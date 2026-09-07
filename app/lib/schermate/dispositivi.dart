@@ -1,10 +1,13 @@
 /// I dispositivi: tutto quello che c'e' in casa, diviso per tipo.
 ///
-/// E' la schermata grezza — l'elenco completo, con gli interruttori che
+/// E' la sezione grezza — l'elenco completo, con gli interruttori che
 /// funzionano — e resta utile anche dopo che sara' arrivata la plancia: e' dove
 /// si cerca *quella* entita' li' quando non ci si ricorda dove sta. Per questo
 /// in cima c'e' una casella di ricerca, e i tipi hanno un nome in italiano
 /// invece del nome che hanno per Home Assistant.
+///
+/// E' un corpo e basta: la barra in cima, col titolo e il menu, la mette la
+/// home, che e' la stessa per tutte le sezioni.
 library;
 
 import 'package:flutter/material.dart';
@@ -73,17 +76,16 @@ const _tipi = <String, (String, IconData)>{
       Icons.category_rounded,
     );
 
-class SchermataDeiDispositivi extends StatefulWidget {
-  const SchermataDeiDispositivi({super.key, required this.collegamento});
+class Dispositivi extends StatefulWidget {
+  const Dispositivi({super.key, required this.collegamento});
 
   final Collegamento collegamento;
 
   @override
-  State<SchermataDeiDispositivi> createState() =>
-      _SchermataDeiDispositiviState();
+  State<Dispositivi> createState() => _DispositiviState();
 }
 
-class _SchermataDeiDispositiviState extends State<SchermataDeiDispositivi> {
+class _DispositiviState extends State<Dispositivi> {
   final _cerca = TextEditingController();
 
   StatoDellaCasa? get _casa => widget.collegamento.stato;
@@ -118,21 +120,6 @@ class _SchermataDeiDispositiviState extends State<SchermataDeiDispositivi> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dispositivi'),
-        bottom: widget.collegamento.dentro
-            ? null
-            : const PreferredSize(
-                preferredSize: Size.fromHeight(3),
-                child: LinearProgressIndicator(minHeight: 3),
-              ),
-      ),
-      body: _corpo(),
-    );
-  }
-
-  Widget _corpo() {
     final casa = _casa;
     if (casa == null || !casa.pieno) {
       return const Center(child: CircularProgressIndicator());
@@ -171,7 +158,7 @@ class _SchermataDeiDispositiviState extends State<SchermataDeiDispositivi> {
     }
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
         TextField(
           controller: _cerca,

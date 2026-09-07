@@ -14,7 +14,6 @@ import 'casa/cassaforte.dart';
 import 'casa/collegamento.dart';
 import 'ponte/centralino.dart';
 import 'schermate/aggiungi_casa.dart';
-import 'schermate/casa.dart';
 import 'schermate/home.dart';
 import 'schermate/le_case.dart';
 import 'vestito/tema.dart';
@@ -138,11 +137,6 @@ class _PortoneState extends State<Portone> {
     }
     return Home(
       collegamento: _collegamento,
-      vaiAiDispositivi: () => Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (_) => SchermataDeiDispositivi(collegamento: _collegamento),
-        ),
-      ),
       vaiAlleCase: () async {
         await Navigator.of(context).push<void>(
           MaterialPageRoute(

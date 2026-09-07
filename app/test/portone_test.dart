@@ -290,7 +290,7 @@ void main() {
    * rotella che gira. */
 
   testWidgets(
-    'con una casa aperta la home mostra il riassunto e da dove si passa',
+    'con una casa aperta la home e\' la plancia, e il menu porta al resto',
     (tester) async {
       late PonteFinto ponte;
       late Collegamento collegamento;
@@ -335,19 +335,39 @@ void main() {
 
       expect(find.text('Casa mia'), findsOneWidget);
       expect(find.text('in casa'), findsOneWidget);
-      expect(find.text('2 accese'), findsOneWidget);
-      expect(find.text('1 aperta'), findsOneWidget);
-      expect(find.text('21.0°'), findsOneWidget);
-      expect(find.text('Spegni tutte le luci'), findsOneWidget);
-      /* I blocchi che non ci sono ancora si vedono lo stesso, spenti: cosi'
-       * si sa dove sta andando l'app. Stanno sotto il bordo, e una ListView
-       * costruisce solo quello che si vede: per trovarli bisogna scorrere
-       * davvero, come farebbe un dito. «Plancia» e' l'ultima, ed e' anche il
-       * posto giusto in cui sta: e' l'ultimo blocco che arrivera'. */
-      await tester.scrollUntilVisible(find.text('Zigbee'), 120);
-      expect(find.text('Zigbee'), findsOneWidget);
-      await tester.scrollUntilVisible(find.text('Plancia'), 120);
+      /* La cosa che si sta provando e' quello che **non** c'e'. La prima
+       * schermata e' la plancia: nessuna entita', nessun contatore, nessun
+       * bottone per spegnere le luci. Quelle cose stanno dietro il menu. */
+      expect(find.text('Cucina'), findsNothing);
+      expect(find.textContaining('accese'), findsNothing);
+      expect(find.textContaining('Spegni'), findsNothing);
+      expect(find.text('Dispositivi'), findsNothing);
+
+      /* Il menu: per etichetta e non per icona, perche' l'etichetta e' quello
+       * che legge chi usa l'app senza vederla. */
+      await tester.tap(find.byTooltip('Menu'));
+      await tester.pumpAndSettle();
       expect(find.text('Plancia'), findsOneWidget);
+      expect(find.text('Dispositivi'), findsOneWidget);
+      /* I blocchi che non ci sono ancora si vedono lo stesso, spenti: cosi'
+       * si sa dove sta andando l'app. */
+      expect(find.text('Aiutanti'), findsOneWidget);
+      expect(find.text('Zigbee'), findsOneWidget);
+      expect(find.text('Automazioni'), findsOneWidget);
+      expect(find.text('presto'), findsNWidgets(3));
+      expect(find.text('Le tue case'), findsOneWidget);
+      /* Il nome della casa sta anche nel menu, con da dove si passa. */
+      expect(find.text('Casa mia'), findsNWidgets(2));
+
+      /* Da li' ai dispositivi: il menu si chiude, la sezione cambia, e le
+       * entita' compaiono adesso — non prima. */
+      await tester.tap(find.text('Dispositivi'));
+      await tester.pumpAndSettle();
+      expect(find.text('Dispositivi'), findsOneWidget, reason: 'il titolo');
+      expect(find.text('Luci'), findsOneWidget);
+      expect(find.text('Cucina'), findsOneWidget);
+      expect(find.text('Salotto'), findsOneWidget);
+      expect(find.text('Plancia'), findsNothing, reason: 'il menu e\' chiuso');
 
       await tester.runAsync(() async {
         await collegamento.chiudi();
@@ -442,11 +462,14 @@ void main() {
     /* L'ultima aggiunta e' quella attiva: chi abbina una casa ci vuole entrare. */
     expect(find.text('Dai miei'), findsOneWidget);
 
-    /* Per etichetta e non per icona: l'icona e' un dettaglio del vestito,
-     * l'etichetta e' quello che legge chi usa l'app senza vederla. */
-    await tester.tap(find.byTooltip('Le tue case'));
+    /* L'elenco delle case sta nel menu. Per etichetta e non per icona:
+     * l'icona e' un dettaglio del vestito, l'etichetta e' quello che legge
+     * chi usa l'app senza vederla. */
+    await tester.tap(find.byTooltip('Menu'));
     await tester.pumpAndSettle();
-    expect(find.text('Le tue case'), findsOneWidget);
+    await tester.tap(find.text('Le tue case'));
+    await tester.pumpAndSettle();
+    expect(find.text('Le tue case'), findsOneWidget, reason: 'il titolo');
     expect(find.text('Casa mia'), findsOneWidget);
 
     /* Il cambio vero — filo giu', filo su — vuole di nuovo il tempo vero. */

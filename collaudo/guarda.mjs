@@ -435,45 +435,45 @@ try {
    * codice. */
   await pagina.keyboard.press("Enter");
   /* Qui succede tutto: il ponte controlla il codice, fabbrica il segno, apre
-   * il filo con Home Assistant, e l'app legge la casa. */
-  await aspettaCheCompaia(pagina, "Luci");
+   * il filo con Home Assistant, e l'app legge la casa. La home e' la plancia:
+   * quello che si aspetta e' il nome della casa con sotto «in casa», non un
+   * elenco di entita' — quello sta dietro il menu. */
+  await aspettaCheCompaia(pagina, "in casa");
   await attendi(600);
   await scatta(pagina, "3-home");
 
+  /* Il menu laterale. Sta dietro il bottone in alto a sinistra, e li' l'albero
+   * dell'accessibilita' di Flutter mette i riquadri dove gli pare: quando il
+   * tocco sul nodo non arriva al bottone disegnato, si tocca dove il bottone
+   * **sta**. Col dito sul telefono non serve. */
+  async function apriIlMenu() {
+    await premi(pagina, "Menu", { inAlto: true });
+    try {
+      await aspettaCheCompaia(pagina, "Aiutanti", 3000);
+    } catch (_ancoraNo) {
+      await pagina.mouse.click(8 + 24, 12 + 24);
+      await aspettaCheCompaia(pagina, "Aiutanti", 4000);
+    }
+    await attendi(500);
+  }
+
+  racconta("apro il menu");
+  await apriIlMenu();
+  await scatta(pagina, "4-menu");
+
   racconta("apro i dispositivi");
   await premi(pagina, "Dispositivi");
-  await aspettaCheCompaia(pagina, "Dispositivi");
+  await aspettaCheCompaia(pagina, "Luci");
   await attendi(1200);
-  await scatta(pagina, "4-dispositivi");
+  await scatta(pagina, "5-dispositivi");
 
-  await premi(pagina, "Back");
-  await attendi(1500);
-
-  /* L'elenco delle case sta dietro un bottone della barra del titolo, e li'
-   * l'albero dell'accessibilita' di Flutter mette i riquadri dove gli pare:
-   * il tocco a volte finisce sulla riga sotto. Non e' un difetto dell'app —
-   * col dito sul telefono funziona — quindi qui non si fa fallire tutto il
-   * collaudo per questo: si prova, e se non va si dice e si tira avanti. */
   racconta("apro l'elenco delle case");
-  try {
-    await premi(pagina, "Le tue case", { inAlto: true });
-    /* Si aspetta «Aggiungi», che sta **solo** nell'elenco delle case:
-     * aspettare «Le tue case» non diceva niente, perche' quella scritta e'
-     * gia' nella home, come etichetta del bottone. */
-    try {
-      await aspettaCheCompaia(pagina, "Aggiungi", 3000);
-    } catch (_ancoraNo) {
-      /* Il tocco sul nodo dell'albero non e' arrivato al bottone disegnato:
-       * si tocca dove il bottone **sta**, in alto a destra. */
-      const { width } = pagina.viewportSize();
-      await pagina.mouse.click(width - 20 - 24, 12 + 24);
-      await aspettaCheCompaia(pagina, "Aggiungi", 4000);
-    }
-    await attendi(600);
-    await scatta(pagina, "5-le-case");
-  } catch (_errore) {
-    racconta("l'elenco delle case non si e' aperto col tocco simulato, tiro avanti");
-  }
+  await apriIlMenu();
+  await premi(pagina, "Le tue case");
+  /* Si aspetta «Aggiungi», che sta **solo** nell'elenco delle case. */
+  await aspettaCheCompaia(pagina, "Aggiungi");
+  await attendi(600);
+  await scatta(pagina, "6-le-case");
 
   racconta("fatto");
 } catch (errore) {

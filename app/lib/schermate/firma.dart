@@ -20,7 +20,11 @@ const String _detta = String.fromEnvironment('VERSIONE');
 String get versioneDelPacchetto => _detta.isEmpty ? 'dal codice' : _detta;
 
 class Firma extends StatelessWidget {
-  const Firma({super.key});
+  const Firma({super.key, this.spazioSopra = 24});
+
+  /// Quanto stare sotto quello che c'e' prima: in fondo a una lista lunga
+  /// serve aria, in fondo a un menu no.
+  final double spazioSopra;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +32,7 @@ class Firma extends StatelessWidget {
     final dove = centralinoDiDifetto?.casa ?? 'nessun centralino';
 
     return Padding(
-      padding: const EdgeInsets.only(top: 24),
+      padding: EdgeInsets.only(top: spazioSopra),
       child: Text(
         'gdahome $versioneDelPacchetto · $dove',
         textAlign: TextAlign.center,

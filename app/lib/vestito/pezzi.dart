@@ -1,8 +1,9 @@
 /// I pezzi che tornano in tutte le schermate.
 ///
-/// Una scheda, un'insegna, una tessera, un pallino, uno stato vuoto. Sono
-/// pochi e sono qui perche' due schermate che disegnano la stessa cosa in due
-/// modi diversi sono la prima cosa che fa sembrare un'app raffazzonata.
+/// Una scheda, un'insegna, un cerchietto, un pallino, un bollino, uno stato
+/// vuoto. Sono pochi e sono qui perche' due schermate che disegnano la stessa
+/// cosa in due modi diversi sono la prima cosa che fa sembrare un'app
+/// raffazzonata.
 library;
 
 import 'package:flutter/material.dart';
@@ -103,80 +104,6 @@ class Cerchietto extends StatelessWidget {
         icona,
         size: lato * 0.52,
         color: colore ?? colori.onPrimaryContainer,
-      ),
-    );
-  }
-}
-
-/// Come si presenta una tessera del riassunto.
-enum TonoDellaTessera { quieto, acceso, attenzione }
-
-/// Una tessera del riassunto: icona, numero grande, etichetta sotto.
-class Tessera extends StatelessWidget {
-  const Tessera({
-    super.key,
-    required this.icona,
-    required this.titolo,
-    required this.valore,
-    this.dettaglio,
-    this.tono = TonoDellaTessera.quieto,
-    this.quandoPremuta,
-  });
-
-  final IconData icona;
-  final String titolo;
-  final String valore;
-  final String? dettaglio;
-  final TonoDellaTessera tono;
-  final VoidCallback? quandoPremuta;
-
-  @override
-  Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
-    final testi = Theme.of(context).textTheme;
-    final (fondoIcona, coloreIcona) = switch (tono) {
-      TonoDellaTessera.quieto => (
-        colori.surfaceContainer,
-        colori.onSurfaceVariant,
-      ),
-      TonoDellaTessera.acceso => (
-        colori.secondaryContainer,
-        colori.onSecondaryContainer,
-      ),
-      TonoDellaTessera.attenzione => (
-        colori.errorContainer,
-        colori.onErrorContainer,
-      ),
-    };
-    return Scheda(
-      quandoPremuta: quandoPremuta,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Cerchietto(icona: icona, fondo: fondoIcona, colore: coloreIcona),
-          const SizedBox(height: 14),
-          Text(
-            valore,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: testi.titleLarge?.copyWith(height: 1.1),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            titolo,
-            style: testi.bodyMedium?.copyWith(color: colori.onSurfaceVariant),
-          ),
-          if (dettaglio != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              dettaglio!,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
-            ),
-          ],
-        ],
       ),
     );
   }
