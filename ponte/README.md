@@ -79,13 +79,25 @@ e con quel segno non si rientra piu'.
 In casa l'app trova il ponte sulla porta 8098 e basta cosi'. Da fuori serve che
 qualcuno faccia arrivare il traffico fino a quella porta, e il ponte **non apre
 niente per conto suo** — non e' cosa che un add-on debba decidere al posto di
-chi installa. Le tre strade, in ordine di quanto sono facili per chi usa l'app:
+chi installa.
 
-* **L'accesso remoto di Home Assistant** (Nabu Casa): niente da configurare,
-  abbonamento mensile;
-* **una VPN** (WireGuard, Tailscale): gratis e sicura, ma va messa su ogni
-  telefono;
-* **un proxy inverso** con il proprio dominio e il proprio certificato.
+**L'accesso remoto di Home Assistant non serve a questo.** Il suo tunnel arriva
+a Home Assistant e si ferma li': le porte degli add-on non le fa passare, e non
+c'e' nessuna impostazione che glielo faccia fare. E' la prima cosa che viene in
+mente a chi ce l'ha, ed e' quella che fa perdere piu' tempo, perche'
+l'indirizzo sembra giusto. L'app lo riconosce e lo dice.
+
+Le due che funzionano:
+
+* **Una rete privata** — Tailscale, o WireGuard. Gratis, cifrata, e sul router
+  non si apre niente. E' la piu' semplice: si installa l'add-on da una parte e
+  l'app dall'altra, e il telefono vede la casa da ovunque.
+* **Un proxy inverso** davanti alla porta, col proprio dominio e il proprio
+  certificato.
+
+Quello che **non va fatto** e' aprire la 8098 sul router cosi' com'e': il ponte
+parla in chiaro, e su internet nudo il codice di abbinamento e il segno
+viaggerebbero leggibili.
 
 ## Cosa puo' fare un telefono abbinato
 

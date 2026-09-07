@@ -126,15 +126,74 @@ strada, e non c'e' modo di aggirarla.
 
 ---
 
+## Da fuori casa: la strada che funziona
+
+Il ponte sta su una porta sua — la 8098 — e da fuori quella porta bisogna
+poterla raggiungere. **L'accesso remoto di Home Assistant non serve a
+niente qui**: il suo tunnel arriva a Home Assistant e si ferma li', le porte
+degli add-on non le fa passare, e non c'e' nessuna impostazione che glielo
+faccia fare. Se ci provi, l'app te lo dice.
+
+Quella che funziona, senza toccare il router e senza aprire niente al mondo, e'
+**Tailscale**: una rete privata fra i tuoi apparecchi. Il telefono vede la casa
+come se ci fosse dentro, da ovunque.
+
+### Come si mette
+
+1. **Su Home Assistant.** Negozio degli add-on → cerca **Tailscale** → installa
+   → avvia. Apri il suo **Log**: stampa un indirizzo lungo che comincia per
+   `https://login.tailscale.com/…`. Aprilo nel browser e accedi (l'account e'
+   gratuito e si fa li').
+2. **Sul telefono.** Installa l'app **Tailscale**, accedi con lo **stesso**
+   account, e accendila.
+3. **Trova l'indirizzo di casa.** Su
+   [login.tailscale.com/admin/machines](https://login.tailscale.com/admin/machines)
+   compaiono i tuoi apparecchi. Quello di Home Assistant ha un indirizzo che
+   comincia per `100.` — per esempio `100.92.14.7`.
+4. **Provalo prima dell'app.** Dal telefono, con Tailscale acceso **e il Wi-Fi
+   di casa spento**, apri nel browser:
+
+   ```
+   http://100.92.14.7:8098/salute
+   ```
+
+   Deve rispondere `{"vivo":true,...}`. Se risponde quello, hai finito: il
+   telefono raggiunge il ponte da fuori.
+5. **Nell'app**, nel campo **Indirizzo pubblico**, scrivi `100.92.14.7:8098`.
+
+Da quel momento l'app funziona in tutte e due i posti, e passa dall'uno
+all'altro da sola: in casa usa l'indirizzo di rete locale, che e' piu' veloce;
+fuori usa quello di Tailscale. Sotto il nome della casa leggi da quale dei due
+sta passando.
+
+Gratis fino a cento apparecchi, cifrato, e sul router non si apre niente.
+
+### Le altre due strade
+
+* **Un proxy inverso** davanti alla porta 8098, col tuo dominio e il tuo
+  certificato. Funziona, ma vuole un dominio, un certificato e una porta aperta
+  sul router.
+* **Niente.** L'app funziona solo sotto il Wi-Fi di casa, e da fuori dice che
+  non trova la casa. Per molti va benissimo.
+
+> ⚠️ Quello che **non va fatto** e' aprire la 8098 sul router cosi' com'e'. Il
+> ponte parla in chiaro: su internet nudo il codice di abbinamento e il segno
+> viaggerebbero leggibili da chiunque stia in mezzo. O c'e' un proxy che ci
+> mette il cifrato davanti, o si sta dentro una rete privata come Tailscale.
+
+---
+
 ## Cosa guardare, una volta dentro
 
 - **Sotto il nome della casa** c'e' scritto da dove stai passando: «in casa»
   col simbolo del Wi-Fi, «da fuori» col mondo. E' la cosa piu' utile da
   controllare per prima.
 - **Spegni il Wi-Fi del telefono** e passa alla rete del cellulare. Se hai
-  messo anche l'indirizzo pubblico, dopo qualche secondo l'app deve tornare su
-  da sola e la scritta deve diventare «da fuori». Se non l'hai messo, deve dire
-  che non trova la casa **e spiegare che manca l'indirizzo pubblico**.
+  messo Tailscale, dopo qualche secondo l'app deve tornare su da sola e la
+  scritta deve diventare «da fuori». Se non l'hai messo, deve dire che non
+  trova la casa **e spiegare che manca l'indirizzo pubblico** — e se ci hai
+  messo un indirizzo di Nabu Casa, deve spiegare perche' quello non puo'
+  funzionare.
 - **Metti il telefono in tasca** per qualche minuto e riprendilo: il filo cade
   e si rialza da solo, e i valori devono essere quelli veri, non quelli di
   prima.
