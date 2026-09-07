@@ -9,7 +9,11 @@
 # L'indirizzo esce da solo: `centralino.<il-tuo-nome>.workers.dev`. Nessun
 # dominio da comprare, nessun server da pagare, nessuna macchina da tenere
 # aggiornata.
-name = "centralino"
+# Il nome e' unico per account, e `wrangler deploy` non chiede il permesso:
+# se ne trova uno che si chiama uguale, ci scrive sopra. «centralino» da solo
+# e' troppo comune per essere sicuro — in un account ci finiscono le cose di
+# tutti i progetti — quindi porta davanti il nome di questo.
+name = "gdahome-centralino"
 main = "src/index.js"
 compatibility_date = "2025-04-01"
 

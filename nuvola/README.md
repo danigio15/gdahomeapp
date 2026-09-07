@@ -19,6 +19,14 @@ l'app, e tutto questo progetto esiste per non chiedere niente a nessuno.
 Qui non c'è niente da pagare, niente da tenere aggiornato e nessun dominio da
 comprare: l'indirizzo arriva insieme.
 
+## Il nome
+
+Il Worker si chiama **`gdahome-centralino`**, non `centralino`, e non e' pignoleria:
+il nome e' unico per account e `wrangler deploy` non chiede il permesso — se ne
+trova uno che si chiama uguale, ci scrive sopra. In un account Cloudflare ci
+finiscono le cose di tutti i progetti, e «centralino» e' una parola che prima o
+poi qualcun altro usa.
+
 ## Metterlo in piedi
 
     npm install
@@ -27,12 +35,12 @@ comprare: l'indirizzo arriva insieme.
 
 Alla fine stampa l'indirizzo, che è fatto così:
 
-    https://centralino.<il-tuo-nome>.workers.dev
+    https://gdahome-centralino.<il-tuo-nome>.workers.dev
 
 Quello si mette nella scheda dell'add-on, alla voce `centralino`, con `wss://`
 davanti:
 
-    centralino: wss://centralino.<il-tuo-nome>.workers.dev
+    centralino: wss://gdahome-centralino.<il-tuo-nome>.workers.dev
 
 Il ponte da quel momento **chiama fuori da solo**. Nella sua console, in Home
 Assistant, si vede se è arrivato.
