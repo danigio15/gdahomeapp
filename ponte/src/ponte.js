@@ -102,6 +102,12 @@ class Collegamento {
   avvia() {
     this.presa.onMessaggio = (testo) => this._dalTelefono(testo);
     this.presa.onChiusa = () => this._finito();
+    /* Un telefono che riceve e non chiede — l'app ferma sulla home — non manda
+     * niente per minuti, ed e' vivo lo stesso. Il pong e' il suo modo di dire
+     * che c'e'. */
+    this.presa.onPong = () => {
+      this.vistoIl = Date.now();
+    };
     /* Come Home Assistant: la prima parola la dice il server. */
     this.presa.manda(JSON.stringify({ type: "auth_required", ha_version: "ponte" }));
     this.battito = setInterval(() => this._controlla(), BATTITO);

@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const DIFETTO = Object.freeze({
+  centralino: "",
   porta_app: 8098,
   dispositivi_massimi: 10,
   minuti_del_codice: 5,
@@ -33,6 +34,9 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
   }
   return {
     cartella,
+    /* Dove chiamare per farsi raggiungere da fuori. Vuoto vuol dire: solo
+     * dentro casa, e va benissimo per chi non esce mai dal proprio Wi-Fi. */
+    centralino: String(process.env.PONTE_CENTRALINO || scritte.centralino || ""),
     portaDellApp: numero(scritte.porta_app, DIFETTO.porta_app),
     portaDellaConsole: numero(process.env.PONTE_PORTA_CONSOLE, 8099),
     dispositiviMassimi: numero(scritte.dispositivi_massimi, DIFETTO.dispositivi_massimi),

@@ -9,6 +9,8 @@ import { pathToFileURL } from "node:url";
 
 import { Abbinamento } from "./abbinamento.js";
 import { Casa } from "./casa.js";
+import { Chiamata } from "./chiamata.js";
+import { Identita } from "./identita.js";
 import { Dispositivi } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
 import { Ponte } from "./ponte.js";
@@ -29,7 +31,23 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   const abbinamento = new Abbinamento({ minutiDelCodice: opzioni.minutiDelCodice });
   const ponte = new Ponte({ casa, dispositivi, registro });
 
-  const app = costruisciLaPortaDellApp({ ponte, dispositivi, abbinamento, registro });
+  /* La chiamata verso il centralino: e' cosi' che si entra da fuori casa,
+   * senza che chi ha installato l'add-on apra o configuri niente. */
+  const identita = new Identita({ cartella: opzioni.cartella });
+  const chiamata = new Chiamata({
+    dove: opzioni.centralino,
+    identita,
+    ponte,
+    registro,
+  });
+
+  const app = costruisciLaPortaDellApp({
+    ponte,
+    dispositivi,
+    abbinamento,
+    registro,
+    chiamata,
+  });
   const console_ = costruisciLaConsole({
     ponte,
     casa,
@@ -37,6 +55,8 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     abbinamento,
     opzioni,
     registro,
+    chiamata,
+    identita,
     cartellaDellaConsole: opzioni.console,
   });
 
@@ -45,6 +65,8 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
 
   registro.info(`la porta dell'app e' la ${opzioni.portaDellApp}`);
   registro.info(`${dispositivi.quanti()} dispositivi abbinati`);
+
+  chiamata.avvia();
 
   const saluto = await casa.saluta();
   if (saluto.viva) registro.info("Home Assistant risponde");
@@ -59,11 +81,23 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   const abbassa = async () => {
     registro.info("il ponte si abbassa");
     clearInterval(giro);
+    chiamata.spegni();
     ponte.chiudiTutto();
     await Promise.all([chiudi(app), chiudi(console_)]);
   };
 
-  return { ponte, dispositivi, abbinamento, casa, registro, app, console: console_, abbassa };
+  return {
+    ponte,
+    dispositivi,
+    abbinamento,
+    casa,
+    identita,
+    chiamata,
+    registro,
+    app,
+    console: console_,
+    abbassa,
+  };
 }
 
 const ascolta = (server, porta) =>

@@ -18,6 +18,7 @@ import { extname, join, normalize } from "node:path";
 import { CodiceSbagliato, TroppiTentativi } from "./abbinamento.js";
 import { TroppiDispositivi } from "./dispositivi.js";
 import { accetta, eUnaSalita } from "./presa.js";
+import { impronta } from "./segreti.js";
 
 /* Un corpo piu' grande di cosi' non e' un abbinamento. */
 const CORPO_MASSIMO = 4 * 1024;
@@ -101,7 +102,7 @@ export const rotta = (richiesta) => {
 
 /* ─── La porta dell'app ──────────────────────────────────────────────────── */
 
-export function costruisciLaPortaDellApp({ ponte, dispositivi, abbinamento, registro }) {
+export function costruisciLaPortaDellApp({ ponte, dispositivi, abbinamento, registro, chiamata }) {
   const server = createServer(async (richiesta, risposta) => {
     /* Qui, e **solo** qui.
      *
@@ -164,6 +165,10 @@ export function costruisciLaPortaDellApp({ ponte, dispositivi, abbinamento, regi
           nome: corpo.nome,
           sistema: corpo.sistema,
         });
+        /* Il codice e' stato speso: l'attesa al centralino non serve piu', e
+         * lasciarla aperta vorrebbe dire tenere una via buona per qualcosa che
+         * non esiste piu'. */
+        chiamata?.chiudiLAbbinamento();
         registro.info(`abbinato «${dispositivo.nome}»`);
         json(risposta, { segno, dispositivo }, 201);
       } catch (errore) {
@@ -200,6 +205,8 @@ export function costruisciLaConsole({
   abbinamento,
   opzioni,
   registro,
+  chiamata,
+  identita,
   cartellaDellaConsole,
 }) {
   return createServer(async (richiesta, risposta) => {
@@ -242,6 +249,8 @@ async function api({
   abbinamento,
   opzioni,
   registro,
+  chiamata,
+  identita,
 }) {
   if (via === "/api/stato" && metodo === "GET") {
     const saluto = await casa.saluta();
@@ -264,12 +273,16 @@ async function api({
       return;
     }
     const { codice, scadeIl } = abbinamento.nuovo();
+    /* Al centralino ne va detta l'**impronta**, perche' possa instradare chi
+     * si presenta con questo codice. Il codice li' non arriva mai. */
+    chiamata?.apriLAbbinamento(impronta(codice));
     registro.info("codice di abbinamento fabbricato dalla console");
     json(risposta, { codice, scadeIl });
     return;
   }
 
   if (via === "/api/codice" && metodo === "DELETE") {
+    chiamata?.chiudiLAbbinamento();
     json(risposta, { annullato: abbinamento.annulla() });
     return;
   }

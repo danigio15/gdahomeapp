@@ -76,28 +76,23 @@ e con quel segno non si rientra piu'.
 
 ## Da fuori casa
 
-In casa l'app trova il ponte sulla porta 8098 e basta cosi'. Da fuori serve che
-qualcuno faccia arrivare il traffico fino a quella porta, e il ponte **non apre
-niente per conto suo** — non e' cosa che un add-on debba decidere al posto di
-chi installa.
+In casa l'app trova il ponte sulla porta 8098, e basta cosi'.
 
-**L'accesso remoto di Home Assistant non serve a questo.** Il suo tunnel arriva
-a Home Assistant e si ferma li': le porte degli add-on non le fa passare, e non
-c'e' nessuna impostazione che glielo faccia fare. E' la prima cosa che viene in
-mente a chi ce l'ha, ed e' quella che fa perdere piu' tempo, perche'
-l'indirizzo sembra giusto. L'app lo riconosce e lo dice.
+Da fuori il ponte **chiama lui**. Nell'opzione `centralino` si scrive
+l'indirizzo di un centralino, e da quel momento il ponte apre un filo verso
+quello e lo tiene aperto; i telefoni arrivano da quella parte. Non c'e' nessuna
+porta da aprire sul router, nessun indirizzo pubblico da avere, nessuna VPN da
+installare, e funziona anche a chi non ha ne' un dominio ne' un abbonamento.
 
-Le due che funzionano:
+Lasciando l'opzione vuota il ponte non chiama nessuno, e l'app funziona solo
+sotto il Wi-Fi di casa. Per chi la casa la guarda dal divano va benissimo.
 
-* **Una rete privata** — Tailscale, o WireGuard. Gratis, cifrata, e sul router
-  non si apre niente. E' la piu' semplice: si installa l'add-on da una parte e
-  l'app dall'altra, e il telefono vede la casa da ovunque.
-* **Un proxy inverso** davanti alla porta, col proprio dominio e il proprio
-  certificato.
-
-Quello che **non va fatto** e' aprire la 8098 sul router cosi' com'e': il ponte
-parla in chiaro, e su internet nudo il codice di abbinamento e il segno
-viaggerebbero leggibili.
+Il perche' di questa strada, e le tre che sono state scartate, stanno in
+[`../docs/PIANO.md`](../docs/PIANO.md). In due righe: l'accesso remoto di Home
+Assistant le porte degli add-on non le fa passare — e non e' cosa che si
+configuri — mentre una VPN o un proxy inverso funzionano ma chiedono a chi usa
+l'app di installare e configurare qualcosa, che e' esattamente cio' che questo
+progetto ha promesso di non chiedere.
 
 ## Cosa puo' fare un telefono abbinato
 
@@ -114,6 +109,7 @@ qualunque telefono si stacca da solo con un bottone.
 
 | | |
 |---|---|
+| `centralino` | dove chiamare per farsi raggiungere da fuori casa; vuoto = solo in casa |
 | `porta_app` | la porta su cui bussa l'app (difetto: 8098) |
 | `dispositivi_massimi` | quanti telefoni possono restare abbinati insieme (difetto: 10) |
 | `minuti_del_codice` | quanto vive un codice di abbinamento (difetto: 5) |

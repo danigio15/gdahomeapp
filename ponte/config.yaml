@@ -12,7 +12,7 @@
 # finire esposta. Su quella non c'e' nessuna console: si puo' solo presentare
 # un codice di abbinamento valido, o un segno di riconoscimento gia' avuto.
 name: Il ponte di DashboardModern
-version: "0.1.1"
+version: "0.2.0"
 slug: ponte
 description: Fa parlare l'app di DashboardModern con questa casa, da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.
 url: https://github.com/danigio15/dashboardmodern-v2/tree/main/ponte
@@ -45,6 +45,15 @@ homeassistant_api: true
 hassio_api: false
 
 options:
+  # Dove chiamare per farsi raggiungere da fuori casa.
+  #
+  # Il ponte non aspetta che qualcuno lo trovi: va lui, e resta li'. Cosi' non
+  # c'e' nessuna porta da aprire sul router, nessun indirizzo pubblico da
+  # avere, e nessuna VPN da installare.
+  #
+  # Vuoto vuol dire: solo dentro casa. Va benissimo per chi la casa la guarda
+  # dal divano.
+  centralino: ""
   porta_app: 8098
   # Quanti telefoni possono restare abbinati insieme.
   dispositivi_massimi: 10
@@ -56,6 +65,7 @@ options:
   registro: info
 
 schema:
+  centralino: str?
   porta_app: int(1024,65535)
   dispositivi_massimi: int(1,100)
   minuti_del_codice: int(1,60)

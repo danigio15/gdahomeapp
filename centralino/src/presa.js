@@ -151,10 +151,14 @@ export class ErroreDiCarico extends Error {}
 /* ─── La presa ───────────────────────────────────────────────────────────── */
 
 export class Presa {
-  constructor(socket, { onMessaggio, onChiusa, messaggioMassimo = MESSAGGIO_MASSIMO } = {}) {
+  constructor(
+    socket,
+    { onMessaggio, onChiusa, onPong, messaggioMassimo = MESSAGGIO_MASSIMO } = {},
+  ) {
     this.socket = socket;
     this.onMessaggio = onMessaggio || (() => {});
     this.onChiusa = onChiusa || (() => {});
+    this.onPong = onPong || (() => {});
     this.massimo = messaggioMassimo;
     this.viva = true;
     this.hoRisposto = false;
@@ -243,7 +247,21 @@ export class Presa {
       }
       return true;
     }
-    if (tipo === TIPO.pong) return true;
+    if (tipo === TIPO.pong) {
+      /* Un pong e' un segno di vita, e va detto a chi ascolta.
+       *
+       * Prima non lo diceva a nessuno, e la conseguenza era un difetto vero:
+       * chi conta il silenzio contava solo i *messaggi*, e un telefono aperto
+       * ma zitto — l'app ferma sulla home, che riceve e non chiede — dopo un
+       * minuto e mezzo veniva buttato fuori pur essendo vivissimo. Nessuna
+       * prova poteva prenderlo: durano tutte meno di quel minuto e mezzo. */
+      try {
+        this.onPong();
+      } catch (_errore) {
+        /* Chi ascolta ha sbagliato: non e' un motivo per far cadere la presa. */
+      }
+      return true;
+    }
 
     if (tipo === TIPO.testo || tipo === TIPO.binario) {
       if (this._tipoInCorso !== null) {
