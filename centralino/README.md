@@ -103,9 +103,30 @@ Diciotto prove, senza rete e senza nulla di finto nel mezzo: il centralino e'
 acceso davvero e le case e i telefoni sono WebSocket clienti veri di Node,
 quelli che useranno il ponte e l'app.
 
-## Quello che manca
+## Il centralino non puo' leggere quello che instrada
 
-La **cifratura fra le due punte**. Adesso il centralino instrada byte che
-potrebbe leggere. Deve diventare: byte che *non* puo' leggere, con una chiave
-derivata dal segno che qui non passa mai. Finche' non c'e', chi mette su un
-centralino si sta prendendo in carico il traffico delle case che ci passano.
+Non e' una promessa: e' una prova, in `ponte/test/cieco.test.js`. Si registra
+**tutto** quello che passa dal centralino e poi ci si cerca dentro il segno del
+telefono, il codice di abbinamento, i comandi e i nomi delle entita'. Non c'e'
+niente.
+
+Come: le due punte si scambiano una chiave a ogni collegamento — uno scambio
+effimero, X25519, mescolato con una chiave che si sono dette al momento
+dell'abbinamento e che qui non passa mai. Poi ogni messaggio e' una busta
+sigillata (AES-256-GCM), numerata, che non si apre due volte e non si apre
+fuori ordine.
+
+Vale anche per l'abbinamento, che e' il momento delicato: li' la chiave comune
+non c'e' ancora, e resta lo scambio effimero. Chi guarda passare due chiavi
+pubbliche non ricava niente.
+
+**Il limite, detto perche' vada scritto e non scoperto.** Un centralino
+riscritto per *attaccare* — non che guarda, ma che si mette in mezzo — potrebbe
+intromettersi nell'abbinamento di un telefono nuovo, perche' li' non c'e'
+ancora niente di condiviso da cui riconoscersi. I telefoni gia' abbinati
+restano al sicuro comunque: la loro chiave non e' mai passata di qui, e senza
+quella non si fabbrica un filo che regga.
+
+La strada per chiudere anche quella e' il codice mostrato come QR:
+duecentocinquantasei bit invece di otto lettere, e all'attacco non resta niente
+da indovinare.

@@ -32,14 +32,14 @@ export class Chiamata {
   constructor({
     dove,
     identita,
-    ponte,
+    portiere,
     registro,
     Presa = globalThis.WebSocket,
     attesaMassima = ATTESA_MASSIMA,
   }) {
     this.dove = String(dove || "").replace(/\/+$/, "");
     this.identita = identita;
-    this.ponte = ponte;
+    this.portiere = portiere;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.Presa = Presa;
     this.attesaMassima = attesaMassima;
@@ -167,7 +167,7 @@ export class Chiamata {
       case "apri": {
         const canale = new Canale(numero, this);
         this.canali.set(numero, canale);
-        this.ponte.accogli(canale, { da: `centralino ${detto.da ?? ""}`.trim() });
+        this.portiere.accogli(canale, { da: `centralino ${detto.da ?? ""}`.trim() });
         return;
       }
       case "d": {

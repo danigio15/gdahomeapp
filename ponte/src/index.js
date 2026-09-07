@@ -14,6 +14,7 @@ import { Identita } from "./identita.js";
 import { Dispositivi } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
 import { Ponte } from "./ponte.js";
+import { Portiere } from "./portiere.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciLaConsole, costruisciLaPortaDellApp } from "./server.js";
 
@@ -34,15 +35,21 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   /* La chiamata verso il centralino: e' cosi' che si entra da fuori casa,
    * senza che chi ha installato l'add-on apra o configuri niente. */
   const identita = new Identita({ cartella: opzioni.cartella });
+  /* Nessuno parla col ponte direttamente: si passa dal portiere, che fa la
+   * stretta di mano e da li' in poi cifra. Vale per chi arriva dalla porta di
+   * casa e per chi arriva dal centralino, allo stesso modo. */
+  const portiere = new Portiere({ ponte, dispositivi, abbinamento, registro });
   const chiamata = new Chiamata({
     dove: opzioni.centralino,
     identita,
-    ponte,
+    portiere,
     registro,
   });
+  portiere.chiamata = chiamata;
 
   const app = costruisciLaPortaDellApp({
     ponte,
+    portiere,
     dispositivi,
     abbinamento,
     registro,
@@ -88,6 +95,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
 
   return {
     ponte,
+    portiere,
     dispositivi,
     abbinamento,
     casa,

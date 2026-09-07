@@ -169,11 +169,20 @@ appartiene.
 Il costo si sposta: dall'utente a chi mantiene il centralino. Ed e' giusto
 cosi' — e' la stessa cosa che fa Nabu Casa.
 
-E c'e' un debito da pagare prima di poterlo dire finito: **la cifratura fra le
-due punte**. Adesso il centralino instrada byte che potrebbe leggere. Deve
-diventare byte che *non* puo' leggere, con una chiave derivata dal segno che
-li' non passa mai. Finche' non c'e', chi mette su un centralino si prende in
-carico il traffico delle case che ci passano.
+E il debito che veniva con questa strada e' pagato: **il centralino non puo'
+leggere quello che instrada**. Non e' una promessa ma una prova — si registra
+tutto quello che gli passa sotto il naso e ci si cerca dentro il segno, il
+codice, i comandi, i nomi delle entita'. Non c'e' niente.
+
+Sotto ci sono due segreti diversi apposta, e la ragione va scritta perche' non
+e' ovvia. Il ponte il segno **non ce l'ha**: sul disco tiene solo l'impronta,
+cosi' un file rubato non fa entrare nessuno. Quella proprieta' vale piu' della
+comodita' di riusare il segno come chiave, quindi a ogni telefono si da' anche
+una **chiave del filo**, che serve solo a cifrare. Chi rubasse il file avrebbe
+la seconda e non la prima: potrebbe leggere del traffico registrato, ma non
+entrerebbe in casa. E perche' anche quello resti chiuso, a ogni collegamento si
+mescola dentro uno scambio effimero — le chiavi di quel momento spariscono con
+lui, e chi rubasse il file domani non leggerebbe quello che e' passato ieri.
 
 ## Le cose che decidono tutto, e che non sono codice
 

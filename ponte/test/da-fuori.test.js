@@ -25,8 +25,11 @@ import { costruisciIlServer } from "../../centralino/src/server.js";
 import { Chiamata } from "../src/chiamata.js";
 import { Identita } from "../src/identita.js";
 import { Ponte } from "../src/ponte.js";
+import { Portiere } from "../src/portiere.js";
 import { Dispositivi } from "../src/dispositivi.js";
+import { Abbinamento } from "../src/abbinamento.js";
 import { accetta } from "../src/presa.js";
+import { telefonoCifrato } from "./telefono-cifrato.js";
 
 const impronta = (cosa) => createHash("sha256").update(cosa).digest("hex");
 const SEGNO_DELLA_CASA = "segno-finto-del-supervisor";
@@ -99,13 +102,16 @@ async function catena() {
   const casa = new Casa({ indirizzo: ha.indirizzo, segno: SEGNO_DELLA_CASA });
   const dispositivi = new Dispositivi({ cartella: nuovaCartella("ponte") });
   const ponte = new Ponte({ casa, dispositivi, registro: null });
+  const abbinamento = new Abbinamento({});
+  const portiere = new Portiere({ ponte, dispositivi, abbinamento, registro: null });
   const identita = new Identita({ cartella: nuovaCartella("identita") });
   const chiamata = new Chiamata({
     dove: doveIlCentralino,
     identita,
-    ponte,
+    portiere,
     attesaMassima: 200,
   });
+  portiere.chiamata = chiamata;
   chiamata.avvia();
   await attendi(() => chiamata.dentro);
 
@@ -116,6 +122,8 @@ async function catena() {
     casa,
     dispositivi,
     ponte,
+    portiere,
+    abbinamento,
     identita,
     chiamata,
     spegni: async () => {
@@ -129,27 +137,9 @@ async function catena() {
   };
 }
 
-/* Un telefono che bussa al centralino e parla il protocollo di Home Assistant. */
-function unTelefono(dove, via) {
-  const presa = new WebSocket(`${dove}${via}`);
-  const detti = [];
-  presa.addEventListener("message", (evento) => detti.push(JSON.parse(evento.data)));
-  return {
-    presa,
-    detti,
-    aperta: new Promise((ok, no) => {
-      presa.addEventListener("open", ok);
-      presa.addEventListener("error", () => no(new Error("non entra")));
-    }),
-    chiusa: new Promise((ok) => presa.addEventListener("close", ok)),
-    manda: (cosa) => presa.send(JSON.stringify(cosa)),
-    aspetta: (tipo) =>
-      attendi(() => detti.some((uno) => uno.type === tipo)).then(() =>
-        detti.find((uno) => uno.type === tipo),
-      ),
-    chiudi: () => presa.close(),
-  };
-}
+/* Un telefono che bussa al centralino. Dietro c'e' il portiere, quindi si
+ * parla cifrato: `telefono-cifrato.js` fa la stretta di mano e poi imbusta. */
+const unTelefono = (dove, via, chiavi) => telefonoCifrato(`${dove}${via}`, chiavi);
 
 /* ─── Le prove ───────────────────────────────────────────────────────────── */
 
@@ -180,10 +170,16 @@ test("l'identita' della casa resta la stessa dopo un riavvio del ponte", async (
 test("un telefono abbinato entra dal centralino e legge la casa", async () => {
   const c = await catena();
   try {
-    const { segno } = c.dispositivi.abbina({ nome: "telefono di fuori", sistema: "ios" });
+    const { segno, chiave, dispositivo } = c.dispositivi.abbina({
+      nome: "telefono di fuori",
+      sistema: "ios",
+    });
 
-    const telefono = unTelefono(c.doveIlCentralino, `/telefono/${c.identita.casa}`);
-    await telefono.aperta;
+    const telefono = unTelefono(c.doveIlCentralino, `/telefono/${c.identita.casa}`, {
+      chi: dispositivo.id,
+      chiave,
+    });
+    await telefono.dentro;
     /* Da qui in poi e' il protocollo di Home Assistant, identico a quello che
      * si parla dentro casa: il centralino e il canale non si vedono. */
     assert.equal((await telefono.aspetta("auth_required")).type, "auth_required");
@@ -208,8 +204,12 @@ test("un telefono abbinato entra dal centralino e legge la casa", async () => {
 test("un segno inventato viene rifiutato anche passando dal centralino", async () => {
   const c = await catena();
   try {
-    const telefono = unTelefono(c.doveIlCentralino, `/telefono/${c.identita.casa}`);
-    await telefono.aperta;
+    const { chiave, dispositivo } = c.dispositivi.abbina({ nome: "telefono" });
+    const telefono = unTelefono(c.doveIlCentralino, `/telefono/${c.identita.casa}`, {
+      chi: dispositivo.id,
+      chiave,
+    });
+    await telefono.dentro;
     await telefono.aspetta("auth_required");
     telefono.manda({ type: "auth", access_token: "me lo sono inventato" });
     assert.equal((await telefono.aspetta("auth_invalid")).type, "auth_invalid");
@@ -230,10 +230,11 @@ test("l'abbinamento passa dal centralino, che il codice non lo vede mai", async 
     /* Al centralino c'e' l'impronta, non il codice. */
     assert.equal([...c.centralino.abbinamenti.keys()][0], impronta(codice));
 
-    const telefono = unTelefono(c.doveIlCentralino, `/abbinamento/${impronta(codice)}`);
-    await telefono.aperta;
-    /* Ci arriva il ponte vero, che parla come Home Assistant. */
-    assert.equal((await telefono.aspetta("auth_required")).type, "auth_required");
+    const telefono = unTelefono(c.doveIlCentralino, `/abbinamento/${impronta(codice)}`, {
+      abbina: true,
+    });
+    /* La stretta di mano riesce: il telefono e' arrivato alla casa giusta. */
+    await telefono.dentro;
     telefono.chiudi();
   } finally {
     await c.spegni();
@@ -246,9 +247,15 @@ test("due telefoni dal centralino sono due fili distinti verso Home Assistant", 
     const uno = c.dispositivi.abbina({ nome: "uno" });
     const due = c.dispositivi.abbina({ nome: "due" });
 
-    const ta = unTelefono(c.doveIlCentralino, `/telefono/${c.identita.casa}`);
-    const tb = unTelefono(c.doveIlCentralino, `/telefono/${c.identita.casa}`);
-    await Promise.all([ta.aperta, tb.aperta]);
+    const ta = unTelefono(c.doveIlCentralino, `/telefono/${c.identita.casa}`, {
+      chi: uno.dispositivo.id,
+      chiave: uno.chiave,
+    });
+    const tb = unTelefono(c.doveIlCentralino, `/telefono/${c.identita.casa}`, {
+      chi: due.dispositivo.id,
+      chiave: due.chiave,
+    });
+    await Promise.all([ta.dentro, tb.dentro]);
     await Promise.all([ta.aspetta("auth_required"), tb.aspetta("auth_required")]);
 
     ta.manda({ type: "auth", access_token: uno.segno });
@@ -267,9 +274,12 @@ test("due telefoni dal centralino sono due fili distinti verso Home Assistant", 
 test("se il telefono se ne va, il suo filo verso Home Assistant si chiude", async () => {
   const c = await catena();
   try {
-    const { segno } = c.dispositivi.abbina({ nome: "passeggero" });
-    const telefono = unTelefono(c.doveIlCentralino, `/telefono/${c.identita.casa}`);
-    await telefono.aperta;
+    const { segno, chiave, dispositivo } = c.dispositivi.abbina({ nome: "passeggero" });
+    const telefono = unTelefono(c.doveIlCentralino, `/telefono/${c.identita.casa}`, {
+      chi: dispositivo.id,
+      chiave,
+    });
+    await telefono.dentro;
     await telefono.aspetta("auth_required");
     telefono.manda({ type: "auth", access_token: segno });
     await telefono.aspetta("auth_ok");
@@ -310,7 +320,7 @@ test("un rifiuto del centralino non si riprova all'infinito", async () => {
     const finto = new Chiamata({
       dove: c.doveIlCentralino,
       identita: impostore,
-      ponte: c.ponte,
+      portiere: c.portiere,
       attesaMassima: 100,
     });
     try {
@@ -338,7 +348,7 @@ test("senza centralino configurato il ponte non prova nemmeno", async () => {
     const chiamata = new Chiamata({
       dove: "",
       identita: new Identita({ cartella: dove }),
-      ponte: null,
+      portiere: null,
     });
     chiamata.avvia();
     assert.equal(chiamata.accesa, false);

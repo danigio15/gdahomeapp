@@ -1,9 +1,19 @@
 /* I telefoni abbinati.
  *
- * Un telefono si abbina una volta e riceve un *segno*: trentadue byte di caso,
- * che restano sul telefono e non tornano mai piu' indietro da qui. Nel file
- * ce n'e' solo l'impronta, quindi chi legge `/data/dispositivi.json` non entra
- * in casa di nessuno — e nemmeno chi ne fa un backup e se lo dimentica in giro.
+ * Un telefono si abbina una volta e riceve **due cose**, e sono diverse
+ * apposta:
+ *
+ *   - il **segno**, che serve a entrare. Qui ne resta solo l'impronta, quindi
+ *     chi legge `/data/dispositivi.json` non entra in casa di nessuno — e
+ *     nemmeno chi ne fa un backup e se lo dimentica in giro.
+ *   - la **chiave del filo**, che serve a cifrare quello che passa dal
+ *     centralino. Quella resta com'e', perche' per cifrare serve la chiave e
+ *     non la sua impronta.
+ *
+ * Chi rubasse questo file avrebbe la seconda e non la prima: potrebbe leggere
+ * del traffico che avesse gia' registrato per conto suo, ma non potrebbe
+ * entrare in casa. Sono due danni diversi, e tenerli separati e' il motivo per
+ * cui sono due cose invece di una.
  *
  * Il segno non e' un segno di Home Assistant, ed e' il punto di tutto
  * l'add-on: vale solo per questo ponte, si stacca da qui senza toccare gli
@@ -14,6 +24,7 @@
 import { join } from "node:path";
 
 import { Archivio } from "./archivio.js";
+import { chiaveDelFiloNuova } from "./cifra.js";
 import { impronta, segnoNuovo, stessoSegreto } from "./segreti.js";
 
 const GIORNO = 24 * 60 * 60 * 1000;
@@ -76,20 +87,34 @@ export class Dispositivi {
    * Il segno esce da qui una volta sola, adesso. Chi lo perde riabbina: non
    * c'e' nessuna strada per rileggerlo, ed e' voluto. */
   abbina({ nome, sistema } = {}) {
-    if (this.lista.length >= this.massimi)
+    if (this.lista.length >= this.massimi) {
       throw new TroppiDispositivi(`sono gia' abbinati ${this.massimi} dispositivi`);
+    }
     const segno = segnoNuovo();
+    const chiave = chiaveDelFiloNuova();
     const dispositivo = {
       id: `dm_${segnoNuovo().slice(0, 16)}`,
       nome: nomePulito(nome) || "Telefono",
       sistema: nomePulito(sistema) || "sconosciuto",
       impronta: impronta(segno),
+      chiave,
       natoIl: this.adesso(),
       vistoIl: this.adesso(),
     };
     this.lista.push(dispositivo);
     this.archivio.salva();
-    return { dispositivo: this._pulito(dispositivo), segno };
+    return { dispositivo: this._pulito(dispositivo), segno, chiave };
+  }
+
+  /* La chiave del filo di un telefono, per cifrare quello che gli si manda.
+   *
+   * Torna `null` per un telefono che non c'e', e anche per uno abbinato prima
+   * che le chiavi esistessero: quello si riabbina, e finche' non lo fa parla
+   * in chiaro come faceva prima. */
+  chiaveDi(id) {
+    const dispositivo = this.lista.find((uno) => uno.id === id);
+    const chiave = dispositivo?.chiave;
+    return typeof chiave === "string" && chiave.length === 64 ? chiave : null;
   }
 
   /* Chi bussa con un segno: `null` se non e' nessuno. */

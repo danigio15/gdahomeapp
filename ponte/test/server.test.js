@@ -15,6 +15,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { accetta } from "../src/presa.js";
+import { telefonoCifrato } from "./telefono-cifrato.js";
 import { alzaIlPonte } from "../src/index.js";
 import { rotta } from "../src/server.js";
 
@@ -275,23 +276,21 @@ test("abbinato dalla console, il telefono entra dal filo e parla con la casa", a
   const b = await banco();
   try {
     const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
-    const { segno } = await (
+    const { segno, chiave, dispositivo } = await (
       await prendi(`${b.app}/abbinamento`, {
         method: "POST",
         body: JSON.stringify({ codice, nome: "Pixel", sistema: "android" }),
       })
     ).json();
 
-    const presa = new WebSocket(`${b.filo}/casa`);
-    const detti = [];
-    presa.addEventListener("message", (evento) => detti.push(JSON.parse(evento.data)));
-    await new Promise((ok, no) => {
-      presa.addEventListener("open", ok);
-      presa.addEventListener("error", () => no(new Error("non entra")));
-    });
-    await attendi(() => detti.some((uno) => uno.type === "auth_required"));
-    presa.send(JSON.stringify({ type: "auth", access_token: segno }));
-    await attendi(() => detti.some((uno) => uno.type === "auth_ok"));
+    /* Anche in casa si passa dal portiere, quindi si parla cifrato: una strada
+     * sola invece di due. */
+    const telefono = telefonoCifrato(`${b.filo}/casa`, { chi: dispositivo.id, chiave });
+    await telefono.dentro;
+    await telefono.aspetta("auth_required");
+    telefono.manda({ type: "auth", access_token: segno });
+    await telefono.aspetta("auth_ok");
+    const presa = telefono.presa;
 
     const stato = await (await prendi(`${b.consolle}/api/stato`)).json();
     assert.equal(stato.dispositivi[0].collegati, 1);
@@ -349,38 +348,30 @@ test("la console stacca un telefono e ne butta giu' il filo", async () => {
   const b = await banco();
   try {
     const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
-    const { segno, dispositivo } = await (
+    const { segno, chiave, dispositivo } = await (
       await prendi(`${b.app}/abbinamento`, {
         method: "POST",
         body: JSON.stringify({ codice, nome: "via" }),
       })
     ).json();
 
-    const presa = new WebSocket(`${b.filo}/casa`);
-    const detti = [];
-    presa.addEventListener("message", (evento) => detti.push(JSON.parse(evento.data)));
-    const chiusa = new Promise((ok) => presa.addEventListener("close", ok));
-    await new Promise((ok) => presa.addEventListener("open", ok));
-    await attendi(() => detti.some((uno) => uno.type === "auth_required"));
-    presa.send(JSON.stringify({ type: "auth", access_token: segno }));
-    await attendi(() => detti.some((uno) => uno.type === "auth_ok"));
+    const telefono = telefonoCifrato(`${b.filo}/casa`, { chi: dispositivo.id, chiave });
+    await telefono.dentro;
+    await telefono.aspetta("auth_required");
+    telefono.manda({ type: "auth", access_token: segno });
+    await telefono.aspetta("auth_ok");
 
     const staccato = await prendi(`${b.consolle}/api/dispositivi/${dispositivo.id}`, {
       method: "DELETE",
     });
     assert.equal(staccato.status, 200);
     assert.equal((await staccato.json()).filiChiusi, 1);
-    await chiusa;
+    await telefono.chiusa;
 
-    /* E con quel segno non si rientra. */
-    const riprova = new WebSocket(`${b.filo}/casa`);
-    const ridetti = [];
-    riprova.addEventListener("message", (evento) => ridetti.push(JSON.parse(evento.data)));
-    await new Promise((ok) => riprova.addEventListener("open", ok));
-    await attendi(() => ridetti.some((uno) => uno.type === "auth_required"));
-    riprova.send(JSON.stringify({ type: "auth", access_token: segno }));
-    await attendi(() => ridetti.some((uno) => uno.type === "auth_invalid"));
-    riprova.close();
+    /* E con quel telefono non si rientra: il portiere non lo conosce piu'. */
+    const riprova = telefonoCifrato(`${b.filo}/casa`, { chi: dispositivo.id, chiave });
+    await assert.rejects(riprova.dentro, /riabbina/);
+    await riprova.chiusa;
   } finally {
     await b.spegni();
   }

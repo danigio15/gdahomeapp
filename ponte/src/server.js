@@ -102,7 +102,14 @@ export const rotta = (richiesta) => {
 
 /* ─── La porta dell'app ──────────────────────────────────────────────────── */
 
-export function costruisciLaPortaDellApp({ ponte, dispositivi, abbinamento, registro, chiamata }) {
+export function costruisciLaPortaDellApp({
+  ponte,
+  portiere,
+  dispositivi,
+  abbinamento,
+  registro,
+  chiamata,
+}) {
   const server = createServer(async (richiesta, risposta) => {
     /* Qui, e **solo** qui.
      *
@@ -161,7 +168,7 @@ export function costruisciLaPortaDellApp({ ponte, dispositivi, abbinamento, regi
         throw errore;
       }
       try {
-        const { dispositivo, segno } = dispositivi.abbina({
+        const { dispositivo, segno, chiave } = dispositivi.abbina({
           nome: corpo.nome,
           sistema: corpo.sistema,
         });
@@ -170,7 +177,10 @@ export function costruisciLaPortaDellApp({ ponte, dispositivi, abbinamento, regi
          * non esiste piu'. */
         chiamata?.chiudiLAbbinamento();
         registro.info(`abbinato «${dispositivo.nome}»`);
-        json(risposta, { segno, dispositivo }, 201);
+        /* Il segno **e** la chiave del filo: sono due cose diverse e servono
+         * tutte e due. Senza la chiave il telefono farebbe la stretta di mano
+         * e poi non capirebbe una parola. */
+        json(risposta, { segno, chiave, dispositivo }, 201);
       } catch (errore) {
         if (errore instanceof TroppiDispositivi) {
           male(risposta, 409, errore.message);
@@ -190,7 +200,10 @@ export function costruisciLaPortaDellApp({ ponte, dispositivi, abbinamento, regi
       return;
     }
     const presa = accetta(richiesta, socket, {});
-    if (presa) ponte.accogli(presa, { da: socket.remoteAddress || "?" });
+    /* Anche in casa si passa dal portiere: la rete di casa non e' cifrata, e
+     * chi ci sta sopra non deve poter leggere piu' di chi sta sul centralino.
+     * E soprattutto: cosi' l'app ha **una strada sola** invece di due. */
+    if (presa) portiere.accogli(presa, { da: socket.remoteAddress || "?" });
   });
 
   return server;
