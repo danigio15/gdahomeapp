@@ -50,7 +50,7 @@ class PonteVero {
     }
   }
 
-  static Future<PonteVero> accendi(CasaFinta casa) async {
+  static Future<PonteVero> accendi(CasaFinta casa, {String? centralino}) async {
     final archivio = await Directory.systemTemp.createTemp('ponte-collaudo-');
     final app = await _unaPortaLibera();
     final consolle = await _unaPortaLibera();
@@ -64,6 +64,7 @@ class PonteVero {
         'minuti_del_codice': 5,
         'giorni_di_silenzio': 90,
         'registro': 'debug',
+        if (centralino != null) 'centralino': centralino,
       }),
     );
 

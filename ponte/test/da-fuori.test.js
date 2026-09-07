@@ -23,7 +23,10 @@ import { Centralino } from "../../centralino/src/centralino.js";
 import { costruisciIlServer } from "../../centralino/src/server.js";
 
 import { Chiamata } from "../src/chiamata.js";
+import { fileURLToPath } from "node:url";
+
 import { Identita } from "../src/identita.js";
+import { costruisciLaConsole } from "../src/server.js";
 import { Ritorno } from "../src/ritorno.js";
 import { Ponte } from "../src/ponte.js";
 import { Portiere } from "../src/portiere.js";
@@ -229,6 +232,49 @@ test("un segno inventato viene rifiutato anche passando dal centralino", async (
     assert.equal((await telefono.aspetta("auth_invalid")).type, "auth_invalid");
     await telefono.chiusa;
     assert.equal(c.ha.prese.length, 0, "Home Assistant non e' stata nemmeno disturbata");
+  } finally {
+    await c.spegni();
+  }
+});
+
+test("il codice fabbricato dalla console arriva al centralino da solo", async () => {
+  /* La prova che mancava, e si vedeva: le altre chiamano `apriLAbbinamento` a
+   * mano, che e' comodo e non e' quello che succede. Nel mondo vero il codice
+   * nasce da un dito che preme un bottone sulla console, e da li' deve
+   * arrivare al centralino **senza che nessuno lo dica**.
+   *
+   * Non arrivava. La console riceveva la chiamata ma non la passava alla
+   * funzione che risponde agli sportelli, quindi `chiamata?.apriLAbbinamento`
+   * era una chiamata su `undefined`: nessun errore, nessun registro, e
+   * l'abbinamento da fuori casa semplicemente non funzionava mai. Il punto
+   * interrogativo, messo per non far esplodere le prove in cui il centralino
+   * non c'e', si e' mangiato l'unico segnale che ci sarebbe stato. */
+  const c = await catena();
+  try {
+    const console_ = costruisciLaConsole({
+      ponte: c.ponte,
+      casa: c.casa,
+      dispositivi: c.dispositivi,
+      abbinamento: c.abbinamento,
+      opzioni: { portaDellApp: 8098, dispositiviMassimi: 10 },
+      registro: null,
+      chiamata: c.chiamata,
+      identita: c.identita,
+      cartellaDellaConsole: fileURLToPath(new URL("../console", import.meta.url)),
+    });
+    await new Promise((ok) => console_.listen(0, "127.0.0.1", ok));
+
+    const risposta = await fetch(
+      `http://127.0.0.1:${console_.address().port}/api/codice`,
+      { method: "POST" },
+    );
+    const { codice } = await risposta.json();
+    assert.match(codice, /^[0-9A-Z]{8}$/);
+
+    /* E il centralino lo sa, senza che gliel'abbia detto la prova. */
+    await attendi(() => c.centralino.abbinamenti.has(impronta(codice)));
+
+    await new Promise((ok) => console_.close(ok));
   } finally {
     await c.spegni();
   }

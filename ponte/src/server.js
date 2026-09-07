@@ -221,11 +221,19 @@ export function costruisciLaConsole({
   dispositivi,
   abbinamento,
   opzioni,
-  registro,
+  registro: scritto,
   chiamata,
   identita,
   cartellaDellaConsole,
 }) {
+  /* Un registro c'e' sempre, anche quando non gliene danno uno.
+   *
+   * Non e' pignoleria: qui dentro il registro si scrive **dentro il gestore
+   * delle richieste**, e anche dentro il `catch` che dovrebbe salvare la
+   * situazione. Se non c'e', il salvagente affonda insieme al naufrago: la
+   * risposta non viene mai chiusa, e chi ha chiamato aspetta per sempre. Un
+   * pezzo che manca deve dare un 500, non una rotella che gira. */
+  const registro = scritto ?? { info() {}, attenzione() {}, errore() {} };
   return createServer(async (richiesta, risposta) => {
     const via = rotta(richiesta);
     const metodo = String(richiesta.method || "").toUpperCase();
@@ -243,6 +251,8 @@ export function costruisciLaConsole({
           abbinamento,
           opzioni,
           registro,
+          chiamata,
+          identita,
         });
       } catch (errore) {
         registro.errore(`la console e' inciampata: ${errore?.message || errore}`);

@@ -1,0 +1,211 @@
+/// Il collaudo di quello che l'app promette: **entrare da fuori senza che
+/// nessuno abbia configurato niente**.
+///
+/// La catena intera, tutta vera tranne Home Assistant:
+///
+///     app (Dart)  ──►  centralino (node)  ◄──  ponte (node)  ──►  HA finta
+///
+/// Il telefono qui **non ha nessun indirizzo della casa**. Non ce l'ha e non
+/// glielo si da': ha otto lettere, e basta quello. E' la differenza fra
+/// «funziona se apri una porta sul router» e «funziona», ed e' l'unica prova
+/// che la dimostra per intero — tutte le altre hanno un finto in mezzo proprio
+/// nel punto che conta.
+///
+/// Serve `node`. Se non c'e', le prove si saltano invece di rompersi.
+@Timeout(Duration(seconds: 120))
+library;
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:gdahome/casa/archivio_delle_case.dart';
+import 'package:gdahome/casa/cassaforte.dart';
+import 'package:gdahome/casa/collegamento.dart';
+import 'package:gdahome/ponte/abbinamento.dart';
+import 'package:gdahome/ponte/errori.dart';
+import 'package:gdahome/ponte/indirizzo.dart';
+
+import 'casa_finta.dart';
+import 'centralino_vero.dart';
+import 'ponte_vero.dart';
+
+void main() {
+  if (!PonteVero.cENode) {
+    test('il collaudo da fuori vuole node, che qui non c\'e\'', () {
+      markTestSkipped('node non e\' installato');
+    }, skip: true);
+    return;
+  }
+
+  late CasaFinta casa;
+  late CentralinoVero centralino;
+  late PonteVero ponte;
+  late IndirizzoDelCentralino dove;
+
+  setUp(() async {
+    casa = await CasaFinta.alza();
+    casa.entita = [
+      CasaFinta.unaEntita('light.cucina', 'on', nome: 'Luce cucina'),
+      CasaFinta.unaEntita('light.salotto', 'off', nome: 'Luce salotto'),
+    ];
+
+    centralino = await CentralinoVero.accendi();
+    dove = IndirizzoDelCentralino.leggi(centralino.dove)!;
+    ponte = await PonteVero.accendi(casa, centralino: centralino.dove);
+
+    /* Il ponte chiama fuori da solo appena si alza: si aspetta che sia
+     * arrivato, se no il telefono bussa a una casa che non c'e' ancora. */
+    await _finoA(
+      () async => await centralino.quanteCase() == 1,
+      perche: 'il ponte non e\' arrivato al centralino:\n'
+          '${ponte.registro.join('\n')}',
+    );
+  });
+
+  tearDown(() async {
+    await ponte.spegni();
+    await centralino.spegni();
+    await casa.spegni();
+  });
+
+  /// Abbina col solo codice e apre il collegamento, **senza mai dare all'app
+  /// un indirizzo della casa**.
+  Future<Collegamento> abbinaEApri() async {
+    final abbinato = await Abbinamento.colCodice(
+      centralino: dove,
+      codice: await ponte.codiceDiAbbinamento(),
+      nome: 'Telefono in stazione',
+      sistema: 'android',
+    );
+
+    final archivio = ArchivioDelleCase(CassaforteInMemoria());
+    await archivio.apri();
+    await archivio.aggiungi(
+      nome: 'Casa lontana',
+      segno: abbinato.segno,
+      identificativo: abbinato.identificativo,
+      chiave: abbinato.chiave,
+      casaAlCentralino: abbinato.casaAlCentralino,
+      centralino: abbinato.centralino,
+    );
+
+    final collegamento = Collegamento(archivio: archivio);
+    await collegamento.apri();
+    return collegamento;
+  }
+
+  test('col solo codice si abbina, senza sapere dove sia la casa', () async {
+    final codice = await ponte.codiceDiAbbinamento();
+
+    /* Il centralino sa che c'e' un abbinamento in corso, ma il codice non lo
+     * ha mai visto: gli e' arrivata la sua impronta. */
+    final abbinato = await Abbinamento.colCodice(
+      centralino: dove,
+      codice: codice,
+      nome: 'Telefono in stazione',
+      sistema: 'android',
+    );
+
+    expect(abbinato.segno, matches(RegExp(r'^[0-9a-f]{64}$')));
+    expect(abbinato.chiave, matches(RegExp(r'^[0-9a-f]{64}$')));
+    expect(abbinato.identificativo, startsWith('dm_'));
+    expect(abbinato.casaAlCentralino, matches(RegExp(r'^casa_[0-9a-f]{32}$')));
+    expect(abbinato.centralino, dove);
+
+    /* E il ponte, dalla sua parte, ha registrato il telefono. */
+    final stato = await ponte.statoDellaConsole();
+    final telefoni = stato['dispositivi'] as List<dynamic>;
+    expect(telefoni.length, 1);
+    expect((telefoni.first as Map)['nome'], 'Telefono in stazione');
+  });
+
+  test('un codice inventato non abbina niente, e non dice di piu\'', () async {
+    await ponte.codiceDiAbbinamento();
+    await expectLater(
+      Abbinamento.colCodice(
+        centralino: dove,
+        codice: 'INVENTA2',
+        nome: 'x',
+        sistema: 'android',
+      ),
+      /* Il centralino non ha nessun abbinamento aperto su quell'impronta:
+       * chiude, e non c'e' niente da cui capire se il codice esisteva. */
+      throwsA(isA<ErroreDelPonte>()),
+    );
+    expect((await ponte.statoDellaConsole())['dispositivi'], isEmpty);
+  });
+
+  test('abbinato dal centralino, il telefono legge la casa e la comanda', () async {
+    final collegamento = await abbinaEApri();
+    try {
+      expect(collegamento.comeVa, ComeVa.aperta);
+      /* Non «da dentro»: questa casa non ha nessun indirizzo di rete locale
+       * nell'archivio, e ci si arriva solo dal centralino. */
+      expect(collegamento.daDove, DaDove.dalCentralino);
+
+      final stato = collegamento.stato!;
+      expect(stato.quante, 2);
+      expect(stato['light.cucina']!.accesa, isTrue);
+
+      /* E il comando torna indietro fino a Home Assistant. */
+      casa.arrivati.clear();
+      await stato.comanda('turn_off', 'light.cucina');
+      final comando = casa.arrivati.firstWhere(
+        (uno) => uno['type'] == 'call_service',
+      );
+      expect(comando['domain'], 'light');
+      expect(comando['service'], 'turn_off');
+      expect(comando['target'], {'entity_id': 'light.cucina'});
+    } finally {
+      await collegamento.chiudi();
+    }
+  });
+
+  test('un cambiamento in casa arriva al telefono passando dal centralino', () async {
+    final collegamento = await abbinaEApri();
+    try {
+      expect(collegamento.stato!['light.salotto']!.accesa, isFalse);
+      casa.cambia('light.salotto', 'on', nome: 'Luce salotto');
+      await _finoA(() async => collegamento.stato!['light.salotto']!.accesa);
+    } finally {
+      await collegamento.chiudi();
+    }
+  });
+
+  test('il centralino instrada e non capisce', () async {
+    /* La promessa che regge tutto il resto. Il centralino vede passare i
+     * byte di questo collegamento: se ci si potesse leggere dentro, «non
+     * serve fidarsi di chi lo gestisce» sarebbe una frase e non un fatto.
+     *
+     * Che sia vero byte per byte lo prova `ponte/test/cieco.test.js`, che
+     * registra tutto quello che attraversa il centralino e controlla che non
+     * ci sia dentro niente di leggibile. Qui si prova il fatto piu' piccolo e
+     * piu' concreto: il centralino conosce l'identificativo della casa, che
+     * gli serve a instradare, e non conosce nessun segno. */
+    final collegamento = await abbinaEApri();
+    try {
+      final salute = await centralino.salute();
+      expect(salute['case'], 1);
+      expect(salute['telefoni'], 1);
+      expect(
+        salute.toString(),
+        isNot(contains(collegamento.casa!.segno)),
+        reason: 'il segno al centralino non passa',
+      );
+    } finally {
+      await collegamento.chiudi();
+    }
+  });
+
+}
+
+Future<void> _finoA(
+  Future<bool> Function() condizione, {
+  Duration entro = const Duration(seconds: 20),
+  String perche = 'l\'attesa e\' scaduta',
+}) async {
+  final fine = DateTime.now().add(entro);
+  while (DateTime.now().isBefore(fine)) {
+    if (await condizione()) return;
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+  }
+  throw StateError(perche);
+}
