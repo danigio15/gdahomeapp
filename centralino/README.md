@@ -127,6 +127,13 @@ ancora niente di condiviso da cui riconoscersi. I telefoni gia' abbinati
 restano al sicuro comunque: la loro chiave non e' mai passata di qui, e senza
 quella non si fabbrica un filo che regga.
 
-La strada per chiudere anche quella e' il codice mostrato come QR:
-duecentocinquantasei bit invece di otto lettere, e all'attacco non resta niente
-da indovinare.
+Il codice a quadretti ne ha tolta meta'. Il codice adesso e' di **sedici**
+lettere — ottanta bit — e la sua impronta, che e' l'unica cosa che arriva fin
+qui, non si prova piu' a raffica in casa propria: otto lettere erano quaranta
+bit, e quaranta bit su una scheda grafica cadono in qualche minuto, cioe'
+dentro i cinque in cui il codice vale.
+
+L'altra meta' resta aperta: quella stretta di mano non e' autenticata. Si
+chiude legandola al codice stesso — usarlo come chiave del filo
+dell'abbinamento — e adesso che il codice e' lungo si puo' fare davvero, perche'
+chi sta in mezzo non ce l'ha e non lo indovina.

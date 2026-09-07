@@ -24,9 +24,18 @@
  * riscritto per **attaccare** — non che guarda, ma che si mette in mezzo —
  * potrebbe intromettersi nell'abbinamento di un telefono nuovo. I telefoni
  * gia' abbinati restano al sicuro comunque, perche' il loro segno non e' mai
- * passato di li'. La strada per chiudere anche quella e' il codice mostrato
- * come QR: duecentocinquantasei bit invece di otto lettere, e l'attacco non
- * ha piu' niente da indovinare.
+ * passato di li'.
+ *
+ * Il codice a quadretti ha tolto meta' del problema. Il codice adesso e' di
+ * sedici lettere — ottanta bit — e la sua impronta, che e' l'unica cosa che
+ * arriva al centralino, non si prova piu' a raffica in casa propria: otto
+ * lettere erano quaranta bit, e quaranta bit cadono in qualche minuto.
+ *
+ * L'altra meta' e' ancora qui: questa stretta di mano non e' autenticata, e
+ * chi sta in mezzo puo' farne due invece di lasciarne passare una. Si chiude
+ * legandola al codice stesso — usarlo come chiave del filo dell'abbinamento —
+ * e adesso che il codice e' lungo si puo' fare davvero: chi sta in mezzo non
+ * ce l'ha, e non lo indovina. E' la prossima cosa da fare qui dentro.
  */
 
 import {

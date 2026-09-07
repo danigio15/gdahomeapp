@@ -1,6 +1,6 @@
 /* Come si torna a questa casa.
  *
- * Un telefono che si abbina battendo otto lettere non sa niente di dove sia
+ * Un telefono che si abbina inquadrando un quadretto non sa niente di dove sia
  * finito: non ha battuto nessun indirizzo, ed e' apposta — chiedere a
  * qualcuno l'indirizzo della propria casa vuol dire chiedergli di andarlo a
  * cercare nel router. Quindi glielo diciamo noi, una volta sola, mentre si

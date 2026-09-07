@@ -79,14 +79,47 @@ h2 {
   margin: 0 0 12px;
 }
 
+/* Il quadretto.
+ *
+ * Sfondo bianco sempre, anche col tema scuro: un QR chiaro su fondo scuro
+ * molti lettori non lo prendono, e chi guarda non ha modo di capire perche'.
+ * La cornice bianca intorno non e' estetica — e' la «zona tranquilla», e senza
+ * quella il codice non si legge nemmeno se e' perfetto. */
+.quadretto {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  margin: 4px auto 12px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--bordo);
+}
+
+/* Le sedici lettere, per chi non puo' inquadrare: chiuse, ma a un tocco. */
+.a-mano {
+  border-top: 1px solid var(--bordo);
+  padding-top: 10px;
+  margin-bottom: 12px;
+}
+
+.a-mano summary {
+  cursor: pointer;
+  color: var(--tenue);
+  font-size: 0.9rem;
+}
+
+.a-mano .spiegazione {
+  margin-top: 8px;
+}
+
 .codice {
   font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  font-size: 2rem;
-  letter-spacing: 0.28em;
+  font-size: 1.5rem;
+  letter-spacing: 0.12em;
   margin: 8px 0 4px;
   /* La spaziatura larga spinge l'ultima lettera fuori dalla scatola: questo la
    * rimette dentro. */
-  text-indent: 0.28em;
+  text-indent: 0.12em;
   word-break: break-all;
 }
 

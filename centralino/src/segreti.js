@@ -37,15 +37,33 @@ export function segnoNuovo() {
 /* L'alfabeto dei codici di abbinamento.
  *
  * Niente 0/O, niente 1/I/L: un codice si legge dallo schermo del computer e si
- * batte sul telefono, e quelle coppie si sbagliano. Ventotto lettere alla
- * ottava fanno trentasette milioni di miliardi di codici, che per una finestra
- * di cinque minuti e' molto piu' che abbastanza. */
+ * batte sul telefono, e quelle coppie si sbagliano.
+ *
+ * Trentuno lettere fanno poco meno di cinque bit l'una. Sedici lettere sono
+ * quindi ottanta bit — un numero che non si indovina nemmeno provandolo
+ * lontano da qui. E lontano da qui e' il caso che conta: al centralino il
+ * codice non arriva mai, ci arriva la sua **impronta**, ma un'impronta si
+ * prova a raffica in casa propria, senza che nessuno lo veda e senza nessun
+ * limite di tentativi. Otto lettere sono quaranta bit, e quaranta bit su una
+ * scheda grafica cadono in qualche minuto: dentro i cinque minuti in cui il
+ * codice vale. Sedici no, e non cadranno.
+ *
+ * Sedici lettere non si battono volentieri, ed e' il motivo per cui c'e' il
+ * codice a quadretti: si inquadra, e non si batte niente. Chi proprio deve
+ * scriverle a mano le trova sotto al quadretto, in quattro gruppi da
+ * quattro. */
 const ALFABETO = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 
-export function codiceNuovo(quante = 8) {
+export function codiceNuovo(quante = 16) {
   let codice = "";
   for (let i = 0; i < quante; i += 1) codice += ALFABETO[randomInt(ALFABETO.length)];
   return codice;
+}
+
+/* Come si legge: quattro gruppi da quattro. Un codice di sedici lettere di
+ * fila non lo copia nessuno senza perdere il segno. */
+export function codiceAGruppi(codice, quanti = 4) {
+  return String(codice ?? "").replace(new RegExp(`(.{${quanti}})(?=.)`, "g"), "$1-");
 }
 
 /* Chi lo batte a mano scrive minuscolo, mette spazi, o un trattino in mezzo. */

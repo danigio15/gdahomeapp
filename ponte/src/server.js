@@ -17,7 +17,9 @@ import { extname, join, normalize } from "node:path";
 
 import { CodiceSbagliato, TroppiTentativi } from "./abbinamento.js";
 import { TroppiDispositivi } from "./dispositivi.js";
+import { invito } from "./invito.js";
 import { accetta, eUnaSalita } from "./presa.js";
+import { qrInSvg } from "./qr.js";
 import { impronta } from "./segreti.js";
 
 /* Un corpo piu' grande di cosi' non e' un abbinamento. */
@@ -183,7 +185,7 @@ export function costruisciLaPortaDellApp({
          * e poi non capirebbe una parola.
          *
          * E il ritorno: dove ribussare domani. Chi si e' abbinato battendo
-         * otto lettere non ha mai visto un indirizzo. */
+         * un quadretto non ha mai visto un indirizzo. */
         json(
           risposta,
           { segno, chiave, dispositivo, ritorno: (await ritorno?.cosaDire()) ?? null },
@@ -228,6 +230,7 @@ export function costruisciLaConsole({
   registro: scritto,
   chiamata,
   identita,
+  ritorno,
   cartellaDellaConsole,
 }) {
   /* Un registro c'e' sempre, anche quando non gliene danno uno.
@@ -257,6 +260,7 @@ export function costruisciLaConsole({
           registro,
           chiamata,
           identita,
+          ritorno,
         });
       } catch (errore) {
         registro.errore(`la console e' inciampata: ${errore?.message || errore}`);
@@ -282,6 +286,7 @@ async function api({
   registro,
   chiamata,
   identita,
+  ritorno,
 }) {
   if (via === "/api/stato" && metodo === "GET") {
     const saluto = await casa.saluta();
@@ -318,13 +323,55 @@ async function api({
      * si presenta con questo codice. Il codice li' non arriva mai. */
     chiamata?.apriLAbbinamento(impronta(codice));
     registro.info("codice di abbinamento fabbricato dalla console");
-    json(risposta, { codice, scadeIl });
+    json(risposta, { codice, scadeIl, invito: await unInvito(codice, ritorno, chiamata) });
+    return;
+  }
+
+  /* Il codice che c'e' adesso, per chi ricarica la pagina.
+   *
+   * Senza, una pagina ricaricata mentre il codice e' ancora buono lo perde di
+   * vista e costringe a fabbricarne un altro — cioe' a buttare via quello
+   * valido, e a ricominciare da capo davanti a chi sta inquadrando. */
+  if (via === "/api/codice" && metodo === "GET") {
+    const vivo = abbinamento.vivo();
+    if (!vivo) {
+      json(risposta, { attivo: false });
+      return;
+    }
+    json(risposta, {
+      attivo: true,
+      ...vivo,
+      invito: await unInvito(vivo.codice, ritorno, chiamata),
+    });
     return;
   }
 
   if (via === "/api/codice" && metodo === "DELETE") {
     chiamata?.chiudiLAbbinamento();
     json(risposta, { annullato: abbinamento.annulla() });
+    return;
+  }
+
+  /* Il codice a quadretti, disegnato qui.
+   *
+   * Il disegno lo fa il ponte e non la pagina: cosi' la console resta tre
+   * file senza niente da scaricare, e il codice non passa mai per un
+   * indirizzo — sta nel corpo di una risposta che non si mette in cache. */
+  if (via === "/api/qr.svg" && metodo === "GET") {
+    const vivo = abbinamento.vivo();
+    if (!vivo) {
+      male(risposta, 404, "nessun codice di abbinamento e' attivo");
+      return;
+    }
+    risposta.writeHead(200, {
+      "content-type": "image/svg+xml; charset=utf-8",
+      "cache-control": "no-store",
+    });
+    risposta.end(
+      qrInSvg(await unInvito(vivo.codice, ritorno, chiamata), {
+        titolo: "Codice di abbinamento",
+      }),
+    );
     return;
   }
 
@@ -359,6 +406,19 @@ async function api({
   }
 
   male(risposta, 404, "qui non c'e' niente");
+}
+
+/* Quello che va dentro il codice a quadretti: il codice, e come si arriva a
+ * questa casa. Se il Supervisor non risponde si va avanti con quello che c'e':
+ * un invito senza indirizzi funziona lo stesso dal centralino, e uno senza
+ * centralino funziona lo stesso in casa. */
+async function unInvito(codice, ritorno, chiamata) {
+  const dove = (await ritorno?.cosaDire()) ?? {};
+  return invito({
+    codice,
+    centralino: dove.centralino || chiamata?.dove || "",
+    indirizzi: dove.indirizzi ?? [],
+  });
 }
 
 /* I file della console. Nessun percorso puo' uscire dalla sua cartella. */

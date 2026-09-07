@@ -52,8 +52,18 @@
     }
   }
 
+  /* Sedici lettere di fila non le copia nessuno senza perdere il segno:
+   * quattro gruppi da quattro si copiano un gruppo per volta. */
+  function aGruppi(codice) {
+    return String(codice).replace(/(.{4})(?=.)/g, "$1-");
+  }
+
   function disegnaIlCodice(codice, scadeIl) {
-    trova("codice").textContent = codice;
+    trova("codice").textContent = aGruppi(codice);
+    /* La marca del tempo non e' scaramanzia: senza, il browser rimette il
+     * quadretto di prima quando se ne fabbrica un altro nello stesso minuto,
+     * e chi inquadra si abbina con un codice gia' speso. */
+    trova("quadretto").src = "api/qr.svg?" + Date.now();
     trova("codice-vivo").hidden = false;
     trova("annulla").hidden = false;
     if (quandoScade) clearInterval(quandoScade);
@@ -159,10 +169,29 @@
         trova("fabbrica").disabled = stato.dispositivi.length >= stato.massimi;
         if (!stato.abbinamento.attivo) nascondiIlCodice();
         avvisa("");
+        /* Un codice ancora buono si rimette a schermo da solo.
+         *
+         * Serve a un caso che capita davvero: la pagina si ricarica — un tocco
+         * per sbaglio, l'add-on che si riavvia, la scheda che si riapre —
+         * mentre il codice vale ancora. Senza questo, chi sta inquadrando deve
+         * fabbricarne un altro, cioe' buttare via un codice buono e
+         * ricominciare davanti a qualcuno che aspetta. */
+        if (stato.abbinamento.attivo && trova("codice-vivo").hidden) return riprendiIlCodice();
+        return undefined;
       })
       .catch(function (errore) {
         trova("stato-casa").textContent = "La console non riesce a leggere lo stato.";
         avvisa(errore.message);
+      });
+  }
+
+  function riprendiIlCodice() {
+    return chiedi("api/codice")
+      .then(function (vivo) {
+        if (vivo.attivo) disegnaIlCodice(vivo.codice, vivo.scadeIl);
+      })
+      .catch(function () {
+        /* Se non si riesce a riprenderlo si resta senza: il bottone e' li'. */
       });
   }
 

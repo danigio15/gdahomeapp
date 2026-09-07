@@ -3,10 +3,15 @@
  * ─── Perche' un QR ────────────────────────────────────────────────────────
  *
  * Otto lettere si battono in venti secondi, e in quei venti secondi si
- * sbagliano. Un QR si inquadra in tre, e — la parte che conta — puo' portarne
- * molte di piu': il codice lungo che ci sta dentro non lo indovina nessuno,
- * mentre otto lettere, se qualcuno si mettesse in mezzo mentre un telefono
- * nuovo si abbina, sarebbero poche.
+ * sbagliano. Un quadretto si inquadra in tre — e questa e' solo la meta'
+ * comoda.
+ *
+ * L'altra e' che dentro un quadretto ci sta molto di piu' di quello che si
+ * batte a mano. Ci sta un codice di **sedici** lettere invece di otto —
+ * ottanta bit invece di quaranta, e quaranta bit li prova a raffica in casa
+ * propria chiunque veda passare l'impronta del codice. E ci sta anche
+ * **dove** sta la casa: quale centralino chiama, su quali indirizzi la si
+ * trova. Chi inquadra non sa niente di tutto questo e non deve saperlo.
  *
  * ─── Perche' scritto a mano ───────────────────────────────────────────────
  *

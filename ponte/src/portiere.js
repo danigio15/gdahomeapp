@@ -208,8 +208,9 @@ export class Portiere {
     const { dispositivo, segno, chiave } = abbinato;
     this.chiamata?.chiudiLAbbinamento();
     this.registro.info(`abbinato «${dispositivo.nome}» dal centralino`);
-    /* Dove tornare. Chi si e' abbinato con otto lettere non ha battuto nessun
-     * indirizzo, e senza questo non saprebbe dove ribussare domani. Se il
+    /* Dove tornare. Chi si e' abbinato inquadrando un quadretto non ha
+     * battuto nessun indirizzo, e senza questo non saprebbe dove ribussare
+     * domani. Se il
      * Supervisor non risponde si va avanti lo stesso, con quello che c'e': un
      * abbinamento non si fa fallire per un indirizzo mancante. */
     const ritorno = (await this.ritorno?.cosaDire()) ?? null;

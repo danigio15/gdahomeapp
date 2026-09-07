@@ -16,12 +16,22 @@
       <section class="scheda">
         <h2>Abbinare un telefono</h2>
         <p class="spiegazione">
-          Il codice vale una volta sola e per pochi minuti. Si batte sull'app, nella schermata di
-          primo avvio.
+          Apri gdahome sul telefono e inquadra il quadretto. Vale una volta sola e per pochi
+          minuti.
         </p>
         <div id="codice-vivo" hidden>
-          <p class="codice" id="codice"></p>
+          <!-- Il disegno lo fa il ponte: la console non scarica niente da
+               nessuna parte, e il codice non passa mai per un indirizzo. -->
+          <img id="quadretto" class="quadretto" alt="Codice di abbinamento" />
           <p class="riga-di-stato" id="scadenza"></p>
+          <details class="a-mano">
+            <summary>Non riesci a inquadrarlo?</summary>
+            <p class="spiegazione">
+              Nell'app tocca «Scrivilo a mano» e batti queste lettere. Sono sedici: si copiano un
+              gruppo per volta.
+            </p>
+            <p class="codice" id="codice"></p>
+          </details>
         </div>
         <div class="bottoni">
           <button id="fabbrica" type="button">Fabbrica un codice</button>

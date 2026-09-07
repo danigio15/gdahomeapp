@@ -66,10 +66,19 @@ la console.
 
 ## Abbinare un telefono
 
-Dalla console si preme **Fabbrica un codice**: escono otto lettere, che valgono
-**cinque minuti e una volta sola**. Si battono sull'app, e il telefono e'
-dentro. Da quel momento l'app entra da sola, e nella console compare col suo
-nome e con un pallino verde quando e' collegata.
+Dalla console si preme **Fabbrica un codice**: compare un **quadretto**, che
+vale **cinque minuti e una volta sola**. Si apre gdahome sul telefono, lo si
+inquadra, e il telefono e' dentro. Da quel momento l'app entra da sola, e nella
+console compare col suo nome e con un pallino verde quando e' collegata.
+
+Dentro al quadretto non c'e' solo il codice: c'e' anche **dove sta questa
+casa** — a quale centralino chiama, e su quali indirizzi la si trova stando sul
+Wi-Fi. E' il motivo per cui inquadrando non si deve battere nient'altro,
+nemmeno la prima volta e nemmeno da fuori.
+
+Sotto al quadretto, per chi non puo' inquadrare, ci sono le stesse cose in
+lettere: sedici, in quattro gruppi da quattro. Sono sedici e non otto apposta —
+otto si indovinano provandole a raffica lontano da qui, e sedici no.
 
 **Stacca** spegne un telefono subito: il filo aperto cade nello stesso istante,
 e con quel segno non si rientra piu'.

@@ -275,7 +275,7 @@ test("il codice fabbricato dalla console arriva al centralino da solo", async ()
       method: "POST",
     });
     const { codice } = await risposta.json();
-    assert.match(codice, /^[0-9A-Z]{8}$/);
+    assert.match(codice, /^[0-9A-Z]{16}$/);
 
     /* E il centralino lo sa, senza che gliel'abbia detto la prova. */
     await attendi(() => c.centralino.abbinamenti.has(impronta(codice)));

@@ -12,8 +12,14 @@ solo quando si mette le mani in `qr.js`. Quello che lascia dietro — il file
 `ponte/test/qr-riferimento.js` — e' quello che le prove leggono, e da li' in
 poi Python non serve piu' a nessuno.
 
-    pip install qrcode
+    pip install qrcode opencv-python-headless
     python3 strumenti/qr-riferimento.py
+
+Con OpenCV installato fa anche l'altra meta' del lavoro: **rilegge** quello che
+il nostro encoder ha disegnato, con un lettore che non c'entra niente ne' con
+lui ne' con la libreria di riferimento. Confrontare due encoder dice che sono
+uguali; farlo leggere dice che si legge. Sono due cose diverse e servono tutte
+e due. Senza OpenCV il resto funziona lo stesso, e lo dice.
 
 Se dopo averlo lanciato `git diff` mostra dei cambiamenti nei vettori, sono
 due i casi: o si e' rotto qualcosa in `qr.js`, o si e' cambiata di proposito
@@ -32,6 +38,12 @@ try:
     from qrcode.util import MODE_8BIT_BYTE, QRData
 except ImportError:  # pragma: no cover
     sys.exit("manca la libreria di riferimento: pip install qrcode")
+
+try:
+    import cv2
+    import numpy
+except ImportError:  # pragma: no cover
+    cv2 = None
 
 QUI = pathlib.Path(__file__).resolve().parent.parent
 DOVE = QUI / "ponte" / "test" / "qr-riferimento.js"
@@ -179,7 +191,49 @@ DA_DISEGNARE = {
 }
 
 
+def rileggi(righe, testo, scala=8):
+    """Lo rilegge davvero, con un lettore che non e' ne' il nostro ne' quello
+    di riferimento. Su qualche codice fitto il rilevatore di OpenCV non trova
+    i mirini e torna a mani vuote: non e' un codice sbagliato, e infatti
+    sbaglia sugli stessi codici anche col disegno della libreria di
+    riferimento. Quello che conterebbe davvero sarebbe rileggere **qualcosa di
+    diverso** da quello che c'era scritto, e quello non succede mai."""
+    lato = len(righe)
+    dentro = numpy.array(
+        [[0 if q == "1" else 255 for q in r] for r in righe], dtype=numpy.uint8
+    )
+    # La zona tranquilla: quattro quadretti di bianco intorno. Senza, non lo
+    # legge nessuno, per bene che sia disegnato.
+    con_bordo = numpy.full((lato + 8, lato + 8), 255, dtype=numpy.uint8)
+    con_bordo[4 : 4 + lato, 4 : 4 + lato] = dentro
+    grande = numpy.kron(con_bordo, numpy.ones((scala, scala), dtype=numpy.uint8))
+    letto, _, _ = cv2.QRCodeDetector().detectAndDecode(grande)
+    if letto == testo:
+        return "riletto"
+    if letto == "":
+        return "non trovato"
+    return "SBAGLIATO"
+
+
+def rileggi_tutti(dentro):
+    if cv2 is None:
+        print("OpenCV non c'e': saltata la rilettura (pip install opencv-python-headless)")
+        return
+    conti = {}
+    for v in dentro:
+        come = rileggi(v["righe"], v["testo"])
+        conti[come] = conti.get(come, 0) + 1
+        if come == "SBAGLIATO":
+            sys.exit(f"un codice si rilegge diverso da com'e' stato scritto: {v['testo'][:30]}")
+    print(
+        f"riletti da OpenCV: {conti.get('riletto', 0)} su {len(dentro)}"
+        + (f" ({conti['non trovato']} non trovati, nessuno sbagliato)" if conti.get("non trovato") else "")
+    )
+
+
 if __name__ == "__main__":
     prove = list(A_MANO)
     prove += [a_caso(n, f"piena {n}") for n in PIENE]
-    scrivi([vettore(t) for t in prove])
+    vettori = [vettore(t) for t in prove]
+    rileggi_tutti(vettori)
+    scrivi(vettori)

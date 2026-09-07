@@ -18,6 +18,7 @@ import { accetta } from "../src/presa.js";
 import { telefonoCifrato } from "./telefono-cifrato.js";
 import { alzaIlPonte } from "../src/index.js";
 import { rotta } from "../src/server.js";
+import { qrInSvg } from "../src/qr.js";
 
 const SEGNO_DEL_SUPERVISOR = "segno-finto-del-supervisor";
 
@@ -172,8 +173,14 @@ test("dalla porta dell'app non si fabbrica un codice, e non si vede niente della
 test("il codice della console abbina il telefono, e vale una volta sola", async () => {
   const b = await banco();
   try {
-    const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
-    assert.match(codice, /^[0-9A-Z]{8}$/);
+    const { codice, invito } = await (
+      await prendi(`${b.consolle}/api/codice`, { method: "POST" })
+    ).json();
+    assert.match(codice, /^[0-9A-Z]{16}$/);
+    /* Nel quadretto ci va il codice **e come si arriva qui**: un'app che
+     * inquadra non deve sapere niente da prima. Questo banco non ha
+     * centralino, e quel campo resta vuoto. */
+    assert.equal(invito, `gdahome|1|${codice}||${INDIRIZZO_DI_CASA}:${b.app.split(":").pop()}`);
 
     const risposta = await prendi(`${b.app}/abbinamento`, {
       method: "POST",
@@ -184,8 +191,8 @@ test("il codice della console abbina il telefono, e vale una volta sola", async 
     assert.match(fatto.segno, /^[0-9a-f]{64}$/);
     assert.equal(fatto.dispositivo.nome, "iPhone di Anna");
 
-    /* Dove tornare. Senza questo, un telefono che si e' abbinato battendo
-     * otto lettere non saprebbe dove ribussare: non ha mai visto un
+    /* Dove tornare. Senza questo, un telefono che si e' abbinato inquadrando
+     * un quadretto non saprebbe dove ribussare: non ha mai visto un
      * indirizzo, ed e' apposta. */
     assert.equal(fatto.ritorno.casa, b.identita.casa);
     assert.deepEqual(fatto.ritorno.indirizzi, [`${INDIRIZZO_DI_CASA}:${b.app.split(":").pop()}`]);
@@ -441,6 +448,52 @@ test("una via che non esiste sulla console risponde 404, non 500", async () => {
       (await prendi(`${b.consolle}/api/dispositivi/dm_nonesiste`, { method: "DELETE" })).status,
       404,
     );
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("il codice a quadretti si ridisegna, e chi ricarica la pagina lo ritrova", async () => {
+  /* Il caso che si vede subito usandolo: la console si ricarica — un tocco
+   * per sbaglio, un riavvio dell'add-on, il telefono che torna sulla scheda —
+   * mentre il codice e' ancora buono. Se la pagina non sa piu' qual e', chi
+   * sta inquadrando deve fabbricarne un altro, cioe' buttare via un codice
+   * valido e ricominciare davanti a qualcuno che aspetta. */
+  const b = await banco();
+  try {
+    const fatto = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
+
+    const ancora = await (await prendi(`${b.consolle}/api/codice`)).json();
+    assert.equal(ancora.attivo, true);
+    assert.equal(ancora.codice, fatto.codice);
+    assert.equal(ancora.invito, fatto.invito);
+    assert.equal(ancora.scadeIl, fatto.scadeIl);
+
+    const disegno = await prendi(`${b.consolle}/api/qr.svg`);
+    assert.equal(disegno.status, 200);
+    assert.match(disegno.headers.get("content-type"), /image\/svg\+xml/);
+    /* Non si guarda che «sembri» un QR: si guarda che sia **quel** QR, cioe'
+     * quello dell'invito che la console ha appena ricevuto. */
+    assert.equal(await disegno.text(), qrInSvg(fatto.invito, { titolo: "Codice di abbinamento" }));
+
+    await prendi(`${b.consolle}/api/codice`, { method: "DELETE" });
+    assert.equal((await (await prendi(`${b.consolle}/api/codice`)).json()).attivo, false);
+    assert.equal((await prendi(`${b.consolle}/api/qr.svg`)).status, 404);
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("il codice a quadretti non esiste sulla porta dell'app", async () => {
+  /* La porta esposta non deve avere **nessuna** via che faccia vedere un
+   * codice di abbinamento: quella e' la differenza fra un ponte e una porta
+   * aperta. */
+  const b = await banco();
+  try {
+    await prendi(`${b.consolle}/api/codice`, { method: "POST" });
+    for (const via of ["/api/qr.svg", "/api/codice"]) {
+      assert.equal((await prendi(`${b.app}${via}`)).status, 404, via);
+    }
   } finally {
     await b.spegni();
   }

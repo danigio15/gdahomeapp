@@ -15,9 +15,9 @@ import { codiceNuovo, codicePulito, impronta, stessoSegreto } from "./segreti.js
 
 const MINUTO = 60 * 1000;
 
-/* Un codice di otto lettere non si indovina, ma nessuno deve poterci provare
- * a raffica: dopo dieci tentativi sbagliati in un quarto d'ora la porta resta
- * chiusa finche' la finestra non passa, e la console lo vede. */
+/* Il codice non si indovina, ma nessuno deve poterci provare a raffica: dopo
+ * dieci tentativi sbagliati in un quarto d'ora la porta resta chiusa finche'
+ * la finestra non passa, e la console lo vede. */
 const TENTATIVI_MASSIMI = 10;
 const FINESTRA_DEI_TENTATIVI = 15 * MINUTO;
 
@@ -31,8 +31,18 @@ export class Abbinamento {
 
   /* Fabbrica un codice nuovo e spegne quello di prima. */
   nuovo() {
-    const codice = codiceNuovo(8);
+    const codice = codiceNuovo();
     this._codice = {
+      /* Il codice **in chiaro**, e solo qui.
+       *
+       * Altrove in questo progetto i segreti si tengono per impronta, e resta
+       * la regola: il segno di un telefono, che vive per anni e sta su un
+       * disco, non si conserva mai leggibile. Questo vive cinque minuti, non
+       * tocca nessun file, e serve a ridisegnarlo — chi ricarica la pagina
+       * della console mentre il codice e' ancora buono deve rivederlo, non
+       * doverne fabbricare un altro. Tenerlo per impronta vorrebbe dire
+       * buttare via un codice valido per niente. */
+      codice,
       impronta: impronta(codice),
       scadeIl: this.adesso() + this.minutiDelCodice * MINUTO,
     };
@@ -40,6 +50,15 @@ export class Abbinamento {
      * guardando lo schermo, e non deve pagare per chi ha bussato prima. */
     this._sbagliati = [];
     return { codice, scadeIl: this._codice.scadeIl };
+  }
+
+  /* Il codice vivo, per chi lo deve rimettere a schermo. Non esce mai dalla
+   * console: quella sta dietro l'autenticazione di Home Assistant, ed e' lo
+   * stesso posto dove il codice era gia' scritto. */
+  vivo() {
+    this._scadenza();
+    if (!this._codice) return null;
+    return { codice: this._codice.codice, scadeIl: this._codice.scadeIl };
   }
 
   annulla() {
