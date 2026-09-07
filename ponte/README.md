@@ -43,11 +43,26 @@ che esiste gia'. E' la differenza fra un ponte e una porta aperta.
 
 ## Come si mette su
 
-1. In Home Assistant: **Impostazioni → Add-on → Negozio degli add-on**, menu in
-   alto a destra → **Archivi**, e si incolla
-   `https://github.com/danigio15/dashboardmodern-v2`.
-2. Nell'elenco compare **Il ponte di DashboardModern**: si installa e si avvia.
-3. Nella barra laterale compare **Il ponte**. E' la console.
+**Se la repository e' privata**, l'indirizzo non funziona: Home Assistant va a
+prendere gli archivi di add-on senza presentarsi, e da una repository privata
+si sente rispondere «non esiste». Si installa a mano, ed e' altrettanto
+semplice:
+
+1. Si scarica il codice — **Code → Download ZIP** — e si copia la cartella
+   `ponte` dentro la cartella `addons` di Home Assistant. Ci si arriva con
+   l'add-on **Samba share**, con **Advanced SSH & Web Terminal**, o con
+   **Studio Code Server**. Alla fine deve esserci `addons/ponte/config.yaml`.
+2. **Impostazioni → Add-on → Negozio degli add-on**, menu in alto a destra →
+   **Ricarica**. Compare una sezione **Local add-ons**.
+3. Si installa. La prima volta ci mette qualche minuto, perche' se lo
+   costruisce sul posto invece di scaricarlo gia' pronto.
+
+**Se la repository e' pubblica**, si fa prima: **Impostazioni → Add-on →
+Negozio degli add-on**, menu in alto a destra → **Archivi**, e si incolla
+l'indirizzo della repository.
+
+In tutti e due i casi, alla fine nella barra laterale compare **Il ponte**. E'
+la console.
 
 ## Abbinare un telefono
 

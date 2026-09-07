@@ -8,14 +8,63 @@ a cui bussare.
 
 ## Prima di tutto: il ponte
 
-1. In Home Assistant: **Impostazioni → Add-on → Negozio degli add-on**, menu in
-   alto a destra → **Archivi**, e incolla
-   `https://github.com/danigio15/gdahomeapp`.
+Due strade, e **quale delle due dipende da una cosa sola: se la repository e'
+privata**.
+
+Home Assistant, quando gli si da' l'indirizzo di un archivio di add-on, va a
+prenderlo **senza presentarsi a nessuno**. Su una repository privata quella
+richiesta torna indietro come «non esiste», e nel negozio non compare niente.
+Non e' un errore da aggiustare: e' che il Supervisor non ha nessuna chiave da
+mostrare, e non c'e' modo di dargliene una senza scriverla dentro la
+configurazione di Home Assistant.
+
+Quindi: **se vuoi tenere la repository privata, si installa a mano.** Non e'
+piu' difficile, e' solo un'altra strada.
+
+### A. A mano, con la repository che resta privata *(consigliata)*
+
+L'add-on si mette in una cartella di Home Assistant e il Supervisor lo trova da
+solo.
+
+1. **Scarica il codice.** Sulla pagina della repository: **Code → Download
+   ZIP**. Funziona anche se e' privata, perche' tu sei dentro.
+2. **Apri la cartella `addons` di Home Assistant.** Ci si arriva con uno
+   qualunque di questi, quello che hai gia':
+   - l'add-on **Samba share**, che la fa comparire come cartella di rete;
+   - l'add-on **Advanced SSH & Web Terminal**;
+   - l'add-on **Studio Code Server** o **File editor**.
+3. **Copiaci dentro la cartella `ponte`** presa dallo ZIP, cosi' com'e'. Alla
+   fine deve esserci `addons/ponte/config.yaml`.
+4. In Home Assistant: **Impostazioni → Add-on → Negozio degli add-on**, menu in
+   alto a destra → **Ricarica**. Compare una sezione **Local add-ons** con
+   dentro **Il ponte di DashboardModern**.
+5. Installalo. **La prima volta ci mette qualche minuto**: non lo scarica
+   gia' pronto, se lo costruisce sul posto — su un Raspberry anche cinque o
+   dieci minuti. Le volte dopo e' immediato.
+6. Avvialo.
+
+Per aggiornarlo: riscarichi lo ZIP, risostituisci la cartella, e nel negozio
+premi **Ricarica**.
+
+### B. Con l'indirizzo, se la rendi pubblica
+
+1. **Impostazioni → Add-on → Negozio degli add-on**, menu in alto a destra →
+   **Archivi**, e incolla `https://github.com/danigio15/gdahomeapp`.
 2. Nell'elenco compare **Il ponte di DashboardModern**: installalo e avvialo.
-3. Nella barra laterale compare **Il ponte**. Aprilo: e' la console.
-4. Premi **Fabbrica un codice**. Escono otto lettere, valide cinque minuti.
+
+Piu' comodo, e si aggiorna da solo. Ma vuol dire che il codice lo legge
+chiunque.
+
+### E poi, in tutti e due i casi
+
+1. Nella barra laterale compare **Il ponte**. Aprilo: e' la console.
+2. Premi **Fabbrica un codice**. Escono otto lettere, valide cinque minuti.
 
 Quel codice serve una volta sola, alla prima accensione dell'app.
+
+> **L'app invece non c'entra niente con tutto questo.** L'APK si scarica da
+> Actions, e li' sei autenticato: la repository puo' restare privata quanto
+> vuoi.
 
 ---
 
