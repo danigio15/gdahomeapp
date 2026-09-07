@@ -42,10 +42,15 @@ import 'indirizzo.dart';
 const String centralinoDiDifettoScritto =
     "wss://gdahome-centralino.danigio15.workers.dev";
 
-const String _daRiga = String.fromEnvironment(
-  'CENTRALINO',
-  defaultValue: centralinoDiDifettoScritto,
-);
+/* Vuoto vuol dire **non detto**, non «nessuno».
+ *
+ * `String.fromEnvironment` usa il proprio difetto solo quando la chiave non e'
+ * stata definita affatto: un `--dart-define=CENTRALINO=` — vuoto ma definito —
+ * la definisce, e il difetto non entra piu' in gioco. E' proprio quello che
+ * fa una compilazione con la casella lasciata vuota, che e' il caso normale.
+ * Quindi il vuoto si riporta al difetto qui, a mano, invece di fidarsi. */
+const String _detto = String.fromEnvironment('CENTRALINO');
+final String _daRiga = _detto.isEmpty ? centralinoDiDifettoScritto : _detto;
 
 /// `null` quando non ce n'e' uno.
 final IndirizzoDelCentralino? centralinoDiDifetto =

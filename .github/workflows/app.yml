@@ -77,11 +77,23 @@ jobs:
           fi
         working-directory: app
 
+      # Il `--dart-define` si passa **solo se c'e' qualcosa da dire**.
+      #
+      # Passarlo vuoto non e' come non passarlo: definisce la chiave con la
+      # stringa vuota, e il difetto scritto nel codice non entra piu' in gioco.
+      # Il pacchetto esce senza centralino pur avendone uno, e il riquadro qui
+      # sopra intanto dice quello giusto: due cose che si contraddicono, ed e'
+      # il modo piu' rapido di far perdere un'ora a chi lo installa.
       - name: Il pacchetto
-        run: flutter build apk --debug --dart-define=CENTRALINO="$CENTRALINO"
         working-directory: app
         env:
           CENTRALINO: ${{ inputs.centralino }}
+        run: |
+          if [ -n "$CENTRALINO" ]; then
+            flutter build apk --debug --dart-define=CENTRALINO="$CENTRALINO"
+          else
+            flutter build apk --debug
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
@@ -102,10 +114,15 @@ jobs:
       - run: flutter pub get
         working-directory: app
       - name: Il sito
-        run: flutter build web --release --dart-define=CENTRALINO="$CENTRALINO"
         working-directory: app
         env:
           CENTRALINO: ${{ inputs.centralino }}
+        run: |
+          if [ -n "$CENTRALINO" ]; then
+            flutter build web --release --dart-define=CENTRALINO="$CENTRALINO"
+          else
+            flutter build web --release
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: gdahome-web
