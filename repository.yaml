@@ -1,0 +1,9 @@
+# L'archivio degli add-on di DashboardModern.
+#
+# Lo stesso indirizzo GitHub serve due cose diverse: HACS ci trova
+# l'integrazione (`hacs.json`, `custom_components/`), il Supervisor ci trova gli
+# add-on (questo file, e le cartelle di primo livello che hanno un
+# `config.yaml`). Non si danno fastidio: guardano posti diversi.
+name: DashboardModern
+url: https://github.com/danigio15/dashboardmodern-v2
+maintainer: danigio15 <https://github.com/danigio15>

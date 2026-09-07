@@ -1,0 +1,12 @@
+{
+  "name": "dashboardmodern-ponte",
+  "private": true,
+  "type": "module",
+  "description": "L'add-on che fa parlare l'app di DashboardModern con la casa.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}

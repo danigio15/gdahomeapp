@@ -1,0 +1,38 @@
+name: Prove
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prove-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ponte:
+    name: Il ponte
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      # Il ponte non ha dipendenze: le sue prove girano su Node e basta.
+      - name: Le prove del ponte
+        run: npm run test:ponte
+
+  forma:
+    name: La forma del codice
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm install --no-audit --no-fund
+      - run: npm run format:check

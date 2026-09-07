@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Il ponte</title>
+    <link rel="stylesheet" href="stile.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Il ponte</h1>
+        <p id="stato-casa" class="riga-di-stato">…</p>
+      </header>
+
+      <section class="scheda">
+        <h2>Abbinare un telefono</h2>
+        <p class="spiegazione">
+          Il codice vale una volta sola e per pochi minuti. Si batte sull'app, nella schermata di
+          primo avvio.
+        </p>
+        <div id="codice-vivo" hidden>
+          <p class="codice" id="codice"></p>
+          <p class="riga-di-stato" id="scadenza"></p>
+        </div>
+        <div class="bottoni">
+          <button id="fabbrica" type="button">Fabbrica un codice</button>
+          <button id="annulla" type="button" class="tenue" hidden>Annulla</button>
+        </div>
+        <p class="avviso" id="avviso" hidden></p>
+      </section>
+
+      <section class="scheda">
+        <h2>Telefoni abbinati</h2>
+        <p class="spiegazione" id="conteggio"></p>
+        <ul id="elenco" class="elenco"></ul>
+      </section>
+
+      <section class="scheda tenue-sfondo">
+        <h2>Da fuori casa</h2>
+        <p class="spiegazione">
+          In casa l'app trova il ponte da sola sulla porta <strong id="porta">…</strong>. Da fuori
+          serve che qualcuno faccia arrivare fin qui il traffico: una VPN, un proxy inverso, o
+          l'accesso remoto di Home Assistant. Il ponte non apre porte per conto suo.
+        </p>
+      </section>
+    </main>
+    <script src="console.js"></script>
+  </body>
+</html>

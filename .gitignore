@@ -1,0 +1,13 @@
+node_modules/
+.DS_Store
+*.log
+
+# Roba dell'app, quando ci sara'
+/app/android/
+/app/ios/
+/app/dist/
+/app/.expo/
+/app/build/
+
+# Roba del ponte in prova
+/ponte/data/

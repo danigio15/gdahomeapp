@@ -1,0 +1,18 @@
+{
+  "name": "gdahomeapp",
+  "private": true,
+  "type": "module",
+  "description": "L'app di casa: la plancia, il ponte, e i comandi che in Home Assistant stanno nascosti.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "npm run test:ponte",
+    "test:ponte": "node --test ponte/test/*.test.js",
+    "format": "prettier --write \"ponte/src/**/*.js\" \"ponte/test/**/*.js\" \"ponte/console/*.js\" \"ponte/console/*.css\"",
+    "format:check": "prettier --check \"ponte/src/**/*.js\" \"ponte/test/**/*.js\" \"ponte/console/*.js\" \"ponte/console/*.css\""
+  },
+  "devDependencies": {
+    "prettier": "^3.3.0"
+  }
+}

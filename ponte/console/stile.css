@@ -1,0 +1,178 @@
+/* La console del ponte.
+ *
+ * Sta dentro Home Assistant, dietro l'ingress, e prende i colori dal tema di
+ * chi guarda: le variabili `--primary-text-color` e compagne le mette Home
+ * Assistant sul documento che ci sta intorno. Quando non ci sono — perche' la
+ * pagina e' aperta da sola — valgono i difetti scritti qui di fianco. */
+
+:root {
+  color-scheme: light dark;
+  --testo: var(--primary-text-color, #1f2937);
+  --tenue: var(--secondary-text-color, #6b7280);
+  --fondo: var(--card-background-color, #ffffff);
+  --fondo-pagina: var(--primary-background-color, #f4f5f7);
+  --bordo: var(--divider-color, #e5e7eb);
+  --acceso: var(--primary-color, #0ea5e9);
+  --male: var(--error-color, #dc2626);
+  --bene: var(--success-color, #16a34a);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --testo: var(--primary-text-color, #e5e7eb);
+    --tenue: var(--secondary-text-color, #9ca3af);
+    --fondo: var(--card-background-color, #1f2937);
+    --fondo-pagina: var(--primary-background-color, #111827);
+    --bordo: var(--divider-color, #374151);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 16px;
+  background: var(--fondo-pagina);
+  color: var(--testo);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin: 0 0 4px;
+}
+
+h2 {
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+}
+
+.scheda {
+  background: var(--fondo);
+  border: 1px solid var(--bordo);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.tenue-sfondo {
+  background: transparent;
+}
+
+.riga-di-stato,
+.spiegazione {
+  color: var(--tenue);
+  font-size: 0.9rem;
+  margin: 0 0 12px;
+}
+
+.codice {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 2rem;
+  letter-spacing: 0.28em;
+  margin: 8px 0 4px;
+  /* La spaziatura larga spinge l'ultima lettera fuori dalla scatola: questo la
+   * rimette dentro. */
+  text-indent: 0.28em;
+  word-break: break-all;
+}
+
+.bottoni {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+button {
+  font: inherit;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 16px;
+  background: var(--acceso);
+  color: #fff;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+button.tenue {
+  background: transparent;
+  color: var(--tenue);
+  border: 1px solid var(--bordo);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.elenco {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.elenco li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--bordo);
+}
+
+.elenco li:first-child {
+  border-top: 0;
+}
+
+.elenco .nome {
+  flex: 1;
+  min-width: 0;
+}
+
+.elenco .nome strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.elenco .nome span {
+  color: var(--tenue);
+  font-size: 0.82rem;
+}
+
+.pallino {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bordo);
+  flex: 0 0 auto;
+}
+
+.pallino.acceso {
+  background: var(--bene);
+}
+
+.avviso {
+  color: var(--male);
+  font-size: 0.9rem;
+  margin: 12px 0 0;
+}
+
+.vuoto {
+  color: var(--tenue);
+  font-size: 0.9rem;
+  padding: 8px 0;
+}
