@@ -141,9 +141,17 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
     if (!mounted) return;
     setState(() {
       _sto = false;
-      _male =
-          'Non trovo nessun ponte a questi indirizzi. '
-          'Controlla che l\'add-on sia acceso e che il telefono sia sulla rete giusta.';
+      /* L'errore che fa perdere piu' tempo: l'indirizzo *sembra* giusto —
+       * e' quello che Home Assistant stessa da' per l'accesso remoto — e
+       * chi lo mette va a cercare il guasto dove non c'e'. */
+      _male = daFuori?.eLAccessoRemotoDiHomeAssistant ?? false
+          ? 'L\'accesso remoto di Home Assistant non arriva agli add-on: il '
+                'suo tunnel finisce dentro Home Assistant, e il ponte sta su '
+                'una porta sua. Per il primo abbinamento mettiti sul Wi-Fi di '
+                'casa e lascia vuoto l\'indirizzo pubblico.'
+          : 'Non trovo nessun ponte a questi indirizzi. '
+                'Controlla che l\'add-on sia acceso e che il telefono sia '
+                'sulla rete giusta.';
     });
   }
 

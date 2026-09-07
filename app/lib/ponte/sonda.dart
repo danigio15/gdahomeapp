@@ -100,6 +100,16 @@ class Sonda {
   /// Il perche' cambia con quello che la casa ha: dire «controlla la rete» a
   /// chi non ha mai messo un indirizzo di fuori non serve a niente.
   static String _perche(CasaConosciuta casa) {
+    /* Questo prima di tutti gli altri: e' l'errore che fa perdere piu' tempo,
+     * perche' l'indirizzo *sembra* giusto — e' quello che Home Assistant
+     * stessa da' per l'accesso remoto — e chi lo mette va a cercare il guasto
+     * dove non c'e'. */
+    if (casa.daFuoriCasa?.eLAccessoRemotoDiHomeAssistant ?? false) {
+      return 'L\'accesso remoto di Home Assistant non arriva agli add-on: il suo '
+          'tunnel finisce dentro Home Assistant, e il ponte sta su una porta '
+          'sua. Non e\' una cosa che si possa configurare. Da fuori serve una '
+          'VPN, oppure un proxy inverso davanti alla porta del ponte.';
+    }
     if (casa.soloInCasa) {
       return 'Non trovo «${casa.nome}». Questa casa ha solo l\'indirizzo di rete '
           'locale: da fuori serve aggiungere anche l\'indirizzo pubblico.';

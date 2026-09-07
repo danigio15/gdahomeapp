@@ -153,6 +153,29 @@ void main() {
     );
   });
 
+  test('a chi ha messo l\'accesso remoto di Home Assistant si dice la verita\'', () async {
+    /* E' l'errore che fa perdere piu' tempo di tutti: quell'indirizzo *sembra*
+     * giusto — e' quello che Home Assistant stessa da' — e chi lo mette va a
+     * cercare il guasto nella rete, nel router, nel telefono. Il guasto non
+     * c'e': quel tunnel arriva a Home Assistant e si ferma li'. */
+    final nabuCasa = IndirizzoDelPonte.leggi('https://abc123.ui.nabu.casa')!;
+    expect(nabuCasa.eLAccessoRemotoDiHomeAssistant, isTrue);
+    expect(inRete.eLAccessoRemotoDiHomeAssistant, isFalse);
+    expect(daFuori.eLAccessoRemotoDiHomeAssistant, isFalse);
+
+    final sonda = sondaChe({inRete: false, nabuCasa: false});
+    await expectLater(
+      sonda.dove(casaCon(dentro: inRete, fuori: nabuCasa)),
+      throwsA(
+        isA<PonteIrraggiungibile>().having(
+          (e) => e.spiegazione,
+          'spiegazione',
+          allOf(contains('non arriva agli add-on'), contains('VPN')),
+        ),
+      ),
+    );
+  });
+
   test(
     'una bussata che esplode vale come «non risponde», non come guasto',
     () async {

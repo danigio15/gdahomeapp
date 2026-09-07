@@ -83,6 +83,16 @@ class IndirizzoDelPonte {
     );
   }
 
+  /// `true` quando questo e' l'accesso remoto di Home Assistant.
+  ///
+  /// Merita un nome perche' merita un messaggio suo. Quel tunnel arriva a Home
+  /// Assistant e si ferma li': **le porte degli add-on non le fa passare**, e
+  /// non c'e' nessuna impostazione che glielo faccia fare. Chi ci prova — ed e'
+  /// la prima cosa che viene in mente a chi ce l'ha — merita di sentirsi dire
+  /// perche' non funziona, invece di un «non trovo il ponte» che lo manda a
+  /// controllare la rete per un'ora.
+  bool get eLAccessoRemotoDiHomeAssistant => casa.endsWith('.ui.nabu.casa');
+
   /// Come si fa rivedere all'utente: senza la porta quando e' quella solita.
   @override
   String toString() {
