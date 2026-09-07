@@ -6,19 +6,30 @@ fare le tre cose che in Home Assistant stanno nascoste in fondo a un menu:
 aiutante**. Tutto quello che si crea da qui compare nella plancia, perche' sono
 entita' di Home Assistant come le altre.
 
-> **Stato: fase 1.** Il ponte c'e'. L'app si abbina, entra e fa vedere la casa
-> viva. Le tre funzioni nuove — Zigbee, automazioni, aiutanti — sono le fasi 2, 3 e 4.
+> **Stato: fase 1 chiusa, tranne la plancia.** Il ponte c'e'. L'app tiene piu'
+> case, entra in ognuna **da dentro e da fuori** senza che l'utente tocchi
+> niente, e ha la sua home. Le tre funzioni nuove — aiutanti, Zigbee,
+> automazioni — sono le fasi 2, 3 e 4. La plancia e' l'ultimo blocco.
 
 ## Le tre parti
 
 ```
-   ┌─────────────┐        ┌──────────────┐        ┌──────────────────┐
-   │   l'app     │  WSS   │   il ponte   │        │  Home Assistant  │
-   │ Android/iOS ├───────►│   (add-on)   ├───────►│      Core        │
-   └─────────────┘        └──────────────┘        └──────────────────┘
-     segno del ponte       SUPERVISOR_TOKEN
-     (revocabile)          (non esce da li')
+                     ┌── in casa ──►  192.168.1.50:8098 ──┐
+   ┌─────────────┐   │                                    ▼
+   │   l'app     │───┤                            ┌──────────────┐      ┌──────────────────┐
+   │ Android/iOS │   │                            │   il ponte   ├─────►│  Home Assistant  │
+   └─────────────┘   │                            │   (add-on)   │      │      Core        │
+     segno del ponte └── da fuori ─► casa.tua.it ──┘──────────────┘      └──────────────────┘
+     (revocabile)                                   SUPERVISOR_TOKEN
+                                                    (non esce da li')
 ```
+
+Due indirizzi, **una casa sola**. Quale dei due funziona dipende da dove sta il
+telefono in questo momento, e cambia mentre l'app e' aperta: si esce dal
+portone e il primo smette di rispondere a meta' frase. L'app li chiede tutti e
+due insieme e tiene il primo che risponde — e lo rifa' **a ogni tentativo di
+riconnessione**, non una volta all'avvio. Chi la usa non deve sapere che esiste
+la differenza.
 
 | | dove sta | cosa fa |
 |---|---|---|
@@ -48,13 +59,16 @@ Il resto — le due porte, l'abbinamento, cosa finisce sul disco — sta in
 | | |
 |---|---|
 | ✅ | Il ponte: abbinamento, revoca, filo verso Home Assistant, console dentro HA |
-| ✅ | L'app: primo avvio col codice, segno nel portachiavi, filo che si rialza da solo |
-| ✅ | La casa viva: tutte le entita', divise per dominio, con gli interruttori che funzionano |
-| ✅ | **100 prove** — 60 sul ponte, 40 sull'app — che girano senza rete, senza Home Assistant e senza telefono |
-| ⬜ | La plancia dentro l'app: serve che il ponte passi anche le pagine, non solo il filo |
+| ✅ | **Piu' case**: ognuna col suo segno, si passa dall'una all'altra senza riabbinare |
+| ✅ | **Dentro e fuori casa**: due indirizzi per la stessa istanza, scelti da soli |
+| ✅ | Il filo: si rialza da solo, cambia approdo, rifa' le sottoscrizioni cadute |
+| ✅ | La home: luci accese, aperture, temperatura, antifurto, cosa non risponde |
+| ✅ | I dispositivi: tutte le entita' divise per dominio, con gli interruttori |
+| ✅ | **150 prove** — 60 sul ponte, 90 sull'app — senza rete, senza Home Assistant, senza telefono |
 | ⬜ | Gli aiutanti (i sette classici, nativi) |
 | ⬜ | Zigbee: ZHA **e** Zigbee2MQTT |
 | ⬜ | Il mago delle automazioni |
+| ⬜ | La plancia dentro l'app — **l'ultimo blocco** |
 | ⬜ | Notifiche, impronta digitale, pubblicazione sui negozi |
 
 Il piano per intero, fase per fase, sta in [`docs/PIANO.md`](docs/PIANO.md).
@@ -63,7 +77,7 @@ Il piano per intero, fase per fase, sta in [`docs/PIANO.md`](docs/PIANO.md).
 
 ```bash
 npm run test:ponte          # il ponte: 60 prove, meno di un secondo
-cd app && flutter test      # l'app: 40 prove, tre secondi
+cd app && flutter test      # l'app: 90 prove, cinque secondi
 ```
 
 Girano tutte senza rete, senza Home Assistant e senza telefono: il ponte ha

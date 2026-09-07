@@ -1,74 +1,47 @@
-/// La casa: quello che si vede una volta dentro.
+/// I dispositivi: tutto quello che c'e' in casa, diviso per dominio.
 ///
-/// Per adesso e' un elenco vivo di tutto quello che c'e', diviso per dominio,
-/// con gli interruttori che funzionano. Non e' la plancia — quella arriva
-/// quando il ponte sapra' passare anche le pagine, non solo il filo — ma e' la
-/// prova che la catena regge da un capo all'altro: telefono, ponte, Home
-/// Assistant, e ritorno.
+/// E' la schermata grezza — l'elenco completo, con gli interruttori che
+/// funzionano — e resta utile anche dopo che sara' arrivata la plancia: e' dove
+/// si cerca *quella* entita' li' quando non ci si ricorda dove sta.
 library;
 
 import 'package:flutter/material.dart';
 
+import '../casa/collegamento.dart';
 import '../casa/entita.dart';
 import '../casa/stato_della_casa.dart';
 import '../ponte/errori.dart';
-import '../ponte/filo.dart';
 
-/// I domini che si comandano con un interruttore, e come si chiama il servizio.
+/// I domini che si comandano con un interruttore.
 const _accendibili = {'light', 'switch', 'fan', 'input_boolean', 'siren'};
 
-class SchermataDellaCasa extends StatefulWidget {
-  const SchermataDellaCasa({
-    super.key,
-    required this.filo,
-    required this.quandoEsce,
-  });
+class SchermataDeiDispositivi extends StatefulWidget {
+  const SchermataDeiDispositivi({super.key, required this.collegamento});
 
-  final Filo filo;
-  final VoidCallback quandoEsce;
+  final Collegamento collegamento;
 
   @override
-  State<SchermataDellaCasa> createState() => _SchermataDellaCasaState();
+  State<SchermataDeiDispositivi> createState() =>
+      _SchermataDeiDispositiviState();
 }
 
-class _SchermataDellaCasaState extends State<SchermataDellaCasa> {
-  late final StatoDellaCasa _casa = StatoDellaCasa(widget.filo);
-  StatoDelFilo _comeVa = StatoDelFilo.chiamando;
-  String? _male;
+class _SchermataDeiDispositiviState extends State<SchermataDeiDispositivi> {
+  StatoDellaCasa? get _casa => widget.collegamento.stato;
 
   @override
   void initState() {
     super.initState();
-    widget.filo.stato.listen((stato) {
-      if (mounted) setState(() => _comeVa = stato);
-    });
-    _casa.cambiamenti.listen((_) {
+    /* Lo stato della casa lo tiene il collegamento: qui ci si limita a
+     * ridisegnare quando cambia. Cosi' passando da una schermata all'altra la
+     * casa non si rilegge da capo ogni volta. */
+    widget.collegamento.cambiamenti.listen((_) {
       if (mounted) setState(() {});
     });
-    _attacca();
-  }
-
-  Future<void> _attacca() async {
-    try {
-      await _casa.attacca();
-      if (mounted) setState(() => _male = null);
-    } on SegnoRifiutato {
-      /* Staccato dalla console: non c'e' niente da riprovare, si riabbina. */
-      if (mounted) widget.quandoEsce();
-    } on ErroreDelPonte catch (errore) {
-      if (mounted) setState(() => _male = errore.spiegazione);
-    }
-  }
-
-  @override
-  void dispose() {
-    _casa.stacca();
-    super.dispose();
   }
 
   Future<void> _inverti(Entita quale) async {
     try {
-      await _casa.comanda('toggle', quale.id);
+      await _casa?.comanda('toggle', quale.id);
     } on ErroreDelPonte catch (errore) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -80,42 +53,24 @@ class _SchermataDellaCasaState extends State<SchermataDellaCasa> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Casa'),
-        bottom: _comeVa == StatoDelFilo.dentro
+        title: const Text('Dispositivi'),
+        bottom: widget.collegamento.dentro
             ? null
             : const PreferredSize(
                 preferredSize: Size.fromHeight(4),
                 child: LinearProgressIndicator(minHeight: 4),
               ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.link_off),
-            tooltip: 'Stacca questo telefono',
-            onPressed: widget.quandoEsce,
-          ),
-        ],
       ),
       body: _corpo(),
     );
   }
 
   Widget _corpo() {
-    if (_male != null) {
-      return _Avviso(
-        icona: Icons.cloud_off,
-        titolo: 'Non riesco a leggere la casa',
-        sotto: _male!,
-        bottone: 'Riprova',
-        quandoPremuto: () {
-          setState(() => _male = null);
-          _attacca();
-        },
-      );
-    }
-    if (!_casa.pieno) {
+    final casa = _casa;
+    if (casa == null || !casa.pieno) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_casa.quante == 0) {
+    if (casa.quante == 0) {
       return const _Avviso(
         icona: Icons.inbox_outlined,
         titolo: 'Casa vuota',
@@ -123,12 +78,12 @@ class _SchermataDellaCasaState extends State<SchermataDellaCasa> {
       );
     }
 
-    final domini = _casa.domini().keys.toList()..sort();
+    final domini = casa.domini().keys.toList()..sort();
     return ListView.builder(
       itemCount: domini.length,
       itemBuilder: (contesto, quale) {
         final dominio = domini[quale];
-        final dentro = _casa.delDominio(dominio);
+        final dentro = casa.delDominio(dominio);
         return ExpansionTile(
           title: Text(dominio),
           subtitle: Text('${dentro.length}'),
@@ -159,15 +114,11 @@ class _Avviso extends StatelessWidget {
     required this.icona,
     required this.titolo,
     required this.sotto,
-    this.bottone,
-    this.quandoPremuto,
   });
 
   final IconData icona;
   final String titolo;
   final String sotto;
-  final String? bottone;
-  final VoidCallback? quandoPremuto;
 
   @override
   Widget build(BuildContext context) {
@@ -187,13 +138,6 @@ class _Avviso extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(color: colori.onSurfaceVariant),
             ),
-            if (bottone != null) ...[
-              const SizedBox(height: 24),
-              FilledButton.tonal(
-                onPressed: quandoPremuto,
-                child: Text(bottone!),
-              ),
-            ],
           ],
         ),
       ),

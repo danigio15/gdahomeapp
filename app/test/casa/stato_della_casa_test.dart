@@ -30,7 +30,7 @@ void main() {
         unita: '°C',
       ),
     ];
-    filo = Filo(
+    filo = Filo.fisso(
       indirizzo: ponte.indirizzo,
       segno: segnoBuono,
       attesaMassima: const Duration(milliseconds: 80),

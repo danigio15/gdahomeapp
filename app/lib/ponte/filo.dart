@@ -43,18 +43,45 @@ enum StatoDelFilo {
 /// Come si apre il canale. Sostituibile nelle prove.
 typedef ApriIlCanale = WebSocketChannel Function(Uri dove);
 
+/// Dove bussare, chiesto *adesso*.
+///
+/// E' una funzione e non un indirizzo, ed e' li' che sta il funzionamento
+/// fuori casa. L'indirizzo si ricalcola **a ogni tentativo**: chi esce dal
+/// portone perde il filo sull'indirizzo di rete locale, e al tentativo dopo la
+/// sonda risponde con quello di fuori. Nessuno tocca niente, e la casa e'
+/// sempre la stessa istanza.
+typedef TrovaLApprodo = Future<IndirizzoDelPonte> Function();
+
 WebSocketChannel _canaleVero(Uri dove) => WebSocketChannel.connect(dove);
 
 class Filo {
   Filo({
-    required this.indirizzo,
+    required TrovaLApprodo approdo,
     required this.segno,
     ApriIlCanale? apri,
     this.attesaMassima = const Duration(seconds: 30),
     this.attesaDellaRisposta = const Duration(seconds: 20),
-  }) : _apri = apri ?? _canaleVero;
+  }) : _trovaLApprodo = approdo,
+       _apri = apri ?? _canaleVero;
 
-  final IndirizzoDelPonte indirizzo;
+  /// Un filo verso un indirizzo solo, che non cambia mai.
+  ///
+  /// Serve alle prove e a chi punta dritto a un Home Assistant senza ponte.
+  Filo.fisso({
+    required IndirizzoDelPonte indirizzo,
+    required String segno,
+    ApriIlCanale? apri,
+    Duration attesaMassima = const Duration(seconds: 30),
+    Duration attesaDellaRisposta = const Duration(seconds: 20),
+  }) : this(
+         approdo: (() async => indirizzo),
+         segno: segno,
+         apri: apri,
+         attesaMassima: attesaMassima,
+         attesaDellaRisposta: attesaDellaRisposta,
+       );
+
+  final TrovaLApprodo _trovaLApprodo;
   final String segno;
   final ApriIlCanale _apri;
 
@@ -69,6 +96,7 @@ class Filo {
   final _sottoscrizioni = <int, _Sottoscrizione>{};
 
   WebSocketChannel? _canale;
+  IndirizzoDelPonte? _approdo;
   StreamSubscription<dynamic>? _ascolto;
   Completer<void>? _stretta;
   Timer? _riprova;
@@ -82,6 +110,10 @@ class Filo {
   StatoDelFilo get statoAdesso => _adesso;
   bool get dentro => _adesso == StatoDelFilo.dentro;
 
+  /// Su quale indirizzo si e' entrati, l'ultima volta che si e' entrati.
+  /// Serve a dire a schermo se si sta passando da dentro casa o da fuori.
+  IndirizzoDelPonte? get approdoAdesso => _approdo;
+
   /// Apre il filo e torna quando la stretta di mano e' andata.
   ///
   /// Tre esiti, e sono tre cose diverse per chi guarda lo schermo:
@@ -89,10 +121,13 @@ class Filo {
   ///  - **torna**: si e' dentro;
   ///  - **[SegnoRifiutato]**: il telefono e' stato staccato dalla console, e
   ///    non si riprova perche' riprovare non cambierebbe niente;
-  ///  - **[PonteIrraggiungibile]** dopo [entro]: il ponte non risponde. I
-  ///    tentativi *continuano* per conto loro — un telefono che rientra in
-  ///    casa si ricollega da solo — ma chi aspettava ha una risposta invece di
-  ///    una rotella che gira per sempre.
+  ///  - **[PonteIrraggiungibile]**: non si trova la casa. Arriva **appena** il
+  ///    primo giro di ricerca ha finito, con la spiegazione di chi ha cercato,
+  ///    non dopo [entro] con una spiegazione nostra; [entro] resta come rete
+  ///    di sicurezza per il caso in cui un indirizzo risponda ma poi la
+  ///    stretta di mano non finisca mai. I tentativi *continuano* per conto
+  ///    loro — un telefono che rientra in casa si ricollega da solo — ma chi
+  ///    aspettava ha una risposta invece di una rotella che gira per sempre.
   Future<void> apri({Duration entro = const Duration(seconds: 25)}) {
     if (dentro) return Future.value();
     if (_stretta != null && !_stretta!.isCompleted) return _stretta!.future;
@@ -100,7 +135,7 @@ class Filo {
     _tentativi = 0;
     final stretta = Completer<void>();
     _stretta = stretta;
-    _bussa();
+    unawaited(_bussa());
     return stretta.future.timeout(
       entro,
       onTimeout: () =>
@@ -108,11 +143,43 @@ class Filo {
     );
   }
 
-  void _bussa() {
+  Future<void> _bussa() async {
     _cambia(StatoDelFilo.chiamando);
+
+    final IndirizzoDelPonte dove;
     try {
-      final canale = _apri(indirizzo.filo);
+      dove = await _trovaLApprodo();
+    } catch (errore) {
+      /* Nessun indirizzo risponde. I tentativi vanno avanti — il telefono puo'
+       * essere in galleria, e fra un minuto no — ma **la prima volta chi
+       * aspetta lo viene a sapere subito**, e con la spiegazione vera.
+       *
+       * Senza questo, chi apre l'app su una casa spenta guarda una rotella per
+       * venticinque secondi e poi legge «il ponte non risponde», che e' la
+       * nostra scadenza e non un motivo. Chi cerca la casa sa molto di piu':
+       * sa se manca l'indirizzo pubblico, o se non risponde nessuno dei due. */
+      final primaVolta = _tentativi == 0;
+      _caduto('non trovo la casa da nessuna parte');
+      if (primaVolta) {
+        final stretta = _stretta;
+        if (stretta != null && !stretta.isCompleted) {
+          stretta.completeError(
+            errore is ErroreDelPonte
+                ? errore
+                : PonteIrraggiungibile('non trovo la casa da nessuna parte'),
+          );
+        }
+      }
+      return;
+    }
+    /* Fra la domanda e la risposta l'app puo' essere stata chiusa, o l'utente
+     * puo' aver cambiato casa. */
+    if (_spentoApposta) return;
+
+    try {
+      final canale = _apri(dove.filo);
       _canale = canale;
+      _approdo = dove;
       /* Il canale racconta i suoi guai in tre posti, non in uno: lo stream,
        * `ready` e `done`. Quello che conta e' `stream`, ed e' li' che si
        * decide; gli altri due vanno comunque *guardati*, perche' un futuro che
@@ -309,7 +376,7 @@ class Filo {
     _riprova?.cancel();
     _riprova = Timer(quanto, () {
       if (_spentoApposta) return;
-      _bussa();
+      unawaited(_bussa());
     });
   }
 
@@ -356,6 +423,7 @@ class Filo {
   }
 
   void _stacca() {
+    _approdo = null;
     _ascolto?.cancel();
     _ascolto = null;
     try {

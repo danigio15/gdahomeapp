@@ -122,14 +122,17 @@ class PonteFinto {
     String stato, {
     String? nome,
     String? unita,
+    String? tipo,
+    String? cambiataIl,
   }) => {
     'entity_id': id,
     'state': stato,
     'attributes': {
       if (nome != null) 'friendly_name': nome,
       if (unita != null) 'unit_of_measurement': unita,
+      if (tipo != null) 'device_class': tipo,
     },
-    'last_changed': '2026-09-07T07:00:00.000000+00:00',
+    'last_changed': cambiataIl ?? '2026-09-07T07:00:00.000000+00:00',
   };
 
   /// Manda un `state_changed` come lo manderebbe Home Assistant.

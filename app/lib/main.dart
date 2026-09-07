@@ -1,24 +1,29 @@
 /// L'app di casa.
 ///
-/// Il portone decide dove mandare chi apre l'app: al primo avvio se non c'e'
-/// ancora un segno nel portachiavi, dritto in casa se c'e'. Nient'altro.
+/// Il portone tiene aperto **un** collegamento — una casa alla volta — e decide
+/// cosa far vedere: la schermata per aggiungere una casa se non ce n'e'
+/// nessuna, la home se c'e'. Tutto quello che le schermate sanno della rete
+/// passa da li'.
 library;
 
 import 'package:flutter/material.dart';
 
-import 'ponte/custodia.dart';
-import 'ponte/filo.dart';
-import 'ponte/indirizzo.dart';
+import 'casa/archivio_delle_case.dart';
+import 'casa/cassaforte.dart';
+import 'casa/collegamento.dart';
+import 'schermate/aggiungi_casa.dart';
 import 'schermate/casa.dart';
-import 'schermate/primo_avvio.dart';
+import 'schermate/home.dart';
+import 'schermate/le_case.dart';
 
 void main() => runApp(const AppDiCasa());
 
 class AppDiCasa extends StatelessWidget {
-  const AppDiCasa({super.key, this.custodia});
+  const AppDiCasa({super.key, this.cassaforte, this.collegamento});
 
-  /// Sostituibile nelle prove, dove il portachiavi del sistema non c'e'.
-  final Custodia? custodia;
+  /// Sostituibili nelle prove, dove il portachiavi e la rete non ci sono.
+  final Cassaforte? cassaforte;
+  final Collegamento? collegamento;
 
   @override
   Widget build(BuildContext context) {
@@ -28,82 +33,102 @@ class AppDiCasa extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorSchemeSeed: seme, brightness: Brightness.light),
       darkTheme: ThemeData(colorSchemeSeed: seme, brightness: Brightness.dark),
-      home: Portone(custodia: custodia ?? const CustodiaDelSistema()),
+      home: Portone(cassaforte: cassaforte, collegamento: collegamento),
     );
   }
 }
 
 class Portone extends StatefulWidget {
-  const Portone({super.key, required this.custodia});
+  const Portone({super.key, this.cassaforte, this.collegamento});
 
-  final Custodia custodia;
+  final Cassaforte? cassaforte;
+  final Collegamento? collegamento;
 
   @override
   State<Portone> createState() => _PortoneState();
 }
 
 class _PortoneState extends State<Portone> {
-  Filo? _filo;
-  bool _guardato = false;
+  late final Collegamento _collegamento;
+  bool _pronto = false;
 
   @override
   void initState() {
     super.initState();
-    _guarda();
+    _collegamento =
+        widget.collegamento ??
+        Collegamento(
+          archivio: ArchivioDelleCase(
+            widget.cassaforte ?? const CassaforteDelSistema(),
+          ),
+        );
+    _accendi();
   }
 
-  Future<void> _guarda() async {
-    final segno = await widget.custodia.leggiIlSegno();
-    final dove = await widget.custodia.leggiLIndirizzo();
+  Future<void> _accendi() async {
+    if (!_collegamento.archivio.aperto) await _collegamento.archivio.apri();
+    /* Una volta sola. Da li' in poi il collegamento si gestisce da solo — si
+     * riconnette, cambia approdo, cambia casa — e riavviarlo a ogni
+     * ricostruzione vorrebbe dire buttare giu' il filo ogni volta che gira lo
+     * schermo. */
+    if (!_collegamento.avviato) await _collegamento.apri();
     if (!mounted) return;
-    setState(() {
-      _guardato = true;
-      if (segno != null && dove != null) _filo = _apriIlFilo(dove, segno);
+    setState(() => _pronto = true);
+    _collegamento.cambiamenti.listen((_) {
+      if (mounted) setState(() {});
     });
-  }
-
-  Filo _apriIlFilo(IndirizzoDelPonte dove, String segno) {
-    final filo = Filo(indirizzo: dove, segno: segno);
-    /* L'esito non si aspetta qui: la schermata della casa guarda lo stato del
-     * filo e racconta da sola cosa sta succedendo. Un errore adesso vorrebbe
-     * dire solo che il telefono non e' ancora in rete. */
-    filo.apri().catchError((Object _) {});
-    return filo;
-  }
-
-  Future<void> _esci() async {
-    final vecchio = _filo;
-    setState(() => _filo = null);
-    await vecchio?.chiudi();
-    await widget.custodia.dimentica();
   }
 
   @override
   void dispose() {
-    _filo?.chiudi();
+    _collegamento.chiudi();
     super.dispose();
+  }
+
+  Future<void> _aggiungiUnaCasa() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (contesto) => AggiungiCasa(
+          archivio: _collegamento.archivio,
+          quandoFatto: (_) async {
+            Navigator.of(contesto).pop();
+            await _collegamento.apri();
+          },
+        ),
+      ),
+    );
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_guardato) {
+    if (!_pronto) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    final filo = _filo;
-    if (filo == null) {
-      return PrimoAvvio(
-        custodia: widget.custodia,
-        quandoEntra: (dove, segno) =>
-            setState(() => _filo = _apriIlFilo(dove, segno)),
+    if (_collegamento.archivio.vuoto) {
+      return AggiungiCasa(
+        archivio: _collegamento.archivio,
+        quandoFatto: (_) => _collegamento.apri(),
       );
     }
-    return SchermataDellaCasa(
-      /* La chiave lega la schermata a questo filo: cambiando filo — perche' si
-       * e' riabbinato — Flutter costruisce una schermata nuova invece di
-       * riusare quella vecchia con dentro lo stato della casa di prima. */
-      key: ValueKey(filo),
-      filo: filo,
-      quandoEsce: _esci,
+    return Home(
+      collegamento: _collegamento,
+      vaiAiDispositivi: () => Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => SchermataDeiDispositivi(collegamento: _collegamento),
+        ),
+      ),
+      vaiAlleCase: () async {
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute(
+            builder: (_) => LeCase(
+              collegamento: _collegamento,
+              aggiungiUnaCasa: _aggiungiUnaCasa,
+            ),
+          ),
+        );
+        if (mounted) setState(() {});
+      },
     );
   }
 }

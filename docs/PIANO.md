@@ -42,7 +42,7 @@ Quindi non c'e' niente da smontare: c'e' da costruire.
 
 ## Le fasi
 
-### Fase 1 — il guscio *(quasi chiusa)*
+### Fase 1 — il guscio *(chiusa, tranne la plancia)*
 
 * ✅ L'add-on: abbinamento con codice a tempo, revoca, filo verso Home
   Assistant, console dentro Home Assistant, 60 prove.
@@ -54,12 +54,25 @@ Quindi non c'e' niente da smontare: c'e' da costruire.
   bruciare il codice.
 * ✅ La casa viva: `get_states` piu' `state_changed`, con la rilettura completa
   dopo ogni riconnessione.
-* ⬜ **La plancia dentro l'app.** Manca un pezzo che al momento non c'e' da
-  nessuna parte: il ponte passa il *filo*, cioe' il WebSocket, ma non le
-  *pagine*. Per far vedere la plancia in una WebView il ponte deve saper
-  passare anche l'HTTP del frontend di Home Assistant, sessione compresa. E' il
-  prossimo lavoro, ed e' piu' delicato del filo — una WebView autenticata e' un
-  posto dove si sbaglia facile.
+* ✅ **Piu' case.** Ognuna col suo segno, in un archivio nel portachiavi. Si
+  passa dall'una all'altra buttando giu' il filo della prima e aprendo quello
+  della seconda: due fili aperti insieme vorrebbero dire due case mescolate a
+  schermo.
+* ✅ **Dentro e fuori casa.** Due indirizzi per la stessa istanza. La sonda li
+  chiede tutti e due insieme e tiene il primo che risponde; il filo la richiama
+  **a ogni tentativo**, cosi' uscire dal portone non richiede niente a nessuno.
+  Dove si e' entrati si ricorda, e la volta dopo si prova per primo quello.
+* ✅ **La home.** Luci accese, aperture, temperatura, antifurto, cose che non
+  rispondono. E in cima, sotto il nome della casa, da dove si sta passando —
+  che e' la prima domanda di chi apre l'app fuori casa e vede qualcosa di
+  strano: sto guardando dati veri o vecchi?
+
+La plancia dentro l'app resta fuori dalla fase 1 **apposta**: e' l'ultimo
+blocco che confluisce nell'app, e prima vengono le tre funzioni che in Home
+Assistant stanno nascoste. Quando sara' il suo turno servira' un pezzo che al
+momento non c'e' da nessuna parte — il ponte passa il *filo*, cioe' il
+WebSocket, ma non le *pagine* — e una WebView autenticata e' un posto dove si
+sbaglia facile.
 
 ### Fase 2 — gli aiutanti
 

@@ -6,6 +6,8 @@
 /// che nell'app risulta spenta.
 library;
 
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/ponte/errori.dart';
 import 'package:gdahome/ponte/filo.dart';
@@ -18,7 +20,7 @@ void main() {
   setUp(() async => ponte = await PonteFinto.alza());
   tearDown(() async => ponte.spegni());
 
-  Filo filoCon({String segno = segnoBuono}) => Filo(
+  Filo filoCon({String segno = segnoBuono}) => Filo.fisso(
     indirizzo: ponte.indirizzo,
     segno: segno,
     /* Nelle prove non si aspettano otto secondi per vedere una riconnessione. */
@@ -130,7 +132,7 @@ void main() {
   test(
     'una richiesta senza risposta muore da sola invece di restare appesa',
     () async {
-      final filo = Filo(
+      final filo = Filo.fisso(
         indirizzo: ponte.indirizzo,
         segno: segnoBuono,
         attesaMassima: const Duration(milliseconds: 80),
@@ -236,6 +238,83 @@ void main() {
     expect(filo.dentro, isFalse);
   });
 
+  test('l\'approdo si ricalcola a ogni tentativo: uscendo di casa si passa da fuori', () async {
+    /* La prova di tutto il funzionamento fuori casa.
+       *
+       * Il primo indirizzo e' quello di rete locale e funziona; poi smette,
+       * come quando si esce dal portone. Al tentativo dopo la sonda risponde
+       * con l'indirizzo di fuori, e il filo ci va senza che nessuno gli abbia
+       * detto niente. */
+    final altroPonte = await PonteFinto.alza();
+    var inCasa = true;
+    final filo = Filo(
+      approdo: () async => inCasa ? ponte.indirizzo : altroPonte.indirizzo,
+      segno: segnoBuono,
+      attesaMassima: const Duration(milliseconds: 80),
+    );
+
+    await filo.apri();
+    expect(filo.approdoAdesso, ponte.indirizzo);
+
+    inCasa = false;
+    await ponte.buttaGiu();
+
+    await _finoA(
+      () => filo.dentro && filo.approdoAdesso == altroPonte.indirizzo,
+      entro: const Duration(seconds: 5),
+    );
+    expect(altroPonte.collegamenti, 1);
+    await filo.chiudi();
+    await altroPonte.spegni();
+  });
+
+  test('se non risponde nessun indirizzo, si continua a riprovare', () async {
+    var chiesto = 0;
+    final filo = Filo(
+      approdo: () async {
+        chiesto += 1;
+        throw const PonteIrraggiungibile('nessuno risponde');
+      },
+      segno: segnoBuono,
+      attesaMassima: const Duration(milliseconds: 60),
+    );
+
+    await expectLater(
+      filo.apri(entro: const Duration(milliseconds: 200)),
+      throwsA(isA<PonteIrraggiungibile>()),
+    );
+    final finQui = chiesto;
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    expect(
+      chiesto,
+      greaterThan(finQui),
+      reason: 'i tentativi vanno avanti da soli',
+    );
+    await filo.chiudi();
+  });
+
+  test('chiudere mentre si sta cercando la casa non riapre niente', () async {
+    final filo = Filo(
+      approdo: () async {
+        await Future<void>.delayed(const Duration(milliseconds: 80));
+        return ponte.indirizzo;
+      },
+      segno: segnoBuono,
+      attesaMassima: const Duration(milliseconds: 60),
+    );
+    unawaited(filo.apri().catchError((Object _) {}));
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await filo.chiudi();
+
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    expect(
+      ponte.collegamenti,
+      0,
+      reason: 'non si e\' collegato dopo la chiusura',
+    );
+    expect(filo.dentro, isFalse);
+  });
+
   test(
     'smettere di ascoltare una sottoscrizione lo dice a Home Assistant',
     () async {
@@ -267,3 +346,6 @@ Future<void> _finoA(
   }
   throw StateError('l\'attesa e\' scaduta');
 }
+
+/// Le prove dell'approdo mobile: quello che succede uscendo di casa.
+void proveDellApprodo() {}
