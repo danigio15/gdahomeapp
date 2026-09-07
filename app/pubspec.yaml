@@ -1,0 +1,35 @@
+name: gdahome
+description: "L'app di casa: la plancia, e i comandi che in Home Assistant stanno nascosti."
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Il filo con il ponte. `web_socket_channel` invece del WebSocket di
+  # `dart:io` perche' si fa sostituire nelle prove senza toccare il codice che
+  # lo usa.
+  web_socket_channel: ^3.0.0
+
+  # L'abbinamento, che e' una POST sola.
+  http: ^1.2.0
+
+  # Il segno del ponte va nel portachiavi del sistema — Keychain sull'iPhone,
+  # Keystore su Android — non in un file di preferenze, che su Android si legge
+  # da fuori con un telefono sbloccato.
+  flutter_secure_storage: ^9.2.0
+
+  # La plancia che gia' esiste, dentro l'app.
+  webview_flutter: ^4.10.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

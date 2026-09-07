@@ -13,6 +13,7 @@ veri.
 | **Accesso da fuori** | un **add-on** che fa da ponte | fatto, sta in `ponte/` |
 | **Zigbee** | **ZHA e Zigbee2MQTT tutti e due** | il pairing va dietro un'interfaccia sola con due adattatori; la fase costa il doppio |
 | **La plancia** | resta quella che c'e' | non si riscrive niente di cio' che gia' funziona |
+| **Con cosa si scrive l'app** | **Flutter** | una sola app per tutti e due i telefoni, e l'interfaccia piu' fluida delle tre strade |
 
 Sulla terza vale la pena essere espliciti, perche' e' la decisione che fa
 risparmiare piu' tempo di tutte. Il progetto vecchio ha gia' provato a
@@ -41,18 +42,24 @@ Quindi non c'e' niente da smontare: c'e' da costruire.
 
 ## Le fasi
 
-### Fase 1 — il guscio *(in corso)*
-
-Il ponte c'e'. Manca l'app che ci bussa.
+### Fase 1 — il guscio *(quasi chiusa)*
 
 * ✅ L'add-on: abbinamento con codice a tempo, revoca, filo verso Home
   Assistant, console dentro Home Assistant, 60 prove.
-* ⬜ Il guscio dell'app: primo avvio, codice di abbinamento, segno nel
-  portachiavi del sistema (Keychain su iPhone, Keystore su Android).
-* ⬜ La plancia dentro l'app, in WebView, con la sessione gia' aperta dal
-  ponte.
-
-Alla fine della fase 1 c'e' **un'app che si installa e fa vedere la casa**.
+* ✅ Il filo in Dart: stretta di mano, comandi numerati, sottoscrizioni,
+  riconnessione con attesa che raddoppia, e le sottoscrizioni che risalgono da
+  sole dopo una caduta.
+* ✅ Il primo avvio: indirizzo e codice, segno nel portachiavi del sistema
+  (Keychain su iPhone, Keystore su Android), e il ponte controllato *prima* di
+  bruciare il codice.
+* ✅ La casa viva: `get_states` piu' `state_changed`, con la rilettura completa
+  dopo ogni riconnessione.
+* ⬜ **La plancia dentro l'app.** Manca un pezzo che al momento non c'e' da
+  nessuna parte: il ponte passa il *filo*, cioe' il WebSocket, ma non le
+  *pagine*. Per far vedere la plancia in una WebView il ponte deve saper
+  passare anche l'HTTP del frontend di Home Assistant, sessione compresa. E' il
+  prossimo lavoro, ed e' piu' delicato del filo — una WebView autenticata e' un
+  posto dove si sbaglia facile.
 
 ### Fase 2 — gli aiutanti
 
@@ -130,12 +137,43 @@ risposta a quella revisione**, non solo funzioni in piu'.
    se qualcuno gia' dentro Home Assistant ha fatto un codice negli ultimi
    cinque minuti, e si stacca con un bottone.
 
-## La decisione che manca
+## Flutter, e cosa vuol dire in pratica
 
-**Con cosa si scrive l'app.** Tre strade, e cambiano tutto il resto:
+Una sola app per Android e iPhone, disegnata da Flutter invece che dal sistema:
+vuol dire che quello che si vede e' identico sui due telefoni, e che le
+animazioni sono le stesse. E' la strada che da' il risultato piu' fluido.
 
-| | | |
-|---|---|---|
-| **Capacitor** | web dentro un guscio nativo | si riusa quello che c'e', si parte in giorni, il nativo si sente poco |
-| **React Native** | nativo vero, con JavaScript | equilibrio fra le due, comunita' grande |
-| **Flutter** | nativo vero, con Dart | il piu' fluido, ma e' un linguaggio nuovo da imparare |
+Il prezzo e' Dart, che e' un linguaggio nuovo rispetto a tutto il resto del
+progetto. Si paga una volta, e per limitare quanto si paga il codice e' diviso
+in due meta' con una regola netta:
+
+* **`app/lib/ponte/` non sa che Flutter esiste.** E' Dart e basta: la stretta
+  di mano col ponte, i comandi, le sottoscrizioni, la riconnessione. Si prova
+  con `flutter test` contro un ponte finto, senza telefono, senza emulatore e
+  senza schermo — che e' l'unico modo di avere prove che girano davvero a ogni
+  commit.
+* **`app/lib/schermate/` e' Flutter**, e sopra quella meta' non c'e' niente da
+  provare che non sia guardare lo schermo.
+
+La divisione non e' pulizia fine a se stessa: e' quello che permette alla CI di
+dire qualcosa di vero sull'app senza avere un telefono attaccato.
+
+## Come si mettono insieme i pezzi
+
+```
+    app/lib/schermate/          Flutter: primo avvio, plancia, impostazioni
+            │
+    app/lib/ponte/              Dart puro: il filo, i comandi — provato
+            │
+        ══════════  WSS  ══════════
+            │
+    ponte/  (add-on)             gia' fatto, 60 prove
+            │
+    Home Assistant
+```
+
+La cosa importante e' che il pezzo di mezzo — `app/lib/ponte/` — parla il
+**protocollo di Home Assistant**, non un protocollo nostro: l'add-on si
+presenta come Home Assistant apposta. Vuol dire che lo stesso codice del filo
+funziona anche puntato dritto a un Home Assistant, senza ponte, e che nessuno
+dei due lati e' incastrato con l'altro.

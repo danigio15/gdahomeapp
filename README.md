@@ -6,7 +6,8 @@ fare le tre cose che in Home Assistant stanno nascoste in fondo a un menu:
 aiutante**. Tutto quello che si crea da qui compare nella plancia, perche' sono
 entita' di Home Assistant come le altre.
 
-> **Stato: fase 1.** Il ponte c'e' ed e' provato. L'app non c'e' ancora.
+> **Stato: fase 1.** Il ponte c'e'. L'app si abbina, entra e fa vedere la casa
+> viva. Le tre funzioni nuove — Zigbee, automazioni, aiutanti — sono le fasi 2, 3 e 4.
 
 ## Le tre parti
 
@@ -22,7 +23,7 @@ entita' di Home Assistant come le altre.
 | | dove sta | cosa fa |
 |---|---|---|
 | **il ponte** | `ponte/` | l'add-on di Home Assistant che fa entrare l'app, da dentro e da fuori casa |
-| **l'app** | `app/` — da fare | la plancia sul telefono, e i comandi che creano le cose |
+| **l'app** | `app/` | Flutter, per Android e iPhone: si abbina, si collega, comanda |
 | **la plancia** | [dashboardmodern-v2](https://github.com/danigio15/dashboardmodern-v2) | le ventitre sezioni che gia' esistono e funzionano |
 
 ## Perche' un ponte, e non un segno incollato a mano
@@ -47,8 +48,10 @@ Il resto — le due porte, l'abbinamento, cosa finisce sul disco — sta in
 | | |
 |---|---|
 | ✅ | Il ponte: abbinamento, revoca, filo verso Home Assistant, console dentro HA |
-| ✅ | 60 prove che girano senza rete e senza Home Assistant, in meno di un secondo |
-| ⬜ | L'app: guscio, primo avvio, plancia |
+| ✅ | L'app: primo avvio col codice, segno nel portachiavi, filo che si rialza da solo |
+| ✅ | La casa viva: tutte le entita', divise per dominio, con gli interruttori che funzionano |
+| ✅ | **100 prove** — 60 sul ponte, 40 sull'app — che girano senza rete, senza Home Assistant e senza telefono |
+| ⬜ | La plancia dentro l'app: serve che il ponte passi anche le pagine, non solo il filo |
 | ⬜ | Gli aiutanti (i sette classici, nativi) |
 | ⬜ | Zigbee: ZHA **e** Zigbee2MQTT |
 | ⬜ | Il mago delle automazioni |
@@ -59,9 +62,14 @@ Il piano per intero, fase per fase, sta in [`docs/PIANO.md`](docs/PIANO.md).
 ## Le prove
 
 ```bash
-npm run test:ponte
+npm run test:ponte          # il ponte: 60 prove, meno di un secondo
+cd app && flutter test      # l'app: 40 prove, tre secondi
 ```
 
-Non serve `npm install`: il ponte non ha dipendenze, e le prove girano su Node
-e basta. `npm install` serve solo per `prettier`, che controlla la forma del
-codice.
+Girano tutte senza rete, senza Home Assistant e senza telefono: il ponte ha
+una Home Assistant finta che fa la stretta di mano vera, e l'app ha un ponte
+finto che fa lo stesso. E' l'unico modo di avere prove che girino davvero a
+ogni commit.
+
+Per il ponte non serve `npm install`: dipendenze non ne ha. `npm install` serve
+solo per `prettier`.

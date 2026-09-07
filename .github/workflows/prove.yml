@@ -36,3 +36,27 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run format:check
+
+  app:
+    name: L'app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Le dipendenze
+        run: flutter pub get
+        working-directory: app
+      # `analyze` e' il controllo dei tipi, ed e' l'unica cosa che dica
+      # qualcosa sulle schermate senza avere un telefono attaccato.
+      - name: L'analisi
+        run: flutter analyze
+        working-directory: app
+      - name: La forma del codice
+        run: dart format --output=none --set-exit-if-changed .
+        working-directory: app
+      - name: Le prove
+        run: flutter test
+        working-directory: app

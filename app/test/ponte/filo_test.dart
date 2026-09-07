@@ -1,0 +1,269 @@
+/// Le prove del filo, contro un ponte vero abbastanza.
+///
+/// La prova che conta piu' di tutte e' quella delle sottoscrizioni dopo una
+/// caduta: e' il modo in cui un'app di casa si rompe in silenzio — smette di
+/// aggiornarsi e nessuno se ne accorge finche' non si guarda una luce accesa
+/// che nell'app risulta spenta.
+library;
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:gdahome/ponte/errori.dart';
+import 'package:gdahome/ponte/filo.dart';
+
+import 'ponte_finto.dart';
+
+void main() {
+  late PonteFinto ponte;
+
+  setUp(() async => ponte = await PonteFinto.alza());
+  tearDown(() async => ponte.spegni());
+
+  Filo filoCon({String segno = segnoBuono}) => Filo(
+    indirizzo: ponte.indirizzo,
+    segno: segno,
+    /* Nelle prove non si aspettano otto secondi per vedere una riconnessione. */
+    attesaMassima: const Duration(milliseconds: 80),
+    attesaDellaRisposta: const Duration(seconds: 3),
+  );
+
+  test('la stretta di mano va, e il filo si dice dentro', () async {
+    final filo = filoCon();
+    final visti = <StatoDelFilo>[];
+    filo.stato.listen(visti.add);
+
+    await filo.apri();
+
+    expect(filo.dentro, isTrue);
+    expect(filo.statoAdesso, StatoDelFilo.dentro);
+    await Future<void>.delayed(Duration.zero);
+    expect(visti, [StatoDelFilo.chiamando, StatoDelFilo.dentro]);
+    await filo.chiudi();
+  });
+
+  test(
+    'un segno rifiutato solleva, e non si riprova nemmeno una volta',
+    () async {
+      final filo = filoCon(segno: 'me lo sono inventato');
+
+      await expectLater(filo.apri(), throwsA(isA<SegnoRifiutato>()));
+
+      expect(filo.dentro, isFalse);
+      final quantiSubito = ponte.collegamenti;
+      /* Molto piu' della attesa massima: se ci riprovasse, si vedrebbe. */
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      expect(ponte.collegamenti, quantiSubito, reason: 'non deve ribussare');
+      await filo.chiudi();
+    },
+  );
+
+  test(
+    'un telefono staccato mentre e\' collegato viene buttato fuori',
+    () async {
+      final filo = filoCon();
+      await filo.apri();
+
+      ponte.accettaIlSegno = false;
+      await ponte.buttaGiu();
+
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      expect(filo.dentro, isFalse);
+      await filo.chiudi();
+    },
+  );
+
+  test('un comando va e torna, con il suo numero', () async {
+    final filo = filoCon();
+    await filo.apri();
+
+    final risposta = await filo.chiedi({'type': 'get_states'});
+
+    expect(risposta['success'], isTrue);
+    expect(ponte.arrivati.single['type'], 'get_states');
+    expect(ponte.arrivati.single['id'], isA<int>());
+    await filo.chiudi();
+  });
+
+  test(
+    'i numeri non si ripetono, e ogni risposta va alla sua richiesta',
+    () async {
+      final filo = filoCon();
+      await filo.apri();
+
+      await Future.wait([
+        filo.chiedi({'type': 'get_config'}),
+        filo.chiedi({'type': 'get_states'}),
+        filo.chiedi({'type': 'get_services'}),
+      ]);
+
+      final numeri = ponte.arrivati.map((uno) => uno['id']).toList();
+      expect(numeri.toSet().length, 3, reason: 'tre numeri diversi');
+      await filo.chiudi();
+    },
+  );
+
+  test('un comando rifiutato da Home Assistant arriva come tale', () async {
+    final filo = filoCon();
+    await filo.apri();
+
+    await expectLater(
+      filo.chiedi({'type': 'un_comando_che_non_esiste'}),
+      throwsA(
+        isA<ComandoRifiutato>().having(
+          (e) => e.codice,
+          'codice',
+          'unknown_command',
+        ),
+      ),
+    );
+    await filo.chiudi();
+  });
+
+  test('un comando su un filo chiuso non parte', () async {
+    final filo = filoCon();
+    await expectLater(
+      filo.chiedi({'type': 'get_states'}),
+      throwsA(isA<FiloCaduto>()),
+    );
+    await filo.chiudi();
+  });
+
+  test(
+    'una richiesta senza risposta muore da sola invece di restare appesa',
+    () async {
+      final filo = Filo(
+        indirizzo: ponte.indirizzo,
+        segno: segnoBuono,
+        attesaMassima: const Duration(milliseconds: 80),
+        attesaDellaRisposta: const Duration(milliseconds: 150),
+      );
+      await filo.apri();
+      ponte.muto = true;
+
+      await expectLater(
+        filo.chiedi({'type': 'get_states'}),
+        throwsA(isA<FiloCaduto>()),
+      );
+      await filo.chiudi();
+    },
+  );
+
+  test('le richieste in volo muoiono quando il filo cade', () async {
+    final filo = filoCon();
+    await filo.apri();
+    ponte.muto = true;
+
+    final inVolo = filo.chiedi({'type': 'get_states'});
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+    await ponte.buttaGiu();
+
+    await expectLater(inVolo, throwsA(isA<FiloCaduto>()));
+    await filo.chiudi();
+  });
+
+  test('gli eventi di una sottoscrizione arrivano', () async {
+    final filo = filoCon();
+    await filo.apri();
+
+    final eventi = await filo.sottoscrivi({'type': 'subscribe_events'});
+    final visti = <Map<String, dynamic>>[];
+    eventi.listen(visti.add);
+
+    final id = ponte.arrivati.last['id'] as int;
+    ponte.evento(id, {'event_type': 'state_changed'});
+
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    expect(visti.single['event_type'], 'state_changed');
+    await filo.chiudi();
+  });
+
+  test('il filo si rialza da solo dopo una caduta', () async {
+    final filo = filoCon();
+    await filo.apri();
+    expect(ponte.collegamenti, 1);
+
+    await ponte.buttaGiu();
+    /* Non basta aspettare che `dentro` torni vero: nell'istante subito dopo la
+     * caduta e' ancora vero, perche' il filo non se n'e' accorto. Quello che
+     * si aspetta e' che il ponte veda **un collegamento nuovo**. */
+    await _finoA(
+      () => ponte.collegamenti > 1 && filo.dentro,
+      entro: const Duration(seconds: 4),
+    );
+
+    expect(ponte.collegamenti, greaterThan(1));
+    expect(filo.dentro, isTrue);
+    await filo.chiudi();
+  });
+
+  test('dopo la caduta la sottoscrizione risale da sola, e gli eventi ricominciano', () async {
+    final filo = filoCon();
+    await filo.apri();
+
+    final eventi = await filo.sottoscrivi({'type': 'subscribe_events'});
+    final visti = <Map<String, dynamic>>[];
+    eventi.listen(visti.add);
+
+    ponte.arrivati.clear();
+    await ponte.buttaGiu();
+    await _finoA(() => filo.dentro, entro: const Duration(seconds: 4));
+    /* Dopo la riconnessione la sottoscrizione va rifatta: se il filo non la
+     * rifacesse, qui non ci sarebbe nessun `subscribe_events`. */
+    await _finoA(
+      () => ponte.arrivati.any((uno) => uno['type'] == 'subscribe_events'),
+      entro: const Duration(seconds: 4),
+    );
+
+    final nuovoId =
+        ponte.arrivati.lastWhere(
+              (uno) => uno['type'] == 'subscribe_events',
+            )['id']
+            as int;
+    ponte.evento(nuovoId, {'event_type': 'state_changed'});
+
+    await _finoA(() => visti.isNotEmpty, entro: const Duration(seconds: 4));
+    expect(visti.single['event_type'], 'state_changed');
+    await filo.chiudi();
+  });
+
+  test('chiudere apposta non fa ripartire niente', () async {
+    final filo = filoCon();
+    await filo.apri();
+    await filo.chiudi();
+
+    final quanti = ponte.collegamenti;
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    expect(ponte.collegamenti, quanti);
+    expect(filo.dentro, isFalse);
+  });
+
+  test(
+    'smettere di ascoltare una sottoscrizione lo dice a Home Assistant',
+    () async {
+      final filo = filoCon();
+      await filo.apri();
+
+      final eventi = await filo.sottoscrivi({'type': 'subscribe_events'});
+      final ascolto = eventi.listen((_) {});
+      await ascolto.cancel();
+
+      await _finoA(
+        () => ponte.arrivati.any((uno) => uno['type'] == 'unsubscribe_events'),
+        entro: const Duration(seconds: 3),
+      );
+      await filo.chiudi();
+    },
+  );
+}
+
+/// Aspetta che una cosa diventi vera, invece di aspettare un tempo a caso.
+Future<void> _finoA(
+  bool Function() condizione, {
+  required Duration entro,
+}) async {
+  final fine = DateTime.now().add(entro);
+  while (DateTime.now().isBefore(fine)) {
+    if (condizione()) return;
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+  }
+  throw StateError('l\'attesa e\' scaduta');
+}

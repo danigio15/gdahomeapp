@@ -2,12 +2,25 @@ node_modules/
 .DS_Store
 *.log
 
-# Roba dell'app, quando ci sara'
-/app/android/
-/app/ios/
-/app/dist/
-/app/.expo/
-/app/build/
-
 # Roba del ponte in prova
 /ponte/data/
+
+# ─── Flutter ───────────────────────────────────────────────────────────────
+# `android/` e `ios/` ci vanno dentro: sono configurazione del progetto, non
+# roba costruita. Quello che si butta e' cio' che si rifa' con un comando.
+/app/build/
+/app/.dart_tool/
+/app/.flutter-plugins
+/app/.flutter-plugins-dependencies
+/app/.packages
+/app/android/.gradle/
+/app/android/local.properties
+/app/android/app/debug/
+/app/android/app/profile/
+/app/android/app/release/
+/app/ios/Pods/
+/app/ios/.symlinks/
+/app/ios/Flutter/Flutter.framework
+/app/ios/Flutter/Flutter.podspec
+/app/ios/Flutter/flutter_export_environment.sh
+/app/ios/Flutter/Generated.xcconfig
