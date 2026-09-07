@@ -19,6 +19,7 @@
  */
 
 import { Canale } from "./canale.js";
+import { Chiamante } from "./chiamante.js";
 
 const SECONDO = 1000;
 
@@ -34,7 +35,7 @@ export class Chiamata {
     identita,
     portiere,
     registro,
-    Presa = globalThis.WebSocket,
+    Presa = Chiamante,
     attesaMassima = ATTESA_MASSIMA,
   }) {
     this.dove = String(dove || "").replace(/\/+$/, "");

@@ -19,7 +19,7 @@
  *    incontra un messaggio lungo.
  */
 
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 
 const GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
@@ -77,7 +77,7 @@ export function accetta(richiesta, socket, opzioni = {}) {
 
 /* ─── I telai ────────────────────────────────────────────────────────────── */
 
-export function telaio(tipo, carico) {
+export function telaio(tipo, carico, { maschera = false } = {}) {
   const dati = Buffer.isBuffer(carico) ? carico : Buffer.from(String(carico ?? ""), "utf8");
   let testa;
   if (dati.length < 126) {
@@ -92,10 +92,20 @@ export function telaio(tipo, carico) {
     testa[1] = 127;
     testa.writeBigUInt64BE(BigInt(dati.length), 2);
   }
-  /* Il bit alto e' FIN: questo server non spezza mai quello che manda. Il bit
-   * della maschera resta a zero, e deve restare a zero. */
+  /* Il bit alto e' FIN: qui dentro non si spezza mai quello che si manda. */
   testa[0] = 0x80 | tipo;
-  return Buffer.concat([testa, dati]);
+  if (!maschera) return Buffer.concat([testa, dati]);
+
+  /* La maschera non e' una difesa: e' una regola del protocollo, e vale per
+   * chi **chiama** e non per chi riceve. Serve a impedire che un pezzo di
+   * traffico scelto dall'attaccante somigli a una richiesta HTTP quando passa
+   * davanti a un proxy che non parla WebSocket. Chi non la mette si vede
+   * chiudere il filo, ed e' giusto cosi'. */
+  const chiave = randomBytes(4);
+  testa[1] |= 0x80;
+  const coperti = Buffer.from(dati);
+  for (let i = 0; i < coperti.length; i += 1) coperti[i] ^= chiave[i & 3];
+  return Buffer.concat([testa, chiave, coperti]);
 }
 
 /* Stacca un telaio dalla testa del buffer.
@@ -103,7 +113,11 @@ export function telaio(tipo, carico) {
  * Torna `null` quando i byte non bastano ancora — che e' la condizione
  * normale, non un errore: un messaggio lungo arriva in piu' pezzi di rete e
  * quasi mai allineato ai telai. */
-export function staccaIlTelaio(buffer, massimo = MESSAGGIO_MASSIMO) {
+export function staccaIlTelaio(
+  buffer,
+  massimo = MESSAGGIO_MASSIMO,
+  { vuoleLaMaschera = true } = {},
+) {
   if (buffer.length < 2) return null;
   const primo = buffer[0];
   const secondo = buffer[1];
@@ -134,13 +148,22 @@ export function staccaIlTelaio(buffer, massimo = MESSAGGIO_MASSIMO) {
   if (tipo >= 0x8 && (!finito || lunghezza > 125))
     throw new ErroreDiProtocollo("telaio di servizio malformato");
 
-  if (!mascherato) throw new ErroreDiProtocollo("telaio in arrivo senza maschera");
+  /* Chi chiama maschera, chi risponde no. Le due parti si aspettano cose
+   * opposte, e chi si sbaglia va fermato: un telaio senza maschera da un
+   * cliente — o con la maschera da un server — vuol dire che dall'altra parte
+   * non c'e' quello che pensiamo. */
+  if (vuoleLaMaschera && !mascherato)
+    throw new ErroreDiProtocollo("telaio in arrivo senza maschera");
+  if (!vuoleLaMaschera && mascherato)
+    throw new ErroreDiProtocollo("telaio in arrivo con la maschera");
 
-  const finaMaschera = inizio + 4;
+  const finaMaschera = mascherato ? inizio + 4 : inizio;
   if (buffer.length < finaMaschera + lunghezza) return null;
-  const maschera = buffer.subarray(inizio, finaMaschera);
   const carico = Buffer.from(buffer.subarray(finaMaschera, finaMaschera + lunghezza));
-  for (let i = 0; i < carico.length; i += 1) carico[i] ^= maschera[i & 3];
+  if (mascherato) {
+    const maschera = buffer.subarray(inizio, finaMaschera);
+    for (let i = 0; i < carico.length; i += 1) carico[i] ^= maschera[i & 3];
+  }
 
   return { tipo, finito, carico, consumati: finaMaschera + lunghezza };
 }
@@ -153,13 +176,23 @@ export class ErroreDiCarico extends Error {}
 export class Presa {
   constructor(
     socket,
-    { onMessaggio, onChiusa, onPong, messaggioMassimo = MESSAGGIO_MASSIMO } = {},
+    {
+      onMessaggio,
+      onChiusa,
+      onPong,
+      messaggioMassimo = MESSAGGIO_MASSIMO,
+      /* `true` quando questa presa e' quella di chi **ha chiamato**: allora
+       * maschera quello che manda e si aspetta senza maschera quello che
+       * riceve. E' l'unica differenza fra le due parti, e sta tutta qui. */
+      daCliente = false,
+    } = {},
   ) {
     this.socket = socket;
     this.onMessaggio = onMessaggio || (() => {});
     this.onChiusa = onChiusa || (() => {});
     this.onPong = onPong || (() => {});
     this.massimo = messaggioMassimo;
+    this.daCliente = daCliente;
     this.viva = true;
     this.hoRisposto = false;
 
@@ -175,10 +208,30 @@ export class Presa {
     socket.setNoDelay(true);
   }
 
+  /* I byte che chi ha fatto la stretta di mano ha letto **insieme alle
+   * intestazioni**.
+   *
+   * Non e' un caso raro da manuale: la risposta 101 e il primo telaio partono
+   * a un millesimo di distanza, quindi quasi sempre arrivano nello stesso
+   * pezzo di rete. Chi li buttasse via perderebbe il primo messaggio — che e'
+   * proprio quello che fa cominciare tutto, `auth_required`.
+   *
+   * Si chiama dopo, e non dal costruttore, per una ragione di ordine: chi ci
+   * sta sopra deve potersi dichiarare aperto **prima** di vedersi arrivare un
+   * messaggio. Altrimenti risponde a un filo che, per quanto ne sa lui, non e'
+   * ancora aperto — e la risposta finisce nel niente. */
+  riprendi(avanzo) {
+    if (avanzo && avanzo.length) this._arrivano(avanzo);
+  }
+
+  _telaio(tipo, carico) {
+    return telaio(tipo, carico, { maschera: this.daCliente });
+  }
+
   manda(testo) {
     if (!this.viva) return false;
     try {
-      this.socket.write(telaio(TIPO.testo, testo));
+      this.socket.write(this._telaio(TIPO.testo, testo));
       return true;
     } catch (_errore) {
       /* Scrivere su una presa gia' caduta non e' un guasto del ponte. */
@@ -190,7 +243,7 @@ export class Presa {
   ping() {
     if (!this.viva) return;
     try {
-      this.socket.write(telaio(TIPO.ping, Buffer.alloc(0)));
+      this.socket.write(this._telaio(TIPO.ping, Buffer.alloc(0)));
     } catch (_errore) {
       this._finita();
     }
@@ -204,7 +257,7 @@ export class Presa {
       const carico = Buffer.alloc(2 + testo.length);
       carico.writeUInt16BE(codice, 0);
       testo.copy(carico, 2);
-      this.socket.write(telaio(TIPO.chiusura, carico));
+      this.socket.write(this._telaio(TIPO.chiusura, carico));
     } catch (_errore) {
       /* Se non si riesce nemmeno a dire addio, si stacca e basta. */
     }
@@ -218,7 +271,9 @@ export class Presa {
     for (;;) {
       let telaioLetto;
       try {
-        telaioLetto = staccaIlTelaio(this._avanzo, this.massimo);
+        telaioLetto = staccaIlTelaio(this._avanzo, this.massimo, {
+          vuoleLaMaschera: !this.daCliente,
+        });
       } catch (errore) {
         this.chiudi(
           errore instanceof ErroreDiCarico ? CHIUSURA.troppoGrande : CHIUSURA.protocollo,
@@ -240,7 +295,7 @@ export class Presa {
     }
     if (tipo === TIPO.ping) {
       try {
-        this.socket.write(telaio(TIPO.pong, carico));
+        this.socket.write(this._telaio(TIPO.pong, carico));
       } catch (_errore) {
         this._finita();
         return false;

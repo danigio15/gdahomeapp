@@ -11,6 +11,8 @@
  * mano.
  */
 
+import { Chiamante } from "./chiamante.js";
+
 const CASA_DI_DIFETTO = "http://supervisor/core";
 
 /* Quanto si aspetta che Home Assistant risponda alla stretta di mano. Oltre,
@@ -21,7 +23,7 @@ export class Casa {
   constructor({
     indirizzo = process.env.PONTE_CASA || CASA_DI_DIFETTO,
     segno = process.env.SUPERVISOR_TOKEN || "",
-    Presa = globalThis.WebSocket,
+    Presa = Chiamante,
     fetch: prendi = globalThis.fetch,
   } = {}) {
     this.indirizzo = String(indirizzo).replace(/\/+$/, "");
