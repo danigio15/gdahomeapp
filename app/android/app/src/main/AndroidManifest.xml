@@ -1,4 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- La fotocamera serve a una cosa sola: inquadrare il codice a quadretti
+         che collega l'app alla casa. Lo dichiara gia' il lettore di quadretti,
+         e ridirlo qui non cambia niente al sistema — cambia a chi legge questo
+         file e si chiede perche' un'app di casa voglia la fotocamera.
+
+         `required="false"` perche' senza fotocamera l'app funziona lo stesso:
+         le lettere sotto al quadretto si battono a mano. Senza questa riga il
+         Play Store nasconderebbe l'app a chi ha un dispositivo senza. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
     <application
         android:label="gdahome"
         android:name="${applicationName}"

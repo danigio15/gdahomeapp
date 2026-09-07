@@ -1,8 +1,9 @@
-/// L'abbinamento: le otto lettere, e basta.
+/// L'abbinamento: un quadretto inquadrato, e basta.
 ///
-/// E' la sola volta in cui l'utente scrive qualcosa. Otto lettere, prese dalla
-/// scheda del ponte dentro Home Assistant, dove le vede solo chi in Home
-/// Assistant e' gia' entrato.
+/// E' la sola volta in cui l'utente fa qualcosa. Il quadretto sta nella scheda
+/// del ponte dentro Home Assistant, dove lo vede solo chi in Home Assistant e'
+/// gia' entrato; chi non puo' inquadrarlo trova sotto le stesse cose in
+/// lettere, e le batte.
 ///
 /// **Quello che qui dentro non si chiede mai** vale la pena scriverlo, perche'
 /// e' una decisione e non un caso: le credenziali di Home Assistant. Non un
@@ -27,6 +28,7 @@ import 'package:http/http.dart' as http;
 
 import 'errori.dart';
 import 'indirizzo.dart';
+import 'invito.dart';
 import 'presa.dart';
 import 'stretta.dart';
 
@@ -78,13 +80,82 @@ class Abbinato {
   String toString() => 'Abbinato($nomeDelDispositivo, $identificativo)';
 }
 
+/// Com'e' andata a finire, e da dove si e' entrati.
+///
+/// Le due cose viaggiano insieme perche' chi ha chiamato ha bisogno di tutte e
+/// due: quello che la casa ha detto, e **da quale delle sue porte** si e'
+/// entrati — che e' quello che l'app si segna per la volta dopo.
+class Entrata {
+  const Entrata(this.abbinato, {this.daDentro});
+
+  final Abbinato abbinato;
+
+  /// L'indirizzo di casa che ha risposto, quando si e' entrati da li'.
+  /// `null` vuol dire che si e' passati dal centralino.
+  final IndirizzoDelPonte? daDentro;
+}
+
 class Abbinamento {
   const Abbinamento._();
+
+  /// Abbina con quello che c'era scritto nel quadretto.
+  ///
+  /// Il quadretto dice **due** strade per la stessa casa, e quale delle due sia
+  /// quella buona dipende da dove si sta in questo momento: sul divano si va
+  /// dritti, dalla stazione si passa dal centralino. Non lo si chiede a chi
+  /// guarda lo schermo — non lo saprebbe dire, e non dovrebbe: si bussa agli
+  /// indirizzi di casa, e se risponde qualcuno vuol dire che si e' in casa.
+  ///
+  /// Dritti e' meglio quando si puo': sono i millesimi contro i decimi, e
+  /// soprattutto non ha bisogno che internet ci sia.
+  static Future<Entrata> conLInvito(
+    Invito invito, {
+    required String nome,
+    required String sistema,
+    IndirizzoDelCentralino? centralinoDiRipiego,
+    ApriLaPresa? apri,
+    http.Client? cliente,
+    Future<bool> Function(Uri)? bussa,
+  }) async {
+    final inCasa = await qualeRisponde(invito.indirizzi, bussa: bussa);
+    if (inCasa != null) {
+      return Entrata(
+        await chiedi(
+          dove: inCasa,
+          codice: invito.codice,
+          nome: nome,
+          sistema: sistema,
+          cliente: cliente,
+        ),
+        daDentro: inCasa,
+      );
+    }
+
+    /* Il centralino del quadretto vince su quello con cui l'app e' stata
+     * costruita: e' quello che quella casa chiama davvero. Il nostro resta
+     * come ripiego per i quadretti che non lo dicono. */
+    final centralino = invito.centralino ?? centralinoDiRipiego;
+    if (centralino == null) {
+      throw const PonteIrraggiungibile(
+        'questo codice non dice da dove si entra, e questa app non ha un '
+        'centralino a cui chiedere',
+      );
+    }
+    return Entrata(
+      await colCodice(
+        centralino: centralino,
+        codice: invito.codice,
+        nome: nome,
+        sistema: sistema,
+        apri: apri,
+      ),
+    );
+  }
 
   /// Abbina passando dal centralino: **l'utente batte solo il codice**.
   ///
   /// Il centralino instrada sull'**impronta** del codice, non sul codice: la
-  /// casa gliel'ha data quando la console ha fabbricato le otto lettere, e il
+  /// casa gliel'ha data quando la console ha fabbricato il codice, e il
   /// codice li' non passa mai. Chi sta in mezzo vede una stringa esadecimale
   /// da cui non si torna indietro, e byte cifrati.
   static Future<Abbinato> colCodice({
@@ -96,7 +167,7 @@ class Abbinamento {
   }) async {
     final pulito = codicePulito(codice);
     if (pulito.length < 4) {
-      throw const CodiceRifiutato('il codice e\' di otto lettere');
+      throw const CodiceRifiutato('questo codice e\' troppo corto');
     }
 
     final Presa sotto;
@@ -230,7 +301,24 @@ class Abbinamento {
     Future<bool> Function(Uri)? bussa,
   }) async {
     if (indirizzi.isEmpty) return null;
+    /* Uno solo non c'e' niente da scegliere, e la bussata sarebbe un'attesa
+     * pagata per niente: quando non si e' in casa non risponde, e si
+     * tornerebbe comunque a questo. */
     if (indirizzi.length == 1) return indirizzi.first;
+    return await qualeRisponde(indirizzi, bussa: bussa) ?? indirizzi.first;
+  }
+
+  /// Quale risponde, oppure **nessuno**.
+  ///
+  /// La differenza con `qualeIndirizzo` e' tutta in quel «nessuno», e non e'
+  /// una sfumatura: qui il silenzio e' una risposta. Vuol dire «non sei in
+  /// casa», ed e' quello che fa scegliere fra andare dritti e passare dal
+  /// centralino.
+  static Future<IndirizzoDelPonte?> qualeRisponde(
+    List<IndirizzoDelPonte> indirizzi, {
+    Future<bool> Function(Uri)? bussa,
+  }) async {
+    if (indirizzi.isEmpty) return null;
     final chiedi = bussa ?? ((Uri dove) => cePonte(dove));
 
     final vincitore = Completer<IndirizzoDelPonte?>();
@@ -245,14 +333,12 @@ class Abbinamento {
               return;
             }
             quantiNo += 1;
-            if (quantiNo == indirizzi.length) {
-              vincitore.complete(indirizzi.first);
-            }
+            if (quantiNo == indirizzi.length) vincitore.complete(null);
           },
           onError: (Object _) {
             quantiNo += 1;
             if (quantiNo == indirizzi.length && !vincitore.isCompleted) {
-              vincitore.complete(indirizzi.first);
+              vincitore.complete(null);
             }
           },
         ),
@@ -260,7 +346,7 @@ class Abbinamento {
     }
     return vincitore.future.timeout(
       _attesaDegliIndirizzi,
-      onTimeout: () => indirizzi.first,
+      onTimeout: () => null,
     );
   }
 

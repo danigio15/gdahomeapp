@@ -267,7 +267,7 @@ void main() {
      * schermo senza spiegazioni. E non e' nemmeno «non raggiungibile», che
      * vorrebbe dire «riprova fra un po'»: qui non c'e' niente da riprovare,
      * non si sa piu' dove sia. L'unica cosa vera da dire e' che va riabbinata,
-     * e sono otto lettere. */
+     * ed e' un quadretto da inquadrare. */
       await archivio.aggiungi(
         nome: 'Orfana',
         segno: segnoBuono,

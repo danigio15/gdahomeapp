@@ -121,7 +121,7 @@ class Sonda {
   static String _perche(CasaConosciuta casa) {
     if (casa.daRiabbinare) {
       return 'Questa casa e\' stata abbinata con una versione vecchia dell\'app: '
-          'va riabbinata, e stavolta bastano le otto lettere.';
+          'va riabbinata: e\' un quadretto da inquadrare.';
     }
     /* Questo prima degli altri: e' l'errore che fa perdere piu' tempo, perche'
      * l'indirizzo *sembra* giusto — e' quello che Home Assistant stessa da'

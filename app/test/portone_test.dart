@@ -20,6 +20,7 @@ import 'package:gdahome/main.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/aggiungi_casa.dart';
+import 'package:gdahome/schermate/lettore.dart';
 
 import 'ponte/ponte_finto.dart';
 
@@ -31,28 +32,171 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Colleghiamo la casa'), findsOneWidget);
-    expect(find.text('Abbina'), findsOneWidget);
+    expect(find.text('Inquadra il codice'), findsOneWidget);
 
     /* La cosa che si sta provando e' quello che **non** c'e'.
      *
-     * Due caselle: il codice e il nome della casa. Nessun indirizzo, nessuna
-     * porta, e soprattutto nessuna credenziale di Home Assistant — che e' una
-     * promessa scritta a schermo, e la prima cosa che si romperebbe
-     * rimettendo dentro un campo per volta. */
-    expect(find.byType(TextField), findsNWidgets(2));
-    expect(
-      find.text('Indirizzo di Home Assistant in casa'),
-      findsNothing,
-      reason: 'con un centralino l\'indirizzo non lo deve battere nessuno',
-    );
+     * Una casella sola, e non e' nemmeno il codice: e' il nome della casa.
+     * Nessun indirizzo, nessuna porta, nessun codice da battere, e soprattutto
+     * nessuna credenziale di Home Assistant — che e' una promessa scritta a
+     * schermo, e la prima cosa che si romperebbe rimettendo dentro un campo
+     * per volta. */
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.text('Indirizzo di Home Assistant in casa'), findsNothing);
+    expect(find.text('Indirizzo di casa (facoltativo)'), findsNothing);
     expect(
       find.textContaining('Non ti verra\' mai chiesta la password'),
       findsOneWidget,
     );
   });
 
+  testWidgets('quello che si inquadra si legge, e si abbina da solo', (
+    tester,
+  ) async {
+    /* La prova di quello che fa questa schermata di quello che ha letto.
+     *
+     * La fotocamera qui non c'e' — nelle prove non c'e' mai — e non e' lei che
+     * si sta provando: e' la decisione che viene dopo. Quel quadretto li' dice
+     * un indirizzo di casa che non risponde e nessun centralino, quindi si
+     * arriva fin dove si puo' arrivare senza rete, e quello che si vede e' che
+     * l'invito e' stato letto per intero. */
+    final archivio = ArchivioDelleCase(CassaforteInMemoria());
+    await archivio.apri();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AggiungiCasa(
+          archivio: archivio,
+          centralino: null,
+          quandoFatto: (_) {},
+          inquadra: (_) async =>
+              const UnQuadretto('gdahome|1|ABCD2345EFGH6789||'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Inquadra il codice'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('non dice da dove si entra'),
+      findsOneWidget,
+      reason:
+          'l\'invito e\' stato letto, e si e\' arrivati a scegliere la strada',
+    );
+  });
+
+  testWidgets('un quadretto che non e\' nostro lo dice, e non «riprova»', (
+    tester,
+  ) async {
+    final archivio = ArchivioDelleCase(CassaforteInMemoria());
+    await archivio.apri();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AggiungiCasa(
+          archivio: archivio,
+          quandoFatto: (_) {},
+          inquadra: (_) async =>
+              const UnQuadretto('https://www.esempio.it/qualcosa'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Inquadra il codice'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('non e\' un codice di gdahome'), findsOneWidget);
+  });
+
+  testWidgets('un quadretto di un ponte piu\' nuovo manda ad aggiornare', (
+    tester,
+  ) async {
+    /* La differenza che conta: «non ti capisco» manda a controllare il codice,
+     * «sei vecchia» manda ad aggiornare l'app. Sono due strade diverse, e
+     * indovinare quale sia tocca a noi. */
+    final archivio = ArchivioDelleCase(CassaforteInMemoria());
+    await archivio.apri();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AggiungiCasa(
+          archivio: archivio,
+          quandoFatto: (_) {},
+          inquadra: (_) async => const UnQuadretto('gdahome|9|ABCD||'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Inquadra il codice'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('aggiorna l\'app'), findsOneWidget);
+  });
+
+  testWidgets('se la fotocamera non c\'e\', le lettere si aprono da sole', (
+    tester,
+  ) async {
+    /* Il caso che si dimentica: chi apre il lettore e trova una fotocamera che
+     * non si apre non ha «annullato». Riportarlo alla schermata di prima con
+     * in mezzo allo schermo lo stesso bottone che ha appena fallito vuol dire
+     * lasciarlo li'. */
+    final archivio = ArchivioDelleCase(CassaforteInMemoria());
+    await archivio.apri();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AggiungiCasa(
+          archivio: archivio,
+          quandoFatto: (_) {},
+          inquadra: (_) async => const SiScriveAMano(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Inquadra il codice'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.widgetWithText(TextField, 'Le lettere sotto al quadretto'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('tornare indietro dal lettore non e\' un errore', (tester) async {
+    /* Chi apre il lettore e poi cambia idea non ha sbagliato niente, e non
+     * deve trovarsi un messaggio rosso addosso. */
+    final archivio = ArchivioDelleCase(CassaforteInMemoria());
+    await archivio.apri();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AggiungiCasa(
+          archivio: archivio,
+          quandoFatto: (_) {},
+          inquadra: (_) async => const NienteDaLeggere(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Inquadra il codice'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Inquadra il codice'), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
+    /* Le due cose che si direbbero di un quadretto letto male: nessuna delle
+     * due, perche' non si e' letto niente. */
+    expect(find.textContaining('Inquadra quello che sta'), findsNothing);
+    expect(find.textContaining('aggiorna l\'app'), findsNothing);
+  });
+
   testWidgets('senza codice non si abbina niente', (tester) async {
     await tester.pumpWidget(AppDiCasa(cassaforte: CassaforteInMemoria()));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.textContaining('Scrivilo a mano'));
+    await tester.tap(find.textContaining('Scrivilo a mano'));
     await tester.pumpAndSettle();
 
     /* Il modulo e' piu' alto della finestra di prova: senza questo, il tocco
@@ -68,18 +212,16 @@ void main() {
   testWidgets(
     'l\'indirizzo si puo\' scrivere lo stesso, per chi ne ha bisogno',
     (tester) async {
-      /* La casella c'e' ancora, ma sta chiusa: serve a chi il centralino non
+      /* La casella c'e' ancora, ma sta di la': serve a chi il centralino non
        * ce l'ha, o a chi vuole abbinare senza far passare niente da fuori. Ci
-       * si arriva da un bottone, e quello che si scrive dentro viene
-       * controllato come prima. */
+       * si arriva dallo stesso bottone delle lettere, e quello che si scrive
+       * dentro viene controllato come prima. */
       await tester.pumpWidget(AppDiCasa(cassaforte: CassaforteInMemoria()));
       await tester.pumpAndSettle();
 
       expect(find.text('Indirizzo di casa (facoltativo)'), findsNothing);
-      await tester.ensureVisible(
-        find.textContaining('Il codice non funziona?'),
-      );
-      await tester.tap(find.textContaining('Il codice non funziona?'));
+      await tester.ensureVisible(find.textContaining('Scrivilo a mano'));
+      await tester.tap(find.textContaining('Scrivilo a mano'));
       await tester.pumpAndSettle();
 
       await tester.enterText(
@@ -99,8 +241,8 @@ void main() {
     'un\'app senza centralino dice cosa manca, non «non ha funzionato»',
     (tester) async {
       /* Il caso di chi si compila l'app per conto suo senza accendere nessun
-       * centralino. Li' l'indirizzo di casa serve davvero, la casella e' gia'
-       * aperta, e se manca si dice **perche'** — non «riprova». */
+       * centralino. Li' l'indirizzo di casa serve davvero — a meno che non lo
+       * dica il quadretto — e se manca si dice **perche'**, non «riprova». */
       final archivio = ArchivioDelleCase(CassaforteInMemoria());
       await archivio.apri();
 
@@ -115,13 +257,21 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await tester.ensureVisible(find.textContaining('Scrivilo a mano'));
+      await tester.tap(find.textContaining('Scrivilo a mano'));
+      await tester.pumpAndSettle();
+
       expect(
         find.text('Indirizzo di Home Assistant in casa'),
         findsOneWidget,
-        reason: 'senza centralino l\'indirizzo e\' l\'unica strada, e si vede subito',
+        reason:
+            'senza centralino l\'indirizzo e\' l\'unica strada battuta a mano',
       );
 
-      await tester.enterText(find.byType(TextField).first, 'ABCD2345');
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Le lettere sotto al quadretto'),
+        'ABCD2345EFGH6789',
+      );
       await tester.ensureVisible(find.text('Abbina'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Abbina'));

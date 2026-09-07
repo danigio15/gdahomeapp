@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/ponte/abbinamento.dart';
 import 'package:gdahome/ponte/errori.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
+import 'package:gdahome/ponte/invito.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
@@ -155,6 +156,119 @@ void main() {
     );
   });
 
+  /* ─── Quello che si e' inquadrato ──────────────────────────────────────
+   *
+   * Il quadretto dice **due** strade per la stessa casa, e quale sia quella
+   * buona dipende da dove si sta in quel momento. Non lo si chiede a chi
+   * guarda lo schermo — non lo saprebbe dire — quindi lo si prova qui: le due
+   * strade, e le due volte in cui non c'e' niente da scegliere. */
+
+  test('sul divano si va dritti, senza passare da fuori', () async {
+    /* Dritti e' meglio quando si puo': sono i millesimi contro i decimi, e
+     * soprattutto non ha bisogno che internet ci sia. */
+    late Uri bussato;
+    final entrata = await Abbinamento.conLInvito(
+      Invito.leggi(
+        'gdahome|1|ABCD|wss://centralino.esempio.dev|192.168.1.50:8098',
+      ),
+      nome: 'iPhone di Anna',
+      sistema: 'ios',
+      bussa: (dove) async {
+        bussato = dove;
+        return true;
+      },
+      cliente: rispondendo(201, {
+        'segno': 'a' * 64,
+        'chiave': 'b' * 64,
+        'dispositivo': {'id': 'dm_1', 'nome': 'iPhone di Anna'},
+      }),
+    );
+
+    expect(bussato.toString(), 'http://192.168.1.50:8098/salute');
+    expect(entrata.daDentro, IndirizzoDelPonte.leggi('192.168.1.50:8098'));
+    expect(entrata.abbinato.identificativo, 'dm_1');
+  });
+
+  test(
+    'alla stazione non risponde nessuno, e si passa dal centralino',
+    () async {
+      /* Il silenzio degli indirizzi di casa e' una risposta: vuol dire «non sei
+     * in casa». Qui si guarda che quel silenzio porti dall'altra parte, e non
+     * a un errore. */
+      final quale = await _dovePorta(
+        Invito.leggi(
+          'gdahome|1|ABCD|wss://centralino.esempio.dev|192.168.1.50:8098',
+        ),
+        rispondono: false,
+      );
+      expect(quale, 'wss://centralino.esempio.dev');
+    },
+  );
+
+  test('il centralino del quadretto vince su quello dell\'app', () async {
+    /* E' il caso che prima non funzionava affatto: una casa che chiama un
+     * centralino suo, e un'app costruita con un altro. Le due meta' non si
+     * incontravano mai, e quello che si vedeva era «non trovo la casa». */
+    final quale = await _dovePorta(
+      Invito.leggi('gdahome|1|ABCD|wss://quello.della.casa||'),
+      ripiego: IndirizzoDelCentralino.leggi('wss://quello.dell.app'),
+    );
+    expect(quale, 'wss://quello.della.casa');
+  });
+
+  test(
+    'un quadretto che non dice il centralino usa quello dell\'app',
+    () async {
+      final quale = await _dovePorta(
+        Invito.leggi('gdahome|1|ABCD||'),
+        ripiego: IndirizzoDelCentralino.leggi('wss://quello.dell.app'),
+      );
+      expect(quale, 'wss://quello.dell.app');
+    },
+  );
+
+  test(
+    'un quadretto senza nessuna strada lo dice, invece di provarci',
+    () async {
+      await expectLater(
+        Abbinamento.conLInvito(
+          Invito.leggi('gdahome|1|ABCD||'),
+          nome: 'x',
+          sistema: 'ios',
+        ),
+        throwsA(
+          isA<PonteIrraggiungibile>().having(
+            (e) => e.spiegazione,
+            'spiegazione',
+            contains('non dice da dove si entra'),
+          ),
+        ),
+      );
+    },
+  );
+
+  test('il silenzio di tutti gli indirizzi e\' una risposta', () async {
+    /* La differenza fra le due: `qualeRisponde` dice «nessuno», ed e' quello
+     * che fa scegliere la strada; `qualeIndirizzo` deve tenerne uno comunque,
+     * perche' domani, tornati a casa, quello e' meglio di niente. */
+    final due = [
+      IndirizzoDelPonte.leggi('192.168.1.50:8098')!,
+      IndirizzoDelPonte.leggi('10.0.0.4:8098')!,
+    ];
+    expect(
+      await Abbinamento.qualeRisponde(due, bussa: (_) async => false),
+      isNull,
+    );
+    expect(
+      await Abbinamento.qualeIndirizzo(due, bussa: (_) async => false),
+      due.first,
+    );
+    expect(
+      await Abbinamento.qualeRisponde(const [], bussa: (_) async => true),
+      isNull,
+    );
+  });
+
   test('il saluto dice se il ponte c\'e\'', () async {
     expect(
       await Abbinamento.cePonte(
@@ -182,6 +296,36 @@ void main() {
       isFalse,
     );
   });
+}
+
+/// Dove e' andata a bussare: torna l'indirizzo del centralino a cui l'app ha
+/// aperto il filo, senza che serva un centralino vero.
+///
+/// La presa finta chiude subito: quello che si sta guardando non e' cosa si
+/// dicono — quello lo provano le prove del centralino — ma **a chi** l'app ha
+/// deciso di parlare.
+Future<String> _dovePorta(
+  Invito invito, {
+  IndirizzoDelCentralino? ripiego,
+  bool rispondono = false,
+}) async {
+  late Uri aperto;
+  try {
+    await Abbinamento.conLInvito(
+      invito,
+      nome: 'x',
+      sistema: 'ios',
+      centralinoDiRipiego: ripiego,
+      bussa: (_) async => rispondono,
+      apri: (dove) async {
+        aperto = dove;
+        throw const _ReteAssente();
+      },
+    );
+  } on PonteIrraggiungibile {
+    /* Aspettata: la presa finta non apre niente. */
+  }
+  return '${aperto.scheme}://${aperto.host}';
 }
 
 class _ReteAssente implements Exception {

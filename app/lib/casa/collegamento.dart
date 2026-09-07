@@ -122,7 +122,7 @@ class Collegamento {
     if (casa.daRiabbinare || !casa.raggiungibile) {
       _perche = casa.daRiabbinare
           ? 'Questa casa e\' stata abbinata con una versione vecchia dell\'app: '
-                'riabbinala, e stavolta bastano le otto lettere.'
+                'riabbinala: e\' un quadretto da inquadrare.'
           : 'Non so piu\' dove sia «${casa.nome}»: riabbinala.';
       _vai(ComeVa.segnoScaduto);
       return;

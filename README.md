@@ -8,10 +8,10 @@ entita' di Home Assistant come le altre.
 
 > **Stato: fase 1 chiusa, tranne la plancia.** Il ponte c'e'. L'app tiene piu'
 > case, entra in ognuna **da dentro e da fuori** senza che l'utente tocchi
-> niente, e ha la sua home. Si abbina con **otto lettere e basta**: nessun
-> indirizzo da battere, nessuna credenziale di Home Assistant. Le tre funzioni
-> nuove — aiutanti, Zigbee, automazioni — sono le fasi 2, 3 e 4. La plancia e'
-> l'ultimo blocco.
+> niente, e ha la sua home. Si abbina **inquadrando un quadretto**: nessun
+> codice da battere, nessun indirizzo, nessuna credenziale di Home Assistant.
+> Le tre funzioni nuove — aiutanti, Zigbee, automazioni — sono le fasi 2, 3 e
+> 4. La plancia e' l'ultimo blocco.
 
 ## Come ci si arriva
 
@@ -119,8 +119,8 @@ vero** dell'app. L'altro, `da_fuori_test.dart`, accende la catena intera:
     app (Dart)  ──►  centralino (node)  ◄──  ponte (node)  ──►  HA finta
 ```
 
-e li' il telefono **non ha nessun indirizzo della casa**: ha otto lettere, e
-basta quello. E' la differenza fra «funziona se apri una porta sul router» e
+e li' il telefono **non ha nessun indirizzo della casa**: ha la riga che ha
+letto da un quadretto, e basta quella. E' la differenza fra «funziona se apri una porta sul router» e
 «funziona», ed e' l'unica prova che la dimostra per intero — tutte le altre
 hanno un finto proprio nel punto che conta. La stessa prova gira anche contro
 il centralino su Cloudflare:

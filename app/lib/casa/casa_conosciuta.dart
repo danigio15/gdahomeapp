@@ -15,7 +15,7 @@
 ///
 /// Quello che c'e' scritto qui dentro l'utente non l'ha battuto: gli
 /// indirizzi, l'identificativo e il centralino arrivano tutti dalla casa
-/// stessa, nella risposta all'abbinamento. Lui ha battuto otto lettere.
+/// stessa, nella risposta all'abbinamento. Lui ha inquadrato un quadretto.
 library;
 
 import '../ponte/indirizzo.dart';

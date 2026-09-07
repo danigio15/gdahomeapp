@@ -114,7 +114,9 @@ Se dice altro, lì c'è scritto cosa non va.
 ### Il codice
 
 Nella barra laterale di Home Assistant apri **Il ponte** e premi **Fabbrica un
-codice**. Escono otto lettere, e valgono cinque minuti.
+codice**. Compare un **quadretto**, e vale cinque minuti. (Sotto, per chi non
+può inquadrarlo, ci sono le stesse cose in lettere: sedici, in quattro gruppi
+da quattro.)
 
 ### Il pacchetto Android
 
@@ -122,8 +124,8 @@ Non serve installare niente sul computer: lo costruisce GitHub.
 
 1. Sulla repository: **Actions → «L'app da provare» → Run workflow**.
 2. C'è una casella **centralino**: incollaci `wss://centralino.<nome>.workers.dev`.
-   Se la lasci vuota funziona lo stesso — solo che la prima volta l'app ti
-   chiede anche l'indirizzo di casa (vedi sotto).
+   Puoi anche lasciarla vuota: inquadrando il quadretto, il centralino glielo
+   dice la casa. Serve solo a chi vuole battere le lettere a mano da fuori.
 3. Quando finisce (cinque minuti circa), in fondo alla pagina della corsa c'è
    **gdahome-android**: scaricalo. Dentro c'è `app-debug.apk`.
 4. Passa il file sul telefono e aprilo. Android chiederà di consentire
@@ -135,14 +137,17 @@ più lento e non è quello che andrebbe su un negozio.
 
 ### La prima accensione
 
-Apri l'app. C'è **una casella**: il codice.
+Apri l'app. C'è **un bottone**: «Inquadra il codice».
 
-- Se hai messo il centralino nella casella del workflow, batti le otto lettere
-  e basta. Da qualunque posto, anche dalla stazione.
-- Se non l'hai messo, l'app ti chiede anche **l'indirizzo di Home Assistant in
-  casa** — per esempio `192.168.1.50`. Si batte una volta sola, stando sul
-  Wi-Fi di casa. Da lì in poi l'app impara tutto il resto dalla casa, **compreso
-  a quale centralino chiama lei**, e da fuori funziona da sola.
+- **Inquadra il quadretto**, e basta. Da qualunque posto, anche dalla stazione:
+  dentro al quadretto c'è anche a quale centralino chiama quella casa e su
+  quali indirizzi la si trova sul Wi-Fi, quindi l'app non ha bisogno di sapere
+  niente da prima. Funziona anche se nella casella del workflow non hai messo
+  nessun centralino.
+- Se non puoi inquadrare — un tablet senza fotocamera, il permesso negato —
+  tocca **«Non puoi inquadrarlo? Scrivilo a mano»**: lì si battono le sedici
+  lettere, e c'è anche la casella dell'indirizzo di casa per chi ne ha
+  bisogno.
 
 **Non ti verrà mai chiesta la password di Home Assistant, né un gettone.** Se
 un giorno succede, è un difetto: quello che l'app riceve nasce dentro Home

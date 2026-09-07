@@ -1,15 +1,20 @@
 /// Aggiungere una casa.
 ///
-/// **Una casella.** Otto lettere, prese dalla scheda del ponte dentro Home
-/// Assistant. Non un indirizzo, non una porta, non un gettone, e soprattutto
-/// non le credenziali di Home Assistant: chi installa un'app di terzi e si
-/// sente chiedere le chiavi di casa fa benissimo a chiuderla.
+/// **Un bottone.** Si inquadra il quadretto che sta nella scheda del ponte,
+/// dentro Home Assistant, e non si batte niente: ne' un indirizzo, ne' una
+/// porta, ne' un gettone, e soprattutto non le credenziali di Home Assistant —
+/// chi installa un'app di terzi e si sente chiedere le chiavi di casa fa
+/// benissimo a chiuderla.
 ///
-/// L'indirizzo compare solo quando serve davvero — quando l'app non ha un
-/// centralino a cui chiedere — e sta chiuso in fondo, dove non spaventa
-/// nessuno. Anche in quel caso e' una riga sola, battuta una volta, stando sul
-/// divano: dalla risposta la casa dice tutto il resto, compreso a quale
-/// centralino chiama lei, e da quel momento l'app la ritrova anche da fuori.
+/// Dentro al quadretto c'e' anche **dove sta quella casa**: a quale centralino
+/// chiama, e su quali indirizzi la si trova sul Wi-Fi. E' il motivo per cui
+/// inquadrando funziona sempre — sul divano e alla stazione — senza che
+/// nessuno debba sapere niente di reti.
+///
+/// Le lettere restano, sotto, per chi non puo' inquadrare: un tablet senza
+/// fotocamera, un permesso negato, una fotocamera rotta. Sono sedici e non si
+/// battono volentieri, ed e' esattamente per questo che il bottone grande e'
+/// l'altro.
 library;
 
 import 'dart:io' show Platform;
@@ -21,7 +26,9 @@ import '../casa/casa_conosciuta.dart';
 import '../ponte/abbinamento.dart';
 import '../ponte/errori.dart';
 import '../ponte/indirizzo.dart';
+import '../ponte/invito.dart';
 import 'firma.dart';
+import 'lettore.dart';
 
 class AggiungiCasa extends StatefulWidget {
   const AggiungiCasa({
@@ -29,18 +36,24 @@ class AggiungiCasa extends StatefulWidget {
     required this.archivio,
     required this.quandoFatto,
     this.centralino,
+    this.inquadra = colLaFotocamera,
   });
 
   final ArchivioDelleCase archivio;
   final void Function(CasaConosciuta casa) quandoFatto;
 
-  /// Il centralino a cui chiedere.
+  /// Il centralino a cui chiedere quando il quadretto non ne dice uno suo.
   ///
   /// Arriva da fuori e non si va a prenderlo qui: `null` vuol dire davvero
-  /// **nessuno**, e allora l'indirizzo di casa e' l'unica strada. Una
-  /// schermata che si cerca da sola una costante globale non si puo' provare
-  /// nei due casi che contano, ed erano proprio quelli da provare.
+  /// **nessuno**. Una schermata che si cerca da sola una costante globale non
+  /// si puo' provare nei due casi che contano, ed erano proprio quelli da
+  /// provare.
   final IndirizzoDelCentralino? centralino;
+
+  /// Come si inquadra. Nelle prove non c'e' nessuna fotocamera, e quello che
+  /// si vuole provare non e' lei: e' cosa fa questa schermata di quello che ha
+  /// letto.
+  final Inquadra inquadra;
 
   @override
   State<AggiungiCasa> createState() => _AggiungiCasaState();
@@ -51,19 +64,14 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
   final _dentro = TextEditingController();
   final _codice = TextEditingController();
   bool _sto = false;
-  bool _mostraLIndirizzo = false;
+  bool _aMano = false;
   String? _male;
 
   IndirizzoDelCentralino? get _centralino => widget.centralino;
 
-  /// `true` quando l'indirizzo non e' un di piu' ma l'unica strada.
+  /// `true` quando, scrivendo a mano, l'indirizzo non e' un di piu' ma l'unica
+  /// strada: nessun centralino a cui chiedere, e nessun quadretto che lo dica.
   bool get _serveLIndirizzo => _centralino == null;
-
-  @override
-  void initState() {
-    super.initState();
-    _mostraLIndirizzo = _serveLIndirizzo;
-  }
 
   @override
   void dispose() {
@@ -91,7 +99,57 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
     }
   }
 
-  Future<void> _abbina() async {
+  /* ─── Inquadrare ───────────────────────────────────────────────────────── */
+
+  Future<void> _inquadra() async {
+    setState(() => _male = null);
+    final letto = await widget.inquadra(context);
+    if (!mounted) return;
+
+    final String riga;
+    switch (letto) {
+      case UnQuadretto(riga: final quella):
+        riga = quella;
+      case NienteDaLeggere():
+        /* Si e' tornati indietro: non e' un errore, e non si dice niente. */
+        return;
+      case SiScriveAMano():
+        /* La fotocamera non c'e'. Si aprono le lettere da sole: chi ha appena
+         * visto fallire il bottone non deve andarselo a cercare. */
+        setState(() => _aMano = true);
+        return;
+    }
+
+    final Invito invito;
+    try {
+      invito = Invito.leggi(riga);
+    } on InvitoIllegibile catch (errore) {
+      setState(
+        () => _male =
+            '${errore.spiegazione} Inquadra quello che sta '
+            'nella scheda «Il ponte», dentro Home Assistant.',
+      );
+      return;
+    } on InvitoTroppoNuovo catch (errore) {
+      setState(() => _male = errore.spiegazione);
+      return;
+    }
+
+    /* Il nome che si e' battuto vale lo stesso: e' l'unica cosa che l'app non
+     * puo' sapere da sola. */
+    await _prova(
+      () => Abbinamento.conLInvito(
+        invito,
+        nome: _comeSiChiama,
+        sistema: _sistema,
+        centralinoDiRipiego: _centralino,
+      ),
+    );
+  }
+
+  /* ─── Scriverlo a mano ─────────────────────────────────────────────────── */
+
+  Future<void> _abbinaAMano() async {
     final scritto = _dentro.text.trim();
     final inCasa = IndirizzoDelPonte.leggi(scritto);
 
@@ -100,12 +158,13 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       return;
     }
     if (codicePulito(_codice.text).isEmpty) {
-      setState(() => _male = 'Manca il codice: sono otto lettere.');
+      setState(
+        () => _male = 'Manca il codice: sono le lettere sotto al quadretto.',
+      );
       return;
     }
     if (inCasa == null && _centralino == null) {
       setState(() {
-        _mostraLIndirizzo = true;
         _male =
             'Serve l\'indirizzo di casa: questa versione dell\'app non ha '
             'un centralino a cui chiedere.';
@@ -113,12 +172,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       return;
     }
 
-    setState(() {
-      _sto = true;
-      _male = null;
-    });
-
-    try {
+    await _prova(() async {
       /* Due strade, stessa risposta. Con un indirizzo si bussa dritti, ed e'
        * quello che si fa stando in casa; senza, si passa dal centralino, dove
        * la casa e' andata ad aspettare. */
@@ -135,6 +189,24 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
               nome: _comeSiChiama,
               sistema: _sistema,
             );
+      return Entrata(abbinato, daDentro: inCasa);
+    }, inCasa: inCasa);
+  }
+
+  /* ─── Quello che succede in tutti e due i casi ─────────────────────────── */
+
+  Future<void> _prova(
+    Future<Entrata> Function() come, {
+    IndirizzoDelPonte? inCasa,
+  }) async {
+    setState(() {
+      _sto = true;
+      _male = null;
+    });
+
+    try {
+      final entrata = await come();
+      final abbinato = entrata.abbinato;
 
       /* La casa dice su quali indirizzi la si trova sulla rete di casa. Si
        * tiene quello che risponde: sono i millesimi contro i decimi, cioe' la
@@ -149,8 +221,8 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
         chiave: abbinato.chiave,
         casaAlCentralino: abbinato.casaAlCentralino,
         centralino: abbinato.centralino ?? _centralino,
-        inCasa: inCasa ?? scoperto,
-        approdoIniziale: inCasa != null
+        inCasa: entrata.daDentro ?? scoperto,
+        approdoIniziale: entrata.daDentro != null
             ? DaDove.daDentro
             : DaDove.dalCentralino,
       );
@@ -194,6 +266,8 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
         '(${errore.spiegazione})';
   }
 
+  /* ─── Quello che si vede ───────────────────────────────────────────────── */
+
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
@@ -224,31 +298,26 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                   ],
                   Text(
                     'In Home Assistant apri «Il ponte» dalla barra laterale e '
-                    'premi «Fabbrica un codice». Poi scrivilo qui.',
+                    'premi «Fabbrica un codice». Poi inquadra il quadretto.',
                     textAlign: TextAlign.center,
                     style: testi.bodyMedium?.copyWith(
                       color: colori.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 28),
-                  TextField(
-                    controller: _codice,
-                    enabled: !_sto,
-                    autofocus: true,
-                    autocorrect: false,
-                    textAlign: TextAlign.center,
-                    textCapitalization: TextCapitalization.characters,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _sto ? null : _abbina(),
-                    style: testi.headlineSmall?.copyWith(
-                      letterSpacing: 8,
-                      fontFamily: 'monospace',
+                  FilledButton.icon(
+                    onPressed: _sto ? null : _inquadra,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(56),
                     ),
-                    decoration: const InputDecoration(
-                      hintText: 'ABCD2345',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(vertical: 20),
-                    ),
+                    icon: _sto
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.qr_code_scanner),
+                    label: const Text('Inquadra il codice'),
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -269,56 +338,11 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  if (_mostraLIndirizzo) ...[
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: _dentro,
-                      enabled: !_sto,
-                      autocorrect: false,
-                      keyboardType: TextInputType.url,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _sto ? null : _abbina(),
-                      decoration: InputDecoration(
-                        labelText: _serveLIndirizzo
-                            ? 'Indirizzo di Home Assistant in casa'
-                            : 'Indirizzo di casa (facoltativo)',
-                        hintText: '192.168.1.50',
-                        helperText:
-                            'Stando sul Wi-Fi di casa. Il resto lo dice '
-                            'la casa da sola.',
-                        helperMaxLines: 2,
-                        border: const OutlineInputBorder(),
-                      ),
-                    ),
-                  ] else ...[
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: _sto
-                          ? null
-                          : () => setState(() => _mostraLIndirizzo = true),
-                      child: const Text(
-                        'Il codice non funziona? Scrivi l\'indirizzo',
-                      ),
-                    ),
-                  ],
+                  if (_aMano) ..._leLettere(testi) else ..._ilRipiego(),
                   if (_male != null) ...[
                     const SizedBox(height: 16),
                     Text(_male!, style: TextStyle(color: colori.error)),
                   ],
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _sto ? null : _abbina,
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
-                    ),
-                    child: _sto
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Abbina'),
-                  ),
                   const Firma(),
                 ],
               ),
@@ -328,4 +352,74 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       ),
     );
   }
+
+  List<Widget> _ilRipiego() => [
+    const SizedBox(height: 8),
+    TextButton(
+      onPressed: _sto ? null : () => setState(() => _aMano = true),
+      child: const Text('Non puoi inquadrarlo? Scrivilo a mano'),
+    ),
+  ];
+
+  List<Widget> _leLettere(TextTheme testi) => [
+    const SizedBox(height: 20),
+    TextField(
+      controller: _codice,
+      enabled: !_sto,
+      autofocus: true,
+      autocorrect: false,
+      textAlign: TextAlign.center,
+      textCapitalization: TextCapitalization.characters,
+      textInputAction: TextInputAction.done,
+      onSubmitted: (_) => _sto ? null : _abbinaAMano(),
+      style: testi.titleLarge?.copyWith(
+        letterSpacing: 3,
+        fontFamily: 'monospace',
+      ),
+      decoration: const InputDecoration(
+        labelText: 'Le lettere sotto al quadretto',
+        hintText: 'ABCD-2345-EFGH-6789',
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(vertical: 20),
+      ),
+    ),
+    /* Qui la casella dell'indirizzo si vede sempre.
+     *
+     * Non e' una contraddizione con quello che c'e' scritto in cima: quello
+     * che non deve spaventare nessuno e' la **prima** schermata, e quella
+     * adesso e' un bottone solo. Chi e' arrivato fin qui sta gia' battendo
+     * sedici lettere a mano, e una casella in piu' — facoltativa, e detto —
+     * non lo spaventa: gli serve. */
+    const SizedBox(height: 20),
+    TextField(
+      controller: _dentro,
+      enabled: !_sto,
+      autocorrect: false,
+      keyboardType: TextInputType.url,
+      textInputAction: TextInputAction.done,
+      onSubmitted: (_) => _sto ? null : _abbinaAMano(),
+      decoration: InputDecoration(
+        labelText: _serveLIndirizzo
+            ? 'Indirizzo di Home Assistant in casa'
+            : 'Indirizzo di casa (facoltativo)',
+        hintText: '192.168.1.50',
+        helperText:
+            'Stando sul Wi-Fi di casa. Il resto lo dice la casa da sola.',
+        helperMaxLines: 2,
+        border: const OutlineInputBorder(),
+      ),
+    ),
+    const SizedBox(height: 20),
+    FilledButton(
+      onPressed: _sto ? null : _abbinaAMano,
+      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+      child: _sto
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Text('Abbina'),
+    ),
+  ];
 }

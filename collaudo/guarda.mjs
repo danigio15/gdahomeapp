@@ -328,7 +328,7 @@ async function aspettaCheCompaia(pagina, etichetta, quanto = 30_000) {
     await attendi(250);
   }
   const cEra = await cosaCeDaPremere(pagina);
-  throw new Error(`«${etichetta}» non e' comparsa. A schermo c'e': ${cEra.join(' · ')}`);
+  throw new Error(`«${etichetta}» non e' comparsa. A schermo c'e': ${cEra.join(" · ")}`);
 }
 
 async function premi(pagina, etichetta, { inAlto = false } = {}) {
@@ -343,19 +343,27 @@ async function premi(pagina, etichetta, { inAlto = false } = {}) {
   }
 
   /* Con la stessa etichetta ce n'e' spesso piu' d'uno: Flutter lascia in giro
-   * nodi vecchi, e il primo che si trova puo' essere sopra a tutt'altro — la
-   * prima volta il «Le tue case» ha aperto i Dispositivi. Con `inAlto` si dice
-   * di prendere quello piu' vicino al bordo di sopra, che e' dove sta un
-   * bottone della barra del titolo. */
+   * nodi vecchi, e la ricerca per testo prende anche i **contenitori** che
+   * quella scritta se la trovano dentro. Il primo che si trova puo' quindi
+   * essere una scatola grande quanto mezza schermata, e premerne il centro
+   * vuol dire premere tutt'altro — e' successo: il tocco su «Scrivilo a mano»
+   * e' finito sul bottone di sopra, e si e' aperto il lettore.
+   *
+   * Quindi si prende il **piu' piccolo**: fra una scatola e quello che ci sta
+   * dentro, quello che si voleva premere e' sempre quello dentro. Con `inAlto`
+   * invece si prende quello piu' vicino al bordo di sopra, che e' dove sta un
+   * bottone della barra del titolo: li' i candidati sono fratelli, non uno
+   * dentro l'altro. */
   const quanti = await tutti.count();
   let bottone = tutti.first();
-  if (inAlto && quanti > 1) {
-    let piuSu = Infinity;
+  if (quanti > 1) {
+    let migliore = Infinity;
     for (let i = 0; i < quanti; i += 1) {
       const riquadro = await tutti.nth(i).boundingBox();
-      if (!riquadro || riquadro.width <= 0) continue;
-      if (riquadro.y < piuSu) {
-        piuSu = riquadro.y;
+      if (!riquadro || riquadro.width <= 0 || riquadro.height <= 0) continue;
+      const quanto = inAlto ? riquadro.y : riquadro.width * riquadro.height;
+      if (quanto < migliore) {
+        migliore = quanto;
         bottone = tutti.nth(i);
       }
     }
@@ -369,10 +377,7 @@ async function premi(pagina, etichetta, { inAlto = false } = {}) {
    * riceve i tocchi davvero. */
   const riquadro = await bottone.boundingBox();
   if (riquadro && riquadro.width > 0 && riquadro.height > 0) {
-    await pagina.mouse.click(
-      riquadro.x + riquadro.width / 2,
-      riquadro.y + riquadro.height / 2,
-    );
+    await pagina.mouse.click(riquadro.x + riquadro.width / 2, riquadro.y + riquadro.height / 2);
     return;
   }
   await bottone.click({ force: true });
@@ -384,8 +389,15 @@ try {
 
   racconta("compilo il modulo, come lo compilerebbe una persona");
   await scriviIn(pagina, "Come si chiama", "Casa del collaudo");
-  await scriviIn(pagina, "Indirizzo sulla rete di casa", `127.0.0.1:${portaDelPonte}`);
-  await scriviIn(pagina, "Codice di abbinamento", codice);
+  /* Qui si va per la strada delle lettere, e non e' pigrizia: in un browser
+   * dentro una macchina non c'e' nessuna fotocamera, e non c'e' niente da
+   * inquadrare. Quello che si sta collaudando e' il resto — il ponte vero, il
+   * segno, il filo, la casa — e a quello ci si arriva battendo, come ci arriva
+   * chi la fotocamera non ce l'ha. */
+  await premi(pagina, "Non puoi inquadrarlo? Scrivilo a mano");
+  await attendi(300);
+  await scriviIn(pagina, "Le lettere sotto al quadretto", codice);
+  await scriviIn(pagina, "Indirizzo di casa (facoltativo)", `127.0.0.1:${portaDelPonte}`);
   await scatta(pagina, "2-modulo-compilato");
 
   racconta("abbino");

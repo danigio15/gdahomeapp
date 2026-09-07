@@ -33,6 +33,15 @@ dependencies:
   # per questo ci sono vettori di prova generati dal Node e ricontrollati qui.
   cryptography: ^2.7.0
 
+  # Il lettore del codice a quadretti.
+  #
+  # Il quadretto **si disegna** senza dipendenze — quello lo fa il ponte, in
+  # `ponte/src/qr.js` — ma leggerlo e' un altro mestiere: vuole la fotocamera,
+  # la messa a fuoco, la luce che cambia, e sotto ci stanno MLKit e Vision, che
+  # sono del sistema. Scriverne uno a mano vorrebbe dire un lettore peggiore di
+  # quello che ogni telefono ha gia' dentro.
+  mobile_scanner: ^7.4.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -6,10 +6,10 @@
 ///     app (Dart)  ──►  centralino (node)  ◄──  ponte (node)  ──►  HA finta
 ///
 /// Il telefono qui **non ha nessun indirizzo della casa**. Non ce l'ha e non
-/// glielo si da': ha otto lettere, e basta quello. E' la differenza fra
-/// «funziona se apri una porta sul router» e «funziona», ed e' l'unica prova
-/// che la dimostra per intero — tutte le altre hanno un finto in mezzo proprio
-/// nel punto che conta.
+/// glielo si da': ha la riga letta da un quadretto, e basta quella. E' la
+/// differenza fra «funziona se apri una porta sul router» e «funziona», ed e'
+/// l'unica prova che la dimostra per intero — tutte le altre hanno un finto in
+/// mezzo proprio nel punto che conta.
 ///
 /// Serve `node`. Se non c'e', le prove si saltano invece di rompersi.
 @Timeout(Duration(seconds: 120))
@@ -24,6 +24,7 @@ import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/ponte/abbinamento.dart';
 import 'package:gdahome/ponte/errori.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
+import 'package:gdahome/ponte/invito.dart';
 
 import 'casa_finta.dart';
 import 'centralino_vero.dart';
@@ -132,6 +133,47 @@ void main() {
     expect(abbinato.centralino, dove);
 
     /* E il ponte, dalla sua parte, ha registrato il telefono. */
+    final stato = await ponte.statoDellaConsole();
+    final telefoni = stato['dispositivi'] as List<dynamic>;
+    expect(telefoni.length, 1);
+    expect((telefoni.first as Map)['nome'], 'Telefono in stazione');
+  });
+
+  test('inquadrando il quadretto ci si abbina senza sapere niente', () async {
+    /* La prova di quello che succede davvero al primo avvio.
+     *
+     * Qui l'app **non riceve nessun centralino**: non gliene passa nessuno la
+     * prova, e non ne ha uno di ripiego. Tutto quello che ha e' la riga che ha
+     * letto dal quadretto, scritta dal ponte vero, e dentro quella riga c'e'
+     * anche a quale centralino chiama questa casa. E' il caso che prima non
+     * poteva funzionare: una casa con un centralino suo, e un'app costruita
+     * senza — o con un altro. */
+    final riga = await ponte.invitoDiAbbinamento();
+    final invito = Invito.leggi(riga);
+    expect(
+      invito.centralino,
+      dove,
+      reason: 'il quadretto dice dove chiama questa casa',
+    );
+    expect(invito.codice, matches(RegExp(r'^[0-9A-Z]{16}$')));
+
+    final entrata = await Abbinamento.conLInvito(
+      invito,
+      nome: 'Telefono in stazione',
+      sistema: 'android',
+    );
+
+    expect(
+      entrata.daDentro,
+      isNull,
+      reason: 'da fuori non risponde nessun indirizzo di casa',
+    );
+    expect(entrata.abbinato.segno, matches(RegExp(r'^[0-9a-f]{64}$')));
+    expect(
+      entrata.abbinato.casaAlCentralino,
+      matches(RegExp(r'^casa_[0-9a-f]{32}$')),
+    );
+
     final stato = await ponte.statoDellaConsole();
     final telefoni = stato['dispositivi'] as List<dynamic>;
     expect(telefoni.length, 1);

@@ -120,6 +120,21 @@ class PonteVero {
     return codice;
   }
 
+  /// Il codice a quadretti, come riga: quello che l'app leggerebbe
+  /// inquadrando.
+  ///
+  /// Lo scrive il ponte vero, non la prova: qui dentro ci finisce dentro anche
+  /// **quale centralino chiama questa casa**, ed e' proprio quella la parte
+  /// che si vuole vedere arrivare fino in fondo.
+  Future<String> invitoDiAbbinamento() async {
+    final detto = await _chiedi('$console/api/codice', metodo: 'POST');
+    final scritto = detto['invito'];
+    if (scritto is! String) {
+      throw StateError('la console non ha dato un invito: $detto');
+    }
+    return scritto;
+  }
+
   Future<Map<String, dynamic>> statoDellaConsole() =>
       _chiedi('$console/api/stato');
 

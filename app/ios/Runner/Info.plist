@@ -24,6 +24,11 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<!-- Quello che l'iPhone scrive nel riquadro del permesso. E' l'unica
+	     riga che l'utente legge prima di dire di si', e va detta per intero:
+	     a cosa serve, e per quanto. -->
+	<key>NSCameraUsageDescription</key>
+	<string>Serve solo a inquadrare il codice a quadretti che collega l'app alla tua casa. Nessuna foto viene salvata o mandata da nessuna parte.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
