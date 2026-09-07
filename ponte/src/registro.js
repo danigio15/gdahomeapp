@@ -12,7 +12,13 @@ export function apriIlRegistro(livello = "info") {
   const soglia = SCALA[livello] ?? SCALA.info;
   const scrivi = (nome, colonna) => (messaggio) => {
     if (SCALA[nome] < soglia) return;
-    const quando = new Date().toISOString().slice(11, 19);
+    /* L'ora locale, non quella di Greenwich.
+     *
+     * `toISOString` da' l'ora universale, e nel registro dell'add-on finiva di
+     * fianco a quella di bashio, che invece e' locale: due righe consecutive
+     * con due ore diverse — «12:20:39» e «10:20:39» — e chi legge non capisce
+     * quale delle due sia successa prima. */
+    const quando = new Date().toTimeString().slice(0, 8);
     process.stdout.write(`[${quando}] ${colonna} ${messaggio}\n`);
   };
   return {

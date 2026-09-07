@@ -7,15 +7,18 @@
 export PONTE_ARCHIVIO="/data"
 export PONTE_CONSOLE="/app/console"
 
-if bashio::services.available "mqtt"; then
-  # Se in casa c'e' gia' un broker MQTT configurato, il ponte lo sapra' — serve
-  # a Zigbee2MQTT, quando arrivera' il suo turno.
-  PONTE_MQTT_HOST="$(bashio::services mqtt "host")"
-  PONTE_MQTT_PORTA="$(bashio::services mqtt "port")"
-  PONTE_MQTT_UTENTE="$(bashio::services mqtt "username")"
-  PONTE_MQTT_PAROLA="$(bashio::services mqtt "password")"
-  export PONTE_MQTT_HOST PONTE_MQTT_PORTA PONTE_MQTT_UTENTE PONTE_MQTT_PAROLA
-fi
+# Qui c'era una domanda al Supervisor: «c'e' un broker MQTT in casa?». Serviva a
+# Zigbee2MQTT, che pero' non e' ancora arrivato.
+#
+# Il guaio e' che quella domanda vuole `hassio_api: true`, che il ponte non ha
+# e non gli serve: senza, il Supervisor risponde di no e bashio stampa
+# «ERROR: Unable to access the API, forbidden» a ogni avvio. Un add-on che al
+# primo accendersi scrive ERROR e' un add-on che sembra rotto, e chi lo installa
+# non ha modo di sapere che quell'errore non conta niente.
+#
+# Quindi via. Tornera' insieme a Zigbee2MQTT, e con il permesso dichiarato come
+# si deve — `services: [mqtt:want]` nel manifesto — invece che chiesto di
+# nascosto e negato.
 
 bashio::log.info "Il ponte si alza."
 exec node /app/src/index.js
