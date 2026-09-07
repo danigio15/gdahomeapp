@@ -13,6 +13,10 @@ name = "centralino"
 main = "src/index.js"
 compatibility_date = "2025-04-01"
 
+# L'indirizzo `centralino.<nome>.workers.dev` arriva insieme, e non c'e'
+# nessun dominio da comprare.
+workers_dev = true
+
 # Una casa per Durable Object. Ogni casa e' un oggetto suo, che dorme quando
 # non passa niente e si sveglia quando arriva un telefono.
 [[durable_objects.bindings]]

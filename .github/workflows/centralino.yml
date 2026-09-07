@@ -1,0 +1,63 @@
+# Accende il centralino su Cloudflare.
+#
+# Serve a non dover installare niente sul proprio computer: il centralino si
+# mette in piedi da questa pagina, con un bottone. Ci vuole una cosa sola, una
+# volta sola — un gettone di Cloudflare messo fra i segreti di questa
+# repository, come `CLOUDFLARE_API_TOKEN`.
+#
+# Come si fa il gettone: su dash.cloudflare.com, in fondo al menu a sinistra,
+# «Manage Account → Account API Tokens → Create Token», e si sceglie il modello
+# gia' pronto **Edit Cloudflare Workers**.
+name: Il centralino
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  accendi:
+    name: Accendi il centralino
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: C'e' il gettone?
+        run: |
+          if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
+            echo "::error::Manca il segreto CLOUDFLARE_API_TOKEN."
+            echo "Si mette in Settings → Secrets and variables → Actions → New repository secret."
+            echo "Il gettone si fa su dash.cloudflare.com → Manage Account → Account API Tokens,"
+            echo "col modello gia' pronto «Edit Cloudflare Workers»."
+            exit 1
+          fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - run: npm ci --no-audit --no-fund
+        working-directory: nuvola
+
+      - name: Accendi
+        run: npx wrangler deploy
+        working-directory: nuvola
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # Serve solo se sul gettone c'e' piu' di un account. Se ce n'e' uno
+          # solo, wrangler lo trova da se' e questo puo' restare vuoto.
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: E adesso
+        run: |
+          echo "### Il centralino è acceso" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "L'indirizzo è scritto qui sopra, nel passo «Accendi»: è la riga che" >> "$GITHUB_STEP_SUMMARY"
+          echo 'finisce per `.workers.dev`.' >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Va messo in due posti, **con \`wss://\` davanti invece di \`https://\`**:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "1. in Home Assistant, nella configurazione dell'add-on **Il ponte**, alla voce \`centralino\`;" >> "$GITHUB_STEP_SUMMARY"
+          echo "2. qui su Actions, in **L'app da provare**, nella casella **centralino**, prima di costruire il pacchetto." >> "$GITHUB_STEP_SUMMARY"
