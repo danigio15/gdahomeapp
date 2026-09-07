@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../casa/casa_conosciuta.dart';
 import '../casa/collegamento.dart';
+import 'firma.dart';
 
 class LeCase extends StatelessWidget {
   const LeCase({
@@ -52,6 +53,7 @@ class LeCase extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
+          const Firma(),
         ],
       ),
     );

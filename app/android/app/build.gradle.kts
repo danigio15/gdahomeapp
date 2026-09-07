@@ -5,6 +5,31 @@ plugins {
 }
 
 android {
+    // La chiave con cui si firmano i pacchetti di prova.
+    //
+    // Sta qui dentro, nel progetto, e **deve starci**: senza, ogni macchina
+    // che compila se ne genera una nuova, Android vede due firme diverse e
+    // rifiuta di installare il pacchetto nuovo sopra il vecchio. Chi lo prova
+    // e' costretto a disinstallare — e disinstallando **perde l'abbinamento**,
+    // perche' il segno della casa sta nel portachiavi del telefono e con l'app
+    // se ne va.
+    //
+    // Il risultato era che ogni versione nuova costava all'utente un giro
+    // completo: stacca, fabbrica un codice, riabbina. Con una chiave ferma il
+    // pacchetto nuovo si installa sopra e non gli si chiede piu' niente.
+    //
+    // Non e' un segreto e non protegge niente: firma soltanto i pacchetti di
+    // prova, quelli che si passano a mano. Il giorno che si va sui negozi
+    // servira' una chiave vera, tenuta fuori di qui.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("chiave-di-prova.jks")
+            storePassword = "gdahome"
+            keyAlias = "gdahome"
+            keyPassword = "gdahome"
+        }
+    }
+
     namespace = "com.gdahome.gdahome"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion

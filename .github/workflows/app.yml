@@ -88,11 +88,19 @@ jobs:
         working-directory: app
         env:
           CENTRALINO: ${{ inputs.centralino }}
+          # Quale pacchetto e' questo, scritto **dentro** l'app.
+          #
+          # Due pacchetti diversi si somigliano troppo, e l'unico modo di
+          # sapere quale si ha installato era disinstallare e rifare — che
+          # costa l'abbinamento. Adesso c'e' scritto in fondo alla schermata.
+          CORSA: ${{ github.run_number }}
         run: |
+          VERSIONE="$CORSA·${GITHUB_SHA:0:7}"
+          echo "Questo pacchetto e' il $VERSIONE"
           if [ -n "$CENTRALINO" ]; then
-            flutter build apk --debug --dart-define=CENTRALINO="$CENTRALINO"
+            flutter build apk --debug --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
           else
-            flutter build apk --debug
+            flutter build apk --debug --dart-define=VERSIONE="$VERSIONE"
           fi
 
       - uses: actions/upload-artifact@v4
@@ -117,11 +125,18 @@ jobs:
         working-directory: app
         env:
           CENTRALINO: ${{ inputs.centralino }}
+          # Quale pacchetto e' questo, scritto **dentro** l'app.
+          #
+          # Due pacchetti diversi si somigliano troppo, e l'unico modo di
+          # sapere quale si ha installato era disinstallare e rifare — che
+          # costa l'abbinamento. Adesso c'e' scritto in fondo alla schermata.
+          CORSA: ${{ github.run_number }}
         run: |
+          VERSIONE="$CORSA·${GITHUB_SHA:0:7}"
           if [ -n "$CENTRALINO" ]; then
-            flutter build web --release --dart-define=CENTRALINO="$CENTRALINO"
+            flutter build web --release --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
           else
-            flutter build web --release
+            flutter build web --release --dart-define=VERSIONE="$VERSIONE"
           fi
       - uses: actions/upload-artifact@v4
         with:

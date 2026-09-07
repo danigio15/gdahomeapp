@@ -21,6 +21,7 @@ import '../casa/casa_conosciuta.dart';
 import '../ponte/abbinamento.dart';
 import '../ponte/errori.dart';
 import '../ponte/indirizzo.dart';
+import 'firma.dart';
 
 class AggiungiCasa extends StatefulWidget {
   const AggiungiCasa({
@@ -318,6 +319,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                           )
                         : const Text('Abbina'),
                   ),
+                  const Firma(),
                 ],
               ),
             ),
