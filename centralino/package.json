@@ -1,0 +1,13 @@
+{
+  "name": "gdahome-centralino",
+  "private": true,
+  "type": "module",
+  "description": "Fa incontrare un telefono e la sua casa, senza che la casa apra niente.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "avvia": "node src/index.js",
+    "test": "node --test test/*.test.js"
+  }
+}

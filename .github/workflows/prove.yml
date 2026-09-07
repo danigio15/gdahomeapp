@@ -14,16 +14,19 @@ concurrency:
 
 jobs:
   ponte:
-    name: Il ponte
+    name: Il ponte e il centralino
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: "22"
-      # Il ponte non ha dipendenze: le sue prove girano su Node e basta.
+      # Ne il ponte ne il centralino hanno dipendenze: le loro prove girano su
+      # Node e basta.
       - name: Le prove del ponte
         run: npm run test:ponte
+      - name: Le prove del centralino
+        run: npm run test:centralino
 
   forma:
     name: La forma del codice

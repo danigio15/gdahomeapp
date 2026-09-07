@@ -10,7 +10,7 @@ veri.
 
 | | scelta | cosa cambia |
 |---|---|---|
-| **Accesso da fuori** | un **add-on** che fa da ponte | fatto, sta in `ponte/` |
+| **Accesso da fuori** | il ponte **chiama fuori**, verso un centralino | l'utente non apre niente e non installa niente |
 | **Zigbee** | **ZHA e Zigbee2MQTT tutti e due** | il pairing va dietro un'interfaccia sola con due adattatori; la fase costa il doppio |
 | **La plancia** | resta quella che c'e' | non si riscrive niente di cio' che gia' funziona |
 | **Con cosa si scrive l'app** | **Flutter** | una sola app per tutti e due i telefoni, e l'interfaccia piu' fluida delle tre strade |
@@ -137,11 +137,47 @@ Attenzione a una cosa: Apple in revisione vuole che l'app abbia un valore suo,
 e una WebView e basta rischia il rifiuto. **Le fasi 2, 3 e 4 sono anche la
 risposta a quella revisione**, non solo funzioni in piu'.
 
+## Perche' il ponte chiama fuori
+
+E' la decisione che e' costata di piu' arrivarci, e vale la pena scrivere come.
+
+Il ponte nasce come add-on su una porta sua. In casa funziona. Da fuori no, e
+le strade per rimediare sembravano tre: l'accesso remoto di Home Assistant, una
+VPN, un proxy inverso.
+
+**La prima non esiste.** Quel tunnel arriva a Home Assistant e si ferma li': le
+porte degli add-on non le fa passare, e non c'e' nessuna impostazione che
+glielo faccia fare. E' anche la prima che viene in mente a chi ce l'ha, quindi
+e' quella che fa perdere piu' tempo — l'indirizzo *sembra* giusto.
+
+**Le altre due funzionano, e sono sbagliate lo stesso**, perche' chiedono
+all'utente di installare e configurare qualcosa. E questo progetto ha promesso
+il contrario: niente token da incollare, niente file da scaricare, niente
+`configuration.yaml` da toccare. Dire «installa Tailscale su Home Assistant e
+sul telefono» rompe quella promessa in pieno.
+
+C'era una quarta strada, ed e' quella giusta: **girare il verso**. Non e' il
+telefono che deve entrare in casa: e' la casa che chiama fuori. Il ponte apre
+lui un filo verso un centralino e lo tiene aperto; i telefoni arrivano da
+quella parte.
+
+L'utente installa l'add-on e basta. Nessuna porta, nessun account, nessuna
+configurazione, e funziona anche a chi non ha ne' Nabu Casa ne' un dominio.
+Nell'app si batte **solo il codice**, perche' il codice sa gia' a quale casa
+appartiene.
+
+Il costo si sposta: dall'utente a chi mantiene il centralino. Ed e' giusto
+cosi' — e' la stessa cosa che fa Nabu Casa.
+
+E c'e' un debito da pagare prima di poterlo dire finito: **la cifratura fra le
+due punte**. Adesso il centralino instrada byte che potrebbe leggere. Deve
+diventare byte che *non* puo' leggere, con una chiave derivata dal segno che
+li' non passa mai. Finche' non c'e', chi mette su un centralino si prende in
+carico il traffico delle case che ci passano.
+
 ## Le cose che decidono tutto, e che non sono codice
 
-1. **Far arrivare il traffico al ponte.** Il ponte non apre porte per conto
-   suo, e non deve: e' una scelta di chi installa. Nabu Casa, una VPN, o un
-   proxy inverso.
+1. **Il centralino lo mantiene chi distribuisce l'app**, non chi la usa.
 2. **Le quindici lingue** del progetto vecchio vanno riportate nell'app.
 3. **Cosa puo' fare un telefono abbinato**: tutto quello che puo' fare il
    ponte. Non c'e' un filtro per tipo di comando, e non c'e' apposta — un
