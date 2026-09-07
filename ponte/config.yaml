@@ -51,14 +51,16 @@ homeassistant_api: true
 hassio_api: true
 
 options:
-  # Dove chiamare per farsi raggiungere da fuori casa.
+  # Da fuori casa l'app entra passando da un centralino: il ponte non aspetta
+  # che qualcuno lo trovi, va lui e ci resta in attesa. Cosi' non c'e' nessuna
+  # porta da aprire sul router, nessun indirizzo pubblico da avere, e nessuna
+  # VPN da installare.
   #
-  # Il ponte non aspetta che qualcuno lo trovi: va lui, e resta li'. Cosi' non
-  # c'e' nessuna porta da aprire sul router, nessun indirizzo pubblico da
-  # avere, e nessuna VPN da installare.
-  #
-  # Vuoto vuol dire: solo dentro casa. Va benissimo per chi la casa la guarda
-  # dal divano.
+  # Lasciando questo acceso non c'e' niente da fare: si usa quello dell'app.
+  # Spegnendolo, la casa si raggiunge solo dalla propria rete.
+  da_fuori_casa: true
+  # Il proprio centralino, per chi se l'e' acceso. Vuoto vuol dire: quello
+  # dell'app. La maggior parte delle persone non tocca questa riga.
   centralino: ""
   porta_app: 8098
   # Quanti telefoni possono restare abbinati insieme.
@@ -71,6 +73,7 @@ options:
   registro: info
 
 schema:
+  da_fuori_casa: bool
   centralino: str?
   porta_app: int(1024,65535)
   dispositivi_massimi: int(1,100)
