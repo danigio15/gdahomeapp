@@ -1,0 +1,77 @@
+# Toglie da un Worker i Durable Object rimasti attaccati.
+#
+# Serve a rimediare a un pasticcio preciso: un `wrangler deploy` fatto con un
+# nome gia' occupato da qualcun altro. Da quel momento il Worker si porta
+# dietro delle classi che il suo codice vero non esporta, e **non lo si puo'
+# piu' ripubblicare** — ne' dal pannello ne' da wrangler — finche' quelle classi
+# non se ne vanno. E se ne vanno solo con una migrazione.
+#
+# Dopo che e' passato di qui, il Worker torna a essere un Worker qualunque: si
+# rimette il codice dal pannello e riparte.
+#
+# **Pubblica un codice che non fa niente.** Chi lo lancia deve avere pronto il
+# codice vero da rimettere subito dopo. I segreti restano dove sono.
+name: Ripara un Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      worker:
+        description: "Il nome del Worker da liberare, per esempio: centralino"
+        required: true
+      conferma:
+        description: >-
+          Riscrivi qui lo stesso nome. Serve a non farlo per sbaglio: questo
+          passo sostituisce il codice del Worker con uno che non fa niente.
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  ripara:
+    name: Libera il Worker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: I due nomi coincidono?
+        env:
+          WORKER: ${{ inputs.worker }}
+          CONFERMA: ${{ inputs.conferma }}
+        run: |
+          if [ "$WORKER" != "$CONFERMA" ]; then
+            echo "::error::I due nomi non coincidono. Riscrivi lo stesso nome nelle due caselle."
+            exit 1
+          fi
+          echo "Si libera il Worker «$WORKER»."
+
+      - run: npm ci --no-audit --no-fund
+        working-directory: nuvola
+
+      - name: Togli i Durable Object
+        working-directory: riparazione
+        env:
+          WORKER: ${{ inputs.worker }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: ../nuvola/node_modules/.bin/wrangler deploy --name "$WORKER"
+
+      - name: E adesso
+        env:
+          WORKER: ${{ inputs.worker }}
+        run: |
+          {
+            echo "### Il Worker \`$WORKER\` è libero"
+            echo ""
+            echo "Adesso ci sta sopra un codice che non fa niente. Da fare, in quest'ordine:"
+            echo ""
+            echo "1. nel pannello, **Impostazioni → Binding**: rimetti quelli che aveva (D1, KV, quello che era);"
+            echo "2. **Impostazioni → Trigger**: rimetti i cron;"
+            echo "3. **Modifica codice**: incolla il codice vero e pubblica."
+            echo ""
+            echo "I **segreti** non si toccano: quelli restano."
+          } >> "$GITHUB_STEP_SUMMARY"

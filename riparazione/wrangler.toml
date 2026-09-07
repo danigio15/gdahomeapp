@@ -1,0 +1,19 @@
+# Toglie da un Worker i Durable Object che non gli servono piu'.
+#
+# Le due migrazioni stanno tutte e due qui perche' wrangler vuole la storia
+# intera e manda solo quelle che mancano: se il Worker e' fermo alla `v1` —
+# quella che le classi le ha create — gli arriva la `v2`, che le cancella.
+#
+# Il nome del Worker arriva da fuori, con `--name`, cosi' questo file non puo'
+# andare a toccare quello sbagliato per conto suo.
+main = "stub.js"
+compatibility_date = "2025-04-01"
+workers_dev = true
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Casa", "Codice"]
+
+[[migrations]]
+tag = "v2"
+deleted_classes = ["Casa", "Codice"]
