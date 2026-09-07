@@ -26,7 +26,14 @@ jobs:
         with:
           node-version: "22"
 
-      - name: C'e' il gettone?
+      # Il gettone si guarda **prima** di provare a usarlo.
+      #
+      # Se e' storto, Cloudflare risponde «Invalid format for Authorization
+      # header [code: 6111]», che e' vero e non serve a niente: chi lo legge
+      # non ha modo di sapere che il problema e' uno spazio incollato per
+      # sbaglio. Qui invece si dice cosa c'e' che non va, senza mai stampare
+      # il gettone.
+      - name: C'e' il gettone, ed e' fatto bene?
         run: |
           if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
             echo "::error::Manca il segreto CLOUDFLARE_API_TOKEN."
@@ -35,6 +42,28 @@ jobs:
             echo "col modello gia' pronto «Edit Cloudflare Workers»."
             exit 1
           fi
+
+          quanto=${#CLOUDFLARE_API_TOKEN}
+
+          # Un gettone di Cloudflare e' una riga sola di lettere, numeri,
+          # trattini e trattini bassi. Nient'altro.
+          if ! printf '%s' "$CLOUDFLARE_API_TOKEN" | grep -qE '^[A-Za-z0-9_-]+$'; then
+            echo "::error::Il gettone contiene qualcosa che non ci va (uno spazio, un a capo, delle virgolette, o del testo intorno)."
+            echo "Nel segreto va **solo** la stringa del token, niente altro:"
+            echo "  * non «Bearer …»"
+            echo "  * non il comando curl che Cloudflare mostra sotto"
+            echo "  * non la chiave segreta o l'endpoint (quelli sono di R2, e non servono)"
+            echo "Lungo $quanto caratteri; ne bastano una quarantina, tutti attaccati."
+            exit 1
+          fi
+
+          if [ "$quanto" -lt 30 ]; then
+            echo "::error::Il gettone e' troppo corto ($quanto caratteri): ne servono una quarantina."
+            echo "Forse e' stato copiato a meta'."
+            exit 1
+          fi
+
+          echo "Il gettone c'e' ed e' fatto bene ($quanto caratteri)."
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
