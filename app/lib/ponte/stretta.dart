@@ -255,6 +255,20 @@ class PresaCifrata implements Presa {
        * rotto o e' stato toccato: in tutti e due i casi andare avanti sarebbe
        * peggio che fermarsi. */
       _finita(FiloCaduto('il filo e\' stato toccato: ${errore.spiegazione}'));
+    } catch (errore) {
+      /* Qualunque altra cosa: si chiude, e si dice cosa.
+       *
+       * Prima qui si prendeva solo `BustaGuasta`, e tutto il resto finiva
+       * nella coda dei messaggi in entrata — dove non lo guardava nessuno. Il
+       * filo restava aperto e muto, e chi guardava lo schermo vedeva una
+       * rotella per venticinque secondi e poi «il ponte non risponde», che di
+       * quello che era successo non diceva niente.
+       *
+       * E' successo davvero, e per un motivo che nessuno avrebbe indovinato:
+       * nella versione web l'aritmetica a sessantaquattro bit dei contatori
+       * non esiste, e ogni busta scoppiava. Un errore ingoiato costa piu' di
+       * quello che nasconde. */
+      _finita(FiloCaduto(_leggibile(errore)));
     }
   }
 

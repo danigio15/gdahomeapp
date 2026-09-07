@@ -47,6 +47,21 @@ preso, perche' le prove guardavano il numero e non la frase: «1 **aperte**» e
 «1 **accese**». Sono la prima cosa che si nota guardando la home, e fanno
 sembrare sciatto tutto il resto.
 
+Il secondo ha trovato una cosa molto peggiore, e l'ha trovata perche' e' qui
+che l'app gira **in un browser**. Dart compilato in JavaScript non ha gli
+interi a sessantaquattro bit, e i contatori delle buste cifrate ne usavano
+uno: ogni singolo messaggio scoppiava, e l'errore finiva in una coda che non
+guardava nessuno. Il filo restava aperto e muto, e a schermo si vedeva una
+rotella per venticinque secondi e poi «il ponte non risponde». Tutte le prove
+erano verdi: giravano sulla macchina virtuale, dove quel numero esiste.
+
+Due cure, e la seconda vale piu' della prima: i contatori adesso si scrivono
+in due meta' da trentadue bit — le stesse su tutti e due — e la cifratura ha
+una prova che gira **dentro un browser**, dentro la CI. Ma soprattutto: un
+errore che non e' quello previsto adesso chiude il filo e dice cosa e'
+successo, invece di essere ingoiato. Un errore ingoiato costa sempre piu' di
+quello che nasconde.
+
 E' il motivo per cui questo banco esiste: ci sono cose che si vedono solo
 guardando.
 

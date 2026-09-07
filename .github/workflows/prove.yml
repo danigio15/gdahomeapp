@@ -68,3 +68,14 @@ jobs:
       - name: Le prove
         run: flutter test
         working-directory: app
+      # E le stesse prove della cifratura **dentro un browser**.
+      #
+      # Non e' zelo: Dart compilato in JavaScript non ha gli interi a
+      # sessantaquattro bit, e il codice che li usava si e' rotto solo li'. Le
+      # prove sulla macchina virtuale erano tutte verdi mentre la versione web
+      # dell'app restava appesa a ogni messaggio, senza dire niente a nessuno.
+      # E' una differenza che nessuna prova avrebbe visto senza girare
+      # dall'altra parte.
+      - name: La cifratura, dentro un browser
+        run: flutter test --platform chrome test/ponte/cifra_test.dart
+        working-directory: app

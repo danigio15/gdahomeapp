@@ -183,10 +183,35 @@ class Busta {
   Uint8List _nonce(DaChi daChi, int contatore) {
     final dodici = Uint8List(12);
     dodici[0] = daChi.numero;
-    final vista = ByteData.view(dodici.buffer);
-    vista.setUint64(4, contatore);
+    _scriviOtto(ByteData.view(dodici.buffer), 4, contatore);
     return dodici;
   }
+
+  /* Il contatore sta in otto byte, e si scrive in due meta' da quattro.
+   *
+   * `setUint64` sarebbe la strada dritta, e sul telefono funziona benissimo.
+   * **In un browser no**: Dart compilato in JavaScript non ha interi a
+   * sessantaquattro bit, e quell'accessore solleva
+   *
+   *     Unsupported operation: Uint64 accessor not supported by dart2js
+   *
+   * a ogni busta, cioe' a ogni messaggio. Non e' un caso raro: e' *sempre*,
+   * dal primo messaggio in poi, e l'app nella versione web restava appesa a
+   * guardare una rotella senza dire niente a nessuno.
+   *
+   * Due meta' da trentadue bit, scritte con la divisione e il resto invece che
+   * con gli spostamenti di bit, danno gli stessi otto byte su tutti e due —
+   * `ByteData` scrive in big-endian, e le due meta' in quest'ordine sono
+   * esattamente quello che scriveva `setUint64`. Gli spostamenti di bit no:
+   * in JavaScript lavorano a trentadue bit, e `contatore >> 32` darebbe zero.
+   */
+  static void _scriviOtto(ByteData vista, int da, int valore) {
+    vista.setUint32(da, valore ~/ 0x100000000);
+    vista.setUint32(da + 4, valore % 0x100000000);
+  }
+
+  static int _leggiOtto(ByteData vista, int da) =>
+      vista.getUint32(da) * 0x100000000 + vista.getUint32(da + 4);
 
   Future<String> chiudi(String testo) async {
     final dodici = _nonce(mio, mando);
@@ -220,8 +245,10 @@ class Busta {
     if (dodici[0] != suo.numero) {
       throw const BustaGuasta('busta dalla direzione sbagliata');
     }
-    final contatore = ByteData.view(Uint8List.fromList(dodici).buffer)
-        .getUint64(4);
+    final contatore = _leggiOtto(
+      ByteData.view(Uint8List.fromList(dodici).buffer),
+      4,
+    );
     if (contatore != ricevo) throw const BustaGuasta('busta fuori ordine');
 
     try {
