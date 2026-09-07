@@ -11,6 +11,15 @@ name: L'app da provare
 
 on:
   workflow_dispatch:
+    inputs:
+      centralino:
+        description: >-
+          Il centralino, per esempio wss://centralino.pippo.workers.dev.
+          Lasciandolo vuoto l'app chiede l'indirizzo di casa la prima volta, e
+          il centralino se lo fa dire dalla casa: funziona uguale, e' solo un
+          passaggio in piu' per chi installa.
+        required: false
+        default: ""
   push:
     tags:
       - "v*"
@@ -40,8 +49,10 @@ jobs:
       # persona sola, e finche' l'app non va sui negozi quella chiave non
       # esiste. Il pacchetto di debug si firma da solo e si installa uguale.
       - name: Il pacchetto
-        run: flutter build apk --debug
+        run: flutter build apk --debug --dart-define=CENTRALINO="$CENTRALINO"
         working-directory: app
+        env:
+          CENTRALINO: ${{ inputs.centralino }}
 
       - uses: actions/upload-artifact@v4
         with:
@@ -62,8 +73,10 @@ jobs:
       - run: flutter pub get
         working-directory: app
       - name: Il sito
-        run: flutter build web --release
+        run: flutter build web --release --dart-define=CENTRALINO="$CENTRALINO"
         working-directory: app
+        env:
+          CENTRALINO: ${{ inputs.centralino }}
       - uses: actions/upload-artifact@v4
         with:
           name: gdahome-web
