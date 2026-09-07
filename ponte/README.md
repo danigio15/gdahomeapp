@@ -124,6 +124,25 @@ qualunque telefono si stacca da solo con un bottone.
 | `POST /abbinamento` | un codice valido | `{"codice":"…","nome":"…","sistema":"ios"}` → il segno, una volta sola |
 | `WS /casa` | il segno | la stretta di mano di Home Assistant, e poi il filo |
 
+Chi si abbina riceve **quattro cose**, e servono tutte e quattro:
+
+| | |
+|---|---|
+| `segno` | fa entrare. Qui ne resta solo l'impronta: chi ruba il file non entra |
+| `chiave` | cifra il filo. Questa resta com'e', perche' per cifrare serve la chiave |
+| `dispositivo` | il nome e l'identificativo del telefono, per la console |
+| `ritorno` | **dove ribussare domani** |
+
+`ritorno` e' il motivo per cui l'utente non batte nessun indirizzo: dice
+l'identificativo di questa casa al centralino, l'indirizzo del centralino, e
+gli indirizzi su cui questa casa si trova sulla rete locale — cosi' il
+telefono, quando e' sul divano, va dritto invece di fare il giro del mondo.
+
+Gli indirizzi di rete locale il ponte li chiede al Supervisor, ed e' l'unica
+cosa per cui serve `hassio_api`. Se non arrivano — permesso tolto, Supervisor
+vecchio, prova su un computer — si perde la strada veloce e non altro: si
+passa sempre dal centralino, che e' piu' lento e funziona uguale.
+
 Sul filo il ponte **si presenta come Home Assistant**: manda `auth_required`,
 aspetta `auth` col segno del ponte al posto di quello di Home Assistant, e
 risponde `auth_ok`. Da li' in poi non guarda piu' dentro a niente. Vuol dire che

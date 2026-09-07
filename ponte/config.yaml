@@ -12,7 +12,7 @@
 # finire esposta. Su quella non c'e' nessuna console: si puo' solo presentare
 # un codice di abbinamento valido, o un segno di riconoscimento gia' avuto.
 name: Il ponte di DashboardModern
-version: "0.3.0"
+version: "0.4.0"
 slug: ponte
 description: Fa parlare l'app di DashboardModern con questa casa, da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.
 url: https://github.com/danigio15/dashboardmodern-v2/tree/main/ponte
@@ -42,7 +42,13 @@ ports_description:
 # il segno del Supervisor. Quel segno non esce mai da questo add-on: e'
 # esattamente il motivo per cui il ponte esiste.
 homeassistant_api: true
-hassio_api: false
+
+# Serve a una cosa sola: chiedere al Supervisor su quali indirizzi si trova
+# questa casa sulla rete locale, per poterlo dire ai telefoni quando si
+# abbinano. Cosi' in casa l'app va dritta invece di fare il giro dal
+# centralino. Se si toglie, tutto funziona lo stesso — solo piu' lento sul
+# divano.
+hassio_api: true
 
 options:
   # Dove chiamare per farsi raggiungere da fuori casa.

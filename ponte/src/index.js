@@ -15,6 +15,7 @@ import { Dispositivi } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
 import { Ponte } from "./ponte.js";
 import { Portiere } from "./portiere.js";
+import { Ritorno } from "./ritorno.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciLaConsole, costruisciLaPortaDellApp } from "./server.js";
 
@@ -38,7 +39,16 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   /* Nessuno parla col ponte direttamente: si passa dal portiere, che fa la
    * stretta di mano e da li' in poi cifra. Vale per chi arriva dalla porta di
    * casa e per chi arriva dal centralino, allo stesso modo. */
-  const portiere = new Portiere({ ponte, dispositivi, abbinamento, registro });
+  /* Quello che si dice a un telefono che si abbina: chi e' questa casa, dove
+   * si chiama per entrare da fuori, e dove sta sulla rete di casa. Senza,
+   * chi ha battuto otto lettere non saprebbe dove ribussare. */
+  const ritorno = new Ritorno({
+    identita,
+    centralino: opzioni.centralino,
+    porta: opzioni.portaDellApp,
+    registro,
+  });
+  const portiere = new Portiere({ ponte, dispositivi, abbinamento, registro, ritorno });
   const chiamata = new Chiamata({
     dove: opzioni.centralino,
     identita,
@@ -54,6 +64,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     abbinamento,
     registro,
     chiamata,
+    ritorno,
   });
   const console_ = costruisciLaConsole({
     ponte,
@@ -69,6 +80,11 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
 
   await ascolta(app, opzioni.portaDellApp);
   await ascolta(console_, opzioni.portaDellaConsole);
+
+  /* La porta vera, non quella chiesta: sono la stessa cosa quando l'add-on
+   * gira, ma nelle prove si chiede la zero e la sceglie il sistema, e un
+   * indirizzo con dentro la porta zero non porterebbe da nessuna parte. */
+  ritorno.porta = app.address().port;
 
   registro.info(`la porta dell'app e' la ${opzioni.portaDellApp}`);
   registro.info(`${dispositivi.quanti()} dispositivi abbinati`);
@@ -101,6 +117,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     casa,
     identita,
     chiamata,
+    ritorno,
     registro,
     app,
     console: console_,

@@ -24,6 +24,7 @@ import { costruisciIlServer } from "../../centralino/src/server.js";
 
 import { Chiamata } from "../src/chiamata.js";
 import { Identita } from "../src/identita.js";
+import { Ritorno } from "../src/ritorno.js";
 import { Ponte } from "../src/ponte.js";
 import { Portiere } from "../src/portiere.js";
 import { Dispositivi } from "../src/dispositivi.js";
@@ -103,8 +104,20 @@ async function catena() {
   const dispositivi = new Dispositivi({ cartella: nuovaCartella("ponte") });
   const ponte = new Ponte({ casa, dispositivi, registro: null });
   const abbinamento = new Abbinamento({});
-  const portiere = new Portiere({ ponte, dispositivi, abbinamento, registro: null });
   const identita = new Identita({ cartella: nuovaCartella("identita") });
+  /* Il Supervisor qui non c'e': si finge, perche' quello che si vuole provare
+   * e' che il telefono riceva dove tornare, non come lo si scopre. */
+  const ritorno = new Ritorno({
+    identita,
+    centralino: doveIlCentralino,
+    porta: 8098,
+    segno: "un-segno",
+    fetch: async () => ({
+      ok: true,
+      json: async () => ({ data: { interfaces: [{ ipv4: { address: ["192.168.1.50/24"] } }] } }),
+    }),
+  });
+  const portiere = new Portiere({ ponte, dispositivi, abbinamento, registro: null, ritorno });
   const chiamata = new Chiamata({
     dove: doveIlCentralino,
     identita,
@@ -125,6 +138,7 @@ async function catena() {
     portiere,
     abbinamento,
     identita,
+    ritorno,
     chiamata,
     spegni: async () => {
       chiamata.spegni();
@@ -223,7 +237,10 @@ test("un segno inventato viene rifiutato anche passando dal centralino", async (
 test("l'abbinamento passa dal centralino, che il codice non lo vede mai", async () => {
   const c = await catena();
   try {
-    const codice = "ABCD2345";
+    /* Un codice vero, fabbricato come lo fabbrica la console: quello finto
+     * bastava a provare l'instradamento, ma qui si vuole l'abbinamento
+     * intero, e il ponte un codice che non ha fatto lui lo rifiuta. */
+    const { codice } = c.abbinamento.nuovo();
     c.chiamata.apriLAbbinamento(impronta(codice));
     await attendi(() => c.centralino.abbinamenti.size === 1);
 
@@ -235,6 +252,25 @@ test("l'abbinamento passa dal centralino, che il codice non lo vede mai", async 
     });
     /* La stretta di mano riesce: il telefono e' arrivato alla casa giusta. */
     await telefono.dentro;
+
+    /* E adesso il giro intero, che e' quello che fara' l'app: dentro il
+     * cifrato si dice il codice, e si torna indietro con tutto il necessario
+     * per non doverlo rifare mai piu'. */
+    telefono.manda({ codice, nome: "iPhone di Anna", sistema: "ios" });
+    const ecco = await telefono.aspetta("ecco");
+
+    assert.match(ecco.segno, /^[0-9a-f]{64}$/);
+    assert.match(ecco.chiave, /^[0-9a-f]{64}$/);
+    assert.equal(ecco.dispositivo.nome, "iPhone di Anna");
+
+    /* Il pezzo nuovo, e il motivo per cui l'utente non batte nessun
+     * indirizzo: dove ribussare domani glielo dice la casa. */
+    assert.equal(ecco.ritorno.casa, c.identita.casa);
+    assert.equal(ecco.ritorno.centralino, c.doveIlCentralino);
+    assert.deepEqual(ecco.ritorno.indirizzi, ["192.168.1.50:8098"]);
+
+    /* Il codice e' stato speso: l'attesa al centralino non resta aperta. */
+    await attendi(() => c.centralino.abbinamenti.size === 0);
     telefono.chiudi();
   } finally {
     await c.spegni();

@@ -29,12 +29,13 @@ import { TroppiDispositivi } from "./dispositivi.js";
 const CHIUSA_PER_REGOLA = 1008;
 
 export class Portiere {
-  constructor({ ponte, dispositivi, abbinamento, registro, chiamata }) {
+  constructor({ ponte, dispositivi, abbinamento, registro, chiamata, ritorno }) {
     this.ponte = ponte;
     this.dispositivi = dispositivi;
     this.abbinamento = abbinamento;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.chiamata = chiamata;
+    this.ritorno = ritorno;
   }
 
   accogli(presa, { da = "?" } = {}) {
@@ -128,11 +129,20 @@ export class Portiere {
     );
 
     const cifrata = new PresaCifrata(presa, chiaveDiQuestoFilo);
-    cifrata.onMessaggio = (dentro) => this._ilCodice(cifrata, dentro, da);
+    /* `_ilCodice` aspetta il Supervisor, quindi torna una promessa: se
+     * scoppiasse, nessuno la guarderebbe e Node butterebbe giu' il ponte per
+     * un errore non gestito. Chi ha chiesto un abbinamento merita un no, non
+     * un add-on che si riavvia. */
+    cifrata.onMessaggio = (dentro) => {
+      this._ilCodice(cifrata, dentro, da).catch((errore) => {
+        this.registro.errore(`abbinamento andato storto: ${errore?.message || errore}`);
+        cifrata.chiudi(1011, "");
+      });
+    };
     cifrata.onChiusa = () => {};
   }
 
-  _ilCodice(cifrata, testo, da) {
+  async _ilCodice(cifrata, testo, da) {
     let detto;
     try {
       detto = JSON.parse(testo);
@@ -157,18 +167,25 @@ export class Portiere {
       return;
     }
 
+    let abbinato;
     try {
-      const { dispositivo, segno, chiave } = this.dispositivi.abbina({
-        nome: detto?.nome,
-        sistema: detto?.sistema,
-      });
-      this.chiamata?.chiudiLAbbinamento();
-      this.registro.info(`abbinato «${dispositivo.nome}» dal centralino`);
-      cifrata.manda(JSON.stringify({ t: "ecco", segno, chiave, dispositivo }));
+      abbinato = this.dispositivi.abbina({ nome: detto?.nome, sistema: detto?.sistema });
     } catch (errore) {
       const perche = errore instanceof TroppiDispositivi ? errore.message : "non ha funzionato";
       cifrata.manda(JSON.stringify({ t: "no", perche }));
+      cifrata.chiudi(1000, "abbinato");
+      return;
     }
+
+    const { dispositivo, segno, chiave } = abbinato;
+    this.chiamata?.chiudiLAbbinamento();
+    this.registro.info(`abbinato «${dispositivo.nome}» dal centralino`);
+    /* Dove tornare. Chi si e' abbinato con otto lettere non ha battuto nessun
+     * indirizzo, e senza questo non saprebbe dove ribussare domani. Se il
+     * Supervisor non risponde si va avanti lo stesso, con quello che c'e': un
+     * abbinamento non si fa fallire per un indirizzo mancante. */
+    const ritorno = (await this.ritorno?.cosaDire()) ?? null;
+    cifrata.manda(JSON.stringify({ t: "ecco", segno, chiave, dispositivo, ritorno }));
     /* Un filo di abbinamento serve a una cosa sola e poi si chiude. Il
      * telefono ritorna dalla porta normale, col segno appena avuto. */
     cifrata.chiudi(1000, "abbinato");

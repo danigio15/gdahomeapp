@@ -26,6 +26,13 @@ dependencies:
   # La plancia che gia' esiste, dentro l'app.
   webview_flutter: ^4.10.0
 
+  # La cifratura fra l'app e il ponte: X25519, HKDF, AES-256-GCM.
+  #
+  # Non si scrive a mano. Dall'altra parte le stesse tre cose vengono da
+  # `node:crypto`, e le due implementazioni devono coincidere byte per byte:
+  # per questo ci sono vettori di prova generati dal Node e ricontrollati qui.
+  cryptography: ^2.7.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

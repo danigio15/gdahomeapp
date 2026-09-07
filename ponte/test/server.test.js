@@ -21,10 +21,27 @@ import { rotta } from "../src/server.js";
 
 const SEGNO_DEL_SUPERVISOR = "segno-finto-del-supervisor";
 
+const INDIRIZZO_DI_CASA = "192.168.1.50";
+
 async function casaFinta() {
   const prese = [];
-  const server = createServer((_r, risposta) => {
+  const server = createServer((richiesta, risposta) => {
     risposta.writeHead(200, { "content-type": "application/json" });
+    /* Il Supervisor finto: e' da qui che il ponte impara su quale indirizzo
+     * lo trovano i telefoni quando sono in casa. */
+    if ((richiesta.url || "").startsWith("/network/info")) {
+      risposta.end(
+        JSON.stringify({
+          data: {
+            interfaces: [
+              { enabled: true, ipv4: { address: ["172.30.32.2/23"] } },
+              { enabled: true, ipv4: { address: [`${INDIRIZZO_DI_CASA}/24`] } },
+            ],
+          },
+        }),
+      );
+      return;
+    }
     risposta.end('{"message":"API running."}');
   });
   server.on("upgrade", (richiesta, socket) => {
@@ -60,7 +77,9 @@ async function banco() {
   const ha = await casaFinta();
   const primaCasa = process.env.PONTE_CASA;
   const primoSegno = process.env.SUPERVISOR_TOKEN;
+  const primoSupervisor = process.env.PONTE_SUPERVISOR;
   process.env.PONTE_CASA = ha.indirizzo;
+  process.env.PONTE_SUPERVISOR = ha.indirizzo;
   process.env.SUPERVISOR_TOKEN = SEGNO_DEL_SUPERVISOR;
 
   const avviato = await alzaIlPonte({
@@ -89,6 +108,8 @@ async function banco() {
       else process.env.PONTE_CASA = primaCasa;
       if (primoSegno === undefined) delete process.env.SUPERVISOR_TOKEN;
       else process.env.SUPERVISOR_TOKEN = primoSegno;
+      if (primoSupervisor === undefined) delete process.env.PONTE_SUPERVISOR;
+      else process.env.PONTE_SUPERVISOR = primoSupervisor;
     },
   };
 }
@@ -162,6 +183,16 @@ test("il codice della console abbina il telefono, e vale una volta sola", async 
     const fatto = await risposta.json();
     assert.match(fatto.segno, /^[0-9a-f]{64}$/);
     assert.equal(fatto.dispositivo.nome, "iPhone di Anna");
+
+    /* Dove tornare. Senza questo, un telefono che si e' abbinato battendo
+     * otto lettere non saprebbe dove ribussare: non ha mai visto un
+     * indirizzo, ed e' apposta. */
+    assert.equal(fatto.ritorno.casa, b.identita.casa);
+    assert.deepEqual(fatto.ritorno.indirizzi, [
+      `${INDIRIZZO_DI_CASA}:${b.app.split(":").pop()}`,
+    ]);
+    /* Questo banco non ha centralino: si dice, invece di far finta. */
+    assert.equal(fatto.ritorno.centralino, null);
 
     const seconda = await prendi(`${b.app}/abbinamento`, {
       method: "POST",

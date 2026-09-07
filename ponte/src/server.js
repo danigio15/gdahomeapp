@@ -109,6 +109,7 @@ export function costruisciLaPortaDellApp({
   abbinamento,
   registro,
   chiamata,
+  ritorno,
 }) {
   const server = createServer(async (richiesta, risposta) => {
     /* Qui, e **solo** qui.
@@ -179,8 +180,11 @@ export function costruisciLaPortaDellApp({
         registro.info(`abbinato «${dispositivo.nome}»`);
         /* Il segno **e** la chiave del filo: sono due cose diverse e servono
          * tutte e due. Senza la chiave il telefono farebbe la stretta di mano
-         * e poi non capirebbe una parola. */
-        json(risposta, { segno, chiave, dispositivo }, 201);
+         * e poi non capirebbe una parola.
+         *
+         * E il ritorno: dove ribussare domani. Chi si e' abbinato battendo
+         * otto lettere non ha mai visto un indirizzo. */
+        json(risposta, { segno, chiave, dispositivo, ritorno: (await ritorno?.cosaDire()) ?? null }, 201);
       } catch (errore) {
         if (errore instanceof TroppiDispositivi) {
           male(risposta, 409, errore.message);
