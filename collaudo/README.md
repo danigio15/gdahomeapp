@@ -28,6 +28,9 @@ Con `node guarda.mjs --resta` il banco resta acceso invece di spegnersi: si
 apre l'indirizzo che stampa e ci si guarda dentro col browser, premendo i
 bottoni a mano.
 
+Con `node guarda.mjs --scuro` l'app gira col tema scuro, come la vede chi
+tiene il telefono cosi', e le fotografie finiscono in `collaudo/foto/scuro/`.
+
 ## Perche' `--dart-define=COLLAUDO=true`
 
 Flutter disegna su una tela. In una pagina web questo vuol dire che nel

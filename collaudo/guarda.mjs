@@ -37,8 +37,13 @@ const QUI = dirname(fileURLToPath(import.meta.url));
 const RADICE = dirname(QUI);
 const APP = join(RADICE, "app");
 const PONTE = join(RADICE, "ponte");
-const FOTO = join(QUI, "foto");
 const RESTA = process.argv.includes("--resta");
+/* `--scuro`: l'app col tema scuro, come la vede chi tiene il telefono cosi'.
+ * Le fotografie finiscono in una cartella a parte, per non coprire quelle
+ * chiare. */
+const SCURO = process.argv.includes("--scuro");
+const FOTO = join(QUI, "foto", SCURO ? "scuro" : "");
+mkdirSync(FOTO, { recursive: true });
 
 const attendi = (millesimi) => new Promise((ok) => setTimeout(ok, millesimi));
 
@@ -238,6 +243,7 @@ async function main() {
   const pagina = await browser.newPage({
     viewport: { width: 430, height: 932 },
     deviceScaleFactor: 2,
+    colorScheme: SCURO ? "dark" : "light",
     /* CanvasKit disegna il testo su tela, e per farlo si scarica i glifi da
      * `fonts.gstatic.com`. Dietro un proxy che rifirma il traffico con una
      * propria autorita', quel prelievo fallisce e le schermate escono **senza
@@ -355,12 +361,35 @@ async function premi(pagina, etichetta, { inAlto = false } = {}) {
    * bottone della barra del titolo: li' i candidati sono fratelli, non uno
    * dentro l'altro. */
   const quanti = await tutti.count();
+  if (process.env.COLLAUDO_SPIA) {
+    for (let i = 0; i < quanti; i += 1) {
+      const r = await tutti.nth(i).boundingBox();
+      const tag = await tutti
+        .nth(i)
+        .evaluate(
+          (e) =>
+            `${e.tagName}#${e.id} role=${e.getAttribute("role")} aria=${e.getAttribute("aria-label")}`,
+        );
+      process.stdout.write(
+        `    spia │ «${etichetta}» ${i}: ${tag} → ${r ? `${Math.round(r.x)},${Math.round(r.y)} ${Math.round(r.width)}x${Math.round(r.height)}` : "nessun riquadro"}\n`,
+      );
+    }
+  }
   let bottone = tutti.first();
   if (quanti > 1) {
     let migliore = Infinity;
     for (let i = 0; i < quanti; i += 1) {
       const riquadro = await tutti.nth(i).boundingBox();
-      if (!riquadro || riquadro.width <= 0 || riquadro.height <= 0) continue;
+      /* Un nodo di un pixel non e' un bottone: e' un residuo dell'albero, e
+       * prenderlo perche' e' «il piu' piccolo» vuol dire premere nel vuoto.
+       * E un nodo grande quanto lo schermo non e' un bottone nemmeno lui: e'
+       * il contenitore di tutto, e la ricerca per testo lo prende perche' la
+       * scritta ce l'ha *dentro*. Con `inAlto` vinceva sempre lui — sta a
+       * y=0 — e il tocco cadeva in mezzo alla pagina. */
+      if (!riquadro || riquadro.width < 16 || riquadro.height < 16) continue;
+      const schermo = pagina.viewportSize();
+      if (schermo && riquadro.width * riquadro.height > schermo.width * schermo.height * 0.6)
+        continue;
       const quanto = inAlto ? riquadro.y : riquadro.width * riquadro.height;
       if (quanto < migliore) {
         migliore = quanto;
@@ -428,7 +457,18 @@ try {
   racconta("apro l'elenco delle case");
   try {
     await premi(pagina, "Le tue case", { inAlto: true });
-    await aspettaCheCompaia(pagina, "Le tue case", 8000);
+    /* Si aspetta «Aggiungi», che sta **solo** nell'elenco delle case:
+     * aspettare «Le tue case» non diceva niente, perche' quella scritta e'
+     * gia' nella home, come etichetta del bottone. */
+    try {
+      await aspettaCheCompaia(pagina, "Aggiungi", 3000);
+    } catch (_ancoraNo) {
+      /* Il tocco sul nodo dell'albero non e' arrivato al bottone disegnato:
+       * si tocca dove il bottone **sta**, in alto a destra. */
+      const { width } = pagina.viewportSize();
+      await pagina.mouse.click(width - 20 - 24, 12 + 24);
+      await aspettaCheCompaia(pagina, "Aggiungi", 4000);
+    }
     await attendi(600);
     await scatta(pagina, "5-le-case");
   } catch (_errore) {
