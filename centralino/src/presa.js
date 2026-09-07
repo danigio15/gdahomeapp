@@ -196,6 +196,13 @@ export class Presa {
     this.viva = true;
     this.hoRisposto = false;
 
+    /* Perche' e' caduta. Vuoto quando e' caduta e basta — la rete, il
+     * telefono in tasca — e pieno quando l'abbiamo chiusa noi per un motivo.
+     * Senza questo, chi guarda il registro vede «il filo si e' interrotto» e
+     * non ha nessun modo di sapere se era un messaggio troppo grande, un
+     * segno rifiutato o davvero la rete. */
+    this.motivo = "";
+
     this._avanzo = Buffer.alloc(0);
     this._pezzi = [];
     this._tipoInCorso = null;
@@ -252,6 +259,7 @@ export class Presa {
   chiudi(codice = CHIUSURA.normale, motivo = "") {
     if (!this.viva) return;
     this.viva = false;
+    if (motivo) this.motivo = String(motivo);
     try {
       const testo = Buffer.from(String(motivo).slice(0, 120), "utf8");
       const carico = Buffer.alloc(2 + testo.length);
@@ -372,7 +380,7 @@ export class Presa {
     if (this.hoRisposto) return;
     this.hoRisposto = true;
     try {
-      this.onChiusa();
+      this.onChiusa(this.motivo);
     } catch (_errore) {
       /* Chi ascolta ha sbagliato: non e' un motivo per far cadere il ponte. */
     }

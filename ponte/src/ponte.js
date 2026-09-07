@@ -101,7 +101,7 @@ class Collegamento {
 
   avvia() {
     this.presa.onMessaggio = (testo) => this._dalTelefono(testo);
-    this.presa.onChiusa = () => this._finito();
+    this.presa.onChiusa = (motivo = "") => this._finito(motivo);
     /* Un telefono che riceve e non chiede — l'app ferma sulla home — non manda
      * niente per minuti, ed e' vivo lo stesso. Il pong e' il suo modo di dire
      * che c'e'. */
@@ -163,7 +163,10 @@ class Collegamento {
     try {
       this.filo = await this.ponte.casa.apriIlFilo({
         onMessaggio: (dallaCasa) => this.presa.manda(dallaCasa),
-        onChiusa: () => this.chiudi(1011, "Home Assistant ha chiuso"),
+        onChiusa: (perche = "") => {
+          this.ponte.registro?.attenzione?.(`il filo con Home Assistant si e' chiuso${perche}`);
+          this.chiudi(1011, "Home Assistant ha chiuso");
+        },
       });
     } catch (errore) {
       const perche =
@@ -212,10 +215,17 @@ class Collegamento {
     this.ponte.collegamenti.delete(this);
   }
 
-  _finito() {
+  _finito(motivo = "") {
     if (this.chiuso) return;
     this.chiuso = true;
     if (this.battito) clearInterval(this.battito);
+    /* Perche' se n'e' andato. Un telefono che chiude l'app se ne va senza dire
+     * niente, e quello e' il caso normale; quando invece un motivo c'e' —
+     * l'abbiamo chiuso noi, o e' arrivato qualcosa di storto — va scritto, se
+     * no chi legge il registro non ha niente da cui partire. */
+    if (motivo && this.dispositivo) {
+      this.ponte.registro?.attenzione?.(`${this.dispositivo.nome} e' uscito: ${motivo}`);
+    }
     this.filo?.chiudi();
     this.ponte.collegamenti.delete(this);
   }

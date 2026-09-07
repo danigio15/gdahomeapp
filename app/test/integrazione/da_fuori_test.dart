@@ -183,6 +183,39 @@ void main() {
     },
   );
 
+  test('una casa grande arriva intera, spezzata per strada', () async {
+    /* La prova del muro vero, e quella che sarebbe servita prima.
+     *
+     * La prima cosa che l'app chiede e' `get_states`: **tutta la casa in un
+     * messaggio solo**. Su una casa vera sono due o tre megabyte, e dal
+     * centralino non passano — le funzioni sulla nuvola hanno un tetto di un
+     * megabyte per messaggio, e non e' un'impostazione. Quello che si vedeva
+     * era un'app che diceva «il filo si e' interrotto» ogni tre secondi,
+     * senza una riga di spiegazione da nessuna parte.
+     *
+     * Qui la casa finta ha ottomila entita', che fanno circa un megabyte e
+     * mezzo — sopra al tetto, e sopra alla misura del pezzo. Se la busta non
+     * si spezzasse, questa prova non finirebbe. */
+    casa.entita = [
+      for (var i = 0; i < 8000; i += 1)
+        CasaFinta.unaEntita(
+          'light.lampada_$i',
+          i.isEven ? 'on' : 'off',
+          nome: 'Lampada numero $i, con un nome lungo per far peso',
+        ),
+    ];
+
+    final collegamento = await abbinaEApri();
+    try {
+      expect(collegamento.comeVa, ComeVa.aperta);
+      expect(collegamento.stato!.quante, 8000);
+      expect(collegamento.stato!['light.lampada_0']!.accesa, isTrue);
+      expect(collegamento.stato!['light.lampada_7999']!.accesa, isFalse);
+    } finally {
+      await collegamento.chiudi();
+    }
+  });
+
   test(
     'un cambiamento in casa arriva al telefono passando dal centralino',
     () async {

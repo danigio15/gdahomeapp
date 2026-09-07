@@ -56,9 +56,14 @@ export const CHIUDENDO = 2;
 export const CHIUSA = 3;
 
 export class Chiamante {
-  constructor(indirizzo, { attesa = ATTESA } = {}) {
+  constructor(indirizzo, { attesa = ATTESA, messaggioMassimo = null } = {}) {
     this.indirizzo = String(indirizzo);
     this.readyState = CONNETTENDO;
+    this.messaggioMassimo = messaggioMassimo;
+
+    /* Perche' e' caduto, quando si sa. Chi ascolta `close` lo trova
+     * nell'evento, e finisce nel registro invece di sparire. */
+    this.motivo = "";
 
     this._ascoltatori = { open: [], message: [], close: [], error: [] };
     this._presa = null;
@@ -206,8 +211,12 @@ export class Chiamante {
 
     this._presa = new Presa(this._socket, {
       daCliente: true,
+      ...(this.messaggioMassimo ? { messaggioMassimo: this.messaggioMassimo } : {}),
       onMessaggio: (testo) => this._avvisa("message", { data: testo }),
-      onChiusa: () => this._finita(),
+      onChiusa: (motivo) => {
+        if (motivo) this.motivo = motivo;
+        this._finita();
+      },
     });
 
     /* Aperto **prima** di guardare quello che era gia' arrivato.
@@ -227,6 +236,7 @@ export class Chiamante {
 
   _male(errore) {
     if (this.readyState === CHIUSA) return;
+    if (!this.motivo) this.motivo = String(errore?.message || errore || "");
     clearTimeout(this._scadenza);
     this._avvisa("error", { error: errore, message: errore?.message });
     this._socket?.destroy();
@@ -236,7 +246,7 @@ export class Chiamante {
   _finita() {
     if (this.readyState === CHIUSA) return;
     this.readyState = CHIUSA;
-    this._avvisa("close", {});
+    this._avvisa("close", { motivo: this.motivo });
   }
 
   _avvisa(quale, evento) {

@@ -38,6 +38,25 @@ import 'presa.dart';
 /// Quanto si aspetta che la casa risponda alla presentazione.
 const Duration attesaDellaStretta = Duration(seconds: 15);
 
+/// Quanto puo' essere grande un pezzo di busta.
+///
+/// La prima cosa che l'app chiede e' `get_states`: **tutta la casa in un
+/// messaggio solo**, che su una casa vera sono due o tre megabyte. Dal
+/// centralino non passa — le funzioni sulla nuvola hanno un tetto di un
+/// megabyte per messaggio, e non e' un'impostazione — quindi le buste grandi
+/// si spezzano.
+///
+/// Un pezzo comincia con `|`, l'ultimo no: chi riceve accumula finche' non
+/// arriva quello senza. Il segno sta **fuori** dalla busta, quindi chi sta in
+/// mezzo puo' al massimo rovinare l'impacchettamento — e allora la busta non
+/// si apre, che e' esattamente quello che deve succedere. E `|` in base64 non
+/// c'e': una busta intera non comincera' mai con quello.
+const int pezzoMassimo = 512 * 1024;
+
+/// Oltre questo, chi manda non sta mandando la casa: sta riempiendo la nostra
+/// memoria.
+const int interoMassimo = 16 * 1024 * 1024;
+
 /// Stringe la mano e torna una presa che cifra da sola.
 ///
 /// Con [chi] e [chiaveDelFilo] e' un telefono gia' abbinato che torna. Senza,
@@ -117,6 +136,9 @@ class PresaCifrata implements Presa {
   final _pronta = Completer<void>();
 
   Busta? _busta;
+
+  /* I pezzi di una busta grande, mentre arrivano. */
+  final StringBuffer _pezzi = StringBuffer();
 
   /* Segnato **subito**, non quando la chiave e' pronta.
    *
@@ -204,8 +226,29 @@ class PresaCifrata implements Presa {
 
   Future<void> _apri(String testo) async {
     if (_chiusa) return;
+
+    if (testo.startsWith('|')) {
+      _pezzi.write(testo.substring(1));
+      if (_pezzi.length > interoMassimo) {
+        _pezzi.clear();
+        _finita(
+          const FiloCaduto('la casa ha mandato qualcosa di troppo grande'),
+        );
+      }
+      return;
+    }
+
+    final String intero;
+    if (_pezzi.isEmpty) {
+      intero = testo;
+    } else {
+      _pezzi.write(testo);
+      intero = _pezzi.toString();
+      _pezzi.clear();
+    }
+
     try {
-      final dentro = await _busta!.apri(testo);
+      final dentro = await _busta!.apri(intero);
       if (!_uscita.isClosed) _uscita.add(dentro);
     } on BustaGuasta catch (errore) {
       /* Su un canale che passa da un terzo, un messaggio che non si apre o e'
@@ -221,7 +264,16 @@ class PresaCifrata implements Presa {
       final busta = _busta;
       if (_chiusa || busta == null) return;
       try {
-        _sotto.manda(await busta.chiudi(testo));
+        final chiusa = await busta.chiudi(testo);
+        if (chiusa.length <= pezzoMassimo) {
+          _sotto.manda(chiusa);
+          return;
+        }
+        for (var da = 0; da < chiusa.length; da += pezzoMassimo) {
+          final fino = da + pezzoMassimo;
+          final pezzo = chiusa.substring(da, fino.clamp(0, chiusa.length));
+          _sotto.manda(fino >= chiusa.length ? pezzo : '|$pezzo');
+        }
       } catch (errore) {
         _finita(FiloCaduto(_leggibile(errore)));
       }

@@ -42,6 +42,9 @@ const SEGNO_DELLA_CASA = "segno-finto-del-supervisor";
 
 async function homeAssistantFinta() {
   const prese = [];
+  /* Quando c'e', `get_states` risponde questo invece dell'elenco finto: serve
+   * a provare la casa grande, che e' quella vera. */
+  const quanto = { grande: null };
   const server = createServer((_r, risposta) => {
     risposta.writeHead(200, { "content-type": "application/json" });
     risposta.end('{"message":"API running."}');
@@ -65,7 +68,10 @@ async function homeAssistantFinta() {
             id: detto.id,
             type: "result",
             success: true,
-            result: detto.type === "get_states" ? [{ entity_id: "light.x", state: "on" }] : null,
+            result:
+              detto.type === "get_states"
+                ? (quanto.grande ?? [{ entity_id: "light.x", state: "on" }])
+                : null,
           }),
         );
       },
@@ -78,6 +84,7 @@ async function homeAssistantFinta() {
   return {
     indirizzo: `http://127.0.0.1:${server.address().port}`,
     prese,
+    quanto,
     spegni: async () => {
       for (const presa of prese) presa.chiudi();
       await new Promise((ok) => server.close(ok));
@@ -316,6 +323,48 @@ test("l'abbinamento passa dal centralino, che il codice non lo vede mai", async 
 
     /* Il codice e' stato speso: l'attesa al centralino non resta aperta. */
     await attendi(() => c.centralino.abbinamenti.size === 0);
+    telefono.chiudi();
+  } finally {
+    await c.spegni();
+  }
+});
+
+test("tutta la casa in un messaggio solo arriva intera, spezzata per strada", async () => {
+  /* La prova del muro vero.
+   *
+   * La prima cosa che chiede un telefono e' `get_states`: **tutta la casa in
+   * un messaggio solo**, che su una casa vera sono due o tre megabyte. Dal
+   * centralino non passa — le funzioni sulla nuvola hanno un tetto di un
+   * megabyte per messaggio, e non e' un'impostazione — quindi le buste grandi
+   * si spezzano e si rimettono insieme dall'altra parte.
+   *
+   * Senza questo, quello che si vede e' un'app che dice «il filo si e'
+   * interrotto» ogni tre secondi, senza una riga di spiegazione da nessuna
+   * parte: il messaggio parte, non arriva, e il filo cade. */
+  const c = await catena();
+  try {
+    const { segno, chiave, dispositivo } = c.dispositivi.abbina({ nome: "telefono" });
+    const telefono = unTelefono(c.doveIlCentralino, `/telefono/${c.identita.casa}`, {
+      chi: dispositivo.id,
+      chiave,
+    });
+    await telefono.dentro;
+    telefono.manda({ type: "auth", access_token: segno });
+    await telefono.aspetta("auth_ok");
+
+    /* Due megabyte e mezzo di roba, come una casa vera. */
+    const tanta = "x".repeat(2_500_000);
+    c.ha.quanto.grande = tanta;
+    telefono.manda({ id: 1, type: "get_states" });
+
+    const risposta = await telefono.aspetta((uno) => uno.id === 1);
+    assert.equal(risposta.result.length, tanta.length);
+    assert.equal(risposta.result, tanta);
+
+    /* E ci e' arrivata a pezzi: se fosse passata intera, questa prova non
+     * starebbe provando niente. */
+    assert.ok(telefono.quantiTelai > 3, `arrivata in ${telefono.quantiTelai} telai`);
+
     telefono.chiudi();
   } finally {
     await c.spegni();

@@ -15,6 +15,19 @@ import { Chiamante } from "./chiamante.js";
 
 const CASA_DI_DIFETTO = "http://supervisor/core";
 
+/* Quanto puo' essere grande un messaggio che arriva da Home Assistant.
+ *
+ * Il difetto della presa e' un megabyte, e per un telefono che manda comandi
+ * e' larghissimo. Da questa parte no: la prima cosa che il telefono chiede e'
+ * `get_states`, cioe' **tutta la casa in un messaggio solo**, e su una casa
+ * vera sono facilmente due o tre megabyte. Con il limite di prima quel
+ * messaggio faceva chiudere il filo, e quello che si vedeva era «il filo si e'
+ * interrotto» ogni tre secondi, senza nessuna spiegazione da nessuna parte.
+ *
+ * Qui dall'altra parte c'e' Home Assistant, non uno sconosciuto: il limite
+ * serve a non finire la memoria, non a difendersi. */
+const DA_HOME_ASSISTANT = 32 * 1024 * 1024;
+
 /* Quanto si aspetta che Home Assistant risponda alla stretta di mano. Oltre,
  * il telefono ha una risposta invece di restare appeso. */
 const ATTESA_DELLA_STRETTA = 15_000;
@@ -60,7 +73,9 @@ export class Casa {
     return new Promise((riuscito, fallito) => {
       let presa;
       try {
-        presa = new this.Presa(this.indirizzoDelFilo);
+        presa = new this.Presa(this.indirizzoDelFilo, {
+          messaggioMassimo: DA_HOME_ASSISTANT,
+        });
       } catch (errore) {
         fallito(new CasaIrraggiungibile(String(errore?.message || errore)));
         return;
@@ -115,12 +130,16 @@ export class Casa {
         }
       });
 
-      presa.addEventListener("close", () => {
+      presa.addEventListener("close", (evento) => {
         clearTimeout(scadenza);
         filo.viva = false;
+        /* Il perche', quando si sa. Senza, chi legge il registro vede un filo
+         * caduto e non ha modo di distinguere la rete da un messaggio troppo
+         * grande — e sono due guasti che si aggiustano in modi opposti. */
+        const perche = evento?.motivo ? `: ${evento.motivo}` : "";
         if (!autenticato)
-          fallito(new CasaIrraggiungibile("il filo si e' chiuso durante la stretta"));
-        else onChiusa?.();
+          fallito(new CasaIrraggiungibile(`il filo si e' chiuso durante la stretta${perche}`));
+        else onChiusa?.(perche);
       });
 
       presa.addEventListener("error", () => {

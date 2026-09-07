@@ -15,6 +15,9 @@ export function telefonoCifrato(indirizzo, { chi = null, chiave = null, abbina =
   const detti = [];
   const inChiaro = [];
   let busta = null;
+  /* Le buste grandi arrivano a pezzi: uno che comincia con `|` non e' finito.
+   * L'app vera fa la stessa cosa, ed e' scritto in `portiere.js`. */
+  let pezzi = "";
   let laStretta = null;
   let guasta = null;
 
@@ -33,7 +36,9 @@ export function telefonoCifrato(indirizzo, { chi = null, chiave = null, abbina =
     );
   });
 
+  let quantiTelai = 0;
   presa.addEventListener("message", (evento) => {
+    quantiTelai += 1;
     const testo = typeof evento.data === "string" ? evento.data : String(evento.data);
     if (!busta) {
       const detto = JSON.parse(testo);
@@ -60,8 +65,15 @@ export function telefonoCifrato(indirizzo, { chi = null, chiave = null, abbina =
      * e si chiude. Vale come specifica per l'app vera — su un canale che passa
      * da un terzo, un messaggio che non si apre o e' rotto o e' stato toccato,
      * e in tutti e due i casi andare avanti sarebbe peggio che fermarsi. */
+    if (testo.startsWith("|")) {
+      pezzi += testo.slice(1);
+      return;
+    }
+    const intero = pezzi ? pezzi + testo : testo;
+    pezzi = "";
+
     try {
-      detti.push(JSON.parse(busta.apri(testo)));
+      detti.push(JSON.parse(busta.apri(intero)));
     } catch (errore) {
       guasta = errore;
       try {
@@ -88,6 +100,9 @@ export function telefonoCifrato(indirizzo, { chi = null, chiave = null, abbina =
       return guasta;
     },
     manda: (cosa) => presa.send(busta.chiudi(JSON.stringify(cosa))),
+    get quantiTelai() {
+      return quantiTelai;
+    },
     mandaGrezzo: (testo) => presa.send(testo),
     aspetta: async (quale) => {
       const trova = () =>

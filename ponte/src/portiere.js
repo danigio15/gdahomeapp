@@ -29,6 +29,27 @@ import { TroppiDispositivi } from "./dispositivi.js";
 
 const CHIUSA_PER_REGOLA = 1008;
 
+/* ─── I messaggi grandi ────────────────────────────────────────────────────
+ *
+ * La prima cosa che chiede un telefono e' `get_states`: **tutta la casa in un
+ * messaggio solo**, che su una casa vera sono due o tre megabyte. Dal
+ * centralino non passa: le funzioni sulla nuvola hanno un tetto di un
+ * megabyte per messaggio, e non e' un'impostazione — e' come sono fatte.
+ *
+ * Quindi le buste grandi si spezzano. Un pezzo comincia con `|`, l'ultimo no:
+ * chi riceve accumula finche' non arriva quello senza. Il segno sta **fuori**
+ * dalla busta, quindi chi sta in mezzo puo' al massimo rovinare
+ * l'impacchettamento — e allora la busta non si apre, che e' esattamente
+ * quello che deve succedere.
+ *
+ * Il `|` va bene come segno perche' in base64 non c'e': una busta intera non
+ * comincera' mai con quello. */
+const PEZZO = 512 * 1024;
+
+/* Oltre questo, chi manda non sta mandando la casa: sta riempiendo la nostra
+ * memoria. */
+const INTERO_MASSIMO = 16 * 1024 * 1024;
+
 export class Portiere {
   constructor({ ponte, dispositivi, abbinamento, registro, chiamata, ritorno }) {
     this.ponte = ponte;
@@ -218,6 +239,7 @@ export class PresaCifrata {
     this.sotto = sotto;
     this.busta = new Busta(chiave, { io: "casa" });
     this.viva = true;
+    this._pezzi = "";
     this.onMessaggio = () => {};
     this.onChiusa = () => {};
     this.onPong = () => {};
@@ -235,7 +257,15 @@ export class PresaCifrata {
 
   manda(testo) {
     if (!this.viva) return false;
-    return this.sotto.manda(this.busta.chiudi(testo));
+    const busta = this.busta.chiudi(testo);
+    if (busta.length <= PEZZO) return this.sotto.manda(busta);
+
+    for (let da = 0; da < busta.length; da += PEZZO) {
+      const pezzo = busta.slice(da, da + PEZZO);
+      const ultimo = da + PEZZO >= busta.length;
+      if (!this.sotto.manda(ultimo ? pezzo : `|${pezzo}`)) return false;
+    }
+    return true;
   }
 
   ping() {
@@ -251,9 +281,22 @@ export class PresaCifrata {
 
   _arrivata(testo) {
     if (!this.viva) return;
+
+    if (typeof testo === "string" && testo.startsWith("|")) {
+      this._pezzi += testo.slice(1);
+      if (this._pezzi.length > INTERO_MASSIMO) {
+        this._pezzi = "";
+        this.chiudi(CHIUSA_PER_REGOLA, "messaggio troppo grande");
+      }
+      return;
+    }
+
+    const intero = this._pezzi ? this._pezzi + testo : testo;
+    this._pezzi = "";
+
     let dentro;
     try {
-      dentro = this.busta.apri(testo);
+      dentro = this.busta.apri(intero);
     } catch (errore) {
       if (!(errore instanceof BustaGuasta)) throw errore;
       this.chiudi(CHIUSA_PER_REGOLA, "busta guasta");
