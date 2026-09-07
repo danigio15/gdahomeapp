@@ -17,6 +17,12 @@ compatibility_date = "2025-04-01"
 # nessun dominio da comprare.
 workers_dev = true
 
+# Ogni versione pubblicata, se non si dice il contrario, resta raggiungibile
+# per sempre al proprio indirizzo. Per un centralino non serve a niente e non
+# e' ordinato: le case chiamano l'indirizzo di adesso, e le versioni di ieri
+# non devono restare accese a fare da centralino a nessuno.
+preview_urls = false
+
 # Una casa per Durable Object. Ogni casa e' un oggetto suo, che dorme quando
 # non passa niente e si sveglia quando arriva un telefono.
 [[durable_objects.bindings]]
