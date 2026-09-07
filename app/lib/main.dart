@@ -12,6 +12,7 @@ import 'package:flutter/semantics.dart';
 import 'casa/archivio_delle_case.dart';
 import 'casa/cassaforte.dart';
 import 'casa/collegamento.dart';
+import 'ponte/centralino.dart';
 import 'schermate/aggiungi_casa.dart';
 import 'schermate/casa.dart';
 import 'schermate/home.dart';
@@ -111,6 +112,7 @@ class _PortoneState extends State<Portone> {
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (contesto) => AggiungiCasa(
+          centralino: centralinoDiDifetto,
           archivio: _collegamento.archivio,
           quandoFatto: (_) async {
             Navigator.of(contesto).pop();
@@ -129,6 +131,7 @@ class _PortoneState extends State<Portone> {
     }
     if (_collegamento.archivio.vuoto) {
       return AggiungiCasa(
+        centralino: centralinoDiDifetto,
         archivio: _collegamento.archivio,
         quandoFatto: (_) => _collegamento.apri(),
       );

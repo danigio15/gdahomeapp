@@ -38,7 +38,8 @@ import 'indirizzo.dart';
 
 /// Cambiato da `strumenti/centralino.mjs`: la riga qui sotto e' quella che
 /// legge, e va lasciata su una riga sola.
-const String centralinoDiDifettoScritto = "";
+const String centralinoDiDifettoScritto =
+    "wss://gdahome-centralino.danigio15.workers.dev";
 
 const String _daRiga = String.fromEnvironment(
   'CENTRALINO',

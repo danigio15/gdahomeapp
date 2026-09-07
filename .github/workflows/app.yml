@@ -14,10 +14,8 @@ on:
     inputs:
       centralino:
         description: >-
-          Il centralino, per esempio wss://centralino.pippo.workers.dev.
-          Lasciandolo vuoto l'app chiede l'indirizzo di casa la prima volta, e
-          il centralino se lo fa dire dalla casa: funziona uguale, e' solo un
-          passaggio in piu' per chi installa.
+          Solo per provarne un altro. Lasciandolo vuoto si usa quello scritto
+          nel codice, che e' quello giusto quasi sempre.
         required: false
         default: ""
   push:
@@ -48,6 +46,37 @@ jobs:
       # release va firmato con una chiave che deve restare in mano a una
       # persona sola, e finche' l'app non va sui negozi quella chiave non
       # esiste. Il pacchetto di debug si firma da solo e si installa uguale.
+      # Quale centralino finisce dentro il pacchetto, scritto dove si vede.
+      #
+      # Serve perche' un pacchetto senza centralino **sembra uguale** a uno che
+      # ce l'ha: la differenza si scopre installandolo, quando l'app chiede un
+      # indirizzo di casa che chi e' fuori non puo' usare. Un'ora persa cosi'
+      # e' un'ora persa per niente.
+      - name: Con quale centralino
+        id: quale
+        env:
+          SCRITTO: ${{ inputs.centralino }}
+        run: |
+          if [ -n "$SCRITTO" ]; then
+            quale="$SCRITTO"
+            da="dalla casella qui sopra"
+          else
+            quale=$(node ../strumenti/centralino.mjs --dimmi | sed -n 's/^l.app:  *//p')
+            da="dal codice"
+          fi
+          echo "quale=$quale" >> "$GITHUB_OUTPUT"
+          if [ "$quale" = "(nessuno)" ] || [ -z "$quale" ]; then
+            echo "::warning::Questo pacchetto non ha nessun centralino: da fuori casa non entrera'."
+            echo "### ⚠️ Nessun centralino" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "L'app chiedera' l'indirizzo di casa, e da fuori quello non serve." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Centralino: \`$quale\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Preso $da. Con questo si abbina battendo solo il codice." >> "$GITHUB_STEP_SUMMARY"
+          fi
+        working-directory: app
+
       - name: Il pacchetto
         run: flutter build apk --debug --dart-define=CENTRALINO="$CENTRALINO"
         working-directory: app

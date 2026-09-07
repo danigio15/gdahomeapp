@@ -19,7 +19,6 @@ import 'package:flutter/material.dart';
 import '../casa/archivio_delle_case.dart';
 import '../casa/casa_conosciuta.dart';
 import '../ponte/abbinamento.dart';
-import '../ponte/centralino.dart';
 import '../ponte/errori.dart';
 import '../ponte/indirizzo.dart';
 
@@ -34,7 +33,12 @@ class AggiungiCasa extends StatefulWidget {
   final ArchivioDelleCase archivio;
   final void Function(CasaConosciuta casa) quandoFatto;
 
-  /// Il centralino a cui chiedere. Nelle prove se ne mette uno finto.
+  /// Il centralino a cui chiedere.
+  ///
+  /// Arriva da fuori e non si va a prenderlo qui: `null` vuol dire davvero
+  /// **nessuno**, e allora l'indirizzo di casa e' l'unica strada. Una
+  /// schermata che si cerca da sola una costante globale non si puo' provare
+  /// nei due casi che contano, ed erano proprio quelli da provare.
   final IndirizzoDelCentralino? centralino;
 
   @override
@@ -49,8 +53,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
   bool _mostraLIndirizzo = false;
   String? _male;
 
-  IndirizzoDelCentralino? get _centralino =>
-      widget.centralino ?? centralinoDiDifetto;
+  IndirizzoDelCentralino? get _centralino => widget.centralino;
 
   /// `true` quando l'indirizzo non e' un di piu' ma l'unica strada.
   bool get _serveLIndirizzo => _centralino == null;

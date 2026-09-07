@@ -27,7 +27,7 @@ import { fileURLToPath } from "node:url";
  * casa l'app direbbe soltanto «non trovo la casa». Li tiene insieme
  * `ponte/test/centralino-di-difetto.test.js`, e si cambiano tutti e due con
  * `node strumenti/centralino.mjs <indirizzo>`. */
-export const CENTRALINO_DI_DIFETTO = "";
+export const CENTRALINO_DI_DIFETTO = "wss://gdahome-centralino.danigio15.workers.dev";
 
 const DIFETTO = Object.freeze({
   centralino: CENTRALINO_DI_DIFETTO,

@@ -19,6 +19,7 @@ import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/main.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/ponte/sonda.dart';
+import 'package:gdahome/schermate/aggiungi_casa.dart';
 
 import 'ponte/ponte_finto.dart';
 
@@ -32,11 +33,18 @@ void main() {
     expect(find.text('Colleghiamo la casa'), findsOneWidget);
     expect(find.text('Abbina'), findsOneWidget);
 
-    /* La cosa che si sta provando e' quello che **non** c'e'. Chi apre l'app
-     * la prima volta trova una casella sola, e non gli viene chiesta nessuna
-     * credenziale di Home Assistant: e' una promessa scritta a schermo, ed e'
-     * la prima cosa che si romperebbe rimettendo dentro un campo per volta. */
-    expect(find.byType(TextField), findsNWidgets(3));
+    /* La cosa che si sta provando e' quello che **non** c'e'.
+     *
+     * Due caselle: il codice e il nome della casa. Nessun indirizzo, nessuna
+     * porta, e soprattutto nessuna credenziale di Home Assistant — che e' una
+     * promessa scritta a schermo, e la prima cosa che si romperebbe
+     * rimettendo dentro un campo per volta. */
+    expect(find.byType(TextField), findsNWidgets(2));
+    expect(
+      find.text('Indirizzo di Home Assistant in casa'),
+      findsNothing,
+      reason: 'con un centralino l\'indirizzo non lo deve battere nessuno',
+    );
     expect(
       find.textContaining('Non ti verra\' mai chiesta la password'),
       findsOneWidget,
@@ -58,13 +66,24 @@ void main() {
   });
 
   testWidgets(
-    'un indirizzo che non si capisce lo dice, senza abbinare niente',
+    'l\'indirizzo si puo\' scrivere lo stesso, per chi ne ha bisogno',
     (tester) async {
+      /* La casella c'e' ancora, ma sta chiusa: serve a chi il centralino non
+       * ce l'ha, o a chi vuole abbinare senza far passare niente da fuori. Ci
+       * si arriva da un bottone, e quello che si scrive dentro viene
+       * controllato come prima. */
       await tester.pumpWidget(AppDiCasa(cassaforte: CassaforteInMemoria()));
       await tester.pumpAndSettle();
 
+      expect(find.text('Indirizzo di casa (facoltativo)'), findsNothing);
+      await tester.ensureVisible(
+        find.textContaining('Il codice non funziona?'),
+      );
+      await tester.tap(find.textContaining('Il codice non funziona?'));
+      await tester.pumpAndSettle();
+
       await tester.enterText(
-        find.widgetWithText(TextField, 'Indirizzo di Home Assistant in casa'),
+        find.widgetWithText(TextField, 'Indirizzo di casa (facoltativo)'),
         'non un indirizzo',
       );
       await tester.ensureVisible(find.text('Abbina'));
@@ -77,19 +96,31 @@ void main() {
   );
 
   testWidgets(
-    'senza centralino e senza indirizzo si dice cosa manca, non «non ha funzionato»',
+    'un\'app senza centralino dice cosa manca, non «non ha funzionato»',
     (tester) async {
-      /* Questa app e' compilata senza centralino — nessun `--dart-define` —
-       * quindi l'indirizzo di casa serve davvero, e la casella e' gia'
-       * aperta. Il giorno che il centralino ci sara', questa prova va
-       * riscritta al contrario, ed e' giusto che faccia rumore. */
-      await tester.pumpWidget(AppDiCasa(cassaforte: CassaforteInMemoria()));
+      /* Il caso di chi si compila l'app per conto suo senza accendere nessun
+       * centralino. Li' l'indirizzo di casa serve davvero, la casella e' gia'
+       * aperta, e se manca si dice **perche'** — non «riprova». */
+      final archivio = ArchivioDelleCase(CassaforteInMemoria());
+      await archivio.apri();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: AggiungiCasa(
+            archivio: archivio,
+            centralino: null,
+            quandoFatto: (_) {},
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
 
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Indirizzo di Home Assistant in casa'),
-        '',
+      expect(
+        find.text('Indirizzo di Home Assistant in casa'),
+        findsOneWidget,
+        reason: 'senza centralino l\'indirizzo e\' l\'unica strada, e si vede subito',
       );
+
       await tester.enterText(find.byType(TextField).first, 'ABCD2345');
       await tester.ensureVisible(find.text('Abbina'));
       await tester.pumpAndSettle();
