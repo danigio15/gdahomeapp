@@ -12,3 +12,15 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Tranne questa, che ci va apposta.
+#
+# Senza una chiave ferma nel progetto, ogni macchina che compila se ne genera
+# una nuova: Android vede due firme diverse e rifiuta di installare il
+# pacchetto nuovo sopra il vecchio. Chi lo prova deve disinstallare, e
+# disinstallando **perde l'abbinamento** — il segno della casa sta nel
+# portachiavi del telefono e con l'app se ne va.
+#
+# Non e' un segreto: firma soltanto i pacchetti di prova, quelli che si
+# passano a mano. La chiave dei negozi sara' un'altra, e non stara' qui.
+!app/chiave-di-prova.jks
