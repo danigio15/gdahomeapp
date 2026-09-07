@@ -264,10 +264,9 @@ test("il codice fabbricato dalla console arriva al centralino da solo", async ()
     });
     await new Promise((ok) => console_.listen(0, "127.0.0.1", ok));
 
-    const risposta = await fetch(
-      `http://127.0.0.1:${console_.address().port}/api/codice`,
-      { method: "POST" },
-    );
+    const risposta = await fetch(`http://127.0.0.1:${console_.address().port}/api/codice`, {
+      method: "POST",
+    });
     const { codice } = await risposta.json();
     assert.match(codice, /^[0-9A-Z]{8}$/);
 

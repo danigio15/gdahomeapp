@@ -114,13 +114,17 @@ class Abbinamento {
       /* Il codice viaggia **dentro** il cifrato. Al centralino arriva una
        * busta, e la casa e' l'unica che la puo' aprire. */
       final risposta = _laPrimaRisposta(cifrata);
-      cifrata.manda(jsonEncode({'codice': pulito, 'nome': nome, 'sistema': sistema}));
-      return _leggiLEcco(await risposta.timeout(
-        _attesaDelCodice,
-        onTimeout: () => throw const PonteIrraggiungibile(
-          'la casa non ha risposto al codice',
+      cifrata.manda(
+        jsonEncode({'codice': pulito, 'nome': nome, 'sistema': sistema}),
+      );
+      return _leggiLEcco(
+        await risposta.timeout(
+          _attesaDelCodice,
+          onTimeout: () => throw const PonteIrraggiungibile(
+            'la casa non ha risposto al codice',
+          ),
         ),
-      ));
+      );
     } on ErroreDelPonte {
       rethrow;
     } catch (errore) {
@@ -241,7 +245,9 @@ class Abbinamento {
               return;
             }
             quantiNo += 1;
-            if (quantiNo == indirizzi.length) vincitore.complete(indirizzi.first);
+            if (quantiNo == indirizzi.length) {
+              vincitore.complete(indirizzi.first);
+            }
           },
           onError: (Object _) {
             quantiNo += 1;
@@ -294,7 +300,9 @@ class Abbinamento {
       throw CodiceRifiutato(perche);
     }
     if (detto['t'] != 'ecco') {
-      throw const PonteIrraggiungibile('la casa ha risposto qualcosa che non capisco');
+      throw const PonteIrraggiungibile(
+        'la casa ha risposto qualcosa che non capisco',
+      );
     }
     return _daJson(detto);
   }
@@ -313,21 +321,27 @@ class Abbinamento {
     }
     final identificativo = dispositivo is Map ? dispositivo['id'] : null;
     if (identificativo is! String || identificativo.isEmpty) {
-      throw const PonteIrraggiungibile('il ponte ha risposto senza dire chi siamo');
+      throw const PonteIrraggiungibile(
+        'il ponte ha risposto senza dire chi siamo',
+      );
     }
 
     final ritorno = corpo['ritorno'];
-    final detto = ritorno is Map<String, dynamic> ? ritorno : const <String, dynamic>{};
+    final detto = ritorno is Map<String, dynamic>
+        ? ritorno
+        : const <String, dynamic>{};
     return Abbinato(
       segno: segno,
       chiave: chiave,
       identificativo: identificativo,
       nomeDelDispositivo:
-          (dispositivo is Map ? dispositivo['nome'] as String? : null) ?? 'questo telefono',
+          (dispositivo is Map ? dispositivo['nome'] as String? : null) ??
+          'questo telefono',
       casaAlCentralino: detto['casa'] as String?,
       centralino: IndirizzoDelCentralino.leggi(detto['centralino'] as String?),
       indirizzi: [
-        for (final scritto in (detto['indirizzi'] as List<dynamic>? ?? const []))
+        for (final scritto
+            in (detto['indirizzi'] as List<dynamic>? ?? const []))
           if (IndirizzoDelPonte.leggi('$scritto') case final letto?) letto,
       ],
     );
@@ -370,7 +384,11 @@ String _leggibile(Object errore) {
   if (errore is ErroreDelPonte) return errore.spiegazione;
   final testo = errore.toString();
   if (testo.contains('TimeoutException')) return 'non ha risposto in tempo';
-  if (testo.contains('Failed host lookup')) return 'questo indirizzo non esiste';
-  if (testo.contains('Connection refused')) return 'non risponde su questa porta';
+  if (testo.contains('Failed host lookup')) {
+    return 'questo indirizzo non esiste';
+  }
+  if (testo.contains('Connection refused')) {
+    return 'non risponde su questa porta';
+  }
   return 'non riesco a raggiungere la casa';
 }

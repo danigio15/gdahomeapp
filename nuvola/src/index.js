@@ -77,9 +77,7 @@ export default {
      * il codice, e nemmeno quello arriva qui — arriva la sua impronta. */
     const inAbbinamento = /^\/abbinamento\/([0-9a-f]+)$/.exec(via);
     if (inAbbinamento && IMPRONTA_VALIDA.test(inAbbinamento[1])) {
-      const dove = await quelCodice(env, inAbbinamento[1]).fetch(
-        "https://centralino/quale",
-      );
+      const dove = await quelCodice(env, inAbbinamento[1]).fetch("https://centralino/quale");
       const { casa } = await dove.json();
       if (!casa) return chiudiSubito("nessun abbinamento in corso");
       return quellaCasa(env, casa).fetch(richiesta);

@@ -28,10 +28,7 @@ void main() {
   tearDown(() async => collegamento.chiudi());
 
   /// Una sonda che risponde «si'» solo agli indirizzi che le si dicono.
-  Sonda sondaChe(
-    Set<IndirizzoDelPonte> vivi, {
-    List<Uri>? bussate,
-  }) => Sonda(
+  Sonda sondaChe(Set<IndirizzoDelPonte> vivi, {List<Uri>? bussate}) => Sonda(
     attesa: const Duration(milliseconds: 200),
     vantaggio: const Duration(milliseconds: 40),
     bussa: (dove) async {
@@ -179,9 +176,7 @@ void main() {
       /* Il filo della prima casa deve essere caduto: due fili aperti insieme
      * vorrebbero dire due sottoscrizioni vive e due case che arrivano
      * mescolate. */
-      await _finoA(
-        () => mia.prese.isEmpty,
-      );
+      await _finoA(() => mia.prese.isEmpty);
       expect(archivio.attiva!.id, casaLoro.id);
 
       await mia.spegni();
@@ -265,30 +260,33 @@ void main() {
     await due.spegni();
   });
 
-  test('una casa senza nessuna strada si fa riabbinare, e non si bussa a vuoto', () async {
-    /* Non e' «nessuna casa»: la casa nell'elenco c'e', e sparirebbe dallo
+  test(
+    'una casa senza nessuna strada si fa riabbinare, e non si bussa a vuoto',
+    () async {
+      /* Non e' «nessuna casa»: la casa nell'elenco c'e', e sparirebbe dallo
      * schermo senza spiegazioni. E non e' nemmeno «non raggiungibile», che
      * vorrebbe dire «riprova fra un po'»: qui non c'e' niente da riprovare,
      * non si sa piu' dove sia. L'unica cosa vera da dire e' che va riabbinata,
      * e sono otto lettere. */
-    await archivio.aggiungi(
-      nome: 'Orfana',
-      segno: segnoBuono,
-      identificativo: chiBuono,
-      chiave: chiaveBuona,
-    );
-    final bussate = <Uri>[];
-    collegamento = Collegamento(
-      archivio: archivio,
-      sonda: sondaChe({}, bussate: bussate),
-    );
+      await archivio.aggiungi(
+        nome: 'Orfana',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+      );
+      final bussate = <Uri>[];
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: sondaChe({}, bussate: bussate),
+      );
 
-    await collegamento.apri();
+      await collegamento.apri();
 
-    expect(collegamento.comeVa, ComeVa.segnoScaduto);
-    expect(collegamento.perche, contains('riabbinala'));
-    expect(bussate, isEmpty);
-  });
+      expect(collegamento.comeVa, ComeVa.segnoScaduto);
+      expect(collegamento.perche, contains('riabbinala'));
+      expect(bussate, isEmpty);
+    },
+  );
 
   test('una casa abbinata prima delle chiavi si fa riabbinare', () async {
     /* Il ponte adesso vuole la stretta di mano cifrata: una casa abbinata
@@ -310,7 +308,11 @@ void main() {
 
     expect(collegamento.comeVa, ComeVa.segnoScaduto);
     expect(collegamento.perche, contains('riabbinala'));
-    expect(bussate, isEmpty, reason: 'non si bussa con una chiave che non c\'e\'');
+    expect(
+      bussate,
+      isEmpty,
+      reason: 'non si bussa con una chiave che non c\'e\'',
+    );
     await ponte.spegni();
   });
 }

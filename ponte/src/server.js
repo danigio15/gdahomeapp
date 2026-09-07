@@ -184,7 +184,11 @@ export function costruisciLaPortaDellApp({
          *
          * E il ritorno: dove ribussare domani. Chi si e' abbinato battendo
          * otto lettere non ha mai visto un indirizzo. */
-        json(risposta, { segno, chiave, dispositivo, ritorno: (await ritorno?.cosaDire()) ?? null }, 201);
+        json(
+          risposta,
+          { segno, chiave, dispositivo, ritorno: (await ritorno?.cosaDire()) ?? null },
+          201,
+        );
       } catch (errore) {
         if (errore instanceof TroppiDispositivi) {
           male(risposta, 409, errore.message);

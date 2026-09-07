@@ -52,7 +52,8 @@ class PresaSuWebSocket implements Presa {
 
   @override
   Stream<String> get messaggi => _canale.stream.map(
-    (dynamic grezzo) => grezzo is String ? grezzo : String.fromCharCodes(grezzo as List<int>),
+    (dynamic grezzo) =>
+        grezzo is String ? grezzo : String.fromCharCodes(grezzo as List<int>),
   );
 
   @override

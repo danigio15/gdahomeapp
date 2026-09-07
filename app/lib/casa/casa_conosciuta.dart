@@ -173,9 +173,7 @@ class CasaConosciuta {
       identificativo: grezza['identificativo'] as String?,
       chiave: grezza['chiave'] as String?,
       casaAlCentralino: grezza['casa_al_centralino'] as String?,
-      centralino: IndirizzoDelCentralino.leggi(
-        grezza['centralino'] as String?,
-      ),
+      centralino: IndirizzoDelCentralino.leggi(grezza['centralino'] as String?),
       inCasa: IndirizzoDelPonte.leggi(grezza['in_casa'] as String? ?? ''),
       daFuoriCasa: IndirizzoDelPonte.leggi(grezza['da_fuori'] as String? ?? ''),
       ultimoApprodo: switch (grezza['ultimo_approdo']) {

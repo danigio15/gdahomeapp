@@ -33,7 +33,9 @@ class CentralinoVero {
   }
 
   static Future<CentralinoVero> accendi() async {
-    final archivio = await Directory.systemTemp.createTemp('centralino-collaudo-');
+    final archivio = await Directory.systemTemp.createTemp(
+      'centralino-collaudo-',
+    );
     final porta = await _unaPortaLibera();
 
     final processo = await Process.start(
@@ -70,7 +72,9 @@ class CentralinoVero {
       }
       await Future<void>.delayed(const Duration(milliseconds: 100));
     }
-    throw StateError('il centralino non si e\' alzato:\n${registro.join('\n')}');
+    throw StateError(
+      'il centralino non si e\' alzato:\n${registro.join('\n')}',
+    );
   }
 
   /// Quante case sono collegate adesso. E' cosi' che si aspetta che il ponte

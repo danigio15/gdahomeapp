@@ -138,7 +138,9 @@ class PresaCifrata implements Presa {
   @override
   Stream<String> get messaggi => _uscita.stream;
 
-  void _ascolta({required Future<SecretKey> Function(Map<String, dynamic>) laPrima}) {
+  void _ascolta({
+    required Future<SecretKey> Function(Map<String, dynamic>) laPrima,
+  }) {
     _sotto.messaggi.listen(
       (testo) {
         if (!_laStrettaEPresa) {
@@ -178,15 +180,23 @@ class PresaCifrata implements Presa {
       try {
         final letto = jsonDecode(testo);
         if (letto is! Map<String, dynamic>) {
-          throw const StrettaRifiutata('la casa ha risposto qualcosa che non e\' una risposta');
+          throw const StrettaRifiutata(
+            'la casa ha risposto qualcosa che non e\' una risposta',
+          );
         }
         _busta = Busta(await laPrima(letto), io: DaChi.telefono);
         if (!_pronta.isCompleted) _pronta.complete();
       } on FormatException {
-        _fallisci(const StrettaRifiutata('la casa ha risposto qualcosa che non e\' una risposta'));
+        _fallisci(
+          const StrettaRifiutata(
+            'la casa ha risposto qualcosa che non e\' una risposta',
+          ),
+        );
       } catch (errore) {
         _fallisci(
-          errore is ErroreDelPonte ? errore : StrettaRifiutata(_leggibile(errore)),
+          errore is ErroreDelPonte
+              ? errore
+              : StrettaRifiutata(_leggibile(errore)),
         );
       }
     });

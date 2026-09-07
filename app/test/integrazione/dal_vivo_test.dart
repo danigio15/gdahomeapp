@@ -92,7 +92,10 @@ void main() {
       /* E il ponte vero dice dove tornare. Questo banco non ha centralino —
        * non c'e' nessun Supervisor da cui sapere gli indirizzi di casa — ma
        * l'identificativo della casa c'e' sempre. */
-      expect(abbinato.casaAlCentralino, matches(RegExp(r'^casa_[0-9a-f]{32}$')));
+      expect(
+        abbinato.casaAlCentralino,
+        matches(RegExp(r'^casa_[0-9a-f]{32}$')),
+      );
 
       /* Lo stesso codice, una seconda volta, non vale piu'. */
       await expectLater(

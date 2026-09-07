@@ -106,7 +106,9 @@ export class Ritorno {
       const detto = await risposta.json();
       return leggiGliIndirizzi(detto?.data, this.porta);
     } catch (errore) {
-      this.registro.attenzione(`non riesco a sapere gli indirizzi di casa: ${errore?.message || errore}`);
+      this.registro.attenzione(
+        `non riesco a sapere gli indirizzi di casa: ${errore?.message || errore}`,
+      );
       return [];
     }
   }
@@ -129,7 +131,9 @@ export function leggiGliIndirizzi(datiDelSupervisor, porta) {
     if (!Array.isArray(indirizzi)) continue;
     for (const scritto of indirizzi) {
       /* Arrivano come `192.168.1.50/24`: la maschera non serve. */
-      const solo = String(scritto || "").split("/")[0].trim();
+      const solo = String(scritto || "")
+        .split("/")[0]
+        .trim();
       if (!eUnIndirizzoDaDare(solo)) continue;
       const con = `${solo}:${porta}`;
       if (!trovati.includes(con)) trovati.push(con);

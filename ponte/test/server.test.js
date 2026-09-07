@@ -188,9 +188,7 @@ test("il codice della console abbina il telefono, e vale una volta sola", async 
      * otto lettere non saprebbe dove ribussare: non ha mai visto un
      * indirizzo, ed e' apposta. */
     assert.equal(fatto.ritorno.casa, b.identita.casa);
-    assert.deepEqual(fatto.ritorno.indirizzi, [
-      `${INDIRIZZO_DI_CASA}:${b.app.split(":").pop()}`,
-    ]);
+    assert.deepEqual(fatto.ritorno.indirizzi, [`${INDIRIZZO_DI_CASA}:${b.app.split(":").pop()}`]);
     /* Questo banco non ha centralino: si dice, invece di far finta. */
     assert.equal(fatto.ritorno.centralino, null);
 

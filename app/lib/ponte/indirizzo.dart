@@ -114,7 +114,6 @@ class IndirizzoDelPonte {
   int get hashCode => Object.hash(casa, porta, sicuro);
 }
 
-
 /* ─── Il centralino ───────────────────────────────────────────────────────── */
 
 /// Dove si chiama per entrare da fuori.
@@ -125,7 +124,11 @@ class IndirizzoDelPonte {
 /// pubblico — e' tutto il punto — quindi il suo indirizzo non lo batte
 /// nessuno: arriva dalla casa stessa quando il telefono si abbina.
 class IndirizzoDelCentralino {
-  const IndirizzoDelCentralino({required this.casa, this.porta, this.sicuro = true});
+  const IndirizzoDelCentralino({
+    required this.casa,
+    this.porta,
+    this.sicuro = true,
+  });
 
   final String casa;
 
@@ -135,7 +138,8 @@ class IndirizzoDelCentralino {
 
   /// Il filo verso una casa. L'identificativo non e' un segreto: serve a
   /// instradare, e il segno viene dopo, dentro il cifrato, verso la casa.
-  Uri filo(String idDellaCasa) => _via(sicuro ? 'wss' : 'ws', '/telefono/$idDellaCasa');
+  Uri filo(String idDellaCasa) =>
+      _via(sicuro ? 'wss' : 'ws', '/telefono/$idDellaCasa');
 
   /// Il filo di chi si sta abbinando. Si instrada sull'**impronta** del
   /// codice: il codice al centralino non passa mai.
@@ -160,7 +164,10 @@ class IndirizzoDelCentralino {
     if (testo.isEmpty) return null;
 
     var sicuro = true;
-    final schema = RegExp(r'^([a-z]+)://', caseSensitive: false).firstMatch(testo);
+    final schema = RegExp(
+      r'^([a-z]+)://',
+      caseSensitive: false,
+    ).firstMatch(testo);
     if (schema != null) {
       final nome = schema.group(1)!.toLowerCase();
       if (nome == 'ws' || nome == 'http') {
@@ -183,7 +190,9 @@ class IndirizzoDelCentralino {
       testo = testo.substring(0, duePunti);
     }
 
-    if (testo.isEmpty || !RegExp(r'^[A-Za-z0-9._-]+$').hasMatch(testo)) return null;
+    if (testo.isEmpty || !RegExp(r'^[A-Za-z0-9._-]+$').hasMatch(testo)) {
+      return null;
+    }
     return IndirizzoDelCentralino(
       casa: testo.toLowerCase(),
       porta: porta,

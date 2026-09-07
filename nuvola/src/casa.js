@@ -86,7 +86,7 @@ export class Casa {
       return;
     }
 
-    const numero = ((await this.state.storage.get("prossimoCanale")) ?? 1);
+    const numero = (await this.state.storage.get("prossimoCanale")) ?? 1;
     await this.state.storage.put("prossimoCanale", numero + 1);
 
     this.state.acceptWebSocket(presa, ["telefono", `c${numero}`]);

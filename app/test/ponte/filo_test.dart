@@ -270,7 +270,8 @@ void main() {
     await ponte.buttaGiu();
 
     await _finoA(
-      () => filo.dentro && filo.approdoAdesso?.filo == altroPonte.indirizzo.filo,
+      () =>
+          filo.dentro && filo.approdoAdesso?.filo == altroPonte.indirizzo.filo,
       entro: const Duration(seconds: 5),
     );
     expect(altroPonte.collegamenti, 1);

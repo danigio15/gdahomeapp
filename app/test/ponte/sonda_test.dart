@@ -14,7 +14,9 @@ import 'package:gdahome/ponte/sonda.dart';
 
 final inRete = IndirizzoDelPonte.leggi('192.168.1.50')!;
 final daFuori = IndirizzoDelPonte.leggi('https://casa.esempio.it')!;
-final ilCentralino = IndirizzoDelCentralino.leggi('wss://centralino.esempio.it')!;
+final ilCentralino = IndirizzoDelCentralino.leggi(
+  'wss://centralino.esempio.it',
+)!;
 
 const idAlCentralino = 'casa_00112233445566778899aabbccddeeff';
 
@@ -49,8 +51,12 @@ Sonda sondaChe(
     IndirizzoDelCentralino centralino => centralino.salute,
     _ => throw ArgumentError('non e\' un posto'),
   };
-  final risposte = {for (final voce in chi.entries) salute(voce.key): voce.value};
-  final attese = {for (final voce in lenti.entries) salute(voce.key): voce.value};
+  final risposte = {
+    for (final voce in chi.entries) salute(voce.key): voce.value,
+  };
+  final attese = {
+    for (final voce in lenti.entries) salute(voce.key): voce.value,
+  };
 
   return Sonda(
     attesa: const Duration(milliseconds: 200),
@@ -141,18 +147,21 @@ void main() {
   /* ─── Il centralino ─────────────────────────────────────────────────────── */
 
   group('il centralino', () {
-    test('da fuori si entra di li\', senza che nessuno abbia configurato niente', () async {
-      final sonda = sondaChe({inRete: false, ilCentralino: true});
-      final approdo = await sonda.dove(
-        casaCon(dentro: inRete, centralino: ilCentralino),
-      );
+    test(
+      'da fuori si entra di li\', senza che nessuno abbia configurato niente',
+      () async {
+        final sonda = sondaChe({inRete: false, ilCentralino: true});
+        final approdo = await sonda.dove(
+          casaCon(dentro: inRete, centralino: ilCentralino),
+        );
 
-      expect(approdo.da, DaDove.dalCentralino);
-      expect(
-        approdo.filo,
-        Uri.parse('wss://centralino.esempio.it/telefono/$idAlCentralino'),
-      );
-    });
+        expect(approdo.da, DaDove.dalCentralino);
+        expect(
+          approdo.filo,
+          Uri.parse('wss://centralino.esempio.it/telefono/$idAlCentralino'),
+        );
+      },
+    );
 
     test('in casa perde, anche se risponde per primo', () async {
       /* La prova che conta. Il centralino risponde sempre e in fretta: senza

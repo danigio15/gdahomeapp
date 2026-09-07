@@ -96,10 +96,7 @@ void main() {
       await tester.tap(find.text('Abbina'));
       await tester.pump();
 
-      expect(
-        find.textContaining('Serve l\'indirizzo di casa'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Serve l\'indirizzo di casa'), findsOneWidget);
     },
   );
 

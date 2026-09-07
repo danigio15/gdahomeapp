@@ -5,8 +5,7 @@
  * tutti e due. Con questi qui in mezzo nessuno dei tre si aspetta.
  */
 
-export const quellaCasa = (env, id) =>
-  env.CASE.get(env.CASE.idFromName(`casa:${id}`));
+export const quellaCasa = (env, id) => env.CASE.get(env.CASE.idFromName(`casa:${id}`));
 
 export const quelCodice = (env, impronta) =>
   env.CODICI.get(env.CODICI.idFromName(`codice:${impronta}`));

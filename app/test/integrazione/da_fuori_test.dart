@@ -75,7 +75,8 @@ void main() {
           ((await ponte.statoDellaConsole())['centralino']
               as Map<String, dynamic>?)?['dentro'] ==
           true,
-      perche: 'il ponte non e\' arrivato al centralino:\n'
+      perche:
+          'il ponte non e\' arrivato al centralino:\n'
           '${ponte.registro.join('\n')}',
     );
   });
@@ -153,42 +154,48 @@ void main() {
     expect((await ponte.statoDellaConsole())['dispositivi'], isEmpty);
   });
 
-  test('abbinato dal centralino, il telefono legge la casa e la comanda', () async {
-    final collegamento = await abbinaEApri();
-    try {
-      expect(collegamento.comeVa, ComeVa.aperta);
-      /* Non «da dentro»: questa casa non ha nessun indirizzo di rete locale
+  test(
+    'abbinato dal centralino, il telefono legge la casa e la comanda',
+    () async {
+      final collegamento = await abbinaEApri();
+      try {
+        expect(collegamento.comeVa, ComeVa.aperta);
+        /* Non «da dentro»: questa casa non ha nessun indirizzo di rete locale
        * nell'archivio, e ci si arriva solo dal centralino. */
-      expect(collegamento.daDove, DaDove.dalCentralino);
+        expect(collegamento.daDove, DaDove.dalCentralino);
 
-      final stato = collegamento.stato!;
-      expect(stato.quante, 2);
-      expect(stato['light.cucina']!.accesa, isTrue);
+        final stato = collegamento.stato!;
+        expect(stato.quante, 2);
+        expect(stato['light.cucina']!.accesa, isTrue);
 
-      /* E il comando torna indietro fino a Home Assistant. */
-      casa.arrivati.clear();
-      await stato.comanda('turn_off', 'light.cucina');
-      final comando = casa.arrivati.firstWhere(
-        (uno) => uno['type'] == 'call_service',
-      );
-      expect(comando['domain'], 'light');
-      expect(comando['service'], 'turn_off');
-      expect(comando['target'], {'entity_id': 'light.cucina'});
-    } finally {
-      await collegamento.chiudi();
-    }
-  });
+        /* E il comando torna indietro fino a Home Assistant. */
+        casa.arrivati.clear();
+        await stato.comanda('turn_off', 'light.cucina');
+        final comando = casa.arrivati.firstWhere(
+          (uno) => uno['type'] == 'call_service',
+        );
+        expect(comando['domain'], 'light');
+        expect(comando['service'], 'turn_off');
+        expect(comando['target'], {'entity_id': 'light.cucina'});
+      } finally {
+        await collegamento.chiudi();
+      }
+    },
+  );
 
-  test('un cambiamento in casa arriva al telefono passando dal centralino', () async {
-    final collegamento = await abbinaEApri();
-    try {
-      expect(collegamento.stato!['light.salotto']!.accesa, isFalse);
-      casa.cambia('light.salotto', 'on', nome: 'Luce salotto');
-      await _finoA(() async => collegamento.stato!['light.salotto']!.accesa);
-    } finally {
-      await collegamento.chiudi();
-    }
-  });
+  test(
+    'un cambiamento in casa arriva al telefono passando dal centralino',
+    () async {
+      final collegamento = await abbinaEApri();
+      try {
+        expect(collegamento.stato!['light.salotto']!.accesa, isFalse);
+        casa.cambia('light.salotto', 'on', nome: 'Luce salotto');
+        await _finoA(() async => collegamento.stato!['light.salotto']!.accesa);
+      } finally {
+        await collegamento.chiudi();
+      }
+    },
+  );
 
   test('il centralino conta le case e i telefoni, e non sa altro', () async {
     /* La promessa che regge tutto il resto. Il centralino vede passare i
@@ -219,7 +226,6 @@ void main() {
       await collegamento.chiudi();
     }
   });
-
 }
 
 Future<void> _finoA(

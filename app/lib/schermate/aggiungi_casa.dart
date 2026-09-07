@@ -102,7 +102,8 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
     if (inCasa == null && _centralino == null) {
       setState(() {
         _mostraLIndirizzo = true;
-        _male = 'Serve l\'indirizzo di casa: questa versione dell\'app non ha '
+        _male =
+            'Serve l\'indirizzo di casa: questa versione dell\'app non ha '
             'un centralino a cui chiedere.';
       });
       return;
@@ -278,7 +279,8 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                             ? 'Indirizzo di Home Assistant in casa'
                             : 'Indirizzo di casa (facoltativo)',
                         hintText: '192.168.1.50',
-                        helperText: 'Stando sul Wi-Fi di casa. Il resto lo dice '
+                        helperText:
+                            'Stando sul Wi-Fi di casa. Il resto lo dice '
                             'la casa da sola.',
                         helperMaxLines: 2,
                         border: const OutlineInputBorder(),
@@ -290,7 +292,9 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                       onPressed: _sto
                           ? null
                           : () => setState(() => _mostraLIndirizzo = true),
-                      child: const Text('Il codice non funziona? Scrivi l\'indirizzo'),
+                      child: const Text(
+                        'Il codice non funziona? Scrivi l\'indirizzo',
+                      ),
                     ),
                   ],
                   if (_male != null) ...[

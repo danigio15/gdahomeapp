@@ -60,29 +60,36 @@ void main() {
     test('dagli stessi scalari escono le stesse chiavi pubbliche', () async {
       /* Se questa e' rossa, il problema sono i dodici byte dell'involucro
        * SPKI: il Dart maneggia le chiavi nude, il Node le veste. */
-      final telefono = await coppiaDalloScalare(_daEsadecimale(_scalareTelefono));
+      final telefono = await coppiaDalloScalare(
+        _daEsadecimale(_scalareTelefono),
+      );
       final casa = await coppiaDalloScalare(_daEsadecimale(_scalareCasa));
       expect(telefono.inBase64, _pubblicaTelefono);
       expect(casa.inBase64, _pubblicaCasa);
       expect(telefono.pubblica, hasLength(44));
     });
 
-    test('la chiave di un collegamento e\' quella che ha calcolato il Node',
-        () async {
-      final chiave = await _chiaveDelVettore(chiaveDelFilo: _chiaveDelFilo);
-      expect(_inEsadecimale(await chiave.extractBytes()), _chiaveConFilo);
-    });
+    test(
+      'la chiave di un collegamento e\' quella che ha calcolato il Node',
+      () async {
+        final chiave = await _chiaveDelVettore(chiaveDelFilo: _chiaveDelFilo);
+        expect(_inEsadecimale(await chiave.extractBytes()), _chiaveConFilo);
+      },
+    );
 
-    test('e quella dell\'abbinamento, dove il filo non c\'e\' ancora',
-        () async {
-      final chiave = await _chiaveDelVettore();
-      expect(_inEsadecimale(await chiave.extractBytes()), _chiaveSenzaFilo);
-    });
+    test(
+      'e quella dell\'abbinamento, dove il filo non c\'e\' ancora',
+      () async {
+        final chiave = await _chiaveDelVettore();
+        expect(_inEsadecimale(await chiave.extractBytes()), _chiaveSenzaFilo);
+      },
+    );
 
-    test('le due punte arrivano alla stessa chiave partendo da capi opposti',
-        () async {
+    test('le due punte arrivano alla stessa chiave partendo da capi opposti', () async {
       /* Il senso di tutto: nessuna delle due ha mandato la chiave all'altra. */
-      final telefono = await coppiaDalloScalare(_daEsadecimale(_scalareTelefono));
+      final telefono = await coppiaDalloScalare(
+        _daEsadecimale(_scalareTelefono),
+      );
       final casa = await coppiaDalloScalare(_daEsadecimale(_scalareCasa));
       final dalTelefono = await chiaveDiSessione(
         miaPrivata: telefono.privata,
@@ -104,15 +111,19 @@ void main() {
     });
 
     test('la casa apre le buste che ha chiuso il telefono del Node', () async {
-      final busta = Busta(await _chiaveDelVettore(chiaveDelFilo: _chiaveDelFilo),
-          io: DaChi.casa);
+      final busta = Busta(
+        await _chiaveDelVettore(chiaveDelFilo: _chiaveDelFilo),
+        io: DaChi.casa,
+      );
       expect(await busta.apri(_primaDalTelefono), _testoDalTelefono);
       expect(await busta.apri(_secondaDalTelefono), 'secondo giro');
     });
 
     test('il telefono apre le buste che ha chiuso la casa del Node', () async {
-      final busta = Busta(await _chiaveDelVettore(chiaveDelFilo: _chiaveDelFilo),
-          io: DaChi.telefono);
+      final busta = Busta(
+        await _chiaveDelVettore(chiaveDelFilo: _chiaveDelFilo),
+        io: DaChi.telefono,
+      );
       expect(await busta.apri(_primaDallaCasa), _testoDallaCasa);
     });
 
@@ -138,9 +149,14 @@ void main() {
       final casa = Busta(chiave, io: DaChi.casa);
 
       for (var giro = 0; giro < 3; giro += 1) {
-        expect(await casa.apri(await telefono.chiudi('vado $giro')), 'vado $giro');
-        expect(await telefono.apri(await casa.chiudi('torno $giro')),
-            'torno $giro');
+        expect(
+          await casa.apri(await telefono.chiudi('vado $giro')),
+          'vado $giro',
+        );
+        expect(
+          await telefono.apri(await casa.chiudi('torno $giro')),
+          'torno $giro',
+        );
       }
     });
 
@@ -157,17 +173,21 @@ void main() {
       await expectLater(casa.apri(busta), throwsA(isA<BustaGuasta>()));
     });
 
-    test('rifiutano una busta rimandata indietro a chi l\'ha scritta',
-        () async {
-      /* Senza la direzione dentro il nonce, il centralino potrebbe rispedire
+    test(
+      'rifiutano una busta rimandata indietro a chi l\'ha scritta',
+      () async {
+        /* Senza la direzione dentro il nonce, il centralino potrebbe rispedire
        * al telefono la busta del telefono, e quello se la aprirebbe come se
        * fosse la risposta della casa. */
-      final chiave = SecretKey(List.filled(32, 7));
-      final telefono = Busta(chiave, io: DaChi.telefono);
-      final suaStessa = await telefono.chiudi('accendi');
-      await expectLater(
-          telefono.apri(suaStessa), throwsA(isA<BustaGuasta>()));
-    });
+        final chiave = SecretKey(List.filled(32, 7));
+        final telefono = Busta(chiave, io: DaChi.telefono);
+        final suaStessa = await telefono.chiudi('accendi');
+        await expectLater(
+          telefono.apri(suaStessa),
+          throwsA(isA<BustaGuasta>()),
+        );
+      },
+    );
 
     test('rifiutano una busta toccata per strada', () async {
       final chiave = SecretKey(List.filled(32, 7));
@@ -177,21 +197,28 @@ void main() {
       final byte = base64.decode(await telefono.chiudi('spegni tutto'));
       byte[20] ^= 1;
       await expectLater(
-          casa.apri(base64.encode(byte)), throwsA(isA<BustaGuasta>()));
+        casa.apri(base64.encode(byte)),
+        throwsA(isA<BustaGuasta>()),
+      );
     });
 
     test('rifiutano una busta chiusa con un\'altra chiave', () async {
       final telefono = Busta(SecretKey(List.filled(32, 7)), io: DaChi.telefono);
       final casa = Busta(SecretKey(List.filled(32, 9)), io: DaChi.casa);
       await expectLater(
-          casa.apri(await telefono.chiudi('ciao')), throwsA(isA<BustaGuasta>()));
+        casa.apri(await telefono.chiudi('ciao')),
+        throwsA(isA<BustaGuasta>()),
+      );
     });
 
     test('rifiutano qualcosa che non e\' nemmeno una busta', () async {
       final casa = Busta(SecretKey(List.filled(32, 7)), io: DaChi.casa);
       for (final spazzatura in ['', 'ciao', 'AAAA', 'non-e-base64!!!']) {
-        await expectLater(casa.apri(spazzatura), throwsA(isA<BustaGuasta>()),
-            reason: spazzatura);
+        await expectLater(
+          casa.apri(spazzatura),
+          throwsA(isA<BustaGuasta>()),
+          reason: spazzatura,
+        );
       }
     });
   });
@@ -212,13 +239,17 @@ void main() {
     test('una coppia nuova esce vestita da SPKI', () async {
       final coppia = await coppiaEffimera();
       expect(coppia.pubblica, hasLength(44));
-      expect(_inEsadecimale(coppia.pubblica.sublist(0, 12)),
-          '302a300506032b656e032100');
+      expect(
+        _inEsadecimale(coppia.pubblica.sublist(0, 12)),
+        '302a300506032b656e032100',
+      );
     });
 
     test('una chiave con l\'involucro sbagliato non passa', () async {
       final mia = await coppiaEffimera();
-      final storta = Uint8List.fromList(await coppiaEffimera().then((c) => c.pubblica));
+      final storta = Uint8List.fromList(
+        await coppiaEffimera().then((c) => c.pubblica),
+      );
       storta[3] = 0x99;
       await expectLater(
         chiaveDiSessione(
