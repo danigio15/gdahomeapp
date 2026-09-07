@@ -88,7 +88,15 @@ export class Chiamata {
     if (this._spentaApposta) return;
     let presa;
     try {
-      presa = new this.Presa(`${this.dove}/casa`);
+      /* L'identificativo sta **nell'indirizzo**, non solo nel primo messaggio.
+       *
+       * Al centralino in Node non servirebbe — legge `sono-io` e sa tutto. Ma
+       * un centralino fatto di funzioni sulla nuvola deve sapere *prima* di
+       * accettare il filo a quale casa consegnarlo, e prima c'e' solo
+       * l'indirizzo. Non e' un segreto: serve a instradare, e quello che fa
+       * entrare — il segreto — resta dentro il primo messaggio, dove il
+       * centralino lo confronta con quello che ha in casa. */
+      presa = new this.Presa(`${this.dove}/casa/${this.identita.casa}`);
     } catch (errore) {
       this._caduta(`non riesco ad aprire il filo: ${errore?.message || errore}`);
       return;

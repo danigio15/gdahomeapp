@@ -1,0 +1,15 @@
+{
+  "name": "centralino-nuvola",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Il centralino, sulla nuvola di Cloudflare: gratis, e senza niente da tenere acceso.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test test/"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

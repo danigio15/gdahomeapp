@@ -8,32 +8,51 @@ entita' di Home Assistant come le altre.
 
 > **Stato: fase 1 chiusa, tranne la plancia.** Il ponte c'e'. L'app tiene piu'
 > case, entra in ognuna **da dentro e da fuori** senza che l'utente tocchi
-> niente, e ha la sua home. Le tre funzioni nuove — aiutanti, Zigbee,
-> automazioni — sono le fasi 2, 3 e 4. La plancia e' l'ultimo blocco.
+> niente, e ha la sua home. Si abbina con **otto lettere e basta**: nessun
+> indirizzo da battere, nessuna credenziale di Home Assistant. Le tre funzioni
+> nuove — aiutanti, Zigbee, automazioni — sono le fasi 2, 3 e 4. La plancia e'
+> l'ultimo blocco.
 
-## Le tre parti
+## Come ci si arriva
 
 ```
-                     ┌── in casa ──►  192.168.1.50:8098 ──┐
-   ┌─────────────┐   │                                    ▼
-   │   l'app     │───┤                            ┌──────────────┐      ┌──────────────────┐
-   │ Android/iOS │   │                            │   il ponte   ├─────►│  Home Assistant  │
-   └─────────────┘   │                            │   (add-on)   │      │      Core        │
-     segno del ponte └── da fuori ─► casa.tua.it ──┘──────────────┘      └──────────────────┘
-     (revocabile)                                   SUPERVISOR_TOKEN
-                                                    (non esce da li')
+                    ┌── in casa ──►  192.168.1.50:8098 ─────────────┐
+   ┌─────────────┐  │                                               ▼
+   │    l'app    │──┤                                       ┌──────────────┐     ┌──────────────────┐
+   │ Android/iOS │  │            ┌──────────────┐           │   il ponte   │────►│  Home Assistant  │
+   └─────────────┘  └─ da fuori ─►│ il centralino│◄──────────┤   (add-on)   │     │      Core        │
+    segno + chiave                └──────────────┘  chiama   └──────────────┘     └──────────────────┘
+    (revocabili)                   instrada e          lui                        SUPERVISOR_TOKEN
+                                   non capisce                                    (non esce da li')
 ```
 
-Due indirizzi, **una casa sola**. Quale dei due funziona dipende da dove sta il
-telefono in questo momento, e cambia mentre l'app e' aperta: si esce dal
-portone e il primo smette di rispondere a meta' frase. L'app li chiede tutti e
-due insieme e tiene il primo che risponde — e lo rifa' **a ogni tentativo di
-riconnessione**, non una volta all'avvio. Chi la usa non deve sapere che esiste
-la differenza.
+**La casa chiama fuori.** E' tutto il punto. Non c'e' nessuna porta da aprire
+sul router, nessun indirizzo pubblico da avere, nessuna VPN da installare: il
+ponte apre lui un filo verso il centralino e lo tiene aperto, e i telefoni
+arrivano da quella parte.
+
+Il centralino **instrada e non puo' leggere**. Fra il telefono e la casa c'e'
+uno scambio di chiavi che passa da lui senza che lui ne ricavi niente, e da li'
+in poi ogni messaggio e' cifrato punta a punta. Non e' una promessa: e' una
+prova che registra tutto quello che lo attraversa e controlla che non ci sia
+dentro niente di leggibile.
+
+E il centralino **non costa niente**: gira su Cloudflare, piano gratuito,
+indirizzo compreso — [`nuvola/`](nuvola/README.md). Chi preferisce il proprio
+ha la stessa cosa in Node in [`centralino/`](centralino/README.md); sono
+intercambiabili, e la prova dal vivo passa identica contro tutti e due.
+
+**Tre strade, una casa sola.** Quale funziona dipende da dove sta il telefono
+adesso, e cambia mentre l'app e' aperta: si esce dal portone e la prima smette
+di rispondere a meta' frase. L'app le chiede tutte insieme e tiene la prima che
+risponde — e lo rifa' **a ogni tentativo di riconnessione**, non una volta
+all'avvio. Con una regola in piu': in casa **vince sempre la strada diretta**,
+se no ogni comando farebbe il giro del mondo per arrivare a tre metri.
 
 | | dove sta | cosa fa |
 |---|---|---|
 | **il ponte** | `ponte/` | l'add-on di Home Assistant che fa entrare l'app, da dentro e da fuori casa |
+| **il centralino** | `nuvola/`, `centralino/` | fa incontrare un telefono e la sua casa, senza capire niente di quello che si dicono |
 | **l'app** | `app/` | Flutter, per Android e iPhone: si abbina, si collega, comanda |
 | **la plancia** | [dashboardmodern-v2](https://github.com/danigio15/dashboardmodern-v2) | le ventitre sezioni che gia' esistono e funzionano |
 
@@ -59,12 +78,15 @@ Il resto — le due porte, l'abbinamento, cosa finisce sul disco — sta in
 | | |
 |---|---|
 | ✅ | Il ponte: abbinamento, revoca, filo verso Home Assistant, console dentro HA |
+| ✅ | **Otto lettere e basta**: nessun indirizzo, nessuna credenziale di Home Assistant |
+| ✅ | **Il centralino**: la casa chiama fuori, e da fuori si entra senza configurare niente |
+| ✅ | **Cifrato punta a punta**: il centralino instrada e non puo' leggere |
 | ✅ | **Piu' case**: ognuna col suo segno, si passa dall'una all'altra senza riabbinare |
-| ✅ | **Dentro e fuori casa**: due indirizzi per la stessa istanza, scelti da soli |
+| ✅ | **Dentro e fuori casa**: tre strade per la stessa istanza, scelte da sole |
 | ✅ | Il filo: si rialza da solo, cambia approdo, rifa' le sottoscrizioni cadute |
 | ✅ | La home: luci accese, aperture, temperatura, antifurto, cosa non risponde |
 | ✅ | I dispositivi: tutte le entita' divise per dominio, con gli interruttori |
-| ✅ | **150 prove** — 60 sul ponte, 90 sull'app — senza rete, senza Home Assistant, senza telefono |
+| ✅ | **254 prove** — 106 sul ponte, 19 sul centralino, 129 sull'app — senza rete, senza Home Assistant, senza telefono |
 | ⬜ | Gli aiutanti (i sette classici, nativi) |
 | ⬜ | Zigbee: ZHA **e** Zigbee2MQTT |
 | ⬜ | Il mago delle automazioni |
@@ -83,16 +105,30 @@ volta dentro — stanno in [`COME_PROVARLA.md`](COME_PROVARLA.md).
 ## Le prove
 
 ```bash
-npm run test:ponte          # il ponte: 62 prove, meno di un secondo
-cd app && flutter test      # l'app: 100 prove, otto secondi
+npm run test:ponte              # il ponte: 106 prove, un secondo
+npm run test:centralino         # il centralino: 19 prove
+cd app && flutter test          # l'app: 129 prove, dieci secondi
 ```
 
 Fra quelle dell'app ce n'e' un gruppo diverso dagli altri, in
-`app/test/integrazione/`: accende il **ponte vero** — lo stesso processo
+`app/test/integrazione/`. Uno accende il **ponte vero** — lo stesso processo
 dell'add-on — contro una Home Assistant finta, e ci fa passare il **cliente
-vero** dell'app. Abbinamento, filo, comandi, revoca. E' l'unico posto in cui le
-due meta' vere si parlano: tutte le altre prove hanno un finto in mezzo, e
-finche' non si incontrano nessuno ha verificato che si capiscano.
+vero** dell'app. L'altro, `da_fuori_test.dart`, accende la catena intera:
+
+```
+    app (Dart)  ──►  centralino (node)  ◄──  ponte (node)  ──►  HA finta
+```
+
+e li' il telefono **non ha nessun indirizzo della casa**: ha otto lettere, e
+basta quello. E' la differenza fra «funziona se apri una porta sul router» e
+«funziona», ed e' l'unica prova che la dimostra per intero — tutte le altre
+hanno un finto proprio nel punto che conta. La stessa prova gira anche contro
+il centralino su Cloudflare:
+
+```bash
+cd nuvola && npx wrangler dev &
+cd app && CENTRALINO_ESTERNO=ws://127.0.0.1:8787 flutter test test/integrazione/da_fuori_test.dart
+```
 
 E per **guardarla** girare, con le fotografie delle schermate, c'e'
 [`collaudo/`](collaudo/README.md).

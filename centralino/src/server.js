@@ -3,7 +3,7 @@
  * Tre vie, e nient'altro. Chi bussa altrove non trova niente.
  *
  *   GET  /salute                      dice solo che e' vivo
- *   WS   /casa                        una casa che chiama fuori
+ *   WS   /casa/<casa_…>              una casa che chiama fuori
  *   WS   /telefono/<casa_…>           un telefono che va alla sua casa
  *   WS   /abbinamento/<impronta>      un telefono che si sta abbinando
  *
@@ -58,7 +58,13 @@ export function costruisciIlServer({ centralino }) {
     }
     const da = socket.remoteAddress || "?";
 
-    if (via === "/casa") {
+    /* `/casa` e `/casa/<casa_…>` sono la stessa porta. L'identificativo
+     * nell'indirizzo qui non serve — chi decide e' il `sono-io` che arriva
+     * subito dopo, ed e' l'unico che porta anche il segreto — ma il centralino
+     * sulla nuvola ne ha bisogno per sapere a quale casa consegnare il filo
+     * prima ancora di accettarlo. Le due punte parlano la stessa lingua a
+     * tutti e due. */
+    if (via === "/casa" || /^\/casa\/[A-Za-z0-9_]+$/.test(via)) {
       const presa = accetta(richiesta, socket, { messaggioMassimo: MESSAGGIO_MASSIMO });
       if (presa) centralino.accogliUnaCasa(presa, { da });
       return;

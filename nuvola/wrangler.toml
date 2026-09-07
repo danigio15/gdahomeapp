@@ -1,0 +1,34 @@
+# Il centralino sulla nuvola di Cloudflare.
+#
+# Si mette in piedi cosi', e non costa niente:
+#
+#     npm install
+#     npx wrangler login
+#     npx wrangler deploy
+#
+# L'indirizzo esce da solo: `centralino.<il-tuo-nome>.workers.dev`. Nessun
+# dominio da comprare, nessun server da pagare, nessuna macchina da tenere
+# aggiornata.
+name = "centralino"
+main = "src/index.js"
+compatibility_date = "2025-04-01"
+
+# Una casa per Durable Object. Ogni casa e' un oggetto suo, che dorme quando
+# non passa niente e si sveglia quando arriva un telefono.
+[[durable_objects.bindings]]
+name = "CASE"
+class_name = "Casa"
+
+# Un oggettino per ogni codice di abbinamento vivo: dice a quale casa
+# appartiene quell'impronta, e sparisce da solo.
+[[durable_objects.bindings]]
+name = "CODICI"
+class_name = "Codice"
+
+# SQLite invece di key-value: e' quello che il piano gratuito permette.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Casa", "Codice"]
+
+[observability]
+enabled = true

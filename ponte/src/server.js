@@ -284,6 +284,16 @@ async function api({
     const collegati = ponte.collegatiPerDispositivo();
     json(risposta, {
       casa: saluto,
+      /* Come va il filo verso il centralino. Va detto a schermo: senza, chi ha
+       * messo un indirizzo sbagliato nella scheda dell'add-on lo scopre in
+       * stazione, quando l'app non trova la casa e non c'e' niente da
+       * guardare. */
+      centralino: {
+        configurato: Boolean(chiamata?.dove),
+        dentro: chiamata?.dentro ?? false,
+        rifiutata: chiamata?.rifiutata ?? null,
+        casa: identita?.casa ?? null,
+      },
       porta: opzioni.portaDellApp,
       massimi: opzioni.dispositiviMassimi,
       abbinamento: abbinamento.stato(),

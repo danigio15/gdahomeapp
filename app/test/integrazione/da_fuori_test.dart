@@ -15,6 +15,8 @@
 @Timeout(Duration(seconds: 120))
 library;
 
+import 'dart:io' show Platform;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
@@ -36,9 +38,19 @@ void main() {
   }
 
   late CasaFinta casa;
-  late CentralinoVero centralino;
+  /* `null` quando il centralino non lo accendiamo noi. */
+  CentralinoVero? centralino;
   late PonteVero ponte;
   late IndirizzoDelCentralino dove;
+
+  /* La stessa prova, contro **un altro centralino**.
+   *
+   *     CENTRALINO_ESTERNO=ws://127.0.0.1:8787 flutter test
+   *
+   * Serve a quello su Cloudflare: e' un'altra scrittura dello stesso
+   * centralino, e l'unico modo serio di dire «sono intercambiabili» e' che la
+   * prova che conta passi identica contro tutti e due. */
+  final esterno = Platform.environment['CENTRALINO_ESTERNO'];
 
   setUp(() async {
     casa = await CasaFinta.alza();
@@ -47,14 +59,22 @@ void main() {
       CasaFinta.unaEntita('light.salotto', 'off', nome: 'Luce salotto'),
     ];
 
-    centralino = await CentralinoVero.accendi();
-    dove = IndirizzoDelCentralino.leggi(centralino.dove)!;
-    ponte = await PonteVero.accendi(casa, centralino: centralino.dove);
+    if (esterno == null) {
+      centralino = await CentralinoVero.accendi();
+    }
+    final indirizzo = esterno ?? centralino!.dove;
+    dove = IndirizzoDelCentralino.leggi(indirizzo)!;
+    ponte = await PonteVero.accendi(casa, centralino: indirizzo);
 
     /* Il ponte chiama fuori da solo appena si alza: si aspetta che sia
-     * arrivato, se no il telefono bussa a una casa che non c'e' ancora. */
+     * arrivato, se no il telefono bussa a una casa che non c'e' ancora.
+     * Lo si chiede al ponte e non al centralino, cosi' la domanda vale per
+     * qualunque centralino. */
     await _finoA(
-      () async => await centralino.quanteCase() == 1,
+      () async =>
+          ((await ponte.statoDellaConsole())['centralino']
+              as Map<String, dynamic>?)?['dentro'] ==
+          true,
       perche: 'il ponte non e\' arrivato al centralino:\n'
           '${ponte.registro.join('\n')}',
     );
@@ -62,7 +82,7 @@ void main() {
 
   tearDown(() async {
     await ponte.spegni();
-    await centralino.spegni();
+    await centralino?.spegni();
     await casa.spegni();
   });
 
@@ -170,7 +190,7 @@ void main() {
     }
   });
 
-  test('il centralino instrada e non capisce', () async {
+  test('il centralino conta le case e i telefoni, e non sa altro', () async {
     /* La promessa che regge tutto il resto. Il centralino vede passare i
      * byte di questo collegamento: se ci si potesse leggere dentro, «non
      * serve fidarsi di chi lo gestisce» sarebbe una frase e non un fatto.
@@ -180,9 +200,14 @@ void main() {
      * ci sia dentro niente di leggibile. Qui si prova il fatto piu' piccolo e
      * piu' concreto: il centralino conosce l'identificativo della casa, che
      * gli serve a instradare, e non conosce nessun segno. */
+    final quello = centralino;
+    if (quello == null) {
+      markTestSkipped('questo centralino non tiene i conti');
+      return;
+    }
     final collegamento = await abbinaEApri();
     try {
-      final salute = await centralino.salute();
+      final salute = await quello.salute();
       expect(salute['case'], 1);
       expect(salute['telefoni'], 1);
       expect(

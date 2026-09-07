@@ -76,6 +76,20 @@
     quandoScade = null;
   }
 
+  /* Come va il filo verso il centralino, in una riga.
+   *
+   * Va detto qui e non lasciato scoprire in stazione: chi sbaglia l'indirizzo
+   * nella scheda dell'add-on non ha nessun altro posto dove accorgersene, e
+   * quello che vedrebbe sarebbe soltanto un'app che «non trova la casa». */
+  function comeVaIlCentralino(centralino) {
+    if (!centralino || !centralino.configurato) {
+      return "Nessun centralino: da fuori casa l'app non entra. Si mette nelle opzioni di questo add-on.";
+    }
+    if (centralino.rifiutata) return "Il centralino ci rifiuta: " + centralino.rifiutata;
+    if (!centralino.dentro) return "Sto chiamando il centralino…";
+    return "Collegato al centralino: da fuori casa si entra.";
+  }
+
   function disegnaIDispositivi(dispositivi, massimi) {
     var elenco = trova("elenco");
     elenco.textContent = "";
@@ -140,6 +154,7 @@
           ? "Home Assistant risponde. Il ponte e' in piedi."
           : "Home Assistant non risponde: " + stato.casa.perche;
         trova("porta").textContent = stato.porta;
+        trova("stato-centralino").textContent = comeVaIlCentralino(stato.centralino);
         disegnaIDispositivi(stato.dispositivi, stato.massimi);
         trova("fabbrica").disabled = stato.dispositivi.length >= stato.massimi;
         if (!stato.abbinamento.attivo) nascondiIlCodice();
