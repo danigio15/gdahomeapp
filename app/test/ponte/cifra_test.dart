@@ -252,7 +252,6 @@ void main() {
 
 Future<SecretKey> _chiaveDelVettore({String? chiaveDelFilo}) async {
   final telefono = await coppiaDalloScalare(_daEsadecimale(_scalareTelefono));
-  final casa = await coppiaDalloScalare(_daEsadecimale(_scalareCasa));
   return chiaveDiSessione(
     miaPrivata: telefono.privata,
     suaPubblica: base64.decode(_pubblicaCasa),

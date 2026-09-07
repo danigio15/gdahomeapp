@@ -31,8 +31,30 @@ void main() {
 
     expect(find.text('Colleghiamo la casa'), findsOneWidget);
     expect(find.text('Abbina'), findsOneWidget);
-    expect(find.text('Indirizzo sulla rete di casa'), findsOneWidget);
-    expect(find.text('Indirizzo pubblico (facoltativo)'), findsOneWidget);
+
+    /* La cosa che si sta provando e' quello che **non** c'e'. Chi apre l'app
+     * la prima volta trova una casella sola, e non gli viene chiesta nessuna
+     * credenziale di Home Assistant: e' una promessa scritta a schermo, ed e'
+     * la prima cosa che si romperebbe rimettendo dentro un campo per volta. */
+    expect(find.byType(TextField), findsNWidgets(3));
+    expect(
+      find.textContaining('Non ti verra\' mai chiesta la password'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('senza codice non si abbina niente', (tester) async {
+    await tester.pumpWidget(AppDiCasa(cassaforte: CassaforteInMemoria()));
+    await tester.pumpAndSettle();
+
+    /* Il modulo e' piu' alto della finestra di prova: senza questo, il tocco
+     * cadrebbe fuori dallo schermo e non premerebbe niente. */
+    await tester.ensureVisible(find.text('Abbina'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abbina'));
+    await tester.pump();
+
+    expect(find.textContaining('Manca il codice'), findsOneWidget);
   });
 
   testWidgets(
@@ -42,11 +64,9 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Indirizzo sulla rete di casa'),
+        find.widgetWithText(TextField, 'Indirizzo di Home Assistant in casa'),
         'non un indirizzo',
       );
-      /* Il modulo e' piu' alto della finestra di prova: senza questo, il
-       * tocco cadrebbe fuori dallo schermo e non premerebbe niente. */
       await tester.ensureVisible(find.text('Abbina'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Abbina'));
@@ -56,37 +76,32 @@ void main() {
     },
   );
 
-  testWidgets('senza nessun indirizzo lo dice', (tester) async {
-    await tester.pumpWidget(AppDiCasa(cassaforte: CassaforteInMemoria()));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'senza centralino e senza indirizzo si dice cosa manca, non «non ha funzionato»',
+    (tester) async {
+      /* Questa app e' compilata senza centralino — nessun `--dart-define` —
+       * quindi l'indirizzo di casa serve davvero, e la casella e' gia'
+       * aperta. Il giorno che il centralino ci sara', questa prova va
+       * riscritta al contrario, ed e' giusto che faccia rumore. */
+      await tester.pumpWidget(AppDiCasa(cassaforte: CassaforteInMemoria()));
+      await tester.pumpAndSettle();
 
-    /* Il modulo e' piu' alto della finestra di prova: senza questo, il tocco
-     * cadrebbe fuori dallo schermo e non premerebbe niente. */
-    await tester.ensureVisible(find.text('Abbina'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Abbina'));
-    await tester.pump();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Indirizzo di Home Assistant in casa'),
+        '',
+      );
+      await tester.enterText(find.byType(TextField).first, 'ABCD2345');
+      await tester.ensureVisible(find.text('Abbina'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Abbina'));
+      await tester.pump();
 
-    expect(find.text('Serve almeno un indirizzo.'), findsOneWidget);
-  });
-
-  testWidgets('con l\'indirizzo ma senza codice lo dice', (tester) async {
-    await tester.pumpWidget(AppDiCasa(cassaforte: CassaforteInMemoria()));
-    await tester.pumpAndSettle();
-
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Indirizzo sulla rete di casa'),
-      '192.168.1.50',
-    );
-    /* Il modulo e' piu' alto della finestra di prova: senza questo, il tocco
-     * cadrebbe fuori dallo schermo e non premerebbe niente. */
-    await tester.ensureVisible(find.text('Abbina'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Abbina'));
-    await tester.pump();
-
-    expect(find.text('Manca il codice di abbinamento.'), findsOneWidget);
-  });
+      expect(
+        find.textContaining('Serve l\'indirizzo di casa'),
+        findsOneWidget,
+      );
+    },
+  );
 
   /* ─── Le prove con una casa collegata ───────────────────────────────────
    *
@@ -125,11 +140,13 @@ void main() {
         await archivio.aggiungi(
           nome: 'Casa mia',
           segno: segnoBuono,
+          identificativo: chiBuono,
+          chiave: chiaveBuona,
           inCasa: ponte.indirizzo,
         );
         collegamento = Collegamento(
           archivio: archivio,
-          sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo),
+          sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
         );
         await collegamento.apri();
       });
@@ -176,12 +193,14 @@ void main() {
       await archivio.aggiungi(
         nome: 'Casa',
         segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
         inCasa: finto,
         daFuoriCasa: ponte.indirizzo,
       );
       collegamento = Collegamento(
         archivio: archivio,
-        sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo),
+        sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
       );
       await collegamento.apri();
     });
@@ -222,11 +241,15 @@ void main() {
       await archivio.aggiungi(
         nome: 'Casa mia',
         segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
         inCasa: mia.indirizzo,
       );
       await archivio.aggiungi(
         nome: 'Dai miei',
         segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
         inCasa: loro.indirizzo,
       );
       collegamento = Collegamento(
@@ -279,6 +302,8 @@ void main() {
       await archivio.aggiungi(
         nome: 'Casa',
         segno: 'x',
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
         inCasa: IndirizzoDelPonte.leggi('192.168.99.99')!,
       );
       collegamento = Collegamento(
@@ -296,9 +321,10 @@ void main() {
     await tester.pump();
 
     expect(find.text('Non trovo la casa'), findsOneWidget);
-    /* Non un «non ha funzionato» generico: le manca l'indirizzo pubblico, e
-     * glielo si dice. */
-    expect(find.textContaining('indirizzo pubblico'), findsOneWidget);
+    /* Non un «non ha funzionato» generico: questa casa si raggiunge solo dalla
+     * sua rete perche' nel ponte non e' stato messo nessun centralino, e
+     * glielo si dice — con scritto dove si mette. */
+    expect(find.textContaining('solo dalla sua rete'), findsOneWidget);
 
     await tester.runAsync(() => collegamento.chiudi());
   });

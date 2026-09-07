@@ -22,7 +22,12 @@ void main() {
     DateTime? adesso,
   }) async {
     ponte.entita = entita;
-    filo = Filo.fisso(indirizzo: ponte.indirizzo, segno: segnoBuono);
+    filo = Filo.fisso(
+      indirizzo: ponte.indirizzo,
+      segno: segnoBuono,
+      chi: chiBuono,
+      chiave: chiaveBuona,
+    );
     await filo.apri();
     casa = StatoDellaCasa(filo);
     await casa.attacca();

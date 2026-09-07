@@ -19,7 +19,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
-import 'package:gdahome/casa/casa_conosciuta.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/ponte/abbinamento.dart';
@@ -69,7 +68,7 @@ void main() {
 
   test('il ponte vero si alza e dice di essere vivo', () async {
     final dove = IndirizzoDelPonte.leggi(ponte.indirizzo)!;
-    expect(await Abbinamento.cePonte(dove), isTrue);
+    expect(await Abbinamento.cePonte(dove.salute), isTrue);
   });
 
   test(
@@ -78,13 +77,22 @@ void main() {
       final dove = IndirizzoDelPonte.leggi(ponte.indirizzo)!;
       final codice = await ponte.codiceDiAbbinamento();
 
-      final segno = await Abbinamento.chiedi(
+      final abbinato = await Abbinamento.chiedi(
         dove: dove,
         codice: codice,
         nome: 'iPhone del collaudo',
         sistema: 'ios',
       );
-      expect(segno, matches(RegExp(r'^[0-9a-f]{64}$')));
+      expect(abbinato.segno, matches(RegExp(r'^[0-9a-f]{64}$')));
+      /* La chiave del filo e' l'altra meta': senza, il telefono farebbe la
+       * stretta di mano col ponte vero e poi non capirebbe una parola. */
+      expect(abbinato.chiave, matches(RegExp(r'^[0-9a-f]{64}$')));
+      expect(abbinato.chiave, isNot(abbinato.segno));
+      expect(abbinato.identificativo, startsWith('dm_'));
+      /* E il ponte vero dice dove tornare. Questo banco non ha centralino —
+       * non c'e' nessun Supervisor da cui sapere gli indirizzi di casa — ma
+       * l'identificativo della casa c'e' sempre. */
+      expect(abbinato.casaAlCentralino, matches(RegExp(r'^casa_[0-9a-f]{32}$')));
 
       /* Lo stesso codice, una seconda volta, non vale piu'. */
       await expectLater(
@@ -217,7 +225,7 @@ void main() {
 Future<Collegamento> _abbinaEApri(PonteVero ponte) async {
   final dove = IndirizzoDelPonte.leggi(ponte.indirizzo)!;
   final codice = await ponte.codiceDiAbbinamento();
-  final segno = await Abbinamento.chiedi(
+  final abbinato = await Abbinamento.chiedi(
     dove: dove,
     codice: codice,
     nome: 'Telefono del collaudo',
@@ -228,7 +236,11 @@ Future<Collegamento> _abbinaEApri(PonteVero ponte) async {
   await archivio.apri();
   await archivio.aggiungi(
     nome: 'Casa del collaudo',
-    segno: segno,
+    segno: abbinato.segno,
+    identificativo: abbinato.identificativo,
+    chiave: abbinato.chiave,
+    casaAlCentralino: abbinato.casaAlCentralino,
+    centralino: abbinato.centralino,
     inCasa: dove,
   );
 

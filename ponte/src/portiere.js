@@ -13,7 +13,8 @@
  *   telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…"}    un telefono noto
  *   telefono → casa   {v:1, abbina:true, apertura:"…", mia:"…"}   un telefono nuovo
  *   casa → telefono   {v:1, pronto:true, mia:"…"}
- *   casa → telefono   {v:1, no:"…"}
+ *   casa → telefono   {v:1, no:"…"}                          e basta
+ *   casa → telefono   {v:1, no:"…", riabbina:true}           questo telefono non c'e' piu'
  *
  * `mia` e' una chiave pubblica effimera: vive quanto il collegamento. `chi` e'
  * l'identificativo del telefono, che non e' un segreto — serve solo a sapere
@@ -79,8 +80,14 @@ export class Portiere {
       /* Detto senza dire *perche'*: un telefono che non c'e' e uno abbinato
        * prima delle chiavi sono la stessa cosa da fuori, e in tutti e due i
        * casi si riabbina. Dire quale dei due sarebbe dire a chi bussa a caso
-       * quali identificativi esistono. */
-      this._no(presa, "riabbina questo telefono");
+       * quali identificativi esistono.
+       *
+       * `riabbina` invece va detto, ed e' una bandierina e non una frase
+       * apposta: il telefono ci deve *fare* qualcosa — smettere di riprovare e
+       * mandare l'utente a rifare l'abbinamento — e far dipendere quel
+       * comportamento dal testo di un messaggio vuol dire romperlo il giorno
+       * che qualcuno riscrive la frase. */
+      this._no(presa, "riabbina questo telefono", { riabbina: true });
       return;
     }
 
@@ -191,8 +198,8 @@ export class Portiere {
     cifrata.chiudi(1000, "abbinato");
   }
 
-  _no(presa, perche) {
-    presa.manda(JSON.stringify({ v: VERSIONE, no: perche }));
+  _no(presa, perche, altro = {}) {
+    presa.manda(JSON.stringify({ v: VERSIONE, no: perche, ...altro }));
     presa.chiudi(CHIUSA_PER_REGOLA, perche);
   }
 }

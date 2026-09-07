@@ -40,6 +40,16 @@ class SegnoRifiutato extends ErroreDelPonte {
   const SegnoRifiutato(super.spiegazione);
 }
 
+/// La casa non ha stretto la mano.
+///
+/// E' una cosa diversa da un segno rifiutato: li' non si e' arrivati nemmeno a
+/// dire chi si e'. Quasi sempre vuol dire che le due punte parlano due lingue
+/// diverse — un ponte vecchio, o un'app vecchia — e la cura e' aggiornare una
+/// delle due, non riabbinare.
+class StrettaRifiutata extends ErroreDelPonte {
+  const StrettaRifiutata(super.spiegazione);
+}
+
 /// Home Assistant ha risposto «no» a un comando.
 class ComandoRifiutato extends ErroreDelPonte {
   const ComandoRifiutato(super.spiegazione, {this.codice});

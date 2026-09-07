@@ -1,9 +1,15 @@
 /// Aggiungere una casa.
 ///
-/// Quattro caselle, e solo due sono obbligatorie. Le altre due sono la stessa
-/// istanza vista da fuori, ed e' scritto a schermo perche' non e' ovvio: chi
-/// non le riempie si trova un'app che funziona solo sotto il proprio Wi-Fi, e
-/// se ne accorge in stazione.
+/// **Una casella.** Otto lettere, prese dalla scheda del ponte dentro Home
+/// Assistant. Non un indirizzo, non una porta, non un gettone, e soprattutto
+/// non le credenziali di Home Assistant: chi installa un'app di terzi e si
+/// sente chiedere le chiavi di casa fa benissimo a chiuderla.
+///
+/// L'indirizzo compare solo quando serve davvero — quando l'app non ha un
+/// centralino a cui chiedere — e sta chiuso in fondo, dove non spaventa
+/// nessuno. Anche in quel caso e' una riga sola, battuta una volta, stando sul
+/// divano: dalla risposta la casa dice tutto il resto, compreso a quale
+/// centralino chiama lei, e da quel momento l'app la ritrova anche da fuori.
 library;
 
 import 'dart:io' show Platform;
@@ -13,6 +19,7 @@ import 'package:flutter/material.dart';
 import '../casa/archivio_delle_case.dart';
 import '../casa/casa_conosciuta.dart';
 import '../ponte/abbinamento.dart';
+import '../ponte/centralino.dart';
 import '../ponte/errori.dart';
 import '../ponte/indirizzo.dart';
 
@@ -21,10 +28,14 @@ class AggiungiCasa extends StatefulWidget {
     super.key,
     required this.archivio,
     required this.quandoFatto,
+    this.centralino,
   });
 
   final ArchivioDelleCase archivio;
   final void Function(CasaConosciuta casa) quandoFatto;
+
+  /// Il centralino a cui chiedere. Nelle prove se ne mette uno finto.
+  final IndirizzoDelCentralino? centralino;
 
   @override
   State<AggiungiCasa> createState() => _AggiungiCasaState();
@@ -33,16 +44,27 @@ class AggiungiCasa extends StatefulWidget {
 class _AggiungiCasaState extends State<AggiungiCasa> {
   final _nome = TextEditingController(text: 'Casa');
   final _dentro = TextEditingController();
-  final _fuori = TextEditingController();
   final _codice = TextEditingController();
   bool _sto = false;
+  bool _mostraLIndirizzo = false;
   String? _male;
+
+  IndirizzoDelCentralino? get _centralino =>
+      widget.centralino ?? centralinoDiDifetto;
+
+  /// `true` quando l'indirizzo non e' un di piu' ma l'unica strada.
+  bool get _serveLIndirizzo => _centralino == null;
+
+  @override
+  void initState() {
+    super.initState();
+    _mostraLIndirizzo = _serveLIndirizzo;
+  }
 
   @override
   void dispose() {
     _nome.dispose();
     _dentro.dispose();
-    _fuori.dispose();
     _codice.dispose();
     super.dispose();
   }
@@ -66,23 +88,23 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
   }
 
   Future<void> _abbina() async {
-    final inCasa = IndirizzoDelPonte.leggi(_dentro.text);
-    final daFuori = IndirizzoDelPonte.leggi(_fuori.text);
+    final scritto = _dentro.text.trim();
+    final inCasa = IndirizzoDelPonte.leggi(scritto);
 
-    if (_dentro.text.trim().isNotEmpty && inCasa == null) {
+    if (scritto.isNotEmpty && inCasa == null) {
       setState(() => _male = 'L\'indirizzo di casa non si capisce.');
       return;
     }
-    if (_fuori.text.trim().isNotEmpty && daFuori == null) {
-      setState(() => _male = 'L\'indirizzo da fuori non si capisce.');
+    if (codicePulito(_codice.text).isEmpty) {
+      setState(() => _male = 'Manca il codice: sono otto lettere.');
       return;
     }
-    if (inCasa == null && daFuori == null) {
-      setState(() => _male = 'Serve almeno un indirizzo.');
-      return;
-    }
-    if (_codice.text.trim().isEmpty) {
-      setState(() => _male = 'Manca il codice di abbinamento.');
+    if (inCasa == null && _centralino == null) {
+      setState(() {
+        _mostraLIndirizzo = true;
+        _male = 'Serve l\'indirizzo di casa: questa versione dell\'app non ha '
+            'un centralino a cui chiedere.';
+      });
       return;
     }
 
@@ -91,68 +113,80 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       _male = null;
     });
 
-    /* L'abbinamento si fa **su un indirizzo solo**, ma il segno che ne esce
-     * vale per la casa intera: il ponte e' lo stesso, visto da due parti. Si
-     * prova quello di casa per primo perche' e' quello che di solito e' vivo
-     * mentre si abbina — si abbina stando in casa. */
-    final daProvare = [
-      if (inCasa != null) (DaDove.daDentro, inCasa),
-      if (daFuori != null) (DaDove.daFuori, daFuori),
-    ];
+    try {
+      /* Due strade, stessa risposta. Con un indirizzo si bussa dritti, ed e'
+       * quello che si fa stando in casa; senza, si passa dal centralino, dove
+       * la casa e' andata ad aspettare. */
+      final abbinato = inCasa != null
+          ? await Abbinamento.chiedi(
+              dove: inCasa,
+              codice: _codice.text,
+              nome: _comeSiChiama,
+              sistema: _sistema,
+            )
+          : await Abbinamento.colCodice(
+              centralino: _centralino!,
+              codice: _codice.text,
+              nome: _comeSiChiama,
+              sistema: _sistema,
+            );
 
-    for (final (da, dove) in daProvare) {
-      if (!await Abbinamento.cePonte(dove)) continue;
-      try {
-        final segno = await Abbinamento.chiedi(
-          dove: dove,
-          codice: _codice.text,
-          nome: _comeSiChiama,
-          sistema: _sistema,
-        );
-        final casa = await widget.archivio.aggiungi(
-          nome: _nome.text,
-          segno: segno,
-          inCasa: inCasa,
-          daFuoriCasa: daFuori,
-          approdoIniziale: da,
-        );
-        if (!mounted) return;
-        widget.quandoFatto(casa);
-        return;
-      } on ErroreDelPonte catch (errore) {
-        /* Un codice sbagliato e' sbagliato su tutti e due gli indirizzi: non
-         * ha senso bruciare il secondo tentativo. */
-        if (!mounted) return;
-        setState(() {
-          _sto = false;
-          _male = errore.spiegazione;
-        });
-        return;
-      } on TroppeCase catch (errore) {
-        if (!mounted) return;
-        setState(() {
-          _sto = false;
-          _male = errore.spiegazione;
-        });
-        return;
-      }
+      /* La casa dice su quali indirizzi la si trova sulla rete di casa. Si
+       * tiene quello che risponde: sono i millesimi contro i decimi, cioe' la
+       * differenza fra una luce che si accende quando la tocchi e una che ci
+       * pensa su. */
+      final scoperto = await Abbinamento.qualeIndirizzo(abbinato.indirizzi);
+
+      final casa = await widget.archivio.aggiungi(
+        nome: _nome.text,
+        segno: abbinato.segno,
+        identificativo: abbinato.identificativo,
+        chiave: abbinato.chiave,
+        casaAlCentralino: abbinato.casaAlCentralino,
+        centralino: abbinato.centralino ?? _centralino,
+        inCasa: inCasa ?? scoperto,
+        approdoIniziale: inCasa != null
+            ? DaDove.daDentro
+            : DaDove.dalCentralino,
+      );
+      if (!mounted) return;
+      widget.quandoFatto(casa);
+    } on ErroreDelPonte catch (errore) {
+      if (!mounted) return;
+      setState(() {
+        _sto = false;
+        _male = _spiegato(errore, inCasa);
+      });
+    } on TroppeCase catch (errore) {
+      if (!mounted) return;
+      setState(() {
+        _sto = false;
+        _male = errore.spiegazione;
+      });
     }
+  }
 
-    if (!mounted) return;
-    setState(() {
-      _sto = false;
-      /* L'errore che fa perdere piu' tempo: l'indirizzo *sembra* giusto —
-       * e' quello che Home Assistant stessa da' per l'accesso remoto — e
-       * chi lo mette va a cercare il guasto dove non c'e'. */
-      _male = daFuori?.eLAccessoRemotoDiHomeAssistant ?? false
-          ? 'L\'accesso remoto di Home Assistant non arriva agli add-on: il '
-                'suo tunnel finisce dentro Home Assistant, e il ponte sta su '
-                'una porta sua. Per il primo abbinamento mettiti sul Wi-Fi di '
-                'casa e lascia vuoto l\'indirizzo pubblico.'
-          : 'Non trovo nessun ponte a questi indirizzi. '
-                'Controlla che l\'add-on sia acceso e che il telefono sia '
-                'sulla rete giusta.';
-    });
+  /// Il messaggio che si legge davvero, che non e' sempre quello dell'errore.
+  String _spiegato(ErroreDelPonte errore, IndirizzoDelPonte? inCasa) {
+    if (errore is! PonteIrraggiungibile) return errore.spiegazione;
+
+    /* L'errore che fa perdere piu' tempo di tutti: quell'indirizzo *sembra*
+     * giusto — e' quello che Home Assistant stessa da' per l'accesso remoto —
+     * e chi lo mette va a cercare il guasto dove non c'e'. */
+    if (inCasa?.eLAccessoRemotoDiHomeAssistant ?? false) {
+      return 'L\'accesso remoto di Home Assistant non arriva agli add-on: il suo '
+          'tunnel finisce dentro Home Assistant, e il ponte sta su una porta '
+          'sua. Mettiti sul Wi-Fi di casa e scrivi l\'indirizzo che ha il tuo '
+          'Home Assistant su quella rete.';
+    }
+    if (inCasa != null) {
+      return 'Non trovo nessun ponte a quell\'indirizzo. Controlla che l\'add-on '
+          'sia acceso e che il telefono sia sulla rete di casa.\n\n'
+          '(${errore.spiegazione})';
+    }
+    return 'Non trovo la casa. Controlla che l\'add-on sia acceso, e che il '
+        'codice non sia scaduto: dura cinque minuti.\n\n'
+        '(${errore.spiegazione})';
   }
 
   @override
@@ -182,16 +216,44 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                       style: testi.headlineSmall,
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      'In Home Assistant apri «Il ponte» dalla barra laterale '
-                      'e premi «Fabbrica un codice».',
-                      textAlign: TextAlign.center,
-                      style: testi.bodyMedium?.copyWith(
-                        color: colori.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
                   ],
+                  Text(
+                    'In Home Assistant apri «Il ponte» dalla barra laterale e '
+                    'premi «Fabbrica un codice». Poi scrivilo qui.',
+                    textAlign: TextAlign.center,
+                    style: testi.bodyMedium?.copyWith(
+                      color: colori.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  TextField(
+                    controller: _codice,
+                    enabled: !_sto,
+                    autofocus: true,
+                    autocorrect: false,
+                    textAlign: TextAlign.center,
+                    textCapitalization: TextCapitalization.characters,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _sto ? null : _abbina(),
+                    style: testi.headlineSmall?.copyWith(
+                      letterSpacing: 8,
+                      fontFamily: 'monospace',
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'ABCD2345',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(vertical: 20),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Non ti verra\' mai chiesta la password di Home Assistant.',
+                    textAlign: TextAlign.center,
+                    style: testi.bodySmall?.copyWith(
+                      color: colori.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   TextField(
                     controller: _nome,
                     enabled: !_sto,
@@ -202,63 +264,35 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  _Insegna('Da dentro casa', colori),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _dentro,
-                    enabled: !_sto,
-                    autocorrect: false,
-                    keyboardType: TextInputType.url,
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Indirizzo sulla rete di casa',
-                      hintText: '192.168.1.50',
-                      border: OutlineInputBorder(),
+                  if (_mostraLIndirizzo) ...[
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _dentro,
+                      enabled: !_sto,
+                      autocorrect: false,
+                      keyboardType: TextInputType.url,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _sto ? null : _abbina(),
+                      decoration: InputDecoration(
+                        labelText: _serveLIndirizzo
+                            ? 'Indirizzo di Home Assistant in casa'
+                            : 'Indirizzo di casa (facoltativo)',
+                        hintText: '192.168.1.50',
+                        helperText: 'Stando sul Wi-Fi di casa. Il resto lo dice '
+                            'la casa da sola.',
+                        helperMaxLines: 2,
+                        border: const OutlineInputBorder(),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  _Insegna('Da fuori casa', colori),
-                  const SizedBox(height: 4),
-                  Text(
-                    'La stessa casa, raggiunta da fuori: il tuo dominio, o l\'accesso '
-                    'remoto di Home Assistant. Senza questo l\'app funziona solo sotto '
-                    'il Wi-Fi di casa.',
-                    style: testi.bodySmall?.copyWith(
-                      color: colori.onSurfaceVariant,
+                  ] else ...[
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: _sto
+                          ? null
+                          : () => setState(() => _mostraLIndirizzo = true),
+                      child: const Text('Il codice non funziona? Scrivi l\'indirizzo'),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _fuori,
-                    enabled: !_sto,
-                    autocorrect: false,
-                    keyboardType: TextInputType.url,
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Indirizzo pubblico (facoltativo)',
-                      hintText: 'https://casa.esempio.it',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  TextField(
-                    controller: _codice,
-                    enabled: !_sto,
-                    autocorrect: false,
-                    textCapitalization: TextCapitalization.characters,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _sto ? null : _abbina(),
-                    style: const TextStyle(
-                      letterSpacing: 6,
-                      fontFamily: 'monospace',
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'Codice di abbinamento',
-                      hintText: 'ABCD2345',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
+                  ],
                   if (_male != null) ...[
                     const SizedBox(height: 16),
                     Text(_male!, style: TextStyle(color: colori.error)),
@@ -285,20 +319,4 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       ),
     );
   }
-}
-
-class _Insegna extends StatelessWidget {
-  const _Insegna(this.testo, this.colori);
-  final String testo;
-  final ColorScheme colori;
-
-  @override
-  Widget build(BuildContext context) => Text(
-    testo.toUpperCase(),
-    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-      color: colori.primary,
-      letterSpacing: 1.2,
-      fontWeight: FontWeight.w700,
-    ),
-  );
 }

@@ -24,20 +24,26 @@ http.Client rispondendo(int stato, Object corpo) => MockClient(
 );
 
 void main() {
-  test('il codice buono torna il segno', () async {
+  test('il codice buono torna tutto quello che serve, non solo il segno', () async {
     late http.Request vista;
     final cliente = MockClient((richiesta) async {
       vista = richiesta;
       return http.Response(
         jsonEncode({
           'segno': 'a' * 64,
+          'chiave': 'b' * 64,
           'dispositivo': {'id': 'dm_1', 'nome': 'iPhone di Anna'},
+          'ritorno': {
+            'casa': 'casa_${'0' * 32}',
+            'centralino': 'wss://centralino.esempio.it',
+            'indirizzi': ['192.168.1.50:8098'],
+          },
         }),
         201,
       );
     });
 
-    final segno = await Abbinamento.chiedi(
+    final abbinato = await Abbinamento.chiedi(
       dove: dove,
       codice: 'ABCD2345',
       nome: 'iPhone di Anna',
@@ -45,7 +51,14 @@ void main() {
       cliente: cliente,
     );
 
-    expect(segno, 'a' * 64);
+    expect(abbinato.segno, 'a' * 64);
+    expect(abbinato.chiave, 'b' * 64);
+    expect(abbinato.identificativo, 'dm_1');
+    /* Da qui l'app impara dove tornare, senza che nessuno abbia battuto un
+     * indirizzo. */
+    expect(abbinato.casaAlCentralino, 'casa_${'0' * 32}');
+    expect(abbinato.centralino, IndirizzoDelCentralino.leggi('wss://centralino.esempio.it'));
+    expect(abbinato.indirizzi.single, IndirizzoDelPonte.leggi('192.168.1.50:8098'));
     expect(vista.url.toString(), 'http://192.168.1.50:8098/abbinamento');
     final mandato = jsonDecode(vista.body) as Map<String, dynamic>;
     expect(mandato['codice'], 'ABCD2345');
@@ -136,25 +149,25 @@ void main() {
   test('il saluto dice se il ponte c\'e\'', () async {
     expect(
       await Abbinamento.cePonte(
-        dove,
+        dove.salute,
         cliente: rispondendo(200, {'vivo': true}),
       ),
       isTrue,
     );
     expect(
       await Abbinamento.cePonte(
-        dove,
+        dove.salute,
         cliente: rispondendo(200, {'vivo': false}),
       ),
       isFalse,
     );
     expect(
-      await Abbinamento.cePonte(dove, cliente: rispondendo(404, {})),
+      await Abbinamento.cePonte(dove.salute, cliente: rispondendo(404, {})),
       isFalse,
     );
     expect(
       await Abbinamento.cePonte(
-        dove,
+        dove.salute,
         cliente: MockClient((_) async => throw const _ReteAssente()),
       ),
       isFalse,

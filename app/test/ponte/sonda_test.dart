@@ -1,8 +1,9 @@
-/// Le prove della sonda.
+/// Le prove della sonda: da dove si entra, adesso.
 ///
-/// La sonda e' il pezzo che fa funzionare l'app fuori casa senza che l'utente
-/// tocchi niente. Le prove qui non toccano la rete: la bussata e' sostituita,
-/// e quello che si guarda e' **come si sceglie**, non come si bussa.
+/// Sembrano prove su un dettaglio di rete. Sono prove su **quanto ci mette
+/// l'app ad aprirsi**, che e' la prima cosa che si nota e l'ultima che si
+/// riesce a spiegare: se qui si sbaglia, l'app «ci mette», e nessuno capisce
+/// perche'.
 library;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -13,35 +14,55 @@ import 'package:gdahome/ponte/sonda.dart';
 
 final inRete = IndirizzoDelPonte.leggi('192.168.1.50')!;
 final daFuori = IndirizzoDelPonte.leggi('https://casa.esempio.it')!;
+final ilCentralino = IndirizzoDelCentralino.leggi('wss://centralino.esempio.it')!;
+
+const idAlCentralino = 'casa_00112233445566778899aabbccddeeff';
 
 CasaConosciuta casaCon({
   IndirizzoDelPonte? dentro,
   IndirizzoDelPonte? fuori,
+  IndirizzoDelCentralino? centralino,
   DaDove? ultimo,
 }) => CasaConosciuta(
   id: 'x',
   nome: 'Casa',
   segno: 's',
+  identificativo: 'dm_prova',
+  chiave: 'c' * 64,
+  casaAlCentralino: centralino == null ? null : idAlCentralino,
+  centralino: centralino,
   inCasa: dentro,
   daFuoriCasa: fuori,
   ultimoApprodo: ultimo,
 );
 
-/// Una bussata che risponde solo a certi indirizzi, e ci mette il tempo che
-/// le si dice.
+/// Una bussata che risponde solo a certi posti, e ci mette il tempo che le si
+/// dice. Si scrivono gli indirizzi; la sonda bussa al loro `/salute`.
 Sonda sondaChe(
-  Map<IndirizzoDelPonte, bool> chi, {
-  Map<IndirizzoDelPonte, Duration> lenti = const {},
-  List<IndirizzoDelPonte>? bussate,
-}) => Sonda(
-  attesa: const Duration(milliseconds: 200),
-  bussa: (dove) async {
-    bussate?.add(dove);
-    final quanto = lenti[dove];
-    if (quanto != null) await Future<void>.delayed(quanto);
-    return chi[dove] ?? false;
-  },
-);
+  Map<Object, bool> chi, {
+  Map<Object, Duration> lenti = const {},
+  List<Uri>? bussate,
+  Duration? vantaggio,
+}) {
+  Uri salute(Object dove) => switch (dove) {
+    IndirizzoDelPonte ponte => ponte.salute,
+    IndirizzoDelCentralino centralino => centralino.salute,
+    _ => throw ArgumentError('non e\' un posto'),
+  };
+  final risposte = {for (final voce in chi.entries) salute(voce.key): voce.value};
+  final attese = {for (final voce in lenti.entries) salute(voce.key): voce.value};
+
+  return Sonda(
+    attesa: const Duration(milliseconds: 200),
+    vantaggio: vantaggio ?? const Duration(milliseconds: 60),
+    bussa: (dove) async {
+      bussate?.add(dove);
+      final quanto = attese[dove];
+      if (quanto != null) await Future<void>.delayed(quanto);
+      return risposte[dove] ?? false;
+    },
+  );
+}
 
 void main() {
   test('in casa si entra dall\'indirizzo di rete locale', () async {
@@ -49,7 +70,7 @@ void main() {
     final approdo = await sonda.dove(casaCon(dentro: inRete, fuori: daFuori));
 
     expect(approdo.da, DaDove.daDentro);
-    expect(approdo.dove, inRete);
+    expect(approdo.filo, inRete.filo);
   });
 
   test('fuori casa si entra dall\'indirizzo pubblico, stessa casa', () async {
@@ -57,15 +78,15 @@ void main() {
     final approdo = await sonda.dove(casaCon(dentro: inRete, fuori: daFuori));
 
     expect(approdo.da, DaDove.daFuori);
-    expect(approdo.dove, daFuori);
+    expect(approdo.filo, daFuori.filo);
   });
 
   test(
-    'si chiedono tutti e due insieme: il lento non fa aspettare il pronto',
+    'si chiedono tutti insieme: il lento non fa aspettare il pronto',
     () async {
       /* Se andassero in fila, l'indirizzo di rete locale che non risponde
-     * costerebbe l'attesa intera prima di provare quello di fuori — e la
-     * costerebbe a ogni apertura dell'app mentre si e' fuori. */
+       * costerebbe l'attesa intera prima di provare quello di fuori — e la
+       * costerebbe a ogni apertura dell'app mentre si e' fuori. */
       final sonda = sondaChe(
         {inRete: false, daFuori: true},
         lenti: {inRete: const Duration(milliseconds: 150)},
@@ -85,7 +106,7 @@ void main() {
   );
 
   test('si prova per primo quello che ha funzionato l\'ultima volta', () async {
-    final bussate = <IndirizzoDelPonte>[];
+    final bussate = <Uri>[];
     final sonda = sondaChe(
       {inRete: true, daFuori: true},
       lenti: {inRete: const Duration(milliseconds: 40)},
@@ -99,7 +120,7 @@ void main() {
     expect(approdo.da, DaDove.daFuori);
     expect(
       bussate.first,
-      daFuori,
+      daFuori.salute,
       reason: 'il primo a cui si bussa e\' l\'ultimo che funzionava',
     );
   });
@@ -117,6 +138,73 @@ void main() {
     },
   );
 
+  /* ─── Il centralino ─────────────────────────────────────────────────────── */
+
+  group('il centralino', () {
+    test('da fuori si entra di li\', senza che nessuno abbia configurato niente', () async {
+      final sonda = sondaChe({inRete: false, ilCentralino: true});
+      final approdo = await sonda.dove(
+        casaCon(dentro: inRete, centralino: ilCentralino),
+      );
+
+      expect(approdo.da, DaDove.dalCentralino);
+      expect(
+        approdo.filo,
+        Uri.parse('wss://centralino.esempio.it/telefono/$idAlCentralino'),
+      );
+    });
+
+    test('in casa perde, anche se risponde per primo', () async {
+      /* La prova che conta. Il centralino risponde sempre e in fretta: senza
+       * il vantaggio alle strade dirette vincerebbe anche dal divano, e ogni
+       * comando farebbe il giro del mondo per arrivare a tre metri. */
+      final sonda = sondaChe(
+        {inRete: true, ilCentralino: true},
+        lenti: {inRete: const Duration(milliseconds: 25)},
+      );
+      final approdo = await sonda.dove(
+        casaCon(dentro: inRete, centralino: ilCentralino),
+      );
+
+      expect(approdo.da, DaDove.daDentro);
+    });
+
+    test('a una strada diretta che tace non si resta appesi', () async {
+      final sonda = sondaChe({inRete: false, ilCentralino: true});
+      final approdo = await sonda.dove(
+        casaCon(dentro: inRete, centralino: ilCentralino),
+      );
+      expect(approdo.da, DaDove.dalCentralino);
+    });
+
+    test('quando e\' l\'unica strada non aspetta nessun vantaggio', () async {
+      final bussate = <Uri>[];
+      final sonda = sondaChe(
+        {ilCentralino: true},
+        bussate: bussate,
+        vantaggio: const Duration(seconds: 5),
+      );
+
+      final inizio = DateTime.now();
+      final approdo = await sonda.dove(casaCon(centralino: ilCentralino));
+      final quanto = DateTime.now().difference(inizio);
+
+      expect(approdo.da, DaDove.dalCentralino);
+      expect(quanto.inMilliseconds, lessThan(200));
+      expect(bussate, [ilCentralino.salute]);
+    });
+
+    test('quando anche il centralino tace, si dice', () async {
+      final sonda = sondaChe({inRete: false, ilCentralino: false});
+      await expectLater(
+        sonda.dove(casaCon(dentro: inRete, centralino: ilCentralino)),
+        throwsA(isA<PonteIrraggiungibile>()),
+      );
+    });
+  });
+
+  /* ─── Quando non si trova ───────────────────────────────────────────────── */
+
   test('se non risponde nessuno lo dice, e dice anche perche\'', () async {
     final sonda = sondaChe({inRete: false, daFuori: false});
     await expectLater(
@@ -132,6 +220,9 @@ void main() {
   });
 
   test('a chi ha solo l\'indirizzo di casa si dice cosa gli manca', () async {
+    /* «Metti un indirizzo pubblico» sarebbe la risposta sbagliata: adesso non
+     * serve piu' a nessuno. Quello che manca e' un centralino nella scheda del
+     * ponte, e va detto dove sta. */
     final sonda = sondaChe({inRete: false});
     await expectLater(
       sonda.dove(casaCon(dentro: inRete)),
@@ -139,17 +230,32 @@ void main() {
         isA<PonteIrraggiungibile>().having(
           (e) => e.spiegazione,
           'spiegazione',
-          contains('indirizzo pubblico'),
+          allOf(contains('solo dalla sua rete'), contains('centralino')),
         ),
       ),
     );
   });
 
-  test('una casa senza nessun indirizzo lo dice subito', () async {
+  test('una casa senza nessuna strada lo dice subito', () async {
     final sonda = sondaChe({});
     await expectLater(
       sonda.dove(casaCon()),
       throwsA(isA<PonteIrraggiungibile>()),
+    );
+  });
+
+  test('una casa abbinata prima delle chiavi si fa riabbinare', () async {
+    const vecchia = CasaConosciuta(id: 'x', nome: 'Casa', segno: 's');
+    expect(vecchia.daRiabbinare, isTrue);
+    await expectLater(
+      sondaChe({}).dove(vecchia),
+      throwsA(
+        isA<PonteIrraggiungibile>().having(
+          (e) => e.spiegazione,
+          'spiegazione',
+          contains('riabbinata'),
+        ),
+      ),
     );
   });
 
@@ -170,7 +276,7 @@ void main() {
         isA<PonteIrraggiungibile>().having(
           (e) => e.spiegazione,
           'spiegazione',
-          allOf(contains('non arriva agli add-on'), contains('VPN')),
+          allOf(contains('non arriva agli add-on'), contains('centralino')),
         ),
       ),
     );
@@ -181,8 +287,9 @@ void main() {
     () async {
       final sonda = Sonda(
         attesa: const Duration(milliseconds: 200),
+        vantaggio: const Duration(milliseconds: 20),
         bussa: (dove) async {
-          if (dove == inRete) throw StateError('la rete non c\'e\'');
+          if (dove == inRete.salute) throw StateError('la rete non c\'e\'');
           return true;
         },
       );

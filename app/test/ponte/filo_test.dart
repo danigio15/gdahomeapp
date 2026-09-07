@@ -11,6 +11,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/ponte/errori.dart';
 import 'package:gdahome/ponte/filo.dart';
+import 'package:gdahome/ponte/indirizzo.dart';
 
 import 'ponte_finto.dart';
 
@@ -23,6 +24,8 @@ void main() {
   Filo filoCon({String segno = segnoBuono}) => Filo.fisso(
     indirizzo: ponte.indirizzo,
     segno: segno,
+    chi: chiBuono,
+    chiave: chiaveBuona,
     /* Nelle prove non si aspettano otto secondi per vedere una riconnessione. */
     attesaMassima: const Duration(milliseconds: 80),
     attesaDellaRisposta: const Duration(seconds: 3),
@@ -135,6 +138,8 @@ void main() {
       final filo = Filo.fisso(
         indirizzo: ponte.indirizzo,
         segno: segnoBuono,
+        chi: chiBuono,
+        chiave: chiaveBuona,
         attesaMassima: const Duration(milliseconds: 80),
         attesaDellaRisposta: const Duration(milliseconds: 150),
       );
@@ -248,19 +253,24 @@ void main() {
     final altroPonte = await PonteFinto.alza();
     var inCasa = true;
     final filo = Filo(
-      approdo: () async => inCasa ? ponte.indirizzo : altroPonte.indirizzo,
+      approdo: () async => Approdo.diretto(
+        inCasa ? DaDove.daDentro : DaDove.daFuori,
+        inCasa ? ponte.indirizzo : altroPonte.indirizzo,
+      ),
       segno: segnoBuono,
+      chi: chiBuono,
+      chiave: chiaveBuona,
       attesaMassima: const Duration(milliseconds: 80),
     );
 
     await filo.apri();
-    expect(filo.approdoAdesso, ponte.indirizzo);
+    expect(filo.approdoAdesso!.filo, ponte.indirizzo.filo);
 
     inCasa = false;
     await ponte.buttaGiu();
 
     await _finoA(
-      () => filo.dentro && filo.approdoAdesso == altroPonte.indirizzo,
+      () => filo.dentro && filo.approdoAdesso?.filo == altroPonte.indirizzo.filo,
       entro: const Duration(seconds: 5),
     );
     expect(altroPonte.collegamenti, 1);
@@ -276,6 +286,8 @@ void main() {
         throw const PonteIrraggiungibile('nessuno risponde');
       },
       segno: segnoBuono,
+      chi: chiBuono,
+      chiave: chiaveBuona,
       attesaMassima: const Duration(milliseconds: 60),
     );
 
@@ -297,9 +309,11 @@ void main() {
     final filo = Filo(
       approdo: () async {
         await Future<void>.delayed(const Duration(milliseconds: 80));
-        return ponte.indirizzo;
+        return Approdo.diretto(DaDove.daDentro, ponte.indirizzo);
       },
       segno: segnoBuono,
+      chi: chiBuono,
+      chiave: chiaveBuona,
       attesaMassima: const Duration(milliseconds: 60),
     );
     unawaited(filo.apri().catchError((Object _) {}));

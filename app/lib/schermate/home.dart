@@ -150,6 +150,7 @@ class _SottoTitolo extends StatelessWidget {
     final (testo, icona) = switch ((collegamento.comeVa, collegamento.daDove)) {
       (ComeVa.aperta, DaDove.daDentro) => ('in casa', Icons.wifi),
       (ComeVa.aperta, DaDove.daFuori) => ('da fuori', Icons.public),
+      (ComeVa.aperta, DaDove.dalCentralino) => ('da fuori', Icons.public),
       (ComeVa.aperta, null) => ('collegata', Icons.check),
       (ComeVa.inCammino, _) => ('sto cercando la casa…', Icons.more_horiz),
       (ComeVa.irraggiungibile, _) => ('non raggiungibile', Icons.cloud_off),

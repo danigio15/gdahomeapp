@@ -1,4 +1,4 @@
-/// Dove sta il ponte.
+/// Dove sta il ponte, e da quale delle sue strade ci si arriva.
 ///
 /// L'utente lo batte a mano al primo avvio, e lo batte come gli viene:
 /// `192.168.1.50`, `192.168.1.50:8098`, `casa.esempio.it`,
@@ -112,4 +112,157 @@ class IndirizzoDelPonte {
 
   @override
   int get hashCode => Object.hash(casa, porta, sicuro);
+}
+
+
+/* ─── Il centralino ───────────────────────────────────────────────────────── */
+
+/// Dove si chiama per entrare da fuori.
+///
+/// Il centralino non e' una casa: e' il posto dove la casa **chiama** e resta
+/// in attesa, e dove i telefoni la vengono a trovare. Chi ha installato
+/// l'add-on non ha aperto nessuna porta sul router e non ha nessun indirizzo
+/// pubblico — e' tutto il punto — quindi il suo indirizzo non lo batte
+/// nessuno: arriva dalla casa stessa quando il telefono si abbina.
+class IndirizzoDelCentralino {
+  const IndirizzoDelCentralino({required this.casa, this.porta, this.sicuro = true});
+
+  final String casa;
+
+  /// `null` vuol dire quella solita dello schema.
+  final int? porta;
+  final bool sicuro;
+
+  /// Il filo verso una casa. L'identificativo non e' un segreto: serve a
+  /// instradare, e il segno viene dopo, dentro il cifrato, verso la casa.
+  Uri filo(String idDellaCasa) => _via(sicuro ? 'wss' : 'ws', '/telefono/$idDellaCasa');
+
+  /// Il filo di chi si sta abbinando. Si instrada sull'**impronta** del
+  /// codice: il codice al centralino non passa mai.
+  Uri abbinamento(String impronta) =>
+      _via(sicuro ? 'wss' : 'ws', '/abbinamento/$impronta');
+
+  Uri get salute => _via(sicuro ? 'https' : 'http', '/salute');
+
+  Uri _via(String schema, String percorso) => porta == null
+      ? Uri(scheme: schema, host: casa, path: percorso)
+      : Uri(scheme: schema, host: casa, port: porta, path: percorso);
+
+  /// Legge quello che ha detto la casa.
+  ///
+  /// Torna `null` quando non e' un indirizzo: una casa che dice una
+  /// sciocchezza non deve rompere l'app di chi ci si sta abbinando.
+  ///
+  /// Senza schema si prende `wss`, non `ws`: un centralino sta su internet, e
+  /// il difetto di una cosa che sta su internet e' il cifrato.
+  static IndirizzoDelCentralino? leggi(String? scritto) {
+    var testo = (scritto ?? '').trim();
+    if (testo.isEmpty) return null;
+
+    var sicuro = true;
+    final schema = RegExp(r'^([a-z]+)://', caseSensitive: false).firstMatch(testo);
+    if (schema != null) {
+      final nome = schema.group(1)!.toLowerCase();
+      if (nome == 'ws' || nome == 'http') {
+        sicuro = false;
+      } else if (nome != 'wss' && nome != 'https') {
+        return null;
+      }
+      testo = testo.substring(schema.end);
+    }
+
+    testo = testo.split(RegExp(r'[/?#]')).first.trim();
+    if (testo.isEmpty) return null;
+
+    int? porta;
+    final duePunti = testo.lastIndexOf(':');
+    if (duePunti > 0) {
+      final numero = int.tryParse(testo.substring(duePunti + 1));
+      if (numero == null || numero < 1 || numero > 65535) return null;
+      porta = numero;
+      testo = testo.substring(0, duePunti);
+    }
+
+    if (testo.isEmpty || !RegExp(r'^[A-Za-z0-9._-]+$').hasMatch(testo)) return null;
+    return IndirizzoDelCentralino(
+      casa: testo.toLowerCase(),
+      porta: porta,
+      sicuro: sicuro,
+    );
+  }
+
+  @override
+  String toString() {
+    final schema = sicuro ? 'wss' : 'ws';
+    return porta == null ? '$schema://$casa' : '$schema://$casa:$porta';
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is IndirizzoDelCentralino &&
+      other.casa == casa &&
+      other.porta == porta &&
+      other.sicuro == sicuro;
+
+  @override
+  int get hashCode => Object.hash(casa, porta, sicuro);
+}
+
+/* ─── Da dove si entra ────────────────────────────────────────────────────── */
+
+/// Le tre strade per la stessa casa.
+enum DaDove {
+  /// Dall'indirizzo di rete locale: si e' in casa, e si va dritti.
+  daDentro,
+
+  /// Da un indirizzo pubblico che qualcuno ha messo a mano: un proxy inverso,
+  /// o una VPN. Non serve a nessuno averlo, ma chi ce l'ha lo usa.
+  daFuori,
+
+  /// Dal centralino: la casa ha chiamato fuori e ci si incontra li'. E' la
+  /// strada di chi non ha configurato niente, cioe' di quasi tutti.
+  dalCentralino,
+}
+
+/// Un posto dove bussare, adesso.
+class Approdo {
+  const Approdo({required this.da, required this.filo, required this.salute});
+
+  /// L'approdo di un indirizzo diretto: la porta dell'add-on.
+  Approdo.diretto(this.da, IndirizzoDelPonte dove)
+    : filo = dove.filo,
+      salute = dove.salute;
+
+  /// L'approdo che passa dal centralino.
+  Approdo.dalCentralino(IndirizzoDelCentralino dove, String idDellaCasa)
+    : da = DaDove.dalCentralino,
+      filo = dove.filo(idDellaCasa),
+      salute = dove.salute;
+
+  final DaDove da;
+
+  /// Dove aprire il filo.
+  final Uri filo;
+
+  /// Dove chiedere «ci sei?» prima di aprirlo. Per un indirizzo diretto e' il
+  /// ponte stesso; per il centralino e' il centralino, che risponde anche
+  /// quando la casa non e' collegata — e li' lo scopre il filo.
+  final Uri salute;
+
+  /// Come si dice a schermo.
+  String get comeSiChiama => switch (da) {
+    DaDove.daDentro => 'in casa',
+    DaDove.daFuori => 'da fuori',
+    DaDove.dalCentralino => 'da fuori',
+  };
+
+  @override
+  String toString() => '$filo ($comeSiChiama)';
+
+  @override
+  bool operator ==(Object other) =>
+      other is Approdo && other.da == da && other.filo == filo;
+
+  @override
+  int get hashCode => Object.hash(da, filo);
 }

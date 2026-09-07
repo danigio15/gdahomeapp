@@ -23,6 +23,7 @@ import 'dart:async';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 import '../ponte/indirizzo.dart';
+import '../ponte/presa.dart';
 import '../ponte/sonda.dart';
 import 'archivio_delle_case.dart';
 import 'casa_conosciuta.dart';
@@ -46,14 +47,14 @@ enum ComeVa {
 }
 
 class Collegamento {
-  Collegamento({required this.archivio, Sonda? sonda, this.apriIlCanale})
+  Collegamento({required this.archivio, Sonda? sonda, this.apriLaPresa})
     : _sonda = sonda ?? const Sonda();
 
   final ArchivioDelleCase archivio;
   final Sonda _sonda;
 
-  /// Come si apre il canale WebSocket. Sostituibile nelle prove.
-  final ApriIlCanale? apriIlCanale;
+  /// Come si apre il filo nudo, sotto la cifratura. Sostituibile nelle prove.
+  final ApriLaPresa? apriLaPresa;
 
   final _cambiamenti = StreamController<void>.broadcast();
 
@@ -111,8 +112,19 @@ class Collegamento {
     _daDove = null;
     _perche = null;
 
-    if (casa == null || !casa.raggiungibile) {
+    if (casa == null) {
       _vai(ComeVa.nessunaCasa);
+      return;
+    }
+
+    /* Una casa abbinata prima che esistessero le chiavi non parla piu' con
+     * nessun ponte: si dice, invece di far girare una rotella per sempre. */
+    if (casa.daRiabbinare || !casa.raggiungibile) {
+      _perche = casa.daRiabbinare
+          ? 'Questa casa e\' stata abbinata con una versione vecchia dell\'app: '
+                'riabbinala, e stavolta bastano le otto lettere.'
+          : 'Non so piu\' dove sia «${casa.nome}»: riabbinala.';
+      _vai(ComeVa.segnoScaduto);
       return;
     }
 
@@ -121,7 +133,9 @@ class Collegamento {
     final filo = Filo(
       approdo: () => _trova(casa),
       segno: casa.segno,
-      apri: apriIlCanale,
+      chi: casa.identificativo!,
+      chiave: casa.chiave!,
+      apri: apriLaPresa,
     );
     _filo = filo;
 
@@ -180,13 +194,13 @@ class Collegamento {
   }
 
   /// Dove bussare adesso. Chiamata dal filo a ogni tentativo.
-  Future<IndirizzoDelPonte> _trova(CasaConosciuta casa) async {
+  Future<Approdo> _trova(CasaConosciuta casa) async {
     final approdo = await _sonda.dove(casa);
     _daDove = approdo.da;
     /* Si scrive solo quando cambia: il filo si riapre a ogni ascensore. */
     unawaited(archivio.segnaLApprodo(casa.id, approdo.da));
     _avvisa();
-    return approdo.dove;
+    return approdo;
   }
 
   /// Passa a un'altra casa: butta giu' il filo di questa e apre quello.

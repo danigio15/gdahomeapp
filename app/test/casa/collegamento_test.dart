@@ -5,11 +5,8 @@
 /// giu', che quello della seconda si apra, e che ognuna resti col suo segno.
 library;
 
-import 'dart:io' show WebSocket;
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
-import 'package:gdahome/casa/casa_conosciuta.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
@@ -33,12 +30,13 @@ void main() {
   /// Una sonda che risponde «si'» solo agli indirizzi che le si dicono.
   Sonda sondaChe(
     Set<IndirizzoDelPonte> vivi, {
-    List<IndirizzoDelPonte>? bussate,
+    List<Uri>? bussate,
   }) => Sonda(
     attesa: const Duration(milliseconds: 200),
+    vantaggio: const Duration(milliseconds: 40),
     bussa: (dove) async {
       bussate?.add(dove);
-      return vivi.contains(dove);
+      return vivi.any((uno) => uno.salute == dove);
     },
   );
 
@@ -54,6 +52,8 @@ void main() {
     await archivio.aggiungi(
       nome: 'Casa',
       segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
       inCasa: ponte.indirizzo,
     );
     ponte.entita = [PonteFinto.unaEntita('light.cucina', 'on', nome: 'Cucina')];
@@ -83,6 +83,8 @@ void main() {
       await archivio.aggiungi(
         nome: 'Casa',
         segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
         inCasa: finto,
         daFuoriCasa: ponte.indirizzo,
       );
@@ -95,7 +97,7 @@ void main() {
 
       expect(collegamento.comeVa, ComeVa.aperta);
       expect(collegamento.daDove, DaDove.daFuori);
-      expect(collegamento.filo!.approdoAdesso, ponte.indirizzo);
+      expect(collegamento.filo!.approdoAdesso!.filo, ponte.indirizzo.filo);
       await ponte.spegni();
     },
   );
@@ -108,6 +110,8 @@ void main() {
       final casa = await archivio.aggiungi(
         nome: 'Casa',
         segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
         inCasa: finto,
         daFuoriCasa: ponte.indirizzo,
       );
@@ -140,11 +144,15 @@ void main() {
       final casaMia = await archivio.aggiungi(
         nome: 'Casa mia',
         segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
         inCasa: mia.indirizzo,
       );
       final casaLoro = await archivio.aggiungi(
         nome: 'Dai miei',
         segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
         inCasa: loro.indirizzo,
       );
 
@@ -172,7 +180,7 @@ void main() {
      * vorrebbero dire due sottoscrizioni vive e due case che arrivano
      * mescolate. */
       await _finoA(
-        () => mia.prese.every((una) => una.readyState != WebSocket.open),
+        () => mia.prese.isEmpty,
       );
       expect(archivio.attiva!.id, casaLoro.id);
 
@@ -187,6 +195,8 @@ void main() {
     await archivio.aggiungi(
       nome: 'Casa',
       segno: 'un segno vecchio',
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
       inCasa: ponte.indirizzo,
     );
 
@@ -205,13 +215,19 @@ void main() {
     'una casa che non risponde lo dice, ma i tentativi vanno avanti',
     () async {
       final finto = IndirizzoDelPonte.leggi('192.168.99.99')!;
-      await archivio.aggiungi(nome: 'Casa', segno: segnoBuono, inCasa: finto);
+      await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        inCasa: finto,
+      );
 
       collegamento = Collegamento(archivio: archivio, sonda: sondaChe({}));
       await collegamento.apri();
 
       expect(collegamento.comeVa, ComeVa.irraggiungibile);
-      expect(collegamento.perche, contains('indirizzo pubblico'));
+      expect(collegamento.perche, contains('solo dalla sua rete'));
     },
   );
 
@@ -221,11 +237,15 @@ void main() {
     final prima = await archivio.aggiungi(
       nome: 'Prima',
       segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
       inCasa: uno.indirizzo,
     );
     final seconda = await archivio.aggiungi(
       nome: 'Seconda',
       segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
       inCasa: due.indirizzo,
     );
 
@@ -245,9 +265,19 @@ void main() {
     await due.spegni();
   });
 
-  test('una casa senza indirizzi non si prova nemmeno', () async {
-    await archivio.aggiungi(nome: 'Orfana', segno: segnoBuono);
-    final bussate = <IndirizzoDelPonte>[];
+  test('una casa senza nessuna strada si fa riabbinare, e non si bussa a vuoto', () async {
+    /* Non e' «nessuna casa»: la casa nell'elenco c'e', e sparirebbe dallo
+     * schermo senza spiegazioni. E non e' nemmeno «non raggiungibile», che
+     * vorrebbe dire «riprova fra un po'»: qui non c'e' niente da riprovare,
+     * non si sa piu' dove sia. L'unica cosa vera da dire e' che va riabbinata,
+     * e sono otto lettere. */
+    await archivio.aggiungi(
+      nome: 'Orfana',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+    );
+    final bussate = <Uri>[];
     collegamento = Collegamento(
       archivio: archivio,
       sonda: sondaChe({}, bussate: bussate),
@@ -255,8 +285,33 @@ void main() {
 
     await collegamento.apri();
 
-    expect(collegamento.comeVa, ComeVa.nessunaCasa);
+    expect(collegamento.comeVa, ComeVa.segnoScaduto);
+    expect(collegamento.perche, contains('riabbinala'));
     expect(bussate, isEmpty);
+  });
+
+  test('una casa abbinata prima delle chiavi si fa riabbinare', () async {
+    /* Il ponte adesso vuole la stretta di mano cifrata: una casa abbinata
+     * prima non parla piu' con nessuno, e nasconderlo vorrebbe dire una
+     * rotella che gira per sempre. */
+    final ponte = await PonteFinto.alza();
+    await archivio.aggiungi(
+      nome: 'Vecchia',
+      segno: segnoBuono,
+      inCasa: ponte.indirizzo,
+    );
+    final bussate = <Uri>[];
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}, bussate: bussate),
+    );
+
+    await collegamento.apri();
+
+    expect(collegamento.comeVa, ComeVa.segnoScaduto);
+    expect(collegamento.perche, contains('riabbinala'));
+    expect(bussate, isEmpty, reason: 'non si bussa con una chiave che non c\'e\'');
+    await ponte.spegni();
   });
 }
 

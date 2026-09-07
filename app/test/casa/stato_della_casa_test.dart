@@ -33,6 +33,8 @@ void main() {
     filo = Filo.fisso(
       indirizzo: ponte.indirizzo,
       segno: segnoBuono,
+      chi: chiBuono,
+      chiave: chiaveBuona,
       attesaMassima: const Duration(milliseconds: 80),
       attesaDellaRisposta: const Duration(seconds: 3),
     );

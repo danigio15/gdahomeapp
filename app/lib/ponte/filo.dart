@@ -24,10 +24,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:web_socket_channel/web_socket_channel.dart';
-
 import 'errori.dart';
 import 'indirizzo.dart';
+import 'presa.dart';
+import 'stretta.dart';
 
 enum StatoDelFilo {
   /// Mai aperto, o chiuso apposta.
@@ -40,9 +40,6 @@ enum StatoDelFilo {
   dentro,
 }
 
-/// Come si apre il canale. Sostituibile nelle prove.
-typedef ApriIlCanale = WebSocketChannel Function(Uri dove);
-
 /// Dove bussare, chiesto *adesso*.
 ///
 /// E' una funzione e non un indirizzo, ed e' li' che sta il funzionamento
@@ -50,40 +47,54 @@ typedef ApriIlCanale = WebSocketChannel Function(Uri dove);
 /// portone perde il filo sull'indirizzo di rete locale, e al tentativo dopo la
 /// sonda risponde con quello di fuori. Nessuno tocca niente, e la casa e'
 /// sempre la stessa istanza.
-typedef TrovaLApprodo = Future<IndirizzoDelPonte> Function();
-
-WebSocketChannel _canaleVero(Uri dove) => WebSocketChannel.connect(dove);
+typedef TrovaLApprodo = Future<Approdo> Function();
 
 class Filo {
   Filo({
     required TrovaLApprodo approdo,
     required this.segno,
-    ApriIlCanale? apri,
+    required this.chi,
+    required this.chiave,
+    ApriLaPresa? apri,
     this.attesaMassima = const Duration(seconds: 30),
     this.attesaDellaRisposta = const Duration(seconds: 20),
   }) : _trovaLApprodo = approdo,
-       _apri = apri ?? _canaleVero;
+       _apri = apri ?? PresaSuWebSocket.apri;
 
-  /// Un filo verso un indirizzo solo, che non cambia mai.
-  ///
-  /// Serve alle prove e a chi punta dritto a un Home Assistant senza ponte.
+  /// Un filo verso un indirizzo solo, che non cambia mai. Serve alle prove.
   Filo.fisso({
     required IndirizzoDelPonte indirizzo,
     required String segno,
-    ApriIlCanale? apri,
+    required String chi,
+    required String chiave,
+    ApriLaPresa? apri,
     Duration attesaMassima = const Duration(seconds: 30),
     Duration attesaDellaRisposta = const Duration(seconds: 20),
   }) : this(
-         approdo: (() async => indirizzo),
+         approdo: (() async => Approdo.diretto(DaDove.daDentro, indirizzo)),
          segno: segno,
+         chi: chi,
+         chiave: chiave,
          apri: apri,
          attesaMassima: attesaMassima,
          attesaDellaRisposta: attesaDellaRisposta,
        );
 
   final TrovaLApprodo _trovaLApprodo;
+
+  /// Il segno: fa entrare. Viaggia dentro il cifrato, mai in chiaro.
   final String segno;
-  final ApriIlCanale _apri;
+
+  /// L'identificativo di questo telefono. Non e' un segreto: serve alla casa
+  /// per sapere quale chiave del filo tirare fuori, e viaggia in chiaro nella
+  /// prima riga della stretta di mano.
+  final String chi;
+
+  /// La chiave del filo: cifra. E' l'altra meta' di quello che si riceve
+  /// abbinandosi, ed e' quella che il centralino non ha mai visto passare.
+  final String chiave;
+
+  final ApriLaPresa _apri;
 
   /// Oltre questa non si aspetta di piu' fra un tentativo e l'altro.
   final Duration attesaMassima;
@@ -95,9 +106,9 @@ class Filo {
   final _inAttesa = <int, Completer<Map<String, dynamic>>>{};
   final _sottoscrizioni = <int, _Sottoscrizione>{};
 
-  WebSocketChannel? _canale;
-  IndirizzoDelPonte? _approdo;
-  StreamSubscription<dynamic>? _ascolto;
+  Presa? _presa;
+  Approdo? _approdo;
+  StreamSubscription<String>? _ascolto;
   Completer<void>? _stretta;
   Timer? _riprova;
   int _prossimoId = 1;
@@ -112,7 +123,7 @@ class Filo {
 
   /// Su quale indirizzo si e' entrati, l'ultima volta che si e' entrati.
   /// Serve a dire a schermo se si sta passando da dentro casa o da fuori.
-  IndirizzoDelPonte? get approdoAdesso => _approdo;
+  Approdo? get approdoAdesso => _approdo;
 
   /// Apre il filo e torna quando la stretta di mano e' andata.
   ///
@@ -146,7 +157,7 @@ class Filo {
   Future<void> _bussa() async {
     _cambia(StatoDelFilo.chiamando);
 
-    final IndirizzoDelPonte dove;
+    final Approdo dove;
     try {
       dove = await _trovaLApprodo();
     } catch (errore) {
@@ -176,37 +187,50 @@ class Filo {
      * puo' aver cambiato casa. */
     if (_spentoApposta) return;
 
+    final Presa presa;
     try {
-      final canale = _apri(dove.filo);
-      _canale = canale;
-      _approdo = dove;
-      /* Il canale racconta i suoi guai in tre posti, non in uno: lo stream,
-       * `ready` e `done`. Quello che conta e' `stream`, ed e' li' che si
-       * decide; gli altri due vanno comunque *guardati*, perche' un futuro che
-       * fallisce senza che nessuno lo guardi in Dart e' un errore non gestito
-       * che salta fuori altrove — dentro una prova che non c'entra niente, o
-       * in mano all'utente. */
-      unawaited(canale.ready.catchError((Object _) {}));
-      unawaited(canale.sink.done.catchError((Object _) => null));
-      _ascolto = canale.stream.listen(
-        _arrivato,
-        onError: (Object errore) => _caduto('il filo si e\' interrotto'),
-        onDone: () => _caduto('il filo si e\' chiuso'),
-        cancelOnError: false,
+      /* Due passi, e il secondo e' quello che conta: si apre il filo nudo, e
+       * poi ci si stringe la mano. Da li' in poi tutto quello che passa e'
+       * imbustato, e chi sta in mezzo — il centralino, o chi e' sulla rete di
+       * casa — vede byte e basta. */
+      final sotto = await _apri(dove.filo);
+      presa = await stringiLaMano(sotto, chi: chi, chiaveDelFilo: chiave);
+    } on SegnoRifiutato catch (errore) {
+      /* La casa dice che questo telefono non lo conosce piu'. Non e' una
+       * caduta: ribussare non cambierebbe niente, e chi guarda lo schermo deve
+       * sapere che va riabbinato. */
+      _segnoNonVale(errore.spiegazione);
+      return;
+    } catch (errore) {
+      _caduto(
+        errore is ErroreDelPonte
+            ? errore.spiegazione
+            : 'non riesco ad aprire il filo',
       );
-    } catch (_) {
-      _caduto('non riesco ad aprire il filo');
+      return;
     }
+
+    if (_spentoApposta) {
+      unawaited(presa.chiudi());
+      return;
+    }
+
+    _presa = presa;
+    _approdo = dove;
+    _ascolto = presa.messaggi.listen(
+      _arrivato,
+      onError: (Object _) => _caduto('il filo si e\' interrotto'),
+      onDone: () => _caduto('il filo si e\' chiuso'),
+      cancelOnError: false,
+    );
   }
 
   /* ─── Quello che arriva ────────────────────────────────────────────────── */
 
-  void _arrivato(dynamic grezzo) {
+  void _arrivato(String grezzo) {
     final Map<String, dynamic> detto;
     try {
-      final letto = jsonDecode(
-        grezzo is String ? grezzo : utf8.decode(grezzo as List<int>),
-      );
+      final letto = jsonDecode(grezzo);
       if (letto is! Map<String, dynamic>) return;
       detto = letto;
     } catch (_) {
@@ -345,10 +369,10 @@ class Filo {
   }
 
   void _manda(Map<String, dynamic> cosa) {
-    final canale = _canale;
-    if (canale == null) return;
+    final presa = _presa;
+    if (presa == null) return;
     try {
-      canale.sink.add(jsonEncode(cosa));
+      presa.manda(jsonEncode(cosa));
     } catch (_) {
       _caduto('non riesco a scrivere sul filo');
     }
@@ -426,12 +450,8 @@ class Filo {
     _approdo = null;
     _ascolto?.cancel();
     _ascolto = null;
-    try {
-      _canale?.sink.close();
-    } catch (_) {
-      /* Gia' chiusa. */
-    }
-    _canale = null;
+    unawaited(_presa?.chiudi() ?? Future<void>.value());
+    _presa = null;
   }
 
   void _cambia(StatoDelFilo nuovo) {
