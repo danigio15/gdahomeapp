@@ -17,6 +17,7 @@ import 'schermate/aggiungi_casa.dart';
 import 'schermate/casa.dart';
 import 'schermate/home.dart';
 import 'schermate/le_case.dart';
+import 'vestito/tema.dart';
 
 /// Acceso solo nella versione costruita per il collaudo, con
 /// `--dart-define=COLLAUDO=true`.
@@ -50,12 +51,11 @@ class AppDiCasa extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const seme = Color(0xFF0EA5E9);
     return MaterialApp(
-      title: 'Casa',
+      title: 'gdahome',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(colorSchemeSeed: seme, brightness: Brightness.light),
-      darkTheme: ThemeData(colorSchemeSeed: seme, brightness: Brightness.dark),
+      theme: temaChiaro(),
+      darkTheme: temaScuro(),
       home: Portone(cassaforte: cassaforte, collegamento: collegamento),
     );
   }

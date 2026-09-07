@@ -27,6 +27,8 @@ import '../ponte/abbinamento.dart';
 import '../ponte/errori.dart';
 import '../ponte/indirizzo.dart';
 import '../ponte/invito.dart';
+import '../vestito/marchio.dart';
+import '../vestito/pezzi.dart';
 import 'firma.dart';
 import 'lettore.dart';
 
@@ -279,7 +281,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 460),
               child: Column(
@@ -287,20 +289,20 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (primaCasa) ...[
-                    Icon(Icons.home_outlined, size: 56, color: colori.primary),
-                    const SizedBox(height: 16),
+                    const Center(child: Marchio(lato: 84)),
+                    const SizedBox(height: 22),
                     Text(
                       'Colleghiamo la casa',
                       textAlign: TextAlign.center,
-                      style: testi.headlineSmall,
+                      style: testi.headlineMedium,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                   ],
                   Text(
                     'In Home Assistant apri «Il ponte» dalla barra laterale e '
                     'premi «Fabbrica un codice». Poi inquadra il quadretto.',
                     textAlign: TextAlign.center,
-                    style: testi.bodyMedium?.copyWith(
+                    style: testi.bodyLarge?.copyWith(
                       color: colori.onSurfaceVariant,
                     ),
                   ),
@@ -308,26 +310,43 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                   FilledButton.icon(
                     onPressed: _sto ? null : _inquadra,
                     style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(56),
+                      minimumSize: const Size.fromHeight(58),
                     ),
                     icon: _sto
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: colori.onPrimary,
+                            ),
                           )
-                        : const Icon(Icons.qr_code_scanner),
+                        : const Icon(Icons.qr_code_scanner_rounded),
                     label: const Text('Inquadra il codice'),
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Non ti verra\' mai chiesta la password di Home Assistant.',
-                    textAlign: TextAlign.center,
-                    style: testi.bodySmall?.copyWith(
-                      color: colori.onSurfaceVariant,
-                    ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.lock_outline_rounded,
+                        size: 14,
+                        color: colori.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          'Non ti verra\' mai chiesta la password di Home '
+                          'Assistant.',
+                          textAlign: TextAlign.center,
+                          style: testi.bodySmall?.copyWith(
+                            color: colori.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   TextField(
                     controller: _nome,
                     enabled: !_sto,
@@ -335,13 +354,21 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                     decoration: const InputDecoration(
                       labelText: 'Come si chiama',
                       hintText: 'Casa, Dai miei, Al mare',
-                      border: OutlineInputBorder(),
                     ),
                   ),
                   if (_aMano) ..._leLettere(testi) else ..._ilRipiego(),
                   if (_male != null) ...[
                     const SizedBox(height: 16),
-                    Text(_male!, style: TextStyle(color: colori.error)),
+                    Scheda(
+                      colore: colori.errorContainer,
+                      padding: const EdgeInsets.all(14),
+                      child: Text(
+                        _male!,
+                        style: testi.bodyMedium?.copyWith(
+                          color: colori.onErrorContainer,
+                        ),
+                      ),
+                    ),
                   ],
                   const Firma(),
                 ],
@@ -354,7 +381,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
   }
 
   List<Widget> _ilRipiego() => [
-    const SizedBox(height: 8),
+    const SizedBox(height: 10),
     TextButton(
       onPressed: _sto ? null : () => setState(() => _aMano = true),
       child: const Text('Non puoi inquadrarlo? Scrivilo a mano'),
@@ -362,64 +389,70 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
   ];
 
   List<Widget> _leLettere(TextTheme testi) => [
-    const SizedBox(height: 20),
-    TextField(
-      controller: _codice,
-      enabled: !_sto,
-      autofocus: true,
-      autocorrect: false,
-      textAlign: TextAlign.center,
-      textCapitalization: TextCapitalization.characters,
-      textInputAction: TextInputAction.done,
-      onSubmitted: (_) => _sto ? null : _abbinaAMano(),
-      style: testi.titleLarge?.copyWith(
-        letterSpacing: 3,
-        fontFamily: 'monospace',
+    const SizedBox(height: 16),
+    Scheda(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _codice,
+            enabled: !_sto,
+            autofocus: true,
+            autocorrect: false,
+            textAlign: TextAlign.center,
+            textCapitalization: TextCapitalization.characters,
+            textInputAction: TextInputAction.next,
+            style: testi.titleLarge?.copyWith(
+              letterSpacing: 3,
+              fontFamily: 'monospace',
+            ),
+            decoration: const InputDecoration(
+              labelText: 'Le lettere sotto al quadretto',
+              hintText: 'ABCD-2345-EFGH-6789',
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 20,
+              ),
+            ),
+          ),
+          /* Qui la casella dell'indirizzo si vede sempre.
+           *
+           * Non e' una contraddizione con quello che c'e' scritto in cima:
+           * quello che non deve spaventare nessuno e' la **prima** schermata,
+           * e quella adesso e' un bottone solo. Chi e' arrivato fin qui sta
+           * gia' battendo sedici lettere a mano, e una casella in piu' —
+           * facoltativa, e detto — non lo spaventa: gli serve. */
+          const SizedBox(height: 14),
+          TextField(
+            controller: _dentro,
+            enabled: !_sto,
+            autocorrect: false,
+            keyboardType: TextInputType.url,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _sto ? null : _abbinaAMano(),
+            decoration: InputDecoration(
+              labelText: _serveLIndirizzo
+                  ? 'Indirizzo di Home Assistant in casa'
+                  : 'Indirizzo di casa (facoltativo)',
+              hintText: '192.168.1.50',
+              helperText:
+                  'Stando sul Wi-Fi di casa. Il resto lo dice la casa da sola.',
+              helperMaxLines: 2,
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: _sto ? null : _abbinaAMano,
+            child: _sto
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Abbina'),
+          ),
+        ],
       ),
-      decoration: const InputDecoration(
-        labelText: 'Le lettere sotto al quadretto',
-        hintText: 'ABCD-2345-EFGH-6789',
-        border: OutlineInputBorder(),
-        contentPadding: EdgeInsets.symmetric(vertical: 20),
-      ),
-    ),
-    /* Qui la casella dell'indirizzo si vede sempre.
-     *
-     * Non e' una contraddizione con quello che c'e' scritto in cima: quello
-     * che non deve spaventare nessuno e' la **prima** schermata, e quella
-     * adesso e' un bottone solo. Chi e' arrivato fin qui sta gia' battendo
-     * sedici lettere a mano, e una casella in piu' — facoltativa, e detto —
-     * non lo spaventa: gli serve. */
-    const SizedBox(height: 20),
-    TextField(
-      controller: _dentro,
-      enabled: !_sto,
-      autocorrect: false,
-      keyboardType: TextInputType.url,
-      textInputAction: TextInputAction.done,
-      onSubmitted: (_) => _sto ? null : _abbinaAMano(),
-      decoration: InputDecoration(
-        labelText: _serveLIndirizzo
-            ? 'Indirizzo di Home Assistant in casa'
-            : 'Indirizzo di casa (facoltativo)',
-        hintText: '192.168.1.50',
-        helperText:
-            'Stando sul Wi-Fi di casa. Il resto lo dice la casa da sola.',
-        helperMaxLines: 2,
-        border: const OutlineInputBorder(),
-      ),
-    ),
-    const SizedBox(height: 20),
-    FilledButton(
-      onPressed: _sto ? null : _abbinaAMano,
-      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-      child: _sto
-          ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Text('Abbina'),
     ),
   ];
 }

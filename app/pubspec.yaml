@@ -49,3 +49,19 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Il carattere dell'app: Outfit, geometrico e caldo, incorporato nel
+  # pacchetto invece che scaricato — cosi' e' uguale su ogni telefono, e non
+  # dipende da nessuna rete al primo avvio. Licenza SIL OFL, in `OFL.txt`
+  # accanto ai file.
+  fonts:
+    - family: Outfit
+      fonts:
+        - asset: assets/carattere/Outfit-400.ttf
+          weight: 400
+        - asset: assets/carattere/Outfit-500.ttf
+          weight: 500
+        - asset: assets/carattere/Outfit-600.ttf
+          weight: 600
+        - asset: assets/carattere/Outfit-700.ttf
+          weight: 700

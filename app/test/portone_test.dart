@@ -339,14 +339,13 @@ void main() {
       expect(find.text('1 aperta'), findsOneWidget);
       expect(find.text('21.0°'), findsOneWidget);
       expect(find.text('Spegni tutte le luci'), findsOneWidget);
-      /* I blocchi che non ci sono ancora si vedono lo stesso, spenti: cosi' si sa
-     * dove sta andando l'app. */
+      /* I blocchi che non ci sono ancora si vedono lo stesso, spenti: cosi'
+       * si sa dove sta andando l'app. Stanno sotto il bordo, e una ListView
+       * costruisce solo quello che si vede: per trovarli bisogna scorrere
+       * davvero, come farebbe un dito. «Plancia» e' l'ultima, ed e' anche il
+       * posto giusto in cui sta: e' l'ultimo blocco che arrivera'. */
+      await tester.scrollUntilVisible(find.text('Zigbee'), 120);
       expect(find.text('Zigbee'), findsOneWidget);
-
-      /* «Plancia» sta sotto il bordo, e una ListView costruisce solo quello
-       * che si vede: per trovarla bisogna scorrere davvero, come farebbe un
-       * dito. Ed e' anche il posto giusto in cui sta, perche' e' l'ultimo
-       * blocco che arrivera'. */
       await tester.scrollUntilVisible(find.text('Plancia'), 120);
       expect(find.text('Plancia'), findsOneWidget);
 
@@ -443,7 +442,9 @@ void main() {
     /* L'ultima aggiunta e' quella attiva: chi abbina una casa ci vuole entrare. */
     expect(find.text('Dai miei'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.swap_horiz));
+    /* Per etichetta e non per icona: l'icona e' un dettaglio del vestito,
+     * l'etichetta e' quello che legge chi usa l'app senza vederla. */
+    await tester.tap(find.byTooltip('Le tue case'));
     await tester.pumpAndSettle();
     expect(find.text('Le tue case'), findsOneWidget);
     expect(find.text('Casa mia'), findsOneWidget);

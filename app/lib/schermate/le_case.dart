@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 
 import '../casa/casa_conosciuta.dart';
 import '../casa/collegamento.dart';
+import '../vestito/pezzi.dart';
+import '../vestito/tema.dart';
 import 'firma.dart';
 
 class LeCase extends StatelessWidget {
@@ -28,14 +30,14 @@ class LeCase extends StatelessWidget {
           ? null
           : FloatingActionButton.extended(
               onPressed: aggiungiUnaCasa,
-              icon: const Icon(Icons.add),
+              icon: const Icon(Icons.add_rounded),
               label: const Text('Aggiungi'),
             ),
       body: ListView(
-        padding: const EdgeInsets.only(bottom: 96),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
         children: [
-          for (final casa in archivio.tutte)
-            _Riga(
+          for (final casa in archivio.tutte) ...[
+            _Casa(
               casa: casa,
               aperta: casa.id == aperta?.id,
               daDove: casa.id == aperta?.id ? collegamento.daDove : null,
@@ -45,13 +47,14 @@ class LeCase extends StatelessWidget {
               },
               quandoTolta: () => _chiediEDimentica(context, casa),
             ),
+            const SizedBox(height: 10),
+          ],
           if (archivio.vuoto)
-            const Padding(
-              padding: EdgeInsets.all(32),
-              child: Text(
-                'Nessuna casa. Aggiungine una col bottone qui sotto.',
-                textAlign: TextAlign.center,
-              ),
+            const StatoVuoto(
+              dentroUnaLista: true,
+              icona: Icons.home_outlined,
+              titolo: 'Nessuna casa',
+              sotto: 'Aggiungine una col bottone qui sotto.',
             ),
           const Firma(),
         ],
@@ -78,6 +81,7 @@ class LeCase extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.of(contesto).pop(true),
+            style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
             child: const Text('Dimentica'),
           ),
         ],
@@ -88,8 +92,8 @@ class LeCase extends StatelessWidget {
   }
 }
 
-class _Riga extends StatelessWidget {
-  const _Riga({
+class _Casa extends StatelessWidget {
+  const _Casa({
     required this.casa,
     required this.aperta,
     required this.daDove,
@@ -106,39 +110,86 @@ class _Riga extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
-    return ListTile(
-      leading: Icon(
-        aperta ? Icons.home : Icons.home_outlined,
-        color: aperta ? colori.primary : null,
-      ),
-      title: Text(casa.nome),
-      subtitle: Text(_comEFatta()),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
+    final testi = Theme.of(context).textTheme;
+    return Scheda(
+      padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
+      bordo: aperta ? colori.primary : null,
+      quandoPremuta: aperta ? null : quandoScelta,
+      child: Row(
         children: [
-          if (aperta && daDove != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: Icon(
-                daDove == DaDove.daDentro ? Icons.wifi : Icons.public,
-                size: 16,
-                color: colori.onSurfaceVariant,
-              ),
+          Cerchietto(
+            icona: aperta ? Icons.home_rounded : Icons.home_outlined,
+            lato: 44,
+            fondo: aperta ? colori.primary : null,
+            colore: aperta ? colori.onPrimary : null,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        casa.nome,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: testi.titleMedium,
+                      ),
+                    ),
+                    if (aperta) ...[
+                      const SizedBox(width: 8),
+                      Bollino(
+                        'aperta',
+                        fondo: colori.primaryContainer,
+                        colore: colori.onPrimaryContainer,
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    if (aperta && daDove != null) ...[
+                      Pallino(
+                        daDove == DaDove.daDentro
+                            ? Colori.bene
+                            : Colori.ambraScura,
+                        lato: 7,
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Flexible(
+                      child: Text(
+                        _comEFatta(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: testi.bodySmall?.copyWith(
+                          color: colori.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
+          ),
           IconButton(
-            icon: const Icon(Icons.delete_outline),
+            icon: const Icon(Icons.delete_outline_rounded),
             tooltip: 'Dimentica',
             onPressed: quandoTolta,
           ),
         ],
       ),
-      selected: aperta,
-      onTap: aperta ? null : quandoScelta,
     );
   }
 
   /// Cosa sa fare questa casa, detto in una riga.
   String _comEFatta() {
+    if (aperta && daDove != null) {
+      return daDove == DaDove.daDentro ? 'in casa adesso' : 'da fuori adesso';
+    }
     if (casa.soloInCasa) return 'solo sotto il Wi-Fi di casa';
     if (casa.inCasa == null) return 'solo da fuori · ${casa.daFuoriCasa}';
     return 'in casa e da fuori';
