@@ -7,6 +7,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 
 import 'casa/archivio_delle_case.dart';
 import 'casa/cassaforte.dart';
@@ -16,7 +17,28 @@ import 'schermate/casa.dart';
 import 'schermate/home.dart';
 import 'schermate/le_case.dart';
 
-void main() => runApp(const AppDiCasa());
+/// Acceso solo nella versione costruita per il collaudo, con
+/// `--dart-define=COLLAUDO=true`.
+///
+/// Serve a una cosa sola: **poter guardare l'app da fuori**. Flutter disegna
+/// su una tela, quindi in una pagina web non c'e' nessun bottone da premere e
+/// nessun testo da leggere per chi non ha gli occhi — un programma che guida
+/// il browser, o una persona che usa un lettore di schermo. L'albero
+/// dell'accessibilita' e' quello che li rimette, ed e' anche il motivo per cui
+/// tenerlo acceso non e' un trucco da collaudo: e' la stessa cosa che serve a
+/// chi l'app la usa senza vederla.
+///
+/// `bool.fromEnvironment` si decide quando si costruisce, non quando si gira:
+/// nella versione che va sui telefoni questa riga non c'e' proprio.
+const bool _perIlCollaudo = bool.fromEnvironment('COLLAUDO');
+
+void main() {
+  if (_perIlCollaudo) {
+    WidgetsFlutterBinding.ensureInitialized();
+    SemanticsBinding.instance.ensureSemantics();
+  }
+  runApp(const AppDiCasa());
+}
 
 class AppDiCasa extends StatelessWidget {
   const AppDiCasa({super.key, this.cassaforte, this.collegamento});

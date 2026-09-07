@@ -98,7 +98,9 @@ void main() {
     final aperture = riassunto.tessere.firstWhere(
       (una) => una.chiave == 'aperture',
     );
-    expect(aperture.valore, '1 aperte');
+    /* «1 aperte» e' quello che ci scriveva prima, e si e' visto solo
+     * guardando una fotografia della schermata vera. */
+    expect(aperture.valore, '1 aperta');
     expect(aperture.titolo, 'Un\'apertura');
     expect(aperture.attenzione, isTrue);
   });
@@ -218,6 +220,58 @@ void main() {
       reason: 'resta solo la tessera delle luci',
     );
     expect(riassunto.tuttoSpento, isTrue);
+  });
+
+  test('uno e tanti si scrivono diversi', () async {
+    var riassunto = await conLaCasaChe([
+      PonteFinto.unaEntita('light.una', 'on', nome: 'Una'),
+      PonteFinto.unaEntita('switch.una', 'on', nome: 'Presa'),
+      PonteFinto.unaEntita(
+        'binary_sensor.una',
+        'on',
+        nome: 'Finestra',
+        tipo: 'window',
+      ),
+    ]);
+    expect(
+      riassunto.tessere.firstWhere((t) => t.chiave == 'luci').valore,
+      '1 accesa',
+    );
+    expect(
+      riassunto.tessere.firstWhere((t) => t.chiave == 'prese').valore,
+      '1 accesa',
+    );
+    expect(
+      riassunto.tessere.firstWhere((t) => t.chiave == 'aperture').valore,
+      '1 aperta',
+    );
+
+    await casa.stacca();
+    await filo.chiudi();
+    riassunto = await conLaCasaChe([
+      PonteFinto.unaEntita('light.una', 'on', nome: 'Una'),
+      PonteFinto.unaEntita('light.due', 'on', nome: 'Due'),
+      PonteFinto.unaEntita(
+        'binary_sensor.una',
+        'on',
+        nome: 'F1',
+        tipo: 'window',
+      ),
+      PonteFinto.unaEntita(
+        'binary_sensor.due',
+        'on',
+        nome: 'F2',
+        tipo: 'window',
+      ),
+    ]);
+    expect(
+      riassunto.tessere.firstWhere((t) => t.chiave == 'luci').valore,
+      '2 accese',
+    );
+    expect(
+      riassunto.tessere.firstWhere((t) => t.chiave == 'aperture').valore,
+      '2 aperte',
+    );
   });
 
   test('le tessere stanno in un ordine stabile', () async {

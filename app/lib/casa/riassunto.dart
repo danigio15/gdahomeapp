@@ -163,7 +163,9 @@ class Riassunto {
       TesseraDelRiassunto(
         chiave: 'luci',
         titolo: 'Luci',
-        valore: luci.isEmpty ? 'tutte spente' : '${luci.length} accese',
+        valore: luci.isEmpty
+            ? 'tutte spente'
+            : _quante(luci.length, 'accesa', 'accese'),
         dettaglio: luci.isEmpty ? null : _elenca(luci),
         attenzione: false,
       ),
@@ -174,7 +176,7 @@ class Riassunto {
         TesseraDelRiassunto(
           chiave: 'aperture',
           titolo: aperture.length == 1 ? 'Un\'apertura' : 'Aperture',
-          valore: '${aperture.length} aperte',
+          valore: _quante(aperture.length, 'aperta', 'aperte'),
           dettaglio: _elenca(aperture),
           attenzione: true,
         ),
@@ -207,7 +209,7 @@ class Riassunto {
         TesseraDelRiassunto(
           chiave: 'prese',
           titolo: 'Prese',
-          valore: '${prese.length} accese',
+          valore: _quante(prese.length, 'accesa', 'accese'),
           dettaglio: _elenca(prese),
         ),
       );
@@ -227,6 +229,15 @@ class Riassunto {
 
     return tessere;
   }
+
+  /// «1 accesa», «2 accese».
+  ///
+  /// Sembra una pedanteria e non lo e': «1 accese» e' la prima cosa che si
+  /// nota guardando la home, e fa sembrare sciatto tutto il resto. Nessuna
+  /// prova l'aveva preso — le prove guardavano il numero — e si e' visto solo
+  /// guardando una fotografia della schermata vera.
+  static String _quante(int quante, String una, String tante) =>
+      '$quante ${quante == 1 ? una : tante}';
 
   /// Tre nomi e poi «e altri N»: un elenco piu' lungo su una tessera non si
   /// legge.

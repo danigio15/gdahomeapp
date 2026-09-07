@@ -57,6 +57,11 @@ jobs:
       - name: La forma del codice
         run: dart format --output=none --set-exit-if-changed .
         working-directory: app
+      # `flutter test` prende dentro anche `test/integrazione/`, che accende il
+      # ponte vero — `node ponte/src/index.js` — contro una Home Assistant
+      # finta e ci fa passare il cliente vero dell'app. E' l'unico posto in
+      # cui le due meta' vere si parlano: tutte le altre prove hanno un finto
+      # in mezzo.
       - name: Le prove
         run: flutter test
         working-directory: app

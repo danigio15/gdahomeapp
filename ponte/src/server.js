@@ -31,6 +31,30 @@ const TIPI = Object.freeze({
 
 /* ─── Le risposte ────────────────────────────────────────────────────────── */
 
+/* Le intestazioni che fanno passare un browser.
+ *
+ * Servono a una cosa sola: far parlare col ponte una versione **web** dell'app
+ * — quella che gira nel collaudo dal vivo, e quella che un giorno potrebbe
+ * stare su un tablet appeso al muro. Un'app vera, quella installata, di CORS
+ * non sa niente e non gli serve.
+ *
+ * Perche' l'origine aperta qui non e' un buco, detto per esteso: su questa
+ * porta ogni sportello vuole o un codice di abbinamento valido — che vive
+ * cinque minuti, si usa una volta, e nasce solo dietro l'autenticazione di
+ * Home Assistant — o un segno gia' avuto, che viaggia nel corpo e non in un
+ * biscotto. Non c'e' nessuna autorita' implicita: niente cookie, niente
+ * sessione del browser, niente che una pagina qualunque possa sfruttare per
+ * conto di chi la guarda. Una pagina cattiva con queste intestazioni puo' fare
+ * esattamente quello che puo' gia' fare `curl`, cioe' bussare senza sapere
+ * niente. Quello che tiene la porta chiusa e' il codice e il segno, non
+ * l'origine. */
+const PER_IL_BROWSER = Object.freeze({
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+  "access-control-allow-headers": "content-type",
+  "access-control-max-age": "600",
+});
+
 function json(risposta, corpo, stato = 200) {
   const testo = JSON.stringify(corpo);
   risposta.writeHead(stato, {
@@ -79,9 +103,29 @@ export const rotta = (richiesta) => {
 
 export function costruisciLaPortaDellApp({ ponte, dispositivi, abbinamento, registro }) {
   const server = createServer(async (richiesta, risposta) => {
+    /* Qui, e **solo** qui.
+     *
+     * La prima versione le metteva dentro la funzione che scrive le risposte,
+     * che pero' e' la stessa delle due porte: la console si ritrovava
+     * l'origine aperta, e la console e' il posto dove nascono i codici di
+     * abbinamento. Una pagina qualunque aperta nel browser di chi e' dentro
+     * Home Assistant avrebbe potuto fabbricarsene uno e leggersi l'elenco dei
+     * telefoni. La console sta dietro l'ingress e li' deve restare. */
+    for (const [nome, valore] of Object.entries(PER_IL_BROWSER)) {
+      risposta.setHeader(nome, valore);
+    }
+
     const via = rotta(richiesta);
     const metodo = String(richiesta.method || "").toUpperCase();
     const da = richiesta.socket.remoteAddress || "?";
+
+    /* Il browser, prima di una POST con un corpo JSON, chiede il permesso.
+     * Va risposto, e va risposto senza toccare niente. */
+    if (metodo === "OPTIONS") {
+      risposta.writeHead(204, PER_IL_BROWSER);
+      risposta.end();
+      return;
+    }
 
     if (metodo === "GET" && via === "/salute") {
       json(risposta, {

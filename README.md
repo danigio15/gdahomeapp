@@ -73,12 +73,29 @@ Il resto — le due porte, l'abbinamento, cosa finisce sul disco — sta in
 
 Il piano per intero, fase per fase, sta in [`docs/PIANO.md`](docs/PIANO.md).
 
+## Provarla davvero, sul telefono
+
+Il pacchetto Android lo costruisce GitHub, quindi non serve installarsi l'SDK:
+**Actions → «L'app da provare» → Run workflow**, e a fine corsa si scarica
+`gdahome-android`. I passi per intero — ponte compreso, e cosa guardare una
+volta dentro — stanno in [`COME_PROVARLA.md`](COME_PROVARLA.md).
+
 ## Le prove
 
 ```bash
-npm run test:ponte          # il ponte: 60 prove, meno di un secondo
-cd app && flutter test      # l'app: 90 prove, cinque secondi
+npm run test:ponte          # il ponte: 62 prove, meno di un secondo
+cd app && flutter test      # l'app: 100 prove, otto secondi
 ```
+
+Fra quelle dell'app ce n'e' un gruppo diverso dagli altri, in
+`app/test/integrazione/`: accende il **ponte vero** — lo stesso processo
+dell'add-on — contro una Home Assistant finta, e ci fa passare il **cliente
+vero** dell'app. Abbinamento, filo, comandi, revoca. E' l'unico posto in cui le
+due meta' vere si parlano: tutte le altre prove hanno un finto in mezzo, e
+finche' non si incontrano nessuno ha verificato che si capiscano.
+
+E per **guardarla** girare, con le fotografie delle schermate, c'e'
+[`collaudo/`](collaudo/README.md).
 
 Girano tutte senza rete, senza Home Assistant e senza telefono: il ponte ha
 una Home Assistant finta che fa la stretta di mano vera, e l'app ha un ponte

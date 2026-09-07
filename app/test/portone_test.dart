@@ -141,7 +141,7 @@ void main() {
       expect(find.text('Casa mia'), findsOneWidget);
       expect(find.text('in casa'), findsOneWidget);
       expect(find.text('2 accese'), findsOneWidget);
-      expect(find.text('1 aperte'), findsOneWidget);
+      expect(find.text('1 aperta'), findsOneWidget);
       expect(find.text('21.0°'), findsOneWidget);
       expect(find.text('Spegni tutte le luci'), findsOneWidget);
       /* I blocchi che non ci sono ancora si vedono lo stesso, spenti: cosi' si sa

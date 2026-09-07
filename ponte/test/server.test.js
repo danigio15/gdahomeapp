@@ -230,6 +230,45 @@ test("oltre il numero massimo la console non fabbrica piu' codici", async () => 
   }
 });
 
+/* ─── Il browser ─────────────────────────────────────────────────────────── */
+
+test("il browser riceve il permesso di parlare, e la console no", async () => {
+  const b = await banco();
+  try {
+    /* La porta dell'app: le intestazioni ci sono, perche' ci deve poter
+     * parlare una versione web dell'app. */
+    const salute = await prendi(`${b.app}/salute`);
+    assert.equal(salute.headers.get("access-control-allow-origin"), "*");
+
+    const permesso = await prendi(`${b.app}/abbinamento`, { method: "OPTIONS" });
+    assert.equal(permesso.status, 204);
+    assert.match(permesso.headers.get("access-control-allow-methods") || "", /POST/);
+    assert.match(permesso.headers.get("access-control-allow-headers") || "", /content-type/);
+
+    /* La console no: ci arriva solo Home Assistant, e una pagina di un altro
+     * sito li' dentro non ci deve poter guardare. */
+    const stato = await prendi(`${b.consolle}/api/stato`);
+    assert.equal(stato.headers.get("access-control-allow-origin"), null);
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("la richiesta di permesso non consuma niente e non abbina nessuno", async () => {
+  const b = await banco();
+  try {
+    await prendi(`${b.consolle}/api/codice`, { method: "POST" });
+    for (let i = 0; i < 5; i += 1) {
+      await prendi(`${b.app}/abbinamento`, { method: "OPTIONS" });
+    }
+    assert.equal(b.abbinamento.stato().attivo, true, "il codice e' ancora buono");
+    assert.equal(b.abbinamento.stato().tentativiSbagliati, 0);
+    assert.equal(b.dispositivi.quanti(), 0);
+  } finally {
+    await b.spegni();
+  }
+});
+
 /* ─── Dal codice al filo, tutto di seguito ───────────────────────────────── */
 
 test("abbinato dalla console, il telefono entra dal filo e parla con la casa", async () => {
