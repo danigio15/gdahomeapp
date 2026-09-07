@@ -20,14 +20,17 @@ import { fileURLToPath } from "node:url";
 
 const RADICE = new URL("../", import.meta.url);
 
+/* Lo spazio fra `=` e le virgolette e' `\s*` e non uno spazio: i formattatori
+ * spezzano su due righe quello che non ci sta, e una riga che si sposta non e'
+ * una riga che cambia. Ci sono gia' cascato una volta. */
 const IL_PONTE = {
   dove: new URL("ponte/src/opzioni.js", RADICE),
-  riga: /^(export const CENTRALINO_DI_DIFETTO = ")([^"]*)(";)$/m,
+  riga: /(export const CENTRALINO_DI_DIFETTO =\s*")([^"]*)(";)/,
 };
 
 const L_APP = {
   dove: new URL("app/lib/ponte/centralino.dart", RADICE),
-  riga: /^(const String centralinoDiDifettoScritto = ")([^"]*)(";)$/m,
+  riga: /(const String centralinoDiDifettoScritto =\s*")([^"]*)(";)/,
 };
 
 function leggi(quale) {
@@ -36,7 +39,7 @@ function leggi(quale) {
   if (!trovata) {
     throw new Error(
       `non trovo la riga del centralino in ${fileURLToPath(quale.dove)}: ` +
-        "qualcuno l'ha riscritta, e va rimessa su una riga sola",
+        "qualcuno l'ha riscritta, e va rimessa com'era",
     );
   }
   return { testo, trovata };

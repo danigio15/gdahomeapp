@@ -36,8 +36,9 @@ library;
 
 import 'indirizzo.dart';
 
-/// Cambiato da `strumenti/centralino.mjs`: la riga qui sotto e' quella che
-/// legge, e va lasciata su una riga sola.
+/// Cambiata da `strumenti/centralino.mjs`. Si puo' spezzare su due righe — il
+/// formattatore lo fa da solo — ma il nome e le virgolette vanno lasciati
+/// com'e' scritto: e' cosi' che la ritrova.
 const String centralinoDiDifettoScritto =
     "wss://gdahome-centralino.danigio15.workers.dev";
 
