@@ -58,10 +58,25 @@ Quindi non c'e' niente da smontare: c'e' da costruire.
   passa dall'una all'altra buttando giu' il filo della prima e aprendo quello
   della seconda: due fili aperti insieme vorrebbero dire due case mescolate a
   schermo.
-* ✅ **Dentro e fuori casa.** Due indirizzi per la stessa istanza. La sonda li
-  chiede tutti e due insieme e tiene il primo che risponde; il filo la richiama
-  **a ogni tentativo**, cosi' uscire dal portone non richiede niente a nessuno.
+* ✅ **Dentro e fuori casa.** Tre strade per la stessa istanza — la rete di
+  casa, il centralino, e un indirizzo pubblico per chi ce l'ha. La sonda le
+  chiede tutte insieme e tiene la prima che risponde; il filo la richiama **a
+  ogni tentativo**, cosi' uscire dal portone non richiede niente a nessuno.
   Dove si e' entrati si ricorda, e la volta dopo si prova per primo quello.
+  In casa vince sempre la strada diretta: il centralino parte con quattro
+  decimi di ritardo, se no ogni comando farebbe il giro del mondo per arrivare
+  a tre metri.
+* ✅ **Il centralino.** La casa chiama fuori e resta in attesa; i telefoni
+  arrivano da li'. Due scritture dello stesso centralino — una in Node, una che
+  gira gratis su Cloudflare — e la stessa prova dal vivo passa contro tutte e
+  due.
+* ✅ **Cifrato punta a punta.** Il centralino instrada e non puo' leggere.
+  X25519, HKDF, AES-256-GCM, con vettori di prova che tengono allineate le due
+  scritture — Node e Dart — byte per byte.
+* ✅ **Otto lettere e basta.** Nell'app si batte il codice e nient'altro:
+  nessun indirizzo, e mai nessuna credenziale di Home Assistant. Il resto —
+  chi e' questo telefono, la chiave, quale centralino, dove sta la casa sulla
+  rete locale — lo dice la casa nella risposta all'abbinamento.
 * ✅ **La home.** Luci accese, aperture, temperatura, antifurto, cose che non
   rispondono. E in cima, sotto il nome della casa, da dove si sta passando —
   che e' la prima domanda di chi apre l'app fuori casa e vede qualcosa di
@@ -169,6 +184,11 @@ appartiene.
 Il costo si sposta: dall'utente a chi mantiene il centralino. Ed e' giusto
 cosi' — e' la stessa cosa che fa Nabu Casa.
 
+E si e' scoperto che quel costo e' **zero**. Il centralino sta dentro il piano
+gratuito di Cloudflare senza sforzo: una casa e' un Durable Object che dorme
+quando non passa niente, e un telefono apre un filo e lo tiene invece di fare
+richieste a raffica. Chi vuole il proprio ce l'ha lo stesso, in Node.
+
 E il debito che veniva con questa strada e' pagato: **il centralino non puo'
 leggere quello che instrada**. Non e' una promessa ma una prova — si registra
 tutto quello che gli passa sotto il naso e ci si cerca dentro il segno, il
@@ -186,7 +206,9 @@ lui, e chi rubasse il file domani non leggerebbe quello che e' passato ieri.
 
 ## Le cose che decidono tutto, e che non sono codice
 
-1. **Il centralino lo mantiene chi distribuisce l'app**, non chi la usa.
+1. **Il centralino lo mantiene chi distribuisce l'app**, non chi la usa — e
+   non costa niente: `npx wrangler deploy`, piano gratuito, indirizzo
+   compreso.
 2. **Le quindici lingue** del progetto vecchio vanno riportate nell'app.
 3. **Cosa puo' fare un telefono abbinato**: tutto quello che puo' fare il
    ponte. Non c'e' un filtro per tipo di comando, e non c'e' apposta — un
