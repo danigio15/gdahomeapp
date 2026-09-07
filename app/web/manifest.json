@@ -3,9 +3,9 @@
     "short_name": "gdahome",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F4F6FA",
+    "theme_color": "#0C1B36",
+    "description": "La casa in tasca: Home Assistant senza le sue complicazioni.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

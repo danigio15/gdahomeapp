@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- L'icona adattiva: il fondo e' un colore pieno, il primo piano sta dentro
+     la zona sicura. E' un segnaposto, come il marchio dentro l'app: quando
+     arrivera' il logo vero si sostituiscono i PNG e basta. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/fondo_dell_icona"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
