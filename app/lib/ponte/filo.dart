@@ -134,6 +134,11 @@ class Filo {
   Timer? _riprova;
   Timer? _colpetti;
   DateTime? _vistoIl;
+
+  /// `null` finche' non si sa se dall'altra parte i colpetti li rimandano
+  /// indietro: vero al primo che torna, falso quando si e' aspettato
+  /// abbastanza da poterlo dire.
+  bool? _rispondeAiColpetti;
   int _prossimoId = 1;
   int _tentativi = 0;
   bool _spentoApposta = false;
@@ -277,6 +282,7 @@ class Filo {
         _evento(detto);
       case 'pong':
         _vistoIl = DateTime.now();
+        _rispondeAiColpetti = true;
     }
   }
 
@@ -407,24 +413,44 @@ class Filo {
   void _cominciaABattere() {
     _smettiDiBattere();
     _vistoIl = DateTime.now();
+    _rispondeAiColpetti = null;
     _colpetti = Timer.periodic(battito, (_) => _colpetto());
   }
 
   void _colpetto() {
     if (!dentro) return;
     final ultimo = _vistoIl;
-    if (ultimo != null &&
-        DateTime.now().difference(ultimo) > silenzioMassimo) {
+    final zitta =
+        ultimo != null && DateTime.now().difference(ultimo) > silenzioMassimo;
+
+    /* Prima di poter dire che un filo e' morto bisogna sapere che dall'altra
+     * parte i colpetti li rimandano indietro. Home Assistant lo fa da sempre —
+     * `ping` e `pong` sono suoi — ma una casa che non lo facesse non e' una
+     * casa morta, e buttare giu' un filo che funziona sarebbe peggio del
+     * guasto che si sta cercando di prevenire. */
+    if (_rispondeAiColpetti == null) {
+      if (!zitta) {
+        _colpo();
+        return;
+      }
+      _rispondeAiColpetti = false;
+      return;
+    }
+    if (_rispondeAiColpetti == false) return;
+
+    if (zitta) {
       /* Sembra aperto e non lo e'. Si chiude di mano nostra: e' la chiusura
        * che fa ripartire la ribussata, e senza questa l'app resterebbe a
        * mostrare dati vecchi credendosi collegata. */
       _caduto('nessuna risposta ai colpetti');
       return;
     }
-    /* E' il `ping` di Home Assistant: il ponte si presenta come lei, quindi e'
-     * lo stesso colpetto puntati a un ponte o puntati a una casa. */
-    _manda({'id': _prossimoId++, 'type': 'ping'});
+    _colpo();
   }
+
+  /* E' il `ping` di Home Assistant: il ponte si presenta come lei, quindi e'
+   * lo stesso colpetto puntati a un ponte o puntati a una casa. */
+  void _colpo() => _manda({'id': _prossimoId++, 'type': 'ping'});
 
   void _smettiDiBattere() {
     _colpetti?.cancel();

@@ -50,8 +50,10 @@ void main() {
     await filo.apri();
     expect(filo.dentro, isTrue);
 
-    /* Da qui in poi la casa non risponde piu' a niente. Non chiude: tace,
-     * come farebbe un router che ha buttato via la sua riga. */
+    /* Prima risponde — cosi' si sa che quella casa saprebbe farlo — e poi
+     * tace, come farebbe un router che ha buttato via la sua riga. Non chiude
+     * niente: e' tutto il punto. */
+    await _respira(120);
     ponte.muto = true;
     await _respira(400);
 
@@ -60,6 +62,24 @@ void main() {
       greaterThan(1),
       reason: 'il filo morto doveva essere chiuso e ribussato',
     );
+
+    await filo.chiudi();
+    await ponte.spegni();
+  });
+
+  test('una casa che non risponde ai colpetti non si butta giu\'', () async {
+    /* Home Assistant a `ping` risponde da sempre, ma una casa che non lo
+     * facesse non e' una casa morta: buttare giu' un filo che funziona
+     * sarebbe peggio del guasto che si sta cercando di prevenire. */
+    final ponte = await PonteFinto.alza();
+    ponte.muto = true;
+    final filo = _unFilo(ponte);
+    await filo.apri();
+
+    await _respira(400);
+
+    expect(filo.dentro, isTrue, reason: 'il filo doveva restare su');
+    expect(ponte.collegamenti, 1, reason: 'non si doveva ribussare');
 
     await filo.chiudi();
     await ponte.spegni();

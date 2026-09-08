@@ -34,6 +34,11 @@
  * quello dietro il router, ed e' l'unico che possa richiamare. E costa niente
  * anche al centralino sulla nuvola, che risponde da solo senza svegliarsi —
  * vedi `nuvola/src/casa.js`.
+ *
+ * Con un centralino vecchio, che ai colpetti non risponde, non si butta giu'
+ * niente: si scrive una volta che quel filo non si puo' sorvegliare, e si va
+ * avanti come prima. Un ponte aggiornato accanto a un centralino da
+ * aggiornare deve funzionare come funzionava, non peggio.
  */
 
 import { Canale } from "./canale.js";
@@ -84,6 +89,9 @@ export class Chiamata {
     this._impronta = null;
     this._battito = null;
     this._vistoIl = 0;
+    /* `null` finche' non si sa: diventa vero al primo colpetto tornato
+     * indietro, falso quando si e' aspettato abbastanza da poterlo dire. */
+    this._rispondeAiColpetti = null;
   }
 
   get accesa() {
@@ -200,9 +208,13 @@ export class Chiamata {
   }
 
   _dalCentralino(detto) {
-    /* Un colpetto tornato indietro: e' tutto quello che serve sapere. */
+    /* Qualunque cosa arrivi e' un segno di vita: un filo con dei telefoni
+     * sopra e' vivo per definizione, e non c'e' motivo di guardare solo i
+     * colpetti. */
+    this._vistoIl = Date.now();
+
     if (detto.t === "battito") {
-      this._vistoIl = Date.now();
+      this._rispondeAiColpetti = true;
       return;
     }
 
@@ -244,13 +256,34 @@ export class Chiamata {
   _cominciaABattere() {
     this._smettiDiBattere();
     this._vistoIl = Date.now();
+    this._rispondeAiColpetti = null;
     this._battito = setInterval(() => this._colpetto(), this.battito);
     this._battito.unref?.();
   }
 
   _colpetto() {
     if (!this.dentro) return;
-    if (Date.now() - this._vistoIl > this.silenzioMassimo) {
+    const zitto = Date.now() - this._vistoIl > this.silenzioMassimo;
+
+    /* Prima di poter dire che un filo e' morto bisogna sapere che quel
+     * centralino saprebbe rispondere. Uno vecchio non risponde mai, e
+     * scambiarlo per un filo morto vorrebbe dire ribussargli addosso per
+     * sempre — cioe' rompere quello che prima funzionava. */
+    if (this._rispondeAiColpetti === null) {
+      if (!zitto) {
+        this._manda({ t: "battito" });
+        return;
+      }
+      this._rispondeAiColpetti = false;
+      this.registro.attenzione(
+        "il centralino non risponde ai colpetti: e' una versione vecchia, " +
+          "e un filo morto senza chiusura non si potra' vedere",
+      );
+      return;
+    }
+    if (!this._rispondeAiColpetti) return;
+
+    if (zitto) {
       /* Sembra aperto e non lo e'. Si chiude di mano nostra: la chiusura fa
        * partire la ribussata, che e' l'unica cosa che rimette in piedi la
        * strada di fuori casa. */

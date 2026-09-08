@@ -50,13 +50,13 @@ class PresaFinta extends EventTarget {
 const identita = { casa: "casa_prova", segreto: "un-segreto" };
 const muto = { info() {}, attenzione() {}, errore() {} };
 
-function unCentralinoChe(rispondiAlBattito) {
+function unCentralinoChe(_ignorato, registro = muto) {
   PresaFinta.aperte = [];
   const chiamata = new Chiamata({
     dove: "wss://centralino.finto",
     identita,
     portiere: { accogli() {} },
-    registro: muto,
+    registro,
     Presa: PresaFinta,
     /* Tempi da prova: si aspetta millesimi, non minuti. */
     battito: 10,
@@ -67,14 +67,14 @@ function unCentralinoChe(rispondiAlBattito) {
   return chiamata;
 }
 
-/* Fa entrare la chiamata: risponde «bene» alla presentazione, e al colpetto
- * risponde o non risponde a seconda di come e' fatta la prova. */
-async function entra(chiamata, { rispondeAlBattito }) {
+/* Fa entrare la chiamata. `risponde` decide, colpetto per colpetto, se il
+ * centralino risponde: cosi' una prova puo' farlo tacere a meta' strada. */
+async function entra(chiamata, risponde) {
   const presa = PresaFinta.aperte.at(-1);
   presa.rispondi = (testo) => {
     const detto = JSON.parse(testo);
     if (detto.t === "sono-io") return JSON.stringify({ t: "bene" });
-    if (detto.t === "battito" && rispondeAlBattito) return testo;
+    if (detto.t === "battito" && risponde()) return testo;
     return null;
   };
   await respira(5);
@@ -85,8 +85,8 @@ async function entra(chiamata, { rispondeAlBattito }) {
 const respira = (quanto) => new Promise((r) => setTimeout(r, quanto));
 
 test("un centralino che risponde ai colpetti tiene il filo su", async () => {
-  const chiamata = unCentralinoChe(true);
-  const presa = await entra(chiamata, { rispondeAlBattito: true });
+  const chiamata = unCentralinoChe();
+  const presa = await entra(chiamata, () => true);
 
   await respira(80);
 
@@ -100,17 +100,47 @@ test("un centralino che risponde ai colpetti tiene il filo su", async () => {
 });
 
 test("un filo che smette di rispondere si chiude, e si richiama", async () => {
-  const chiamata = unCentralinoChe(false);
-  const primaPresa = await entra(chiamata, { rispondeAlBattito: false });
+  const chiamata = unCentralinoChe();
+  /* Prima risponde — cosi' si sa che quel centralino saprebbe farlo — e poi
+   * tace, come farebbe un router che ha buttato via la sua riga. Non chiude
+   * niente: e' tutto il punto. */
+  let risponde = true;
+  const primaPresa = await entra(chiamata, () => risponde);
+  await respira(30);
+  risponde = false;
 
-  /* Il centralino non chiude niente: tace e basta, come farebbe un router che
-   * ha buttato via la sua riga. */
-  await respira(120);
+  await respira(150);
 
   assert.equal(primaPresa.chiusa, true, "il filo morto doveva essere chiuso");
   assert.ok(
     PresaFinta.aperte.length > 1,
     "il ponte doveva ribussare al centralino",
+  );
+  chiamata.spegni();
+});
+
+test("un centralino vecchio, che ai colpetti non risponde mai, non si butta giu'", async () => {
+  /* Un ponte aggiornato accanto a un centralino da aggiornare deve funzionare
+   * come funzionava, non peggio: scambiare «non sa rispondere» per «e' morto»
+   * vorrebbe dire ribussargli addosso per sempre. */
+  const detto = [];
+  const chiamata = unCentralinoChe(undefined, {
+    info() {},
+    attenzione(cosa) {
+      detto.push(cosa);
+    },
+    errore() {},
+  });
+  const presa = await entra(chiamata, () => false);
+
+  await respira(150);
+
+  assert.equal(chiamata.dentro, true, "il filo doveva restare su");
+  assert.equal(presa.chiusa, false, "non c'era niente da chiudere");
+  assert.equal(PresaFinta.aperte.length, 1, "non si doveva ribussare");
+  assert.ok(
+    detto.some((riga) => riga.includes("versione vecchia")),
+    `doveva dirlo una volta, invece ha detto: ${JSON.stringify(detto)}`,
   );
   chiamata.spegni();
 });

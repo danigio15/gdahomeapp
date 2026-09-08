@@ -234,6 +234,13 @@ export function alzaLaCasaFinta() {
     const ok = (result = null) => manda({ id: detto.id, type: "result", success: true, result });
 
     switch (detto.type) {
+      /* Il colpetto, come lo fa Home Assistant. L'app lo manda ogni mezzo
+       * minuto per accorgersi dei fili che muoiono senza chiudersi: una casa
+       * finta che non rispondesse farebbe passare il collaudo su una strada
+       * che in casa vera non si percorre. */
+      case "ping":
+        manda({ id: detto.id, type: "pong" });
+        return;
       case "get_states":
         ok([...entita.values()]);
         return;
