@@ -558,7 +558,13 @@ try {
         await attendi(200);
         continue;
       }
-      if (dove.y >= 0 && dove.y + dove.height <= schermo.height) break;
+      /* Non basta che stia dentro lo schermo: il menu ha un **piede fisso**
+       * — «Le tue case» e la riga della versione — e le ultime voci della
+       * lista finiscono li' sotto. Il loro riquadro dice che sono dentro, il
+       * tocco pero' cade sul piede, e si finisce nell'elenco delle case. Si
+       * lascia libera la fascia in fondo. */
+      const piede = 150;
+      if (dove.y >= 0 && dove.y + dove.height <= schermo.height - piede) break;
       /* La rotella gira dove sta il mouse, e il menu sta a sinistra. */
       await pagina.mouse.move(schermo.width / 4, schermo.height / 2);
       await pagina.mouse.wheel(0, 260);
