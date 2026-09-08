@@ -387,15 +387,41 @@ async function aspettaCheCompaia(pagina, etichetta, quanto = 30_000) {
   throw new Error(`«${etichetta}» non e' comparsa. A schermo c'e': ${cEra.join(" · ")}`);
 }
 
-async function premi(pagina, etichetta, { inAlto = false } = {}) {
+async function premi(pagina, etichetta, opzioni = {}) {
+  const bottone = await ilBottone(pagina, etichetta, opzioni);
+  if (!bottone) {
+    const cEra = await cosaCeDaPremere(pagina);
+    throw new Error(`non trovo «${etichetta}». A schermo c'e': ${cEra.join(" · ")}`);
+  }
+  /* Col mouse, sul centro del riquadro vero.
+   *
+   * Premere l'elemento dell'albero non basta: quegli elementi Flutter li mette
+   * dove gli pare e il tocco finisce da un'altra parte — la prima volta il
+   * «Abbina» ha messo il fuoco sulla casella dell'indirizzo. Il riquadro
+   * invece dice dove la cosa e' *disegnata*, e li' sotto c'e' la tela che
+   * riceve i tocchi davvero. */
+  const riquadro = await bottone.boundingBox();
+  if (riquadro && riquadro.width > 0 && riquadro.height > 0) {
+    await pagina.mouse.click(riquadro.x + riquadro.width / 2, riquadro.y + riquadro.height / 2);
+    return;
+  }
+  await bottone.click({ force: true });
+}
+
+/* Quale nodo si preme, per un'etichetta.
+ *
+ * Sta a parte perche' lo chiede anche chi deve scorrere un menu prima di
+ * premere: per sapere **dove** e' una voce bisogna sceglierla con le stesse
+ * regole con cui poi la si preme, se no si misura una cosa e se ne preme
+ * un'altra. Torna `null` quando quel testo a schermo non c'e'. */
+async function ilBottone(pagina, etichetta, { inAlto = false, aspetta = true } = {}) {
   let tutti = pagina.locator(
     `[aria-label="${etichetta}"], flt-semantics:has-text("${etichetta}")`,
   );
   try {
-    await tutti.first().waitFor({ state: "attached", timeout: 20_000 });
+    await tutti.first().waitFor({ state: "attached", timeout: aspetta ? 20_000 : 600 });
   } catch (_errore) {
-    const cEra = await cosaCeDaPremere(pagina);
-    throw new Error(`non trovo «${etichetta}». A schermo c'e': ${cEra.join(" · ")}`);
+    return null;
   }
   /* Un'etichetta esatta vale piu' di una scritta che la contiene: «Clima» nel
    * menu e' un bottone con quel nome, e «Clima soggiorno · Clima ca…» sulla
@@ -461,19 +487,7 @@ async function premi(pagina, etichetta, { inAlto = false } = {}) {
       }
     }
   }
-  /* Col mouse, sul centro del riquadro vero.
-   *
-   * Premere l'elemento dell'albero non basta: quegli elementi Flutter li mette
-   * dove gli pare e il tocco finisce da un'altra parte — la prima volta il
-   * «Abbina» ha messo il fuoco sulla casella dell'indirizzo. Il riquadro
-   * invece dice dove la cosa e' *disegnata*, e li' sotto c'e' la tela che
-   * riceve i tocchi davvero. */
-  const riquadro = await bottone.boundingBox();
-  if (riquadro && riquadro.width > 0 && riquadro.height > 0) {
-    await pagina.mouse.click(riquadro.x + riquadro.width / 2, riquadro.y + riquadro.height / 2);
-    return;
-  }
-  await bottone.click({ force: true });
+  return bottone;
 }
 
 const banco = await main();
@@ -544,50 +558,35 @@ try {
    * non e' davvero li'. */
   async function premiNelMenu(nome) {
     const schermo = pagina.viewportSize();
-    for (let giro = 0; giro < 10; giro += 1) {
-      const voce = pagina.locator(`[aria-label="${nome}"]`).first();
-      /* Col tempo: `boundingBox()` di suo **aspetta** che l'elemento ci sia, e
-       * l'attesa di serie e' mezzo minuto. Su una voce che non c'e' ancora
-       * — il menu sta entrando — dieci giri diventavano cinque minuti, e il
-       * collaudo sembrava un'app lenta quando la lenta era l'attesa. */
-      const dove = await voce.boundingBox({ timeout: 800 }).catch(() => null);
-      /* Nessun riquadro vuol dire «il menu sta ancora entrando», non «e' piu'
-       * in basso»: scorrere adesso vorrebbe dire scorrere alla cieca, e in
-       * otto giri il menu finirebbe in fondo con la voce fuori dallo schermo. */
-      if (!dove) {
-        await attendi(200);
-        continue;
+    /* Finche' una voce sta sotto il bordo, in Flutter **non esiste**: la
+     * lista la disegna, ma nell'albero che si interroga da fuori non c'e'
+     * nodo con quel testo. Cercare il suo riquadro per decidere se scorrere
+     * non funziona — non si trova niente, e non si scorre mai. Quindi si
+     * scorre finche' non compare, e solo allora si preme.
+     *
+     * Il piede del menu — «Le tue case» e la riga della versione — sta fisso
+     * in fondo: una voce che finisce li' sotto ha un riquadro dentro lo
+     * schermo ma il tocco cade sul piede. Si lascia libera quella fascia. */
+    const piede = 150;
+    for (let giro = 0; giro < 14; giro += 1) {
+      const bottone = await ilBottone(pagina, nome, { aspetta: false });
+      const dove = await bottone?.boundingBox({ timeout: 800 }).catch(() => null);
+      /* Alto quanto una riga: i contenitori grandi contengono quel testo ma
+       * non sono la voce, e premerne il centro vuol dire premere altro. */
+      const eUnaVoce = dove && dove.height > 20 && dove.height < 90;
+      if (eUnaVoce && dove.y >= 0 && dove.y + dove.height <= schermo.height - piede) {
+        break;
       }
-      /* Non basta che stia dentro lo schermo: il menu ha un **piede fisso**
-       * — «Le tue case» e la riga della versione — e le ultime voci della
-       * lista finiscono li' sotto. Il loro riquadro dice che sono dentro, il
-       * tocco pero' cade sul piede, e si finisce nell'elenco delle case. Si
-       * lascia libera la fascia in fondo. */
-      const piede = 150;
-      if (dove.y >= 0 && dove.y + dove.height <= schermo.height - piede) break;
       /* La rotella gira dove sta il mouse, e il menu sta a sinistra. */
       await pagina.mouse.move(schermo.width / 4, schermo.height / 2);
-      await pagina.mouse.wheel(0, 260);
-      await attendi(200);
+      await pagina.mouse.wheel(0, 220);
+      await attendi(250);
     }
-    /* Il menu si ferma per inerzia, non di colpo: misurando subito dopo
-     * l'ultima rotellata il riquadro e' gia' vecchio quando il tocco arriva,
-     * e il tocco cade su un'altra voce — «Le tue case», che sta in fondo.
-     * Si aspetta che si fermi, e poi ci si assicura che sia fermo davvero:
-     * due misure uguali di fila vogliono dire che non si muove piu'. */
-    let prima = null;
-    for (let giro = 0; giro < 12; giro += 1) {
-      await attendi(150);
-      const adesso = await pagina
-        .locator(`[aria-label="${nome}"]`)
-        .first()
-        .boundingBox({ timeout: 800 })
-        .catch(() => null);
-      if (adesso && prima && Math.abs(adesso.y - prima.y) < 1) break;
-      prima = adesso;
-    }
+    /* Lo scorrimento si ferma per inerzia: si misura dopo, non durante. */
+    await attendi(500);
     await premi(pagina, nome);
   }
+
 
   /* Le pagine della plancia, una per una, dal menu. */
   const pagine = [
@@ -606,6 +605,7 @@ try {
     ["Continuità", "tutto alimentato", "4m-continuita"],
     ["MiniPC", "tranquillo", "4n-minipc"],
   ];
+
   for (const [nome, attesa, foto] of pagine) {
     racconta(`apro ${nome}`);
     await apriIlMenu();
@@ -620,14 +620,14 @@ try {
   await scatta(pagina, "5-menu");
 
   racconta("apro i dispositivi");
-  await premi(pagina, "Dispositivi");
+  await premiNelMenu("Dispositivi");
   await aspettaCheCompaia(pagina, "Cerca fra");
   await attendi(1200);
   await scatta(pagina, "6-dispositivi");
 
   racconta("apro l'elenco delle case");
   await apriIlMenu();
-  await premi(pagina, "Le tue case");
+  await premiNelMenu("Le tue case");
   /* Si aspetta «Aggiungi», che sta **solo** nell'elenco delle case. */
   await aspettaCheCompaia(pagina, "Aggiungi");
   await attendi(600);
@@ -637,7 +637,7 @@ try {
    * che si finisce. */
   if (FILMA) {
     await apriIlMenu();
-    await premi(pagina, "Home");
+    await premiNelMenu("Home");
     await aspettaCheCompaia(pagina, "PERSONE");
     await attendi(1200);
   }
