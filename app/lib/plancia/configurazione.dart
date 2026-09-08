@@ -324,6 +324,30 @@ class ConfigurazioneDellaPlancia {
     ];
   }
 
+  /// I calendari scelti, da `cd_calendari`.
+  List<CalendarioScelto> get calendari {
+    final grezzi = grezzo('cd_calendari');
+    if (grezzi is! List) return const [];
+    return [
+      for (final (posto, uno) in grezzi.indexed)
+        if (uno is Map)
+          if (CalendarioScelto._(uno, posto) case final riga)
+            if (riga.entita.startsWith('calendar.')) riga,
+    ];
+  }
+
+  /// Le liste di cose da fare, da `cd_todo`.
+  List<ListaDiCose> get liste {
+    final grezze = grezzo('cd_todo');
+    if (grezze is! List) return const [];
+    return [
+      for (final (posto, una) in grezze.indexed)
+        if (una is Map)
+          if (ListaDiCose._(una, posto) case final riga)
+            if (riga.entita.startsWith('todo.')) riga,
+    ];
+  }
+
   /// Gli scaldabagni, dalla loro chiave. Una riga senza nemmeno una casella
   /// non e' uno scaldabagno a meta': e' una riga vuota.
   List<Scaldabagno> get scaldabagni {
@@ -1222,6 +1246,38 @@ class Ups {
     potenza,
     temperatura,
   ].where((e) => e.isNotEmpty).toList();
+}
+
+/// Un calendario scelto per l'agenda.
+class CalendarioScelto {
+  CalendarioScelto._(Map grezzo, int posto)
+    : id = pulito(grezzo['id']).isNotEmpty
+          ? pulito(grezzo['id'])
+          : 'calendario-${posto + 1}',
+      entita = pulito(grezzo['entity']).isNotEmpty
+          ? pulito(grezzo['entity'])
+          : pulito(grezzo['entity_id']),
+      nome = pulito(grezzo['name']);
+
+  final String id;
+  final String entita;
+  final String nome;
+}
+
+/// Una lista di cose da fare.
+class ListaDiCose {
+  ListaDiCose._(Map grezzo, int posto)
+    : id = pulito(grezzo['id']).isNotEmpty
+          ? pulito(grezzo['id'])
+          : 'todo-${posto + 1}',
+      entita = pulito(grezzo['entity']).isNotEmpty
+          ? pulito(grezzo['entity'])
+          : pulito(grezzo['entity_id']),
+      nome = pulito(grezzo['name']);
+
+  final String id;
+  final String entita;
+  final String nome;
 }
 
 /// Uno scaldabagno, come sta scritto in `cd_scaldabagni`.

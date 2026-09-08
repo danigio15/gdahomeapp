@@ -45,6 +45,7 @@ void main() {
         elenco: demo.tutte,
       );
       expect(tutte.map((t) => t.chiave), [
+        'agenda',
         'luci',
         'clima',
         'tapparelle',
@@ -70,7 +71,7 @@ void main() {
       ]);
       expect(
         intestazioneDeiWidget(tutte),
-        '21 sezioni · 2 chiedono attenzione: Batterie, Finestra cucina',
+        '22 sezioni · 2 chiedono attenzione: Batterie, Finestra cucina',
       );
     },
   );
@@ -255,7 +256,7 @@ void main() {
     expect(tutte.where((t) => t.chiave.startsWith('custom-')), isEmpty);
     expect(
       intestazioneDeiWidget(tutte),
-      '17 sezioni · 1 chiede attenzione: Sicurezza',
+      '18 sezioni · 1 chiede attenzione: Sicurezza',
     );
   });
 

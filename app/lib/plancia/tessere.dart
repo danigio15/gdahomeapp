@@ -11,6 +11,7 @@
 library;
 
 import '../casa/entita.dart';
+import 'agenda.dart';
 import 'configurazione.dart';
 import 'numeri.dart';
 import 'rilevate.dart';
@@ -150,11 +151,22 @@ List<Tessera> tessereDellaHome(
   DateTime? adesso,
   Map<String, DateTime>? tenute,
   Elenco? elenco,
+  List<Impegno> impegni = const [],
+  List<Cosa> cose = const [],
+  bool agendaInArrivo = false,
 }) {
   if (!config.configurata) return const [];
-  final c = _Contesto(config, leggi, adesso ?? DateTime.now(), tenute ?? {});
+  final quando = adesso ?? DateTime.now();
+  final c = _Contesto(config, leggi, quando, tenute ?? {});
   final tutte = <Tessera?>[
     ..._evidenze(c),
+    tesseraDellAgenda(
+      config,
+      impegni,
+      cose,
+      adesso: quando,
+      inArrivo: agendaInArrivo,
+    ),
     _luci(c),
     _clima(c),
     _tapparelle(c),

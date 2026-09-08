@@ -129,6 +129,7 @@ void main() {
       Sezione.clima,
       Sezione.temperatura,
       Sezione.finestre,
+      Sezione.agenda,
     ]);
     expect(sezioniDellaPlancia(null), [Sezione.plancia]);
     expect(sezioniDellaPlancia(ConfigurazioneDellaPlancia.vuota), [

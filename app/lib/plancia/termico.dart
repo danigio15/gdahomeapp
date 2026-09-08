@@ -379,7 +379,6 @@ Tessera? _scaldabagno(ConfigurazioneDellaPlancia config, Leggi leggi) {
     chiave: 'scaldabagno',
     colore: '#ea580c',
     etichetta: 'Scaldabagno',
-    simbolo: '🚿',
     valore: testa.temperatura != null
         ? '${numero(testa.temperatura)}°'
         : acceso
@@ -469,7 +468,6 @@ Tessera? _caldaia(ConfigurazioneDellaPlancia config, Leggi leggi) {
     chiave: 'caldaia',
     colore: '#ef4444',
     etichetta: 'Caldaia',
-    simbolo: '🔥',
     valore: testa.mandata != null
         ? '${numero(testa.mandata)}°'
         : testa.lavora

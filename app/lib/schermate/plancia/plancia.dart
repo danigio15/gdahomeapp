@@ -72,6 +72,7 @@ class _PlanciaState extends State<Plancia> {
   @override
   Widget build(BuildContext context) {
     final config = widget.configurazione;
+    final libro = widget.collegamento.libro;
     final adesso = DateTime.now();
     final tessere = tessereDellaHome(
       config,
@@ -79,6 +80,9 @@ class _PlanciaState extends State<Plancia> {
       adesso: adesso,
       tenute: _tenute,
       elenco: _tuttaLaCasa,
+      impegni: libro?.impegni ?? const [],
+      cose: libro?.cose ?? const [],
+      agendaInArrivo: libro?.inArrivo ?? false,
     );
     final persone = personeDellaHome(config, _leggi, adesso: adesso);
     final azioni = config.azioniRapide;
@@ -767,6 +771,8 @@ class _FinestraDellaTessera extends StatelessWidget {
           (id) => collegamento.stato?[id],
           tenute: tenute,
           elenco: () => collegamento.stato?.tutte() ?? const [],
+          impegni: collegamento.libro?.impegni ?? const [],
+          cose: collegamento.libro?.cose ?? const [],
         );
         final tessera = tessere.where((t) => t.chiave == chiave).firstOrNull;
         if (tessera == null) {

@@ -23,6 +23,7 @@ import '../vestito/pezzi.dart';
 import 'da_dove.dart';
 import 'dispositivi.dart';
 import 'menu.dart';
+import 'plancia/agenda.dart';
 import 'plancia/clima.dart';
 import 'plancia/finestre.dart';
 import 'plancia/luci.dart';
@@ -113,6 +114,10 @@ class _HomeState extends State<Home> {
         configurazione: config,
       ),
       Sezione.finestre => PaginaDelleFinestre(
+        collegamento: collegamento,
+        configurazione: config,
+      ),
+      Sezione.agenda => PaginaDellAgenda(
         collegamento: collegamento,
         configurazione: config,
       ),

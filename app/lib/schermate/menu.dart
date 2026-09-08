@@ -47,6 +47,7 @@ enum Sezione {
     dellaPlancia: true,
   ),
   finestre('Finestre', Icons.blinds_rounded, pronta: true, dellaPlancia: true),
+  agenda('Agenda', Icons.event_rounded, pronta: true, dellaPlancia: true),
   dispositivi('Dispositivi', Icons.devices_other_rounded, pronta: true),
   aiutanti('Aiutanti', Icons.tune_rounded),
   zigbee('Zigbee', Icons.settings_input_antenna_rounded),
@@ -81,6 +82,7 @@ List<Sezione> sezioniDellaPlancia(ConfigurazioneDellaPlancia? config) {
     if (config.unitaClima.isNotEmpty) Sezione.clima,
     if (config.stanze.any((s) => s.temperatura.isNotEmpty)) Sezione.temperatura,
     if (config.coperture.isNotEmpty) Sezione.finestre,
+    if (config.calendari.isNotEmpty || config.liste.isNotEmpty) Sezione.agenda,
   ];
 }
 

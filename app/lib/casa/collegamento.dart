@@ -22,6 +22,7 @@ import 'dart:async';
 
 import '../plancia/configurazione.dart';
 import '../plancia/lettura.dart';
+import '../plancia/libro.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 import '../ponte/indirizzo.dart';
@@ -64,6 +65,7 @@ class Collegamento {
   StatoDellaCasa? _stato;
   ConfigurazioneDellaPlancia? _plancia;
   bool _planciaLetta = false;
+  LibroDegliImpegni? _libro;
   CasaConosciuta? _casa;
   DaDove? _daDove;
   ComeVa _comeVa = ComeVa.nessunaCasa;
@@ -89,6 +91,10 @@ class Collegamento {
 
   /// `true` quando la casa ha risposto sulla plancia, in un senso o nell'altro.
   bool get planciaLetta => _planciaLetta;
+
+  /// Gli appuntamenti e le cose da fare: non stanno negli stati, si chiedono
+  /// coi servizi, e quindi vivono per conto loro.
+  LibroDegliImpegni? get libro => _libro;
 
   /// Da dove si sta passando adesso: serve a scrivere «in casa» o «da fuori».
   DaDove? get daDove => _daDove;
@@ -211,6 +217,26 @@ class Collegamento {
     if (_filo != filo) return;
     _planciaLetta = true;
     _avvisa();
+    final config = _plancia;
+    if (config != null) unawaited(_leggiLAgenda(filo, config));
+  }
+
+  /// L'agenda arriva dopo, e per conto suo: sono due giri di rete per ogni
+  /// calendario e per ogni lista, e la plancia non deve aspettarli per
+  /// disegnarsi.
+  Future<void> _leggiLAgenda(
+    Filo filo,
+    ConfigurazioneDellaPlancia config, {
+    bool forza = false,
+  }) async {
+    final libro = _libro ??= LibroDegliImpegni(filo);
+    try {
+      await libro.leggi(config, forza: forza);
+    } on ErroreDelPonte {
+      /* Un calendario che non risponde non porta via la plancia. */
+    }
+    if (_filo != filo) return;
+    _avvisa();
   }
 
   /// Rilegge la configurazione della plancia: dopo un salvataggio
@@ -219,6 +245,8 @@ class Collegamento {
     final filo = _filo;
     if (filo == null || !filo.dentro) return;
     await _leggiLaPlancia(filo);
+    final config = _plancia;
+    if (config != null) await _leggiLAgenda(filo, config, forza: true);
   }
 
   /// Quando il filo si rialza per conto suo, si riprende da dove si era
@@ -266,6 +294,8 @@ class Collegamento {
     _stato = null;
     _plancia = null;
     _planciaLetta = false;
+    await _libro?.chiudi();
+    _libro = null;
     await _filo?.chiudi();
     _filo = null;
     _daDove = null;

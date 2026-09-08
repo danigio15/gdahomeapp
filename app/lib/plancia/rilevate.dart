@@ -385,7 +385,6 @@ Tessera? _batterie(_Rilevatore c) {
     chiave: 'batterie',
     colore: '#eab308',
     etichetta: 'Batterie',
-    simbolo: '🔋',
     allarme: true,
     valore: '${scariche.length}',
     didascalia:
@@ -429,7 +428,6 @@ Tessera? _aria(_Rilevatore c) {
     chiave: 'aria',
     colore: _coloriDellAria[peggiore.grado]!,
     etichetta: 'Aria',
-    simbolo: '🍃',
     /* Rossa in cima come gli allagamenti solo quando l'aria e' da cambiare. */
     allarme: peggiore.grado == GradoDellAria.cattiva,
     valore: peggiore.scritto,
@@ -475,7 +473,6 @@ Tessera? _fumo(_Rilevatore c) {
     chiave: 'fumo',
     colore: suonano.isEmpty ? '#94a3b8' : '#ef4444',
     etichetta: 'Fumo e gas',
-    simbolo: '💨',
     allarme: suonano.isNotEmpty,
     attiva: suonano.isNotEmpty,
     valore: '${suonano.isEmpty ? righe.length : suonano.length}',
@@ -506,7 +503,6 @@ Tessera? _allagamenti(_Rilevatore c) {
     chiave: 'allagamenti',
     colore: bagnati.isEmpty ? '#94a3b8' : '#38bdf8',
     etichetta: 'Allagamenti',
-    simbolo: '💧',
     allarme: bagnati.isNotEmpty,
     attiva: bagnati.isNotEmpty,
     valore: '${bagnati.isEmpty ? righe.length : bagnati.length}',
