@@ -96,6 +96,11 @@ const _ingresso = 'ingresso';
 /// tempo di una riconnessione, non di piu'.
 const _attesaDelFilo = Duration(seconds: 20);
 
+/// Quanto si aspetta una commissione. Piu' di un comando: un file da un
+/// megabyte che passa dal centralino, su una rete del cellulare, ci mette il
+/// suo tempo, e un file che arriva tardi vale piu' di un file che non arriva.
+const _attesaDellaCommissione = Duration(seconds: 90);
+
 /// I comandi di Home Assistant che dopo la risposta continuano a mandare
 /// eventi con lo stesso numero. Per questi l'instradamento resta; per tutti
 /// gli altri si toglie appena arriva la risposta, se no un telefono che tiene
@@ -365,7 +370,7 @@ class Servitore {
       'percorso': percorso,
       if (corpo != null) 'corpo': base64.encode(corpo),
       if (tipoDelCorpo != null) 'tipo': tipoDelCorpo,
-    });
+    }, entro: _attesaDellaCommissione);
     return _Scaricato.dalla(risposta);
   }
 

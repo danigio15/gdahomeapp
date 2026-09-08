@@ -343,7 +343,14 @@ class Filo {
   /* ─── I comandi ────────────────────────────────────────────────────────── */
 
   /// Manda un comando e aspetta la risposta.
-  Future<Map<String, dynamic>> chiedi(Map<String, dynamic> comando) {
+  ///
+  /// [entro] e' quanto si aspetta, quando non e' l'attesa di sempre: un file
+  /// della plancia da un megabyte, passando dal centralino, ci mette piu' di
+  /// un comando a una luce.
+  Future<Map<String, dynamic>> chiedi(
+    Map<String, dynamic> comando, {
+    Duration? entro,
+  }) {
     if (!dentro) {
       return Future.error(const FiloCaduto('il filo non e\' aperto'));
     }
@@ -356,7 +363,7 @@ class Filo {
      * puo' non rispondere a un comando che non conosce, e senza questa
      * scadenza l'app aspetterebbe fino alla prossima caduta del filo. */
     return chiAspetta.future.timeout(
-      attesaDellaRisposta,
+      entro ?? attesaDellaRisposta,
       onTimeout: () {
         _inAttesa.remove(id);
         throw const FiloCaduto('Home Assistant non ha risposto in tempo');
@@ -365,8 +372,10 @@ class Filo {
   }
 
   /// Il risultato del comando, gia' spacchettato.
-  Future<dynamic> risultato(Map<String, dynamic> comando) async =>
-      (await chiedi(comando))['result'];
+  Future<dynamic> risultato(
+    Map<String, dynamic> comando, {
+    Duration? entro,
+  }) async => (await chiedi(comando, entro: entro))['result'];
 
   /// Si sottoscrive, e resta sottoscritto anche dopo una caduta del filo.
   ///
