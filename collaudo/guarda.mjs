@@ -766,9 +766,9 @@ try {
   await attendi(700);
   await scatta(pagina, "6c-config-prese");
   await premi(pagina, "Aggiungi una presa");
-  await aspettaCheCompaia(pagina, "Cerca fra le prese");
+  await aspettaCheCompaia(pagina, "Come si chiama");
   await attendi(700);
-  await scatta(pagina, "6d-config-scelta");
+  await scatta(pagina, "6d-config-scheda");
   /* Si chiude la tendina e si torna indietro dalla freccia, come si torna
    * indietro. Col tasto del browser no: quella cronologia non e' quella delle
    * pagine dell'app — c'e' finita dentro ogni finestra che si e' aperta e
