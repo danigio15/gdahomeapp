@@ -656,6 +656,13 @@ class TesseraDellaHome extends StatelessWidget {
         child: SizedBox(
           height: altezza,
           child: Stack(
+            /* In mezzo, non in cima.
+             *
+             * Quello che una pila non posiziona lo mette in alto a sinistra,
+             * e la riga della pillola e' piu' bassa della pillola: restava
+             * appiccicata al bordo di sopra con l'aria tutta sotto, come una
+             * scritta scivolata. */
+            alignment: Alignment.centerLeft,
             children: [
               /* La tacca: una semipillola fusa nel bordo sinistro, col colore
                * della sezione. Quando c'e' un avviso ingrossa. */
