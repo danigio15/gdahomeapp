@@ -67,7 +67,7 @@ enum Sezione {
     dellaPlancia: true,
   ),
   continuita(
-    'Continuita\'',
+    'Continuità',
     Icons.battery_charging_full_rounded,
     pronta: true,
     dellaPlancia: true,

@@ -169,7 +169,7 @@ const _sostanze = <String, _Sostanza>{
   'nitrogen_dioxide': _Sostanza('🏭', 'Biossido di azoto', [40, 90, 120]),
   'ozone': _Sostanza('🌬️', 'Ozono', [100, 130, 240]),
   'sulphur_dioxide': _Sostanza('🏭', 'Biossido di zolfo', [100, 200, 350]),
-  'aqi': _Sostanza('📈', "Indice di qualita' dell'aria", [50, 100, 150]),
+  'aqi': _Sostanza('📈', "Indice di qualità dell'aria", [50, 100, 150]),
 };
 
 /// La lettura di un sensore dell'aria: quanto, di che sostanza, e come sta.

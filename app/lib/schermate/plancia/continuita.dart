@@ -37,7 +37,7 @@ class PaginaDellaContinuita extends StatelessWidget {
     if (casa == null || gruppi.isEmpty) {
       return const StatoVuoto(
         icona: Icons.battery_charging_full_rounded,
-        titolo: 'Nessun gruppo di continuita\'',
+        titolo: 'Nessun gruppo di continuità',
         sotto: 'Associa il tuo UPS dall\'Editor Dashboard.',
       );
     }
@@ -102,7 +102,7 @@ class SchedaDellUps extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        lettura.nome.isEmpty ? 'Continuita\'' : lettura.nome,
+                        lettura.nome.isEmpty ? 'Continuità' : lettura.nome,
                         style: testi.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),

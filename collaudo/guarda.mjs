@@ -581,7 +581,7 @@ try {
     ["Robot", "in funzione", "4j-robot"],
     ["Energia", "DAL SOLE", "4k-energia"],
     ["Elettrodomestici", "ASSORBIMENTO", "4l-elettrodomestici"],
-    ["Continuita'", "tutto alimentato", "4m-continuita"],
+    ["Continuità", "tutto alimentato", "4m-continuita"],
     ["MiniPC", "tranquillo", "4n-minipc"],
   ];
   for (const [nome, attesa, foto] of pagine) {
