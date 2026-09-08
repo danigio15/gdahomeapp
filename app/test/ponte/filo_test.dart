@@ -347,6 +347,67 @@ void main() {
       await filo.chiudi();
     },
   );
+
+  test('un messaggio mandato per conto di altri torna a chi l\'ha mandato, '
+      'col numero del filo', () async {
+    final filo = filoCon();
+    await filo.apri();
+
+    final tornati = <Map<String, dynamic>>[];
+    final numero = filo.instrada({'type': 'get_states'}, tornati.add);
+
+    await _finoA(() => tornati.isNotEmpty, entro: const Duration(seconds: 3));
+    expect(tornati.single['id'], numero);
+    expect(tornati.single['type'], 'result');
+    expect(
+      ponte.arrivati.where((uno) => uno['type'] == 'get_states').single['id'],
+      numero,
+    );
+
+    /* Gli eventi con quel numero seguono la stessa strada, finche' non si
+     * dimentica. */
+    ponte.cambia(numero, 'light.sala', {'state': 'on'});
+    await _finoA(() => tornati.length == 2, entro: const Duration(seconds: 3));
+    expect(tornati.last['type'], 'event');
+
+    filo.dimentica(numero);
+    ponte.cambia(numero, 'light.sala', {'state': 'off'});
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    expect(tornati.length, 2, reason: 'dimenticato: non deve piu\' arrivare');
+
+    /* E i numeri restano un contatore solo: quello dopo e' piu' grande. */
+    final risposta = await filo.chiedi({'type': 'get_states'});
+    expect(risposta['id'], greaterThan(numero));
+    await filo.chiudi();
+  });
+
+  test(
+    'dopo una caduta chi mandava per conto suo non riceve piu\' niente',
+    () async {
+      final filo = filoCon();
+      await filo.apri();
+      final tornati = <Map<String, dynamic>>[];
+      final numero = filo.instrada({'type': 'subscribe_events'}, tornati.add);
+      await _finoA(() => tornati.isNotEmpty, entro: const Duration(seconds: 3));
+
+      await ponte.buttaGiu();
+      await _finoA(() => filo.dentro, entro: const Duration(seconds: 5));
+      ponte.cambia(numero, 'light.sala', {'state': 'on'});
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(tornati.length, 1);
+      expect(() => filo.dimentica(numero), returnsNormally);
+      await filo.chiudi();
+    },
+  );
+
+  test('senza filo non si instrada niente', () async {
+    final filo = filoCon();
+    expect(
+      () => filo.instrada({'type': 'get_states'}, (_) {}),
+      throwsA(isA<FiloCaduto>()),
+    );
+    await filo.chiudi();
+  });
 }
 
 /// Aspetta che una cosa diventi vera, invece di aspettare un tempo a caso.

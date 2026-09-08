@@ -114,6 +114,15 @@ Quello che c'e' al posto suo e' che un telefono entra **solo** se qualcuno gia'
 dentro Home Assistant ha fabbricato un codice negli ultimi cinque minuti, e che
 qualunque telefono si stacca da solo con un bottone.
 
+C'e' una cosa sola che il ponte fa **da se'** per il telefono, senza girarla
+a Home Assistant: le commissioni, `ponte/http`. L'app fa girare la plancia
+vera di DashboardModern dentro un WebView, e quella plancia e' fatta di file
+che stanno in Home Assistant, su una porta che dal telefono — da fuori casa,
+di sicuro — non si vede. Quindi il telefono li chiede al ponte, sullo stesso
+filo, e il ponte li va a prendere: `/api/…` passa dal Supervisor col suo segno,
+`/dashboardmodern_static/…` va dritto al contenitore di Home Assistant, e
+nient'altro passa di li'. Sta scritto in `src/commissioni.js`.
+
 ## Le opzioni
 
 | | |

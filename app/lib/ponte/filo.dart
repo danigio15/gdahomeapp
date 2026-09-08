@@ -127,6 +127,10 @@ class Filo {
   final _inAttesa = <int, Completer<Map<String, dynamic>>>{};
   final _sottoscrizioni = <int, _Sottoscrizione>{};
 
+  /// I messaggi mandati per conto di qualcun altro — la plancia vera, che
+  /// parla Home Assistant da dentro il WebView — e chi ne aspetta le risposte.
+  final _instradati = <int, void Function(Map<String, dynamic>)>{};
+
   Presa? _presa;
   Approdo? _approdo;
   StreamSubscription<String>? _ascolto;
@@ -267,6 +271,19 @@ class Filo {
       return;
     }
 
+    /* Quello che si e' mandato per conto di qualcun altro torna a lui,
+     * qualunque cosa sia: la risposta, gli eventi, un pong. Si guarda prima
+     * di tutto il resto, perche' quel numero l'ha messo il filo ma il
+     * messaggio non e' suo. */
+    final numero = detto['id'];
+    if (numero is int) {
+      final aChi = _instradati[numero];
+      if (aChi != null) {
+        aChi(detto);
+        return;
+      }
+    }
+
     switch (detto['type']) {
       case 'auth_required':
         _manda({'type': 'auth', 'access_token': segno});
@@ -398,6 +415,33 @@ class Filo {
     }
   }
 
+  /* ─── Per conto di qualcun altro ───────────────────────────────────────── */
+
+  /// Manda un messaggio per conto di qualcun altro, e consegna a [ricevi]
+  /// tutto quello che torna con quel numero: la risposta, e gli eventi se era
+  /// una sottoscrizione.
+  ///
+  /// Serve alla plancia vera, che dentro il WebView parla Home Assistant per
+  /// conto suo: i suoi messaggi passano da qui col numero **del filo** — Home
+  /// Assistant vuole numeri sempre crescenti su un filo, e due contatori non
+  /// possono spartirsene uno — e chi li ha mandati li rivede col numero suo.
+  /// Il numero torna, e vale finche' qualcuno non lo [dimentica] o il filo
+  /// non cade: dopo una caduta Home Assistant non si ricorda di niente, e
+  /// chi aveva chiesto deve ricominciare da capo, come farebbe da solo.
+  int instrada(
+    Map<String, dynamic> messaggio,
+    void Function(Map<String, dynamic> risposta) ricevi,
+  ) {
+    if (!dentro) throw const FiloCaduto('il filo non e\' aperto');
+    final id = _prossimoId++;
+    _instradati[id] = ricevi;
+    _manda({...messaggio, 'id': id});
+    return id;
+  }
+
+  /// Smette di consegnare quello che torna con quel numero.
+  void dimentica(int id) => _instradati.remove(id);
+
   void _manda(Map<String, dynamic> cosa) {
     final presa = _presa;
     if (presa == null) return;
@@ -516,6 +560,10 @@ class Filo {
     ErroreDelPonte errore, {
     bool ancheLaStretta = true,
   }) {
+    /* Chi aveva mandato per conto suo non riceve un errore: riceve niente,
+     * e vede il filo cadere — e' cosi' che se ne accorge Home Assistant, ed
+     * e' cosi' che se ne deve accorgere lui. */
+    _instradati.clear();
     final appese = List.of(_inAttesa.values);
     _inAttesa.clear();
     for (final chiAspetta in appese) {

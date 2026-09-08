@@ -15,6 +15,7 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:gdahome/ponte/cifra.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
@@ -113,18 +114,123 @@ class PonteFinto {
       });
       return;
     }
+    /* Le commissioni: quello che il ponte vero fa da se', senza passare da
+     * Home Assistant. Qui si serve da una cartella in memoria. */
+    if (detto['type'] == 'ponte/http') {
+      _manda(presa, {'id': id, ..._commissione(detto)});
+      return;
+    }
     _manda(presa, {
       'id': id,
       'type': 'result',
       'success': true,
       'result': switch (detto['type']) {
         'get_states' => entita,
+        'get_panels' => pannelli ?? const <String, dynamic>{},
         'dashboardmodern/config/get' =>
           configurazione ?? {'profile': 'primary', 'snapshot': null},
         _ => null,
       },
     });
   }
+
+  /// I pannelli che risponde `get_panels`. `null` e' una casa senza
+  /// DashboardModern: risponde lo stesso, ma senza quel pannello.
+  Map<String, dynamic>? pannelli = pannelliConLaPlancia();
+
+  /// I file che il ponte finto sa servire con `ponte/http`: il percorso, il
+  /// tipo e i byte. Sotto `/api/` si risponde con l'eco della richiesta.
+  final Map<String, (String, List<int>)> file = {};
+
+  /// Le commissioni arrivate, in ordine: serve a contare quante volte un
+  /// file e' stato chiesto davvero.
+  final List<Map<String, dynamic>> commissioni = [];
+
+  Map<String, dynamic> _commissione(Map<String, dynamic> detto) {
+    commissioni.add(detto);
+    final percorso = detto['percorso'] as String? ?? '';
+    final soloIlPercorso = percorso.split('?').first;
+    if (percorso.startsWith('/api/')) {
+      final corpo = detto['corpo'];
+      final eco = jsonEncode({
+        'metodo': detto['metodo'],
+        'percorso': percorso,
+        'tipo': detto['tipo'],
+        'corpo': corpo is String ? utf8.decode(base64.decode(corpo)) : null,
+      });
+      return _pacchetto(
+        200,
+        'application/json; charset=utf-8',
+        utf8.encode(eco),
+      );
+    }
+    final trovato = file[soloIlPercorso];
+    if (trovato == null) {
+      return _pacchetto(
+        404,
+        'text/plain',
+        utf8.encode('qui non c\'e\' niente'),
+      );
+    }
+    return _pacchetto(200, trovato.$1, trovato.$2);
+  }
+
+  /// Come lo impacchetta il ponte vero: il testo viaggia compresso.
+  static Map<String, dynamic> _pacchetto(
+    int stato,
+    String tipo,
+    List<int> corpo,
+  ) {
+    final testo =
+        tipo.startsWith('text/') ||
+        tipo.startsWith('application/javascript') ||
+        tipo.startsWith('application/json') ||
+        tipo.startsWith('image/svg');
+    return {
+      'type': 'result',
+      'success': true,
+      'result': {
+        'stato': stato,
+        'tipo': tipo,
+        if (testo && corpo.length >= 32) ...{
+          'corpo': base64.encode(gzip.encode(corpo)),
+          'compresso': 'gzip',
+        } else
+          'corpo': base64.encode(Uint8List.fromList(corpo)),
+      },
+    };
+  }
+
+  /// I pannelli di una casa con DashboardModern, come li da' `get_panels`.
+  static Map<String, dynamic> pannelliConLaPlancia({
+    String base = '/dashboardmodern_static/abc123',
+  }) => {
+    'lovelace': {
+      'component_name': 'lovelace',
+      'url_path': 'lovelace',
+      'config': null,
+    },
+    'dashboardmodern': {
+      'component_name': 'custom',
+      'url_path': 'dashboardmodern',
+      'title': 'DashboardModern',
+      'config': {
+        'entry_ids': ['e1'],
+        'instance_id': 'e1',
+        'config_profile': 'primary',
+        'title': 'DashboardModern',
+        'primary': true,
+        'static_base': base,
+        'legacy_variants': ['dashboard-en.html', 'dashboard.html'],
+        '_panel_custom': {
+          'name': 'dashboardmodern-panel-abc123',
+          'embed_iframe': false,
+          'trust_external': false,
+          'module_url': '$base/panel.js',
+        },
+      },
+    },
+  };
 
   /// Se in questa casa c'e' DashboardModern. Senza, `config/get` non esiste.
   bool planciaInstallata = true;

@@ -23,6 +23,7 @@ import 'dart:async';
 import '../plancia/configurazione.dart';
 import '../plancia/lettura.dart';
 import '../plancia/libro.dart';
+import '../plancia/pannello.dart';
 import '../plancia/scrittura.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
@@ -66,6 +67,8 @@ class Collegamento {
   StatoDellaCasa? _stato;
   ConfigurazioneDellaPlancia? _plancia;
   bool _planciaLetta = false;
+  PannelloDellaPlancia? _pannello;
+  bool _pannelloLetto = false;
   LibroDegliImpegni? _libro;
   CasaConosciuta? _casa;
   DaDove? _daDove;
@@ -92,6 +95,12 @@ class Collegamento {
 
   /// `true` quando la casa ha risposto sulla plancia, in un senso o nell'altro.
   bool get planciaLetta => _planciaLetta;
+
+  /// Il pannello di DashboardModern in questa casa: dove stanno i file della
+  /// plancia vera. `null` finche' non si e' chiesto, o per sempre se
+  /// DashboardModern non c'e': [pannelloLetto] distingue i due casi.
+  PannelloDellaPlancia? get pannello => _pannello;
+  bool get pannelloLetto => _pannelloLetto;
 
   /// Gli appuntamenti e le cose da fare: non stanno negli stati, si chiedono
   /// coi servizi, e quindi vivono per conto loro.
@@ -210,6 +219,16 @@ class Collegamento {
   /// Un errore qui non e' un errore della casa: la casa e' aperta e le entita'
   /// ci sono. Si segna che si e' chiesto, e la Home dice quello che sa.
   Future<void> _leggiLaPlancia(Filo filo) async {
+    /* Prima il pannello, che e' quello che apre la plancia vera: la
+     * configurazione serve al resto, e puo' aspettare un giro. */
+    try {
+      _pannello = await trovaLaPlancia(filo);
+    } on ErroreDelPonte {
+      _pannello = null;
+    }
+    if (_filo != filo) return;
+    _pannelloLetto = true;
+    _avvisa();
     try {
       _plancia = await chiediLaConfigurazione(filo);
     } on ErroreDelPonte {
@@ -321,6 +340,8 @@ class Collegamento {
     _stato = null;
     _plancia = null;
     _planciaLetta = false;
+    _pannello = null;
+    _pannelloLetto = false;
     await _libro?.chiudi();
     _libro = null;
     await _filo?.chiudi();

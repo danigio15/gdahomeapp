@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- La plancia vera arriva al WebView da un server che sta dentro l'app,
+     su 127.0.0.1, in chiaro: non esce dal telefono, e non c'e' niente da
+     cifrare. Android pero' da Pie in poi blocca ogni http senza s, anche
+     verso se stesso, e senza queste righe il WebView direbbe
+     «ERR_CLEARTEXT_NOT_PERMITTED». Vale **solo** per il telefono stesso:
+     verso qualunque altro indirizzo resta la regola di sistema. -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

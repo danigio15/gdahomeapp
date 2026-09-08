@@ -10,6 +10,7 @@ import { pathToFileURL } from "node:url";
 import { Abbinamento } from "./abbinamento.js";
 import { Casa } from "./casa.js";
 import { Chiamata } from "./chiamata.js";
+import { Commissioni } from "./commissioni.js";
 import { Identita } from "./identita.js";
 import { Dispositivi } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
@@ -31,7 +32,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     giorniDiSilenzio: opzioni.giorniDiSilenzio,
   });
   const abbinamento = new Abbinamento({ minutiDelCodice: opzioni.minutiDelCodice });
-  const ponte = new Ponte({ casa, dispositivi, registro });
+  /* I file della plancia vera, e le chiamate REST che le servono: il telefono
+   * li chiede al ponte, e il ponte li va a prendere in Home Assistant. */
+  const commissioni = new Commissioni({ casa, registro });
+  const ponte = new Ponte({ casa, dispositivi, registro, commissioni });
 
   /* La chiamata verso il centralino: e' cosi' che si entra da fuori casa,
    * senza che chi ha installato l'add-on apra o configuri niente. */

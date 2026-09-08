@@ -20,6 +20,7 @@
  */
 
 import { CasaIrraggiungibile } from "./casa.js";
+import { eUnaCommissione, no } from "./commissioni.js";
 
 /* Quanti messaggi al secondo puo' mandare un telefono.
  *
@@ -28,7 +29,11 @@ import { CasaIrraggiungibile } from "./casa.js";
  * telefono impazzito o un cliente scritto male, non contro l'uso normale:
  * qualunque cosa sotto questa soglia passa senza accorgersene. */
 const MESSAGGI_AL_SECONDO = 50;
-const RAFFICA = 300;
+/* La raffica e' larga per la plancia vera: aprendola a freddo il telefono
+ * chiede al ponte trecento file in pochi secondi — i moduli, i caratteri, i
+ * ritratti — e sono tutti messaggi su questo filo. Dopo la prima volta li
+ * tiene sul disco e non li chiede piu'. */
+const RAFFICA = 600;
 
 /* Ogni quanto il ponte controlla che il telefono ci sia ancora.
  *
@@ -40,10 +45,14 @@ const BATTITO = 30_000;
 const SILENZIO_MASSIMO = 90_000;
 
 export class Ponte {
-  constructor({ casa, dispositivi, registro }) {
+  constructor({ casa, dispositivi, registro, commissioni = null }) {
     this.casa = casa;
     this.dispositivi = dispositivi;
     this.registro = registro;
+    /* Quello che il ponte fa da se' per il telefono, senza passare da Home
+     * Assistant: vedi `commissioni.js`. Senza, un `ponte/…` riceve un rifiuto
+     * invece di finire in Home Assistant, che non saprebbe cosa farsene. */
+    this.commissioni = commissioni;
     this.collegamenti = new Set();
   }
 
@@ -82,6 +91,15 @@ export class Ponte {
 
   chiudiTutto() {
     for (const uno of [...this.collegamenti]) uno.chiudi(1001, "il ponte si sta spegnendo");
+  }
+}
+
+function leggi(testo) {
+  try {
+    const detto = JSON.parse(testo);
+    return detto && typeof detto === "object" ? detto : null;
+  } catch (_errore) {
+    return null;
   }
 }
 
@@ -132,8 +150,17 @@ class Collegamento {
 
     /* Dopo la stretta il ponte non guarda piu' dentro: quello che arriva e'
      * roba fra il telefono e Home Assistant, e leggerla sarebbe soltanto un
-     * modo per sbagliarla. */
+     * modo per sbagliarla. Con un'eccezione: i messaggi `ponte/…`, che sono
+     * per il ponte e in Home Assistant non devono arrivare. Si riconoscono
+     * senza aprire il JSON, e si aprono solo quelli. */
     if (this.dispositivo) {
+      if (eUnaCommissione(testo)) {
+        const detto = leggi(testo);
+        if (detto && typeof detto.type === "string" && detto.type.startsWith("ponte/")) {
+          this._commissione(detto);
+          return;
+        }
+      }
       if (!this.filo?.manda(testo)) this.chiudi(1011, "il filo con la casa e' caduto");
       return;
     }
@@ -150,6 +177,21 @@ class Collegamento {
       return;
     }
     this._autentica(String(detto.access_token || ""));
+  }
+
+  _commissione(detto) {
+    const commissioni = this.ponte.commissioni;
+    const risposta = commissioni
+      ? commissioni.rispondi(detto)
+      : Promise.resolve(no(detto.id ?? null, "unknown_command", "questo ponte non lo sa fare"));
+    risposta
+      .catch((errore) => {
+        this.ponte.registro?.errore?.(`commissione andata storta: ${errore?.message || errore}`);
+        return no(detto.id ?? null, "ponte_http", "non ha funzionato");
+      })
+      .then((detta) => {
+        if (!this.chiuso) this.presa.manda(JSON.stringify(detta));
+      });
   }
 
   async _autentica(segno) {

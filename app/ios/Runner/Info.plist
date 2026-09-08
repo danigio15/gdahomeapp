@@ -31,6 +31,18 @@
 	<string>Serve solo a inquadrare il codice a quadretti che collega l'app alla tua casa. Nessuna foto viene salvata o mandata da nessuna parte.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- La plancia vera dentro l'app arriva al WebView da un server che sta
+	     dentro l'app stessa, su 127.0.0.1, in chiaro: non esce dal telefono.
+	     Senza questa eccezione l'iPhone rifiuta ogni http senza s, anche
+	     verso se stesso. Vale per la rete locale e per quello che il WebView
+	     apre; verso internet resta la regola di sistema. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+	</dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
