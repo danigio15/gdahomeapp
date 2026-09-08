@@ -127,13 +127,14 @@ Non serve installare niente sul computer: lo costruisce GitHub.
    Puoi anche lasciarla vuota: inquadrando il quadretto, il centralino glielo
    dice la casa. Serve solo a chi vuole battere le lettere a mano da fuori.
 3. Quando finisce (cinque minuti circa), in fondo alla pagina della corsa c'è
-   **gdahome-android**: scaricalo. Dentro c'è `app-debug.apk`.
+   **gdahome-android**: scaricalo. Dentro c'è `app-release.apk`.
 4. Passa il file sul telefono e aprilo. Android chiederà di consentire
    l'installazione da questa origine: è la richiesta normale per un'app che non
    arriva dal Play Store.
 
-Il pacchetto è di *debug*, non di *release*: si installa uguale, ma è un po'
-più lento e non è quello che andrebbe su un negozio.
+Il pacchetto è di *release*, firmato con la chiave di sviluppo: non è quello
+che andrebbe su un negozio, ma è compilato per davvero — quello di *debug*
+girava interpretato, con tutti i controlli accesi, ed era lento e scaldava.
 
 ### La prima accensione
 

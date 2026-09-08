@@ -66,12 +66,11 @@ class _FlussoDisegnatoState extends State<FlussoDisegnato>
     duration: const Duration(milliseconds: 1400),
   );
 
-  @override
-  void initState() {
-    super.initState();
-    _guardaSeDeveMuoversi();
-  }
-
+  /* Non in `initState`: li' il contesto non ha ancora i suoi antenati, e
+   * chiedergli il MediaQuery e' un errore che la versione di prova segnala
+   * con lo schermo rosso e quella definitiva lascia passare in silenzio.
+   * `didChangeDependencies` arriva subito dopo, e ogni volta che cambia
+   * qualcosa da cui si dipende — che e' esattamente quello che serve. */
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();

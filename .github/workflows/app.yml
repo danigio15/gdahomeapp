@@ -42,10 +42,11 @@ jobs:
       - run: flutter pub get
         working-directory: app
 
-      # In *debug*, non in *release*, e non e' una svista: un pacchetto di
-      # release va firmato con una chiave che deve restare in mano a una
-      # persona sola, e finche' l'app non va sui negozi quella chiave non
-      # esiste. Il pacchetto di debug si firma da solo e si installa uguale.
+      # In *release*, ed e' quello che conta per chi lo prova: il pacchetto di
+      # debug gira interpretato, con tutti i controlli accesi, ed era lui a
+      # rendere l'app lenta e a scaldare il telefono. La chiave per firmarlo
+      # e' quella di sviluppo che Flutter mette da se' nel progetto — sui
+      # negozi non si va con quella, ma si installa uguale e va veloce.
       # Quale centralino finisce dentro il pacchetto, scritto dove si vede.
       #
       # Serve perche' un pacchetto senza centralino **sembra uguale** a uno che
@@ -98,15 +99,15 @@ jobs:
           VERSIONE="$CORSA·${GITHUB_SHA:0:7}"
           echo "Questo pacchetto e' il $VERSIONE"
           if [ -n "$CENTRALINO" ]; then
-            flutter build apk --debug --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
+            flutter build apk --release --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
           else
-            flutter build apk --debug --dart-define=VERSIONE="$VERSIONE"
+            flutter build apk --release --dart-define=VERSIONE="$VERSIONE"
           fi
 
       - uses: actions/upload-artifact@v4
         with:
           name: gdahome-android
-          path: app/build/app/outputs/flutter-apk/app-debug.apk
+          path: app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
 
