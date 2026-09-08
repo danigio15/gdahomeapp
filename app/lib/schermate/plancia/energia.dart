@@ -174,19 +174,7 @@ class _IlFlusso extends StatelessWidget {
           acceso: (lettura.batteria ?? 0) != 0,
         ),
     ];
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        for (final nodo in nodi)
-          LayoutBuilder(
-            builder: (context, _) => SizedBox(
-              width: (MediaQuery.sizeOf(context).width - 32 - 10) / 2,
-              child: nodo,
-            ),
-          ),
-      ],
-    );
+    return DuePerRiga(nodi, spazio: 10);
   }
 }
 
