@@ -504,6 +504,10 @@ try {
     ["Temperatura", "TUTTE", "4d-temperatura"],
     ["Finestre", "Apri tutto", "4e-finestre"],
     ["Agenda", "cose aperte", "4f-agenda"],
+    ["Sicurezza", "Antifurto", "4g-sicurezza"],
+    ["Prese", "Accendi tutte", "4h-prese"],
+    ["Musica", "in riproduzione", "4i-musica"],
+    ["Robot", "in funzione", "4j-robot"],
   ];
   for (const [nome, attesa, foto] of pagine) {
     racconta(`apro ${nome}`);

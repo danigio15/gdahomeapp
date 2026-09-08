@@ -148,10 +148,7 @@ class LibroDegliImpegni {
       },
     });
     final fresche = await _coseDi(lista);
-    _cose = [
-      ..._cose.where((una) => una.lista != lista),
-      ...fresche,
-    ];
+    _cose = [..._cose.where((una) => una.lista != lista), ...fresche];
     _avvisa();
   }
 

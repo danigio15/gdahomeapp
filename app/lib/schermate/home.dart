@@ -27,7 +27,11 @@ import 'plancia/agenda.dart';
 import 'plancia/clima.dart';
 import 'plancia/finestre.dart';
 import 'plancia/luci.dart';
+import 'plancia/musica.dart';
 import 'plancia/plancia.dart';
+import 'plancia/prese.dart';
+import 'plancia/robot.dart';
+import 'plancia/sicurezza.dart';
 import 'plancia/stanze.dart';
 import 'plancia/temperatura.dart';
 
@@ -118,6 +122,22 @@ class _HomeState extends State<Home> {
         configurazione: config,
       ),
       Sezione.agenda => PaginaDellAgenda(
+        collegamento: collegamento,
+        configurazione: config,
+      ),
+      Sezione.sicurezza => PaginaDellaSicurezza(
+        collegamento: collegamento,
+        configurazione: config,
+      ),
+      Sezione.prese => PaginaDellePrese(
+        collegamento: collegamento,
+        configurazione: config,
+      ),
+      Sezione.musica => PaginaDellaMusica(
+        collegamento: collegamento,
+        configurazione: config,
+      ),
+      Sezione.robot => PaginaDeiRobot(
         collegamento: collegamento,
         configurazione: config,
       ),

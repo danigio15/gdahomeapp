@@ -130,6 +130,10 @@ void main() {
       Sezione.temperatura,
       Sezione.finestre,
       Sezione.agenda,
+      Sezione.sicurezza,
+      Sezione.prese,
+      Sezione.musica,
+      Sezione.robot,
     ]);
     expect(sezioniDellaPlancia(null), [Sezione.plancia]);
     expect(sezioniDellaPlancia(ConfigurazioneDellaPlancia.vuota), [

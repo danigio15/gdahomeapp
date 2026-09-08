@@ -152,7 +152,10 @@ List<Impegno> impegniDallaRisposta(Object? risultato, String entita) {
   return [
     for (final uno in eventi)
       if (uno is Map)
-        if (istanteDi(uno['start']) case (quando: final inizio?, :final tuttoIlGiorno))
+        if (istanteDi(uno['start']) case (
+          quando: final inizio?,
+          :final tuttoIlGiorno,
+        ))
           Impegno(
             entita: entita,
             titolo: pulito(uno['summary']),
@@ -233,9 +236,7 @@ List<Cosa> daFare(Iterable<Cosa> cose) =>
 
 /// Una riga dell'agenda: un appuntamento o una scadenza.
 class RigaDellAgenda {
-  const RigaDellAgenda.impegno(Impegno questo)
-    : impegno = questo,
-      cosa = null;
+  const RigaDellAgenda.impegno(Impegno questo) : impegno = questo, cosa = null;
   const RigaDellAgenda.scadenza(Cosa questa) : impegno = null, cosa = questa;
 
   final Impegno? impegno;
@@ -265,11 +266,7 @@ class GiornoDellAgenda {
 /// scorre indietro per trovarla — appartiene ad adesso, ed e' proprio la riga
 /// per cui si apre l'agenda.
 ({List<RigaDellAgenda> inRitardo, List<GiornoDellAgenda> giorni})
-agendaPerGiorno(
-  List<Impegno> impegni,
-  List<Cosa> cose,
-  DateTime adesso,
-) {
+agendaPerGiorno(List<Impegno> impegni, List<Cosa> cose, DateTime adesso) {
   final oggi = chiaveDelGiorno(adesso);
   final giorni = <String, List<RigaDellAgenda>>{};
   void metti(String giorno, RigaDellAgenda riga) =>
@@ -300,7 +297,8 @@ agendaPerGiorno(
 
   final ordinati = giorni.keys.toList()..sort();
   return (
-    inRitardo: inRitardo..sort((una, altra) => una.inizio.compareTo(altra.inizio)),
+    inRitardo: inRitardo
+      ..sort((una, altra) => una.inizio.compareTo(altra.inizio)),
     giorni: [
       for (final giorno in ordinati)
         GiornoDellAgenda(
@@ -341,8 +339,7 @@ enum QuandoConta { oggi, domani, avanti, mai }
   final diOggi =
       restano
           .where(
-            (uno) =>
-                chiaveDelGiorno(uno.inizio) == oggi || uno.inCorso(adesso),
+            (uno) => chiaveDelGiorno(uno.inizio) == oggi || uno.inCorso(adesso),
           )
           .length +
       scadenze

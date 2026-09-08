@@ -54,4 +54,55 @@ class Comandi {
     entita,
     con: {'position': percento.clamp(0, 100)},
   );
+
+  /* ─── Chi suona ────────────────────────────────────────────────────────── */
+
+  Future<void> suonaOFermati(String entita) =>
+      _casa.comanda('media_play_pause', entita);
+
+  Future<void> brano(String entita, {required bool avanti}) => _casa.comanda(
+    avanti ? 'media_next_track' : 'media_previous_track',
+    entita,
+  );
+
+  /// Il volume si manda da zero a uno, non in percento.
+  Future<void> volume(String entita, int percento) => _casa.comanda(
+    'volume_set',
+    entita,
+    con: {'volume_level': percento.clamp(0, 100) / 100},
+  );
+
+  Future<void> muto(String entita, {required bool zitto}) =>
+      _casa.comanda('volume_mute', entita, con: {'is_volume_muted': zitto});
+
+  Future<void> sorgente(String entita, String quale) =>
+      _casa.comanda('select_source', entita, con: {'source': quale});
+
+  /* ─── Chi pulisce ──────────────────────────────────────────────────────── */
+
+  Future<void> parti(String entita) => _casa.comanda('start', entita);
+  Future<void> pausa(String entita) => _casa.comanda('pause', entita);
+  Future<void> fermati(String entita) => _casa.comanda('stop', entita);
+  Future<void> allaBase(String entita) =>
+      _casa.comanda('return_to_base', entita);
+  Future<void> fattiTrovare(String entita) => _casa.comanda('locate', entita);
+  Future<void> potenza(String entita, String quale) =>
+      _casa.comanda('set_fan_speed', entita, con: {'fan_speed': quale});
+
+  /* ─── Le porte e la centrale ───────────────────────────────────────────── */
+
+  Future<void> serra(String entita) => _casa.comanda('lock', entita);
+  Future<void> libera(String entita) => _casa.comanda('unlock', entita);
+
+  /// Inserisce o disinserisce la centrale.
+  ///
+  /// Il codice si manda solo quando la centrale ne dichiara uno: mandarne uno
+  /// a chi non lo vuole fa rispondere di no a centrali che avrebbero detto
+  /// di si'.
+  Future<void> allarme(String entita, String servizio, {String? codice}) =>
+      _casa.comanda(
+        servizio,
+        entita,
+        con: codice == null || codice.isEmpty ? null : {'code': codice},
+      );
 }

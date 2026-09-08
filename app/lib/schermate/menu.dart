@@ -24,6 +24,7 @@ import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
 import '../plancia/configurazione.dart';
+import '../plancia/tessere.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
 import 'da_dove.dart';
@@ -48,6 +49,15 @@ enum Sezione {
   ),
   finestre('Finestre', Icons.blinds_rounded, pronta: true, dellaPlancia: true),
   agenda('Agenda', Icons.event_rounded, pronta: true, dellaPlancia: true),
+  sicurezza(
+    'Sicurezza',
+    Icons.shield_rounded,
+    pronta: true,
+    dellaPlancia: true,
+  ),
+  prese('Prese', Icons.power_rounded, pronta: true, dellaPlancia: true),
+  musica('Musica', Icons.speaker_rounded, pronta: true, dellaPlancia: true),
+  robot('Robot', Icons.smart_toy_rounded, pronta: true, dellaPlancia: true),
   dispositivi('Dispositivi', Icons.devices_other_rounded, pronta: true),
   aiutanti('Aiutanti', Icons.tune_rounded),
   zigbee('Zigbee', Icons.settings_input_antenna_rounded),
@@ -83,6 +93,13 @@ List<Sezione> sezioniDellaPlancia(ConfigurazioneDellaPlancia? config) {
     if (config.stanze.any((s) => s.temperatura.isNotEmpty)) Sezione.temperatura,
     if (config.coperture.isNotEmpty) Sezione.finestre,
     if (config.calendari.isNotEmpty || config.liste.isNotEmpty) Sezione.agenda,
+    if (config.entita(riferimentoDellaCentrale) != null ||
+        config.porte.isNotEmpty ||
+        config.telecamere.isNotEmpty)
+      Sezione.sicurezza,
+    if (config.prese.isNotEmpty) Sezione.prese,
+    if (config.lettori.isNotEmpty) Sezione.musica,
+    if (config.robot.any((r) => r.entita.isNotEmpty)) Sezione.robot,
   ];
 }
 

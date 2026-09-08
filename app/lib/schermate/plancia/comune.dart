@@ -146,6 +146,34 @@ class DueBottoni extends StatelessWidget {
 }
 
 /// Una pastiglia con una parola, e magari un'icona: «ACCESA», «Casa».
+/// Bottoni due per riga.
+///
+/// Il tema da' ai bottoni un'altezza fissa e nessuna larghezza, cioe' tutta
+/// quella che trovano: sei tasti diventano sei righe, e una centrale con sei
+/// inserimenti riempiva uno schermo intero per dire una cosa sola. Qui la
+/// larghezza gliela si da', e chi resta da solo in fondo tiene la sua meta'
+/// invece di allargarsi e sembrare un tasto diverso dagli altri.
+class DuePerRiga extends StatelessWidget {
+  const DuePerRiga(this.figli, {super.key, this.spazio = 8});
+
+  final List<Widget> figli;
+  final double spazio;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, misure) {
+      final larghezza = (misure.maxWidth - spazio) / 2;
+      return Wrap(
+        spacing: spazio,
+        runSpacing: spazio,
+        children: [
+          for (final figlio in figli) SizedBox(width: larghezza, child: figlio),
+        ],
+      );
+    },
+  );
+}
+
 class Pillolina extends StatelessWidget {
   const Pillolina({
     super.key,
