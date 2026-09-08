@@ -65,7 +65,7 @@ class VistaDellaPersona {
     required this.colore,
     required this.emoji,
     required this.foto,
-    required this.conLaFaccia,
+    required this.faccia,
   });
 
   final String id;
@@ -94,7 +94,11 @@ class VistaDellaPersona {
   final String colore;
   final String emoji;
   final String foto;
-  final bool conLaFaccia;
+  /// Il ritratto scelto: persona, capelli, carnagione, abito. Vuoto quando
+  /// non ne e' stato scelto uno.
+  final Map<String, Object?> faccia;
+
+  bool get conLaFaccia => faccia.isNotEmpty;
 
   bool get batteriaBassa => batteria != null && batteria! <= 20;
   bool get orologioBasso => orologio != null && orologio! <= 20;
@@ -268,7 +272,7 @@ VistaDellaPersona vistaDellaPersona(
     colore: persona.colore,
     emoji: persona.emoji,
     foto: foto,
-    conLaFaccia: persona.conLaFaccia,
+    faccia: persona.faccia,
   );
 }
 

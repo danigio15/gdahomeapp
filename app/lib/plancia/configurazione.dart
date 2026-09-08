@@ -1146,8 +1146,12 @@ class Persona {
       emoji = grezza['avatar'] is Map
           ? pulito((grezza['avatar'] as Map)['emoji'])
           : '',
-      conLaFaccia =
-          grezza['avatar'] is Map && (grezza['avatar'] as Map)['face'] is Map;
+      faccia = grezza['avatar'] is Map && (grezza['avatar'] as Map)['face'] is Map
+          ? {
+              for (final v in ((grezza['avatar'] as Map)['face'] as Map).entries)
+                pulito(v.key): v.value,
+            }
+          : const {};
 
   final String id;
   final String nome;
@@ -1167,7 +1171,12 @@ class Persona {
   /// Il colore dell'avatar, sempre uno di quelli della plancia.
   final String colore;
   final String emoji;
-  final bool conLaFaccia;
+
+  /// Il ritratto scelto in configurazione: persona, capelli, carnagione,
+  /// abito. Vuoto quando nessuno ne ha scelto uno.
+  final Map<String, Object?> faccia;
+
+  bool get conLaFaccia => faccia.isNotEmpty;
 
   static const coloriDellAvatar = [
     '#0ea5e9',

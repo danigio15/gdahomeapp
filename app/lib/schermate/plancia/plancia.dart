@@ -22,9 +22,12 @@ import '../../plancia/configurazione.dart';
 import '../../plancia/numeri.dart';
 import '../../plancia/persone.dart';
 import '../../plancia/tessere.dart';
+import '../../vestito/marchio.dart';
 import '../../vestito/oggetti.dart';
+import '../../vestito/ritratti.dart';
 import '../../vestito/pezzi.dart';
 import '../../vestito/tema.dart';
+import '../da_dove.dart';
 import 'comune.dart';
 
 class Plancia extends StatefulWidget {
@@ -32,10 +35,14 @@ class Plancia extends StatefulWidget {
     super.key,
     required this.collegamento,
     required this.configurazione,
+    this.vaiAlleCase,
   });
 
   final Collegamento collegamento;
   final ConfigurazioneDellaPlancia configurazione;
+
+  /// Dove si va toccando il marchio: l'elenco delle case.
+  final VoidCallback? vaiAlleCase;
 
   @override
   State<Plancia> createState() => _PlanciaState();
@@ -132,7 +139,13 @@ class _PlanciaState extends State<Plancia> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          _Testata(configurazione: config, leggi: _leggi, adesso: adesso),
+          Testata(
+            collegamento: widget.collegamento,
+            configurazione: config,
+            leggi: _leggi,
+            adesso: adesso,
+            vaiAlleCase: widget.vaiAlleCase,
+          ),
           const SizedBox(height: 22),
           ...blocchi,
         ],
@@ -241,68 +254,189 @@ class _DueColonne extends StatelessWidget {
   }
 }
 
-/* ─── L'intestazione: il meteo e l'ora ─────────────────────────────────── */
+/* ─── L'intestazione ────────────────────────────────────────────────────── */
 
-class _Testata extends StatelessWidget {
-  const _Testata({
-    required this.configurazione,
-    required this.leggi,
-    required this.adesso,
-  });
+/// La testata: il marchio, il nome della casa, come sta il filo, e sotto una
+/// fascia col meteo e l'ora.
+///
+/// E' la stessa della plancia, ed e' fatta cosi' per un motivo che si vede
+/// solo su un telefono: il meteo era una card alta, con l'icona a settanta e
+/// la temperatura a cinquantadue, e da sola si prendeva un quinto dello
+/// schermo per dire quattro numeri. Tutto quello che dice sta comodo in una
+/// fascia sotto il nome, e quello che si guadagna e' la prima fila di tessere
+/// che si vede senza scorrere.
+///
+/// Il nome sta al centro perche' e' l'unica cosa che si legge da lontano: a
+/// sinistra il marchio, a destra come sta il filo, e in mezzo di chi e' questa
+/// casa.
+class Testata extends StatelessWidget {
+  Testata({
+    super.key,
+    required this.collegamento,
+    ConfigurazioneDellaPlancia? configurazione,
+    DateTime? adesso,
+    Leggi? leggi,
+    this.vaiAlleCase,
+  }) : configurazione = configurazione ?? ConfigurazioneDellaPlancia.vuota,
+       adesso = adesso ?? DateTime.now(),
+       /* Senza plancia il meteo non c'e': resta il nome e come sta il filo,
+        * che sono le due cose che si vogliono sapere anche — anzi soprattutto
+        * — quando il resto non arriva. */
+       leggi = leggi ?? ((_) => null);
 
+  final Collegamento collegamento;
   final ConfigurazioneDellaPlancia configurazione;
+  final DateTime adesso;
   final Leggi leggi;
+  final VoidCallback? vaiAlleCase;
+
+  @override
+  Widget build(BuildContext context) {
+    final meteoEntita = configurazione.entita('dm.home_meteo');
+    final meteo = meteoEntita == null ? null : leggi(meteoEntita);
+
+    return Scheda(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Marchio(lato: 34),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _IlNomeDellaCasa(collegamento.casa?.nome ?? 'Casa'),
+              ),
+              const SizedBox(width: 8),
+              DaDoveSiPassa(collegamento, piccolo: true),
+              /* Il modo per cambiare casa sta qui, ed e' un bottone con un
+               * nome: il marchio accanto non fa niente. Due cose che portano
+               * allo stesso posto con due nomi diversi si spiegano male a chi
+               * l'app la usa senza vederla. */
+              if (vaiAlleCase != null)
+                IconButton(
+                  onPressed: vaiAlleCase,
+                  tooltip: 'Le tue case',
+                  visualDensity: VisualDensity.compact,
+                  iconSize: 20,
+                  icon: const Icon(Icons.home_work_rounded),
+                ),
+            ],
+          ),
+          if (meteo != null) ...[
+            const SizedBox(height: 8),
+            _LaFasciaDelMeteo(meteo: meteo, adesso: adesso),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Il nome della casa: in mezzo, in una riga sola, e con la sfumatura del
+/// marchio — blu notte che diventa verde.
+///
+/// A cedere e' lui, se lo spazio manca: il meteo dice numeri e non si puo'
+/// accorciare, un nome coi puntini si legge lo stesso.
+class _IlNomeDellaCasa extends StatelessWidget {
+  const _IlNomeDellaCasa(this.nome);
+  final String nome;
+
+  @override
+  Widget build(BuildContext context) {
+    final scuro = Theme.of(context).brightness == Brightness.dark;
+    return ShaderMask(
+      shaderCallback: (dove) => LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: scuro
+            ? const [Color(0xFFE8EDF6), Color(0xFF4ADE80)]
+            : const [Colori.notte, Colori.bene],
+      ).createShader(dove),
+      child: Text(
+        nome,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0,
+          height: 1.2,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+/// La fascia sotto il nome: il tempo che fa, e l'ora.
+///
+/// E' un riquadro incassato, non una card dentro una card: il bordo e il fondo
+/// sono suoi, e il meteo ci sta dentro nudo.
+class _LaFasciaDelMeteo extends StatelessWidget {
+  const _LaFasciaDelMeteo({required this.meteo, required this.adesso});
+
+  final Entita meteo;
   final DateTime adesso;
 
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
-    final testi = Theme.of(context).textTheme;
-    final meteoEntita = configurazione.entita('dm.home_meteo');
-    final meteo = meteoEntita == null ? null : leggi(meteoEntita);
-
-    return Scheda(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+    final gradi = comeNumero(meteo.attributi['temperature']);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
+      decoration: BoxDecoration(
+        color: colori.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colori.outlineVariant),
+      ),
       child: Row(
         children: [
-          if (meteo != null) ...[
-            Cerchietto(
-              icona: _iconaDelMeteo(meteo.stato),
-              lato: 46,
-              fondo: colori.secondaryContainer,
-              colore: colori.onSecondaryContainer,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${numero(comeNumero(meteo.attributi['temperature']), cifre: 1)}°',
-                    style: testi.headlineSmall,
-                  ),
-                  const SizedBox(height: 3),
-                  _RigaDelMeteo(meteo: meteo),
-                ],
+          SizedBox(
+            width: 26,
+            height: 26,
+            child: Center(
+              child: Icon(
+                _iconaDelMeteo(meteo.stato),
+                size: 21,
+                color: Colori.ambraScura,
               ),
             ),
-          ] else
-            const Spacer(),
-          const SizedBox(width: 12),
+          ),
+          const SizedBox(width: 9),
+          Text(
+            '${numero(gradi, cifre: 1)}°',
+            style: carattereDelNumero(
+              corpo: 19,
+              peso: FontWeight.w700,
+              colore: colori.onSurface,
+            ),
+          ),
+          const SizedBox(width: 9),
+          Expanded(child: _RigaDelMeteo(meteo: meteo)),
+          const SizedBox(width: 8),
+          /* L'ora sta all'estremita', staccata da una riga sottile: e' un'altra
+           * cosa dal tempo che fa, e senza la riga si leggevano come un dato
+           * solo. */
+          Container(width: 1, height: 22, color: colori.outlineVariant),
+          const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
                 _ora(adesso),
-                style: testi.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.5,
+                style: carattereDelNumero(
+                  corpo: 17,
+                  peso: FontWeight.w700,
+                  colore: colori.onSurface,
                 ),
               ),
-              const SizedBox(height: 2),
               Text(
                 _data(adesso),
-                style: testi.bodySmall?.copyWith(
+                style: TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
                   color: colori.onSurfaceVariant,
                 ),
               ),
@@ -335,19 +469,50 @@ class _RigaDelMeteo extends StatelessWidget {
       children: [
         Icon(icona, size: 13, color: colori.onSurfaceVariant),
         const SizedBox(width: 2),
-        Text(testo, style: stile),
+        Flexible(
+          child: Text(
+            testo,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: stile,
+          ),
+        ),
       ],
     );
-    return Wrap(
-      spacing: 8,
-      runSpacing: 2,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    /* Due righe corte invece di una lunga, e per scelta.
+     *
+     * Su un telefono la fascia e' gia' alta quanto il marchio, quindi la
+     * seconda riga non costa niente in altezza e fa risparmiare meta'
+     * larghezza — che e' quella che serve al nome della casa per non finire
+     * coi puntini. In una riga sola andava a capo lo stesso, ma dove capitava. */
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(_nomeDelMeteo(meteo.stato), style: stile),
-        if (umidita != null)
-          dato(Icons.water_drop_outlined, '${numero(umidita, cifre: 0)}%'),
-        if (vento != null)
-          dato(Icons.air_rounded, '${numero(vento, cifre: 1)} $unitaDelVento'),
+        Text(
+          _nomeDelMeteo(meteo.stato),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: stile,
+        ),
+        if (umidita != null || vento != null)
+          Row(
+            children: [
+              if (umidita != null)
+                dato(
+                  Icons.water_drop_outlined,
+                  '${numero(umidita, cifre: 0)}%',
+                ),
+              if (umidita != null && vento != null) const SizedBox(width: 8),
+              if (vento != null)
+                Flexible(
+                  child: dato(
+                    Icons.air_rounded,
+                    '${numero(vento, cifre: 1)} $unitaDelVento',
+                  ),
+                ),
+            ],
+          ),
       ],
     );
   }
@@ -961,24 +1126,33 @@ class _CartaDellaPersona extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
+              /* Il ritratto, quando c'e' — la faccia scelta in
+               * configurazione, coi suoi capelli e il suo abito. Poi l'emoji
+               * scelta, e per ultime le iniziali, che sono quello che resta
+               * quando nessuno ha scelto niente. */
               Container(
                 width: 68,
                 height: 68,
                 alignment: Alignment.center,
+                clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: colore.withValues(alpha: 0.14),
                   border: Border.all(color: colore, width: 2.5),
                 ),
-                child: Text(
-                  persona.emoji.isNotEmpty ? persona.emoji : persona.iniziali,
-                  style: persona.emoji.isNotEmpty
-                      ? const TextStyle(fontSize: 28)
-                      : testi.titleLarge?.copyWith(
-                          color: colore,
-                          fontWeight: FontWeight.w700,
-                        ),
-                ),
+                child: persona.conLaFaccia
+                    ? Ritratto(FacciaScelta.dalla(persona.faccia), lato: 68)
+                    : Text(
+                        persona.emoji.isNotEmpty
+                            ? persona.emoji
+                            : persona.iniziali,
+                        style: persona.emoji.isNotEmpty
+                            ? const TextStyle(fontSize: 28)
+                            : testi.titleLarge?.copyWith(
+                                color: colore,
+                                fontWeight: FontWeight.w700,
+                              ),
+                      ),
               ),
               Positioned(
                 right: -2,

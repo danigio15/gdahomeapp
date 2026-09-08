@@ -64,55 +64,73 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     final collegamento = widget.collegamento;
     final voci = vociDellaBarra(sezioniDellaPlancia(collegamento.plancia));
+    /* Sulla plancia la barra del titolo non c'e': la fa la **testata**, che e'
+     * la card in cima con il marchio, il nome della casa e la fascia del
+     * meteo. Tenerle tutt'e due vorrebbe dire scrivere il nome della casa due
+     * volte a tre centimetri di distanza, e perdere cinquantasei punti di
+     * schermo — che su un telefono sono la prima fila di tessere. */
+    final sullaPlancia = _sezione == Sezione.plancia;
     return Scaffold(
-      appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 12, top: 8, bottom: 8),
-          child: GestureDetector(
-            onTap: widget.vaiAlleCase,
-            child: const Marchio(lato: 30),
-          ),
-        ),
-        leadingWidth: 54,
-        titleSpacing: 4,
-        title: _sezione == Sezione.plancia
-            ? _NomeEStato(collegamento: collegamento)
-            : Text(_sezione.titolo),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.home_work_rounded),
-            tooltip: 'Le tue case',
-            onPressed: widget.vaiAlleCase,
-          ),
-        ],
-        /* Una riga sottile che dice «sto ricollegando»: i dati vecchi restano
+      appBar: sullaPlancia
+          ? null
+          : AppBar(
+              leading: Padding(
+                padding: const EdgeInsets.only(left: 12, top: 8, bottom: 8),
+                child: GestureDetector(
+                  onTap: widget.vaiAlleCase,
+                  child: const Marchio(lato: 30),
+                ),
+              ),
+              leadingWidth: 54,
+              titleSpacing: 4,
+              title: _sezione == Sezione.plancia
+                  ? _NomeEStato(collegamento: collegamento)
+                  : Text(_sezione.titolo),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.home_work_rounded),
+                  tooltip: 'Le tue case',
+                  onPressed: widget.vaiAlleCase,
+                ),
+              ],
+              /* Una riga sottile che dice «sto ricollegando»: i dati vecchi restano
          * a schermo, e si vede che stanno per cambiare. */
-        bottom: collegamento.comeVa == ComeVa.inCammino
-            ? const PreferredSize(
-                preferredSize: Size.fromHeight(3),
-                child: LinearProgressIndicator(minHeight: 3),
-              )
-            : null,
-      ),
+              bottom: collegamento.comeVa == ComeVa.inCammino
+                  ? const PreferredSize(
+                      preferredSize: Size.fromHeight(3),
+                      child: LinearProgressIndicator(minHeight: 3),
+                    )
+                  : null,
+            ),
       /* La barra sta **sopra** la pagina, non accanto: e' una dock, si chiama
        * quando serve e sparisce quando non serve. Sotto la pagina si lascia
        * l'aria che le tocca, se no l'ultima riga finisce sotto la maniglia. */
       body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: spazioPerLaBarra),
-            child: switch (_sezione) {
-              Sezione.dispositivi => Dispositivi(collegamento: collegamento),
-              /* La configurazione si apre anche su una casa dove la plancia
+          /* Senza barra del titolo la pagina comincia sotto l'orologio del
+           * telefono: l'aria in cima gliela lascia questo, e solo dove la
+           * barra non c'e' — dove c'e', quell'aria l'ha gia' lasciata lei. */
+          SafeArea(
+            top: sullaPlancia,
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.only(left: spazioPerLaBarra),
+              child: switch (_sezione) {
+                Sezione.dispositivi => Dispositivi(collegamento: collegamento),
+                /* La configurazione si apre anche su una casa dove la plancia
                * non c'e' ancora: e' il posto dove la si mette. */
-              Sezione.configurazione => PaginaDellaConfigurazione(
-                collegamento: collegamento,
-                configurazione:
-                    collegamento.plancia ?? ConfigurazioneDellaPlancia.vuota,
-              ),
-              Sezione.plancia => _Plancia(collegamento: collegamento),
-              _ => _paginaDellaPlancia(collegamento),
-            },
+                Sezione.configurazione => PaginaDellaConfigurazione(
+                  collegamento: collegamento,
+                  configurazione:
+                      collegamento.plancia ?? ConfigurazioneDellaPlancia.vuota,
+                ),
+                Sezione.plancia => _Plancia(
+                  collegamento: collegamento,
+                  vaiAlleCase: widget.vaiAlleCase,
+                ),
+                _ => _paginaDellaPlancia(collegamento),
+              },
+            ),
           ),
           BarraDelleSezioni(
             key: _barra,
@@ -224,8 +242,9 @@ class _NomeEStato extends StatelessWidget {
 /// Dove sta la plancia: quella vera quando c'e', e altrimenti come sta la
 /// casa, o cosa manca.
 class _Plancia extends StatelessWidget {
-  const _Plancia({required this.collegamento});
+  const _Plancia({required this.collegamento, this.vaiAlleCase});
   final Collegamento collegamento;
+  final VoidCallback? vaiAlleCase;
 
   @override
   Widget build(BuildContext context) {
@@ -233,13 +252,24 @@ class _Plancia extends StatelessWidget {
     if (collegamento.comeVa == ComeVa.aperta &&
         plancia != null &&
         plancia.configurata) {
-      return Plancia(collegamento: collegamento, configurazione: plancia);
+      return Plancia(
+        collegamento: collegamento,
+        configurazione: plancia,
+        vaiAlleCase: vaiAlleCase,
+      );
     }
     return RefreshIndicator(
       onRefresh: () => collegamento.apri(forza: true),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: [_corpo()],
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        children: [
+          /* La testata c'e' anche quando la plancia non c'e': il nome della
+           * casa e come sta il filo sono proprio quello che si guarda mentre
+           * il resto non arriva. */
+          Testata(collegamento: collegamento, vaiAlleCase: vaiAlleCase),
+          const SizedBox(height: 22),
+          _corpo(),
+        ],
       ),
     );
   }

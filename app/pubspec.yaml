@@ -60,6 +60,11 @@ flutter:
     # disegni di DashboardModern, presi da li' e non rifatti a somiglianza,
     # perche' «a somiglianza» vuol dire un'altra app.
     - assets/oggetti/
+    # I ritratti delle persone: i render 3D di Fluent Emoji (Microsoft,
+    # licenza MIT, in `LICENSE.txt` accanto ai file), gli stessi che usa la
+    # plancia. Ci sono le teste e i busti che le tabelle nominano davvero, non
+    # tutta la cartella.
+    - assets/ritratti/
 
   # I caratteri sono quelli della plancia, e non per pigrizia: chi passa dal
   # telefono alla dashboard non deve avere l'impressione di due prodotti.
