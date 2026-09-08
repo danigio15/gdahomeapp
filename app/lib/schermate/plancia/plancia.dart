@@ -125,10 +125,12 @@ class _PlanciaState extends State<Plancia> {
           if (azioni.isEmpty) continue;
           blocchi.addAll([
             const Insegna('Azioni rapide'),
-            _DueColonne([
-              for (final azione in azioni)
-                _AzioneRapida(azione, quandoPremuta: () => _esegui(azione)),
-            ]),
+            _IlVassoio(
+              child: _DueColonne(spazio: 10, [
+                for (final azione in azioni)
+                  _AzioneRapida(azione, quandoPremuta: () => _esegui(azione)),
+              ]),
+            ),
             const SizedBox(height: 24),
           ]);
       }
@@ -1297,6 +1299,88 @@ class _Dettaglio extends StatelessWidget {
 
 /* ─── Le azioni rapide ─────────────────────────────────────────────────── */
 
+/// Il vassoio: un ripiano incavato che tiene dentro i tasti.
+///
+/// E' incavato per davvero — l'ombra sta **dentro**, non sotto — e in fondo ha
+/// una cucitura chiara. E' quella che lo fa sembrare un pezzo solo invece di
+/// un rettangolo grigio dietro sei card.
+class _IlVassoio extends StatelessWidget {
+  const _IlVassoio({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final scuro = Theme.of(context).brightness == Brightness.dark;
+    final vetrino = Colors.white.withValues(alpha: scuro ? 0.06 : 0.75);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(26),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.alphaBlend(
+              colori.onSurface.withValues(alpha: 0.06),
+              colori.surface,
+            ),
+            Color.alphaBlend(
+              colori.onSurface.withValues(alpha: 0.03),
+              colori.surface,
+            ),
+          ],
+        ),
+      ),
+      child: Stack(
+        children: [
+          /* L'ombra di dentro, in cima: e' l'unica cosa che distingue un
+           * ripiano incavato da un rettangolo colorato. */
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(26),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: scuro ? 0.35 : 0.09),
+                      Colors.black.withValues(alpha: 0),
+                    ],
+                    stops: const [0, 0.06],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Padding(padding: const EdgeInsets.all(12), child: child),
+          /* La cucitura in fondo. */
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 6,
+            child: IgnorePointer(
+              child: Container(
+                height: 1,
+                color: vetrino.withValues(alpha: vetrino.a * 0.55),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Un tasto delle azioni rapide: il disco di smalto col simbolo, e il nome
+/// sotto.
+///
+/// Il disco e' quello della plancia: il colore dell'azione steso in
+/// sfumatura, un riflesso in cima come su un tasto di smalto, e sotto
+/// un'ombra della **sua** tinta invece di una grigia. E' l'unico posto della
+/// Home dove il colore si prende tanto spazio, ed e' voluto: queste sei cose
+/// si premono al volo, e devono essere riconoscibili prima di essere lette.
 class _AzioneRapida extends StatelessWidget {
   const _AzioneRapida(this.azione, {required this.quandoPremuta});
   final AzioneRapida azione;
@@ -1311,50 +1395,146 @@ class _AzioneRapida extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final testi = Theme.of(context).textTheme;
+    final colori = Theme.of(context).colorScheme;
     final incorporata = azione.tipo == 'builtin'
         ? _incorporate[azione.incorporata]
         : null;
-    final colore = coloreDaTesto(
+    final tinta = coloreDaTesto(
       azione.colore.isNotEmpty ? azione.colore : (incorporata?.$2 ?? '#0ea5e9'),
     );
     final nome = azione.nome.isNotEmpty
         ? azione.nome
         : (incorporata?.$3 ?? '?');
-    final Widget disegno;
-    if (azione.icona.isNotEmpty) {
-      disegno = Text(azione.icona, style: const TextStyle(fontSize: 26));
-    } else if (incorporata != null) {
-      disegno = Icon(incorporata.$1, size: 28, color: colore);
-    } else {
-      disegno = Icon(Icons.bolt_rounded, size: 28, color: colore);
-    }
-    return Scheda(
-      padding: const EdgeInsets.fromLTRB(12, 18, 12, 14),
-      quandoPremuta: quandoPremuta,
-      child: Column(
+    final Widget disegno = azione.icona.isNotEmpty
+        ? Text(
+            azione.icona,
+            style: const TextStyle(
+              fontSize: 30,
+              height: 1,
+              shadows: [
+                Shadow(
+                  color: Color(0x4D0F172A),
+                  blurRadius: 3,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+          )
+        : Icon(
+            incorporata?.$1 ?? Icons.bolt_rounded,
+            size: 30,
+            color: Colors.white,
+            shadows: const [
+              Shadow(
+                color: Color(0x4D0F172A),
+                blurRadius: 3,
+                offset: Offset(0, 2),
+              ),
+            ],
+          );
+
+    return Material(
+      color: colori.surfaceContainerLowest,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: colori.onSurface.withValues(alpha: 0.08)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: quandoPremuta,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 14, 10, 14),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _DiscoDiSmalto(tinta: tinta, child: disegno),
+              const SizedBox(height: 11),
+              Text(
+                nome.toUpperCase(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.1,
+                  color: colori.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Il disco di smalto: la tinta dell'azione in sfumatura, il riflesso in cima,
+/// l'ombra della sua tinta sotto.
+class _DiscoDiSmalto extends StatelessWidget {
+  const _DiscoDiSmalto({required this.tinta, required this.child});
+
+  final Color tinta;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 66,
+      height: 66,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          /* Centocinquantacinque gradi: la luce viene da sopra a sinistra,
+           * come per tutti gli oggetti della plancia. */
+          begin: const Alignment(-0.7, -1),
+          end: const Alignment(0.5, 1),
+          colors: [
+            Color.lerp(tinta, Colors.white, 0.22)!,
+            tinta,
+            Color.lerp(tinta, Colors.black, 0.18)!,
+          ],
+          stops: const [0, 0.58, 1],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: tinta.withValues(alpha: 0.55),
+            blurRadius: 22,
+            spreadRadius: -15,
+            offset: const Offset(0, 13),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: colore.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(18),
+          /* Il riflesso: mezza altezza in cima, che sfuma via. E' quello che
+           * fa sembrare il disco una cosa di smalto invece di un quadrato
+           * colorato. */
+          Positioned(
+            left: 2,
+            right: 2,
+            top: 2,
+            height: 30,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                  bottom: Radius.elliptical(30, 15),
+                ),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.36),
+                    Colors.white.withValues(alpha: 0),
+                  ],
+                ),
+              ),
             ),
-            child: disegno,
           ),
-          const SizedBox(height: 10),
-          Text(
-            nome.toUpperCase(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: testi.labelMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1,
-            ),
-          ),
+          child,
         ],
       ),
     );
