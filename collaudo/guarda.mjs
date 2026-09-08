@@ -10,7 +10,7 @@
  *          │
  *          ▼
  *     una Home Assistant finta, con dentro la casa demo di DashboardModern
- *     e i file veri della plancia (PLANCIA_VERA=…/frontend)
+ *     (i file della plancia e la sua configurazione ce li ha il ponte)
  *
  * L'unica finzione e' l'ultima. Il ponte e' il processo vero, l'app e' l'app
  * vera, il servitore e' lo stesso che gira dentro l'app sul telefono — sul
@@ -37,7 +37,7 @@ import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
-import { alzaLaCasaFinta, PLANCIA_VERA, SEGNO_DEL_SUPERVISOR } from "./casa-finta.js";
+import { alzaLaCasaFinta, SCATTO_DEMO, SEGNO_DEL_SUPERVISOR } from "./casa-finta.js";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 const RADICE = dirname(QUI);
@@ -300,6 +300,16 @@ async function main() {
     }),
   );
 
+  /* La configurazione della plancia la tiene il ponte, nel suo archivio:
+   * gliela si mette prima di accenderlo, com'e' nella casa demo, cosi' la
+   * plancia si apre gia' configurata — stanze, luci, persone, energia. */
+  writeFileSync(
+    join(archivio, "plancia.json"),
+    JSON.stringify({ profiles: { primary: { ...SCATTO_DEMO, history: [] } } }, null, 2),
+  );
+
+  /* I file della plancia il ponte li ha con se', in `ponte/plancia/`: qui
+   * come nell'add-on, senza nessuna integrazione in Home Assistant. */
   const processo = spawn("node", [join(PONTE, "src", "index.js")], {
     env: {
       ...process.env,
@@ -308,10 +318,6 @@ async function main() {
       PONTE_PORTA_CONSOLE: String(portaDellaConsole),
       SUPERVISOR_TOKEN: SEGNO_DEL_SUPERVISOR,
       PONTE_CASA: `http://127.0.0.1:${portaDellaCasa}`,
-      /* I file della plancia il ponte li va a prendere qui: in casa vera e'
-       * il contenitore di Home Assistant, qui la casa finta li serve dal
-       * checkout. */
-      PONTE_PLANCIA: `http://127.0.0.1:${portaDellaCasa}`,
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -342,9 +348,6 @@ async function main() {
    * qui a parte, uguale a com'e' nell'app: si abbina al ponte con un codice
    * suo, apre il filo, trova la plancia e la serve. Il riquadro dell'app ci
    * punta. Il codice vive uno per volta: prima il suo, poi quello dell'app. */
-  if (!PLANCIA_VERA) {
-    racconta("PLANCIA_VERA non e' detto: la casa finta non avra' DashboardModern");
-  }
   const codiceDelServitore = (
     await (
       await fetch(`http://127.0.0.1:${portaDellaConsole}/api/codice`, { method: "POST" })

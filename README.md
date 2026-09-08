@@ -84,9 +84,9 @@ Il resto — le due porte, l'abbinamento, cosa finisce sul disco — sta in
 | ✅ | **Piu' case**: ognuna col suo segno, si passa dall'una all'altra senza riabbinare |
 | ✅ | **Dentro e fuori casa**: tre strade per la stessa istanza, scelte da sole |
 | ✅ | Il filo: si rialza da solo, cambia approdo, rifa' le sottoscrizioni cadute |
-| ✅ | **La plancia dentro l'app**: quella vera di DashboardModern, in un WebView, passando dal ponte |
+| ✅ | **La plancia dentro l'app**: quella vera di DashboardModern, in un WebView; i file e la configurazione li ha l'add-on, in Home Assistant non serve niente |
 | ✅ | I dispositivi: tutte le entita' divise per dominio, con gli interruttori |
-| ✅ | **357 prove** — 161 sul ponte, 19 sul centralino, 177 sull'app — senza rete, senza Home Assistant, senza telefono |
+| ✅ | **377 prove** — 179 sul ponte, 19 sul centralino, 179 sull'app — senza rete, senza Home Assistant, senza telefono |
 | ⬜ | Gli aiutanti (i sette classici, nativi) |
 | ⬜ | Zigbee: ZHA **e** Zigbee2MQTT |
 | ⬜ | Il mago delle automazioni |
@@ -95,22 +95,27 @@ Il resto — le due porte, l'abbinamento, cosa finisce sul disco — sta in
 ### La plancia, com'e' fatta
 
 L'app **non rifa'** la plancia: mostra quella vera. La pagina di
-DashboardModern — la stessa che si apre in Home Assistant, con le sue tessere,
-le sue finestre, la sua barra e la sua configurazione — gira dentro l'app in un
-WebView, e quello che si configura di la' si vede di qua senza fare niente.
-Prima si era provato a rifarla in Flutter, ed e' andata come dice il piano:
-non era lei.
+DashboardModern — con le sue tessere, le sue finestre, la sua barra e la sua
+configurazione — gira dentro l'app in un WebView. Prima si era provato a
+rifarla in Flutter, ed e' andata come dice il piano: non era lei.
 
-Da dove arriva, visto che dal telefono Home Assistant non si vede: da un
-server che sta **dentro l'app**, su `127.0.0.1` (`app/lib/plancia/servitore.dart`).
-I file della plancia li chiede al ponte sul filo — la commissione `ponte/http`,
-in `ponte/src/commissioni.js` — e li tiene sul disco: il percorso ha dentro
-un'impronta che cambia a ogni aggiornamento dell'integrazione, quindi un file
-preso una volta vale finche' esiste. Il WebSocket della pagina lo cuce sullo
-stesso filo, coi numeri del filo. Alla pagina si dice di essere *ospitata*,
-come quando gira dentro il pannello di Home Assistant: cosi' non chiede nessun
-segno, e nessuna credenziale di Home Assistant tocca ne' la pagina ne' il
-telefono.
+Da dove arriva: **dall'add-on**. In Home Assistant non c'e' e non serve
+nessuna integrazione: i file della plancia — la pagina, i moduli, i caratteri,
+i ritratti — stanno dentro il ponte, in `ponte/plancia/`, portati da
+`strumenti/porta-la-plancia.mjs`, e la sua configurazione la tiene il ponte
+(`ponte/src/configurazione.js`), che risponde alla pagina esattamente come
+risponderebbe l'integrazione. Si configura dall'app, dalla sezione Config
+della plancia, e ogni telefono di casa vede la stessa configurazione.
+
+Sul telefono un server che sta **dentro l'app**, su `127.0.0.1`
+(`app/lib/plancia/servitore.dart`), chiede i file al ponte sul filo — la
+commissione `ponte/http`, in `ponte/src/commissioni.js` — e li tiene sul
+disco: il percorso ha dentro un'impronta che cambia a ogni aggiornamento della
+plancia nell'add-on, quindi un file preso una volta vale finche' esiste. Il
+WebSocket della pagina lo cuce sullo stesso filo, coi numeri del filo. Alla
+pagina si dice di essere *ospitata*, come quando gira dentro un pannello:
+cosi' non chiede nessun segno, e nessuna credenziale di Home Assistant tocca
+ne' la pagina ne' il telefono.
 
 Il **menu laterale** tiene il resto: la casa in cui si e' e da dove ci si
 passa, la plancia, i dispositivi, e quello che verra'. Le pagine della plancia
@@ -129,9 +134,9 @@ volta dentro — stanno in [`COME_PROVARLA.md`](COME_PROVARLA.md).
 ## Le prove
 
 ```bash
-npm run test:ponte              # il ponte: 161 prove, due secondi
+npm run test:ponte              # il ponte: 179 prove, due secondi
 npm run test:centralino         # il centralino: 19 prove
-cd app && flutter test          # l'app: 177 prove, un quarto di minuto
+cd app && flutter test          # l'app: 179 prove, un quarto di minuto
 ```
 
 Fra quelle dell'app ce n'e' un gruppo diverso dagli altri, in

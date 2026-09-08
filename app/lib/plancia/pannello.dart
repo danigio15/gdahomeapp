@@ -1,17 +1,18 @@
-/// Il pannello di DashboardModern: dove Home Assistant tiene la plancia vera.
+/// Dove sta la plancia vera, e com'e' fatta.
 ///
-/// L'integrazione registra un pannello nella barra laterale di Home Assistant
-/// e, nella sua configurazione, scrive tutto quello che serve per aprire la
-/// plancia da fuori dal pannello: **dove stanno i file** — un percorso con
+/// Quello che serve per aprirla: **dove stanno i file** — un percorso con
 /// dentro un'impronta, che cambia a ogni aggiornamento — quale istanza e',
 /// quale profilo di configurazione usa, e in quali lingue esiste.
 ///
-/// Si legge con `get_panels`, che e' un comando di Home Assistant come gli
-/// altri e passa dal ponte senza che il ponte lo sappia. Una casa senza
-/// DashboardModern non ha quel pannello, e allora la plancia non c'e': e' una
-/// cosa da dire, non un guasto.
+/// Lo dice il ponte, con `ponte/plancia`: la plancia sta dentro l'add-on, e
+/// in Home Assistant non serve nessuna integrazione. Se il ponte non ce l'ha,
+/// si guarda se in Home Assistant c'e' l'integrazione, che registra un
+/// pannello con le stesse informazioni e si legge con `get_panels`. Se non
+/// c'e' da nessuna parte, la plancia non c'e': e' una cosa da dire, non un
+/// guasto.
 library;
 
+import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 
 /// Il nome con cui l'integrazione registra il pannello. Quello principale ha
@@ -77,13 +78,53 @@ class PannelloDellaPlancia {
   String toString() => 'PannelloDellaPlancia($percorso → $base)';
 }
 
-/// Chiede a Home Assistant i pannelli e trova quello della plancia.
+/// Trova la plancia: prima nel ponte, poi in Home Assistant.
 ///
-/// `null` se DashboardModern non c'e'. Con piu' plance si prende la
-/// principale.
+/// Il posto giusto e' il ponte, `ponte/plancia`: la plancia sta dentro
+/// l'add-on, e in Home Assistant non serve nessuna integrazione. Un ponte
+/// che non ce l'ha — uno vecchio, o uno sul banco senza la cartella — dice
+/// di no, e allora si guarda se in Home Assistant c'e' l'integrazione, che
+/// la serve allo stesso modo. `null` se non c'e' da nessuna parte.
 Future<PannelloDellaPlancia?> trovaLaPlancia(Filo filo) async {
+  try {
+    final dalPonte = leggiLaPlanciaDelPonte(
+      await filo.risultato({'type': 'ponte/plancia'}),
+    );
+    if (dalPonte != null) return dalPonte;
+  } on ComandoRifiutato {
+    /* Non ce l'ha, o non sa cos'e': si prova di la'. */
+  }
   final risposta = await filo.risultato({'type': 'get_panels'});
   return leggiIPannelli(risposta);
+}
+
+/// Da quello che risponde `ponte/plancia` al pannello della plancia.
+PannelloDellaPlancia? leggiLaPlanciaDelPonte(Object? risposta) {
+  if (risposta is! Map) return null;
+  final base = risposta['base'];
+  if (base is! String || !base.startsWith('/dashboardmodern_static/')) {
+    return null;
+  }
+  final varianti = risposta['varianti'];
+  return PannelloDellaPlancia(
+    percorso: 'ponte',
+    titolo: switch (risposta['titolo']) {
+      final String s when s.isNotEmpty => s,
+      _ => 'DashboardModern',
+    },
+    base: base.replaceAll(RegExp(r'/+$'), ''),
+    istanza: risposta['istanza']?.toString() ?? 'ponte',
+    profilo: switch (risposta['profilo']) {
+      final String s when s.isNotEmpty => s,
+      _ => 'primary',
+    },
+    primario: risposta['primario'] != false,
+    varianti: [
+      if (varianti is List)
+        for (final una in varianti)
+          if (una is String && una.isNotEmpty) una,
+    ],
+  );
 }
 
 /// Da quello che risponde `get_panels` al pannello della plancia.

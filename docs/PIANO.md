@@ -84,9 +84,10 @@ Quindi non c'e' niente da smontare: c'e' da costruire.
 La plancia dentro l'app c'e', ed e' quella vera: la pagina di DashboardModern
 in un WebView, servita da un server che sta dentro l'app e che i file li
 chiede al ponte — la commissione `ponte/http` — e il WebSocket lo cuce sul
-filo. Il ponte passa quindi il filo *e* le pagine, e la WebView non e'
-autenticata: alla pagina si dice di essere ospitata, come nel pannello di
-Home Assistant, e nessun segno la tocca. Prima di questo si era provato a
+filo. I file e la configurazione ce li ha il ponte, dentro l'add-on: in Home
+Assistant non c'e' nessuna integrazione, ed e' un paletto, non un dettaglio.
+La WebView non e' autenticata: alla pagina si dice di essere ospitata, come
+in un pannello, e nessun segno la tocca. Prima di questo si era provato a
 rifarla in Flutter, ed e' andata come dice la tabella in cima: non era lei.
 
 ### Fase 2 — gli aiutanti

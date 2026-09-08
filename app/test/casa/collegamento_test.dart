@@ -307,16 +307,16 @@ void main() {
     await _finoA(() => collegamento.pannelloLetto);
 
     expect(collegamento.pannello, isNotNull);
-    expect(collegamento.pannello!.base, '/dashboardmodern_static/abc123');
+    expect(collegamento.pannello!.base, '/dashboardmodern_static/ponte1234');
     expect(collegamento.pannello!.profilo, 'primary');
     expect(
-      ponte.arrivati.where((m) => m['type'] == 'get_panels'),
+      ponte.arrivati.where((m) => m['type'] == 'ponte/plancia'),
       hasLength(1),
     );
 
-    /* Rileggerla — dopo un aggiornamento dell'integrazione — chiede di
-     * nuovo, e vede l'impronta nuova. */
-    ponte.pannelli = PonteFinto.pannelliConLaPlancia(
+    /* Rileggerla — dopo un aggiornamento del ponte — chiede di nuovo, e
+     * vede l'impronta nuova. */
+    ponte.planciaDelPonte = PonteFinto.planciaNelPonte(
       base: '/dashboardmodern_static/def456',
     );
     await collegamento.rileggiLaPlancia();
@@ -324,8 +324,9 @@ void main() {
     await ponte.spegni();
   });
 
-  test('una casa senza DashboardModern lo dice, e resta aperta', () async {
+  test('una casa senza plancia lo dice, e resta aperta', () async {
     final ponte = await PonteFinto.alza();
+    ponte.planciaDelPonte = null;
     ponte.pannelli = null;
     await archivio.aggiungi(
       nome: 'Casa',

@@ -157,14 +157,16 @@ console del ponte.
 
 ### La plancia
 
-La home dell'app è **la tua plancia di DashboardModern**, quella vera: la
-stessa pagina che apri in Home Assistant, con le sue tessere, le sue finestre,
-la sua barra in fondo e la sua configurazione. Per vederla servono due cose:
+La home dell'app è **la plancia di DashboardModern**, quella vera: la pagina
+con le sue tessere, le sue finestre, la sua barra in fondo e la sua
+configurazione. In Home Assistant **non serve installare niente**: la plancia
+la porta il ponte, che ha con sé i file e tiene lui la configurazione. Serve
+solo **il ponte dalla 0.7.0 in su**; con uno più vecchio l'app dice che il
+ponte non ha la plancia, e restano i dispositivi.
 
-- **DashboardModern installata in Home Assistant** (l'integrazione, da HACS).
-  Senza, l'app lo dice, e dalla barra restano i dispositivi.
-- **Il ponte dalla 0.6.0 in su**: è lui che porta i file della plancia al
-  telefono. Con un ponte più vecchio la plancia non arriva.
+Si configura **dall'app**: la sezione Config della plancia, in fondo alla sua
+barra. Quello che configuri lo vedono uguale tutti i telefoni abbinati a
+quella casa, perché sta nel ponte e non sul telefono.
 
 La prima volta ci mette qualche secondo, di più se sei fuori casa: i file
 passano dal ponte e restano sul telefono, e dalla seconda volta in poi si apre
@@ -240,5 +242,5 @@ strada, e non c'è modo di aggirarla.
 | La console dice «Il centralino ci rifiuta» | c'è già un'altra casa registrata con quell'identificativo su quel centralino |
 | Il codice viene rifiutato | dura cinque minuti e vale una volta sola: fanne un altro |
 | L'app dice che la casa va riabbinata | il telefono è stato staccato dalla console, o è stato abbinato con una versione vecchia |
-| L'app dice «Qui non c'è DashboardModern» | in quella Home Assistant l'integrazione non c'è: installala da HACS |
-| La plancia resta su «Apro la plancia…» o dice che non è arrivata | il ponte è più vecchio della 0.6.0 (aggiornalo), oppure il telefono è fuori casa e i file stanno ancora arrivando: la prima volta ci mette qualche secondo |
+| L'app dice «Il ponte non ha la plancia» | il ponte è più vecchio della 0.7.0, o la cartella `plancia` non è finita dentro l'add-on: ricopia la cartella `ponte` intera e ricostruiscilo |
+| La plancia resta su «Apro la plancia…» o dice che non è arrivata | il telefono è fuori casa e i file stanno ancora arrivando: la prima volta ci mette qualche secondo. Se non arriva mai, guarda il registro dell'add-on |

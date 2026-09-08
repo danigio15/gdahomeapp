@@ -1,0 +1,1123 @@
+/* La tapparella sta fuori, l'infisso si vede da dentro.
+ *
+ * La card mostrava un rettangolo azzurro con delle stecche che scendevano
+ * davanti: una tapparella senza finestra. Si guarda invece dalla stanza — che e'
+ * da dove uno guarda una tapparella — e allora in primo piano c'e' sempre
+ * l'infisso, con il suo telaio, le due ante e la maniglia; dietro il vetro
+ * scende la tapparella; dietro ancora c'e' il fuori.
+ *
+ * E un infisso puo' essere aperto. Un contatto sull'anta lo dice, e quando lo
+ * dice le ante rientrano verso i loro cardini e scoprono il vano.
+ *
+ * Il movimento delle ante e' uno `scaleX`, non un `rotateY`. Sono la stessa
+ * cosa sullo schermo — l'anta si stringe verso il cardine e torna — ma la
+ * rotazione aprirebbe un contesto tridimensionale su ogni card, ed e'
+ * esattamente quello che aveva ucciso WebKit sulle icone degli avvisi.
+ *
+ * Niente qui scrive dati: la posizione della tapparella resta di chi la
+ * disegnava, il contatto si legge e basta.
+ */
+import {
+  CHIAVE_SOGLIA_UMIDITA,
+  SOGLIA_MASSIMA,
+  SOGLIA_MINIMA,
+  SOGLIA_PREDEFINITA,
+  consiglioDiArieggiare,
+  cosaMancaPerArieggiare,
+  sogliaDellUmidita,
+  sogliaDellaFinestra,
+} from "../core/arieggiare.js";
+import {
+  CHIAVE_SOGLIA_CHIUSA,
+  SOGLIA_CHIUSA_MASSIMA,
+  coverClosedThreshold,
+  coverEntries,
+  coverKindLabel,
+} from "../core/cover-kind.js";
+import { contactEntity, inferriataEntity, serramentoModel } from "../core/shutter-window.js";
+import { CHIAVE_VERSI, insiemeInvertiti } from "../core/verso-aperture.js";
+import { renderHomeWidgets } from "./home-widgets-section.js";
+import {
+  allStates,
+  clean,
+  dashboardStore,
+  doc,
+  esc,
+  installStyle,
+  readJson,
+  root,
+  section,
+  t,
+  writeJsonIfChanged,
+} from "./shared.js";
+
+const KEY = "__DASHBOARDMODERN_SHUTTER_WINDOW__";
+const STYLE_ID = "dm-shutter-window-style";
+const state = (root[KEY] ||= { installed: false, frame: 0 });
+
+/* Le tapparelle configurate: dal modello canonico, con la copia in
+ * localStorage come rete di sicurezza per la plancia ospitata, che puo'
+ * disegnare prima che il modello esista. */
+function covers() {
+  try {
+    const stored = dashboardStore()?.getSection?.("covers");
+    if (Array.isArray(stored) && stored.length) return stored;
+  } catch (_error) {}
+  const legacy = readJson("cd_tapparelle", []);
+  return Array.isArray(legacy) ? legacy : [];
+}
+
+/* La riga di configurazione a cui appartiene una card.
+ *
+ * Un infisso puo' produrre piu' di una card — tapparella, tenda, tenda da sole
+ * — e il contatto della finestra e' uno solo, scritto sulla riga. Cercando
+ * soltanto fra le tapparelle, le card in piu' non ritrovavano la loro riga:
+ * disegnavano la finestra sempre chiusa e restavano senza la pastiglia
+ * «finestra aperta», mentre la card principale dello stesso serramento la
+ * mostrava. */
+function coverForCard(card) {
+  const entity = clean(card.getAttribute("data-tapp"));
+  if (!entity) return null;
+  return (
+    covers().find(
+      (item) =>
+        coverEntries(item).some((entry) => clean(entry.entity) === entity) ||
+        /* Una finestra senza motori si identifica col suo contatto: e' l'unica
+         * entita' che ha, e quindi e' quella scritta sulla card. Da quando i
+         * contatti possono essere due (#254), quello scritto sulla card puo'
+         * essere anche l'inferriata: chi ha le sole grate non aveva modo di
+         * ritrovare la propria riga. */
+        clean(contactEntity(item)) === entity ||
+        clean(inferriataEntity(item)) === entity,
+    ) || null
+  );
+}
+
+/* I pezzi che si aggiungono al vano, una volta sola.
+ *
+ * Il runtime ridisegna tutta la griglia a ogni cambio di stato, quindi questa
+ * passata gira di continuo: costruisce solo dove non ha ancora costruito, e
+ * riconosce il proprio lavoro dal segno che lascia. */
+function build(windowNode) {
+  if (windowNode.dataset.dmInfisso === "true") return false;
+  windowNode.dataset.dmInfisso = "true";
+
+  /* Solo cio' che manca.
+   *
+   * Il vano ha gia' un padrone: cielo, colline, sole, cassonetto e guide sono
+   * disegnati dal modulo della scena, e le stecche sono uno sfondo ripetuto
+   * sulla tapparella stessa. Rifarli qui vorrebbe dire due padroni sullo stesso
+   * pixel, che e' il difetto che questa plancia ha passato mesi a togliersi.
+   * Quello che davvero non c'era e' l'infisso: il telaio, le due ante, la
+   * maniglia. */
+  const spalla = doc.createElement("div");
+  spalla.className = "dm-tw-spalla";
+  const infisso = doc.createElement("div");
+  infisso.className = "dm-tw-infisso";
+  infisso.innerHTML =
+    '<div class="dm-tw-anta dm-tw-anta-sx"></div>' +
+    '<div class="dm-tw-anta dm-tw-anta-dx"><span class="dm-tw-maniglia"></span></div>' +
+    '<div class="dm-tw-telaio"></div>';
+  /* L'inferriata sta FUORI, quindi davanti a tutto: due mezze grate che si
+   * scostano di lato, non ante che rientrano. Il nodo nasce sempre ma resta
+   * spento finche' qualcuno non dichiara il suo sensore — costruirlo solo
+   * quando serve vorrebbe dire ricostruire la card a ogni cambio di
+   * configurazione, e questa passata gira a ogni evento di stato. */
+  const grata = doc.createElement("div");
+  grata.className = "dm-tw-grata";
+  grata.innerHTML =
+    '<span class="dm-tw-grata-meta dm-tw-grata-sx"></span>' +
+    '<span class="dm-tw-grata-meta dm-tw-grata-dx"></span>';
+  windowNode.append(spalla, infisso, grata);
+  return true;
+}
+
+/** Cosa dicono i contatti di questa card, adesso. */
+export function paintCard(card, states = allStates()) {
+  const windowNode = card.querySelector(".tapp-win");
+  if (!windowNode) return false;
+  build(windowNode);
+  const cover = coverForCard(card);
+  /* Il contatto girato (#244) sta a ON quando l'anta e' chiusa: il disegno e
+   * la pastiglia seguono il verso vero, non quello del filo. Il verso lo
+   * applica il modello, che ha in mano tutti e due i contatti. */
+  const model = serramentoModel(
+    cover || {},
+    states,
+    root.resolveEntity || ((value) => value),
+    insiemeInvertiti(readJson(CHIAVE_VERSI, [])),
+  );
+  // Aperto solo quando il contatto lo dice: un sensore che non risponde non e'
+  // una finestra chiusa, ma il disegno di riposo e' quello, e non si inventa
+  // un'apertura che nessuno ha misurato.
+  const aperto = model.infisso.open === true ? "aperto" : "chiuso";
+  if (windowNode.dataset.dmInfissoStato !== aperto) windowNode.dataset.dmInfissoStato = aperto;
+  /* La grata si accende solo dove qualcuno l'ha dichiarata: su tutte le altre
+   * card il vano resta esattamente quello di prima. */
+  const grata = model.inferriata.configured
+    ? model.inferriata.open === true
+      ? "aperta"
+      : "chiusa"
+    : "";
+  if ((windowNode.dataset.dmGrata || "") !== grata) {
+    if (grata) windowNode.dataset.dmGrata = grata;
+    else delete windowNode.dataset.dmGrata;
+  }
+  ensurePill(card, model);
+  ensureArieggia(card, cover, states);
+  return true;
+}
+
+/* Come si legge un serramento, in due parole.
+ *
+ * Con la sola finestra resta la frase di sempre. Con la grata le parole
+ * diventano quattro, perche' quattro sono gli stati che si volevano
+ * distinguere: e' la differenza fra «sto arieggiando» e «e' rimasto aperto». */
+export function paroleDelSerramento(model) {
+  if (!model?.inferriata?.configured) {
+    return model?.infisso?.open === true ? t("Finestra aperta", "Window open") : "";
+  }
+  switch (model.stato) {
+    case "aperto":
+      return t("Inferriata e finestra aperte", "Grate and window open");
+    case "grata":
+      return t("Inferriata aperta", "Grate open");
+    case "infisso":
+      return t("Finestra aperta", "Window open");
+    default:
+      return "";
+  }
+}
+
+/* «Apri la finestra per arieggiare» (#330).
+ *
+ * L'umidita' e' quella della STANZA a cui la finestra appartiene: il sensore
+ * che la stanza porta nella scheda Temperature. Sopra la soglia — quella
+ * scritta sulla riga della finestra, o quella di casa — la card dice di
+ * aprire. Chi decide e' `consiglioDiArieggiare`, che non legge niente: qui si
+ * vanno solo a prendere i numeri.
+ *
+ * Il dato di fuori era una CONDIZIONE: «si apre solo se fuori e' piu'
+ * asciutto». Chi non ha una stazione meteo mappata non vedeva mai il
+ * consiglio, e la scheda gli chiedeva un sensore che con le sue finestre non
+ * c'entra. «L'umidita' si prende solo da quella legata al sensore della
+ * stanza, non fuori.» Il fuori, quando c'e', si dice accanto e non decide. */
+const ENTITA_UMIDITA_FUORI = "dm.home_meteo_umidita";
+
+function misura(riferimento, states) {
+  const entity = clean(riferimento);
+  if (!entity) return null;
+  const risolto = clean(root.resolveEntity?.(entity) || entity);
+  const stato = states?.[risolto] ?? states?.[entity];
+  const grezzo = clean(stato?.state);
+  if (!grezzo || grezzo === "unavailable" || grezzo === "unknown") return null;
+  return grezzo;
+}
+
+/* La stanza di una finestra: quella scritta sulla sua riga, per id o per nome. */
+function stanzaDellaFinestra(cover) {
+  const cercato = clean(cover?.room_id || cover?.roomId || cover?.room);
+  if (!cercato) return null;
+  const stanze = section("rooms", readJson("cd_stanze", []));
+  if (!Array.isArray(stanze)) return null;
+  return (
+    stanze.find(
+      (stanza) => clean(stanza?.id) === cercato || clean(stanza?.name) === cercato,
+    ) || null
+  );
+}
+
+export function consiglioDellaFinestra(cover, states = allStates()) {
+  const stanza = stanzaDellaFinestra(cover);
+  if (!stanza) return null;
+  return consiglioDiArieggiare({
+    dentro: misura(stanza.hum, states),
+    fuori: misura(ENTITA_UMIDITA_FUORI, states),
+    soglia: sogliaDellaFinestra(cover, readJson(CHIAVE_SOGLIA_UMIDITA, null)),
+  });
+}
+
+/* La riga dell'umidita', sotto la card.
+ *
+ * «Nella sezione non esce nessun avviso.» La riga compariva SOLO col
+ * consiglio, e senza consiglio la card non diceva nemmeno che umidita' c'e':
+ * chi aveva appena collegato l'igrometro alla stanza non aveva modo di vedere
+ * che la finestra lo legge. Adesso la riga c'e' appena la stanza ha una
+ * misura — «💧 Umidita' 48%» — e diventa il consiglio quando la misura supera
+ * la soglia. Non e' una pastiglia di stato: sta sotto perche' in testa ci sono
+ * gia' il nome e lo stato, e una terza pastiglia li' mangerebbe il nome.
+ *
+ * `data-dm-arieggia` c'e' solo quando si consiglia: e' il segno che la pagina
+ * e le prove leggono per «c'e' il consiglio». */
+function ensureArieggia(card, cover, states) {
+  const esito = cover ? consiglioDellaFinestra(cover, states) : null;
+  let riga = card.querySelector("[data-dm-umidita]");
+  if (esito?.dentro === null || esito?.dentro === undefined) {
+    riga?.remove();
+    return;
+  }
+  if (!riga) {
+    riga = doc.createElement("div");
+    riga.dataset.dmUmidita = "";
+    card.append(riga);
+  }
+  const stato = esito.arieggia ? "sopra" : "sotto";
+  if (riga.dataset.dmUmidita !== stato) riga.dataset.dmUmidita = stato;
+  const classe = esito.arieggia ? "dm-tw-umidita dm-tw-arieggia" : "dm-tw-umidita";
+  if (riga.className !== classe) riga.className = classe;
+  if (esito.arieggia) {
+    if (riga.dataset.dmArieggia !== "true") riga.dataset.dmArieggia = "true";
+  } else if (riga.dataset.dmArieggia) delete riga.dataset.dmArieggia;
+  /* I numeri stanno fuori dalla frase da tradurre: una chiave con dentro un
+   * `${...}` non e' una chiave, e' un pezzo di codice che cambia a ogni
+   * lettura del sensore. La frase resta fissa, i numeri le si mettono
+   * accanto. */
+  const dentro = `${Math.round(esito.dentro)}%`;
+  const soglia = esito.soglia === null ? "" : `${Math.round(esito.soglia)}%`;
+  const fuori = esito.fuori === null ? "" : `${Math.round(esito.fuori)}%`;
+  const testo = esito.arieggia
+    ? `💨 ${t("Apri per arieggiare", "Open to air out")} · ${dentro}${soglia ? ` > ${soglia}` : ""}${
+        esito.fuoriPiuUmido ? ` · ${t("fuori è più umido", "wetter outside")} (${fuori})` : ""
+      }`
+    : `💧 ${t("Umidità", "Humidity")} ${dentro}${soglia ? ` · ${t("soglia", "threshold")} ${soglia}` : ""}`;
+  if (riga.textContent !== testo) riga.textContent = testo;
+  const titolo = [
+    `${t("Umidità in stanza", "Room humidity")} ${dentro}`,
+    soglia ? `${t("soglia", "threshold")} ${soglia}` : "",
+    fuori ? `${t("fuori", "outside")} ${fuori}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  if (riga.title !== titolo) riga.title = titolo;
+}
+
+/* La pastiglia "Finestra aperta" accanto a quella della tapparella.
+ *
+ * Sta accanto, non al posto: la tapparella continua a dire a che punto e', e
+ * l'infisso aggiunge la sua riga solo quando c'e' qualcosa da aggiungere. */
+function ensurePill(card, model) {
+  const head = card.querySelector(".tapp-head");
+  if (!head) return;
+  const label = paroleDelSerramento(model);
+  const aperto = Boolean(label);
+  /* Su una finestra che si apre a mano la pastiglia della card gia' dice
+   * «Aperta», e quella e' proprio la finestra: non c'e' una tapparella accanto
+   * da distinguere. Aggiungerne una seconda con «Finestra aperta» sarebbe
+   * ripetere la stessa cosa due volte sulla stessa riga.
+   *
+   * Con l'inferriata pero' c'e' eccome da distinguere (#254): «Aperta» da solo
+   * non dice se e' aperta la grata, la finestra o tutte e due, che e' proprio
+   * la domanda per cui si sono messi due sensori. */
+  if (card.dataset.dmSoloInfisso === "true" && !model?.inferriata?.configured) return;
+  let pill = head.querySelector(".dm-tw-pill");
+  /* Due pastiglie sulla stessa riga mangiano il nome.
+   *
+   * Il nome e' il dato che identifica la scheda; lo stato e' un commento. Con
+   * due pastiglie accanto — "Aperta" e "Finestra aperta" — a cedere spazio era
+   * il nome, che finiva troncato: "Tapparella so…". A cedere deve essere lo
+   * stato, che va a capo sotto e resta leggibile per intero. Il segno sta qui
+   * perche' e' questo modulo ad aggiungere la seconda pastiglia: chi crea
+   * l'affollamento se ne occupa. */
+  if (!aperto) {
+    if (pill) pill.remove();
+    if (head.dataset.dmTwPills) delete head.dataset.dmTwPills;
+    return;
+  }
+  if (head.dataset.dmTwPills !== "due") head.dataset.dmTwPills = "due";
+  if (!pill) {
+    pill = doc.createElement("span");
+    pill.className = "tapp-state dm-tw-pill";
+    head.append(pill);
+  }
+  if (pill.textContent !== label) pill.textContent = label;
+}
+
+export function paintShutterWindows(scope = doc?.getElementById("page-tapparelle")) {
+  if (!scope?.querySelectorAll) return 0;
+  const states = allStates();
+  let painted = 0;
+  for (const card of scope.querySelectorAll(".tapp-card[data-tapp]")) {
+    if (paintCard(card, states)) painted += 1;
+  }
+  return painted;
+}
+
+/* ── il campo in Config ─────────────────────────────────────────────────── */
+
+/* Un infisso, quattro caselle.
+ *
+ * La scheda chiedeva una entita' sola piu' un menu che diceva di che tipo
+ * fosse. Ma sulla stessa finestra ci stanno insieme la tapparella, la tenda e
+ * la tenda da sole, e chi le ha tutte non poteva dirlo: ne sceglieva una. Le
+ * caselle adesso sono una per funzione — e il menu del tipo non serve piu',
+ * perche' il tipo lo dice la casella in cui hai scritto.
+ *
+ * Il runtime stampa la prima casella e la stanza; queste si aggiungono dopo,
+ * con la stessa coppia campo + lente, e il resto — pastiglia, matita, cestino —
+ * arriva dal modulo delle righe come su ogni altra scheda. */
+/* Le etichette non sono parole nuove: sono quelle che il tipo di copertura ha
+ * gia' — «Tenda», «Tenda da sole» — piu' quella del contatto, che la finestra
+ * della matita stampa con le stesse parole. Un vocabolario che esiste gia' non
+ * si riscrive: si chiama. */
+function caselle() {
+  return [
+    /* Il rele' che manda giu' (#194): uno Shelly lasciato in modalita'
+     * interruttore espone due prese, una che alza e una che abbassa, e senza
+     * la seconda «Chiudi» non chiude niente. Vale solo quando la casella
+     * principale porta anch'essa un rele': su una copertura vera i due versi
+     * li ha gia' Home Assistant. */
+    ["ed-tp-down", t("Relè di discesa", "Down relay"), "switch.tapparella_giu"],
+    ["ed-tp-tenda", coverKindLabel("tenda"), "cover.tenda_salotto"],
+    /* Anche la tenda puo' stare su due rele' — «ho due tende su due Shelly
+     * 2PM» e' la segnalazione da cui e' nato tutto: ognuna delle tre
+     * coperture della riga ha il suo verso di discesa, non solo la
+     * tapparella. */
+    [
+      "ed-tp-down-tenda",
+      `${coverKindLabel("tenda")} · ${t("relè di discesa", "down relay")}`,
+      "switch.tenda_giu",
+    ],
+    ["ed-tp-tendasole", coverKindLabel("tenda_sole"), "cover.tenda_da_sole"],
+    [
+      "ed-tp-down-tendasole",
+      `${coverKindLabel("tenda_sole")} · ${t("relè di discesa", "down relay")}`,
+      "switch.tenda_sole_giu",
+    ],
+    [
+      "ed-tp-contact",
+      t("Sensore apertura infisso", "Window contact sensor"),
+      "binary_sensor.finestra_camera",
+    ],
+    /* Il secondo contatto, quello di fuori (#254): la grata davanti al vetro.
+     * Sta dopo l'infisso perche' e' l'ordine in cui si guardano dalla stanza —
+     * prima il serramento, poi cio' che ci sta davanti — e perche' chi non ha
+     * inferriate la trova in fondo e la salta. */
+    [
+      "ed-tp-inferriata",
+      t("Sensore apertura inferriata", "Grate contact sensor"),
+      "binary_sensor.inferriata_camera",
+    ],
+  ];
+}
+
+/* La stanza, in cima e col suo nome scritto sopra.
+ *
+ * «La stanza la devi spostare in alto dove si sceglie il nome e devi indicare
+ * che e' la stanza.» Il guscio la stampa come un `<select>` nudo, senza
+ * etichetta, subito dopo la casella dell'entita': con le sei caselle che
+ * questo modulo aggiunge in mezzo finiva undici campi piu' giu', fra la
+ * posizione preferita e la spunta delle percentuali invertite — una tendina
+ * che diceva «Salone» senza dire di cosa.
+ *
+ * Va dove si decide di che riga si tratta: sotto il nome, prima di tutto il
+ * resto. E si porta un'etichetta, come ogni altra casella della scheda.
+ */
+function vestiLaStanza(body) {
+  const room = body?.querySelector?.("#ed-tp-room");
+  const nome = body?.querySelector?.("#ed-tp-name");
+  if (!room || !nome) return false;
+  let riquadro = room.closest("label.ed-slot");
+  if (!riquadro) {
+    riquadro = doc.createElement("label");
+    riquadro.className = "ed-slot dm-tw-slot";
+    riquadro.dataset.dmTwSlot = "ed-tp-room";
+    const testa = doc.createElement("span");
+    testa.className = "ed-slot-lbl";
+    testa.textContent = t("Stanza", "Room");
+    room.before(riquadro);
+    riquadro.append(testa, room);
+    /* Il margine se lo prende il riquadro: il `<select>` lo portava addosso, e
+     * dentro l'etichetta diventava uno stacco in mezzo alla casella. */
+    room.style.marginBottom = "0";
+  }
+  /* Subito dopo il nome, a ogni giro: il guscio ristampa il modulo da capo
+   * quando l'elenco cambia, e la tendina tornerebbe in fondo. */
+  if (nome.nextElementSibling !== riquadro) nome.after(riquadro);
+  diciLUmiditaDellaStanza(riquadro, room);
+  return true;
+}
+
+/* Quale igrometro sta leggendo questa finestra, scritto sotto la stanza.
+ *
+ * «Nelle finestre manca ancora il sensore umidita': deve importarlo in
+ * automatico dalla stanza. Metto l'umidita' della cucina in Temperature, e
+ * quando metto la finestra cucina deve leggere quel sensore.»
+ *
+ * Lo fa gia': l'umidita' di una finestra e' quella della stanza a cui la
+ * finestra e' assegnata, e non esiste una casella per riscriverla — sarebbe lo
+ * stesso sensore in due posti, e due posti che dicono la stessa cosa prima o
+ * poi la dicono diversa. Quello che mancava e' il modo di VEDERLO: la tendina
+ * diceva «Cucina» e non diceva cosa si porta dietro, quindi «in automatico»
+ * restava una promessa senza prova.
+ *
+ * Qui c'e' la prova, e quando manca dice cosa manca e dove si mette. */
+function diciLUmiditaDellaStanza(riquadro, tendina) {
+  if (!riquadro || !tendina) return false;
+  let nota = riquadro.parentElement?.querySelector?.("[data-dm-umidita-stanza]");
+  if (!nota) {
+    nota = doc.createElement("small");
+    nota.className = "dm-tw-umidita-stanza";
+    nota.dataset.dmUmiditaStanza = "senza";
+    riquadro.after(nota);
+    /* La tendina cambia stanza, e con la stanza cambia l'igrometro: la riga si
+     * rifa' subito, non al prossimo ridisegno del modulo. */
+    tendina.addEventListener("change", () => diciLUmiditaDellaStanza(riquadro, tendina));
+  }
+  const stanza = stanzaDellaFinestra({ room: clean(tendina.value) });
+  const igrometro = clean(stanza?.hum);
+  if (!clean(tendina.value)) {
+    nota.dataset.dmUmiditaStanza = "senza";
+    nota.textContent = t(
+      "Senza stanza questa finestra non ha un'umidità da guardare: sceglila qui sopra.",
+      "Without a room this window has no humidity to watch: pick one above.",
+    );
+  } else if (igrometro) {
+    nota.dataset.dmUmiditaStanza = "pronto";
+    nota.textContent = `💧 ${t("Umidità della stanza", "Room humidity")}: ${igrometro}`;
+  } else {
+    nota.dataset.dmUmiditaStanza = "senza";
+    /* Il nome della stanza sta FUORI dalla frase da tradurre: una chiave con
+     * dentro un `${...}` non e' una chiave, e' un pezzo di codice. */
+    const quale = clean(stanza?.name) || clean(tendina.value);
+    nota.textContent = `${quale} — ${t(
+      "questa stanza non ha un sensore di umidità: si associa nella scheda Temperature.",
+      "this room has no humidity sensor: set it under the Temperature tab.",
+    )}`;
+  }
+  return true;
+}
+
+/* La casella della posizione preferita (#200): un numero, non un'entita' —
+ * niente lente. 0 = chiusa, 100 = aperta; e' la voce con la stella nella
+ * tendina della card, non l'unica percentuale che si puo' scegliere. */
+function casellaPreset() {
+  const holder = doc.createElement("label");
+  holder.className = "ed-slot dm-tw-slot";
+  holder.dataset.dmTwSlot = "ed-tp-preset";
+  holder.innerHTML =
+    `<span class="ed-slot-lbl">${t("Posizione preferita (%)", "Favorite position (%)")}</span>` +
+    '<input id="ed-tp-preset" class="ed-input" type="number" min="0" max="100" step="1"' +
+    ' placeholder="es. 5" autocomplete="off">';
+  return holder;
+}
+
+/* La stessa forma della casella del guscio («Entita' tapparella»): la casella
+ * nuda con la lente, e il nome glielo scrive la carta delle entita', che lo
+ * conosce per id. Con un'etichetta propria la carta trattava il campo da gia'
+ * intitolato: la matita finiva su una riga a se' sopra la casella, e sette
+ * campi della scheda non stavano in riga con il primo (visto sul campo). */
+function casella(id, etichetta, esempio) {
+  const holder = doc.createElement("div");
+  holder.className = "dm-tw-slot";
+  holder.dataset.dmTwSlot = id;
+  holder.dataset.dmTwEtichetta = etichetta;
+  /* La riga porta anche la classe di tutte le righe di campo del guscio: e'
+   * quella che il decoratore delle entita' e chi prova la scheda cercano per
+   * trovare la pastiglia accanto alla casella. */
+  holder.innerHTML =
+    '<div class="dm-tw-campo ed-form-row" style="display:flex; gap:8px; margin-bottom:6px;">' +
+    `<input id="${id}" class="ed-input mono" style="flex:1;" autocomplete="off" data-entity-input="true"` +
+    ` placeholder="${esempio}">` +
+    `<button type="button" class="dm-entity-picker" data-entity-target="${id}"` +
+    ` aria-label="${t("Seleziona entità", "Choose entity")}">🔍</button>` +
+    "</div>";
+  return holder;
+}
+
+/* La soglia di chiusura di QUESTA riga (dal campo, dopo la #298): «ognuno puo'
+ * avere una percentuale differente». Vuota, vale quella di casa scritta in
+ * cima alla scheda. */
+function casellaSogliaRiga() {
+  const holder = doc.createElement("label");
+  holder.className = "ed-slot dm-tw-slot";
+  holder.dataset.dmTwSlot = "ed-tp-soglia-riga";
+  holder.innerHTML =
+    `<span class="ed-slot-lbl">${esc(t("Chiusa sotto il (%)", "Closed below (%)"))}</span>` +
+    `<input id="ed-tp-soglia-riga" class="ed-input" type="number" min="0" max="${SOGLIA_CHIUSA_MASSIMA}" step="1"` +
+    ` placeholder="${esc(t("come la casa", "as the house"))}" autocomplete="off">` +
+    `<small>${esc(
+      t(
+        "Solo per questa finestra: ferma a questa percentuale o sotto conta come chiusa. Vuota, vale la soglia di casa scritta in cima.",
+        "For this window only: resting at this percentage or below counts as closed. Empty, the house threshold at the top applies.",
+      ),
+    )}</small>`;
+  return holder;
+}
+
+/* La soglia dell'umidita' di QUESTA finestra.
+ *
+ * «La percentuale deve stare sotto alla creazione della singola finestra e
+ * legata a ogni finestra.» Il bagno vuole il cinquantacinque e la camera il
+ * sessantacinque: una soglia sola per tutta la casa era una delle due
+ * sbagliata. Vuota, vale quella di casa scritta in cima; zero spegne il
+ * consiglio su questa finestra sola. */
+function casellaUmiditaRiga() {
+  const holder = doc.createElement("label");
+  holder.className = "ed-slot dm-tw-slot";
+  holder.dataset.dmTwSlot = "ed-tp-umidita";
+  holder.innerHTML =
+    `<span class="ed-slot-lbl">${esc(t("Arieggia sopra il (%)", "Air out above (%)"))}</span>` +
+    `<input id="ed-tp-umidita" class="ed-input" type="number" min="0" max="${SOGLIA_MASSIMA}" step="1"` +
+    ` placeholder="${esc(t("come la casa", "as the house"))}" autocomplete="off">` +
+    `<small>${esc(
+      t(
+        "Solo per questa finestra: quando l'umidità della sua stanza supera questa quota, la card dice di aprirla per arieggiare. Vuota, vale la soglia di casa scritta in cima; zero spegne il consiglio su questa finestra.",
+        "For this window only: when its room's humidity goes above this level, the card says to open it to air out. Empty, the house threshold at the top applies; zero turns the advice off on this window.",
+      ),
+    )}</small>`;
+  return holder;
+}
+
+/* Dove attaccarle: subito sotto la casella della tapparella.
+ *
+ * Prima ci si ancorava alla stanza, e si cercava il suo contenitore con
+ * `closest("label, .ed-slot, div")`. Ma nel markup del runtime la stanza e' un
+ * `<select>` nudo: niente `label`, niente `.ed-slot`, e allora quel `div`
+ * finale acchiappava il riquadro che avvolge tutto il pannello. Le tre caselle
+ * uscivano dopo «Aggiungi tapparella» e dopo «Salva sezione», staccate dalla
+ * riga che stanno descrivendo.
+ *
+ * Adesso si parte dalla casella principale e si sale finche' non si sta nello
+ * stesso contenitore della stanza: quello e' il fratello da cui ripartire,
+ * qualunque cosa gli abbia messo intorno chi impagina i campi. Non si esce mai
+ * dal modulo, perche' non si guarda piu' un elenco di tag ma una parentela. */
+function ancoraSottoLaPrincipale(body) {
+  const primaria = body?.querySelector?.("#ed-tp-ent");
+  const room = body?.querySelector?.("#ed-tp-room");
+  if (!primaria || !room) return null;
+  const contenitore = (room.closest("label, .ed-slot") || room).parentElement;
+  if (!contenitore) return null;
+  let nodo = primaria;
+  while (nodo && nodo.parentElement !== contenitore) nodo = nodo.parentElement;
+  return nodo || null;
+}
+
+/* La soglia di chiusura (#298), in cima alla scheda: e' di tutta la casa, non
+ * di una riga, quindi sta prima dell'elenco e non dentro il modulo di una
+ * tapparella.
+ *
+ * «Vorrei poter definire un valore percentuale, es. 10%, per considerare le
+ * tapparelle chiuse: le imposto cosi' per mantenere un minimo il passaggio
+ * d'aria, ma il sistema le rileva aperte.» Si scrive e vale subito: la pagina
+ * Finestre e la tessera in Home rileggono la chiave a ogni giro. */
+export function ensureSogliaField(body = doc?.getElementById("ed-body")) {
+  const intro = body?.querySelector?.(".ed-intro");
+  if (!intro || !body.querySelector("#ed-tp-name")) return false;
+  let riquadro = body.querySelector("[data-dm-tw-soglia]");
+  if (!riquadro) {
+    riquadro = doc.createElement("label");
+    riquadro.className = "ed-slot dm-tw-slot dm-tw-soglia";
+    riquadro.dataset.dmTwSoglia = "true";
+    riquadro.innerHTML =
+      `<span class="ed-slot-lbl">${esc(t("Chiusa sotto il (%), di serie", "Closed below (%), by default"))}</span>` +
+      `<input id="ed-tp-soglia" class="ed-input" type="number" min="0" max="${SOGLIA_CHIUSA_MASSIMA}" step="1"` +
+      ' placeholder="0" autocomplete="off">' +
+      `<small>${esc(
+        t(
+          "Una tapparella ferma a questa percentuale o sotto conta come chiusa, in pagina e in Home: chi lascia uno spiraglio del 10% per l'aria non se le sente dire aperte. Vale per tutte le finestre che non hanno una soglia propria nella loro riga. Zero è il comportamento di sempre.",
+          "A shutter resting at this percentage or below counts as closed, on the page and on Home: whoever leaves a 10% gap for air is not told they are open. It applies to every window without a threshold of its own in its row. Zero is the behaviour of always.",
+        ),
+      )}</small>`;
+    const campo = riquadro.querySelector("#ed-tp-soglia");
+    campo.value = String(coverClosedThreshold(readJson(CHIAVE_SOGLIA_CHIUSA, 0)) || "");
+    /* Si salva mentre si scrive: e' un numero solo, e un tasto «Salva» per un
+     * numero solo sarebbe un gesto in piu' per niente. */
+    campo.addEventListener("change", () => {
+      const soglia = coverClosedThreshold(campo.value);
+      campo.value = soglia ? String(soglia) : "";
+      writeJsonIfChanged(CHIAVE_SOGLIA_CHIUSA, soglia);
+      try {
+        root.renderTapparelle?.();
+      } catch (_error) {}
+      try {
+        renderHomeWidgets();
+      } catch (_error) {}
+      schedule();
+    });
+  }
+  if (intro.nextElementSibling !== riquadro) intro.after(riquadro);
+  return true;
+}
+
+/* La soglia dell'umidita' che fa dire «apri la finestra» (#330).
+ *
+ * Stava nella scheda Temperature, accanto ai sensori che confronta. Sembrava
+ * il posto giusto e non lo era: «non compare in finestre» — chi cerca una cosa
+ * che riguarda le finestre la cerca dove stanno le finestre, e il ragionamento
+ * «sta accanto al dato» e' un ragionamento di chi il codice lo ha scritto, non
+ * di chi la plancia la usa. Adesso sta qui, sotto la soglia di chiusura: sono
+ * tutte e due impostazioni di casa, non di una riga.
+ *
+ * Sotto la casella c'e' scritto cosa manca. Il consiglio vuole tre cose
+ * insieme — la soglia, l'igrometro della stanza, la finestra in quella stanza —
+ * e se ne manca una tace: tacere e' giusto, tacere in silenzio e' quel che fa
+ * sembrare rotta una funzione che sta solo aspettando un sensore.
+ *
+ * Questa e' la soglia DI CASA: ogni finestra puo' averne una sua, scritta
+ * nella sua riga, e questa vale per quelle che non l'hanno scritta.
+ *
+ * Si salva mentre si scrive, come la soglia di chiusura: e' un numero solo, e
+ * un tasto «Salva» per un numero solo e' un gesto in piu' per niente. */
+function stanzeConIgrometro() {
+  const stanze = section("rooms", readJson("cd_stanze", []));
+  return Array.isArray(stanze) ? stanze.filter((stanza) => clean(stanza?.hum)) : [];
+}
+
+function frasiDiCosaManca(mancanze) {
+  const detto = {
+    "soglia-spenta": t(
+      "Adesso è spento: scrivi una quota fra 30 e 95 per accenderlo, zero lo rispegne.",
+      "Right now it is off: write a level between 30 and 95 to turn it on, zero turns it back off.",
+    ),
+    "senza-igrometro-in-stanza": t(
+      "Manca il sensore di umidità delle stanze: si associa nella scheda Temperature, una stanza per volta.",
+      "The rooms' humidity sensor is missing: set it under the Temperature tab, one room at a time.",
+    ),
+    "finestra-senza-stanza": t(
+      "Nessuna finestra sta in una stanza che ha l'igrometro: scegli la stanza nella riga della finestra, qui sotto.",
+      "No window sits in a room that has a hygrometer: pick the room in the window's row, below.",
+    ),
+  };
+  return mancanze.map((codice) => detto[codice]).filter(Boolean);
+}
+
+function aggiornaCosaManca(riquadro) {
+  const nota = riquadro?.querySelector("[data-dm-umidita-manca]");
+  if (!nota) return;
+  const stanze = stanzeConIgrometro();
+  const conIgrometro = new Set(stanze.map((stanza) => clean(stanza.id) || clean(stanza.name)));
+  const casa = readJson(CHIAVE_SOGLIA_UMIDITA, null);
+  const inStanzaConIgrometro = covers().filter((cover) => {
+    const stanza = stanzaDellaFinestra(cover);
+    return stanza && conIgrometro.has(clean(stanza.id) || clean(stanza.name));
+  });
+  const mancanze = cosaMancaPerArieggiare({
+    soglia: casa,
+    stanzeConUmidita: stanze.length,
+    finestreInStanzaConUmidita: inStanzaConIgrometro.length,
+    /* Ogni finestra ha la sua soglia: la prontezza si guarda finestra per
+     * finestra, non sulla sola casa (osservazione della review). */
+    finestreConSoglia: inStanzaConIgrometro.filter(
+      (cover) => sogliaDellaFinestra(cover, casa) !== null,
+    ).length,
+  });
+  const testo = mancanze.length
+    ? `⚠️ ${frasiDiCosaManca(mancanze).join(" ")}`
+    : `✅ ${t(
+        "C'è tutto: la card della finestra mostra l'umidità della sua stanza e dice di aprire appena supera la soglia.",
+        "Everything is here: the window's card shows its room's humidity and says to open as soon as it goes above the threshold.",
+      )}`;
+  if (nota.textContent !== testo) nota.textContent = testo;
+  const stato = mancanze.length ? "manca" : "pronto";
+  if (nota.dataset.dmUmiditaManca !== stato) nota.dataset.dmUmiditaManca = stato;
+}
+
+export function ensureCampoUmidita(body = doc?.getElementById("ed-body")) {
+  const ancora = body?.querySelector?.("[data-dm-tw-soglia]");
+  if (!ancora) return false;
+  let riquadro = body.querySelector("[data-dm-umidita-soglia]");
+  if (!riquadro) {
+    riquadro = doc.createElement("label");
+    riquadro.className = "ed-slot dm-tw-slot dm-tw-soglia dm-umidita-soglia";
+    riquadro.dataset.dmUmiditaSoglia = "true";
+    riquadro.innerHTML =
+      `<span class="ed-slot-lbl">${esc(
+        t("Suggerisci di arieggiare sopra il (%), di serie", "Suggest airing above (%), by default"),
+      )}</span>` +
+      `<input id="ed-umidita-soglia" class="ed-input" type="number" min="${SOGLIA_MINIMA}" max="${SOGLIA_MASSIMA}" step="1"` +
+      ` placeholder="${SOGLIA_PREDEFINITA}" autocomplete="off">` +
+      `<small>${esc(
+        t(
+          "Quando l'umidità di una stanza supera questa quota, la finestra di quella stanza suggerisce di aprirla per arieggiare. L'umidità è quella del sensore della stanza. Vale per le finestre che non hanno una soglia propria nella loro riga. Vuoto vale 60. Zero spegne il suggerimento.",
+          "When a room's humidity goes above this level, that room's window suggests opening it to air out. The humidity is the room sensor's. It applies to the windows without a threshold of their own in their row. Empty means 60. Zero turns the suggestion off.",
+        ),
+      )}</small>` +
+      `<small class="dm-umidita-manca" data-dm-umidita-manca="manca"></small>`;
+    const campo = riquadro.querySelector("#ed-umidita-soglia");
+    const scritto = readJson(CHIAVE_SOGLIA_UMIDITA, null);
+    campo.value = scritto === null || scritto === "" ? "" : String(scritto);
+    campo.addEventListener("change", () => {
+      const grezzo = clean(campo.value);
+      /* Vuoto vuol dire «quella di casa», zero vuol dire «spento»: sono due
+       * cose diverse, e vanno salvate diverse. Un numero fuori scala si
+       * riporta dentro invece di essere buttato via in silenzio. */
+      if (!grezzo) {
+        campo.value = "";
+        writeJsonIfChanged(CHIAVE_SOGLIA_UMIDITA, null);
+      } else if (Number.parseFloat(grezzo) === 0) {
+        campo.value = "0";
+        writeJsonIfChanged(CHIAVE_SOGLIA_UMIDITA, 0);
+      } else {
+        const soglia = sogliaDellUmidita(grezzo) ?? SOGLIA_PREDEFINITA;
+        campo.value = String(soglia);
+        writeJsonIfChanged(CHIAVE_SOGLIA_UMIDITA, soglia);
+      }
+      aggiornaCosaManca(riquadro);
+      try {
+        root.renderTapparelle?.();
+      } catch (_error) {}
+    });
+  }
+  if (ancora.nextElementSibling !== riquadro) ancora.after(riquadro);
+  /* La riga di cosa manca si rilegge a ogni giro: uno associa l'igrometro in
+   * un'altra scheda e tornando qui deve trovarla gia' cambiata. */
+  aggiornaCosaManca(riquadro);
+  return true;
+}
+
+export function ensureContactField(body = doc?.getElementById("ed-body")) {
+  /* La soglia di chiusura (#298) sta sopra tutto: e' della casa, non della riga.
+   * Subito sotto quella dell'umidita' (#330), che e' di casa anche lei. */
+  ensureSogliaField(body);
+  ensureCampoUmidita(body);
+  /* Prima la stanza: sale in cima, e le sei caselle qui sotto si mettono in
+   * fila dopo l'entita' senza trovarsela in mezzo. */
+  vestiLaStanza(body);
+  const ancora = ancoraSottoLaPrincipale(body);
+  if (!ancora) return false;
+  let ultimo = ancora;
+  let aggiunte = 0;
+  for (const [id, etichetta, esempio] of caselle()) {
+    let campo = body.querySelector(`#${id}`);
+    if (!campo) {
+      campo = casella(id, etichetta, esempio);
+      aggiunte += 1;
+    } else {
+      campo = campo.closest("[data-dm-tw-slot], label, .ed-slot") || campo;
+    }
+    /* Si rimette in fila a ogni giro: una casella stampata al posto sbagliato
+     * da una versione precedente torna dove deve stare senza doverla rifare. */
+    if (ultimo.nextElementSibling !== campo) ultimo.after?.(campo);
+    ultimo = campo;
+  }
+  {
+    let campo = body.querySelector("#ed-tp-preset");
+    if (!campo) {
+      campo = casellaPreset();
+      aggiunte += 1;
+    } else {
+      campo = campo.closest("label, .ed-slot") || campo;
+    }
+    if (ultimo.nextElementSibling !== campo) ultimo.after?.(campo);
+    ultimo = campo;
+  }
+  {
+    let campo = body.querySelector("#ed-tp-soglia-riga");
+    if (!campo) {
+      campo = casellaSogliaRiga();
+      aggiunte += 1;
+    } else {
+      campo = campo.closest("label, .ed-slot") || campo;
+    }
+    if (ultimo.nextElementSibling !== campo) ultimo.after?.(campo);
+    ultimo = campo;
+  }
+  {
+    let campo = body.querySelector("#ed-tp-umidita");
+    if (!campo) {
+      campo = casellaUmiditaRiga();
+      aggiunte += 1;
+    } else {
+      campo = campo.closest("label, .ed-slot") || campo;
+    }
+    if (ultimo.nextElementSibling !== campo) ultimo.after?.(campo);
+  }
+  /* La prima casella e' quella del runtime: le si da' il nome che adesso le
+   * spetta, perche' non e' piu' «l'entita'» ma quella della tapparella. */
+  const primaria = body.querySelector("#ed-tp-ent");
+  const etichetta = primaria?.closest(".ed-slot")?.querySelector(".ed-slot-lbl");
+  if (etichetta) {
+    const nome = t("Entità tapparella", "Cover entity");
+    if (clean(etichetta.textContent) !== nome) etichetta.textContent = nome;
+  }
+  /* Il segnaposto diceva soltanto `cover.`, e chi ha una tapparella dietro un
+   * rele' cercava una copertura che non esiste — e' esattamente il vicolo
+   * cieco della segnalazione #194. La casella un rele' lo accetta da sempre:
+   * adesso lo dice. Fuori dal ramo dell'etichetta, perche' la casella del
+   * runtime non ha una `.ed-slot-lbl` e li' dentro non ci si arriva mai. */
+  if (primaria) {
+    const esempio = t(
+      "cover.tapparella_x — oppure switch.tapparella_su",
+      "cover.shutter_x — or switch.shutter_up",
+    );
+    if (primaria.placeholder !== esempio) primaria.placeholder = esempio;
+  }
+  /* E la riga in cima, che diceva «tapparelle (entità cover)»: e' la frase da
+   * cui parte il vicolo cieco della #194 — chi ha la tapparella dietro uno
+   * Shelly cerca una copertura che il suo impianto non espone, e si ferma li'.
+   * La scheda dice invece tutte e tre le strade che conosce. */
+  const intro = body.querySelector(".ed-intro");
+  if (intro && !intro.dataset.dmTwIntro) {
+    intro.dataset.dmTwIntro = "true";
+    intro.textContent = t(
+      "Le tapparelle e le tende compaiono nella pagina 🪟 Finestre, raggruppate per piano e stanza. Ogni riga accetta un'entità cover.* — con posizione e percentuali — oppure un relè switch.*: uno solo se accendendolo la tapparella sta su, due se ce n'è uno per la salita e uno per la discesa, come uno Shelly in modalità interruttore. Se la finestra si apre a mano — persiane, scuri, una maniglia — lascia vuote le caselle dei comandi e compila solo il sensore di apertura: la card la disegna lo stesso e dice se è aperta.",
+      "Shutters and curtains show up on the 🪟 Windows page, grouped by floor and room. Every row accepts a cover.* entity — with position and percentages — or a switch.* relay: one when switching it on keeps the shutter up, two when one relay sends it up and another sends it down, like a Shelly in switch mode. When the window opens by hand — shutters, blinds, a handle — leave the command boxes empty and fill in the contact sensor alone: the card still draws it and says whether it is open.",
+    );
+  }
+  /* Il menu del tipo non ha piu' ragione di esistere: se e' rimasto da una
+   * versione precedente se ne va, o direbbe una cosa che nessuno legge. */
+  body.querySelector("#ed-tp-kind")?.closest("label, .ed-slot")?.remove();
+  return aggiunte > 0;
+}
+
+function schedule() {
+  if (state.frame) return;
+  const run = () => {
+    state.frame = 0;
+    paintShutterWindows();
+    ensureContactField();
+  };
+  state.frame = root.requestAnimationFrame?.(run) || root.setTimeout?.(run, 0) || 0;
+}
+
+function installStyles() {
+  installStyle(
+    STYLE_ID,
+    `
+    /* L'infisso, sempre in primo piano: sta sopra le guide del vano, che sono
+       l'ultimo strato che disegna il modulo della scena. */
+    html body #page-tapparelle#page-tapparelle .dm-tw-infisso{
+      position:absolute!important;inset:0!important;z-index:7!important;pointer-events:none!important}
+    html body #page-tapparelle#page-tapparelle .dm-tw-telaio{
+      position:absolute!important;inset:0!important;border:8px solid #e8edf3!important;border-radius:13px!important;
+      box-shadow:inset 0 0 0 1px #b6c2d1,inset 0 2px 5px rgba(15,23,42,.16)!important}
+    html body #page-tapparelle#page-tapparelle .dm-tw-anta{
+      position:absolute!important;top:8px!important;bottom:8px!important;width:calc(50% - 8px)!important;
+      border:6px solid #e8edf3!important;border-radius:7px!important;background:transparent!important;
+      box-shadow:inset 0 0 0 1px #b6c2d1!important;
+      transition:transform 1s cubic-bezier(.3,.7,.2,1),filter 1s ease!important}
+    html body #page-tapparelle#page-tapparelle .dm-tw-anta-sx{left:8px!important;transform-origin:left center!important}
+    html body #page-tapparelle#page-tapparelle .dm-tw-anta-dx{right:8px!important;transform-origin:right center!important}
+    html body #page-tapparelle#page-tapparelle .dm-tw-maniglia{
+      position:absolute!important;left:-9px!important;top:50%!important;width:7px!important;height:22px!important;
+      border-radius:3px!important;background:linear-gradient(180deg,#cbd5e1,#94a3b8)!important;
+      transform:translateY(-50%)!important;box-shadow:0 1px 2px rgba(15,23,42,.3)!important}
+    html body #page-tapparelle#page-tapparelle .dm-tw-maniglia::after{
+      content:""!important;position:absolute!important;left:-9px!important;top:7px!important;width:12px!important;height:5px!important;
+      border-radius:3px!important;background:linear-gradient(180deg,#cbd5e1,#8fa0b3)!important}
+
+    /* Aperta: le ante rientrano verso il cardine e fanno ombra su cio' che
+       hanno dietro.
+     *
+     * Con la tapparella alzata bastava vedere il cielo scoperto. Con la
+     * tapparella giu' no: le ante rientravano su un fondo dello stesso colore e
+     * non si capiva piu' niente — la card diceva "finestra aperta" e mostrava
+     * una tapparella chiusa qualunque.
+     *
+     * Adesso l'anta aperta resta un'anta: prende corpo, si stacca dal fondo, e
+     * getta ombra su quello che ha dietro. E' l'ombra a dire che li' c'e' un
+     * buco, e funziona sia sulla tapparella chiara sia sul cielo — senza
+     * coprire ne' l'una ne' l'altro. Da chiusa l'anta resta trasparente, se no
+     * si perderebbe il vetro. */
+    html body #page-tapparelle#page-tapparelle .tapp-win[data-dm-infisso-stato="aperto"] .dm-tw-anta{
+      transform:scaleX(.28)!important;
+      background:linear-gradient(135deg,#f7fafc,#dbe3ec)!important;
+      box-shadow:inset 0 0 0 1px #b6c2d1,6px 0 14px -4px rgba(15,23,42,.55)!important}
+    html body #page-tapparelle#page-tapparelle .tapp-win[data-dm-infisso-stato="aperto"] .dm-tw-anta-dx{
+      box-shadow:inset 0 0 0 1px #b6c2d1,-6px 0 14px -4px rgba(15,23,42,.55)!important}
+    /* Lo spessore del muro attorno al buco. */
+    html body #page-tapparelle#page-tapparelle .dm-tw-spalla{
+      position:absolute!important;top:8px!important;bottom:8px!important;left:8px!important;right:8px!important;
+      border-radius:7px!important;z-index:6!important;opacity:0!important;transition:opacity .9s ease!important;
+      pointer-events:none!important;
+      background:linear-gradient(90deg,rgba(15,23,42,.62) 0,rgba(15,23,42,.22) 9%,rgba(15,23,42,0) 22%,
+                 rgba(15,23,42,0) 78%,rgba(15,23,42,.22) 91%,rgba(15,23,42,.62) 100%),
+                 linear-gradient(180deg,rgba(15,23,42,.30),rgba(15,23,42,0) 26%)!important}
+    html body #page-tapparelle#page-tapparelle .tapp-win[data-dm-infisso-stato="aperto"] .dm-tw-spalla{opacity:1!important}
+
+    /* ── l'inferriata (#254) ────────────────────────────────────────────
+     *
+     * Sta FUORI, quindi davanti a tutto: sopra l'infisso, sopra il vano, sopra
+     * la tapparella. Due mezze grate che si scostano di lato — non ante che
+     * rientrano, perche' una grata scorre e non ruota.
+     *
+     * Sta DENTRO il telaio, non sopra: una grata copre il vetro, non la
+     * cornice, e disegnandola da bordo a bordo si perdeva il serramento che
+     * doveva proteggere. Le sbarre sono sottili e rade apposta: attraverso una
+     * grata si vede fuori, ed e' l'unica cosa che la distingue da un muro.
+     *
+     * Il nodo c'e' sempre ma non si vede: senza il sensore dichiarato la card
+     * resta quella di prima, pixel per pixel. */
+    html body #page-tapparelle#page-tapparelle .dm-tw-grata{
+      position:absolute!important;top:8px!important;bottom:8px!important;left:8px!important;
+      right:8px!important;z-index:8!important;pointer-events:none!important;display:none!important}
+    html body #page-tapparelle#page-tapparelle .tapp-win[data-dm-grata] .dm-tw-grata{display:block!important}
+    html body #page-tapparelle#page-tapparelle .dm-tw-grata-meta{
+      position:absolute!important;top:0!important;bottom:0!important;width:50%!important;
+      transition:transform 1s cubic-bezier(.3,.7,.2,1)!important;
+      /* Sbarre verticali rade piu' due traverse: si vede attraverso.
+         Il ferro e' grigio chiaro (dal campo: «essendo molto scure, quando
+         sono chiuse e la finestra e' aperta visivamente non e' il massimo»):
+         una grata si legge dal disegno delle sbarre, non dal nero. */
+      background:
+        repeating-linear-gradient(90deg,
+          rgba(148,163,184,.9) 0 3px,rgba(148,163,184,0) 3px 21px),
+        linear-gradient(180deg,rgba(148,163,184,0) 0 21%,rgba(148,163,184,.9) 21% 24%,
+          rgba(148,163,184,0) 24% 74%,rgba(148,163,184,.9) 74% 77%,rgba(148,163,184,0) 77%)!important;
+      filter:drop-shadow(1px 1px 0 rgba(255,255,255,.55))!important}
+    html body #page-tapparelle#page-tapparelle .dm-tw-grata-sx{left:0!important;transform-origin:left center!important}
+    html body #page-tapparelle#page-tapparelle .dm-tw-grata-dx{right:0!important;transform-origin:right center!important}
+    /* Aperta: le due meta' si ammucchiano contro i loro stipiti e il vetro
+       torna sgombro nel mezzo. Restano visibili — una grata aperta non
+       sparisce, si impacchetta di lato — e le sbarre schiacciate diventano
+       una fascia fitta, che e' esattamente come si vede una grata a soffietto
+       tirata da parte. */
+    html body #page-tapparelle#page-tapparelle .tapp-win[data-dm-grata="aperta"] .dm-tw-grata-meta{
+      transform:scaleX(.16)!important}
+    /* Le sbarre trasversali (#297): «sarebbe ottimale vedere l'inferriata che
+       si chiude, a barre trasversali sull'immagine». Da chiusa le due meta' si
+       incontrano nel mezzo e le traverse corrono da bordo a bordo; e per non
+       lasciarle al buio quando la finestra dietro e' chiusa, la grata porta
+       un filo di luce sulla sbarra. */
+    html body #page-tapparelle#page-tapparelle .tapp-win[data-dm-grata="chiusa"] .dm-tw-grata-meta{
+      transform:scaleX(1)!important;
+      background:
+        repeating-linear-gradient(90deg,
+          rgba(148,163,184,.92) 0 3px,rgba(148,163,184,0) 3px 21px),
+        repeating-linear-gradient(180deg,
+          rgba(148,163,184,0) 0 18px,rgba(148,163,184,.92) 18px 21px)!important}
+    /* Il grigio sfumato (dal campo: «secondo me un grigio sfumato sarebbe
+       meglio»). Dove il browser sa mascherare, la sbarra non e' una tinta
+       piena ma va dal chiaro in alto al pieno in basso, con un filo di luce
+       sul bordo: e' il ferro zincato controluce, e si legge tanto sul vetro
+       aperto quanto sulle ante chiuse. Il ritaglio a sbarre lo fa la
+       maschera, il colore e' un fondo solo; chi non sa mascherare tiene le
+       sbarre grigie di sopra, che sono la stessa forma senza la sfumatura. */
+    @supports (mask-image:linear-gradient(#000,#000)) or (-webkit-mask-image:linear-gradient(#000,#000)){
+      html body #page-tapparelle#page-tapparelle .dm-tw-grata-meta{
+        background:
+          repeating-linear-gradient(90deg,rgba(255,255,255,.7) 0 1px,rgba(255,255,255,0) 1px 21px),
+          linear-gradient(180deg,#e2e8f0 0%,#b4bfcd 55%,#8593a7 100%)!important;
+        filter:none!important;
+        -webkit-mask-image:
+          repeating-linear-gradient(90deg,#000 0 3px,transparent 3px 21px),
+          linear-gradient(180deg,transparent 0 21%,#000 21% 24%,transparent 24% 74%,#000 74% 77%,transparent 77%);
+        mask-image:
+          repeating-linear-gradient(90deg,#000 0 3px,transparent 3px 21px),
+          linear-gradient(180deg,transparent 0 21%,#000 21% 24%,transparent 24% 74%,#000 74% 77%,transparent 77%)}
+      html body #page-tapparelle#page-tapparelle .tapp-win[data-dm-grata="chiusa"] .dm-tw-grata-meta{
+        background:
+          repeating-linear-gradient(90deg,rgba(255,255,255,.7) 0 1px,rgba(255,255,255,0) 1px 21px),
+          repeating-linear-gradient(180deg,rgba(255,255,255,0) 0 18px,rgba(255,255,255,.7) 18px 19px,rgba(255,255,255,0) 19px 21px),
+          linear-gradient(180deg,#e2e8f0 0%,#b4bfcd 55%,#8593a7 100%)!important;
+        -webkit-mask-image:
+          repeating-linear-gradient(90deg,#000 0 3px,transparent 3px 21px),
+          repeating-linear-gradient(180deg,transparent 0 18px,#000 18px 21px);
+        mask-image:
+          repeating-linear-gradient(90deg,#000 0 3px,transparent 3px 21px),
+          repeating-linear-gradient(180deg,transparent 0 18px,#000 18px 21px)}
+    }
+    /* Prima la grata, poi la finestra (#297).
+     *
+     * Le due cose si muovono nell'ordine in cui le si tocca davvero: chiudendo,
+       si tira la grata e poi si accostano le ante; aprendo, si spingono le ante
+       e poi si scosta la grata. Su una card che ha la grata, l'anta che si
+       chiude aspetta che la grata abbia finito, e la grata che si apre aspetta
+       che le ante siano rientrate. Senza grata non cambia niente: il ritardo
+       sta solo sotto «data-dm-grata». */
+    html body #page-tapparelle#page-tapparelle .tapp-win[data-dm-grata][data-dm-infisso-stato="chiuso"] .dm-tw-anta{
+      transition-delay:.9s!important}
+    html body #page-tapparelle#page-tapparelle .tapp-win[data-dm-grata="aperta"] .dm-tw-grata-meta{
+      transition-delay:.9s!important}
+    html body #page-tapparelle#page-tapparelle .tapp-win[data-dm-grata="aperta"][data-dm-infisso-stato="chiuso"] .dm-tw-grata-meta{
+      transition-delay:0s!important}
+
+    /* Con due pastiglie il nome tiene la sua riga e lo stato va a capo. */
+    html body #page-tapparelle#page-tapparelle .tapp-head[data-dm-tw-pills="due"]{
+      flex-wrap:wrap!important;justify-content:flex-start!important;row-gap:8px!important}
+    html body #page-tapparelle#page-tapparelle .tapp-head[data-dm-tw-pills="due"]>.dm-tapp-title{
+      flex:1 1 100%!important;min-width:0!important}
+
+    /* La pastiglia dell'infisso vive accanto a quella della tapparella, e la
+       forma la da' gia' chi possiede .tapp-state: qui si cambia solo il colore. */
+    html body #page-tapparelle#page-tapparelle .dm-tw-pill{
+      background:rgba(245,158,11,.18)!important;border-color:rgba(245,158,11,.34)!important;color:#b45309!important}
+
+    /* Il consiglio di arieggiare (#330): una riga sotto la card, non una terza
+       pastiglia in testa — quella riga dice cosa fare, non com'e' messa la
+       finestra, e in testa mangerebbe il nome. Verde acqua perche' e' un
+       invito, non un allarme: la finestra chiusa non e' un guasto. */
+    html body #page-tapparelle#page-tapparelle .dm-tw-umidita{
+      margin:8px 0 0;padding:5px 9px;border-radius:11px;
+      border:1px solid color-mix(in srgb,var(--text-dim,#64748b) 18%,transparent);
+      color:var(--text-dim,#64748b);font-size:11px;font-weight:700;letter-spacing:.2px;
+      line-height:1.3;text-align:center}
+    html body #page-tapparelle#page-tapparelle .dm-tw-arieggia{
+      margin:8px 0 0;padding:6px 9px;border-radius:11px;
+      border:1px solid color-mix(in srgb,#0ea5e9 32%,transparent);
+      background:color-mix(in srgb,#0ea5e9 11%,transparent);
+      color:#0369a1;font-size:11px;font-weight:800;letter-spacing:.2px;
+      line-height:1.3;text-align:center}
+
+    #ed-body .dm-tw-contact-slot{display:block!important;margin-top:10px!important}
+    /* La soglia (#298): una casella stretta col suo aiuto sotto, e senza la
+       matita — non e' un'etichetta da rinominare, e' un numero da scrivere. */
+    #ed-body .dm-tw-soglia{display:block;margin:6px 0 12px}
+    #ed-body .dm-tw-soglia #ed-tp-soglia{max-width:140px}
+    #ed-body .dm-tw-soglia small{
+      display:block;margin:4px 2px 0;font-size:11px;line-height:1.45;color:var(--text-dim,#64748b)}
+    /* Cosa manca perche' il consiglio compaia (#330): una riga sola, colorata
+       come la risposta che da'. Non e' un errore — e' l'elenco della spesa. */
+    #ed-body .dm-umidita-soglia #ed-umidita-soglia{max-width:140px}
+    #ed-body .dm-umidita-soglia small.dm-umidita-manca{
+      margin-top:6px;padding:6px 9px;border-radius:10px;font-weight:700;
+      border:1px solid color-mix(in srgb,#f59e0b 34%,transparent);
+      background:color-mix(in srgb,#f59e0b 12%,transparent);color:#92400e}
+    #ed-body .dm-umidita-soglia small.dm-umidita-manca[data-dm-umidita-manca="pronto"]{
+      border-color:color-mix(in srgb,#10b981 34%,transparent);
+      background:color-mix(in srgb,#10b981 12%,transparent);color:#065f46}
+    /* L'igrometro che la finestra si porta dalla stanza: sotto la tendina,
+       perche' e' la conseguenza di quella scelta e si legge insieme a lei. */
+    #ed-body small.dm-tw-umidita-stanza{
+      display:block;margin:-4px 0 10px;padding:5px 9px;border-radius:9px;
+      font-size:11px;line-height:1.4;font-weight:600;
+      border:1px solid color-mix(in srgb,#f59e0b 30%,transparent);
+      background:color-mix(in srgb,#f59e0b 10%,transparent);color:#92400e}
+    #ed-body small.dm-tw-umidita-stanza[data-dm-umidita-stanza="pronto"]{
+      border-color:color-mix(in srgb,#10b981 30%,transparent);
+      background:color-mix(in srgb,#10b981 10%,transparent);color:#065f46}
+  `,
+  );
+}
+
+export function installShutterWindowSection() {
+  if (!doc || state.installed) return;
+  state.installed = true;
+  installStyles();
+  for (const eventName of [
+    "dashboardmodern:legacy-ready",
+    "dashboardmodern:runtime-ready",
+    "dashboardmodern:state-changed",
+    // Quando arriva una configurazione condivisa il modulo della scena rifa' la
+    // griglia da capo con innerHTML, e con lei sparisce ogni infisso: senza
+    // questo, le card restavano senza finestra fino al primo cambio di stato.
+    "dashboardmodern:persistence-restored",
+    /* E ogni volta che il corpo della configurazione viene rifatto.
+     *
+     * Le tre caselle in piu' — la tenda, la tenda da sole, il contatto — le
+     * rimetteva il giro appeso al cambio di linguetta. Ma la scheda la ridisegna
+     * anche il modello, a ogni salvataggio, e li' se ne andavano: si aggiungeva
+     * una tapparella e le caselle sparivano, come se non fossero mai esistite.
+     * Per rivederle bisognava uscire dalla linguetta e rientrarci. */
+    "dashboardmodern:editor-rendered",
+    "pageshow",
+  ]) {
+    root.addEventListener?.(eventName, schedule);
+  }
+  doc.addEventListener(
+    "click",
+    (event) => {
+      if (event.target?.closest?.("[data-tab],[data-page],.ed-tab,.tapp-btn")) {
+        root.setTimeout?.(schedule, 0);
+      }
+    },
+    true,
+  );
+  schedule();
+}
+
+if (doc?.readyState === "loading") {
+  doc.addEventListener("DOMContentLoaded", installShutterWindowSection, { once: true });
+} else {
+  installShutterWindowSection();
+}

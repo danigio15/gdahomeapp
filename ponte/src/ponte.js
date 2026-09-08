@@ -156,7 +156,7 @@ class Collegamento {
     if (this.dispositivo) {
       if (eUnaCommissione(testo)) {
         const detto = leggi(testo);
-        if (detto && typeof detto.type === "string" && detto.type.startsWith("ponte/")) {
+        if (detto && this._eUnaCommissione(detto)) {
           this._commissione(detto);
           return;
         }
@@ -177,6 +177,15 @@ class Collegamento {
       return;
     }
     this._autentica(String(detto.access_token || ""));
+  }
+
+  /* Le commissioni le riconosce chi le fa; un ponte senza commissioni
+   * riconosce solo i `ponte/…`, per dire di no invece di girarli a Home
+   * Assistant, che non saprebbe cosa farsene. */
+  _eUnaCommissione(detto) {
+    const commissioni = this.ponte.commissioni;
+    if (commissioni) return commissioni.riconosce(detto);
+    return typeof detto.type === "string" && detto.type.startsWith("ponte/");
   }
 
   _commissione(detto) {

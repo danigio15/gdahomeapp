@@ -17,8 +17,16 @@ import { gunzipSync } from "node:zlib";
 
 import { accetta } from "../src/presa.js";
 import { Casa } from "../src/casa.js";
-import { Commissioni, impacchetta, TIPO } from "../src/commissioni.js";
+import {
+  Commissioni,
+  eUnaCommissione,
+  impacchetta,
+  TIPO,
+  TIPO_PLANCIA,
+} from "../src/commissioni.js";
+import { Configurazione } from "../src/configurazione.js";
 import { Dispositivi } from "../src/dispositivi.js";
+import { Plancia } from "../src/plancia.js";
 import { Ponte } from "../src/ponte.js";
 
 const SEGNO_DEL_SUPERVISOR = "il-segno-del-supervisor";
@@ -440,6 +448,292 @@ test("un ponte senza commissioni dice di no, invece di girarlo a Home Assistant"
 
   assert.equal(detti.find((uno) => uno.id === 1).error.code, "unknown_command");
   assert.equal(ha.arrivate.filter((una) => una.filo).length, 0);
+
+  telefono.close();
+  ponte.chiudiTutto();
+  await new Promise((ok) => server.close(ok));
+  await ha.spegni();
+  rmSync(cartella, { recursive: true, force: true });
+});
+
+/* ─── La plancia dentro l'add-on, e la sua configurazione ─────────────────── */
+
+test("si riconosce cosa fa il ponte e cosa va in Home Assistant", () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-"));
+  const con = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    plancia: new Plancia(),
+    configurazione: new Configurazione({ cartella }),
+  });
+  for (const tipo of [
+    TIPO,
+    TIPO_PLANCIA,
+    "ponte/altro",
+    "dashboardmodern/config/get",
+    "dashboardmodern/config/set",
+    "dashboardmodern/config/restore",
+  ]) {
+    assert.equal(con.riconosce({ type: tipo }), true, tipo);
+  }
+  /* La copia vecchia per utente si ferma qui; le altre chiavi vanno in casa. */
+  assert.equal(
+    con.riconosce({
+      id: 12,
+      type: "frontend/get_user_data",
+      key: "dashboardmodern_integration_config",
+    }),
+    true,
+  );
+  assert.equal(
+    con.riconosce({
+      id: 700001,
+      type: "frontend/get_user_data",
+      key: "dashboardmodern_integration_config",
+    }),
+    false,
+  );
+  assert.equal(con.riconosce({ id: 12, type: "frontend/set_user_data", key: "altro" }), false);
+  for (const tipo of [
+    "get_states",
+    "dashboardmodern/www/list",
+    "dashboardmodern/tickets/list",
+    "call_service",
+  ]) {
+    assert.equal(con.riconosce({ type: tipo }), false, tipo);
+  }
+  assert.equal(con.riconosce({}), false);
+
+  /* Senza configurazione, la configurazione non e' cosa sua. */
+  const senza = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
+  assert.equal(senza.riconosce({ type: "dashboardmodern/config/get" }), false);
+  assert.equal(senza.riconosce({ type: TIPO }), true);
+
+  assert.equal(eUnaCommissione('{"id":1,"type":"dashboardmodern/config/get"}'), true);
+  assert.equal(eUnaCommissione('{"id":1,"type":"frontend/get_user_data","key":"x"}'), true);
+  assert.equal(eUnaCommissione('{"id":1,"type":"get_states"}'), false);
+  rmSync(cartella, { recursive: true, force: true });
+});
+
+test("i file della plancia vengono dall'add-on, senza andare in Home Assistant", async () => {
+  const { scarica, chieste } = scaricaFinto();
+  const plancia = new Plancia();
+  const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO, scarica, plancia });
+
+  const dove = await con.rispondi({ id: 1, type: TIPO_PLANCIA });
+  assert.equal(dove.success, true);
+  assert.equal(dove.result.base, plancia.base);
+  assert.deepEqual(dove.result.varianti, ["dashboard-en.html", "dashboard.html"]);
+
+  const pagina = await con.rispondi({
+    id: 2,
+    type: TIPO,
+    percorso: `${plancia.base}/legacy/dashboard.html`,
+  });
+  assert.equal(pagina.result.stato, 200);
+  assert.equal(pagina.result.compresso, "gzip");
+  assert.match(gunzipSync(Buffer.from(pagina.result.corpo, "base64")).toString(), /<html/);
+
+  const vecchia = await con.rispondi({
+    id: 3,
+    type: TIPO,
+    percorso: "/dashboardmodern_static/vecchia/legacy/dashboard.html",
+  });
+  assert.equal(vecchia.result.stato, 404);
+  assert.equal(chieste.length, 0, "in Home Assistant non si va");
+
+  /* Le chiamate REST invece si'. */
+  await con.rispondi({ id: 4, type: TIPO, percorso: "/api/states" });
+  assert.equal(chieste.length, 1);
+});
+
+test("senza la plancia nell'add-on, ponte/plancia dice di no e i file si chiedono a Home Assistant", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "senza-plancia-"));
+  const { scarica, chieste } = scaricaFinto();
+  const con = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    scarica,
+    plancia: new Plancia({ cartella }),
+  });
+  const dove = await con.rispondi({ id: 1, type: TIPO_PLANCIA });
+  assert.equal(dove.success, false);
+  assert.equal(dove.error.code, "not_found");
+  await con.rispondi({
+    id: 2,
+    type: TIPO,
+    percorso: "/dashboardmodern_static/x/legacy/dashboard.html",
+  });
+  assert.equal(chieste.length, 1);
+  rmSync(cartella, { recursive: true, force: true });
+});
+
+test("la configurazione della plancia la tiene il ponte, con le stesse risposte dell'integrazione", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-config-"));
+  const con = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
+  });
+
+  const vuota = await con.rispondi({ id: 1, type: "dashboardmodern/config/get" });
+  assert.deepEqual(vuota, {
+    id: 1,
+    type: "result",
+    success: true,
+    result: {
+      profile: "primary",
+      requested_profile: null,
+      snapshot: null,
+      recoverable: [],
+      profiles: [],
+    },
+  });
+
+  const scritta = await con.rispondi({
+    id: 2,
+    type: "dashboardmodern/config/set",
+    profile: "primary",
+    snapshot: {
+      values: { cd_stanze: '[{"name":"Sala"}]' },
+      keys_revision: 1,
+      writer_generation: 2,
+      updated_at: 0,
+    },
+    expected_revision: 0,
+  });
+  assert.equal(scritta.success, true);
+  assert.equal(scritta.result.status, "saved");
+  assert.equal(scritta.result.snapshot.revision, 1);
+  assert.equal(scritta.result.snapshot.updated_at, 5000);
+
+  const conflitto = await con.rispondi({
+    id: 3,
+    type: "dashboardmodern/config/set",
+    snapshot: { values: { cd_stanze: "[]" } },
+    expected_revision: 0,
+  });
+  assert.equal(conflitto.result.status, "conflict");
+
+  const letta = await con.rispondi({
+    id: 4,
+    type: "dashboardmodern/config/get",
+    profile: "primary",
+  });
+  assert.equal(letta.result.snapshot.values.cd_stanze, '[{"name":"Sala"}]');
+
+  const storta = await con.rispondi({
+    id: 5,
+    type: "dashboardmodern/config/set",
+    snapshot: { values: "no" },
+  });
+  assert.equal(storta.success, false);
+  assert.equal(storta.error.code, "invalid_format");
+  const troppo = await con.rispondi({
+    id: 6,
+    type: "dashboardmodern/config/set",
+    snapshot: { values: { a: "x".repeat(3 * 1024 * 1024) } },
+  });
+  assert.equal(troppo.error.code, "snapshot_too_large");
+  const profilo = await con.rispondi({
+    id: 7,
+    type: "dashboardmodern/config/get",
+    profile: "../x",
+  });
+  assert.equal(profilo.error.code, "invalid_format");
+
+  const senzaRevisione = await con.rispondi({ id: 8, type: "dashboardmodern/config/restore" });
+  assert.equal(senzaRevisione.error.code, "invalid_format");
+  const ripristino = await con.rispondi({
+    id: 9,
+    type: "dashboardmodern/config/restore",
+    revision: 42,
+  });
+  assert.equal(ripristino.result.status, "conflict");
+
+  /* La copia vecchia per utente: una risposta innocua. */
+  const vecchia = await con.rispondi({
+    id: 10,
+    type: "frontend/get_user_data",
+    key: "dashboardmodern_integration_config",
+  });
+  assert.deepEqual(vecchia.result, { value: null });
+  const scrittaVecchia = await con.rispondi({
+    id: 11,
+    type: "frontend/set_user_data",
+    key: "dashboardmodern_integration_config",
+    value: {},
+  });
+  assert.equal(scrittaVecchia.success, true);
+  assert.equal(scrittaVecchia.result, null);
+  rmSync(cartella, { recursive: true, force: true });
+});
+
+test("col ponte in mezzo: la configurazione non arriva in Home Assistant, le altre chiavi si'", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "ponte-config-"));
+  const ha = await casaFinta();
+  const casa = new Casa({ indirizzo: ha.indirizzo, segno: SEGNO_DEL_SUPERVISOR });
+  const dispositivi = new Dispositivi({ cartella });
+  const { segno } = dispositivi.abbina({ nome: "Prova" });
+  const commissioni = new Commissioni({
+    casa,
+    registro: ZITTO,
+    plancia: new Plancia(),
+    configurazione: new Configurazione({ cartella }),
+  });
+  const ponte = new Ponte({ casa, dispositivi, registro: ZITTO, commissioni });
+
+  const server = createServer((_r, risposta) => risposta.end());
+  server.on("upgrade", (richiesta, socket) => {
+    const presa = accetta(richiesta, socket, {});
+    if (presa) ponte.accogli(presa, { da: "prova" });
+  });
+  await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
+
+  const telefono = new WebSocket(`ws://127.0.0.1:${server.address().port}`);
+  const detti = [];
+  telefono.addEventListener("message", (evento) => detti.push(JSON.parse(evento.data)));
+  await new Promise((ok) => telefono.addEventListener("open", ok));
+  await attendi(() => detti.some((uno) => uno.type === "auth_required"));
+  telefono.send(JSON.stringify({ type: "auth", access_token: segno }));
+  await attendi(() => detti.some((uno) => uno.type === "auth_ok"));
+
+  telefono.send(JSON.stringify({ id: 1, type: TIPO_PLANCIA }));
+  telefono.send(
+    JSON.stringify({
+      id: 2,
+      type: "dashboardmodern/config/set",
+      snapshot: { values: { cd_stanze: '[{"name":"Sala"}]' } },
+    }),
+  );
+  telefono.send(JSON.stringify({ id: 3, type: "dashboardmodern/config/get" }));
+  telefono.send(
+    JSON.stringify({
+      id: 4,
+      type: "frontend/get_user_data",
+      key: "dashboardmodern_integration_config",
+    }),
+  );
+  telefono.send(JSON.stringify({ id: 5, type: "frontend/get_user_data", key: "core.profile" }));
+  telefono.send(JSON.stringify({ id: 6, type: "dashboardmodern/www/list" }));
+  await attendi(() => detti.filter((uno) => uno.type === "result").length === 6);
+
+  assert.equal(detti.find((uno) => uno.id === 1).result.base, new Plancia().base);
+  assert.equal(detti.find((uno) => uno.id === 2).result.status, "saved");
+  assert.equal(detti.find((uno) => uno.id === 3).result.snapshot.revision, 1);
+  assert.deepEqual(detti.find((uno) => uno.id === 4).result, { value: null });
+  /* In Home Assistant sono arrivate solo le cose sue. */
+  assert.deepEqual(
+    ha.arrivate.filter((una) => una.filo).map((una) => una.filo.type),
+    ["frontend/get_user_data", "dashboardmodern/www/list"],
+  );
+  assert.equal(
+    ha.arrivate.find((una) => una.filo?.type === "frontend/get_user_data").filo.key,
+    "core.profile",
+  );
+
+  /* E la configurazione e' sul disco del ponte. */
+  assert.equal(new Configurazione({ cartella }).leggi().snapshot.revision, 1);
 
   telefono.close();
   ponte.chiudiTutto();

@@ -12,8 +12,8 @@
 /// Nessuna credenziale di Home Assistant tocca ne' la pagina ne' il telefono.
 ///
 /// Questa schermata sa tre cose: quando la casa non e' pronta lo dice, quando
-/// in casa non c'e' DashboardModern lo dice, e quando c'e' apre la pagina e
-/// la copre finche' non e' arrivata.
+/// il ponte non ha la plancia lo dice, e quando ce l'ha apre la pagina e la
+/// copre finche' non e' arrivata.
 library;
 
 import 'dart:async';
@@ -161,11 +161,11 @@ class PlanciaVeraState extends State<PlanciaVera> {
         collegamento: collegamento,
         vaiAlleCase: widget.vaiAlleCase,
         icona: Icons.dashboard_customize_rounded,
-        titolo: 'Qui non c\'e\' DashboardModern',
+        titolo: 'Il ponte non ha la plancia',
         sotto:
-            'La plancia dell\'app e\' la tua plancia di DashboardModern: '
-            'installala in Home Assistant e comparira\' qui, com\'e\' li\'. '
-            'Intanto, dalla barra, ci sono i dispositivi.',
+            'La plancia la porta il ponte, dalla versione 0.7.0: aggiorna '
+            'l\'add-on in Home Assistant e comparira\' qui. Intanto, dalla '
+            'barra, ci sono i dispositivi.',
       );
     }
 

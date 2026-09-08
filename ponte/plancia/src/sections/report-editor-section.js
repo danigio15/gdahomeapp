@@ -1,0 +1,320 @@
+import { applianceArtwork } from "../core/appliance-artwork.js";
+import { applianceArtworkType } from "../core/appliance-card-view-model.js";
+import { reportIconForDevice } from "../core/energy-projection.js";
+import { clean, doc, esc, installStyle, onEditorRedraw, root, section, t, wrapFunction } from "./shared.js";
+
+globalThis.__DM_20260815C__ = true;
+const KEY = "__DASHBOARDMODERN_REPORT_EDITOR_SECTION__";
+const state = (root[KEY] ||= { installed: false, listeners: false });
+
+function panel() {
+  return doc?.querySelector("#editor-modal [data-energy-panel='report']");
+}
+
+function rowFields(row) {
+  return {
+    enabled: row.querySelector("[data-report-toggle]"),
+    label: row.querySelector("[data-report-label]"),
+    icon: row.querySelector(".dm-icon-field input,.ed-icon-input"),
+    entity: row.querySelector("[data-entity-field] input,.dm-entity-field input"),
+    actions: row.querySelector("span:has([data-report-up]),.dm-report-actions"),
+  };
+}
+
+/* The little square next to a Report entry says which appliance it is about.
+ *
+ * It is painted from the entry's own icon, and an entry saved before that field
+ * existed has none: the square then stayed empty, which says nothing at all.
+ * The dashboard has an answer for exactly this — the icon the Report row draws,
+ * which follows the appliance card — so the editor shows the same one instead
+ * of a blank box. Nothing is written to the configuration: what is stored is
+ * still empty until the user chooses an icon of their own. */
+function deviceForRow(row) {
+  const id = clean(row.dataset.reportId);
+  // Lo stesso campo che rowFields legge: la ricerca per nome cercava un
+  // attributo che nessuno scrive, quindi non trovava mai niente e il quadratino
+  // dell'icona restava vuoto.
+  const name = clean(
+    (row.querySelector("[data-report-label]") || row.querySelector("[data-report-name]"))?.value,
+  );
+  const devices = [...(section("appliances", []) || []), ...(section("loads", []) || [])];
+  return (
+    devices.find((item) => clean(item.id) && clean(item.id) === id) ||
+    devices.find((item) => clean(item.name).toLowerCase() === name.toLowerCase()) ||
+    null
+  );
+}
+
+/* Lo stesso disegno degli elettrodomestici, non una faccina.
+ *
+ * Il quadratino accanto a una voce del Report stampava il carattere che c'era
+ * scritto nel campo: un'emoji. Ma gli elettrodomestici hanno un catalogo di
+ * disegni stilizzati, e il Report *sulla plancia* quel catalogo lo usa gia' —
+ * era solo la riga qui in configurazione a restare indietro. Nella stessa
+ * schermata convivevano cosi' due stili: le schede col disegno, l'editor con
+ * le faccine.
+ *
+ * Il tipo lo decide la stessa funzione della scheda, che quando non riconosce
+ * niente risponde «generico» invece di non rispondere: cosi' tutte le voci del
+ * catalogo sono disegnate allo stesso modo, e le altre pure. */
+function paintCatalogArtwork(button, device) {
+  if (!device) return false;
+  let artwork = "";
+  try {
+    artwork = applianceArtwork(applianceArtworkType(device), 26) || "";
+  } catch (_error) {
+    return false;
+  }
+  if (!artwork) return false;
+  const firma = `art|${clean(device.id || device.name)}`;
+  if (button.dataset.dmReportIconToken === firma) return true;
+  button.innerHTML = artwork;
+  button.dataset.dmReportIconToken = firma;
+  return true;
+}
+
+function paintEmptyReportIcon(row, fields) {
+  const button = fields.icon?.closest(".dm-icon-field,.ed-form-row")?.querySelector("button");
+  if (!button) return;
+  // The stored value first — an entry can carry an mdi name, an emoji or an
+  // artwork key — and the icon the Report actually draws when it carries none.
+  const stored = clean(fields.icon?.value);
+  const device = deviceForRow(row);
+  /* Il disegno del catalogo viene prima di tutto: e' quello che si vede sulla
+   * plancia accanto a questa voce, ed e' l'unico modo perche' le due schermate
+   * mostrino la stessa cosa. Un'icona scelta a mano resta scritta nel campo e
+   * torna appena il disegno non c'e'. */
+  if (paintCatalogArtwork(button, device)) return;
+  const token = stored || (device ? reportIconForDevice(device) : "");
+  if (!token) return;
+  if (button.dataset.dmReportIconToken === token) return;
+  if (/^mdi:/i.test(token)) {
+    // An mdi name is not a character: printed as text it left the square blank.
+    // The icon engine draws it, the same one the appliance card uses.
+    if (root.DashboardModernIconEngine?.render?.(button, "load", token, { size: 26 })) {
+      button.dataset.dmReportIconToken = token;
+      return;
+    }
+    return;
+  }
+  if (button.textContent !== token) button.textContent = token;
+  button.dataset.dmReportIconToken = token;
+}
+
+function cumulativeEntity(entity) {
+  const id = clean(entity);
+  if (!id) return false;
+  const current = root.STATES?.[id] || root._RAW_STATES?.[id] || null;
+  const stateClass = clean(current?.attributes?.state_class).toLowerCase();
+  return (
+    stateClass === "total" ||
+    stateClass === "total_increasing" ||
+    /(?:^|[._-])(total|totale|lifetime|meter|contatore)(?:[._-]|$)/i.test(id)
+  );
+}
+
+function openReportEditor(row) {
+  doc?.getElementById("dm-report-row-editor")?.remove();
+  const fields = rowFields(row);
+  const modal = doc.createElement("div");
+  modal.id = "dm-report-row-editor";
+  modal.className = "dm-section-modal";
+  modal.innerHTML = `<section class="dm-section-dialog" role="dialog" aria-modal="true" aria-labelledby="dm-report-row-title">
+    <header><strong id="dm-report-row-title">📊 ${t("Modifica voce Report", "Edit Report entry")}</strong><button type="button" data-close aria-label="${t("Chiudi", "Close")}">✕</button></header>
+    <form data-form>
+      <label class="dm-modal-check"><input type="checkbox" name="enabled" ${fields.enabled?.checked ? "checked" : ""}> <span>${t("Mostra nel Report", "Show in Report")}</span></label>
+      <label class="ed-slot"><span class="ed-slot-lbl">${t("Etichetta", "Label")}</span><input class="ed-input" name="label" value="${esc(fields.label?.value)}" required></label>
+      <label class="ed-slot"><span class="ed-slot-lbl">${t("Icona", "Icon")}</span><input class="ed-input" name="icon" value="${esc(fields.icon?.value)}"></label>
+      <label class="ed-slot"><span class="ed-slot-lbl">${t("Entità totale per lo storico", "Lifetime total entity")}</span><span class="ed-form-row"><input class="ed-input mono" name="entity" value="${esc(fields.entity?.value)}"><button type="button" class="dm-entity-picker" data-pick>🔍</button></span><small>${t("Contatore cumulativo kWh per mese selezionato, mesi precedenti e anno.", "Cumulative kWh meter for selected month, previous months and year.")}</small></label>
+      <output data-error></output>
+      <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">💾 ${t("Salva modifiche", "Save changes")}</button></footer>
+    </form>
+  </section>`;
+  doc.body.append(modal);
+  const form = modal.querySelector("[data-form]");
+  const close = () => modal.remove();
+  modal.querySelectorAll("[data-close],[data-cancel]").forEach((button) => button.addEventListener("click", close));
+  modal.querySelector("[data-pick]").addEventListener("click", () => root.wzPickEntity?.(form.elements.entity));
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) close();
+  });
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const label = clean(form.elements.label.value);
+    const entity = clean(form.elements.entity.value);
+    const error = form.querySelector("[data-error]");
+    if (!label) {
+      error.textContent = t("Inserisci un'etichetta.", "Enter a label.");
+      return;
+    }
+    if (entity && !cumulativeEntity(entity)) {
+      error.textContent = t(
+        "Seleziona un contatore totale kWh con state_class total o total_increasing.",
+        "Select a total kWh meter with state_class total or total_increasing.",
+      );
+      return;
+    }
+    if (fields.enabled) fields.enabled.checked = form.elements.enabled.checked;
+    if (fields.label) fields.label.value = label;
+    if (fields.icon) fields.icon.value = clean(form.elements.icon.value);
+    if (fields.entity) fields.entity.value = entity;
+    for (const field of [fields.enabled, fields.label, fields.icon, fields.entity]) {
+      field?.dispatchEvent(new Event("input", { bubbles: true }));
+      field?.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    close();
+    panel()?.querySelector("[data-report-save]")?.click();
+  });
+}
+
+export function normalizeReportEditorSection() {
+  const target = panel();
+  if (!target) return false;
+  target.dataset.dmReportLayout = "cards";
+  target.querySelectorAll(".dm-report-row").forEach((row) => {
+    const fields = rowFields(row);
+    row.dataset.historyValid = String(!fields.entity?.value || cumulativeEntity(fields.entity.value));
+    fields.enabled?.closest("label")?.classList.add("dm-report-enabled");
+    fields.label?.classList.add("dm-report-label");
+    const casella = fields.icon?.closest(".dm-icon-field,.ed-form-row");
+    if (casella) {
+      casella.classList.add("dm-report-icon");
+      /* Il quadratino ha un padrone solo, e lo dice.
+       *
+       * Ogni bottone .dm-icon-picker della configurazione viene ridipinto da
+       * chi decora i selettori d'icona con il carattere scritto nel campo: su
+       * queste righe voleva dire riscrivere l'emoji sopra il disegno del
+       * catalogo, subito dopo che era stato messo. Due padroni sullo stesso
+       * pixel, e vinceva l'ultimo. Con questo segno il decoratore generale
+       * lascia stare la casella, e a disegnarla resta solo il Report. */
+      casella.dataset.dmIconOwner = "report";
+    }
+    paintEmptyReportIcon(row, fields);
+    fields.entity?.closest("[data-entity-field],.dm-entity-field")?.classList.add("dm-report-history");
+    if (fields.actions) {
+      fields.actions.classList.add("dm-report-actions");
+      if (!fields.actions.querySelector("[data-dm-report-edit]")) {
+        const edit = doc.createElement("button");
+        edit.type = "button";
+        edit.dataset.dmReportEdit = "true";
+        edit.textContent = "✏️";
+        edit.setAttribute("aria-label", t("Modifica voce Report", "Edit Report entry"));
+        fields.actions.prepend(edit);
+      }
+    }
+    let help = row.querySelector(".dm-report-history-help");
+    if (!help) {
+      help = doc.createElement("small");
+      help.className = "dm-report-history-help";
+      row.append(help);
+    }
+    help.textContent = row.dataset.historyValid === "true"
+      ? t(
+          "Il contatore totale abilita il mese selezionato, i mesi precedenti e il totale anno.",
+          "The total meter enables the selected month, previous months and yearly total.",
+        )
+      : t(
+          "Questa entità non sembra cumulativa: scegli il contatore totale lifetime del dispositivo.",
+          "This entity does not look cumulative: choose the device lifetime total meter.",
+        );
+  });
+  return true;
+}
+
+function installStyles() {
+  installStyle(
+    "dm-report-editor-section-style",
+    `
+      #editor-modal [data-energy-panel="report"]{box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:hidden!important}
+      #editor-modal [data-energy-panel="report"] [data-report-list]{display:grid!important;box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;gap:12px!important;overflow-x:hidden!important}
+      #editor-modal [data-energy-panel="report"] .dm-report-row{display:grid!important;grid-template-columns:112px minmax(0,1fr) 52px minmax(0,1.55fr) 124px!important;grid-template-areas:"enabled label icon history actions" "help help help help help"!important;align-items:end!important;gap:10px 10px!important;box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;padding:16px!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:18px!important;background:var(--ha-card-background,var(--card-bg,#fff))!important;overflow:hidden!important}
+      #editor-modal [data-energy-panel="report"] .dm-report-row>*{box-sizing:border-box!important;min-width:0!important;max-width:100%!important}
+      #editor-modal [data-energy-panel="report"] .dm-report-row input,#editor-modal [data-energy-panel="report"] .dm-report-row select,#editor-modal [data-energy-panel="report"] .dm-report-row textarea{box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important}
+      #editor-modal .dm-report-enabled{grid-area:enabled!important;display:flex!important;align-items:center!important;gap:7px!important;min-height:44px!important;margin:0!important;font-weight:850!important;white-space:nowrap!important}
+      #editor-modal .dm-report-enabled input{flex:0 0 18px!important;width:18px!important;height:18px!important;margin:0!important}
+      #editor-modal .dm-report-label{grid-area:label!important;width:100%!important;min-width:0!important}
+      #editor-modal .dm-report-icon{grid-area:icon!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;min-width:0!important}
+      #editor-modal .dm-report-icon input{display:none!important}.dm-report-icon button{width:44px!important;height:44px!important;margin:auto!important}
+      /* Il quadratino dell'icona restava vuoto: il pulsante di anteprima azzera
+         il corpo del testo per far posto a un'immagine, ma qui l'icona e' un
+         carattere, e a corpo zero non si vede. */
+      /* E il vestito sta qui, dove quel bottone e' gia' di casa.
+       *
+       * Il filo del tema glielo dava una regola generale su .dm-icon-picker,
+       * che vale (0,1,0); questa riga, che lo governa gia' per il resto, vale
+       * (1,1,1) perche' parte dall'identificativo dell'editor. Finche' il bordo lo diceva
+       * solo quella generale, bastava un'altra regola con un cancelletto davanti — o un
+       * ordine di caricamento diverso — perche' il quadratino tornasse a
+       * portare il bordo di serie del browser: due pixel in rilievo che non
+       * sono di nessun tema, accanto a pulsanti che il filo chiaro ce l'hanno.
+       * Detto dove il bottone e' gia' descritto, non c'e' piu' niente che possa
+       * arrivare prima. */
+      #editor-modal .dm-report-icon button{
+        display:grid!important;place-items:center!important;
+        border:1px solid var(--divider-color,#dbe4ee)!important;
+        border-radius:12px!important;
+        background:var(--secondary-background-color,#eef2f7)!important;
+        font-size:22px!important;line-height:1!important;color:var(--text,#0f172a)!important}
+      #editor-modal[data-dm-editor-theme="dark"] .dm-report-icon button{
+        border-color:var(--dm-editor-border,#31405f)!important;
+        background:var(--dm-editor-shell,#161f36)!important;
+        color:var(--dm-editor-text,#edf4ff)!important}
+      /* La riga ha gia' la sua etichetta con la matita e, in fondo, il pulsante
+         che apre la voce per intero. La card dei campi entita' ci metteva una
+         cornice dentro la cornice e una seconda matita a capo, e la riga
+         cresceva al doppio dell'altezza che le serve. */
+      #editor-modal .dm-report-history [data-dm-entity-chip="true"]{
+        display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:8px!important;
+        margin:0!important;padding:0!important;border:0!important;background:transparent!important}
+      #editor-modal .dm-report-history [data-dm-entity-chip="true"]>.dm-entity-picker.dm-slot-chip{
+        flex:1 1 auto!important;width:auto!important}
+      #editor-modal .dm-report-history .dm-chip-manual{
+        flex:0 0 34px!important;width:34px!important;height:34px!important;order:3!important}
+      #editor-modal [data-energy-panel="report"] .dm-report-row{align-items:center!important}
+      #editor-modal .dm-report-history{grid-area:history!important;display:grid!important;gap:5px!important;min-width:0!important;max-width:100%!important;margin:0!important;overflow:hidden!important}
+      #editor-modal .dm-report-history .ed-form-row,#editor-modal .dm-report-history .dm-entity-field{box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important}
+      #editor-modal .dm-report-history .ed-slot-lbl{display:block!important;min-height:18px!important;font-size:11px!important;font-weight:850!important;color:var(--secondary-text-color,#64748b)!important}
+      #editor-modal .dm-report-actions{grid-area:actions!important;display:grid!important;grid-template-columns:repeat(3,36px)!important;justify-content:end!important;align-items:center!important;gap:5px!important;min-width:0!important;max-width:100%!important}
+      #editor-modal .dm-report-actions button{display:grid!important;place-items:center!important;box-sizing:border-box!important;width:36px!important;height:36px!important;margin:0!important;padding:0!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:10px!important;background:var(--secondary-background-color,#eef2f7)!important;color:var(--text,#0f172a)!important}
+      #editor-modal .dm-report-history-help{grid-area:help!important;display:block!important;min-width:0!important;margin:0!important;color:var(--secondary-text-color,#64748b)!important;font-size:11px!important;line-height:1.4!important;overflow-wrap:anywhere!important}
+      #editor-modal .dm-report-row[data-history-valid="false"] .dm-report-history-help{color:var(--warning-color,#b45309)!important;font-weight:850!important}
+      #editor-modal[data-dm-editor-theme="dark"] [data-energy-panel="report"] .dm-report-row{background:var(--dm-editor-panel,#1b2540)!important;border-color:var(--dm-editor-border,#31405f)!important}
+      #editor-modal[data-dm-editor-theme="dark"] .dm-report-history .ed-slot-lbl,#editor-modal[data-dm-editor-theme="dark"] .dm-report-history-help,#editor-modal[data-dm-editor-theme="dark"] .dm-report-enabled{color:var(--dm-editor-muted,#92a4c2)!important}
+      #editor-modal[data-dm-editor-theme="dark"] .dm-report-actions button{background:var(--dm-editor-shell,#161f36)!important;border-color:var(--dm-editor-border,#31405f)!important;color:var(--dm-editor-text,#edf4ff)!important}
+      .dm-modal-check{display:flex!important;align-items:center!important;gap:9px!important;min-height:44px!important;font-weight:850!important}.dm-modal-check input{width:20px!important;height:20px!important}
+      @media(max-width:980px){#editor-modal [data-energy-panel="report"] .dm-report-row{grid-template-columns:104px minmax(0,1fr) 52px 116px!important;grid-template-areas:"enabled label icon actions" "history history history history" "help help help help"!important}}
+      @media(max-width:620px){#editor-modal [data-energy-panel="report"] .dm-report-row{grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:"enabled actions" "label label" "icon icon" "history history" "help help"!important;align-items:center!important}.dm-report-actions{grid-template-columns:repeat(3,36px)!important}.dm-report-icon{justify-items:start!important}.dm-report-icon button{margin:0!important}}
+    `,
+  );
+}
+
+export function installReportEditorSection() {
+  if (!doc) return;
+  installStyles();
+  onEditorRedraw("__dmReportEditorSection", normalizeReportEditorSection);
+  normalizeReportEditorSection();
+  if (!state.listeners) {
+    state.listeners = true;
+    doc.addEventListener(
+      "click",
+      (event) => {
+        const edit = event.target?.closest?.("[data-dm-report-edit]");
+        if (edit) {
+          event.preventDefault();
+          event.stopPropagation();
+          openReportEditor(edit.closest(".dm-report-row"));
+          return;
+        }
+        if (event.target?.closest?.("[data-energy-tab],.ed-tab[data-tab='sez1'],[data-report-add]"))
+          root.queueMicrotask?.(normalizeReportEditorSection);
+      },
+      true,
+    );
+    root.addEventListener?.("dashboardmodern:legacy-ready", normalizeReportEditorSection);
+  }
+  state.installed = true;
+}
+
+if (doc?.readyState === "loading")
+  doc.addEventListener("DOMContentLoaded", installReportEditorSection, { once: true });
+else installReportEditorSection();

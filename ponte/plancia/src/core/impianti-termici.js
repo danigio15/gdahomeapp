@@ -1,0 +1,482 @@
+/* Cosa c'e' davvero nel locale caldaia (#253).
+ *
+ * La sezione si chiamava «Solare termico» e disegnava una cosa sola: pannello,
+ * pompa, accumulo. Ma l'acqua calda in casa la fanno tre macchine diverse, e
+ * quasi nessuno ne ha una sola:
+ *
+ *   - il SOLARE TERMICO, che scalda col sole e si guarda per sapere se
+ *     conviene far girare la pompa;
+ *   - lo SCALDABAGNO elettrico, che scalda con una resistenza che si paga e si
+ *     guarda per sapere quando ci sara' l'acqua calda;
+ *   - la CALDAIA, che scalda a gas e serve anche i termosifoni, quindi si
+ *     guarda la mandata, il ritorno e la pressione del circuito.
+ *
+ * Chi ha il fotovoltaico e lo scaldabagno non ha il solare termico, e la
+ * sezione gli mostrava un pannello che non ha. Chi ha solare e caldaia insieme
+ * — che e' il caso piu' comune — ne vedeva una sola.
+ *
+ * Qui c'e' solo la scelta: quali dei tre ci sono, e quale si sta guardando. La
+ * regola sta fuori dal disegno perche' la stessa risposta serve alla pagina,
+ * alla scheda di configurazione e alla barra di navigazione, e tre copie della
+ * stessa domanda sono tre occasioni di rispondere diverso.
+ */
+
+import {
+  caselleDi,
+  corrente,
+  elencoConCorrente,
+  entitaDiTutte,
+  nomeProgressivo,
+  normalizzaVoce,
+  overridesPerScelto,
+} from "./piu-di-uno.js";
+
+/** La chiave in cui vive la scelta. */
+export const CHIAVE_IMPIANTI = "cd_impianti_termici";
+
+/* L'ordine e' quello in cui si presentano le linguette, e non e' alfabetico:
+ * e' l'ordine in cui il calore arriva in casa — prima quello che e' gratis,
+ * poi quello che si paga a corrente, poi quello che si paga a gas. */
+export const TIPI_TERMICI = Object.freeze(["solare", "scaldabagno", "caldaia"]);
+
+export const ETICHETTE_TERMICHE = Object.freeze({
+  solare: ["Solare termico", "Solar thermal"],
+  scaldabagno: ["Scaldabagno", "Water heater"],
+  caldaia: ["Caldaia", "Boiler"],
+});
+
+/* Come si chiama la sezione, adesso che non e' piu' una macchina sola.
+ *
+ * «La sezione non si deve chiamare piu' Solare termico ma Gestione termica»:
+ * ha ragione — il nome vecchio era quello di uno dei tre impianti, e chi ha
+ * solo la caldaia si trovava la sua macchina dentro una voce che parlava di
+ * pannelli solari. */
+/* Il titolo della pagina segue quello che si sta guardando quando c'e' una
+ * macchina sola: senza linguette, il titolo e' l'unica cosa che dice cosa si
+ * sta guardando. Con due o tre lo dicono le linguette, e allora il titolo
+ * torna a essere il nome della sezione — che sta qui sotto la stessa chiave
+ * `sezione`, insieme ai casi che ricopre, invece che sciolto per conto suo:
+ * l'estrattore riconosce le tabelle di coppie, e una coppia sciolta gli
+ * passava davanti senza che nessuno se ne accorgesse. */
+export const TITOLI_TERMICI = Object.freeze({
+  sezione: ["Gestione termica", "Thermal management"],
+  solare: ["Impianto solare termico", "Solar thermal plant"],
+  scaldabagno: ["Scaldabagno elettrico", "Electric water heater"],
+  caldaia: ["Caldaia", "Boiler"],
+});
+
+export const BRICIOLE_TERMICHE = Object.freeze({
+  sezione: ["Solare · Scaldabagno · Caldaia", "Solar · Water heater · Boiler"],
+  solare: [
+    "Circuito primario · Boiler · Ricircolo sanitario",
+    "Primary loop · Tank · Recirculation",
+  ],
+  scaldabagno: ["Acqua calda · Resistenza · Consumo", "Hot water · Element · Consumption"],
+  caldaia: ["Mandata · Ritorno · Pressione", "Flow · Return · Pressure"],
+});
+
+/* Come si chiama la sezione, adesso che non e' piu' una macchina sola.
+ *
+ * «La sezione non si deve chiamare piu' Solare termico ma Gestione termica»:
+ * ha ragione — il nome vecchio era quello di uno dei tre impianti, e chi ha
+ * solo la caldaia si trovava la sua macchina dentro una voce che parlava di
+ * pannelli solari. */
+export const NOME_SEZIONE = TITOLI_TERMICI.sezione;
+export const BRICIOLA_SEZIONE = BRICIOLE_TERMICHE.sezione;
+
+const clean = (value) => String(value ?? "").trim();
+
+const vero = (valore) => valore === true || valore === "true" || valore === 1 || valore === "1";
+
+/**
+ * La scelta salvata, ripulita.
+ *
+ * `null` non e' «nessuno»: e' «non ha ancora scelto nessuno», e le due cose
+ * vanno distinte — la prima e' una pagina vuota voluta, la seconda e' una
+ * plancia che sta per essere aggiornata e non deve perdere quello che vede.
+ */
+export function normalizzaScelta(stored) {
+  if (!stored || typeof stored !== "object" || Array.isArray(stored)) return null;
+  const scelta = {};
+  let almenoUna = false;
+  for (const tipo of TIPI_TERMICI) {
+    const acceso = vero(stored[tipo]);
+    scelta[tipo] = acceso;
+    if (acceso) almenoUna = true;
+  }
+  /* Una scelta salvata con tutti e tre spenti e' una scelta: chi ha tolto ogni
+   * spunta vuole la sezione vuota, e riempirgliela sarebbe disobbedire. Si
+   * distingue dal «non ha mai scelto» perche' l'oggetto in memoria c'e'. */
+  return { ...scelta, vuota: !almenoUna };
+}
+
+/**
+ * Quali impianti ha questa casa, in ordine di linguetta.
+ *
+ * `indizi` dice cosa risulta gia' configurato — le caselle del solare mappate,
+ * un elenco di scaldabagni, le caselle della caldaia — e serve solo a chi non
+ * ha ancora scelto: la sezione esiste da prima di questa domanda, e chi ci
+ * arriva con l'impianto solare gia' mappato deve continuare a vederlo senza
+ * dover andare a mettere una spunta che ieri non c'era.
+ */
+export function impiantiScelti(stored, indizi = {}) {
+  const scelta = normalizzaScelta(stored);
+  if (scelta) return TIPI_TERMICI.filter((tipo) => scelta[tipo]);
+  const dedotti = TIPI_TERMICI.filter((tipo) => Boolean(indizi[tipo]));
+  /* Nessuna scelta e nessun indizio: la sezione mostra il solare, che e'
+   * quello che ha sempre mostrato. Non e' un ripiego neutro — e' il
+   * comportamento di prima, che nessun aggiornamento deve cambiare da solo. */
+  return dedotti.length ? dedotti : ["solare"];
+}
+
+/**
+ * Quale linguetta e' aperta.
+ *
+ * La richiesta vale solo se quell'impianto c'e': chi toglie la caldaia mentre
+ * la sta guardando non deve restare su una linguetta che non esiste piu'.
+ */
+export function tabAttiva(scelti, richiesta) {
+  const elenco = Array.isArray(scelti) ? scelti.filter(Boolean) : [];
+  if (!elenco.length) return "";
+  const voluta = clean(richiesta);
+  return elenco.includes(voluta) ? voluta : elenco[0];
+}
+
+/** Le linguette si mostrano solo quando c'e' da scegliere. */
+export function servonoLinguette(scelti) {
+  return Array.isArray(scelti) && scelti.length > 1;
+}
+
+/* ── la caldaia ────────────────────────────────────────────────────────────
+ *
+ * Le sue caselle stanno in una chiave sua e non fra quelle del solare: sono
+ * un'altra macchina, e mescolarle vorrebbe dire una scheda in cui meta' dei
+ * campi non riguarda chi la sta compilando. */
+export const CHIAVE_CALDAIA = "cd_caldaia";
+
+/* Cosa si guarda di una caldaia, e in che ordine.
+ *
+ * Mandata e ritorno prima di tutto: la differenza fra i due dice se
+ * l'impianto sta cedendo calore o sta girando a vuoto, ed e' la ragione per
+ * cui si apre questa pagina. La pressione subito dopo, perche' e' l'unica
+ * cosa che ogni tanto va rabboccata a mano. */
+export const CASELLE_CALDAIA = Object.freeze([
+  { campo: "stato", tipo: "acceso" },
+  { campo: "fiamma", tipo: "acceso" },
+  /* L'interruttore che la accende e la spegne (#274).
+   *
+   * «Non permette accensione/spegnimento della caldaia»: la pagina leggeva e
+   * basta. Lo stato dice se la macchina lavora, ma non la comanda — sono due
+   * entita' diverse, e chi ha un `switch` sulla caldaia lo vuole sotto le dita
+   * dove la guarda invece che in un'altra pagina. */
+  { campo: "interruttore", tipo: "acceso" },
+  /* Le elettrovalvole di riciclo (#274).
+   *
+   * «Non mostra le elettrovalvole di riciclo»: sono quelle che smistano
+   * l'acqua fra il riscaldamento e il sanitario, e da come stanno si capisce
+   * dove sta andando il calore — che e' meta' di quello che si viene a
+   * guardare su questa pagina. Due, perche' due sono in un impianto normale. */
+  { campo: "valvola", tipo: "acceso" },
+  { campo: "valvola2", tipo: "acceso" },
+  { campo: "mandata", tipo: "gradi" },
+  { campo: "ritorno", tipo: "gradi" },
+  { campo: "acquaCalda", tipo: "gradi" },
+  { campo: "pressione", tipo: "bar" },
+  { campo: "modulazione", tipo: "percento" },
+]);
+
+const ACCESI = /^(on|true|1|heat|heating|burning|flame|dhw|attiva|attivo)$/i;
+const SPENTI = /^(off|false|0|idle|standby|none|ferma|fermo)$/i;
+
+/** Acceso, spento, o non lo sappiamo. */
+export function accesoCaldaia(state) {
+  const valore = clean(state);
+  if (ACCESI.test(valore)) return true;
+  if (SPENTI.test(valore)) return false;
+  return null;
+}
+
+const numero = (valore) => {
+  if (valore === null || valore === undefined || valore === "") return null;
+  const dato = Number(valore);
+  return Number.isFinite(dato) ? dato : null;
+};
+
+/* Cosa c'è all'altro capo del tubo (#274).
+ *
+ * «Richiesta di visualizzare o radiatore o boiler»: la scena disegnava sempre
+ * un radiatore, e chi ha una caldaia che serve solo l'accumulo sanitario ci
+ * vedeva un termosifone che non ha. Sono due impianti diversi e si dicono con
+ * due disegni diversi; di serie i radiatori, che è il caso comune. */
+export const USCITE_CALDAIA = Object.freeze(["radiatori", "boiler"]);
+
+/** La configurazione della caldaia, ripulita. */
+export function normalizzaCaldaia(stored) {
+  const dato = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
+  const fuori = { name: clean(dato.name) };
+  for (const { campo } of CASELLE_CALDAIA) fuori[campo] = clean(dato[campo]);
+  const uscita = clean(dato.uscita).toLowerCase();
+  fuori.uscita = USCITE_CALDAIA.includes(uscita) ? uscita : USCITE_CALDAIA[0];
+  return fuori;
+}
+
+/* Le caldaie di casa, che possono essere piu' d'una (#281).
+ *
+ * «Avendo una casa composta da due appartamenti uniti ho due caldaie, una per
+ * la zona giorno e una per la zona notte.»
+ *
+ * La chiave resta la stessa e accetta tutte e due le forme: chi ne aveva una
+ * la ritrova dov'era, senza migrazioni e senza perdere niente. Chi ne aggiunge
+ * una seconda scrive una lista, e da li' in poi e' una lista.
+ */
+export function normalizzaCaldaie(stored) {
+  const righe = Array.isArray(stored)
+    ? stored
+    : stored && typeof stored === "object"
+      ? [stored]
+      : [];
+  return (
+    righe
+      .map((riga, indice) => ({
+        ...normalizzaCaldaia(riga),
+        id: clean(riga?.id) || `caldaia-${indice + 1}`,
+      }))
+      /* Una riga senza nemmeno un'entita' non e' una caldaia a meta': e' una
+       * riga vuota, e disegnarla vorrebbe dire una macchina che non dice
+       * niente. Quella appena aggiunta vive nell'editor finche' non si compila. */
+      .filter((riga) => CASELLE_CALDAIA.some(({ campo }) => riga[campo]))
+  );
+}
+
+/** Le entita' di tutte le caldaie. */
+export function entitaDelleCaldaie(stored) {
+  return normalizzaCaldaie(stored).flatMap((riga) => entitaDellaCaldaia(riga));
+}
+
+/** Le letture di tutte le caldaie, nell'ordine in cui sono scritte. */
+export function lettureCaldaie(stored, states = {}, resolve = (value) => value) {
+  return normalizzaCaldaie(stored).map((riga) => ({
+    ...letturaCaldaia(riga, states, resolve),
+    id: riga.id,
+  }));
+}
+
+/** Le entita' che la caldaia tiene d'occhio. */
+export function entitaDellaCaldaia(config) {
+  const dato = normalizzaCaldaia(config);
+  return CASELLE_CALDAIA.map(({ campo }) => dato[campo]).filter(Boolean);
+}
+
+/**
+ * La lettura della caldaia: cosa dicono adesso le sue caselle.
+ *
+ * `salto` e' la differenza fra mandata e ritorno, ed e' la misura che dice se
+ * l'impianto sta davvero cedendo calore: due numeri vicini su una caldaia
+ * accesa vogliono dire che l'acqua gira senza scaldare niente.
+ */
+export function letturaCaldaia(config, states = {}, resolve = (value) => value) {
+  const dato = normalizzaCaldaia(config);
+  const leggi = (riferimento) => {
+    const chiave = clean(riferimento);
+    if (!chiave) return null;
+    let entity = chiave;
+    try {
+      entity = clean(resolve(chiave)) || chiave;
+    } catch (_error) {
+      entity = chiave;
+    }
+    return states?.[entity] || states?.[chiave] || null;
+  };
+  const mandata = numero(leggi(dato.mandata)?.state);
+  const ritorno = numero(leggi(dato.ritorno)?.state);
+  const statoEntita = leggi(dato.stato);
+  const fiammaEntita = leggi(dato.fiamma);
+  const fiamma = accesoCaldaia(fiammaEntita?.state);
+  const acceso = accesoCaldaia(statoEntita?.state);
+  const interruttore = accesoCaldaia(leggi(dato.interruttore)?.state);
+  return {
+    name: dato.name,
+    uscita: dato.uscita,
+    /* L'interruttore, per comandarla: l'entita' e il suo stato viaggiano
+     * insieme perche' chi disegna il tasto deve sapere tutte e due — quale
+     * chiamare e come dipingerlo. */
+    interruttore: dato.interruttore,
+    interruttoreAcceso: interruttore,
+    /* Le elettrovalvole, con dentro solo quelle mappate: una valvola che non
+     * c'e' non e' una valvola chiusa. */
+    valvole: [
+      { entity: dato.valvola, acceso: accesoCaldaia(leggi(dato.valvola)?.state) },
+      { entity: dato.valvola2, acceso: accesoCaldaia(leggi(dato.valvola2)?.state) },
+    ].filter((voce) => clean(voce.entity)),
+    /* Come si chiama quello che sta facendo adesso: e' la lettura che la
+     * pagina non diceva quando c'erano le sonde («non mostra lo stato
+     * standby/in funzione»). In funzione se brucia o se e' accesa; a riposo se
+     * lo sappiamo e non lo e'; niente se nessuno l'ha mappata. */
+    inFunzione:
+      fiamma === true
+        ? true
+        : acceso === true
+          ? true
+          : fiamma === false || acceso === false
+            ? false
+            : null,
+    /* La fiamma accesa e' gia' una caldaia accesa: chi mappa solo il bruciatore
+     * non deve mappare anche uno stato per vedere la sua macchina viva. */
+    acceso: acceso ?? (fiamma === true ? true : fiamma === false ? null : null),
+    fiamma,
+    mandata,
+    ritorno,
+    salto: mandata != null && ritorno != null ? Math.round((mandata - ritorno) * 10) / 10 : null,
+    acquaCalda: numero(leggi(dato.acquaCalda)?.state),
+    pressione: numero(leggi(dato.pressione)?.state),
+    modulazione: numero(leggi(dato.modulazione)?.state),
+  };
+}
+
+/* La pressione di un impianto domestico sta fra un bar e mezzo e due e mezzo;
+ * sotto l'uno il pressostato blocca la caldaia, ed e' la sola cosa di questa
+ * pagina che chiede di alzarsi dal divano. */
+export const PRESSIONE_MINIMA = 1;
+export const PRESSIONE_MASSIMA = 3;
+
+/** Se la pressione chiede attenzione, e in che verso. */
+export function verdettoPressione(bar) {
+  const valore = numero(bar);
+  if (valore === null) return "";
+  if (valore < PRESSIONE_MINIMA) return "bassa";
+  if (valore > 2.5) return "alta";
+  return "buona";
+}
+
+/* ── il solare, che può essere più d'uno ───────────────────────────────── */
+
+/* «Solare termico continua ad avere un solo impianto: non è stata aggiunta la
+ * possibilità di gestire più impianti.»
+ *
+ * Era l'ultima macchina rimasta singola. Gli scaldabagni sono una lista da
+ * sempre, le caldaie lo sono diventate (#281), e il solare no: le sue tredici
+ * caselle sono mappature `dm.boiler_*` dentro `cd_entity_overrides`, e di
+ * quelle ce n'è una serie sola.
+ *
+ * La regola davanti a tutte è la stessa degli impianti dell'energia: NON SI
+ * SPOSTA NIENTE. Chi ha un solare solo non ha una lista, non ha un id, non ha
+ * niente da migrare — le sue caselle restano dove sono sempre state e questa
+ * parte del modulo non si accorge nemmeno di lui. La lista nasce quando si
+ * aggiunge il secondo impianto, e da lì in poi contiene tutti e due.
+ *
+ * Quello che si vede a schermo è sempre l'impianto scritto nelle mappature:
+ * scegliere un altro impianto vuol dire scriverci il suo. Nessuno intercetta
+ * niente — la scena del guscio, la tessera della Home, la sincronizzazione e
+ * il rilevamento automatico continuano a leggere l'unico posto che hanno
+ * sempre letto, e leggono l'impianto che si sta guardando.
+ */
+export const CHIAVE_SOLARI = "cd_solari";
+export const CHIAVE_SOLARE_SCELTO = "cd_solare_scelto";
+
+/* Le tredici caselle del solare, con le stesse parole della scheda del guscio:
+ * sono le mappature che la scena legge, e sono queste e non altre. */
+export const CASELLE_SOLARE = Object.freeze([
+  {
+    ref: "dm.boiler_sonda_temperatura_1",
+    it: "Sonda temperatura 1 (°C)",
+    en: "Temperature probe 1 (°C)",
+  },
+  {
+    ref: "dm.boiler_sonda_temperatura_2",
+    it: "Sonda temperatura 2 (°C)",
+    en: "Temperature probe 2 (°C)",
+  },
+  {
+    ref: "dm.boiler_sonda_temperatura_3",
+    it: "Sonda temperatura 3 (°C)",
+    en: "Temperature probe 3 (°C)",
+  },
+  {
+    ref: "dm.boiler_delta_temperatura",
+    it: "Delta temperatura (°C)",
+    en: "Temperature delta (°C)",
+  },
+  { ref: "dm.boiler_pressione_acqua", it: "Pressione acqua (bar)", en: "Water pressure (bar)" },
+  {
+    ref: "dm.boiler_potenza_resistenza_boiler",
+    it: "Potenza resistenza boiler (W)",
+    en: "Boiler heater power (W)",
+  },
+  { ref: "dm.boiler_pompa_solare", it: "Pompa solare (manuale)", en: "Solar pump (manual)" },
+  { ref: "dm.boiler_stato_pompa_solare", it: "Stato pompa solare", en: "Solar pump state" },
+  { ref: "dm.boiler_sensore_pompa_solare", it: "Sensore pompa solare", en: "Solar pump sensor" },
+  {
+    ref: "dm.boiler_centralina_solare_termico",
+    it: "Centralina solare termico",
+    en: "Solar controller",
+  },
+  {
+    ref: "dm.boiler_interruttore_solare_termico",
+    it: "Interruttore solare termico",
+    en: "Solar switch",
+  },
+  { ref: "dm.boiler_interruttore_boiler", it: "Interruttore boiler", en: "Boiler switch" },
+  {
+    ref: "dm.boiler_valvola_di_sicurezza",
+    it: "Valvola di sicurezza (cover)",
+    en: "Safety valve (cover)",
+  },
+]);
+
+/* I riferimenti delle tredici caselle, per la regola comune. */
+const REFS_SOLARE = Object.freeze(CASELLE_SOLARE.map((riga) => riga.ref));
+
+/** Le mappature `dm.boiler_*` di un elenco di override, ripulite. */
+export function caselleSolariDa(overrides) {
+  return caselleDi(overrides, REFS_SOLARE);
+}
+
+/* L'id del primo impianto non si sceglie: è quello, sempre. È la stessa
+ * regola degli impianti dell'energia, e per la stessa ragione — chi c'era
+ * prima ha un id senza che nessuno gliel'abbia scritto. */
+export const PRIMO_SOLARE = "solare";
+
+/** Un impianto solare, ripulito. */
+export function normalizzaSolare(stored, indice = 0) {
+  return normalizzaVoce(stored, indice, REFS_SOLARE, PRIMO_SOLARE);
+}
+
+/**
+ * Gli impianti solari di casa.
+ *
+ * Con la lista vuota — cioè per chiunque non abbia mai chiesto il secondo —
+ * esce un impianto solo, quello scritto nelle mappature: senza id inventati e
+ * senza niente da salvare. Appena la lista esiste, l'impianto che si sta
+ * guardando è quello che porta le mappature adesso, e gli altri sono suoi
+ * fratelli fermi in attesa del proprio turno.
+ */
+export function impiantiSolari(stored, overrides = {}, scelto = "") {
+  return elencoConCorrente(stored, overrides, scelto, REFS_SOLARE, PRIMO_SOLARE);
+}
+
+/** L'impianto che si sta guardando. */
+export function solareCorrente(lista) {
+  return corrente(lista);
+}
+
+/** Il nome da mostrare per un impianto, che un nome ce l'ha sempre. */
+export function nomeDelSolare(impianto, indice = 0, parole = ["Solare termico", "Solar thermal"]) {
+  return nomeProgressivo(impianto, indice, parole[0]);
+}
+
+/** Le entità di tutti gli impianti solari. */
+export function entitaDeiSolari(lista) {
+  return entitaDiTutte(lista);
+}
+
+/**
+ * Le mappature da scrivere per far vedere un altro impianto.
+ *
+ * Torna l'oggetto degli override completo, non solo le tredici caselle: le
+ * altre mappature — l'auto, il server, l'energia — restano quelle che erano, e
+ * quelle del solare che l'impianto scelto non usa se ne vanno, altrimenti la
+ * scena mostrerebbe una sonda del vicino.
+ */
+export function overridesPerSolare(overrides, impianto) {
+  return overridesPerScelto(overrides, impianto, REFS_SOLARE);
+}

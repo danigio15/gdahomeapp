@@ -118,29 +118,69 @@ void main() {
     expect(pannello.pagina('it'), 'dashboard.html');
   });
 
-  test('dal filo: si chiede get_panels e si legge la risposta', () async {
-    final ponte = await PonteFinto.alza();
-    final filo = Filo.fisso(
-      indirizzo: ponte.indirizzo,
-      segno: segnoBuono,
-      chi: chiBuono,
-      chiave: chiaveBuona,
-    );
-    await filo.apri();
+  test('la plancia del ponte si legge com\'e\', con i difetti giusti', () {
+    final dalPonte = leggiLaPlanciaDelPonte(PonteFinto.planciaNelPonte())!;
+    expect(dalPonte.base, '/dashboardmodern_static/ponte1234');
+    expect(dalPonte.istanza, 'ponte');
+    expect(dalPonte.profilo, 'primary');
+    expect(dalPonte.primario, isTrue);
+    expect(dalPonte.percorso, 'ponte');
+    expect(dalPonte.pagina('it'), 'dashboard.html');
+    expect(dalPonte.pagina('en'), 'dashboard-en.html');
 
-    expect(
-      (await trovaLaPlancia(filo))!.base,
-      '/dashboardmodern_static/abc123',
-    );
-    expect(
-      ponte.arrivati.where((uno) => uno['type'] == 'get_panels'),
-      hasLength(1),
-    );
-
-    ponte.pannelli = null;
-    expect(await trovaLaPlancia(filo), isNull);
-
-    await filo.chiudi();
-    await ponte.spegni();
+    expect(leggiLaPlanciaDelPonte(null), isNull);
+    expect(leggiLaPlanciaDelPonte({'base': '/altrove/x'}), isNull);
+    final scarna = leggiLaPlanciaDelPonte({
+      'base': '/dashboardmodern_static/x/',
+    })!;
+    expect(scarna.base, '/dashboardmodern_static/x');
+    expect(scarna.titolo, 'DashboardModern');
+    expect(scarna.varianti, isEmpty);
   });
+
+  test(
+    'dal filo: prima il ponte, e solo se non ce l\'ha Home Assistant',
+    () async {
+      final ponte = await PonteFinto.alza();
+      final filo = Filo.fisso(
+        indirizzo: ponte.indirizzo,
+        segno: segnoBuono,
+        chi: chiBuono,
+        chiave: chiaveBuona,
+      );
+      await filo.apri();
+
+      /* Il ponte ce l'ha: si prende quella, e get_panels non si chiede. */
+      expect(
+        (await trovaLaPlancia(filo))!.base,
+        '/dashboardmodern_static/ponte1234',
+      );
+      expect(
+        ponte.arrivati.where((uno) => uno['type'] == 'ponte/plancia'),
+        hasLength(1),
+      );
+      expect(
+        ponte.arrivati.where((uno) => uno['type'] == 'get_panels'),
+        isEmpty,
+      );
+
+      /* Un ponte senza plancia: si guarda in Home Assistant. */
+      ponte.planciaDelPonte = null;
+      expect(
+        (await trovaLaPlancia(filo))!.base,
+        '/dashboardmodern_static/abc123',
+      );
+      expect(
+        ponte.arrivati.where((uno) => uno['type'] == 'get_panels'),
+        hasLength(1),
+      );
+
+      /* Ne' l'uno ne' l'altra. */
+      ponte.pannelli = null;
+      expect(await trovaLaPlancia(filo), isNull);
+
+      await filo.chiudi();
+      await ponte.spegni();
+    },
+  );
 }

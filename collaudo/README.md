@@ -11,7 +11,7 @@ Guardare l'app girare, invece di crederci sulla parola.
         │
         ▼
    una Home Assistant finta, con dentro la casa demo di DashboardModern
-   e i file veri della plancia (PLANCIA_VERA=…/frontend)
+   (i file della plancia e la sua configurazione ce li ha il ponte)
 ```
 
 L'unica finzione e' l'ultima. Il ponte e' il processo vero, l'app e' l'app
@@ -28,14 +28,13 @@ E' l'unica differenza col telefono, dove il servitore sta dentro l'app.
 ```bash
 cd app && flutter build web --release --dart-define=COLLAUDO=true \
   --dart-define=PLANCIA_URL=http://127.0.0.1:8765
-cd ../collaudo && npm install
-PLANCIA_VERA=/dove/sta/dashboardmodern-v2/custom_components/dashboardmodern/frontend npm run guarda
+cd ../collaudo && npm install && npm run guarda
 ```
 
-`PLANCIA_VERA` e' la cartella del frontend di DashboardModern, presa da un
-checkout di `dashboardmodern-v2`: la casa finta serve quei file al ponte, e il
-ponte li serve al servitore, come in casa. Senza, la casa finta e' una casa
-dove DashboardModern non c'e', e si vede cosa dice l'app in quel caso.
+I file della plancia il ponte li ha con se', in `ponte/plancia/` — gli
+stessi che vanno nell'add-on — e la configurazione della casa demo gliela
+mette il collaudo nell'archivio prima di accenderlo. In Home Assistant, vera o
+finta, non c'e' nessuna integrazione.
 
 Le fotografie finiscono in `collaudo/foto/`: la plancia vera dentro l'app,
 pagina per pagina dalla sua barra, e poi la barra dell'app, i dispositivi,

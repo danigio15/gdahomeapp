@@ -11,6 +11,8 @@ import { Abbinamento } from "./abbinamento.js";
 import { Casa } from "./casa.js";
 import { Chiamata } from "./chiamata.js";
 import { Commissioni } from "./commissioni.js";
+import { Configurazione } from "./configurazione.js";
+import { Plancia } from "./plancia.js";
 import { Identita } from "./identita.js";
 import { Dispositivi } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
@@ -32,9 +34,19 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     giorniDiSilenzio: opzioni.giorniDiSilenzio,
   });
   const abbinamento = new Abbinamento({ minutiDelCodice: opzioni.minutiDelCodice });
-  /* I file della plancia vera, e le chiamate REST che le servono: il telefono
-   * li chiede al ponte, e il ponte li va a prendere in Home Assistant. */
-  const commissioni = new Commissioni({ casa, registro });
+  /* La plancia, dentro l'add-on, e la sua configurazione: il telefono
+   * chiede i file e la configurazione al ponte, e in Home Assistant non serve
+   * nessuna integrazione. */
+  const plancia = new Plancia();
+  const configurazione = new Configurazione({ cartella: opzioni.cartella });
+  if (plancia.cE) {
+    registro.info(
+      `la plancia c'e': ${plancia.descrizione().file} file, impronta ${plancia.impronta}`,
+    );
+  } else {
+    registro.attenzione("senza plancia: in ponte/plancia non c'e' niente da servire");
+  }
+  const commissioni = new Commissioni({ casa, registro, plancia, configurazione });
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni });
 
   /* La chiamata verso il centralino: e' cosi' che si entra da fuori casa,

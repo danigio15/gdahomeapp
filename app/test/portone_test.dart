@@ -478,11 +478,11 @@ void main() {
       await tester.pump();
 
       /* La home e' la plancia vera, aperta sul servitore alla pagina che il
-       * pannello di DashboardModern dice. */
+       * ponte dice — la plancia sta dentro l'add-on. */
       expect(find.textContaining('LA PLANCIA VERA'), findsOneWidget);
       expect(
         find.textContaining(
-          '/dashboardmodern_static/abc123/legacy/dashboard.html',
+          '/dashboardmodern_static/ponte1234/legacy/dashboard.html',
         ),
         findsOneWidget,
       );

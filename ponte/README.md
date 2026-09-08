@@ -114,14 +114,19 @@ Quello che c'e' al posto suo e' che un telefono entra **solo** se qualcuno gia'
 dentro Home Assistant ha fabbricato un codice negli ultimi cinque minuti, e che
 qualunque telefono si stacca da solo con un bottone.
 
-C'e' una cosa sola che il ponte fa **da se'** per il telefono, senza girarla
-a Home Assistant: le commissioni, `ponte/http`. L'app fa girare la plancia
-vera di DashboardModern dentro un WebView, e quella plancia e' fatta di file
-che stanno in Home Assistant, su una porta che dal telefono — da fuori casa,
-di sicuro — non si vede. Quindi il telefono li chiede al ponte, sullo stesso
-filo, e il ponte li va a prendere: `/api/…` passa dal Supervisor col suo segno,
-`/dashboardmodern_static/…` va dritto al contenitore di Home Assistant, e
-nient'altro passa di li'. Sta scritto in `src/commissioni.js`.
+C'e' una cosa che il ponte fa **da se'** per il telefono, senza girarla a
+Home Assistant: la plancia. L'app fa girare la plancia vera di DashboardModern
+dentro un WebView, e in Home Assistant non c'e' e non deve esserci nessuna
+integrazione: i file della plancia stanno qui, in `plancia/` (li porta dentro
+`strumenti/porta-la-plancia.mjs` da un checkout di `dashboardmodern-v2`), e
+la configurazione la tiene il ponte in `/data/plancia.json`, rispondendo alla
+pagina esattamente come risponderebbe l'integrazione
+(`dashboardmodern/config/get`, `set`, `restore`: stesse regole contro le
+perdite di dati, stesse cinque revisioni tenute). Il telefono chiede tutto sul
+filo — `ponte/plancia` per sapere dove sta, `ponte/http` per i file — e le
+chiamate REST della pagina, lo storico e le istantanee, passano dal Supervisor
+col suo segno. Nient'altro passa di li'. Sta scritto in `src/commissioni.js`,
+`src/plancia.js` e `src/configurazione.js`.
 
 ## Le opzioni
 

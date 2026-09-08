@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="it">
+<head><link rel="stylesheet" href="./dashboard-runtime-it.css" media="print" onload="this.media='all'">
+<!-- Il velo d'avvio si dipinge PRIMA che arrivi qualunque foglio esterno:
+     queste regole sono inline apposta, e i fogli grandi non bloccano piu' il
+     primo dipinto — tanto sotto il velo non si vede niente finche' la plancia
+     non e' pronta. Senza, al primo avvio restava uno schermo bianco per tutto
+     il tempo del download. -->
+<style id="dm-avvio-critico">
+html{background:#e8edf3}
+html[data-theme="dark"]{background:#0b1220}
+#cd-boot-overlay{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;background:#e8edf3;transition:opacity .26s ease;font-family:system-ui,-apple-system,sans-serif}
+html[data-theme="dark"] #cd-boot-overlay{background:#0b1220}
+#cd-boot-overlay img{width:76px;height:76px;border-radius:20px}
+#cd-boot-overlay b{font-size:15px;letter-spacing:.09em;color:#0f172a;text-transform:uppercase;font-weight:900}
+html[data-theme="dark"] #cd-boot-overlay b{color:#e2e8f0}
+#cd-boot-overlay small{font-size:11.5px;color:#64748b;font-weight:700}
+#cd-boot-overlay .s{width:38px;height:38px;border:4px solid rgba(14,165,233,.22);border-top-color:#0ea5e9;border-radius:50%;animation:cdBootSpin .8s linear infinite}
+@keyframes cdBootSpin{to{transform:rotate(360deg)}}
+</style>
+<!-- I moduli, chiesti tutti insieme dal primo istante.
+     La plancia e' fatta di centosessantacinque moduli e la catena degli import
+     e' profonda dieci livelli: un browser scopre un modulo solo quando ha
+     finito di leggere quello che lo importa, quindi senza questo elenco
+     servono dieci giri di rete uno dopo l'altro. In quei secondi si vede la
+     plancia com'e' disegnata dal guscio — il meteo grande in mezzo alla
+     pagina, le azioni rapide senza il loro ripiano — e poi tutto si sposta
+     sotto gli occhi.
+     L'elenco lo scrive `scripts/porta-avanti-i-moduli.mjs` camminando sul
+     grafo vero: a mano invecchierebbe in una settimana. -->
+<!-- moduli-in-anticipo:inizio -->
+<link rel="modulepreload" href="./build-info.js">
+<link rel="modulepreload" href="./modules-entry.js">
+<link rel="modulepreload" href="../src/core/alarm-panel.js">
+<link rel="modulepreload" href="../src/core/allerte-model.js">
+<link rel="modulepreload" href="../src/core/analisi-sezione.js">
+<link rel="modulepreload" href="../src/core/appliance-artwork.js">
+<link rel="modulepreload" href="../src/core/appliance-card-view-model.js">
+<link rel="modulepreload" href="../src/core/appliance-cycle-tracker.js">
+<link rel="modulepreload" href="../src/core/appliance-device-binding.js">
+<link rel="modulepreload" href="../src/core/appliance-hero-artwork.js">
+<link rel="modulepreload" href="../src/core/appliance-program.js">
+<link rel="modulepreload" href="../src/core/appliance-view-model.js">
+<link rel="modulepreload" href="../src/core/aria-model.js">
+<link rel="modulepreload" href="../src/core/arieggiare.js">
+<link rel="modulepreload" href="../src/core/auto-device-binding.js">
+<link rel="modulepreload" href="../src/core/auto-termica.js">
+<link rel="modulepreload" href="../src/core/avatar-3d.js">
+<link rel="modulepreload" href="../src/core/avatar-catalog.js">
+<link rel="modulepreload" href="../src/core/avviso-chat.js">
+<link rel="modulepreload" href="../src/core/calendario-model.js">
+<link rel="modulepreload" href="../src/core/carichi-travasati.js">
+<link rel="modulepreload" href="../src/core/catalogo-disegni.js">
+<link rel="modulepreload" href="../src/core/climate-power.js">
+<link rel="modulepreload" href="../src/core/contenuto-delle-sezioni.js">
+<link rel="modulepreload" href="../src/core/cover-kind.js">
+<link rel="modulepreload" href="../src/core/dashboard-store.js">
+<link rel="modulepreload" href="../src/core/daylight.js">
+<link rel="modulepreload" href="../src/core/device-model.js">
+<link rel="modulepreload" href="../src/core/editor-slots.js">
+<link rel="modulepreload" href="../src/core/energy-bundle-service.js">
+<link rel="modulepreload" href="../src/core/energy-calculations.js">
+<link rel="modulepreload" href="../src/core/energy-flow-topology.js">
+<link rel="modulepreload" href="../src/core/energy-flow-truth.js">
+<link rel="modulepreload" href="../src/core/energy-loads-config.js">
+<link rel="modulepreload" href="../src/core/energy-plants.js">
+<link rel="modulepreload" href="../src/core/energy-projection.js">
+<link rel="modulepreload" href="../src/core/energy-view-model.js">
+<link rel="modulepreload" href="../src/core/energy-writer.js">
+<link rel="modulepreload" href="../src/core/entita-mie.js">
+<link rel="modulepreload" href="../src/core/entity-autodetect.js">
+<link rel="modulepreload" href="../src/core/entity-search-index.js">
+<link rel="modulepreload" href="../src/core/ev-console.js">
+<link rel="modulepreload" href="../src/core/flusso-fermo.js">
+<link rel="modulepreload" href="../src/core/fondo-di-sistema.js">
+<link rel="modulepreload" href="../src/core/i18n-dom.js">
+<link rel="modulepreload" href="../src/core/i18n.js">
+<link rel="modulepreload" href="../src/core/impianti-termici.js">
+<link rel="modulepreload" href="../src/core/indirizzo-di-casa.js">
+<link rel="modulepreload" href="../src/core/kiosk-undo.js">
+<link rel="modulepreload" href="../src/core/light-model.js">
+<link rel="modulepreload" href="../src/core/media-picker.js">
+<link rel="modulepreload" href="../src/core/media-player.js">
+<link rel="modulepreload" href="../src/core/migrations.js">
+<link rel="modulepreload" href="../src/core/modello-nel-tempo.js">
+<link rel="modulepreload" href="../src/core/nome-della-lettura.js">
+<link rel="modulepreload" href="../src/core/oggetti-widget.js">
+<link rel="modulepreload" href="../src/core/ordine-a-mano.js">
+<link rel="modulepreload" href="../src/core/ordine-dei-blocchi.js">
+<link rel="modulepreload" href="../src/core/period-service.js">
+<link rel="modulepreload" href="../src/core/periodo-storico.js">
+<link rel="modulepreload" href="../src/core/person-model.js">
+<link rel="modulepreload" href="../src/core/personalization-catalog.js">
+<link rel="modulepreload" href="../src/core/piu-di-uno.js">
+<link rel="modulepreload" href="../src/core/pool-model.js">
+<link rel="modulepreload" href="../src/core/prese-model.js">
+<link rel="modulepreload" href="../src/core/quick-climate.js">
+<link rel="modulepreload" href="../src/core/racconto-tessera.js">
+<link rel="modulepreload" href="../src/core/radar-mappa.js">
+<link rel="modulepreload" href="../src/core/renderers.js">
+<link rel="modulepreload" href="../src/core/rifiuti-model.js">
+<link rel="modulepreload" href="../src/core/robot-model.js">
+<link rel="modulepreload" href="../src/core/room-overview.js">
+<link rel="modulepreload" href="../src/core/runtime-metrics.js">
+<link rel="modulepreload" href="../src/core/runtime-steps.js">
+<link rel="modulepreload" href="../src/core/scala-clima.js">
+<link rel="modulepreload" href="../src/core/scaldabagno-model.js">
+<link rel="modulepreload" href="../src/core/security-door-model.js">
+<link rel="modulepreload" href="../src/core/segno-progressivo.js">
+<link rel="modulepreload" href="../src/core/sezioni-mie.js">
+<link rel="modulepreload" href="../src/core/shutter-window.js">
+<link rel="modulepreload" href="../src/core/signed-energy.js">
+<link rel="modulepreload" href="../src/core/state-event-gate.js">
+<link rel="modulepreload" href="../src/core/stato-della-ricarica.js">
+<link rel="modulepreload" href="../src/core/storico-lungo.js">
+<link rel="modulepreload" href="../src/core/storico-rest.js">
+<link rel="modulepreload" href="../src/core/strategie-telecamera.js">
+<link rel="modulepreload" href="../src/core/subload-popup-model.js">
+<link rel="modulepreload" href="../src/core/tavolozza-disegni.js">
+<link rel="modulepreload" href="../src/core/telecamera-dal-vivo.js">
+<link rel="modulepreload" href="../src/core/telecamera-rtsp.js">
+<link rel="modulepreload" href="../src/core/telecamera-webrtc.js">
+<link rel="modulepreload" href="../src/core/todo-model.js">
+<link rel="modulepreload" href="../src/core/ups-model.js">
+<link rel="modulepreload" href="../src/core/valvola-trv.js">
+<link rel="modulepreload" href="../src/core/vehicle-model.js">
+<link rel="modulepreload" href="../src/core/verso-aperture.js">
+<link rel="modulepreload" href="../src/core/wallbox-device-binding.js">
+<link rel="modulepreload" href="../src/i18n/source-index.js">
+<link rel="modulepreload" href="../src/legacy/dashboard-data.js">
+<link rel="modulepreload" href="../src/sections/agenda-editor-section.js">
+<link rel="modulepreload" href="../src/sections/alarm-modes-editor-section.js">
+<link rel="modulepreload" href="../src/sections/alerts-section.js">
+<link rel="modulepreload" href="../src/sections/allerte-editor-section.js">
+<link rel="modulepreload" href="../src/sections/allerte-section.js">
+<link rel="modulepreload" href="../src/sections/appliance-detail-popup-section.js">
+<link rel="modulepreload" href="../src/sections/appliance-editor-section.js">
+<link rel="modulepreload" href="../src/sections/appliance-integration-section.js">
+<link rel="modulepreload" href="../src/sections/appliance-layout-section.js">
+<link rel="modulepreload" href="../src/sections/appliance-showcase-section.js">
+<link rel="modulepreload" href="../src/sections/appliances-section.js">
+<link rel="modulepreload" href="../src/sections/assistenza-section.js">
+<link rel="modulepreload" href="../src/sections/auto-integrazione-section.js">
+<link rel="modulepreload" href="../src/sections/auto-termica-section.js">
+<link rel="modulepreload" href="../src/sections/azioni-rapide-vassoio-section.js">
+<link rel="modulepreload" href="../src/sections/azioni-servizio-giusto-section.js">
+<link rel="modulepreload" href="../src/sections/backup-editor-section.js">
+<link rel="modulepreload" href="../src/sections/beta-compat-section.js">
+<link rel="modulepreload" href="../src/sections/beta-entry-section.js">
+<link rel="modulepreload" href="../src/sections/beta11-real-device-polish-section.js">
+<link rel="modulepreload" href="../src/sections/beta12-real-device-polish-section.js">
+<link rel="modulepreload" href="../src/sections/beta12-room-color-lock-section.js">
+<link rel="modulepreload" href="../src/sections/beta14-real-device-hotfix-section.js">
+<link rel="modulepreload" href="../src/sections/beta16-real-device-layout-section.js">
+<link rel="modulepreload" href="../src/sections/beta17-final-icon-polish-section.js">
+<link rel="modulepreload" href="../src/sections/beta22-load-slots-hotfix-section.js">
+<link rel="modulepreload" href="../src/sections/beta24-energy-recovery-section.js">
+<link rel="modulepreload" href="../src/sections/beta25-compatibility-section.js">
+<link rel="modulepreload" href="../src/sections/beta25-real-device-fixes-section.js">
+<link rel="modulepreload" href="../src/sections/beta26-real-device-stability-section.js">
+<link rel="modulepreload" href="../src/sections/beta27-release-stability-section.js">
+<link rel="modulepreload" href="../src/sections/beta4-mobile-polish-section.js">
+<link rel="modulepreload" href="../src/sections/beta6-feedback-section.js">
+<link rel="modulepreload" href="../src/sections/beta7-brand-guard-section.js">
+<link rel="modulepreload" href="../src/sections/beta7-regression-section.js">
+<link rel="modulepreload" href="../src/sections/beta9-real-device-polish-section.js">
+<link rel="modulepreload" href="../src/sections/calendario-modifica-section.js">
+<link rel="modulepreload" href="../src/sections/calendario-section.js">
+<link rel="modulepreload" href="../src/sections/centrali-allarme-editor-section.js">
+<link rel="modulepreload" href="../src/sections/climate-power-section.js">
+<link rel="modulepreload" href="../src/sections/climate-thermal-section.js">
+<link rel="modulepreload" href="../src/sections/config-persistence-section.js">
+<link rel="modulepreload" href="../src/sections/config-uniformity-section.js">
+<link rel="modulepreload" href="../src/sections/connection-recovery-section.js">
+<link rel="modulepreload" href="../src/sections/data-contracts-section.js">
+<link rel="modulepreload" href="../src/sections/editor-contracts-section.js">
+<link rel="modulepreload" href="../src/sections/editor-crud-section.js">
+<link rel="modulepreload" href="../src/sections/editor-entry-section.js">
+<link rel="modulepreload" href="../src/sections/editor-polish-section.js">
+<link rel="modulepreload" href="../src/sections/editor-slots-section.js">
+<link rel="modulepreload" href="../src/sections/energia-cerchi-storico-section.js">
+<link rel="modulepreload" href="../src/sections/energy-analysis-section.js">
+<link rel="modulepreload" href="../src/sections/energy-calculations-section.js">
+<link rel="modulepreload" href="../src/sections/energy-flow-section.js">
+<link rel="modulepreload" href="../src/sections/energy-guidance-section.js">
+<link rel="modulepreload" href="../src/sections/energy-legacy-guard-section.js">
+<link rel="modulepreload" href="../src/sections/energy-loads-editor-section.js">
+<link rel="modulepreload" href="../src/sections/energy-plants-section.js">
+<link rel="modulepreload" href="../src/sections/energy-refresh-section.js">
+<link rel="modulepreload" href="../src/sections/energy-report-polish-section.js">
+<link rel="modulepreload" href="../src/sections/energy-section.js">
+<link rel="modulepreload" href="../src/sections/energy-services-section.js">
+<link rel="modulepreload" href="../src/sections/energy-signed-section.js">
+<link rel="modulepreload" href="../src/sections/energy-stability-section.js">
+<link rel="modulepreload" href="../src/sections/english-runtime-strings-section.js">
+<link rel="modulepreload" href="../src/sections/entita-mie-editor-section.js">
+<link rel="modulepreload" href="../src/sections/entita-mie-section.js">
+<link rel="modulepreload" href="../src/sections/entity-autodetect-section.js">
+<link rel="modulepreload" href="../src/sections/entity-picker-guard-section.js">
+<link rel="modulepreload" href="../src/sections/entity-search-section.js">
+<link rel="modulepreload" href="../src/sections/ev-section.js">
+<link rel="modulepreload" href="../src/sections/ev-showcase-section.js">
+<link rel="modulepreload" href="../src/sections/ev-stato-e-target-section.js">
+<link rel="modulepreload" href="../src/sections/flood-alerts-section.js">
+<link rel="modulepreload" href="../src/sections/foglio-del-guscio-section.js">
+<link rel="modulepreload" href="../src/sections/history-section.js">
+<link rel="modulepreload" href="../src/sections/home-blocchi-section.js">
+<link rel="modulepreload" href="../src/sections/home-widgets-section.js">
+<link rel="modulepreload" href="../src/sections/i18n-section.js">
+<link rel="modulepreload" href="../src/sections/icon-engine-section.js">
+<link rel="modulepreload" href="../src/sections/icone-leggibili-section.js">
+<link rel="modulepreload" href="../src/sections/il-popup-del-clima-distingue-section.js">
+<link rel="modulepreload" href="../src/sections/il-popup-dell-auto-racconta-section.js">
+<link rel="modulepreload" href="../src/sections/il-popup-della-lavatrice-section.js">
+<link rel="modulepreload" href="../src/sections/impianti-termici-editor-section.js">
+<link rel="modulepreload" href="../src/sections/impianti-termici-section.js">
+<link rel="modulepreload" href="../src/sections/indirizzo-di-casa-section.js">
+<link rel="modulepreload" href="../src/sections/le-strisce-di-linguette-section.js">
+<link rel="modulepreload" href="../src/sections/legacy-sections-registry.js">
+<link rel="modulepreload" href="../src/sections/lights-alerts-section.js">
+<link rel="modulepreload" href="../src/sections/lights-page-section.js">
+<link rel="modulepreload" href="../src/sections/lights-scene-section.js">
+<link rel="modulepreload" href="../src/sections/lingua-section.js">
+<link rel="modulepreload" href="../src/sections/live-ui-section.js">
+<link rel="modulepreload" href="../src/sections/media-in-azioni-section.js">
+<link rel="modulepreload" href="../src/sections/media-picker-section.js">
+<link rel="modulepreload" href="../src/sections/media-player-editor-section.js">
+<link rel="modulepreload" href="../src/sections/media-player-section.js">
+<link rel="modulepreload" href="../src/sections/minipc-showcase-section.js">
+<link rel="modulepreload" href="../src/sections/navigation-section.js">
+<link rel="modulepreload" href="../src/sections/orologio-section.js">
+<link rel="modulepreload" href="../src/sections/page-masthead-section.js">
+<link rel="modulepreload" href="../src/sections/people-editor-section.js">
+<link rel="modulepreload" href="../src/sections/people-section.js">
+<link rel="modulepreload" href="../src/sections/person-avatar-section.js">
+<link rel="modulepreload" href="../src/sections/personalization-section.js">
+<link rel="modulepreload" href="../src/sections/pool-editor-section.js">
+<link rel="modulepreload" href="../src/sections/pool-extra-section.js">
+<link rel="modulepreload" href="../src/sections/pool-irrigation-scene-section.js">
+<link rel="modulepreload" href="../src/sections/prese-section.js">
+<link rel="modulepreload" href="../src/sections/quick-climate-editor-section.js">
+<link rel="modulepreload" href="../src/sections/radar-meteo-section.js">
+<link rel="modulepreload" href="../src/sections/report-editor-section.js">
+<link rel="modulepreload" href="../src/sections/rifiuti-editor-section.js">
+<link rel="modulepreload" href="../src/sections/rifiuti-section.js">
+<link rel="modulepreload" href="../src/sections/robot-editor-section.js">
+<link rel="modulepreload" href="../src/sections/robot-section.js">
+<link rel="modulepreload" href="../src/sections/room-assign-section.js">
+<link rel="modulepreload" href="../src/sections/rooms-order-editor-section.js">
+<link rel="modulepreload" href="../src/sections/rooms-page-section.js">
+<link rel="modulepreload" href="../src/sections/save-engine-section.js">
+<link rel="modulepreload" href="../src/sections/section-runtime.js">
+<link rel="modulepreload" href="../src/sections/security-doors-editor-section.js">
+<link rel="modulepreload" href="../src/sections/security-doors-section.js">
+<link rel="modulepreload" href="../src/sections/security-showcase-section.js">
+<link rel="modulepreload" href="../src/sections/segnalazioni-section.js">
+<link rel="modulepreload" href="../src/sections/sezioni-mie-editor-section.js">
+<link rel="modulepreload" href="../src/sections/sezioni-mie-section.js">
+<link rel="modulepreload" href="../src/sections/shared.js">
+<link rel="modulepreload" href="../src/sections/shutter-scene-section.js">
+<link rel="modulepreload" href="../src/sections/shutter-section.js">
+<link rel="modulepreload" href="../src/sections/shutter-sky-section.js">
+<link rel="modulepreload" href="../src/sections/shutter-window-section.js">
+<link rel="modulepreload" href="../src/sections/smoke-alerts-section.js">
+<link rel="modulepreload" href="../src/sections/solar-thermal-design-section.js">
+<link rel="modulepreload" href="../src/sections/sostieni-il-progetto-section.js">
+<link rel="modulepreload" href="../src/sections/stanze-per-nome-section.js">
+<link rel="modulepreload" href="../src/sections/storico-condiviso-section.js">
+<link rel="modulepreload" href="../src/sections/storico-connettivita-section.js">
+<link rel="modulepreload" href="../src/sections/subload-popup-section.js">
+<link rel="modulepreload" href="../src/sections/telecamera-rtsp-section.js">
+<link rel="modulepreload" href="../src/sections/telecamera-vivo-section.js">
+<link rel="modulepreload" href="../src/sections/telecamera-webrtc-section.js">
+<link rel="modulepreload" href="../src/sections/temperature-layout-section.js">
+<link rel="modulepreload" href="../src/sections/temperature-section.js">
+<link rel="modulepreload" href="../src/sections/temperature-trend-section.js">
+<link rel="modulepreload" href="../src/sections/termico-del-caldo-section.js">
+<link rel="modulepreload" href="../src/sections/theme-foundation-section.js">
+<link rel="modulepreload" href="../src/sections/todo-editor-section.js">
+<link rel="modulepreload" href="../src/sections/trv-editor-section.js">
+<link rel="modulepreload" href="../src/sections/unified-editors-section.js">
+<link rel="modulepreload" href="../src/sections/ups-editor-section.js">
+<link rel="modulepreload" href="../src/sections/ups-section.js">
+<link rel="modulepreload" href="../src/sections/weather-in-masthead-section.js">
+<link rel="modulepreload" href="../src/sections/widget-entity-choice-section.js">
+<link rel="modulepreload" href="../src/transport/hosted-bridge-guard.js">
+<!-- moduli-in-anticipo:fine -->
+<script type="module" src="./modules-entry.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Smart Home Dashboard</title>
+<link rel="stylesheet" href="./vendor/caratteri.css" media="print" onload="this.media='all'">
+<script defer src="./vendor/hls.min.js"></script>
+
+<link rel="stylesheet" href="./dashboard-runtime.css" media="print" onload="this.media='all'">
+</head>
+<body>
+<!-- Prima di tutto, anche di OGNI script sincrono: il parser si ferma su
+     ciascuno di loro, e a riavvio di Home Assistant possono metterci secondi
+     ad arrivare — con loro in testa lo schermo restava bianco per tutto quel
+     tempo, e il velo usciva solo alla fine. Qui sopra non c'e' niente che
+     blocchi: il velo si dipinge subito, gli script si aspettano sotto di lui.
+     L'ordine di esecuzione e' lo stesso di prima: spazio dei nomi, ponte,
+     config, tema. -->
+<!-- Il logo del velo viaggia DENTRO la pagina: come immagine esterna
+     arrivava dopo il primo dipinto, e al riavvio si vedeva prima la sola
+     rotella e poi, con comodo, il logo. Qui e' una versione 152px del
+     logo vero, pesa quattro kilobyte e nasce insieme al velo. -->
+<div id="cd-boot-overlay"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJgAAACYCAMAAAAvHNATAAABgFBMVEUdh8akolcgi8pyhGFTkqLLoi4CaaMJe8MZgbwSg7wdp91fz/s4w/B2cDxQdW5LvPiYhjqKutYAAGoWgb4cq/lGz/rGr0QRb6VEvfv/xR7i7/YAAKoMb6gAqqo4xv9j0v8+YF9FeYBVqqpBndWIfkChzukvp/BHufYKdrQUh8/y+f0cl+YAAAAFbKY8svMine1RwvkZkd0OfsH2uSQVZpMrltc0ZXMYea75sxtkzPj7xCooaYnO6fkmeaklisktcpQqXGw2p/FItvWr2fUpg7hQZlVtsNn1rBgA//9CZ2cplNeLyvA5Wllyw/TB3vAMdbBZx/m64vpVxfp///9puewUebEAf/+V0vdQx/kQW4VUxvgMdbEtnONJq+lJu/ZayPpma0Rtc0m0lTMaWnkEdbQRd7HUpCoAf39VxvkAVapQpNmNiUkNjuFVqv9orNZiy/mmizPd8fwAa7AUg8UiichLuvhQvPZ/f//iqiT///82tvZFXlREufaJfDoAAP8BaaYOdFNvAAAAgHRSTlNh/6H///8TJJjw/1////+3//8CYwwX/+UX//8DUAMJlf//A/////7+/v7//gD+/v79/v7/////k/+T/////////5WU//////8B/5T/////0Y7/0gL/awL/Lf9LSZX/0bL/////MLP/AmgD////A/9z//8T1pBMcAL/ARL/Kv8BJul0WzgAAAueSURBVHjazdz5Q9pIGwfw4G2tve/dd/c9IZFA5BQBgVWpuNjF+6zgVepZrbXWWt3+6+8zyYQEyExCZlp9frBVQvLhO8885KcIMqEKR/DjyYvlvr7j42G+NX18vLp6dfkELnBUIF1fsP7z3FdZ/m15FUiV2dlBzuUbnJ2tTE/vri7/Jstf51qAfYHPgVQVTiafz+qvs5Xh49VlWJsvDmEFSGu5j5uK5MK2PqB9LTiBzSHW7xWOK+ejvVr5HdHmbGGFgvx0d5hnW9FdKLbh3afoulTYF7mwOlwZ/JkulNrwakH+QoPNyU/7uMblyIVC63vasJx1sCN5+biCtjM/liMYHFM5XpaPSLA5eXl6Fh3m41ODtR+2B0Jo08t1mZlg/5ZXweW7oQLZqjkzwZTXTbqwbK4ZdnTDrsbMBFN/Dd6oC7Waqc8Ec99zvMjdu25kZUMm4K/Hy12uruDdu0E37yvvXuIvTg02t7hb4bqOQVeJQWaV3cU5A4Y2pO+WlL41Eawgv5guD94OF7TZC7mAYRBYZfC2JDZY0SIT0B3F1a1ZSHUxr9CdBoIVdsuDt8c1WN4tqDA0wny3qtRhJshf5d0ynxEBxeVE5V1ACQX5kk9gwTfp9BKnyC7lgnAkf77PxbU0ADXDlhl+9/3P8pEgX56XubkGBsaCHGDl80vosatRHq6xAVxMmenvHb0CGI+VNFxsMv2tsJbCHoeVNLuQLMgKK5/vCU9G2cfEzEBdpX1BRphv9InA3GJNLvcyYxCOXgnQYkGGMrve+MwyprPe/yx8LvuYXL50zeUNssq8+mnLn4XzMjeXz+c1foX/t+7SYcHyuXDOEFgThE1muIK+c2GUo4tN5jXBgqMsMK/vIzZ89HmNP5oX162LCeY1tbrXfIEZ03Zw6WKBEVwuZQ0uDeZ1UUHvvNlV/1KdzPkZTf93DTO5ZryNF4dfx1zImmDMLqtilbmEed/YuEyyotcljMk1Rj5mST9myc0V3MGcuLzeIovMFcyZi03mBub8ekWHn4APrEjvaiUWU1rOlgdsieqK4WKWtQyjTgFFU3XEjNTs5wofmGluklyZDk/MJPORZbTvnBZh9q5MRvJ4JPNqEmVBfrAZO1cmMz7ekezIZEyRme5C6t9wJ8hrKWeMe1OCa3x8XPQgWMa8N2v3k+kf02OOXCMdyQj8kzGtpStZC7A0zYVg4BoZGfG8fDaiwRQrmY87LG3c3lNc2Y5k0oNgdWtp+7EYYDXXOsmVGR/JZlMeBNMiU7wMMoewdbpLCwzySrUnk8n2rBWsRZkzGGnDNywkBPYMYPeyIGuGmTaP3wmsjYNL0RcSBRbJEmDGeHYgaxP+sDtEceCKqa5sHAX2LEWCtSL7wxbmt3NpgUGDZeMosKSHDDN9pfmZYT67G5daYPF4px3MX7tpmvczwvwzti5Fdx0gV7I9rsEUxUuRpZkT010K2aXCUvFJNbDkvRqMKvMpTDAFw5b89gupBRaZpMK8/qKj/rdPLE1tVkUfFfFJHFg1jmAZMgw3rZctMa+SpiZmLCQOLOkB2AgN9gb3GCPMr+3wMT8hLzwq4pP5iEOYtpRpxb75FUrpzTrjJxyGA5ucPEgiWQQ2pQGjnHDMT7+uPQwnTzpADSylBqZGFtlEsHGSS9GXYIkRpvjn9V4lueoDi+QnUzSYgpu26FcYYfom8tsGhipZtYPhbT5vD1PoMK8+doguFNiW5ooktybjqSy5xWzOZ5RjmPUnDEkZdebrgUWSBypMkkKk861r51tnhSl+fcI2v+IPSZIaWF4PTIONIJjfVWu0ApshNSuGQWCbkVpt2sH0XW4P81NLqU1Ypek1cInqStYCi8CmBJiIYITT4flqcbq6cgAr4glLgMGXkREY2pQaTGr9c7YKq2Vv4dJgRmDJrRosRIUVOcBq3WoVmAgrmTc6LHmCYFmRLDP2EjNsnQTTAkvFPUaHRR4gmBaZtUz5qE8fRpjfmIhWMDGVuhcx1WY+H9cjk0Ih4tnW7a7qAKakrT+j2mJiNup5WQ9DkZFlxPxbh+GuKB5awUYCdYFVNzbUyGqyppPNk7aSCxi+Tzm02pRiwGOGdfYDTJWJ1rJDvMf9HGCH+p1dgwvBwrCW6O41v7nZf30SiWz196PM1O9LK5lyWLQ8mTtY0fJDqjCITIzCJAPaRv+JkdxFpJqybLNDPF8PecAs2yKkwVBkMDHiANvoNK3py/aoFllj/+OGlexhb+0OkfBGsoShyFJYVjXBLuKp5xgWsoDN28LeIliIWpI+eqTGFwyZCrswXImDXCqqr6W5FDwUJfo1NVjIBqZQYVg2md8wb8983BJG/JBNMgewUEiPnwhD/Z/vNwW2lavB6t5VawsnMFuXhG8VJUsXkiHYt+uEIdsgwfBGitnBQggmkUq7ekjCE1YiHIlhJwkjsCmYsXjE1p1QwvNVsis6TD8bHoo2sC0DtjmlBhYmn8oJjPLqHS2xefrHxLCqDkt0fosbK1lf+DbRFia9Ff4kv3jnzh31X5/eGBTYP/MXCa0iiespIgzfJtrD/nQCw1uJAAursKmNCIYlqnltWFjAahucDaY3VUyD7ZNh8fjUpu6qBRZuPjamjzFGmH66NO10cOuDYNe66yIPsGjAciVj1OxbhknUBYDAovHc1IkOe4ADs4Ltc4bR9lIYw7aMwHLxqHXr2+1vl7Axcu/ncjAttDqZyhEDczzGnMJo50MtBjB9Wkxs4MB+Coy2Amrv56Y2cGBbU1NwxxOw3JMtzFeHMNyzGUqL6dMCAssRA9N3UZgXjLLLRQy7TkzAOiY6p2griWH7vGH7JFgOTYsJKPj6RoGRVpI+qV3A8Cf9ELZayYAK20IwU2CWsP84HmOtweYpsGqiLjDLlQzvOx5jDmFhvJvCViupwvITAEtUwUVZyfBr7jA8fxouFw6He5FLhaHArnWXCC/B685OQ4CdOYE91Jrjr/Rf9ZVOj41Hoyu53CZayQsIbBvDMmPpdMPh6bFX6ln+5wR2JghOYB8GiPVqBCX2X7SSD9TAUOuLUpr8jodOYIIgfJJsD8RdS7jOSiq3rU6Lb7XARMonGXhtfz3pkwrTfyMfGLOB5WBa6IGpsNeUNziZrwjWhpoYlf6vVVFWpmMFlrIKgeWNwETKJ3klUa+kUdoEoftMP6yXfJwYI8oeQvNvx6HDTraRS4OFKZHti7ausHTWDTD9t16RfKQofXjdVB+gOqIINokC286tgEtLLCzGXlvWh4wYdlAA+wWaTD1Wmz5EmWUFoJBsc2Jia3t7RQ8MnUkklb1KhBb7RZChyUSGUmEHExP3VBgOjLGgxWRB7j5jcqmwB4nOFXNgrHXWDbBT4VOYFbaV2EQsToGFPwmnsrAnP25jhUWrVdXFKbBw22N5TyjIXW2sS5maaOcYmCi2dckFQS7IQi9jZPcmohxd4V4VJS/K3YyRBdoPAqqLV2DdgBJk+b0slFhggUB7NoBYnFwlAUgabIctssC/AgF+LrFtB8NQbj1skfF09aDu0h9dctpTYpZxcpV6TmuPLgHhWo97FfopcqueNTUw/HicxUcL79ydpzfEUyWK7xYeLZqfdFQ4fexmMQNiKNTLE1Z6fFqoewQT7MwhV23GF1bq+Y52pPmhVYvyjss24xnY0I7WYObHfP1DXhsq3ayrNLQGjKYHoy26lHF1LVo9Sm5PlQVaiIpjWgHVtWf98L1FbQcEHJbjA52cC1w7prwaHle4J++geXYTrncLO+a8Gh/wuCh3LaDl/Nmu0tBCV11eTY/EhCGyNuQkNJFrXNBe+vwiPUT0b/hGh9C4BmLzCSEu+N7+2/axq5DozsLQu58FezcE3dWwjIQH1UJoKq3041UljdUUF+nRvu/hwO+/gu35j1Q9B9Wv3yGI9y08DPk9pNb1fW1hCIL7AcmVIKqhhbXvXZDW+5ae0gxvQFPlUdfO2toC8PjWwsIaoB6hyUl8fPT/Ac5JvN3+baw5AAAAAElFTkSuQmCC" alt=""><b>DashboardModern</b><div class="s"></div><small>Caricamento…</small></div>
+<script src="./storage-namespace.js"></script>
+<script src="./bridge-prelude.js"></script>
+<!-- ═══ CONFIG UTENTE (opzionale): copia config.example.js in config.js accanto a questo file e personalizza ═══ -->
+<script src="config.js" onerror="console.warn('[Dashboard] config.js non trovato — uso i default interni')"></script>
+<script src="./dashboard-theme-it.js"></script>
+
+<script data-dashboardmodern-bootstrap-watchdog src="./dashboard-watchdog-it.js"></script>
+<div class="animated-mesh-bg"></div>
+
+<header>
+    <div class="header-left-wrap">
+      <button class="ha-menu-btn" onclick="apriMenuLaterale()">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      
+      <div class="brand-text">
+        <h1>Smart Home</h1>
+        <p>Smart Home Dashboard</p>
+      </div>
+    </div>
+    
+    <div class="status-pill">
+      <span class="live-dot" id="live-dot"></span>
+      <span id="conn-text">CONNECTING...</span>
+    </div>
+  </header>
+  
+  <nav class="tabs bottom-nav-bar">
+    <button class="tab active" data-tab="home"><span class="icon">🏠</span><span class="text">Home</span></button>
+    <button class="tab" data-tab="energy"><span class="icon">⚡</span><span class="text">Energia</span></button>
+    <button class="tab" data-tab="appliances-main"><span class="icon">🧺</span><span class="text">Elettrodomestici</span></button>
+    <button class="tab" data-tab="ev"><span class="icon">🚗</span><span class="text">Auto</span></button>
+    <button class="tab" data-tab="boiler"><span class="icon">🌞</span><span class="text">Solare Termico</span></button>
+    <button class="tab" data-tab="clima"><span class="icon">❄️</span><span class="text">Clima</span></button>
+    <button class="tab" data-tab="temp"><span class="icon">🌡️</span><span class="text">Temperatura</span></button>
+    <button class="tab" data-tab="tapparelle" id="tab-tapparelle" style="display: none;"><span class="icon">🪟</span><span class="text">Finestre</span></button>
+    <button class="tab" data-tab="irrigazione" id="tab-irrigazione" style="display: none;"><span class="icon">💧</span><span class="text">Irrigazione</span></button>
+    <button class="tab" data-tab="piscina" id="tab-piscina" style="display: none;"><span class="icon">🏊</span><span class="text">Piscina</span></button>
+    <button class="tab" data-tab="security" onclick="refreshCameras()"><span class="icon">🛡️</span><span class="text">Sicurezza</span></button>
+    <button class="tab" data-tab="server"><span class="icon">🖥️</span><span class="text">MiniPC</span></button>
+    <button class="tab" data-tab="config" id="tab-config" style="display: none;"><span class="icon">⚙️</span><span class="text">Config</span></button>
+  </nav>
+
+  <!-- Maniglia per mostrare/nascondere la barra inferiore su mobile -->
+  <div class="bottom-nav-handle" id="bottomNavHandle" aria-label="Mostra menu"></div>
+
+  <section class="page active" id="page-home">
+    <div class="weather-widget" onclick="apriMeteo()">
+      <div class="w-left">
+        <div class="w-icon" id="w-icon">☀️</div>
+        <div class="w-temp-wrap">
+          <span class="w-temp" id="w-temp">--°C</span>
+          <span class="w-state" id="w-state">Caricamento...</span>
+        </div>
+      </div>
+      <div class="w-right">
+        <div class="w-detail">💧 Umidità <span id="w-hum">--</span></div>
+        <div class="w-detail">💨 Vento <span id="w-wind">--</span></div>
+        <div class="w-detail" id="w-feel-row" style="display:none">🌡️ Percepita <span id="w-feel">--</span></div>
+      </div>
+    </div>
+
+    <!-- v245: container per le pillole di stato (caldaia + antifurto, affiancate) -->
+    <div class="dashboard-pills-row" id="dashboard-pills-row">
+      <!-- v244: Pillola caldaia accesa (visibile solo se switch.caldaia è ON) -->
+      <div id="caldaia-banner" class="status-pill caldaia-banner" onclick="apriQuickClimaCaldo()">
+        <span class="caldaia-banner-icon">🔥</span>
+        <span class="caldaia-banner-text">Caldaia accesa</span>
+        <span class="caldaia-banner-pulse"></span>
+      </div>
+      <!-- v245: Pillola antifurto attivo (visibile solo se stato ≠ disarmed) -->
+      <div id="allarme-banner" class="status-pill allarme-banner" onclick="apriQuickAntifurto()">
+        <span class="status-pill-icon" id="allarme-banner-icon">🛡️</span>
+        <span class="status-pill-text" id="allarme-banner-text">Antifurto</span>
+        <span class="status-pill-dot"></span>
+      </div>
+    </div>
+
+
+    <h3 class="section-title">Azioni rapide</h3>
+    <div class="quick-actions" id="qa-grid"><!-- v261: azioni generate da getQuickActions() --></div>
+
+    <h3 class="section-title" id="dev-title" style="display:none;">Dispositivi</h3>
+    <div class="dev-grid" id="dev-grid"><!-- v280: card dispositivi personalizzati (cd_devices) --></div>
+    
+  </section>
+
+
+<section class="page" id="page-appliances-main">
+  <div class="sub-tabs-container">
+    <div class="sub-tabs-energy">
+      <button class="sub-tab-btn appl-section-tab active" onclick="switchApplianceView('overview', event)">📊 Panoramica</button>
+      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('kitchen', event)">🍳 Cucina</button>
+      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('laundry', event)">🧺 Lavanderia</button>
+      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('home', event)">🏠 Casa</button>
+      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('other', event)">🔌 Altro</button>
+      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('consumption', event)">⚡ Consumi</button>
+      <button class="sub-tab-btn appl-section-tab" onclick="switchApplianceView('automations', event)">🤖 Automazioni</button>
+    </div>
+  </div>
+  <div class="appl-main-hero">
+    <div><div class="appl-main-title">🧺 Elettrodomestici</div><div class="appl-main-sub" id="appl-main-sub"></div></div>
+  </div>
+  <div class="glance-grid appl-kpi-grid" id="appl-kpi-grid"></div>
+  <div class="appl-main-view active" id="appl-view-overview"><h3 class="section-title">Panoramica</h3><div class="appl-page-grid" id="appl-grid-overview"></div></div>
+  <div class="appl-main-view" id="appl-view-kitchen"><h3 class="section-title">Cucina</h3><div class="appl-page-grid" id="appl-grid-kitchen"></div></div>
+  <div class="appl-main-view" id="appl-view-laundry"><h3 class="section-title">Lavanderia</h3><div class="appl-page-grid" id="appl-grid-laundry"></div></div>
+  <div class="appl-main-view" id="appl-view-home"><h3 class="section-title">Casa</h3><div class="appl-page-grid" id="appl-grid-home"></div></div>
+  <div class="appl-main-view" id="appl-view-other"><h3 class="section-title">Altro</h3><div class="appl-page-grid" id="appl-grid-other"></div></div>
+  <div class="appl-main-view" id="appl-view-consumption"><h3 class="section-title">Consumi</h3><div class="ed-chart-card"><div class="ed-chart-header"><div class="ed-chart-title">📈 Consumo istantaneo</div></div><div class="appl-consumption-list" id="appl-consumption-list"></div></div></div>
+  <div class="appl-main-view" id="appl-view-automations"><h3 class="section-title">Automazioni</h3><div class="appl-page-grid" id="appl-grid-automations"></div></div>
+</section>
+
+<section class="page" id="page-energy">
+    <div class="sub-tabs-container">
+     <div class="sub-tabs-energy">
+       <button class="sub-tab-btn" onclick="switchEnergyView('panoramica'); renderEnergyDashboard();">📊 Report</button>
+       <button class="sub-tab-btn active" onclick="switchEnergyView('ist')">⚡ Istantanea</button>
+       <button class="sub-tab-btn" onclick="switchEnergyView('day')">📅 Giornaliera</button>
+       <button class="sub-tab-btn" onclick="switchEnergyView('month')">📆 Mensile</button>
+       <button class="sub-tab-btn" onclick="switchEnergyView('temp')">🌡️ Temperature</button>
+
+     </div>
+    </div>
+
+    <!-- ======= REPORT ENERGIA MENSILE ======= -->
+    <div id="view-panoramica" class="flow-view energy-dashboard">
+
+      <!-- Header identico alla foto: brand + stato + periodo + chip YoY -->
+      <div class="ed-header">
+
+        <!-- Riga 1: Brand + stato connessione -->
+        <div class="ed-header-top">
+          <div class="ed-header-brand">
+            <div class="ed-title">
+              <div class="ed-icon">⚡</div>
+            </div>
+            <div class="ed-title-text">
+              <h2>Dashboard Energia</h2>
+              <div class="ed-datetime" id="ed-datetime">—</div>
+            </div>
+          </div>
+          <div class="ed-header-meta">
+            <div class="ed-status-pill">
+              <span class="ed-status-dot"></span>
+              Connesso
+            </div>
+            <div class="ed-clock-pill">⏰ <span id="ed-clock">—</span></div>
+          </div>
+        </div>
+
+        <!-- Riga 2: Selezione periodo + chip YoY -->
+        <div class="ed-header-period">
+          <div class="ed-period-label">📅 Mese:</div>
+          <div class="ed-select-wrap">
+            <select class="ed-select" id="ed-sel-month" onchange="renderEnergyDashboard()">
+              <option value="1">Gennaio</option><option value="2">Febbraio</option>
+              <option value="3">Marzo</option><option value="4">Aprile</option>
+              <option value="5">Maggio</option><option value="6">Giugno</option>
+              <option value="7">Luglio</option><option value="8">Agosto</option>
+              <option value="9">Settembre</option><option value="10">Ottobre</option>
+              <option value="11">Novembre</option><option value="12">Dicembre</option>
+            </select>
+            <select class="ed-select" id="ed-sel-year" onchange="renderEnergyDashboard()">
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026" selected>2026</option>
+            </select>
+          </div>
+          <div class="ed-yoy-chips" id="ed-yoy-chips"></div>
+        </div>
+
+      </div>
+
+      <!-- Pill tab Panoramica / Analisi -->
+      <div class="ed-inner-tabs">
+        <button class="ed-inner-tab active" id="ed-tab-pan" onclick="edSwitchTab('panoramica')">🏠 Panoramica</button>
+        <button class="ed-inner-tab" id="ed-tab-ana" onclick="edSwitchTab('analisi')">📊 Analisi</button>
+      </div>
+
+      <!-- ═══ TAB: PANORAMICA ═══ -->
+      <div id="ed-pane-panoramica">
+
+        <!-- v254: Banner KPI uniformato (bianco + 3 colori brand) -->
+        <div class="ed-kpi-banner">
+          <div class="ed-kpi-item" style="--kpi-rgb: 22, 163, 74;">
+            <div class="ed-kpi-icon">☀️</div>
+            <div class="ed-kpi-label">Produzione FV</div>
+            <div class="ed-kpi-val" id="ed-kpi-prod">— <small>kWh</small></div>
+          </div>
+          <div class="ed-kpi-item" style="--kpi-rgb: 124, 58, 237;">
+            <div class="ed-kpi-icon">🏠</div>
+            <div class="ed-kpi-label">Consumo Totale</div>
+            <div class="ed-kpi-val" id="ed-kpi-cons">— <small>kWh</small></div>
+          </div>
+          <div class="ed-kpi-item" style="--kpi-rgb: 245, 158, 11;">
+            <div class="ed-kpi-icon">🔋</div>
+            <div class="ed-kpi-label">Autosufficienza</div>
+            <div class="ed-kpi-val" id="ed-kpi-auto">— <small>%</small></div>
+          </div>
+        </div>
+
+        <!-- ═══════ BILANCIO ANNO: totale pagato + risparmiato dell'anno corrente ═══════ -->
+        <div class="ed-year-summary" id="ed-year-summary">
+          <div class="ed-year-summary-header">
+            <span class="ed-year-summary-icon">📊</span>
+            <div class="ed-year-summary-title">
+              <div class="ed-year-summary-lbl">Totale</div>
+              <div class="ed-year-summary-year" id="ed-year-summary-year">2026</div>
+            </div>
+          </div>
+          <div class="ed-year-summary-grid">
+            <div class="ed-year-stat">
+              <div class="ed-year-stat-lbl">💸 Pagato</div>
+              <div class="ed-year-stat-val pagato" id="ed-year-pagato">— €</div>
+              <div class="ed-year-stat-sub" id="ed-year-pagato-sub">— kWh dalla rete</div>
+            </div>
+            <div class="ed-year-divider"></div>
+            <div class="ed-year-stat">
+              <div class="ed-year-stat-lbl">💰 Risparmiato</div>
+              <div class="ed-year-stat-val risparmio" id="ed-year-risparmio">— €</div>
+              <div class="ed-year-stat-sub" id="ed-year-risparmio-sub">grazie al fotovoltaico</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Griglia finanziaria -->
+        <div class="ed-fin-grid" style="grid-template-columns:repeat(5,1fr);">
+          <!-- 1. Quanto avresti speso senza FV -->
+          <div class="ed-fin-card">
+            <div class="ed-fin-lbl">💸 Senza FV</div>
+            <div class="ed-fin-val" id="ed-fin-pagato" style="color:#dc2626;">—</div>
+            <div class="ed-fin-sub" id="ed-fin-pagato-sub"></div>
+          </div>
+          <!-- 2. Quanto hai effettivamente speso -->
+          <div class="ed-fin-card">
+            <div class="ed-fin-lbl">💳 Costo Reale</div>
+            <div class="ed-fin-val" id="ed-fin-costo" style="color:#f97316;">—</div>
+            <div class="ed-fin-sub" id="ed-fin-costo-sub"></div>
+          </div>
+          <!-- 3. Risparmio = (1) - (2) -->
+          <div class="ed-fin-card">
+            <div class="ed-fin-lbl">💰 Risparmio</div>
+            <div class="ed-fin-val" id="ed-fin-risp" style="color:#15803d;">—</div>
+            <div class="ed-fin-sub" id="ed-fin-risp-sub"></div>
+          </div>
+          <!-- 4. kWh venduti alla rete + guadagno GSE -->
+          <div class="ed-fin-card">
+            <div class="ed-fin-lbl">⚡ Venduto</div>
+            <div class="ed-fin-val" id="ed-fin-imm" style="color:#0ea5e9;">—</div>
+            <div class="ed-fin-sub" id="ed-fin-imm-sub"></div>
+          </div>
+          <!-- 5. CO₂ evitata -->
+          <div class="ed-fin-card">
+            <div class="ed-fin-lbl">🌳 CO₂ Evitata</div>
+            <div class="ed-fin-val" id="ed-fin-co2" style="color:#16a34a;">—</div>
+            <div class="ed-fin-sub" id="ed-fin-co2-sub"></div>
+          </div>
+        </div>
+
+        <!-- Badge -->
+        <div class="ed-badges" id="ed-badges"></div>
+
+        <!-- Autosufficienza ring -->
+        <div class="ed-auto-row">
+          <div class="ed-auto-ring">
+            <svg viewBox="0 0 80 80" width="80" height="80">
+              <circle cx="40" cy="40" r="32" fill="none" stroke="#e2e8f0" stroke-width="7"/>
+              <circle cx="40" cy="40" r="32" fill="none" stroke="#16a34a" stroke-width="7"
+                stroke-linecap="round" id="ed-auto-circle" stroke-dasharray="0 201"
+                style="transition:stroke-dasharray 1.2s cubic-bezier(0.165,0.84,0.44,1);"/>
+            </svg>
+            <div class="ed-auto-ring-val" id="ed-auto-ring-val">—</div>
+          </div>
+          <div class="ed-auto-info">
+            <div class="ed-auto-label">Autosufficienza Energetica</div>
+            <div class="ed-auto-val" id="ed-auto-big">—%</div>
+            <div class="ed-auto-sub" id="ed-auto-sub">Energia autoprodotta consumata</div>
+          </div>
+        </div>
+
+        <!-- Grafico andamento giornaliero -->
+        <div class="ed-chart-card">
+          <div class="ed-chart-header">
+            <div class="ed-chart-title">📈 Andamento Giornaliero</div>
+            <div class="ed-chart-legend">
+              <div class="ed-legend-item"><div class="ed-legend-dot" style="background:#16a34a;"></div>Produzione</div>
+              <div class="ed-legend-item"><div class="ed-legend-dot" style="background:#0ea5e9;"></div>Consumo</div>
+            </div>
+          </div>
+          <div class="ed-chart-wrap">
+            <div id="ed-chart-loading" style="display:flex;align-items:center;justify-content:center;height:100%;font-size:13px;font-weight:800;color:var(--text-dim);gap:8px;">
+              <span style="animation:spinAnim 1s linear infinite;display:inline-block;">⏳</span> Caricamento dati storici...
+            </div>
+            <canvas id="ed-daily-canvas" style="display:none;"></canvas>
+          </div>
+        </div>
+
+      </div><!-- /ed-pane-panoramica -->
+
+      <!-- ═══ TAB: ANALISI ═══ -->
+      <div id="ed-pane-analisi" style="display:none;">
+
+        <!-- Confronto settimanale -->
+        <div class="ed-weekly-card">
+          <div class="ed-weekly-title">🔄 Confronto Settimanale</div>
+          <div class="ed-weekly-row">
+            <div class="ed-weekly-lbl">Sett. Scorsa</div>
+            <div class="ed-weekly-bar-bg">
+              <div class="ed-weekly-bar-fill" id="ed-w-prev-bar" style="background:#94a3b8;width:0%;"></div>
+            </div>
+            <div class="ed-weekly-val" id="ed-w-prev-val">— kWh</div>
+          </div>
+          <div class="ed-weekly-row">
+            <div class="ed-weekly-lbl">Questa Sett.</div>
+            <div class="ed-weekly-bar-bg">
+              <div class="ed-weekly-bar-fill" id="ed-w-curr-bar" style="background:#16a34a;width:0%;"></div>
+            </div>
+            <div class="ed-weekly-val" id="ed-w-curr-val">— kWh</div>
+            <div class="ed-weekly-diff" id="ed-w-diff">—</div>
+          </div>
+        </div>
+
+        <!-- Attività Dispositivi -->
+        <div class="ed-devices-card">
+          <div class="ed-devices-header">
+            <div class="ed-devices-title">⚡ Attività Dispositivi</div>
+            <div class="ed-devices-subtitle" id="ed-dev-period-label">Mese in corso</div>
+          </div>
+          <div id="ed-device-list"></div>
+          <div class="ed-devices-total">
+            <div class="ed-devices-total-lbl">🔌 Totale Monitorato</div>
+            <div class="ed-devices-total-val" id="ed-dev-total">— kWh &nbsp;|&nbsp; — €</div>
+          </div>
+        </div>
+
+        <!-- Dettaglio Dispositivo -->
+        <div class="ed-devices-card ed-dev-detail-wrap">
+          <div class="ed-dev-detail-bar">
+            <div class="ed-devices-title">📊 Dettaglio Dispositivo</div>
+            <div class="ed-dev-select-wrap">
+              <span class="ed-dev-select-lbl">Seleziona:</span>
+              <select class="ed-dev-select" id="ed-dev-selector" onchange="edCaricaDettaglio()">
+                <option value="">— Scegli —</option>
+                <optgroup label="Elettrodomestici">
+                  <option value="dm.ev_energia_wallbox_mese">⚡ Wallbox</option>
+                  <option value="dm.core_032">🧊 Frigorifero</option>
+                  <option value="dm.core_034">🍽️ Lavastoviglie</option>
+                  <option value="dm.core_031">🍟 Friggitrice</option>
+                  <option value="dm.core_033">☕ Macchina Caffè</option>
+                  <option value="dm.core_029">💨 Asciugatrice</option>
+                  <option value="dm.core_035">🧺 Lavatrice</option>
+                  <option value="dm.core_030">♨️ Forno</option>
+                  <option value="dm.core_036">📡 Microonde</option>
+                  <option value="dm.energy_boiler_mese">🔥 Boiler</option>
+                </optgroup>
+                <optgroup label="Climatizzazione">
+                  <option value="dm.energy_condizionatori_mese">❄️ Condizionatori</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+
+          <!-- KPI 3 colonne -->
+          <div class="ed-dev-kpi-row" id="ed-dev-kpi-row">
+            <div class="ed-dev-kpi-box">
+              <div class="ed-dev-kpi-box-val" id="ed-dkpi-mese">—</div>
+              <div class="ed-dev-kpi-box-lbl">kWh Questo Mese</div>
+              <div class="ed-dev-kpi-box-sub" id="ed-dkpi-mese-eur">— €</div>
+            </div>
+            <div class="ed-dev-kpi-box">
+              <div class="ed-dev-kpi-box-val" id="ed-dkpi-media">—</div>
+              <div class="ed-dev-kpi-box-lbl">Media Giornaliera</div>
+              <div class="ed-dev-kpi-box-sub" id="ed-dkpi-media-sub">kWh/giorno</div>
+            </div>
+            <div class="ed-dev-kpi-box">
+              <div class="ed-dev-kpi-box-val" id="ed-dkpi-picco">—</div>
+              <div class="ed-dev-kpi-box-lbl">Picco</div>
+              <div class="ed-dev-kpi-box-sub" id="ed-dkpi-picco-sub">—</div>
+            </div>
+          </div>
+
+          <!-- Card costi e risparmio per il dispositivo selezionato — MESE SELEZIONATO -->
+          <div style="font-size:10px; color:var(--text-dim); font-weight:800; letter-spacing:1.5px; text-transform:uppercase; margin-top:14px; padding-left:4px;">📅 Mese selezionato</div>
+          <div class="ed-dev-cost-row" style="display:flex; gap:12px; margin-top:6px; flex-wrap:wrap;">
+            <div class="ed-cost-card ed-cost-positive">
+              <div class="ed-cost-lbl">☀️ Risparmiato grazie al FV</div>
+              <div class="ed-cost-val" id="ed-dkpi-risp-eur">— €</div>
+              <div class="ed-cost-sub" id="ed-dkpi-risp-kwh">— kWh da FV</div>
+            </div>
+            <div class="ed-cost-card ed-cost-negative">
+              <div class="ed-cost-lbl">🔌 Speso dalla rete</div>
+              <div class="ed-cost-val" id="ed-dkpi-costo-eur">— €</div>
+              <div class="ed-cost-sub" id="ed-dkpi-costo-kwh">— kWh dalla rete</div>
+            </div>
+          </div>
+
+          <!-- Card costi e risparmio per il dispositivo selezionato — TOTALE ANNO -->
+          <div style="font-size:10px; color:var(--text-dim); font-weight:800; letter-spacing:1.5px; text-transform:uppercase; margin-top:14px; padding-left:4px;">📊 Totale anno <span id="ed-dkpi-year-lbl">2026</span></div>
+          <div class="ed-dev-cost-row" style="display:flex; gap:12px; margin-top:6px; flex-wrap:wrap;">
+            <div class="ed-cost-card ed-cost-positive">
+              <div class="ed-cost-lbl">☀️ Risparmiato anno</div>
+              <div class="ed-cost-val" id="ed-dkpi-anno-risp-eur">— €</div>
+              <div class="ed-cost-sub" id="ed-dkpi-anno-risp-kwh">— kWh da FV</div>
+            </div>
+            <div class="ed-cost-card ed-cost-negative">
+              <div class="ed-cost-lbl">🔌 Speso anno</div>
+              <div class="ed-cost-val" id="ed-dkpi-anno-costo-eur">— €</div>
+              <div class="ed-cost-sub" id="ed-dkpi-anno-costo-kwh">— kWh dalla rete</div>
+            </div>
+          </div>
+
+          <!-- Grafico a barre storico 7 giorni -->
+          <div class="ed-dev-chart-wrap">
+            <div id="ed-dev-chart-msg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text-dim);">
+              ☝️ Seleziona un dispositivo
+            </div>
+            <canvas id="ed-dev-chart-canvas" style="display:none;"></canvas>
+          </div>
+        </div>
+
+        <!-- Wallbox (visibile solo se selezionato il dispositivo Wallbox) -->
+        <div class="ed-bottom-grid" id="ed-bottom-grid" style="grid-template-columns:1fr; display:none;">
+          <div class="ed-wb-card" id="ed-wb-card">
+            <div class="ed-section-title">⚡ Wallbox &amp; Ricarica EV</div>
+            <div class="ed-wb-stats">
+              <div class="ed-wb-stat"><div class="ed-wb-stat-val" id="ed-wb-sess">—</div><div class="ed-wb-stat-lbl">Sessioni</div></div>
+              <div class="ed-wb-stat"><div class="ed-wb-stat-val" id="ed-wb-kwmed">—</div><div class="ed-wb-stat-lbl">kW medio</div></div>
+              <div class="ed-wb-stat"><div class="ed-wb-stat-val" id="ed-wb-kwpeak">—</div><div class="ed-wb-stat-lbl">kW picco</div></div>
+            </div>
+            <div class="ed-wb-sub-grid" style="grid-template-columns:1fr;">
+              <div class="ed-wb-sub">
+                <div class="ed-wb-sub-label">⚡ Energia Erogata (da HA)</div>
+                <div class="ed-wb-sub-val" id="ed-wb-on">— kWh</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /ed-pane-analisi -->
+
+    </div><!-- /view-panoramica -->
+
+    <div id="view-ist" class="flow-view active">
+      <div class="flow-stage">
+        <svg class="flow-svg desktop-svg" viewBox="0 0 1000 600" preserveAspectRatio="none">
+          <path id="line-solar-home" class="flow-line" style="--line-color: #f59e0b" d="M 500 147 L 500 235"/>
+          <path id="line-grid-home" class="flow-line" style="--line-color: #1e40af" d="M 307 198 Q 500 198 500 235"/>
+          <path id="line-battery-home" class="flow-line" style="--line-color: #15803d" d="M 693 198 Q 500 198 500 235"/>
+          <path id="line-solar-grid" class="flow-line" style="--line-color: #f59e0b" d="M 442 90 Q 250 90 250 140"/>
+          <path id="line-solar-battery" class="flow-line" style="--line-color: #f59e0b" d="M 558 90 Q 750 90 750 140"/>
+          <path id="line-home-boiler" class="flow-line" style="--line-color: #ea580c" d="M 500 365 Q 160 420 160 445"/>
+          <path id="line-home-wb" class="flow-line" style="--line-color: #06b6d4" d="M 500 365 Q 330 420 330 445"/>
+          <path id="line-home-clima" class="flow-line" style="--line-color: #0ea5e9" d="M 500 365 L 500 445"/>
+          <path id="line-home-lav" class="flow-line" style="--line-color: #7c3aed" d="M 500 365 Q 670 420 670 445"/>
+          <path id="line-home-cuc" class="flow-line" style="--line-color: #e11d48" d="M 500 365 Q 840 420 840 445"/>
+        </svg>
+        <svg class="flow-svg mobile-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+          <path id="m-line-solar-home" class="flow-line" style="--line-color: #f59e0b" d="M 500 150 L 500 460"/>
+          <path id="m-line-grid-home" class="flow-line" style="--line-color: #1e40af" d="M 200 280 Q 500 280 500 460"/>
+          <path id="m-line-battery-home" class="flow-line" style="--line-color: #15803d" d="M 800 280 Q 500 280 500 460"/>
+          <path id="m-line-solar-grid" class="flow-line" style="--line-color: #f59e0b" d="M 450 150 Q 200 150 200 280"/>
+          <path id="m-line-solar-battery" class="flow-line" style="--line-color: #f59e0b" d="M 550 150 Q 800 150 800 280"/>
+          <path id="m-line-home-wb" class="flow-line" style="--line-color: #06b6d4" d="M 500 460 Q 200 460 200 680"/>
+          <path id="m-line-home-clima" class="flow-line" style="--line-color: #0ea5e9" d="M 500 460 L 500 680"/>
+          <path id="m-line-home-cuc" class="flow-line" style="--line-color: #e11d48" d="M 500 460 Q 800 460 800 680"/>
+          <path id="m-line-home-boiler" class="flow-line" style="--line-color: #ea580c" d="M 500 460 Q 350 460 350 840"/>
+          <path id="m-line-home-lav" class="flow-line" style="--line-color: #7c3aed" d="M 500 460 Q 650 460 650 840"/>
+        </svg>
+
+        <div class="node n-main hist-clickable" id="n-solar" style="left:50%; top:15%; --n-color:#f59e0b; --n-rgb: 245,158,11;" onclick="apriStorico(event, 'dm.energy_potenza_fotovoltaico', 'Produzione Solare')"><div class="node-label">Solare</div><div class="node-icon">☀️</div><span id="v-solar">—</span></div>
+        <div class="node n-main hist-clickable" id="n-grid" style="left:25%; top:33%; --n-color:#1e40af; --n-rgb: 30,64,175;" onclick="apriStorico(event, 'dm.energy_potenza_scambio_rete', 'Rete Elettrica')"><div class="node-label">Rete</div><div class="node-icon">⚡</div><span id="v-grid">—</span></div>
+        <div class="node n-main hist-clickable" id="n-battery" style="left:75%; top:33%; --n-color:#15803d; --n-rgb: 21, 128, 61;" onclick="apriStorico(event, 'dm.energy_potenza_batteria', 'Potenza Batteria')"><div class="node-label">Batteria</div><div class="node-icon">🔋</div><span id="v-battery">—</span><div id="v-battery-soc" style="font-size:12px; font-weight:800; color:var(--text-dim); margin-top:3px; cursor:pointer; padding:1px 6px; border-radius:8px; transition:background 0.2s;" onclick="event.stopPropagation(); apriStorico(event, 'dm.energy_stato_carica_batteria', 'Livello Batteria (SOC)')" onmouseover="this.style.background='rgba(5,150,105,0.15)'" onmouseout="this.style.background='transparent'">—</div></div>
+        <div class="node n-home hist-clickable" id="n-home" style="left:50%; top:50%; --n-color:var(--text); --n-rgb: 10,14,23;" onclick="apriStorico(event, 'dm.energy_potenza_consumo_casa', 'Consumo Casa')"><div class="node-label">Casa</div><div class="node-icon">🏠</div><span id="v-home">—</span></div>
+        
+        <div class="node n-load hist-clickable" id="n-boiler" style="left:16%; top:83%; --n-color:#ea580c; --n-rgb: 234,88,12;" onclick="apriStorico(event, 'dm.boiler_potenza_resistenza_boiler', 'Consumo Boiler')"><div class="node-label">Boiler</div><div class="node-icon">♨️</div><span id="v-boiler-p">—</span></div>
+        <div class="node n-load hist-clickable" id="n-wb" style="left:33%; top:83%; --n-color:#06b6d4; --n-rgb: 6,182,212;" onclick="apriPopup()"><div class="node-label">Wallbox</div><div class="node-icon">🚗</div><span id="v-wb-p">—</span></div>
+        <div class="node n-load hist-clickable" id="n-clima" style="left:50%; top:83%; --n-color:#0ea5e9; --n-rgb: 14,165,233;" onclick="apriStorico(event, 'dm.energy_potenza_condizionatori', 'Potenza Clima')"><div class="node-label">Clima</div><div class="node-icon">❄️</div><span id="v-clima-p">—</span></div>
+        <div class="node n-load hist-clickable" id="n-lav" style="left:67%; top:83%; --n-color:#7c3aed; --n-rgb: 124,58,237;" onclick="apriSubLoads('lavanderia')"><div class="node-label">Lavanderia</div><div class="node-icon">🧺</div><span id="v-lav-p">—</span></div>
+        <div class="node n-load hist-clickable" id="n-cuc" style="left:84%; top:83%; --n-color:#e11d48; --n-rgb: 225,29,72;" onclick="apriSubLoads('cucina')"><div class="node-label">Cucina</div><div class="node-icon">🍳</div><span id="v-cuc-p">—</span></div>
+      </div><!-- v293: chiuso qui per ospitare la griglia -->
+      <div class="dev-grid" id="custom-loads-grid" style="display:none; margin-top:14px;"><!-- gruppi carico personalizzati --></div>
+      <div style="display:none;"><!-- v293: assorbe la vecchia chiusura -->
+      </div>
+    </div>
+
+    <div id="view-day" class="flow-view">
+      <div class="flow-stage">
+        <svg class="flow-svg desktop-svg" viewBox="0 0 1000 600" preserveAspectRatio="none">
+          <path id="line-solar-home-day" class="flow-line" style="--line-color: #f59e0b" d="M 500 147 L 500 235"/>
+          <path id="line-grid-home-day" class="flow-line" style="--line-color: #1e40af" d="M 307 198 Q 500 198 500 235"/>
+          <path id="line-battery-home-day" class="flow-line" style="--line-color: #15803d" d="M 693 198 Q 500 198 500 235"/>
+          <path id="line-solar-grid-day" class="flow-line" style="--line-color: #f59e0b" d="M 442 90 Q 250 90 250 140"/>
+          <path id="line-solar-battery-day" class="flow-line" style="--line-color: #f59e0b" d="M 558 90 Q 750 90 750 140"/>
+          <path id="line-home-boiler-day" class="flow-line" style="--line-color: #ea580c" d="M 500 365 Q 160 420 160 445"/>
+          <path id="line-home-wb-day" class="flow-line" style="--line-color: #06b6d4" d="M 500 365 Q 330 420 330 445"/>
+          <path id="line-home-clima-day" class="flow-line" style="--line-color: #0ea5e9" d="M 500 365 L 500 445"/>
+          <path id="line-home-lav-day" class="flow-line" style="--line-color: #7c3aed" d="M 500 365 Q 670 420 670 445"/>
+          <path id="line-home-cuc-day" class="flow-line" style="--line-color: #e11d48" d="M 500 365 Q 840 420 840 445"/>
+        </svg>
+        <svg class="flow-svg mobile-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+          <path id="m-line-solar-home-day" class="flow-line" style="--line-color: #f59e0b" d="M 500 150 L 500 460"/>
+          <path id="m-line-grid-home-day" class="flow-line" style="--line-color: #1e40af" d="M 200 280 Q 500 280 500 460"/>
+          <path id="m-line-battery-home-day" class="flow-line" style="--line-color: #15803d" d="M 800 280 Q 500 280 500 460"/>
+          <path id="m-line-solar-grid-day" class="flow-line" style="--line-color: #f59e0b" d="M 450 150 Q 200 150 200 280"/>
+          <path id="m-line-solar-battery-day" class="flow-line" style="--line-color: #f59e0b" d="M 550 150 Q 800 150 800 280"/>
+          <path id="m-line-home-wb-day" class="flow-line" style="--line-color: #06b6d4" d="M 500 460 Q 200 460 200 680"/>
+          <path id="m-line-home-clima-day" class="flow-line" style="--line-color: #0ea5e9" d="M 500 460 L 500 680"/>
+          <path id="m-line-home-cuc-day" class="flow-line" style="--line-color: #e11d48" d="M 500 460 Q 800 460 800 680"/>
+          <path id="m-line-home-boiler-day" class="flow-line" style="--line-color: #ea580c" d="M 500 460 Q 350 460 350 840"/>
+          <path id="m-line-home-lav-day" class="flow-line" style="--line-color: #7c3aed" d="M 500 460 Q 650 460 650 840"/>
+        </svg>
+
+        <div class="node n-main" id="n-solar-day" style="left:50%; top:15%; --n-color:#f59e0b; --n-rgb: 245,158,11;"><div class="node-label">Solare</div><div class="node-icon">☀️</div><span id="v-solar-day">—</span></div>
+        <div class="node n-main" id="n-grid-day" style="left:25%; top:33%; --n-color:#1e40af; --n-rgb: 30,64,175;"><div class="node-label">Rete</div><div class="node-icon">⚡</div><span id="v-grid-day" class="dual-val">—</span></div>
+        <div class="node n-main" id="n-battery-day" style="left:75%; top:33%; --n-color:#15803d; --n-rgb: 21, 128, 61;"><div class="node-label">Batteria</div><div class="node-icon">🔋</div><span id="v-battery-day" class="dual-val">—</span></div>
+        <div class="node n-home" id="n-home-day" style="left:50%; top:50%; --n-color:var(--text); --n-rgb: 10,14,23;"><div class="node-label">Casa</div><div class="node-icon">🏠</div><span id="v-home-day">—</span></div>
+        
+        <div class="node n-load" id="n-boiler-day" style="left:16%; top:83%; --n-color:#ea580c; --n-rgb: 234,88,12;"><div class="node-label">Boiler</div><div class="node-icon">♨️</div><span id="v-boiler-day">—</span></div>
+        <div class="node n-load" id="n-wb-day" style="left:33%; top:83%; --n-color:#06b6d4; --n-rgb: 6,182,212;"><div class="node-label">Wallbox</div><div class="node-icon">🚗</div><span id="v-wb-day">—</span></div>
+        <div class="node n-load hist-clickable" id="n-clima-day" style="left:50%; top:83%; --n-color:#0ea5e9; --n-rgb: 14,165,233;" onclick="apriStorico(event, 'dm.energy_condizionatori_oggi', 'Clima Oggi')"><div class="node-label">Clima</div><div class="node-icon">❄️</div><span id="v-clima-day">—</span></div>
+        <div class="node n-load hist-clickable" id="n-lav-day" style="left:67%; top:83%; --n-color:#7c3aed; --n-rgb: 124,58,237;" onclick="apriSubLoads('lavanderia_day')"><div class="node-label">Lavanderia</div><div class="node-icon">🧺</div><span id="v-lav-day">—</span></div>
+        <div class="node n-load hist-clickable" id="n-cuc-day" style="left:84%; top:83%; --n-color:#e11d48; --n-rgb: 225,29,72;" onclick="apriSubLoads('cucina_day')"><div class="node-label">Cucina</div><div class="node-icon">🍳</div><span id="v-cuc-day">—</span></div>
+      </div>
+    </div>
+
+    <div id="view-month" class="flow-view">
+      <div class="flow-stage">
+        <svg class="flow-svg desktop-svg" viewBox="0 0 1000 600" preserveAspectRatio="none">
+          <path id="line-solar-home-month" class="flow-line" style="--line-color: #f59e0b" d="M 500 147 L 500 235"/>
+          <path id="line-grid-home-month" class="flow-line" style="--line-color: #1e40af" d="M 307 198 Q 500 198 500 235"/>
+          <path id="line-battery-home-month" class="flow-line" style="--line-color: #15803d" d="M 693 198 Q 500 198 500 235"/>
+          <path id="line-solar-grid-month" class="flow-line" style="--line-color: #f59e0b" d="M 442 90 Q 250 90 250 140"/>
+          <path id="line-solar-battery-month" class="flow-line" style="--line-color: #f59e0b" d="M 558 90 Q 750 90 750 140"/>
+          <path id="line-home-boiler-month" class="flow-line" style="--line-color: #ea580c" d="M 500 365 Q 160 420 160 445"/>
+          <path id="line-home-wb-month" class="flow-line" style="--line-color: #06b6d4" d="M 500 365 Q 330 420 330 445"/>
+          <path id="line-home-clima-month" class="flow-line" style="--line-color: #0ea5e9" d="M 500 365 L 500 445"/>
+          <path id="line-home-lav-month" class="flow-line" style="--line-color: #7c3aed" d="M 500 365 Q 670 420 670 445"/>
+          <path id="line-home-cuc-month" class="flow-line" style="--line-color: #e11d48" d="M 500 365 Q 840 420 840 445"/>
+        </svg>
+        <svg class="flow-svg mobile-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+          <path id="m-line-solar-home-month" class="flow-line" style="--line-color: #f59e0b" d="M 500 150 L 500 460"/>
+          <path id="m-line-grid-home-month" class="flow-line" style="--line-color: #1e40af" d="M 200 280 Q 500 280 500 460"/>
+          <path id="m-line-battery-home-month" class="flow-line" style="--line-color: #15803d" d="M 800 280 Q 500 280 500 460"/>
+          <path id="m-line-solar-grid-month" class="flow-line" style="--line-color: #f59e0b" d="M 450 150 Q 200 150 200 280"/>
+          <path id="m-line-solar-battery-month" class="flow-line" style="--line-color: #f59e0b" d="M 550 150 Q 800 150 800 280"/>
+          <path id="m-line-home-wb-month" class="flow-line" style="--line-color: #06b6d4" d="M 500 460 Q 200 460 200 680"/>
+          <path id="m-line-home-clima-month" class="flow-line" style="--line-color: #0ea5e9" d="M 500 460 L 500 680"/>
+          <path id="m-line-home-cuc-month" class="flow-line" style="--line-color: #e11d48" d="M 500 460 Q 800 460 800 680"/>
+          <path id="m-line-home-boiler-month" class="flow-line" style="--line-color: #ea580c" d="M 500 460 Q 350 460 350 840"/>
+          <path id="m-line-home-lav-month" class="flow-line" style="--line-color: #7c3aed" d="M 500 460 Q 650 460 650 840"/>
+        </svg>
+
+        <div class="node n-main" id="n-solar-month" style="left:50%; top:15%; --n-color:#f59e0b; --n-rgb: 245,158,11;"><div class="node-label">Solare</div><div class="node-icon">☀️</div><span id="v-solar-month">—</span></div>
+        <div class="node n-main" id="n-grid-month" style="left:25%; top:33%; --n-color:#1e40af; --n-rgb: 30,64,175;"><div class="node-label">Rete</div><div class="node-icon">⚡</div><span id="v-grid-month" class="dual-val">—</span></div>
+        <div class="node n-main" id="n-battery-month" style="left:75%; top:33%; --n-color:#15803d; --n-rgb: 21, 128, 61;"><div class="node-label">Batteria</div><div class="node-icon">🔋</div><span id="v-battery-month" class="dual-val">—</span></div>
+        <div class="node n-home" id="n-home-month" style="left:50%; top:50%; --n-color:var(--text); --n-rgb: 10,14,23;"><div class="node-label">Casa</div><div class="node-icon">🏠</div><span id="v-home-month">—</span></div>
+        
+        <div class="node n-load" id="n-boiler-month" style="left:16%; top:83%; --n-color:#ea580c; --n-rgb: 234,88,12;"><div class="node-label">Boiler</div><div class="node-icon">♨️</div><span id="v-boiler-month">—</span></div>
+        <div class="node n-load" id="n-wb-month" style="left:33%; top:83%; --n-color:#06b6d4; --n-rgb: 6,182,212;"><div class="node-label">Wallbox</div><div class="node-icon">🚗</div><span id="v-wb-month">—</span></div>
+        <div class="node n-load hist-clickable" id="n-clima-month" style="left:50%; top:83%; --n-color:#0ea5e9; --n-rgb: 14,165,233;" onclick="apriStorico(event, 'dm.energy_condizionatori_mese', 'Clima Mese')"><div class="node-label">Clima</div><div class="node-icon">❄️</div><span id="v-clima-month">—</span></div>
+        <div class="node n-load hist-clickable" id="n-lav-month" style="left:67%; top:83%; --n-color:#7c3aed; --n-rgb: 124,58,237;" onclick="apriSubLoads('lavanderia_month')"><div class="node-label">Lavanderia</div><div class="node-icon">🧺</div><span id="v-lav-month">—</span></div>
+        <div class="node n-load hist-clickable" id="n-cuc-month" style="left:84%; top:83%; --n-color:#e11d48; --n-rgb: 225,29,72;" onclick="apriSubLoads('cucina_month')"><div class="node-label">Cucina</div><div class="node-icon">🍳</div><span id="v-cuc-month">—</span></div>
+      </div>
+    </div>
+
+    <!-- ════════════════ VIEW: TEMPERATURE & RAFFREDDAMENTO ════════════════ -->
+    <div id="view-temp" class="flow-view">
+      <div class="tmp-header">
+        <div class="tmp-header-left">
+          <div class="tmp-header-icon">🌡️</div>
+          <div>
+            <h2 class="tmp-header-title">Temperature & Raffreddamento</h2>
+            <div class="tmp-header-sub">Monitoraggio inverter, batteria e ventola</div>
+          </div>
+        </div>
+        <div class="tmp-status-pill" id="tmp-status-pill">
+          <span class="tmp-status-dot"></span>
+          <span id="tmp-status-text">Sistema OK</span>
+        </div>
+      </div>
+
+      <!-- Card delle 3 temperature -->
+      <div class="tmp-grid">
+        <!-- INVERTER AC -->
+        <div class="tmp-card" id="tmp-card-ac" onclick="apriStorico(event, 'dm.energy_temperatura_ac_inverter', 'Temperatura Inverter AC')">
+          <div class="tmp-card-icon">🔥</div>
+          <div class="tmp-card-label">Inverter AC</div>
+          <div class="tmp-gauge">
+            <svg class="tmp-gauge-svg" viewBox="0 0 100 60">
+              <path class="tmp-gauge-bg"   d="M 10 55 A 40 40 0 0 1 90 55" />
+              <path class="tmp-gauge-fill" id="tmp-gauge-fill-ac" d="M 10 55 A 40 40 0 0 1 90 55" />
+            </svg>
+            <div class="tmp-gauge-value">
+              <span class="tmp-value" id="tmp-val-ac">—</span><span class="tmp-unit">°C</span>
+            </div>
+          </div>
+          <div class="tmp-card-status" id="tmp-status-ac">—</div>
+        </div>
+
+        <!-- INVERTER DC -->
+        <div class="tmp-card" id="tmp-card-dc" onclick="apriStorico(event, 'dm.energy_temperatura_dc_inverter', 'Temperatura Inverter DC')">
+          <div class="tmp-card-icon">⚡</div>
+          <div class="tmp-card-label">Inverter DC</div>
+          <div class="tmp-gauge">
+            <svg class="tmp-gauge-svg" viewBox="0 0 100 60">
+              <path class="tmp-gauge-bg"   d="M 10 55 A 40 40 0 0 1 90 55" />
+              <path class="tmp-gauge-fill" id="tmp-gauge-fill-dc" d="M 10 55 A 40 40 0 0 1 90 55" />
+            </svg>
+            <div class="tmp-gauge-value">
+              <span class="tmp-value" id="tmp-val-dc">—</span><span class="tmp-unit">°C</span>
+            </div>
+          </div>
+          <div class="tmp-card-status" id="tmp-status-dc">—</div>
+        </div>
+
+        <!-- BATTERIA -->
+        <div class="tmp-card" id="tmp-card-bat" onclick="apriStorico(event, 'dm.energy_temperatura_batteria', 'Temperatura Batteria')">
+          <div class="tmp-card-icon">🔋</div>
+          <div class="tmp-card-label">Batteria</div>
+          <div class="tmp-gauge">
+            <svg class="tmp-gauge-svg" viewBox="0 0 100 60">
+              <path class="tmp-gauge-bg"   d="M 10 55 A 40 40 0 0 1 90 55" />
+              <path class="tmp-gauge-fill" id="tmp-gauge-fill-bat" d="M 10 55 A 40 40 0 0 1 90 55" />
+            </svg>
+            <div class="tmp-gauge-value">
+              <span class="tmp-value" id="tmp-val-bat">—</span><span class="tmp-unit">°C</span>
+            </div>
+          </div>
+          <div class="tmp-card-status" id="tmp-status-bat">—</div>
+        </div>
+      </div>
+
+      <!-- Card della VENTOLA -->
+      <div class="fan-card" id="fan-card" onclick="toggleVentola()">
+        <div class="fan-icon-wrap">
+          <div class="fan-icon-ring" id="fan-icon-ring"></div>
+          <div class="fan-icon" id="fan-icon">🌀</div>
+        </div>
+        <div class="fan-info">
+          <div class="fan-label">Ventola Superiore Inverter</div>
+          <div class="fan-status-row">
+            <span class="fan-status-badge" id="fan-status-badge">
+              <span class="fan-status-dot" id="fan-status-dot"></span>
+              <span id="fan-status-txt">Spenta</span>
+            </span>
+            <span class="fan-power-badge">
+              <span id="fan-power-val">0</span> <small>W</small>
+            </span>
+          </div>
+        </div>
+        <div class="fan-toggle" id="fan-toggle"></div>
+      </div>
+
+      <!-- Card info raffreddamento -->
+      <div class="tmp-info-card">
+        <div class="tmp-info-icon">💡</div>
+        <div class="tmp-info-text">
+          <strong>Tocca un sensore</strong> per vedere il grafico storico.<br>
+          <strong>Tocca la ventola</strong> per accenderla o spegnerla manualmente.
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+  <section class="page" id="page-ev">
+  <div style="max-width:1000px;margin:0 auto;" id="ev-car-picker" style-note="" >
+    <select id="ev-car-sel" class="ed-input" style="width:100%; margin:0 0 8px;" onchange="cdEvCarSel(this)"></select>
+  </div>
+  <div style="max-width:1000px;margin:0 auto;">
+
+    <!-- ── HERO: Auto + Batteria ── -->
+    <div class="lm-hero" id="lm-hero-card">
+      <!-- Foto sfondo - cambia tra idle e plugged -->
+      <img id="ev-mod-car-img" class="lm-hero-bg"
+           src=""
+           onerror="this.onerror=null; this.dataset.evFailed='1'; this.src=''; this.style.display='none';"
+           alt=""
+           style="transition:opacity 0.4s ease;">
+      <div class="lm-hero-top">
+        <div class="lm-brand">
+          <div class="lm-brand-name">La mia auto</div>
+          <div class="lm-brand-sub">EV Smart</div>
+        </div>
+        <div class="lm-charge-badge" id="lm-charge-badge" style="position:static;transform:none;margin-left:auto;">
+          <span class="lm-charge-pulse" id="lm-dot"></span>
+          <span id="lm-stato-txt">—</span>
+        </div>
+      </div>
+
+      <!-- Canvas particelle ricarica (sopra tutto) -->
+      <canvas id="lm-charge-canvas" style="display:none!important;position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;opacity:0;transition:opacity 0.5s;"></canvas>
+
+
+      
+
+      <div class="lm-batt-section">
+        <div class="lm-batt-header">
+          <span class="lm-batt-lbl">Batteria</span>
+          <span class="lm-batt-soc v-ev-soc-txt">—<small>%</small></span>
+        </div>
+        <div class="lm-batt-track">
+          <div class="lm-batt-fill" id="ev-mod-batt-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── KPI principali: Autonomia · Potenza · Stato ── -->
+    <div class="lm-kpi-row">
+      <div class="lm-kpi-card" style="--kc-rgb:16,185,129;" onclick="apriStorico(event,'dm.ev_autonomia','Autonomia')">
+        <span class="lm-kpi-icon">🧭</span>
+        <span class="lm-kpi-val v-ev-range">—</span>
+        <span class="lm-kpi-lbl">Autonomia</span>
+      </div>
+      <div class="lm-kpi-card" style="--kc-rgb:6,182,212;" onclick="apriStorico(event,'dm.ev_potenza_wallbox','Potenza Wallbox')">
+        <span class="lm-kpi-icon">⚡</span>
+        <span class="lm-kpi-val v-ev-pow">—</span>
+        <span class="lm-kpi-lbl">Potenza WB</span>
+      </div>
+      <div class="lm-kpi-card" style="--kc-rgb:245,158,11;" onclick="apriStorico(event,'dm.ev_energia_sessione','Energia Sessione')">
+        <span class="lm-kpi-icon">📈</span>
+        <span class="lm-kpi-val v-ev-energy-all">—</span>
+        <span class="lm-kpi-lbl">Sessione</span>
+      </div>
+    </div>
+
+    <!-- ── Sessione Ricarica ── -->
+    <div class="lm-session-card">
+      <div class="lm-session-title">⚡ Sessione Ricarica</div>
+      <div class="lm-session-grid">
+        <div class="lm-sess-kpi">
+          <div class="lm-sess-kpi-val v-ev-energy-all">—</div>
+          <div class="lm-sess-kpi-lbl">kWh Caricati</div>
+        </div>
+        <div class="lm-sess-kpi">
+          <div class="lm-sess-kpi-val v-ev-remain">—</div>
+          <div class="lm-sess-kpi-lbl">Tempo Stimato</div>
+        </div>
+      </div>
+      <div class="lm-solar-row">
+        <span class="lm-solar-lbl">☀️ Solare</span>
+        <div class="lm-solar-track">
+          <div class="lm-solar-fill v-ev-solar-fill" style="width:0%"></div>
+        </div>
+        <span class="lm-solar-pct v-ev-solar-mix">0%</span>
+      </div>
+    </div>
+
+    <!-- ── Stats dettaglio ── -->
+    <div class="lm-stats-grid">
+      <div class="lm-stat-card hist-clickable" onclick="apriStorico(event,'dm.ev_tensione_wallbox','Tensione Wallbox')">
+        <div class="lm-stat-icon">🔌</div>
+        <div class="lm-stat-info"><span class="lm-stat-lbl">Tensione WB</span><span class="lm-stat-val v-ev-volt">—</span></div>
+      </div>
+      <div class="lm-stat-card hist-clickable" onclick="apriStorico(event,'dm.ev_km_dall_ultima_ricarica','Km da Ultima Ricarica')">
+        <div class="lm-stat-icon">🔄</div>
+        <div class="lm-stat-info"><span class="lm-stat-lbl">Da Ultima Ric.</span><span class="lm-stat-val v-ev-km-ric">—</span></div>
+      </div>
+      <div class="lm-stat-card hist-clickable" onclick="apriStorico(event,'dm.ev_odometro','Odometro')">
+        <div class="lm-stat-icon">🛣️</div>
+        <div class="lm-stat-info"><span class="lm-stat-lbl">Odometro</span><span class="lm-stat-val v-ev-odo">—</span></div>
+      </div>
+      <div class="lm-stat-card hist-clickable" onclick="apriStorico(event,'dm.ev_prelievo_ac_totale_auto','Prelievo AC')">
+        <div class="lm-stat-icon">🔋</div>
+        <div class="lm-stat-info"><span class="lm-stat-lbl">Prelievo AC Tot.</span><span class="lm-stat-val v-ev-ac-tot">—</span></div>
+      </div>
+      <div class="lm-stat-card hist-clickable" onclick="apriStorico(event,'dm.ev_temperatura_wallbox','Temp. Wallbox')">
+        <div class="lm-stat-icon">🌡️</div>
+        <div class="lm-stat-info"><span class="lm-stat-lbl">Temp. Wallbox</span><span class="lm-stat-val v-ev-temp-wb">—</span></div>
+      </div>
+      <div class="lm-stat-card">
+        <div class="lm-stat-icon">🎯</div>
+        <div class="lm-stat-info"><span class="lm-stat-lbl">Autonomia al Target</span><span class="lm-stat-val v-auto-limite">—</span></div>
+      </div>
+    </div>
+
+    <!-- ── Target SoC ── -->
+    <div class="lm-target-card">
+      <span class="lm-target-icon">🎯</span>
+      <div class="lm-target-info">
+        <div class="lm-target-lbl">Target Ricarica (SoC)</div>
+        <div class="lm-target-val v-auto-limite">—</div>
+      </div>
+      <select id="sel-target-soc" class="lm-target-select" onchange="changeSelect('dm.ev_target_soc', this.value)"></select>
+    </div>
+
+    <!-- ── Modalità EVCC ── -->
+    <div class="lm-evcc-card">
+      <div class="lm-evcc-title">⚡ Console Ricarica EVCC</div>
+      <div class="lm-evcc-grid">
+        <div class="lm-evcc-btn evcc-mode-btn" id="m-btn-off" onclick="setEVMode('off')"
+             style="--btn-col:#e11d48;--btn-bg:#fff1f2;">
+          <span class="ev-ic">🛑</span><span class="ev-lbl">Spento</span>
+        </div>
+        <div class="lm-evcc-btn evcc-mode-btn" id="m-btn-pv" onclick="setEVMode('pv')"
+             style="--btn-col:#059669;--btn-bg:#f0fdf4;">
+          <span class="ev-ic">☀️</span><span class="ev-lbl">Solar</span>
+        </div>
+        <div class="lm-evcc-btn evcc-mode-btn" id="m-btn-minpv" onclick="setEVMode('minpv')"
+             style="--btn-col:#d97706;--btn-bg:#fffbeb;">
+          <span class="ev-ic">⛅</span><span class="ev-lbl">Min+Sol</span>
+        </div>
+        <div class="lm-evcc-btn evcc-mode-btn" id="m-btn-now" onclick="setEVMode('now')"
+             style="--btn-col:#0284c7;--btn-bg:#f0f9ff;">
+          <span class="ev-ic">🚀</span><span class="ev-lbl">Fast</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+  <section class="page" id="page-boiler">
+    <div class="boiler-dashboard">
+      <div class="boiler-header">
+        <h2 class="boiler-title" style="color: #ea580c;">Impianto Solare Termico</h2>
+      </div>
+
+      <div class="synoptic-stage">
+        <div class="syn-safety-alert" id="syn-safety-icon">⚠️ SAFETY LIMIT</div>
+        
+        <svg class="syn-svg" viewBox="0 0 1000 600" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="comet-hot-waw-elite" x1="100%" y1="0%" x2="0%" y2="0%"><stop offset="0%" stop-color="#e11d48" stop-opacity="0" /><stop offset="100%" stop-color="#e11d48" stop-opacity="1" /></linearGradient>
+            <linearGradient id="comet-cold-waw-elite" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#1e40af" stop-opacity="0" /><stop offset="100%" stop-color="#1e40af" stop-opacity="1" /></linearGradient>
+            <linearGradient id="comet-purple-waw-elite" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#7c3aed" stop-opacity="0" /><stop offset="100%" stop-color="#7c3aed" stop-opacity="1" /></linearGradient>
+          </defs>
+          <path class="syn-pipe-bg" d="M 700 430 L 700 490 Q 700 510 680 510 L 270 510 Q 250 510 250 490 L 250 390" />
+          <path class="syn-pipe-inner" d="M 700 430 L 700 490 Q 700 510 680 510 L 270 510 Q 250 510 250 490 L 250 390" />
+          <path id="flow-sol-cold" class="syn-flow" stroke="url(#comet-cold-waw-elite)" d="M 700 430 L 700 490 Q 700 510 680 510 L 270 510 Q 250 510 250 490 L 250 390" />
+          <path class="syn-pipe-bg" d="M 250 210 L 250 150 Q 250 130 270 130 L 680 130 Q 700 130 700 150 L 700 170" />
+          <path class="syn-pipe-inner" d="M 250 210 L 250 150 Q 250 130 270 130 L 680 130 Q 700 130 700 150 L 700 170" />
+          <path id="flow-sol-hot" class="syn-flow" stroke="url(#comet-hot-waw-elite)" d="M 250 210 L 250 150 Q 250 130 270 130 L 680 130 Q 700 130 700 150 L 700 170" />
+          <path class="syn-pipe-bg" d="M 770 250 L 850 250 Q 880 250 880 300 Q 880 350 850 350 L 770 350" />
+          <path class="syn-pipe-inner" d="M 770 250 L 850 250 Q 880 250 880 300 Q 880 350 850 350 L 770 350" />
+          <path id="flow-ricircolo" class="syn-flow" stroke="url(#comet-purple-waw-elite)" d="M 770 250 L 850 250 Q 880 250 880 300 Q 880 350 850 350 L 770 350" />
+        </svg>
+
+        <div class="syn-node-boiler" style="left: 25%; top: 50%;">
+          <div class="syn-solar-panel" onclick="toggle('dm.boiler_pompa_solare')">
+            <div class="syn-solar-grid"></div>
+            <div class="syn-solar-glass"></div>
+            <div class="syn-solar-content">
+              <div class="sun-icon" id="syn-sun">☀️</div>
+              <div class="syn-lbl">Pannello Solare</div>
+              <div class="syn-val hist-clickable" id="syn-v-pannello" style="color:#f59e0b;" onclick="apriStorico(event, 'dm.boiler_sonda_temperatura_1', 'Temperatura Pannello')">--</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="syn-node-boiler" style="left: 70%; top: 50%;">
+          <div class="sv-wrap" id="syn-faucet-wrap">
+            <div class="sv-pipe-h"></div>
+            <div class="sv-body">
+              <div class="sv-head"><div class="sv-lever"></div></div>
+              <div class="sv-pipe-v"></div>
+              <div class="sv-nozzle"></div>
+              <div class="sv-flow"></div>
+              <div class="sv-drop"></div>
+            </div>
+          </div>
+          <div class="syn-tank">
+            <div class="tank-glass"></div>
+            <div class="tank-water"></div>
+            <div class="tank-probes">
+              <div class="probe hist-clickable" onclick="apriStorico(event, 'dm.boiler_sonda_temperatura_3', 'Temp. Boiler Alto')">
+                <span class="probe-val" id="syn-v-balto">--</span>
+              </div>
+              <div class="probe hist-clickable" onclick="apriStorico(event, 'dm.boiler_sonda_temperatura_2', 'Temp. Boiler Basso')">
+                <span class="probe-val" id="syn-v-bbasso">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="syn-pump" id="syn-p-solare" style="left: 50%; top: 85%;" onclick="toggle('dm.boiler_pompa_solare')">
+        </div>
+        <div class="syn-valve" id="syn-v-chiave" style="left: 50%; top: 21.5%;" onclick="toggle('valve.chiave_solare_termico')">
+          <div class="icon valve-indicator" id="valve-indicator">
+            <svg class="valve-svg" viewBox="0 0 36 36" width="30" height="30" xmlns="http://www.w3.org/2000/svg">
+              <line x1="0" y1="18" x2="36" y2="18" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+              <g class="valve-closed-shape">
+                <polygon points="18,18 8,8 8,28" fill="#ef4444" opacity="0.9"/>
+                <polygon points="18,18 28,8 28,28" fill="#ef4444" opacity="0.9"/>
+              </g>
+              <line class="valve-open-shape" x1="18" y1="6" x2="18" y2="30"
+                    stroke="#10b981" stroke-width="4" stroke-linecap="round"/>
+              <circle cx="18" cy="18" r="3" fill="#64748b"/>
+            </svg>
+          </div>
+          <span id="txt-chiave" style="display:none">CHIUSA</span>
+        </div>
+        <div class="syn-pump" id="syn-p-ricircolo" style="left: 88%; top: 50%;" onclick="toggle('dm.core_051')">
+        </div>
+      </div>
+      
+      <div class="boiler-stats-row">
+         <div class="b-stat-card hist-clickable" onclick="apriStorico(event, 'dm.boiler_delta_temperatura', 'Delta Termico')">
+            <div class="lbl" style="color:#059669;">ΔT Solare</div>
+            <div class="val" id="syn-v-delta">--</div>
+         </div>
+         <div class="b-stat-card hist-clickable" onclick="apriStorico(event, 'dm.boiler_pressione_acqua', 'Pressione Impianto')">
+            <div class="lbl" style="color:#0284c7;">Pressione</div>
+            <div class="val" id="syn-v-press">--</div>
+         </div>
+         <div class="b-stat-card hist-clickable" onclick="apriStorico(event, 'dm.boiler_potenza_resistenza_boiler', 'Potenza Elettrica')">
+            <div class="lbl" style="color:#ea580c;">Potenza Boiler</div>
+            <div class="val" id="syn-v-power">--</div>
+         </div>
+      </div>
+
+      <div class="b-controls-grid">
+        <div class="b-btn" id="b-c-pompasol" onclick="toggle('dm.boiler_pompa_solare')" style="--c-rgb: 234,88,12;"><div class="icon"><span class="spin-active">🔄</span></div><div class="state">OFF</div></div>
+        <div class="b-btn" id="b-c-ricircolo" onclick="toggle('dm.core_051')" style="--c-rgb: 124,58,237;"><div class="icon"><span class="spin-active">🔁</span></div><div class="state">OFF</div></div>
+        <div class="b-btn" id="b-c-centralina" onclick="toggle('dm.boiler_centralina_solare_termico')" style="--c-rgb: 245,158,11;"><div class="icon">⚙️</div><div class="lbl">Centralina</div><div class="state">OFF</div></div>
+        <div class="b-btn" id="b-c-solare" onclick="toggle('dm.boiler_interruttore_solare_termico')" style="--c-rgb: 245,158,11;"><div class="icon">♨️</div><div class="lbl">Ctrl Solare</div><div class="state">OFF</div></div>
+        <div class="b-btn" id="b-c-valvola" onclick="toggle('valve.chiave_solare_termico')" style="--c-rgb: 6,182,212;"><div class="icon">🎛️</div><div class="lbl">Valvola</div><div class="state">CHIUSA</div></div>
+        <div class="b-btn" id="b-c-boiler" onclick="toggle('dm.boiler_interruttore_boiler')" style="--c-rgb: 30,64,175;"><div class="icon">🌊</div><div class="lbl">Boiler</div><div class="state">OFF</div></div>
+        <div class="b-btn" id="b-c-pdc" onclick="toggle('dm.core_050')" style="--c-rgb: 124,58,237;"><div class="icon">🌬️</div><div class="lbl">PdC</div><div class="state">OFF</div></div>
+        <div class="b-btn" id="b-c-boost" onclick="toggle('dm.core_048')" style="--c-rgb: 236,72,153;"><div class="icon">🚀</div><div class="lbl">Boost</div><div class="state">OFF</div></div>
+        <div class="b-btn" id="b-c-sicurezza" onclick="toggle('dm.boiler_valvola_di_sicurezza')" style="--c-rgb: 225,29,72;"><div class="icon"><span class="blink-active">🔒</span></div><div class="lbl">V. Sicurezza</div><div class="state">CHIUSA</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="page-security">
+    <div class="security-dashboard">
+      <div class="sec-header">
+        <h2 class="sec-title" style="color: #be123c;">SISTEMA DI SICUREZZA ELITE</h2>
+      </div>
+
+      <!-- ═══════ NUOVO PANNELLO ANTIFURTO PREMIUM ═══════ -->
+      <div class="alarm-hero" id="alarm-stage">
+        <!-- Layer di sfondo animato con gradient dinamico -->
+        <div class="alarm-hero-bg"></div>
+        
+        <!-- Riga superiore: stato + timer -->
+        <div class="alarm-hero-top">
+          <div class="alarm-hero-icon-wrap">
+            <div class="alarm-hero-icon-ring"></div>
+            <div class="alarm-hero-icon" id="alarm-icon-new">🛡️</div>
+          </div>
+          <div class="alarm-hero-info">
+            <div class="alarm-hero-label">Stato Antifurto</div>
+            <div class="alarm-hero-status" id="alarm-state-text-new">CARICAMENTO</div>
+            <div class="alarm-hero-timer" id="alarm-state-timer"></div>
+          </div>
+          <div class="alarm-hero-status-dot" id="alarm-status-dot"></div>
+        </div>
+        
+        <!-- Riga pulsanti modalità (segmented control) -->
+        <div class="alarm-hero-controls">
+          <button class="alarm-mode-btn" data-mode="away" onclick="promptPinAndSet('alarm_arm_away')">
+            <div class="alarm-mode-icon">🏠</div>
+            <div class="alarm-mode-text">Fuori</div>
+          </button>
+          <button class="alarm-mode-btn" data-mode="night" onclick="promptPinAndSet('alarm_arm_night')">
+            <div class="alarm-mode-icon">🌙</div>
+            <div class="alarm-mode-text">Notte</div>
+          </button>
+          <button class="alarm-mode-btn" data-mode="disarm" onclick="promptPinAndSet('alarm_disarm')">
+            <div class="alarm-mode-icon">🔓</div>
+            <div class="alarm-mode-text">Sblocca</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="cctv-header-wrap">
+        <h3 class="cctv-header-title">LIVE STREAM TVCC</h3>
+        <div class="cctv-status-badge">TVCC ATTIVO</div>
+      </div>
+
+      <div class="cam-grid" id="cam-grid"><!-- v258: card camere generate da getCameras() --></div>
+    </div>
+  </section>
+
+  <section class="page" id="page-piscina">
+  <div style="max-width:1000px;margin:0 auto;" id="pool-wrap"></div>
+  </section>
+
+  <section class="page" id="page-irrigazione">
+  <div style="max-width:1000px;margin:0 auto;">
+    <div id="irr-head"></div>
+    <div id="irr-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;padding:0 4px 10px;"></div>
+  </div>
+  </section>
+
+  <section class="page" id="page-tapparelle">
+  <div style="max-width:1000px;margin:0 auto;">
+    <div id="tapp-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;padding:10px 4px;"></div>
+  </div>
+  </section>
+
+  <section class="page" id="page-server">
+  <div style="max-width:1000px;margin:0 auto;">
+    <div class="srv-hero">
+      <div class="srv-hero-top" ondblclick="toggleDebug()">
+        <div class="srv-hero-brand">
+          <div class="srv-hero-icon">🖥️</div>
+          <div><div class="srv-hero-title">MiniPC Server</div><div class="srv-hero-sub">Home Assistant · Sistema Core</div></div>
+        </div>
+        <div class="srv-hero-pill"><span class="srv-hero-dot"></span><span id="v-srv-net-status">ONLINE</span></div>
+      </div>
+      <div class="srv-hero-metrics">
+        <div class="srv-metric" style="--m-rgb: 6, 182, 212;" onclick="apriStorico(event,'dm.server_cpu','CPU')">
+          <div class="srv-metric-top"><span class="srv-metric-lbl">CPU</span><span class="srv-metric-icon">🎛️</span></div>
+          <div><span class="srv-metric-val" id="v-srv-cpu">—</span><span class="srv-metric-unit">%</span></div>
+          <div class="srv-metric-bar"><div class="srv-metric-fill" id="srv-fill-cpu" style="width:0%;background:#06b6d4;"></div></div>
+        </div>
+        <div class="srv-metric" style="--m-rgb: 124, 58, 237;" onclick="apriStorico(event,'dm.server_ram','RAM')">
+          <div class="srv-metric-top"><span class="srv-metric-lbl">RAM</span><span class="srv-metric-icon">💾</span></div>
+          <div><span class="srv-metric-val" id="v-srv-ram">—</span><span class="srv-metric-unit" id="u-srv-ram">%</span></div>
+          <div class="srv-metric-bar"><div class="srv-metric-fill" id="srv-fill-ram" style="width:0%;background:#7c3aed;"></div></div>
+        </div>
+        <div class="srv-metric" style="--m-rgb: 16, 185, 129;" onclick="apriStorico(event,'dm.server_disco','Disco')">
+          <div class="srv-metric-top"><span class="srv-metric-lbl">Disco</span><span class="srv-metric-icon">💽</span></div>
+          <div><span class="srv-metric-val" id="v-srv-disk">—</span><span class="srv-metric-unit">%</span></div>
+          <div class="srv-metric-bar"><div class="srv-metric-fill" id="srv-fill-disk" style="width:0%;background:#10b981;"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="srv-temp-card" onclick="apriStorico(event,'dm.server_temperatura_cpu','Temperatura CPU')">
+      <div class="srv-temp-ring">
+        <svg viewBox="0 0 90 90" width="90" height="90">
+          <circle cx="45" cy="45" r="36" fill="none" stroke="#f1f5f9" stroke-width="7"/>
+          <circle cx="45" cy="45" r="36" fill="none" stroke="#7c3aed" stroke-width="7" stroke-linecap="round" id="srv-temp-circle" stroke-dasharray="0 226" style="transition:stroke-dasharray 1s ease,stroke 0.5s ease;"/>
+        </svg>
+        <div class="srv-temp-ring-val">
+          <span class="srv-temp-num" id="v-srv-cputemp">—</span>
+          <span class="srv-temp-unit">°C</span>
+        </div>
+      </div>
+      <div class="srv-temp-info">
+        <div class="srv-temp-title">Temperatura CPU</div>
+        <div class="srv-temp-status" id="v-srv-temp-status">—</div>
+        <div class="srv-temp-sublbl">Package ID 0 · N100 MiniPC</div>
+      </div>
+    </div>
+    <div class="srv-tel-grid">
+      <div class="srv-tel-card" style="--tc-rgb:239,68,68;" onclick="apriStorico(event,'dm.server_potenza_raspberry_server','Potenza')">
+        <div class="srv-tel-top"><span class="srv-tel-lbl">Alimentazione</span><div class="srv-tel-icon">⚡</div></div>
+        <div class="srv-tel-val" id="v-srv-pwr">—</div>
+        <div class="srv-tel-sub">Consumo istantaneo</div>
+      </div>
+      <div class="srv-tel-card" style="--tc-rgb:99,102,241;" onclick="apriStorico(event,'dm.server_uptime_home_assistant','Uptime')">
+        <div class="srv-tel-top"><span class="srv-tel-lbl">Uptime</span><div class="srv-tel-icon">🕐</div></div>
+        <div class="srv-tel-val" id="v-srv-uptime">—</div>
+        <div class="srv-tel-sub" id="v-srv-uptime-sub">Dall'ultimo riavvio</div>
+      </div>
+      <div class="srv-tel-card" style="--tc-rgb:16,185,129;" onclick="apriStorico(event,'dm.server_speedtest_download','Download')">
+        <div class="srv-tel-top"><span class="srv-tel-lbl">Download</span><div class="srv-tel-icon">⬇️</div></div>
+        <div class="srv-tel-val" id="v-srv-dl">—</div>
+        <div class="srv-tel-sub">Speedtest downlink</div>
+      </div>
+      <div class="srv-tel-card" style="--tc-rgb:124,58,237;" onclick="apriStorico(event,'dm.server_speedtest_upload','Upload')">
+        <div class="srv-tel-top"><span class="srv-tel-lbl">Upload</span><div class="srv-tel-icon">⬆️</div></div>
+        <div class="srv-tel-val" id="v-srv-ul">—</div>
+        <div class="srv-tel-sub">Speedtest uplink</div>
+      </div>
+    </div>
+    <div class="srv-status-grid">
+      <div class="srv-status-card" onclick="apriSrvHistory('connettivita')">
+        <div class="srv-status-left"><span class="srv-status-lbl">Connettività</span><span class="srv-status-val" id="v-srv-net-text2">—</span></div>
+        <div class="srv-status-badge online" id="waw-net-badge"><div class="srv-status-indicator"></div><span id="v-srv-net-status2">ONLINE</span></div>
+      </div>
+      <div class="srv-status-card" onclick="apriSrvHistory('inverter')">
+        <div class="srv-status-left"><span class="srv-status-lbl">Inverter Fotovoltaico</span><span class="srv-status-val" id="v-srv-inv-text">—</span></div>
+        <div class="srv-status-badge" id="waw-inv-badge"><div class="srv-status-indicator"></div><span id="v-srv-inv-status">—</span></div>
+      </div>
+      <!-- v256: le card Editor Plancia e Configura Entità sono state spostate nella pagina Configurazione -->
+    </div>
+  </div>
+
+    <!-- Debug Sensori — visibile solo in modalità debug -->
+    <div id="debug-panel" style="display:none; margin-top:16px; background:#1e293b; border-radius:16px; padding:16px; font-family:monospace; font-size:11px; color:#e2e8f0; line-height:1.8;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+        <span style="font-weight:800; color:#7c3aed; font-size:13px;">🔍 DEBUG SENSORI</span>
+        <button onclick="document.getElementById('debug-panel').style.display='none'" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:16px;">✕</button>
+      </div>
+      <div id="debug-content">Caricamento...</div>
+    </div>
+</section>
+  <!-- ═══════════ PAGINA CONFIGURAZIONE (solo admin) ═══════════ -->
+  <section class="page" id="page-config">
+    <div class="cfg-hero">
+      <div class="cfg-hero-ico" style="background:none; box-shadow:none; width:auto; height:auto;">
+        <svg width="52" height="52" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+          <defs><linearGradient id="cdlgcfg" x1="0" y1="0" x2="48" y2="48"><stop offset="0" stop-color="#38bdf8"/><stop offset="1" stop-color="#0369a1"/></linearGradient></defs>
+          <rect x="2" y="2" width="44" height="44" rx="13" fill="url(#cdlgcfg)"/>
+          <path d="M13 24.5 L24 15 L35 24.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M15.8 23 V34 H32.2 V23" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M25 23.5 L20.5 30.8 H24 L23 35 L28.8 27.2 H24.9 Z" fill="#fde047"/>
+        </svg>
+      </div>
+      <div class="cfg-hero-txt">
+        <div class="cfg-hero-title">CONFIGURAZIONE</div>
+        <div class="cfg-hero-sub">Strumenti amministratore · <span id="cfg-ver"></span></div>
+      </div>
+    </div>
+
+    <div class="cfg-grid">
+      
+
+      <!-- Configura Entità -->
+      <div class="cfg-card" id="srv-config-card" onclick="apriConfigEntita()">
+        <div class="cfg-card-ico" style="--cc-rgb: 124,58,237;">🧩</div>
+        <div class="cfg-card-txt">
+          <div class="cfg-card-nm">Configura Entità</div>
+          <div class="cfg-card-ds">Sostituzioni, carichi, avvisi, testi, sezioni ed esportazione HTML</div>
+        </div>
+        <div class="cfg-card-arrow">›</div>
+      </div>
+
+      <!-- Tema -->
+      <div class="cfg-card cfg-card-theme">
+        <div class="cfg-card-ico" style="--cc-rgb: 245,158,11;">🎨</div>
+        <div class="cfg-card-txt">
+          <div class="cfg-card-nm">Tema</div>
+          <div class="cfg-card-ds">Aspetto della dashboard su questo dispositivo</div>
+          <div class="theme-seg" id="theme-seg">
+            <button class="theme-opt" data-theme="light" onclick="setTheme('light')"><span class="theme-opt-ico">☀️</span><span>Chiaro</span></button>
+            <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')"><span class="theme-opt-ico">🌙</span><span>Scuro</span></button>
+            <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')"><span class="theme-opt-ico">📱</span><span>Auto</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="cfg-card cfg-card-theme">
+        <div class="cfg-card-ico" style="--cc-rgb: 14,165,233;">📌</div>
+        <div class="cfg-card-txt">
+          <div class="cfg-card-nm">Barra di navigazione</div>
+          <div class="cfg-card-ds">Sempre visibile o a scomparsa, su questo dispositivo</div>
+          <div class="theme-seg">
+            <button class="theme-opt" id="nav-opt-auto" onclick="wzSetNavMode('auto'); setTimeout(() => location.reload(), 150);"><span class="theme-opt-ico">👆</span> A scomparsa</button>
+            <button class="theme-opt" id="nav-opt-fixed" onclick="wzSetNavMode('fixed'); setTimeout(() => location.reload(), 150);"><span class="theme-opt-ico">📌</span> Fissa</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<section class="page" id="page-clima">
+    <button class="back-home-btn" onclick="document.querySelector('[data-tab=&quot;home&quot;]').click(); if(navigator.vibrate)navigator.vibrate(5);">
+      <span class="bh-icon">←</span><span>Home</span>
+    </button>
+    <div class="clima-dashboard">
+      <div class="sec-header" style="margin-bottom: 10px;">
+        <h2 class="sec-title" style="color: #0ea5e9; letter-spacing: 2px;">SISTEMA CLIMATICO</h2>
+      </div>
+
+      <!-- v254: Selettore Freddo/Caldo -->
+      <div class="clima-page-mode-switch">
+        <button class="clima-page-mode-btn active-freddo" id="clima-page-mode-freddo" onclick="setClimaPageMode('freddo')">
+          <span class="icon">❄️</span><span>Freddo</span>
+        </button>
+        <button class="clima-page-mode-btn" id="clima-page-mode-caldo" onclick="setClimaPageMode('caldo')">
+          <span class="icon">🔥</span><span>Caldo</span>
+        </button>
+      </div>
+
+      <!-- ZONA FREDDO: Condizionatori -->
+      <div class="clima-zone clima-zone-freddo show">
+      <div class="clima-premium-grid" id="clima-grid-freddo">
+        <!-- v260: card generate da getClimaUnits() -->
+      </div>
+      <!-- /clima-zone-freddo -->
+      </div>
+
+      <!-- ZONA CALDO: Termosifoni -->
+      <div class="clima-zone clima-zone-caldo">
+      <div class="clima-premium-grid" id="clima-grid-caldo">
+        <!-- v260: card generate da getClimaUnits() -->
+      </div>
+      <!-- /clima-zone-caldo -->
+      </div>
+    </div>
+  </section>
+<div class="modal-wrapper" id="weather-modal" onclick="closeModal(event, 'weather-modal')">
+  <div class="modal-card details-content" style="max-width: 480px;">
+    <div class="ev-waw-header">
+      <h3 class="ev-waw-title" id="weather-title">🌤️ PREVISIONI 7 GIORNI</h3>
+      <div class="ev-waw-close" onclick="forceClose('weather-modal')">✕ CHIUDI</div>
+    </div>
+    <div id="weather-forecast-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+  </div>
+</div>
+
+<div class="modal-wrapper" id="weather-hourly-modal" onclick="closeModal(event, 'weather-hourly-modal')" style="z-index: 10001;">
+  <div class="modal-card details-content" style="max-width: 480px; padding: 25px;">
+    <div class="ev-waw-header">
+      <h3 class="ev-waw-title" style="font-size: 20px;">⏳ ORARIE <span id="weather-hourly-date"></span></h3>
+      <div class="ev-waw-close" onclick="forceClose('weather-hourly-modal')">✕ CHIUDI</div>
+    </div>
+    <div id="weather-hourly-list" style="display:flex; flex-direction:column; gap:6px; max-height: 60vh; overflow-y:auto; padding-right: 5px;"></div>
+  </div>
+</div>
+
+<!-- v240: POPUP CLIMA RAPIDO — stile NSPanel (griglia bottoni quadrati, toggle 3-step) -->
+<!-- v241: aggiunto switch FREDDO/CALDO per gestire anche i termosifoni -->
+<div class="modal-wrapper" id="quick-clima-modal" onclick="closeModal(event, 'quick-clima-modal')">
+  <div class="modal-card details-content" style="max-width: 560px; padding: 25px;">
+    <div class="ev-waw-header">
+      <h3 class="ev-waw-title" id="quick-clima-title">❄️ CLIMA · FREDDO</h3>
+      <div class="ev-waw-close" onclick="forceClose('quick-clima-modal')">✕ CHIUDI</div>
+    </div>
+    <div class="ns-clima-mode-switch">
+      <button class="ns-clima-mode-btn active-freddo" id="ns-mode-freddo" onclick="setQuickClimaMode('freddo')">
+        <span class="ns-clima-mode-btn-icon">❄️</span>
+        <span>Freddo</span>
+      </button>
+      <button class="ns-clima-mode-btn" id="ns-mode-caldo" onclick="setQuickClimaMode('caldo')">
+        <span class="ns-clima-mode-btn-icon">🔥</span>
+        <span>Caldo</span>
+      </button>
+    </div>
+    <div class="ns-clima-grid" id="quick-clima-grid"></div>
+
+    <!-- v244: pannello stato termico (caldaia, termocamino, aspiratore) - solo modalità Caldo -->
+    <div class="ns-thermal-panel" id="ns-thermal-panel">
+      <div class="ns-thermal-row" id="ns-thermal-row-caldaia" style="--nt-rgb: 239, 68, 68;">
+        <span class="ns-thermal-icon">🔥</span>
+        <span class="ns-thermal-label">Caldaia</span>
+        <span class="ns-thermal-state off" id="ns-thermal-caldaia">
+          <span class="ns-thermal-dot"></span>
+          <span id="ns-thermal-caldaia-text">—</span>
+        </span>
+      </div>
+      <div class="ns-thermal-row" id="ns-thermal-row-termocamino" style="--nt-rgb: 234, 88, 12;">
+        <span class="ns-thermal-icon">🔄</span>
+        <span class="ns-thermal-label">Pompa termocamino</span>
+        <span class="ns-thermal-state off" id="ns-thermal-termocamino">
+          <span class="ns-thermal-dot"></span>
+          <span id="ns-thermal-termocamino-text">—</span>
+        </span>
+      </div>
+      <div class="ns-thermal-row is-clickable" id="ns-thermal-row-aspiratore" style="--nt-rgb: 14, 165, 233;" onclick="toggleAspiratoreCF()">
+        <span class="ns-thermal-icon">💨</span>
+        <span class="ns-thermal-label">Aspiratore canna fumaria</span>
+        <span class="ns-thermal-state off" id="ns-thermal-aspiratore-btn">
+          <span class="ns-thermal-dot"></span>
+          <span id="ns-thermal-aspiratore-text">OFF</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="ns-clima-hint" id="quick-clima-hint">Tocca per accendere · raffrescamento 26°C · ventola auto</div>
+  </div>
+</div>
+
+<!-- v240: POPUP ANTIFURTO RAPIDO — 3 bottoni (Totale/Notte/Sblocca) con PIN -->
+<div class="modal-wrapper" id="quick-alarm-modal" onclick="closeModal(event, 'quick-alarm-modal')">
+  <div class="modal-card details-content" style="max-width: 520px; padding: 25px;">
+    <div class="ev-waw-header">
+      <h3 class="ev-waw-title">🛡️ ANTIFURTO</h3>
+      <div class="ev-waw-close" onclick="forceClose('quick-alarm-modal')">✕ CHIUDI</div>
+    </div>
+    <div class="qa-alarm-status">
+      <span class="qa-alarm-status-dot" id="qa-alarm-dot"></span>
+      <span class="qa-alarm-status-label">Stato attuale</span>
+      <span class="qa-alarm-status-value" id="qa-alarm-state-text">—</span>
+    </div>
+    <div class="qa-alarm-grid" id="qa-alarm-grid">
+      <button class="qa-alarm-btn" data-mode="home" onclick="promptPinAndSet('alarm_arm_home')">
+        <span class="qa-alarm-btn-icon">🏡</span>
+        <span class="qa-alarm-btn-name">Casa</span>
+        <span class="qa-alarm-btn-sub">Solo perimetro</span>
+      </button>
+      <button class="qa-alarm-btn" data-mode="away" onclick="promptPinAndSet('alarm_arm_away')">
+        <span class="qa-alarm-btn-icon">🏠</span>
+        <span class="qa-alarm-btn-name">Totale</span>
+        <span class="qa-alarm-btn-sub">Tutta la casa</span>
+      </button>
+      <button class="qa-alarm-btn" data-mode="night" onclick="promptPinAndSet('alarm_arm_night')">
+        <span class="qa-alarm-btn-icon">🌙</span>
+        <span class="qa-alarm-btn-name">Notte</span>
+        <span class="qa-alarm-btn-sub">Perimetro</span>
+      </button>
+      <button class="qa-alarm-btn" data-mode="disarm" onclick="promptPinAndSet('alarm_disarm')">
+        <span class="qa-alarm-btn-icon">🔓</span>
+        <span class="qa-alarm-btn-name">Sblocca</span>
+        <span class="qa-alarm-btn-sub">Disinserisci</span>
+      </button>
+    </div>
+    <div class="ns-clima-hint" id="qa-alarm-pin-hint">Verrà richiesto il PIN per confermare l'operazione</div>
+  </div>
+</div>
+
+<div class="modal-wrapper" id="subloads-modal" onclick="closeModal(event, 'subloads-modal')">
+  <div class="modal-card details-content" style="max-width: 600px;">
+    <div class="ev-waw-header">
+      <h3 class="ev-waw-title" id="subloads-title">CARICHI</h3>
+      <div class="ev-waw-close" onclick="forceClose('subloads-modal')">✕ CHIUDI</div>
+    </div>
+    <div class="subloads-grid" id="subloads-list"></div>
+  </div>
+</div>
+
+<div class="modal-wrapper" id="lavatrice-modal" onclick="closeModal(event, 'lavatrice-modal')">
+  <div class="modal-card ev-dash-waw">
+    <div class="ev-waw-header">
+      <div class="ev-waw-title"><span class="icon" style="font-size: 26px; color: #0ea5e9;">🧺</span> LAVATRICE</div>
+      <div class="ev-waw-close" onclick="forceClose('lavatrice-modal')">✕ CHIUDI</div>
+    </div>
+
+    <div class="lav-dashboard-grid">
+        <div class="lav-area-img">
+           <img id="img-lavatrice" src="" style="max-width: 140px; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.15)); transition: 0.4s;" onerror="this.style.display='none'; this.parentElement.classList.add('img-fallback');">
+        </div>
+
+        <div class="lav-area-quick">
+            <h4 style="font-family: 'Inter', sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; font-size: 11px; color: var(--text-dim); margin-bottom: 12px;">Programmi Rapidi</h4>
+            <div class="lav-preset-grid">
+              <button class="lav-preset-btn" onclick="toggle('dm.lavatrice_script_programma_59')"><div class="icon-wrap">⏱️</div><div class="name">Rapido 59'</div></button>
+              <button class="lav-preset-btn" onclick="toggle('dm.lavatrice_script_programma_rapido_14')"><div class="icon-wrap">⚡</div><div class="name">Rapido 14'</div></button>
+              <button class="lav-preset-btn" onclick="toggle('dm.lavatrice_script_programma_30')"><div class="icon-wrap">⏲️</div><div class="name">Rapido 30'</div></button>
+              <button class="lav-preset-btn" onclick="toggle('dm.lavatrice_script_programma_misto_colorati')"><div class="icon-wrap">👕</div><div class="name">Colorati</div></button>
+            </div>
+            <div class="ev-actions-grid" style="margin-top: auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+               <div class="ev-act-btn" id="lav-btn-power" onclick="toggle('dm.lavatrice_presa_avvio_lavatrice')" style="--btn-col: #0ea5e9; --btn-bg: #e0f2fe;"><div class="icon" style="font-size: 22px;">🔌</div><div class="txt" id="lav-txt-power" style="font-size: 11px;">SPENTA</div></div>
+               <div class="ev-act-btn" id="lav-btn-play" onclick="toggle('dm.lavatrice_avvio_ciclo')" style="--btn-col: #0ea5e9; --btn-bg: #e0f2fe;"><div class="icon" style="font-size: 22px;">▶️</div><div class="txt" id="lav-txt-play" style="font-size: 11px;">PAUSA</div></div>
+            </div>
+        </div>
+
+        <div class="lav-area-mon">
+           <div class="lav-mon-card"><div class="lbl">FASE ATTUALE</div><div class="val" id="v-lav-fase" style="color: var(--accent);">—</div></div>
+           <div class="lav-mon-card"><div class="lbl">TEMPO RIMANENTE</div><div class="val" id="v-lav-tempo" style="color: var(--load);">—</div></div>
+           <div class="lav-mon-card hist-clickable" onclick="apriStorico(event, 'dm.core_037', 'Consumo Lavatrice')"><div class="lbl">ASSORBIMENTO</div><div class="val" id="v-lav-power-w" style="color: #f59e0b;">—</div></div>
+        </div>
+
+        <div class="lav-area-manual">
+            <h4 style="font-family: 'Inter', sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; font-size: 11px; color: var(--text-dim); margin-bottom: 2px;">Impostazioni Manuali</h4>
+            <div class="detail-row" style="padding: 12px 18px;">
+                <div style="display:flex; align-items:center; width: 100%; gap: 15px;">
+                    <div class="d-icon" style="font-size: 18px; width: 40px; height: 40px;">📋</div>
+                    <div class="d-info" style="flex: 1;"><div class="d-name" style="font-size: 13px;">Programma</div><select id="sel-lav-prog" class="ha-select" onchange="changeSelect('dm.lavatrice_programma', this.value)"></select></div>
+                </div>
+            </div>
+            <div class="detail-row" style="padding: 12px 18px;">
+                <div style="display:flex; align-items:center; width: 100%; gap: 15px;">
+                    <div class="d-icon" style="font-size: 18px; width: 40px; height: 40px;">🌡️</div>
+                    <div class="d-info" style="flex: 1;"><div class="d-name" style="font-size: 13px;">Temperatura</div><select id="sel-lav-temp" class="ha-select" onchange="changeSelect('dm.lavatrice_temperatura', this.value)"></select></div>
+                </div>
+            </div>
+            <div class="detail-row" style="padding: 12px 18px;">
+                <div style="display:flex; align-items:center; width: 100%; gap: 15px;">
+                    <div class="d-icon" style="font-size: 18px; width: 40px; height: 40px;">🌀</div>
+                    <div class="d-info" style="flex: 1;"><div class="d-name" style="font-size: 13px;">Centrifuga</div><select id="sel-lav-cent" class="ha-select" onchange="changeSelect('dm.lavatrice_centrifuga', this.value)"></select></div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-wrapper" id="ev-popup" onclick="closeModal(event, 'ev-popup')">
+  <div class="modal-card ev-popup-card">
+    
+    <!-- Header standard dashboard -->
+    <div class="ev-waw-header">
+      <div class="ev-popup-header-info">
+        <h3 class="ev-waw-title">La mia auto</h3>
+        <div class="ev-popup-sub">
+          <span class="ev-popup-sub-name">EV</span>
+          <span class="ev-popup-status" id="ev-popup-badge">⚪ SCOLLEGATA</span>
+        </div>
+      </div>
+      <div class="ev-waw-close ev-popup-close" onclick="forceClose('ev-popup')">✕ CHIUDI</div>
+    </div>
+
+    <!-- Foto auto compatta -->
+    <div class="ev-popup-img-row">
+      <img src="" id="ev-new-car-img" onerror="this.onerror=null;">
+    </div>
+
+    <!-- Hero card batteria -->
+    <div class="ev-popup-batt-card hist-clickable" onclick="apriStorico(event, 'dm.ev_batteria_auto', 'Livello Batteria EV')">
+      <div class="ev-popup-batt-top">
+        <div class="ev-popup-batt-icon">🔋</div>
+        <div class="ev-popup-batt-info">
+          <div class="ev-popup-batt-lbl">Livello batteria</div>
+          <div class="ev-popup-batt-val v-ev-soc-txt">0%</div>
+        </div>
+      </div>
+      <div class="ev-popup-batt-bar">
+        <div class="ev-popup-batt-fill" id="ev-mod-batt-fill-popup-svg" style="width:0%;background:#0ea5e9;"></div>
+      </div>
+    </div>
+
+    <!-- 3 stat cards in riga -->
+    <div class="ev-popup-stats">
+      <div class="ev-popup-stat hist-clickable" onclick="apriStorico(event, 'dm.ev_autonomia', 'Autonomia EV')" style="--m-rgb: 6, 182, 212;">
+        <div class="ev-popup-stat-icon">📈</div>
+        <div class="ev-popup-stat-lbl">Autonomia</div>
+        <div class="ev-popup-stat-val v-ev-range">—</div>
+      </div>
+      <div class="ev-popup-stat hist-clickable" onclick="apriStorico(event, 'dm.ev_potenza_wallbox', 'Potenza Wallbox')" style="--m-rgb: 16, 185, 129;">
+        <div class="ev-popup-stat-icon">⚡</div>
+        <div class="ev-popup-stat-lbl">Potenza</div>
+        <div class="ev-popup-stat-val v-ev-pow">—</div>
+      </div>
+      <div class="ev-popup-stat" style="--m-rgb: 124, 58, 237;">
+        <div class="ev-popup-stat-icon">📍</div>
+        <div class="ev-popup-stat-lbl">Aut. Prevista</div>
+        <div class="ev-popup-stat-val v-auto-limite">—</div>
+      </div>
+    </div>
+
+    <!-- Session info box -->
+    <div class="ev-popup-session">
+      <div class="ev-popup-session-row">
+        <span class="lbl"><span class="lbl-icon">⏱️</span> <span id="lbl-ev-remain-popup">Tempo al target</span></span>
+        <span class="val" id="v-ev-remain-popup">IN ATTESA</span>
+      </div>
+      <div class="ev-popup-session-row">
+        <span class="lbl"><span class="lbl-icon">☀️</span> Energia sessione</span>
+        <span class="val v-ev-energy-all">—</span>
+      </div>
+      <div class="ev-popup-session-row">
+        <span class="lbl"><span class="lbl-icon">🌞</span> Mix solare EVCC</span>
+        <span class="val v-ev-solar-mix">—</span>
+      </div>
+      <div class="ev-popup-session-bar">
+        <div class="ev-popup-session-fill" id="ev-mix-bar"></div>
+      </div>
+    </div>
+
+    <!-- Target SoC -->
+    <div class="ev-popup-target">
+      <span class="ev-popup-target-lbl"><span class="lbl-icon">🎯</span> Target SoC</span>
+      <select id="sel-target-soc-popup" class="ha-select target-select" onchange="changeSelect('dm.ev_target_soc', this.value)"></select>
+    </div>
+
+    <!-- Mode buttons EVCC -->
+    <div class="ev-popup-modes">
+      <div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-off" onclick="setEVMode('off')" style="--btn-col: #e11d48; --btn-bg: #ffe4e6;"><div class="icon">🛑</div><div class="txt">Spento</div></div>
+      <div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-pv" onclick="setEVMode('pv')" style="--btn-col: #059669; --btn-bg: #d1fae5;"><div class="icon">☀️</div><div class="txt">Solar</div></div>
+      <div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-minpv" onclick="setEVMode('minpv')" style="--btn-col: #f59e0b; --btn-bg: #fef3c7;"><div class="icon">⛅</div><div class="txt">Min+Sol</div></div>
+      <div class="ev-popup-mode-btn evcc-mode-btn" id="p-btn-now" onclick="setEVMode('now')" style="--btn-col: #06b6d4; --btn-bg: #cffafe;"><div class="icon">🚀</div><div class="txt">Fast</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="details-modal" class="modal-wrapper" onclick="closeModal(event, 'details-modal')">
+  <div class="modal-card details-content">
+    <div class="ev-waw-header">
+      <h3 class="ev-waw-title" id="details-title">DETTAGLI</h3>
+      <div class="ev-waw-close" onclick="forceClose('details-modal')">✕ CHIUDI</div>
+    </div>
+    <div id="details-list" class="details-list"></div>
+  </div>
+</div>
+
+<div id="custom-keypad" class="modal-wrapper" onclick="closeModal(event, 'custom-keypad')">
+  <div class="modal-card keypad-content">
+    <div class="keypad-header-wrap">
+      <div class="keypad-title" id="keypad-title">INSERISCI PIN</div>
+      <div class="keypad-sub" id="keypad-action-name">Azione</div>
+    </div>
+    <div class="pin-display" id="pin-display">
+      <div class="pin-dot" id="dot-1"></div><div class="pin-dot" id="dot-2"></div><div class="pin-dot" id="dot-3"></div><div class="pin-dot" id="dot-4"></div>
+    </div>
+    <div class="keypad-grid">
+      <button class="keypad-btn" onclick="kp(1)">1</button><button class="keypad-btn" onclick="kp(2)">2</button><button class="keypad-btn" onclick="kp(3)">3</button>
+      <button class="keypad-btn" onclick="kp(4)">4</button><button class="keypad-btn" onclick="kp(5)">5</button><button class="keypad-btn" onclick="kp(6)">6</button>
+      <button class="keypad-btn" onclick="kp(7)">7</button><button class="keypad-btn" onclick="kp(8)">8</button><button class="keypad-btn" onclick="kp(9)">9</button>
+      <button class="keypad-btn action" onclick="kpDel()">DEL</button><button class="keypad-btn" onclick="kp(0)">0</button><button class="keypad-btn ok" onclick="kpOk()">OK</button>
+    </div>
+    <button class="keypad-cancel" onclick="forceClose('custom-keypad')">ANNULLA OPERAZIONE</button>
+  </div>
+</div>
+
+<div id="history-modal" class="modal-wrapper" onclick="closeModal(event, 'history-modal')">
+  <div class="modal-card hist-content">
+    <div class="ev-waw-header">
+      <h3 class="ev-waw-title" id="hist-title">STORICO</h3>
+      <div class="ev-waw-close" onclick="forceClose('history-modal')">✕ CHIUDI</div>
+    </div>
+    
+    <div class="hist-time-controls">
+        <button class="hist-time-btn" data-hours="1" onclick="cambiaTempoStorico(1)">1 Ora</button>
+        <button class="hist-time-btn" data-hours="6" onclick="cambiaTempoStorico(6)">6 Ore</button>
+        <button class="hist-time-btn" data-hours="12" onclick="cambiaTempoStorico(12)">12 Ore</button>
+        <button class="hist-time-btn active" data-hours="24" onclick="cambiaTempoStorico(24)">24 Ore</button>
+    </div>
+
+    <div class="hist-body">
+      <div class="hist-loading" id="hist-loading"><div class="hist-spinner"></div>Sincronizzazione dati...</div>
+      <div id="hist-canvas-container" style="width:100%; height:100%; display:none;"><canvas id="hist-canvas"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- v254: Modal generico di conferma azione -->
+<div id="confirm-modal" class="modal-wrapper" onclick="closeModal(event, 'confirm-modal')">
+  <div class="modal-card confirm-card">
+    <div class="confirm-icon-wrap">
+      <div class="confirm-icon" id="confirm-icon">⛩️</div>
+    </div>
+    <h3 class="confirm-title" id="confirm-title">Apri Cancello</h3>
+    <p class="confirm-message" id="confirm-message">Sei sicuro di voler aprire il cancello?</p>
+    <div class="confirm-actions">
+      <button class="confirm-btn confirm-btn-cancel" onclick="forceClose('confirm-modal')">Annulla</button>
+      <button class="confirm-btn confirm-btn-ok" id="confirm-ok-btn">Conferma</button>
+    </div>
+  </div>
+</div>
+<!-- Scesi dalla testa del documento: sincroni com'erano, tenevano in ostaggio
+     il primo dipinto. Restano prima del runtime, che e' chi li usa. -->
+<script src="./vendor/chart.umd.min.js"></script>
+<script src="./dashboard-debug-it.js"></script>
+<script src="./dashboard-runtime-it.js"></script>
+
+  <section class="page" id="page-temp">
+    <button class="back-home-btn" onclick="document.querySelector('[data-tab=&quot;home&quot;]').click(); if(navigator.vibrate)navigator.vibrate(5);">
+      <span class="bh-icon">←</span><span>Home</span>
+    </button>
+    <div style="margin-bottom:20px;">
+      <h2 style="font-family:'Oswald',sans-serif;font-size:26px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">🌡️ Temperature</h2>
+      <p style="font-size:11px;font-weight:800;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;" id="temp-last-update">Aggiornamento in corso...</p>
+    </div>
+    <div class="temp-grid" id="temp-grid"><!-- v257: card stanze generate dinamicamente da CD_STANZE / config utente --></div>
+  </section>
+
+<!-- ======= POPUP CONTROLLO CLIMA ======= -->
+<div class="clima-popup-overlay" id="clima-popup-overlay" onclick="chiudiClimaPopup(event)">
+  <div class="clima-popup">
+    <button class="clima-popup-close" onclick="chiudiClimaPopup()">✕</button>
+    <div class="clima-popup-room" id="cp-room">❄️ Condizionatore</div>
+    <div class="clima-popup-name" id="cp-name">—</div>
+
+    <!-- Temperatura -->
+    <div class="clima-temp-display">
+      <button class="clima-temp-btn" onclick="cpSetTemp(-0.5)">➖</button>
+      <div class="clima-temp-center">
+        <div class="clima-temp-val" id="cp-temp-val">--°</div>
+        <div class="clima-temp-unit">Temperatura Target</div>
+        <div class="clima-temp-current" id="cp-temp-curr">Ambiente: --°</div>
+      </div>
+      <button class="clima-temp-btn" onclick="cpSetTemp(+0.5)">➕</button>
+    </div>
+
+    <!-- Modalità (solo condizionatori, nascosto per termosifoni) -->
+    <div id="cp-mode-section">
+      <div class="clima-section-lbl">Modalità</div>
+      <div class="clima-mode-grid">
+        <div class="clima-mode-btn" data-mode="cool" onclick="cpSetMode('cool')" style="--mode-col:#0ea5e9;--mode-rgb:14,165,233">
+          <span class="ic">❄️</span><span class="lb">Freddo</span>
+        </div>
+        <div class="clima-mode-btn" data-mode="heat" onclick="cpSetMode('heat')" style="--mode-col:#f97316;--mode-rgb:249,115,22">
+          <span class="ic">🔥</span><span class="lb">Caldo</span>
+        </div>
+        <div class="clima-mode-btn" data-mode="fan_only" onclick="cpSetMode('fan_only')" style="--mode-col:#8b5cf6;--mode-rgb:139,92,246">
+          <span class="ic">💨</span><span class="lb">Ventola</span>
+        </div>
+        <div class="clima-mode-btn" data-mode="dry" onclick="cpSetMode('dry')" style="--mode-col:#06b6d4;--mode-rgb:6,182,212">
+          <span class="ic">💧</span><span class="lb">Secco</span>
+        </div>
+        <div class="clima-mode-btn" data-mode="auto" onclick="cpSetMode('auto')" style="--mode-col:#6366f1;--mode-rgb:99,102,241">
+          <span class="ic">⚙️</span><span class="lb">Auto</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ventola (solo condizionatori) - generata dinamicamente da JS -->
+    <div id="cp-fan-section">
+      <div class="clima-section-lbl">Velocità Ventola</div>
+      <div class="clima-fan-grid" id="cp-fan-grid"></div>
+    </div>
+
+    <!-- Potenza -->
+    <div class="clima-power-row">
+      <button class="clima-pwr-btn off" id="cp-btn-off" onclick="cpPower('off')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg> Spegni</button>
+      <button class="clima-pwr-btn on"  id="cp-btn-on"  onclick="cpPower('on')">⚡ Accendi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── POPUP STORICO STATI SERVER ── -->
+<div class="srv-history-overlay" id="srv-hist-overlay" onclick="chiudiSrvHistory(event)">
+  <div class="srv-history-popup">
+    <button class="srv-history-close" onclick="chiudiSrvHistory()">✕</button>
+    <div class="srv-history-title" id="srv-hist-title">—</div>
+    <div class="srv-history-subtitle" id="srv-hist-subtitle">Ultimi 7 giorni</div>
+    <div class="srv-history-current" id="srv-hist-current">
+      <div>
+        <div class="srv-history-current-lbl">Stato attuale</div>
+        <div class="srv-history-current-val" id="srv-hist-curr-val">—</div>
+      </div>
+      <div id="srv-hist-curr-badge"></div>
+    </div>
+    <div class="srv-history-section-lbl">Cronologia Cambiamenti</div>
+    <div class="srv-history-timeline" id="srv-hist-timeline">
+      <div class="srv-hist-loading">
+        <div class="srv-hist-spinner"></div>
+        Caricamento storico...
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

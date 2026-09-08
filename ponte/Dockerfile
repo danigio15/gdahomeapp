@@ -10,6 +10,10 @@ WORKDIR /app
 COPY src/ /app/src/
 COPY package.json /app/
 COPY console/ /app/console/
+# La plancia di DashboardModern, com'e': la serve il ponte al telefono, e
+# in Home Assistant non serve nessuna integrazione. La porta dentro
+# `strumenti/porta-la-plancia.mjs`.
+COPY plancia/ /app/plancia/
 COPY run.sh /
 RUN chmod a+x /run.sh
 

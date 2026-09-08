@@ -1,7 +1,14 @@
 /* Le commissioni: quello che il ponte fa da se' per il telefono.
  *
  * Dopo la stretta di mano il ponte non guarda dentro ai messaggi: sono roba
- * fra il telefono e Home Assistant. Con un'eccezione, ed e' questa.
+ * fra il telefono e Home Assistant. Con un'eccezione, ed e' questa: tutto
+ * quello che riguarda la plancia, che in Home Assistant non c'e'.
+ *
+ * Sono quattro cose: i file della plancia (`ponte/http`), dove sta e com'e'
+ * (`ponte/plancia`), la sua configurazione (`dashboardmodern/config/…`, che
+ * la pagina chiede come la chiederebbe all'integrazione e che qui tiene il
+ * ponte), e le chiamate REST che la pagina fa a Home Assistant per lo storico
+ * e le istantanee.
  *
  * La plancia vera — quella di DashboardModern, che l'app fa girare dentro un
  * WebView invece di rifarla — e' fatta di file: una pagina, un foglio di
@@ -38,7 +45,22 @@ import { request as richiestaHttp } from "node:http";
 import { request as richiestaHttps } from "node:https";
 import { gzipSync } from "node:zlib";
 
+import { Configurazione, PROFILO_PRINCIPALE, ScattoTroppoGrande } from "./configurazione.js";
+
 export const TIPO = "ponte/http";
+export const TIPO_PLANCIA = "ponte/plancia";
+const CONFIG_GET = "dashboardmodern/config/get";
+const CONFIG_SET = "dashboardmodern/config/set";
+const CONFIG_RESTORE = "dashboardmodern/config/restore";
+
+/* La pagina, per abitudine vecchia, tiene anche una copia per utente della
+ * configurazione in Home Assistant (`frontend/*_user_data`), con questa
+ * chiave e coi numeri sotto i settecentomila. Il ponte del pannello la ferma
+ * per non avere due scrittori; qui si fa lo stesso, e per la stessa ragione.
+ * Le altre chiavi di `frontend/*_user_data` non sono nostre e vanno in Home
+ * Assistant come tutto il resto. */
+const CHIAVE_VECCHIA = "dashboardmodern_integration_config";
+const NUMERO_MODERNO = 700000;
 
 const METODI = new Set(["GET", "POST", "PUT", "DELETE"]);
 
@@ -70,7 +92,20 @@ const PERCORSO_BUONO = /^\/[A-Za-z0-9_\-./~%+@:=&?,!()*;]*$/;
 /* Senza leggere il JSON: la maggior parte dei messaggi del telefono sono
  * comandi per Home Assistant e non vanno nemmeno aperti. */
 export function eUnaCommissione(testo) {
-  return typeof testo === "string" && testo.includes('"ponte/');
+  return (
+    typeof testo === "string" &&
+    (testo.includes('"ponte/') ||
+      testo.includes('"dashboardmodern/') ||
+      testo.includes('"frontend/'))
+  );
+}
+
+function eLaCopiaVecchia(detto) {
+  const tipo = detto?.type;
+  if (tipo !== "frontend/get_user_data" && tipo !== "frontend/set_user_data") return false;
+  if (!String(detto?.key || "").startsWith(CHIAVE_VECCHIA)) return false;
+  const numero = Number(detto?.id);
+  return !Number.isFinite(numero) || numero < NUMERO_MODERNO;
 }
 
 export function si(id, result) {
@@ -82,22 +117,101 @@ export function no(id, code, message) {
 }
 
 export class Commissioni {
-  constructor({ casa, registro, scarica = scaricaDavvero, insieme = INSIEME } = {}) {
+  constructor({
+    casa,
+    registro,
+    plancia = null,
+    configurazione = null,
+    scarica = scaricaDavvero,
+    insieme = INSIEME,
+  } = {}) {
     this.casa = casa;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
+    /* La plancia dentro l'add-on, e la sua configurazione. Senza — un ponte
+     * sul banco, senza la cartella — i file si chiedono a Home Assistant,
+     * dove ci sarebbero solo con l'integrazione. */
+    this.plancia = plancia;
+    this.configurazione = configurazione;
     this.scarica = scarica;
     this.insieme = insieme;
     this._inCorso = 0;
     this._coda = [];
   }
 
-  /* La risposta a un messaggio `ponte/…`, nella forma di Home Assistant. Non
-   * solleva mai: un errore e' una risposta con `success: false`, come
+  /* E' una cosa che fa il ponte, o va in Home Assistant? */
+  riconosce(detto) {
+    const tipo = detto?.type;
+    if (typeof tipo !== "string") return false;
+    if (tipo.startsWith("ponte/")) return true;
+    if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
+      return Boolean(this.configurazione);
+    return Boolean(this.configurazione) && eLaCopiaVecchia(detto);
+  }
+
+  /* La risposta a un messaggio riconosciuto, nella forma di Home Assistant.
+   * Non solleva mai: un errore e' una risposta con `success: false`, come
    * farebbe Home Assistant per un comando andato storto. */
   async rispondi(detto) {
     const id = detto?.id ?? null;
-    if (detto?.type !== TIPO) return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    const tipo = detto?.type;
+    if (tipo === TIPO) return this._http(detto);
+    if (tipo === TIPO_PLANCIA) return this._laPlancia(id);
+    if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
+      return this._configurazione(detto);
+    if (eLaCopiaVecchia(detto)) {
+      /* Una risposta innocua, come fa il ponte del pannello: il codice
+       * vecchio non resta appeso, e l'unico scrittore resta quello moderno. */
+      return si(id, tipo === "frontend/get_user_data" ? { value: null } : null);
+    }
+    return no(id, "unknown_command", `non conosco ${tipo}`);
+  }
 
+  _laPlancia(id) {
+    if (!this.plancia?.cE) return no(id, "not_found", "questo ponte non ha la plancia");
+    return si(id, this.plancia.descrizione());
+  }
+
+  _configurazione(detto) {
+    const id = detto.id ?? null;
+    const cassetta = this.configurazione;
+    if (!cassetta) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    const profilo = detto.profile ?? PROFILO_PRINCIPALE;
+    if (!Configurazione.profiloBuono(profilo))
+      return no(id, "invalid_format", "profilo non valido");
+    try {
+      if (detto.type === CONFIG_GET) return si(id, cassetta.leggi(profilo));
+      if (detto.type === CONFIG_RESTORE) {
+        const revisione = Number(detto.revision);
+        if (!Number.isFinite(revisione)) return no(id, "invalid_format", "manca la revisione");
+        return si(id, cassetta.ripristina(profilo, revisione));
+      }
+      const scatto = detto.snapshot;
+      if (
+        !scatto ||
+        typeof scatto !== "object" ||
+        !scatto.values ||
+        typeof scatto.values !== "object"
+      )
+        return no(id, "invalid_format", "manca lo scatto");
+      return si(
+        id,
+        cassetta.scrivi(profilo, scatto.values, {
+          keys_revision: scatto.keys_revision ?? 0,
+          writer_generation: scatto.writer_generation ?? 0,
+          updated_at: scatto.updated_at ?? 0,
+          expected_revision: detto.expected_revision ?? null,
+          reset: detto.reset === true,
+        }),
+      );
+    } catch (errore) {
+      if (errore instanceof ScattoTroppoGrande) return no(id, "snapshot_too_large", errore.message);
+      this.registro.errore(`configurazione andata storta: ${errore?.message || errore}`);
+      return no(id, "ponte_config", "non ha funzionato");
+    }
+  }
+
+  async _http(detto) {
+    const id = detto?.id ?? null;
     const metodo = String(detto.metodo ?? "GET").toUpperCase();
     if (!METODI.has(metodo)) return no(id, "not_allowed", `il metodo ${metodo} non passa di qui`);
 
@@ -111,6 +225,13 @@ export class Commissioni {
       if (typeof detto.corpo !== "string") return no(id, "not_allowed", "corpo non valido");
       corpo = Buffer.from(detto.corpo, "base64");
       if (corpo.length > CORPO_MASSIMO) return no(id, "not_allowed", "corpo troppo grande");
+    }
+
+    /* I file della plancia stanno qui, nell'add-on: non si va da nessuna
+     * parte. Il metodo non conta, e' un file. */
+    if (percorso.startsWith("/dashboardmodern_static/") && this.plancia?.cE) {
+      const { stato, tipo, corpo: letto } = this.plancia.leggi(percorso);
+      return si(id, impacchetta(stato, tipo, letto));
     }
 
     const dove = await this._dove(percorso);

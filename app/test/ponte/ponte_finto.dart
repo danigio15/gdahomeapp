@@ -120,6 +120,24 @@ class PonteFinto {
       _manda(presa, {'id': id, ..._commissione(detto)});
       return;
     }
+    if (detto['type'] == 'ponte/plancia') {
+      final sua = planciaDelPonte;
+      _manda(
+        presa,
+        sua == null
+            ? {
+                'id': id,
+                'type': 'result',
+                'success': false,
+                'error': {
+                  'code': 'not_found',
+                  'message': 'questo ponte non ha la plancia',
+                },
+              }
+            : {'id': id, 'type': 'result', 'success': true, 'result': sua},
+      );
+      return;
+    }
     _manda(presa, {
       'id': id,
       'type': 'result',
@@ -134,9 +152,29 @@ class PonteFinto {
     });
   }
 
+  /// Quello che risponde `ponte/plancia`: la plancia dentro l'add-on. `null`
+  /// e' un ponte che non ce l'ha, e dice di no.
+  Map<String, dynamic>? planciaDelPonte = planciaNelPonte();
+
   /// I pannelli che risponde `get_panels`. `null` e' una casa senza
   /// DashboardModern: risponde lo stesso, ma senza quel pannello.
   Map<String, dynamic>? pannelli = pannelliConLaPlancia();
+
+  /// La plancia come la descrive il ponte vero con `ponte/plancia`.
+  static Map<String, dynamic> planciaNelPonte({
+    String base = '/dashboardmodern_static/ponte1234',
+  }) => {
+    'base': base,
+    'impronta': base.split('/').last,
+    'varianti': ['dashboard-en.html', 'dashboard.html'],
+    'titolo': 'DashboardModern',
+    'istanza': 'ponte',
+    'profilo': 'primary',
+    'primario': true,
+    'file': 294,
+    'commit': '0f4180bbd69d5d1b7979c7ccb193280e77cfd000',
+    'portata_il': '2026-09-08T17:54:08.396Z',
+  };
 
   /// I file che il ponte finto sa servire con `ponte/http`: il percorso, il
   /// tipo e i byte. Sotto `/api/` si risponde con l'eco della richiesta.
