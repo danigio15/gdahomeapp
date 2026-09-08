@@ -38,7 +38,12 @@ void main() {
   test(
     'sulla casa demo escono le stesse tessere della plancia web, in ordine',
     () {
-      final tutte = tessereDellaHome(config, demo.stato, adesso: adesso);
+      final tutte = tessereDellaHome(
+        config,
+        demo.stato,
+        adesso: adesso,
+        elenco: demo.tutte,
+      );
       expect(tutte.map((t) => t.chiave), [
         'luci',
         'clima',
@@ -57,11 +62,15 @@ void main() {
         'prese',
         'media',
         'irrigazione',
+        /* Queste quattro non le ha configurate nessuno: le trova in casa. */
+        'batterie',
+        'allagamenti',
+        'fumo',
         'custom-0',
       ]);
       expect(
         intestazioneDeiWidget(tutte),
-        '18 sezioni · 1 chiede attenzione: Finestra cucina',
+        '21 sezioni · 2 chiedono attenzione: Batterie, Finestra cucina',
       );
     },
   );

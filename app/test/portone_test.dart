@@ -447,8 +447,11 @@ void main() {
       expect(tessera('4'), findsWidgets);
       expect(tessera('CLIMA'), findsOneWidget);
       expect(tessera('22,5'), findsOneWidget);
+      /* Le tessere che chiedono attenzione stanno scritte per nome
+       * nell'intestazione: la batteria di Marco al 9% e la finestra aperta
+       * in cucina. */
       expect(
-        find.textContaining('chiede attenzione: Finestra cucina'),
+        find.textContaining('chiedono attenzione: Batterie, Finestra cucina'),
         findsOneWidget,
       );
       await tester.scrollUntilVisible(

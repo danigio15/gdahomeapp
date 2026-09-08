@@ -41,6 +41,10 @@ class CasaDemo {
 
   Entita? stato(String id) => entita[id];
 
+  /// Tutta la casa in una volta, come la vede chi rileva da se': le tessere
+  /// delle batterie, dell'aria, del fumo e degli allagamenti.
+  List<Entita> tutte() => entita.values.toList();
+
   ConfigurazioneDellaPlancia get configurazione =>
       ConfigurazioneDellaPlancia.dallaRisposta(risposta);
 

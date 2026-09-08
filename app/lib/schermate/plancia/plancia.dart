@@ -64,6 +64,11 @@ class _PlanciaState extends State<Plancia> {
 
   Entita? _leggi(String id) => widget.collegamento.stato?[id];
 
+  /* Le tessere rilevate — batterie, aria, fumo, allagamenti — non partono da
+   * un elenco scritto: guardano tutta la casa. Si passa la funzione invece
+   * della lista perche' cosi' la casa si legge solo se qualcuna la chiede. */
+  List<Entita> _tuttaLaCasa() => widget.collegamento.stato?.tutte() ?? const [];
+
   @override
   Widget build(BuildContext context) {
     final config = widget.configurazione;
@@ -73,6 +78,7 @@ class _PlanciaState extends State<Plancia> {
       _leggi,
       adesso: adesso,
       tenute: _tenute,
+      elenco: _tuttaLaCasa,
     );
     final persone = personeDellaHome(config, _leggi, adesso: adesso);
     final azioni = config.azioniRapide;
@@ -435,6 +441,10 @@ IconData iconaDellaTessera(String chiave) => switch (chiave.split('_').first) {
   'media' => Icons.speaker_rounded,
   'irrigazione' => Icons.water_drop_rounded,
   'agenda' => Icons.event_rounded,
+  'batterie' => Icons.battery_alert_rounded,
+  'allagamenti' => Icons.water_damage_rounded,
+  'fumo' => Icons.local_fire_department_rounded,
+  'aria' => Icons.air_rounded,
   'evidenza' => Icons.star_rounded,
   _ => Icons.warning_amber_rounded,
 };
@@ -754,6 +764,7 @@ class _FinestraDellaTessera extends StatelessWidget {
           configurazione,
           (id) => collegamento.stato?[id],
           tenute: tenute,
+          elenco: () => collegamento.stato?.tutte() ?? const [],
         );
         final tessera = tessere.where((t) => t.chiave == chiave).firstOrNull;
         if (tessera == null) {

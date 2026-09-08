@@ -13,6 +13,7 @@ library;
 import '../casa/entita.dart';
 import 'configurazione.dart';
 import 'numeri.dart';
+import 'rilevate.dart';
 
 /// Come si legge lo stato di un'entita' adesso.
 typedef Leggi = Entita? Function(String entita);
@@ -147,6 +148,7 @@ List<Tessera> tessereDellaHome(
   Leggi leggi, {
   DateTime? adesso,
   Map<String, DateTime>? tenute,
+  Elenco? elenco,
 }) {
   if (!config.configurata) return const [];
   final c = _Contesto(config, leggi, adesso ?? DateTime.now(), tenute ?? {});
@@ -169,6 +171,9 @@ List<Tessera> tessereDellaHome(
     _prese(c),
     _media(c),
     _irrigazione(c),
+    /* Le rilevate stanno in coda, dove le mette la plancia web: sono avvisi
+     * che nascono da soli, e chi non ne ha in casa non le vede mai. */
+    if (elenco != null) ...tessereRilevate(config, leggi, elenco),
     ..._avvisi(c),
   ];
   return _conLePreferenze(tutte.whereType<Tessera>().toList(), config.widget);
