@@ -22,9 +22,9 @@ import '../../plancia/configurazione.dart';
 import '../../plancia/numeri.dart';
 import '../../plancia/persone.dart';
 import '../../plancia/tessere.dart';
-import '../../ponte/errori.dart';
 import '../../vestito/pezzi.dart';
 import '../../vestito/tema.dart';
+import 'comune.dart';
 
 class Plancia extends StatefulWidget {
   const Plancia({
@@ -188,23 +188,10 @@ class _PlanciaState extends State<Plancia> {
         ? 'turn_on'
         : 'toggle';
     if (!mounted) return;
-    await _comanda(context, widget.collegamento, servizio, entita);
-  }
-}
-
-/// Un comando alla casa, con l'errore detto a schermo se non va.
-Future<void> _comanda(
-  BuildContext context,
-  Collegamento collegamento,
-  String servizio,
-  String entita,
-) async {
-  try {
-    await collegamento.stato?.comanda(servizio, entita);
-  } on ErroreDelPonte catch (errore) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(errore.spiegazione)));
+    await esegui(
+      context,
+      () => widget.collegamento.stato!.comanda(servizio, entita),
+    );
   }
 }
 
@@ -236,14 +223,6 @@ class _DueColonne extends StatelessWidget {
     }
     return Column(children: righe);
   }
-}
-
-/// Il colore di una sezione, da `#rrggbb`.
-Color coloreDaTesto(String esadecimale, [Color ripiego = Colori.notteChiara]) {
-  final testo = esadecimale.replaceFirst('#', '');
-  if (testo.length != 6) return ripiego;
-  final valore = int.tryParse(testo, radix: 16);
-  return valore == null ? ripiego : Color(0xFF000000 | valore);
 }
 
 /* ─── L'intestazione: il meteo e l'ora ─────────────────────────────────── */
@@ -877,11 +856,12 @@ class _FinestraDellaTessera extends StatelessWidget {
                             accento: accento,
                             quandoInvertita:
                                 riga.comando && riga.entita.isNotEmpty
-                                ? () => _comanda(
+                                ? () => esegui(
                                     context,
-                                    collegamento,
-                                    'toggle',
-                                    riga.entita,
+                                    () => collegamento.stato!.comanda(
+                                      'toggle',
+                                      riga.entita,
+                                    ),
                                   )
                                 : null,
                           ),
@@ -1027,14 +1007,14 @@ class _CartaDellaPersona extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           if (persona.nota)
-            _Pillola(
+            Pillolina(
               testo: persona.etichettaDellaZona,
               icona: iconaDellaZona,
               colore: coloreDellaZona,
               piena: true,
             )
           else
-            _Pillola(
+            Pillolina(
               testo: 'non si sa',
               icona: Icons.help_outline_rounded,
               colore: colori.onSurfaceVariant,
@@ -1047,14 +1027,14 @@ class _CartaDellaPersona extends StatelessWidget {
               alignment: WrapAlignment.center,
               children: [
                 if (persona.distanza != null)
-                  _Pillola(
+                  Pillolina(
                     testo:
                         '${numero(persona.distanza, cifre: persona.unitaDellaDistanza == 'm' ? 0 : 1)} ${persona.unitaDellaDistanza}',
                     icona: Icons.explore_outlined,
                     colore: colori.onSurfaceVariant,
                   ),
                 if (persona.viaggio != null)
-                  _Pillola(
+                  Pillolina(
                     testo: '${persona.viaggio} min',
                     icona: Icons.timer_outlined,
                     colore: colori.onSurfaceVariant,
@@ -1137,46 +1117,6 @@ class _Dettaglio extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// Una pastiglia con un'icona e una parola: «Casa», «8,4 km», «14 min».
-class _Pillola extends StatelessWidget {
-  const _Pillola({
-    required this.testo,
-    required this.icona,
-    required this.colore,
-    this.piena = false,
-  });
-
-  final String testo;
-  final IconData icona;
-  final Color colore;
-  final bool piena;
-
-  @override
-  Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
-    final inchiostro = piena ? Colors.white : colore;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: piena ? colore : colori.surfaceContainer,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icona, size: 13, color: inchiostro),
-          const SizedBox(width: 4),
-          Text(
-            testo,
-            style: Theme.of(context).textTheme.labelSmall
-                ?.copyWith(color: inchiostro, fontWeight: FontWeight.w700),
-          ),
-        ],
-      ),
     );
   }
 }

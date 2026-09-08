@@ -23,7 +23,12 @@ import '../vestito/pezzi.dart';
 import 'da_dove.dart';
 import 'dispositivi.dart';
 import 'menu.dart';
+import 'plancia/clima.dart';
+import 'plancia/finestre.dart';
+import 'plancia/luci.dart';
 import 'plancia/plancia.dart';
+import 'plancia/stanze.dart';
+import 'plancia/temperatura.dart';
 
 class Home extends StatefulWidget {
   const Home({
@@ -75,9 +80,44 @@ class _HomeState extends State<Home> {
       ),
       body: switch (_sezione) {
         Sezione.dispositivi => Dispositivi(collegamento: collegamento),
-        _ => _Plancia(collegamento: collegamento),
+        Sezione.plancia => _Plancia(collegamento: collegamento),
+        _ => _paginaDellaPlancia(collegamento),
       },
     );
+  }
+
+  /// Una pagina della plancia — Luci, Clima… — quando la plancia c'e';
+  /// altrimenti quello che la Home direbbe al suo posto.
+  Widget _paginaDellaPlancia(Collegamento collegamento) {
+    final config = collegamento.plancia;
+    if (collegamento.comeVa != ComeVa.aperta ||
+        config == null ||
+        !config.configurata) {
+      return _Plancia(collegamento: collegamento);
+    }
+    return switch (_sezione) {
+      Sezione.stanze => PaginaDelleStanze(
+        collegamento: collegamento,
+        configurazione: config,
+      ),
+      Sezione.luci => PaginaDelleLuci(
+        collegamento: collegamento,
+        configurazione: config,
+      ),
+      Sezione.clima => PaginaDelClima(
+        collegamento: collegamento,
+        configurazione: config,
+      ),
+      Sezione.temperatura => PaginaDellaTemperatura(
+        collegamento: collegamento,
+        configurazione: config,
+      ),
+      Sezione.finestre => PaginaDelleFinestre(
+        collegamento: collegamento,
+        configurazione: config,
+      ),
+      _ => _Plancia(collegamento: collegamento),
+    };
   }
 }
 

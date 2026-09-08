@@ -7,10 +7,13 @@
 ///
 ///  - **la casa** su cui si e' aperti, e da dove ci si sta passando. Si preme
 ///    e si cambia casa;
-///  - **le sezioni**: la plancia e i dispositivi, che ci sono; gli aiutanti,
-///    Zigbee e le automazioni, che arriveranno. Quelle che non ci sono ancora
-///    si vedono lo stesso, spente: si sa dove sta andando l'app, e non ci si
-///    chiede se manchi un pezzo o se sia nascosto da qualche parte;
+///  - **la plancia**: la Home e le sue pagine — Stanze, Luci, Clima,
+///    Temperatura, Finestre — solo quelle che questa casa ha davvero, come
+///    nella barra della plancia web;
+///  - **le sezioni**: i dispositivi, che ci sono; gli aiutanti, Zigbee e le
+///    automazioni, che arriveranno. Quelle che non ci sono ancora si vedono
+///    lo stesso, spente: si sa dove sta andando l'app, e non ci si chiede se
+///    manchi un pezzo o se sia nascosto da qualche parte;
 ///  - **le case**, in fondo, e la riga con la versione.
 ///
 /// L'ordine delle voci e' l'ordine in cui servono: prima quello che si guarda
@@ -20,6 +23,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
+import '../plancia/configurazione.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
 import 'da_dove.dart';
@@ -27,23 +31,58 @@ import 'firma.dart';
 
 /// Le sezioni dell'app: le voci del menu.
 enum Sezione {
-  plancia('Plancia', Icons.dashboard_rounded, pronta: true),
+  plancia('Home', Icons.dashboard_rounded, pronta: true, dellaPlancia: true),
+  stanze(
+    'Stanze',
+    Icons.meeting_room_rounded,
+    pronta: true,
+    dellaPlancia: true,
+  ),
+  luci('Luci', Icons.lightbulb_rounded, pronta: true, dellaPlancia: true),
+  clima('Clima', Icons.ac_unit_rounded, pronta: true, dellaPlancia: true),
+  temperatura(
+    'Temperatura',
+    Icons.thermostat_rounded,
+    pronta: true,
+    dellaPlancia: true,
+  ),
+  finestre('Finestre', Icons.blinds_rounded, pronta: true, dellaPlancia: true),
   dispositivi('Dispositivi', Icons.devices_other_rounded, pronta: true),
   aiutanti('Aiutanti', Icons.tune_rounded),
   zigbee('Zigbee', Icons.settings_input_antenna_rounded),
   automazioni('Automazioni', Icons.auto_awesome_rounded);
 
-  const Sezione(this.titolo, this.icona, {this.pronta = false});
+  const Sezione(
+    this.titolo,
+    this.icona, {
+    this.pronta = false,
+    this.dellaPlancia = false,
+  });
 
   final String titolo;
   final IconData icona;
 
   /// `false` finche' quel blocco non e' scritto: la voce si vede, spenta.
   final bool pronta;
+
+  /// Una pagina della plancia di DashboardModern: compare solo se in quella
+  /// casa c'e' qualcosa da mostrarci.
+  final bool dellaPlancia;
 }
 
-/// Le sezioni che si guardano tutti i giorni.
-const _diCasa = [Sezione.plancia, Sezione.dispositivi];
+/// Le pagine della plancia che questa casa ha davvero: una sezione senza
+/// niente dentro non sta nella barra, come nella plancia web.
+List<Sezione> sezioniDellaPlancia(ConfigurazioneDellaPlancia? config) {
+  if (config == null || !config.configurata) return const [Sezione.plancia];
+  return [
+    Sezione.plancia,
+    if (config.stanze.isNotEmpty) Sezione.stanze,
+    if (config.gruppiDiLuci().isNotEmpty) Sezione.luci,
+    if (config.unitaClima.isNotEmpty) Sezione.clima,
+    if (config.stanze.any((s) => s.temperatura.isNotEmpty)) Sezione.temperatura,
+    if (config.coperture.isNotEmpty) Sezione.finestre,
+  ];
+}
 
 /// Quelle che si toccano una volta ogni tanto.
 const _daConfigurare = [Sezione.aiutanti, Sezione.zigbee, Sezione.automazioni];
@@ -95,13 +134,27 @@ class MenuLaterale extends StatelessWidget {
                       quandoPremuta: () => chiudiE(vaiAlleCase),
                     ),
                     const SizedBox(height: 18),
-                    for (final sezione in _diCasa)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 10),
+                      child: Insegna('Plancia'),
+                    ),
+                    for (final sezione in sezioniDellaPlancia(
+                      collegamento.plancia,
+                    ))
                       _Voce(
                         icona: sezione.icona,
                         titolo: sezione.titolo,
                         scelta: sezione == aperta,
                         quandoPremuta: () => chiudiE(() => vai(sezione)),
                       ),
+                    const SizedBox(height: 18),
+                    _Voce(
+                      icona: Sezione.dispositivi.icona,
+                      titolo: Sezione.dispositivi.titolo,
+                      scelta: aperta == Sezione.dispositivi,
+                      quandoPremuta: () =>
+                          chiudiE(() => vai(Sezione.dispositivi)),
+                    ),
                     const SizedBox(height: 18),
                     const Padding(
                       padding: EdgeInsets.only(left: 10),

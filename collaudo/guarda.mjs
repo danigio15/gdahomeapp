@@ -287,6 +287,11 @@ async function main() {
 }
 
 async function scatta(pagina, nome) {
+  /* Il mouse resta dove ha premuto l'ultima volta, e sotto di lui un bottone
+   * si scalda: in fotografia sembrerebbe premuto. Lo si sposta in un angolo
+   * dove non c'e' niente. */
+  await pagina.mouse.move(pagina.viewportSize().width - 8, 8);
+  await attendi(120);
   const dove = join(FOTO, `${nome}.png`);
   await pagina.screenshot({ path: dove });
   racconta(`fotografia: ${nome}.png`);
@@ -338,7 +343,7 @@ async function aspettaCheCompaia(pagina, etichetta, quanto = 30_000) {
 }
 
 async function premi(pagina, etichetta, { inAlto = false } = {}) {
-  const tutti = pagina.locator(
+  let tutti = pagina.locator(
     `[aria-label="${etichetta}"], flt-semantics:has-text("${etichetta}")`,
   );
   try {
@@ -347,6 +352,11 @@ async function premi(pagina, etichetta, { inAlto = false } = {}) {
     const cEra = await cosaCeDaPremere(pagina);
     throw new Error(`non trovo «${etichetta}». A schermo c'e': ${cEra.join(" · ")}`);
   }
+  /* Un'etichetta esatta vale piu' di una scritta che la contiene: «Clima» nel
+   * menu e' un bottone con quel nome, e «Clima soggiorno · Clima ca…» sulla
+   * tessera dietro e' un'altra cosa. */
+  const esatti = pagina.locator(`[aria-label="${etichetta}"]`);
+  if ((await esatti.count()) > 0) tutti = esatti;
 
   /* Con la stessa etichetta ce n'e' spesso piu' d'uno: Flutter lascia in giro
    * nodi vecchi, e la ricerca per testo prende anche i **contenitori** che
@@ -474,15 +484,32 @@ try {
     await attendi(500);
   }
 
+  /* Le pagine della plancia, una per una, dal menu. */
+  const pagine = [
+    ["Stanze", "SENSORI DELLA STANZA", "4a-stanze"],
+    ["Luci", "Accendi tutte", "4b-luci"],
+    ["Clima", "Accendi tutto", "4c-clima"],
+    ["Temperatura", "TUTTE", "4d-temperatura"],
+    ["Finestre", "Apri tutto", "4e-finestre"],
+  ];
+  for (const [nome, attesa, foto] of pagine) {
+    racconta(`apro ${nome}`);
+    await apriIlMenu();
+    await premi(pagina, nome);
+    await aspettaCheCompaia(pagina, attesa);
+    await attendi(900);
+    await scatta(pagina, foto);
+  }
+
   racconta("apro il menu");
   await apriIlMenu();
-  await scatta(pagina, "4-menu");
+  await scatta(pagina, "5-menu");
 
   racconta("apro i dispositivi");
   await premi(pagina, "Dispositivi");
   await aspettaCheCompaia(pagina, "Cerca fra");
   await attendi(1200);
-  await scatta(pagina, "5-dispositivi");
+  await scatta(pagina, "6-dispositivi");
 
   racconta("apro l'elenco delle case");
   await apriIlMenu();
@@ -490,7 +517,7 @@ try {
   /* Si aspetta «Aggiungi», che sta **solo** nell'elenco delle case. */
   await aspettaCheCompaia(pagina, "Aggiungi");
   await attendi(600);
-  await scatta(pagina, "6-le-case");
+  await scatta(pagina, "7-le-case");
 
   racconta("fatto");
 } catch (errore) {

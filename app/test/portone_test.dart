@@ -359,7 +359,7 @@ void main() {
        * che legge chi usa l'app senza vederla. */
       await tester.tap(find.byTooltip('Menu'));
       await tester.pumpAndSettle();
-      expect(find.text('Plancia'), findsOneWidget);
+      expect(find.text('Home'), findsOneWidget);
       expect(find.text('Dispositivi'), findsOneWidget);
       /* I blocchi che non ci sono ancora si vedono lo stesso, spenti: cosi'
        * si sa dove sta andando l'app. */
@@ -379,7 +379,7 @@ void main() {
       expect(find.text('Luci'), findsOneWidget);
       expect(find.text('Cucina'), findsOneWidget);
       expect(find.text('Salotto'), findsOneWidget);
-      expect(find.text('Plancia'), findsNothing, reason: 'il menu e\' chiuso');
+      expect(find.text('Home'), findsNothing, reason: 'il menu e\' chiuso');
 
       await tester.runAsync(() async {
         await collegamento.chiudi();
@@ -469,6 +469,113 @@ void main() {
       expect(find.text('Faretti soggiorno'), findsOneWidget);
       expect(find.text('Tutto regolare'), findsNothing);
       expect(find.text('In corso'), findsOneWidget);
+
+      await tester.runAsync(() async {
+        await collegamento.chiudi();
+        await ponte.spegni();
+      });
+    },
+  );
+
+  testWidgets(
+    'dal menu si va nelle pagine della plancia: luci, clima, stanze',
+    (tester) async {
+      final demo = CasaDemo.leggi();
+      late PonteFinto ponte;
+      late Collegamento collegamento;
+
+      await tester.runAsync(() async {
+        ponte = await PonteFinto.alza();
+        ponte.entita = demo.grezze;
+        ponte.configurazione = demo.risposta;
+        final archivio = ArchivioDelleCase(CassaforteInMemoria());
+        await archivio.apri();
+        await archivio.aggiungi(
+          nome: 'Smart Home',
+          segno: segnoBuono,
+          identificativo: chiBuono,
+          chiave: chiaveBuona,
+          inCasa: ponte.indirizzo,
+        );
+        collegamento = Collegamento(
+          archivio: archivio,
+          sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
+        );
+        await collegamento.apri();
+        await _finoAllaPlancia(collegamento);
+      });
+
+      await tester.pumpWidget(AppDiCasa(collegamento: collegamento));
+      await tester.pump();
+      await tester.pump();
+
+      Future<void> vaiA(String pagina) async {
+        await tester.tap(find.byTooltip('Menu'));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(of: find.byType(Drawer), matching: find.text(pagina)),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      /* Il menu elenca le pagine che questa casa ha. */
+      await tester.tap(find.byTooltip('Menu'));
+      await tester.pumpAndSettle();
+      for (final pagina in [
+        'Home',
+        'Stanze',
+        'Luci',
+        'Clima',
+        'Temperatura',
+        'Finestre',
+      ]) {
+        expect(
+          find.descendant(of: find.byType(Drawer), matching: find.text(pagina)),
+          findsOneWidget,
+          reason: pagina,
+        );
+      }
+      await tester.tap(
+        find.descendant(of: find.byType(Drawer), matching: find.text('Luci')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('4/8 accese'), findsOneWidget);
+      expect(find.text('Faretti soggiorno'), findsOneWidget);
+      expect(find.text('ACCESA · 75%'), findsOneWidget);
+      expect(find.text('Accendi tutte'), findsOneWidget);
+
+      await vaiA('Clima');
+      expect(find.text('Clima soggiorno'), findsOneWidget);
+      expect(find.text('TARGET'), findsWidgets);
+      expect(find.text('FREDDO'), findsOneWidget, reason: 'la linguetta');
+      expect(find.text('CALDO'), findsOneWidget);
+
+      await vaiA('Temperatura');
+      expect(find.text('COMFORT'), findsWidgets);
+      expect(find.text('22,4'), findsOneWidget, reason: 'il soggiorno');
+
+      await vaiA('Finestre');
+      expect(find.text('3 aperte · 1 chiusa'), findsOneWidget);
+      expect(find.text('Tapparella soggiorno'), findsOneWidget);
+      /* La cucina sta sotto: le schede delle finestre sono alte, e una
+       * ListView costruisce solo quello che si vede. */
+      await tester.scrollUntilVisible(
+        find.text('FINESTRA APERTA'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('FINESTRA APERTA'), findsOneWidget, reason: 'la cucina');
+
+      await vaiA('Stanze');
+      expect(find.text('SENSORI DELLA STANZA'), findsOneWidget);
+      expect(find.text('2/2'), findsOneWidget, reason: 'le luci del soggiorno');
+      await tester.scrollUntilVisible(
+        find.text('Strip TV'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Strip TV'), findsOneWidget);
 
       await tester.runAsync(() async {
         await collegamento.chiudi();
