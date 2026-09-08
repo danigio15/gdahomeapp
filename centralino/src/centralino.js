@@ -179,6 +179,13 @@ class CasaCollegata {
     }
 
     switch (detto.t) {
+      case "battito":
+        /* Il colpetto della casa, rimandato indietro. Non serve a questo
+         * centralino — lui le case le pinga per conto suo — ma serve a lei:
+         * e' cosi' che si accorge di un filo morto senza chiusura, e quel
+         * filo e' dietro il suo router, non dietro il nostro. */
+        this.presa.manda(testo);
+        return;
       case "apri-abbinamento":
         this._apriUnAbbinamento(detto.impronta);
         return;

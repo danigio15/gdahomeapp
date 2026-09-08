@@ -94,6 +94,13 @@ class PonteFinto {
     if (muto) return;
 
     final id = detto['id'];
+    /* Il colpetto, come lo fa Home Assistant: `ping` e si risponde `pong`.
+     * Quando la casa e' muta non risponde nemmeno a questo, ed e' proprio
+     * quello che serve a provare un filo morto senza chiusura. */
+    if (detto['type'] == 'ping') {
+      _manda(presa, {'id': id, 'type': 'pong'});
+      return;
+    }
     /* Un comando che Home Assistant non conosce: e' anche quello che risponde
      * una casa senza DashboardModern a `dashboardmodern/config/get`. */
     if (detto['type'] == 'un_comando_che_non_esiste' ||

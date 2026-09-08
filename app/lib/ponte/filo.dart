@@ -18,6 +18,15 @@
 ///  - **le richieste in attesa che muoiono subito**. Una richiesta partita
 ///    prima della caduta non avra' mai risposta: farla fallire adesso e'
 ///    meglio che lasciare l'app ferma a girare una rotella.
+///
+/// E ce n'e' una quarta, che non si vede finche' non morde: **il battito**.
+/// Un filo che cade lo si sente — arriva una chiusura, e si ribussa. Un filo
+/// che muore *senza cadere* no: fra il telefono e la casa ci sono un router e
+/// spesso un centralino, e una corrispondenza di rete che nessuno usa sparisce
+/// dopo qualche minuto senza che nessuno dei due capi riceva niente. L'app
+/// resterebbe li' a mostrare dati vecchi credendosi collegata. Percio' si
+/// manda un colpetto ogni mezzo minuto e si aspetta la risposta: se non torna
+/// entro un minuto e mezzo il filo e' morto, e si ricomincia.
 library;
 
 import 'dart:async';
@@ -58,6 +67,8 @@ class Filo {
     ApriLaPresa? apri,
     this.attesaMassima = const Duration(seconds: 30),
     this.attesaDellaRisposta = const Duration(seconds: 20),
+    this.battito = const Duration(seconds: 30),
+    this.silenzioMassimo = const Duration(seconds: 90),
   }) : _trovaLApprodo = approdo,
        _apri = apri ?? PresaSuWebSocket.apri;
 
@@ -70,6 +81,8 @@ class Filo {
     ApriLaPresa? apri,
     Duration attesaMassima = const Duration(seconds: 30),
     Duration attesaDellaRisposta = const Duration(seconds: 20),
+    Duration battito = const Duration(seconds: 30),
+    Duration silenzioMassimo = const Duration(seconds: 90),
   }) : this(
          approdo: (() async => Approdo.diretto(DaDove.daDentro, indirizzo)),
          segno: segno,
@@ -78,6 +91,8 @@ class Filo {
          apri: apri,
          attesaMassima: attesaMassima,
          attesaDellaRisposta: attesaDellaRisposta,
+         battito: battito,
+         silenzioMassimo: silenzioMassimo,
        );
 
   final TrovaLApprodo _trovaLApprodo;
@@ -102,6 +117,12 @@ class Filo {
   /// Quanto vive una richiesta senza risposta.
   final Duration attesaDellaRisposta;
 
+  /// Ogni quanto parte un colpetto, e dopo quanto silenzio il filo si
+  /// considera morto. Il secondo e' il triplo del primo: due colpetti persi
+  /// capitano, tre di fila no.
+  final Duration battito;
+  final Duration silenzioMassimo;
+
   final _stato = StreamController<StatoDelFilo>.broadcast();
   final _inAttesa = <int, Completer<Map<String, dynamic>>>{};
   final _sottoscrizioni = <int, _Sottoscrizione>{};
@@ -111,6 +132,8 @@ class Filo {
   StreamSubscription<String>? _ascolto;
   Completer<void>? _stretta;
   Timer? _riprova;
+  Timer? _colpetti;
+  DateTime? _vistoIl;
   int _prossimoId = 1;
   int _tentativi = 0;
   bool _spentoApposta = false;
@@ -253,12 +276,13 @@ class Filo {
       case 'event':
         _evento(detto);
       case 'pong':
-        break;
+        _vistoIl = DateTime.now();
     }
   }
 
   void _entrato() {
     _tentativi = 0;
+    _cominciaABattere();
     _cambia(StatoDelFilo.dentro);
     if (_stretta != null && !_stretta!.isCompleted) _stretta!.complete();
     _rifaiLeSottoscrizioni();
@@ -378,9 +402,39 @@ class Filo {
     }
   }
 
+  /* ─── Il battito ───────────────────────────────────────────────────────── */
+
+  void _cominciaABattere() {
+    _smettiDiBattere();
+    _vistoIl = DateTime.now();
+    _colpetti = Timer.periodic(battito, (_) => _colpetto());
+  }
+
+  void _colpetto() {
+    if (!dentro) return;
+    final ultimo = _vistoIl;
+    if (ultimo != null &&
+        DateTime.now().difference(ultimo) > silenzioMassimo) {
+      /* Sembra aperto e non lo e'. Si chiude di mano nostra: e' la chiusura
+       * che fa ripartire la ribussata, e senza questa l'app resterebbe a
+       * mostrare dati vecchi credendosi collegata. */
+      _caduto('nessuna risposta ai colpetti');
+      return;
+    }
+    /* E' il `ping` di Home Assistant: il ponte si presenta come lei, quindi e'
+     * lo stesso colpetto puntati a un ponte o puntati a una casa. */
+    _manda({'id': _prossimoId++, 'type': 'ping'});
+  }
+
+  void _smettiDiBattere() {
+    _colpetti?.cancel();
+    _colpetti = null;
+  }
+
   /* ─── Quando cade ──────────────────────────────────────────────────────── */
 
   void _caduto(String perche) {
+    _smettiDiBattere();
     _stacca();
     /* Le richieste in volo muoiono: la loro risposta non arrivera' mai. Ma chi
      * sta aspettando di *entrare* no — il filo sta per ribussare, e se

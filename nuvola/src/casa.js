@@ -15,6 +15,19 @@
  * Ogni variabile d'istanza qui dentro sarebbe un difetto che si vede solo
  * dopo, quando la casa e' rimasta zitta abbastanza a lungo.
  *
+ * ─── Il colpetto a cui si risponde nel sonno ─────────────────────────────
+ *
+ * La casa manda un colpetto ogni mezzo minuto — le serve per accorgersi dei
+ * fili che muoiono senza cadere, vedi `ponte/src/chiamata.js`. Se a
+ * rispondergli fosse `webSocketMessage` sveglierebbe questo oggetto due volte
+ * al minuto, per sempre, e una casa ferma di notte smetterebbe di costare
+ * niente.
+ *
+ * `setWebSocketAutoResponse` risponde al posto nostro: e' Cloudflare a
+ * riconoscere quel messaggio esatto e a rimandare la risposta, senza che
+ * l'oggetto si svegli. Il filo resta caldo, il router di casa tiene la sua
+ * riga, e qui non gira niente.
+ *
  * ─── Chi e' un filo ──────────────────────────────────────────────────────
  *
  * Le targhette dicono chi e': `casa` per il filo della casa, `telefono` e
@@ -34,6 +47,12 @@ const TELEFONI_PER_CASA = 20;
  * smette di riprovare, invece di girare a vuoto per sempre. */
 const PER_REGOLA = 1008;
 const NORMALE = 1000;
+
+/* Il colpetto: uguale all'andata e al ritorno, e scritto qui una volta sola —
+ * la coppia della risposta automatica confronta il testo **esatto**, quindi
+ * fabbricarlo con `JSON.stringify` in due posti sarebbe un modo elegante di
+ * romperlo il giorno che uno dei due mette uno spazio. */
+const COLPETTO = '{"t":"battito"}';
 
 export class Casa {
   constructor(state, env) {
@@ -68,6 +87,7 @@ export class Casa {
       }
     }
     this.state.acceptWebSocket(presa, ["casa"]);
+    this._rispondiAiColpetti();
     presa.serializeAttachment({ chi: "casa", atteso, entrata: false });
   }
 
@@ -94,6 +114,19 @@ export class Casa {
     casa.send(JSON.stringify({ c: numero, t: "apri", da }));
   }
 
+  /* Il colpetto e la sua risposta. Si dichiara a ogni casa che arriva perche'
+   * questo oggetto si dimentica tutto fra un risveglio e l'altro, e dichiarare
+   * due volte la stessa coppia non costa niente. */
+  _rispondiAiColpetti() {
+    const Coppia = globalThis.WebSocketRequestResponsePair;
+    if (typeof Coppia !== "function") return;
+    try {
+      this.state.setWebSocketAutoResponse(new Coppia(COLPETTO, COLPETTO));
+    } catch (_errore) {
+      /* Un runtime che non lo sa fare: si risponde svegliandosi, sotto. */
+    }
+  }
+
   /* ─── Quello che passa ────────────────────────────────────────────────── */
 
   async webSocketMessage(presa, messaggio) {
@@ -107,6 +140,13 @@ export class Casa {
       return;
     }
     if (suo.chi !== "casa") return;
+
+    /* Il ripiego, per un runtime che non sa rispondere da solo: si risponde
+     * qui, svegliandosi. Meglio svegliarsi che lasciar morire il filo. */
+    if (messaggio === COLPETTO) {
+      presa.send(COLPETTO);
+      return;
+    }
 
     let detto;
     try {

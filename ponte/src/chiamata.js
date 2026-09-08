@@ -16,6 +16,24 @@
  * sempre. Ma se il centralino dice **«non ti riconosco»** quello non e' una
  * caduta: e' una risposta, non passera' col tempo, e ribussare all'infinito
  * vorrebbe dire nascondere un guasto che va invece scritto e guardato.
+ *
+ * ─── Il battito, e perche' senza non funzionava ───────────────────────────
+ *
+ * Un filo che cade lo si sente: arriva una chiusura, e si ribussa. Un filo che
+ * **muore senza cadere** no. Fra questa casa e il centralino c'e' un router, e
+ * un router tiene le sue corrispondenze finche' passa qualcosa: dopo qualche
+ * minuto di silenzio quella riga sparisce dalla sua tabella, i pacchetti non
+ * tornano piu' indietro, e nessuno dei due capi riceve niente da cui
+ * accorgersene. Il ponte resta convinto d'essere collegato, il centralino
+ * scrive in un buco, e da fuori casa l'app non entra piu' — finche' qualcuno
+ * non va a riavviare l'add-on.
+ *
+ * Percio' si batte. Ogni mezzo minuto parte un colpetto e si aspetta la
+ * risposta; se non arriva entro un minuto e mezzo, quel filo e' morto anche se
+ * sembra aperto, e lo si chiude per ribussare. Deve farlo **questo** lato: e'
+ * quello dietro il router, ed e' l'unico che possa richiamare. E costa niente
+ * anche al centralino sulla nuvola, che risponde da solo senza svegliarsi —
+ * vedi `nuvola/src/casa.js`.
  */
 
 import { Canale } from "./canale.js";
@@ -29,6 +47,12 @@ const ATTESA_MASSIMA = 60 * SECONDO;
 /* Quanto si aspetta che il centralino risponda alla presentazione. */
 const ATTESA_DELLA_PRESENTAZIONE = 20 * SECONDO;
 
+/* Ogni quanto parte un colpetto, e dopo quanto silenzio il filo si considera
+ * morto. Il secondo e' il triplo del primo: due colpetti persi capitano, tre
+ * di fila no. */
+const BATTITO = 30 * SECONDO;
+const SILENZIO_MASSIMO = 90 * SECONDO;
+
 export class Chiamata {
   constructor({
     dove,
@@ -37,6 +61,8 @@ export class Chiamata {
     registro,
     Presa = Chiamante,
     attesaMassima = ATTESA_MASSIMA,
+    battito = BATTITO,
+    silenzioMassimo = SILENZIO_MASSIMO,
   }) {
     this.dove = String(dove || "").replace(/\/+$/, "");
     this.identita = identita;
@@ -44,6 +70,8 @@ export class Chiamata {
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.Presa = Presa;
     this.attesaMassima = attesaMassima;
+    this.battito = battito;
+    this.silenzioMassimo = silenzioMassimo;
 
     this.presa = null;
     this.dentro = false;
@@ -54,6 +82,8 @@ export class Chiamata {
     this._tentativi = 0;
     this._riprova = null;
     this._impronta = null;
+    this._battito = null;
+    this._vistoIl = 0;
   }
 
   get accesa() {
@@ -151,6 +181,7 @@ export class Chiamata {
       this.rifiutata = null;
       this._tentativi = 0;
       this.registro.info(`il centralino ci conosce: ${this.identita.casa}`);
+      this._cominciaABattere();
       /* Se c'era un codice in attesa quando il filo e' caduto, si rimette:
        * altrimenti chi sta davanti allo schermo col codice in mano vedrebbe
        * l'app dire che non trova niente, senza sapere perche'. */
@@ -169,6 +200,12 @@ export class Chiamata {
   }
 
   _dalCentralino(detto) {
+    /* Un colpetto tornato indietro: e' tutto quello che serve sapere. */
+    if (detto.t === "battito") {
+      this._vistoIl = Date.now();
+      return;
+    }
+
     const numero = detto.c;
     if (typeof numero !== "number") return;
 
@@ -202,6 +239,35 @@ export class Chiamata {
     }
   }
 
+  /* ─── Il battito ─────────────────────────────────────────────────────── */
+
+  _cominciaABattere() {
+    this._smettiDiBattere();
+    this._vistoIl = Date.now();
+    this._battito = setInterval(() => this._colpetto(), this.battito);
+    this._battito.unref?.();
+  }
+
+  _colpetto() {
+    if (!this.dentro) return;
+    if (Date.now() - this._vistoIl > this.silenzioMassimo) {
+      /* Sembra aperto e non lo e'. Si chiude di mano nostra: la chiusura fa
+       * partire la ribussata, che e' l'unica cosa che rimette in piedi la
+       * strada di fuori casa. */
+      this.registro.attenzione("centralino: nessuna risposta ai colpetti, richiamo");
+      this._chiudiLaPresa();
+      this._caduta("il filo era morto senza dirlo");
+      return;
+    }
+    this._manda({ t: "battito" });
+  }
+
+  _smettiDiBattere() {
+    if (!this._battito) return;
+    clearInterval(this._battito);
+    this._battito = null;
+  }
+
   /* ─── I canali, visti da dentro ──────────────────────────────────────── */
 
   mandaSulCanale(numero, testo) {
@@ -222,6 +288,7 @@ export class Chiamata {
 
   _caduta(perche) {
     this.dentro = false;
+    this._smettiDiBattere();
     this._chiudiLaPresa();
     this._buttaGiuITelefoni();
     if (this._spentaApposta) return;
@@ -267,6 +334,7 @@ export class Chiamata {
     this.dentro = false;
     clearTimeout(this._riprova);
     this._riprova = null;
+    this._smettiDiBattere();
     this._buttaGiuITelefoni();
     this._chiudiLaPresa();
   }
