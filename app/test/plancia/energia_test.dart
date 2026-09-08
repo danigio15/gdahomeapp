@@ -109,4 +109,21 @@ void main() {
     expect(prezzi.spesaDi(10), closeTo(2.8, 0.001));
     expect(prezzi.spesaDi(null), isNull);
   });
+
+  group('il disegno di un carico', () {
+    test('viene dal nome, che e\' l\'unica cosa che un carico ha', () {
+      expect(disegnoDelCarico('Wallbox'), 'ev');
+      expect(disegnoDelCarico('Ricarica auto'), 'ev');
+      expect(disegnoDelCarico('Climatizzazione'), 'clima');
+      expect(disegnoDelCarico('Boiler'), 'scaldabagno');
+      expect(disegnoDelCarico('Pompa piscina'), 'piscina');
+    });
+
+    test('un nome che non dice niente prende quello generico', () {
+      /* Meglio un disegno che non dice niente di uno che dice il falso: un
+       * frigorifero con la macchina sopra si legge, e si legge sbagliato. */
+      expect(disegnoDelCarico('Gruppo 3'), 'elettrodomestici');
+      expect(disegnoDelCarico(''), 'elettrodomestici');
+    });
+  });
 }

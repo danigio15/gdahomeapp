@@ -621,10 +621,17 @@ try {
       for (let giro = 0; giro < 16; giro += 1) {
         const bottone = await ilBottone(pagina, nome, { aspetta: false });
         const riquadro = await (bottone?.boundingBox().catch(() => null) ?? null);
-        /* Alta quanto una voce: i contenitori che quel testo se lo trovano
-         * dentro sono alti tutta la barra. */
+        /* Una voce della barra: alta quanto una voce — i contenitori che quel
+         * testo se lo trovano dentro sono alti tutta la barra — e **dentro la
+         * barra**, che sta sul fianco sinistro. Senza quest'ultima, una parola
+         * che sta anche sulla pagina dietro vinceva sulla voce: la ricerca per
+         * testo non guarda le maiuscole, e «Elettrodomestici» scritto in un
+         * elenco e' lo stesso testo di «ELETTRODOMESTICI» nella barra. */
         const eUnaVoce =
-          riquadro && riquadro.height > 20 && riquadro.height < 70;
+          riquadro &&
+          riquadro.height > 20 &&
+          riquadro.height < 70 &&
+          riquadro.x < 210;
         if (
           eUnaVoce &&
           riquadro.y >= 8 &&
@@ -696,7 +703,7 @@ try {
     ["Prese", "Accendi tutte", "4h-prese"],
     ["Musica", "in riproduzione", "4i-musica"],
     ["Robot", "in funzione", "4j-robot"],
-    ["Energia", "DAL SOLE", "4k-energia"],
+    ["Energia", "REPORT", "4k-energia"],
     ["Elettrodomestici", "ASSORBIMENTO", "4l-elettrodomestici"],
     ["Continuità", "tutto alimentato", "4m-continuita"],
     ["MiniPC", "tranquillo", "4n-minipc"],
@@ -729,6 +736,15 @@ try {
     await attendi(900);
     await scatta(pagina, foto);
   }
+
+  /* L'energia ha quattro viste, e quella che si apre e' il flusso: si
+   * fotografa anche il rapporto, che e' l'altra meta' della pagina. */
+  racconta("l'energia, il rapporto");
+  await vaiA("Energia", "REPORT");
+  await premi(pagina, "REPORT");
+  await aspettaCheCompaia(pagina, "DAL SOLE");
+  await attendi(800);
+  await scatta(pagina, "4k2-energia-report");
 
   racconta("apro il menu");
   await apriIlMenu();

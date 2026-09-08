@@ -19,14 +19,16 @@ import '../../plancia/energia.dart';
 import '../../plancia/numeri.dart';
 import '../../vestito/pezzi.dart';
 import '../../vestito/tema.dart';
+import '../../vestito/oggetti.dart';
 import 'comune.dart';
+import 'flusso.dart';
 
 const _arancio = Color(0xFFF97316);
 const _sole = Color(0xFFF59E0B);
 const _rete = Color(0xFF3B82F6);
 const _batteria = Color(0xFF10B981);
 
-class PaginaDellEnergia extends StatelessWidget {
+class PaginaDellEnergia extends StatefulWidget {
   const PaginaDellEnergia({
     super.key,
     required this.collegamento,
@@ -35,6 +37,22 @@ class PaginaDellEnergia extends StatelessWidget {
 
   final Collegamento collegamento;
   final ConfigurazioneDellaPlancia configurazione;
+
+  @override
+  State<PaginaDellEnergia> createState() => _PaginaDellEnergiaState();
+}
+
+class _PaginaDellEnergiaState extends State<PaginaDellEnergia> {
+  /* Quale delle quattro viste si sta guardando. `null` e' il rapporto: i
+   * numeri in fila, che e' quello che si vuole quando si cerca una cifra
+   * precisa invece di capire da dove arriva la corrente. */
+  PeriodoDellEnergia? _periodo = PeriodoDellEnergia.adesso;
+
+  /// Quale impianto, quando ce n'e' piu' d'uno.
+  int _impianto = 0;
+
+  Collegamento get collegamento => widget.collegamento;
+  ConfigurazioneDellaPlancia get configurazione => widget.configurazione;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +71,9 @@ class PaginaDellEnergia extends StatelessWidget {
     final insieme = letture.length > 1
         ? sommaDegliImpianti(letture)
         : letture.first;
+    final impianti = configurazione.impianti
+        .where((i) => i.posto == 0 || i.configurato)
+        .toList();
     final prezzi = PrezziDellEnergia.dalla(configurazione);
     final spesa = prezzi.spesaDi(insieme.oggi);
 
@@ -80,17 +101,42 @@ class PaginaDellEnergia extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        _IlFlusso(lettura: insieme),
-        if (insieme.quotaDelSole case final quota?) ...[
-          const SizedBox(height: 16),
-          _QuotaDelSole(quota: quota, lettura: insieme),
-        ],
-        if (letture.length > 1) ...[
+        _IViste(
+          scelto: _periodo,
+          quandoScelto: (quale) => setState(() => _periodo = quale),
+        ),
+        const SizedBox(height: 14),
+        if (_periodo case final periodo?) ...[
+          if (impianti.length > 1) ...[
+            _GliImpianti(
+              impianti: impianti,
+              scelto: _impianto,
+              quandoScelto: (quale) => setState(() => _impianto = quale),
+            ),
+            const SizedBox(height: 12),
+          ],
+          FlussoDisegnato(
+            flussoDellEnergia(
+              configurazione,
+              (id) => casa[id],
+              impianto: impianti[_impianto.clamp(0, impianti.length - 1)],
+              periodo: periodo,
+              carichi: carichi.map((c) => c.carico).toList(),
+            ),
+          ),
+        ] else
+          _IlFlusso(lettura: insieme),
+        if (_periodo == null)
+          if (insieme.quotaDelSole case final quota?) ...[
+            const SizedBox(height: 16),
+            _QuotaDelSole(quota: quota, lettura: insieme),
+          ],
+        if (_periodo == null && letture.length > 1) ...[
           const SizedBox(height: 20),
           const Insegna('Gli impianti'),
           for (final lettura in letture) _RigaDellImpianto(lettura: lettura),
         ],
-        if (carichi.isNotEmpty) ...[
+        if (_periodo == null && carichi.isNotEmpty) ...[
           const SizedBox(height: 20),
           InsegnaConConto(testo: 'Carichi', conto: '${carichi.length}'),
           for (final voce in carichi)
@@ -433,6 +479,136 @@ class _RigaDelCarico extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Le quattro viste: il rapporto, e il flusso in tre finestre di tempo.
+///
+/// Sono pastiglie in fila che scorrono, come sulla plancia. Non una tendina:
+/// una tendina nasconde che le viste esistono, e la prima volta nessuno la
+/// apre.
+class _IViste extends StatelessWidget {
+  const _IViste({required this.scelto, required this.quandoScelto});
+
+  final PeriodoDellEnergia? scelto;
+  final void Function(PeriodoDellEnergia? quale) quandoScelto;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Row(
+        children: [
+          _Pastiglia(
+            testo: 'Report',
+            disegno: 'widget',
+            scelta: scelto == null,
+            quandoPremuta: () => quandoScelto(null),
+          ),
+          for (final periodo in PeriodoDellEnergia.values) ...[
+            const SizedBox(width: 8),
+            _Pastiglia(
+              testo: periodo.titolo,
+              disegno: switch (periodo) {
+                PeriodoDellEnergia.adesso => 'energia',
+                PeriodoDellEnergia.oggi => 'agenda',
+                PeriodoDellEnergia.mese => 'todo',
+              },
+              scelta: scelto == periodo,
+              quandoPremuta: () => quandoScelto(periodo),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Gli impianti, quando ce n'e' piu' d'uno: il flusso e' di uno alla volta,
+/// perche' due impianti sommati in un disegno solo non sono un disegno di
+/// niente.
+class _GliImpianti extends StatelessWidget {
+  const _GliImpianti({
+    required this.impianti,
+    required this.scelto,
+    required this.quandoScelto,
+  });
+
+  final List<Impianto> impianti;
+  final int scelto;
+  final void Function(int quale) quandoScelto;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Row(
+        children: [
+          for (final (posto, impianto) in impianti.indexed) ...[
+            if (posto > 0) const SizedBox(width: 8),
+            _Pastiglia(
+              testo: impianto.etichetta(),
+              disegno: 'home',
+              scelta: posto == scelto,
+              quandoPremuta: () => quandoScelto(posto),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _Pastiglia extends StatelessWidget {
+  const _Pastiglia({
+    required this.testo,
+    required this.disegno,
+    required this.scelta,
+    required this.quandoPremuta,
+  });
+
+  final String testo;
+  final String disegno;
+  final bool scelta;
+  final VoidCallback quandoPremuta;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    return Material(
+      color: scelta ? colori.onSurface : colori.surfaceContainerLowest,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(999),
+        side: BorderSide(
+          color: scelta ? Colors.transparent : colori.outlineVariant,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: quandoPremuta,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Oggetto(disegno, lato: 17, quantoSpento: scelta ? 0 : 0.28),
+              const SizedBox(width: 8),
+              Text(
+                testo.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                  color: scelta ? colori.surface : colori.onSurface,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
