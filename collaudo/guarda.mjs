@@ -286,6 +286,18 @@ async function main() {
   return { pagina, codice, portaDelPonte, portaDellaConsole };
 }
 
+/* Una rotellata in mezzo allo schermo.
+ *
+ * La rotella scorre quello che sta sotto il mouse — e il mouse, dopo una
+ * fotografia, sta in un angolo dove non c'e' niente da scorrere. Percio' lo si
+ * riporta al centro prima di girarla, se no la pagina non si muove e le
+ * fotografie «piu' in basso» vengono tutte uguali alla prima. */
+async function scorri(pagina, quanto) {
+  const { width, height } = pagina.viewportSize();
+  await pagina.mouse.move(width / 2, height / 2);
+  await pagina.mouse.wheel(0, quanto);
+}
+
 async function scatta(pagina, nome) {
   /* Il mouse resta dove ha premuto l'ultima volta, e sotto di lui un bottone
    * si scalda: in fotografia sembrerebbe premuto. Lo si sposta in un angolo
@@ -452,19 +464,19 @@ try {
   await scatta(pagina, "3-home");
   /* La plancia e' piu' alta dello schermo: si scorre e si fotografa il resto,
    * poi si torna in cima. */
-  await pagina.mouse.wheel(0, 900);
+  await scorri(pagina, 900);
   await attendi(700);
   await scatta(pagina, "3b-home-tessere");
   /* Fino in fondo, dove stanno le azioni rapide: una rotellata sola non
    * basta, Flutter ne prende una alla volta. */
   for (let giro = 0; giro < 8; giro += 1) {
-    await pagina.mouse.wheel(0, 1200);
+    await scorri(pagina, 1200);
     await attendi(150);
   }
   await attendi(700);
   await scatta(pagina, "3c-home-azioni");
   for (let giro = 0; giro < 10; giro += 1) {
-    await pagina.mouse.wheel(0, -1200);
+    await scorri(pagina, -1200);
     await attendi(100);
   }
   await attendi(500);
