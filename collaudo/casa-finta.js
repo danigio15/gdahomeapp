@@ -6,50 +6,27 @@
  * spegne davvero, e si vede.
  */
 
+import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { createHash } from "node:crypto";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export const SEGNO_DEL_SUPERVISOR = "segno-finto-del-supervisor";
 
-/* Una casa piccola ma con dentro tutto quello che la home sa raccontare:
- * luci accese e spente, una finestra aperta, due temperature, un antifurto,
- * una presa, e una cosa che non risponde. */
-const CASA = [
-  ent("light.cucina", "on", { friendly_name: "Luce cucina" }),
-  ent("light.salotto", "on", { friendly_name: "Luce salotto" }),
-  ent("light.camera", "off", { friendly_name: "Luce camera" }),
-  ent("light.bagno", "off", { friendly_name: "Luce bagno" }),
-  ent("binary_sensor.finestra_bagno", "on", {
-    friendly_name: "Finestra bagno",
-    device_class: "window",
-  }),
-  ent("binary_sensor.porta_ingresso", "off", {
-    friendly_name: "Porta d'ingresso",
-    device_class: "door",
-  }),
-  ent("sensor.soggiorno", "21.4", {
-    friendly_name: "Temperatura soggiorno",
-    device_class: "temperature",
-    unit_of_measurement: "°C",
-  }),
-  ent("sensor.camera", "19.8", {
-    friendly_name: "Temperatura camera",
-    device_class: "temperature",
-    unit_of_measurement: "°C",
-  }),
-  ent("alarm_control_panel.casa", "disarmed", { friendly_name: "Antifurto" }),
-  ent("switch.lavatrice", "on", { friendly_name: "Presa lavatrice" }),
-  ent("sensor.sonda_garage", "unavailable", { friendly_name: "Sonda garage" }),
-];
-
-function ent(entity_id, state, attributes = {}) {
-  return {
-    entity_id,
-    state,
-    attributes,
-    last_changed: new Date().toISOString(),
-  };
-}
+/* La casa demo di DashboardModern: la stessa casa inventata con cui la plancia
+ * web disegna le sue anteprime, con dentro tutto — persone, luci, clima,
+ * energia, elettrodomestici, auto, piscina — e la configurazione della plancia
+ * gia' fatta. Cosi' quello che si fotografa qui si confronta con quelle
+ * anteprime, tessera per tessera.
+ *
+ * Le date delle entita' si rimettono a «un minuto e mezzo fa» a ogni
+ * accensione: nel file sono ferme al giorno in cui e' stato scritto, e le
+ * persone direbbero «visto 40 giorni fa». */
+const DEMO = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "casa-demo.json"), "utf8"));
+const ADESSO = new Date(Date.now() - 90_000).toISOString();
+const CASA = DEMO.entita.map((una) => ({ ...una, last_changed: ADESSO, last_updated: ADESSO }));
+const CONFIGURAZIONE = DEMO.configurazione;
 
 /* ─── La presa WebSocket, la stessa del ponte ─────────────────────────────── */
 
@@ -169,6 +146,10 @@ export function alzaLaCasaFinta() {
     switch (detto.type) {
       case "get_states":
         ok([...entita.values()]);
+        return;
+      /* La configurazione della plancia, come la da' DashboardModern. */
+      case "dashboardmodern/config/get":
+        ok(CONFIGURAZIONE);
         return;
       case "subscribe_events":
         sottoscrizioni.set(socket, detto.id);

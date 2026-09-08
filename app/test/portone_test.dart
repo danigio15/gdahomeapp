@@ -21,8 +21,19 @@ import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/aggiungi_casa.dart';
 import 'package:gdahome/schermate/lettore.dart';
+import 'package:gdahome/schermate/plancia/plancia.dart';
 
+import 'plancia/casa_demo.dart';
 import 'ponte/ponte_finto.dart';
+
+/// Aspetta che la casa abbia risposto anche sulla plancia: finche' non lo
+/// fa, la home mostra una rotella, e una rotella non si «assesta» mai.
+Future<void> _finoAllaPlancia(Collegamento collegamento) async {
+  final fine = DateTime.now().add(const Duration(seconds: 5));
+  while (!collegamento.planciaLetta && DateTime.now().isBefore(fine)) {
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+  }
+}
 
 void main() {
   testWidgets('senza case si finisce sulla schermata per aggiungerne una', (
@@ -327,6 +338,7 @@ void main() {
           sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
         );
         await collegamento.apri();
+        await _finoAllaPlancia(collegamento);
       });
 
       await tester.pumpWidget(AppDiCasa(collegamento: collegamento));
@@ -376,6 +388,95 @@ void main() {
     },
   );
 
+  testWidgets(
+    'con DashboardModern configurata la home e\' la plancia: persone, tessere, azioni',
+    (tester) async {
+      /* La casa demo di DashboardModern: quello che compare qui sono gli
+       * stessi numeri delle anteprime della plancia web. */
+      final demo = CasaDemo.leggi();
+      late PonteFinto ponte;
+      late Collegamento collegamento;
+
+      await tester.runAsync(() async {
+        ponte = await PonteFinto.alza();
+        ponte.entita = demo.grezze;
+        ponte.configurazione = demo.risposta;
+        final archivio = ArchivioDelleCase(CassaforteInMemoria());
+        await archivio.apri();
+        await archivio.aggiungi(
+          nome: 'Smart Home',
+          segno: segnoBuono,
+          identificativo: chiBuono,
+          chiave: chiaveBuona,
+          inCasa: ponte.indirizzo,
+        );
+        collegamento = Collegamento(
+          archivio: archivio,
+          sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
+        );
+        await collegamento.apri();
+        await _finoAllaPlancia(collegamento);
+      });
+
+      await tester.pumpWidget(AppDiCasa(collegamento: collegamento));
+      await tester.pump();
+      await tester.pump();
+
+      /* Le persone stanno in cima, coi loro numeri. */
+      expect(find.text('PERSONE'), findsOneWidget);
+      expect(find.text('Giovanni'), findsOneWidget);
+      expect(find.text('Laura'), findsOneWidget);
+      expect(find.text('82%'), findsOneWidget);
+      expect(find.text('Casa'), findsOneWidget, reason: 'Giovanni e\' a casa');
+      expect(find.text('Fuori'), findsOneWidget, reason: 'Laura e\' fuori');
+      expect(find.text('Ufficio'), findsOneWidget, reason: 'Marco e\' in zona');
+
+      /* Le tessere, coi numeri della plancia web. Stanno sotto, e una
+       * ListView costruisce solo quello che si vede. «LUCI» sta anche fra
+       * le azioni rapide: si cerca dentro le tessere. */
+      Finder tessera(String testo) => find.descendant(
+        of: find.byType(TesseraDellaHome),
+        matching: find.text(testo),
+      );
+      await tester.scrollUntilVisible(
+        tessera('LUCI'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(tessera('LUCI'), findsOneWidget);
+      expect(tessera('4'), findsWidgets);
+      expect(tessera('CLIMA'), findsOneWidget);
+      expect(tessera('22,5'), findsOneWidget);
+      expect(
+        find.textContaining('chiede attenzione: Finestra cucina'),
+        findsOneWidget,
+      );
+      await tester.scrollUntilVisible(
+        find.text('AZIONI RAPIDE'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('AZIONI RAPIDE'), findsOneWidget);
+      expect(find.text('CANCELLO'), findsOneWidget);
+
+      /* La finestra di una tessera: le luci, con gli interruttori. La
+       * tessera esiste ancora ma e' scorsa via: la si riporta a schermo, se
+       * no il tocco cade nel vuoto. */
+      await tester.ensureVisible(tessera('LUCI'));
+      await tester.pumpAndSettle();
+      await tester.tap(tessera('LUCI'));
+      await tester.pumpAndSettle();
+      expect(find.text('Faretti soggiorno'), findsOneWidget);
+      expect(find.text('Tutto regolare'), findsNothing);
+      expect(find.text('In corso'), findsOneWidget);
+
+      await tester.runAsync(() async {
+        await collegamento.chiudi();
+        await ponte.spegni();
+      });
+    },
+  );
+
   testWidgets('da fuori casa la home lo scrive, ed e\' la stessa casa', (
     tester,
   ) async {
@@ -400,6 +501,7 @@ void main() {
         sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
       );
       await collegamento.apri();
+      await _finoAllaPlancia(collegamento);
     });
 
     await tester.pumpWidget(AppDiCasa(collegamento: collegamento));
@@ -454,6 +556,7 @@ void main() {
         sonda: Sonda(bussa: (_) async => true),
       );
       await collegamento.apri();
+      await _finoAllaPlancia(collegamento);
     });
 
     await tester.pumpWidget(AppDiCasa(collegamento: collegamento));
@@ -516,6 +619,7 @@ void main() {
         ),
       );
       await collegamento.apri();
+      await _finoAllaPlancia(collegamento);
     });
 
     await tester.pumpWidget(AppDiCasa(collegamento: collegamento));

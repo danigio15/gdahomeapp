@@ -20,6 +20,8 @@ library;
 
 import 'dart:async';
 
+import '../plancia/configurazione.dart';
+import '../plancia/lettura.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 import '../ponte/indirizzo.dart';
@@ -60,6 +62,8 @@ class Collegamento {
 
   Filo? _filo;
   StatoDellaCasa? _stato;
+  ConfigurazioneDellaPlancia? _plancia;
+  bool _planciaLetta = false;
   CasaConosciuta? _casa;
   DaDove? _daDove;
   ComeVa _comeVa = ComeVa.nessunaCasa;
@@ -76,6 +80,15 @@ class Collegamento {
   CasaConosciuta? get casa => _casa;
   StatoDellaCasa? get stato => _stato;
   Filo? get filo => _filo;
+
+  /// La configurazione della plancia di questa casa.
+  ///
+  /// `null` finche' non e' arrivata — o per sempre, se in questa casa
+  /// DashboardModern non c'e': [planciaLetta] distingue i due casi.
+  ConfigurazioneDellaPlancia? get plancia => _plancia;
+
+  /// `true` quando la casa ha risposto sulla plancia, in un senso o nell'altro.
+  bool get planciaLetta => _planciaLetta;
 
   /// Da dove si sta passando adesso: serve a scrivere «in casa» o «da fuori».
   DaDove? get daDove => _daDove;
@@ -172,6 +185,9 @@ class Collegamento {
     try {
       await stato.attacca();
       _vai(ComeVa.aperta);
+      /* La plancia arriva dopo la casa, e non la tiene ferma: le entita' si
+       * vedono subito, le tessere appena la configurazione e' arrivata. */
+      unawaited(_leggiLaPlancia(filo));
     } on SegnoRifiutato catch (errore) {
       _perche = errore.spiegazione;
       _vai(ComeVa.segnoScaduto);
@@ -180,6 +196,29 @@ class Collegamento {
       _vai(ComeVa.irraggiungibile);
       _riprendiQuandoTorna(filo);
     }
+  }
+
+  /// Chiede alla casa la configurazione della plancia.
+  ///
+  /// Un errore qui non e' un errore della casa: la casa e' aperta e le entita'
+  /// ci sono. Si segna che si e' chiesto, e la Home dice quello che sa.
+  Future<void> _leggiLaPlancia(Filo filo) async {
+    try {
+      _plancia = await chiediLaConfigurazione(filo);
+    } on ErroreDelPonte {
+      _plancia = null;
+    }
+    if (_filo != filo) return;
+    _planciaLetta = true;
+    _avvisa();
+  }
+
+  /// Rilegge la configurazione della plancia: dopo un salvataggio
+  /// nell'editor, o quando si tira giu' per aggiornare.
+  Future<void> rileggiLaPlancia() async {
+    final filo = _filo;
+    if (filo == null || !filo.dentro) return;
+    await _leggiLaPlancia(filo);
   }
 
   /// Quando il filo si rialza per conto suo, si riprende da dove si era
@@ -225,6 +264,8 @@ class Collegamento {
     _guardaLaCasa = null;
     await _stato?.stacca();
     _stato = null;
+    _plancia = null;
+    _planciaLetta = false;
     await _filo?.chiudi();
     _filo = null;
     _daDove = null;

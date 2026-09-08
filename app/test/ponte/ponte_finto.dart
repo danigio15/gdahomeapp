@@ -94,7 +94,10 @@ class PonteFinto {
     if (muto) return;
 
     final id = detto['id'];
-    if (detto['type'] == 'un_comando_che_non_esiste') {
+    /* Un comando che Home Assistant non conosce: e' anche quello che risponde
+     * una casa senza DashboardModern a `dashboardmodern/config/get`. */
+    if (detto['type'] == 'un_comando_che_non_esiste' ||
+        (detto['type'] == 'dashboardmodern/config/get' && !planciaInstallata)) {
       _manda(presa, {
         'id': id,
         'type': 'result',
@@ -107,9 +110,22 @@ class PonteFinto {
       'id': id,
       'type': 'result',
       'success': true,
-      'result': detto['type'] == 'get_states' ? entita : null,
+      'result': switch (detto['type']) {
+        'get_states' => entita,
+        'dashboardmodern/config/get' =>
+          configurazione ?? {'profile': 'primary', 'snapshot': null},
+        _ => null,
+      },
     });
   }
+
+  /// Se in questa casa c'e' DashboardModern. Senza, `config/get` non esiste.
+  bool planciaInstallata = true;
+
+  /// Quello che risponde `dashboardmodern/config/get`: la risposta intera,
+  /// come la da' l'integrazione. `null` vuol dire una plancia mai
+  /// configurata.
+  Map<String, dynamic>? configurazione;
 
   /// Scrive solo se dall'altra parte c'e' ancora qualcuno.
   ///

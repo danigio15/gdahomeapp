@@ -11,8 +11,9 @@
 /// domanda di chi apre l'app fuori casa e vede qualcosa di strano: sto
 /// guardando dati veri o vecchi?
 ///
-/// La plancia vera non c'e' ancora: al suo posto c'e' scritto cosa ci sara'.
-/// Quando arrivera' cambiera' [_Plancia], e il resto restera' com'e'.
+/// La plancia e' quella di DashboardModern, rifatta qui: quello che si e'
+/// configurato nell'editor in Home Assistant compare com'e'. Quando in casa
+/// non c'e' DashboardModern, o c'e' ma non e' ancora configurata, lo si dice.
 library;
 
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ import '../vestito/pezzi.dart';
 import 'da_dove.dart';
 import 'dispositivi.dart';
 import 'menu.dart';
+import 'plancia/plancia.dart';
 
 class Home extends StatefulWidget {
   const Home({
@@ -103,13 +105,20 @@ class _NomeEStato extends StatelessWidget {
   }
 }
 
-/// Dove sta la plancia. Per ora dice cosa ci sara', e come sta la casa.
+/// Dove sta la plancia: quella vera quando c'e', e altrimenti come sta la
+/// casa, o cosa manca.
 class _Plancia extends StatelessWidget {
   const _Plancia({required this.collegamento});
   final Collegamento collegamento;
 
   @override
   Widget build(BuildContext context) {
+    final plancia = collegamento.plancia;
+    if (collegamento.comeVa == ComeVa.aperta &&
+        plancia != null &&
+        plancia.configurata) {
+      return Plancia(collegamento: collegamento, configurazione: plancia);
+    }
     return RefreshIndicator(
       onRefresh: () => collegamento.apri(forza: true),
       child: ListView(
@@ -145,14 +154,29 @@ class _Plancia extends StatelessWidget {
       case ComeVa.inCammino:
       case ComeVa.aperta:
         final stato = collegamento.stato;
-        if (stato == null || !stato.pieno) return const _Attesa();
+        if (stato == null || !stato.pieno || !collegamento.planciaLetta) {
+          return const _Attesa();
+        }
+        if (collegamento.plancia == null) {
+          return const StatoVuoto(
+            dentroUnaLista: true,
+            icona: Icons.dashboard_customize_rounded,
+            titolo: 'Qui non c\'e\' DashboardModern',
+            sotto:
+                'La plancia dell\'app e\' la tua plancia di DashboardModern: '
+                'installala in Home Assistant, configurala dall\'Editor '
+                'Dashboard, e comparira\' qui. Intanto, dal menu, ci sono i '
+                'dispositivi.',
+          );
+        }
         return const StatoVuoto(
           dentroUnaLista: true,
           icona: Icons.dashboard_customize_rounded,
-          titolo: 'La plancia arriva qui',
+          titolo: 'La plancia e\' vuota',
           sotto:
-              'Le sezioni di DashboardModern, come le hai disegnate in '
-              'Home Assistant. Intanto, dal menu, ci sono i dispositivi.',
+              'Aprila in Home Assistant e configurala dall\'Editor Dashboard: '
+              'le stanze, le luci, il clima. Quello che configuri li\' '
+              'compare qui.',
         );
     }
   }

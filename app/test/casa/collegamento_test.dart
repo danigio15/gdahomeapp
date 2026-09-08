@@ -288,6 +288,75 @@ void main() {
     },
   );
 
+  test('la configurazione della plancia arriva dopo la casa', () async {
+    final ponte = await PonteFinto.alza();
+    ponte.configurazione = {
+      'profile': 'primary',
+      'snapshot': {
+        'revision': 3,
+        'values': {'cd_stanze': '[{"id":"room-a","name":"Sala"}]'},
+      },
+    };
+    await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+    );
+
+    await collegamento.apri();
+    expect(collegamento.comeVa, ComeVa.aperta);
+    await _finoA(() => collegamento.planciaLetta);
+
+    expect(collegamento.plancia, isNotNull);
+    expect(collegamento.plancia!.revisione, 3);
+    expect(collegamento.plancia!.stanze.single.nome, 'Sala');
+    expect(collegamento.plancia!.configurata, isTrue);
+    expect(
+      ponte.arrivati.where((m) => m['type'] == 'dashboardmodern/config/get'),
+      hasLength(1),
+    );
+
+    /* Rileggerla — dopo un salvataggio nell'editor — chiede di nuovo. */
+    ponte.configurazione = {
+      'profile': 'primary',
+      'snapshot': {'revision': 4, 'values': <String, String>{}},
+    };
+    await collegamento.rileggiLaPlancia();
+    expect(collegamento.plancia!.revisione, 4);
+    expect(collegamento.plancia!.configurata, isFalse);
+    await ponte.spegni();
+  });
+
+  test('una casa senza DashboardModern lo dice, e resta aperta', () async {
+    final ponte = await PonteFinto.alza();
+    ponte.planciaInstallata = false;
+    await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+    );
+
+    await collegamento.apri();
+    await _finoA(() => collegamento.planciaLetta);
+
+    expect(collegamento.comeVa, ComeVa.aperta);
+    expect(collegamento.plancia, isNull);
+    expect(collegamento.stato, isNotNull);
+    await ponte.spegni();
+  });
+
   test('una casa abbinata prima delle chiavi si fa riabbinare', () async {
     /* Il ponte adesso vuole la stretta di mano cifrata: una casa abbinata
      * prima non parla piu' con nessuno, e nasconderlo vorrebbe dire una

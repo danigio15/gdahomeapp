@@ -435,12 +435,29 @@ try {
    * codice. */
   await pagina.keyboard.press("Enter");
   /* Qui succede tutto: il ponte controlla il codice, fabbrica il segno, apre
-   * il filo con Home Assistant, e l'app legge la casa. La home e' la plancia:
-   * quello che si aspetta e' il nome della casa con sotto «in casa», non un
-   * elenco di entita' — quello sta dietro il menu. */
-  await aspettaCheCompaia(pagina, "in casa");
-  await attendi(600);
+   * il filo con Home Assistant, e l'app legge la casa e la sua plancia. La
+   * home e' la plancia: le persone, le tessere, le azioni rapide. */
+  await aspettaCheCompaia(pagina, "PERSONE");
+  await attendi(800);
   await scatta(pagina, "3-home");
+  /* La plancia e' piu' alta dello schermo: si scorre e si fotografa il resto,
+   * poi si torna in cima. */
+  await pagina.mouse.wheel(0, 900);
+  await attendi(700);
+  await scatta(pagina, "3b-home-tessere");
+  /* Fino in fondo, dove stanno le azioni rapide: una rotellata sola non
+   * basta, Flutter ne prende una alla volta. */
+  for (let giro = 0; giro < 8; giro += 1) {
+    await pagina.mouse.wheel(0, 1200);
+    await attendi(150);
+  }
+  await attendi(700);
+  await scatta(pagina, "3c-home-azioni");
+  for (let giro = 0; giro < 10; giro += 1) {
+    await pagina.mouse.wheel(0, -1200);
+    await attendi(100);
+  }
+  await attendi(500);
 
   /* Il menu laterale. Sta dietro il bottone in alto a sinistra, e li' l'albero
    * dell'accessibilita' di Flutter mette i riquadri dove gli pare: quando il
@@ -463,7 +480,7 @@ try {
 
   racconta("apro i dispositivi");
   await premi(pagina, "Dispositivi");
-  await aspettaCheCompaia(pagina, "Luci");
+  await aspettaCheCompaia(pagina, "Cerca fra");
   await attendi(1200);
   await scatta(pagina, "5-dispositivi");
 
