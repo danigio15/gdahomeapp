@@ -1,56 +1,39 @@
-/// La home: la plancia, e un menu laterale per tutto il resto.
+/// La home: la plancia vera, e una barra laterale per tutto il resto.
 ///
-/// Aprendo l'app si vede la casa — la plancia di DashboardModern — e
-/// nient'altro. Niente elenco di entita', niente tessere coi numeri: chi si e'
-/// disegnato la casa la vuole vedere cosi', e quello che di solito le sta
-/// intorno (i dispositivi, gli aiutanti, Zigbee, le automazioni, le case) sta
-/// dietro il bottone in alto a sinistra.
+/// Aprendo l'app si vede la casa — la plancia di DashboardModern, quella
+/// vera, dentro un riquadro — e nient'altro. Niente elenco di entita', niente
+/// tessere rifatte: chi si e' disegnato la casa la vuole vedere cosi'. Quello
+/// che di solito le sta intorno (i dispositivi, gli aiutanti, Zigbee, le
+/// automazioni, le case) sta nella barra, che si chiama dal bordo sinistro.
 ///
-/// In cima restano due cose sole: il nome della casa, e da dove ci si sta
-/// passando. Quella seconda riga sembra un dettaglio e invece e' la prima
-/// domanda di chi apre l'app fuori casa e vede qualcosa di strano: sto
-/// guardando dati veri o vecchi?
-///
-/// La plancia e' quella di DashboardModern, rifatta qui: quello che si e'
-/// configurato nell'editor in Home Assistant compare com'e'. Quando in casa
-/// non c'e' DashboardModern, o c'e' ma non e' ancora configurata, lo si dice.
+/// Le pagine della plancia — le luci, il clima, l'energia, la configurazione —
+/// stanno dentro la plancia, nella sua barra: qui non si ripetono.
 library;
 
 import 'package:flutter/material.dart';
 
-import '../plancia/configurazione.dart';
 import '../casa/collegamento.dart';
-import '../vestito/pezzi.dart';
-import 'da_dove.dart';
-import 'dispositivi.dart';
 import '../vestito/marchio.dart';
+import '../vestito/pezzi.dart';
 import 'barra.dart';
+import 'dispositivi.dart';
 import 'menu.dart';
-import 'plancia/agenda.dart';
-import 'plancia/config.dart';
-import 'plancia/clima.dart';
-import 'plancia/continuita.dart';
-import 'plancia/elettrodomestici.dart';
-import 'plancia/energia.dart';
-import 'plancia/finestre.dart';
-import 'plancia/luci.dart';
-import 'plancia/musica.dart';
-import 'plancia/plancia.dart';
-import 'plancia/prese.dart';
-import 'plancia/robot.dart';
-import 'plancia/sicurezza.dart';
-import 'plancia/stanze.dart';
-import 'plancia/temperatura.dart';
+import 'plancia_vera.dart';
 
 class Home extends StatefulWidget {
   const Home({
     super.key,
     required this.collegamento,
     required this.vaiAlleCase,
+    required this.plancia,
   });
 
   final Collegamento collegamento;
   final VoidCallback vaiAlleCase;
+
+  /// Come si apre la plancia vera: il servitore e il riquadro. Sostituibile
+  /// nelle prove.
+  final FabbricaDellaPlancia plancia;
 
   @override
   State<Home> createState() => _HomeState();
@@ -58,17 +41,25 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final _barra = GlobalKey<BarraDelleSezioniState>();
+  final _plancia = GlobalKey<PlanciaVeraState>();
   Sezione _sezione = Sezione.plancia;
+
+  void _vai(Sezione dove) {
+    /* Toccare «Plancia» quando ci si e' gia' la ricarica: e' il gesto piu'
+     * vicino a tirare giu' per aggiornare, che dentro un riquadro non c'e'. */
+    if (dove == _sezione) {
+      if (dove == Sezione.plancia) _plancia.currentState?.ricarica();
+      return;
+    }
+    setState(() => _sezione = dove);
+  }
 
   @override
   Widget build(BuildContext context) {
     final collegamento = widget.collegamento;
-    final voci = vociDellaBarra(sezioniDellaPlancia(collegamento.plancia));
-    /* Sulla plancia la barra del titolo non c'e': la fa la **testata**, che e'
-     * la card in cima con il marchio, il nome della casa e la fascia del
-     * meteo. Tenerle tutt'e due vorrebbe dire scrivere il nome della casa due
-     * volte a tre centimetri di distanza, e perdere cinquantasei punti di
-     * schermo — che su un telefono sono la prima fila di tessere. */
+    /* Sulla plancia la barra del titolo non c'e': la plancia ha la sua
+     * testata, col nome della casa e il meteo, e una seconda riga sopra
+     * direbbe le stesse cose a tre centimetri di distanza. */
     final sullaPlancia = _sezione == Sezione.plancia;
     return Scaffold(
       appBar: sullaPlancia
@@ -83,9 +74,7 @@ class _HomeState extends State<Home> {
               ),
               leadingWidth: 54,
               titleSpacing: 4,
-              title: _sezione == Sezione.plancia
-                  ? _NomeEStato(collegamento: collegamento)
-                  : Text(_sezione.titolo),
+              title: Text(_sezione.titolo),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.home_work_rounded),
@@ -93,8 +82,8 @@ class _HomeState extends State<Home> {
                   onPressed: widget.vaiAlleCase,
                 ),
               ],
-              /* Una riga sottile che dice «sto ricollegando»: i dati vecchi restano
-         * a schermo, e si vede che stanno per cambiare. */
+              /* Una riga sottile che dice «sto ricollegando»: i dati vecchi
+               * restano a schermo, e si vede che stanno per cambiare. */
               bottom: collegamento.comeVa == ComeVa.inCammino
                   ? const PreferredSize(
                       preferredSize: Size.fromHeight(3),
@@ -109,231 +98,60 @@ class _HomeState extends State<Home> {
         children: [
           /* Senza barra del titolo la pagina comincia sotto l'orologio del
            * telefono: l'aria in cima gliela lascia questo, e solo dove la
-           * barra non c'e' — dove c'e', quell'aria l'ha gia' lasciata lei. */
+           * barra non c'e' — dove c'e', quell'aria l'ha gia' lasciata lei.
+           * In fondo lo stesso: la plancia ha la sua barra proprio li', e
+           * non deve finire sotto i gesti del telefono. */
           SafeArea(
             top: sullaPlancia,
-            bottom: false,
+            bottom: sullaPlancia,
             child: Padding(
               padding: const EdgeInsets.only(left: spazioPerLaBarra),
-              child: switch (_sezione) {
-                Sezione.dispositivi => Dispositivi(collegamento: collegamento),
-                /* La configurazione si apre anche su una casa dove la plancia
-               * non c'e' ancora: e' il posto dove la si mette. */
-                Sezione.configurazione => PaginaDellaConfigurazione(
-                  collegamento: collegamento,
-                  configurazione:
-                      collegamento.plancia ?? ConfigurazioneDellaPlancia.vuota,
-                ),
-                Sezione.plancia => _Plancia(
-                  collegamento: collegamento,
-                  vaiAlleCase: widget.vaiAlleCase,
-                ),
-                _ => _paginaDellaPlancia(collegamento),
-              },
+              /* Le sezioni restano in piedi anche quando non si guardano: la
+               * plancia e' una pagina web, e rifarla da capo a ogni ritorno
+               * vorrebbe dire riaprirla ogni volta. */
+              child: IndexedStack(
+                index: Sezione.values.indexOf(_sezione),
+                children: [
+                  for (final sezione in Sezione.values)
+                    switch (sezione) {
+                      Sezione.plancia => PlanciaVera(
+                        key: _plancia,
+                        collegamento: collegamento,
+                        fabbrica: widget.plancia,
+                        vaiAlleCase: widget.vaiAlleCase,
+                      ),
+                      Sezione.dispositivi => Dispositivi(
+                        collegamento: collegamento,
+                      ),
+                      _ => _InArrivo(sezione),
+                    },
+                ],
+              ),
             ),
           ),
           BarraDelleSezioni(
             key: _barra,
-            sezioni: voci,
+            sezioni: vociDellaBarra(),
             aperta: _sezione,
-            vai: (dove) => setState(() => _sezione = dove),
+            vai: _vai,
             vaiAlleCase: widget.vaiAlleCase,
+            collegamento: collegamento,
           ),
         ],
       ),
     );
   }
-
-  /// Una pagina della plancia — Luci, Clima… — quando la plancia c'e';
-  /// altrimenti quello che la Home direbbe al suo posto.
-  Widget _paginaDellaPlancia(Collegamento collegamento) {
-    final config = collegamento.plancia;
-    if (collegamento.comeVa != ComeVa.aperta ||
-        config == null ||
-        !config.configurata) {
-      return _Plancia(collegamento: collegamento);
-    }
-    return switch (_sezione) {
-      Sezione.stanze => PaginaDelleStanze(
-        collegamento: collegamento,
-        configurazione: config,
-      ),
-      Sezione.luci => PaginaDelleLuci(
-        collegamento: collegamento,
-        configurazione: config,
-      ),
-      Sezione.clima => PaginaDelClima(
-        collegamento: collegamento,
-        configurazione: config,
-      ),
-      Sezione.temperatura => PaginaDellaTemperatura(
-        collegamento: collegamento,
-        configurazione: config,
-      ),
-      Sezione.finestre => PaginaDelleFinestre(
-        collegamento: collegamento,
-        configurazione: config,
-      ),
-      Sezione.agenda => PaginaDellAgenda(
-        collegamento: collegamento,
-        configurazione: config,
-      ),
-      Sezione.sicurezza => PaginaDellaSicurezza(
-        collegamento: collegamento,
-        configurazione: config,
-      ),
-      Sezione.prese => PaginaDellePrese(
-        collegamento: collegamento,
-        configurazione: config,
-      ),
-      Sezione.musica => PaginaDellaMusica(
-        collegamento: collegamento,
-        configurazione: config,
-      ),
-      Sezione.robot => PaginaDeiRobot(
-        collegamento: collegamento,
-        configurazione: config,
-      ),
-      Sezione.energia => PaginaDellEnergia(
-        collegamento: collegamento,
-        configurazione: config,
-      ),
-      Sezione.elettrodomestici => PaginaDegliElettrodomestici(
-        collegamento: collegamento,
-        configurazione: config,
-      ),
-      Sezione.continuita => PaginaDellaContinuita(
-        collegamento: collegamento,
-        configurazione: config,
-      ),
-      Sezione.minipc => PaginaDelMinipc(
-        collegamento: collegamento,
-        configurazione: config,
-      ),
-      _ => _Plancia(collegamento: collegamento),
-    };
-  }
 }
 
-/// Il nome della casa, e sotto da dove si sta passando.
-class _NomeEStato extends StatelessWidget {
-  const _NomeEStato({required this.collegamento});
-  final Collegamento collegamento;
+/// Una sezione che non c'e' ancora.
+class _InArrivo extends StatelessWidget {
+  const _InArrivo(this.sezione);
+  final Sezione sezione;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          collegamento.casa?.nome ?? 'Casa',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: 1),
-        DaDoveSiPassa(collegamento, piccolo: true),
-      ],
-    );
-  }
-}
-
-/// Dove sta la plancia: quella vera quando c'e', e altrimenti come sta la
-/// casa, o cosa manca.
-class _Plancia extends StatelessWidget {
-  const _Plancia({required this.collegamento, this.vaiAlleCase});
-  final Collegamento collegamento;
-  final VoidCallback? vaiAlleCase;
-
-  @override
-  Widget build(BuildContext context) {
-    final plancia = collegamento.plancia;
-    if (collegamento.comeVa == ComeVa.aperta &&
-        plancia != null &&
-        plancia.configurata) {
-      return Plancia(
-        collegamento: collegamento,
-        configurazione: plancia,
-        vaiAlleCase: vaiAlleCase,
-      );
-    }
-    return RefreshIndicator(
-      onRefresh: () => collegamento.apri(forza: true),
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-        children: [
-          /* La testata c'e' anche quando la plancia non c'e': il nome della
-           * casa e come sta il filo sono proprio quello che si guarda mentre
-           * il resto non arriva. */
-          Testata(collegamento: collegamento, vaiAlleCase: vaiAlleCase),
-          const SizedBox(height: 22),
-          _corpo(),
-        ],
-      ),
-    );
-  }
-
-  Widget _corpo() {
-    switch (collegamento.comeVa) {
-      case ComeVa.nessunaCasa:
-        return const StatoVuoto(
-          dentroUnaLista: true,
-          icona: Icons.home_outlined,
-          titolo: 'Nessuna casa',
-          sotto: 'Aggiungine una per cominciare.',
-        );
-      case ComeVa.segnoScaduto:
-        return StatoVuoto(
-          dentroUnaLista: true,
-          icona: Icons.link_off_rounded,
-          titolo: 'Questo telefono e\' stato staccato',
-          sotto: collegamento.perche ?? 'Riabbina la casa con un quadretto nuovo dalla console del ponte.',
-        );
-      case ComeVa.irraggiungibile:
-        return StatoVuoto(
-          dentroUnaLista: true,
-          icona: Icons.cloud_off_rounded,
-          titolo: 'Non trovo la casa',
-          sotto: collegamento.perche ?? 'Sto continuando a provare.',
-        );
-      case ComeVa.inCammino:
-      case ComeVa.aperta:
-        final stato = collegamento.stato;
-        if (stato == null || !stato.pieno || !collegamento.planciaLetta) {
-          return const _Attesa();
-        }
-        if (collegamento.plancia == null) {
-          return const StatoVuoto(
-            dentroUnaLista: true,
-            icona: Icons.dashboard_customize_rounded,
-            titolo: 'Qui non c\'e\' DashboardModern',
-            sotto:
-                'La plancia dell\'app e\' la tua plancia di DashboardModern: '
-                'installala in Home Assistant, configurala dall\'Editor '
-                'Dashboard, e comparira\' qui. Intanto, dal menu, ci sono i '
-                'dispositivi.',
-          );
-        }
-        return const StatoVuoto(
-          dentroUnaLista: true,
-          icona: Icons.dashboard_customize_rounded,
-          titolo: 'La plancia e\' vuota',
-          sotto:
-              'Aprila in Home Assistant e configurala dall\'Editor Dashboard: '
-              'le stanze, le luci, il clima. Quello che configuri li\' '
-              'compare qui.',
-        );
-    }
-  }
-}
-
-class _Attesa extends StatelessWidget {
-  const _Attesa();
-
-  @override
-  Widget build(BuildContext context) => const Padding(
-    padding: EdgeInsets.symmetric(vertical: 120),
-    child: Center(child: CircularProgressIndicator()),
+  Widget build(BuildContext context) => StatoVuoto(
+    icona: Icons.construction_rounded,
+    titolo: '${sezione.titolo}: in arrivo',
+    sotto: 'Questa parte dell\'app non e\' ancora scritta.',
   );
 }

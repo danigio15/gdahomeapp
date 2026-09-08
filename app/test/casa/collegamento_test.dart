@@ -288,15 +288,8 @@ void main() {
     },
   );
 
-  test('la configurazione della plancia arriva dopo la casa', () async {
+  test('dove sta la plancia arriva dopo la casa', () async {
     final ponte = await PonteFinto.alza();
-    ponte.configurazione = {
-      'profile': 'primary',
-      'snapshot': {
-        'revision': 3,
-        'values': {'cd_stanze': '[{"id":"room-a","name":"Sala"}]'},
-      },
-    };
     await archivio.aggiungi(
       nome: 'Casa',
       segno: segnoBuono,
@@ -311,31 +304,29 @@ void main() {
 
     await collegamento.apri();
     expect(collegamento.comeVa, ComeVa.aperta);
-    await _finoA(() => collegamento.planciaLetta);
+    await _finoA(() => collegamento.pannelloLetto);
 
-    expect(collegamento.plancia, isNotNull);
-    expect(collegamento.plancia!.revisione, 3);
-    expect(collegamento.plancia!.stanze.single.nome, 'Sala');
-    expect(collegamento.plancia!.configurata, isTrue);
+    expect(collegamento.pannello, isNotNull);
+    expect(collegamento.pannello!.base, '/dashboardmodern_static/abc123');
+    expect(collegamento.pannello!.profilo, 'primary');
     expect(
-      ponte.arrivati.where((m) => m['type'] == 'dashboardmodern/config/get'),
+      ponte.arrivati.where((m) => m['type'] == 'get_panels'),
       hasLength(1),
     );
 
-    /* Rileggerla — dopo un salvataggio nell'editor — chiede di nuovo. */
-    ponte.configurazione = {
-      'profile': 'primary',
-      'snapshot': {'revision': 4, 'values': <String, String>{}},
-    };
+    /* Rileggerla — dopo un aggiornamento dell'integrazione — chiede di
+     * nuovo, e vede l'impronta nuova. */
+    ponte.pannelli = PonteFinto.pannelliConLaPlancia(
+      base: '/dashboardmodern_static/def456',
+    );
     await collegamento.rileggiLaPlancia();
-    expect(collegamento.plancia!.revisione, 4);
-    expect(collegamento.plancia!.configurata, isFalse);
+    expect(collegamento.pannello!.base, '/dashboardmodern_static/def456');
     await ponte.spegni();
   });
 
   test('una casa senza DashboardModern lo dice, e resta aperta', () async {
     final ponte = await PonteFinto.alza();
-    ponte.planciaInstallata = false;
+    ponte.pannelli = null;
     await archivio.aggiungi(
       nome: 'Casa',
       segno: segnoBuono,
@@ -349,10 +340,10 @@ void main() {
     );
 
     await collegamento.apri();
-    await _finoA(() => collegamento.planciaLetta);
+    await _finoA(() => collegamento.pannelloLetto);
 
     expect(collegamento.comeVa, ComeVa.aperta);
-    expect(collegamento.plancia, isNull);
+    expect(collegamento.pannello, isNull);
     expect(collegamento.stato, isNotNull);
     await ponte.spegni();
   });

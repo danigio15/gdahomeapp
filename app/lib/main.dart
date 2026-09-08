@@ -16,6 +16,7 @@ import 'ponte/centralino.dart';
 import 'schermate/aggiungi_casa.dart';
 import 'schermate/home.dart';
 import 'schermate/le_case.dart';
+import 'schermate/plancia_vera.dart';
 import 'vestito/sfondo.dart';
 import 'vestito/tema.dart';
 
@@ -43,11 +44,18 @@ void main() {
 }
 
 class AppDiCasa extends StatelessWidget {
-  const AppDiCasa({super.key, this.cassaforte, this.collegamento});
+  const AppDiCasa({
+    super.key,
+    this.cassaforte,
+    this.collegamento,
+    this.plancia,
+  });
 
-  /// Sostituibili nelle prove, dove il portachiavi e la rete non ci sono.
+  /// Sostituibili nelle prove, dove il portachiavi, la rete e il WebView non
+  /// ci sono.
   final Cassaforte? cassaforte;
   final Collegamento? collegamento;
+  final FabbricaDellaPlancia? plancia;
 
   @override
   Widget build(BuildContext context) {
@@ -61,16 +69,21 @@ class AppDiCasa extends StatelessWidget {
        * cambio di pagina, e sarebbe un lampo invece di un cielo. */
       builder: (context, schermata) =>
           SfondoVivo(child: schermata ?? const SizedBox.shrink()),
-      home: Portone(cassaforte: cassaforte, collegamento: collegamento),
+      home: Portone(
+        cassaforte: cassaforte,
+        collegamento: collegamento,
+        plancia: plancia,
+      ),
     );
   }
 }
 
 class Portone extends StatefulWidget {
-  const Portone({super.key, this.cassaforte, this.collegamento});
+  const Portone({super.key, this.cassaforte, this.collegamento, this.plancia});
 
   final Cassaforte? cassaforte;
   final Collegamento? collegamento;
+  final FabbricaDellaPlancia? plancia;
 
   @override
   State<Portone> createState() => _PortoneState();
@@ -78,6 +91,8 @@ class Portone extends StatefulWidget {
 
 class _PortoneState extends State<Portone> {
   late final Collegamento _collegamento;
+  late final FabbricaDellaPlancia _plancia =
+      widget.plancia ?? FabbricaDellaPlancia();
   bool _pronto = false;
 
   @override
@@ -143,6 +158,7 @@ class _PortoneState extends State<Portone> {
     }
     return Home(
       collegamento: _collegamento,
+      plancia: _plancia,
       vaiAlleCase: () async {
         await Navigator.of(context).push<void>(
           MaterialPageRoute(

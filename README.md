@@ -84,9 +84,9 @@ Il resto — le due porte, l'abbinamento, cosa finisce sul disco — sta in
 | ✅ | **Piu' case**: ognuna col suo segno, si passa dall'una all'altra senza riabbinare |
 | ✅ | **Dentro e fuori casa**: tre strade per la stessa istanza, scelte da sole |
 | ✅ | Il filo: si rialza da solo, cambia approdo, rifa' le sottoscrizioni cadute |
-| ✅ | **La plancia dentro l'app**: la home e' la plancia, e le sue pagine stanno nel menu |
+| ✅ | **La plancia dentro l'app**: quella vera di DashboardModern, in un WebView, passando dal ponte |
 | ✅ | I dispositivi: tutte le entita' divise per dominio, con gli interruttori |
-| ✅ | **409 prove** — 147 sul ponte, 19 sul centralino, 243 sull'app — senza rete, senza Home Assistant, senza telefono |
+| ✅ | **357 prove** — 161 sul ponte, 19 sul centralino, 177 sull'app — senza rete, senza Home Assistant, senza telefono |
 | ⬜ | Gli aiutanti (i sette classici, nativi) |
 | ⬜ | Zigbee: ZHA **e** Zigbee2MQTT |
 | ⬜ | Il mago delle automazioni |
@@ -94,29 +94,28 @@ Il resto — le due porte, l'abbinamento, cosa finisce sul disco — sta in
 
 ### La plancia, com'e' fatta
 
-L'app **non carica** la plancia web: chiede a DashboardModern la
-configurazione che c'e' gia' — `dashboardmodern/config/get`, che passa dal
-ponte come qualunque altro comando — e con quella piu' gli stati vivi la
-ridisegna in Flutter. Le regole sono le stesse, funzione per funzione: le
-soglie degli elettrodomestici, l'ordine delle tessere, quando una tessera si
-accende, il segno della rete, i giudizi di comfort. Le prove le confrontano
-coi numeri delle anteprime della plancia web, sulla stessa casa demo.
+L'app **non rifa'** la plancia: mostra quella vera. La pagina di
+DashboardModern — la stessa che si apre in Home Assistant, con le sue tessere,
+le sue finestre, la sua barra e la sua configurazione — gira dentro l'app in un
+WebView, e quello che si configura di la' si vede di qua senza fare niente.
+Prima si era provato a rifarla in Flutter, ed e' andata come dice il piano:
+non era lei.
 
-La **Home** sono le tessere. Ce ne sono ventidue sulla casa demo: luci, clima,
-finestre, sicurezza, telecamere, energia, elettrodomestici, temperatura, auto,
-robot, solare, continuita', MiniPC, piscina, prese, musica, irrigazione,
-agenda, e quelle che nessuno configura — batterie, aria, fumo e gas,
-allagamenti — che le rileva Home Assistant da se'.
+Da dove arriva, visto che dal telefono Home Assistant non si vede: da un
+server che sta **dentro l'app**, su `127.0.0.1` (`app/lib/plancia/servitore.dart`).
+I file della plancia li chiede al ponte sul filo — la commissione `ponte/http`,
+in `ponte/src/commissioni.js` — e li tiene sul disco: il percorso ha dentro
+un'impronta che cambia a ogni aggiornamento dell'integrazione, quindi un file
+preso una volta vale finche' esiste. Il WebSocket della pagina lo cuce sullo
+stesso filo, coi numeri del filo. Alla pagina si dice di essere *ospitata*,
+come quando gira dentro il pannello di Home Assistant: cosi' non chiede nessun
+segno, e nessuna credenziale di Home Assistant tocca ne' la pagina ne' il
+telefono.
 
-Il **menu laterale** prende il posto della barra in basso, e mostra solo le
-pagine che quella casa ha davvero: Stanze, Luci, Clima, Temperatura, Finestre,
-Agenda, Sicurezza, Prese, Musica, Robot, Energia, Elettrodomestici,
-Continuita', MiniPC.
-
-I tasti compaiono solo quando l'apparecchio li accetta: lo dice
-`supported_features`, e un tasto che non corrisponde a un bit e' un tasto che
-non fa niente. La centrale antifurto mostra i **suoi** inserimenti, e chiede
-il codice solo se un codice esiste.
+Il **menu laterale** tiene il resto: la casa in cui si e' e da dove ci si
+passa, la plancia, i dispositivi, e quello che verra'. Le pagine della plancia
+— le luci, il clima, l'energia, la configurazione — stanno dentro la plancia,
+nella sua barra: qui non si ripetono.
 
 Il piano per intero, fase per fase, sta in [`docs/PIANO.md`](docs/PIANO.md).
 
@@ -130,9 +129,9 @@ volta dentro — stanno in [`COME_PROVARLA.md`](COME_PROVARLA.md).
 ## Le prove
 
 ```bash
-npm run test:ponte              # il ponte: 147 prove, un secondo
+npm run test:ponte              # il ponte: 161 prove, due secondi
 npm run test:centralino         # il centralino: 19 prove
-cd app && flutter test          # l'app: 243 prove, venti secondi
+cd app && flutter test          # l'app: 177 prove, un quarto di minuto
 ```
 
 Fra quelle dell'app ce n'e' un gruppo diverso dagli altri, in

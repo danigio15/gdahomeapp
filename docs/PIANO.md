@@ -77,17 +77,17 @@ Quindi non c'e' niente da smontare: c'e' da costruire.
   nessun indirizzo, e mai nessuna credenziale di Home Assistant. Il resto —
   chi e' questo telefono, la chiave, quale centralino, dove sta la casa sulla
   rete locale — lo dice la casa nella risposta all'abbinamento.
-* ✅ **La home.** Luci accese, aperture, temperatura, antifurto, cose che non
-  rispondono. E in cima, sotto il nome della casa, da dove si sta passando —
-  che e' la prima domanda di chi apre l'app fuori casa e vede qualcosa di
-  strano: sto guardando dati veri o vecchi?
+* ✅ **La home.** E' la plancia vera. E nella barra, sotto il nome della
+  casa, da dove si sta passando — che e' la prima domanda di chi apre l'app
+  fuori casa e vede qualcosa di strano: sto guardando dati veri o vecchi?
 
-La plancia dentro l'app resta fuori dalla fase 1 **apposta**: e' l'ultimo
-blocco che confluisce nell'app, e prima vengono le tre funzioni che in Home
-Assistant stanno nascoste. Quando sara' il suo turno servira' un pezzo che al
-momento non c'e' da nessuna parte — il ponte passa il *filo*, cioe' il
-WebSocket, ma non le *pagine* — e una WebView autenticata e' un posto dove si
-sbaglia facile.
+La plancia dentro l'app c'e', ed e' quella vera: la pagina di DashboardModern
+in un WebView, servita da un server che sta dentro l'app e che i file li
+chiede al ponte — la commissione `ponte/http` — e il WebSocket lo cuce sul
+filo. Il ponte passa quindi il filo *e* le pagine, e la WebView non e'
+autenticata: alla pagina si dice di essere ospitata, come nel pannello di
+Home Assistant, e nessun segno la tocca. Prima di questo si era provato a
+rifarla in Flutter, ed e' andata come dice la tabella in cima: non era lei.
 
 ### Fase 2 — gli aiutanti
 

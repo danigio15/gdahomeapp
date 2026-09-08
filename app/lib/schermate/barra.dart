@@ -26,7 +26,9 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../casa/collegamento.dart';
 import '../vestito/oggetti.dart';
+import 'da_dove.dart';
 import 'menu.dart';
 
 /// Quanto resta aperta se non si tocca niente.
@@ -49,10 +51,16 @@ class BarraDelleSezioni extends StatefulWidget {
     required this.aperta,
     required this.vai,
     required this.vaiAlleCase,
+    this.collegamento,
   });
 
   /// Le sezioni da mostrare, nell'ordine in cui vanno.
   final List<Sezione> sezioni;
+
+  /// La casa in cui si e', per scriverla in cima alla barra: il nome, e da
+  /// dove ci si sta passando. E' l'unico posto dell'app che lo dice mentre
+  /// si guarda la plancia, che di suo non lo sa.
+  final Collegamento? collegamento;
 
   /// Quella che si sta guardando: e' la pastiglia accesa.
   final Sezione aperta;
@@ -179,21 +187,35 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                             /* Alta quanto le sue voci, e non un punto di piu': una
                          * barra che arriva sempre in fondo allo schermo sembra
                          * un pannello, e un pannello non si chiude da solo. */
-                            child: ListView.separated(
-                              controller: _scorrimento,
-                              shrinkWrap: true,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              itemCount: widget.sezioni.length,
-                              separatorBuilder: (_, _) =>
-                                  const SizedBox(height: _Voce.spazio),
-                              itemBuilder: (context, posto) {
-                                final sezione = widget.sezioni[posto];
-                                return _Voce(
-                                  sezione: sezione,
-                                  scelta: sezione == widget.aperta,
-                                  quandoPremuta: () => _scelta(sezione),
-                                );
-                              },
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (widget.collegamento != null)
+                                  _LaCasa(
+                                    collegamento: widget.collegamento!,
+                                    quandoPremuta: widget.vaiAlleCase,
+                                  ),
+                                Flexible(
+                                  child: ListView.separated(
+                                    controller: _scorrimento,
+                                    shrinkWrap: true,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    itemCount: widget.sezioni.length,
+                                    separatorBuilder: (_, _) =>
+                                        const SizedBox(height: _Voce.spazio),
+                                    itemBuilder: (context, posto) {
+                                      final sezione = widget.sezioni[posto];
+                                      return _Voce(
+                                        sezione: sezione,
+                                        scelta: sezione == widget.aperta,
+                                        quandoPremuta: () => _scelta(sezione),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -253,6 +275,75 @@ class _IlVetro extends StatelessWidget {
             ],
           ),
           child: child,
+        ),
+      ),
+    );
+  }
+}
+
+/// In cima alla barra: la casa in cui si e', e da dove ci si sta passando.
+///
+/// Si tocca per passare a un'altra casa. E' qui e non sulla plancia perche'
+/// la plancia e' una pagina web che di case ne conosce una sola, la sua: il
+/// nome che scrive in testata e' quello di Home Assistant, e «in casa» o
+/// «da fuori» non lo puo' sapere.
+class _LaCasa extends StatelessWidget {
+  const _LaCasa({required this.collegamento, required this.quandoPremuta});
+
+  final Collegamento collegamento;
+  final VoidCallback quandoPremuta;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    /* Il nome per chi non la vede — e per le prove — sta nel suggerimento,
+     * non in un'etichetta che coprirebbe il nome della casa e da dove si
+     * passa: quelle due righe le deve leggere anche un lettore di schermo. */
+    return Tooltip(
+      message: nomeDelleCase,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          onTap: quandoPremuta,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(19, 16, 12, 12),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: colori.onSurface.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        collegamento.casa?.nome ?? 'Casa',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: testi.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      DaDoveSiPassa(collegamento, piccolo: true),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: colori.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -463,16 +554,8 @@ class _LaManiglia extends StatelessWidget {
   }
 }
 
-/// Le voci della barra: le pagine della plancia, i dispositivi, e in fondo
-/// quello che si tocca una volta ogni tanto.
-List<Sezione> vociDellaBarra(List<Sezione> dellaPlancia) => [
-  ...dellaPlancia,
-  Sezione.dispositivi,
-  Sezione.aiutanti,
-  Sezione.zigbee,
-  Sezione.automazioni,
-  Sezione.configurazione,
-];
+/// Le voci della barra: la plancia, i dispositivi, e quello che verra'.
+List<Sezione> vociDellaBarra() => Sezione.values;
 
 /// Come si chiama la maniglia per chi non la vede: il lettore di schermo la
 /// legge cosi', e le prove la cercano con questo nome.
@@ -481,6 +564,10 @@ List<Sezione> vociDellaBarra(List<Sezione> dellaPlancia) => [
 /// — «22 sezioni · 2 chiedono attenzione» — e chi cerca per testo finirebbe a
 /// premere quella riga. Un nome deve essere di una cosa sola.
 const nomeDellaManiglia = 'Barra delle sezioni';
+
+/// Come si chiama, per chi non la vede, la riga in cima alla barra che porta
+/// all'elenco delle case.
+const nomeDelleCase = 'Le tue case';
 
 /// Quanta aria lasciare sul fianco sinistro della pagina, per non finire
 /// sotto la maniglia.

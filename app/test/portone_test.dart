@@ -24,19 +24,75 @@ import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/aggiungi_casa.dart';
 import 'package:gdahome/schermate/barra.dart';
 import 'package:gdahome/schermate/lettore.dart';
-import 'package:gdahome/schermate/menu.dart';
-import 'package:gdahome/schermate/plancia/plancia.dart';
+import 'package:gdahome/plancia/pannello.dart';
+import 'package:gdahome/plancia/servitore_qui/qui.dart';
+import 'package:gdahome/schermate/plancia_vera.dart';
+import 'package:gdahome/ponte/filo.dart';
 
-import 'plancia/casa_demo.dart';
 import 'ponte/ponte_finto.dart';
 
-/// Aspetta che la casa abbia risposto anche sulla plancia: finche' non lo
-/// fa, la home mostra una rotella, e una rotella non si «assesta» mai.
+/// Aspetta che la casa abbia risposto anche su dove sta la plancia: finche'
+/// non lo fa, la home mostra una rotella, e una rotella non si «assesta» mai.
 Future<void> _finoAllaPlancia(Collegamento collegamento) async {
   final fine = DateTime.now().add(const Duration(seconds: 5));
-  while (!collegamento.planciaLetta && DateTime.now().isBefore(fine)) {
+  while (!collegamento.pannelloLetto && DateTime.now().isBefore(fine)) {
     await Future<void>.delayed(const Duration(milliseconds: 10));
   }
+}
+
+/// La plancia vera, nelle prove: un servitore che non serve niente e un
+/// riquadro che e' una scritta. Un WebView qui non c'e', e quello che si
+/// prova e' **dove si finisce**: che la home sia la plancia, e a quale
+/// indirizzo la si e' aperta.
+class _PlanciaFinta extends FabbricaDellaPlancia {
+  @override
+  Future<ServitoreDiQuestoSistema?> servitore(
+    Filo? Function() filo, {
+    String lingua = 'it',
+  }) async => _ServitoreFinto();
+
+  @override
+  Widget riquadro(
+    Uri pagina, {
+    required Key chiave,
+    required VoidCallback quandoCaricata,
+    required void Function(String perche) quandoFallisce,
+  }) => _RiquadroFinto(key: chiave, pagina: pagina, caricata: quandoCaricata);
+}
+
+class _ServitoreFinto implements ServitoreDiQuestoSistema {
+  @override
+  Uri paginaDi(PannelloDellaPlancia pannello) =>
+      Uri.parse('http://127.0.0.1:1${pannello.percorsoDellaPagina('it')}');
+
+  @override
+  Future<void> spegni() async {}
+}
+
+/// Si dice caricato al primo fotogramma, come una pagina che arriva.
+class _RiquadroFinto extends StatefulWidget {
+  const _RiquadroFinto({
+    super.key,
+    required this.pagina,
+    required this.caricata,
+  });
+  final Uri pagina;
+  final VoidCallback caricata;
+
+  @override
+  State<_RiquadroFinto> createState() => _RiquadroFintoState();
+}
+
+class _RiquadroFintoState extends State<_RiquadroFinto> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => widget.caricata());
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      Center(child: Text('LA PLANCIA VERA ${widget.pagina}'));
 }
 
 /// Un telefono che ha chiesto meno movimento.
@@ -415,12 +471,21 @@ void main() {
         await _finoAllaPlancia(collegamento);
       });
 
-      await tester.pumpWidget(AppDiCasa(collegamento: collegamento));
+      await tester.pumpWidget(
+        AppDiCasa(collegamento: collegamento, plancia: _PlanciaFinta()),
+      );
       await tester.pump();
       await tester.pump();
 
-      expect(find.text('Casa mia'), findsOneWidget);
-      expect(find.text('in casa'), findsOneWidget);
+      /* La home e' la plancia vera, aperta sul servitore alla pagina che il
+       * pannello di DashboardModern dice. */
+      expect(find.textContaining('LA PLANCIA VERA'), findsOneWidget);
+      expect(
+        find.textContaining(
+          '/dashboardmodern_static/abc123/legacy/dashboard.html',
+        ),
+        findsOneWidget,
+      );
       /* La cosa che si sta provando e' quello che **non** c'e'. La prima
        * schermata e' la plancia: nessuna entita', nessun contatore, nessun
        * bottone per spegnere le luci. Quelle cose stanno dietro il menu. */
@@ -430,9 +495,12 @@ void main() {
       expect(find.text('Dispositivi'), findsNothing);
 
       /* La barra: si chiama dalla maniglia in fondo, come la dock della
-       * plancia. I nomi sono in maiuscolo e per intero. */
+       * plancia. In cima c'e' la casa in cui si e', e da dove ci si passa;
+       * sotto, i nomi in maiuscolo e per intero. */
       await apriLaBarra(tester);
-      expect(nellaBarra('HOME'), findsOneWidget);
+      expect(nellaBarra('Casa mia'), findsOneWidget);
+      expect(nellaBarra('in casa'), findsOneWidget);
+      expect(nellaBarra('PLANCIA'), findsOneWidget);
       expect(nellaBarra('DISPOSITIVI'), findsOneWidget);
       /* I blocchi che non ci sono ancora si vedono lo stesso, spenti: cosi'
        * si sa dove sta andando l'app. */
@@ -478,213 +546,6 @@ void main() {
     },
   );
 
-  testWidgets(
-    'con DashboardModern configurata la home e\' la plancia: persone, tessere, azioni',
-    (tester) async {
-      /* La casa demo di DashboardModern: quello che compare qui sono gli
-       * stessi numeri delle anteprime della plancia web. */
-      final demo = CasaDemo.leggi();
-      late PonteFinto ponte;
-      late Collegamento collegamento;
-
-      await tester.runAsync(() async {
-        ponte = await PonteFinto.alza();
-        ponte.entita = demo.grezze;
-        ponte.configurazione = demo.risposta;
-        final archivio = ArchivioDelleCase(CassaforteInMemoria());
-        await archivio.apri();
-        await archivio.aggiungi(
-          nome: 'Smart Home',
-          segno: segnoBuono,
-          identificativo: chiBuono,
-          chiave: chiaveBuona,
-          inCasa: ponte.indirizzo,
-        );
-        collegamento = Collegamento(
-          archivio: archivio,
-          sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
-        );
-        await collegamento.apri();
-        await _finoAllaPlancia(collegamento);
-      });
-
-      await tester.pumpWidget(AppDiCasa(collegamento: collegamento));
-      await tester.pump();
-      await tester.pump();
-
-      /* Le persone stanno in cima, coi loro numeri. */
-      expect(find.text('PERSONE'), findsOneWidget);
-      expect(find.text('Giovanni'), findsOneWidget);
-      expect(find.text('Laura'), findsOneWidget);
-      expect(find.text('82%'), findsOneWidget);
-      expect(find.text('Casa'), findsOneWidget, reason: 'Giovanni e\' a casa');
-      expect(find.text('Fuori'), findsOneWidget, reason: 'Laura e\' fuori');
-      expect(find.text('Ufficio'), findsOneWidget, reason: 'Marco e\' in zona');
-
-      /* Le tessere, coi numeri della plancia web. Stanno sotto, e una
-       * ListView costruisce solo quello che si vede. «LUCI» sta anche fra
-       * le azioni rapide: si cerca dentro le tessere. */
-      Finder tessera(String testo) => find.descendant(
-        of: find.byType(TesseraDellaHome),
-        matching: find.text(testo),
-      );
-      await tester.scrollUntilVisible(
-        tessera('LUCI'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(tessera('LUCI'), findsOneWidget);
-      expect(tessera('4'), findsWidgets);
-      expect(tessera('CLIMA'), findsOneWidget);
-      expect(tessera('22,5'), findsOneWidget);
-      /* Le tessere che chiedono attenzione stanno scritte per nome
-       * nell'intestazione: la batteria di Marco al 9% e la finestra aperta
-       * in cucina. */
-      expect(
-        find.textContaining('chiedono attenzione: Batterie, Finestra cucina'),
-        findsOneWidget,
-      );
-      await tester.scrollUntilVisible(
-        find.text('AZIONI RAPIDE'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(find.text('AZIONI RAPIDE'), findsOneWidget);
-      /* Le azioni stanno sotto il titolo, e la lista costruisce solo quello
-       * che si vede: si scorre fino a trovarne una. */
-      await tester.scrollUntilVisible(
-        find.text('CANCELLO'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(find.text('CANCELLO'), findsWidgets);
-
-      /* La finestra di una tessera: le luci, con gli interruttori. La
-       * tessera adesso non c'e' nemmeno piu': si e' scorso fino in fondo, e
-       * una lista costruisce solo quello che si vede. Si torna su a
-       * cercarla. */
-      await tester.scrollUntilVisible(
-        tessera('LUCI'),
-        -200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(tessera('LUCI'));
-      await tester.pumpAndSettle();
-      expect(find.text('Faretti soggiorno'), findsOneWidget);
-      expect(find.text('Tutto regolare'), findsNothing);
-      expect(find.text('In corso'), findsOneWidget);
-
-      await tester.runAsync(() async {
-        await collegamento.chiudi();
-        await ponte.spegni();
-      });
-    },
-  );
-
-  testWidgets(
-    'dal menu si va nelle pagine della plancia: luci, clima, stanze',
-    (tester) async {
-      final demo = CasaDemo.leggi();
-      late PonteFinto ponte;
-      late Collegamento collegamento;
-
-      await tester.runAsync(() async {
-        ponte = await PonteFinto.alza();
-        ponte.entita = demo.grezze;
-        ponte.configurazione = demo.risposta;
-        final archivio = ArchivioDelleCase(CassaforteInMemoria());
-        await archivio.apri();
-        await archivio.aggiungi(
-          nome: 'Smart Home',
-          segno: segnoBuono,
-          identificativo: chiBuono,
-          chiave: chiaveBuona,
-          inCasa: ponte.indirizzo,
-        );
-        collegamento = Collegamento(
-          archivio: archivio,
-          sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
-        );
-        await collegamento.apri();
-        await _finoAllaPlancia(collegamento);
-      });
-
-      await tester.pumpWidget(AppDiCasa(collegamento: collegamento));
-      await tester.pump();
-      await tester.pump();
-
-      Future<void> vaiA(Sezione dove) async {
-        await apriLaBarra(tester);
-        await tester.tap(nellaBarra(dove.titolo.toUpperCase()));
-        await tester.pumpAndSettle();
-      }
-
-      /* La barra elenca le pagine che questa casa ha. */
-      await apriLaBarra(tester);
-      /* Nella barra i nomi sono interi, in maiuscolo: come sulla plancia,
-       * dove «ELETTRODOMESTICI» si scrive tutto. */
-      for (final sezione in [
-        Sezione.plancia,
-        Sezione.stanze,
-        Sezione.luci,
-        Sezione.clima,
-        Sezione.temperatura,
-        Sezione.finestre,
-      ]) {
-        expect(
-          nellaBarra(sezione.titolo.toUpperCase()),
-          findsOneWidget,
-          reason: sezione.titolo,
-        );
-      }
-      await tester.tap(nellaBarra('LUCI'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('4/8 accese'), findsOneWidget);
-      expect(find.text('Faretti soggiorno'), findsOneWidget);
-      expect(find.text('ACCESA · 75%'), findsOneWidget);
-      expect(find.text('Accendi tutte'), findsOneWidget);
-
-      await vaiA(Sezione.clima);
-      expect(find.text('Clima soggiorno'), findsOneWidget);
-      expect(find.text('TARGET'), findsWidgets);
-      expect(find.text('FREDDO'), findsOneWidget, reason: 'la linguetta');
-      expect(find.text('CALDO'), findsOneWidget);
-
-      await vaiA(Sezione.temperatura);
-      expect(find.text('COMFORT'), findsWidgets);
-      expect(find.text('22,4'), findsOneWidget, reason: 'il soggiorno');
-
-      await vaiA(Sezione.finestre);
-      expect(find.text('3 aperte · 1 chiusa'), findsOneWidget);
-      expect(find.text('Tapparella soggiorno'), findsOneWidget);
-      /* La cucina sta sotto: le schede delle finestre sono alte, e una
-       * ListView costruisce solo quello che si vede. */
-      await tester.scrollUntilVisible(
-        find.text('FINESTRA APERTA'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(find.text('FINESTRA APERTA'), findsOneWidget, reason: 'la cucina');
-
-      await vaiA(Sezione.stanze);
-      expect(find.text('SENSORI DELLA STANZA'), findsOneWidget);
-      expect(find.text('2/2'), findsOneWidget, reason: 'le luci del soggiorno');
-      await tester.scrollUntilVisible(
-        find.text('Strip TV'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(find.text('Strip TV'), findsOneWidget);
-
-      await tester.runAsync(() async {
-        await collegamento.chiudi();
-        await ponte.spegni();
-      });
-    },
-  );
-
   testWidgets('da fuori casa la home lo scrive, ed e\' la stessa casa', (
     tester,
   ) async {
@@ -712,12 +573,17 @@ void main() {
       await _finoAllaPlancia(collegamento);
     });
 
-    await tester.pumpWidget(AppDiCasa(collegamento: collegamento));
+    await tester.pumpWidget(
+      AppDiCasa(collegamento: collegamento, plancia: _PlanciaFinta()),
+    );
     await tester.pump();
     await tester.pump();
 
-    expect(find.text('da fuori'), findsOneWidget);
-    expect(find.text('Casa'), findsOneWidget);
+    /* Lo dice la barra: la plancia e' una pagina web, e da dove ci si passa
+     * non lo sa. */
+    await apriLaBarra(tester);
+    expect(nellaBarra('da fuori'), findsOneWidget);
+    expect(nellaBarra('Casa'), findsOneWidget);
 
     await tester.runAsync(() async {
       await collegamento.chiudi();
@@ -767,16 +633,20 @@ void main() {
       await _finoAllaPlancia(collegamento);
     });
 
-    await tester.pumpWidget(AppDiCasa(collegamento: collegamento));
+    await tester.pumpWidget(
+      AppDiCasa(collegamento: collegamento, plancia: _PlanciaFinta()),
+    );
     await tester.pump();
     await tester.pump();
-    /* L'ultima aggiunta e' quella attiva: chi abbina una casa ci vuole entrare. */
-    expect(find.text('Dai miei'), findsOneWidget);
+    /* L'ultima aggiunta e' quella attiva: chi abbina una casa ci vuole
+     * entrare. Il nome sta in cima alla barra. */
+    await apriLaBarra(tester);
+    expect(nellaBarra('Dai miei'), findsOneWidget);
 
-    /* L'elenco delle case sta in cima, dove si guarda per sapere in che casa
-     * si e'. Per etichetta e non per icona: l'icona e' un dettaglio del
-     * vestito, l'etichetta e' quello che legge chi usa l'app senza vederla. */
-    await tester.tap(find.byTooltip('Le tue case'));
+    /* L'elenco delle case sta dietro quel nome. Per etichetta e non per
+     * icona: l'icona e' un dettaglio del vestito, l'etichetta e' quello che
+     * legge chi usa l'app senza vederla. */
+    await tester.tap(find.byTooltip(nomeDelleCase));
     await tester.pumpAndSettle();
     expect(find.text('Le tue case'), findsOneWidget, reason: 'il titolo');
     expect(find.text('Casa mia'), findsOneWidget);
@@ -828,7 +698,9 @@ void main() {
       await _finoAllaPlancia(collegamento);
     });
 
-    await tester.pumpWidget(AppDiCasa(collegamento: collegamento));
+    await tester.pumpWidget(
+      AppDiCasa(collegamento: collegamento, plancia: _PlanciaFinta()),
+    );
     await tester.pump();
     await tester.pump();
 

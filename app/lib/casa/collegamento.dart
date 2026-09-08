@@ -20,11 +20,7 @@ library;
 
 import 'dart:async';
 
-import '../plancia/configurazione.dart';
-import '../plancia/lettura.dart';
-import '../plancia/libro.dart';
 import '../plancia/pannello.dart';
-import '../plancia/scrittura.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 import '../ponte/indirizzo.dart';
@@ -65,11 +61,8 @@ class Collegamento {
 
   Filo? _filo;
   StatoDellaCasa? _stato;
-  ConfigurazioneDellaPlancia? _plancia;
-  bool _planciaLetta = false;
   PannelloDellaPlancia? _pannello;
   bool _pannelloLetto = false;
-  LibroDegliImpegni? _libro;
   CasaConosciuta? _casa;
   DaDove? _daDove;
   ComeVa _comeVa = ComeVa.nessunaCasa;
@@ -87,24 +80,11 @@ class Collegamento {
   StatoDellaCasa? get stato => _stato;
   Filo? get filo => _filo;
 
-  /// La configurazione della plancia di questa casa.
-  ///
-  /// `null` finche' non e' arrivata — o per sempre, se in questa casa
-  /// DashboardModern non c'e': [planciaLetta] distingue i due casi.
-  ConfigurazioneDellaPlancia? get plancia => _plancia;
-
-  /// `true` quando la casa ha risposto sulla plancia, in un senso o nell'altro.
-  bool get planciaLetta => _planciaLetta;
-
   /// Il pannello di DashboardModern in questa casa: dove stanno i file della
   /// plancia vera. `null` finche' non si e' chiesto, o per sempre se
   /// DashboardModern non c'e': [pannelloLetto] distingue i due casi.
   PannelloDellaPlancia? get pannello => _pannello;
   bool get pannelloLetto => _pannelloLetto;
-
-  /// Gli appuntamenti e le cose da fare: non stanno negli stati, si chiedono
-  /// coi servizi, e quindi vivono per conto loro.
-  LibroDegliImpegni? get libro => _libro;
 
   /// Da dove si sta passando adesso: serve a scrivere «in casa» o «da fuori».
   DaDove? get daDove => _daDove;
@@ -214,13 +194,11 @@ class Collegamento {
     }
   }
 
-  /// Chiede alla casa la configurazione della plancia.
+  /// Chiede alla casa dove sta la plancia.
   ///
   /// Un errore qui non e' un errore della casa: la casa e' aperta e le entita'
-  /// ci sono. Si segna che si e' chiesto, e la Home dice quello che sa.
+  /// ci sono. Si segna che si e' chiesto, e la schermata dice quello che sa.
   Future<void> _leggiLaPlancia(Filo filo) async {
-    /* Prima il pannello, che e' quello che apre la plancia vera: la
-     * configurazione serve al resto, e puo' aspettare un giro. */
     try {
       _pannello = await trovaLaPlancia(filo);
     } on ErroreDelPonte {
@@ -229,70 +207,14 @@ class Collegamento {
     if (_filo != filo) return;
     _pannelloLetto = true;
     _avvisa();
-    try {
-      _plancia = await chiediLaConfigurazione(filo);
-    } on ErroreDelPonte {
-      _plancia = null;
-    }
-    if (_filo != filo) return;
-    _planciaLetta = true;
-    _avvisa();
-    final config = _plancia;
-    if (config != null) unawaited(_leggiLAgenda(filo, config));
   }
 
-  /// L'agenda arriva dopo, e per conto suo: sono due giri di rete per ogni
-  /// calendario e per ogni lista, e la plancia non deve aspettarli per
-  /// disegnarsi.
-  Future<void> _leggiLAgenda(
-    Filo filo,
-    ConfigurazioneDellaPlancia config, {
-    bool forza = false,
-  }) async {
-    final libro = _libro ??= LibroDegliImpegni(filo);
-    try {
-      await libro.leggi(config, forza: forza);
-    } on ErroreDelPonte {
-      /* Un calendario che non risponde non porta via la plancia. */
-    }
-    if (_filo != filo) return;
-    _avvisa();
-  }
-
-  /// Rilegge la configurazione della plancia: dopo un salvataggio
-  /// nell'editor, o quando si tira giu' per aggiornare.
+  /// Richiede alla casa dove sta la plancia: dopo un aggiornamento
+  /// dell'integrazione, o quando si tira giu' per aggiornare.
   Future<void> rileggiLaPlancia() async {
     final filo = _filo;
     if (filo == null || !filo.dentro) return;
     await _leggiLaPlancia(filo);
-    final config = _plancia;
-    if (config != null) await _leggiLAgenda(filo, config, forza: true);
-  }
-
-  /// Salva la configurazione della plancia, con dentro i cambiamenti.
-  ///
-  /// Quello che torna dalla casa e' la configurazione che adesso c'e' davvero —
-  /// la nostra se e' andata, quella di un altro se ci ha scavalcati — e si
-  /// tiene quella: dopo un salvataggio andato male, restare in mano con la
-  /// propria vorrebbe dire mostrare una casa che non esiste.
-  Future<Salvataggio> salvaLaPlancia(Map<String, String> cambiamenti) async {
-    final filo = _filo;
-    final config = _plancia;
-    if (filo == null || !filo.dentro || config == null) {
-      return Salvataggio(
-        EsitoDelSalvataggio.scavalcata,
-        config ?? ConfigurazioneDellaPlancia.vuota,
-      );
-    }
-    final esito = await salvaLaConfigurazione(
-      filo,
-      config,
-      cambiamenti: cambiamenti,
-    );
-    if (_filo != filo) return esito;
-    _plancia = esito.adesso;
-    _avvisa();
-    return esito;
   }
 
   /// Quando il filo si rialza per conto suo, si riprende da dove si era
@@ -338,12 +260,8 @@ class Collegamento {
     _guardaLaCasa = null;
     await _stato?.stacca();
     _stato = null;
-    _plancia = null;
-    _planciaLetta = false;
     _pannello = null;
     _pannelloLetto = false;
-    await _libro?.chiudi();
-    _libro = null;
     await _filo?.chiudi();
     _filo = null;
     _daDove = null;
