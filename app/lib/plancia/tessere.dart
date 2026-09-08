@@ -14,6 +14,7 @@ import '../casa/entita.dart';
 import 'configurazione.dart';
 import 'numeri.dart';
 import 'rilevate.dart';
+import 'termico.dart';
 
 /// Come si legge lo stato di un'entita' adesso.
 typedef Leggi = Entita? Function(String entita);
@@ -165,6 +166,7 @@ List<Tessera> tessereDellaHome(
     _ev(c),
     _robot(c),
     _solare(c),
+    ...tessereTermiche(config, leggi),
     _ups(c),
     _minipc(c),
     _piscina(c),

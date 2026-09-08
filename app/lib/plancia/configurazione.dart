@@ -324,6 +324,36 @@ class ConfigurazioneDellaPlancia {
     ];
   }
 
+  /// Gli scaldabagni, dalla loro chiave. Una riga senza nemmeno una casella
+  /// non e' uno scaldabagno a meta': e' una riga vuota.
+  List<Scaldabagno> get scaldabagni {
+    final grezzi = grezzo('cd_scaldabagni');
+    if (grezzi is! List) return const [];
+    return [
+      for (final (posto, uno) in grezzi.indexed)
+        if (uno is Map)
+          if (Scaldabagno._(uno, posto) case final riga)
+            if (riga.caselle.isNotEmpty) riga,
+    ];
+  }
+
+  /// Le caldaie di casa, che possono essere piu' d'una: chi ne ha due — due
+  /// appartamenti uniti — scrive una lista, chi ne ha una la ritrova dov'era.
+  List<Caldaia> get caldaie {
+    final grezze = grezzo('cd_caldaia');
+    final elenco = grezze is List
+        ? grezze
+        : grezze is Map
+        ? [grezze]
+        : const [];
+    return [
+      for (final (posto, una) in elenco.indexed)
+        if (una is Map)
+          if (Caldaia._(una, posto) case final riga)
+            if (riga.caselle.isNotEmpty) riga,
+    ];
+  }
+
   List<Telecamera> get telecamere {
     final grezze = _sezioni['cameras'];
     if (grezze is! List) return const [];
@@ -1191,6 +1221,108 @@ class Ups {
     tensione,
     potenza,
     temperatura,
+  ].where((e) => e.isNotEmpty).toList();
+}
+
+/// Uno scaldabagno, come sta scritto in `cd_scaldabagni`.
+class Scaldabagno {
+  Scaldabagno._(Map grezzo, int posto)
+    : id = pulito(grezzo['id']).isNotEmpty
+          ? pulito(grezzo['id'])
+          : 'scaldabagno-${posto + 1}',
+      nome = pulito(grezzo['name']),
+      stanzaId = pulito(grezzo['room']).isNotEmpty
+          ? pulito(grezzo['room'])
+          : pulito(grezzo['room_id']),
+      /* L'entita' intera di Home Assistant, quando c'e': si porta dietro
+       * stato, temperatura e obiettivo tutti insieme. */
+      entita = pulito(grezzo['entity']).isNotEmpty
+          ? pulito(grezzo['entity'])
+          : pulito(grezzo['entity_id']),
+      interruttore = pulito(grezzo['interruttore']).isNotEmpty
+          ? pulito(grezzo['interruttore'])
+          : pulito(grezzo['switch']),
+      temperatura = pulito(grezzo['temperatura']).isNotEmpty
+          ? pulito(grezzo['temperatura'])
+          : pulito(grezzo['temperature']),
+      obiettivo = pulito(grezzo['obiettivo']).isNotEmpty
+          ? pulito(grezzo['obiettivo'])
+          : pulito(grezzo['target']),
+      potenza = pulito(grezzo['potenza']).isNotEmpty
+          ? pulito(grezzo['potenza'])
+          : pulito(grezzo['power']),
+      energia = pulito(grezzo['energia']).isNotEmpty
+          ? pulito(grezzo['energia'])
+          : pulito(grezzo['energy']);
+
+  final String id;
+  final String nome;
+  final String stanzaId;
+  final String entita;
+  final String interruttore;
+  final String temperatura;
+  final String obiettivo;
+  final String potenza;
+  final String energia;
+
+  List<String> get caselle => [
+    entita,
+    interruttore,
+    temperatura,
+    obiettivo,
+    potenza,
+    energia,
+  ].where((e) => e.isNotEmpty).toList();
+}
+
+/// Una caldaia, come sta scritta in `cd_caldaia`.
+class Caldaia {
+  Caldaia._(Map grezzo, int posto)
+    : id = pulito(grezzo['id']).isNotEmpty
+          ? pulito(grezzo['id'])
+          : 'caldaia-${posto + 1}',
+      nome = pulito(grezzo['name']),
+      stato = pulito(grezzo['stato']),
+      fiamma = pulito(grezzo['fiamma']),
+      interruttore = pulito(grezzo['interruttore']),
+      valvola = pulito(grezzo['valvola']),
+      valvola2 = pulito(grezzo['valvola2']),
+      mandata = pulito(grezzo['mandata']),
+      ritorno = pulito(grezzo['ritorno']),
+      acquaCalda = pulito(grezzo['acquaCalda']),
+      pressione = pulito(grezzo['pressione']),
+      modulazione = pulito(grezzo['modulazione']),
+      /* Cosa c'e' all'altro capo del tubo: chi ha una caldaia che serve solo
+       * l'accumulo sanitario non deve vederci un termosifone che non ha. */
+      uscita = pulito(grezzo['uscita']).toLowerCase() == 'boiler'
+          ? 'boiler'
+          : 'radiatori';
+
+  final String id;
+  final String nome;
+  final String stato;
+  final String fiamma;
+  final String interruttore;
+  final String valvola;
+  final String valvola2;
+  final String mandata;
+  final String ritorno;
+  final String acquaCalda;
+  final String pressione;
+  final String modulazione;
+  final String uscita;
+
+  List<String> get caselle => [
+    stato,
+    fiamma,
+    interruttore,
+    valvola,
+    valvola2,
+    mandata,
+    ritorno,
+    acquaCalda,
+    pressione,
+    modulazione,
   ].where((e) => e.isNotEmpty).toList();
 }
 
