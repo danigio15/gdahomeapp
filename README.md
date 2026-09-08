@@ -6,12 +6,12 @@ fare le tre cose che in Home Assistant stanno nascoste in fondo a un menu:
 aiutante**. Tutto quello che si crea da qui compare nella plancia, perche' sono
 entita' di Home Assistant come le altre.
 
-> **Stato: fase 1 chiusa, tranne la plancia.** Il ponte c'e'. L'app tiene piu'
+> **Stato: fase 1 chiusa, plancia compresa.** Il ponte c'e'. L'app tiene piu'
 > case, entra in ognuna **da dentro e da fuori** senza che l'utente tocchi
 > niente, e ha la sua home. Si abbina **inquadrando un quadretto**: nessun
 > codice da battere, nessun indirizzo, nessuna credenziale di Home Assistant.
-> Le tre funzioni nuove — aiutanti, Zigbee, automazioni — sono le fasi 2, 3 e
-> 4. La plancia e' l'ultimo blocco.
+> La plancia c'e': la home e' la plancia, e le sue pagine stanno nel menu. Le
+> tre funzioni nuove — aiutanti, Zigbee, automazioni — sono le fasi 2, 3 e 4.
 
 ## Come ci si arriva
 
@@ -84,14 +84,39 @@ Il resto — le due porte, l'abbinamento, cosa finisce sul disco — sta in
 | ✅ | **Piu' case**: ognuna col suo segno, si passa dall'una all'altra senza riabbinare |
 | ✅ | **Dentro e fuori casa**: tre strade per la stessa istanza, scelte da sole |
 | ✅ | Il filo: si rialza da solo, cambia approdo, rifa' le sottoscrizioni cadute |
-| ✅ | La home: luci accese, aperture, temperatura, antifurto, cosa non risponde |
+| ✅ | **La plancia dentro l'app**: la home e' la plancia, e le sue pagine stanno nel menu |
 | ✅ | I dispositivi: tutte le entita' divise per dominio, con gli interruttori |
-| ✅ | **254 prove** — 106 sul ponte, 19 sul centralino, 129 sull'app — senza rete, senza Home Assistant, senza telefono |
+| ✅ | **409 prove** — 147 sul ponte, 19 sul centralino, 243 sull'app — senza rete, senza Home Assistant, senza telefono |
 | ⬜ | Gli aiutanti (i sette classici, nativi) |
 | ⬜ | Zigbee: ZHA **e** Zigbee2MQTT |
 | ⬜ | Il mago delle automazioni |
-| ⬜ | La plancia dentro l'app — **l'ultimo blocco** |
 | ⬜ | Notifiche, impronta digitale, pubblicazione sui negozi |
+
+### La plancia, com'e' fatta
+
+L'app **non carica** la plancia web: chiede a DashboardModern la
+configurazione che c'e' gia' — `dashboardmodern/config/get`, che passa dal
+ponte come qualunque altro comando — e con quella piu' gli stati vivi la
+ridisegna in Flutter. Le regole sono le stesse, funzione per funzione: le
+soglie degli elettrodomestici, l'ordine delle tessere, quando una tessera si
+accende, il segno della rete, i giudizi di comfort. Le prove le confrontano
+coi numeri delle anteprime della plancia web, sulla stessa casa demo.
+
+La **Home** sono le tessere. Ce ne sono ventidue sulla casa demo: luci, clima,
+finestre, sicurezza, telecamere, energia, elettrodomestici, temperatura, auto,
+robot, solare, continuita', MiniPC, piscina, prese, musica, irrigazione,
+agenda, e quelle che nessuno configura — batterie, aria, fumo e gas,
+allagamenti — che le rileva Home Assistant da se'.
+
+Il **menu laterale** prende il posto della barra in basso, e mostra solo le
+pagine che quella casa ha davvero: Stanze, Luci, Clima, Temperatura, Finestre,
+Agenda, Sicurezza, Prese, Musica, Robot, Energia, Elettrodomestici,
+Continuita', MiniPC.
+
+I tasti compaiono solo quando l'apparecchio li accetta: lo dice
+`supported_features`, e un tasto che non corrisponde a un bit e' un tasto che
+non fa niente. La centrale antifurto mostra i **suoi** inserimenti, e chiede
+il codice solo se un codice esiste.
 
 Il piano per intero, fase per fase, sta in [`docs/PIANO.md`](docs/PIANO.md).
 
@@ -105,9 +130,9 @@ volta dentro — stanno in [`COME_PROVARLA.md`](COME_PROVARLA.md).
 ## Le prove
 
 ```bash
-npm run test:ponte              # il ponte: 106 prove, un secondo
+npm run test:ponte              # il ponte: 147 prove, un secondo
 npm run test:centralino         # il centralino: 19 prove
-cd app && flutter test          # l'app: 129 prove, dieci secondi
+cd app && flutter test          # l'app: 243 prove, venti secondi
 ```
 
 Fra quelle dell'app ce n'e' un gruppo diverso dagli altri, in
