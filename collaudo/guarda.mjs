@@ -636,6 +636,10 @@ try {
   /* Chi guarda il video deve tornare a casa: e' li' che si comincia, ed e' li'
    * che si finisce. */
   if (FILMA) {
+    /* Dall'elenco delle case non si torna col menu: quella schermata il menu
+     * non ce l'ha, ha il tasto indietro. */
+    await premi(pagina, "Back", { inAlto: true });
+    await attendi(600);
     await apriIlMenu();
     await premiNelMenu("Home");
     await aspettaCheCompaia(pagina, "PERSONE");
