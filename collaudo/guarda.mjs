@@ -564,6 +564,22 @@ try {
       await pagina.mouse.wheel(0, 260);
       await attendi(200);
     }
+    /* Il menu si ferma per inerzia, non di colpo: misurando subito dopo
+     * l'ultima rotellata il riquadro e' gia' vecchio quando il tocco arriva,
+     * e il tocco cade su un'altra voce — «Le tue case», che sta in fondo.
+     * Si aspetta che si fermi, e poi ci si assicura che sia fermo davvero:
+     * due misure uguali di fila vogliono dire che non si muove piu'. */
+    let prima = null;
+    for (let giro = 0; giro < 12; giro += 1) {
+      await attendi(150);
+      const adesso = await pagina
+        .locator(`[aria-label="${nome}"]`)
+        .first()
+        .boundingBox({ timeout: 800 })
+        .catch(() => null);
+      if (adesso && prima && Math.abs(adesso.y - prima.y) < 1) break;
+      prima = adesso;
+    }
     await premi(pagina, nome);
   }
 
