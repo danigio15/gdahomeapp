@@ -134,6 +134,10 @@ void main() {
       Sezione.prese,
       Sezione.musica,
       Sezione.robot,
+      Sezione.energia,
+      Sezione.elettrodomestici,
+      Sezione.continuita,
+      Sezione.minipc,
     ]);
     expect(sezioniDellaPlancia(null), [Sezione.plancia]);
     expect(sezioniDellaPlancia(ConfigurazioneDellaPlancia.vuota), [

@@ -13,6 +13,7 @@ library;
 import '../casa/entita.dart';
 import 'agenda.dart';
 import 'configurazione.dart';
+import 'energia.dart';
 import 'numeri.dart';
 import 'rilevate.dart';
 import 'termico.dart';
@@ -674,80 +675,36 @@ Tessera? _telecamere(_Contesto c) {
 
 /* ─── L'energia ─────────────────────────────────────────────────────────── */
 
-const _gruppiDellEnergia = [
-  ('house', 'Casa', 'dm.energy_potenza_consumo_casa'),
-  ('solar', 'Solare', 'dm.energy_potenza_fotovoltaico'),
-  ('grid', 'Rete', 'dm.energy_potenza_scambio_rete'),
-  ('battery', 'Batteria', 'dm.energy_potenza_batteria'),
-];
-
-class _LetturaDellImpianto {
-  _LetturaDellImpianto(this.righe, this.casa, this.oggi);
-  final List<({String gruppo, String nome, num? watt, num? carica})> righe;
-  final num? casa;
-  final num? oggi;
-}
-
-_LetturaDellImpianto _letturaDellImpianto(
-  _Contesto c,
-  Impianto impianto,
-  bool primo,
-) {
-  Map<String, String> gruppo(String nome) => switch (nome) {
-    'house' => impianto.casa,
-    'solar' => impianto.solare,
-    'grid' => impianto.rete,
-    _ => impianto.batteria,
-  };
-  final righe = <({String gruppo, String nome, num? watt, num? carica})>[];
-  num? casa;
-  for (final (chiave, nome, rif) in _gruppiDellEnergia) {
-    final entita = pulito(gruppo(chiave)['power']);
-    final wattLetti = c.watt(entita.isNotEmpty ? entita : (primo ? rif : ''));
-    if (chiave == 'house') casa = wattLetti;
-    if (wattLetti != null) {
-      righe.add((gruppo: chiave, nome: nome, watt: wattLetti, carica: null));
-    }
+List<Tessera> _energia(_Contesto c) {
+  final letture = lettureDegliImpianti(c.config, c.stato);
+  if (letture.isEmpty) return const [];
+  if (letture.length < 2) {
+    return [if (_tesseraEnergia(letture.first) case final t?) t];
   }
-  final socEntita = pulito(impianto.batteria['soc']);
-  final carica = c.numeroDi(
-    socEntita.isNotEmpty
-        ? socEntita
-        : (primo ? 'dm.energy_stato_carica_batteria' : ''),
-  );
-  if (carica != null) {
-    final indice = righe.indexWhere((r) => r.gruppo == 'battery');
-    if (indice >= 0) {
-      righe[indice] = (
-        gruppo: 'battery',
-        nome: 'Batteria',
-        watt: righe[indice].watt,
-        carica: carica,
-      );
-    } else {
-      righe.add((
-        gruppo: 'battery',
-        nome: 'Batteria',
-        watt: null,
-        carica: carica,
-      ));
-    }
+  if (c.config.unaTesseraPerImpianto) {
+    return [
+      for (final (posto, lettura) in letture.indexed)
+        if (_tesseraEnergia(
+              lettura,
+              chiave: posto == 0 || lettura.id == 'impianto'
+                  ? 'energia'
+                  : 'energia_${lettura.id}',
+              etichetta: lettura.nome,
+            )
+            case final t?)
+          t,
+    ];
   }
-  final oggiEntita = pulito(impianto.casa['daily_energy']);
-  final oggi = c.numeroDi(
-    oggiEntita.isNotEmpty
-        ? oggiEntita
-        : (primo ? 'dm.energy_consumo_casa_oggi' : ''),
-  );
-  return _LetturaDellImpianto(righe, casa, oggi);
+  /* Una sola, con la somma: chi ha unito due appartamenti ha una casa sola. */
+  return [if (_tesseraEnergia(sommaDegliImpianti(letture)) case final t?) t];
 }
 
 Tessera? _tesseraEnergia(
-  _LetturaDellImpianto lettura, {
+  LetturaDellImpianto lettura, {
   String chiave = 'energia',
   String etichetta = 'Energia',
 }) {
-  if (lettura.casa == null && lettura.righe.isEmpty) return null;
+  if (!lettura.ceQualcosa) return null;
   return Tessera(
     chiave: chiave,
     colore: '#f97316',
@@ -759,7 +716,7 @@ Tessera? _tesseraEnergia(
     righe: [
       for (final r in lettura.righe)
         Riga(
-          nome: r.nome,
+          nome: r.gruppo.nome,
           grezzo: r.watt ?? r.carica,
           valore: r.watt != null
               ? watt(r.watt)
@@ -767,73 +724,6 @@ Tessera? _tesseraEnergia(
         ),
     ],
   );
-}
-
-List<Tessera> _energia(_Contesto c) {
-  final impianti = c.config.impianti;
-  if (impianti.isEmpty) return const [];
-  final configurati = [
-    for (final i in impianti)
-      if (i.posto == 0 || i.configurato) i,
-  ];
-  final letture = [
-    for (final i in configurati) _letturaDellImpianto(c, i, i.posto == 0),
-  ];
-  if (configurati.length < 2) {
-    final sola = letture.isEmpty
-        ? _LetturaDellImpianto(const [], null, null)
-        : letture.first;
-    return [if (_tesseraEnergia(sola) case final t?) t];
-  }
-  if (c.config.unaTesseraPerImpianto) {
-    return [
-      for (var i = 0; i < configurati.length; i += 1)
-        if (_tesseraEnergia(
-              letture[i],
-              chiave: i == 0 || configurati[i].id == 'impianto'
-                  ? 'energia'
-                  : 'energia_${configurati[i].id}',
-              etichetta: configurati[i].etichetta(),
-            )
-            case final t?)
-          t,
-    ];
-  }
-  /* Una sola, con la somma: chi ha unito due appartamenti ha una casa sola.
-   * Sommare due `null` non fa zero, fa «non lo sappiamo». */
-  num? somma(Iterable<num?> valori) {
-    final veri = valori.whereType<num>().toList();
-    return veri.isEmpty ? null : veri.reduce((a, b) => a + b);
-  }
-
-  final perGruppo = <String, ({num? watt, num? carica, int quante})>{};
-  for (final lettura in letture) {
-    for (final r in lettura.righe) {
-      final voce = perGruppo[r.gruppo] ?? (watt: null, carica: null, quante: 0);
-      perGruppo[r.gruppo] = (
-        watt: r.watt == null ? voce.watt : (voce.watt ?? 0) + r.watt!,
-        carica: r.carica == null ? voce.carica : (voce.carica ?? 0) + r.carica!,
-        quante: voce.quante + (r.carica == null ? 0 : 1),
-      );
-    }
-  }
-  final righe = [
-    for (final (chiave, nome, _) in _gruppiDellEnergia)
-      if (perGruppo[chiave] case final v?
-          when v.watt != null || v.carica != null)
-        (
-          gruppo: chiave,
-          nome: nome,
-          watt: v.watt,
-          carica: v.quante > 0 ? v.carica! / v.quante : null,
-        ),
-  ];
-  final unita = _LetturaDellImpianto(
-    righe,
-    somma(letture.map((l) => l.casa)),
-    somma(letture.map((l) => l.oggi)),
-  );
-  return [if (_tesseraEnergia(unita) case final t?) t];
 }
 
 /* ─── Gli elettrodomestici ──────────────────────────────────────────────── */
@@ -1845,7 +1735,22 @@ const _caselleDelMinipc = [
   ),
 ];
 
-Tessera? _minipc(_Contesto c) {
+/// Le caselle del MiniPC, lette una per una.
+///
+/// Servono anche alla sua pagina, che le disegna come misure invece che come
+/// una tessera sola: e' lo stesso elenco, letto due volte in due modi.
+({List<Riga> righe, num? carico, Map<String, Riga> quote}) lettureDelMinipc(
+  ConfigurazioneDellaPlancia config,
+  Leggi leggi,
+) {
+  final c = _Contesto(config, leggi, DateTime.now(), const {});
+  final letto = _lettureDelMinipc(c);
+  return (righe: letto.righe, carico: letto.carico, quote: letto.quote);
+}
+
+({List<Riga> righe, num? carico, Map<String, Riga> quote}) _lettureDelMinipc(
+  _Contesto c,
+) {
   final righe = <Riga>[];
   final visti = <String>{};
   num? carico;
@@ -1882,6 +1787,11 @@ Tessera? _minipc(_Contesto c) {
     if (chiave.isNotEmpty) quote[chiave] = riga;
     righe.add(riga);
   }
+  return (righe: righe, carico: carico, quote: quote);
+}
+
+Tessera? _minipc(_Contesto c) {
+  final (:righe, :carico, :quote) = _lettureDelMinipc(c);
   if (righe.isEmpty) return null;
   return Tessera(
     chiave: 'minipc',

@@ -2,7 +2,7 @@
 <resources>
     <!-- Gli stessi di `lib/vestito/tema.dart`: il blu notte del marchio e i
          due fondi delle schermate, chiaro e scuro. -->
-    <color name="fondo_dell_icona">#0C1B36</color>
+    <color name="fondo_dell_icona">#000000</color>
     <color name="fondo_chiaro">#F4F6FA</color>
     <color name="fondo_scuro">#0A1220</color>
 </resources>

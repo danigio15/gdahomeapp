@@ -25,6 +25,9 @@ import 'dispositivi.dart';
 import 'menu.dart';
 import 'plancia/agenda.dart';
 import 'plancia/clima.dart';
+import 'plancia/continuita.dart';
+import 'plancia/elettrodomestici.dart';
+import 'plancia/energia.dart';
 import 'plancia/finestre.dart';
 import 'plancia/luci.dart';
 import 'plancia/musica.dart';
@@ -138,6 +141,22 @@ class _HomeState extends State<Home> {
         configurazione: config,
       ),
       Sezione.robot => PaginaDeiRobot(
+        collegamento: collegamento,
+        configurazione: config,
+      ),
+      Sezione.energia => PaginaDellEnergia(
+        collegamento: collegamento,
+        configurazione: config,
+      ),
+      Sezione.elettrodomestici => PaginaDegliElettrodomestici(
+        collegamento: collegamento,
+        configurazione: config,
+      ),
+      Sezione.continuita => PaginaDellaContinuita(
+        collegamento: collegamento,
+        configurazione: config,
+      ),
+      Sezione.minipc => PaginaDelMinipc(
         collegamento: collegamento,
         configurazione: config,
       ),

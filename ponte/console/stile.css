@@ -55,6 +55,14 @@ h1 {
   margin: 0 0 4px;
 }
 
+/* Il marchio accanto al titolo: la stessa immagine che sta sull'icona
+   dell'app, e con gli stessi angoli tondi. */
+.marchio {
+  border-radius: 10px;
+  display: block;
+  margin-bottom: 8px;
+}
+
 h2 {
   font-size: 1.05rem;
   margin: 0 0 8px;

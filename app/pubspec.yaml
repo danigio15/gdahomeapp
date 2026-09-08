@@ -50,6 +50,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  assets:
+    # Il marchio: la stessa immagine che fa da icona dell'app. Ce n'e' una
+    # sola, e sta in un posto solo.
+    - assets/marchio/gda.png
+
   # Il carattere dell'app: Outfit, geometrico e caldo, incorporato nel
   # pacchetto invece che scaricato — cosi' e' uguale su ogni telefono, e non
   # dipende da nessuna rete al primo avvio. Licenza SIL OFL, in `OFL.txt`

@@ -24,6 +24,7 @@ import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
 import '../plancia/configurazione.dart';
+import '../plancia/energia.dart';
 import '../plancia/tessere.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
@@ -58,6 +59,20 @@ enum Sezione {
   prese('Prese', Icons.power_rounded, pronta: true, dellaPlancia: true),
   musica('Musica', Icons.speaker_rounded, pronta: true, dellaPlancia: true),
   robot('Robot', Icons.smart_toy_rounded, pronta: true, dellaPlancia: true),
+  energia('Energia', Icons.bolt_rounded, pronta: true, dellaPlancia: true),
+  elettrodomestici(
+    'Elettrodomestici',
+    Icons.local_laundry_service_rounded,
+    pronta: true,
+    dellaPlancia: true,
+  ),
+  continuita(
+    'Continuita\'',
+    Icons.battery_charging_full_rounded,
+    pronta: true,
+    dellaPlancia: true,
+  ),
+  minipc('MiniPC', Icons.dns_rounded, pronta: true, dellaPlancia: true),
   dispositivi('Dispositivi', Icons.devices_other_rounded, pronta: true),
   aiutanti('Aiutanti', Icons.tune_rounded),
   zigbee('Zigbee', Icons.settings_input_antenna_rounded),
@@ -100,6 +115,14 @@ List<Sezione> sezioniDellaPlancia(ConfigurazioneDellaPlancia? config) {
     if (config.prese.isNotEmpty) Sezione.prese,
     if (config.lettori.isNotEmpty) Sezione.musica,
     if (config.robot.any((r) => r.entita.isNotEmpty)) Sezione.robot,
+    if (config.impianti.any((i) => i.posto == 0 || i.configurato) ||
+        carichiDellEnergia(config).isNotEmpty)
+      Sezione.energia,
+    if (config.elettrodomestici.any((e) => e.abilitato))
+      Sezione.elettrodomestici,
+    if (config.ups.isNotEmpty) Sezione.continuita,
+    if (config.caselle.keys.any((c) => c.startsWith('dm.server_')))
+      Sezione.minipc,
   ];
 }
 

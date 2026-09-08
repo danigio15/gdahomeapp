@@ -23,6 +23,7 @@ import {
   existsSync,
   mkdirSync,
   readdirSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -42,10 +43,24 @@ const RESTA = process.argv.includes("--resta");
  * Le fotografie finiscono in una cartella a parte, per non coprire quelle
  * chiare. */
 const SCURO = process.argv.includes("--scuro");
+/* `--filma`: invece delle sole fotografie, registra tutto il giro in un video.
+ *
+ * Serve a far vedere l'app a chi non ce l'ha installata: una fotografia dice
+ * com'e' fatta una schermata, un video dice come ci si arriva — che e' la
+ * domanda vera quando si guarda un'app per la prima volta. Il giro e' lo
+ * stesso del collaudo, solo respirato: le pause si allungano perche' chi
+ * guarda deve fare in tempo a leggere. */
+const FILMA = process.argv.includes("--filma");
 const FOTO = join(QUI, "foto", SCURO ? "scuro" : "");
+const VIDEO = join(QUI, "video");
 mkdirSync(FOTO, { recursive: true });
+if (FILMA) mkdirSync(VIDEO, { recursive: true });
 
-const attendi = (millesimi) => new Promise((ok) => setTimeout(ok, millesimi));
+/* Quanto si respira quando si filma: le stesse attese, moltiplicate. */
+const RESPIRO = FILMA ? 2.2 : 1;
+
+const attendi = (millesimi) =>
+  new Promise((ok) => setTimeout(ok, Math.round(millesimi * RESPIRO)));
 
 function racconta(cosa) {
   process.stdout.write(`  · ${cosa}\n`);
@@ -240,10 +255,16 @@ async function main() {
     ],
   });
   daSpegnere.push(() => browser.close());
-  const pagina = await browser.newPage({
+  const contesto = await browser.newContext({
     viewport: { width: 430, height: 932 },
     deviceScaleFactor: 2,
     colorScheme: SCURO ? "dark" : "light",
+    /* Il video lo scrive Playwright da se', un fotogramma alla volta: si
+     * chiude il contesto e il file c'e'. Niente da installare, niente
+     * ffmpeg. */
+    ...(FILMA
+      ? { recordVideo: { dir: VIDEO, size: { width: 430, height: 932 } } }
+      : {}),
     /* CanvasKit disegna il testo su tela, e per farlo si scarica i glifi da
      * `fonts.gstatic.com`. Dietro un proxy che rifirma il traffico con una
      * propria autorita', quel prelievo fallisce e le schermate escono **senza
@@ -255,6 +276,7 @@ async function main() {
      * dal sistema e non chiede niente a nessuno. */
     ignoreHTTPSErrors: true,
   });
+  const pagina = await contesto.newPage();
   pagina.on("console", (m) => {
     if (m.type() === "error") process.stdout.write(`    app   │ ${m.text()}\n`);
   });
@@ -283,7 +305,7 @@ async function main() {
   await attendi(2500);
   await scatta(pagina, "1-primo-avvio");
 
-  return { pagina, codice, portaDelPonte, portaDellaConsole };
+  return { pagina, contesto, codice, portaDelPonte, portaDellaConsole };
 }
 
 /* Una rotellata in mezzo allo schermo.
@@ -295,7 +317,18 @@ async function main() {
 async function scorri(pagina, quanto) {
   const { width, height } = pagina.viewportSize();
   await pagina.mouse.move(width / 2, height / 2);
-  await pagina.mouse.wheel(0, quanto);
+  if (!FILMA) {
+    await pagina.mouse.wheel(0, quanto);
+    return;
+  }
+  /* Filmando, una rotellata sola e' uno scatto: la pagina salta da un punto
+   * all'altro e chi guarda perde il filo di dov'era. Si scorre a passetti, che
+   * e' anche il modo in cui scorre un dito vero. */
+  const passi = 12;
+  for (let passo = 0; passo < passi; passo += 1) {
+    await pagina.mouse.wheel(0, quanto / passi);
+    await new Promise((ok) => setTimeout(ok, 28));
+  }
 }
 
 async function scatta(pagina, nome) {
@@ -337,7 +370,7 @@ async function cosaCeDaPremere(pagina) {
     [...document.querySelectorAll("[aria-label], flt-semantics")]
       .map((uno) => uno.getAttribute("aria-label") || uno.textContent?.trim())
       .filter((uno) => uno)
-      .slice(0, 40),
+      .slice(0, 80),
   );
 }
 
@@ -382,7 +415,16 @@ async function premi(pagina, etichetta, { inAlto = false } = {}) {
    * invece si prende quello piu' vicino al bordo di sopra, che e' dove sta un
    * bottone della barra del titolo: li' i candidati sono fratelli, non uno
    * dentro l'altro. */
-  const quanti = await tutti.count();
+  /* Quanti candidati si guardano davvero.
+   *
+   * Senza etichetta esatta la ricerca per testo prende anche tutti i
+   * **contenitori** che quella scritta se la trovano dentro, e con un menu di
+   * venti voci sono centinaia di nodi: chiedere il riquadro di ognuno vuol
+   * dire un viaggio nel browser per ognuno, e il collaudo ci metteva cinque
+   * minuti per premere un bottone. I primi quaranta bastano: l'albero e' in
+   * ordine di documento, e quello che si vuole premere sta li' in mezzo. */
+  const trovati = await tutti.count();
+  const quanti = Math.min(trovati, 40);
   if (process.env.COLLAUDO_SPIA) {
     for (let i = 0; i < quanti; i += 1) {
       const r = await tutti.nth(i).boundingBox();
@@ -496,6 +538,35 @@ try {
     await attendi(500);
   }
 
+  /* Il menu e' piu' alto dello schermo: le voci in fondo — Continuita', MiniPC
+   * — stanno sotto il bordo, e premere il centro del loro riquadro vorrebbe
+   * dire premere fuori dalla finestra. Prima si scorre il menu finche' la voce
+   * non e' davvero li'. */
+  async function premiNelMenu(nome) {
+    const schermo = pagina.viewportSize();
+    for (let giro = 0; giro < 10; giro += 1) {
+      const voce = pagina.locator(`[aria-label="${nome}"]`).first();
+      /* Col tempo: `boundingBox()` di suo **aspetta** che l'elemento ci sia, e
+       * l'attesa di serie e' mezzo minuto. Su una voce che non c'e' ancora
+       * — il menu sta entrando — dieci giri diventavano cinque minuti, e il
+       * collaudo sembrava un'app lenta quando la lenta era l'attesa. */
+      const dove = await voce.boundingBox({ timeout: 800 }).catch(() => null);
+      /* Nessun riquadro vuol dire «il menu sta ancora entrando», non «e' piu'
+       * in basso»: scorrere adesso vorrebbe dire scorrere alla cieca, e in
+       * otto giri il menu finirebbe in fondo con la voce fuori dallo schermo. */
+      if (!dove) {
+        await attendi(200);
+        continue;
+      }
+      if (dove.y >= 0 && dove.y + dove.height <= schermo.height) break;
+      /* La rotella gira dove sta il mouse, e il menu sta a sinistra. */
+      await pagina.mouse.move(schermo.width / 4, schermo.height / 2);
+      await pagina.mouse.wheel(0, 260);
+      await attendi(200);
+    }
+    await premi(pagina, nome);
+  }
+
   /* Le pagine della plancia, una per una, dal menu. */
   const pagine = [
     ["Stanze", "SENSORI DELLA STANZA", "4a-stanze"],
@@ -508,11 +579,15 @@ try {
     ["Prese", "Accendi tutte", "4h-prese"],
     ["Musica", "in riproduzione", "4i-musica"],
     ["Robot", "in funzione", "4j-robot"],
+    ["Energia", "DAL SOLE", "4k-energia"],
+    ["Elettrodomestici", "ASSORBIMENTO", "4l-elettrodomestici"],
+    ["Continuita'", "tutto alimentato", "4m-continuita"],
+    ["MiniPC", "tranquillo", "4n-minipc"],
   ];
   for (const [nome, attesa, foto] of pagine) {
     racconta(`apro ${nome}`);
     await apriIlMenu();
-    await premi(pagina, nome);
+    await premiNelMenu(nome);
     await aspettaCheCompaia(pagina, attesa);
     await attendi(900);
     await scatta(pagina, foto);
@@ -536,6 +611,15 @@ try {
   await attendi(600);
   await scatta(pagina, "7-le-case");
 
+  /* Chi guarda il video deve tornare a casa: e' li' che si comincia, ed e' li'
+   * che si finisce. */
+  if (FILMA) {
+    await apriIlMenu();
+    await premi(pagina, "Home");
+    await aspettaCheCompaia(pagina, "PERSONE");
+    await attendi(1200);
+  }
+
   racconta("fatto");
 } catch (errore) {
   process.stdout.write(`\n  ✗ ${errore?.message || errore}\n`);
@@ -554,7 +638,19 @@ if (RESTA) {
   racconta("resto acceso: ctrl-C per chiudere");
   await new Promise(() => {});
 } else {
+  /* Il video si chiude col contesto, non col browser: chiudendo il browser
+   * per primo il file resterebbe a meta'. */
+  let video = "";
+  if (FILMA) {
+    const dove = await banco.pagina.video()?.path();
+    await banco.contesto.close();
+    if (dove && existsSync(dove)) {
+      video = join(VIDEO, `giro-completo${SCURO ? "-scuro" : ""}.webm`);
+      renameSync(dove, video);
+    }
+  }
   await abbassaTutto();
   process.stdout.write(`\n  Le fotografie stanno in ${FOTO}\n`);
+  if (video) process.stdout.write(`  Il video sta in ${video}\n`);
   process.exit(0);
 }
