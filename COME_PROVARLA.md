@@ -155,6 +155,21 @@ un giorno succede, è un difetto: quello che l'app riceve nasce dentro Home
 Assistant, vale solo per quel telefono, e si stacca con un bottone dalla
 console del ponte.
 
+### La plancia
+
+La home dell'app è **la tua plancia di DashboardModern**, quella vera: la
+stessa pagina che apri in Home Assistant, con le sue tessere, le sue finestre,
+la sua barra in fondo e la sua configurazione. Per vederla servono due cose:
+
+- **DashboardModern installata in Home Assistant** (l'integrazione, da HACS).
+  Senza, l'app lo dice, e dalla barra restano i dispositivi.
+- **Il ponte dalla 0.6.0 in su**: è lui che porta i file della plancia al
+  telefono. Con un ponte più vecchio la plancia non arriva.
+
+La prima volta ci mette qualche secondo, di più se sei fuori casa: i file
+passano dal ponte e restano sul telefono, e dalla seconda volta in poi si apre
+subito. Toccare **«Plancia»** nella barra quando ci sei già la ricarica.
+
 ### Dal browser, senza installare niente *(la più rapida in assoluto)*
 
 1. **Actions → «L'app da provare»**, e scarica **gdahome-web**.
@@ -173,6 +188,12 @@ sono **tutti e due** in chiaro o **tutti e due** in cifrato. Se servi la pagina
 in `http` e il ponte risponde in `http`, funziona. Mischiarli no — è il browser
 che lo impedisce, non l'app.
 
+E una seconda: **dal browser la plancia non si vede**. Sul telefono la serve
+un server che sta dentro l'app, e dentro una pagina web un server non si apre.
+Dal browser si provano l'abbinamento, il filo, i dispositivi, le case; la
+plancia si prova sul telefono (o col collaudo, che il server lo accende a
+parte: vedi `collaudo/README.md`).
+
 ### Dal codice, con Flutter *(per lavorarci)*
 
 ```bash
@@ -189,9 +210,14 @@ strada, e non c'è modo di aggirarla.
 
 ## Cosa guardare, una volta dentro
 
-- **Sotto il nome della casa** c'è scritto da dove stai passando: «in casa» col
-  simbolo del Wi-Fi, «da fuori» col mondo. È la cosa più utile da controllare
-  per prima.
+- **La home è la tua plancia**, com'è in Home Assistant: le stesse tessere,
+  le stesse finestre quando le tocchi, la stessa barra in fondo con le sue
+  pagine, la stessa Config. Se cambi qualcosa nell'editor di là, qui si vede
+  senza fare niente.
+- **La barra dell'app** si tira dentro dal bordo sinistro (la pillola a metà
+  altezza). In cima c'è il nome della casa e da dove stai passando: «in
+  casa» o «da fuori». È la cosa più utile da controllare per prima, e la
+  plancia da sola non la può sapere.
 - **Spegni il Wi-Fi del telefono** e passa alla rete del cellulare. Dopo
   qualche secondo l'app deve tornare su da sola e la scritta deve diventare
   «da fuori». Se il centralino non c'è, deve dire che la casa si raggiunge solo
@@ -214,3 +240,5 @@ strada, e non c'è modo di aggirarla.
 | La console dice «Il centralino ci rifiuta» | c'è già un'altra casa registrata con quell'identificativo su quel centralino |
 | Il codice viene rifiutato | dura cinque minuti e vale una volta sola: fanne un altro |
 | L'app dice che la casa va riabbinata | il telefono è stato staccato dalla console, o è stato abbinato con una versione vecchia |
+| L'app dice «Qui non c'è DashboardModern» | in quella Home Assistant l'integrazione non c'è: installala da HACS |
+| La plancia resta su «Apro la plancia…» o dice che non è arrivata | il ponte è più vecchio della 0.6.0 (aggiornalo), oppure il telefono è fuori casa e i file stanno ancora arrivando: la prima volta ci mette qualche secondo |
