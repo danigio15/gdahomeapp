@@ -3,15 +3,20 @@
  * Accende tutta la catena, per davvero, e poi la fotografa:
  *
  *     Chromium ── l'app (Flutter, versione web)
- *          │
+ *          │              └── il riquadro della plancia ── il servitore vero
+ *          │                                                  (dart run bin/servitore.dart)
  *          ▼  il codice di abbinamento, battuto come lo batterebbe una persona
  *     il ponte vero ── node ponte/src/index.js, quello dell'add-on
  *          │
  *          ▼
- *     una Home Assistant finta, con dentro una casa piccola
+ *     una Home Assistant finta, con dentro la casa demo di DashboardModern
+ *     e i file veri della plancia (PLANCIA_VERA=…/frontend)
  *
  * L'unica finzione e' l'ultima. Il ponte e' il processo vero, l'app e' l'app
- * vera, e il codice di abbinamento nasce dalla console come nasce in casa.
+ * vera, il servitore e' lo stesso che gira dentro l'app sul telefono — sul
+ * web un server dentro la pagina non si apre, e allora lo si accende a parte
+ * e l'app ci punta con `PLANCIA_URL` — e il codice di abbinamento nasce dalla
+ * console come nasce in casa.
  *
  *     node guarda.mjs            fotografa e basta
  *     node guarda.mjs --resta    resta acceso, per guardarci dentro col browser
@@ -32,7 +37,7 @@ import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
-import { alzaLaCasaFinta, SEGNO_DEL_SUPERVISOR } from "./casa-finta.js";
+import { alzaLaCasaFinta, PLANCIA_VERA, SEGNO_DEL_SUPERVISOR } from "./casa-finta.js";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 const RADICE = dirname(QUI);
@@ -52,6 +57,9 @@ const SCURO = process.argv.includes("--scuro");
  * guarda deve fare in tempo a leggere. */
 const FILMA = process.argv.includes("--filma");
 const FOTO = join(QUI, "foto", SCURO ? "scuro" : "");
+/* Dove il servitore serve la plancia. Fissa, perche' l'app la deve sapere
+ * quando la si costruisce: `--dart-define=PLANCIA_URL=http://127.0.0.1:8765`. */
+const PORTA_DEL_SERVITORE = Number(process.env.PORTA_DEL_SERVITORE || 8765);
 const VIDEO = join(QUI, "video");
 mkdirSync(FOTO, { recursive: true });
 if (FILMA) mkdirSync(VIDEO, { recursive: true });
@@ -59,8 +67,7 @@ if (FILMA) mkdirSync(VIDEO, { recursive: true });
 /* Quanto si respira quando si filma: le stesse attese, moltiplicate. */
 const RESPIRO = FILMA ? 2.2 : 1;
 
-const attendi = (millesimi) =>
-  new Promise((ok) => setTimeout(ok, Math.round(millesimi * RESPIRO)));
+const attendi = (millesimi) => new Promise((ok) => setTimeout(ok, Math.round(millesimi * RESPIRO)));
 
 function racconta(cosa) {
   process.stdout.write(`  · ${cosa}\n`);
@@ -89,12 +96,13 @@ function serviLApp(cartella) {
     if (!dentro.startsWith(normalize(cartella)) || !existsSync(dentro)) {
       dentro = join(cartella, "index.html");
     }
+    /* Niente isolamento dell'origine: dentro l'app c'e' un riquadro che
+     * mostra la plancia da un'altra origine — il servitore — e con
+     * `require-corp` il browser lo lascerebbe vuoto. I thread di Flutter non
+     * servono qui. */
     risposta.writeHead(200, {
       "content-type": TIPI[extname(dentro)] || "application/octet-stream",
       "cache-control": "no-store",
-      /* Flutter sul web vuole queste due per usare i thread. */
-      "cross-origin-opener-policy": "same-origin",
-      "cross-origin-embedder-policy": "require-corp",
     });
     createReadStream(dentro).pipe(risposta);
   });
@@ -148,6 +156,110 @@ function trovaIlBrowser() {
   return cartelle.find((uno) => existsSync(uno)) ?? null;
 }
 
+/* ─── Il servitore ────────────────────────────────────────────────────────── */
+
+/* Dove sta `dart`. Quello di Flutter, se Flutter c'e': e' lo stesso SDK con
+ * cui si e' costruita l'app, e il servitore e' un pezzo dell'app. */
+function trovaDart() {
+  if (process.env.DART) return process.env.DART;
+  for (const uno of [
+    "/opt/flutter/bin/dart",
+    join(process.env.HOME || "", "flutter", "bin", "dart"),
+  ]) {
+    if (existsSync(uno)) return uno;
+  }
+  return "dart";
+}
+
+/* Accende il servitore e torna l'indirizzo della plancia, o `null` se in
+ * questa casa non c'e' DashboardModern (il servitore lo dice e si spegne). */
+async function accendiIlServitore({ portaDelPonte, codice, cartella }) {
+  const processo = spawn(
+    trovaDart(),
+    [
+      "run",
+      "bin/servitore.dart",
+      "--casa",
+      `127.0.0.1:${portaDelPonte}`,
+      "--codice",
+      codice,
+      "--porta",
+      String(PORTA_DEL_SERVITORE),
+      "--cartella",
+      cartella,
+    ],
+    { cwd: APP, env: { ...process.env }, stdio: ["ignore", "pipe", "pipe"] },
+  );
+  daSpegnere.push(
+    () =>
+      new Promise((ok) => {
+        if (processo.exitCode !== null) return ok();
+        processo.once("exit", ok);
+        processo.kill("SIGTERM");
+        setTimeout(() => processo.kill("SIGKILL"), 3000).unref?.();
+      }),
+  );
+  return new Promise((ok, no) => {
+    let detto = "";
+    let finito = false;
+    const fine = setTimeout(() => {
+      if (finito) return;
+      finito = true;
+      no(new Error("il servitore non si e' acceso in due minuti"));
+    }, 120_000);
+    processo.stdout.on("data", (d) => {
+      const testo = String(d);
+      process.stdout.write(`    servitore │ ${testo}`);
+      detto += testo;
+      const trovata = /^plancia: (\S+)$/m.exec(detto);
+      if (trovata && !finito) {
+        finito = true;
+        clearTimeout(fine);
+        ok(trovata[1]);
+      }
+    });
+    processo.stderr.on("data", (d) => {
+      const testo = String(d);
+      process.stdout.write(`    servitore │ ${testo}`);
+      if (/non c'e' DashboardModern/.test(testo) && !finito) {
+        finito = true;
+        clearTimeout(fine);
+        ok(null);
+      }
+    });
+    processo.on("exit", (codiceDiUscita) => {
+      if (finito) return;
+      finito = true;
+      clearTimeout(fine);
+      no(new Error(`il servitore si e' spento subito (${codiceDiUscita})`));
+    });
+  });
+}
+
+/* Il riquadro con dentro la plancia vera: e' un'altra pagina, con la sua
+ * finestra, e ci si parla come a una pagina. Si aspetta che sia **pronta**
+ * — il segno lo mette la plancia stessa quando la configurazione e'
+ * arrivata e la barra e' disegnata — perche' prima di quello c'e' il velo
+ * d'avvio, e una fotografia del velo non dice niente. */
+async function laPlancia(pagina, quanto = 90_000) {
+  const fine = Date.now() + quanto;
+  let ultimo = "nessun riquadro";
+  while (Date.now() < fine) {
+    const riquadro = pagina.frames().find((f) => f.url().includes("/dashboardmodern_static/"));
+    if (riquadro) {
+      ultimo = await riquadro
+        .evaluate(
+          () =>
+            `barra=${document.documentElement.getAttribute("data-dm-barra")} pronta=${Boolean(window.__DASHBOARDMODERN_READY__)}`,
+        )
+        .catch((errore) => `il riquadro non risponde: ${errore?.message || errore}`);
+      if (/barra=pronta pronta=true/.test(ultimo)) return riquadro;
+    }
+    await attendi(300);
+  }
+  throw new Error(`la plancia non e' comparsa nel riquadro (${ultimo})`);
+}
+
 /* ─── Il banco ────────────────────────────────────────────────────────────── */
 
 const daSpegnere = [];
@@ -196,6 +308,10 @@ async function main() {
       PONTE_PORTA_CONSOLE: String(portaDellaConsole),
       SUPERVISOR_TOKEN: SEGNO_DEL_SUPERVISOR,
       PONTE_CASA: `http://127.0.0.1:${portaDellaCasa}`,
+      /* I file della plancia il ponte li va a prendere qui: in casa vera e'
+       * il contenitore di Home Assistant, qui la casa finta li serve dal
+       * checkout. */
+      PONTE_PLANCIA: `http://127.0.0.1:${portaDellaCasa}`,
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -221,18 +337,39 @@ async function main() {
   }
   racconta(`il ponte vero sulla ${portaDelPonte}, console sulla ${portaDellaConsole}`);
 
-  /* 3. Il codice di abbinamento, dalla console — come in casa. */
+  /* 3. Il servitore della plancia. E' il pezzo dell'app che sul web non puo'
+   * girare — un server dentro una pagina non si apre — quindi lo si accende
+   * qui a parte, uguale a com'e' nell'app: si abbina al ponte con un codice
+   * suo, apre il filo, trova la plancia e la serve. Il riquadro dell'app ci
+   * punta. Il codice vive uno per volta: prima il suo, poi quello dell'app. */
+  if (!PLANCIA_VERA) {
+    racconta("PLANCIA_VERA non e' detto: la casa finta non avra' DashboardModern");
+  }
+  const codiceDelServitore = (
+    await (
+      await fetch(`http://127.0.0.1:${portaDellaConsole}/api/codice`, { method: "POST" })
+    ).json()
+  ).codice;
+  const paginaDellaPlancia = await accendiIlServitore({
+    portaDelPonte,
+    codice: codiceDelServitore,
+    cartella: join(archivio, "plancia"),
+  });
+  if (paginaDellaPlancia) racconta(`il servitore serve la plancia: ${paginaDellaPlancia}`);
+
+  /* 4. Il codice di abbinamento dell'app, dalla console — come in casa. */
   const { codice } = await (
     await fetch(`http://127.0.0.1:${portaDellaConsole}/api/codice`, { method: "POST" })
   ).json();
   racconta(`codice di abbinamento: ${codice}`);
 
-  /* 4. L'app. */
+  /* 5. L'app. */
   const costruita = join(APP, "build", "web");
   if (!existsSync(join(costruita, "index.html"))) {
     throw new Error(
       "l'app non e' stata costruita. Prima:\n" +
-        "  cd app && flutter build web --release --dart-define=COLLAUDO=true",
+        "  cd app && flutter build web --release --dart-define=COLLAUDO=true" +
+        ` --dart-define=PLANCIA_URL=http://127.0.0.1:${PORTA_DEL_SERVITORE}`,
     );
   }
   const sito = serviLApp(costruita);
@@ -240,7 +377,7 @@ async function main() {
   daSpegnere.push(() => sito.spegni());
   racconta(`l'app sulla ${portaDellApp}`);
 
-  /* 5. Il browser. */
+  /* 6. Il browser. */
   const dove = trovaIlBrowser();
   if (dove) racconta(`Chromium: ${dove}`);
   const browser = await chromium.launch({
@@ -262,9 +399,7 @@ async function main() {
     /* Il video lo scrive Playwright da se', un fotogramma alla volta: si
      * chiude il contesto e il file c'e'. Niente da installare, niente
      * ffmpeg. */
-    ...(FILMA
-      ? { recordVideo: { dir: VIDEO, size: { width: 430, height: 932 } } }
-      : {}),
+    ...(FILMA ? { recordVideo: { dir: VIDEO, size: { width: 430, height: 932 } } } : {}),
     /* CanvasKit disegna il testo su tela, e per farlo si scarica i glifi da
      * `fonts.gstatic.com`. Dietro un proxy che rifirma il traffico con una
      * propria autorita', quel prelievo fallisce e le schermate escono **senza
@@ -537,29 +672,54 @@ try {
    * codice. */
   await pagina.keyboard.press("Enter");
   /* Qui succede tutto: il ponte controlla il codice, fabbrica il segno, apre
-   * il filo con Home Assistant, e l'app legge la casa e la sua plancia. La
-   * home e' la plancia: le persone, le tessere, le azioni rapide. */
-  await aspettaCheCompaia(pagina, "PERSONE");
-  await attendi(800);
+   * il filo con Home Assistant, e l'app trova la plancia e la apre nel
+   * riquadro. La home e' la plancia vera: quella di DashboardModern, com'e'. */
+  const plancia = await laPlancia(pagina);
+  await attendi(1500);
   await scatta(pagina, "3-home");
-  /* La plancia e' piu' alta dello schermo: si scorre e si fotografa il resto,
-   * poi si torna in cima. */
-  await scorri(pagina, 900);
-  await attendi(700);
+  /* La plancia e' piu' alta dello schermo: e' una pagina, e si scorre come
+   * una pagina. */
+  await plancia.evaluate(() => window.scrollTo({ top: 900, behavior: "instant" }));
+  await attendi(800);
   await scatta(pagina, "3b-home-tessere");
-  /* Fino in fondo, dove stanno le azioni rapide: una rotellata sola non
-   * basta, Flutter ne prende una alla volta. */
-  for (let giro = 0; giro < 8; giro += 1) {
-    await scorri(pagina, 1200);
-    await attendi(150);
-  }
-  await attendi(700);
-  await scatta(pagina, "3c-home-azioni");
-  for (let giro = 0; giro < 10; giro += 1) {
-    await scorri(pagina, -1200);
-    await attendi(100);
-  }
+  await plancia.evaluate(() =>
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" }),
+  );
+  await attendi(800);
+  await scatta(pagina, "3c-home-fondo");
+  await plancia.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
   await attendi(500);
+
+  /* Le pagine della plancia, dalla **sua** barra in fondo: quelle che ci sono
+   * davvero, perche' la plancia nasconde le voci delle sezioni vuote. Si
+   * preme dentro il riquadro, come si preme sulla plancia. */
+  const schede = await plancia.locator("nav.tabs .tab:visible").evaluateAll((voci) =>
+    voci.map((una) => ({
+      quale: una.dataset.tab,
+      nome: una.querySelector(".text")?.textContent?.trim() || una.dataset.tab,
+    })),
+  );
+  racconta(`la plancia ha ${schede.length} pagine: ${schede.map((una) => una.nome).join(", ")}`);
+  /* Si preme la voce dal di dentro, con un clic sintetico: sul telefono la
+   * barra scorre in orizzontale e le voci in fondo stanno fuori dallo
+   * schermo, e un clic col mouse su una cosa fuori dallo schermo non parte.
+   * Il gestore della plancia e' lo stesso. */
+  const premiLaScheda = (quale) =>
+    plancia.evaluate((dove) => {
+      const voce = document.querySelector(`nav.tabs .tab[data-tab="${dove}"]`);
+      if (!voce) throw new Error(`nella barra della plancia non c'e' ${dove}`);
+      voce.click();
+    }, quale);
+  for (const { quale, nome } of schede) {
+    if (quale === "home") continue;
+    racconta(`apro ${nome}`);
+    await premiLaScheda(quale);
+    await plancia.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    await attendi(1400);
+    await scatta(pagina, `4-${quale}`);
+  }
+  await premiLaScheda("home");
+  await attendi(700);
 
   /* Il menu laterale. Sta dietro il bottone in alto a sinistra, e li' l'albero
    * dell'accessibilita' di Flutter mette i riquadri dove gli pare: quando il
@@ -628,15 +788,8 @@ try {
          * testo non guarda le maiuscole, e «Elettrodomestici» scritto in un
          * elenco e' lo stesso testo di «ELETTRODOMESTICI» nella barra. */
         const eUnaVoce =
-          riquadro &&
-          riquadro.height > 20 &&
-          riquadro.height < 70 &&
-          riquadro.x < 210;
-        if (
-          eUnaVoce &&
-          riquadro.y >= 8 &&
-          riquadro.y + riquadro.height <= schermo.height - 8
-        ) {
+          riquadro && riquadro.height > 20 && riquadro.height < 70 && riquadro.x < 210;
+        if (eUnaVoce && riquadro.y >= 8 && riquadro.y + riquadro.height <= schermo.height - 8) {
           dove = riquadro;
           break;
         }
@@ -689,33 +842,12 @@ try {
     return Boolean(dove && dove.x > 150);
   }
 
-
-
-  /* Le pagine della plancia, una per una, dal menu. */
-  const pagine = [
-    ["Stanze", "SENSORI DELLA STANZA", "4a-stanze"],
-    ["Luci", "Accendi tutte", "4b-luci"],
-    ["Clima", "Accendi tutto", "4c-clima"],
-    ["Temperatura", "TUTTE", "4d-temperatura"],
-    ["Finestre", "Apri tutto", "4e-finestre"],
-    ["Agenda", "cose aperte", "4f-agenda"],
-    ["Sicurezza", "Antifurto", "4g-sicurezza"],
-    ["Prese", "Accendi tutte", "4h-prese"],
-    ["Musica", "in riproduzione", "4i-musica"],
-    ["Robot", "in funzione", "4j-robot"],
-    ["Energia", "REPORT", "4k-energia"],
-    ["Elettrodomestici", "ASSORBIMENTO", "4l-elettrodomestici"],
-    ["Continuità", "tutto alimentato", "4m-continuita"],
-    ["MiniPC", "tranquillo", "4n-minipc"],
-  ];
-
-  /* Andare in una sezione, e assicurarsi di esserci arrivati.
+  /* Andare in una sezione dell'app, e assicurarsi di esserci arrivati.
    *
    * Che la barra si sia chiusa dice che si e' premuta **una** voce, non che si
    * e' premuta **quella**: la barra puo' star finendo di scorrere mentre si
-   * preme, e il dito prende la vicina. Chi guarda se ne accorgerebbe subito —
-   * la pagina e' un'altra — e ripremerebbe. Qui si fa lo stesso: la prova
-   * d'essere arrivati e' una parola che sta solo su quella pagina. */
+   * preme, e il dito prende la vicina. La prova d'essere arrivati e' una
+   * parola che sta solo su quella pagina. */
   async function vaiA(nome, attesa) {
     for (let tentativo = 1; tentativo <= 3; tentativo += 1) {
       await apriIlMenu();
@@ -730,64 +862,26 @@ try {
     }
   }
 
-  for (const [nome, attesa, foto] of pagine) {
-    racconta(`apro ${nome}`);
-    await vaiA(nome, attesa);
-    await attendi(900);
-    await scatta(pagina, foto);
-  }
-
-  /* L'energia ha quattro viste, e quella che si apre e' il flusso: si
-   * fotografa anche il rapporto, che e' l'altra meta' della pagina. */
-  racconta("l'energia, il rapporto");
-  await vaiA("Energia", "REPORT");
-  await premi(pagina, "REPORT");
-  await aspettaCheCompaia(pagina, "DAL SOLE");
-  await attendi(800);
-  await scatta(pagina, "4k2-energia-report");
-
-  racconta("apro il menu");
+  racconta("apro la barra dell'app");
   await apriIlMenu();
-  await scatta(pagina, "5-menu");
+  await scatta(pagina, "5-barra");
 
   racconta("apro i dispositivi");
   await vaiA("Dispositivi", "Cerca fra");
   await attendi(1200);
   await scatta(pagina, "6-dispositivi");
 
-  racconta("apro la configurazione");
-  await vaiA("Configurazione", "LE SEZIONI");
-  await attendi(900);
-  await scatta(pagina, "6b-configurazione");
-
-  racconta("apro le prese, per riempirle");
-  await premi(pagina, "Prese");
-  await aspettaCheCompaia(pagina, "Aggiungi una presa");
-  await attendi(700);
-  await scatta(pagina, "6c-config-prese");
-  await premi(pagina, "Aggiungi una presa");
-  await aspettaCheCompaia(pagina, "Come si chiama");
-  await attendi(700);
-  await scatta(pagina, "6d-config-scheda");
-  /* Si chiude la tendina e si torna indietro dalla freccia, come si torna
-   * indietro. Col tasto del browser no: quella cronologia non e' quella delle
-   * pagine dell'app — c'e' finita dentro ogni finestra che si e' aperta e
-   * chiusa — e due passi indietro finivano su una pagina a caso. */
-  /* La tendina si chiude toccando fuori, che e' come la si chiude col dito.
-   * Col tasto di fuga no: quello lo raccoglie il browser, e alla tela non
-   * arriva — la tendina restava aperta e chi veniva dopo cercava la freccia
-   * indietro dentro l'elenco delle prese. */
-  await pagina.mouse.click(pagina.viewportSize().width / 2, 60);
-  await attendi(700);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(800);
-  await vaiA("Home", "PERSONE");
+  racconta("torno alla plancia");
+  await apriIlMenu();
+  await premiNelMenu("Plancia");
+  await laPlancia(pagina);
   await attendi(600);
 
   racconta("apro l'elenco delle case");
-  /* L'elenco delle case non sta nella barra: sta in cima, dove si guarda per
-   * sapere in che casa si e'. */
-  await premi(pagina, "Le tue case", { inAlto: true });
+  /* L'elenco delle case sta in cima alla barra, dietro il nome della casa:
+   * e' li' che si guarda per sapere in che casa si e'. */
+  await apriIlMenu();
+  await premi(pagina, "Casa del collaudo");
   /* Si aspetta «Aggiungi», che sta **solo** nell'elenco delle case. */
   await aspettaCheCompaia(pagina, "Aggiungi");
   await attendi(600);
@@ -796,17 +890,11 @@ try {
   /* Chi guarda il video deve tornare a casa: e' li' che si comincia, ed e' li'
    * che si finisce. */
   if (FILMA) {
-    /* Dall'elenco delle case non si torna col menu: quella schermata il menu
-     * non ce l'ha, ha il tasto indietro. */
     await premi(pagina, "Back", { inAlto: true });
-    await attendi(600);
-    await vaiA("Home", "PERSONE");
+    await laPlancia(pagina);
     await attendi(1200);
   }
 
-  /* La configurazione per ultima, e non per importanza: dentro ci sono due
-   * pagine impilate e una tendina aperta, e quello che si lascia aperto qui se
-   * lo porterebbe dietro chi viene dopo. */
   racconta("fatto");
 } catch (errore) {
   process.stdout.write(`\n  ✗ ${errore?.message || errore}\n`);

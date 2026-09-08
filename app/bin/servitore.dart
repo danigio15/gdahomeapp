@@ -71,6 +71,9 @@ Future<void> main(List<String> argomenti) async {
     filo: () => filo,
     cartella: cartella,
     lingua: lingua,
+    /* Da qui la radice porta alla pagina, chiave compresa: chi bussa e' il
+     * collaudo, o chi ha acceso questo servitore a mano. */
+    portaAperta: true,
     racconta: stderr.writeln,
   );
   await servitore.alza(porta: porta);

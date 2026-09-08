@@ -6,13 +6,87 @@
  * spegne davvero, e si vede.
  */
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { createHash } from "node:crypto";
-import { dirname, join } from "node:path";
+import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const SEGNO_DEL_SUPERVISOR = "segno-finto-del-supervisor";
+
+/* La plancia vera: i file di DashboardModern, presi da un checkout di
+ * `dashboardmodern-v2` (`custom_components/dashboardmodern/frontend`). Si
+ * dice con `PLANCIA_VERA`. Senza, questa casa e' una casa dove
+ * DashboardModern non c'e', e l'app lo dice.
+ *
+ * L'impronta nel percorso e' fissa: in casa vera la calcola l'integrazione
+ * sui file, qui basta che sia una. */
+export const PLANCIA_VERA = process.env.PLANCIA_VERA || "";
+export const IMPRONTA = "collaudo";
+export const BASE_DELLA_PLANCIA = `/dashboardmodern_static/${IMPRONTA}`;
+
+const TIPI_DEI_FILE = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".gif": "image/gif",
+  ".ico": "image/x-icon",
+  ".woff2": "font/woff2",
+  ".woff": "font/woff",
+};
+
+/* Quello che risponde `get_panels`: con la plancia quando i file ci sono,
+ * come lo scriverebbe l'integrazione. */
+function pannelli() {
+  const base = { lovelace: { component_name: "lovelace", url_path: "lovelace", config: null } };
+  if (!PLANCIA_VERA) return base;
+  return {
+    ...base,
+    dashboardmodern: {
+      component_name: "custom",
+      url_path: "dashboardmodern",
+      title: "DashboardModern",
+      config: {
+        entry_ids: ["collaudo"],
+        instance_id: "collaudo",
+        config_profile: "primary",
+        title: "DashboardModern",
+        primary: true,
+        static_base: BASE_DELLA_PLANCIA,
+        legacy_variants: ["dashboard-en.html", "dashboard.html"],
+        _panel_custom: {
+          name: `dashboardmodern-panel-${IMPRONTA}`,
+          embed_iframe: false,
+          trust_external: false,
+          module_url: `${BASE_DELLA_PLANCIA}/panel.js`,
+        },
+      },
+    },
+  };
+}
+
+/* Un file della plancia, dal checkout. `/dashboardmodern_static/<impronta>/…`
+ * e' la cartella del frontend; `avatars` e `brands` stanno fuori
+ * dall'impronta, come in casa vera. */
+function fileDellaPlancia(percorso) {
+  if (!PLANCIA_VERA || !percorso.startsWith("/dashboardmodern_static/")) return null;
+  const resto = percorso.slice("/dashboardmodern_static/".length);
+  const relativo = resto.startsWith(`${IMPRONTA}/`) ? resto.slice(IMPRONTA.length + 1) : resto;
+  const dentro = normalize(join(PLANCIA_VERA, relativo));
+  if (!dentro.startsWith(normalize(PLANCIA_VERA)) || !existsSync(dentro)) return null;
+  if (!statSync(dentro).isFile()) return null;
+  return {
+    corpo: readFileSync(dentro),
+    tipo: TIPI_DEI_FILE[extname(dentro)] || "application/octet-stream",
+  };
+}
 
 /* La casa demo di DashboardModern: la stessa casa inventata con cui la plancia
  * web disegna le sue anteprime, con dentro tutto — persone, luci, clima,
@@ -23,7 +97,9 @@ export const SEGNO_DEL_SUPERVISOR = "segno-finto-del-supervisor";
  * Le date delle entita' si rimettono a «un minuto e mezzo fa» a ogni
  * accensione: nel file sono ferme al giorno in cui e' stato scritto, e le
  * persone direbbero «visto 40 giorni fa». */
-const DEMO = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "casa-demo.json"), "utf8"));
+const DEMO = JSON.parse(
+  readFileSync(join(dirname(fileURLToPath(import.meta.url)), "casa-demo.json"), "utf8"),
+);
 const ADESSO = new Date(Date.now() - 90_000).toISOString();
 const CASA = DEMO.entita.map((una) => ({ ...una, last_changed: ADESSO, last_updated: ADESSO }));
 const CONFIGURAZIONE = DEMO.configurazione;
@@ -123,7 +199,9 @@ const COSE = {
 const GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 function firma(chiave) {
-  return createHash("sha1").update(chiave + GUID).digest("base64");
+  return createHash("sha1")
+    .update(chiave + GUID)
+    .digest("base64");
 }
 
 function telaio(carico) {
@@ -174,7 +252,27 @@ export function alzaLaCasaFinta() {
   const prese = new Set();
   const sottoscrizioni = new Map();
 
-  const server = createServer((_richiesta, risposta) => {
+  /* La porta HTTP: e' quella su cui il ponte va a prendere i file della
+   * plancia (`PONTE_PLANCIA`) e a fare le chiamate REST (`PONTE_CASA`). */
+  const server = createServer((richiesta, risposta) => {
+    const percorso = new URL(richiesta.url || "/", "http://casa").pathname;
+    const file = fileDellaPlancia(percorso);
+    if (file) {
+      risposta.writeHead(200, { "content-type": file.tipo, "content-length": file.corpo.length });
+      risposta.end(file.corpo);
+      return;
+    }
+    if (percorso.startsWith("/dashboardmodern_static/")) {
+      risposta.writeHead(404, { "content-type": "text/plain" });
+      risposta.end("qui non c'e' niente");
+      return;
+    }
+    /* Lo storico e i calendari via REST: vuoti, ma nella forma giusta. */
+    if (percorso.startsWith("/api/history/") || percorso.startsWith("/api/calendars/")) {
+      risposta.writeHead(200, { "content-type": "application/json" });
+      risposta.end("[]");
+      return;
+    }
     risposta.writeHead(200, { "content-type": "application/json" });
     risposta.end('{"message":"API running."}');
   });
@@ -244,10 +342,68 @@ export function alzaLaCasaFinta() {
       case "get_states":
         ok([...entita.values()]);
         return;
-      /* La configurazione della plancia, come la da' DashboardModern. */
+      case "get_panels":
+        ok(pannelli());
+        return;
+      /* Quello che la plancia vera chiede a Home Assistant appena parte, nella
+       * forma che si aspetta e senza niente dentro: una casa finta non ha
+       * stanze registrate ne' storico, ma non deve rispondere `null` a chi
+       * legge un campo. */
+      case "get_config":
+        ok({
+          location_name: "Casa del collaudo",
+          latitude: 45.4642,
+          longitude: 9.19,
+          elevation: 120,
+          unit_system: { length: "km", mass: "kg", temperature: "°C", volume: "L" },
+          time_zone: "Europe/Rome",
+          currency: "EUR",
+          language: "it",
+          version: "2025.1.0",
+          components: ["frontend", "dashboardmodern"],
+          state: "RUNNING",
+        });
+        return;
+      case "get_services":
+      case "history/history_during_period":
+      case "recorder/statistics_during_period":
+      case "dashboardmodern/integrations/catalog":
+        ok({});
+        return;
+      case "config/area_registry/list":
+      case "config/floor_registry/list":
+      case "config/device_registry/list":
+      case "config/entity_registry/list":
+      case "recorder/list_statistic_ids":
+      case "dashboardmodern/www/list":
+      case "dashboardmodern/tickets/list":
+        ok([]);
+        return;
+      case "frontend/get_user_data":
+        ok({ value: null });
+        return;
+      case "auth/sign_path":
+        ok({ path: detto.path });
+        return;
+      /* La configurazione della plancia, come la da' DashboardModern. E si
+       * lascia anche scrivere: cosi' nel collaudo si puo' toccare l'editor. */
       case "dashboardmodern/config/get":
         ok(CONFIGURAZIONE);
         return;
+      case "dashboardmodern/config/set": {
+        const snapshot = CONFIGURAZIONE.snapshot || {};
+        const valori = detto.snapshot?.values;
+        if (valori && typeof valori === "object" && Object.keys(valori).length) {
+          snapshot.values = valori;
+          snapshot.revision = Number(snapshot.revision || 0) + 1;
+          snapshot.updated_at = new Date().toISOString();
+          CONFIGURAZIONE.snapshot = snapshot;
+          ok({ status: "saved", profile: CONFIGURAZIONE.profile, snapshot });
+        } else {
+          ok({ status: "refused-empty", profile: CONFIGURAZIONE.profile, snapshot });
+        }
+        return;
+      }
       case "subscribe_events":
         sottoscrizioni.set(socket, detto.id);
         ok();
@@ -272,7 +428,8 @@ export function alzaLaCasaFinta() {
         if (detto.domain === "todo" && detto.service === "update_item") {
           const voci = COSE[chiesto] || [];
           const quale = voci.find(
-            (una) => una.uid === detto.service_data?.item || una.summary === detto.service_data?.item,
+            (una) =>
+              una.uid === detto.service_data?.item || una.summary === detto.service_data?.item,
           );
           if (quale) quale.status = detto.service_data?.status || "completed";
           ok();

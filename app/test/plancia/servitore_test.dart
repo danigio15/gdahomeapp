@@ -4,8 +4,9 @@
 /// Il browser qui e' `HttpClient` e `WebSocket` di `dart:io`, e dall'altra
 /// parte c'e' il ponte finto, che sa servire file con `ponte/http`. Quello
 /// che si prova: i file arrivano dal ponte una volta sola e poi dal disco, la
-/// pagina ha in testa le premesse giuste, e il WebSocket della pagina parla
-/// Home Assistant coi numeri suoi mentre sul filo passano quelli del filo.
+/// pagina ha in testa le premesse giuste, la porta ha la sua chiave, e il
+/// WebSocket della pagina parla Home Assistant coi numeri suoi mentre sul filo
+/// passano quelli del filo.
 library;
 
 import 'dart:async';
@@ -24,7 +25,8 @@ const _pagina =
     '<!DOCTYPE html><html lang="it"><head><link rel="stylesheet" '
     'href="./dashboard-runtime-it.css"></head><body>la plancia</body></html>';
 const _modulo =
-    'export const uno = 1;\n// un modulo della plancia, lungo abbastanza da essere compresso\n';
+    'export const uno = 1;\n'
+    '// un modulo della plancia, lungo abbastanza da essere compresso\n';
 
 void main() {
   late PonteFinto ponte;
@@ -67,10 +69,20 @@ void main() {
     await cartella.delete(recursive: true);
   });
 
-  Future<(int, String, List<int>)> prendi(String percorso) async {
+  /// Come bussa la pagina: col biscotto della chiave, che il browser mette
+  /// da se' dopo la prima volta. Con [senzaChiave] si bussa come chiunque
+  /// altro.
+  Future<(int, String, List<int>)> prendi(
+    String percorso, {
+    bool senzaChiave = false,
+    String? query,
+  }) async {
     final richiesta = await cliente.getUrl(
-      servitore.radice.replace(path: percorso),
+      servitore.radice.replace(path: percorso, query: query),
     );
+    if (!senzaChiave) {
+      richiesta.cookies.add(Cookie('gdahome', servitore.chiave));
+    }
     final risposta = await richiesta.close();
     final byte = await risposta.fold<List<int>>(
       [],
@@ -93,16 +105,35 @@ void main() {
     varianti: const ['dashboard.html'],
   );
 
-  test('la pagina arriva dal ponte, con le premesse in testa', () async {
+  test('la pagina arriva dal ponte, con le premesse in testa e la chiave '
+      'nell\'indirizzo', () async {
     final dove = servitore.paginaDi(pannello());
     expect(
       dove.toString(),
-      'http://127.0.0.1:${servitore.porta}$_base/legacy/dashboard.html',
+      'http://127.0.0.1:${servitore.porta}$_base/legacy/dashboard.html'
+      '?ingresso=${servitore.chiave}',
     );
+    expect(servitore.chiave, hasLength(32));
 
-    final (stato, tipo, byte) = await prendi(dove.path);
-    expect(stato, 200);
-    expect(tipo, startsWith('text/html'));
+    /* La prima volta la chiave sta nell'indirizzo e nessun biscotto
+       * ancora: lo mette la risposta. */
+    final richiesta = await cliente.getUrl(dove);
+    final risposta = await richiesta.close();
+    final byte = await risposta.fold<List<int>>(
+      [],
+      (tutti, pezzo) => tutti..addAll(pezzo),
+    );
+    expect(risposta.statusCode, 200);
+    expect(risposta.headers.contentType.toString(), startsWith('text/html'));
+    final biscotto = risposta.cookies.singleWhere(
+      (uno) => uno.name == 'gdahome',
+    );
+    expect(biscotto.value, servitore.chiave);
+    expect(biscotto.httpOnly, isTrue);
+    /* Niente che vieti di mostrarla in un riquadro: nel collaudo sta in
+       * un riquadro dentro l'app web. */
+    expect(risposta.headers.value('x-frame-options'), isNull);
+
     final testo = utf8.decode(byte);
     /* Lo script sta subito dopo `<head>`, prima del foglio di stile. */
     final dopoLaTesta = testo.indexOf('<head>') + '<head>'.length;
@@ -110,15 +141,48 @@ void main() {
       testo.substring(dopoLaTesta),
       startsWith('<script>window.__DASHBOARDMODERN_HOSTED__=true;'),
     );
-    expect(
-      testo,
-      contains('window.__DASHBOARDMODERN_BRIDGE_WS__=window.WebSocket;'),
-    );
+    /* Il WebSocket che la pagina trova va sempre al servitore, qualunque
+       * indirizzo gli si dia. */
+    expect(testo, contains('window.__DASHBOARDMODERN_BRIDGE_WS__=(function'));
+    expect(testo, contains('location.host+"/api/websocket"'));
+    expect(testo, contains('Cucita.OPEN=1;'));
     expect(testo, contains('window.__DASHBOARDMODERN_INSTANCE__="e1";'));
     expect(testo, contains('window.__DASHBOARDMODERN_PROFILE__="primary";'));
     expect(testo, contains('window.__DASHBOARDMODERN_PRIMARY__=true;'));
     expect(testo, contains('window.__DASHBOARDMODERN_LOCALE__="it";'));
     expect(testo, contains('la plancia'));
+  });
+
+  test('senza la chiave non si ottiene niente: ne\' file, ne\' chiamate, ne\' filo', () async {
+    final (pagina, _, _) = await prendi(
+      '$_base/legacy/dashboard.html',
+      senzaChiave: true,
+    );
+    expect(pagina, 403);
+    final (sbagliata, _, _) = await prendi(
+      '$_base/legacy/dashboard.html',
+      senzaChiave: true,
+      query: 'ingresso=nonlaso',
+    );
+    expect(sbagliata, 403);
+    final (modulo, _, _) = await prendi(
+      '$_base/src/core/uno.js',
+      senzaChiave: true,
+    );
+    expect(modulo, 403);
+    final (api, _, _) = await prendi('/api/states', senzaChiave: true);
+    expect(api, 403);
+    expect(ponte.commissioni, isEmpty);
+
+    await expectLater(
+      WebSocket.connect('ws://127.0.0.1:${servitore.porta}/api/websocket'),
+      throwsA(isA<WebSocketException>()),
+    );
+
+    /* Sul telefono la radice non porta da nessuna parte: la chiave non si
+       * chiede a nessuno. */
+    final (radice, _, _) = await prendi('/', senzaChiave: true);
+    expect(radice, 403);
   });
 
   test(
@@ -133,7 +197,6 @@ void main() {
       expect(ponte.commissioni.single['metodo'], 'GET');
 
       /* La seconda volta il ponte non lo vede nemmeno. */
-      await Future<void>.delayed(const Duration(milliseconds: 50));
       final (stato2, _, byte2) = await prendi('$_base/src/core/uno.js');
       expect(stato2, 200);
       expect(utf8.decode(byte2), _modulo);
@@ -193,8 +256,10 @@ void main() {
         query: 'a=1',
       ),
     );
+    richiesta.cookies.add(Cookie('gdahome', servitore.chiave));
     richiesta.headers.contentType = ContentType.json;
-    /* La pagina ospitata manda un segno vuoto: non deve arrivare da nessuna parte. */
+    /* La pagina ospitata manda un segno vuoto: non deve arrivare da nessuna
+     * parte. */
     richiesta.headers.set('authorization', 'Bearer ');
     richiesta.write('{"entity_id":"light.sala"}');
     final risposta = await richiesta.close();
@@ -209,12 +274,15 @@ void main() {
   });
 
   group('il WebSocket della pagina', () {
-    Future<WebSocket> apri() =>
-        WebSocket.connect('ws://127.0.0.1:${servitore.porta}/api/websocket');
+    Future<WebSocket> apri({Servitore? di}) => WebSocket.connect(
+      'ws://127.0.0.1:${(di ?? servitore).porta}/api/websocket',
+      headers: {'cookie': 'gdahome=${(di ?? servitore).chiave}'},
+    );
 
-    test('parla Home Assistant coi numeri della pagina, e sul filo passano quelli del filo', () async {
-      /* Il filo ha gia' mandato qualcosa: i numeri del filo e quelli della
-       * pagina non possono coincidere. */
+    test('parla Home Assistant coi numeri della pagina, e sul filo passano '
+        'quelli del filo', () async {
+      /* Il filo ha gia' mandato qualcosa: i numeri del filo e quelli
+         * della pagina non possono coincidere. */
       await filo.chiedi({'type': 'get_states'});
       await filo.chiedi({'type': 'get_states'});
 
@@ -225,16 +293,21 @@ void main() {
             arrivati.add(jsonDecode(testo as String) as Map<String, dynamic>),
       );
 
+      /* Come il ponte del pannello: `auth_ok` e basta, senza chiedere
+         * niente. Un `auth` mandato lo stesso non fa niente. */
       await _finoA(() => arrivati.isNotEmpty);
-      expect(arrivati.first['type'], 'auth_required');
+      expect(arrivati.single['type'], 'auth_ok');
       presa.add(
         jsonEncode({
           'type': 'auth',
           'access_token': '__dashboardmodern_hosted__',
         }),
       );
-      await _finoA(() => arrivati.length == 2);
-      expect(arrivati[1]['type'], 'auth_ok');
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(arrivati, hasLength(1));
+      /* Perche' i conti tornino sotto: due messaggi prima di quelli della
+         * pagina. */
+      arrivati.add(const {'type': 'auth_required'});
 
       final primaDellaPagina = ponte.arrivati.length;
       presa.add(jsonEncode({'id': 1, 'type': 'get_states'}));
@@ -255,8 +328,8 @@ void main() {
         isTrue,
       );
 
-      /* Sul filo sono passati con numeri del filo: dopo quelli gia' usati dal
-       * filo per conto suo, e diversi da quelli della pagina. */
+      /* Sul filo sono passati con numeri del filo: dopo quelli gia' usati
+         * dal filo per conto suo, e diversi da quelli della pagina. */
       final sulFilo = ponte.arrivati.sublist(primaDellaPagina);
       expect(sulFilo.map((uno) => uno['type']), [
         'get_states',
@@ -266,11 +339,7 @@ void main() {
       expect(numeriDelFilo, [3, 4]);
 
       /* Un evento sulla sottoscrizione torna col numero della pagina. */
-      final numeroDellaSottoscrizione =
-          ponte.arrivati.lastWhere(
-                (uno) => uno['type'] == 'subscribe_events',
-              )['id']
-              as int;
+      final numeroDellaSottoscrizione = numeriDelFilo.last;
       ponte.cambia(numeroDellaSottoscrizione, 'light.sala', {'state': 'on'});
       await _finoA(() => arrivati.length == 5);
       expect(arrivati.last['type'], 'event');
@@ -305,8 +374,7 @@ void main() {
           onDone: chiusa.complete,
         );
         await _finoA(() => arrivati.isNotEmpty);
-        presa.add(jsonEncode({'type': 'auth', 'access_token': 'x'}));
-        await _finoA(() => arrivati.length == 2);
+        expect(arrivati.single['type'], 'auth_ok');
 
         await ponte.buttaGiu();
         await chiusa.future.timeout(const Duration(seconds: 5));
@@ -314,26 +382,26 @@ void main() {
       },
     );
 
-    test('se il filo non torna, la pagina lo viene a sapere invece di aspettare per sempre', () async {
-      await filo.chiudi();
-      final senzaFilo = Servitore(filo: () => null, cartella: cartella);
-      await senzaFilo.alza();
-      final presa = await WebSocket.connect(
-        'ws://127.0.0.1:${senzaFilo.porta}/api/websocket',
-      );
-      final arrivati = <Map<String, dynamic>>[];
-      presa.listen(
-        (dynamic testo) =>
-            arrivati.add(jsonDecode(testo as String) as Map<String, dynamic>),
-      );
-      await _finoA(() => arrivati.isNotEmpty);
-      presa.add(jsonEncode({'type': 'auth', 'access_token': 'x'}));
-      /* Venti secondi sarebbero troppi per una prova: si guarda solo che non
-       * risponda `auth_ok` a un filo che non c'e'. */
-      await Future<void>.delayed(const Duration(milliseconds: 300));
-      expect(arrivati.where((uno) => uno['type'] == 'auth_ok'), isEmpty);
-      await senzaFilo.spegni();
-    });
+    test(
+      'se il filo non torna, la pagina lo viene a sapere invece di aspettare '
+      'per sempre',
+      () async {
+        await filo.chiudi();
+        final senzaFilo = Servitore(filo: () => null, cartella: cartella);
+        await senzaFilo.alza();
+        final presa = await apri(di: senzaFilo);
+        final arrivati = <Map<String, dynamic>>[];
+        presa.listen(
+          (dynamic testo) =>
+              arrivati.add(jsonDecode(testo as String) as Map<String, dynamic>),
+        );
+        /* Venti secondi sarebbero troppi per una prova: si guarda solo che
+         * non dica `auth_ok` con un filo che non c'e'. */
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        expect(arrivati.where((uno) => uno['type'] == 'auth_ok'), isEmpty);
+        await senzaFilo.spegni();
+      },
+    );
   });
 }
 

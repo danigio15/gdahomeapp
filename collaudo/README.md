@@ -4,25 +4,42 @@ Guardare l'app girare, invece di crederci sulla parola.
 
 ```
    Chromium ── l'app vera (Flutter, versione web)
-        │
+        │           └── il riquadro della plancia ── il servitore vero
+        │                                            (dart run bin/servitore.dart)
         ▼  il codice di abbinamento, battuto come lo batterebbe una persona
    il ponte vero ── node ponte/src/index.js, quello dell'add-on
         │
         ▼
-   una Home Assistant finta, con dentro una casa piccola
+   una Home Assistant finta, con dentro la casa demo di DashboardModern
+   e i file veri della plancia (PLANCIA_VERA=…/frontend)
 ```
 
 L'unica finzione e' l'ultima. Il ponte e' il processo vero, l'app e' l'app
-vera, e il codice di abbinamento nasce dalla console come nasce in casa.
+vera, il servitore — il server che dentro l'app serve la plancia al WebView —
+e' lo stesso che gira sul telefono, e il codice di abbinamento nasce dalla
+console come nasce in casa.
+
+Sul web un server dentro la pagina non si apre: il servitore si accende a
+parte, sulla porta 8765, e il riquadro dell'app ci punta con `PLANCIA_URL`.
+E' l'unica differenza col telefono, dove il servitore sta dentro l'app.
 
 ## Come si accende
 
 ```bash
-cd app && flutter build web --release --dart-define=COLLAUDO=true
-cd ../collaudo && npm install && npm run guarda
+cd app && flutter build web --release --dart-define=COLLAUDO=true \
+  --dart-define=PLANCIA_URL=http://127.0.0.1:8765
+cd ../collaudo && npm install
+PLANCIA_VERA=/dove/sta/dashboardmodern-v2/custom_components/dashboardmodern/frontend npm run guarda
 ```
 
-Le fotografie finiscono in `collaudo/foto/`.
+`PLANCIA_VERA` e' la cartella del frontend di DashboardModern, presa da un
+checkout di `dashboardmodern-v2`: la casa finta serve quei file al ponte, e il
+ponte li serve al servitore, come in casa. Senza, la casa finta e' una casa
+dove DashboardModern non c'e', e si vede cosa dice l'app in quel caso.
+
+Le fotografie finiscono in `collaudo/foto/`: la plancia vera dentro l'app,
+pagina per pagina dalla sua barra, e poi la barra dell'app, i dispositivi,
+le case.
 
 Con `node guarda.mjs --resta` il banco resta acceso invece di spegnersi: si
 apre l'indirizzo che stampa e ci si guarda dentro col browser, premendo i

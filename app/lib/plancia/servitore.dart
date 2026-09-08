@@ -26,6 +26,14 @@
 /// trova, ed e' il nostro. Nessuna credenziale di Home Assistant arriva mai
 /// alla pagina, e nemmeno al telefono.
 ///
+/// Chi puo' bussare a questo server: **solo il WebView dell'app**. Sul
+/// telefono `127.0.0.1` lo raggiunge qualunque altra app, e nel browser
+/// qualunque pagina; e da questo server, attraverso il filo, si comanda la
+/// casa. Percio' la porta ha una chiave: la pagina si apre con la chiave
+/// nell'indirizzo — che conosce solo chi l'ha aperta, cioe' l'app — e da li'
+/// in poi la chiave viaggia in un biscotto, che il browser mette da se' su
+/// ogni richiesta della pagina e che nessun altro ha. Senza, si riceve un no.
+///
 /// Niente Flutter qui dentro, ed e' voluto: si prova per intero senza uno
 /// schermo, e gira anche da solo, da riga di comando, per il collaudo.
 library;
@@ -33,6 +41,7 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
@@ -79,6 +88,10 @@ const _fissi = '/dashboardmodern_static/';
 /// Quanto puo' essere grande il corpo di una chiamata REST della plancia.
 const _corpoMassimo = 4 * 1024 * 1024;
 
+/// Il biscotto che porta la chiave, e il nome della chiave nell'indirizzo.
+const _biscotto = 'gdahome';
+const _ingresso = 'ingresso';
+
 /// Quanto si aspetta il filo prima di dire alla pagina che non c'e': e' il
 /// tempo di una riconnessione, non di piu'.
 const _attesaDelFilo = Duration(seconds: 20);
@@ -102,11 +115,21 @@ class Servitore {
     required TrovaIlFilo filo,
     required this.cartella,
     this.lingua = 'it',
+    this.portaAperta = false,
     void Function(String)? racconta,
   }) : _trovaIlFilo = filo,
        _racconta = racconta ?? ((_) {});
 
   final TrovaIlFilo _trovaIlFilo;
+
+  /// `true` quando la radice (`/`) porta alla pagina, chiave compresa. Serve
+  /// al servitore da riga di comando, dove chi bussa e' il collaudo; sul
+  /// telefono nessuno deve poter chiedere la chiave a nessuno.
+  final bool portaAperta;
+
+  /// La chiave della porta: nasce con il servitore, e la conosce solo chi
+  /// apre la pagina dall'indirizzo che [paginaDi] da'.
+  final String chiave = _chiaveNuova();
 
   /// Dove si tengono i file della plancia, fra un'apertura e l'altra.
   final Directory cartella;
@@ -133,11 +156,14 @@ class Servitore {
 
   bool get acceso => _server != null;
 
-  /// La pagina da aprire nel WebView per questo pannello. Da qui in poi e'
-  /// questo il pannello che si serve.
+  /// La pagina da aprire nel WebView per questo pannello, con la chiave. Da
+  /// qui in poi e' questo il pannello che si serve.
   Uri paginaDi(PannelloDellaPlancia quale) {
     pannello = quale;
-    return radice.replace(path: quale.percorsoDellaPagina(lingua));
+    return radice.replace(
+      path: quale.percorsoDellaPagina(lingua),
+      queryParameters: {_ingresso: chiave},
+    );
   }
 
   /// Si mette in ascolto. Su `127.0.0.1` e basta: nessun altro sulla rete
@@ -145,9 +171,27 @@ class Servitore {
   Future<void> alza({int porta = 0}) async {
     if (_server != null) return;
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, porta);
+    /* `dart:io` mette di suo un'intestazione che vieta di mostrare la pagina
+     * dentro un riquadro di un'altra origine. Sul telefono non cambia niente
+     * — il WebView la apre per intero — ma nel collaudo la plancia sta in un
+     * riquadro dentro l'app web, e senza questo il browser lo lascia vuoto.
+     * La porta ha la sua chiave: chi la inquadra senza non vede niente. */
+    server.defaultResponseHeaders.removeAll('x-frame-options');
     _server = server;
     unawaited(_ascolta(server));
   }
+
+  /// Chi bussa ha la chiave? Nel biscotto, o — la prima volta —
+  /// nell'indirizzo.
+  bool _haLaChiave(HttpRequest richiesta) {
+    for (final uno in richiesta.cookies) {
+      if (uno.name == _biscotto && uno.value == chiave) return true;
+    }
+    return richiesta.uri.queryParameters[_ingresso] == chiave;
+  }
+
+  void _no(HttpRequest richiesta) =>
+      _rispondi(richiesta, 403, 'text/plain', utf8.encode('serve la chiave'));
 
   Future<void> spegni() async {
     final server = _server;
@@ -171,6 +215,17 @@ class Servitore {
 
   Future<void> _servi(HttpRequest richiesta) async {
     final percorso = richiesta.uri.path;
+
+    if (percorso == '/' && portaAperta && pannello != null) {
+      richiesta.response.redirect(paginaDi(pannello!));
+      return;
+    }
+
+    /* Tutto il resto vuole la chiave: i file, le chiamate, il filo. */
+    if (!_haLaChiave(richiesta)) {
+      _no(richiesta);
+      return;
+    }
 
     if (percorso == '/api/websocket') {
       if (!WebSocketTransformer.isUpgradeRequest(richiesta)) {
@@ -250,6 +305,14 @@ class Servitore {
     }
 
     if (eLaPagina) {
+      /* Da qui in poi la chiave sta nel biscotto: il browser lo mette da se'
+       * su ogni cosa che la pagina chiede, e su nient'altro. */
+      richiesta.response.cookies.add(
+        Cookie(_biscotto, chiave)
+          ..path = '/'
+          ..httpOnly = true
+          ..sameSite = SameSite.strict,
+      );
       _rispondi(
         richiesta,
         200,
@@ -326,12 +389,25 @@ class Servitore {
   /// quale istanza e quale profilo e', in che lingua. Lo script va **prima di
   /// ogni altro**, ed e' per questo che si mette in cima a `<head>`: il
   /// preludio della plancia legge queste cose appena parte.
+  ///
+  /// Il WebSocket che trova e' quello vero del browser, con una cosa in piu':
+  /// qualunque indirizzo gli si dia, va al servitore. La plancia, ospitata,
+  /// apre un secondo filo per la configurazione e lo punta a un nome finto —
+  /// `dashboardmodern.invalid` — contando sul fatto che il ponte del
+  /// pannello l'indirizzo lo ignora. Qui il ponte e' un server, e
+  /// l'indirizzo va detto giusto.
   String conLePremesse(String pagina) {
     final quale = pannello;
     final premessa =
         '<script>'
         'window.__DASHBOARDMODERN_HOSTED__=true;'
-        'window.__DASHBOARDMODERN_BRIDGE_WS__=window.WebSocket;'
+        'window.__DASHBOARDMODERN_BRIDGE_WS__=(function(Vera){'
+        'var dove=(location.protocol==="https:"?"wss://":"ws://")+location.host+"/api/websocket";'
+        'function Cucita(_indirizzo,protocolli){'
+        'return protocolli===undefined?new Vera(dove):new Vera(dove,protocolli);}'
+        'Cucita.prototype=Vera.prototype;'
+        'Cucita.CONNECTING=0;Cucita.OPEN=1;Cucita.CLOSING=2;Cucita.CLOSED=3;'
+        'return Cucita;})(window.WebSocket);'
         'window.__DASHBOARDMODERN_INSTANCE__=${jsonEncode(quale?.istanza ?? '')};'
         'window.__DASHBOARDMODERN_PROFILE__=${jsonEncode(quale?.profilo ?? 'primary')};'
         'window.__DASHBOARDMODERN_PRIMARY__=${quale?.primario ?? true};'
@@ -443,6 +519,15 @@ class Servitore {
   }
 }
 
+/// Trentadue cifre esadecimali, da un generatore che non si indovina.
+String _chiaveNuova() {
+  final caso = Random.secure();
+  return List.generate(
+    16,
+    (_) => caso.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ).join();
+}
+
 String _tipoDi(String percorso) {
   final punto = percorso.lastIndexOf('.');
   if (punto < 0) return 'application/octet-stream';
@@ -480,9 +565,11 @@ class _Scaricato {
 
 /// Un WebSocket della pagina, cucito sul filo dell'app.
 ///
-/// Dalla parte della pagina si comporta come Home Assistant: dice
-/// `auth_required`, accetta un `auth` qualunque — non c'e' niente da
-/// autenticare, il filo lo e' gia' — e risponde `auth_ok`. Da li' in poi ogni
+/// Dalla parte della pagina si comporta come il ponte del pannello di Home
+/// Assistant: dice `auth_ok` e basta, appena il filo c'e'. Non c'e' niente da
+/// autenticare — il filo lo e' gia', e la porta ha la sua chiave — e la
+/// plancia ospitata in un punto aspetta `auth_ok` senza mandare nessun
+/// `auth`. Un `auth` che arriva lo stesso si lascia cadere. Da li' in poi ogni
 /// messaggio va sul filo col numero del filo e torna col numero della pagina.
 ///
 /// Quando il filo cade, la pagina si vede chiudere il WebSocket: e' quello che
@@ -507,7 +594,7 @@ class _Cucitura {
       onError: (Object _) => _pagina(),
       cancelOnError: true,
     );
-    _manda({'type': 'auth_required', 'ha_version': 'gdahome'});
+    unawaited(_entra());
     return _finita.future;
   }
 
@@ -522,10 +609,10 @@ class _Cucitura {
       return;
     }
 
-    if (!_dentro) {
-      if (detto['type'] == 'auth') await _entra();
-      return;
-    }
+    /* Un `auth` non serve a niente qui, e prima di `auth_ok` non si
+     * ascolta: quello che arriva prima lo manda una pagina che non ha
+     * aspettato, e non e' un comando. */
+    if (!_dentro || detto['type'] == 'auth') return;
 
     final filo = _filo;
     if (filo == null || !filo.dentro) {
@@ -574,6 +661,7 @@ class _Cucitura {
 
   Future<void> _entra() async {
     final filo = await _servitore._filoPronto();
+    if (_finita.isCompleted) return;
     if (filo == null) {
       _manda({'type': 'auth_invalid', 'message': 'la casa non risponde'});
       await chiudi();
