@@ -92,8 +92,5 @@ Salvataggio leggiLEsito(Object? risposta) {
      * salvato: si tratta come un conflitto, cioe' si va a rileggere. */
     _ => EsitoDelSalvataggio.scavalcata,
   };
-  return Salvataggio(
-    esito,
-    ConfigurazioneDellaPlancia.dallaRisposta(risposta),
-  );
+  return Salvataggio(esito, ConfigurazioneDellaPlancia.dallaRisposta(risposta));
 }

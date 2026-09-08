@@ -35,9 +35,7 @@ class PresaFinta extends EventTarget {
     this.mandati.push(testo);
     const risposta = this.rispondi?.(testo);
     if (risposta === undefined || risposta === null) return;
-    queueMicrotask(() =>
-      this.dispatchEvent(new MessageEvent("message", { data: risposta })),
-    );
+    queueMicrotask(() => this.dispatchEvent(new MessageEvent("message", { data: risposta })));
   }
 
   close() {
@@ -112,10 +110,7 @@ test("un filo che smette di rispondere si chiude, e si richiama", async () => {
   await respira(150);
 
   assert.equal(primaPresa.chiusa, true, "il filo morto doveva essere chiuso");
-  assert.ok(
-    PresaFinta.aperte.length > 1,
-    "il ponte doveva ribussare al centralino",
-  );
+  assert.ok(PresaFinta.aperte.length > 1, "il ponte doveva ribussare al centralino");
   chiamata.spegni();
 });
 

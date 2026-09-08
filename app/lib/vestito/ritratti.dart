@@ -44,7 +44,9 @@ class FacciaScelta {
     /* «barba», «rossi», «bianchi» e «biondi» sono varianti dei lisci nella
      * configurazione nuova: la plancia le riporta li' e poi ci lavora sopra a
      * pixel. Qui invece la variante incisa c'e' gia', e si usa quella. */
-    if (!capelliDeiRitratti.contains(capelli)) capelli = capelliDeiRitratti.first;
+    if (!capelliDeiRitratti.contains(capelli)) {
+      capelli = capelliDeiRitratti.first;
+    }
     return FacciaScelta(
       persona: persona,
       capelli: personeConICapelli.contains(persona)

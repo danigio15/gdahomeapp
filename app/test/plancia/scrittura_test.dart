@@ -52,8 +52,9 @@ void main() {
       ]);
 
       expect(cambiamenti['cd_prese'], contains('switch.nuova'));
-      final stato =
-          jsonDecode(cambiamenti['dm_dashboard_state']!) as Map<String, Object?>;
+      final stato = jsonDecode(
+        cambiamenti['dm_dashboard_state']!,
+      ) as Map<String, Object?>;
       final sezioni = stato['sections']! as Map<String, Object?>;
       expect((sezioni['sockets']! as List).single, {
         'entity': 'switch.nuova',

@@ -904,10 +904,7 @@ const bustiDeiRitratti = <String, String>{
 };
 
 /// Gli abiti che non hanno un render tutto loro e ne prendono un altro.
-const abitiSintetici = <String, String>{
-  'polo': 'casual',
-  'camicia': 'casual',
-};
+const abitiSintetici = <String, String>{'polo': 'casual', 'camicia': 'casual'};
 
 const personeDeiRitratti = <String>[
   'uomo',
@@ -920,11 +917,7 @@ const personeDeiRitratti = <String>[
 ];
 
 /// Chi ha i capelli disegnati a parte: per gli altri c'e' una testa sola.
-const personeConICapelli = <String>{
-  'uomo',
-  'donna',
-  'neutro',
-};
+const personeConICapelli = <String>{'uomo', 'donna', 'neutro'};
 
 const capelliDeiRitratti = <String>[
   'lisci',

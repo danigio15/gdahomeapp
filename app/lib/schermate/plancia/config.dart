@@ -423,8 +423,7 @@ class _PaginaDaRiempireState extends State<_PaginaDaRiempire> {
                                   ? 'niente collegato'
                                   : riempiti
                                         .map(
-                                          (c) =>
-                                              '${c.nome}: ${cosa[c.chiave]}',
+                                          (c) => '${c.nome}: ${cosa[c.chiave]}',
                                         )
                                         .join('\n'),
                               style: testi.bodySmall?.copyWith(
@@ -520,9 +519,8 @@ class _PaginaDaRiempireState extends State<_PaginaDaRiempire> {
         'La casa non ha accettato: sembrava di svuotare tutto.',
       _ => 'Non è stato salvato.',
     };
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(cosaDire)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(cosaDire)));
   }
 }
 
@@ -554,7 +552,8 @@ class _SchedaDellaCosaState extends State<_SchedaDellaCosa> {
     super.dispose();
   }
 
-  bool get _eNuova => widget.cosa['name'] == null &&
+  bool get _eNuova =>
+      widget.cosa['name'] == null &&
       widget.sezione.campi.every((c) => widget.cosa[c.chiave] == null);
 
   @override
@@ -566,9 +565,7 @@ class _SchedaDellaCosaState extends State<_SchedaDellaCosa> {
         color: colori.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
@@ -588,9 +585,7 @@ class _SchedaDellaCosaState extends State<_SchedaDellaCosa> {
               ),
               const SizedBox(height: 18),
               Text(
-                _eNuova
-                    ? 'Aggiungi ${widget.sezione.cosaCiSta}'
-                    : 'Modifica',
+                _eNuova ? 'Aggiungi ${widget.sezione.cosaCiSta}' : 'Modifica',
                 style: testi.titleMedium,
               ),
               const SizedBox(height: 16),
@@ -618,10 +613,7 @@ class _SchedaDellaCosaState extends State<_SchedaDellaCosa> {
                 ),
               ],
               const SizedBox(height: 22),
-              FilledButton(
-                onPressed: _salva,
-                child: const Text('Salva'),
-              ),
+              FilledButton(onPressed: _salva, child: const Text('Salva')),
               if (!_eNuova) ...[
                 const SizedBox(height: 8),
                 TextButton(
@@ -688,9 +680,7 @@ class _RigaDelCampo extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  scelta.isEmpty
-                      ? 'niente'
-                      : (viva?.nome ?? scelta),
+                  scelta.isEmpty ? 'niente' : (viva?.nome ?? scelta),
                   style: testi.titleSmall?.copyWith(
                     color: scelta.isEmpty ? colori.onSurfaceVariant : null,
                   ),

@@ -94,6 +94,7 @@ class VistaDellaPersona {
   final String colore;
   final String emoji;
   final String foto;
+
   /// Il ritratto scelto: persona, capelli, carnagione, abito. Vuoto quando
   /// non ne e' stato scelto uno.
   final Map<String, Object?> faccia;

@@ -510,9 +510,15 @@ FlussoDellEnergia flussoDellEnergia(
   final casa = adesso
       ? casella(GruppoDiEnergia.casa, 'power', inWatt: true)
       : casella(GruppoDiEnergia.casa, '${quando}_energy');
-  final rete = adesso ? casella(GruppoDiEnergia.rete, 'power', inWatt: true) : null;
-  final presa = adesso ? null : casella(GruppoDiEnergia.rete, '${quando}_import_energy');
-  final data = adesso ? null : casella(GruppoDiEnergia.rete, '${quando}_export_energy');
+  final rete = adesso
+      ? casella(GruppoDiEnergia.rete, 'power', inWatt: true)
+      : null;
+  final presa = adesso
+      ? null
+      : casella(GruppoDiEnergia.rete, '${quando}_import_energy');
+  final data = adesso
+      ? null
+      : casella(GruppoDiEnergia.rete, '${quando}_export_energy');
   final batteria = adesso
       ? casella(GruppoDiEnergia.batteria, 'power', inWatt: true)
       : null;

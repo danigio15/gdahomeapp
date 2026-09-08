@@ -128,14 +128,15 @@ class ConfigurazioneDellaPlancia {
   Map<String, String> cambiaLaSezione(String sezione, Object? contenuto) {
     final stato = _valori['dm_dashboard_state'];
     final fuori = <String, Object?>{
-      if (stato is Map) ...{for (final v in stato.entries) pulito(v.key): v.value},
+      if (stato is Map) ...{
+        for (final v in stato.entries) pulito(v.key): v.value,
+      },
     };
     final sezioni = <String, Object?>{
-      if (fuori['sections'] is Map)
-        ...{
-          for (final v in (fuori['sections'] as Map).entries)
-            pulito(v.key): v.value,
-        },
+      if (fuori['sections'] is Map) ...{
+        for (final v in (fuori['sections'] as Map).entries)
+          pulito(v.key): v.value,
+      },
     };
     sezioni[sezione] = contenuto;
     fuori['sections'] = sezioni;
@@ -162,6 +163,7 @@ class ConfigurazioneDellaPlancia {
     }
     return fuori;
   }
+
   final Map<String, Object?> _sezioni;
   final int revisione;
   final String profilo;
@@ -1146,9 +1148,11 @@ class Persona {
       emoji = grezza['avatar'] is Map
           ? pulito((grezza['avatar'] as Map)['emoji'])
           : '',
-      faccia = grezza['avatar'] is Map && (grezza['avatar'] as Map)['face'] is Map
+      faccia =
+          grezza['avatar'] is Map && (grezza['avatar'] as Map)['face'] is Map
           ? {
-              for (final v in ((grezza['avatar'] as Map)['face'] as Map).entries)
+              for (final v
+                  in ((grezza['avatar'] as Map)['face'] as Map).entries)
                 pulito(v.key): v.value,
             }
           : const {};
