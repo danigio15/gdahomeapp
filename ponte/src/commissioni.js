@@ -46,12 +46,23 @@ import { request as richiestaHttps } from "node:https";
 import { gzipSync } from "node:zlib";
 
 import { Configurazione, PROFILO_PRINCIPALE, ScattoTroppoGrande } from "./configurazione.js";
+import { DISPOSITIVI_MASSIMI } from "./catalogo.js";
+import { BASE_DELLE_FOTO, FOTO_MASSIMA } from "./foto.js";
 
 export const TIPO = "ponte/http";
 export const TIPO_PLANCIA = "ponte/plancia";
 const CONFIG_GET = "dashboardmodern/config/get";
 const CONFIG_SET = "dashboardmodern/config/set";
 const CONFIG_RESTORE = "dashboardmodern/config/restore";
+const CATALOGO = "dashboardmodern/integrations/catalog";
+const FOTO_ELENCO = "dashboardmodern/www/list";
+const FOTO_CARICA = "dashboardmodern/www/upload";
+
+/* Le segnalazioni e la chat di assistenza escono dalla plancia: diventano
+ * dell'app, che le fa da se'. Alla pagina, che ha ancora i suoi bottoni, si
+ * risponde con una frase e non con un «comando sconosciuto». */
+const NELLAPP = /^dashboardmodern\/(tickets|chat)\//;
+const DETTO_NELLAPP = "Le segnalazioni e la chat stanno nell'app, non nella plancia.";
 
 /* La pagina, per abitudine vecchia, tiene anche una copia per utente della
  * configurazione in Home Assistant (`frontend/*_user_data`), con questa
@@ -122,6 +133,8 @@ export class Commissioni {
     registro,
     plancia = null,
     configurazione = null,
+    catalogo = null,
+    foto = null,
     scarica = scaricaDavvero,
     insieme = INSIEME,
   } = {}) {
@@ -132,6 +145,10 @@ export class Commissioni {
      * dove ci sarebbero solo con l'integrazione. */
     this.plancia = plancia;
     this.configurazione = configurazione;
+    /* Il catalogo delle integrazioni e le foto: le altre due cose che la
+     * plancia chiedeva all'integrazione. */
+    this.catalogo = catalogo;
+    this.foto = foto;
     this.scarica = scarica;
     this.insieme = insieme;
     this._inCorso = 0;
@@ -145,6 +162,9 @@ export class Commissioni {
     if (tipo.startsWith("ponte/")) return true;
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
       return Boolean(this.configurazione);
+    if (tipo === CATALOGO) return Boolean(this.catalogo);
+    if (tipo === FOTO_ELENCO || tipo === FOTO_CARICA) return Boolean(this.foto);
+    if (NELLAPP.test(tipo)) return true;
     return Boolean(this.configurazione) && eLaCopiaVecchia(detto);
   }
 
@@ -158,6 +178,11 @@ export class Commissioni {
     if (tipo === TIPO_PLANCIA) return this._laPlancia(id);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
       return this._configurazione(detto);
+    if (tipo === CATALOGO) return this._catalogo(detto);
+    if (tipo === FOTO_ELENCO) return this._elencoDelleFoto(detto);
+    if (tipo === FOTO_CARICA) return this._caricaUnaFoto(detto);
+    if (typeof tipo === "string" && NELLAPP.test(tipo))
+      return no(id, "not_supported", DETTO_NELLAPP);
     if (eLaCopiaVecchia(detto)) {
       /* Una risposta innocua, come fa il ponte del pannello: il codice
        * vecchio non resta appeso, e l'unico scrittore resta quello moderno. */
@@ -210,6 +235,63 @@ export class Commissioni {
     }
   }
 
+  async _catalogo(detto) {
+    const id = detto.id ?? null;
+    if (!this.catalogo) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    let deviceIds = null;
+    if (detto.device_ids !== undefined) {
+      if (
+        !Array.isArray(detto.device_ids) ||
+        detto.device_ids.length > DISPOSITIVI_MASSIMI ||
+        !detto.device_ids.every(
+          (uno) => typeof uno === "string" && uno.length > 0 && uno.length <= 64,
+        )
+      )
+        return no(id, "invalid_format", "device_ids non valido");
+      deviceIds = detto.device_ids;
+    }
+    try {
+      return si(id, await this.catalogo.chiedi({ deviceIds }));
+    } catch (errore) {
+      this.registro.attenzione(`catalogo non costruito: ${errore?.message || errore}`);
+      return no(
+        id,
+        errore?.code || "ponte_catalogo",
+        String(errore?.message || "non ha funzionato"),
+      );
+    }
+  }
+
+  _elencoDelleFoto(detto) {
+    const id = detto.id ?? null;
+    if (!this.foto) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    const percorso = detto.path ?? "";
+    if (typeof percorso !== "string" || percorso.length > 512)
+      return no(id, "invalid_format", "percorso non valido");
+    const elenco = this.foto.elenca(percorso);
+    if (elenco === null) return no(id, "not_found", "La cartella non esiste dentro www");
+    return si(id, elenco);
+  }
+
+  _caricaUnaFoto(detto) {
+    const id = detto.id ?? null;
+    if (!this.foto) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    if (typeof detto.filename !== "string" || !detto.filename || detto.filename.length > 255)
+      return no(id, "invalid_format", "manca il nome del file");
+    if (typeof detto.data !== "string" || !detto.data || detto.data.length > FOTO_MASSIMA * 2)
+      return no(id, "invalid_format", "manca la foto");
+    let byte;
+    try {
+      byte = Buffer.from(detto.data, "base64");
+    } catch (_errore) {
+      return no(id, "invalid_data", "La foto non e' leggibile.");
+    }
+    const messa = this.foto.carica(detto.filename, byte);
+    if (!messa)
+      return no(id, "invalid_upload", "Il file non e' un'immagine, o e' piu' grande di 10 MB.");
+    return si(id, messa);
+  }
+
   async _http(detto) {
     const id = detto?.id ?? null;
     const metodo = String(detto.metodo ?? "GET").toUpperCase();
@@ -225,6 +307,12 @@ export class Commissioni {
       if (typeof detto.corpo !== "string") return no(id, "not_allowed", "corpo non valido");
       corpo = Buffer.from(detto.corpo, "base64");
       if (corpo.length > CORPO_MASSIMO) return no(id, "not_allowed", "corpo troppo grande");
+    }
+
+    /* Le foto caricate dalla plancia stanno nel ponte. */
+    if (percorso.startsWith(`${BASE_DELLE_FOTO}/`) && this.foto) {
+      const { stato, tipo, corpo: letto } = this.foto.leggi(percorso);
+      return si(id, impacchetta(stato, tipo, letto));
     }
 
     /* I file della plancia stanno qui, nell'add-on: non si va da nessuna

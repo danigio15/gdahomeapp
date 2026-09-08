@@ -86,7 +86,7 @@ Il resto — le due porte, l'abbinamento, cosa finisce sul disco — sta in
 | ✅ | Il filo: si rialza da solo, cambia approdo, rifa' le sottoscrizioni cadute |
 | ✅ | **La plancia dentro l'app**: quella vera di DashboardModern, in un WebView; i file e la configurazione li ha l'add-on, in Home Assistant non serve niente |
 | ✅ | I dispositivi: tutte le entita' divise per dominio, con gli interruttori |
-| ✅ | **377 prove** — 179 sul ponte, 19 sul centralino, 179 sull'app — senza rete, senza Home Assistant, senza telefono |
+| ✅ | **393 prove** — 195 sul ponte, 19 sul centralino, 179 sull'app — senza rete, senza Home Assistant, senza telefono |
 | ⬜ | Gli aiutanti (i sette classici, nativi) |
 | ⬜ | Zigbee: ZHA **e** Zigbee2MQTT |
 | ⬜ | Il mago delle automazioni |
@@ -102,10 +102,15 @@ rifarla in Flutter, ed e' andata come dice il piano: non era lei.
 Da dove arriva: **dall'add-on**. In Home Assistant non c'e' e non serve
 nessuna integrazione: i file della plancia — la pagina, i moduli, i caratteri,
 i ritratti — stanno dentro il ponte, in `ponte/plancia/`, portati da
-`strumenti/porta-la-plancia.mjs`, e la sua configurazione la tiene il ponte
-(`ponte/src/configurazione.js`), che risponde alla pagina esattamente come
-risponderebbe l'integrazione. Si configura dall'app, dalla sezione Config
-della plancia, e ogni telefono di casa vede la stessa configurazione.
+`strumenti/porta-la-plancia.mjs`. Tutto quello che la plancia chiedeva
+all'integrazione lo fa il ponte, rispondendo esattamente come risponderebbe
+lei: la configurazione (`ponte/src/configurazione.js`), il catalogo delle
+integrazioni per scegliere elettrodomestici, auto e robot
+(`ponte/src/catalogo.js`, dai registri di Home Assistant), le foto caricate
+(`ponte/src/foto.js`). Si configura dall'app, dalla sezione Config della
+plancia, e ogni telefono di casa vede la stessa configurazione. Le
+segnalazioni e la chat di assistenza invece escono dalla plancia e diventano
+dell'app: il piano in due binari sta in `docs/PIANO.md`.
 
 Sul telefono un server che sta **dentro l'app**, su `127.0.0.1`
 (`app/lib/plancia/servitore.dart`), chiede i file al ponte sul filo — la
@@ -134,7 +139,7 @@ volta dentro — stanno in [`COME_PROVARLA.md`](COME_PROVARLA.md).
 ## Le prove
 
 ```bash
-npm run test:ponte              # il ponte: 179 prove, due secondi
+npm run test:ponte              # il ponte: 195 prove, due secondi
 npm run test:centralino         # il centralino: 19 prove
 cd app && flutter test          # l'app: 179 prove, un quarto di minuto
 ```

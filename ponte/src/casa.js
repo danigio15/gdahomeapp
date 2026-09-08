@@ -207,6 +207,105 @@ export class Casa {
   }
 }
 
+/* Quanto si aspetta la risposta a una domanda del ponte. */
+const ATTESA_DELLA_RISPOSTA = 20_000;
+
+/* Home Assistant ha detto di no a una domanda del ponte: il codice e il
+ * messaggio sono i suoi. */
+export class RispostaNegativa extends Error {
+  constructor(code, message) {
+    super(message || code || "Home Assistant ha detto di no");
+    this.code = code || "unknown_error";
+  }
+}
+
+/* Le domande che il ponte fa a Home Assistant per conto suo.
+ *
+ * Il filo di ogni telefono e' del telefono: quello che ci passa torna al
+ * telefono senza che il ponte lo guardi. Quando e' il ponte ad avere una
+ * domanda — i registri dei dispositivi per il catalogo delle integrazioni —
+ * gli serve un filo suo, con i suoi numeri. E' uno solo per tutto il ponte,
+ * si apre alla prima domanda e si riapre da solo se cade. */
+Object.assign(Casa.prototype, {
+  async chiedi(comando, { entro = ATTESA_DELLA_RISPOSTA } = {}) {
+    const filo = await this._filoMio();
+    this._domande ??= new Map();
+    this._prossimaDomanda ??= 1;
+    const id = this._prossimaDomanda++;
+    return new Promise((riuscito, fallito) => {
+      const scadenza = setTimeout(() => {
+        this._domande.delete(id);
+        fallito(new CasaIrraggiungibile("Home Assistant non ha risposto in tempo"));
+      }, entro);
+      this._domande.set(id, { riuscito, fallito, scadenza });
+      if (!filo.manda(JSON.stringify({ ...comando, id }))) {
+        clearTimeout(scadenza);
+        this._domande.delete(id);
+        fallito(new CasaIrraggiungibile("il filo del ponte e' caduto"));
+      }
+    });
+  },
+
+  _filoMio() {
+    if (this._mio?.viva) return Promise.resolve(this._mio);
+    if (this._aperturaMia) return this._aperturaMia;
+    this._aperturaMia = this.apriIlFilo({
+      onMessaggio: (testo) => this._rispostaMia(testo),
+      onChiusa: () => {
+        this._mio = null;
+        this._faFallireLeDomande("il filo del ponte si e' chiuso");
+      },
+    }).then(
+      (filo) => {
+        this._mio = filo;
+        this._aperturaMia = null;
+        return filo;
+      },
+      (errore) => {
+        this._aperturaMia = null;
+        throw errore;
+      },
+    );
+    return this._aperturaMia;
+  },
+
+  _rispostaMia(testo) {
+    let detto;
+    try {
+      detto = JSON.parse(testo);
+    } catch (_errore) {
+      return;
+    }
+    if (detto?.type !== "result") return;
+    const domanda = this._domande?.get(detto.id);
+    if (!domanda) return;
+    this._domande.delete(detto.id);
+    clearTimeout(domanda.scadenza);
+    if (detto.success === false) {
+      domanda.fallito(new RispostaNegativa(detto.error?.code, detto.error?.message));
+      return;
+    }
+    domanda.riuscito(detto.result);
+  },
+
+  _faFallireLeDomande(perche) {
+    const appese = [...(this._domande?.values() ?? [])];
+    this._domande?.clear();
+    for (const domanda of appese) {
+      clearTimeout(domanda.scadenza);
+      domanda.fallito(new CasaIrraggiungibile(perche));
+    }
+  },
+
+  /* Chiude il filo del ponte, se e' aperto: serve a spegnere per bene. */
+  chiudiIlFiloMio() {
+    const filo = this._mio;
+    this._mio = null;
+    filo?.chiudi();
+    this._faFallireLeDomande("il ponte si sta spegnendo");
+  },
+});
+
 export class Filo {
   constructor(presa) {
     this.presa = presa;

@@ -25,6 +25,93 @@ esistono si mostrano in una WebView; le funzioni nuove si scrivono native.**
 Non e' un compromesso, e' il punto: le tre funzioni che vogliamo non esistono
 da nessuna parte, quindi scriverle native non costa un minuto in piu'.
 
+## I due binari
+
+Da qui in avanti il lavoro corre su due binari, e conviene tenerli distinti
+perche' hanno padroni diversi.
+
+**Binario A — la plancia, e tutto quello che le serve.** La plancia e' quella
+di DashboardModern, com'e', dentro un WebView. Non si tocca: si porta dentro
+l'add-on con `strumenti/porta-la-plancia.mjs` e si aggiorna rilanciando lo
+script. Quello che la plancia chiedeva all'integrazione di Home Assistant lo
+fa **il ponte**, e in Home Assistant non c'e' nessuna integrazione — e' un
+paletto.
+
+| cosa | chi lo fa | stato |
+|---|---|---|
+| I file della plancia (pagina, moduli, caratteri, ritratti) | `ponte/plancia/`, serviti sul filo con `ponte/http` | ✅ |
+| La configurazione (`dashboardmodern/config/get`, `set`, `restore`) | `ponte/src/configurazione.js`, in `/data/plancia.json` | ✅ |
+| Il catalogo delle integrazioni (elettrodomestici, auto, robot, e quello che verra') | `ponte/src/catalogo.js`, dai registri di Home Assistant | ✅ |
+| Le foto caricate dalla plancia (`www/list`, `www/upload`) | `ponte/src/foto.js`, in `/data/www` | ✅ |
+| Lo storico, le statistiche, le telecamere, i calendari | Home Assistant, sul filo e via REST dal Supervisor | ✅ |
+| Il server locale nel telefono e il WebSocket cucito sul filo | `app/lib/plancia/servitore.dart` | ✅ |
+| La plancia anche dalla console del ponte, nel browser | il ponte la serve sotto ingress | ⬜ |
+| Il ritratto delle persone, la lingua, i temi: come nel pannello | la premessa in testa alla pagina | ✅ |
+
+Le **segnalazioni** e la **chat di assistenza** escono da questo binario: nella
+plancia i loro bottoni rispondono «stanno nell'app», e il resto sta sotto.
+
+**Binario B — l'app, e quello che e' suo.** Le cose che in Home Assistant
+stanno nascoste o non esistono, scritte native in Flutter, con il ponte che fa
+da tramite verso Home Assistant.
+
+| cosa | stato |
+|---|---|
+| Abbinamento con otto lettere o col quadretto, piu' case, dentro e fuori casa, cifratura | ✅ |
+| La barra: la casa in cui si e', da dove si passa, le sezioni | ✅ |
+| I dispositivi: tutte le entita' per dominio, con gli interruttori | ✅ (elenco) |
+| **Segnalazioni**: si aprono dall'app, con i dati della casa raccolti da sola | ⬜ |
+| **Chat di assistenza**: dall'app, con chi mantiene il progetto | ⬜ |
+| Zigbee: ZHA **e** Zigbee2MQTT, dietro un'interfaccia sola | ⬜ (fase 3) |
+| I dispositivi: aggiungerli, rinominarli, metterli in una stanza | ⬜ |
+| Gli aiutanti: i sette classici | ⬜ (fase 2) |
+| Il mago delle automazioni | ⬜ (fase 4) |
+| Notifiche, impronta digitale, negozi | ⬜ (fasi 5 e 6) |
+
+**Binario C — gli acquisti in app.** Alcune sezioni, dell'app e della plancia,
+saranno a pagamento. Il disegno, prima del codice:
+
+* **I diritti.** Ogni sezione a pagamento ha una chiave — `plancia.energia`,
+  `plancia.elettrodomestici`, `app.zigbee`, `app.automazioni` — e un diritto
+  e' l'elenco delle chiavi accese per **una casa**, con una scadenza. Per
+  casa e non per telefono: chi compra una sezione la vede su tutti i telefoni
+  abbinati a quella casa, e non la ricompra per il tablet in cucina.
+* **Dove sta la verita'.** Non nel telefono e non nel ponte, che stanno tutti
+  e due in casa dell'utente: sta nel **centralino**, che e' gia' il pezzo che
+  chi distribuisce l'app mantiene. Il centralino tiene il registro degli
+  acquisti e **firma** i diritti (Ed25519); il ponte ha la chiave pubblica e
+  verifica la firma da solo, anche senza rete. Un diritto firmato vale fino
+  alla sua scadenza, e il ponte lo rinnova dal centralino quando ci arriva.
+* **Come si compra.** Dai negozi, perche' Apple e Google lo impongono per le
+  funzioni digitali dentro l'app: Google Play Billing e StoreKit, con il
+  plugin `in_app_purchase` di Flutter. L'app compra il prodotto, riceve la
+  ricevuta del negozio, la manda al centralino insieme all'identificativo
+  della casa; il centralino la verifica presso Google o Apple, scrive
+  l'acquisto nel registro e rimanda il diritto firmato, che il ponte mette
+  in `/data/diritti.json`. «Ripristina gli acquisti» rifa' lo stesso giro.
+* **Come si accende e si spegne una sezione.** Il ponte e' l'unico punto di
+  passaggio, e lo fa da li': per la plancia, `config/get` serve la
+  configurazione **senza** le sezioni spente e `config/set` non le accetta,
+  e in testa alla pagina la premessa scrive quali sezioni sono accese cosi'
+  la barra e la Config le mostrano chiuse col loro prezzo; per l'app, la
+  barra e le schermate leggono lo stesso elenco. Spegnere e' togliere la
+  chiave dal diritto: la volta dopo che il ponte lo rinnova, la sezione si
+  chiude da sola.
+* **Quello che decide chi vende.** Cosa e' gratis e cosa no, i pacchetti,
+  una tantum o abbonamento, il periodo di prova, e i diritti **regalati** —
+  a chi collauda, a chi aiuta — che si concedono dalla console del
+  centralino senza passare dai negozi. Il registro e' un elenco per casa, e
+  la console lo mostra e lo cambia.
+
+| pezzo | dove | stato |
+|---|---|---|
+| Le chiavi delle sezioni e l'elenco di cosa e' a pagamento | `docs/`, poi codice comune | ⬜ da decidere |
+| Il registro degli acquisti e la firma dei diritti | `nuvola/` (centralino) | ⬜ |
+| La verifica delle ricevute presso Google e Apple | `nuvola/` | ⬜ |
+| I diritti nel ponte, la configurazione filtrata, la premessa | `ponte/src/diritti.js` | ⬜ |
+| L'acquisto e il ripristino nell'app | `app/lib/acquisti/` | ⬜ |
+| La console del centralino: vedere, regalare, revocare | `nuvola/` | ⬜ |
+
 ## Cosa manca davvero
 
 Verificato nel codice del progetto vecchio: la plancia **legge e comanda**
@@ -37,12 +124,13 @@ entita', non ne **crea**.
 | Creare un aiutante | niente |
 | Flussi di configurazione di Home Assistant | niente |
 | Notifiche native | niente |
+| Segnalazioni e chat fuori dalla plancia, nell'app | niente |
 
 Quindi non c'e' niente da smontare: c'e' da costruire.
 
 ## Le fasi
 
-### Fase 1 — il guscio *(chiusa, tranne la plancia)*
+### Fase 1 — il guscio *(chiusa)*
 
 * ✅ L'add-on: abbinamento con codice a tempo, revoca, filo verso Home
   Assistant, console dentro Home Assistant, 60 prove.
@@ -81,14 +169,25 @@ Quindi non c'e' niente da smontare: c'e' da costruire.
   casa, da dove si sta passando — che e' la prima domanda di chi apre l'app
   fuori casa e vede qualcosa di strano: sto guardando dati veri o vecchi?
 
-La plancia dentro l'app c'e', ed e' quella vera: la pagina di DashboardModern
-in un WebView, servita da un server che sta dentro l'app e che i file li
-chiede al ponte — la commissione `ponte/http` — e il WebSocket lo cuce sul
-filo. I file e la configurazione ce li ha il ponte, dentro l'add-on: in Home
-Assistant non c'e' nessuna integrazione, ed e' un paletto, non un dettaglio.
-La WebView non e' autenticata: alla pagina si dice di essere ospitata, come
-in un pannello, e nessun segno la tocca. Prima di questo si era provato a
-rifarla in Flutter, ed e' andata come dice la tabella in cima: non era lei.
+* ✅ **La plancia.** Quella vera, in un WebView, servita da un server che sta
+  dentro l'app e che i file li chiede al ponte — la commissione `ponte/http`
+  — e il WebSocket lo cuce sul filo. I file, la configurazione, il catalogo
+  delle integrazioni e le foto ce li ha il ponte, dentro l'add-on: in Home
+  Assistant non c'e' nessuna integrazione. La WebView non e' autenticata:
+  alla pagina si dice di essere ospitata, come in un pannello, e nessun segno
+  la tocca. Prima di questo si era provato a rifarla in Flutter, ed e' andata
+  come dice la tabella in cima: non era lei.
+
+### Fase 1b — segnalazioni e chat, nell'app
+
+Nella plancia erano due sezioni che parlavano col backend dell'integrazione,
+che a sua volta parlava con GitHub e con un relay. Qui diventano dell'app:
+una schermata per aprire una segnalazione — con dentro, raccolti da soli, la
+versione dell'app e del ponte, il telefono, com'e' andato l'ultimo
+collegamento — e una per la chat con chi mantiene il progetto. Passano dal
+ponte, che e' l'unico che puo' parlare fuori per conto della casa, e nessun
+segreto sta sul telefono. Nella plancia i due bottoni rispondono che quelle
+cose stanno nell'app.
 
 ### Fase 2 — gli aiutanti
 

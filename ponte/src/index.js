@@ -7,11 +7,15 @@
 
 import { pathToFileURL } from "node:url";
 
+import { join } from "node:path";
+
 import { Abbinamento } from "./abbinamento.js";
 import { Casa } from "./casa.js";
 import { Chiamata } from "./chiamata.js";
 import { Commissioni } from "./commissioni.js";
+import { Catalogo } from "./catalogo.js";
 import { Configurazione } from "./configurazione.js";
+import { Foto } from "./foto.js";
 import { Plancia } from "./plancia.js";
 import { Identita } from "./identita.js";
 import { Dispositivi } from "./dispositivi.js";
@@ -46,7 +50,12 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   } else {
     registro.attenzione("senza plancia: in ponte/plancia non c'e' niente da servire");
   }
-  const commissioni = new Commissioni({ casa, registro, plancia, configurazione });
+  /* Il catalogo delle integrazioni — per scegliere elettrodomestici, auto e
+   * robot — e le foto caricate dalla plancia: le altre due cose che la
+   * plancia chiedeva all'integrazione, e che qui fa il ponte. */
+  const catalogo = new Catalogo({ casa, registro });
+  const foto = new Foto({ cartella: join(opzioni.cartella, "www") });
+  const commissioni = new Commissioni({ casa, registro, plancia, configurazione, catalogo, foto });
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni });
 
   /* La chiamata verso il centralino: e' cosi' che si entra da fuori casa,
@@ -126,6 +135,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     clearInterval(giro);
     chiamata.spegni();
     ponte.chiudiTutto();
+    casa.chiudiIlFiloMio();
     await Promise.all([chiudi(app), chiudi(console_)]);
   };
 

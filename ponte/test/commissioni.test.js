@@ -16,7 +16,7 @@ import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
 
 import { accetta } from "../src/presa.js";
-import { Casa } from "../src/casa.js";
+import { Casa, RispostaNegativa } from "../src/casa.js";
 import {
   Commissioni,
   eUnaCommissione,
@@ -25,6 +25,7 @@ import {
   TIPO_PLANCIA,
 } from "../src/commissioni.js";
 import { Configurazione } from "../src/configurazione.js";
+import { BASE_DELLE_FOTO, Foto } from "../src/foto.js";
 import { Dispositivi } from "../src/dispositivi.js";
 import { Plancia } from "../src/plancia.js";
 import { Ponte } from "../src/ponte.js";
@@ -282,7 +283,7 @@ test("se il Supervisor non risponde si va col nome del contenitore", async () =>
 
 /* ─── Da un capo all'altro, col ponte vero in mezzo ──────────────────────── */
 
-async function casaFinta() {
+async function casaFinta({ risposte = {} } = {}) {
   const arrivate = [];
   const prese = [];
   const server = createServer((richiesta, risposta) => {
@@ -315,7 +316,21 @@ async function casaFinta() {
           return;
         }
         arrivate.push({ filo: detto });
-        presa.manda(JSON.stringify({ id: detto.id, type: "result", success: true, result: null }));
+        const canned = risposte[detto.type];
+        if (canned instanceof Error) {
+          presa.manda(
+            JSON.stringify({
+              id: detto.id,
+              type: "result",
+              success: false,
+              error: { code: canned.code || "unknown_error", message: canned.message },
+            }),
+          );
+          return;
+        }
+        presa.manda(
+          JSON.stringify({ id: detto.id, type: "result", success: true, result: canned ?? null }),
+        );
       },
     });
     if (!presa) return;
@@ -327,6 +342,7 @@ async function casaFinta() {
   return {
     indirizzo: `http://127.0.0.1:${server.address().port}`,
     arrivate,
+    prese,
     spegni: async () => {
       for (const presa of prese) presa.chiudi();
       await new Promise((ok) => server.close(ok));
@@ -494,14 +510,12 @@ test("si riconosce cosa fa il ponte e cosa va in Home Assistant", () => {
     false,
   );
   assert.equal(con.riconosce({ id: 12, type: "frontend/set_user_data", key: "altro" }), false);
-  for (const tipo of [
-    "get_states",
-    "dashboardmodern/www/list",
-    "dashboardmodern/tickets/list",
-    "call_service",
-  ]) {
+  /* Senza il catalogo e le foto, quelli vanno in casa; le segnalazioni e la
+   * chat invece si fermano sempre qui, per dire dove stanno. */
+  for (const tipo of ["get_states", "dashboardmodern/www/list", "call_service"]) {
     assert.equal(con.riconosce({ type: tipo }), false, tipo);
   }
+  assert.equal(con.riconosce({ type: "dashboardmodern/tickets/list" }), true);
   assert.equal(con.riconosce({}), false);
 
   /* Senza configurazione, la configurazione non e' cosa sua. */
@@ -739,5 +753,190 @@ test("col ponte in mezzo: la configurazione non arriva in Home Assistant, le alt
   ponte.chiudiTutto();
   await new Promise((ok) => server.close(ok));
   await ha.spegni();
+  rmSync(cartella, { recursive: true, force: true });
+});
+
+/* ─── Le domande del ponte a Home Assistant ──────────────────────────────── */
+
+test("il ponte fa le sue domande a Home Assistant su un filo suo, e lo riapre se cade", async (t) => {
+  const negata = new Error("solo un amministratore");
+  negata.code = "unauthorized";
+  const ha = await casaFinta({
+    risposte: { "config/device_registry/list": [{ id: "d1" }], "manifest/list": negata },
+  });
+  const casa = new Casa({ indirizzo: ha.indirizzo, segno: SEGNO_DEL_SUPERVISOR });
+  /* Comunque vada, si chiude tutto: un socket lasciato aperto tiene in piedi
+   * il processo delle prove per sempre. */
+  t.after(async () => {
+    casa.chiudiIlFiloMio();
+    await ha.spegni();
+  });
+
+  assert.deepEqual(await casa.chiedi({ type: "config/device_registry/list" }), [{ id: "d1" }]);
+  const [prima, seconda] = await Promise.all([
+    casa.chiedi({ type: "config/device_registry/list" }),
+    casa.chiedi({ type: "config/area_registry/list" }),
+  ]);
+  assert.deepEqual(prima, [{ id: "d1" }]);
+  assert.equal(seconda, null);
+  assert.equal(ha.prese.length, 1, "un filo solo per tutte le domande");
+  /* La stretta di mano l'ha fatta il ponte: i numeri delle domande sono suoi. */
+  const numeri = ha.arrivate.filter((una) => una.filo).map((una) => una.filo.id);
+  assert.deepEqual(numeri, [1, 2, 3]);
+
+  await assert.rejects(
+    () => casa.chiedi({ type: "manifest/list" }),
+    (errore) => errore instanceof RispostaNegativa && errore.code === "unauthorized",
+  );
+
+  /* Home Assistant chiude: la domanda dopo riapre il filo da sola. */
+  for (const presa of ha.prese) presa.chiudi();
+  await attendi(() => !casa._mio);
+  assert.deepEqual(await casa.chiedi({ type: "config/device_registry/list" }), [{ id: "d1" }]);
+  assert.equal(ha.prese.length, 2);
+});
+
+/* ─── Il catalogo, le foto, e quello che sta nell'app ────────────────────── */
+
+test("si riconoscono il catalogo, le foto e le cose che stanno nell'app", () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-foto-"));
+  const con = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    catalogo: { chiedi: async () => ({ integrations: [], devices: [], entities: [] }) },
+    foto: new Foto({ cartella }),
+  });
+  assert.equal(con.riconosce({ type: "dashboardmodern/integrations/catalog" }), true);
+  assert.equal(con.riconosce({ type: "dashboardmodern/www/list" }), true);
+  assert.equal(con.riconosce({ type: "dashboardmodern/www/upload" }), true);
+  assert.equal(con.riconosce({ type: "dashboardmodern/tickets/list" }), true);
+  assert.equal(con.riconosce({ type: "dashboardmodern/chat/send" }), true);
+  assert.equal(con.riconosce({ type: "dashboardmodern/altro" }), false);
+
+  const senza = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
+  assert.equal(senza.riconosce({ type: "dashboardmodern/integrations/catalog" }), false);
+  assert.equal(senza.riconosce({ type: "dashboardmodern/www/list" }), false);
+  assert.equal(senza.riconosce({ type: "dashboardmodern/tickets/list" }), true);
+  rmSync(cartella, { recursive: true, force: true });
+});
+
+test("le segnalazioni e la chat rispondono con una frase, non con un comando sconosciuto", async () => {
+  const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
+  const risposta = await con.rispondi({
+    id: 4,
+    type: "dashboardmodern/tickets/create",
+    title: "x",
+  });
+  assert.equal(risposta.success, false);
+  assert.equal(risposta.error.code, "not_supported");
+  assert.match(risposta.error.message, /nell'app/);
+});
+
+test("il catalogo passa dal ponte, coi dispositivi chiesti", async () => {
+  const chieste = [];
+  const con = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    catalogo: {
+      async chiedi({ deviceIds }) {
+        chieste.push(deviceIds);
+        return { integrations: [{ domain: "hon" }], devices: [], entities: [] };
+      },
+    },
+  });
+  const tutto = await con.rispondi({ id: 1, type: "dashboardmodern/integrations/catalog" });
+  assert.equal(tutto.success, true);
+  assert.deepEqual(tutto.result.integrations, [{ domain: "hon" }]);
+  await con.rispondi({
+    id: 2,
+    type: "dashboardmodern/integrations/catalog",
+    device_ids: ["d-lav"],
+  });
+  assert.deepEqual(chieste, [null, ["d-lav"]]);
+
+  const storta = await con.rispondi({
+    id: 3,
+    type: "dashboardmodern/integrations/catalog",
+    device_ids: "d-lav",
+  });
+  assert.equal(storta.error.code, "invalid_format");
+  const troppi = await con.rispondi({
+    id: 4,
+    type: "dashboardmodern/integrations/catalog",
+    device_ids: Array.from({ length: 201 }, (_, i) => `d${i}`),
+  });
+  assert.equal(troppi.error.code, "invalid_format");
+
+  const rotto = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    catalogo: {
+      async chiedi() {
+        const errore = new Error("Home Assistant non ha risposto in tempo");
+        throw errore;
+      },
+    },
+  });
+  const senzaRisposta = await rotto.rispondi({
+    id: 5,
+    type: "dashboardmodern/integrations/catalog",
+  });
+  assert.equal(senzaRisposta.success, false);
+  assert.match(senzaRisposta.error.message, /non ha risposto/);
+});
+
+test("le foto si caricano e si elencano dal ponte, e la pagina le riceve come file", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-foto-"));
+  const { scarica, chieste } = scaricaFinto();
+  const con = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    scarica,
+    foto: new Foto({ cartella: join(cartella, "www") }),
+  });
+  const png = Buffer.concat([Buffer.from("\x89PNG\r\n\x1a\n", "latin1"), Buffer.alloc(16, 7)]);
+
+  const vuoto = await con.rispondi({ id: 1, type: "dashboardmodern/www/list" });
+  assert.equal(vuoto.success, true);
+  assert.equal(vuoto.result.available, false);
+
+  const caricata = await con.rispondi({
+    id: 2,
+    type: "dashboardmodern/www/upload",
+    filename: "Auto.png",
+    data: png.toString("base64"),
+  });
+  assert.equal(caricata.success, true);
+  assert.equal(caricata.result.path, `${BASE_DELLE_FOTO}/dashboardmodern/auto.png`);
+
+  const elenco = await con.rispondi({
+    id: 3,
+    type: "dashboardmodern/www/list",
+    path: "dashboardmodern",
+  });
+  assert.deepEqual(
+    elenco.result.images.map((una) => una.url),
+    [`${BASE_DELLE_FOTO}/dashboardmodern/auto.png`],
+  );
+  const fuori = await con.rispondi({ id: 4, type: "dashboardmodern/www/list", path: "../" });
+  assert.equal(fuori.error.code, "not_found");
+
+  const nonUnaFoto = await con.rispondi({
+    id: 5,
+    type: "dashboardmodern/www/upload",
+    filename: "x.png",
+    data: Buffer.from("questo e' testo, non un png").toString("base64"),
+  });
+  assert.equal(nonUnaFoto.error.code, "invalid_upload");
+  const senzaNome = await con.rispondi({ id: 6, type: "dashboardmodern/www/upload", data: "AAAA" });
+  assert.equal(senzaNome.error.code, "invalid_format");
+
+  /* E la pagina la chiede come un file qualunque: dal ponte, non da Home
+   * Assistant. */
+  const servita = await con.rispondi({ id: 7, type: TIPO, percorso: caricata.result.path });
+  assert.equal(servita.result.stato, 200);
+  assert.equal(servita.result.tipo, "image/png");
+  assert.deepEqual(Buffer.from(servita.result.corpo, "base64"), png);
+  assert.equal(chieste.length, 0);
   rmSync(cartella, { recursive: true, force: true });
 });
