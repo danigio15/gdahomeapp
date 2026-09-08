@@ -7,12 +7,13 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "npm run test:ponte && npm run test:centralino",
+    "test": "npm run test:ponte && npm run test:centralino && npm run test:nuvola",
     "test:ponte": "node --test ponte/test/*.test.js",
     "test:centralino": "node --test centralino/test/*.test.js",
-    "format": "prettier --write \"ponte/src/**/*.js\" \"ponte/test/**/*.js\" \"ponte/console/*.js\" \"ponte/console/*.css\" \"centralino/src/**/*.js\" \"centralino/test/**/*.js\" \"nuvola/src/**/*.js\" \"strumenti/*.mjs\"",
-    "format:check": "prettier --check \"ponte/src/**/*.js\" \"ponte/test/**/*.js\" \"ponte/console/*.js\" \"ponte/console/*.css\" \"centralino/src/**/*.js\" \"centralino/test/**/*.js\" \"nuvola/src/**/*.js\" \"strumenti/*.mjs\"",
-    "centralino": "node strumenti/centralino.mjs"
+    "format": "prettier --write \"ponte/src/**/*.js\" \"ponte/test/**/*.js\" \"ponte/console/*.js\" \"ponte/console/*.css\" \"centralino/src/**/*.js\" \"centralino/test/**/*.js\" \"nuvola/src/**/*.js\" \"nuvola/test/**/*.js\" \"strumenti/*.mjs\"",
+    "format:check": "prettier --check \"ponte/src/**/*.js\" \"ponte/test/**/*.js\" \"ponte/console/*.js\" \"ponte/console/*.css\" \"centralino/src/**/*.js\" \"centralino/test/**/*.js\" \"nuvola/src/**/*.js\" \"nuvola/test/**/*.js\" \"strumenti/*.mjs\"",
+    "centralino": "node strumenti/centralino.mjs",
+    "test:nuvola": "node --test nuvola/test/*.test.js"
   },
   "devDependencies": {
     "prettier": "^3.3.0"

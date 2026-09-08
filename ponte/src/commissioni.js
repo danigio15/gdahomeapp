@@ -48,6 +48,7 @@ import { gzipSync } from "node:zlib";
 import { Configurazione, PROFILO_PRINCIPALE, ScattoTroppoGrande } from "./configurazione.js";
 import { DISPOSITIVI_MASSIMI } from "./catalogo.js";
 import { BASE_DELLE_FOTO, FOTO_MASSIMA } from "./foto.js";
+import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 
 export const TIPO = "ponte/http";
 export const TIPO_PLANCIA = "ponte/plancia";
@@ -135,6 +136,7 @@ export class Commissioni {
     configurazione = null,
     catalogo = null,
     foto = null,
+    segnalazioni = null,
     scarica = scaricaDavvero,
     insieme = INSIEME,
   } = {}) {
@@ -149,6 +151,8 @@ export class Commissioni {
      * plancia chiedeva all'integrazione. */
     this.catalogo = catalogo;
     this.foto = foto;
+    /* Le segnalazioni e la chat dell'app, che passano dal centralino. */
+    this.segnalazioni = segnalazioni;
     this.scarica = scarica;
     this.insieme = insieme;
     this._inCorso = 0;
@@ -176,6 +180,11 @@ export class Commissioni {
     const tipo = detto?.type;
     if (tipo === TIPO) return this._http(detto);
     if (tipo === TIPO_PLANCIA) return this._laPlancia(id);
+    if (
+      typeof tipo === "string" &&
+      (tipo.startsWith("ponte/segnalazioni/") || tipo.startsWith("ponte/chat/"))
+    )
+      return this._segnalazioni(detto);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
       return this._configurazione(detto);
     if (tipo === CATALOGO) return this._catalogo(detto);
@@ -232,6 +241,56 @@ export class Commissioni {
       if (errore instanceof ScattoTroppoGrande) return no(id, "snapshot_too_large", errore.message);
       this.registro.errore(`configurazione andata storta: ${errore?.message || errore}`);
       return no(id, "ponte_config", "non ha funzionato");
+    }
+  }
+
+  async _segnalazioni(detto) {
+    const id = detto.id ?? null;
+    const mie = this.segnalazioni;
+    if (!mie) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    const parola = (valore, massimo) =>
+      typeof valore === "string" ? valore.slice(0, massimo) : "";
+    try {
+      switch (detto.type) {
+        case "ponte/segnalazioni/elenco":
+          return si(id, await mie.elenco({ aggiorna: detto.aggiorna === true }));
+        case "ponte/segnalazioni/crea":
+          return si(
+            id,
+            await mie.crea({
+              tipo: parola(detto.tipo, 20),
+              titolo: parola(detto.titolo, 200),
+              corpo: parola(detto.corpo, 10000),
+              diagnostica:
+                detto.diagnostica && typeof detto.diagnostica === "object" ? detto.diagnostica : {},
+            }),
+          );
+        case "ponte/segnalazioni/leggi":
+          if (!Number.isFinite(Number(detto.numero)))
+            return no(id, "invalid_format", "manca il numero");
+          return si(id, await mie.leggi(Number(detto.numero)));
+        case "ponte/segnalazioni/rispondi":
+          if (!Number.isFinite(Number(detto.numero)))
+            return no(id, "invalid_format", "manca il numero");
+          return si(id, await mie.rispondi(Number(detto.numero), parola(detto.testo, 5000)));
+        case "ponte/chat/leggi":
+          return si(id, { chat: await mie.chat() });
+        case "ponte/chat/scrivi":
+          return si(
+            id,
+            await mie.chatta(
+              parola(detto.testo, 5000),
+              detto.diagnostica && typeof detto.diagnostica === "object" ? detto.diagnostica : {},
+            ),
+          );
+        default:
+          return no(id, "unknown_command", `non conosco ${detto.type}`);
+      }
+    } catch (errore) {
+      if (errore instanceof SenzaCentralino) return no(id, errore.codice, errore.message);
+      if (errore instanceof CentralinoHaDettoNo) return no(id, errore.codice, errore.message);
+      this.registro.errore(`segnalazione andata storta: ${errore?.message || errore}`);
+      return no(id, "ponte_segnalazioni", "non ha funzionato");
     }
   }
 

@@ -38,6 +38,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
 import { alzaLaCasaFinta, SCATTO_DEMO, SEGNO_DEL_SUPERVISOR } from "./casa-finta.js";
+import { alzaIlCentralinoFinto } from "./centralino-finto.js";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 const RADICE = dirname(QUI);
@@ -279,6 +280,12 @@ async function main() {
 
   /* 1. La casa finta. */
   const casa = alzaLaCasaFinta();
+  /* Il centralino finto: accetta la chiamata della casa e tiene le
+   * segnalazioni e la chat, rispondendo da solo come farebbe chi mantiene
+   * l'app. Cosi' nelle fotografie il filo ha due voci. */
+  const centralino = await alzaIlCentralinoFinto();
+  daSpegnere.push(() => centralino.spegni());
+  racconta(`il centralino finto sulla ${centralino.porta}`);
   const portaDellaCasa = await casa.ascolta();
   daSpegnere.push(() => casa.spegni());
   racconta(`Home Assistant finta sulla ${portaDellaCasa}`);
@@ -318,6 +325,9 @@ async function main() {
       PONTE_PORTA_CONSOLE: String(portaDellaConsole),
       SUPERVISOR_TOKEN: SEGNO_DEL_SUPERVISOR,
       PONTE_CASA: `http://127.0.0.1:${portaDellaCasa}`,
+      /* Il ponte chiama il centralino finto: la chiamata riesce, e le
+       * segnalazioni hanno una strada per uscire. */
+      PONTE_CENTRALINO: centralino.indirizzo,
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -471,9 +481,11 @@ async function scorri(pagina, quanto) {
 
 async function scatta(pagina, nome) {
   /* Il mouse resta dove ha premuto l'ultima volta, e sotto di lui un bottone
-   * si scalda: in fotografia sembrerebbe premuto. Lo si sposta in un angolo
-   * dove non c'e' niente. */
-  await pagina.mouse.move(pagina.viewportSize().width - 8, 8);
+   * si scalda: in fotografia sembrerebbe premuto. Lo si sposta sul bordo
+   * sinistro, a meta' altezza, dove non c'e' niente: nell'angolo in alto a
+   * destra c'e' il bottone della barra del titolo, e fermarglisi sopra gli
+   * fa spuntare il fumetto col nome, che finiva in fotografia. */
+  await pagina.mouse.move(1, Math.round(pagina.viewportSize().height / 2));
   await attendi(120);
   const dove = join(FOTO, `${nome}.png`);
   await pagina.screenshot({ path: dove });
@@ -525,19 +537,54 @@ async function aspettaCheCompaia(pagina, etichetta, quanto = 30_000) {
   throw new Error(`«${etichetta}» non e' comparsa. A schermo c'e': ${cEra.join(" · ")}`);
 }
 
+/* Si preme **il nodo**, non il punto dove sta disegnato.
+ *
+ * Flutter, quando un tocco cade su un nodo premibile dell'albero, non lo passa
+ * a chi disegna: aspetta il `click` del browser su **quel** nodo e manda un
+ * «tap» con il suo nome. E' la strada che fa un lettore di schermo, e la si fa
+ * direttamente: un `click()` sul nodo premibile, e Flutter preme quel bottone
+ * — non quello che sta disegnato sotto il punto dove si sarebbe cliccato, che
+ * puo' essere un altro se l'albero si e' mosso fra il misurare e il premere.
+ *
+ * Le caselle di testo non sono premibili: hanno dentro l'elemento che scrive,
+ * e un `click()` su di lui gli da' il fuoco — anche questo e' come fa il
+ * motore. Se il nodo non e' ne' l'una ne' l'altra cosa torna `false`, e chi
+ * chiama prova col mouse.
+ *
+ * La pausa prima: un `click` che arriva a meno di cinquanta millisecondi
+ * dall'ultimo tocco del mouse Flutter lo butta via, credendolo lo stesso tocco
+ * contato due volte. */
+async function premiIlNodo(nodo) {
+  await attendi(80);
+  const come = await nodo
+    .evaluate((elemento) => {
+      const scrive = elemento.matches("input, textarea")
+        ? elemento
+        : elemento.querySelector("input, textarea");
+      if (scrive) {
+        scrive.click();
+        return "casella";
+      }
+      const premibile = elemento.hasAttribute("flt-tappable")
+        ? elemento
+        : elemento.querySelector("[flt-tappable]") || elemento.closest("[flt-tappable]");
+      if (premibile) {
+        premibile.click();
+        return "nodo";
+      }
+      return null;
+    })
+    .catch(() => null);
+  return Boolean(come);
+}
+
 async function premi(pagina, etichetta, opzioni = {}) {
   const bottone = await ilBottone(pagina, etichetta, opzioni);
   if (!bottone) {
     const cEra = await cosaCeDaPremere(pagina);
     throw new Error(`non trovo «${etichetta}». A schermo c'e': ${cEra.join(" · ")}`);
   }
-  /* Col mouse, sul centro del riquadro vero.
-   *
-   * Premere l'elemento dell'albero non basta: quegli elementi Flutter li mette
-   * dove gli pare e il tocco finisce da un'altra parte — la prima volta il
-   * «Abbina» ha messo il fuoco sulla casella dell'indirizzo. Il riquadro
-   * invece dice dove la cosa e' *disegnata*, e li' sotto c'e' la tela che
-   * riceve i tocchi davvero. */
+  if (await premiIlNodo(bottone)) return;
   const riquadro = await bottone.boundingBox().catch(() => null);
   if (riquadro && riquadro.width > 0 && riquadro.height > 0) {
     await pagina.mouse.click(riquadro.x + riquadro.width / 2, riquadro.y + riquadro.height / 2);
@@ -562,18 +609,13 @@ async function premi(pagina, etichetta, opzioni = {}) {
  * un'altra. Torna `null` quando quel testo a schermo non c'e'. */
 async function ilBottone(pagina, etichetta, { inAlto = false, aspetta = true } = {}) {
   const tutti = pagina.locator(
-    `[aria-label="${etichetta}"], flt-semantics:has-text("${etichetta}")`,
+    `[aria-label="${etichetta}"], [aria-label^="${etichetta}"], flt-semantics:has-text("${etichetta}")`,
   );
   try {
     await tutti.first().waitFor({ state: "attached", timeout: aspetta ? 20_000 : 600 });
   } catch (_errore) {
     return null;
   }
-  /* Un'etichetta esatta vale piu' di una scritta che la contiene: «Clima» nel
-   * menu e' un bottone con quel nome, e «Clima soggiorno · Clima ca…» sulla
-   * tessera dietro e' un'altra cosa. */
-  const esatti = pagina.locator(`[aria-label="${etichetta}"]`);
-  const quali = (await esatti.count()) > 0 ? esatti : tutti;
 
   /* Si prendono gli **elementi**, non i posti.
    *
@@ -591,8 +633,68 @@ async function ilBottone(pagina, etichetta, { inAlto = false, aspetta = true } =
    * con una barra di venti voci sono centinaia. I primi quaranta bastano —
    * l'albero e' in ordine di documento, e quello che si vuole premere sta li'
    * in mezzo. */
-  const nodi = (await quali.elementHandles()).slice(0, 40);
-  if (nodi.length === 0) return null;
+  const presi = (await tutti.elementHandles()).slice(0, 60);
+  if (presi.length === 0) return null;
+
+  /* Chi combacia davvero, a gradini.
+   *
+   * La ricerca per testo non guarda le maiuscole e prende anche i pezzi:
+   * «Manda» sta dentro «Domanda», e siccome il bottone «Domanda» e' piu'
+   * piccolo di «Manda» era lui a vincere — la segnalazione cambiava tipo e non
+   * partiva. Quindi prima chi ha **proprio** quella scritta, o quell'etichetta:
+   * «Clima» nel menu e' un bottone con quel nome, e «Clima soggiorno · Clima
+   * ca…» sulla tessera dietro e' un'altra cosa.
+   *
+   * Poi l'etichetta che comincia cosi' e va a capo: una casella di testo che
+   * ha il fuoco si porta dietro, dopo un a capo, anche il suggerimento che
+   * mostra — «Le lettere sotto al quadretto⏎ABCD-2345-EFGH-6789» — e finche'
+   * ha il fuoco quell'etichetta in due righe e' la sua.
+   *
+   * Poi chi la contiene, con le maiuscole giuste. E solo alla fine tutti.
+   *
+   * Si decide qui, sugli elementi gia' presi, non con una seconda domanda
+   * all'albero: fra una domanda e l'altra il fuoco arrivava sulla casella,
+   * l'etichetta cambiava, e la seconda domanda tornava a mani vuote. */
+  const scritte = await Promise.all(
+    presi.map((nodo) =>
+      nodo
+        .evaluate((e) => ({
+          etichetta: e.getAttribute("aria-label"),
+          testo: (e.textContent || "").trim(),
+          premibile:
+            e.matches("input, textarea") ||
+            Boolean(e.querySelector("input, textarea")) ||
+            e.hasAttribute("flt-tappable") ||
+            Boolean(e.querySelector("[flt-tappable]")) ||
+            Boolean(e.closest("[flt-tappable]")),
+        }))
+        .catch(() => ({ etichetta: null, testo: "", premibile: false })),
+    ),
+  );
+  const esatti = presi.filter(
+    (_nodo, i) => scritte[i].etichetta === etichetta || scritte[i].testo === etichetta,
+  );
+  const quasi = presi.filter((_nodo, i) =>
+    (scritte[i].etichetta || "").startsWith(`${etichetta}\n`),
+  );
+  const contengono = presi.filter(
+    (_nodo, i) =>
+      (scritte[i].etichetta || "").includes(etichetta) || scritte[i].testo.includes(etichetta),
+  );
+  const combaciano =
+    esatti.length > 0
+      ? esatti
+      : quasi.length > 0
+        ? quasi
+        : contengono.length > 0
+          ? contengono
+          : presi;
+  /* E fra chi combacia, chi si puo' premere: un bottone, una casella, una
+   * scritta che sta dentro a un bottone. Il fumetto che spunta quando il
+   * mouse si ferma su «Rileggi» ha la stessa parola, e' piu' piccolo del
+   * bottone e non fa niente: senza questo era lui a vincere. */
+  const premibili = combaciano.filter((nodo) => scritte[presi.indexOf(nodo)].premibile);
+  const nodi = premibili.length > 0 ? premibili : combaciano;
 
   const riquadri = await Promise.all(nodi.map((nodo) => nodo.boundingBox().catch(() => null)));
   if (process.env.COLLAUDO_SPIA) {
@@ -713,8 +815,11 @@ try {
       if (!voce) throw new Error(`nella barra della plancia non c'e' ${dove}`);
       voce.click();
     }, quale);
+  /* `COLLAUDO_SALTA_PLANCIA=1` salta il giro delle pagine della plancia: e'
+   * la parte lunga, e chi sta lavorando a una schermata dell'app vuole
+   * arrivarci in fretta. */
   for (const { quale, nome } of schede) {
-    if (quale === "home") continue;
+    if (quale === "home" || process.env.COLLAUDO_SALTA_PLANCIA) continue;
     racconta(`apro ${nome}`);
     await premiLaScheda(quale);
     await plancia.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
@@ -781,6 +886,7 @@ try {
        * che si interroga da fuori non c'e' nodo con quel testo. Si scorre
        * finche' non compare. */
       let dove = null;
+      let voce = null;
       for (let giro = 0; giro < 16; giro += 1) {
         const bottone = await ilBottone(pagina, nome, { aspetta: false });
         const riquadro = await (bottone?.boundingBox().catch(() => null) ?? null);
@@ -794,6 +900,7 @@ try {
           riquadro && riquadro.height > 20 && riquadro.height < 70 && riquadro.x < 210;
         if (eUnaVoce && riquadro.y >= 8 && riquadro.y + riquadro.height <= schermo.height - 8) {
           dove = riquadro;
+          voce = bottone;
           break;
         }
         if (!(await laBarraECaperta())) break;
@@ -802,9 +909,12 @@ try {
         await attendi(200);
       }
       if (!dove) continue;
-      /* Sul posto, subito: fra il misurare e il premere non ci va nient'altro.
-       * Non si richiede il nodo, che nel frattempo puo' essere un altro. */
-      await pagina.mouse.click(dove.x + dove.width / 2, dove.y + dove.height / 2);
+      /* Subito, sul nodo che si e' appena misurato: fra il misurare e il
+       * premere non ci va nient'altro. Se il nodo non si lascia premere, il
+       * mouse sul posto. */
+      if (!(await premiIlNodo(voce))) {
+        await pagina.mouse.click(dove.x + dove.width / 2, dove.y + dove.height / 2);
+      }
 
       /* Ha preso?
        *
@@ -873,6 +983,54 @@ try {
   await vaiA("Dispositivi", "Cerca fra");
   await attendi(1200);
   await scatta(pagina, "6-dispositivi");
+
+  racconta("apro le segnalazioni");
+  await vaiA("Segnalazioni", "Nessuna segnalazione");
+  await attendi(900);
+  await scatta(pagina, "6b-segnalazioni");
+
+  racconta("ne scrivo una");
+  await premi(pagina, "Nuova segnalazione");
+  await aspettaCheCompaia(pagina, "Parte anche questo");
+  await attendi(500);
+  await premi(pagina, "Idea");
+  await scriviIn(pagina, "In due parole", "Una tessera per la piscina");
+  await scriviIn(
+    pagina,
+    "Racconta",
+    "Sarebbe bello vederla in home, con la temperatura dell'acqua e la pompa.",
+  );
+  await attendi(400);
+  await scatta(pagina, "6c-nuova-segnalazione");
+  await premi(pagina, "Manda");
+  await aspettaCheCompaia(pagina, "#12");
+  /* Il manutentore finto risponde dopo un attimo: si rilegge, e c'e'. */
+  await attendi(2200);
+  await premi(pagina, "Rileggi", { inAlto: true });
+  await aspettaCheCompaia(pagina, "Grazie, guardo subito");
+  await attendi(600);
+  await scatta(pagina, "6d-segnalazione");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(800);
+
+  racconta("apro l'assistenza");
+  await vaiA("Assistenza", "Qui si parla con chi fa");
+  await attendi(600);
+  await scriviIn(
+    pagina,
+    "Scrivi a chi fa l'app…",
+    "Buongiorno! Come si aggiunge una seconda casa?",
+  );
+  await premi(pagina, "Manda");
+  await aspettaCheCompaia(pagina, "Come si aggiunge una seconda casa");
+  /* La risposta arriva dopo un attimo, e la si vede mandando la parola dopo:
+   * il filo che torna e' quello intero. */
+  await attendi(2200);
+  await scriviIn(pagina, "Scrivi a chi fa l'app…", "Grazie!");
+  await premi(pagina, "Manda");
+  await aspettaCheCompaia(pagina, "Grazie, guardo subito");
+  await attendi(700);
+  await scatta(pagina, "6e-assistenza");
 
   racconta("torno alla plancia");
   await apriIlMenu();

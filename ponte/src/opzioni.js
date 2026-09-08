@@ -44,6 +44,21 @@ const numero = (valore, difetto) => {
   return Number.isFinite(letto) ? letto : difetto;
 };
 
+/* La versione del ponte, letta dal manifesto dell'add-on: e' l'unico posto
+ * dove sta scritta, e chi legge una segnalazione vuole sapere quale ponte
+ * l'ha mandata. */
+export function versioneDelPonte() {
+  try {
+    const manifesto = readFileSync(
+      fileURLToPath(new URL("../config.yaml", import.meta.url)),
+      "utf8",
+    );
+    return /^version:\s*"?([^"\n]+)"?/m.exec(manifesto)?.[1]?.trim() || "";
+  } catch (_errore) {
+    return "";
+  }
+}
+
 export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data") {
   let scritte = {};
   try {
@@ -77,5 +92,6 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
      * cartella da cui si e' stati lanciati: `npm test` e l'add-on partono da
      * due posti diversi, e la pagina deve trovarsi in tutti e due. */
     console: process.env.PONTE_CONSOLE || fileURLToPath(new URL("../console", import.meta.url)),
+    versione: versioneDelPonte(),
   };
 }

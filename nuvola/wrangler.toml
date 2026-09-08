@@ -46,3 +46,12 @@ new_sqlite_classes = ["Casa", "Codice"]
 
 [observability]
 enabled = true
+
+# Le segnalazioni e la chat di assistenza diventano issue di GitHub in questa
+# repository. Il gettone che le scrive e' un segreto e NON sta qui: si mette
+# una volta con `npx wrangler secret put GITHUB_SEGNALAZIONI` (un token a
+# grana fine con «Issues: lettura e scrittura» sulla sola repository qui
+# sotto). Senza gettone il centralino risponde «segnalazioni non
+# configurate», e l'app lo dice.
+[vars]
+GITHUB_REPO = "danigio15/gdahome-segnalazioni"

@@ -55,6 +55,12 @@ export default {
     }
 
     if (richiesta.headers.get("Upgrade") !== "websocket") {
+      /* Le segnalazioni e la chat di una casa: HTTP, verso il suo oggetto,
+       * che e' l'unico a sapere se il segreto e' il suo. */
+      const inCasa = /^\/casa\/([A-Za-z0-9_]+)\/(segnalazioni|chat)(\/|$)/.exec(via);
+      if (inCasa && CASA_VALIDA.test(inCasa[1])) {
+        return quellaCasa(env, inCasa[1]).fetch(richiesta);
+      }
       return risposta({ errore: "qui non c'e' niente" }, 404);
     }
 

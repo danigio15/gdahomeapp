@@ -107,3 +107,19 @@ stringa da un filo all'altro.
 
 Se un giorno le case diventassero tante da uscire dal piano gratuito, sarebbe
 un bel problema da avere.
+
+## Le segnalazioni e la chat
+
+Il centralino riceve dal ponte le segnalazioni e i messaggi della chat di
+assistenza e li apre come **issue di GitHub**, in `GITHUB_REPO`
+(`wrangler.toml`), col gettone `GITHUB_SEGNALAZIONI`, che e' un segreto:
+
+    npx wrangler secret put GITHUB_SEGNALAZIONI
+
+Un token a grana fine, sulla sola repository delle segnalazioni, con
+**Issues: Read and write**. La casa si presenta col suo segreto — lo stesso
+della chiamata — e legge e scrive solo nelle issue che ha aperto lei; chi
+risponde da GitHub scrive un commento, e il commento torna nell'app. I
+commenti della casa portano un segno invisibile in testa, cosi' si sa chi ha
+scritto cosa anche se il gettone e' uno solo. Sta in `src/segnalazioni.js`,
+con le sue prove in `test/`.

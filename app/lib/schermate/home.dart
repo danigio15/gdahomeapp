@@ -10,15 +10,19 @@
 /// stanno dentro la plancia, nella sua barra: qui non si ripetono.
 library;
 
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
+import 'assistenza.dart';
 import 'barra.dart';
 import 'dispositivi.dart';
+import 'firma.dart';
 import 'menu.dart';
 import 'plancia_vera.dart';
+import 'segnalazioni.dart';
 
 class Home extends StatefulWidget {
   const Home({
@@ -43,6 +47,20 @@ class _HomeState extends State<Home> {
   final _barra = GlobalKey<BarraDelleSezioniState>();
   final _plancia = GlobalKey<PlanciaVeraState>();
   Sezione _sezione = Sezione.plancia;
+
+  /// Quello che una segnalazione porta con se' senza che nessuno lo scriva:
+  /// e' la meta' delle domande che chi legge farebbe per prime.
+  Map<String, String> _diagnostica() {
+    final collegamento = widget.collegamento;
+    return {
+      'app': versioneDellApp.isEmpty ? 'sviluppo' : versioneDellApp,
+      'sistema': kIsWeb ? 'web' : defaultTargetPlatform.name,
+      'casa': collegamento.casa?.nome ?? '',
+      'da_dove': collegamento.daDove?.name ?? '',
+      'stato': collegamento.comeVa.name,
+      if (collegamento.perche != null) 'perche': collegamento.perche!,
+    };
+  }
 
   void _vai(Sezione dove) {
     /* Toccare «Plancia» quando ci si e' gia' la ricarica: e' il gesto piu'
@@ -122,6 +140,14 @@ class _HomeState extends State<Home> {
                       ),
                       Sezione.dispositivi => Dispositivi(
                         collegamento: collegamento,
+                      ),
+                      Sezione.segnalazioni => SchermataDelleSegnalazioni(
+                        collegamento: collegamento,
+                        diagnostica: _diagnostica,
+                      ),
+                      Sezione.assistenza => SchermataDellAssistenza(
+                        collegamento: collegamento,
+                        diagnostica: _diagnostica,
                       ),
                       _ => _InArrivo(sezione),
                     },

@@ -27,6 +27,8 @@ jobs:
         run: npm run test:ponte
       - name: Le prove del centralino
         run: npm run test:centralino
+      - name: Le prove del centralino sulla nuvola
+        run: npm run test:nuvola
 
   forma:
     name: La forma del codice

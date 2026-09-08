@@ -86,6 +86,7 @@ Il resto — le due porte, l'abbinamento, cosa finisce sul disco — sta in
 | ✅ | Il filo: si rialza da solo, cambia approdo, rifa' le sottoscrizioni cadute |
 | ✅ | **La plancia dentro l'app**: quella vera di DashboardModern, in un WebView; i file e la configurazione li ha l'add-on, in Home Assistant non serve niente |
 | ✅ | I dispositivi: tutte le entita' divise per dominio, con gli interruttori |
+| ✅ | **Segnalazioni e chat di assistenza** nell'app: arrivano a chi la fa come issue di GitHub, passando dal ponte e dal centralino, con la diagnostica raccolta da sola |
 | ✅ | **393 prove** — 195 sul ponte, 19 sul centralino, 179 sull'app — senza rete, senza Home Assistant, senza telefono |
 | ⬜ | Gli aiutanti (i sette classici, nativi) |
 | ⬜ | Zigbee: ZHA **e** Zigbee2MQTT |

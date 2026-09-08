@@ -39,6 +39,10 @@
 import { impronta, stessaImpronta } from "./segreti.js";
 import { quelCodice } from "./dove.js";
 import { CASA_VALIDA, IMPRONTA_VALIDA } from "./nomi.js";
+import { GitHub, GitHubNonRisponde, RichiestaSbagliata, Segnalazioni } from "./segnalazioni.js";
+
+/* Un corpo piu' grande di cosi' non e' una segnalazione. */
+const CORPO_MASSIMO = 64 * 1024;
 
 /* Quanti telefoni insieme puo' avere una casa. Oltre non e' una famiglia. */
 const TELEFONI_PER_CASA = 20;
@@ -63,6 +67,10 @@ export class Casa {
   /* ─── Chi arriva ──────────────────────────────────────────────────────── */
 
   async fetch(richiesta) {
+    /* Le segnalazioni e la chat arrivano in HTTP, dal ponte: non aprono
+     * nessun filo, chiedono e ricevono una risposta. */
+    if (richiesta.headers.get("Upgrade") !== "websocket") return this._http(richiesta);
+
     const via = new URL(richiesta.url).pathname;
     const da = richiesta.headers.get("cf-connecting-ip") || "?";
     const [alClient, mia] = Object.values(new WebSocketPair());
@@ -283,6 +291,80 @@ export class Casa {
     await this._chiudiGliAbbinamenti();
   }
 
+  /* ─── Le segnalazioni e la chat ───────────────────────────────────────── */
+
+  /* La casa si presenta col suo segreto — lo stesso della chiamata — e
+   * ottiene le sue issue, e solo le sue. Chi non si e' mai presentato dal
+   * filo non ha ancora un'impronta qui, e non entra: prima la casa si
+   * collega, poi scrive. */
+  async _http(richiesta) {
+    const via = new URL(richiesta.url).pathname;
+    const pezzi =
+      /^\/casa\/([A-Za-z0-9_]+)\/(segnalazioni|chat)(?:\/(\d+))?(?:\/(risposte|messaggi))?$/.exec(
+        via,
+      );
+    if (!pezzi)
+      return rispostaJson({ errore: "non_trovato", spiegazione: "qui non c'e' niente" }, 404);
+    const [, casa, cosa, numero, coda] = pezzi;
+
+    const segreto = /^Casa (.+)$/.exec(richiesta.headers.get("authorization") || "")?.[1];
+    if (!segreto) {
+      return rispostaJson(
+        { errore: "senza_segreto", spiegazione: "serve il segreto della casa" },
+        401,
+      );
+    }
+    const conosciuta = await this.state.storage.get("impronta");
+    if (conosciuta === undefined || !stessaImpronta(conosciuta, await impronta(segreto))) {
+      return rispostaJson({ errore: "non_ti_riconosco", spiegazione: "non ti riconosco" }, 403);
+    }
+
+    const github = new GitHub({ token: this.env.GITHUB_SEGNALAZIONI, repo: this.env.GITHUB_REPO });
+    const segnalazioni = new Segnalazioni({ storage: this.state.storage, github, casa });
+    const metodo = richiesta.method;
+    try {
+      if (cosa === "segnalazioni") {
+        if (!numero && !coda && metodo === "GET") {
+          return rispostaJson({ segnalazioni: await segnalazioni.elenco() });
+        }
+        if (!numero && !coda && metodo === "POST") {
+          return rispostaJson(await segnalazioni.crea(await corpoDi(richiesta)), 201);
+        }
+        if (numero && !coda && metodo === "GET") {
+          return rispostaJson(await segnalazioni.leggi(Number(numero)));
+        }
+        if (numero && coda === "risposte" && metodo === "POST") {
+          const { testo } = await corpoDi(richiesta);
+          return rispostaJson(await segnalazioni.rispondi(Number(numero), testo));
+        }
+      } else if (!numero) {
+        if (!coda && metodo === "GET") return rispostaJson({ chat: await segnalazioni.chat() });
+        if (coda === "messaggi" && metodo === "POST") {
+          const { testo, diagnostica } = await corpoDi(richiesta);
+          return rispostaJson(await segnalazioni.chatta(testo, diagnostica), 201);
+        }
+      }
+      return rispostaJson({ errore: "non_trovato", spiegazione: "qui non c'e' niente" }, 404);
+    } catch (errore) {
+      if (errore instanceof RichiestaSbagliata) {
+        return rispostaJson({ errore: errore.codice, spiegazione: errore.message }, errore.stato);
+      }
+      if (errore instanceof GitHubNonRisponde) {
+        return rispostaJson(
+          {
+            errore: "github",
+            spiegazione: `GitHub ha risposto ${errore.stato}: ${errore.message}`,
+          },
+          502,
+        );
+      }
+      return rispostaJson(
+        { errore: "centralino", spiegazione: String(errore?.message || errore) },
+        500,
+      );
+    }
+  }
+
   /* Rifiutare **dicendolo**.
    *
    * Chiudere e basta sarebbe la cosa peggiore: il ponte vedrebbe un filo
@@ -297,5 +379,25 @@ export class Casa {
     } catch (_errore) {
       /* Gia' chiusa. */
     }
+  }
+}
+
+function rispostaJson(corpo, stato = 200) {
+  return new Response(JSON.stringify(corpo), {
+    status: stato,
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+  });
+}
+
+async function corpoDi(richiesta) {
+  const testo = await richiesta.text();
+  if (testo.length > CORPO_MASSIMO)
+    throw new RichiestaSbagliata("troppo_grande", "Il corpo e' troppo grande.", 413);
+  if (!testo.trim()) return {};
+  try {
+    const letto = JSON.parse(testo);
+    return letto && typeof letto === "object" ? letto : {};
+  } catch (_errore) {
+    throw new RichiestaSbagliata("non_json", "Il corpo non e' JSON.", 400);
   }
 }

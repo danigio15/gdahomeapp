@@ -114,6 +114,16 @@ class PonteFinto {
       });
       return;
     }
+    /* Le segnalazioni e la chat: quello che il ponte vero porta al
+     * centralino, qui sta in memoria. */
+    final tipo = detto['type'];
+    if (tipo is String &&
+        (tipo.startsWith('ponte/segnalazioni/') ||
+            tipo.startsWith('ponte/chat/'))) {
+      _manda(presa, {'id': id, ..._segnalazione(detto)});
+      return;
+    }
+
     /* Le commissioni: quello che il ponte vero fa da se', senza passare da
      * Home Assistant. Qui si serve da una cartella in memoria. */
     if (detto['type'] == 'ponte/http') {
@@ -155,6 +165,121 @@ class PonteFinto {
   /// Quello che risponde `ponte/plancia`: la plancia dentro l'add-on. `null`
   /// e' un ponte che non ce l'ha, e dice di no.
   Map<String, dynamic>? planciaDelPonte = planciaNelPonte();
+
+  /// Se questa casa passa da un centralino: senza, le segnalazioni non si
+  /// spediscono, e il ponte lo dice.
+  bool conIlCentralino = true;
+
+  /// Le segnalazioni che il ponte finto tiene, nella forma del ponte vero.
+  final List<Map<String, dynamic>> segnalazioni = [];
+  Map<String, dynamic>? chat;
+  int _prossimaSegnalazione = 7;
+
+  /// Il manutentore risponde a una segnalazione, o alla chat.
+  void rispondeIlManutentore(int numero, String testo) {
+    final filo = numero == chat?['numero']
+        ? chat
+        : segnalazioni.cast<Map<String, dynamic>?>().firstWhere(
+            (una) => una!['numero'] == numero,
+            orElse: () => null,
+          );
+    (filo!['messaggi'] as List).add({
+      'da': 'manutentore',
+      'testo': testo,
+      'il': '2026-09-08T11:00:00Z',
+    });
+  }
+
+  Map<String, dynamic> _segnalazione(Map<String, dynamic> detto) {
+    Map<String, dynamic> no(String codice, String spiegazione) => {
+      'type': 'result',
+      'success': false,
+      'error': {'code': codice, 'message': spiegazione},
+    };
+    Map<String, dynamic> si(Object? risultato) => {
+      'type': 'result',
+      'success': true,
+      'result': risultato,
+    };
+    if (!conIlCentralino) {
+      if (detto['type'] == 'ponte/segnalazioni/elenco') {
+        return si({'spedibili': false, 'aggiornato_il': 0, 'segnalazioni': []});
+      }
+      return no('senza_centralino', 'nessun centralino');
+    }
+    Map<String, dynamic> filo(Map<String, dynamic> una) => {
+      ...una,
+      'messaggi': List.of(una['messaggi'] as List),
+    };
+    Map<String, dynamic>? trova(Object? numero) => segnalazioni
+        .cast<Map<String, dynamic>?>()
+        .firstWhere((una) => una!['numero'] == numero, orElse: () => null);
+    switch (detto['type']) {
+      case 'ponte/segnalazioni/elenco':
+        return si({
+          'spedibili': true,
+          'aggiornato_il': 1,
+          'segnalazioni': [
+            for (final una in segnalazioni)
+              {...una, 'messaggi': (una['messaggi'] as List).length},
+          ],
+        });
+      case 'ponte/segnalazioni/crea':
+        final titolo = detto['titolo']?.toString().trim() ?? '';
+        if (titolo.isEmpty) return no('manca_il_titolo', 'Manca il titolo.');
+        final una = {
+          'numero': _prossimaSegnalazione++,
+          'tipo': detto['tipo'],
+          'titolo': titolo,
+          'stato': 'aperta',
+          'aperta_il': '2026-09-08T10:00:00Z',
+          'url': 'https://github.com/x/y/issues/1',
+          'diagnostica': detto['diagnostica'],
+          'messaggi': [
+            {
+              'da': 'casa',
+              'testo': detto['corpo'],
+              'il': '2026-09-08T10:00:00Z',
+            },
+          ],
+        };
+        segnalazioni.insert(0, una);
+        return si(filo(una));
+      case 'ponte/segnalazioni/leggi':
+        final una = trova(detto['numero']);
+        if (una == null) return no('non_trovata', 'non e\' tua');
+        return si(filo(una));
+      case 'ponte/segnalazioni/rispondi':
+        final una = trova(detto['numero']);
+        if (una == null) return no('non_trovata', 'non e\' tua');
+        (una['messaggi'] as List).add({
+          'da': 'casa',
+          'testo': detto['testo'],
+          'il': '2026-09-08T12:00:00Z',
+        });
+        return si(filo(una));
+      case 'ponte/chat/leggi':
+        return si({'chat': chat == null ? null : filo(chat!)});
+      case 'ponte/chat/scrivi':
+        chat ??= {
+          'numero': _prossimaSegnalazione++,
+          'tipo': 'chat',
+          'titolo': 'Chat di assistenza',
+          'stato': 'aperta',
+          'aperta_il': '2026-09-08T10:00:00Z',
+          'url': '',
+          'messaggi': <Map<String, dynamic>>[],
+        };
+        (chat!['messaggi'] as List).add({
+          'da': 'casa',
+          'testo': detto['testo'],
+          'il': '2026-09-08T12:00:00Z',
+        });
+        return si(filo(chat!));
+      default:
+        return no('unknown_command', 'non conosco ${detto['type']}');
+    }
+  }
 
   /// I pannelli che risponde `get_panels`. `null` e' una casa senza
   /// DashboardModern: risponde lo stesso, ma senza quel pannello.

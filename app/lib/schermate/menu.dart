@@ -14,6 +14,8 @@ library;
 enum Sezione {
   plancia('Plancia', 'home', pronta: true),
   dispositivi('Dispositivi', 'widget', pronta: true),
+  segnalazioni('Segnalazioni', 'segnalazioni', pronta: true),
+  assistenza('Assistenza', 'assistenza', pronta: true),
   aiutanti('Aiutanti', 'impostazioni'),
   zigbee('Zigbee', 'runtime'),
   automazioni('Automazioni', 'azioni');

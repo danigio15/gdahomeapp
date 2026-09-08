@@ -128,6 +128,14 @@ chiamate REST della pagina, lo storico e le istantanee, passano dal Supervisor
 col suo segno. Nient'altro passa di li'. Sta scritto in `src/commissioni.js`,
 `src/plancia.js` e `src/configurazione.js`.
 
+Le **segnalazioni** e la **chat di assistenza** dell'app passano anche loro
+dal ponte, con `ponte/segnalazioni/…` e `ponte/chat/…`: il ponte le porta al
+centralino — presentandosi col segreto della casa, lo stesso della chiamata —
+e il centralino le apre come issue di GitHub per chi mantiene l'app. Qui non
+c'e' nessun gettone di nessuno; una copia di quello che si e' scritto sta in
+`/data/segnalazioni.json`, cosi' l'app vede subito qualcosa anche quando il
+centralino e' lento. Senza centralino non c'e' dove spedire, e si dice cosi'.
+
 ## Le opzioni
 
 | | |

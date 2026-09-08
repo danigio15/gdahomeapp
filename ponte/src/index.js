@@ -23,6 +23,7 @@ import { leggiLeOpzioni } from "./opzioni.js";
 import { Ponte } from "./ponte.js";
 import { Portiere } from "./portiere.js";
 import { Ritorno } from "./ritorno.js";
+import { Segnalazioni } from "./segnalazioni.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciLaConsole, costruisciLaPortaDellApp } from "./server.js";
 
@@ -55,12 +56,31 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * plancia chiedeva all'integrazione, e che qui fa il ponte. */
   const catalogo = new Catalogo({ casa, registro });
   const foto = new Foto({ cartella: join(opzioni.cartella, "www") });
-  const commissioni = new Commissioni({ casa, registro, plancia, configurazione, catalogo, foto });
+  /* Chi e' questa casa per il centralino: serve alla chiamata, e alle
+   * segnalazioni, che al centralino si presentano allo stesso modo. */
+  const identita = new Identita({ cartella: opzioni.cartella });
+  /* Le segnalazioni e la chat dell'app: dal ponte al centralino, e da li' a
+   * chi mantiene il progetto. */
+  const segnalazioni = new Segnalazioni({
+    identita,
+    centralino: opzioni.centralino,
+    cartella: opzioni.cartella,
+    versione: opzioni.versione,
+    registro,
+  });
+  const commissioni = new Commissioni({
+    casa,
+    registro,
+    plancia,
+    configurazione,
+    catalogo,
+    foto,
+    segnalazioni,
+  });
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni });
 
   /* La chiamata verso il centralino: e' cosi' che si entra da fuori casa,
    * senza che chi ha installato l'add-on apra o configuri niente. */
-  const identita = new Identita({ cartella: opzioni.cartella });
   /* Nessuno parla col ponte direttamente: si passa dal portiere, che fa la
    * stretta di mano e da li' in poi cifra. Vale per chi arriva dalla porta di
    * casa e per chi arriva dal centralino, allo stesso modo. */

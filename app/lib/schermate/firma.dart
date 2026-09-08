@@ -17,6 +17,10 @@ import '../ponte/centralino.dart';
 /// e allora lo si dice, invece di far finta di essere una versione.
 const String _detta = String.fromEnvironment('VERSIONE');
 
+/// Quale pacchetto e' questo, per chi lo deve sapere fuori da qui: finisce
+/// nelle segnalazioni, raccolto da solo.
+const String versioneDellApp = _detta;
+
 String get versioneDelPacchetto => _detta.isEmpty ? 'dal codice' : _detta;
 
 class Firma extends StatelessWidget {

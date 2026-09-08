@@ -60,8 +60,8 @@ da tramite verso Home Assistant.
 | Abbinamento con otto lettere o col quadretto, piu' case, dentro e fuori casa, cifratura | ✅ |
 | La barra: la casa in cui si e', da dove si passa, le sezioni | ✅ |
 | I dispositivi: tutte le entita' per dominio, con gli interruttori | ✅ (elenco) |
-| **Segnalazioni**: si aprono dall'app, con i dati della casa raccolti da sola | ⬜ |
-| **Chat di assistenza**: dall'app, con chi mantiene il progetto | ⬜ |
+| **Segnalazioni**: si aprono dall'app, con i dati della casa raccolti da soli; dal ponte al centralino, che le apre come issue di GitHub | ✅ |
+| **Chat di assistenza**: dall'app, con chi mantiene il progetto, sullo stesso filo | ✅ |
 | Zigbee: ZHA **e** Zigbee2MQTT, dietro un'interfaccia sola | ⬜ (fase 3) |
 | I dispositivi: aggiungerli, rinominarli, metterli in una stanza | ⬜ |
 | Gli aiutanti: i sette classici | ⬜ (fase 2) |
@@ -69,13 +69,15 @@ da tramite verso Home Assistant.
 | Notifiche, impronta digitale, negozi | ⬜ (fasi 5 e 6) |
 
 **Binario C — gli acquisti in app.** Alcune sezioni, dell'app e della plancia,
-saranno a pagamento. Il disegno, prima del codice:
+saranno a pagamento. Prima il disegno, poi la proposta commerciale, poi il
+codice.
 
 * **I diritti.** Ogni sezione a pagamento ha una chiave — `plancia.energia`,
   `plancia.elettrodomestici`, `app.zigbee`, `app.automazioni` — e un diritto
-  e' l'elenco delle chiavi accese per **una casa**, con una scadenza. Per
-  casa e non per telefono: chi compra una sezione la vede su tutti i telefoni
-  abbinati a quella casa, e non la ricompra per il tablet in cucina.
+  e' l'elenco delle chiavi accese per **una casa**, con una scadenza e con i
+  **limiti** (quanti dispositivi). Per casa e non per telefono: chi compra
+  una sezione la vede su tutti i telefoni abbinati a quella casa, e non la
+  ricompra per il tablet in cucina.
 * **Dove sta la verita'.** Non nel telefono e non nel ponte, che stanno tutti
   e due in casa dell'utente: sta nel **centralino**, che e' gia' il pezzo che
   chi distribuisce l'app mantiene. Il centralino tiene il registro degli
@@ -96,12 +98,56 @@ saranno a pagamento. Il disegno, prima del codice:
   la barra e la Config le mostrano chiuse col loro prezzo; per l'app, la
   barra e le schermate leggono lo stesso elenco. Spegnere e' togliere la
   chiave dal diritto: la volta dopo che il ponte lo rinnova, la sezione si
-  chiude da sola.
+  chiude da sola. I **limiti sui dispositivi** si contano nel ponte: il
+  catalogo delle integrazioni dice quanti dispositivi sono collegati nella
+  plancia, e il ponte rifiuta di collegarne uno in piu' del diritto — il
+  primo e' gratis, gli altri si sbloccano.
 * **Quello che decide chi vende.** Cosa e' gratis e cosa no, i pacchetti,
   una tantum o abbonamento, il periodo di prova, e i diritti **regalati** —
   a chi collauda, a chi aiuta — che si concedono dalla console del
   centralino senza passare dai negozi. Il registro e' un elenco per casa, e
   la console lo mostra e lo cambia.
+
+**La proposta commerciale** (una proposta: si decide insieme).
+
+*Cosa resta gratis, per sempre.* Tutto quello che serve a **vedere e
+comandare** la propria casa: la plancia intera con le sue pagine — Home,
+stanze, luci, clima, temperatura, finestre, prese, agenda, sicurezza, meteo,
+persone, energia istantanea — l'app con l'abbinamento, piu' case, dentro e
+fuori casa dal centralino, i dispositivi in elenco, le segnalazioni e la
+chat. E **un dispositivo collegato** gratis: un elettrodomestico, un'auto o
+un robot dal catalogo delle integrazioni, e piu' avanti un dispositivo
+Zigbee. Chi prova l'app deve vederla funzionare davvero, non una vetrina.
+
+*Cosa si sblocca.* Un livello solo, **Casa completa**, per casa:
+
+| cosa | gratis | Casa completa |
+|---|---|---|
+| Dispositivi collegati (elettrodomestici, auto, robot; poi Zigbee) | 1 | senza limite |
+| Telecamere nella plancia | 1 | senza limite |
+| Energia: report, analisi, confronti nel tempo | istantanea | tutto |
+| Automazioni col mago (fase 4) | 1 | senza limite |
+| Aiutanti (fase 2) | 3 | senza limite |
+| Zigbee: abbinare dispositivi (fase 3) | 1 dispositivo | senza limite |
+| Segnalazioni e chat | si' | con precedenza nelle risposte |
+
+Un livello solo e non tre, perche' ogni livello in piu' e' una domanda in
+piu' da fare a chi paga, e la risposta giusta a «quanti dispositivi hai» e'
+quasi sempre «piu' di uno». Il limite sui dispositivi e' quello che si sente:
+il secondo elettrodomestico e' il momento in cui l'app ha gia' dimostrato di
+valere.
+
+*Come si paga.* **Una tantum per casa**, intorno ai 19,99 €, con un
+abbonamento alternativo intorno a 1,99 € al mese per chi preferisce provare:
+i due prezzi stanno bene insieme sui negozi e nessuno dei due spaventa. Una
+**prova di quattordici giorni** con tutto acceso al primo abbinamento, senza
+carta: si vede cosa si perde, che e' il modo piu' onesto di far comprare. Il
+prezzo e' per casa, quindi la famiglia intera con un acquisto solo. I diritti
+regalati dalla console del centralino coprono chi collauda e chi aiuta.
+
+*Cosa non fare.* Non far pagare l'accesso da fuori casa: costa zero, e' il
+motivo per cui l'app esiste, e farlo pagare e' il modo piu' rapido di far
+chiudere l'app. Non far pagare le segnalazioni: chi segnala aiuta.
 
 | pezzo | dove | stato |
 |---|---|---|
@@ -124,7 +170,6 @@ entita', non ne **crea**.
 | Creare un aiutante | niente |
 | Flussi di configurazione di Home Assistant | niente |
 | Notifiche native | niente |
-| Segnalazioni e chat fuori dalla plancia, nell'app | niente |
 
 Quindi non c'e' niente da smontare: c'e' da costruire.
 

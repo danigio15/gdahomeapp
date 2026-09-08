@@ -210,6 +210,35 @@ strada, e non c'è modo di aggirarla.
 
 ---
 
+## Le segnalazioni e la chat, per chi mantiene l'app
+
+Nell'app ci sono **Segnalazioni** e **Assistenza**: chi la usa scrive da lì,
+e quello che scrive arriva a te come **issue di GitHub**, in una repository
+che scegli tu. Rispondi da GitHub con un commento, e la risposta torna
+nell'app. Nessuna console da tenere accesa: la console è GitHub.
+
+Per accenderle, una volta sola:
+
+1. Crea una repository per le segnalazioni (privata va bene), per esempio
+   `gdahome-segnalazioni`, e scrivila in `nuvola/wrangler.toml` alla voce
+   `GITHUB_REPO`.
+2. Crea su GitHub un **token a grana fine** (Settings → Developer settings →
+   Fine-grained tokens) con accesso alla sola repository di cui sopra e il
+   permesso **Issues: Read and write**. Non incollarlo da nessuna parte che
+   non sia il passo dopo.
+3. Dalla cartella `nuvola`, mettilo nel centralino come segreto:
+
+   ```bash
+   npx wrangler secret put GITHUB_SEGNALAZIONI
+   ```
+
+   Lo chiede a terminale, e non finisce in nessun file.
+
+4. Ripubblica il centralino (`npx wrangler deploy`, o il workflow).
+
+Senza il segreto tutto il resto funziona: l'app dice che il centralino non
+ha le segnalazioni accese, e basta.
+
 ## Cosa guardare, una volta dentro
 
 - **La home è la tua plancia**, com'è in Home Assistant: le stesse tessere,
