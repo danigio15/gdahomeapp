@@ -498,7 +498,14 @@ async function ilBottone(pagina, etichetta, { inAlto = false, aspetta = true } =
     if (!riquadro || riquadro.width < 16 || riquadro.height < 16) continue;
     if (schermo && riquadro.width * riquadro.height > schermo.width * schermo.height * 0.6)
       continue;
-    const quanto = inAlto ? riquadro.y : riquadro.width * riquadro.height;
+    /* Con `inAlto` si cerca un bottone della barra del titolo, e «il piu' in
+     * alto» da solo non basta: un contenitore che comincia a filo del bordo
+     * sta piu' in alto del bottone e vince, e il tocco cade in mezzo alla
+     * pagina. Si guardano quindi solo i candidati che stanno **nella** barra
+     * del titolo — il primo quarto di schermo — e fra quelli si prende sempre
+     * il piu' piccolo, che e' la regola di tutti gli altri. */
+    if (inAlto && schermo && riquadro.y > schermo.height * 0.25) continue;
+    const quanto = riquadro.width * riquadro.height;
     if (quanto < migliore) {
       migliore = quanto;
       bottone = nodi[i];
@@ -591,55 +598,66 @@ try {
     const schermo = pagina.viewportSize();
     /* Dove sta la barra: sul fianco sinistro, a meta' altezza. */
     const dentroLaBarra = { x: 96, y: schermo.height / 2 };
-    for (let giro = 0; giro < 14; giro += 1) {
-      /* La barra si toglie di mezzo da sola dopo qualche secondo. Un dito la
-       * tiene aperta scorrendola; una macchina che fra una rotellata e l'altra
-       * si ferma a interrogare l'albero ci mette di piu', e se la ritrova
-       * chiusa. Quando non c'e' piu', la si richiama e si riprende da dove si
-       * era. */
+
+    /* Cercare e premere stanno nello stesso tentativo, e il tentativo
+     * ricomincia da capo.
+     *
+     * Perche' la barra, quando si riapre, torna scorsa sulla sezione che si
+     * sta guardando: se si e' scorso fino in fondo per trovare
+     * «Configurazione» e nel frattempo la barra si e' richiusa da sola, alla
+     * riapertura quella voce e' di nuovo fuori vista — e la maniglia che si
+     * era misurata prima non e' piu' di niente. Riaprire e riprendere a
+     * scorrere da dove si era e' proprio la cosa che non si puo' fare. */
+    for (let tentativo = 0; tentativo < 4; tentativo += 1) {
       if (!(await laBarraECaperta())) {
         await premi(pagina, "Barra delle sezioni");
         await attendi(900);
       }
-      const bottone = await ilBottone(pagina, nome, { aspetta: false });
-      const dove = await (bottone?.boundingBox().catch(() => null) ?? null);
-      /* Alta quanto una voce: i contenitori che quel testo se lo trovano
-       * dentro sono alti tutta la barra. */
-      const eUnaVoce = dove && dove.height > 20 && dove.height < 70;
-      if (eUnaVoce && dove.y >= 8 && dove.y + dove.height <= schermo.height - 8) {
-        break;
+      /* La barra e' piu' alta dello schermo: le voci in fondo stanno sotto il
+       * bordo, e finche' stanno fuori in Flutter **non esistono** — nell'albero
+       * che si interroga da fuori non c'e' nodo con quel testo. Si scorre
+       * finche' non compare. */
+      let dove = null;
+      for (let giro = 0; giro < 16; giro += 1) {
+        const bottone = await ilBottone(pagina, nome, { aspetta: false });
+        const riquadro = await (bottone?.boundingBox().catch(() => null) ?? null);
+        /* Alta quanto una voce: i contenitori che quel testo se lo trovano
+         * dentro sono alti tutta la barra. */
+        const eUnaVoce =
+          riquadro && riquadro.height > 20 && riquadro.height < 70;
+        if (
+          eUnaVoce &&
+          riquadro.y >= 8 &&
+          riquadro.y + riquadro.height <= schermo.height - 8
+        ) {
+          dove = riquadro;
+          break;
+        }
+        if (!(await laBarraECaperta())) break;
+        await pagina.mouse.move(dentroLaBarra.x, dentroLaBarra.y);
+        await pagina.mouse.wheel(0, 180);
+        await attendi(200);
       }
-      await pagina.mouse.move(dentroLaBarra.x, dentroLaBarra.y);
-      await pagina.mouse.wheel(0, 180);
-      await attendi(220);
+      if (!dove) continue;
+      /* Sul posto, subito: fra il misurare e il premere non ci va nient'altro.
+       * Non si richiede il nodo, che nel frattempo puo' essere un altro. */
+      await pagina.mouse.click(dove.x + dove.width / 2, dove.y + dove.height / 2);
+
+      /* Ha preso?
+       *
+       * Una voce premuta manda giu' la barra — e' quello che fa la plancia,
+       * per dare il tempo di vedere che si e' premuto e poi togliersi di
+       * mezzo. Se dopo un secondo la barra e' ancora su, quel tocco non e'
+       * finito su una voce, ed e' da rifare. */
+      await attendi(1000);
+      if (!(await laBarraECaperta())) return;
     }
-    await attendi(300);
-    if (!(await laBarraECaperta())) {
-      await premi(pagina, "Barra delle sezioni");
-      await attendi(900);
-    }
-    await premi(pagina, nome);
-    /* Ha preso?
-     *
-     * Una voce premuta manda giu' la barra — e' quello che fa la plancia, per
-     * dare il tempo di vedere che si e' premuto e poi togliersi di mezzo. Se
-     * dopo un secondo la barra e' ancora su, quel tocco non e' finito su una
-     * voce: e' finito sul vetro accanto, o su un nodo che nel frattempo si era
-     * spostato. Chi guarda se ne accorgerebbe e ripremerebbe; qui si fa lo
-     * stesso, invece di andare avanti e accusare la pagina dopo di non essere
-     * comparsa. */
-    await attendi(1000);
-    if (await laBarraECaperta()) await premi(pagina, nome);
-    /* E poi si aspetta che se ne sia andata davvero.
-     *
-     * Finche' e' su, la barra tiene un velo sopra tutta la pagina che raccoglie
-     * il primo tocco per chiudersi — e' giusto cosi': si tocca fuori e si
-     * chiude. Ma chi viene dopo crede di aver premuto quello che vedeva, e non
-     * ha premuto niente. */
-    for (let giro = 0; giro < 12; giro += 1) {
-      if (!(await laBarraECaperta())) break;
-      await attendi(250);
-    }
+    /* Quattro tentativi e niente: lo si dice, invece di andare avanti e
+     * accusare la pagina dopo di non essere comparsa. */
+    const cEra = await cosaCeDaPremere(pagina);
+    throw new Error(
+      `«${nome}» nella barra non si e' lasciata premere. A schermo c'e': ${cEra.join(" · ")}`,
+    );
   }
 
   /* Se la barra e' dentro. Lo dice la **maniglia**.
@@ -684,11 +702,30 @@ try {
     ["MiniPC", "tranquillo", "4n-minipc"],
   ];
 
+  /* Andare in una sezione, e assicurarsi di esserci arrivati.
+   *
+   * Che la barra si sia chiusa dice che si e' premuta **una** voce, non che si
+   * e' premuta **quella**: la barra puo' star finendo di scorrere mentre si
+   * preme, e il dito prende la vicina. Chi guarda se ne accorgerebbe subito —
+   * la pagina e' un'altra — e ripremerebbe. Qui si fa lo stesso: la prova
+   * d'essere arrivati e' una parola che sta solo su quella pagina. */
+  async function vaiA(nome, attesa) {
+    for (let tentativo = 1; tentativo <= 3; tentativo += 1) {
+      await apriIlMenu();
+      await premiNelMenu(nome);
+      try {
+        await aspettaCheCompaia(pagina, attesa, tentativo < 3 ? 6000 : 30_000);
+        return;
+      } catch (errore) {
+        if (tentativo === 3) throw errore;
+        process.stdout.write(`    · «${nome}» non ha preso, riprovo\n`);
+      }
+    }
+  }
+
   for (const [nome, attesa, foto] of pagine) {
     racconta(`apro ${nome}`);
-    await apriIlMenu();
-    await premiNelMenu(nome);
-    await aspettaCheCompaia(pagina, attesa);
+    await vaiA(nome, attesa);
     await attendi(900);
     await scatta(pagina, foto);
   }
@@ -698,10 +735,38 @@ try {
   await scatta(pagina, "5-menu");
 
   racconta("apro i dispositivi");
-  await premiNelMenu("Dispositivi");
-  await aspettaCheCompaia(pagina, "Cerca fra");
+  await vaiA("Dispositivi", "Cerca fra");
   await attendi(1200);
   await scatta(pagina, "6-dispositivi");
+
+  racconta("apro la configurazione");
+  await vaiA("Configurazione", "LE SEZIONI");
+  await attendi(900);
+  await scatta(pagina, "6b-configurazione");
+
+  racconta("apro le prese, per riempirle");
+  await premi(pagina, "Prese");
+  await aspettaCheCompaia(pagina, "Aggiungi una presa");
+  await attendi(700);
+  await scatta(pagina, "6c-config-prese");
+  await premi(pagina, "Aggiungi una presa");
+  await aspettaCheCompaia(pagina, "Cerca fra le prese");
+  await attendi(700);
+  await scatta(pagina, "6d-config-scelta");
+  /* Si chiude la tendina e si torna indietro dalla freccia, come si torna
+   * indietro. Col tasto del browser no: quella cronologia non e' quella delle
+   * pagine dell'app — c'e' finita dentro ogni finestra che si e' aperta e
+   * chiusa — e due passi indietro finivano su una pagina a caso. */
+  /* La tendina si chiude toccando fuori, che e' come la si chiude col dito.
+   * Col tasto di fuga no: quello lo raccoglie il browser, e alla tela non
+   * arriva — la tendina restava aperta e chi veniva dopo cercava la freccia
+   * indietro dentro l'elenco delle prese. */
+  await pagina.mouse.click(pagina.viewportSize().width / 2, 60);
+  await attendi(700);
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(800);
+  await vaiA("Home", "PERSONE");
+  await attendi(600);
 
   racconta("apro l'elenco delle case");
   /* L'elenco delle case non sta nella barra: sta in cima, dove si guarda per
@@ -719,12 +784,13 @@ try {
      * non ce l'ha, ha il tasto indietro. */
     await premi(pagina, "Back", { inAlto: true });
     await attendi(600);
-    await apriIlMenu();
-    await premiNelMenu("Home");
-    await aspettaCheCompaia(pagina, "PERSONE");
+    await vaiA("Home", "PERSONE");
     await attendi(1200);
   }
 
+  /* La configurazione per ultima, e non per importanza: dentro ci sono due
+   * pagine impilate e una tendina aperta, e quello che si lascia aperto qui se
+   * lo porterebbe dietro chi viene dopo. */
   racconta("fatto");
 } catch (errore) {
   process.stdout.write(`\n  ✗ ${errore?.message || errore}\n`);

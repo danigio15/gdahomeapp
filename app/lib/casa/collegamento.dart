@@ -23,6 +23,7 @@ import 'dart:async';
 import '../plancia/configurazione.dart';
 import '../plancia/lettura.dart';
 import '../plancia/libro.dart';
+import '../plancia/scrittura.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 import '../ponte/indirizzo.dart';
@@ -247,6 +248,32 @@ class Collegamento {
     await _leggiLaPlancia(filo);
     final config = _plancia;
     if (config != null) await _leggiLAgenda(filo, config, forza: true);
+  }
+
+  /// Salva la configurazione della plancia, con dentro i cambiamenti.
+  ///
+  /// Quello che torna dalla casa e' la configurazione che adesso c'e' davvero —
+  /// la nostra se e' andata, quella di un altro se ci ha scavalcati — e si
+  /// tiene quella: dopo un salvataggio andato male, restare in mano con la
+  /// propria vorrebbe dire mostrare una casa che non esiste.
+  Future<Salvataggio> salvaLaPlancia(Map<String, String> cambiamenti) async {
+    final filo = _filo;
+    final config = _plancia;
+    if (filo == null || !filo.dentro || config == null) {
+      return Salvataggio(
+        EsitoDelSalvataggio.scavalcata,
+        config ?? ConfigurazioneDellaPlancia.vuota,
+      );
+    }
+    final esito = await salvaLaConfigurazione(
+      filo,
+      config,
+      cambiamenti: cambiamenti,
+    );
+    if (_filo != filo) return esito;
+    _plancia = esito.adesso;
+    _avvisa();
+    return esito;
   }
 
   /// Quando il filo si rialza per conto suo, si riprende da dove si era

@@ -68,7 +68,10 @@ enum Sezione {
   ),
   aiutanti('Aiutanti', 'impostazioni'),
   zigbee('Zigbee', 'runtime'),
-  automazioni('Automazioni', 'azioni');
+  automazioni('Automazioni', 'azioni'),
+  /* La configurazione sta in fondo, come sulla plancia: e' la voce che si
+   * tocca il primo giorno e poi quasi mai. */
+  configurazione('Configurazione', 'impostazioni', pronta: true);
 
   const Sezione(
     this.titolo,

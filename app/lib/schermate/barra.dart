@@ -471,6 +471,7 @@ List<Sezione> vociDellaBarra(List<Sezione> dellaPlancia) => [
   Sezione.aiutanti,
   Sezione.zigbee,
   Sezione.automazioni,
+  Sezione.configurazione,
 ];
 
 /// Come si chiama la maniglia per chi non la vede: il lettore di schermo la

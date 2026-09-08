@@ -57,6 +57,7 @@ const List<String> blocchiDellaHome = [
 class ConfigurazioneDellaPlancia {
   ConfigurazioneDellaPlancia._(
     this._valori, {
+    this._grezzi = const {},
     this.revisione = 0,
     this.profilo = '',
   }) : _sezioni = _leggiLeSezioni(_valori);
@@ -84,19 +85,83 @@ class ConfigurazioneDellaPlancia {
     String profilo = '',
   }) {
     final letti = <String, Object?>{};
+    final grezzi = <String, String>{};
     for (final voce in valori.entries) {
       final chiave = pulito(voce.key);
       if (chiave.isEmpty) continue;
       letti[chiave] = _decodifica(voce.value);
+      grezzi[chiave] = pulito(voce.value);
     }
     return ConfigurazioneDellaPlancia._(
       letti,
+      grezzi: grezzi,
       revisione: revisione,
       profilo: profilo,
     );
   }
 
   final Map<String, Object?> _valori;
+
+  /* Le chiavi come sono arrivate, testo per testo.
+   *
+   * Servono per **riscrivere**. L'archivio non aggiorna le chiavi che gli
+   * mandi: sostituisce l'intero scatto con quello che riceve, e una chiave che
+   * non c'e' nel messaggio non c'e' piu' nemmeno in casa. Quindi per cambiare
+   * una cosa sola bisogna rimandare anche tutte le altre — e rimandarle
+   * **identiche**, non ricostruite: quello che l'app non sa leggere lo
+   * riscriverebbe sbagliato, e una plancia si perderebbe pezzi ogni volta che
+   * dal telefono si tocca un interruttore di configurazione. */
+  final Map<String, String> _grezzi;
+
+  /// I cambiamenti che rimettono una sezione, canonica e legacy.
+  ///
+  /// Una sezione sta scritta in due posti: la copia canonica dentro
+  /// `dm_dashboard_state.sections`, e — per quasi tutte — una chiave vecchia
+  /// tutta sua, tipo `cd_prese`. La plancia le tiene allineate, e chi ne
+  /// scrive una sola lascia l'altra a dire il contrario: la lettura sceglie la
+  /// canonica quando non e' vuota, quindi svuotare solo quella farebbe
+  /// **ricomparire** la roba vecchia.
+  ///
+  /// Del `dm_dashboard_state` si tiene tutto il resto com'era: dentro ci sono
+  /// anche cose che quest'app non legge, e riscriverlo da zero vorrebbe dire
+  /// buttarle via.
+  Map<String, String> cambiaLaSezione(String sezione, Object? contenuto) {
+    final stato = _valori['dm_dashboard_state'];
+    final fuori = <String, Object?>{
+      if (stato is Map) ...{for (final v in stato.entries) pulito(v.key): v.value},
+    };
+    final sezioni = <String, Object?>{
+      if (fuori['sections'] is Map)
+        ...{
+          for (final v in (fuori['sections'] as Map).entries)
+            pulito(v.key): v.value,
+        },
+    };
+    sezioni[sezione] = contenuto;
+    fuori['sections'] = sezioni;
+    final cambiamenti = <String, String>{
+      'dm_dashboard_state': jsonEncode(fuori),
+    };
+    final vecchia = chiaviDelleSezioni[sezione];
+    if (vecchia != null) cambiamenti[vecchia] = jsonEncode(contenuto);
+    return cambiamenti;
+  }
+
+  /// Lo scatto da rimandare in casa, con dentro i cambiamenti.
+  ///
+  /// Le chiavi che si toccano vanno passate gia' scritte come vanno scritte
+  /// (quasi sempre JSON); una chiave con valore vuoto si toglie.
+  Map<String, String> scattoCon(Map<String, String> cambiamenti) {
+    final fuori = Map<String, String>.from(_grezzi);
+    for (final voce in cambiamenti.entries) {
+      if (voce.value.isEmpty) {
+        fuori.remove(voce.key);
+      } else {
+        fuori[voce.key] = voce.value;
+      }
+    }
+    return fuori;
+  }
   final Map<String, Object?> _sezioni;
   final int revisione;
   final String profilo;

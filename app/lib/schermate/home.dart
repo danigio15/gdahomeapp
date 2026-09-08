@@ -18,6 +18,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../plancia/configurazione.dart';
 import '../casa/collegamento.dart';
 import '../vestito/pezzi.dart';
 import 'da_dove.dart';
@@ -26,6 +27,7 @@ import '../vestito/marchio.dart';
 import 'barra.dart';
 import 'menu.dart';
 import 'plancia/agenda.dart';
+import 'plancia/config.dart';
 import 'plancia/clima.dart';
 import 'plancia/continuita.dart';
 import 'plancia/elettrodomestici.dart';
@@ -101,6 +103,13 @@ class _HomeState extends State<Home> {
             padding: const EdgeInsets.only(left: spazioPerLaBarra),
             child: switch (_sezione) {
               Sezione.dispositivi => Dispositivi(collegamento: collegamento),
+              /* La configurazione si apre anche su una casa dove la plancia
+               * non c'e' ancora: e' il posto dove la si mette. */
+              Sezione.configurazione => PaginaDellaConfigurazione(
+                collegamento: collegamento,
+                configurazione:
+                    collegamento.plancia ?? ConfigurazioneDellaPlancia.vuota,
+              ),
               Sezione.plancia => _Plancia(collegamento: collegamento),
               _ => _paginaDellaPlancia(collegamento),
             },
