@@ -11,6 +11,8 @@
 /// solo dopo si disegna: quando la schermata compare, la casa e' gia' letta.
 library;
 
+import 'dart:ui' show AccessibilityFeatures;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
@@ -20,7 +22,9 @@ import 'package:gdahome/main.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/aggiungi_casa.dart';
+import 'package:gdahome/schermate/barra.dart';
 import 'package:gdahome/schermate/lettore.dart';
+import 'package:gdahome/schermate/menu.dart';
 import 'package:gdahome/schermate/plancia/plancia.dart';
 
 import 'plancia/casa_demo.dart';
@@ -35,7 +39,77 @@ Future<void> _finoAllaPlancia(Collegamento collegamento) async {
   }
 }
 
+/// Un telefono che ha chiesto meno movimento.
+///
+/// Serve a tutte le prove: il fondo dell'app respira per sempre, e
+/// `pumpAndSettle` aspetta che tutto si fermi — con qualcosa che non si ferma
+/// mai, ogni attesa scade. Chiedendo «meno animazioni» il fondo sta fermo, che
+/// e' quello che fa anche su un telefono vero con quella preferenza accesa.
+class _SenzaMovimento implements AccessibilityFeatures {
+  const _SenzaMovimento();
+
+  @override
+  bool get accessibleNavigation => false;
+  @override
+  bool get boldText => false;
+  @override
+  bool get disableAnimations => true;
+  @override
+  bool get highContrast => false;
+  @override
+  bool get invertColors => false;
+  @override
+  bool get onOffSwitchLabels => false;
+  @override
+  bool get reduceMotion => true;
+  @override
+  bool get autoPlayAnimatedImages => false;
+  @override
+  bool get autoPlayVideos => false;
+  @override
+  bool get deterministicCursor => false;
+  @override
+  bool get supportsAnnounce => false;
+}
+
+/// Tira su la barra delle sezioni, come si fa col dito sulla maniglia.
+///
+/// La barra non c'e' finche' non la si chiama: e' una dock, e sta sotto il
+/// bordo. Le prove che vogliono andare da qualche parte passano di qui.
+Future<void> apriLaBarra(WidgetTester tester) async {
+  /* La barra si richiude da sola poco dopo che si e' scelto. Se si premesse
+   * la maniglia mentre e' ancora aperta la si chiuderebbe, e il tocco dopo
+   * cadrebbe nel vuoto: si lascia passare il tempo che ci mette a togliersi
+   * di mezzo, e poi la si chiama. */
+  await tester.pump(const Duration(seconds: 5));
+  await tester.pumpAndSettle();
+  await tester.tap(find.bySemanticsLabel(nomeDellaManiglia));
+  await tester.pumpAndSettle();
+}
+
+/// Una voce **della barra**, e non la tessera che sulla pagina dietro si
+/// chiama allo stesso modo: «CLIMA» c'e' in tutti e due i posti, e premere
+/// quella sbagliata apre la finestra di una tessera invece della pagina.
+Finder nellaBarra(String scritta) => find.descendant(
+  of: find.byType(BarraDelleSezioni),
+  matching: find.text(scritta),
+);
+
 void main() {
+  /* Il fondo dell'app si muove da solo, e `pumpAndSettle` non si assesta mai
+   * finche' qualcosa si muove. Qui si dice a Flutter che questo telefono ha
+   * chiesto meno movimento: il fondo resta dov'e', e le attese finiscono. */
+  setUp(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final binding = TestWidgetsFlutterBinding.instance;
+    binding.platformDispatcher.accessibilityFeaturesTestValue =
+        const _SenzaMovimento();
+  });
+  tearDown(() {
+    TestWidgetsFlutterBinding.instance.platformDispatcher
+        .clearAccessibilityFeaturesTestValue();
+  });
+
   testWidgets('senza case si finisce sulla schermata per aggiungerne una', (
     tester,
   ) async {
@@ -355,31 +429,47 @@ void main() {
       expect(find.textContaining('Spegni'), findsNothing);
       expect(find.text('Dispositivi'), findsNothing);
 
-      /* Il menu: per etichetta e non per icona, perche' l'etichetta e' quello
-       * che legge chi usa l'app senza vederla. */
-      await tester.tap(find.byTooltip('Menu'));
-      await tester.pumpAndSettle();
-      expect(find.text('Home'), findsOneWidget);
-      expect(find.text('Dispositivi'), findsOneWidget);
+      /* La barra: si chiama dalla maniglia in fondo, come la dock della
+       * plancia. I nomi sono in maiuscolo e per intero. */
+      await apriLaBarra(tester);
+      expect(nellaBarra('HOME'), findsOneWidget);
+      expect(nellaBarra('DISPOSITIVI'), findsOneWidget);
       /* I blocchi che non ci sono ancora si vedono lo stesso, spenti: cosi'
        * si sa dove sta andando l'app. */
-      expect(find.text('Aiutanti'), findsOneWidget);
-      expect(find.text('Zigbee'), findsOneWidget);
-      expect(find.text('Automazioni'), findsOneWidget);
-      expect(find.text('presto'), findsNWidgets(3));
-      expect(find.text('Le tue case'), findsOneWidget);
-      /* Il nome della casa sta anche nel menu, con da dove si passa. */
-      expect(find.text('Casa mia'), findsNWidgets(2));
+      expect(nellaBarra('AIUTANTI'), findsOneWidget);
+      expect(nellaBarra('ZIGBEE'), findsOneWidget);
+      expect(nellaBarra('AUTOMAZIONI'), findsOneWidget);
 
-      /* Da li' ai dispositivi: il menu si chiude, la sezione cambia, e le
+      /* Finche' la si scorre non se ne va. La barra si toglie di mezzo da
+       * sola dopo qualche secondo, ma cercare la propria sezione fra venti
+       * voci ci mette di piu' di cosi': se sparisse sotto il dito mentre la
+       * si scorre, si dovrebbe richiamarla ogni volta. Qui passa piu' tempo
+       * di quanto ne basti a chiuderla, ma in mezzo la si tocca. */
+      final barra = tester.state<BarraDelleSezioniState>(
+        find.byType(BarraDelleSezioni),
+      );
+      await tester.pump(const Duration(seconds: 3));
+      await tester.drag(find.byType(BarraDelleSezioni), const Offset(-60, 0));
+      await tester.pump(const Duration(seconds: 3));
+      expect(
+        barra.aperta,
+        isTrue,
+        reason: 'scorrendola, il conto alla rovescia riparte',
+      );
+      /* Lasciata stare, invece, se ne va. */
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(barra.aperta, isFalse, reason: 'da sola si chiude');
+      await apriLaBarra(tester);
+
+      /* Da li' ai dispositivi: la barra si richiude, la sezione cambia, e le
        * entita' compaiono adesso — non prima. */
-      await tester.tap(find.text('Dispositivi'));
+      await tester.tap(nellaBarra('DISPOSITIVI'));
       await tester.pumpAndSettle();
       expect(find.text('Dispositivi'), findsOneWidget, reason: 'il titolo');
       expect(find.text('Luci'), findsOneWidget);
       expect(find.text('Cucina'), findsOneWidget);
       expect(find.text('Salotto'), findsOneWidget);
-      expect(find.text('Home'), findsNothing, reason: 'il menu e\' chiuso');
 
       await tester.runAsync(() async {
         await collegamento.chiudi();
@@ -460,12 +550,24 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       expect(find.text('AZIONI RAPIDE'), findsOneWidget);
-      expect(find.text('CANCELLO'), findsOneWidget);
+      /* Le azioni stanno sotto il titolo, e la lista costruisce solo quello
+       * che si vede: si scorre fino a trovarne una. */
+      await tester.scrollUntilVisible(
+        find.text('CANCELLO'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('CANCELLO'), findsWidgets);
 
       /* La finestra di una tessera: le luci, con gli interruttori. La
-       * tessera esiste ancora ma e' scorsa via: la si riporta a schermo, se
-       * no il tocco cade nel vuoto. */
-      await tester.ensureVisible(tessera('LUCI'));
+       * tessera adesso non c'e' nemmeno piu': si e' scorso fino in fondo, e
+       * una lista costruisce solo quello che si vede. Si torna su a
+       * cercarla. */
+      await tester.scrollUntilVisible(
+        tessera('LUCI'),
+        -200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
       await tester.tap(tessera('LUCI'));
       await tester.pumpAndSettle();
@@ -512,35 +614,31 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      Future<void> vaiA(String pagina) async {
-        await tester.tap(find.byTooltip('Menu'));
-        await tester.pumpAndSettle();
-        await tester.tap(
-          find.descendant(of: find.byType(Drawer), matching: find.text(pagina)),
-        );
+      Future<void> vaiA(Sezione dove) async {
+        await apriLaBarra(tester);
+        await tester.tap(nellaBarra(dove.titolo.toUpperCase()));
         await tester.pumpAndSettle();
       }
 
-      /* Il menu elenca le pagine che questa casa ha. */
-      await tester.tap(find.byTooltip('Menu'));
-      await tester.pumpAndSettle();
-      for (final pagina in [
-        'Home',
-        'Stanze',
-        'Luci',
-        'Clima',
-        'Temperatura',
-        'Finestre',
+      /* La barra elenca le pagine che questa casa ha. */
+      await apriLaBarra(tester);
+      /* Nella barra i nomi sono interi, in maiuscolo: come sulla plancia,
+       * dove «ELETTRODOMESTICI» si scrive tutto. */
+      for (final sezione in [
+        Sezione.plancia,
+        Sezione.stanze,
+        Sezione.luci,
+        Sezione.clima,
+        Sezione.temperatura,
+        Sezione.finestre,
       ]) {
         expect(
-          find.descendant(of: find.byType(Drawer), matching: find.text(pagina)),
+          nellaBarra(sezione.titolo.toUpperCase()),
           findsOneWidget,
-          reason: pagina,
+          reason: sezione.titolo,
         );
       }
-      await tester.tap(
-        find.descendant(of: find.byType(Drawer), matching: find.text('Luci')),
-      );
+      await tester.tap(nellaBarra('LUCI'));
       await tester.pumpAndSettle();
 
       expect(find.text('4/8 accese'), findsOneWidget);
@@ -548,17 +646,17 @@ void main() {
       expect(find.text('ACCESA · 75%'), findsOneWidget);
       expect(find.text('Accendi tutte'), findsOneWidget);
 
-      await vaiA('Clima');
+      await vaiA(Sezione.clima);
       expect(find.text('Clima soggiorno'), findsOneWidget);
       expect(find.text('TARGET'), findsWidgets);
       expect(find.text('FREDDO'), findsOneWidget, reason: 'la linguetta');
       expect(find.text('CALDO'), findsOneWidget);
 
-      await vaiA('Temperatura');
+      await vaiA(Sezione.temperatura);
       expect(find.text('COMFORT'), findsWidgets);
       expect(find.text('22,4'), findsOneWidget, reason: 'il soggiorno');
 
-      await vaiA('Finestre');
+      await vaiA(Sezione.finestre);
       expect(find.text('3 aperte · 1 chiusa'), findsOneWidget);
       expect(find.text('Tapparella soggiorno'), findsOneWidget);
       /* La cucina sta sotto: le schede delle finestre sono alte, e una
@@ -570,7 +668,7 @@ void main() {
       );
       expect(find.text('FINESTRA APERTA'), findsOneWidget, reason: 'la cucina');
 
-      await vaiA('Stanze');
+      await vaiA(Sezione.stanze);
       expect(find.text('SENSORI DELLA STANZA'), findsOneWidget);
       expect(find.text('2/2'), findsOneWidget, reason: 'le luci del soggiorno');
       await tester.scrollUntilVisible(
@@ -675,12 +773,10 @@ void main() {
     /* L'ultima aggiunta e' quella attiva: chi abbina una casa ci vuole entrare. */
     expect(find.text('Dai miei'), findsOneWidget);
 
-    /* L'elenco delle case sta nel menu. Per etichetta e non per icona:
-     * l'icona e' un dettaglio del vestito, l'etichetta e' quello che legge
-     * chi usa l'app senza vederla. */
-    await tester.tap(find.byTooltip('Menu'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Le tue case'));
+    /* L'elenco delle case sta in cima, dove si guarda per sapere in che casa
+     * si e'. Per etichetta e non per icona: l'icona e' un dettaglio del
+     * vestito, l'etichetta e' quello che legge chi usa l'app senza vederla. */
+    await tester.tap(find.byTooltip('Le tue case'));
     await tester.pumpAndSettle();
     expect(find.text('Le tue case'), findsOneWidget, reason: 'il titolo');
     expect(find.text('Casa mia'), findsOneWidget);

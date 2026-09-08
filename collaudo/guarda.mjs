@@ -400,12 +400,20 @@ async function premi(pagina, etichetta, opzioni = {}) {
    * «Abbina» ha messo il fuoco sulla casella dell'indirizzo. Il riquadro
    * invece dice dove la cosa e' *disegnata*, e li' sotto c'e' la tela che
    * riceve i tocchi davvero. */
-  const riquadro = await bottone.boundingBox();
+  const riquadro = await bottone.boundingBox().catch(() => null);
   if (riquadro && riquadro.width > 0 && riquadro.height > 0) {
     await pagina.mouse.click(riquadro.x + riquadro.width / 2, riquadro.y + riquadro.height / 2);
     return;
   }
-  await bottone.click({ force: true });
+  const andata = await bottone
+    .click({ force: true, timeout: 2500 })
+    .then(() => true)
+    .catch(() => false);
+  if (andata) return;
+  const cEra = await cosaCeDaPremere(pagina);
+  throw new Error(
+    `«${etichetta}» c'era e non si e' lasciata premere. A schermo c'e': ${cEra.join(" · ")}`,
+  );
 }
 
 /* Quale nodo si preme, per un'etichetta.
@@ -415,7 +423,7 @@ async function premi(pagina, etichetta, opzioni = {}) {
  * regole con cui poi la si preme, se no si misura una cosa e se ne preme
  * un'altra. Torna `null` quando quel testo a schermo non c'e'. */
 async function ilBottone(pagina, etichetta, { inAlto = false, aspetta = true } = {}) {
-  let tutti = pagina.locator(
+  const tutti = pagina.locator(
     `[aria-label="${etichetta}"], flt-semantics:has-text("${etichetta}")`,
   );
   try {
@@ -427,64 +435,73 @@ async function ilBottone(pagina, etichetta, { inAlto = false, aspetta = true } =
    * menu e' un bottone con quel nome, e «Clima soggiorno · Clima ca…» sulla
    * tessera dietro e' un'altra cosa. */
   const esatti = pagina.locator(`[aria-label="${etichetta}"]`);
-  if ((await esatti.count()) > 0) tutti = esatti;
+  const quali = (await esatti.count()) > 0 ? esatti : tutti;
 
-  /* Con la stessa etichetta ce n'e' spesso piu' d'uno: Flutter lascia in giro
-   * nodi vecchi, e la ricerca per testo prende anche i **contenitori** che
-   * quella scritta se la trovano dentro. Il primo che si trova puo' quindi
-   * essere una scatola grande quanto mezza schermata, e premerne il centro
-   * vuol dire premere tutt'altro — e' successo: il tocco su «Scrivilo a mano»
-   * e' finito sul bottone di sopra, e si e' aperto il lettore.
+  /* Si prendono gli **elementi**, non i posti.
+   *
+   * Un `nth(4)` non e' un nodo: e' «il quinto che combacia, quando lo si
+   * chiedera'». L'albero dell'accessibilita' di Flutter si rifa' in
+   * continuazione — una barra che si chiude, una pagina che scorre — e fra il
+   * misurare e il premere il quinto era diventato un altro, o non c'era piu':
+   * il collaudo restava fermo trenta secondi ad aspettare un nodo che nessuno
+   * avrebbe piu' disegnato. Presi cosi' invece sono maniglie su elementi veri,
+   * fotografati tutti nello stesso istante: quello che si misura e' quello che
+   * si preme.
+   *
+   * Quanti se ne guardano: senza etichetta esatta la ricerca per testo prende
+   * anche tutti i **contenitori** che quella scritta se la trovano dentro, e
+   * con una barra di venti voci sono centinaia. I primi quaranta bastano —
+   * l'albero e' in ordine di documento, e quello che si vuole premere sta li'
+   * in mezzo. */
+  const nodi = (await quali.elementHandles()).slice(0, 40);
+  if (nodi.length === 0) return null;
+
+  const riquadri = await Promise.all(nodi.map((nodo) => nodo.boundingBox().catch(() => null)));
+  if (process.env.COLLAUDO_SPIA) {
+    for (let i = 0; i < nodi.length; i += 1) {
+      const r = riquadri[i];
+      const tag = await nodi[i]
+        .evaluate(
+          (e) =>
+            `${e.tagName}#${e.id} role=${e.getAttribute("role")} aria=${e.getAttribute("aria-label")}`,
+        )
+        .catch(() => "sparito");
+      process.stdout.write(
+        `    spia │ «${etichetta}» ${i}: ${tag} → ${r ? `${Math.round(r.x)},${Math.round(r.y)} ${Math.round(r.width)}x${Math.round(r.height)}` : "nessun riquadro"}\n`,
+      );
+    }
+  }
+
+  /* Con la stessa etichetta ce n'e' spesso piu' d'uno: la ricerca per testo
+   * prende anche i **contenitori** che quella scritta se la trovano dentro,
+   * quindi il primo puo' essere una scatola grande quanto mezza schermata, e
+   * premerne il centro vuol dire premere tutt'altro — e' successo: il tocco su
+   * «Scrivilo a mano» e' finito sul bottone di sopra, e si e' aperto il
+   * lettore.
    *
    * Quindi si prende il **piu' piccolo**: fra una scatola e quello che ci sta
    * dentro, quello che si voleva premere e' sempre quello dentro. Con `inAlto`
    * invece si prende quello piu' vicino al bordo di sopra, che e' dove sta un
    * bottone della barra del titolo: li' i candidati sono fratelli, non uno
    * dentro l'altro. */
-  /* Quanti candidati si guardano davvero.
-   *
-   * Senza etichetta esatta la ricerca per testo prende anche tutti i
-   * **contenitori** che quella scritta se la trovano dentro, e con un menu di
-   * venti voci sono centinaia di nodi: chiedere il riquadro di ognuno vuol
-   * dire un viaggio nel browser per ognuno, e il collaudo ci metteva cinque
-   * minuti per premere un bottone. I primi quaranta bastano: l'albero e' in
-   * ordine di documento, e quello che si vuole premere sta li' in mezzo. */
-  const trovati = await tutti.count();
-  const quanti = Math.min(trovati, 40);
-  if (process.env.COLLAUDO_SPIA) {
-    for (let i = 0; i < quanti; i += 1) {
-      const r = await tutti.nth(i).boundingBox();
-      const tag = await tutti
-        .nth(i)
-        .evaluate(
-          (e) =>
-            `${e.tagName}#${e.id} role=${e.getAttribute("role")} aria=${e.getAttribute("aria-label")}`,
-        );
-      process.stdout.write(
-        `    spia │ «${etichetta}» ${i}: ${tag} → ${r ? `${Math.round(r.x)},${Math.round(r.y)} ${Math.round(r.width)}x${Math.round(r.height)}` : "nessun riquadro"}\n`,
-      );
-    }
-  }
-  let bottone = tutti.first();
-  if (quanti > 1) {
-    let migliore = Infinity;
-    for (let i = 0; i < quanti; i += 1) {
-      const riquadro = await tutti.nth(i).boundingBox();
-      /* Un nodo di un pixel non e' un bottone: e' un residuo dell'albero, e
-       * prenderlo perche' e' «il piu' piccolo» vuol dire premere nel vuoto.
-       * E un nodo grande quanto lo schermo non e' un bottone nemmeno lui: e'
-       * il contenitore di tutto, e la ricerca per testo lo prende perche' la
-       * scritta ce l'ha *dentro*. Con `inAlto` vinceva sempre lui — sta a
-       * y=0 — e il tocco cadeva in mezzo alla pagina. */
-      if (!riquadro || riquadro.width < 16 || riquadro.height < 16) continue;
-      const schermo = pagina.viewportSize();
-      if (schermo && riquadro.width * riquadro.height > schermo.width * schermo.height * 0.6)
-        continue;
-      const quanto = inAlto ? riquadro.y : riquadro.width * riquadro.height;
-      if (quanto < migliore) {
-        migliore = quanto;
-        bottone = tutti.nth(i);
-      }
+  const schermo = pagina.viewportSize();
+  let bottone = nodi[0];
+  let migliore = Infinity;
+  for (let i = 0; i < nodi.length; i += 1) {
+    const riquadro = riquadri[i];
+    /* Un nodo di un pixel non e' un bottone: e' un residuo dell'albero, e
+     * prenderlo perche' e' «il piu' piccolo» vuol dire premere nel vuoto.
+     * E un nodo grande quanto lo schermo non e' un bottone nemmeno lui: e' il
+     * contenitore di tutto, e la ricerca per testo lo prende perche' la
+     * scritta ce l'ha *dentro*. Con `inAlto` vinceva sempre lui — sta a y=0 —
+     * e il tocco cadeva in mezzo alla pagina. */
+    if (!riquadro || riquadro.width < 16 || riquadro.height < 16) continue;
+    if (schermo && riquadro.width * riquadro.height > schermo.width * schermo.height * 0.6)
+      continue;
+    const quanto = inAlto ? riquadro.y : riquadro.width * riquadro.height;
+    if (quanto < migliore) {
+      migliore = quanto;
+      bottone = nodi[i];
     }
   }
   return bottone;
@@ -541,51 +558,112 @@ try {
    * dell'accessibilita' di Flutter mette i riquadri dove gli pare: quando il
    * tocco sul nodo non arriva al bottone disegnato, si tocca dove il bottone
    * **sta**. Col dito sul telefono non serve. */
+  /* La barra delle sezioni non e' un menu a tendina: e' una dock che sta
+   * sotto il bordo e si chiama dalla maniglia, la pillola in fondo allo
+   * schermo. Si preme li'. */
   async function apriIlMenu() {
-    await premi(pagina, "Menu", { inAlto: true });
-    try {
-      await aspettaCheCompaia(pagina, "Aiutanti", 3000);
-    } catch (_ancoraNo) {
-      await pagina.mouse.click(8 + 24, 12 + 24);
-      await aspettaCheCompaia(pagina, "Aiutanti", 4000);
+    /* Si richiude da sola poco dopo che si e' scelto: premere la maniglia
+     * mentre e' ancora aperta la chiuderebbe. */
+    await attendi(1400);
+    /* Premere la maniglia quando la barra e' gia' su la manda giu'. */
+    if (!(await laBarraECaperta())) {
+      await premi(pagina, "Barra delle sezioni");
+      await attendi(900);
     }
-    await attendi(500);
+    /* Non si aspetta una voce in particolare: la barra si apre gia' scorsa
+     * sulla sezione aperta, e quale voce si veda dipende da dove si e'. Chi
+     * viene dopo la cerca scorrendo, e se la barra non fosse salita lo
+     * direbbe li'. */
+    await attendi(800);
   }
 
   /* Il menu e' piu' alto dello schermo: le voci in fondo — Continuita', MiniPC
    * — stanno sotto il bordo, e premere il centro del loro riquadro vorrebbe
    * dire premere fuori dalla finestra. Prima si scorre il menu finche' la voce
    * non e' davvero li'. */
-  async function premiNelMenu(nome) {
+  /* Una voce della barra. La barra sta di lato, scorre in verticale e ne
+   * mostra una dozzina per volta: quella che si cerca puo' stare fuori, e
+   * finche' sta fuori in Flutter **non esiste** — nell'albero che si
+   * interroga da fuori non c'e' nodo con quel testo. Quindi si scorre finche'
+   * non compare. */
+  async function premiNelMenu(sezione) {
+    const nome = sezione.toUpperCase();
     const schermo = pagina.viewportSize();
-    /* Finche' una voce sta sotto il bordo, in Flutter **non esiste**: la
-     * lista la disegna, ma nell'albero che si interroga da fuori non c'e'
-     * nodo con quel testo. Cercare il suo riquadro per decidere se scorrere
-     * non funziona — non si trova niente, e non si scorre mai. Quindi si
-     * scorre finche' non compare, e solo allora si preme.
-     *
-     * Il piede del menu — «Le tue case» e la riga della versione — sta fisso
-     * in fondo: una voce che finisce li' sotto ha un riquadro dentro lo
-     * schermo ma il tocco cade sul piede. Si lascia libera quella fascia. */
-    const piede = 150;
+    /* Dove sta la barra: sul fianco sinistro, a meta' altezza. */
+    const dentroLaBarra = { x: 96, y: schermo.height / 2 };
     for (let giro = 0; giro < 14; giro += 1) {
+      /* La barra si toglie di mezzo da sola dopo qualche secondo. Un dito la
+       * tiene aperta scorrendola; una macchina che fra una rotellata e l'altra
+       * si ferma a interrogare l'albero ci mette di piu', e se la ritrova
+       * chiusa. Quando non c'e' piu', la si richiama e si riprende da dove si
+       * era. */
+      if (!(await laBarraECaperta())) {
+        await premi(pagina, "Barra delle sezioni");
+        await attendi(900);
+      }
       const bottone = await ilBottone(pagina, nome, { aspetta: false });
-      const dove = await bottone?.boundingBox({ timeout: 800 }).catch(() => null);
-      /* Alto quanto una riga: i contenitori grandi contengono quel testo ma
-       * non sono la voce, e premerne il centro vuol dire premere altro. */
-      const eUnaVoce = dove && dove.height > 20 && dove.height < 90;
-      if (eUnaVoce && dove.y >= 0 && dove.y + dove.height <= schermo.height - piede) {
+      const dove = await (bottone?.boundingBox().catch(() => null) ?? null);
+      /* Alta quanto una voce: i contenitori che quel testo se lo trovano
+       * dentro sono alti tutta la barra. */
+      const eUnaVoce = dove && dove.height > 20 && dove.height < 70;
+      if (eUnaVoce && dove.y >= 8 && dove.y + dove.height <= schermo.height - 8) {
         break;
       }
-      /* La rotella gira dove sta il mouse, e il menu sta a sinistra. */
-      await pagina.mouse.move(schermo.width / 4, schermo.height / 2);
-      await pagina.mouse.wheel(0, 220);
+      await pagina.mouse.move(dentroLaBarra.x, dentroLaBarra.y);
+      await pagina.mouse.wheel(0, 180);
+      await attendi(220);
+    }
+    await attendi(300);
+    if (!(await laBarraECaperta())) {
+      await premi(pagina, "Barra delle sezioni");
+      await attendi(900);
+    }
+    await premi(pagina, nome);
+    /* Ha preso?
+     *
+     * Una voce premuta manda giu' la barra — e' quello che fa la plancia, per
+     * dare il tempo di vedere che si e' premuto e poi togliersi di mezzo. Se
+     * dopo un secondo la barra e' ancora su, quel tocco non e' finito su una
+     * voce: e' finito sul vetro accanto, o su un nodo che nel frattempo si era
+     * spostato. Chi guarda se ne accorgerebbe e ripremerebbe; qui si fa lo
+     * stesso, invece di andare avanti e accusare la pagina dopo di non essere
+     * comparsa. */
+    await attendi(1000);
+    if (await laBarraECaperta()) await premi(pagina, nome);
+    /* E poi si aspetta che se ne sia andata davvero.
+     *
+     * Finche' e' su, la barra tiene un velo sopra tutta la pagina che raccoglie
+     * il primo tocco per chiudersi — e' giusto cosi': si tocca fuori e si
+     * chiude. Ma chi viene dopo crede di aver premuto quello che vedeva, e non
+     * ha premuto niente. */
+    for (let giro = 0; giro < 12; giro += 1) {
+      if (!(await laBarraECaperta())) break;
       await attendi(250);
     }
-    /* Lo scorrimento si ferma per inerzia: si misura dopo, non durante. */
-    await attendi(500);
-    await premi(pagina, nome);
   }
+
+  /* Se la barra e' dentro. Lo dice la **maniglia**.
+   *
+   * Non una voce: le voci scorrono, e la prima — «HOME» — esce di vista appena
+   * la barra si apre su una sezione in fondo all'elenco. Chiedere di lei
+   * voleva dire sentirsi rispondere «chiusa» a barra apertissima, premere la
+   * maniglia per aprirla e cosi' chiuderla davvero.
+   *
+   * La maniglia invece c'e' sempre, e quando la barra e' dentro si sposta di
+   * fianco a lei: se sta sul bordo la barra e' fuori, se sta a duecento punti
+   * la barra e' aperta. Una cosa sola da guardare, e sempre la stessa. */
+  async function laBarraECaperta() {
+    const maniglia = await ilBottone(pagina, "Barra delle sezioni", {
+      aspetta: false,
+    });
+    const dove = await (maniglia?.boundingBox().catch(() => null) ?? null);
+    /* Ben dentro, non a meta' strada: la maniglia ci mette quattro decimi di
+     * secondo ad arrivare, e sorprenderla per via voleva dire leggere «e'
+     * aperta» su una barra che si stava ancora aprendo — e premere la
+     * maniglia per aprirla, cioe' richiuderla. */
+    return Boolean(dove && dove.x > 150);
+  }
+
 
 
   /* Le pagine della plancia, una per una, dal menu. */
@@ -626,8 +704,9 @@ try {
   await scatta(pagina, "6-dispositivi");
 
   racconta("apro l'elenco delle case");
-  await apriIlMenu();
-  await premiNelMenu("Le tue case");
+  /* L'elenco delle case non sta nella barra: sta in cima, dove si guarda per
+   * sapere in che casa si e'. */
+  await premi(pagina, "Le tue case", { inAlto: true });
   /* Si aspetta «Aggiungi», che sta **solo** nell'elenco delle case. */
   await aspettaCheCompaia(pagina, "Aggiungi");
   await attendi(600);

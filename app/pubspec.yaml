@@ -41,6 +41,7 @@ dependencies:
   # sono del sistema. Scriverne uno a mano vorrebbe dire un lettore peggiore di
   # quello che ogni telefono ha gia' dentro.
   mobile_scanner: ^7.4.0
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -54,19 +55,41 @@ flutter:
     # Il marchio: la stessa immagine che fa da icona dell'app. Ce n'e' una
     # sola, e sta in un posto solo.
     - assets/marchio/gda.png
+    # Gli oggetti delle sezioni: gli stessi disegni della plancia, uno per
+    # sezione. Non sono simboli a contorno ne' emoji di sistema — sono i
+    # disegni di DashboardModern, presi da li' e non rifatti a somiglianza,
+    # perche' «a somiglianza» vuol dire un'altra app.
+    - assets/oggetti/
 
-  # Il carattere dell'app: Outfit, geometrico e caldo, incorporato nel
-  # pacchetto invece che scaricato — cosi' e' uguale su ogni telefono, e non
-  # dipende da nessuna rete al primo avvio. Licenza SIL OFL, in `OFL.txt`
-  # accanto ai file.
+  # I caratteri sono quelli della plancia, e non per pigrizia: chi passa dal
+  # telefono alla dashboard non deve avere l'impressione di due prodotti.
+  #  - **Inter** per tutto quello che si legge. Licenza SIL OFL,
+  #    in `OFL-Inter.txt`.
+  #  - **Oswald** per i numeri grandi e i titoli: stretto, in maiuscolo, e'
+  #    quello che sulla plancia dice i gradi e i kilowatt. Licenza SIL OFL,
+  #    in `OFL-Oswald.txt`.
+  # Incorporati nel pacchetto invece che scaricati: uguali su ogni telefono,
+  # e senza dipendere da nessuna rete al primo avvio.
   fonts:
-    - family: Outfit
+    - family: Inter
       fonts:
-        - asset: assets/carattere/Outfit-400.ttf
+        - asset: assets/carattere/Inter-400.ttf
           weight: 400
-        - asset: assets/carattere/Outfit-500.ttf
+        - asset: assets/carattere/Inter-500.ttf
           weight: 500
-        - asset: assets/carattere/Outfit-600.ttf
+        - asset: assets/carattere/Inter-600.ttf
           weight: 600
-        - asset: assets/carattere/Outfit-700.ttf
+        - asset: assets/carattere/Inter-700.ttf
+          weight: 700
+        - asset: assets/carattere/Inter-800.ttf
+          weight: 800
+        - asset: assets/carattere/Inter-900.ttf
+          weight: 900
+    - family: Oswald
+      fonts:
+        - asset: assets/carattere/Oswald-200.ttf
+          weight: 200
+        - asset: assets/carattere/Oswald-400.ttf
+          weight: 400
+        - asset: assets/carattere/Oswald-700.ttf
           weight: 700

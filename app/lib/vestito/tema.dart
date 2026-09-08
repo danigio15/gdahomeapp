@@ -8,7 +8,8 @@
 ///    tutte le app di domotica;
 ///  - **ambra** come accento — e' il colore di una luce accesa, e in una casa
 ///    e' quello che si guarda;
-///  - **Outfit** come carattere, incorporato: geometrico, pulito, caldo;
+///  - **Inter** per quello che si legge e **Oswald** per i numeri grandi: sono
+///    i caratteri della plancia, non due che gli somigliano;
 ///  - schede a angoli morbidi, senza ombre dure; le ombre in un'app di casa
 ///    fanno scaffalatura.
 ///
@@ -20,13 +21,50 @@ import 'package:flutter/material.dart';
 
 /// I colori del marchio.
 abstract final class Colori {
-  static const notte = Color(0xFF0C1B36);
-  static const notteChiara = Color(0xFF1A3A6E);
-  static const ambra = Color(0xFFF5B942);
-  static const ambraScura = Color(0xFFB8781A);
-  static const bene = Color(0xFF2E9E68);
-  static const male = Color(0xFFD64545);
+  static const notte = Color(0xFF0F172A);
+  static const notteChiara = Color(0xFF1E293B);
+  static const ambra = Color(0xFFF59E0B);
+  static const ambraScura = Color(0xFFB45309);
+  static const bene = Color(0xFF16A34A);
+  static const male = Color(0xFFE11D48);
+
+  /// L'azzurro della plancia: e' il colore che dice «premi qui».
+  static const accento = Color(0xFF0EA5E9);
+
+  /// Il fondo scolpito, e le due macchie che ci galleggiano sopra.
+  ///
+  /// Un grigio piatto e' la cosa che fa sembrare vecchia un'app: non e' un
+  /// colore, e' l'assenza di una scelta. Qui sotto invece c'e' un fondo appena
+  /// azzurrino con due aloni sfocati che si muovono pianissimo — verde da una
+  /// parte, celeste dall'altra — e le schede bianche ci galleggiano sopra.
+  static const fondo = Color(0xFFF0F4F8);
+  static const alone1 = Color(0xFFDCFCE7);
+  static const alone2 = Color(0xFFE0F2FE);
+
+  static const fondoScuro = Color(0xFF080F1C);
+  static const aloneScuro1 = Color(0xFF10321F);
+  static const aloneScuro2 = Color(0xFF0C2B44);
 }
+
+/// Il carattere dei numeri: Oswald, stretto e alto.
+///
+/// Sulla plancia i numeri non sono scritti col carattere del testo: hanno il
+/// loro, condensato, e sono la prima cosa che si vede di una tessera. Qui c'e'
+/// una sola funzione perche' quella scelta stia in un posto solo.
+TextStyle carattereDelNumero({
+  required double corpo,
+  FontWeight peso = FontWeight.w200,
+  Color? colore,
+  double spaziatura = -0.02,
+}) => TextStyle(
+  fontFamily: 'Oswald',
+  fontSize: corpo,
+  fontWeight: peso,
+  height: 1,
+  letterSpacing: corpo * spaziatura,
+  color: colore,
+  fontFeatures: const [FontFeature.tabularFigures()],
+);
 
 ThemeData temaChiaro() => _tema(Brightness.light);
 ThemeData temaScuro() => _tema(Brightness.dark);
@@ -37,14 +75,14 @@ ThemeData _tema(Brightness luce) {
   final colori = chiaro
       ? const ColorScheme(
           brightness: Brightness.light,
-          primary: Colori.notte,
+          primary: Colori.accento,
           onPrimary: Colors.white,
-          primaryContainer: Color(0xFFE2E9F6),
-          onPrimaryContainer: Colori.notte,
+          primaryContainer: Color(0xFFE0F2FE),
+          onPrimaryContainer: Color(0xFF075985),
           secondary: Colori.ambraScura,
           onSecondary: Colors.white,
-          secondaryContainer: Color(0xFFFFF0CF),
-          onSecondaryContainer: Color(0xFF5C3F07),
+          secondaryContainer: Color(0xFFFEF3C7),
+          onSecondaryContainer: Color(0xFF78350F),
           tertiary: Colori.bene,
           onTertiary: Colors.white,
           tertiaryContainer: Color(0xFFDDF3E7),
@@ -53,16 +91,16 @@ ThemeData _tema(Brightness luce) {
           onError: Colors.white,
           errorContainer: Color(0xFFFBE3E3),
           onErrorContainer: Color(0xFF6B1B1B),
-          surface: Color(0xFFF4F6FA),
-          onSurface: Color(0xFF15213A),
+          surface: Colori.fondo,
+          onSurface: Color(0xFF0F172A),
           surfaceContainerLowest: Colors.white,
-          surfaceContainerLow: Color(0xFFF9FAFD),
-          surfaceContainer: Color(0xFFEDF0F6),
-          surfaceContainerHigh: Color(0xFFE5E9F1),
-          surfaceContainerHighest: Color(0xFFDDE2EC),
-          onSurfaceVariant: Color(0xFF5C6A84),
-          outline: Color(0xFFC6CFDD),
-          outlineVariant: Color(0xFFE3E8F0),
+          surfaceContainerLow: Color(0xFFF8FAFC),
+          surfaceContainer: Color(0xFFF1F5F9),
+          surfaceContainerHigh: Color(0xFFE9EEF4),
+          surfaceContainerHighest: Color(0xFFE2E8F0),
+          onSurfaceVariant: Color(0xFF64748B),
+          outline: Color(0xFFCBD5E1),
+          outlineVariant: Color(0xFFE8EDF3),
           inverseSurface: Colori.notte,
           onInverseSurface: Colors.white,
           inversePrimary: Color(0xFFAFC8F5),
@@ -71,8 +109,8 @@ ThemeData _tema(Brightness luce) {
         )
       : const ColorScheme(
           brightness: Brightness.dark,
-          primary: Color(0xFFB4CCF7),
-          onPrimary: Colori.notte,
+          primary: Color(0xFF38BDF8),
+          onPrimary: Color(0xFF04283A),
           primaryContainer: Color(0xFF1F3A66),
           onPrimaryContainer: Color(0xFFDCE7FA),
           secondary: Colori.ambra,
@@ -87,12 +125,12 @@ ThemeData _tema(Brightness luce) {
           onError: Color(0xFF4A0F0F),
           errorContainer: Color(0xFF5E2222),
           onErrorContainer: Color(0xFFFFDADA),
-          surface: Color(0xFF0A1220),
+          surface: Colori.fondoScuro,
           onSurface: Color(0xFFE8EDF6),
-          surfaceContainerLowest: Color(0xFF121D33),
-          surfaceContainerLow: Color(0xFF0F182B),
-          surfaceContainer: Color(0xFF17243D),
-          surfaceContainerHigh: Color(0xFF1D2C48),
+          surfaceContainerLowest: Color(0xFF111C2F),
+          surfaceContainerLow: Color(0xFF0D1626),
+          surfaceContainer: Color(0xFF16223A),
+          surfaceContainerHigh: Color(0xFF1C2A45),
           surfaceContainerHighest: Color(0xFF243553),
           onSurfaceVariant: Color(0xFFA5B2C8),
           outline: Color(0xFF3A4C6E),
@@ -108,8 +146,10 @@ ThemeData _tema(Brightness luce) {
     useMaterial3: true,
     colorScheme: colori,
     brightness: luce,
-    fontFamily: 'Outfit',
-    scaffoldBackgroundColor: colori.surface,
+    fontFamily: 'Inter',
+    /* Il fondo lo dipinge `SfondoVivo`, sotto tutto: le schermate ci
+     * galleggiano sopra, e non c'e' un grigio piatto da nessuna parte. */
+    scaffoldBackgroundColor: Colors.transparent,
   );
 
   final testi = base.textTheme.copyWith(
@@ -139,7 +179,8 @@ ThemeData _tema(Brightness luce) {
   return base.copyWith(
     textTheme: testi,
     appBarTheme: AppBarTheme(
-      backgroundColor: colori.surface,
+      /* Trasparente come il resto: sotto ci passa il fondo vivo. */
+      backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,

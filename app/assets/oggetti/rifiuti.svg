@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs>
+      <linearGradient id="dmoRifB" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#86efac"/><stop offset=".5" stop-color="#22c55e"/>
+        <stop offset="1" stop-color="#15803d"/></linearGradient></defs>
+    <ellipse cx="16" cy="28.2" rx="9" ry="1.8" fill="#0b1220" opacity=".14"/>
+    <rect x="7.4" y="9.6" width="17.2" height="17.6" rx="2.6" fill="url(#dmoRifB)"/>
+    <rect x="5" y="6.2" width="22" height="4.2" rx="2.1" fill="#166534"/>
+    <rect x="12.6" y="3.8" width="6.8" height="3" rx="1.5" fill="#166534"/>
+    <g fill="none" stroke="#fff" stroke-opacity=".9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13.2 17.2 16 12.6l1.6 2.7"/>
+      <path d="M20.2 15.4l2 3.5-3.1-.1"/>
+      <path d="M12.6 20.6l-1.9 3.3h3.4"/>
+      <path d="M17.4 23.9h4.2l-1.5-2.7"/>
+    </g></svg>

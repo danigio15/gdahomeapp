@@ -22,6 +22,8 @@ import '../casa/collegamento.dart';
 import '../vestito/pezzi.dart';
 import 'da_dove.dart';
 import 'dispositivi.dart';
+import '../vestito/marchio.dart';
+import 'barra.dart';
 import 'menu.dart';
 import 'plancia/agenda.dart';
 import 'plancia/clima.dart';
@@ -53,24 +55,34 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final _impalcatura = GlobalKey<ScaffoldState>();
+  final _barra = GlobalKey<BarraDelleSezioniState>();
   Sezione _sezione = Sezione.plancia;
 
   @override
   Widget build(BuildContext context) {
     final collegamento = widget.collegamento;
+    final voci = vociDellaBarra(sezioniDellaPlancia(collegamento.plancia));
     return Scaffold(
-      key: _impalcatura,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.menu_rounded),
-          tooltip: 'Menu',
-          onPressed: () => _impalcatura.currentState?.openDrawer(),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12, top: 8, bottom: 8),
+          child: GestureDetector(
+            onTap: widget.vaiAlleCase,
+            child: const Marchio(lato: 30),
+          ),
         ),
+        leadingWidth: 54,
         titleSpacing: 4,
         title: _sezione == Sezione.plancia
             ? _NomeEStato(collegamento: collegamento)
             : Text(_sezione.titolo),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home_work_rounded),
+            tooltip: 'Le tue case',
+            onPressed: widget.vaiAlleCase,
+          ),
+        ],
         /* Una riga sottile che dice «sto ricollegando»: i dati vecchi restano
          * a schermo, e si vede che stanno per cambiare. */
         bottom: collegamento.comeVa == ComeVa.inCammino
@@ -80,17 +92,28 @@ class _HomeState extends State<Home> {
               )
             : null,
       ),
-      drawer: MenuLaterale(
-        collegamento: collegamento,
-        aperta: _sezione,
-        vai: (dove) => setState(() => _sezione = dove),
-        vaiAlleCase: widget.vaiAlleCase,
+      /* La barra sta **sopra** la pagina, non accanto: e' una dock, si chiama
+       * quando serve e sparisce quando non serve. Sotto la pagina si lascia
+       * l'aria che le tocca, se no l'ultima riga finisce sotto la maniglia. */
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: spazioPerLaBarra),
+            child: switch (_sezione) {
+              Sezione.dispositivi => Dispositivi(collegamento: collegamento),
+              Sezione.plancia => _Plancia(collegamento: collegamento),
+              _ => _paginaDellaPlancia(collegamento),
+            },
+          ),
+          BarraDelleSezioni(
+            key: _barra,
+            sezioni: voci,
+            aperta: _sezione,
+            vai: (dove) => setState(() => _sezione = dove),
+            vaiAlleCase: widget.vaiAlleCase,
+          ),
+        ],
       ),
-      body: switch (_sezione) {
-        Sezione.dispositivi => Dispositivi(collegamento: collegamento),
-        Sezione.plancia => _Plancia(collegamento: collegamento),
-        _ => _paginaDellaPlancia(collegamento),
-      },
     );
   }
 

@@ -22,6 +22,7 @@ import '../../plancia/configurazione.dart';
 import '../../plancia/numeri.dart';
 import '../../plancia/persone.dart';
 import '../../plancia/tessere.dart';
+import '../../vestito/oggetti.dart';
 import '../../vestito/pezzi.dart';
 import '../../vestito/tema.dart';
 import 'comune.dart';
@@ -104,7 +105,7 @@ class _PlanciaState extends State<Plancia> {
             const Insegna('Widget'),
             _RigaDeiWidget(tessere),
             const SizedBox(height: 10),
-            _DueColonne([
+            _DueColonne(spazio: 8, [
               for (final tessera in tessere)
                 TesseraDellaHome(
                   tessera,
@@ -207,8 +208,13 @@ class _PlanciaState extends State<Plancia> {
 
 /// Due per riga, alte uguali. Quando ne resta una sola, sta da sola.
 class _DueColonne extends StatelessWidget {
-  const _DueColonne(this.pezzi);
+  const _DueColonne(this.pezzi, {this.spazio = 12});
   final List<Widget> pezzi;
+
+  /// Quanto stanno distanti. Le pillole dei widget si stringono a otto: sono
+  /// tante, e la compatta serve proprio a farne stare il piu' possibile sopra
+  /// la piega.
+  final double spazio;
 
   @override
   Widget build(BuildContext context) {
@@ -220,7 +226,7 @@ class _DueColonne extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(child: pezzi[i]),
-              const SizedBox(width: 12),
+              SizedBox(width: spazio),
               if (i + 1 < pezzi.length)
                 Expanded(child: pezzi[i + 1])
               else
@@ -229,7 +235,7 @@ class _DueColonne extends StatelessWidget {
           ),
         ),
       );
-      if (i + 2 < pezzi.length) righe.add(const SizedBox(height: 12));
+      if (i + 2 < pezzi.length) righe.add(SizedBox(height: spazio));
     }
     return Column(children: righe);
   }
@@ -426,43 +432,28 @@ class _RigaDeiWidget extends StatelessWidget {
   }
 }
 
-IconData iconaDellaTessera(String chiave) => switch (chiave.split('_').first) {
-  'luci' => Icons.lightbulb_rounded,
-  'clima' => Icons.ac_unit_rounded,
-  'tapparelle' => Icons.blinds_rounded,
-  'sicurezza' => Icons.shield_rounded,
-  'telecamere' => Icons.videocam_rounded,
-  'energia' => Icons.bolt_rounded,
-  'elettrodomestici' => Icons.local_laundry_service_rounded,
-  'temperatura' => Icons.thermostat_rounded,
-  'ev' => Icons.electric_car_rounded,
-  'robot' => Icons.smart_toy_rounded,
-  'solare' => Icons.wb_sunny_rounded,
-  'ups' => Icons.battery_charging_full_rounded,
-  'minipc' => Icons.dns_rounded,
-  'piscina' => Icons.pool_rounded,
-  'prese' => Icons.power_rounded,
-  'media' => Icons.speaker_rounded,
-  'irrigazione' => Icons.water_drop_rounded,
-  'agenda' => Icons.event_rounded,
-  'scaldabagno' => Icons.shower_rounded,
-  'caldaia' => Icons.local_fire_department_rounded,
-  'batterie' => Icons.battery_alert_rounded,
-  'allagamenti' => Icons.water_damage_rounded,
-  'fumo' => Icons.local_fire_department_rounded,
-  'aria' => Icons.air_rounded,
-  'evidenza' => Icons.star_rounded,
-  _ => Icons.warning_amber_rounded,
-};
-
-/// Una tessera della Home: la pastiglia col disegno, il nome in maiuscolo,
-/// il numero grande, la didascalia, e in fondo la misura.
+/// Una tessera della Home: la pillola.
 ///
-/// Nasce calma — pastiglia neutra, niente velo — e si accende solo quando ha
-/// qualcosa da dire: il velo del suo colore, il bordo che si scalda. Se
-/// gridano tutte non si sente nessuna.
+/// Sulla plancia, su uno schermo largo, la tessera e' un riquadro alto con
+/// dentro quattro cose. Su un telefono no: sotto i cinquecentoventi punti la
+/// plancia stringe da sola, e la tessera diventa una **pillola coricata** —
+/// quarantotto punti d'altezza, due per riga, e dentro solo tre cose: il
+/// disegno, il nome, il numero a destra. Didascalie e misure spariscono; il
+/// resto vive nella finestra che si apre premendola.
+///
+/// Non e' una scorciatoia per far stare tutto: e' la stessa scelta, presa per
+/// lo stesso motivo. Un telefono in mano si guarda per un secondo, e in un
+/// secondo si legge un nome e un numero. Un'app che invece impagina come uno
+/// schermo largo si riconosce subito, e si riconosce male.
+///
+/// Sul fianco sinistro c'e' la tacca col colore della sezione, fusa nel bordo.
+/// Quando la tessera chiede attenzione la pillola prende un velo del colore
+/// d'avviso, la tacca ingrossa e il numero va in tinta: si legge, non lampeggia.
 class TesseraDellaHome extends StatelessWidget {
   const TesseraDellaHome(this.tessera, {super.key, this.quandoPremuta});
+
+  /// Quanto e' alta la pillola.
+  static const double altezza = 48;
 
   final Tessera tessera;
   final VoidCallback? quandoPremuta;
@@ -470,189 +461,175 @@ class TesseraDellaHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
-    final testi = Theme.of(context).textTheme;
     final accento = coloreDaTesto(tessera.colore);
-    final accesa = tessera.accesa;
+    final avviso = tessera.allarme;
     final (numeroGrande, unita) = tessera.valoreDiviso;
-    final parola = numeroGrande.length > 7;
+    /* Il grado e la percentuale sono parte del numero, non un'etichetta: gli
+     * stanno attaccati e vanno in apice, come sui quadranti veri. */
+    final simbolo = unita == '°' || unita == '%';
 
     return Material(
-      color: accesa
+      color: avviso
           ? Color.alphaBlend(
-              accento.withValues(alpha: tessera.allarme ? 0.12 : 0.06),
+              accento.withValues(alpha: 0.10),
               colori.surfaceContainerLowest,
             )
           : colori.surfaceContainerLowest,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(14),
         side: BorderSide(
-          color: accesa ? accento.withValues(alpha: 0.35) : Colors.transparent,
+          color: avviso
+              ? accento.withValues(alpha: 0.30)
+              : colori.onSurface.withValues(alpha: 0.08),
         ),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: quandoPremuta,
-        child: Stack(
-          children: [
-            /* La lama di colore sul bordo: e' la firma della sezione, e si
-             * vede da un metro. */
-            Positioned(
-              left: 0,
-              top: 16,
-              bottom: 16,
-              child: Container(
-                width: 4,
-                decoration: BoxDecoration(
-                  color: accento.withValues(alpha: accesa ? 1 : 0.45),
-                  borderRadius: const BorderRadius.horizontal(
-                    right: Radius.circular(4),
+        child: SizedBox(
+          height: altezza,
+          child: Stack(
+            children: [
+              /* La tacca: una semipillola fusa nel bordo sinistro, col colore
+               * della sezione. Quando c'e' un avviso ingrossa. */
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: Container(
+                    width: avviso ? 5 : 4,
+                    height: avviso ? 27 : 21,
+                    decoration: BoxDecoration(
+                      color: accento,
+                      borderRadius: const BorderRadius.horizontal(
+                        right: Radius.circular(4),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 13, 14, 13),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      _Pastiglia(
-                        tessera: tessera,
-                        accento: accento,
-                        accesa: accesa,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(child: _Etichetta(tessera.etichetta)),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          numeroGrande,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style:
-                              (parola ? testi.titleMedium : testi.headlineSmall)
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: parola ? 0 : -0.5,
-                                    color: tessera.allarme
-                                        ? accento
-                                        : colori.onSurface,
-                                  ),
-                        ),
-                      ),
-                      if (unita.isNotEmpty) ...[
-                        SizedBox(
-                          width: unita.startsWith('°') || unita.startsWith('%')
-                              ? 1
-                              : 5,
-                        ),
-                        Text(
-                          unita,
-                          style: testi.bodySmall?.copyWith(
-                            color: colori.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
+              Padding(
+                padding: const EdgeInsets.only(left: 13, right: 12),
+                child: Row(
+                  children: [
+                    _Pastiglia(tessera: tessera),
+                    const SizedBox(width: 9),
+                    Expanded(child: _Etichetta(tessera.etichetta)),
+                    const SizedBox(width: 6),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 110),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: simbolo
+                            ? CrossAxisAlignment.start
+                            : CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              numeroGrande,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
+                              style: TextStyle(
+                                fontSize: 15.5,
+                                height: 1.15,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.155,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                                color: avviso
+                                    ? Color.lerp(
+                                        const Color(0xFF0F172A),
+                                        accento,
+                                        0.68,
+                                      )
+                                    : colori.onSurface,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  if (tessera.didascalia.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      tessera.didascalia,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: testi.bodySmall?.copyWith(
-                        color: colori.onSurfaceVariant,
+                          if (unita.isNotEmpty)
+                            Padding(
+                              padding: EdgeInsets.only(
+                                left: simbolo ? 1 : 4,
+                                top: simbolo ? 1 : 0,
+                              ),
+                              child: Text(
+                                unita,
+                                style: TextStyle(
+                                  fontSize: simbolo ? 9.5 : 8,
+                                  height: simbolo ? 1.5 : null,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: simbolo ? 0 : 0.64,
+                                  color: colori.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],
-                  if (tessera.misura != Misura.nessuna) ...[
-                    const SizedBox(height: 10),
-                    _MisuraDellaTessera(tessera: tessera, accento: accento),
-                  ],
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// Il nome della sezione, in maiuscolo, che non finisce mai coi puntini: se
-/// non entra si stringe la spaziatura, poi si scende di corpo, e solo alla
-/// fine va su due righe — «ELETTRODOMESTICI» spezzato a meta' non e' un nome.
+/// Il nome della sezione, in maiuscoletto minuto e in inchiostro pieno.
+///
+/// Non smorzato: a otto punti e mezzo il grigio non si leggerebbe. Se non
+/// entra va su due righe — «ELETTRODOMESTICI» tagliato coi puntini non e' un
+/// nome.
 class _Etichetta extends StatelessWidget {
   const _Etichetta(this.testo);
   final String testo;
 
   @override
   Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
-    final lunghezza = testo.length;
-    final (corpo, spazio) = lunghezza > 14
-        ? (9.0, 0.3)
-        : lunghezza > 10
-        ? (10.0, 0.6)
-        : (11.0, 1.1);
     return Text(
       testo.toUpperCase(),
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: colori.onSurfaceVariant,
-        fontWeight: FontWeight.w800,
-        fontSize: corpo,
-        letterSpacing: spazio,
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onSurface,
+        fontWeight: FontWeight.w900,
+        fontSize: 8.8,
+        letterSpacing: 0.8,
         height: 1.2,
       ),
     );
   }
 }
 
-/// La pastiglia col disegno: un cuscino neutro, che prende il colore della
-/// sezione quando la tessera e' accesa.
+/// La pastiglia col disegno: un cuscinetto neutro, sempre.
+///
+/// Nella pillola il colore ce lo mette la tacca, non la pastiglia: due cose
+/// colorate a nove punti di distanza fanno confusione, non gerarchia.
 class _Pastiglia extends StatelessWidget {
-  const _Pastiglia({
-    required this.tessera,
-    required this.accento,
-    required this.accesa,
-  });
+  const _Pastiglia({required this.tessera, this.lato = 30});
 
   final Tessera tessera;
-  final Color accento;
-  final bool accesa;
+  final double lato;
 
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     return Container(
-      width: 40,
-      height: 40,
+      width: lato,
+      height: lato,
       decoration: BoxDecoration(
-        color: accesa
-            ? accento.withValues(alpha: 0.16)
-            : colori.surfaceContainer,
-        borderRadius: BorderRadius.circular(13),
+        color: colori.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(lato / 3),
+        border: Border.all(color: colori.onSurface.withValues(alpha: 0.09)),
       ),
       alignment: Alignment.center,
-      child: tessera.simbolo.isNotEmpty
-          ? Text(tessera.simbolo, style: const TextStyle(fontSize: 20))
-          : Icon(
-              iconaDellaTessera(tessera.chiave),
-              size: 22,
-              color: accesa ? accento : colori.onSurfaceVariant,
-            ),
+      child: Oggetto(disegnoDellaTessera(tessera.chiave), lato: lato * 0.63),
     );
   }
 }
@@ -811,11 +788,7 @@ class _FinestraDellaTessera extends StatelessWidget {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    _Pastiglia(
-                      tessera: tessera,
-                      accento: accento,
-                      accesa: true,
-                    ),
+                    _Pastiglia(tessera: tessera, lato: 44),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -855,6 +828,14 @@ class _FinestraDellaTessera extends StatelessWidget {
                       color: colori.onSurfaceVariant,
                     ),
                   ),
+                ],
+                /* La misura sta qui, e non sulla pillola: nella pillola non
+                 * ci sta, e messa a forza toglierebbe posto al numero, che e'
+                 * la ragione per cui la si guarda. Qui invece c'e' spazio, e
+                 * chi ha aperto la finestra vuole proprio il dettaglio. */
+                if (tessera.misura != Misura.nessuna) ...[
+                  const SizedBox(height: 14),
+                  _MisuraDellaTessera(tessera: tessera, accento: accento),
                 ],
                 const SizedBox(height: 16),
                 if (tessera.righe.isEmpty)

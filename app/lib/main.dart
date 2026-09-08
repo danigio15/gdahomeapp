@@ -16,6 +16,7 @@ import 'ponte/centralino.dart';
 import 'schermate/aggiungi_casa.dart';
 import 'schermate/home.dart';
 import 'schermate/le_case.dart';
+import 'vestito/sfondo.dart';
 import 'vestito/tema.dart';
 
 /// Acceso solo nella versione costruita per il collaudo, con
@@ -55,6 +56,11 @@ class AppDiCasa extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: temaChiaro(),
       darkTheme: temaScuro(),
+      /* Il fondo vivo sta qui, sotto tutte le schermate e una volta sola: se
+       * lo mettesse ogni pagina, gli aloni ripartirebbero da capo a ogni
+       * cambio di pagina, e sarebbe un lampo invece di un cielo. */
+      builder: (context, schermata) =>
+          SfondoVivo(child: schermata ?? const SizedBox.shrink()),
       home: Portone(cassaforte: cassaforte, collegamento: collegamento),
     );
   }

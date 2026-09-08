@@ -8,7 +8,12 @@ library;
 
 import 'package:flutter/material.dart';
 
-/// Una scheda: fondo chiaro, angoli morbidi, niente ombra.
+/// Una scheda: bianca, angoli morbidi, e un'ombra che la stacca dal fondo.
+///
+/// L'ombra e' la stessa della plancia — larga, tenue, due strati — e non e' un
+/// vezzo: e' quello che fa **galleggiare** la scheda sopra il cielo invece di
+/// incollarcela. Senza, il bianco su un fondo chiaro non si vede, e la
+/// schermata sembra un foglio a righe.
 class Scheda extends StatelessWidget {
   const Scheda({
     super.key,
@@ -25,20 +30,42 @@ class Scheda extends StatelessWidget {
   final Color? colore;
   final Color? bordo;
 
+  /// L'ombra scolpita della plancia: `0 4px 20px` tenue piu' un velo corto.
+  static List<BoxShadow> ombra(BuildContext context) {
+    final scuro = Theme.of(context).brightness == Brightness.dark;
+    return [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: scuro ? 0.34 : 0.06),
+        blurRadius: 20,
+        offset: const Offset(0, 4),
+      ),
+      BoxShadow(
+        color: Colors.black.withValues(alpha: scuro ? 0.2 : 0.04),
+        blurRadius: 4,
+        offset: const Offset(0, 1),
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     final forma = BorderRadius.circular(20);
-    return Material(
-      color: colore ?? colori.surfaceContainerLowest,
-      shape: RoundedRectangleBorder(
-        borderRadius: forma,
-        side: bordo == null ? BorderSide.none : BorderSide(color: bordo!),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: quandoPremuta,
-        child: Padding(padding: padding, child: child),
+    return DecoratedBox(
+      decoration: BoxDecoration(borderRadius: forma, boxShadow: ombra(context)),
+      child: Material(
+        color: colore ?? colori.surfaceContainerLowest,
+        shape: RoundedRectangleBorder(
+          borderRadius: forma,
+          side: bordo == null
+              ? BorderSide(color: colori.outlineVariant)
+              : BorderSide(color: bordo!),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: quandoPremuta,
+          child: Padding(padding: padding, child: child),
+        ),
       ),
     );
   }
