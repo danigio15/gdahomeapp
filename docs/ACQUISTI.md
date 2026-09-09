@@ -202,6 +202,64 @@ esattamente il modo 2, con i campi già compilati.
 È la differenza fra «scrivimi una mail» e «tocca qui»: la seconda la usa
 qualcuno.
 
+## Quanto regge, e cosa non regge
+
+La domanda giusta da farsi prima di scrivere una riga di questo: **uno non
+può semplicemente sbloccare tutto senza pagare?**
+
+Sì. Può. E non c'è modo di impedirglielo.
+
+Il ponte gira **in casa sua**, dentro il suo Home Assistant, dove ha i
+permessi di amministratore. La plancia è JavaScript in chiaro. L'APK si
+decompila. E la chiave pubblica con cui il ponte verifica il diritto firmato
+sta dentro il ponte: si sostituisce con la propria e ci si firma i diritti da
+soli.
+
+Non è un difetto di questo disegno: è la natura di qualunque licenza che gira
+sulla macchina del cliente. Sublime Text, WinRAR, JetBrains fuori linea —
+tutti crackati, tutti fatti da aziende con più mezzi di noi. Chi dice di aver
+risolto questo problema sta vendendo qualcosa.
+
+Quindi la regola, e vale per tutte le decisioni qui sotto: **il controllo
+nell'app è un dosso, non una serratura.** Va dimensionato come tale. Qualche
+giorno di lavoro, non settimane; e ogni ora spesa a offuscare è un'ora tolta
+alle funzioni, senza vincere lo stesso.
+
+### Quello che regge davvero, in ordine
+
+1. **Gli aggiornamenti.** La plancia è passata da 1.4.11 a 1.4.15 in tre
+   giorni. Chi cracka si congela alla versione che ha crackato e deve rifarlo
+   a ogni rilascio. Per un prodotto che si muove così, il flusso degli
+   aggiornamenti vale più di qualunque protezione — e non costa niente,
+   perché lo si sta già facendo.
+2. **Il servizio, che non si copia.** Il codice si copia; l'assistenza con
+   precedenza, il backup della configurazione, le notifiche no. Chi cracka
+   ottiene un'app che funziona ed è sola. È l'unico pezzo genuinamente non
+   copiabile, e per questo è quello su cui conviene appoggiarsi.
+3. **Il diritto legato alla casa, con scadenza.** Non ferma chi cracka, ma
+   ferma la **condivisione casuale** — che è il grosso del problema vero.
+   Nessuno può mandare a un amico il proprio file «sbloccato»: è firmato per
+   la sua casa e scade fra un mese.
+4. **La licenza.** Dove la tecnica non arriva. La plancia ha già una licenza
+   proprietaria che vieta la redistribuzione; l'app dovrebbe averne una
+   uguale, e oggi non ce l'ha.
+
+### Quello che il centralino può vedere, e che costa zero
+
+Il centralino sa quali case chiedono il rinnovo di un diritto. Se un diritto
+firmato per una casa comincia a comparire da quaranta case diverse, si vede.
+Non serve bloccare nessuno in automatico — serve **saperlo**, perché è la
+differenza fra «qualcuno l'ha crackata» e «qualcuno la sta rivendendo», che
+sono due problemi con due risposte diverse.
+
+### Il rischio vero non è chi cracka
+
+Per 19,99 € una tantum su un pubblico Home Assistant, chi cracka spesso non
+avrebbe pagato comunque, e la perdita è limitata. Il rischio vero è un altro,
+ed è di quelli legali: **qualcuno che rivende la plancia come propria**, o un
+pacchetto modificato che circola su un forum. Lì non serve codice — serve la
+licenza, e serve accorgersene.
+
 ## Cosa non fare
 
 - **Non far pagare l'accesso da fuori casa.** Costa zero, è il motivo per cui
@@ -213,6 +271,15 @@ qualcuno.
 - **Non chiedere la carta per la prova.** Quattordici giorni senza carta si
   raccontano in una riga; quattordici giorni con la carta sono un abbonamento
   con la trappola, e si vede.
+- **Non spostare i dati sul centralino per proteggerli.** Calcolare i report
+  di la' li renderebbe non copiabili, ed e' vero. Ma ucciderebbe la promessa
+  che tutto resta in casa dell'utente, che e' il motivo per cui il progetto
+  esiste: vale piu' di 19,99 €.
+- **Non mettere controlli nel JavaScript della plancia.** E' la superficie
+  piu' esposta, e il giorno che un controllo sbaglia si rompe la dashboard a
+  chi **ha pagato**. Il punto di passaggio e' il ponte, ed e' uno solo.
+- **Non offuscare.** Costa, si legge lo stesso, e intanto rende illeggibile il
+  codice anche a noi.
 
 ## Cosa c'è già e cosa manca
 
