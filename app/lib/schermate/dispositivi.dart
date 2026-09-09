@@ -99,6 +99,17 @@ class _DispositiviState extends State<Dispositivi> {
   final _cerca = TextEditingController();
   var _ascolti = <StreamSubscription<void>>[];
 
+  /* Ogni quanto, al massimo, si ridisegna l'elenco.
+   *
+   * In una casa vera gli eventi arrivano a raffica — quattro, dieci al
+   * secondo — e ognuno faceva rifare l'elenco intero. Scorrendo si sentiva:
+   * il dito andava e la lista restava indietro. Il primo cambiamento si
+   * disegna subito, che un interruttore appena toccato deve rispondere
+   * subito; quelli che arrivano nel frattempo aspettano il giro dopo. */
+  static const Duration _respiro = Duration(milliseconds: 300);
+  Timer? _fraPoco;
+  DateTime _ultimoDisegno = DateTime.fromMillisecondsSinceEpoch(0);
+
   StatoDellaCasa? get _casa => widget.collegamento.stato;
 
   @override
@@ -121,7 +132,22 @@ class _DispositiviState extends State<Dispositivi> {
    * sensore che cambia, e' fatica buttata. Si aspetta di tornare visibili,
    * e li' si ridisegna. */
   void _ridisegna() {
-    if (mounted && widget.visibile) setState(() {});
+    if (!mounted || !widget.visibile) return;
+    final adesso = DateTime.now();
+    final daAllora = adesso.difference(_ultimoDisegno);
+    if (daAllora >= _respiro) {
+      _fraPoco?.cancel();
+      _fraPoco = null;
+      _ultimoDisegno = adesso;
+      setState(() {});
+      return;
+    }
+    _fraPoco ??= Timer(_respiro - daAllora, () {
+      _fraPoco = null;
+      if (!mounted || !widget.visibile) return;
+      _ultimoDisegno = DateTime.now();
+      setState(() {});
+    });
   }
 
   /* Le entita' si chiedono quando si e' a schermo, non prima. */
@@ -136,6 +162,7 @@ class _DispositiviState extends State<Dispositivi> {
 
   @override
   void dispose() {
+    _fraPoco?.cancel();
     for (final uno in _ascolti) {
       uno.cancel();
     }
@@ -196,33 +223,56 @@ class _DispositiviState extends State<Dispositivi> {
       );
     }
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-      children: [
-        TextField(
-          controller: _cerca,
-          decoration: InputDecoration(
-            hintText: 'Cerca fra ${casa.quante} entita\'',
-            prefixIcon: const Icon(Icons.search_rounded),
-            suffixIcon: cercato.isEmpty
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: _cerca.clear,
-                  ),
-          ),
+    final cerca = Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: TextField(
+        controller: _cerca,
+        decoration: InputDecoration(
+          hintText: 'Cerca fra ${casa.quante} entita\'',
+          prefixIcon: const Icon(Icons.search_rounded),
+          suffixIcon: cercato.isEmpty
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: _cerca.clear,
+                ),
         ),
-        const SizedBox(height: 14),
-        if (gruppi.isEmpty)
+      ),
+    );
+
+    if (gruppi.isEmpty) {
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        children: [
+          cerca,
           const StatoVuoto(
             dentroUnaLista: true,
             icona: Icons.search_off_rounded,
             titolo: 'Niente con questo nome',
             sotto: 'Prova con una parola piu\' corta.',
-          )
-        else
-          for (final gruppo in gruppi) ...[gruppo, const SizedBox(height: 10)],
-      ],
+          ),
+        ],
+      );
+    }
+
+    /* Una lista **pigra**: si costruisce quello che si vede.
+     *
+     * Prima era una lista intera, tutta insieme: in una casa da trecento
+     * entita' voleva dire trecento righe costruite a ogni ridisegno, e
+     * ridisegni ce n'erano a ogni evento. Scorrendo il dito andava e la
+     * lista restava indietro. Quale gruppo e' aperto se lo ricorda la
+     * pagina, dalla `PageStorageKey`: un gruppo che esce di vista e torna lo
+     * ritrova com'era. */
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      itemCount: gruppi.length + 1,
+      itemBuilder: (context, posto) {
+        if (posto == 0) return cerca;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: gruppi[posto - 1],
+        );
+      },
     );
   }
 }

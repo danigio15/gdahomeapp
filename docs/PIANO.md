@@ -294,6 +294,13 @@ E due cose che non erano prestazioni ma sembravano un guasto:
   l'orologio e sotto i tasti — e quanto prendono quelle barre glielo dice
   l'app, in due variabili CSS che si riscrivono girando lo schermo senza
   ricaricare niente.
+- **L'elenco dei dispositivi non si rifa' piu' tutto a ogni evento.** Era una
+  lista intera, costruita tutta insieme: in una casa da trecento entita'
+  trecento righe a ogni ridisegno, e ridisegni ce n'erano a ogni evento della
+  casa — quattro, dieci al secondo. Scorrendo, il dito andava e la lista
+  restava indietro. Adesso si costruisce quello che si vede, e i ridisegni
+  hanno un respiro: il primo cambiamento subito, gli altri al massimo tre
+  volte al secondo.
 - **Quando il filo torna su da solo, l'app se ne accorge.** Il collegamento
   guardava solo la discesa: caduto il filo si diceva «sto cercando la casa»,
   e quando il filo si rialzava — cosa che fa da solo, ed e' tutto il punto —

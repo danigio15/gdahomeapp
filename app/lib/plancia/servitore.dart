@@ -515,15 +515,26 @@ class Servitore {
       '--gdahome-basso:${margini.basso.round()}px}'
       'html body .app{padding-top:calc(var(--gdahome-alto) + 8px)!important;'
       'padding-bottom:calc(var(--gdahome-basso) + 40px)!important}'
-      /* Nascosta resta dov'e' — fuori dallo schermo e' fuori dallo schermo —
-       * e si alza solo quando si vede. Sul tablet largo la si tira su
-       * passandoci sopra, ed e' la stessa cosa. */
+      /* La barra della plancia si alza sopra i tasti del telefono, **in
+       * tutti e due i modi in cui puo' stare li'**: ferma, che e' come sta
+       * di solito, o chiamata dalla maniglia. La prima volta avevo scritto
+       * solo il secondo, e sul telefono — dove la barra e' ferma — non
+       * cambiava niente: la classe che aspettavo non c'era. Nascosta resta
+       * dov'e', che fuori dallo schermo e' fuori dallo schermo. */
+      'html body.cd-nav-fixed nav.tabs.bottom-nav-bar,'
       'html body nav.tabs.bottom-nav-bar.visible{'
       'bottom:calc(var(--gdahome-basso) + 8px)!important}'
-      'html body nav.tabs.bottom-nav-bar:hover{'
-      'bottom:calc(var(--gdahome-basso) + 20px)!important}'
+      /* Con la barra ferma la pagina lascia gia' il posto sotto: gliene si
+       * lascia altrettanto piu' i tasti. */
+      'html body.cd-nav-fixed{'
+      'padding-bottom:calc(var(--gdahome-basso) + 112px)!important}'
       'html body .bottom-nav-handle{'
       'bottom:calc(var(--gdahome-basso) + 6px)!important}'
+      /* Solo dove c'e' un puntatore vero: su un telefono il «sopra» non
+       * esiste, e un dito che sfiora non deve tirare su la barra. */
+      '@media (hover:hover) and (pointer:fine){'
+      'html body nav.tabs.bottom-nav-bar:hover{'
+      'bottom:calc(var(--gdahome-basso) + 20px)!important}}'
       '</style>';
 
   String conLePremesse(String pagina) {
