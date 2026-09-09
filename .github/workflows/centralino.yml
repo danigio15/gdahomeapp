@@ -101,17 +101,32 @@ jobs:
             exit 0
           fi
 
-          # Un token di GitHub e' una riga sola: quelli a grana fine cominciano
-          # con github_pat_, quelli classici con ghp_. Uno spazio o un a capo
-          # incollato per sbaglio lo renderebbe inutile, e GitHub risponderebbe
-          # solo «Bad credentials».
-          if ! printf '%s' "$GETTONE" | grep -qE '^(github_pat_|ghp_)[A-Za-z0-9_]+$'; then
-            echo "::error::Il segreto GETTONE_SEGNALAZIONI non ha la forma di un token di GitHub (una riga sola che comincia con github_pat_)."
-            echo "Nel segreto va solo la stringa del token, senza spazi, a capo o virgolette intorno."
+          # Un token di GitHub e' una riga sola di lettere, numeri e trattini
+          # bassi: quelli a grana fine cominciano con github_pat_, quelli
+          # classici con ghp_. Gli spazi e gli a capo intorno — o in mezzo: un
+          # token incollato da un telefono puo' arrivare spezzato su due righe
+          # — non ne fanno parte, e si tolgono e basta. Le virgolette pure.
+          gettone=$(printf '%s' "$GETTONE" | tr -d '[:space:]"'"'"'')
+
+          if ! printf '%s' "$gettone" | grep -qE '^(github_pat_|ghp_)[A-Za-z0-9_]+$'; then
+            # Cosa c'e' che non va, detto senza mai stampare il gettone.
+            quanto=${#gettone}
+            echo "::error::Il segreto GETTONE_SEGNALAZIONI non ha la forma di un token di GitHub."
+            echo "Un token a grana fine e' una riga sola che comincia con github_pat_ (uno classico con ghp_),"
+            echo "fatta di lettere, numeri e trattini bassi, lunga un'ottantina di caratteri."
+            echo "Quello che c'e' nel segreto, tolti spazi e a capo, e' lungo $quanto caratteri"
+            case "$gettone" in
+              github_pat_*) echo "e comincia con github_pat_, ma dentro ha caratteri che non ci vanno: forse e' stato copiato insieme a qualcos'altro." ;;
+              ghp_*) echo "e comincia con ghp_, ma dentro ha caratteri che non ci vanno: forse e' stato copiato insieme a qualcos'altro." ;;
+              Bearer*|bearer*) echo "e comincia con «Bearer»: va messo solo il token, senza «Bearer» davanti." ;;
+              *) echo "e non comincia con github_pat_: forse non e' il token ma un'altra cosa (il suo nome, o un token di un altro tipo)." ;;
+            esac
+            echo "Si rifa' cosi': su GitHub, Settings → Developer settings → Personal access tokens → Fine-grained tokens,"
+            echo "si genera il token, lo si copia col bottone accanto, e si incolla nel segreto GETTONE_SEGNALAZIONI. Solo quello."
             exit 1
           fi
 
-          printf '%s\n' "$GETTONE" | npx wrangler secret put GITHUB_SEGNALAZIONI
+          printf '%s\n' "$gettone" | npx wrangler secret put GITHUB_SEGNALAZIONI
           repository=$(sed -n 's/^GITHUB_REPO *= *"\(.*\)"/\1/p' wrangler.toml)
           echo "Il gettone delle segnalazioni è al centralino: le issue si aprono in ${repository}."
           echo "" >> "$GITHUB_STEP_SUMMARY"
