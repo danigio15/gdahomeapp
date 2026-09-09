@@ -33,6 +33,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'altrove/altrove.dart';
+import 'cifra.dart';
 import 'errori.dart';
 import 'indirizzo.dart';
 import 'presa.dart';
@@ -69,6 +71,7 @@ class Filo {
     this.attesaDellaRisposta = const Duration(seconds: 20),
     this.battito = const Duration(seconds: 30),
     this.silenzioMassimo = const Duration(seconds: 90),
+    this.pazienzaAlRisveglio = const Duration(seconds: 6),
   }) : _trovaLApprodo = approdo,
        _apri = apri ?? PresaSuWebSocket.apri;
 
@@ -83,6 +86,7 @@ class Filo {
     Duration attesaDellaRisposta = const Duration(seconds: 20),
     Duration battito = const Duration(seconds: 30),
     Duration silenzioMassimo = const Duration(seconds: 90),
+    Duration pazienzaAlRisveglio = const Duration(seconds: 6),
   }) : this(
          approdo: (() async => Approdo.diretto(DaDove.daDentro, indirizzo)),
          segno: segno,
@@ -93,6 +97,7 @@ class Filo {
          attesaDellaRisposta: attesaDellaRisposta,
          battito: battito,
          silenzioMassimo: silenzioMassimo,
+         pazienzaAlRisveglio: pazienzaAlRisveglio,
        );
 
   final TrovaLApprodo _trovaLApprodo;
@@ -123,17 +128,35 @@ class Filo {
   final Duration battito;
   final Duration silenzioMassimo;
 
+  /// Quanto si aspetta, al risveglio, un segno di vita prima di ribussare.
+  final Duration pazienzaAlRisveglio;
+
   final _stato = StreamController<StatoDelFilo>.broadcast();
   final _inAttesa = <int, Completer<Map<String, dynamic>>>{};
   final _sottoscrizioni = <int, _Sottoscrizione>{};
 
   /// I messaggi mandati per conto di qualcun altro — la plancia vera, che
   /// parla Home Assistant da dentro il WebView — e chi ne aspetta le risposte.
-  final _instradati = <int, void Function(Map<String, dynamic>)>{};
+  final _instradati = <int, void Function(Instradato)>{};
 
   Presa? _presa;
   Approdo? _approdo;
   StreamSubscription<String>? _ascolto;
+
+  /* Quello che arriva si legge **in fila**: aprire un messaggio grosso e'
+   * asincrono — va altrove, e torna — e senza la fila la risposta a una
+   * sottoscrizione potrebbe farsi sorpassare dal primo evento di quella
+   * stessa sottoscrizione. */
+  Future<void> _codaInEntrata = Future<void>.value();
+
+  /* Cresce a ogni caduta: un messaggio rimasto in fila da prima non si
+   * consegna piu', e' di un filo che non c'e'. */
+  int _generazione = 0;
+
+  int _cadute = 0;
+  String? _ultimaCaduta;
+  DateTime? _cadutoIl;
+  Timer? _controlloAlRisveglio;
   Completer<void>? _stretta;
   Timer? _riprova;
   Timer? _colpetti;
@@ -168,9 +191,21 @@ class Filo {
     if (dal == null) return null;
     final minuti = DateTime.now().difference(dal).inSeconds / 60;
     final mb = _byteArrivati / (1024 * 1024);
+    final cadutoIl = _cadutoIl;
+    final cadute = _cadute == 0
+        ? 'mai caduto'
+        : 'caduto $_cadute volte, l\'ultima ${_daQuanto(cadutoIl)} fa: '
+              '$_ultimaCaduta';
     return '$_messaggiArrivati msg, $_eventiArrivati eventi, '
         '${mb.toStringAsFixed(1)} MB giu\', $_messaggiMandati su, '
-        'in ${minuti < 1 ? '${(minuti * 60).round()} s' : '${minuti.round()} min'}';
+        'in ${minuti < 1 ? '${(minuti * 60).round()} s' : '${minuti.round()} min'}; '
+        '$cadute';
+  }
+
+  static String _daQuanto(DateTime? quando) {
+    if (quando == null) return '?';
+    final secondi = DateTime.now().difference(quando).inSeconds;
+    return secondi < 90 ? '$secondi s' : '${(secondi / 60).round()} min';
   }
 
   bool get dentro => _adesso == StatoDelFilo.dentro;
@@ -284,9 +319,45 @@ class Filo {
   void _arrivato(String grezzo) {
     _messaggiArrivati += 1;
     _byteArrivati += grezzo.length;
+    /* Qualunque cosa arrivi dice che il filo e' vivo: un fiume di eventi
+     * non e' silenzio, anche se il pong ai colpetti sta in fila dietro. */
+    _vistoIl = DateTime.now();
+    final generazione = _generazione;
+    _codaInEntrata = _codaInEntrata
+        .then((_) => _leggi(grezzo, generazione))
+        .catchError((Object _) {
+          /* Un messaggio che non si legge non deve fermare la fila. */
+        });
+  }
+
+  Future<void> _leggi(String grezzo, int generazione) async {
+    if (generazione != _generazione) return;
+
+    /* Quello che si e' mandato per conto di qualcun altro torna a lui,
+     * qualunque cosa sia: la risposta, gli eventi, un pong. Si guarda prima
+     * di tutto il resto, perche' quel numero l'ha messo il filo ma il
+     * messaggio non e' suo.
+     *
+     * E gli si da' il **testo**, cosi' com'e' arrivato: leggerlo tutto per
+     * poi riscriverlo uguale costava, su un `get_states` da un megabyte, un
+     * decimo di secondo di schermo fermo — e la plancia lo legge da se'. Il
+     * numero e il tipo stanno in testa, e si prendono senza aprire il resto.
+     * Se la testa non e' fatta come ci si aspetta, si legge tutto, come
+     * prima. */
+    final testa = _Testa.leggi(grezzo);
+    if (testa != null) {
+      final aChi = _instradati[testa.id];
+      if (aChi != null) {
+        aChi(Instradato._(grezzo, testa));
+        return;
+      }
+    }
+
     final Map<String, dynamic> detto;
     try {
-      final letto = jsonDecode(grezzo);
+      final letto = grezzo.length < Busta.sogliaAltrove
+          ? jsonDecode(grezzo)
+          : await altrove(() => jsonDecode(grezzo));
       if (letto is! Map<String, dynamic>) return;
       detto = letto;
     } catch (_) {
@@ -294,17 +365,16 @@ class Filo {
        * di far cadere il filo per colpa di un byte. */
       return;
     }
+    if (generazione != _generazione) return;
 
-    /* Quello che si e' mandato per conto di qualcun altro torna a lui,
-     * qualunque cosa sia: la risposta, gli eventi, un pong. Si guarda prima
-     * di tutto il resto, perche' quel numero l'ha messo il filo ma il
-     * messaggio non e' suo. */
-    final numero = detto['id'];
-    if (numero is int) {
-      final aChi = _instradati[numero];
-      if (aChi != null) {
-        aChi(detto);
-        return;
+    if (testa == null) {
+      final numero = detto['id'];
+      if (numero is int) {
+        final aChi = _instradati[numero];
+        if (aChi != null) {
+          aChi(Instradato._daMappa(detto));
+          return;
+        }
       }
     }
 
@@ -325,6 +395,8 @@ class Filo {
       case 'pong':
         _vistoIl = DateTime.now();
         _rispondeAiColpetti = true;
+        _controlloAlRisveglio?.cancel();
+        _controlloAlRisveglio = null;
     }
   }
 
@@ -469,7 +541,7 @@ class Filo {
   /// chi aveva chiesto deve ricominciare da capo, come farebbe da solo.
   int instrada(
     Map<String, dynamic> messaggio,
-    void Function(Map<String, dynamic> risposta) ricevi,
+    void Function(Instradato risposta) ricevi,
   ) {
     if (!dentro) throw const FiloCaduto('il filo non e\' aperto');
     final id = _prossimoId++;
@@ -536,6 +608,40 @@ class Filo {
    * lo stesso colpetto puntati a un ponte o puntati a una casa. */
   void _colpo() => _manda({'id': _prossimoId++, 'type': 'ping'});
 
+  /// L'app e' tornata in primo piano: si guarda subito se il filo e' vivo.
+  ///
+  /// Un telefono messo in tasca non chiude niente: il sistema gli sospende
+  /// la rete, e il socket resta li', aperto in apparenza e morto in realta'.
+  /// Senza questo, al ritorno l'app restava a guardare una plancia ferma
+  /// finche' il battito — un colpetto ogni trenta secondi, novanta di
+  /// pazienza — non si decideva a dirlo: fino a due minuti di «lentissima».
+  /// Qui si manda un colpetto subito e si aspetta [pazienzaAlRisveglio]: o
+  /// arriva qualcosa, o si chiude e si ribussa. E se il filo stava gia'
+  /// aspettando il suo turno per ribussare, ribussa adesso.
+  void sveglia() {
+    if (_spentoApposta) return;
+    if (dentro) {
+      if (_rispondeAiColpetti == false) return;
+      _colpo();
+      _controlloAlRisveglio?.cancel();
+      final da = DateTime.now();
+      _controlloAlRisveglio = Timer(pazienzaAlRisveglio, () {
+        _controlloAlRisveglio = null;
+        final visto = _vistoIl;
+        if (dentro && (visto == null || !visto.isAfter(da))) {
+          _caduto('il filo era morto mentre l\'app dormiva');
+        }
+      });
+      return;
+    }
+    if (_riprova != null) {
+      _riprova!.cancel();
+      _riprova = null;
+      _tentativi = 0;
+      unawaited(_bussa());
+    }
+  }
+
   void _smettiDiBattere() {
     _colpetti?.cancel();
     _colpetti = null;
@@ -544,6 +650,9 @@ class Filo {
   /* ─── Quando cade ──────────────────────────────────────────────────────── */
 
   void _caduto(String perche) {
+    _cadute += 1;
+    _ultimaCaduta = perche;
+    _cadutoIl = DateTime.now();
     _smettiDiBattere();
     _stacca();
     /* Le richieste in volo muoiono: la loro risposta non arrivera' mai. Ma chi
@@ -615,6 +724,9 @@ class Filo {
   }
 
   void _stacca() {
+    _generazione += 1;
+    _controlloAlRisveglio?.cancel();
+    _controlloAlRisveglio = null;
     _approdo = null;
     _ascolto?.cancel();
     _ascolto = null;
@@ -652,4 +764,83 @@ class _Sottoscrizione {
   _Sottoscrizione({required this.comando, required this.uscita});
   final Map<String, dynamic> comando;
   final StreamController<Map<String, dynamic>> uscita;
+}
+
+/// Quello che torna a chi aveva instradato un messaggio: il testo cosi'
+/// com'e' arrivato — col numero del filo — e quel poco che si legge dalla
+/// testa senza aprirlo tutto.
+class Instradato {
+  Instradato._(this.testo, _Testa testa)
+    : id = testa.id,
+      tipo = testa.tipo,
+      successo = testa.successo,
+      _dopoIlNumero = testa.dopoIlNumero,
+      _detto = null;
+
+  Instradato._daMappa(Map<String, dynamic> detto)
+    : testo = jsonEncode(detto),
+      id = detto['id'] as int,
+      tipo = detto['type'] as String?,
+      successo = detto['success'] as bool?,
+      _dopoIlNumero = null,
+      _detto = detto;
+
+  /// Il messaggio, testo, col numero del filo.
+  final String testo;
+
+  /// Il numero del filo.
+  final int id;
+
+  /// `result`, `event`, `pong`…
+  final String? tipo;
+
+  /// Per un `result`: se e' andata.
+  final bool? successo;
+
+  final int? _dopoIlNumero;
+  final Map<String, dynamic>? _detto;
+
+  /// Il messaggio aperto. Costa quanto aprirlo: chi puo' fare col testo lo
+  /// lasci stare.
+  Map<String, dynamic> get detto =>
+      _detto ?? jsonDecode(testo) as Map<String, dynamic>;
+
+  /// Lo stesso messaggio, col numero di chi l'aveva chiesto al posto di
+  /// quello del filo. Il numero sta in testa, e si cambia solo quello.
+  String conNumero(int altro) {
+    final dopo = _dopoIlNumero;
+    if (dopo != null) return '{"id": $altro${testo.substring(dopo)}';
+    return jsonEncode({...detto, 'id': altro});
+  }
+}
+
+/* La testa di un messaggio di Home Assistant: `{"id": 5, "type": "result",
+ * "success": true, …}`. Home Assistant e il ponte scrivono cosi' — il numero
+ * per primo, poi il tipo — e chi arriva qui fatto diversamente si legge per
+ * intero, come sempre. */
+class _Testa {
+  const _Testa(this.id, this.tipo, this.successo, this.dopoIlNumero);
+
+  final int id;
+  final String tipo;
+  final bool? successo;
+  final int dopoIlNumero;
+
+  static final _forma = RegExp(
+    r'^\{\s*"id"\s*:\s*(\d+)(\s*,\s*"type"\s*:\s*"([a-z_]+)"(?:\s*,\s*"success"\s*:\s*(true|false))?)',
+  );
+
+  static _Testa? leggi(String grezzo) {
+    final trovato = _forma.matchAsPrefix(grezzo);
+    if (trovato == null) return null;
+    final id = int.tryParse(trovato.group(1)!);
+    if (id == null) return null;
+    final successo = trovato.group(4);
+    return _Testa(
+      id,
+      trovato.group(3)!,
+      successo == null ? null : successo == 'true',
+      trovato.end - trovato.group(2)!.length,
+    );
+  }
 }

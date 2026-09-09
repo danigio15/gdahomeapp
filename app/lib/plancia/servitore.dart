@@ -644,13 +644,16 @@ class _Cucitura {
     try {
       late final int mio;
       mio = filo.instrada(messaggio, (risposta) {
-        _manda({...risposta, 'id': suo});
+        /* Il testo cosi' com'e' arrivato, col suo numero rimesso in testa:
+         * niente da aprire e richiudere, che su un `get_states` grosso era
+         * un decimo di secondo di schermo fermo. */
+        _mandaTesto(risposta.conNumero(suo));
         /* Un comando che ha avuto la sua risposta e non manda eventi non
          * serve piu' a nessuno. */
-        if (risposta['type'] == 'result' &&
+        if (risposta.tipo == 'result' &&
             (tipo is! String ||
                 !_continua(tipo) ||
-                risposta['success'] != true)) {
+                risposta.successo != true)) {
           filo.dimentica(mio);
           _numeri.remove(suo);
         }
@@ -680,10 +683,12 @@ class _Cucitura {
     _manda({'type': 'auth_ok', 'ha_version': 'gdahome'});
   }
 
-  void _manda(Map<String, dynamic> cosa) {
+  void _manda(Map<String, dynamic> cosa) => _mandaTesto(jsonEncode(cosa));
+
+  void _mandaTesto(String testo) {
     if (_presa.readyState != WebSocket.open) return;
     try {
-      _presa.add(jsonEncode(cosa));
+      _presa.add(testo);
     } catch (_) {
       /* Chiusa fra il controllo e la scrittura. */
     }

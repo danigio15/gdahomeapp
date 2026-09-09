@@ -87,6 +87,10 @@ class Collegamento {
   /// la diagnostica: dice se una casa e' silenziosa o un fiume in piena.
   String? get traffico => _filo?.traffico;
 
+  /// L'app e' tornata in primo piano: il filo si controlla subito, invece di
+  /// aspettare il battito.
+  void sveglia() => _filo?.sveglia();
+
   ComeVa get comeVa => _comeVa;
   String? get perche => _perche;
   CasaConosciuta? get casa => _casa;

@@ -91,7 +91,7 @@ class Portone extends StatefulWidget {
   State<Portone> createState() => _PortoneState();
 }
 
-class _PortoneState extends State<Portone> {
+class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   late final Collegamento _collegamento;
   late final FabbricaDellaPlancia _plancia =
       widget.plancia ?? FabbricaDellaPlancia();
@@ -101,6 +101,7 @@ class _PortoneState extends State<Portone> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _collegamento =
         widget.collegamento ??
         Collegamento(
@@ -109,6 +110,15 @@ class _PortoneState extends State<Portone> {
           ),
         );
     _accendi();
+  }
+
+  /* Quando l'app torna in primo piano il filo si controlla subito: un
+   * telefono messo in tasca ha quasi sempre un socket morto in mano, e
+   * aspettare che se ne accorga il battito voleva dire una plancia ferma per
+   * un paio di minuti. */
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState stato) {
+    if (stato == AppLifecycleState.resumed) _collegamento.sveglia();
   }
 
   Future<void> _accendi() async {
@@ -130,6 +140,7 @@ class _PortoneState extends State<Portone> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _ascolto?.cancel();
     _collegamento.chiudi();
     super.dispose();

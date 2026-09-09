@@ -7,6 +7,7 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/ponte/errori.dart';
@@ -353,12 +354,18 @@ void main() {
     final filo = filoCon();
     await filo.apri();
 
-    final tornati = <Map<String, dynamic>>[];
+    final tornati = <Instradato>[];
     final numero = filo.instrada({'type': 'get_states'}, tornati.add);
 
     await _finoA(() => tornati.isNotEmpty, entro: const Duration(seconds: 3));
-    expect(tornati.single['id'], numero);
-    expect(tornati.single['type'], 'result');
+    expect(tornati.single.id, numero);
+    expect(tornati.single.tipo, 'result');
+    expect(tornati.single.successo, isTrue);
+    expect(tornati.single.detto['id'], numero);
+    /* Il testo si riconsegna col numero di chi aveva chiesto, cambiando
+     * solo quello: il resto e' lo stesso, byte per byte. */
+    final riscritto = jsonDecode(tornati.single.conNumero(99));
+    expect(riscritto, {...tornati.single.detto, 'id': 99});
     expect(
       ponte.arrivati.where((uno) => uno['type'] == 'get_states').single['id'],
       numero,
@@ -368,7 +375,8 @@ void main() {
      * dimentica. */
     ponte.cambia(numero, 'light.sala', {'state': 'on'});
     await _finoA(() => tornati.length == 2, entro: const Duration(seconds: 3));
-    expect(tornati.last['type'], 'event');
+    expect(tornati.last.tipo, 'event');
+    expect(tornati.last.successo, isNull);
 
     filo.dimentica(numero);
     ponte.cambia(numero, 'light.sala', {'state': 'off'});
@@ -386,7 +394,7 @@ void main() {
     () async {
       final filo = filoCon();
       await filo.apri();
-      final tornati = <Map<String, dynamic>>[];
+      final tornati = <Instradato>[];
       final numero = filo.instrada({'type': 'subscribe_events'}, tornati.add);
       await _finoA(() => tornati.isNotEmpty, entro: const Duration(seconds: 3));
 
@@ -399,6 +407,57 @@ void main() {
       await filo.chiudi();
     },
   );
+
+  test('al risveglio un filo morto in silenzio si chiude e ribussa', () async {
+    final filo = Filo.fisso(
+      indirizzo: ponte.indirizzo,
+      segno: segnoBuono,
+      chi: chiBuono,
+      chiave: chiaveBuona,
+      attesaMassima: const Duration(milliseconds: 80),
+      attesaDellaRisposta: const Duration(seconds: 3),
+      pazienzaAlRisveglio: const Duration(milliseconds: 300),
+    );
+    await filo.apri();
+    final visti = <StatoDelFilo>[];
+    filo.stato.listen(visti.add);
+
+    /* Il ponte c'e' ma non risponde piu': e' il socket che il telefono si
+     * ritrova in mano dopo un po' in tasca. */
+    ponte.muto = true;
+    filo.sveglia();
+    await _finoA(
+      () => visti.contains(StatoDelFilo.chiamando),
+      entro: const Duration(seconds: 3),
+    );
+    expect(filo.traffico, contains('mentre l\'app dormiva'));
+
+    ponte.muto = false;
+    await _finoA(() => filo.dentro, entro: const Duration(seconds: 5));
+    expect(filo.traffico, contains('caduto 1 volte'));
+    await filo.chiudi();
+  });
+
+  test('al risveglio un filo vivo resta dentro', () async {
+    final filo = Filo.fisso(
+      indirizzo: ponte.indirizzo,
+      segno: segnoBuono,
+      chi: chiBuono,
+      chiave: chiaveBuona,
+      attesaMassima: const Duration(milliseconds: 80),
+      attesaDellaRisposta: const Duration(seconds: 3),
+      pazienzaAlRisveglio: const Duration(milliseconds: 300),
+    );
+    await filo.apri();
+    final visti = <StatoDelFilo>[];
+    filo.stato.listen(visti.add);
+    filo.sveglia();
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    expect(visti, isEmpty);
+    expect(filo.dentro, isTrue);
+    expect(filo.traffico, contains('mai caduto'));
+    await filo.chiudi();
+  });
 
   test('senza filo non si instrada niente', () async {
     final filo = filoCon();

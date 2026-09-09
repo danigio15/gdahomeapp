@@ -22,6 +22,8 @@ import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 
+import 'altrove/altrove.dart';
+
 /// Il numero di versione viaggia in chiaro nella prima riga.
 const int versioneDelProtocollo = 1;
 
@@ -50,7 +52,6 @@ final Uint8List _involucroSpki = Uint8List.fromList([
 ]);
 
 final _x25519 = X25519();
-final _gcm = AesGcm.with256bits();
 final _hkdf = Hkdf(hmac: Hmac.sha256(), outputLength: 32);
 
 /// Da che parte va un messaggio.
@@ -180,6 +181,20 @@ class Busta {
   int mando = 0;
   int ricevo = 0;
 
+  /// Da quanti caratteri in su una busta si apre e si chiude **altrove**, in
+  /// un isolato a parte, invece che sul filo che disegna lo schermo.
+  ///
+  /// Sotto, il costo di spedire il lavoro e' piu' del lavoro: un evento da
+  /// un chilobyte si apre in meno di un millesimo. Sopra, e' un file della
+  /// plancia, un `get_states`, una storia di consumi: roba da decimi di
+  /// secondo su un telefono, che sul filo principale sono scatti.
+  static const int sogliaAltrove = 16 * 1024;
+
+  Uint8List? _chiaveByte;
+
+  Future<Uint8List> _byteDellaChiave() async =>
+      _chiaveByte ??= Uint8List.fromList(await chiave.extractBytes());
+
   Uint8List _nonce(DaChi daChi, int contatore) {
     final dodici = Uint8List(12);
     dodici[0] = daChi.numero;
@@ -215,12 +230,31 @@ class Busta {
 
   Future<String> chiudi(String testo) async {
     final dodici = _nonce(mio, mando);
-    final scatola = await _gcm.encrypt(
+    final String chiusa;
+    if (testo.length < sogliaAltrove) {
+      chiusa = await _chiudiDavvero(chiave, dodici, testo);
+    } else {
+      final byte = await _byteDellaChiave();
+      chiusa = await altrove(
+        () => _chiudiDavvero(SecretKey(byte), dodici, testo),
+      );
+    }
+    mando += 1;
+    return chiusa;
+  }
+
+  /* Il lavoro vero, scritto in modo da poter partire per un altro isolato:
+   * prende byte e testo, non `this`. */
+  static Future<String> _chiudiDavvero(
+    SecretKey chiave,
+    Uint8List dodici,
+    String testo,
+  ) async {
+    final scatola = await AesGcm.with256bits().encrypt(
       utf8.encode(testo),
       secretKey: chiave,
       nonce: dodici,
     );
-    mando += 1;
     return base64.encode([
       ...dodici,
       ...scatola.cipherText,
@@ -233,15 +267,16 @@ class Busta {
   /// ignorare — o e' rotto o e' stato toccato, e in tutti e due i casi si
   /// chiude.
   Future<String> apri(String inBase64) async {
-    final Uint8List tutto;
+    /* La testa — i dodici byte del nonce — sono i primi sedici caratteri, e
+     * si leggono da soli: la direzione e il contatore si controllano qui,
+     * prima di spedire il grosso altrove. */
+    if (inBase64.length < 16) throw const BustaGuasta('busta troppo corta');
+    final Uint8List dodici;
     try {
-      tutto = base64.decode(inBase64);
+      dodici = base64.decode(inBase64.substring(0, 16));
     } catch (_) {
       throw const BustaGuasta('non e\' nemmeno base64');
     }
-    if (tutto.length < 12 + 16) throw const BustaGuasta('busta troppo corta');
-
-    final dodici = tutto.sublist(0, 12);
     if (dodici[0] != suo.numero) {
       throw const BustaGuasta('busta dalla direzione sbagliata');
     }
@@ -251,20 +286,41 @@ class Busta {
     );
     if (contatore != ricevo) throw const BustaGuasta('busta fuori ordine');
 
+    final String dentro;
     try {
-      final dentro = await _gcm.decrypt(
-        SecretBox(
-          tutto.sublist(12, tutto.length - 16),
-          nonce: dodici,
-          mac: Mac(tutto.sublist(tutto.length - 16)),
-        ),
-        secretKey: chiave,
-      );
-      ricevo += 1;
-      return utf8.decode(dentro);
+      if (inBase64.length < sogliaAltrove) {
+        dentro = await _apriDavvero(chiave, inBase64);
+      } else {
+        final byte = await _byteDellaChiave();
+        dentro = await altrove(() => _apriDavvero(SecretKey(byte), inBase64));
+      }
+    } on BustaGuasta {
+      rethrow;
     } catch (_) {
       throw const BustaGuasta('la busta non si apre');
     }
+    ricevo += 1;
+    return dentro;
+  }
+
+  static Future<String> _apriDavvero(SecretKey chiave, String inBase64) async {
+    final Uint8List tutto;
+    try {
+      tutto = base64.decode(inBase64);
+    } catch (_) {
+      throw const BustaGuasta('non e\' nemmeno base64');
+    }
+    if (tutto.length < 12 + 16) throw const BustaGuasta('busta troppo corta');
+    final dodici = tutto.sublist(0, 12);
+    final dentro = await AesGcm.with256bits().decrypt(
+      SecretBox(
+        tutto.sublist(12, tutto.length - 16),
+        nonce: dodici,
+        mac: Mac(tutto.sublist(tutto.length - 16)),
+      ),
+      secretKey: chiave,
+    );
+    return utf8.decode(dentro);
   }
 }
 

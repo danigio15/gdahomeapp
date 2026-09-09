@@ -143,6 +143,38 @@ void main() {
   });
 
   group('le buste', () {
+    test('una busta grande si apre altrove, e torna uguale', () async {
+      /* Sopra la soglia il lavoro va in un altro isolato: il testo deve
+       * tornare identico, e i contatori devono andare avanti lo stesso. */
+      final chiave = SecretKey(List.filled(32, 7));
+      final telefono = Busta(chiave, io: DaChi.telefono);
+      final casa = Busta(chiave, io: DaChi.casa);
+      final grande = List.generate(
+        Busta.sogliaAltrove ~/ 8,
+        (i) => 'entita\' $i, ',
+      ).join();
+      expect(grande.length, greaterThan(Busta.sogliaAltrove));
+
+      final chiusa = await telefono.chiudi(grande);
+      expect(chiusa.length, greaterThan(Busta.sogliaAltrove));
+      expect(await casa.apri(chiusa), grande);
+
+      final piccola = await telefono.chiudi('e poi una piccola');
+      expect(await casa.apri(piccola), 'e poi una piccola');
+      expect(casa.ricevo, 2);
+    });
+
+    test('una busta grande toccata non si apre', () async {
+      final chiave = SecretKey(List.filled(32, 7));
+      final telefono = Busta(chiave, io: DaChi.telefono);
+      final casa = Busta(chiave, io: DaChi.casa);
+      final chiusa = await telefono.chiudi('x' * (Busta.sogliaAltrove + 100));
+      final meta = chiusa.length ~/ 2;
+      final toccata =
+          '${chiusa.substring(0, meta)}${chiusa[meta] == 'A' ? 'B' : 'A'}${chiusa.substring(meta + 1)}';
+      await expectLater(casa.apri(toccata), throwsA(isA<BustaGuasta>()));
+    });
+
     test('vanno avanti e indietro', () async {
       final chiave = SecretKey(List.filled(32, 7));
       final telefono = Busta(chiave, io: DaChi.telefono);
