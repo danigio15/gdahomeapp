@@ -75,26 +75,36 @@ class _CercatoreState extends State<_Cercatore> {
   final _scorrimento = ScrollController();
   Timer? _aspetta;
 
-  late final List<Cercabile> _tutte = [
-    for (final una in widget.collegamento.stato?.tutte() ?? const [])
-      if (Cercabile.da(una) != null) Cercabile.da(una)!,
-  ];
+  /* Le entita' della casa, preparate per essere cercate.
+   *
+   * Non sono `late final`: la prima volta che si apre una casella la casa
+   * puo' non essere ancora arrivata — le entita' si leggono solo quando
+   * qualcuno le chiede, e chiederle in una casa vera vuol dire un megabyte e
+   * mezzo. Prima diceva «Nessuna entita'», che e' la risposta sbagliata alla
+   * domanda giusta: non e' che non ce ne siano, e' che non sono ancora qui. */
+  List<Cercabile> _tutte = const [];
+  Map<String, int> _perDominio = const {};
+  int _quanteSuggerite = 0;
+  bool _stoLeggendo = false;
+  StreamSubscription<void>? _ascolto;
 
-  /// Quante entita' per dominio: e' il conto sulle pastiglie, e si fa una
-  /// volta sola perche' non dipende da quello che si scrive.
-  late final Map<String, int> _perDominio = () {
+  void _prendiLeEntita() {
+    final casa = widget.collegamento.stato;
+    final stanze = widget.collegamento.registroDelleStanze;
+    _tutte = [
+      for (final una in casa?.tutte() ?? const [])
+        ?Cercabile.da(una, stanza: stanze.stanzaDi(una.id)),
+    ];
     final conti = <String, int>{};
     for (final una in _tutte) {
       conti[una.dominio] = (conti[una.dominio] ?? 0) + 1;
     }
-    return conti;
-  }();
-
-  /// Quante sono suggerite per questa casella. Anche questo non dipende da
-  /// quello che si scrive.
-  late final int _quanteSuggerite = _tutte
-      .where((una) => quantoCentra(una, widget.vuole).forte)
-      .length;
+    _perDominio = conti;
+    _quanteSuggerite = _tutte
+        .where((una) => quantoCentra(una, widget.vuole).forte)
+        .length;
+    _soloLeSuggerite = _quanteSuggerite > 0;
+  }
 
   String _scritto = '';
   String? _soloIlDominio;
@@ -109,14 +119,35 @@ class _CercatoreState extends State<_Cercatore> {
      * dashboard, ed e' il motivo per cui il cercatore esiste — aprire una
      * casella e trovarci gia' dentro le tre entita' giuste, invece di
      * tremila in ordine alfabetico. */
-    _soloLeSuggerite = _quanteSuggerite > 0;
+    _prendiLeEntita();
     _ricerca();
     _scorrimento.addListener(_forseUnAltraPagina);
+    /* Se la casa non e' ancora arrivata la si chiede adesso, e quando arriva
+     * la lista si riempie da sola: chi ha aperto la casella non deve
+     * chiuderla e riaprirla per vedere qualcosa. */
+    if (_tutte.isEmpty) {
+      _stoLeggendo = true;
+      unawaited(widget.collegamento.serveLaCasa());
+    }
+    _ascolto = widget.collegamento.entitaCambiate.listen((_) {
+      if (!mounted) return;
+      final quante = _tutte.length;
+      _prendiLeEntita();
+      /* Solo quando **quali** entita' ci sono e' cambiato: un valore che
+       * cambia dieci volte al secondo non deve rifare la ricerca sotto le
+       * dita di chi sta scrivendo. */
+      if (_tutte.length == quante && !_stoLeggendo) return;
+      setState(() {
+        _stoLeggendo = false;
+        _ricerca();
+      });
+    });
   }
 
   @override
   void dispose() {
     _aspetta?.cancel();
+    _ascolto?.cancel();
     _scorrimento.dispose();
     super.dispose();
   }
@@ -258,14 +289,16 @@ class _CercatoreState extends State<_Cercatore> {
             const SizedBox(height: 6),
             Expanded(
               child: daMostrare.isEmpty
-                  ? StatoVuoto(
-                      icona: Icons.search_off_rounded,
-                      titolo: 'Nessuna entita\'',
-                      sotto: _soloLeSuggerite
-                          ? 'Tocca «Tutte» per vedere anche quelle che non '
-                                'sembrano di questo campo.'
-                          : 'Prova con meno lettere, o togli il filtro.',
-                    )
+                  ? (_stoLeggendo && _tutte.isEmpty
+                        ? const _StoLeggendo()
+                        : StatoVuoto(
+                            icona: Icons.search_off_rounded,
+                            titolo: 'Nessuna entita\'',
+                            sotto: _soloLeSuggerite
+                                ? 'Tocca «Tutte» per vedere anche quelle che '
+                                      'non sembrano di questo campo.'
+                                : 'Prova con meno lettere, o togli il filtro.',
+                          ))
                   : ListView.builder(
                       controller: _scorrimento,
                       itemCount: daMostrare.length,
@@ -387,4 +420,39 @@ class _Riga extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Le entita' stanno arrivando.
+///
+/// In una casa vera sono un megabyte e mezzo, e si chiedono solo quando
+/// servono. «Nessuna entita'» era la risposta sbagliata alla domanda giusta:
+/// non e' che non ce ne siano, e' che non sono ancora qui.
+class _StoLeggendo extends StatelessWidget {
+  const _StoLeggendo();
+
+  @override
+  Widget build(BuildContext context) => Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      const CircularProgressIndicator(),
+      const SizedBox(height: 18),
+      Text(
+        'Sto leggendo le entita\' di casa…',
+        style: Theme.of(context).textTheme.titleSmall,
+      ),
+      const SizedBox(height: 6),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Text(
+          'La prima volta ci mette un attimo: sono tante, e si chiedono solo '
+          'quando servono davvero.',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
+        ),
+      ),
+    ],
+  );
 }

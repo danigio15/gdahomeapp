@@ -92,6 +92,15 @@ class _PaginaDiConfigurazioneState extends State<PaginaDiConfigurazione> {
   void initState() {
     super.initState();
     unawaited(_leggi());
+    /* Le entita' della casa si chiedono adesso, non quando si tocca la lente.
+     *
+     * In una casa vera sono un megabyte e mezzo e si leggono solo quando
+     * qualcuno le vuole: finora le voleva solo l'elenco dei dispositivi, e
+     * chi apriva una casella della configurazione senza esserci mai passato
+     * trovava «0 entita'» — che e' la risposta sbagliata alla domanda giusta.
+     * Chiedendole all'apertura della schermata, quando il dito arriva sulla
+     * lente sono gia' qui. Chiamarla due volte non costa niente. */
+    unawaited(widget.collegamento.serveLaCasa());
   }
 
   Future<void> _leggi() async {

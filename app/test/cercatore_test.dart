@@ -214,4 +214,53 @@ void main() {
       expect(Cercabile.da(_una('')), isNull);
     });
   });
+
+  _leStanze();
+}
+
+/* Le stanze: senza, il cercatore e' cieco proprio dove servirebbe di piu'. */
+void _leStanze() {
+  group('le stanze dai registri', () {
+    test('una parola che sta solo nella stanza si trova lo stesso', () {
+      /* `sensor.0x00124b` non dice niente a nessuno: chi lo configura cerca
+       * «cameretta», e quella parola sta solo nel registro. */
+      final casa = _casa([
+        _una('sensor.0x00124b0022', nome: 'Temperatura', classe: 'temperature'),
+      ]);
+      expect(cerca(casa, scritto: 'cameretta'), isEmpty);
+
+      final conStanza = [
+        Cercabile.da(
+          _una(
+            'sensor.0x00124b0022',
+            nome: 'Temperatura',
+            classe: 'temperature',
+          ),
+          stanza: 'Cameretta',
+        )!,
+      ];
+      expect(
+        cerca(conStanza, scritto: 'cameretta').single.una.id,
+        'sensor.0x00124b0022',
+      );
+    });
+
+    test('la stanza del campo alza chi ci sta dentro', () {
+      final quali = [
+        Cercabile.da(
+          _una('sensor.uno', nome: 'Temperatura', classe: 'temperature'),
+          stanza: 'Salotto',
+        )!,
+        Cercabile.da(
+          _una('sensor.due', nome: 'Temperatura', classe: 'temperature'),
+          stanza: 'Cameretta',
+        )!,
+      ];
+      final vuole = cosaVuole(
+        etichetta: 'Sensore di temperatura',
+        stanza: 'Cameretta',
+      );
+      expect(cerca(quali, vuole: vuole).first.una.id, 'sensor.due');
+    });
+  });
 }

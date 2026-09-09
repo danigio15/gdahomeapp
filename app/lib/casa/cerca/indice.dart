@@ -134,16 +134,22 @@ class Cercabile {
   });
 
   /// Da un'entita' della casa. `null` se non e' un'entita' vera.
-  static Cercabile? da(Entita una) {
+  ///
+  /// [stanza] arriva dai registri di Home Assistant (vedi `registro.dart`):
+  /// negli stati non c'e', e senza di lei il cercatore non sa dire che
+  /// `sensor.0x00124b` sta in cameretta.
+  static Cercabile? da(Entita una, {String stanza = ''}) {
     final id = una.id.trim();
     final dove = id.indexOf('.');
     if (dove <= 0) return null;
     final oggetto = id.substring(dove + 1);
     final nome = una.nome.trim().isEmpty ? id : una.nome.trim();
-    final stanza = '${una.attributi['area'] ?? ''}'.trim();
+    final laStanza = stanza.trim().isNotEmpty
+        ? stanza.trim()
+        : '${una.attributi['area'] ?? ''}'.trim();
     final idPiegato = ripiega(id);
     final nomePiegato = ripiega(nome);
-    final stanzaPiegata = stanza.isEmpty ? '' : ripiega(stanza);
+    final stanzaPiegata = laStanza.isEmpty ? '' : ripiega(laStanza);
     /* Il dominio non e' una parola dell'entita': contare `sensor.` come tale
      * farebbe combaciare ogni sensore della casa con una casella che nella sua
      * etichetta dice «sensore», e il dominio e' gia' un vincolo suo. */
@@ -155,7 +161,7 @@ class Cercabile {
       oggetto: oggetto,
       classe: '${una.attributi['device_class'] ?? ''}'.toLowerCase(),
       unita: '${una.attributi['unit_of_measurement'] ?? ''}',
-      stanza: stanza,
+      stanza: laStanza,
       stato: una.stato,
       /* Due malus, tutti e due indipendenti da cosa si cerca: un'entita' che
        * adesso non risponde e' raramente quella che si sta configurando, e fra

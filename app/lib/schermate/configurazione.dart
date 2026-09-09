@@ -15,6 +15,8 @@
 /// allineato.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
@@ -24,7 +26,7 @@ import '../vestito/pezzi.dart';
 import 'configurazione/albero.dart';
 import 'configurazione/voci.dart';
 
-class SchermataDellaConfigurazione extends StatelessWidget {
+class SchermataDellaConfigurazione extends StatefulWidget {
   const SchermataDellaConfigurazione({
     super.key,
     required this.collegamento,
@@ -39,13 +41,33 @@ class SchermataDellaConfigurazione extends StatelessWidget {
   /// schermata; nelle prove si guarda e basta.
   final void Function(Voce voce)? apri;
 
+  @override
+  State<SchermataDellaConfigurazione> createState() =>
+      _SchermataDellaConfigurazioneState();
+}
+
+class _SchermataDellaConfigurazioneState
+    extends State<SchermataDellaConfigurazione> {
+  @override
+  void initState() {
+    super.initState();
+    /* Le entita' della casa si chiedono qui, all'ingresso della
+     * configurazione: e' un megabyte e mezzo che si legge una volta sola, e
+     * da qui in poi ogni casella che si apre le trova gia' pronte. */
+    unawaited(widget.collegamento.serveLaCasa());
+  }
+
   void _apri(BuildContext contesto, Voce voce) {
-    final suo = apri;
+    final suo = widget.apri;
     if (suo != null) {
       suo(voce);
       return;
     }
-    final schermata = schermataDi(voce, collegamento, impostazioni);
+    final schermata = schermataDi(
+      voce,
+      widget.collegamento,
+      widget.impostazioni,
+    );
     if (schermata == null) return;
     Navigator.of(contesto)
         .push(MaterialPageRoute<void>(builder: (dentro) => schermata));
@@ -58,7 +80,7 @@ class SchermataDellaConfigurazione extends StatelessWidget {
       key: const PageStorageKey('configurazione'),
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
       children: [
-        _Cappello(collegamento: collegamento),
+        _Cappello(collegamento: widget.collegamento),
         const SizedBox(height: 18),
         for (final famiglia in albero) ...[
           Insegna(famiglia.titolo),
