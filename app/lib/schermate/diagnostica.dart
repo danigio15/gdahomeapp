@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
 import '../casa/impostazioni.dart';
+import '../misure/lavori.dart';
 import '../vestito/pezzi.dart';
 import 'misure.dart';
 
@@ -20,6 +21,7 @@ class SchermataDellaDiagnostica extends StatefulWidget {
     required this.collegamento,
     required this.impostazioni,
     this.misure,
+    this.lavori,
   });
 
   final Collegamento collegamento;
@@ -27,6 +29,9 @@ class SchermataDellaDiagnostica extends StatefulWidget {
 
   /// Nelle prove si passano numeri finti; nell'app sono quelle vere.
   final UltimoMinuto Function()? misure;
+
+  /// Idem per i lavori pesanti.
+  final List<UnLavoro> Function()? lavori;
 
   @override
   State<SchermataDellaDiagnostica> createState() =>
@@ -62,6 +67,7 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
     final colori = Theme.of(context).colorScheme;
     final testi = Theme.of(context).textTheme;
     final minuto = (widget.misure ?? () => Misure.io.ultimoMinuto)();
+    final fatti = (widget.lavori ?? () => Lavori.io.tutti)();
     final impostazioni = widget.impostazioni;
     final collegamento = widget.collegamento;
 
@@ -142,6 +148,39 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
                 riga('Stato', collegamento.comeVa.name),
                 riga('Da dove', collegamento.daDove?.name ?? '-'),
                 riga('Traffico', collegamento.traffico ?? 'non collegato'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Scheda(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Cosa costa', style: testi.titleMedium),
+                const SizedBox(height: 6),
+                if (fatti.isEmpty)
+                  Text(
+                    'Ancora niente da segnare.',
+                    style: testi.bodyMedium?.copyWith(
+                      color: colori.onSurfaceVariant,
+                    ),
+                  )
+                else
+                  for (final uno in fatti.take(8))
+                    riga(
+                      uno.cosa,
+                      '${uno.quante} volte, ${uno.totaleMs} ms in tutto, '
+                      '${uno.maxMs} ms il peggiore',
+                    ),
+                const SizedBox(height: 6),
+                Text(
+                  'Se un lavoro da solo dura quanto un blocco, il colpevole '
+                  'e\' quello. Se sono tutti piccoli e i blocchi restano, e\' '
+                  'la roba da buttare che si accumula.',
+                  style: testi.bodySmall?.copyWith(
+                    color: colori.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ),

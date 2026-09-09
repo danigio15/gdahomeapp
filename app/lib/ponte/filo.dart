@@ -33,6 +33,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import '../misure/lavori.dart';
 import 'altrove/altrove.dart';
 import 'cifra.dart';
 import 'errori.dart';
@@ -364,8 +365,11 @@ class Filo {
     final Map<String, dynamic> detto;
     try {
       final letto = grezzo.length < Busta.sogliaAltrove
-          ? jsonDecode(grezzo)
-          : await altrove(() => jsonDecode(grezzo));
+          ? Lavori.io.subito('messaggi letti qui', () => jsonDecode(grezzo))
+          : await Lavori.io.conto(
+              'messaggi letti altrove',
+              () => altrove(() => jsonDecode(grezzo)),
+            );
       if (letto is! Map<String, dynamic>) return;
       detto = letto;
     } catch (_) {
@@ -411,6 +415,9 @@ class Filo {
   void _entrato() {
     _tentativi = 0;
     _contoDal = DateTime.now();
+    /* I lavori si contano dallo stesso momento del traffico: cosi' le due
+     * righe della diagnostica parlano dello stesso pezzo di tempo. */
+    Lavori.io.azzera();
     _messaggiArrivati = 0;
     _byteArrivati = 0;
     _eventiArrivati = 0;
@@ -486,6 +493,45 @@ class Filo {
     Map<String, dynamic> comando, {
     Duration? entro,
   }) async => (await chiedi(comando, entro: entro))['result'];
+
+  /// La risposta a un comando **come e' arrivata**: il testo, senza aprirlo.
+  ///
+  /// Serve a chi se la apre da solo, e altrove. Un file della plancia e' un
+  /// JSON con dentro un megabyte di base64: aprirlo qui vuol dire costruirne
+  /// una copia sul filo che disegna lo schermo, e poi un'altra copia per i
+  /// byte, e un'altra ancora per i byte scompattati. Tutta roba da buttare
+  /// subito dopo — e buttarla, quando ce n'e' tanta, e' un decimo di secondo
+  /// di schermo fermo.
+  Future<String> testoDi(Map<String, dynamic> comando, {Duration? entro}) {
+    if (!dentro) {
+      return Future.error(const FiloCaduto('il filo non e\' aperto'));
+    }
+    final aspetta = Completer<String>();
+    late final int id;
+    id = instrada(comando, (risposta) {
+      if (aspetta.isCompleted) return;
+      dimentica(id);
+      if (risposta.successo == false) {
+        final male = risposta.detto['error'];
+        aspetta.completeError(
+          ComandoRifiutato(
+            (male is Map ? male['message'] as String? : null) ??
+                'Home Assistant ha rifiutato il comando',
+            codice: male is Map ? male['code'] as String? : null,
+          ),
+        );
+        return;
+      }
+      aspetta.complete(risposta.testo);
+    });
+    return aspetta.future.timeout(
+      entro ?? attesaDellaRisposta,
+      onTimeout: () {
+        dimentica(id);
+        throw const FiloCaduto('Home Assistant non ha risposto in tempo');
+      },
+    );
+  }
 
   /// Si sottoscrive, e resta sottoscritto anche dopo una caduta del filo.
   ///

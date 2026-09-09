@@ -22,6 +22,7 @@ import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 
+import '../misure/lavori.dart';
 import 'altrove/altrove.dart';
 import 'compressione/compressione.dart' as compressione;
 
@@ -256,11 +257,17 @@ class Busta {
     final daComprimere = comprime && testo.length >= sogliaDiCompressione;
     final String chiusa;
     if (testo.length < sogliaAltrove) {
-      chiusa = await _chiudiDavvero(chiave, dodici, testo, daComprimere);
+      chiusa = await Lavori.io.conto(
+        'buste chiuse qui',
+        () => _chiudiDavvero(chiave, dodici, testo, daComprimere),
+      );
     } else {
       final byte = await _byteDellaChiave();
-      chiusa = await altrove(
-        () => _chiudiDavvero(SecretKey(byte), dodici, testo, daComprimere),
+      chiusa = await Lavori.io.conto(
+        'buste chiuse altrove',
+        () => altrove(
+          () => _chiudiDavvero(SecretKey(byte), dodici, testo, daComprimere),
+        ),
       );
     }
     mando += 1;
@@ -325,10 +332,16 @@ class Busta {
     final String dentro;
     try {
       if (inBase64.length < sogliaAltrove) {
-        dentro = await _apriDavvero(chiave, inBase64);
+        dentro = await Lavori.io.conto(
+          'buste aperte qui',
+          () => _apriDavvero(chiave, inBase64),
+        );
       } else {
         final byte = await _byteDellaChiave();
-        dentro = await altrove(() => _apriDavvero(SecretKey(byte), inBase64));
+        dentro = await Lavori.io.conto(
+          'buste aperte altrove',
+          () => altrove(() => _apriDavvero(SecretKey(byte), inBase64)),
+        );
       }
     } on BustaGuasta {
       rethrow;

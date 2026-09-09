@@ -355,6 +355,49 @@ void main() {
     );
   });
 
+  group('l\'aiutante', () {
+    final chiave = SecretKey(List.filled(32, 9));
+
+    test('lo stesso aiutante fa tanti lavori uno dietro l\'altro', () async {
+      /* Prima se ne apriva uno nuovo per ogni busta, e durante l\'avvio della
+       * plancia sono centinaia di isolati aperti e chiusi in mezzo minuto.
+       * Qui: tante buste grandi di fila, tutte giuste, tutte in ordine. */
+      final casa = Busta(chiave, io: DaChi.casa, comprime: true);
+      final telefono = Busta(chiave, io: DaChi.telefono);
+      final testi = [
+        for (var i = 0; i < 12; i += 1)
+          List.generate(2000, (n) => 'pezzo $i numero $n, ').join(),
+      ];
+
+      final chiuse = <String>[];
+      for (final uno in testi) {
+        chiuse.add(await casa.chiudi(uno));
+      }
+      for (var i = 0; i < testi.length; i += 1) {
+        expect(await telefono.apri(chiuse[i]), testi[i]);
+      }
+      expect(telefono.ricevo, testi.length);
+    });
+
+    test('un lavoro andato storto non porta giu\' l\'aiutante', () async {
+      final casa = Busta(chiave, io: DaChi.casa, comprime: true);
+      final telefono = Busta(chiave, io: DaChi.telefono);
+
+      /* Una bomba: si rifiuta, e l\'aiutante resta in piedi. */
+      await expectLater(
+        telefono.apri(await casa.chiudi(' ' * (apertaMassima + 1))),
+        throwsA(isA<BustaGuasta>()),
+      );
+
+      /* La busta rifiutata non e' stata contata: la prossima e' ancora la
+       * prima, e chi la manda riparte da zero come lei. */
+      expect(telefono.ricevo, 0);
+      final grande = 'x' * (Busta.sogliaAltrove * 2);
+      final dopo = Busta(chiave, io: DaChi.casa, comprime: true);
+      expect(await telefono.apri(await dopo.chiudi(grande)), grande);
+    });
+  });
+
   group('l\'apertura', () {
     test('e\' sedici byte, e non e\' mai la stessa', () {
       final viste = <String>{};

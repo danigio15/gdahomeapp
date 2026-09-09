@@ -41,8 +41,12 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:math';
+import 'dart:typed_data';
 
+import '../misure/lavori.dart';
+import '../ponte/altrove/altrove.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 import 'pannello.dart';
@@ -377,14 +381,19 @@ class Servitore {
   }) async {
     final filo = await _filoPronto();
     if (filo == null) throw const FiloCaduto('il filo non c\'e\'');
-    final risposta = await filo.risultato({
-      'type': 'ponte/http',
-      'metodo': metodo,
-      'percorso': percorso,
-      if (corpo != null) 'corpo': base64.encode(corpo),
-      if (tipoDelCorpo != null) 'tipo': tipoDelCorpo,
-    }, entro: _attesaDellaCommissione);
-    return _Scaricato.dalla(risposta);
+    /* Il **testo** della risposta, non la risposta aperta: quello che c'e'
+     * dentro si apre altrove, tutto in una volta. Vedi [_spacchetta]. */
+    final testo = await Lavori.io.conto(
+      'risposte del ponte, aspettate',
+      () => filo.testoDi({
+        'type': 'ponte/http',
+        'metodo': metodo,
+        'percorso': percorso,
+        if (corpo != null) 'corpo': base64.encode(corpo),
+        if (tipoDelCorpo != null) 'tipo': tipoDelCorpo,
+      }, entro: _attesaDellaCommissione),
+    );
+    return _spacchetta(testo);
   }
 
   Future<void> _metti(File dove, List<int> byte) async {
@@ -562,26 +571,70 @@ String _tipoDi(String percorso) {
       'application/octet-stream';
 }
 
+/// Oltre questo, una risposta si apre **altrove**. E' la stessa soglia delle
+/// buste, per la stessa ragione: sotto, spedire il lavoro costa piu' del
+/// lavoro.
+const int _grossa = 16 * 1024;
+
+/// Apre la risposta a una commissione: il JSON, il base64, il gzip.
+///
+/// Tutto insieme, e altrove quando e' grossa. Un file della plancia, arrivato
+/// qui, sono quattro cose grandi una dopo l'altra: il testo del messaggio, la
+/// sua copia dentro il JSON aperto, i byte del base64, i byte scompattati.
+/// Farle sul filo che disegna lo schermo voleva dire riempirlo di roba da
+/// buttare — nove megabyte in mezzo minuto, all'avvio della plancia — e
+/// buttarla, quando ce n'e' tanta, e' un decimo di secondo di schermo fermo.
+///
+/// Qui ne torna una sola, e **trasferita**, non copiata: i byte cambiano
+/// isolato senza passare per la memoria di questo.
+Future<_Scaricato> _spacchetta(String testo) async {
+  final (int, String, TransferableTypedData?) preso;
+  try {
+    preso = testo.length < _grossa
+        ? Lavori.io.subito('risposte aperte qui', () => _apri(testo))
+        : await Lavori.io.conto(
+            'risposte aperte altrove',
+            () => altrove(() => _apri(testo)),
+          );
+  } on ErroreDelPonte {
+    rethrow;
+  } catch (_) {
+    throw const ComandoRifiutato('il ponte ha risposto una cosa strana');
+  }
+  final (stato, tipo, corpo) = preso;
+  return _Scaricato(
+    stato,
+    tipo,
+    corpo == null ? const <int>[] : corpo.materialize().asUint8List(),
+  );
+}
+
+/// Il lavoro vero, scritto in modo da poter partire per un altro isolato:
+/// prende testo e torna byte, non tocca niente di qui.
+(int, String, TransferableTypedData?) _apri(String testo) {
+  final letto = jsonDecode(testo);
+  final risposta = letto is Map ? letto['result'] : null;
+  if (risposta is! Map) {
+    throw const ComandoRifiutato('il ponte ha risposto una cosa strana');
+  }
+  final stato = risposta['stato'];
+  final corpo = risposta['corpo'];
+  var byte = corpo is String ? base64.decode(corpo) : Uint8List(0);
+  if (risposta['compresso'] == 'gzip') {
+    byte = Uint8List.fromList(gzip.decode(byte));
+  }
+  return (
+    stato is int ? stato : 502,
+    risposta['tipo'] is String
+        ? risposta['tipo'] as String
+        : 'application/octet-stream',
+    byte.isEmpty ? null : TransferableTypedData.fromList([byte]),
+  );
+}
+
 /// Quello che torna da una commissione, gia' spacchettato.
 class _Scaricato {
   const _Scaricato(this.stato, this.tipo, this.byte);
-
-  factory _Scaricato.dalla(Object? risposta) {
-    if (risposta is! Map) {
-      throw const ComandoRifiutato('il ponte ha risposto una cosa strana');
-    }
-    final stato = risposta['stato'];
-    final corpo = risposta['corpo'];
-    var byte = corpo is String ? base64.decode(corpo) : const <int>[];
-    if (risposta['compresso'] == 'gzip') byte = gzip.decode(byte);
-    return _Scaricato(
-      stato is int ? stato : 502,
-      risposta['tipo'] is String
-          ? risposta['tipo'] as String
-          : 'application/octet-stream',
-      byte,
-    );
-  }
 
   final int stato;
   final String tipo;

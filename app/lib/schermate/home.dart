@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
 import '../casa/impostazioni.dart';
+import '../misure/lavori.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
 import 'assistenza.dart';
@@ -65,6 +66,7 @@ class _HomeState extends State<Home> {
       if (collegamento.perche != null) 'perche': collegamento.perche!,
       if (collegamento.traffico != null) 'filo': collegamento.traffico!,
       'schermo': Misure.io.riassunto,
+      'lavori': Lavori.io.riassunto,
       'plancia': widget.impostazioni.riassunto,
     };
   }
@@ -121,6 +123,18 @@ class _HomeState extends State<Home> {
        * l'aria che le tocca, se no l'ultima riga finisce sotto la maniglia. */
       body: Stack(
         children: [
+          /* Sulla plancia il fondo dell'app non si vede.
+           *
+           * Dietro le bande del sistema — l'orologio in cima, i gesti in
+           * fondo — ci va lo stesso grigio della pagina, piatto, senza gli
+           * aloni: cosi' quelle bande non sembrano il bordo di un'altra
+           * cosa, e la plancia si legge come una pagina sola che arriva
+           * fino ai lati dello schermo. Sotto ci sta comunque il fondo
+           * vivo, che si rivede appena si esce dalla plancia. */
+          if (sullaPlancia)
+            Positioned.fill(
+              child: ColoredBox(color: Theme.of(context).colorScheme.surface),
+            ),
           /* Senza barra del titolo la pagina comincia sotto l'orologio del
            * telefono: l'aria in cima gliela lascia questo, e solo dove la
            * barra non c'e' — dove c'e', quell'aria l'ha gia' lasciata lei.
@@ -130,7 +144,12 @@ class _HomeState extends State<Home> {
             top: sullaPlancia,
             bottom: sullaPlancia,
             child: Padding(
-              padding: const EdgeInsets.only(left: spazioPerLaBarra),
+              /* Alla plancia lo schermo si da' tutto: la maniglia della
+               * barra le galleggia sopra, che e' quello che fa una maniglia,
+               * e dieci punti tolti a tutte le pagine si vedevano solo li'. */
+              padding: EdgeInsets.only(
+                left: sullaPlancia ? 0 : spazioPerLaBarra,
+              ),
               /* Le sezioni restano in piedi anche quando non si guardano: la
                * plancia e' una pagina web, e rifarla da capo a ogni ritorno
                * vorrebbe dire riaprirla ogni volta. */
