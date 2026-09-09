@@ -317,7 +317,13 @@ class Filo {
     _approdo = dove;
     _ascolto = presa.messaggi.listen(
       _arrivato,
-      onError: (Object _) => _caduto('il filo si e\' interrotto'),
+      /* Il perche' e' quello che ha detto chi ha chiuso, quando l'ha detto:
+       * vedi `PresaSuWebSocket.messaggi`. */
+      onError: (Object errore) => _caduto(
+        errore is ErroreDelPonte
+            ? errore.spiegazione
+            : 'il filo si e\' interrotto',
+      ),
       onDone: () => _caduto('il filo si e\' chiuso'),
       cancelOnError: false,
     );

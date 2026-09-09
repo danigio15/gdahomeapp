@@ -15,6 +15,8 @@ import 'dart:async';
 
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+import 'errori.dart';
+
 abstract interface class Presa {
   /// Quello che arriva. Uno stream solo, con un ascoltatore solo.
   Stream<String> get messaggi;
@@ -50,10 +52,28 @@ class PresaSuWebSocket implements Presa {
 
   final WebSocketChannel _canale;
 
+  /// Quello che arriva, e in fondo **il perche' di chi ha chiuso**.
+  ///
+  /// Chi chiude un WebSocket puo' dire perche', e chi sta dall'altra parte di
+  /// solito lo butta via. Qui no: e' l'unica frase che viene da chi lo sa
+  /// davvero. «Questa casa adesso non e' collegata» — che il centralino dice
+  /// quando l'add-on non e' attaccato — vale mille volte «il filo si e'
+  /// chiuso», che e' quello che si vedeva prima e che non dice niente a
+  /// nessuno.
   @override
-  Stream<String> get messaggi => _canale.stream.map(
-    (dynamic grezzo) =>
+  Stream<String> get messaggi => _canale.stream.transform(
+    StreamTransformer<dynamic, String>.fromHandlers(
+      handleData: (dynamic grezzo, sink) => sink.add(
         grezzo is String ? grezzo : String.fromCharCodes(grezzo as List<int>),
+      ),
+      handleDone: (sink) {
+        final perche = _canale.closeReason;
+        if (perche != null && perche.trim().isNotEmpty) {
+          sink.addError(FiloCaduto(perche.trim()));
+        }
+        sink.close();
+      },
+    ),
   );
 
   @override

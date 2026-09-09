@@ -62,6 +62,28 @@ void main() {
     await servitore.alza();
   });
 
+  test('sul telefono la porta e\' sempre quella, e se e\' occupata si prende la vicina', () async {
+    /* Un browser tiene quello che una pagina si salva per **origine**, e
+       * l'origine e' fatta anche dalla porta: con una porta a caso a ogni
+       * avvio la plancia ripartiva ogni volta senza la sua configurazione. */
+    final suaCartella = await Directory.systemTemp.createTemp('porta-');
+    final primo = Servitore(filo: () => filo, cartella: suaCartella);
+    final secondo = Servitore(filo: () => filo, cartella: suaCartella);
+    try {
+      await primo.alza(porta: portaDiCasa);
+      expect(primo.porta, greaterThanOrEqualTo(portaDiCasa));
+      expect(primo.porta, lessThan(portaDiCasa + porteDaProvare));
+
+      /* Occupata: la prossima, non una a caso. */
+      await secondo.alza(porta: portaDiCasa);
+      expect(secondo.porta, primo.porta + 1);
+    } finally {
+      await primo.spegni();
+      await secondo.spegni();
+      await suaCartella.delete(recursive: true);
+    }
+  });
+
   tearDown(() async {
     await servitore.spegni();
     await filo.chiudi();

@@ -278,6 +278,20 @@ Quello che si e' fatto, in ordine di peso:
   quanto passa sul filo con la casa. E' la pagina da fotografare in una
   segnalazione, e la parte da guardare per decidere il prossimo passo.
 
+E due cose che non erano prestazioni ma sembravano un guasto:
+
+- **La plancia non si dimentica piu' la sua configurazione.** Il servitore
+  ascoltava su una porta a caso a ogni avvio, e un browser tiene quello che
+  una pagina si salva per *origine* — che e' fatta anche dalla porta. Ogni
+  avvio era quindi una pagina nuova, senza niente: la plancia ripartiva vuota
+  e si riempiva solo quando riusciva a rileggersi dal ponte. Riaprendo l'app
+  fuori casa, col filo ancora in cammino, non ci riusciva, e sembrava che la
+  configurazione fosse andata persa. Adesso la porta e' sempre la stessa.
+- **Quando la casa non risponde, si dice quello che ha detto lei.** La bussata
+  che sceglie la strada non veta piu' il centralino: se non risponde nessuno
+  lo si prova lo stesso, e il no arriva da chi lo sa — «questa casa adesso non
+  e' collegata» invece di «non trovo la casa da nessuna parte».
+
 Quello che resta da capire, e si capisce solo con le misure di un telefono
 vero: se la plancia da sola, dentro il riquadro, va come nell'app di Home
 Assistant. Se si', l'app e' a posto; se no, il peso e' della pagina — tre

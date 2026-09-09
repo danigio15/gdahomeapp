@@ -465,6 +465,32 @@ void main() {
     ponte.conosceIlGzip = true;
   });
 
+  test('quando chi chiude dice perche\', la caduta lo ripete', () async {
+    /* «Il filo si e' chiuso» non dice niente a nessuno. «Questa casa adesso
+     * non e' collegata» — che e' quello che dice il centralino quando
+     * l'add-on non e' attaccato — dice tutto, ed e' l'unica frase che viene
+     * da chi lo sa davvero. */
+    final filo = Filo.fisso(
+      indirizzo: ponte.indirizzo,
+      segno: segnoBuono,
+      chi: chiBuono,
+      chiave: chiaveBuona,
+      attesaMassima: const Duration(seconds: 30),
+    );
+    await filo.apri();
+    expect(filo.dentro, isTrue);
+
+    for (final presa in [...ponte.prese]) {
+      await presa.chiudi(perche: 'casa non collegata');
+    }
+    await _finoA(
+      () => filo.traffico?.contains('casa non collegata') ?? false,
+      entro: const Duration(seconds: 3),
+    );
+    expect(filo.traffico, contains('casa non collegata'));
+    await filo.chiudi();
+  });
+
   test('al risveglio un filo vivo resta dentro', () async {
     final filo = Filo.fisso(
       indirizzo: ponte.indirizzo,

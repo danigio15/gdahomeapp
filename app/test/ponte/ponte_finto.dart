@@ -628,7 +628,7 @@ class TelefonoCollegato {
   /// all'infinito su un segno che non vale piu'. Il ponte vero non ha il
   /// problema — imbusta di corsa — ma il telefono deve funzionare con tutti e
   /// due, e questa e' la parte in cui si guarda.
-  Future<void> chiudi() async {
+  Future<void> chiudi({String? perche}) async {
     _ponte.prese.remove(this);
     try {
       await _coda;
@@ -636,7 +636,7 @@ class TelefonoCollegato {
       /* Quello che era in coda e' andato storto: si chiude lo stesso. */
     }
     try {
-      await _presa.close();
+      await _presa.close(WebSocketStatus.normalClosure, perche);
     } catch (_) {
       /* Gia' chiusa. */
     }

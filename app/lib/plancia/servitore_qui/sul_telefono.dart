@@ -45,6 +45,8 @@ Future<ServitoreDiQuestoSistema?> alzaIlServitore({
     cartella: Directory('${supporto.path}/plancia'),
     lingua: lingua,
   );
-  await servitore.alza();
+  /* La porta e' quella di casa: cosi' la plancia si ritrova la sua
+   * configurazione anche quando riapre l'app senza rete. Vedi [portaDiCasa]. */
+  await servitore.alza(porta: portaDiCasa);
   return _SulTelefono(servitore);
 }

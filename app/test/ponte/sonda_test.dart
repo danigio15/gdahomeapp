@@ -203,12 +203,16 @@ void main() {
       expect(bussate, [ilCentralino.salute]);
     });
 
-    test('quando anche il centralino tace, si dice', () async {
+    test('quando tace anche il centralino, lo si prova lo stesso', () async {
+      /* La bussata serve a scegliere la strada, non a vietarla: un telefono
+       * appena riacceso puo' non ricevere in tempo una risposta che
+       * arriverebbe un secondo dopo. Provando, o si entra, o il no lo dice
+       * chi lo sa — e il centralino sa dire «questa casa non e' collegata». */
       final sonda = sondaChe({inRete: false, ilCentralino: false});
-      await expectLater(
-        sonda.dove(casaCon(dentro: inRete, centralino: ilCentralino)),
-        throwsA(isA<PonteIrraggiungibile>()),
+      final approdo = await sonda.dove(
+        casaCon(dentro: inRete, centralino: ilCentralino),
       );
+      expect(approdo.da, DaDove.dalCentralino);
     });
   });
 

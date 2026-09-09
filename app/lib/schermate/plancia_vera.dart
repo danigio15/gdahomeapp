@@ -102,6 +102,18 @@ class PlanciaVeraState extends State<PlanciaVera> {
   late bool _leggera = widget.impostazioni.planciaLeggera;
   late bool _ibrida = widget.impostazioni.composizioneIbrida;
 
+  /* La pagina si e' aperta mentre la casa non c'era.
+   *
+   * Succede riaprendo l'app fuori casa: il riquadro parte subito, e il filo
+   * col centralino ci mette qualche secondo. La plancia allora non riesce a
+   * rileggersi la configurazione dal ponte e mostra quella che ha — e la
+   * prima volta, su un telefono appena aggiornato, non ha niente: si vede
+   * «la dashboard e' quasi pronta», e sembra che la configurazione sia
+   * andata persa. Quando la casa arriva le si da' un'altra occasione, una
+   * volta sola. */
+  bool _apertaSenzaCasa = false;
+  bool _giaRicaricata = false;
+
   @override
   void initState() {
     super.initState();
@@ -238,6 +250,20 @@ class PlanciaVeraState extends State<PlanciaVera> {
       _pagina = pagina;
       _caricata = false;
       _perche = null;
+      _apertaSenzaCasa = false;
+      _giaRicaricata = false;
+    }
+
+    /* La casa e' arrivata dopo la pagina: la pagina si rifa', cosi' si
+     * rilegge la configurazione dal ponte invece di restare quella vuota di
+     * un momento fa. Una volta sola, che un filo ballerino non deve far
+     * lampeggiare la plancia. */
+    if (_apertaSenzaCasa && collegamento.dentro) {
+      _apertaSenzaCasa = false;
+      _giaRicaricata = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ricarica();
+      });
     }
 
     return Stack(
@@ -252,7 +278,11 @@ class PlanciaVeraState extends State<PlanciaVera> {
             chiave: _riquadro,
             ibrido: _ibrida,
             quandoCaricata: () {
-              if (mounted && !_caricata) setState(() => _caricata = true);
+              if (!mounted) return;
+              if (!collegamento.dentro && !_giaRicaricata) {
+                _apertaSenzaCasa = true;
+              }
+              if (!_caricata) setState(() => _caricata = true);
             },
             quandoFallisce: (perche) {
               if (mounted) setState(() => _perche = perche);

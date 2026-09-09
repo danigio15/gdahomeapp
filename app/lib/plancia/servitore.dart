@@ -96,6 +96,27 @@ const _corpoMassimo = 4 * 1024 * 1024;
 const _biscotto = 'gdahome';
 const _ingresso = 'ingresso';
 
+/// La porta su cui il servitore ascolta sul telefono. **Fissa, e non a caso.**
+///
+/// Un browser tiene quello che una pagina si salva — e la plancia ci salva la
+/// sua configurazione — per **origine**, e l'origine e' fatta anche dalla
+/// porta. Con una porta diversa a ogni avvio, ogni avvio era una pagina nuova
+/// che non si ricordava niente: la plancia ripartiva vuota, con «la dashboard
+/// e' quasi pronta», e si riempiva solo quando riusciva a rileggersi dal
+/// ponte. Col filo giu' — un telefono che si riapre fuori casa, e il
+/// centralino ci mette qualche secondo — non ci riusciva, e sembrava che la
+/// configurazione fosse andata persa. Non era persa: era su un'altra origine,
+/// e nessuno l'avrebbe piu' letta.
+///
+/// Il numero non vuol dire niente: e' alto, fuori da quelli che si assegnano
+/// da soli, e non e' di nessun servizio conosciuto. Su `127.0.0.1` la puo'
+/// raggiungere un'altra app del telefono, ma senza la chiave non ne cava
+/// niente — la chiave nasce col servitore e non e' nell'indirizzo di nessuno.
+const int portaDiCasa = 43117;
+
+/// Quante porte si provano prima di arrendersi a una qualunque.
+const int porteDaProvare = 8;
+
 /// Quanto si aspetta il filo prima di dire alla pagina che non c'e': e' il
 /// tempo di una riconnessione, non di piu'.
 const _attesaDelFilo = Duration(seconds: 20);
@@ -190,9 +211,15 @@ class Servitore {
 
   /// Si mette in ascolto. Su `127.0.0.1` e basta: nessun altro sulla rete
   /// deve poter chiedere niente a questo server.
+  ///
+  /// Con [porta] a zero il sistema ne da' una qualunque: va bene alle prove,
+  /// che ne accendono tante insieme. Sul telefono no — li' si chiede
+  /// [portaDiCasa], e il perche' e' scritto li'.
   Future<void> alza({int porta = 0}) async {
     if (_server != null) return;
-    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, porta);
+    final server = porta == portaDiCasa
+        ? await _laPortaDiCasa()
+        : await HttpServer.bind(InternetAddress.loopbackIPv4, porta);
     /* `dart:io` mette di suo un'intestazione che vieta di mostrare la pagina
      * dentro un riquadro di un'altra origine. Sul telefono non cambia niente
      * — il WebView la apre per intero — ma nel collaudo la plancia sta in un
@@ -201,6 +228,29 @@ class Servitore {
     server.defaultResponseHeaders.removeAll('x-frame-options');
     _server = server;
     unawaited(_ascolta(server));
+  }
+
+  /* La porta di casa, o una vicina.
+   *
+   * Occupata da qualcun altro — un'altra app, o l'app stessa che si e'
+   * riavviata prima che il sistema liberasse la porta — si prova la
+   * successiva, e dopo qualche tentativo una qualunque: meglio una plancia
+   * che riparte smemorata che una plancia che non parte. */
+  Future<HttpServer> _laPortaDiCasa() async {
+    for (var i = 0; i < porteDaProvare; i += 1) {
+      try {
+        return await HttpServer.bind(
+          InternetAddress.loopbackIPv4,
+          portaDiCasa + i,
+        );
+      } on SocketException {
+        _racconta(
+          'la porta ${portaDiCasa + i} e\' occupata, provo la prossima',
+        );
+      }
+    }
+    _racconta('nessuna porta di casa libera: la plancia ripartira\' vuota');
+    return HttpServer.bind(InternetAddress.loopbackIPv4, 0);
   }
 
   /// Chi bussa ha la chiave? Nel biscotto, o — la prima volta —

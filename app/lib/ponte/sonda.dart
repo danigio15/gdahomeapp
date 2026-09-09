@@ -75,9 +75,25 @@ class Sonda {
     void haDettoNo() {
       quantiHannoDettoNo += 1;
       if (quantiHannoDettoNo < candidati.length) return;
-      if (!vincitore.isCompleted) {
-        vincitore.completeError(PonteIrraggiungibile(_perche(casa)));
+      if (vincitore.isCompleted) return;
+      /* Nessuno ha risposto. Se c'e' il centralino, lo si prova lo stesso.
+       *
+       * Questa bussata serve a **scegliere** la strada, non a vietarla: un
+       * telefono appena riacceso, con la radio ancora fredda o la rete del
+       * cellulare che si sveglia, puo' non ricevere in tempo una risposta che
+       * arriverebbe un secondo dopo — e arrendersi li' vuol dire dire «non
+       * trovo la casa» a chi la casa ce l'ha accesa. Provando, o si entra, o
+       * il no lo dice chi lo sa davvero: il centralino risponde «questa casa
+       * adesso non e' collegata», che e' una frase su cui si puo' fare
+       * qualcosa. */
+      final dalCentralino = candidati
+          .where((uno) => uno.da == DaDove.dalCentralino)
+          .firstOrNull;
+      if (dalCentralino != null) {
+        vincitore.complete(dalCentralino);
+        return;
       }
+      vincitore.completeError(PonteIrraggiungibile(_perche(casa)));
     }
 
     for (final candidato in candidati) {

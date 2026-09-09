@@ -305,6 +305,10 @@ perché.
   si rialza da solo, e i valori devono essere quelli veri, non quelli di prima.
 - **Dalla console del ponte, premi «Stacca»** sul telefono mentre l'app è
   aperta: deve accorgersene e dire che va riabbinato, senza restare a girare.
+- **Chiudi e riapri l'app**: la plancia deve tornare com'era *subito*, anche
+  prima che la casa risponda. Se dice «la dashboard è quasi pronta», vuol dire
+  che la pagina non si è ritrovata quello che si era salvata: guarda in «Come
+  va l'app» se il filo è aperto.
 - **Se va a scatti: Assistenza → «Come va l'app».** Usa l'app per un minuto
   — plancia, barra, dispositivi — poi apri quella pagina e fotografala: dice
   quanti fotogrammi sono lenti, se il peso è di Flutter o della scheda video,
