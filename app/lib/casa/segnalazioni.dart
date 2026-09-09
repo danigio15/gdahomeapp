@@ -258,7 +258,8 @@ String spiegaLErrore(Object errore) => switch (errore) {
     'Il centralino non riconosce questa casa: il ponte deve prima '
         'collegarsi da fuori una volta.',
   ComandoRifiutato(codice: 'unknown_command') =>
-    'Il ponte e\' vecchio: aggiornalo per mandare segnalazioni.',
+    'Il ponte in casa e\' piu\' vecchio dell\'app e questa cosa non la sa '
+        'ancora fare: aggiorna l\'add-on «Il ponte».',
   ComandoRifiutato(codice: 'troppo_grande') =>
     'L\'allegato e\' troppo grande: al massimo 10 MB. Un video va tenuto '
         'corto.',

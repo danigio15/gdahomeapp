@@ -172,7 +172,7 @@ void main() {
     );
     expect(
       spiegaLErrore(const ComandoRifiutato('x', codice: 'unknown_command')),
-      contains('aggiornalo'),
+      contains('aggiorna l\'add-on'),
     );
     expect(spiegaLErrore(const ComandoRifiutato('boh')), 'boh');
   });
