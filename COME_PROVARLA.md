@@ -47,7 +47,35 @@ difficile, è solo un'altra strada.
 6. Avvialo.
 
 Per aggiornarlo: riscarichi lo ZIP, risostituisci la cartella, e nel negozio
-premi **Ricarica**.
+premi **Ricarica**; poi nella pagina dell'add-on premi **Aggiorna** (o, dai
+tre puntini, **Ricostruisci**).
+
+#### Dal terminale, in un colpo solo
+
+Se hai l'add-on **Terminal & SSH** (o **Advanced SSH & Web Terminal**), lo
+stesso giro lo fa questo, incollato nel suo terminale. Chiede un token di
+GitHub perché la repository è privata: un token a grana fine su
+`gdahomeapp` soltanto, con **Contents: Read-only** e nient'altro. Non lo
+scrive da nessuna parte: si incolla e sparisce.
+
+```sh
+printf 'Token di GitHub (non si vede mentre lo incolli), poi Invio: '; stty -echo; read -r G; stty echo; echo
+G=$(printf '%s' "$G" | tr -d '[:space:]"'"'"''); case "$G" in github_pat_*|ghp_*) ;; *) G="github_pat_$G";; esac
+rm -rf /tmp/gdahomeapp && mkdir -p /tmp/gdahomeapp \
+&& curl -fsSL -H "Authorization: Bearer $G" https://api.github.com/repos/danigio15/gdahomeapp/tarball/main | tar -xzf - -C /tmp/gdahomeapp \
+&& rm -rf /addons/ponte && cp -r /tmp/gdahomeapp/*/ponte /addons/ponte && rm -rf /tmp/gdahomeapp \
+&& grep '^version' /addons/ponte/config.yaml \
+&& ha addons reload && (ha addons update local_ponte || ha addons rebuild local_ponte) && ha addons restart local_ponte \
+&& ha addons info local_ponte | grep -E '^(version|state):' \
+&& echo "Fatto: il ponte e' aggiornato." || echo "Qualcosa non e' andato: leggi la riga sopra."
+unset G
+```
+
+Scarica il codice, sostituisce `addons/ponte`, ricarica il negozio,
+aggiorna (o ricostruisce) l'add-on e lo riavvia: alla fine stampa versione e
+stato. La cartella vecchia la toglie **solo dopo** che il codice nuovo è
+arrivato, quindi se il token è sbagliato non si rompe niente. Ci mette
+qualche minuto, che è la ricostruzione.
 
 ### B. Con l'indirizzo, se la rendi pubblica
 
