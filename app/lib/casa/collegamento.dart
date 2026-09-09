@@ -166,7 +166,28 @@ class Collegamento {
     _filo = filo;
 
     _guardaIlFilo = filo.stato.listen((stato) {
-      if (stato != StatoDelFilo.dentro && _comeVa == ComeVa.aperta) {
+      if (stato == StatoDelFilo.dentro) {
+        /* **Ed e' tornato su.**
+         *
+         * Qui prima non c'era niente, e si guardava solo la discesa: caduto
+         * il filo si diceva «sto cercando la casa», e quando il filo si
+         * rialzava da solo — cosa che fa, da solo, ed e' tutto il punto —
+         * nessuno lo rimetteva a posto. L'app restava a cercare una casa che
+         * intanto le stava mandando sessanta eventi in quindici secondi: la
+         * plancia dentro il riquadro funzionava, e la riga sopra diceva di
+         * no. La prima volta ci pensa `_leggiLaCasa`, e infatti il difetto
+         * si vedeva solo dalla seconda in poi — cioe' ogni volta che si
+         * riprendeva in mano il telefono. */
+        if (_stato != null && _comeVa != ComeVa.aperta) {
+          _perche = null;
+          _vai(ComeVa.aperta);
+          /* Mentre si era via la plancia puo' essere cambiata, o non essere
+           * mai stata letta. */
+          if (!_pannelloLetto) unawaited(_leggiLaPlancia(filo));
+        }
+        return;
+      }
+      if (_comeVa == ComeVa.aperta) {
         /* Caduto: si resta sulla casa, si dice che si sta ricollegando, e i
          * dati vecchi restano a schermo invece di sparire. */
         _vai(ComeVa.inCammino);

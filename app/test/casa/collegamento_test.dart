@@ -189,6 +189,46 @@ void main() {
     },
   );
 
+  test('quando il filo torna su da solo, l\'app se ne accorge', () async {
+    /* Il difetto si vedeva solo dalla seconda volta in poi: la prima ci
+     * pensa l'apertura, e dalla seconda nessuno rimetteva lo stato a posto.
+     * L'app restava a «sto cercando la casa» su un filo che intanto
+     * funzionava — la plancia dentro il riquadro andava, e la riga sopra
+     * diceva di no. */
+    final ponte = await PonteFinto.alza();
+    await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+    );
+    await collegamento.apri();
+    expect(collegamento.comeVa, ComeVa.aperta);
+
+    /* La casa chiude il filo: si dice che si sta ricollegando. */
+    for (final presa in [...ponte.prese]) {
+      await presa.chiudi();
+    }
+    await _finoA(() => collegamento.comeVa == ComeVa.inCammino);
+    expect(collegamento.comeVa, ComeVa.inCammino);
+
+    /* E quando il filo si rialza da solo, si torna aperti. */
+    await _finoA(
+      () => collegamento.comeVa == ComeVa.aperta,
+      entro: const Duration(seconds: 10),
+    );
+    expect(collegamento.dentro, isTrue);
+
+    await collegamento.chiudi();
+    await ponte.spegni();
+  });
+
   test('un segno rifiutato lo dice, e non finge di riprovare', () async {
     final ponte = await PonteFinto.alza();
     ponte.accettaIlSegno = false;

@@ -501,15 +501,29 @@ class Servitore {
   /// barra della plancia si appoggia sopra i tasti invece di restare a
   /// mezz'aria. Il resto della pagina — i margini ai lati, tutto il suo
   /// disegno — non si tocca.
+  ///
+  /// Va **in fondo alla pagina**, non in testa, e con un selettore piu' lungo
+  /// del necessario. La plancia scrive le sue misure con `!important`, e fra
+  /// due `!important` della stessa forza vince l'ultimo che si legge: messo
+  /// in testa, il mio perdeva e la barra della plancia finiva sotto i tasti
+  /// del telefono. Le regole senza `!important` — i margini in cima — invece
+  /// vincevano lo stesso, ed e' per questo che il difetto si vedeva solo in
+  /// fondo.
   String get stileDelleMisure =>
       '<style id="gdahome-misure">'
       ':root{--gdahome-alto:${margini.alto.round()}px;'
       '--gdahome-basso:${margini.basso.round()}px}'
-      '.app{padding-top:calc(var(--gdahome-alto) + 8px)!important;'
+      'html body .app{padding-top:calc(var(--gdahome-alto) + 8px)!important;'
       'padding-bottom:calc(var(--gdahome-basso) + 40px)!important}'
-      'nav.tabs.bottom-nav-bar.visible{'
+      /* Nascosta resta dov'e' — fuori dallo schermo e' fuori dallo schermo —
+       * e si alza solo quando si vede. Sul tablet largo la si tira su
+       * passandoci sopra, ed e' la stessa cosa. */
+      'html body nav.tabs.bottom-nav-bar.visible{'
       'bottom:calc(var(--gdahome-basso) + 8px)!important}'
-      '.bottom-nav-handle{bottom:calc(var(--gdahome-basso) + 6px)!important}'
+      'html body nav.tabs.bottom-nav-bar:hover{'
+      'bottom:calc(var(--gdahome-basso) + 20px)!important}'
+      'html body .bottom-nav-handle{'
+      'bottom:calc(var(--gdahome-basso) + 6px)!important}'
       '</style>';
 
   String conLePremesse(String pagina) {
@@ -530,14 +544,22 @@ class Servitore {
         'window.__DASHBOARDMODERN_LOCALE__=${jsonEncode(lingua)};'
         'window.__GDAHOME__=true;'
         '</script>'
-        '$stileDelleMisure'
         '${leggera ? stileLeggero : ''}';
     final testa = RegExp(
       r'<head[^>]*>',
       caseSensitive: false,
     ).firstMatch(pagina);
-    if (testa == null) return '$premessa$pagina';
-    return pagina.replaceRange(testa.end, testa.end, premessa);
+    final conLaPremessa = testa == null
+        ? '$premessa$pagina'
+        : pagina.replaceRange(testa.end, testa.end, premessa);
+
+    /* Le misure vanno in fondo: vedi [stileDelleMisure]. */
+    final fine = RegExp(
+      r'</body\s*>',
+      caseSensitive: false,
+    ).firstMatch(conLaPremessa);
+    if (fine == null) return '$conLaPremessa$stileDelleMisure';
+    return conLaPremessa.replaceRange(fine.start, fine.start, stileDelleMisure);
   }
 
   /* ─── Le chiamate REST ─────────────────────────────────────────────────── */

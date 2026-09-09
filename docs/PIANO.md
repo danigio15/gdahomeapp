@@ -294,6 +294,14 @@ E due cose che non erano prestazioni ma sembravano un guasto:
   l'orologio e sotto i tasti — e quanto prendono quelle barre glielo dice
   l'app, in due variabili CSS che si riscrivono girando lo schermo senza
   ricaricare niente.
+- **Quando il filo torna su da solo, l'app se ne accorge.** Il collegamento
+  guardava solo la discesa: caduto il filo si diceva «sto cercando la casa»,
+  e quando il filo si rialzava — cosa che fa da solo, ed e' tutto il punto —
+  nessuno rimetteva lo stato a posto. L'app restava a cercare una casa che
+  intanto le mandava sessanta eventi in quindici secondi: la plancia dentro
+  il riquadro funzionava, e la riga sopra diceva di no. La prima volta ci
+  pensava l'apertura, e infatti il difetto si vedeva solo dalla seconda in
+  poi — cioe' ogni volta che si riprendeva in mano il telefono.
 - **Il filo si riprende dopo che l'app e' stata da parte.** Aprire la presa
   non aveva una scadenza: un telefono che si sveglia con la radio ancora
   fredda apriva una presa che non si apriva e non falliva, e l'app restava a

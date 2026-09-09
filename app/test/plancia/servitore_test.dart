@@ -154,11 +154,13 @@ void main() {
         contains('padding-bottom:calc(var(--gdahome-basso) + 40px)'),
       );
       expect(testo, contains('bottom:calc(var(--gdahome-basso) + 8px)'));
-      /* Lo stile sta in testa, dopo le premesse: vince su quello della
-       * plancia, che arriva dopo. */
+      /* Lo stile sta **in fondo**, dopo il foglio della plancia: fra due
+       * `!important` della stessa forza vince l'ultimo che si legge, e
+       * messo in testa perdeva — la barra della plancia finiva sotto i
+       * tasti del telefono. */
       expect(
         testo.indexOf('gdahome-misure'),
-        lessThan(testo.indexOf('dashboard-runtime')),
+        greaterThan(testo.indexOf('dashboard-runtime')),
       );
     },
   );
