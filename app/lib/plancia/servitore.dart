@@ -183,6 +183,12 @@ class Servitore {
   /// sfocature spariscono. Si cambia da fuori, e vale dalla pagina dopo.
   bool leggera;
 
+  /// Il tema della plancia su questo dispositivo: `auto`, `chiaro`, `scuro`.
+  String tema = 'auto';
+
+  /// Come sta la barra in fondo alla plancia: `scomparsa` o `fissa`.
+  String barra = 'scomparsa';
+
   /// La chiave della porta: nasce con il servitore, e la conosce solo chi
   /// apre la pagina dall'indirizzo che [paginaDi] da'.
   final String chiave = _chiaveNuova();
@@ -537,6 +543,68 @@ class Servitore {
       'bottom:calc(var(--gdahome-basso) + 20px)!important}}'
       '</style>';
 
+  /// Toglie dalla plancia la sua Config, e dice dov'e' andata.
+  ///
+  /// La configurazione della casa adesso sta nel menu dell'app: tenerne due,
+  /// una qui e una li', vorrebbe dire due posti dove cambiare la stessa cosa e
+  /// due occasioni di trovarla diversa. Quella della plancia sparisce.
+  ///
+  /// **Non si tocca un file della dashboard.** I file restano quelli
+  /// pubblicati — e devono restarlo, che il ponte li ricontrolla uno per uno
+  /// (vedi `ponte/src/provenienza.js`) e una plancia con un file cambiato si
+  /// direbbe modificata. Qui si aggiunge soltanto qualcosa **alla pagina
+  /// servita**, che e' lo stesso posto da cui la plancia riceve gia' le misure
+  /// delle barre del telefono.
+  ///
+  /// Si toglie in due modi insieme, e servono tutti e due: lo stile fa sparire
+  /// la voce dalla barra e la sua pagina, e il pezzo di programma chiude
+  /// l'editor se qualcosa riesce ad aprirlo lo stesso — la plancia ha piu' di
+  /// una strada per arrivarci, e nasconderne una sola vorrebbe dire trovarsi
+  /// l'editor addosso da un'altra.
+  String get senzaConfig =>
+      '<style id="gdahome-senza-config">'
+      '#tab-config,#page-config,.tab[data-tab="config"]{display:none!important}'
+      '#editor-modal,#cd-entpick{display:none!important}'
+      '</style>'
+      '<script>(function(){'
+      'var chiudi=function(){'
+      'var quali=["editor-modal","cd-entpick"];'
+      'for(var i=0;i<quali.length;i++){'
+      'var uno=document.getElementById(quali[i]);if(uno)uno.remove();}'
+      '};'
+      /* Un osservatore e non un controllo ogni tanto: l'editor si apre
+       * mettendo un nodo nel corpo della pagina, e un osservatore se ne
+       * accorge nello stesso fotogramma. Un controllo a tempo lo lascerebbe
+       * vedere per un attimo, ed e' proprio l'attimo in cui uno ci mette il
+       * dito. */
+      'if(window.MutationObserver){'
+      'new MutationObserver(chiudi).observe(document.documentElement,'
+      '{childList:true,subtree:true});}'
+      'document.addEventListener("DOMContentLoaded",chiudi);'
+      'chiudi();'
+      '})();</script>';
+
+  /// Il tema e la barra, scritti dove la plancia se li aspetta.
+  ///
+  /// Sono di **questo dispositivo** — il tablet in cucina puo' stare sullo
+  /// scuro mentre il telefono segue il sistema — e la dashboard li tiene
+  /// apposta fuori dalle chiavi che si sincronizzano. Quando la sua Config
+  /// sparisce, li tiene l'app; e siccome la plancia li legge dal deposito
+  /// locale della pagina, glieli si scrive li' **prima** che parta, se no li
+  /// legge vuoti e poi cambia colore sotto gli occhi.
+  String get leMieMisureDellaPlancia {
+    final quale = switch (tema) {
+      'chiaro' => 'light',
+      'scuro' => 'dark',
+      _ => 'auto',
+    };
+    final come = barra == 'fissa' ? 'fixed' : 'auto';
+    return '<script>try{'
+        'localStorage.setItem("cd_theme",${jsonEncode(quale)});'
+        'localStorage.setItem("cd_navbar_mode",${jsonEncode(come)});'
+        '}catch(e){}</script>';
+  }
+
   String conLePremesse(String pagina) {
     final quale = pannello;
     final premessa =
@@ -555,6 +623,7 @@ class Servitore {
         'window.__DASHBOARDMODERN_LOCALE__=${jsonEncode(lingua)};'
         'window.__GDAHOME__=true;'
         '</script>'
+        '$leMieMisureDellaPlancia'
         '${leggera ? stileLeggero : ''}';
     final testa = RegExp(
       r'<head[^>]*>',
@@ -564,13 +633,15 @@ class Servitore {
         ? '$premessa$pagina'
         : pagina.replaceRange(testa.end, testa.end, premessa);
 
-    /* Le misure vanno in fondo: vedi [stileDelleMisure]. */
+    /* Le misure e la Config tolta vanno in fondo: vedi [stileDelleMisure],
+     * che spiega perche' in testa perdevano contro lo stile della plancia. */
+    final inFondo = '$stileDelleMisure$senzaConfig';
     final fine = RegExp(
       r'</body\s*>',
       caseSensitive: false,
     ).firstMatch(conLaPremessa);
-    if (fine == null) return '$conLaPremessa$stileDelleMisure';
-    return conLaPremessa.replaceRange(fine.start, fine.start, stileDelleMisure);
+    if (fine == null) return '$conLaPremessa$inFondo';
+    return conLaPremessa.replaceRange(fine.start, fine.start, inFondo);
   }
 
   /* ─── Le chiamate REST ─────────────────────────────────────────────────── */

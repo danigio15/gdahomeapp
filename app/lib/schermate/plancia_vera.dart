@@ -105,6 +105,8 @@ class PlanciaVeraState extends State<PlanciaVera> {
   StreamSubscription<void>? _ascoltoLaConfigurazione;
   late bool _leggera = widget.impostazioni.planciaLeggera;
   late bool _ibrida = widget.impostazioni.composizioneIbrida;
+  late String _tema = widget.impostazioni.temaDellaPlancia;
+  late String _barra = widget.impostazioni.barraDellaPlancia;
 
   /* La pagina si e' aperta mentre la casa non c'era.
    *
@@ -147,6 +149,8 @@ class PlanciaVeraState extends State<PlanciaVera> {
     );
     if (!mounted) return;
     servitore?.leggera = widget.impostazioni.planciaLeggera;
+    servitore?.tema = widget.impostazioni.temaDellaPlancia;
+    servitore?.barra = widget.impostazioni.barraDellaPlancia;
     setState(() => _servitore = servitore);
   }
 
@@ -157,12 +161,23 @@ class PlanciaVeraState extends State<PlanciaVera> {
     if (!mounted) return;
     final leggera = widget.impostazioni.planciaLeggera;
     final ibrida = widget.impostazioni.composizioneIbrida;
+    final tema = widget.impostazioni.temaDellaPlancia;
+    final barra = widget.impostazioni.barraDellaPlancia;
     final cambiaLaComposizione = ibrida != _ibrida;
-    if (leggera == _leggera && !cambiaLaComposizione) return;
+    if (leggera == _leggera &&
+        tema == _tema &&
+        barra == _barra &&
+        !cambiaLaComposizione) {
+      return;
+    }
     _servitore?.leggera = leggera;
+    _servitore?.tema = tema;
+    _servitore?.barra = barra;
     setState(() {
       _leggera = leggera;
       _ibrida = ibrida;
+      _tema = tema;
+      _barra = barra;
       _caricata = false;
       _perche = null;
     });

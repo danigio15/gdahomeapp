@@ -278,6 +278,22 @@ const albero = <Famiglia>[
   ),
   Famiglia('L\'app', 'Il telefono, non la casa', [
     Voce(
+      'Tema della plancia',
+      'Chiaro, scuro, o come il telefono. Vale solo su questo dispositivo: '
+          'il tablet in cucina puo\' stare sullo scuro e il telefono no',
+      disegno: 'evidenza',
+      viene: Provenienza.dellApp,
+      pronta: true,
+    ),
+    Voce(
+      'Barra della plancia',
+      'La fila in fondo alla plancia: sempre visibile, o a scomparsa. Anche '
+          'questa e\' di questo dispositivo',
+      disegno: 'mie',
+      viene: Provenienza.dellApp,
+      pronta: true,
+    ),
+    Voce(
       'Plancia leggera',
       'Spegne le sfocature della plancia sui telefoni lenti. Di serie e\' spenta: '
           'le animazioni restano',

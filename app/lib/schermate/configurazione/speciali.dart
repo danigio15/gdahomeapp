@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../casa/collegamento.dart';
+import '../../casa/impostazioni.dart';
 import '../../casa/plancia/scatto.dart';
 import '../../vestito/pezzi.dart';
 import 'pezzi.dart';
@@ -849,4 +850,119 @@ class SchermataDellIrrigazione extends StatelessWidget {
       ];
     },
   );
+}
+
+/* ─── Il telefono, non la casa ───────────────────────────────────────────── */
+
+/// Il tema e la barra della plancia: due scelte di **questo dispositivo**.
+///
+/// Nella dashboard stavano nella sua pagina Config, e non viaggiavano col
+/// resto della configurazione: la dashboard le tiene apposta fuori dalle
+/// chiavi che si sincronizzano, perche' il tablet in cucina puo' stare sullo
+/// scuro mentre il telefono segue il sistema. Quando la Config e' uscita dalla
+/// plancia sono uscite con lei, e siccome sono del dispositivo le tiene l'app:
+/// il servitore le scrive nella pagina prima che parta.
+class SchermataDelDispositivo extends StatelessWidget {
+  const SchermataDelDispositivo({
+    super.key,
+    required this.titolo,
+    required this.sotto,
+    required this.impostazioni,
+    required this.ilTema,
+  });
+
+  final String titolo;
+  final String sotto;
+  final Impostazioni impostazioni;
+
+  /// `true` per il tema, `false` per la barra: due voci, una schermata.
+  final bool ilTema;
+
+  static const _temi = <(String, String, String)>[
+    ('auto', 'Come il telefono', 'Segue il tema del sistema'),
+    ('chiaro', 'Chiaro', 'Sempre chiara'),
+    ('scuro', 'Scuro', 'Sempre scura'),
+  ];
+
+  static const _barre = <(String, String, String)>[
+    (
+      'scomparsa',
+      'A scomparsa',
+      'Si chiama con la maniglia, e lascia tutto lo schermo alla casa',
+    ),
+    ('fissa', 'Sempre visibile', 'Sta li\', in fondo, e non si nasconde'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final scelte = ilTema ? _temi : _barre;
+    return Scaffold(
+      appBar: AppBar(title: Text(titolo)),
+      body: SafeArea(
+        top: false,
+        child: StreamBuilder<void>(
+          stream: impostazioni.cambiamenti,
+          builder: (qui, _) {
+            final adesso = ilTema
+                ? impostazioni.temaDellaPlancia
+                : impostazioni.barraDellaPlancia;
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 16),
+                  child: Text(
+                    sotto,
+                    style: Theme.of(qui).textTheme.bodyMedium?.copyWith(
+                      color: colori.onSurfaceVariant,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+                Scheda(
+                  padding: EdgeInsets.zero,
+                  child: RadioGroup<String>(
+                    groupValue: adesso,
+                    onChanged: (scelto) {
+                      if (scelto == null) return;
+                      unawaited(
+                        impostazioni.metti(
+                          temaDellaPlancia: ilTema ? scelto : null,
+                          barraDellaPlancia: ilTema ? null : scelto,
+                        ),
+                      );
+                    },
+                    child: Column(
+                      children: [
+                        for (final (quale, nome, spiega) in scelte)
+                          RadioListTile<String>(
+                            value: quale,
+                            title: Text(nome),
+                            subtitle: Text(spiega),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Scheda(
+                  colore: colori.surfaceContainerHigh,
+                  child: Text(
+                    'Vale su questo telefono e basta: gli altri dispositivi '
+                    'di casa tengono la loro scelta. La plancia si ricarica '
+                    'da sola per applicarla.',
+                    style: Theme.of(qui).textTheme.bodySmall?.copyWith(
+                      color: colori.onSurfaceVariant,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
 }

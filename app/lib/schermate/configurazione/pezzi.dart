@@ -15,9 +15,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../casa/collegamento.dart';
-import '../../casa/entita.dart';
 import '../../casa/plancia/scatto.dart';
 import '../../vestito/pezzi.dart';
+import 'cercatore.dart';
 
 /// Il guscio di una schermata della configurazione.
 ///
@@ -352,6 +352,8 @@ class CampoDiEntita extends StatelessWidget {
     required this.cambiato,
     required this.collegamento,
     this.domini = const [],
+    this.chiave = '',
+    this.contesto = '',
   });
 
   final String etichetta;
@@ -359,10 +361,24 @@ class CampoDiEntita extends StatelessWidget {
   final ValueChanged<String> cambiato;
   final Collegamento collegamento;
 
-  /// Se non e' vuoto, il cercatore parte da questi domini: `light`, `switch`.
-  /// Si possono cercare anche gli altri — un filtro che non si puo' togliere
-  /// e' una casa in cui manca meta' della roba.
+  /// Se non e' vuoto, il cercatore ne tiene conto: `light`, `switch`. Non e'
+  /// un filtro che si subisce — le altre si cercano lo stesso, che un filtro
+  /// che non si puo' togliere e' una casa in cui manca meta' della roba.
   final List<String> domini;
+
+  /// Il riferimento della casella, quando ce l'ha: `dm.energy_potenza_batteria`.
+  /// Insieme all'etichetta e' quello che fa capire al cercatore cosa vuole
+  /// questa casella, ed e' come lo capisce la dashboard.
+  final String chiave;
+
+  /// Di che cosa e' questa casella: «una luce», «una finestra».
+  ///
+  /// Non si vede, e serve al cercatore. Dentro un elenco l'etichetta di una
+  /// casella e' spesso «Entita'» e basta — che e' giusto, perche' sopra c'e'
+  /// gia' scritto «Aggiungi una luce» — ma da sola non dice niente su cosa
+  /// vada messo dentro, e il cercatore resterebbe cieco proprio dove servirebbe
+  /// di piu'.
+  final String contesto;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -387,7 +403,10 @@ class CampoDiEntita extends StatelessWidget {
             final scelta = await cercaUnEntita(
               context,
               collegamento: collegamento,
+              chiave: chiave,
+              etichetta: contesto.isEmpty ? etichetta : '$etichetta $contesto',
               domini: domini,
+              adesso: valore,
             );
             if (scelta != null) cambiato(scelta);
           },
@@ -397,116 +416,4 @@ class CampoDiEntita extends StatelessWidget {
       ),
     ],
   );
-}
-
-/// Il cercatore: si apre dal basso, si scrive, si sceglie.
-///
-/// Cerca sul nome **e** sull'identificativo, perche' chi configura sa spesso
-/// solo uno dei due: chi ha appena collegato una presa ricorda «cucina», chi
-/// legge la Config della dashboard ricorda `switch.presa_03`.
-Future<String?> cercaUnEntita(
-  BuildContext contesto, {
-  required Collegamento collegamento,
-  List<String> domini = const [],
-}) => showModalBottomSheet<String>(
-  context: contesto,
-  isScrollControlled: true,
-  showDragHandle: true,
-  builder: (dentro) => _Cercatore(collegamento: collegamento, domini: domini),
-);
-
-class _Cercatore extends StatefulWidget {
-  const _Cercatore({required this.collegamento, required this.domini});
-  final Collegamento collegamento;
-  final List<String> domini;
-
-  @override
-  State<_Cercatore> createState() => _CercatoreState();
-}
-
-class _CercatoreState extends State<_Cercatore> {
-  String _cercato = '';
-  late bool _soloIMiei = widget.domini.isNotEmpty;
-
-  @override
-  Widget build(BuildContext context) {
-    final casa = widget.collegamento.stato;
-    final tutte = casa?.tutte() ?? const <Entita>[];
-    final cercato = _cercato.trim().toLowerCase();
-    final trovate = [
-      for (final una in tutte)
-        if ((!_soloIMiei || widget.domini.contains(una.dominio)) &&
-            (cercato.isEmpty ||
-                una.id.toLowerCase().contains(cercato) ||
-                una.nome.toLowerCase().contains(cercato)))
-          una,
-    ];
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.78,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: TextField(
-                autofocus: true,
-                onChanged: (scritto) => setState(() => _cercato = scritto),
-                decoration: InputDecoration(
-                  hintText: 'Cerca fra ${tutte.length} entita\'',
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
-              ),
-            ),
-            if (widget.domini.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: Row(
-                  children: [
-                    FilterChip(
-                      label: Text('Solo ${widget.domini.join(', ')}'),
-                      selected: _soloIMiei,
-                      onSelected: (acceso) =>
-                          setState(() => _soloIMiei = acceso),
-                    ),
-                  ],
-                ),
-              ),
-            Expanded(
-              child: trovate.isEmpty
-                  ? const StatoVuoto(
-                      icona: Icons.search_off_rounded,
-                      titolo: 'Nessuna entita\'',
-                      sotto: 'Prova con meno lettere, o togli il filtro.',
-                    )
-                  : ListView.builder(
-                      itemCount: trovate.length,
-                      itemBuilder: (dentro, quale) {
-                        final una = trovate[quale];
-                        return ListTile(
-                          dense: true,
-                          title: Text(una.nome),
-                          subtitle: Text(
-                            una.id,
-                            style: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 12,
-                            ),
-                          ),
-                          trailing: Text(
-                            una.stato,
-                            style: Theme.of(dentro).textTheme.labelSmall,
-                          ),
-                          onTap: () => Navigator.of(dentro).pop(una.id),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

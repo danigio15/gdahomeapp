@@ -127,6 +127,11 @@ class _SchermataDelleCaselleState extends State<SchermataDelleCaselle> {
           for (final una in daMostrare) ...[
             CampoDiEntita(
               etichetta: una.etichetta,
+              /* La chiave della casella conta quanto l'etichetta: in
+               * `dm.energy_potenza_batteria` ci sono tre parole che dicono
+               * cosa la casella vuole, ed e' da li' che la dashboard tira
+               * fuori i suoi suggerimenti. */
+              chiave: una.chiave,
               valore: '${scritte[una.chiave] ?? ''}',
               collegamento: widget.collegamento,
               cambiato: (scritto) {

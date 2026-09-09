@@ -143,6 +143,61 @@ L'alberatura sta scritta in un posto solo,
 schede resti fuori. Se domani la plancia ne aggiunge una, la prova se ne
 accorge prima di noi.
 
+## La Config sparisce dalla plancia
+
+Tenerne due — una nella dashboard e una nell'app — vorrebbe dire due posti dove
+cambiare la stessa cosa, e due occasioni di trovarla diversa. Quindi quella
+della plancia sparisce: la voce **Config** non c'è più nella barra in fondo, e
+l'editor non si apre più.
+
+**Non si tocca un file della dashboard.** I file restano quelli pubblicati — e
+devono restarlo, perché il ponte li ricontrolla uno per uno
+([`TUTELA.md`](TUTELA.md)) e una plancia con un file cambiato si direbbe
+modificata. Si aggiunge soltanto qualcosa **alla pagina servita**, che è lo
+stesso posto da cui la plancia riceve già le misure delle barre del telefono
+(`app/lib/plancia/servitore.dart`, `senzaConfig`).
+
+Si toglie in due modi insieme, e servono tutti e due: uno stile fa sparire la
+voce e la sua pagina, e un pezzo di programma chiude l'editor se qualcosa
+riesce ad aprirlo lo stesso — la plancia ha più di una strada per arrivarci, e
+nasconderne una sola vuol dire ritrovarselo addosso da un'altra.
+
+Il collaudo lo verifica senza che nessuno glielo chieda: legge la barra della
+plancia e dice quante pagine ha. Erano venti con Config, sono **diciannove**.
+
+Due cose che stavano in quella pagina non sono configurazione della casa ma di
+**questo dispositivo** — il tema e la barra della plancia — e la dashboard le
+tiene apposta fuori dalle chiavi che si sincronizzano: il tablet in cucina può
+stare sullo scuro mentre il telefono segue il sistema. Sono uscite con il resto
+e adesso stanno nel menu, sotto «L'app»: le tiene l'app, e il servitore le
+scrive nella pagina prima che parta.
+
+## Il cercatore di entità è lo stesso
+
+La parte della Config che si usa di più non è una schermata: è **la lente**.
+Ogni casella la apre, e quella maschera è dove si passa il tempo.
+
+Quella dell'app non è rifatta a somiglianza: `app/lib/casa/cerca/indice.dart` è
+il porto riga per riga di `entity-search-index.js`, la parte della dashboard che
+cerca e che indovina. Le stesse regole, le stesse parole italiane e inglesi, gli
+stessi punteggi:
+
+- **cerca** ripiegando gli accenti e spezzando in parole, dando più peso a
+  un'entità il cui identificativo comincia con quello che si è scritto che a una
+  che se lo trova in mezzo al nome, e facendo scendere quelle che non rispondono;
+- **indovina** cosa vuole la casella da come è descritta — «Sensore di
+  temperatura» vuole un `sensor` con `device_class: temperature` e i gradi;
+  «Valvola» vuole un `valve` o uno `switch` — e le entità che lo soddisfano
+  stanno in cima con la loro pastiglia, **anche senza scrivere niente**.
+
+Perché un porto e non una cosa nuova: chi configura la stessa casa dal browser
+e dal telefono deve vedere gli stessi suggerimenti. Se qui si indovinasse in un
+altro modo, la stessa casella proporrebbe due cose diverse a seconda di dove la
+si apre, e una delle due sembrerebbe sbagliata.
+
+Quando la dashboard cambia quelle regole, questo file va riallineato: la prova
+`app/test/cercatore_test.dart` tiene fermi i casi che contano.
+
 ## Cosa scrive, e dove finisce
 
 Niente di nuovo: la configurazione è già un mucchio di chiavi che stanno sul
@@ -185,6 +240,10 @@ dietro un telefono non lo sa e non deve saperlo.
 | La schermata che la mostra | `app/lib/schermate/configurazione.dart` | ✅ |
 | La voce nel menu | `app/lib/schermate/menu.dart` | ✅ |
 | La prova che non si perde una scheda | `app/test/configurazione_test.dart` | ✅ |
-| Le schermate delle singole voci | `app/lib/schermate/configurazione/` | ⬜ |
+| Le schermate delle singole voci (23 su 25) | `app/lib/schermate/configurazione/` | ✅ |
+| Il cercatore di entità, portato dalla plancia | `app/lib/casa/cerca/indice.dart` | ✅ |
+| La Config tolta dalla plancia servita | `app/lib/plancia/servitore.dart` | ✅ |
+| Il tema e la barra, usciti con lei | `app/lib/casa/impostazioni.dart` | ✅ |
+| L'autorilevamento | `app/lib/schermate/configurazione/` | ⬜ |
 | Le persone, accanto ai dispositivi | `ponte/src/dispositivi.js` | ⬜ |
 | Chi comanda la configurazione | `ponte/`, `app/` | ⬜ |

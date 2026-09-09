@@ -504,6 +504,10 @@ class _ModuloState extends State<_Modulo> {
                 switch (campo.tipo) {
                   Tipo.entita => CampoDiEntita(
                     etichetta: campo.etichetta,
+                    /* «una luce», «una finestra»: e' quello che fa capire al
+                     * cercatore cosa cercare, quando l'etichetta della casella
+                     * dice solo «Entita'». */
+                    contesto: widget.unaCosa,
                     valore: '${_cosa[campo.chiave] ?? ''}',
                     domini: campo.domini,
                     collegamento: widget.collegamento,

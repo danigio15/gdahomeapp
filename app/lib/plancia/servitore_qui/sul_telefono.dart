@@ -17,6 +17,12 @@ abstract interface class ServitoreDiQuestoSistema {
   /// La plancia leggera: vale dalla pagina dopo.
   set leggera(bool valore);
 
+  /// Il tema della plancia su questo dispositivo — `auto`, `chiaro`, `scuro`
+  /// — e come sta la sua barra in fondo — `scomparsa` o `fissa`. Erano nella
+  /// Config della plancia; quella e' uscita, e questi sono venuti con lei.
+  set tema(String quale);
+  set barra(String come);
+
   /// Quanto prendono le barre del telefono: vale dalla pagina dopo, e
   /// intanto la cambia da fuori chi mostra il riquadro.
   set margini(({double alto, double basso}) quanto);
@@ -34,6 +40,12 @@ class _SulTelefono implements ServitoreDiQuestoSistema {
 
   @override
   set leggera(bool valore) => _servitore.leggera = valore;
+
+  @override
+  set tema(String quale) => _servitore.tema = quale;
+
+  @override
+  set barra(String come) => _servitore.barra = come;
 
   @override
   set margini(({double alto, double basso}) quanto) =>

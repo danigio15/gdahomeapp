@@ -181,6 +181,7 @@ class _HomeState extends State<Home> {
                       ),
                       Sezione.configurazione => SchermataDellaConfigurazione(
                         collegamento: collegamento,
+                        impostazioni: widget.impostazioni,
                       ),
                       Sezione.acquisti => SchermataDegliAcquisti(
                         collegamento: collegamento,

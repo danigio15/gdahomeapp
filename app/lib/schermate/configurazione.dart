@@ -18,6 +18,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
+import '../casa/impostazioni.dart';
 import '../vestito/oggetti.dart';
 import '../vestito/pezzi.dart';
 import 'configurazione/albero.dart';
@@ -27,10 +28,12 @@ class SchermataDellaConfigurazione extends StatelessWidget {
   const SchermataDellaConfigurazione({
     super.key,
     required this.collegamento,
+    required this.impostazioni,
     this.apri,
   });
 
   final Collegamento collegamento;
+  final Impostazioni impostazioni;
 
   /// Cosa fare quando si tocca una voce pronta. Di serie apre la sua
   /// schermata; nelle prove si guarda e basta.
@@ -42,7 +45,7 @@ class SchermataDellaConfigurazione extends StatelessWidget {
       suo(voce);
       return;
     }
-    final schermata = schermataDi(voce, collegamento);
+    final schermata = schermataDi(voce, collegamento, impostazioni);
     if (schermata == null) return;
     Navigator.of(contesto)
         .push(MaterialPageRoute<void>(builder: (dentro) => schermata));

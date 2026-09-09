@@ -9,6 +9,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../casa/collegamento.dart';
+import '../../casa/impostazioni.dart';
 import 'albero.dart';
 import 'caselle.dart';
 import 'elenco.dart';
@@ -18,6 +19,7 @@ import 'speciali.dart';
 Widget? schermataDi(
   Voce voce,
   Collegamento collegamento,
+  Impostazioni impostazioni,
 ) => switch (voce.titolo) {
   /* ── La casa ── */
   'Generali' => SchermataDeiGenerali(collegamento: collegamento),
@@ -280,6 +282,24 @@ Widget? schermataDi(
   ),
 
   /* ── Manutenzione ── */
+  /* ── Il telefono, non la casa ── */
+  'Tema della plancia' => SchermataDelDispositivo(
+    titolo: 'Tema della plancia',
+    sotto:
+        'Chiaro, scuro, o come il telefono. Nella dashboard stava nella sua '
+        'Config: e\' uscita di la\' insieme al resto.',
+    impostazioni: impostazioni,
+    ilTema: true,
+  ),
+  'Barra della plancia' => SchermataDelDispositivo(
+    titolo: 'Barra della plancia',
+    sotto:
+        'La fila in fondo alla plancia: sempre visibile, o a scomparsa con la '
+        'maniglia.',
+    impostazioni: impostazioni,
+    ilTema: false,
+  ),
+
   'Sostituzioni' => SchermataDelleSostituzioni(collegamento: collegamento),
   'Runtime' => SchermataDelRuntime(collegamento: collegamento),
   'Riporta tutto com\'era' => SchermataDelRipristino(

@@ -1020,6 +1020,23 @@ try {
   await aspettaCheCompaia(pagina, "Aggiungi una luce");
   await attendi(900);
   await scatta(pagina, "6o-configurazione-luci");
+
+  /* Il cercatore di entita': e' quello della plancia, portato in Dart. Si
+   * apre da una casella che sa cosa vuole — «Entita'» di una luce — e deve
+   * far vedere le pastiglie coi conti e le suggerite in cima. */
+  await premi(pagina, "Aggiungi una luce");
+  await aspettaCheCompaia(pagina, "Nome");
+  await attendi(500);
+  await premi(pagina, "Cerca fra le entita' di casa");
+  await aspettaCheCompaia(pagina, "Scegli l'entita'");
+  await attendi(900);
+  await scatta(pagina, "6p-cercatore");
+  await premi(pagina, "Annulla");
+  await attendi(600);
+  /* Il modulo e' un foglio che sale dal basso: si chiude toccando fuori, e
+   * quel «fuori» nell'albero dell'accessibilita' si chiama «Dismiss». */
+  await premi(pagina, "Dismiss");
+  await attendi(600);
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
 
