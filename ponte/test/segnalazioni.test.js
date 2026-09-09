@@ -10,10 +10,11 @@ import { join } from "node:path";
 
 import { Commissioni } from "../src/commissioni.js";
 import {
-  baseDelCentralino,
+  ALLEGATO_MASSIMO,
   CentralinoHaDettoNo,
   Segnalazioni,
   SenzaCentralino,
+  baseDelCentralino,
 } from "../src/segnalazioni.js";
 
 const IDENTITA = { casa: `casa_${"c".repeat(32)}`, segreto: "il-segreto-della-casa" };
@@ -39,14 +40,19 @@ async function centralinoFinto() {
     };
   };
   const server = createServer(async (richiesta, risposta) => {
-    let corpo = "";
-    for await (const pezzo of richiesta) corpo += pezzo;
-    const detto = corpo ? JSON.parse(corpo) : {};
+    const pezzi = [];
+    for await (const pezzo of richiesta) pezzi.push(pezzo);
+    const corpo = Buffer.concat(pezzi);
+    const eUnFile = !(richiesta.headers["content-type"] || "").startsWith("application/json");
+    const detto = corpo.length && !eUnFile ? JSON.parse(corpo.toString("utf8")) : {};
     arrivate.push({
       metodo: richiesta.method,
       via: richiesta.url,
       autorizzazione: richiesta.headers.authorization,
       detto,
+      tipo: richiesta.headers["content-type"],
+      nome: richiesta.headers["x-gdahome-nome"],
+      byte: eUnFile ? corpo : null,
     });
     const json = (cosa, stato = 200) => {
       risposta.writeHead(stato, { "content-type": "application/json" });
@@ -90,6 +96,14 @@ async function centralinoFinto() {
     if ((m = /^\/segnalazioni\/(\d+)\/risposte$/.exec(via)) && richiesta.method === "POST") {
       issue.get(Number(m[1])).messaggi.push({ da: "casa", testo: detto.testo, il: "t1" });
       return json(filo(Number(m[1])));
+    }
+    if ((m = /^\/segnalazioni\/(\d+)\/allegati$/.exec(via)) && richiesta.method === "POST") {
+      issue.get(Number(m[1])).messaggi.push({
+        da: "casa",
+        testo: `📷 ${richiesta.headers["x-gdahome-nome"]} (${corpo.length} B)`,
+        il: "t4",
+      });
+      return json(filo(Number(m[1])), 201);
     }
     if (via === "/chat" && richiesta.method === "GET")
       return json({ chat: chat ? filo(chat) : null });
@@ -363,4 +377,68 @@ test("dall'app: i comandi ponte/segnalazioni e ponte/chat, e i loro no", async (
 
   await centralino.spegni();
   rmSync(cartella, { recursive: true, force: true });
+});
+
+test("un allegato va al centralino in binario, col nome e il tipo, e torna nel filo", async () => {
+  const centralino = await centralinoFinto();
+  const con = new Commissioni({
+    casa: { indirizzo: "http://supervisor/core", segno: "s" },
+    registro: ZITTO,
+    segnalazioni: new Segnalazioni({
+      identita: IDENTITA,
+      centralino: centralino.indirizzo,
+      cartella: mkdtempSync(join(tmpdir(), "segnalazioni-")),
+      registro: ZITTO,
+    }),
+  });
+  const creata = await con.rispondi({
+    id: 1,
+    type: "ponte/segnalazioni/crea",
+    tipo: "problema",
+    titolo: "La luce",
+    corpo: "Non va",
+  });
+  const numero = creata.result.numero;
+  const byte = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4, 5]);
+
+  const conFoto = await con.rispondi({
+    id: 2,
+    type: "ponte/segnalazioni/allega",
+    numero,
+    nome: "cucina.jpg",
+    tipo: "image/jpeg",
+    byte: byte.toString("base64"),
+  });
+  assert.equal(conFoto.success, true);
+  assert.match(conFoto.result.messaggi.at(-1).testo, /^📷 cucina\.jpg \(9 B\)/);
+
+  const arrivato = centralino.arrivate.find((una) => /\/allegati$/.test(una.via));
+  assert.equal(arrivato.metodo, "POST");
+  assert.equal(arrivato.tipo, "image/jpeg");
+  assert.equal(arrivato.nome, "cucina.jpg");
+  assert.deepEqual([...arrivato.byte], [...byte]);
+
+  /* Senza file, o con roba che non e' base64: no. */
+  const senza = await con.rispondi({
+    id: 3,
+    type: "ponte/segnalazioni/allega",
+    numero,
+    byte: "!!!",
+  });
+  assert.equal(senza.success, false);
+  assert.equal(senza.error.code, "invalid_format");
+  /* Troppo grande: lo dice il ponte, senza nemmeno chiamare. */
+  const prima = centralino.arrivate.length;
+  const grosso = await con.rispondi({
+    id: 4,
+    type: "ponte/segnalazioni/allega",
+    numero,
+    nome: "film.mp4",
+    tipo: "video/mp4",
+    byte: Buffer.alloc(ALLEGATO_MASSIMO + 1).toString("base64"),
+  });
+  assert.equal(grosso.success, false);
+  assert.equal(grosso.error.code, "troppo_grande");
+  assert.equal(centralino.arrivate.length, prima);
+  await centralino.spegni();
 });

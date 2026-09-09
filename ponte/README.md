@@ -135,6 +135,9 @@ e il centralino le apre come issue di GitHub per chi mantiene l'app. Qui non
 c'e' nessun gettone di nessuno; una copia di quello che si e' scritto sta in
 `/data/segnalazioni.json`, cosi' l'app vede subito qualcosa anche quando il
 centralino e' lento. Senza centralino non c'e' dove spedire, e si dice cosi'.
+Con `ponte/segnalazioni/allega` e `ponte/chat/allega` passano anche le foto e
+i video: arrivano dall'app in base64 dentro il messaggio, e al centralino
+vanno cosi' come sono, in binario. Dieci megabyte al massimo.
 
 ## Le opzioni
 

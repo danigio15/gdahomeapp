@@ -2,6 +2,9 @@
 /// che ne ricava.
 library;
 
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/segnalazioni.dart';
 import 'package:gdahome/ponte/errori.dart';
@@ -66,6 +69,65 @@ void main() {
     final risposta = await mie.rispondi(7, 'Grazie!');
     expect(risposta.messaggi, hasLength(3));
     expect(risposta.messaggi.last.testo, 'Grazie!');
+  });
+
+  test(
+    'un allegato va al ponte in base64, e torna nel filo come messaggio',
+    () async {
+      final mie = Segnalazioni(filo);
+      final aperta = await mie.crea(
+        tipo: TipoDiSegnalazione.problema,
+        titolo: 'La luce',
+        corpo: 'Non va.',
+      );
+      final foto = Allegato(
+        nome: 'cucina.jpg',
+        tipo: 'image/jpeg',
+        byte: Uint8List.fromList([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]),
+      );
+      expect(foto.foto, isTrue);
+      expect(foto.peso, '7 B');
+
+      final conFoto = await mie.allega(aperta.numero, foto);
+      expect(conFoto.messaggi.last.testo, '📷 cucina.jpg (7 B)');
+      expect(conFoto.messaggi.last.dallaCasa, isTrue);
+
+      final arrivato = ponte.allegati.single;
+      expect(arrivato['nome'], 'cucina.jpg');
+      expect(arrivato['tipo'], 'image/jpeg');
+      expect(arrivato['byte'], 7);
+      final mandato = ponte.arrivati.lastWhere(
+        (uno) => uno['type'] == 'ponte/segnalazioni/allega',
+      );
+      expect(base64.decode(mandato['byte'] as String), foto.byte);
+
+      /* Anche alla chat, che nasce con lui se non c'era. */
+      final chat = await mie.allegaAllaChat(
+        Allegato(nome: 'clip.mp4', tipo: 'video/mp4', byte: Uint8List(4)),
+      );
+      expect(chat.chat, isTrue);
+      expect(chat.messaggi.last.testo, '🎬 clip.mp4 (4 B)');
+    },
+  );
+
+  test('i pesi si leggono, e i no sugli allegati diventano frasi', () {
+    expect(pesoLeggibile(512), '512 B');
+    expect(pesoLeggibile(200 * 1024), '200 KB');
+    expect(pesoLeggibile(3 * 1024 * 1024 + 300 * 1024), '3.3 MB');
+    expect(
+      spiegaLErrore(const ComandoRifiutato('x', codice: 'troppo_grande')),
+      contains('10 MB'),
+    );
+    expect(
+      spiegaLErrore(const ComandoRifiutato('x', codice: 'tipo_non_ammesso')),
+      contains('solo foto e video'),
+    );
+    expect(
+      spiegaLErrore(
+        const ComandoRifiutato('GitHub ha risposto 403', codice: 'github'),
+      ),
+      contains('Contents: Read and write'),
+    );
   });
 
   test('la chat: niente, poi un filo solo', () async {

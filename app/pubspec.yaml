@@ -26,6 +26,12 @@ dependencies:
   # La plancia che gia' esiste, dentro l'app.
   webview_flutter: ^4.10.0
 
+  # Foto e video da allegare a una segnalazione: la galleria, la fotocamera.
+  # Sono del sistema — il selettore delle foto di Android e di iOS — e per
+  # una foto chiede gia' ridotta, cosi' ne parte qualche centinaio di
+  # chilobyte e non dieci megabyte.
+  image_picker: ^1.1.2
+
   # La cifratura fra l'app e il ponte: X25519, HKDF, AES-256-GCM.
   #
   # Non si scrive a mano. Dall'altra parte le stesse tre cose vengono da

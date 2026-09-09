@@ -10,6 +10,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../casa/allegati.dart';
 import '../casa/collegamento.dart';
 import '../casa/segnalazioni.dart';
 import '../ponte/filo.dart';
@@ -21,9 +22,14 @@ class SchermataDelleSegnalazioni extends StatefulWidget {
     super.key,
     required this.collegamento,
     required this.diagnostica,
+    this.scegli = scegliDalTelefono,
   });
 
   final Collegamento collegamento;
+
+  /// Come si sceglie una foto o un video da allegare. Nelle prove e' una
+  /// funzione finta: il selettore del sistema li' non c'e'.
+  final ScegliUnAllegato scegli;
 
   /// Quello che si allega da soli: chiesto al momento di mandare, cosi' dice
   /// le cose di quel momento.
@@ -88,6 +94,7 @@ class _SchermataDelleSegnalazioniState
           segnalazioni: Segnalazioni(filo),
           diagnostica: widget.diagnostica(),
           quandoMandata: _mandata,
+          scegli: widget.scegli,
         ),
       ),
     );
@@ -104,6 +111,7 @@ class _SchermataDelleSegnalazioniState
         builder: (_) => FiloDellaSegnalazione(
           segnalazioni: Segnalazioni(filo),
           iniziale: aperta,
+          scegli: widget.scegli,
         ),
       ),
     );
@@ -118,6 +126,7 @@ class _SchermataDelleSegnalazioniState
         builder: (_) => FiloDellaSegnalazione(
           segnalazioni: Segnalazioni(filo),
           iniziale: quale,
+          scegli: widget.scegli,
         ),
       ),
     );
@@ -301,6 +310,7 @@ class NuovaSegnalazione extends StatefulWidget {
     required this.segnalazioni,
     required this.diagnostica,
     required this.quandoMandata,
+    this.scegli = scegliDalTelefono,
   });
 
   final Segnalazioni segnalazioni;
@@ -310,6 +320,9 @@ class NuovaSegnalazione extends StatefulWidget {
   /// si torna.
   final Future<void> Function(Segnalazione aperta) quandoMandata;
 
+  /// Come si sceglie una foto o un video. Nelle prove e' una funzione finta.
+  final ScegliUnAllegato scegli;
+
   @override
   State<NuovaSegnalazione> createState() => _NuovaSegnalazioneState();
 }
@@ -318,8 +331,17 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
   TipoDiSegnalazione _tipo = TipoDiSegnalazione.problema;
   final _titolo = TextEditingController();
   final _corpo = TextEditingController();
+  final _allegati = <Allegato>[];
   bool _mandando = false;
+  bool _scegliendo = false;
   String? _perche;
+
+  /* Cosa si sta facendo, mentre si manda: «Mando la foto 1 di 2…». */
+  String? _passo;
+
+  /* Aperta, ma con allegati rimasti indietro: si riprovano solo quelli, e
+   * la segnalazione non si apre due volte. */
+  Segnalazione? _aperta;
 
   @override
   void dispose() {
@@ -328,40 +350,106 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
     super.dispose();
   }
 
-  Future<void> _manda() async {
-    final titolo = _titolo.text.trim();
-    final corpo = _corpo.text.trim();
-    if (titolo.isEmpty || corpo.isEmpty) {
-      setState(() => _perche = 'Servono un titolo e due righe di testo.');
-      return;
-    }
+  Future<void> _scegli(DaDoveLAllegato daDove) async {
+    if (_scegliendo) return;
     setState(() {
-      _mandando = true;
+      _scegliendo = true;
       _perche = null;
     });
     try {
-      final aperta = await widget.segnalazioni.crea(
-        tipo: _tipo,
-        titolo: titolo,
-        corpo: corpo,
-        diagnostica: widget.diagnostica,
-      );
-      if (!mounted) return;
-      await widget.quandoMandata(aperta);
+      final scelto = await widget.scegli(daDove);
+      if (scelto != null && mounted) setState(() => _allegati.add(scelto));
+    } on AllegatoNonBuono catch (errore) {
+      if (mounted) setState(() => _perche = errore.spiegazione);
     } catch (errore) {
       if (mounted) {
+        setState(
+          () => _perche = 'Non sono riuscito a prendere il file: $errore',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _scegliendo = false);
+    }
+  }
+
+  Future<void> _manda() async {
+    var aperta = _aperta;
+    if (aperta == null) {
+      final titolo = _titolo.text.trim();
+      final corpo = _corpo.text.trim();
+      if (titolo.isEmpty || corpo.isEmpty) {
+        setState(() => _perche = 'Servono un titolo e due righe di testo.');
+        return;
+      }
+      setState(() {
+        _mandando = true;
+        _perche = null;
+        _passo = 'Mando la segnalazione…';
+      });
+      try {
+        aperta = await widget.segnalazioni.crea(
+          tipo: _tipo,
+          titolo: titolo,
+          corpo: corpo,
+          diagnostica: widget.diagnostica,
+        );
+      } catch (errore) {
+        if (mounted) {
+          setState(() {
+            _perche = spiegaLErrore(errore);
+            _mandando = false;
+            _passo = null;
+          });
+        }
+        return;
+      }
+      if (!mounted) return;
+      _aperta = aperta;
+    } else {
+      setState(() {
+        _mandando = true;
+        _perche = null;
+      });
+    }
+
+    /* Gli allegati, uno alla volta: ognuno e' un viaggio intero fino a
+     * GitHub. Quello che non parte resta in lista, e si riprova da qui. */
+    final quanti = _allegati.length;
+    var fatti = 0;
+    while (_allegati.isNotEmpty) {
+      final uno = _allegati.first;
+      setState(
+        () => _passo =
+            'Mando ${uno.foto ? 'la foto' : 'il video'} ${fatti + 1} di $quanti…',
+      );
+      try {
+        aperta = await widget.segnalazioni.allega(aperta!.numero, uno);
+        fatti += 1;
+        if (!mounted) return;
+        setState(() => _allegati.removeAt(0));
+      } catch (errore) {
+        if (!mounted) return;
+        final numero = aperta!.numero;
         setState(() {
-          _perche = spiegaLErrore(errore);
           _mandando = false;
+          _passo = null;
+          _perche =
+              'La segnalazione #$numero e\' partita, ma «${uno.nome}» no: '
+              '${spiegaLErrore(errore)} Premi «Manda» per riprovare gli '
+              'allegati, o vai avanti senza.';
         });
+        return;
       }
     }
+    if (!mounted) return;
+    await widget.quandoMandata(aperta!);
   }
 
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     final testi = Theme.of(context).textTheme;
+    final aperta = _aperta;
     return Scaffold(
       appBar: AppBar(title: const Text('Nuova segnalazione')),
       body: ListView(
@@ -373,8 +461,9 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
                 ButtonSegment(value: tipo, label: Text(tipo.nome)),
             ],
             selected: {_tipo},
-            onSelectionChanged: (scelti) =>
-                setState(() => _tipo = scelti.first),
+            onSelectionChanged: aperta != null
+                ? null
+                : (scelti) => setState(() => _tipo = scelti.first),
           ),
           const SizedBox(height: 6),
           Text(
@@ -384,6 +473,7 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
           const SizedBox(height: 18),
           TextField(
             controller: _titolo,
+            enabled: aperta == null,
             maxLength: 120,
             textCapitalization: TextCapitalization.sentences,
             decoration: const InputDecoration(
@@ -394,6 +484,7 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
           const SizedBox(height: 12),
           TextField(
             controller: _corpo,
+            enabled: aperta == null,
             minLines: 5,
             maxLines: 12,
             maxLength: 4000,
@@ -404,6 +495,15 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
                   'Cosa stavi facendo, cosa ti aspettavi, cosa e\' successo.',
               alignLabelWithHint: true,
             ),
+          ),
+          const SizedBox(height: 18),
+          GliAllegati(
+            allegati: _allegati,
+            scegliendo: _scegliendo,
+            scegli: _mandando ? null : _scegli,
+            togli: _mandando
+                ? null
+                : (quale) => setState(() => _allegati.remove(quale)),
           ),
           const SizedBox(height: 18),
           _CosaSiAllega(widget.diagnostica),
@@ -421,10 +521,117 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.send_rounded),
-            label: Text(_mandando ? 'Sto mandando…' : 'Manda'),
+            label: Text(
+              _mandando
+                  ? (_passo ?? 'Sto mandando…')
+                  : aperta != null
+                  ? 'Riprova gli allegati'
+                  : 'Manda',
+            ),
           ),
+          if (aperta != null && !_mandando)
+            TextButton(
+              onPressed: () => widget.quandoMandata(aperta),
+              child: const Text('Vai alla segnalazione senza gli allegati'),
+            ),
         ],
       ),
+    );
+  }
+}
+
+/// Le foto e i video scelti, e i bottoni per sceglierne altri.
+///
+/// Sta a parte perche' lo stesso pezzo serve al modulo nuovo e, un giorno,
+/// a chiunque voglia allegare qualcosa prima di mandare.
+class GliAllegati extends StatelessWidget {
+  const GliAllegati({
+    super.key,
+    required this.allegati,
+    required this.scegliendo,
+    required this.scegli,
+    required this.togli,
+  });
+
+  final List<Allegato> allegati;
+  final bool scegliendo;
+  final Future<void> Function(DaDoveLAllegato daDove)? scegli;
+  final void Function(Allegato quale)? togli;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Foto e video',
+          style: testi.titleSmall?.copyWith(color: colori.onSurfaceVariant),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Una foto di quello che vedi vale piu\' di una descrizione. Le '
+          'foto partono ridotte; un video va tenuto corto.',
+          style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
+        ),
+        if (allegati.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              for (final uno in allegati)
+                InputChip(
+                  avatar: Icon(
+                    uno.foto ? Icons.photo_rounded : Icons.videocam_rounded,
+                    size: 18,
+                  ),
+                  label: Text('${uno.nome} · ${uno.peso}'),
+                  onDeleted: togli == null ? null : () => togli!(uno),
+                  deleteButtonTooltipMessage: 'Togli',
+                ),
+            ],
+          ),
+        ],
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: [
+            OutlinedButton.icon(
+              onPressed: scegli == null || scegliendo
+                  ? null
+                  : () => scegli!(DaDoveLAllegato.galleria),
+              icon: const Icon(Icons.photo_library_rounded),
+              label: const Text('Foto'),
+            ),
+            OutlinedButton.icon(
+              onPressed: scegli == null || scegliendo
+                  ? null
+                  : () => scegli!(DaDoveLAllegato.fotocamera),
+              icon: const Icon(Icons.photo_camera_rounded),
+              label: const Text('Scatta'),
+            ),
+            OutlinedButton.icon(
+              onPressed: scegli == null || scegliendo
+                  ? null
+                  : () => scegli!(DaDoveLAllegato.video),
+              icon: const Icon(Icons.videocam_rounded),
+              label: const Text('Video'),
+            ),
+            if (scegliendo)
+              const Padding(
+                padding: EdgeInsets.all(10),
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -478,10 +685,12 @@ class FiloDellaSegnalazione extends StatefulWidget {
     super.key,
     required this.segnalazioni,
     required this.iniziale,
+    this.scegli = scegliDalTelefono,
   });
 
   final Segnalazioni segnalazioni;
   final Segnalazione iniziale;
+  final ScegliUnAllegato scegli;
 
   @override
   State<FiloDellaSegnalazione> createState() => _FiloDellaSegnalazioneState();
@@ -551,6 +760,14 @@ class _FiloDellaSegnalazioneState extends State<FiloDellaSegnalazione> {
           final aggiornato = await _rispondi(testo);
           if (mounted) setState(() => _filo = aggiornato);
         },
+        allega: (allegato) async {
+          final aggiornato = await widget.segnalazioni.allega(
+            _filo.numero,
+            allegato,
+          );
+          if (mounted) setState(() => _filo = aggiornato);
+        },
+        scegli: widget.scegli,
         rileggi: _rileggi,
       ),
     );
@@ -570,11 +787,17 @@ class Conversazione extends StatefulWidget {
     this.perche,
     this.vuota,
     this.suggerimento = 'Scrivi…',
+    this.allega,
+    this.scegli = scegliDalTelefono,
   });
 
   final List<Messaggio> messaggi;
   final Future<void> Function(String testo) manda;
   final Future<void> Function() rileggi;
+
+  /// Come si allega una foto o un video, se da qui si puo'.
+  final Future<void> Function(Allegato allegato)? allega;
+  final ScegliUnAllegato scegli;
   final Widget? intestazione;
   final String? perche;
 
@@ -607,6 +830,47 @@ class _ConversazioneState extends State<Conversazione> {
     try {
       await widget.manda(testo);
       _testo.clear();
+    } catch (errore) {
+      if (mounted) setState(() => _perche = spiegaLErrore(errore));
+    } finally {
+      if (mounted) setState(() => _mandando = false);
+    }
+  }
+
+  /* Da dove: una tendina con le tre strade, e poi si sceglie e si manda. */
+  Future<void> _allega() async {
+    final allega = widget.allega;
+    if (allega == null || _mandando) return;
+    final daDove = await showModalBottomSheet<DaDoveLAllegato>(
+      context: context,
+      builder: (contesto) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final una in DaDoveLAllegato.values)
+              ListTile(
+                leading: Icon(switch (una) {
+                  DaDoveLAllegato.galleria => Icons.photo_library_rounded,
+                  DaDoveLAllegato.fotocamera => Icons.photo_camera_rounded,
+                  DaDoveLAllegato.video => Icons.videocam_rounded,
+                }),
+                title: Text(una.nome),
+                onTap: () => Navigator.of(contesto).pop(una),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (daDove == null || !mounted) return;
+    setState(() {
+      _mandando = true;
+      _perche = null;
+    });
+    try {
+      final scelto = await widget.scegli(daDove);
+      if (scelto != null) await allega(scelto);
+    } on AllegatoNonBuono catch (errore) {
+      if (mounted) setState(() => _perche = errore.spiegazione);
     } catch (errore) {
       if (mounted) setState(() => _perche = spiegaLErrore(errore));
     } finally {
@@ -649,6 +913,12 @@ class _ConversazioneState extends State<Conversazione> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                if (widget.allega != null)
+                  IconButton(
+                    tooltip: 'Allega',
+                    onPressed: _mandando ? null : _allega,
+                    icon: const Icon(Icons.attach_file_rounded),
+                  ),
                 Expanded(
                   child: TextField(
                     controller: _testo,

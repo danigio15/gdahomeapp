@@ -120,6 +120,21 @@ function eLaCopiaVecchia(detto) {
   return !Number.isFinite(numero) || numero < NUMERO_MODERNO;
 }
 
+/* L'allegato come arriva dall'app: il file in base64 dentro il messaggio —
+ * sul filo passa testo — e qui torna byte, una volta sola. Quello che non
+ * e' base64 non e' un file. */
+export function unAllegato(detto) {
+  const testo = typeof detto.byte === "string" ? detto.byte.replace(/\s+/g, "") : "";
+  if (!testo || !/^[A-Za-z0-9+/]+=*$/.test(testo)) return null;
+  const byte = Buffer.from(testo, "base64");
+  if (byte.length === 0) return null;
+  return {
+    nome: typeof detto.nome === "string" ? detto.nome.slice(0, 120) : "allegato",
+    tipo: typeof detto.tipo === "string" ? detto.tipo.slice(0, 60) : "",
+    byte: new Uint8Array(byte.buffer, byte.byteOffset, byte.byteLength),
+  };
+}
+
 export function si(id, result) {
   return { id, type: "result", success: true, result };
 }
@@ -273,6 +288,18 @@ export class Commissioni {
           if (!Number.isFinite(Number(detto.numero)))
             return no(id, "invalid_format", "manca il numero");
           return si(id, await mie.rispondi(Number(detto.numero), parola(detto.testo, 5000)));
+        case "ponte/segnalazioni/allega": {
+          if (!Number.isFinite(Number(detto.numero)))
+            return no(id, "invalid_format", "manca il numero");
+          const allegato = unAllegato(detto);
+          if (!allegato) return no(id, "invalid_format", "manca il file, o non e' base64");
+          return si(id, await mie.allega(Number(detto.numero), allegato));
+        }
+        case "ponte/chat/allega": {
+          const allegato = unAllegato(detto);
+          if (!allegato) return no(id, "invalid_format", "manca il file, o non e' base64");
+          return si(id, await mie.allegaAllaChat(allegato));
+        }
         case "ponte/chat/leggi":
           return si(id, { chat: await mie.chat() });
         case "ponte/chat/scrivi":

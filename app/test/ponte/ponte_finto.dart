@@ -190,6 +190,23 @@ class PonteFinto {
     });
   }
 
+  /// Gli allegati arrivati, per le prove: nome, tipo, quanti byte.
+  final allegati = <Map<String, Object>>[];
+
+  static Map<String, Object>? _unAllegato(Map<String, dynamic> detto) {
+    final inBase64 = detto['byte'];
+    if (inBase64 is! String || inBase64.isEmpty) return null;
+    try {
+      return {
+        'nome': detto['nome']?.toString() ?? 'allegato',
+        'tipo': detto['tipo']?.toString() ?? '',
+        'byte': base64.decode(inBase64).length,
+      };
+    } on FormatException {
+      return null;
+    }
+  }
+
   Map<String, dynamic> _segnalazione(Map<String, dynamic> detto) {
     Map<String, dynamic> no(String codice, String spiegazione) => {
       'type': 'result',
@@ -258,6 +275,40 @@ class PonteFinto {
           'il': '2026-09-08T12:00:00Z',
         });
         return si(filo(una));
+      case 'ponte/segnalazioni/allega':
+        final una = trova(detto['numero']);
+        if (una == null) return no('non_trovata', 'non e\' tua');
+        final allegato = _unAllegato(detto);
+        if (allegato == null) return no('invalid_format', 'manca il file');
+        if (allegato['byte'] as int > 10 * 1024 * 1024) {
+          return no('troppo_grande', 'troppo grande');
+        }
+        allegati.add(allegato);
+        (una['messaggi'] as List).add({
+          'da': 'casa',
+          'testo': '📷 ${allegato['nome']} (${allegato['byte']} B)',
+          'il': '2026-09-08T12:30:00Z',
+        });
+        return si(filo(una));
+      case 'ponte/chat/allega':
+        final allegato = _unAllegato(detto);
+        if (allegato == null) return no('invalid_format', 'manca il file');
+        allegati.add(allegato);
+        chat ??= {
+          'numero': _prossimaSegnalazione++,
+          'tipo': 'chat',
+          'titolo': 'Chat di assistenza',
+          'stato': 'aperta',
+          'aperta_il': '2026-09-08T10:00:00Z',
+          'url': 'https://github.com/x/y/issues/9',
+          'messaggi': <Map<String, dynamic>>[],
+        };
+        (chat!['messaggi'] as List).add({
+          'da': 'casa',
+          'testo': '🎬 ${allegato['nome']} (${allegato['byte']} B)',
+          'il': '2026-09-08T12:30:00Z',
+        });
+        return si(filo(chat!));
       case 'ponte/chat/leggi':
         return si({'chat': chat == null ? null : filo(chat!)});
       case 'ponte/chat/scrivi':

@@ -28,7 +28,11 @@
 	     riga che l'utente legge prima di dire di si', e va detta per intero:
 	     a cosa serve, e per quanto. -->
 	<key>NSCameraUsageDescription</key>
-	<string>Serve solo a inquadrare il codice a quadretti che collega l'app alla tua casa. Nessuna foto viene salvata o mandata da nessuna parte.</string>
+	<string>Serve a inquadrare il codice a quadretti che collega l'app alla tua casa, e a scattare una foto da allegare a una segnalazione, se lo chiedi tu.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Serve a scegliere una foto o un video da allegare a una segnalazione, solo quando lo chiedi tu.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Serve solo se registri un video da allegare a una segnalazione.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<!-- La plancia vera dentro l'app arriva al WebView da un server che sta

@@ -62,6 +62,7 @@ da tramite verso Home Assistant.
 | I dispositivi: tutte le entita' per dominio, con gli interruttori | ✅ (elenco) |
 | **Segnalazioni**: si aprono dall'app, con i dati della casa raccolti da soli; dal ponte al centralino, che le apre come issue di GitHub | ✅ |
 | **Chat di assistenza**: dall'app, con chi mantiene il progetto, sullo stesso filo | ✅ |
+| **Foto e video** allegati alle segnalazioni e alla chat, nella repository sotto `allegati/` | ✅ |
 | Zigbee: ZHA **e** Zigbee2MQTT, dietro un'interfaccia sola | ⬜ (fase 3) |
 | I dispositivi: aggiungerli, rinominarli, metterli in una stanza | ⬜ |
 | Gli aiutanti: i sette classici | ⬜ (fase 2) |
@@ -232,7 +233,9 @@ versione dell'app e del ponte, il telefono, com'e' andato l'ultimo
 collegamento — e una per la chat con chi mantiene il progetto. Passano dal
 ponte, che e' l'unico che puo' parlare fuori per conto della casa, e nessun
 segreto sta sul telefono. Nella plancia i due bottoni rispondono che quelle
-cose stanno nell'app.
+cose stanno nell'app. A una segnalazione si allegano foto e video, dalla
+galleria o scattati al momento: viaggiano per intero dal filo al ponte al
+centralino, che li mette nella stessa repository delle issue.
 
 ### Fase 2 — gli aiutanti
 

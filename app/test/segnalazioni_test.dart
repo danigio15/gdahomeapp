@@ -2,8 +2,11 @@
 /// una segnalazione dalla barra, si vede il filo, si scrive in chat.
 library;
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gdahome/casa/allegati.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
@@ -30,6 +33,32 @@ Future<Collegamento> _casaCollegata(PonteFinto ponte) async {
   );
   await collegamento.apri();
   return collegamento;
+}
+
+/* La pagina e' piu' alta della finestra di prova, e la lista costruisce
+ * solo quello che si vede: un bottone in fondo **non esiste** finche' non ci
+ * si scorre. Si scorre come farebbe un dito, finche' compare. */
+Future<void> _scorriFinoA(WidgetTester tester, Finder cosa) async {
+  await tester.scrollUntilVisible(
+    cosa,
+    200,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.pumpAndSettle();
+}
+
+/* Un giro di andata e ritorno col ponte finto ha bisogno del tempo vero —
+ * i socket parlano solo li' — e le continuazioni dell'app girano nel tempo
+ * finto, a ogni `pump`. Quando un gesto fa due viaggi di fila, come mandare
+ * una segnalazione e poi la sua foto, ci vogliono piu' giri alternati. */
+Future<void> _lasciaFare(WidgetTester tester) async {
+  for (var giro = 0; giro < 5; giro += 1) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 250)),
+    );
+    await tester.pump();
+  }
+  await tester.pumpAndSettle();
 }
 
 Map<String, String> _diagnostica() => const {
@@ -80,8 +109,7 @@ void main() {
     );
     /* Il bottone sta in fondo a una pagina piu' alta della finestra di
      * prova: si scorre fin li', come farebbe un dito. */
-    await tester.ensureVisible(find.text('Manda'));
-    await tester.pumpAndSettle();
+    await _scorriFinoA(tester, find.text('Manda'));
     await tester.tap(find.text('Manda'));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 300)),
@@ -140,6 +168,92 @@ void main() {
     expect(find.text('LE TUE SEGNALAZIONI'), findsOneWidget);
     expect(find.text('Una tessera per la piscina'), findsOneWidget);
     expect(find.textContaining('3 messaggi'), findsOneWidget);
+
+    await tester.runAsync(() async {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+  });
+
+  testWidgets('una foto scelta si allega alla segnalazione, e poi al filo', (
+    tester,
+  ) async {
+    late PonteFinto ponte;
+    late Collegamento collegamento;
+    await tester.runAsync(() async {
+      ponte = await PonteFinto.alza();
+      collegamento = await _casaCollegata(ponte);
+    });
+    /* Il selettore del sistema nelle prove non c'e': al suo posto una
+     * funzione che torna una foto finta, e si ricorda cosa le e' stato
+     * chiesto. */
+    final chieste = <DaDoveLAllegato>[];
+    Future<Allegato?> scegliFinto(DaDoveLAllegato daDove) async {
+      chieste.add(daDove);
+      return Allegato(
+        nome: daDove == DaDoveLAllegato.video ? 'clip.mp4' : 'cucina.jpg',
+        tipo: daDove == DaDoveLAllegato.video ? 'video/mp4' : 'image/jpeg',
+        byte: Uint8List.fromList(List.filled(300, 7)),
+      );
+    }
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SchermataDelleSegnalazioni(
+          collegamento: collegamento,
+          diagnostica: _diagnostica,
+          scegli: scegliFinto,
+        ),
+      ),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nuova segnalazione'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'In due parole'),
+      'La luce lampeggia',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Racconta'),
+      'Si vede nel video.',
+    );
+    /* Si sceglie una foto: compare fra gli allegati, col suo peso. */
+    await _scorriFinoA(tester, find.text('Foto'));
+    await tester.tap(find.text('Foto'));
+    await tester.pumpAndSettle();
+    expect(chieste, [DaDoveLAllegato.galleria]);
+    expect(find.text('cucina.jpg · 300 B'), findsOneWidget);
+    /* E un video. */
+    await tester.tap(find.text('Video'));
+    await tester.pumpAndSettle();
+    expect(find.text('clip.mp4 · 300 B'), findsOneWidget);
+    /* Uno si toglie. */
+    await tester.tap(find.byTooltip('Togli').last);
+    await tester.pumpAndSettle();
+    expect(find.text('clip.mp4 · 300 B'), findsNothing);
+
+    await _scorriFinoA(tester, find.text('Manda'));
+    await tester.tap(find.text('Manda'));
+    await _lasciaFare(tester);
+
+    /* Prima la segnalazione, poi la foto; nel filo c'e' il messaggio che
+     * la indica. */
+    expect(ponte.allegati, hasLength(1));
+    expect(ponte.allegati.single['nome'], 'cucina.jpg');
+    expect(ponte.allegati.single['byte'], 300);
+    expect(find.text('📷 cucina.jpg (300 B)'), findsOneWidget);
+
+    /* Dal filo si allega ancora, dalla graffetta. */
+    await tester.tap(find.byTooltip('Allega'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Un video dalla galleria'));
+    await _lasciaFare(tester);
+    expect(ponte.allegati, hasLength(2));
+    expect(find.text('📷 clip.mp4 (300 B)'), findsOneWidget);
 
     await tester.runAsync(() async {
       await collegamento.chiudi();

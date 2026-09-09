@@ -31,6 +31,43 @@ export const SCRITTURE_ALLORA = 60;
 export const MARCATORE_CASA = "<!-- gdahome:casa -->";
 const MARCATORE_DIAGNOSTICA = "<!-- gdahome:diagnostica -->";
 
+/* Gli allegati: foto e video, messi nella stessa repository delle issue,
+ * sotto `allegati/<numero>/`, con un commento che li indica. Passano per
+ * intero dal ponte e da qui, quindi c'e' un tetto: una foto ridotta pesa
+ * qualche centinaio di chilobyte, un video corto qualche megabyte. */
+export const ALLEGATO_MASSIMO = 10 * 1024 * 1024;
+export const TIPI_DI_ALLEGATO = Object.freeze([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+  "image/gif",
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+  "video/3gpp",
+]);
+
+/* Un nome di file che si puo' scrivere in una repository senza sorprese:
+ * lettere, numeri, punto, trattino, trattino basso. Il resto diventa un
+ * trattino basso, e non si va oltre i sessanta caratteri. */
+export function nomeDiFile(nome) {
+  const pulito = String(nome ?? "")
+    .trim()
+    .replace(/[^A-Za-z0-9._-]+/g, "_")
+    .replace(/^[._-]+/, "")
+    .slice(0, 60);
+  return pulito || "allegato";
+}
+
+/* Quanto pesa, detto a una persona. */
+export function pesoLeggibile(byte) {
+  if (byte < 1024) return `${byte} B`;
+  if (byte < 1024 * 1024) return `${Math.round(byte / 1024)} KB`;
+  return `${(byte / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 const testo = (valore, massimo) =>
   String(valore ?? "")
     .trim()
@@ -160,6 +197,32 @@ export class GitHub {
   commenta(numero, testo) {
     return this._chiama("POST", `/issues/${numero}/comments`, { body: testo });
   }
+
+  /* Mette un file nella repository, in `via`, con un commit. Vuole il
+   * permesso «Contents: Read and write» sul gettone: senza, GitHub risponde
+   * 403 o 404, e l'app lo dice. Torna l'indirizzo con cui aprirlo. */
+  async mettiFile({ via, byte, messaggio }) {
+    const risposta = await this._chiama("PUT", `/contents/${via}`, {
+      message: messaggio,
+      content: inBase64(byte),
+    });
+    const contenuto = risposta?.content ?? {};
+    return {
+      via,
+      url: contenuto.html_url ? `${contenuto.html_url}?raw=true` : "",
+    };
+  }
+}
+
+/* Base64 di byte, a pezzi: `btoa` vuole una stringa di caratteri a un
+ * byte, e farla in un colpo solo su dieci megabyte sfonda la pila. */
+export function inBase64(byte) {
+  const pezzi = [];
+  const passo = 0x8000;
+  for (let da = 0; da < byte.length; da += passo) {
+    pezzi.push(String.fromCharCode.apply(null, byte.subarray(da, da + passo)));
+  }
+  return btoa(pezzi.join(""));
 }
 
 /* ─── Le segnalazioni di una casa ────────────────────────────────────────── */
@@ -238,6 +301,64 @@ export class Segnalazioni {
     await this._contaUnaScrittura();
     await this.github.commenta(voce.numero, `${MARCATORE_CASA}\n${pulito}`);
     return this.leggi(voce.numero);
+  }
+
+  /* Un allegato a una segnalazione: il file va nella repository, e sotto la
+   * issue va un commento che lo indica, con il segno della casa. */
+  async allega(numero, allegato) {
+    this._pronto();
+    const voce = await this._mia(numero);
+    await this._contaUnaScrittura();
+    await this._allega(voce.numero, allegato);
+    return this.leggi(voce.numero);
+  }
+
+  /* Un allegato alla chat. Se la chat non e' ancora nata, nasce con lui. */
+  async allegaAllaChat(allegato, diagnostica) {
+    this._pronto();
+    await this._contaUnaScrittura();
+    let numero = await this.storage.get("chat");
+    if (!numero) {
+      const issue = await this.github.apriIssue({
+        titolo: `[chat] Casa ${String(this.casa || "").slice(0, 12)}`,
+        corpo: corpoDellaIssue({ corpo: "(un allegato)", diagnostica, casa: this.casa }),
+        etichette: ["gdahome", "chat"],
+      });
+      numero = issue.number;
+      await this.storage.put("chat", numero);
+    }
+    await this._allega(numero, allegato);
+    return this.chat();
+  }
+
+  async _allega(numero, { nome, tipo, byte }) {
+    if (!(byte instanceof Uint8Array) || byte.length === 0)
+      throw new RichiestaSbagliata("manca_il_file", "Manca il file.");
+    if (byte.length > ALLEGATO_MASSIMO)
+      throw new RichiestaSbagliata(
+        "troppo_grande",
+        `L'allegato e' troppo grande: al massimo ${pesoLeggibile(ALLEGATO_MASSIMO)}.`,
+        413,
+      );
+    if (!TIPI_DI_ALLEGATO.includes(String(tipo)))
+      throw new RichiestaSbagliata(
+        "tipo_non_ammesso",
+        "Si possono allegare solo foto e video.",
+        415,
+      );
+    const pulito = nomeDiFile(nome);
+    const via = `allegati/${numero}/${new Date(this.adesso()).toISOString().replace(/[:.]/g, "-")}-${pulito}`;
+    const messo = await this.github.mettiFile({
+      via,
+      byte,
+      messaggio: `Allegato alla #${numero}: ${pulito}`,
+    });
+    const foto = String(tipo).startsWith("image/");
+    await this.github.commenta(
+      numero,
+      `${MARCATORE_CASA}\n${foto ? "📷" : "🎬"} ${pulito} (${pesoLeggibile(byte.length)})\n${messo.url}`,
+    );
+    return messo;
   }
 
   /* La chat: una issue sola per casa, che nasce alla prima parola. */

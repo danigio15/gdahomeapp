@@ -7,6 +7,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../casa/allegati.dart';
 import '../casa/collegamento.dart';
 import '../casa/segnalazioni.dart';
 import '../ponte/filo.dart';
@@ -18,10 +19,14 @@ class SchermataDellAssistenza extends StatefulWidget {
     super.key,
     required this.collegamento,
     required this.diagnostica,
+    this.scegli = scegliDalTelefono,
   });
 
   final Collegamento collegamento;
   final Map<String, String> Function() diagnostica;
+
+  /// Come si sceglie una foto o un video da allegare.
+  final ScegliUnAllegato scegli;
 
   @override
   State<SchermataDellAssistenza> createState() =>
@@ -89,6 +94,18 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
     }
   }
 
+  Future<void> _allega(Allegato allegato) async {
+    final filo = _filo;
+    if (filo == null) throw const FiloCadutoQui();
+    final chat = await Segnalazioni(filo).allegaAllaChat(allegato);
+    if (mounted) {
+      setState(() {
+        _chat = chat;
+        _letta = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_letta && _caricando) {
@@ -108,6 +125,8 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
             'versione dell\'app e del ponte, cosi\' non te le chiediamo.',
       ),
       manda: _scrivi,
+      allega: _allega,
+      scegli: widget.scegli,
       rileggi: _carica,
     );
   }

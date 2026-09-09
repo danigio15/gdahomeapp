@@ -39,7 +39,13 @@
 import { impronta, stessaImpronta } from "./segreti.js";
 import { quelCodice } from "./dove.js";
 import { CASA_VALIDA, IMPRONTA_VALIDA } from "./nomi.js";
-import { GitHub, GitHubNonRisponde, RichiestaSbagliata, Segnalazioni } from "./segnalazioni.js";
+import {
+  ALLEGATO_MASSIMO,
+  GitHub,
+  GitHubNonRisponde,
+  RichiestaSbagliata,
+  Segnalazioni,
+} from "./segnalazioni.js";
 
 /* Un corpo piu' grande di cosi' non e' una segnalazione. */
 const CORPO_MASSIMO = 64 * 1024;
@@ -300,7 +306,7 @@ export class Casa {
   async _http(richiesta) {
     const via = new URL(richiesta.url).pathname;
     const pezzi =
-      /^\/casa\/([A-Za-z0-9_]+)\/(segnalazioni|chat)(?:\/(\d+))?(?:\/(risposte|messaggi))?$/.exec(
+      /^\/casa\/([A-Za-z0-9_]+)\/(segnalazioni|chat)(?:\/(\d+))?(?:\/(risposte|messaggi|allegati))?$/.exec(
         via,
       );
     if (!pezzi)
@@ -337,11 +343,21 @@ export class Casa {
           const { testo } = await corpoDi(richiesta);
           return rispostaJson(await segnalazioni.rispondi(Number(numero), testo));
         }
+        if (numero && coda === "allegati" && metodo === "POST") {
+          return rispostaJson(
+            await segnalazioni.allega(Number(numero), await allegatoDi(richiesta)),
+            201,
+          );
+        }
       } else if (!numero) {
         if (!coda && metodo === "GET") return rispostaJson({ chat: await segnalazioni.chat() });
         if (coda === "messaggi" && metodo === "POST") {
           const { testo, diagnostica } = await corpoDi(richiesta);
           return rispostaJson(await segnalazioni.chatta(testo, diagnostica), 201);
+        }
+        if (coda === "allegati" && metodo === "POST") {
+          const allegato = await allegatoDi(richiesta);
+          return rispostaJson(await segnalazioni.allegaAllaChat(allegato, {}), 201);
         }
       }
       return rispostaJson({ errore: "non_trovato", spiegazione: "qui non c'e' niente" }, 404);
@@ -387,6 +403,23 @@ function rispostaJson(corpo, stato = 200) {
     status: stato,
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
   });
+}
+
+/* Un allegato: il file cosi' com'e' nel corpo, il tipo nel `content-type`,
+ * il nome in un'intestazione. Niente JSON, niente base64: dieci megabyte
+ * passano una volta sola. */
+async function allegatoDi(richiesta) {
+  const dichiarato = Number(richiesta.headers.get("content-length") || 0);
+  if (dichiarato > ALLEGATO_MASSIMO)
+    throw new RichiestaSbagliata("troppo_grande", "L'allegato e' troppo grande.", 413);
+  const byte = new Uint8Array(await richiesta.arrayBuffer());
+  if (byte.length > ALLEGATO_MASSIMO)
+    throw new RichiestaSbagliata("troppo_grande", "L'allegato e' troppo grande.", 413);
+  return {
+    nome: richiesta.headers.get("x-gdahome-nome") || "allegato",
+    tipo: (richiesta.headers.get("content-type") || "").split(";")[0].trim(),
+    byte,
+  };
 }
 
 async function corpoDi(richiesta) {

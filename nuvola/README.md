@@ -119,9 +119,17 @@ segreto `GETTONE_SEGNALAZIONI` di questa repository; o, da un terminale,
     npx wrangler secret put GITHUB_SEGNALAZIONI
 
 Un token a grana fine, sulla sola repository delle segnalazioni, con
-**Issues: Read and write**. La casa si presenta col suo segreto — lo stesso
+**Issues: Read and write** e, per gli allegati, **Contents: Read and write**.
+La casa si presenta col suo segreto — lo stesso
 della chiamata — e legge e scrive solo nelle issue che ha aperto lei; chi
 risponde da GitHub scrive un commento, e il commento torna nell'app. I
 commenti della casa portano un segno invisibile in testa, cosi' si sa chi ha
 scritto cosa anche se il gettone e' uno solo. Sta in `src/segnalazioni.js`,
 con le sue prove in `test/`.
+
+Gli **allegati** — foto e video — arrivano dal ponte in binario, con
+`POST /casa/<id>/segnalazioni/<n>/allegati` (o `/chat/allegati`), il tipo nel
+`content-type` e il nome in `x-gdahome-nome`. Il centralino li mette nella
+repository con l'API dei contenuti, sotto `allegati/<n>/`, e scrive sotto la
+issue un commento col nome, il peso e il link. Dieci megabyte al massimo, e
+solo foto e video: e' un tetto che vale uguale nell'app, nel ponte e qui.

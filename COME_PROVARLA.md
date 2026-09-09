@@ -251,9 +251,10 @@ Per accenderle, una volta sola:
    `gdahome-segnalazioni`, e scrivila in `nuvola/wrangler.toml` alla voce
    `GITHUB_REPO`.
 2. Crea su GitHub un **token a grana fine** (Settings → Developer settings →
-   Fine-grained tokens) con accesso alla sola repository di cui sopra e il
-   permesso **Issues: Read and write**. Non incollarlo da nessuna parte che
-   non sia il passo dopo.
+   Fine-grained tokens) con accesso alla sola repository di cui sopra e due
+   permessi: **Issues: Read and write** per le segnalazioni, e **Contents:
+   Read and write** per le foto e i video che ci si allegano. Non incollarlo
+   da nessuna parte che non sia il passo dopo.
 3. Mettilo fra i segreti di questa repository: Settings → Secrets and
    variables → Actions → New repository secret, nome `GETTONE_SEGNALAZIONI`
    (GitHub non accetta un segreto che cominci con `GITHUB_`), dentro solo il
@@ -266,6 +267,15 @@ Chi ha un terminale può fare le stesse due cose dalla cartella `nuvola`, con
 
 Senza il segreto tutto il resto funziona: l'app dice che il centralino non
 ha le segnalazioni accese, e basta.
+
+**Le foto e i video.** A una segnalazione, e alla chat, si allegano dal
+telefono: dalla galleria o scattando al momento. Finiscono nella stessa
+repository, in una cartella `allegati/<numero della issue>/`, e sotto la
+issue compare un commento con il nome del file e il link per aprirlo. Le foto
+partono già ridotte (1600 punti sul lato lungo); un video deve stare sotto i
+10 MB, cioè venti o trenta secondi. Se il token non ha il permesso sui
+contenuti, la segnalazione parte lo stesso e l'app dice che l'allegato no, e
+perché.
 
 ## Cosa guardare, una volta dentro
 

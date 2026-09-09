@@ -5,17 +5,20 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  ALLEGATO_MASSIMO,
   APERTE_MASSIME,
-  classifica,
-  corpoDellaIssue,
-  filo,
   GitHub,
   GitHubNonRisponde,
   MARCATORE_CASA,
-  paroleDellaPersona,
   RichiestaSbagliata,
   SCRITTURE_ALLORA,
   Segnalazioni,
+  classifica,
+  corpoDellaIssue,
+  filo,
+  inBase64,
+  nomeDiFile,
+  paroleDellaPersona,
 } from "../src/segnalazioni.js";
 
 /* Un archivio come quello del Durable Object: get, put, e basta. */
@@ -37,6 +40,7 @@ function archivioFinto() {
 function gitHubFinto({ rotto = false } = {}) {
   const chiamate = [];
   const issues = new Map();
+  const file = new Map();
   let prossimo = 41;
   const prendi = async (url, opzioni = {}) => {
     chiamate.push({
@@ -79,10 +83,18 @@ function gitHubFinto({ rotto = false } = {}) {
       if (!issue) return { ok: false, status: 404, json: async () => ({ message: "Not Found" }) };
       return { ok: true, status: 200, json: async () => issue };
     }
+    if ((m = /\/contents\/(.+)$/.exec(via)) && opzioni.method === "PUT") {
+      file.set(m[1], corpo.content);
+      return {
+        ok: true,
+        status: 201,
+        json: async () => ({ content: { html_url: `https://github.com/x/y/blob/main/${m[1]}` } }),
+      };
+    }
     return { ok: false, status: 404, json: async () => ({ message: "Not Found" }) };
   };
   const github = new GitHub({ token: "gettone", repo: "x/y", fetch: prendi });
-  return { github, chiamate, issues };
+  return { github, chiamate, issues, file };
 }
 
 test("il corpo della issue porta le parole e la diagnostica, e le parole tornano da sole", () => {
@@ -317,4 +329,80 @@ test("i limiti: dieci aperte per casa, sessanta scritture l'ora", async () => {
   );
   ora += 3_600_001;
   assert.ok(await altre.rispondi(prima.numero, "adesso si"));
+});
+
+test("un allegato finisce nella repository, e sotto la issue c'e' il commento che lo indica", async () => {
+  const { github, chiamate, file } = gitHubFinto();
+  const storage = archivioFinto();
+  const mie = new Segnalazioni({
+    storage,
+    github,
+    casa: "casa_1",
+    adesso: () => 1_700_000_000_000,
+  });
+  const aperta = await mie.crea({
+    tipo: "problema",
+    titolo: "La luce",
+    corpo: "Non va",
+    diagnostica: {},
+  });
+
+  const byte = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+  const filo = await mie.allega(aperta.numero, {
+    nome: "cucina (sera).jpg",
+    tipo: "image/jpeg",
+    byte,
+  });
+
+  const messo = chiamate.find((una) => una.metodo === "PUT");
+  assert.ok(messo, "il file va messo con una PUT");
+  assert.match(messo.url, new RegExp(`/contents/allegati/${aperta.numero}/.*cucina_sera_.jpg$`));
+  assert.equal(messo.corpo.content, inBase64(byte));
+  assert.equal(file.size, 1);
+
+  const ultimo = filo.messaggi.at(-1);
+  assert.equal(ultimo.da, "casa");
+  assert.match(ultimo.testo, /^📷 cucina_sera_\.jpg \(7 B\)\n.*\?raw=true$/);
+
+  /* Non della casa: no. */
+  await assert.rejects(
+    mie.allega(999, { nome: "x.jpg", tipo: "image/jpeg", byte }),
+    (errore) => errore instanceof RichiestaSbagliata && errore.codice === "non_trovata",
+  );
+  /* Troppo grande, o non una foto: no, e si dice. */
+  await assert.rejects(
+    mie.allega(aperta.numero, {
+      nome: "x.jpg",
+      tipo: "image/jpeg",
+      byte: new Uint8Array(ALLEGATO_MASSIMO + 1),
+    }),
+    (errore) => errore instanceof RichiestaSbagliata && errore.codice === "troppo_grande",
+  );
+  await assert.rejects(
+    mie.allega(aperta.numero, { nome: "x.exe", tipo: "application/octet-stream", byte }),
+    (errore) => errore instanceof RichiestaSbagliata && errore.codice === "tipo_non_ammesso",
+  );
+});
+
+test("un allegato alla chat la fa nascere, se non c'era", async () => {
+  const { github, chiamate } = gitHubFinto();
+  const storage = archivioFinto();
+  const mie = new Segnalazioni({
+    storage,
+    github,
+    casa: "casa_1",
+    adesso: () => 1_700_000_000_000,
+  });
+  const byte = new Uint8Array([1, 2, 3, 4]);
+  const chat = await mie.allegaAllaChat({ nome: "clip.mp4", tipo: "video/mp4", byte }, {});
+  assert.ok(chat.numero);
+  assert.equal(chat.tipo, "chat");
+  assert.match(chat.messaggi.at(-1).testo, /^🎬 clip\.mp4 \(4 B\)/);
+  assert.ok(chiamate.some((una) => una.metodo === "PUT"));
+});
+
+test("i nomi dei file si puliscono, e il peso si legge", () => {
+  assert.equal(nomeDiFile("../../segreti/../foto di casa.JPG"), "segreti_.._foto_di_casa.JPG");
+  assert.equal(nomeDiFile("   "), "allegato");
+  assert.equal(nomeDiFile("a".repeat(100)).length, 60);
 });

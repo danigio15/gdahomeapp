@@ -10,6 +10,9 @@
 /// Niente Flutter qui dentro: si prova contro un ponte finto.
 library;
 
+import 'dart:convert';
+import 'dart:typed_data';
+
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 
@@ -29,6 +32,43 @@ enum TipoDiSegnalazione {
     _ => TipoDiSegnalazione.problema,
   };
 }
+
+/// Una foto o un video da mandare insieme alle parole.
+///
+/// Va nella repository delle segnalazioni, sotto la issue, con un commento
+/// che lo indica. Passa per intero dal filo, dal ponte e dal centralino:
+/// per questo c'e' un tetto, e per questo una foto si chiede gia' ridotta.
+class Allegato {
+  const Allegato({required this.nome, required this.tipo, required this.byte});
+
+  final String nome;
+
+  /// `image/jpeg`, `video/mp4`…
+  final String tipo;
+  final Uint8List byte;
+
+  /// Lo stesso tetto del ponte e del centralino.
+  static const int massimo = 10 * 1024 * 1024;
+
+  bool get foto => tipo.startsWith('image/');
+  String get peso => pesoLeggibile(byte.length);
+
+  Map<String, Object> get _corpo => {
+    'nome': nome,
+    'tipo': tipo,
+    'byte': base64.encode(byte),
+  };
+}
+
+/// Quanto pesa, detto a una persona.
+String pesoLeggibile(int byte) {
+  if (byte < 1024) return '$byte B';
+  if (byte < 1024 * 1024) return '${(byte / 1024).round()} KB';
+  return '${(byte / (1024 * 1024)).toStringAsFixed(1)} MB';
+}
+
+/// Un allegato da dieci megabyte, da fuori casa, ci mette il suo tempo.
+const Duration attesaPerUnAllegato = Duration(minutes: 3);
 
 /// Una battuta del filo: chi l'ha scritta, cosa, quando.
 class Messaggio {
@@ -177,6 +217,23 @@ class Segnalazioni {
     }),
   );
 
+  /// Allega una foto o un video a una segnalazione. Torna il filo aggiornato,
+  /// con dentro il messaggio che indica l'allegato.
+  Future<Segnalazione> allega(int numero, Allegato allegato) async => _una(
+    await _filo.risultato({
+      'type': 'ponte/segnalazioni/allega',
+      'numero': numero,
+      ...allegato._corpo,
+    }, entro: attesaPerUnAllegato),
+  );
+
+  Future<Segnalazione> allegaAllaChat(Allegato allegato) async => _una(
+    await _filo.risultato({
+      'type': 'ponte/chat/allega',
+      ...allegato._corpo,
+    }, entro: attesaPerUnAllegato),
+  );
+
   static Segnalazione _una(Object? letto) {
     if (letto is! Map) {
       throw const ComandoRifiutato('il ponte ha risposto una cosa strana');
@@ -202,6 +259,15 @@ String spiegaLErrore(Object errore) => switch (errore) {
         'collegarsi da fuori una volta.',
   ComandoRifiutato(codice: 'unknown_command') =>
     'Il ponte e\' vecchio: aggiornalo per mandare segnalazioni.',
+  ComandoRifiutato(codice: 'troppo_grande') =>
+    'L\'allegato e\' troppo grande: al massimo 10 MB. Un video va tenuto '
+        'corto.',
+  ComandoRifiutato(codice: 'tipo_non_ammesso') =>
+    'Si possono allegare solo foto e video.',
+  ComandoRifiutato(codice: 'github', :final spiegazione) =>
+    'GitHub non ha accettato: $spiegazione. Se era un allegato, il gettone '
+        'delle segnalazioni deve poter scrivere i file (Contents: Read and '
+        'write).',
   final ErroreDelPonte e => e.spiegazione,
   _ => 'Non ha funzionato: $errore',
 };

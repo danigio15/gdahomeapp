@@ -21,6 +21,13 @@ import { Archivio } from "./archivio.js";
 
 /* Quanto si aspetta il centralino. */
 const ATTESA = 20_000;
+/* Un allegato da dieci megabyte, da dentro casa fino al centralino e da li'
+ * a GitHub, ci mette il suo tempo. */
+const ATTESA_PER_UN_ALLEGATO = 120_000;
+
+/* Lo stesso tetto del centralino: quello che passa di qui e' gia' il file
+ * intero. */
+export const ALLEGATO_MASSIMO = 10 * 1024 * 1024;
 
 /* Quanto vale l'elenco tenuto qui prima di richiederlo. */
 const QUANTO_DURA_LELENCO = 60_000;
@@ -134,6 +141,25 @@ export class Segnalazioni {
     return intero;
   }
 
+  /* Un allegato — foto o video — a una segnalazione. Al centralino va cosi'
+   * com'e', in binario: e' lui a metterlo nella repository. */
+  async allega(numero, { nome, tipo, byte }) {
+    const intero = await this._chiamaConUnFile(`/segnalazioni/${Number(numero)}/allegati`, {
+      nome,
+      tipo,
+      byte,
+    });
+    this._tieni(intero);
+    return intero;
+  }
+
+  async allegaAllaChat({ nome, tipo, byte }) {
+    const chat = await this._chiamaConUnFile("/chat/allegati", { nome, tipo, byte });
+    this.archivio.dati.chat = chat;
+    this.archivio.salva();
+    return chat;
+  }
+
   async chat() {
     const { chat } = await this._chiama("GET", "/chat");
     this.archivio.dati.chat = chat ?? null;
@@ -183,7 +209,34 @@ export class Segnalazioni {
     this.archivio.salva();
   }
 
-  async _chiama(metodo, via, corpo) {
+  _chiama(metodo, via, corpo) {
+    return this._chiamaDavvero(metodo, via, {
+      intestazioni: corpo ? { "content-type": "application/json" } : {},
+      corpo: corpo ? JSON.stringify(corpo) : undefined,
+      attesa: ATTESA,
+    });
+  }
+
+  _chiamaConUnFile(via, { nome, tipo, byte }) {
+    if (!(byte instanceof Uint8Array) || byte.length === 0)
+      throw new CentralinoHaDettoNo(400, "manca_il_file", "Manca il file.");
+    if (byte.length > ALLEGATO_MASSIMO)
+      throw new CentralinoHaDettoNo(
+        413,
+        "troppo_grande",
+        "L'allegato e' troppo grande: al massimo 10 MB.",
+      );
+    return this._chiamaDavvero("POST", via, {
+      intestazioni: {
+        "content-type": String(tipo || "application/octet-stream"),
+        "x-gdahome-nome": String(nome || "allegato").replace(/[^\x20-\x7e]/g, "_"),
+      },
+      corpo: byte,
+      attesa: ATTESA_PER_UN_ALLEGATO,
+    });
+  }
+
+  async _chiamaDavvero(metodo, via, { intestazioni, corpo, attesa }) {
     if (!this.spedibili) throw new SenzaCentralino();
     let risposta;
     try {
@@ -191,10 +244,10 @@ export class Segnalazioni {
         method: metodo,
         headers: {
           authorization: `Casa ${this.identita.segreto}`,
-          ...(corpo ? { "content-type": "application/json" } : {}),
+          ...intestazioni,
         },
-        body: corpo ? JSON.stringify(corpo) : undefined,
-        signal: AbortSignal.timeout(ATTESA),
+        body: corpo,
+        signal: AbortSignal.timeout(attesa),
       });
     } catch (errore) {
       throw new CentralinoHaDettoNo(
