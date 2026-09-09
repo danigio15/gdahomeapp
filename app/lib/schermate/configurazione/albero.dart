@@ -95,6 +95,21 @@ const albero = <Famiglia>[
       pronta: true,
     ),
     Voce(
+      'Come si comporta la plancia',
+      'La barra, chi comanda, il meteo di casa: le scelte che valgono per '
+          'tutta la plancia',
+      disegno: 'impostazioni',
+      da: 'visib',
+      pronta: true,
+    ),
+    Voce(
+      'I piani',
+      'Come si raggruppano le stanze quando ce ne sono tante',
+      disegno: 'stanze',
+      da: 'stanze',
+      pronta: true,
+    ),
+    Voce(
       'Le stanze',
       'Le stanze della casa, con la loro temperatura e la loro umidita\'',
       disegno: 'stanze',
@@ -143,6 +158,14 @@ const albero = <Famiglia>[
       'Quali inserimenti si vedono: Casa, Fuori, Notte, Vacanza, Parziale',
       disegno: 'sicurezza',
       da: 'sez4',
+      pronta: true,
+    ),
+    Voce(
+      'Le cose che scaldano',
+      'Il termocamino, l\'aspiratore della canna fumaria, quello che scalda '
+          'oltre ai termosifoni',
+      disegno: 'caldaia',
+      da: 'sez5',
       pronta: true,
     ),
     Voce(

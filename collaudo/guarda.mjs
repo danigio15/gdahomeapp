@@ -1038,11 +1038,11 @@ try {
   await scatta(pagina, "6p-cercatore");
   await premi(pagina, "Annulla");
   await attendi(700);
-  /* Dalla luce si torna all'elenco, dall'elenco all'alberatura. */
+  /* Dalla luce si torna all'elenco, dall'elenco all'alberatura. Niente
+   * «Lascia stare»: aprire una luce e chiudere il cercatore non cambia
+   * niente, e la barra del salvataggio non compare. */
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
-  await premi(pagina, "Lascia stare");
-  await attendi(600);
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
 

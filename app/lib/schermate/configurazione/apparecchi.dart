@@ -76,6 +76,8 @@ class SchermataDegliApparecchi extends StatefulWidget {
     this.laFoto = false,
     this.leStanze = true,
     this.leAltreEntita = true,
+    this.stanzeAParte = '',
+    this.ordineAParte = '',
     this.inFondo,
   });
 
@@ -104,6 +106,17 @@ class SchermataDegliApparecchi extends StatefulWidget {
   /// luce non ha un contatore mensile.
   final bool leAltreEntita;
 
+  /// Dove sta scritta la stanza, quando **non sta nella riga**.
+  ///
+  /// Le luci e le prese la plancia le tiene come mappa `entita' -> nome`: in
+  /// una riga cosi' non c'e' posto per la stanza, e infatti la stanza sta in
+  /// una casella sua accanto (`cd_luci_rooms`). Scriverla nella riga vorrebbe
+  /// dire scriverla dove nessuno la legge.
+  final String stanzeAParte;
+
+  /// Dove sta scritto l'ordine, quando non sta nella riga: stessa ragione.
+  final String ordineAParte;
+
   /// Quello che sta sotto l'elenco: le soglie, le impostazioni di casa.
   final List<Widget> Function(Scatto scatto, Quaderno quaderno)? inFondo;
 
@@ -115,6 +128,11 @@ class SchermataDegliApparecchi extends StatefulWidget {
 class _SchermataDegliApparecchiState extends State<SchermataDegliApparecchi> {
   List<Apparecchio>? _elenco;
   int _daQualeScatto = -1;
+
+  /* Le caselle accanto: la stanza e l'ordine di una luce non stanno nella sua
+   * riga — la riga e' `entita' -> nome` e non ha posto per altro. */
+  Map<String, dynamic> _stanzeAParte = {};
+  Map<String, dynamic> _ordineAParte = {};
 
   List<Apparecchio> _stanzeDi(Scatto scatto) => widget.sezione == Sezione.stanze
       ? const []
@@ -130,6 +148,12 @@ class _SchermataDegliApparecchiState extends State<SchermataDegliApparecchi> {
         sezione: widget.sezione,
         stanze: _stanzeDi(scatto),
       );
+      if (widget.stanzeAParte.isNotEmpty) {
+        _stanzeAParte = scatto.mappa(widget.stanzeAParte);
+      }
+      if (widget.ordineAParte.isNotEmpty) {
+        _ordineAParte = scatto.mappa(widget.ordineAParte);
+      }
       _daQualeScatto = scatto.revisione;
     }
     return _elenco!;
@@ -143,6 +167,18 @@ class _SchermataDegliApparecchiState extends State<SchermataDegliApparecchi> {
       widget.sezione.chiave,
       scriviGliApparecchi(_elenco!, widget.sezione),
     );
+    if (widget.stanzeAParte.isNotEmpty) {
+      quaderno.segna(widget.stanzeAParte, _stanzeAParte);
+    }
+    if (widget.ordineAParte.isNotEmpty) {
+      /* L'ordine si riscrive tutto: e' `entita' -> posto`, e un posto rimasto
+       * indietro sposta una luce che nessuno ha toccato. */
+      _ordineAParte = {
+        for (final (posto, uno) in _elenco!.indexed)
+          if (uno.entita.isNotEmpty) uno.entita: posto,
+      };
+      quaderno.segna(widget.ordineAParte, _ordineAParte);
+    }
     setState(() {});
   }
 
@@ -226,6 +262,18 @@ class _SchermataDegliApparecchiState extends State<SchermataDegliApparecchi> {
           sezione: widget.sezione,
           apparecchio: quale,
           stanze: stanze,
+          stanzaAParte: widget.stanzeAParte.isEmpty
+              ? null
+              : (
+                  quale: '${_stanzeAParte[quale.entita] ?? ''}',
+                  metti: (String dove) => setState(() {
+                    if (dove.isEmpty) {
+                      _stanzeAParte.remove(quale.entita);
+                    } else {
+                      _stanzeAParte[quale.entita] = dove;
+                    }
+                  }),
+                ),
           domini: widget.domini,
           campi: widget.campi,
           laFoto: widget.laFoto,
@@ -452,6 +500,7 @@ class _UnApparecchio extends StatefulWidget {
     required this.leStanze,
     required this.leAltreEntita,
     required this.unaCosa,
+    this.stanzaAParte,
   });
 
   final Collegamento collegamento;
@@ -464,6 +513,10 @@ class _UnApparecchio extends StatefulWidget {
   final bool leStanze;
   final bool leAltreEntita;
   final String unaCosa;
+
+  /// Quando la stanza non sta nella riga: cosa c'e' scritto adesso, e dove
+  /// scriverla.
+  final ({String quale, void Function(String dove) metti})? stanzaAParte;
 
   @override
   State<_UnApparecchio> createState() => _UnApparecchioState();
@@ -554,8 +607,16 @@ class _UnApparecchioState extends State<_UnApparecchio> {
                 const SizedBox(height: 14),
                 _LaStanza(
                   stanze: widget.stanze,
-                  adesso: quale,
-                  scegli: (stanza) => _tocca(() => quale.mettiLaStanza(stanza)),
+                  scelta: widget.stanzaAParte != null
+                      ? widget.stanzaAParte!.quale
+                      : quale.idDellaStanza,
+                  scegli: (stanza) => _tocca(() {
+                    if (widget.stanzaAParte != null) {
+                      widget.stanzaAParte!.metti(stanza?.id ?? '');
+                    } else {
+                      quale.mettiLaStanza(stanza);
+                    }
+                  }),
                 ),
               ],
               const SizedBox(height: 18),
@@ -704,12 +765,15 @@ class _IlCampo extends StatelessWidget {
 class _LaStanza extends StatelessWidget {
   const _LaStanza({
     required this.stanze,
-    required this.adesso,
+    required this.scelta,
     required this.scegli,
   });
 
   final List<Apparecchio> stanze;
-  final Apparecchio adesso;
+
+  /// L'identificativo della stanza scelta adesso.
+  final String scelta;
+
   final ValueChanged<Apparecchio?> scegli;
 
   @override
@@ -724,7 +788,7 @@ class _LaStanza extends StatelessWidget {
         ),
       );
     }
-    final quale = stanze.where((una) => una.id == adesso.idDellaStanza);
+    final quale = stanze.where((una) => una.id == scelta);
     return DropdownButtonFormField<String>(
       initialValue: quale.isEmpty ? '' : quale.first.id,
       decoration: const InputDecoration(

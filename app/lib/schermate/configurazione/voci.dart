@@ -17,6 +17,7 @@ import 'apparecchi.dart';
 import '../../casa/plancia/home.dart';
 import 'cose_di_casa.dart';
 import 'home.dart';
+import 'il_resto.dart';
 import 'parole.dart';
 import 'sicurezza.dart';
 import 'caselle.dart';
@@ -192,6 +193,14 @@ Widget? schermataDi(
   ),
   'Cosa e\' sparito' => SchermataDeiNascosti(collegamento: collegamento),
 
+  'La raccolta' => SchermataDellaRaccolta(collegamento: collegamento),
+  'Le sezioni mie' => SchermataDelleSezioniMie(collegamento: collegamento),
+  'Le cose che scaldano' => SchermataDelCaldo(collegamento: collegamento),
+  'Come si comporta la plancia' => SchermataDegliInterruttori(
+    collegamento: collegamento,
+  ),
+  'I piani' => SchermataDeiPiani(collegamento: collegamento),
+
   'MiniPC' => SchermataDelleCaselle(
     titolo: 'MiniPC',
     sotto: 'Il monitoraggio del server: processore, memoria, dischi.',
@@ -282,6 +291,11 @@ Widget? schermataDi(
     /* Una luce non ha un contatore mensile: le sette caselle in piu' qui
      * sarebbero sette domande a cui nessuno risponde. */
     leAltreEntita: false,
+    /* La plancia tiene le luci come mappa `entita' -> nome`: in una riga
+     * cosi' non c'e' posto per la stanza ne' per l'ordine, e infatti stanno
+     * in due caselle accanto. */
+    stanzeAParte: chiaveDelleStanzeDelleLuci,
+    ordineAParte: chiaveDellOrdineDelleLuci,
   ),
   'Prese' => SchermataDegliApparecchi(
     titolo: 'Prese',

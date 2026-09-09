@@ -265,8 +265,12 @@ const chiaveDeiDisegniDegliAvvisi = 'cd_avvisi_icone';
 const chiaveDeiNomiDegliAvvisi = 'cd_avvisi_names_extra';
 
 /// I gruppi di luci aggiunti a mano, e quelli tolti.
-const chiaveDeiGruppi = 'cd_gruppi_extra';
-const chiaveDeiGruppiTolti = 'cd_gruppi_removed';
+///
+/// «Di luci» nel nome non e' pedanteria: `chiaveDeiGruppi` senza altro c'e'
+/// gia', ed e' quella dei sottocarichi dell'energia. Due costanti con lo
+/// stesso nome in due file stanno buone finche' nessuno le importa insieme.
+const chiaveDeiGruppiDiLuci = 'cd_gruppi_extra';
+const chiaveDeiGruppiDiLuciTolti = 'cd_gruppi_removed';
 
 /// L'ordine delle luci, le loro stanze, e l'ordine delle stanze.
 const chiaveDellOrdineDelleLuci = 'cd_luci_order';

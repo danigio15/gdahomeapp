@@ -12,11 +12,11 @@ un'altra cosa, e questo documento la misura invece di stimarla.
 | | quante |
 |---|---|
 | Chiavi che la dashboard sincronizza (`config-persistence-section.js`) | **83** (85 meno le due di servizio) |
-| Chiavi che la Configurazione dell'app sa leggere e scrivere | **54** |
+| Chiavi che la Configurazione dell'app sa leggere e scrivere | **68** |
 | Moduli della plancia che sono editor o pezzi di editor (`src/sections/*editor*`, `*integraz*`) | **30** |
 | Righe dei moduli della plancia | ~91.000 |
 
-Non è una stima: le 83 chiavi sono estratte dal file che le elenca, e le 54
+Non è una stima: le 83 chiavi sono estratte dal file che le elenca, e le 68
 sono un **elenco scritto a mano** in `app/test/chiavi_della_config_test.dart`,
 e scritto a mano lo è apposta. Il conto lo si faceva frugando nei sorgenti:
 bastava dichiarare quaranta costanti in un file di modello — nomi e basta,

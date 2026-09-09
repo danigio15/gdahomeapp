@@ -104,7 +104,7 @@ const leChiaviDellaPlancia = <String>[
 
 /// Quante ne conosce l'app adesso. Sale, non scende: quando sale si cambia
 /// questo numero e si cambia il documento, insieme.
-const quanteNeConosciamo = 54;
+const quanteNeConosciamo = 68;
 
 /* Quali chiavi l'app sa configurare **davvero**.
  *
@@ -131,6 +131,7 @@ const leChiaviCheSappiamoFare = <String>[
   'cd_cameras',
   'cd_centrale_scelta',
   'cd_centrali',
+  'cd_clima_inverti_card',
   'cd_clima_units',
   'cd_costo_kwh',
   'cd_energia_tessere',
@@ -141,14 +142,21 @@ const leChiaviCheSappiamoFare = <String>[
   'cd_ev_car_active',
   'cd_ev_cars',
   'cd_evidenza',
+  'cd_floor_icons',
+  'cd_floors',
   'cd_flow_nodes',
+  'cd_fumo_rilevato',
   'cd_hidden_elements',
   'cd_home_blocchi',
   'cd_impianti_termici',
   'cd_irrigazione',
   'cd_loads',
   'cd_luci',
+  'cd_luci_order',
+  'cd_luci_rooms',
   'cd_media_player',
+  'cd_meteo_entita_proprie',
+  'cd_navbar_mode',
   'cd_navbar_order',
   'cd_people',
   'cd_piscina',
@@ -157,23 +165,29 @@ const leChiaviCheSappiamoFare = <String>[
   'cd_prezzo_immissione',
   'cd_quick_actions',
   'cd_report_devices',
+  'cd_rifiuti',
   'cd_robot',
   'cd_scaldabagni',
   'cd_section_names',
   'cd_sections',
+  'cd_sections_manual',
   'cd_security_doors',
+  'cd_sezioni_mie',
   'cd_slot_labels',
   'cd_solare_scelto',
   'cd_solari',
+  'cd_solo_lettura',
   'cd_stanze',
   'cd_subload_groups',
   'cd_subloads_extra',
   'cd_tapparelle',
   'cd_tapparelle_soglia',
+  'cd_termico_caldo',
   'cd_text_overrides',
   'cd_todo',
   'cd_umidita_soglia',
   'cd_ups',
+  'cd_visual_prefer_image',
   'cd_widgets',
 ];
 
