@@ -616,12 +616,27 @@ async function premi(pagina, etichetta, opzioni = {}) {
  * quindi si scorre finche' la voce non c'e', e allora si preme.
  */
 async function premiCercando(pagina, etichetta, opzioni = {}) {
+  const { height } = pagina.viewportSize();
+  /* Non basta che la voce ci sia: deve essere DOVE SI VEDE.
+   *
+   * L'albero dell'accessibilita' tiene anche quello che e' scorso via sopra,
+   * col suo riquadro a coordinate negative: cliccarlo a quel punto vuol dire
+   * cliccare quello che sta in cima allo schermo — una volta e' finito su «Le
+   * tue case», e da li' in poi il collaudo guardava un'altra schermata senza
+   * che niente lo dicesse. Quindi si scorre finche' il riquadro non e' dentro
+   * la finestra, e solo allora si preme.
+   */
   await scorri(pagina, -8000);
-  await attendi(400);
-  for (let giro = 0; giro < 16; giro += 1) {
-    if (await ilBottone(pagina, etichetta, opzioni)) break;
-    await scorri(pagina, 600);
-    await attendi(240);
+  await attendi(500);
+  for (let giro = 0; giro < 18; giro += 1) {
+    const nodo = await ilBottone(pagina, etichetta, opzioni);
+    const riquadro = nodo ? await nodo.boundingBox().catch(() => null) : null;
+    if (riquadro && riquadro.y > 90 && riquadro.y + riquadro.height < height - 60) {
+      await attendi(300);
+      return premi(pagina, etichetta, opzioni);
+    }
+    await scorri(pagina, 520);
+    await attendi(260);
   }
   return premi(pagina, etichetta, opzioni);
 }
@@ -1075,10 +1090,11 @@ try {
   await scorri(pagina, 700);
   await attendi(500);
   await scatta(pagina, "6o4-un-elettrodomestico");
+  /* Niente «Lascia stare»: guardare la scheda senza scriverci dentro non
+   * cambia niente, e l'apparecchio nuovo non viene nemmeno messo in elenco —
+   * e' quello che deve succedere. */
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
-  await premi(pagina, "Lascia stare");
-  await attendi(600);
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
 
