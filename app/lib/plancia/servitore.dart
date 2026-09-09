@@ -121,6 +121,7 @@ class Servitore {
     required this.cartella,
     this.lingua = 'it',
     this.portaAperta = false,
+    this.leggera = false,
     void Function(String)? racconta,
   }) : _trovaIlFilo = filo,
        _racconta = racconta ?? ((_) {});
@@ -131,6 +132,18 @@ class Servitore {
   /// al servitore da riga di comando, dove chi bussa e' il collaudo; sul
   /// telefono nessuno deve poter chiedere la chiave a nessuno.
   final bool portaAperta;
+
+  /// La plancia senza quello che un telefono non regge.
+  ///
+  /// Il foglio di stile della plancia ha settantadue animazioni che non
+  /// finiscono mai — puntini che pulsano, fiamme che tremolano — e sedici
+  /// sfocature dietro le tessere, fino a quarantadue pixel. Nel browser di un
+  /// computer non si notano; in un WebView su un telefono vogliono dire
+  /// ridisegnare tutto sessanta volte al secondo, per sempre, sulla stessa
+  /// scheda video che deve disegnare anche l'app: e l'app va a scatti. Con
+  /// questa le animazioni infinite fanno un giro e si fermano, e le
+  /// sfocature spariscono. Si cambia da fuori, e vale dalla pagina dopo.
+  bool leggera;
 
   /// La chiave della porta: nasce con il servitore, e la conosce solo chi
   /// apre la pagina dall'indirizzo che [paginaDi] da'.
@@ -401,6 +414,14 @@ class Servitore {
   /// `dashboardmodern.invalid` — contando sul fatto che il ponte del
   /// pannello l'indirizzo lo ignora. Qui il ponte e' un server, e
   /// l'indirizzo va detto giusto.
+  /// Lo stile della plancia leggera: si mette in testa alla pagina, dopo
+  /// le premesse, e vince su tutto con `!important`.
+  static const String stileLeggero =
+      '<style id="gdahome-leggera">'
+      '*,*::before,*::after{animation-iteration-count:1!important}'
+      '*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}'
+      '</style>';
+
   String conLePremesse(String pagina) {
     final quale = pannello;
     final premessa =
@@ -418,7 +439,8 @@ class Servitore {
         'window.__DASHBOARDMODERN_PRIMARY__=${quale?.primario ?? true};'
         'window.__DASHBOARDMODERN_LOCALE__=${jsonEncode(lingua)};'
         'window.__GDAHOME__=true;'
-        '</script>';
+        '</script>'
+        '${leggera ? stileLeggero : ''}';
     final testa = RegExp(
       r'<head[^>]*>',
       caseSensitive: false,

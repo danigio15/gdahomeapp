@@ -14,4 +14,7 @@ Future<ServitoreDiQuestoSistema?> alzaIlServitore({
 abstract interface class ServitoreDiQuestoSistema {
   Uri paginaDi(PannelloDellaPlancia pannello);
   Future<void> spegni();
+
+  /// La plancia leggera: vale dalla pagina dopo.
+  set leggera(bool valore);
 }

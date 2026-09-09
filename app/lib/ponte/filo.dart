@@ -183,24 +183,32 @@ class Filo {
   DateTime? _contoDal;
 
   /// Il traffico da quando si e' entrati l'ultima volta, in una riga:
-  /// «1234 msg, 320 eventi, 8,1 MB in 5 min». Dice se una casa e' silenziosa
-  /// o un fiume in piena, che e' la prima cosa da sapere quando l'app va a
-  /// scatti.
+  /// «1234 msg, 320 eventi, 8,1 MB giu' (1,2 MB sul filo, gzip), 295 su, in
+  /// 5 min». Dice se una casa e' silenziosa o un fiume in piena, che e' la
+  /// prima cosa da sapere quando l'app va a scatti; e se la compressione
+  /// c'e', che vuol dire che il ponte e' abbastanza nuovo.
   String? get traffico {
     final dal = _contoDal;
     if (dal == null) return null;
     final minuti = DateTime.now().difference(dal).inSeconds / 60;
-    final mb = _byteArrivati / (1024 * 1024);
     final cadutoIl = _cadutoIl;
     final cadute = _cadute == 0
         ? 'mai caduto'
         : 'caduto $_cadute volte, l\'ultima ${_daQuanto(cadutoIl)} fa: '
               '$_ultimaCaduta';
+    final presa = _presa;
+    final sulFilo = presa is PresaCifrata
+        ? ' (${_megabyte(presa.caratteriArrivati)} sul filo'
+              '${presa.comprime ? ', gzip' : ', senza gzip'})'
+        : '';
     return '$_messaggiArrivati msg, $_eventiArrivati eventi, '
-        '${mb.toStringAsFixed(1)} MB giu\', $_messaggiMandati su, '
+        '${_megabyte(_byteArrivati)} giu\'$sulFilo, $_messaggiMandati su, '
         'in ${minuti < 1 ? '${(minuti * 60).round()} s' : '${minuti.round()} min'}; '
         '$cadute';
   }
+
+  static String _megabyte(int quanti) =>
+      '${(quanti / (1024 * 1024)).toStringAsFixed(1)} MB';
 
   static String _daQuanto(DateTime? quando) {
     if (quando == null) return '?';

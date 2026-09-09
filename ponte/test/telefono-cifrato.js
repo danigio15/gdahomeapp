@@ -7,7 +7,10 @@
 
 import { aperturaNuova, Busta, chiaveDiSessione, coppiaEffimera, VERSIONE } from "../src/cifra.js";
 
-export function telefonoCifrato(indirizzo, { chi = null, chiave = null, abbina = false } = {}) {
+export function telefonoCifrato(
+  indirizzo,
+  { chi = null, chiave = null, abbina = false, gzip = false } = {},
+) {
   const presa = new WebSocket(indirizzo);
   const mia = coppiaEffimera();
   const apertura = aperturaNuova();
@@ -32,14 +35,18 @@ export function telefonoCifrato(indirizzo, { chi = null, chiave = null, abbina =
         ...(abbina ? { abbina: true } : { chi }),
         apertura: apertura.toString("base64"),
         mia: mia.pubblica.toString("base64"),
+        /* Un telefono che sa aprire il gzip lo dice; uno vecchio no. */
+        ...(gzip ? { gzip: true } : {}),
       }),
     );
   });
 
   let quantiTelai = 0;
+  let quantiCaratteri = 0;
   presa.addEventListener("message", (evento) => {
     quantiTelai += 1;
     const testo = typeof evento.data === "string" ? evento.data : String(evento.data);
+    quantiCaratteri += testo.length;
     if (!busta) {
       const detto = JSON.parse(testo);
       inChiaro.push(detto);
@@ -56,7 +63,9 @@ export function telefonoCifrato(indirizzo, { chi = null, chiave = null, abbina =
           apertura,
           chiaveDelFilo: chiave,
         }),
-        { io: "telefono" },
+        /* Si comprime verso la casa solo se la casa ha detto di saperlo
+         * aprire: e' la stessa regola dell'app vera. */
+        { io: "telefono", comprime: gzip && detto.gzip === true },
       );
       laStretta.riuscito();
       return;
@@ -102,6 +111,11 @@ export function telefonoCifrato(indirizzo, { chi = null, chiave = null, abbina =
     manda: (cosa) => presa.send(busta.chiudi(JSON.stringify(cosa))),
     get quantiTelai() {
       return quantiTelai;
+    },
+    /* Quanto e' passato sul filo, in caratteri: e' quello che la
+     * compressione deve far calare. */
+    get quantiCaratteri() {
+      return quantiCaratteri;
     },
     mandaGrezzo: (testo) => presa.send(testo),
     aspetta: async (quale) => {

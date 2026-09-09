@@ -23,9 +23,22 @@ import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 
 import 'altrove/altrove.dart';
+import 'compressione/compressione.dart' as compressione;
+
+export 'compressione/compressione.dart' show gzipDisponibile;
 
 /// Il numero di versione viaggia in chiaro nella prima riga.
 const int versioneDelProtocollo = 1;
+
+/// Da quanti caratteri in su una busta si comprime, se l'altra punta sa
+/// aprirla. Sotto, un evento compresso non e' piu' piccolo: e' solo piu'
+/// lento. Vedi `compressione/compressione.dart`.
+const int sogliaDiCompressione = 1024;
+
+/// Oltre questo, dentro una busta non c'e' la casa: c'e' una bomba. E' lo
+/// stesso tetto di un messaggio intero a pezzi, `interoMassimo` in
+/// `stretta.dart`.
+const int apertaMassima = 16 * 1024 * 1024;
 
 const String _etichettaFilo = 'gdahome/filo/v1';
 const String _etichettaAbbinamento = 'gdahome/abbinamento/v1';
@@ -170,13 +183,19 @@ Uint8List aperturaNuova() {
 /// messaggio rigiocato, e in un canale che passa da un terzo va rifiutato
 /// senza pensarci.
 class Busta {
-  Busta(this.chiave, {required DaChi io})
+  Busta(this.chiave, {required DaChi io, this.comprime = false})
     : mio = io,
       suo = io == DaChi.casa ? DaChi.telefono : DaChi.casa;
 
   final SecretKey chiave;
   final DaChi mio;
   final DaChi suo;
+
+  /// Se le buste che si chiudono qui si comprimono: l'altra punta ha detto
+  /// nella stretta di mano di saper aprire il gzip. Aprirle, le buste
+  /// compresse, lo si sa sempre — dove c'e' `dart:io` — e si riconoscono da
+  /// sole, dai due byte con cui comincia un gzip.
+  final bool comprime;
 
   int mando = 0;
   int ricevo = 0;
@@ -188,7 +207,11 @@ class Busta {
   /// un chilobyte si apre in meno di un millesimo. Sopra, e' un file della
   /// plancia, un `get_states`, una storia di consumi: roba da decimi di
   /// secondo su un telefono, che sul filo principale sono scatti.
-  static const int sogliaAltrove = 16 * 1024;
+  ///
+  /// Si misura sul filo, cioe' compressa: una risposta da duecento chilobyte
+  /// di storico arriva in venti, e quei venti si aprono qui — decifrare e
+  /// scompattare, insieme, un paio di millesimi.
+  static const int sogliaAltrove = 8 * 1024;
 
   Uint8List? _chiaveByte;
 
@@ -230,13 +253,14 @@ class Busta {
 
   Future<String> chiudi(String testo) async {
     final dodici = _nonce(mio, mando);
+    final daComprimere = comprime && testo.length >= sogliaDiCompressione;
     final String chiusa;
     if (testo.length < sogliaAltrove) {
-      chiusa = await _chiudiDavvero(chiave, dodici, testo);
+      chiusa = await _chiudiDavvero(chiave, dodici, testo, daComprimere);
     } else {
       final byte = await _byteDellaChiave();
       chiusa = await altrove(
-        () => _chiudiDavvero(SecretKey(byte), dodici, testo),
+        () => _chiudiDavvero(SecretKey(byte), dodici, testo, daComprimere),
       );
     }
     mando += 1;
@@ -249,17 +273,29 @@ class Busta {
     SecretKey chiave,
     Uint8List dodici,
     String testo,
+    bool daComprimere,
   ) async {
+    List<int> dentro = utf8.encode(testo);
+    if (daComprimere) dentro = compressione.comprimi(dentro);
     final scatola = await AesGcm.with256bits().encrypt(
-      utf8.encode(testo),
+      dentro,
       secretKey: chiave,
       nonce: dodici,
     );
-    return base64.encode([
-      ...dodici,
-      ...scatola.cipherText,
-      ...scatola.mac.bytes,
-    ]);
+    final cifrato = scatola.cipherText;
+    final marchio = scatola.mac.bytes;
+    /* Un solo blocco di byte, non una lista di numeri: un allegato da
+     * cinque megabyte messo insieme un numero alla volta era un secondo di
+     * niente. */
+    final tutto = Uint8List(dodici.length + cifrato.length + marchio.length)
+      ..setRange(0, dodici.length, dodici)
+      ..setRange(dodici.length, dodici.length + cifrato.length, cifrato)
+      ..setRange(
+        dodici.length + cifrato.length,
+        dodici.length + cifrato.length + marchio.length,
+        marchio,
+      );
+    return base64.encode(tutto);
   }
 
   /// Torna il testo, o solleva. Non torna mai `null` per un messaggio guasto:
@@ -312,7 +348,7 @@ class Busta {
     }
     if (tutto.length < 12 + 16) throw const BustaGuasta('busta troppo corta');
     final dodici = tutto.sublist(0, 12);
-    final dentro = await AesGcm.with256bits().decrypt(
+    var dentro = await AesGcm.with256bits().decrypt(
       SecretBox(
         tutto.sublist(12, tutto.length - 16),
         nonce: dodici,
@@ -320,6 +356,17 @@ class Busta {
       ),
       secretKey: chiave,
     );
+    /* Il marchio ha gia' detto che e' roba nostra: se dentro c'e' un gzip —
+     * comincia con `1f 8b`, e un testo in UTF-8 non comincia mai cosi',
+     * perche' `8b` da solo non e' un carattere — si scompatta, con un
+     * tetto. */
+    if (dentro.length >= 2 && dentro[0] == 0x1f && dentro[1] == 0x8b) {
+      try {
+        dentro = compressione.scompatta(dentro, massimo: apertaMassima);
+      } catch (_) {
+        throw const BustaGuasta('la busta compressa non si apre');
+      }
+    }
     return utf8.decode(dentro);
   }
 }

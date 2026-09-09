@@ -64,6 +64,9 @@ void main() {
     expect(collegamento.comeVa, ComeVa.aperta);
     expect(collegamento.dentro, isTrue);
     expect(collegamento.daDove, DaDove.daDentro);
+    /* Le entita' si leggono quando servono, non all'apertura. */
+    expect(collegamento.stato!.pieno, isFalse);
+    await collegamento.serveLaCasa();
     expect(collegamento.stato!.quante, 1);
     expect(collegamento.stato!['light.cucina']!.accesa, isTrue);
     await ponte.spegni();
@@ -159,11 +162,13 @@ void main() {
       );
 
       await collegamento.cambiaCasa(casaMia.id);
+      await collegamento.serveLaCasa();
       expect(collegamento.casa!.nome, 'Casa mia');
       expect(collegamento.stato!.quante, 1);
       expect(mia.prese.length, 1);
 
       await collegamento.cambiaCasa(casaLoro.id);
+      await collegamento.serveLaCasa();
       expect(collegamento.casa!.nome, 'Dai miei');
       expect(collegamento.stato!.quante, 2);
       expect(collegamento.stato!['light.salotto'], isNotNull);

@@ -364,6 +364,44 @@ test("tutta la casa in un messaggio solo arriva intera, spezzata per strada", as
     /* E ci e' arrivata a pezzi: se fosse passata intera, questa prova non
      * starebbe provando niente. */
     assert.ok(telefono.quantiTelai > 3, `arrivata in ${telefono.quantiTelai} telai`);
+    /* Un telefono che non ha detto di saper aprire il gzip riceve tutto
+     * com'era: piu' del testo, che in base64 cresce di un terzo. */
+    assert.ok(telefono.quantiCaratteri > tanta.length, `passati ${telefono.quantiCaratteri} caratteri`);
+
+    telefono.chiudi();
+  } finally {
+    await c.spegni();
+  }
+});
+
+test("un telefono che sa aprire il gzip riceve la casa grande compressa, e intera", async () => {
+  /* La stessa casa di prima, ma il telefono ha detto `gzip: true` nella
+   * stretta di mano: la casa gli risponde che lo sa aprire anche lei, e da
+   * li' in poi i due megabyte e mezzo passano in qualche chilobyte. Il
+   * centralino non se ne accorge: vede buste, solo piu' piccole. */
+  const c = await catena();
+  try {
+    const { segno, chiave, dispositivo } = c.dispositivi.abbina({ nome: "telefono" });
+    const telefono = unTelefono(c.doveIlCentralino, `/telefono/${c.identita.casa}`, {
+      chi: dispositivo.id,
+      chiave,
+      gzip: true,
+    });
+    await telefono.dentro;
+    assert.equal(telefono.inChiaro[0].gzip, true, "la casa dice di saper aprire il gzip");
+    telefono.manda({ type: "auth", access_token: segno });
+    await telefono.aspetta("auth_ok");
+
+    const tanta = "x".repeat(2_500_000);
+    c.ha.quanto.grande = tanta;
+    telefono.manda({ id: 1, type: "get_states" });
+
+    const risposta = await telefono.aspetta((uno) => uno.id === 1);
+    assert.equal(risposta.result, tanta);
+    assert.ok(
+      telefono.quantiCaratteri < tanta.length / 10,
+      `passati ${telefono.quantiCaratteri} caratteri per ${tanta.length} di casa`,
+    );
 
     telefono.chiudi();
   } finally {

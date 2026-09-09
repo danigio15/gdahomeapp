@@ -5,6 +5,7 @@ library;
 import 'dart:async';
 
 import 'package:flutter/painting.dart' show Color;
+import 'package:flutter/widgets.dart' show Widget;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -15,10 +16,17 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 /// esiste; i video delle telecamere che partono senza un dito sopra, come
 /// fanno nel browser; e le uscite chiuse — dal riquadro non si esce verso
 /// altri siti, perche' non c'e' nessun posto dove andare.
+///
+/// E un fondo **pieno**, [sfondo], non trasparente. Un WebView trasparente
+/// va composto con quello che ha sotto a ogni fotogramma, e Android gli
+/// toglie le scorciatoie che ha per una superficie opaca: con una plancia
+/// che si muove sempre e' lavoro in piu' sessanta volte al secondo, per
+/// mostrare un fondo che la pagina copre comunque.
 WebViewController costruisciIlControllore({
   required void Function() quandoCaricata,
   required void Function(String perche) quandoFallisce,
   required bool Function(String indirizzo) siPuoAndare,
+  required Color sfondo,
 }) {
   final PlatformWebViewControllerCreationParams parametri;
   if (WebViewPlatform.instance is WebKitWebViewPlatform) {
@@ -31,7 +39,7 @@ WebViewController costruisciIlControllore({
   }
   final controllore = WebViewController.fromPlatformCreationParams(parametri)
     ..setJavaScriptMode(JavaScriptMode.unrestricted)
-    ..setBackgroundColor(const Color(0x00000000))
+    ..setBackgroundColor(sfondo.withValues(alpha: 1))
     ..setNavigationDelegate(
       NavigationDelegate(
         onPageFinished: (_) => quandoCaricata(),
@@ -53,3 +61,27 @@ WebViewController costruisciIlControllore({
 
 Future<void> ricarica(WebViewController controllore, Uri pagina) =>
     controllore.reload();
+
+/// Il riquadro che mostra il WebView.
+///
+/// Su Android, con [ibrido], il riquadro lo compone il sistema per conto suo
+/// (composizione ibrida): Flutter gli lascia il buco e disegna intorno. Senza,
+/// il WebView disegna in una tessitura che Flutter ricompone a ogni suo
+/// fotogramma — e una plancia che si muove sempre e' un fotogramma dietro
+/// l'altro, sulla stessa scheda video dell'app. Sull'iPhone la scelta non
+/// c'e': e' sempre il sistema a comporre.
+Widget riquadroDelWebView(
+  WebViewController controllore, {
+  required bool ibrido,
+}) {
+  final piattaforma = controllore.platform;
+  if (ibrido && piattaforma is AndroidWebViewController) {
+    return WebViewWidget.fromPlatformCreationParams(
+      params: AndroidWebViewWidgetCreationParams(
+        controller: piattaforma,
+        displayWithHybridComposition: true,
+      ),
+    );
+  }
+  return WebViewWidget(controller: controllore);
+}

@@ -10,15 +10,18 @@
  * Un messaggio per parte, in chiaro. E' l'unico pezzo che il centralino vede,
  * e non c'e' niente dentro che gli serva.
  *
- *   telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…"}    un telefono noto
- *   telefono → casa   {v:1, abbina:true, apertura:"…", mia:"…"}   un telefono nuovo
- *   casa → telefono   {v:1, pronto:true, mia:"…"}
+ *   telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true}   un telefono noto
+ *   telefono → casa   {v:1, abbina:true, apertura:"…", mia:"…", gzip:true}  un telefono nuovo
+ *   casa → telefono   {v:1, pronto:true, mia:"…", gzip:true}
  *   casa → telefono   {v:1, no:"…"}                          e basta
  *   casa → telefono   {v:1, no:"…", riabbina:true}           questo telefono non c'e' piu'
  *
  * `mia` e' una chiave pubblica effimera: vive quanto il collegamento. `chi` e'
  * l'identificativo del telefono, che non e' un segreto — serve solo a sapere
- * quale chiave del filo tirare fuori.
+ * quale chiave del filo tirare fuori. `gzip: true` dice «so aprire una busta
+ * compressa»: chi manda comprime solo se l'altro l'ha detto, e chi non lo
+ * dice — un'app vecchia, l'app nel browser — riceve tutto com'era. E' scritto
+ * in `cifra.js`.
  *
  * Dopo, ogni messaggio e' una busta.
  */
@@ -127,12 +130,19 @@ export class Portiere {
       return;
     }
 
-    presa.manda(
-      JSON.stringify({ v: VERSIONE, pronto: true, mia: mia.pubblica.toString("base64") }),
-    );
+    presa.manda(JSON.stringify(this._pronto(mia)));
     /* Da qui in poi il ponte vede una presa qualunque, e non sa niente di
      * tutto questo. */
-    this.ponte.accogli(new PresaCifrata(presa, chiaveDiQuestoFilo), { da });
+    this.ponte.accogli(
+      new PresaCifrata(presa, chiaveDiQuestoFilo, { comprime: detto.gzip === true }),
+      { da },
+    );
+  }
+
+  /* La risposta a chi ha stretto la mano: la mia chiave effimera, e che qui
+   * il gzip si sa aprire. */
+  _pronto(mia) {
+    return { v: VERSIONE, pronto: true, mia: mia.pubblica.toString("base64"), gzip: true };
   }
 
   /* ─── L'abbinamento, dentro il cifrato ───────────────────────────────── */
@@ -152,11 +162,9 @@ export class Portiere {
       return;
     }
 
-    presa.manda(
-      JSON.stringify({ v: VERSIONE, pronto: true, mia: mia.pubblica.toString("base64") }),
-    );
+    presa.manda(JSON.stringify(this._pronto(mia)));
 
-    const cifrata = new PresaCifrata(presa, chiaveDiQuestoFilo);
+    const cifrata = new PresaCifrata(presa, chiaveDiQuestoFilo, { comprime: detto.gzip === true });
     /* `_ilCodice` aspetta il Supervisor, quindi torna una promessa: se
      * scoppiasse, nessuno la guarderebbe e Node butterebbe giu' il ponte per
      * un errore non gestito. Chi ha chiesto un abbinamento merita un no, non
@@ -236,9 +244,9 @@ export class Portiere {
  * stato toccato, e in tutti e due i casi andare avanti sarebbe peggio.
  */
 export class PresaCifrata {
-  constructor(sotto, chiave) {
+  constructor(sotto, chiave, { comprime = false } = {}) {
     this.sotto = sotto;
-    this.busta = new Busta(chiave, { io: "casa" });
+    this.busta = new Busta(chiave, { io: "casa", comprime });
     this.viva = true;
     this._pezzi = "";
     this.onMessaggio = () => {};

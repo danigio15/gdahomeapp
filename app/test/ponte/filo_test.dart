@@ -438,6 +438,33 @@ void main() {
     await filo.chiudi();
   });
 
+  test('il traffico dice se il gzip c\'e\': con un ponte nuovo si\', con uno vecchio no', () async {
+    final filo = Filo.fisso(
+      indirizzo: ponte.indirizzo,
+      segno: segnoBuono,
+      chi: chiBuono,
+      chiave: chiaveBuona,
+    );
+    await filo.apri();
+    expect(filo.traffico, contains('sul filo, gzip)'));
+    await filo.chiudi();
+
+    /* Un ponte di prima: nella stretta di mano non dice niente del gzip,
+     * e l'app non comprime verso di lui. Si parlano lo stesso. */
+    ponte.conosceIlGzip = false;
+    final vecchio = Filo.fisso(
+      indirizzo: ponte.indirizzo,
+      segno: segnoBuono,
+      chi: chiBuono,
+      chiave: chiaveBuona,
+    );
+    await vecchio.apri();
+    expect(vecchio.dentro, isTrue);
+    expect(vecchio.traffico, contains('senza gzip)'));
+    await vecchio.chiudi();
+    ponte.conosceIlGzip = true;
+  });
+
   test('al risveglio un filo vivo resta dentro', () async {
     final filo = Filo.fisso(
       indirizzo: ponte.indirizzo,

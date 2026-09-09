@@ -37,7 +37,7 @@ enum ComeVa {
   /// Sta cercando la casa, o sta bussando.
   inCammino,
 
-  /// Dentro, e lo stato della casa e' arrivato.
+  /// Dentro: il filo e' aperto e la casa risponde.
   aperta,
 
   /// Il segno non vale piu': questa casa va riabbinata.
@@ -194,23 +194,38 @@ class Collegamento {
   Future<void> _leggiLaCasa(Filo filo) async {
     final stato = StatoDellaCasa(filo);
     _stato = stato;
+    _casaChiesta = false;
     _guardaLaCasa = stato.cambiamenti.listen((_) {
       if (!_entitaCambiate.isClosed) _entitaCambiate.add(null);
     });
+    _vai(ComeVa.aperta);
+    /* La plancia parte subito: e' lei la home, e sapere dove sta e' una
+     * domanda sola. Le entita' — tutte, con i loro eventi — si leggono solo
+     * quando qualcuno le vuole, vedi [serveLaCasa]. */
+    await _leggiLaPlancia(filo);
+  }
+
+  bool _casaChiesta = false;
+
+  /// Le entita' della casa, quando servono davvero.
+  ///
+  /// Un `get_states` in una casa vera e' un megabyte e mezzo, e gli eventi
+  /// che seguono sono decine al secondo: leggerli all'apertura del filo, e a
+  /// ogni riconnessione, voleva dire tenere ferma la plancia — che intanto
+  /// se li legge da sola, per conto suo — e raddoppiare il traffico. Li
+  /// chiede l'elenco dei dispositivi quando si e' a schermo, e da li' in poi
+  /// restano aggiornati. Chiamarla due volte non costa niente.
+  Future<void> serveLaCasa() async {
+    final stato = _stato;
+    if (stato == null || _casaChiesta) return;
+    _casaChiesta = true;
     try {
       await stato.attacca();
-      _vai(ComeVa.aperta);
-      /* La plancia arriva dopo la casa, e non la tiene ferma: le entita' si
-       * vedono subito, le tessere appena la configurazione e' arrivata. */
-      unawaited(_leggiLaPlancia(filo));
-    } on SegnoRifiutato catch (errore) {
-      _perche = errore.spiegazione;
-      _vai(ComeVa.segnoScaduto);
     } on ErroreDelPonte catch (errore) {
+      _casaChiesta = false;
       _perche = errore.spiegazione;
-      _vai(ComeVa.irraggiungibile);
-      _riprendiQuandoTorna(filo);
     }
+    _avvisa();
   }
 
   /// Chiede alla casa dove sta la plancia.

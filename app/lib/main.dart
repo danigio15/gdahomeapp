@@ -8,15 +8,19 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
 import 'casa/archivio_delle_case.dart';
 import 'casa/cassaforte.dart';
 import 'casa/collegamento.dart';
+import 'casa/impostazioni.dart';
 import 'ponte/centralino.dart';
 import 'schermate/aggiungi_casa.dart';
 import 'schermate/home.dart';
+import 'schermate/misure.dart';
 import 'schermate/le_case.dart';
 import 'schermate/plancia_vera.dart';
 import 'vestito/sfondo.dart';
@@ -81,11 +85,18 @@ class AppDiCasa extends StatelessWidget {
 }
 
 class Portone extends StatefulWidget {
-  const Portone({super.key, this.cassaforte, this.collegamento, this.plancia});
+  const Portone({
+    super.key,
+    this.cassaforte,
+    this.collegamento,
+    this.plancia,
+    this.impostazioni,
+  });
 
   final Cassaforte? cassaforte;
   final Collegamento? collegamento;
   final FabbricaDellaPlancia? plancia;
+  final Impostazioni? impostazioni;
 
   @override
   State<Portone> createState() => _PortoneState();
@@ -95,6 +106,12 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   late final Collegamento _collegamento;
   late final FabbricaDellaPlancia _plancia =
       widget.plancia ?? FabbricaDellaPlancia();
+  late final Impostazioni _impostazioni =
+      widget.impostazioni ??
+      Impostazioni(
+        sulTelefono: !kIsWeb,
+        android: !kIsWeb && defaultTargetPlatform == TargetPlatform.android,
+      );
   bool _pronto = false;
   StreamSubscription<void>? _ascolto;
 
@@ -102,6 +119,8 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    Misure.io.accendi();
+    unawaited(_impostazioni.carica());
     _collegamento =
         widget.collegamento ??
         Collegamento(
@@ -142,6 +161,8 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _ascolto?.cancel();
+    Misure.io.spegni();
+    _impostazioni.chiudi();
     _collegamento.chiudi();
     super.dispose();
   }
@@ -177,6 +198,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     return Home(
       collegamento: _collegamento,
       plancia: _plancia,
+      impostazioni: _impostazioni,
       vaiAlleCase: () async {
         await Navigator.of(context).push<void>(
           MaterialPageRoute(

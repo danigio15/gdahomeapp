@@ -13,6 +13,9 @@ import '../../ponte/filo.dart';
 abstract interface class ServitoreDiQuestoSistema {
   Uri paginaDi(PannelloDellaPlancia pannello);
   Future<void> spegni();
+
+  /// La plancia leggera: vale dalla pagina dopo.
+  set leggera(bool valore);
 }
 
 class _SulTelefono implements ServitoreDiQuestoSistema {
@@ -24,6 +27,9 @@ class _SulTelefono implements ServitoreDiQuestoSistema {
 
   @override
   Future<void> spegni() => _servitore.spegni();
+
+  @override
+  set leggera(bool valore) => _servitore.leggera = valore;
 }
 
 /// Accende il servitore, con i file della plancia nella cartella di supporto

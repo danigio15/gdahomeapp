@@ -111,6 +111,8 @@ void main() {
 
     final collegamento = Collegamento(archivio: archivio);
     await collegamento.apri();
+    /* Le entita' si leggono quando servono: qui servono. */
+    await collegamento.serveLaCasa();
     return collegamento;
   }
 

@@ -164,6 +164,12 @@ Il pacchetto è di *release*, firmato con la chiave di sviluppo: non è quello
 che andrebbe su un negozio, ma è compilato per davvero — quello di *debug*
 girava interpretato, con tutti i controlli accesi, ed era lento e scaldava.
 
+> **Il ponte va tenuto al passo.** Dalla 0.11.0 il ponte e l'app comprimono
+> quello che si mandano (cinque, otto volte meno byte, e meno lavoro per
+> decifrarli): un'app nuova con un ponte vecchio funziona lo stesso, ma senza.
+> Da «Come va l'app» si vede: nella riga del traffico c'è «gzip» oppure
+> «senza gzip».
+
 ### La prima accensione
 
 Apri l'app. C'è **un bottone**: «Inquadra il codice».
@@ -299,6 +305,14 @@ perché.
   si rialza da solo, e i valori devono essere quelli veri, non quelli di prima.
 - **Dalla console del ponte, premi «Stacca»** sul telefono mentre l'app è
   aperta: deve accorgersene e dire che va riabbinato, senza restare a girare.
+- **Se va a scatti: Assistenza → «Come va l'app».** Usa l'app per un minuto
+  — plancia, barra, dispositivi — poi apri quella pagina e fotografala: dice
+  quanti fotogrammi sono lenti, se il peso è di Flutter o della scheda video,
+  se il filo principale è rimasto bloccato, e quanto passa sul filo con la
+  casa. Allegala a una segnalazione: è metà della diagnosi. Per un confronto
+  onesto, apri la stessa plancia nell'app di Home Assistant o in Chrome sullo
+  stesso telefono: se anche lì va a scatti, il peso è della pagina, non
+  dell'app.
 
 ## Se qualcosa non va
 

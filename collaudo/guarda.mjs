@@ -1032,6 +1032,19 @@ try {
   await attendi(700);
   await scatta(pagina, "6e-assistenza");
 
+  /* «Come va l'app»: i numeri di come disegna, e quanto passa sul filo. E'
+   * la pagina che si chiede di fotografare quando l'app va a scatti, quindi
+   * la si fotografa anche qui. */
+  racconta("apro «Come va l'app»");
+  await premi(pagina, "Come va l'app");
+  await aspettaCheCompaia(pagina, "Fotogrammi");
+  await attendi(1500);
+  await scatta(pagina, "6f-come-va-l-app");
+  /* Il bottone per tornare: in inglese, che e' la lingua del browser del collaudo. */
+  await premi(pagina, "Back");
+  await aspettaCheCompaia(pagina, "Scrivi a chi fa l'app");
+  await attendi(400);
+
   racconta("torno alla plancia");
   await apriIlMenu();
   await premiNelMenu("Plancia");

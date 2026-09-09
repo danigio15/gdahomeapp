@@ -38,7 +38,7 @@ finta, non c'e' nessuna integrazione.
 
 Le fotografie finiscono in `collaudo/foto/`: la plancia vera dentro l'app,
 pagina per pagina dalla sua barra, e poi la barra dell'app, i dispositivi,
-le case.
+le segnalazioni, l'assistenza con «Come va l'app», le case.
 
 Con `node guarda.mjs --resta` il banco resta acceso invece di spegnersi: si
 apre l'indirizzo che stampa e ci si guarda dentro col browser, premendo i

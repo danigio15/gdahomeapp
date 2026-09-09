@@ -40,6 +40,14 @@ Future<void> _finoAllaPlancia(Collegamento collegamento) async {
   }
 }
 
+/// Aspetta, nel tempo vero, che una condizione si avveri.
+Future<void> _finoA(bool Function() condizione) async {
+  final fine = DateTime.now().add(const Duration(seconds: 5));
+  while (!condizione() && DateTime.now().isBefore(fine)) {
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+  }
+}
+
 /// La plancia vera, nelle prove: un servitore che non serve niente e un
 /// riquadro che e' una scritta. Un WebView qui non c'e', e quello che si
 /// prova e' **dove si finisce**: che la home sia la plancia, e a quale
@@ -57,6 +65,7 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
     required Key chiave,
     required VoidCallback quandoCaricata,
     required void Function(String perche) quandoFallisce,
+    bool ibrido = false,
   }) => _RiquadroFinto(key: chiave, pagina: pagina, caricata: quandoCaricata);
 }
 
@@ -67,6 +76,9 @@ class _ServitoreFinto implements ServitoreDiQuestoSistema {
 
   @override
   Future<void> spegni() async {}
+
+  @override
+  set leggera(bool valore) {}
 }
 
 /// Si dice caricato al primo fotogramma, come una pagina che arriva.
@@ -533,6 +545,12 @@ void main() {
       /* Da li' ai dispositivi: la barra si richiude, la sezione cambia, e le
        * entita' compaiono adesso — non prima. */
       await tester.tap(nellaBarra('DISPOSITIVI'));
+      await tester.pump();
+      /* Le entita' si chiedono adesso, alla casa finta, con prese vere: il
+       * tempo finto non le fa arrivare, si aspetta quello vero. */
+      await tester.runAsync(
+        () => _finoA(() => (collegamento.stato?.quante ?? 0) > 0),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Dispositivi'), findsOneWidget, reason: 'il titolo');
       expect(find.text('Luci'), findsOneWidget);
@@ -652,9 +670,10 @@ void main() {
     expect(find.text('Casa mia'), findsOneWidget);
 
     /* Il cambio vero — filo giu', filo su — vuole di nuovo il tempo vero. */
-    await tester.runAsync(
-      () => collegamento.cambiaCasa(archivio.tutte.first.id),
-    );
+    await tester.runAsync(() async {
+      await collegamento.cambiaCasa(archivio.tutte.first.id);
+      await collegamento.serveLaCasa();
+    });
     await tester.pump();
 
     expect(collegamento.casa!.nome, 'Casa mia');

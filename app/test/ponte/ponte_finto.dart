@@ -50,6 +50,10 @@ class PonteFinto {
   /// Quando e' `true`, non risponde ai comandi: e' Home Assistant che tace.
   bool muto = false;
 
+  /// Quando e' `false`, e' un ponte di prima della compressione: nella
+  /// stretta di mano non dice di saper aprire il gzip, e non comprime.
+  bool conosceIlGzip = true;
+
   static Future<PonteFinto> alza() async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     final ponte = PonteFinto._(server);
@@ -585,9 +589,15 @@ class TelefonoCollegato {
         'v': versioneDelProtocollo,
         'pronto': true,
         'mia': mia.inBase64,
+        if (_ponte.conosceIlGzip) 'gzip': true,
       }),
     );
-    _busta = Busta(chiave, io: DaChi.casa);
+    /* Come il ponte vero: si comprime verso chi ha detto di saper aprire. */
+    _busta = Busta(
+      chiave,
+      io: DaChi.casa,
+      comprime: _ponte.conosceIlGzip && detto['gzip'] == true,
+    );
     _ponte._manda(this, {'type': 'auth_required', 'ha_version': 'ponte'});
   }
 

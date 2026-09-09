@@ -79,9 +79,17 @@ const _tipi = <String, (String, IconData)>{
     );
 
 class Dispositivi extends StatefulWidget {
-  const Dispositivi({super.key, required this.collegamento});
+  const Dispositivi({
+    super.key,
+    required this.collegamento,
+    this.visibile = true,
+  });
 
   final Collegamento collegamento;
+
+  /// Se questa sezione e' quella che si guarda. Le entita' si chiedono alla
+  /// casa la prima volta che lo e'.
+  final bool visibile;
 
   @override
   State<Dispositivi> createState() => _DispositiviState();
@@ -104,14 +112,26 @@ class _DispositiviState extends State<Dispositivi> {
       widget.collegamento.entitaCambiate.listen((_) => _ridisegna()),
     ];
     _cerca.addListener(() => setState(() {}));
+    if (widget.visibile) unawaited(widget.collegamento.serveLaCasa());
   }
 
   /* Solo quando si e' a schermo. Questa sezione resta in piedi anche quando
-   * se ne guarda un'altra, e ridisegnare un elenco che nessuno vede, a ogni
-   * sensore che cambia, e' fatica buttata: si aspetta di tornare visibili —
-   * e li' Flutter ridisegna da se', perche' `TickerMode` e' una dipendenza. */
+   * se ne guarda un'altra — la pila delle sezioni tiene tutto vivo,
+   * animazioni comprese — e ridisegnare un elenco che nessuno vede, a ogni
+   * sensore che cambia, e' fatica buttata. Si aspetta di tornare visibili,
+   * e li' si ridisegna. */
   void _ridisegna() {
-    if (mounted && TickerMode.valuesOf(context).enabled) setState(() {});
+    if (mounted && widget.visibile) setState(() {});
+  }
+
+  /* Le entita' si chiedono quando si e' a schermo, non prima. */
+  @override
+  void didUpdateWidget(Dispositivi vecchia) {
+    super.didUpdateWidget(vecchia);
+    if (widget.visibile && !vecchia.visibile) {
+      unawaited(widget.collegamento.serveLaCasa());
+      setState(() {});
+    }
   }
 
   @override
@@ -137,6 +157,10 @@ class _DispositiviState extends State<Dispositivi> {
   Widget build(BuildContext context) {
     final casa = _casa;
     if (casa == null || !casa.pieno) {
+      /* Nascosti non si gira nessuna rotella: la pila delle sezioni tiene
+       * vive le animazioni anche di chi non si vede, e una rotella che gira
+       * per sempre in una sezione chiusa e' un fotogramma al secondo buttato. */
+      if (!widget.visibile) return const SizedBox.shrink();
       return const Center(child: CircularProgressIndicator());
     }
     if (casa.quante == 0) {

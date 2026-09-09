@@ -63,6 +63,7 @@ da tramite verso Home Assistant.
 | **Segnalazioni**: si aprono dall'app, con i dati della casa raccolti da soli; dal ponte al centralino, che le apre come issue di GitHub | ✅ |
 | **Chat di assistenza**: dall'app, con chi mantiene il progetto, sullo stesso filo | ✅ |
 | **Foto e video** allegati alle segnalazioni e alla chat, nella repository sotto `allegati/` | ✅ |
+| **L'app fluida** con la plancia com'e' disegnata, animazioni comprese: il lavoro pesante fuori dal filo che disegna, il riquadro composto da Android, le buste compresse, «Come va l'app» con le misure vere | 🔄 (fase 1c) |
 | Zigbee: ZHA **e** Zigbee2MQTT, dietro un'interfaccia sola | ⬜ (fase 3) |
 | I dispositivi: aggiungerli, rinominarli, metterli in una stanza | ⬜ |
 | Gli aiutanti: i sette classici | ⬜ (fase 2) |
@@ -236,6 +237,52 @@ segreto sta sul telefono. Nella plancia i due bottoni rispondono che quelle
 cose stanno nell'app. A una segnalazione si allegano foto e video, dalla
 galleria o scattati al momento: viaggiano per intero dal filo al ponte al
 centralino, che li mette nella stessa repository delle issue.
+
+### Fase 1c — l'app che non va a scatti
+
+La regola, detta una volta: **la plancia non si tocca**. Le sue animazioni,
+le sue sfocature, i suoi effetti sono quello che chi l'ha disegnata vuole
+vedere, e l'app deve reggerli cosi' come sono — il compito e' rendere leggero
+tutto quello che le sta intorno, non alleggerire lei. La «plancia leggera»
+resta come interruttore, spento di serie, per un telefono che proprio non ce
+la fa: si accende a mano, da «Come va l'app», e si sa che cambia l'aspetto.
+
+Quello che si e' fatto, in ordine di peso:
+
+- **Gli eventi della casa non ridisegnano tutto.** Un evento al secondo che
+  ricostruiva la home intera era la prima causa degli scatti: adesso si
+  raccolgono e si consegnano solo a chi li vuole, e l'elenco delle entita' si
+  chiede solo quando lo si guarda.
+- **Il lavoro pesante si fa altrove.** Decifrare un `get_states` da un
+  megabyte e mezzo, o un file della plancia, sul filo che disegna lo schermo
+  erano decimi di secondo di schermo fermo: adesso va in un altro isolato di
+  Dart, e sul filo principale passano solo i messaggi piccoli.
+- **Il riquadro della plancia lo compone Android**, non Flutter: senza,
+  ogni fotogramma della plancia — e con le sue animazioni sono sessanta al
+  secondo, per sempre — obbligava Flutter a ridisegnare tutta l'app sulla
+  stessa scheda video. Con la composizione ibrida Flutter disegna solo quando
+  cambia qualcosa di suo, e la plancia va da sola, come in un browser.
+- **Il fondo dell'app non sfoca piu'.** Il motore di disegno di Flutter sul
+  telefono non tiene da parte quello che ha gia' disegnato, e i due aloni
+  sfocati sotto tutte le schermate erano due passate su tutto lo schermo a
+  ogni fotogramma dell'app. Adesso sono due gradienti radiali, che costano
+  quanto dipingere un colore e a occhio sono lo stesso alone.
+- **Le buste sono compresse**, prima di essere cifrate: cinque, otto volte
+  meno byte sul filo, sul Wi-Fi e sulla rete del cellulare, e cinque, otto
+  volte meno lavoro per decifrarle. Il ponte e l'app se lo dicono nella
+  stretta di mano, quindi un ponte vecchio e un'app nuova si parlano come
+  prima. Serve il ponte dalla 0.11.0.
+- **«Come va l'app»**, in Assistenza, dice in numeri quello che prima era una
+  sensazione: quanti fotogrammi in un minuto, quanti lenti, se e' Flutter o
+  la scheda video, quante volte il filo principale e' rimasto bloccato, e
+  quanto passa sul filo con la casa. E' la pagina da fotografare in una
+  segnalazione, e la parte da guardare per decidere il prossimo passo.
+
+Quello che resta da capire, e si capisce solo con le misure di un telefono
+vero: se la plancia da sola, dentro il riquadro, va come nell'app di Home
+Assistant. Se si', l'app e' a posto; se no, il peso e' della pagina — tre
+volte gli avvii di storico e le sfocature a quarantadue pixel su una scheda
+video da telefono — ed e' lavoro del binario A, non dell'app.
 
 ### Fase 2 — gli aiutanti
 

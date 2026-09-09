@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
+import '../casa/impostazioni.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
 import 'assistenza.dart';
@@ -21,6 +22,7 @@ import 'barra.dart';
 import 'dispositivi.dart';
 import 'firma.dart';
 import 'menu.dart';
+import 'misure.dart';
 import 'plancia_vera.dart';
 import 'segnalazioni.dart';
 
@@ -30,9 +32,11 @@ class Home extends StatefulWidget {
     required this.collegamento,
     required this.vaiAlleCase,
     required this.plancia,
+    required this.impostazioni,
   });
 
   final Collegamento collegamento;
+  final Impostazioni impostazioni;
   final VoidCallback vaiAlleCase;
 
   /// Come si apre la plancia vera: il servitore e il riquadro. Sostituibile
@@ -60,6 +64,8 @@ class _HomeState extends State<Home> {
       'stato': collegamento.comeVa.name,
       if (collegamento.perche != null) 'perche': collegamento.perche!,
       if (collegamento.traffico != null) 'filo': collegamento.traffico!,
+      'schermo': Misure.io.riassunto,
+      'plancia': widget.impostazioni.riassunto,
     };
   }
 
@@ -137,10 +143,12 @@ class _HomeState extends State<Home> {
                         key: _plancia,
                         collegamento: collegamento,
                         fabbrica: widget.plancia,
+                        impostazioni: widget.impostazioni,
                         vaiAlleCase: widget.vaiAlleCase,
                       ),
                       Sezione.dispositivi => Dispositivi(
                         collegamento: collegamento,
+                        visibile: _sezione == Sezione.dispositivi,
                       ),
                       Sezione.segnalazioni => SchermataDelleSegnalazioni(
                         collegamento: collegamento,
@@ -149,6 +157,7 @@ class _HomeState extends State<Home> {
                       Sezione.assistenza => SchermataDellAssistenza(
                         collegamento: collegamento,
                         diagnostica: _diagnostica,
+                        impostazioni: widget.impostazioni,
                       ),
                       _ => _InArrivo(sezione),
                     },

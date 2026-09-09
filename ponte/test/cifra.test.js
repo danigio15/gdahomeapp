@@ -9,12 +9,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  APERTA_MASSIMA,
   aperturaNuova,
   Busta,
   BustaGuasta,
   chiaveDelFiloNuova,
   chiaveDiSessione,
   coppiaEffimera,
+  SOGLIA_DI_COMPRESSIONE,
 } from "../src/cifra.js";
 
 /* Una stretta di mano intera, come succede a ogni collegamento. */
@@ -175,4 +177,96 @@ test("una busta storta non fa esplodere niente, dice solo di no", () => {
   for (const roba of ["", "non base64!!!", "AAAA", Buffer.alloc(27).toString("base64")]) {
     assert.throws(() => casa.apri(roba), BustaGuasta, `«${roba}»`);
   }
+});
+
+/* ─── La compressione ────────────────────────────────────────────────────── */
+
+/* Un `get_states` come lo manda una casa vera: quattrocento entita', tutte
+ * fatte allo stesso modo. */
+const unaCasaGrande = () =>
+  JSON.stringify({
+    id: 7,
+    type: "result",
+    success: true,
+    result: Array.from({ length: 400 }, (_, i) => ({
+      entity_id: `sensor.temperatura_${i}`,
+      state: String(20 + (i % 7)),
+      attributes: {
+        unit_of_measurement: "°C",
+        friendly_name: `Temperatura ${i}`,
+        device_class: "temperature",
+      },
+      last_changed: "2026-09-09T10:00:00.000000+00:00",
+      last_updated: "2026-09-09T10:00:00.000000+00:00",
+    })),
+  });
+
+/* Dodici di nonce, il testo com'e', sedici di marchio: e' una busta che non
+ * ha compresso niente. */
+const pesoSenzaComprimere = (testo) => 12 + Buffer.byteLength(testo, "utf8") + 16;
+
+test("una busta compressa e' molto piu' piccola, e si apre uguale", () => {
+  const chiave = unaStretta().daDentroLaCasa;
+  const casa = new Busta(chiave, { io: "casa", comprime: true });
+  const telefono = new Busta(chiave, { io: "telefono" });
+  const testo = unaCasaGrande();
+  assert.ok(testo.length > SOGLIA_DI_COMPRESSIONE);
+
+  const busta = casa.chiudi(testo);
+  assert.ok(busta.length < testo.length / 4, `${busta.length} caratteri per ${testo.length} di testo`);
+  assert.equal(telefono.apri(busta), testo);
+  assert.equal(telefono.ricevo, 1);
+});
+
+test("sotto la soglia non si comprime: una busta piccola resta com'era", () => {
+  const chiave = unaStretta().daDentroLaCasa;
+  const casa = new Busta(chiave, { io: "casa", comprime: true });
+  const telefono = new Busta(chiave, { io: "telefono" });
+  const testo = JSON.stringify({ type: "event", event: { data: { entity_id: "light.cucina" } } });
+
+  const busta = casa.chiudi(testo);
+  assert.equal(Buffer.from(busta, "base64").length, pesoSenzaComprimere(testo));
+  assert.equal(telefono.apri(busta), testo);
+});
+
+test("chi non ha detto di saper aprire il gzip non lo riceve, per quanto grande sia il testo", () => {
+  const chiave = unaStretta().daDentroLaCasa;
+  const casa = new Busta(chiave, { io: "casa" });
+  const telefono = new Busta(chiave, { io: "telefono" });
+  const testo = unaCasaGrande();
+
+  const busta = casa.chiudi(testo);
+  assert.equal(Buffer.from(busta, "base64").length, pesoSenzaComprimere(testo));
+  assert.equal(telefono.apri(busta), testo);
+});
+
+test("una busta compressa si apre anche da chi non comprime: il contenuto si riconosce da solo", () => {
+  const chiave = unaStretta().daDentroLaCasa;
+  const telefono = new Busta(chiave, { io: "telefono", comprime: true });
+  const casa = new Busta(chiave, { io: "casa", comprime: false });
+  const testo = unaCasaGrande();
+  assert.equal(casa.apri(telefono.chiudi(testo)), testo);
+});
+
+test("un testo che comincia con i caratteri del gzip non si scambia per un gzip", () => {
+  /* I due byte con cui comincia un gzip, `1f 8b`, in UTF-8 non si possono
+   * scrivere: `8b` da solo non e' un carattere, e un testo li' non ci arriva
+   * mai. Percio' riconoscere il gzip dai primi due byte non ha falsi
+   * positivi — nemmeno con un testo che ci prova. */
+  const chiave = unaStretta().daDentroLaCasa;
+  const casa = new Busta(chiave, { io: "casa", comprime: false });
+  const telefono = new Busta(chiave, { io: "telefono" });
+  const testo = "\u001f\u008bnon sono un gzip";
+  assert.equal(telefono.apri(casa.chiudi(testo)), testo);
+});
+
+test("una bomba non si apre: oltre i sedici megabyte si dice di no", () => {
+  const chiave = unaStretta().daDentroLaCasa;
+  const casa = new Busta(chiave, { io: "casa", comprime: true });
+  const telefono = new Busta(chiave, { io: "telefono" });
+  /* Sedici megabyte di niente pesano venti chilobyte compressi. */
+  const busta = casa.chiudi(" ".repeat(APERTA_MASSIMA + 1));
+  assert.ok(busta.length < 100_000, `la bomba pesa ${busta.length} caratteri`);
+  assert.throws(() => telefono.apri(busta), BustaGuasta);
+  assert.equal(telefono.ricevo, 0, "una busta rifiutata non conta");
 });

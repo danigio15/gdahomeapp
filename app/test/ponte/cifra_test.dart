@@ -16,6 +16,7 @@
 library;
 
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
@@ -255,6 +256,105 @@ void main() {
     });
   });
 
+  group('la compressione', () {
+    final chiave = SecretKey(List.filled(32, 7));
+
+    test(
+      'una busta compressa e\' molto piu\' piccola, e torna uguale',
+      () async {
+        final casa = Busta(chiave, io: DaChi.casa, comprime: true);
+        final telefono = Busta(chiave, io: DaChi.telefono);
+        final testo = _unaCasaGrande();
+        expect(testo.length, greaterThan(sogliaDiCompressione));
+
+        final chiusa = await casa.chiudi(testo);
+        expect(
+          chiusa.length,
+          lessThan(testo.length ~/ 4),
+          reason: '${chiusa.length} caratteri per ${testo.length} di testo',
+        );
+        expect(await telefono.apri(chiusa), testo);
+        expect(telefono.ricevo, 1);
+      },
+    );
+
+    test(
+      'sotto la soglia non si comprime: una busta piccola resta com\'era',
+      () async {
+        final casa = Busta(chiave, io: DaChi.casa, comprime: true);
+        final telefono = Busta(chiave, io: DaChi.telefono);
+        const testo =
+            '{"type":"event","event":{"data":{"entity_id":"light.cucina"}}}';
+
+        final chiusa = await casa.chiudi(testo);
+        /* Dodici di nonce, il testo com'e', sedici di marchio. */
+        expect(
+          base64.decode(chiusa).length,
+          12 + utf8.encode(testo).length + 16,
+        );
+        expect(await telefono.apri(chiusa), testo);
+      },
+    );
+
+    test('chi non ha detto di saper aprire il gzip non lo riceve', () async {
+      final casa = Busta(chiave, io: DaChi.casa);
+      final telefono = Busta(chiave, io: DaChi.telefono);
+      final testo = _unaCasaGrande();
+
+      final chiusa = await casa.chiudi(testo);
+      expect(base64.decode(chiusa).length, 12 + utf8.encode(testo).length + 16);
+      expect(await telefono.apri(chiusa), testo);
+    });
+
+    test('una busta compressa si apre anche da chi non comprime', () async {
+      final telefono = Busta(chiave, io: DaChi.telefono, comprime: true);
+      final casa = Busta(chiave, io: DaChi.casa);
+      final testo = _unaCasaGrande();
+      expect(await casa.apri(await telefono.chiudi(testo)), testo);
+    });
+
+    test(
+      'una busta compressa grande si apre altrove, e torna uguale',
+      () async {
+        /* Roba che si comprime poco, cosi' anche compressa passa la soglia
+       * dell'isolato: e' la strada che fa uno storico di consumi vero. */
+        final caso = Random(1);
+        final testo = List.generate(
+          20000,
+          (_) => caso.nextInt(1 << 32).toRadixString(36),
+        ).join(' ');
+        final casa = Busta(chiave, io: DaChi.casa, comprime: true);
+        final telefono = Busta(chiave, io: DaChi.telefono);
+
+        final chiusa = await casa.chiudi(testo);
+        expect(chiusa.length, greaterThan(Busta.sogliaAltrove));
+        expect(chiusa.length, lessThan(testo.length));
+        expect(await telefono.apri(chiusa), testo);
+      },
+    );
+
+    test('un testo che comincia con i caratteri del gzip non si scambia per un gzip', () async {
+      /* `1f 8b` in UTF-8 non si scrive: `8b` da solo non e' un carattere. */
+      final casa = Busta(chiave, io: DaChi.casa);
+      final telefono = Busta(chiave, io: DaChi.telefono);
+      const testo = '\u001f\u008bnon sono un gzip';
+      expect(await telefono.apri(await casa.chiudi(testo)), testo);
+    });
+
+    test(
+      'una bomba non si apre: oltre i sedici megabyte si dice di no',
+      () async {
+        final casa = Busta(chiave, io: DaChi.casa, comprime: true);
+        final telefono = Busta(chiave, io: DaChi.telefono);
+        /* Sedici megabyte di niente pesano venti chilobyte compressi. */
+        final chiusa = await casa.chiudi(' ' * (apertaMassima + 1));
+        expect(chiusa.length, lessThan(100000));
+        await expectLater(telefono.apri(chiusa), throwsA(isA<BustaGuasta>()));
+        expect(telefono.ricevo, 0, reason: 'una busta rifiutata non conta');
+      },
+    );
+  });
+
   group('l\'apertura', () {
     test('e\' sedici byte, e non e\' mai la stessa', () {
       final viste = <String>{};
@@ -312,6 +412,28 @@ void main() {
 }
 
 /* ─── Attrezzi ────────────────────────────────────────────────────────────── */
+
+/// Un `get_states` come lo manda una casa vera: quattrocento entita', tutte
+/// fatte allo stesso modo.
+String _unaCasaGrande() => jsonEncode({
+  'id': 7,
+  'type': 'result',
+  'success': true,
+  'result': [
+    for (var i = 0; i < 400; i += 1)
+      {
+        'entity_id': 'sensor.temperatura_$i',
+        'state': '${20 + (i % 7)}',
+        'attributes': {
+          'unit_of_measurement': '°C',
+          'friendly_name': 'Temperatura $i',
+          'device_class': 'temperature',
+        },
+        'last_changed': '2026-09-09T10:00:00.000000+00:00',
+        'last_updated': '2026-09-09T10:00:00.000000+00:00',
+      },
+  ],
+});
 
 Future<SecretKey> _chiaveDelVettore({String? chiaveDelFilo}) async {
   final telefono = await coppiaDalloScalare(_daEsadecimale(_scalareTelefono));

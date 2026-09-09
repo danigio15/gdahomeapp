@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../casa/collegamento.dart';
+import '../casa/impostazioni.dart';
 import '../plancia/servitore_qui/qui.dart';
 import '../ponte/filo.dart';
 import '../vestito/pezzi.dart';
@@ -59,9 +60,11 @@ class FabbricaDellaPlancia {
     required Key chiave,
     required VoidCallback quandoCaricata,
     required void Function(String perche) quandoFallisce,
+    bool ibrido = false,
   }) => RiquadroDellaPlancia(
     key: chiave,
     pagina: pagina,
+    ibrido: ibrido,
     quandoCaricata: quandoCaricata,
     quandoFallisce: quandoFallisce,
   );
@@ -72,11 +75,13 @@ class PlanciaVera extends StatefulWidget {
     super.key,
     required this.collegamento,
     required this.fabbrica,
+    required this.impostazioni,
     this.vaiAlleCase,
   });
 
   final Collegamento collegamento;
   final FabbricaDellaPlancia fabbrica;
+  final Impostazioni impostazioni;
   final VoidCallback? vaiAlleCase;
 
   @override
@@ -93,11 +98,23 @@ class PlanciaVeraState extends State<PlanciaVera> {
   Uri? _pagina;
   bool _caricata = false;
   String? _perche;
+  StreamSubscription<void>? _ascoltoLeImpostazioni;
+  late bool _leggera = widget.impostazioni.planciaLeggera;
+  late bool _ibrida = widget.impostazioni.composizioneIbrida;
 
   @override
   void initState() {
     super.initState();
+    _ascoltoLeImpostazioni = widget.impostazioni.cambiamenti.listen(
+      (_) => _impostazioniCambiate(),
+    );
     if (!kIsWeb) unawaited(_accendi());
+  }
+
+  @override
+  void dispose() {
+    _ascoltoLeImpostazioni?.cancel();
+    super.dispose();
   }
 
   Future<void> _accendi() async {
@@ -106,7 +123,30 @@ class PlanciaVeraState extends State<PlanciaVera> {
       () => widget.collegamento.filo,
     );
     if (!mounted) return;
+    servitore?.leggera = widget.impostazioni.planciaLeggera;
     setState(() => _servitore = servitore);
+  }
+
+  /* Un interruttore cambiato vale dalla pagina dopo: la plancia leggera
+   * la scrive il servitore in testa alla pagina, e la composizione e' del
+   * riquadro. In tutti e due i casi si ricarica. */
+  void _impostazioniCambiate() {
+    if (!mounted) return;
+    final leggera = widget.impostazioni.planciaLeggera;
+    final ibrida = widget.impostazioni.composizioneIbrida;
+    final cambiaLaComposizione = ibrida != _ibrida;
+    if (leggera == _leggera && !cambiaLaComposizione) return;
+    _servitore?.leggera = leggera;
+    setState(() {
+      _leggera = leggera;
+      _ibrida = ibrida;
+      _caricata = false;
+      _perche = null;
+    });
+    /* Con la composizione cambiata il riquadro rinasce da solo, chiave
+     * nuova, e ricarica la pagina da se'. Con la sola leggerezza cambiata
+     * il riquadro e' lo stesso, e la pagina va ricaricata. */
+    if (!cambiaLaComposizione) _riquadro.currentState?.ricarica();
   }
 
   /// Ricarica la pagina: e' quello che fa toccare di nuovo «Plancia» nella
@@ -203,15 +243,21 @@ class PlanciaVeraState extends State<PlanciaVera> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        widget.fabbrica.riquadro(
-          pagina,
-          chiave: _riquadro,
-          quandoCaricata: () {
-            if (mounted && !_caricata) setState(() => _caricata = true);
-          },
-          quandoFallisce: (perche) {
-            if (mounted) setState(() => _perche = perche);
-          },
+        /* La chiave sulla composizione: cambiarla rifa' il riquadro da capo,
+         * perche' un WebView nasce in un modo e in quello resta. */
+        KeyedSubtree(
+          key: ValueKey<bool>(_ibrida),
+          child: widget.fabbrica.riquadro(
+            pagina,
+            chiave: _riquadro,
+            ibrido: _ibrida,
+            quandoCaricata: () {
+              if (mounted && !_caricata) setState(() => _caricata = true);
+            },
+            quandoFallisce: (perche) {
+              if (mounted) setState(() => _perche = perche);
+            },
+          ),
         ),
         if (_perche != null)
           _Velo(
@@ -254,9 +300,13 @@ class RiquadroDellaPlancia extends StatefulWidget {
     required this.pagina,
     required this.quandoCaricata,
     required this.quandoFallisce,
+    this.ibrido = false,
   });
 
   final Uri pagina;
+
+  /// Su Android: composizione ibrida. Vedi `riquadro/sul_telefono.dart`.
+  final bool ibrido;
   final VoidCallback quandoCaricata;
   final void Function(String perche) quandoFallisce;
 
@@ -265,11 +315,10 @@ class RiquadroDellaPlancia extends StatefulWidget {
 }
 
 class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
-  late final WebViewController _controllore = riquadro.costruisciIlControllore(
-    quandoCaricata: () => widget.quandoCaricata(),
-    quandoFallisce: (perche) => widget.quandoFallisce(perche),
-    siPuoAndare: _dentroCasa,
-  );
+  /* Nasce alla prima occasione in cui c'e' un tema da cui prendere il
+   * colore del fondo — non in `initState`, dove il tema non si puo' ancora
+   * leggere — e da li' resta lo stesso per tutta la vita del riquadro. */
+  WebViewController? _controllore;
 
   /// Dal riquadro non si esce: la plancia sta tutta sul servitore, e un
   /// indirizzo di fuori e' un collegamento che non ha senso aprire qui.
@@ -278,23 +327,39 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
       indirizzo.startsWith('about:');
 
   @override
-  void initState() {
-    super.initState();
-    unawaited(_controllore.loadRequest(widget.pagina));
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_controllore != null) return;
+    final controllore = riquadro.costruisciIlControllore(
+      quandoCaricata: () => widget.quandoCaricata(),
+      quandoFallisce: (perche) => widget.quandoFallisce(perche),
+      siPuoAndare: _dentroCasa,
+      /* Lo stesso fondo dell'app: sotto la pagina, finche' non arriva, non
+       * si vede un lampo di un altro colore. */
+      sfondo: Theme.of(context).colorScheme.surface,
+    );
+    _controllore = controllore;
+    unawaited(controllore.loadRequest(widget.pagina));
   }
 
   @override
   void didUpdateWidget(RiquadroDellaPlancia oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.pagina != widget.pagina) {
-      unawaited(_controllore.loadRequest(widget.pagina));
+      unawaited(_controllore?.loadRequest(widget.pagina));
     }
   }
 
-  void ricarica() => unawaited(riquadro.ricarica(_controllore, widget.pagina));
+  void ricarica() {
+    final controllore = _controllore;
+    if (controllore != null) {
+      unawaited(riquadro.ricarica(controllore, widget.pagina));
+    }
+  }
 
   @override
-  Widget build(BuildContext context) => WebViewWidget(controller: _controllore);
+  Widget build(BuildContext context) =>
+      riquadro.riquadroDelWebView(_controllore!, ibrido: widget.ibrido);
 }
 
 /// Un velo sopra il riquadro, col fondo dell'app: copre la pagina finche'

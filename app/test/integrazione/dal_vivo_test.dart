@@ -149,6 +149,11 @@ void main() {
 
         /* Il segno del Supervisor non ha mai attraversato il ponte. */
         expect(collegamento.casa!.segno, isNot(segnoDelSupervisor));
+
+        /* E le buste del ponte vero — Node — si aprono qui — Dart —
+         * compresse: e' l'unica prova in cui il gzip attraversa davvero le
+         * due implementazioni. */
+        expect(collegamento.traffico, contains(', gzip)'));
       } finally {
         await collegamento.chiudi();
       }
@@ -249,6 +254,8 @@ Future<Collegamento> _abbinaEApri(PonteVero ponte) async {
 
   final collegamento = Collegamento(archivio: archivio);
   await collegamento.apri();
+  /* Le entita' si leggono solo quando servono: qui servono subito. */
+  await collegamento.serveLaCasa();
   return collegamento;
 }
 

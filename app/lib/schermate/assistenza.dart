@@ -9,9 +9,11 @@ import 'package:flutter/material.dart';
 
 import '../casa/allegati.dart';
 import '../casa/collegamento.dart';
+import '../casa/impostazioni.dart';
 import '../casa/segnalazioni.dart';
 import '../ponte/filo.dart';
 import '../vestito/pezzi.dart';
+import 'diagnostica.dart';
 import 'segnalazioni.dart';
 
 class SchermataDellAssistenza extends StatefulWidget {
@@ -19,11 +21,15 @@ class SchermataDellAssistenza extends StatefulWidget {
     super.key,
     required this.collegamento,
     required this.diagnostica,
+    this.impostazioni,
     this.scegli = scegliDalTelefono,
   });
 
   final Collegamento collegamento;
   final Map<String, String> Function() diagnostica;
+
+  /// Con le impostazioni c'e' anche la porta di «Come va l'app».
+  final Impostazioni? impostazioni;
 
   /// Come si sceglie una foto o un video da allegare.
   final ScegliUnAllegato scegli;
@@ -111,10 +117,28 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
     if (!_letta && _caricando) {
       return const Center(child: CircularProgressIndicator());
     }
+    final impostazioni = widget.impostazioni;
     return Conversazione(
       messaggi: _chat?.messaggi ?? const [],
       perche: _perche,
       suggerimento: 'Scrivi a chi fa l\'app…',
+      intestazione: impostazioni == null
+          ? null
+          : Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push<void>(
+                  MaterialPageRoute(
+                    builder: (_) => SchermataDellaDiagnostica(
+                      collegamento: widget.collegamento,
+                      impostazioni: impostazioni,
+                    ),
+                  ),
+                ),
+                icon: const Icon(Icons.monitor_heart_outlined),
+                label: const Text('Come va l\'app'),
+              ),
+            ),
       vuota: const StatoVuoto(
         dentroUnaLista: true,
         icona: Icons.support_agent_rounded,

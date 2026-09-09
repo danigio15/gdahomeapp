@@ -16,17 +16,22 @@
 /// Un messaggio per parte, in chiaro. E' l'unico pezzo che il centralino vede,
 /// e non c'e' niente dentro che gli serva.
 ///
-///     telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…"}   telefono noto
-///     telefono → casa   {v:1, abbina:true, apertura:"…", mia:"…"}  telefono nuovo
-///     casa → telefono   {v:1, pronto:true, mia:"…"}
+///     telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true}   telefono noto
+///     telefono → casa   {v:1, abbina:true, apertura:"…", mia:"…", gzip:true}  telefono nuovo
+///     casa → telefono   {v:1, pronto:true, mia:"…", gzip:true}
 ///     casa → telefono   {v:1, no:"…"}                              e basta
 ///     casa → telefono   {v:1, no:"…", riabbina:true}               non ti conosco piu'
+///
+/// `gzip: true` dice «so aprire una busta compressa»: chi manda comprime solo
+/// se l'altro l'ha detto, e chi non lo dice — un ponte vecchio, l'app nel
+/// browser — riceve e manda tutto com'era. Vedi `cifra.dart`.
 ///
 /// Dall'altra parte c'e' `ponte/src/portiere.js`, e le due descrizioni devono
 /// restare la stessa descrizione.
 library;
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:cryptography/cryptography.dart';
@@ -114,6 +119,8 @@ Future<Presa> stringiLaMano(
       if (chi != null) 'chi': chi else 'abbina': true,
       'apertura': base64.encode(apertura),
       'mia': mia.inBase64,
+      /* Sul telefono si'; nel browser no, e non lo si dice. */
+      if (gzipDisponibile) 'gzip': true,
     }),
   );
 
@@ -153,9 +160,31 @@ class PresaCifrata implements Presa {
   /* Cifrare e decifrare sono operazioni asincrone, e il contatore dentro la
    * busta non perdona: due messaggi imbustati insieme uscirebbero con i numeri
    * scambiati, e dall'altra parte il secondo verrebbe rifiutato come rigiocato.
-   * Percio' si fa una coda: uno alla volta, nell'ordine in cui sono arrivati. */
-  Future<void> _codaInUscita = Future<void>.value();
+   * Percio' si fa una coda: uno alla volta, nell'ordine in cui sono arrivati.
+   *
+   * In uscita e' una fila che si svuota da se', non una catena di `then`:
+   * una catena riparte nella zona della promessa gia' compiuta, che puo'
+   * essere un'altra da quella di chi manda — nelle prove col tempo finto il
+   * messaggio restava fermo finche' non girava il tempo vero. */
+  final _daMandare = Queue<String>();
+  bool _mandando = false;
   Future<void> _codaInEntrata = Future<void>.value();
+
+  /* Quanto passa sul filo davvero, in caratteri di busta: e' quello che la
+   * compressione fa calare, e in diagnostica si mette accanto a quanto e'
+   * arrivato una volta aperto. */
+  int _caratteriArrivati = 0;
+  int _caratteriMandati = 0;
+
+  /// I caratteri arrivati sul filo, buste comprese, da quando e' aperta.
+  int get caratteriArrivati => _caratteriArrivati;
+
+  /// I caratteri mandati sul filo, buste comprese, da quando e' aperta.
+  int get caratteriMandati => _caratteriMandati;
+
+  /// Se quello che si manda si comprime: la casa ha detto di saper aprire il
+  /// gzip, e qui lo si sa chiudere.
+  bool get comprime => _busta?.comprime ?? false;
 
   @override
   Stream<String> get messaggi => _uscita.stream;
@@ -206,7 +235,11 @@ class PresaCifrata implements Presa {
             'la casa ha risposto qualcosa che non e\' una risposta',
           );
         }
-        _busta = Busta(await laPrima(letto), io: DaChi.telefono);
+        _busta = Busta(
+          await laPrima(letto),
+          io: DaChi.telefono,
+          comprime: gzipDisponibile && letto['gzip'] == true,
+        );
         if (!_pronta.isCompleted) _pronta.complete();
       } on FormatException {
         _fallisci(
@@ -226,6 +259,7 @@ class PresaCifrata implements Presa {
 
   Future<void> _apri(String testo) async {
     if (_chiusa) return;
+    _caratteriArrivati += testo.length;
 
     if (testo.startsWith('|')) {
       _pezzi.write(testo.substring(1));
@@ -274,24 +308,39 @@ class PresaCifrata implements Presa {
 
   @override
   void manda(String testo) {
-    _codaInUscita = _codaInUscita.then((_) async {
-      final busta = _busta;
-      if (_chiusa || busta == null) return;
-      try {
-        final chiusa = await busta.chiudi(testo);
-        if (chiusa.length <= pezzoMassimo) {
-          _sotto.manda(chiusa);
+    _daMandare.add(testo);
+    if (!_mandando) unawaited(_svuota());
+  }
+
+  Future<void> _svuota() async {
+    _mandando = true;
+    try {
+      while (_daMandare.isNotEmpty) {
+        final testo = _daMandare.removeFirst();
+        final busta = _busta;
+        /* Prima della stretta di mano non c'e' con che imbustare: quello che
+         * si manda adesso si perde, come prima. */
+        if (_chiusa || busta == null) continue;
+        try {
+          final chiusa = await busta.chiudi(testo);
+          _caratteriMandati += chiusa.length;
+          if (chiusa.length <= pezzoMassimo) {
+            _sotto.manda(chiusa);
+            continue;
+          }
+          for (var da = 0; da < chiusa.length; da += pezzoMassimo) {
+            final fino = da + pezzoMassimo;
+            final pezzo = chiusa.substring(da, fino.clamp(0, chiusa.length));
+            _sotto.manda(fino >= chiusa.length ? pezzo : '|$pezzo');
+          }
+        } catch (errore) {
+          _finita(FiloCaduto(_leggibile(errore)));
           return;
         }
-        for (var da = 0; da < chiusa.length; da += pezzoMassimo) {
-          final fino = da + pezzoMassimo;
-          final pezzo = chiusa.substring(da, fino.clamp(0, chiusa.length));
-          _sotto.manda(fino >= chiusa.length ? pezzo : '|$pezzo');
-        }
-      } catch (errore) {
-        _finita(FiloCaduto(_leggibile(errore)));
       }
-    });
+    } finally {
+      _mandando = false;
+    }
   }
 
   @override
