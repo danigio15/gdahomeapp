@@ -211,6 +211,40 @@ const albero = <Famiglia>[
       pronta: true,
     ),
   ]),
+  Famiglia(
+    'Piu\' di uno',
+    'Quello di cui la plancia tiene un elenco, e non uno solo',
+    [
+      Voce(
+        'Centrali d\'allarme',
+        'Le centrali di casa, e quale comanda la pagina Sicurezza',
+        disegno: 'sicurezza',
+        da: 'sez4',
+        pronta: true,
+      ),
+      Voce(
+        'Scaldabagni',
+        'Gli scaldabagni, uno per bagno se serve',
+        disegno: 'scaldabagno',
+        da: 'sez3',
+        pronta: true,
+      ),
+      Voce(
+        'Impianti termici',
+        'Caldaie e pompe di calore',
+        disegno: 'caldaia',
+        da: 'sez9',
+        pronta: true,
+      ),
+      Voce(
+        'Continuita\'',
+        'I gruppi di continuita\'',
+        disegno: 'minipc',
+        da: 'sez6',
+        pronta: true,
+      ),
+    ],
+  ),
   Famiglia('Gli avvisi', 'Quando la casa deve farsi sentire', [
     Voce(
       'Quadro avvisi',

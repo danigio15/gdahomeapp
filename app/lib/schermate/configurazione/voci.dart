@@ -10,8 +10,10 @@ import 'package:flutter/material.dart';
 
 import '../../casa/collegamento.dart';
 import '../../casa/impostazioni.dart';
+import '../../casa/plancia/piu_di_uno.dart' as piu;
 import 'albero.dart';
 import 'caselle.dart';
+import 'famiglia.dart';
 import 'elenco.dart';
 import 'speciali.dart';
 
@@ -72,17 +74,33 @@ Widget? schermataDi(
     sezione: 'energy',
     collegamento: collegamento,
   ),
-  'Auto elettrica' => SchermataDelleCaselle(
-    titolo: 'Auto elettrica',
-    sotto: 'L\'auto e la wallbox: batteria, autonomia, ricarica.',
-    sezione: 'ev',
+  /* L'auto non e' una fila di caselle: sono **le auto**, ognuna con la sua
+   * marca, il suo modello, la sua mappatura e le sue due foto. Le caselle
+   * stanno dentro il profilo, ed e' quello che fa cambiare tutta la pagina
+   * quando si passa da un'auto all'altra. */
+  'Auto elettrica' => SchermataDiFamiglia(
+    titolo: 'Auto elettriche',
+    sotto:
+        'Le auto di casa. Ognuna si porta dentro le sue entita\' e le sue '
+        'foto: quella con la pastiglia e\' quella che si vede nella plancia.',
     collegamento: collegamento,
+    famiglia: piu.leAuto,
+    sezioneDelleCaselle: 'ev',
+    leFoto: true,
+    campi: const [
+      CampoDellaVoce('brand', 'Marca', spiega: 'Leapmotor'),
+      CampoDellaVoce('model', 'Modello', spiega: 'B10'),
+    ],
   ),
-  'Solare termico' => SchermataDelleCaselle(
-    titolo: 'Solare termico',
-    sotto: 'Il boiler e il solare termico.',
-    sezione: 'boiler',
+  'Solare termico' => SchermataDiFamiglia(
+    titolo: 'Impianti solari',
+    sotto:
+        'Gli impianti solari termici. Anche di questi ce ne puo\' essere piu\' '
+        'di uno, ognuno con le sue entita\'.',
     collegamento: collegamento,
+    famiglia: piu.gliImpiantiSolari,
+    sezioneDelleCaselle: 'boiler',
+    campi: const [CampoDellaVoce('id', 'Sigla', spiega: 'tetto, garage…')],
   ),
   'Sicurezza' => SchermataDelleCaselle(
     titolo: 'Sicurezza',
@@ -264,6 +282,86 @@ Widget? schermataDi(
   ),
   'Piscina' => SchermataDellaPiscina(collegamento: collegamento),
   'Irrigazione' => _Irrigazione(collegamento: collegamento),
+
+  /* ── Piu' di uno ── */
+  'Centrali d\'allarme' => SchermataDiFamiglia(
+    titolo: 'Centrali d\'allarme',
+    sotto:
+        'Le centrali di casa. Quella con la pastiglia comanda la pagina '
+        'Sicurezza.',
+    collegamento: collegamento,
+    famiglia: piu.leCentrali,
+    campi: const [
+      CampoDellaVoce('id', 'Sigla', spiega: 'casa, garage…'),
+      CampoDellaVoce(
+        'entity',
+        'La centrale',
+        entita: true,
+        domini: ['alarm_control_panel'],
+      ),
+    ],
+  ),
+  'Scaldabagni' => SchermataDiFamiglia(
+    titolo: 'Scaldabagni',
+    sotto: 'Uno per bagno, se serve.',
+    collegamento: collegamento,
+    famiglia: piu.gliScaldabagni,
+    campi: const [
+      CampoDellaVoce(
+        'entity',
+        'Lo scaldabagno',
+        entita: true,
+        domini: ['water_heater', 'switch'],
+      ),
+      CampoDellaVoce(
+        'temp',
+        'Temperatura dell\'acqua',
+        entita: true,
+        domini: ['sensor'],
+      ),
+    ],
+  ),
+  'Impianti termici' => SchermataDiFamiglia(
+    titolo: 'Impianti termici',
+    sotto: 'Caldaie e pompe di calore.',
+    collegamento: collegamento,
+    famiglia: piu.gliImpiantiTermici,
+    campi: const [
+      CampoDellaVoce(
+        'entity',
+        'L\'impianto',
+        entita: true,
+        domini: ['climate', 'water_heater', 'switch'],
+      ),
+      CampoDellaVoce(
+        'temp',
+        'Temperatura di mandata',
+        entita: true,
+        domini: ['sensor'],
+      ),
+    ],
+  ),
+  'Continuita\'' => SchermataDiFamiglia(
+    titolo: 'Continuita\'',
+    sotto: 'I gruppi di continuita\', con la loro carica e il loro carico.',
+    collegamento: collegamento,
+    famiglia: piu.laContinuita,
+    campi: const [
+      CampoDellaVoce(
+        'battery',
+        'Carica della batteria (%)',
+        entita: true,
+        domini: ['sensor'],
+      ),
+      CampoDellaVoce('load', 'Carico (%)', entita: true, domini: ['sensor']),
+      CampoDellaVoce(
+        'status',
+        'Stato',
+        entita: true,
+        domini: ['sensor', 'binary_sensor'],
+      ),
+    ],
+  ),
 
   /* ── Gli avvisi ── */
   'Quadro avvisi' => SchermataDiElenco(
