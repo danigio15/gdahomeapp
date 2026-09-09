@@ -110,6 +110,11 @@ class _DispositiviState extends State<Dispositivi> {
   Timer? _fraPoco;
   DateTime _ultimoDisegno = DateTime.fromMillisecondsSinceEpoch(0);
 
+  /* Quali gruppi sono aperti. Lo tiene la schermata, non la tessera: in una
+   * lista pigra una tessera che esce di vista viene buttata, e uno stato
+   * tenuto li' dentro tornando indietro non ci sarebbe piu'. */
+  late final Set<String> _aperti = {..._accendibili};
+
   StatoDellaCasa? get _casa => widget.collegamento.stato;
 
   @override
@@ -201,7 +206,18 @@ class _DispositiviState extends State<Dispositivi> {
     final cercato = _cerca.text.trim().toLowerCase();
     final domini = casa.domini().keys.toList()
       ..sort((a, b) => _tipo(a).$1.compareTo(_tipo(b).$1));
-    final gruppi = <Widget>[];
+
+    /* Una lista **piatta**, e pigra: una voce per intestazione e una per
+     * riga, e si costruisce solo quello che si vede.
+     *
+     * Prima ogni gruppo era una tessera che si apriva, con dentro tutte le
+     * sue righe in colonna. In una casa da tremila entita' — ce n'e' una, e
+     * gli interruttori da soli sono centinaia — aprire un gruppo voleva dire
+     * costruire e impaginare centinaia di righe in un colpo solo, dentro una
+     * voce sola della lista: la lista pigra non poteva farci niente, perche'
+     * quella voce era una. Scorrendo il dito andava e la lista restava
+     * indietro. Adesso ogni riga e' una voce sua. */
+    final voci = <Object>[];
     for (final dominio in domini) {
       final dentro = casa
           .delDominio(dominio)
@@ -213,14 +229,12 @@ class _DispositiviState extends State<Dispositivi> {
           )
           .toList();
       if (dentro.isEmpty) continue;
-      gruppi.add(
-        _Gruppo(
-          dominio: dominio,
-          entita: dentro,
-          aperto: cercato.isNotEmpty || _accendibili.contains(dominio),
-          inverti: _inverti,
-        ),
-      );
+      final aperto = cercato.isNotEmpty || _aperti.contains(dominio);
+      voci.add(_Intestazione(dominio, dentro.length, aperto));
+      if (!aperto) continue;
+      for (var i = 0; i < dentro.length; i += 1) {
+        voci.add(_Voce(dentro[i], i == dentro.length - 1));
+      }
     }
 
     final cerca = Padding(
@@ -240,7 +254,7 @@ class _DispositiviState extends State<Dispositivi> {
       ),
     );
 
-    if (gruppi.isEmpty) {
+    if (voci.isEmpty) {
       return ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
@@ -255,62 +269,127 @@ class _DispositiviState extends State<Dispositivi> {
       );
     }
 
-    /* Una lista **pigra**: si costruisce quello che si vede.
-     *
-     * Prima era una lista intera, tutta insieme: in una casa da trecento
-     * entita' voleva dire trecento righe costruite a ogni ridisegno, e
-     * ridisegni ce n'erano a ogni evento. Scorrendo il dito andava e la
-     * lista restava indietro. Quale gruppo e' aperto se lo ricorda la
-     * pagina, dalla `PageStorageKey`: un gruppo che esce di vista e torna lo
-     * ritrova com'era. */
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-      itemCount: gruppi.length + 1,
+      itemCount: voci.length + 1,
       itemBuilder: (context, posto) {
         if (posto == 0) return cerca;
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: gruppi[posto - 1],
+        final voce = voci[posto - 1];
+        if (voce is _Intestazione) {
+          return _Guscio(
+            sopra: true,
+            sotto: !voce.aperto,
+            child: _TestaDelGruppo(
+              dominio: voce.dominio,
+              quante: voce.quante,
+              aperto: voce.aperto,
+              premi: () => setState(() {
+                if (!_aperti.remove(voce.dominio)) _aperti.add(voce.dominio);
+              }),
+            ),
+          );
+        }
+        final riga = voce as _Voce;
+        return _Guscio(
+          sopra: false,
+          sotto: riga.ultima,
+          child: _Riga(una: riga.una, inverti: _inverti),
         );
       },
     );
   }
 }
 
-/// Un tipo di entita', con le sue dentro: si apre e si chiude.
-class _Gruppo extends StatelessWidget {
-  const _Gruppo({
+/// Una voce della lista: l'intestazione di un gruppo.
+class _Intestazione {
+  const _Intestazione(this.dominio, this.quante, this.aperto);
+  final String dominio;
+  final int quante;
+  final bool aperto;
+}
+
+/// Una voce della lista: una riga, e se e' l'ultima del suo gruppo.
+class _Voce {
+  const _Voce(this.una, this.ultima);
+  final Entita una;
+  final bool ultima;
+}
+
+/// Il fondo su cui stanno le voci: un unico foglio per gruppo, arrotondato
+/// dove il gruppo comincia e dove finisce.
+class _Guscio extends StatelessWidget {
+  const _Guscio({
+    required this.child,
+    required this.sopra,
+    required this.sotto,
+  });
+
+  final Widget child;
+  final bool sopra;
+  final bool sotto;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    const raggio = Radius.circular(20);
+    return Padding(
+      padding: EdgeInsets.only(bottom: sotto ? 10 : 0),
+      child: Material(
+        color: colori.surfaceContainerLowest,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: sopra ? raggio : Radius.zero,
+            bottom: sotto ? raggio : Radius.zero,
+          ),
+          side: BorderSide(color: colori.outlineVariant),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: child,
+      ),
+    );
+  }
+}
+
+/// L'intestazione di un gruppo: si preme e il gruppo si apre o si chiude.
+class _TestaDelGruppo extends StatelessWidget {
+  const _TestaDelGruppo({
     required this.dominio,
-    required this.entita,
+    required this.quante,
     required this.aperto,
-    required this.inverti,
+    required this.premi,
   });
 
   final String dominio;
-  final List<Entita> entita;
+  final int quante;
   final bool aperto;
-  final Future<void> Function(Entita) inverti;
+  final VoidCallback premi;
 
   @override
   Widget build(BuildContext context) {
     final (nome, icona) = _tipo(dominio);
     final colori = Theme.of(context).colorScheme;
-    return Scheda(
-      padding: EdgeInsets.zero,
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          key: PageStorageKey(dominio),
-          initiallyExpanded: aperto,
-          tilePadding: const EdgeInsets.fromLTRB(14, 6, 14, 6),
-          childrenPadding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
-          leading: Cerchietto(icona: icona, lato: 40),
-          title: Text(nome, style: Theme.of(context).textTheme.titleMedium),
-          trailing: Bollino('${entita.length}'),
-          iconColor: colori.onSurfaceVariant,
-          collapsedIconColor: colori.onSurfaceVariant,
+    return InkWell(
+      onTap: premi,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+        child: Row(
           children: [
-            for (final una in entita) _Riga(una: una, inverti: inverti),
+            Cerchietto(icona: icona, lato: 40),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                nome,
+                style: Theme.of(context).textTheme.titleMedium,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Bollino('$quante'),
+            const SizedBox(width: 6),
+            Icon(
+              aperto ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+              color: colori.onSurfaceVariant,
+            ),
           ],
         ),
       ),

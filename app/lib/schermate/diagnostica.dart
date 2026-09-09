@@ -6,6 +6,7 @@
 library;
 
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -36,6 +37,18 @@ class SchermataDellaDiagnostica extends StatefulWidget {
   @override
   State<SchermataDellaDiagnostica> createState() =>
       _SchermataDellaDiagnosticaState();
+}
+
+/// Quanto prende una barra del telefono, in punti: presa dalla finestra,
+/// come la prende la plancia.
+String _quanto(BuildContext context, {required bool sopra}) {
+  final vista = View.of(context);
+  final punti = vista.devicePixelRatio;
+  final dallAlbero = MediaQuery.viewPaddingOf(context);
+  final quanto = sopra
+      ? math.max(dallAlbero.top, vista.viewPadding.top / punti)
+      : math.max(dallAlbero.bottom, vista.viewPadding.bottom / punti);
+  return '${quanto.round()}';
 }
 
 class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
@@ -197,6 +210,15 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('La plancia', style: testi.titleMedium),
+                const SizedBox(height: 6),
+                /* I numeri veri delle barre del telefono: sono quelli che
+                 * l'app passa alla pagina, e quando la barra della plancia
+                 * finisce sotto i tasti la risposta e' qui. */
+                riga(
+                  'Barre del telefono',
+                  'in cima ${_quanto(context, sopra: true)}, '
+                      'in fondo ${_quanto(context, sopra: false)}',
+                ),
                 const SizedBox(height: 6),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,

@@ -17,6 +17,7 @@
 library;
 
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -176,11 +177,22 @@ class PlanciaVeraState extends State<PlanciaVera> {
   @override
   Widget build(BuildContext context) {
     final collegamento = widget.collegamento;
-    /* Quanto prendono l'orologio in cima e i tasti in fondo. Il riquadro
-     * arriva ai bordi dello schermo e la pagina se li tiene da se': vedi
-     * `Servitore.margini`. */
-    final aria = MediaQuery.paddingOf(context);
-    final margini = (alto: aria.top, basso: aria.bottom);
+    /* Quanto prendono l'orologio in cima e i tasti in fondo.
+     *
+     * Prese **dalla finestra**, non dall'albero. Quello che si legge
+     * nell'albero e' quello che resta dopo che chi sta sopra se n'e' preso
+     * la sua parte — un `SafeArea`, una barra del titolo — e per i tasti in
+     * fondo tornava zero: l'app credeva che i tasti non ci fossero, non
+     * diceva niente alla pagina, e la barra della plancia finiva sotto.
+     * `MediaQuery` si legge lo stesso, che e' quello che fa ridisegnare
+     * quando lo schermo cambia — si gira il telefono, si apre la tastiera. */
+    final dallAlbero = MediaQuery.viewPaddingOf(context);
+    final vista = View.of(context);
+    final punti = vista.devicePixelRatio;
+    final margini = (
+      alto: math.max(dallAlbero.top, vista.viewPadding.top / punti),
+      basso: math.max(dallAlbero.bottom, vista.viewPadding.bottom / punti),
+    );
     switch (collegamento.comeVa) {
       case ComeVa.nessunaCasa:
         return _Stato(

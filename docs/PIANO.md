@@ -294,6 +294,13 @@ E due cose che non erano prestazioni ma sembravano un guasto:
   l'orologio e sotto i tasti — e quanto prendono quelle barre glielo dice
   l'app, in due variabili CSS che si riscrivono girando lo schermo senza
   ricaricare niente.
+- **L'elenco dei dispositivi e' una lista piatta.** Ogni gruppo era una
+  tessera che si apriva, con dentro tutte le sue righe in colonna: in una
+  casa da tremila entita' — ce n'e' una, e i soli interruttori sono
+  centinaia — aprire un gruppo voleva dire costruire e impaginare centinaia
+  di righe dentro **una** voce della lista, e una lista pigra non poteva
+  farci niente. Adesso ogni riga e' una voce sua, e si costruisce solo
+  quello che si vede.
 - **L'elenco dei dispositivi non si rifa' piu' tutto a ogni evento.** Era una
   lista intera, costruita tutta insieme: in una casa da trecento entita'
   trecento righe a ogni ridisegno, e ridisegni ce n'erano a ogni evento della
