@@ -88,7 +88,12 @@ final _aCaso = Random();
 /// Un identificativo nuovo, nella forma della plancia: `sezione-qualcosa`.
 String fabbricaUnId(String sezione) {
   final quando = DateTime.now().millisecondsSinceEpoch.toRadixString(36);
-  final caso = _aCaso.nextInt(1 << 32).toRadixString(36);
+  /* Non `1 << 32`: sul web gli spostamenti di bit sono a trentadue, quel
+   * numero vale **zero**, e `nextInt(0)` non e' un numero a caso — e' un
+   * errore che porta giu' la schermata. Il collaudo l'ha visto aprendo una
+   * luce; su un telefono non sarebbe mai successo, ed e' proprio per questo
+   * che il collaudo guarda l'app girare invece di crederci sulla parola. */
+  final caso = _aCaso.nextInt(0x7fffffff).toRadixString(36);
   return '$sezione-$quando-$caso';
 }
 

@@ -139,6 +139,20 @@ const albero = <Famiglia>[
       pronta: true,
     ),
     Voce(
+      'I tasti dell\'allarme',
+      'Quali inserimenti si vedono: Casa, Fuori, Notte, Vacanza, Parziale',
+      disegno: 'sicurezza',
+      da: 'sez4',
+      pronta: true,
+    ),
+    Voce(
+      'La caldaia',
+      'Mandata, ritorno, pressione, e cosa c\'e\' all\'altro capo del tubo',
+      disegno: 'caldaia',
+      da: 'sez5',
+      pronta: true,
+    ),
+    Voce(
       'MiniPC',
       'Il monitoraggio del server',
       disegno: 'minipc',
@@ -197,6 +211,23 @@ const albero = <Famiglia>[
       pronta: true,
     ),
     Voce(
+      'Telecamere',
+      'Le telecamere di casa, col loro flusso video',
+      disegno: 'telecamere',
+      /* Nella plancia le telecamere si configurano dentro Sicurezza, insieme
+       * alla centrale: qui sono una voce loro, che su un telefono un elenco
+       * dentro un elenco non si guarda. */
+      da: 'sez4',
+      pronta: true,
+    ),
+    Voce(
+      'Robot',
+      'Aspirapolvere e lavapavimenti',
+      disegno: 'robot',
+      da: 'robot',
+      pronta: true,
+    ),
+    Voce(
       'Piscina',
       'Sensori, pompa e filtrazione automatica',
       disegno: 'piscina',
@@ -240,12 +271,26 @@ const albero = <Famiglia>[
         'Continuita\'',
         'I gruppi di continuita\'',
         disegno: 'minipc',
-        da: 'sez6',
+        da: 'ups',
         pronta: true,
       ),
     ],
   ),
   Famiglia('Gli avvisi', 'Quando la casa deve farsi sentire', [
+    Voce(
+      'Allerte meteo',
+      'Le allerte della protezione civile, e quali far comparire',
+      disegno: 'avvisi',
+      da: 'allerte',
+      pronta: true,
+    ),
+    Voce(
+      'Porte da sorvegliare',
+      'Quali porte contano come «casa aperta», e quali chiedono conferma',
+      disegno: 'sicurezza',
+      da: 'doors',
+      pronta: true,
+    ),
     Voce(
       'Quadro avvisi',
       'Cosa fa comparire un avviso, e con che parole',
@@ -254,6 +299,48 @@ const albero = <Famiglia>[
       pronta: true,
     ),
   ]),
+  Famiglia(
+    'Le tessere della Home',
+    'Quello che la prima pagina mette in mostra',
+    [
+      Voce(
+        'Lettori e casse',
+        'Gli altoparlanti e i televisori che la plancia comanda',
+        disegno: 'media',
+        da: 'media',
+      ),
+      Voce(
+        'La raccolta',
+        'Quando passa il camion, e cosa si mette fuori',
+        disegno: 'rifiuti',
+        da: 'rifiuti',
+      ),
+      Voce(
+        'Le liste di cose da fare',
+        'Quali liste si vedono in Agenda',
+        disegno: 'agenda',
+        da: 'todo',
+      ),
+      Voce(
+        'I calendari',
+        'Quali calendari si vedono in Agenda',
+        disegno: 'agenda',
+        da: 'agenda',
+      ),
+      Voce(
+        'Le entita\' mie',
+        'Entita\' qualunque, messe in Home con un nome e un disegno',
+        disegno: 'mie',
+        da: 'entita',
+      ),
+      Voce(
+        'Le sezioni mie',
+        'Pagine intere fatte da te, accanto a quelle della plancia',
+        disegno: 'custom',
+        da: 'mie',
+      ),
+    ],
+  ),
   Famiglia('Manutenzione', 'Quando qualcosa non torna', [
     Voce(
       'Autorilevamento',
@@ -277,6 +364,12 @@ const albero = <Famiglia>[
       pronta: true,
     ),
     Voce(
+      'Le copie della configurazione',
+      'Salvarla da parte, e rimetterla se qualcosa va storto',
+      disegno: 'backup',
+      da: 'backup',
+    ),
+    Voce(
       'Riporta tutto com\'era',
       'Rimette la configurazione dell\'ultimo salvataggio, o la azzera',
       disegno: 'allerte',
@@ -284,32 +377,30 @@ const albero = <Famiglia>[
       pronta: true,
     ),
   ]),
-  Famiglia(
-    'Chi puo\' entrare',
-    'Le persone e i telefoni. Nella plancia non c\'e\': una pagina web non sa chi la guarda',
-    [
-      Voce(
-        'Le persone',
-        'Chi usa questa casa. Un telefono puo\' anche non avere una persona: '
-            'e\' il caso di adesso, e resta quello di serie',
-        disegno: 'persone',
-        viene: Provenienza.dellApp,
-      ),
-      Voce(
-        'I telefoni abbinati',
-        'Quali telefoni sono entrati, quando, e da dove passano',
-        disegno: 'mie',
-        viene: Provenienza.dellApp,
-      ),
-      Voce(
-        'Chi comanda la configurazione',
-        'Di serie chi ha abbinato per primo. Gli altri guardano e comandano, '
-            'ma non riscrivono la plancia agli altri',
-        disegno: 'sicurezza',
-        viene: Provenienza.dellApp,
-      ),
-    ],
-  ),
+  Famiglia('Chi puo\' entrare', 'Le persone e i telefoni di casa', [
+    /* Le persone la plancia ce le ha, e ha la sua scheda: quello che nella
+       * plancia non c'e' sono i telefoni — una pagina web non sa chi la
+       * guarda — e infatti le due voci qui sotto sono dell'app. */
+    Voce(
+      'Le persone',
+      'Chi usa questa casa: nome, foto e presenza',
+      disegno: 'persone',
+      da: 'people',
+    ),
+    Voce(
+      'I telefoni abbinati',
+      'Quali telefoni sono entrati, quando, e da dove passano',
+      disegno: 'mie',
+      viene: Provenienza.dellApp,
+    ),
+    Voce(
+      'Chi comanda la configurazione',
+      'Di serie chi ha abbinato per primo. Gli altri guardano e comandano, '
+          'ma non riscrivono la plancia agli altri',
+      disegno: 'sicurezza',
+      viene: Provenienza.dellApp,
+    ),
+  ]),
   Famiglia('L\'app', 'Il telefono, non la casa', [
     Voce(
       'Tema della plancia',
@@ -390,4 +481,23 @@ const schedeDellaPlancia = <String>{
   'appliances',
   'avvisi',
   'runtime',
+  /* La scheda del caldo: nel documento c'e', e ci stanno la caldaia, gli
+   * scaldabagni e gli impianti termici. */
+  'sez5',
+  /* Le schede che i moduli si aggiungono da soli, accanto a quelle del
+   * documento: ognuna dichiara il suo nome in `*_EDITOR_TAB`. Non stanno nel
+   * documento vendorizzato, ma nella plancia ci sono — e questo elenco serve a
+   * dire proprio quello. */
+  'robot',
+  'ups',
+  'people',
+  'media',
+  'rifiuti',
+  'todo',
+  'agenda',
+  'allerte',
+  'doors',
+  'entita',
+  'mie',
+  'backup',
 };

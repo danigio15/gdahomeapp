@@ -228,4 +228,30 @@ void main() {
       expect(leggiGliApparecchi('boh', sezione: Sezione.luci), isEmpty);
     });
   });
+
+  proveDellIdentificativo();
+}
+
+/* Il collaudo ha visto la schermata di una luce cadere con «max must be in
+ * range 0 < max ≤ 2^32, was 0»: `1 << 32` sul web vale zero. */
+void proveDellIdentificativo() {
+  group('l\'identificativo', () {
+    test('si fabbrica anche sul web, dove i bit sono trentadue', () {
+      /* Se il numero a caso nascesse da `1 << 32` questa riga cadrebbe
+       * compilata per il web, e non qui: quello che si prova e' che il
+       * numero stia dentro i trentadue bit di una macchina qualunque. */
+      for (var quale = 0; quale < 200; quale += 1) {
+        final id = fabbricaUnId('lights');
+        expect(id, startsWith('lights-'));
+        expect(id.split('-').length, 3);
+      }
+    });
+
+    test('due di fila non sono lo stesso', () {
+      final visti = {
+        for (var quale = 0; quale < 200; quale += 1) fabbricaUnId('x'),
+      };
+      expect(visti.length, greaterThan(190));
+    });
+  });
 }

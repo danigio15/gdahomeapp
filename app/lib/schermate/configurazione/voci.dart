@@ -11,7 +11,11 @@ import 'package:flutter/material.dart';
 import '../../casa/collegamento.dart';
 import '../../casa/impostazioni.dart';
 import '../../casa/plancia/piu_di_uno.dart' as piu;
+import '../../casa/plancia/apparecchio.dart';
 import 'albero.dart';
+import 'apparecchi.dart';
+import 'cose_di_casa.dart';
+import 'sicurezza.dart';
 import 'caselle.dart';
 import 'energia.dart';
 import 'famiglia.dart';
@@ -28,32 +32,7 @@ Widget? schermataDi(
   'Generali' => SchermataDeiGenerali(collegamento: collegamento),
   'Le sezioni' => SchermataDelleSezioni(collegamento: collegamento),
   'L\'ordine della barra' => SchermataDellOrdine(collegamento: collegamento),
-  'Le stanze' => SchermataDiElenco(
-    titolo: 'Le stanze',
-    sotto:
-        'Le stanze della casa. Quelle con un sensore di temperatura '
-        'compaiono anche nella pagina Temperatura.',
-    collegamento: collegamento,
-    forma: const Forma.elenco('cd_stanze'),
-    unaCosa: 'una stanza',
-    campi: const [
-      Campo('name', 'Nome della stanza', serve: true),
-      Campo(
-        'temp',
-        'Sensore di temperatura',
-        tipo: Tipo.entita,
-        domini: ['sensor'],
-      ),
-      Campo(
-        'hum',
-        'Sensore di umidita\'',
-        tipo: Tipo.entita,
-        domini: ['sensor'],
-      ),
-      Campo('icon', 'Disegno', spiega: 'Un emoji, per esempio 🛋️'),
-      Campo('floor', 'Piano', spiega: 'Piano terra, Primo piano…'),
-    ],
-  ),
+  'Le stanze' => SchermataDelleStanze(collegamento: collegamento),
 
   /* ── Le pagine ── */
   'Home' => SchermataDelleCaselle(
@@ -105,6 +84,10 @@ Widget? schermataDi(
     sezione: 'security',
     collegamento: collegamento,
   ),
+  'I tasti dell\'allarme' => SchermataDeiModi(collegamento: collegamento),
+  'La caldaia' => SchermataDellaCaldaia(collegamento: collegamento),
+  'Porte da sorvegliare' => SchermataDellePorte(collegamento: collegamento),
+  'Allerte meteo' => SchermataDelleAllerte(collegamento: collegamento),
   'MiniPC' => SchermataDelleCaselle(
     titolo: 'MiniPC',
     sotto: 'Il monitoraggio del server: processore, memoria, dischi.',
@@ -159,121 +142,109 @@ Widget? schermataDi(
       Campo('icon', 'Disegno', spiega: 'Un emoji'),
     ],
   ),
-  'Clima' => SchermataDiElenco(
+  'Clima' => SchermataDegliApparecchi(
     titolo: 'Clima',
     sotto: 'Condizionatori, pompe di calore, termostati.',
-    collegamento: collegamento,
-    forma: const Forma.elenco('cd_clima_units'),
+    sezione: Sezione.clima,
     unaCosa: 'un\'unita\'',
+    collegamento: collegamento,
+    domini: const ['climate'],
+    leAltreEntita: false,
     campi: const [
-      Campo('name', 'Come si chiama', serve: true),
-      Campo(
-        'entity',
-        'Entita\' clima',
-        tipo: Tipo.entita,
-        domini: ['climate'],
-        serve: true,
-      ),
-      Campo('room', 'In che stanza'),
-      Campo(
+      CampoDellApparecchio(
         'type',
         'Che cosa e\'',
         spiega: 'split, canalizzato, pompa di calore…',
+      ),
+      CampoDellApparecchio(
+        'valvola',
+        'La valvola, se ce l\'ha',
+        entita: true,
+        domini: ['climate', 'valve', 'switch', 'number'],
       ),
     ],
   ),
 
   /* ── Le cose di casa ── */
-  'Luci' => SchermataDiElenco(
+  'Luci' => SchermataDegliApparecchi(
     titolo: 'Luci',
     sotto:
-        'Le luci che la plancia comanda. Il nome si scrive «Stanza - '
-        'Nome» e la plancia le raggruppa da sola per stanza.',
-    collegamento: collegamento,
-    forma: const Forma.mappa(
-      'cd_luci',
-      campoDellaChiave: 'entity',
-      campoDelValore: 'name',
-    ),
+        'Le luci che la plancia comanda. La stanza si sceglie da quelle che '
+        'hai: la plancia le raggruppa da sola.',
+    sezione: Sezione.luci,
     unaCosa: 'una luce',
-    campi: const [
-      Campo('name', 'Nome', serve: true, spiega: 'Cucina - Faretti'),
-      Campo(
-        'entity',
-        'Entita\'',
-        tipo: Tipo.entita,
-        domini: ['light', 'switch', 'group', 'input_boolean', 'fan'],
-        serve: true,
-      ),
-    ],
+    collegamento: collegamento,
+    domini: const ['light', 'switch', 'group', 'input_boolean', 'fan'],
+    /* Una luce non ha un contatore mensile: le sette caselle in piu' qui
+     * sarebbero sette domande a cui nessuno risponde. */
+    leAltreEntita: false,
   ),
-  'Prese' => SchermataDiElenco(
+  'Prese' => SchermataDegliApparecchi(
     titolo: 'Prese',
     sotto:
-        'Le prese comandate. Sono uscite dalle Luci, e si configurano '
-        'allo stesso modo.',
-    collegamento: collegamento,
-    forma: const Forma.mappa(
-      'cd_prese',
-      campoDellaChiave: 'entity',
-      campoDelValore: 'name',
-    ),
+        'Le prese comandate. Sono uscite dalle Luci, e si configurano allo '
+        'stesso modo — ma una presa spesso misura anche quello che consuma.',
+    sezione: Sezione.prese,
     unaCosa: 'una presa',
-    campi: const [
-      Campo('name', 'Nome', serve: true, spiega: 'Salotto - Televisione'),
-      Campo(
-        'entity',
-        'Entita\'',
-        tipo: Tipo.entita,
-        domini: ['switch', 'input_boolean'],
-        serve: true,
-      ),
-    ],
-  ),
-  'Finestre' => SchermataDiElenco(
-    titolo: 'Finestre',
-    sotto: 'Tapparelle, tende e finestre motorizzate.',
     collegamento: collegamento,
-    forma: const Forma.elenco('cd_tapparelle'),
-    unaCosa: 'una finestra',
-    campi: const [
-      Campo('name', 'Come si chiama', serve: true),
-      Campo(
-        'entity',
-        'Entita\'',
-        tipo: Tipo.entita,
-        domini: ['cover'],
-        serve: true,
-      ),
-      Campo('room', 'In che stanza'),
-      Campo(
-        'invertita',
-        'Percentuali al contrario',
-        tipo: Tipo.bandiera,
-        spiega: 'Accendilo se 100 vuol dire chiusa invece che aperta',
-      ),
-    ],
+    domini: const ['switch', 'input_boolean'],
   ),
-  'Elettrodomestici' => SchermataDiElenco(
+  'Finestre' => SchermataDelleFinestre(collegamento: collegamento),
+  'Elettrodomestici' => SchermataDegliApparecchi(
     titolo: 'Elettrodomestici',
     sotto:
-        'Lavastoviglie, lavatrice, forno, stufa: la plancia capisce da '
-        'sola se stanno lavorando guardando quello che consumano.',
-    collegamento: collegamento,
-    forma: const Forma.elenco('cd_appliances'),
+        'Lavastoviglie, lavatrice, forno, stufa: la plancia capisce da sola '
+        'se stanno lavorando guardando quello che consumano. Per questo le '
+        'entita\' sono piu\' d\'una.',
+    sezione: Sezione.elettrodomestici,
     unaCosa: 'un elettrodomestico',
+    collegamento: collegamento,
+    laFoto: true,
     campi: const [
-      Campo('name', 'Come si chiama', serve: true),
-      Campo(
-        'entity',
-        'Entita\' principale',
-        tipo: Tipo.entita,
-        serve: true,
-        spiega: 'La presa o il sensore di potenza',
+      CampoDellApparecchio(
+        'visual_key',
+        'Che cosa e\'',
+        spiega: 'lavatrice, lavastoviglie, forno, frigo…',
       ),
-      Campo('icon', 'Disegno', spiega: 'Un emoji, per esempio 🧺'),
-      Campo('room', 'In che stanza'),
     ],
+  ),
+  /* Le telecamere hanno tre entita' oltre alla loro: lo stream, l'RTSP e il
+   * «vivo». Sono i campi che `normalizeDevice` dichiara per questa sezione, e
+   * uno che il modello non dichiara sparirebbe alla prima normalizzazione. */
+  'Telecamere' => SchermataDegliApparecchi(
+    titolo: 'Telecamere',
+    sotto:
+        'Le telecamere di casa. La plancia mostra l\'immagine e, se glielo '
+        'dici, apre il flusso video.',
+    sezione: Sezione.telecamere,
+    unaCosa: 'una telecamera',
+    collegamento: collegamento,
+    domini: const ['camera'],
+    leAltreEntita: false,
+    campi: const [
+      CampoDellApparecchio(
+        'stream',
+        'Il flusso video',
+        spiega: 'L\'indirizzo dello stream, se non basta l\'entita\'',
+      ),
+      CampoDellApparecchio('rtsp', 'Indirizzo RTSP', spiega: 'rtsp://…'),
+      CampoDellApparecchio(
+        'vivo',
+        'Guarda dal vivo',
+        bandiera: true,
+        spiega: 'Apre il video invece dell\'ultima immagine',
+      ),
+    ],
+  ),
+  'Robot' => SchermataDegliApparecchi(
+    titolo: 'Robot',
+    sotto: 'Aspirapolvere e lavapavimenti.',
+    sezione: Sezione.robot,
+    unaCosa: 'un robot',
+    collegamento: collegamento,
+    domini: const ['vacuum'],
+    laFoto: true,
+    leAltreEntita: false,
   ),
   'Piscina' => SchermataDellaPiscina(collegamento: collegamento),
   'Irrigazione' => _Irrigazione(collegamento: collegamento),

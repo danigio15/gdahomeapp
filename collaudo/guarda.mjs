@@ -1025,17 +1025,42 @@ try {
    * apre da una casella che sa cosa vuole — «Entita'» di una luce — e deve
    * far vedere le pastiglie coi conti e le suggerite in cima. */
   await premi(pagina, "Aggiungi una luce");
-  await aspettaCheCompaia(pagina, "Nome");
-  await attendi(500);
+  await aspettaCheCompaia(pagina, "Come si chiama");
+  await attendi(700);
+  await scatta(pagina, "6o2-una-luce");
   await premi(pagina, "Cerca fra le entita' di casa");
   await aspettaCheCompaia(pagina, "Scegli l'entita'");
   await attendi(900);
   await scatta(pagina, "6p-cercatore");
   await premi(pagina, "Annulla");
+  await attendi(700);
+  /* Dalla luce si torna all'elenco, dall'elenco all'alberatura. */
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+  await premi(pagina, "Lascia stare");
   await attendi(600);
-  /* Il modulo e' un foglio che sale dal basso: si chiude toccando fuori, e
-   * quel «fuori» nell'albero dell'accessibilita' si chiama «Dismiss». */
-  await premi(pagina, "Dismiss");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
+  /* Un elettrodomestico: e' quello con piu' entita' di tutti — la presa che
+   * lo accende, la potenza, i contatori — ed e' la prova che le «altre
+   * entita'» ci sono davvero e non solo nel modello. */
+  racconta("apro un elettrodomestico");
+  await premi(pagina, "Elettrodomestici");
+  await aspettaCheCompaia(pagina, "Aggiungi un elettrodomestico");
+  await attendi(800);
+  await scatta(pagina, "6o3-elettrodomestici");
+  await premi(pagina, "Aggiungi un elettrodomestico");
+  await aspettaCheCompaia(pagina, "Le altre entita'");
+  await attendi(700);
+  await premi(pagina, "Le altre entita'");
+  await attendi(700);
+  await scorri(pagina, 700);
+  await attendi(500);
+  await scatta(pagina, "6o4-un-elettrodomestico");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+  await premi(pagina, "Lascia stare");
   await attendi(600);
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
