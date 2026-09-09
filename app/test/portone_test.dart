@@ -66,6 +66,7 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
     required VoidCallback quandoCaricata,
     required void Function(String perche) quandoFallisce,
     bool ibrido = false,
+    ({double alto, double basso}) margini = (alto: 0, basso: 0),
   }) => _RiquadroFinto(key: chiave, pagina: pagina, caricata: quandoCaricata);
 }
 
@@ -79,6 +80,9 @@ class _ServitoreFinto implements ServitoreDiQuestoSistema {
 
   @override
   set leggera(bool valore) {}
+
+  @override
+  set margini(({double alto, double basso}) quanto) {}
 }
 
 /// Si dice caricato al primo fotogramma, come una pagina che arriva.

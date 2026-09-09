@@ -127,6 +127,42 @@ void main() {
     varianti: const ['dashboard.html'],
   );
 
+  test(
+    'la pagina sa quanto prendono le barre del telefono, e ci si tiene fuori',
+    () async {
+      /* Prima le due bande le teneva l'app, intorno al riquadro: la plancia
+       * sembrava una pagina dentro una cornice, e sopra e sotto l'aria era
+       * doppia. Adesso il riquadro arriva ai bordi e le misure le sa la
+       * pagina. */
+      servitore.margini = (alto: 37, basso: 24);
+      final dove = servitore.paginaDi(pannello());
+      final richiesta = await cliente.getUrl(dove);
+      final risposta = await richiesta.close();
+      final byte = await risposta.fold<List<int>>(
+        [],
+        (tutti, pezzo) => tutti..addAll(pezzo),
+      );
+      final testo = utf8.decode(byte);
+
+      expect(testo, contains('--gdahome-alto:37px'));
+      expect(testo, contains('--gdahome-basso:24px'));
+      /* Il contenuto comincia sotto l'orologio e finisce sopra i tasti, e la
+       * barra della plancia si appoggia sopra i tasti. */
+      expect(testo, contains('padding-top:calc(var(--gdahome-alto) + 8px)'));
+      expect(
+        testo,
+        contains('padding-bottom:calc(var(--gdahome-basso) + 40px)'),
+      );
+      expect(testo, contains('bottom:calc(var(--gdahome-basso) + 8px)'));
+      /* Lo stile sta in testa, dopo le premesse: vince su quello della
+       * plancia, che arriva dopo. */
+      expect(
+        testo.indexOf('gdahome-misure'),
+        lessThan(testo.indexOf('dashboard-runtime')),
+      );
+    },
+  );
+
   test('la pagina arriva dal ponte, con le premesse in testa e la chiave '
       'nell\'indirizzo', () async {
     final dove = servitore.paginaDi(pannello());

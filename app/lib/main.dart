@@ -12,6 +12,7 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart';
 
 import 'casa/archivio_delle_case.dart';
 import 'casa/cassaforte.dart';
@@ -42,8 +43,14 @@ import 'vestito/tema.dart';
 const bool _perIlCollaudo = bool.fromEnvironment('COLLAUDO');
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  /* L'app arriva ai bordi dello schermo: sotto l'orologio e sotto i tasti del
+   * telefono ci passa quello che si sta guardando, e le barre del sistema ci
+   * galleggiano sopra. Serve alla plancia, che dentro un riquadro inserito
+   * sembrava una pagina in una cornice; alle altre schermate l'aria che gli
+   * tocca la lascia il `SafeArea` della home. */
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   if (_perIlCollaudo) {
-    WidgetsFlutterBinding.ensureInitialized();
     SemanticsBinding.instance.ensureSemantics();
   }
   runApp(const AppDiCasa());

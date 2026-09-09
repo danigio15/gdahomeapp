@@ -62,6 +62,28 @@ WebViewController costruisciIlControllore({
 Future<void> ricarica(WebViewController controllore, Uri pagina) =>
     controllore.reload();
 
+/// Dice alla pagina quanto prendono le barre del telefono, adesso.
+///
+/// Sono due variabili CSS, e la pagina le usa nei suoi margini: cambiarle
+/// costa un fotogramma e non ricarica niente — girando lo schermo la plancia
+/// si risistema senza ripartire da capo.
+Future<void> diciLeMisure(
+  WebViewController controllore, {
+  required double alto,
+  required double basso,
+}) async {
+  try {
+    await controllore.runJavaScript(
+      'document.documentElement.style.setProperty('
+      '"--gdahome-alto","${alto.round()}px");'
+      'document.documentElement.style.setProperty('
+      '"--gdahome-basso","${basso.round()}px");',
+    );
+  } catch (_) {
+    /* La pagina non c'e' ancora, o se n'e' andata: alla prossima. */
+  }
+}
+
 /// Il riquadro che mostra il WebView.
 ///
 /// Su Android, con [ibrido], il riquadro lo compone il sistema per conto suo

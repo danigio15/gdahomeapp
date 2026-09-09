@@ -61,10 +61,12 @@ class FabbricaDellaPlancia {
     required VoidCallback quandoCaricata,
     required void Function(String perche) quandoFallisce,
     bool ibrido = false,
+    ({double alto, double basso}) margini = (alto: 0, basso: 0),
   }) => RiquadroDellaPlancia(
     key: chiave,
     pagina: pagina,
     ibrido: ibrido,
+    margini: margini,
     quandoCaricata: quandoCaricata,
     quandoFallisce: quandoFallisce,
   );
@@ -174,6 +176,11 @@ class PlanciaVeraState extends State<PlanciaVera> {
   @override
   Widget build(BuildContext context) {
     final collegamento = widget.collegamento;
+    /* Quanto prendono l'orologio in cima e i tasti in fondo. Il riquadro
+     * arriva ai bordi dello schermo e la pagina se li tiene da se': vedi
+     * `Servitore.margini`. */
+    final aria = MediaQuery.paddingOf(context);
+    final margini = (alto: aria.top, basso: aria.bottom);
     switch (collegamento.comeVa) {
       case ComeVa.nessunaCasa:
         return _Stato(
@@ -241,6 +248,9 @@ class PlanciaVeraState extends State<PlanciaVera> {
         if (!_servitoreChiesto) unawaited(_accendi());
         return _Attesa(collegamento: collegamento, cosa: 'Accendo la plancia…');
       }
+      /* Prima di chiedere la pagina, cosi' le misure ci sono gia' dentro e
+       * non si vede un salto al primo fotogramma. */
+      servitore.margini = margini;
       pagina = servitore.paginaDi(pannello);
     }
 
@@ -277,6 +287,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
             pagina,
             chiave: _riquadro,
             ibrido: _ibrida,
+            margini: margini,
             quandoCaricata: () {
               if (!mounted) return;
               if (!collegamento.dentro && !_giaRicaricata) {
@@ -331,12 +342,17 @@ class RiquadroDellaPlancia extends StatefulWidget {
     required this.quandoCaricata,
     required this.quandoFallisce,
     this.ibrido = false,
+    this.margini = (alto: 0, basso: 0),
   });
 
   final Uri pagina;
 
   /// Su Android: composizione ibrida. Vedi `riquadro/sul_telefono.dart`.
   final bool ibrido;
+
+  /// Quanto prendono le barre del telefono. Cambiando — si gira lo schermo —
+  /// si ridicono alla pagina, che si risistema senza ricaricare.
+  final ({double alto, double basso}) margini;
   final VoidCallback quandoCaricata;
   final void Function(String perche) quandoFallisce;
 
@@ -361,7 +377,12 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
     super.didChangeDependencies();
     if (_controllore != null) return;
     final controllore = riquadro.costruisciIlControllore(
-      quandoCaricata: () => widget.quandoCaricata(),
+      quandoCaricata: () {
+        /* La pagina e' arrivata: le si ridicono le misure, che nel frattempo
+         * possono essere cambiate — la tastiera, una rotazione. */
+        _leMisure();
+        widget.quandoCaricata();
+      },
       quandoFallisce: (perche) => widget.quandoFallisce(perche),
       siPuoAndare: _dentroCasa,
       /* Lo stesso fondo dell'app: sotto la pagina, finche' non arriva, non
@@ -377,7 +398,21 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.pagina != widget.pagina) {
       unawaited(_controllore?.loadRequest(widget.pagina));
+      return;
     }
+    if (oldWidget.margini != widget.margini) _leMisure();
+  }
+
+  void _leMisure() {
+    final controllore = _controllore;
+    if (controllore == null) return;
+    unawaited(
+      riquadro.diciLeMisure(
+        controllore,
+        alto: widget.margini.alto,
+        basso: widget.margini.basso,
+      ),
+    );
   }
 
   void ricarica() {

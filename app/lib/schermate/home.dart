@@ -141,8 +141,13 @@ class _HomeState extends State<Home> {
            * In fondo lo stesso: la plancia ha la sua barra proprio li', e
            * non deve finire sotto i gesti del telefono. */
           SafeArea(
-            top: sullaPlancia,
-            bottom: sullaPlancia,
+            /* Alla plancia lo schermo si da' tutto, barre di sistema
+             * comprese: dove non scrivere lo sa la pagina, e se lo tiene lei
+             * (vedi `Servitore.margini`). Sulle altre sezioni la barra del
+             * titolo pensa alla cima, e qui si toglie solo l'aria in fondo,
+             * che se no l'ultima riga finisce sotto i tasti del telefono. */
+            top: false,
+            bottom: !sullaPlancia,
             child: Padding(
               /* Alla plancia lo schermo si da' tutto: la maniglia della
                * barra le galleggia sopra, che e' quello che fa una maniglia,

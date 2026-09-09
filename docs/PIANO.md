@@ -287,6 +287,13 @@ E due cose che non erano prestazioni ma sembravano un guasto:
   e si riempiva solo quando riusciva a rileggersi dal ponte. Riaprendo l'app
   fuori casa, col filo ancora in cammino, non ci riusciva, e sembrava che la
   configurazione fosse andata persa. Adesso la porta e' sempre la stessa.
+- **La plancia si prende lo schermo intero.** Il riquadro stava dentro le
+  barre del telefono e la pagina ci aggiungeva i suoi margini: sopra l'aria
+  era doppia, e la barra della plancia restava a mezz'aria sopra i tasti.
+  Adesso il riquadro arriva ai bordi — il fondo della pagina passa sotto
+  l'orologio e sotto i tasti — e quanto prendono quelle barre glielo dice
+  l'app, in due variabili CSS che si riscrivono girando lo schermo senza
+  ricaricare niente.
 - **Quando la casa non risponde, si dice quello che ha detto lei.** La bussata
   che sceglie la strada non veta piu' il centralino: se non risponde nessuno
   lo si prova lo stesso, e il no arriva da chi lo sa — «questa casa adesso non

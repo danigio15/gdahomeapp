@@ -158,6 +158,19 @@ class Servitore {
   /// telefono nessuno deve poter chiedere la chiave a nessuno.
   final bool portaAperta;
 
+  /// Quanto prendono le barre del telefono, in punti CSS: l'orologio in
+  /// cima, i tasti (o la barretta) in fondo.
+  ///
+  /// La pagina arriva ai bordi dello schermo — il suo fondo passa sotto
+  /// tutt'e due — e questi due numeri le dicono dove non deve scrivere.
+  /// Prima li teneva l'app, lasciando due bande vuote intorno al riquadro: la
+  /// plancia sembrava una pagina dentro una cornice, e sopra e sotto l'aria
+  /// era doppia — quella della cornice piu' quella della pagina.
+  ///
+  /// Si riscrivono girando lo schermo, e allora la pagina non si ricarica: le
+  /// due misure sono variabili CSS, e l'app le cambia da fuori.
+  ({double alto, double basso}) margini = (alto: 0, basso: 0);
+
   /// La plancia senza quello che un telefono non regge.
   ///
   /// Il foglio di stile della plancia ha settantadue animazioni che non
@@ -481,6 +494,24 @@ class Servitore {
       '*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}'
       '</style>';
 
+  /// Le misure delle barre del telefono, e cosa farne.
+  ///
+  /// Tre righe, e ognuna toglie un'aria di troppo: il contenuto comincia un
+  /// dito sotto l'orologio invece di due, finisce un dito sopra i tasti, e la
+  /// barra della plancia si appoggia sopra i tasti invece di restare a
+  /// mezz'aria. Il resto della pagina — i margini ai lati, tutto il suo
+  /// disegno — non si tocca.
+  String get stileDelleMisure =>
+      '<style id="gdahome-misure">'
+      ':root{--gdahome-alto:${margini.alto.round()}px;'
+      '--gdahome-basso:${margini.basso.round()}px}'
+      '.app{padding-top:calc(var(--gdahome-alto) + 8px)!important;'
+      'padding-bottom:calc(var(--gdahome-basso) + 40px)!important}'
+      'nav.tabs.bottom-nav-bar.visible{'
+      'bottom:calc(var(--gdahome-basso) + 8px)!important}'
+      '.bottom-nav-handle{bottom:calc(var(--gdahome-basso) + 6px)!important}'
+      '</style>';
+
   String conLePremesse(String pagina) {
     final quale = pannello;
     final premessa =
@@ -499,6 +530,7 @@ class Servitore {
         'window.__DASHBOARDMODERN_LOCALE__=${jsonEncode(lingua)};'
         'window.__GDAHOME__=true;'
         '</script>'
+        '$stileDelleMisure'
         '${leggera ? stileLeggero : ''}';
     final testa = RegExp(
       r'<head[^>]*>',

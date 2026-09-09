@@ -26,6 +26,13 @@ WebViewController costruisciIlControllore({
 Future<void> ricarica(WebViewController controllore, Uri pagina) =>
     controllore.loadRequest(pagina);
 
+/// Nel browser le barre del telefono non ci sono, e non c'e' niente da dire.
+Future<void> diciLeMisure(
+  WebViewController controllore, {
+  required double alto,
+  required double basso,
+}) async {}
+
 /// Nel browser il riquadro e' uno solo: la scelta della composizione e' di
 /// Android.
 Widget riquadroDelWebView(

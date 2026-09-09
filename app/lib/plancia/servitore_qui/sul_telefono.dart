@@ -16,6 +16,10 @@ abstract interface class ServitoreDiQuestoSistema {
 
   /// La plancia leggera: vale dalla pagina dopo.
   set leggera(bool valore);
+
+  /// Quanto prendono le barre del telefono: vale dalla pagina dopo, e
+  /// intanto la cambia da fuori chi mostra il riquadro.
+  set margini(({double alto, double basso}) quanto);
 }
 
 class _SulTelefono implements ServitoreDiQuestoSistema {
@@ -30,6 +34,10 @@ class _SulTelefono implements ServitoreDiQuestoSistema {
 
   @override
   set leggera(bool valore) => _servitore.leggera = valore;
+
+  @override
+  set margini(({double alto, double basso}) quanto) =>
+      _servitore.margini = quanto;
 }
 
 /// Accende il servitore, con i file della plancia nella cartella di supporto
