@@ -226,15 +226,15 @@ Per accenderle, una volta sola:
    Fine-grained tokens) con accesso alla sola repository di cui sopra e il
    permesso **Issues: Read and write**. Non incollarlo da nessuna parte che
    non sia il passo dopo.
-3. Dalla cartella `nuvola`, mettilo nel centralino come segreto:
+3. Mettilo fra i segreti di questa repository: Settings → Secrets and
+   variables → Actions → New repository secret, nome `GETTONE_SEGNALAZIONI`
+   (GitHub non accetta un segreto che cominci con `GITHUB_`), dentro solo il
+   token. Non finisce in nessun file.
+4. Lancia il bottone **Il centralino** su Actions: ripubblica il centralino e
+   gli porta il gettone come `GITHUB_SEGNALAZIONI`.
 
-   ```bash
-   npx wrangler secret put GITHUB_SEGNALAZIONI
-   ```
-
-   Lo chiede a terminale, e non finisce in nessun file.
-
-4. Ripubblica il centralino (`npx wrangler deploy`, o il workflow).
+Chi ha un terminale può fare le stesse due cose dalla cartella `nuvola`, con
+`npx wrangler secret put GITHUB_SEGNALAZIONI` e poi `npx wrangler deploy`.
 
 Senza il segreto tutto il resto funziona: l'app dice che il centralino non
 ha le segnalazioni accese, e basta.

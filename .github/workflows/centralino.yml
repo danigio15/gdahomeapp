@@ -8,6 +8,12 @@
 # Come si fa il gettone: su dash.cloudflare.com, in fondo al menu a sinistra,
 # «Manage Account → Account API Tokens → Create Token», e si sceglie il modello
 # gia' pronto **Edit Cloudflare Workers**.
+#
+# Un secondo gettone, facoltativo, accende le **segnalazioni**: quello con cui
+# il centralino apre le issue su GitHub. Si mette fra i segreti di questa
+# repository come `GETTONE_SEGNALAZIONI` (GitHub non lascia chiamare un
+# segreto con `GITHUB_` davanti), e questo bottone lo porta al worker come
+# `GITHUB_SEGNALAZIONI`. Senza, il centralino si accende lo stesso.
 name: Il centralino
 
 on:
@@ -77,6 +83,43 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           # Serve solo se sul gettone c'e' piu' di un account. Se ce n'e' uno
           # solo, wrangler lo trova da se' e questo puo' restare vuoto.
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # Il gettone delle segnalazioni, se c'e'. Va dopo «Accendi»: un segreto si
+      # puo' dare solo a un worker che esiste gia'. Wrangler lo legge da qui
+      # e non lo scrive da nessuna parte; nei registri di questa pagina GitHub
+      # lo copre da se'.
+      - name: Il gettone delle segnalazioni al centralino
+        run: |
+          if [ -z "${GETTONE}" ]; then
+            echo "Nessun gettone delle segnalazioni: il centralino si accende lo stesso,"
+            echo "e alle segnalazioni risponde «non configurate»."
+            echo "Per accenderle: Settings → Secrets and variables → Actions → New repository secret,"
+            echo "nome GETTONE_SEGNALAZIONI, dentro il token a grana fine di GitHub; poi si rilancia questo bottone."
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Le **segnalazioni** non sono accese: manca il segreto \`GETTONE_SEGNALAZIONI\`." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Un token di GitHub e' una riga sola: quelli a grana fine cominciano
+          # con github_pat_, quelli classici con ghp_. Uno spazio o un a capo
+          # incollato per sbaglio lo renderebbe inutile, e GitHub risponderebbe
+          # solo «Bad credentials».
+          if ! printf '%s' "$GETTONE" | grep -qE '^(github_pat_|ghp_)[A-Za-z0-9_]+$'; then
+            echo "::error::Il segreto GETTONE_SEGNALAZIONI non ha la forma di un token di GitHub (una riga sola che comincia con github_pat_)."
+            echo "Nel segreto va solo la stringa del token, senza spazi, a capo o virgolette intorno."
+            exit 1
+          fi
+
+          printf '%s\n' "$GETTONE" | npx wrangler secret put GITHUB_SEGNALAZIONI
+          repository=$(sed -n 's/^GITHUB_REPO *= *"\(.*\)"/\1/p' wrangler.toml)
+          echo "Il gettone delle segnalazioni è al centralino: le issue si aprono in ${repository}."
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Le **segnalazioni** sono accese: le issue si aprono in \`${repository}\`." >> "$GITHUB_STEP_SUMMARY"
+        working-directory: nuvola
+        env:
+          GETTONE: ${{ secrets.GETTONE_SEGNALAZIONI }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: E adesso

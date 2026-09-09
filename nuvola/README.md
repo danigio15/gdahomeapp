@@ -112,7 +112,9 @@ un bel problema da avere.
 
 Il centralino riceve dal ponte le segnalazioni e i messaggi della chat di
 assistenza e li apre come **issue di GitHub**, in `GITHUB_REPO`
-(`wrangler.toml`), col gettone `GITHUB_SEGNALAZIONI`, che e' un segreto:
+(`wrangler.toml`), col gettone `GITHUB_SEGNALAZIONI`, che e' un segreto del
+worker: lo porta li' il bottone **Il centralino** su Actions, prendendolo dal
+segreto `GETTONE_SEGNALAZIONI` di questa repository; o, da un terminale,
 
     npx wrangler secret put GITHUB_SEGNALAZIONI
 
