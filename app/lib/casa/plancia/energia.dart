@@ -621,3 +621,44 @@ Map<String, dynamic> proiezioneDellEnergia(
   }
   return fuori;
 }
+
+/* ────────────────────── quali viste dell'Energia si vedono ──────────────── */
+
+/// Le cinque linguette della pagina Energia, e come si chiamano.
+///
+/// Chi non ha la batteria non ha niente da vedere in «Temperature», e chi
+/// guarda solo la bolletta non vuole la mappa dei flussi: si spengono. E'
+/// `cdEnList` del runtime, con la stessa regola di lettura — **quello che non
+/// e' scritto `false` e' acceso** — cosi' una plancia che questa chiave non
+/// l'ha mai vista le mostra tutte, come ha sempre fatto.
+const chiaveDelleViste = 'cd_energy_views';
+
+const vistaDellEnergia = <(String, String, String)>[
+  ('ist', '⚡', 'Istantanea (mappa dei flussi)'),
+  ('day', '📅', 'Giornaliera'),
+  ('month', '📆', 'Mensile'),
+  ('panoramica', '📊', 'Report (elettrodomestici e analisi)'),
+  ('temp', '🌡️', 'Temperature dell\'inverter'),
+];
+
+bool laVistaSiVede(Map<String, dynamic> viste, String quale) =>
+    viste[quale] != false;
+
+/// Lo stesso oggetto, con una vista accesa o spenta.
+///
+/// Accesa si **toglie** invece di scriverla `true`: e' come la scrive il
+/// runtime, e tiene la chiave piccola — con cinque viste tutte accese non c'e'
+/// niente da salvare.
+Map<String, dynamic> conLaVista(
+  Map<String, dynamic> viste,
+  String quale,
+  bool accesa,
+) {
+  final dopo = Map<String, dynamic>.from(viste);
+  if (accesa) {
+    dopo.remove(quale);
+  } else {
+    dopo[quale] = false;
+  }
+  return dopo;
+}

@@ -325,4 +325,48 @@ void main() {
     // Fuori dai bordi non si muove niente.
     expect(spostaIlCarico(dopo, dopo.first.id, -1).first.id, dopo.first.id);
   });
+
+  proveDelReport();
+}
+
+/* Il Report non ha un elenco suo: si ricava da carichi ed elettrodomestici, e
+ * questi due campi sono l'unico modo di dirgli qualcosa. */
+void proveDelReport() {
+  group('il Report', () {
+    test('di serie un carico ci compare', () {
+      expect(caricoVuoto(const []).nelReport, isTrue);
+      final scritto = carichiDaScrivere([caricoVuoto(const [])]);
+      expect(scritto.carichi.single['show_in_report'], isTrue);
+    });
+
+    test('toglierlo si scrive, e si rilegge', () {
+      final uno = caricoVuoto(const [])..nelReport = false;
+      final scritto = carichiDaScrivere([uno]);
+      expect(scritto.carichi.single['show_in_report'], isFalse);
+      expect(
+        modelloDeiCarichi(carichi: scritto.carichi).single.nelReport,
+        isFalse,
+      );
+    });
+
+    test('nel Report puo\' chiamarsi diversamente', () {
+      final uno = caricoVuoto(const [])
+        ..nome = 'Cucina'
+        ..nomeNelReport = 'Piano cottura';
+      final scritto = carichiDaScrivere([uno]);
+      expect(scritto.carichi.single['report_label'], 'Piano cottura');
+      final riletto = modelloDeiCarichi(carichi: scritto.carichi).single;
+      expect(riletto.nome, 'Cucina');
+      expect(riletto.nomeNelReport, 'Piano cottura');
+    });
+
+    test('l\'ordine nel Report segue quello dei cerchi', () {
+      final elenco = <Carico>[];
+      for (var quale = 0; quale < 3; quale += 1) {
+        elenco.add(caricoVuoto(elenco));
+      }
+      final scritto = carichiDaScrivere(elenco);
+      expect(scritto.carichi.map((uno) => uno['report_order']), [0, 1, 2]);
+    });
+  });
 }

@@ -164,6 +164,8 @@ class _SchermataDellEnergiaState extends State<SchermataDellEnergia> {
             },
           ),
         const SizedBox(height: 8),
+        _LeViste(scatto: scatto, quaderno: quaderno),
+        const SizedBox(height: 8),
         _IlPrezzo(
           modello: modello,
           scatto: scatto,
@@ -529,4 +531,48 @@ class _IlPrezzo extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// Quali delle cinque linguette della pagina Energia si vedono.
+class _LeViste extends StatelessWidget {
+  const _LeViste({required this.scatto, required this.quaderno});
+
+  final Scatto scatto;
+  final Quaderno quaderno;
+
+  @override
+  Widget build(BuildContext context) {
+    final segnate = quaderno.cambiate[chiaveDelleViste];
+    final viste = segnate is Map
+        ? Map<String, dynamic>.from(segnate)
+        : scatto.mappa(chiaveDelleViste);
+    final quante = vistaDellEnergia
+        .where((una) => laVistaSiVede(viste, una.$1))
+        .length;
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        title: const Text('Cosa si vede nella pagina'),
+        subtitle: Text(
+          '$quante linguette su ${vistaDellEnergia.length}',
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        ),
+        children: [
+          for (final (chiave, disegno, nome) in vistaDellEnergia)
+            SwitchListTile(
+              value: laVistaSiVede(viste, chiave),
+              onChanged: (acceso) => quaderno.segna(
+                chiaveDelleViste,
+                conLaVista(viste, chiave, acceso),
+              ),
+              secondary: Text(disegno, style: const TextStyle(fontSize: 22)),
+              title: Text(nome),
+              dense: true,
+            ),
+        ],
+      ),
+    );
+  }
 }

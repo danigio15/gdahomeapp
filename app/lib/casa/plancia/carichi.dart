@@ -217,6 +217,8 @@ class Carico {
     this.mese = '',
     List<Sottocarico>? figli,
     this.impianto = '',
+    this.nelReport = true,
+    this.nomeNelReport = '',
   }) : figli = figli ?? [];
 
   final String id;
@@ -231,6 +233,18 @@ class Carico {
   String giorno;
   String mese;
   final List<Sottocarico> figli;
+
+  /// Se questo carico compare nel Report (la linguetta «Report» della pagina
+  /// Energia, quella che mette in fila gli elettrodomestici e li confronta).
+  ///
+  /// Il Report non ha un elenco suo: si ricava da elettrodomestici e carichi,
+  /// e questi due campi sono l'unico modo di dirgli qualcosa. `cd_report_devices`
+  /// era l'elenco separato di una volta, migrato dentro i carichi una volta
+  /// sola e mai piu' riletto.
+  bool nelReport;
+
+  /// Come si chiama nel Report, se li' vuole chiamarsi diversamente.
+  String nomeNelReport;
 
   /// Di quale impianto e' questo cerchio. Vuoto vuol dire il primo.
   final String impianto;
@@ -437,6 +451,8 @@ List<Carico> modelloDeiCarichi({
             ...vecchi,
           ].take(massimoDeiSottocarichi).toList(),
           impianto: _pulito(carico[campoDellImpianto]),
+          nelReport: carico['show_in_report'] != false,
+          nomeNelReport: _pulito(carico['report_label']),
         );
       }(),
   ];
@@ -585,6 +601,9 @@ carichiDaScrivere(
         'color': colore,
         'order': posto,
         'show_in_dashboard': carico.visibile,
+        'show_in_report': carico.nelReport,
+        'report_label': carico.nomeNelReport,
+        'report_order': posto,
         'power_entity': carico.potenza,
         'total_energy_entity': carico.totale,
         'history_entity': carico.totale,

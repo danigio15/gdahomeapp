@@ -504,6 +504,37 @@ class _UnCaricoState extends State<_UnCarico> {
               ),
               const SizedBox(height: 24),
               Text(
+                'Nel Report',
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'La linguetta «Report» della pagina Energia mette in fila '
+                'quello che consuma e lo confronta. Il Report non ha un elenco '
+                'suo: prende da qui.',
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: colori.onSurfaceVariant, height: 1.4),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: carico.nelReport,
+                onChanged: (acceso) => _tocca(() => carico.nelReport = acceso),
+                title: const Text('Si vede nel Report'),
+                dense: true,
+              ),
+              if (carico.nelReport) ...[
+                const SizedBox(height: 6),
+                CampoDiTesto(
+                  etichetta: 'Come si chiama nel Report',
+                  valore: carico.nomeNelReport,
+                  suggerimento: carico.nome,
+                  cambiato: (scritto) =>
+                      _tocca(() => carico.nomeNelReport = scritto),
+                ),
+              ],
+              const SizedBox(height: 24),
+              Text(
                 'Cosa c\'e\' dentro',
                 style: Theme.of(context).textTheme.titleSmall
                     ?.copyWith(fontWeight: FontWeight.w700),

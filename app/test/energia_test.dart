@@ -249,6 +249,7 @@ void main() {
     });
   });
 
+  proveDelleViste();
   proveDellaProiezione();
 }
 
@@ -313,6 +314,32 @@ void proveDellaProiezione() {
         'cooling': {'fan_power': 'sensor.ventola'},
       }, {});
       expect(fuori['dm.energy_potenza_ventola_inverter'], 'sensor.ventola');
+    });
+  });
+}
+
+/* Le cinque linguette della pagina Energia: chi non ha la batteria non ha
+ * niente da vedere in «Temperature». */
+void proveDelleViste() {
+  group('quali viste si vedono', () {
+    test('sono cinque, e di serie sono tutte accese', () {
+      expect(vistaDellEnergia.length, 5);
+      for (final (chiave, _, _) in vistaDellEnergia) {
+        expect(laVistaSiVede(const {}, chiave), isTrue);
+      }
+    });
+
+    test('spegnerne una la scrive `false`', () {
+      final dopo = conLaVista(const {}, 'temp', false);
+      expect(dopo, {'temp': false});
+      expect(laVistaSiVede(dopo, 'temp'), isFalse);
+      expect(laVistaSiVede(dopo, 'ist'), isTrue);
+    });
+
+    test('riaccenderla la toglie invece di scriverla vera', () {
+      /* Con cinque viste tutte accese non c'e' niente da salvare: e' come la
+       * scrive il runtime, e tiene la chiave piccola. */
+      expect(conLaVista(const {'temp': false}, 'temp', true), isEmpty);
     });
   });
 }
