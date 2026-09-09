@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 
 import '../../casa/collegamento.dart';
 import '../../casa/plancia/apparecchio.dart';
+import '../../casa/plancia/home.dart';
+import '../../casa/plancia/scatto.dart';
 import '../../casa/plancia/soglie.dart';
 import '../../vestito/pezzi.dart';
 import 'apparecchi.dart';
@@ -122,6 +124,8 @@ class SchermataDelleStanze extends StatelessWidget {
       ),
     ],
     inFondo: (scatto, quaderno) => [
+      _LeEntitaDelleStanze(scatto: scatto, quaderno: quaderno),
+      const SizedBox(height: 16),
       _LaSoglia(
         titolo: 'Quando conviene aprire la finestra',
         spiega:
@@ -193,6 +197,85 @@ class _LaSoglia extends StatelessWidget {
             onChanged: (quanto) =>
                 quaderno.segna(chiave, quanto.round().toString()),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Le entita' assegnate a una stanza quando la loro scheda non lo chiede.
+///
+/// Una casella sola, `entita' -> stanza`, e dentro ci va **l'id**: cambiare il
+/// nome di una stanza non rompe niente. Serve a tutto quello che una stanza
+/// non se la porta dietro — un sensore qualunque che si vuole veder comparire
+/// nella pagina di quella stanza.
+class _LeEntitaDelleStanze extends StatelessWidget {
+  const _LeEntitaDelleStanze({required this.scatto, required this.quaderno});
+
+  final Scatto scatto;
+  final Quaderno quaderno;
+
+  @override
+  Widget build(BuildContext context) {
+    final segnate = quaderno.cambiate[chiaveDelleEntitaDelleStanze];
+    final dentro = segnate is Map
+        ? Map<String, dynamic>.from(segnate)
+        : scatto.mappa(chiaveDelleEntitaDelleStanze);
+    final stanze = leggiGliApparecchi(
+      scatto.aperto(Sezione.stanze.chiave),
+      sezione: Sezione.stanze,
+    );
+    String comeSiChiama(String id) {
+      for (final una in stanze) {
+        if (una.id == id) return una.nome.isNotEmpty ? una.nome : id;
+      }
+      return id;
+    }
+
+    return Scheda(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Le entita\' messe in una stanza',
+            style: Theme.of(context).textTheme.titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Un sensore qualunque che vuoi veder comparire nella pagina di una '
+            'stanza, anche se la sua scheda la stanza non la chiede.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (dentro.isEmpty)
+            Text(
+              'Non ce n\'e\' nessuna.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            )
+          else
+            for (final voce in dentro.entries)
+              ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  voce.key,
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                ),
+                subtitle: Text('in ${comeSiChiama('${voce.value}')}'),
+                trailing: TextButton(
+                  onPressed: () => quaderno.segna(
+                    chiaveDelleEntitaDelleStanze,
+                    Map<String, dynamic>.from(dentro)..remove(voce.key),
+                  ),
+                  child: const Text('Togli'),
+                ),
+              ),
         ],
       ),
     );

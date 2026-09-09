@@ -13,11 +13,15 @@ import '../../casa/impostazioni.dart';
 import '../../casa/plancia/piu_di_uno.dart' as piu;
 import '../../casa/plancia/apparecchio.dart';
 import 'albero.dart';
+import '../../casa/plancia/scatto.dart';
+import '../../vestito/pezzi.dart';
+import 'pezzi.dart';
 import 'apparecchi.dart';
 import '../../casa/plancia/home.dart';
 import 'cose_di_casa.dart';
 import 'home.dart';
 import 'il_resto.dart';
+import 'ultime.dart';
 import 'parole.dart';
 import 'sicurezza.dart';
 import 'caselle.dart';
@@ -201,6 +205,95 @@ Widget? schermataDi(
   ),
   'I piani' => SchermataDeiPiani(collegamento: collegamento),
 
+  'Il tasto rapido del clima' => SchermataDelClimaRapido(
+    collegamento: collegamento,
+  ),
+  'I sensori girati' => SchermataDeiVersi(collegamento: collegamento),
+  'I programmi della lavatrice' => SchermataDiRighe(
+    titolo: 'I programmi della lavatrice',
+    sotto:
+        'I tasti che compaiono aprendo la lavatrice. Ognuno chiama uno script: '
+        'quello del rapido da quattordici minuti, quello dei colorati.',
+    chiave: chiaveDeiProgrammi,
+    unaCosa: 'un programma',
+    disegnoDiSerie: '🧺',
+    domini: const ['script', 'scene', 'button'],
+    collegamento: collegamento,
+  ),
+  'I gruppi di luci' => SchermataDiRighe(
+    titolo: 'I gruppi di luci',
+    sotto:
+        'Gruppi tuoi, oltre a quelli che la plancia fa da sola guardando le '
+        'stanze: «tutte quelle di sotto», «quelle che lascio accese la notte».',
+    chiave: chiaveDeiGruppiDiLuci,
+    unaCosa: 'un gruppo',
+    disegnoDiSerie: '💡',
+    domini: const ['light', 'group', 'switch'],
+    collegamento: collegamento,
+    sottoTutto: (scatto, quaderno) => [
+      _GruppiTolti(scatto: scatto, quaderno: quaderno),
+    ],
+  ),
+
+  /* Il ritratto di una lavatrice e di un'auto: quando c'e' una foto e non un
+   * emoji, e la plancia deve sapere quale disegnare. Sono due mappe da
+   * riferimento a immagine, ed e' cosi' che la plancia le tiene. */
+  'I ritratti' => SchermataDiParole(
+    titolo: 'I ritratti',
+    sotto:
+        'Quando una cosa ha una foto invece di un emoji, qui si dice quale. '
+        'Vale per la lavatrice e per l\'auto: la plancia disegna quella.',
+    chiave: chiaveDelRitrattoDellaLavatrice,
+    cosaEChiave: 'Quale cosa',
+    cosaEValore: 'La foto',
+    esempio: 'lavatrice',
+    collegamento: collegamento,
+  ),
+  'Il ritratto dell\'auto' => SchermataDiParole(
+    titolo: 'Il ritratto dell\'auto',
+    sotto:
+        'La foto di un\'auto, per riferimento. Nella scheda dell\'auto la foto '
+        'si sceglie dalla galleria; qui c\'e\' quella di ripiego, per chi non '
+        'l\'ha scelta.',
+    chiave: chiaveDelRitrattoDellAuto,
+    cosaEChiave: 'Quale auto',
+    cosaEValore: 'La foto',
+    collegamento: collegamento,
+  ),
+  'I dati in piu\' dell\'auto' => SchermataDiParole(
+    titolo: 'I dati in piu\' dell\'auto',
+    sotto:
+        'Quello che la plancia si annota su un\'auto e che non sta nel suo '
+        'profilo: il segno progressivo, gli ultimi conti. Di solito non c\'e\' '
+        'niente da toccare — sta qui per poterlo guardare.',
+    chiave: chiaveDeiDatiDellAuto,
+    cosaEChiave: 'Quale',
+    cosaEValore: 'Cosa dice',
+    collegamento: collegamento,
+  ),
+  'I dati in piu\' della continuita\'' => SchermataDiParole(
+    titolo: 'I dati in piu\' della continuita\'',
+    sotto:
+        'Il segno progressivo dei gruppi di continuita\': e\' quello che '
+        'impedisce a un identificativo di tornare buono una seconda volta, con '
+        'addosso quello che apparteneva a chi non c\'e\' piu\'.',
+    chiave: chiaveDeiDatiDellaContinuita,
+    cosaEChiave: 'Quale',
+    cosaEValore: 'Cosa dice',
+    collegamento: collegamento,
+  ),
+  'I dispositivi di una volta' => SchermataDiParole(
+    titolo: 'I dispositivi di una volta',
+    sotto:
+        'L\'elenco che la plancia teneva prima delle sezioni. Non lo scrive '
+        'piu\' nessuno e non lo legge piu\' niente: sta qui perche\' una '
+        'configurazione vecchia non deve avere angoli invisibili.',
+    chiave: chiaveDeiDispositivi,
+    cosaEChiave: 'Quale dispositivo',
+    cosaEValore: 'Cosa diceva',
+    collegamento: collegamento,
+  ),
+
   'MiniPC' => SchermataDelleCaselle(
     titolo: 'MiniPC',
     sotto: 'Il monitoraggio del server: processore, memoria, dischi.',
@@ -296,6 +389,9 @@ Widget? schermataDi(
      * in due caselle accanto. */
     stanzeAParte: chiaveDelleStanzeDelleLuci,
     ordineAParte: chiaveDellOrdineDelleLuci,
+    inFondo: (scatto, quaderno) => [
+      _LOrdineDelleStanze(scatto: scatto, quaderno: quaderno),
+    ],
   ),
   'Prese' => SchermataDegliApparecchi(
     titolo: 'Prese',
@@ -448,6 +544,26 @@ Widget? schermataDi(
   ),
 
   /* ── Gli avvisi ── */
+  'I disegni degli avvisi' => SchermataDiParole(
+    titolo: 'I disegni degli avvisi',
+    sotto:
+        'Il disegno di un avviso, cambiato. A sinistra il riferimento '
+        'dell\'avviso, a destra l\'emoji.',
+    chiave: chiaveDeiDisegniDegliAvvisi,
+    cosaEChiave: 'Quale avviso',
+    cosaEValore: 'Che disegno',
+    esempio: 'finestre',
+    collegamento: collegamento,
+  ),
+  'I nomi degli avvisi' => SchermataDiParole(
+    titolo: 'I nomi degli avvisi',
+    sotto: 'Come si chiama un avviso, se il nome che ha non ti torna.',
+    chiave: chiaveDeiNomiDegliAvvisi,
+    cosaEChiave: 'Quale avviso',
+    cosaEValore: 'Come deve chiamarsi',
+    esempio: 'allagamenti',
+    collegamento: collegamento,
+  ),
   'Quadro avvisi' => SchermataDiElenco(
     titolo: 'Quadro avvisi',
     sotto:
@@ -525,4 +641,157 @@ class _Irrigazione extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// I gruppi che la plancia farebbe da sola e che si sono tolti.
+///
+/// La plancia raggruppa le luci per stanza da sola: chi non vuole il gruppo
+/// «Bagno» lo toglie, e resta tolto — se lo si potesse solo aggiungere, ogni
+/// stanza nuova rimetterebbe un gruppo che qualcuno aveva gia' detto di non
+/// volere.
+class _GruppiTolti extends StatelessWidget {
+  const _GruppiTolti({required this.scatto, required this.quaderno});
+
+  final dynamic scatto;
+  final Quaderno quaderno;
+
+  @override
+  Widget build(BuildContext context) {
+    final segnati = quaderno.cambiate[chiaveDeiGruppiDiLuciTolti];
+    final dentro = segnati is Map
+        ? Map<String, dynamic>.from(segnati)
+        : scatto.mappa(chiaveDeiGruppiDiLuciTolti) as Map<String, dynamic>;
+    final luci = [
+      for (final uno in (dentro['luci'] as List? ?? const []))
+        if ('$uno'.trim().isNotEmpty) '$uno'.trim(),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'I gruppi tolti',
+          style: Theme.of(context).textTheme.titleSmall
+              ?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'La plancia raggruppa le luci per stanza da sola. Quelli qui sotto '
+          'sono i gruppi che hai detto di non volere, e restano tolti.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (luci.isEmpty)
+          Text(
+            'Non ne hai tolto nessuno.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          )
+        else
+          for (final (posto, quale) in luci.indexed)
+            Card(
+              margin: const EdgeInsets.symmetric(vertical: 3),
+              child: ListTile(
+                dense: true,
+                title: Text(quale),
+                trailing: TextButton(
+                  onPressed: () => quaderno.segna(chiaveDeiGruppiDiLuciTolti, {
+                    ...dentro,
+                    'luci': [...luci]..removeAt(posto),
+                  }),
+                  child: const Text('Rimettilo'),
+                ),
+              ),
+            ),
+      ],
+    );
+  }
+}
+
+/// In che ordine stanno le stanze nella pagina Luci.
+///
+/// «Chi ordina le stanze in configurazione lo fa per una ragione: e' l'ordine
+/// in cui gira per casa.» Quell'ordine pero' arrivava solo alla pagina Stanze:
+/// le pagine che raggruppano per stanza se lo riscrivevano ognuna a modo suo,
+/// e il bagnetto spostato in cima restava in fondo dappertutto.
+class _LOrdineDelleStanze extends StatelessWidget {
+  const _LOrdineDelleStanze({required this.scatto, required this.quaderno});
+
+  final Scatto scatto;
+  final Quaderno quaderno;
+
+  @override
+  Widget build(BuildContext context) {
+    final segnate = quaderno.cambiate[chiaveDellOrdineDelleStanze];
+    final fila = segnate is List
+        ? [
+            for (final uno in segnate)
+              if ('$uno'.trim().isNotEmpty) '$uno'.trim(),
+          ]
+        : scatto.parole(chiaveDellOrdineDelleStanze);
+    return Scheda(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'In che ordine stanno le stanze',
+            style: Theme.of(context).textTheme.titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Chi ordina le stanze lo fa per una ragione: e\' l\'ordine in cui '
+            'gira per casa. Le stanze che non stanno qui vanno in fondo.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (fila.isEmpty)
+            Text(
+              'Nessun ordine scritto: le stanze vanno come vengono.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            )
+          else
+            for (final (posto, quale) in fila.indexed)
+              ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(radius: 13, child: Text('${posto + 1}')),
+                title: Text(quale),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: posto == 0
+                          ? null
+                          : () => quaderno.segna(
+                              chiaveDellOrdineDelleStanze,
+                              [...fila]
+                                ..insert(posto - 1, fila.removeAt(posto)),
+                            ),
+                      icon: const Icon(Icons.keyboard_arrow_up_rounded),
+                      tooltip: 'Su',
+                    ),
+                    IconButton(
+                      onPressed: () => quaderno.segna(
+                        chiaveDellOrdineDelleStanze,
+                        [...fila]..removeAt(posto),
+                      ),
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      tooltip: 'Togli',
+                    ),
+                  ],
+                ),
+              ),
+        ],
+      ),
+    );
+  }
 }

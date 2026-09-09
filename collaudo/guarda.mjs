@@ -607,6 +607,25 @@ async function premi(pagina, etichetta, opzioni = {}) {
  * premere: per sapere **dove** e' una voce bisogna sceglierla con le stesse
  * regole con cui poi la si preme, se no si misura una cosa e se ne preme
  * un'altra. Torna `null` quando quel testo a schermo non c'e'. */
+/* Preme una voce che sta in una lista lunga, cercandola.
+ *
+ * Scorrere di un numero fisso e' andato bene finche' l'alberatura e' rimasta
+ * quella: cresciuta, quel numero ha cominciato a mancare il bersaglio e a
+ * premere quello che si trovava li' sotto — una volta e' finito sull'elenco
+ * delle case. Una lista lunga tiene nel documento solo quello che si vede,
+ * quindi si scorre finche' la voce non c'e', e allora si preme.
+ */
+async function premiCercando(pagina, etichetta, opzioni = {}) {
+  await scorri(pagina, -8000);
+  await attendi(400);
+  for (let giro = 0; giro < 16; giro += 1) {
+    if (await ilBottone(pagina, etichetta, opzioni)) break;
+    await scorri(pagina, 600);
+    await attendi(240);
+  }
+  return premi(pagina, etichetta, opzioni);
+}
+
 async function ilBottone(pagina, etichetta, { inAlto = false, aspetta = true } = {}) {
   const tutti = pagina.locator(
     `[aria-label="${etichetta}"], [aria-label^="${etichetta}"], flt-semantics:has-text("${etichetta}")`,
@@ -1008,19 +1027,13 @@ try {
    * dentro le cose della casa, e si torna indietro. E' la prova che il
    * cablaggio fra l'alberatura e le schermate tiene. */
   racconta("apro una voce della configurazione");
-  await scorri(pagina, -6000);
-  await attendi(600);
-  await premi(pagina, "Le sezioni");
+  await premiCercando(pagina, "Le sezioni");
   await aspettaCheCompaia(pagina, "Le pagine spente spariscono");
   await attendi(900);
   await scatta(pagina, "6n-configurazione-sezioni");
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
-  /* «Le cose di casa» sta piu' in basso di prima: l'alberatura e' cresciuta, e
-   * una lista lunga tiene nel documento solo quello che si vede. */
-  await scorri(pagina, 2400);
-  await attendi(600);
-  await premi(pagina, "Luci");
+  await premiCercando(pagina, "Luci");
   await aspettaCheCompaia(pagina, "Aggiungi una luce");
   await attendi(900);
   await scatta(pagina, "6o-configurazione-luci");
@@ -1050,11 +1063,7 @@ try {
    * lo accende, la potenza, i contatori — ed e' la prova che le «altre
    * entita'» ci sono davvero e non solo nel modello. */
   racconta("apro un elettrodomestico");
-  await scorri(pagina, -6000);
-  await attendi(500);
-  await scorri(pagina, 2400);
-  await attendi(600);
-  await premi(pagina, "Elettrodomestici");
+  await premiCercando(pagina, "Elettrodomestici");
   await aspettaCheCompaia(pagina, "Aggiungi un elettrodomestico");
   await attendi(800);
   await scatta(pagina, "6o3-elettrodomestici");
@@ -1079,11 +1088,7 @@ try {
    * impianto con la sua riga di pastiglie, e che dai carichi si arrivi ai
    * cerchi con dentro gli elettrodomestici. */
   racconta("apro l'energia");
-  await scorri(pagina, -6000);
-  await attendi(500);
-  await scorri(pagina, 1100);
-  await attendi(600);
-  await premi(pagina, "Energia");
+  await premiCercando(pagina, "Energia");
   await aspettaCheCompaia(pagina, "Fotovoltaico, batteria, rete e consumi");
   await attendi(900);
   await scatta(pagina, "6q-energia");

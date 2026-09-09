@@ -309,3 +309,60 @@ const chiaveDelFumo = 'cd_fumo_rilevato';
 /// I dispositivi della plancia storica, e le voci del Report di una volta.
 const chiaveDeiDispositivi = 'cd_devices';
 const chiaveDelReportDiUnaVolta = 'cd_report_devices';
+
+/* ── il tasto rapido del clima ────────────────────────────────────────────*/
+
+/// Le modalita' di Home Assistant, meno «off»: il tasto serve ad accendere, e
+/// spegnere lo fa gia' premendolo una seconda volta.
+const modiDelClima = <(String, String)>[
+  ('cool', 'Raffredda'),
+  ('heat', 'Riscalda'),
+  ('heat_cool', 'Automatico caldo/freddo'),
+  ('auto', 'Automatico'),
+  ('dry', 'Deumidifica'),
+  ('fan_only', 'Solo ventola'),
+];
+
+/// Quello che la plancia ha sempre fatto: resta il comportamento di chi non
+/// apre mai la configurazione.
+const climaDiSerie = (modo: 'cool', gradi: 26.0, ventola: 'auto');
+
+/// Sotto i cinque gradi e sopra i trentacinque non c'e' un condizionatore che
+/// obbedisca: e' un numero digitato male, non una scelta.
+const gradiMinimi = 5.0;
+const gradiMassimi = 35.0;
+
+/// Il tasto rapido, ripulito.
+///
+/// Una casella lasciata vuota vuol dire «non toccare»: chi ha un condizionatore
+/// senza ventola non deve ricevere una chiamata che quel condizionatore non sa
+/// eseguire, e chi la temperatura la tiene dal termostato non vuole che il
+/// tasto gliela riscriva. Per questo i gradi possono essere `null`, che non e'
+/// «zero gradi».
+({String modo, double? gradi, String ventola}) leggiIlClimaRapido(
+  dynamic letto,
+) {
+  final dato = letto is Map
+      ? Map<String, dynamic>.from(letto)
+      : <String, dynamic>{};
+  final modo = _pulito(dato['mode']).toLowerCase();
+  final scritto = _pulito(dato['temperature']);
+  final quanti = double.tryParse(scritto.replaceAll(',', '.'));
+  return (
+    modo: modiDelClima.any((uno) => uno.$1 == modo) ? modo : climaDiSerie.modo,
+    gradi: scritto.isEmpty
+        ? null
+        : (quanti == null || !quanti.isFinite
+              ? climaDiSerie.gradi
+              : ((quanti * 2).round() / 2).clamp(gradiMinimi, gradiMassimi)),
+    ventola: _pulito(dato['fan']),
+  );
+}
+
+Map<String, dynamic> climaRapidoDaScrivere(
+  ({String modo, double? gradi, String ventola}) quale,
+) => {
+  'mode': quale.modo,
+  if (quale.gradi != null) 'temperature': quale.gradi,
+  if (quale.ventola.isNotEmpty) 'fan': quale.ventola,
+};

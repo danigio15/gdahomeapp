@@ -12,11 +12,11 @@ un'altra cosa, e questo documento la misura invece di stimarla.
 | | quante |
 |---|---|
 | Chiavi che la dashboard sincronizza (`config-persistence-section.js`) | **83** (85 meno le due di servizio) |
-| Chiavi che la Configurazione dell'app sa leggere e scrivere | **68** |
+| Chiavi che la Configurazione dell'app sa leggere e scrivere | **83** |
 | Moduli della plancia che sono editor o pezzi di editor (`src/sections/*editor*`, `*integraz*`) | **30** |
 | Righe dei moduli della plancia | ~91.000 |
 
-Non è una stima: le 83 chiavi sono estratte dal file che le elenca, e le 68
+Non è una stima: le 83 chiavi sono estratte dal file che le elenca, e le 83
 sono un **elenco scritto a mano** in `app/test/chiavi_della_config_test.dart`,
 e scritto a mano lo è apposta. Il conto lo si faceva frugando nei sorgenti:
 bastava dichiarare quaranta costanti in un file di modello — nomi e basta,
@@ -25,6 +25,19 @@ un pomeriggio, senza che nessuno potesse configurare niente di più. Adesso ogni
 chiave che entra nel conto è una riga che qualcuno ha aggiunto sapendo cosa
 stava dicendo, e una prova controlla che non sia una promessa: una chiave
 elencata deve comparire nei sorgenti, o l'elenco cade.
+
+### Cosa vuol dire «sa leggere e scrivere»
+
+Che una schermata dell'app la apre, la mostra e la salva. **Non** che la
+schermata sia bella come quella della dashboard, né che copra ogni angolo di
+quella chiave: cinque delle ottantatré — i ritratti, i dati in più dell'auto e
+della continuità, i dispositivi di una volta — sono mappe che l'app fa vedere e
+modificare riga per riga, dove la dashboard ha una maschera fatta apposta.
+Sono chiavi che quasi nessuno tocca, e averle visibili è meglio che averle
+invisibili; ma dire «uguale» lì sarebbe dire una cosa non vera.
+
+Le altre settantotto hanno la loro schermata, col cercatore di entità, il
+catalogo delle integrazioni e le foto dove servono.
 
 ## Il difetto strutturale: la dashboard tiene *più* di tutto
 

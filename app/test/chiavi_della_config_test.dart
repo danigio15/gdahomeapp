@@ -104,7 +104,7 @@ const leChiaviDellaPlancia = <String>[
 
 /// Quante ne conosce l'app adesso. Sale, non scende: quando sale si cambia
 /// questo numero e si cambia il documento, insieme.
-const quanteNeConosciamo = 68;
+const quanteNeConosciamo = 83;
 
 /* Quali chiavi l'app sa configurare **davvero**.
  *
@@ -125,6 +125,8 @@ const leChiaviCheSappiamoFare = <String>[
   'cd_antifurto_modi',
   'cd_appliances',
   'cd_avvisi_custom',
+  'cd_avvisi_icone',
+  'cd_avvisi_names_extra',
   'cd_branding',
   'cd_caldaia',
   'cd_calendari',
@@ -132,8 +134,11 @@ const leChiaviCheSappiamoFare = <String>[
   'cd_centrale_scelta',
   'cd_centrali',
   'cd_clima_inverti_card',
+  'cd_clima_rapido',
+  'cd_clima_rapido_unita',
   'cd_clima_units',
   'cd_costo_kwh',
+  'cd_devices',
   'cd_energia_tessere',
   'cd_energy_model',
   'cd_energy_views',
@@ -141,18 +146,25 @@ const leChiaviCheSappiamoFare = <String>[
   'cd_entity_overrides',
   'cd_ev_car_active',
   'cd_ev_cars',
+  'cd_ev_meta',
+  'cd_ev_visual',
   'cd_evidenza',
   'cd_floor_icons',
   'cd_floors',
   'cd_flow_nodes',
   'cd_fumo_rilevato',
+  'cd_gruppi_extra',
+  'cd_gruppi_removed',
   'cd_hidden_elements',
   'cd_home_blocchi',
   'cd_impianti_termici',
   'cd_irrigazione',
+  'cd_lavatrice_programmi',
+  'cd_lavatrice_visual',
   'cd_loads',
   'cd_luci',
   'cd_luci_order',
+  'cd_luci_room_order',
   'cd_luci_rooms',
   'cd_media_player',
   'cd_meteo_entita_proprie',
@@ -178,6 +190,8 @@ const leChiaviCheSappiamoFare = <String>[
   'cd_solari',
   'cd_solo_lettura',
   'cd_stanze',
+  'cd_stanze_entita',
+  'cd_stati_invertiti',
   'cd_subload_groups',
   'cd_subloads_extra',
   'cd_tapparelle',
@@ -187,6 +201,7 @@ const leChiaviCheSappiamoFare = <String>[
   'cd_todo',
   'cd_umidita_soglia',
   'cd_ups',
+  'cd_ups_meta',
   'cd_visual_prefer_image',
   'cd_widgets',
 ];
