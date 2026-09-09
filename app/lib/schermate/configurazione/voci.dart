@@ -14,7 +14,10 @@ import '../../casa/plancia/piu_di_uno.dart' as piu;
 import '../../casa/plancia/apparecchio.dart';
 import 'albero.dart';
 import 'apparecchi.dart';
+import '../../casa/plancia/home.dart';
 import 'cose_di_casa.dart';
+import 'home.dart';
+import 'parole.dart';
 import 'sicurezza.dart';
 import 'caselle.dart';
 import 'energia.dart';
@@ -88,6 +91,107 @@ Widget? schermataDi(
   'La caldaia' => SchermataDellaCaldaia(collegamento: collegamento),
   'Porte da sorvegliare' => SchermataDellePorte(collegamento: collegamento),
   'Allerte meteo' => SchermataDelleAllerte(collegamento: collegamento),
+  /* ── La Home ── */
+  'L\'ordine della Home' => SchermataDeiBlocchi(collegamento: collegamento),
+  'Le tessere della Home' => SchermataDelleTessere(collegamento: collegamento),
+  'In evidenza' => SchermataDiVoci(
+    titolo: 'In evidenza',
+    sotto:
+        'Sensori sparsi che vuoi tenere d\'occhio dalla Home, senza dar loro '
+        'una sezione intera.',
+    chiave: chiaveDellEvidenza,
+    unaCosa: 'un\'entita\'',
+    prefisso: 'evidenza',
+    collegamento: collegamento,
+  ),
+  'Lettori e casse' => SchermataDiVoci(
+    titolo: 'Lettori e casse',
+    sotto: 'Gli altoparlanti e i televisori che la plancia comanda.',
+    chiave: chiaveDeiLettori,
+    unaCosa: 'un lettore',
+    prefisso: 'lettore',
+    domini: const ['media_player'],
+    collegamento: collegamento,
+  ),
+  'I calendari' => SchermataDiVoci(
+    titolo: 'I calendari',
+    sotto:
+        'Quali calendari si vedono in Agenda. Il colore serve a distinguerli '
+        'quando ce n\'e\' piu\' d\'uno: «lavoro» e «famiglia» nello stesso '
+        'giorno, senza dover leggere il nome.',
+    chiave: chiaveDeiCalendari,
+    unaCosa: 'un calendario',
+    prefisso: 'cal',
+    domini: const ['calendar'],
+    ilColore: true,
+    collegamento: collegamento,
+  ),
+  'Le liste di cose da fare' => SchermataDiVoci(
+    titolo: 'Le liste di cose da fare',
+    sotto: 'Quali liste si vedono in Agenda.',
+    chiave: chiaveDelleListe,
+    unaCosa: 'una lista',
+    prefisso: 'todo',
+    domini: const ['todo'],
+    collegamento: collegamento,
+  ),
+  'Le entita\' mie' => SchermataDiVoci(
+    titolo: 'Le entita\' mie',
+    sotto:
+        'Entita\' qualunque, messe in una pagina con un nome e un disegno. '
+        'Dodici per pagina: oltre non e\' piu\' «qualche entita\' mia», e '
+        'per quello c\'e\' una sezione tua.',
+    chiave: chiaveDelleEntitaMie,
+    unaCosa: 'un\'entita\'',
+    prefisso: 'mia',
+    laSezione: true,
+    collegamento: collegamento,
+  ),
+  'Le persone' => SchermataDiVoci(
+    titolo: 'Le persone',
+    sotto: 'Chi usa questa casa: il nome, la foto e la presenza.',
+    chiave: chiaveDellePersone,
+    unaCosa: 'una persona',
+    prefisso: 'person',
+    domini: const ['person', 'device_tracker'],
+    collegamento: collegamento,
+  ),
+
+  /* ── Le parole ── */
+  'I nomi delle pagine' => SchermataDiParole(
+    titolo: 'I nomi delle pagine',
+    sotto:
+        'Come si chiamano le pagine della plancia, se non ti vanno bene i nomi '
+        'che hanno.',
+    chiave: chiaveDeiNomiDelleSezioni,
+    cosaEChiave: 'La pagina',
+    cosaEValore: 'Come deve chiamarsi',
+    esempio: 'energia',
+    collegamento: collegamento,
+  ),
+  'Le parole della plancia' => SchermataDiParole(
+    titolo: 'Le parole della plancia',
+    sotto:
+        'Una scritta che non ti torna, riscritta. Vale ovunque quella scritta '
+        'compaia.',
+    chiave: chiaveDeiTesti,
+    cosaEChiave: 'Quello che c\'e\' scritto adesso',
+    cosaEValore: 'Cosa deve dire',
+    collegamento: collegamento,
+  ),
+  'I nomi delle caselle' => SchermataDiParole(
+    titolo: 'I nomi delle caselle',
+    sotto:
+        'Come si chiamano le caselle della configurazione. Serve a chi ha dato '
+        'un uso diverso a una casella e vuole che lo dica.',
+    chiave: chiaveDelleEtichette,
+    cosaEChiave: 'Il riferimento della casella',
+    cosaEValore: 'Come deve chiamarsi',
+    esempio: 'dm.core_043',
+    collegamento: collegamento,
+  ),
+  'Cosa e\' sparito' => SchermataDeiNascosti(collegamento: collegamento),
+
   'MiniPC' => SchermataDelleCaselle(
     titolo: 'MiniPC',
     sotto: 'Il monitoraggio del server: processore, memoria, dischi.',

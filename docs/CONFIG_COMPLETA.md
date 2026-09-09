@@ -12,15 +12,19 @@ un'altra cosa, e questo documento la misura invece di stimarla.
 | | quante |
 |---|---|
 | Chiavi che la dashboard sincronizza (`config-persistence-section.js`) | **83** (85 meno le due di servizio) |
-| Chiavi che la Configurazione dell'app sa leggere e scrivere | **42** |
+| Chiavi che la Configurazione dell'app sa leggere e scrivere | **54** |
 | Moduli della plancia che sono editor o pezzi di editor (`src/sections/*editor*`, `*integraz*`) | **30** |
 | Righe dei moduli della plancia | ~91.000 |
 
-Non è una stima: le 83 chiavi sono estratte dal file che le elenca, e le 42
-sono quelle che compaiono in `app/lib/`. E non è nemmeno una promessa: il
-conto lo rifà una prova, `app/test/chiavi_della_config_test.dart`, ogni volta
-che gira. Un numero scritto a mano in un documento invecchia il giorno dopo, e
-invecchia sempre nella stessa direzione — verso l'ottimismo.
+Non è una stima: le 83 chiavi sono estratte dal file che le elenca, e le 54
+sono un **elenco scritto a mano** in `app/test/chiavi_della_config_test.dart`,
+e scritto a mano lo è apposta. Il conto lo si faceva frugando nei sorgenti:
+bastava dichiarare quaranta costanti in un file di modello — nomi e basta,
+senza una schermata dietro — e il numero saltava da quarantadue a ottantatré in
+un pomeriggio, senza che nessuno potesse configurare niente di più. Adesso ogni
+chiave che entra nel conto è una riga che qualcuno ha aggiunto sapendo cosa
+stava dicendo, e una prova controlla che non sia una promessa: una chiave
+elencata deve comparire nei sorgenti, o l'elenco cade.
 
 ## Il difetto strutturale: la dashboard tiene *più* di tutto
 

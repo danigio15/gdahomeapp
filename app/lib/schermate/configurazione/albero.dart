@@ -341,6 +341,36 @@ const albero = <Famiglia>[
       ),
     ],
   ),
+  Famiglia('Le parole', 'Come la plancia si legge, non cosa mostra', [
+    Voce(
+      'I nomi delle pagine',
+      'Come si chiamano le pagine, se non ti vanno bene i nomi che hanno',
+      disegno: 'custom',
+      da: 'visib',
+      pronta: true,
+    ),
+    Voce(
+      'Le parole della plancia',
+      'Una scritta che non ti torna, riscritta ovunque compaia',
+      disegno: 'custom',
+      da: 'sost',
+      pronta: true,
+    ),
+    Voce(
+      'I nomi delle caselle',
+      'Come si chiamano le caselle della configurazione',
+      disegno: 'custom',
+      da: 'sost',
+      pronta: true,
+    ),
+    Voce(
+      'Cosa e\' sparito',
+      'I pezzi della plancia che si sono fatti sparire: qui si rimettono',
+      disegno: 'impostazioni',
+      da: 'visib',
+      pronta: true,
+    ),
+  ]),
   Famiglia('Manutenzione', 'Quando qualcosa non torna', [
     Voce(
       'Autorilevamento',
@@ -386,6 +416,7 @@ const albero = <Famiglia>[
       'Chi usa questa casa: nome, foto e presenza',
       disegno: 'persone',
       da: 'people',
+      pronta: true,
     ),
     Voce(
       'I telefoni abbinati',

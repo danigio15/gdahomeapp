@@ -104,9 +104,80 @@ const leChiaviDellaPlancia = <String>[
 
 /// Quante ne conosce l'app adesso. Sale, non scende: quando sale si cambia
 /// questo numero e si cambia il documento, insieme.
-const quanteNeConosciamo = 42;
+const quanteNeConosciamo = 54;
 
-Set<String> _chiaviScritteNellApp() {
+/* Quali chiavi l'app sa configurare **davvero**.
+ *
+ * E' un elenco scritto a mano, e lo e' apposta. Il conto lo si faceva
+ * frugando nei sorgenti: bastava dichiarare quaranta costanti in un file di
+ * modello — nomi e basta, senza una schermata dietro — e il numero saltava da
+ * quarantadue a ottantatre in un pomeriggio, senza che nessuno potesse
+ * configurare niente di piu'. E' esattamente il modo in cui un documento
+ * comincia a mentire, e questo conto esiste per impedirlo.
+ *
+ * Scritto a mano, ogni chiave che entra qui e' una riga che qualcuno ha
+ * aggiunto sapendo cosa stava dicendo. E la prova sotto controlla che non sia
+ * una promessa: una chiave elencata qui deve comparire nei sorgenti dell'app,
+ * o l'elenco cade.
+ */
+const leChiaviCheSappiamoFare = <String>[
+  'cd_allerte',
+  'cd_antifurto_modi',
+  'cd_appliances',
+  'cd_avvisi_custom',
+  'cd_branding',
+  'cd_caldaia',
+  'cd_calendari',
+  'cd_cameras',
+  'cd_centrale_scelta',
+  'cd_centrali',
+  'cd_clima_units',
+  'cd_costo_kwh',
+  'cd_energia_tessere',
+  'cd_energy_model',
+  'cd_energy_views',
+  'cd_entita_mie',
+  'cd_entity_overrides',
+  'cd_ev_car_active',
+  'cd_ev_cars',
+  'cd_evidenza',
+  'cd_flow_nodes',
+  'cd_hidden_elements',
+  'cd_home_blocchi',
+  'cd_impianti_termici',
+  'cd_irrigazione',
+  'cd_loads',
+  'cd_luci',
+  'cd_media_player',
+  'cd_navbar_order',
+  'cd_people',
+  'cd_piscina',
+  'cd_porte_conferma',
+  'cd_prese',
+  'cd_prezzo_immissione',
+  'cd_quick_actions',
+  'cd_report_devices',
+  'cd_robot',
+  'cd_scaldabagni',
+  'cd_section_names',
+  'cd_sections',
+  'cd_security_doors',
+  'cd_slot_labels',
+  'cd_solare_scelto',
+  'cd_solari',
+  'cd_stanze',
+  'cd_subload_groups',
+  'cd_subloads_extra',
+  'cd_tapparelle',
+  'cd_tapparelle_soglia',
+  'cd_text_overrides',
+  'cd_todo',
+  'cd_umidita_soglia',
+  'cd_ups',
+  'cd_widgets',
+];
+
+Set<String> _chiaviNeiSorgenti() {
   final trovate = <String>{};
   final forma = RegExp("'(cd_[a-z0-9_]+)'");
   for (final cosa in Directory('lib').listSync(recursive: true)) {
@@ -125,15 +196,28 @@ void main() {
   });
 
   test('l\'app ne conosce quante dice il documento', () {
-    final nostre = _chiaviScritteNellApp();
-    final coperte = leChiaviDellaPlancia.where(nostre.contains).toList();
-    expect(
-      coperte.length,
-      quanteNeConosciamo,
-      reason: coperte.length > quanteNeConosciamo
-          ? 'ne conosciamo di piu\': alza il numero qui e in '
-                'docs/CONFIG_COMPLETA.md — ${coperte.length} su 83'
-          : 'ne conosciamo di meno: qualcosa si e\' perso per strada',
-    );
+    expect(leChiaviCheSappiamoFare.length, quanteNeConosciamo);
+    expect(leChiaviCheSappiamoFare.toSet().length, quanteNeConosciamo);
+  });
+
+  test('quelle che diciamo di fare sono chiavi della plancia', () {
+    for (final chiave in leChiaviCheSappiamoFare) {
+      expect(
+        leChiaviDellaPlancia,
+        contains(chiave),
+        reason: '«$chiave» non e\' una chiave che la plancia sincronizza',
+      );
+    }
+  });
+
+  test('e non sono promesse: nei sorgenti ci sono', () {
+    final nei = _chiaviNeiSorgenti();
+    for (final chiave in leChiaviCheSappiamoFare) {
+      expect(
+        nei,
+        contains(chiave),
+        reason: '«$chiave» e\' scritta nell\'elenco e non nel codice',
+      );
+    }
   });
 }

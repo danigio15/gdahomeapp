@@ -1016,6 +1016,10 @@ try {
   await scatta(pagina, "6n-configurazione-sezioni");
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
+  /* «Le cose di casa» sta piu' in basso di prima: l'alberatura e' cresciuta, e
+   * una lista lunga tiene nel documento solo quello che si vede. */
+  await scorri(pagina, 2400);
+  await attendi(600);
   await premi(pagina, "Luci");
   await aspettaCheCompaia(pagina, "Aggiungi una luce");
   await attendi(900);
@@ -1046,6 +1050,10 @@ try {
    * lo accende, la potenza, i contatori — ed e' la prova che le «altre
    * entita'» ci sono davvero e non solo nel modello. */
   racconta("apro un elettrodomestico");
+  await scorri(pagina, -6000);
+  await attendi(500);
+  await scorri(pagina, 2400);
+  await attendi(600);
   await premi(pagina, "Elettrodomestici");
   await aspettaCheCompaia(pagina, "Aggiungi un elettrodomestico");
   await attendi(800);
@@ -1073,8 +1081,8 @@ try {
   racconta("apro l'energia");
   await scorri(pagina, -6000);
   await attendi(500);
-  await scorri(pagina, 900);
-  await attendi(500);
+  await scorri(pagina, 1100);
+  await attendi(600);
   await premi(pagina, "Energia");
   await aspettaCheCompaia(pagina, "Fotovoltaico, batteria, rete e consumi");
   await attendi(900);
