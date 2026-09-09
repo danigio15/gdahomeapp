@@ -240,7 +240,8 @@ dietro un telefono non lo sa e non deve saperlo.
 | La schermata che la mostra | `app/lib/schermate/configurazione.dart` | ✅ |
 | La voce nel menu | `app/lib/schermate/menu.dart` | ✅ |
 | La prova che non si perde una scheda | `app/test/configurazione_test.dart` | ✅ |
-| Le schermate delle singole voci (23 su 25) | `app/lib/schermate/configurazione/` | ✅ |
+| Le schermate delle singole voci: si aprono e salvano | `app/lib/schermate/configurazione/` | ✅ |
+| **Ma coprono 14 delle 83 chiavi della Config vera** — vedi [`CONFIG_COMPLETA.md`](CONFIG_COMPLETA.md) | | ⬜ |
 | Il cercatore di entità, portato dalla plancia | `app/lib/casa/cerca/indice.dart` | ✅ |
 | La Config tolta dalla plancia servita | `app/lib/plancia/servitore.dart` | ✅ |
 | Il tema e la barra, usciti con lei | `app/lib/casa/impostazioni.dart` | ✅ |

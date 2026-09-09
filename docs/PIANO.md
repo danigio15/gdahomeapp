@@ -364,7 +364,8 @@ stessi comandi, quindi la plancia se le ritrova e non c'e' niente da migrare.
 | La schermata che la mostra | `app/lib/schermate/configurazione.dart` | ✅ |
 | La voce nel menu, e quella degli acquisti | `app/lib/schermate/menu.dart` | ✅ |
 | La prova che non si perde una scheda | `app/test/configurazione_test.dart` | ✅ |
-| Le schermate delle singole voci | `app/lib/schermate/configurazione/` | ⬜ |
+| Le schermate delle singole voci: si aprono e salvano | `app/lib/schermate/configurazione/` | ✅ |
+| Le 69 chiavi della Config che ancora non copre, e il multi-istanza | [`CONFIG_COMPLETA.md`](CONFIG_COMPLETA.md) | ⬜ |
 | Le persone, accanto ai dispositivi | `ponte/src/dispositivi.js` | ⬜ |
 
 ### Fase 2 — gli aiutanti

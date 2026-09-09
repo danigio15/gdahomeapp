@@ -24,6 +24,7 @@ import 'package:flutter/material.dart';
 import '../../casa/cerca/indice.dart';
 import '../../casa/collegamento.dart';
 import '../../vestito/pezzi.dart';
+import 'integrazioni.dart';
 
 /// Quante righe per pagina.
 const _unaPagina = 60;
@@ -307,8 +308,35 @@ class _CercatoreState extends State<_Cercatore> {
                           _Riga(trovata: daMostrare[quale]),
                     ),
             ),
+            /* La strada dell'integrazione, accanto a quella della ricerca.
+             *
+             * Cercare per nome va bene quando il nome si sa. Per una lavatrice
+             * appena collegata non si sa: e' arrivata da hOn con venti entita'
+             * che si chiamano tutte «Lavatrice qualcosa», e trovare quella
+             * giusta fra quelle vuol dire leggerle una per una. Sceglierla dal
+             * suo dispositivo e' un'altra cosa. */
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final scelto = await scegliDaUnIntegrazione(
+                      context,
+                      collegamento: widget.collegamento,
+                      unaSola: true,
+                    );
+                    if (scelto == null || !context.mounted) return;
+                    final una = scelto.entita.firstOrNull;
+                    if (una != null) Navigator.of(context).pop(una.id);
+                  },
+                  icon: const Icon(Icons.extension_rounded),
+                  label: const Text('Prendila da un\'integrazione'),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton.tonal(
