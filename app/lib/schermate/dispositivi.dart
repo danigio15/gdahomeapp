@@ -10,6 +10,8 @@
 /// home, che e' la stessa per tutte le sezioni.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
@@ -87,6 +89,7 @@ class Dispositivi extends StatefulWidget {
 
 class _DispositiviState extends State<Dispositivi> {
   final _cerca = TextEditingController();
+  var _ascolti = <StreamSubscription<void>>[];
 
   StatoDellaCasa? get _casa => widget.collegamento.stato;
 
@@ -96,14 +99,26 @@ class _DispositiviState extends State<Dispositivi> {
     /* Lo stato della casa lo tiene il collegamento: qui ci si limita a
      * ridisegnare quando cambia. Cosi' passando da una schermata all'altra la
      * casa non si rilegge da capo ogni volta. */
-    widget.collegamento.cambiamenti.listen((_) {
-      if (mounted) setState(() {});
-    });
+    _ascolti = [
+      widget.collegamento.cambiamenti.listen((_) => _ridisegna()),
+      widget.collegamento.entitaCambiate.listen((_) => _ridisegna()),
+    ];
     _cerca.addListener(() => setState(() {}));
+  }
+
+  /* Solo quando si e' a schermo. Questa sezione resta in piedi anche quando
+   * se ne guarda un'altra, e ridisegnare un elenco che nessuno vede, a ogni
+   * sensore che cambia, e' fatica buttata: si aspetta di tornare visibili —
+   * e li' Flutter ridisegna da se', perche' `TickerMode` e' una dipendenza. */
+  void _ridisegna() {
+    if (mounted && TickerMode.valuesOf(context).enabled) setState(() {});
   }
 
   @override
   void dispose() {
+    for (final uno in _ascolti) {
+      uno.cancel();
+    }
     _cerca.dispose();
     super.dispose();
   }

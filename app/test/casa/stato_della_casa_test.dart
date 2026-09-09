@@ -39,7 +39,8 @@ void main() {
       attesaDellaRisposta: const Duration(seconds: 3),
     );
     await filo.apri();
-    casa = StatoDellaCasa(filo);
+    /* Senza respiro fra gli avvisi: qui si contano uno a uno. */
+    casa = StatoDellaCasa(filo, respiro: Duration.zero);
   });
 
   tearDown(() async {
@@ -181,6 +182,44 @@ void main() {
       Entita.leggi({'entity_id': 'sensor.x', 'state': '18.4'})!.muta,
       isFalse,
     );
+  });
+
+  test('col respiro, una raffica di cambiamenti e\' un avviso solo', () async {
+    /* Una casa vera cambia decine di volte al secondo. Chi disegna deve
+     * vedere l'ultimo stato, non ridisegnare a ogni sensore. */
+    final calma = StatoDellaCasa(
+      filo,
+      respiro: const Duration(milliseconds: 120),
+    );
+    await calma.attacca();
+    var avvisi = 0;
+    calma.cambiamenti.listen((_) => avvisi += 1);
+    final id =
+        ponte.arrivati.lastWhere(
+              (uno) => uno['type'] == 'subscribe_events',
+            )['id']
+            as int;
+
+    for (var giro = 0; giro < 30; giro += 1) {
+      ponte.cambia(
+        id,
+        'sensor.fuori',
+        PonteFinto.unaEntita(
+          'sensor.fuori',
+          '${20 + giro}',
+          nome: 'Temperatura fuori',
+          unita: '°C',
+        ),
+      );
+    }
+    await _finoA(() => calma['sensor.fuori']!.stato == '49');
+    /* Il primo passa subito, gli altri si accodano: l'ultimo avviso arriva
+     * alla fine del respiro, e con lui l'ultimo stato. */
+    await _finoA(() => avvisi >= 1);
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    expect(avvisi, inInclusiveRange(1, 3));
+    expect(calma['sensor.fuori']!.stato, '49');
+    await calma.stacca();
   });
 }
 

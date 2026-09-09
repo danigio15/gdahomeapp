@@ -6,6 +6,8 @@
 /// passa da li'.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
@@ -94,6 +96,7 @@ class _PortoneState extends State<Portone> {
   late final FabbricaDellaPlancia _plancia =
       widget.plancia ?? FabbricaDellaPlancia();
   bool _pronto = false;
+  StreamSubscription<void>? _ascolto;
 
   @override
   void initState() {
@@ -117,13 +120,17 @@ class _PortoneState extends State<Portone> {
     if (!_collegamento.avviato) await _collegamento.apri();
     if (!mounted) return;
     setState(() => _pronto = true);
-    _collegamento.cambiamenti.listen((_) {
+    /* Solo i cambiamenti del collegamento — la casa, lo stato, l'approdo —
+     * non quelli delle entita': quelli arrivano decine di volte al secondo,
+     * e da qui si ridisegna tutta l'app. */
+    _ascolto = _collegamento.cambiamenti.listen((_) {
       if (mounted) setState(() {});
     });
   }
 
   @override
   void dispose() {
+    _ascolto?.cancel();
     _collegamento.chiudi();
     super.dispose();
   }

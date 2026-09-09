@@ -58,6 +58,7 @@ class Collegamento {
   final ApriLaPresa? apriLaPresa;
 
   final _cambiamenti = StreamController<void>.broadcast();
+  final _entitaCambiate = StreamController<void>.broadcast();
 
   Filo? _filo;
   StatoDellaCasa? _stato;
@@ -73,6 +74,18 @@ class Collegamento {
 
   /// Scatta a ogni cambiamento: chi disegna ridisegna.
   Stream<void> get cambiamenti => _cambiamenti.stream;
+
+  /// Le entita' della casa sono cambiate: una luce, un sensore, un contatore.
+  ///
+  /// Sta su un canale suo, separato da [cambiamenti], apposta: [cambiamenti]
+  /// lo ascolta la radice dell'app, che a ogni avviso ridisegna tutto, e
+  /// ridisegnare tutto a ogni sensore che cambia e' quello che faceva andare
+  /// l'app a scatti. Qui si mette in ascolto solo chi le entita' le mostra.
+  Stream<void> get entitaCambiate => _entitaCambiate.stream;
+
+  /// Quanto e' passato sul filo da quando si e' entrati, in due parole. Per
+  /// la diagnostica: dice se una casa e' silenziosa o un fiume in piena.
+  String? get traffico => _filo?.traffico;
 
   ComeVa get comeVa => _comeVa;
   String? get perche => _perche;
@@ -177,7 +190,9 @@ class Collegamento {
   Future<void> _leggiLaCasa(Filo filo) async {
     final stato = StatoDellaCasa(filo);
     _stato = stato;
-    _guardaLaCasa = stato.cambiamenti.listen((_) => _avvisa());
+    _guardaLaCasa = stato.cambiamenti.listen((_) {
+      if (!_entitaCambiate.isClosed) _entitaCambiate.add(null);
+    });
     try {
       await stato.attacca();
       _vai(ComeVa.aperta);
@@ -270,6 +285,7 @@ class Collegamento {
   Future<void> chiudi() async {
     await _chiudiIlFilo();
     if (!_cambiamenti.isClosed) await _cambiamenti.close();
+    if (!_entitaCambiate.isClosed) await _entitaCambiate.close();
   }
 
   void _vai(ComeVa nuovo) {

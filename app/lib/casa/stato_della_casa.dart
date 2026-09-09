@@ -15,17 +15,34 @@ import '../ponte/filo.dart';
 import 'entita.dart';
 
 class StatoDellaCasa {
-  StatoDellaCasa(this._filo);
+  StatoDellaCasa(
+    this._filo, {
+    this.respiro = const Duration(milliseconds: 300),
+  });
 
   final Filo _filo;
   final _entita = <String, Entita>{};
   final _cambiamenti = StreamController<void>.broadcast();
 
+  /// Quanto passa, al minimo, fra un avviso e l'altro.
+  ///
+  /// Una casa vera cambia decine di volte al secondo — i contatori di
+  /// energia, i sensori di movimento, i lettori che avanzano — e ogni evento
+  /// avvisava chi disegna, che ridisegnava tutto: l'app andava a scatti e
+  /// basta. Gli eventi si prendono tutti, ma chi disegna si avvisa al piu'
+  /// tre volte al secondo: il primo cambiamento passa subito, gli altri si
+  /// accodano in un avviso solo. Nessuno vede la differenza fra trecento
+  /// millisecondi e zero; tutti vedono un'app che scatta.
+  final Duration respiro;
+
   StreamSubscription<Map<String, dynamic>>? _ascolto;
   StreamSubscription<StatoDelFilo>? _guardaIlFilo;
   bool _pieno = false;
+  DateTime? _ultimoAvviso;
+  Timer? _avvisoInSospeso;
 
-  /// Scatta a ogni cambiamento, senza dire cosa: chi disegna ridisegna.
+  /// Scatta quando qualcosa e' cambiato, senza dire cosa: chi disegna
+  /// ridisegna. Al piu' una volta ogni [respiro].
   Stream<void> get cambiamenti => _cambiamenti.stream;
 
   /// `true` quando la prima lettura completa e' arrivata.
@@ -116,10 +133,28 @@ class StatoDellaCasa {
   });
 
   void _avvisa() {
-    if (!_cambiamenti.isClosed) _cambiamenti.add(null);
+    if (_cambiamenti.isClosed) return;
+    final adesso = DateTime.now();
+    final ultimo = _ultimoAvviso;
+    final passato = ultimo == null ? respiro : adesso.difference(ultimo);
+    if (passato >= respiro) {
+      _ultimoAvviso = adesso;
+      _cambiamenti.add(null);
+      return;
+    }
+    /* Troppo presto: si avvisa alla fine del respiro, una volta per tutti
+     * quelli che arrivano nel frattempo. */
+    _avvisoInSospeso ??= Timer(respiro - passato, () {
+      _avvisoInSospeso = null;
+      if (_cambiamenti.isClosed) return;
+      _ultimoAvviso = DateTime.now();
+      _cambiamenti.add(null);
+    });
   }
 
   Future<void> stacca() async {
+    _avvisoInSospeso?.cancel();
+    _avvisoInSospeso = null;
     await _ascolto?.cancel();
     await _guardaIlFilo?.cancel();
     _ascolto = null;

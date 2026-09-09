@@ -59,6 +59,7 @@ class _HomeState extends State<Home> {
       'da_dove': collegamento.daDove?.name ?? '',
       'stato': collegamento.comeVa.name,
       if (collegamento.perche != null) 'perche': collegamento.perche!,
+      if (collegamento.traffico != null) 'filo': collegamento.traffico!,
     };
   }
 

@@ -151,6 +151,28 @@ class Filo {
   /// Come sta il filo, adesso e mano a mano che cambia.
   Stream<StatoDelFilo> get stato => _stato.stream;
   StatoDelFilo get statoAdesso => _adesso;
+
+  /* Quanto passa sul filo. Per la diagnostica, non per la logica. */
+  int _messaggiArrivati = 0;
+  int _byteArrivati = 0;
+  int _eventiArrivati = 0;
+  int _messaggiMandati = 0;
+  DateTime? _contoDal;
+
+  /// Il traffico da quando si e' entrati l'ultima volta, in una riga:
+  /// «1234 msg, 320 eventi, 8,1 MB in 5 min». Dice se una casa e' silenziosa
+  /// o un fiume in piena, che e' la prima cosa da sapere quando l'app va a
+  /// scatti.
+  String? get traffico {
+    final dal = _contoDal;
+    if (dal == null) return null;
+    final minuti = DateTime.now().difference(dal).inSeconds / 60;
+    final mb = _byteArrivati / (1024 * 1024);
+    return '$_messaggiArrivati msg, $_eventiArrivati eventi, '
+        '${mb.toStringAsFixed(1)} MB giu\', $_messaggiMandati su, '
+        'in ${minuti < 1 ? '${(minuti * 60).round()} s' : '${minuti.round()} min'}';
+  }
+
   bool get dentro => _adesso == StatoDelFilo.dentro;
 
   /// Su quale indirizzo si e' entrati, l'ultima volta che si e' entrati.
@@ -260,6 +282,8 @@ class Filo {
   /* ─── Quello che arriva ────────────────────────────────────────────────── */
 
   void _arrivato(String grezzo) {
+    _messaggiArrivati += 1;
+    _byteArrivati += grezzo.length;
     final Map<String, dynamic> detto;
     try {
       final letto = jsonDecode(grezzo);
@@ -296,6 +320,7 @@ class Filo {
       case 'result':
         _risposta(detto);
       case 'event':
+        _eventiArrivati += 1;
         _evento(detto);
       case 'pong':
         _vistoIl = DateTime.now();
@@ -305,6 +330,11 @@ class Filo {
 
   void _entrato() {
     _tentativi = 0;
+    _contoDal = DateTime.now();
+    _messaggiArrivati = 0;
+    _byteArrivati = 0;
+    _eventiArrivati = 0;
+    _messaggiMandati = 0;
     _cominciaABattere();
     _cambia(StatoDelFilo.dentro);
     if (_stretta != null && !_stretta!.isCompleted) _stretta!.complete();
@@ -456,6 +486,7 @@ class Filo {
     if (presa == null) return;
     try {
       presa.manda(jsonEncode(cosa));
+      _messaggiMandati += 1;
     } catch (_) {
       _caduto('non riesco a scrivere sul filo');
     }
