@@ -232,6 +232,7 @@ export function costruisciLaConsole({
   chiamata,
   identita,
   ritorno,
+  plancia,
   cartellaDellaConsole,
 }) {
   /* Un registro c'e' sempre, anche quando non gliene danno uno.
@@ -262,6 +263,7 @@ export function costruisciLaConsole({
           chiamata,
           identita,
           ritorno,
+          plancia,
         });
       } catch (errore) {
         registro.errore(`la console e' inciampata: ${errore?.message || errore}`);
@@ -288,6 +290,7 @@ async function api({
   chiamata,
   identita,
   ritorno,
+  plancia,
 }) {
   if (via === "/api/stato" && metodo === "GET") {
     const saluto = await casa.saluta();
@@ -306,6 +309,12 @@ async function api({
       },
       porta: opzioni.portaDellApp,
       massimi: opzioni.dispositiviMassimi,
+      /* Da dove viene la plancia che questo ponte serve, e se e' intatta.
+       *
+       * Sta in questa pagina e non nascosto in un registro perche' e' la
+       * risposta a «questa e' quella vera?», e chi se lo chiede se lo chiede
+       * guardando qui. */
+      plancia: plancia?.cE ? plancia.provenienza : null,
       abbinamento: abbinamento.stato(),
       dispositivi: dispositivi
         .elenco()

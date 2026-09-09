@@ -23,6 +23,8 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { guardaLaPlancia, inDueParole } from "./provenienza.js";
+
 export const BASE = "/dashboardmodern_static";
 
 const TIPI = Object.freeze({
@@ -57,11 +59,27 @@ export class Plancia {
   } = {}) {
     this.cartella = resolve(cartella);
     this._impronta = null;
+    this._provenienza = null;
   }
 
   /* C'e' una plancia da servire? Basta che ci sia la pagina. */
   get cE() {
     return existsSync(join(this.cartella, "legacy", "dashboard.html"));
+  }
+
+  /* Da dove viene questa plancia, e se qualcuno l'ha toccata.
+   *
+   * Si guarda una volta e ci si tiene la risposta: sono ottocento file da
+   * leggere, e la risposta non cambia mentre il ponte e' acceso — se cambiano
+   * i file, cambiano al prossimo aggiornamento, e l'add-on si riavvia. */
+  get provenienza() {
+    if (!this._provenienza) this._provenienza = guardaLaPlancia(this.cartella);
+    return this._provenienza;
+  }
+
+  /* Il verdetto in una riga, per il registro all'avvio. */
+  get provenienzaInDueParole() {
+    return inDueParole(this.provenienza);
   }
 
   /* L'impronta del contenuto: si calcola una volta, alla prima domanda. */

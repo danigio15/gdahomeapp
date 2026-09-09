@@ -252,6 +252,14 @@ Non serve bloccare nessuno in automatico — serve **saperlo**, perché è la
 differenza fra «qualcuno l'ha crackata» e «qualcuno la sta rivendendo», che
 sono due problemi con due risposte diverse.
 
+### Difendere la paternità è un'altra partita, e quella si vince
+
+Tutto quello scritto qui sopra vale per **l'incasso**. Difendere il *lavoro* —
+che non venga preso, rimaneggiato e presentato come di qualcun altro — è un
+problema diverso, e lì gli strumenti funzionano: non si impedisce un'azione, si
+rende **riconoscibile**, **dimostrabile** e **costosa**. Sta in
+[`TUTELA.md`](TUTELA.md), ed è già in piedi per metà.
+
 ### Il rischio vero non è chi cracka
 
 Per 19,99 € una tantum su un pubblico Home Assistant, chi cracka spesso non

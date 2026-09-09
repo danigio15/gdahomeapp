@@ -213,7 +213,10 @@ test("una busta compressa e' molto piu' piccola, e si apre uguale", () => {
   assert.ok(testo.length > SOGLIA_DI_COMPRESSIONE);
 
   const busta = casa.chiudi(testo);
-  assert.ok(busta.length < testo.length / 4, `${busta.length} caratteri per ${testo.length} di testo`);
+  assert.ok(
+    busta.length < testo.length / 4,
+    `${busta.length} caratteri per ${testo.length} di testo`,
+  );
   assert.equal(telefono.apri(busta), testo);
   assert.equal(telefono.ricevo, 1);
 });

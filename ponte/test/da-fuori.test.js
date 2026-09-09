@@ -366,7 +366,10 @@ test("tutta la casa in un messaggio solo arriva intera, spezzata per strada", as
     assert.ok(telefono.quantiTelai > 3, `arrivata in ${telefono.quantiTelai} telai`);
     /* Un telefono che non ha detto di saper aprire il gzip riceve tutto
      * com'era: piu' del testo, che in base64 cresce di un terzo. */
-    assert.ok(telefono.quantiCaratteri > tanta.length, `passati ${telefono.quantiCaratteri} caratteri`);
+    assert.ok(
+      telefono.quantiCaratteri > tanta.length,
+      `passati ${telefono.quantiCaratteri} caratteri`,
+    );
 
     telefono.chiudi();
   } finally {

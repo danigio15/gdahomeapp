@@ -22,6 +22,7 @@ import {
   cpSync,
   existsSync,
   mkdirSync,
+  readFileSync,
   readdirSync,
   rmSync,
   statSync,
@@ -29,6 +30,11 @@ import {
 } from "node:fs";
 import { dirname, extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+
+/* Il sigillo lo calcola il ponte, non questo script: se lo calcolassero tutti
+ * e due, il giorno che uno dei due cambiasse formula la verifica direbbe
+ * «modificata» su una plancia intatta. */
+import { improntaDi, sigilloDi } from "../ponte/src/provenienza.js";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 const DESTINAZIONE = join(dirname(QUI), "ponte", "plancia");
@@ -90,6 +96,13 @@ mkdirSync(DESTINAZIONE, { recursive: true });
 
 let quanti = 0;
 let byte = 0;
+/* L'impronta di ogni file, e non solo il conto.
+ *
+ * Serve a rispondere a una domanda sola, ed e' quella che conta quando il
+ * lavoro di qualcuno finisce in mano ad altri: **questa plancia e' quella che
+ * ho pubblicato io, o l'ha toccata qualcuno?** Col solo numero di file la
+ * risposta e' «boh»; con le impronte si sa anche quali. */
+const impronte = {};
 for (const cartella of CARTELLE) {
   const da = join(frontend, cartella);
   if (!existsSync(da)) continue;
@@ -97,10 +110,15 @@ for (const cartella of CARTELLE) {
     const dove = join(DESTINAZIONE, relativo);
     mkdirSync(dirname(dove), { recursive: true });
     cpSync(join(frontend, relativo), dove);
+    impronte[relativo] = improntaDi(readFileSync(dove));
     quanti += 1;
     byte += statSync(dove).size;
   }
 }
+
+/* Il sigillo: un'impronta sola di tutte le impronte, ed e' quella che si
+ * firma. Firmare ottocento righe una per una non aggiungerebbe niente. */
+const sigillo = sigilloDi(impronte);
 
 let commit = "";
 try {
@@ -108,15 +126,34 @@ try {
 } catch (_errore) {
   /* Non e' un checkout di git: si scrive quello che si sa. */
 }
+
+/* Che versione e', detta com'e' scritta nel manifesto dell'integrazione: e'
+ * il numero che l'utente riconosce, mentre il commit e' per noi. */
+let versione = "";
+try {
+  const manifesto = JSON.parse(
+    readFileSync(join(checkout, "custom_components", "dashboardmodern", "manifest.json"), "utf8"),
+  );
+  versione = String(manifesto.version || "");
+} catch (_errore) {
+  /* Senza manifesto si va avanti col commit. */
+}
 writeFileSync(
   join(DESTINAZIONE, "ORIGINE.json"),
   JSON.stringify(
     {
       repository: "danigio15/dashboardmodern-v2",
       commit,
+      versione,
       portata_il: new Date().toISOString(),
       file: quanti,
       byte,
+      sigillo,
+      /* La firma la mette `strumenti/firma-la-plancia.mjs`, che ha la chiave.
+       * Qui resta vuota: una plancia portata dentro e non ancora firmata lo
+       * deve dire, non far finta di niente. */
+      firma: "",
+      impronte,
     },
     null,
     2,
@@ -125,6 +162,8 @@ writeFileSync(
 
 process.stdout.write(
   `Portati ${quanti} file (${(byte / 1024 / 1024).toFixed(1)} MB) in ponte/plancia` +
+    (versione ? `, versione ${versione}` : "") +
     (commit ? `, dal commit ${commit.slice(0, 10)}` : "") +
-    ".\n",
+    `.\nSigillo ${sigillo.slice(0, 16)}… — da firmare con` +
+    " strumenti/firma-la-plancia.mjs\n",
 );

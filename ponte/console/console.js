@@ -100,6 +100,56 @@
     return "Collegato al centralino: da fuori casa si entra.";
   }
 
+  /* Da dove viene la plancia, in tre righe.
+   *
+   * Il verdetto e' uno di quattro, e si dicono tutti e quattro senza girarci
+   * intorno: originale e firmata, intatta ma senza firma, modificata (con
+   * quali file), o senza provenienza. Chi legge deve poter rispondere a «e'
+   * quella vera?» senza sapere niente di firme. */
+  function disegnaLaProvenienza(plancia) {
+    var scheda = trova("provenienza");
+    if (!scheda) return;
+    if (!plancia) {
+      scheda.hidden = true;
+      return;
+    }
+    scheda.hidden = false;
+    var quale = plancia.versione ? "DashboardModern " + plancia.versione : "DashboardModern";
+    var riga = trova("provenienza-riga");
+    var spiega = trova("provenienza-spiega");
+    var quali = trova("provenienza-quali");
+    var acceso = plancia.stato === "originale" || plancia.stato === "non-firmata";
+    riga.innerHTML =
+      '<span class="pallino' +
+      (acceso ? " acceso" : "") +
+      '"></span> ' +
+      quale +
+      " — " +
+      {
+        originale: "originale, firma verificata",
+        "non-firmata": "i file tornano tutti",
+        modificata: "modificata",
+        "senza-origine": "provenienza sconosciuta",
+      }[plancia.stato];
+    spiega.textContent =
+      plancia.stato === "originale"
+        ? "Ogni file di questa plancia e' quello pubblicato, e la firma lo conferma."
+        : plancia.stato === "non-firmata"
+          ? "Ogni file torna con le impronte scritte dentro. Manca solo la firma di chi l'ha pubblicata."
+          : plancia.stato === "modificata"
+            ? "Qualcosa qui dentro non e' come e' stato pubblicato: " +
+              plancia.perche +
+              ". Se non l'hai toccata tu, reinstalla l'add-on."
+            : plancia.perche || "";
+    var elenco = plancia.quali || [];
+    quali.hidden = elenco.length === 0;
+    if (elenco.length) {
+      trova("provenienza-elenco").textContent =
+        elenco.join("\n") +
+        (plancia.quanti > elenco.length ? "\n… e altri " + (plancia.quanti - elenco.length) : "");
+    }
+  }
+
   function disegnaIDispositivi(dispositivi, massimi) {
     var elenco = trova("elenco");
     elenco.textContent = "";
@@ -165,6 +215,7 @@
           : "Home Assistant non risponde: " + stato.casa.perche;
         trova("porta").textContent = stato.porta;
         trova("stato-centralino").textContent = comeVaIlCentralino(stato.centralino);
+        disegnaLaProvenienza(stato.plancia);
         disegnaIDispositivi(stato.dispositivi, stato.massimi);
         trova("fabbrica").disabled = stato.dispositivi.length >= stato.massimi;
         if (!stato.abbinamento.attivo) nascondiIlCodice();

@@ -48,6 +48,12 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro.info(
       `la plancia c'e': ${plancia.descrizione().file} file, impronta ${plancia.impronta}`,
     );
+    /* E da dove viene. Nel registro all'avvio perche' e' la riga che si
+     * chiede a chi segnala qualcosa di strano: una plancia toccata spiega da
+     * sola meta' delle stranezze. */
+    const detto = plancia.provenienzaInDueParole;
+    if (plancia.provenienza.stato === "modificata") registro.attenzione(detto);
+    else registro.info(detto);
   } else {
     registro.attenzione("senza plancia: in ponte/plancia non c'e' niente da servire");
   }
@@ -124,6 +130,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * codice a quadretti ci va scritto dentro, cosi' chi lo inquadra non deve
      * cercare niente. */
     ritorno,
+    /* Da dove viene la plancia che questo ponte serve: la console lo dice,
+     * cosi' chi si chiede se sia quella originale ha la risposta li'. */
+    plancia,
     cartellaDellaConsole: opzioni.console,
   });
 
