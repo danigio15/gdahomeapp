@@ -6,8 +6,11 @@
 /// che di solito le sta intorno (i dispositivi, gli aiutanti, Zigbee, le
 /// automazioni, le case) sta nella barra, che si chiama dal bordo sinistro.
 ///
-/// Le pagine della plancia — le luci, il clima, l'energia, la configurazione —
-/// stanno dentro la plancia, nella sua barra: qui non si ripetono.
+/// Le pagine della plancia — le luci, il clima, l'energia — stanno dentro la
+/// plancia, nella sua barra: qui non si ripetono. La **configurazione** no:
+/// quella esce dalla plancia e diventa una sezione dell'app (vedi
+/// `menu.dart`), perche' e' una cosa della casa e non una pagina della
+/// dashboard.
 library;
 
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
@@ -18,8 +21,10 @@ import '../casa/impostazioni.dart';
 import '../misure/lavori.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
+import 'acquisti.dart';
 import 'assistenza.dart';
 import 'barra.dart';
+import 'configurazione.dart';
 import 'dispositivi.dart';
 import 'firma.dart';
 import 'menu.dart';
@@ -173,6 +178,12 @@ class _HomeState extends State<Home> {
                       Sezione.dispositivi => Dispositivi(
                         collegamento: collegamento,
                         visibile: _sezione == Sezione.dispositivi,
+                      ),
+                      Sezione.configurazione => SchermataDellaConfigurazione(
+                        collegamento: collegamento,
+                      ),
+                      Sezione.acquisti => SchermataDegliAcquisti(
+                        collegamento: collegamento,
                       ),
                       Sezione.segnalazioni => SchermataDelleSegnalazioni(
                         collegamento: collegamento,

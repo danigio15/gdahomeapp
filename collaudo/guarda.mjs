@@ -984,6 +984,34 @@ try {
   await attendi(1200);
   await scatta(pagina, "6-dispositivi");
 
+  /* La Configurazione: la Config della plancia, uscita dalla plancia. E'
+   * l'alberatura della dashboard 1.4.15 rifatta in verticale, e va guardata
+   * perche' e' l'unica schermata dell'app che deve somigliare a una cosa che
+   * esiste gia' altrove. */
+  racconta("apro la configurazione");
+  await vaiA("Configurazione", "La configurazione di");
+  await attendi(1000);
+  await scatta(pagina, "6g-configurazione");
+  await scorri(pagina, 900);
+  await attendi(700);
+  await scatta(pagina, "6h-configurazione-pagine");
+  await scorri(pagina, 2600);
+  await attendi(700);
+  await scatta(pagina, "6i-configurazione-cose-di-casa");
+  /* Le due famiglie in fondo — chi puo' entrare, e l'app — nella plancia non
+   * ci sono: sono la parte nuova, ed e' quella che va guardata. */
+  await scorri(pagina, 3500);
+  await attendi(700);
+  await scatta(pagina, "6i2-configurazione-fondo");
+
+  racconta("apro gli acquisti");
+  await vaiA("Acquisti", "Prova aperta su");
+  await attendi(900);
+  await scatta(pagina, "6l-acquisti");
+  await scorri(pagina, 1100);
+  await attendi(700);
+  await scatta(pagina, "6m-acquisti-listino");
+
   racconta("apro le segnalazioni");
   await vaiA("Segnalazioni", "Nessuna segnalazione");
   await attendi(900);

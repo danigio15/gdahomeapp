@@ -110,7 +110,9 @@ codice.
   centralino senza passare dai negozi. Il registro e' un elenco per casa, e
   la console lo mostra e lo cambia.
 
-**La proposta commerciale** (una proposta: si decide insieme).
+**La proposta commerciale** (una proposta: si decide insieme). Il listino
+per esteso, il giro dei soldi e i tre modi di autorizzare uno sblocco stanno
+in [`ACQUISTI.md`](ACQUISTI.md).
 
 *Cosa resta gratis, per sempre.* Tutto quello che serve a **vedere e
 comandare** la propria casa: la plancia intera con le sue pagine — Home,
@@ -346,52 +348,24 @@ video da telefono — ed e' lavoro del binario A, non dell'app.
 
 ### Fase 1d — la Config esce dalla plancia ed entra nell'app
 
-**Perche'.** Oggi la plancia si configura da dentro se stessa: la sua
-sezione Config, dentro il riquadro. Va bene per una pagina web, non per
-un'app — la configurazione della casa e' una cosa dell'app, non di una delle
-sue schermate, e chi la cerca la cerca nel menu. In piu' quella sezione e' la
-parte piu' pesante della pagina, e tenerla dentro vuol dire caricarla sempre
-anche a chi non la apre mai.
+L'alberatura, il menu che la replica e le regole per piu' utenti stanno per
+esteso in [`CONFIG.md`](CONFIG.md): sono state lette dalla release **1.4.15**
+della plancia, scheda per scheda, e non riassunte a memoria.
 
-**Dove va.** Nella barra laterale, sotto una voce sua, con dentro
-l'alberatura che la plancia ha gia' — le stesse sezioni, gli stessi campi —
-ma come schermate dell'app:
+In due righe: le diciannove schede della Config — la fila orizzontale in cima
+all'editor, che su un telefono non ci sta — diventano **una voce del menu**
+con dentro le stesse diciannove, raggruppate in cinque famiglie piu' due
+nuove (chi puo' entrare, l'app). Scrivono le stesse chiavi sul ponte con gli
+stessi comandi, quindi la plancia se le ritrova e non c'e' niente da migrare.
 
-    Impostazioni
-      La casa            nome, foto, meteo, unita'
-      Le sezioni         quali si vedono, in che ordine (le 17 della plancia)
-      Le tessere         cosa mostra la Home: widget, evidenza, avvisi
-      Le persone         chi c'e' in casa, e cosa si vede di loro
-      I dispositivi      le assegnazioni: stanze, verso girato, sola lettura
-      Chi puo' entrare   gli utenti e i telefoni abbinati        ← nuovo
-      L'app              plancia leggera, composizione, «Come va l'app»
-
-**Come arriva alla plancia.** Non si tocca niente della pagina: la
-configurazione e' gia' un mucchio di chiavi che stanno sul ponte
-(`configurazione.js`, `dashboardmodern/config/get|set`). L'app legge e scrive
-le stesse chiavi con gli stessi comandi, e la plancia se le ritrova. Quando
-l'app scrive, la pagina si ricarica da se': e' quello che fa gia' quando la
-configurazione arriva da un altro telefono.
-
-**Piu' utenti, e i telefoni.** Oggi un telefono abbinato e' un telefono, e
-basta: ha un identificativo, una chiave, un nome. Serve un gradino in piu' —
-una **persona**, con i suoi telefoni sotto. Le regole, in ordine di
-importanza:
-
- - un telefono puo' non avere nessuna persona: e' il caso di adesso, e resta
-   quello di serie — la casa e' una sola e la vedono tutti uguale;
- - una persona ha uno o piu' telefoni. Staccare una persona stacca i suoi;
- - la configurazione della plancia resta **della casa**, non della persona:
-   e' quello che ci si aspetta, e non si vuole finire con sei plance
-   diverse per sei telefoni. Quello che puo' essere della persona e' cosa le
-   si lascia toccare;
- - chi puo' cambiare la configurazione: di serie chi ha abbinato per primo.
-   Gli altri guardano e comandano, ma non riscrivono la plancia agli altri.
-   E' una casella per persona, non un sistema di permessi.
-
-Il ponte tiene le persone accanto ai dispositivi (`dispositivi.js`), e la
-console le mostra. Il centralino non cambia: instrada telefoni, e chi sia
-dietro un telefono non lo sa e non deve saperlo.
+| pezzo | dove | stato |
+|---|---|---|
+| L'alberatura, letta dalla 1.4.15 | `app/lib/schermate/configurazione/albero.dart` | ✅ |
+| La schermata che la mostra | `app/lib/schermate/configurazione.dart` | ✅ |
+| La voce nel menu, e quella degli acquisti | `app/lib/schermate/menu.dart` | ✅ |
+| La prova che non si perde una scheda | `app/test/configurazione_test.dart` | ✅ |
+| Le schermate delle singole voci | `app/lib/schermate/configurazione/` | ⬜ |
+| Le persone, accanto ai dispositivi | `ponte/src/dispositivi.js` | ⬜ |
 
 ### Fase 2 — gli aiutanti
 
