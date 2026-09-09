@@ -60,6 +60,16 @@ class Collegamento {
   final _cambiamenti = StreamController<void>.broadcast();
   final _entitaCambiate = StreamController<void>.broadcast();
 
+  /* La configurazione della plancia e' cambiata da qui dentro l'app.
+   *
+   * La plancia gira in un riquadro, ed e' una pagina web: non ha modo di
+   * accorgersi che qualcuno le ha riscritto la configurazione da fuori — la
+   * legge una volta, all'avvio. Chi la cambia lo dice qui, e la schermata
+   * della plancia si ricarica. Senza, si salvava una luce e la si vedeva
+   * comparire solo alla riapertura dell'app: due minuti buoni a chiedersi se
+   * il salvataggio avesse funzionato. */
+  final _planciaCambiata = StreamController<void>.broadcast();
+
   Filo? _filo;
   StatoDellaCasa? _stato;
   PannelloDellaPlancia? _pannello;
@@ -83,9 +93,21 @@ class Collegamento {
   /// l'app a scatti. Qui si mette in ascolto solo chi le entita' le mostra.
   Stream<void> get entitaCambiate => _entitaCambiate.stream;
 
+  /// Qualcuno ha riscritto la configurazione della plancia: chi la mostra la
+  /// ricarichi.
+  Stream<void> get planciaCambiata => _planciaCambiata.stream;
+
+  /// Lo dice chi l'ha cambiata.
+  void laPlanciaECambiata() {
+    if (!_planciaCambiata.isClosed) _planciaCambiata.add(null);
+  }
+
   /// Quanto e' passato sul filo da quando si e' entrati, in due parole. Per
   /// la diagnostica: dice se una casa e' silenziosa o un fiume in piena.
   String? get traffico => _filo?.traffico;
+
+  /// Le ultime cadute del filo, col loro perche', dalla piu' recente.
+  List<String> get ultimeCadute => _filo?.ultimeCadute ?? const [];
 
   /// L'app e' tornata in primo piano: il filo si controlla subito, invece di
   /// aspettare il battito.
@@ -326,6 +348,7 @@ class Collegamento {
     await _chiudiIlFilo();
     if (!_cambiamenti.isClosed) await _cambiamenti.close();
     if (!_entitaCambiate.isClosed) await _entitaCambiate.close();
+    if (!_planciaCambiata.isClosed) await _planciaCambiata.close();
   }
 
   void _vai(ComeVa nuovo) {

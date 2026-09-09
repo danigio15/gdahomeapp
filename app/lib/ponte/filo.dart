@@ -169,6 +169,18 @@ class Filo {
   int _generazione = 0;
 
   int _cadute = 0;
+
+  /* Le ultime cadute, col loro perche'.
+   *
+   * Una sola non basta: otto cadute possono essere otto volte la stessa cosa
+   * — e allora il rimedio e' uno — oppure otto cose diverse, e allora si sta
+   * guardando il difetto sbagliato. Se ne tengono cinque, che stanno in una
+   * schermata e bastano a vedere se si ripetono. */
+  static const quanteCaduteSiTengono = 5;
+  final _ultimeCadute = <String>[];
+
+  /// Le ultime cadute, dalla piu' recente: cosa e' successo e quando.
+  List<String> get ultimeCadute => List.unmodifiable(_ultimeCadute.reversed);
   String? _ultimaCaduta;
   DateTime? _cadutoIl;
   Timer? _controlloAlRisveglio;
@@ -333,10 +345,17 @@ class Filo {
       _caduto('la casa non ha aperto il filo in tempo');
       return;
     } catch (errore) {
+      /* Il perche' vero, non «non riesco ad aprire il filo».
+       *
+       * Quella frase era un muro: otto cadute di fila e nessun modo di sapere
+       * se fosse la rete del telefono, il centralino che chiude, o la casa
+       * che non risponde — tre cose con tre rimedi diversi. Adesso quello che
+       * ha detto chi e' caduto arriva fino in fondo, e in «Come va l'app» si
+       * legge. */
       _caduto(
         errore is ErroreDelPonte
             ? errore.spiegazione
-            : 'non riesco ad aprire il filo',
+            : 'non riesco ad aprire il filo: $errore',
       );
       return;
     }
@@ -760,6 +779,8 @@ class Filo {
     _cadute += 1;
     _ultimaCaduta = perche;
     _cadutoIl = DateTime.now();
+    _ultimeCadute.add(perche);
+    if (_ultimeCadute.length > quanteCaduteSiTengono) _ultimeCadute.removeAt(0);
     _smettiDiBattere();
     _stacca();
     /* Le richieste in volo muoiono: la loro risposta non arrivera' mai. Ma chi

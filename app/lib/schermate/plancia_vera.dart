@@ -102,6 +102,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
   bool _caricata = false;
   String? _perche;
   StreamSubscription<void>? _ascoltoLeImpostazioni;
+  StreamSubscription<void>? _ascoltoLaConfigurazione;
   late bool _leggera = widget.impostazioni.planciaLeggera;
   late bool _ibrida = widget.impostazioni.composizioneIbrida;
 
@@ -123,12 +124,19 @@ class PlanciaVeraState extends State<PlanciaVera> {
     _ascoltoLeImpostazioni = widget.impostazioni.cambiamenti.listen(
       (_) => _impostazioniCambiate(),
     );
+    /* La configurazione cambiata dalla schermata Configurazione: la pagina la
+     * legge all'avvio e basta, quindi si riparte da capo. Non e' uno spreco —
+     * succede quando si preme «Salva», non a ogni evento della casa. */
+    _ascoltoLaConfigurazione = widget.collegamento.planciaCambiata.listen(
+      (_) => ricarica(),
+    );
     if (!kIsWeb) unawaited(_accendi());
   }
 
   @override
   void dispose() {
     _ascoltoLeImpostazioni?.cancel();
+    _ascoltoLaConfigurazione?.cancel();
     super.dispose();
   }
 
@@ -167,6 +175,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
   /// Ricarica la pagina: e' quello che fa toccare di nuovo «Plancia» nella
   /// barra quando ci si e' gia'.
   void ricarica() {
+    if (!mounted) return;
     setState(() {
       _caricata = false;
       _perche = null;
@@ -189,10 +198,31 @@ class PlanciaVeraState extends State<PlanciaVera> {
     final dallAlbero = MediaQuery.viewPaddingOf(context);
     final vista = View.of(context);
     final punti = vista.devicePixelRatio;
-    final margini = (
-      alto: math.max(dallAlbero.top, vista.viewPadding.top / punti),
-      basso: math.max(dallAlbero.bottom, vista.viewPadding.bottom / punti),
+    final inCima = math.max(dallAlbero.top, vista.viewPadding.top / punti);
+    final inFondo = math.max(
+      dallAlbero.bottom,
+      vista.viewPadding.bottom / punti,
     );
+
+    /* In fondo non si chiede niente alla pagina: si accorcia il riquadro.
+     *
+     * Tre volte ho scritto la regola di stile che doveva tenere la barra
+     * della plancia sopra i tasti di Android, e tre volte non ha funzionato:
+     * il numero non arrivava, poi arrivava e vinceva un altro `!important`,
+     * poi la barra stava li' in un modo che il selettore non prendeva. Il
+     * difetto vero non era nessuno di quei tre — era **aver chiesto alla
+     * pagina di stare attenta**. Una pagina che deve ricordarsi di lasciare
+     * spazio in fondo se lo dimentica in tutti i modi che ci sono.
+     *
+     * Adesso il riquadro finisce **dove cominciano i tasti**, e sotto ci
+     * resta il fondo dell'app, che e' dello stesso grigio: si legge come una
+     * pagina sola, e non c'e' nessuna regola di stile che possa sbagliare.
+     * Sopra invece resta com'era — li' la pagina se lo tiene bene, e
+     * accorciare vorrebbe dire una fascia vuota sotto l'orologio.
+     *
+     * `basso: 0` non e' una svista: alla pagina si dice che in fondo non
+     * deve lasciare niente, se no lo spazio verrebbe contato due volte. */
+    final margini = (alto: inCima, basso: 0.0);
     switch (collegamento.comeVa) {
       case ComeVa.nessunaCasa:
         return _Stato(
@@ -293,23 +323,26 @@ class PlanciaVeraState extends State<PlanciaVera> {
       children: [
         /* La chiave sulla composizione: cambiarla rifa' il riquadro da capo,
          * perche' un WebView nasce in un modo e in quello resta. */
-        KeyedSubtree(
-          key: ValueKey<bool>(_ibrida),
-          child: widget.fabbrica.riquadro(
-            pagina,
-            chiave: _riquadro,
-            ibrido: _ibrida,
-            margini: margini,
-            quandoCaricata: () {
-              if (!mounted) return;
-              if (!collegamento.dentro && !_giaRicaricata) {
-                _apertaSenzaCasa = true;
-              }
-              if (!_caricata) setState(() => _caricata = true);
-            },
-            quandoFallisce: (perche) {
-              if (mounted) setState(() => _perche = perche);
-            },
+        Padding(
+          padding: EdgeInsets.only(bottom: inFondo),
+          child: KeyedSubtree(
+            key: ValueKey<bool>(_ibrida),
+            child: widget.fabbrica.riquadro(
+              pagina,
+              chiave: _riquadro,
+              ibrido: _ibrida,
+              margini: margini,
+              quandoCaricata: () {
+                if (!mounted) return;
+                if (!collegamento.dentro && !_giaRicaricata) {
+                  _apertaSenzaCasa = true;
+                }
+                if (!_caricata) setState(() => _caricata = true);
+              },
+              quandoFallisce: (perche) {
+                if (mounted) setState(() => _perche = perche);
+              },
+            ),
           ),
         ),
         if (_perche != null)

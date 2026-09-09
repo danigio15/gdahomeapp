@@ -70,6 +70,10 @@ flutter:
     # disegni di DashboardModern, presi da li' e non rifatti a somiglianza,
     # perche' «a somiglianza» vuol dire un'altra app.
     - assets/oggetti/
+    # Le caselle della configurazione: cento etichette prese da `CD_SLOTS`
+    # nel runtime della plancia, non ricopiate a mano. Le riscrive
+    # `strumenti/leggi-le-caselle.mjs` a ogni aggiornamento della plancia.
+    - assets/plancia/caselle.json
 
   # I caratteri sono quelli della plancia, e non per pigrizia: chi passa dal
   # telefono alla dashboard non deve avere l'impressione di due prodotti.

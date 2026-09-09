@@ -1004,6 +1004,25 @@ try {
   await attendi(700);
   await scatta(pagina, "6i2-configurazione-fondo");
 
+  /* Una voce riempita: si apre, si guarda che ci sia davvero un modulo con
+   * dentro le cose della casa, e si torna indietro. E' la prova che il
+   * cablaggio fra l'alberatura e le schermate tiene. */
+  racconta("apro una voce della configurazione");
+  await scorri(pagina, -6000);
+  await attendi(600);
+  await premi(pagina, "Le sezioni");
+  await aspettaCheCompaia(pagina, "Le pagine spente spariscono");
+  await attendi(900);
+  await scatta(pagina, "6n-configurazione-sezioni");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+  await premi(pagina, "Luci");
+  await aspettaCheCompaia(pagina, "Aggiungi una luce");
+  await attendi(900);
+  await scatta(pagina, "6o-configurazione-luci");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
   racconta("apro gli acquisti");
   await vaiA("Acquisti", "Prova aperta su");
   await attendi(900);

@@ -168,6 +168,34 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
                 riga('Stato', collegamento.comeVa.name),
                 riga('Da dove', collegamento.daDove?.name ?? '-'),
                 riga('Traffico', collegamento.traffico ?? 'non collegato'),
+                /* Perche' e' caduto, non solo quante volte.
+                 *
+                 * «Caduto otto volte» non dice se sia la rete del telefono,
+                 * il centralino che chiude o la casa che non risponde: tre
+                 * cose con tre rimedi diversi. Cinque righe qui rispondono
+                 * alla domanda senza doverla indovinare. */
+                if (collegamento.ultimeCadute.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    'Le ultime cadute',
+                    style: testi.labelLarge?.copyWith(
+                      color: colori.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  for (final (quale, perche)
+                      in collegamento.ultimeCadute.indexed)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 3),
+                      child: Text(
+                        '${quale + 1}. $perche',
+                        style: testi.bodySmall?.copyWith(
+                          color: colori.onSurfaceVariant,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                ],
               ],
             ),
           ),

@@ -21,6 +21,7 @@ import '../casa/collegamento.dart';
 import '../vestito/oggetti.dart';
 import '../vestito/pezzi.dart';
 import 'configurazione/albero.dart';
+import 'configurazione/voci.dart';
 
 class SchermataDellaConfigurazione extends StatelessWidget {
   const SchermataDellaConfigurazione({
@@ -31,8 +32,21 @@ class SchermataDellaConfigurazione extends StatelessWidget {
 
   final Collegamento collegamento;
 
-  /// Cosa fare quando si tocca una voce pronta. Nelle prove si guarda.
+  /// Cosa fare quando si tocca una voce pronta. Di serie apre la sua
+  /// schermata; nelle prove si guarda e basta.
   final void Function(Voce voce)? apri;
+
+  void _apri(BuildContext contesto, Voce voce) {
+    final suo = apri;
+    if (suo != null) {
+      suo(voce);
+      return;
+    }
+    final schermata = schermataDi(voce, collegamento);
+    if (schermata == null) return;
+    Navigator.of(contesto)
+        .push(MaterialPageRoute<void>(builder: (dentro) => schermata));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +78,7 @@ class SchermataDellaConfigurazione extends StatelessWidget {
                       indent: 62,
                       color: colori.outlineVariant,
                     ),
-                  _Riga(voce: voce, apri: apri),
+                  _Riga(voce: voce, apri: (una) => _apri(context, una)),
                 ],
               ],
             ),
