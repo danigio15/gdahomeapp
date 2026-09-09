@@ -52,26 +52,57 @@ class StatoDellaCasa {
 
   Entita? operator [](String id) => _entita[id];
 
+  /* L'elenco ordinato e i gruppi si tengono da parte finche' niente cambia.
+   *
+   * Erano il conto piu' caro dell'app, e nessuno se n'era accorto: la
+   * schermata dei dispositivi chiedeva le entita' di ogni dominio, e ognuna
+   * di quelle domande **riordinava tutta la casa**. Trenta domini per
+   * tremila entita' fa trenta ordinamenti da tremila, con due parole nuove
+   * per ogni confronto — qualche milione di parole buttate a ogni
+   * ridisegno, e i ridisegni arrivavano con gli eventi. Il dito scorreva e
+   * la lista restava indietro, e sembrava colpa della lista. */
+  List<Entita>? _ordinate;
+  Map<String, List<Entita>>? _raggruppate;
+
+  void _cambiate() {
+    _ordinate = null;
+    _raggruppate = null;
+  }
+
   List<Entita> tutte() {
+    final gia = _ordinate;
+    if (gia != null) return gia;
     final elenco = _entita.values.toList();
-    elenco.sort(
-      (una, altra) =>
-          una.nome.toLowerCase().compareTo(altra.nome.toLowerCase()),
-    );
+    /* La chiave si calcola una volta per entita', non a ogni confronto. */
+    final chiavi = <String, String>{
+      for (final una in elenco) una.id: una.nome.toLowerCase(),
+    };
+    elenco.sort((una, altra) => chiavi[una.id]!.compareTo(chiavi[altra.id]!));
+    _ordinate = elenco;
     return elenco;
   }
 
-  List<Entita> delDominio(String dominio) =>
-      tutte().where((una) => una.dominio == dominio).toList();
+  List<Entita> delDominio(String dominio) => perDominio()[dominio] ?? const [];
+
+  /// Le entita' divise per dominio, ognuna nel suo gruppo e in ordine.
+  ///
+  /// Un giro solo per tutta la casa, e il risultato si tiene: chiederle
+  /// dominio per dominio costava un ordinamento per domanda.
+  Map<String, List<Entita>> perDominio() {
+    final gia = _raggruppate;
+    if (gia != null) return gia;
+    final gruppi = <String, List<Entita>>{};
+    for (final una in tutte()) {
+      (gruppi[una.dominio] ??= <Entita>[]).add(una);
+    }
+    _raggruppate = gruppi;
+    return gruppi;
+  }
 
   /// I domini presenti, e quante entita' ha ognuno.
-  Map<String, int> domini() {
-    final conto = <String, int>{};
-    for (final una in _entita.values) {
-      conto[una.dominio] = (conto[una.dominio] ?? 0) + 1;
-    }
-    return conto;
-  }
+  Map<String, int> domini() => {
+    for (final gruppo in perDominio().entries) gruppo.key: gruppo.value.length,
+  };
 
   /// Si attacca al filo: legge tutto, poi resta in ascolto.
   Future<void> attacca() async {
@@ -98,6 +129,7 @@ class StatoDellaCasa {
       final una = Entita.leggi(grezza);
       if (una != null) _entita[una.id] = una;
     }
+    _cambiate();
     _pieno = true;
     _avvisa();
   }
@@ -112,10 +144,20 @@ class StatoDellaCasa {
     if (nuova == null) {
       /* `new_state` vuoto vuol dire che l'entita' e' stata tolta da Home
        * Assistant: va tolta anche di qui, o resta a schermo per sempre. */
-      if (_entita.remove(id) != null) _avvisa();
+      if (_entita.remove(id) != null) {
+        _cambiate();
+        _avvisa();
+      }
       return;
     }
+    /* L'ordine si rifa' solo quando cambia **quali** entita' ci sono, o come
+     * si chiamano: un valore che cambia — ed e' quello che cambia dieci
+     * volte al secondo — lascia l'ordine dov'e'. Chi disegna una riga si
+     * prende l'entita' viva dal suo identificativo, non quella di quando
+     * l'ordine e' stato fatto. */
+    final vecchia = _entita[nuova.id];
     _entita[nuova.id] = nuova;
+    if (vecchia == null || vecchia.nome != nuova.nome) _cambiate();
     _avvisa();
   }
 

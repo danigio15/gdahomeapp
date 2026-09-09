@@ -204,7 +204,8 @@ class _DispositiviState extends State<Dispositivi> {
     }
 
     final cercato = _cerca.text.trim().toLowerCase();
-    final domini = casa.domini().keys.toList()
+    final perDominio = casa.perDominio();
+    final domini = perDominio.keys.toList()
       ..sort((a, b) => _tipo(a).$1.compareTo(_tipo(b).$1));
 
     /* Una lista **piatta**, e pigra: una voce per intestazione e una per
@@ -219,15 +220,16 @@ class _DispositiviState extends State<Dispositivi> {
      * indietro. Adesso ogni riga e' una voce sua. */
     final voci = <Object>[];
     for (final dominio in domini) {
-      final dentro = casa
-          .delDominio(dominio)
-          .where(
-            (una) =>
-                cercato.isEmpty ||
-                una.nome.toLowerCase().contains(cercato) ||
-                una.id.toLowerCase().contains(cercato),
-          )
-          .toList();
+      final tutte = perDominio[dominio] ?? const <Entita>[];
+      final dentro = cercato.isEmpty
+          ? tutte
+          : tutte
+                .where(
+                  (una) =>
+                      una.nome.toLowerCase().contains(cercato) ||
+                      una.id.toLowerCase().contains(cercato),
+                )
+                .toList();
       if (dentro.isEmpty) continue;
       final aperto = cercato.isNotEmpty || _aperti.contains(dominio);
       voci.add(_Intestazione(dominio, dentro.length, aperto));
@@ -290,10 +292,12 @@ class _DispositiviState extends State<Dispositivi> {
           );
         }
         final riga = voce as _Voce;
+        /* L'entita' viva, non quella di quando si e' fatto l'ordine: i
+         * valori cambiano dieci volte al secondo, l'ordine no. */
         return _Guscio(
           sopra: false,
           sotto: riga.ultima,
-          child: _Riga(una: riga.una, inverti: _inverti),
+          child: _Riga(una: casa[riga.una.id] ?? riga.una, inverti: _inverti),
         );
       },
     );

@@ -12,7 +12,6 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
-import 'package:flutter/services.dart';
 
 import 'casa/archivio_delle_case.dart';
 import 'casa/cassaforte.dart';
@@ -44,12 +43,19 @@ const bool _perIlCollaudo = bool.fromEnvironment('COLLAUDO');
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  /* L'app arriva ai bordi dello schermo: sotto l'orologio e sotto i tasti del
-   * telefono ci passa quello che si sta guardando, e le barre del sistema ci
-   * galleggiano sopra. Serve alla plancia, che dentro un riquadro inserito
-   * sembrava una pagina in una cornice; alle altre schermate l'aria che gli
-   * tocca la lascia il `SafeArea` della home. */
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  /* **Niente app a tutto schermo.**
+   *
+   * L'avevo accesa perche' la plancia sembrasse una pagina sola invece che
+   * una pagina dentro una cornice. Il prezzo, sul telefono, era che il
+   * riquadro finiva sotto i tasti di Android: la barra della plancia sta a
+   * diciotto punti dal fondo della sua finestra, e se la finestra arriva
+   * sotto i tasti quei diciotto punti ci finiscono in mezzo. Per rimetterla
+   * a posto bisogna sapere quanto sono alti quei tasti, e quel numero — qui,
+   * su questo telefono — non arrivava: si leggeva zero. Senza il numero non
+   * c'e' regola che tenga, e allora si lascia fare al telefono: la finestra
+   * si ferma dove cominciano i tasti, e la barra della plancia sta dove
+   * deve. L'aria in cima resta poca lo stesso, che quella la decide la
+   * pagina. */
   if (_perIlCollaudo) {
     SemanticsBinding.instance.ensureSemantics();
   }

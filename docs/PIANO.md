@@ -294,6 +294,15 @@ E due cose che non erano prestazioni ma sembravano un guasto:
   l'orologio e sotto i tasti — e quanto prendono quelle barre glielo dice
   l'app, in due variabili CSS che si riscrivono girando lo schermo senza
   ricaricare niente.
+- **Le entita' si ordinano una volta, non trenta.** Era il conto piu' caro
+  dell'app e nessuno se n'era accorto: chiedere le entita' di un dominio
+  riordinava tutta la casa, e la schermata lo chiedeva per ognuno dei suoi
+  trenta domini. Su tremila entita' fa trenta ordinamenti da tremila, con due
+  parole nuove per ogni confronto: qualche milione di parole buttate a ogni
+  ridisegno. Adesso l'ordine e i gruppi si tengono da parte e si rifanno solo
+  quando cambia **quali** entita' ci sono o come si chiamano; un valore che
+  cambia lascia l'ordine dov'e', e chi disegna una riga si prende l'entita'
+  viva dal suo identificativo.
 - **L'elenco dei dispositivi e' una lista piatta.** Ogni gruppo era una
   tessera che si apriva, con dentro tutte le sue righe in colonna: in una
   casa da tremila entita' — ce n'e' una, e i soli interruttori sono
@@ -334,6 +343,55 @@ vero: se la plancia da sola, dentro il riquadro, va come nell'app di Home
 Assistant. Se si', l'app e' a posto; se no, il peso e' della pagina — tre
 volte gli avvii di storico e le sfocature a quarantadue pixel su una scheda
 video da telefono — ed e' lavoro del binario A, non dell'app.
+
+### Fase 1d — la Config esce dalla plancia ed entra nell'app
+
+**Perche'.** Oggi la plancia si configura da dentro se stessa: la sua
+sezione Config, dentro il riquadro. Va bene per una pagina web, non per
+un'app — la configurazione della casa e' una cosa dell'app, non di una delle
+sue schermate, e chi la cerca la cerca nel menu. In piu' quella sezione e' la
+parte piu' pesante della pagina, e tenerla dentro vuol dire caricarla sempre
+anche a chi non la apre mai.
+
+**Dove va.** Nella barra laterale, sotto una voce sua, con dentro
+l'alberatura che la plancia ha gia' — le stesse sezioni, gli stessi campi —
+ma come schermate dell'app:
+
+    Impostazioni
+      La casa            nome, foto, meteo, unita'
+      Le sezioni         quali si vedono, in che ordine (le 17 della plancia)
+      Le tessere         cosa mostra la Home: widget, evidenza, avvisi
+      Le persone         chi c'e' in casa, e cosa si vede di loro
+      I dispositivi      le assegnazioni: stanze, verso girato, sola lettura
+      Chi puo' entrare   gli utenti e i telefoni abbinati        ← nuovo
+      L'app              plancia leggera, composizione, «Come va l'app»
+
+**Come arriva alla plancia.** Non si tocca niente della pagina: la
+configurazione e' gia' un mucchio di chiavi che stanno sul ponte
+(`configurazione.js`, `dashboardmodern/config/get|set`). L'app legge e scrive
+le stesse chiavi con gli stessi comandi, e la plancia se le ritrova. Quando
+l'app scrive, la pagina si ricarica da se': e' quello che fa gia' quando la
+configurazione arriva da un altro telefono.
+
+**Piu' utenti, e i telefoni.** Oggi un telefono abbinato e' un telefono, e
+basta: ha un identificativo, una chiave, un nome. Serve un gradino in piu' —
+una **persona**, con i suoi telefoni sotto. Le regole, in ordine di
+importanza:
+
+ - un telefono puo' non avere nessuna persona: e' il caso di adesso, e resta
+   quello di serie — la casa e' una sola e la vedono tutti uguale;
+ - una persona ha uno o piu' telefoni. Staccare una persona stacca i suoi;
+ - la configurazione della plancia resta **della casa**, non della persona:
+   e' quello che ci si aspetta, e non si vuole finire con sei plance
+   diverse per sei telefoni. Quello che puo' essere della persona e' cosa le
+   si lascia toccare;
+ - chi puo' cambiare la configurazione: di serie chi ha abbinato per primo.
+   Gli altri guardano e comandano, ma non riscrivono la plancia agli altri.
+   E' una casella per persona, non un sistema di permessi.
+
+Il ponte tiene le persone accanto ai dispositivi (`dispositivi.js`), e la
+console le mostra. Il centralino non cambia: instrada telefoni, e chi sia
+dietro un telefono non lo sa e non deve saperlo.
 
 ### Fase 2 — gli aiutanti
 
