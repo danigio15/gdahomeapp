@@ -1040,6 +1040,55 @@ try {
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
 
+  /* L'Energia: e' la pagina piu' grossa della Config, e la sola che ha piu'
+   * di un impianto — «non si possono inserire piu' impianti elettrici». Si
+   * guarda che ci siano i cinque gruppi, che il «+» faccia nascere il secondo
+   * impianto con la sua riga di pastiglie, e che dai carichi si arrivi ai
+   * cerchi con dentro gli elettrodomestici. */
+  racconta("apro l'energia");
+  await scorri(pagina, -6000);
+  await attendi(500);
+  await scorri(pagina, 900);
+  await attendi(500);
+  await premi(pagina, "Energia");
+  await aspettaCheCompaia(pagina, "Fotovoltaico, batteria, rete e consumi");
+  await attendi(900);
+  await scatta(pagina, "6q-energia");
+
+  racconta("aggiungo un secondo impianto");
+  await premi(pagina, "Aggiungi un altro impianto");
+  await aspettaCheCompaia(pagina, "Nome impianto");
+  await attendi(800);
+  await scatta(pagina, "6q2-energia-due-impianti");
+
+  await scorri(pagina, 1200);
+  await attendi(600);
+  await scatta(pagina, "6r-energia-gruppi");
+  await scorri(pagina, 1600);
+  await attendi(600);
+  await scatta(pagina, "6r2-energia-costi");
+
+  racconta("apro i carichi");
+  await premi(pagina, "I carichi");
+  await aspettaCheCompaia(pagina, "Aggiungi un carico");
+  await attendi(800);
+  await scatta(pagina, "6s-carichi");
+  await premi(pagina, "Aggiungi un carico");
+  await attendi(900);
+  await scatta(pagina, "6s2-un-carico-in-elenco");
+  await premi(pagina, "Carico 1");
+  await aspettaCheCompaia(pagina, "Cosa c'e' dentro");
+  await attendi(800);
+  await scatta(pagina, "6t-un-carico");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+  await premi(pagina, "Lascia stare");
+  await attendi(700);
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
   racconta("apro gli acquisti");
   await vaiA("Acquisti", "Prova aperta su");
   await attendi(900);

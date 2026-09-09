@@ -13,6 +13,7 @@ import '../../casa/impostazioni.dart';
 import '../../casa/plancia/piu_di_uno.dart' as piu;
 import 'albero.dart';
 import 'caselle.dart';
+import 'energia.dart';
 import 'famiglia.dart';
 import 'elenco.dart';
 import 'speciali.dart';
@@ -65,15 +66,9 @@ Widget? schermataDi(
     sezione: 'home',
     collegamento: collegamento,
   ),
-  'Energia' => SchermataDelleCaselle(
-    titolo: 'Energia',
-    sotto:
-        'Fotovoltaico, batteria, rete e carichi. Sono tante: riempi '
-        'quelle che hai e lascia vuote le altre — la plancia mostra solo '
-        'quello che trova.',
-    sezione: 'energy',
-    collegamento: collegamento,
-  ),
+  /* L'Energia non e' una fila di caselle: e' un modello con cinque gruppi,
+   * i costi, i carichi e — la cosa che mancava — **piu' di un impianto**. */
+  'Energia' => SchermataDellEnergia(collegamento: collegamento),
   /* L'auto non e' una fila di caselle: sono **le auto**, ognuna con la sua
    * marca, il suo modello, la sua mappatura e le sue due foto. Le caselle
    * stanno dentro il profilo, ed e' quello che fa cambiare tutta la pagina

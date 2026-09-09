@@ -207,7 +207,7 @@ class _PaginaDiConfigurazioneState extends State<PaginaDiConfigurazione> {
                   ],
                 ),
               ),
-              _BarraDelSalvataggio(
+              BarraDelSalvataggio(
                 cEqualcosa: _quaderno.cEqualcosa,
                 sta: _salva,
                 salva: _scrivi,
@@ -228,8 +228,17 @@ class _PaginaDiConfigurazioneState extends State<PaginaDiConfigurazione> {
 ///
 /// Sempre visibile sarebbe un bottone che quasi sempre non fa niente, e un
 /// bottone che quasi sempre non fa niente insegna a non premerlo.
-class _BarraDelSalvataggio extends StatelessWidget {
-  const _BarraDelSalvataggio({
+///
+/// L'avviso sta **sopra** i due bottoni e non accanto. Accanto ci stava su uno
+/// schermo largo e non su un telefono: «Lascia stare» e «Salva» insieme
+/// prendono trecentoventi punti su quattrocentosei, all'avviso ne restavano
+/// tredici — una lettera per riga, la barra alta mezzo schermo — e «Salva»
+/// finiva **fuori dal bordo destro**, cioe' non si poteva piu' salvare
+/// niente da nessuna schermata della configurazione. Cosi' invece non c'e'
+/// larghezza a cui possa rompersi.
+class BarraDelSalvataggio extends StatelessWidget {
+  const BarraDelSalvataggio({
+    super.key,
     required this.cEqualcosa,
     required this.sta,
     required this.salva,
@@ -256,29 +265,45 @@ class _BarraDelSalvataggio extends StatelessWidget {
                 color: colori.surfaceContainerHigh,
                 border: Border(top: BorderSide(color: colori.outlineVariant)),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: Text(
-                      'Non ancora salvato',
-                      style: Theme.of(context).textTheme.bodySmall
-                          ?.copyWith(color: colori.onSurfaceVariant),
-                    ),
+                  Text(
+                    'Non ancora salvato',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: colori.onSurfaceVariant),
                   ),
-                  TextButton(
-                    onPressed: sta ? null : lascia,
-                    child: const Text('Lascia stare'),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: sta ? null : salva,
-                    child: sta
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Salva'),
+                  const SizedBox(height: 6),
+                  /* Un `Wrap` e non una `Row`: sotto ai trecentoquaranta punti
+                   * i due bottoni non ci stanno affiancati nemmeno da soli, e
+                   * una riga che non ci sta spinge fuori dal bordo quello a
+                   * destra — che qui e' proprio «Salva». Cosi' invece, quando
+                   * non ci stanno, vanno a capo. */
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      TextButton(
+                        onPressed: sta ? null : lascia,
+                        child: const Text('Lascia stare'),
+                      ),
+                      FilledButton(
+                        onPressed: sta ? null : salva,
+                        child: sta
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Salva'),
+                      ),
+                    ],
                   ),
                 ],
               ),

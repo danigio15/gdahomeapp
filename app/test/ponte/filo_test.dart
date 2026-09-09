@@ -8,6 +8,7 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/ponte/errori.dart';
@@ -584,6 +585,94 @@ void main() {
       throwsA(isA<FiloCaduto>()),
     );
     await filo.chiudi();
+  });
+
+  group('quando il telefono non ha ancora rete', () {
+    /* «Dopo 30 minuti di inattivo»: il telefono va in Doze, e quando si
+     * riprende in mano la radio non e' ancora su. Il sistema risponde
+     * «Failed host lookup: No address associated with hostname», che non vuol
+     * dire che la casa non c'e' — vuol dire che il telefono non ha rete, e
+     * fra un secondo ce l'ha. */
+
+    test('la riconosce dalle parole che usa il sistema', () {
+      expect(
+        Filo.laReteNonCEAncora(
+          const SocketException(
+            "Failed host lookup: 'gdahome-centralino.esempio.workers.dev'",
+            osError: OSError('No address associated with hostname', 7),
+          ),
+        ),
+        isTrue,
+      );
+      expect(
+        Filo.laReteNonCEAncora(Exception('Network is unreachable')),
+        isTrue,
+      );
+      /* Una casa che rifiuta invece e' una caduta vera: non va confusa. */
+      expect(Filo.laReteNonCEAncora(Exception('Connection refused')), isFalse);
+      expect(
+        Filo.laReteNonCEAncora(const PonteIrraggiungibile('boh')),
+        isFalse,
+      );
+    });
+
+    test('non e\' una caduta, e si riprova in fretta', () async {
+      var quante = 0;
+      final filo = Filo.fisso(
+        indirizzo: ponte.indirizzo,
+        segno: segnoBuono,
+        chi: chiBuono,
+        chiave: chiaveBuona,
+        apri: (dove) {
+          quante += 1;
+          /* Le prime tre: la radio non e' ancora su. */
+          if (quante <= 3) {
+            throw const SocketException(
+              'Failed host lookup: \'ponte.esempio\'',
+              osError: OSError('No address associated with hostname', 7),
+            );
+          }
+          return PresaSuWebSocket.apri(dove);
+        },
+        attesaAFreddo: const Duration(milliseconds: 10),
+        /* Se le contasse come cadute aspetterebbe questo, e la prova
+         * scadrebbe: e' il modo di dimostrare che non le conta. */
+        attesaMassima: const Duration(seconds: 20),
+      );
+
+      await filo.apri(entro: const Duration(seconds: 5));
+      expect(filo.dentro, isTrue);
+      expect(quante, 4);
+      /* E soprattutto: in «Come va l'app» non resta scritto niente. */
+      expect(filo.ultimeCadute, isEmpty);
+      await filo.chiudi();
+    });
+
+    test('se la rete non torna proprio, alla fine e\' una caduta', () async {
+      final filo = Filo.fisso(
+        indirizzo: ponte.indirizzo,
+        segno: segnoBuono,
+        chi: chiBuono,
+        chiave: chiaveBuona,
+        apri: (_) => throw const SocketException(
+          'Failed host lookup: \'ponte.esempio\'',
+          osError: OSError('No address associated with hostname', 7),
+        ),
+        attesaAFreddo: const Duration(milliseconds: 5),
+        quantiTentativiAFreddo: 3,
+        attesaMassima: const Duration(milliseconds: 20),
+      );
+
+      unawaited(
+        filo.apri(entro: const Duration(seconds: 3)).catchError((_) {}),
+      );
+      /* Tre tentativi veloci non contano; dal quarto in poi si', e il motivo
+       * scritto e' quello vero del sistema, non «non riesco ad aprire». */
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      expect(filo.ultimeCadute, isNotEmpty);
+      expect(filo.ultimeCadute.first, contains('Failed host lookup'));
+      await filo.chiudi();
+    });
   });
 }
 

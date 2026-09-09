@@ -74,6 +74,8 @@ class Filo {
     this.silenzioMassimo = const Duration(seconds: 90),
     this.pazienzaAlRisveglio = const Duration(seconds: 6),
     this.attesaDellApertura = const Duration(seconds: 20),
+    this.attesaAFreddo = const Duration(milliseconds: 400),
+    this.quantiTentativiAFreddo = 6,
   }) : _trovaLApprodo = approdo,
        _apri = apri ?? PresaSuWebSocket.apri;
 
@@ -90,6 +92,8 @@ class Filo {
     Duration silenzioMassimo = const Duration(seconds: 90),
     Duration pazienzaAlRisveglio = const Duration(seconds: 6),
     Duration attesaDellApertura = const Duration(seconds: 20),
+    Duration attesaAFreddo = const Duration(milliseconds: 400),
+    int quantiTentativiAFreddo = 6,
   }) : this(
          approdo: (() async => Approdo.diretto(DaDove.daDentro, indirizzo)),
          segno: segno,
@@ -102,6 +106,8 @@ class Filo {
          silenzioMassimo: silenzioMassimo,
          pazienzaAlRisveglio: pazienzaAlRisveglio,
          attesaDellApertura: attesaDellApertura,
+         attesaAFreddo: attesaAFreddo,
+         quantiTentativiAFreddo: quantiTentativiAFreddo,
        );
 
   final TrovaLApprodo _trovaLApprodo;
@@ -145,6 +151,21 @@ class Filo {
   /// modo peggiore di rompersi: sembra tutto in corso, e non sta succedendo
   /// niente.
   final Duration attesaDellApertura;
+
+  /// Quanto si aspetta quando la rete del telefono non c'e' ancora, e quante
+  /// volte prima di chiamarla caduta.
+  ///
+  /// «Failed host lookup: No address associated with hostname»: dopo mezz'ora
+  /// in tasca il telefono e' in Doze, e quando si riprende in mano la radio
+  /// non e' ancora su. Non e' la casa che non risponde — e' il telefono che
+  /// non ha ancora una rete — e la differenza conta: quella si risolve in un
+  /// secondo, e trattarla come una caduta vuol dire raddoppiare l'attesa
+  /// proprio nel momento in cui basterebbe riprovare fra un attimo, **e**
+  /// scrivere in «Come va l'app» tre errori che spaventano e non dicono
+  /// niente. Sei tentativi ogni quattro decimi sono due secondi e mezzo:
+  /// dopo quelli, se ancora non c'e' rete, e' una caduta come le altre.
+  final Duration attesaAFreddo;
+  final int quantiTentativiAFreddo;
 
   final _stato = StreamController<StatoDelFilo>.broadcast();
   final _inAttesa = <int, Completer<Map<String, dynamic>>>{};
@@ -190,6 +211,9 @@ class Filo {
    * la sua presa sopra quella che intanto e' entrata. */
   int _bussate = 0;
   DateTime? _bussataDa;
+
+  /// Quante volte di fila la rete del telefono ha detto che non c'e'.
+  int _aFreddo = 0;
   Completer<void>? _stretta;
   Timer? _riprova;
   Timer? _colpetti;
@@ -301,6 +325,13 @@ class Filo {
        * venticinque secondi e poi legge «il ponte non risponde», che e' la
        * nostra scadenza e non un motivo. Chi cerca la casa sa molto di piu':
        * sa se manca l'indirizzo pubblico, o se non risponde nessuno dei due. */
+      /* Anche qui: se nessun indirizzo si risolve perche' la rete non c'e'
+       * ancora, non e' «non trovo la casa» — e' «non trovo niente», e fra un
+       * secondo si trova. */
+      if (laReteNonCEAncora(errore)) {
+        _senzaRete(errore);
+        return;
+      }
       final primaVolta = _tentativi == 0;
       _caduto('non trovo la casa da nessuna parte');
       if (primaVolta) {
@@ -345,6 +376,13 @@ class Filo {
       _caduto('la casa non ha aperto il filo in tempo');
       return;
     } catch (errore) {
+      /* Prima di tutto: e' la casa che non risponde, o e' il telefono che non
+       * ha ancora rete? Dopo mezz'ora in tasca e' quasi sempre il secondo, e
+       * si risolve riprovando fra un attimo. */
+      if (laReteNonCEAncora(errore)) {
+        _senzaRete(errore);
+        return;
+      }
       /* Il perche' vero, non «non riesco ad aprire il filo».
        *
        * Quella frase era un muro: otto cadute di fila e nessun modo di sapere
@@ -485,6 +523,10 @@ class Filo {
     _eventiArrivati = 0;
     _messaggiMandati = 0;
     _cominciaABattere();
+    /* Il filo e' dentro: la rete c'e'. Il conto dei tentativi a freddo
+     * riparte da zero, cosi' il prossimo risveglio ha di nuovo tutti i suoi
+     * tentativi veloci prima di parlare di cadute. */
+    _aFreddo = 0;
     _cambia(StatoDelFilo.dentro);
     if (_stretta != null && !_stretta!.isCompleted) _stretta!.complete();
     _rifaiLeSottoscrizioni();
@@ -774,6 +816,49 @@ class Filo {
   }
 
   /* ─── Quando cade ──────────────────────────────────────────────────────── */
+
+  /// Se quello che e' andato storto e' «il telefono non ha rete», non «la
+  /// casa non risponde».
+  ///
+  /// Sono due cose diverse con due rimedi diversi, e finora finivano nello
+  /// stesso mucchio. Il sistema le dice sempre con le stesse parole, e sono
+  /// queste.
+  static bool laReteNonCEAncora(Object errore) {
+    final detto = '$errore'.toLowerCase();
+    return detto.contains('failed host lookup') ||
+        detto.contains('no address associated with hostname') ||
+        detto.contains('network is unreachable') ||
+        detto.contains('nodename nor servname provided') ||
+        detto.contains('temporary failure in name resolution');
+  }
+
+  /// La rete non c'e' ancora: si riprova fra un attimo, e non e' una caduta.
+  ///
+  /// Dopo mezz'ora in tasca il telefono e' in Doze: quando si riprende in mano
+  /// la radio ci mette un secondo a tornare su, e in quel secondo qualunque
+  /// indirizzo non si risolve. Contarlo come caduta faceva due danni: la
+  /// prossima attesa raddoppiava — proprio quando bastava aspettare un attimo
+  /// — e in «Come va l'app» restavano scritti errori di sistema che non
+  /// dicono niente a chi li legge.
+  ///
+  /// Dopo [quantiTentativiAFreddo] tentativi la rete davvero non c'e', e
+  /// allora e' una caduta come le altre.
+  void _senzaRete(Object errore) {
+    _aFreddo += 1;
+    if (_aFreddo > quantiTentativiAFreddo) {
+      _aFreddo = 0;
+      _caduto('$errore');
+      return;
+    }
+    _smettiDiBattere();
+    _stacca();
+    _cambia(StatoDelFilo.chiamando);
+    _riprova?.cancel();
+    _riprova = Timer(attesaAFreddo, () {
+      if (_spentoApposta) return;
+      unawaited(_bussa());
+    });
+  }
 
   void _caduto(String perche) {
     _cadute += 1;

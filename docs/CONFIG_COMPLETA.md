@@ -12,12 +12,15 @@ un'altra cosa, e questo documento la misura invece di stimarla.
 | | quante |
 |---|---|
 | Chiavi che la dashboard sincronizza (`config-persistence-section.js`) | **83** (85 meno le due di servizio) |
-| Chiavi che la Configurazione dell'app sa leggere e scrivere | **14** |
+| Chiavi che la Configurazione dell'app sa leggere e scrivere | **33** |
 | Moduli della plancia che sono editor o pezzi di editor (`src/sections/*editor*`, `*integraz*`) | **30** |
 | Righe dei moduli della plancia | ~91.000 |
 
-Non è una stima: le 83 chiavi sono estratte dal file che le elenca, e le 14
-sono quelle che compaiono in `app/lib/schermate/configurazione/`.
+Non è una stima: le 83 chiavi sono estratte dal file che le elenca, e le 33
+sono quelle che compaiono in `app/lib/`. E non è nemmeno una promessa: il
+conto lo rifà una prova, `app/test/chiavi_della_config_test.dart`, ogni volta
+che gira. Un numero scritto a mano in un documento invecchia il giorno dopo, e
+invecchia sempre nella stessa direzione — verso l'ottimismo.
 
 ## Il difetto strutturale: la dashboard tiene *più* di tutto
 
