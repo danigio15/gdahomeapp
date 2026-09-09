@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/ponte/errori.dart';
 import 'package:gdahome/ponte/filo.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
+import 'package:gdahome/ponte/presa.dart';
 
 import 'ponte_finto.dart';
 
@@ -490,6 +491,70 @@ void main() {
     expect(filo.traffico, contains('casa non collegata'));
     await filo.chiudi();
   });
+
+  test(
+    'una presa che non si apre non tiene il filo appeso: si riprova',
+    () async {
+      /* Il modo peggiore di rompersi: un telefono che si sveglia con la radio
+     * ancora fredda apriva una presa che non si apriva e non falliva, e
+     * l'app restava a «sto cercando la casa» per sempre — sembrava tutto in
+     * corso, e non stava succedendo niente. */
+      var quante = 0;
+      final filo = Filo.fisso(
+        indirizzo: ponte.indirizzo,
+        segno: segnoBuono,
+        chi: chiBuono,
+        chiave: chiaveBuona,
+        apri: (dove) {
+          quante += 1;
+          /* La prima resta li' e non torna mai. */
+          if (quante == 1) return Completer<Presa>().future;
+          return PresaSuWebSocket.apri(dove);
+        },
+        attesaDellApertura: const Duration(milliseconds: 300),
+        attesaMassima: const Duration(milliseconds: 100),
+      );
+
+      await filo.apri(entro: const Duration(seconds: 5));
+      expect(filo.dentro, isTrue);
+      expect(quante, 2, reason: 'la prima si e\' lasciata perdere');
+      await filo.chiudi();
+    },
+  );
+
+  test(
+    'al risveglio una bussata appesa si lascia perdere e se ne fa un\'altra',
+    () async {
+      /* Con una scadenza lunga solo il risveglio puo' salvarla: e' il caso di
+     * chi riprende in mano il telefono e non vuole aspettare. */
+      var quante = 0;
+      final filo = Filo.fisso(
+        indirizzo: ponte.indirizzo,
+        segno: segnoBuono,
+        chi: chiBuono,
+        chiave: chiaveBuona,
+        apri: (dove) {
+          quante += 1;
+          if (quante == 1) return Completer<Presa>().future;
+          return PresaSuWebSocket.apri(dove);
+        },
+        attesaDellApertura: const Duration(seconds: 30),
+        pazienzaAlRisveglio: const Duration(milliseconds: 50),
+      );
+
+      unawaited(
+        filo.apri(entro: const Duration(seconds: 5)).catchError((_) {}),
+      );
+      await _finoA(() => quante == 1, entro: const Duration(seconds: 2));
+      /* Oltre la pazienza: adesso quella bussata e' «appesa da un po'». */
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+
+      filo.sveglia();
+      await _finoA(() => filo.dentro, entro: const Duration(seconds: 5));
+      expect(quante, 2);
+      await filo.chiudi();
+    },
+  );
 
   test('al risveglio un filo vivo resta dentro', () async {
     final filo = Filo.fisso(

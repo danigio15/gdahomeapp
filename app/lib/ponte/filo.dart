@@ -73,6 +73,7 @@ class Filo {
     this.battito = const Duration(seconds: 30),
     this.silenzioMassimo = const Duration(seconds: 90),
     this.pazienzaAlRisveglio = const Duration(seconds: 6),
+    this.attesaDellApertura = const Duration(seconds: 20),
   }) : _trovaLApprodo = approdo,
        _apri = apri ?? PresaSuWebSocket.apri;
 
@@ -88,6 +89,7 @@ class Filo {
     Duration battito = const Duration(seconds: 30),
     Duration silenzioMassimo = const Duration(seconds: 90),
     Duration pazienzaAlRisveglio = const Duration(seconds: 6),
+    Duration attesaDellApertura = const Duration(seconds: 20),
   }) : this(
          approdo: (() async => Approdo.diretto(DaDove.daDentro, indirizzo)),
          segno: segno,
@@ -99,6 +101,7 @@ class Filo {
          battito: battito,
          silenzioMassimo: silenzioMassimo,
          pazienzaAlRisveglio: pazienzaAlRisveglio,
+         attesaDellApertura: attesaDellApertura,
        );
 
   final TrovaLApprodo _trovaLApprodo;
@@ -132,6 +135,17 @@ class Filo {
   /// Quanto si aspetta, al risveglio, un segno di vita prima di ribussare.
   final Duration pazienzaAlRisveglio;
 
+  /// Quanto si aspetta che la presa si apra, prima di dire che non si apre.
+  ///
+  /// Senza questa scadenza un tentativo poteva restare appeso **per sempre**:
+  /// un telefono che si sveglia con la radio ancora fredda apre una presa che
+  /// non si apre e non fallisce, `_bussa` non torna piu', e l'app resta a
+  /// «sto cercando la casa» senza piu' riprovare — e nemmeno il risveglio
+  /// puo' farci niente, perche' non c'e' nessun timer da anticipare. E' il
+  /// modo peggiore di rompersi: sembra tutto in corso, e non sta succedendo
+  /// niente.
+  final Duration attesaDellApertura;
+
   final _stato = StreamController<StatoDelFilo>.broadcast();
   final _inAttesa = <int, Completer<Map<String, dynamic>>>{};
   final _sottoscrizioni = <int, _Sottoscrizione>{};
@@ -158,6 +172,12 @@ class Filo {
   String? _ultimaCaduta;
   DateTime? _cadutoIl;
   Timer? _controlloAlRisveglio;
+
+  /* Quale bussata e' quella buona, e da quando sta provando. Una lasciata
+   * indietro — il risveglio ne fa ripartire una nuova — non deve installare
+   * la sua presa sopra quella che intanto e' entrata. */
+  int _bussate = 0;
+  DateTime? _bussataDa;
   Completer<void>? _stretta;
   Timer? _riprova;
   Timer? _colpetti;
@@ -253,6 +273,8 @@ class Filo {
   }
 
   Future<void> _bussa() async {
+    final mia = ++_bussate;
+    _bussataDa = DateTime.now();
     _cambia(StatoDelFilo.chiamando);
 
     final Approdo dove;
@@ -281,9 +303,10 @@ class Filo {
       }
       return;
     }
-    /* Fra la domanda e la risposta l'app puo' essere stata chiusa, o l'utente
-     * puo' aver cambiato casa. */
-    if (_spentoApposta) return;
+    /* Fra la domanda e la risposta l'app puo' essere stata chiusa, l'utente
+     * puo' aver cambiato casa, o il risveglio puo' aver fatto ripartire una
+     * bussata nuova: questa allora si toglie di mezzo. */
+    if (_spentoApposta || mia != _bussate) return;
 
     final Presa presa;
     try {
@@ -291,7 +314,14 @@ class Filo {
        * poi ci si stringe la mano. Da li' in poi tutto quello che passa e'
        * imbustato, e chi sta in mezzo — il centralino, o chi e' sulla rete di
        * casa — vede byte e basta. */
-      final sotto = await _apri(dove.filo);
+      final sotto = await _apri(dove.filo).timeout(attesaDellApertura);
+      if (mia != _bussate) {
+        /* Un'altra bussata ha preso il posto di questa mentre si apriva: la
+         * presa aperta qui non serve piu' a nessuno, e lasciarla aperta
+         * vorrebbe dire due fili verso la stessa casa. */
+        unawaited(sotto.chiudi());
+        return;
+      }
       presa = await stringiLaMano(sotto, chi: chi, chiaveDelFilo: chiave);
     } on SegnoRifiutato catch (errore) {
       /* La casa dice che questo telefono non lo conosce piu'. Non e' una
@@ -299,12 +329,19 @@ class Filo {
        * sapere che va riabbinato. */
       _segnoNonVale(errore.spiegazione);
       return;
+    } on TimeoutException {
+      _caduto('la casa non ha aperto il filo in tempo');
+      return;
     } catch (errore) {
       _caduto(
         errore is ErroreDelPonte
             ? errore.spiegazione
             : 'non riesco ad aprire il filo',
       );
+      return;
+    }
+    if (mia != _bussate) {
+      unawaited(presa.chiudi());
       return;
     }
 
@@ -694,12 +731,22 @@ class Filo {
       });
       return;
     }
-    if (_riprova != null) {
-      _riprova!.cancel();
-      _riprova = null;
-      _tentativi = 0;
-      unawaited(_bussa());
-    }
+    /* Non dentro. Si riparte **subito**, e da zero: chi ha appena ripreso in
+     * mano il telefono non deve aspettare mezzo minuto perche' i tentativi
+     * di prima avevano allungato l'attesa. E se una bussata era rimasta
+     * appesa — la presa che non si apre e non fallisce — si lascia perdere e
+     * se ne comincia un'altra: e' l'unico modo di uscirne, perche' quella
+     * non tornera' mai da sola. */
+    final da = _bussataDa;
+    final staProvandoDaPoco =
+        da != null &&
+        DateTime.now().difference(da) < pazienzaAlRisveglio &&
+        _riprova == null;
+    if (staProvandoDaPoco) return;
+    _riprova?.cancel();
+    _riprova = null;
+    _tentativi = 0;
+    unawaited(_bussa());
   }
 
   void _smettiDiBattere() {

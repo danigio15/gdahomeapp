@@ -294,6 +294,14 @@ E due cose che non erano prestazioni ma sembravano un guasto:
   l'orologio e sotto i tasti — e quanto prendono quelle barre glielo dice
   l'app, in due variabili CSS che si riscrivono girando lo schermo senza
   ricaricare niente.
+- **Il filo si riprende dopo che l'app e' stata da parte.** Aprire la presa
+  non aveva una scadenza: un telefono che si sveglia con la radio ancora
+  fredda apriva una presa che non si apriva e non falliva, e l'app restava a
+  «sto cercando la casa» per sempre — sembrava tutto in corso, e non stava
+  succedendo niente. Adesso l'apertura scade, una bussata rimasta indietro
+  non installa piu' niente, e il risveglio lascia perdere quella appesa e ne
+  comincia un'altra da zero, senza aspettare l'attesa allungata dai
+  tentativi di prima.
 - **Quando la casa non risponde, si dice quello che ha detto lei.** La bussata
   che sceglie la strada non veta piu' il centralino: se non risponde nessuno
   lo si prova lo stesso, e il no arriva da chi lo sa — «questa casa adesso non

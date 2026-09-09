@@ -24,8 +24,19 @@ class Misure {
    * sessanta al secondo — si vede. */
   static const int lentoOltreMs = 32;
 
+  /* Oltre questo non e' uno scatto: e' l'app che dormiva.
+   *
+   * Android congela quello che nessuno sta guardando, e l'orologio di qui si
+   * ferma con lei: al ritorno il ritardo e' di mezzo minuto. Segnarlo come
+   * blocco vorrebbe dire mettere in cima alla pagina un numero che non parla
+   * dell'app — e nasconderci sotto i blocchi veri, che sono decimi di
+   * secondo. Si contano a parte: sapere che l'app e' stata in pausa serve a
+   * leggere il resto. */
+  static const int dormivaOltreMs = 2000;
+
   final _fotogrammi = <_Fotogramma>[];
   final _blocchi = <_Blocco>[];
+  final _pause = <DateTime>[];
   Timer? _orologio;
   DateTime? _ultimoTic;
   bool _accese = false;
@@ -68,7 +79,11 @@ class Misure {
     _ultimoTic = ora;
     if (prima != null) {
       final tardi = ora.difference(prima).inMilliseconds - passo.inMilliseconds;
-      if (tardi > 80) _blocchi.add(_Blocco(ora, tardi));
+      if (tardi > dormivaOltreMs) {
+        _pause.add(ora);
+      } else if (tardi > 80) {
+        _blocchi.add(_Blocco(ora, tardi));
+      }
     }
     _pota(ora);
   }
@@ -77,6 +92,7 @@ class Misure {
     final soglia = ora.subtract(finestra);
     _fotogrammi.removeWhere((uno) => uno.quando.isBefore(soglia));
     _blocchi.removeWhere((uno) => uno.quando.isBefore(soglia));
+    _pause.removeWhere((uno) => uno.isBefore(soglia));
   }
 
   /// Gli ultimi sessanta secondi, in numeri.
@@ -110,6 +126,7 @@ class Misure {
       gpuMaxMs: gpuMax,
       blocchi: _blocchi.length,
       bloccoMaxMs: bloccoMax,
+      pause: _pause.length,
     );
   }
 
@@ -127,6 +144,7 @@ class UltimoMinuto {
     required this.gpuMaxMs,
     required this.blocchi,
     required this.bloccoMaxMs,
+    this.pause = 0,
   });
 
   final int fotogrammi;
@@ -138,15 +156,23 @@ class UltimoMinuto {
   final int blocchi;
   final int bloccoMaxMs;
 
+  /// Quante volte l'app e' stata messa da parte e ripresa, nell'ultimo
+  /// minuto. Non e' un difetto: e' il contesto per leggere il resto.
+  final int pause;
+
   int get percentoLenti =>
       fotogrammi == 0 ? 0 : (lenti * 100 / fotogrammi).round();
 
-  String get riga => fotogrammi == 0
-      ? 'nessun fotogramma nell\'ultimo minuto; blocchi: $blocchi'
-            '${blocchi == 0 ? '' : ' (max $bloccoMaxMs ms)'}'
-      : '$fotogrammi fotogrammi in 60 s, $percentoLenti% lenti; '
-            'UI $uiMedioMs ms (max $uiMaxMs), GPU $gpuMedioMs ms (max $gpuMaxMs); '
-            'blocchi: $blocchi${blocchi == 0 ? '' : ' (max $bloccoMaxMs ms)'}';
+  String get riga {
+    final inPausa = pause == 0 ? '' : '; in pausa $pause volte';
+    return fotogrammi == 0
+        ? 'nessun fotogramma nell\'ultimo minuto; blocchi: $blocchi'
+              '${blocchi == 0 ? '' : ' (max $bloccoMaxMs ms)'}$inPausa'
+        : '$fotogrammi fotogrammi in 60 s, $percentoLenti% lenti; '
+              'UI $uiMedioMs ms (max $uiMaxMs), GPU $gpuMedioMs ms (max $gpuMaxMs); '
+              'blocchi: $blocchi${blocchi == 0 ? '' : ' (max $bloccoMaxMs ms)'}'
+              '$inPausa';
+  }
 }
 
 class _Fotogramma {

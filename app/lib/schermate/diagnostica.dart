@@ -126,11 +126,18 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
                       : '${minuto.blocchi} volte, '
                             'fino a ${minuto.bloccoMaxMs} ms',
                 ),
+                if (minuto.pause > 0)
+                  riga(
+                    'App messa da parte',
+                    '${minuto.pause} volte: quel tempo non conta',
+                  ),
                 const SizedBox(height: 6),
                 Text(
                   'UI alta: e\' l\'app che costruisce troppo. GPU alta: e\' '
                   'quello che c\'e\' da disegnare, di solito la plancia. '
-                  'Blocchi: il filo principale stava facendo altro.',
+                  'Blocchi: il filo principale stava facendo altro. Quando '
+                  'l\'app sta da parte il telefono la congela, e quel tempo '
+                  'non e\' un blocco: si conta a parte.',
                   style: testi.bodySmall?.copyWith(
                     color: colori.onSurfaceVariant,
                   ),
