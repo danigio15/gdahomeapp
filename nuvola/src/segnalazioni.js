@@ -110,7 +110,10 @@ export class GitHub {
   constructor({ token, repo, fetch: prendi = globalThis.fetch, base = "https://api.github.com" }) {
     this.token = token;
     this.repo = repo;
-    this.prendi = prendi;
+    /* Non `this.prendi = prendi`: `fetch` chiamata come metodo di
+     * quest'oggetto — `this.prendi(...)` — arriva col `this` sbagliato, e il
+     * worker la rifiuta con «Illegal invocation». Si chiama e basta. */
+    this.prendi = (...argomenti) => prendi(...argomenti);
     this.base = base;
   }
 
