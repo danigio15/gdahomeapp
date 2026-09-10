@@ -41,6 +41,65 @@ class StatoDellaCasa {
   DateTime? _ultimoAvviso;
   Timer? _avvisoInSospeso;
 
+  /* ─── Quanto ci mette un cambiamento ad arrivare ────────────────────────
+   *
+   * «I dati arrivano con circa un minuto di ritardo, non sono immediati.»
+   *
+   * Un minuto e' tanto, e la domanda vera e' **dove** sta: se un cambiamento
+   * ci mette un minuto a percorrere la strada — telefono, centralino, ponte,
+   * Home Assistant — o se Home Assistant quel valore lo scopre un minuto
+   * dopo, perche' l'integrazione che lo porta interroga il dispositivo una
+   * volta al minuto. Sono due guai diversi e uno solo dei due e' nostro.
+   *
+   * La risposta sta dentro l'evento. Home Assistant ci scrive **quando** lo
+   * stato e' cambiato (`last_changed`): se all'arrivo quell'ora e' di un
+   * minuto fa, il minuto se l'e' preso la strada; se e' di adesso, la strada
+   * e' immediata e il minuto sta a monte — e a monte non ci arriviamo, ma
+   * almeno si smette di cercarlo dalla parte sbagliata.
+   *
+   * Si tiene poco: gli ultimi cento eventi, il tipico e il peggiore. Un
+   * elenco lungo qui dentro sarebbe memoria buttata per un numero che si
+   * guarda una volta ogni tanto. */
+  static const int _quantiRitardi = 100;
+  final _ritardi = <int>[];
+
+  /// Quanti cambiamenti si sono misurati.
+  int get quantiRitardi => _ritardi.length;
+
+  /// Quanto ci mette **di solito** un cambiamento ad arrivare, dal momento in
+  /// cui Home Assistant dice che e' successo. `null` finche' non ne e'
+  /// arrivato nemmeno uno.
+  ///
+  /// E' la mediana e non la media: basta un evento arrivato dopo un risveglio
+  /// del telefono — mezzo minuto di ritardo, e non e' colpa di nessuno — per
+  /// spostare una media di parecchio e far sembrare lenta una strada che non
+  /// lo e'.
+  Duration? get ritardoSolito {
+    if (_ritardi.isEmpty) return null;
+    final ordinati = List<int>.from(_ritardi)..sort();
+    return Duration(milliseconds: ordinati[ordinati.length ~/ 2]);
+  }
+
+  /// Il peggiore degli ultimi cento.
+  Duration? get ritardoPeggiore => _ritardi.isEmpty
+      ? null
+      : Duration(milliseconds: _ritardi.reduce((uno, due) => uno > due ? uno : due));
+
+  void _misuraIlRitardo(Entita quale) {
+    /* `last_updated` e non `last_changed`: un sensore che ripete lo stesso
+     * numero non sposta il secondo, e misurarlo direbbe «un'ora di ritardo»
+     * per un evento arrivato in un millesimo. */
+    final quando = quale.aggiornataIl;
+    if (quando == null) return;
+    final quanto = DateTime.now().difference(quando).inMilliseconds;
+    /* Negativo vuol dire che l'orologio del telefono e quello di casa non
+     * vanno d'accordo: un numero cosi' non racconta niente sulla strada, e
+     * messo in mezzo agli altri li sporcherebbe. */
+    if (quanto < 0) return;
+    _ritardi.add(quanto);
+    if (_ritardi.length > _quantiRitardi) _ritardi.removeAt(0);
+  }
+
   /// Scatta quando qualcosa e' cambiato, senza dire cosa: chi disegna
   /// ridisegna. Al piu' una volta ogni [respiro].
   Stream<void> get cambiamenti => _cambiamenti.stream;
@@ -155,6 +214,7 @@ class StatoDellaCasa {
      * volte al secondo — lascia l'ordine dov'e'. Chi disegna una riga si
      * prende l'entita' viva dal suo identificativo, non quella di quando
      * l'ordine e' stato fatto. */
+    _misuraIlRitardo(nuova);
     final vecchia = _entita[nuova.id];
     _entita[nuova.id] = nuova;
     if (vecchia == null || vecchia.nome != nuova.nome) _cambiate();

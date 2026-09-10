@@ -200,6 +200,8 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
             ),
           ),
           const SizedBox(height: 12),
+          _IlRitardo(collegamento: collegamento, riga: riga),
+          const SizedBox(height: 12),
           Scheda(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,5 +288,94 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
         ],
       ),
     );
+  }
+}
+
+/// Quanto ci mette un cambiamento della casa ad arrivare qui.
+///
+/// Serve a rispondere a una domanda sola, e a rispondere **bene**: «i dati
+/// arrivano con un minuto di ritardo» puo' voler dire due cose diverse, e una
+/// sola delle due e' nostra.
+///
+/// Home Assistant scrive dentro ogni evento **quando** ha registrato quello
+/// stato. Se quando arriva qui quell'ora e' di un minuto fa, il minuto se
+/// l'e' preso la strada — telefono, centralino, ponte — e c'e' da lavorarci.
+/// Se e' di adesso, la strada e' immediata e il minuto sta a monte: e'
+/// l'integrazione che porta quel dato a interrogare il dispositivo una volta
+/// al minuto, e li' non ci arriva nessuno da qui.
+class _IlRitardo extends StatelessWidget {
+  const _IlRitardo({required this.collegamento, required this.riga});
+
+  final Collegamento collegamento;
+  final Widget Function(String nome, String valore) riga;
+
+  @override
+  Widget build(BuildContext context) {
+    final testi = Theme.of(context).textTheme;
+    final colori = Theme.of(context).colorScheme;
+    final casa = collegamento.stato;
+    final solito = casa?.ritardoSolito;
+    final peggiore = casa?.ritardoPeggiore;
+    final quanti = casa?.quantiRitardi ?? 0;
+    return Scheda(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Quanto ci mettono i dati', style: testi.titleMedium),
+          const SizedBox(height: 6),
+          if (quanti == 0)
+            Text(
+              casa == null
+                  ? 'La casa non e\' ancora collegata.'
+                  : 'Nessun cambiamento misurato, ancora. Apri i dispositivi '
+                        'e aspetta che qualcosa in casa cambi.',
+              style: testi.bodySmall?.copyWith(
+                color: colori.onSurfaceVariant,
+                height: 1.4,
+              ),
+            )
+          else ...[
+            riga('Di solito', _quanto(solito)),
+            riga('Il peggiore', _quanto(peggiore)),
+            riga('Su quanti', '$quanti cambiamenti'),
+            const SizedBox(height: 8),
+            Text(
+              _cosaVuolDire(solito),
+              style: testi.bodySmall?.copyWith(
+                color: colori.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  static String _quanto(Duration? quale) {
+    if (quale == null) return '-';
+    if (quale.inMilliseconds < 1000) return '${quale.inMilliseconds} ms';
+    final secondi = quale.inMilliseconds / 1000;
+    return secondi < 10
+        ? '${secondi.toStringAsFixed(1)} s'
+        : '${secondi.round()} s';
+  }
+
+  static String _cosaVuolDire(Duration? solito) {
+    if (solito == null) return '';
+    if (solito.inMilliseconds < 2000) {
+      return 'La strada e\' immediata: quello che cambia in casa arriva qui '
+          'in meno di due secondi. Se un valore a schermo sembra vecchio di '
+          'un minuto, quel minuto non e\' della strada — e\' Home Assistant '
+          'che scopre quel dato una volta al minuto, perche\' e\' cosi\' che '
+          'l\'integrazione che lo porta interroga il dispositivo.';
+    }
+    if (solito.inSeconds < 15) {
+      return 'Qualche secondo: e\' la strada, e di solito vuol dire che si '
+          'sta passando dal centralino invece che dalla rete di casa.';
+    }
+    return 'Tanto. Questo e\' un ritardo della strada, non di Home Assistant: '
+        'vale la pena mandarlo in una segnalazione, con questa schermata '
+        'allegata.';
   }
 }

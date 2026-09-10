@@ -7,12 +7,24 @@ class Entita {
     required this.stato,
     required this.attributi,
     this.cambiataIl,
+    this.aggiornataIl,
   });
 
   final String id;
   final String stato;
   final Map<String, dynamic> attributi;
+
+  /// Quando il **valore** e' cambiato l'ultima volta. Un sensore che ridice lo
+  /// stesso numero non la sposta.
   final DateTime? cambiataIl;
+
+  /// Quando Home Assistant ha scritto questo stato, anche se il valore e' lo
+  /// stesso di prima.
+  ///
+  /// E' quella che serve per sapere quanto ci mette un cambiamento ad
+  /// arrivare fin qui: [cambiataIl] su un sensore che ripete lo stesso valore
+  /// resta ferma a ore fa, e misurata come ritardo direbbe una bugia grossa.
+  final DateTime? aggiornataIl;
 
   /// Il pezzo prima del punto: `light`, `sensor`, `switch`.
   String get dominio => id.split('.').first;
@@ -45,6 +57,9 @@ class Entita {
           ? Map<String, dynamic>.from(attributi)
           : const {},
       cambiataIl: DateTime.tryParse(grezza['last_changed'] as String? ?? ''),
+      aggiornataIl: DateTime.tryParse(
+        grezza['last_updated'] as String? ?? grezza['last_changed'] as String? ?? '',
+      ),
     );
   }
 

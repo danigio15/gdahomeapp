@@ -89,3 +89,33 @@ di «Salotto». La tavola sta scritta a mano in
 `app/lib/casa/plancia/lettere.dart`, copre il latino accentato d'Europa, e la
 usano sia gli identificativi delle persone sia il motore che appaia le stanze
 alle aree di Home Assistant.
+
+## Quanto ci mettono i dati ad arrivare
+
+Niente a che vedere col ritratto, ma sta qui perché nasce dalla stessa
+domanda — «cosa fa questa app quando qualcosa cambia in casa».
+
+«I dati arrivano con circa un minuto di ritardo» può voler dire due cose
+diverse, e una sola delle due è nostra:
+
+- **il minuto se l'è preso la strada** — telefono, centralino, ponte;
+- **il minuto sta a monte**: Home Assistant quel dato lo scopre una volta al
+  minuto, perché è così che l'integrazione che lo porta interroga il
+  dispositivo. Lì da qui non ci arriva nessuno.
+
+La risposta sta dentro l'evento. Home Assistant scrive in ogni `state_changed`
+**quando** ha registrato quello stato (`last_updated`): se all'arrivo quell'ora
+è di un minuto fa, il minuto è della strada; se è di adesso, la strada è
+immediata.
+
+Si legge in **Assistenza → Come va l'app**, nel riquadro «Quanto ci mettono i
+dati»: quanto ci mette di solito, il peggiore, e su quanti cambiamenti. Sotto
+c'è scritto cosa vuol dire il numero, così non serve interpretarlo.
+
+Due cose che la misura non conta, e per una buona ragione ciascuna:
+
+- **`last_changed` no, `last_updated` sì.** Un sensore che ridice lo stesso
+  numero non sposta il primo: misurato come ritardo direbbe «un'ora», e
+  manderebbe a cercare un guasto che non c'è.
+- **I ritardi negativi si buttano.** Vogliono dire che l'orologio del telefono
+  e quello di casa non vanno d'accordo, e di un numero così non si fa niente.

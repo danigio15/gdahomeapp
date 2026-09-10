@@ -221,6 +221,85 @@ void main() {
     expect(calma['sensor.fuori']!.stato, '49');
     await calma.stacca();
   });
+  group('Quanto ci mettono i dati ad arrivare', () {
+    /* «I dati arrivano con circa un minuto di ritardo.» Un minuto e' tanto, e
+     * la domanda vera e' **dove** sta: nella strada, o a monte in Home
+     * Assistant, che quel dato lo scopre una volta al minuto. La risposta sta
+     * dentro l'evento, e questa e' la misura che la legge. */
+
+    test('finche\' non arriva niente non c\'e\' niente da dire', () async {
+      await casa.attacca();
+      expect(casa.quantiRitardi, 0);
+      expect(casa.ritardoSolito, isNull);
+      expect(casa.ritardoPeggiore, isNull);
+    });
+
+    test('un evento appena nato misura un ritardo piccolo', () async {
+      await casa.attacca();
+      final adesso = DateTime.now().toUtc().toIso8601String();
+      ponte.cambia(
+        _numeroDellaSottoscrizione(ponte),
+        'light.cucina',
+        PonteFinto.unaEntita('light.cucina', 'on', aggiornataIl: adesso),
+      );
+      await casa.cambiamenti.first;
+      expect(casa.quantiRitardi, 1);
+      expect(casa.ritardoSolito!.inSeconds, lessThan(5));
+    });
+
+    test('un evento vecchio di un minuto lo dice', () async {
+      await casa.attacca();
+      final unMinutoFa = DateTime.now()
+          .toUtc()
+          .subtract(const Duration(seconds: 60))
+          .toIso8601String();
+      ponte.cambia(
+        _numeroDellaSottoscrizione(ponte),
+        'light.cucina',
+        PonteFinto.unaEntita('light.cucina', 'on', aggiornataIl: unMinutoFa),
+      );
+      await casa.cambiamenti.first;
+      expect(casa.ritardoSolito!.inSeconds, greaterThanOrEqualTo(59));
+    });
+
+    test('un sensore che ripete lo stesso valore non conta un\'ora', () async {
+      /* `last_changed` su un sensore che ridice lo stesso numero resta ferma
+       * a ore fa: misurata come ritardo direbbe una bugia grossa, e manderebbe
+       * a cercare un guasto che non c'e'. Si guarda `last_updated`. */
+      await casa.attacca();
+      final adesso = DateTime.now().toUtc().toIso8601String();
+      ponte.cambia(
+        _numeroDellaSottoscrizione(ponte),
+        'sensor.fuori',
+        PonteFinto.unaEntita(
+          'sensor.fuori',
+          '18.4',
+          cambiataIl: '2026-09-07T07:00:00.000000+00:00',
+          aggiornataIl: adesso,
+        ),
+      );
+      await casa.cambiamenti.first;
+      expect(casa.ritardoSolito!.inSeconds, lessThan(5));
+    });
+
+    test('un orologio avanti non sporca la misura', () async {
+      /* Il telefono e la casa non vanno per forza d'accordo sull'ora: un
+       * evento «del futuro» darebbe un ritardo negativo, che non racconta
+       * niente sulla strada. Si butta invece di mescolarlo agli altri. */
+      await casa.attacca();
+      final fraUnMinuto = DateTime.now()
+          .toUtc()
+          .add(const Duration(seconds: 60))
+          .toIso8601String();
+      ponte.cambia(
+        _numeroDellaSottoscrizione(ponte),
+        'light.cucina',
+        PonteFinto.unaEntita('light.cucina', 'on', aggiornataIl: fraUnMinuto),
+      );
+      await casa.cambiamenti.first;
+      expect(casa.quantiRitardi, 0);
+    });
+  });
 }
 
 Future<void> _finoA(
@@ -234,3 +313,11 @@ Future<void> _finoA(
   }
   throw StateError('l\'attesa e\' scaduta');
 }
+
+/// Con quale numero si e' sottoscritto agli eventi: e' quello con cui il ponte
+/// finto deve rispondere, se no l'evento non arriva a nessuno.
+int _numeroDellaSottoscrizione(PonteFinto ponte) =>
+    ponte.arrivati.lastWhere(
+          (uno) => uno['type'] == 'subscribe_events',
+        )['id']
+        as int;

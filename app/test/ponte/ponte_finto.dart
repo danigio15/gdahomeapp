@@ -479,6 +479,7 @@ class PonteFinto {
     String? unita,
     String? tipo,
     String? cambiataIl,
+    String? aggiornataIl,
   }) => {
     'entity_id': id,
     'state': stato,
@@ -488,6 +489,12 @@ class PonteFinto {
       if (tipo != null) 'device_class': tipo,
     },
     'last_changed': cambiataIl ?? '2026-09-07T07:00:00.000000+00:00',
+    /* Home Assistant le manda tutte e due, e non sono la stessa cosa: la
+     * prima si sposta solo quando cambia il **valore**, la seconda ogni volta
+     * che lo stato si riscrive. Chi misura quanto ci mette un dato ad
+     * arrivare guarda la seconda. */
+    'last_updated':
+        aggiornataIl ?? cambiataIl ?? '2026-09-07T07:00:00.000000+00:00',
   };
 
   /// Manda un `state_changed` come lo manderebbe Home Assistant.

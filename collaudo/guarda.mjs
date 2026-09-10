@@ -627,16 +627,26 @@ async function premiCercando(pagina, etichetta, opzioni = {}) {
    * che niente lo dicesse. Quindi si scorre finche' il riquadro non e' dentro
    * la finestra, e solo allora si preme.
    */
-  await scorri(pagina, -8000);
+  /* Su fino in cima: l alberatura e lunga, e chi arriva dal fondo — dalle
+   * persone, in fondo a tutto — con ottomila non ci torna. */
+  await scorri(pagina, -30000);
   await attendi(500);
-  for (let giro = 0; giro < 18; giro += 1) {
-    const nodo = await ilBottone(pagina, etichetta, opzioni);
+  /* Trenta giri, non diciotto.
+   *
+   * L'alberatura della Config e' lunga, e le famiglie in fondo — chi puo'
+   * entrare, l'app — stavano oltre il punto in cui si smetteva di cercare.
+   * Il collaudo non le trovava e diceva «non trovo Le persone» elencando
+   * quello che si vedeva in cima: un messaggio giusto e una diagnosi
+   * sbagliata. Una lista pigra, per giunta, quelle voci non le mette
+   * nemmeno nell'albero finche' non ci si arriva vicino. */
+  for (let giro = 0; giro < 30; giro += 1) {
+    const nodo = await ilBottone(pagina, etichetta, { ...opzioni, aspetta: false });
     const riquadro = nodo ? await nodo.boundingBox().catch(() => null) : null;
     if (riquadro && riquadro.y > 90 && riquadro.y + riquadro.height < height - 60) {
       await attendi(300);
       return premi(pagina, etichetta, opzioni);
     }
-    await scorri(pagina, 520);
+    await scorri(pagina, 620);
     await attendi(260);
   }
   return premi(pagina, etichetta, opzioni);
@@ -1094,6 +1104,30 @@ try {
   /* Niente «Lascia stare»: guardare la scheda senza scriverci dentro non
    * cambia niente, e l'apparecchio nuovo non viene nemmeno messo in elenco —
    * e' quello che deve succedere. */
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
+  /* Le persone: la scheda che fino a ieri era quella generica delle voci —
+   * nome, entita', un emoji — e adesso ha tutto quello che la plancia sa di
+   * una persona. Compreso il ritratto, che si compone e lo disegna la
+   * plancia stessa. */
+  racconta("apro le persone");
+  await premiCercando(pagina, "Le persone");
+  await aspettaCheCompaia(pagina, "Aggiungi una persona");
+  await attendi(900);
+  await scatta(pagina, "6p2-persone");
+  await premi(pagina, "Aggiungi una persona");
+  await aspettaCheCompaia(pagina, "La faccia");
+  await attendi(800);
+  await scatta(pagina, "6p3-una-persona");
+  await premi(pagina, "Componi il ritratto");
+  await aspettaCheCompaia(pagina, "Carnagione");
+  await attendi(1200);
+  await scatta(pagina, "6p4-il-ritratto");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
   await premi(pagina, "Back", { inAlto: true });
