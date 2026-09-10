@@ -19,6 +19,13 @@
 ///
 /// Si chiude da sola in tre modi, gli stessi dappertutto: scegliendo una
 /// sezione, toccando fuori, o lasciandola stare.
+///
+/// **Dove lo schermo avanza, non si nasconde affatto.** Nascondersi e' la
+/// scelta giusta dove la fascia di schermo e' l'unica cosa che non si puo'
+/// comprare; su un computer, o su un tablet di lato, e' un gesto in piu' per
+/// ogni cambio di pagina e non serve a niente. Sopra i novecento punti la
+/// barra resta, la maniglia sparisce, e toccare fuori non la chiude piu'
+/// — vedi `vestito/quanto_e_largo.dart`.
 library;
 
 import 'dart:async';
@@ -28,6 +35,7 @@ import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
 import '../vestito/oggetti.dart';
+import '../vestito/quanto_e_largo.dart';
 import 'da_dove.dart';
 import 'menu.dart';
 
@@ -86,7 +94,10 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
    * dall'inizio obbliga a scorrerla ogni volta. */
   final _scorrimento = ScrollController();
 
-  bool get aperta => _molla.value > 0.02;
+  /// Se qui la barra resta invece di nascondersi.
+  bool _resta = false;
+
+  bool get aperta => _resta || _molla.value > 0.02;
 
   @override
   void dispose() {
@@ -124,7 +135,7 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
   }
 
   void _scelta(Sezione dove) {
-    _rimanda(_dopoLaScelta);
+    if (!_resta) _rimanda(_dopoLaScelta);
     if (dove != widget.aperta) widget.vai(dove);
   }
 
@@ -134,13 +145,21 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
    * rovescia riparte a ogni tocco: quando il dito si ferma, riprende a
    * scorrere il tempo, non prima. */
   void _laStaUsando() {
-    if (aperta) _rimanda(_daSola);
+    if (aperta && !_resta) _rimanda(_daSola);
   }
 
   @override
   Widget build(BuildContext context) {
     final alto = MediaQuery.paddingOf(context).top;
     final basso = MediaQuery.paddingOf(context).bottom;
+    /* Si guarda a ogni ridisegno, non una volta all'avvio: su un computer la
+     * finestra si rimpicciolisce di continuo, e una barra che resta larga
+     * quanto mezza finestra stretta e' peggio di una che si nasconde. */
+    _resta = QuantoELargo.di(context).laBarraResta;
+    if (_resta && _molla.value != 1) {
+      _daChiudere?.cancel();
+      _molla.value = 1;
+    }
     return AnimatedBuilder(
       animation: _molla,
       builder: (context, _) {
@@ -149,7 +168,7 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
           children: [
             /* Toccare fuori la chiude. Prende i tocchi solo quando c'e': a
              * barra chiusa non deve rubare niente alla pagina. */
-            if (aperta)
+            if (aperta && !_resta)
               Positioned.fill(
                 child: GestureDetector(
                   behavior: HitTestBehavior.translucent,
@@ -225,12 +244,16 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                 ),
               ),
             ),
-            _LaManiglia(
-              quanto: quanto,
-              alzata: aperta,
-              quandoPremuta: () => aperta ? chiudi() : apri(),
-              quandoTirata: (dentro) => dentro ? apri() : chiudi(),
-            ),
+            /* La maniglia serve a chiamare una barra che non c'e'. Dove la
+             * barra c'e' sempre, e' una pillola che non fa niente accanto a
+             * una cosa gia' aperta. */
+            if (!_resta)
+              _LaManiglia(
+                quanto: quanto,
+                alzata: aperta,
+                quandoPremuta: () => aperta ? chiudi() : apri(),
+                quandoTirata: (dentro) => dentro ? apri() : chiudi(),
+              ),
           ],
         );
       },
@@ -572,3 +595,13 @@ const nomeDelleCase = 'Le tue case';
 /// Quanta aria lasciare sul fianco sinistro della pagina, per non finire
 /// sotto la maniglia.
 const double spazioPerLaBarra = 10;
+
+/// Quanto posto vuole la barra quando resta aperta: la sua larghezza piu'
+/// l'aria che si tiene ai due lati.
+const double spazioPerLaBarraFerma = _larghezzaDellaBarra + 22;
+
+/// Quanto lasciare a sinistra al contenuto, su questo schermo.
+double quantoPerLaBarra(BuildContext contesto) =>
+    QuantoELargo.di(contesto).laBarraResta
+    ? spazioPerLaBarraFerma
+    : spazioPerLaBarra;

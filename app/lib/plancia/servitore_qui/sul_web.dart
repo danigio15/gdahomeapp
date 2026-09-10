@@ -146,6 +146,11 @@ class _ServitoreSulWeb implements ServitoreDiQuestoSistema {
       premesse.margini = quanto;
 
   Future<bool> accendi() async {
+    /* Un browser i service worker li fa girare solo dove la pagina e' arrivata
+     * in modo sicuro: `https`, o `localhost`. E' una regola sua, e provarci
+     * lo stesso vuol dire un'eccezione dentro un `try` e nessuno che capisce
+     * perche' la plancia non c'e'. Meglio saperlo e dirlo. */
+    if (!web.window.isSecureContext) return false;
     final lavoratori = web.window.navigator.serviceWorker;
     try {
       /* Ambito la radice, non una cartella: la plancia chiama i suoi file per

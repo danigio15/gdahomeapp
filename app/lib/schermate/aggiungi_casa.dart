@@ -325,26 +325,38 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                     label: const Text('Inquadra il codice'),
                   ),
                   const SizedBox(height: 14),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.lock_outline_rounded,
-                        size: 14,
-                        color: colori.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          'Non ti verra\' mai chiesta la password di Home '
-                          'Assistant.',
-                          textAlign: TextAlign.center,
-                          style: testi.bodySmall?.copyWith(
-                            color: colori.onSurfaceVariant,
+                  /* Il lucchetto **dentro** la frase, e non di fianco.
+                   *
+                   * Di fianco era una riga con due pezzi: su uno schermo
+                   * stretto la frase andava a capo e si centrava per conto
+                   * suo, e il lucchetto restava piantato all'estremita'
+                   * sinistra, staccato da tutto. Messo dentro il testo va a
+                   * capo con le parole, come farebbe una parola. */
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: Icon(
+                              Icons.lock_outline_rounded,
+                              size: 14,
+                              color: colori.onSurfaceVariant,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                        const TextSpan(
+                          text:
+                              'Non ti verra\' mai chiesta la password di Home '
+                              'Assistant.',
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                    style: testi.bodySmall?.copyWith(
+                      color: colori.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   TextField(

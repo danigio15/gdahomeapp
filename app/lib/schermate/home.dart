@@ -23,6 +23,7 @@ import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
 import 'acquisti.dart';
 import 'assistenza.dart';
+import '../vestito/quanto_e_largo.dart';
 import 'barra.dart';
 import 'configurazione.dart';
 import 'dispositivi.dart';
@@ -156,9 +157,17 @@ class _HomeState extends State<Home> {
             child: Padding(
               /* Alla plancia lo schermo si da' tutto: la maniglia della
                * barra le galleggia sopra, che e' quello che fa una maniglia,
-               * e dieci punti tolti a tutte le pagine si vedevano solo li'. */
+               * e dieci punti tolti a tutte le pagine si vedevano solo li'.
+               *
+               * Dove la barra **resta** invece — su un computer, su un tablet
+               * di lato — il posto glielo si lascia per davvero, e anche alla
+               * plancia: li' la barra non galleggia sopra niente, sta accanto,
+               * e una plancia che le finisce sotto e' una plancia con una
+               * fascia che non si puo' toccare. */
               padding: EdgeInsets.only(
-                left: sullaPlancia ? 0 : spazioPerLaBarra,
+                left: sullaPlancia && !QuantoELargo.di(context).laBarraResta
+                    ? 0
+                    : quantoPerLaBarra(context),
               ),
               /* Le sezioni restano in piedi anche quando non si guardano: la
                * plancia e' una pagina web, e rifarla da capo a ogni ritorno
@@ -167,36 +176,47 @@ class _HomeState extends State<Home> {
                 index: Sezione.values.indexOf(_sezione),
                 children: [
                   for (final sezione in Sezione.values)
-                    switch (sezione) {
-                      Sezione.plancia => PlanciaVera(
-                        key: _plancia,
-                        collegamento: collegamento,
-                        fabbrica: widget.plancia,
-                        impostazioni: widget.impostazioni,
-                        vaiAlleCase: widget.vaiAlleCase,
-                      ),
-                      Sezione.dispositivi => Dispositivi(
-                        collegamento: collegamento,
-                        visibile: _sezione == Sezione.dispositivi,
-                      ),
-                      Sezione.configurazione => SchermataDellaConfigurazione(
-                        collegamento: collegamento,
-                        impostazioni: widget.impostazioni,
-                      ),
-                      Sezione.acquisti => SchermataDegliAcquisti(
-                        collegamento: collegamento,
-                      ),
-                      Sezione.segnalazioni => SchermataDelleSegnalazioni(
-                        collegamento: collegamento,
-                        diagnostica: _diagnostica,
-                      ),
-                      Sezione.assistenza => SchermataDellAssistenza(
-                        collegamento: collegamento,
-                        diagnostica: _diagnostica,
-                        impostazioni: widget.impostazioni,
-                      ),
-                      _ => _InArrivo(sezione),
-                    },
+                    /* Le pagine dell'app si fermano dove si legge ancora e
+                     * restano in mezzo: una riga lunga duemila punti l'occhio
+                     * non la segue, e su un computer una configurazione larga
+                     * tutta la finestra e' un modulo che si attraversa col
+                     * collo. La plancia no: quella ha un disegno suo che si
+                     * adatta, e le si da' tutto quello che c'e'. */
+                    QuantoCiSta(
+                      quanto: sezione == Sezione.plancia
+                          ? double.infinity
+                          : null,
+                      child: switch (sezione) {
+                        Sezione.plancia => PlanciaVera(
+                          key: _plancia,
+                          collegamento: collegamento,
+                          fabbrica: widget.plancia,
+                          impostazioni: widget.impostazioni,
+                          vaiAlleCase: widget.vaiAlleCase,
+                        ),
+                        Sezione.dispositivi => Dispositivi(
+                          collegamento: collegamento,
+                          visibile: _sezione == Sezione.dispositivi,
+                        ),
+                        Sezione.configurazione => SchermataDellaConfigurazione(
+                          collegamento: collegamento,
+                          impostazioni: widget.impostazioni,
+                        ),
+                        Sezione.acquisti => SchermataDegliAcquisti(
+                          collegamento: collegamento,
+                        ),
+                        Sezione.segnalazioni => SchermataDelleSegnalazioni(
+                          collegamento: collegamento,
+                          diagnostica: _diagnostica,
+                        ),
+                        Sezione.assistenza => SchermataDellAssistenza(
+                          collegamento: collegamento,
+                          diagnostica: _diagnostica,
+                          impostazioni: widget.impostazioni,
+                        ),
+                        _ => _InArrivo(sezione),
+                      },
+                    ),
                 ],
               ),
             ),

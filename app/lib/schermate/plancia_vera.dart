@@ -289,8 +289,33 @@ class PlanciaVeraState extends State<PlanciaVera> {
 
     final servitore = _servitore;
     if (servitore == null) {
-      if (!_servitoreChiesto) unawaited(_accendi());
-      return _Attesa(collegamento: collegamento, cosa: 'Accendo la plancia…');
+      if (!_servitoreChiesto) {
+        unawaited(_accendi());
+        return _Attesa(collegamento: collegamento, cosa: 'Accendo la plancia…');
+      }
+      /* Chiesto e non arrivato. Sul telefono non succede; nel browser si', e
+       * per una ragione sola: la plancia la serve un service worker, e un
+       * browser i service worker li fa girare **solo** su `https` o su
+       * `localhost`. E' una regola sua, non nostra, e non si aggira.
+       *
+       * Il resto dell'app funziona lo stesso: la casa, i dispositivi, la
+       * configurazione. Manca la plancia, ed e' meglio dire perche' che
+       * lasciare un riquadro bianco. */
+      return _Stato(
+        collegamento: collegamento,
+        vaiAlleCase: widget.vaiAlleCase,
+        icona: Icons.lock_outline_rounded,
+        titolo: kIsWeb
+            ? 'La plancia vuole un indirizzo sicuro'
+            : 'Non riesco ad accendere la plancia',
+        sotto: kIsWeb
+            ? 'Il browser fa girare quello che serve alla plancia solo su un '
+                  'indirizzo che comincia per https, o su localhost. Da un '
+                  'indirizzo http la casa si comanda lo stesso — dispositivi, '
+                  'configurazione, tutto — ma la plancia resta fuori. Apri '
+                  'gdahome dall\'indirizzo sicuro della tua Home Assistant.'
+            : 'Riprova, o riapri l\'app.',
+      );
     }
     /* Prima di chiedere la pagina, cosi' le misure ci sono gia' dentro e non
      * si vede un salto al primo fotogramma. */
