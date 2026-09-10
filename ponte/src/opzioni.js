@@ -92,6 +92,13 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
      * cartella da cui si e' stati lanciati: `npm test` e l'add-on partono da
      * due posti diversi, e la pagina deve trovarsi in tutti e due. */
     console: process.env.PONTE_CONSOLE || fileURLToPath(new URL("../console", import.meta.url)),
+    /* E di fianco alla console c'e' gdahome, quella che si apre in un browser.
+     * Stessa regola: si cerca vicino al codice.
+     *
+     * Puo' non esserci — chi lancia il ponte da una copia della repository non
+     * ha nessuna app costruita sotto mano, e non deve per questo vedere errori
+     * — e allora quel pezzo semplicemente non si serve. */
+    app: process.env.PONTE_APP || fileURLToPath(new URL("../app", import.meta.url)),
     versione: versioneDelPonte(),
   };
 }

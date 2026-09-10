@@ -13,5 +13,18 @@
 _flutter.loader.load({
   config: {
     canvasKitBaseUrl: "canvaskit/",
+    // Un motore solo, scelto qui.
+    //
+    // Di suo Flutter ne costruisce sei — canvaskit, la sua versione per
+    // Chrome, skwasm, skwasm pesante, wimp, webparagraph — e sceglie a
+    // seconda del browser. Sono trentasette megabyte di roba costruita, per
+    // usarne uno.
+    //
+    // Non e' peso da niente: questa app la porta l'add-on dentro casa, e
+    // quello che l'add-on si porta dietro sta nella repository. Un motore
+    // solo, uguale su tutti i browser, vuol dire dodici megabyte in meno e
+    // una cosa in meno che si comporta diversamente altrove.
+    renderer: "canvaskit",
+    canvasKitVariant: "full",
   },
 });

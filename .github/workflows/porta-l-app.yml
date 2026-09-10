@@ -1,0 +1,91 @@
+# Mette gdahome da browser dentro l'add-on.
+#
+# Serve a una cosa sola, e a quella serve davvero: **non avere un computer**.
+# L'app web e' roba costruita — `flutter build web` — e chi ha l'add-on acceso
+# in casa non ha nessun modo di costruirsela. Allora se la porta dietro
+# l'add-on, e a costruirla e' questa pagina.
+#
+# Si accende a mano: Actions → «gdahome dentro l'add-on» → Run workflow. Alla
+# fine, in `ponte/app/` c'e' l'app costruita, gia' salvata nella repository:
+# basta riavviare o aggiornare l'add-on e il link e' quello nuovo.
+#
+# Non gira da sola a ogni modifica, ed e' voluto: sono quindici megabyte di
+# roba costruita, e salvarne una copia a ogni riga cambiata vorrebbe dire una
+# repository che cresce senza motivo.
+name: gdahome dentro l'add-on
+
+on:
+  workflow_dispatch:
+    inputs:
+      centralino:
+        description: >-
+          Solo per provarne un altro. Lasciandolo vuoto si usa quello scritto
+          nel codice, che e' quello giusto quasi sempre.
+        required: false
+        default: ""
+
+# Qui si scrive nella repository: e' l'unico modo perche' l'app costruita
+# arrivi dentro l'add-on senza passare da un computer.
+permissions:
+  contents: write
+
+jobs:
+  porta:
+    name: Costruisci e porta dentro
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: app
+
+      - name: Costruisci l'app web
+        working-directory: app
+        env:
+          CENTRALINO: ${{ inputs.centralino }}
+          CORSA: ${{ github.run_number }}
+        run: |
+          # Senza il service worker di Flutter: il nostro vuole lo stesso
+          # ambito — deve vedere passare `dashboardmodern_static/`, che la
+          # plancia chiama per indirizzo assoluto — e chi arriva secondo
+          # scalza il primo.
+          VERSIONE="$CORSA·${GITHUB_SHA:0:7}"
+          if [ -n "$CENTRALINO" ]; then
+            flutter build web --release --pwa-strategy=none --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
+          else
+            flutter build web --release --pwa-strategy=none --dart-define=VERSIONE="$VERSIONE"
+          fi
+
+      - name: Portala dentro il ponte
+        run: node strumenti/porta-l-app.mjs
+
+      # Le prove del ponte guardano anche `ponte/app/`: che ci sia tutto quello
+      # che la pagina chiede, e che i motori di disegno che non si usano siano
+      # rimasti fuori. E' il posto giusto per accorgersene — prima di salvare,
+      # non dopo, quando l'add-on e' gia' in casa di qualcuno.
+      - name: Le prove del ponte
+        run: npm test
+        working-directory: ponte
+
+      - name: Salvala nella repository
+        run: |
+          if git diff --quiet -- ponte/app; then
+            echo "### Niente da cambiare" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "L'app dentro l'add-on e' gia' questa." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ponte/app
+          git commit -m "gdahome dentro l'add-on, dalla corsa ${{ github.run_number }}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          {
+            echo "### gdahome e' dentro l'add-on"
+            echo ""
+            echo "Aggiorna o riavvia l'add-on «Il ponte», poi aprilo dalla barra"
+            echo "laterale di Home Assistant: c'e' il bottone **Apri gdahome**."
+          } >> "$GITHUB_STEP_SUMMARY"

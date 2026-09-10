@@ -31,6 +31,22 @@ const TIPI = Object.freeze({
   ".js": "text/javascript; charset=utf-8",
   ".svg": "image/svg+xml",
   ".png": "image/png",
+  /* Quello che si porta dietro l'app web: i caratteri, la tela di Flutter, i
+   * suoi dati. Un tipo sbagliato qui non e' un dettaglio — un carattere
+   * servito come byte qualunque il browser lo rifiuta, e un `.wasm` servito
+   * male non parte proprio. */
+  ".json": "application/json; charset=utf-8",
+  ".wasm": "application/wasm",
+  ".otf": "font/otf",
+  ".ttf": "font/ttf",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ico": "image/x-icon",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".map": "application/json; charset=utf-8",
+  ".bin": "application/octet-stream",
 });
 
 /* ─── Le risposte ────────────────────────────────────────────────────────── */
@@ -234,6 +250,7 @@ export function costruisciLaConsole({
   ritorno,
   plancia,
   cartellaDellaConsole,
+  cartellaDellApp,
 }) {
   /* Un registro c'e' sempre, anche quando non gliene danno uno.
    *
@@ -269,6 +286,37 @@ export function costruisciLaConsole({
         registro.errore(`la console e' inciampata: ${errore?.message || errore}`);
         male(risposta, 500, "qualcosa e' andato storto");
       }
+      return;
+    }
+
+    /* gdahome in un browser, servito dall'add-on stesso.
+     *
+     * E' il link che serviva: chi ha l'add-on acceso ha gia' l'app, e non c'e'
+     * niente da installare da nessuna parte. Dietro l'ingress vuol dire anche
+     * che chi non e' entrato in Home Assistant non ci arriva.
+     *
+     * Un avvertimento onesto: la plancia dentro l'app web la serve un service
+     * worker, e un browser i service worker li fa girare solo su `https` o
+     * `localhost`. Chi apre Home Assistant su un indirizzo `http` vede tutto
+     * il resto e non la plancia — e l'app glielo dice invece di restare
+     * bianca. */
+    if (via === "/app" || via.startsWith("/app/")) {
+      if (!cartellaDellApp || !existsSync(cartellaDellApp)) {
+        male(risposta, 404, "questo add-on non si porta dietro gdahome da browser");
+        return;
+      }
+      /* La barra in fondo non e' un dettaglio: senza, il browser crede che la
+       * pagina stia nella cartella **sopra**, e tutti i file dell'app li va a
+       * cercare un piano piu' su. Il rimando e' scritto **relativo** apposta —
+       * `app/` e non `/app/` — perche' cosi' vale sia da solo sia sotto
+       * l'ingress, dove davanti c'e' un prefisso che qui non si conosce e non
+       * si deve conoscere. */
+      if (via === "/app") {
+        risposta.writeHead(302, { location: "app/", "cache-control": "no-store" });
+        risposta.end();
+        return;
+      }
+      servi(risposta, cartellaDellApp, via.slice("/app".length), { deposito: true });
       return;
     }
 
@@ -309,6 +357,10 @@ async function api({
       },
       porta: opzioni.portaDellApp,
       massimi: opzioni.dispositiviMassimi,
+      /* Se questo add-on si porta dietro gdahome da aprire in un browser.
+       * La console lo chiede per sapere se mostrare il link o tacere: un link
+       * che porta a un 404 e' peggio di nessun link. */
+      app: Boolean(opzioni.app && existsSync(opzioni.app)),
       /* Da dove viene la plancia che questo ponte serve, e se e' intatta.
        *
        * Sta in questa pagina e non nascosto in un registro perche' e' la
@@ -431,17 +483,25 @@ async function unInvito(codice, ritorno, chiamata) {
   });
 }
 
-/* I file della console. Nessun percorso puo' uscire dalla sua cartella. */
-function servi(risposta, cartella, via) {
+/* I file della console e quelli dell'app web. Nessun percorso puo' uscire
+ * dalla sua cartella.
+ *
+ * Col `deposito` acceso i file si possono tenere: l'app web pesa qualche
+ * megabyte e non cambia finche' non si aggiorna l'add-on, e riscaricarla a
+ * ogni apertura su una rete di casa e' tempo perso a guardare una pagina
+ * bianca. La pagina d'ingresso no — quella dice qual e' la versione, e va
+ * chiesta ogni volta. */
+function servi(risposta, cartella, via, { deposito = false } = {}) {
   const chiesto = via === "/" || via === "" ? "/index.html" : via;
   const dentro = normalize(join(cartella, chiesto));
   if (!dentro.startsWith(normalize(cartella)) || !existsSync(dentro)) {
     male(risposta, 404, "qui non c'e' niente");
     return;
   }
+  const laPagina = chiesto === "/index.html";
   risposta.writeHead(200, {
     "content-type": TIPI[extname(dentro)] || "application/octet-stream",
-    "cache-control": "no-store",
+    "cache-control": deposito && !laPagina ? "public, max-age=3600" : "no-store",
   });
   createReadStream(dentro).pipe(risposta);
 }

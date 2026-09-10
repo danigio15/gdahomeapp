@@ -207,6 +207,22 @@
     });
   }
 
+  /* Il link a gdahome da browser.
+   *
+   * Si vede solo se l'app c'e' davvero dentro questo add-on: un link che porta
+   * a un 404 e' peggio di nessun link.
+   *
+   * E si dice subito, non dopo, se questa pagina e' aperta su un indirizzo
+   * `http`: li' la plancia nel browser non si disegna — un service worker i
+   * browser lo fanno girare solo su `https` o `localhost`, ed e' una regola
+   * loro. Scoprirlo dopo aver aperto l'app, guardando un riquadro che spiega,
+   * e' un giro piu' lungo per la stessa notizia. */
+  function disegnaIlLink(ce) {
+    trova("scheda-app").hidden = !ce;
+    if (!ce) return;
+    trova("avviso-sicuro").hidden = window.isSecureContext !== false;
+  }
+
   function aggiornaTutto() {
     return chiedi("api/stato")
       .then(function (stato) {
@@ -216,6 +232,7 @@
         trova("porta").textContent = stato.porta;
         trova("stato-centralino").textContent = comeVaIlCentralino(stato.centralino);
         disegnaLaProvenienza(stato.plancia);
+        disegnaIlLink(stato.app);
         disegnaIDispositivi(stato.dispositivi, stato.massimi);
         trova("fabbrica").disabled = stato.dispositivi.length >= stato.massimi;
         if (!stato.abbinamento.attivo) nascondiIlCodice();

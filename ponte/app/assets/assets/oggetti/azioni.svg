@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs>
+      <linearGradient id="dmoTasto" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#a5b4fc"/><stop offset=".5" stop-color="#6366f1"/>
+        <stop offset="1" stop-color="#3730a3"/></linearGradient></defs>
+    <ellipse cx="16" cy="28" rx="7.6" ry="1.8" fill="#0b1220" opacity=".14"/>
+    <circle cx="16" cy="15.6" r="9.4" fill="url(#dmoTasto)"/>
+    <circle cx="16" cy="15.6" r="5.4" fill="#0f172a" opacity=".2"/>
+    <circle cx="16" cy="15.6" r="4" fill="#e0e7ff"/>
+    <path d="M10.2 8.6a8 8 0 0 1 4-2.4" stroke="#fff" stroke-opacity=".8" stroke-width="1.7"
+      fill="none" stroke-linecap="round"/>
+    <g stroke="#6366f1" stroke-width="1.9" fill="none" stroke-linecap="round" opacity=".7">
+      <path d="M24.6 22.6a12 12 0 0 0 1.8-3.4M27.8 25a15.6 15.6 0 0 0 2.2-4.4"/></g></svg>

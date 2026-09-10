@@ -134,6 +134,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * cosi' chi si chiede se sia quella originale ha la risposta li'. */
     plancia,
     cartellaDellaConsole: opzioni.console,
+    /* E gdahome da aprire in un browser, se questo add-on se la porta dietro.
+     * E' il link: chi ha l'add-on ha gia' l'app, e non deve installare
+     * niente da nessuna parte. */
+    cartellaDellApp: opzioni.app,
   });
 
   await ascolta(app, opzioni.portaDellApp);

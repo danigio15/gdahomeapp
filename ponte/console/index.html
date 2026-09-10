@@ -45,6 +45,26 @@
         <p class="avviso" id="avviso" hidden></p>
       </section>
 
+      <!-- Il link. Chi ha l'add-on acceso ha gia' gdahome: non c'e' niente da
+           scaricare e niente da installare, si apre e basta. La scheda si vede
+           solo se l'app c'e' davvero dentro questo add-on — un link che porta
+           a un 404 e' peggio di nessun link. -->
+      <section class="scheda" id="scheda-app" hidden>
+        <h2>gdahome in un browser</h2>
+        <p class="spiegazione">
+          La stessa app del telefono, aperta qui dentro. Si adatta da sola allo schermo: computer,
+          tablet o telefono. Ci arriva solo chi e' entrato in Home Assistant.
+        </p>
+        <div class="bottoni">
+          <a class="bottone" id="apri-app" href="app/" target="_blank" rel="noopener">Apri gdahome</a>
+        </div>
+        <p class="spiegazione" id="avviso-sicuro" hidden>
+          Questa pagina e' aperta su un indirizzo <strong>http</strong>. Tutto funziona tranne la
+          plancia: per disegnarla nel browser serve un indirizzo <strong>https</strong> — e' una
+          regola dei browser, non nostra. Sul telefono la plancia si vede comunque.
+        </p>
+      </section>
+
       <section class="scheda">
         <h2>Telefoni abbinati</h2>
         <p class="spiegazione" id="conteggio"></p>

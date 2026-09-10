@@ -89,6 +89,24 @@ quello che nasconde.
 E' il motivo per cui questo banco esiste: ci sono cose che si vedono solo
 guardando.
 
+## L'altro banco: il link
+
+```bash
+node collaudo/guarda-il-link.mjs
+```
+
+Non e' lo stesso giro. Qui non c'e' nessuna casa e nessun abbinamento: si guarda
+**gdahome servita dall'add-on**, che e' il link che si apre dalla console.
+
+Accende il ponte vero con dentro `ponte/app/`, gli mette davanti un prefisso di
+ingress finto — uno di quelli che Home Assistant cambia a ogni riavvio — e apre
+la pagina con un browser vero, a tre larghezze: telefono, tablet, computer. Poi
+controlla che la pagina si sia calcolata bene da dove pende, e fotografa.
+
+Serve perche' quando uno di quei pezzi e' storto **non c'e' nessun errore**: c'e'
+una pagina bianca, e un errore che non si vede si trova solo guardando. Le
+fotografie restano in `collaudo/foto/link-*.png`.
+
 ## Quello che il collaudo *non* prova
 
 Il tocco simulato sui bottoni della barra del titolo a volte finisce sulla riga

@@ -34,7 +34,7 @@ nell'add-on e non esce mai.
 
 | | dove arriva | cosa si puo' fare |
 |---|---|---|
-| **ingress** | solo da Home Assistant, che ci mette davanti la sua autenticazione | fabbricare un codice di abbinamento, vedere i telefoni, staccarli |
+| **ingress** | solo da Home Assistant, che ci mette davanti la sua autenticazione | fabbricare un codice di abbinamento, vedere i telefoni, staccarli, aprire gdahome in un browser |
 | **8098** | l'unica che puo' finire esposta | chiedere se il ponte e' vivo, presentare un codice, aprire il filo con un segno gia' avuto |
 
 Un codice di abbinamento **nasce solo dalla console**. Sulla porta esposta non
@@ -183,6 +183,29 @@ risponde `auth_ok`. Da li' in poi non guarda piu' dentro a niente. Vuol dire che
 qualunque codice che sa parlare con Home Assistant funziona di qui senza
 cambiare una riga.
 
+## gdahome da aprire in un browser
+
+Sulla porta dell'ingress, sotto `/app/`, il ponte serve **gdahome**: la stessa
+app del telefono, compilata per il browser. Dalla console c'e' il bottone che la
+apre.
+
+E' il link che mancava: chi ha l'add-on acceso ha gia' l'app, e non deve
+installare niente da nessuna parte. Sta dietro l'ingress, quindi ci arriva solo
+chi e' gia' entrato in Home Assistant — nessuna porta nuova, niente che si veda
+da fuori.
+
+I file stanno in `ponte/app/`, e ce li mette `strumenti/porta-l-app.mjs` da un
+`flutter build web`. Senza quella cartella il ponte risponde che l'app non c'e'
+e la console non mostra il bottone: un link che porta a un 404 e' peggio di
+nessun link.
+
+Una cosa da dire, perche' sembra un difetto e non lo e': se Home Assistant e'
+aperta su un indirizzo `http`, **la plancia dentro l'app web non si disegna**.
+La serve un service worker, e i service worker i browser li fanno girare solo su
+`https` o `localhost`. Tutto il resto dell'app funziona, e sia la console sia
+l'app lo dicono a schermo. Sul telefono non succede: li' il server sta dentro
+l'app.
+
 ## Cosa finisce sul disco
 
 Solo `/data/dispositivi.json`, e dentro c'e' l'**impronta** di ogni segno, mai
@@ -202,7 +225,11 @@ npm test
 
 Girano senza rete e senza Home Assistant: c'e' una Home Assistant finta che fa
 la stretta di mano vera, un telefono finto che e' il WebSocket cliente di Node,
-e in mezzo il ponte vero. Sessanta prove, meno di un secondo.
+e in mezzo il ponte vero. Duecentoventinove prove, qualche secondo.
+
+Le due che guardano `ponte/app/` si saltano da sole quando quella cartella non
+c'e': chi lavora sul ponte non ha per forza un'app costruita sotto mano, e un
+rosso li' insegnerebbe soltanto a non guardare i rossi.
 
 Non c'e' niente da installare — `npm install` non serve, il ponte non ha
 dipendenze: la presa WebSocket e' scritta in `src/presa.js`, e il resto viene

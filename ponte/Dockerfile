@@ -14,6 +14,11 @@ COPY console/ /app/console/
 # in Home Assistant non serve nessuna integrazione. La porta dentro
 # `strumenti/porta-la-plancia.mjs`.
 COPY plancia/ /app/plancia/
+# gdahome da aprire in un browser: la stessa app del telefono, costruita da
+# `flutter build web` e portata dentro da `strumenti/porta-l-app.mjs`. Il ponte
+# la serve sotto `/app/`, dietro l'ingress — cioe' solo a chi e' gia' entrato
+# in Home Assistant.
+COPY app/ /app/app/
 COPY run.sh /
 RUN chmod a+x /run.sh
 

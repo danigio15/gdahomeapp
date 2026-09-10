@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs>
+      <linearGradient id="dmoFoglio" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cbd5e1"/></linearGradient>
+      <linearGradient id="dmoSpunta" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#6ee7b7"/><stop offset="1" stop-color="#059669"/></linearGradient></defs>
+    <ellipse cx="16" cy="28.8" rx="7.4" ry="1.8" fill="#0b1220" opacity=".14"/>
+    <rect x="6" y="4" width="20" height="24" rx="3.2" fill="url(#dmoFoglio)"/>
+    <rect x="11.6" y="2.4" width="8.8" height="4.4" rx="2.2" fill="#94a3b8"/>
+    <g stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round">
+      <path d="M10.4 13h5M10.4 18h7.6M10.4 23h4.4"/></g>
+    <circle cx="22" cy="21.6" r="6" fill="url(#dmoSpunta)"/>
+    <path d="m19.4 21.8 1.8 1.8 3.6-4" stroke="#fff" stroke-width="1.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>

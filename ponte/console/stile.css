@@ -148,6 +148,23 @@ button {
   min-height: 44px;
 }
 
+/* Un link vestito da bottone. E' un link e non un bottone perche' porta
+   davvero da un'altra parte: si deve poter aprire in una scheda nuova, tenere
+   premuto, copiare. Un bottone con dentro un `location.href` toglie tutte e
+   tre le cose e non ne restituisce nessuna. */
+a.bottone {
+  font: inherit;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 16px;
+  background: var(--acceso);
+  color: #fff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
 button.tenue {
   background: transparent;
   color: var(--tenue);

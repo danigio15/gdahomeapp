@@ -208,27 +208,27 @@ subito. Toccare **«Plancia»** nella barra quando ci sei già la ricarica.
 
 ### Dal browser, senza installare niente *(la più rapida in assoluto)*
 
-1. **Actions → «L'app da provare»**, e scarica **gdahome-web**.
-2. Scompatta, e servi quella cartella da un computer sulla rete di casa:
+Il link ce l'hai già: lo dà l'add-on.
 
-   ```bash
-   cd gdahome-web
-   python3 -m http.server 8000
-   ```
+1. In Home Assistant, barra laterale → **Il ponte**.
+2. Scheda «gdahome in un browser» → **Apri gdahome**.
 
-3. Dal telefono, sulla stessa rete, apri `http://<ip-del-computer>:8000`.
-   Su iPhone, **Condividi → Aggiungi a Home** la mette fra le app.
+È la stessa app del telefono, e si adatta da sola allo schermo: su un computer
+la barra resta aperta di fianco, su tablet e telefono si apre a scomparsa.
+L'indirizzo sta **dietro l'ingress** di Home Assistant — ci arriva solo chi è
+già entrato, e non c'è nessuna porta nuova aperta sul router.
 
-Una cosa da sapere: il browser fa parlare la pagina col ponte solo se i due
-sono **tutti e due** in chiaro o **tutti e due** in cifrato. Se servi la pagina
-in `http` e il ponte risponde in `http`, funziona. Mischiarli no — è il browser
-che lo impedisce, non l'app.
+Se la scheda non c'è, l'add-on non si porta ancora dietro l'app: **Actions →
+«gdahome dentro l'add-on» → Run workflow**, poi aggiorna l'add-on.
 
-E una seconda: **dal browser la plancia non si vede**. Sul telefono la serve
-un server che sta dentro l'app, e dentro una pagina web un server non si apre.
-Dal browser si provano l'abbinamento, il filo, i dispositivi, le case; la
-plancia si prova sul telefono (o col collaudo, che il server lo accende a
-parte: vedi `collaudo/README.md`).
+Una cosa da sapere, e conviene saperla prima: se apri Home Assistant su un
+indirizzo **`http`**, dal browser **la plancia non si disegna**. Tutto il resto
+sì — l'abbinamento, il filo, la Configurazione, i dispositivi, le case. Non è un
+pezzo che manca: la plancia nel browser la serve un *service worker*, e i
+service worker i browser li fanno girare solo su `https` o `localhost`. È una
+regola loro. Con Nabu Casa acceso, o con un proxy che mette il certificato,
+`https` c'è e la plancia si vede. Sul telefono la plancia si vede sempre, perché
+lì il server sta dentro l'app.
 
 ### Dal codice, con Flutter *(per lavorarci)*
 
