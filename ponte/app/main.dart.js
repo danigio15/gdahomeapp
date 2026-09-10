@@ -102497,7 +102497,7 @@ p="<script>window.__DASHBOARDMODERN_HOSTED__=true;window.__DASHBOARDMODERN_BRIDG
 o=A.bN("<head[^>]*>",!1,!1).kf(a)
 n=o==null?p+a:B.c.lf(a,o.gbA(0),o.gbA(0),p)
 h=k.d
-m='<style id="gdahome-misure">:root{--gdahome-alto:'+B.d.aF(h.a)+"px;--gdahome-basso:"+B.e.aF(h.b)+'px}html body{padding-top:var(--gdahome-alto)!important;padding-bottom:calc(var(--gdahome-basso) + 40px)!important}html body.cd-nav-fixed nav.tabs.bottom-nav-bar,html body nav.tabs.bottom-nav-bar.visible{bottom:calc(var(--gdahome-basso) + 8px)!important}html body.cd-nav-fixed{padding-bottom:calc(var(--gdahome-basso) + 112px)!important}html body .bottom-nav-handle{bottom:calc(var(--gdahome-basso) + 6px)!important}@media (hover:hover) and (pointer:fine){html body nav.tabs.bottom-nav-bar:hover{bottom:calc(var(--gdahome-basso) + 20px)!important}}</style><style id="gdahome-config-fuori">#tab-config,.tab[data-tab="config"]{display:none!important}#page-config #dm-tkt-card{display:none!important}</style><script>(function(){var laVoce=function(quale){var tutte=document.querySelectorAll(".tab");for(var i=0;i<tutte.length;i+=1)if(tutte[i].getAttribute("data-tab")===quale)return tutte[i];return null;};var ciSiamo=function(){var pagina=document.getElementById("page-config");return !!pagina&&pagina.classList.contains("active");};var dove="";var apri=function(prove){if(ciSiamo())return;var voce=laVoce("config");if(voce){var attiva=document.querySelector(".tab.active");if(attiva&&attiva!==voce)dove=attiva.getAttribute("data-tab")||"";try{voce.click();}catch(male){}if(ciSiamo())return;}if(prove<120)setTimeout(function(){apri(prove+1);},60);};window.gdahomeApriLaConfig=function(){apri(0);};window.gdahomeTornaDallaConfig=function(){if(!ciSiamo())return;var voce=laVoce(dove)||laVoce("home");if(voce)try{voce.click();}catch(male){}};var dallIndirizzo=function(){if(/gdahome-config/.test(location.hash))apri(0);};document.addEventListener("DOMContentLoaded",dallIndirizzo);dallIndirizzo();})();</script>'
+m='<style id="gdahome-misure">:root{--gdahome-alto:'+B.d.aF(h.a)+"px;--gdahome-basso:"+B.e.aF(h.b)+'px}html body{padding-top:var(--gdahome-alto)!important;padding-bottom:calc(var(--gdahome-basso) + 40px)!important}html body.cd-nav-fixed nav.tabs.bottom-nav-bar,html body nav.tabs.bottom-nav-bar.visible{bottom:calc(var(--gdahome-basso) + 8px)!important}html body.cd-nav-fixed{padding-bottom:calc(var(--gdahome-basso) + 112px)!important}html body .bottom-nav-handle{bottom:calc(var(--gdahome-basso) + 6px)!important}@media (hover:hover) and (pointer:fine){html body nav.tabs.bottom-nav-bar:hover{bottom:calc(var(--gdahome-basso) + 20px)!important}}</style><style id="gdahome-config-fuori">#tab-config,.tab[data-tab="config"]{display:none!important}#page-config #dm-tkt-card{display:none!important}html body #page-config .back-home-btn{display:none!important}html body header .dm-editor-entry,html body header .ha-menu-btn{display:none!important}</style><script>(function(){var laVoce=function(quale){var tutte=document.querySelectorAll(".tab");for(var i=0;i<tutte.length;i+=1)if(tutte[i].getAttribute("data-tab")===quale)return tutte[i];return null;};var ciSiamo=function(){var pagina=document.getElementById("page-config");return !!pagina&&pagina.classList.contains("active");};var dove="";var apri=function(prove){if(ciSiamo())return;var voce=laVoce("config");if(voce){var attiva=document.querySelector(".tab.active");if(attiva&&attiva!==voce)dove=attiva.getAttribute("data-tab")||"";try{voce.click();}catch(male){}if(ciSiamo())return;}if(prove<120)setTimeout(function(){apri(prove+1);},60);};window.gdahomeApriLaConfig=function(){apri(0);};window.gdahomeTornaDallaConfig=function(){if(!ciSiamo())return;var voce=laVoce(dove)||laVoce("home");if(voce)try{voce.click();}catch(male){}};var dallIndirizzo=function(){if(/gdahome-config/.test(location.hash))apri(0);};document.addEventListener("DOMContentLoaded",dallIndirizzo);dallIndirizzo();})();</script>'
 l=A.bN("</body\\s*>",!1,!1).kf(n)
 if(l==null)return n+m
 h=l.b.index
@@ -104517,13 +104517,13 @@ if(o==null)o="nessun centralino"
 p=A.N(a).ok.Q
 if(p==null)p=r
 else{s=q.rx
-p=p.yc((s==null?q.k3:s).fG(0.7),11)}return new A.bH(new A.ar(0,24,0,0),A.b1("gdahome 17\xb722450a5 \xb7 "+o,r,r,r,r,p,B.bG,r),r)}}
+p=p.yc((s==null?q.k3:s).fG(0.7),11)}return new A.bH(new A.ar(0,24,0,0),A.b1("gdahome 18-dbd6ebb \xb7 "+o,r,r,r,r,p,B.bG,r),r)}}
 A.EQ.prototype={
 aj(){return new A.Lr(new A.bv(null,t.Pq),new A.bv(null,t.dS),B.dL)}}
 A.Lr.prototype={
 ahH(){var s,r,q,p,o,n,m=null,l=this.a.c,k=t.N
 k=A.w(k,k)
-k.m(0,"app","17\xb722450a5")
+k.m(0,"app","18-dbd6ebb")
 k.m(0,"sistema","web")
 s=l.z
 s=s==null?m:s.b
