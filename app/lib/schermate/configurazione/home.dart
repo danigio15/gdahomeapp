@@ -205,6 +205,8 @@ class SchermataDiVoci extends StatefulWidget {
     this.laSezione = false,
     this.ilColore = false,
     this.quante = 0,
+    this.inItaliano = true,
+    this.laStanza = false,
   });
 
   final String titolo;
@@ -228,6 +230,24 @@ class SchermataDiVoci extends StatefulWidget {
   /// Il tetto, se ce n'e' uno. Zero vuol dire nessuno.
   final int quante;
 
+  /// Come si chiamano il nome e il disegno **dentro la configurazione**.
+  ///
+  /// Una schermata sola serve sei liste, e le sei non le chiamano allo stesso
+  /// modo. I lettori, le entita' mie e le sezioni mie leggono `nome || name` e
+  /// `icona || icon`: li' va bene tutto. I calendari e le liste di cose da
+  /// fare leggono **solo** `name`; le entita' in evidenza leggono `name` e
+  /// `icon`. Scrivendo sempre in italiano, il nome dato a un calendario o a
+  /// una lista non lo vedeva nessuno — si salvava e la plancia continuava a
+  /// mostrare il nome che l'entita' ha in Home Assistant.
+  final bool inItaliano;
+
+  /// `true` per i lettori: la stanza in cui sta la cassa. Nella Config della
+  /// dashboard e' una tendina accanto all'entita' (`data-mp-campo="room_id"`).
+  final bool laStanza;
+
+  String get campoDelNome => inItaliano ? 'nome' : 'name';
+  String get campoDelDisegno => inItaliano ? 'icona' : 'icon';
+
   @override
   State<SchermataDiVoci> createState() => _SchermataDiVociState();
 }
@@ -238,7 +258,12 @@ class _SchermataDiVociState extends State<SchermataDiVoci> {
 
   List<Map<String, String>> _leggi(Scatto scatto) {
     if (_voci == null || _daQualeScatto != scatto.revisione) {
-      _voci = leggiLeVoci(scatto.aperto(widget.chiave), widget.prefisso);
+      _voci = leggiLeVoci(
+        scatto.aperto(widget.chiave),
+        widget.prefisso,
+        campoDelNome: widget.campoDelNome,
+        campoDelDisegno: widget.campoDelDisegno,
+      );
       _daQualeScatto = scatto.revisione;
     }
     return _voci!;
@@ -277,6 +302,9 @@ class _SchermataDiVociState extends State<SchermataDiVoci> {
               domini: widget.domini,
               laSezione: widget.laSezione,
               ilColore: widget.ilColore,
+              laStanza: widget.laStanza,
+              campoDelNome: widget.campoDelNome,
+              campoDelDisegno: widget.campoDelDisegno,
               collegamento: widget.collegamento,
               cambiato: () => _segna(quaderno),
               sposta: (di) {
@@ -299,10 +327,11 @@ class _SchermataDiVociState extends State<SchermataDiVoci> {
               voci.add({
                 'id': '${widget.prefisso}-${voci.length + 1}',
                 'entity': '',
-                'nome': '',
-                'icona': '',
+                widget.campoDelNome: '',
+                widget.campoDelDisegno: '',
                 if (widget.laSezione) 'sezione': '',
                 if (widget.ilColore) 'colore': '',
+                if (widget.laStanza) 'room_id': '',
               });
               _segna(quaderno);
             },
@@ -329,6 +358,9 @@ class _UnaVoce extends StatelessWidget {
     required this.domini,
     required this.laSezione,
     required this.ilColore,
+    required this.laStanza,
+    required this.campoDelNome,
+    required this.campoDelDisegno,
     required this.collegamento,
     required this.cambiato,
     required this.sposta,
@@ -343,6 +375,13 @@ class _UnaVoce extends StatelessWidget {
   final List<String> domini;
   final bool laSezione;
   final bool ilColore;
+  final bool laStanza;
+
+  /// Come si chiamano quelle due caselle dentro la configurazione: vedi
+  /// `SchermataDiVoci.inItaliano`.
+  final String campoDelNome;
+  final String campoDelDisegno;
+
   final Collegamento collegamento;
   final VoidCallback cambiato;
   final ValueChanged<int> sposta;
@@ -354,14 +393,15 @@ class _UnaVoce extends StatelessWidget {
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     final entita = voce['entity'] ?? '';
-    final nome = voce['nome'] ?? '';
+    final nome = voce[campoDelNome] ?? '';
+    final disegno = voce[campoDelDisegno] ?? '';
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         initiallyExpanded: entita.isEmpty,
-        leading: (voce['icona'] ?? '').isNotEmpty
-            ? Text(voce['icona']!, style: const TextStyle(fontSize: 22))
+        leading: disegno.isNotEmpty
+            ? Text(disegno, style: const TextStyle(fontSize: 22))
             : null,
         title: Text(
           nome.isNotEmpty
@@ -396,7 +436,7 @@ class _UnaVoce extends StatelessWidget {
                   valore: nome,
                   suggerimento: 'Lascia vuoto per il nome che ha in casa',
                   cambiato: (scritto) {
-                    voce['nome'] = scritto;
+                    voce[campoDelNome] = scritto;
                     cambiato();
                   },
                 ),
@@ -405,16 +445,31 @@ class _UnaVoce extends StatelessWidget {
               Expanded(
                 child: CampoDiTesto(
                   etichetta: 'Disegno',
-                  valore: voce['icona'] ?? '',
+                  valore: disegno,
                   suggerimento: '⭐',
                   cambiato: (scritto) {
-                    voce['icona'] = scritto;
+                    voce[campoDelDisegno] = scritto;
                     cambiato();
                   },
                 ),
               ),
             ],
           ),
+          /* La stanza di una cassa: nella Config della dashboard e' una
+           * tendina accanto all'entita', e serve alla pagina Media per
+           * raggruppare gli altoparlanti per stanza. */
+          if (laStanza) ...[
+            const SizedBox(height: 14),
+            CampoDiTesto(
+              etichetta: 'In che stanza',
+              valore: voce['room_id'] ?? '',
+              suggerimento: 'Il nome della stanza, come l\'hai chiamata',
+              cambiato: (scritto) {
+                voce['room_id'] = scritto;
+                cambiato();
+              },
+            ),
+          ],
           if (laSezione) ...[
             const SizedBox(height: 14),
             CampoDiTesto(

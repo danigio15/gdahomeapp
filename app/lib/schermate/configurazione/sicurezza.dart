@@ -197,14 +197,36 @@ class _UnaPorta extends StatelessWidget {
         ),
         childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
         children: [
-          CampoDiTesto(
-            etichetta: 'Nome',
-            valore: nome,
-            suggerimento: 'Portone condominio',
-            cambiato: (scritto) {
-              porta['name'] = scritto;
-              cambiato();
-            },
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: CampoDiTesto(
+                  etichetta: 'Nome',
+                  valore: nome,
+                  suggerimento: 'Portone condominio',
+                  cambiato: (scritto) {
+                    porta['name'] = scritto;
+                    cambiato();
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              /* Il disegno: nella Config della dashboard e' una casella
+               * (`data-door-field="icon"`), e qui era fisso a 🚪 — il cancello
+               * e il portone del garage si somigliavano tutti. */
+              Expanded(
+                child: CampoDiTesto(
+                  etichetta: 'Disegno',
+                  valore: '${porta['icon'] ?? ''}',
+                  suggerimento: iconaDellaPorta,
+                  cambiato: (scritto) {
+                    porta['icon'] = scritto;
+                    cambiato();
+                  },
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 14),
           CampoDiEntita(

@@ -259,6 +259,45 @@ Con i nomi giusti sono arrivati anche i campi che mancavano:
 - **Centrali d'allarme** — l'entità è passata nella sua casella dentro il
   profilo, dov'è nelle auto e negli impianti solari.
 
+### Il quarto giro: le liste della Home parlavano la lingua sbagliata
+
+`SchermataDiVoci` serve **sei liste** con una schermata sola — lettori,
+calendari, liste di cose da fare, entità in evidenza, entità mie, sezioni mie —
+e scriveva sempre `nome` e `icona`. Le sei però non le chiamano allo stesso
+modo:
+
+| lista | il modello legge | andava? |
+|---|---|---|
+| Lettori e casse | `nome \|\| name`, `icona \|\| icon` | sì |
+| Le entità mie | `nome \|\| name` | sì |
+| Le sezioni mie | `nome ?? name` | sì |
+| **I calendari** | `name` | **no** |
+| **Le liste di cose da fare** | `name` | **no** |
+| **In evidenza** | `name`, `icon` | **no** |
+
+Il nome dato a un calendario o a una lista si salvava e non lo vedeva nessuno:
+la plancia continuava a mostrare quello che l'entità ha in Home Assistant. Ora
+ogni lista dichiara la lingua delle sue due caselle, e in lettura si accettano
+tutti e due i nomi — quello che era già scritto si ritrova al suo posto.
+
+Con loro:
+
+- **Lettori e casse** — mancava la **stanza**, che nella pagina Media serve a
+  raggruppare gli altoparlanti.
+- **Porte da sorvegliare** — mancava il **disegno**: era fisso a 🚪, e il
+  cancello e il portone del garage si somigliavano tutti.
+
+Controllati e già uguali: la raccolta (la dashboard non fa scegliere icona e
+colore, li ricalcola dal materiale), il PIN di una porta, i calendari col loro
+colore, le sezioni mie, le entità mie.
+
+**Una cosa che non viaggia, e non è colpa dell'app**: `cd_radar_meteo` — la
+posizione, il raggio e il servizio del radar pioggia — la plancia la scrive e
+la rilegge da `localStorage`, ma non sta fra le 83 chiavi che sincronizza. Non
+arriva al ponte, quindi non arriva né all'app né a un secondo browser: chi
+configura il radar sul tablet non se lo ritrova sul telefono. È così anche
+senza l'app, ed è nella dashboard che andrebbe aggiunta alla lista.
+
 ## Quello che resta davvero
 
 1. **Il modello canonico.** L'app scrive solo le chiavi storiche, e non passa
@@ -282,7 +321,8 @@ Tre prove, e nessun numero scritto a mano che non ne abbia una dietro:
   nessuna casella degli editor della plancia resti fuori dall'app, e che nessuna
   casella dell'app finisca in un posto che nella plancia non legge nessuno — e
   la **forma** di ogni chiave, elenco contro oggetto, presa dal valore di
-  ripiego che la plancia stessa passa a `readJson`, e le caselle di ogni scheda
-  contro il file che ne dichiara il modello;
+  ripiego che la plancia stessa passa a `readJson`; le caselle di ogni scheda
+  contro il file che ne dichiara il modello; e la **lingua** delle due caselle
+  di ogni lista della Home, guardando se quel modello legge `.nome` o `.name`;
 - `app/test/configurazione_test.dart` controlla che l'alberatura copra tutte le
   schede della Config della plancia.

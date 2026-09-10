@@ -137,7 +137,25 @@ const chiaveDelleSezioniMie = 'cd_sezioni_mie';
 
 /// Una voce con entita', nome e disegno: la forma che hanno quasi tutte le
 /// liste della Home. Senza entita' non e' una voce.
-Map<String, String>? leggiUnaVoce(dynamic letto, int quale, String prefisso) {
+///
+/// [campoDelNome] e [campoDelDisegno] dicono **come si chiamano quelle due
+/// caselle in questa lista**, e non e' pedanteria: le sei liste che passano di
+/// qui non le chiamano allo stesso modo. I lettori, le entita' mie e le
+/// sezioni mie leggono `nome || name`; i calendari e le liste di cose da fare
+/// leggono solo `name`; le entita' in evidenza leggono `name` e `icon`.
+/// Scrivendo sempre in italiano, il nome dato a un calendario finiva in una
+/// casella che nessuno guardava.
+///
+/// In lettura si accettano tutti e due i nomi, sempre: cosi' quello che era
+/// gia' scritto nel nome sbagliato si ritrova al suo posto, e il primo
+/// salvataggio lo mette dove va.
+Map<String, String>? leggiUnaVoce(
+  dynamic letto,
+  int quale,
+  String prefisso, {
+  String campoDelNome = 'nome',
+  String campoDelDisegno = 'icona',
+}) {
   final dato = letto is Map
       ? Map<String, dynamic>.from(letto)
       : <String, dynamic>{};
@@ -148,17 +166,32 @@ Map<String, String>? leggiUnaVoce(dynamic letto, int quale, String prefisso) {
         ? _pulito(dato['id'])
         : '$prefisso-${quale + 1}',
     'entity': entita,
-    'nome': _pulito(dato['nome'] ?? dato['name']),
-    'icona': _pulito(dato['icona'] ?? dato['icon']),
+    campoDelNome: _pulito(dato['nome'] ?? dato['name']),
+    campoDelDisegno: _pulito(dato['icona'] ?? dato['icon']),
     if (dato.containsKey('sezione') || dato.containsKey('tab'))
       'sezione': _pulito(dato['sezione'] ?? dato['tab']),
     if (dato.containsKey('colore')) 'colore': _pulito(dato['colore']),
+    if (dato.containsKey('room_id') || dato.containsKey('room'))
+      'room_id': _pulito(dato['room_id'] ?? dato['room']),
   };
 }
 
-List<Map<String, String>> leggiLeVoci(dynamic letto, String prefisso) => [
+List<Map<String, String>> leggiLeVoci(
+  dynamic letto,
+  String prefisso, {
+  String campoDelNome = 'nome',
+  String campoDelDisegno = 'icona',
+}) => [
   for (final (quale, uno) in _righe(letto).indexed)
-    if (leggiUnaVoce(uno, quale, prefisso) case final voce?) voce,
+    if (leggiUnaVoce(
+          uno,
+          quale,
+          prefisso,
+          campoDelNome: campoDelNome,
+          campoDelDisegno: campoDelDisegno,
+        )
+        case final voce?)
+      voce,
 ];
 
 /// Le voci da salvare: quelle vuote non si scrivono.

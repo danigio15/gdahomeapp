@@ -135,6 +135,10 @@ Widget? schermataDi(
     chiave: chiaveDellEvidenza,
     unaCosa: 'un\'entita\'',
     prefisso: 'evidenza',
+    /* `rigaInEvidenza` legge `name` e `icon`: scritti in italiano non li
+     * guardava nessuno, e la tessera mostrava il nome di Home Assistant con
+     * la stellina di serie. */
+    inItaliano: false,
     collegamento: collegamento,
   ),
   'Lettori e casse' => SchermataDiVoci(
@@ -144,6 +148,10 @@ Widget? schermataDi(
     unaCosa: 'un lettore',
     prefisso: 'lettore',
     domini: const ['media_player'],
+    /* `normalizzaLettore` legge `nome || name` e `icona || icon`: qui va bene
+     * l'italiano. La stanza invece mancava, e nella pagina Media serve a
+     * raggruppare le casse. */
+    laStanza: true,
     collegamento: collegamento,
   ),
   'I calendari' => SchermataDiVoci(
@@ -157,6 +165,10 @@ Widget? schermataDi(
     prefisso: 'cal',
     domini: const ['calendar'],
     ilColore: true,
+    /* `normalizzaCalendari` legge `name`, non `nome`: il nome dato qui non lo
+     * vedeva nessuno, e la plancia continuava a mostrare quello che il
+     * calendario ha in Home Assistant. */
+    inItaliano: false,
     collegamento: collegamento,
   ),
   'Le liste di cose da fare' => SchermataDiVoci(
@@ -166,6 +178,8 @@ Widget? schermataDi(
     unaCosa: 'una lista',
     prefisso: 'todo',
     domini: const ['todo'],
+    /* `normalizeTodoLists` legge `name`, come i calendari. */
+    inItaliano: false,
     collegamento: collegamento,
   ),
   'Le entita\' mie' => SchermataDiVoci(

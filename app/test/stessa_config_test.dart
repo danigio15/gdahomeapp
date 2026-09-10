@@ -298,4 +298,65 @@ void main() {
           'Array e la scelta si perde',
     );
   });
+
+  /* Le sei liste della Home, e la lingua delle loro due caselle.
+   *
+   * `SchermataDiVoci` serve sei liste con una schermata sola, e le sei non
+   * chiamano allo stesso modo il nome e il disegno. I lettori, le entita' mie
+   * e le sezioni mie leggono `nome || name`: li' va bene l'italiano. I
+   * calendari e le liste di cose da fare leggono **solo** `name`; le entita'
+   * in evidenza leggono `name` e `icon`. Scrivendo sempre in italiano, il nome
+   * dato a un calendario finiva in una casella che non guarda nessuno — si
+   * salvava, e la plancia continuava a mostrare il nome che quel calendario ha
+   * in Home Assistant.
+   *
+   * Qui non si ricopia la risposta: si guarda **il modello**. Se legge `.nome`
+   * l'italiano va bene, se non lo legge la voce deve dire `inItaliano: false`.
+   */
+  test('le liste della Home parlano la lingua del loro modello', () {
+    const dove = <String, String>{
+      'Lettori e casse': '../ponte/plancia/src/core/media-player.js',
+      'I calendari': '../ponte/plancia/src/core/calendario-model.js',
+      'Le liste di cose da fare': '../ponte/plancia/src/core/todo-model.js',
+      'Le entita\' mie': '../ponte/plancia/src/core/entita-mie.js',
+      'In evidenza': '../ponte/plancia/src/sections/home-widgets-section.js',
+    };
+    final voci = File('lib/schermate/configurazione/voci.dart')
+        .readAsStringSync();
+    final teste = RegExp(r"\n  '((?:[^'\\]|\\.)*)' =>")
+        .allMatches(voci)
+        .toList();
+    final corpoPerVoce = <String, String>{};
+    for (final (quale, testa) in teste.indexed) {
+      final fino = quale + 1 < teste.length
+          ? teste[quale + 1].start
+          : voci.length;
+      corpoPerVoce[testa.group(1)!.replaceAll("\\'", "'")] = voci.substring(
+        testa.end,
+        fino,
+      );
+    }
+
+    final sbagliate = <String>[];
+    for (final voce in dove.entries) {
+      final corpo = corpoPerVoce[voce.key];
+      expect(corpo, isNotNull, reason: 'nessuna voce si chiama «${voce.key}»');
+      final modello = File(voce.value).readAsStringSync();
+      /* `In evidenza` sta in un file grosso che nomina `.nome` per altre cose:
+       * quello che conta e' la riga che legge la voce, e la si riconosce
+       * dall'accesso `voce?.name`. */
+      final leggeItaliano = voce.key == 'In evidenza'
+          ? modello.contains('voce?.nome')
+          : RegExp(r'[.?]nome\b').hasMatch(modello);
+      final scriveItaliano = !corpo!.contains('inItaliano: false');
+      if (leggeItaliano != scriveItaliano) {
+        sbagliate.add(
+          leggeItaliano
+              ? '${voce.key}: il modello legge «nome» e l\'app scrive «name»'
+              : '${voce.key}: il modello legge «name» e l\'app scrive «nome»',
+        );
+      }
+    }
+    expect(sbagliate..sort(), isEmpty, reason: sbagliate.join('; '));
+  });
 }
