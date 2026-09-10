@@ -198,9 +198,18 @@ la porta il ponte, che ha con sé i file e tiene lui la configurazione. Serve
 solo **il ponte dalla 0.7.0 in su**; con uno più vecchio l'app dice che il
 ponte non ha la plancia, e restano i dispositivi.
 
-Si configura **dall'app**: la sezione Config della plancia, in fondo alla sua
-barra. Quello che configuri lo vedono uguale tutti i telefoni abbinati a
-quella casa, perché sta nel ponte e non sul telefono.
+Si configura **dall'app**, dalla voce **Configurazione** del menu: quella apre
+la pagina Configurazione della plancia, la sua, con la tessera «Configura
+Entità» che porta all'editor, il **Tema** con le sei tavolozze, la **Barra di
+navigazione** e «Sostieni il progetto». Nella barra in fondo alla plancia la
+voce Config non c'è: su un telefono quella fila di schede non ci sta, ed è la
+sola ragione per cui la porta si è spostata. Tornando a **Plancia** dal menu,
+la plancia torna dov'era.
+
+Quello che configuri lo vedono uguale tutti i telefoni abbinati a quella casa,
+perché sta nel ponte e non sul telefono. Il tema, la tavolozza e la barra no:
+quelli sono **di questo dispositivo**, e lo dice la dashboard stessa sotto ogni
+tessera.
 
 La prima volta ci mette qualche secondo, di più se sei fuori casa: i file
 passano dal ponte e restano sul telefono, e dalla seconda volta in poi si apre
@@ -285,6 +294,35 @@ perché.
 
 ## Cosa guardare, una volta dentro
 
+Prima di tutto le cose arrivate per ultime, che sono quelle da bocciare subito
+se non funzionano:
+
+- **Menu → Configurazione.** Deve comparire la pagina **CONFIGURAZIONE** della
+  dashboard, con la sua insegna e la versione della plancia, e sotto le sue
+  tessere: 🧩 Configura Entità, 🎨 Tema con le sei tavolozze, 📌 Barra di
+  navigazione, 💙 Sostieni il progetto. Toccando 🧩 si apre il suo editor, col
+  cercatore e le sette famiglie. Poi **menu → Plancia**: la plancia torna
+  dov'era.
+- **Il tema, dalle sue tessere.** Chiaro, scuro, una tavolozza: la plancia
+  cambia colore. Chiudi e riapri l'app: la scelta deve **restare**. Prima
+  l'app la riscriveva a ogni caricamento e tornava indietro.
+- **💙 Sostieni il progetto → «Dona con PayPal».** Si deve aprire il **browser
+  del telefono** su PayPal. Prima non succedeva niente: valeva per tutti i
+  collegamenti che portano fuori dalla plancia (anche il meteo di Windy e
+  l'indirizzo su una mappa).
+- **Cancella qualcosa nell'editor** — una stanza, una presa, un
+  elettrodomestico. Deve comparire una **finestra che chiede conferma**. Prima,
+  sull'iPhone, quella domanda non si vedeva e la risposta era «no» da sola:
+  ogni cestino sembrava rotto.
+- **Le tessere della plancia vibrano** quando le tocchi (su Android; se hai la
+  vibrazione spenta nel telefono, no).
+- **La testata della plancia** («SMART HOME», con la pastiglia dello stato) non
+  deve finire sotto l'orologio del telefono.
+- **Una foto di casa col nome normale.** Se in `config/www` hai un file che si
+  chiama «mia auto.png», con lo spazio: adesso si vede.
+
+E poi tutto il resto:
+
 - **La home è la tua plancia**, com'è in Home Assistant: le stesse tessere,
   le stesse finestre quando le tocchi, la stessa barra in fondo con le sue
   pagine, la stessa Config. Se cambi qualcosa nell'editor di là, qui si vede
@@ -309,7 +347,8 @@ perché.
   prima che la casa risponda. Se dice «la dashboard è quasi pronta», vuol dire
   che la pagina non si è ritrovata quello che si era salvata: guarda in «Come
   va l'app» se il filo è aperto.
-- **Se va a scatti: Assistenza → «Come va l'app».** Usa l'app per un minuto
+- **Se va a scatti: «Come va l'app»**, dal menu (o dall'Assistenza, che ha il
+  suo bottone). Usa l'app per un minuto
   — plancia, barra, dispositivi — poi apri quella pagina e fotografala: dice
   quanti fotogrammi sono lenti, se il peso è di Flutter o della scheda video,
   se il filo principale è rimasto bloccato, e quanto passa sul filo con la
