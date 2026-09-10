@@ -84,6 +84,41 @@ void main() {
       }
     });
 
+    /* Ogni schermata instradata ha la sua voce nel menu.
+     *
+     * `voci.dart` instrada per titolo, e l'alberatura decide cosa si vede: tre
+     * schermate — le tessere della Home, l'ordine della Home, In evidenza —
+     * erano instradate e non stavano nell'albero. Esistevano, si aprivano da
+     * nessuna parte, e il conto delle chiavi le dava per coperte perche'
+     * `cd_widgets`, `cd_home_blocchi` e `cd_evidenza` nei sorgenti
+     * comparivano: comparivano dentro la schermata che nessuno poteva aprire.
+     *
+     * Il contrario invece si puo': una voce senza `case` in `voci.dart` e' una
+     * schermata dell'app — gli acquisti, «Come va l'app» — che il menu apre
+     * per conto suo.
+     */
+    test('ogni schermata instradata ha la sua voce nel menu', () {
+      final instradate = <String>{
+        for (final trovato
+            in RegExp("\n  '((?:[^'\\\\]|\\\\.)*)' =>").allMatches(
+              File('lib/schermate/configurazione/voci.dart').readAsStringSync(),
+            ))
+          trovato.group(1)!.replaceAll("\\'", "'"),
+      };
+      final nelMenu = <String>{
+        for (final famiglia in albero)
+          for (final voce in famiglia.voci) voce.titolo,
+      };
+      final orfane = instradate.difference(nelMenu).toList()..sort();
+      expect(
+        orfane,
+        isEmpty,
+        reason:
+            'queste schermate esistono e dal menu non ci si arriva: '
+            '${orfane.join(', ')}',
+      );
+    });
+
     test('nessun titolo doppio', () {
       final visti = <String>{};
       for (final famiglia in albero) {

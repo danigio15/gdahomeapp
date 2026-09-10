@@ -1059,6 +1059,18 @@ try {
   await scatta(pagina, "6n-configurazione-sezioni");
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
+
+  /* Le tessere della Home, e la tendina «Cosa mostra»: la Temperatura senza
+   * scelta dice la media di tutte le stanze, e si puo' dire quale stanza. */
+  racconta("apro le tessere della Home");
+  await premiCercando(pagina, "Le tessere della Home");
+  await aspettaCheCompaia(pagina, "Quando una tessera si stringe");
+  await attendi(800);
+  await scorri(pagina, 700);
+  await attendi(500);
+  await scatta(pagina, "6n2-tessere-cosa-mostra");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
   await premiCercando(pagina, "Luci");
   await aspettaCheCompaia(pagina, "Aggiungi una luce");
   await attendi(900);

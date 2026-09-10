@@ -312,8 +312,18 @@ senza l'app, ed è nella dashboard che andrebbe aggiunta alla lista.
   dell'app la chiave la leggeva e la scriveva già — mancava la tendina che la
   riempie.
 
-Anche questi hanno il loro campanello: una prova legge `cdNavVisMap` dal
-runtime e confronta le due liste, nei due versi.
+- **Tre schermate esistevano e non si potevano aprire.** «Le tessere della
+  Home» (`cd_widgets`), «L'ordine della Home» (`cd_home_blocchi`) e «In
+  evidenza» (`cd_evidenza`) erano instradate in `voci.dart` e non c'erano
+  nell'alberatura: il codice c'era tutto, dal menu non ci si arrivava in nessun
+  modo. Ed è il difetto che spiega perché il conto delle chiavi non basta —
+  quelle tre risultavano coperte perché il loro nome compariva nei sorgenti:
+  compariva **dentro la schermata che nessuno poteva aprire**.
+
+Tre campanelli nuovi: uno legge `cdNavVisMap` dal runtime e confronta le due
+liste di sezioni nei due versi; uno controlla che ogni schermata instradata
+abbia la sua voce nel menu (il contrario si può: una voce senza `case` è una
+schermata dell'app, che il menu apre per conto suo).
 
 ## Quello che resta davvero
 

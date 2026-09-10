@@ -355,6 +355,33 @@ const albero = <Famiglia>[
     'Le tessere della Home',
     'Quello che la prima pagina mette in mostra',
     [
+      /* Queste tre erano scritte in `voci.dart` e non qui: le schermate
+       * c'erano, il menu no, e dall'app non ci si arrivava in nessun modo.
+       * Il conto delle chiavi non se n'era accorto perche' `cd_widgets`,
+       * `cd_home_blocchi` e `cd_evidenza` nei sorgenti comparivano —
+       * comparivano nella schermata che nessuno poteva aprire. */
+      Voce(
+        'Le tessere della Home',
+        'Quali si vedono, in che ordine, e cosa mostra quella che riassume',
+        disegno: 'home',
+        da: 'sez0',
+        pronta: true,
+      ),
+      Voce(
+        'L\'ordine della Home',
+        'In che ordine stanno i blocchi della prima pagina',
+        disegno: 'mie',
+        da: 'sez0',
+        pronta: true,
+      ),
+      Voce(
+        'In evidenza',
+        'Sensori sparsi da tenere d\'occhio dalla Home, senza dar loro una '
+            'sezione intera',
+        disegno: 'evidenza',
+        da: 'sez0',
+        pronta: true,
+      ),
       Voce(
         'Lettori e casse',
         'Gli altoparlanti e i televisori che la plancia comanda',
