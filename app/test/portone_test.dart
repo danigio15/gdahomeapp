@@ -86,14 +86,6 @@ class _ServitoreFinto implements ServitoreDiQuestoSistema {
   set leggera(bool valore) {}
 
   @override
-  set tema(String quale) {}
-
-  @override
-  set barra(String come) {}
-  @override
-  set tavolozza(String quale) {}
-
-  @override
   set margini(({double alto, double basso}) quanto) {}
 }
 
