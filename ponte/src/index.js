@@ -24,6 +24,7 @@ import { Ponte } from "./ponte.js";
 import { Portiere } from "./portiere.js";
 import { Ritorno } from "./ritorno.js";
 import { Segnalazioni } from "./segnalazioni.js";
+import { Spegnimento } from "./spegnimento.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciLaConsole, costruisciLaPortaDellApp } from "./server.js";
 
@@ -85,6 +86,11 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     versione: opzioni.versione,
     registro,
   });
+  /* Lo spegnimento programmato del clima (#364): il conto alla rovescia che
+   * nella dashboard tiene l'integrazione, e qui tiene il ponte — sul disco,
+   * cosi' un riavvio nel mezzo della notte non lascia acceso niente. */
+  const spegnimento = new Spegnimento({ casa, cartella: opzioni.cartella, registro });
+  spegnimento.carica();
   const commissioni = new Commissioni({
     casa,
     registro,
@@ -94,6 +100,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     foto,
     fotoDiCasa,
     segnalazioni,
+    spegnimento,
   });
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni });
 
@@ -180,6 +187,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     clearInterval(giro);
     chiamata.spegni();
     ponte.chiudiTutto();
+    spegnimento.chiudi();
     casa.chiudiIlFiloMio();
     await Promise.all([chiudi(app), chiudi(console_)]);
   };

@@ -14,15 +14,30 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// Le chiavi che la plancia sincronizza, da `config-persistence-section.js`,
-/// meno le due di servizio (`cd_sync_dirty`, `cd_sync_ts`).
+/// Le chiavi che la plancia sincronizza: `CONFIG_KEYS` di
+/// `core/chiavi-di-configurazione.js`, revisione 41 (plancia 1.4.17).
+///
+/// Sono centotre': cento `cd_` e tre `dm_`. Le tre `dm_` non sono schermate:
+/// `dm_dashboard_state` e' il blocco di stato del guscio vecchio,
+/// `dm_schema_version` la versione dello schema — il ponte le porta da un
+/// dispositivo all'altro senza aprirle — e `dm_campi_scelti` e' il segno che
+/// l'app mette dentro `metadata` di un carico quando le sue caselle sono
+/// state scelte a mano. La prova sotto lo dice: si contano, ma non si
+/// promettono.
 const leChiaviDellaPlancia = <String>[
+  'cd_allag_rilevato',
   'cd_allerte',
+  'cd_animali',
   'cd_antifurto_modi',
+  'cd_antifurto_su_misura',
   'cd_appliances',
+  'cd_assist',
   'cd_avvisi_custom',
   'cd_avvisi_icone',
   'cd_avvisi_names_extra',
+  'cd_barra_casa',
+  'cd_batteria_verso',
+  'cd_batterie',
   'cd_branding',
   'cd_caldaia',
   'cd_calendari',
@@ -43,12 +58,15 @@ const leChiaviDellaPlancia = <String>[
   'cd_ev_car_active',
   'cd_ev_cars',
   'cd_ev_meta',
+  'cd_ev_motore',
   'cd_ev_visual',
   'cd_evidenza',
   'cd_floor_icons',
   'cd_floors',
   'cd_flow_nodes',
+  'cd_flusso_home',
   'cd_fumo_rilevato',
+  'cd_grafico_stanze',
   'cd_gruppi_extra',
   'cd_gruppi_removed',
   'cd_hidden_elements',
@@ -57,21 +75,26 @@ const leChiaviDellaPlancia = <String>[
   'cd_irrigazione',
   'cd_lavatrice_programmi',
   'cd_lavatrice_visual',
+  'cd_lingua',
   'cd_loads',
   'cd_luci',
   'cd_luci_order',
   'cd_luci_room_order',
   'cd_luci_rooms',
+  'cd_macchine',
   'cd_media_player',
   'cd_meteo_entita_proprie',
   'cd_navbar_mode',
   'cd_navbar_order',
+  'cd_orologio',
   'cd_people',
   'cd_piscina',
   'cd_porte_conferma',
   'cd_prese',
+  'cd_presenza',
   'cd_prezzo_immissione',
   'cd_quick_actions',
+  'cd_radar_meteo',
   'cd_report_devices',
   'cd_rifiuti',
   'cd_robot',
@@ -98,13 +121,23 @@ const leChiaviDellaPlancia = <String>[
   'cd_umidita_soglia',
   'cd_ups',
   'cd_ups_meta',
+  'cd_varchi',
   'cd_visual_prefer_image',
+  'cd_vmc',
   'cd_widgets',
+  'dm_campi_scelti',
+  'dm_dashboard_state',
+  'dm_schema_version',
 ];
 
 /// Quante ne conosce l'app adesso. Sale, non scende: quando sale si cambia
 /// questo numero e si cambia il documento, insieme.
-const quanteNeConosciamo = 83;
+///
+/// Centouno su centotre': mancano `dm_dashboard_state` e `dm_schema_version`,
+/// che non sono schermate — il ponte le porta da un dispositivo all'altro
+/// senza aprirle — e `dm_campi_scelti` c'e' perche' l'app lo scrive dentro
+/// `metadata` di ogni carico e apparecchio che salva.
+const quanteNeConosciamo = 101;
 
 /* Quali chiavi l'app sa configurare **davvero**.
  *
@@ -121,12 +154,19 @@ const quanteNeConosciamo = 83;
  * o l'elenco cade.
  */
 const leChiaviCheSappiamoFare = <String>[
+  'cd_allag_rilevato',
   'cd_allerte',
+  'cd_animali',
   'cd_antifurto_modi',
+  'cd_antifurto_su_misura',
   'cd_appliances',
+  'cd_assist',
   'cd_avvisi_custom',
   'cd_avvisi_icone',
   'cd_avvisi_names_extra',
+  'cd_barra_casa',
+  'cd_batteria_verso',
+  'cd_batterie',
   'cd_branding',
   'cd_caldaia',
   'cd_calendari',
@@ -147,12 +187,15 @@ const leChiaviCheSappiamoFare = <String>[
   'cd_ev_car_active',
   'cd_ev_cars',
   'cd_ev_meta',
+  'cd_ev_motore',
   'cd_ev_visual',
   'cd_evidenza',
   'cd_floor_icons',
   'cd_floors',
   'cd_flow_nodes',
+  'cd_flusso_home',
   'cd_fumo_rilevato',
+  'cd_grafico_stanze',
   'cd_gruppi_extra',
   'cd_gruppi_removed',
   'cd_hidden_elements',
@@ -161,21 +204,26 @@ const leChiaviCheSappiamoFare = <String>[
   'cd_irrigazione',
   'cd_lavatrice_programmi',
   'cd_lavatrice_visual',
+  'cd_lingua',
   'cd_loads',
   'cd_luci',
   'cd_luci_order',
   'cd_luci_room_order',
   'cd_luci_rooms',
+  'cd_macchine',
   'cd_media_player',
   'cd_meteo_entita_proprie',
   'cd_navbar_mode',
   'cd_navbar_order',
+  'cd_orologio',
   'cd_people',
   'cd_piscina',
   'cd_porte_conferma',
   'cd_prese',
+  'cd_presenza',
   'cd_prezzo_immissione',
   'cd_quick_actions',
+  'cd_radar_meteo',
   'cd_report_devices',
   'cd_rifiuti',
   'cd_robot',
@@ -202,13 +250,16 @@ const leChiaviCheSappiamoFare = <String>[
   'cd_umidita_soglia',
   'cd_ups',
   'cd_ups_meta',
+  'cd_varchi',
   'cd_visual_prefer_image',
+  'cd_vmc',
   'cd_widgets',
+  'dm_campi_scelti',
 ];
 
 Set<String> _chiaviNeiSorgenti() {
   final trovate = <String>{};
-  final forma = RegExp("'(cd_[a-z0-9_]+)'");
+  final forma = RegExp("'((?:cd|dm)_[a-z0-9_]+)'");
   for (final cosa in Directory('lib').listSync(recursive: true)) {
     if (cosa is! File || !cosa.path.endsWith('.dart')) continue;
     for (final trovato in forma.allMatches(cosa.readAsStringSync())) {
@@ -219,9 +270,42 @@ Set<String> _chiaviNeiSorgenti() {
 }
 
 void main() {
-  test('le chiavi della plancia sono ottantatre', () {
-    expect(leChiaviDellaPlancia.length, 83);
-    expect(leChiaviDellaPlancia.toSet().length, 83);
+  test('le chiavi della plancia sono centotre\'', () {
+    expect(leChiaviDellaPlancia.length, 103);
+    expect(leChiaviDellaPlancia.toSet().length, 103);
+  });
+
+  /* E sono **quelle** della plancia vendorizzata, non una copia a mano.
+   *
+   * La copia a mano e' esattamente quello che era rimasto indietro: sei giri
+   * di verifica contro una plancia 1.4.11 mentre la dashboard era alla
+   * 1.4.17, con diciassette chiavi in piu'. Da qui in poi la lista di sopra
+   * si confronta col file della plancia dentro l'add-on, e se la plancia
+   * cambia la prova cade prima di noi. */
+  test('e sono quelle di chiavi-di-configurazione.js', () {
+    final registro = File(
+      '../ponte/plancia/src/core/chiavi-di-configurazione.js',
+    ).readAsStringSync();
+    final blocco = RegExp(r'CONFIG_KEYS = Object\.freeze\(\[([\s\S]*?)\]\);')
+        .firstMatch(registro);
+    expect(blocco, isNotNull, reason: 'CONFIG_KEYS non si trova piu\'');
+    final dellaPlancia = {
+      for (final trovato in RegExp(
+        r'^\s*"([a-z_]+)",?\s*$',
+        multiLine: true,
+      ).allMatches(blocco!.group(1)!))
+        trovato.group(1)!,
+    };
+    expect(
+      leChiaviDellaPlancia.toSet().difference(dellaPlancia),
+      isEmpty,
+      reason: 'chiavi che la plancia non ha piu\'',
+    );
+    expect(
+      dellaPlancia.difference(leChiaviDellaPlancia.toSet()),
+      isEmpty,
+      reason: 'chiavi nuove della plancia che qui mancano',
+    );
   });
 
   test('l\'app ne conosce quante dice il documento', () {
@@ -263,7 +347,7 @@ void main() {
       if (cosa is! File || !cosa.path.endsWith('.dart')) continue;
       final testo = cosa.readAsStringSync();
       for (final trovato in RegExp(
-        r"const (\w+) = '(cd_[a-z0-9_]+)';",
+        r"const (\w+) = '((?:cd|dm)_[a-z0-9_]+)';",
       ).allMatches(testo)) {
         costanti[trovato.group(1)!] = trovato.group(2)!;
       }

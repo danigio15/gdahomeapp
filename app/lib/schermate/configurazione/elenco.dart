@@ -41,6 +41,11 @@ enum Tipo {
   /// Piu' entita' nello stesso campo: le luci di un'azione «popup luci».
   /// Si aggiungono una per volta e si tolgono con la crocetta.
   entitaTante,
+
+  /// In che stanza sta: si sceglie fra quelle di `cd_stanze`, e si scrive
+  /// l'identificativo della stanza (o il nome, se non ha un identificativo),
+  /// come fa `roomOptionsMarkup` nella plancia. Vuoto vuol dire nessuna.
+  stanza,
 }
 
 /// Un campo di una cosa dell'elenco.
@@ -177,6 +182,7 @@ class SchermataDiElenco extends StatelessWidget {
     required this.unaCosa,
     this.disegno,
     this.riordinabile = true,
+    this.massimo = 0,
   });
 
   final String titolo;
@@ -184,6 +190,10 @@ class SchermataDiElenco extends StatelessWidget {
   final Collegamento collegamento;
   final Forma forma;
   final List<Campo> campi;
+
+  /// Il tetto, se ce n'e' uno: quattro macchine della VMC. Zero vuol dire
+  /// nessuno.
+  final int massimo;
 
   /// Come si chiama una di queste cose, al singolare: «una luce», «una
   /// stanza». Finisce nel bottone e nei messaggi.
@@ -206,6 +216,7 @@ class SchermataDiElenco extends StatelessWidget {
         campi: campi,
         unaCosa: unaCosa,
         riordinabile: riordinabile && !forma.eUnaMappa,
+        massimo: massimo,
         scatto: scatto,
         quaderno: quaderno,
       ),
@@ -220,6 +231,7 @@ class _Elenco extends StatefulWidget {
     required this.campi,
     required this.unaCosa,
     required this.riordinabile,
+    required this.massimo,
     required this.scatto,
     required this.quaderno,
   });
@@ -229,6 +241,7 @@ class _Elenco extends StatefulWidget {
   final List<Campo> campi;
   final String unaCosa;
   final bool riordinabile;
+  final int massimo;
   final Scatto scatto;
   final Quaderno quaderno;
 
@@ -259,6 +272,19 @@ class _ElencoState extends State<_Elenco> {
     setState(() {});
   }
 
+  /// Le stanze di casa, per il campo che le sceglie: identificativo (o nome,
+  /// se non ce l'ha) e nome, nell'ordine della configurazione.
+  List<(String, String)> get _leStanze => [
+    for (final una in widget.scatto.oggetti('cd_stanze'))
+      if ('${una['id'] ?? una['name'] ?? ''}'.trim().isNotEmpty)
+        (
+          '${una['id'] ?? ''}'.trim().isNotEmpty
+              ? '${una['id']}'.trim()
+              : '${una['name']}'.trim(),
+          '${una['name'] ?? una['id'] ?? ''}'.trim(),
+        ),
+  ];
+
   Future<void> _apri(int quale) async {
     final partenza = quale < 0
         ? <String, dynamic>{}
@@ -273,6 +299,7 @@ class _ElencoState extends State<_Elenco> {
         cosa: partenza,
         unaCosa: widget.unaCosa,
         nuova: quale < 0,
+        stanze: _leStanze,
       ),
     );
     if (scritta == null) return;
@@ -347,9 +374,17 @@ class _ElencoState extends State<_Elenco> {
           ),
         const SizedBox(height: 14),
         FilledButton.tonalIcon(
-          onPressed: () => _apri(-1),
+          /* Al tetto il bottone si spegne, come nella plancia: la VMC ne
+           * tiene quattro, e la quinta non si salverebbe. */
+          onPressed: widget.massimo > 0 && cose.length >= widget.massimo
+              ? null
+              : () => _apri(-1),
           icon: const Icon(Icons.add_rounded),
-          label: Text('Aggiungi ${widget.unaCosa}'),
+          label: Text(
+            widget.massimo > 0 && cose.length >= widget.massimo
+                ? 'Non piu\' di ${widget.massimo}'
+                : 'Aggiungi ${widget.unaCosa}',
+          ),
         ),
       ],
     );
@@ -468,6 +503,7 @@ class _Modulo extends StatefulWidget {
     required this.cosa,
     required this.unaCosa,
     required this.nuova,
+    this.stanze = const [],
   });
 
   final Collegamento collegamento;
@@ -475,6 +511,9 @@ class _Modulo extends StatefulWidget {
   final Map<String, dynamic> cosa;
   final String unaCosa;
   final bool nuova;
+
+  /// Le stanze fra cui scegliere, per un campo [Tipo.stanza].
+  final List<(String, String)> stanze;
 
   @override
   State<_Modulo> createState() => _ModuloState();
@@ -593,6 +632,39 @@ class _ModuloState extends State<_Modulo> {
                     items: [
                       for (final (valore, nome) in campo.scelte)
                         DropdownMenuItem(value: valore, child: Text(nome)),
+                    ],
+                    onChanged: (scelto) => setState(() {
+                      if ((scelto ?? '').isEmpty) {
+                        _cosa.remove(campo.chiave);
+                      } else {
+                        _cosa[campo.chiave] = scelto;
+                      }
+                    }),
+                  ),
+                  Tipo.stanza => DropdownButtonFormField<String>(
+                    initialValue:
+                        widget.stanze.any(
+                          (una) => una.$1 == '${_cosa[campo.chiave] ?? ''}',
+                        )
+                        ? '${_cosa[campo.chiave]}'
+                        : '',
+                    decoration: InputDecoration(
+                      labelText: campo.etichetta,
+                      helperText: widget.stanze.isEmpty
+                          ? 'Non c\'e\' ancora nessuna stanza: aggiungile '
+                                'dalla voce «Le stanze»'
+                          : campo.spiega,
+                      helperMaxLines: 3,
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    items: [
+                      const DropdownMenuItem(
+                        value: '',
+                        child: Text('— Nessuna stanza —'),
+                      ),
+                      for (final (id, nome) in widget.stanze)
+                        DropdownMenuItem(value: id, child: Text(nome)),
                     ],
                     onChanged: (scelto) => setState(() {
                       if ((scelto ?? '').isEmpty) {

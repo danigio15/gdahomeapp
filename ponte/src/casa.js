@@ -269,11 +269,58 @@ Object.assign(Casa.prototype, {
     return this._aperturaMia;
   },
 
+  /* Un abbonamento agli eventi di Home Assistant, sul filo del ponte.
+   *
+   * Serve a chi ha bisogno di sapere quando qualcosa cambia senza che un
+   * telefono glielo dica: il timer del clima, che si toglie da solo quando
+   * l'unita' viene spenta a mano. Torna la funzione che disdice. Se il filo
+   * cade l'abbonamento cade con lui — Home Assistant non se lo ricorda — e
+   * chi ascolta se ne accorge dalla chiamata a `onCaduto`, se l'ha passata. */
+  async ascolta(eventType, onEvento, { onCaduto = null } = {}) {
+    const filo = await this._filoMio();
+    this._domande ??= new Map();
+    this._ascolti ??= new Map();
+    this._prossimaDomanda ??= 1;
+    const id = this._prossimaDomanda++;
+    await new Promise((riuscito, fallito) => {
+      const scadenza = setTimeout(() => {
+        this._domande.delete(id);
+        fallito(new CasaIrraggiungibile("Home Assistant non ha risposto in tempo"));
+      }, ATTESA_DELLA_RISPOSTA);
+      this._domande.set(id, { riuscito, fallito, scadenza });
+      if (!filo.manda(JSON.stringify({ id, type: "subscribe_events", event_type: eventType }))) {
+        clearTimeout(scadenza);
+        this._domande.delete(id);
+        fallito(new CasaIrraggiungibile("il filo del ponte e' caduto"));
+      }
+    });
+    this._ascolti.set(id, { onEvento, onCaduto });
+    return async () => {
+      if (!this._ascolti?.delete(id)) return;
+      try {
+        await this.chiedi({ type: "unsubscribe_events", subscription: id });
+      } catch (_errore) {
+        /* Il filo e' caduto: l'abbonamento e' gia' morto con lui. */
+      }
+    };
+  },
+
   _rispostaMia(testo) {
     let detto;
     try {
       detto = JSON.parse(testo);
     } catch (_errore) {
+      return;
+    }
+    if (detto?.type === "event") {
+      const ascolto = this._ascolti?.get(detto.id);
+      if (ascolto) {
+        try {
+          ascolto.onEvento(detto.event);
+        } catch (_errore) {
+          /* Chi ascolta si tiene i suoi errori. */
+        }
+      }
       return;
     }
     if (detto?.type !== "result") return;
@@ -294,6 +341,16 @@ Object.assign(Casa.prototype, {
     for (const domanda of appese) {
       clearTimeout(domanda.scadenza);
       domanda.fallito(new CasaIrraggiungibile(perche));
+    }
+    /* Gli abbonamenti muoiono col filo: chi li aveva lo viene a sapere. */
+    const ascolti = [...(this._ascolti?.values() ?? [])];
+    this._ascolti?.clear();
+    for (const ascolto of ascolti) {
+      try {
+        ascolto.onCaduto?.(perche);
+      } catch (_errore) {
+        /* Idem. */
+      }
     }
   },
 

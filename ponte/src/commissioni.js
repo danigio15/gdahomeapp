@@ -46,7 +46,7 @@ import { request as richiestaHttps } from "node:https";
 import { gzipSync } from "node:zlib";
 
 import { Configurazione, PROFILO_PRINCIPALE, ScattoTroppoGrande } from "./configurazione.js";
-import { DISPOSITIVI_MASSIMI } from "./catalogo.js";
+import { DISPOSITIVI_MASSIMI, ENTITA_MASSIME } from "./catalogo.js";
 import { BASE_DELLE_FOTO, BASE_DI_CASA, FOTO_MASSIMA } from "./foto.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 
@@ -58,6 +58,11 @@ const CONFIG_RESTORE = "dashboardmodern/config/restore";
 const CATALOGO = "dashboardmodern/integrations/catalog";
 const FOTO_ELENCO = "dashboardmodern/www/list";
 const FOTO_CARICA = "dashboardmodern/www/upload";
+/* Lo spegnimento programmato del clima (#364): nell'integrazione lo tiene
+ * Home Assistant, qui lo tiene il ponte (`spegnimento.js`). */
+const TIMER_ELENCO = "dashboardmodern/clima/timer/list";
+const TIMER_METTI = "dashboardmodern/clima/timer/set";
+const TIMER_TOGLI = "dashboardmodern/clima/timer/clear";
 
 /* Le segnalazioni e la chat di assistenza escono dalla plancia: diventano
  * dell'app, che le fa da se'. Alla pagina, che ha ancora i suoi bottoni, si
@@ -153,6 +158,7 @@ export class Commissioni {
     foto = null,
     fotoDiCasa = null,
     segnalazioni = null,
+    spegnimento = null,
     scarica = scaricaDavvero,
     insieme = INSIEME,
   } = {}) {
@@ -172,6 +178,9 @@ export class Commissioni {
     this.fotoDiCasa = fotoDiCasa;
     /* Le segnalazioni e la chat dell'app, che passano dal centralino. */
     this.segnalazioni = segnalazioni;
+    /* Il conto alla rovescia del clima, che nell'integrazione sta in Home
+     * Assistant e qui sta nel ponte. */
+    this.spegnimento = spegnimento;
     this.scarica = scarica;
     this.insieme = insieme;
     this._inCorso = 0;
@@ -187,6 +196,8 @@ export class Commissioni {
       return Boolean(this.configurazione);
     if (tipo === CATALOGO) return Boolean(this.catalogo);
     if (tipo === FOTO_ELENCO || tipo === FOTO_CARICA) return Boolean(this.foto);
+    if (tipo === TIMER_ELENCO || tipo === TIMER_METTI || tipo === TIMER_TOGLI)
+      return Boolean(this.spegnimento);
     if (NELLAPP.test(tipo)) return true;
     return Boolean(this.configurazione) && eLaCopiaVecchia(detto);
   }
@@ -209,6 +220,8 @@ export class Commissioni {
     if (tipo === CATALOGO) return this._catalogo(detto);
     if (tipo === FOTO_ELENCO) return this._elencoDelleFoto(detto);
     if (tipo === FOTO_CARICA) return this._caricaUnaFoto(detto);
+    if (tipo === TIMER_ELENCO || tipo === TIMER_METTI || tipo === TIMER_TOGLI)
+      return this._timerDelClima(detto);
     if (typeof tipo === "string" && NELLAPP.test(tipo))
       return no(id, "not_supported", DETTO_NELLAPP);
     if (eLaCopiaVecchia(detto)) {
@@ -217,6 +230,32 @@ export class Commissioni {
       return si(id, tipo === "frontend/get_user_data" ? { value: null } : null);
     }
     return no(id, "unknown_command", `non conosco ${tipo}`);
+  }
+
+  /* Lo spegnimento programmato: le stesse tre risposte dell'integrazione.
+   * Un'entita' e' una parola con un punto dentro; i minuti vanno da zero
+   * (togli il timer) a settecentoventi, come lo slider. */
+  _timerDelClima(detto) {
+    const id = detto.id ?? null;
+    const timer = this.spegnimento;
+    if (!timer) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    try {
+      if (detto.type === TIMER_ELENCO) return si(id, { scadenze: timer.scadenze() });
+      const entita = typeof detto.entity_id === "string" ? detto.entity_id.trim() : "";
+      if (entita.length < 3 || entita.length > 255 || !entita.includes("."))
+        return no(id, "invalid_format", "entity_id non valido");
+      if (detto.type === TIMER_TOGLI) {
+        timer.annulla(entita);
+        return si(id, { removed: true });
+      }
+      const minuti = Number(detto.minuti);
+      if (!Number.isInteger(minuti) || minuti < 0 || minuti > 720)
+        return no(id, "invalid_format", "minuti non validi: da 0 a 720");
+      return si(id, { entity_id: entita, scadenza: timer.programma(entita, minuti) });
+    } catch (errore) {
+      this.registro.errore(`timer del clima andato storto: ${errore?.message || errore}`);
+      return no(id, "ponte_timer", "non ha funzionato");
+    }
   }
 
   _laPlancia(id) {
@@ -340,8 +379,22 @@ export class Commissioni {
         return no(id, "invalid_format", "device_ids non valido");
       deviceIds = detto.device_ids;
     }
+    /* Per nome (#382): la scheda delle macchine chiede di chi sono i sensori
+     * che ha trovato, a lotti. */
+    let entityIds = null;
+    if (detto.entity_ids !== undefined) {
+      if (
+        !Array.isArray(detto.entity_ids) ||
+        detto.entity_ids.length > ENTITA_MASSIME ||
+        !detto.entity_ids.every(
+          (uno) => typeof uno === "string" && uno.length >= 3 && uno.length <= 255,
+        )
+      )
+        return no(id, "invalid_format", "entity_ids non valido");
+      entityIds = detto.entity_ids;
+    }
     try {
-      return si(id, await this.catalogo.chiedi({ deviceIds }));
+      return si(id, await this.catalogo.chiedi({ deviceIds, entityIds }));
     } catch (errore) {
       this.registro.attenzione(`catalogo non costruito: ${errore?.message || errore}`);
       return no(
@@ -447,11 +500,7 @@ export class Commissioni {
 
     const dove = await this._dove(percorso);
     if (!dove) {
-      return no(
-        id,
-        "not_allowed",
-        "di qui passano solo /api/, /dashboardmodern_static/ e /local/",
-      );
+      return no(id, "not_allowed", "di qui passano solo /api/, /dashboardmodern_static/ e /local/");
     }
 
     const intestazioni = { ...dove.intestazioni, "accept-encoding": "identity" };

@@ -292,3 +292,55 @@ test("senza i registri che contano, il catalogo lo dice", async () => {
   const catalogo = new Catalogo({ casa, registro: { attenzione() {} } });
   await assert.rejects(() => catalogo.chiedi(), /negato/);
 });
+
+/* Per nome (#382): la scheda delle macchine chiede di chi sono i sensori che
+ * ha trovato. Torna l'elenco di righe e basta, con la piattaforma; chi non
+ * e' nel registro non c'e', e la plancia stessa non risponde per se'. */
+test("le entita' chieste per nome dicono di che integrazione sono", () => {
+  const risposta = costruisciIlCatalogo({
+    ...registri,
+    entityIds: [
+      "sensor.lavatrice_tempo",
+      "sensor.senza_dispositivo",
+      "sensor.plancia_x",
+      "binary_sensor.inventato",
+      "sensor.lavatrice_tempo",
+    ],
+  });
+  assert.deepEqual(Object.keys(risposta), ["entities"]);
+  assert.deepEqual(
+    risposta.entities.map((riga) => [riga.entity_id, riga.platform, riga.device_id]),
+    [
+      ["sensor.lavatrice_tempo", "hon", "d-lav"],
+      ["sensor.senza_dispositivo", "hon", ""],
+    ],
+  );
+  /* Il nome della riga toglie il dispositivo davanti, come per dispositivo. */
+  assert.equal(risposta.entities[0].name, "Tempo rimanente");
+});
+
+test("dal filo: entity_ids si controlla e passa al catalogo", async () => {
+  const { Commissioni } = await import("../src/commissioni.js");
+  const chieste = [];
+  const catalogo = {
+    async chiedi(cosa) {
+      chieste.push(cosa);
+      return { entities: [] };
+    },
+  };
+  const commissioni = new Commissioni({ casa: {}, catalogo });
+  const bene = await commissioni.rispondi({
+    id: 7,
+    type: "dashboardmodern/integrations/catalog",
+    entity_ids: ["binary_sensor.pve_lxc_101_status"],
+  });
+  assert.equal(bene.success, true);
+  assert.deepEqual(chieste, [{ deviceIds: null, entityIds: ["binary_sensor.pve_lxc_101_status"] }]);
+  const male = await commissioni.rispondi({
+    id: 8,
+    type: "dashboardmodern/integrations/catalog",
+    entity_ids: ["x"],
+  });
+  assert.equal(male.success, false);
+  assert.equal(male.error.code, "invalid_format");
+});

@@ -90,6 +90,8 @@ class _ServitoreFinto implements ServitoreDiQuestoSistema {
 
   @override
   set barra(String come) {}
+  @override
+  set tavolozza(String quale) {}
 
   @override
   set margini(({double alto, double basso}) quanto) {}

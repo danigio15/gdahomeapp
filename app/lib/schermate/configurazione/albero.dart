@@ -1,19 +1,22 @@
 /// L'alberatura della configurazione: la stessa della plancia, in Dart.
 ///
-/// Non e' un'alberatura inventata. E' quella che la plancia ha gia' — le
-/// schede in cima all'editor di DashboardModern, lette dalla versione 1.4.15
-/// (`frontend/legacy/dashboard-runtime-it.js`, la fila `.ed-tabs`, piu' la
-/// scheda Prese che i moduli aggiungono da soli in `modules-entry.js`) —
-/// riscritta qui voce per voce, con gli stessi nomi e nello stesso ordine di
-/// senso. Chi ha configurato la dashboard nel browser deve ritrovare le sue
-/// cose dove le lasciate, con lo stesso nome.
+/// Non e' un'alberatura inventata. E' quella che la plancia ha gia': dalla
+/// 1.4.17 la Config di DashboardModern non e' piu' una fila di linguette ma
+/// **sette famiglie**, scritte in `core/alberatura-del-config.js` (`FAMIGLIE`
+/// e `SCHEDE`): la plancia, l'energia, il clima e l'acqua, la casa, la
+/// sicurezza, gli avvisi, le macchine e la rete. Qui sono le stesse sette,
+/// con gli stessi nomi e nello stesso ordine, e ogni scheda della plancia
+/// sta nella famiglia in cui la mette `SCHEDE`. Chi ha configurato la
+/// dashboard nel browser deve ritrovare le sue cose dove le ha lasciate, con
+/// lo stesso nome.
 ///
-/// Cambia una cosa sola, ed e' il motivo per cui il file esiste: nella plancia
-/// le diciannove schede stanno tutte in fila, una striscia orizzontale da
-/// scorrere al buio. Su un telefono quella fila non ci sta. Qui le stesse
-/// diciannove diventano **cinque famiglie**, che e' come uno le direbbe a
-/// voce: la casa, le pagine, le cose di casa, gli avvisi, la manutenzione.
-/// Nessuna voce si perde e nessuna si inventa — si raggruppano e basta.
+/// Dentro una famiglia una scheda della plancia puo' diventare piu' voci —
+/// «Sicurezza» nel browser e' un accordion con dentro la centrale, i tasti
+/// dell'allarme e le telecamere; su un telefono un elenco dentro un elenco
+/// non si guarda, e sono tre voci — ma nessuna si perde e nessuna si
+/// inventa: la scheda da cui viene e' scritta in `da`, e la prova
+/// `configurazione_test.dart` controlla che tutte le schede di `SCHEDE`
+/// ci siano.
 ///
 /// Le due famiglie in fondo — chi puo' entrare, e l'app — nella plancia non
 /// ci sono: la prima perche' una pagina web non sa chi la guarda, la seconda
@@ -69,20 +72,23 @@ class Famiglia {
   final List<Voce> voci;
 }
 
-/// L'alberatura intera.
+/// L'alberatura intera: le sette famiglie di `FAMIGLIE`, nel loro ordine, e
+/// poi le due dell'app.
 const albero = <Famiglia>[
-  Famiglia('La casa', 'Come si chiama, cosa si vede, com\'e\' fatta', [
+  /* ── ⚙️ Plancia: tutto cio' che riguarda la plancia, non la casa ──────
+   * SCHEDE: visib, sez0, todo, entita, mie, backup, runtime. */
+  Famiglia('Plancia', 'Come si chiama, cosa si vede, come si comporta', [
     Voce(
       'Generali',
-      'Nome della dashboard, sottotitolo, chi puo\' comandare',
+      'Nome della dashboard, sottotitolo, la lingua, chi puo\' comandare',
       disegno: 'impostazioni',
       da: 'visib',
       pronta: true,
     ),
     Voce(
       'Le sezioni',
-      'Quali pagine si vedono: Home, Energia, Auto, Solare, Clima, '
-          'Temperatura, Sicurezza, MiniPC',
+      'Quali pagine si vedono: Home, Energia, Auto, Clima, Sicurezza, '
+          'Animali, Varchi, Batterie e le altre',
       disegno: 'evidenza',
       da: 'visib',
       pronta: true,
@@ -96,28 +102,51 @@ const albero = <Famiglia>[
     ),
     Voce(
       'Come si comporta la plancia',
-      'La barra, chi comanda, il meteo di casa: le scelte che valgono per '
-          'tutta la plancia',
+      'La barra, l\'orologio, chi comanda, il meteo di casa: le scelte che '
+          'valgono per tutta la plancia',
+      disegno: 'impostazioni',
+      da: 'visib',
+      pronta: true,
+    ),
+    /* Assist (#360): quale assistente, se legge la risposta ad alta voce, se
+     * il tasto si vede. Nella plancia sta nelle Impostazioni, sotto la
+     * lingua. */
+    Voce(
+      'Assist',
+      'Chiedere le cose a casa scrivendo o parlando: quale assistente, e se '
+          'risponde a voce',
       disegno: 'impostazioni',
       da: 'visib',
       pronta: true,
     ),
     Voce(
-      'I piani',
-      'Come si raggruppano le stanze quando ce ne sono tante',
-      disegno: 'stanze',
-      da: 'stanze',
+      'I nomi delle pagine',
+      'Come si chiamano le pagine, se non ti vanno bene i nomi che hanno',
+      disegno: 'custom',
+      da: 'visib',
       pronta: true,
     ),
     Voce(
-      'Le stanze',
-      'Le stanze della casa, con la loro temperatura e la loro umidita\'',
-      disegno: 'stanze',
-      da: 'stanze',
+      'Cosa e\' sparito',
+      'I pezzi della plancia che si sono fatti sparire: qui si rimettono',
+      disegno: 'impostazioni',
+      da: 'visib',
       pronta: true,
     ),
-  ]),
-  Famiglia('Le pagine', 'Cosa mostra ognuna delle pagine della plancia', [
+    Voce(
+      'Autorilevamento',
+      'Guarda tutte le entita\' di Home Assistant e compila da solo luci, '
+          'clima, stanze e telecamere',
+      disegno: 'backup',
+      da: 'visib',
+    ),
+    Voce(
+      'Riporta tutto com\'era',
+      'Rimette la configurazione dell\'ultimo salvataggio, o la azzera',
+      disegno: 'allerte',
+      da: 'visib',
+      pronta: true,
+    ),
     Voce(
       'Home',
       'Le tessere della prima pagina: meteo, evidenza, azioni rapide, avvisi',
@@ -125,6 +154,125 @@ const albero = <Famiglia>[
       da: 'sez0',
       pronta: true,
     ),
+    Voce(
+      'Le tessere della Home',
+      'Quali si vedono, in che ordine, e cosa mostra quella che riassume',
+      disegno: 'home',
+      da: 'sez0',
+      pronta: true,
+    ),
+    Voce(
+      'L\'ordine della Home',
+      'In che ordine stanno i blocchi della prima pagina, e se si vede il '
+          'flusso dell\'energia',
+      disegno: 'mie',
+      da: 'sez0',
+      pronta: true,
+    ),
+    /* La riga sotto il meteo (#356, #357): quali pastiglie si vedono — le
+     * luci accese, le finestre aperte, il ritiro di stasera — e da quale
+     * contatto arriva la posta. */
+    Voce(
+      'La riga sotto il meteo',
+      'Le pastiglie di cosa e\' acceso in casa, e la cassetta della posta',
+      disegno: 'home',
+      da: 'sez0',
+      pronta: true,
+    ),
+    /* Il radar della pioggia dentro le previsioni (#266): da dove arrivano
+     * i quadratini, e dove si guarda. */
+    Voce(
+      'Il radar meteo',
+      'La pioggia sulla mappa, dentro le previsioni: il posto, il raggio, il '
+          'servizio',
+      disegno: 'home',
+      da: 'sez0',
+      pronta: true,
+    ),
+    Voce(
+      'In evidenza',
+      'Sensori sparsi da tenere d\'occhio dalla Home, senza dar loro una '
+          'sezione intera',
+      disegno: 'evidenza',
+      da: 'sez0',
+      pronta: true,
+    ),
+    Voce(
+      'Le liste di cose da fare',
+      'Quali liste si vedono in Agenda',
+      disegno: 'agenda',
+      da: 'todo',
+    ),
+    Voce(
+      'Le entita\' mie',
+      'Entita\' qualunque, messe in Home con un nome e un disegno',
+      disegno: 'mie',
+      da: 'entita',
+    ),
+    Voce(
+      'Le sezioni mie',
+      'Pagine intere fatte da te, accanto a quelle della plancia',
+      disegno: 'custom',
+      da: 'mie',
+    ),
+    Voce(
+      'Le copie della configurazione',
+      'Salvarla da parte, e rimetterla se qualcosa va storto',
+      disegno: 'backup',
+      da: 'backup',
+    ),
+    Voce(
+      'Runtime',
+      'La diagnosi della plancia: versione, sincronizzazione, sezioni',
+      disegno: 'runtime',
+      da: 'runtime',
+      pronta: true,
+    ),
+    Voce(
+      'I dispositivi di una volta',
+      'L\'elenco che la plancia teneva prima delle sezioni',
+      disegno: 'runtime',
+      da: 'runtime',
+      pronta: true,
+    ),
+    /* `cd_report_devices`: la chiave dichiarata e mai usata. La costante
+     * c'era, la schermata no, e il conto delle chiavi la dava per coperta
+     * perche' il nome nei sorgenti compariva — nella riga che lo dichiara. */
+    Voce(
+      'Le voci del Report',
+      'Le righe che si scelgono nel Report Analisi dell\'Energia',
+      disegno: 'energia',
+      da: 'runtime',
+      pronta: true,
+    ),
+    /* Le tre di `sost`: non e' una linguetta della fila — si arriva da
+     * dentro — ma esiste, ed e' l'unica ammessa oltre l'elenco. */
+    Voce(
+      'Le parole della plancia',
+      'Una scritta che non ti torna, riscritta ovunque compaia',
+      disegno: 'custom',
+      da: 'sost',
+      pronta: true,
+    ),
+    Voce(
+      'I nomi delle caselle',
+      'Come si chiamano le caselle della configurazione',
+      disegno: 'custom',
+      da: 'sost',
+      pronta: true,
+    ),
+    Voce(
+      'Sostituzioni',
+      'Hai cambiato una presa o un sensore: qui si sostituisce ovunque compaia',
+      disegno: 'custom',
+      da: 'sost',
+      pronta: true,
+    ),
+  ]),
+
+  /* ── ⚡ Energia: tutto cio' che misura o muove kWh ─────────────────────
+   * SCHEDE: sez1, sez2, ups. */
+  Famiglia('Energia', 'Fotovoltaico, consumi, la batteria, l\'auto, l\'UPS', [
     Voce(
       'Energia',
       'Fotovoltaico, consumi, carichi e il Report Analisi',
@@ -147,6 +295,15 @@ const albero = <Famiglia>[
       da: 'sez1',
       pronta: true,
     ),
+    /* Da che parte scrive la batteria (#434): meta' dei sensori scrive
+     * positivo quando si carica, e da un valore solo non si indovina. */
+    Voce(
+      'Il verso della batteria',
+      'Se il sensore della batteria scrive positivo quando si carica',
+      disegno: 'energia',
+      da: 'sez1',
+      pronta: true,
+    ),
     Voce(
       'Auto elettrica',
       'Entita\' dell\'auto e della wallbox, e i profili se le auto sono piu\' di una',
@@ -154,322 +311,12 @@ const albero = <Famiglia>[
       da: 'sez2',
       pronta: true,
     ),
+    /* Il motore dichiarato da chi non ha nessun profilo auto (#326). */
     Voce(
-      'Solare termico',
-      'Il boiler solare',
-      disegno: 'solare',
-      da: 'sez3',
-      pronta: true,
-    ),
-    Voce(
-      'Sicurezza',
-      'Telecamere e allarme',
-      disegno: 'sicurezza',
-      da: 'sez4',
-      pronta: true,
-    ),
-    Voce(
-      'I tasti dell\'allarme',
-      'Quali inserimenti si vedono: Casa, Fuori, Notte, Vacanza, Parziale',
-      disegno: 'sicurezza',
-      da: 'sez4',
-      pronta: true,
-    ),
-    Voce(
-      'Le cose che scaldano',
-      'Il termocamino, l\'aspiratore della canna fumaria, quello che scalda '
-          'oltre ai termosifoni',
-      disegno: 'caldaia',
-      da: 'sez5',
-      pronta: true,
-    ),
-    Voce(
-      'La caldaia',
-      'Mandata, ritorno, pressione, e cosa c\'e\' all\'altro capo del tubo',
-      disegno: 'caldaia',
-      da: 'sez5',
-      pronta: true,
-    ),
-    Voce(
-      'MiniPC',
-      'Il monitoraggio del server',
-      disegno: 'minipc',
-      da: 'sez6',
-      pronta: true,
-    ),
-    Voce(
-      'Temperatura',
-      'Temperature e umidita\', stanza per stanza',
-      disegno: 'temperatura',
-      da: 'sez7',
-      pronta: true,
-    ),
-    Voce(
-      'Azioni rapide',
-      'I bottoni della Home: cosa fanno e in che ordine stanno',
-      disegno: 'azioni',
-      da: 'sez8',
-      pronta: true,
-    ),
-    Voce(
-      'Clima',
-      'Condizionatori e riscaldamento',
-      disegno: 'clima',
-      da: 'sez9',
-      pronta: true,
-    ),
-  ]),
-  Famiglia('Le cose di casa', 'Quello che si accende, si apre e si comanda', [
-    Voce(
-      'Luci',
-      'Le luci, coi loro nomi e le loro stanze',
-      disegno: 'luci',
-      da: 'luci',
-      pronta: true,
-    ),
-    Voce(
-      'Prese',
-      'Le prese comandate',
-      disegno: 'prese',
-      da: 'prese',
-      pronta: true,
-    ),
-    Voce(
-      'Finestre',
-      'Tapparelle, tende e finestre',
-      disegno: 'tapparelle',
-      da: 'tapp',
-      pronta: true,
-    ),
-    Voce(
-      'Elettrodomestici',
-      'Lavastoviglie, lavatrice, forno, stufa: quali ci sono e cosa dicono',
-      disegno: 'elettrodomestici',
-      da: 'appliances',
-      pronta: true,
-    ),
-    Voce(
-      'Telecamere',
-      'Le telecamere di casa, col loro flusso video',
-      disegno: 'telecamere',
-      /* Nella plancia le telecamere si configurano dentro Sicurezza, insieme
-       * alla centrale: qui sono una voce loro, che su un telefono un elenco
-       * dentro un elenco non si guarda. */
-      da: 'sez4',
-      pronta: true,
-    ),
-    Voce(
-      'Robot',
-      'Aspirapolvere e lavapavimenti',
-      disegno: 'robot',
-      da: 'robot',
-      pronta: true,
-    ),
-    Voce(
-      'Piscina',
-      'Sensori, pompa e filtrazione automatica',
-      disegno: 'piscina',
-      da: 'pool',
-      pronta: true,
-    ),
-    Voce(
-      'Irrigazione',
-      'Le zone e i loro tempi',
-      disegno: 'irrigazione',
-      da: 'irr',
-      pronta: true,
-    ),
-  ]),
-  Famiglia(
-    'Piu\' di uno',
-    'Quello di cui la plancia tiene un elenco, e non uno solo',
-    [
-      Voce(
-        'Centrali d\'allarme',
-        'Le centrali di casa, e quale comanda la pagina Sicurezza',
-        disegno: 'sicurezza',
-        da: 'sez4',
-        pronta: true,
-      ),
-      Voce(
-        'Scaldabagni',
-        'Gli scaldabagni, uno per bagno se serve',
-        disegno: 'scaldabagno',
-        da: 'sez3',
-        pronta: true,
-      ),
-      Voce(
-        'Impianti termici',
-        'Cosa c\'e\' nel locale caldaia: solare, scaldabagno, caldaia',
-        disegno: 'caldaia',
-        da: 'sez9',
-        pronta: true,
-      ),
-      Voce(
-        'Continuita\'',
-        'I gruppi di continuita\'',
-        disegno: 'minipc',
-        da: 'ups',
-        pronta: true,
-      ),
-    ],
-  ),
-  Famiglia('Gli avvisi', 'Quando la casa deve farsi sentire', [
-    Voce(
-      'Allerte meteo',
-      'Le allerte della protezione civile, e quali far comparire',
-      disegno: 'avvisi',
-      da: 'allerte',
-      pronta: true,
-    ),
-    Voce(
-      'Porte da sorvegliare',
-      'Quali porte contano come «casa aperta», e quali chiedono conferma',
-      disegno: 'sicurezza',
-      da: 'doors',
-      pronta: true,
-    ),
-    Voce(
-      'I disegni degli avvisi',
-      'Il disegno di un avviso, cambiato',
-      disegno: 'avvisi',
-      da: 'avvisi',
-      pronta: true,
-    ),
-    Voce(
-      'I nomi degli avvisi',
-      'Come si chiama un avviso, se il nome che ha non ti torna',
-      disegno: 'avvisi',
-      da: 'avvisi',
-      pronta: true,
-    ),
-    Voce(
-      'Quadro avvisi',
-      'Cosa fa comparire un avviso, e con che parole',
-      disegno: 'avvisi',
-      da: 'avvisi',
-      pronta: true,
-    ),
-  ]),
-  Famiglia(
-    'Le tessere della Home',
-    'Quello che la prima pagina mette in mostra',
-    [
-      /* Queste tre erano scritte in `voci.dart` e non qui: le schermate
-       * c'erano, il menu no, e dall'app non ci si arrivava in nessun modo.
-       * Il conto delle chiavi non se n'era accorto perche' `cd_widgets`,
-       * `cd_home_blocchi` e `cd_evidenza` nei sorgenti comparivano —
-       * comparivano nella schermata che nessuno poteva aprire. */
-      Voce(
-        'Le tessere della Home',
-        'Quali si vedono, in che ordine, e cosa mostra quella che riassume',
-        disegno: 'home',
-        da: 'sez0',
-        pronta: true,
-      ),
-      Voce(
-        'L\'ordine della Home',
-        'In che ordine stanno i blocchi della prima pagina',
-        disegno: 'mie',
-        da: 'sez0',
-        pronta: true,
-      ),
-      Voce(
-        'In evidenza',
-        'Sensori sparsi da tenere d\'occhio dalla Home, senza dar loro una '
-            'sezione intera',
-        disegno: 'evidenza',
-        da: 'sez0',
-        pronta: true,
-      ),
-      Voce(
-        'Lettori e casse',
-        'Gli altoparlanti e i televisori che la plancia comanda',
-        disegno: 'media',
-        da: 'media',
-      ),
-      Voce(
-        'La raccolta',
-        'Quando passa il camion, e cosa si mette fuori',
-        disegno: 'rifiuti',
-        da: 'rifiuti',
-      ),
-      Voce(
-        'Le liste di cose da fare',
-        'Quali liste si vedono in Agenda',
-        disegno: 'agenda',
-        da: 'todo',
-      ),
-      Voce(
-        'I calendari',
-        'Quali calendari si vedono in Agenda',
-        disegno: 'agenda',
-        da: 'agenda',
-      ),
-      Voce(
-        'Le entita\' mie',
-        'Entita\' qualunque, messe in Home con un nome e un disegno',
-        disegno: 'mie',
-        da: 'entita',
-      ),
-      Voce(
-        'Le sezioni mie',
-        'Pagine intere fatte da te, accanto a quelle della plancia',
-        disegno: 'custom',
-        da: 'mie',
-      ),
-    ],
-  ),
-  Famiglia('Le parole', 'Come la plancia si legge, non cosa mostra', [
-    Voce(
-      'I nomi delle pagine',
-      'Come si chiamano le pagine, se non ti vanno bene i nomi che hanno',
-      disegno: 'custom',
-      da: 'visib',
-      pronta: true,
-    ),
-    Voce(
-      'Le parole della plancia',
-      'Una scritta che non ti torna, riscritta ovunque compaia',
-      disegno: 'custom',
-      da: 'sost',
-      pronta: true,
-    ),
-    Voce(
-      'I nomi delle caselle',
-      'Come si chiamano le caselle della configurazione',
-      disegno: 'custom',
-      da: 'sost',
-      pronta: true,
-    ),
-    Voce(
-      'Cosa e\' sparito',
-      'I pezzi della plancia che si sono fatti sparire: qui si rimettono',
-      disegno: 'impostazioni',
-      da: 'visib',
-      pronta: true,
-    ),
-  ]),
-  Famiglia('Manutenzione', 'Quando qualcosa non torna', [
-    Voce(
-      'Autorilevamento',
-      'Guarda tutte le entita\' di Home Assistant e compila da solo luci, '
-          'clima, stanze e telecamere',
-      disegno: 'backup',
-      da: 'visib',
-    ),
-    Voce(
-      'Sostituzioni',
-      'Hai cambiato una presa o un sensore: qui si sostituisce ovunque compaia',
-      disegno: 'custom',
-      da: 'sost',
-      pronta: true,
-    ),
-    Voce(
-      'I ritratti',
-      'Quando una cosa ha una foto invece di un emoji',
-      disegno: 'elettrodomestici',
-      da: 'appliances',
+      'Il motore dell\'auto',
+      'Elettrica, termica o ibrida, per chi compila le caselle senza un profilo',
+      disegno: 'ev',
+      da: 'sez2',
       pronta: true,
     ),
     Voce(
@@ -487,27 +334,168 @@ const albero = <Famiglia>[
       pronta: true,
     ),
     Voce(
+      'Continuita\'',
+      'I gruppi di continuita\'',
+      disegno: 'minipc',
+      da: 'ups',
+      pronta: true,
+    ),
+    Voce(
       'I dati in piu\' della continuita\'',
       'Il segno progressivo dei gruppi di continuita\'',
       disegno: 'ups',
       da: 'ups',
       pronta: true,
     ),
+  ]),
+
+  /* ── 🌡️ Clima e acqua: l'aria che si respira e l'acqua che scorre ─────
+   * SCHEDE: sez9, sez7, sez3, pool, irr. */
+  Famiglia(
+    'Clima e acqua',
+    'Condizionatori, temperature, l\'acqua calda, la piscina, l\'irrigazione',
+    [
+      Voce(
+        'Clima',
+        'Condizionatori e riscaldamento',
+        disegno: 'clima',
+        da: 'sez9',
+        pronta: true,
+      ),
+      Voce(
+        'Le cose che scaldano',
+        'Il termocamino, l\'aspiratore della canna fumaria, quello che scalda '
+            'oltre ai termosifoni',
+        disegno: 'caldaia',
+        da: 'sez9',
+        pronta: true,
+      ),
+      /* La ventilazione meccanica (#371): le quattro temperature dello
+     * scambiatore, il bypass, i filtri, le ventole. */
+      Voce(
+        'La ventilazione',
+        'Le macchine della VMC: le quattro temperature, il bypass, i filtri',
+        disegno: 'clima',
+        da: 'sez9',
+        pronta: true,
+      ),
+      Voce(
+        'Temperatura',
+        'Temperature e umidita\', stanza per stanza',
+        disegno: 'temperatura',
+        da: 'sez7',
+        pronta: true,
+      ),
+      Voce(
+        'Il tasto rapido del clima',
+        'Cosa fa il tasto che accende il clima',
+        disegno: 'clima',
+        da: 'sez7',
+        pronta: true,
+      ),
+      /* Chi resta fuori dal grafico delle Temperature (#433): il vano tecnico
+     * fuori scala schiaccia tutte le altre stanze. */
+      Voce(
+        'Il grafico delle temperature',
+        'Quali stanze restano fuori dal grafico, perche\' una fuori scala '
+            'schiaccia le altre',
+        disegno: 'temperatura',
+        da: 'sez7',
+        pronta: true,
+      ),
+      /* La scheda che il guscio chiama «Solare» e che il suo modulo rinomina
+     * «Gestione termica»: solare, scaldabagno, caldaia. */
+      Voce(
+        'Solare termico',
+        'Il boiler solare',
+        disegno: 'solare',
+        da: 'sez3',
+        pronta: true,
+      ),
+      Voce(
+        'Scaldabagni',
+        'Gli scaldabagni, uno per bagno se serve',
+        disegno: 'scaldabagno',
+        da: 'sez3',
+        pronta: true,
+      ),
+      Voce(
+        'La caldaia',
+        'Mandata, ritorno, pressione, e cosa c\'e\' all\'altro capo del tubo',
+        disegno: 'caldaia',
+        da: 'sez3',
+        pronta: true,
+      ),
+      Voce(
+        'Impianti termici',
+        'Cosa c\'e\' nel locale caldaia: solare, scaldabagno, caldaia',
+        disegno: 'caldaia',
+        da: 'sez3',
+        pronta: true,
+      ),
+      Voce(
+        'Piscina',
+        'Sensori, pompa e filtrazione automatica',
+        disegno: 'piscina',
+        da: 'pool',
+        pronta: true,
+      ),
+      Voce(
+        'Irrigazione',
+        'Le zone e i loro tempi',
+        disegno: 'irrigazione',
+        da: 'irr',
+        pronta: true,
+      ),
+    ],
+  ),
+
+  /* ── 🛋️ Casa: le stanze e quello che ci sta dentro ───────────────────
+   * SCHEDE: stanze, luci, tapp, appliances, media, robot, animali, people,
+   * sez8, batterie. */
+  Famiglia('Casa', 'Le stanze e quello che ci sta dentro', [
     Voce(
-      'I dispositivi di una volta',
-      'L\'elenco che la plancia teneva prima delle sezioni',
-      disegno: 'runtime',
-      da: 'runtime',
+      'Le stanze',
+      'Le stanze della casa, con la loro temperatura e la loro umidita\'',
+      disegno: 'stanze',
+      da: 'stanze',
       pronta: true,
     ),
-    /* `cd_report_devices`: la chiave dichiarata e mai usata. La costante
-     * c'era, la schermata no, e il conto delle chiavi la dava per coperta
-     * perche' il nome nei sorgenti compariva — nella riga che lo dichiara. */
     Voce(
-      'Le voci del Report',
-      'Le righe che si scelgono nel Report Analisi dell\'Energia',
-      disegno: 'energia',
-      da: 'runtime',
+      'I piani',
+      'Come si raggruppano le stanze quando ce ne sono tante',
+      disegno: 'stanze',
+      da: 'stanze',
+      pronta: true,
+    ),
+    Voce(
+      'Luci',
+      'Le luci, coi loro nomi e le loro stanze',
+      disegno: 'luci',
+      da: 'luci',
+      pronta: true,
+    ),
+    Voce(
+      'I gruppi di luci',
+      'Gruppi tuoi, oltre a quelli che la plancia fa da sola',
+      disegno: 'luci',
+      da: 'luci',
+      pronta: true,
+    ),
+    /* Le prese: nella plancia si aggiungono dalla scheda Luci, che accetta
+     * anche `switch.`, e hanno un elenco loro (`cd_prese`). */
+    Voce(
+      'Prese',
+      'Le prese comandate',
+      disegno: 'prese',
+      da: 'luci',
+      pronta: true,
+    ),
+    Voce(
+      'Finestre',
+      'Tapparelle, tende e finestre',
+      disegno: 'tapparelle',
+      da: 'tapp',
       pronta: true,
     ),
     Voce(
@@ -518,10 +506,10 @@ const albero = <Famiglia>[
       pronta: true,
     ),
     Voce(
-      'Il tasto rapido del clima',
-      'Cosa fa il tasto che accende il clima',
-      disegno: 'clima',
-      da: 'sez7',
+      'Elettrodomestici',
+      'Lavastoviglie, lavatrice, forno, stufa: quali ci sono e cosa dicono',
+      disegno: 'elettrodomestici',
+      da: 'appliances',
       pronta: true,
     ),
     Voce(
@@ -543,37 +531,34 @@ const albero = <Famiglia>[
       pronta: true,
     ),
     Voce(
-      'I gruppi di luci',
-      'Gruppi tuoi, oltre a quelli che la plancia fa da sola',
-      disegno: 'luci',
-      da: 'luci',
+      'I ritratti',
+      'Quando una cosa ha una foto invece di un emoji',
+      disegno: 'elettrodomestici',
+      da: 'appliances',
       pronta: true,
     ),
     Voce(
-      'Runtime',
-      'La diagnosi della plancia: versione, sincronizzazione, sezioni',
-      disegno: 'runtime',
-      da: 'runtime',
-      pronta: true,
+      'Lettori e casse',
+      'Gli altoparlanti e i televisori che la plancia comanda',
+      disegno: 'media',
+      da: 'media',
     ),
     Voce(
-      'Le copie della configurazione',
-      'Salvarla da parte, e rimetterla se qualcosa va storto',
-      disegno: 'backup',
-      da: 'backup',
-    ),
-    Voce(
-      'Riporta tutto com\'era',
-      'Rimette la configurazione dell\'ultimo salvataggio, o la azzera',
-      disegno: 'allerte',
-      da: 'visib',
+      'Robot',
+      'Aspirapolvere e lavapavimenti',
+      disegno: 'robot',
+      da: 'robot',
       pronta: true,
     ),
-  ]),
-  Famiglia('Chi puo\' entrare', 'Le persone e i telefoni di casa', [
-    /* Le persone la plancia ce le ha, e ha la sua scheda: quello che nella
-       * plancia non c'e' sono i telefoni — una pagina web non sa chi la
-       * guarda — e infatti le due voci qui sotto sono dell'app. */
+    /* Gli animali di casa (#358): nome, foto, e le entita' della ciotola,
+     * della lettiera, dell'acqua, della porta col microchip e del collare. */
+    Voce(
+      'Gli animali',
+      'Il gatto e il cane: la ciotola, la lettiera, la fontanella, il collare',
+      disegno: 'animali',
+      da: 'animali',
+      pronta: true,
+    ),
     Voce(
       'Le persone',
       'Chi usa questa casa: nome, foto e presenza',
@@ -581,6 +566,172 @@ const albero = <Famiglia>[
       da: 'people',
       pronta: true,
     ),
+    Voce(
+      'Azioni rapide',
+      'I bottoni della Home: cosa fanno e in che ordine stanno',
+      disegno: 'azioni',
+      da: 'sez8',
+      pronta: true,
+    ),
+    /* Le batterie (#398): sotto quanto una e' da cambiare, quali si
+     * aggiungono a mano, quali si tolgono, come si chiamano. */
+    Voce(
+      'Le batterie',
+      'Le pile di casa: sotto quanto avvisare, quali contare, come si chiamano',
+      disegno: 'batterie',
+      da: 'batterie',
+      pronta: true,
+    ),
+  ]),
+
+  /* ── 🛡️ Sicurezza: chi entra, chi esce, cosa sorveglia ───────────────
+   * SCHEDE: sez4, varchi, presenza, doors. */
+  Famiglia('Sicurezza', 'Chi entra, chi esce, cosa sorveglia', [
+    Voce(
+      'Sicurezza',
+      'Telecamere e allarme',
+      disegno: 'sicurezza',
+      da: 'sez4',
+      pronta: true,
+    ),
+    Voce(
+      'I tasti dell\'allarme',
+      'Quali inserimenti si vedono: Casa, Fuori, Notte, Vacanza, Parziale',
+      disegno: 'sicurezza',
+      da: 'sez4',
+      pronta: true,
+    ),
+    /* I tasti d'inserimento scritti a mano (#413): per chi si e' fatto
+     * l'antifurto con ESPHome e una centrale non ce l'ha. */
+    Voce(
+      'I tasti su misura',
+      'L\'antifurto senza centrale: un nome, un disegno, l\'entita\' da chiamare',
+      disegno: 'sicurezza',
+      da: 'sez4',
+      pronta: true,
+    ),
+    Voce(
+      'Centrali d\'allarme',
+      'Le centrali di casa, e quale comanda la pagina Sicurezza',
+      disegno: 'sicurezza',
+      da: 'sez4',
+      pronta: true,
+    ),
+    Voce(
+      'Telecamere',
+      'Le telecamere di casa, col loro flusso video',
+      disegno: 'telecamere',
+      /* Nella plancia le telecamere si configurano dentro Sicurezza, insieme
+       * alla centrale: qui sono una voce loro, che su un telefono un elenco
+       * dentro un elenco non si guarda. */
+      da: 'sez4',
+      pronta: true,
+    ),
+    /* I varchi (#367, #377): i contatti porta-finestra, quanti sono aperti
+     * adesso. Niente da configurare per cominciare: qui si corregge. */
+    Voce(
+      'I varchi',
+      'I contatti di porte e finestre: quali non contano, quali aggiungere, '
+          'come si chiamano',
+      disegno: 'aperture',
+      da: 'varchi',
+      pronta: true,
+    ),
+    /* La presenza (#432): i rilevatori di movimento, stessa forma dei
+     * varchi. */
+    Voce(
+      'La presenza',
+      'I rilevatori di movimento e presenza: quali non contano, quali '
+          'aggiungere, come si chiamano',
+      disegno: 'persone',
+      da: 'presenza',
+      pronta: true,
+    ),
+    Voce(
+      'Porte da sorvegliare',
+      'Quali porte contano come «casa aperta», e quali chiedono conferma',
+      disegno: 'sicurezza',
+      da: 'doors',
+      pronta: true,
+    ),
+  ]),
+
+  /* ── 🔔 Avvisi: quello che la casa ti viene a dire ────────────────────
+   * SCHEDE: avvisi, allerte, agenda, rifiuti. */
+  Famiglia('Avvisi', 'Quando la casa deve farsi sentire', [
+    Voce(
+      'Quadro avvisi',
+      'Cosa fa comparire un avviso, e con che parole',
+      disegno: 'avvisi',
+      da: 'avvisi',
+      pronta: true,
+    ),
+    Voce(
+      'I disegni degli avvisi',
+      'Il disegno di un avviso, cambiato',
+      disegno: 'avvisi',
+      da: 'avvisi',
+      pronta: true,
+    ),
+    Voce(
+      'I nomi degli avvisi',
+      'Come si chiama un avviso, se il nome che ha non ti torna',
+      disegno: 'avvisi',
+      da: 'avvisi',
+      pronta: true,
+    ),
+    Voce(
+      'Allerte meteo',
+      'Le allerte della protezione civile, e quali far comparire',
+      disegno: 'avvisi',
+      da: 'allerte',
+      pronta: true,
+    ),
+    Voce(
+      'I calendari',
+      'Quali calendari si vedono in Agenda',
+      disegno: 'agenda',
+      da: 'agenda',
+    ),
+    Voce(
+      'La raccolta',
+      'Quando passa il camion, e cosa si mette fuori',
+      disegno: 'rifiuti',
+      da: 'rifiuti',
+    ),
+  ]),
+
+  /* ── 🖥️ Macchine e rete: il homelab, l'unica famiglia che non parla
+   * della casa. SCHEDE: sez6. */
+  Famiglia(
+    'Macchine e rete',
+    'Il server, i container, il router e i ripetitori',
+    [
+      Voce(
+        'MiniPC',
+        'Il monitoraggio del server',
+        disegno: 'minipc',
+        da: 'sez6',
+        pronta: true,
+      ),
+      /* Le macchine del server e la rete (#382): quali integrazioni contano,
+     * quali sensori togliere o aggiungere, come si chiamano. */
+      Voce(
+        'Le macchine e la rete',
+        'I container di Proxmox e i ripetitori del router: da quali '
+            'integrazioni, e come si chiamano',
+        disegno: 'minipc',
+        da: 'sez6',
+        pronta: true,
+      ),
+    ],
+  ),
+
+  /* ── Le due dell'app ─────────────────────────────────────────────────── */
+  Famiglia('Chi puo\' entrare', 'Le persone e i telefoni di casa', [
+    /* Le persone stanno con la casa, nella famiglia della plancia. Quello
+     * che nella plancia non c'e' sono i telefoni — una pagina web non sa chi
+     * la guarda — e infatti le due voci qui sotto sono dell'app. */
     Voce(
       'I telefoni abbinati',
       'Quali telefoni sono entrati, quando, e da dove passano',
@@ -600,6 +751,17 @@ const albero = <Famiglia>[
       'Tema della plancia',
       'Chiaro, scuro, o come il telefono. Vale solo su questo dispositivo: '
           'il tablet in cucina puo\' stare sullo scuro e il telefono no',
+      disegno: 'evidenza',
+      viene: Provenienza.dellApp,
+      pronta: true,
+    ),
+    /* Le tavolozze della plancia (`cd_tavolozza`): notte, grafite, bosco,
+     * sabbia, menta, ardesia. Nella plancia stanno nelle Impostazioni, ma
+     * non viaggiano: sono del dispositivo, come il tema. */
+    Voce(
+      'La tavolozza',
+      'I colori della plancia oltre a chiaro e scuro: notte, grafite, bosco, '
+          'sabbia, menta, ardesia. Di questo dispositivo, come il tema',
       disegno: 'evidenza',
       viene: Provenienza.dellApp,
       pronta: true,
@@ -653,45 +815,63 @@ int get quanteDallaPlancia => albero.fold(
 
 /// Le schede della Config della plancia che quest'albero replica.
 ///
-/// E' l'elenco vero, letto dalla 1.4.15: se un giorno la plancia ne aggiunge
-/// una, la prova se ne accorge prima di noi.
+/// Sono le chiavi di `SCHEDE` in `core/alberatura-del-config.js` della
+/// 1.4.17: le diciotto della fila del guscio (`.ed-tabs`) e le sedici che i
+/// moduli si aggiungono da soli, ognuno col suo `*_EDITOR_TAB`. La prova
+/// `configurazione_test.dart` le confronta con quel file: se un giorno la
+/// plancia ne aggiunge una, la prova se ne accorge prima di noi.
 const schedeDellaPlancia = <String>{
+  /* ⚙️ Plancia */
   'visib',
   'sez0',
-  'sez1',
-  'sez2',
-  'sez3',
-  'sez4',
-  'sez6',
-  'sez7',
-  'sez8',
-  'sez9',
-  'pool',
-  'irr',
-  'tapp',
-  'stanze',
-  'luci',
-  'prese',
-  'appliances',
-  'avvisi',
-  'runtime',
-  /* La scheda del caldo: nel documento c'e', e ci stanno la caldaia, gli
-   * scaldabagni e gli impianti termici. */
-  'sez5',
-  /* Le schede che i moduli si aggiungono da soli, accanto a quelle del
-   * documento: ognuna dichiara il suo nome in `*_EDITOR_TAB`. Non stanno nel
-   * documento vendorizzato, ma nella plancia ci sono — e questo elenco serve a
-   * dire proprio quello. */
-  'robot',
-  'ups',
-  'people',
-  'media',
-  'rifiuti',
   'todo',
-  'agenda',
-  'allerte',
-  'doors',
   'entita',
   'mie',
   'backup',
+  'runtime',
+  /* ⚡ Energia */
+  'sez1',
+  'sez2',
+  'ups',
+  /* 🌡️ Clima e acqua */
+  'sez9',
+  'sez7',
+  'sez3',
+  'pool',
+  'irr',
+  /* 🛋️ Casa */
+  'stanze',
+  'luci',
+  'tapp',
+  'appliances',
+  'media',
+  'robot',
+  'animali',
+  'people',
+  'sez8',
+  'batterie',
+  /* 🛡️ Sicurezza */
+  'sez4',
+  'varchi',
+  'presenza',
+  'doors',
+  /* 🔔 Avvisi */
+  'avvisi',
+  'allerte',
+  'agenda',
+  'rifiuti',
+  /* 🖥️ Macchine e rete */
+  'sez6',
 };
+
+/// Le sette famiglie della plancia, nell'ordine di `FAMIGLIE`, col nome che
+/// hanno li'. Le prove confrontano questo elenco col file della plancia.
+const famiglieDellaPlancia = <String>[
+  'Plancia',
+  'Energia',
+  'Clima e acqua',
+  'Casa',
+  'Sicurezza',
+  'Avvisi',
+  'Macchine e rete',
+];

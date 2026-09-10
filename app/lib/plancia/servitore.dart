@@ -196,6 +196,10 @@ class Servitore {
   String get barra => premesse.barra;
   set barra(String come) => premesse.barra = come;
 
+  /// La tavolozza della plancia, di questo dispositivo.
+  String get tavolozza => premesse.tavolozza;
+  set tavolozza(String quale) => premesse.tavolozza = quale;
+
   /// La chiave della porta: nasce con il servitore, e la conosce solo chi
   /// apre la pagina dall'indirizzo che [paginaDi] da'.
   final String chiave = _chiaveNuova();

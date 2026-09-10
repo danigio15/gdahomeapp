@@ -8,6 +8,7 @@ import '../../casa/collegamento.dart';
 import '../../casa/plancia/caldo.dart';
 import '../../casa/plancia/home.dart';
 import '../../casa/plancia/scatto.dart';
+import '../../casa/plancia/scelte.dart';
 import '../../vestito/pezzi.dart';
 import 'pezzi.dart';
 
@@ -576,6 +577,26 @@ class SchermataDegliInterruttori extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
+        /* L'orologio in testata **non e' JSON**: la plancia legge
+         * `getItem("cd_orologio") !== "0"`. Acceso vuol dire chiave assente,
+         * spento vuol dire la parola `0`, scritta nuda. */
+        Card(
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          child: SwitchListTile(
+            value: orologioAcceso(
+              quaderno.cambiate.containsKey(chiaveDellOrologio)
+                  ? '${quaderno.cambiate[chiaveDellOrologio] ?? ''}'
+                  : scatto.valori[chiaveDellOrologio],
+            ),
+            onChanged: (acceso) =>
+                quaderno.segna(chiaveDellOrologio, acceso ? null : '0'),
+            title: const Text('L\'ora in testata'),
+            subtitle: const Text(
+              'L\'ora e la data accanto al meteo, in cima alla plancia. Di '
+              'serie si vede.',
+            ),
+          ),
+        ),
         interruttore(
           chiaveDelSoloLettura,
           'Si guarda e basta',
@@ -643,6 +664,40 @@ class SchermataDegliInterruttori extends StatelessWidget {
             icon: const Icon(Icons.done_all_rounded),
             label: Text('Ho letto (${scatto.parole(chiaveDelFumo).length})'),
           ),
+        const SizedBox(height: 16),
+        Text(
+          'L\'acqua',
+          style: Theme.of(dentro).textTheme.titleSmall
+              ?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 6),
+        /* Il gemello del fumo, con un'altra forma: un si'/no che dice che il
+         * rilevamento automatico dei sensori di allagamento e' gia' passato
+         * una volta. Serve perche' una lista svuotata resti vuota: senza,
+         * togliere l'ultimo sensore fa ripartire il rilevamento e rimette
+         * dentro proprio quello che era stato tolto. Toglierlo vuol dire
+         * chiedere alla plancia di rifare il giro. */
+        Text(
+          scatto.aperto(chiaveDegliAllagamentiRilevati) == true
+              ? 'La plancia ha gia\' cercato i sensori di allagamento: quelli '
+                    'che ha trovato stanno nel gruppo «allagamento», e un '
+                    'sensore tolto non torna da solo.'
+              : 'La plancia non ha ancora cercato i sensori di allagamento: '
+                    'lo fara\' alla prossima apertura.',
+          style: Theme.of(dentro).textTheme.bodySmall?.copyWith(
+            color: Theme.of(dentro).colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
+        ),
+        if (scatto.aperto(chiaveDegliAllagamentiRilevati) == true) ...[
+          const SizedBox(height: 10),
+          FilledButton.tonalIcon(
+            onPressed: () =>
+                quaderno.segna(chiaveDegliAllagamentiRilevati, null),
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Rifai il rilevamento'),
+          ),
+        ],
       ];
     },
   );

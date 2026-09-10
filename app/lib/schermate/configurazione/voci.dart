@@ -28,6 +28,12 @@ import 'caselle.dart';
 import '../plancia_vera.dart' show FabbricaDellaPlancia;
 import 'energia.dart';
 import 'famiglia.dart';
+import '../../casa/plancia/scelte.dart' as scelte;
+import '../../casa/plancia/vmc.dart';
+import '../../casa/plancia/correzioni.dart';
+import 'animali.dart';
+import 'correzioni.dart';
+import 'scelte.dart';
 import 'elenco.dart';
 import 'persone.dart';
 import 'speciali.dart';
@@ -639,9 +645,7 @@ Widget? schermataDi(
      * `dm.security_centrale_allarme` — come le diciassette dell'auto. Qui
      * c'era un campo `entity` sciolto che nella plancia non legge nessuno. */
     sezioneDelleCaselle: 'security',
-    campi: const [
-      CampoDellaVoce('id', 'Sigla', spiega: 'casa, garage…'),
-    ],
+    campi: const [CampoDellaVoce('id', 'Sigla', spiega: 'casa, garage…')],
   ),
   'Scaldabagni' => SchermataDiFamiglia(
     titolo: 'Scaldabagni',
@@ -693,7 +697,11 @@ Widget? schermataDi(
         entita: true,
         domini: ['sensor'],
       ),
-      CampoDellaVoce('room', 'In che bagno sta', spiega: 'Il nome della stanza'),
+      CampoDellaVoce(
+        'room',
+        'In che bagno sta',
+        spiega: 'Il nome della stanza',
+      ),
     ],
   ),
   /* `cd_impianti_termici` non e' un elenco: e' la risposta a «cosa hai nel
@@ -863,6 +871,168 @@ Widget? schermataDi(
     impostazioni: impostazioni,
     ilTema: false,
   ),
+
+  /* ── Le sezioni nuove della 1.4.17 ── */
+  'Assist' => SchermataDiAssist(collegamento: collegamento),
+  'La riga sotto il meteo' => SchermataDellaBarraDiCasa(
+    collegamento: collegamento,
+  ),
+  'Il radar meteo' => SchermataDelRadar(collegamento: collegamento),
+  'Il verso della batteria' => SchermataDelVersoDellaBatteria(
+    collegamento: collegamento,
+  ),
+  'Il motore dell\'auto' => SchermataDelMotore(collegamento: collegamento),
+  'Il grafico delle temperature' => SchermataDelGrafico(
+    collegamento: collegamento,
+  ),
+  'Gli animali' => SchermataDegliAnimali(collegamento: collegamento),
+  'Le batterie' => SchermataDelleBatterie(collegamento: collegamento),
+  'Le macchine e la rete' => SchermataDelleMacchine(collegamento: collegamento),
+  'I varchi' => SchermataDelleCorrezioni(
+    titolo: 'I varchi',
+    sotto:
+        'I contatti di porte e finestre: quanti sono aperti adesso, e quali. '
+        'Non c\'e\' niente da configurare per cominciare — un contatto lo '
+        'dichiara Home Assistant — qui si corregge: si toglie il sensore del '
+        'frigo etichettato «door», si aggiunge quello che nessuno ha '
+        'etichettato, si da\' un nome piu\' chiaro di «Contact 4B».',
+    chiave: chiaveDeiVarchi,
+    collegamento: collegamento,
+    rilevata: eUnVarco,
+    disegno: disegnoDelVarco,
+    unaCosa: 'un contatto',
+    aggiungi: 'Aggiungi un contatto che non viene trovato',
+    esempio: 'binary_sensor.porta_cantina',
+    elenco: 'I contatti di casa',
+    vuoto: 'Nessun contatto trovato',
+    acceso: 'aperto',
+    spento: 'chiuso',
+  ),
+  'La presenza' => SchermataDelleCorrezioni(
+    titolo: 'La presenza',
+    sotto:
+        'I rilevatori di movimento e di presenza: dove c\'e\' qualcuno adesso, '
+        'e da quanto una stanza e\' vuota. E\' la stessa scheda dei varchi, '
+        'perche\' e\' lo stesso problema: si corregge quello che Home '
+        'Assistant dichiara da solo.',
+    chiave: chiaveDellaPresenza,
+    collegamento: collegamento,
+    rilevata: eUnRilevatore,
+    disegno: disegnoDelRilevatore,
+    unaCosa: 'un rilevatore',
+    aggiungi: 'Aggiungi un rilevatore che non viene trovato',
+    esempio: 'binary_sensor.movimento_salone',
+    elenco: 'I rilevatori di casa',
+    vuoto: 'Nessun rilevatore trovato',
+    acceso: 'attivo',
+    spento: 'libero',
+  ),
+  /* I tasti d'inserimento su misura (#413): chi si e' fatto l'antifurto con
+   * ESPHome un `alarm_control_panel` non ce l'ha, e i tasti se li descrive.
+   * Le righe si scrivono come stanno — e' la plancia, leggendole, a tenere
+   * solo quelle con qualcosa da premere. */
+  'I tasti su misura' => SchermataDiElenco(
+    titolo: 'I tasti su misura',
+    sotto:
+        'Serve a chi una centrale non ce l\'ha: un antifurto fatto con '
+        'ESPHome, con gli script o con un elenco di modalita\'. Ogni tasto '
+        'compare nella sezione Sicurezza e nella tessera della Home, accanto '
+        'a quelli della centrale — e se una centrale non c\'e\', al posto '
+        'loro. Finche\' non scegli cosa premere, il tasto non compare.',
+    collegamento: collegamento,
+    forma: const Forma.elenco(scelte.chiaveDellAntifurtoSuMisura),
+    unaCosa: 'un tasto',
+    campi: [
+      const Campo('nome', 'Nome del tasto', spiega: 'Fuori casa'),
+      const Campo(
+        'icona',
+        'Icona',
+        spiega: 'Un nome del catalogo, per esempio mdi:shield-home',
+      ),
+      Campo(
+        'entita',
+        'Cosa premere',
+        tipo: Tipo.entita,
+        domini: scelte.dominiSuMisura,
+        spiega:
+            'Lo script, la scena, il pulsante, l\'interruttore o l\'elenco '
+            'che inserisce: il servizio giusto lo sceglie la plancia dal '
+            'dominio dell\'entita\'.',
+      ),
+      const Campo(
+        'opzione',
+        'Quale voce dell\'elenco',
+        spiega:
+            'Solo per un select o un input_select: scritta come Home '
+            'Assistant la elenca, lettera per lettera.',
+      ),
+      const Campo(
+        'stato',
+        'Dove si legge se e\' inserito',
+        tipo: Tipo.entita,
+        spiega: 'Vuoto: si guarda l\'entita\' stessa',
+      ),
+      const Campo(
+        'valore',
+        'Il valore che vuol dire «inserito»',
+        spiega:
+            'Vuoto vuol dire «on». Senza questo il tasto funziona lo stesso: '
+            'semplicemente non resta acceso.',
+      ),
+    ],
+  ),
+  /* La ventilazione meccanica (#371): quattro macchine al massimo, ognuna con
+   * le sue caselle. Si scrivono normalizzate come le legge `normalizzaVmc`:
+   * `nome`, `stanza`, e le dodici caselle. */
+  'La ventilazione' => SchermataDiElenco(
+    titolo: 'La ventilazione',
+    sotto:
+        'Le macchine della VMC: le quattro temperature dello scambiatore — '
+        'da fuori verso casa e da casa verso fuori — il bypass, i filtri, le '
+        'ventole. Dalle quattro temperature la plancia calcola il recupero '
+        'di calore, che e\' l\'unico numero che dice se la macchina vale '
+        'quello che costa.',
+    collegamento: collegamento,
+    forma: const Forma.elenco(chiaveDellaVmc),
+    unaCosa: 'una VMC',
+    massimo: massimoVmc,
+    campi: [
+      const Campo('nome', 'Nome', spiega: 'Comfoair'),
+      const Campo('stanza', 'Stanza', tipo: Tipo.stanza),
+      Campo(
+        macchinaDellaVmc.$1,
+        '${macchinaDellaVmc.$2} ${macchinaDellaVmc.$3}',
+        tipo: Tipo.entita,
+        domini: const ['climate', 'fan'],
+        spiega: macchinaDellaVmc.$4,
+      ),
+      for (final (chiave, glifo, parola, esempio) in temperatureDellaVmc)
+        Campo(
+          chiave,
+          '$glifo $parola',
+          tipo: Tipo.entita,
+          domini: const ['sensor'],
+          spiega: esempio,
+        ),
+      for (final (chiave, glifo, parola, esempio) in interruttoriDellaVmc)
+        Campo(
+          chiave,
+          '$glifo $parola',
+          tipo: Tipo.entita,
+          domini: const ['binary_sensor'],
+          spiega: esempio,
+        ),
+      for (final (chiave, glifo, parola, esempio) in numeriDellaVmc)
+        Campo(
+          chiave,
+          '$glifo $parola',
+          tipo: Tipo.entita,
+          domini: const ['sensor'],
+          spiega: esempio,
+        ),
+    ],
+  ),
+  'La tavolozza' => SchermataDellaTavolozza(impostazioni: impostazioni),
 
   'Sostituzioni' => SchermataDelleSostituzioni(collegamento: collegamento),
   'Runtime' => SchermataDelRuntime(collegamento: collegamento),

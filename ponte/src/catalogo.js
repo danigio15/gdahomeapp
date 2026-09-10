@@ -22,6 +22,10 @@
  */
 
 /* Piu' di cosi' non e' un menu: e' un'esportazione. */
+/* Quante entita' si possono chiedere per nome in una volta: e' il tetto
+ * dell'integrazione, e la plancia le chiede a lotti di duecento. */
+export const ENTITA_MASSIME = 500;
+
 export const DISPOSITIVI_MASSIMI = 200;
 
 /* Le entita' della plancia stessa non sono di nessun elettrodomestico. */
@@ -117,7 +121,41 @@ export function costruisciIlCatalogo({
   stati,
   manifesti,
   deviceIds = null,
+  entityIds = null,
 } = {}) {
+  /* Chieste per nome (#382): di quale integrazione sono queste entita'. E' la
+   * domanda che fa la scheda delle macchine — lo stato non lo dice, il
+   * registro si' — e la risposta e' l'elenco di righe e basta, senza
+   * dispositivi ne' integrazioni, come la da' l'integrazione. Chi non e' nel
+   * registro non c'e': un'entita' inventata non diventa vera per essere stata
+   * chiesta. */
+  if (Array.isArray(entityIds) && entityIds.length) {
+    const statoDi = new Map();
+    for (const stato of elenco(stati)) if (stato?.entity_id) statoDi.set(stato.entity_id, stato);
+    const perEntita = new Map();
+    for (const voce of elenco(entita)) if (voce?.entity_id) perEntita.set(voce.entity_id, voce);
+    const nomiDeiDispositivi = new Map();
+    for (const dispositivo of elenco(dispositivi))
+      if (dispositivo?.id)
+        nomiDeiDispositivi.set(
+          dispositivo.id,
+          testo(dispositivo.name_by_user) || testo(dispositivo.name),
+        );
+    const righe = [];
+    for (const entityId of [...new Set(entityIds)].slice(0, ENTITA_MASSIME)) {
+      const voce = perEntita.get(entityId);
+      if (!voce || voce.platform === DOMINIO_DELLA_PLANCIA) continue;
+      righe.push(
+        rigaDellEntita(
+          voce,
+          statoDi.get(voce.entity_id),
+          voce.device_id ? nomiDeiDispositivi.get(voce.device_id) || "" : "",
+        ),
+      );
+    }
+    return { entities: righe };
+  }
+
   const perDispositivo = new Map();
   for (const voce of elenco(entita)) {
     if (!voce || voce.platform === DOMINIO_DELLA_PLANCIA || !voce.device_id) continue;
@@ -235,10 +273,12 @@ export class Catalogo {
 
   /* Il catalogo, nella forma che la pagina si aspetta. Solleva se Home
    * Assistant non risponde alle domande che non possono mancare. */
-  async chiedi({ deviceIds = null } = {}) {
+  async chiedi({ deviceIds = null, entityIds = null } = {}) {
     const registri = await this._iRegistri();
-    const stati = Array.isArray(deviceIds) && deviceIds.length ? await this._gliStati() : [];
-    return costruisciIlCatalogo({ ...registri, stati, deviceIds });
+    const perNome = Array.isArray(entityIds) && entityIds.length;
+    const stati =
+      perNome || (Array.isArray(deviceIds) && deviceIds.length) ? await this._gliStati() : [];
+    return costruisciIlCatalogo({ ...registri, stati, deviceIds, entityIds });
   }
 
   async _iRegistri() {

@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import '../../casa/collegamento.dart';
 import '../../casa/plancia/apparecchio.dart';
 import '../../casa/plancia/home.dart';
+import '../../casa/plancia/scelte.dart';
 import '../../casa/plancia/scatto.dart';
 import '../../vestito/pezzi.dart';
 import 'pezzi.dart';
@@ -35,7 +36,28 @@ class SchermataDeiBlocchi extends StatelessWidget {
       final nomi = {
         for (final (chiave, nome) in blocchiDellaHome) chiave: nome,
       };
+      /* Il flusso dell'energia in Home (#415): un si'/no, e senza niente
+       * scritto si vede. Non e' un blocco della fila — non si sposta — ed e'
+       * qui perche' nella Config sta sotto la fila dei blocchi. */
+      final flusso = flussoInHome(
+        quaderno.cambiate.containsKey(chiaveDelFlussoInHome)
+            ? quaderno.cambiate[chiaveDelFlussoInHome]
+            : scatto.aperto(chiaveDelFlussoInHome),
+      );
       return [
+        Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: SwitchListTile(
+            value: flusso,
+            onChanged: (acceso) =>
+                quaderno.segna(chiaveDelFlussoInHome, acceso),
+            title: const Text('Mostra il flusso dell\'energia'),
+            subtitle: const Text(
+              'Il disegno del flusso dal fotovoltaico alla casa, dalla casa '
+              'alla batteria e all\'auto, accanto alle tessere della Home.',
+            ),
+          ),
+        ),
         for (final (posto, quale) in fila.indexed)
           Card(
             margin: const EdgeInsets.symmetric(vertical: 4),
@@ -92,6 +114,7 @@ class SchermataDelleTessere extends StatelessWidget {
     ('luci', '💡', 'Luci'),
     ('aperture', '🪟', 'Aperture'),
     ('sicurezza', '🛡️', 'Sicurezza'),
+    ('porte', '🚪', 'Porte'),
     ('batterie', '🔋', 'Batterie'),
     ('aria', '🌬️', 'Qualita\' dell\'aria'),
     ('fumo', '🔥', 'Fumo'),
@@ -102,7 +125,11 @@ class SchermataDelleTessere extends StatelessWidget {
     ('media', '🔊', 'Lettori'),
     ('ev', '🚗', 'Auto elettrica'),
     ('robot', '🤖', 'Robot'),
-    ('ups', '🔌', 'Continuita\''),
+    ('ups', '🔌', 'UPS'),
+    ('varchi', '🚪', 'Varchi'),
+    ('presenza', '🏃', 'Presenza'),
+    ('macchine', '🖥️', 'Server e rete'),
+    ('vmc', '🔄', 'Ventilazione'),
     ('custom', '📌', 'Gli avvisi tuoi'),
   ];
 

@@ -29,6 +29,9 @@ abstract interface class ServitoreDiQuestoSistema {
   set tema(String quale);
   set barra(String come);
 
+  /// La tavolozza (`cd_tavolozza`), anche lei di questo dispositivo.
+  set tavolozza(String quale);
+
   /// Quanto prendono le barre del telefono: vale dalla pagina dopo, e
   /// intanto la cambia da fuori chi mostra il riquadro.
   set margini(({double alto, double basso}) quanto);
@@ -56,6 +59,9 @@ class _SulTelefono implements ServitoreDiQuestoSistema {
 
   @override
   set barra(String come) => _servitore.barra = come;
+
+  @override
+  set tavolozza(String quale) => _servitore.tavolozza = quale;
 
   @override
   set margini(({double alto, double basso}) quanto) =>

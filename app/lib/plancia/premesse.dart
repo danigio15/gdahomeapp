@@ -32,6 +32,7 @@ class Premesse {
     this.leggera = false,
     this.tema = 'auto',
     this.barra = 'scomparsa',
+    this.tavolozza = '',
     this.margini = (alto: 0.0, basso: 0.0),
   });
 
@@ -48,6 +49,12 @@ class Premesse {
 
   /// `scomparsa` o `fissa`.
   String barra;
+
+  /// La tavolozza (`cd_tavolozza`): `notte`, `grafite`, `bosco`, `sabbia`,
+  /// `menta`, `ardesia`, o vuoto. Nella plancia sceglierne una scrive anche
+  /// `cd_theme` con la sua famiglia — scura le prime tre, chiara le altre —
+  /// e toglierla cancella la chiave. Qui si fa lo stesso.
+  String tavolozza;
 
   /// Quanto prendono le barre del telefono, in punti.
   ({double alto, double basso}) margini;
@@ -114,14 +121,24 @@ class Premesse {
   /// scrive li' **prima** che parta: se no li legge vuoti e poi cambia colore
   /// sotto gli occhi.
   String get temaEBarra {
-    final quale = switch (tema) {
-      'chiaro' => 'light',
-      'scuro' => 'dark',
-      _ => 'auto',
-    };
+    final scura = const ['notte', 'grafite', 'bosco'].contains(tavolozza);
+    final chiara = const ['sabbia', 'menta', 'ardesia'].contains(tavolozza);
+    final quale = scura
+        ? 'dark'
+        : chiara
+        ? 'light'
+        : switch (tema) {
+            'chiaro' => 'light',
+            'scuro' => 'dark',
+            _ => 'auto',
+          };
     final come = barra == 'fissa' ? 'fixed' : 'auto';
+    final laTavolozza = scura || chiara
+        ? 'localStorage.setItem("cd_tavolozza",${jsonEncode(tavolozza)});'
+        : 'localStorage.removeItem("cd_tavolozza");';
     return '<script>try{'
         'localStorage.setItem("cd_theme",${jsonEncode(quale)});'
+        '$laTavolozza'
         'localStorage.setItem("cd_navbar_mode",${jsonEncode(come)});'
         '}catch(e){}</script>';
   }

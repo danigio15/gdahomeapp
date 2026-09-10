@@ -109,6 +109,7 @@ abstract interface class ServitoreDiQuestoSistema {
   set leggera(bool valore);
   set tema(String quale);
   set barra(String come);
+  set tavolozza(String quale);
   set margini(({double alto, double basso}) quanto);
 }
 
@@ -148,6 +149,8 @@ class _ServitoreSulWeb implements ServitoreDiQuestoSistema {
   set tema(String quale) => premesse.tema = quale;
   @override
   set barra(String come) => premesse.barra = come;
+  @override
+  set tavolozza(String quale) => premesse.tavolozza = quale;
   @override
   set margini(({double alto, double basso}) quanto) =>
       premesse.margini = quanto;

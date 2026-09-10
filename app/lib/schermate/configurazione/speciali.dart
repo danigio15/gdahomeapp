@@ -10,31 +10,45 @@ import 'package:flutter/material.dart';
 import '../../casa/collegamento.dart';
 import '../../casa/impostazioni.dart';
 import '../../casa/plancia/scatto.dart';
+import '../../casa/plancia/scelte.dart';
 import '../../casa/plancia/vasche.dart';
 import '../../vestito/pezzi.dart';
 import 'pezzi.dart';
 
-/// Le dodici sezioni della plancia, con le stesse parole della Config.
+/// Le sezioni della plancia, con le stesse parole della Config.
 ///
-/// Sono quelle di `cdNavVisMap()` nel runtime della dashboard, ed e' da li'
-/// che vanno prese: e' la mappa che decide quale tasto della barra sparisce
-/// quando in `cd_sections` c'e' scritto `false`. Erano otto — mancavano gli
-/// elettrodomestici, le finestre, l'irrigazione e la piscina — e chi dall'app
-/// voleva togliere dalla barra la pagina della piscina che non ha non poteva
-/// farlo, mentre dal browser si', perche' li' i tasti sono dodici.
+/// Sono `SEZIONI` di `core/lelenco-delle-sezioni.js` (1.4.17): la chiave
+/// che sta in `cd_sections`, il nome, e una riga sotto. E' l'elenco che
+/// decide quale tasto della barra sparisce quando in `cd_sections` c'e'
+/// scritto `false` — e sono ventisei, piu' Assist che ha la sua riga.
 const sezioniDellaPlancia = <(String, String, String)>[
   ('home', 'Home', 'Meteo, avvisi, azioni rapide'),
   ('energy', 'Energia', 'Fotovoltaico e consumi'),
-  ('appliances', 'Elettrodomestici', 'Lavatrice, lavastoviglie, forno'),
   ('ev', 'Auto elettrica', 'EV + wallbox (EVCC)'),
-  ('boiler', 'Solare termico', 'Boiler solare'),
-  ('clima', 'Clima', 'Condizionatori e riscaldamento'),
-  ('temp', 'Temperatura', 'Temperature e umidita\''),
-  ('tapparelle', 'Finestre', 'Tapparelle, tende e finestre'),
+  ('boiler', 'Gestione termica', 'Solare, scaldabagno, caldaia'),
   ('security', 'Sicurezza', 'Telecamere e allarme'),
+  ('server', 'Server e rete', 'Il server, i container, la rete'),
+  ('temp', 'Temperature', 'Temperature e umidita\''),
+  ('clima', 'Clima', 'Condizionatori e riscaldamento'),
+  ('tapparelle', 'Finestre', 'Tapparelle, tende e finestre'),
   ('piscina', 'Piscina', 'Sensori, pompa e filtrazione'),
   ('irrigazione', 'Irrigazione', 'Le zone e il loro programma'),
-  ('server', 'MiniPC', 'Monitoraggio server'),
+  ('appliances', 'Elettrodomestici', 'Lavatrice, lavastoviglie, forno'),
+  ('robot', 'Aspirapolvere', 'Aspirapolvere e lavapavimenti'),
+  ('animali', 'Animali', 'Il gatto e il cane di casa'),
+  ('luci', 'Luci', 'Le luci, stanza per stanza'),
+  ('stanze', 'Stanze', 'Le stanze e quello che ci sta dentro'),
+  ('calendario', 'Agenda', 'Calendari e liste di cose da fare'),
+  ('ups', 'UPS', 'I gruppi di continuita\''),
+  ('allerte', 'Allerte', 'Meteo e protezione civile'),
+  ('rifiuti', 'Rifiuti', 'La raccolta differenziata'),
+  ('varchi', 'Varchi', 'I contatti di porte e finestre'),
+  ('presenza', 'Presenza', 'Movimento e presenza'),
+  ('porte', 'Porte e cancelli', 'Le aperture che si comandano'),
+  ('media', 'Musica', 'Lettori e casse'),
+  ('batterie', 'Batterie', 'Le pile di casa'),
+  ('mie', 'Le tue sezioni', 'Le pagine fatte da te'),
+  (sezioneDiAssist, 'Assist', 'Chiedere le cose a casa, scrivendo o parlando'),
 ];
 
 /* ─── Generali ───────────────────────────────────────────────────────────── */
@@ -86,6 +100,47 @@ class SchermataDeiGenerali extends StatelessWidget {
               quaderno.segna('cd_branding', {...marchio, 'subtitle': scritto}),
         ),
         const SizedBox(height: 26),
+        const Insegna('La lingua della plancia'),
+        /* La lingua (#350) **non e' JSON**: la plancia la legge con
+         * `getItem` nuda, e si scrive nuda — una stringa in Dart passa cosi'
+         * com'e'. «Lingua di Home Assistant» vuol dire nessuna scelta, e
+         * nessuna scelta e' la chiave che non c'e'. */
+        DropdownButtonFormField<String>(
+          initialValue:
+              lingueDellaPlancia.any(
+                (una) => una.$1 == _laLingua(quaderno, scatto),
+              )
+              ? _laLingua(quaderno, scatto)
+              : 'auto',
+          decoration: const InputDecoration(
+            labelText: 'Lingua della plancia',
+            border: OutlineInputBorder(),
+            isDense: true,
+          ),
+          items: [
+            const DropdownMenuItem(
+              value: 'auto',
+              child: Text('Lingua di Home Assistant'),
+            ),
+            for (final (codice, nome) in lingueDellaPlancia)
+              DropdownMenuItem(value: codice, child: Text(nome)),
+          ],
+          onChanged: (scelta) => quaderno.segna(
+            chiaveDellaLingua,
+            scelta == null || scelta == 'auto' ? null : scelta,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Lasciandola sulla lingua di Home Assistant la plancia segue il '
+          'profilo di chi guarda. Sceglierne una la fissa per questa '
+          'dashboard, anche se Home Assistant parla un\'altra lingua.',
+          style: Theme.of(dentro).textTheme.bodySmall?.copyWith(
+            color: Theme.of(dentro).colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 26),
         const Insegna('Chi comanda la configurazione'),
         CampoDiTesto(
           etichetta: 'Utente amministratore',
@@ -113,6 +168,17 @@ class SchermataDeiGenerali extends StatelessWidget {
       ];
     },
   );
+}
+
+/// La lingua com'e' adesso: quella segnata sul quaderno, o quella nello
+/// scatto, letta nuda (non e' JSON). `auto` quando non c'e'.
+String _laLingua(Quaderno quaderno, Scatto scatto) {
+  if (quaderno.cambiate.containsKey(chiaveDellaLingua)) {
+    final segnata = quaderno.cambiate[chiaveDellaLingua];
+    return segnata is String && segnata.isNotEmpty ? segnata : 'auto';
+  }
+  final scritta = scatto.valori[chiaveDellaLingua]?.trim() ?? '';
+  return scritta.isEmpty ? 'auto' : scritta;
 }
 
 /* ─── Le sezioni accese ──────────────────────────────────────────────────── */

@@ -93,6 +93,7 @@ class EntitaDelDispositivo {
     required this.spenta,
     this.chiaveDiTraduzione = '',
     this.classeDiStato = '',
+    this.piattaforma = '',
   });
 
   final String id;
@@ -112,6 +113,11 @@ class EntitaDelDispositivo {
   /// mentre il nome cambia. Il motore che indovina le caselle la pesa quanto
   /// il nome e l'identificativo messi insieme.
   final String chiaveDiTraduzione;
+
+  /// Di che integrazione e': `proxmoxve`, `fritz`. Lo stato non lo dice — la
+  /// classe `connectivity` ce l'hanno il router, la stampante e ogni telefono
+  /// — e il registro si'. Arriva solo quando lo si chiede per nome.
+  final String piattaforma;
 
   /// `total`, `total_increasing`, `measurement`. Distingue un contatore che
   /// sale per sempre da una lettura che va su e giu': senza, il «totale» di un
@@ -160,10 +166,14 @@ class IlCatalogo {
 Future<IlCatalogo> chiediIlCatalogo(
   Filo filo, {
   List<String> dispositivi = const [],
+  List<String> entita = const [],
 }) async {
   final detto = await filo.chiedi({
     'type': comandoDelCatalogo,
     if (dispositivi.isNotEmpty) 'device_ids': dispositivi,
+    /* Per nome: di quale integrazione e' questa entita'. E' la domanda che
+     * fa la scheda delle macchine, e il registro e' l'unico che lo sa. */
+    if (entita.isNotEmpty) 'entity_ids': entita,
   }, entro: attesaDelCatalogo);
   return leggiIlCatalogo(detto['result']);
 }
@@ -185,8 +195,9 @@ IlCatalogo leggiIlCatalogo(dynamic risultato) {
 
   final entita = <String, List<EntitaDelDispositivo>>{};
   for (final una in elenco('entities')) {
+    /* Chieste per nome possono non avere un dispositivo: stanno sotto la
+     * chiave vuota, che e' comunque una risposta. */
     final quale = '${una['device_id'] ?? ''}';
-    if (quale.isEmpty) continue;
     (entita[quale] ??= []).add(
       EntitaDelDispositivo(
         id: '${una['entity_id'] ?? ''}',
@@ -197,6 +208,7 @@ IlCatalogo leggiIlCatalogo(dynamic risultato) {
         spenta: una['disabled'] == true || una['hidden'] == true,
         chiaveDiTraduzione: '${una['translation_key'] ?? ''}',
         classeDiStato: '${una['state_class'] ?? ''}',
+        piattaforma: '${una['platform'] ?? ''}',
       ),
     );
   }

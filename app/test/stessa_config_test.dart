@@ -360,52 +360,61 @@ void main() {
     expect(sbagliate..sort(), isEmpty, reason: sbagliate.join('; '));
   });
 
-  /* I tasti della barra: dodici, non otto.
+  /* Le sezioni che si accendono e si spengono: ventisei, piu' Assist.
    *
-   * `cdNavVisMap()` e' la mappa che decide quale tasto sparisce quando in
-   * `cd_sections` c'e' scritto `false`. L'app ne elencava otto: gli
-   * elettrodomestici, le finestre, l'irrigazione e la piscina si potevano
-   * togliere dalla barra dal browser e non dall'app.
+   * Dalla 1.4.17 l'elenco e' uno solo, `SEZIONI` in
+   * `core/lelenco-delle-sezioni.js`: la chiave che sta in `cd_sections`, la
+   * scheda della Config, il nome. Prima erano i dodici di `cdNavVisMap()`
+   * nel runtime piu' quelli che ogni modulo si registrava da solo, e l'app
+   * ne elencava dodici: le altre quattordici si spegnevano dal browser e non
+   * dall'app. Assist non sta in quell'elenco — ha la sua riga nelle
+   * Impostazioni — ma scrive la stessa chiave, e qui si conta a mano.
    */
-  test('le sezioni della barra sono quelle di cdNavVisMap', () {
-    final runtime = File('../ponte/plancia/legacy/dashboard-runtime-it.js')
+  test('le sezioni sono quelle di lelenco-delle-sezioni.js', () {
+    final elenco = File('../ponte/plancia/src/core/lelenco-delle-sezioni.js')
         .readAsStringSync();
-    final mappa = RegExp(
-      r'function cdNavVisMap\(\)\s*\{\s*return\s*\{([^}]*)\}',
-    ).firstMatch(runtime);
-    expect(mappa, isNotNull, reason: 'cdNavVisMap non sta piu\' nel runtime');
+    final blocco = RegExp(
+      r'export const SEZIONI = Object\.freeze\(\s*\[([\s\S]*?)\]\.map',
+    ).firstMatch(elenco);
+    expect(blocco, isNotNull, reason: 'SEZIONI non sta piu\' nel modello');
     final dellaPlancia = {
       for (final voce in RegExp(
-        r"(\w+)\s*:\s*'[^']*'",
-      ).allMatches(mappa!.group(1)!))
+        r'chiave:\s*"([a-z0-9_]+)"',
+      ).allMatches(blocco!.group(1)!))
         voce.group(1)!,
+      'assist',
     };
-    expect(dellaPlancia.length, greaterThan(8));
+    expect(dellaPlancia.length, greaterThan(20));
 
     final speciali = File('lib/schermate/configurazione/speciali.dart')
         .readAsStringSync();
-    final elenco = RegExp(
+    final scritte = RegExp(
       r'const sezioniDellaPlancia = <\(String, String, String\)>\[(.*?)\n\];',
       dotAll: true,
     ).firstMatch(speciali);
-    expect(elenco, isNotNull, reason: 'sezioniDellaPlancia non si trova piu\'');
+    expect(
+      scritte,
+      isNotNull,
+      reason: 'sezioniDellaPlancia non si trova piu\'',
+    );
     final dellApp = {
       for (final voce in RegExp(
         r"\('([a-z0-9_]+)',",
-      ).allMatches(elenco!.group(1)!))
+      ).allMatches(scritte!.group(1)!))
         voce.group(1)!,
+      /* Assist si scrive con la sua costante, non con la parola. */
+      if (scritte.group(1)!.contains('(sezioneDiAssist,')) 'assist',
     };
 
     expect(
       dellaPlancia.difference(dellApp).toList()..sort(),
       isEmpty,
-      reason:
-          'queste pagine si tolgono dalla barra dal browser e non dall\'app',
+      reason: 'queste sezioni si spengono dal browser e non dall\'app',
     );
     expect(
       dellApp.difference(dellaPlancia).toList()..sort(),
       isEmpty,
-      reason: 'l\'app elenca pagine che nella barra non ci sono',
+      reason: 'l\'app elenca sezioni che nella plancia non ci sono',
     );
   });
 }

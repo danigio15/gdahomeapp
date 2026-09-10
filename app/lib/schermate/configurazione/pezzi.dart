@@ -389,12 +389,17 @@ class CampoDiEntita extends StatelessWidget {
     this.chiave = '',
     this.contesto = '',
     this.rinomina,
+    this.esempio,
   });
 
   final String etichetta;
   final String valore;
   final ValueChanged<String> cambiato;
   final Collegamento collegamento;
+
+  /// L'esempio in grigio, quando la Config della plancia ne ha uno suo:
+  /// `sensor.petkit_food_level` dice piu' di `sensor.nome`.
+  final String? esempio;
 
   /// Se non e' vuoto, il cercatore ne tiene conto: `light`, `switch`. Non e'
   /// un filtro che si subisce — le altre si cercano lo stesso, che un filtro
@@ -434,9 +439,9 @@ class CampoDiEntita extends StatelessWidget {
           etichetta: etichetta,
           valore: valore,
           mono: true,
-          suggerimento: domini.isEmpty
-              ? 'dominio.nome'
-              : '${domini.first}.nome',
+          suggerimento:
+              esempio ??
+              (domini.isEmpty ? 'dominio.nome' : '${domini.first}.nome'),
           cambiato: cambiato,
         ),
       ),

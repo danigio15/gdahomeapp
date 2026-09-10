@@ -30,6 +30,63 @@ void main() {
       );
     });
 
+    /* Le sette famiglie sono quelle della plancia, con gli stessi nomi e
+     * nello stesso ordine; e le schede stanno ognuna nella famiglia in cui la
+     * mette `SCHEDE`. Non e' una copia a mano che si controlla da sola: si
+     * legge `core/alberatura-del-config.js` dentro l'add-on. */
+    test('le famiglie e le schede sono quelle di alberatura-del-config.js', () {
+      final sorgente = File(
+        '../ponte/plancia/src/core/alberatura-del-config.js',
+      ).readAsStringSync();
+      final famiglie = [
+        for (final trovata in RegExp(
+          r'chiave:\s*"([a-z]+)",\s*\n\s*glifo:[^\n]*\n\s*it:\s*"([^"]+)"',
+        ).allMatches(sorgente))
+          (trovata.group(1)!, trovata.group(2)!),
+      ];
+      expect(famiglie, hasLength(7));
+      expect(
+        [for (final (_, nome) in famiglie) nome],
+        famiglieDellaPlancia,
+        reason: 'le famiglie della plancia, nel loro ordine',
+      );
+      expect(
+        [
+          for (final famiglia in albero)
+            if (famiglia.voci.any((v) => v.viene == Provenienza.dallaPlancia))
+              famiglia.titolo,
+        ],
+        famiglieDellaPlancia,
+        reason:
+            'l\'albero dell\'app comincia con le sette famiglie della plancia',
+      );
+
+      final schede = {
+        for (final trovata in RegExp(
+          r'^\s+([a-z0-9]+):\s*\{\s*famiglia:\s*"([a-z]+)"',
+          multiLine: true,
+        ).allMatches(sorgente))
+          trovata.group(1)!: trovata.group(2)!,
+      };
+      expect(schede.keys.toSet(), schedeDellaPlancia);
+      final nomeDellaFamiglia = {
+        for (final (chiave, nome) in famiglie) chiave: nome,
+      };
+      for (final famiglia in albero) {
+        for (final voce in famiglia.voci) {
+          final scheda = voce.da;
+          if (scheda == null || !schede.containsKey(scheda)) continue;
+          expect(
+            famiglia.titolo,
+            nomeDellaFamiglia[schede[scheda]],
+            reason:
+                '«${voce.titolo}» viene da $scheda, che nella plancia sta '
+                'sotto ${nomeDellaFamiglia[schede[scheda]]}',
+          );
+        }
+      }
+    });
+
     test('non si inventa schede che nella plancia non ci sono', () {
       /* `sost` non sta nella fila in cima all'editor — si arriva da dentro —
        * ma esiste: e' l'unica ammessa oltre l'elenco. */
