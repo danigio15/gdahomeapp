@@ -1109,6 +1109,32 @@ try {
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
 
+  /* L'auto elettrica: la marca si sceglie da una griglia di loghi, non si
+   * batte, e sotto ci sono le sue diciassette entita'. Quelle sono la prova
+   * che `caselle.json` arriva davvero: dietro l'ingress il service worker se
+   * lo mangiava, e la scheda restava a meta' senza dire niente. */
+  racconta("apro un'auto");
+  await premiCercando(pagina, "Auto elettrica");
+  await aspettaCheCompaia(pagina, "Aggiungi un'auto");
+  await attendi(800);
+  await scatta(pagina, "6p5-auto");
+  await premi(pagina, "Aggiungi un'auto");
+  await aspettaCheCompaia(pagina, "La marca");
+  await attendi(700);
+  await scorri(pagina, 300);
+  await attendi(400);
+  await scatta(pagina, "6p6-una-auto");
+  await premi(pagina, "La marca");
+  await aspettaCheCompaia(pagina, "Alfa Romeo");
+  await attendi(1500);
+  await scatta(pagina, "6p7-le-marche");
+  await premi(pagina, "Annulla");
+  await attendi(600);
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
   /* Le persone: la scheda che fino a ieri era quella generica delle voci —
    * nome, entita', un emoji — e adesso ha tutto quello che la plancia sa di
    * una persona. Compreso il ritratto, che si compone e lo disegna la
