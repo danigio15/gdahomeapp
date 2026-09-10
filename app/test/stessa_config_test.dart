@@ -98,6 +98,80 @@ void main() {
     );
   });
 
+  /* Le caselle di una scheda, controllate contro **il suo** modello.
+   *
+   * Il controllo qui sotto — «la parola compare da qualche parte nella
+   * plancia» — e' un pavimento troppo basso, e si e' visto: `temp`, `battery`,
+   * `load`, `status` compaiono tutte, in altri file e per altre cose, e
+   * intanto la temperatura di uno scaldabagno finiva in `temp` mentre
+   * `normalizeScaldabagni` legge `temperatura`, e le tre caselle di un gruppo
+   * di continuita' finivano in `battery`/`load`/`status` mentre
+   * `normalizzaUps` legge `batteria`/`carico`/`stato`. Si riempivano, si
+   * salvavano, e la scheda restava vuota.
+   *
+   * Qui ogni scheda si controlla contro il file che ne dichiara la forma. La
+   * tabella e' scritta a mano ed e' giusto cosi': dice, riga per riga, dove
+   * sta la verita' di quella scheda.
+   */
+  const modelli = <String, String>{
+    'Scaldabagni': '../ponte/plancia/src/core/scaldabagno-model.js',
+    'Continuita\'': '../ponte/plancia/src/core/ups-model.js',
+    'Robot': '../ponte/plancia/src/core/robot-model.js',
+    'Quadro avvisi': '../ponte/plancia/src/sections/home-widgets-section.js',
+  };
+
+  test('le caselle di una scheda le legge il suo modello', () {
+    final voci = File('lib/schermate/configurazione/voci.dart')
+        .readAsStringSync();
+    /* Le voci stanno in uno `switch` sul titolo: ognuna va da dove comincia
+     * la sua riga fino a dove comincia la prossima.
+     *
+     * `split` non serve: in Dart non restituisce i gruppi catturati, quindi i
+     * titoli si perderebbero per strada e la tabella qui sopra non troverebbe
+     * piu' niente — cioe' la prova passerebbe sempre. */
+    final teste = RegExp(r"\n  '((?:[^'\\]|\\.)*)' =>")
+        .allMatches(voci)
+        .toList();
+    final campiPerVoce = <String, List<String>>{};
+    for (final (quale, testa) in teste.indexed) {
+      final fino = quale + 1 < teste.length
+          ? teste[quale + 1].start
+          : voci.length;
+      final corpo = voci.substring(testa.end, fino);
+      campiPerVoce[testa.group(1)!.replaceAll("\\'", "'")] = [
+        for (final trovato in RegExp(
+          r"Campo(?:DellApparecchio|DellaVoce)?\(\s*'([a-zA-Z_][a-zA-Z_0-9]*)'",
+        ).allMatches(corpo))
+          trovato.group(1)!,
+      ];
+    }
+    /* Se un giorno una voce cambiasse titolo, la tabella non troverebbe piu'
+     * niente e il controllo passerebbe sempre. Meglio che cada qui. */
+    for (final titolo in modelli.keys) {
+      expect(
+        campiPerVoce[titolo],
+        isNotNull,
+        reason: 'nessuna voce si chiama piu\' «$titolo»',
+      );
+      expect(campiPerVoce[titolo], isNotEmpty, reason: titolo);
+    }
+
+    final fuori = <String>[];
+    for (final voce in modelli.entries) {
+      final modello = File(voce.value).readAsStringSync();
+      for (final campo in campiPerVoce[voce.key]!) {
+        /* Il nome intero, non un pezzo di un altro: cercando «temp» come
+         * sottostringa lo si trova dentro `.temperatura`, e la prova che
+         * doveva accorgersi proprio di quello passava contenta. */
+        if (RegExp('[.\'"]${RegExp.escape(campo)}\\b').hasMatch(modello)) {
+          continue;
+        }
+        fuori.add('${voce.key}: «$campo» non sta in ${voce.value}');
+      }
+    }
+    expect(fuori..sort(), isEmpty, reason: fuori.join('; '));
+  });
+
   /* E il contrario: una casella che l'app scrive e la plancia non legge.
    *
    * E' il difetto piu' cattivo dei due, perche' non si vede nemmeno

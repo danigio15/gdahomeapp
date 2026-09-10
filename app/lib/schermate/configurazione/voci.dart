@@ -601,19 +601,20 @@ Widget? schermataDi(
         'Sicurezza.',
     collegamento: collegamento,
     famiglia: piu.leCentrali,
+    /* L'entita' della centrale sta nella sua casella, dentro il profilo —
+     * `dm.security_centrale_allarme` — come le diciassette dell'auto. Qui
+     * c'era un campo `entity` sciolto che nella plancia non legge nessuno. */
+    sezioneDelleCaselle: 'security',
     campi: const [
       CampoDellaVoce('id', 'Sigla', spiega: 'casa, garage…'),
-      CampoDellaVoce(
-        'entity',
-        'La centrale',
-        entita: true,
-        domini: ['alarm_control_panel'],
-      ),
     ],
   ),
   'Scaldabagni' => SchermataDiFamiglia(
     titolo: 'Scaldabagni',
-    sotto: 'Uno per bagno, se serve.',
+    sotto:
+        'Uno per bagno, se serve. Un\'entita\' `water_heater` si porta dietro '
+        'stato, temperatura e obiettivo tutti insieme; chi ha uno scaldabagno '
+        'comandato a interruttore li mette uno per uno.',
     collegamento: collegamento,
     famiglia: piu.gliScaldabagni,
     campi: const [
@@ -621,14 +622,44 @@ Widget? schermataDi(
         'entity',
         'Lo scaldabagno',
         entita: true,
-        domini: ['water_heater', 'switch'],
+        domini: ['water_heater'],
+        spiega: 'Se ce l\'hai, basta questa',
       ),
       CampoDellaVoce(
-        'temp',
+        'interruttore',
+        'Cosa lo accende',
+        entita: true,
+        domini: ['switch', 'input_boolean'],
+      ),
+      /* `temperatura`, non `temp`: `normalizeScaldabagni` legge
+       * `item.temperatura || item.temperature`, e quello che finiva in `temp`
+       * non lo guardava nessuno. */
+      CampoDellaVoce(
+        'temperatura',
         'Temperatura dell\'acqua',
         entita: true,
         domini: ['sensor'],
+        venivaDa: 'temp',
       ),
+      CampoDellaVoce(
+        'obiettivo',
+        'Temperatura da raggiungere',
+        entita: true,
+        domini: ['sensor', 'number', 'input_number'],
+      ),
+      CampoDellaVoce(
+        'potenza',
+        'Potenza adesso (W)',
+        entita: true,
+        domini: ['sensor'],
+      ),
+      CampoDellaVoce(
+        'energia',
+        'Energia consumata (kWh)',
+        entita: true,
+        domini: ['sensor'],
+      ),
+      CampoDellaVoce('room', 'In che bagno sta', spiega: 'Il nome della stanza'),
     ],
   ),
   /* `cd_impianti_termici` non e' un elenco: e' la risposta a «cosa hai nel
@@ -638,24 +669,76 @@ Widget? schermataDi(
   'Impianti termici' => SchermataDegliImpiantiTermici(
     collegamento: collegamento,
   ),
+  /* Le otto caselle di `CASELLE_UPS`, coi loro nomi veri.
+   *
+   * Erano tre, e tutte e tre col nome sbagliato: `battery`, `load`, `status`
+   * dove la plancia legge `batteria`, `carico`, `stato`. Si riempivano, si
+   * salvavano, e la scheda del gruppo restava vuota. */
   'Continuita\'' => SchermataDiFamiglia(
     titolo: 'Continuita\'',
-    sotto: 'I gruppi di continuita\', con la loro carica e il loro carico.',
+    sotto:
+        'I gruppi di continuita\'. Bastano lo stato e la carica: il resto e\' '
+        'per chi ha un UPS che lo dice.',
     collegamento: collegamento,
     famiglia: piu.laContinuita,
     campi: const [
       CampoDellaVoce(
-        'battery',
+        'stato',
+        'Stato del gruppo',
+        entita: true,
+        domini: ['sensor', 'binary_sensor'],
+        venivaDa: 'status',
+        spiega: 'Online, a batteria, batteria scarica',
+      ),
+      CampoDellaVoce(
+        'rete',
+        'C\'e\' la corrente dalla rete',
+        entita: true,
+        domini: ['binary_sensor', 'sensor'],
+      ),
+      CampoDellaVoce(
+        'batteria',
         'Carica della batteria (%)',
         entita: true,
         domini: ['sensor'],
+        venivaDa: 'battery',
       ),
-      CampoDellaVoce('load', 'Carico (%)', entita: true, domini: ['sensor']),
       CampoDellaVoce(
-        'status',
-        'Stato',
+        'carico',
+        'Carico (%)',
         entita: true,
-        domini: ['sensor', 'binary_sensor'],
+        domini: ['sensor'],
+        venivaDa: 'load',
+      ),
+      CampoDellaVoce(
+        'autonomia',
+        'Autonomia che resta (minuti)',
+        entita: true,
+        domini: ['sensor'],
+      ),
+      CampoDellaVoce(
+        'tensione',
+        'Tensione (V)',
+        entita: true,
+        domini: ['sensor'],
+      ),
+      CampoDellaVoce(
+        'potenza',
+        'Potenza (W)',
+        entita: true,
+        domini: ['sensor'],
+      ),
+      CampoDellaVoce(
+        'temperatura',
+        'Temperatura (°C)',
+        entita: true,
+        domini: ['sensor'],
+      ),
+      CampoDellaVoce(
+        'invertita',
+        'La lettura e\' al contrario',
+        bandiera: true,
+        spiega: 'Accendilo se il sensore dice «acceso» quando la rete manca',
       ),
     ],
   ),

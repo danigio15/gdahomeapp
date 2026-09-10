@@ -39,6 +39,8 @@ class CampoDellaVoce {
     this.entita = false,
     this.domini = const [],
     this.come = ComeSiRiempie.aMano,
+    this.venivaDa,
+    this.bandiera = false,
   });
 
   final String chiave;
@@ -49,6 +51,18 @@ class CampoDellaVoce {
 
   /// Come si riempie: battendola, o scegliendo da un elenco.
   final ComeSiRiempie come;
+
+  /// Come si chiamava, quando l'app la scriveva col nome sbagliato.
+  ///
+  /// La temperatura di uno scaldabagno finiva in `temp` e la plancia legge
+  /// `temperatura`; la carica di un gruppo di continuita' in `battery` invece
+  /// che `batteria`. Si salvavano senza un errore e non le leggeva nessuno.
+  /// Quello che c'e' nel nome vecchio si vede lo stesso, e al primo
+  /// salvataggio passa in quello giusto.
+  final String? venivaDa;
+
+  /// Un si'/no invece di una casella: il verso di una lettura.
+  final bool bandiera;
 }
 
 /// Da dove viene quello che finisce in una casella.
@@ -433,6 +447,21 @@ class _UnaVoceState extends State<_UnaVoce> {
                   const SizedBox(height: 14),
                   for (final campo in widget.campi) ...[
                     switch (campo.come) {
+                      /* Prima di tutto il nome vecchio, se ce n'e' uno: quello
+                       * che ci sta dentro si legge, e il primo tocco lo
+                       * sposta nella casella giusta. */
+                      _ when campo.bandiera => SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _leggi(voce, campo) == 'true',
+                        onChanged: (acceso) => setState(
+                          () => _scrivi(voce, campo, acceso ? true : null),
+                        ),
+                        title: Text(campo.etichetta),
+                        subtitle: campo.spiega == null
+                            ? null
+                            : Text(campo.spiega!),
+                        dense: true,
+                      ),
                       ComeSiRiempie.laMarca => _LaMarca(
                         valore: '${voce.dentro[campo.chiave] ?? ''}',
                         collegamento: widget.collegamento,
@@ -446,19 +475,19 @@ class _UnaVoceState extends State<_UnaVoce> {
                       ),
                       ComeSiRiempie.aMano when campo.entita => CampoDiEntita(
                         etichetta: campo.etichetta,
-                        valore: '${voce.dentro[campo.chiave] ?? ''}',
+                        valore: _leggi(voce, campo),
                         domini: campo.domini,
                         contesto: widget.famiglia.unaCosa,
                         collegamento: widget.collegamento,
                         cambiato: (scritto) =>
-                            setState(() => voce.metti(campo.chiave, scritto)),
+                            setState(() => _scrivi(voce, campo, scritto)),
                       ),
                       ComeSiRiempie.aMano => CampoDiTesto(
                         etichetta: campo.etichetta,
-                        valore: '${voce.dentro[campo.chiave] ?? ''}',
+                        valore: _leggi(voce, campo),
                         suggerimento: campo.spiega,
                         cambiato: (scritto) =>
-                            setState(() => voce.metti(campo.chiave, scritto)),
+                            setState(() => _scrivi(voce, campo, scritto)),
                       ),
                     },
                     const SizedBox(height: 14),
@@ -728,4 +757,26 @@ class _UnaRigaDiFoto extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Quello che c'e' nella casella, o nel nome che aveva prima.
+///
+/// Il nome vecchio si legge finche' quello giusto e' vuoto: chi aveva battuto
+/// la temperatura del suo scaldabagno la ritrova al suo posto invece di
+/// trovare un campo vuoto e chiedersi dove sia finita.
+String _leggi(Voce voce, CampoDellaVoce campo) {
+  final adesso = '${voce.dentro[campo.chiave] ?? ''}';
+  if (adesso.trim().isNotEmpty) return adesso;
+  final vecchio = campo.venivaDa;
+  return vecchio == null ? adesso : '${voce.dentro[vecchio] ?? ''}';
+}
+
+/// Scrive nella casella giusta, e toglie di mezzo quella vecchia.
+///
+/// Se restasse, chi apre la stessa scheda dal browser vedrebbe due caselle che
+/// dicono la stessa cosa e non saprebbe quale conta.
+void _scrivi(Voce voce, CampoDellaVoce campo, Object? valore) {
+  voce.metti(campo.chiave, valore);
+  final vecchio = campo.venivaDa;
+  if (vecchio != null) voce.dentro.remove(vecchio);
 }

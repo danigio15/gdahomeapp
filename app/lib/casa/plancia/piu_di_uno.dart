@@ -74,11 +74,16 @@ const gliImpiantiSolari = Famiglia(
   sceltaPerNumero: false,
 );
 
+/* La centrale ha una casella sola, e sta **dentro** il profilo come le
+ * diciassette dell'auto: `REFS_CENTRALE` e' `['dm.security_centrale_allarme']`,
+ * e `entitaDellaCentrale` legge `centrale.caselle[RIF_CENTRALE]`. L'app
+ * scriveva un `entity` sciolto accanto, che li' non guarda nessuno. */
 const leCentrali = Famiglia(
   chiave: 'cd_centrali',
   laScelta: 'cd_centrale_scelta',
   unaCosa: 'una centrale',
   leCose: 'Le centrali d\'allarme',
+  prefissoDelleCaselle: 'dm.security_',
   sceltaPerNumero: false,
 );
 

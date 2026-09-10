@@ -229,6 +229,36 @@ E due sezioni erano ferme a metà:
   minore). L'app ne faceva una sola, la prima, e su una entità sola: «temperatura
   sopra 30» o «termostato in heat» dall'app non si potevano fare.
 
+### Il terzo giro: le caselle contro il loro modello
+
+Il controllo «la parola compare da qualche parte nella plancia» era un pavimento
+troppo basso, e si è visto. `temp`, `battery`, `load`, `status` compaiono tutte
+— in altri file, per altre cose — e intanto:
+
+| nell'app era | la plancia legge | dove |
+|---|---|---|
+| `temp` | `temperatura` | uno scaldabagno |
+| `battery` | `batteria` | un gruppo di continuità |
+| `load` | `carico` | un gruppo di continuità |
+| `status` | `stato` | un gruppo di continuità |
+| `entity` sciolto | `caselle['dm.security_centrale_allarme']` | una centrale d'allarme |
+
+Cinque caselle che si riempivano, si salvavano, e lasciavano la scheda vuota.
+Adesso ogni scheda si controlla contro **il file che ne dichiara la forma**
+(`scaldabagno-model.js`, `ups-model.js`, `robot-model.js`…), col nome intero e
+non come sottostringa — cercando `temp` dentro `.temperatura` la prova che
+doveva accorgersene passava contenta.
+
+Con i nomi giusti sono arrivati anche i campi che mancavano:
+
+- **Scaldabagni** — erano due, sono nove: l'entità `water_heater`,
+  l'interruttore per chi lo comanda a relè, temperatura, obiettivo, potenza,
+  energia, il bagno in cui sta.
+- **Continuità** — erano tre, sono nove: stato, rete, batteria, carico,
+  autonomia, tensione, potenza, temperatura, più il verso della lettura.
+- **Centrali d'allarme** — l'entità è passata nella sua casella dentro il
+  profilo, dov'è nelle auto e negli impianti solari.
+
 ## Quello che resta davvero
 
 1. **Il modello canonico.** L'app scrive solo le chiavi storiche, e non passa
@@ -252,6 +282,7 @@ Tre prove, e nessun numero scritto a mano che non ne abbia una dietro:
   nessuna casella degli editor della plancia resti fuori dall'app, e che nessuna
   casella dell'app finisca in un posto che nella plancia non legge nessuno — e
   la **forma** di ogni chiave, elenco contro oggetto, presa dal valore di
-  ripiego che la plancia stessa passa a `readJson`;
+  ripiego che la plancia stessa passa a `readJson`, e le caselle di ogni scheda
+  contro il file che ne dichiara il modello;
 - `app/test/configurazione_test.dart` controlla che l'alberatura copra tutte le
   schede della Config della plancia.
