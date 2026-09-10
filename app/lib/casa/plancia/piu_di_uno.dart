@@ -89,12 +89,15 @@ const gliScaldabagni = Famiglia(
   leCose: 'Gli scaldabagni',
 );
 
-const gliImpiantiTermici = Famiglia(
-  chiave: 'cd_impianti_termici',
-  laScelta: '',
-  unaCosa: 'un impianto',
-  leCose: 'Gli impianti termici',
-);
+/* Gli impianti termici qui non ci sono, ed e' voluto.
+ *
+ * `cd_impianti_termici` sembra una famiglia come le altre e non lo e': non
+ * tiene un elenco di macchine, tiene tre si'/no — «cosa c'e' nel locale
+ * caldaia». Trattarlo come una famiglia voleva dire scriverci un elenco, e la
+ * plancia un elenco li' lo scarta (`normalizzaScelta` torna `null` per un
+ * Array): la scelta fatta dal browser spariva al primo salvataggio dall'app.
+ * Sta in `casa/plancia/caldo.dart`, con la sua forma.
+ */
 
 const laContinuita = Famiglia(
   chiave: 'cd_ups',

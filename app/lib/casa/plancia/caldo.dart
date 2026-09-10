@@ -139,3 +139,55 @@ List<Map<String, String>> leggiIlTermicoCaldo(dynamic letto) {
       if (leggiUnaVoceDelCaldo(uno) case final voce?) voce,
   ];
 }
+
+/// Quali macchine ci sono nel locale caldaia.
+///
+/// `cd_impianti_termici` **non** e' un elenco di impianti: e' la risposta a
+/// «cosa hai davvero», tre si'/no. La pagina Gestione termica mostra solo
+/// quelli spuntati, e con due o tre compaiono le linguette per passare
+/// dall'uno all'altro.
+///
+/// L'app ci scriveva un elenco di profili con dentro delle entita'. Quello
+/// che la plancia fa con un elenco sta scritto in `normalizzaScelta`: se non
+/// e' un oggetto — e un Array non lo e' — torna `null`, cioe' «non ha ancora
+/// scelto», e la scelta vera se ne va. Peggio: salvare da qui cancellava le
+/// tre spunte fatte dal browser.
+const chiaveDegliImpiantiTermici = 'cd_impianti_termici';
+
+/// I tre, nell'ordine in cui il calore arriva in casa: prima quello che e'
+/// gratis, poi quello che si paga a corrente, poi quello che si paga a gas.
+/// Da `TIPI_TERMICI`, e le parole da `ETICHETTE_TERMICHE` e dai suoi aiuti.
+const iTipiTermici = <(String, String, String)>[
+  (
+    'solare',
+    'Solare termico',
+    'Pannelli sul tetto e accumulo: le caselle sono quelle della voce Solare '
+        'termico.',
+  ),
+  (
+    'scaldabagno',
+    'Scaldabagno',
+    'Uno scaldabagno elettrico, anche alimentato dal fotovoltaico.',
+  ),
+  (
+    'caldaia',
+    'Caldaia',
+    'Una caldaia a gas: mandata, ritorno e pressione del circuito.',
+  ),
+];
+
+/// Quali sono accesi, da quello che c'e' scritto.
+///
+/// Un elenco — la forma che l'app scriveva prima — vale come «non ha mai
+/// scelto», che e' esattamente quello che ne fa la plancia.
+Map<String, bool> laScelaTermica(Object? scritto) {
+  final dato = scritto is Map ? scritto : const <String, dynamic>{};
+  return {
+    for (final (tipo, _, _) in iTipiTermici)
+      tipo:
+          dato[tipo] == true ||
+          dato[tipo] == 'true' ||
+          dato[tipo] == 1 ||
+          dato[tipo] == '1',
+  };
+}

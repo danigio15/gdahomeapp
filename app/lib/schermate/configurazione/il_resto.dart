@@ -624,7 +624,13 @@ class SchermataDegliInterruttori extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        if (scatto.mappa(chiaveDelFumo).isEmpty)
+        /* Il registro e' un **elenco** di rilevatori gia' visti, non una
+         * mappa: la plancia lo legge con `readJson(SMOKE_SEEN_KEY, [])` e lo
+         * riscrive come `[...new Set([...registro, ...daSegnare])]`. Letto
+         * come mappa tornava sempre vuoto — «nessun rilevatore ha suonato»
+         * anche con il registro pieno — e svuotarlo ci scriveva un oggetto
+         * dove va un elenco. */
+        if (scatto.parole(chiaveDelFumo).isEmpty)
           Text(
             'Non c\'e\' niente da leggere: nessun rilevatore ha suonato.',
             style: Theme.of(dentro).textTheme.bodySmall?.copyWith(
@@ -633,9 +639,9 @@ class SchermataDegliInterruttori extends StatelessWidget {
           )
         else
           FilledButton.tonalIcon(
-            onPressed: () => quaderno.segna(chiaveDelFumo, <String, dynamic>{}),
+            onPressed: () => quaderno.segna(chiaveDelFumo, const <String>[]),
             icon: const Icon(Icons.done_all_rounded),
-            label: Text('Ho letto (${scatto.mappa(chiaveDelFumo).length})'),
+            label: Text('Ho letto (${scatto.parole(chiaveDelFumo).length})'),
           ),
       ];
     },

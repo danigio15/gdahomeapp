@@ -146,4 +146,82 @@ void main() {
           '${orfane.join(', ')}',
     );
   });
+
+  /* E la **forma** di una chiave, che e' il terzo modo di scollegarsi.
+   *
+   * Non basta che i campi ci siano: conta se una chiave tiene un elenco o un
+   * oggetto. `cd_impianti_termici` sembrava una famiglia come le auto e non lo
+   * e' — tiene tre si'/no, «cosa c'e' nel locale caldaia» — e l'app ci
+   * scriveva un elenco: `normalizzaScelta` scarta un Array, quindi la scelta
+   * fatta dal browser spariva al primo salvataggio dall'app.
+   * `cd_fumo_rilevato` era il contrario: un elenco letto come mappa, e il
+   * registro dei rilevatori che hanno suonato risultava sempre vuoto.
+   *
+   * La forma la dichiara la plancia stessa, nel valore di ripiego che passa a
+   * `readJson`: `[]` vuol dire elenco, `{}` oggetto. Qui si controlla che l'app
+   * non legga con l'attrezzo dell'altra forma.
+   */
+  test('e ogni chiave ha la forma che la plancia le da\'', () {
+    final plancia = StringBuffer();
+    for (final dove in [
+      '../ponte/plancia/src/core',
+      '../ponte/plancia/src/sections',
+    ]) {
+      for (final cosa in Directory(dove).listSync()) {
+        if (cosa is File && cosa.path.endsWith('.js')) {
+          plancia.write(cosa.readAsStringSync());
+        }
+      }
+    }
+    final elenchi = <String>{};
+    final oggetti = <String>{};
+    final forma = RegExp(r'readJson\(\s*"(cd_[a-z0-9_]+)"\s*,\s*(\[\]|\{\})');
+    for (final trovato in forma.allMatches(plancia.toString())) {
+      (trovato.group(2) == '[]' ? elenchi : oggetti).add(trovato.group(1)!);
+    }
+    expect(elenchi.length + oggetti.length, greaterThan(10));
+
+    final app = _iSorgentiDellApp();
+    /* Il nome che la costante ha in Dart, quando ce l'ha: si legge la chiave
+     * per nome piu' spesso che per stringa. */
+    String? costanteDi(String chiave) {
+      final trovata = RegExp("const (\\w+) = '${RegExp.escape(chiave)}';")
+          .firstMatch(app);
+      return trovata?.group(1);
+    }
+
+    final sbagliate = <String>[];
+    for (final (quali, attrezzoSbagliato, comEChiamato) in [
+      (elenchi, 'mappa', 'un elenco letto come mappa'),
+      (oggetti, 'oggetti', 'un oggetto letto come elenco'),
+    ]) {
+      for (final chiave in quali) {
+        /* Una chiave puo' essere letta in tutte e due le forme dalla plancia
+         * — `cd_stanze` lo e' — e allora non c'e' niente da dire. */
+        if (elenchi.contains(chiave) && oggetti.contains(chiave)) continue;
+        for (final come in [("'$chiave'"), costanteDi(chiave)]) {
+          if (come == null) continue;
+          if (app.contains('scatto.$attrezzoSbagliato($come)')) {
+            sbagliate.add('$chiave: $comEChiamato');
+          }
+        }
+      }
+    }
+    expect(sbagliate..sort(), isEmpty, reason: sbagliate.join('; '));
+
+    /* `cd_impianti_termici` non passa dal controllo qui sopra — la plancia lo
+     * legge con `readJson(CHIAVE_IMPIANTI, null)`, e `null` non dice che forma
+     * abbia — ma e' proprio quello che si era scollegato, quindi si dice a
+     * mano. Tre si'/no, non un elenco: se un giorno tornasse a essere una
+     * famiglia come le auto, la scelta fatta dal browser sparirebbe di nuovo
+     * al primo salvataggio dall'app. */
+    expect(
+      app.contains("chiave: 'cd_impianti_termici'"),
+      isFalse,
+      reason:
+          'cd_impianti_termici tiene tre si\'/no («cosa c\'e\' nel locale '
+          'caldaia»), non un elenco di impianti: normalizzaScelta scarta un '
+          'Array e la scelta si perde',
+    );
+  });
 }

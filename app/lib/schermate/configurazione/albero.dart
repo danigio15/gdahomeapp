@@ -300,7 +300,7 @@ const albero = <Famiglia>[
       ),
       Voce(
         'Impianti termici',
-        'Caldaie e pompe di calore',
+        'Cosa c\'e\' nel locale caldaia: solare, scaldabagno, caldaia',
         disegno: 'caldaia',
         da: 'sez9',
         pronta: true,

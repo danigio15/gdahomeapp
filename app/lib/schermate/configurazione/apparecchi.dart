@@ -36,6 +36,7 @@ class CampoDellApparecchio {
     this.bandiera = false,
     this.numero = false,
     this.scelte = const [],
+    this.tante = false,
   });
 
   final String chiave;
@@ -54,6 +55,9 @@ class CampoDellApparecchio {
   /// La prima voce con la chiave vuota vale «lascia decidere a Home Assistant»,
   /// che e' cosa fa la plancia quando il tipo non e' dichiarato.
   final List<(String, String)> scelte;
+
+  /// Piu' entita' nello stesso campo: i comandi a parte di un robot.
+  final bool tante;
 }
 
 /// Le altre entita' di un apparecchio, con nomi che si capiscono.
@@ -870,6 +874,19 @@ class _IlCampo extends StatelessWidget {
         title: Text(campo.etichetta),
         subtitle: campo.spiega == null ? null : Text(campo.spiega!),
         dense: true,
+      );
+    }
+    if (campo.tante) {
+      return TanteEntita(
+        etichetta: campo.etichetta,
+        spiega: campo.spiega,
+        domini: campo.domini,
+        quali: [for (final una in (adesso as List? ?? [])) '$una'],
+        collegamento: collegamento,
+        cambiate: (dopo) {
+          apparecchio.metti(campo.chiave, dopo.isEmpty ? null : dopo);
+          cambiato();
+        },
       );
     }
     if (campo.scelte.isNotEmpty) {

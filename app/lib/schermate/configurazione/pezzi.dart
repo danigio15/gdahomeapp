@@ -535,3 +535,91 @@ class _ChiediIlNomeState extends State<_ChiediIlNome> {
     ],
   );
 }
+
+/// Piu' entita' in un campo solo: le luci di un'azione «popup luci».
+///
+/// La plancia le tiene in un elenco (`a.lights`) e le fa scegliere una per
+/// volta; qui e' lo stesso, con la pastiglia che si toglie con la crocetta. Un
+/// campo di testo con le virgole sarebbe stato meno codice e piu' errori: un
+/// identificativo battuto a mano e' un identificativo sbagliato.
+class TanteEntita extends StatelessWidget {
+  const TanteEntita({
+    super.key,
+    required this.etichetta,
+    required this.quali,
+    required this.collegamento,
+    required this.cambiate,
+    this.spiega,
+    this.domini = const [],
+  });
+
+  final String etichetta;
+  final String? spiega;
+  final List<String> domini;
+  final List<String> quali;
+  final Collegamento collegamento;
+  final ValueChanged<List<String>> cambiate;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          etichetta,
+          style: Theme.of(context).textTheme.labelLarge
+              ?.copyWith(color: colori.onSurfaceVariant),
+        ),
+        if (spiega != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            spiega!,
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: colori.onSurfaceVariant),
+          ),
+        ],
+        const SizedBox(height: 8),
+        if (quali.isEmpty)
+          Text(
+            'Nessuna scelta',
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: colori.onSurfaceVariant),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final una in quali)
+                InputChip(
+                  label: Text(una, style: const TextStyle(fontSize: 12)),
+                  onDeleted: () => cambiate(
+                    [...quali]..removeWhere((quale) => quale == una),
+                  ),
+                ),
+            ],
+          ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: () async {
+              final scelta = await cercaUnEntita(
+                context,
+                collegamento: collegamento,
+                etichetta: etichetta,
+                domini: domini,
+              );
+              if (scelta == null || scelta.isEmpty) return;
+              if (quali.contains(scelta)) return;
+              cambiate([...quali, scelta]);
+            },
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Aggiungine una'),
+          ),
+        ),
+      ],
+    );
+  }
+}

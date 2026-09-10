@@ -1260,6 +1260,48 @@ try {
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
 
+  /* Il robot e gli avvisi: le due sezioni ferme a meta'.
+   *
+   * Un robot nella plancia porta la sua mappa, la sua batteria e fino a dodici
+   * tasti; un avviso guarda piu' entita' insieme e ha sei condizioni. */
+  racconta("apro un robot");
+  await premiCercando(pagina, "Robot");
+  await aspettaCheCompaia(pagina, "Aggiungi un robot");
+  await attendi(700);
+  await premi(pagina, "Aggiungi un robot");
+  await aspettaCheCompaia(pagina, "La sua mappa");
+  await attendi(800);
+  await scorri(pagina, 400);
+  await attendi(500);
+  await scatta(pagina, "6z-un-robot");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
+  racconta("apro il quadro avvisi");
+  await premiCercando(pagina, "Quadro avvisi");
+  await aspettaCheCompaia(pagina, "Aggiungi un avviso");
+  await attendi(700);
+  await premi(pagina, "Aggiungi un avviso");
+  await aspettaCheCompaia(pagina, "Quando compare");
+  await attendi(800);
+  await scatta(pagina, "6z2-un-avviso");
+  /* La scheda di un elenco e' un foglio che sale dal basso: si chiude toccando
+   * il velo dietro — «Dismiss» — non con la freccia in alto, che li' non c'e'. */
+  await premi(pagina, "Dismiss");
+  await attendi(700);
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
+  racconta("apro il locale caldaia");
+  await premiCercando(pagina, "Impianti termici");
+  await aspettaCheCompaia(pagina, "Solare termico");
+  await attendi(800);
+  await scatta(pagina, "6z3-locale-caldaia");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
   racconta("apro le caselle dell'energia");
   await premiCercando(pagina, "Le caselle dell'Energia");
   await aspettaCheCompaia(pagina, "su 36 riempite");

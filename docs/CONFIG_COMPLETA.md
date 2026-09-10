@@ -201,6 +201,34 @@ salvataggio lo sposta.
   sulla tessera. Senza, la sonda fuori dalla finestra si chiamava
   «Temperatura» come tutte le altre.
 
+### Il secondo giro: la forma, non solo i campi
+
+I campi non bastavano. Una chiave può tenere un **elenco** o un **oggetto**, e
+sbagliare quello è peggio di una casella mancante: la casella mancante non
+c'era, la forma sbagliata cancella quello che c'era.
+
+- **`cd_impianti_termici`** sembrava una famiglia come le auto e non lo è: tiene
+  **tre sì/no** — «cosa c'è nel locale caldaia»: solare, scaldabagno, caldaia —
+  e la pagina Gestione termica mostra solo quelli spuntati. L'app ci scriveva un
+  elenco di profili con dentro delle entità, e `normalizzaScelta` scarta un
+  Array: la scelta fatta dal browser **spariva al primo salvataggio dall'app**.
+  Adesso sono tre interruttori, come là.
+- **`cd_fumo_rilevato`** è il contrario: un elenco dei rilevatori che hanno già
+  suonato, letto dall'app come mappa. Risultava sempre vuoto — «nessun
+  rilevatore ha suonato» anche col registro pieno — e «Ho letto» ci scriveva un
+  oggetto dove va un elenco.
+
+E due sezioni erano ferme a metà:
+
+- **Robot** — c'erano nome, entità e stanza. Mancavano la sua mappa, la batteria
+  quando sta in un sensore a parte (i tagliaerba la pubblicano così), e i suoi
+  **tasti**, fino a dodici: «le varie entità del robot continuano a non essere
+  visibili, da solo la modalità aspirazione».
+- **Quadro avvisi** — un avviso nella dashboard guarda **più entità insieme** e
+  ha **sei condizioni** (accesa, spenta, uguale a, diversa da, maggiore,
+  minore). L'app ne faceva una sola, la prima, e su una entità sola: «temperatura
+  sopra 30» o «termostato in heat» dall'app non si potevano fare.
+
 ## Quello che resta davvero
 
 1. **Il modello canonico.** L'app scrive solo le chiavi storiche, e non passa
@@ -220,9 +248,10 @@ Tre prove, e nessun numero scritto a mano che non ne abbia una dietro:
   quelle dichiarate compaiano davvero nei sorgenti;
 - `app/test/caselle_test.dart` controlla che nessun gruppo di `CD_SLOTS` resti
   senza una schermata che lo apra;
-- `app/test/stessa_config_test.dart` controlla i **campi**, nei due versi: che
-  nessuna casella degli editor della plancia resti fuori dall'app, e che
-  nessuna casella dell'app finisca in un posto che nella plancia non legge
-  nessuno;
+- `app/test/stessa_config_test.dart` controlla i **campi**, nei due versi — che
+  nessuna casella degli editor della plancia resti fuori dall'app, e che nessuna
+  casella dell'app finisca in un posto che nella plancia non legge nessuno — e
+  la **forma** di ogni chiave, elenco contro oggetto, presa dal valore di
+  ripiego che la plancia stessa passa a `readJson`;
 - `app/test/configurazione_test.dart` controlla che l'alberatura copra tutte le
   schede della Config della plancia.

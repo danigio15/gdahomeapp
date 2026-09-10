@@ -540,13 +540,55 @@ Widget? schermataDi(
   ),
   'Robot' => SchermataDegliApparecchi(
     titolo: 'Robot',
-    sotto: 'Aspirapolvere e lavapavimenti.',
+    sotto:
+        'Aspirapolvere, lavapavimenti e tagliaerba. Oltre al robot si possono '
+        'dare la sua mappa, la sua batteria se sta in un sensore a parte, e i '
+        'tasti che l\'integrazione gli mette accanto.',
     sezione: Sezione.robot,
     unaCosa: 'un robot',
     collegamento: collegamento,
-    domini: const ['vacuum'],
+    domini: const ['vacuum', 'lawn_mower'],
     laFoto: true,
     leAltreEntita: false,
+    campi: const [
+      CampoDellApparecchio(
+        'mapEntity',
+        'La sua mappa',
+        entita: true,
+        domini: ['camera', 'image'],
+        spiega: 'La telecamera che disegna la piantina',
+      ),
+      /* La batteria puo' stare fuori dall'entita' del robot: molti tagliaerba
+       * la pubblicano cosi', e senza questa casella la scheda non la mostra. */
+      CampoDellApparecchio(
+        'battery',
+        'La sua batteria',
+        entita: true,
+        domini: ['sensor'],
+        spiega: 'Solo se non e\' dentro l\'entita\' del robot',
+      ),
+      /* I comandi a parte (#306): «le varie entita' del robot continuano a
+       * non essere visibili, da solo la modalita' aspirazione». Sono tasti,
+       * interruttori e tendine che l'integrazione pubblica accanto a lui —
+       * fino a dodici, che una scheda e' una scheda. */
+      CampoDellApparecchio(
+        'comandi',
+        'I suoi tasti, fino a dodici',
+        tante: true,
+        domini: [
+          'button',
+          'input_button',
+          'script',
+          'scene',
+          'automation',
+          'switch',
+          'input_boolean',
+          'select',
+          'input_select',
+        ],
+        spiega: 'Aspirazione, ritorno alla base, pulizia programmata…',
+      ),
+    ],
   ),
   'Piscina' => SchermataDellaPiscina(collegamento: collegamento),
   'Irrigazione' => _Irrigazione(collegamento: collegamento),
@@ -589,25 +631,12 @@ Widget? schermataDi(
       ),
     ],
   ),
-  'Impianti termici' => SchermataDiFamiglia(
-    titolo: 'Impianti termici',
-    sotto: 'Caldaie e pompe di calore.',
+  /* `cd_impianti_termici` non e' un elenco: e' la risposta a «cosa hai nel
+   * locale caldaia», tre si'/no. Qui c'era una schermata a profili che ci
+   * scriveva dentro un elenco di entita' — una forma che `normalizzaScelta`
+   * scarta, e che salvando cancellava le tre spunte fatte dal browser. */
+  'Impianti termici' => SchermataDegliImpiantiTermici(
     collegamento: collegamento,
-    famiglia: piu.gliImpiantiTermici,
-    campi: const [
-      CampoDellaVoce(
-        'entity',
-        'L\'impianto',
-        entita: true,
-        domini: ['climate', 'water_heater', 'switch'],
-      ),
-      CampoDellaVoce(
-        'temp',
-        'Temperatura di mandata',
-        entita: true,
-        domini: ['sensor'],
-      ),
-    ],
   ),
   'Continuita\'' => SchermataDiFamiglia(
     titolo: 'Continuita\'',
@@ -655,14 +684,46 @@ Widget? schermataDi(
   'Quadro avvisi' => SchermataDiElenco(
     titolo: 'Quadro avvisi',
     sotto:
-        'Cosa fa comparire un avviso in Home, e con che parole. '
-        'L\'avviso compare quando l\'entita\' e\' accesa o aperta.',
+        'Cosa fa comparire un avviso in Home, e con che parole. Un avviso '
+        'puo\' guardare piu\' entita\' insieme: compare quando almeno una di '
+        'loro fa quello che gli hai detto.',
     collegamento: collegamento,
     forma: const Forma.elenco('cd_avvisi_custom'),
     unaCosa: 'un avviso',
     campi: const [
       Campo('name', 'Cosa dice', serve: true, spiega: 'Finestra cucina aperta'),
-      Campo('entity', 'Quale entita\'', tipo: Tipo.entita, serve: true),
+      /* `entities`, al plurale: e' cosi' che lo scrive la Config della
+       * dashboard — «un avviso, tante finestre» — e con una sola l'app
+       * scriveva `entity`, che la plancia accetta ma tiene una entita' sola.
+       * Quella gia' scritta diventa un elenco di uno al primo salvataggio. */
+      Campo(
+        'entities',
+        'Quali entita\'',
+        tipo: Tipo.entitaTante,
+        serve: true,
+        venivaDa: 'entity',
+      ),
+      /* Quando conta come «e' successo». Erano sei nella dashboard e una
+       * sola qui: chi voleva «temperatura sopra 30» o «termostato in heat»
+       * dall'app non poteva farlo. */
+      Campo(
+        'cond',
+        'Quando compare',
+        tipo: Tipo.scelta,
+        scelte: [
+          ('on', 'Accesa, attiva o aperta'),
+          ('off', 'Spenta o chiusa'),
+          ('eq', 'Uguale a…'),
+          ('neq', 'Diversa da…'),
+          ('gt', 'Maggiore di…'),
+          ('lt', 'Minore di…'),
+        ],
+      ),
+      Campo(
+        'value',
+        'Uguale a cosa, o sopra quanto',
+        spiega: 'Serve alle ultime quattro: heat, 23.5, open…',
+      ),
       Campo('icon', 'Disegno', spiega: 'Un emoji, per esempio 🔔'),
     ],
   ),

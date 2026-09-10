@@ -21,7 +21,6 @@ import 'package:flutter/material.dart';
 import '../../casa/collegamento.dart';
 import '../../casa/plancia/scatto.dart';
 import '../../vestito/pezzi.dart';
-import 'cercatore.dart';
 import 'pezzi.dart';
 
 /// Cosa vuole un campo.
@@ -497,9 +496,19 @@ class _ModuloState extends State<_Modulo> {
     for (final campo in campi) {
       final vecchio = campo.venivaDa;
       if (vecchio == null) continue;
-      if ('${cosa[campo.chiave] ?? ''}'.trim().isNotEmpty) continue;
+      final adesso = cosa[campo.chiave];
+      final gia = adesso is List
+          ? adesso.isNotEmpty
+          : '${adesso ?? ''}'.trim().isNotEmpty;
+      if (gia) continue;
       final cera = cosa.remove(vecchio);
-      if (cera != null && '$cera'.trim().isNotEmpty) cosa[campo.chiave] = cera;
+      if (cera == null || '$cera'.trim().isEmpty) continue;
+      /* Quando il campo nuovo tiene piu' cose e il vecchio ne teneva una
+       * sola — l'entita' di un avviso, che nella plancia e' un elenco — quella
+       * diventa un elenco di uno invece di finire dentro come testo. */
+      cosa[campo.chiave] = campo.tipo == Tipo.entitaTante && cera is! List
+          ? ['$cera']
+          : cera;
     }
     return cosa;
   }
@@ -507,7 +516,14 @@ class _ModuloState extends State<_Modulo> {
   void _conferma() {
     for (final campo in widget.campi) {
       if (!campo.serve) continue;
-      if ('${_cosa[campo.chiave] ?? ''}'.trim().isEmpty) {
+      final valore = _cosa[campo.chiave];
+      /* Un elenco vuoto e' vuoto: scritto dentro una stringa diventa «[]»,
+       * che di lettere ne ha due, e un avviso senza nemmeno un'entita'
+       * sarebbe passato di qui come se fosse pieno. */
+      final vuoto = valore is List
+          ? valore.isEmpty
+          : '${valore ?? ''}'.trim().isEmpty;
+      if (vuoto) {
         setState(() => _manca = 'Manca: ${campo.etichetta}');
         return;
       }
@@ -586,8 +602,10 @@ class _ModuloState extends State<_Modulo> {
                       }
                     }),
                   ),
-                  Tipo.entitaTante => _TanteEntita(
-                    campo: campo,
+                  Tipo.entitaTante => TanteEntita(
+                    etichetta: campo.etichetta,
+                    spiega: campo.spiega,
+                    domini: campo.domini,
                     quali: [
                       for (final una in (_cosa[campo.chiave] as List? ?? []))
                         '$una',
@@ -639,89 +657,6 @@ class _ModuloState extends State<_Modulo> {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Piu' entita' in un campo solo: le luci di un'azione «popup luci».
-///
-/// La plancia le tiene in un elenco (`a.lights`) e le fa scegliere una per
-/// volta; qui e' lo stesso, con la pastiglia che si toglie con la crocetta. Un
-/// campo di testo con le virgole sarebbe stato meno codice e piu' errori: un
-/// identificativo battuto a mano e' un identificativo sbagliato.
-class _TanteEntita extends StatelessWidget {
-  const _TanteEntita({
-    required this.campo,
-    required this.quali,
-    required this.collegamento,
-    required this.cambiate,
-  });
-
-  final Campo campo;
-  final List<String> quali;
-  final Collegamento collegamento;
-  final ValueChanged<List<String>> cambiate;
-
-  @override
-  Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          campo.etichetta,
-          style: Theme.of(context).textTheme.labelLarge
-              ?.copyWith(color: colori.onSurfaceVariant),
-        ),
-        if (campo.spiega != null) ...[
-          const SizedBox(height: 2),
-          Text(
-            campo.spiega!,
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(color: colori.onSurfaceVariant),
-          ),
-        ],
-        const SizedBox(height: 8),
-        if (quali.isEmpty)
-          Text(
-            'Nessuna scelta',
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(color: colori.onSurfaceVariant),
-          )
-        else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final una in quali)
-                InputChip(
-                  label: Text(una, style: const TextStyle(fontSize: 12)),
-                  onDeleted: () => cambiate(
-                    [...quali]..removeWhere((quale) => quale == una),
-                  ),
-                ),
-            ],
-          ),
-        const SizedBox(height: 8),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: () async {
-              final scelta = await cercaUnEntita(
-                context,
-                collegamento: collegamento,
-                etichetta: campo.etichetta,
-                domini: campo.domini,
-              );
-              if (scelta == null || scelta.isEmpty) return;
-              if (quali.contains(scelta)) return;
-              cambiate([...quali, scelta]);
-            },
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('Aggiungine una'),
-          ),
-        ),
-      ],
     );
   }
 }

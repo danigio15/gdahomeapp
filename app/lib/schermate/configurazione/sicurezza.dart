@@ -516,3 +516,52 @@ class _UnaCaldaia extends StatelessWidget {
     );
   }
 }
+
+/// Cosa c'e' nel locale caldaia: solare, scaldabagno, caldaia.
+///
+/// Tre si'/no, non un elenco di impianti — vedi `chiaveDegliImpiantiTermici`
+/// in `casa/plancia/caldo.dart` per il perche' la differenza conta. La pagina
+/// Gestione termica della plancia mostra solo quelli spuntati, e con due o tre
+/// compaiono in alto le linguette per passare dall'uno all'altro.
+///
+/// Le entita' di ognuno non stanno qui: il solare le tiene nelle sue tredici
+/// caselle (voce «Solare termico»), la caldaia nelle sue dieci (voce «La
+/// caldaia»), gli scaldabagni nel loro elenco. Qui si dice soltanto quali
+/// macchine esistono.
+class SchermataDegliImpiantiTermici extends StatelessWidget {
+  const SchermataDegliImpiantiTermici({super.key, required this.collegamento});
+
+  final Collegamento collegamento;
+
+  @override
+  Widget build(BuildContext context) => PaginaDiConfigurazione(
+    titolo: 'Cosa c\'e\' nel locale caldaia',
+    sotto:
+        'Spunta quello che hai davvero: la pagina mostra solo quello, e con '
+        'due o tre compaiono in alto le linguette per passare dall\'uno '
+        'all\'altro. Le entita\' di ognuno si mettono nella sua voce.',
+    collegamento: collegamento,
+    disegna: (dentro, scatto, quaderno) {
+      final scelta = laScelaTermica(
+        quaderno.cambiate[chiaveDegliImpiantiTermici] ??
+            scatto.aperto(chiaveDegliImpiantiTermici),
+      );
+      return [
+        for (final (tipo, nome, spiega) in iTipiTermici)
+          Card(
+            margin: const EdgeInsets.symmetric(vertical: 3),
+            child: SwitchListTile(
+              value: scelta[tipo] ?? false,
+              onChanged: (acceso) => quaderno.segna(
+                chiaveDegliImpiantiTermici,
+                {...scelta, tipo: acceso},
+              ),
+              title: Text(nome),
+              subtitle: Text(spiega),
+              isThreeLine: spiega.length > 60,
+            ),
+          ),
+      ];
+    },
+  );
+}
