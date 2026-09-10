@@ -62,6 +62,20 @@ Widget? schermataDi(
   /* L'Energia non e' una fila di caselle: e' un modello con cinque gruppi,
    * i costi, i carichi e — la cosa che mancava — **piu' di un impianto**. */
   'Energia' => SchermataDellEnergia(collegamento: collegamento),
+  /* Ed e' anche una fila di caselle, perche' nella plancia sono tutte e due
+   * le cose insieme: il modello per i moduli nuovi, le caselle per il runtime
+   * vecchio. Dodici delle trentasei nel modello non ci sono — i
+   * condizionatori, il boiler, i carichi dei nodi, lo stato della rete — e
+   * senza questa schermata restavano fuori dall'app. */
+  'Le caselle dell\'Energia' => SchermataDelleCaselle(
+    titolo: 'Le caselle dell\'Energia',
+    sotto:
+        'Tutte le entita\' della pagina Energia. Quelle dell\'impianto le '
+        'riempie gia\' «Energia» qui sopra: qui ci sono anche le altre — i '
+        'condizionatori, il boiler, i carichi dei nodi.',
+    sezione: 'energy',
+    collegamento: collegamento,
+  ),
   /* L'auto non e' una fila di caselle: sono **le auto**, ognuna con la sua
    * marca, il suo modello, la sua mappatura e le sue due foto. Le caselle
    * stanno dentro il profilo, ed e' quello che fa cambiare tutta la pagina
@@ -224,6 +238,15 @@ Widget? schermataDi(
     collegamento: collegamento,
   ),
   'I sensori girati' => SchermataDeiVersi(collegamento: collegamento),
+  'Le entita\' della lavatrice' => SchermataDelleCaselle(
+    titolo: 'Le entita\' della lavatrice',
+    sotto:
+        'La tessera della lavatrice in Home: la presa che la accende, la fase '
+        'in cui sta, quanto le manca. Per lavatrici non smart basta la '
+        'potenza della presa: sopra i cinque watt sta lavorando.',
+    sezione: 'lavatrice',
+    collegamento: collegamento,
+  ),
   'I programmi della lavatrice' => SchermataDiRighe(
     titolo: 'I programmi della lavatrice',
     sotto:

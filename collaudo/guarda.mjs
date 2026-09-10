@@ -1204,6 +1204,38 @@ try {
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
 
+  /* Le due file di caselle che nell'app non si potevano riempire.
+   *
+   * L'Energia ne ha trentasei e il modello ne copre ventiquattro: le altre
+   * dodici — i condizionatori, il boiler, i carichi dei nodi, lo stato della
+   * rete — non stavano da nessuna parte. La lavatrice ne ha dodici e non
+   * aveva nessuna schermata. Si fotografano tutte e due, e si apre la matita:
+   * il nome di una casella si riscrive, come nella plancia. */
+  racconta("apro le caselle dell'energia");
+  await premiCercando(pagina, "Le caselle dell'Energia");
+  await aspettaCheCompaia(pagina, "su 36 riempite");
+  await attendi(900);
+  await scatta(pagina, "6u-caselle-energia");
+  await scorri(pagina, 1400);
+  await attendi(600);
+  await scatta(pagina, "6u2-caselle-energia-le-dodici");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
+  racconta("apro le caselle della lavatrice");
+  await premiCercando(pagina, "Le entita' della lavatrice");
+  await aspettaCheCompaia(pagina, "su 12 riempite");
+  await attendi(900);
+  await scatta(pagina, "6v-caselle-lavatrice");
+  await premi(pagina, "Cambia il nome di questa casella");
+  await aspettaCheCompaia(pagina, "Come si chiama questa casella");
+  await attendi(700);
+  await scatta(pagina, "6v2-rinomina-una-casella");
+  await premi(pagina, "Lascia stare");
+  await attendi(600);
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
   racconta("apro gli acquisti");
   await vaiA("Acquisti", "Prova aperta su");
   await attendi(900);

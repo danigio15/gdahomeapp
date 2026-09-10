@@ -11,12 +11,19 @@
 /// Quindi in cima c'e' quante ne sono gia' riempite, e un filtro che lascia
 /// vedere solo quelle vuote: chi torna a finire il lavoro non riscorre da
 /// capo tutte quelle che aveva gia' fatto.
+///
+/// E il nome di ogni casella si puo' riscrivere, come nella plancia: li' e'
+/// un campo di testo sopra ogni riga, e finisce in `cd_slot_labels`. Chi ha
+/// chiamato «Potenza tetto sud» quella che di serie e' «Potenza fotovoltaico
+/// (W)» deve ritrovarla con il suo nome anche qui, o le due configurazioni
+/// parlano di due case diverse.
 library;
 
 import 'package:flutter/material.dart';
 
 import '../../casa/collegamento.dart';
 import '../../casa/plancia/caselle.dart';
+import '../../casa/plancia/home.dart';
 import '../../vestito/pezzi.dart';
 import 'pezzi.dart';
 
@@ -88,6 +95,20 @@ class _SchermataDelleCaselleState extends State<SchermataDelleCaselle> {
         if (segnate is Map) {
           scritte.addAll(Map<String, dynamic>.from(segnate));
         }
+        /* I nomi riscritti: quelli salvati, piu' quelli appena cambiati e
+         * non ancora mandati. Stessa ragione delle sostituzioni qui sopra. */
+        final etichette = Map<String, dynamic>.from(
+          scatto.mappa(chiaveDelleEtichette),
+        );
+        final segnate2 = quaderno.cambiate[chiaveDelleEtichette];
+        if (segnate2 is Map) {
+          etichette.addAll(Map<String, dynamic>.from(segnate2));
+        }
+        String comeSiChiama(Casella una) {
+          final suo = '${etichette[una.chiave] ?? ''}'.trim();
+          return suo.isEmpty ? una.etichetta : suo;
+        }
+
         final piene = sezione.caselle
             .where((una) => '${scritte[una.chiave] ?? ''}'.isNotEmpty)
             .length;
@@ -126,7 +147,7 @@ class _SchermataDelleCaselleState extends State<SchermataDelleCaselle> {
             ),
           for (final una in daMostrare) ...[
             CampoDiEntita(
-              etichetta: una.etichetta,
+              etichetta: comeSiChiama(una),
               /* La chiave della casella conta quanto l'etichetta: in
                * `dm.energy_potenza_batteria` ci sono tre parole che dicono
                * cosa la casella vuole, ed e' da li' che la dashboard tira
@@ -142,6 +163,18 @@ class _SchermataDelleCaselleState extends State<SchermataDelleCaselle> {
                   dopo[una.chiave] = scritto.trim();
                 }
                 quaderno.segna(chiaveDelleSostituzioni, dopo);
+              },
+              rinomina: (nome) {
+                final dopo = Map<String, dynamic>.from(etichette);
+                /* Il nome di serie non si scrive: se uno lo rimette uguale,
+                 * quella voce non deve restare li' a invecchiare mentre la
+                 * plancia cambia le sue etichette. */
+                if (nome.isEmpty || nome == una.etichetta) {
+                  dopo.remove(una.chiave);
+                } else {
+                  dopo[una.chiave] = nome;
+                }
+                quaderno.segna(chiaveDelleEtichette, dopo);
               },
             ),
             const SizedBox(height: 14),

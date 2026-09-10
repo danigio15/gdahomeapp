@@ -132,6 +132,21 @@ const albero = <Famiglia>[
       da: 'sez1',
       pronta: true,
     ),
+    /* Le trentasei caselle dell'Energia, per intero.
+     *
+     * Il modello — la voce qui sopra — ne copre ventiquattro: quelle che
+     * `ENERGY_SLOT_MAP` sa mettere in tutti e due i posti. Le altre dodici —
+     * i condizionatori, il boiler, i carichi dei nodi, lo stato della rete —
+     * nel modello non ci sono, e senza questa voce nell'app non si potevano
+     * riempire per niente, mentre nel browser bastava aprire l'accordion
+     * «⚡ Energia». */
+    Voce(
+      'Le caselle dell\'Energia',
+      'Tutte le entita\' della pagina Energia, una per una, come nell\'accordion della dashboard',
+      disegno: 'energia',
+      da: 'sez1',
+      pronta: true,
+    ),
     Voce(
       'Auto elettrica',
       'Entita\' dell\'auto e della wallbox, e i profili se le auto sono piu\' di una',
@@ -475,6 +490,17 @@ const albero = <Famiglia>[
     Voce(
       'I programmi della lavatrice',
       'I tasti che compaiono aprendo la lavatrice',
+      disegno: 'elettrodomestici',
+      da: 'appliances',
+      pronta: true,
+    ),
+    /* La lavatrice della Home: nella plancia e' un gruppo di caselle suo
+     * (`CD_SLOTS.lavatrice`), agganciato alla sezione Home. Non e' la stessa
+     * cosa della lavatrice fra gli elettrodomestici: quella e' una scheda che
+     * si aggiunge, questa e' la tessera che la Home ha di serie. */
+    Voce(
+      'Le entita\' della lavatrice',
+      'Presa, fase, tempo rimanente, programma: le caselle della tessera in Home',
       disegno: 'elettrodomestici',
       da: 'appliances',
       pronta: true,

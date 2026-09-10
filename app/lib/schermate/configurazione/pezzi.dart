@@ -388,6 +388,7 @@ class CampoDiEntita extends StatelessWidget {
     this.domini = const [],
     this.chiave = '',
     this.contesto = '',
+    this.rinomina,
   });
 
   final String etichetta;
@@ -413,6 +414,16 @@ class CampoDiEntita extends StatelessWidget {
   /// vada messo dentro, e il cercatore resterebbe cieco proprio dove servirebbe
   /// di piu'.
   final String contesto;
+
+  /// Se c'e', accanto al cercatore compare la matita e l'etichetta si puo'
+  /// riscrivere.
+  ///
+  /// Nella Config della plancia il nome di ogni casella **e'** un campo di
+  /// testo: chi ha il fotovoltaico su due tetti scrive «Potenza tetto sud» al
+  /// posto di «Potenza fotovoltaico (W)», e la plancia da quel momento la
+  /// chiama cosi'. Senza questo, la stessa casella nell'app avrebbe un nome
+  /// diverso da quello che la persona ha scelto nel browser.
+  final ValueChanged<String>? rinomina;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -447,6 +458,79 @@ class CampoDiEntita extends StatelessWidget {
           icon: const Icon(Icons.search_rounded),
           tooltip: 'Cerca fra le entita\' di casa',
         ),
+      ),
+      if (rinomina != null) ...[
+        const SizedBox(width: 4),
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: IconButton(
+            onPressed: () => _riscrivi(context),
+            icon: const Icon(Icons.drive_file_rename_outline_rounded),
+            tooltip: 'Cambia il nome di questa casella',
+          ),
+        ),
+      ],
+    ],
+  );
+
+  /* Il nome della casella, riscritto.
+   *
+   * Vuoto vuol dire «rimettilo com'era»: nella plancia una riscrittura
+   * cancellata toglie la voce da `cd_slot_labels` e l'etichetta torna quella
+   * di serie, e chi svuota il campo si aspetta quello e non un nome vuoto. */
+  Future<void> _riscrivi(BuildContext context) async {
+    final nuovo = await showDialog<String>(
+      context: context,
+      builder: (dentro) => _ChiediIlNome(adesso: etichetta),
+    );
+    if (nuovo != null) rinomina!(nuovo.trim());
+  }
+}
+
+/// Il riquadro che chiede il nome nuovo di una casella.
+///
+/// E' un widget con stato per una ragione sola, e non e' eleganza: il campo
+/// di testo ha un controller, il controller va chiuso, e chiuderlo appena
+/// `showDialog` ritorna lo chiude mentre il riquadro sta ancora scivolando
+/// via col campo dentro. Qui muore insieme al riquadro, che e' quando serve.
+class _ChiediIlNome extends StatefulWidget {
+  const _ChiediIlNome({required this.adesso});
+
+  final String adesso;
+
+  @override
+  State<_ChiediIlNome> createState() => _ChiediIlNomeState();
+}
+
+class _ChiediIlNomeState extends State<_ChiediIlNome> {
+  late final _scritto = TextEditingController(text: widget.adesso);
+
+  @override
+  void dispose() {
+    _scritto.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Come si chiama questa casella'),
+    content: TextField(
+      controller: _scritto,
+      autofocus: true,
+      decoration: const InputDecoration(
+        border: OutlineInputBorder(),
+        helperText: 'Lascia vuoto per rimettere il nome di serie',
+      ),
+      onSubmitted: (testo) => Navigator.of(context).pop(testo),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Text('Lascia stare'),
+      ),
+      FilledButton(
+        onPressed: () => Navigator.of(context).pop(_scritto.text),
+        child: const Text('Va bene'),
       ),
     ],
   );

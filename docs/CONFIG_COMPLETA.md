@@ -3,9 +3,11 @@
 Documento di verità, non di intenzioni. Serve a rispondere a una domanda sola:
 **quanto manca perché la Configurazione dell'app sia quella della dashboard?**
 
-La risposta breve: molto. Quello che c'è oggi nell'app è l'**alberatura** con un
-editor generico sopra le chiavi più semplici. La Config della dashboard è
-un'altra cosa, e questo documento la misura invece di stimarla.
+La risposta breve, oggi: poco, e quel poco è scritto in fondo. Quando questo
+documento è nato la risposta era «molto» — c'era l'alberatura e un editor
+generico sopra le chiavi più semplici — e le parti che dicevano cosa mancava
+sono rimaste dove stanno, riscritte man mano che quelle cose venivano fatte.
+Si misura, non si stima: ogni numero qui sotto ha una prova che lo tiene.
 
 ## I numeri, contati
 
@@ -39,10 +41,11 @@ invisibili; ma dire «uguale» lì sarebbe dire una cosa non vera.
 Le altre settantotto hanno la loro schermata, col cercatore di entità, il
 catalogo delle integrazioni e le foto dove servono.
 
-## Il difetto strutturale: la dashboard tiene *più* di tutto
+## Il difetto strutturale, risolto: la dashboard tiene *più* di tutto
 
-È il punto che conta più del conteggio, perché non si risolve aggiungendo
-schermate: si risolve cambiando il modello.
+Era il punto che contava più del conteggio, perché non si risolveva aggiungendo
+schermate: si risolveva cambiando il modello. È stato cambiato — sotto c'è
+com'era, e in fondo com'è adesso.
 
 La dashboard non ha **una** auto, **un** impianto solare, **una** centrale
 d'allarme. Ne tiene un elenco, più la chiave che dice **qual è quella scelta**:
@@ -60,11 +63,12 @@ E ognuna di quelle voci non è «un nome e un'entità»: un'auto ha nome, marca,
 modello, **la sua mappatura di entità** (`dm.ev_*`, dentro il profilo) e **due
 foto** (`cd_ev_visual`, `cd_ev_image`, `cd_ev_image_plugged`).
 
-L'editor a elenco che ho scritto sa fare «un nome e qualche campo». Non sa fare
-niente di tutto questo, e ogni schermata costruita su quel modello è lavoro da
-rifare.
+L'editor a elenco della prima versione sapeva fare «un nome e qualche campo», e
+ogni schermata costruita su quel modello era lavoro da rifare. Rifatto:
+`app/lib/casa/plancia/piu_di_uno.dart` tiene l'elenco, la scelta, la mappatura
+di entità e le foto dentro ogni voce, per tutte e sei le famiglie.
 
-## Il secondo difetto: due modelli, e l'app conosce quello vecchio
+## Il difetto che resta: due modelli, e l'app conosce quello vecchio
 
 I moduli della plancia leggono da un **modello canonico**
 (`dm_dashboard_state.sections`), con `SECTION_KEYS` che lo aggancia alle chiavi
@@ -83,95 +87,85 @@ sezioni leggono prima la chiave storica e poi il canonico
 
 **Va deciso prima di scrivere altre schermate**, perché riguarda tutte.
 
-## Cosa manca, per famiglia
+## Cosa c'è, per famiglia
 
-Segnate `✅` le chiavi che l'app oggi sa davvero leggere e scrivere.
+Tutte e ottantatré le chiavi hanno la loro schermata: la prova che le conta è
+`app/test/chiavi_della_config_test.dart`, e una chiave elencata lì deve
+comparire nei sorgenti o l'elenco cade. Quello che resta più magro della
+dashboard sono le cinque mappe dette qui sopra — i ritratti, i dati in più
+dell'auto e della continuità, i dispositivi di una volta — che l'app fa vedere
+riga per riga dove la dashboard ha una maschera fatta apposta.
 
-### La casa e le pagine
-`cd_branding` ✅ · `cd_sections` ✅ · `cd_sections_manual` · `cd_navbar_order` ✅
-· `cd_navbar_mode` ✅ · `cd_section_names` · `cd_sezioni_mie` · `cd_stanze` ✅ ·
-`cd_stanze_entita` · `cd_floors` · `cd_floor_icons` · `cd_hidden_elements` ·
-`cd_text_overrides` · `cd_slot_labels` · `cd_solo_lettura`
+## Le caselle: tutte e centodue
 
-### La Home
-`cd_widgets` · `cd_home_blocchi` · `cd_evidenza` · `cd_quick_actions` ✅ ·
-`cd_avvisi_custom` ✅ · `cd_avvisi_icone` · `cd_avvisi_names_extra` ·
-`cd_gruppi_extra` · `cd_gruppi_removed` · `cd_meteo_entita_proprie` ·
-`cd_stati_invertiti` · `cd_todo` · `cd_calendari` · `cd_people` · `cd_rifiuti`
+Oltre alle chiavi, la Config della dashboard ha le **caselle**: `CD_SLOTS`,
+sette gruppi, centodue domande a cui si risponde con un'entità di Home
+Assistant, e la risposta finisce in `cd_entity_overrides`.
 
-### L'energia — è la famiglia più grossa, e l'app non ne tocca una
-`cd_energy_model` · `cd_energia_tessere` · `cd_energy_views` · `cd_loads` ·
-`cd_flow_nodes` · `cd_subload_groups` · `cd_subloads_extra` ·
-`cd_report_devices` · `cd_devices` · `cd_costo_kwh` · `cd_prezzo_immissione`
+| gruppo | quante | dove sta nell'app |
+|---|---|---|
+| 🏠 Home | 9 | «Home» |
+| ⚡ Energia | 36 | «Le caselle dell'Energia» |
+| 🚗 Auto elettrica | 17 | dentro il profilo di ogni auto |
+| 🌞 Solare termico | 13 | dentro il profilo di ogni impianto |
+| 🛡️ Sicurezza | 1 | «Sicurezza» |
+| 🧺 Lavatrice | 12 | «Le entità della lavatrice» |
+| 🖥️ MiniPC | 14 | «MiniPC» |
 
-### L'auto elettrica
-`cd_ev_cars` · `cd_ev_car_active` · `cd_ev_visual` · `cd_ev_meta` ·
-`cd_entity_overrides` ✅ *(le caselle sì, i profili no)*
+Due gruppi ci sono arrivati tardi, e vale la pena dire perché: l'Energia e la
+lavatrice non si potevano riempire per niente, e non si vedeva. Il menu era
+pieno, «Energia» c'era, e chi la apriva trovava il **modello** — che ne copre
+ventiquattro su trentasei. Le altre dodici — i condizionatori, il boiler, i
+carichi dei nodi, lo stato della rete — non stanno in `ENERGY_SLOT_MAP`, e
+quindi non stavano da nessuna parte. Nel browser bastava aprire l'accordion
+«⚡ Energia».
 
-### Il caldo e il freddo
-`cd_clima_units` ✅ · `cd_clima_rapido` · `cd_clima_rapido_unita` ·
-`cd_clima_inverti_card` · `cd_impianti_termici` · `cd_caldaia` ·
-`cd_termico_caldo` · `cd_scaldabagni` · `cd_solari` · `cd_solare_scelto` ·
-`cd_umidita_soglia`
+Adesso il conto lo tiene `app/test/caselle_test.dart`: se la plancia aggiunge
+un gruppo, o se qualcuno stacca una voce, la prova cade.
 
-### Le cose di casa
-`cd_luci` ✅ · `cd_luci_rooms` · `cd_luci_order` · `cd_luci_room_order` ·
-`cd_prese` ✅ · `cd_tapparelle` ✅ · `cd_tapparelle_soglia` · `cd_appliances` ✅
-*(nome e una entità: la vera ne vuole molte, più i programmi)* ·
-`cd_lavatrice_programmi` · `cd_lavatrice_visual` · `cd_robot` ·
-`cd_media_player` · `cd_piscina` ✅ · `cd_irrigazione` ✅ · `cd_cameras` ·
-`cd_visual_prefer_image`
+E il **nome** di ogni casella si riscrive, come là: nella plancia l'etichetta è
+un campo di testo sopra ogni riga e finisce in `cd_slot_labels`. Chi ha due
+tetti chiama «Potenza tetto sud» quella che di serie è «Potenza fotovoltaico
+(W)»; se dall'app la ritrovasse col nome vecchio, le due configurazioni
+parlerebbero di due case diverse.
 
-### La sicurezza
-`cd_centrali` · `cd_centrale_scelta` · `cd_antifurto_modi` ·
-`cd_security_doors` · `cd_porte_conferma` · `cd_allerte`
+## Il multi-istanza, le integrazioni e le foto: fatti
 
-### Il resto
-`cd_ups` · `cd_ups_meta` · `cd_entita_mie` · `cd_fumo_rilevato`
+Erano i tre pezzi che questo documento dava per mancanti, ed è la parte che è
+invecchiata di più. Restano scritti perché il *perché* vale ancora.
 
-## Il terzo pezzo che manca del tutto: le integrazioni
+- **Il multi-istanza.** `app/lib/casa/plancia/piu_di_uno.dart`: elenco più
+  «qual è scelta», per tutte e sei le famiglie — auto, impianti solari,
+  centrali d'allarme, scaldabagni, impianti termici, continuità. La mappatura
+  di entità e le foto stanno **dentro** la voce, che era il punto: un'auto non
+  è «un nome e un'entità».
+- **Le integrazioni.** Il menu a tre passi sul catalogo del ponte c'è
+  (`app/lib/schermate/configurazione/integrazioni.dart`), e sotto c'è il motore
+  che riempie le caselle da solo (`app/lib/casa/plancia/legame.dart`): è il
+  porto fedele di `core/appliance-device-binding.js`, con i suoi tredici ruoli
+  e i suoi punteggi. Non c'è più niente da battere a mano.
+- **Le foto.** `www/list` e `www/upload` li usa l'app
+  (`app/lib/schermate/configurazione/le_foto.dart`), e si sfoglia anche quello
+  che sta già in `config/www` di Home Assistant, in sola lettura.
 
-Un elettrodomestico moderno arriva in Home Assistant da un'integrazione — hOn,
-Home Connect, Miele, LG ThinQ — come **un dispositivo con dentro venti o trenta
-entità**. La dashboard lo sceglie da un menu a tre passi: l'integrazione, il
-dispositivo, e le sue entità si mappano da sole.
+## Quello che resta davvero
 
-Nell'app non c'è, e si vede: per configurare l'auto elettrica bisogna battere
-a mano diciassette identificativi.
-
-Il pezzo difficile **c'è già ed è finito**: `ponte/src/catalogo.js` legge i
-registri di Home Assistant e serve il menu con la stessa forma che aveva
-l'integrazione, sotto `dashboardmodern/integrations/catalog`. Risponde con
-`integrations` (dominio, nome, quanti dispositivi), `devices` (id, nome, marca,
-modello, stanza, quante entità) e, chiedendo `device_ids`, le entità di quei
-dispositivi con classe, unità e categoria.
-
-**Manca solo il lato app: nessuno lo chiama.** È il pezzo col rapporto fra
-valore e lavoro migliore di tutti.
-
-Stessa cosa per le **foto**: `ponte/src/foto.js` serve già `www/list` e
-`www/upload`, e l'app non li usa — per questo l'auto non ha la sua immagine.
-
-## In che ordine va fatto
-
-L'ordine non è per importanza: è perché ogni riga costruita sul modello
-sbagliato è una riga da riscrivere.
-
-1. **Il modello.** Decidere canonico contro storico, e portare
-   `normalizeSection` (o la parte che serve) dalla parte dell'app. Senza
-   questo, tutto il resto è provvisorio.
-2. **Il multi-istanza.** Elenco + «qual è scelta», con la mappatura di entità
-   e le foto dentro ogni voce. Sblocca auto, solari, centrali, scaldabagni,
-   impianti termici, UPS in un colpo solo.
-3. **Le integrazioni.** Il menu a tre passi sul catalogo del ponte. È quello
-   che toglie di mezzo il battere a mano.
-4. **Le foto.** `www/list` e `www/upload`, e l'immagine dell'auto.
-5. **L'energia.** Carichi, nodi, sottocarichi, report: da sola vale quanto
-   tutte le altre messe insieme.
-6. **Il resto**, chiave per chiave, con questo documento come lista.
+1. **Il modello canonico.** L'app scrive solo le chiavi storiche, e non passa
+   da `normalizeSection`. È il difetto descritto qui sopra, ed è l'unico dei
+   tre «difetti strutturali» ancora aperto. Oggi funziona perché le sezioni
+   leggono prima la chiave storica; il giorno che una sezione leggerà solo il
+   canonico, si vedrà.
+2. **Le cinque mappe.** `cd_ev_visual`, `cd_ev_meta`, `cd_ups_meta`,
+   `cd_devices`, `cd_report_devices`: visibili e modificabili riga per riga,
+   senza la maschera che hanno là. Sono chiavi che quasi nessuno tocca.
 
 ## Come si tiene onesto questo conto
 
-Una prova conta le chiavi che l'app copre e le confronta con le 83: quando se
-ne aggiunge una alla dashboard, o una all'app, il numero qui sopra si aggiorna
-da solo invece di invecchiare in silenzio.
+Tre prove, e nessun numero scritto a mano che non ne abbia una dietro:
+
+- `app/test/chiavi_della_config_test.dart` conta le chiavi e controlla che
+  quelle dichiarate compaiano davvero nei sorgenti;
+- `app/test/caselle_test.dart` controlla che nessun gruppo di `CD_SLOTS` resti
+  senza una schermata che lo apra;
+- `app/test/configurazione_test.dart` controlla che l'alberatura copra tutte le
+  schede della Config della plancia.
