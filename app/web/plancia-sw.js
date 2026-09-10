@@ -83,18 +83,39 @@ async function chiediAllApp(percorso) {
   return risposta;
 }
 
+/* Il percorso **dentro l'app**, tolto quello che sta davanti.
+ *
+ * Qui c'era un difetto che si e' visto solo in casa di qualcuno, ed era grosso.
+ *
+ * Dietro l'ingress di Home Assistant l'app sta su un indirizzo che comincia
+ * con `/api/hassio_ingress/<gettone>/app/`. Il confronto era «il percorso
+ * CONTIENE `/api/`?» — e a quel punto **ogni** cosa che l'app chiede di suo
+ * contiene `/api/`: i suoi caratteri, i suoi disegni, e `caselle.json`, che e'
+ * l'elenco delle cento caselle della configurazione. Finivano tutte al ponte,
+ * che le girava a Home Assistant, che rispondeva 404. Il risultato a schermo:
+ * l'auto senza le sue diciassette entita', e nessun errore da nessuna parte.
+ *
+ * L'ambito del service worker e' esattamente la cartella dell'app: quello che
+ * viene prima non e' roba nostra e va tolto **prima** di cercare. */
+function dentroLApp(pathname) {
+  const ambito = new URL(self.registration.scope).pathname;
+  if (ambito.length > 1 && pathname.startsWith(ambito)) {
+    return pathname.slice(ambito.length - 1);
+  }
+  return pathname;
+}
+
 self.addEventListener("fetch", (evento) => {
   const dove = new URL(evento.request.url);
   if (dove.origin !== self.location.origin) return;
-  const mia = MIE.find((quale) => dove.pathname.includes(quale));
+  const dentro = dentroLApp(dove.pathname);
+  const mia = MIE.find((quale) => dentro.includes(quale));
   if (!mia) return;
 
   /* Quello che si chiede all'app e' il percorso come lo scrive la plancia,
    * con la sua eventuale domanda: le chiamate REST — lo storico, le
-   * istantanee delle telecamere — la portano dietro. Davanti puo' esserci il
-   * prefisso di dove sta l'app, e li' non c'entra niente. */
-  const percorso =
-    dove.pathname.slice(dove.pathname.indexOf(mia)) + dove.search;
+   * istantanee delle telecamere — la portano dietro. */
+  const percorso = dentro.slice(dentro.indexOf(mia)) + dove.search;
   evento.respondWith(
     chiediAllApp(percorso).then(
       (detto) => {

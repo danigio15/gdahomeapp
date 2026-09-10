@@ -22,10 +22,12 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../casa/collegamento.dart';
+import '../../casa/plancia/marchi.dart';
 import '../../casa/plancia/caselle.dart' as le_caselle;
 import '../../casa/plancia/piu_di_uno.dart';
 import '../../vestito/pezzi.dart';
 import 'le_foto.dart';
+import 'marche.dart';
 import 'pezzi.dart';
 
 /// Un campo di una voce, oltre a quelli che hanno tutte.
@@ -36,6 +38,7 @@ class CampoDellaVoce {
     this.spiega,
     this.entita = false,
     this.domini = const [],
+    this.come = ComeSiRiempie.aMano,
   });
 
   final String chiave;
@@ -43,6 +46,27 @@ class CampoDellaVoce {
   final String? spiega;
   final bool entita;
   final List<String> domini;
+
+  /// Come si riempie: battendola, o scegliendo da un elenco.
+  final ComeSiRiempie come;
+}
+
+/// Da dove viene quello che finisce in una casella.
+enum ComeSiRiempie {
+  /// Si batte. Va bene per il modello di un'auto, che e' una parola sua.
+  aMano,
+
+  /// **La marca**, da una griglia di loghi.
+  ///
+  /// Non e' un vezzo: chi ha una Škoda non deve indovinare se si scrive
+  /// «Skoda», «skoda» o «Škoda», e la plancia quella marca la disegna col suo
+  /// colore solo se la riconosce. Una casella di testo libero, con dentro un
+  /// esempio scritto in grigio, e' anche il modo piu' rapido di far credere
+  /// che l'esempio sia un dato bloccato nel codice.
+  laMarca,
+
+  /// La sagoma dell'auto, fra le otto della plancia.
+  laSagoma,
 }
 
 /// La schermata di una famiglia.
@@ -399,14 +423,28 @@ class _UnaVoceState extends State<_UnaVoce> {
                   CampoDiTesto(
                     etichetta: 'Come si chiama',
                     valore: voce.nome,
-                    suggerimento: 'Leapmotor B10',
+                    /* Niente marca e modello veri qui dentro: un esempio
+                     * scritto in grigio, visto di sfuggita, sembra un dato
+                     * bloccato nel codice. */
+                    suggerimento: 'Come la chiami tu',
                     cambiato: (scritto) =>
                         setState(() => voce.metti('name', scritto)),
                   ),
                   const SizedBox(height: 14),
                   for (final campo in widget.campi) ...[
-                    if (campo.entita)
-                      CampoDiEntita(
+                    switch (campo.come) {
+                      ComeSiRiempie.laMarca => _LaMarca(
+                        valore: '${voce.dentro[campo.chiave] ?? ''}',
+                        collegamento: widget.collegamento,
+                        cambiata: (scritto) =>
+                            setState(() => voce.metti(campo.chiave, scritto)),
+                      ),
+                      ComeSiRiempie.laSagoma => _LaSagoma(
+                        valore: '${voce.dentro[campo.chiave] ?? ''}',
+                        cambiata: (scelta) =>
+                            setState(() => voce.metti(campo.chiave, scelta)),
+                      ),
+                      ComeSiRiempie.aMano when campo.entita => CampoDiEntita(
                         etichetta: campo.etichetta,
                         valore: '${voce.dentro[campo.chiave] ?? ''}',
                         domini: campo.domini,
@@ -414,15 +452,15 @@ class _UnaVoceState extends State<_UnaVoce> {
                         collegamento: widget.collegamento,
                         cambiato: (scritto) =>
                             setState(() => voce.metti(campo.chiave, scritto)),
-                      )
-                    else
-                      CampoDiTesto(
+                      ),
+                      ComeSiRiempie.aMano => CampoDiTesto(
                         etichetta: campo.etichetta,
                         valore: '${voce.dentro[campo.chiave] ?? ''}',
                         suggerimento: campo.spiega,
                         cambiato: (scritto) =>
                             setState(() => voce.metti(campo.chiave, scritto)),
                       ),
+                    },
                     const SizedBox(height: 14),
                   ],
 
@@ -522,6 +560,108 @@ class _UnaVoceState extends State<_UnaVoce> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// La marca dell'auto: il logo, il nome, e il tasto che apre la griglia.
+class _LaMarca extends StatelessWidget {
+  const _LaMarca({
+    required this.valore,
+    required this.collegamento,
+    required this.cambiata,
+  });
+
+  final String valore;
+  final Collegamento collegamento;
+  final ValueChanged<String> cambiata;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    final marca = marcaDaScritta(valore);
+    return Scheda(
+      padding: EdgeInsets.zero,
+      child: ListTile(
+        leading: SizedBox(
+          width: 44,
+          height: 44,
+          child: marca == null
+              ? Icon(
+                  Icons.directions_car_filled_outlined,
+                  color: colori.onSurfaceVariant,
+                )
+              : IlLogo(marca: marca, collegamento: collegamento, quanto: 40),
+        ),
+        title: Text(
+          marca?.nome ?? (valore.isEmpty ? 'La marca' : valore),
+          style: testi.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        subtitle: Text(
+          marca != null
+              ? 'La plancia la disegna col suo colore'
+              : (valore.isEmpty
+                    ? 'Toccala e scegli dai loghi'
+                    : 'Non e\' una delle marche che la plancia conosce: '
+                          'sceglila per avere il logo'),
+          style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: () async {
+          final scelta = await scegliLaMarca(
+            context,
+            collegamento: collegamento,
+            adesso: valore,
+          );
+          if (scelta != null) cambiata(scelta);
+        },
+      ),
+    );
+  }
+}
+
+/// La sagoma dell'auto: quale disegno la rappresenta quando non c'e' una foto.
+class _LaSagoma extends StatelessWidget {
+  const _LaSagoma({required this.valore, required this.cambiata});
+
+  final String valore;
+  final ValueChanged<String> cambiata;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    final quale = leSagomeDellAuto
+        .where((una) => una.id == valore)
+        .firstOrNull;
+    return Scheda(
+      padding: EdgeInsets.zero,
+      child: ListTile(
+        leading: SizedBox(
+          width: 44,
+          height: 44,
+          child: Center(
+            child: Text(
+              quale?.disegno ?? '🚗',
+              style: const TextStyle(fontSize: 26),
+            ),
+          ),
+        ),
+        title: Text(
+          quale?.nome ?? 'Che auto e\'',
+          style: testi.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        subtitle: Text(
+          'La sagoma che si vede quando non c\'e\' una foto',
+          style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: () async {
+          final scelta = await scegliLaSagoma(context, adesso: valore);
+          if (scelta != null) cambiata(scelta);
+        },
       ),
     );
   }

@@ -76,8 +76,16 @@ Widget? schermataDi(
     sezioneDelleCaselle: 'ev',
     leFoto: true,
     campi: const [
-      CampoDellaVoce('brand', 'Marca', spiega: 'Leapmotor'),
-      CampoDellaVoce('model', 'Modello', spiega: 'B10'),
+      /* La marca si sceglie dai loghi, non si batte: e' cosi' nella Config
+       * della dashboard, e la plancia disegna il marchio col colore della sua
+       * casa **solo** se lo riconosce. Battuto a mano, «Skoda» e «Škoda» sono
+       * due marche diverse e una delle due resta senza logo. */
+      CampoDellaVoce('brand', 'Marca', come: ComeSiRiempie.laMarca),
+      /* Il modello no: quello e' una parola sua, e nessun elenco puo'
+       * contenerla. */
+      CampoDellaVoce('model', 'Modello', spiega: 'Come si chiama il modello'),
+      /* La sagoma: quale disegno la rappresenta quando non c'e' una foto. */
+      CampoDellaVoce('icon', 'Che auto e\'', come: ComeSiRiempie.laSagoma),
     ],
   ),
   'Solare termico' => SchermataDiFamiglia(
