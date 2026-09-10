@@ -16,16 +16,57 @@
  * Nothing else on the page is touched: this module renders no data and owns
  * no state.
  */
-import { clean, doc, english, esc, installStyle, root, t } from "./shared.js";
+import {
+  clean,
+  doc,
+  english,
+  esc,
+  installStyle,
+  planciaVisibile,
+  quandoSiCambiaPagina,
+  root,
+  t,
+} from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_PAGE_MASTHEAD__";
 const STYLE_ID = "dm-page-masthead-style";
-const state = (root[KEY] ||= { installed: false, frame: 0, seeded: false, mastheads: {} });
+const state = (root[KEY] ||= {
+  installed: false,
+  frame: 0,
+  /* Se dopo la passata in coda ne serve un'altra: vedi `scheduleSettled`. */
+  ancora: false,
+  /* Quante passate sono CORSE davvero. Non serve a disegnare: serve a chi
+   * aspetta che l'intestazione si sia posata — le prove — per distinguere
+   * «non si e' ancora mossa» da «e' ferma». Sono due cose diverse, e da fuori
+   * si somigliano: un riquadro immobile perche' la passata non e' ancora
+   * partita e' esattamente cio' che una prova non deve prendere per buono. */
+  passate: 0,
+  seeded: false,
+  mastheads: {},
+});
 
 /* The pages of the dashboard, what each one is, and the two colours its
  * heading is drawn in — the first tints the sun disc and starts the title
  * gradient, the second closes it. `fold` names the heading the page printed
  * before this module existed. */
+/* Questo elenco e' anche quello che disegna il tasto per tornare in Home: chi
+ * non ci sta apre la sua pagina e non se ne esce piu'.
+ *
+ * Ci mancavano due pagine. La Presenza, nata con la 1.4.16, l'ha segnalata chi
+ * la usava: «manca il tasto HOME». Il Cruscotto delle segnalazioni non l'aveva
+ * segnalato nessuno, e l'ha trovato la prova nuova — che parte dalle pagine
+ * che le sezioni dichiarano invece che da questo elenco, ed e' il verso
+ * giusto: una riga che manca non la trova nessuna prova che guardi solo le
+ * righe che ci sono.
+ *
+ * Le spiegazioni delle singole voci stanno qui sopra e non fra le voci, e non
+ * per gusto: l'estrattore delle traduzioni legge questo letterale e pretende
+ * che dentro non ci sia niente da eseguire, ma prima svuota le stringhe — e in
+ * un commento italiano gli apostrofi si accoppiano come se fossero apici,
+ * inghiottendo a tratti quello che c'e' in mezzo. Due commenti piu' su
+ * campavano cosi', e aggiungerne altri qui dentro ha spostato l'accoppiamento
+ * e li ha scoperti. Un commento fuori dal letterale non puo' fare danni.
+ */
 const PAGES = Object.freeze([
   {
     id: "page-temp",
@@ -110,8 +151,8 @@ const PAGES = Object.freeze([
   {
     id: "page-ups",
     tint: ["14,165,233", "34,197,94"],
-    it: ["Continuità", "Rete · Batteria · Carico"],
-    en: ["Backup power", "Mains · Battery · Load"],
+    it: ["UPS", "Rete · Batteria · Carico"],
+    en: ["UPS", "Mains · Battery · Load"],
   },
   /* Le allerte, #296, e la raccolta differenziata, #293, nascono con la
    * loro pagina, e la testata nasce con loro. */
@@ -121,11 +162,59 @@ const PAGES = Object.freeze([
     it: ["Allerte", "Terremoti · Meteo · Fulmini · Pollini · Voli"],
     en: ["Alerts", "Earthquakes · Weather · Lightning · Pollen · Flights"],
   },
+  /* Gli animali nascono con la loro pagina e restavano l'unica senza
+   * intestazione: «sarebbe bello se la nuova sezione Animali avesse coerenza
+   * grafica con le altre, attualmente l'header e' totalmente diverso, anzi
+   * assente» — issue 373. Mancava una riga in questa tabella: non c'era niente
+   * di diverso nella pagina, c'era che nessuno l'aveva annunciata. */
+  {
+    id: "page-animali",
+    tint: ["245,158,11", "236,72,153"],
+    it: ["Animali", "Ciotola · Lettiera · Acqua · Collare"],
+    en: ["Pets", "Bowl · Litter · Water · Collar"],
+  },
+  /* I varchi: i contatti porta-finestra, guardati e basta. La sottotitolatura
+   * dice le tre cose che la pagina risponde — quanti sono aperti, quali, e chi
+   * non risponde. */
+  {
+    id: "page-varchi",
+    tint: ["220,38,38", "22,163,74"],
+    it: ["Varchi", "Porte · Finestre · Aperti e chiusi"],
+    en: ["Openings", "Doors · Windows · Open and closed"],
+  },
+  /* La Presenza: dove c'e' qualcuno adesso, e da quanto una stanza e' vuota.
+   *
+   * Qui non c'era, e il tasto per tornare in Home lo disegna questo elenco:
+   * la pagina nuova della 1.4.16 si apriva e non se ne usciva piu' («manca il
+   * tasto HOME», #452). Una sezione che si struttura diversamente dalle altre
+   * e' una sezione a cui manca qualcosa, e questo era il pezzo. */
+  {
+    id: "page-cruscotto",
+    tint: ["14,165,233", "139,92,246"],
+    it: ["Cruscotto", "Le tue segnalazioni · Stato · Risposte"],
+    en: ["Console", "Your reports · Status · Replies"],
+  },
+  {
+    id: "page-presenza",
+    tint: ["139,92,246", "34,197,94"],
+    it: ["Presenza", "Movimento · Stanze libere · Ultimo passaggio"],
+    en: ["Presence", "Motion · Free rooms · Last seen"],
+  },
   {
     id: "page-rifiuti",
     tint: ["34,197,94", "14,165,233"],
     it: ["Rifiuti", "Raccolta differenziata · Prossimi ritiri"],
     en: ["Waste", "Recycling · Next collections"],
+  },
+  /* Le batterie (#398). Una pagina nuova senza la sua riga qui nasce senza
+   * intestazione: niente titolo, niente tasto per tornare a casa, e la voce
+   * della barra che intanto nasconde la testata del guscio. Si vede subito
+   * aprendola, e non si vede affatto scrivendola. */
+  {
+    id: "page-batterie",
+    tint: ["34,197,94", "234,179,8"],
+    it: ["Batterie", "Cariche · Scariche · Chi non risponde"],
+    en: ["Batteries", "Charged · Low · Not reporting"],
   },
   /* Il calendario (#259) nasce con la sua pagina, e l'intestazione nasce con
    * lei: gli impegni di oggi e dei giorni che vengono. */
@@ -538,6 +627,7 @@ export function renderPageMastheads() {
   for (const piano of piani) measureMasthead(piano);
   for (const piano of piani) applyMasthead(piano);
   state.seeded = true;
+  state.passate += 1;
   return true;
 }
 
@@ -545,9 +635,58 @@ function schedule() {
   if (state.frame) return;
   const run = () => {
     state.frame = 0;
+    /* La passata misura: chiede al browser il riquadro della pagina e lo stile
+     * calcolato del contenuto, e sono conti d'impaginazione. Se la plancia non
+     * la sta guardando nessuno — scheda in secondo piano, o plancia
+     * parcheggiata dietro un'altra pagina di Home Assistant — quei conti non
+     * servono a niente, e passavano a ogni mazzetto di stati. */
+    if (!planciaVisibile()) {
+      state.ancora = false;
+      return;
+    }
     renderPageMastheads();
+    /* La seconda passata chiesta mentre questa era ancora in coda: adesso puo'
+     * partire, e misura il contenuto arrivato nel frattempo. */
+    if (state.ancora) {
+      state.ancora = false;
+      schedule();
+    }
   };
   state.frame = root.requestAnimationFrame?.(run) || root.setTimeout?.(run, 0) || 0;
+}
+
+/* E una seconda passata, un attimo dopo.
+ *
+ * La larghezza dell'intestazione la detta il contenuto della pagina, e il
+ * contenuto puo' arrivare nello stesso giro in cui la si misura: chi disegna
+ * una pagina si mette in coda con la sua rAF, e chi arriva dopo di noi dipinge
+ * dopo la nostra misura. Da quando ogni sezione disegna solo la pagina che si
+ * vede, quel «dopo» capita proprio all'arrivo su una pagina — cioe' l'unica
+ * volta che conta. Una passata in piu' a pagina ferma non costa niente e
+ * misura quello che c'e' davvero.
+ *
+ * ── Perche' non basta chiamare due volte `schedule` ──────────────────────
+ *
+ * Perche' `schedule` non ne accoda una seconda se ce n'e' gia' una in coda —
+ * ed e' giusto cosi', o ogni mazzetto di stati ne accumulerebbe una a testa.
+ * Ma vuol dire che la chiamata dopo ottanta millisecondi non faceva NIENTE
+ * ogni volta che la rAF non era ancora corsa: le due passate diventavano una
+ * sola, la prima, quella che misura prima che il contenuto arrivi.
+ *
+ * E la rAF tarda esattamente quando la macchina e' carica — cioe' proprio nel
+ * caso per cui la passata di sicurezza esiste. Dal campo si vedeva cosi': su
+ * WebKit, sotto otto lavori in parallelo, la pagina del Clima si apriva col
+ * contenuto sopra l'intestazione, e nessuno riusciva a riprodurlo altrove.
+ *
+ * Adesso, se la prima e' ancora in coda, si segna che ne serve un'altra e a
+ * riarmarla e' la prima quando finisce. La seconda passata non puo' piu'
+ * sparire dentro la prima. */
+function scheduleSettled() {
+  schedule();
+  root.setTimeout?.(() => {
+    if (state.frame) state.ancora = true;
+    else schedule();
+  }, 80);
 }
 
 /* The measurements below are the Solar thermal header's own: same padding,
@@ -729,17 +868,11 @@ export function installPageMastheadSection() {
     "dashboardmodern:state-changed",
     "pageshow",
   ]) {
-    root.addEventListener?.(eventName, schedule);
+    root.addEventListener?.(eventName, scheduleSettled);
   }
-  doc.addEventListener(
-    "click",
-    (event) => {
-      if (event.target?.closest?.("[data-tab],[data-page],.bottom-nav-btn,.back-home-btn")) {
-        root.setTimeout?.(schedule, 0);
-      }
-    },
-    true,
-  );
+  /* Il tocco su una linguetta e' quello che porta in scena un'altra pagina, e
+   * l'intestazione e' di chi arriva: la regola sta nell'aiutante condiviso. */
+  quandoSiCambiaPagina(scheduleSettled);
   schedule();
 }
 

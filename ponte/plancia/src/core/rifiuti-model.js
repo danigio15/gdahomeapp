@@ -113,6 +113,303 @@ function normalizzaRiga(riga, indice) {
   };
 }
 
+/* ── il calendario di casa: due settimane, scritte a mano (#366) ──────── */
+
+/* «Vorrei che ci fosse la possibilita' di un menu a tendina per le 2 settimane
+ * cosi uno sceglie il rifiuto, senza dover creare o modificare il calendario
+ * di home assistant.»
+ *
+ * Quasi tutti i comuni girano su due settimane: lunedi' l'organico, martedi'
+ * la plastica, e la settimana dopo cambia. Chi ha quel foglietto sul frigo non
+ * ha nessun sensore da collegare — e finora la pagina dei rifiuti gli chiedeva
+ * di costruirsi un calendario in Home Assistant per scriverci dentro una cosa
+ * che sa a memoria.
+ *
+ * Quattordici caselle, una per giorno, ognuna con i materiali di quel giorno
+ * (che possono essere piu' d'uno: capita che escano insieme). Si ripetono a
+ * partire da una data, e quella data e' l'unica cosa che serve sapere per dire
+ * in che giorno del turno siamo oggi — anche fra tre anni. */
+export const GIORNI_DEL_TURNO = 14;
+
+/** Una data come `2026-09-07`, o `""` se non e' una data. */
+function dataScritta(valore) {
+  const data = leggiData(valore);
+  if (!data) return "";
+  const due = (numero) => String(numero).padStart(2, "0");
+  return `${data.getFullYear()}-${due(data.getMonth() + 1)}-${due(data.getDate())}`;
+}
+
+/**
+ * Il turno, ripulito.
+ *
+ * Torna sempre quattordici caselle, anche quando ne sono state scritte meno o
+ * di piu': chi disegna la griglia non deve difendersi da una configurazione
+ * storta. Senza una data d'inizio valida il turno non si puo' collocare nel
+ * tempo, e allora non c'e'.
+ */
+export function normalizzaTurno(stored) {
+  const dato = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
+  const inizio = dataScritta(dato.inizio ?? dato.start);
+  const grezzi = Array.isArray(dato.giorni)
+    ? dato.giorni
+    : Array.isArray(dato.days)
+      ? dato.days
+      : [];
+  const giorni = [];
+  for (let indice = 0; indice < GIORNI_DEL_TURNO; indice += 1) {
+    const voce = grezzi[indice];
+    const elenco = Array.isArray(voce) ? voce : voce ? [voce] : [];
+    const visti = [];
+    for (const materiale of elenco) {
+      const chiave = pulito(materiale);
+      /* Solo i materiali che si conoscono: uno scritto a mano che non esiste
+       * diventerebbe «altro» e la casella direbbe il falso. */
+      if (!MATERIALI.some((noto) => noto.chiave === chiave)) continue;
+      if (!visti.includes(chiave)) visti.push(chiave);
+    }
+    giorni.push(visti);
+  }
+  return { inizio, giorni };
+}
+
+/** Se il turno dice qualcosa: una data d'inizio e almeno un materiale. */
+export function turnoConfigurato(turno) {
+  const dato = normalizzaTurno(turno);
+  return Boolean(dato.inizio) && dato.giorni.some((giorno) => giorno.length > 0);
+}
+
+/**
+ * In quale casella del turno cade quel giorno.
+ *
+ * Il resto della divisione si porta dentro il segno in JavaScript, e un giorno
+ * PRIMA dell'inizio darebbe una casella negativa: si rimette dentro. Cosi' il
+ * turno vale anche all'indietro — chi scrive come inizio il lunedi' della
+ * settimana prossima vede comunque il turno di oggi.
+ */
+export function caselleDelTurno(turno, quando) {
+  const dato = normalizzaTurno(turno);
+  if (!dato.inizio) return -1;
+  const partenza = leggiData(dato.inizio);
+  if (!partenza) return -1;
+  const distanza = giorniFra(partenza, quando);
+  return ((distanza % GIORNI_DEL_TURNO) + GIORNI_DEL_TURNO) % GIORNI_DEL_TURNO;
+}
+
+/**
+ * I ritiri che il turno annuncia da oggi in avanti.
+ *
+ * Si guardano quattordici giorni e non di piu': il turno si ripete, quindi
+ * oltre non c'e' niente di nuovo da dire — solo le stesse righe una seconda
+ * volta. Ogni materiale esce UNA volta, alla sua prima occasione: un elenco
+ * che ripete la plastica fra due giorni e fra nove non risponde alla domanda
+ * della sera, la annacqua.
+ */
+export function ritiriDalTurno(turno, adesso = Date.now()) {
+  const dato = normalizzaTurno(turno);
+  if (!turnoConfigurato(dato)) return [];
+  const oggi = inizioDelGiorno(adesso);
+  const visti = new Set();
+  const fuori = [];
+  for (let avanti = 0; avanti < GIORNI_DEL_TURNO; avanti += 1) {
+    const quando = new Date(oggi.getTime() + avanti * 86400000 + 12 * 3600000);
+    const casella = caselleDelTurno(dato, quando);
+    if (casella < 0) break;
+    for (const materiale of dato.giorni[casella]) {
+      if (visti.has(materiale)) continue;
+      visti.add(materiale);
+      const voce = materialeDiSerie(materiale);
+      fuori.push({
+        id: `turno-${materiale}`,
+        materiale: voce.chiave,
+        nome: "",
+        icona: voce.icona,
+        colore: voce.colore,
+        entity: "",
+        muto: false,
+        dalTurno: true,
+        data: quando,
+        giorni: avanti,
+        quando: quandoCodice(avanti),
+      });
+    }
+  }
+  return fuori.sort((a, b) => a.giorni - b.giorni);
+}
+
+/* ── un sensore solo che porta tutto il calendario (#443) ─────────────── */
+
+/* «Molte integrazioni non forniscono un calendario vero e proprio ma dei
+ *  sensori sensor.xxx. Sarebbe bello poterli usare.»
+ *
+ * Un sensore per materiale la plancia lo legge da sempre: e' la riga, con la
+ * sua data. Quello che mancava e' l'altro modo, che in Italia e' il piu'
+ * diffuso: UN sensore che porta l'intero elenco dei prossimi ritiri negli
+ * attributi — il SAVNO di Conegliano, per dirne uno segnalato dal campo — dove
+ * ogni voce ha una data e il nome della frazione.
+ *
+ * Non si puo' pretendere un dialetto solo, perche' non ce n'e' uno: chi scrive
+ * queste integrazioni mette un elenco di oggetti, o un elenco di frasi, o una
+ * mappa frazione → data. Qui si accettano tutte e tre, e la regola e' la
+ * stessa che vale per le righe: una data la si riconosce nei modi in cui la
+ * scrivono tutti, e il materiale lo si indovina dal nome, che e' quello che fa
+ * gia' `materialeDalNome` per gli eventi del calendario.
+ *
+ * Quello che NON si fa e' inventare: una voce da cui non esce una data non
+ * diventa una riga muta, sparisce. Un elenco da cui non esce niente lascia il
+ * campo al modo di prima — lo stato del sensore letto come data unica — che
+ * per molti sensori e' gia' la risposta giusta.
+ */
+
+/* Dove le integrazioni tengono l'elenco. Si guardano prima questi nomi e poi
+ * tutti gli altri attributi: il nome giusto e' quello che porta delle date. */
+const NOMI_DELL_ELENCO = Object.freeze([
+  "prossimi_ritiri",
+  "ritiri",
+  "raccolte",
+  "prossime_raccolte",
+  "upcoming",
+  "collections",
+  "next_collections",
+  "schedule",
+  "events",
+  "days",
+  "dates",
+  "calendar",
+]);
+
+/* Dentro una voce dell'elenco: dove sta la data e dove sta la frazione. */
+const NOMI_DELLA_DATA = Object.freeze([
+  "date",
+  "data",
+  "day",
+  "giorno",
+  "start",
+  "start_time",
+  "next",
+  "when",
+  "quando",
+  "collection_date",
+  "pickup_date",
+]);
+
+const NOMI_DEL_MATERIALE = Object.freeze([
+  "type",
+  "tipo",
+  "types",
+  "waste_type",
+  "waste_types",
+  "fraction",
+  "frazione",
+  "name",
+  "nome",
+  "summary",
+  "title",
+  "titolo",
+  "description",
+  "descrizione",
+  "text",
+]);
+
+const testoDi = (valore) => (Array.isArray(valore) ? valore.join(" ") : pulito(valore));
+
+/* Una voce dell'elenco, comunque sia scritta: torna la data e il testo da cui
+ * si indovina il materiale, oppure `null` se una data non c'e'. */
+function voceDellElenco(voce) {
+  if (voce && typeof voce === "object" && !Array.isArray(voce)) {
+    let data = null;
+    for (const nome of NOMI_DELLA_DATA) {
+      data = leggiData(voce[nome]);
+      if (data) break;
+    }
+    if (!data) return null;
+    const parti = NOMI_DEL_MATERIALE.map((nome) => testoDi(voce[nome])).filter(Boolean);
+    return { data, testo: parti.join(" ") };
+  }
+  /* Una frase: «2026-09-11 Plastica», «Plastica: 11/09», «Plastica il 11 set».
+   * La data e' il pezzo che si sa leggere; il resto e' il nome. */
+  const frase = pulito(voce);
+  if (!frase) return null;
+  const pezzi = frase.split(/[\s,;:]+/).filter(Boolean);
+  for (let quanti = 3; quanti >= 1; quanti -= 1)
+    for (let da = 0; da + quanti <= pezzi.length; da += 1) {
+      const data = leggiData(pezzi.slice(da, da + quanti).join(" "));
+      if (!data) continue;
+      const resto = [...pezzi.slice(0, da), ...pezzi.slice(da + quanti)].join(" ");
+      return { data, testo: resto || frase };
+    }
+  return null;
+}
+
+/* L'elenco grezzo, da qualunque attributo lo porti: un array di voci, oppure
+ * una mappa frazione → data, che si legge come un elenco di coppie. */
+function elencoGrezzo(attributi) {
+  const nomi = [
+    ...NOMI_DELL_ELENCO.filter((nome) => attributi[nome] !== undefined),
+    ...Object.keys(attributi).filter((nome) => !NOMI_DELL_ELENCO.includes(nome)),
+  ];
+  for (const nome of nomi) {
+    const valore = attributi[nome];
+    if (Array.isArray(valore)) {
+      const voci = valore.map(voceDellElenco).filter(Boolean);
+      if (voci.length) return voci;
+      continue;
+    }
+    if (valore && typeof valore === "object") {
+      const voci = Object.entries(valore)
+        .map(([chiave, quando]) => {
+          const data = leggiData(quando);
+          return data ? { data, testo: chiave } : null;
+        })
+        .filter(Boolean);
+      if (voci.length) return voci;
+    }
+  }
+  return [];
+}
+
+/**
+ * I ritiri che UN sensore annuncia con tutto il suo elenco.
+ *
+ * Torna righe della stessa forma di quelle del turno e dei sensori per
+ * materiale: chi disegna non deve sapere da dove viene una riga. I ritiri gia'
+ * passati restano fuori, e di ogni materiale si tiene la PRIMA occasione — un
+ * elenco che ripete la plastica fra due giorni e fra nove non risponde alla
+ * domanda della sera, la annacqua.
+ */
+export function ritiriDaUnElenco(stato, adesso = Date.now()) {
+  const attributi = stato?.attributes;
+  if (!attributi || typeof attributi !== "object") return [];
+  const visti = new Set();
+  return elencoGrezzo(attributi)
+    .map((voce) => {
+      const giorni = giorniFra(adesso, voce.data);
+      const materiale = materialeDiSerie(materialeDalNome(voce.testo));
+      return { ...voce, giorni, materiale };
+    })
+    .filter((voce) => voce.giorni >= 0)
+    .sort((sinistra, destra) => sinistra.giorni - destra.giorni)
+    .filter((voce) => {
+      if (visti.has(voce.materiale.chiave)) return false;
+      visti.add(voce.materiale.chiave);
+      return true;
+    })
+    .map((voce) => ({
+      id: `elenco-${voce.materiale.chiave}`,
+      materiale: voce.materiale.chiave,
+      /* Il nome scritto dall'integrazione resta solo quando dice qualcosa in
+       * piu' del materiale: «Plastica e lattine» si', «plastica» no. */
+      nome: materialeDalNome(voce.testo) === "altro" ? pulito(voce.testo) : "",
+      icona: voce.materiale.icona,
+      colore: voce.materiale.colore,
+      entity: "",
+      muto: false,
+      dallElenco: true,
+      data: voce.data,
+      giorni: voce.giorni,
+      quando: quandoCodice(voce.giorni),
+    }));
+}
+
 /** La configurazione, ripulita. */
 export function normalizzaRifiuti(stored) {
   const dato = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
@@ -120,7 +417,7 @@ export function normalizzaRifiuti(stored) {
     .map(normalizzaRiga)
     .filter(Boolean)
     .slice(0, MASSIMO_RIGHE);
-  return { calendario: pulito(dato.calendario), righe };
+  return { calendario: pulito(dato.calendario), righe, turno: normalizzaTurno(dato.turno) };
 }
 
 /** Le righe con un'entita' dietro: quelle che si possono leggere. */
@@ -131,7 +428,14 @@ export function righeConfigurate(config) {
 /** Se c'e' qualcosa da leggere: una riga con la sua entita', o il calendario. */
 export function rifiutiConfigurati(config) {
   const dato = normalizzaRifiuti(config);
-  return righeConfigurate(dato).length > 0 || dato.calendario.includes(".");
+  /* Il turno di casa conta quanto un sensore: chi ha scritto le due settimane
+   * ha configurato i rifiuti, e la pagina non deve continuare a chiedergli
+   * un'entita' che non avra' mai (#366). */
+  return (
+    righeConfigurate(dato).length > 0 ||
+    dato.calendario.includes(".") ||
+    turnoConfigurato(dato.turno)
+  );
 }
 
 /** Tutte le entita' nominate, senza doppioni. */
@@ -161,13 +465,75 @@ export function giorniFra(da, a) {
   return Math.round((utcDue - utcUno) / 86400000);
 }
 
+/* I mesi scritti a parole, nelle sei lingue in cui si conoscono gia' i giorni
+ * della settimana. Una data cosi' non la scrive un'integrazione: la scrive chi
+ * si e' composto lo stato con un template, e per lui e' una data come le
+ * altre. */
+const MESI = Object.freeze([
+  /^(gen|genn|gennaio|jan|january|januar|januari|ene|enero|janv|janvier)$/,
+  /^(feb|febb|febbraio|february|februar|februari|feb|febrero|fevr|février|fevrier)$/,
+  /^(mar|marzo|march|märz|marz|maart|marzo|mars)$/,
+  /^(apr|aprile|april|abr|abril|avr|avril)$/,
+  /^(mag|maggio|may|mai|mei|may|mayo)$/,
+  /^(giu|giugno|jun|june|juni|jun|junio|juin)$/,
+  /^(lug|luglio|jul|july|juli|jul|julio|juil|juillet)$/,
+  /^(ago|agosto|aug|august|augustus|ago|agosto|aout|août)$/,
+  /^(set|sett|settembre|sep|sept|september|sep|septiembre|septembre)$/,
+  /^(ott|ottobre|oct|october|oktober|okt|oct|octubre|octobre)$/,
+  /^(nov|novembre|november|nov|noviembre|novembre)$/,
+  /^(dic|dicembre|dec|december|dez|dezember|dic|diciembre|déc|decembre)$/,
+]);
+
+const meseDaParola = (parola) => {
+  const voce = minuscolo(parola).replace(/\.$/, "");
+  if (!voce) return -1;
+  return MESI.findIndex((prova) => prova.test(voce));
+};
+
+/* Le parole che stanno davanti a una data senza aggiungere niente.
+ *
+ * «on Fri, 18.09.2026» e' lo stato vero di un sensore di Waste Collection
+ * Schedule (#383), ed e' due parole di troppo: la preposizione inglese e il
+ * giorno della settimana. Il lettore ne toglieva UNA, e solo se era un giorno
+ * — quindi su quella riga si fermava sulla prima parola e falliva tutto,
+ * mentre «Fri, 18.09.2026» lo leggeva benissimo.
+ *
+ * Le preposizioni sono quelle delle lingue in cui si conoscono gia' i giorni.
+ * `il` e `al` italiane, `on` e `at` inglesi, `am` tedesca, `el` spagnola, `le`
+ * francese, `op` olandese. Nessuna di queste e' un mese ne' un numero, quindi
+ * toglierla non puo' mangiare un pezzo di data. */
+const PREPOSIZIONI = /^(il|lo|al|del|di|on|at|am|el|le|op|den|op de)$/;
+
+/* Due parole al massimo — una preposizione e un giorno — e mai fino a
+ * svuotare la riga: se dopo aver tolto non resta una cifra, non era una data
+ * con qualcosa davanti, era un'altra cosa e va lasciata com'e'. */
+const PAROLE_DA_TOGLIERE = 2;
+
+function senzaIlGiornoDavanti(voce) {
+  let resto = voce;
+  for (let giro = 0; giro < PAROLE_DA_TOGLIERE; giro += 1) {
+    const m = /^([\p{L}]+)[.,]?\s+(.+)$/u.exec(resto);
+    if (!m) break;
+    const parola = minuscolo(m[1]);
+    const inutile =
+      PREPOSIZIONI.test(parola) || GIORNI_DELLA_SETTIMANA.some((prova) => prova.test(parola));
+    if (!inutile) break;
+    const dopo = pulito(m[2]);
+    if (!/\d/.test(dopo)) break;
+    resto = dopo;
+  }
+  return resto;
+}
+
 /**
  * Una data scritta come la scrivono le integrazioni: `2026-09-05`,
- * `2026-09-05 06:00:00`, `2026-09-05T06:00:00+02:00`, `05/09/2026`.
+ * `2026-09-05 06:00:00`, `2026-09-05T06:00:00+02:00`, `05/09/2026`; e come la
+ * scrive chi si compone lo stato con un template: «mer 10/09/2026», «10
+ * settembre», «10 settembre 2026».
  * Torna `null` per tutto il resto: un numero non e' una data.
  */
-export function leggiData(testo, { giornoIntero = false } = {}) {
-  const voce = pulito(testo);
+export function leggiData(testo, { giornoIntero = false, adesso = null } = {}) {
+  const voce = senzaIlGiornoDavanti(pulito(testo));
   if (!voce) return null;
   let m = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/.exec(voce);
   if (m) {
@@ -189,6 +555,31 @@ export function leggiData(testo, { giornoIntero = false } = {}) {
   /* `05/09/2026`, `05.09.2026`, e il `05-09-2026` degli olandesi (Afvalwijzer). */
   m = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?:[ T]\d{2}:\d{2}(?::\d{2})?)?$/.exec(voce);
   if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+  /* «10 settembre», «10 set 2026», «10 September 2026». Senza anno vale il
+   * prossimo che viene: un ritiro scritto a mano guarda avanti, non indietro.
+   *
+   * Prendere l'anno di oggi e fermarsi li' funziona undici mesi su dodici e
+   * sbaglia proprio quando conta: «2 gennaio» letto il 30 dicembre diventava
+   * il 2 gennaio di quest'anno — undici mesi fa — e chi conta i giorni lo
+   * trovava scaduto e lo toglieva dai prossimi. Il bidone andava fuori fra tre
+   * giorni e la tessera non lo diceva. Se la data cosi' composta e' gia'
+   * passata, vale quella dell'anno dopo.
+   *
+   * L'istante di riferimento arriva da chi chiama, che ce l'ha; senza, si
+   * ripiega sull'orologio, che e' quello che si faceva prima. */
+  m = /^(\d{1,2})\s+([\p{L}]{3,})\.?(?:\s+(\d{4}))?$/u.exec(voce);
+  if (m) {
+    const mese = meseDaParola(m[2]);
+    if (mese < 0) return null;
+    const giorno = +m[1];
+    if (m[3]) return new Date(+m[3], mese, giorno);
+    const riferimento = adesso === null || adesso === undefined ? new Date() : new Date(adesso);
+    if (!Number.isFinite(riferimento.getTime())) return null;
+    const candidata = new Date(riferimento.getFullYear(), mese, giorno);
+    if (candidata.getTime() < inizioDelGiorno(riferimento).getTime())
+      return new Date(riferimento.getFullYear() + 1, mese, giorno);
+    return candidata;
+  }
   return null;
 }
 
@@ -196,13 +587,13 @@ export function leggiData(testo, { giornoIntero = false } = {}) {
  * della data: «Friday», «venerdì», «Vrijdag». Vale il prossimo con quel nome,
  * oggi compreso. */
 const GIORNI_DELLA_SETTIMANA = Object.freeze([
-  /^(domenica|sunday|sun|sonntag|zondag|domingo|dimanche)$/,
-  /^(lunedi|lunedì|monday|mon|montag|maandag|lunes|lundi)$/,
-  /^(martedi|martedì|tuesday|tue|dienstag|dinsdag|martes|mardi)$/,
-  /^(mercoledi|mercoledì|wednesday|wed|mittwoch|woensdag|miércoles|miercoles|mercredi)$/,
-  /^(giovedi|giovedì|thursday|thu|donnerstag|donderdag|jueves|jeudi)$/,
-  /^(venerdi|venerdì|friday|fri|freitag|vrijdag|viernes|vendredi)$/,
-  /^(sabato|saturday|sat|samstag|zaterdag|sábado|sabado|samedi)$/,
+  /^(domenica|dom|sunday|sun|sonntag|zondag|domingo|dimanche)$/,
+  /^(lunedi|lunedì|lun|monday|mon|montag|maandag|lunes|lundi)$/,
+  /^(martedi|martedì|mar|tuesday|tue|dienstag|dinsdag|martes|mardi)$/,
+  /^(mercoledi|mercoledì|mer|wednesday|wed|mittwoch|woensdag|miércoles|miercoles|mercredi)$/,
+  /^(giovedi|giovedì|gio|thursday|thu|donnerstag|donderdag|jueves|jeudi)$/,
+  /^(venerdi|venerdì|ven|friday|fri|freitag|vrijdag|viernes|vendredi)$/,
+  /^(sabato|sab|saturday|sat|samstag|zaterdag|sábado|sabado|samedi)$/,
 ]);
 
 export function giornoDellaSettimana(testo, adesso = Date.now()) {
@@ -217,8 +608,11 @@ export function giornoDellaSettimana(testo, adesso = Date.now()) {
 
 /* Le parole che dicono fra quanto: «domani», «in 3 giorni», «today», «in 2
  * dagen», «in 3 Tagen». */
+/* La preposizione e' facoltativa: «fra 3 giorni» e «3 giorni» dicono la stessa
+ * cosa, e la seconda e' quella che esce dal template piu' diffuso di Waste
+ * Collection Schedule — `{{value.daysTo}} giorni` (#383). */
 const FRA_GIORNI =
-  /^(?:in|fra|tra|en|dans)\s+(\d+)\s+(?:giorn[oi]|days?|d|dagen|tagen?|días?|dias?|jours?)$/;
+  /^(?:(?:in|fra|tra|en|dans)\s+)?(\d+)\s+(?:giorn[oi]|days?|d|dagen|tagen?|días?|dias?|jours?)$/;
 
 function giorniDalleParole(testo) {
   const voce = minuscolo(testo);
@@ -265,19 +659,19 @@ export function dataDelRitiro(stato, adesso = Date.now()) {
     "start_time",
     "start",
   ]) {
-    const data = leggiData(attributi[nome], { giornoIntero });
+    const data = leggiData(attributi[nome], { giornoIntero, adesso });
     if (!data) continue;
     /* Un evento gia' cominciato e non ancora finito e' il ritiro di adesso.
      * Un ritiro che dura da ieri a domani — capita coi calendari scritti a
      * mano — partiva ieri, e ieri e' passato: la riga finiva fra le scadute e
      * la tessera diceva «nessuna data in vista» mentre il bidone era fuori. */
-    const fine = leggiData(attributi.end_time || attributi.end, { giornoIntero });
+    const fine = leggiData(attributi.end_time || attributi.end, { giornoIntero, adesso });
     if (fine && data.getTime() <= adesso && adesso < fine.getTime()) return inizioDelGiorno(adesso);
     return data;
   }
   const prossimi = Array.isArray(attributi.upcoming) ? attributi.upcoming : [];
   for (const voce of prossimi) {
-    const data = leggiData(voce?.date ?? voce?.start ?? voce);
+    const data = leggiData(voce?.date ?? voce?.start ?? voce, { adesso });
     if (data) return data;
   }
   /* I giorni contati, in tutti i dialetti: `daysTo` (Waste Collection
@@ -302,7 +696,7 @@ export function dataDelRitiro(stato, adesso = Date.now()) {
       return new Date(inizioDelGiorno(adesso).getTime() + n * 86400000 + 12 * 3600000);
   }
   const grezzo = pulito(stato.state);
-  const dallaData = leggiData(grezzo);
+  const dallaData = leggiData(grezzo, { adesso });
   if (dallaData) return dallaData;
   const dalleParole = giorniDalleParole(grezzo);
   if (dalleParole !== null)
@@ -359,16 +753,58 @@ export function letturaRifiuti(
    * trovata» nascondeva il guasto proprio quando poteva far saltare un
    * ritiro vero. */
   const risponde = (stato) => Boolean(stato) && !STATI_MUTI.test(pulito(stato.state));
+  /* Il turno di casa (#366) da' righe come le da' un sensore: stesso materiale,
+   * stessa data, stessa parola. Chi disegna non deve sapere da dove viene una
+   * riga — e infatti non lo sa: la pagina, la tessera e il widget mostrano il
+   * turno senza una riga di codice in piu'.
+   *
+   * Un materiale che ha gia' il suo sensore non si ripete: il sensore sa la
+   * data vera, il turno la data prevista, e due righe dello stesso bidone con
+   * due date diverse sono peggio di una sola. */
+  /* Il materiale VERO di una riga configurata, che non sempre e' quello
+   * scritto nella riga.
+   *
+   * Chi non lo sceglie lascia «altro», e allora lo dice il sensore: Waste
+   * Collection Schedule scrive `types`, altri `waste_type`, altri ancora solo
+   * il nome amichevole. Quella traduzione la faceva soltanto il disegno delle
+   * righe, piu' in basso, e qui sopra restava «altro» — cosi' l'elenco delle
+   * esclusioni diceva di avere un sensore per «altro» mentre in pagina quella
+   * riga era diventata «plastica». Il calendario portava allora la SUA
+   * plastica, che nessuno escludeva piu': due righe dello stesso bidone, con
+   * due date diverse, che e' esattamente cio' che l'esclusione esiste per
+   * impedire.
+   *
+   * La domanda si fa in un posto solo, e la fanno tutti e due. */
+  const vestitoDellaRiga = (riga) => {
+    if (riga.materiale !== "altro") return null;
+    const dalSensore = materialeDalSensore(leggi(riga.entity));
+    return dalSensore ? materialeDiSerie(dalSensore) : null;
+  };
+  const materialeDellaRiga = (riga) => vestitoDellaRiga(riga)?.chiave || riga.materiale;
+  const daiSensori = new Set(
+    dato.righe.filter((riga) => riga.entity.includes(".")).map(materialeDellaRiga),
+  );
+  /* Un sensore solo che porta tutto l'elenco (#443): le sue voci diventano
+   * righe come le altre. Un materiale che ha gia' il suo sensore per materiale
+   * non si ripete — quello e' scelto, questo e' dedotto — e il turno scritto a
+   * mano cede il passo a tutti e due: e' la previsione, non la data. */
+  const dallElenco = ritiriDaUnElenco(
+    dato.calendario.includes(".") ? leggi(dato.calendario) : null,
+    adesso,
+  ).filter((riga) => !daiSensori.has(riga.materiale));
+  const dallElencoMateriali = new Set(dallElenco.map((riga) => riga.materiale));
+  const dalTurno = ritiriDalTurno(dato.turno, adesso).filter(
+    (riga) => !daiSensori.has(riga.materiale) && !dallElencoMateriali.has(riga.materiale),
+  );
   const righe = dato.righe
     .filter((riga) => riga.entity.includes("."))
     .map((riga) => {
       const stato = leggi(riga.entity);
       const data = dataDelRitiro(stato, adesso);
       const giorni = data ? giorniFra(adesso, data) : null;
-      /* Il materiale lo dice il sensore, se la riga non l'ha scelto: Waste
-       * Collection Schedule scrive `types` (un elenco), altri `waste_type`. */
-      const dalSensore = riga.materiale === "altro" ? materialeDalSensore(stato) : null;
-      const vestito = dalSensore ? materialeDiSerie(dalSensore) : null;
+      /* Lo stesso materiale che ha guardato l'esclusione qui sopra: se i due
+       * posti rispondessero diversamente tornerebbero le righe doppie. */
+      const vestito = vestitoDellaRiga(riga);
       return {
         ...riga,
         ...(vestito
@@ -377,9 +813,19 @@ export function letturaRifiuti(
         muto: !risponde(stato),
         data,
         giorni,
+        /* Cosa c'era scritto, quando non se n'e' cavata una data.
+         *
+         * «Non riesce ad elaborare la data anche se e' presente» (#383): la
+         * riga restava un trattino muto, e capire quale dialetto parlasse
+         * quell'integrazione toccava a chi legge le segnalazioni, due giorni
+         * dopo. Detto sulla riga, la diagnosi ce l'ha davanti chi configura —
+         * ed e' l'unico che puo' vederla. Si porta solo quando serve: dove la
+         * data c'e', non c'e' niente da spiegare. */
+        letto: !data && risponde(stato) ? pulito(stato?.state) : "",
         quando: quandoCodice(giorni),
       };
     })
+    .concat(dallElenco, dalTurno)
     .sort((a, b) => {
       if (a.giorni === null && b.giorni === null) return 0;
       if (a.giorni === null) return 1;
@@ -388,7 +834,9 @@ export function letturaRifiuti(
     });
 
   let calendario = null;
-  if (dato.calendario.includes(".")) {
+  /* Quando l'elenco ha parlato, la riga unica del «Calendario dei ritiri» non
+   * ci va: direbbe una seconda volta la prima delle righe qui sopra. */
+  if (dato.calendario.includes(".") && !dallElenco.length) {
     const stato = leggi(dato.calendario);
     const data = dataDelRitiro(stato, adesso);
     const giorni = data ? giorniFra(adesso, data) : null;

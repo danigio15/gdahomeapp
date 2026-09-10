@@ -83,3 +83,39 @@ export function codiceDellaRicarica({ stato, collegata = null, potenza = null } 
 
 /** Le pastiglie leggono anche quello che il guscio scrive gia': le lettere. */
 export const LETTERE = Object.freeze(["A", "B", "C", "F", "N"]);
+
+/* Il cavo lo dice solo il suo sensore. Un «off» del sensore di carica non e'
+ * un cavo fuori: e' una carica ferma, e il cavo puo' essere dentro. Qui si
+ * legge il sensore del cavo — `dm.ev_cavo_collegato` — e si risponde si', no,
+ * o «non lo so» quando lo stato non e' fra quelli che parlano.
+ *
+ * Sta qui, e non nella sezione della pastiglia, perche' lo leggono in due: la
+ * pastiglia sulla pagina Auto e la tessera in Home. «Nel widget la ricarica
+ * risulta scollegata, ma nella pagina dedicata la vedi collegata» (#348) era
+ * esattamente questo: due letture diverse dello stesso cavo. */
+const CAVO_DENTRO = /^(on|true|1|home|connected|plugged|collegato|attaccato)$/i;
+const CAVO_FUORI = /^(off|false|0|not_home|disconnected|unplugged|scollegato|staccato)$/i;
+
+/* E le lettere della norma dicono il cavo meglio di chiunque.
+ *
+ * IEC 61851: A e' la presa libera, B il cavo dentro e fermo, C e D il cavo
+ * dentro che carica. Le colonnine serie — KEBA, go-e, openWB — pubblicano
+ * proprio quella lettera, spesso in un sensore che si chiama «vehicle status»,
+ * e chi la legge sa del cavo senza bisogno di un secondo sensore. F e' un
+ * guasto: di dov'e' il cavo non dice niente, e infatti qui non risponde. */
+const CAVO_LETTERA_FUORI = /^[aA]$/;
+const CAVO_LETTERA_DENTRO = /^[bBcCdD]$/;
+
+export function cavoDalloStato(stato) {
+  const grezzo = clean(stato);
+  if (CAVO_LETTERA_DENTRO.test(grezzo)) return true;
+  if (CAVO_LETTERA_FUORI.test(grezzo)) return false;
+  if (CAVO_DENTRO.test(grezzo)) return true;
+  if (CAVO_FUORI.test(grezzo)) return false;
+  return null;
+}
+
+/** Se uno stato e' una delle lettere della norma. */
+export function eUnaLettera(stato) {
+  return /^[abcdfABCDF]$/.test(clean(stato));
+}

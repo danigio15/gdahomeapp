@@ -5,6 +5,7 @@ import {
   canonicalApplianceVisualKey,
   applianceVisualKey,
 } from "../core/device-model.js";
+import { apriIlFoglioDiScelta, chiudiIlFoglioDiScelta } from "./foglio-di-scelta-section.js";
 import { iconGlyph } from "./icon-engine-section.js";
 import {
   activeLocale,
@@ -22,7 +23,24 @@ import {
 import { catalogLabel } from "../core/personalization-catalog.js";
 import { bindApplianceToDevice, bindingLabel } from "../core/appliance-device-binding.js";
 import { APPLIANCE_BINDING_FIELDS } from "../core/device-model.js";
+/* Le regole dei comandi a parte sono quelle del robot (#306), e non se ne
+ * scrive un secondo elenco per gli elettrodomestici (#338): quali domini
+ * possono fare da comando, come si chiama un comando senza ripetere il nome
+ * dell'apparecchio, quali entita' gli stanno accanto. Sono nate li' perche' li'
+ * e' arrivata la domanda per prima; sono le stesse. */
+import {
+  comandiSuggeriti as comandiVicini,
+  elencoComandi,
+  genereDelComando,
+  nomeDelComando,
+} from "../core/robot-model.js";
 import { apriMenuIntegrazioni } from "./appliance-integration-section.js";
+import { CAMPI_SCELTI } from "../core/energy-loads-config.js";
+import {
+  eDiUnAltroApparecchio,
+  paroleDegliAltri,
+  paroleDellApparecchio,
+} from "../core/entita-di-questo-apparecchio.js";
 
 globalThis.__DM_20260815C__ = true;
 const KEY = "__DASHBOARDMODERN_APPLIANCE_EDITOR_SECTION__";
@@ -37,6 +55,14 @@ function appliances() {
   return Array.isArray(stored) ? stored.slice() : readJson("cd_appliances", []);
 }
 
+/* L'unico posto della sezione dove l'emoji resta, e non e' una scelta.
+ *
+ * «Non voglio vedere icone che non sono nostre»: giusto, e dappertutto qui
+ * intorno adesso c'e' il disegno del catalogo. Qui no, e non per dimenticanza:
+ * questa e' la tendina delle stanze, e dentro un `<option>` il browser disegna
+ * TESTO — nessun elemento, nessun disegno, nemmeno un'immagine. Per mettercelo
+ * bisognerebbe rifare la tendina come menu nostro, che e' un'altra cosa e un
+ * altro lavoro. Finche' e' un `<select>`, l'emoji e' quello che si puo'. */
 function roomIconEmoji(icon) {
   return iconGlyph("room", clean(icon) || "mdi:home") || "🏠";
 }
@@ -101,18 +127,19 @@ function typeLabel(value) {
   return applianceCatalogLabel(value, locale());
 }
 
+/* La cornice — sfondo, scheda, titolo, Chiudi — e' quella condivisa: la stessa
+ * che usa la tendina dei dispositivi del Report. Qui dentro ci va solo cosa si
+ * sceglie, che e' una griglia di piastrelle. */
 function openTypePicker({ selected = "generico", onSelect } = {}) {
-  doc?.getElementById("dm-applpick")?.remove();
   const selectedKey = editorVisualKey(selected) || "generico";
-  const overlay = doc.createElement("div");
-  overlay.id = "dm-applpick";
-  overlay.className = "dm-appliance-type-picker";
-  overlay.innerHTML = `<section class="dm-appliance-type-picker-dialog" role="dialog" aria-modal="true" aria-labelledby="dm-appliance-type-picker-title">
-    <strong id="dm-appliance-type-picker-title">${t("Scegli l'elettrodomestico", "Choose appliance")}</strong>
-    <div class="dm-appliance-type-grid" role="listbox"></div>
-    <button type="button" class="dm-appliance-type-close">${t("Chiudi", "Close")}</button>
-  </section>`;
-  const grid = overlay.querySelector(".dm-appliance-type-grid");
+  const corpo = apriIlFoglioDiScelta({
+    titolo: t("Scegli l'elettrodomestico", "Choose appliance"),
+    id: "dm-applpick",
+  });
+  if (!corpo) return null;
+  const grid = doc.createElement("div");
+  grid.className = "dm-appliance-type-grid";
+  grid.setAttribute("role", "listbox");
   APPLIANCE_CATALOG.forEach((item) => {
     const button = doc.createElement("button");
     button.type = "button";
@@ -122,19 +149,13 @@ function openTypePicker({ selected = "generico", onSelect } = {}) {
     button.setAttribute("aria-selected", String(item.key === selectedKey));
     button.innerHTML = `<span class="dm-appliance-type-option-icon">${typeIconMarkup(item.key, 30)}</span><span>${esc(catalogLabel(item))}</span>`;
     button.addEventListener("click", () => {
-      overlay.remove();
+      chiudiIlFoglioDiScelta();
       onSelect?.(item.key);
     });
     grid.append(button);
   });
-  overlay
-    .querySelector(".dm-appliance-type-close")
-    ?.addEventListener("click", () => overlay.remove());
-  overlay.addEventListener("click", (event) => {
-    if (event.target === overlay) overlay.remove();
-  });
-  doc.body.append(overlay);
-  return overlay;
+  corpo.append(grid);
+  return corpo;
 }
 
 function installPickerOverride() {
@@ -295,7 +316,152 @@ function cardFieldsMarkup(device = {}) {
   </details>`;
 }
 
-function normalizeEntities(device, values) {
+/* ── gli altri comandi dell'apparecchio (#338) ─────────────────────────────
+ *
+ * «Sto provando ad integrare l'asciugatrice con hOn. Non ha un'entita'
+ * comando, ma da documentazione posso far partire il comando con
+ * `hon.start_program` e `program: rapid_30`. Come posso integrare questo nella
+ * sezione dell'asciugatrice?»
+ *
+ * Fino a qui un apparecchio sapeva premere solo entita': interruttori, menu,
+ * numeri, tasti. Una chiamata di servizio con i suoi parametri non e'
+ * nessuna di quelle — ma avvolta in uno script di tre righe diventa
+ * `script.asciugatrice_rapido_30`, che e' un'entita' come le altre. Il robot
+ * aveva gia' questo campo (#306) e le regole stanno in un posto solo: qui si
+ * scelgono le entita', di la' si disegnano.
+ *
+ * Non si salva niente finche' non si preme il tasto in fondo: l'elenco vive in
+ * un campo nascosto del modulo, come il collegamento all'integrazione. */
+function chipComandoMarkup(entity, azione, segno, apparecchio, states) {
+  return `<button type="button" class="dm-appl-cmd-chip" data-${azione}="${esc(entity)}" data-genere="${esc(genereDelComando(entity))}" title="${esc(entity)}"><span>${esc(nomeDelComando(entity, apparecchio, states))}</span><i aria-hidden="true">${segno}</i></button>`;
+}
+
+/* L'apparecchio come lo vede il vocabolario dei comandi: la sua entita' e i
+ * comandi gia' scelti. L'entita' serve a due cose — togliere il suo nome
+ * davanti a quello dei comandi, e riconoscere quelli che gli stanno accanto. */
+function apparecchioDeiComandi(values, scelti) {
+  return {
+    entity: clean(values.control_entity || values.state_entity || values.power_entity),
+    /* Il nome scritto nella scheda: serve a togliere «Asciugatrice» davanti a
+     * «Asciugatrice Rapido 30», anche quando l'apparecchio non ha nessuna
+     * entita' comando — che e' proprio il caso di chi ha aperto #338. */
+    name: clean(values.name),
+    comandi: scelti,
+  };
+}
+
+/* Quello che sta accanto all'apparecchio e potrebbe essere un suo comando: le
+ * entita' comandabili del dispositivo collegato, piu' quelle che portano il
+ * suo nome o il suo id. Sono proposte, non scelte. */
+function comandiProposti(values, snapshot, scelti) {
+  const states = allStates();
+  const gia = new Set(scelti);
+  const dalDispositivo = (Array.isArray(snapshot) ? snapshot : []).filter(
+    (id) => genereDelComando(id) && !gia.has(id),
+  );
+  const accanto = comandiVicini(apparecchioDeiComandi(values, scelti), states);
+  return [...new Set([...dalDispositivo, ...accanto])].slice(0, 18);
+}
+
+function comandiExtraMarkup(device) {
+  const scelti = elencoComandi(device.comandi);
+  return `<section class="ed-slot dm-appl-comandi" data-appl-comandi>
+    <span class="ed-slot-lbl">${t("Altri comandi", "Other commands")}</span>
+    <input type="hidden" name="comandi" value="${esc(scelti.join(","))}">
+    <div class="dm-appl-cmd-chips" data-appl-comandi-scelti></div>
+    <!-- La lente non si disegna qui: il campo dichiara di volere un'entita' —
+         col suo placeholder — e la scheda di casa gli mette addosso la SUA
+         pastiglia «Scegli entità», con la matita per scriverla a mano. Averne
+         una nostra accanto vorrebbe dire due lenti per lo stesso campo. -->
+    <span class="ed-form-row">
+      <input id="dm-appl-comando" class="ed-input mono" data-appl-comando-nuovo placeholder="script.asciugatrice_rapido_30" autocomplete="off" spellcheck="false">
+      <button type="button" class="dm-appl-cmd-add" data-appl-cmd-add aria-label="${t("Aggiungi comando", "Add command")}" title="${t("Aggiungi comando", "Add command")}">＋</button>
+    </span>
+    <output class="dm-appl-cmd-error" data-appl-cmd-error></output>
+    <small class="dm-appl-cmd-proposte-lbl" data-appl-comandi-proposti-lbl hidden>${t("Trovati accanto all'apparecchio — un tocco li aggiunge:", "Found next to the appliance — one tap adds them:")}</small>
+    <div class="dm-appl-cmd-chips dm-appl-cmd-proposte" data-appl-comandi-proposti></div>
+    <small>${t(
+      "I programmi e le regolazioni che non hanno un interruttore: entità button.*, select.*, switch.* (e input_*, script.*, scene.*, automation.*). Compaiono come tasti nella finestra dell'apparecchio. Un servizio con parametri — hon.start_program con il suo programma — si avvolge in uno script di tre righe e da lì in poi è un'entità come le altre.",
+      "The programs and settings without a switch of their own: button.*, select.*, switch.* entities (plus input_*, script.*, scene.*, automation.*). They show up as buttons in the appliance window. A service with parameters — hon.start_program with its program — goes into a three-line script, and from then on it is an entity like any other.",
+    )}</small>
+  </section>`;
+}
+
+/* Le pastiglie si ridisegnano da sole: quello che c'e' scritto nel campo
+ * nascosto E' l'elenco, e le proposte cambiano con lui. */
+function disegnaComandi(modal, form) {
+  const blocco = modal.querySelector("[data-appl-comandi]");
+  if (!blocco) return;
+  const states = allStates();
+  const values = Object.fromEntries(new FormData(form).entries());
+  const scelti = elencoComandi(values.comandi);
+  const apparecchio = apparecchioDeiComandi(values, scelti);
+  const cassetto = blocco.querySelector("[data-appl-comandi-scelti]");
+  if (cassetto)
+    cassetto.innerHTML = scelti.length
+      ? scelti
+          .map((entity) => chipComandoMarkup(entity, "appl-cmd-del", "✕", apparecchio, states))
+          .join("")
+      : `<small class="dm-appl-cmd-vuoto">${esc(t("Nessun comando in più: la finestra ha quelli dell'apparecchio e basta.", "No extra command: the window carries the appliance's own and nothing else."))}</small>`;
+  const proposte = comandiProposti(values, bindingSnapshot(values), scelti);
+  const cassettoProposte = blocco.querySelector("[data-appl-comandi-proposti]");
+  const etichettaProposte = blocco.querySelector("[data-appl-comandi-proposti-lbl]");
+  if (cassettoProposte)
+    cassettoProposte.innerHTML = proposte
+      .map((entity) => chipComandoMarkup(entity, "appl-cmd-sug", "＋", apparecchio, states))
+      .join("");
+  if (etichettaProposte) etichettaProposte.hidden = proposte.length === 0;
+}
+
+function wireComandi(modal, form) {
+  const blocco = modal.querySelector("[data-appl-comandi]");
+  if (!blocco) return;
+  const nascosto = form.elements.comandi;
+  const errore = blocco.querySelector("[data-appl-cmd-error]");
+  const scrivi = (elenco) => {
+    nascosto.value = elencoComandi(elenco).join(",");
+    disegnaComandi(modal, form);
+  };
+  blocco.addEventListener("click", (event) => {
+    const togli = event.target.closest("[data-appl-cmd-del]");
+    const proposta = event.target.closest("[data-appl-cmd-sug]");
+    const aggiungi = event.target.closest("[data-appl-cmd-add]");
+    if (!togli && !proposta && !aggiungi) return;
+    event.preventDefault();
+    const casella = blocco.querySelector("[data-appl-comando-nuovo]");
+    const scelti = elencoComandi(nascosto.value);
+    if (togli) {
+      if (errore) errore.textContent = "";
+      scrivi(scelti.filter((entity) => entity !== clean(togli.dataset.applCmdDel)));
+      return;
+    }
+    const nuovo = proposta ? clean(proposta.dataset.applCmdSug) : clean(casella?.value);
+    if (!genereDelComando(nuovo)) {
+      if (errore)
+        errore.textContent = t(
+          "Serve un'entità button.*, select.* o switch.* — oppure input_button, input_select, input_boolean, script, scene.",
+          "A button.*, select.* or switch.* entity is required — or input_button, input_select, input_boolean, script, scene.",
+        );
+      return;
+    }
+    if (errore) errore.textContent = "";
+    if (casella && !proposta) casella.value = "";
+    scrivi([...scelti, nuovo]);
+  });
+  disegnaComandi(modal, form);
+}
+
+/* Le entita' dell'apparecchio dopo un salvataggio: le caselle della maschera,
+ * piu' quelle che aveva gia' e che non sono di un altro apparecchio (#417).
+ *
+ * Il setaccio serve perche' l'elenco `entities` non lo scrive nessuno a mano:
+ * lo riempiva la passata che indovina dai nomi, e quando sbagliava ci lasciava
+ * dentro i sensori del frigorifero accanto. Da qui in poi le caselle sono
+ * scelte — `dm_campi_scelti` le blocca — quindi quello che resta nell'elenco
+ * resta per sempre: se non si toglie adesso non si toglie piu'. */
+function normalizeEntities(device, values, elenco = []) {
+  const parole = paroleDellApparecchio(device);
+  const altrui = paroleDegliAltri(device, elenco);
   return [
     ...new Set(
       [
@@ -307,9 +473,11 @@ function normalizeEntities(device, values) {
         values.total_energy_entity,
         values.history_entity,
         values.report_entity,
-        ...(device.entities || []).map((entry) =>
-          clean(typeof entry === "string" ? entry : entry?.entity || entry?.entity_id),
-        ),
+        ...(device.entities || [])
+          .map((entry) =>
+            clean(typeof entry === "string" ? entry : entry?.entity || entry?.entity_id),
+          )
+          .filter((entity) => !eDiUnAltroApparecchio(entity, parole, altrui)),
       ].filter(Boolean),
     ),
   ];
@@ -438,6 +606,9 @@ function paintBinding(modal, form, note = "") {
       );
     link.textContent = `🔗 ${t("Scegli il dispositivo", "Pick the device")}`;
   }
+  /* Collegare o scollegare un dispositivo cambia quali comandi gli stanno
+   * accanto (#338): le proposte si rifanno insieme alla fascia. */
+  disegnaComandi(modal, form);
 }
 
 function wireBinding(modal, form, device) {
@@ -542,6 +713,7 @@ export function openApplianceEditor(index) {
         ${entityField("monthly_energy_entity", t("Energia mensile", "Monthly energy"), device.monthly_energy_entity, t("Facoltativa: sostituisce il calcolo del mese corrente.", "Optional: overrides the current-month calculation."))}
         ${entityField("total_energy_entity", t("Energia totale per storico e Report", "Total energy for history and Report"), totalInitial, t("Deve essere un contatore cumulativo kWh con state_class total o total_increasing. Non usare qui il sensore mensile: questo campo serve per ricostruire anche i mesi precedenti.", "This must be a cumulative kWh meter with state_class total or total_increasing. Do not use the monthly sensor here: this field is required to reconstruct previous months."))}
       </section>
+      ${comandiExtraMarkup(device)}
       ${cardFieldsMarkup(device)}
       <output data-error></output>
       <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">💾 ${t("Salva modifiche", "Save changes")}</button></footer>
@@ -552,6 +724,7 @@ export function openApplianceEditor(index) {
   const close = () => modal.remove();
   updateEditType(modal, visual);
   wireBinding(modal, form, device);
+  wireComandi(modal, form);
   modal.querySelector("[data-type-trigger]")?.addEventListener("click", () => {
     openTypePicker({
       selected: form.elements.icon.value,
@@ -656,6 +829,12 @@ export function openApplianceEditor(index) {
     const snapshot = bindingSnapshot(values);
     if (clean(values.device_id) && snapshot.length) next.device_entities = snapshot;
     else delete next.device_entities;
+    /* Gli altri comandi (#338): quello che c'e' scritto nel campo nascosto,
+     * ripulito. Un elenco vuoto non e' una configurazione — il campo se ne va,
+     * cosi' un apparecchio senza comandi in piu' resta com'era. */
+    const comandi = elencoComandi(values.comandi);
+    if (comandi.length) next.comandi = comandi;
+    else delete next.comandi;
     if (next.threshold_standby === "") delete next.threshold_standby;
     for (const key of [
       "cycle_minutes",
@@ -672,7 +851,14 @@ export function openApplianceEditor(index) {
       next.total_energy_entity ||
       next.monthly_energy_entity ||
       next.daily_energy_entity;
-    next.entities = normalizeEntities(device, next);
+    next.entities = normalizeEntities(device, next, appliances());
+    /* Da adesso le caselle sono sue: quello che ha lasciato vuoto e' una
+     * risposta, non una domanda, e la passata che indovina dai nomi non ci
+     * torna sopra (#417). Senza questo segno «anche se cancello l'associazione,
+     * quando ritorno in configurazione me la ritrovo sempre»: l'entita' tolta
+     * col cestino rientrava un istante dopo il salvataggio. E' lo stesso segno
+     * che mette il collegamento a un dispositivo dell'integrazione. */
+    next.metadata = { ...(next.metadata || {}), [CAMPI_SCELTI]: true };
     try {
       await saveAppliance(index, next);
       close();
@@ -709,6 +895,22 @@ function installStyles() {
     .dm-appliance-binding-unlink{background:#64748b!important;color:#fff!important}
     .dm-appliance-binding[data-bound="false"] .dm-appliance-binding-unlink{display:none!important}
     @media(max-width:520px){.dm-appliance-binding{grid-template-columns:minmax(0,1fr)!important}.dm-appliance-binding-actions{flex-direction:row!important}.dm-appliance-binding-actions .ed-btn-add{flex:1 1 auto!important}}
+    /* Gli altri comandi (#338): pastiglie, quelle scelte con la croce e quelle
+       proposte col piu'. Stesso disegno della scheda del robot, che e' la
+       stessa cosa: un elenco di entita' che l'apparecchio sa premere. */
+    .dm-appl-comandi{display:grid!important;gap:6px!important;margin-top:14px!important}
+    .dm-appl-comandi .ed-form-row{display:flex!important;gap:8px!important;min-width:0!important}
+    .dm-appl-comandi .ed-form-row>input{flex:1 1 auto!important;min-width:0!important}
+    .dm-appl-comandi .dm-appl-cmd-add{flex:0 0 38px!important;height:38px!important;border:none!important;border-radius:10px!important;background:linear-gradient(135deg,#10b981,#047857)!important;color:#fff!important;font-size:14px!important;cursor:pointer!important}
+    .dm-appl-comandi small{font-size:11px!important;line-height:1.45!important;color:var(--secondary-text-color,#64748b)!important;font-weight:600!important}
+    .dm-appl-cmd-chips{display:flex!important;flex-wrap:wrap!important;gap:6px!important}
+    .dm-appl-cmd-chip{display:inline-flex!important;align-items:center!important;gap:6px!important;max-width:100%!important;padding:5px 10px!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:999px!important;background:var(--card-background-color,#fff)!important;font:inherit!important;font-size:12px!important;font-weight:800!important;color:var(--text,#0f172a)!important;cursor:pointer!important}
+    .dm-appl-cmd-chip>span{overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+    .dm-appl-cmd-chip>i{font-style:normal!important;opacity:.7!important}
+    .dm-appl-cmd-chip[data-genere="tendina"]{border-style:dashed!important}
+    .dm-appl-cmd-proposte .dm-appl-cmd-chip{border-color:#0ea5e9!important;color:#0369a1!important}
+    .dm-appl-cmd-vuoto{opacity:.75!important}
+    .dm-appl-cmd-error:not(:empty){color:var(--error-color,#dc2626)!important;font-size:12px!important;font-weight:800!important}
     .dm-appliance-flow-suggestion{display:block!important;margin-top:3px!important;color:#16a34a!important;font-weight:750!important}
     .dm-appliance-flow-suggestion[hidden]{display:none!important}
     .dm-appliance-card-fields{margin-top:14px!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:16px!important;background:color-mix(in srgb,var(--secondary-background-color,#f1f5f9) 45%,transparent)!important;overflow:hidden!important}
@@ -718,11 +920,8 @@ function installStyles() {
     .dm-appliance-card-fields[open]>summary::after{transform:rotate(180deg)}
     .dm-appliance-card-fields-intro{padding:0 16px 10px!important;font-size:11.5px!important;line-height:1.5!important;color:var(--secondary-text-color,#64748b)!important}
     .dm-appliance-card-fields .dm-appliance-entity-grid{padding:0 12px 12px!important}
-    .dm-appliance-type-picker{position:fixed!important;inset:0!important;z-index:100002!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:16px!important;background:rgba(15,23,42,.60)!important}
-    .dm-appliance-type-picker-dialog{display:flex!important;flex-direction:column!important;box-sizing:border-box!important;width:min(460px,100%)!important;max-height:80dvh!important;padding:18px!important;border-radius:22px!important;background:var(--card-background-color,#fff)!important;color:var(--text,#0f172a)!important;box-shadow:0 20px 60px rgba(0,0,0,.35)!important}
-    .dm-appliance-type-picker-dialog>strong{margin-bottom:10px!important;font-size:14.5px!important;font-weight:900!important}.dm-appliance-type-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(88px,1fr))!important;gap:8px!important;overflow-y:auto!important;min-height:0!important}
+.dm-appliance-type-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(88px,1fr))!important;gap:8px!important;overflow-y:auto!important;min-height:0!important}
     .dm-appliance-type-option{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:5px!important;min-height:92px!important;padding:10px 4px!important;border:1px solid var(--divider-color,#e2e8f0)!important;border-radius:14px!important;background:color-mix(in srgb,var(--secondary-background-color,#f1f5f9) 70%,transparent)!important;color:inherit!important;cursor:pointer!important}.dm-appliance-type-option[aria-selected="true"]{border-color:#0ea5e9!important;box-shadow:0 0 0 2px color-mix(in srgb,#0ea5e9 18%,transparent)!important}.dm-appliance-type-option-icon{display:grid!important;place-items:center!important;height:34px!important;color:#0ea5e9!important}.dm-appliance-type-option-icon svg{width:30px!important;height:30px!important}.dm-appliance-type-option>span:last-child{font-size:10px!important;font-weight:800!important;line-height:1.15!important;text-align:center!important}
-    .dm-appliance-type-close{margin-top:10px!important;min-height:44px!important;padding:11px!important;border:0!important;border-radius:12px!important;background:#94a3b8!important;color:#fff!important;font-weight:800!important;cursor:pointer!important}
     @media(max-width:520px){.dm-appliance-icon-row{grid-template-columns:84px minmax(0,1fr)!important}.dm-appliance-type-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}.dm-appliance-type-option{min-width:0!important;min-height:92px!important}}
   `;
   doc.head.append(style);

@@ -603,12 +603,40 @@ export function apriMappaRobot(entity) {
 
 /* ── la mappa ────────────────────────────────────────────────────────────── */
 
+/* Ogni quanto si richiede la mappa mentre il robot gira (#456).
+ *
+ * Il giro di disegno passa di qui ogni tre secondi; quattro sono un giro sì e
+ * uno no, che per una mappa e' fluido a sufficienza — il robot fa un metro in
+ * quel tempo — e non raddoppia il lavoro chiesto a Home Assistant. */
+const MAPPA_OGNI_MS = 4000;
+
 /* La mappa e' un disegno che cambia mentre il robot gira.
  *
- * Home Assistant la pubblica come telecamera o come immagine, e in tutti e due
- * i casi cambia l'indirizzo in `entity_picture` a ogni aggiornamento. Si
- * ridisegna quando quell'indirizzo cambia, e mai piu' spesso: chiedere di
- * nuovo lo stesso disegno vuol dire far lavorare Home Assistant per niente. */
+ * Home Assistant la pubblica come telecamera o come immagine, e si diceva che
+ * in tutti e due i casi l'indirizzo in `entity_picture` cambiasse a ogni
+ * aggiornamento. Per una parte delle integrazioni e' vero; per le altre no, ed
+ * e' la segnalazione: «nella mappa il robot non si muove».
+ *
+ * Su Valetudo, su Roborock e sui derivati del Xiaomi map card la mappa e' una
+ * TELECAMERA, e l'indirizzo di una telecamera porta un gettone che cambia
+ * quando scade il gettone — non quando cambia il disegno. Il disegno cambia
+ * dieci volte al minuto e l'indirizzo resta identico per un'ora: fidarsi
+ * dell'indirizzo vuol dire guardare la fotografia del momento in cui si e'
+ * aperta la pagina, per tutto il tempo in cui il robot pulisce. Che e'
+ * esattamente il momento in cui la mappa serve.
+ *
+ * Percio' l'indirizzo resta la regola quando il robot e' fermo — li' il
+ * disegno davvero non cambia, e richiederlo sarebbe far lavorare Home
+ * Assistant per niente — e mentre GIRA si richiede a tempo. Non serve un timer
+ * nuovo: il giro di disegno della pagina passa di qui ogni tre secondi da
+ * sempre, e basta non dirgli di no. Il battito muore da solo quando il robot
+ * si ferma o quando la pagina non e' quella guardata, che e' la stessa
+ * disciplina delle telecamere.
+ *
+ * Si richiede solo per la strada col gettone, che chiede `no-store` e quindi
+ * torna col fotogramma di adesso. L'altra — l'immagine messa nella pagina per
+ * indirizzo — non si puo' rinfrescare senza cambiare l'indirizzo, e cambiarlo
+ * vorrebbe dire rompere la firma del gettone: li' resta la regola di prima. */
 async function loadMap(card, view) {
   const host = card.querySelector("[data-dm-robot-map]");
   const image = card.querySelector("[data-dm-robot-map-image]");
@@ -616,17 +644,44 @@ async function loadMap(card, view) {
   const picture = clean(view.mapPicture);
   if (!picture) {
     host.dataset.dmMapState = "missing";
+    /* E si scorda quello di prima: se la telecamera torna col disegno di
+     * sempre, va ripreso. Tenendo il ricordo, il giro dopo si direbbe «questo
+     * ce l'ho gia'» a una mappa che sullo schermo non c'e' piu'. */
+    state.mapPictures.delete(view.entity);
+    state.mapAt?.delete?.(view.entity);
     return;
   }
   /* Si ricorda il disegno gia' preso, per non richiederlo uguale a ogni giro.
    * Ci si ricorda pero' solo di quelli arrivati: un disegno che non e' arrivato
    * — un momento di rete, un token non ancora pronto — deve poter essere
-   * richiesto di nuovo, altrimenti la mappa resta rotta per sempre. */
-  if (state.mapPictures.get(view.entity) === picture) return;
+   * richiesto di nuovo, altrimenti la mappa resta rotta per sempre.
+   *
+   * E del ricordo ci si fida solo finche' la mappa e' davvero li'. Il ricordo
+   * e' del robot, la mappa e' di un pezzo di pagina: la card si ridisegna, e
+   * la sua tessera nuova nasce a «loading» con l'immagine vuota. Fidarsi del
+   * ricordo davanti a una tessera appena nata vuol dire lasciarla vuota
+   * finche' Home Assistant non cambia indirizzo — cioe' finche' il robot non
+   * riparte. */
+  const mappeChieste = (state.mapAt ||= new Map());
+  const inMoto = Boolean(view.cleaning || view.mowing);
+  const scaduta = inMoto && Date.now() - (Number(mappeChieste.get(view.entity)) || 0) >= MAPPA_OGNI_MS;
+  const gia =
+    state.mapPictures.get(view.entity) === picture &&
+    host.dataset.dmMapState === "ready" &&
+    clean(image.getAttribute("src"));
+  if (gia && !scaduta) return;
 
   const token = gettoneDiAccesso();
-  if (typeof root.fetch === "function" && token) {
+  const conGettone = typeof root.fetch === "function" && Boolean(token);
+  /* Senza gettone la mappa si rinfresca solo cambiando indirizzo: se
+   * l'indirizzo e' lo stesso non c'e' niente da chiedere, e riscrivere la
+   * stessa `src` non fa succedere niente — solo un giro a vuoto per beat. */
+  if (gia && !conGettone) return;
+  if (conGettone) {
     try {
+      /* Il momento si segna PRIMA della risposta: una richiesta che fallisce
+       * non deve tornare al beat dopo, o su una rete lenta si accodano. */
+      mappeChieste.set(view.entity, Date.now());
       const response = await root.fetch(picture, {
         headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
@@ -756,8 +811,8 @@ function handleFanChange(event) {
 
 function paint() {
   state.frame = 0;
-  ensureRobotTab();
   teachNavVisibility();
+  ensureRobotTab();
   renderRobots();
 }
 
@@ -888,8 +943,8 @@ export function installRobotSection() {
   state.installed = true;
   installStyles();
   ensureRobotPage();
-  ensureRobotTab();
   teachNavVisibility();
+  ensureRobotTab();
   doc.addEventListener("click", handleRobotClick);
   /* La mappa aperta si chiude con Esc, come ogni finestra della plancia, e col
    * tasto invio o barra si apre da tastiera — il riquadro e' un bottone. */

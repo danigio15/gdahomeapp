@@ -9,6 +9,7 @@ import {
   sezioniGovernate,
 } from "../core/contenuto-delle-sezioni.js";
 import { sectionForEditorSlot } from "../core/editor-slots.js";
+import { humidityEntry } from "../core/room-overview.js";
 import {
   renderBeta25TemperatureCards,
   temperatureEntries,
@@ -114,11 +115,7 @@ function rooms() {
   return Array.isArray(values) ? values : [];
 }
 
-function humidityEntity(entry = {}) {
-  const explicit = clean(entry.hum);
-  if (explicit) return explicit;
-  return clean(entry.temp).replace("_temperature", "_humidity");
-}
+const humidityEntity = (entry = {}) => humidityEntry(entry);
 
 function numericState(entity) {
   const value = Number.parseFloat(allStates()[clean(entity)]?.state);
@@ -1229,7 +1226,8 @@ function patchSubloadPopup(groupId = state.popupGroup) {
 
 function installPopupOwner() {
   let installed = false;
-  for (const name of ["apriSubLoads", "openSubLoads"]) {
+  /* Solo `apriSubLoads`: `openSubLoads` non esiste in nessun guscio. */
+  for (const name of ["apriSubLoads"]) {
     const current = root[name];
     if (typeof current !== "function" || current.__dmBeta27PopupOwner) continue;
     function beta27OpenSubLoads(type, ...args) {
@@ -1439,17 +1437,3 @@ export function installBeta26RealDeviceStability() {
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installBeta26RealDeviceStability, { once: true });
 else installBeta26RealDeviceStability();
-
-export const beta26RealDeviceStability = Object.freeze({
-  installCanonicalApplianceArtworkBridge,
-  syncBeta26TemperatureLabels,
-  renderStableBeta27Temperature,
-  temperatureRoomTabsModel,
-  legacyVisibilityTargets,
-  ensureConfiguredSectionsVisible,
-  loadGroupsModel,
-  normalizeFlowNodesForEditor,
-  renderBeta27LoadsEditor,
-  applyFlowNodeCustomization,
-  installBeta26RealDeviceStability,
-});

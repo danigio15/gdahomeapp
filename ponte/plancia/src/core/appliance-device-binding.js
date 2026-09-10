@@ -132,6 +132,15 @@ const ROLES = Object.freeze([
     key: "state_entity",
     score(entity, clues, states) {
       const domain = domainOf(entity.entity_id);
+      /* Il televisore, e qualunque cosa sia prima di tutto un lettore.
+       *
+       * L'integrazione di una TV LG porta un `media_player` e un `remote`, e
+       * nessun sensore di stato ne' interruttore: il collegamento non
+       * riempiva niente e la card diceva SPENTO a televisore acceso — «la TV
+       * e' accesa e risulta dall'integrazione sotto, ma risulta spenta nella
+       * scheda» (#354). Lo stato di un lettore E' lo stato del dispositivo, e
+       * vale piu' di qualunque sensore di testo che gli stia accanto. */
+      if (domain === "media_player") return 12;
       if (domain === "binary_sensor") {
         return /\b(running|active|working|operating|in funzione|attiv[oa])\b/.test(clues)
           ? 4
@@ -321,6 +330,14 @@ export function proposeRoles(entities = [], states = {}, { type = "", deviceName
     taken.add(best.entity.entity_id);
     proposal[role.key] = best.entity.entity_id;
   }
+  /* Un lettore e' insieme lo stato e l'interruttore: `media_player.turn_on`
+   * e `turn_off` esistono, e su un televisore non c'e' altro da premere. La
+   * regola «un'entita', un ruolo» vale per non far fare al sensore della fase
+   * anche il tasto d'avvio; qui e' la stessa cosa a fare tutte e due le
+   * parti, e lasciare la card senza tasto sarebbe la regola applicata al
+   * contrario (#354). Un interruttore vero, se c'e', e' gia' stato preso. */
+  if (!proposal.control_entity && /^media_player\./.test(clean(proposal.state_entity)))
+    proposal.control_entity = proposal.state_entity;
   return proposal;
 }
 
@@ -465,13 +482,45 @@ export function roomForArea(area, rooms = []) {
   return found ? clean(found.id || found.name) : "";
 }
 
-/* Le integrazioni con dentro i loro dispositivi, come le vuole un menu. */
+/* Da quali integrazioni arriva questo dispositivo.
+ *
+ * Il catalogo ne manda due cose: `integration` e' la principale — una sola, e
+ * il backend la sceglie dalla voce di configurazione o dalla piattaforma piu'
+ * frequente — mentre `integrations` sono tutte quelle che ci mettono qualcosa.
+ * Un dispositivo puo' benissimo stare in due: l'aspirapolvere adottato da
+ * un'integrazione di marca ma acceso via MQTT, la presa di un'integrazione
+ * cloud che pubblica anche in locale. */
+function domini(device) {
+  const tutte = Array.isArray(device?.integrations) ? device.integrations.map(clean) : [];
+  const principale = clean(device?.integration);
+  const insieme = new Set(tutte.filter(Boolean));
+  if (principale) insieme.add(principale);
+  return insieme;
+}
+
+/* Le integrazioni con dentro i loro dispositivi, come le vuole un menu.
+ *
+ * Dal campo, sulla sezione Robot: «immaginavo ma non la vedo fra le
+ * integrazioni». Qui si guardava solo la principale, e questo bastava a far
+ * sparire una riga intera: un robot che arriva da due integrazioni finiva
+ * sotto la principale e basta, l'altra restava con zero dispositivi e il
+ * filtro qui sotto la buttava via. Chi cercava il proprio robot per marca non
+ * lo trovava — la marca non era nell'elenco. Adesso un dispositivo compare
+ * sotto ognuna delle sue integrazioni: cercarlo da una qualsiasi lo trova, e
+ * il collegamento porta il dominio della riga da cui lo si e' preso. */
 export function integrationsWithDevices(catalog = {}) {
   const devices = (catalog.devices || []).filter((device) => device && device.entities > 0);
+  const per = new Map();
+  for (const device of devices)
+    for (const dominio of domini(device)) {
+      const elenco = per.get(dominio);
+      if (elenco) elenco.push(device);
+      else per.set(dominio, [device]);
+    }
   return (catalog.integrations || [])
     .map((integration) => ({
       ...integration,
-      devices: devices.filter((device) => device.integration === integration.domain),
+      devices: per.get(clean(integration.domain)) || [],
     }))
     .filter((integration) => integration.devices.length)
     .sort((a, b) => lower(a.name).localeCompare(lower(b.name)));

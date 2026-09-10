@@ -1,7 +1,7 @@
 // Beta 25 real-device fixes: multi-sensor temperatures and appliance artwork ownership.
 import { applianceArtwork, canonicalArtworkType } from "../core/appliance-artwork.js";
 import { directEmoji, roomGlyph } from "../core/personalization-catalog.js";
-import { normalizeTemperatureEntry, temperatureEntries } from "../core/room-overview.js";
+import { humidityEntry, normalizeTemperatureEntry, temperatureEntries } from "../core/room-overview.js";
 import { renderTemperatureCards } from "./temperature-section.js";
 import {
   clean,
@@ -98,10 +98,7 @@ function temperatureRecords() {
   );
 }
 
-function humidityEntity(entry) {
-  const temp = clean(entry?.temp);
-  return clean(entry?.hum || temp.replace("_temperature", "_humidity"));
-}
+const humidityEntity = (entry) => humidityEntry(entry);
 
 /* Un disegnatore solo.
  *
@@ -401,13 +398,3 @@ export function installBeta25RealDeviceFixes() {
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installBeta25RealDeviceFixes, { once: true });
 else installBeta25RealDeviceFixes();
-
-export const beta25RealDeviceFixes = Object.freeze({
-  temperatureEntries,
-  projectTemperatureEntries,
-  upsertTemperatureEntry,
-  removeTemperatureEntry,
-  preferredApplianceVisual,
-  repairStoredApplianceVisuals,
-  repairApplianceCards,
-});

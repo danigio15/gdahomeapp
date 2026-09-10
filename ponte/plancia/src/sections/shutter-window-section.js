@@ -33,6 +33,8 @@ import {
   coverClosedThreshold,
   coverEntries,
   coverKindLabel,
+  coverStateLabel,
+  INFISSO,
 } from "../core/cover-kind.js";
 import { contactEntity, inferriataEntity, serramentoModel } from "../core/shutter-window.js";
 import { CHIAVE_VERSI, insiemeInvertiti } from "../core/verso-aperture.js";
@@ -164,7 +166,7 @@ export function paintCard(card, states = allStates()) {
     else delete windowNode.dataset.dmGrata;
   }
   ensurePill(card, model);
-  ensureArieggia(card, cover, states);
+  ensureArieggia(card, cover, states, model);
   return true;
 }
 
@@ -174,8 +176,13 @@ export function paintCard(card, states = allStates()) {
  * diventano quattro, perche' quattro sono gli stati che si volevano
  * distinguere: e' la differenza fra «sto arieggiando» e «e' rimasto aperto». */
 export function paroleDelSerramento(model) {
+  /* «Finestra aperta» la dice il modello delle coperture (#353), che ha il
+   * vocabolario di tutte e quattro le cose che si aprono: la stessa frase
+   * scritta anche qui sarebbe la stessa parola con due padroni, e prima o poi
+   * due parole diverse per la stessa finestra. */
+  const finestraAperta = coverStateLabel(INFISSO, "open");
   if (!model?.inferriata?.configured) {
-    return model?.infisso?.open === true ? t("Finestra aperta", "Window open") : "";
+    return model?.infisso?.open === true ? finestraAperta : "";
   }
   switch (model.stato) {
     case "aperto":
@@ -183,7 +190,7 @@ export function paroleDelSerramento(model) {
     case "grata":
       return t("Inferriata aperta", "Grate open");
     case "infisso":
-      return t("Finestra aperta", "Window open");
+      return finestraAperta;
     default:
       return "";
   }
@@ -221,19 +228,19 @@ function stanzaDellaFinestra(cover) {
   const stanze = section("rooms", readJson("cd_stanze", []));
   if (!Array.isArray(stanze)) return null;
   return (
-    stanze.find(
-      (stanza) => clean(stanza?.id) === cercato || clean(stanza?.name) === cercato,
-    ) || null
+    stanze.find((stanza) => clean(stanza?.id) === cercato || clean(stanza?.name) === cercato) ||
+    null
   );
 }
 
-export function consiglioDellaFinestra(cover, states = allStates()) {
+export function consiglioDellaFinestra(cover, states = allStates(), { aperta = null } = {}) {
   const stanza = stanzaDellaFinestra(cover);
   if (!stanza) return null;
   return consiglioDiArieggiare({
     dentro: misura(stanza.hum, states),
     fuori: misura(ENTITA_UMIDITA_FUORI, states),
     soglia: sogliaDellaFinestra(cover, readJson(CHIAVE_SOGLIA_UMIDITA, null)),
+    aperta,
   });
 }
 
@@ -249,8 +256,12 @@ export function consiglioDellaFinestra(cover, states = allStates()) {
  *
  * `data-dm-arieggia` c'e' solo quando si consiglia: e' il segno che la pagina
  * e le prove leggono per «c'e' il consiglio». */
-function ensureArieggia(card, cover, states) {
-  const esito = cover ? consiglioDellaFinestra(cover, states) : null;
+function ensureArieggia(card, cover, states, model = null) {
+  /* L'infisso aperto lo dice il suo contatto: a finestra aperta il consiglio
+   * di aprire non ha senso, e la riga resta la misura e basta. */
+  const esito = cover
+    ? consiglioDellaFinestra(cover, states, { aperta: model?.infisso?.open === true })
+    : null;
   let riga = card.querySelector("[data-dm-umidita]");
   if (esito?.dentro === null || esito?.dentro === undefined) {
     riga?.remove();
@@ -261,7 +272,7 @@ function ensureArieggia(card, cover, states) {
     riga.dataset.dmUmidita = "";
     card.append(riga);
   }
-  const stato = esito.arieggia ? "sopra" : "sotto";
+  const stato = esito.arieggia ? "sopra" : esito.motivo === "gia-aperta" ? "aperta" : "sotto";
   if (riga.dataset.dmUmidita !== stato) riga.dataset.dmUmidita = stato;
   const classe = esito.arieggia ? "dm-tw-umidita dm-tw-arieggia" : "dm-tw-umidita";
   if (riga.className !== classe) riga.className = classe;
@@ -722,7 +733,10 @@ export function ensureCampoUmidita(body = doc?.getElementById("ed-body")) {
     riquadro.dataset.dmUmiditaSoglia = "true";
     riquadro.innerHTML =
       `<span class="ed-slot-lbl">${esc(
-        t("Suggerisci di arieggiare sopra il (%), di serie", "Suggest airing above (%), by default"),
+        t(
+          "Suggerisci di arieggiare sopra il (%), di serie",
+          "Suggest airing above (%), by default",
+        ),
       )}</span>` +
       `<input id="ed-umidita-soglia" class="ed-input" type="number" min="${SOGLIA_MINIMA}" max="${SOGLIA_MASSIMA}" step="1"` +
       ` placeholder="${SOGLIA_PREDEFINITA}" autocomplete="off">` +
@@ -765,7 +779,33 @@ export function ensureCampoUmidita(body = doc?.getElementById("ed-body")) {
   return true;
 }
 
+/* Il tasto in fondo alla scheda non aggiunge una tapparella.
+ *
+ * La sezione si chiama Finestre e da un pezzo accetta molto piu' di una
+ * tapparella: una finestra senza `cover`, una tenda, una tenda da sole, una
+ * zanzariera, un contatto che dice solo aperto o chiuso. Il tasto pero'
+ * continuava a dire «Aggiungi tapparella», ed e' l'ultima cosa che si legge
+ * prima di premere: chi ha una finestra e basta leggeva che li' dentro non
+ * c'era posto per lei.
+ *
+ * La scritta sta nel guscio storico, che non si tocca a mano: si riscrive qui,
+ * nella stessa passata che veste il resto della scheda. Il tasto resta il suo
+ * — stesso `onclick`, stesso `edTappAdd` — cambia solo quello che dichiara di
+ * fare, perche' e' quello che era diventato falso.
+ */
+function rinominaIlTastoAggiungi(body) {
+  const tasto = body?.querySelector?.(".ed-btn-add[onclick*='edTappAdd']");
+  if (!tasto) return false;
+  const scritta = `＋ ${t("Aggiungi entità a Finestre", "Add an entity to Windows")}`;
+  /* Si riscrive solo se e' cambiata: la passata gira a ogni ridisegno, e
+   * toccare il documento per riscriverci la stessa cosa e' lavoro per niente. */
+  if (tasto.textContent === scritta) return false;
+  tasto.textContent = scritta;
+  return true;
+}
+
 export function ensureContactField(body = doc?.getElementById("ed-body")) {
+  rinominaIlTastoAggiungi(body);
   /* La soglia di chiusura (#298) sta sopra tutto: e' della casa, non della riga.
    * Subito sotto quella dell'umidita' (#330), che e' di casa anche lei. */
   ensureSogliaField(body);

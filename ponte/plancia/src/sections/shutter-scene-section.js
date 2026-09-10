@@ -9,6 +9,8 @@ import {
   coverKind,
   coverDownRelay,
   coverKindLabel,
+  coverStateLabel,
+  INFISSO,
   coverPositionChoices,
   coverPresetPosition,
   relayCoverCommands,
@@ -19,6 +21,7 @@ import {
   apertaSecondoVerso,
   insiemeInvertiti,
   posizioneSecondoVerso,
+  statoSecondoVerso,
   versoInvertito,
 } from "../core/verso-aperture.js";
 import { roomOrderRank } from "../core/room-overview.js";
@@ -125,9 +128,17 @@ function coverView(item = {}, distingui = false) {
     status = status === "on" ? "open" : status === "off" ? "closed" : status;
   }
   /* La tapparella girata (#244) dichiara 100 quando e' giu': qui si legge
-   * tradotto al verso della plancia, e chi scrive traduce all'inverso. */
+   * tradotto al verso della plancia, e chi scrive traduce all'inverso.
+   *
+   * Il verso vale anche per la PAROLA che la copertura dichiara (#353): una
+   * tapparella che la posizione non la pubblica affatto — e sono spesso proprio
+   * quelle montate al contrario — restava identica con la spunta e senza, e la
+   * pastiglia, il cursore e il disegno continuavano tutti e tre a dire il
+   * rovescio di quello che si vedeva dalla stanza. */
+  const girata = versoInvertito(item);
+  status = statoSecondoVerso(status, girata);
   const raw = eUnoSwitch(entity) ? null : current?.attributes?.current_position;
-  const reported = raw == null ? null : posizioneSecondoVerso(Number(raw), versoInvertito(item));
+  const reported = raw == null ? null : posizioneSecondoVerso(Number(raw), girata);
   const hasPosition = Number.isFinite(reported);
   const features = Number(current?.attributes?.supported_features) || 0;
   const grab = state.grabbed.get(entity);
@@ -306,12 +317,19 @@ function statoVisibile(view) {
   return view.status;
 }
 
+/* Di cosa parla questa pastiglia: una tapparella, una tenda, un infisso (#353).
+ *
+ * La finestra senza motori si chiede per nome — `INFISSO` — perche' la sua
+ * riga un tipo di copertura non ce l'ha e non deve prenderselo per sbaglio. */
+const cosaE = (view) => (view?.soloInfisso ? INFISSO : view?.kind || "");
+
 function statusLabel(view) {
   const stato = statoVisibile(view);
-  if (stato === "opening") return t("In apertura", "Opening");
-  if (stato === "closing") return t("In chiusura", "Closing");
-  if (stato === "open") return t("Aperta", "Open");
-  if (stato === "closed") return t("Chiusa", "Closed");
+  /* «Aperta» non diceva COSA fosse aperto: su una finestra che ha insieme la
+   * tapparella, la tenda e il contatto erano tre pastiglie identiche. Le parole
+   * le tiene il modello, che sa gia' come si chiama ogni copertura. */
+  const detto = coverStateLabel(cosaE(view), stato);
+  if (detto) return detto;
   /* Due rele' fermi non vogliono dire «non lo so»: vogliono dire che il
    * motore non sta girando. Dove sia arrivata non lo racconta nessuno — il
    * disegno la mette a meta', che e' il modo di non inventarlo — ma dire
@@ -415,11 +433,14 @@ export function contoDelGruppo(views) {
 
 export function paroleDelConto(conto) {
   const dato =
-    typeof conto === "number" ? { tapparelle: conto, finestre: 0 } : conto || { tapparelle: 0, finestre: 0 };
+    typeof conto === "number"
+      ? { tapparelle: conto, finestre: 0 }
+      : conto || { tapparelle: 0, finestre: 0 };
   const parti = [];
   const n = dato.tapparelle || 0;
   const f = dato.finestre || 0;
-  if (n) parti.push(n === 1 ? t("1 tapparella", "1 shutter") : t(`${n} tapparelle`, `${n} shutters`));
+  if (n)
+    parti.push(n === 1 ? t("1 tapparella", "1 shutter") : t(`${n} tapparelle`, `${n} shutters`));
   if (f) parti.push(f === 1 ? t("1 finestra", "1 window") : t(`${f} finestre`, `${f} windows`));
   return parti.join(" · ");
 }
@@ -569,14 +590,58 @@ function cardMarkup(view) {
   </article>`;
 }
 
+/* Quali stanze meritano la loro intestazione (#424).
+ *
+ * «Persiste la visualizzazione sempre in colonna da monitor piu' grandi, come
+ *  pc o tablet.»
+ *
+ * L'intestazione di stanza prende tutta la riga della griglia — deve, e'
+ * un separatore — e chi viene dopo ricomincia dalla prima colonna. Con UNA
+ * tapparella per stanza questo vuol dire un'intestazione e una card per ogni
+ * riga: sei stanze, sei card, sei righe da una card sola. A qualunque
+ * larghezza, anche dove di colonne ce ne stanno quattro. La griglia non era
+ * rotta — la #349 l'aveva sistemata e la sua prova regge ancora — era il
+ * separatore a ricominciare la riga sei volte.
+ *
+ * E quell'intestazione, li', non diceva niente: la card stampa gia' la sua
+ * stanza sotto il nome. Un'intestazione che nomina una card sola ripete la
+ * card e costa la riga intera.
+ *
+ * Percio': la scritta di stanza compare dove serve a distinguere — una stanza
+ * con piu' finestre — e sparisce dove ripete. Restano due eccezioni, che sono
+ * la stessa: una pagina dove nessuno ha una stanza non raggruppa affatto (era
+ * gia' cosi'), e il gruppo «Senza stanza» tiene la sua scritta anche da solo,
+ * perche' quelle card la stanza non ce l'hanno da stampare.
+ */
+export function stanzeConIntestazione(views) {
+  const elenco = Array.isArray(views) ? views : [];
+  const chiavi = new Set();
+  if (!elenco.some((view) => clean(view?.room))) return chiavi;
+  const gruppi = new Map();
+  elenco.forEach((view) => {
+    const chiave = groupKey(view);
+    if (!gruppi.has(chiave)) gruppi.set(chiave, []);
+    gruppi.get(chiave).push(view);
+  });
+  gruppi.forEach((insieme, chiave) => {
+    if (insieme.length > 1 || !clean(insieme[0]?.room)) chiavi.add(chiave);
+  });
+  return chiavi;
+}
+
 function gridMarkup(views) {
-  const grouped = views.some((view) => view.room);
+  const conIntestazione = stanzeConIntestazione(views);
   let markup = backHomeMarkup() + heroMarkup();
   let lastKey = null;
   views.forEach((view) => {
-    if (grouped && groupKey(view) !== lastKey) {
-      lastKey = groupKey(view);
-      markup += groupMarkup(view, contoDelGruppo(views.filter((other) => groupKey(other) === lastKey)));
+    const chiave = groupKey(view);
+    if (chiave !== lastKey) {
+      lastKey = chiave;
+      if (conIntestazione.has(chiave))
+        markup += groupMarkup(
+          view,
+          contoDelGruppo(views.filter((other) => groupKey(other) === chiave)),
+        );
     }
     markup += cardMarkup(view);
   });

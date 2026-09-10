@@ -25,6 +25,8 @@ import {
   esc,
   installStyle,
   locale,
+  paginaVisibile,
+  quandoSiCambiaPagina,
   readJson,
   root,
   t,
@@ -215,7 +217,54 @@ function prossimoMarkup(lettura) {
     <strong>${esc(parolaDelQuando(primo))}</strong>
     <span class="dm-rifiuti-prossimo-data">${esc(dataScritta(primo))}</span>
     <div class="dm-rifiuti-prossimo-bidoni">${prossimi.map((riga) => bidoneMarkup(riga, true)).join("")}</div>
+    ${seraMarkup(lettura, primo)}
   </div>`;
+}
+
+/* La sera prima e' il momento in cui si puo' ancora fare qualcosa (#409, #441).
+ *
+ * «Si chiede di mostrare il rifiuto di domani» era la prima meta': quando il
+ * prossimo ritiro e' oggi, la risposta grande dice «Oggi» e finisce li', e
+ * cosa mettere fuori STASERA per domani mattina non lo diceva nessuno.
+ *
+ * «Mostra il giorno di ritiro tipo la plastica oggi, ma sarebbe piu' comodo
+ *  penso per tutti che lo segnasse un giorno prima, in modo da metterli fuori
+ *  la sera» e' la seconda, ed e' la stessa cosa detta meglio. Il dato c'era e
+ *  si disegnava; era la parola a essere sbagliata. «Domani» e' un'informazione
+ *  — vero, e da guardare — mentre quello che serve e' un gesto, e il gesto ha
+ *  un'ora: stasera. Chi legge «Domani: plastica» deve ancora fare da se' il
+ *  passo che conta; chi legge «Da mettere fuori stasera» ha gia' finito.
+ *
+ * Percio' la riga la dice cosi', e la dice anche quando il prossimo ritiro E'
+ * domani — li' i bidoni li ha gia' scritti grandi la risposta sopra, e sotto
+ * resta solo il gesto, senza ripetere l'elenco. */
+function seraMarkup(lettura, primo) {
+  const domani = Array.isArray(lettura?.domani) ? lettura.domani : [];
+  const stasera = esc(t("Da mettere fuori stasera", "Put it out tonight"));
+  if (primo?.giorni === 1)
+    return `<div class="dm-rifiuti-domani" data-dm-stasera="true">
+    <small>${stasera}</small>
+  </div>`;
+  if (!domani.length) return "";
+  return `<div class="dm-rifiuti-domani" data-dm-stasera="true">
+    <small>${stasera}</small>
+    <div class="dm-rifiuti-prossimo-bidoni">${domani.map((riga) => bidoneMarkup(riga)).join("")}</div>
+  </div>`;
+}
+
+/* Sotto il nome: la data, oppure — quando non se n'e' cavata una — quello che
+ * l'entita' ha detto davvero.
+ *
+ * «Non riesce ad elaborare la data anche se e' presente» (#383). Un trattino
+ * muto lascia chi configura senza niente in mano: cosi' invece si legge la
+ * frase che non si e' saputa leggere, e si capisce subito se e' l'entita'
+ * sbagliata o un modo di scrivere le date che la plancia ancora non conosce. */
+function sottoIlNome(riga) {
+  const data = dataScritta(riga);
+  if (data) return esc(data);
+  const letto = clean(riga?.letto);
+  if (!letto) return "";
+  return `${esc(t("dice", "says"))} «${esc(letto)}»`;
 }
 
 function rigaMarkup(riga) {
@@ -224,7 +273,7 @@ function rigaMarkup(riga) {
     <span class="dm-rifiuti-riga-ic" aria-hidden="true">${esc(riga.icona || materiale.icona)}</span>
     <div class="dm-rifiuti-riga-testo">
       <strong>${esc(nomeDellaRiga(riga))}</strong>
-      <small>${esc(dataScritta(riga) || "")}</small>
+      <small>${sottoIlNome(riga)}</small>
     </div>
     <b class="dm-rifiuti-riga-quando">${esc(parolaDelQuando(riga))}</b>
   </article>`;
@@ -258,6 +307,11 @@ function dipingi() {
   const pagina = ensureRifiutiPage();
   const dove = pagina?.querySelector?.("#rifiuti-wrap");
   if (!dove) return;
+  /* La lettura dei rifiuti — calendari, giorni che mancano, ordinamento — e la
+   * sua impronta in JSON si facevano a ogni mazzetto di stati, anche a pagina
+   * chiusa. La voce nella barra invece si accende comunque: quella la si vede
+   * da fuori (`accendiLaVoce`, sopra questo giro). */
+  if (!paginaVisibile(RIFIUTI_PAGE_ID)) return;
   if (!rifiutiInPlancia()) {
     if (state.firma !== "vuoto") {
       state.firma = "vuoto";
@@ -316,6 +370,13 @@ function installStyles() {
     ${P} .dm-rifiuti-prossimo[data-quando="oggi"] strong{color:#dc2626}
     ${P} .dm-rifiuti-prossimo[data-quando="domani"] strong{color:#d97706}
     ${P} .dm-rifiuti-prossimo-data{font-size:13px;font-weight:700;color:var(--text-dim,#64748b);text-transform:capitalize}
+    ${P} .dm-rifiuti-domani{
+      display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px;padding-top:10px;
+      border-top:1px dashed var(--card-border,rgba(0,0,0,.14))}
+    ${P} .dm-rifiuti-domani>small{
+      font-size:9.5px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;
+      color:var(--text-dim,#94a3b8)}
+    ${P} .dm-rifiuti-domani .dm-rifiuti-prossimo-bidoni{margin:0}
     ${P} .dm-rifiuti-prossimo-bidoni{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 
     /* Il bidone: una pillola col colore del bidone vero. */
@@ -385,6 +446,7 @@ export function installRifiuti() {
     "dashboardmodern:persistence-restored",
   ])
     root.addEventListener?.(evento, schedule);
+  quandoSiCambiaPagina(schedule);
   schedule();
   return true;
 }

@@ -39,7 +39,7 @@ export const IGNOTO = "ignoto";
 
 const PESO = Object.freeze({ quiete: 0, nota: 1, attenzione: 2, allarme: 3 });
 
-/* Le sei categorie, con le caselle che ognuna accetta. La prima casella e'
+/* Le otto categorie, con le caselle che ognuna accetta. La prima casella e'
  * l'entita' principale e da sola basta; le altre servono a chi ha
  * l'informazione spezzata in piu' sensori — Blitzortung tiene il conteggio e
  * la distanza in due entita' diverse. */
@@ -47,10 +47,40 @@ export const CATEGORIE = Object.freeze([
   Object.freeze({ chiave: "terremoti", caselle: ["entity", "magnitudo", "distanza"] }),
   Object.freeze({ chiave: "meteo", caselle: ["entity"] }),
   Object.freeze({ chiave: "fulmini", caselle: ["entity", "distanza"] }),
-  Object.freeze({ chiave: "pollini", caselle: ["entity"] }),
-  Object.freeze({ chiave: "comfort", caselle: ["entity"] }),
+  /* I pollini presi uno per uno (#428): «un campo dove aggiungere un sensor
+   * che dice le tipologie di minacce come polline di oggi, oltre quelli che
+   * specificano il rischio preso singolarmente per erba, erbacce e albero».
+   * L'entita' principale resta il bollettino di oggi; le altre tre dicono di
+   * quale polline si tratta, che e' l'unica cosa che permette a chi e'
+   * allergico di sapere se la giornata riguarda lui. */
+  Object.freeze({ chiave: "pollini", caselle: ["entity", "erba", "erbacce", "albero"] }),
+  /* Il disagio termico ha piu' di un modo di misurarsi (#428): «si potrebbe
+   * aggiungere la possibilita' di avere altri campi, come humidex, indice di
+   * calore e rischio gelo». La percezione resta la principale — e' quella che
+   * uno guarda — e le altre tre le stanno accanto. */
+  Object.freeze({ chiave: "comfort", caselle: ["entity", "humidex", "calore", "gelo"] }),
   Object.freeze({ chiave: "voli", caselle: ["entity"] }),
+  /* «Sarebbe bello inserire una sezione per gli scioperi nazionali e per gli
+   * orari dei treni, con la stazione preferita» (#352). Sono due notizie che
+   * si guardano prima di uscire di casa, e stanno bene accanto al meteo. */
+  Object.freeze({ chiave: "scioperi", caselle: ["entity"] }),
+  Object.freeze({ chiave: "treni", caselle: ["entity", "stazione"] }),
 ]);
+
+/**
+ * La voce col livello più alto fra quelle date, o `null` se non ce ne sono.
+ *
+ * È la stessa regola di `livelloMassimo`, ma torna la voce e non il suo
+ * livello: chi disegna deve poter dire QUALE polline è alto, non soltanto che
+ * qualcosa lo è.
+ */
+export function laPiuGrave(voci = []) {
+  return (Array.isArray(voci) ? voci : []).reduce(
+    (piuAlta, voce) =>
+      !piuAlta || (PESO[voce?.livello] ?? -1) > (PESO[piuAlta?.livello] ?? -1) ? voce : piuAlta,
+    null,
+  );
+}
 
 /* Gli stati che vogliono dire «non lo so». */
 const MUTI = new Set(["unavailable", "unknown", "none", ""]);
@@ -247,56 +277,176 @@ const PAROLE_POLLINI = Object.freeze([
   [/low|bass[ao]|none|nessun[ao]|assente|no[_ ]?pollen/, "quiete"],
 ]);
 
+/* Il livello di un indice dei pollini, qualunque scala usi il sensore.
+ *
+ * Le tre scale che girano davvero: la percentuale, la concentrazione in granuli
+ * per metro cubo, e il gradino da uno a quattro dei bollettini — che e' quello
+ * dei sensori per erba, erbacce e albero: «restituiscono valori numerici quindi
+ * un valore 1 e' indicativo di rischio molto basso, valore 2 basso, valore 3
+ * medio e valore 4 alto». */
+function livelloDellIndice(indice, unita) {
+  if (indice == null) return null;
+  if (pulito(unita) === "%")
+    return indice >= 75
+      ? "allarme"
+      : indice >= 50
+        ? "attenzione"
+        : indice >= 25
+          ? "nota"
+          : "quiete";
+  /* Una concentrazione (granuli per metro cubo): le soglie dei bollettini. */
+  if (indice > 10)
+    return indice >= 500
+      ? "allarme"
+      : indice >= 100
+        ? "attenzione"
+        : indice >= 20
+          ? "nota"
+          : "quiete";
+  return indice >= 4 ? "allarme" : indice >= 3 ? "attenzione" : indice >= 2 ? "nota" : "quiete";
+}
+
+/* Il livello di una parola dei pollini, o `null` se quella parola non la
+ * conosciamo. */
+function livelloDellaParola(parola) {
+  for (const [prova, esito] of PAROLE_POLLINI) if (prova.test(parola)) return esito;
+  return null;
+}
+
+/* Un polline preso da se': erba, erbacce o albero (#428).
+ *
+ * «Oltre allo stato, questi sensori espongono Category con il label del
+ * rischio, Advice con testi riassuntivi e Description con conseguenze del
+ * clima attuale.» Sono le tre cose che trasformano un «3» in una notizia, e la
+ * plancia le porta cosi' come le scrive l'integrazione: sono frasi sue, gia'
+ * nella lingua in cui l'ha configurata chi la usa. */
+function leggiUnPolline(chiave, stato) {
+  if (!stato || MUTI.has(minuscolo(stato.state))) return null;
+  const unita = pulito(stato?.attributes?.unit_of_measurement);
+  const indice = numero(minuscolo(stato.state));
+  const categoria = pulito(
+    attributo(stato, ["Category", "category", "level", "level_text", "livello"]),
+  );
+  return {
+    chiave,
+    indice,
+    unita,
+    categoria,
+    consiglio: pulito(attributo(stato, ["Advice", "advice", "consiglio"])),
+    descrizione: pulito(attributo(stato, ["Description", "description", "descrizione"])),
+    livello:
+      livelloDellIndice(indice, unita) ||
+      livelloDellaParola(minuscolo(categoria || stato.state)) ||
+      "quiete",
+  };
+}
+
+const POLLINI_SINGOLI = Object.freeze(["erba", "erbacce", "albero"]);
+
 function leggiPollini(voce, stati) {
   const principale = stati.entity;
   const grezzo = minuscolo(principale?.state);
   const unita = pulito(principale?.attributes?.unit_of_measurement);
   const indice = numero(grezzo);
-  let livello = "quiete";
-  if (indice != null) {
-    if (unita === "%")
-      livello =
-        indice >= 75 ? "allarme" : indice >= 50 ? "attenzione" : indice >= 25 ? "nota" : "quiete";
-    else if (indice > 10)
-      /* Una concentrazione (granuli per metro cubo): le soglie dei bollettini. */
-      livello =
-        indice >= 500 ? "allarme" : indice >= 100 ? "attenzione" : indice >= 20 ? "nota" : "quiete";
-    else
-      livello =
-        indice >= 4 ? "allarme" : indice >= 3 ? "attenzione" : indice >= 2 ? "nota" : "quiete";
-  } else {
+  let livello = livelloDellIndice(indice, unita);
+  if (livello === null) {
     const parola = grezzo || minuscolo(attributo(principale, ["level", "level_text", "livello"]));
-    for (const [prova, esito] of PAROLE_POLLINI)
-      if (prova.test(parola)) {
-        livello = esito;
-        break;
-      }
+    livello = livelloDellaParola(parola) || "quiete";
   }
-  return { livello, indice, unita, parola: indice == null ? grezzo : "" };
+  /* I tre pollini presi uno per uno. Il livello della categoria e' il piu' alto
+   * fra il bollettino di oggi e loro: chi e' allergico alle graminacee deve
+   * vedere l'allerta anche quando la media della giornata e' tranquilla. */
+  const voci = POLLINI_SINGOLI.map((chiave) => leggiUnPolline(chiave, stati[chiave])).filter(
+    Boolean,
+  );
+  const massimo = laPiuGrave([{ livello }, ...voci])?.livello || livello;
+  return {
+    livello: massimo,
+    indice,
+    unita,
+    parola: indice == null ? grezzo : "",
+    /* Le frasi del bollettino di oggi, quando l'integrazione le espone: sono
+     * le stesse tre dei pollini singoli. */
+    categoria: pulito(attributo(principale, ["Category", "category"])),
+    consiglio: pulito(attributo(principale, ["Advice", "advice", "consiglio"])),
+    descrizione: pulito(attributo(principale, ["Description", "description", "descrizione"])),
+    voci,
+  };
 }
 
 /* Il comfort termico: le parole di Thermal Comfort, o un indice di calore in
  * gradi. */
+/* Le parole del disagio termico, dalla piu' grave alla piu' tranquilla (#355).
+ *
+ * «Nelle allerte un discomfort termico dovrebbe essere rilevato come allerta
+ * mentre dice tutto OK.» Le fonti che raccontano il caldo afoso sono tante e
+ * non parlano la stessa lingua: Thermal Comfort ha la percezione
+ * (`quite_uncomfortable`) e la zona del simmer index (`slightly_uncomfortable`,
+ * `no_discomfort`), l'humidex conta il disagio (`some_discomfort`,
+ * `great_discomfort`), il rischio gelo ha le sue quattro parole, e chi si
+ * scrive un sensore in casa mette «Slightly uncomfortable» con lo spazio e la
+ * maiuscola, o un `binary_sensor` che sta a `on`. Prima ne conoscevamo una
+ * manciata e tutto il resto cadeva su «quiete», cioe' su «tutto OK».
+ *
+ * La prima riga sono le parole che NEGANO il disagio: si guardano per prime
+ * perche' contengono la parola della cosa che negano, e piu' in fondo
+ * verrebbero lette al contrario. */
 const PAROLE_COMFORT = Object.freeze([
+  [/no_discomfort|no_risk|nessun_disagio/, "quiete"],
   [
-    /severely_high|extremely_uncomfortable|danger_of_heatstroke|extremely_dangerous|circulatory_collapse|heat[_ ]stroke/,
+    /severely_high|extremely_uncomfortable|danger_of_heatstroke|extremely_dangerous|circulatory_collapse|heat[_ ]?stroke|sweltering|^dangerous$|torrido/,
     "allarme",
   ],
-  [/quite_uncomfortable|extremely_warm|^high$|frost.*high/, "attenzione"],
-  [/somewhat_uncomfortable|ok_but_humid|increasing_discomfort|probable|humid/, "nota"],
-  [/dry|very_comfortable|comfortable|slightly_warm|slightly_cool|cool|no_risk|unlikely/, "quiete"],
+  [
+    /quite_uncomfortable|great_discomfort|extremely_warm|very_hot|^hot$|oppressive|miserable|^high$|frost.*high|molto_caldo|afoso/,
+    "attenzione",
+  ],
+  [
+    /somewhat_uncomfortable|slightly_uncomfortable|some_discomfort|ok_but_humid|increasing_discomfort|uncomfortable|discomfort|probable|humid|muggy|^warm$|disagio|umido|caldo/,
+    "nota",
+  ],
+  [
+    /dry|very_comfortable|(^|_)comfortable|slightly_warm|slightly_cool|^cool$|^cold$|unlikely|^ok$|confortevole|secca/,
+    "quiete",
+  ],
 ]);
 
-function leggiComfort(voce, stati) {
-  const principale = stati.entity;
-  const grezzo = minuscolo(principale?.state);
-  const unita = pulito(principale?.attributes?.unit_of_measurement);
-  const gradi = numero(grezzo);
+/* La parola come la scrive l'integrazione, ridotta a una forma sola:
+ * «Slightly uncomfortable», «slightly-uncomfortable» e
+ * `slightly_uncomfortable` sono la stessa cosa, e chi legge non deve saperlo. */
+function parolaNormalizzata(stato) {
+  return minuscolo(stato).replace(/[\s-]+/g, "_");
+}
+
+/* I gradi, sempre nella stessa scala.
+ *
+ * Un indice di calore in Fahrenheit non si giudica con le soglie di Celsius:
+ * 90 °F sono 32 °C — attenzione — e non 90, che sarebbe allarme. E' la stessa
+ * regola dell'aria (#340): prima si porta la misura nella sua unita' di
+ * riferimento, poi si giudica. */
+function gradiInCelsius(valore, unita) {
+  if (valore == null) return null;
+  const sigla = pulito(unita).replace(/[°\s]/g, "");
+  return /^f$/i.test(sigla) ? ((valore - 32) * 5) / 9 : valore;
+}
+
+/* Il disagio di UN sensore: la sua parola o i suoi gradi, e che livello vuol
+ * dire. Lo stesso giudizio serve alla percezione, all'humidex, all'indice di
+ * calore e al rischio gelo — sono quattro modi di misurare la stessa cosa. */
+function leggiUnDisagio(stato) {
+  if (!stato || MUTI.has(minuscolo(stato.state))) return null;
+  const grezzo = parolaNormalizzata(stato.state);
+  const unita = pulito(stato?.attributes?.unit_of_measurement);
+  const gradi = gradiInCelsius(numero(minuscolo(stato.state)), unita);
   let livello = "quiete";
   if (gradi != null) {
     if (gradi >= 41) livello = "allarme";
     else if (gradi >= 32) livello = "attenzione";
     else if (gradi >= 27 || gradi <= 0) livello = "nota";
+  } else if (grezzo === "on" || grezzo === "off") {
+    /* Un contatto: acceso vuol dire che il disagio c'e'. Chi il sensore se lo
+     * scrive in casa fa cosi', e prima non veniva letto affatto. */
+    livello = grezzo === "on" ? "attenzione" : "quiete";
   } else {
     for (const [prova, esito] of PAROLE_COMFORT)
       if (prova.test(grezzo)) {
@@ -304,12 +454,79 @@ function leggiComfort(voce, stati) {
         break;
       }
   }
-  return { livello, codice: gradi == null ? grezzo : "", gradi, unita };
+  return {
+    livello,
+    codice: gradi == null ? grezzo : "",
+    /* Lo stato come lo scrive il sensore, senza toccarlo (#428): «anche se il
+     * sensore espone uno stato scritto in italiano, la dashboard prende
+     * l'opzione dell'attributo scritta in lowcase ed in inglese». Il codice
+     * ridotto serve a giudicare, non a leggere: chi disegna prova prima il
+     * vocabolario e, se quella parola non la conosce, scrive questa — che e'
+     * gia' nella lingua di chi ha configurato il sensore.
+     *
+     * Si chiama `scritto` e non `testo` perche' `testo` in questo modello vuol
+     * dire un'altra cosa — l'avviso lungo della protezione civile, quello che
+     * la tessera taglia e che da solo vale l'apertura del dettaglio. Chiamarli
+     * uguale rendeva apribile ogni tessera del comfort per mostrarci dentro
+     * niente. */
+    scritto: pulito(stato.state),
+    gradi,
+    unita,
+  };
+}
+
+const INDICI_DEL_DISAGIO = Object.freeze(["humidex", "calore", "gelo"]);
+
+function leggiComfort(voce, stati) {
+  const percepito = leggiUnDisagio(stati.entity) || {
+    livello: "quiete",
+    codice: "",
+    scritto: "",
+    gradi: null,
+    unita: "",
+  };
+  /* Gli altri tre indici, quando ci sono. Il livello della categoria e' il piu'
+   * alto: un rischio gelo alto e' una notizia anche se la percezione dice che
+   * si sta bene, ed e' esattamente il caso in cui serve. */
+  const voci = INDICI_DEL_DISAGIO.map((chiave) => {
+    const letto = leggiUnDisagio(stati[chiave]);
+    return letto ? { chiave, ...letto } : null;
+  }).filter(Boolean);
+  const massimo = laPiuGrave([percepito, ...voci])?.livello || percepito.livello;
+  return {
+    livello: massimo,
+    codice: percepito.codice,
+    scritto: percepito.scritto,
+    gradi: percepito.gradi,
+    unita: percepito.unita,
+    voci,
+  };
 }
 
 /* I voli sopra casa: quanti, e quali. Flightradar24 tiene l'elenco negli
- * attributi, e ogni voce ha il numero del volo, la compagnia, il modello. */
+ * attributi, e ogni voce ha il numero del volo, la compagnia, il modello.
+ *
+ * «Mi piacerebbe che il widget delle allerte relativo ai voli dia le info del
+ * volo: destinazione/tratta, tipo di aereo, compagnia» (#334). C'erano gia',
+ * ma dette come le scrive il computer: «AZ1234 · ITA» e «A320 · FCO → CDG».
+ * Un codice IATA lo sa leggere chi vola spesso; la tratta la capiscono tutti
+ * se e' scritta coi nomi delle citta', che l'integrazione pubblica accanto ai
+ * codici. Qui si prende la parola piu' leggibile che c'e' — la citta', se no
+ * il nome dell'aeroporto, se no il codice — e la compagnia per esteso quando
+ * la sigla non basta. */
 const VOLI_MOSTRATI = 5;
+
+/* Il posto, come lo direbbe una persona: la citta' se c'e', se no il nome
+ * dell'aeroporto senza la sua coda («Roma Fiumicino Airport» → il codice resta
+ * il ripiego onesto). */
+function luogoDelVolo(volo, lato) {
+  return (
+    pulito(volo?.[`airport_${lato}_city`]) ||
+    pulito(volo?.[`airport_${lato}_name`]) ||
+    pulito(volo?.[`airport_${lato}_code_iata`]) ||
+    pulito(volo?.[`airport_${lato}_code`])
+  );
+}
 
 function leggiVoli(voce, stati) {
   const principale = stati.entity;
@@ -319,14 +536,109 @@ function leggiVoli(voce, stati) {
   const conteggio = numero(principale?.state) ?? elenco.length;
   const voci = elenco.slice(0, VOLI_MOSTRATI).map((volo) => ({
     numero: pulito(volo?.flight_number || volo?.callsign || volo?.id),
-    compagnia: pulito(volo?.airline_short || volo?.airline),
+    compagnia: pulito(volo?.airline_short || volo?.airline || volo?.airline_iata),
     aereo: pulito(volo?.aircraft_model || volo?.aircraft_code),
+    /* La targa dell'aeroplano: chi guarda in su e fotografa la cerca. */
+    targa: pulito(volo?.aircraft_registration),
     quota: numero(volo?.altitude),
     distanza: numero(volo?.distance),
-    da: pulito(volo?.airport_origin_code_iata || volo?.airport_origin_code),
-    a: pulito(volo?.airport_destination_code_iata || volo?.airport_destination_code),
+    da: luogoDelVolo(volo, "origin"),
+    a: luogoDelVolo(volo, "destination"),
   }));
   return { livello: conteggio > 0 ? "nota" : "quiete", conteggio, voci };
+}
+
+/* Gli scioperi: quanti, di che settore, e quando cominciano.
+ *
+ * L'integrazione italiana degli scioperi tiene il conteggio nello stato e
+ * l'elenco negli attributi, ognuno con settore, regione, data e distanza da
+ * casa; alcuni suoi sensori dicono anche il mezzo e i sindacati. Si legge
+ * quello che c'e', coi nomi che ognuna usa: chi pubblica in inglese e chi in
+ * italiano. */
+const SCIOPERI_MOSTRATI = 5;
+
+function leggiScioperi(voce, stati, adesso) {
+  const principale = stati.entity;
+  const elenco = Array.isArray(attributo(principale, ["strikes", "scioperi", "events"]))
+    ? attributo(principale, ["strikes", "scioperi", "events"])
+    : [];
+  const conteggio = numero(principale?.state) ?? elenco.length;
+  const oggi = new Date(adesso);
+  const voci = elenco.slice(0, SCIOPERI_MOSTRATI).map((sciopero) => {
+    const quando = Date.parse(
+      pulito(
+        sciopero?.start_date || sciopero?.start_date_str || sciopero?.data || sciopero?.inizio,
+      ),
+    );
+    const giorno = Number.isFinite(quando) ? new Date(quando) : null;
+    return {
+      settore: pulito(sciopero?.sector || sciopero?.settore || sciopero?.category),
+      zona: pulito(sciopero?.region || sciopero?.regione || sciopero?.province || sciopero?.area),
+      mezzo: pulito(sciopero?.modality || sciopero?.mezzo || sciopero?.transport),
+      sindacati: pulito(sciopero?.unions || sciopero?.sindacati),
+      inizio: Number.isFinite(quando) ? quando : null,
+      vicino: sciopero?.in_radius === true,
+      /* Oggi vuol dire oggi nel fuso di chi guarda, non nelle ultime
+       * ventiquattr'ore: uno sciopero che comincia stasera riguarda la
+       * giornata di oggi. */
+      oggi: Boolean(
+        giorno &&
+        giorno.getFullYear() === oggi.getFullYear() &&
+        giorno.getMonth() === oggi.getMonth() &&
+        giorno.getDate() === oggi.getDate(),
+      ),
+    };
+  });
+  let livello = conteggio > 0 ? "nota" : "quiete";
+  if (voci.some((v) => v.oggi) || voci.some((v) => v.vicino)) livello = "attenzione";
+  return { livello, conteggio, voci };
+}
+
+/* Il treno: quanto ritarda, e da dove parte.
+ *
+ * Le integrazioni dei treni italiani tengono il ritardo in minuti nello stato
+ * o in un attributo, e accanto il numero del treno, la destinazione, il
+ * binario e l'orario. I nomi cambiano da integrazione a integrazione: si
+ * cercano quelli che si usano, in italiano e in inglese, e quello che non
+ * c'e' semplicemente non si scrive. */
+const RITARDO_NOTA = 5;
+const RITARDO_ATTENZIONE = 15;
+const RITARDO_ALLARME = 30;
+const SOPPRESSO = /(soppress|cancell|cancel)/i;
+
+function leggiTreni(voce, stati) {
+  const principale = stati.entity;
+  const grezzo = pulito(principale?.state);
+  const soppresso =
+    SOPPRESSO.test(grezzo) ||
+    SOPPRESSO.test(pulito(attributo(principale, ["stato", "status", "state_text"])));
+  const ritardo =
+    numero(grezzo) ??
+    numero(attributo(principale, ["ritardo", "delay", "delay_minutes", "minuti_ritardo"]));
+  const treno = pulito(
+    attributo(principale, ["treno", "train", "train_number", "numero_treno", "categoria"]),
+  );
+  const destinazione = pulito(
+    attributo(principale, ["destinazione", "destination", "arrivo", "to"]),
+  );
+  const partenza = pulito(
+    attributo(principale, ["partenza", "origin", "departure", "from", "stazione_partenza"]),
+  );
+  const binario = pulito(attributo(principale, ["binario", "platform", "track"]));
+  const orario = pulito(
+    attributo(principale, ["orario", "time", "scheduled", "orario_partenza", "departure_time"]),
+  );
+  const stazione =
+    pulito(stati.stazione?.attributes?.friendly_name) ||
+    pulito(attributo(principale, ["stazione", "station", "station_name"]));
+  let livello = "quiete";
+  if (soppresso) livello = "allarme";
+  else if (ritardo != null) {
+    if (ritardo >= RITARDO_ALLARME) livello = "allarme";
+    else if (ritardo >= RITARDO_ATTENZIONE) livello = "attenzione";
+    else if (ritardo >= RITARDO_NOTA) livello = "nota";
+  }
+  return { livello, ritardo, soppresso, treno, destinazione, partenza, binario, orario, stazione };
 }
 
 const LETTORI = Object.freeze({
@@ -336,6 +648,8 @@ const LETTORI = Object.freeze({
   pollini: leggiPollini,
   comfort: leggiComfort,
   voli: leggiVoli,
+  scioperi: leggiScioperi,
+  treni: leggiTreni,
 });
 
 /**

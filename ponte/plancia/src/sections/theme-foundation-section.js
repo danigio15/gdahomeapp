@@ -38,6 +38,7 @@ export function installThemeFoundationSection() {
       --shadow-sculpted:0 4px 20px rgba(0,0,0,.45),0 1px 4px rgba(0,0,0,.35);
       --shadow-hover:0 12px 35px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.4);
       --shadow-glass:0 8px 30px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.06);
+      --shadow-glass-strong:0 14px 40px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.07);
       color-scheme:dark;
     }
     /* #206: le variabili col NOME di Home Assistant, risolte sui token nostri.
@@ -50,8 +51,12 @@ export function installThemeFoundationSection() {
      * regola che usa il nome di HA riceve il token di DashboardModern, chiaro
      * col chiaro e scuro con lo scuro, senza toccare le regole una per una. */
     html{
+      /* L'ombra «forte» aveva il nome e non la definizione: chi la chiedeva
+       * ripiegava sulla sua ombra chiara, che sul fondo scuro non si vede. */
+      --shadow-glass-strong:0 12px 34px rgba(15,23,42,.16);
       --card-background-color:var(--card-bg);
       --ha-card-background:var(--card-bg);
+      --primary-background-color:var(--bg-sculpted);
       --secondary-background-color:var(--surface-2);
       --divider-color:var(--card-border);
       --secondary-text-color:var(--text-dim);
@@ -86,6 +91,33 @@ export function installThemeFoundationSection() {
     body{
       padding-left:max(var(--dm-gutter),env(safe-area-inset-left,0px));
       padding-right:max(var(--dm-gutter),env(safe-area-inset-right,0px));
+    }
+
+    /* Il nome della plancia deve leggersi anche di notte.
+     *
+     * Il titolo in alto a sinistra e' un testo riempito da un gradiente, e il
+     * gradiente partiva da un blu notte scritto a mano. In tema chiaro si
+     * legge benissimo; in tema scuro quella prima parola finisce su un fondo
+     * dello stesso colore e sparisce — restava leggibile solo "Home". Tutto il
+     * resto dell'intestazione, sottotitolo e pastiglia della connessione,
+     * seguiva gia' il tema: era solo quel capo del gradiente a non farlo. E'
+     * una fondamenta come le altre qui sopra: un colore che deve seguire il
+     * tema, non la rifinitura di una sezione. */
+    .brand-text h1{
+      background:linear-gradient(135deg,var(--text,#0f172a),var(--green,#16a34a))!important;
+      -webkit-background-clip:text!important;background-clip:text!important;
+      -webkit-text-fill-color:transparent!important}
+
+    /* Lo sfondo animato sta sul suo livello (dal campo: la CPU del mini PC).
+     *
+     * Le due macchie sfumate dietro la plancia si muovono per sempre, fuori da
+     * ogni pagina, con un blur di cento pixel su meta' dello schermo. Promosse
+     * a livello composito il browser le sposta senza rasterizzarle di nuovo a
+     * ogni fotogramma; e chi ha chiesto al sistema di ridurre le animazioni le
+     * trova ferme, che e' quello che ha chiesto. */
+    .animated-mesh-bg::before,.animated-mesh-bg::after{will-change:transform}
+    @media (prefers-reduced-motion:reduce){
+      .animated-mesh-bg::before,.animated-mesh-bg::after{animation-play-state:paused!important}
     }
   `);
   return true;

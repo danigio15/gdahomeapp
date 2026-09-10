@@ -297,11 +297,6 @@ function overrides() {
   return scritti && typeof scritti === "object" ? scritti : {};
 }
 
-/** Quale entità è scritta in una casella. */
-export function entitaDellaCasella(riferimento) {
-  return clean(overrides()[riferimento]);
-}
-
 /** Come restano le mappature dopo il travaso, o `null` se non c'era niente da
  * spostare né da ripulire. */
 export function dopoIlTravaso(scritte, casella = CASELLA_DI_RETE, vecchie = CASELLE_VECCHIE) {
@@ -547,8 +542,20 @@ function syncHeadings(page) {
     const block = page.querySelector(group.block);
     const heading = block?.previousElementSibling;
     if (!heading?.classList?.contains("dm-srvx-head")) continue;
-    const cards = block.matches(group.card) ? [block] : [...block.querySelectorAll(group.card)];
-    const empty = cards.length > 0 && cards.every((card) => card.style.display === "none");
+    /* Vuoto vuol dire due cose, e finora se ne guardava una sola.
+     *
+     * Le card si possono nascondere — `display:none` — oppure sparire: l'auto
+     * hide TOGLIE dal documento le sezioni non configurate, e allora dentro al
+     * blocco non c'e' piu' niente da contare. Pretendendo almeno una card per
+     * dichiararlo vuoto, un blocco svuotato del tutto teneva la sua
+     * intestazione: «Rete e impianto» restava scritta sopra il niente, in fondo
+     * alla pagina del mini PC.
+     *
+     * Si guardano i figli del blocco, non le card per nome: quello che il
+     * blocco mostra e' quello che c'e' dentro e non e' nascosto, comunque si
+     * chiami. Il blocco che E' la card resta il caso a parte di sempre. */
+    const suoi = block.matches(group.card) ? [block] : [...block.children];
+    const empty = suoi.length === 0 || suoi.every((nodo) => nodo.style.display === "none");
     const display = empty ? "none" : "";
     if (heading.style.display !== display) heading.style.display = display;
     if (group.block === ".srv-temp-card") {
@@ -1261,7 +1268,7 @@ function minipcShowcaseCss() {
 }
 #page-server.dm-srvx .srv-tel-card::before{
   width:120px!important;height:120px!important;
-  background:radial-gradient(circle at top right,rgba(var(--tc-rgb,14,165,233),.14) 0%,transparent 68%)!important
+  background:radial-gradient(circle at top right,rgba(var(--accent-rgb,14,165,233),.14) 0%,transparent 68%)!important
 }
 #page-server.dm-srvx .srv-tel-card:hover{
   transform:translateY(-4px) rotateX(6deg)!important;
@@ -1269,8 +1276,8 @@ function minipcShowcaseCss() {
 }
 #page-server.dm-srvx .srv-tel-icon{
   width:30px!important;height:30px!important;border-radius:10px!important;font-size:0!important;
-  background:rgba(var(--tc-rgb,14,165,233),.13)!important;border:0!important;
-  color:rgb(var(--tc-rgb,14,165,233))!important
+  background:rgba(var(--accent-rgb,14,165,233),.13)!important;border:0!important;
+  color:rgb(var(--accent-rgb,14,165,233))!important
 }
 #page-server.dm-srvx .srv-tel-lbl{font-size:9.5px!important;letter-spacing:.12em!important}
 #page-server.dm-srvx .srv-tel-val{font-size:24px!important;letter-spacing:-.02em!important}
@@ -1278,11 +1285,11 @@ function minipcShowcaseCss() {
 /* download and upload run their own stream along the foot of the tile */
 #page-server.dm-srvx .dm-srvx-stream{
   position:absolute;left:15px;right:15px;bottom:11px;height:2px;border-radius:2px;overflow:hidden;
-  background:rgba(var(--tc-rgb,14,165,233),.14)
+  background:rgba(var(--accent-rgb,14,165,233),.14)
 }
 #page-server.dm-srvx .dm-srvx-stream::after{
   content:"";position:absolute;top:0;bottom:0;left:0;width:52%;
-  background:linear-gradient(90deg,transparent,rgb(var(--tc-rgb,14,165,233)),transparent);
+  background:linear-gradient(90deg,transparent,rgb(var(--accent-rgb,14,165,233)),transparent);
   opacity:.75
 }
 #page-server.dm-srvx [data-dm-srvx-flow="in"] .dm-srvx-stream::after{animation:dmSrvxFlowIn 2.6s linear infinite}

@@ -357,6 +357,100 @@ const OGGETTI = Object.freeze({
       <path d="M17.4 23.9h4.2l-1.5-2.7"/>
     </g>`,
 
+  /* I varchi: la porta socchiusa, che e' la cosa che si va a cercare.
+   *
+   * «Almeno a colpo d'occhio so quante finestre sono aperte in questo
+   * momento» (#367, #377). Non una porta chiusa — quella non racconta niente —
+   * ma il battente che si e' aperto di uno spiraglio, con la luce che passa:
+   * si legge prima di leggere il numero. */
+  varchi: `<defs>
+      <linearGradient id="dmoVarcoB" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fbbf24"/><stop offset=".5" stop-color="#f59e0b"/>
+        <stop offset="1" stop-color="#b45309"/></linearGradient>
+      <linearGradient id="dmoVarcoL" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#fef3c7"/><stop offset="1" stop-color="#fde68a"/></linearGradient></defs>
+    ${OMBRA(16, 28.4, 9)}
+    <rect x="5.6" y="4.4" width="9.4" height="23.2" rx="1.6" fill="url(#dmoVarcoL)"/>
+    <path d="M16.6 3.6 26.4 6.2v19.6l-9.8 2.6z" fill="url(#dmoVarcoB)"/>
+    <circle cx="18.8" cy="16" r="1.5" fill="#fff" fill-opacity=".9"/>
+    <path d="M8.2 8.6h4.4M8.2 12.4h4.4" stroke="#f59e0b" stroke-opacity=".5" stroke-width="1.4"
+      stroke-linecap="round" fill="none"/>`,
+
+  /* La presenza: il rilevatore a muro, con le onde che scendono.
+   *
+   * «Ci vorrebbe una sezione con i sensori presenza o movimento» (#432).
+   * L'oggetto e' quello vero — la scatoletta bianca sopra la porta, con la
+   * lente scura che occupa la meta' bassa — e le due onde sotto dicono cosa
+   * fa: guarda in giu', nella stanza. La lente accesa e' azzurra, che e' il
+   * colore con cui la pagina segna una stanza dove c'e' qualcuno. */
+  presenza: `<defs>
+      <linearGradient id="dmoPresC" x1="0" y1="0" x2=".35" y2="1">
+        <stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#e2e8f0"/>
+        <stop offset="1" stop-color="#94a3b8"/></linearGradient>
+      <linearGradient id="dmoPresL" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#334155"/><stop offset="1" stop-color="#0f172a"/></linearGradient>
+      <radialGradient id="dmoPresO" cx=".35" cy=".3" r=".8">
+        <stop offset="0" stop-color="#93c5fd"/><stop offset="1" stop-color="#2563eb"/></radialGradient></defs>
+    ${OMBRA(16, 28.4, 8.6)}
+    <rect x="8" y="3.8" width="16" height="13.6" rx="4.4" fill="url(#dmoPresC)"/>
+    <path d="M9.2 10.8h13.6v2a4.6 4.6 0 0 1-4.6 4.6h-4.4a4.6 4.6 0 0 1-4.6-4.6z"
+      fill="url(#dmoPresL)"/>
+    <circle cx="16" cy="13.2" r="2" fill="url(#dmoPresO)"/>
+    <circle cx="15.3" cy="12.5" r=".62" fill="#fff" fill-opacity=".8"/>
+    <path d="M9.6 7a3.2 3.2 0 0 1 2.8-1.8" stroke="#fff" stroke-opacity=".9" stroke-width="1.4"
+      stroke-linecap="round" fill="none"/>
+    <g fill="none" stroke="#2563eb" stroke-width="1.9" stroke-linecap="round" stroke-opacity=".9">
+      <path d="M11.4 22.4a6.4 6.4 0 0 1 9.2 0"/>
+      <path d="M13.6 25.8a3.4 3.4 0 0 1 4.8 0"/>
+    </g>`,
+
+  /* Il server e la rete: il rack con le sue macchine, e il segnale che esce.
+   *
+   * «I controlli del server proxmox dove gira HA con tutti i suoi container, e
+   * lo stato del fritbox e i suoi ripeter» (#382). Le tre feritoie sono le
+   * macchine una sopra l'altra; le onde a destra sono la rete, che e' l'altra
+   * meta' della stessa domanda — e' tutto su? */
+  macchine: `<defs>
+      <linearGradient id="dmoMacS" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#818cf8"/><stop offset=".55" stop-color="#4f46e5"/>
+        <stop offset="1" stop-color="#312e81"/></linearGradient></defs>
+    ${OMBRA(16, 28.4, 8.4)}
+    <rect x="5.4" y="5" width="15.6" height="22" rx="3" fill="url(#dmoMacS)"/>
+    <g fill="#e0e7ff" fill-opacity=".92">
+      <rect x="7.8" y="8" width="10.8" height="4" rx="1.2"/>
+      <rect x="7.8" y="14" width="10.8" height="4" rx="1.2"/>
+      <rect x="7.8" y="20" width="10.8" height="4" rx="1.2"/>
+    </g>
+    <g fill="#22c55e">
+      <circle cx="16.6" cy="10" r="1.1"/><circle cx="16.6" cy="16" r="1.1"/><circle cx="16.6" cy="22" r="1.1"/>
+    </g>
+    <g fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round">
+      <path d="M23.6 12.6a5.4 5.4 0 0 1 0 6.8"/>
+      <path d="M26.6 9.4a9.6 9.6 0 0 1 0 13.2"/>
+    </g>`,
+
+  /* La ventilazione meccanica: la macchina appesa, e i due flussi che si
+   * incrociano dentro.
+   *
+   * E' quello che la VMC fa e che nessun'altra tessera racconta: l'aria che
+   * esce calda scalda quella che entra fredda, e le due non si mescolano mai.
+   * Il disegno dice la stessa cosa della fascia nella sezione Clima — due
+   * frecce incrociate, una tiepida e una fresca — cosi' chi vede la tessera
+   * riconosce la sezione prima di aprirla. */
+  vmc: `<defs>
+      <linearGradient id="dmoVmcS" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#e2e8f0"/><stop offset=".55" stop-color="#94a3b8"/>
+        <stop offset="1" stop-color="#475569"/></linearGradient></defs>
+    ${OMBRA(16, 28, 8.6)}
+    <rect x="4.6" y="7" width="22.8" height="18" rx="3.4" fill="url(#dmoVmcS)"/>
+    <rect x="6.8" y="9.2" width="18.4" height="13.6" rx="2.4" fill="#0f172a" fill-opacity=".16"/>
+    <g fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 11.4h9.6l-2.6-2.4M17.6 11.4l-2.6 2.4" stroke="#fb923c"/>
+      <path d="M24 20.6h-9.6l2.6 2.4M14.4 20.6l2.6-2.4" stroke="#38bdf8"/>
+    </g>
+    <path d="M9.4 22.6 22.6 9.6" stroke="#fff" stroke-opacity=".45" stroke-width="1.4" stroke-linecap="round"/>
+    <rect x="10.6" y="25" width="10.8" height="2.6" rx="1.3" fill="#334155"/>`,
+
   ups: `<defs>
       <linearGradient id="dmoUpsS" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stop-color="#64748b"/><stop offset=".45" stop-color="#334155"/>
@@ -531,6 +625,22 @@ const OGGETTI = Object.freeze({
     <path d="M8.6 7.4a4.6 4.6 0 0 1 3-1.6" stroke="#fff" stroke-opacity=".75" stroke-width="1.5"
       fill="none" stroke-linecap="round"/>`,
 
+  /* Gli animali di casa (#358): l'orma. Il cuscinetto e le quattro dita, con
+   * la luce in alto a sinistra come su ogni altro oggetto — un'emoji di zampa
+   * accanto a questi disegni si sarebbe vista da un chilometro. */
+  animale: `<defs>
+      <linearGradient id="dmoAnimale" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fed7aa"/><stop offset=".55" stop-color="#f97316"/>
+        <stop offset="1" stop-color="#9a3412"/></linearGradient></defs>
+    ${OMBRA(16, 27.8, 8.6)}
+    <ellipse cx="16" cy="20.6" rx="6.4" ry="5.2" fill="url(#dmoAnimale)"/>
+    <ellipse cx="7.4" cy="15.4" rx="2.6" ry="3.3" fill="url(#dmoAnimale)"/>
+    <ellipse cx="12.4" cy="10.2" rx="2.7" ry="3.5" fill="url(#dmoAnimale)"/>
+    <ellipse cx="19.6" cy="10.2" rx="2.7" ry="3.5" fill="url(#dmoAnimale)"/>
+    <ellipse cx="24.6" cy="15.4" rx="2.6" ry="3.3" fill="url(#dmoAnimale)"/>
+    <path d="M11.8 18.8a5.4 5.4 0 0 1 3.4-2.4" stroke="#fff" stroke-opacity=".75" stroke-width="1.5"
+      fill="none" stroke-linecap="round"/>`,
+
   /* Il runtime: il battito sotto vetro, che e' quello che quella scheda mostra. */
   runtime: `<defs>
       <linearGradient id="dmoBatt2" x1="0" y1="0" x2="1" y2="0">
@@ -627,12 +737,26 @@ const OGGETTI = Object.freeze({
       fill="url(#dmoAssistCuore)" stroke="#fff" stroke-opacity=".7" stroke-width=".8"/>`,
 });
 
+/* Due nomi per lo stesso disegno.
+ *
+ * La scheda della configurazione si chiama «aperture» dal giorno in cui e'
+ * nata; la tessera della Home che ne e' uscita (#457) si chiama «porte»,
+ * perche' e' cosi' che la chiama chi la guarda. Ricopiare il disegno vorrebbe
+ * dire due definizioni della stessa cosa, e prima o poi due disegni diversi:
+ * qui c'e' il nome, non una seconda copia. */
+const ALTRI_NOMI = Object.freeze({ porte: "aperture" });
+
+const nomeDelDisegno = (chiave) => {
+  const nome = String(chiave || "");
+  return ALTRI_NOMI[nome] || nome;
+};
+
 /* Il disegno della tessera, pronto da mettere dentro la pastiglia.
  *
  * Chi chiama passa anche il simbolo di ripiego — quello scelto in
  * configurazione per le tessere fatte in casa — e per quelle si tiene il suo. */
 export function oggettoWidget(chiave, ripiego = "") {
-  const disegno = OGGETTI[String(chiave || "")];
+  const disegno = OGGETTI[nomeDelDisegno(chiave)];
   if (!disegno) return String(ripiego || "");
   return `<svg class="dm-oggetto" viewBox="0 0 32 32" aria-hidden="true" focusable="false">${conRipiegoDiColore(disegno)}</svg>`;
 }
@@ -654,7 +778,7 @@ export function conRipiegoDiColore(markup) {
 
 /* Serve alle prove e a chi vuole sapere se un tasto avra' il suo disegno. */
 export function haOggettoWidget(chiave) {
-  return Object.prototype.hasOwnProperty.call(OGGETTI, String(chiave || ""));
+  return Object.prototype.hasOwnProperty.call(OGGETTI, nomeDelDisegno(chiave));
 }
 
 export const CHIAVI_OGGETTI = Object.freeze(Object.keys(OGGETTI));

@@ -402,6 +402,7 @@ const KNOWN_DOMAINS = new Set([
   "cover",
   "climate",
   "camera",
+  "image",
   "weather",
   "automation",
   "script",
@@ -601,17 +602,6 @@ export function queryScore(record, plan) {
   if (plan.terms.length > 1 && record.idFold.indexOf(plan.folded) >= 0) score += 30;
   if (plan.folded && record.idFold === plan.folded) score += 400;
   return score;
-}
-
-/** Full score, hints included. The hot loop uses the precomputed hint table. */
-export function scoreRecord(record, plan, hints = null) {
-  const base = queryScore(record, plan);
-  if (base === -Infinity) return base;
-  return (
-    base +
-    hintDetail(record, hints).score +
-    (hints?.current && record.id === hints.current ? 220 : 0)
-  );
 }
 
 /* The hint part of a score does not depend on the query, so it is computed once

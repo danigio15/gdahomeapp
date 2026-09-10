@@ -1,5 +1,5 @@
 import { catalogLabel, ROOM_CATALOG, roomVisual } from "../core/personalization-catalog.js";
-import { oggettoWidget } from "../core/oggetti-widget.js";
+import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
 import { clean, doc, esc, formatNumber, installStyle, root, t, wrapFunction } from "./shared.js";
 
 // Kept in the beta4 entry filename for release compatibility, but this module is
@@ -47,6 +47,9 @@ const TAB_ICONS = Object.freeze({
    * la colonna si stringe, ed e' lo stesso difetto delle quattro sopra. */
   media: "🔊",
   entita: "⭐",
+  /* Gli animali (#358): stessa storia, stessa cura — il simbolo e' quello che
+   * la scheda si scrive da se'. */
+  animali: "🐾",
 });
 
 /* Quale disegno di casa porta ogni scheda della configurazione.
@@ -98,6 +101,14 @@ const OGGETTO_DELLA_SCHEDA = Object.freeze({
    * evidenze — le due cose sono la stessa famiglia, entita' scelte a mano. */
   media: "media",
   entita: "evidenza",
+  /* Gli animali (#358): l'orma di casa, la stessa che porta la loro voce
+   * nella barra. */
+  animali: "animale",
+  /* I varchi (#367, #377): la porta socchiusa, la stessa che porta la loro
+   * voce nella barra e la loro tessera in Home. Una scheda nuova si dimentica
+   * questa tabella perche' non e' dove si lavora, ed e' la terza volta che la
+   * prova la trova nuda. */
+  varchi: "varchi",
 });
 
 const FLOW_LOADS = Object.freeze({
@@ -149,6 +160,21 @@ const BRAND_LOGOS = Object.freeze({
   xpeng: "<path d='M8 11l17 6 7 10 7-10 17-6-12 14 11 8-17-4-6 10-6-10-17 4 11-8z' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linejoin='round'/>",
 });
 
+/* Il disegno di una scheda, anche di una nata dopo questa tabella.
+ *
+ * Le schede storiche si chiamano «sez0», «sez1», «tapp»: nomi che non dicono
+ * niente, e per loro la tabella qui sopra e' l'unico posto dove sta scritto
+ * cosa disegnare. Le schede nuove invece si chiamano come la cosa che
+ * configurano — «varchi», «media», «batterie» — e quel nome e' gia' il nome
+ * del disegno. Scriverlo anche qui era una riga da ricordarsi, ed e' la riga
+ * che si e' dimenticata a ogni sezione nuova: la prova che sorveglia questa
+ * colonna ha trovato una voce nuda quattro volte. */
+function disegnoDellaScheda(tab) {
+  const scritto = OGGETTO_DELLA_SCHEDA[tab];
+  if (scritto) return scritto;
+  return haOggettoWidget(tab) ? tab : "";
+}
+
 function activeTab() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
@@ -192,8 +218,11 @@ function syncConfigTabIcons() {
      * una colonna larga quanto un dito. Succedeva a ogni scheda aggiunta dopo
      * che questa tabella e' stata scritta — cioe' sempre alle ultime. Adesso
      * la tabella e' il primo posto dove guardare, non l'unico. */
+    const disegno = disegnoDellaScheda(tab);
     const icon = TAB_ICONS[tab] || primoSimbolo(button);
-    if (!icon) return;
+    /* Chi ha il disegno di casa entra anche senza simbolo: e' il simbolo a
+     * essere di scorta, non il disegno. */
+    if (!icon && !disegno) return;
     const existingLabel = button.querySelector("[data-dm-config-name]");
     const labelText = stripLeadingIcon(existingLabel?.textContent || button.textContent) || tab;
     let iconNode = button.querySelector(":scope > .dm-beta4-tab-icon");
@@ -214,7 +243,6 @@ function syncConfigTabIcons() {
      * ce l'ha ancora. La colonna della configurazione portava le emoji, che
      * cambiano faccia da un telefono all'altro e — peggio — si ripetevano:
      * Energia e Azioni avevano lo stesso fulmine. */
-    const disegno = OGGETTO_DELLA_SCHEDA[tab];
     const marchio = disegno ? oggettoWidget(disegno) : "";
     if (marchio) {
       if (iconNode.dataset.dmOggetto !== disegno) {
@@ -888,7 +916,5 @@ export function installBeta4MobilePolishSection() {
   installRealDailyChartOwner();
   schedule();
 }
-
-export const installBeta5RootCauseFixes = installBeta4MobilePolishSection;
 
 installBeta4MobilePolishSection();

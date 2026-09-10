@@ -193,10 +193,7 @@ function openAlertPicker(input, titolo) {
   return true;
 }
 
-function decorateAlertIconField() {
-  // Gli avvisi vivono in fondo alla scheda dei widget: quello che conta e'
-  // che la loro casella sia in scena, non da che linguetta ci si arriva.
-  const input = doc?.getElementById("ed-avv-icon");
+function vestiIlCampoAvviso(input) {
   const row = input?.parentElement;
   if (!input || !row) return false;
   row.classList.add("dm-beta11-alert-icon-row");
@@ -214,12 +211,19 @@ function decorateAlertIconField() {
    * il campo mostrava la scritta «mdi:door-closed» a caratteri cubitali al
    * posto di una porta. L'emoji resta emoji. */
   const valore = clean(input.value) || "🔔";
-  const disegnata = /^mdi:/i.test(valore)
-    ? root.DashboardModernIconEngine?.markup?.("action", valore, { size: 34 }) || ""
-    : "";
-  if (disegnata) preview.innerHTML = disegnata;
-  else preview.textContent = valore;
-  preview.dataset.alertIcon = valore;
+  /* Si riscrive solo quando cambia. Le passate qui sopra sono tante — una per
+   * ogni click, ogni cambio e ogni giro dell'editor — e ridisegnare un'icona
+   * che e' rimasta quella significa buttare via il disegno di prima per
+   * rifarne uno identico, ogni volta. Il confronto costa un paragone; la
+   * riscrittura costa il motore delle icone piu' un pezzo di documento. */
+  if (preview.dataset.alertIcon !== valore) {
+    const disegnata = /^mdi:/i.test(valore)
+      ? root.DashboardModernIconEngine?.markup?.("action", valore, { size: 34 }) || ""
+      : "";
+    if (disegnata) preview.innerHTML = disegnata;
+    else preview.textContent = valore;
+    preview.dataset.alertIcon = valore;
+  }
   if (input.dataset.dmBeta11Bound !== "true") {
     input.dataset.dmBeta11Bound = "true";
     input.addEventListener("input", decorateAlertIconField);
@@ -230,11 +234,49 @@ function decorateAlertIconField() {
    * il proprio selettore: due menu per la stessa icona. L'anteprima e' il
    * menu; il tasto di prima si ritira, ma resta marcato cosi' un click
    * arrivato prima di questa vestizione finisce comunque sul catalogo. */
-  row.querySelectorAll(".dm-beta5-alert-icon-trigger").forEach((button) => {
-    button.dataset.dmBeta11AlertPicker = "true";
-    button.hidden = true;
-  });
+  ritiraLeLenti(row, preview);
   return true;
+}
+
+/* Si ritira ogni tasto della riga che non sia la nostra anteprima.
+ *
+ * Prima si cercava la classe `dm-beta5-alert-icon-trigger`, e quella non e'
+ * nostra: gliela mette la rifinitura da telefono, con un classList.add in una
+ * sua passata. Quale delle due passate arrivi prima dipende dal carico — su un
+ * iPad con sette prove in parallelo arrivava prima la nostra — e allora qui non
+ * c'era ancora nessuna classe da riconoscere: la lente restava nascosta dal
+ * foglio ma non ritirata. E' lo stato a intermittenza che ha fermato il
+ * rilascio due volte.
+ *
+ * Aspettare l'altro modulo vorrebbe dire un orecchio o un secondo giro, e
+ * questo modulo non ne vuole — e' scritto nella sua prova. Ma non serve: quale
+ * sia la lente si sa senza chiedere niente a nessuno. Nella riga della casella
+ * i tasti sono due, l'anteprima e lei, e l'anteprima e' la nostra: tutto quello
+ * che non e' nostro, li' dentro, e' la lente di prima. */
+function ritiraLeLenti(row, preview) {
+  for (const button of row.querySelectorAll(":scope > button")) {
+    if (button === preview) continue;
+    if (button.dataset.dmBeta11AlertPicker !== "true") button.dataset.dmBeta11AlertPicker = "true";
+    if (!button.hidden) button.hidden = true;
+  }
+}
+
+/* Gli avvisi vivono in fondo alla scheda dei widget: quello che conta e' che
+ * la loro casella sia in scena, non da che linguetta ci si arriva.
+ *
+ * E se di caselle ce n'e' piu' d'una si vestono tutte. L'editor storico, dopo
+ * un ridisegno parziale, puo' lasciare in piedi un secondo pannello con la sua
+ * copia del campo: `getElementById` ne vede una sola, e la lente dell'altra
+ * restava com'era — non ritirata e non marcata. Chi ci arrivava sopra
+ * riapriva il vecchio selettore accanto all'anteprima, cioe' i «due menu per
+ * inserire icona» che questa vestizione esiste per togliere. Su iPad e'
+ * successo davvero. */
+function decorateAlertIconField() {
+  const caselle = doc?.querySelectorAll?.("#ed-avv-icon");
+  if (!caselle?.length) return false;
+  let vestita = false;
+  for (const casella of caselle) if (vestiIlCampoAvviso(casella)) vestita = true;
+  return vestita;
 }
 
 function run() {
@@ -281,7 +323,8 @@ function installStyles() {
     #ed-body .dm-beta11-alert-icon-row>#ed-avv-icon{min-width:0!important;width:100%!important;grid-column:2!important}
     #ed-body .dm-beta11-alert-preview{overflow:hidden!important;word-break:break-all!important}
     #ed-body .dm-beta11-alert-preview svg{width:34px!important;height:34px!important;display:block!important}
-    #ed-body .dm-beta11-alert-icon-row>.dm-beta5-alert-icon-trigger{display:none!important}
+    #ed-body .dm-beta11-alert-icon-row>.dm-beta5-alert-icon-trigger,
+    #ed-body .dm-beta11-alert-icon-row>[data-dm-beta11-alert-picker="true"]{display:none!important}
     .dm-beta11-alert-dialog{width:min(720px,calc(100vw - 24px))!important;max-height:min(82vh,760px)!important;overflow:hidden!important}.dm-beta11-alert-search{padding:14px 16px 8px!important}.dm-beta11-alert-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;padding:8px 16px 18px!important;max-height:60vh!important;overflow:auto!important}.dm-beta11-alert-option{display:grid!important;grid-template-rows:48px auto!important;place-items:center!important;gap:7px!important;min-height:94px!important;padding:10px 7px!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:16px!important;background:var(--card-background-color,#fff)!important;cursor:pointer!important}.dm-beta11-alert-option[hidden]{display:none!important}.dm-beta11-alert-glyph{font-size:31px!important}.dm-beta11-alert-option b{font-size:11px!important;text-align:center!important}
     @media(max-width:560px){html body #editor-modal #ed-body [data-ev-appearance] .dm-brand-preview[data-dm-beta11-ev-preview="true"]{grid-template-columns:92px minmax(0,1fr)!important;gap:9px!important;padding:10px!important}html body #editor-modal #ed-body [data-ev-appearance] .dm-brand-preview .dm-car-brand,html body #editor-modal #ed-body [data-ev-appearance] .dm-brand-preview .dm-leapmotor-mark{width:88px!important;max-width:88px!important;height:44px!important;max-height:44px!important}#ed-body .ed-row.dm-room-config-row.dm-beta11-room-row{grid-template-columns:56px minmax(0,1fr) 46px 46px!important;gap:8px!important;padding:11px 10px!important}.dm-beta11-alert-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
   `,
@@ -299,8 +342,12 @@ function install() {
     doc.addEventListener(
       "click",
       (event) => {
+        /* Ogni lente dell'avviso, marcata o no. La marcatura e' il segno che
+         * la vestizione c'e' passata, non il permesso: se una lente e' li' e
+         * qualcuno la preme, il menu da aprire e' uno solo comunque — quello
+         * del catalogo — anche se la vestizione non l'ha ancora raggiunta. */
         const trigger = event.target?.closest?.(
-          ".dm-beta5-alert-icon-trigger[data-dm-beta11-alert-picker='true']",
+          '.dm-beta5-alert-icon-trigger,[data-dm-beta11-alert-picker="true"]',
         );
         if (trigger) {
           const input = trigger.closest(".dm-beta11-alert-icon-row")?.querySelector("#ed-avv-icon");

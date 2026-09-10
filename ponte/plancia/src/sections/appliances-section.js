@@ -3,7 +3,7 @@ import { applianceArtwork, canonicalArtworkType } from "../core/appliance-artwor
 import { createApplianceViewModel, onRunHoldExpiry } from "../core/appliance-view-model.js";
 import { isCumulativeEnergyEntity, resolveEntity } from "../core/period-service.js";
 import { runtimeMetrics } from "../core/runtime-metrics.js";
-import { iconGlyph } from "./icon-engine-section.js";
+import { iconGlyphMarkup } from "./icon-engine-section.js";
 import {
   activeLocale,
   allStates,
@@ -20,7 +20,20 @@ import {
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_APPLIANCES_SECTION__";
-const DAILY_REFRESH_MS = 5000;
+/* Ogni quanto si rifa' il conto dei kWh di oggi degli elettrodomestici.
+ *
+ * Erano cinque secondi, ma non li rispettava nessuno: ogni infornata di stati
+ * — e un misuratore di potenza ne manda in continuazione — rimetteva a zero
+ * l'orologio del riposo, e cosi' una lettura delle statistiche partiva a ogni
+ * infornata, per tutto il tempo che la pagina restava aperta. Il riposo
+ * c'era, e serviva a niente.
+ *
+ * Un minuto, e indipendente dagli stati: questo numero e' fatto di kWh
+ * accumulati, che Home Assistant ricompila ogni cinque minuti, quindi
+ * chiederlo piu' spesso non trova niente di nuovo. I watt che scorrono non
+ * passano di qui — quelli si proiettano dagli eventi di stato — e chi tocca
+ * la tessera per aprire il dettaglio chiede lo stesso subito (`force`). */
+const DAILY_REFRESH_MS = 60_000;
 /* "Spegni" / "Turn off" needs a button wide enough to hold it, and on a phone
  * that width is not there: the label was clipped mid-word against the history
  * button beside it. The glyph says the same thing in a square, and the words
@@ -48,7 +61,15 @@ export function normalizeApplianceRoomTabs() {
       const label = button.textContent || "";
       const match = label.match(/^mdi:[a-z0-9][a-z0-9-]*/i);
       if (!match) return;
-      button.textContent = `${iconGlyph("room", match[0])}${label.slice(match[0].length)}`;
+      /* Il disegno del catalogo, non l'emoji di sistema.
+       *
+       * «Nelle stanze degli elettrodomestici ci sono icone che non sono del
+       * nostro catalogo»: qui si chiedeva `iconGlyph`, che di un nome mdi
+       * torna l'EMOJI — quella del telefono, diversa su ognuno e diversa da
+       * tutto il resto della plancia. Il disegno lo da' `iconGlyphMarkup`, ed
+       * e' la stessa cosa che disegna la colonna delle stanze due dita piu' in
+       * la'. */
+      button.innerHTML = `${iconGlyphMarkup("room", match[0], { size: 16 })}<span>${esc(label.slice(match[0].length))}</span>`;
       normalized = true;
     });
   return normalized;
@@ -129,7 +150,7 @@ export async function buildApplianceDailyBreakdown(
     if (!source) return;
     const row = {
       id: clean(device.id) || `appliance-${index}`,
-      name: clean(device.name) || (t("Elettrodomestico", "Appliance")),
+      name: clean(device.name) || t("Elettrodomestico", "Appliance"),
       entity: source.entity,
       source: source.source,
       direct: source.direct,
@@ -181,7 +202,6 @@ export async function buildApplianceDailyBreakdown(
  * l'unita' di misura, quello guarda anche la classe del dispositivo e i campi
  * gia' configurati. Non lo chiamava nessuno dei due; e' rimasto quello che ha
  * le prove a dire cosa deve rispondere. */
-
 
 function devices() {
   const values = section("appliances", []);
@@ -462,6 +482,15 @@ function ensureDailyPopup() {
   return popup;
 }
 
+/* Se il conto di oggi sta ancora riposando.
+ *
+ * Sta in una funzione sua perche' e' l'unica regola che tiene lontano il
+ * Recorder da questa pagina, e una regola che conta si deve poter provare. */
+export function ilContoDiOggiRiposa({ aggiornatoIl = 0, adesso = Date.now(), force = false } = {}) {
+  if (force || !aggiornatoIl) return false;
+  return adesso - aggiornatoIl < DAILY_REFRESH_MS;
+}
+
 async function refreshApplianceDailyKpi({ force = false, openPopup = false } = {}) {
   const card = dailyCard();
   if (!card) return state.dailyBreakdown;
@@ -473,8 +502,7 @@ async function refreshApplianceDailyKpi({ force = false, openPopup = false } = {
       renderDailyPopup(state.dailyBreakdown, { loading: true });
     }
   }
-  const age = Date.now() - state.dailyUpdatedAt;
-  if (!force && state.dailyUpdatedAt && age < DAILY_REFRESH_MS) {
+  if (ilContoDiOggiRiposa({ aggiornatoIl: state.dailyUpdatedAt, force })) {
     applyDailyKpi(state.dailyBreakdown);
     if (openPopup) renderDailyPopup(state.dailyBreakdown);
     return state.dailyBreakdown;
@@ -509,7 +537,10 @@ function applyDailyKpi(breakdown = state.dailyBreakdown) {
     "aria-label",
     t("Apri dettaglio energia elettrodomestici di oggi", "Open today's appliance energy breakdown"),
   );
-  card.title = t("Mostra dispositivi ed entità che hanno consumato", "Show devices and energy sources");
+  card.title = t(
+    "Mostra dispositivi ed entità che hanno consumato",
+    "Show devices and energy sources",
+  );
   const value = card.querySelector(".g-val");
   if (value) value.textContent = formatDaily(breakdown.total);
   if (!card.dataset.dmDailyMounted) {
@@ -544,12 +575,7 @@ export function normalizeApplianceCards() {
     cards.forEach((card, index) => {
       const device = byId.get(clean(card.dataset.applianceId)) || configured[index];
       if (!device) return;
-      const model = createApplianceViewModel(
-        device,
-        states,
-        section("rooms", []),
-        activeLocale(),
-      );
+      const model = createApplianceViewModel(device, states, section("rooms", []), activeLocale());
       card.dataset.dmApplianceSection = "true";
       card.dataset.dmArtStyle = "panel";
       card.dataset.applianceThemeAware = "true";
@@ -595,9 +621,9 @@ function installStyles() {
       }
       /* Square, the size of the .appl-action-btn beside it: the 88px floor
          existed to fit the word, and it is what pushed the button into the
-         History control on a narrow card. beta27-release-stability-section
-         sizes the same control and is deliberately last in the cascade, so
-         the two must agree — see the note on its rule. */
+         History control on a narrow card. Questa misura la scrive un posto
+         solo: la passata di stabilita' che una volta la ripeteva in fondo
+         alla cascata non c'e' piu'. */
       #page-appliances-main .dm-appliance-power-toggle,#appl-grid-overview .dm-appliance-power-toggle{
         min-width:0!important;width:32px!important;height:32px!important;padding:0!important;
         flex:0 0 auto!important;display:inline-grid!important;place-items:center!important;
@@ -638,6 +664,8 @@ function installWrappers() {
 function subscribeStore() {
   if (state.storeUnsubscribe || !dashboardStore()?.subscribe) return;
   state.storeUnsubscribe = dashboardStore().subscribe((change) => {
+    /* La configurazione cambiata invece vale la lettura subito: sono altri
+     * elettrodomestici, o altre entita', non altri watt. */
     if (change.section === "appliances" && appliancesVisible()) {
       state.dailyUpdatedAt = 0;
       state.dailyGeneration += 1;
@@ -662,8 +690,11 @@ export function installAppliancesSection() {
       if (appliancesVisible()) scheduleApplianceNormalization();
     });
     root.addEventListener?.("dashboardmodern:state-changed", (event) => {
+      /* Le schede si rifanno — sono i watt che scorrono, e si vedono — ma il
+       * conto dei kWh di oggi tiene il suo passo: qui si azzerava l'orologio
+       * del riposo a ogni infornata di stati, cioe' si scavalcava il riposo
+       * proprio nel momento in cui la casa e' piu' viva. */
       if (appliancesVisible() && stateChangeAffectsAppliances(event)) {
-        state.dailyUpdatedAt = 0;
         scheduleApplianceNormalization();
       }
     });

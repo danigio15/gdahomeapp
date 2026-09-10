@@ -99,7 +99,7 @@ export function ensureUpsTab() {
   voce.className = "tab";
   voce.dataset.tab = UPS_TAB;
   voce.id = `tab-${UPS_TAB}`;
-  voce.innerHTML = `<span class="icon">🔌</span><span class="text">${esc(t("Continuità", "Backup power"))}</span>`;
+  voce.innerHTML = `<span class="icon">🔌</span><span class="text">${esc(t("UPS", "UPS"))}</span>`;
   /* Il gestore che il runtime lega alle voci lo lega una volta sola, al
    * caricamento: questa arriva dopo, e il suo tocco se lo deve gestire da se'.
    * Fa la stessa identica cosa, perche' due modi di cambiare pagina sarebbero
@@ -161,10 +161,20 @@ const NUMERO = (valore, cifre = 1) => formatNumber(valore, cifre);
  * Le coordinate stanno qui e non dentro il disegno: chi sposta una targhetta
  * la sposta in un posto solo, e il disegno resta la forma della scena invece
  * di essere anche il suo righello. */
+/* Le due targhette di lato non escono dal palco.
+ *
+ * «Rete elettrica» e «Sotto protezione» sono pastiglie larghe una
+ * centoquarantina di pixel, centrate su un dodicesimo e su undici dodicesimi
+ * della scena — e la scena taglia quello che le esce dai bordi. Su un telefono
+ * il dodici per cento sono quarantasette pixel: mezza pastiglia finiva fuori,
+ * tagliata via. La percentuale resta, ma non scende sotto il mezzo respiro che
+ * serve a starci dentro; su uno schermo largo non morde e non cambia niente. */
+const RIENTRO = "76px";
+
 const POSTI = Object.freeze({
-  rete: "left:12%;top:50%",
+  rete: `left:max(12%,${RIENTRO});top:50%`,
   scatola: "left:50%;top:50%",
-  casa: "left:88%;top:50%",
+  casa: `left:min(88%,100% - ${RIENTRO});top:50%`,
   carico: "left:50%;top:12%",
   autonomia: "left:50%;top:88%",
   tensione: "left:14%;top:18%",
@@ -244,7 +254,7 @@ function scena(dato, da) {
         </span>
         <span class="dm-ups-prese"><i></i><i></i><i></i></span>
       </div>
-      <span class="dm-ups-nome">${esc(clean(dato.name) || t("Continuità", "Backup power"))}</span>
+      <span class="dm-ups-nome">${esc(clean(dato.name) || t("UPS", "UPS"))}</span>
     </div>
 
     <div class="dm-ups-nodo" style="${POSTI.casa}">
@@ -315,7 +325,7 @@ function dipingi() {
    * nome sopra, perche' due scene identiche senza nome non si distinguono. */
   const elenco = gruppi().filter((gruppo) => entitaDellUps(gruppo).length > 0);
   const scene = elenco.map((gruppo, posizione) => ({
-    nome: clean(gruppo.name) || `${t("Continuità", "Backup power")} ${posizione + 1}`,
+    nome: clean(gruppo.name) || `${t("UPS", "UPS")} ${posizione + 1}`,
     dato: letturaDi(gruppo),
     da: daQuandoUps(gruppo, allStates(), risolvi()),
   }));
@@ -326,12 +336,22 @@ function dipingi() {
   const firma = JSON.stringify(scene);
   if (state.firma === firma && dove.firstElementChild) return;
   state.firma = firma;
+  /* Il nome sta FUORI dal palco, non dentro (#343).
+   *
+   * «Il nome dell'UPS viene coperto dall'effetto dello sfondo.» Era dentro:
+   * un titolo nel flusso, e sopra di lui la scena — `position:absolute;
+   * inset:0` — che copre il palco da bordo a bordo. Tutto quello che la scena
+   * disegna sta piu' in alto di lui per il solo fatto di essere posizionato:
+   * il nome finiva sotto i cavi e sotto il velo dello sfondo, e da fuori
+   * sembrava proprio quello che e' stato segnalato — un nome coperto.
+   *
+   * Che il posto giusto fosse fuori lo diceva gia' il foglio di stile: le sue
+   * regole parlano del titolo come FRATELLO del palco («.dm-ups-stage +
+   * .dm-ups-titolo»), e da dentro non si applicavano mai. */
   dove.innerHTML = scene
     .map(
       (voce) =>
-        `<div class="dm-ups-stage">${
-          elenco.length > 1 ? `<h3 class="dm-ups-titolo">${esc(voce.nome)}</h3>` : ""
-        }${scena(voce.dato, voce.da)}</div>`,
+        `${elenco.length > 1 ? `<h3 class="dm-ups-titolo">${esc(voce.nome)}</h3>` : ""}<div class="dm-ups-stage">${scena(voce.dato, voce.da)}</div>`,
     )
     .join("");
 }
@@ -533,6 +553,11 @@ function installStyles() {
       box-shadow:0 10px 24px -10px rgba(244,63,94,.85)}
 
     @media (max-width:820px){
+      /* Le pastiglie dei nomi vanno a capo invece di uscire dal palco: il
+         telaio si stringe, le parole no — «Sotto protezione» su una riga sola
+         e' piu' larga di un terzo di telefono. */
+      ${P} .dm-ups-nome{
+        max-width:min(40vw,150px);white-space:normal;text-align:center;line-height:1.25}
       ${P} .dm-ups-stage{height:520px;border-radius:24px}
       ${P} .dm-ups-box{width:158px;height:186px}
       ${P} .dm-ups-lcd{height:66px}

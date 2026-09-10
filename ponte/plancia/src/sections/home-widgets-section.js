@@ -23,13 +23,15 @@ import {
   parseTodoItemsResponse,
   pendingTodoItems,
 } from "../core/todo-model.js";
+import { batterieDiCasa, CHIAVE_BATTERIE, sogliaDelleBatterie } from "../core/batterie-di-casa.js";
 import { createApplianceViewModel, onRunHoldExpiry } from "../core/appliance-view-model.js";
 import { applianceVisualKey, canonicalClimateType } from "../core/device-model.js";
 import { applianceArtwork } from "../core/appliance-artwork.js";
 import { applianceModelById, buildCardMarkup, cardLabels } from "./appliance-showcase-section.js";
 import { RIF_CENTRALE } from "../core/alarm-panel.js";
 import { alarmActiveButton, alarmModeButtons } from "./security-showcase-section.js";
-import { oggettoWidget } from "../core/oggetti-widget.js";
+import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
+import { iconGlyphMarkup } from "./icon-engine-section.js";
 import {
   bricioleDellaSezione,
   fraseDellaTessera,
@@ -37,15 +39,21 @@ import {
   verdettoDellaTessera,
 } from "../core/racconto-tessera.js";
 import { analisiDellaSezione } from "../core/analisi-sezione.js";
+import { escluseDellaTessera } from "../core/fuori-dai-widget.js";
+import { PERIOD_SOURCES } from "../core/period-service.js";
 import {
   TONO_DEL_GRADO,
   eUnaMisuraDellAria,
   fraseDellAria,
   giudizioDellAria,
   letturaDellAria,
+  normalizzaAria,
   parolaDelGrado,
 } from "../core/aria-model.js";
 import { nomeDellaLettura } from "../core/nome-della-lettura.js";
+import { cavoDalloStato, codiceDellaRicarica } from "../core/stato-della-ricarica.js";
+import { eDellaWallbox } from "../core/wallbox-device-binding.js";
+import { statoUmanoEV } from "./il-popup-dell-auto-racconta-section.js";
 import { poolList } from "../core/pool-model.js";
 /* La tessera delle segnalazioni chiede il suo conto a chi gia' lo tiene, invece
  * di rifare il giro verso GitHub per conto suo. */
@@ -85,10 +93,13 @@ import {
   plantList,
   sommaLetture,
   sommaNumeri,
+  sommaOggi,
 } from "../core/energy-plants.js";
 import {
   CALENDARI_KEY,
   GIORNI_AVANTI,
+  calendariAssegnati,
+  calendariDellUtente,
   eventiDaQui,
   inCorso,
   minutiAllEvento,
@@ -132,11 +143,13 @@ import {
 import { categoriaDelleAllerte, fraseDellAllerta } from "./allerte-section.js";
 import {
   CHIAVE_RIFIUTI,
-  entitaDeiRifiuti,
   letturaRifiuti,
+  normalizzaRifiuti,
   rifiutiConfigurati,
 } from "../core/rifiuti-model.js";
 import { nomeDellaRiga, parolaDelQuando } from "./rifiuti-section.js";
+import { CHIAVE_VMC, entitaDellaVmc, letturaVmc, vmcDisegnabili, vmcParla } from "../core/vmc-model.js";
+import { avvisiAppenaAccesi } from "../core/avvisi-che-si-aprono.js";
 import { comandiMediaMarkup, sottoDelLettore, titoloDelLettore } from "./media-player-section.js";
 import { iconaPresaMarkup } from "./prese-section.js";
 import { puntiDi, quandoArrivaLoStorico } from "./storico-condiviso-section.js";
@@ -150,13 +163,42 @@ import {
   isRelayEntity,
   relayCoverCommands,
 } from "../core/cover-kind.js";
-import { doorOpenCall } from "../core/security-door-model.js";
-import { configuredSecurityDoors, iconaPortaMarkup } from "./security-doors-section.js";
+import { azioniDellaPorta } from "../core/security-door-model.js";
+import { humidityEntry } from "../core/room-overview.js";
+import { CHIAVE_VARCHI, contoDeiVarchi, varchiDiCasa } from "../core/varchi-di-casa.js";
+import {
+  CHIAVE_VERSO_BATTERIA,
+  batteriaGirata,
+  potenzaDellaBatteria,
+} from "../core/energy-flow-truth.js";
+import {
+  CHIAVE_PRESENZA,
+  contoDellaPresenza,
+  presenzaDiCasa,
+} from "../core/presenza-in-casa.js";
+import {
+  CHIAVE_MACCHINE,
+  contoDelleMacchine,
+  macchineERete,
+} from "../core/macchine-e-rete.js";
+import {
+  CHIAVE_ANTIFURTO_SU_MISURA,
+  modoSuMisuraAcceso,
+  normalizzaModiSuMisura,
+} from "../core/antifurto-su-misura.js";
+import { EVENTO_PIATTAFORME, piattaformeConosciute } from "./di-chi-e-unentita-section.js";
+/* I server adottati per dispositivo (#411) li raccoglie la sezione Server, e
+ * si leggono da li': la tessera e la pagina devono contare le stesse righe. */
+import { serverPerDispositivo } from "./macchine-e-rete-section.js";
+import {
+  configuredSecurityDoors,
+  iconaPortaMarkup,
+  parolaDelGesto,
+} from "./security-doors-section.js";
 import { wattsFromState } from "../core/signed-energy.js";
 import {
   contactEntity,
   inferriataEntity,
-  isWindowOnly,
   windowOpenFromState,
 } from "../core/shutter-window.js";
 import {
@@ -164,6 +206,7 @@ import {
   apertaSecondoVerso,
   insiemeInvertiti,
   posizioneSecondoVerso,
+  statoSecondoVerso,
   versoInvertito,
 } from "../core/verso-aperture.js";
 import { normalizeRobots, robotStateLabel, robotView } from "../core/robot-model.js";
@@ -190,6 +233,7 @@ import {
   gettoneDiAccesso,
   lexicalGlobal,
   locale,
+  planciaVisibile,
   readClimateUnits,
   readJson,
   root,
@@ -197,6 +241,7 @@ import {
   siComanda,
   t,
 } from "./shared.js";
+import { disegnaComeStaLaCasa } from "./come-sta-la-casa-section.js";
 
 const KEY = "__DASHBOARDMODERN_HOME_WIDGETS__";
 const STYLE_ID = "dm-widgets-style";
@@ -225,6 +270,11 @@ const state = (root[KEY] ||= {
   expanded: "",
   signature: "",
   escape: false,
+  /* Quali avvisi personalizzati erano accesi l'ultima volta che si e'
+   * guardato (#445). `null` vuol dire «mai guardato», ed e' il valore che
+   * impedisce alla finestra di aprirsi al primo disegno su un avviso acceso
+   * da stamattina. */
+  avvisiVisti: null,
   lists: new Map(), // entity -> { items, fetchedAt, inflight }
   /* Gli eventi letti, per calendario (#259). Stanno accanto alle liste ToDo e
    * non dentro: sono due servizi diversi e due risposte diverse, e mescolarle
@@ -262,9 +312,94 @@ export function configuredTodoLists() {
   return normalizeTodoLists(readJson(TODO_CONFIG_KEY, []));
 }
 
-/** I calendari scelti (#259). */
-export function calendariConfigurati() {
+/** Tutti i calendari scelti (#259), com'è scritto in configurazione. */
+export function calendariScritti() {
   return normalizzaCalendari(readJson(CALENDARI_KEY, []));
+}
+
+/* ── chi sta guardando l'agenda (#344) ────────────────────────────────────
+ *
+ * «Sarebbe possibile implementare una soluzione in cui il calendario mostrato
+ * dalla dashboard vari in base alla persona che lo sta visualizzando?»
+ *
+ * Chi sia l'utente collegato, dentro il pannello, lo sa il documento OSPITE:
+ * `hass.user` vive di là, e il documento della plancia riceve un ponte, non
+ * l'utente. Due strade, e la plancia le prende tutte e due.
+ *
+ * La prima: se un giorno l'ospite lo consegna — `__DASHBOARDMODERN_UTENTE__`
+ * — non c'è più niente da chiedere a nessuno, e l'agenda si veste da sola.
+ *
+ * La seconda, che funziona oggi: la scelta si scrive nel profilo di Home
+ * Assistant di CHI E' COLLEGATO (`frontend/set_user_data`, che il ponte lascia
+ * già passare). E' una casella per utente, non per dispositivo: chi dice una
+ * volta «sono io» si ritrova la sua agenda dal telefono, dal computer e dal
+ * tablet, e non la vede nessun altro.
+ *
+ * Finché nessun calendario ha un padrone, niente di tutto questo succede: la
+ * domanda non si fa e l'agenda è quella di sempre. */
+const CHIAVE_CHI_GUARDA = "dashboardmodern_calendario_utente";
+const chiGuarda = (root.__DASHBOARDMODERN_CHI_GUARDA__ ||= {
+  scelto: "",
+  chiesto: false,
+});
+
+/** Chi sta guardando, quando si sa. Vuoto vuol dire «non lo sappiamo». */
+export function utenteCheGuarda() {
+  const dallOspite = root.__DASHBOARDMODERN_UTENTE__;
+  const suo = clean(typeof dallOspite === "string" ? dallOspite : dallOspite?.id);
+  return suo || clean(chiGuarda.scelto);
+}
+
+function avvisaChiDisegnaLAgenda() {
+  /* Cambiata la persona sono cambiati i calendari da guardare: quelli nuovi
+   * non li ha mai chiesti nessuno, e senza questa riga l'agenda mostrerebbe
+   * gli eventi di prima finche' non passa il giro dei cinque minuti. */
+  try {
+    aggiornaCalendari({ force: true });
+  } catch (_error) {}
+  try {
+    renderHomeWidgets();
+  } catch (_error) {}
+  root.dispatchEvent?.(new CustomEvent("dashboardmodern:calendario-utente"));
+}
+
+/** La scelta ricordata nel profilo di chi è collegato. Si chiede una volta. */
+export function chiediChiGuarda() {
+  if (chiGuarda.chiesto) return;
+  chiGuarda.chiesto = true;
+  chiediAHomeAssistant({ type: "frontend/get_user_data", key: CHIAVE_CHI_GUARDA })
+    .then((risposta) => {
+      const scelto = clean(risposta?.value?.utente);
+      if (!scelto || scelto === chiGuarda.scelto) return;
+      chiGuarda.scelto = scelto;
+      avvisaChiDisegnaLAgenda();
+    })
+    .catch(() => {
+      /* Senza risposta si resta senza nome, che è il caso di sempre: l'agenda
+       * mostra i calendari di casa. Non è un errore da raccontare. */
+      chiGuarda.chiesto = false;
+    });
+}
+
+/** «Sono io»: la scelta si ricorda nel profilo dell'utente collegato. */
+export function ricordaChiGuarda(utente) {
+  const scelto = clean(utente);
+  if (chiGuarda.scelto === scelto) return Promise.resolve(false);
+  chiGuarda.scelto = scelto;
+  chiGuarda.chiesto = true;
+  avvisaChiDisegnaLAgenda();
+  return chiediAHomeAssistant({
+    type: "frontend/set_user_data",
+    key: CHIAVE_CHI_GUARDA,
+    value: { utente: scelto },
+  })
+    .then(() => true)
+    .catch(() => false);
+}
+
+/** I calendari che tocca vedere a chi sta guardando (#259, #344). */
+export function calendariConfigurati() {
+  return calendariDellUtente(calendariScritti(), utenteCheGuarda());
 }
 
 /* ── letture ──────────────────────────────────────────────────────────── */
@@ -293,6 +428,18 @@ function record(entity) {
     state.lists.set(entity, value);
   }
   return value;
+}
+
+/* La pagina dell'Agenda aspetta questi dati e non ha modo di saperlo.
+ *
+ * La tessera in Home la ridisegna `schedule()`, che e' di questo modulo; la
+ * pagina ha il suo padrone. Finche' il guscio ridipingeva tutte e nove le
+ * pagine ogni secondo la cosa non si vedeva — adesso che disegna solo quella
+ * che si guarda, un'Agenda aperta mentre le liste e gli eventi sono per strada
+ * resterebbe vuota fino al primo movimento in casa. Un avviso solo per tutti e
+ * due i fili: la pagina ridisegna quello che e' cambiato davvero. */
+function avvisaLAgenda() {
+  root.dispatchEvent?.(new CustomEvent("dashboardmodern:agenda-aggiornata"));
 }
 
 async function fetchItems(entity, { force = false } = {}) {
@@ -326,7 +473,10 @@ async function fetchItems(entity, { force = false } = {}) {
   cache.inflight = false;
   // Un fallimento non ha cambiato niente da disegnare: ridisegnare lo stesso
   // vorrebbe dire richiedere di nuovo, subito.
-  if (riuscita) schedule();
+  if (riuscita) {
+    schedule();
+    avvisaLAgenda();
+  }
 }
 
 /* ── il filo dei calendari (#259) ──────────────────────────────────────
@@ -455,7 +605,10 @@ async function fetchEventi(entity, { force = false } = {}) {
     root.console?.warn?.("[DashboardModern] calendar events", error);
   }
   scheda.inflight = false;
-  if (riuscita) schedule();
+  if (riuscita) {
+    schedule();
+    avvisaLAgenda();
+  }
 }
 
 /** Gli eventi di tutti i calendari scelti, in fila. Serve anche alla pagina. */
@@ -478,6 +631,10 @@ export function eventiDeiCalendari() {
 
 /** Chiede gli eventi a tutti i calendari scelti. */
 export function aggiornaCalendari(opzioni) {
+  /* Prima di chiedere gli eventi si chiede chi guarda (#344), ma solo se
+   * qualcuno ha diviso i calendari fra le persone: finche' sono tutti di casa
+   * non c'e' niente da sapere, e non si disturba Home Assistant per niente. */
+  if (calendariAssegnati(calendariScritti())) chiediChiGuarda();
   for (const calendario of calendariConfigurati()) fetchEventi(calendario.entity, opzioni);
 }
 
@@ -575,7 +732,8 @@ function localToday() {
 }
 
 function todoModel() {
-  const lists = configuredTodoLists().filter((list) => widgetIncludes(list.entity));
+  const fuori = widgetExcludedEntities("agenda");
+  const lists = configuredTodoLists().filter((list) => widgetIncludes(list.entity, fuori));
   if (!lists.length) return null;
   let pending = 0;
   let total = 0;
@@ -632,7 +790,7 @@ function paroleDelCalendario() {
  */
 /* Le liste grezze, per chi deve contare le scadenze senza disegnare niente. */
 function blocchiDelleListe() {
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("agenda");
   return configuredTodoLists()
     .filter((list) => widgetIncludes(list.entity, fuori))
     .map((list) => ({ list, items: record(list.entity).items }));
@@ -716,7 +874,7 @@ function lightsModel(states) {
   } catch (_error) {
     return null;
   }
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("luci");
   const rows = groups.flatMap((group) =>
     group.entities
       .filter((entity) => widgetIncludes(entity, fuori))
@@ -803,7 +961,7 @@ function climateModel(states) {
   } catch (_error) {
     return null;
   }
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("clima");
   const rows = units
     .map((unit) => rigaClima(states, unit))
     .filter((riga) => riga && widgetIncludes(riga.entity, fuori));
@@ -835,6 +993,8 @@ function climateModel(states) {
       : nomiAccesi(on, () => true, t(`${on.length} accese`, `${on.length} on`)),
     ring: Math.round((on.length / rows.length) * 100),
     rows,
+    // Le unita' accese, per chi le conta e non le disegna.
+    on,
   };
 }
 
@@ -858,7 +1018,7 @@ function climateRow(entity) {
 function coversModel(states) {
   const values = root.getTapparelle?.() || readJson("cd_tapparelle", []);
   if (!Array.isArray(values) || !values.length) return null;
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("tapparelle");
   /* Una riga puo' portare tapparella, tenda e tenda da sole insieme: la
    * tessera ne mostrava solo la prima, e chi ha le tende in Home non le
    * vedeva. Adesso ogni copertura della riga e' una voce, col suo nome e col
@@ -873,46 +1033,64 @@ function coversModel(states) {
        * solo i sensori di apertura non aveva modo di vedere a colpo d'occhio
        * quali infissi ha lasciato aperti — che e' esattamente la cosa che si
        * vuole sapere uscendo di casa. */
-      if (isWindowOnly(item)) {
-        /* I contatti possono essere due (#254): l'infisso dentro e
-         * l'inferriata fuori. Sono due cose che si aprono per conto loro, e in
-         * Home vanno elencate separate — una grata lasciata aperta e una
-         * finestra lasciata aperta non sono la stessa notizia. Chi ne ha
-         * dichiarato uno solo vede una riga sola, come prima. */
-        const nome = clean(item?.name);
-        return [
-          [contactEntity(item), nome, false],
-          [inferriataEntity(item), nome, true],
-        ]
-          .filter(([entita]) => entita)
-          .map(([entita, etichetta, grata]) => ({
-            item,
-            voce: { entity: entita, kind: "", down: "" },
-            etichetta: grata
-              ? `${etichetta || entita} · ${t("Inferriata", "Grate")}`
-              : etichetta || entita,
-            soloSensore: true,
-          }));
-      }
-      return coverEntries(item).map((voce) => ({
+      /* Una riga porta due cose diverse, e in Home vanno tutte e due.
+       *
+       * I contatti possono essere due (#254): l'infisso dentro e l'inferriata
+       * fuori. Sono due cose che si aprono per conto loro, e vanno elencate
+       * separate — una grata lasciata aperta e una finestra lasciata aperta
+       * non sono la stessa notizia.
+       *
+       * Prima i contatti uscivano SOLO da una riga senza motore, e la riga
+       * normale — la tapparella con il sensore del suo infisso, che e' come si
+       * configura una finestra — ne dava indietro la sola tapparella. La
+       * tessera quindi contava l'avvolgibile su e taceva dell'anta aperta,
+       * cioe' faceva l'errore della #442 dall'altro lato: chiamava tapparelle
+       * una casa che aveva anche una finestra aperta. Adesso una riga rende
+       * quello che ha. */
+      const nome = clean(item?.name);
+      const motori = coverEntries(item);
+      const righeMotore = motori.map((voce) => ({
         item,
         voce,
         etichetta:
-          coverEntries(item).length > 1 && voce.kind
-            ? `${clean(item?.name) || voce.entity} · ${coverKindLabel(voce.kind)}`
-            : clean(item?.name) || voce.entity,
+          motori.length > 1 && voce.kind
+            ? `${nome || voce.entity} · ${coverKindLabel(voce.kind)}`
+            : nome || voce.entity,
       }));
+      const righeContatto = [
+        [contactEntity(item), false],
+        [inferriataEntity(item), true],
+      ]
+        .filter(([entita]) => entita)
+        .map(([entita, grata]) => ({
+          item,
+          voce: { entity: entita, kind: "", down: "" },
+          /* Il nome si qualifica solo quando serve a distinguere: con un
+           * motore sulla stessa riga «Camera» comparirebbe due volte, una
+           * alzata e una aperta, e non si capirebbe quale e' quale. Da sola,
+           * la finestra resta «Camera» come e' sempre stata. */
+          etichetta: grata
+            ? `${nome || entita} · ${t("Inferriata", "Grate")}`
+            : motori.length
+              ? `${nome || entita} · ${t("Finestra", "Window")}`
+              : nome || entita,
+          soloSensore: true,
+        }));
+      return [...righeMotore, ...righeContatto];
     })
     .map(({ item, voce, etichetta, soloSensore }) => {
       const entity = clean(voce.entity);
       if (!entity || !widgetIncludes(entity, fuori)) return null;
       const current = stateOf(states, entity);
-      const raw = clean(current?.state).toLowerCase();
       /* Il verso (#244): la tapparella girata dichiara 100 quando e' giu', e
        * il contatto girato sta a ON quando e' chiuso. Qui si normalizza tutto
        * al verso della plancia — 100 e ON vogliono dire aperto — cosi' quello
        * che segue non deve saperne niente. */
       const girata = versoInvertito(item);
+      /* Anche la parola, non solo la posizione (#353): la tapparella montata
+       * al contrario che la posizione non la pubblica dichiara «open» quando
+       * e' giu', e la tessera la contava fra le aperte. */
+      const raw = statoSecondoVerso(current?.state, girata);
       const position = posizioneSecondoVerso(Number(current?.attributes?.current_position), girata);
       /* Il contatto parla la sua lingua — `on` e' aperto — e non ha posizione:
        * chiederla a lui vorrebbe dire inventarla. */
@@ -950,39 +1128,99 @@ function coversModel(states) {
     .filter(Boolean);
   if (!rows.length) return null;
   const open = rows.filter((row) => row.open);
+  /* Una tapparella alzata non e' una finestra aperta (#442).
+   *
+   * «Nella home il chip indica 6 finestre aperte ma in realta' sono 6
+   *  tapparelle, le finestre (tramite sensori di apertura/chiusura)
+   *  andrebbero specificate come finestre in un altro chip.»
+   *
+   * Ha ragione sulla parola. La tessera conta quello che la sezione Finestre
+   * ha dentro, e dentro stanno due cose diverse: i motori — tapparelle, tende,
+   * tende da sole — che si ALZANO, e i contatti sull'anta, che si APRONO.
+   * Chiamarle tutte «aperte» dice a chi sta uscendo di casa una cosa che non
+   * e': sei tapparelle tirate su sono una casa normale, sei finestre aperte
+   * sono una casa da chiudere.
+   *
+   * L'altro chip che chiede c'e' gia' e si chiama Varchi: i contatti di porte
+   * e finestre li trova da se', uno per uno, senza configurare niente — anche
+   * quelli scritti dentro una riga delle Finestre. Qui si corregge la parola,
+   * che e' il pezzo che diceva il falso; e quando la sezione porta le due cose
+   * insieme, la didascalia le dice separate invece di sommarle in silenzio. */
+  const coperture = rows.filter((row) => !row.soloSensore);
+  const contatti = rows.filter((row) => row.soloSensore);
+  const alzate = coperture.filter((row) => row.open);
+  const aperte = contatti.filter((row) => row.open);
+  const soloMotori = coperture.length > 0 && contatti.length === 0;
+  const didascalia = () => {
+    if (soloMotori) return nomiAccesi(alzate, () => true, t("Tutte abbassate", "All down"));
+    /* Le finestre aperte si NOMINANO, una per una.
+     *
+     * E' la ragione per cui la tessera delle «aperture» non esiste piu': le
+     * diceva questa, per nome, e contarle e basta la farebbe tornare. Le
+     * tapparelle invece si contano: quali siano su non e' una notizia, quante
+     * ne restano alzate quando esci di casa si'. */
+    const pezzi = [
+      nomiAccesi(aperte, () => true, ""),
+      alzate.length ? t(`${alzate.length} alzate`, `${alzate.length} up`) : "",
+    ].filter(Boolean);
+    return pezzi.length ? pezzi.join(" · ") : t("Tutto chiuso", "All closed");
+  };
   return {
     key: "tapparelle",
     accent: "#8b5cf6",
     icon: "🪟",
-    label: t("Finestre", "Windows"),
+    /* Il nome dice cosa c'e' dentro: senza un solo contatto sull'anta questa
+     * tessera parla di motori, e si chiama come loro. */
+    label: soloMotori ? t("Tapparelle", "Shutters") : t("Finestre", "Windows"),
     value: String(open.length),
-    caption: nomiAccesi(open, () => true, t(`${open.length} aperte`, `${open.length} open`)),
+    caption: didascalia(),
     ring: Math.round((open.length / rows.length) * 100),
     rows,
+    /* Le aperture escono col modello, come le luci accese: chi le conta senza
+     * disegnarle legge questo campo invece di rifiltrare le righe per conto
+     * suo, e due conti sulla stessa cosa non possono divergere se il conto e'
+     * uno. */
+    open,
   };
 }
 
+/* La Sicurezza parla dell'antifurto, e basta (#457).
+ *
+ * «Create a doors widget in the home, separate from the security widget.» Le
+ * aperture stavano qui dentro, e il motivo per cui non ci stanno piu' e' che
+ * questa tessera e quelle rispondono a due domande diverse: «come sta la
+ * casa» — inserito, disinserito, allarme — e «aprimi il portone», che non e'
+ * una lettura ma un comando. Tenerle insieme voleva dire aprire la tessera
+ * per una qualunque delle due.
+ *
+ * Le aperture hanno adesso la loro, `porteModel` qui sotto, che legge la
+ * stessa configurazione di prima: nessuno deve riscrivere niente. */
 function securityModel(states) {
-  const fuori = widgetExcludedEntities();
   const alarm = stateOf(states, RIF_CENTRALE);
-  /* Le entita' delle Prese non sono porte: la lista arriva gia' filtrata. */
-  const doors = configuredSecurityDoors().filter((door) => widgetIncludes(door.entity, fuori));
-  // Senza antifurto e senza aperture non c'e' una sicurezza da raccontare: le
-  // telecamere, da sole, sono gia' la loro tessera.
-  if (!alarm && !doors.length) return null;
+  /* I tasti scritti a mano da chi una centrale non ce l'ha (#413): sono un
+   * antifurto quanto quello di una centrale, e la tessera deve saperlo. Senza,
+   * chi ha solo quelli non aveva nessuna tessera da cui inserirlo — cioe' la
+   * fila di tasti c'era e non si poteva raggiungere — e se aveva anche una
+   * porta la tessera diceva «—» a antifurto inserito. */
+  const miei = normalizzaModiSuMisura(readJson(CHIAVE_ANTIFURTO_SU_MISURA, []));
+  const mioAcceso = miei.length ? modoSuMisuraAcceso(miei, states) : "";
+  // Senza antifurto non c'e' una sicurezza da raccontare: le telecamere e le
+  // aperture, da sole, hanno gia' la loro tessera.
+  if (!alarm && !miei.length) return null;
   const raw = clean(alarm?.state).toLowerCase();
   const triggered = raw === "triggered" || raw === "pending";
-  const armed = raw.startsWith("armed");
-  const value = !alarm
-    ? "—"
-    : triggered
-      ? t("Allarme!", "Alarm!")
-      : armed
-        ? t("Inserito", "Armed")
-        : t("Disinserito", "Disarmed");
-  // La didascalia parla di quello che questa tessera comanda — l'antifurto e
-  // le aperture — non delle telecamere: quelle hanno la loro tessera, con le
-  // miniature, e dirle due volte era dire due volte la stessa cosa.
+  const armed = raw.startsWith("armed") || Boolean(mioAcceso);
+  const value =
+    !alarm && !miei.length
+      ? "—"
+      : triggered
+        ? t("Allarme!", "Alarm!")
+        : armed
+          ? t("Inserito", "Armed")
+          : t("Disinserito", "Disarmed");
+  // La didascalia parla di quello che questa tessera comanda — l'antifurto —
+  // non delle telecamere ne' delle porte: quelle hanno la loro tessera, e
+  // dirle due volte era dire due volte la stessa cosa.
   return {
     key: "sicurezza",
     accent: triggered ? "#e11d48" : "#10b981",
@@ -990,13 +1228,65 @@ function securityModel(states) {
     alert: triggered,
     label: t("Sicurezza", "Security"),
     value,
-    caption: doors.length ? clean(doors[0].name) || clean(doors[0].entity) : "",
+    caption: "",
     ring: armed || triggered ? 100 : 0,
-    doors,
-    alarm: Boolean(alarm),
+    /* «C'e' un antifurto da comandare»: la centrale, oppure i tasti scritti a
+     * mano. Chi legge questo campo apre la fila dei tasti, e quella fila i
+     * suoi ce li ha in tutti e due i casi. */
+    alarm: Boolean(alarm) || miei.length > 0,
     armed,
     triggered,
-    mode: raw,
+    mode: raw || mioAcceso,
+  };
+}
+
+/* Le porte e i cancelli, con la loro tessera (#457).
+ *
+ * Sono la stessa lista di «Porte e cancelli» che la Sicurezza mostrava prima:
+ * la configurazione non si tocca, cambia solo dove si guarda.
+ *
+ * Il numero grande dipende da cosa c'e' dentro, ed e' una distinzione che
+ * conta. Una serratura DICE come sta — chiusa a chiave, sbloccata — e allora
+ * il numero e' quante ne sono aperte, rosso, come nei Varchi. Un pulsante del
+ * citofono o il rele' di un cancello non dicono niente di simile: il loro
+ * «acceso» dura un secondo e non vuol dire che il cancello sia aperto.
+ * Contarli fra le aperte sarebbe inventare un allarme, quindi dove non c'e'
+ * nessuna serratura il numero e' semplicemente quante aperture ci sono — come
+ * fanno le telecamere, che nemmeno loro hanno un «aperto».
+ */
+const PORTA_APERTA = /^(unlocked|open|opening)$/;
+
+export function porteAperte(doors = [], states = {}) {
+  return doors.filter((door) => {
+    /* Solo le serrature: sono le uniche che dichiarano davvero di stare
+     * aperte. Vedi sopra perche' un rele' non conta. */
+    if (clean(door?.entity).split(".")[0] !== "lock") return false;
+    return PORTA_APERTA.test(clean(stateOf(states, door.entity)?.state).toLowerCase());
+  });
+}
+
+function porteModel(states) {
+  const fuori = widgetExcludedEntities("porte");
+  /* Le entita' delle Prese non sono porte: la lista arriva gia' filtrata. */
+  const doors = configuredSecurityDoors().filter((door) => widgetIncludes(door.entity, fuori));
+  if (!doors.length) return null;
+  const serrature = doors.filter((door) => clean(door.entity).split(".")[0] === "lock");
+  const aperte = porteAperte(doors, states);
+  const nome = (door) => clean(door.name) || clean(door.entity);
+  return {
+    key: "porte",
+    accent: aperte.length ? "#dc2626" : serrature.length ? "#16a34a" : "#d97706",
+    icon: "🚪",
+    alert: aperte.length > 0,
+    label: t("Porte", "Doors"),
+    value: String(serrature.length ? aperte.length : doors.length),
+    caption: aperte.length
+      ? aperte.map(nome).join(" · ")
+      : serrature.length
+        ? t("Tutto chiuso", "All closed")
+        : nome(doors[0]),
+    ring: serrature.length ? Math.round((aperte.length / serrature.length) * 100) : null,
+    doors,
   };
 }
 
@@ -1010,6 +1300,7 @@ function formatWatts(value) {
 }
 
 function camerasModel() {
+  const fuori = widgetExcludedEntities("telecamere");
   let cameras = [];
   try {
     cameras = root.getCameras?.() || [];
@@ -1019,7 +1310,7 @@ function camerasModel() {
       entity: clean(camera?.entity),
       name: clean(camera?.name) || clean(camera?.entity),
     }))
-    .filter((row) => row.entity && widgetIncludes(row.entity));
+    .filter((row) => row.entity && widgetIncludes(row.entity, fuori));
   if (!rows.length) return null;
   return {
     key: "telecamere",
@@ -1051,6 +1342,32 @@ function wattsOf(states, entity) {
   return wattsFromState(stateOf(states, entity));
 }
 
+/* Quanto ha fatto oggi ogni sorgente di UN impianto.
+ *
+ * «Oltre ai dati del consumo attuale istantaneo inserirei, sotto in basso in
+ *  piccolino, anche quelli della produzione, importazione ecc. del giorno. Per
+ *  avere il colpo d'occhio necessario.» (#429)
+ *
+ * La tessera diceva la potenza di adesso e, sotto, il solo consumo di casa
+ * oggi. Gli altri numeri del giorno — quanto ha prodotto il fotovoltaico,
+ * quanto si e' preso dalla rete, quanto le si e' dato — esistono da sempre
+ * nella sezione Energia, e in Home non arrivavano.
+ *
+ * Quale entita' dica il giorno per ogni sorgente non si decide qui: lo dice
+ * `PERIOD_SOURCES`, che e' la stessa tabella con cui l'Energia costruisce i
+ * suoi piani. Scriverne una seconda vorrebbe dire che un giorno la sezione e
+ * la tessera leggono due entita' diverse per lo stesso numero. */
+function oggiDellImpianto(states, impianto, primo) {
+  const oggi = {};
+  for (const piano of PERIOD_SOURCES) {
+    const entita =
+      clean(impianto?.[piano.group]?.[piano.periodKeys.day]) || (primo ? piano.slots.day : "");
+    const letto = entita ? numOf(states, entita) : null;
+    if (letto != null) oggi[piano.key] = letto;
+  }
+  return oggi;
+}
+
 /* Le letture dei quattro gruppi di UN impianto.
  *
  * `slot` è la mappatura di sempre, e vale solo per il primo impianto: gli
@@ -1072,17 +1389,107 @@ function lettureDellImpianto(states, impianto, primo) {
     if (batteria) batteria.soc = soc;
     else rows.push({ group: "battery", watts: null, soc });
   }
+  const oggi = oggiDellImpianto(states, impianto, primo);
   return {
     rows,
     house: readings.find((row) => row.group === "house")?.watts ?? null,
-    today: numOf(
-      states,
-      clean(impianto?.house?.daily_energy) || (primo ? "dm.energy_consumo_casa_oggi" : ""),
-    ),
+    /* `today` resta il consumo di casa oggi, che e' il numero della didascalia
+     * da sempre: adesso lo dice la stessa tabella che dice tutti gli altri. */
+    today: oggi.house ?? null,
+    oggi,
   };
 }
 
-function tesseraEnergia(rows, house, today, { key = "energia", label, impianto = "" } = {}) {
+/**
+ * I quattro numeri dell'energia di tutta la casa, sommati sugli impianti.
+ *
+ * Li legge chi disegna il flusso in Home (#415): non li rilegge per conto suo —
+ * le mappature, gli impianti, le unita' e la somma di chi ne ha due sono gia'
+ * risolte qui, e due letture della stessa casa e' il modo di far dire due
+ * numeri diversi alla stessa corrente.
+ *
+ * @returns {{solare:number|null, rete:number|null, batteria:number|null,
+ *            casa:number|null, soc:number|null}}
+ */
+export function lettureDiCasa(states = allStates()) {
+  const documento = section("energy", {}) || {};
+  const impianti = plantList(documento).filter(
+    (impianto, indice) => indice === 0 || plantIsConfigured(impianto),
+  );
+  const letture = impianti.map((impianto, indice) =>
+    lettureDellImpianto(states, impianto, indice === 0),
+  );
+  const righe = sommaLetture(letture.map((lettura) => lettura.rows));
+  const di = (gruppo) => righe.find((riga) => riga.group === gruppo) || null;
+  return {
+    solare: di("solar")?.watts ?? null,
+    rete: di("grid")?.watts ?? null,
+    /* La batteria nella convenzione di casa: positivo = scarica. Meta' dei
+     * sensori scrive positivo quando si CARICA, e il verso lo dice la casa una
+     * volta sola — sennò la mappa disegna le frecce all'incontrario (#434). */
+    batteria: potenzaDellaBatteria(
+      di("battery")?.watts ?? null,
+      batteriaGirata(readJson(CHIAVE_VERSO_BATTERIA, {})),
+    ),
+    casa: sommaNumeri(letture.map((lettura) => lettura.house)),
+    soc: di("battery")?.soc ?? null,
+  };
+}
+
+/* Cosa dice la didascalia del giorno, in che ordine e con quale parola.
+ *
+ * L'ordine e' quello con cui si guarda una casa — quanto ha consumato, quanto
+ * ha prodotto, quanto ha preso e quanto ha dato — e non quello della tabella
+ * dei piani, che e' ordinata per come si interroga Recorder. Quale entita' dica
+ * ognuno di questi numeri resta affare di `PERIOD_SOURCES`: qui ci sono
+ * soltanto le parole. */
+/* Il disegno di ogni sorgente. Lo usano la didascalia della tessera e le righe
+ * della sua finestra: due mappe uguali sarebbero il modo di far comparire un
+ * sole in un posto e una spina nell'altro per la stessa corrente. */
+const GLIFI_ENERGIA = Object.freeze({
+  house: "🏠",
+  solar: "☀️",
+  grid: "🔌",
+  battery: "🔋",
+});
+
+const PAROLE_DI_OGGI = Object.freeze([
+  Object.freeze({ chiave: "solar", it: "Produzione", en: "Produced" }),
+  Object.freeze({ chiave: "gridImport", it: "Prelievo", en: "Imported" }),
+  Object.freeze({ chiave: "gridExport", it: "Immissione", en: "Exported" }),
+  Object.freeze({ chiave: "batteryCharged", it: "In batteria", en: "To battery" }),
+  Object.freeze({ chiave: "batteryDischarged", it: "Da batteria", en: "From battery" }),
+]);
+
+/* La riga sotto il numero grande.
+ *
+ * Il consumo di casa resta in testa e scritto per esteso, com'era: chi ha
+ * mappato solo quello legge esattamente la didascalia di prima — «Oggi 12,3
+ * kWh» — e non si accorge che questa funzione e' cambiata. Gli altri numeri del
+ * giorno gli si accodano senza ripetere l'unita', che e' la stessa. */
+function didascaliaDiOggi(oggi) {
+  const casa = oggi?.house ?? null;
+  const testa =
+    casa == null
+      ? t("potenza di casa", "home power")
+      : `${t("Oggi", "Today")} ${formatNumber(casa, 1)} kWh`;
+  /* Le sorgenti si dicono per esteso, e la riga scorre se non ci sta: e' il
+   * nastro che la plancia usa da sempre per le didascalie lunghe — le Luci ci
+   * elencano quali sono accese — e usarlo qui vuol dire una tessera che si
+   * comporta come le altre.
+   *
+   * Ci ho provato con i disegni al posto delle parole, per farcele stare tutte
+   * in una riga ferma. Non e' andata: quattro numeri in centonovanta pixel non
+   * ci stanno comunque, e un «🔌↓» a undici pixel e' una macchia scura con una
+   * freccia accanto. Meglio una parola che scorre di un simbolo che non si
+   * capisce. */
+  const altre = PAROLE_DI_OGGI.filter((voce) => oggi?.[voce.chiave] != null).map(
+    (voce) => `${t(voce.it, voce.en)} ${formatNumber(oggi[voce.chiave], 1)}`,
+  );
+  return altre.length ? `${testa} · ${altre.join(" · ")}` : testa;
+}
+
+function tesseraEnergia(rows, house, today, { key = "energia", label, impianto = "", oggi } = {}) {
   if (house == null && !rows.length) return null;
   return {
     key,
@@ -1093,13 +1500,13 @@ function tesseraEnergia(rows, house, today, { key = "energia", label, impianto =
      * di lui, non su quello che era rimasto acceso (#286, dal campo). */
     impianto: clean(impianto),
     value: formatWatts(house),
-    caption:
-      today == null
-        ? t("potenza di casa", "home power")
-        : `${t("Oggi", "Today")} ${formatNumber(today, 1)} kWh`,
+    caption: didascaliaDiOggi(oggi || (today == null ? {} : { house: today })),
     ring: null,
     rows,
     today,
+    /* Quanto ha fatto oggi ogni sorgente: la didascalia ne fa una riga, e la
+     * finestra del dettaglio lo scrive sotto la potenza di ciascuna. */
+    oggi: oggi || {},
   };
 }
 
@@ -1120,8 +1527,8 @@ function energyModels(states) {
     lettureDellImpianto(states, impianto, indice === 0),
   );
   if (configurati.length < 2) {
-    const sola = letture[0] || { rows: [], house: null, today: null };
-    return [tesseraEnergia(sola.rows, sola.house, sola.today)].filter(Boolean);
+    const sola = letture[0] || { rows: [], house: null, today: null, oggi: {} };
+    return [tesseraEnergia(sola.rows, sola.house, sola.today, { oggi: sola.oggi })].filter(Boolean);
   }
   /* La scelta è una parola, non un oggetto: si legge com'è scritta — come
    * `cd_energy_plant`, che è la casella vicina di casa. */
@@ -1137,6 +1544,7 @@ function energyModels(states) {
           key: plantKey("energia", impianto, indice),
           label: plantLabel(impianto, indice, t("Impianto", "Plant")),
           impianto: clean(impianto?.id) || PRIMO_IMPIANTO,
+          oggi: letture[indice].oggi,
         }),
       )
       .filter(Boolean);
@@ -1148,6 +1556,7 @@ function energyModels(states) {
       sommaLetture(letture.map((lettura) => lettura.rows)),
       sommaNumeri(letture.map((lettura) => lettura.house)),
       sommaNumeri(letture.map((lettura) => lettura.today)),
+      { oggi: sommaOggi(letture.map((lettura) => lettura.oggi)) },
     ),
   ].filter(Boolean);
 }
@@ -1155,7 +1564,7 @@ function energyModels(states) {
 function appliancesModel(states) {
   const devices = section("appliances", readJson("cd_appliances", []));
   if (!Array.isArray(devices) || !devices.length) return null;
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("elettrodomestici");
   const rows = devices
     .filter((device) => device?.enabled !== false)
     .filter((device) =>
@@ -1194,15 +1603,16 @@ function appliancesModel(states) {
 function temperatureModel(states) {
   const rooms = root.getStanze?.() || readJson("cd_stanze", []);
   if (!Array.isArray(rooms)) return null;
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("temperatura");
   const rows = rooms
     .filter((room) => clean(room?.temp) && widgetIncludes(room.temp, fuori))
     .map((room) => {
       const temperature = numOf(states, room.temp);
-      const humidity = numOf(
-        states,
-        clean(room.hum) || clean(room.temp).replace("_temperature", "_humidity"),
-      );
+      /* La gemella per nome si prova, ma solo se il nome cambia davvero:
+       * senza quella guardia un id senza «_temperature» tornava identico e la
+       * finestra stampava la temperatura una seconda volta col «%» addosso —
+       * «una stanza mostra l'umidita' senza avere nessun sensore» (#379). */
+      const humidity = numOf(states, humidityEntry(room));
       /* L'entita' resta sulla riga: senza, la finestra non sa a chi chiedere
        * lo storico, e la Temperatura non poteva mai avere la sua analisi nel
        * tempo. */
@@ -1310,9 +1720,54 @@ const SPINA_NO =
   /(not[\s_-]*charging|dis[\s_-]*connect|un[\s_-]*plug|no[nt]?[\s_-]*(in[\s_-]*)?carica|no[nt]?[\s_-]*colleg|scolleg|staccat|no[\s_-]*vehicle|not[\s_-]*connect)/;
 const SPINA_SI = /(charging|carica|plug|connect|conness|colleg)/;
 
-function letturaVettura(states, auto, fuori, indice) {
+/* Il cavo e la potenza, come testimoni dello stato della ricarica.
+ *
+ * La pagina Auto decide la pastiglia — «Non connessa», «Collegata», «In
+ * carica» — con `codiceDellaRicarica`, dando al nucleo lo stato grezzo, il
+ * sensore del cavo e la potenza che passa. La tessera in Home invece
+ * guardava lo stato grezzo da solo: con un `binary_sensor.charging` che dice
+ * «off» a cavo attaccato diceva «Scollegata», e la pagina, un tocco piu' in
+ * la', «Collegata». «Nel widget la ricarica risulta scollegata ma se entri
+ * nella pagina dedicata la vedi collegata» (#348). Adesso i due posti chiedono
+ * allo stesso nucleo, con gli stessi testimoni.
+ *
+ * Il cavo e la potenza sono della colonnina, cioe' della casa: si leggono
+ * dalla mappatura della vettura se ce li ha (ogni salvataggio glieli copia
+ * dentro), altrimenti dalle chiavi di casa, che e' dove la pagina li legge. */
+function testimoniDellaRicarica(states, mappa) {
+  const statoDi = (riferimento) => {
+    const propria = clean(mappa?.[riferimento]);
+    const entity = propria || clean(root.resolveEntity?.(riferimento) || "");
+    if (!entity || entity === riferimento) return null;
+    return stateOf(states, entity);
+  };
+  const collegata = cavoDalloStato(statoDi("dm.ev_cavo_collegato")?.state);
+  let potenza = null;
+  for (const riferimento of ["dm.ev_potenza_wallbox", "dm.ev_charge_power"]) {
+    const letta = Number(statoDi(riferimento)?.state);
+    if (Number.isFinite(letta)) {
+      potenza = letta;
+      break;
+    }
+  }
+  return { collegata, potenza };
+}
+
+/* La lettera della ricarica di questa vettura, o — quando il nucleo non sa
+ * dire niente — lo stato com'e', che le parole di prima sanno ancora leggere. */
+function ricaricaDellaVettura(states, mappa, stato) {
+  const grezzo = clean(stato?.state);
+  const codice = codiceDellaRicarica({ stato: grezzo, ...testimoniDellaRicarica(states, mappa) });
+  return codice || grezzo;
+}
+
+/* `visti` e' l'insieme delle entita' gia' raccontate: proprio di UNA vettura
+ * quando la si legge da sola, e di tutta la casa quando le si legge in fila
+ * (vedi `evModel`). Una casella copiata in ogni profilo — il cavo della
+ * colonnina, che ogni salvataggio dell'auto si porta dentro — e' un fatto
+ * solo, e fa una riga sola. */
+function letturaVettura(states, auto, fuori, indice, visti = new Set()) {
   const mappa = auto?.ov || auto?.overrides || {} || {};
-  const visti = new Set();
   const misura = (riferimento) => {
     const entity = clean(mappa[riferimento]);
     if (!entity || !widgetIncludes(entity, fuori)) return null;
@@ -1355,10 +1810,13 @@ function letturaVettura(states, auto, fuori, indice) {
   };
   return {
     nome: clean(auto?.name) || clean(auto?.model) || `${t("Auto", "Car")} ${indice + 1}`,
+    /* Un'auto e' il suo sensore di carica: due profili che leggono lo stesso
+     * sono la stessa vettura scritta due volte, e `evModel` ne tiene una. */
+    identita: carica?.entity || autonomia?.entity || "",
     percentuale,
     carburante: Boolean(serbatoio),
     km: autonomia?.value == null ? null : autonomia.value,
-    ricarica: stato?.state || "",
+    ricarica: ricaricaDellaVettura(states, mappa, stato),
     kw: sbircia("dm.ev_potenza_ricarica"),
     target: sbircia("dm.ev_target_soc"),
     altre: altreCaselleEv(states, mappa, fuori, visti),
@@ -1459,7 +1917,10 @@ function altreCaselleEv(states, mappa, fuori, visti) {
     const riga = rigaDaEntita(states, entity, glifoEv(riferimento));
     if (!riga) continue;
     visti.add(entity);
-    righe.push(riga);
+    /* Le caselle della colonnina sono della casa, non di questa vettura: la
+     * riga non porta il nome dell'auto, perche' il cavo e' lo stesso qualunque
+     * macchina ci sia attaccata. */
+    righe.push(eDellaWallbox(riferimento) ? { ...riga, diCasa: true } : riga);
   }
   return righe;
 }
@@ -1490,10 +1951,11 @@ function letturaAttiva(states, fuori) {
   const mappa = readJson("cd_entity_overrides", {}) || {};
   return {
     nome: "",
+    identita: carica?.entity || autonomia?.entity || "",
     percentuale: carica?.value == null ? null : Math.max(0, Math.min(100, carica.value)),
     carburante: Boolean(serbatoio),
     km: autonomia?.value == null ? null : autonomia.value,
-    ricarica: stato?.state || "",
+    ricarica: ricaricaDellaVettura(states, mappa, stato),
     kw: refValue(states, "dm.ev_potenza_ricarica", fuori)?.value ?? null,
     target: refValue(states, "dm.ev_target_soc", fuori)?.value ?? null,
     altre: altreCaselleEv(states, mappa, fuori, visti),
@@ -1520,23 +1982,52 @@ function righeVettura(lettura, conNome) {
       glyph: "🔌",
       name: `${prefisso}${t("Ricarica", "Charging")}`,
       /* La parola, non il codice: «C» e' il gergo della wallbox, e in una
-       * casella si legge malissimo. La lettura e' la stessa di `attiva`. */
-      value: autoAllaPresa(lettura.ricarica)
-        ? t("In carica", "Charging")
-        : t("Scollegata", "Unplugged"),
+       * casella si legge malissimo. La lettera la decide il nucleo della
+       * pastiglia (#348), e le parole sono le stesse del popup dell'auto;
+       * uno stato che il nucleo non sa leggere tiene le parole di prima. */
+      value:
+        statoUmanoEV(lettura.ricarica) ||
+        (autoAllaPresa(lettura.ricarica) ? t("In carica", "Charging") : t("Scollegata", "Unplugged")),
     });
   /* E tutte le altre caselle mappate di questa vettura: sono quelle su cui
-   * l'interruttore «nel widget» sta acceso, e finora non uscivano. */
+   * l'interruttore «nel widget» sta acceso, e finora non uscivano. Quelle
+   * della colonnina sono della casa e non portano il nome dell'auto. */
   for (const riga of lettura.altre || [])
-    righe.push(prefisso ? { ...riga, name: `${prefisso}${riga.name}` } : riga);
+    righe.push(prefisso && !riga.diCasa ? { ...riga, name: `${prefisso}${riga.name}` } : riga);
   return righe;
 }
 
+/* Le vetture in fila, senza dire due volte la stessa cosa (#348).
+ *
+ * «Nel widget dell'auto mi trovo nella sezione stato cinque volte la stessa
+ * entita' con scritto spento.» Il salvataggio dell'auto copia nel profilo
+ * TUTTE le caselle `dm.ev_*` di casa — anche quelle della colonnina — e
+ * l'auto arrivata dall'integrazione, prima della 1.4.10, nasceva daccapo a
+ * ogni collegamento: cinque profili, la stessa mappatura, e la tessera che
+ * leggeva ognuno per conto suo diceva cinque volte lo stesso sensore.
+ *
+ * Qui le entita' gia' raccontate non si raccontano piu' — l'insieme `visti`
+ * e' uno per tutta la casa — e un profilo che legge lo stesso sensore di
+ * carica di uno gia' letto e' la stessa auto scritta due volte, e si salta. */
+export function lettureDelleVetture(states, auto = [], fuori = new Set()) {
+  const visti = new Set();
+  const identita = new Set();
+  const letture = [];
+  (Array.isArray(auto) ? auto : []).forEach((vettura, indice) => {
+    const lettura = letturaVettura(states, vettura, fuori, indice, visti);
+    if (!lettura) return;
+    if (lettura.identita) {
+      if (identita.has(lettura.identita)) return;
+      identita.add(lettura.identita);
+    }
+    letture.push(lettura);
+  });
+  return letture;
+}
+
 function evModel(states) {
-  const fuori = widgetExcludedEntities();
-  const profilate = vetture()
-    .map((auto, indice) => letturaVettura(states, auto, fuori, indice))
-    .filter(Boolean);
+  const fuori = widgetExcludedEntities("ev");
+  const profilate = lettureDelleVetture(states, vetture(), fuori);
   /* Il profilo comanda appena e' leggibile, anche da solo: prima, con UNA
    * vettura profilata, si leggevano solo le chiavi globali — che si riempiono
    * ai salvataggi successivi, la foto compresa — e un'auto con la batteria
@@ -1609,7 +2100,7 @@ function robotsModel(states) {
   const robots = normalizeRobots(
     Array.isArray(salvati) && salvati.length ? salvati : readJson("cd_robot", []),
   );
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("robot");
   const viste = robots
     .filter((robot) => clean(robot.entity) && widgetIncludes(clean(robot.entity), fuori))
     .map((robot) => robotView(robot, states));
@@ -1709,7 +2200,7 @@ const STATI_SPENTI = /^(off|false|0|idle|ferma|fermo|closed|chiusa|standby)$/i;
 const STATI_MUTI = /^(unknown|unavailable|none|)$/i;
 
 function solarThermalModel(states) {
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("solare");
   const righe = [];
   const visti = new Set();
   let primaSonda = null;
@@ -1820,7 +2311,7 @@ const GLIFI_SCALDABAGNO = Object.freeze({
 });
 
 function scaldabagnoModel(states) {
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("scaldabagno");
   const letture = lettureScaldabagni(
     configuredScaldabagni(),
     states,
@@ -1926,7 +2417,7 @@ function caldaiaModel(states) {
   const config = readJson(CHIAVE_CALDAIA, {});
   const entita = entitaDelleCaldaie(config);
   if (!entita.length) return null;
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("caldaia");
   if (!entita.some((entity) => widgetIncludes(entity, fuori))) return null;
   const dati = normalizzaCaldaie(config);
   const letture = lettureCaldaie(config, states, root.resolveEntity || ((value) => value));
@@ -2093,7 +2584,7 @@ function upsModel(states) {
     (gruppo) => entitaDellUps(gruppo).length > 0,
   );
   if (!gruppi.length) return null;
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("ups");
   const visibili = gruppi.filter((gruppo) =>
     entitaDellUps(gruppo).some((entity) => widgetIncludes(entity, fuori)),
   );
@@ -2143,7 +2634,7 @@ function upsModel(states) {
     key: "ups",
     accent: "#0ea5e9",
     icon: "🔋",
-    label: t("Continuità", "Backup power"),
+    label: t("UPS", "UPS"),
     /* A rete caduta parla l'autonomia, perche' e' il tempo che resta; a rete
      * presente parla la batteria, perche' e' la conferma che il tempo c'e'. */
     value:
@@ -2249,7 +2740,7 @@ function contaDaFare(tessera) {
 function poolModel(states) {
   const config = root.getPool?.() || readJson("cd_piscina", {});
   if (!config || typeof config !== "object") return null;
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("piscina");
   /* Tutte le vasche, non solo la prima.
    *
    * Qui si leggeva `config` cosi' com'e', che sono le caselle della PRIMA
@@ -2352,7 +2843,7 @@ function preseModel(states) {
   const grezzo = Array.isArray(canonico) && canonico.length ? canonico : readJson("cd_prese", []);
   const prese = normalizzaPrese(grezzo).filter((presa) => clean(presa.entity));
   if (!prese.length) return null;
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("prese");
   const rows = [];
   for (const presa of prese) {
     if (!widgetIncludes(presa.entity, fuori)) continue;
@@ -2378,7 +2869,8 @@ function preseModel(states) {
     });
   }
   if (!rows.length) return null;
-  const accese = rows.filter((row) => row.on).length;
+  const on = rows.filter((row) => row.on);
+  const accese = on.length;
   return {
     key: "prese",
     accent: "#475569",
@@ -2389,6 +2881,8 @@ function preseModel(states) {
     ring: rows.length ? Math.round((accese / rows.length) * 100) : null,
     attiva: accese > 0,
     rows,
+    // Le prese accese, per chi le conta e non le disegna.
+    on,
   };
 }
 
@@ -2409,7 +2903,7 @@ function cosaSuona(riga, conIlPosto) {
 function mediaModel(states) {
   const lettori = lettoriConfigurati(readJson(CHIAVE_MEDIA, []));
   if (!lettori.length) return null;
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("media");
   const dentro = lettori.filter((voce) => widgetIncludes(voce.entity, fuori));
   if (!dentro.length) return null;
   const righe = lettureDeiLettori(dentro, states, root.resolveEntity || ((valore) => valore));
@@ -2434,6 +2928,8 @@ function mediaModel(states) {
      * la copertina accanto. La stessa cosa scritta due volte a due dita di
      * distanza si legge come un errore. */
     lettori: righe,
+    // Chi sta suonando, per chi lo conta e non lo disegna.
+    suonano,
   };
 }
 
@@ -2532,7 +3028,7 @@ const CASELLE_MINIPC = Object.freeze([
  * faticando?»; il resto sta nella finestra, e il tasto porta alla sua
  * sezione. */
 export function minipcModel(states) {
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("minipc");
   const rows = [];
   const visti = new Set();
   let carico = null;
@@ -2591,7 +3087,7 @@ export function minipcModel(states) {
 function irrigationModel(states) {
   const config = root.getIrr?.() || readJson("cd_irrigazione", {});
   const zones = Array.isArray(config?.zones) ? config.zones : [];
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("irrigazione");
   const attive = zones.filter((zona) => {
     const entity = clean(zona?.entity);
     return entity && widgetIncludes(entity, fuori);
@@ -2738,7 +3234,11 @@ export function entitaSorvegliate(chiave, { extras, removed, vive } = {}) {
   return uscita;
 }
 
-function gruppoEntita(chiave) {
+/* Il secondo argomento e' la tessera per cui si sta chiedendo l'elenco: le
+ * stesse entita' sorvegliate finiscono in tessere diverse, e la scelta di
+ * lasciarne fuori una vale per la tessera che la mostra. Senza, si legge solo
+ * quello che e' fuori da tutte. */
+export function gruppoEntita(chiave, tessera = "") {
   try {
     let vive = [];
     try {
@@ -2749,7 +3249,7 @@ function gruppoEntita(chiave) {
       removed: readJson("cd_gruppi_removed", {}),
       vive,
     });
-    const fuori = widgetExcludedEntities();
+    const fuori = widgetExcludedEntities(tessera);
     return lista.filter((entity) => widgetIncludes(entity, fuori));
   } catch (_error) {
     return [];
@@ -2762,17 +3262,28 @@ function friendlyName(states, entity) {
    * Camera matrimoniale Batteria» — il nome di fabbrica — anche a chi quella
    * riga l'aveva battezzata: il nome scelto sta in `cd_avvisi_names_extra`,
    * ed e' lo stesso posto da cui lo leggono il Quadro Avvisi e gli
-   * allagamenti. Un nome dato una volta vale ovunque. */
-  return (
-    clean(readJson("cd_avvisi_names_extra", {})?.[entity]) ||
-    clean(stateOf(states, entity)?.attributes?.friendly_name) ||
-    entity.split(".")[1]?.replaceAll("_", " ") ||
-    entity
-  );
+   * allagamenti. Un nome dato una volta vale ovunque.
+   *
+   * La catena — scelto, poi Home Assistant, poi l'identificativo reso
+   * leggibile — qui era riscritta, e riscritta quasi uguale: la coda
+   * dell'identificativo veniva fuori in minuscolo mentre dappertutto comincia
+   * per maiuscola. Adesso la dice `nomeDellEntita`, che e' la stessa che
+   * legge la pagina di ogni sezione. */
+  return nomeDellEntita(entity, readJson("cd_avvisi_names_extra", {})?.[entity], states);
 }
 
 function batteriesModel(states) {
-  const entities = gruppoEntita("batt");
+  /* Lo stesso elenco della pagina e della scheda — le configurate piu' quelle
+   * che Home Assistant dichiara da se' — e su quello, e solo qui, il filtro
+   * delle tessere: nascondere una batteria da Home e' una scelta che riguarda
+   * Home, non un modo di dire che quella pila non esiste. La regola che
+   * compone l'elenco sta in `batterie-di-casa.js`, ed e' una sola. */
+  const fuoriDaiWidget = widgetExcludedEntities("batterie");
+  const entities = batterieDiCasa({
+    configurate: gruppoEntita("batt", "batterie"),
+    stati: states,
+    tolte: readJson("cd_gruppi_removed", {})?.batt,
+  }).filter((entity) => widgetIncludes(entity, fuoriDaiWidget));
   if (!entities.length) return null;
   const rows = entities
     .map((entity) => {
@@ -2785,17 +3296,44 @@ function batteriesModel(states) {
     })
     .filter((row) => row.level != null)
     .sort((a, b) => a.level - b.level);
-  const low = rows.filter((row) => row.level <= 20);
-  if (!low.length) return null;
+  if (!rows.length) return null;
+  /* La soglia non e' piu' venti scritto qui (#398): la scrive chi ha la casa,
+   * nella scheda Batterie, ed e' la stessa che colora la pagina. Due numeri
+   * per la stessa domanda vorrebbero dire una tessera che dice «2 scariche»
+   * sopra una pagina che ne colora tre. */
+  const soglia = sogliaDelleBatterie(readJson(CHIAVE_BATTERIE, {}));
+  const low = rows.filter((row) => row.level <= soglia);
+  /* La tessera c'e' anche quando va tutto bene (#398).
+   *
+   * «Le batterie quelle cariche non le fa vedere?» No: prima la tessera
+   * spariva del tutto se nessuna era sotto il venti per cento, e chi aveva la
+   * casa in ordine non aveva nessun posto dove guardare le sue batterie —
+   * nemmeno per sapere quale sarebbe stata la prossima a chiedere una pila.
+   *
+   * Era anche l'unica tessera che si comportava cosi'. Quella del fumo, che e'
+   * la sua gemella, sta li' sempre e si accende solo quando c'e' da accendersi;
+   * questa spariva. Adesso fanno la stessa cosa: presente sempre, in allarme
+   * solo quando serve. Chi non la vuole in Home la spegne dall'elenco dei
+   * widget, che e' il posto dove si decidono queste cose.
+   */
+  const scariche = low.length > 0;
   return {
     key: "batterie",
-    accent: "#eab308",
+    accent: scariche ? "#eab308" : "#94a3b8",
     icon: "🔋",
-    alert: true,
+    alert: scariche,
     label: t("Batterie", "Batteries"),
-    value: String(low.length),
-    caption: low[0] ? `${low[0].name} ${Math.round(low[0].level)}%` : "",
-    ring: Math.round((low.length / rows.length) * 100),
+    value: String(scariche ? low.length : rows.length),
+    /* A riposo la didascalia dice comunque un fatto utile: qual e' la piu'
+     * bassa, cioe' quella che chiedera' una pila per prima. Le righe sono
+     * gia' ordinate dalla piu' scarica. */
+    caption: scariche
+      ? `${low[0].name} ${Math.round(low[0].level)}%`
+      : `${t("Tutte cariche", "All charged")} · ${rows[0].name} ${Math.round(rows[0].level)}%`,
+    /* L'anello si riempie solo quando c'e' da guardare: a riposo la tessera
+     * non deve gridare, sta li' e basta. */
+    ring: scariche ? Math.round((low.length / rows.length) * 100) : 0,
+    attiva: scariche,
     rows,
     low,
   };
@@ -2813,20 +3351,32 @@ function batteriesModel(states) {
  * valore, la didascalia dice quale sostanza e' e come sta.
  */
 function ariaModel(states) {
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("aria");
+  /* Quello che chi ha la casa ha detto sull'aria: quali sensori non contano,
+   * quali contano anche se Home Assistant non li dichiara, e con che confini.
+   * Sta in `cd_allerte.aria` e si scrive dalla scheda Allerte — «mi devi creare
+   * da qualche parte la possibilita' di inserire entita' e i parametri, non
+   * solo nei widget». Senza niente scritto, tutto resta com'era. */
+  const ariaScelta = readJson(CHIAVE_ALLERTE, {})?.aria;
   const letture = Object.entries(states || {})
-    .filter(([entity, stato]) => eUnaMisuraDellAria(entity, stato) && widgetIncludes(entity, fuori))
+    .filter(
+      ([entity, stato]) =>
+        eUnaMisuraDellAria(entity, stato, ariaScelta) && widgetIncludes(entity, fuori),
+    )
     .map(([entity, stato]) => {
-      const lettura = letturaDellAria(entity, stato, locale());
+      const lettura = letturaDellAria(entity, stato, locale(), ariaScelta);
       if (!lettura) return null;
       return { ...lettura, name: friendlyName(states, entity) };
     })
     .filter(Boolean)
     .sort((a, b) => a.misura.localeCompare(b.misura) || a.name.localeCompare(b.name));
-  const giudizio = giudizioDellAria(letture);
+  const giudizio = giudizioDellAria(letture, normalizzaAria(ariaScelta).principale);
   if (!giudizio) return null;
-  const peggiore = giudizio.peggiore;
-  const parola = parolaDelGrado(giudizio.grado, locale());
+  /* In copertina va la misura che si e' scelta — di serie la peggiore (#375).
+   * Il giudizio pero' resta della peggiore: una centralina che dice «buona»
+   * non deve coprire una polvere sottile che dice «cattiva». */
+  const copertina = giudizio.copertina;
+  const parola = parolaDelGrado(copertina.grado, locale());
   return {
     key: "aria",
     /* Il colore dice il giudizio senza leggere: verde, ambra, arancio, rosso. */
@@ -2840,9 +3390,9 @@ function ariaModel(states) {
     label: t("Aria", "Air"),
     /* Il numero e la sua unita' nella stessa casella: la tessera le separa da
      * se', come fa coi gradi della temperatura. */
-    value: `${formatNumber(peggiore.valore, peggiore.valore >= 100 ? 0 : 1)}${peggiore.unita ? ` ${peggiore.unita}` : ""}`,
-    caption: `${parola} · ${peggiore.misura}`,
-    ring: peggiore.quanto,
+    value: `${formatNumber(copertina.valore, copertina.valore >= 100 ? 0 : 1)}${copertina.unita ? ` ${copertina.unita}` : ""}`,
+    caption: `${parola} · ${copertina.misura}`,
+    ring: copertina.quanto,
     grado: giudizio.grado,
     frase: fraseDellAria(giudizio, locale()),
     /* Le righe sono letture, non comandi: la finestra le disegna come caselle
@@ -2853,6 +3403,173 @@ function ariaModel(states) {
       glyph: lettura.glifo,
       value: `${formatNumber(lettura.valore, lettura.valore >= 100 ? 0 : 1)}${lettura.unita ? ` ${lettura.unita}` : ""}`,
       grado: lettura.grado,
+    })),
+  };
+}
+
+/* I varchi: quanti sono aperti adesso (#367, #377).
+ *
+ * «Almeno a colpo d'occhio so quante finestre sono aperte in questo momento»
+ * e «magari che la card principale come per le luci mostri solo il numero di
+ * porte aperte». Il numero grande e' quello: quante ne sono aperte. La
+ * didascalia dice quali, perche' «due aperte» senza sapere quali obbliga ad
+ * aprire la scheda per una domanda che si fa in mezzo secondo.
+ *
+ * La tessera si accende — rossa in cima — solo quando qualcosa e' aperto: a
+ * casa chiusa non c'e' niente da dire, e un avviso che si accende sempre non e'
+ * piu' un avviso. Le righe sono pastiglie, rosse le aperte e verdi le chiuse,
+ * che e' esattamente la colorazione chiesta nella segnalazione. */
+function varchiModel(states) {
+  const fuori = widgetExcludedEntities("varchi");
+  const config = readJson(CHIAVE_VARCHI, {});
+  const girati = insiemeInvertiti(readJson(CHIAVE_VERSI, {}));
+  const righe = varchiDiCasa(states, config, girati, (entity) =>
+    friendlyName(states, entity),
+  ).filter((riga) => widgetIncludes(riga.entity, fuori));
+  if (!righe.length) return null;
+  const conto = contoDeiVarchi(righe);
+  return {
+    key: "varchi",
+    accent: conto.aperti ? "#dc2626" : "#16a34a",
+    icon: "🚪",
+    alert: conto.aperti > 0,
+    label: t("Varchi", "Openings"),
+    value: String(conto.aperti),
+    caption: conto.aperti
+      ? conto.nomi.join(" · ")
+      : t(`Tutto chiuso · ${conto.chiusi}`, `All closed · ${conto.chiusi}`),
+    ring: conto.totale ? Math.round((conto.aperti / conto.totale) * 100) : null,
+    rows: righe.map((riga) => ({
+      entity: riga.entity,
+      name: riga.name,
+      glyph: riga.glifo,
+      on: riga.stato === "aperto",
+      /* Il tono dice il colore della pastiglia senza sapere di cosa parla:
+       * aperto e' una cosa da guardare, chiuso e' la buona notizia. */
+      tono: riga.stato === "aperto" ? "allarme" : riga.stato === "chiuso" ? "quiete" : "",
+      value:
+        riga.stato === "aperto"
+          ? t("Aperto", "Open")
+          : riga.stato === "chiuso"
+            ? t("Chiuso", "Closed")
+            : t("Non risponde", "Not answering"),
+    })),
+  };
+}
+
+/* La presenza: in quante stanze c'è qualcuno adesso (#432).
+ *
+ * «Ci vorrebbe una sezione con i sensori presenza o movimento.»
+ *
+ * Il numero grande è quello: quante stanze hanno qualcuno dentro. La
+ * didascalia dice QUALI, perché «in due stanze» senza sapere quali obbliga ad
+ * aprire la scheda per una domanda che si fa in mezzo secondo — ed è la stessa
+ * scelta della tessera dei Varchi, che è la stessa domanda su un'altra
+ * famiglia di sensori.
+ *
+ * La tessera non si accende mai: qualcuno che è in casa non è un allarme, è la
+ * normalità. Chi vuole l'avviso lo mette sulla Sicurezza, che è dove sta.
+ */
+function presenzaModel(states) {
+  const fuori = widgetExcludedEntities("presenza");
+  const righe = presenzaDiCasa(states, readJson(CHIAVE_PRESENZA, {}), (entity) =>
+    friendlyName(states, entity),
+  ).filter((riga) => widgetIncludes(riga.entity, fuori));
+  if (!righe.length) return null;
+  const conto = contoDellaPresenza(righe);
+  return {
+    key: "presenza",
+    accent: conto.attivi ? "#2563eb" : "#16a34a",
+    icon: "🏃",
+    label: t("Presenza", "Presence"),
+    value: String(conto.attivi),
+    caption: conto.attivi
+      ? conto.nomi.join(" · ")
+      : t(`Casa libera · ${conto.liberi}`, `Nobody around · ${conto.liberi}`),
+    ring: conto.totale ? Math.round((conto.attivi / conto.totale) * 100) : null,
+    rows: righe.map((riga) => ({
+      entity: riga.entity,
+      name: riga.name,
+      glyph: riga.glifo,
+      on: riga.stato === "attivo",
+      /* Il tono dice il colore della pastiglia senza sapere di cosa parla: chi
+       * rileva qualcuno è una cosa che sta succedendo — non un allarme, che è
+       * il rosso — e una stanza libera è la quiete. */
+      tono: riga.stato === "attivo" ? "acceso" : riga.stato === "libero" ? "quiete" : "",
+      value:
+        riga.stato === "attivo"
+          ? riga.stabile
+            ? t("Occupato", "Occupied")
+            : t("Movimento", "Movement")
+          : riga.stato === "libero"
+            ? riga.stabile
+              ? t("Libero", "Free")
+              : t("Fermo", "Still")
+            : t("Non risponde", "Not answering"),
+    })),
+  };
+}
+
+/* Le macchine del server e la rete (#382).
+ *
+ * «I controlli del server proxmox dove gira HA con tutti i suoi container, e
+ * controllare lo stato del fritbox e i suoi ripeter.» Il numero grande e'
+ * quello che conta guardando di sfuggita: quante sono FERME. A tutto in piedi
+ * la tessera dice quante ne sta guardando, che e' il modo in cui una
+ * sorveglianza si fa vedere anche quando non ha niente da dire.
+ *
+ * Macchine e rete stanno nella stessa tessera perche' rispondono alla stessa
+ * domanda — «e' tutto su?» — e chi la fa non pensa «adesso guardo i container
+ * e poi guardo i ripetitori». Aprendola si distinguono: le pastiglie portano
+ * il verde di chi va e il rosso di chi non va. */
+function macchineModel(states) {
+  const fuori = widgetExcludedEntities("macchine");
+  const config = readJson(CHIAVE_MACCHINE, {});
+  /* Le stesse integrazioni scelte per la pagina Server: la tessera non conta
+   * niente che quella pagina non mostrerebbe. */
+  const elenchi = macchineERete(
+    states,
+    config,
+    (entity) => friendlyName(states, entity),
+    piattaformeConosciute(),
+    /* Compresi i NAS che non dichiarano l'acceso: senza questi la pagina
+     * Server mostrava il Synology e la tessera no, o spariva del tutto se non
+     * c'era altro. Una tessera che conta meno righe della pagina che apre e'
+     * una tessera che mente. */
+    serverPerDispositivo(states, config),
+  );
+  const righe = [...elenchi.macchine, ...elenchi.rete].filter((riga) =>
+    widgetIncludes(riga.entity, fuori),
+  );
+  if (!righe.length) return null;
+  const conto = contoDelleMacchine(righe);
+  return {
+    key: "macchine",
+    accent: conto.giu ? "#dc2626" : "#6366f1",
+    icon: "🖥️",
+    alert: conto.giu > 0,
+    label: t("Server e rete", "Server and network"),
+    value: conto.giu ? String(conto.giu) : String(conto.su),
+    caption: conto.giu
+      ? conto.fermi.join(" · ")
+      : t(`Tutto in piedi · ${conto.totale}`, `All up · ${conto.totale}`),
+    ring: conto.totale ? Math.round((conto.su / conto.totale) * 100) : null,
+    rows: righe.map((riga) => ({
+      entity: riga.entity,
+      name: riga.name,
+      glyph: riga.glifo,
+      on: riga.stato === "su",
+      tono: riga.stato === "su" ? "quiete" : riga.stato === "giu" ? "allarme" : "",
+      value:
+        riga.stato === "su"
+          ? riga.famiglia === "rete"
+            ? t("Connesso", "Connected")
+            : t("Acceso", "Running")
+          : riga.stato === "giu"
+            ? riga.famiglia === "rete"
+              ? t("Assente", "Down")
+              : t("Fermo", "Stopped")
+            : t("Non risponde", "Not answering"),
     })),
   };
 }
@@ -2884,7 +3601,7 @@ function fumoModel(states) {
     return null;
   }
   if (!Array.isArray(entities) || !entities.length) return null;
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("fumo");
   const nomi = readJson("cd_avvisi_names_extra", {}) || {};
   const righe = entities
     .filter((entity) => widgetIncludes(entity, fuori))
@@ -2932,7 +3649,7 @@ function floodModel(states) {
     return null;
   }
   if (!Array.isArray(entities) || !entities.length) return null;
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("allagamenti");
   const rows = entities
     .filter((entity) => widgetIncludes(entity, fuori))
     .map((entity) => ({
@@ -3025,7 +3742,7 @@ function customAlertModels(states) {
         : avviso?.entity
           ? [avviso.entity]
           : [];
-      const fuori = widgetExcludedEntities();
+      const fuori = widgetExcludedEntities(`custom-${index}`);
       const rows = entities
         .map(clean)
         .filter((entity) => entity && widgetIncludes(entity, fuori))
@@ -3086,7 +3803,7 @@ export const eUnaTesseraSola = (voce) =>
 export function evidenzaModel(states) {
   const voci = readJson(EVIDENZA_CONFIG_KEY, []);
   if (!Array.isArray(voci)) return null;
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("evidenza");
   const rows = voci
     .filter((voce) => !eUnaTesseraSola(voce))
     .map((voce) => rigaInEvidenza(states, voce, fuori))
@@ -3114,7 +3831,10 @@ export function evidenzaModel(states) {
 export function evidenzeSingole(states) {
   const voci = readJson(EVIDENZA_CONFIG_KEY, []);
   if (!Array.isArray(voci)) return [];
-  const fuori = widgetExcludedEntities();
+  /* Qui le tessere sono tante quante le voci «a se'», e ognuna ha la sua
+   * chiave: l'elenco delle escluse si legge una volta e si ritaglia per voce,
+   * invece di rileggere la configurazione a ogni giro. */
+  const elenco = widgetPreferences().excluded;
   let stanze = [];
   try {
     stanze = root.getStanze?.() || readJson("cd_stanze", []) || [];
@@ -3124,7 +3844,7 @@ export function evidenzeSingole(states) {
   return voci
     .map((voce, index) => {
       if (!eUnaTesseraSola(voce)) return null;
-      const riga = rigaInEvidenza(states, voce, fuori);
+      const riga = rigaInEvidenza(states, voce, escluseDellaTessera(elenco, `evidenza-${index}`));
       if (!riga) return null;
       const stanza = Array.isArray(stanze)
         ? stanze.find((room) => clean(room?.id) === clean(voce?.room_id))
@@ -3185,16 +3905,72 @@ function nascosteDiOggi(nascoste) {
   return [...fuori];
 }
 
+/* Le tessere nate da una che si e' divisa in due, e da chi vengono.
+ *
+ * Le porte e i cancelli stavano dentro la Sicurezza e adesso hanno tessera
+ * loro (#457). Non e' un cambio di nome — la Sicurezza c'e' ancora e parla
+ * dell'antifurto — quindi non basta tradurre: le due scelte gia' salvate, se
+ * nascondere e dove mettere, riguardavano una tessera che conteneva anche
+ * l'altra, e vanno onorate tutte e due.
+ *
+ * Come per i nomi cambiati, si traduce in lettura e non si riscrive niente:
+ * una plancia aperta con la versione di prima continua a leggere la sua, e
+ * nessuno perde niente tornando indietro. */
+const TESSERE_DIVISE = Object.freeze({ porte: "sicurezza" });
+
+/* Nascosta la madre, nascosta anche la figlia — ma una volta sola.
+ *
+ * Chi aveva spento la Sicurezza aveva spento anche le porte, perche' non
+ * c'era altro posto dove stessero: farle ricomparire in Home sarebbe
+ * rimettergli in casa una cosa che aveva tolto.
+ *
+ * «Una volta sola» e' la parte che conta. Se bastasse guardare le nascoste,
+ * chi accende le Porte tenendo spenta la Sicurezza se le vedrebbe rispegnere
+ * al giro dopo, per sempre. Il segno che la scelta e' gia' stata fatta e'
+ * l'ordine salvato: chi salva da questa versione in poi ci scrive dentro
+ * tutto il catalogo, «porte» compresa, e da quel momento qui non si tocca
+ * piu' niente. */
+function nascosteDopoLaDivisione(nascoste, ordineSalvato) {
+  const dentro = new Set(nascoste);
+  const gia = new Set(ordineSalvato);
+  for (const [nata, madre] of Object.entries(TESSERE_DIVISE)) {
+    if (gia.has(nata)) continue;
+    if (dentro.has(madre)) dentro.add(nata);
+  }
+  return [...dentro];
+}
+
+/* La figlia si mette accanto a sua madre, non in coda.
+ *
+ * Chi aveva gia' ordinato le tessere ha «sicurezza» a un certo posto e
+ * «porte» da nessuna parte: senza questo le porte finirebbero in fondo alla
+ * Home, lontane dalla cosa da cui sono uscite e dove nessuno le cerca. */
+function ordineDopoLaDivisione(ordine) {
+  const dentro = new Set(ordine);
+  const fila = [];
+  for (const nome of ordine) {
+    fila.push(nome);
+    for (const [nata, madre] of Object.entries(TESSERE_DIVISE)) {
+      if (nome === madre && !dentro.has(nata)) fila.push(nata);
+    }
+  }
+  return fila;
+}
+
 export function widgetPreferences() {
   const stored = readJson(WIDGETS_CONFIG_KEY, {});
-  const hidden = nascosteDiOggi(
-    Array.isArray(stored?.hidden) ? stored.hidden.map(clean).filter(Boolean) : [],
-  );
-  const order = [
+  const ordineSalvato = [
     ...new Set(
       (Array.isArray(stored?.order) ? stored.order.map(clean).filter(Boolean) : []).map(nomeDiOggi),
     ),
   ];
+  const hidden = nascosteDopoLaDivisione(
+    nascosteDiOggi(
+      Array.isArray(stored?.hidden) ? stored.hidden.map(clean).filter(Boolean) : [],
+    ),
+    ordineSalvato,
+  );
+  const order = ordineDopoLaDivisione(ordineSalvato);
   const excluded = Array.isArray(stored?.excluded)
     ? stored.excluded.map(clean).filter(Boolean)
     : [];
@@ -3214,7 +3990,11 @@ export function widgetPreferences() {
             .filter(([chiave, valore]) => chiave && valore),
         )
       : {};
-  return { hidden, order, excluded, compatto, sorgenti };
+  /* Se gli avvisi personalizzati si fanno vedere da soli (#445). Sta spento
+   * finche' non lo si accende: una finestra che si apre da sola e' una cosa
+   * che si chiede, non che si subisce. */
+  const avvisiInPopup = stored?.avvisiInPopup === true;
+  return { hidden, order, excluded, compatto, sorgenti, avvisiInPopup };
 }
 
 /** L'entita' scelta per una tessera che riassume, o «» per la media. */
@@ -3222,18 +4002,26 @@ export function sorgenteDelWidget(chiave, preferences = widgetPreferences()) {
   return clean(preferences?.sorgenti?.[clean(chiave)]);
 }
 
-/* Le entita' che restano fuori dai widget.
+/* Le entita' che restano fuori da UNA tessera.
  *
  * Ogni tessera legge la configurazione della sua sezione, tutta: senza una
  * parola in contrario, quello che c'e' nella sezione finisce nel widget. La
  * parola in contrario e' questa — l'interruttore accanto a ogni entita' negli
  * editor — e si tiene in `cd_widgets`, insieme all'ordine e alle tessere
  * nascoste. Chi non e' nell'elenco e' dentro: cosi' chi non tocca niente
- * vede quello che vedeva prima. */
-export function widgetExcludedEntities() {
-  return new Set(widgetPreferences().excluded);
+ * vede quello che vedeva prima.
+ *
+ * La chiave e' quella della tessera che sta chiedendo, ed e' obbligatoria di
+ * fatto: un contatto scritto sia nelle Finestre sia nei Varchi si spegne in
+ * una senza sparire dall'altra, e senza chiave le due domande sono la stessa.
+ * Chi la regola sta in `fuori-dai-widget.js`; qui si legge e basta. */
+export function widgetExcludedEntities(chiave = "") {
+  return escluseDellaTessera(widgetPreferences().excluded, chiave);
 }
 
+/* L'insieme si passa sempre: e' quello della tessera che sta chiedendo. Senza,
+ * si guarda solo chi e' fuori da tutte le tessere — che e' la risposta giusta
+ * a una domanda che non nomina nessuna tessera, non una scorciatoia. */
 export function widgetIncludes(entity, excluded = widgetExcludedEntities()) {
   const id = clean(entity);
   return !id || !excluded.has(id);
@@ -3422,7 +4210,7 @@ export function paroleDelleFontiMute(quante) {
 function allerteModel(states) {
   const config = readJson(CHIAVE_ALLERTE, {});
   if (!categorieConfigurate(config).length) return null;
-  const fuori = widgetExcludedEntities();
+  const fuori = widgetExcludedEntities("allerte");
   if (!entitaDelleAllerte(config).some((entity) => widgetIncludes(entity, fuori))) return null;
   const letture = letturaAllerte(config, states, root.resolveEntity || ((value) => value));
   const attive = allerteAttive(letture);
@@ -3469,10 +4257,27 @@ function allerteModel(states) {
  * cosa: e' la risposta alla domanda della sera. Si accende il giorno prima e
  * il giorno stesso, che sono i due momenti in cui serve vederla. */
 function rifiutiModel(states) {
-  const config = readJson(CHIAVE_RIFIUTI, {});
+  const grezza = readJson(CHIAVE_RIFIUTI, {});
+  /* L'interruttore «Nel widget» toglie le entita' una per una: quello che ha
+   * spento non deve entrare nella tessera. Si toglie DAL MODELLO, non dal solo
+   * cancello — leggere tutto e poi limitarsi a non aprire la tessera lasciava
+   * le righe escluse dentro il valore, la didascalia e l'elenco ogni volta che
+   * un'altra entita' bastava a farla aprire.
+   *
+   * Cosi' la domanda torna a essere una sola, la stessa della sezione: quello
+   * che resta dice qualcosa? Il turno scritto a mano (#366) risponde di si'
+   * anche da solo, ed e' il punto — non e' un'entita', e' il foglietto sul
+   * frigo, e di interruttori da spegnere non ne ha. Contarlo per zero voleva
+   * dire che chi configurava SOLO le due settimane si ritrovava la sezione
+   * piena e in Home nessuna tessera. */
+  const fuori = widgetExcludedEntities("rifiuti");
+  const dato = normalizzaRifiuti(grezza);
+  const config = {
+    ...dato,
+    righe: dato.righe.filter((riga) => widgetIncludes(riga.entity, fuori)),
+    calendario: widgetIncludes(dato.calendario, fuori) ? dato.calendario : "",
+  };
   if (!rifiutiConfigurati(config)) return null;
-  const fuori = widgetExcludedEntities();
-  if (!entitaDeiRifiuti(config).some((entity) => widgetIncludes(entity, fuori))) return null;
   const lettura = letturaRifiuti(config, states, root.resolveEntity || ((value) => value));
   const dalCalendario =
     lettura.calendario && lettura.calendario.giorni !== null && lettura.calendario.giorni >= 0
@@ -3503,8 +4308,15 @@ function rifiutiModel(states) {
     icon: "♻️",
     label: t("Rifiuti", "Waste"),
     value: primaRiga ? parolaDelQuando(primaRiga) : "—",
+    /* Quando il ritiro e' domani, la tessera dice il gesto e non solo il
+     * giorno (#441): «Da mettere fuori stasera» e' quello che uno deve fare
+     * adesso, mentre «Domani» lascia a chi legge il passo che conta. */
     caption: primo
-      ? prossimi.map((riga) => riga.name).join(" · ")
+      ? primo.quando === "domani"
+        ? `${t("Da mettere fuori stasera", "Put it out tonight")} · ${prossimi
+            .map((riga) => riga.name)
+            .join(" · ")}`
+        : prossimi.map((riga) => riga.name).join(" · ")
       : t("Nessuna data in vista", "No date in sight"),
     ring: null,
     attiva: Boolean(primo && (primo.quando === "oggi" || primo.quando === "domani")),
@@ -3514,9 +4326,75 @@ function rifiutiModel(states) {
   };
 }
 
-function widgetModels(states) {
+/* La ventilazione meccanica (#371).
+ *
+ * La tessera dice la cosa che si guarda passando: a che temperatura sta
+ * entrando l'aria in casa, e quanto la macchina se n'e' ripreso. Il resto — le
+ * quattro temperature incrociate, il bypass, le ventole — sta nella pagina del
+ * Clima, che e' dove uno va quando la risposta corta non gli basta. */
+function vmcModel(states) {
+  const config = readJson(CHIAVE_VMC, []);
+  const unita = vmcDisegnabili(config);
+  if (!unita.length) return null;
+  const fuori = widgetExcludedEntities("vmc");
+  if (!entitaDellaVmc(config).some((entity) => widgetIncludes(entity, fuori))) return null;
+  const letture = unita.map((voce) => letturaVmc(voce, states)).filter(vmcParla);
+  if (!letture.length) return null;
+  const prima = letture[0];
+  const immissione = prima.temperature.immissione;
+  const valore =
+    immissione && !immissione.muto && immissione.valore !== null
+      ? `${Math.round(immissione.valore * 10) / 10}°`
+      : "—";
+  const filtri = letture.some((lettura) => lettura.avvisi.length > 0);
+  const parti = [];
+  if (prima.bypassAperto) parti.push(t("Bypass aperto", "Bypass open"));
+  else if (prima.recupero !== null)
+    parti.push(`${t("Recupero", "Recovery")} ${prima.recupero}%`);
+  if (prima.estate) parti.push(t("Estate", "Summer"));
+  if (filtri) parti.push(t("Filtri da cambiare", "Filters need changing"));
+  return {
+    key: "vmc",
+    accent: "#0ea5e9",
+    icon: "🔄",
+    label: t("Ventilazione", "Ventilation"),
+    value: valore,
+    caption: parti.length ? parti.join(" · ") : t("Aria in casa", "Air into the house"),
+    ring: prima.bypassAperto || prima.recupero === null ? null : prima.recupero,
+    attiva: false,
+    alert: filtri,
+    rows: letture.flatMap((lettura) =>
+      Object.values(lettura.temperature)
+        .filter((voce) => voce && !voce.muto && voce.valore !== null)
+        .map((voce) => ({
+          glyph: voce.glifo,
+          name: lettura.nome
+            ? `${lettura.nome} · ${parolaDellaTemperatura(voce.chiave)}`
+            : parolaDellaTemperatura(voce.chiave),
+          entity: voce.entita,
+          value: `${Math.round(voce.valore * 10) / 10}°`,
+        })),
+    ),
+  };
+}
+
+function parolaDellaTemperatura(chiave) {
+  if (chiave === "esterna") return t("Aria esterna", "Outside air");
+  if (chiave === "immissione") return t("Immissione", "Supply");
+  if (chiave === "ripresa") return t("Ripresa", "Return");
+  return t("Espulsione", "Exhaust");
+}
+
+/* Tutte le tessere che la casa sa raccontare, prima delle preferenze.
+ *
+ * Sta staccato dal filtro perche' i modelli servono a due cose: la griglia
+ * delle tessere, che mostra quelle scelte, e chi conta quello che e' acceso
+ * senza disegnare niente. Chi nasconde la tessera delle Luci non deve per
+ * questo perdere il conto delle luci accese — e nessuno dei due deve
+ * rileggere gli stati di casa per conto suo: il giro e' uno solo. */
+export function modelliDelleTessere(states) {
   if (!planciaConfigurata()) return [];
-  return applyWidgetPreferences(
+  return (
     [
       /* L'avviso dell'assistenza sta per primo: e' una risposta a chi ha
        * chiesto aiuto, e la prima tessera e' quella che si vede senza cercare.
@@ -3529,6 +4407,9 @@ function widgetModels(states) {
       climateModel(states),
       coversModel(states),
       securityModel(states),
+      porteModel(states),
+      varchiModel(states),
+      presenzaModel(states),
       camerasModel(states),
       ...energyModels(states),
       appliancesModel(states),
@@ -3540,18 +4421,20 @@ function widgetModels(states) {
       caldaiaModel(states),
       upsModel(states),
       minipcModel(states),
+      macchineModel(states),
       poolModel(states),
       preseModel(states),
       mediaModel(states),
       allerteModel(states),
       rifiutiModel(states),
+      vmcModel(states),
       irrigationModel(states),
       batteriesModel(states),
       floodModel(states),
       fumoModel(states),
       ariaModel(states),
       ...customAlertModels(states),
-    ].filter(Boolean),
+    ].filter(Boolean)
   );
 }
 
@@ -3778,6 +4661,23 @@ function unitaSimbolo(unita) {
   return /^[°%]/.test(String(unita || ""));
 }
 
+/* La faccia di una tessera.
+ *
+ * Le tessere di sezione hanno il loro disegno di casa, e si chiamano per
+ * chiave. Un avviso personalizzato una chiave di casa non ce l'ha — e' una
+ * riga che l'utente si e' scritto — e li' si stampava il RIPIEGO cosi' com'e'
+ * scritto: un'emoji andava bene, ma un'icona scelta dal catalogo e' un nome
+ * mdi, e sulla tessera si leggeva «mdi:water-alert» invece di vedersi un
+ * disegno. Dal campo (#381): «alcune icone negli avvisi personalizzati non
+ * vengono visualizzate correttamente, sia in config che nel widget».
+ *
+ * Chi sa disegnare un nome mdi e' il motore delle icone, che e' anche quello
+ * che ha riempito il catalogo da cui la scelta viene. */
+function facciaDellaTessera(widget) {
+  if (haOggettoWidget(widget?.key)) return oggettoWidget(widget.key);
+  return iconGlyphMarkup("action", widget?.icon, { size: 22 });
+}
+
 function tileMarkup(widget, index = 0) {
   const open = state.expanded === widget.key;
   const giaVista = viste().has(widget.key) ? ' data-dm-seen="true"' : "";
@@ -3787,7 +4687,7 @@ function tileMarkup(widget, index = 0) {
       style="--dm-widget-accent:${widget.accent};--dm-tile-i:${index}" aria-expanded="${open}" aria-label="${esc(widget.label)}">
       <span class="dm-tile-alone" aria-hidden="true"></span>
       <span class="dm-tile-cima">
-        <span class="dm-tile-chip" aria-hidden="true">${oggettoWidget(widget.key, widget.icon)}</span>
+        <span class="dm-tile-chip" aria-hidden="true">${facciaDellaTessera(widget)}</span>
         <span class="dm-tile-label" data-dm-tile-label>${esc(widget.label)}</span>
       </span>
       <span class="dm-tile-val"><b class="dm-tile-value" data-dm-tile-value data-dm-len="${misuraValore(widget.value)}">${esc(numero)}</b><i class="dm-tile-unit" data-dm-tile-unit data-simbolo="${unitaSimbolo(unita)}">${esc(unita)}</i></span>
@@ -4085,7 +4985,14 @@ function agendaDetail(widget, states) {
 
 function lightsDetail(widget) {
   if (!widget.on.length && !widget.rows.length) return "";
-  const rows = [...widget.rows].sort((a, b) => Number(b.on) - Number(a.on)).slice(0, 14);
+  /* Tutte, non le prime quattordici (#335).
+   *
+   * «Nel widget luci scrive il totale luci compresi gli switch, ma nella
+   * lista sotto non li fa vedere.» L'elenco si fermava a quattordici righe:
+   * chi ha molte luci — e gli interruttori aggiunti a mano, che qui contano
+   * come luci — vedeva un numero in alto e una lista che non lo raggiungeva.
+   * Il corpo della finestra scorre gia': si elencano tutte, accese prima. */
+  const rows = [...widget.rows].sort((a, b) => Number(b.on) - Number(a.on));
   /* «Sul widget luci metterei anche spegni tutte» (#315).
    *
    * Una riga sola sopra l'elenco, e solo quando c'e' qualcosa da spegnere: con
@@ -4379,9 +5286,13 @@ function coversDetail(widget) {
             * al suo posto dice quello che sa, cioe' se e' aperta. */
            row.soloSensore
              ? esc(row.open ? t("Aperta", "Open") : t("Chiusa", "Closed"))
-             : row.position == null
-               ? ""
-               : `${row.position}%`
+             : row.position != null
+               ? `${row.position}%`
+               : /* E un motore che la posizione non la pubblica diceva NIENTE.
+                  * Sa se sta su o giu' — e' il conto che la tessera fa in cima
+                  * — e lo dice con la sua parola: una tapparella si alza, non
+                  * si apre (#442). */
+                 esc(row.open ? t("Alzata", "Up") : t("Abbassata", "Down"))
          }</small></span>
          ${
            row.isCover || row.relay
@@ -4397,6 +5308,8 @@ function coversDetail(widget) {
     .join("");
 }
 
+/* Dentro la tessera della Sicurezza c'e' l'antifurto. Le porte stanno nella
+ * loro (#457): vedi `porteDetail`. */
 function securityDetail(widget, states) {
   const parts = [];
   if (widget.alarm) {
@@ -4433,6 +5346,17 @@ function securityDetail(widget, states) {
       ),
     );
   }
+  return parts.join("");
+}
+
+/* Le righe delle porte: una per apertura, col suo tasto.
+ *
+ * E' lo stesso elenco che stava dentro la Sicurezza, spostato qui e non
+ * ricopiato: il tasto porta lo stesso `data-dm-door` dei tasti della pagina
+ * Sicurezza, quindi conferma, tastierino del PIN e chiamata restano una mano
+ * sola. */
+function porteDetail(widget, states) {
+  const parts = [];
   for (const door of widget.doors) {
     const raw = clean(stateOf(states, door.entity)?.state).toLowerCase();
     const label =
@@ -4453,8 +5377,20 @@ function securityDetail(widget, states) {
      * quel gesto lo ascolta il documento intero: e' la stessa mano che apre —
      * stessa conferma, stesso tastierino del PIN, stessa chiamata. Qui non si
      * ricopia niente, si chiede a chi lo sa gia' fare. */
-    const apre = doorOpenCall(door.entity, stateOf(states, door.entity));
-    const invito = door.pin ? t("Apri, col PIN", "Open, with the PIN") : t("Apri", "Open");
+    /* Qui il tasto e' uno solo, e fa il primo dei gesti che quella porta offre
+     * — quello che si puo' disfare, dove ce ne sono due (#387).
+     *
+     * E si chiama come il gesto che fa. Diceva «Apri» sempre: su una serratura
+     * configurata coi due gesti il tasto sblocca e basta, e chi lo premeva
+     * restava con la porta chiusa e la scritta che gli aveva promesso il
+     * contrario. Il nome adesso arriva dallo stesso elenco da cui arriva la
+     * chiamata, cosi' le due cose non possono piu' separarsi. */
+    const azioni = azioniDellaPorta(door, stateOf(states, door.entity));
+    const apre = azioni.length > 0;
+    const parola = parolaDelGesto(azioni[0]?.gesto);
+    const invito = door.pin
+      ? `${parola} · ${t("chiede il PIN", "asks for the PIN")}`
+      : parola;
     parts.push(
       rowShell(
         `<span class="dm-w-glyph" aria-hidden="true">${iconaPortaMarkup(door.icon)}</span>
@@ -4672,16 +5608,21 @@ function pilloleDelloStato(widget) {
   const righe = Array.isArray(widget.rows) ? widget.rows : [];
   /* Dodici e non otto: da quando le righe acceso/spento non fanno piu' lista
    * sotto, le pillole sono l'unico posto dove si leggono — una casa con
-   * undici finestre le deve vedere tutte. */
-  const voci = righe
-    .filter((riga) => typeof riga?.on === "boolean" && clean(riga?.name))
-    .slice(0, 12);
+   * undici finestre le deve vedere tutte. E oltre le dodici c'e' lo stesso
+   * tasto delle misure: il taglio e' lo stesso, e nascondere in silenzio e'
+   * lo stesso difetto (#376). */
+  const voci = righe.filter((riga) => typeof riga?.on === "boolean" && clean(riga?.name));
   if (!voci.length) return "";
+  const chiave = chiaveDellElenco(widget, "stato");
+  const tutte = misureAperte().has(chiave);
+  const oltre = Math.max(0, voci.length - MISURE_IN_VISTA);
   return `<h4 class="dm-w-titoletto">${esc(t("Lo stato", "The state"))}</h4>
     <div class="dm-w-pillole">${voci
       .map(
-        (riga) =>
-          `<span class="dm-w-pillola" data-acceso="${riga.on ? "true" : "false"}">${
+        (riga, indice) =>
+          `<span class="dm-w-pillola" data-acceso="${riga.on ? "true" : "false"}"${
+            clean(riga.tono) ? ` data-tono="${esc(clean(riga.tono))}"` : ""
+          }${!tutte && indice >= MISURE_IN_VISTA ? " hidden" : ""}>${
             riga.glyph
               ? `<span class="dm-w-pillola-ic" aria-hidden="true">${riga.glyph}</span>`
               : ""
@@ -4689,7 +5630,7 @@ function pilloleDelloStato(widget) {
             clean(riga.value) ? `<b>${esc(clean(riga.value))}</b>` : ""
           }</span>`,
       )
-      .join("")}</div>`;
+      .join("")}</div>${oltre ? tastoMostraTutte(chiave, voci.length, tutte) : ""}`;
 }
 
 /* Le righe di sola lettura, fatte caselle.
@@ -4717,6 +5658,7 @@ const CHIAVI_A_CARTE = new Set([
   "batterie",
   "allerte",
   "rifiuti",
+  "vmc",
   "elettrodomestici",
 ]);
 
@@ -4742,7 +5684,25 @@ function carteDalleRighe(widget) {
       grid: t("Rete", "Grid"),
       battery: t("Batteria", "Battery"),
     };
-    const glifi = { house: "🏠", solar: "☀️", grid: "🔌", battery: "🔋" };
+    const glifi = GLIFI_ENERGIA;
+    /* Quanto ha fatto oggi, sotto la potenza di adesso (#429). Qui le parole si
+     * scrivono per esteso — c'e' lo spazio — e la rete e la batteria ne hanno
+     * due, perche' preso e dato sono due versi della stessa cosa. */
+    const oggi = widget.oggi || {};
+    const parola = (chiave) => {
+      const valore = oggi?.[chiave];
+      if (valore == null) return "";
+      const voce = PAROLE_DI_OGGI.find((riga) => riga.chiave === chiave);
+      return `${t(voce.it, voce.en)} ${formatNumber(valore, 1)} kWh`;
+    };
+    const delGiorno = {
+      house: oggi.house == null ? "" : `${formatNumber(oggi.house, 1)} kWh`,
+      solar: parola("solar"),
+      grid: [parola("gridImport"), parola("gridExport")].filter(Boolean).join(" · "),
+      battery: [parola("batteryCharged"), parola("batteryDischarged")]
+        .filter(Boolean)
+        .join(" · "),
+    };
     return righe.map((riga) => ({
       glyph: glifi[riga.group] || "⚡",
       /* La batteria dice anche quanto e' piena: watt e percentuale insieme,
@@ -4754,6 +5714,10 @@ function carteDalleRighe(widget) {
             : `${formatWatts(riga.watts)} · ${Math.round(riga.soc)}%`
           : formatWatts(riga.watts),
       etichetta: nomi[riga.group] || clean(riga.group),
+      /* «Oggi · Produzione 8,1 kWh»: il separatore serve alla lingua, non
+       * all'ordine — «Oggi Produzione» sono due sostantivi appiccicati, e si
+       * legge male in tutte le lingue in cui questa riga esce. */
+      sotto: delGiorno[riga.group] ? `${t("Oggi", "Today")} · ${delGiorno[riga.group]}` : "",
     }));
   }
   if (chiave === "temperatura") {
@@ -4803,19 +5767,53 @@ function carteDalleRighe(widget) {
     }));
 }
 
+/* Quante misure si vedono senza chiedere.
+ *
+ * Oltre questo numero la finestra smette di essere un riassunto e diventa un
+ * elenco. Le altre pero' esistono, e sparivano in silenzio: chi ha venticinque
+ * batterie ne vedeva dodici e non aveva modo di sapere che le altre c'erano.
+ * Dal campo (#376): «quando si apre la scheda batterie, oltre a mostrare
+ * quelle piu' scariche, ci fosse un tasto mostra tutto come per la sezione
+ * luci». Vale per ogni scheda che nasconde qualcosa, non per le batterie sole:
+ * il taglio e' uno, e la porta per andare oltre e' una. */
+const MISURE_IN_VISTA = 12;
+
+/* Gli elenchi che hanno chiesto di vedersi per intero. Sta qui e non nel
+ * documento perche' il corpo della finestra si ridisegna a ogni giro di stati:
+ * l'elenco aperto si richiuderebbe da solo al primo valore che cambia.
+ *
+ * La chiave dice la scheda E quale dei due elenchi, perche' nella stessa
+ * finestra ce ne sono due — le misure e le pillole dello stato — e aprirne
+ * uno non vuol dire aprire l'altro. */
+function misureAperte() {
+  return (state.tutteLeMisure ||= new Set());
+}
+
+const chiaveDellElenco = (widget, quale) => `${clean(widget?.key)}:${quale}`;
+
+/* Il tasto che scavalca il taglio, per chiunque tagli. */
+function tastoMostraTutte(chiave, quante, tutte) {
+  return `<button type="button" class="dm-w-tutte-btn dm-w-tutte-misure" data-dm-w-tutte-misure="${esc(chiave)}" aria-expanded="${tutte}"><span aria-hidden="true">${tutte ? "\u25b4" : "\u25be"}</span>${esc(
+    tutte ? t("Mostra solo le prime", "Show fewer") : `${t("Mostra tutte", "Show all")} \u00b7 ${quante}`,
+  )}</button>`;
+}
+
 /* Le caselle: i riassunti di `summaryChips` («la piu' bassa», «media», «in
  * funzione») piu' le letture fatte caselle. Un titolo solo, una griglia sola. */
 function caselleDelleMisure(widget) {
   const voci = [
     ...summaryChips(widget).map(([etichetta, valore]) => ({ glyph: "", valore, etichetta })),
     ...carteDalleRighe(widget),
-  ].slice(0, 12);
+  ];
   if (!voci.length) return "";
+  const chiave = chiaveDellElenco(widget, "misure");
+  const tutte = misureAperte().has(chiave);
+  const oltre = Math.max(0, voci.length - MISURE_IN_VISTA);
   return `<h4 class="dm-w-titoletto">${esc(t("Le misure", "The readings"))}</h4>
     <div class="dm-w-caselle">${voci
       .map(
-        (voce) =>
-          `<div class="dm-w-casella">${
+        (voce, indice) =>
+          `<div class="dm-w-casella"${!tutte && indice >= MISURE_IN_VISTA ? " hidden" : ""}>${
             voce.glyph
               ? `<span class="dm-w-casella-ic" aria-hidden="true">${voce.glyph}</span>`
               : ""
@@ -4823,7 +5821,7 @@ function caselleDelleMisure(widget) {
             voce.sotto ? `<i class="dm-w-casella-sotto">${esc(voce.sotto)}</i>` : ""
           }<span>${esc(voce.etichetta)}</span></div>`,
       )
-      .join("")}</div>`;
+      .join("")}</div>${oltre ? tastoMostraTutte(chiave, voci.length, tutte) : ""}`;
 }
 
 /* La corsa della misura: dov'era tre ore fa, dov'e' adesso.
@@ -5293,6 +6291,7 @@ function detailRows(widget, states) {
   if (widget.key === "clima") return climateDetail(widget);
   if (widget.key === "tapparelle") return coversDetail(widget);
   if (widget.key === "sicurezza") return securityDetail(widget, states);
+  if (widget.key === "porte") return porteDetail(widget, states);
   if (widget.key === "telecamere") return camerasDetail(widget);
   if (eUnaTesseraEnergia(widget.key)) return energyDetail(widget);
   if (widget.key === "elettrodomestici") return appliancesDetail(widget);
@@ -5336,6 +6335,9 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
   clima: "clima",
   tapparelle: "tapparelle",
   sicurezza: "security",
+  /* Le porte e i cancelli si configurano e si aprono nella Sicurezza: e' la
+   * sezione che li contiene davvero, anche se in Home hanno tessera loro. */
+  porte: "security",
   telecamere: "security",
   energia: "energy",
   elettrodomestici: "appliances-main",
@@ -5352,6 +6354,8 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
   minipc: "server",
   allerte: "allerte",
   rifiuti: "rifiuti",
+  /* La ventilazione vive nella pagina del Clima: la tessera ci porta li'. */
+  vmc: "clima",
   media: "media",
 });
 
@@ -5390,7 +6394,7 @@ function detailMarkup(widget, states) {
       style="--dm-widget-accent:${widget.accent}">
       <header class="dm-w-head">
         <button type="button" class="dm-w-close" data-dm-widget-close aria-label="${esc(t("Chiudi", "Close"))}"><span aria-hidden="true">✕</span> ${esc(t("Chiudi", "Close"))}</button>
-        <span class="dm-w-head-ic" aria-hidden="true">${oggettoWidget(widget.key, widget.icon)}</span>
+        <span class="dm-w-head-ic" aria-hidden="true">${facciaDellaTessera(widget)}</span>
         <strong data-dm-titolo>${esc(widget.label)}</strong>
         <small data-dm-detail-caption>${esc(bricioleDelWidget(widget))}</small>
       </header>
@@ -5541,9 +6545,64 @@ function structureSignature(models) {
   return models.map((widget) => widget.key).join("|");
 }
 
+/* Un avviso personalizzato che si fa vedere da solo (#445).
+ *
+ * «Ho un boolean che se attivo mi indica con un popup l'intervento del
+ *  distacco carichi: vorrei sfruttarlo in questo fantastico lavoro.»
+ *
+ * La tessera si accende gia', e chi guarda la Home la vede. Ma un intervento
+ * del distacco carichi non e' una cosa da vedere passando: e' una cosa da
+ * sapere adesso, ed e' la differenza fra una tessera e un popup. Una tessera
+ * aspetta lo sguardo, un popup lo va a prendere.
+ *
+ * Il quando lo decide `core/avvisi-che-si-aprono.js`, che risponde a una
+ * domanda sola — quali si sono ACCESI ADESSO, non quali sono accesi — e al
+ * primo sguardo non accende niente. Qui restano le due cose che solo la
+ * sezione puo' sapere: che l'interruttore sia acceso, e che non ci sia gia'
+ * una finestra aperta. Chi sta guardando qualcos'altro ha gia' scelto cosa
+ * guardare, e sovrapporsi non sarebbe avvisarlo: sarebbe interromperlo. */
+function apriGliAvvisiAppenaAccesi(models) {
+  const accesi = models
+    .filter((widget) => String(widget?.key || "").startsWith("custom-"))
+    .map((widget) => widget.key);
+  const passo = avvisiAppenaAccesi(state.avvisiVisti ?? null, accesi);
+  /* Niente da aprire, o la funzione e' spenta: si prende nota e si va avanti.
+   * Se e' spenta non si aprira' mai niente, e tenere in sospeso un avviso
+   * vorrebbe dire che accendendo la funzione domani si spalancherebbe la
+   * finestra di una cosa saputa ieri. */
+  if (!passo.aperti.length || !widgetPreferences().avvisiInPopup) {
+    state.avvisiVisti = passo.memoria;
+    return false;
+  }
+  /* C'e' gia' una finestra aperta: chi guarda ha scelto cosa guardare, e la
+   * sua non si scavalca.
+   *
+   * Ma l'avviso NON si consuma. La memoria si scriveva prima di questo
+   * controllo, e allora l'avviso appena acceso risultava gia' visto: chiusa
+   * la finestra che c'era, ai giri dopo non era piu' «appena acceso» e la sua
+   * finestra non arrivava mai. Restando fuori dalla memoria resta appena
+   * acceso, e la finestra arriva quando c'e' posto. */
+  if (state.expanded) return false;
+  state.avvisiVisti = passo.memoria;
+  toggleExpand(passo.aperti[0]);
+  return true;
+}
+
 export function renderHomeWidgets() {
   const states = allStates();
-  const models = widgetModels(states);
+  const tutti = modelliDelleTessere(states);
+  /* La riga sotto il meteo (#356) si disegna qui, coi modelli appena fatti e
+   * prima di ogni scorciatoia: le tessere possono non esserci — plancia
+   * appena installata, tutte nascoste — e la pastiglia della posta deve
+   * comparire lo stesso. Un secondo giro sugli stati per contare le stesse
+   * cose sarebbe il doppio del lavoro per la stessa risposta. */
+  try {
+    disegnaComeStaLaCasa(tutti, states);
+  } catch (error) {
+    root.console?.warn?.("[DashboardModern] barra di casa", error);
+  }
+  const models = applyWidgetPreferences(tutti);
+  apriGliAvvisiAppenaAccesi(models);
   const host = doc?.getElementById?.("dm-widgets");
   if (!models.length) {
     host?.remove();
@@ -6050,6 +7109,13 @@ function scorriDidascalie(grid) {
  * `installHomeWidgetsSection`), quindi chi arriva trova le tessere di adesso e
  * non quelle di quando se n'e' andato. */
 function laHomeSiVede() {
+  /* E la plancia, la sta guardando qualcuno? Una scheda in secondo piano o una
+   * plancia parcheggiata — messa da parte da chi la ospita quando si va su
+   * un'altra pagina di Home Assistant — hanno la Home ancora «attiva» e il
+   * documento ancora «visible»: senza questa domanda le tessere avrebbero
+   * continuato a rifarsi due volte al secondo per nessuno. Al ritorno si
+   * ridipinge, che e' il `pageshow` qui sotto. */
+  if (!planciaVisibile()) return false;
   if (homeVisible()) return true;
   /* Il popup del dettaglio sta attaccato al corpo della pagina, non alla
    * Home: finche' e' aperto va tenuto vivo comunque, perche' e' lui che si
@@ -6086,7 +7152,11 @@ function homeVisible() {
 }
 
 function cameraWidgetOnScreen() {
-  return state.expanded === "telecamere" && homeVisible() && doc?.visibilityState !== "hidden";
+  /* `planciaVisibile` tiene dentro anche il parcheggio: quando chi ospita
+   * mette la plancia da parte — si va su un'altra pagina di Home Assistant e
+   * la cornice resta viva, nascosta — la tessera e' aperta ma non la guarda
+   * nessuno, e i fotogrammi li tira comunque il server di casa. */
+  return state.expanded === "telecamere" && homeVisible() && planciaVisibile();
 }
 
 function fermaTimerTelecamere() {
@@ -6317,6 +7387,29 @@ function onClick(event) {
   /* La rotella apre e chiude il pannello della riga. Non passa da un
    * ridisegno: si tocca il documento e si segna la scelta, cosi' l'apertura e'
    * immediata e il prossimo ridisegno la ritrova. */
+  const misure = event.target?.closest?.("[data-dm-w-tutte-misure]");
+  if (misure) {
+    event.preventDefault();
+    /* Si scoprono le caselle che c'erano gia', senza rifare la finestra: un
+     * ridisegno qui vorrebbe dire ricaricare le miniature delle telecamere e
+     * perdere quello che si stava scrivendo nelle liste. */
+    const chiave = clean(misure.dataset.dmWTutteMisure);
+    const apri = !misureAperte().has(chiave);
+    if (apri) misureAperte().add(chiave);
+    else misureAperte().delete(chiave);
+    const griglia = misure.previousElementSibling;
+    const caselle = [
+      ...(griglia?.querySelectorAll?.(".dm-w-casella, .dm-w-pillola") || []),
+    ];
+    caselle.forEach((casella, indice) => {
+      casella.hidden = !apri && indice >= MISURE_IN_VISTA;
+    });
+    misure.setAttribute("aria-expanded", String(apri));
+    misure.innerHTML = `<span aria-hidden="true">${apri ? "▴" : "▾"}</span>${esc(
+      apri ? t("Mostra solo le prime", "Show fewer") : `${t("Mostra tutte", "Show all")} · ${caselle.length}`,
+    )}`;
+    return;
+  }
   const rotella = event.target?.closest?.("[data-dm-w-more]");
   if (rotella) {
     event.preventDefault();
@@ -6717,7 +7810,7 @@ html[data-theme="dark"] #dm-widget-popup .dm-widget-detail .dm-w-close:hover{col
   margin:2px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
 #dm-widget-popup .dm-w-punti li{
   position:relative;padding-inline-start:13px;font-size:12.5px;line-height:1.4;
-  font-weight:650;color:var(--muted,#64748b)}
+  font-weight:650;color:var(--text-dim,#64748b)}
 #dm-widget-popup .dm-w-punti li::before{
   content:"";position:absolute;inset-inline-start:2px;top:.62em;
   width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.55}
@@ -6809,6 +7902,9 @@ html[data-theme="dark"] #dm-widget-popup .dm-widget-detail .dm-w-close:hover{col
 #dm-widget-popup .dm-w-casella{
   display:grid;gap:2px;padding:10px 11px;border-radius:14px;
   border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
+#dm-widget-popup .dm-w-caselle .dm-w-casella[hidden],
+#dm-widget-popup .dm-w-pillole .dm-w-pillola[hidden]{display:none}
+#dm-widget-popup .dm-w-tutte-misure{margin-top:8px;justify-content:center}
 #dm-widget-popup .dm-w-casella-ic{font-size:15px;line-height:1}
 #dm-widget-popup .dm-w-casella-ic svg{width:18px;height:18px;display:block}
 #dm-widget-popup .dm-w-casella b{
@@ -6841,6 +7937,25 @@ html[data-theme="dark"] #dm-widget-popup .dm-widget-detail .dm-w-close:hover{col
   border-color:color-mix(in srgb,#10b981 34%,transparent);
   background:color-mix(in srgb,#10b981 12%,transparent);
   color:color-mix(in srgb,#10b981 76%,#0f172a)}
+/* Il tono di una pastiglia, quando la cosa che racconta ha due versi e il
+ * verde non e' sempre quello buono. Un varco aperto e' rosso e uno chiuso e'
+ * verde (#367): senza questi due, un'apertura accesa sarebbe uscita verde
+ * come una presa in funzione. */
+#dm-widget-popup .dm-w-pillola[data-tono="allarme"]{
+  border-color:color-mix(in srgb,#dc2626 34%,transparent);
+  background:color-mix(in srgb,#dc2626 12%,transparent);
+  color:color-mix(in srgb,#dc2626 78%,#0f172a)}
+/* «Acceso» non e' «allarme»: e' una cosa che sta succedendo e che si vuole
+   vedere — una stanza con dentro qualcuno (#432) — non una da guardare
+   subito. Il rosso resta a chi deve alzare la testa. */
+#dm-widget-popup .dm-w-pillola[data-tono="acceso"]{
+  border-color:color-mix(in srgb,#2563eb 34%,transparent);
+  background:color-mix(in srgb,#2563eb 12%,transparent);
+  color:color-mix(in srgb,#2563eb 78%,#0f172a)}
+#dm-widget-popup .dm-w-pillola[data-tono="quiete"]{
+  border-color:color-mix(in srgb,#16a34a 30%,transparent);
+  background:color-mix(in srgb,#16a34a 10%,transparent);
+  color:color-mix(in srgb,#16a34a 74%,#0f172a)}
 /* Nome e stato si distinguono: il nome respira, lo stato e' la parola in
  * maiuscoletto dopo il punto — «non si capisce» era tutto sullo stesso tono. */
 #dm-widget-popup .dm-w-pillola{font-size:11px}
@@ -7624,7 +8739,7 @@ body.dark-theme :is(#dm-widgets,#dm-widget-popup){
   margin-top:18px;padding-top:16px;border-top:1px solid var(--card-border,#e2e8f0)}
 :is(#dm-widgets,#dm-widget-popup) .dm-ag-titolo{
   margin:0 0 10px;font-size:12px;font-weight:900;letter-spacing:.4px;
-  color:var(--text-color,#0f172a)}
+  color:var(--text,#0f172a)}
 :is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-cal-lista{list-style:none;margin:0;padding:0 2px;display:grid;gap:9px}
 :is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-cal-evento{
   display:flex;align-items:flex-start;gap:11px;min-width:0}
@@ -7844,9 +8959,18 @@ export function installHomeWidgetsSection() {
        e' gia' disegnata: la sua tessera va messa quando la risposta atterra,
        non al primo evento che passi di li' per un'altra ragione. */
     "dashboardmodern:segnalazioni-coda",
+    /* Il registro ha detto di chi sono le entita' del server e della rete: la
+       tessera «Server e rete» conta solo quelle delle integrazioni scelte, e
+       prima di quella risposta non ne conta nessuna. */
+    EVENTO_PIATTAFORME,
     /* La chat di assistenza dice quando ha una risposta da leggere, e quando
        e' stata letta: la sua tessera compare e sparisce con quello. */
     "dashboardmodern:chat-stato",
+    /* E il ritorno in scena: una scheda che torna davanti, o la plancia che
+       chi la ospita rimette al suo posto dopo un giro su un'altra pagina di
+       Home Assistant. Le tessere si rifanno con quello che c'e' adesso senza
+       aspettare che in casa cambi qualcosa. */
+    "pageshow",
   ])
     root.addEventListener?.(eventName, schedule);
   ascoltaLaPorta();

@@ -24,6 +24,7 @@
  * visibility banner is the runtime's own `cdSecToggleHtml` markup with the
  * runtime's own `edSecTog` handler.
  */
+import { CHIAVI_PER_SCHEDA } from "../core/lelenco-delle-sezioni.js";
 import { clean, doc, installStyle, onEditorRedraw, root, t, wrapFunction } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_CONFIG_UNIFORMITY__";
@@ -32,61 +33,16 @@ const state = (root[KEY] ||= { installed: false, frame: 0, watched: null, observ
 
 /* The tab of a dashboard section, and the visibility key that section has.
  *
- * The `sez*` ordinals are the runtime's own (`cdSecKeyByOrd`); the rest are the
- * keys `editorSwitch` already passes to `cdSecToggleHtml` when it prints those
- * tabs. Temperature is in the list for the same reason as all the others — it
- * has a switch — and it is the one the editor forgot. */
-export const TAB_SECTION_KEYS = Object.freeze({
-  sez0: "home",
-  sez1: "energy",
-  sez2: "ev",
-  sez3: "boiler",
-  sez4: "security",
-  sez6: "server",
-  sez7: "temp",
-  sez9: "clima",
-  tapp: "tapparelle",
-  pool: "piscina",
-  irr: "irrigazione",
-  appliances: "appliances",
-  /* L'Aspirapolvere e' arrivata dopo questa mappa, e senza la sua riga la
-   * fascia verde della sua scheda non era la sua: toccarla non nascondeva
-   * niente. La chiave e' la stessa che `cdNavVisMap` conosce per quella voce,
-   * altrimenti si scriverebbe una preferenza che nessuno legge. */
-  robot: "robot",
-  /* La sezione Luci nasce a runtime come il robot, e come lui insegna la sua
-   * chiave a `cdNavVisMap`: questa riga fa comparire la fascia sulla scheda
-   * Luci dell'editor, e toccarla nasconde davvero la voce nella barra. */
-  luci: "luci",
-  /* Le Stanze erano l'unica pagina della barra senza il suo interruttore:
-   * «manca proprio la possibilita' di nascondere la sezione». La chiave e'
-   * quella che il modulo delle stanze insegna a `cdNavVisMap`. */
-  stanze: "stanze",
-  /* L'Agenda e la Continuita' sono arrivate dopo, con una pagina nella barra e
-   * nessuna scheda dove mettere l'interruttore: erano le due voci che non si
-   * potevano nascondere. Le loro chiavi non stanno in `cdNavVisMap` perche'
-   * quelle due voci le crea il runtime e se le governa da solo, leggendo
-   * `cd_sections` — che e' esattamente quello che questa fascia scrive. */
-  agenda: "calendario",
-  ups: "ups",
-  /* Le allerte (#296) e i rifiuti (#293): stessa forma della Continuita',
-   * voce creata dal runtime e governata da lui leggendo `cd_sections`. */
-  allerte: "allerte",
-  rifiuti: "rifiuti",
-  /* Le sezioni che si fa l'utente (#262). La fascia ne spegne le voci tutte
-   * insieme — quali comparire nella barra lo dice la spunta sulla riga di
-   * ognuna, che e' una proprieta' della sezione e non una preferenza di
-   * visibilita' del guscio. La chiave e' quella che legge la loro pagina. */
-  mie: "mie",
-  /* Le aperture sono uscite dalla Sicurezza e hanno una voce loro (#275): la
-   * fascia va sulla loro scheda, con la chiave che legge la loro pagina —
-   * scriverne un'altra vorrebbe dire una preferenza che nessuno legge. */
-  doors: "porte",
-  /* La musica (#269) nasce con la sua pagina e la sua scheda: la chiave e'
-   * quella che legge la pagina dei lettori, e la fascia la spegne come tutte
-   * le altre voci della barra. */
-  media: "media",
-});
+ * The map itself no longer lives here: it moved to `core/lelenco-delle-
+ * sezioni.js` when the single list of switches was built, because that list
+ * needs exactly the same map and two copies of it mean that sooner or later
+ * one of them learns about a new section and the other does not — which is
+ * precisely how the banner on the Vacuum tab once ended up toggling nothing.
+ *
+ * The name stays exported from here: it is what this module has always been
+ * asked for, and renaming it would only move the churn somewhere else.
+ */
+export const TAB_SECTION_KEYS = CHIAVI_PER_SCHEDA;
 
 /* Tabs that hold no configuration to save: diagnostics is read-only, the
  * visibility tab has its own single control, and Backup acts with its own
@@ -149,6 +105,17 @@ export function pruneHiddenSections(body = editorBody(), tab = activeTab()) {
 
 /* ── the same switch, on every section ────────────────────────────────────── */
 
+/* Dove finisce il corpo della scheda: prima del salvataggio, se c'e'.
+ *
+ * «Ultimo» sarebbe stato il piede del salvataggio, che ultimo ci sta per conto
+ * suo e per una ragione sua. Dirsi ultimi in due e' lo stesso errore del
+ * dirsi primi in due, spostato in fondo: si spingerebbero a vicenda a ogni
+ * passata. `insertBefore(nodo, null)` mette in fondo, quindi senza piede
+ * questa e' esattamente «in fondo». */
+function piedeDelSalvataggio(body) {
+  return body?.querySelector?.(":scope > [data-dm-save-footer]") || null;
+}
+
 function bannerMarkup(key) {
   try {
     return clean(root.cdSecToggleHtml?.(key));
@@ -190,7 +157,7 @@ export function ensureVisibilityBanner(body = editorBody(), tab = activeTab()) {
     banner = holder.firstElementChild;
     if (!banner) return false;
     banner.dataset.dmSectionSwitch = "true";
-    body.prepend(banner);
+    body.insertBefore(banner, piedeDelSalvataggio(body));
   }
   // The switch is moved by its own block, never torn out of the wrapper the tab
   // built around it — the EV tab wraps it together with the vehicle profiles,
@@ -198,8 +165,22 @@ export function ensureVisibilityBanner(body = editorBody(), tab = activeTab()) {
   let outermost = banner;
   while (outermost.parentElement && outermost.parentElement !== body)
     outermost = outermost.parentElement;
-  if (outermost.parentElement === body && body.firstElementChild !== outermost)
-    body.prepend(outermost);
+  /* In fondo, e non in cima.
+   *
+   * Stava in cima, e in cima ci sta anche il nome della sezione: due moduli
+   * che si dichiaravano tutti e due primi, e l'ordine lo decideva chi passava
+   * per ultimo. Si spingevano a vicenda a ogni giro — una scrittura nel
+   * documento per niente, ogni passata — e chi guardava trovava sopra il nome
+   * della scheda una fascia verde che col nome non c'entra.
+   *
+   * Sotto il nome della sezione ci vanno i DATI: si apre una scheda per
+   * configurarla, non per accenderla. L'interruttore che dice se la sezione si
+   * vede in plancia e' una decisione sola e si prende una volta: sta in fondo,
+   * dopo quello che si e' venuti a fare, e sta in fondo in ogni sezione — che
+   * e' l'unica cosa che lo rende trovabile senza cercarlo. */
+  const piede = piedeDelSalvataggio(body);
+  if (outermost.parentElement === body && outermost.nextElementSibling !== piede)
+    body.insertBefore(outermost, piede);
   banner.classList.add("dm-section-switch");
   rinfrescaBanner(banner, key);
   return true;

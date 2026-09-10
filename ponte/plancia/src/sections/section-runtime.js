@@ -1,10 +1,13 @@
 import { applianceArtwork, canonicalArtworkType } from "../core/appliance-artwork.js";
 import { applianceHeroArtwork } from "../core/appliance-hero-artwork.js";
 import { createApplianceViewModel } from "../core/appliance-view-model.js";
+import { CONFIG_KEYS } from "../core/chiavi-di-configurazione.js";
 import { installStateEventGate } from "../core/state-event-gate.js";
 import { installHostedBridgeGuard } from "../transport/hosted-bridge-guard.js";
+import { installGuscioQuandoServe } from "./il-guscio-disegna-quando-serve-section.js";
 import { installI18nSection } from "./i18n-section.js";
 import { installThemeFoundationSection } from "./theme-foundation-section.js";
+import { installTavolozzeSection } from "./tavolozze-section.js";
 import { installIconeLeggibiliSection } from "./icone-leggibili-section.js";
 import { installDataContractsSection } from "./data-contracts-section.js";
 import { installEnergyCalculationsSection } from "./energy-calculations-section.js";
@@ -15,6 +18,7 @@ import { installEnergyRefreshSection } from "./energy-refresh-section.js";
 import { installEnergyLegacyGuardSection } from "./energy-legacy-guard-section.js";
 import { installEnergyStabilitySection } from "./energy-stability-section.js";
 import { installHomeBlocchiSection } from "./home-blocchi-section.js";
+import { installComeStaLaCasa } from "./come-sta-la-casa-section.js";
 import { installEnergyGuidanceSection } from "./energy-guidance-section.js";
 import { installEnergyFlowSection } from "./energy-flow-section.js";
 import { installEnergyLoadsEditor } from "./energy-loads-editor-section.js";
@@ -28,9 +32,13 @@ import { installTemperatureLayoutSection } from "./temperature-layout-section.js
 import { installTemperatureTrendSection } from "./temperature-trend-section.js";
 import { installAppliancesSection } from "./appliances-section.js";
 import { installApplianceLayoutSection } from "./appliance-layout-section.js";
-import { installBeta27ReleaseStability } from "./beta27-release-stability-section.js";
 import { installApplianceShowcaseSection } from "./appliance-showcase-section.js";
 import { installApplianceEditorSection } from "./appliance-editor-section.js";
+import { installCercaNelConfigSection } from "./cerca-nel-config-section.js";
+import { installVarchiInConfigurazioneSection } from "./varchi-in-configurazione-section.js";
+import { installFoglioDiSceltaSection } from "./foglio-di-scelta-section.js";
+import { installSpegnimentoProgrammatoSection } from "./spegnimento-programmato-section.js";
+import { installReportTendinaDispositiviSection } from "./report-tendina-dispositivi-section.js";
 import { installApplianceIntegrationSection } from "./appliance-integration-section.js";
 import { installLightsAlertsSection } from "./lights-alerts-section.js";
 import { installLightsSceneSection } from "./lights-scene-section.js";
@@ -43,7 +51,12 @@ import { installLiveUiSection } from "./live-ui-section.js";
 import { installTelecameraWebRtc } from "./telecamera-webrtc-section.js";
 import { installConnectionRecoverySection } from "./connection-recovery-section.js";
 import { installAlarmModesEditorSection } from "./alarm-modes-editor-section.js";
+import { installAntifurtoSuMisuraEditorSection } from "./antifurto-su-misura-editor-section.js";
+import { installFlussoDiCasaSection } from "./flusso-di-casa-section.js";
 import { installQuickClimateEditorSection } from "./quick-climate-editor-section.js";
+import { installVmcEditor } from "./vmc-editor-section.js";
+import { installAssistSection } from "./assist-section.js";
+import { installAssistEditor } from "./assist-editor-section.js";
 import { installTrvEditor } from "./trv-editor-section.js";
 import { installSecurityShowcaseSection } from "./security-showcase-section.js";
 import { installSecurityDoorsSection } from "./security-doors-section.js";
@@ -73,12 +86,20 @@ import { installStrisceDiLinguette } from "./le-strisce-di-linguette-section.js"
 import { installWeatherInMasthead } from "./weather-in-masthead-section.js";
 import { installShutterSceneSection } from "./shutter-scene-section.js";
 import { installClimatePowerSection } from "./climate-power-section.js";
+import { installAlberatura } from "./alberatura-del-config-section.js";
+import { installIlDitoScorreOTocca } from "./il-dito-scorre-o-tocca-section.js";
+import { installElencoDelleSezioni } from "./lelenco-delle-sezioni-section.js";
+import { installBatterie } from "./batterie-section.js";
+import { installBatterieEditor } from "./batterie-editor-section.js";
+import { installVideoSiMuove } from "./telecamera-il-video-si-muove-section.js";
+import { installTelecameraSubito } from "./telecamera-subito-section.js";
 import { installShutterSkySection } from "./shutter-sky-section.js";
 import { installShutterWindowSection } from "./shutter-window-section.js";
 import { installPoolIrrigationSceneSection } from "./pool-irrigation-scene-section.js";
 import { installPoolExtraSection } from "./pool-extra-section.js";
 import { installPoolEditorSection } from "./pool-editor-section.js";
 import { installRobotSection } from "./robot-section.js";
+import { installAnimaliSection } from "./animali-section.js";
 import { installPreseSection } from "./prese-section.js";
 import { installEnergyPlantsSection } from "./energy-plants-section.js";
 import { installRoomAssignSection } from "./room-assign-section.js";
@@ -87,6 +108,7 @@ import { installRoomsOrderEditor } from "./rooms-order-editor-section.js";
 import { installAutoIntegrazione } from "./auto-integrazione-section.js";
 import { installEnergiaCerchiStorico } from "./energia-cerchi-storico-section.js";
 import { installRobotEditorSection } from "./robot-editor-section.js";
+import { installAnimaliEditorSection } from "./animali-editor-section.js";
 import { installEditorEntrySection } from "./editor-entry-section.js";
 import { installEvSection } from "./ev-section.js";
 import { installMediaPickerSection } from "./media-picker-section.js";
@@ -111,6 +133,13 @@ import { installAllerte } from "./allerte-section.js";
 import { installAllerteEditor } from "./allerte-editor-section.js";
 import { installRifiuti } from "./rifiuti-section.js";
 import { installRifiutiEditor } from "./rifiuti-editor-section.js";
+import { installVarchi } from "./varchi-section.js";
+import { installVarchiEditor } from "./varchi-editor-section.js";
+import { installPresenza } from "./presenza-section.js";
+import { installPresenzaEditor } from "./presenza-editor-section.js";
+import { installVersoBatteriaEditorSection } from "./verso-batteria-editor-section.js";
+import { installMacchine } from "./macchine-e-rete-section.js";
+import { installMacchineEditor } from "./macchine-editor-section.js";
 import { installAgendaEditorSection } from "./agenda-editor-section.js";
 import { installLinguaSection } from "./lingua-section.js";
 import { installSostieniIlProgetto } from "./sostieni-il-progetto-section.js";
@@ -131,33 +160,9 @@ import { activeLocale, allStates, clean, english, section, t, wrapFunction } fro
 const root = globalThis;
 const RUNTIME_KEY = "__DASHBOARDMODERN_SECTION_RUNTIME__";
 const INSTALLING_KEY = "__DASHBOARDMODERN_SECTION_RUNTIME_INSTALLING__";
-const APPLIANCE_PICKER_LAYER_STYLE_ID = "dm-appliance-picker-layer-style";
 const APPLIANCE_DAILY_POPUP_STYLE_ID = "dm-appliance-daily-dashboard-style";
 const APPLIANCE_KPI_POPUP_STYLE_ID = "dm-appliance-kpi-popup-style";
 const APPLIANCE_KPI_STATE_KEY = "__DASHBOARDMODERN_APPLIANCE_KPI_POPUPS__";
-
-function installAppliancePickerLayer() {
-  const doc = root.document;
-  if (!doc?.head || doc.getElementById(APPLIANCE_PICKER_LAYER_STYLE_ID)) return;
-  const style = doc.createElement("style");
-  style.id = APPLIANCE_PICKER_LAYER_STYLE_ID;
-  style.textContent = `
-    /* The canonical appliance picker may be opened from inside the Edit modal.
-       Keep it above every editor overlay so visible options also own pointer input. */
-    #dm-applpick.dm-appliance-type-picker {
-      position: fixed !important;
-      inset: 0 !important;
-      z-index: 2147483647 !important;
-      pointer-events: auto !important;
-    }
-    #dm-applpick .dm-appliance-type-picker-dialog,
-    #dm-applpick .dm-appliance-type-grid,
-    #dm-applpick .dm-appliance-type-option {
-      pointer-events: auto !important;
-    }
-  `;
-  doc.head.append(style);
-}
 
 function installApplianceDailyPopupStyle() {
   const doc = root.document;
@@ -791,6 +796,11 @@ export function installSectionRuntime() {
 
   root[INSTALLING_KEY] = true;
   try {
+    /* Per primo, prima di ogni involucro: il padrone di `cdRenderSoon` e dei
+     * timer del guscio. I moduli qui sotto si agganciano a `render`, e
+     * quanto spesso `render` giri lo decide chi possiede il nome prima di
+     * loro. */
+    installGuscioQuandoServe();
     /* Prima di tutto: una domanda a Home Assistant che parte con l'indirizzo
      * sbagliato non arriva, e chi la fa non se ne accorge — «Failed to fetch»
      * al posto dello storico. Si ripara la sola cosa che serve, e si ripara
@@ -800,6 +810,9 @@ export function installSectionRuntime() {
     // the locale has to be settled before the first of them runs.
     installI18nSection();
     installThemeFoundationSection();
+    /* Subito dopo le fondamenta, e non prima: le tavolozze riscrivono gli
+     * stessi token, e a parita' di peso vince chi viene dopo (#436). */
+    installTavolozzeSection();
     /* Subito dopo le fondamenta del tema e prima di ogni disegno: il foglio
      * delle sfumature deve stare in cima al documento gia' al primo giro, o
      * i disegni nascono mezzi e si riparano solo al secondo. */
@@ -812,7 +825,11 @@ export function installSectionRuntime() {
     installEnergySignedSection();
     installEnergySection();
     installEnergyRefreshSection();
-    installStateEventGate(root.DashboardModernEnergyService?.broker, root);
+    /* Le chiavi vere, non una copia: e' l'elenco della persistenza, quello
+     * che dice cosa e' configurazione della casa. */
+    installStateEventGate(root.DashboardModernEnergyService?.broker, root, {
+      chiavi: CONFIG_KEYS,
+    });
     installEnergyLegacyGuardSection();
     installEnergyStabilitySection();
     installHomeBlocchiSection();
@@ -837,8 +854,19 @@ export function installSectionRuntime() {
     installApplianceShowcaseSection();
     installApplianceDailyPopupStyle();
     installApplianceKpiPopups();
-    installAppliancePickerLayer();
+    installFoglioDiSceltaSection();
+    /* Gli spegnimenti programmati del clima (#364): il conto alla rovescia
+     * lo tiene Home Assistant, qui si chiede una volta chi e' appeso. Prima
+     * del Clima, che alla prima passata lo legge gia'. */
+    installSpegnimentoProgrammatoSection();
+    /* La riga per cercare vive sopra il corpo dell'editor: si installa con gli
+     * altri moduli della configurazione, e si rimette a posto a ogni giro. */
+    installCercaNelConfigSection();
+    /* Le pastiglie aperto/chiuso sulle righe che nominano un varco: vale in
+     * ogni scheda dove un varco compare, non in una sola. */
+    installVarchiInConfigurazioneSection();
     installApplianceEditorSection();
+    installReportTendinaDispositiviSection();
     // Il menu delle integrazioni veste la scheda che l'editor ha appena
     // disegnato e apre la finestra di modifica che l'editor ha appena
     // sostituito: viene dopo di lui.
@@ -878,6 +906,8 @@ export function installSectionRuntime() {
     /* La scelta dei tasti dell'antifurto chiede alla vetrina quali la centrale
      * accetta: si installa dopo di lei, che quella risposta la pubblica. */
     installAlarmModesEditorSection();
+    installAntifurtoSuMisuraEditorSection();
+    installFlussoDiCasaSection();
     installClimateThermalSection();
     /* Le voci termiche del popup Caldo: dopo chi disegna il popup, cosi' il
      * pannello passa di mano una volta sola. */
@@ -896,6 +926,13 @@ export function installSectionRuntime() {
     installQuickClimateEditorSection();
     /* La valvola TRV (#300): una casella in piu' nella scheda dell'unita' clima. */
     installTrvEditor();
+    /* La ventilazione meccanica (#371): la sua scheda si appende in fondo
+     * alla configurazione del Clima, dov'e' che uno cerca l'aria di casa. */
+    installVmcEditor();
+    /* Assist (#360): il tasto che apre l'assistente di Home Assistant, e la
+     * riga che lo accende fra le Impostazioni. */
+    installAssistSection();
+    installAssistEditor();
     installLiveUiSection();
     /* Il video vero delle telecamere (#294): WebRTC e HLS nelle tessere, e il
      * WebRTC nativo del popup negoziato con i server ICE di casa. */
@@ -919,6 +956,30 @@ export function installSectionRuntime() {
     // Il cielo si installa dopo chi disegna la finestra: ridefinisce solo le
     // variabili del fondo, e le trova gia' al loro posto.
     installClimatePowerSection();
+    /* L'HLS di una telecamera vale quando il video si muove davvero (#385):
+     * si avvolge la strada del guscio, che si accontentava dell'intestazione. */
+    installVideoSiMuove();
+    /* Il fotogramma si vede prima del negoziato, e la strada che ha funzionato
+     * si prova per prima la volta dopo: «sono lentissime e non carica
+     * immediatamente immagine». Si installa DOPO chi avvolge le singole
+     * strade, cosi' la scorciatoia chiama quelle gia' corrette. */
+    installTelecameraSubito();
+    /* Le linguette del Config in ordine di alberatura, con l'insegna della
+     * famiglia davanti a ognuna: si installa dopo tutti gli editor che una
+     * linguetta se la aggiungono, cosi' al primo giro le trova gia' tutte. */
+    installAlberatura();
+    /* Lo scorrimento col dito non deve azionare quello che sfiora (#397): la
+     * guardia sta sul documento, in cattura, e vale per ogni elenco lungo —
+     * comprese le sezioni che ancora non esistono. */
+    installIlDitoScorreOTocca();
+    /* L'elenco unico delle sezioni, in ⚙️ Impostazioni: cosa c'e' e se si
+     * vede, senza aprire ventiquattro schede per scoprirlo. */
+    installElencoDelleSezioni();
+    /* Le batterie hanno la loro pagina e la loro scheda (#398): «le batterie
+     * quelle cariche non le fa vedere? sarebbe carino che stessero nel config
+     * come le altre cose». */
+    installBatterie();
+    installBatterieEditor();
     installShutterSkySection();
     installPageMastheadSection();
     /* Il meteo si accoda al nome della casa nell'intestazione: si installa
@@ -958,6 +1019,15 @@ export function installSectionRuntime() {
      * foto, quindi si installano dopo di lui. */
     installPeopleSection();
     installPeopleEditorSection();
+    /* La riga sotto il meteo (#356, #357) prima del ponte: e' il ponte a
+     * disegnarla, coi modelli delle tessere che ha appena fatto, e quando lo
+     * fa deve trovare gia' installati lo stile, il tocco e la sua scheda. */
+    installComeStaLaCasa();
+    /* Gli animali di casa (#358): la loro voce si mette accanto a quella
+     * delle Persone, quindi si installano dopo di lei; il loro editor usa il
+     * selettore foto, che e' gia' in piedi qui sopra. */
+    installAnimaliSection();
+    installAnimaliEditorSection();
     /* Il ponte dei widget sta sotto le persone in Home: si installa dopo,
      * cosi' trova gia' il suo ancoraggio. */
     installHomeWidgetsSection();
@@ -993,6 +1063,13 @@ export function installSectionRuntime() {
     installAllerteEditor();
     installRifiuti();
     installRifiutiEditor();
+    installVarchi();
+    installVarchiEditor();
+    installPresenza();
+    installPresenzaEditor();
+    installVersoBatteriaEditorSection();
+    installMacchine();
+    installMacchineEditor();
     /* Il calendario (#259) ha una pagina sua accanto alla Home, e con le liste
      * ToDo una scheda sola nella configurazione: sono la stessa pagina, e chi
      * le configura le pensa nello stesso momento. */
@@ -1026,11 +1103,11 @@ export function installSectionRuntime() {
     // The MiniPC skin owns the presentation of #page-server: it reads the bars,
     // the temperature arc and the status badges the legacy render loop writes.
     installMinipcShowcaseSection();
-    installBeta27ReleaseStability();
 
     root[RUNTIME_KEY] = Object.freeze({
       installed: true,
       sections: Object.freeze([
+        "il-guscio-disegna-quando-serve",
         "i18n",
         "data-contracts",
         ...LEGACY_SECTION_KEYS,
@@ -1060,6 +1137,7 @@ export function installSectionRuntime() {
         "smoke-alerts",
         "english-runtime-strings",
         "theme-foundation",
+        "tavolozze",
         "security-showcase",
         "security-doors",
         "security-doors-editor",
@@ -1083,6 +1161,8 @@ export function installSectionRuntime() {
         "media-picker",
         "people",
         "people-editor",
+        "animali",
+        "animali-editor",
         "home-widgets",
         "todo-editor",
         "widget-entity-choice",
@@ -1100,7 +1180,13 @@ export function installSectionRuntime() {
         "allerte-editor",
         "rifiuti",
         "rifiuti-editor",
-        "beta27-release-stability",
+        "varchi",
+        "varchi-editor",
+        "presenza",
+        "presenza-editor",
+        "verso-batteria-editor",
+        "macchine-e-rete",
+        "macchine-editor",
       ]),
       registry: root.__DASHBOARDMODERN_SECTIONS__,
       energyServices: root.__DASHBOARDMODERN_ENERGY_SERVICES__,

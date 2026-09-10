@@ -1,9 +1,11 @@
+import { eUnaFotoDaEntita, fotoDallEntita } from "../core/foto-da-entita.js";
 import { carBrandVisual } from "../core/personalization-catalog.js";
-import { eDellaWallbox } from "../core/wallbox-device-binding.js";
+import { eDellaWallbox, eTargetDiCasa } from "../core/wallbox-device-binding.js";
 import {
   VEHICLE_KEY_FIELD,
   VEHICLE_OVERRIDES_FIELD,
   VEHICLE_PHOTO_FIELDS,
+  conLeCaselleScritte,
   nuovoVeicolo,
   pickVehicle,
   storedVehicles,
@@ -43,7 +45,14 @@ function integrationAssetRoot(base) {
   } catch (_error) { return ""; }
 }
 
-export function resolveVehicleAsset(value, base = doc?.baseURI || root.location?.href || "") {
+export function resolveVehicleAsset(value, base = doc?.baseURI || root.location?.href || "", states) {
+  /* La foto puo' essere un'entita' invece di un file (#369): «alcune
+   * integrazioni come UConnect mettono a disposizione questa entita'». Si
+   * guarda qui perche' qui passa OGNI foto dell'auto — l'eroe, la vetrina, il
+   * profilo — e chi disegna non deve sapere se sta guardando un file o
+   * un'entita'. L'indirizzo lo da' Home Assistant col suo gettone, quindi si
+   * aggiorna da se' e non resta in cache quando la foto e' un'altra. */
+  if (eUnaFotoDaEntita(value)) return fotoDallEntita(value, states || allStates());
   let raw = typeof value === "string" ? value : value?.url || value?.path || "";
   raw = clean(raw).replaceAll("\\", "/");
   if (!raw) return "";
@@ -347,13 +356,26 @@ function rimettiInUso(auto, indice) {
  * seconda di dimenticare cosa fa la prima. */
 function scriviNeiCampi(contenitore, quale) {
   let scritti = 0;
-  for (const slot of contenitore.querySelectorAll('input.ed-slot-in[data-ref^="dm.ev_"]')) {
-    const valore = quale(clean(slot.dataset.ref));
-    if (valore === null || slot.value === valore) continue;
-    slot.value = valore;
-    slot.dispatchEvent(new Event("input", { bubbles: true }));
-    slot.dispatchEvent(new Event("change", { bubbles: true }));
-    scritti += 1;
+  /* Quello che scrive la plancia non e' una correzione a mano (#444).
+   *
+   * Qui si riempiono i campi dal profilo, e riempirli manda un `change` — deve
+   * mandarlo, o il guscio non se ne accorge. Ma `change` e' anche il momento in
+   * cui una casella corretta a mano entra nel profilo, e senza questo segno il
+   * profilo si sarebbe riscritto da se': profilo nei campi, campi nel profilo,
+   * e daccapo. Un valore che la plancia ha appena messo li' non e' una
+   * risposta di nessuno. */
+  state.dettandoICampi = true;
+  try {
+    for (const slot of contenitore.querySelectorAll('input.ed-slot-in[data-ref^="dm.ev_"]')) {
+      const valore = quale(clean(slot.dataset.ref));
+      if (valore === null || slot.value === valore) continue;
+      slot.value = valore;
+      slot.dispatchEvent(new Event("input", { bubbles: true }));
+      slot.dispatchEvent(new Event("change", { bubbles: true }));
+      scritti += 1;
+    }
+  } finally {
+    state.dettandoICampi = false;
   }
   return scritti;
 }
@@ -373,7 +395,8 @@ function senzaLaColonnina(mappa) {
 function soloLaColonnina(mappa) {
   const uscita = {};
   for (const [chiave, valore] of Object.entries(mappa || {}))
-    if (eDellaWallbox(chiave) && clean(valore)) uscita[chiave] = valore;
+    if (clean(valore) && (eDellaWallbox(chiave) || eTargetDiCasa(chiave, valore)))
+      uscita[chiave] = valore;
   return uscita;
 }
 
@@ -464,12 +487,16 @@ function legacyPhotoRow(body) {
 }
 
 function photoFieldMarkup(kind, label, hint, value) {
-  /* Il campo resta, per chi il percorso lo sa gia'; accanto c'e' il tasto per
-   * sfogliare le cartelle di Home Assistant, che e' il modo in cui la foto si
-   * sceglie senza sapere che /config/www si chiama /local. */
+  /* Il campo resta, per chi il percorso lo sa gia'; accanto ci sono i due modi
+   * di trovarla senza saperlo: la lente cerca fra le ENTITA' che una foto ce
+   * l'hanno gia' (#369 - "alcune integrazioni come UConnect mettono a
+   * disposizione questa entita'"), la cartella sfoglia i file di Home
+   * Assistant, che e' il modo in cui la foto si sceglie senza sapere che
+   * /config/www si chiama /local. */
+  const cerca = t("Scegli un'entità immagine", "Pick an image entity");
   return `<div class="dm-ev-photo" data-ev-photo="${kind}">
     <span class="dm-ev-photo-lbl">${esc(label)}</span>
-    <span class="dm-ev-photo-row"><input class="ed-input mono" data-ev-photo-input value="${esc(value)}" placeholder="/local/auto-${kind}.png" autocomplete="off" spellcheck="false" aria-label="${esc(label)}"><button type="button" class="dm-ev-photo-browse" data-ev-photo-browse aria-label="${esc(t("Sfoglia le cartelle di Home Assistant", "Browse the Home Assistant folders"))}" title="${esc(t("Sfoglia le cartelle di Home Assistant", "Browse the Home Assistant folders"))}">📁</button></span>
+    <span class="dm-ev-photo-row"><input class="ed-input mono" data-ev-photo-input data-domain="image camera" data-dm-entity-optional="true" value="${esc(value)}" placeholder="/local/auto-${kind}.png" autocomplete="off" spellcheck="false" aria-label="${esc(label)}"><button type="button" class="dm-entity-picker dm-ev-photo-pick" data-ev-photo-pick aria-label="${esc(cerca)}" title="${esc(cerca)}">🔍</button><button type="button" class="dm-ev-photo-browse" data-ev-photo-browse aria-label="${esc(t("Sfoglia le cartelle di Home Assistant", "Browse the Home Assistant folders"))}" title="${esc(t("Sfoglia le cartelle di Home Assistant", "Browse the Home Assistant folders"))}">📁</button></span>
     <small class="dm-ev-photo-hint">${esc(hint)}</small>
     <span class="dm-ev-photo-preview" data-ev-photo-preview></span>
   </div>`;
@@ -499,7 +526,12 @@ function savePhotos(panelNode) {
   for (const field of panelNode.querySelectorAll("[data-ev-photo]")) {
     const kind = field.dataset.evPhoto === "plugged" ? "plugged" : "idle";
     const value = clean(field.querySelector("[data-ev-photo-input]")?.value);
-    const stored = value ? resolveVehicleAsset(value) || value : "";
+    /* Un'entita' si salva com'e' scritta (#369).
+     *
+     * `resolveVehicleAsset` ne tira fuori l'indirizzo di ADESSO, gettone di
+     * cache compreso: salvare quello vorrebbe dire congelare lo scatto di
+     * oggi e perdere il legame con l'integrazione, che e' tutto il punto. */
+    const stored = value ? (eUnaFotoDaEntita(value) ? value : resolveVehicleAsset(value) || value) : "";
     salvate[kind] = stored;
     if (scriveIlDisegno) root.localStorage?.setItem(EV_PHOTO_KEYS[kind], JSON.stringify(stored));
     // Written: what is on screen and what is stored say the same thing again.
@@ -637,8 +669,12 @@ export function ensureVehiclePhotoEditor() {
         "Due scatti della stessa auto: la plancia mostra quello con il cavo attaccato mentre è in ricarica e l'altro nel resto del tempo. Basta la prima: senza la seconda resta sempre quella.",
         "Two shots of the same car: the dashboard shows the plugged-in one while it charges and the other one the rest of the time. The first is enough — without the second it simply stays.",
       )}</div>
+      <div class="ed-intro">${t(
+        "Al posto del percorso puoi scrivere un'entità immagine (image.auto) o una telecamera (camera.auto): la foto la tiene aggiornata l'integrazione, e la lente 🔍 te la fa cercare.",
+        "Instead of a path you can write an image entity (image.car) or a camera (camera.car): the integration keeps the photo up to date, and the 🔍 lens finds it for you.",
+      )}</div>
       <div class="dm-ev-photo-grid">
-        ${photoFieldMarkup("idle", t("Cavo staccato", "Cable unplugged"), t("Percorso sotto /local, es. /local/auto.png", "Path under /local, e.g. /local/car.png"), photos.idle)}
+        ${photoFieldMarkup("idle", t("Cavo staccato", "Cable unplugged"), t("Percorso /local o entità immagine, es. /local/auto.png o image.auto", "A /local path or an image entity, e.g. /local/car.png or image.car"), photos.idle)}
         ${photoFieldMarkup("plugged", t("Cavo attaccato", "Cable plugged in"), t("Facoltativa: mostrata durante la ricarica", "Optional: shown while charging"), photos.plugged)}
       </div>
       <button type="button" class="ed-save-btn" data-ev-photos-save>💾 ${t("Salva foto", "Save photos")}</button>`;
@@ -655,6 +691,31 @@ export function ensureVehiclePhotoEditor() {
     panelNode.querySelector("[data-ev-photos-save]").addEventListener("click", () => {
       savePhotos(panelNode);
       panelNode.dataset.saved = "true";
+    });
+    panelNode.addEventListener("click", (event) => {
+      const lente = event.target?.closest?.("[data-ev-photo-pick]");
+      if (!lente) return;
+      event.preventDefault();
+      const field = lente.closest("[data-ev-photo]");
+      const input = field?.querySelector("[data-ev-photo-input]");
+      if (!input) return;
+      /* Il catalogo scrive nel campo e dice `change`: da li' in poi la scelta
+       * e' di chi configura, esattamente come se l'avesse battuta. Si ascolta
+       * una volta sola — il campo resta, il gesto no. */
+      input.addEventListener(
+        "change",
+        () => {
+          const pannello = evEditorBody()?.querySelector(":scope > [data-ev-photos]") || panelNode;
+          const casella = input.closest("[data-ev-photo]");
+          if (!casella?.isConnected) return;
+          casella.dataset.evPhotoEdited = "true";
+          paintPhotoPreview(casella);
+          savePhotos(pannello);
+          pannello.dataset.saved = "true";
+        },
+        { once: true },
+      );
+      root.wzPickEntity?.(input);
     });
     panelNode.addEventListener("click", async (event) => {
       const button = event.target?.closest?.("[data-ev-photo-browse]");
@@ -1744,6 +1805,66 @@ function installLegacyWrappers() {
     addProfile.__dmPrevious = previous;
     root.edEvCarAdd = addProfile;
   }
+  /* Le caselle appena scritte, dentro il profilo di chi sono.
+   *
+   * Di CHI sono lo dice la stessa domanda che si fa il tasto «Salva auto»:
+   * senza un gesto esplicito la scheda racconta l'auto in uso, la matita apre
+   * quella vettura, e una bozza — «＋ Aggiungi auto» — non e' ancora nessuno,
+   * quindi le sue caselle non appartengono a nessuno finche' non la si salva.
+   *
+   * La raccolta la fa `cdEvCaptureProfile`, che rilegge ogni campo `dm.ev_*`
+   * del modulo ed e' gia' avvolto qui sopra per tenere fuori la colonnina:
+   * quella e' della casa, e non entra nel profilo di una vettura. */
+  function prendiLeCaselle(scritte) {
+    /* Mentre e' la plancia a dettare i campi non si ascolta: quello che scrive
+     * lei non e' una correzione di nessuno, e prenderla per tale vorrebbe dire
+     * riscrivere il profilo con quello che ne era appena uscito. */
+    if (state.dettandoICampi || state.prendendoLeCaselle) return false;
+    if (!scritte || !Object.keys(scritte).length) return false;
+    const chiave = editingKey();
+    if (chiave === "") return false;
+    const elenco = profiles();
+    let bersaglio = null;
+    if (chiave) bersaglio = elenco.find((car) => uidDi(car) === chiave) || null;
+    else {
+      /* Senza un gesto esplicito comanda il NOME scritto, ed e' la stessa
+       * domanda che si fa il tasto «Salva auto»: il nome scelto scegle l'auto
+       * che lo porta gia'; un nome nuovo e' una vettura che sta nascendo, e le
+       * sue caselle non sono di nessuno finche' non la si salva.
+       *
+       * Versarle nell'auto in uso e' il modo in cui due auto si mescolano —
+       * l'ho fatto, e `ev-two-profiles` me l'ha detto: si mappa la Zoe, si
+       * salva, si rimappa per la Tesla, e la Zoe si prendeva la batteria della
+       * Tesla prima che la Tesla esistesse. */
+      const nomeScritto = clean(doc?.getElementById("ed-evcar-name")?.value);
+      const omonima = nomeScritto
+        ? elenco.find((car) => clean(car?.name) === nomeScritto) || null
+        : null;
+      if (nomeScritto && !omonima) return false;
+      bersaglio = omonima || activeVehicle(elenco);
+    }
+    if (!bersaglio) return false;
+    const { cars, cambiato } = conLeCaselleScritte(
+      elenco,
+      uidDi(bersaglio),
+      scritte,
+      (ref, valore) => eDellaWallbox(ref) || eTargetDiCasa(ref, valore),
+    );
+    /* Niente da cambiare, niente da salvare: una casella si salva sul `change`
+     * del campo, e spingere la configurazione a ogni battito sarebbe una
+     * sincronizzazione per ogni lettera scritta. */
+    if (!cambiato) return false;
+    /* Salvare le auto fa ridisegnare la scheda, e ridisegnarla puo' riportare
+     * qui: un giro solo, e chi ci rientra dentro trova la porta chiusa. */
+    state.prendendoLeCaselle = true;
+    try {
+      salvaAuto(cars);
+    } finally {
+      state.prendendoLeCaselle = false;
+    }
+    return true;
+  }
+
   /* «SALVA SEZIONE» salva anche le foto.
    *
    * Il bottone verde in fondo alla sezione raccoglie i campi entita' e
@@ -1764,6 +1885,21 @@ function installLegacyWrappers() {
           savePhotos(panel);
           panel.dataset.saved="true";
         }
+        /* E le caselle nel profilo dell'auto (#444).
+         *
+         * Qui e non sul `change` del singolo campo, e l'ho imparato rompendolo:
+         * mentre una casella cambia non si SA di chi sia. Comporre un'auto
+         * nuova usa gli stessi campi — prima le entita', poi il nome — e al
+         * momento del `change` il nome e' ancora quello di prima. La domanda
+         * «di chi sono queste caselle» ha una risposta solo quando si salva, ed
+         * e' per questo che il tasto «Salva auto» la fa li'.
+         *
+         * «SALVA SEZIONE» e' l'altro salvataggio che raccoglie i campi entita',
+         * ed e' quello che chiunque preme: sta in fondo e dice «salva la
+         * sezione». Le caselle si prendono tutte, perche' e' quello che vuol
+         * dire, ed e' un gesto solo, che non torna. */
+        if (body?.querySelector?.('input.ed-slot-in[data-ref^="dm.ev_"]'))
+          prendiLeCaselle(root.cdEvCaptureProfile?.()?.ov || {});
       } catch (_error) {}
       return result;
     }
@@ -1848,6 +1984,9 @@ function installStyles() {
 .dm-ev-photos .dm-ev-photo-row>input{flex:1 1 auto!important;min-width:0!important}
 .dm-ev-photos .dm-ev-photo-browse{flex:0 0 40px!important;height:40px!important;border:none!important;border-radius:11px!important;background:linear-gradient(135deg,#0ea5e9,#0369a1)!important;color:#fff!important;font-size:16px!important;cursor:pointer!important}
 .dm-ev-photos .dm-ev-photo-browse:disabled{opacity:.5!important;cursor:progress!important}
+/* La lente e' quella di tutta la configurazione: qui prende la misura del
+ * tasto cartella che le sta accanto, o le due si vedevano una piu' alta. */
+.dm-ev-photos .dm-ev-photo-pick{flex:0 0 40px!important;width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important;border-radius:11px!important;font-size:15px!important}
 .dm-ev-photos .dm-ev-photo-hint{color:var(--secondary-text-color,#64748b)!important;font-size:11px!important;font-weight:650!important}
 .dm-ev-photos .dm-ev-photo-preview{display:block!important;min-height:0!important}
 .dm-ev-photos .dm-ev-photo-preview img{display:block!important;width:100%!important;max-height:112px!important;object-fit:contain!important;border-radius:11px!important;background:var(--secondary-background-color,#f6f8fb)!important}

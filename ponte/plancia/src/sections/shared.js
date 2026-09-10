@@ -1,5 +1,6 @@
 // DM-FIX-20260812B
 import { canonicalClimateType } from "../core/device-model.js";
+import { isCumulativeEnergyEntity } from "../core/period-service.js";
 import {
   DEFAULT_LOCALE,
   SOURCE_LOCALE,
@@ -405,6 +406,23 @@ export function chiediAHomeAssistant(payload, timeout = 8000) {
   });
 }
 
+/* Che aspetto ha una lente, dovunque la si trovi.
+ *
+ * Quasi tutte le schede scrivono la loro col nome di casa — `.dm-entity-picker`
+ * — ma due se l'erano fatta col proprio: gli animali e il robot. Chi le
+ * cercava conosceva solo il primo nome, quindi su quelle righe non ne trovava
+ * nessuna e ne aggiungeva una seconda. Poi la riga «Scegli entita'» si prende
+ * la lente e ci si trasforma dentro — e' proprio lei a diventare la riga — ma
+ * si prendeva quella appena aggiunta, e quella della scheda restava li' accanto
+ * come un quadratino azzurro col 🔍 che non serviva piu' a niente. E' la
+ * segnalazione: «elimina le lenti di ricerca».
+ *
+ * Il nome della lente si dice una volta sola, qui, e lo usano tutti e due —
+ * chi la cerca per non rifarla e chi la trasforma in riga. Il piu' («aggiungi
+ * comando») non e' una lente: apre un campo, non un catalogo. */
+export const LENTE_SELECTOR =
+  ".dm-entity-picker,.dm-animale-pick,.dm-robot-pick:not(.dm-robot-aggiungi),button[onclick*='wzPickEntity']";
+
 export function lexicalGlobal(name) {
   try {
     const value = root.eval?.(`typeof ${name} !== "undefined" && ${name} ? ${name} : null`);
@@ -488,12 +506,118 @@ export function allStates() {
   return values;
 }
 
+/* «E' un contatore di vita?» — una domanda sola, e gli stati dove stanno.
+ *
+ * La risposta canonica e' in period-service, ed e' quella su cui si regge
+ * tutto il calcolo dell'energia. Il Report ne teneva due copie private, una
+ * nella riga della configurazione e una nella finestra della voce, e tutte e
+ * due chiedevano gli stati a `root.STATES`: ma `STATES` e `_RAW_STATES` sono
+ * binding lessicali del guscio, e da un modulo `root.STATES` e' sempre
+ * `undefined`. Le due copie non hanno mai letto uno `state_class` in vita
+ * loro: decidevano solo dal nome dell'entita'. Cosi' un contatore vero —
+ * `sensor.lavastoviglie_energia`, `total_increasing` — si prendeva
+ * «l'entita' non sembra cumulativa» e la finestra rifiutava di salvarlo.
+ *
+ * Qui la domanda si fa una volta, e gli stati si chiedono ad `allStates()`,
+ * che sa dove il guscio li tiene. */
+export function isLifetimeMeter(entity) {
+  return isCumulativeEnergyEntity(entity, allStates());
+}
+
 export function readJson(key, fallback) {
   try {
     return JSON.parse(root.localStorage?.getItem(key) || "") ?? fallback;
   } catch (_error) {
     return fallback;
   }
+}
+
+/* ── si dipinge per chi guarda, e solo di cio' che e' cambiato ───────────── */
+
+/* Le pagine restano nel documento: il guscio le nasconde, non le toglie. Una
+ * sezione che ridisegna a ogni mazzetto di stati — mezzo secondo, una casa
+ * vera ne manda di continuo — lavora quindi anche per le otto pagine che
+ * nessuno ha davanti. Con il profilatore in mano quelle passate erano la voce
+ * piu' grossa del processore, ed e' il calore del mini PC segnalato dal campo.
+ *
+ * La regola l'avevano gia' scritta in casa loro la Home e la scena
+ * dell'Energia, ognuna a modo suo. Qui e' scritta una volta: chi disegna una
+ * pagina chiede se quella pagina si vede, e chi ascolta i cambi di stato
+ * chiede se il mazzetto tocca roba sua. Al ritorno sulla linguetta si ridipinge
+ * comunque — le sezioni si agganciano gia' al tocco, a `pageshow` e agli
+ * annunci del guscio — quindi chi arriva trova quello che c'e' adesso e non
+ * quello di quando se n'e' andato.
+ */
+
+/* Chi disegna una pagina sola si rimette in moto quando quella pagina arriva.
+ *
+ * Le sezioni gated qui sopra saltano il giro quando la loro pagina non si vede.
+ * Il tocco su una linguetta e' il momento in cui torna a vedersi, e chi
+ * disegna deve rifare la passata subito: aspettare il prossimo mazzetto di
+ * stati vorrebbe dire arrivare su una pagina ferma a com'era quando la si era
+ * lasciata. Si ascolta in cattura e si rimanda di un giro, perche' la classe
+ * `active` la scrive il guscio nel suo gestore, cioe' dopo di noi. */
+export function quandoSiCambiaPagina(callback) {
+  doc?.addEventListener?.(
+    "click",
+    (event) => {
+      if (event.target?.closest?.("[data-tab],[data-page],.bottom-nav-btn,.back-home-btn"))
+        root.setTimeout?.(callback, 0);
+    },
+    true,
+  );
+  root.addEventListener?.("pageshow", callback);
+  return true;
+}
+
+/* La plancia si vede?
+ *
+ * Due cose la spengono agli occhi di chi la usa, e nessuna delle due toglie
+ * niente dal documento: la scheda del browser che passa in secondo piano, e il
+ * parcheggio — la plancia messa da parte da chi la ospita quando si va su
+ * un'altra pagina di Home Assistant. Il segno del parcheggio lo scrive
+ * `src/legacy/host.js` sulla finestra, ed e' un patto fra due programmi come
+ * `__DASHBOARDMODERN_HOSTED__`: il nome sta scritto in tutti e due i posti. */
+const SEGNO_DEL_PARCHEGGIO = "__DASHBOARDMODERN_PARCHEGGIATA__";
+
+export function planciaVisibile(documento = doc) {
+  if (root[SEGNO_DEL_PARCHEGGIO] === true) return false;
+  return documento?.visibilityState !== "hidden";
+}
+
+/**
+ * La pagina di questa sezione e' quella aperta, e la plancia si vede.
+ *
+ * Una pagina che non c'e' conta come visibile: chi la cerca disegna altrove —
+ * un guscio fatto in un altro modo, una prova — e tacere li' vorrebbe dire
+ * spegnere quella sezione per sempre invece di risparmiare un giro.
+ */
+export function paginaVisibile(pageId, documento = doc) {
+  if (!planciaVisibile(documento)) return false;
+  const pagina = documento?.getElementById?.(pageId);
+  return !pagina || pagina.classList.contains("active");
+}
+
+/**
+ * Il mazzetto di stati tocca una delle entita' che questa sezione usa?
+ *
+ * Senza elenco — una sezione che non sa dire cosa legge — si dipinge, che e'
+ * come si e' sempre fatto. E un avviso che non dice quali entita' porta non si
+ * scarta: e' un annuncio generico, non un mazzetto.
+ */
+export function ilCambioTocca(event, ids) {
+  const elenco =
+    ids instanceof Set
+      ? ids
+      : new Set((Array.isArray(ids) ? ids : [ids]).map(clean).filter(Boolean));
+  if (!elenco.size) return true;
+  const detail = event?.detail;
+  const cambiate = detail?.entity_ids || (detail?.entity_id ? [detail.entity_id] : null);
+  if (!Array.isArray(cambiate) && !cambiate) return true;
+  for (const id of Array.isArray(cambiate) ? cambiate : [cambiate]) {
+    if (elenco.has(clean(id))) return true;
+  }
+  return false;
 }
 
 /* Le cose che si guardano e basta.
@@ -569,6 +693,61 @@ export function righeDelDocumento(body, attributo, lista, leggi, tieni) {
     if (!tieni || tieni(bozza, next[posizione], posizione)) next[posizione] = bozza;
   }
   return next;
+}
+
+/* Le righe che i moduli aggiungono alla scheda ⚙️ Impostazioni, in ordine.
+ *
+ * Sta scritto qui e non dentro i moduli perche' «in che ordine si leggono» e'
+ * una domanda sola: sparpagliata in due file, la risposta la si ricava
+ * aprendoli tutti e due. Un numero nuovo si infila in mezzo senza toccare gli
+ * altri — sono distanziati apposta. */
+export const ORDINE_IMPOSTAZIONI = Object.freeze({ lingua: 10, assist: 20, sezioni: 30 });
+
+/* Da dove parte il blocco delle righe aggiunte: subito sotto il tasto «salva»
+ * del blocco «Generali» del guscio, che si riconosce dal gestore e non dalla
+ * scritta — quella cambia con la lingua. Il blocco pero' il guscio lo disegna
+ * solo a chi puo' vederlo: dove non c'e', le righe si mettono in cima. */
+export const dopoIGenerali = (corpo) => corpo?.querySelector?.('[onclick*="edSaveGeneral"]') || null;
+
+/* L'attributo che porta il posto di una riga aggiunta da un modulo. */
+export const ATTRIBUTO_ORDINE = "data-dm-ordine";
+
+/**
+ * Mette una riga in una scheda dell'editor al posto che le spetta.
+ *
+ * Le righe che i moduli aggiungono a una scheda del guscio — la lingua e
+ * Assist nelle Impostazioni — si mettevano ognuna con la propria ancora: la
+ * lingua sotto il tasto «salva» dei Generali, Assist sotto la lingua. Ma
+ * l'ancora di Assist e' una riga che a quel momento puo' non esserci ancora, e
+ * allora Assist ricadeva in cima alla scheda: chi si installa per primo vince,
+ * e l'ordine di quello che si legge diventa l'ordine in cui i moduli si
+ * caricano. «Lingua non presente nella parte iniziale del config dove c'e'
+ * assistenza, prima usciva li'.»
+ *
+ * Qui l'ordine e' un numero che la riga si porta scritto addosso, e chi arriva
+ * si mette fra chi ha un numero piu' basso e chi ce l'ha piu' alto. Arrivare
+ * primo o ultimo non cambia piu' niente, e una terza riga domani non deve
+ * sapere di queste due: le basta il suo numero.
+ *
+ * `ancora(dentro)` dice da dove parte il blocco quando la riga e' la prima ad
+ * arrivare — di solito un pezzo del guscio.
+ */
+export function inserisciInOrdine(dentro, riga, ordine, ancora) {
+  if (!dentro || !riga) return null;
+  const posto = finite(ordine, 0);
+  riga.setAttribute(ATTRIBUTO_ORDINE, String(posto));
+  const sorelle = [...(dentro.querySelectorAll?.(`[${ATTRIBUTO_ORDINE}]`) || [])].filter(
+    (nodo) => nodo !== riga && nodo.parentElement === dentro,
+  );
+  const dopo = sorelle.find((nodo) => finite(nodo.getAttribute(ATTRIBUTO_ORDINE), 0) > posto);
+  if (dopo) dentro.insertBefore(riga, dopo);
+  else if (sorelle.length) sorelle[sorelle.length - 1].after(riga);
+  else {
+    const partenza = ancora?.(dentro);
+    if (partenza) partenza.after(riga);
+    else dentro.prepend(riga);
+  }
+  return riga;
 }
 
 export function writeJsonIfChanged(key, value, { sync = true } = {}) {
@@ -768,6 +947,70 @@ export function onEditorRedraw(marker, callback) {
     });
   }
   return avvolto;
+}
+
+/**
+ * Tiene un blocco aggiunto alla scheda del Config, comunque la scheda cambi.
+ *
+ * `onEditorRedraw` avvisa quando la scheda si rifa' per due strade — la
+ * navigazione fra le linguette e `renderCurrentEditor` — e a lungo e' bastato.
+ * Non basta piu': il corpo della scheda lo rifa' anche chi salva, e chi apre la
+ * finestra da un tasto qualunque della plancia. Un blocco appeso li' dentro
+ * sparisce e non torna, perche' nessuno gli dice che il corpo e' un altro.
+ *
+ * Il caso che l'ha reso una regola e' #431: «non fa inserire altri tasti oltre
+ * al primo». Aggiungere il primo tasto salva, salvare ridisegna la scheda, e il
+ * blocco dei tasti su misura se ne andava con lei — il secondo «＋» non c'era
+ * piu' da premere. Il blocco delle modalita', che sta due righe sopra e ha lo
+ * stesso problema, se l'era gia' risolto per conto suo con un osservatore. Una
+ * meta' della stessa fila sapeva rimettersi in piedi e l'altra no.
+ *
+ * Il corpo che cambia figli e' l'unico segnale che vuol dire davvero «la scheda
+ * e' nuova»: si guarda quello, e l'osservatore si riattacca al corpo di adesso
+ * — la finestra si apre e si chiude, e ogni volta il corpo e' un altro.
+ *
+ * `disegna` deve saper uscire subito quando non c'e' niente da rifare: qui la
+ * si chiama spesso.
+ */
+export function tieniIlBloccoNellaScheda(marker, disegna) {
+  const registro = (root.__dmBlocchiDellaScheda ||= new Map());
+  const richiama = () => {
+    try {
+      disegna();
+    } catch (_errore) {}
+  };
+  const aggancia = () => {
+    onEditorRedraw(marker, richiama);
+    const corpo = doc?.getElementById?.("ed-body");
+    const suo = registro.get(marker);
+    if (!corpo || suo?.corpo === corpo) return;
+    suo?.osservatore?.disconnect?.();
+    if (typeof root.MutationObserver !== "function") {
+      registro.set(marker, { corpo, osservatore: null });
+      return;
+    }
+    const osservatore = new root.MutationObserver(() => root.queueMicrotask?.(richiama));
+    osservatore.observe(corpo, { childList: true });
+    registro.set(marker, { corpo, osservatore });
+  };
+  if (!registro.has(marker)) {
+    registro.set(marker, { corpo: null, osservatore: null });
+    /* Al primo clic il corpo puo' non esserci ancora, al secondo si'. Guardare
+     * ogni clic costa una ricerca per id, e smette di costare appena
+     * l'osservatore e' attaccato. */
+    doc?.addEventListener?.(
+      "click",
+      () =>
+        root.queueMicrotask?.(() => {
+          aggancia();
+          richiama();
+        }),
+      true,
+    );
+  }
+  aggancia();
+  richiama();
+  return aggancia;
 }
 
 export function selectedPeriod() {

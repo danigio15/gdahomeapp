@@ -17,19 +17,24 @@
  * comportamento di chi non ha mai toccato niente.
  */
 import {
+  LOCALE_LEGACY_KEY,
   LOCALE_STORAGE_KEY,
   detectLocale,
   getLocale,
   hostLocale,
   localeInfo,
+  readStoredLocale,
   resetLocale,
   setLocale,
   supportedLocales,
 } from "../core/i18n.js";
 import {
+  ORDINE_IMPOSTAZIONI,
   clean,
   doc,
+  dopoIGenerali,
   esc,
+  inserisciInOrdine,
   installStyle,
   onEditorRedraw,
   root,
@@ -47,12 +52,28 @@ function schedaAttiva() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
 
-/** La scelta salvata, se c'e': altrimenti si segue Home Assistant. */
+/** La scelta salvata, se c'e': altrimenti si segue Home Assistant.
+ *
+ * La legge il motore, che sa anche dove stava prima (#350): chiedere qui la
+ * chiave a mano voleva dire una tendina che dice «Lingua di Home Assistant»
+ * mentre la plancia parla italiano, perche' la scelta era scritta di la'. */
 export function linguaScelta() {
   try {
-    return clean(root.localStorage?.getItem?.(LOCALE_STORAGE_KEY)) || AUTO;
+    return clean(readStoredLocale()) || AUTO;
   } catch (_error) {
     return AUTO;
+  }
+}
+
+/* Tornare all'automatico vuol dire cancellare la scelta, e la scelta puo'
+ * essere scritta in due posti finche' esistono plance che non hanno ancora
+ * fatto il travaso: si tolgono tutti e due, o quella vecchia la riporterebbe
+ * in vita al prossimo giro. */
+function dimenticaLaScelta() {
+  for (const chiave of [LOCALE_STORAGE_KEY, LOCALE_LEGACY_KEY]) {
+    try {
+      root.localStorage?.removeItem?.(chiave);
+    } catch (_error) {}
   }
 }
 
@@ -94,12 +115,14 @@ function rigaMarkup() {
 export function ensureLingua() {
   const corpo = doc?.getElementById("ed-body");
   if (!corpo || schedaAttiva() !== SCHEDA) return false;
-  /* L'ancora e' il tasto del guscio che chiude il blocco «Generali»: la lingua
-   * e' una preferenza generale, e sta con le altre invece che in fondo alla
-   * scheda dopo il reset totale. Si riconosce dal gestore, non dalla scritta,
-   * che cambia con la lingua — proprio quella che questa riga governa. */
-  const salva = corpo.querySelector('[onclick*="edSaveGeneral"]');
-  if (!salva) return false;
+  /* La lingua e' una preferenza generale e sta col blocco «Generali», non in
+   * fondo alla scheda dopo il reset totale. Ma quel blocco il guscio lo
+   * disegna solo a chi puo' vederlo — c'e' una casella «Utente admin (vuoto =
+   * Config visibile a tutti)» — e su una plancia dove quella casella e' piena
+   * chi guarda da un altro utente perdeva il blocco e con lui la lingua:
+   * «verifica sempre il problema della scelta lingua perche' e' scomparsa nel
+   * config». La lingua non e' del blocco Generali, e' della plancia: dove
+   * l'ancora non c'e' si mette in cima. Sparire non e' una risposta. */
   const gia = corpo.querySelector("[data-dm-lingua]");
   if (gia) {
     /* Ridisegnata la scheda, la scelta puo' essere cambiata da un'altra
@@ -112,7 +135,7 @@ export function ensureLingua() {
   guscio.innerHTML = rigaMarkup();
   const riga = guscio.firstElementChild;
   if (!riga) return false;
-  salva.after(riga);
+  inserisciInOrdine(corpo, riga, ORDINE_IMPOSTAZIONI.lingua, dopoIGenerali);
   installStile();
   return true;
 }
@@ -135,9 +158,7 @@ function installStile() {
  * ridisegna da solo sull'evento della lingua. */
 async function scegli(codice) {
   if (codice === AUTO) {
-    try {
-      root.localStorage?.removeItem?.(LOCALE_STORAGE_KEY);
-    } catch (_error) {}
+    dimenticaLaScelta();
     resetLocale();
   }
   /* Si passa dallo switch pubblico, non da `setLocale` diretto.
@@ -158,11 +179,7 @@ async function scegli(codice) {
   else await setLocale(bersaglio, { persist: codice !== AUTO });
   /* Chi ha scelto l'automatico non deve ritrovarsi la scelta riscritta: lo
    * switch pubblico persiste sempre, quindi la si ricancella dopo. */
-  if (codice === AUTO) {
-    try {
-      root.localStorage?.removeItem?.(LOCALE_STORAGE_KEY);
-    } catch (_error) {}
-  }
+  if (codice === AUTO) dimenticaLaScelta();
   try {
     root.render?.();
   } catch (_error) {}

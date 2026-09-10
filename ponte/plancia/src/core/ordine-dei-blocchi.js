@@ -17,7 +17,19 @@
  * blocco: compaiono da sole quando hanno qualcosa da dire e stanno in cima
  * perche' sono un avviso. Metterle in fila con gli altri vorrebbe dire poterle
  * mandare in fondo, cioe' non vederle. */
-export const BLOCCHI_DELLA_HOME = Object.freeze(["persone", "widget", "azioni", "dispositivi"]);
+export const BLOCCHI_DELLA_HOME = Object.freeze([
+  "persone",
+  /* Il flusso dell'energia (#415) qui c'e' stato, e non c'e' piu'. La
+   * segnalazione lo voleva «accanto alle card delle persone», e adesso lo e'
+   * davvero: e' una card DENTRO la griglia delle persone, non un blocco suo.
+   * Spostarlo per conto proprio quindi non vuol dire piu' niente — si muove
+   * con le persone, che e' la cosa a cui e' accanto. Chi l'aveva messo in fila
+   * non perde nulla: `ordineDeiBlocchi` butta via i nomi che non esistono
+   * piu', ed e' proprio per questo che sa farlo. */
+  "widget",
+  "azioni",
+  "dispositivi",
+]);
 
 const NOTI = new Set(BLOCCHI_DELLA_HOME);
 

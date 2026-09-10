@@ -29,7 +29,7 @@ import {
 import { createApplianceViewModel } from "../core/appliance-view-model.js";
 import { createCycleTracker } from "../core/appliance-cycle-tracker.js";
 import { scheduleApplianceNormalization } from "./appliances-section.js";
-import { iconGlyph } from "./icon-engine-section.js";
+import { iconGlyphMarkup } from "./icon-engine-section.js";
 import { roomOrderRank } from "../core/room-overview.js";
 import {
   activeLocale,
@@ -46,6 +46,7 @@ import {
   scriviTestoSeCambia,
   section,
   t,
+  wrapFunction,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_APPLIANCE_SHOWCASE__";
@@ -183,6 +184,46 @@ function tracker() {
   return state.tracker;
 }
 
+/* I cicli si contano guardando gli stati, non le schede.
+ *
+ * «Nella sezione elettrodomestici i cicli non si conteggiano giusti. Certi
+ * partono solo quando entro nella sezione. Certi segnano tante ore in piu'.»
+ * (#363)
+ *
+ * Il campionamento stava dentro il disegno delle schede, e le schede si
+ * disegnano solo quando quella pagina si guarda — e' la regola che ha smesso
+ * di scaldare il mini PC, ed e' giusta. Ma cosi' il contatore dei cicli vedeva
+ * l'apparecchio solo mentre qualcuno lo guardava: una lavatrice partita alle
+ * otto risultava partita a mezzogiorno, quando si apriva la sezione, e una
+ * finita nel frattempo non risultava affatto.
+ *
+ * Gli stati invece arrivano sempre, qualunque pagina si stia guardando, e il
+ * guscio li raccoglie in un disegno solo per raffica. Ci si aggancia li': un
+ * campione per raffica, lo stesso conto di prima, e la sezione torna a fare
+ * solo il suo mestiere — mostrare quello che il contatore ha gia' visto. */
+export function campionaICicli() {
+  const list = devices();
+  if (!list.length) return false;
+  const states = allStates();
+  const locale = activeLocale();
+  const now = Date.now();
+  const cycles = tracker();
+  cycles.update(
+    list.map((device, index) => {
+      const model = createApplianceViewModel(device, states, [], locale);
+      const key = deviceKey(device, index);
+      return {
+        id: key,
+        mode: model.mode,
+        watts: model.watts,
+        dailyKwh: dailyEnergyKwh(device, states),
+        remainingSeconds: remainingInfo(device, states, now, cycles.record(key))?.seconds,
+      };
+    }),
+  );
+  return true;
+}
+
 function deviceKey(device, index) {
   return clean(device?.id) || `appl-idx-${index}`;
 }
@@ -294,6 +335,11 @@ const ICONS = {
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="5" y1="20" x2="5" y2="12"/><line x1="12" y1="20" x2="12" y2="5"/><line x1="19" y1="20" x2="19" y2="9"/></svg>',
   snow: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="3" x2="12" y2="21"/><line x1="4.2" y1="7.5" x2="19.8" y2="16.5"/><line x1="19.8" y1="7.5" x2="4.2" y2="16.5"/></svg>',
   home: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5"/><path d="M6 9.5V20h12V9.5"/></svg>',
+  /* «Senza stanza» aveva il punto interrogativo di sistema, ❓, che su ogni
+   * telefono ha una faccia diversa e su nessuno assomiglia alle altre voci
+   * della colonna. Disegnato come i suoi vicini: una casa col punto dentro. */
+  senzaStanza:
+    '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5"/><path d="M6 9.5V20h12V9.5"/><path d="M10.4 12.4a1.7 1.7 0 1 1 2.4 1.6c-.5.3-.8.7-.8 1.2v.3"/><circle cx="12" cy="17.6" r=".05" stroke-width="1.6"/></svg>',
 };
 
 function heroFxMarkup(model) {
@@ -452,9 +498,9 @@ export function buildCardMarkup(model, labels = copy()) {
     </span>`;
   return `<article class="appl-wide-card dm-ap-card dm-ap-mech is-${badgeClass} acc-${esc(model.accent)}${model.alarm ? " has-alarm" : ""}" data-appliance-id="${esc(model.id)}" data-idx="${model.index}" data-mode="${esc(model.mode)}" data-art="${esc(model.artworkType)}" role="button" tabindex="0" aria-label="${esc(model.name)} — ${esc(model.label)}">
     <div class="dm-ap-top">
-      <span class="dm-ap-chip" aria-hidden="true">${applianceArtwork(model.artworkType, 30) || "🔌"}</span>
-      <span class="dm-ap-headings"><span class="dm-ap-name appl-wide-name" data-dm-no-i18n>${esc(model.name)}</span>${roomName ? `<span class="dm-ap-room" data-dm-no-i18n>${esc(roomName)}</span>` : ""}</span>
-      <span class="dm-ap-badge ${badgeClass}"><i class="dm-ap-dot"></i>${esc(model.label)}</span>
+      <span class="dm-ap-chip" aria-hidden="true">${applianceArtwork(model.artworkType, 30) || iconGlyphMarkup("action", "mdi:power-plug", { size: 22 })}</span>
+      <span class="dm-ap-headings"><span class="dm-ap-name appl-wide-name" data-dm-no-i18n>${esc(model.name)}</span>
+        <span class="dm-ap-sotto">${roomName ? `<span class="dm-ap-room" data-dm-no-i18n>${esc(roomName)}</span>` : ""}<span class="dm-ap-badge ${badgeClass}"><i class="dm-ap-dot"></i>${esc(model.label)}</span></span></span>
       ${controls}
     </div>
     <div class="dm-ap-hero${heroHasImage(model) ? " has-image" : ""}">${heroMarkup(model)}${heroHasImage(model) ? heroFxMarkup(model) : ""}</div>
@@ -679,7 +725,7 @@ function renderSidebar(shell, models, counts, rooms, labels) {
           sideItem({
             key: room.id,
             kind: "room",
-            icon: esc(iconGlyph("room", room.icon || "mdi:home")),
+            icon: iconGlyphMarkup("room", room.icon || "mdi:home", { size: 17 }),
             label: room.name,
             count: counts.rooms.get(room.id) || 0,
             active: state.ui.room === room.id,
@@ -691,7 +737,7 @@ function renderSidebar(shell, models, counts, rooms, labels) {
         sideItem({
           key: "unassigned",
           kind: "room",
-          icon: "❓",
+          icon: ICONS.senzaStanza,
           label: labels.noRoom,
           count: counts.unassigned,
           active: state.ui.room === "unassigned",
@@ -883,27 +929,6 @@ export function renderShowcase(force) {
   const price = globalPriceKwh();
   const cycles = tracker();
 
-  const preliminary = list.map((device, index) => {
-    const model = createApplianceViewModel(device, states, [], locale);
-    const key = deviceKey(device, index);
-    return {
-      id: key,
-      mode: model.mode,
-      watts: model.watts,
-      dailyKwh: dailyEnergyKwh(device, states),
-      remainingSeconds: remainingInfo(device, states, now, cycles.record(key))?.seconds,
-    };
-  });
-  cycles.update(preliminary);
-
-  if (now - state.sparkTs >= SPARK_SAMPLE_MS || !state.spark.length) {
-    state.sparkTs = now;
-    state.spark.push(
-      preliminary.reduce((sum, entry) => sum + Math.max(0, finiteOrNull(entry.watts) ?? 0), 0),
-    );
-    if (state.spark.length > SPARK_MAX_SAMPLES) state.spark.shift();
-  }
-
   const models = list.map((device, index) =>
     applianceCardModel(device, states, {
       rooms,
@@ -919,6 +944,17 @@ export function renderShowcase(force) {
   const keyed = models.map((model, index) =>
     model.id ? model : Object.freeze({ ...model, id: deviceKey(list[index], index) }),
   );
+
+  /* La riga dei watt si campiona da quello che le schede mostrano, che e' lo
+   * stesso numero di prima: il conto preliminare che stava qui e' andato dove
+   * doveva stare — con il contatore dei cicli, fuori dal disegno. */
+  if (now - state.sparkTs >= SPARK_SAMPLE_MS || !state.spark.length) {
+    state.sparkTs = now;
+    state.spark.push(
+      keyed.reduce((sum, model) => sum + Math.max(0, finiteOrNull(model.watts) ?? 0), 0),
+    );
+    if (state.spark.length > SPARK_MAX_SAMPLES) state.spark.shift();
+  }
 
   const counts = showcaseCounts(keyed);
   const visible = filterShowcaseModels(keyed, state.ui);
@@ -1115,6 +1151,11 @@ export function installApplianceShowcaseSection() {
   installOverrides();
   if (!state.listeners) {
     state.listeners = true;
+    /* Il contatore dei cicli si aggancia al disegno del guscio, che gira a ogni
+     * raffica di stati qualunque pagina si stia guardando — non al disegno di
+     * questa sezione, che gira solo quando la si guarda. Vedi
+     * `campionaICicli`. */
+    wrapFunction("render", "__dmApplianceCycles", campionaICicli);
     doc.addEventListener("click", onShellClick);
     doc.addEventListener("change", onShellChange);
     doc.addEventListener("keydown", onShellKeydown);
@@ -1243,7 +1284,16 @@ function showcaseCss() {
  * di uno e la spaziatura di un altro. Nessuno aveva scelto quel nome li'.
  * Adesso sono i valori che si vedevano, scritti dove nasce la scheda. */
 .dm-ap-name{min-width:0;font-size:15px;font-weight:950;letter-spacing:-.15px;line-height:1.12;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dm-ap-room{font-size:10px;font-weight:750;color:var(--dm-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dm-ap-room{font-size:10px;font-weight:750;color:var(--dm-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+/* Il nome ha la riga per se'.
+ *
+ * Dal campo: «i nomi degli elettrodomestici non entrano nella card» — e
+ * usciva «Friggitric…», «Lavastovi…». Il nome divideva la riga con la
+ * pastiglia dello stato e due tasti: su una scheda stretta gli restavano
+ * quaranta pixel, e la parte tagliata era proprio quella che distingue una
+ * macchina dall'altra. Adesso la pastiglia scende accanto alla stanza, dov'e'
+ * l'informazione di contorno, e il nome si prende tutta la larghezza. */
+.dm-ap-sotto{display:flex;align-items:center;gap:6px;min-width:0}
 .dm-ap-badge{display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;padding:4px 7px;border-radius:999px;font-size:8.5px;font-weight:900;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap}
 .dm-ap-badge.run{background:#dcfce7;color:#15803d}
 .dm-ap-badge.standby{background:#dbeafe;color:#2563eb}
@@ -1393,7 +1443,14 @@ function showcaseCss() {
 @media(max-width:520px){.dm-appl-shell .dm-ap-program{margin:8px 10px 0;gap:5px}.dm-appl-shell .dm-ap-fact{font-size:10.5px;padding:3px 8px}}
 /* list view */
 .dm-appl-shell[data-view="list"] #appl-grid-overview.dm-appl-grid,.dm-appl-shell[data-view="list"] .dm-appl-grid{grid-template-columns:1fr;gap:10px}
-.dm-appl-shell[data-view="list"] .appl-wide-card.dm-ap-card{display:grid;grid-template-columns:64px minmax(150px,.85fr) minmax(220px,1.15fr) minmax(0,1.5fr);grid-template-areas:"hero top panel cycle";align-items:center;gap:14px;padding:10px 14px}
+/* La striscia del programma ha una riga sua, sotto il nome (#389).
+   Stava in «top», la stessa cella del nome e della pastiglia di stato: due
+   elementi nella stessa cella di una griglia non si spingono, si impilano —
+   ed e' la sovrapposizione segnalata. La seconda riga esiste sempre ma e'
+   alta zero quando il programma non c'e' (il suo elemento non viene proprio
+   disegnato), percio' lo spazio fra le righe e' zero e l'aria se la prende il
+   programma con il suo margine: senza programma la card resta identica. */
+.dm-appl-shell[data-view="list"] .appl-wide-card.dm-ap-card{display:grid;grid-template-columns:64px minmax(150px,.85fr) minmax(220px,1.15fr) minmax(0,1.5fr);grid-template-areas:"hero top panel cycle" "hero prog panel cycle";align-items:center;gap:0 14px;padding:10px 14px}
 .dm-appl-shell[data-view="list"] .dm-ap-top{grid-area:top;display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:0;min-width:0}
 .dm-appl-shell[data-view="list"] .dm-ap-chip{display:none}
 .dm-appl-shell[data-view="list"] .dm-ap-headings{flex:1 1 100%;min-width:0}
@@ -1402,14 +1459,19 @@ function showcaseCss() {
 .dm-appl-shell[data-view="list"] .dm-ap-hero .dm-ap-fx{display:none}
 .dm-appl-shell[data-view="list"] .dm-ap-img{padding:2px}
 .dm-appl-shell[data-view="list"] .dm-ap-panel{grid-area:panel;margin:0;padding:8px 12px;gap:10px}
-.dm-appl-shell[data-view="list"] .dm-ap-program{grid-area:top;align-self:end;margin:0;flex-basis:100%}
+.dm-appl-shell[data-view="list"] .dm-ap-program{grid-area:prog;margin:6px 0 0;justify-self:start}
 .dm-appl-shell[data-view="list"] .dm-ap-ring{width:50px;height:50px;flex:0 0 50px}
 .dm-appl-shell[data-view="list"] .dm-ap-ring-copy b{font-size:11px}
 .dm-appl-shell[data-view="list"] .dm-ap-ring-copy small{font-size:5px}
 .dm-appl-shell[data-view="list"] .dm-ap-cycle{grid-area:cycle;margin:0;padding:8px 12px 7px}
 .dm-appl-shell[data-view="list"] .dm-ap-cycle-cap{margin-bottom:4px}
 @media(max-width:1120px){
-.dm-appl-shell[data-view="list"] .appl-wide-card.dm-ap-card{grid-template-columns:64px minmax(0,1fr);grid-template-areas:"hero top" "panel panel" "cycle cycle";row-gap:10px}
+.dm-appl-shell[data-view="list"] .appl-wide-card.dm-ap-card{grid-template-columns:64px minmax(0,1fr);grid-template-areas:"hero top" "hero prog" "panel panel" "cycle cycle";row-gap:0}
+/* Lo spazio fra le fasce era il salto fra le righe, che pero' lo metterebbe sopra
+   la riga vuota del programma: qui lo portano i margini, che esistono solo
+   dove c'e' qualcosa. */
+.dm-appl-shell[data-view="list"] .dm-ap-panel{margin-top:10px}
+.dm-appl-shell[data-view="list"] .dm-ap-cycle{margin-top:10px}
 }
 /* responsive */
 @media(max-width:980px){
