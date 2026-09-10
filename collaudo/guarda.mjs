@@ -1211,6 +1211,55 @@ try {
    * rete — non stavano da nessuna parte. La lavatrice ne ha dodici e non
    * aveva nessuna schermata. Si fotografano tutte e due, e si apre la matita:
    * il nome di una casella si riscrive, come nella plancia. */
+  /* Le schede che il controllo campo per campo ha allungato.
+   *
+   * Una finestra nella plancia ha tre coperture, due contatti, il rele' di
+   * discesa, la posizione preferita e due soglie sue; nell'app aveva quattro
+   * caselle. La piscina ha piu' di una vasca. L'irrigazione guarda l'umidita'
+   * del terreno e salta il turno sul bagnato. */
+  racconta("apro una finestra");
+  await premiCercando(pagina, "Finestre");
+  await aspettaCheCompaia(pagina, "Aggiungi una finestra");
+  await attendi(700);
+  await premi(pagina, "Aggiungi una finestra");
+  await aspettaCheCompaia(pagina, "Che copertura e'");
+  await attendi(800);
+  await scatta(pagina, "6w-una-finestra");
+  await scorri(pagina, 700);
+  await attendi(500);
+  await scatta(pagina, "6w2-una-finestra-le-coperture");
+  /* La scheda di una finestra e' un foglio che si chiude col Back, e
+   * chiudendolo senza toccare niente non c'e' niente da salvare: la barra non
+   * compare, e cercare «Lascia stare» qui fermava il giro. */
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
+  racconta("apro la piscina");
+  await premiCercando(pagina, "Piscina");
+  /* Le insegne della pagina si disegnano in maiuscolo — «I SENSORI» — e
+   * cercarle com'e' scritto nel codice non le trova. */
+  await aspettaCheCompaia(pagina, "Aggiungi un'altra vasca");
+  await attendi(800);
+  await scatta(pagina, "6x-piscina");
+  await premi(pagina, "Aggiungi un'altra vasca");
+  await aspettaCheCompaia(pagina, "Come si chiama");
+  await attendi(800);
+  await scatta(pagina, "6x2-piscina-due-vasche");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
+  racconta("apro l'irrigazione");
+  await premiCercando(pagina, "Irrigazione");
+  await aspettaCheCompaia(pagina, "La sonda nel terreno");
+  await attendi(800);
+  await scorri(pagina, 600);
+  await attendi(500);
+  await scatta(pagina, "6y-irrigazione-terreno");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
   racconta("apro le caselle dell'energia");
   await premiCercando(pagina, "Le caselle dell'Energia");
   await aspettaCheCompaia(pagina, "su 36 riempite");

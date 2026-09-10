@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import '../../casa/collegamento.dart';
 import '../../casa/plancia/scatto.dart';
 import '../../vestito/pezzi.dart';
+import 'cercatore.dart';
 import 'pezzi.dart';
 
 /// Cosa vuole un campo.
@@ -34,6 +35,13 @@ enum Tipo {
   /// scriverci `false` dentro farebbe una configurazione diversa da quella
   /// che scriverebbe lei.
   bandiera,
+
+  /// Un elenco chiuso: si sceglie, non si batte. Le voci stanno in `scelte`.
+  scelta,
+
+  /// Piu' entita' nello stesso campo: le luci di un'azione «popup luci».
+  /// Si aggiungono una per volta e si tolgono con la crocetta.
+  entitaTante,
 }
 
 /// Un campo di una cosa dell'elenco.
@@ -45,6 +53,8 @@ class Campo {
     this.domini = const [],
     this.serve = false,
     this.spiega,
+    this.venivaDa,
+    this.scelte = const [],
   });
 
   /// Come si chiama dentro l'oggetto: `name`, `entity`, `temp`.
@@ -60,6 +70,20 @@ class Campo {
 
   /// Una riga sotto, quando il nome del campo non basta.
   final String? spiega;
+
+  /// Come si chiamava, quando l'app lo scriveva col nome sbagliato.
+  ///
+  /// La durata di una zona d'irrigazione andava in `min`, e la plancia legge
+  /// `mins`: si salvava senza un errore e la zona restava ai dieci minuti di
+  /// serie. Cambiare il nome e basta avrebbe fatto sparire dagli occhi il
+  /// numero battuto — che non ha mai funzionato, ma qualcuno l'ha scritto.
+  /// Quando la casella giusta e' vuota e la vecchia no, si legge la vecchia; e
+  /// al primo salvataggio quello che c'e' finisce nella giusta e la vecchia se
+  /// ne va.
+  final String? venivaDa;
+
+  /// Le voci di un [Tipo.scelta]: valore da scrivere, e come si legge.
+  final List<(String, String)> scelte;
 }
 
 /// Da dove si leggono e dove si scrivono le cose dell'elenco.
@@ -458,8 +482,27 @@ class _Modulo extends StatefulWidget {
 }
 
 class _ModuloState extends State<_Modulo> {
-  late final Map<String, dynamic> _cosa = Map.of(widget.cosa);
+  late final Map<String, dynamic> _cosa = _conIVecchiNomi(
+    Map.of(widget.cosa),
+    widget.campi,
+  );
   String? _manca;
+
+  /// Quello che era finito nella casella col nome sbagliato, spostato in
+  /// quella giusta prima ancora di far vedere la scheda.
+  static Map<String, dynamic> _conIVecchiNomi(
+    Map<String, dynamic> cosa,
+    List<Campo> campi,
+  ) {
+    for (final campo in campi) {
+      final vecchio = campo.venivaDa;
+      if (vecchio == null) continue;
+      if ('${cosa[campo.chiave] ?? ''}'.trim().isNotEmpty) continue;
+      final cera = cosa.remove(vecchio);
+      if (cera != null && '$cera'.trim().isNotEmpty) cosa[campo.chiave] = cera;
+    }
+    return cosa;
+  }
 
   void _conferma() {
     for (final campo in widget.campi) {
@@ -476,6 +519,10 @@ class _ModuloState extends State<_Modulo> {
       final valore = _cosa[campo.chiave];
       if (valore is String && valore.trim().isEmpty) _cosa.remove(campo.chiave);
       if (valore is String) _cosa[campo.chiave] = valore.trim();
+      /* E il nome vecchio non resta li' a fare ombra: se restasse, chi apre
+       * la stessa scheda dalla plancia vedrebbe due caselle che dicono la
+       * stessa cosa e non saprebbe quale conta. */
+      if (campo.venivaDa != null) _cosa.remove(campo.venivaDa);
     }
     Navigator.of(context).pop(_cosa);
   }
@@ -512,6 +559,47 @@ class _ModuloState extends State<_Modulo> {
                     domini: campo.domini,
                     collegamento: widget.collegamento,
                     cambiato: (scritto) => _cosa[campo.chiave] = scritto,
+                  ),
+                  Tipo.scelta => DropdownButtonFormField<String>(
+                    initialValue:
+                        campo.scelte.any(
+                          (una) => una.$1 == '${_cosa[campo.chiave] ?? ''}',
+                        )
+                        ? '${_cosa[campo.chiave]}'
+                        : campo.scelte.first.$1,
+                    decoration: InputDecoration(
+                      labelText: campo.etichetta,
+                      helperText: campo.spiega,
+                      helperMaxLines: 3,
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    items: [
+                      for (final (valore, nome) in campo.scelte)
+                        DropdownMenuItem(value: valore, child: Text(nome)),
+                    ],
+                    onChanged: (scelto) => setState(() {
+                      if ((scelto ?? '').isEmpty) {
+                        _cosa.remove(campo.chiave);
+                      } else {
+                        _cosa[campo.chiave] = scelto;
+                      }
+                    }),
+                  ),
+                  Tipo.entitaTante => _TanteEntita(
+                    campo: campo,
+                    quali: [
+                      for (final una in (_cosa[campo.chiave] as List? ?? []))
+                        '$una',
+                    ],
+                    collegamento: widget.collegamento,
+                    cambiate: (adesso) => setState(() {
+                      if (adesso.isEmpty) {
+                        _cosa.remove(campo.chiave);
+                      } else {
+                        _cosa[campo.chiave] = adesso;
+                      }
+                    }),
                   ),
                   Tipo.bandiera => SwitchListTile(
                     contentPadding: EdgeInsets.zero,
@@ -551,6 +639,89 @@ class _ModuloState extends State<_Modulo> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Piu' entita' in un campo solo: le luci di un'azione «popup luci».
+///
+/// La plancia le tiene in un elenco (`a.lights`) e le fa scegliere una per
+/// volta; qui e' lo stesso, con la pastiglia che si toglie con la crocetta. Un
+/// campo di testo con le virgole sarebbe stato meno codice e piu' errori: un
+/// identificativo battuto a mano e' un identificativo sbagliato.
+class _TanteEntita extends StatelessWidget {
+  const _TanteEntita({
+    required this.campo,
+    required this.quali,
+    required this.collegamento,
+    required this.cambiate,
+  });
+
+  final Campo campo;
+  final List<String> quali;
+  final Collegamento collegamento;
+  final ValueChanged<List<String>> cambiate;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          campo.etichetta,
+          style: Theme.of(context).textTheme.labelLarge
+              ?.copyWith(color: colori.onSurfaceVariant),
+        ),
+        if (campo.spiega != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            campo.spiega!,
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: colori.onSurfaceVariant),
+          ),
+        ],
+        const SizedBox(height: 8),
+        if (quali.isEmpty)
+          Text(
+            'Nessuna scelta',
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: colori.onSurfaceVariant),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final una in quali)
+                InputChip(
+                  label: Text(una, style: const TextStyle(fontSize: 12)),
+                  onDeleted: () => cambiate(
+                    [...quali]..removeWhere((quale) => quale == una),
+                  ),
+                ),
+            ],
+          ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: () async {
+              final scelta = await cercaUnEntita(
+                context,
+                collegamento: collegamento,
+                etichetta: campo.etichetta,
+                domini: campo.domini,
+              );
+              if (scelta == null || scelta.isEmpty) return;
+              if (quali.contains(scelta)) return;
+              cambiate([...quali, scelta]);
+            },
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Aggiungine una'),
+          ),
+        ),
+      ],
     );
   }
 }

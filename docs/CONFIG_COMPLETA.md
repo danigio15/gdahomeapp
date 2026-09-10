@@ -136,7 +136,8 @@ invecchiata di più. Restano scritti perché il *perché* vale ancora.
 
 - **Il multi-istanza.** `app/lib/casa/plancia/piu_di_uno.dart`: elenco più
   «qual è scelta», per tutte e sei le famiglie — auto, impianti solari,
-  centrali d'allarme, scaldabagni, impianti termici, continuità. La mappatura
+  centrali d'allarme, scaldabagni, impianti termici, continuità — più le
+  vasche della piscina, che hanno una forma loro (`casa/plancia/vasche.dart`). La mappatura
   di entità e le foto stanno **dentro** la voce, che era il punto: un'auto non
   è «un nome e un'entità».
 - **Le integrazioni.** Il menu a tre passi sul catalogo del ponte c'è
@@ -147,6 +148,58 @@ invecchiata di più. Restano scritti perché il *perché* vale ancora.
 - **Le foto.** `www/list` e `www/upload` li usa l'app
   (`app/lib/schermate/configurazione/le_foto.dart`), e si sfoglia anche quello
   che sta già in `config/www` di Home Assistant, in sola lettura.
+
+## Il controllo campo per campo, e cosa ne è uscito
+
+Le chiavi c'erano tutte e le caselle anche, e non bastava: **dentro** una
+chiave ci sono i campi, e lì la Config dell'app era più corta di quella della
+dashboard senza che si vedesse da nessuna parte.
+
+Il controllo è meccanico e sta in `app/test/stessa_config_test.dart`: legge gli
+editor veri della plancia (`ponte/plancia/src/sections/*.js`), tira fuori il
+nome di ogni casella che salvano, e cade se un nome non compare nei sorgenti
+dell'app. Fa anche il contrario, che è il difetto peggiore dei due.
+
+**Due caselle finivano in un posto che nessuno legge.** Si riempivano, si
+salvavano senza un errore, e non facevano niente:
+
+| nell'app era | la plancia legge | cosa non succedeva |
+|---|---|---|
+| `contact_out`, «Contatto della zanzariera» | `inferriata` | il secondo contatto della finestra non contava |
+| `min` sulla zona d'irrigazione | `mins` | la zona restava ai dieci minuti di serie |
+
+La prima non era nemmeno la stessa cosa: `INFERRIATA_KEYS` sono `inferriata`,
+`inferriata_entity`, `grate_entity`, `outer_contact`, e l'inferriata è quella
+che sta davanti al vetro e si apre di lato — non una zanzariera. Il numero già
+battuto in `min` non si perde: la casella giusta lo legge e al primo
+salvataggio lo sposta.
+
+**E ventidue campi non c'erano.** Per sezione:
+
+- **Finestre** — `kind` (tapparella, tenda, tenda da sole), `inferriata`,
+  `down` (il relè che la fa scendere, per i motori a due fili),
+  `tenda` + `tendaDown`, `tendaSole` + `tendaSoleDown` (sulla stessa finestra
+  ci stanno insieme fino a tre coperture), `preset` (la posizione preferita),
+  `umidita` (la soglia di questa finestra: il bagno non è la camera).
+- **Irrigazione** — `weatherEnt`, e tutta **l'umidità del terreno**:
+  `soilEnt`, `soilMin`, `soilMax`, `soilSkipAbove`, `soilStartBelow`. Non è un
+  dettaglio: col terreno già bagnato il programma delle ore fisse *salta*, e
+  sotto la soglia bassa parte da solo. Chi configurava dall'app aveva
+  l'irrigazione che andava lo stesso sul bagnato. Più `room` sulla zona.
+- **Piscina** — `lightEnt` (la luce della vasca), `clMin` e `clMax` (la banda
+  del cloro, che c'era per il pH e non per lui), e **le vasche sono più
+  d'una**: `casa/plancia/vasche.dart` è il porto di `pool-model.js`, con la
+  fila di pastiglie come l'Energia.
+- **Azioni rapide** — `type`. Erano otto tipi e l'app ne faceva tre: mancavano
+  i quattro popup (luci scelte, tutte le luci, Clima, Antifurto, Lavatrice) e
+  con loro `lights`, le luci che ci vanno dentro. Più `confirm`, il «sei
+  sicuro?» prima di eseguire — che su un bottone che apre il cancello vale più
+  di tutto il resto.
+- **Prese** — `bloccata`: «si vede ma non si comanda», per il frigo, il modem,
+  il congelatore.
+- **Stanze** — `temp_name` e `hum_name`: come si chiamano quei due sensori
+  sulla tessera. Senza, la sonda fuori dalla finestra si chiamava
+  «Temperatura» come tutte le altre.
 
 ## Quello che resta davvero
 
@@ -167,5 +220,9 @@ Tre prove, e nessun numero scritto a mano che non ne abbia una dietro:
   quelle dichiarate compaiano davvero nei sorgenti;
 - `app/test/caselle_test.dart` controlla che nessun gruppo di `CD_SLOTS` resti
   senza una schermata che lo apra;
+- `app/test/stessa_config_test.dart` controlla i **campi**, nei due versi: che
+  nessuna casella degli editor della plancia resti fuori dall'app, e che
+  nessuna casella dell'app finisca in un posto che nella plancia non legge
+  nessuno;
 - `app/test/configurazione_test.dart` controlla che l'alberatura copra tutte le
   schede della Config della plancia.

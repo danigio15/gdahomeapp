@@ -26,27 +26,86 @@ class SchermataDelleFinestre extends StatelessWidget {
   Widget build(BuildContext context) => SchermataDegliApparecchi(
     titolo: 'Finestre',
     sotto:
-        'Tapparelle, tende e finestre motorizzate. I due contatti servono a '
-        'chi ha un sensore che dice se e\' aperta davvero, oltre alla '
-        'percentuale del motore.',
+        'Tapparelle, tende e finestre motorizzate. Su una finestra sola ci '
+        'stanno insieme la tapparella, la tenda e la tenda da sole: qui si '
+        'mettono tutte e tre, ognuna col suo comando.',
     sezione: Sezione.finestre,
     unaCosa: 'una finestra',
     collegamento: collegamento,
     domini: const ['cover'],
     leAltreEntita: false,
     campi: const [
+      /* Il tipo: la plancia disegna una tapparella che scende, una tenda che
+       * si scosta dal centro e una tenda da sole che esce in fuori. Senza
+       * dichiararlo lo indovina dalla `device_class`, e quando non c'e'
+       * disegna una tapparella. I tre valori sono quelli di `COVER_KINDS`:
+       * un quarto battuto a mano `declaredCoverKind` lo scarta. */
       CampoDellApparecchio(
-        'contact',
-        'Contatto di apertura',
-        entita: true,
-        domini: ['binary_sensor'],
-        spiega: 'Il sensore che dice se e\' aperta',
+        'kind',
+        'Che copertura e\'',
+        scelte: [
+          ('', 'Lo decide Home Assistant'),
+          ('tapparella', 'Tapparella'),
+          ('tenda', 'Tenda'),
+          ('tenda_sole', 'Tenda da sole'),
+        ],
       ),
       CampoDellApparecchio(
-        'contact_out',
-        'Contatto della zanzariera',
+        'contact',
+        'Contatto dell\'infisso',
         entita: true,
         domini: ['binary_sensor'],
+        spiega: 'Il sensore che dice se la finestra e\' aperta davvero',
+      ),
+      /* L'inferriata: il secondo contatto, quello di fuori.
+       *
+       * Si chiamava «zanzariera» e finiva in `contact_out`, che nella plancia
+       * non legge nessuno: `INFERRIATA_KEYS` sono `inferriata`,
+       * `inferriata_entity`, `grate_entity`, `outer_contact`. Si salvava senza
+       * un errore e non contava niente. */
+      CampoDellApparecchio(
+        'inferriata',
+        'Contatto dell\'inferriata',
+        entita: true,
+        domini: ['binary_sensor'],
+        spiega: 'Quella che sta davanti al vetro e si apre di lato',
+      ),
+      /* Il rele' di discesa (#194).
+       *
+       * Uno Shelly 2PM lasciato in modalita' interruttore non espone una
+       * copertura: espone due prese, una che manda su e una che manda giu'.
+       * Chiudere non e' spegnere la salita — e' accendere la discesa. */
+      CampoDellApparecchio(
+        'down',
+        'Il rele\' che la fa scendere',
+        entita: true,
+        domini: ['switch'],
+        spiega: 'Solo se il comando qui sopra e\' un rele\' e non una cover',
+      ),
+      /* Le altre due coperture dello stesso infisso, ognuna col suo rele'. */
+      CampoDellApparecchio(
+        'tenda',
+        'La tenda della stessa finestra',
+        entita: true,
+        domini: ['cover', 'switch'],
+      ),
+      CampoDellApparecchio(
+        'tendaDown',
+        'Il rele\' che fa scendere la tenda',
+        entita: true,
+        domini: ['switch'],
+      ),
+      CampoDellApparecchio(
+        'tendaSole',
+        'La tenda da sole della stessa finestra',
+        entita: true,
+        domini: ['cover', 'switch'],
+      ),
+      CampoDellApparecchio(
+        'tendaSoleDown',
+        'Il rele\' che fa rientrare la tenda da sole',
+        entita: true,
+        domini: ['switch'],
       ),
       CampoDellApparecchio(
         'invertita',
@@ -54,11 +113,27 @@ class SchermataDelleFinestre extends StatelessWidget {
         bandiera: true,
         spiega: 'Accendilo se 100 vuol dire chiusa invece che aperta',
       ),
+      /* La posizione preferita (#200): dove va quando si preme «la solita». */
+      CampoDellApparecchio(
+        'preset',
+        'La sua posizione preferita (%)',
+        numero: true,
+        spiega: 'Quella a cui la rimetti sempre. Vuoto: nessuna',
+      ),
       CampoDellApparecchio(
         'soglia',
         'La sua soglia di «chiusa» (%)',
         numero: true,
         spiega: 'Lascia vuoto per usare quella di casa, qui sotto',
+      ),
+      /* E la soglia dell'umidita' di QUESTA finestra: il bagno si apre a
+       * un'umidita' diversa dalla camera. Nella plancia e' una casella per
+       * riga (`ed-tp-umidita`), e vuota vuol dire quella di casa. */
+      CampoDellApparecchio(
+        'umidita',
+        'La sua soglia di umidita\' (%)',
+        numero: true,
+        spiega: 'Sopra questa te la fa aprire. Vuoto: quella di casa',
       ),
     ],
     inFondo: (scatto, quaderno) => [
@@ -113,11 +188,27 @@ class SchermataDelleStanze extends StatelessWidget {
         entita: true,
         domini: ['sensor'],
       ),
+      /* Come si chiama quel sensore, sulla tessera.
+       *
+       * Nella plancia sono due caselle accanto alle entita': chi ha la sonda
+       * fuori dalla finestra la chiama «Esterno», e la tessera della stanza
+       * scrive «Esterno» invece di «Temperatura». Senza, dice «Temperatura»
+       * per tutte, che e' quello che diceva l'app. */
+      CampoDellApparecchio(
+        'temp_name',
+        'Come si chiama la temperatura',
+        spiega: 'Vuoto: «Temperatura»',
+      ),
       CampoDellApparecchio(
         'hum',
         'Sensore di umidita\'',
         entita: true,
         domini: ['sensor'],
+      ),
+      CampoDellApparecchio(
+        'hum_name',
+        'Come si chiama l\'umidita\'',
+        spiega: 'Vuoto: «Umidita\'»',
       ),
       CampoDellApparecchio(
         'floor',

@@ -376,14 +376,52 @@ Widget? schermataDi(
     unaCosa: 'un\'azione',
     campi: const [
       Campo('name', 'Come si chiama', serve: true),
+      /* Che tipo di azione: sono gli otto della Config della dashboard.
+       *
+       * Nell'app c'erano solo nome, entita' ed emoji — cioe' i tre tipi che
+       * accendono qualcosa. I quattro popup — le luci, il clima, l'antifurto,
+       * la lavatrice — non si potevano fare per niente: un bottone che apre
+       * una finestra non ha un'entita' da accendere, e senza il tipo la
+       * plancia non sa che finestra aprire. */
+      Campo(
+        'type',
+        'Che cosa fa',
+        tipo: Tipo.scelta,
+        scelte: [
+          ('toggle', 'Accende e spegne un\'entita\''),
+          ('script', 'Fa partire uno script'),
+          ('scene', 'Chiama una scena'),
+          ('luci_group', 'Apre un popup con le luci che scegli tu'),
+          ('builtin_luci', 'Apre il popup di tutte le luci'),
+          ('builtin_clima', 'Apre il popup del Clima'),
+          ('builtin_antifurto', 'Apre il popup dell\'Antifurto'),
+          ('builtin_lavatrice', 'Apre il popup della Lavatrice'),
+        ],
+      ),
       Campo(
         'entity',
         'Cosa fa',
         tipo: Tipo.entita,
         domini: ['script', 'scene', 'switch', 'input_boolean'],
-        serve: true,
+        spiega: 'Serve ai primi tre tipi. I popup non ne hanno bisogno',
+      ),
+      /* Le luci del popup «scegli tu»: senza queste quel tipo apre una
+       * finestra vuota. */
+      Campo(
+        'lights',
+        'Quali luci ci sono dentro',
+        tipo: Tipo.entitaTante,
+        domini: ['light', 'switch'],
+        spiega: 'Solo per «popup con le luci che scegli tu»',
       ),
       Campo('icon', 'Disegno', spiega: 'Un emoji'),
+      /* «Sei sicuro?»: il messaggio che compare prima di eseguire. Su un
+       * bottone che apre il cancello vale piu' di tutto il resto. */
+      Campo(
+        'confirm',
+        'Chiedi conferma con',
+        spiega: 'Il messaggio da mostrare prima. Vuoto: nessuna conferma',
+      ),
     ],
   ),
   'Clima' => SchermataDegliApparecchi(
@@ -440,6 +478,18 @@ Widget? schermataDi(
     unaCosa: 'una presa',
     collegamento: collegamento,
     domini: const ['switch', 'input_boolean'],
+    campi: const [
+      /* «Si vede ma non si comanda»: il frigo, il modem, il congelatore.
+       * La riga resta dov'e', il tasto smette di rispondere. */
+      CampoDellApparecchio(
+        'bloccata',
+        'Si vede ma non si comanda',
+        bandiera: true,
+        spiega:
+            'Per le prese che non vanno spente: il frigo, il modem, il '
+            'congelatore',
+      ),
+    ],
   ),
   'Finestre' => SchermataDelleFinestre(collegamento: collegamento),
   'Elettrodomestici' => SchermataDegliApparecchi(
@@ -673,7 +723,21 @@ class _Irrigazione extends StatelessWidget {
               domini: ['valve', 'switch'],
               serve: true,
             ),
-            Campo('min', 'Per quanti minuti', tipo: Tipo.numero),
+            /* `mins`, non `min`: la plancia legge `zone.mins`, e quello che
+             * finiva in `min` non lo guardava nessuno — la zona restava ai
+             * dieci minuti di serie senza dirlo. Il numero gia' battuto si
+             * ritrova qui, e al primo salvataggio va nella casella giusta. */
+            Campo(
+              'mins',
+              'Per quanti minuti',
+              tipo: Tipo.numero,
+              venivaDa: 'min',
+            ),
+            Campo(
+              'room',
+              'In che stanza',
+              spiega: 'Il nome della stanza, come l\'hai chiamata',
+            ),
           ],
         ),
       ),

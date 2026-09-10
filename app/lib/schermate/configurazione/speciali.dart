@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import '../../casa/collegamento.dart';
 import '../../casa/impostazioni.dart';
 import '../../casa/plancia/scatto.dart';
+import '../../casa/plancia/vasche.dart';
 import '../../vestito/pezzi.dart';
 import 'pezzi.dart';
 
@@ -640,13 +641,26 @@ String _quando(DateTime quando) {
 
 /// La piscina: i sensori, la pompa, e la filtrazione automatica.
 ///
-/// Non e' un elenco: e' **un oggetto solo** con dentro una decina di campi
-/// (`cd_piscina`), e va riscritto tutto insieme lasciando stare quello che la
-/// schermata non conosce — la plancia ci tiene anche l'ultima accensione.
-class SchermataDellaPiscina extends StatelessWidget {
+/// **Le vasche sono piu' d'una**, come nella dashboard: la prima sta in cima
+/// all'oggetto salvato — dove il runtime l'ha sempre cercata — e le altre
+/// nell'elenco `pools` accanto. Vedi `casa/plancia/vasche.dart`, che e' il
+/// porto di `pool-model.js`; qui c'e' solo la fila delle pastiglie che dice
+/// quale si sta guardando, la stessa dell'Energia.
+///
+/// Quello che la schermata non conosce resta dov'e': la plancia in
+/// `cd_piscina` ci tiene anche l'ultima accensione, e riscrivere l'oggetto da
+/// zero vorrebbe dire azzerare lo storico della filtrazione.
+class SchermataDellaPiscina extends StatefulWidget {
   const SchermataDellaPiscina({super.key, required this.collegamento});
 
   final Collegamento collegamento;
+
+  @override
+  State<SchermataDellaPiscina> createState() => _SchermataDellaPiscinaState();
+}
+
+class _SchermataDellaPiscinaState extends State<SchermataDellaPiscina> {
+  int _scelta = 0;
 
   @override
   Widget build(BuildContext context) => PaginaDiConfigurazione(
@@ -655,17 +669,58 @@ class SchermataDellaPiscina extends StatelessWidget {
         'Sensori, pompa e filtrazione. In automatico le ore di filtrazione '
         'sono la temperatura dell\'acqua diviso due, fra un minimo di 2 e un '
         'massimo di 12.',
-    collegamento: collegamento,
+    collegamento: widget.collegamento,
     disegna: (dentro, scatto, quaderno) {
-      final piscina = Map<String, dynamic>.from(scatto.mappa('cd_piscina'));
+      final collegamento = widget.collegamento;
+      final tutto = Map<String, dynamic>.from(scatto.mappa('cd_piscina'));
       final segnata = quaderno.cambiate['cd_piscina'];
-      if (segnata is Map) piscina.addAll(Map<String, dynamic>.from(segnata));
-      void cambia(String campo, Object? valore) => quaderno.segna(
-        'cd_piscina',
-        {...piscina, if (valore != null) campo: valore}
-          ..removeWhere((_, quanto) => quanto is String && quanto.isEmpty),
-      );
+      if (segnata is Map) tutto.addAll(Map<String, dynamic>.from(segnata));
+      final vasche = leVasche(tutto);
+      if (_scelta >= vasche.length) _scelta = vasche.length - 1;
+      final piscina = vasche[_scelta];
+      void scrivi(List<Map<String, dynamic>> adesso) =>
+          quaderno.segna('cd_piscina', vascheDaSalvare(adesso, tutto));
+      void cambia(String campo, Object? valore) {
+        final dopo = [...vasche];
+        final questa = Map<String, dynamic>.from(dopo[_scelta]);
+        if (valore == null || (valore is String && valore.isEmpty)) {
+          questa.remove(campo);
+        } else {
+          questa[campo] = valore;
+        }
+        dopo[_scelta] = questa;
+        scrivi(dopo);
+      }
+
       return [
+        _LeVasche(
+          vasche: vasche,
+          scelta: _scelta,
+          scegli: (quale) => setState(() => _scelta = quale),
+          aggiungi: () {
+            scrivi([...vasche, <String, dynamic>{}]);
+            setState(() => _scelta = vasche.length);
+          },
+          elimina: vasche.length < 2
+              ? null
+              : () {
+                  final dopo = [...vasche]..removeAt(_scelta);
+                  scrivi(dopo);
+                  setState(() => _scelta = 0);
+                },
+        ),
+        const SizedBox(height: 18),
+        /* Il nome, che serve solo quando le vasche sono piu' d'una: con una
+         * sola la pastiglia non c'e' e il nome non lo leggerebbe nessuno. */
+        if (vasche.length > 1) ...[
+          CampoDiTesto(
+            etichetta: 'Come si chiama',
+            valore: '${piscina['name'] ?? ''}',
+            suggerimento: 'Piscina, Idromassaggio…',
+            cambiato: (scritto) => cambia('name', scritto),
+          ),
+          const SizedBox(height: 24),
+        ],
         const Insegna('I sensori'),
         for (final (campo, nome) in const [
           ('tempEnt', 'Temperatura dell\'acqua'),
@@ -697,6 +752,14 @@ class SchermataDellaPiscina extends StatelessWidget {
           domini: const ['switch'],
           collegamento: collegamento,
           cambiato: (scritto) => cambia('heatEnt', scritto),
+        ),
+        const SizedBox(height: 14),
+        CampoDiEntita(
+          etichetta: 'Luce della vasca',
+          valore: '${piscina['lightEnt'] ?? ''}',
+          domini: const ['light', 'switch'],
+          collegamento: collegamento,
+          cambiato: (scritto) => cambia('lightEnt', scritto),
         ),
         const SizedBox(height: 26),
         const Insegna('La filtrazione'),
@@ -754,8 +817,90 @@ class SchermataDellaPiscina extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 26),
+        /* Il cloro ha la sua banda come il pH, e non ha valori di partenza:
+         * dipende da come si tratta l'acqua, e un numero inventato qui
+         * direbbe «fuori norma» a chi sta benissimo. */
+        const Insegna('Il cloro che va bene'),
+        Row(
+          children: [
+            for (final (campo, nome) in const [
+              ('clMin', 'Minimo'),
+              ('clMax', 'Massimo'),
+            ]) ...[
+              if (campo == 'clMax') const SizedBox(width: 12),
+              Expanded(
+                child: CampoDiTesto(
+                  etichetta: nome,
+                  valore: '${piscina[campo] ?? ''}',
+                  numerico: true,
+                  cambiato: (scritto) => cambia(
+                    campo,
+                    double.tryParse(scritto.replaceAll(',', '.')),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ];
     },
+  );
+}
+
+/// La fila delle pastiglie: quale vasca si sta configurando.
+///
+/// Con una sola non compare nessuna pastiglia — solo «Aggiungi un'altra
+/// vasca» — che e' come fa l'Energia: chi ha una piscina e basta non deve
+/// nemmeno accorgersi che l'elenco esiste.
+class _LeVasche extends StatelessWidget {
+  const _LeVasche({
+    required this.vasche,
+    required this.scelta,
+    required this.scegli,
+    required this.aggiungi,
+    required this.elimina,
+  });
+
+  final List<Map<String, dynamic>> vasche;
+  final int scelta;
+  final ValueChanged<int> scegli;
+  final VoidCallback aggiungi;
+  final VoidCallback? elimina;
+
+  @override
+  Widget build(BuildContext context) => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      children: [
+        if (vasche.length > 1)
+          for (final (quale, una) in vasche.indexed)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                avatar: const Text('🏊'),
+                label: Text(comeSiChiamaLaVasca(una, quale)),
+                selected: quale == scelta,
+                onSelected: (_) => scegli(quale),
+              ),
+            ),
+        ActionChip(
+          avatar: const Icon(Icons.add_rounded, size: 18),
+          label: Text(
+            vasche.length > 1 ? 'Aggiungi' : 'Aggiungi un\'altra vasca',
+          ),
+          onPressed: aggiungi,
+        ),
+        if (elimina != null) ...[
+          const SizedBox(width: 8),
+          ActionChip(
+            avatar: const Icon(Icons.delete_outline_rounded, size: 18),
+            label: const Text('Elimina questa'),
+            onPressed: elimina,
+          ),
+        ],
+      ],
+    ),
   );
 }
 
@@ -788,8 +933,15 @@ class SchermataDellIrrigazione extends StatelessWidget {
       if (segnata is Map) {
         irrigazione.addAll(Map<String, dynamic>.from(segnata));
       }
-      void cambia(String campo, Object? valore) =>
-          quaderno.segna('cd_irrigazione', {...irrigazione, campo: valore});
+      /* Svuotare una casella la toglie invece di scriverci dentro un niente:
+       * una chiave che c'e' e non dice niente sembra configurata, e nelle
+       * soglie del terreno «vuoto» vuol dire «non guardarla». */
+      void cambia(String campo, Object? valore) => quaderno.segna(
+        'cd_irrigazione',
+        valore == null
+            ? ({...irrigazione}..remove(campo))
+            : {...irrigazione, campo: valore},
+      );
       final zone = irrigazione['zones'];
       final quante = zone is List ? zone.length : 0;
       return [
@@ -847,6 +999,63 @@ class SchermataDellIrrigazione extends StatelessWidget {
           suggerimento: '60',
           cambiato: (scritto) => cambia('rainThr', int.tryParse(scritto) ?? 60),
         ),
+        const SizedBox(height: 14),
+        /* Il meteo, oltre al sensore di pioggia: chi non ha un sensore in
+         * giardino ha comunque una previsione, e la plancia la guarda. */
+        CampoDiEntita(
+          etichetta: 'Il meteo (facoltativo)',
+          valore: '${irrigazione['weatherEnt'] ?? ''}',
+          domini: const ['weather'],
+          collegamento: collegamento,
+          cambiato: (scritto) => cambia('weatherEnt', scritto),
+        ),
+        const SizedBox(height: 24),
+        /* L'umidita' del terreno.
+         *
+         * E' la parte che nell'app non c'era per niente, e non e' un dettaglio:
+         * col terreno gia' bagnato il programma delle ore fisse **salta**, e
+         * sotto la soglia bassa parte da solo una volta al giorno. Chi ha la
+         * sonda in giardino e configura dall'app si trovava l'irrigazione che
+         * andava lo stesso sul bagnato. */
+        const Insegna('L\'umidita\' del terreno'),
+        CampoDiEntita(
+          etichetta: 'La sonda nel terreno',
+          valore: '${irrigazione['soilEnt'] ?? ''}',
+          domini: const ['sensor'],
+          collegamento: collegamento,
+          cambiato: (scritto) => cambia('soilEnt', scritto),
+        ),
+        const SizedBox(height: 14),
+        for (final (campo, nome, aiuto, esempio) in const [
+          ('soilMin', 'Umidita\' ideale minima (%)', '', '30'),
+          ('soilMax', 'Umidita\' ideale massima (%)', '', '60'),
+          (
+            'soilSkipAbove',
+            'Salta il programma sopra (%)',
+            'Col terreno gia\' bagnato non innaffia, e lo scrive sulla tessera',
+            '60',
+          ),
+          (
+            'soilStartBelow',
+            'Parte da solo sotto (%)',
+            'Una volta al giorno, senza aspettare l\'ora',
+            '5',
+          ),
+        ]) ...[
+          CampoDiTesto(
+            etichetta: nome,
+            valore: '${irrigazione[campo] ?? ''}',
+            numerico: true,
+            suggerimento: aiuto.isEmpty ? esempio : aiuto,
+            cambiato: (scritto) => cambia(
+              campo,
+              scritto.trim().isEmpty
+                  ? null
+                  : num.tryParse(scritto.replaceAll(',', '.')),
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
       ];
     },
   );

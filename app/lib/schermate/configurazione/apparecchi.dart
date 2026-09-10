@@ -35,6 +35,7 @@ class CampoDellApparecchio {
     this.domini = const [],
     this.bandiera = false,
     this.numero = false,
+    this.scelte = const [],
   });
 
   final String chiave;
@@ -44,6 +45,15 @@ class CampoDellApparecchio {
   final List<String> domini;
   final bool bandiera;
   final bool numero;
+
+  /// Quando i valori buoni sono pochi e li decide la plancia: il tipo di una
+  /// copertura e' uno di tre — `tapparella`, `tenda`, `tenda_sole` — e battuto
+  /// a mano un quarto viene scartato senza dire niente
+  /// (`declaredCoverKind` tiene solo quelli di `COVER_KINDS`).
+  ///
+  /// La prima voce con la chiave vuota vale «lascia decidere a Home Assistant»,
+  /// che e' cosa fa la plancia quando il tipo non e' dichiarato.
+  final List<(String, String)> scelte;
 }
 
 /// Le altre entita' di un apparecchio, con nomi che si capiscono.
@@ -860,6 +870,32 @@ class _IlCampo extends StatelessWidget {
         title: Text(campo.etichetta),
         subtitle: campo.spiega == null ? null : Text(campo.spiega!),
         dense: true,
+      );
+    }
+    if (campo.scelte.isNotEmpty) {
+      final quale = '${adesso ?? ''}';
+      return DropdownButtonFormField<String>(
+        initialValue: campo.scelte.any((una) => una.$1 == quale)
+            ? quale
+            : campo.scelte.first.$1,
+        decoration: InputDecoration(
+          labelText: campo.etichetta,
+          helperText: campo.spiega,
+          helperMaxLines: 3,
+          border: const OutlineInputBorder(),
+          isDense: true,
+        ),
+        items: [
+          for (final (valore, nome) in campo.scelte)
+            DropdownMenuItem(value: valore, child: Text(nome)),
+        ],
+        onChanged: (scelto) {
+          apparecchio.metti(
+            campo.chiave,
+            (scelto ?? '').isEmpty ? null : scelto,
+          );
+          cambiato();
+        },
       );
     }
     if (campo.entita) {
