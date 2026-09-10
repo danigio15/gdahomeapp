@@ -298,6 +298,23 @@ arriva al ponte, quindi non arriva né all'app né a un secondo browser: chi
 configura il radar sul tablet non se lo ritrova sul telefono. È così anche
 senza l'app, ed è nella dashboard che andrebbe aggiunta alla lista.
 
+### Il quinto giro: la barra della plancia, e cosa mostra una tessera
+
+- **Le sezioni erano otto, nella plancia sono dodici.** `cdNavVisMap()` è la
+  mappa che decide quale tasto della barra sparisce quando in `cd_sections` c'è
+  scritto `false`, e ne elenca dodici. L'app ne mostrava otto: gli
+  **elettrodomestici**, le **finestre**, l'**irrigazione** e la **piscina** si
+  toglievano dalla barra dal browser e non dall'app. Chi la piscina non ce l'ha
+  si teneva il suo tasto.
+- **«Cosa mostra» una tessera che riassume.** `cd_widgets.sorgenti`: la tessera
+  Temperatura senza scelta dice la media di tutte le stanze, e si può dire
+  «mostrami quella della cucina»; il Clima uguale, con le sue unità. Il modello
+  dell'app la chiave la leggeva e la scriveva già — mancava la tendina che la
+  riempie.
+
+Anche questi hanno il loro campanello: una prova legge `cdNavVisMap` dal
+runtime e confronta le due liste, nei due versi.
+
 ## Quello che resta davvero
 
 1. **Il modello canonico.** L'app scrive solo le chiavi storiche, e non passa

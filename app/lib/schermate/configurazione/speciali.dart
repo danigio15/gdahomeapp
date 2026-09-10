@@ -14,16 +14,26 @@ import '../../casa/plancia/vasche.dart';
 import '../../vestito/pezzi.dart';
 import 'pezzi.dart';
 
-/// Le otto sezioni della plancia, con le stesse parole della Config
-/// (`cdVisibSez()` nel runtime della dashboard).
+/// Le dodici sezioni della plancia, con le stesse parole della Config.
+///
+/// Sono quelle di `cdNavVisMap()` nel runtime della dashboard, ed e' da li'
+/// che vanno prese: e' la mappa che decide quale tasto della barra sparisce
+/// quando in `cd_sections` c'e' scritto `false`. Erano otto — mancavano gli
+/// elettrodomestici, le finestre, l'irrigazione e la piscina — e chi dall'app
+/// voleva togliere dalla barra la pagina della piscina che non ha non poteva
+/// farlo, mentre dal browser si', perche' li' i tasti sono dodici.
 const sezioniDellaPlancia = <(String, String, String)>[
   ('home', 'Home', 'Meteo, avvisi, azioni rapide'),
   ('energy', 'Energia', 'Fotovoltaico e consumi'),
+  ('appliances', 'Elettrodomestici', 'Lavatrice, lavastoviglie, forno'),
   ('ev', 'Auto elettrica', 'EV + wallbox (EVCC)'),
   ('boiler', 'Solare termico', 'Boiler solare'),
   ('clima', 'Clima', 'Condizionatori e riscaldamento'),
   ('temp', 'Temperatura', 'Temperature e umidita\''),
+  ('tapparelle', 'Finestre', 'Tapparelle, tende e finestre'),
   ('security', 'Sicurezza', 'Telecamere e allarme'),
+  ('piscina', 'Piscina', 'Sensori, pompa e filtrazione'),
+  ('irrigazione', 'Irrigazione', 'Le zone e il loro programma'),
   ('server', 'MiniPC', 'Monitoraggio server'),
 ];
 

@@ -359,4 +359,53 @@ void main() {
     }
     expect(sbagliate..sort(), isEmpty, reason: sbagliate.join('; '));
   });
+
+  /* I tasti della barra: dodici, non otto.
+   *
+   * `cdNavVisMap()` e' la mappa che decide quale tasto sparisce quando in
+   * `cd_sections` c'e' scritto `false`. L'app ne elencava otto: gli
+   * elettrodomestici, le finestre, l'irrigazione e la piscina si potevano
+   * togliere dalla barra dal browser e non dall'app.
+   */
+  test('le sezioni della barra sono quelle di cdNavVisMap', () {
+    final runtime = File('../ponte/plancia/legacy/dashboard-runtime-it.js')
+        .readAsStringSync();
+    final mappa = RegExp(
+      r'function cdNavVisMap\(\)\s*\{\s*return\s*\{([^}]*)\}',
+    ).firstMatch(runtime);
+    expect(mappa, isNotNull, reason: 'cdNavVisMap non sta piu\' nel runtime');
+    final dellaPlancia = {
+      for (final voce in RegExp(
+        r"(\w+)\s*:\s*'[^']*'",
+      ).allMatches(mappa!.group(1)!))
+        voce.group(1)!,
+    };
+    expect(dellaPlancia.length, greaterThan(8));
+
+    final speciali = File('lib/schermate/configurazione/speciali.dart')
+        .readAsStringSync();
+    final elenco = RegExp(
+      r'const sezioniDellaPlancia = <\(String, String, String\)>\[(.*?)\n\];',
+      dotAll: true,
+    ).firstMatch(speciali);
+    expect(elenco, isNotNull, reason: 'sezioniDellaPlancia non si trova piu\'');
+    final dellApp = {
+      for (final voce in RegExp(
+        r"\('([a-z0-9_]+)',",
+      ).allMatches(elenco!.group(1)!))
+        voce.group(1)!,
+    };
+
+    expect(
+      dellaPlancia.difference(dellApp).toList()..sort(),
+      isEmpty,
+      reason:
+          'queste pagine si tolgono dalla barra dal browser e non dall\'app',
+    );
+    expect(
+      dellApp.difference(dellaPlancia).toList()..sort(),
+      isEmpty,
+      reason: 'l\'app elenca pagine che nella barra non ci sono',
+    );
+  });
 }

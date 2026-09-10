@@ -8,6 +8,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../casa/collegamento.dart';
+import '../../casa/plancia/apparecchio.dart';
 import '../../casa/plancia/home.dart';
 import '../../casa/plancia/scatto.dart';
 import '../../vestito/pezzi.dart';
@@ -161,15 +162,35 @@ class SchermataDelleTessere extends StatelessWidget {
         for (final (chiave, disegno, nome) in _tessere)
           Card(
             margin: const EdgeInsets.symmetric(vertical: 3),
-            child: SwitchListTile(
-              value: tessere.siVede(chiave),
-              onChanged: (acceso) {
-                tessere.mostra(chiave, acceso);
-                segna();
-              },
-              secondary: Text(disegno, style: const TextStyle(fontSize: 22)),
-              title: Text(nome),
-              dense: true,
+            child: Column(
+              children: [
+                SwitchListTile(
+                  value: tessere.siVede(chiave),
+                  onChanged: (acceso) {
+                    tessere.mostra(chiave, acceso);
+                    segna();
+                  },
+                  secondary: Text(
+                    disegno,
+                    style: const TextStyle(fontSize: 22),
+                  ),
+                  title: Text(nome),
+                  dense: true,
+                ),
+                /* «Cosa mostra» una tessera che riassume piu' cose.
+                 *
+                 * Vale per due sole: la Temperatura, che senza questa dice la
+                 * media di tutte le stanze, e il Clima, che dice quella di
+                 * tutte le unita'. Le altre non hanno niente da scegliere e
+                 * nella dashboard non hanno la tendina. */
+                if (tessere.siVede(chiave))
+                  _CosaMostra(
+                    tessera: chiave,
+                    tessere: tessere,
+                    scatto: scatto,
+                    segna: segna,
+                  ),
+              ],
             ),
           ),
         const SizedBox(height: 16),
@@ -518,6 +539,87 @@ class _UnaVoce extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Le scelte della tendina «Cosa mostra», per le due tessere che riassumono.
+///
+/// La Temperatura senza scelta dice la media di tutte le stanze, il Clima
+/// quella di tutte le unita'. Le voci si prendono da dove stanno gia': le
+/// stanze che hanno un sensore di temperatura, e le unita' di clima
+/// configurate. `null` per tutte le altre tessere, che nella dashboard non
+/// hanno la tendina perche' non hanno niente da scegliere.
+List<(String, String)>? _cosaMostra(String tessera, Scatto scatto) {
+  String nomeDi(Map<String, dynamic> uno, String ripiego) {
+    final nome = '${uno['name'] ?? ''}'.trim();
+    return nome.isNotEmpty ? nome : ripiego;
+  }
+
+  if (tessera == 'temperatura') {
+    final stanze = scatto.oggetti(Sezione.stanze.chiave);
+    return [
+      ('', 'Media di tutte le stanze'),
+      for (final una in stanze)
+        if ('${una['temp'] ?? ''}'.trim().isNotEmpty)
+          ('${una['temp']}'.trim(), nomeDi(una, '${una['temp']}')),
+    ];
+  }
+  if (tessera == 'clima') {
+    final unita = scatto.oggetti(Sezione.clima.chiave);
+    return [
+      ('', 'Media di tutte le unita\''),
+      for (final una in unita)
+        if ('${una['entity'] ?? ''}'.trim().isNotEmpty)
+          ('${una['entity']}'.trim(), nomeDi(una, '${una['entity']}')),
+    ];
+  }
+  return null;
+}
+
+/// La tendina «Cosa mostra» di una tessera, quando quella tessera ce l'ha.
+class _CosaMostra extends StatelessWidget {
+  const _CosaMostra({
+    required this.tessera,
+    required this.tessere,
+    required this.scatto,
+    required this.segna,
+  });
+
+  final String tessera;
+  final LeTessere tessere;
+  final Scatto scatto;
+  final VoidCallback segna;
+
+  @override
+  Widget build(BuildContext context) {
+    final quali = _cosaMostra(tessera, scatto);
+    /* Una tessera senza scelte non ha la tendina, e nemmeno una che ne ha una
+     * sola: «media di tutte» da sola non e' una scelta. */
+    if (quali == null || quali.length < 2) return const SizedBox.shrink();
+    final adesso = tessere.sorgenti[tessera] ?? '';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: DropdownButtonFormField<String>(
+        initialValue: quali.any((una) => una.$1 == adesso) ? adesso : '',
+        decoration: const InputDecoration(
+          labelText: 'Cosa mostra',
+          border: OutlineInputBorder(),
+          isDense: true,
+        ),
+        items: [
+          for (final (valore, comeSiChiama) in quali)
+            DropdownMenuItem(value: valore, child: Text(comeSiChiama)),
+        ],
+        onChanged: (scelto) {
+          if ((scelto ?? '').isEmpty) {
+            tessere.sorgenti.remove(tessera);
+          } else {
+            tessere.sorgenti[tessera] = scelto!;
+          }
+          segna();
+        },
       ),
     );
   }
