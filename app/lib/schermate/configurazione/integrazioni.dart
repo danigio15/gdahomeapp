@@ -24,37 +24,71 @@ import '../../casa/catalogo/catalogo.dart';
 import '../../casa/collegamento.dart';
 import '../../vestito/pezzi.dart';
 
-/// Cosa si e' scelto: il dispositivo, e quali delle sue entita'.
+/// Come si prende quello che si e' trovato.
+enum ComeSiPrende {
+  /// Il dispositivo intero, ed e' il modo giusto per un apparecchio.
+  ///
+  /// Nella Config della dashboard non si spunta niente: si sceglie la
+  /// lavatrice e nasce **gia' compilata**, perche' a dire quale entita' fa la
+  /// potenza e quale il tempo rimanente ci pensa il motore. Spuntarle a mano
+  /// vorrebbe dire rifare a mano il lavoro che il motore fa da solo — e
+  /// sbagliarlo, perche' chi spunta non sa quale delle due energie sia il
+  /// contatore.
+  tuttoIlDispositivo,
+
+  /// Spuntando quelle che si vogliono: per le sezioni in cui le entita' non
+  /// hanno caselle fisse.
+  spuntandole,
+
+  /// Una sola: per una casella che ne vuole una e basta.
+  unaSola,
+}
+
+/// Cosa si e' scelto: da dove viene, il dispositivo, e le sue entita'.
 class SceltoDalCatalogo {
-  const SceltoDalCatalogo({required this.dispositivo, required this.entita});
+  const SceltoDalCatalogo({
+    required this.dispositivo,
+    required this.entita,
+    this.integrazione,
+    this.tutte = const [],
+  });
 
   final Dispositivo dispositivo;
+
+  /// Quelle che servono a chi ha aperto il menu.
   final List<EntitaDelDispositivo> entita;
+
+  /// Da dove arriva il dispositivo. Serve a scrivere «hOn» invece di «hon»
+  /// nella riga che dice da dove viene un apparecchio.
+  final Integrazione? integrazione;
+
+  /// **Tutte** quelle del dispositivo, comprese quelle di servizio.
+  ///
+  /// Il motore che indovina le vuole tutte: scarta lui quelle che parlano
+  /// della radio invece che dell'apparecchio, e lo fa con le sue regole. Un
+  /// elenco gia' setacciato da qui gli toglierebbe indizi.
+  final List<EntitaDelDispositivo> tutte;
 }
 
 /// Apre il menu e restituisce cosa si e' scelto, o `null`.
-///
-/// [unaSola] per le caselle che vogliono un'entita' e basta: allora il terzo
-/// passo si chiude appena se ne tocca una, invece di chiedere di spuntare e
-/// confermare.
 Future<SceltoDalCatalogo?> scegliDaUnIntegrazione(
   BuildContext contesto, {
   required Collegamento collegamento,
-  bool unaSola = false,
+  ComeSiPrende come = ComeSiPrende.tuttoIlDispositivo,
 }) => Navigator.of(contesto).push<SceltoDalCatalogo>(
   MaterialPageRoute(
     builder: (dentro) =>
-        _LeIntegrazioni(collegamento: collegamento, unaSola: unaSola),
+        _LeIntegrazioni(collegamento: collegamento, come: come),
   ),
 );
 
 /* ─── Passo 1: l'integrazione ────────────────────────────────────────────── */
 
 class _LeIntegrazioni extends StatefulWidget {
-  const _LeIntegrazioni({required this.collegamento, required this.unaSola});
+  const _LeIntegrazioni({required this.collegamento, required this.come});
 
   final Collegamento collegamento;
-  final bool unaSola;
+  final ComeSiPrende come;
 
   @override
   State<_LeIntegrazioni> createState() => _LeIntegrazioniState();
@@ -169,7 +203,7 @@ class _LeIntegrazioniState extends State<_LeIntegrazioni> {
           collegamento: widget.collegamento,
           integrazione: quale,
           dispositivi: letto.dellIntegrazione(quale.dominio),
-          unaSola: widget.unaSola,
+          come: widget.come,
         ),
       ),
     );
@@ -184,13 +218,13 @@ class _IDispositivi extends StatelessWidget {
     required this.collegamento,
     required this.integrazione,
     required this.dispositivi,
-    required this.unaSola,
+    required this.come,
   });
 
   final Collegamento collegamento;
   final Integrazione integrazione;
   final List<Dispositivo> dispositivi;
-  final bool unaSola;
+  final ComeSiPrende come;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -227,8 +261,9 @@ class _IDispositivi extends StatelessWidget {
                                   MaterialPageRoute(
                                     builder: (dentro) => _LeEntita(
                                       collegamento: collegamento,
+                                      integrazione: integrazione,
                                       dispositivo: uno,
-                                      unaSola: unaSola,
+                                      come: come,
                                     ),
                                   ),
                                 );
@@ -251,13 +286,15 @@ class _IDispositivi extends StatelessWidget {
 class _LeEntita extends StatefulWidget {
   const _LeEntita({
     required this.collegamento,
+    required this.integrazione,
     required this.dispositivo,
-    required this.unaSola,
+    required this.come,
   });
 
   final Collegamento collegamento;
+  final Integrazione integrazione;
   final Dispositivo dispositivo;
-  final bool unaSola;
+  final ComeSiPrende come;
 
   @override
   State<_LeEntita> createState() => _LeEntitaState();
@@ -338,9 +375,20 @@ class _LeEntitaState extends State<_LeEntita> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
                       child: Text(
-                        widget.unaSola
-                            ? 'Tocca quella che serve.'
-                            : 'Spunta quelle che vuoi nella plancia.',
+                        switch (widget.come) {
+                          ComeSiPrende.unaSola => 'Tocca quella che serve.',
+                          ComeSiPrende.spuntandole =>
+                            'Spunta quelle che vuoi nella plancia.',
+                          /* Non c'e' niente da spuntare: si prende il
+                           * dispositivo intero, e a mettere ogni entita' nella
+                           * sua casella ci pensa il motore. Queste righe sono
+                           * li' per far vedere **cosa** si sta prendendo. */
+                          ComeSiPrende.tuttoIlDispositivo =>
+                            'Le prendo tutte, e le metto io nelle caselle '
+                                'giuste: la potenza nella potenza, il tempo '
+                                'rimanente nel tempo rimanente. Quello che hai '
+                                'gia\' scritto a mano non lo tocco.',
+                        },
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -366,38 +414,41 @@ class _LeEntitaState extends State<_LeEntita> {
                       child: Column(
                         children: [
                           for (final una in daMostrare)
-                            widget.unaSola
-                                ? ListTile(
-                                    dense: true,
-                                    title: Text(una.nome),
-                                    subtitle: _sotto(context, una),
-                                    onTap: () => Navigator.of(context).pop(
-                                      SceltoDalCatalogo(
-                                        dispositivo: widget.dispositivo,
-                                        entita: [una],
-                                      ),
-                                    ),
-                                  )
-                                : CheckboxListTile(
-                                    dense: true,
-                                    value: _scelte.contains(una.id),
-                                    title: Text(una.nome),
-                                    subtitle: _sotto(context, una),
-                                    onChanged: (spuntata) => setState(() {
-                                      if (spuntata == true) {
-                                        _scelte.add(una.id);
-                                      } else {
-                                        _scelte.remove(una.id);
-                                      }
-                                    }),
-                                  ),
+                            switch (widget.come) {
+                              ComeSiPrende.unaSola => ListTile(
+                                dense: true,
+                                title: Text(una.nome),
+                                subtitle: _sotto(context, una),
+                                onTap: () => Navigator.of(
+                                  context,
+                                ).pop(_scelto(entita: [una])),
+                              ),
+                              ComeSiPrende.spuntandole => CheckboxListTile(
+                                dense: true,
+                                value: _scelte.contains(una.id),
+                                title: Text(una.nome),
+                                subtitle: _sotto(context, una),
+                                onChanged: (spuntata) => setState(() {
+                                  if (spuntata == true) {
+                                    _scelte.add(una.id);
+                                  } else {
+                                    _scelte.remove(una.id);
+                                  }
+                                }),
+                              ),
+                              ComeSiPrende.tuttoIlDispositivo => ListTile(
+                                dense: true,
+                                title: Text(una.nome),
+                                subtitle: _sotto(context, una),
+                              ),
+                            },
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
-              if (!widget.unaSola)
+              if (widget.come == ComeSiPrende.spuntandole)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
                   child: SizedBox(
@@ -406,8 +457,7 @@ class _LeEntitaState extends State<_LeEntita> {
                       onPressed: _scelte.isEmpty
                           ? null
                           : () => Navigator.of(context).pop(
-                              SceltoDalCatalogo(
-                                dispositivo: widget.dispositivo,
+                              _scelto(
                                 entita: [
                                   for (final una in tutte!)
                                     if (_scelte.contains(una.id)) una,
@@ -422,12 +472,43 @@ class _LeEntitaState extends State<_LeEntita> {
                     ),
                   ),
                 ),
+              if (widget.come == ComeSiPrende.tuttoIlDispositivo)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () => Navigator.of(
+                        context,
+                      ).pop(_scelto(entita: tutte ?? const [])),
+                      icon: const Icon(Icons.auto_awesome_rounded),
+                      label: Text(
+                        'Collega ${widget.dispositivo.nome} '
+                        '(${tutte?.length ?? 0} entita\')',
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         },
       ),
     );
   }
+
+  /// Il risultato, sempre con dentro **tutte** le entita' del dispositivo.
+  ///
+  /// Chi ha aperto il menu ne vuole alcune; il motore che indovina le vuole
+  /// tutte, comprese quelle di servizio: e' lui che decide cosa scartare, con
+  /// le sue regole. Passargliene un elenco gia' setacciato qui vorrebbe dire
+  /// togliergli indizi senza dirglielo.
+  SceltoDalCatalogo _scelto({required List<EntitaDelDispositivo> entita}) =>
+      SceltoDalCatalogo(
+        dispositivo: widget.dispositivo,
+        integrazione: widget.integrazione,
+        entita: entita,
+        tutte: _entita ?? const [],
+      );
 
   Widget _sotto(BuildContext contesto, EntitaDelDispositivo una) => Text(
     [

@@ -103,6 +103,8 @@ class SchermataDelleStanze extends StatelessWidget {
     /* Una stanza non sta in una stanza. */
     leStanze: false,
     leAltreEntita: false,
+    /* E non arriva da un'integrazione: le stanze le decide chi ci abita. */
+    dallIntegrazione: false,
     laFoto: true,
     campi: const [
       CampoDellApparecchio(

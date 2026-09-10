@@ -69,6 +69,55 @@ const _diSezione = <String, Set<String>>{
   'climate': {'type', 'valvola'},
   'cameras': {'stream', 'rtsp', 'vivo'},
   'covers': {'contact', 'contact_out'},
+  /* Un elettrodomestico connesso porta molto piu' di un interruttore: il
+   * programma, la fase, il tempo che manca, la durata del ciclo, due
+   * temperature, l'allarme, l'ora di avvio, l'energia e il costo dell'ultimo
+   * ciclo. Sono caselle vere di `normalizeDevice`, non appunti — e una
+   * casella non dichiarata sparisce al primo salvataggio dell'app, che e' il
+   * difetto che in questo file e' gia' costato sei righe aggiunte dopo la
+   * segnalazione di qualcuno. */
+  'appliances': _diUnApparecchio,
+  'loads': _diUnApparecchio,
+};
+
+const _diUnApparecchio = {
+  'state_entity',
+  'remaining_entity',
+  'cycle_duration_entity',
+  'temperature_entity',
+  'temperature_entity_2',
+  'alert_entity',
+  'last_start_entity',
+  'last_duration_entity',
+  'last_energy_entity',
+  'last_cost_entity',
+  'report_entity',
+  'report_label',
+  'report_icon',
+  'report_order',
+  'show_in_report',
+  'show_in_dashboard',
+  'switch_disabled',
+  'category',
+  'device_type',
+  'threshold_run',
+  'threshold_standby',
+  'cycle_minutes',
+  'off_delay_minutes',
+  'temp_min',
+  'temp_max',
+  'max_power',
+  'price_kwh',
+  /* Di quale impianto e' questo carico. Vuoto vuol dire il primo. */
+  'plant',
+  /* Da quale dispositivo viene, quando viene da un'integrazione. */
+  'device_id',
+  'integration',
+  'integration_name',
+  'device_name',
+  'device_manufacturer',
+  'device_model',
+  'device_entities',
 };
 
 /// I campi da cui `deviceEntities` raccoglie le entita' di un apparecchio.

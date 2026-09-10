@@ -91,6 +91,8 @@ class EntitaDelDispositivo {
     required this.unita,
     required this.categoria,
     required this.spenta,
+    this.chiaveDiTraduzione = '',
+    this.classeDiStato = '',
   });
 
   final String id;
@@ -102,6 +104,19 @@ class EntitaDelDispositivo {
 
   final String classe;
   final String unita;
+
+  /// Come l'integrazione chiama questa entita' **in ogni lingua**.
+  ///
+  /// E' l'indizio piu' fedele che ci sia: hOn chiama `remaining_time` il tempo
+  /// che manca sia su un Home Assistant in italiano sia su uno in coreano,
+  /// mentre il nome cambia. Il motore che indovina le caselle la pesa quanto
+  /// il nome e l'identificativo messi insieme.
+  final String chiaveDiTraduzione;
+
+  /// `total`, `total_increasing`, `measurement`. Distingue un contatore che
+  /// sale per sempre da una lettura che va su e giu': senza, il «totale» di un
+  /// elettrodomestico e' l'energia di oggi una volta su due.
+  final String classeDiStato;
 
   /// `config` o `diagnostic`: entita' di servizio, che di solito non si
   /// mettono in una tessera.
@@ -180,6 +195,8 @@ IlCatalogo leggiIlCatalogo(dynamic risultato) {
         unita: '${una['unit'] ?? ''}',
         categoria: '${una['category'] ?? ''}',
         spenta: una['disabled'] == true || una['hidden'] == true,
+        chiaveDiTraduzione: '${una['translation_key'] ?? ''}',
+        classeDiStato: '${una['state_class'] ?? ''}',
       ),
     );
   }

@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 
 import '../../casa/collegamento.dart';
 import '../../casa/plancia/apparecchio.dart';
+import '../../casa/plancia/legame.dart';
 import '../../casa/plancia/scatto.dart';
 import '../../vestito/pezzi.dart';
 import 'integrazioni.dart';
@@ -78,6 +79,7 @@ class SchermataDegliApparecchi extends StatefulWidget {
     this.leAltreEntita = true,
     this.stanzeAParte = '',
     this.ordineAParte = '',
+    this.dallIntegrazione = true,
     this.inFondo,
   });
 
@@ -116,6 +118,13 @@ class SchermataDegliApparecchi extends StatefulWidget {
 
   /// Dove sta scritto l'ordine, quando non sta nella riga: stessa ragione.
   final String ordineAParte;
+
+  /// `false` dove un dispositivo di Home Assistant non c'entra niente.
+  ///
+  /// Una stanza non arriva da un'integrazione: e' una cosa che si inventa chi
+  /// configura, e offrire di prenderla da hOn e' offrire una strada che non
+  /// porta da nessuna parte.
+  final bool dallIntegrazione;
 
   /// Quello che sta sotto l'elenco: le soglie, le impostazioni di casa.
   final List<Widget> Function(Scatto scatto, Quaderno quaderno)? inFondo;
@@ -191,6 +200,36 @@ class _SchermataDegliApparecchiState extends State<SchermataDegliApparecchi> {
       final elenco = _leggi(scatto);
       final stanze = _stanzeDi(scatto);
       return [
+        /* Il tasto sta **in cima**, come nella Config della dashboard, e non
+         * e' una questione di gusto.
+         *
+         * Prima era un'iconcina in fondo, di fianco ad «Aggiungi»: chi apriva
+         * la scheda vedeva il campo del nome e cominciava a battere entita' a
+         * mano — cioe' faceva il lavoro lungo senza sapere che ce n'era uno
+         * corto. La strada buona va vista per prima, o e' come se non ci
+         * fosse. */
+        if (widget.dallIntegrazione) ...[
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => _dalCatalogo(stanze, quaderno),
+              icon: const Icon(Icons.extension_rounded),
+              label: const Text('Aggiungi da un\'integrazione'),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
+            child: Text(
+              'hOn, Home Connect, Miele, LG ThinQ… Scegli il dispositivo e le '
+              'sue entita\' finiscono da sole nelle caselle giuste.',
+              style: Theme.of(dentro).textTheme.bodySmall?.copyWith(
+                color: Theme.of(dentro).colorScheme.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
         if (elenco.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 28),
@@ -221,22 +260,13 @@ class _SchermataDegliApparecchiState extends State<SchermataDegliApparecchi> {
               },
             ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: FilledButton.tonalIcon(
-                onPressed: () => _apri(-1, stanze, quaderno),
-                icon: const Icon(Icons.add_rounded),
-                label: Text('Aggiungi ${widget.unaCosa}'),
-              ),
-            ),
-            const SizedBox(width: 8),
-            IconButton.filledTonal(
-              onPressed: () => _dalCatalogo(stanze, quaderno),
-              icon: const Icon(Icons.extension_rounded),
-              tooltip: 'Prendilo da un\'integrazione',
-            ),
-          ],
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.tonalIcon(
+            onPressed: () => _apri(-1, stanze, quaderno),
+            icon: const Icon(Icons.add_rounded),
+            label: Text('Aggiungi ${widget.unaCosa}'),
+          ),
         ),
         if (widget.inFondo != null) ...[
           const SizedBox(height: 24),
@@ -280,6 +310,7 @@ class _SchermataDegliApparecchiState extends State<SchermataDegliApparecchi> {
           leStanze: widget.leStanze,
           leAltreEntita: widget.leAltreEntita,
           unaCosa: widget.unaCosa,
+          dallIntegrazione: widget.dallIntegrazione,
         ),
       ),
     );
@@ -297,22 +328,54 @@ class _SchermataDegliApparecchiState extends State<SchermataDegliApparecchi> {
       context,
       collegamento: widget.collegamento,
     );
-    if (scelto == null) return;
+    if (scelto == null || !mounted) return;
     final nato = Apparecchio.nuovo(widget.sezione, quale: _elenco!.length);
-    riempiDalCatalogo(nato, scelto, domini: widget.domini);
-    /* La stanza il catalogo la sa gia': viene dai registri di Home Assistant,
-     * ed e' quella vera. Riscriverla a mano e' il modo di sbagliarla. */
-    final dove = scelto.dispositivo.stanza;
-    if (dove.isNotEmpty && widget.leStanze) {
-      final trovata = stanze.where((una) => una.nome == dove);
-      if (trovata.isNotEmpty) {
-        nato.mettiLaStanza(trovata.first);
-      } else {
-        nato.metti('room', dove);
-      }
-    }
+    final andata = collegaAlDispositivo(
+      nato,
+      dispositivo: scelto.dispositivo,
+      entita: scelto.tutte.isNotEmpty ? scelto.tutte : scelto.entita,
+      integrazione: scelto.integrazione,
+      stanze: widget.leStanze ? stanze : const [],
+      /* I sensori che stanno **fuori** dal dispositivo ma parlano di lui: la
+       * presa Zigbee sotto la lavatrice, il sensore dell'energia di oggi che
+       * uno si e' costruito da se'. Riempiono solo dove il dispositivo non
+       * arriva. */
+      fuori: parentiFuoriDalDispositivo(
+        nomeDelDispositivo: scelto.dispositivo.nome,
+        casa: widget.collegamento.stato?.tutte() ?? const [],
+        escludi: [for (final una in scelto.tutte) una.id],
+      ),
+    );
+    mettiLEntitaPrincipale(
+      nato,
+      scelto.tutte.isNotEmpty ? scelto.tutte : scelto.entita,
+      domini: widget.domini,
+    );
     _elenco!.add(nato);
     _segna(quaderno);
+    _diComEAndata(nato, andata);
+  }
+
+  /// Cosa e' successo, detto a schermo.
+  ///
+  /// Senza, collegare un dispositivo sembra non aver fatto niente: la scheda
+  /// nuova compare, e quali caselle si siano riempite lo scopre solo chi la
+  /// apre. Con venti entita' e tredici caselle, «riempite otto» e' la
+  /// differenza fra fidarsi e ricontrollare tutto a mano.
+  void _diComEAndata(Apparecchio quale, ComEAndata andata) {
+    if (!mounted) return;
+    final quante = andata.riempite.length;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          quante == 0
+              ? '${quale.nome}: collegato. Nessuna casella da riempire.'
+              : '${quale.nome}: collegato, $quante '
+                    '${quante == 1 ? 'casella riempita' : 'caselle riempite'}'
+                    '${andata.tenute.isEmpty ? '' : ', ${andata.tenute.length} lasciate come stavano'}.',
+        ),
+      ),
+    );
   }
 
   Future<void> _togli(int posto, Apparecchio quale, Quaderno quaderno) async {
@@ -340,56 +403,6 @@ class _SchermataDegliApparecchiState extends State<SchermataDegliApparecchi> {
     if (sicuro != true) return;
     _elenco!.removeAt(posto);
     _segna(quaderno);
-  }
-}
-
-/// Riempie un apparecchio con quello che si e' scelto da un'integrazione.
-///
-/// Non si limita a scrivere il nome e la prima entita': un dispositivo ne
-/// porta cinque o sei, e ognuna sa gia' cos'e' — Home Assistant lo dice nella
-/// sua «classe» e nella sua unita'. La potenza va nella potenza, il contatore
-/// nel contatore, l'interruttore nell'interruttore. E' l'intera ragione per
-/// cui il catalogo esiste: chi lo apre non deve poi ribattere sei entita' a
-/// mano nelle sei caselle giuste.
-void riempiDalCatalogo(
-  Apparecchio quale,
-  SceltoDalCatalogo scelto, {
-  List<String> domini = const [],
-}) {
-  if (quale.nome.isEmpty) {
-    quale.metti('name', scelto.dispositivo.nome);
-  }
-  for (final una in scelto.entita) {
-    final dominio = una.id.split('.').first;
-    final classe = una.classe.toLowerCase();
-    final unita = una.unita.toLowerCase();
-    final campo = switch ((dominio, classe)) {
-      (_, 'power') => 'power_entity',
-      (_, 'energy') =>
-        quale.dentro['total_energy_entity'] == null
-            ? 'total_energy_entity'
-            : 'daily_energy_entity',
-      ('switch' || 'input_boolean', _) => 'control_entity',
-      _ when unita == 'w' || unita == 'kw' => 'power_entity',
-      _ when unita == 'kwh' || unita == 'wh' => 'total_energy_entity',
-      _ => null,
-    };
-    if (campo == null) continue;
-    if ('${quale.dentro[campo] ?? ''}'.isNotEmpty) continue;
-    quale.metti(campo, una.id);
-  }
-  /* L'entita' principale: la prima del dominio che questa sezione vuole, e
-   * senza domini la prima e basta. E' quella che la plancia comanda. */
-  if (quale.entita.isEmpty) {
-    for (final una in scelto.entita) {
-      final dominio = una.id.split('.').first;
-      if (domini.isNotEmpty && !domini.contains(dominio)) continue;
-      quale.metti('entity', una.id);
-      break;
-    }
-  }
-  if (quale.entita.isEmpty && scelto.entita.isNotEmpty) {
-    quale.metti('entity', scelto.entita.first.id);
   }
 }
 
@@ -500,6 +513,7 @@ class _UnApparecchio extends StatefulWidget {
     required this.leStanze,
     required this.leAltreEntita,
     required this.unaCosa,
+    required this.dallIntegrazione,
     this.stanzaAParte,
   });
 
@@ -513,6 +527,7 @@ class _UnApparecchio extends StatefulWidget {
   final bool leStanze;
   final bool leAltreEntita;
   final String unaCosa;
+  final bool dallIntegrazione;
 
   /// Quando la stanza non sta nella riga: cosa c'e' scritto adesso, e dove
   /// scriverla.
@@ -543,19 +558,20 @@ class _UnApparecchioState extends State<_UnApparecchio> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(quale.nome.isNotEmpty ? quale.nome : widget.unaCosa),
-          actions: [
-            IconButton(
-              onPressed: () => _dalCatalogo(quale),
-              icon: const Icon(Icons.extension_rounded),
-              tooltip: 'Riempi da un\'integrazione',
-            ),
-          ],
         ),
         body: SafeArea(
           top: false,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 32),
             children: [
+              if (widget.dallIntegrazione) ...[
+                _LIntegrazione(
+                  apparecchio: quale,
+                  collega: () => _dalCatalogo(quale),
+                  scollega: () => _tocca(() => scollega(quale)),
+                ),
+                const SizedBox(height: 14),
+              ],
               CampoDiTesto(
                 etichetta: 'Come si chiama',
                 valore: quale.nome,
@@ -694,8 +710,125 @@ class _UnApparecchioState extends State<_UnApparecchio> {
       context,
       collegamento: widget.collegamento,
     );
-    if (scelto == null) return;
-    _tocca(() => riempiDalCatalogo(quale, scelto, domini: widget.domini));
+    if (scelto == null || !mounted) return;
+    final andata = collegaAlDispositivo(
+      quale,
+      dispositivo: scelto.dispositivo,
+      entita: scelto.tutte.isNotEmpty ? scelto.tutte : scelto.entita,
+      integrazione: scelto.integrazione,
+      stanze: widget.leStanze ? widget.stanze : const [],
+      fuori: parentiFuoriDalDispositivo(
+        nomeDelDispositivo: scelto.dispositivo.nome,
+        casa: widget.collegamento.stato?.tutte() ?? const [],
+        escludi: [for (final una in scelto.tutte) una.id],
+      ),
+    );
+    mettiLEntitaPrincipale(
+      quale,
+      scelto.tutte.isNotEmpty ? scelto.tutte : scelto.entita,
+      domini: widget.domini,
+    );
+    _tocca(() {});
+    if (!mounted) return;
+    final quante = andata.riempite.length;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          quante == 0
+              ? 'Collegato. Le caselle c\'erano gia\' tutte.'
+              : 'Collegato: $quante '
+                    '${quante == 1 ? 'casella riempita' : 'caselle riempite'}'
+                    '${andata.tenute.isEmpty ? '' : ', ${andata.tenute.length} lasciate come stavano'}.',
+        ),
+      ),
+    );
+  }
+}
+
+/// Da quale dispositivo viene questo apparecchio, e cosa si puo' farci.
+///
+/// E' il blocco «Integrazione» della Config della dashboard, e sta in cima
+/// alla maschera perche' e' la prima domanda: **questo lo devo compilare a
+/// mano, o arriva da solo?** Chi lo legge dopo aver battuto sei entita' ha
+/// gia' perso il tempo che questo blocco fa risparmiare.
+class _LIntegrazione extends StatelessWidget {
+  const _LIntegrazione({
+    required this.apparecchio,
+    required this.collega,
+    required this.scollega,
+  });
+
+  final Apparecchio apparecchio;
+  final VoidCallback collega;
+  final VoidCallback scollega;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    final collegato = eCollegato(apparecchio);
+    return Scheda(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.extension_rounded,
+                size: 18,
+                color: collegato ? colori.primary : colori.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Integrazione',
+                style: testi.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            collegato
+                ? etichettaDelLegame(apparecchio)
+                : 'Non e\' collegato a nessun dispositivo. Collegandolo, le '
+                      'sue entita\' finiscono da sole nelle caselle giuste — '
+                      'e quello che hai gia\' scritto a mano resta com\'e\'.',
+            style: testi.bodySmall?.copyWith(
+              color: colori.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.tonalIcon(
+                onPressed: collega,
+                icon: const Icon(Icons.extension_rounded, size: 18),
+                label: Text(collegato ? 'Cambia dispositivo' : 'Collega'),
+              ),
+              if (collegato)
+                TextButton.icon(
+                  onPressed: scollega,
+                  icon: const Icon(Icons.link_off_rounded, size: 18),
+                  label: const Text('Scollega'),
+                ),
+            ],
+          ),
+          if (collegato)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                'Scollegando, le caselle restano scritte: si smette di '
+                'seguire il dispositivo, non si butta via la configurazione.',
+                style: testi.labelSmall?.copyWith(
+                  color: colori.onSurfaceVariant,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
 

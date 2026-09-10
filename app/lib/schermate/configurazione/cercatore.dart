@@ -24,7 +24,6 @@ import 'package:flutter/material.dart';
 import '../../casa/cerca/indice.dart';
 import '../../casa/collegamento.dart';
 import '../../vestito/pezzi.dart';
-import 'integrazioni.dart';
 
 /// Quante righe per pagina.
 const _unaPagina = 60;
@@ -308,35 +307,21 @@ class _CercatoreState extends State<_Cercatore> {
                           _Riga(trovata: daMostrare[quale]),
                     ),
             ),
-            /* La strada dell'integrazione, accanto a quella della ricerca.
+            /* Qui **non** c'e' il tasto dell'integrazione, e non e' una
+             * dimenticanza.
              *
-             * Cercare per nome va bene quando il nome si sa. Per una lavatrice
-             * appena collegata non si sa: e' arrivata da hOn con venti entita'
-             * che si chiamano tutte «Lavatrice qualcosa», e trovare quella
-             * giusta fra quelle vuol dire leggerle una per una. Sceglierla dal
-             * suo dispositivo e' un'altra cosa. */
+             * Nella Config della dashboard la strada dell'integrazione parte
+             * dalla scheda — «Aggiungi da un'integrazione» in cima — e non da
+             * dentro il cercatore, perche' un'integrazione non da' *una*
+             * entita': da' un dispositivo con dentro venti entita' e le mette
+             * tutte nelle loro caselle. Farlo partire da una casella sola vuol
+             * dire buttare via diciannove indizi.
+             *
+             * E costava anche: due tasti in fondo, sopra la tastiera aperta,
+             * lasciavano alla lista una riga e mezza. Il cercatore serve a
+             * cercare, e cercare vuol dire vedere quello che si trova. */
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-              child: SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    final scelto = await scegliDaUnIntegrazione(
-                      context,
-                      collegamento: widget.collegamento,
-                      unaSola: true,
-                    );
-                    if (scelto == null || !context.mounted) return;
-                    final una = scelto.entita.firstOrNull;
-                    if (una != null) Navigator.of(context).pop(una.id);
-                  },
-                  icon: const Icon(Icons.extension_rounded),
-                  label: const Text('Prendila da un\'integrazione'),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton.tonal(
