@@ -76,6 +76,10 @@ class _ServitoreFinto implements ServitoreDiQuestoSistema {
       Uri.parse('http://127.0.0.1:1${pannello.percorsoDellaPagina('it')}');
 
   @override
+  Uri indirizzoDi(String percorso, {Map<String, String> domande = const {}}) =>
+      Uri.parse('http://127.0.0.1:1$percorso');
+
+  @override
   Future<void> spegni() async {}
 
   @override

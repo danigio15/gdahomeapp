@@ -299,6 +299,24 @@ void main() {
     },
   );
 
+  test('la pagina del ritratto la fa il servitore, non il ponte', () async {
+    /* E' una pagina **nostra**, messa di fianco ai file della plancia perche'
+     * e' li' che va a prendere il compositore che disegna la faccia. Al ponte
+     * non c'e': chiedergliela vorrebbe dire un 404 al posto di un ritratto. */
+    final (stato, tipo, corpo) = await prendi(
+      '$_base/gdahome-ritratto.html',
+      query: 'persona=donna&carnagione=media',
+    );
+    expect(stato, 200);
+    expect(tipo, startsWith('text/html'));
+    final scritto = utf8.decode(corpo);
+    expect(scritto, contains('person-avatar-section.js'));
+    /* Relativo apposta: la pagina sta di fianco ai moduli, e cosi' vale sia
+     * sul telefono sia nel browser, dove davanti c'e' il prefisso dell'app. */
+    expect(scritto, contains('"./src/sections/person-avatar-section.js"'));
+    expect(ponte.commissioni, isEmpty);
+  });
+
   test('un percorso strano non arriva al ponte', () async {
     final (uno, _, _) = await prendi('/dashboardmodern_static/../etc/passwd');
     expect(uno, anyOf(400, 404));

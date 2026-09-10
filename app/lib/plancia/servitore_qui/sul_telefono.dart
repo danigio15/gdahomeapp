@@ -12,6 +12,12 @@ import '../../ponte/filo.dart';
 /// Quello che alla schermata serve sapere di un servitore.
 abstract interface class ServitoreDiQuestoSistema {
   Uri paginaDi(PannelloDellaPlancia pannello);
+
+  /// L'indirizzo di una pagina qualunque servita da qui: serve al ritratto di
+  /// una persona, che e' una pagina nostra messa di fianco ai file della
+  /// plancia.
+  Uri indirizzoDi(String percorso, {Map<String, String> domande});
+
   Future<void> spegni();
 
   /// La plancia leggera: vale dalla pagina dopo.
@@ -34,6 +40,10 @@ class _SulTelefono implements ServitoreDiQuestoSistema {
 
   @override
   Uri paginaDi(PannelloDellaPlancia pannello) => _servitore.paginaDi(pannello);
+
+  @override
+  Uri indirizzoDi(String percorso, {Map<String, String> domande = const {}}) =>
+      _servitore.indirizzoDi(percorso, domande: domande);
 
   @override
   Future<void> spegni() => _servitore.spegni();

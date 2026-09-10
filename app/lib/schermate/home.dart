@@ -201,6 +201,10 @@ class _HomeState extends State<Home> {
                         Sezione.configurazione => SchermataDellaConfigurazione(
                           collegamento: collegamento,
                           impostazioni: widget.impostazioni,
+                          /* Serve al ritratto delle persone, che lo disegna
+                           * la plancia: e' la stessa che serve la plancia
+                           * vera, accesa una volta sola per tutta l'app. */
+                          fabbrica: widget.plancia,
                         ),
                         Sezione.acquisti => SchermataDegliAcquisti(
                           collegamento: collegamento,

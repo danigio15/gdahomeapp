@@ -52,6 +52,7 @@ import '../ponte/filo.dart';
 import 'cucitura.dart';
 import 'pannello.dart';
 import 'premesse.dart';
+import 'ritratto.dart';
 
 /// Come si trova il filo, adesso.
 ///
@@ -235,6 +236,17 @@ class Servitore {
     );
   }
 
+  /// L'indirizzo di una pagina qualunque servita da qui.
+  ///
+  /// Serve al ritratto di una persona, che e' una pagina nostra messa di
+  /// fianco ai file della plancia. La chiave ci va lo stesso: da qui non passa
+  /// niente senza.
+  Uri indirizzoDi(String percorso, {Map<String, String> domande = const {}}) =>
+      radice.replace(
+        path: percorso,
+        queryParameters: {...domande, _ingresso: chiave},
+      );
+
   /// Si mette in ascolto. Su `127.0.0.1` e basta: nessun altro sulla rete
   /// deve poter chiedere niente a questo server.
   ///
@@ -375,6 +387,19 @@ class Servitore {
   /* ─── I file ───────────────────────────────────────────────────────────── */
 
   Future<void> _file(HttpRequest richiesta, String percorso) async {
+    /* La pagina che disegna un ritratto non e' un file della plancia: e'
+     * nostra, e sta di fianco ai suoi moduli perche' e' li' che li va a
+     * prendere. Chiederla al ponte vorrebbe dire un 404. */
+    if (percorso.endsWith('/$fileDelRitratto')) {
+      _rispondi(
+        richiesta,
+        200,
+        'text/html; charset=utf-8',
+        utf8.encode(paginaDelRitratto),
+      );
+      return;
+    }
+
     if (!_percorsoDelFile.hasMatch(percorso) ||
         percorso.contains('..') ||
         percorso.contains('//')) {

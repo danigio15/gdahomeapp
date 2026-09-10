@@ -28,6 +28,7 @@ import '../catalogo/catalogo.dart';
 import '../entita.dart';
 import 'apparecchio.dart';
 import 'carichi.dart' show campiScelti;
+import 'lettere.dart';
 
 /* ─── Le parole ridotte all'osso ─────────────────────────────────────────── */
 
@@ -35,7 +36,6 @@ String _pulito(Object? valore) => '${valore ?? ''}'.trim();
 String _basso(Object? valore) => _pulito(valore).toLowerCase();
 String _dominioDi(String id) => _basso(id).split('.').first;
 
-final _accenti = RegExp('[̀-ͯ]');
 final _nonLettere = RegExp(r'[^a-z0-9]+');
 
 /// Un nome ridotto all'osso, per confrontarne due: minuscolo, senza accenti,
@@ -44,10 +44,8 @@ final _nonLettere = RegExp(r'[^a-z0-9]+');
 /// Serve a riconoscere l'interruttore che porta il nome del dispositivo, che
 /// e' una cosa che le integrazioni fanno tutte e che nessuna lista di parole
 /// puo' sapere in anticipo.
-String nomeRidotto(Object? valore) => _basso(valore)
-    .replaceAll(_accenti, '')
-    .replaceAll(_nonLettere, ' ')
-    .trim();
+String nomeRidotto(Object? valore) =>
+    senzaAccenti(_pulito(valore)).replaceAll(_nonLettere, ' ').trim();
 
 /* ─── Un'entita', come la legge chi indovina ─────────────────────────────── */
 
@@ -659,10 +657,10 @@ String indovinaIlTipo({
 /// La stanza della plancia che porta lo stesso nome dell'area di Home
 /// Assistant.
 String stanzaPerArea(String area, List<Apparecchio> stanze) {
-  final voluta = _basso(area).replaceAll(_accenti, '');
+  final voluta = senzaAccenti(_pulito(area));
   if (voluta.isEmpty) return '';
   for (final una in stanze) {
-    if (_basso(una.nome).replaceAll(_accenti, '') == voluta) {
+    if (senzaAccenti(una.nome.trim()) == voluta) {
       return una.id.isNotEmpty ? una.id : una.nome;
     }
   }

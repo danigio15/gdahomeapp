@@ -16,6 +16,7 @@
 library;
 
 import 'dart:async';
+import 'plancia_vera.dart' show FabbricaDellaPlancia;
 
 import 'package:flutter/material.dart';
 
@@ -31,11 +32,16 @@ class SchermataDellaConfigurazione extends StatefulWidget {
     super.key,
     required this.collegamento,
     required this.impostazioni,
+    this.fabbrica,
     this.apri,
   });
 
   final Collegamento collegamento;
   final Impostazioni impostazioni;
+
+  /// Chi accende il servitore. Serve a una voce sola — le persone, che il
+  /// ritratto lo fanno disegnare alla plancia.
+  final FabbricaDellaPlancia? fabbrica;
 
   /// Cosa fare quando si tocca una voce pronta. Di serie apre la sua
   /// schermata; nelle prove si guarda e basta.
@@ -67,6 +73,7 @@ class _SchermataDellaConfigurazioneState
       voce,
       widget.collegamento,
       widget.impostazioni,
+      fabbrica: widget.fabbrica,
     );
     if (schermata == null) return;
     Navigator.of(contesto)

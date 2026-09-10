@@ -25,17 +25,23 @@ import 'ultime.dart';
 import 'parole.dart';
 import 'sicurezza.dart';
 import 'caselle.dart';
+import '../plancia_vera.dart' show FabbricaDellaPlancia;
 import 'energia.dart';
 import 'famiglia.dart';
 import 'elenco.dart';
+import 'persone.dart';
 import 'speciali.dart';
 
 /// La schermata di una voce, o `null` se quella voce non e' ancora scritta.
 Widget? schermataDi(
   Voce voce,
   Collegamento collegamento,
-  Impostazioni impostazioni,
-) => switch (voce.titolo) {
+  Impostazioni impostazioni, {
+  /* Chi accende il servitore. Serve a una voce sola — le persone, che il
+   * ritratto lo fanno disegnare alla plancia — e passa di qui invece che da un
+   * posto globale perche' le prove ne facciano a meno. */
+  FabbricaDellaPlancia? fabbrica,
+}) => switch (voce.titolo) {
   /* ── La casa ── */
   'Generali' => SchermataDeiGenerali(collegamento: collegamento),
   'Le sezioni' => SchermataDelleSezioni(collegamento: collegamento),
@@ -152,14 +158,15 @@ Widget? schermataDi(
     laSezione: true,
     collegamento: collegamento,
   ),
-  'Le persone' => SchermataDiVoci(
-    titolo: 'Le persone',
-    sotto: 'Chi usa questa casa: il nome, la foto e la presenza.',
-    chiave: chiaveDellePersone,
-    unaCosa: 'una persona',
-    prefisso: 'person',
-    domini: const ['person', 'device_tracker'],
+  /* Le persone hanno una schermata loro, e non quella generica delle voci.
+   *
+   * Di una persona la plancia sa la foto, la batteria, otto sensori del suo
+   * telefono, se nasconderla dalla Home, il colore delle iniziali — e la sua
+   * **faccia**, che si compone. Nella schermata generica c'erano un nome,
+   * un'entita' e un emoji: tutto il resto non si poteva nemmeno scrivere. */
+  'Le persone' => SchermataDellePersone(
     collegamento: collegamento,
+    fabbrica: fabbrica,
   ),
 
   /* ── Le parole ── */

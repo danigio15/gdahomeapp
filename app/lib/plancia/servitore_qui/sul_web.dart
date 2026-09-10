@@ -34,6 +34,7 @@ import '../../ponte/filo.dart';
 import '../cucitura.dart';
 import '../pannello.dart';
 import '../premesse.dart';
+import '../ritratto.dart';
 
 /// Quanto si aspetta un file dal ponte. Come sul telefono: puo' passare dal
 /// centralino con la casa dall'altra parte del paese.
@@ -98,6 +99,12 @@ const String _ilWebSocketFinto =
 /// Quello che alla schermata serve sapere di un servitore, senza `dart:io`.
 abstract interface class ServitoreDiQuestoSistema {
   Uri paginaDi(PannelloDellaPlancia pannello);
+
+  /// L'indirizzo di una pagina qualunque servita da qui: serve al ritratto di
+  /// una persona, che e' una pagina nostra messa di fianco ai file della
+  /// plancia.
+  Uri indirizzoDi(String percorso, {Map<String, String> domande});
+
   Future<void> spegni();
   set leggera(bool valore);
   set tema(String quale);
@@ -187,6 +194,16 @@ class _ServitoreSulWeb implements ServitoreDiQuestoSistema {
   }
 
   @override
+  Uri indirizzoDi(String percorso, {Map<String, String> domande = const {}}) =>
+      /* Sulla base del documento, non sulla radice: sotto l'ingress di Home
+       * Assistant — e sotto `/app/` quando l'app la serve il ponte — la radice
+       * non e' dove sta l'app, e il service worker non vedrebbe passare
+       * niente. */
+      Uri.base
+          .resolve(percorso.startsWith('/') ? percorso.substring(1) : percorso)
+          .replace(queryParameters: domande.isEmpty ? null : domande);
+
+  @override
   Future<void> spegni() async {
     await _dalLavoratore?.cancel();
     _dalLavoratore = null;
@@ -231,6 +248,19 @@ extension on _ServitoreSulWeb {
     final numero = detto['numero'];
     final percorso = '${detto['percorso'] ?? ''}';
     if (numero == null || percorso.isEmpty) return;
+    /* La pagina che disegna un ritratto e' nostra, non della plancia: sta di
+     * fianco ai suoi moduli perche' e' li' che li va a prendere, e chiederla
+     * al ponte vorrebbe dire un 404. */
+    if (percorso.split('?').first.endsWith('/$fileDelRitratto')) {
+      _rispondi({
+        'che': 'gdahome/file',
+        'numero': numero,
+        'stato': 200,
+        'tipo': 'text/html; charset=utf-8',
+        'byte': Uint8List.fromList(utf8.encode(paginaDelRitratto)),
+      });
+      return;
+    }
     try {
       final preso = await _chiedi(percorso);
       var corpo = preso.byte;
