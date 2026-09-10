@@ -108,7 +108,18 @@ function dentroLApp(pathname) {
 self.addEventListener("fetch", (evento) => {
   const dove = new URL(evento.request.url);
   if (dove.origin !== self.location.origin) return;
-  const dentro = dentroLApp(dove.pathname);
+  /* Il percorso col nome vero del file, non con i segni di percentuale:
+   * «mia auto.png» viaggia come `mia%20auto.png`, e con quel nome il ponte
+   * non trova niente — i suoi nomi li vuole con lo spazio dentro
+   * (`ponte/src/foto.js`). Un percorso che non si scioglie si lascia
+   * com'e': meglio chiederlo storto che non chiederlo. */
+  let strada = dove.pathname;
+  try {
+    strada = decodeURIComponent(strada);
+  } catch (_male) {
+    /* Percentuali sbagliate: resta com'era. */
+  }
+  const dentro = dentroLApp(strada);
   const mia = MIE.find((quale) => dentro.includes(quale));
   if (!mia) return;
 
