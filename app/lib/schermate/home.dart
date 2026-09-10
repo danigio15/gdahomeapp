@@ -25,7 +25,7 @@ import 'acquisti.dart';
 import 'assistenza.dart';
 import '../vestito/quanto_e_largo.dart';
 import 'barra.dart';
-import 'questo_telefono.dart';
+import 'diagnostica.dart';
 import 'dispositivi.dart';
 import 'firma.dart';
 import 'menu.dart';
@@ -78,15 +78,26 @@ class _HomeState extends State<Home> {
   }
 
   void _vai(Sezione dove) {
-    /* La Configurazione non e' una schermata dell'app: e' la Config della
-     * plancia, quella della dashboard, e si apre sopra la plancia com'e'.
-     * Della voce del menu resta la porta — e' quello che vuol dire «uscita
-     * da dentro la plancia» — e dietro la porta c'e' la sua, intatta. */
+    /* La Configurazione non e' una schermata dell'app: e' la pagina
+     * Configurazione della plancia, quella della dashboard, e si apre dentro
+     * il riquadro com'e'. Della voce del menu resta la porta — e' quello che
+     * vuol dire «uscita da dentro la plancia» — e dietro la porta c'e' la
+     * sua pagina, intatta: la tessera che apre l'editor, il Tema, la
+     * Tavolozza, la Barra, «Sostieni il progetto».
+     *
+     * La sezione resta segnata «Configurazione» anche se sotto si vede il
+     * riquadro: e' li' che si e', e il menu deve dirlo. */
     if (dove == Sezione.configurazione) {
-      if (_sezione != Sezione.plancia) {
-        setState(() => _sezione = Sezione.plancia);
-      }
+      if (_sezione != dove) setState(() => _sezione = dove);
       _plancia.currentState?.apriLaConfig();
+      return;
+    }
+    /* Dalla Configurazione alla Plancia: la plancia torna dov'era prima.
+     * Nella dashboard si tocca un'altra linguetta della sua barra; qui la
+     * barra e' il menu dell'app, e fa la stessa cosa. */
+    if (dove == Sezione.plancia && _sezione == Sezione.configurazione) {
+      setState(() => _sezione = dove);
+      _plancia.currentState?.tornaDallaConfig();
       return;
     }
     /* Toccare «Plancia» quando ci si e' gia' la ricarica: e' il gesto piu'
@@ -104,7 +115,8 @@ class _HomeState extends State<Home> {
     /* Sulla plancia la barra del titolo non c'e': la plancia ha la sua
      * testata, col nome della casa e il meteo, e una seconda riga sopra
      * direbbe le stesse cose a tre centimetri di distanza. */
-    final sullaPlancia = _sezione == Sezione.plancia;
+    final sullaPlancia =
+        _sezione == Sezione.plancia || _sezione == Sezione.configurazione;
     return Scaffold(
       appBar: sullaPlancia
           ? null
@@ -184,7 +196,13 @@ class _HomeState extends State<Home> {
                * plancia e' una pagina web, e rifarla da capo a ogni ritorno
                * vorrebbe dire riaprirla ogni volta. */
               child: IndexedStack(
-                index: Sezione.values.indexOf(_sezione),
+                /* La Configurazione mostra il riquadro: la sua pagina sta
+                 * dentro la plancia, e la voce del menu la apre li'. */
+                index: Sezione.values.indexOf(
+                  _sezione == Sezione.configurazione
+                      ? Sezione.plancia
+                      : _sezione,
+                ),
                 children: [
                   for (final sezione in Sezione.values)
                     /* Le pagine dell'app si fermano dove si legge ancora e
@@ -210,12 +228,18 @@ class _HomeState extends State<Home> {
                           visibile: _sezione == Sezione.dispositivi,
                         ),
                         /* La Configurazione qui non ha una schermata: la
-                         * voce apre la Config della plancia, sopra la
-                         * plancia. Il posto nella fila resta perche' le
-                         * sezioni e le voci del menu sono la stessa cosa. */
+                         * voce apre la pagina della plancia, dentro il
+                         * riquadro, e la fila mostra quello. Il posto resta
+                         * perche' le sezioni e le voci del menu sono la
+                         * stessa cosa. */
                         Sezione.configurazione => const SizedBox.shrink(),
-                        Sezione.questoTelefono => SchermataDiQuestoTelefono(
+                        /* «Come va l'app»: la stessa schermata che apre
+                         * l'Assistenza, senza la sua barra — qui la barra
+                         * la mette la home. */
+                        Sezione.comeVaLApp => SchermataDellaDiagnostica(
+                          collegamento: collegamento,
                           impostazioni: widget.impostazioni,
+                          nuda: true,
                         ),
                         Sezione.acquisti => SchermataDegliAcquisti(
                           collegamento: collegamento,

@@ -15,10 +15,15 @@
 /// altro posto dove le cose stanno, e non sarebbe mai la stessa. Vedi
 /// `plancia/premesse.dart`.
 ///
-/// E **L'app**, che e' l'altra faccia della stessa scelta: le tre o quattro
-/// cose che riguardano questo telefono e non la casa — il tema del riquadro,
-/// la tavolozza, la barra — non stanno nella Config della casa, perche' non
-/// viaggiano. Stanno li'.
+/// La Config della plancia e' la sua **pagina**, non solo il suo editor:
+/// dentro ci stanno anche il Tema, la Tavolozza e la Barra di navigazione, che
+/// la dashboard tiene per questo dispositivo e dichiara tali. Quelle non si
+/// rifanno: si aprono.
+///
+/// E **Come va l'app**, che dell'app parla davvero: i fotogrammi, il filo con
+/// la casa, il ritardo dei dati, e i due interruttori che pesano sul riquadro
+/// — la plancia leggera e la composizione ibrida. Sono cose dell'app, non
+/// della plancia, e nella plancia non ci sono perche' non ci possono essere.
 ///
 /// Il resto e' quello che in Home Assistant sta nascosto, e che l'app
 /// aggiunge. Le voci che non ci sono ancora restano nell'elenco, spente: si
@@ -30,7 +35,7 @@ enum Sezione {
   plancia('Plancia', 'home', pronta: true),
   dispositivi('Dispositivi', 'widget', pronta: true),
   configurazione('Configurazione', 'impostazioni', pronta: true),
-  questoTelefono('L\'app', 'minipc', pronta: true),
+  comeVaLApp('Come va l\'app', 'minipc', pronta: true),
   acquisti('Acquisti', 'evidenza', pronta: true),
   segnalazioni('Segnalazioni', 'segnalazioni', pronta: true),
   assistenza('Assistenza', 'assistenza', pronta: true),

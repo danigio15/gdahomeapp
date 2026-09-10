@@ -102,9 +102,18 @@ const DA_COMPRIMERE = /^(text\/|application\/(javascript|json|xml|x-javascript)|
 const ALMENO = 512;
 
 /* Un percorso e' fatto di lettere, numeri e pochi segni. Niente `..`, niente
- * spazi, niente caratteri di controllo: quello che il browser della plancia
- * chiede sta tutto qui dentro, e il resto e' qualcuno che prova. */
-const PERCORSO_BUONO = /^\/[A-Za-z0-9_\-./~%+@:=&?,!()*;]*$/;
+ * caratteri di controllo: quello che il browser della plancia chiede sta
+ * tutto qui dentro, e il resto e' qualcuno che prova.
+ *
+ * Lo **spazio** c'e', e prima non c'era. I file della plancia hanno nomi
+ * semplici, ma sotto `/local/` stanno le foto di casa, e quei nomi li
+ * sceglie chi le ha scattate: «mia auto.png». Il servitore dell'app scioglie
+ * i segni di percentuale prima di chiedere — un nome di file e' il nome, non
+ * il modo in cui viaggia — e con lo spazio vietato qui quella foto tornava
+ * «percorso non valido». Dall'altra parte `foto.js` lo spazio lo accetta gia'
+ * (`PEZZO_BUONO`), e verso Home Assistant ci pensa `new URL`, che rimette la
+ * percentuale dov'era. */
+const PERCORSO_BUONO = /^\/[A-Za-z0-9_\-./~%+@:=&?,!()*; ]*$/;
 
 /* Senza leggere il JSON: la maggior parte dei messaggi del telefono sono
  * comandi per Home Assistant e non vanno nemmeno aperti. */

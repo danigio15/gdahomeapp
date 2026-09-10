@@ -10,6 +10,13 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
+    <!-- La plancia vibra: un colpetto a ogni tessera toccata, a ogni cambio
+         di pagina, a ogni scena delle luci. Sono piu' di quaranta punti in
+         cui chiama `navigator.vibrate`, e in un WebView Android senza questo
+         permesso quella chiamata non fa niente e non dice niente: la plancia
+         nel browser vibrava, nell'app no, e non si capiva perche'. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <!-- La plancia vera dentro l'app passa da un server locale, su
          127.0.0.1: e' l'unico indirizzo in chiaro che il WebView puo'
          aprire, ed e' scritto in res/xml/network_security_config.xml. -->

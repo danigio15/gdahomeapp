@@ -32,6 +32,12 @@ dependencies:
   # chilobyte e non dieci megabyte.
   image_picker: ^1.1.2
 
+  # I collegamenti che portano fuori: la plancia ne ha qualcuno — il tasto
+  # delle donazioni, il meteo di Windy, la mappa — e dentro il riquadro non
+  # c'e' nessun posto dove aprirli. Si aprono nel browser del telefono, che e'
+  # dove li aprirebbe la plancia in Home Assistant.
+  url_launcher: ^6.3.1
+
   # La cifratura fra l'app e il ponte: X25519, HKDF, AES-256-GCM.
   #
   # Non si scrive a mano. Dall'altra parte le stesse tre cose vengono da

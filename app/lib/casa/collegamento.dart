@@ -23,7 +23,6 @@ import 'dart:async';
 import '../plancia/pannello.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
-import 'cerca/registro.dart';
 import '../ponte/indirizzo.dart';
 import '../ponte/presa.dart';
 import '../ponte/sonda.dart';
@@ -253,13 +252,15 @@ class Collegamento {
 
   bool _casaChiesta = false;
 
-  /* In che stanza sta ogni entita'.
+  /* In che stanza sta ogni entita' non si chiede piu'.
    *
-   * Non e' nello stato: sta nei registri, e va chiesto a parte. Serve al
-   * cercatore della configurazione — chi configura la temperatura della
-   * cameretta cerca «cameretta», e quella parola spesso sta solo li'. Si
-   * legge insieme alle entita', che tanto il giro e' lo stesso. */
-  final registroDelleStanze = RegistroDelleStanze();
+   * Erano tre elenchi dai registri di Home Assistant, e servivano al
+   * cercatore della Config rifatta in Flutter: chi configurava la
+   * temperatura della cameretta cercava «cameretta», e quella parola stava
+   * solo li'. Quella Config non c'e' piu' — c'e' la sua, dentro la plancia,
+   * che i registri se li chiede da se' — e quei tre elenchi restavano
+   * chiesti a ogni lettura delle entita' per riempire una mappa che nessuno
+   * leggeva. */
 
   /// Le entita' della casa, quando servono davvero.
   ///
@@ -271,8 +272,6 @@ class Collegamento {
   /// configurazione quando si apre, e da li' in poi restano aggiornati.
   /// Chiamarla due volte non costa niente.
   ///
-  /// Con le entita' arrivano le **stanze**, dai registri: e' un giro solo, e
-  /// chi vuole le entita' quasi sempre vuole anche sapere dove stanno.
   Future<void> serveLaCasa() async {
     final stato = _stato;
     if (stato == null || _casaChiesta) return;
@@ -284,20 +283,6 @@ class Collegamento {
       _perche = errore.spiegazione;
     }
     _avvisa();
-    /* Le stanze **non si aspettano**.
-     *
-     * Sono tre elenchi in piu', e chi chiama questa vuole le entita': una
-     * casa che a quei tre comandi non risponde — un Home Assistant vecchio,
-     * un filo che cade a meta' — terrebbe fermo l'elenco dei dispositivi per
-     * venti secondi buoni ad aspettare una cosa che a quell'elenco non serve.
-     * Partono per conto loro e, quando arrivano, chi guarda se ne accorge. */
-    final filo = _filo;
-    if (filo == null || !filo.dentro) return;
-    unawaited(
-      registroDelleStanze.leggi(filo).then((_) {
-        if (_filo == filo) _avvisa();
-      }),
-    );
   }
 
   /// Chiede alla casa dove sta la plancia.

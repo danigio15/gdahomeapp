@@ -352,19 +352,20 @@ L'alberatura, il menu che la replica e le regole per piu' utenti stanno per
 esteso in [`CONFIG.md`](CONFIG.md): sono state lette dalla release **1.4.15**
 della plancia, scheda per scheda, e non riassunte a memoria.
 
-In due righe: la Config della plancia — il riquadro che nella dashboard si
-apre da dentro la plancia, e la cui fila di schede su un telefono non ci sta
-— diventa **una voce del menu**. Non una copia: quella, com'e'. Della Config
-si sposta la porta, e la stanza resta la sua (vedi
-[`CONFIG_COMPLETA.md`](CONFIG_COMPLETA.md), che racconta anche perche' la
-copia in Flutter e' stata cancellata).
+In due righe: la Configurazione della plancia — la sua **pagina**, con la
+tessera che apre l'editor, il Tema, la Tavolozza, la Barra di navigazione e
+«Sostieni il progetto» — diventa **una voce del menu**. Non una copia: quella,
+com'e'. Della Configurazione si sposta la porta, e la stanza resta la sua
+(vedi [`CONFIG_COMPLETA.md`](CONFIG_COMPLETA.md), che racconta anche perche'
+la copia in Flutter e' stata cancellata, e perche' anche i tre comandi di
+quella pagina sono tornati suoi).
 
 | pezzo | dove | stato |
 |---|---|---|
 | La voce nel menu, e quella degli acquisti | `app/lib/schermate/menu.dart` | ✅ |
 | La porta: la maniglia nella pagina servita | `app/lib/plancia/premesse.dart` | ✅ |
 | Chi la tira, dal menu | `app/lib/schermate/plancia_vera.dart` | ✅ |
-| Quello che e' di questo telefono e non della casa | `app/lib/schermate/questo_telefono.dart` | ✅ |
+| Quello che e' dell'app e non della plancia (plancia leggera, composizione ibrida) | `app/lib/schermate/diagnostica.dart` | ✅ |
 | La foto del collaudo, presa dentro il riquadro | `collaudo/guarda.mjs` | ✅ |
 | Le persone, accanto ai dispositivi | `ponte/src/dispositivi.js` | ⬜ |
 

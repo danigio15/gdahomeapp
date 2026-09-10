@@ -987,19 +987,73 @@ try {
 
   /* La Configurazione.
    *
-   * Non e' una schermata dell'app: e' la Config della **dashboard**, quella
-   * vera, e la voce del menu apre lei sopra la plancia. Prima l'app ne aveva
-   * una sua, rifatta in Flutter, e per quanto le si rifacessero le caselle
-   * una per una restava un'altra cosa — un'altra grafica, un'altra
-   * alberatura, un altro posto dove ogni cosa sta. Adesso di rifatto non c'e'
-   * niente: si guarda che la sua arrivi, e che sia la sua. */
-  racconta("apro la Config della plancia dal menu");
-  await apriIlMenu();
-  await premiNelMenu("Configurazione");
+   * Non e' una schermata dell'app: e' la pagina **Configurazione della
+   * dashboard**, quella vera, e la voce del menu apre lei dentro il
+   * riquadro. Prima l'app ne aveva una sua, rifatta in Flutter, e per quanto
+   * le si rifacessero le caselle una per una restava un'altra cosa —
+   * un'altra grafica, un'altra alberatura, un altro posto dove ogni cosa
+   * sta. Poi la voce apriva solo il suo editor, e la pagina restava murata:
+   * cosi' si perdevano il Tema, la Tavolozza, la Barra e le donazioni, che
+   * stanno nella pagina e non nell'editor. Adesso si apre la pagina: di
+   * rifatto non c'e' niente, e si guarda che sia la sua. */
+  racconta("apro la Configurazione della plancia dal menu");
   const laConfig = await laPlancia(pagina);
-  await laConfig.waitForSelector("#editor-modal", { timeout: 30_000 });
-  await attendi(2000);
+  await apriIlMenu();
+  /* La prova che la voce ha preso e' **la pagina**, non la barra.
+   *
+   * `premiNelMenu` guarda la maniglia: una voce premuta manda giu' la barra,
+   * e se dopo un secondo e' ancora su quel tocco non e' finito su una voce.
+   * Vale per le schermate dell'app, e non per le due voci che aprono il
+   * riquadro: qui il collaudo gira nel browser, dove la plancia sta in un
+   * `iframe` e il suo cambio di pagina lavora sullo **stesso filo** che
+   * disegna Flutter. La barra si sta chiudendo, la sua animazione resta
+   * indietro di qualche decimo, e la maniglia si legge ancora alta su una
+   * pagina che si e' aperta al primo tocco. Si preme, e poi si chiede alla
+   * plancia se ci siamo. */
+  try {
+    await premiNelMenu("Configurazione");
+  } catch (male) {
+    racconta(`la barra non si e' letta chiusa: guardo la pagina (${male.message})`);
+  }
+  await laConfig.waitForSelector("#page-config.active", { timeout: 30_000 });
+  await attendi(1800);
   await scatta(pagina, "6g-la-config-della-plancia");
+
+  /* «Sostieni il progetto»: una tessera della pagina
+   * (`sostieni-il-progetto-section.js`), e la finestra che racconta il
+   * perche' prima del collegamento. Nell'app c'e' perche' c'e' la sua
+   * pagina — non perche' l'abbiamo rifatta — e prima, con la pagina murata,
+   * non c'era nessun modo di arrivarci. Il tasto va su PayPal: nel browser
+   * si apre in una scheda, sul telefono lo apre il browser del telefono
+   * (`riquadro/sul_telefono.dart`). */
+  racconta("apro «Sostieni il progetto» dalla sua tessera");
+  const laTesseraDelleDonazioni = await laConfig.evaluate(() => {
+    const tessera = document.querySelector("#page-config .dm-sostieni-tessera");
+    if (!tessera) return false;
+    tessera.click();
+    return true;
+  });
+  if (!laTesseraDelleDonazioni) {
+    throw new Error("nella pagina Config non c'e' la tessera delle donazioni");
+  }
+  await attendi(1200);
+  await scatta(pagina, "6g2-config-sostieni");
+  await laConfig.evaluate(() =>
+    document.getElementById("dm-sostieni-modal")?.classList.remove("show"),
+  );
+  await attendi(600);
+
+  /* L'editor si apre da dentro la pagina, dalla sua tessera: e' il giro che
+   * si fa nella dashboard. */
+  racconta("apro l'editor dalla tessera «Configura Entita'»");
+  await laConfig.evaluate(() => {
+    const tessera = document.getElementById("srv-config-card");
+    if (tessera) tessera.click();
+    else window.apriConfigEntita?.();
+  });
+  await laConfig.waitForSelector("#editor-modal", { timeout: 30_000 });
+  await attendi(1800);
+  await scatta(pagina, "6g3-editor-della-config");
 
   /* Una scheda qualunque, dal di dentro: quello che si vede e' il markup
    * della dashboard, non un modulo nostro che le somiglia. */
@@ -1022,20 +1076,40 @@ try {
   await attendi(1600);
   await scatta(pagina, "6i-config-persone");
 
-  /* Si chiude come nella dashboard: il riquadro se ne va e sotto c'e' la
-   * plancia, che non si e' mai ricaricata. */
-  racconta("chiudo la Config");
+  /* Si chiude come nella dashboard: l'editor se ne va e sotto resta la sua
+   * pagina, che non si e' mai ricaricata. */
+  racconta("chiudo l'editor");
   await laConfig.evaluate(() => document.getElementById("editor-modal")?.remove());
   await attendi(900);
 
-  /* «L'app»: le poche scelte che sono di questo telefono e non della casa,
-   * e che per questo non stanno nella Config. */
-  racconta("apro L'app");
+  /* Dalla Configurazione alla Plancia: la plancia torna dov'era, e la pagina
+   * Config si chiude come si chiuderebbe toccando un'altra linguetta della
+   * sua barra. */
+  racconta("torno alla plancia");
+  await apriIlMenu();
+  try {
+    await premiNelMenu("Plancia");
+  } catch (male) {
+    racconta(`la barra non si e' letta chiusa: guardo la pagina (${male.message})`);
+  }
+  await attendi(1500);
+  const laConfigSiEChiusa = await laConfig.evaluate(
+    () => !document.getElementById("page-config")?.classList.contains("active"),
+  );
+  if (!laConfigSiEChiusa) {
+    throw new Error("la plancia non e' tornata dalla Configurazione");
+  }
+
+  /* «Come va l'app»: quello che e' dell'app e non della plancia — i
+   * fotogrammi, il filo con la casa, il ritardo dei dati — e i due
+   * interruttori che pesano sul riquadro. Nel menu, e non solo dentro
+   * l'Assistenza: e' la pagina da fotografare quando l'app va a scatti. */
+  racconta("apro «Come va l'app» dal menu");
   /* Si aspetta la riga d'apertura, non un'insegna: le insegne dentro una
    * scheda l'albero dei significati non le dichiara sempre. */
-  await vaiA("L'app", "Quello che vale solo qui");
+  await vaiA("Come va l'app", "L'ultimo minuto");
   await attendi(900);
-  await scatta(pagina, "6l2-l-app");
+  await scatta(pagina, "6l2-come-va-l-app");
 
   racconta("apro gli acquisti");
   await vaiA("Acquisti", "Prova aperta su");

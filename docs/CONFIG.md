@@ -157,20 +157,21 @@ modificata. Si aggiunge soltanto qualcosa **alla pagina servita**, che è lo
 stesso posto da cui la plancia riceve già le misure delle barre del telefono
 (`app/lib/plancia/servitore.dart`, `senzaConfig`).
 
-Si toglie in due modi insieme, e servono tutti e due: uno stile fa sparire la
-voce e la sua pagina, e un pezzo di programma chiude l'editor se qualcosa
-riesce ad aprirlo lo stesso — la plancia ha più di una strada per arrivarci, e
-nasconderne una sola vuol dire ritrovarselo addosso da un'altra.
+Si toglie **la voce**, non la pagina: uno stile fa sparire la linguetta dalla
+barra in fondo alla plancia, e il menu dell'app la preme per conto suo. La
+pagina resta com'è, perché dentro c'è più dell'editor — il Tema con le sei
+tavolozze, la Barra di navigazione, «Sostieni il progetto» — e nasconderla
+voleva dire perdere quelle. Vedi
+[`CONFIG_COMPLETA.md`](CONFIG_COMPLETA.md).
 
 Il collaudo lo verifica senza che nessuno glielo chieda: legge la barra della
 plancia e dice quante pagine ha. Erano venti con Config, sono **diciannove**.
 
-Due cose che stavano in quella pagina non sono configurazione della casa ma di
-**questo dispositivo** — il tema e la barra della plancia — e la dashboard le
-tiene apposta fuori dalle chiavi che si sincronizzano: il tablet in cucina può
-stare sullo scuro mentre il telefono segue il sistema. Sono uscite con il resto
-e adesso stanno nel menu, sotto «L'app»: le tiene l'app, e il servitore le
-scrive nella pagina prima che parta.
+Due tessere di quella pagina non sono configurazione della casa ma di **questo
+dispositivo** — il Tema e la Barra della plancia — e la dashboard le tiene
+apposta fuori dalle chiavi che si sincronizzano: il tablet in cucina può stare
+sullo scuro mentre il telefono segue il sistema. Restano sue: l'app le apre e
+non le rifà.
 
 ## Il cercatore di entità è lo stesso
 
@@ -244,9 +245,10 @@ dietro un telefono non lo sa e non deve saperlo.
 | pezzo | dove | stato |
 |---|---|---|
 | La voce nel menu | `app/lib/schermate/menu.dart` | ✅ |
-| La porta che apre la Config della plancia | `app/lib/plancia/premesse.dart` | ✅ |
-| La Config tolta dalla barra della plancia | `app/lib/plancia/premesse.dart` | ✅ |
-| Il tema, la barra e la tavolozza di questo dispositivo | `app/lib/schermate/questo_telefono.dart` | ✅ |
+| La porta che apre la pagina Configurazione della plancia | `app/lib/plancia/premesse.dart` | ✅ |
+| La voce Config tolta dalla barra della plancia | `app/lib/plancia/premesse.dart` | ✅ |
+| ~~Il tema, la barra e la tavolozza rifatti in Flutter~~ | cancellati: sono tessere della sua pagina | — |
+| Plancia leggera e composizione ibrida, che sono dell'app | `app/lib/schermate/diagnostica.dart`, voce «Come va l'app» | ✅ |
 | ~~L'alberatura rifatta in Flutter~~ | cancellata | — |
 | ~~Le schermate delle singole voci~~ | cancellate | — |
 | ~~Il cercatore di entità, portato dalla plancia~~ | cancellato: è quello della plancia | — |

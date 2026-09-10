@@ -107,9 +107,6 @@ class PlanciaVeraState extends State<PlanciaVera> {
   StreamSubscription<void>? _ascoltoLaConfigurazione;
   late bool _leggera = widget.impostazioni.planciaLeggera;
   late bool _ibrida = widget.impostazioni.composizioneIbrida;
-  late String _tema = widget.impostazioni.temaDellaPlancia;
-  late String _barra = widget.impostazioni.barraDellaPlancia;
-  late String _tavolozza = widget.impostazioni.tavolozzaDellaPlancia;
 
   /* La pagina si e' aperta mentre la casa non c'era.
    *
@@ -152,9 +149,6 @@ class PlanciaVeraState extends State<PlanciaVera> {
     );
     if (!mounted) return;
     servitore?.leggera = widget.impostazioni.planciaLeggera;
-    servitore?.tema = widget.impostazioni.temaDellaPlancia;
-    servitore?.barra = widget.impostazioni.barraDellaPlancia;
-    servitore?.tavolozza = widget.impostazioni.tavolozzaDellaPlancia;
     setState(() => _servitore = servitore);
   }
 
@@ -165,27 +159,12 @@ class PlanciaVeraState extends State<PlanciaVera> {
     if (!mounted) return;
     final leggera = widget.impostazioni.planciaLeggera;
     final ibrida = widget.impostazioni.composizioneIbrida;
-    final tema = widget.impostazioni.temaDellaPlancia;
-    final barra = widget.impostazioni.barraDellaPlancia;
-    final tavolozza = widget.impostazioni.tavolozzaDellaPlancia;
     final cambiaLaComposizione = ibrida != _ibrida;
-    if (leggera == _leggera &&
-        tema == _tema &&
-        barra == _barra &&
-        tavolozza == _tavolozza &&
-        !cambiaLaComposizione) {
-      return;
-    }
+    if (leggera == _leggera && !cambiaLaComposizione) return;
     _servitore?.leggera = leggera;
-    _servitore?.tema = tema;
-    _servitore?.barra = barra;
-    _servitore?.tavolozza = tavolozza;
     setState(() {
       _leggera = leggera;
       _ibrida = ibrida;
-      _tema = tema;
-      _barra = barra;
-      _tavolozza = tavolozza;
       _caricata = false;
       _perche = null;
     });
@@ -211,9 +190,10 @@ class PlanciaVeraState extends State<PlanciaVera> {
    * riquadro sta ancora leggendo i suoi script. */
   bool _laConfigAppenaSiPuo = false;
 
-  /// Apre la Config della plancia: **quella** della dashboard, sopra la
-  /// pagina, com'e'. E' la voce «Configurazione» del menu dell'app: la porta
-  /// e' uscita da dentro la plancia, la Config no.
+  /// Apre la Configurazione della plancia: **quella** della dashboard — la
+  /// sua pagina, con la sua insegna e le sue tessere — e non una rifatta.
+  /// E' la voce «Configurazione» del menu dell'app: di dentro la plancia e'
+  /// uscita la porta, la pagina no.
   void apriLaConfig() {
     if (!mounted) return;
     if (!_caricata) {
@@ -221,6 +201,15 @@ class PlanciaVeraState extends State<PlanciaVera> {
       return;
     }
     _riquadro.currentState?.apriLaConfig();
+  }
+
+  /// Torna dov'era la plancia prima della Configurazione. E' la voce
+  /// «Plancia» del menu quando si viene dalla Config: nella dashboard si
+  /// tocca un'altra linguetta, qui la linguetta e' la voce del menu.
+  void tornaDallaConfig() {
+    if (!mounted) return;
+    _laConfigAppenaSiPuo = false;
+    _riquadro.currentState?.tornaDallaConfig();
   }
 
   @override
@@ -466,11 +455,104 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
    * leggere — e da li' resta lo stesso per tutta la vita del riquadro. */
   WebViewController? _controllore;
 
-  /// Dal riquadro non si esce: la plancia sta tutta sul servitore, e un
-  /// indirizzo di fuori e' un collegamento che non ha senso aprire qui.
-  bool _dentroCasa(String indirizzo) =>
-      indirizzo.startsWith(widget.pagina.origin) ||
-      indirizzo.startsWith('about:');
+  /// Cosa e' di casa. La plancia sta tutta sul servitore: dentro il riquadro
+  /// ci va lei e nient'altro. Un indirizzo di fuori non si carica qui — se lo
+  /// portasse via, la plancia sarebbe finita — e si apre nel browser del
+  /// telefono (`riquadro/sul_telefono.dart`).
+  ///
+  /// «Di casa» non e' tutta l'origine, ed e' una lezione: la plancia ha
+  /// qualche collegamento scritto **dalla radice**, che dentro Home Assistant
+  /// porta a una pagina di Home Assistant — «Aprila», sotto il campo RTSP
+  /// nelle telecamere, va a `/config/integrations/...`. Qui quell'indirizzo
+  /// comincia con l'origine del servitore, quindi passava: il riquadro se ne
+  /// andava dalla plancia e il servitore rispondeva «qui non c'e' niente» in
+  /// testo nudo. Si torna solo ricaricando. Passa quello che il servitore
+  /// serve davvero, e nient'altro.
+  /// I tre percorsi che il servitore serve: i file della plancia, le
+  /// immagini di `config/www`, e le chiamate REST a Home Assistant.
+  static const _diCasa = ['/dashboardmodern_static/', '/local/', '/api/'];
+
+  bool _dentroCasa(String indirizzo) {
+    if (indirizzo.startsWith('about:')) return true;
+    final origine = widget.pagina.origin;
+    if (!indirizzo.startsWith(origine)) return false;
+    final dopo = indirizzo.substring(origine.length);
+    if (dopo.isEmpty || dopo.startsWith('?') || dopo.startsWith('#')) {
+      return true;
+    }
+    /* La pagina stessa, con la sua chiave o il suo ancoraggio. */
+    if (dopo.startsWith(widget.pagina.path)) return true;
+    return _diCasa.any(dopo.startsWith);
+  }
+
+  /* Le tre finestre che un browser ha e un WebView no: `alert`, `confirm`,
+   * `prompt`. La pagina le chiama come le chiamerebbe dentro Home Assistant,
+   * e a mostrarle e' l'app. Vedi `riquadro/sul_telefono.dart`. */
+
+  Future<void> _laPaginaDice(String messaggio) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dove) => AlertDialog(
+        content: Text(messaggio),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dove).pop(),
+            child: const Text('Va bene'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<bool> _laPaginaChiede(String domanda) async {
+    if (!mounted) return false;
+    final risposta = await showDialog<bool>(
+      context: context,
+      builder: (dove) => AlertDialog(
+        content: Text(domanda),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dove).pop(false),
+            child: const Text('Lascia stare'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dove).pop(true),
+            child: const Text('Vai avanti'),
+          ),
+        ],
+      ),
+    );
+    return risposta ?? false;
+  }
+
+  Future<String> _laPaginaFaScrivere(String domanda, String diSerie) async {
+    if (!mounted) return '';
+    final penna = TextEditingController(text: diSerie);
+    final scritto = await showDialog<String>(
+      context: context,
+      builder: (dove) => AlertDialog(
+        title: Text(domanda),
+        content: TextField(
+          controller: penna,
+          autofocus: true,
+          onSubmitted: (cosa) => Navigator.of(dove).pop(cosa),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dove).pop(),
+            child: const Text('Lascia stare'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dove).pop(penna.text),
+            child: const Text('Va bene'),
+          ),
+        ],
+      ),
+    );
+    penna.dispose();
+    return scritto ?? '';
+  }
 
   @override
   void didChangeDependencies() {
@@ -485,6 +567,9 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
       },
       quandoFallisce: (perche) => widget.quandoFallisce(perche),
       siPuoAndare: _dentroCasa,
+      dice: _laPaginaDice,
+      chiede: _laPaginaChiede,
+      faScrivere: _laPaginaFaScrivere,
       /* Lo stesso fondo dell'app: sotto la pagina, finche' non arriva, non
        * si vede un lampo di un altro colore. */
       sfondo: Theme.of(context).colorScheme.surface,
@@ -528,6 +613,13 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
     final controllore = _controllore;
     if (controllore != null) {
       unawaited(riquadro.apriLaConfig(controllore, widget.pagina));
+    }
+  }
+
+  void tornaDallaConfig() {
+    final controllore = _controllore;
+    if (controllore != null) {
+      unawaited(riquadro.tornaDallaConfig(controllore));
     }
   }
 

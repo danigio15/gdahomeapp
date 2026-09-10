@@ -17,9 +17,6 @@ class Impostazioni {
        /* Spenta di serie, su tutto: vedi [planciaLeggera]. */
        _planciaLeggera = false,
        _composizioneIbrida = android,
-       _temaDellaPlancia = 'auto',
-       _barraDellaPlancia = 'scomparsa',
-       _tavolozzaDellaPlancia = '',
        // ignore: prefer_initializing_formals
        _sulTelefono = sulTelefono,
        _android = android;
@@ -32,22 +29,16 @@ class Impostazioni {
   bool _planciaLeggera;
   bool _composizioneIbrida;
 
-  /* Il tema e la barra della plancia.
+  /* Il tema, la tavolozza e la barra della plancia qui non ci sono, e ci
+   * sono stati.
    *
-   * Nella dashboard stanno nella sua pagina Config, e non viaggiano col resto
-   * della configurazione: sono di **questo dispositivo**, e la dashboard li
-   * tiene apposta fuori dalle chiavi che si sincronizzano — il tablet in
-   * cucina puo' stare sullo scuro mentre il telefono segue il sistema. Quando
-   * la Config esce dalla plancia devono uscire con lei, se no si perdono; e
-   * siccome sono del dispositivo li tiene l'app, e il servitore li scrive
-   * nella pagina prima che parta. */
-  String _temaDellaPlancia;
-  String _barraDellaPlancia;
-
-  /// La tavolozza della plancia (`cd_tavolozza`): `notte`, `grafite`,
-  /// `bosco`, `sabbia`, `menta`, `ardesia`, o vuoto. Come il tema, e' di
-  /// questo dispositivo: nella plancia non viaggia.
-  String _tavolozzaDellaPlancia;
+   * Sono tre comandi della pagina Config della plancia — «su questo
+   * dispositivo», lo scrive lei — e la pagina se li tiene nel deposito
+   * locale del riquadro, che dura. Tenerli anche qui voleva dire due
+   * padroni: l'app li riscriveva nella pagina a ogni caricamento, e la
+   * scelta fatta dalle tessere della dashboard spariva. Adesso la pagina si
+   * apre dal menu e i suoi comandi sono i suoi. Vedi
+   * `plancia/premesse.dart`. */
   bool _caricate = false;
 
   /// La plancia senza le sfocature dietro le tessere e senza le animazioni
@@ -58,15 +49,6 @@ class Impostazioni {
   /// interruttore per un telefono che proprio non ce la fa, e lo si accende
   /// a mano da «Come va l'app», sapendo che la plancia cambia aspetto.
   bool get planciaLeggera => _planciaLeggera;
-
-  /// `auto`, `chiaro` o `scuro`. `auto` segue il tema del telefono.
-  String get temaDellaPlancia => _temaDellaPlancia;
-
-  /// `scomparsa` o `fissa`: come sta la barra in fondo alla plancia.
-  String get barraDellaPlancia => _barraDellaPlancia;
-
-  /// La tavolozza scelta, o vuoto per nessuna.
-  String get tavolozzaDellaPlancia => _tavolozzaDellaPlancia;
 
   /// Su Android: il riquadro della plancia disegnato dal sistema per conto
   /// suo (composizione ibrida) invece che ridisegnato da Flutter a ogni
@@ -93,15 +75,6 @@ class Impostazioni {
           if (letto['composizione_ibrida'] is bool) {
             _composizioneIbrida = letto['composizione_ibrida'] as bool;
           }
-          if (letto['tema_della_plancia'] is String) {
-            _temaDellaPlancia = letto['tema_della_plancia'] as String;
-          }
-          if (letto['barra_della_plancia'] is String) {
-            _barraDellaPlancia = letto['barra_della_plancia'] as String;
-          }
-          if (letto['tavolozza_della_plancia'] is String) {
-            _tavolozzaDellaPlancia = letto['tavolozza_della_plancia'] as String;
-          }
         }
       }
     } catch (_) {
@@ -111,29 +84,10 @@ class Impostazioni {
     _avvisa();
   }
 
-  Future<void> metti({
-    bool? planciaLeggera,
-    bool? composizioneIbrida,
-    String? temaDellaPlancia,
-    String? barraDellaPlancia,
-    String? tavolozzaDellaPlancia,
-  }) async {
+  Future<void> metti({bool? planciaLeggera, bool? composizioneIbrida}) async {
     var cambiato = false;
-    if (tavolozzaDellaPlancia != null &&
-        tavolozzaDellaPlancia != _tavolozzaDellaPlancia) {
-      _tavolozzaDellaPlancia = tavolozzaDellaPlancia;
-      cambiato = true;
-    }
     if (planciaLeggera != null && planciaLeggera != _planciaLeggera) {
       _planciaLeggera = planciaLeggera;
-      cambiato = true;
-    }
-    if (temaDellaPlancia != null && temaDellaPlancia != _temaDellaPlancia) {
-      _temaDellaPlancia = temaDellaPlancia;
-      cambiato = true;
-    }
-    if (barraDellaPlancia != null && barraDellaPlancia != _barraDellaPlancia) {
-      _barraDellaPlancia = barraDellaPlancia;
       cambiato = true;
     }
     if (composizioneIbrida != null &&
@@ -147,9 +101,6 @@ class Impostazioni {
       jsonEncode({
         'plancia_leggera': _planciaLeggera,
         'composizione_ibrida': _composizioneIbrida,
-        'tema_della_plancia': _temaDellaPlancia,
-        'barra_della_plancia': _barraDellaPlancia,
-        'tavolozza_della_plancia': _tavolozzaDellaPlancia,
       }),
     );
   }

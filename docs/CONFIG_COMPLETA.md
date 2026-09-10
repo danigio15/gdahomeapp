@@ -19,37 +19,59 @@ la stessa scheda letta sui due telefoni non si riconosceva.
 
 La plancia dentro l'app è quella vera: la stessa pagina che si apre in Home
 Assistant, servita dal ponte e cucita sul filo dell'app
-(`app/lib/plancia/servitore.dart`). La sua Config è dentro di lei, ed è
-`apriConfigEntita()`: il riquadro sopra la pagina, con le sue schede, il suo
-cercatore di entità, le sue pastiglie, i suoi interruttori «nel widget».
+(`app/lib/plancia/servitore.dart`). La sua Configurazione è una **pagina della
+plancia**, `#page-config`, e dentro ci sta tutto:
 
-Di quella Config, l'app sposta **la porta e non la stanza**:
+| tessera | cosa fa |
+|---|---|
+| 🧩 Configura Entità | apre `apriConfigEntita()`, l'editor col cercatore, le sette famiglie, le pastiglie |
+| 🎨 Tema | chiaro, scuro, auto — «su questo dispositivo», lo scrive lei — con le sei tavolozze innestate sotto (`tavolozze-section.js`) |
+| 📌 Barra di navigazione | a scomparsa o fissa, anche questa del dispositivo |
+| 💙 Sostieni il progetto | il collegamento delle donazioni, uno, lo stesso del README |
+| 🎫 Segnalazioni | la sua strada passa dall'integrazione: nell'app resta nascosta, vedi sotto |
+| 💬 Assistenza | si toglie da sé quando la chat non risponde |
+
+Di quella pagina, l'app sposta **la porta e non la stanza**:
 
 - dalla barra in fondo alla plancia la voce sparisce — su un telefono quella
   fila di schede non ci sta, ed è la ragione per cui la porta si spostava;
-- nel menu dell'app c'è «Configurazione», e apre lei
-  (`Premesse.laConfigFuoriDallaPlancia` mette la maniglia nella pagina,
-  `PlanciaVeraState.apriLaConfig` la tira);
-- chiudendola si torna alla plancia, che non si è mai ricaricata.
+- nel menu dell'app c'è «Configurazione», e preme la sua linguetta
+  (`Premesse.laConfigFuoriDallaPlancia` mette le maniglie nella pagina,
+  `PlanciaVeraState.apriLaConfig` le tira);
+- tornando alla Plancia la pagina si chiude e la plancia torna dov'era
+  (`gdahomeTornaDallaConfig`), che è quello che farebbe toccando un'altra
+  linguetta della sua barra.
+
+Per un giro l'app apriva **solo l'editor**, e la pagina la nascondeva. Era
+mezza scelta: l'editor è la parte grossa, ma il Tema, la Tavolozza, la Barra
+e le donazioni stanno nella pagina, non nell'editor. Nascosta la pagina,
+quelle si perdevano — e l'app se ne era rifatti tre suoi, in Flutter, che
+scriveva nel deposito della pagina a ogni caricamento: due padroni per la
+stessa preferenza, e vinceva sempre quello di Flutter. Adesso si apre la
+pagina, e i suoi comandi sono i suoi.
 
 Non si tocca un file della dashboard: si aggiunge una riga alla **pagina
-servita**, come per il tema e le misure delle barre del telefono. Il ponte
-ricontrolla i file uno per uno, e una plancia con un file cambiato si
-direbbe modificata.
+servita**, come per le misure delle barre del telefono. Il ponte ricontrolla i
+file uno per uno, e una plancia con un file cambiato si direbbe modificata.
 
 ## Cosa l'app tiene di suo
 
-Le poche scelte che sono di **questo dispositivo** e non della casa: non
-viaggiano al ponte, e nella Config della casa non avrebbero senso — il tablet
-in cucina può stare sullo scuro e il telefono in tasca no. Stanno nella voce
-«L'app» (`app/lib/schermate/questo_telefono.dart`):
+Due interruttori, e sono dell'**app**, non della plancia: la plancia non ce li
+ha e non li può avere, perché riguardano il modo in cui l'app la tiene dentro
+un riquadro. Stanno dove stanno i numeri che sono la ragione per cui uno li
+cerca — «**Come va l'app**», che è una voce del menu e la schermata che apre
+anche l'Assistenza (`app/lib/schermate/diagnostica.dart`):
 
 | cosa | dove finisce |
 |---|---|
-| Il tema del riquadro: come il telefono, chiaro, scuro | sul dispositivo |
-| La tavolozza (`cd_tavolozza`, e `cd_theme` con lei) | sul dispositivo |
-| La barra della plancia: a scomparsa o sempre visibile | sul dispositivo |
-| Plancia leggera, composizione ibrida | sul dispositivo |
+| Plancia leggera: ferma le animazioni infinite e le sfocature | sul dispositivo |
+| Composizione ibrida: su Android il riquadro lo compone il sistema | sul dispositivo |
+
+Il tema, la tavolozza e la barra **non sono qui**: sono tre tessere della
+pagina Configurazione della dashboard, che le tratta già come scelte del
+dispositivo. Erano rifatte in una schermata dell'app, «L'app», e quella
+schermata è stata cancellata: restavano due interruttori, e stanno meglio
+accanto ai fotogrammi.
 
 E il resto dell'app, che con la Config non c'entra: i dispositivi, gli
 acquisti, le segnalazioni, l'assistenza, «Come va l'app», l'elenco delle case.

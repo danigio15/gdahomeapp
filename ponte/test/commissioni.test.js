@@ -974,6 +974,11 @@ function dueCartelle() {
     join(dove, "casa", "www", "auto.png"),
     Buffer.concat([Buffer.from("\x89PNG\r\n\x1a\n", "latin1"), Buffer.alloc(16, 1)]),
   );
+  /* Il nome che le ha dato chi l'ha scattata, con lo spazio dentro. */
+  writeFileSync(
+    join(dove, "casa", "www", "mia auto.png"),
+    Buffer.concat([Buffer.from("\x89PNG\r\n\x1a\n", "latin1"), Buffer.alloc(16, 2)]),
+  );
   return {
     dove,
     foto: new Foto({ cartella: join(dove, "ponte", "www") }),
@@ -985,6 +990,32 @@ function dueCartelle() {
     via: () => rmSync(dove, { recursive: true, force: true }),
   };
 }
+
+test("una foto di casa col nome che le ha dato chi l'ha scattata", async () => {
+  /* Sotto `/local/` i nomi li sceglie l'utente, e «mia auto.png» arriva col
+   * suo spazio dentro: il servitore dell'app scioglie i segni di percentuale
+   * prima di chiedere, perche' il nome di un file e' il nome. Prima lo spazio
+   * era «percorso non valido» e la foto dell'auto non si vedeva — nel browser
+   * dentro Home Assistant si vedeva. */
+  const { fotoDiCasa, via } = dueCartelle();
+  try {
+    const commissioni = new Commissioni({
+      casa: casaDiProva(),
+      registro: ZITTO,
+      fotoDiCasa,
+    });
+    const risposta = await commissioni.rispondi({
+      id: 11,
+      type: TIPO,
+      percorso: "/local/mia auto.png",
+    });
+    assert.equal(risposta.success, true);
+    assert.equal(risposta.result.stato, 200);
+    assert.equal(risposta.result.tipo, "image/png");
+  } finally {
+    via();
+  }
+});
 
 test("l'elenco delle foto dice in quale cartella si guarda, e quali ci sono", async () => {
   const { foto, fotoDiCasa, via } = dueCartelle();
@@ -1010,10 +1041,12 @@ test("l'elenco delle foto dice in quale cartella si guarda, e quali ci sono", as
       root: "casa",
     });
     assert.equal(diCasa.result.root, "casa");
-    assert.deepEqual(
-      diCasa.result.images.map((una) => una.url),
-      ["/local/auto.png"],
-    );
+    /* Anche quella col nome «normale», con lo spazio dentro: l'elenco la
+     * mostra, e il suo indirizzo lo sa portare. */
+    assert.deepEqual(diCasa.result.images.map((una) => una.url).sort(), [
+      "/local/auto.png",
+      "/local/mia auto.png",
+    ]);
   } finally {
     via();
   }

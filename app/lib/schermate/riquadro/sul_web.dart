@@ -15,11 +15,17 @@ import 'package:webview_flutter/webview_flutter.dart';
 /// per arrivata subito — il velo si toglie, e sotto il riquadro fa da se'.
 /// Il fondo, [sfondo], qui non si imposta: e' un `iframe`, e il fondo e'
 /// della pagina.
+/// I tre dialoghi (`dice`, `chiede`, `faScrivere`) qui non si passano: in un
+/// `iframe` li fa il browser, come li farebbe alla plancia dentro Home
+/// Assistant. Stanno nella firma perche' la firma e' una sola.
 WebViewController costruisciIlControllore({
   required void Function() quandoCaricata,
   required void Function(String perche) quandoFallisce,
   required bool Function(String indirizzo) siPuoAndare,
   required Color sfondo,
+  Future<void> Function(String messaggio)? dice,
+  Future<bool> Function(String domanda)? chiede,
+  Future<String> Function(String domanda, String diSerie)? faScrivere,
 }) {
   scheduleMicrotask(quandoCaricata);
   return WebViewController();
@@ -36,7 +42,7 @@ Future<void> diciLeMisure(
   required double basso,
 }) async {}
 
-/// Apre la Config della plancia: quella vera, con `apriConfigEntita`.
+/// Apre la Configurazione della plancia: la sua pagina, quella vera.
 ///
 /// Nel browser il riquadro e' un `iframe`, e la plancia arriva dallo stesso
 /// posto da cui arriva l'app — il service worker, sotto la stessa origine —
@@ -48,8 +54,15 @@ Future<void> diciLeMisure(
 /// non ricarica niente — e' cosi' che funziona un ancoraggio — e la pagina
 /// non se ne accorgerebbe. Si prova su ogni riquadro: quello della plancia
 /// e' l'unico che la maniglia ce l'ha.
-Future<void> apriLaConfig(WebViewController controllore, Uri pagina) async {
-  const maniglia = 'gdahomeApriLaConfig';
+Future<void> apriLaConfig(WebViewController controllore, Uri pagina) async =>
+    _tira('gdahomeApriLaConfig');
+
+/// Riporta la plancia dov'era prima della Configurazione.
+Future<void> tornaDallaConfig(WebViewController controllore) async =>
+    _tira('gdahomeTornaDallaConfig');
+
+/// Tira una delle maniglie che il servitore ha messo nella pagina servita.
+void _tira(String maniglia) {
   final riquadri = web.document.querySelectorAll('iframe');
   for (var quale = 0; quale < riquadri.length; quale += 1) {
     final uno = riquadri.item(quale);

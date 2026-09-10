@@ -82,12 +82,21 @@ const _tipi = <String, String>{
   '.ttf': 'font/ttf',
 };
 
-/// Un percorso e' fatto di lettere, numeri e pochi segni. Niente `..`: e' un
-/// percorso sul disco, e chi lo chiede e' una pagina web. I file della
-/// plancia hanno nomi semplici, e un `%` in un nome di file non e' un file:
-/// e' un browser che ha trovato uno spazio, o qualcuno che prova.
-final _percorsoDelFile = RegExp(r'^/[A-Za-z0-9_\-./@+~]+$');
-final _percorsoBuono = RegExp(r'^/[A-Za-z0-9_\-./@+~%]+$');
+/// Un percorso che si puo' aprire sul disco. Niente `..` — e' un percorso, e
+/// chi lo chiede e' una pagina web — niente caratteri di controllo, e niente
+/// barra rovesciata, che su qualche sistema separa le cartelle.
+///
+/// Gli spazi e le lettere accentate ci sono, e prima non c'erano: i file
+/// della plancia hanno nomi semplici, ma sotto `/local/` stanno le foto di
+/// casa, e quei nomi li sceglie chi le ha scattate. «mia auto.png» arriva
+/// come `mia%20auto.png`, che `Uri.path` riporta con lo spazio dentro: la
+/// regola di prima lo chiamava «percorso strano» e rispondeva 400, e la foto
+/// dell'auto non si vedeva. Nel browser dentro Home Assistant si vede.
+final _percorsoDelFile = RegExp(r'^/[^\x00-\x1f\\]+$');
+
+/// Un percorso da rimandare al ponte: quello delle chiamate REST, che qui
+/// non si apre e non tocca nessun disco.
+final _percorsoBuono = RegExp(r'^/[^\x00-\x1f]+$');
 
 /// La cartella dei file della plancia.
 const _fissi = '/dashboardmodern_static/';
@@ -187,18 +196,6 @@ class Servitore {
   /// sfocature spariscono. Si cambia da fuori, e vale dalla pagina dopo.
   bool get leggera => premesse.leggera;
   set leggera(bool quanto) => premesse.leggera = quanto;
-
-  /// Il tema della plancia su questo dispositivo: `auto`, `chiaro`, `scuro`.
-  String get tema => premesse.tema;
-  set tema(String quale) => premesse.tema = quale;
-
-  /// Come sta la barra in fondo alla plancia: `scomparsa` o `fissa`.
-  String get barra => premesse.barra;
-  set barra(String come) => premesse.barra = come;
-
-  /// La tavolozza della plancia, di questo dispositivo.
-  String get tavolozza => premesse.tavolozza;
-  set tavolozza(String quale) => premesse.tavolozza = quale;
 
   /// La chiave della porta: nasce con il servitore, e la conosce solo chi
   /// apre la pagina dall'indirizzo che [paginaDi] da'.
@@ -328,7 +325,22 @@ class Servitore {
   }
 
   Future<void> _servi(HttpRequest richiesta) async {
-    final percorso = richiesta.uri.path;
+    /* Il percorso **come si chiama il file**, non come viaggia.
+     *
+     * `Uri.path` in Dart lo da' com'e' arrivato, coi segni di percentuale
+     * dentro: una foto che si chiama «mia auto.png» arriva
+     * `mia%20auto.png`, e con quel nome non esiste ne' sul disco ne' per il
+     * ponte — che i suoi nomi li vuole con lo spazio dentro
+     * (`ponte/src/foto.js`, `PEZZO_BUONO`). Si scioglie qui, una volta, e
+     * dopo si controlla: `..` e `//` si cercano su quello che il percorso
+     * **e'**, non su come si scriveva. */
+    final String percorso;
+    try {
+      percorso = Uri.decodeComponent(richiesta.uri.path);
+    } catch (_) {
+      _rispondi(richiesta, 400, 'text/plain', utf8.encode('percorso strano'));
+      return;
+    }
 
     if (percorso == '/' && portaAperta && pannello != null) {
       richiesta.response.redirect(paginaDi(pannello!));

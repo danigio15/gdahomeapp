@@ -49,6 +49,11 @@ void main() {
       'image/png',
       [137, 80, 78, 71, 0, 1, 2, 3],
     );
+    /* Una foto di casa col nome che le ha dato chi l'ha scattata. */
+    ponte.file['/local/mia auto.png'] = (
+      'image/png',
+      [137, 80, 78, 71, 4, 5, 6, 7],
+    );
     filo = Filo.fisso(
       indirizzo: ponte.indirizzo,
       segno: segnoBuono,
@@ -147,8 +152,14 @@ void main() {
       expect(testo, contains('--gdahome-alto:37px'));
       expect(testo, contains('--gdahome-basso:24px'));
       /* Il contenuto comincia sotto l'orologio e finisce sopra i tasti, e la
-       * barra della plancia si appoggia sopra i tasti. */
-      expect(testo, contains('padding-top:calc(var(--gdahome-alto) + 8px)'));
+       * barra della plancia si appoggia sopra i tasti.
+       *
+       * Il margine in cima va al **corpo**: `.app` nella pagina non esiste
+       * — e' un guscio di una plancia piu' vecchia, rimasto nel foglio di
+       * stile — quindi la regola di prima non colpiva niente e la testata
+       * finiva sotto l'orologio. */
+      expect(testo, contains('html body{padding-top:var(--gdahome-alto)'));
+      expect(testo, isNot(contains('.app{padding-top')));
       expect(
         testo,
         contains('padding-bottom:calc(var(--gdahome-basso) + 40px)'),
@@ -317,15 +328,61 @@ void main() {
     expect(ponte.commissioni, isEmpty);
   });
 
+  test('la porta della Configurazione apre la pagina della dashboard, non una '
+      'nostra', () async {
+    final dove = servitore.paginaDi(pannello());
+    final richiesta = await cliente.getUrl(dove);
+    final risposta = await richiesta.close();
+    final byte = await risposta.fold<List<int>>(
+      [],
+      (tutti, pezzo) => tutti..addAll(pezzo),
+    );
+    final testo = utf8.decode(byte);
+
+    /* La voce nella barra in fondo alla plancia se ne va: la Config si apre
+       * dal menu dell'app. */
+    expect(testo, contains('#tab-config,.tab[data-tab="config"]'));
+    /* La **pagina** resta: dentro ci stanno la tessera che apre l'editor,
+       * il Tema, la Tavolozza, la Barra, «Sostieni il progetto». Nasconderla
+       * voleva dire perderle. */
+    expect(testo, isNot(contains('#page-config{display:none')));
+    expect(testo, isNot(contains(',#page-config,')));
+    /* Una sola tessera nascosta: le Segnalazioni, che nell'app passano dal
+       * centralino e non dall'integrazione. */
+    expect(testo, contains('#page-config #dm-tkt-card{display:none'));
+    /* Le due maniglie: si apre premendo la sua linguetta, e si torna
+       * dov'era. */
+    expect(testo, contains('window.gdahomeApriLaConfig=function()'));
+    expect(testo, contains('window.gdahomeTornaDallaConfig=function()'));
+    expect(testo, contains('getElementById("page-config")'));
+    /* Il tema, la tavolozza e la barra non si scrivono piu' nel deposito
+       * della pagina: quelle scelte sono delle sue tessere, e riscriverle a
+       * ogni caricamento le cancellava. */
+    expect(testo, isNot(contains('cd_theme')));
+    expect(testo, isNot(contains('cd_navbar_mode')));
+    expect(testo, isNot(contains('cd_tavolozza')));
+  });
+
   test('un percorso strano non arriva al ponte', () async {
     final (uno, _, _) = await prendi('/dashboardmodern_static/../etc/passwd');
     expect(uno, anyOf(400, 404));
     final (due, _, _) = await prendi('/altrove/x.js');
     expect(due, 404);
-    final (tre, _, _) = await prendi('/dashboardmodern_static/a b.js');
-    expect(tre, 400);
     expect(ponte.commissioni, isEmpty);
   });
+
+  test(
+    'un nome con lo spazio dentro e\' un nome, non un percorso strano',
+    () async {
+      /* Sotto `/local/` stanno le foto di casa, e i nomi li sceglie chi le ha
+     * scattate: «mia auto.png» arriva come `mia%20auto.png`. Prima era
+     * «percorso strano» e 400, e la foto dell'auto non si vedeva. */
+      final (stato, _, corpo) = await prendi('/local/mia auto.png');
+      expect(stato, 200);
+      expect(corpo, isNotEmpty);
+      expect(ponte.commissioni.last['percorso'], '/local/mia auto.png');
+    },
+  );
 
   test('le chiamate REST passano dal ponte, col metodo e col corpo', () async {
     final richiesta = await cliente.postUrl(
