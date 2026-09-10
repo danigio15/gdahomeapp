@@ -500,6 +500,16 @@ const albero = <Famiglia>[
       da: 'runtime',
       pronta: true,
     ),
+    /* `cd_report_devices`: la chiave dichiarata e mai usata. La costante
+     * c'era, la schermata no, e il conto delle chiavi la dava per coperta
+     * perche' il nome nei sorgenti compariva — nella riga che lo dichiara. */
+    Voce(
+      'Le voci del Report',
+      'Le righe che si scelgono nel Report Analisi dell\'Energia',
+      disegno: 'energia',
+      da: 'runtime',
+      pronta: true,
+    ),
     Voce(
       'I sensori girati',
       'Le aperture il cui sensore dice il contrario',

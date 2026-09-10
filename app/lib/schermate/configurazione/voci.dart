@@ -346,6 +346,26 @@ Widget? schermataDi(
     collegamento: collegamento,
   ),
 
+  /* Le voci del Report di una volta.
+   *
+   * `cd_report_devices` era la chiave dichiarata e mai usata: la costante
+   * c'era in `casa/plancia/home.dart` e nessuna schermata la apriva. Il conto
+   * delle chiavi la dava per coperta perche' il nome nei sorgenti compariva —
+   * compariva nella riga che la dichiara, ed e' esattamente il modo in cui
+   * quel conto comincia a mentire, scritto nel commento della sua prova.
+   *
+   * Sono `{name, icon, entity}`, come le aggiunge `edAddReportDevice`. */
+  'Le voci del Report' => SchermataDiRighe(
+    titolo: 'Le voci del Report',
+    sotto:
+        'Le righe che si possono scegliere nel Report Analisi dell\'Energia: '
+        'un nome, un disegno e l\'entita\' da cui nasce lo storico.',
+    chiave: chiaveDelReportDiUnaVolta,
+    unaCosa: 'una voce',
+    disegnoDiSerie: '⚡',
+    domini: const ['sensor'],
+    collegamento: collegamento,
+  ),
   'MiniPC' => SchermataDelleCaselle(
     titolo: 'MiniPC',
     sotto: 'Il monitoraggio del server: processore, memoria, dischi.',

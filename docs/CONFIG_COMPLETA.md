@@ -325,6 +325,27 @@ liste di sezioni nei due versi; uno controlla che ogni schermata instradata
 abbia la sua voce nel menu (il contrario si può: una voce senza `case` è una
 schermata dell'app, che il menu apre per conto suo).
 
+### Il sesto giro: la chiave dichiarata e mai usata
+
+`cd_report_devices` — le righe che si scelgono nel Report Analisi
+dell'Energia — era dichiarata in `casa/plancia/home.dart` e **nessuna
+schermata la apriva**. Il conto delle chiavi la dava per coperta perché il suo
+nome nei sorgenti compariva: compariva nella riga che lo dichiara.
+
+Ed è precisamente il difetto contro cui il commento di quella prova metteva in
+guardia — «bastava dichiarare quaranta costanti in un file di modello, nomi e
+basta, senza una schermata dietro». Succedeva su una chiave, e la prova non se
+ne accorgeva. Adesso una chiave deve comparire **fuori** dalla riga che la
+dichiara, e l'ho verificato togliendo la schermata per vedere il campanello
+suonare.
+
+Controllati in questo giro e già uguali: le allerte meteo (sei categorie con le
+loro caselle in più — magnitudo e distanza dei terremoti, distanza dei
+fulmini), i carichi e i nodi dell'energia, i sottocarichi, gli impianti, le
+persone, le prese, le luci, il clima rapido, i piani, le entità delle stanze,
+i sensori girati, le soglie di casa, il costo del kWh e il prezzo di
+immissione.
+
 ## Quello che resta davvero
 
 1. **Il modello canonico.** L'app scrive solo le chiavi storiche, e non passa
@@ -340,8 +361,10 @@ schermata dell'app, che il menu apre per conto suo).
 
 Tre prove, e nessun numero scritto a mano che non ne abbia una dietro:
 
-- `app/test/chiavi_della_config_test.dart` conta le chiavi e controlla che
-  quelle dichiarate compaiano davvero nei sorgenti;
+- `app/test/chiavi_della_config_test.dart` conta le chiavi, controlla che
+  quelle dichiarate compaiano davvero nei sorgenti, e che compaiano **fuori
+  dalla riga che le dichiara** — una costante sola in fondo a un file di
+  modello non passa più;
 - `app/test/caselle_test.dart` controlla che nessun gruppo di `CD_SLOTS` resti
   senza una schermata che lo apra;
 - `app/test/stessa_config_test.dart` controlla i **campi**, nei due versi — che

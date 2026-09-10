@@ -239,6 +239,63 @@ void main() {
     }
   });
 
+  /* E non basta che ci siano: qualcuno deve usarle.
+   *
+   * `cd_report_devices` era dichiarata in `casa/plancia/home.dart` e nessuna
+   * schermata la apriva: il conto qui sotto la dava per coperta perche' il
+   * nome nei sorgenti compariva — compariva nella riga che lo dichiara. E' lo
+   * stesso difetto che il commento sopra descrive («bastava dichiarare
+   * quaranta costanti in un file di modello, nomi e basta, senza una
+   * schermata dietro»), succedeva davvero su una chiave, e la prova non se ne
+   * accorgeva.
+   *
+   * Adesso una chiave deve comparire **fuori** dal file che la dichiara. Non
+   * prova che la schermata sia raggiungibile — quello lo fa
+   * `configurazione_test.dart` — ma una costante sola in fondo a un file di
+   * modello non passa piu'.
+   */
+  test('e non sono dichiarazioni sole: qualcuno le usa', () {
+    /* Tutti i sorgenti in un pezzo, meno le righe che dichiarano le
+     * costanti: quelle ci sono sempre, e sono proprio quello che non conta. */
+    final costanti = <String, String>{};
+    final tutto = StringBuffer();
+    for (final cosa in Directory('lib').listSync(recursive: true)) {
+      if (cosa is! File || !cosa.path.endsWith('.dart')) continue;
+      final testo = cosa.readAsStringSync();
+      for (final trovato in RegExp(
+        r"const (\w+) = '(cd_[a-z0-9_]+)';",
+      ).allMatches(testo)) {
+        costanti[trovato.group(1)!] = trovato.group(2)!;
+      }
+      tutto.write(testo);
+    }
+    var senzaLeDichiarazioni = tutto.toString();
+    for (final voce in costanti.entries) {
+      senzaLeDichiarazioni = senzaLeDichiarazioni.replaceAll(
+        "const ${voce.key} = '${voce.value}';",
+        '',
+      );
+    }
+
+    /* Come si chiama, in Dart, la costante di questa chiave — se ce l'ha. */
+    final nomeDi = {for (final voce in costanti.entries) voce.value: voce.key};
+    final sole = [
+      for (final chiave in leChiaviCheSappiamoFare)
+        if (!senzaLeDichiarazioni.contains("'$chiave'") &&
+            !(nomeDi[chiave] != null &&
+                RegExp('\\b${RegExp.escape(nomeDi[chiave]!)}\\b')
+                    .hasMatch(senzaLeDichiarazioni)))
+          chiave,
+    ]..sort();
+    expect(
+      sole,
+      isEmpty,
+      reason:
+          'queste chiavi stanno solo nella riga che le dichiara: nessuna '
+          'schermata le apre — ${sole.join(', ')}',
+    );
+  });
+
   test('e non sono promesse: nei sorgenti ci sono', () {
     final nei = _chiaviNeiSorgenti();
     for (final chiave in leChiaviCheSappiamoFare) {
