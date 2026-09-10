@@ -149,6 +149,21 @@ class SchermataDelleTessere extends StatelessWidget {
       void segna() =>
           quaderno.segna(chiaveDelleTessereDellaHome, tessere.daScrivere);
       return [
+        Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: SwitchListTile(
+            value: tessere.avvisiInPopup,
+            onChanged: (acceso) {
+              tessere.avvisiInPopup = acceso;
+              segna();
+            },
+            title: const Text('Avvisi personalizzati a finestra'),
+            subtitle: const Text(
+              'Un avviso tuo che si accende si apre da solo, a finestra, '
+              'invece di restare una tessera fra le altre.',
+            ),
+          ),
+        ),
         Scheda(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -255,12 +270,21 @@ class SchermataDiVoci extends StatefulWidget {
     this.quante = 0,
     this.inItaliano = true,
     this.laStanza = false,
+    this.lePersone = false,
+    this.tessera = '',
   });
 
   final String titolo;
   final String sotto;
   final String chiave;
   final String unaCosa;
+
+  /// `true` per i calendari: di chi e' (1.4.17). Nessuno spuntato vuol dire
+  /// di casa, e lo vedono tutti.
+  final bool lePersone;
+
+  /// La tessera della Home di cui parlano queste voci (`media`), o «».
+  final String tessera;
 
   /// Come nascono gli identificativi: `lettore`, `cal`, `todo`, `mia`.
   final String prefisso;
@@ -351,6 +375,14 @@ class _SchermataDiVociState extends State<SchermataDiVoci> {
               laSezione: widget.laSezione,
               ilColore: widget.ilColore,
               laStanza: widget.laStanza,
+              lePersone: widget.lePersone,
+              tessera: widget.tessera.isEmpty
+                  ? null
+                  : TesseraDelCampo(
+                      widget.tessera,
+                      scatto: scatto,
+                      quaderno: quaderno,
+                    ),
               campoDelNome: widget.campoDelNome,
               campoDelDisegno: widget.campoDelDisegno,
               collegamento: widget.collegamento,
@@ -415,6 +447,8 @@ class _UnaVoce extends StatelessWidget {
     required this.primo,
     required this.ultimo,
     required this.togli,
+    this.lePersone = false,
+    this.tessera,
   });
 
   final Map<String, String> voce;
@@ -424,6 +458,8 @@ class _UnaVoce extends StatelessWidget {
   final bool laSezione;
   final bool ilColore;
   final bool laStanza;
+  final bool lePersone;
+  final TesseraDelCampo? tessera;
 
   /// Come si chiamano quelle due caselle dentro la configurazione: vedi
   /// `SchermataDiVoci.inItaliano`.
@@ -469,6 +505,7 @@ class _UnaVoce extends StatelessWidget {
             domini: domini,
             valore: entita,
             collegamento: collegamento,
+            tessera: tessera,
             cambiato: (scritto) {
               voce['entity'] = scritto;
               cambiato();
@@ -514,6 +551,20 @@ class _UnaVoce extends StatelessWidget {
               suggerimento: 'Il nome della stanza, come l\'hai chiamata',
               cambiato: (scritto) {
                 voce['room_id'] = scritto;
+                cambiato();
+              },
+            ),
+          ],
+          if (lePersone) ...[
+            const SizedBox(height: 14),
+            _DiChiE(
+              scelti: {
+                for (final id in (voce['persone'] ?? '').split(','))
+                  if (id.trim().isNotEmpty) id.trim(),
+              },
+              collegamento: collegamento,
+              scegli: (ids) {
+                voce['persone'] = ids.join(',');
                 cambiato();
               },
             ),
@@ -648,6 +699,86 @@ class _CosaMostra extends StatelessWidget {
           segna();
         },
       ),
+    );
+  }
+}
+
+/// Di chi e' un calendario (1.4.17): gli utenti di Home Assistant, presi
+/// dalle persone di casa che ne hanno uno (`person.*` con `user_id`).
+///
+/// Nessuno spuntato: il calendario e' di casa e lo vedono tutti. Per dividere
+/// i calendari fra le persone servono le persone di Home Assistant, ognuna
+/// legata al suo utente.
+class _DiChiE extends StatelessWidget {
+  const _DiChiE({
+    required this.scelti,
+    required this.collegamento,
+    required this.scegli,
+  });
+
+  final Set<String> scelti;
+  final Collegamento collegamento;
+  final ValueChanged<List<String>> scegli;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    final utenti = <(String, String)>[
+      for (final una in collegamento.stato?.tutte() ?? const [])
+        if (una.id.startsWith('person.') &&
+            '${una.attributi['user_id'] ?? ''}'.trim().isNotEmpty)
+          ('${una.attributi['user_id']}'.trim(), una.nome),
+    ]..sort((a, b) => a.$2.compareTo(b.$2));
+    /* Un utente scelto che oggi non ha una persona resta spuntato: non si
+     * butta via una scelta solo perche' la persona e' spenta. */
+    for (final id in scelti) {
+      if (!utenti.any((uno) => uno.$1 == id)) utenti.add((id, id));
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Di chi e\'',
+          style: testi.labelLarge?.copyWith(color: colori.onSurfaceVariant),
+        ),
+        const SizedBox(height: 6),
+        if (utenti.isEmpty)
+          Text(
+            'Per dividere i calendari fra le persone servono le persone di '
+            'Home Assistant, ognuna legata al suo utente.',
+            style: testi.bodySmall?.copyWith(
+              color: colori.onSurfaceVariant,
+              height: 1.4,
+            ),
+          )
+        else
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final (id, nome) in utenti)
+                FilterChip(
+                  label: Text(nome),
+                  selected: scelti.contains(id),
+                  onSelected: (acceso) {
+                    final dopo = {...scelti};
+                    if (acceso) {
+                      dopo.add(id);
+                    } else {
+                      dopo.remove(id);
+                    }
+                    scegli(dopo.toList());
+                  },
+                ),
+            ],
+          ),
+        const SizedBox(height: 4),
+        Text(
+          'Nessuno spuntato: il calendario e\' di casa e lo vedono tutti.',
+          style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
+        ),
+      ],
     );
   }
 }

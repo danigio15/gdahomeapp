@@ -15,6 +15,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../casa/collegamento.dart';
+import '../../casa/plancia/fuori.dart';
+import '../../casa/plancia/home.dart'
+    show LeTessere, chiaveDelleTessereDellaHome;
 import '../../casa/plancia/scatto.dart';
 import '../../vestito/pezzi.dart';
 import 'cercatore.dart';
@@ -390,12 +393,18 @@ class CampoDiEntita extends StatelessWidget {
     this.contesto = '',
     this.rinomina,
     this.esempio,
+    this.tessera,
   });
 
   final String etichetta;
   final String valore;
   final ValueChanged<String> cambiato;
   final Collegamento collegamento;
+
+  /// Di quale tessera della Home parla questa casella, se ne parla: allora
+  /// sotto il campo compare l'interruttore «Nel widget / Fuori» della
+  /// plancia, che decide se l'entita' scritta qui finisce nella tessera.
+  final TesseraDelCampo? tessera;
 
   /// L'esempio in grigio, quando la Config della plancia ne ha uno suo:
   /// `sensor.petkit_food_level` dice piu' di `sensor.nome`.
@@ -431,7 +440,25 @@ class CampoDiEntita extends StatelessWidget {
   final ValueChanged<String>? rinomina;
 
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) {
+    final riga = _laRiga(context);
+    final dove = tessera;
+    if (dove == null || !formaDellEntita.hasMatch(valore.trim())) return riga;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        riga,
+        InterruttoreDellaTessera(
+          tessera: dove.nome,
+          entita: [valore.trim()],
+          scatto: dove.scatto,
+          quaderno: dove.quaderno,
+        ),
+      ],
+    );
+  }
+
+  Widget _laRiga(BuildContext context) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Expanded(
@@ -556,6 +583,7 @@ class TanteEntita extends StatelessWidget {
     required this.cambiate,
     this.spiega,
     this.domini = const [],
+    this.massimo = 0,
   });
 
   final String etichetta;
@@ -564,6 +592,10 @@ class TanteEntita extends StatelessWidget {
   final List<String> quali;
   final Collegamento collegamento;
   final ValueChanged<List<String>> cambiate;
+
+  /// Quante al massimo: i comandi di un robot sono dodici, e la tredicesima
+  /// la plancia la butta via senza dirlo. Zero vuol dire senza tetto.
+  final int massimo;
 
   @override
   Widget build(BuildContext context) {
@@ -609,22 +641,140 @@ class TanteEntita extends StatelessWidget {
         Align(
           alignment: Alignment.centerLeft,
           child: TextButton.icon(
-            onPressed: () async {
-              final scelta = await cercaUnEntita(
-                context,
-                collegamento: collegamento,
-                etichetta: etichetta,
-                domini: domini,
-              );
-              if (scelta == null || scelta.isEmpty) return;
-              if (quali.contains(scelta)) return;
-              cambiate([...quali, scelta]);
-            },
+            onPressed: massimo > 0 && quali.length >= massimo
+                ? null
+                : () async {
+                    final scelta = await cercaUnEntita(
+                      context,
+                      collegamento: collegamento,
+                      etichetta: etichetta,
+                      domini: domini,
+                    );
+                    if (scelta == null || scelta.isEmpty) return;
+                    if (quali.contains(scelta)) return;
+                    cambiate([...quali, scelta]);
+                  },
             icon: const Icon(Icons.add_rounded),
             label: const Text('Aggiungine una'),
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Di quale tessera della Home parla una casella, e dove segnare la scelta.
+class TesseraDelCampo {
+  const TesseraDelCampo(
+    this.nome, {
+    required this.scatto,
+    required this.quaderno,
+  });
+
+  /// `luci`, `piscina`, `caldaia`… o «» quando la scelta vale ovunque.
+  final String nome;
+  final Scatto scatto;
+  final Quaderno quaderno;
+}
+
+/// Le tessere come stanno adesso: quello che si e' gia' segnato, o quello
+/// che c'e' scritto.
+LeTessere leTessereAdesso(Scatto scatto, Quaderno quaderno) => LeTessere.da(
+  quaderno.cambiate[chiaveDelleTessereDellaHome] ??
+      scatto.mappa(chiaveDelleTessereDellaHome),
+);
+
+/// Se almeno una di queste entita' e' dentro questa tessera.
+bool dentroLaTessera(
+  Scatto scatto,
+  Quaderno quaderno,
+  String tessera,
+  Iterable<String> entita,
+) {
+  final fuori = escluseDellaTessera(
+    leTessereAdesso(scatto, quaderno).escluse,
+    tessera,
+  );
+  return entita.any((una) => !fuori.contains(una));
+}
+
+/// Toglie dalla tessera, o ci rimette: e' `onClick` di
+/// `widget-entity-choice-section.js`. Torna se adesso stanno dentro.
+bool giraLaTessera(
+  Scatto scatto,
+  Quaderno quaderno,
+  String tessera,
+  Iterable<String> entita,
+) {
+  final tessere = leTessereAdesso(scatto, quaderno);
+  final dentro = dentroLaTessera(scatto, quaderno, tessera, entita);
+  var elenco = List<String>.from(tessere.escluse);
+  for (final una in entita) {
+    elenco = dentro
+        ? togliDallaTessera(elenco, tessera, una)
+        : rimettiNellaTessera(elenco, tessera, una);
+  }
+  tessere.escluse
+    ..clear()
+    ..addAll(elenco.toSet().toList()..sort());
+  quaderno.segna(chiaveDelleTessereDellaHome, tessere.daScrivere);
+  return !dentro;
+}
+
+/// L'interruttore «Nel widget / Fuori» che la plancia mette accanto a ogni
+/// entita' scritta nella Config (`widget-entity-choice-section.js`): dice se
+/// quell'entita' finisce nella tessera della Home, e lo dice al presente.
+///
+/// La scelta va in `cd_widgets.excluded`, come «tessera|entita'» quando si sa
+/// di che tessera si parla e nuda quando non si sa.
+class InterruttoreDellaTessera extends StatelessWidget {
+  const InterruttoreDellaTessera({
+    super.key,
+    required this.tessera,
+    required this.entita,
+    required this.scatto,
+    required this.quaderno,
+  });
+
+  final String tessera;
+  final List<String> entita;
+  final Scatto scatto;
+  final Quaderno quaderno;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final dentro = dentroLaTessera(scatto, quaderno, tessera, entita);
+    return Tooltip(
+      message: dentro
+          ? 'Questa entita\' e\' dentro la tessera della Home: tocca per '
+                'toglierla.'
+          : 'Questa entita\' non entra nella tessera della Home: tocca per '
+                'rimetterla.',
+      child: ActionChip(
+        avatar: const Text('🧩', style: TextStyle(fontSize: 14)),
+        label: Text(dentro ? 'Nel widget' : 'Fuori'),
+        labelStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: dentro ? colori.onSecondaryContainer : colori.onSurfaceVariant,
+        ),
+        backgroundColor: dentro ? colori.secondaryContainer : null,
+        side: dentro ? BorderSide.none : null,
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+        onPressed: () {
+          final adesso = giraLaTessera(scatto, quaderno, tessera, entita);
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(adesso ? '🧩 Nei widget' : '🧩 Fuori dai widget'),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+        },
+      ),
     );
   }
 }

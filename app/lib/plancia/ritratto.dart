@@ -80,8 +80,8 @@ const paginaDelRitratto = '''
 /// [base] e' dove stanno i file della plancia — `/dashboardmodern_static/<impronta>`
 /// — perche' il modulo che disegna sta li' dentro e si chiama per indirizzo
 /// relativo.
-Uri indirizzoDelRitratto(Uri servitore, String base, Map<String, String> scelte) =>
-    servitore.replace(
-      path: '$base/$fileDelRitratto',
-      queryParameters: scelte,
-    );
+Uri indirizzoDelRitratto(
+  Uri servitore,
+  String base,
+  Map<String, String> scelte,
+) => servitore.replace(path: '$base/$fileDelRitratto', queryParameters: scelte);

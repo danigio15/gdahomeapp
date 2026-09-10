@@ -1,19 +1,42 @@
 /// Le prove della caldaia e delle cose che scaldano.
 library;
 
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/plancia/caldo.dart';
 
 void main() {
   group('la caldaia', () {
-    test('ha dieci caselle, mandata e ritorno per prime fra i gradi', () {
-      expect(caselleDellaCaldaia.length, 10);
+    test('ha diciotto caselle, mandata e ritorno per prime fra i gradi', () {
+      expect(caselleDellaCaldaia.length, 18);
       final gradi = [
         for (final (campo, _, tipo, _) in caselleDellaCaldaia)
           if (tipo == 'gradi') campo,
       ];
       expect(gradi.first, 'mandata');
       expect(gradi[1], 'ritorno');
+    });
+
+    test('e sono quelle di CASELLE_CALDAIA in impianti-termici.js', () {
+      final sorgente = File('../ponte/plancia/src/core/impianti-termici.js')
+          .readAsStringSync();
+      final blocco = sorgente.substring(
+        sorgente.indexOf('export const CASELLE_CALDAIA'),
+      );
+      final dellaPlancia = RegExp(r'\{ campo: "([A-Za-z0-9]+)"')
+          .allMatches(blocco.substring(0, blocco.indexOf(']);')))
+          .map((trovato) => trovato.group(1))
+          .toList();
+      expect(dellaPlancia, isNotEmpty);
+      expect([
+        for (final (campo, _, _, _) in caselleDellaCaldaia) campo,
+      ], dellaPlancia);
+      /* E il gruppo del pellet e' quello segnato `gruppo: GRUPPO_PELLET`. */
+      final pellet = RegExp(
+        r'\{ campo: "([A-Za-z0-9]+)", tipo: "[a-z]+", gruppo: GRUPPO_PELLET',
+      ).allMatches(blocco).map((trovato) => trovato.group(1)).toList();
+      expect(caselleDelPellet, pellet);
     });
 
     test('l\'uscita di serie sono i radiatori', () {

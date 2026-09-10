@@ -13,12 +13,12 @@ Si misura, non si stima: ogni numero qui sotto ha una prova che lo tiene.
 
 | | quante |
 |---|---|
-| Chiavi che la dashboard sincronizza (`config-persistence-section.js`) | **83** (85 meno le due di servizio) |
-| Chiavi che la Configurazione dell'app sa leggere e scrivere | **83** |
-| Moduli della plancia che sono editor o pezzi di editor (`src/sections/*editor*`, `*integraz*`) | **30** |
-| Righe dei moduli della plancia | ~91.000 |
+| Chiavi che la dashboard 1.4.17 sincronizza (`core/chiavi-di-configurazione.js`, revisione 41) | **103** (100 `cd_` più tre `dm_`) |
+| Chiavi che la Configurazione dell'app sa leggere e scrivere | **101** (tutte le `cd_` più `dm_campi_scelti`; `dm_dashboard_state` e `dm_schema_version` sono del runtime) |
+| Moduli della plancia che sono editor o pezzi di editor (`src/sections/*editor*`, `*integraz*`) | **38** |
+| Righe dei moduli della plancia | ~110.000 |
 
-Non è una stima: le 83 chiavi sono estratte dal file che le elenca, e le 83
+Non è una stima: le 103 chiavi sono estratte dal file che le elenca, e le 101
 sono un **elenco scritto a mano** in `app/test/chiavi_della_config_test.dart`,
 e scritto a mano lo è apposta. Il conto lo si faceva frugando nei sorgenti:
 bastava dichiarare quaranta costanti in un file di modello — nomi e basta,
@@ -32,13 +32,13 @@ elencata deve comparire nei sorgenti, o l'elenco cade.
 
 Che una schermata dell'app la apre, la mostra e la salva. **Non** che la
 schermata sia bella come quella della dashboard, né che copra ogni angolo di
-quella chiave: cinque delle ottantatré — i ritratti, i dati in più dell'auto e
+quella chiave: cinque delle cento — i ritratti, i dati in più dell'auto e
 della continuità, i dispositivi di una volta — sono mappe che l'app fa vedere e
 modificare riga per riga, dove la dashboard ha una maschera fatta apposta.
 Sono chiavi che quasi nessuno tocca, e averle visibili è meglio che averle
 invisibili; ma dire «uguale» lì sarebbe dire una cosa non vera.
 
-Le altre settantotto hanno la loro schermata, col cercatore di entità, il
+Le altre novantacinque hanno la loro schermata, col cercatore di entità, il
 catalogo delle integrazioni e le foto dove servono.
 
 ## Il difetto strutturale, risolto: la dashboard tiene *più* di tutto
@@ -89,9 +89,12 @@ sezioni leggono prima la chiave storica e poi il canonico
 
 ## Cosa c'è, per famiglia
 
-Tutte e ottantatré le chiavi hanno la loro schermata: la prova che le conta è
+Tutte e cento le chiavi `cd_` hanno la loro schermata: la prova che le conta è
 `app/test/chiavi_della_config_test.dart`, e una chiave elencata lì deve
-comparire nei sorgenti o l'elenco cade. Quello che resta più magro della
+comparire nei sorgenti o l'elenco cade. Le famiglie sono le sette di
+`core/alberatura-del-config.js` — Plancia, Energia, Clima e acqua, Casa,
+Sicurezza, Avvisi, Macchine e rete — con le trentaquattro schede della
+plancia, e una prova (`configurazione_test.dart`) che le rilegge da quel file. Quello che resta più magro della
 dashboard sono le cinque mappe dette qui sopra — i ritratti, i dati in più
 dell'auto e della continuità, i dispositivi di una volta — che l'app fa vedere
 riga per riga dove la dashboard ha una maschera fatta apposta.
@@ -291,12 +294,12 @@ Controllati e già uguali: la raccolta (la dashboard non fa scegliere icona e
 colore, li ricalcola dal materiale), il PIN di una porta, i calendari col loro
 colore, le sezioni mie, le entità mie.
 
-**Una cosa che non viaggia, e non è colpa dell'app**: `cd_radar_meteo` — la
-posizione, il raggio e il servizio del radar pioggia — la plancia la scrive e
-la rilegge da `localStorage`, ma non sta fra le 83 chiavi che sincronizza. Non
-arriva al ponte, quindi non arriva né all'app né a un secondo browser: chi
-configura il radar sul tablet non se lo ritrova sul telefono. È così anche
-senza l'app, ed è nella dashboard che andrebbe aggiunta alla lista.
+**Una cosa che non viaggiava, e non era colpa dell'app**: `cd_radar_meteo` —
+la posizione, il raggio e il servizio del radar pioggia — fino alla 1.4.16 la
+plancia la scriveva e la rileggeva da `localStorage`, fuori dalle chiavi che
+sincronizza: chi configurava il radar sul tablet non se lo ritrovava sul
+telefono. Dalla 1.4.17 sta nell'elenco (`CONFIG_KEYS`), arriva al ponte, e
+l'app ha la sua voce, «Il radar meteo».
 
 ### Il quinto giro: la barra della plancia, e cosa mostra una tessera
 
@@ -346,6 +349,67 @@ persone, le prese, le luci, il clima rapido, i piani, le entità delle stanze,
 i sensori girati, le soglie di casa, il costo del kWh e il prezzo di
 immissione.
 
+### Il settimo giro: la plancia dalla 1.4.11 alla 1.4.17
+
+Novantotto commit, e la Config della plancia cambiata in tre modi: un'alberatura
+a sette famiglie al posto della fila di linguette, diciassette chiavi nuove
+(`cd_animali`, `cd_varchi`, `cd_presenza`, `cd_macchine`, `cd_batterie`,
+`cd_vmc`, `cd_assist`, `cd_barra_casa`, `cd_radar_meteo`, `cd_grafico_stanze`,
+`cd_antifurto_su_misura`, `cd_batteria_verso`, `cd_ev_motore`, `cd_flusso_home`,
+`cd_lingua`, `cd_orologio`, `cd_allag_rilevato`, più `dm_campi_scelti` come
+segno dentro i carichi), e gli editor di prima con caselle in più. Tutto questo
+è nell'app, e ognuno con la sua prova contro il sorgente della plancia:
+
+- **le schermate nuove**, una per chiave — gli animali con le sedici caselle e
+  le sette azioni di `animali-model.js`, i varchi e la presenza come correzioni
+  di quello che Home Assistant dichiara, le macchine e la rete per
+  integrazione, le batterie con la soglia, la ventilazione a quattro macchine,
+  Assist, la riga sotto il meteo, il radar, il grafico delle temperature con
+  le serie spente, i tasti su misura dell'antifurto, il verso della batteria,
+  il motore dell'auto, la lingua e l'orologio nei Generali, la tavolozza;
+- **gli editor cambiati**: le allerte a otto categorie con la qualità dell'aria
+  (`cd_allerte.aria`, che la plancia stessa perde a un «Salva» qualunque e
+  l'app invece tiene), le porte con «cosa fa il tocco» sulle serrature che
+  sanno aprire, i calendari di una o più persone, il clima con la modalità, lo
+  spegnimento automatico e i mesi (`unified-editors-section.js`), gli
+  elettrodomestici coi comandi a parte e il setaccio delle entità, i carichi
+  con la stanza, la raccolta a turni di due settimane, la caldaia con le otto
+  caselle del pellet (`GRUPPO_PELLET`), l'irrigazione con gli altri orari
+  (`cd_irrigazione.orari`, ora più minuti e soglia del terreno), il Report che
+  dice riga per riga se l'entità è un contatore cumulativo
+  (`isCumulativeEnergyEntity`), il motore che indovina con il televisore come
+  stato e tasto e i dispositivi sotto **tutte** le loro integrazioni;
+- **l'interruttore «Nel widget / Fuori»** di `widget-entity-choice-section.js`:
+  in ogni scheda che parla di una tessera della Home, accanto all'entità c'è
+  la parola in contrario, e si scrive in `cd_widgets.excluded` come
+  `tessera|entità` — le regole sono quelle di `core/fuori-dai-widget.js`,
+  portate in `casa/plancia/fuori.dart` con la prova che rilegge le tabelle
+  delle tessere da quel file;
+- **il ponte**: lo spegnimento programmato del clima
+  (`dashboardmodern/clima/timer/list|set|clear`, tenuto dal ponte e non dal
+  telefono) e il catalogo delle integrazioni chiesto per entità, che sono le
+  due cose che la plancia 1.4.17 chiede al suo backend e che qui non c'erano.
+
+### L'ottavo giro: l'auto e la colonnina da un'integrazione
+
+Nella plancia «Auto elettrica» ha il menu delle integrazioni: si sceglie
+l'integrazione, si sceglie il dispositivo, e la vettura nasce con le caselle
+`dm.ev_*` già piene (`auto-integrazione-section.js`). Nell'app l'auto si
+compilava a mano, casella per casella, col cercatore — mancava già alla 1.4.11.
+Adesso c'è, ed è lo stesso motore: `casa/plancia/legame_auto.dart` è il porto
+riga per riga di `core/auto-device-binding.js` (le domande nello stesso ordine,
+i vocabolari nelle stesse lingue, la batteria di servizio anche in volt, il
+cavo letto dall'auto prima dello stato della ricarica, il target comandabile
+che vince sul sensore) e di `core/wallbox-device-binding.js` (le nove caselle
+della colonnina, evcc con la modalità e il limite che si comanda, la regola
+per cui il secondo dispositivo si aggiunge al primo e un comando scalza una
+lettura). L'auto nata dal dispositivo va nel suo profilo, e se è la prima — o
+quella in uso — versa le caselle nelle sostituzioni di casa come fa «Usa»,
+tenendo da parte quelle della colonnina (`soloLaColonnina`). La colonnina e
+evcc hanno la loro scheda sotto l'elenco delle auto, con le caselle che la casa
+ha adesso e il tasto per collegarle. Le prove (`legame_auto_test.dart`)
+passano una EV6 coreana con venti entità, una go-e e un evcc.
+
 ## Quello che resta davvero
 
 1. **Il modello canonico.** L'app scrive solo le chiavi storiche, e non passa
@@ -356,6 +420,8 @@ immissione.
 2. **Le cinque mappe.** `cd_ev_visual`, `cd_ev_meta`, `cd_ups_meta`,
    `cd_devices`, `cd_report_devices`: visibili e modificabili riga per riga,
    senza la maschera che hanno là. Sono chiavi che quasi nessuno tocca.
+3. **Le icone `mdi:` delle stanze nelle azioni rapide**: la plancia 1.4.17 le
+   accetta accanto agli emoji; l'app scrive ancora solo l'emoji.
 
 ## Come si tiene onesto questo conto
 
@@ -375,4 +441,11 @@ Tre prove, e nessun numero scritto a mano che non ne abbia una dietro:
   contro il file che ne dichiara il modello; e la **lingua** delle due caselle
   di ogni lista della Home, guardando se quel modello legge `.nome` o `.name`;
 - `app/test/configurazione_test.dart` controlla che l'alberatura copra tutte le
-  schede della Config della plancia.
+  schede della Config della plancia, e che famiglie e schede siano quelle di
+  `alberatura-del-config.js`;
+- `app/test/{animali,correzioni,vmc,scelte,caldo,orari,fuori}_test.dart`
+  rileggono dai sorgenti della plancia le caselle degli animali, le classi dei
+  varchi e della presenza, i campi della ventilazione, le lingue, le caselle
+  della caldaia (`CASELLE_CALDAIA`), le tabelle delle tessere
+  (`TESSERE_PER_SCHEDA`, `TESSERE_PER_BLOCCO`): se la plancia le cambia, la
+  prova cade prima che se ne accorga qualcuno.

@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 
 import '../../casa/collegamento.dart';
 import '../../casa/impostazioni.dart';
+import '../../casa/plancia/orari.dart';
 import '../../casa/plancia/scatto.dart';
 import '../../casa/plancia/scelte.dart';
 import '../../casa/plancia/vasche.dart';
@@ -804,6 +805,11 @@ class _SchermataDellaPiscinaState extends State<SchermataDellaPiscina> {
           ('clEnt', 'Cloro (se ce l\'hai)'),
         ]) ...[
           CampoDiEntita(
+            tessera: TesseraDelCampo(
+              'piscina',
+              scatto: scatto,
+              quaderno: quaderno,
+            ),
             etichetta: nome,
             valore: '${piscina[campo] ?? ''}',
             domini: const ['sensor'],
@@ -815,6 +821,11 @@ class _SchermataDellaPiscinaState extends State<SchermataDellaPiscina> {
         const SizedBox(height: 12),
         const Insegna('Cosa si comanda'),
         CampoDiEntita(
+          tessera: TesseraDelCampo(
+            'piscina',
+            scatto: scatto,
+            quaderno: quaderno,
+          ),
           etichetta: 'Pompa di filtrazione',
           valore: '${piscina['pumpEnt'] ?? ''}',
           domini: const ['switch'],
@@ -823,6 +834,11 @@ class _SchermataDellaPiscinaState extends State<SchermataDellaPiscina> {
         ),
         const SizedBox(height: 14),
         CampoDiEntita(
+          tessera: TesseraDelCampo(
+            'piscina',
+            scatto: scatto,
+            quaderno: quaderno,
+          ),
           etichetta: 'Riscaldamento (se ce l\'hai)',
           valore: '${piscina['heatEnt'] ?? ''}',
           domini: const ['switch'],
@@ -831,6 +847,11 @@ class _SchermataDellaPiscinaState extends State<SchermataDellaPiscina> {
         ),
         const SizedBox(height: 14),
         CampoDiEntita(
+          tessera: TesseraDelCampo(
+            'piscina',
+            scatto: scatto,
+            quaderno: quaderno,
+          ),
           etichetta: 'Luce della vasca',
           valore: '${piscina['lightEnt'] ?? ''}',
           domini: const ['light', 'switch'],
@@ -1054,13 +1075,29 @@ class SchermataDellIrrigazione extends StatelessWidget {
         const Insegna('Quando'),
         CampoDiTesto(
           etichetta: 'A che ora parte',
-          valore: '${irrigazione['time'] ?? '06:30'}',
-          suggerimento: '06:30',
+          valore: '${irrigazione['time'] ?? orarioPredefinito}',
+          suggerimento: orarioPredefinito,
           cambiato: (scritto) => cambia('time', scritto),
+        ),
+        const SizedBox(height: 14),
+        /* Piu' momenti nella stessa giornata (#325): «una alle 05:30 del
+         * mattino e alle 20:30 dopo una giornata di caldo intenso, se la %
+         * del sensore umidita' terreno e' inferiore a una certa %». Il primo
+         * orario resta quello qui sopra, che e' del runtime; gli altri stanno
+         * in `orari`, e la plancia li mette tutti in fila. */
+        _GliAltriOrari(
+          orari: leggiGliOrari(irrigazione['orari']),
+          cambia: (orari) =>
+              cambia('orari', orari.isEmpty ? null : orariDaScrivere(orari)),
         ),
         const SizedBox(height: 24),
         const Insegna('Quando invece non parte'),
         CampoDiEntita(
+          tessera: TesseraDelCampo(
+            'irrigazione',
+            scatto: scatto,
+            quaderno: quaderno,
+          ),
           etichetta: 'Sensore di pioggia o probabilita\'',
           valore: '${irrigazione['rainEnt'] ?? ''}',
           domini: const ['sensor'],
@@ -1079,6 +1116,11 @@ class SchermataDellIrrigazione extends StatelessWidget {
         /* Il meteo, oltre al sensore di pioggia: chi non ha un sensore in
          * giardino ha comunque una previsione, e la plancia la guarda. */
         CampoDiEntita(
+          tessera: TesseraDelCampo(
+            'irrigazione',
+            scatto: scatto,
+            quaderno: quaderno,
+          ),
           etichetta: 'Il meteo (facoltativo)',
           valore: '${irrigazione['weatherEnt'] ?? ''}',
           domini: const ['weather'],
@@ -1095,6 +1137,11 @@ class SchermataDellIrrigazione extends StatelessWidget {
          * andava lo stesso sul bagnato. */
         const Insegna('L\'umidita\' del terreno'),
         CampoDiEntita(
+          tessera: TesseraDelCampo(
+            'irrigazione',
+            scatto: scatto,
+            quaderno: quaderno,
+          ),
           etichetta: 'La sonda nel terreno',
           valore: '${irrigazione['soilEnt'] ?? ''}',
           domini: const ['sensor'],
@@ -1248,6 +1295,130 @@ class SchermataDelDispositivo extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+/// Gli altri orari di irrigazione, uno per riga.
+///
+/// E' la casella «Altri orari di irrigazione» che `pool-irrigation-scene-
+/// section.js` monta sotto l'ora di partenza: ogni riga porta l'ora, i minuti
+/// di quella corsa (che valgono per tutte le zone) e la percentuale di
+/// terreno sotto la quale ha senso farla. Si scrive appena si tocca, come
+/// nella plancia: un elenco che si modifica non aspetta un tasto Salva.
+class _GliAltriOrari extends StatelessWidget {
+  const _GliAltriOrari({required this.orari, required this.cambia});
+
+  final List<OrarioDellIrrigazione> orari;
+  final ValueChanged<List<OrarioDellIrrigazione>> cambia;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final colori = tema.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Altri orari di irrigazione',
+          style: tema.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Il primo orario e\' quello qui sopra. Ogni riga in piu\' e\' una '
+          'corsa a se\': i minuti valgono per tutte le zone di quella corsa, e '
+          'la % la fa partire solo col terreno piu\' asciutto di cosi\'.',
+          style: tema.textTheme.bodySmall?.copyWith(
+            color: colori.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 10),
+        for (final (quale, orario) in orari.indexed) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 5,
+                child: CampoDiTesto(
+                  etichetta: 'Ora',
+                  valore: orario.ora,
+                  suggerimento: '20:30',
+                  cambiato: (scritto) => cambia([
+                    ...orari.take(quale),
+                    orario.con(ora: scritto.trim()),
+                    ...orari.skip(quale + 1),
+                  ]),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 4,
+                child: CampoDiTesto(
+                  etichetta: 'Durata',
+                  valore: '${orario.minuti ?? ''}',
+                  numerico: true,
+                  suggerimento: 'min',
+                  cambiato: (scritto) {
+                    final minuti = int.tryParse(scritto.trim());
+                    cambia([
+                      ...orari.take(quale),
+                      minuti == null
+                          ? orario.senza(minuti: true)
+                          : orario.con(minuti: minuti),
+                      ...orari.skip(quale + 1),
+                    ]);
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 4,
+                child: CampoDiTesto(
+                  etichetta: 'Se sotto (%)',
+                  valore: '${orario.seSottoA ?? ''}',
+                  numerico: true,
+                  suggerimento: '%',
+                  cambiato: (scritto) {
+                    final soglia = int.tryParse(scritto.trim());
+                    cambia([
+                      ...orari.take(quale),
+                      soglia == null
+                          ? orario.senza(seSottoA: true)
+                          : orario.con(seSottoA: soglia),
+                      ...orari.skip(quale + 1),
+                    ]);
+                  },
+                ),
+              ),
+              IconButton(
+                tooltip: 'Togli l\'orario',
+                onPressed: () =>
+                    cambia([...orari.take(quale), ...orari.skip(quale + 1)]),
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ],
+          ),
+          if (orario.ora.isNotEmpty && !orario.valido)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 2, 12, 0),
+              child: Text(
+                'Scrivila come 20:30: cosi\' com\'e\' la plancia la salta.',
+                style: tema.textTheme.bodySmall?.copyWith(color: colori.error),
+              ),
+            ),
+          const SizedBox(height: 10),
+        ],
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: () => cambia([...orari, const OrarioDellIrrigazione()]),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Aggiungi un orario'),
+          ),
+        ),
+      ],
     );
   }
 }

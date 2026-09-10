@@ -341,14 +341,17 @@ const iSensoriDellaPersona = <(String, String, List<String>)>[
 const dominiDellaPersona = ['person', 'device_tracker'];
 
 /// Un identificativo come lo fabbrica la plancia: minuscolo, senza accenti.
-String identificativoDellaPersona(String valore) => senzaAccenti(valore)
-    .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-    .replaceAll(RegExp(r'^-+|-+$'), '');
+String identificativoDellaPersona(String valore) =>
+    senzaAccenti(valore)
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
 
 /// Le iniziali: l'avatar che non si deve disegnare. Due lettere, come le
 /// rubriche dei telefoni — piu' di due diventano un timbro.
 String inizialiDi(String nome) {
-  final parole = _pulito(nome).split(RegExp(r'\s+')).where((una) => una.isNotEmpty);
+  final parole = _pulito(nome)
+      .split(RegExp(r'\s+'))
+      .where((una) => una.isNotEmpty);
   if (parole.isEmpty) return '?';
   return parole.take(2).map((una) => una[0].toUpperCase()).join();
 }
@@ -391,8 +394,7 @@ class Persona {
     return Persona(fuori);
   }
 
-  factory Persona.nuova({int quale = 0}) =>
-      Persona.da(const {}, quale: quale);
+  factory Persona.nuova({int quale = 0}) => Persona.da(const {}, quale: quale);
 
   final Map<String, dynamic> dentro;
 

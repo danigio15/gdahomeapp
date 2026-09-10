@@ -29,6 +29,7 @@ import '../plancia_vera.dart' show FabbricaDellaPlancia;
 import 'energia.dart';
 import 'famiglia.dart';
 import '../../casa/plancia/scelte.dart' as scelte;
+import '../../casa/plancia/energia.dart' show eUnContatoreCumulativo;
 import '../../casa/plancia/vmc.dart';
 import '../../casa/plancia/correzioni.dart';
 import 'animali.dart';
@@ -87,6 +88,12 @@ Widget? schermataDi(
    * stanno dentro il profilo, ed e' quello che fa cambiare tutta la pagina
    * quando si passa da un'auto all'altra. */
   'Auto elettrica' => SchermataDiFamiglia(
+    tessera: 'ev',
+    /* Come nella Config della dashboard: si sceglie l'integrazione, si
+     * sceglie il dispositivo, e l'auto nasce con le caselle gia' piene. E
+     * sotto, la colonnina con evcc, che e' della casa. */
+    dallIntegrazione: true,
+    laColonnina: true,
     titolo: 'Auto elettriche',
     sotto:
         'Le auto di casa. Ognuna si porta dentro le sue entita\' e le sue '
@@ -109,6 +116,7 @@ Widget? schermataDi(
     ],
   ),
   'Solare termico' => SchermataDiFamiglia(
+    tessera: 'solare',
     titolo: 'Impianti solari',
     sotto:
         'Gli impianti solari termici. Anche di questi ce ne puo\' essere piu\' '
@@ -119,6 +127,7 @@ Widget? schermataDi(
     campi: const [CampoDellaVoce('id', 'Sigla', spiega: 'tetto, garage…')],
   ),
   'Sicurezza' => SchermataDelleCaselle(
+    tessera: 'sicurezza',
     titolo: 'Sicurezza',
     sotto:
         'La centrale dell\'allarme. Le telecamere si aggiungono dalla '
@@ -148,6 +157,7 @@ Widget? schermataDi(
     collegamento: collegamento,
   ),
   'Lettori e casse' => SchermataDiVoci(
+    tessera: 'media',
     titolo: 'Lettori e casse',
     sotto: 'Gli altoparlanti e i televisori che la plancia comanda.',
     chiave: chiaveDeiLettori,
@@ -175,6 +185,9 @@ Widget? schermataDi(
      * vedeva nessuno, e la plancia continuava a mostrare quello che il
      * calendario ha in Home Assistant. */
     inItaliano: false,
+    /* Di chi e' (1.4.17): un calendario puo' essere di una o piu' persone,
+     * e la plancia lo mostra solo a loro. */
+    lePersone: true,
     collegamento: collegamento,
   ),
   'Le liste di cose da fare' => SchermataDiVoci(
@@ -368,17 +381,32 @@ Widget? schermataDi(
         'un nome, un disegno e l\'entita\' da cui nasce lo storico.',
     chiave: chiaveDelReportDiUnaVolta,
     unaCosa: 'una voce',
+    /* «Entita' totale per lo storico»: l'editor della plancia accetta solo
+     * un contatore cumulativo (`isLifetimeMeter`), e lo dice sotto la riga. */
+    controlla: (entita, stato) => eUnContatoreCumulativo(entita, stato)
+        ? (
+            true,
+            'Il contatore totale abilita il mese selezionato, i mesi '
+                'precedenti e il totale anno.',
+          )
+        : (
+            false,
+            'Questa entita\' non sembra cumulativa: scegli il contatore '
+                'totale lifetime del dispositivo.',
+          ),
     disegnoDiSerie: '⚡',
     domini: const ['sensor'],
     collegamento: collegamento,
   ),
   'MiniPC' => SchermataDelleCaselle(
+    tessera: 'minipc',
     titolo: 'MiniPC',
     sotto: 'Il monitoraggio del server: processore, memoria, dischi.',
     sezione: 'server',
     collegamento: collegamento,
   ),
   'Temperatura' => SchermataDiElenco(
+    tessera: 'temperatura',
     titolo: 'Temperatura',
     sotto:
         'La pagina Temperatura mostra le stanze che hanno un sensore. '
@@ -484,6 +512,55 @@ Widget? schermataDi(
         entita: true,
         domini: ['climate', 'valve', 'switch', 'number'],
       ),
+      /* La modalita' del riscaldamento (#362), quanto resta accesa (#364) e
+       * i mesi in cui si vede (#365): i tre dati dell'unita' che
+       * `unified-editors-section.js` scrive accanto alla valvola. */
+      CampoDellApparecchio(
+        'modo',
+        'L\'entita\' della modalita\' (In casa / Fuori / Vacanza)',
+        entita: true,
+        domini: ['select', 'input_select', 'sensor', 'climate'],
+        spiega:
+            'I termostati smart tengono la modalita\' su un\'entita\' a '
+            'parte: TADO ha In casa e Fuori, altri aggiungono Vacanza o '
+            'Boost. Se e\' un select si cambia dalla scheda',
+      ),
+      /* Le durate sono i fermi dello slider (`FERMI_DELLO_SLIDER`): la
+       * plancia porta comunque un numero qualsiasi al fermo piu' vicino. */
+      CampoDellApparecchio(
+        'minuti',
+        'Spegnimento automatico',
+        numero: true,
+        scelte: [
+          ('0', 'Mai: resta accesa'),
+          ('15', '15 min'),
+          ('30', '30 min'),
+          ('45', '45 min'),
+          ('60', '1 h'),
+          ('90', '1 h 30'),
+          ('120', '2 h'),
+          ('180', '3 h'),
+          ('240', '4 h'),
+          ('300', '5 h'),
+          ('360', '6 h'),
+          ('480', '8 h'),
+          ('600', '10 h'),
+          ('720', '12 h'),
+        ],
+        spiega:
+            'Quanto resta accesa dal momento dell\'accensione. Il conto alla '
+            'rovescia lo tiene Home Assistant: si puo\' chiudere l\'app e '
+            'l\'unita\' si spegne lo stesso',
+      ),
+      CampoDellApparecchio(
+        'mesi',
+        'Mesi in cui mostrarla',
+        mesi: true,
+        spiega:
+            'Un condizionatore da maggio a settembre, i termosifoni da '
+            'ottobre ad aprile: fuori da quei mesi la scheda non compare. '
+            'Nessun mese acceso vuol dire tutto l\'anno',
+      ),
     ],
   ),
 
@@ -547,6 +624,26 @@ Widget? schermataDi(
         'visual_key',
         'Che cosa e\'',
         spiega: 'lavatrice, lavastoviglie, forno, frigo…',
+      ),
+      /* Gli altri comandi (#338): le regole sono quelle del robot (#306),
+       * `elencoComandi` in robot-model.js — stessi domini, fino a dodici. */
+      CampoDellApparecchio(
+        'comandi',
+        'Altri comandi, fino a dodici',
+        tante: true,
+        massimo: 12,
+        domini: [
+          'button',
+          'input_button',
+          'script',
+          'scene',
+          'automation',
+          'switch',
+          'input_boolean',
+          'select',
+          'input_select',
+        ],
+        spiega: 'script.asciugatrice_rapido_30, button.forno_preriscalda…',
       ),
     ],
   ),
@@ -615,6 +712,7 @@ Widget? schermataDi(
         'comandi',
         'I suoi tasti, fino a dodici',
         tante: true,
+        massimo: 12,
         domini: [
           'button',
           'input_button',
@@ -635,6 +733,7 @@ Widget? schermataDi(
 
   /* ── Piu' di uno ── */
   'Centrali d\'allarme' => SchermataDiFamiglia(
+    tessera: 'sicurezza',
     titolo: 'Centrali d\'allarme',
     sotto:
         'Le centrali di casa. Quella con la pastiglia comanda la pagina '
@@ -648,6 +747,7 @@ Widget? schermataDi(
     campi: const [CampoDellaVoce('id', 'Sigla', spiega: 'casa, garage…')],
   ),
   'Scaldabagni' => SchermataDiFamiglia(
+    tessera: 'scaldabagno',
     titolo: 'Scaldabagni',
     sotto:
         'Uno per bagno, se serve. Un\'entita\' `water_heater` si porta dietro '
@@ -716,8 +816,9 @@ Widget? schermataDi(
    * Erano tre, e tutte e tre col nome sbagliato: `battery`, `load`, `status`
    * dove la plancia legge `batteria`, `carico`, `stato`. Si riempivano, si
    * salvavano, e la scheda del gruppo restava vuota. */
-  'Continuita\'' => SchermataDiFamiglia(
-    titolo: 'Continuita\'',
+  'UPS' => SchermataDiFamiglia(
+    tessera: 'ups',
+    titolo: 'UPS',
     sotto:
         'I gruppi di continuita\'. Bastano lo stato e la carica: il resto e\' '
         'per chi ha un UPS che lo dice.',
@@ -889,6 +990,7 @@ Widget? schermataDi(
   'Le batterie' => SchermataDelleBatterie(collegamento: collegamento),
   'Le macchine e la rete' => SchermataDelleMacchine(collegamento: collegamento),
   'I varchi' => SchermataDelleCorrezioni(
+    tessera: 'varchi',
     titolo: 'I varchi',
     sotto:
         'I contatti di porte e finestre: quanti sono aperti adesso, e quali. '
@@ -909,6 +1011,7 @@ Widget? schermataDi(
     spento: 'chiuso',
   ),
   'La presenza' => SchermataDelleCorrezioni(
+    tessera: 'presenza',
     titolo: 'La presenza',
     sotto:
         'I rilevatori di movimento e di presenza: dove c\'e\' qualcuno adesso, '
@@ -985,6 +1088,7 @@ Widget? schermataDi(
    * le sue caselle. Si scrivono normalizzate come le legge `normalizzaVmc`:
    * `nome`, `stanza`, e le dodici caselle. */
   'La ventilazione' => SchermataDiElenco(
+    tessera: 'vmc',
     titolo: 'La ventilazione',
     sotto:
         'Le macchine della VMC: le quattro temperature dello scambiatore — '

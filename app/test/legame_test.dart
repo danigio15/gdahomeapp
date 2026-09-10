@@ -145,18 +145,15 @@ const _dispositivo = Dispositivo(
 
 Apparecchio _vuoto() => Apparecchio.nuovo(Sezione.elettrodomestici);
 
-Apparecchio _unaStanza(String id, String nome) => Apparecchio.da({
-  'id': id,
-  'name': nome,
-}, sezione: Sezione.stanze);
+Apparecchio _unaStanza(String id, String nome) =>
+    Apparecchio.da({'id': id, 'name': nome}, sezione: Sezione.stanze);
 
 void main() {
   group('Le caselle proposte', () {
     test('la lavatrice di hOn riempie le caselle giuste', () {
-      final proposta = proponiLeCaselle(
-        [for (final una in _lavatrice) DaLeggere.dalCatalogo(una)],
-        nomeDelDispositivo: 'Lavatrice',
-      );
+      final proposta = proponiLeCaselle([
+        for (final una in _lavatrice) DaLeggere.dalCatalogo(una),
+      ], nomeDelDispositivo: 'Lavatrice');
 
       expect(proposta['power_entity'], 'sensor.lavatrice_potenza');
       expect(proposta['daily_energy_entity'], 'sensor.lavatrice_energia_oggi');
@@ -175,10 +172,9 @@ void main() {
       /* Il tasto giusto e' quello che porta il nome del dispositivo. E'
        * l'unico segnale che non parla una lingua sola: «Pausa» e «Vapore»
        * hanno un nome loro, la macchina no. */
-      final proposta = proponiLeCaselle(
-        [for (final una in _lavatrice) DaLeggere.dalCatalogo(una)],
-        nomeDelDispositivo: 'Lavatrice',
-      );
+      final proposta = proponiLeCaselle([
+        for (final una in _lavatrice) DaLeggere.dalCatalogo(una),
+      ], nomeDelDispositivo: 'Lavatrice');
       expect(proposta['control_entity'], 'switch.lavatrice');
     });
 
@@ -186,10 +182,9 @@ void main() {
       /* Si somigliano — tutti e due in minuti, tutti e due «tempo» — e sono
        * la cosa piu' facile da scambiare. Chi guarda la tessera vedrebbe un
        * conto alla rovescia che non finisce mai. */
-      final proposta = proponiLeCaselle(
-        [for (final una in _lavatrice) DaLeggere.dalCatalogo(una)],
-        nomeDelDispositivo: 'Lavatrice',
-      );
+      final proposta = proponiLeCaselle([
+        for (final una in _lavatrice) DaLeggere.dalCatalogo(una),
+      ], nomeDelDispositivo: 'Lavatrice');
       expect(
         proposta.values,
         isNot(contains('sensor.lavatrice_avvio_ritardato')),
@@ -197,19 +192,17 @@ void main() {
     });
 
     test('la tensione non passa per potenza, e il wifi non passa mai', () {
-      final proposta = proponiLeCaselle(
-        [for (final una in _lavatrice) DaLeggere.dalCatalogo(una)],
-        nomeDelDispositivo: 'Lavatrice',
-      );
+      final proposta = proponiLeCaselle([
+        for (final una in _lavatrice) DaLeggere.dalCatalogo(una),
+      ], nomeDelDispositivo: 'Lavatrice');
       expect(proposta.values, isNot(contains('sensor.lavatrice_tensione')));
       expect(proposta.values, isNot(contains('sensor.lavatrice_wifi')));
     });
 
     test('un\'entita\' sola non fa due caselle', () {
-      final proposta = proponiLeCaselle(
-        [for (final una in _lavatrice) DaLeggere.dalCatalogo(una)],
-        nomeDelDispositivo: 'Lavatrice',
-      );
+      final proposta = proponiLeCaselle([
+        for (final una in _lavatrice) DaLeggere.dalCatalogo(una),
+      ], nomeDelDispositivo: 'Lavatrice');
       expect(proposta.values.toSet().length, proposta.values.length);
     });
 
@@ -304,13 +297,19 @@ void main() {
   });
 
   group('La stanza', () {
-    test('l\'area di Home Assistant diventa la stanza che si chiama uguale', () {
-      final stanze = [_unaStanza('rooms-1', 'Bagno'), _unaStanza('rooms-2', 'Cucina')];
-      expect(stanzaPerArea('Bagno', stanze), 'rooms-1');
-      expect(stanzaPerArea('bagno', stanze), 'rooms-1');
-      expect(stanzaPerArea('Garage', stanze), '');
-      expect(stanzaPerArea('', stanze), '');
-    });
+    test(
+      'l\'area di Home Assistant diventa la stanza che si chiama uguale',
+      () {
+        final stanze = [
+          _unaStanza('rooms-1', 'Bagno'),
+          _unaStanza('rooms-2', 'Cucina'),
+        ];
+        expect(stanzaPerArea('Bagno', stanze), 'rooms-1');
+        expect(stanzaPerArea('bagno', stanze), 'rooms-1');
+        expect(stanzaPerArea('Garage', stanze), '');
+        expect(stanzaPerArea('', stanze), '');
+      },
+    );
   });
 
   group('Il legame', () {
@@ -361,31 +360,31 @@ void main() {
         entita: _lavatrice,
         integrazione: _hon,
       );
-      expect(
-        quale.dentro['history_entity'],
-        'sensor.lavatrice_energia_totale',
-      );
+      expect(quale.dentro['history_entity'], 'sensor.lavatrice_energia_totale');
       expect(quale.dentro['report_entity'], 'sensor.lavatrice_energia_totale');
       expect(quale.dentro['energy_entity'], 'sensor.lavatrice_energia_totale');
     });
 
-    test('l\'elenco piatto porta anche le caselle che il modello non conta', () {
-      /* `entities` si ricava dalle otto caselle che il modello dichiara, e le
+    test(
+      'l\'elenco piatto porta anche le caselle che il modello non conta',
+      () {
+        /* `entities` si ricava dalle otto caselle che il modello dichiara, e le
        * caselle di un dispositivo sono tredici: senza scriverlo a mano, il
        * tempo rimanente e la fase sparirebbero dall'elenco che la plancia
        * legge quando non guarda i campi. */
-      final quale = _vuoto();
-      collegaAlDispositivo(
-        quale,
-        dispositivo: _dispositivo,
-        entita: _lavatrice,
-        integrazione: _hon,
-      );
-      final elenco = (quale.dentro['entities'] as List).cast<String>();
-      expect(elenco, contains('sensor.lavatrice_tempo_rimanente'));
-      expect(elenco, contains('sensor.lavatrice_fase'));
-      expect(elenco, contains('switch.lavatrice'));
-    });
+        final quale = _vuoto();
+        collegaAlDispositivo(
+          quale,
+          dispositivo: _dispositivo,
+          entita: _lavatrice,
+          integrazione: _hon,
+        );
+        final elenco = (quale.dentro['entities'] as List).cast<String>();
+        expect(elenco, contains('sensor.lavatrice_tempo_rimanente'));
+        expect(elenco, contains('sensor.lavatrice_fase'));
+        expect(elenco, contains('switch.lavatrice'));
+      },
+    );
 
     test('si segna da dove viene, e le entita\' accese', () {
       final quale = _vuoto();
@@ -436,19 +435,22 @@ void main() {
       expect(eCollegato(quale), isFalse);
     });
 
-    test('l\'etichetta dice integrazione, marca, modello e quante entita\'', () {
-      final quale = _vuoto();
-      collegaAlDispositivo(
-        quale,
-        dispositivo: _dispositivo,
-        entita: _lavatrice,
-        integrazione: _hon,
-      );
-      expect(
-        etichettaDelLegame(quale),
-        'hOn · Hoover HW-2431 · ${_lavatrice.length} entita\'',
-      );
-    });
+    test(
+      'l\'etichetta dice integrazione, marca, modello e quante entita\'',
+      () {
+        final quale = _vuoto();
+        collegaAlDispositivo(
+          quale,
+          dispositivo: _dispositivo,
+          entita: _lavatrice,
+          integrazione: _hon,
+        );
+        expect(
+          etichettaDelLegame(quale),
+          'hOn · Hoover HW-2431 · ${_lavatrice.length} entita\'',
+        );
+      },
+    );
   });
 
   group('L\'entita\' principale', () {
@@ -469,30 +471,40 @@ void main() {
     test('non scavalca quella che c\'e\' gia\'', () {
       final quale = Apparecchio.nuovo(Sezione.luci)
         ..metti('entity', 'light.la_mia');
-      mettiLEntitaPrincipale(quale, [
-        _una('light.lampada', nome: 'Lampada'),
-      ], domini: const ['light']);
+      mettiLEntitaPrincipale(
+        quale,
+        [_una('light.lampada', nome: 'Lampada')],
+        domini: const ['light'],
+      );
       expect(quale.entita, 'light.la_mia');
     });
 
     test('le spente non si prendono', () {
       final quale = Apparecchio.nuovo(Sezione.luci);
-      mettiLEntitaPrincipale(quale, [
-        _una('light.spenta', nome: 'Spenta', spenta: true),
-        _una('light.viva', nome: 'Viva'),
-      ], domini: const ['light']);
+      mettiLEntitaPrincipale(
+        quale,
+        [
+          _una('light.spenta', nome: 'Spenta', spenta: true),
+          _una('light.viva', nome: 'Viva'),
+        ],
+        domini: const ['light'],
+      );
       expect(quale.entita, 'light.viva');
     });
 
     test('senza domini si prende la prima, e con domini sbagliati niente', () {
       final senza = Apparecchio.nuovo(Sezione.elettrodomestici);
-      mettiLEntitaPrincipale(senza, [_una('sensor.qualcosa', nome: 'Qualcosa')]);
+      mettiLEntitaPrincipale(senza, [
+        _una('sensor.qualcosa', nome: 'Qualcosa'),
+      ]);
       expect(senza.entita, 'sensor.qualcosa');
 
       final storto = Apparecchio.nuovo(Sezione.luci);
-      mettiLEntitaPrincipale(storto, [
-        _una('sensor.qualcosa', nome: 'Qualcosa'),
-      ], domini: const ['light']);
+      mettiLEntitaPrincipale(
+        storto,
+        [_una('sensor.qualcosa', nome: 'Qualcosa')],
+        domini: const ['light'],
+      );
       expect(storto.entita, '');
     });
   });
@@ -540,10 +552,7 @@ void main() {
         casa: casaFinta(),
       );
       expect(trovati['power_entity'], 'sensor.presa_lavatrice_potenza');
-      expect(
-        trovati['daily_energy_entity'],
-        'sensor.energia_oggi_lavatrice',
-      );
+      expect(trovati['daily_energy_entity'], 'sensor.energia_oggi_lavatrice');
       /* Il forno non c'entra: non porta il nome del dispositivo. */
       expect(trovati.values, isNot(contains('sensor.energia_oggi_forno')));
     });
@@ -633,6 +642,68 @@ void main() {
       final menu = integrazioniConDispositivi(catalogo);
       expect(menu.map((uno) => uno.$1.dominio).toList(), ['hon', 'zulu']);
       expect(menu.first.$2.single.id, 'dev-lavatrice');
+    });
+
+    test('un dispositivo di due integrazioni compare sotto tutte e due', () {
+      /* «immaginavo ma non la vedo fra le integrazioni»: il robot adottato
+       * da un'integrazione di marca ma acceso via MQTT stava solo sotto la
+       * principale, e chi lo cercava per marca non lo trovava. */
+      final catalogo = IlCatalogo(
+        integrazioni: const [
+          _hon,
+          Integrazione(
+            dominio: 'mqtt',
+            nome: 'MQTT',
+            quantiDispositivi: 1,
+            diQualcunAltro: false,
+          ),
+        ],
+        dispositivi: const [
+          Dispositivo(
+            id: 'dev-robot',
+            nome: 'Robot',
+            marca: '',
+            modello: '',
+            integrazione: 'mqtt',
+            integrazioniDichiarate: ['hon', 'mqtt'],
+            stanza: '',
+            quanteEntita: 3,
+            spento: false,
+          ),
+        ],
+        entita: const {},
+      );
+      final menu = integrazioniConDispositivi(catalogo);
+      expect(menu.map((uno) => uno.$1.dominio).toList(), ['hon', 'mqtt']);
+      expect(menu.first.$2.single.id, 'dev-robot');
+      expect(menu.last.$2.single.id, 'dev-robot');
+      /* E la principale conta anche quando l'elenco non la nomina. */
+      expect(_dispositivo.integrazioni, {'hon'});
+    });
+  });
+
+  group('Il televisore (#354)', () {
+    test('il lettore e\' lo stato, e anche il tasto', () {
+      /* Una TV LG: un `media_player`, un `remote`, e nessun sensore di stato
+       * ne' interruttore. Prima il collegamento non riempiva niente. */
+      final proposta = proponiLeCaselle([
+        DaLeggere.dalCatalogo(_una('media_player.tv_salotto', nome: 'TV')),
+        DaLeggere.dalCatalogo(_una('remote.tv_salotto', nome: 'TV remote')),
+        DaLeggere.dalCatalogo(
+          _una('sensor.tv_salotto_stato', nome: 'TV status'),
+        ),
+      ], nomeDelDispositivo: 'TV');
+      expect(proposta['state_entity'], 'media_player.tv_salotto');
+      expect(proposta['control_entity'], 'media_player.tv_salotto');
+    });
+
+    test('con un interruttore vero, quello resta il tasto', () {
+      final proposta = proponiLeCaselle([
+        DaLeggere.dalCatalogo(_una('media_player.tv', nome: 'TV')),
+        DaLeggere.dalCatalogo(_una('switch.tv_power', nome: 'TV power')),
+      ], nomeDelDispositivo: 'TV');
+      expect(proposta['state_entity'], 'media_player.tv');
+      expect(proposta['control_entity'], 'switch.tv_power');
     });
   });
 }

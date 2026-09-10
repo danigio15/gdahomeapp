@@ -115,7 +115,7 @@ void main() {
    */
   const modelli = <String, String>{
     'Scaldabagni': '../ponte/plancia/src/core/scaldabagno-model.js',
-    'Continuita\'': '../ponte/plancia/src/core/ups-model.js',
+    'UPS': '../ponte/plancia/src/core/ups-model.js',
     'Robot': '../ponte/plancia/src/core/robot-model.js',
     'Quadro avvisi': '../ponte/plancia/src/sections/home-widgets-section.js',
   };

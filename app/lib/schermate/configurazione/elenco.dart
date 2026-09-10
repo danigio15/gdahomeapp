@@ -183,6 +183,7 @@ class SchermataDiElenco extends StatelessWidget {
     this.disegno,
     this.riordinabile = true,
     this.massimo = 0,
+    this.tessera = '',
   });
 
   final String titolo;
@@ -204,6 +205,10 @@ class SchermataDiElenco extends StatelessWidget {
   /// Le mappe non hanno un ordine loro: riordinarle non vorrebbe dire niente.
   final bool riordinabile;
 
+  /// La tessera della Home di cui parlano le entita' di queste cose
+  /// (`temperatura`, `vmc`), o «» se non ne hanno una.
+  final String tessera;
+
   @override
   Widget build(BuildContext context) => PaginaDiConfigurazione(
     titolo: titolo,
@@ -217,6 +222,7 @@ class SchermataDiElenco extends StatelessWidget {
         unaCosa: unaCosa,
         riordinabile: riordinabile && !forma.eUnaMappa,
         massimo: massimo,
+        tessera: tessera,
         scatto: scatto,
         quaderno: quaderno,
       ),
@@ -232,6 +238,7 @@ class _Elenco extends StatefulWidget {
     required this.unaCosa,
     required this.riordinabile,
     required this.massimo,
+    required this.tessera,
     required this.scatto,
     required this.quaderno,
   });
@@ -242,6 +249,7 @@ class _Elenco extends StatefulWidget {
   final String unaCosa;
   final bool riordinabile;
   final int massimo;
+  final String tessera;
   final Scatto scatto;
   final Quaderno quaderno;
 
@@ -300,6 +308,13 @@ class _ElencoState extends State<_Elenco> {
         unaCosa: widget.unaCosa,
         nuova: quale < 0,
         stanze: _leStanze,
+        tessera: widget.tessera.isEmpty
+            ? null
+            : TesseraDelCampo(
+                widget.tessera,
+                scatto: widget.scatto,
+                quaderno: widget.quaderno,
+              ),
       ),
     );
     if (scritta == null) return;
@@ -504,6 +519,7 @@ class _Modulo extends StatefulWidget {
     required this.unaCosa,
     required this.nuova,
     this.stanze = const [],
+    this.tessera,
   });
 
   final Collegamento collegamento;
@@ -511,6 +527,9 @@ class _Modulo extends StatefulWidget {
   final Map<String, dynamic> cosa;
   final String unaCosa;
   final bool nuova;
+
+  /// La tessera di cui parlano le caselle, per l'interruttore «nel widget».
+  final TesseraDelCampo? tessera;
 
   /// Le stanze fra cui scegliere, per un campo [Tipo.stanza].
   final List<(String, String)> stanze;
@@ -613,6 +632,7 @@ class _ModuloState extends State<_Modulo> {
                     valore: '${_cosa[campo.chiave] ?? ''}',
                     domini: campo.domini,
                     collegamento: widget.collegamento,
+                    tessera: widget.tessera,
                     cambiato: (scritto) => _cosa[campo.chiave] = scritto,
                   ),
                   Tipo.scelta => DropdownButtonFormField<String>(

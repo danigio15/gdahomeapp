@@ -219,6 +219,7 @@ class Carico {
     this.impianto = '',
     this.nelReport = true,
     this.nomeNelReport = '',
+    this.stanza = '',
   }) : figli = figli ?? [];
 
   final String id;
@@ -248,6 +249,11 @@ class Carico {
 
   /// Di quale impianto e' questo cerchio. Vuoto vuol dire il primo.
   final String impianto;
+
+  /// In che stanza sta (1.4.17): l'identificativo della stanza, o il nome se
+  /// non ce l'ha. Vuoto: nessuna. Serve alla pagina Stanze, che mette il
+  /// carico fra le cose della stanza.
+  String stanza;
 
   /// Una riga sotto la scheda, cosi' cosa legge un carico si vede senza
   /// aprirlo.
@@ -453,6 +459,11 @@ List<Carico> modelloDeiCarichi({
           impianto: _pulito(carico[campoDellImpianto]),
           nelReport: carico['show_in_report'] != false,
           nomeNelReport: _pulito(carico['report_label']),
+          /* Il cerchio che valeva come stanza (`flow_room`) e' il ripiego:
+           * e' cosi' che legge `energy-loads-config.js`. */
+          stanza: _pulito(carico['room_id']).isNotEmpty
+              ? _pulito(carico['room_id'])
+              : _pulito(_mappa(carico['metadata'])['flow_room']),
         );
       }(),
   ];
@@ -604,6 +615,7 @@ carichiDaScrivere(
         'show_in_report': carico.nelReport,
         'report_label': carico.nomeNelReport,
         'report_order': posto,
+        'room_id': carico.stanza,
         'power_entity': carico.potenza,
         'total_energy_entity': carico.totale,
         'history_entity': carico.totale,

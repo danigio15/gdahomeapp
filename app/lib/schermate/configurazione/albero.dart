@@ -333,9 +333,11 @@ const albero = <Famiglia>[
       da: 'sez2',
       pronta: true,
     ),
+    /* «Continuita'» nella 1.4.11, «UPS» dalla 1.4.17: la linguetta, la
+     * pagina e i nomi di serie sono cambiati tutti insieme. */
     Voce(
-      'Continuita\'',
-      'I gruppi di continuita\'',
+      'UPS',
+      'I gruppi di continuita\', con le loro entita\'',
       disegno: 'minipc',
       da: 'ups',
       pronta: true,

@@ -419,9 +419,9 @@ class _LeEntitaState extends State<_LeEntita> {
                                 dense: true,
                                 title: Text(una.nome),
                                 subtitle: _sotto(context, una),
-                                onTap: () => Navigator.of(
-                                  context,
-                                ).pop(_scelto(entita: [una])),
+                                onTap: () =>
+                                    Navigator.of(context)
+                                        .pop(_scelto(entita: [una])),
                               ),
                               ComeSiPrende.spuntandole => CheckboxListTile(
                                 dense: true,
@@ -478,9 +478,9 @@ class _LeEntitaState extends State<_LeEntita> {
                   child: SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: () => Navigator.of(
-                        context,
-                      ).pop(_scelto(entita: tutte ?? const [])),
+                      onPressed: () =>
+                          Navigator.of(context)
+                              .pop(_scelto(entita: tutte ?? const [])),
                       icon: const Icon(Icons.auto_awesome_rounded),
                       label: Text(
                         'Collega ${widget.dispositivo.nome} '

@@ -52,7 +52,70 @@ const caselleDellaCaldaia = <(String, String, String, List<String>)>[
   ('acquaCalda', 'Temperatura dell\'acqua calda (°C)', 'gradi', ['sensor']),
   ('pressione', 'Pressione (bar)', 'bar', ['sensor']),
   ('modulazione', 'Modulazione (%)', 'percento', ['sensor']),
+  /* Quello che una caldaia a pellet o a legna ha in piu' (#346), da chi ha
+   * una Froling letta con «Froling Connect»: la combustione da guardare — i
+   * fumi, l'ossigeno che avanza, il ventilatore che tira — e un serbatoio che
+   * si svuota. Stanno in coda a quelle di prima, nell'ordine in cui le ha
+   * chieste, e la scheda le raccoglie sotto un titolo loro: chi ha una
+   * caldaia a gas non se le trova in mezzo alle sue. Il ventilatore dei fumi
+   * puo' essere una percentuale di comando o un interruttore: lo capisce la
+   * plancia dalla lettura, non chi configura. */
+  ('temperaturaCaldaia', 'Temperatura della caldaia', 'gradi', ['sensor']),
+  ('boilerAlto', 'Boiler sanitario, sonda alta', 'gradi', ['sensor']),
+  ('boilerBasso', 'Boiler sanitario, sonda bassa', 'gradi', ['sensor']),
+  ('fumi', 'Temperatura dei fumi', 'gradi', ['sensor']),
+  (
+    'ventilatoreFumi',
+    'Ventilatore dei fumi',
+    'percento',
+    ['fan', 'sensor', 'number', 'switch', 'input_boolean'],
+  ),
+  ('ossigeno', 'Ossigeno residuo (%)', 'percento', ['sensor']),
+  ('pellet', 'Livello del pellet', 'percento', ['sensor']),
+  ('mandataCalcolata', 'Mandata calcolata', 'gradi', ['sensor']),
 ];
+
+/// Il gruppo delle caselle che ha solo chi brucia pellet o legna:
+/// `GRUPPO_PELLET` in `core/impianti-termici.js`. La prima porta il titolo.
+const caselleDelPellet = <String>[
+  'temperaturaCaldaia',
+  'boilerAlto',
+  'boilerBasso',
+  'fumi',
+  'ventilatoreFumi',
+  'ossigeno',
+  'pellet',
+  'mandataCalcolata',
+];
+
+/// Gli esempi e gli aiuti che l'editor della plancia scrive sotto le caselle
+/// del pellet (`ETICHETTE` in `impianti-termici-editor-section.js`).
+const esempiDelPellet = <String, String>{
+  'temperaturaCaldaia': 'sensor.caldaia_temperatura',
+  'boilerAlto': 'sensor.caldaia_boiler_alto',
+  'boilerBasso': 'sensor.caldaia_boiler_basso',
+  'fumi': 'sensor.caldaia_fumi',
+  'ventilatoreFumi': 'fan.caldaia_ventilatore_fumi',
+  'ossigeno': 'sensor.caldaia_ossigeno',
+  'pellet': 'sensor.caldaia_pellet',
+  'mandataCalcolata': 'sensor.caldaia_mandata_calcolata',
+};
+
+const aiutiDelPellet = <String, String>{
+  'temperaturaCaldaia':
+      'E\' l\'acqua dentro la caldaia, non quella che parte verso i '
+      'termosifoni',
+  'boilerBasso': 'Le due sonde insieme dicono quanta acqua calda e\' rimasta',
+  'ventilatoreFumi':
+      'Va bene una percentuale di comando o un interruttore: quale sia lo '
+      'capisce da se\'',
+  'pellet':
+      'In percentuale diventa il serbatoio disegnato in pagina; in kg si '
+      'legge in chili',
+  'mandataCalcolata':
+      'Il grado che la centralina si e\' data: accanto alla mandata vera dice '
+      'se ci sta arrivando',
+};
 
 /// Cosa c'e' all'altro capo del tubo.
 ///

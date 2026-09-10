@@ -639,7 +639,9 @@ async function premiCercando(pagina, etichetta, opzioni = {}) {
    * quello che si vedeva in cima: un messaggio giusto e una diagnosi
    * sbagliata. Una lista pigra, per giunta, quelle voci non le mette
    * nemmeno nell'albero finche' non ci si arriva vicino. */
-  for (let giro = 0; giro < 30; giro += 1) {
+  /* Ottanta giri, non trenta: l'alberatura a sette famiglie e' lunga il
+   * doppio di quella a una fila, e «Quadro avvisi» sta nella sesta. */
+  for (let giro = 0; giro < 80; giro += 1) {
     const nodo = await ilBottone(pagina, etichetta, { ...opzioni, aspetta: false });
     const riquadro = nodo ? await nodo.boundingBox().catch(() => null) : null;
     if (riquadro && riquadro.y > 90 && riquadro.y + riquadro.height < height - 60) {
@@ -1130,6 +1132,14 @@ try {
   await aspettaCheCompaia(pagina, "Aggiungi un'auto");
   await attendi(800);
   await scatta(pagina, "6p5-auto");
+  /* La colonnina e evcc: sotto l'elenco delle auto, perche' sono della casa
+   * e non di una vettura. Le nove caselle che la casa ha adesso, e il tasto
+   * per collegarle da un'integrazione. */
+  await scorri(pagina, 1200);
+  await attendi(600);
+  await scatta(pagina, "6p5b-la-colonnina");
+  await scorri(pagina, -1200);
+  await attendi(500);
   await premi(pagina, "Aggiungi un'auto");
   await aspettaCheCompaia(pagina, "La marca");
   await attendi(700);
@@ -1177,7 +1187,9 @@ try {
    * impianto con la sua riga di pastiglie, e che dai carichi si arrivi ai
    * cerchi con dentro gli elettrodomestici. */
   racconta("apro l'energia");
-  await premiCercando(pagina, "Energia");
+  /* Per il sottotitolo, non per il nome: «Energia» sta anche nel sottotitolo
+   * di «Le sezioni», che nell'alberatura a famiglie viene prima. */
+  await premiCercando(pagina, "Fotovoltaico, consumi, carichi e il Report Analisi");
   await aspettaCheCompaia(pagina, "Fotovoltaico, batteria, rete e consumi");
   await attendi(900);
   await scatta(pagina, "6q-energia");
@@ -1311,6 +1323,65 @@ try {
   await aspettaCheCompaia(pagina, "Solare termico");
   await attendi(800);
   await scatta(pagina, "6z3-locale-caldaia");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
+  /* La caldaia della 1.4.17: alle dieci caselle di prima se ne aggiungono
+   * otto sotto il titolo «Combustibile solido: pellet o legna». Si aggiunge
+   * una caldaia vuota, che si apre da sola, e si scorre fino al pellet. */
+  racconta("apro la caldaia, fino al pellet");
+  await premiCercando(pagina, "La caldaia");
+  await aspettaCheCompaia(pagina, "Aggiungi una caldaia");
+  await attendi(700);
+  await premi(pagina, "Aggiungi una caldaia");
+  await aspettaCheCompaia(pagina, "Combustibile solido");
+  await attendi(700);
+  await scorri(pagina, 1500);
+  await attendi(600);
+  await scatta(pagina, "6z4-caldaia-pellet");
+  /* Una caldaia aggiunta e' una modifica: tornando indietro l'app chiede. */
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+  await premi(pagina, "Lascia stare");
+  await attendi(700);
+
+  /* Un'unita' del clima, aperta: dalla 1.4.17 ha la modalita' del
+   * riscaldamento, lo spegnimento automatico e i mesi in cui si vede. */
+  racconta("apro un'unita' del clima");
+  /* «Clima» sta anche nel titolo della famiglia «Clima e acqua»: si preme la
+   * voce per il suo sottotitolo. */
+  await premiCercando(pagina, "Condizionatori e riscaldamento");
+  await aspettaCheCompaia(pagina, "Aggiungi un'unita'");
+  await attendi(800);
+  await premi(pagina, "Clima soggiorno");
+  await aspettaCheCompaia(pagina, "Spegnimento automatico");
+  await attendi(700);
+  await scorri(pagina, 700);
+  await attendi(600);
+  await scatta(pagina, "6z5-clima-unita");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
+  /* L'irrigazione: sotto l'ora di partenza ci sono gli altri orari (#325),
+   * una riga per corsa coi suoi minuti e la soglia del terreno. */
+  racconta("apro l'irrigazione");
+  await premiCercando(pagina, "Irrigazione");
+  await aspettaCheCompaia(pagina, "Altri orari di irrigazione");
+  await attendi(800);
+  await scatta(pagina, "6z6-irrigazione-orari");
+  await premi(pagina, "Back", { inAlto: true });
+  await attendi(700);
+
+  /* I varchi: le porte e le finestre che Home Assistant dichiara compaiono
+   * da sole, e ogni riga porta l'interruttore «Nel widget / Fuori» della
+   * plancia — la parola in contrario per la tessera della Home. */
+  racconta("apro i varchi");
+  await premiCercando(pagina, "I varchi");
+  await aspettaCheCompaia(pagina, "Nel widget");
+  await attendi(900);
+  await scatta(pagina, "6z7-varchi-nel-widget");
   await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
 

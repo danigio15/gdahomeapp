@@ -14,6 +14,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../casa/collegamento.dart';
+import '../../casa/plancia/apparecchio.dart';
 import '../../casa/plancia/carichi.dart';
 import '../../casa/plancia/energia.dart';
 import '../../casa/plancia/scatto.dart';
@@ -167,6 +168,10 @@ class _SchermataDeiCarichiState extends State<SchermataDeiCarichi> {
         builder: (dentro) => _UnCarico(
           collegamento: widget.collegamento,
           carico: _modello![posto],
+          stanze: leggiGliApparecchi(
+            scatto.aperto(Sezione.stanze.chiave),
+            sezione: Sezione.stanze,
+          ),
         ),
       ),
     );
@@ -374,10 +379,17 @@ class _IlPallino extends StatelessWidget {
 /// Un carico aperto: il nome, il disegno, il colore, le entita', e gli
 /// elettrodomestici che ci stanno dentro.
 class _UnCarico extends StatefulWidget {
-  const _UnCarico({required this.collegamento, required this.carico});
+  const _UnCarico({
+    required this.collegamento,
+    required this.carico,
+    this.stanze = const [],
+  });
 
   final Collegamento collegamento;
   final Carico carico;
+
+  /// Le stanze di casa, per dire in quale sta il carico.
+  final List<Apparecchio> stanze;
 
   @override
   State<_UnCarico> createState() => _UnCaricoState();
@@ -385,6 +397,9 @@ class _UnCarico extends StatefulWidget {
 
 class _UnCaricoState extends State<_UnCarico> {
   bool _cambiato = false;
+
+  static String _idDellaStanza(Apparecchio una) =>
+      una.id.isNotEmpty ? una.id : una.nome;
 
   void _tocca(VoidCallback cosa) => setState(() {
     cosa();
@@ -449,6 +464,38 @@ class _UnCaricoState extends State<_UnCarico> {
                     ),
                 ],
               ),
+              if (widget.stanze.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                /* La stanza (1.4.17): «— Nessuna stanza —» piu' quelle di
+                 * casa, col loro identificativo (o il nome, se non ce l'hanno),
+                 * come `roomOptionsMarkup` nella plancia. */
+                DropdownButtonFormField<String>(
+                  initialValue:
+                      widget.stanze.any(
+                        (una) => _idDellaStanza(una) == carico.stanza,
+                      )
+                      ? carico.stanza
+                      : '',
+                  decoration: const InputDecoration(
+                    labelText: 'Stanza',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: [
+                    const DropdownMenuItem(
+                      value: '',
+                      child: Text('— Nessuna stanza —'),
+                    ),
+                    for (final una in widget.stanze)
+                      DropdownMenuItem(
+                        value: _idDellaStanza(una),
+                        child: Text(una.nome.isNotEmpty ? una.nome : una.id),
+                      ),
+                  ],
+                  onChanged: (scelto) =>
+                      _tocca(() => carico.stanza = scelto ?? ''),
+                ),
+              ],
               const SizedBox(height: 20),
               Text(
                 'Cosa legge',

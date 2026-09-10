@@ -83,7 +83,9 @@ class StatoDellaCasa {
   /// Il peggiore degli ultimi cento.
   Duration? get ritardoPeggiore => _ritardi.isEmpty
       ? null
-      : Duration(milliseconds: _ritardi.reduce((uno, due) => uno > due ? uno : due));
+      : Duration(
+          milliseconds: _ritardi.reduce((uno, due) => uno > due ? uno : due),
+        );
 
   void _misuraIlRitardo(Entita quale) {
     /* `last_updated` e non `last_changed`: un sensore che ripete lo stesso

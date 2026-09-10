@@ -142,10 +142,7 @@ void main() {
     });
 
     test('l\'identificativo nasce dal nome, senza accenti', () {
-      expect(
-        Persona.da(const {'name': 'Niccolò È'}).id,
-        'person-niccolo-e',
-      );
+      expect(Persona.da(const {'name': 'Niccolò È'}).id, 'person-niccolo-e');
       /* Senza nome vale l'entita'. */
       expect(
         Persona.da(const {'entity': 'person.mario_rossi'}).id,

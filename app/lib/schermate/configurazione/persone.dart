@@ -209,10 +209,7 @@ class _LaScheda extends StatelessWidget {
                   if (persona.entita.isNotEmpty) persona.entita,
                   if (persona.nascosta) 'nascosta in Home',
                 ].join(' · '),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: colori.onSurfaceVariant,
-                ),
+                style: TextStyle(fontSize: 12, color: colori.onSurfaceVariant),
               ),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: apri,
@@ -352,7 +349,10 @@ class _UnaPersonaState extends State<_UnaPersona> {
                       children: [
                         FilledButton.tonalIcon(
                           onPressed: _componiIlRitratto,
-                          icon: const Icon(Icons.face_retouching_natural_rounded, size: 18),
+                          icon: const Icon(
+                            Icons.face_retouching_natural_rounded,
+                            size: 18,
+                          ),
                           label: Text(
                             quale.ritratto == null
                                 ? 'Componi il ritratto'
@@ -451,18 +451,15 @@ class _UnaPersonaState extends State<_UnaPersona> {
               /* ── Quello che racconta il suo telefono ───────────────────── */
               Text(
                 'Quello che racconta il suo telefono',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 4),
               Text(
                 'Tutte facoltative. Arrivano dalla Companion App, '
                 'dall\'orologio, o da Waze e Proximity per chi li usa.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colori.onSurfaceVariant,
-                  height: 1.4,
-                ),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: colori.onSurfaceVariant, height: 1.4),
               ),
               const SizedBox(height: 12),
               CampoDiEntita(

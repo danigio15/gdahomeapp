@@ -37,6 +37,7 @@ class SchermataDelleCaselle extends StatefulWidget {
     required this.sotto,
     required this.sezione,
     required this.collegamento,
+    this.tessera = '',
   });
 
   final String titolo;
@@ -45,6 +46,10 @@ class SchermataDelleCaselle extends StatefulWidget {
   /// Quale sezione di `CD_SLOTS`: `home`, `energy`, `ev`, `boiler`,
   /// `security`, `server`.
   final String sezione;
+
+  /// La tessera della Home di cui parlano queste caselle (`sicurezza`,
+  /// `minipc`), o «» se non ne hanno una: la Home e l'Energia.
+  final String tessera;
 
   final Collegamento collegamento;
 
@@ -155,6 +160,13 @@ class _SchermataDelleCaselleState extends State<SchermataDelleCaselle> {
               chiave: una.chiave,
               valore: '${scritte[una.chiave] ?? ''}',
               collegamento: widget.collegamento,
+              tessera: widget.tessera.isEmpty
+                  ? null
+                  : TesseraDelCampo(
+                      widget.tessera,
+                      scatto: scatto,
+                      quaderno: quaderno,
+                    ),
               cambiato: (scritto) {
                 final dopo = Map<String, dynamic>.from(scritte);
                 if (scritto.trim().isEmpty) {

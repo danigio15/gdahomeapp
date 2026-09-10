@@ -69,6 +69,7 @@ class LeTessere {
     List<String>? escluse,
     this.compatto = 'auto',
     Map<String, String>? sorgenti,
+    this.avvisiInPopup = false,
   }) : nascoste = nascoste ?? [],
        ordine = ordine ?? [],
        escluse = escluse ?? [],
@@ -94,6 +95,7 @@ class LeTessere {
             if (_pulito(voce.key).isNotEmpty && _pulito(voce.value).isNotEmpty)
               _pulito(voce.key): _pulito(voce.value),
       },
+      avvisiInPopup: dato['avvisiInPopup'] == true,
     );
   }
 
@@ -102,6 +104,10 @@ class LeTessere {
   final List<String> escluse;
   String compatto;
   final Map<String, String> sorgenti;
+
+  /// Gli avvisi personalizzati a finestra (1.4.17): una tessera `custom-*`
+  /// che si accende si apre da sola.
+  bool avvisiInPopup;
 
   bool siVede(String quale) => !nascoste.contains(quale);
 
@@ -116,6 +122,7 @@ class LeTessere {
     if (escluse.isNotEmpty) 'excluded': escluse,
     if (compatto != 'auto') 'compatto': compatto,
     if (sorgenti.isNotEmpty) 'sorgenti': sorgenti,
+    if (avvisiInPopup) 'avvisiInPopup': true,
   };
 }
 
@@ -173,6 +180,17 @@ Map<String, String>? leggiUnaVoce(
     if (dato.containsKey('colore')) 'colore': _pulito(dato['colore']),
     if (dato.containsKey('room_id') || dato.containsKey('room'))
       'room_id': _pulito(dato['room_id'] ?? dato['room']),
+    /* Di chi e' un calendario (1.4.17): gli identificativi degli utenti di
+     * Home Assistant. Nella riga della schermata stanno come parole separate
+     * da virgola — la riga tiene testo — e tornano elenco al salvataggio,
+     * che e' come li vuole `normalizzaCalendari`. Vuoto: di casa, di tutti. */
+    if (dato.containsKey('persone'))
+      'persone': dato['persone'] is List
+          ? (dato['persone'] as List)
+                .map(_pulito)
+                .where((una) => una.isNotEmpty)
+                .join(',')
+          : _pulito(dato['persone']),
   };
 }
 
@@ -194,12 +212,19 @@ List<Map<String, String>> leggiLeVoci(
       voce,
 ];
 
-/// Le voci da salvare: quelle vuote non si scrivono.
+/// Le voci da salvare: quelle vuote non si scrivono, e le persone tornano
+/// un elenco.
 List<Map<String, dynamic>> vociDaScrivere(List<Map<String, String>> quali) => [
   for (final una in quali)
     {
       for (final voce in una.entries)
-        if (voce.value.trim().isNotEmpty) voce.key: voce.value.trim(),
+        if (voce.value.trim().isNotEmpty)
+          voce.key: voce.key == 'persone'
+              ? [
+                  for (final id in voce.value.split(RegExp(r'[\s,;]+')))
+                    if (id.trim().isNotEmpty) id.trim(),
+                ]
+              : voce.value.trim(),
     },
 ];
 
@@ -234,17 +259,65 @@ const materialiDeiRifiuti = <(String, String, String)>[
   ('altro', '♻️', '#0ea5e9'),
 ];
 
-/// La raccolta: il calendario da cui nasce, e le righe.
-({String calendario, List<Map<String, dynamic>> righe}) leggiLaRaccolta(
-  dynamic letto,
-) {
+/// Il turno scritto a mano (1.4.17): il lunedi' da cui comincia la prima
+/// settimana, e quattordici giorni con i materiali che escono. E'
+/// `normalizzaTurno` di `rifiuti-model.js`: sempre quattordici voci, solo
+/// materiali conosciuti, senza doppioni; una data storta vale vuoto.
+const giorniDelTurno = 14;
+
+({String inizio, List<List<String>> giorni}) leggiIlTurno(dynamic letto) {
+  final dato = letto is Map
+      ? Map<String, dynamic>.from(letto)
+      : <String, dynamic>{};
+  final noti = {for (final (chiave, _, _) in materialiDeiRifiuti) chiave};
+  final grezzi = dato['giorni'] ?? dato['days'];
+  final giorni = <List<String>>[];
+  for (var quale = 0; quale < giorniDelTurno; quale += 1) {
+    final giorno = grezzi is List && quale < grezzi.length
+        ? grezzi[quale]
+        : null;
+    final voci = giorno is List
+        ? giorno
+        : giorno is String
+        ? [giorno]
+        : const [];
+    final visti = <String>{};
+    giorni.add([
+      for (final una in voci)
+        if (noti.contains(_pulito(una)) && visti.add(_pulito(una)))
+          _pulito(una),
+    ]);
+  }
+  final inizio = _pulito(dato['inizio'] ?? dato['start']);
+  final buona =
+      RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(inizio) &&
+      DateTime.tryParse(inizio) != null;
+  return (inizio: buona ? inizio : '', giorni: giorni);
+}
+
+/// Se il turno dice qualcosa: una data, e almeno un materiale.
+bool turnoConfigurato(({String inizio, List<List<String>> giorni}) turno) =>
+    turno.inizio.isNotEmpty && turno.giorni.any((giorno) => giorno.isNotEmpty);
+
+/// La raccolta: il calendario (o il sensore) da cui nasce, le righe, e il
+/// turno scritto a mano.
+({
+  String calendario,
+  List<Map<String, dynamic>> righe,
+  ({String inizio, List<List<String>> giorni}) turno,
+})
+leggiLaRaccolta(dynamic letto) {
   final dato = letto is Map
       ? Map<String, dynamic>.from(letto)
       : <String, dynamic>{};
   final righe = _righe(dato['righe'] ?? dato['rows'])
       .take(massimoDeiRifiuti)
       .toList();
-  return (calendario: _pulito(dato['calendario']), righe: righe);
+  return (
+    calendario: _pulito(dato['calendario']),
+    righe: righe,
+    turno: leggiIlTurno(dato['turno']),
+  );
 }
 
 /* ── i sensori girati ─────────────────────────────────────────────────────*/

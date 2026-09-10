@@ -18,6 +18,8 @@
 /// sua normalizzazione sui nostri dati non cambia niente.
 library;
 
+import 'lettere.dart';
+
 import 'dart:math';
 
 /// Le sezioni che hanno apparecchi, coi nomi che usa la plancia
@@ -66,7 +68,9 @@ const _diTutti = {
 
 /// I campi in piu' di ogni sezione, presi da `normalizeDevice`.
 const _diSezione = <String, Set<String>>{
-  'climate': {'type', 'valvola'},
+  /* La modalita' (In casa / Fuori / Vacanza), lo spegnimento automatico e i
+   * mesi in cui mostrarla arrivano con la 1.4.17 (`unified-editors`). */
+  'climate': {'type', 'valvola', 'modo', 'minuti', 'mesi'},
   'cameras': {'stream', 'rtsp', 'vivo'},
   'covers': {'contact', 'contact_out'},
   /* Un elettrodomestico connesso porta molto piu' di un interruttore: il
@@ -81,6 +85,8 @@ const _diSezione = <String, Set<String>>{
 };
 
 const _diUnApparecchio = {
+  /* Gli altri comandi (1.4.17): tasti, tendine e interruttori in piu'. */
+  'comandi',
   'state_entity',
   'remaining_entity',
   'cycle_duration_entity',
@@ -378,4 +384,112 @@ Object scriviGliApparecchi(List<Apparecchio> quali, Sezione sezione) {
     };
   }
   return [for (final uno in quali) uno.dentro];
+}
+
+/* ─── Di chi e' un'entita' ───────────────────────────────────────────────── */
+
+/// Le parole che non dicono niente: stanno nel nome di serie di ogni
+/// apparecchio, e non distinguono nessuno.
+const _paroleDiTutti = {
+  'appl',
+  'appliance',
+  'device',
+  'dispositivo',
+  'generic',
+  'generico',
+  'load',
+  'carico',
+};
+
+/// Un testo ridotto a parole: minuscolo, senza accenti, un trattino fra
+/// una parola e l'altra. E' `aParole` di `entita-di-questo-apparecchio.js`.
+List<String> _aParole(String testo) =>
+    senzaAccenti(testo)
+        .toLowerCase()
+        .split(RegExp(r'[^a-z0-9]+'))
+        .where((una) => una.isNotEmpty)
+        .toList();
+
+/// Le parole con cui un apparecchio si riconosce: quelle del suo nome —
+/// o dell'identificativo senza il prefisso di serie — lunghe almeno tre
+/// lettere o fatte di sole cifre, meno quelle di tutti.
+List<String> paroleDellApparecchio(Map<String, dynamic> apparecchio) {
+  var testo = '${apparecchio['name'] ?? ''}'.trim();
+  if (testo.isEmpty) {
+    testo = '${apparecchio['id'] ?? ''}'.replaceFirst(
+      RegExp(r'^(appl|load|device)-'),
+      '',
+    );
+  }
+  return [
+    for (final una in _aParole(testo))
+      if ((una.length >= 3 || RegExp(r'^\d+$').hasMatch(una)) &&
+          !_paroleDiTutti.contains(una))
+        una,
+  ];
+}
+
+/// Se un'entita' e' di questo apparecchio: **tutte** le sue parole stanno
+/// nel nome dell'entita'.
+bool eDiQuestoApparecchio(String entita, List<String> parole) {
+  if (parole.isEmpty) return false;
+  final pezzi = _aParole(entita.split('.').skip(1).join('.')).toSet();
+  return parole.every(pezzi.contains);
+}
+
+/// Le parole degli altri apparecchi, senza doppioni.
+List<List<String>> paroleDegliAltri(
+  Map<String, dynamic> apparecchio,
+  List<Map<String, dynamic>> elenco,
+) {
+  final viste = <String>{};
+  return [
+    for (final altro in elenco)
+      if (!identical(altro, apparecchio) &&
+          '${altro['id'] ?? ''}' != '${apparecchio['id'] ?? ''}')
+        if (viste.add(paroleDellApparecchio(altro).join(' ')))
+          paroleDellApparecchio(altro),
+  ];
+}
+
+/// Se un'entita' e' di un altro apparecchio: un altro la riconosce, e questo
+/// no — o la riconosce con meno parole.
+bool eDiUnAltroApparecchio(
+  String entita,
+  List<String> parole,
+  List<List<String>> altrui,
+) {
+  final mie = eDiQuestoApparecchio(entita, parole) ? parole.length : -1;
+  for (final sue in altrui) {
+    if (sue.isEmpty || !eDiQuestoApparecchio(entita, sue)) continue;
+    if (mie < 0 || sue.length > mie) return true;
+  }
+  return false;
+}
+
+/// L'elenco delle entita' di un apparecchio dopo un salvataggio: le sue
+/// caselle, piu' quelle che aveva gia' e che non sono di un altro
+/// apparecchio (#417). E' `normalizeEntities` dell'editor della plancia.
+List<String> entitaSetacciate(
+  Map<String, dynamic> apparecchio,
+  List<Map<String, dynamic>> elenco,
+) {
+  final parole = paroleDellApparecchio(apparecchio);
+  final altrui = paroleDegliAltri(apparecchio, elenco);
+  final fuori = <String>{};
+  for (final campo in campiDiEntita) {
+    final valore = '${apparecchio[campo] ?? ''}'.trim();
+    if (valore.isNotEmpty) fuori.add(valore);
+  }
+  for (final una in (apparecchio['entities'] as List? ?? const [])) {
+    final id = una is String
+        ? una.trim()
+        : una is Map
+        ? '${una['entity'] ?? ''}'.trim()
+        : '';
+    if (id.isEmpty || fuori.contains(id)) continue;
+    if (eDiUnAltroApparecchio(id, parole, altrui)) continue;
+    fuori.add(id);
+  }
+  return fuori.toList();
 }

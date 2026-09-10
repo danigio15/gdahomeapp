@@ -175,9 +175,8 @@ final _ruoli = <_Ruolo>[
     if (_dominioDi(una.id) != 'sensor' || !_ePotenza(una)) return null;
     var punti = 10;
     if (RegExp(r'\b(power|potenza|watt)\b').hasMatch(indizi)) punti += 3;
-    if (RegExp(
-      r'\b(voltage|current|apparent|reactive|factor|tension|amper)\b',
-    ).hasMatch(indizi)) {
+    if (RegExp(r'\b(voltage|current|apparent|reactive|factor|tension|amper)\b')
+        .hasMatch(indizi)) {
       punti -= 3;
     }
     if (_basso(una.categoria) == 'diagnostic') punti -= 5;
@@ -215,6 +214,14 @@ final _ruoli = <_Ruolo>[
   }),
   _Ruolo('state_entity', (una, indizi, _) {
     final dominio = _dominioDi(una.id);
+    /* Il televisore, e qualunque cosa sia prima di tutto un lettore (#354).
+     *
+     * L'integrazione di una TV LG porta un `media_player` e un `remote`, e
+     * nessun sensore di stato ne' interruttore: il collegamento non riempiva
+     * niente e la card diceva SPENTO a televisore acceso. Lo stato di un
+     * lettore E' lo stato del dispositivo, e vale piu' di qualunque sensore
+     * di testo che gli stia accanto. */
+    if (dominio == 'media_player') return 12;
     if (dominio == 'binary_sensor') {
       return RegExp(
             r'\b(running|active|working|operating|in funzione|attiv[oa])\b',
@@ -223,9 +230,8 @@ final _ruoli = <_Ruolo>[
           : null;
     }
     if (dominio != 'sensor' || _basso(una.unita).isNotEmpty) return null;
-    if (RegExp(
-      r'\b(remote|door|connection|connectivity|lock|error|fault)\b',
-    ).hasMatch(indizi)) {
+    if (RegExp(r'\b(remote|door|connection|connectivity|lock|error|fault)\b')
+        .hasMatch(indizi)) {
       return null;
     }
     if (RegExp(
@@ -265,9 +271,8 @@ final _ruoli = <_Ruolo>[
     if (RegExp(r'\b(remaining|elapsed|trascors[oa])\b').hasMatch(indizi)) {
       return null;
     }
-    if (!RegExp(
-      r'\b(duration|durata|total time|program time|cycle time)\b',
-    ).hasMatch(indizi)) {
+    if (!RegExp(r'\b(duration|durata|total time|program time|cycle time)\b')
+        .hasMatch(indizi)) {
       return null;
     }
     return const ['min', 'minutes', 's', 'h'].contains(_basso(una.unita))
@@ -280,21 +285,18 @@ final _ruoli = <_Ruolo>[
         !_basso(una.unita).contains('°')) {
       return null;
     }
-    if (RegExp(
-      r'\b(target|setpoint|obiettivo|desired|set)\b',
-    ).hasMatch(indizi)) {
+    if (RegExp(r'\b(target|setpoint|obiettivo|desired|set)\b')
+        .hasMatch(indizi)) {
       return null;
     }
     var punti = 6;
-    if (RegExp(
-      r'\b(fridge|frigo|refrigerator|frigorifero|cooler)\b',
-    ).hasMatch(indizi)) {
+    if (RegExp(r'\b(fridge|frigo|refrigerator|frigorifero|cooler)\b')
+        .hasMatch(indizi)) {
       punti += 4;
     }
     if (RegExp(r'\b(freezer|congelatore)\b').hasMatch(indizi)) punti -= 2;
-    if (RegExp(
-      r'\b(ambient|room|ambiente|external|esterna)\b',
-    ).hasMatch(indizi)) {
+    if (RegExp(r'\b(ambient|room|ambiente|external|esterna)\b')
+        .hasMatch(indizi)) {
       punti -= 3;
     }
     return punti;
@@ -305,14 +307,12 @@ final _ruoli = <_Ruolo>[
         !_basso(una.unita).contains('°')) {
       return null;
     }
-    if (RegExp(
-      r'\b(target|setpoint|obiettivo|desired|set)\b',
-    ).hasMatch(indizi)) {
+    if (RegExp(r'\b(target|setpoint|obiettivo|desired|set)\b')
+        .hasMatch(indizi)) {
       return null;
     }
-    if (RegExp(
-      r'\b(ambient|room|ambiente|external|esterna)\b',
-    ).hasMatch(indizi)) {
+    if (RegExp(r'\b(ambient|room|ambiente|external|esterna)\b')
+        .hasMatch(indizi)) {
       return null;
     }
     return RegExp(r'\b(freezer|congelatore)\b').hasMatch(indizi) ? 10 : 3;
@@ -333,12 +333,7 @@ final _ruoli = <_Ruolo>[
    * quindi pesa piu' di ogni parola. */
   _Ruolo('control_entity', (una, indizi, contesto) {
     final dominio = _dominioDi(una.id);
-    if (!const [
-      'switch',
-      'light',
-      'fan',
-      'input_boolean',
-    ].contains(dominio)) {
+    if (!const ['switch', 'light', 'fan', 'input_boolean'].contains(dominio)) {
       return null;
     }
     var punti = dominio == 'switch' ? 6 : 3;
@@ -382,9 +377,8 @@ final _ruoli = <_Ruolo>[
     if (_dominioDi(una.id) != 'sensor' || _diRitardo.hasMatch(indizi)) {
       return null;
     }
-    if (!RegExp(
-      r'\b(start time|started|last start|avvio|begin|inizio)\b',
-    ).hasMatch(indizi)) {
+    if (!RegExp(r'\b(start time|started|last start|avvio|begin|inizio)\b')
+        .hasMatch(indizi)) {
       return null;
     }
     return _basso(una.classe) == 'timestamp' ? 9 : 5;
@@ -450,6 +444,16 @@ Map<String, String> proponiLeCaselle(
     if (migliore == null) continue;
     prese.add(migliore.id);
     proposta[ruolo.chiave] = migliore.id;
+  }
+  /* Un lettore e' insieme lo stato e l'interruttore: `media_player.turn_on`
+   * e `turn_off` esistono, e su un televisore non c'e' altro da premere. La
+   * regola «un'entita', un ruolo» vale per non far fare al sensore della
+   * fase anche il tasto d'avvio; qui e' la stessa cosa a fare tutte e due le
+   * parti (#354). Un interruttore vero, se c'e', e' gia' stato preso. */
+  final stato = proposta['state_entity'] ?? '';
+  if ((proposta['control_entity'] ?? '').isEmpty &&
+      stato.startsWith('media_player.')) {
+    proposta['control_entity'] = stato;
   }
   return proposta;
 }
@@ -586,10 +590,7 @@ final _tipiDalNome = <(String, RegExp)>[
     'lavatrice',
     RegExp(r'\b(washing machine|washer|washing|lavatrice|lavatr|wash)\b'),
   ),
-  (
-    'lavastoviglie',
-    RegExp(r'\b(dishwasher|dish|lavastoviglie|lavastov)\b'),
-  ),
+  ('lavastoviglie', RegExp(r'\b(dishwasher|dish|lavastoviglie|lavastov)\b')),
   ('forno', RegExp(r'\b(oven|forno|cooker)\b')),
   ('microonde', RegExp(r'\b(microwave|microonde)\b')),
   ('congelatore', RegExp(r'\b(freezer|congelatore)\b')),
@@ -623,10 +624,7 @@ final _tipiDalleEntita = <(String, RegExp)>[
     'lavatrice',
     RegExp(r'\b(spin speed|spin|rinse|detergent|softener|prewash|wash)\b'),
   ),
-  (
-    'lavastoviglie',
-    RegExp(r'\b(rinse aid|salt|tabs|half load|dishwasher)\b'),
-  ),
+  ('lavastoviglie', RegExp(r'\b(rinse aid|salt|tabs|half load|dishwasher)\b')),
   ('forno', RegExp(r'\b(oven|preheat|cavity|meat probe)\b')),
   ('frigo', RegExp(r'\b(fridge|refrigerator|super cool|freezer)\b')),
 ];
@@ -721,7 +719,9 @@ ComEAndata collegaAlDispositivo(
   quale.metti('integration', dominio);
   quale.metti(
     'integration_name',
-    _pulito(integrazione?.nome).isNotEmpty ? _pulito(integrazione?.nome) : dominio,
+    _pulito(integrazione?.nome).isNotEmpty
+        ? _pulito(integrazione?.nome)
+        : dominio,
   );
   quale.metti('device_name', _pulito(dispositivo.nome));
   quale.metti('device_manufacturer', _pulito(dispositivo.marca));
@@ -830,7 +830,8 @@ ComEAndata collegaAlDispositivo(
         for (final uno in gia)
           if (uno is String && uno.contains('.'))
             uno
-          else if (uno is Map && '${uno['entity'] ?? uno['entity_id'] ?? ''}'.contains('.'))
+          else if (uno is Map &&
+              '${uno['entity'] ?? uno['entity_id'] ?? ''}'.contains('.'))
             '${uno['entity'] ?? uno['entity_id']}',
       for (final chiave in leCaselleDelLegame)
         if (_pulito(quale.dentro[chiave]).contains('.'))
@@ -912,15 +913,23 @@ List<(Integrazione, List<Dispositivo>)> integrazioniConDispositivi(
     for (final uno in catalogo.dispositivi)
       if (uno.quanteEntita > 0) uno,
   ];
+  /* Dal campo, sulla sezione Robot: «immaginavo ma non la vedo fra le
+   * integrazioni». Si guardava solo la principale, e questo bastava a far
+   * sparire una riga intera: un robot che arriva da due integrazioni finiva
+   * sotto la principale e basta, l'altra restava con zero dispositivi e
+   * usciva dal menu. Adesso un dispositivo compare sotto ognuna delle sue
+   * integrazioni: cercarlo da una qualsiasi lo trova. */
   final fuori = <(Integrazione, List<Dispositivo>)>[];
   for (final una in catalogo.integrazioni) {
     final suoi = [
       for (final uno in dispositivi)
-        if (uno.integrazione == una.dominio) uno,
+        if (uno.integrazioni.contains(una.dominio)) uno,
     ];
     if (suoi.isEmpty) continue;
     fuori.add((una, suoi));
   }
-  fuori.sort((prima, dopo) => _basso(prima.$1.nome).compareTo(_basso(dopo.$1.nome)));
+  fuori.sort(
+    (prima, dopo) => _basso(prima.$1.nome).compareTo(_basso(dopo.$1.nome)),
+  );
   return fuori;
 }

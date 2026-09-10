@@ -163,13 +163,12 @@ class _IlRitrattoState extends State<IlRitratto> {
         ),
       );
     }
-    final controllore =
-        _controllore ??= costruisciIlControllore(
-          quandoCaricata: () {},
-          quandoFallisce: (_) {},
-          siPuoAndare: (_) => false,
-          sfondo: Colors.transparent,
-        );
+    final controllore = _controllore ??= costruisciIlControllore(
+      quandoCaricata: () {},
+      quandoFallisce: (_) {},
+      siPuoAndare: (_) => false,
+      sfondo: Colors.transparent,
+    );
     unawaited(ricarica(controllore, pagina));
     return riquadroDelWebView(controllore, ibrido: false);
   }

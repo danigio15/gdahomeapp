@@ -35,6 +35,7 @@ class SchermataDelleCorrezioni extends StatelessWidget {
     required this.sotto,
     required this.chiave,
     required this.collegamento,
+    required this.tessera,
     required this.rilevata,
     required this.disegno,
     required this.unaCosa,
@@ -50,6 +51,10 @@ class SchermataDelleCorrezioni extends StatelessWidget {
   final String sotto;
   final String chiave;
   final Collegamento collegamento;
+
+  /// La tessera della Home di cui parlano queste entita' (`varchi`,
+  /// `presenza`): l'interruttore «nel widget» di ogni riga scrive quella.
+  final String tessera;
 
   /// Se un'entita' di casa conta da sola, per quello che ne dice Home
   /// Assistant.
@@ -111,6 +116,11 @@ class SchermataDelleCorrezioni extends StatelessWidget {
               entita: una,
               nome: scelte.nomi[una.id] ?? '',
               aMano: scelte.aggiunte.contains(una.id),
+              tessera: TesseraDelCampo(
+                tessera,
+                scatto: scatto,
+                quaderno: quaderno,
+              ),
               stato: una.muta ? '' : (una.accesa ? acceso : spento),
               chiama: (nome) {
                 scelte.chiama(una.id, nome);
@@ -324,6 +334,14 @@ class _SchermataDelleMacchineState extends State<SchermataDelleMacchine> {
                   entita: una,
                   nome: scelte.nomi[una.id] ?? '',
                   aMano: aMano,
+                  /* La scheda delle macchine si marchia «macchine»
+                   * (`macchine-editor-section.js`): la tessera in Home e'
+                   * quella, non il MiniPC in cui la scheda sta. */
+                  tessera: TesseraDelCampo(
+                    'macchine',
+                    scatto: scatto,
+                    quaderno: quaderno,
+                  ),
                   stato: una.muta ? '' : (una.accesa ? 'acceso' : 'spento'),
                   chiama: (nome) {
                     scelte.chiama(una.id, nome);
@@ -487,6 +505,11 @@ class SchermataDelleBatterie extends StatelessWidget {
               entita: una,
               nome: '${nomi[una.id] ?? ''}',
               aMano: aMano,
+              tessera: TesseraDelCampo(
+                'batterie',
+                scatto: scatto,
+                quaderno: quaderno,
+              ),
               stato: livelloDellaBatteria(una) == null
                   ? ''
                   : '${livelloDellaBatteria(una)!.round()}%',
@@ -626,6 +649,7 @@ class _Riga extends StatelessWidget {
     required this.stato,
     required this.chiama,
     required this.togli,
+    required this.tessera,
     this.scarica = false,
   });
 
@@ -635,6 +659,9 @@ class _Riga extends StatelessWidget {
   final bool aMano;
   final String stato;
   final bool scarica;
+
+  /// Di quale tessera parla la riga: l'interruttore «nel widget» sta qui.
+  final TesseraDelCampo tessera;
   final ValueChanged<String> chiama;
   final VoidCallback togli;
 
@@ -671,6 +698,13 @@ class _Riga extends StatelessWidget {
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  InterruttoreDellaTessera(
+                    tessera: tessera.nome,
+                    entita: [entita.id],
+                    scatto: tessera.scatto,
+                    quaderno: tessera.quaderno,
                   ),
                 ],
               ),

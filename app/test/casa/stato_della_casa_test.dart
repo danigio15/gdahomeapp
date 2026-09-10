@@ -317,7 +317,5 @@ Future<void> _finoA(
 /// Con quale numero si e' sottoscritto agli eventi: e' quello con cui il ponte
 /// finto deve rispondere, se no l'evento non arriva a nessuno.
 int _numeroDellaSottoscrizione(PonteFinto ponte) =>
-    ponte.arrivati.lastWhere(
-          (uno) => uno['type'] == 'subscribe_events',
-        )['id']
+    ponte.arrivati.lastWhere((uno) => uno['type'] == 'subscribe_events')['id']
         as int;

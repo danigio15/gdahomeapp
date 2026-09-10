@@ -25,6 +25,8 @@ class SchermataDellaRaccolta extends StatefulWidget {
 class _SchermataDellaRaccoltaState extends State<SchermataDellaRaccolta> {
   List<Map<String, dynamic>>? _righe;
   String _calendario = '';
+  String _inizio = '';
+  List<List<String>> _giorni = const [];
   int _daQualeScatto = -1;
 
   void _leggi(Scatto scatto) {
@@ -32,13 +34,30 @@ class _SchermataDellaRaccoltaState extends State<SchermataDellaRaccolta> {
     final letta = leggiLaRaccolta(scatto.mappa(chiaveDeiRifiuti));
     _righe = letta.righe;
     _calendario = letta.calendario;
+    _inizio = letta.turno.inizio;
+    _giorni = [
+      for (final giorno in letta.turno.giorni) [...giorno],
+    ];
     _daQualeScatto = scatto.revisione;
+  }
+
+  /// Il lunedi' di questa settimana: e' da dove parte un turno nuovo, come
+  /// nella Config della plancia.
+  static String _lunediDiQuestaSettimana() {
+    final oggi = DateTime.now();
+    final lunedi = oggi.subtract(Duration(days: oggi.weekday - 1));
+    return '${lunedi.year.toString().padLeft(4, '0')}-'
+        '${lunedi.month.toString().padLeft(2, '0')}-'
+        '${lunedi.day.toString().padLeft(2, '0')}';
   }
 
   void _segna(Quaderno quaderno) {
     quaderno.segna(chiaveDeiRifiuti, {
       if (_calendario.trim().isNotEmpty) 'calendario': _calendario.trim(),
       'righe': _righe,
+      /* Il turno si scrive sempre com'e' — quattordici giorni — perche' e'
+       * cosi' che lo scrive «Salva rifiuti» nella plancia. */
+      'turno': {'inizio': _inizio, 'giorni': _giorni},
     });
     setState(() {});
   }
@@ -60,7 +79,7 @@ class _SchermataDellaRaccoltaState extends State<SchermataDellaRaccolta> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Da un calendario solo',
+                'Calendario o sensore unico (facoltativo)',
                 style: Theme.of(dentro).textTheme.titleSmall
                     ?.copyWith(fontWeight: FontWeight.w700),
               ),
@@ -68,7 +87,8 @@ class _SchermataDellaRaccoltaState extends State<SchermataDellaRaccolta> {
               Text(
                 'Chi ha il calendario del comune non deve scrivere niente '
                 'altro: la plancia legge da li\' e riconosce il materiale dal '
-                'nome dell\'evento.',
+                'nome dell\'evento. Va bene anche un sensore che tiene '
+                'l\'elenco dei prossimi ritiri.',
                 style: Theme.of(dentro).textTheme.bodySmall?.copyWith(
                   color: Theme.of(dentro).colorScheme.onSurfaceVariant,
                   height: 1.4,
@@ -77,10 +97,16 @@ class _SchermataDellaRaccoltaState extends State<SchermataDellaRaccolta> {
               const SizedBox(height: 12),
               CampoDiEntita(
                 etichetta: 'Il calendario della raccolta',
+                esempio: 'calendar.raccolta_rifiuti o sensor.prossimi_ritiri',
                 contesto: 'della raccolta dei rifiuti',
-                domini: const ['calendar'],
+                domini: const ['calendar', 'sensor'],
                 valore: _calendario,
                 collegamento: widget.collegamento,
+                tessera: TesseraDelCampo(
+                  'rifiuti',
+                  scatto: scatto,
+                  quaderno: quaderno,
+                ),
                 cambiato: (scritto) {
                   _calendario = scritto;
                   _segna(quaderno);
@@ -88,6 +114,22 @@ class _SchermataDellaRaccoltaState extends State<SchermataDellaRaccolta> {
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 16),
+        /* Il calendario di casa scritto a mano (1.4.17): due settimane che si
+         * ripetono, un giorno alla volta. */
+        _IlTurno(
+          inizio: _inizio,
+          giorni: _giorni,
+          cambiaInizio: (data) {
+            _inizio = data;
+            _segna(quaderno);
+          },
+          cambiaGiorno: (quale, materiali) {
+            _giorni[quale] = materiali;
+            if (_inizio.isEmpty) _inizio = _lunediDiQuestaSettimana();
+            _segna(quaderno);
+          },
         ),
         const SizedBox(height: 16),
         Text(
@@ -101,6 +143,11 @@ class _SchermataDellaRaccoltaState extends State<SchermataDellaRaccolta> {
             riga: riga,
             quale: posto,
             collegamento: widget.collegamento,
+            tessera: TesseraDelCampo(
+              'rifiuti',
+              scatto: scatto,
+              quaderno: quaderno,
+            ),
             cambiato: () => _segna(quaderno),
             togli: () {
               righe.removeAt(posto);
@@ -130,11 +177,186 @@ class _SchermataDellaRaccoltaState extends State<SchermataDellaRaccolta> {
   );
 }
 
+/// Il calendario di casa: quattordici giorni, ognuno con quello che esce.
+class _IlTurno extends StatelessWidget {
+  const _IlTurno({
+    required this.inizio,
+    required this.giorni,
+    required this.cambiaInizio,
+    required this.cambiaGiorno,
+  });
+
+  final String inizio;
+  final List<List<String>> giorni;
+  final ValueChanged<String> cambiaInizio;
+  final void Function(int quale, List<String> materiali) cambiaGiorno;
+
+  static const _settimana = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'];
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    final partenza = DateTime.tryParse(inizio);
+    final oggi = DateTime.now();
+    final disegni = {
+      for (final (chiave, disegno, _) in materialiDeiRifiuti) chiave: disegno,
+    };
+    return Scheda(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            '🗓️ Il calendario di casa',
+            style: testi.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Per chi non ha un calendario ne\' un sensore: due settimane che '
+            'si ripetono. Tocca un giorno e di\' cosa esce.',
+            style: testi.bodySmall?.copyWith(
+              color: colori.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () async {
+              final scelta = await showDatePicker(
+                context: context,
+                initialDate: partenza ?? oggi,
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2100),
+                helpText: 'La prima settimana comincia il',
+              );
+              if (scelta == null) return;
+              cambiaInizio(
+                '${scelta.year.toString().padLeft(4, '0')}-'
+                '${scelta.month.toString().padLeft(2, '0')}-'
+                '${scelta.day.toString().padLeft(2, '0')}',
+              );
+            },
+            icon: const Icon(Icons.event_rounded, size: 18),
+            label: Text(
+              inizio.isEmpty
+                  ? 'La prima settimana comincia il…'
+                  : 'La prima settimana comincia il $inizio',
+            ),
+          ),
+          for (final settimana in [0, 1]) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Settimana ${settimana + 1}',
+              style: testi.labelLarge?.copyWith(color: colori.onSurfaceVariant),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (var giorno = 0; giorno < 7; giorno += 1)
+                  () {
+                    final quale = settimana * 7 + giorno;
+                    final data = partenza?.add(Duration(days: quale));
+                    final eOggi =
+                        data != null &&
+                        data.year == oggi.year &&
+                        data.month == oggi.month &&
+                        data.day == oggi.day;
+                    final materiali = quale < giorni.length
+                        ? giorni[quale]
+                        : const <String>[];
+                    return ActionChip(
+                      avatar: Text(
+                        _settimana[giorno],
+                        style: testi.labelSmall?.copyWith(
+                          fontWeight: eOggi ? FontWeight.w800 : null,
+                          color: eOggi ? colori.primary : null,
+                        ),
+                      ),
+                      label: Text(
+                        materiali.isEmpty
+                            ? '—'
+                            : materiali.map((m) => disegni[m] ?? m).join(' '),
+                      ),
+                      tooltip: materiali.isEmpty
+                          ? 'Nessun ritiro'
+                          : materiali.join(', '),
+                      onPressed: () => _scegli(context, quale, materiali),
+                    );
+                  }(),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _scegli(
+    BuildContext context,
+    int quale,
+    List<String> adesso,
+  ) async {
+    final scelti = {...adesso};
+    final risposta = await showModalBottomSheet<List<String>>(
+      context: context,
+      showDragHandle: true,
+      builder: (dentro) => StatefulBuilder(
+        builder: (dentro, ridisegna) => Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Cosa esce questo giorno',
+                style: Theme.of(dentro).textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final (chiave, disegno, _) in materialiDeiRifiuti)
+                    FilterChip(
+                      avatar: Text(disegno),
+                      label: Text(chiave),
+                      selected: scelti.contains(chiave),
+                      onSelected: (acceso) => ridisegna(() {
+                        if (acceso) {
+                          scelti.add(chiave);
+                        } else {
+                          scelti.remove(chiave);
+                        }
+                      }),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              FilledButton(
+                onPressed: () => Navigator.of(dentro).pop([
+                  for (final (chiave, _, _) in materialiDeiRifiuti)
+                    if (scelti.contains(chiave)) chiave,
+                ]),
+                child: const Text('Fatto'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (risposta != null) cambiaGiorno(quale, risposta);
+  }
+}
+
 class _UnaRiga extends StatelessWidget {
   const _UnaRiga({
     required this.riga,
     required this.quale,
     required this.collegamento,
+    required this.tessera,
     required this.cambiato,
     required this.togli,
   });
@@ -142,6 +364,7 @@ class _UnaRiga extends StatelessWidget {
   final Map<String, dynamic> riga;
   final int quale;
   final Collegamento collegamento;
+  final TesseraDelCampo tessera;
   final VoidCallback cambiato;
   final VoidCallback togli;
 
@@ -203,6 +426,7 @@ class _UnaRiga extends StatelessWidget {
             domini: const ['sensor', 'calendar', 'binary_sensor'],
             valore: '${riga['entity'] ?? ''}',
             collegamento: collegamento,
+            tessera: tessera,
             cambiato: (scritto) {
               riga['entity'] = scritto;
               cambiato();

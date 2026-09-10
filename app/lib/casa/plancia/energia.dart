@@ -14,6 +14,7 @@
 /// dentro `core/energy-projection.js`, ed e' quella qui sotto.
 library;
 
+import '../entita.dart';
 import 'segno.dart';
 
 /// Dove va ogni casella dell'energia: percorso nel modello → chiave fra le
@@ -661,4 +662,43 @@ Map<String, dynamic> conLaVista(
     dopo[quale] = false;
   }
   return dopo;
+}
+
+/* ─── Un contatore cumulativo, per lo storico ────────────────────────────── */
+
+final _unitaDiPotenza = RegExp(r'^(w|kw|mw)$');
+final _unitaDiEnergia = RegExp(r'^(wh|kwh|mwh)$');
+final _paroleDaContatore = RegExp(
+  r'(^|[\s._-])(total|totale|lifetime|counter|contatore|meter)([\s._-]|$)',
+);
+
+/// Se questa entita' e' un contatore cumulativo di energia: e'
+/// `isCumulativeEnergyEntity` di `core/period-service.js`, la regola con cui
+/// l'editor del Report accetta l'«entita' totale per lo storico».
+///
+/// I watt non sono energia: sono quanto sta consumando adesso. Con gli
+/// attributi in mano si pretende che parlino di energia — senza questo un
+/// contatore dell'acqua in litri diventava un contatore della corrente. Poi
+/// vale la `state_class` (`total`, `total_increasing`), e per chi non ce l'ha
+/// il nome: «total», «lifetime», «contatore», «meter».
+bool eUnContatoreCumulativo(String entita, Entita? stato) {
+  final id = entita.trim();
+  if (id.isEmpty) return false;
+  final attributi = stato?.attributi ?? const <String, dynamic>{};
+  final unita = '${attributi['unit_of_measurement'] ?? ''}'
+      .trim()
+      .toLowerCase();
+  if (_unitaDiPotenza.hasMatch(unita)) return false;
+  final classe = '${attributi['device_class'] ?? ''}'.trim().toLowerCase();
+  if (attributi.isNotEmpty &&
+      !_unitaDiEnergia.hasMatch(unita) &&
+      classe != 'energy') {
+    return false;
+  }
+  final classeDiStato = '${attributi['state_class'] ?? ''}'.toLowerCase();
+  if (classeDiStato == 'total' || classeDiStato == 'total_increasing') {
+    return true;
+  }
+  final testo = '$id ${attributi['friendly_name'] ?? ''}'.toLowerCase();
+  return _paroleDaContatore.hasMatch(testo);
 }

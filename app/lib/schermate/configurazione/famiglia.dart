@@ -22,10 +22,17 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../casa/collegamento.dart';
+import '../../casa/entita.dart';
 import '../../casa/plancia/marchi.dart';
 import '../../casa/plancia/caselle.dart' as le_caselle;
+import '../../casa/plancia/legame.dart' show DaLeggere;
+import '../../casa/plancia/legame_auto.dart';
 import '../../casa/plancia/piu_di_uno.dart';
+import '../../casa/plancia/scatto.dart';
 import '../../vestito/pezzi.dart';
+import 'caselle.dart' show chiaveDelleSostituzioni;
+import 'cercatore.dart';
+import 'integrazioni.dart';
 import 'le_foto.dart';
 import 'marche.dart';
 import 'pezzi.dart';
@@ -94,12 +101,27 @@ class SchermataDiFamiglia extends StatelessWidget {
     this.campi = const [],
     this.leFoto = false,
     this.sezioneDelleCaselle = '',
+    this.tessera = '',
+    this.dallIntegrazione = false,
+    this.laColonnina = false,
   });
 
   final String titolo;
   final String sotto;
   final Collegamento collegamento;
   final Famiglia famiglia;
+
+  /// `true` per le auto: si sceglie l'integrazione, poi il dispositivo, e la
+  /// vettura nasce con le caselle gia' piene (`auto-integrazione-section.js`).
+  final bool dallIntegrazione;
+
+  /// `true` per le auto: sotto l'elenco c'e' la colonnina, che e' della casa
+  /// e non di una vettura, con evcc accanto.
+  final bool laColonnina;
+
+  /// La tessera della Home di cui parlano le entita' di questa famiglia
+  /// (`ev`, `solare`, `scaldabagno`, `ups`, `sicurezza`), o «».
+  final String tessera;
 
   /// I campi propri: la marca e il modello di un'auto, l'entita' di una
   /// centrale.
@@ -126,6 +148,9 @@ class SchermataDiFamiglia extends StatelessWidget {
         sezioneDelleCaselle: sezioneDelleCaselle,
         scatto: scatto,
         quaderno: quaderno,
+        tessera: tessera,
+        dallIntegrazione: dallIntegrazione,
+        laColonnina: laColonnina,
       ),
     ],
   );
@@ -140,6 +165,9 @@ class _Famiglia extends StatefulWidget {
     required this.sezioneDelleCaselle,
     required this.scatto,
     required this.quaderno,
+    required this.tessera,
+    required this.dallIntegrazione,
+    required this.laColonnina,
   });
 
   final Collegamento collegamento;
@@ -149,6 +177,9 @@ class _Famiglia extends StatefulWidget {
   final String sezioneDelleCaselle;
   final dynamic scatto;
   final Quaderno quaderno;
+  final String tessera;
+  final bool dallIntegrazione;
+  final bool laColonnina;
 
   @override
   State<_Famiglia> createState() => _FamigliaState();
@@ -195,6 +226,14 @@ class _FamigliaState extends State<_Famiglia> {
           sezioneDelleCaselle: widget.sezioneDelleCaselle,
           voce: voce,
           nuova: quale < 0,
+          dallIntegrazione: widget.dallIntegrazione,
+          tessera: widget.tessera.isEmpty
+              ? null
+              : TesseraDelCampo(
+                  widget.tessera,
+                  scatto: widget.scatto as Scatto,
+                  quaderno: widget.quaderno,
+                ),
         ),
       ),
     );
@@ -207,12 +246,294 @@ class _FamigliaState extends State<_Famiglia> {
     _segna();
   }
 
+  /// La casa com'e' adesso, per il legame: i `friendly_name`, le classi e
+  /// le unita' che il registro non dice, e lo stato per la lettera del cavo.
+  Map<String, Entita> _laCasa() => {
+    for (final una in widget.collegamento.stato?.tutte() ?? const <Entita>[])
+      una.id: una,
+  };
+
+  /// Le sostituzioni di casa (`cd_entity_overrides`), con quello che si e'
+  /// gia' segnato sopra.
+  Map<String, dynamic> _leSostituzioni() {
+    final segnate = widget.quaderno.cambiate[chiaveDelleSostituzioni];
+    if (segnate is Map) return Map<String, dynamic>.from(segnate);
+    return Map<String, dynamic>.from(
+      (widget.scatto as Scatto).mappa(chiaveDelleSostituzioni),
+    );
+  }
+
+  /// Come si chiama una casella `dm.ev_*`, con le parole della plancia.
+  String _comeSiChiama(String ref) {
+    for (final una
+        in le_caselle.caselleLette[widget.sezioneDelleCaselle]?.caselle ??
+            const <le_caselle.Casella>[]) {
+      if (una.chiave == ref) return una.etichetta;
+    }
+    return nomiDellaWallbox[ref] ?? ref.replaceFirst('dm.ev_', '');
+  }
+
+  /* L'auto nuova, nata dal dispositivo scelto: e' `creaAutoDaDispositivo`.
+   *
+   * Le caselle di una vettura non stanno in un campo suo: stanno nel suo
+   * profilo, che e' la stessa strada di chi le compila a mano. Il motore lo
+   * dicono le entita' — un serbatoio senza batteria e' benzina. Il
+   * dispositivo si versa nell'auto che gia' porta questo nome, se c'e' —
+   * foto, marca e modello restano suoi — e solo senza nasce una vettura
+   * nuova. */
+  Future<void> _dalCatalogo() async {
+    final scelto = await scegliDaUnIntegrazione(
+      context,
+      collegamento: widget.collegamento,
+    );
+    if (scelto == null || !mounted) return;
+    final entita = scelto.tutte.isNotEmpty ? scelto.tutte : scelto.entita;
+    final legame = legaLAutoAlDispositivo([
+      for (final una in entita) DaLeggere.dalCatalogo(una),
+    ], stato: _laCasa());
+    if (legame.mappa.isEmpty) {
+      await _avvisa(
+        'Da questo dispositivo non si riconosce nessuna casella dell\'auto.',
+      );
+      return;
+    }
+    final nome = scelto.dispositivo.nome.trim().isEmpty
+        ? 'Auto'
+        : scelto.dispositivo.nome.trim();
+    if (!await _anteprimaDellAuto(legame, nome)) return;
+    if (!mounted) return;
+    final gia = elenco.voci.indexWhere((una) => una.nome.trim() == nome);
+    final Voce voce;
+    final bool nuova;
+    if (gia >= 0) {
+      voce = elenco.voci[gia];
+      voce.caselle = {...voce.caselle, ...legame.mappa};
+      /* Il motore lo dice chi l'ha dichiarato; l'integrazione parla solo dove
+       * nessuno ha ancora detto niente. */
+      if (tipoMotore(voce.dentro['tipo']).isEmpty && legame.tipo.isNotEmpty) {
+        voce.dentro['tipo'] = legame.tipo;
+      }
+      nuova = false;
+    } else {
+      voce = Voce.nuova(nome);
+      if (legame.tipo.isNotEmpty) voce.dentro['tipo'] = legame.tipo;
+      voce.caselle = Map.of(legame.mappa);
+      nuova = true;
+    }
+    final eraVuoto = elenco.voci.isEmpty;
+    if (nuova) elenco.aggiungi(voce);
+    /* La prima auto e' anche quella in uso, e l'auto in uso versa le sue
+     * caselle nelle sostituzioni di casa, da cui il disegno legge: e' il
+     * gesto di «Usa», e con una macchina sola non lo farebbe nessuno. La
+     * colonnina resta della casa. */
+    if (eraVuoto || elenco.quellaScelta == voce) {
+      widget.quaderno.segna(
+        chiaveDelleSostituzioni,
+        versaLAutoNelleSostituzioni(_leSostituzioni(), voce.caselle),
+      );
+    }
+    _segna();
+    if (!mounted) return;
+    final daChi = scelto.integrazione?.nome.trim().isNotEmpty == true
+        ? scelto.integrazione!.nome.trim()
+        : 'un\'integrazione';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '«$nome» — ${nuova ? 'aggiunta' : 'aggiornata'} da $daChi: '
+          '${legame.mappa.length} caselle riempite',
+        ),
+      ),
+    );
+  }
+
+  /// Quello che il dispositivo ha lasciato capire, prima di confermare: e'
+  /// `anteprimaAuto`. Le prime caselle per nome, delle altre il numero.
+  Future<bool> _anteprimaDellAuto(LegameDellAuto legame, String nome) async {
+    const prime = [
+      'dm.ev_batteria_auto',
+      'dm.ev_carburante',
+      'dm.ev_autonomia',
+      'dm.ev_odometro',
+    ];
+    final inTesta = [
+      for (final ref in prime)
+        if (legame.mappa.containsKey(ref)) (ref, legame.mappa[ref]!),
+    ];
+    final restanti = [
+      for (final ref in legame.mappa.keys)
+        if (!prime.contains(ref)) _comeSiChiama(ref),
+    ];
+    return _conferma(
+      titolo: switch (legame.tipo) {
+        'termica' => 'Auto a benzina',
+        'ibrida' => 'Auto ibrida',
+        _ => 'Auto elettrica',
+      },
+      nome: nome,
+      righe: [
+        for (final (ref, entita) in inTesta) (_comeSiChiama(ref), entita),
+        (
+          'Altre caselle riconosciute',
+          restanti.isEmpty
+              ? '—'
+              : '${restanti.length} — ${restanti.join(', ')}',
+        ),
+      ],
+    );
+  }
+
+  /* La colonnina, e evcc: e' `collegaLaWallbox`. Le sue caselle sono della
+   * casa, stanno in `cd_entity_overrides`, e il secondo dispositivo si
+   * aggiunge al primo — evcc la modalita' e la quota di sole, la colonnina
+   * quello che misura — senza scalzarlo. */
+  Future<void> _collegaLaColonnina() async {
+    final scelto = await scegliDaUnIntegrazione(
+      context,
+      collegamento: widget.collegamento,
+    );
+    if (scelto == null || !mounted) return;
+    final entita = scelto.tutte.isNotEmpty ? scelto.tutte : scelto.entita;
+    final legame = legaLaWallboxAlDispositivo([
+      for (final una in entita) DaLeggere.dalCatalogo(una),
+    ], stato: _laCasa());
+    if (legame.mappa.isEmpty) {
+      await _avvisa(
+        'Da questo dispositivo non si riconosce nessuna casella della '
+        'colonnina.',
+      );
+      return;
+    }
+    final nome = scelto.dispositivo.nome.trim();
+    final va = await _conferma(
+      titolo: legame.evcc ? 'evcc' : 'La colonnina',
+      nome: nome,
+      righe: [
+        for (final voce in legame.mappa.entries)
+          (_comeSiChiama(voce.key), voce.value),
+      ],
+    );
+    if (!va || !mounted) return;
+    final messa = mettiLaColonninaNelleSostituzioni(
+      _leSostituzioni(),
+      legame.mappa,
+      sue: {for (final una in entita) una.id},
+    );
+    widget.quaderno.segna(chiaveDelleSostituzioni, messa.prossime);
+    setState(() {});
+    if (!mounted) return;
+    final tenute = messa.tenute.length;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          tenute == 0
+              ? '${nome.isEmpty ? 'La colonnina' : '«$nome»'} collegata: '
+                    '${legame.mappa.length} caselle riempite'
+              : '${nome.isEmpty ? 'La colonnina' : '«$nome»'} collegata: '
+                    '${legame.mappa.length - tenute} caselle riempite, '
+                    '$tenute ${tenute == 1 ? 'era' : 'erano'} gia\' di un '
+                    'altro dispositivo e ${tenute == 1 ? 'resta sua' : 'restano sue'}',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _avvisa(String parola) => showDialog<void>(
+    context: context,
+    builder: (dentro) => AlertDialog(
+      content: Text(parola),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.of(dentro).pop(),
+          child: const Text('Ho capito'),
+        ),
+      ],
+    ),
+  );
+
+  Future<bool> _conferma({
+    required String titolo,
+    required String nome,
+    required List<(String, String)> righe,
+  }) async {
+    final va = await showDialog<bool>(
+      context: context,
+      builder: (dentro) => AlertDialog(
+        title: Text(nome.isEmpty ? titolo : '$titolo · $nome'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final (etichetta, valore) in righe)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        etichetta,
+                        style: Theme.of(dentro).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(dentro).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        valore,
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dentro).pop(false),
+            child: const Text('Annulla'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dentro).pop(true),
+            child: const Text('Va bene'),
+          ),
+        ],
+      ),
+    );
+    return va == true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
+    final sostituzioni = widget.laColonnina
+        ? _leSostituzioni()
+        : const <String, dynamic>{};
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        /* Il tasto sta in cima, come nella Config della dashboard: la strada
+         * buona va vista per prima, o e' come se non ci fosse. */
+        if (widget.dallIntegrazione) ...[
+          FilledButton.icon(
+            onPressed: _dalCatalogo,
+            icon: const Icon(Icons.extension_rounded),
+            label: const Text('Aggiungi da un\'integrazione'),
+          ),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
+            child: Text(
+              'Kia, Hyundai, Volkswagen, Tesla, Renault… Scegli l\'auto e le '
+              'sue entita\' finiscono da sole nelle caselle giuste: la '
+              'batteria, l\'autonomia, il contachilometri, il cavo.',
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: colori.onSurfaceVariant, height: 1.4),
+            ),
+          ),
+        ],
         if (elenco.voci.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 28),
@@ -261,6 +582,66 @@ class _FamigliaState extends State<_Famiglia> {
             'li\'.',
             style: Theme.of(context).textTheme.bodySmall
                 ?.copyWith(color: colori.onSurfaceVariant, height: 1.4),
+          ),
+        ],
+        /* La colonnina e' DELLA CASA, l'auto e' UNA DELLE AUTO: chi ha due
+         * vetture ha una colonnina sola, e la potenza che sta erogando e' la
+         * stessa qualunque macchina sia attaccata. Per questo le sue caselle
+         * stanno qui, separate, e non se le porta via nessun cambio d'auto. */
+        if (widget.laColonnina) ...[
+          const SizedBox(height: 24),
+          const Insegna('La colonnina e evcc'),
+          Scheda(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'La colonnina e\' della casa, non di un\'auto: chi ha due '
+                  'vetture ha una colonnina sola. evcc e\' il regolatore che '
+                  'le sta davanti: porta la modalita\' di ricarica, il limite '
+                  'che si comanda, la sessione e la quota di sole. Si '
+                  'collegano tutti e due, e nessuno porta via le caselle '
+                  'dell\'altro.',
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: colori.onSurfaceVariant, height: 1.4),
+                ),
+                const SizedBox(height: 12),
+                for (final ref in caselleDellaWallbox)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _comeSiChiama(ref),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                        Flexible(
+                          child: Text(
+                            '${sostituzioni[ref] ?? ''}'.trim().isEmpty
+                                ? '—'
+                                : '${sostituzioni[ref]}',
+                            textAlign: TextAlign.end,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 11.5,
+                              color: colori.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                FilledButton.tonalIcon(
+                  onPressed: _collegaLaColonnina,
+                  icon: const Icon(Icons.ev_station_rounded),
+                  label: const Text('Collega la colonnina o evcc'),
+                ),
+              ],
+            ),
           ),
         ],
       ],
@@ -376,6 +757,8 @@ class _UnaVoce extends StatefulWidget {
     required this.sezioneDelleCaselle,
     required this.voce,
     required this.nuova,
+    required this.tessera,
+    this.dallIntegrazione = false,
   });
 
   final Collegamento collegamento;
@@ -386,6 +769,12 @@ class _UnaVoce extends StatefulWidget {
   final Voce voce;
   final bool nuova;
 
+  /// `true` per le auto: le caselle si riempiono anche da un'integrazione.
+  final bool dallIntegrazione;
+
+  /// La tessera di cui parlano le caselle, per l'interruttore «nel widget».
+  final TesseraDelCampo? tessera;
+
   @override
   State<_UnaVoce> createState() => _UnaVoceState();
 }
@@ -393,6 +782,62 @@ class _UnaVoce extends StatefulWidget {
 class _UnaVoceState extends State<_UnaVoce> {
   Map<String, le_caselle.SezioneDiCaselle> _tutte = le_caselle.caselleLette;
   bool _soloLeVuote = false;
+
+  /// Le caselle dal dispositivo scelto, versate nell'auto aperta: quello che
+  /// il dispositivo sa vince su quello che c'era, il resto resta.
+  Future<void> _riempiDalCatalogo() async {
+    final scelto = await scegliDaUnIntegrazione(
+      context,
+      collegamento: widget.collegamento,
+    );
+    if (scelto == null || !mounted) return;
+    final entita = scelto.tutte.isNotEmpty ? scelto.tutte : scelto.entita;
+    final legame = legaLAutoAlDispositivo(
+      [for (final una in entita) DaLeggere.dalCatalogo(una)],
+      stato: {
+        for (final una
+            in widget.collegamento.stato?.tutte() ?? const <Entita>[])
+          una.id: una,
+      },
+    );
+    if (legame.mappa.isEmpty) {
+      await showDialog<void>(
+        context: context,
+        builder: (dentro) => AlertDialog(
+          content: const Text(
+            'Da questo dispositivo non si riconosce nessuna casella '
+            'dell\'auto.',
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(dentro).pop(),
+              child: const Text('Ho capito'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    setState(() {
+      final voce = widget.voce;
+      if (voce.nome.trim().isEmpty &&
+          scelto.dispositivo.nome.trim().isNotEmpty) {
+        voce.metti('name', scelto.dispositivo.nome.trim());
+      }
+      voce.caselle = {...voce.caselle, ...legame.mappa};
+      if (tipoMotore(voce.dentro['tipo']).isEmpty && legame.tipo.isNotEmpty) {
+        voce.dentro['tipo'] = legame.tipo;
+      }
+    });
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${legame.mappa.length} caselle riempite dal dispositivo',
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -445,6 +890,19 @@ class _UnaVoceState extends State<_UnaVoce> {
                         setState(() => voce.metti('name', scritto)),
                   ),
                   const SizedBox(height: 14),
+                  /* Il dispositivo si versa nell'auto aperta con la matita:
+                   * foto, marca e modello restano suoi, le caselle si
+                   * riempiono. */
+                  if (widget.dallIntegrazione) ...[
+                    OutlinedButton.icon(
+                      onPressed: _riempiDalCatalogo,
+                      icon: const Icon(Icons.extension_rounded),
+                      label: const Text(
+                        'Riempi le caselle da un\'integrazione',
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                   for (final campo in widget.campi) ...[
                     switch (campo.come) {
                       /* Prima di tutto il nome vecchio, se ce n'e' uno: quello
@@ -479,6 +937,7 @@ class _UnaVoceState extends State<_UnaVoce> {
                         domini: campo.domini,
                         contesto: widget.famiglia.unaCosa,
                         collegamento: widget.collegamento,
+                        tessera: widget.tessera,
                         cambiato: (scritto) =>
                             setState(() => _scrivi(voce, campo, scritto)),
                       ),
@@ -555,6 +1014,7 @@ class _UnaVoceState extends State<_UnaVoce> {
                         chiave: una.chiave,
                         valore: mappate[una.chiave] ?? '',
                         collegamento: widget.collegamento,
+                        tessera: widget.tessera,
                         cambiato: (scritto) => setState(() {
                           final dopo = Map<String, String>.from(voce.caselle);
                           if (scritto.trim().isEmpty) {
@@ -662,9 +1122,7 @@ class _LaSagoma extends StatelessWidget {
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     final testi = Theme.of(context).textTheme;
-    final quale = leSagomeDellAuto
-        .where((una) => una.id == valore)
-        .firstOrNull;
+    final quale = leSagomeDellAuto.where((una) => una.id == valore).firstOrNull;
     return Scheda(
       padding: EdgeInsets.zero,
       child: ListTile(
@@ -751,6 +1209,24 @@ class _UnaRigaDiFoto extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          /* Al posto del percorso, un'entita' immagine (1.4.17): `image.auto`
+           * o una telecamera. Si scrive cosi' com'e', e la plancia la
+           * risolve da `entity_picture`. */
+          IconButton(
+            onPressed: () async {
+              final trovata = await cercaUnEntita(
+                context,
+                collegamento: collegamento,
+                etichetta: '$titolo, da un\'entita\' immagine',
+                domini: const ['image', 'camera'],
+                adesso: adesso,
+              );
+              if (trovata != null) scelta(trovata);
+            },
+            icon: const Icon(Icons.image_search_rounded),
+            tooltip:
+                'Un\'entita\' immagine o una telecamera al posto della foto',
           ),
           const Icon(Icons.chevron_right_rounded),
         ],

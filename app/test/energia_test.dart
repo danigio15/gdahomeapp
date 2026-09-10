@@ -3,6 +3,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gdahome/casa/entita.dart';
 import 'package:gdahome/casa/plancia/energia.dart';
 
 void main() {
@@ -340,6 +341,54 @@ void proveDelleViste() {
       /* Con cinque viste tutte accese non c'e' niente da salvare: e' come la
        * scrive il runtime, e tiene la chiave piccola. */
       expect(conLaVista(const {'temp': false}, 'temp', true), isEmpty);
+    });
+  });
+
+  group('un contatore cumulativo (isCumulativeEnergyEntity)', () {
+    Entita stato(String id, Map<String, dynamic> attributi) =>
+        Entita(id: id, stato: '12.5', attributi: attributi);
+
+    test('la state_class decide, e i watt non sono energia', () {
+      expect(
+        eUnContatoreCumulativo(
+          'sensor.lavatrice_energia',
+          stato('sensor.lavatrice_energia', {
+            'unit_of_measurement': 'kWh',
+            'state_class': 'total_increasing',
+          }),
+        ),
+        isTrue,
+      );
+      expect(
+        eUnContatoreCumulativo(
+          'sensor.lavatrice_potenza',
+          stato('sensor.lavatrice_potenza', {
+            'unit_of_measurement': 'W',
+            'state_class': 'total',
+          }),
+        ),
+        isFalse,
+      );
+      /* Un contatore dell'acqua in litri non e' un contatore della corrente. */
+      expect(
+        eUnContatoreCumulativo(
+          'sensor.acqua_totale',
+          stato('sensor.acqua_totale', {
+            'unit_of_measurement': 'L',
+            'state_class': 'total_increasing',
+          }),
+        ),
+        isFalse,
+      );
+    });
+
+    test('senza attributi vale il nome', () {
+      expect(eUnContatoreCumulativo('sensor.forno_total_energy', null), isTrue);
+      expect(
+        eUnContatoreCumulativo('sensor.forno_energia_oggi', null),
+        isFalse,
+      );
+      expect(eUnContatoreCumulativo('', null), isFalse);
     });
   });
 }

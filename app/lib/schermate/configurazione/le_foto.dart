@@ -95,7 +95,8 @@ class _LeFotoState extends State<_LeFoto> {
        * sicurezza. */
       if (!_giaScelta) {
         _giaScelta = true;
-        if (!letto.cE && letto.quali.contains(archivio.RadiceDelleFoto.laCasa)) {
+        if (!letto.cE &&
+            letto.quali.contains(archivio.RadiceDelleFoto.laCasa)) {
           setState(() => _radice = archivio.RadiceDelleFoto.laCasa);
           await _leggi();
           return;

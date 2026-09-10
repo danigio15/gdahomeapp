@@ -58,7 +58,9 @@ class Entita {
           : const {},
       cambiataIl: DateTime.tryParse(grezza['last_changed'] as String? ?? ''),
       aggiornataIl: DateTime.tryParse(
-        grezza['last_updated'] as String? ?? grezza['last_changed'] as String? ?? '',
+        grezza['last_updated'] as String? ??
+            grezza['last_changed'] as String? ??
+            '',
       ),
     );
   }

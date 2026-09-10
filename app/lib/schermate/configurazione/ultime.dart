@@ -9,6 +9,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../casa/collegamento.dart';
+import '../../casa/entita.dart';
 import '../../casa/plancia/home.dart';
 import '../../vestito/pezzi.dart';
 import 'pezzi.dart';
@@ -179,6 +180,7 @@ class SchermataDiRighe extends StatefulWidget {
     required this.collegamento,
     this.domini = const [],
     this.sottoTutto,
+    this.controlla,
   });
 
   final String titolo;
@@ -189,6 +191,11 @@ class SchermataDiRighe extends StatefulWidget {
   final Collegamento collegamento;
   final List<String> domini;
   final List<Widget> Function(dynamic scatto, Quaderno quaderno)? sottoTutto;
+
+  /// Cosa dire sotto l'entita' scelta: `(va bene, parola)`. Le voci del
+  /// Report vogliono un contatore cumulativo, e l'editor della plancia lo
+  /// dice riga per riga invece di lasciar scoprire lo storico vuoto.
+  final (bool, String) Function(String entita, Entita? stato)? controlla;
 
   @override
   State<SchermataDiRighe> createState() => _SchermataDiRigheState();
@@ -285,6 +292,31 @@ class _SchermataDiRigheState extends State<SchermataDiRighe> {
                         _segna(quaderno);
                       },
                     ),
+                    if (widget.controlla != null &&
+                        (una['entity'] ?? '').trim().isNotEmpty)
+                      Builder(
+                        builder: (dentro) {
+                          final id = una['entity']!.trim();
+                          final (bene, parola) = widget.controlla!(
+                            id,
+                            widget.collegamento.stato?[id],
+                          );
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+                            child: Text(
+                              parola,
+                              style: Theme.of(dentro).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: bene
+                                        ? Theme.of(dentro)
+                                              .colorScheme
+                                              .onSurfaceVariant
+                                        : Theme.of(dentro).colorScheme.error,
+                                  ),
+                            ),
+                          );
+                        },
+                      ),
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton.icon(

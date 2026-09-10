@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 
 import '../../casa/collegamento.dart';
 import '../../casa/plancia/apparecchio.dart';
+import '../../casa/plancia/carichi.dart' show campiScelti;
 import '../../casa/plancia/legame.dart';
 import '../../casa/plancia/scatto.dart';
 import '../../vestito/pezzi.dart';
@@ -37,6 +38,8 @@ class CampoDellApparecchio {
     this.numero = false,
     this.scelte = const [],
     this.tante = false,
+    this.mesi = false,
+    this.massimo = 0,
   });
 
   final String chiave;
@@ -45,6 +48,10 @@ class CampoDellApparecchio {
   final bool entita;
   final List<String> domini;
   final bool bandiera;
+
+  /// Un numero. Con le [scelte] vuol dire che quello che si sceglie si
+  /// scrive come numero e non come parola: i minuti dello spegnimento del
+  /// clima sono `60`, non `"60"`, e zero toglie la casella.
   final bool numero;
 
   /// Quando i valori buoni sono pochi e li decide la plancia: il tipo di una
@@ -58,6 +65,13 @@ class CampoDellApparecchio {
 
   /// Piu' entita' nello stesso campo: i comandi a parte di un robot.
   final bool tante;
+
+  /// I mesi dell'anno in cui mostrarla (1.4.17): dodici bottoni, e si scrive
+  /// l'elenco dei numeri scelti — tutti e dodici vale nessuno.
+  final bool mesi;
+
+  /// Per [tante]: quante al massimo. Zero vuol dire senza tetto.
+  final int massimo;
 }
 
 /// Le altre entita' di un apparecchio, con nomi che si capiscono.
@@ -186,6 +200,17 @@ class _SchermataDegliApparecchiState extends State<SchermataDegliApparecchi> {
     for (final (posto, uno) in _elenco!.indexed) {
       uno.metti('order', posto);
     }
+    if (widget.sezione == Sezione.elettrodomestici) {
+      /* L'elenco `entities` non lo scrive nessuno a mano: lo riempiva la
+       * passata che indovina dai nomi, e quando sbagliava ci lasciava dentro i
+       * sensori del frigorifero accanto. Da qui in poi le caselle sono scelte,
+       * quindi quello che resta nell'elenco resta per sempre: se non si toglie
+       * adesso non si toglie piu' (#417). */
+      final tutti = [for (final uno in _elenco!) uno.dentro];
+      for (final uno in _elenco!) {
+        uno.dentro['entities'] = entitaSetacciate(uno.dentro, tutti);
+      }
+    }
     quaderno.segna(
       widget.sezione.chiave,
       scriviGliApparecchi(_elenco!, widget.sezione),
@@ -204,6 +229,21 @@ class _SchermataDegliApparecchiState extends State<SchermataDegliApparecchi> {
     }
     setState(() {});
   }
+
+  /// La tessera della Home che legge questa sezione: e' `TESSERE_PER_SCHEDA`
+  /// e `TESSERE_PER_BLOCCO` in `fuori-dai-widget.js`, per linguetta.
+  String get _laTessera => switch (widget.sezione) {
+    Sezione.luci => 'luci',
+    Sezione.prese => 'prese',
+    Sezione.finestre => 'tapparelle',
+    Sezione.elettrodomestici => 'elettrodomestici',
+    Sezione.robot => 'robot',
+    Sezione.telecamere => 'telecamere',
+    Sezione.clima => 'clima',
+    Sezione.stanze => 'temperatura',
+    Sezione.auto => 'ev',
+    Sezione.carichi => '',
+  };
 
   @override
   Widget build(BuildContext context) => PaginaDiConfigurazione(
@@ -260,6 +300,9 @@ class _SchermataDegliApparecchiState extends State<SchermataDegliApparecchi> {
               apparecchio: uno,
               primo: posto == 0,
               ultimo: posto == elenco.length - 1,
+              tessera: _laTessera,
+              scatto: scatto,
+              quaderno: quaderno,
               apri: () => _apri(posto, stanze, quaderno),
               sposta: (di) {
                 final dove = posto + di;
@@ -329,6 +372,18 @@ class _SchermataDegliApparecchiState extends State<SchermataDegliApparecchi> {
       ),
     );
     if (fatto != true) return;
+    if (widget.sezione == Sezione.elettrodomestici) {
+      /* Da adesso le caselle sono sue (#417): quello che ha lasciato vuoto e'
+       * una risposta, non una domanda, e la passata della plancia che
+       * indovina dai nomi non ci torna sopra. E' lo stesso segno che mette il
+       * collegamento a un dispositivo. */
+      quale.metti('metadata', {
+        ...(quale.dentro['metadata'] is Map
+            ? Map<String, dynamic>.from(quale.dentro['metadata'] as Map)
+            : const <String, dynamic>{}),
+        campiScelti: true,
+      });
+    }
     if (nuovo) {
       _elenco!.add(quale);
     } else {
@@ -426,6 +481,9 @@ class _LaScheda extends StatelessWidget {
     required this.apparecchio,
     required this.primo,
     required this.ultimo,
+    required this.tessera,
+    required this.scatto,
+    required this.quaderno,
     required this.apri,
     required this.sposta,
     required this.togli,
@@ -435,6 +493,13 @@ class _LaScheda extends StatelessWidget {
   final Apparecchio apparecchio;
   final bool primo;
   final bool ultimo;
+
+  /// La tessera della Home di cui parla questa riga (`luci`, `tapparelle`…),
+  /// o «» se la sezione non ne ha una. Con la tessera la riga porta anche la
+  /// scelta «nel widget / fuori» della plancia, in `cd_widgets.excluded`.
+  final String tessera;
+  final Scatto scatto;
+  final Quaderno quaderno;
   final VoidCallback apri;
   final ValueChanged<int> sposta;
   final VoidCallback togli;
@@ -444,6 +509,14 @@ class _LaScheda extends StatelessWidget {
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     final quante = apparecchio.tutteLeEntita.length;
+    /* L'interruttore della tessera (`widget-entity-choice-section.js`)
+     * parla dell'entita' scritta in chiaro sulla riga: la principale. */
+    final leSue = apparecchio.entita.isNotEmpty
+        ? [apparecchio.entita]
+        : apparecchio.tutteLeEntita;
+    final conLaTessera = tessera.isNotEmpty && leSue.isNotEmpty;
+    final dentro =
+        !conLaTessera || dentroLaTessera(scatto, quaderno, tessera, leSue);
     final sotto = [
       if (apparecchio.stanza.isNotEmpty) apparecchio.stanza,
       if (apparecchio.entita.isNotEmpty)
@@ -451,6 +524,7 @@ class _LaScheda extends StatelessWidget {
       else
         'nessuna entita\'',
       if (quante > 1) '$quante entita\'',
+      if (!dentro) '🧩 fuori dalla tessera',
     ].join(' · ');
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -491,6 +565,7 @@ class _LaScheda extends StatelessWidget {
               onSelected: (cosa) => switch (cosa) {
                 'apri' => apri(),
                 'spegni' => accendi(!apparecchio.acceso),
+                'tessera' => giraLaTessera(scatto, quaderno, tessera, leSue),
                 'togli' => togli(),
                 _ => null,
               },
@@ -504,6 +579,17 @@ class _LaScheda extends StatelessWidget {
                         : 'Rimostra nella plancia',
                   ),
                 ),
+                /* «Nel widget / Fuori»: la tessera della Home mostra questa
+                 * entita', o non la mostra. La sezione resta com'e'. */
+                if (conLaTessera)
+                  PopupMenuItem(
+                    value: 'tessera',
+                    child: Text(
+                      dentro
+                          ? '🧩 Fuori dalla tessera della Home'
+                          : '🧩 Nella tessera della Home',
+                    ),
+                  ),
                 const PopupMenuItem(value: 'togli', child: Text('Togli')),
               ],
             ),
@@ -881,10 +967,30 @@ class _IlCampo extends StatelessWidget {
         etichetta: campo.etichetta,
         spiega: campo.spiega,
         domini: campo.domini,
+        massimo: campo.massimo,
         quali: [for (final una in (adesso as List? ?? [])) '$una'],
         collegamento: collegamento,
         cambiate: (dopo) {
           apparecchio.metti(campo.chiave, dopo.isEmpty ? null : dopo);
+          cambiato();
+        },
+      );
+    }
+    if (campo.mesi) {
+      return _IMesi(
+        campo: campo,
+        scelti: {
+          for (final uno in (adesso as List? ?? const []))
+            if (uno is num)
+              uno.toInt()
+            else if (int.tryParse('$uno') != null)
+              int.parse('$uno'),
+        },
+        scegli: (elenco) {
+          apparecchio.metti(
+            campo.chiave,
+            elenco.length == 12 || elenco.isEmpty ? null : elenco,
+          );
           cambiato();
         },
       );
@@ -907,9 +1013,15 @@ class _IlCampo extends StatelessWidget {
             DropdownMenuItem(value: valore, child: Text(nome)),
         ],
         onChanged: (scelto) {
+          final vuoto =
+              (scelto ?? '').isEmpty || (campo.numero && scelto == '0');
           apparecchio.metti(
             campo.chiave,
-            (scelto ?? '').isEmpty ? null : scelto,
+            vuoto
+                ? null
+                : campo.numero
+                ? (num.tryParse(scelto!) ?? scelto)
+                : scelto,
           );
           cambiato();
         },
@@ -1020,4 +1132,81 @@ class _LaFoto extends StatelessWidget {
       TextButton(onPressed: togli, child: const Text('Togli la foto')),
     ],
   );
+}
+
+/// I mesi in cui mostrare un'unita' del clima (1.4.17): dodici bottoni.
+/// Nessuno scelto vuol dire tutti, che e' come la plancia legge un elenco
+/// vuoto; e tutti scelti si scrive come nessuno.
+class _IMesi extends StatelessWidget {
+  const _IMesi({
+    required this.campo,
+    required this.scelti,
+    required this.scegli,
+  });
+
+  final CampoDellApparecchio campo;
+  final Set<int> scelti;
+  final ValueChanged<List<int>> scegli;
+
+  static const _nomi = [
+    'Gen',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mag',
+    'Giu',
+    'Lug',
+    'Ago',
+    'Set',
+    'Ott',
+    'Nov',
+    'Dic',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          campo.etichetta,
+          style: Theme.of(context).textTheme.labelLarge
+              ?.copyWith(color: colori.onSurfaceVariant),
+        ),
+        if (campo.spiega != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              campo.spiega!,
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: colori.onSurfaceVariant),
+            ),
+          ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (var mese = 1; mese <= 12; mese += 1)
+              FilterChip(
+                label: Text(_nomi[mese - 1]),
+                selected: scelti.isEmpty || scelti.contains(mese),
+                onSelected: (acceso) {
+                  final dopo = scelti.isEmpty
+                      ? {for (var m = 1; m <= 12; m += 1) m}
+                      : {...scelti};
+                  if (acceso) {
+                    dopo.add(mese);
+                  } else {
+                    dopo.remove(mese);
+                  }
+                  scegli(dopo.toList()..sort());
+                },
+              ),
+          ],
+        ),
+      ],
+    );
+  }
 }

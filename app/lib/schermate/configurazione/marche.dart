@@ -26,8 +26,7 @@ Future<String?> scegliLaMarca(
   context: contesto,
   isScrollControlled: true,
   showDragHandle: true,
-  builder: (dentro) =>
-      _LeMarche(collegamento: collegamento, adesso: adesso),
+  builder: (dentro) => _LeMarche(collegamento: collegamento, adesso: adesso),
 );
 
 class _LeMarche extends StatelessWidget {
@@ -49,9 +48,8 @@ class _LeMarche extends StatelessWidget {
               children: [
                 Text(
                   'La marca',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const Spacer(),
                 if (adesso.isNotEmpty)
@@ -65,13 +63,12 @@ class _LeMarche extends StatelessWidget {
           Expanded(
             child: GridView.builder(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              gridDelegate:
-                  const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 120,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    childAspectRatio: 0.95,
-                  ),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 120,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childAspectRatio: 0.95,
+              ),
               itemCount: leMarcheDelleAuto.length,
               itemBuilder: (dentro, quale) {
                 final una = leMarcheDelleAuto[quale];
@@ -124,9 +121,7 @@ class _UnaMarca extends StatelessWidget {
         onTap: premuta,
         child: Container(
           decoration: BoxDecoration(
-            border: scelta
-                ? Border.all(color: colori.primary, width: 2)
-                : null,
+            border: scelta ? Border.all(color: colori.primary, width: 2) : null,
             borderRadius: BorderRadius.circular(14),
           ),
           padding: const EdgeInsets.all(8),
@@ -252,9 +247,8 @@ Future<String?> scegliLaSagoma(BuildContext contesto, {String adesso = ''}) =>
             children: [
               Text(
                 'Che auto e\'',
-                style: Theme.of(dentro).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+                style: Theme.of(dentro).textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 4),
               Text(

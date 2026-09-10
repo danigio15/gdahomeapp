@@ -60,13 +60,33 @@ class Dispositivo {
     required this.stanza,
     required this.quanteEntita,
     required this.spento,
+    this.integrazioniDichiarate = const [],
   });
 
   final String id;
   final String nome;
   final String marca;
   final String modello;
+
+  /// La principale: una sola, quella che il ponte sceglie dalla voce di
+  /// configurazione o dalla piattaforma piu' frequente.
   final String integrazione;
+
+  /// `integrations` del catalogo, com'e' arrivato.
+  final List<String> integrazioniDichiarate;
+
+  /// Da quali integrazioni arriva: tutte quelle che ci mettono qualcosa, la
+  /// principale compresa. Un dispositivo puo' benissimo stare in due:
+  /// l'aspirapolvere adottato da un'integrazione di marca ma acceso via MQTT,
+  /// la presa di un'integrazione cloud che pubblica anche in locale. E'
+  /// `integrations` del catalogo, e `domini()` in
+  /// `appliance-device-binding.js`.
+  Set<String> get integrazioni => {
+    for (final una in integrazioniDichiarate)
+      if (una.trim().isNotEmpty) una.trim(),
+    if (integrazione.trim().isNotEmpty) integrazione.trim(),
+  };
+
   final String stanza;
   final int quanteEntita;
 
@@ -233,6 +253,10 @@ IlCatalogo leggiIlCatalogo(dynamic risultato) {
           marca: '${uno['manufacturer'] ?? ''}',
           modello: '${uno['model'] ?? ''}',
           integrazione: '${uno['integration'] ?? ''}',
+          integrazioniDichiarate: [
+            for (final dominio in (uno['integrations'] as List? ?? const []))
+              '$dominio',
+          ],
           stanza: '${uno['area'] ?? ''}',
           quanteEntita: (uno['entities'] as num?)?.toInt() ?? 0,
           spento: uno['disabled'] == true,
