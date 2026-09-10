@@ -22,6 +22,27 @@ const attesaDelCaricamento = Duration(seconds: 60);
 /// Quanto puo' pesare una foto: e' il limite del ponte.
 const fotoMassima = 10 * 1024 * 1024;
 
+/// Da quale cartella arrivano le foto.
+enum RadiceDelleFoto {
+  /// Quelle caricate dall'app: stanno nel ponte, e li' si puo' scrivere.
+  ilPonte('ponte', 'Caricate qui'),
+
+  /// Quelle che stanno gia' in `config/www` di Home Assistant: le foto delle
+  /// auto, i loghi, gli sfondi di chi ha una casa da qualche anno. Si
+  /// guardano e basta — quella cartella e' di chi ci abita.
+  laCasa('casa', 'Home Assistant');
+
+  const RadiceDelleFoto(this.nome, this.comeSiChiama);
+
+  final String nome;
+  final String comeSiChiama;
+
+  bool get ciSiScrive => this == RadiceDelleFoto.ilPonte;
+
+  static RadiceDelleFoto da(Object? letto) =>
+      '$letto' == 'casa' ? RadiceDelleFoto.laCasa : RadiceDelleFoto.ilPonte;
+}
+
 /// Una cartella dentro `www`.
 class Cartella {
   const Cartella({required this.nome, required this.percorso});
@@ -55,6 +76,8 @@ class DentroLaCartella {
     required this.foto,
     required this.cE,
     required this.troncata,
+    this.radice = RadiceDelleFoto.ilPonte,
+    this.quali = const {RadiceDelleFoto.ilPonte},
   });
 
   const DentroLaCartella.niente()
@@ -62,9 +85,21 @@ class DentroLaCartella {
       cartelle = const [],
       foto = const [],
       cE = false,
-      troncata = false;
+      troncata = false,
+      radice = RadiceDelleFoto.ilPonte,
+      quali = const {RadiceDelleFoto.ilPonte};
 
   final String dove;
+
+  /// In quale delle due cartelle si sta guardando.
+  final RadiceDelleFoto radice;
+
+  /// Quali cartelle ci sono davvero.
+  ///
+  /// Il ponte lo dice, cosi' la maschera non offre «Home Assistant» a chi ha
+  /// l'add-on vecchio, che quella cartella non ce l'ha mappata: un tasto che
+  /// porta a «non c'e' niente» e' peggio di nessun tasto.
+  final Set<RadiceDelleFoto> quali;
   final List<Cartella> cartelle;
   final List<Foto> foto;
 
@@ -78,10 +113,15 @@ class DentroLaCartella {
 }
 
 /// Chiede cosa c'e' in una cartella di `www`.
-Future<DentroLaCartella> elencaLeFoto(Filo filo, {String dove = ''}) async {
+Future<DentroLaCartella> elencaLeFoto(
+  Filo filo, {
+  String dove = '',
+  RadiceDelleFoto radice = RadiceDelleFoto.ilPonte,
+}) async {
   final detto = await filo.chiedi({
     'type': 'dashboardmodern/www/list',
     'path': dove,
+    'root': radice.nome,
   }, entro: attesaDellElenco);
   return leggiLaCartella(detto['result']);
 }
@@ -98,8 +138,18 @@ DentroLaCartella leggiLaCartella(dynamic risultato) {
     ];
   }
 
+  /* Quali cartelle ci sono. Un ponte vecchio non lo dice: allora c'e' solo la
+   * sua, che e' come e' sempre stato. */
+  final dette = risultato['roots'];
   return DentroLaCartella(
     dove: '${risultato['path'] ?? ''}',
+    radice: RadiceDelleFoto.da(risultato['root']),
+    quali: {
+      /* Quella del ponte c'e' sempre: e' la sua, e ci si scrive. */
+      RadiceDelleFoto.ilPonte,
+      if (dette is Map && dette[RadiceDelleFoto.laCasa.nome] == true)
+        RadiceDelleFoto.laCasa,
+    },
     cE: risultato['available'] != false,
     troncata: risultato['truncated'] == true,
     cartelle: [

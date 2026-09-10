@@ -99,6 +99,14 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
      * ha nessuna app costruita sotto mano, e non deve per questo vedere errori
      * — e allora quel pezzo semplicemente non si serve. */
     app: process.env.PONTE_APP || fileURLToPath(new URL("../app", import.meta.url)),
+    /* La cartella `www` di Home Assistant, dove chi ha una casa da qualche
+     * anno tiene le foto delle auto, i loghi, gli sfondi.
+     *
+     * Il Supervisor la monta su `/homeassistant` quando il manifesto chiede
+     * `homeassistant_config:ro`. Se non c'e' — l'add-on aggiornato ma non
+     * riavviato, o una prova — non e' un guaio: quella meta' della maschera
+     * delle foto semplicemente non compare. */
+    wwwDiCasa: process.env.PONTE_WWW_CASA || "/homeassistant/www",
     versione: versioneDelPonte(),
   };
 }

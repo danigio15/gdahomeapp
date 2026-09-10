@@ -54,8 +54,14 @@ self.addEventListener("message", (evento) => {
   chi(detto);
 });
 
-/* Le due cartelle che si servono. Il resto non si tocca. */
-const MIE = ["/dashboardmodern_static/", "/api/"];
+/* Le cartelle che si servono. Il resto non si tocca.
+ *
+ * `/local/` e' la cartella `www` di Home Assistant: le foto delle auto, i
+ * loghi, gli sfondi che chi ha una casa da qualche anno tiene li'. Dentro Home
+ * Assistant le serve Home Assistant; qui le legge il ponte dal disco, cosi'
+ * una configurazione fatta nell'app mostra la stessa foto anche nella plancia
+ * dentro Home Assistant. */
+const MIE = ["/dashboardmodern_static/", "/api/", "/local/"];
 
 async function chiediAllApp(percorso) {
   /* A chi si chiede: all'app. Il riquadro della plancia e' una pagina anche

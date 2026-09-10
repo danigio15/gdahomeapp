@@ -206,6 +206,35 @@ La serve un service worker, e i service worker i browser li fanno girare solo su
 l'app lo dicono a schermo. Sul telefono non succede: li' il server sta dentro
 l'app.
 
+## Le foto: due cartelle
+
+Quando si sceglie una foto — quella dell'auto, il ritratto di un
+elettrodomestico — se ne guardano due:
+
+| | dove sta | cosa si puo' fare | indirizzo che si scrive |
+|---|---|---|---|
+| **il ponte** | `/data/www` dell'add-on | leggere e caricare | `/dashboardmodern_static/www/…` |
+| **Home Assistant** | `config/www`, montata in sola lettura | solo leggere | `/local/…` |
+
+La seconda e' quella che serviva davvero: chi ha una casa da qualche anno ha li'
+dentro le foto delle auto, i loghi e gli sfondi, e la plancia li chiama
+`/local/…` da sempre. Senza, la maschera delle foto diceva «nessuna foto,
+ancora» a chi ne aveva duecento.
+
+Si legge e non si scrive, e non e' prudenza generica: in quella cartella ci
+sono le automazioni, i temi e i segreti di chi ci abita. Un add-on che ci
+lascia dentro file e' un add-on che, il giorno che si disinstalla, lascia
+sporco in casa d'altri. Quello che si carica dall'app finisce nella cartella
+del ponte, sempre.
+
+`/local/…` lo serve il ponte anche alla plancia dentro l'app, dove Home
+Assistant non c'e' a servirlo: cosi' una configurazione fatta dall'app mostra la
+stessa foto anche nella plancia dentro Home Assistant, e viceversa.
+
+Serve `map: [homeassistant_config:ro]` nel manifesto: un add-on aggiornato ma
+non riavviato quella cartella non la vede ancora, e allora quella meta' della
+maschera semplicemente non compare.
+
 ## Cosa finisce sul disco
 
 Solo `/data/dispositivi.json`, e dentro c'e' l'**impronta** di ogni segno, mai

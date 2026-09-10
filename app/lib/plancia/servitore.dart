@@ -91,6 +91,15 @@ final _percorsoBuono = RegExp(r'^/[A-Za-z0-9_\-./@+~%]+$');
 /// La cartella dei file della plancia.
 const _fissi = '/dashboardmodern_static/';
 
+/// Le immagini che stanno in `config/www` di Home Assistant.
+///
+/// La plancia le chiama cosi' da sempre — `/local/foto.jpg` — perche' dentro
+/// Home Assistant e' Home Assistant a servirle. Qui la plancia gira dietro il
+/// servitore, e quell'indirizzo non porterebbe da nessuna parte: passa dal
+/// ponte come tutto il resto, e il ponte le legge dal disco. Cosi' la stessa
+/// configurazione mostra la stessa foto in tutti e due i posti.
+const _diCasa = '/local/';
+
 /// Quanto puo' essere grande il corpo di una chiamata REST della plancia.
 const _corpoMassimo = 4 * 1024 * 1024;
 
@@ -340,7 +349,7 @@ class Servitore {
       return;
     }
 
-    if (percorso.startsWith(_fissi)) {
+    if (percorso.startsWith(_fissi) || percorso.startsWith(_diCasa)) {
       await _file(richiesta, percorso);
       return;
     }

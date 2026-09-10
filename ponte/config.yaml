@@ -12,7 +12,7 @@
 # finire esposta. Su quella non c'e' nessuna console: si puo' solo presentare
 # un codice di abbinamento valido, o un segno di riconoscimento gia' avuto.
 name: Il ponte di DashboardModern
-version: "0.12.0"
+version: "0.13.0"
 slug: ponte
 description: Fa parlare l'app di DashboardModern con questa casa, da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.
 url: https://github.com/danigio15/dashboardmodern-v2/tree/main/ponte
@@ -42,6 +42,19 @@ ports_description:
 # il segno del Supervisor. Quel segno non esce mai da questo add-on: e'
 # esattamente il motivo per cui il ponte esiste.
 homeassistant_api: true
+
+# La cartella `www` di Home Assistant, in **sola lettura**.
+#
+# Serve a una cosa sola: far scegliere, dalla Config dell'app, le immagini che
+# ci sono gia' — le foto delle auto, i loghi, gli sfondi che chi ha una casa da
+# qualche anno tiene li' e che la plancia ha sempre usato con `/local/…`. Senza
+# questa riga la maschera delle foto dice «nessuna foto» a chi ne ha duecento.
+#
+# In sola lettura, e non e' prudenza generica: li' dentro ci sono le
+# automazioni, i temi e i segreti di chi ci abita. Il ponte guarda e non tocca;
+# quello che si carica dall'app finisce nella sua cartella, non nella loro.
+map:
+  - homeassistant_config:ro
 
 # Serve a una cosa sola: chiedere al Supervisor su quali indirizzi si trova
 # questa casa sulla rete locale, per poterlo dire ai telefoni quando si

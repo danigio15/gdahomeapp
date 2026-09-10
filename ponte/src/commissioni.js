@@ -47,7 +47,7 @@ import { gzipSync } from "node:zlib";
 
 import { Configurazione, PROFILO_PRINCIPALE, ScattoTroppoGrande } from "./configurazione.js";
 import { DISPOSITIVI_MASSIMI } from "./catalogo.js";
-import { BASE_DELLE_FOTO, FOTO_MASSIMA } from "./foto.js";
+import { BASE_DELLE_FOTO, BASE_DI_CASA, FOTO_MASSIMA } from "./foto.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 
 export const TIPO = "ponte/http";
@@ -151,6 +151,7 @@ export class Commissioni {
     configurazione = null,
     catalogo = null,
     foto = null,
+    fotoDiCasa = null,
     segnalazioni = null,
     scarica = scaricaDavvero,
     insieme = INSIEME,
@@ -166,6 +167,9 @@ export class Commissioni {
      * plancia chiedeva all'integrazione. */
     this.catalogo = catalogo;
     this.foto = foto;
+    /* Quelle che stanno gia' in Home Assistant, in sola lettura: chi ha una
+     * casa da qualche anno le ha li', e le sceglieva da li'. */
+    this.fotoDiCasa = fotoDiCasa;
     /* Le segnalazioni e la chat dell'app, che passano dal centralino. */
     this.segnalazioni = segnalazioni;
     this.scarica = scarica;
@@ -354,9 +358,27 @@ export class Commissioni {
     const percorso = detto.path ?? "";
     if (typeof percorso !== "string" || percorso.length > 512)
       return no(id, "invalid_format", "percorso non valido");
-    const elenco = this.foto.elenca(percorso);
+    /* Da quale delle due cartelle: quella del ponte — dove finisce quello che
+     * si carica dall'app — o quella di Home Assistant, dove c'e' quello che
+     * c'era gia'. Senza dire niente si guarda nel ponte, che e' come era
+     * prima: una versione vecchia dell'app non deve trovarsi sotto le mani
+     * una cartella che non si aspetta. */
+    const diCasa = detto.root === "casa";
+    const dove = diCasa ? this.fotoDiCasa : this.foto;
+    if (!dove) return no(id, "not_found", "Questa cartella non c'e'");
+    const elenco = dove.elenca(percorso);
     if (elenco === null) return no(id, "not_found", "La cartella non esiste dentro www");
-    return si(id, elenco);
+    /* Quali cartelle si possono guardare: la maschera lo chiede una volta e
+     * sa se mostrare il tasto «Home Assistant», invece di offrirlo e poi
+     * dire che non c'e' niente. */
+    return si(id, {
+      ...elenco,
+      root: diCasa ? "casa" : "ponte",
+      roots: {
+        ponte: Boolean(this.foto?.cE),
+        casa: Boolean(this.fotoDiCasa?.cE),
+      },
+    });
   }
 
   _caricaUnaFoto(detto) {
@@ -404,6 +426,18 @@ export class Commissioni {
       return si(id, impacchetta(stato, tipo, letto, { senzaGzip }));
     }
 
+    /* E `/local/…` e' la cartella `www` di Home Assistant.
+     *
+     * Dentro Home Assistant quell'indirizzo lo serve Home Assistant stessa, e
+     * la plancia lo usa da sempre. Nell'app la plancia gira dietro il
+     * servitore, e li' quell'indirizzo non porta da nessuna parte: se lo
+     * serve il ponte, dal disco, e la stessa configurazione mostra la stessa
+     * foto in tutti e due i posti. Sola lettura, e solo immagini. */
+    if (percorso.startsWith(`${BASE_DI_CASA}/`) && this.fotoDiCasa) {
+      const { stato, tipo, corpo: letto } = this.fotoDiCasa.leggi(percorso);
+      return si(id, impacchetta(stato, tipo, letto, { senzaGzip }));
+    }
+
     /* I file della plancia stanno qui, nell'add-on: non si va da nessuna
      * parte. Il metodo non conta, e' un file. */
     if (percorso.startsWith("/dashboardmodern_static/") && this.plancia?.cE) {
@@ -413,7 +447,11 @@ export class Commissioni {
 
     const dove = await this._dove(percorso);
     if (!dove) {
-      return no(id, "not_allowed", "di qui passano solo /api/ e /dashboardmodern_static/");
+      return no(
+        id,
+        "not_allowed",
+        "di qui passano solo /api/, /dashboardmodern_static/ e /local/",
+      );
     }
 
     const intestazioni = { ...dove.intestazioni, "accept-encoding": "identity" };

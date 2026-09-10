@@ -10,7 +10,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
@@ -25,7 +25,7 @@ import {
   TIPO_PLANCIA,
 } from "../src/commissioni.js";
 import { Configurazione } from "../src/configurazione.js";
-import { BASE_DELLE_FOTO, Foto } from "../src/foto.js";
+import { BASE_DELLE_FOTO, BASE_DI_CASA, Foto } from "../src/foto.js";
 import { Dispositivi } from "../src/dispositivi.js";
 import { Plancia } from "../src/plancia.js";
 import { Ponte } from "../src/ponte.js";
@@ -957,4 +957,130 @@ test("chi non sa aprire il gzip lo dice, e il ponte non comprime", () => {
 test("chi non lo chiede riceve quello che riceveva prima", () => {
   const testo = Buffer.from("y".repeat(4096));
   assert.equal(impacchetta(200, "text/css", testo, {}).compresso, "gzip");
+});
+
+/* ─── Le foto che stanno gia' in Home Assistant ──────────────────────────── */
+
+/* Chi ha una casa da qualche anno ha le foto delle auto, i loghi e gli sfondi
+ * in `config/www`, e la plancia li ha sempre chiamati `/local/…`. Il ponte ci
+ * entra in sola lettura e li serve con quello stesso indirizzo: cosi' una
+ * configurazione fatta dall'app mostra la stessa foto nella plancia dentro
+ * Home Assistant, e viceversa. */
+
+function dueCartelle() {
+  const dove = mkdtempSync(join(tmpdir(), "due-"));
+  mkdirSync(join(dove, "casa", "www"), { recursive: true });
+  writeFileSync(
+    join(dove, "casa", "www", "auto.png"),
+    Buffer.concat([Buffer.from("\x89PNG\r\n\x1a\n", "latin1"), Buffer.alloc(16, 1)]),
+  );
+  return {
+    dove,
+    foto: new Foto({ cartella: join(dove, "ponte", "www") }),
+    fotoDiCasa: new Foto({
+      cartella: join(dove, "casa", "www"),
+      base: BASE_DI_CASA,
+      scrivibile: false,
+    }),
+    via: () => rmSync(dove, { recursive: true, force: true }),
+  };
+}
+
+test("l'elenco delle foto dice in quale cartella si guarda, e quali ci sono", async () => {
+  const { foto, fotoDiCasa, via } = dueCartelle();
+  try {
+    const commissioni = new Commissioni({
+      casa: casaDiProva(),
+      registro: ZITTO,
+      foto,
+      fotoDiCasa,
+    });
+
+    /* Senza dire niente si guarda nel ponte: e' come era prima, e una
+     * versione vecchia dell'app non deve trovarsi sotto le mani una cartella
+     * che non si aspetta. */
+    const suo = await commissioni.rispondi({ id: 1, type: "dashboardmodern/www/list" });
+    assert.equal(suo.result.root, "ponte");
+    assert.deepEqual(suo.result.images, []);
+    assert.deepEqual(suo.result.roots, { ponte: false, casa: true });
+
+    const diCasa = await commissioni.rispondi({
+      id: 2,
+      type: "dashboardmodern/www/list",
+      root: "casa",
+    });
+    assert.equal(diCasa.result.root, "casa");
+    assert.deepEqual(
+      diCasa.result.images.map((una) => una.url),
+      ["/local/auto.png"],
+    );
+  } finally {
+    via();
+  }
+});
+
+test("una foto di Home Assistant si serve a `/local/…`, e non ci si scrive", async () => {
+  const { foto, fotoDiCasa, via } = dueCartelle();
+  try {
+    const commissioni = new Commissioni({
+      casa: casaDiProva(),
+      registro: ZITTO,
+      foto,
+      fotoDiCasa,
+    });
+
+    const letta = await commissioni.rispondi({
+      id: 1,
+      type: TIPO,
+      metodo: "GET",
+      percorso: "/local/auto.png",
+      senzaGzip: true,
+    });
+    assert.equal(letta.result.stato, 200);
+    assert.equal(letta.result.tipo, "image/png");
+
+    /* Dalla cartella non si esce: e' l'unico modo in cui una richiesta
+     * potrebbe leggere le automazioni o i segreti di chi ci abita. */
+    const fuori = await commissioni.rispondi({
+      id: 2,
+      type: TIPO,
+      metodo: "GET",
+      percorso: "/local/secrets.yaml",
+      senzaGzip: true,
+    });
+    assert.equal(fuori.result.stato, 404);
+
+    /* Il caricamento va sempre nella cartella del ponte, mai in quella di
+     * Home Assistant. */
+    const messa = await commissioni.rispondi({
+      id: 3,
+      type: "dashboardmodern/www/upload",
+      filename: "nuova.png",
+      data: Buffer.concat([
+        Buffer.from("\x89PNG\r\n\x1a\n", "latin1"),
+        Buffer.alloc(16, 1),
+      ]).toString("base64"),
+    });
+    assert.match(messa.result.path, /^\/dashboardmodern_static\/www\//);
+  } finally {
+    via();
+  }
+});
+
+test("senza la cartella di Home Assistant non succede niente di male", async () => {
+  /* L'add-on aggiornato ma non ancora riavviato non ce l'ha mappata. Prima
+   * qui il ponte cadeva a meta' accensione. */
+  const commissioni = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    foto: new Foto({ cartella: join(tmpdir(), "non-esiste-mai", "www") }),
+    fotoDiCasa: new Foto({ cartella: "", base: BASE_DI_CASA, scrivibile: false }),
+  });
+  const detto = await commissioni.rispondi({
+    id: 1,
+    type: "dashboardmodern/www/list",
+    root: "casa",
+  });
+  assert.equal(detto.result.available, false);
+  assert.deepEqual(detto.result.roots, { ponte: false, casa: false });
 });

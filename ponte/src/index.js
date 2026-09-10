@@ -15,7 +15,7 @@ import { Chiamata } from "./chiamata.js";
 import { Commissioni } from "./commissioni.js";
 import { Catalogo } from "./catalogo.js";
 import { Configurazione } from "./configurazione.js";
-import { Foto } from "./foto.js";
+import { BASE_DI_CASA, Foto } from "./foto.js";
 import { Plancia } from "./plancia.js";
 import { Identita } from "./identita.js";
 import { Dispositivi } from "./dispositivi.js";
@@ -62,6 +62,17 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * plancia chiedeva all'integrazione, e che qui fa il ponte. */
   const catalogo = new Catalogo({ casa, registro });
   const foto = new Foto({ cartella: join(opzioni.cartella, "www") });
+  /* E quelle che stanno gia' in Home Assistant, in sola lettura.
+   *
+   * Chi ha una casa da qualche anno ha duecento immagini in `config/www` e le
+   * sceglieva da li'. Senza questa riga la maschera delle foto gli diceva
+   * «nessuna foto, ancora», che e' una risposta sbagliata detta con
+   * sicurezza. */
+  const fotoDiCasa = new Foto({
+    cartella: opzioni.wwwDiCasa,
+    base: BASE_DI_CASA,
+    scrivibile: false,
+  });
   /* Chi e' questa casa per il centralino: serve alla chiamata, e alle
    * segnalazioni, che al centralino si presentano allo stesso modo. */
   const identita = new Identita({ cartella: opzioni.cartella });
@@ -81,6 +92,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     configurazione,
     catalogo,
     foto,
+    fotoDiCasa,
     segnalazioni,
   });
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni });

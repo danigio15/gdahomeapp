@@ -29,6 +29,19 @@ import { basename, extname, join, resolve, sep } from "node:path";
 
 export const BASE_DELLE_FOTO = "/dashboardmodern_static/www";
 
+/* La cartella `www` di Home Assistant, che la plancia ha sempre usato.
+ *
+ * Chi ha una casa da qualche anno ci ha dentro le foto delle auto, i loghi,
+ * gli sfondi — e li sceglieva da li'. Il ponte non ci entrava, e la maschera
+ * delle foto dell'app diceva «nessuna foto» a chi ne aveva duecento.
+ *
+ * Ci entra in sola lettura (`homeassistant_config:ro` nel manifesto), e
+ * l'indirizzo che scrive e' quello vero: `/local/…`, lo stesso che scrive la
+ * Config della dashboard. Cosi' una configurazione fatta dall'app si vede
+ * uguale nella plancia dentro Home Assistant, e viceversa — che e' tutto il
+ * punto. */
+export const BASE_DI_CASA = "/local";
+
 /* Dove finiscono i caricamenti, per non sparpagliare. */
 const SOTTOCARTELLA = "dashboardmodern";
 
@@ -86,8 +99,20 @@ function vuota(disponibile) {
 }
 
 export class Foto {
-  constructor({ cartella }) {
-    this.cartella = resolve(cartella);
+  /** [base] e' il prefisso degli indirizzi che scrive; [scrivibile] dice se ci
+   * si puo' caricare sopra. La cartella di Home Assistant si legge e basta:
+   * quella e' roba di chi ci abita, non nostra da riordinare. */
+  constructor({ cartella, base = BASE_DELLE_FOTO, scrivibile = true }) {
+    /* Una cartella che non c'e' e' un magazzino vuoto, non un errore.
+     *
+     * Non e' un dettaglio: la cartella di Home Assistant esiste solo se il
+     * Supervisor l'ha montata, e chi lancia il ponte sul banco non ne ha
+     * nessuna. Un `resolve(undefined)` qui buttava giu' l'avvio del ponte —
+     * e siccome succedeva a meta' accensione, lasciava in piedi i server gia'
+     * aperti: le prove non fallivano, restavano appese per sempre. */
+    this.cartella = cartella ? resolve(cartella) : "";
+    this.base = base;
+    this.scrivibile = scrivibile;
   }
 
   /* Elenca cartelle e immagini sotto la cartella delle foto.
@@ -96,8 +121,15 @@ export class Foto {
    * cui una richiesta potrebbe leggere qualcosa che non le compete, e va
    * fermata qui. Una cartella che non esiste ancora non e' un errore: e' una
    * casa senza foto, e la risposta lo dice con `available`. */
+  /* C'e' qualcosa da mostrare qui? Serve alla maschera per non offrire una
+   * strada che non porta da nessuna parte: senza la cartella di Home
+   * Assistant mappata, il tasto «Home Assistant» non si vede proprio. */
+  get cE() {
+    return Boolean(this.cartella) && existsSync(this.cartella);
+  }
+
   elenca(relativo = "") {
-    if (!existsSync(this.cartella)) return vuota(false);
+    if (!this.cE) return vuota(false);
     let base;
     try {
       base = realpathSync(this.cartella);
@@ -149,7 +181,7 @@ export class Foto {
       }
       if (suo.isDirectory()) folders.push({ name: nome, path: mostrato });
       else if (IMMAGINI.has(extname(nome).toLowerCase()))
-        images.push({ name: nome, path: mostrato, url: `${BASE_DELLE_FOTO}/${mostrato}` });
+        images.push({ name: nome, path: mostrato, url: `${this.base}/${mostrato}` });
     }
     const perNome = (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase());
     folders.sort(perNome);
@@ -172,6 +204,12 @@ export class Foto {
   /* Mette via una foto e ne da' l'indirizzo. `null` per un file che non e'
    * un'immagine, o troppo grande. */
   carica(nomeFile, byte) {
+    if (!this.cartella) return null;
+    /* Nella cartella di Home Assistant non si scrive. E' roba di chi ci abita
+     * — automazioni, temi, foto messe li' negli anni — e un add-on che ci
+     * lascia dentro file e' un add-on che, il giorno che si disinstalla,
+     * lascia sporco in casa d'altri. */
+    if (!this.scrivibile) return null;
     const nome = nomePulito(nomeFile);
     if (!CARICABILI.has(extname(nome))) return null;
     if (!Buffer.isBuffer(byte) || !byte.length || byte.length > FOTO_MASSIMA) return null;
@@ -199,14 +237,15 @@ export class Foto {
         destinazione = join(cartella, `${radice}-${contatore}${suffisso}`);
       }
     }
-    return { path: `${BASE_DELLE_FOTO}/${SOTTOCARTELLA}/${basename(destinazione)}` };
+    return { path: `${this.base}/${SOTTOCARTELLA}/${basename(destinazione)}` };
   }
 
   /* Una foto, dal percorso come lo chiede il browser. */
   leggi(percorso) {
+    if (!this.cartella) return questoNo();
     const pulito = String(percorso || "").split("?")[0];
-    if (!pulito.startsWith(`${BASE_DELLE_FOTO}/`)) return questoNo();
-    const pezzi = pulito.slice(BASE_DELLE_FOTO.length + 1).split("/");
+    if (!pulito.startsWith(`${this.base}/`)) return questoNo();
+    const pezzi = pulito.slice(this.base.length + 1).split("/");
     if (!pezzi.length || !pezzi.every((uno) => uno && uno !== ".." && PEZZO_BUONO.test(uno)))
       return questoNo();
     const tipo = TIPI[extname(pezzi[pezzi.length - 1]).toLowerCase()];

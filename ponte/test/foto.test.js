@@ -7,7 +7,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { BASE_DELLE_FOTO, Foto, FOTO_MASSIMA, nomePulito } from "../src/foto.js";
+import { BASE_DELLE_FOTO, BASE_DI_CASA, Foto, FOTO_MASSIMA, nomePulito } from "../src/foto.js";
 
 const PNG = Buffer.concat([Buffer.from("\x89PNG\r\n\x1a\n", "latin1"), Buffer.alloc(16, 1)]);
 const JPEG = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(16, 2)]);
@@ -119,4 +119,84 @@ test("dalla cartella non si esce, ne' leggendo ne' elencando", () => {
   assert.equal(foto.leggi("/dashboardmodern_static/abc/legacy/dashboard.html").stato, 404);
   assert.equal(foto.leggi("").stato, 404);
   via();
+});
+
+/* ─── La cartella di Home Assistant ──────────────────────────────────────── */
+
+/* Chi ha una casa da qualche anno ha duecento immagini in `config/www` e le
+ * sceglieva da li'. Il ponte ci entra in sola lettura, e gli indirizzi che
+ * scrive sono quelli veri di Home Assistant — `/local/…` — cosi' la stessa
+ * configurazione mostra la stessa foto nella plancia dentro Home Assistant e
+ * nella plancia dentro l'app. */
+
+function cartellaDiCasa() {
+  const dove = mkdtempSync(join(tmpdir(), "casa-"));
+  mkdirSync(join(dove, "www", "auto"), { recursive: true });
+  writeFileSync(join(dove, "www", "sfondo.png"), PNG);
+  writeFileSync(join(dove, "www", "auto", "leapmotor.jpg"), JPEG);
+  writeFileSync(join(dove, "www", "segreti.yaml"), "niente");
+  return {
+    foto: new Foto({
+      cartella: join(dove, "www"),
+      base: BASE_DI_CASA,
+      scrivibile: false,
+    }),
+    dove,
+    via: () => rmSync(dove, { recursive: true, force: true }),
+  };
+}
+
+test("le immagini di Home Assistant si elencano con l'indirizzo vero", () => {
+  const { foto, via } = cartellaDiCasa();
+  try {
+    const dentro = foto.elenca();
+    assert.equal(dentro.available, true);
+    assert.deepEqual(
+      dentro.images.map((una) => una.url),
+      ["/local/sfondo.png"],
+    );
+    assert.deepEqual(
+      dentro.folders.map((una) => una.name),
+      ["auto"],
+    );
+    /* Un file che non e' un'immagine non si elenca: li' dentro ci sono anche
+     * le automazioni e i segreti di chi ci abita. */
+    assert.equal(
+      dentro.images.some((una) => una.name.endsWith(".yaml")),
+      false,
+    );
+    assert.deepEqual(
+      foto.elenca("auto").images.map((una) => una.url),
+      ["/local/auto/leapmotor.jpg"],
+    );
+  } finally {
+    via();
+  }
+});
+
+test("da Home Assistant si legge e non si scrive", () => {
+  const { foto, via } = cartellaDiCasa();
+  try {
+    const letta = foto.leggi("/local/sfondo.png");
+    assert.equal(letta.stato, 200);
+    assert.equal(letta.tipo, "image/png");
+
+    /* La cartella di chi ci abita non si tocca: un add-on che ci lascia
+     * dentro file e' un add-on che, il giorno che si disinstalla, lascia
+     * sporco in casa d'altri. */
+    assert.equal(foto.carica("nuova.png", PNG), null);
+  } finally {
+    via();
+  }
+});
+
+test("una cartella che non c'e' e' un magazzino vuoto, non un errore", () => {
+  /* Il Supervisor la monta solo se il manifesto la chiede, e chi lancia il
+   * ponte sul banco non ne ha nessuna. Prima qui il ponte cadeva a meta'
+   * accensione, lasciando in piedi i server gia' aperti. */
+  const senza = new Foto({ cartella: "", base: BASE_DI_CASA, scrivibile: false });
+  assert.equal(senza.cE, false);
+  assert.equal(senza.elenca().available, false);
+  assert.equal(senza.leggi("/local/sfondo.png").stato, 404);
+  assert.equal(senza.carica("nuova.png", PNG), null);
 });

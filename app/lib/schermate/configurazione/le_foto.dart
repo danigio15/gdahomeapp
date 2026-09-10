@@ -55,6 +55,16 @@ class _LeFotoState extends State<_LeFoto> {
   String? _male;
   bool _sto = false;
 
+  /* In quale delle due cartelle si sta guardando.
+   *
+   * Si parte da quella di Home Assistant quando c'e': e' li' che chi ha una
+   * casa da qualche anno tiene le foto delle auto e i loghi, e la prima volta
+   * che si apre questa maschera si sta cercando **una foto che si ha gia'**,
+   * non una da caricare. Quale ci sia lo dice il ponte alla prima lettura,
+   * quindi il primo giro si fa comunque nella sua. */
+  var _radice = archivio.RadiceDelleFoto.ilPonte;
+  var _giaScelta = false;
+
   /* Le cartelle da cui si e' passati, per tornare indietro senza rileggere
    * l'albero intero. */
   final _percorsi = <String>[''];
@@ -73,11 +83,40 @@ class _LeFotoState extends State<_LeFoto> {
     }
     setState(() => _male = null);
     try {
-      final letto = await archivio.elencaLeFoto(filo, dove: _percorsi.last);
-      if (mounted) setState(() => _dentro = letto);
+      final letto = await archivio.elencaLeFoto(
+        filo,
+        dove: _percorsi.last,
+        radice: _radice,
+      );
+      if (!mounted) return;
+      /* La prima volta, se la cartella di Home Assistant c'e' e la sua e'
+       * vuota, si va di la': cercare una foto che si ha gia' e trovarsi
+       * davanti «nessuna foto, ancora» e' la risposta sbagliata detta con
+       * sicurezza. */
+      if (!_giaScelta) {
+        _giaScelta = true;
+        if (!letto.cE && letto.quali.contains(archivio.RadiceDelleFoto.laCasa)) {
+          setState(() => _radice = archivio.RadiceDelleFoto.laCasa);
+          await _leggi();
+          return;
+        }
+      }
+      setState(() => _dentro = letto);
     } on Object catch (male) {
       if (mounted) setState(() => _male = '$male');
     }
+  }
+
+  void _cambiaCartella(archivio.RadiceDelleFoto quale) {
+    if (quale == _radice) return;
+    setState(() {
+      _radice = quale;
+      _percorsi
+        ..clear()
+        ..add('');
+      _dentro = null;
+    });
+    unawaited(_leggi());
   }
 
   Future<void> _carica(DaDoveLAllegato daDove) async {
@@ -140,6 +179,24 @@ class _LeFotoState extends State<_LeFoto> {
           top: false,
           child: Column(
             children: [
+              if ((dentro?.quali.length ?? 1) > 1)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                  child: Row(
+                    children: [
+                      for (final una in archivio.RadiceDelleFoto.values)
+                        if (dentro!.quali.contains(una))
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Text(una.comeSiChiama),
+                              selected: _radice == una,
+                              onSelected: (_) => _cambiaCartella(una),
+                            ),
+                          ),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: switch ((dentro, _male)) {
                   (_, final String male) => StatoVuoto(
@@ -204,12 +261,16 @@ class _LeFotoState extends State<_LeFoto> {
                           ),
                         ),
                       if (!letto.cE)
-                        const StatoVuoto(
+                        StatoVuoto(
                           icona: Icons.photo_library_outlined,
                           titolo: 'Nessuna foto, ancora',
-                          sotto:
-                              'Carica la prima col bottone qui sotto: finisce '
-                              'sul ponte, in casa tua.',
+                          sotto: _radice.ciSiScrive
+                              ? 'Carica la prima col bottone qui sotto: '
+                                    'finisce sul ponte, in casa tua.'
+                              : 'In Home Assistant, dentro «config/www», non '
+                                    'c\'e\' nessuna immagine. Se l\'add-on e\' '
+                                    'appena stato aggiornato, riavvialo: prima '
+                                    'quella cartella non la vedeva.',
                           dentroUnaLista: true,
                         )
                       else ...[
@@ -255,26 +316,42 @@ class _LeFotoState extends State<_LeFoto> {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _sto
-                            ? null
-                            : () => _carica(DaDoveLAllegato.galleria),
-                        icon: const Icon(Icons.photo_rounded),
-                        label: const Text('Dalla galleria'),
+                    if (!_radice.ciSiScrive)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          'Queste sono le immagini che hai gia\' in Home '
+                          'Assistant: si scelgono e basta. Per caricarne una '
+                          'nuova, passa a «Caricate qui».',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colori.onSurfaceVariant),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _sto
-                            ? null
-                            : () => _carica(DaDoveLAllegato.fotocamera),
-                        icon: const Icon(Icons.photo_camera_rounded),
-                        label: const Text('Scattala'),
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _sto || !_radice.ciSiScrive
+                                ? null
+                                : () => _carica(DaDoveLAllegato.galleria),
+                            icon: const Icon(Icons.photo_rounded),
+                            label: const Text('Dalla galleria'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _sto || !_radice.ciSiScrive
+                                ? null
+                                : () => _carica(DaDoveLAllegato.fotocamera),
+                            icon: const Icon(Icons.photo_camera_rounded),
+                            label: const Text('Scattala'),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
