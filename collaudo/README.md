@@ -26,7 +26,7 @@ E' l'unica differenza col telefono, dove il servitore sta dentro l'app.
 ## Come si accende
 
 ```bash
-cd app && flutter build web --release --dart-define=COLLAUDO=true \
+cd app && flutter build web --release --pwa-strategy=none --dart-define=COLLAUDO=true \
   --dart-define=PLANCIA_URL=http://127.0.0.1:8765
 cd ../collaudo && npm install && npm run guarda
 ```

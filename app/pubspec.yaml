@@ -53,6 +53,11 @@ dependencies:
   webview_flutter_wkwebview: ^3.26.1
   path_provider: ^2.1.6
 
+  # Il documento e il browser, per la versione web: il service worker che
+  # serve la plancia, e i messaggi fra l'app e il riquadro. Sul telefono
+  # questo pacchetto non entra in gioco.
+  web: ^1.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

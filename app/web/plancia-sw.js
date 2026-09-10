@@ -6,10 +6,16 @@
  * telefono».
  *
  * Un service worker fa la stessa cosa da dentro: si mette in mezzo alle
- * richieste di una cartella — qui `plancia/` — e risponde lui. I file non ce
- * li ha: li chiede alla pagina che lo ha registrato, cioe' all'app, che li fa
- * arrivare **sul filo** come li fa arrivare sul telefono. Stessa strada,
- * stessi byte, stessa cifratura: cambia solo chi li serve all'ultimo metro.
+ * richieste di due cartelle — `dashboardmodern_static/`, dove sta tutta la
+ * plancia, e `api/`, dove la pagina chiede lo storico e le istantanee delle
+ * telecamere — e risponde lui. I file non ce li ha: li chiede alla pagina che
+ * lo ha registrato, cioe' all'app, che li fa arrivare **sul filo** come li fa
+ * arrivare sul telefono. Stessa strada, stessi byte, stessa cifratura: cambia
+ * solo chi li serve all'ultimo metro.
+ *
+ * Tutto il resto passa: i file dell'app, i suoi caratteri, i suoi disegni. Un
+ * service worker che risponde a tutto e' un service worker che prima o poi
+ * risponde male a qualcosa.
  *
  * Cosa questo NON aggiunge: nessuna porta nuova sul ponte, e niente che esca
  * dal browser. Un service worker risponde solo alle pagine della sua origine,
@@ -48,12 +54,14 @@ self.addEventListener("message", (evento) => {
   chi(detto);
 });
 
+/* Le due cartelle che si servono. Il resto non si tocca. */
+const MIE = ["/dashboardmodern_static/", "/api/"];
+
 async function chiediAllApp(percorso) {
-  /* A chi si chiede: a una qualunque delle pagine di questa origine. Ce n'e'
-   * una sola — l'app — ma il riquadro della plancia e' una pagina anche lui,
-   * e a lui non serve chiedere niente: non saprebbe rispondere. */
+  /* A chi si chiede: all'app. Il riquadro della plancia e' una pagina anche
+   * lui, e a lui non serve chiedere niente — non saprebbe rispondere. */
   const pagine = await self.clients.matchAll({ type: "window" });
-  const app = pagine.find((una) => !una.url.includes("/plancia/"));
+  const app = pagine.find((una) => !una.url.includes("/dashboardmodern_static/"));
   if (!app) throw new Error("l'app non c'e'");
 
   const numero = prossima++;
@@ -72,13 +80,15 @@ async function chiediAllApp(percorso) {
 self.addEventListener("fetch", (evento) => {
   const dove = new URL(evento.request.url);
   if (dove.origin !== self.location.origin) return;
-  const dentro = dove.pathname.indexOf("/plancia/");
-  if (dentro < 0) return;
+  const mia = MIE.find((quale) => dove.pathname.includes(quale));
+  if (!mia) return;
 
-  /* Quello che si chiede all'app e' il percorso **dentro** la plancia, con la
-   * sua eventuale domanda: le chiamate REST della pagina — lo storico, le
-   * istantanee delle telecamere — la portano dietro. */
-  const percorso = dove.pathname.slice(dentro + "/plancia".length) + dove.search;
+  /* Quello che si chiede all'app e' il percorso come lo scrive la plancia,
+   * con la sua eventuale domanda: le chiamate REST — lo storico, le
+   * istantanee delle telecamere — la portano dietro. Davanti puo' esserci il
+   * prefisso di dove sta l'app, e li' non c'entra niente. */
+  const percorso =
+    dove.pathname.slice(dove.pathname.indexOf(mia)) + dove.search;
   evento.respondWith(
     chiediAllApp(percorso).then(
       (detto) => {

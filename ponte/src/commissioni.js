@@ -388,6 +388,9 @@ export class Commissioni {
       return no(id, "not_allowed", "percorso non valido");
     }
 
+    /* Se chi chiede sa aprire il gzip. Un browser no, e lo dice. */
+    const senzaGzip = detto.senzaGzip === true;
+
     let corpo = null;
     if (detto.corpo != null) {
       if (typeof detto.corpo !== "string") return no(id, "not_allowed", "corpo non valido");
@@ -398,14 +401,14 @@ export class Commissioni {
     /* Le foto caricate dalla plancia stanno nel ponte. */
     if (percorso.startsWith(`${BASE_DELLE_FOTO}/`) && this.foto) {
       const { stato, tipo, corpo: letto } = this.foto.leggi(percorso);
-      return si(id, impacchetta(stato, tipo, letto));
+      return si(id, impacchetta(stato, tipo, letto, { senzaGzip }));
     }
 
     /* I file della plancia stanno qui, nell'add-on: non si va da nessuna
      * parte. Il metodo non conta, e' un file. */
     if (percorso.startsWith("/dashboardmodern_static/") && this.plancia?.cE) {
       const { stato, tipo, corpo: letto } = this.plancia.leggi(percorso);
-      return si(id, impacchetta(stato, tipo, letto));
+      return si(id, impacchetta(stato, tipo, letto, { senzaGzip }));
     }
 
     const dove = await this._dove(percorso);
@@ -432,7 +435,7 @@ export class Commissioni {
         massimo: RISPOSTA_MASSIMA,
         attesa: ATTESA,
       });
-      return si(id, impacchetta(stato, tipo, ricevuto));
+      return si(id, impacchetta(stato, tipo, ricevuto, { senzaGzip }));
     } catch (errore) {
       this.registro.attenzione(
         `commissione fallita (${metodo} ${percorso}): ${errore?.message || errore}`,
@@ -477,11 +480,18 @@ export class Commissioni {
 }
 
 /* Il corpo in base64, compresso se e' testo. Chi lo riceve guarda
- * `compresso` e sa cosa fare. */
-export function impacchetta(stato, tipo, corpo) {
+ * `compresso` e sa cosa fare.
+ *
+ * Con `senzaGzip` non si comprime: e' quello che chiede l'app quando gira in
+ * un **browser**, dove il gzip non si apre — `dart:io` non c'e', e mettersi in
+ * casa un decompressore per una cosa che si puo' semplicemente non fare e' il
+ * modo lungo. Sulla rete di casa qualche byte in piu' non si sente; fuori casa
+ * e' il prezzo di poter guardare la casa da un browser. Chi non lo chiede —
+ * cioe' ogni telefono — riceve quello che riceveva prima. */
+export function impacchetta(stato, tipo, corpo, { senzaGzip = false } = {}) {
   const dati = Buffer.isBuffer(corpo) ? corpo : Buffer.from(corpo ?? "");
   const tipoPulito = String(tipo || "application/octet-stream");
-  if (DA_COMPRIMERE.test(tipoPulito) && dati.length >= ALMENO) {
+  if (!senzaGzip && DA_COMPRIMERE.test(tipoPulito) && dati.length >= ALMENO) {
     return { stato, tipo: tipoPulito, corpo: gzipSync(dati).toString("base64"), compresso: "gzip" };
   }
   return { stato, tipo: tipoPulito, corpo: dati.toString("base64") };

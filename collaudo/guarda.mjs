@@ -381,7 +381,8 @@ async function main() {
   if (!existsSync(join(costruita, "index.html"))) {
     throw new Error(
       "l'app non e' stata costruita. Prima:\n" +
-        "  cd app && flutter build web --release --dart-define=COLLAUDO=true" +
+        "  cd app && flutter build web --release --pwa-strategy=none" +
+        " --dart-define=COLLAUDO=true" +
         ` --dart-define=PLANCIA_URL=http://127.0.0.1:${PORTA_DEL_SERVITORE}`,
     );
   }

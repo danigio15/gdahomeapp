@@ -940,3 +940,21 @@ test("le foto si caricano e si elencano dal ponte, e la pagina le riceve come fi
   assert.equal(chieste.length, 0);
   rmSync(cartella, { recursive: true, force: true });
 });
+
+test("chi non sa aprire il gzip lo dice, e il ponte non comprime", () => {
+  /* Un browser non ha `dart:io` e il gzip non lo apre. Mettersi in casa un
+   * decompressore per una cosa che si puo' semplicemente non fare e' il modo
+   * lungo: chi non sa aprirlo lo dice, e il ponte non comprime. */
+  const testo = Buffer.from("x".repeat(4096));
+  const compresso = impacchetta(200, "text/html", testo);
+  assert.equal(compresso.compresso, "gzip");
+
+  const nudo = impacchetta(200, "text/html", testo, { senzaGzip: true });
+  assert.equal(nudo.compresso, undefined);
+  assert.equal(Buffer.from(nudo.corpo, "base64").toString(), testo.toString());
+});
+
+test("chi non lo chiede riceve quello che riceveva prima", () => {
+  const testo = Buffer.from("y".repeat(4096));
+  assert.equal(impacchetta(200, "text/css", testo, {}).compresso, "gzip");
+});

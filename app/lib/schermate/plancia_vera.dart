@@ -31,10 +31,12 @@ import '../vestito/pezzi.dart';
 import 'da_dove.dart';
 import 'riquadro/qui.dart' as riquadro;
 
-/// Dove sta la plancia quando l'app gira sul web: li' un server dentro la
-/// pagina non si puo' aprire, e il riquadro punta a un servitore acceso a
-/// parte — quello del collaudo, `bin/servitore.dart`. Sul telefono questa
-/// riga non c'e'.
+/// Un servitore acceso a parte, invece di quello che l'app si apre da se'.
+///
+/// Serve al collaudo, che nel browser fa girare l'app contro
+/// `bin/servitore.dart`. Vuoto — cioe' quasi sempre — la plancia arriva dal
+/// servitore di questo sistema: un server vero sul telefono, un service worker
+/// nel browser.
 const String _planciaSulWeb = String.fromEnvironment('PLANCIA_URL');
 
 /// Come si apre la plancia vera su questo sistema: il servitore, e il
@@ -285,31 +287,17 @@ class PlanciaVeraState extends State<PlanciaVera> {
       );
     }
 
-    final Uri pagina;
-    if (kIsWeb) {
-      if (_planciaSulWeb.isEmpty) {
-        return _Stato(
-          collegamento: collegamento,
-          vaiAlleCase: widget.vaiAlleCase,
-          icona: Icons.phone_android_rounded,
-          titolo: 'La plancia si vede sul telefono',
-          sotto:
-              'Sul web l\'app non puo\' aprire il server che le serve. '
-              'Installala su un telefono, o accendi il servitore a parte.',
-        );
-      }
-      pagina = Uri.parse(_planciaSulWeb);
-    } else {
-      final servitore = _servitore;
-      if (servitore == null) {
-        if (!_servitoreChiesto) unawaited(_accendi());
-        return _Attesa(collegamento: collegamento, cosa: 'Accendo la plancia…');
-      }
-      /* Prima di chiedere la pagina, cosi' le misure ci sono gia' dentro e
-       * non si vede un salto al primo fotogramma. */
-      servitore.margini = margini;
-      pagina = servitore.paginaDi(pannello);
+    final servitore = _servitore;
+    if (servitore == null) {
+      if (!_servitoreChiesto) unawaited(_accendi());
+      return _Attesa(collegamento: collegamento, cosa: 'Accendo la plancia…');
     }
+    /* Prima di chiedere la pagina, cosi' le misure ci sono gia' dentro e non
+     * si vede un salto al primo fotogramma. */
+    servitore.margini = margini;
+    final pagina = _planciaSulWeb.isNotEmpty
+        ? Uri.parse(_planciaSulWeb)
+        : servitore.paginaDi(pannello);
 
     if (_pagina != pagina) {
       /* Una pagina nuova — un'altra casa, un'integrazione aggiornata — si
