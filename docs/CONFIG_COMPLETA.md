@@ -420,8 +420,10 @@ passano una EV6 coreana con venti entità, una go-e e un evcc.
 2. **Le cinque mappe.** `cd_ev_visual`, `cd_ev_meta`, `cd_ups_meta`,
    `cd_devices`, `cd_report_devices`: visibili e modificabili riga per riga,
    senza la maschera che hanno là. Sono chiavi che quasi nessuno tocca.
-3. **Le icone `mdi:` delle stanze nelle azioni rapide**: la plancia 1.4.17 le
-   accetta accanto agli emoji; l'app scrive ancora solo l'emoji.
+Le icone delle azioni rapide, che sembravano un punto aperto, non lo sono: il
+catalogo della plancia mostra i nomi `mdi:`, ma quello che salva nella voce è
+il segno — «la forma portatile», dice il sorgente — e il segno è quello che
+l'app fa scrivere.
 
 ## Come si tiene onesto questo conto
 

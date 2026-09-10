@@ -1339,10 +1339,11 @@ try {
   await scorri(pagina, 1500);
   await attendi(600);
   await scatta(pagina, "6z4-caldaia-pellet");
-  /* Una caldaia aggiunta e' una modifica: tornando indietro l'app chiede. */
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
+  /* Una caldaia aggiunta e' una modifica, e la barra del salvataggio e'
+   * comparsa: si lascia stare dalla barra, poi si torna indietro. */
   await premi(pagina, "Lascia stare");
+  await attendi(600);
+  await premi(pagina, "Back", { inAlto: true });
   await attendi(700);
 
   /* Un'unita' del clima, aperta: dalla 1.4.17 ha la modalita' del

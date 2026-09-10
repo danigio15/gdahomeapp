@@ -184,9 +184,15 @@ Uint8List aperturaNuova() {
 /// messaggio rigiocato, e in un canale che passa da un terzo va rifiutato
 /// senza pensarci.
 class Busta {
-  Busta(this.chiave, {required DaChi io, this.comprime = false})
+  Busta(this.chiave, {required DaChi io, bool comprime = false})
     : mio = io,
-      suo = io == DaChi.casa ? DaChi.telefono : DaChi.casa;
+      suo = io == DaChi.casa ? DaChi.telefono : DaChi.casa,
+      /* Nel browser il gzip non c'e', e chiedere di comprimere li' non e'
+       * un ordine da eseguire ma una cosa da non fare: la prima busta sopra
+       * la soglia farebbe saltare tutto con un `UnsupportedError`. La
+       * stretta di mano gia' non lo chiede (`gzipDisponibile && gzip`); qui
+       * lo si tiene fermo anche per chi costruisce una busta a mano. */
+      comprime = comprime && compressione.gzipDisponibile;
 
   final SecretKey chiave;
   final DaChi mio;

@@ -268,11 +268,20 @@ void main() {
         expect(testo.length, greaterThan(sogliaDiCompressione));
 
         final chiusa = await casa.chiudi(testo);
-        expect(
-          chiusa.length,
-          lessThan(testo.length ~/ 4),
-          reason: '${chiusa.length} caratteri per ${testo.length} di testo',
-        );
+        if (gzipDisponibile) {
+          expect(
+            chiusa.length,
+            lessThan(testo.length ~/ 4),
+            reason: '${chiusa.length} caratteri per ${testo.length} di testo',
+          );
+        } else {
+          /* Nel browser non si comprime, nemmeno a chiederlo: la busta e'
+           * grande quanto il testo, e si apre lo stesso. */
+          expect(
+            base64.decode(chiusa).length,
+            12 + utf8.encode(testo).length + 16,
+          );
+        }
         expect(await telefono.apri(chiusa), testo);
         expect(telefono.ricevo, 1);
       },
@@ -318,17 +327,19 @@ void main() {
       () async {
         /* Roba che si comprime poco, cosi' anche compressa passa la soglia
        * dell'isolato: e' la strada che fa uno storico di consumi vero. */
+        /* Non `1 << 32`: in JavaScript gli spostamenti di bit lavorano a
+         * trentadue bit e quello fa zero, e `nextInt(0)` e' un errore. */
         final caso = Random(1);
         final testo = List.generate(
           20000,
-          (_) => caso.nextInt(1 << 32).toRadixString(36),
+          (_) => caso.nextInt(0x40000000).toRadixString(36),
         ).join(' ');
         final casa = Busta(chiave, io: DaChi.casa, comprime: true);
         final telefono = Busta(chiave, io: DaChi.telefono);
 
         final chiusa = await casa.chiudi(testo);
         expect(chiusa.length, greaterThan(Busta.sogliaAltrove));
-        expect(chiusa.length, lessThan(testo.length));
+        if (gzipDisponibile) expect(chiusa.length, lessThan(testo.length));
         expect(await telefono.apri(chiusa), testo);
       },
     );
@@ -352,6 +363,8 @@ void main() {
         await expectLater(telefono.apri(chiusa), throwsA(isA<BustaGuasta>()));
         expect(telefono.ricevo, 0, reason: 'una busta rifiutata non conta');
       },
+      /* Una bomba e' un gzip: senza gzip non si fa, e nel browser non c'e'. */
+      skip: gzipDisponibile ? false : 'nel browser non si comprime',
     );
   });
 
@@ -395,7 +408,7 @@ void main() {
       final grande = 'x' * (Busta.sogliaAltrove * 2);
       final dopo = Busta(chiave, io: DaChi.casa, comprime: true);
       expect(await telefono.apri(await dopo.chiudi(grande)), grande);
-    });
+    }, skip: gzipDisponibile ? false : 'nel browser non si comprime');
   });
 
   group('l\'apertura', () {

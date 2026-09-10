@@ -63,7 +63,11 @@ function siPorta(relativo) {
   if (FILE_SCARTATI.has(relativo)) return false;
   if (SCARTATI.has(extname(relativo))) return false;
   for (const motore of MOTORI_INUTILI) {
-    if (relativo === motore || relativo.startsWith(`${motore}/`) || relativo.startsWith(`${motore}.`))
+    if (
+      relativo === motore ||
+      relativo.startsWith(`${motore}/`) ||
+      relativo.startsWith(`${motore}.`)
+    )
       return false;
   }
   return true;
