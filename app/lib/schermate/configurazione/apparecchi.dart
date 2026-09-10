@@ -1189,13 +1189,14 @@ class _IMesi extends StatelessWidget {
           runSpacing: 6,
           children: [
             for (var mese = 1; mese <= 12; mese += 1)
+              /* Come nella plancia: nessun mese acceso vuol dire tutto
+               * l'anno, e le pastiglie stanno spente. Accenderle tutte e
+               * dodici torna a dire la stessa cosa, e si scrive niente. */
               FilterChip(
                 label: Text(_nomi[mese - 1]),
-                selected: scelti.isEmpty || scelti.contains(mese),
+                selected: scelti.contains(mese),
                 onSelected: (acceso) {
-                  final dopo = scelti.isEmpty
-                      ? {for (var m = 1; m <= 12; m += 1) m}
-                      : {...scelti};
+                  final dopo = {...scelti};
                   if (acceso) {
                     dopo.add(mese);
                   } else {

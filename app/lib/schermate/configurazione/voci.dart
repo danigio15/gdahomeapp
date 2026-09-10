@@ -517,13 +517,14 @@ Widget? schermataDi(
        * `unified-editors-section.js` scrive accanto alla valvola. */
       CampoDellApparecchio(
         'modo',
-        'L\'entita\' della modalita\' (In casa / Fuori / Vacanza)',
+        'L\'entita\' della modalita\'',
         entita: true,
         domini: ['select', 'input_select', 'sensor', 'climate'],
         spiega:
-            'I termostati smart tengono la modalita\' su un\'entita\' a '
-            'parte: TADO ha In casa e Fuori, altri aggiungono Vacanza o '
-            'Boost. Se e\' un select si cambia dalla scheda',
+            'In casa, Fuori, Vacanza: i termostati smart tengono la '
+            'modalita\' su un\'entita\' a parte — TADO ha In casa e Fuori, '
+            'altri aggiungono Vacanza o Boost. Se e\' un select si cambia '
+            'dalla scheda',
       ),
       /* Le durate sono i fermi dello slider (`FERMI_DELLO_SLIDER`): la
        * plancia porta comunque un numero qualsiasi al fermo piu' vicino. */
