@@ -25,7 +25,7 @@ import 'acquisti.dart';
 import 'assistenza.dart';
 import '../vestito/quanto_e_largo.dart';
 import 'barra.dart';
-import 'configurazione.dart';
+import 'questo_telefono.dart';
 import 'dispositivi.dart';
 import 'firma.dart';
 import 'menu.dart';
@@ -78,6 +78,17 @@ class _HomeState extends State<Home> {
   }
 
   void _vai(Sezione dove) {
+    /* La Configurazione non e' una schermata dell'app: e' la Config della
+     * plancia, quella della dashboard, e si apre sopra la plancia com'e'.
+     * Della voce del menu resta la porta — e' quello che vuol dire «uscita
+     * da dentro la plancia» — e dietro la porta c'e' la sua, intatta. */
+    if (dove == Sezione.configurazione) {
+      if (_sezione != Sezione.plancia) {
+        setState(() => _sezione = Sezione.plancia);
+      }
+      _plancia.currentState?.apriLaConfig();
+      return;
+    }
     /* Toccare «Plancia» quando ci si e' gia' la ricarica: e' il gesto piu'
      * vicino a tirare giu' per aggiornare, che dentro un riquadro non c'e'. */
     if (dove == _sezione) {
@@ -198,13 +209,13 @@ class _HomeState extends State<Home> {
                           collegamento: collegamento,
                           visibile: _sezione == Sezione.dispositivi,
                         ),
-                        Sezione.configurazione => SchermataDellaConfigurazione(
-                          collegamento: collegamento,
+                        /* La Configurazione qui non ha una schermata: la
+                         * voce apre la Config della plancia, sopra la
+                         * plancia. Il posto nella fila resta perche' le
+                         * sezioni e le voci del menu sono la stessa cosa. */
+                        Sezione.configurazione => const SizedBox.shrink(),
+                        Sezione.questoTelefono => SchermataDiQuestoTelefono(
                           impostazioni: widget.impostazioni,
-                          /* Serve al ritratto delle persone, che lo disegna
-                           * la plancia: e' la stessa che serve la plancia
-                           * vera, accesa una volta sola per tutta l'app. */
-                          fabbrica: widget.plancia,
                         ),
                         Sezione.acquisti => SchermataDegliAcquisti(
                           collegamento: collegamento,

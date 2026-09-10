@@ -206,6 +206,23 @@ class PlanciaVeraState extends State<PlanciaVera> {
     _riquadro.currentState?.ricarica();
   }
 
+  /* La Config chiesta prima che la pagina fosse pronta: si apre appena
+   * arriva. Succede aprendo l'app e andando subito sulla Config — il
+   * riquadro sta ancora leggendo i suoi script. */
+  bool _laConfigAppenaSiPuo = false;
+
+  /// Apre la Config della plancia: **quella** della dashboard, sopra la
+  /// pagina, com'e'. E' la voce «Configurazione» del menu dell'app: la porta
+  /// e' uscita da dentro la plancia, la Config no.
+  void apriLaConfig() {
+    if (!mounted) return;
+    if (!_caricata) {
+      _laConfigAppenaSiPuo = true;
+      return;
+    }
+    _riquadro.currentState?.apriLaConfig();
+  }
+
   @override
   Widget build(BuildContext context) {
     final collegamento = widget.collegamento;
@@ -372,6 +389,10 @@ class PlanciaVeraState extends State<PlanciaVera> {
                   _apertaSenzaCasa = true;
                 }
                 if (!_caricata) setState(() => _caricata = true);
+                if (_laConfigAppenaSiPuo) {
+                  _laConfigAppenaSiPuo = false;
+                  _riquadro.currentState?.apriLaConfig();
+                }
               },
               quandoFallisce: (perche) {
                 if (mounted) setState(() => _perche = perche);
@@ -498,6 +519,15 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
     final controllore = _controllore;
     if (controllore != null) {
       unawaited(riquadro.ricarica(controllore, widget.pagina));
+    }
+  }
+
+  /// Apre la Config della plancia: la maniglia sta nella pagina, e come si
+  /// tira dipende dal sistema — vedi `riquadro/sul_telefono.dart`.
+  void apriLaConfig() {
+    final controllore = _controllore;
+    if (controllore != null) {
+      unawaited(riquadro.apriLaConfig(controllore, widget.pagina));
     }
   }
 

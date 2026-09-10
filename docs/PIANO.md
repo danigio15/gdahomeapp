@@ -352,20 +352,20 @@ L'alberatura, il menu che la replica e le regole per piu' utenti stanno per
 esteso in [`CONFIG.md`](CONFIG.md): sono state lette dalla release **1.4.15**
 della plancia, scheda per scheda, e non riassunte a memoria.
 
-In due righe: le diciannove schede della Config — la fila orizzontale in cima
-all'editor, che su un telefono non ci sta — diventano **una voce del menu**
-con dentro le stesse diciannove, raggruppate in cinque famiglie piu' due
-nuove (chi puo' entrare, l'app). Scrivono le stesse chiavi sul ponte con gli
-stessi comandi, quindi la plancia se le ritrova e non c'e' niente da migrare.
+In due righe: la Config della plancia — il riquadro che nella dashboard si
+apre da dentro la plancia, e la cui fila di schede su un telefono non ci sta
+— diventa **una voce del menu**. Non una copia: quella, com'e'. Della Config
+si sposta la porta, e la stanza resta la sua (vedi
+[`CONFIG_COMPLETA.md`](CONFIG_COMPLETA.md), che racconta anche perche' la
+copia in Flutter e' stata cancellata).
 
 | pezzo | dove | stato |
 |---|---|---|
-| L'alberatura, letta dalla 1.4.15 | `app/lib/schermate/configurazione/albero.dart` | ✅ |
-| La schermata che la mostra | `app/lib/schermate/configurazione.dart` | ✅ |
 | La voce nel menu, e quella degli acquisti | `app/lib/schermate/menu.dart` | ✅ |
-| La prova che non si perde una scheda | `app/test/configurazione_test.dart` | ✅ |
-| Le schermate delle singole voci: si aprono e salvano | `app/lib/schermate/configurazione/` | ✅ |
-| Le 69 chiavi della Config che ancora non copre, e il multi-istanza | [`CONFIG_COMPLETA.md`](CONFIG_COMPLETA.md) | ⬜ |
+| La porta: la maniglia nella pagina servita | `app/lib/plancia/premesse.dart` | ✅ |
+| Chi la tira, dal menu | `app/lib/schermate/plancia_vera.dart` | ✅ |
+| Quello che e' di questo telefono e non della casa | `app/lib/schermate/questo_telefono.dart` | ✅ |
+| La foto del collaudo, presa dentro il riquadro | `collaudo/guarda.mjs` | ✅ |
 | Le persone, accanto ai dispositivi | `ponte/src/dispositivi.js` | ⬜ |
 
 ### Fase 2 — gli aiutanti

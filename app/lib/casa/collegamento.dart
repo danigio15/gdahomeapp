@@ -96,12 +96,14 @@ class Collegamento {
 
   /// Qualcuno ha riscritto la configurazione della plancia: chi la mostra la
   /// ricarichi.
+  ///
+  /// Serviva quando la Config era una schermata dell'app: si salvava di qua e
+  /// la pagina di la' non ne sapeva niente. Adesso la Config e' quella della
+  /// plancia, dentro la pagina: si salva e si ridisegna da se', e questo
+  /// avviso non lo manda piu' nessuno. Resta perche' e' il posto dove
+  /// arriverebbe una configurazione cambiata da **un altro** telefono, il
+  /// giorno che il ponte la spingera'.
   Stream<void> get planciaCambiata => _planciaCambiata.stream;
-
-  /// Lo dice chi l'ha cambiata.
-  void laPlanciaECambiata() {
-    if (!_planciaCambiata.isClosed) _planciaCambiata.add(null);
-  }
 
   /// Quanto e' passato sul filo da quando si e' entrati, in due parole. Per
   /// la diagnostica: dice se una casa e' silenziosa o un fiume in piena.

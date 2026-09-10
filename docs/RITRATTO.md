@@ -45,12 +45,16 @@ quando la plancia cambia.
 
 | dove | cosa fa |
 |---|---|
-| `app/lib/casa/plancia/persone.dart` | quali scelte esistono, e come si scrivono |
 | `app/lib/plancia/ritratto.dart` | la pagina che chiede il ritratto al compositore |
 | `app/lib/plancia/servitore.dart` | la serve, sul telefono |
 | `app/lib/plancia/servitore_qui/sul_web.dart` | la serve, nel browser |
-| `app/lib/schermate/configurazione/ritratto.dart` | le file da cui si sceglie, e l'anteprima |
-| `app/lib/schermate/configurazione/persone.dart` | tutto il resto di una persona |
+
+**Da chi si sceglie, oggi**: dalla Config della plancia, che e' quella della
+dashboard e ha la sua scheda delle persone col suo compositore. L'app ne
+aveva una sua, con le file di scelte e l'anteprima; e' stata cancellata
+insieme al resto della copia (vedi
+[`CONFIG_COMPLETA.md`](CONFIG_COMPLETA.md)). La pagina che serve il
+compositore resta: e' una capacita' del servitore, e non costa niente.
 
 La pagina si chiama `gdahome-ritratto.html` e sta **dentro la cartella dei file
 della plancia**, perché è lì che va a prendere il modulo che disegna, con un
@@ -84,11 +88,12 @@ Gli accenti. La plancia scompone con `normalize("NFKD")` e butta via i segni;
 sola espressione regolare che toglie i segni non trova niente da togliere —
 senza scomporre, «ò» è un carattere solo e non due.
 
-Risultato: «Niccolò» diventava `niccol`, e la stanza «Salottò» non era la stessa
-di «Salotto». La tavola sta scritta a mano in
-`app/lib/casa/plancia/lettere.dart`, copre il latino accentato d'Europa, e la
-usano sia gli identificativi delle persone sia il motore che appaia le stanze
-alle aree di Home Assistant.
+Risultato: «Niccolò» diventava `niccol`, e la stanza «Salottò» non era la
+stessa di «Salotto». La tavola stava scritta a mano in
+`app/lib/casa/plancia/lettere.dart`, ed e' andata via con la copia della
+Config: quelle stanghette adesso le fa la plancia, che era il posto giusto
+dall'inizio — il difetto originale, del resto, era proprio suo (`slugify`
+senza la tavola), e li' e' stato corretto.
 
 ## Quanto ci mettono i dati ad arrivare
 

@@ -137,11 +137,11 @@ gli stessi campi. Le due famiglie in fondo nella plancia non ci sono: la prima
 perché una pagina web non sa chi la sta guardando, la seconda perché riguarda
 il telefono e non la casa.
 
-L'alberatura sta scritta in un posto solo,
-`app/lib/schermate/configurazione/albero.dart`, e una prova
-(`app/test/configurazione_test.dart`) verifica che nessuna delle diciannove
-schede resti fuori. Se domani la plancia ne aggiunge una, la prova se ne
-accorge prima di noi.
+L'alberatura non sta scritta da nessuna parte, e non e' una mancanza: e'
+quella della plancia, dentro la Config della plancia, e l'app apre lei. Una
+copia dell'alberatura vorrebbe dire una prova che la inseguisse — e per un
+po' e' stato cosi', `albero.dart` e `configurazione_test.dart`, finche' non
+si e' visto che una copia che passa la prova non e' comunque la stessa cosa.
 
 ## La Config sparisce dalla plancia
 
@@ -234,17 +234,21 @@ dietro un telefono non lo sa e non deve saperlo.
 
 ## Cosa c'è già e cosa manca
 
+> **Questo documento racconta una strada che è stata chiusa.** L'app non
+> replica più la Config: apre **quella** della dashboard, e la replica in
+> Flutter è stata cancellata. Il perché, e com'è fatto adesso, stanno in
+> [`CONFIG_COMPLETA.md`](CONFIG_COMPLETA.md). Quello che segue resta perché
+> l'alberatura della plancia, il cercatore e le regole di chi scrive dove
+> sono ancora descritte qui meglio che altrove.
+
 | pezzo | dove | stato |
 |---|---|---|
-| L'alberatura, letta dalla 1.4.15 | `app/lib/schermate/configurazione/albero.dart` | ✅ |
-| La schermata che la mostra | `app/lib/schermate/configurazione.dart` | ✅ |
 | La voce nel menu | `app/lib/schermate/menu.dart` | ✅ |
-| La prova che non si perde una scheda | `app/test/configurazione_test.dart` | ✅ |
-| Le schermate delle singole voci: si aprono e salvano | `app/lib/schermate/configurazione/` | ✅ |
-| **Ma coprono 14 delle 83 chiavi della Config vera** — vedi [`CONFIG_COMPLETA.md`](CONFIG_COMPLETA.md) | | ⬜ |
-| Il cercatore di entità, portato dalla plancia | `app/lib/casa/cerca/indice.dart` | ✅ |
-| La Config tolta dalla plancia servita | `app/lib/plancia/servitore.dart` | ✅ |
-| Il tema e la barra, usciti con lei | `app/lib/casa/impostazioni.dart` | ✅ |
-| L'autorilevamento | `app/lib/schermate/configurazione/` | ⬜ |
+| La porta che apre la Config della plancia | `app/lib/plancia/premesse.dart` | ✅ |
+| La Config tolta dalla barra della plancia | `app/lib/plancia/premesse.dart` | ✅ |
+| Il tema, la barra e la tavolozza di questo dispositivo | `app/lib/schermate/questo_telefono.dart` | ✅ |
+| ~~L'alberatura rifatta in Flutter~~ | cancellata | — |
+| ~~Le schermate delle singole voci~~ | cancellate | — |
+| ~~Il cercatore di entità, portato dalla plancia~~ | cancellato: è quello della plancia | — |
 | Le persone, accanto ai dispositivi | `ponte/src/dispositivi.js` | ⬜ |
 | Chi comanda la configurazione | `ponte/`, `app/` | ⬜ |

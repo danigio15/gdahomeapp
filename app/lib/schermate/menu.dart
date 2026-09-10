@@ -5,11 +5,20 @@
 /// stanno dentro di lei, nella sua barra, e qui non si ripetono.
 ///
 /// Con una sola eccezione, ed e' voluta: la **Configurazione**. Nella plancia
-/// si apre da dentro la plancia, un riquadro sopra la pagina con diciannove
-/// schede in fila orizzontale; su un telefono quella fila non ci sta, e
-/// soprattutto la configurazione della casa e' una cosa dell'app, non di una
-/// delle sue schermate. Esce da li' e diventa una voce del menu, con dentro
-/// la stessa alberatura (vedi `configurazione/albero.dart`).
+/// si apre da dentro la plancia, e la configurazione della casa e' una cosa
+/// dell'app, non di una delle sue schermate: esce da li' e diventa una voce
+/// del menu.
+///
+/// Esce la **porta**, non la Config. La voce del menu apre quella della
+/// dashboard — la stessa, com'e', con le sue schede e il suo cercatore — e
+/// non una copia rifatta in Flutter: una copia sarebbe un'altra grafica e un
+/// altro posto dove le cose stanno, e non sarebbe mai la stessa. Vedi
+/// `plancia/premesse.dart`.
+///
+/// E **L'app**, che e' l'altra faccia della stessa scelta: le tre o quattro
+/// cose che riguardano questo telefono e non la casa — il tema del riquadro,
+/// la tavolozza, la barra — non stanno nella Config della casa, perche' non
+/// viaggiano. Stanno li'.
 ///
 /// Il resto e' quello che in Home Assistant sta nascosto, e che l'app
 /// aggiunge. Le voci che non ci sono ancora restano nell'elenco, spente: si
@@ -21,6 +30,7 @@ enum Sezione {
   plancia('Plancia', 'home', pronta: true),
   dispositivi('Dispositivi', 'widget', pronta: true),
   configurazione('Configurazione', 'impostazioni', pronta: true),
+  questoTelefono('L\'app', 'minipc', pronta: true),
   acquisti('Acquisti', 'evidenza', pronta: true),
   segnalazioni('Segnalazioni', 'segnalazioni', pronta: true),
   assistenza('Assistenza', 'assistenza', pronta: true),

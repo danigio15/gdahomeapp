@@ -6,7 +6,7 @@
 /// **ospitata** (e quindi non chiede segni e usa il WebSocket che trova),
 /// quale istanza e quale profilo e', in che lingua. Piu' tre cose nostre: il
 /// tema e la barra di questo dispositivo, le misure delle barre del telefono,
-/// e la Config tolta.
+/// e la Config che esce da dentro la plancia per diventare una voce del menu.
 ///
 /// **Non si tocca un file della dashboard.** I file restano quelli pubblicati
 /// — e devono restarlo, che il ponte li ricontrolla uno per uno e una plancia
@@ -91,28 +91,44 @@ class Premesse {
       'bottom:calc(var(--gdahome-basso) + 20px)!important}}'
       '</style>';
 
-  /// Toglie dalla plancia la sua Config, e dice dov'e' andata.
+  /// La Config esce da dentro la plancia e diventa una voce del menu.
   ///
-  /// Si toglie in due modi insieme, e servono tutti e due: lo stile fa sparire
-  /// la voce dalla barra e la sua pagina, e il pezzo di programma chiude
-  /// l'editor se qualcosa riesce ad aprirlo lo stesso — la plancia ha piu' di
-  /// una strada per arrivarci.
-  static const String senzaConfig =
-      '<style id="gdahome-senza-config">'
+  /// **Non e' una Config che le somiglia: e' quella.** La stessa che si apre
+  /// nella dashboard — `apriConfigEntita()`, il riquadro sopra la pagina con
+  /// le sue schede, il suo cercatore, le sue pastiglie, i suoi interruttori —
+  /// e non si tocca nemmeno una riga. Di suo qui si sposta solo la **porta**:
+  /// la voce nella barra in fondo alla plancia sparisce, e ad aprirla e' il
+  /// menu dell'app, che chiama la stessa funzione.
+  ///
+  /// Prima invece l'app aveva una Config sua, rifatta in Flutter, e questo
+  /// pezzo la Config della plancia la murava: lo stile la nascondeva e un
+  /// osservatore le toglieva il riquadro da sotto i piedi ogni volta che
+  /// qualcuno riusciva ad aprirlo. Due Config per la stessa casa sono due
+  /// grafiche, due alberature, due posti dove una cosa puo' finire — e la
+  /// seconda non sara' mai la prima. Ne resta una.
+  ///
+  /// `gdahomeApriLaConfig` e' la maniglia che l'app tira: prova, e se la
+  /// plancia non ha ancora dichiarato la sua funzione riprova per qualche
+  /// secondo — una pagina appena aperta i suoi script li sta ancora leggendo.
+  /// Con `#gdahome-config` nell'indirizzo si apre da se': serve dove non si
+  /// puo' chiamare una funzione da fuori, cioe' nel browser.
+  static const String laConfigFuoriDallaPlancia =
+      '<style id="gdahome-config-fuori">'
       '#tab-config,#page-config,.tab[data-tab="config"]{display:none!important}'
-      '#editor-modal,#cd-entpick{display:none!important}'
       '</style>'
       '<script>(function(){'
-      'var chiudi=function(){'
-      'var quali=["editor-modal","cd-entpick"];'
-      'for(var i=0;i<quali.length;i++){'
-      'var uno=document.getElementById(quali[i]);if(uno)uno.remove();}'
+      'var apri=function(prove){'
+      'if(document.getElementById("editor-modal"))return;'
+      'if(typeof window.apriConfigEntita==="function"){'
+      'try{window.apriConfigEntita();return;}catch(male){}}'
+      'if(prove<120)setTimeout(function(){apri(prove+1);},60);'
       '};'
-      'if(window.MutationObserver){'
-      'new MutationObserver(chiudi).observe(document.documentElement,'
-      '{childList:true,subtree:true});}'
-      'document.addEventListener("DOMContentLoaded",chiudi);'
-      'chiudi();'
+      'window.gdahomeApriLaConfig=function(){apri(0);};'
+      'var dallIndirizzo=function(){'
+      'if(/gdahome-config/.test(location.hash))apri(0);'
+      '};'
+      'document.addEventListener("DOMContentLoaded",dallIndirizzo);'
+      'dallIndirizzo();'
       '})();</script>';
 
   /// Il tema e la barra, scritti dove la plancia se li aspetta.
@@ -172,9 +188,10 @@ class Premesse {
         ? '$premessa$pagina'
         : pagina.replaceRange(testa.end, testa.end, premessa);
 
-    /* Le misure e la Config tolta vanno in fondo: vedi [stileDelleMisure],
-     * che spiega perche' in testa perdevano contro lo stile della plancia. */
-    final inFondo = '$stileDelleMisure$senzaConfig';
+    /* Le misure e la porta della Config vanno in fondo: vedi
+     * [stileDelleMisure], che spiega perche' in testa perdevano contro lo
+     * stile della plancia. */
+    final inFondo = '$stileDelleMisure$laConfigFuoriDallaPlancia';
     final fine = RegExp(
       r'</body\s*>',
       caseSensitive: false,

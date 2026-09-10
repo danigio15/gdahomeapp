@@ -608,52 +608,6 @@ async function premi(pagina, etichetta, opzioni = {}) {
  * premere: per sapere **dove** e' una voce bisogna sceglierla con le stesse
  * regole con cui poi la si preme, se no si misura una cosa e se ne preme
  * un'altra. Torna `null` quando quel testo a schermo non c'e'. */
-/* Preme una voce che sta in una lista lunga, cercandola.
- *
- * Scorrere di un numero fisso e' andato bene finche' l'alberatura e' rimasta
- * quella: cresciuta, quel numero ha cominciato a mancare il bersaglio e a
- * premere quello che si trovava li' sotto — una volta e' finito sull'elenco
- * delle case. Una lista lunga tiene nel documento solo quello che si vede,
- * quindi si scorre finche' la voce non c'e', e allora si preme.
- */
-async function premiCercando(pagina, etichetta, opzioni = {}) {
-  const { height } = pagina.viewportSize();
-  /* Non basta che la voce ci sia: deve essere DOVE SI VEDE.
-   *
-   * L'albero dell'accessibilita' tiene anche quello che e' scorso via sopra,
-   * col suo riquadro a coordinate negative: cliccarlo a quel punto vuol dire
-   * cliccare quello che sta in cima allo schermo — una volta e' finito su «Le
-   * tue case», e da li' in poi il collaudo guardava un'altra schermata senza
-   * che niente lo dicesse. Quindi si scorre finche' il riquadro non e' dentro
-   * la finestra, e solo allora si preme.
-   */
-  /* Su fino in cima: l alberatura e lunga, e chi arriva dal fondo — dalle
-   * persone, in fondo a tutto — con ottomila non ci torna. */
-  await scorri(pagina, -30000);
-  await attendi(500);
-  /* Trenta giri, non diciotto.
-   *
-   * L'alberatura della Config e' lunga, e le famiglie in fondo — chi puo'
-   * entrare, l'app — stavano oltre il punto in cui si smetteva di cercare.
-   * Il collaudo non le trovava e diceva «non trovo Le persone» elencando
-   * quello che si vedeva in cima: un messaggio giusto e una diagnosi
-   * sbagliata. Una lista pigra, per giunta, quelle voci non le mette
-   * nemmeno nell'albero finche' non ci si arriva vicino. */
-  /* Ottanta giri, non trenta: l'alberatura a sette famiglie e' lunga il
-   * doppio di quella a una fila, e «Quadro avvisi» sta nella sesta. */
-  for (let giro = 0; giro < 80; giro += 1) {
-    const nodo = await ilBottone(pagina, etichetta, { ...opzioni, aspetta: false });
-    const riquadro = nodo ? await nodo.boundingBox().catch(() => null) : null;
-    if (riquadro && riquadro.y > 90 && riquadro.y + riquadro.height < height - 60) {
-      await attendi(300);
-      return premi(pagina, etichetta, opzioni);
-    }
-    await scorri(pagina, 620);
-    await attendi(260);
-  }
-  return premi(pagina, etichetta, opzioni);
-}
-
 async function ilBottone(pagina, etichetta, { inAlto = false, aspetta = true } = {}) {
   const tutti = pagina.locator(
     `[aria-label="${etichetta}"], [aria-label^="${etichetta}"], flt-semantics:has-text("${etichetta}")`,
@@ -1031,385 +985,57 @@ try {
   await attendi(1200);
   await scatta(pagina, "6-dispositivi");
 
-  /* La Configurazione: la Config della plancia, uscita dalla plancia. E'
-   * l'alberatura della dashboard 1.4.15 rifatta in verticale, e va guardata
-   * perche' e' l'unica schermata dell'app che deve somigliare a una cosa che
-   * esiste gia' altrove. */
-  racconta("apro la configurazione");
-  await vaiA("Configurazione", "La configurazione di");
-  await attendi(1000);
-  await scatta(pagina, "6g-configurazione");
-  await scorri(pagina, 900);
-  await attendi(700);
-  await scatta(pagina, "6h-configurazione-pagine");
-  await scorri(pagina, 2600);
-  await attendi(700);
-  await scatta(pagina, "6i-configurazione-cose-di-casa");
-  /* Le due famiglie in fondo — chi puo' entrare, e l'app — nella plancia non
-   * ci sono: sono la parte nuova, ed e' quella che va guardata. */
-  await scorri(pagina, 3500);
-  await attendi(700);
-  await scatta(pagina, "6i2-configurazione-fondo");
-
-  /* Una voce riempita: si apre, si guarda che ci sia davvero un modulo con
-   * dentro le cose della casa, e si torna indietro. E' la prova che il
-   * cablaggio fra l'alberatura e le schermate tiene. */
-  racconta("apro una voce della configurazione");
-  await premiCercando(pagina, "Le sezioni");
-  await aspettaCheCompaia(pagina, "Le pagine spente spariscono");
-  await attendi(900);
-  await scatta(pagina, "6n-configurazione-sezioni");
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-
-  /* Le tessere della Home, e la tendina «Cosa mostra»: la Temperatura senza
-   * scelta dice la media di tutte le stanze, e si puo' dire quale stanza. */
-  racconta("apro le tessere della Home");
-  await premiCercando(pagina, "Le tessere della Home");
-  await aspettaCheCompaia(pagina, "Quando una tessera si stringe");
-  await attendi(800);
-  await scorri(pagina, 700);
-  await attendi(500);
-  await scatta(pagina, "6n2-tessere-cosa-mostra");
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-  await premiCercando(pagina, "Luci");
-  await aspettaCheCompaia(pagina, "Aggiungi una luce");
-  await attendi(900);
-  await scatta(pagina, "6o-configurazione-luci");
-
-  /* Il cercatore di entita': e' quello della plancia, portato in Dart. Si
-   * apre da una casella che sa cosa vuole — «Entita'» di una luce — e deve
-   * far vedere le pastiglie coi conti e le suggerite in cima. */
-  await premi(pagina, "Aggiungi una luce");
-  await aspettaCheCompaia(pagina, "Come si chiama");
-  await attendi(700);
-  await scatta(pagina, "6o2-una-luce");
-  await premi(pagina, "Cerca fra le entita' di casa");
-  await aspettaCheCompaia(pagina, "Scegli l'entita'");
-  await attendi(900);
-  await scatta(pagina, "6p-cercatore");
-  await premi(pagina, "Annulla");
-  await attendi(700);
-  /* Dalla luce si torna all'elenco, dall'elenco all'alberatura. Niente
-   * «Lascia stare»: aprire una luce e chiudere il cercatore non cambia
-   * niente, e la barra del salvataggio non compare. */
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-
-  /* Un elettrodomestico: e' quello con piu' entita' di tutti — la presa che
-   * lo accende, la potenza, i contatori — ed e' la prova che le «altre
-   * entita'» ci sono davvero e non solo nel modello. */
-  racconta("apro un elettrodomestico");
-  await premiCercando(pagina, "Elettrodomestici");
-  await aspettaCheCompaia(pagina, "Aggiungi un elettrodomestico");
-  await attendi(800);
-  await scatta(pagina, "6o3-elettrodomestici");
-  await premi(pagina, "Aggiungi un elettrodomestico");
-  await aspettaCheCompaia(pagina, "Le altre entita'");
-  await attendi(700);
-  await premi(pagina, "Le altre entita'");
-  await attendi(700);
-  await scorri(pagina, 700);
-  await attendi(500);
-  await scatta(pagina, "6o4-un-elettrodomestico");
-  /* Niente «Lascia stare»: guardare la scheda senza scriverci dentro non
-   * cambia niente, e l'apparecchio nuovo non viene nemmeno messo in elenco —
-   * e' quello che deve succedere. */
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-
-  /* L'auto elettrica: la marca si sceglie da una griglia di loghi, non si
-   * batte, e sotto ci sono le sue diciassette entita'. Quelle sono la prova
-   * che `caselle.json` arriva davvero: dietro l'ingress il service worker se
-   * lo mangiava, e la scheda restava a meta' senza dire niente. */
-  racconta("apro un'auto");
-  await premiCercando(pagina, "Auto elettrica");
-  await aspettaCheCompaia(pagina, "Aggiungi un'auto");
-  await attendi(800);
-  await scatta(pagina, "6p5-auto");
-  /* La colonnina e evcc: sotto l'elenco delle auto, perche' sono della casa
-   * e non di una vettura. Le nove caselle che la casa ha adesso, e il tasto
-   * per collegarle da un'integrazione. */
-  await scorri(pagina, 1200);
-  await attendi(600);
-  await scatta(pagina, "6p5b-la-colonnina");
-  await scorri(pagina, -1200);
-  await attendi(500);
-  await premi(pagina, "Aggiungi un'auto");
-  await aspettaCheCompaia(pagina, "La marca");
-  await attendi(700);
-  await scorri(pagina, 300);
-  await attendi(400);
-  await scatta(pagina, "6p6-una-auto");
-  await premi(pagina, "La marca");
-  await aspettaCheCompaia(pagina, "Alfa Romeo");
-  await attendi(1500);
-  await scatta(pagina, "6p7-le-marche");
-  await premi(pagina, "Annulla");
-  await attendi(600);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-
-  /* Le persone: la scheda che fino a ieri era quella generica delle voci —
-   * nome, entita', un emoji — e adesso ha tutto quello che la plancia sa di
-   * una persona. Compreso il ritratto, che si compone e lo disegna la
-   * plancia stessa. */
-  racconta("apro le persone");
-  await premiCercando(pagina, "Le persone");
-  await aspettaCheCompaia(pagina, "Aggiungi una persona");
-  await attendi(900);
-  await scatta(pagina, "6p2-persone");
-  await premi(pagina, "Aggiungi una persona");
-  await aspettaCheCompaia(pagina, "La faccia");
-  await attendi(800);
-  await scatta(pagina, "6p3-una-persona");
-  await premi(pagina, "Componi il ritratto");
-  await aspettaCheCompaia(pagina, "Carnagione");
-  await attendi(1200);
-  await scatta(pagina, "6p4-il-ritratto");
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-
-  /* L'Energia: e' la pagina piu' grossa della Config, e la sola che ha piu'
-   * di un impianto — «non si possono inserire piu' impianti elettrici». Si
-   * guarda che ci siano i cinque gruppi, che il «+» faccia nascere il secondo
-   * impianto con la sua riga di pastiglie, e che dai carichi si arrivi ai
-   * cerchi con dentro gli elettrodomestici. */
-  racconta("apro l'energia");
-  /* Per il sottotitolo, non per il nome: «Energia» sta anche nel sottotitolo
-   * di «Le sezioni», che nell'alberatura a famiglie viene prima. */
-  await premiCercando(pagina, "Fotovoltaico, consumi, carichi e il Report Analisi");
-  await aspettaCheCompaia(pagina, "Fotovoltaico, batteria, rete e consumi");
-  await attendi(900);
-  await scatta(pagina, "6q-energia");
-
-  racconta("aggiungo un secondo impianto");
-  await premi(pagina, "Aggiungi un altro impianto");
-  await aspettaCheCompaia(pagina, "Nome impianto");
-  await attendi(800);
-  await scatta(pagina, "6q2-energia-due-impianti");
-
-  await scorri(pagina, 1200);
-  await attendi(600);
-  await scatta(pagina, "6r-energia-gruppi");
-  await scorri(pagina, 1600);
-  await attendi(600);
-  await scatta(pagina, "6r2-energia-costi");
-
-  racconta("apro i carichi");
-  await premi(pagina, "I carichi");
-  await aspettaCheCompaia(pagina, "Aggiungi un carico");
-  await attendi(800);
-  await scatta(pagina, "6s-carichi");
-  await premi(pagina, "Aggiungi un carico");
-  await attendi(900);
-  await scatta(pagina, "6s2-un-carico-in-elenco");
-  await premi(pagina, "Carico 1");
-  await aspettaCheCompaia(pagina, "Cosa c'e' dentro");
-  await attendi(800);
-  await scatta(pagina, "6t-un-carico");
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-  await premi(pagina, "Lascia stare");
-  await attendi(700);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-
-  /* Le due file di caselle che nell'app non si potevano riempire.
+  /* La Configurazione.
    *
-   * L'Energia ne ha trentasei e il modello ne copre ventiquattro: le altre
-   * dodici — i condizionatori, il boiler, i carichi dei nodi, lo stato della
-   * rete — non stavano da nessuna parte. La lavatrice ne ha dodici e non
-   * aveva nessuna schermata. Si fotografano tutte e due, e si apre la matita:
-   * il nome di una casella si riscrive, come nella plancia. */
-  /* Le schede che il controllo campo per campo ha allungato.
-   *
-   * Una finestra nella plancia ha tre coperture, due contatti, il rele' di
-   * discesa, la posizione preferita e due soglie sue; nell'app aveva quattro
-   * caselle. La piscina ha piu' di una vasca. L'irrigazione guarda l'umidita'
-   * del terreno e salta il turno sul bagnato. */
-  racconta("apro una finestra");
-  await premiCercando(pagina, "Finestre");
-  await aspettaCheCompaia(pagina, "Aggiungi una finestra");
-  await attendi(700);
-  await premi(pagina, "Aggiungi una finestra");
-  await aspettaCheCompaia(pagina, "Che copertura e'");
-  await attendi(800);
-  await scatta(pagina, "6w-una-finestra");
-  await scorri(pagina, 700);
-  await attendi(500);
-  await scatta(pagina, "6w2-una-finestra-le-coperture");
-  /* La scheda di una finestra e' un foglio che si chiude col Back, e
-   * chiudendolo senza toccare niente non c'e' niente da salvare: la barra non
-   * compare, e cercare «Lascia stare» qui fermava il giro. */
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
+   * Non e' una schermata dell'app: e' la Config della **dashboard**, quella
+   * vera, e la voce del menu apre lei sopra la plancia. Prima l'app ne aveva
+   * una sua, rifatta in Flutter, e per quanto le si rifacessero le caselle
+   * una per una restava un'altra cosa — un'altra grafica, un'altra
+   * alberatura, un altro posto dove ogni cosa sta. Adesso di rifatto non c'e'
+   * niente: si guarda che la sua arrivi, e che sia la sua. */
+  racconta("apro la Config della plancia dal menu");
+  await apriIlMenu();
+  await premiNelMenu("Configurazione");
+  const laConfig = await laPlancia(pagina);
+  await laConfig.waitForSelector("#editor-modal", { timeout: 30_000 });
+  await attendi(2000);
+  await scatta(pagina, "6g-la-config-della-plancia");
 
-  racconta("apro la piscina");
-  await premiCercando(pagina, "Piscina");
-  /* Le insegne della pagina si disegnano in maiuscolo — «I SENSORI» — e
-   * cercarle com'e' scritto nel codice non le trova. */
-  await aspettaCheCompaia(pagina, "Aggiungi un'altra vasca");
-  await attendi(800);
-  await scatta(pagina, "6x-piscina");
-  await premi(pagina, "Aggiungi un'altra vasca");
-  await aspettaCheCompaia(pagina, "Come si chiama");
-  await attendi(800);
-  await scatta(pagina, "6x2-piscina-due-vasche");
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
+  /* Una scheda qualunque, dal di dentro: quello che si vede e' il markup
+   * della dashboard, non un modulo nostro che le somiglia. */
+  racconta("apro i varchi nella Config");
+  await laConfig.evaluate(() => {
+    try {
+      window.editorSwitch?.("varchi");
+    } catch (male) {
+      /* La scheda non c'e' in questa versione: pazienza, si guarda quella
+       * che c'e'. */
+    }
+  });
+  await attendi(1600);
+  await scatta(pagina, "6h-config-varchi");
+  await laConfig.evaluate(() => {
+    try {
+      window.editorSwitch?.("people");
+    } catch (male) {}
+  });
+  await attendi(1600);
+  await scatta(pagina, "6i-config-persone");
 
-  racconta("apro l'irrigazione");
-  await premiCercando(pagina, "Irrigazione");
-  await aspettaCheCompaia(pagina, "La sonda nel terreno");
-  await attendi(800);
-  await scorri(pagina, 600);
-  await attendi(500);
-  await scatta(pagina, "6y-irrigazione-terreno");
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-
-  /* Il robot e gli avvisi: le due sezioni ferme a meta'.
-   *
-   * Un robot nella plancia porta la sua mappa, la sua batteria e fino a dodici
-   * tasti; un avviso guarda piu' entita' insieme e ha sei condizioni. */
-  racconta("apro un robot");
-  await premiCercando(pagina, "Robot");
-  await aspettaCheCompaia(pagina, "Aggiungi un robot");
-  await attendi(700);
-  await premi(pagina, "Aggiungi un robot");
-  await aspettaCheCompaia(pagina, "La sua mappa");
-  await attendi(800);
-  await scorri(pagina, 400);
-  await attendi(500);
-  await scatta(pagina, "6z-un-robot");
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-
-  racconta("apro il quadro avvisi");
-  await premiCercando(pagina, "Quadro avvisi");
-  await aspettaCheCompaia(pagina, "Aggiungi un avviso");
-  await attendi(700);
-  await premi(pagina, "Aggiungi un avviso");
-  await aspettaCheCompaia(pagina, "Quando compare");
-  await attendi(800);
-  await scatta(pagina, "6z2-un-avviso");
-  /* La scheda di un elenco e' un foglio che sale dal basso: si chiude toccando
-   * il velo dietro — «Dismiss» — non con la freccia in alto, che li' non c'e'. */
-  await premi(pagina, "Dismiss");
-  await attendi(700);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-
-  racconta("apro il locale caldaia");
-  await premiCercando(pagina, "Impianti termici");
-  await aspettaCheCompaia(pagina, "Solare termico");
-  await attendi(800);
-  await scatta(pagina, "6z3-locale-caldaia");
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-
-  /* La caldaia della 1.4.17: alle dieci caselle di prima se ne aggiungono
-   * otto sotto il titolo «Combustibile solido: pellet o legna». Si aggiunge
-   * una caldaia vuota, che si apre da sola, e si scorre fino al pellet. */
-  racconta("apro la caldaia, fino al pellet");
-  await premiCercando(pagina, "La caldaia");
-  await aspettaCheCompaia(pagina, "Aggiungi una caldaia");
-  await attendi(700);
-  await premi(pagina, "Aggiungi una caldaia");
-  await aspettaCheCompaia(pagina, "Combustibile solido");
-  await attendi(700);
-  await scorri(pagina, 1500);
-  await attendi(600);
-  await scatta(pagina, "6z4-caldaia-pellet");
-  /* Una caldaia aggiunta e' una modifica, e la barra del salvataggio e'
-   * comparsa: si lascia stare dalla barra, poi si torna indietro. */
-  await premi(pagina, "Lascia stare");
-  await attendi(600);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-
-  /* Un'unita' del clima, aperta: dalla 1.4.17 ha la modalita' del
-   * riscaldamento, lo spegnimento automatico e i mesi in cui si vede. */
-  racconta("apro un'unita' del clima");
-  /* «Clima» sta anche nel titolo della famiglia «Clima e acqua»: si preme la
-   * voce per il suo sottotitolo. */
-  await premiCercando(pagina, "Condizionatori e riscaldamento");
-  await aspettaCheCompaia(pagina, "Aggiungi un'unita'");
-  await attendi(800);
-  await premi(pagina, "Clima soggiorno");
-  await aspettaCheCompaia(pagina, "Spegnimento automatico");
-  await attendi(700);
-  await scorri(pagina, 700);
-  await attendi(600);
-  await scatta(pagina, "6z5-clima-unita");
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-
-  /* L'irrigazione: sotto l'ora di partenza ci sono gli altri orari (#325),
-   * una riga per corsa coi suoi minuti e la soglia del terreno. */
-  racconta("apro l'irrigazione");
-  await premiCercando(pagina, "Irrigazione");
-  await aspettaCheCompaia(pagina, "Altri orari di irrigazione");
-  await attendi(800);
-  await scatta(pagina, "6z6-irrigazione-orari");
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-
-  /* I varchi: le porte e le finestre che Home Assistant dichiara compaiono
-   * da sole, e ogni riga porta l'interruttore «Nel widget / Fuori» della
-   * plancia — la parola in contrario per la tessera della Home. */
-  racconta("apro i varchi");
-  await premiCercando(pagina, "I varchi");
-  await aspettaCheCompaia(pagina, "Nel widget");
+  /* Si chiude come nella dashboard: il riquadro se ne va e sotto c'e' la
+   * plancia, che non si e' mai ricaricata. */
+  racconta("chiudo la Config");
+  await laConfig.evaluate(() => document.getElementById("editor-modal")?.remove());
   await attendi(900);
-  await scatta(pagina, "6z7-varchi-nel-widget");
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
 
-  racconta("apro le caselle dell'energia");
-  await premiCercando(pagina, "Le caselle dell'Energia");
-  await aspettaCheCompaia(pagina, "su 36 riempite");
+  /* «L'app»: le poche scelte che sono di questo telefono e non della casa,
+   * e che per questo non stanno nella Config. */
+  racconta("apro L'app");
+  /* Si aspetta la riga d'apertura, non un'insegna: le insegne dentro una
+   * scheda l'albero dei significati non le dichiara sempre. */
+  await vaiA("L'app", "Quello che vale solo qui");
   await attendi(900);
-  await scatta(pagina, "6u-caselle-energia");
-  await scorri(pagina, 1400);
-  await attendi(600);
-  await scatta(pagina, "6u2-caselle-energia-le-dodici");
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
-
-  racconta("apro le caselle della lavatrice");
-  await premiCercando(pagina, "Le entita' della lavatrice");
-  await aspettaCheCompaia(pagina, "su 12 riempite");
-  await attendi(900);
-  await scatta(pagina, "6v-caselle-lavatrice");
-  await premi(pagina, "Cambia il nome di questa casella");
-  await aspettaCheCompaia(pagina, "Come si chiama questa casella");
-  await attendi(700);
-  await scatta(pagina, "6v2-rinomina-una-casella");
-  await premi(pagina, "Lascia stare");
-  await attendi(600);
-  await premi(pagina, "Back", { inAlto: true });
-  await attendi(700);
+  await scatta(pagina, "6l2-l-app");
 
   racconta("apro gli acquisti");
   await vaiA("Acquisti", "Prova aperta su");
