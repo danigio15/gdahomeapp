@@ -111,6 +111,132 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  iphone:
+    name: iPhone (IPA)
+    # Un'app per iPhone la puo' costruire **solo** un Mac, ed e' l'unica
+    # ragione per cui questo lavoro gira su una macchina diversa dagli altri.
+    # Su GitHub un Mac c'e', e non bisogna comprarlo.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: app
+
+      # Primo passo, e vale da solo: **compila**.
+      #
+      # Senza firma non si installa da nessuna parte, ma se questo passo e'
+      # verde vuol dire che l'app per iPhone c'e' davvero — i plugin nativi
+      # stanno in piedi, i permessi sono scritti giusti, niente e' rimasto
+      # indietro. E' la differenza fra «iOS lo faremo» e «iOS c'e', manca la
+      # firma di Apple».
+      - name: Compila (senza firma)
+        working-directory: app
+        env:
+          CENTRALINO: ${{ inputs.centralino }}
+          CORSA: ${{ github.run_number }}
+        run: |
+          VERSIONE="$CORSA·${GITHUB_SHA:0:7}"
+          if [ -n "$CENTRALINO" ]; then
+            flutter build ios --release --no-codesign --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
+          else
+            flutter build ios --release --no-codesign --dart-define=VERSIONE="$VERSIONE"
+          fi
+
+      # Da qui in giu' si va avanti solo se su GitHub ci sono le chiavi di
+      # Apple. Non ci sono? Il lavoro finisce verde lo stesso, e sopra c'e'
+      # scritto cosa manca: un lavoro rosso per una cosa che non e' rotta
+      # insegna a non guardare i lavori rossi.
+      - name: Ci sono le chiavi di Apple?
+        id: chiavi
+        env:
+          CHIAVE: ${{ secrets.APPLE_CHIAVE_P8 }}
+          SQUADRA: ${{ secrets.APPLE_SQUADRA }}
+        run: |
+          if [ -n "$CHIAVE" ] && [ -n "$SQUADRA" ]; then
+            echo "ci-sono=si" >> "$GITHUB_OUTPUT"
+          else
+            echo "ci-sono=no" >> "$GITHUB_OUTPUT"
+            {
+              echo "### L'app per iPhone e' compilata, e non e' firmata"
+              echo ""
+              echo "Compila: i plugin nativi stanno in piedi e i permessi sono a posto."
+              echo "Per installarla su un iPhone serve l'account sviluppatore Apple"
+              echo "(99 €/anno) e quattro segreti su GitHub — come si prendono sta"
+              echo "scritto in \`docs/IPHONE.md\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: L'archivio firmato
+        if: steps.chiavi.outputs.ci-sono == 'si'
+        working-directory: app
+        env:
+          CHIAVE: ${{ secrets.APPLE_CHIAVE_P8 }}
+          CHIAVE_ID: ${{ secrets.APPLE_CHIAVE_ID }}
+          EMITTENTE: ${{ secrets.APPLE_EMITTENTE }}
+          SQUADRA: ${{ secrets.APPLE_SQUADRA }}
+        run: |
+          # La chiave dell'App Store Connect, su disco dove Xcode la cerca.
+          mkdir -p ~/.appstoreconnect/private_keys
+          printf '%s' "$CHIAVE" > ~/.appstoreconnect/private_keys/AuthKey_$CHIAVE_ID.p8
+          # `-allowProvisioningUpdates` e' quello che evita di doversi
+          # portare dietro certificato e profilo: con la chiave qui sopra,
+          # Xcode se li fa dare da Apple e se li tiene lui. E' il solo modo
+          # per chi non ha un Mac di firmare senza toccare un Mac.
+          xcodebuild -workspace ios/Runner.xcworkspace \
+            -scheme Runner -configuration Release -sdk iphoneos \
+            -archivePath build/gdahome.xcarchive archive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_$CHIAVE_ID.p8 \
+            -authenticationKeyID "$CHIAVE_ID" \
+            -authenticationKeyIssuerID "$EMITTENTE" \
+            DEVELOPMENT_TEAM="$SQUADRA" CODE_SIGN_STYLE=Automatic
+
+      - name: Il pacchetto, e su TestFlight
+        if: steps.chiavi.outputs.ci-sono == 'si'
+        working-directory: app
+        env:
+          CHIAVE_ID: ${{ secrets.APPLE_CHIAVE_ID }}
+          EMITTENTE: ${{ secrets.APPLE_EMITTENTE }}
+          SQUADRA: ${{ secrets.APPLE_SQUADRA }}
+        run: |
+          cat > build/esporta.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>$SQUADRA</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>destination</key><string>upload</string>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive \
+            -archivePath build/gdahome.xcarchive \
+            -exportPath build/ipa \
+            -exportOptionsPlist build/esporta.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_$CHIAVE_ID.p8 \
+            -authenticationKeyID "$CHIAVE_ID" \
+            -authenticationKeyIssuerID "$EMITTENTE"
+          {
+            echo "### Su TestFlight"
+            echo ""
+            echo "Fra qualche minuto arriva la notifica di Apple. Da TestFlight"
+            echo "sul telefono si installa senza computer."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.chiavi.outputs.ci-sono == 'si'
+        with:
+          name: gdahome-iphone
+          path: app/build/ipa/*.ipa
+          if-no-files-found: warn
+          retention-days: 30
+
   web:
     name: Web
     runs-on: ubuntu-latest

@@ -33,6 +33,14 @@
 	<string>Serve a scegliere una foto o un video da allegare a una segnalazione, solo quando lo chiedi tu.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Serve solo se registri un video da allegare a una segnalazione.</string>
+	<!-- La casa sta sulla rete di casa, e da iOS 14 arrivarci vuole un
+	     permesso a parte. Senza questa riga il sistema non chiede niente e non
+	     dice niente: **rifiuta**, e l'app cerca la casa dove la casa c'e'
+	     senza trovarla mai. Da fuori si passa dal centralino e questo non
+	     serve; dentro casa e' la differenza fra funzionare e non funzionare,
+	     ed e' esattamente il collegamento piu' veloce dei due. -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Serve a parlare con la tua Home Assistant quando sei in casa, direttamente sulla tua rete, senza passare da internet. Fuori casa non viene usato.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<!-- La plancia vera dentro l'app arriva al WebView da un server che sta
