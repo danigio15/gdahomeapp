@@ -49,7 +49,9 @@ import '../misure/lavori.dart';
 import '../ponte/altrove/altrove.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
+import 'cucitura.dart';
 import 'pannello.dart';
+import 'premesse.dart';
 
 /// Come si trova il filo, adesso.
 ///
@@ -126,30 +128,20 @@ const _attesaDelFilo = Duration(seconds: 20);
 /// suo tempo, e un file che arriva tardi vale piu' di un file che non arriva.
 const _attesaDellaCommissione = Duration(seconds: 90);
 
-/// I comandi di Home Assistant che dopo la risposta continuano a mandare
-/// eventi con lo stesso numero. Per questi l'instradamento resta; per tutti
-/// gli altri si toglie appena arriva la risposta, se no un telefono che tiene
-/// la plancia aperta per giorni si porterebbe dietro un numero per ogni
-/// comando mai mandato.
-const _cheContinuano = {
-  'subscribe_events',
-  'subscribe_trigger',
-  'render_template',
-  'history/stream',
-  'camera/webrtc/offer',
-  'camera/web_rtc_offer',
-};
-
 class Servitore {
   Servitore({
     required TrovaIlFilo filo,
     required this.cartella,
     this.lingua = 'it',
     this.portaAperta = false,
-    this.leggera = false,
+    bool leggera = false,
     void Function(String)? racconta,
   }) : _trovaIlFilo = filo,
-       _racconta = racconta ?? ((_) {});
+       _racconta = racconta ?? ((_) {}) {
+    premesse
+      ..lingua = lingua
+      ..leggera = leggera;
+  }
 
   final TrovaIlFilo _trovaIlFilo;
 
@@ -169,7 +161,9 @@ class Servitore {
   ///
   /// Si riscrivono girando lo schermo, e allora la pagina non si ricarica: le
   /// due misure sono variabili CSS, e l'app le cambia da fuori.
-  ({double alto, double basso}) margini = (alto: 0, basso: 0);
+  ({double alto, double basso}) get margini => premesse.margini;
+  set margini(({double alto, double basso}) quanto) =>
+      premesse.margini = quanto;
 
   /// La plancia senza quello che un telefono non regge.
   ///
@@ -181,13 +175,16 @@ class Servitore {
   /// scheda video che deve disegnare anche l'app: e l'app va a scatti. Con
   /// questa le animazioni infinite fanno un giro e si fermano, e le
   /// sfocature spariscono. Si cambia da fuori, e vale dalla pagina dopo.
-  bool leggera;
+  bool get leggera => premesse.leggera;
+  set leggera(bool quanto) => premesse.leggera = quanto;
 
   /// Il tema della plancia su questo dispositivo: `auto`, `chiaro`, `scuro`.
-  String tema = 'auto';
+  String get tema => premesse.tema;
+  set tema(String quale) => premesse.tema = quale;
 
   /// Come sta la barra in fondo alla plancia: `scomparsa` o `fissa`.
-  String barra = 'scomparsa';
+  String get barra => premesse.barra;
+  set barra(String come) => premesse.barra = come;
 
   /// La chiave della porta: nasce con il servitore, e la conosce solo chi
   /// apre la pagina dall'indirizzo che [paginaDi] da'.
@@ -204,11 +201,12 @@ class Servitore {
 
   /// Il pannello che si sta servendo. Si scrive prima di aprire la pagina:
   /// e' da qui che la pagina sa quale istanza e quale profilo e'.
-  PannelloDellaPlancia? pannello;
+  PannelloDellaPlancia? get pannello => premesse.pannello;
+  set pannello(PannelloDellaPlancia? quale) => premesse.pannello = quale;
 
   HttpServer? _server;
   final _inArrivo = <String, Future<_Scaricato>>{};
-  final _cuciture = <_Cucitura>{};
+  final _cuciture = <Cucitura>{};
 
   /// Su quale porta si ascolta. Solo dopo [alza].
   int get porta => _server?.port ?? 0;
@@ -324,7 +322,19 @@ class Servitore {
         return;
       }
       final presa = await WebSocketTransformer.upgrade(richiesta);
-      final cucitura = _Cucitura(this, presa);
+      final cucitura = Cucitura(_LaPresa(presa), _filoPronto);
+      /* Chi ascolta la pagina e' l'adattatore, non la cucitura: la cucitura
+       * il trasporto non lo conosce, ed e' l'intera ragione per cui la stessa
+       * sta in piedi anche nel browser, dove un WebSocket da ascoltare non
+       * c'e'. */
+      presa.listen(
+        (dynamic grezzo) {
+          if (grezzo is String) unawaited(cucitura.dallaPagina(grezzo));
+        },
+        onDone: cucitura.laPaginaSeNEAndata,
+        onError: (Object _) => cucitura.laPaginaSeNEAndata(),
+        cancelOnError: true,
+      );
       _cuciture.add(cucitura);
       cucitura.avvia().whenComplete(() => _cuciture.remove(cucitura));
       return;
@@ -492,157 +502,14 @@ class Servitore {
   /// `dashboardmodern.invalid` — contando sul fatto che il ponte del
   /// pannello l'indirizzo lo ignora. Qui il ponte e' un server, e
   /// l'indirizzo va detto giusto.
-  /// Lo stile della plancia leggera: si mette in testa alla pagina, dopo
-  /// le premesse, e vince su tutto con `!important`.
-  static const String stileLeggero =
-      '<style id="gdahome-leggera">'
-      '*,*::before,*::after{animation-iteration-count:1!important}'
-      '*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}'
-      '</style>';
+  /// Le premesse della pagina: stanno in `premesse.dart`, senza `dart:io`,
+  /// perche' le usa anche il browser — dove un server non c'e' e la plancia la
+  /// serve un service worker. Uguali per tutti e due; cambia solo da dove
+  /// arriva il WebSocket.
+  final premesse = Premesse();
 
-  /// Le misure delle barre del telefono, e cosa farne.
-  ///
-  /// Tre righe, e ognuna toglie un'aria di troppo: il contenuto comincia un
-  /// dito sotto l'orologio invece di due, finisce un dito sopra i tasti, e la
-  /// barra della plancia si appoggia sopra i tasti invece di restare a
-  /// mezz'aria. Il resto della pagina — i margini ai lati, tutto il suo
-  /// disegno — non si tocca.
-  ///
-  /// Va **in fondo alla pagina**, non in testa, e con un selettore piu' lungo
-  /// del necessario. La plancia scrive le sue misure con `!important`, e fra
-  /// due `!important` della stessa forza vince l'ultimo che si legge: messo
-  /// in testa, il mio perdeva e la barra della plancia finiva sotto i tasti
-  /// del telefono. Le regole senza `!important` — i margini in cima — invece
-  /// vincevano lo stesso, ed e' per questo che il difetto si vedeva solo in
-  /// fondo.
-  String get stileDelleMisure =>
-      '<style id="gdahome-misure">'
-      ':root{--gdahome-alto:${margini.alto.round()}px;'
-      '--gdahome-basso:${margini.basso.round()}px}'
-      'html body .app{padding-top:calc(var(--gdahome-alto) + 8px)!important;'
-      'padding-bottom:calc(var(--gdahome-basso) + 40px)!important}'
-      /* La barra della plancia si alza sopra i tasti del telefono, **in
-       * tutti e due i modi in cui puo' stare li'**: ferma, che e' come sta
-       * di solito, o chiamata dalla maniglia. La prima volta avevo scritto
-       * solo il secondo, e sul telefono — dove la barra e' ferma — non
-       * cambiava niente: la classe che aspettavo non c'era. Nascosta resta
-       * dov'e', che fuori dallo schermo e' fuori dallo schermo. */
-      'html body.cd-nav-fixed nav.tabs.bottom-nav-bar,'
-      'html body nav.tabs.bottom-nav-bar.visible{'
-      'bottom:calc(var(--gdahome-basso) + 8px)!important}'
-      /* Con la barra ferma la pagina lascia gia' il posto sotto: gliene si
-       * lascia altrettanto piu' i tasti. */
-      'html body.cd-nav-fixed{'
-      'padding-bottom:calc(var(--gdahome-basso) + 112px)!important}'
-      'html body .bottom-nav-handle{'
-      'bottom:calc(var(--gdahome-basso) + 6px)!important}'
-      /* Solo dove c'e' un puntatore vero: su un telefono il «sopra» non
-       * esiste, e un dito che sfiora non deve tirare su la barra. */
-      '@media (hover:hover) and (pointer:fine){'
-      'html body nav.tabs.bottom-nav-bar:hover{'
-      'bottom:calc(var(--gdahome-basso) + 20px)!important}}'
-      '</style>';
-
-  /// Toglie dalla plancia la sua Config, e dice dov'e' andata.
-  ///
-  /// La configurazione della casa adesso sta nel menu dell'app: tenerne due,
-  /// una qui e una li', vorrebbe dire due posti dove cambiare la stessa cosa e
-  /// due occasioni di trovarla diversa. Quella della plancia sparisce.
-  ///
-  /// **Non si tocca un file della dashboard.** I file restano quelli
-  /// pubblicati — e devono restarlo, che il ponte li ricontrolla uno per uno
-  /// (vedi `ponte/src/provenienza.js`) e una plancia con un file cambiato si
-  /// direbbe modificata. Qui si aggiunge soltanto qualcosa **alla pagina
-  /// servita**, che e' lo stesso posto da cui la plancia riceve gia' le misure
-  /// delle barre del telefono.
-  ///
-  /// Si toglie in due modi insieme, e servono tutti e due: lo stile fa sparire
-  /// la voce dalla barra e la sua pagina, e il pezzo di programma chiude
-  /// l'editor se qualcosa riesce ad aprirlo lo stesso — la plancia ha piu' di
-  /// una strada per arrivarci, e nasconderne una sola vorrebbe dire trovarsi
-  /// l'editor addosso da un'altra.
-  String get senzaConfig =>
-      '<style id="gdahome-senza-config">'
-      '#tab-config,#page-config,.tab[data-tab="config"]{display:none!important}'
-      '#editor-modal,#cd-entpick{display:none!important}'
-      '</style>'
-      '<script>(function(){'
-      'var chiudi=function(){'
-      'var quali=["editor-modal","cd-entpick"];'
-      'for(var i=0;i<quali.length;i++){'
-      'var uno=document.getElementById(quali[i]);if(uno)uno.remove();}'
-      '};'
-      /* Un osservatore e non un controllo ogni tanto: l'editor si apre
-       * mettendo un nodo nel corpo della pagina, e un osservatore se ne
-       * accorge nello stesso fotogramma. Un controllo a tempo lo lascerebbe
-       * vedere per un attimo, ed e' proprio l'attimo in cui uno ci mette il
-       * dito. */
-      'if(window.MutationObserver){'
-      'new MutationObserver(chiudi).observe(document.documentElement,'
-      '{childList:true,subtree:true});}'
-      'document.addEventListener("DOMContentLoaded",chiudi);'
-      'chiudi();'
-      '})();</script>';
-
-  /// Il tema e la barra, scritti dove la plancia se li aspetta.
-  ///
-  /// Sono di **questo dispositivo** — il tablet in cucina puo' stare sullo
-  /// scuro mentre il telefono segue il sistema — e la dashboard li tiene
-  /// apposta fuori dalle chiavi che si sincronizzano. Quando la sua Config
-  /// sparisce, li tiene l'app; e siccome la plancia li legge dal deposito
-  /// locale della pagina, glieli si scrive li' **prima** che parta, se no li
-  /// legge vuoti e poi cambia colore sotto gli occhi.
-  String get leMieMisureDellaPlancia {
-    final quale = switch (tema) {
-      'chiaro' => 'light',
-      'scuro' => 'dark',
-      _ => 'auto',
-    };
-    final come = barra == 'fissa' ? 'fixed' : 'auto';
-    return '<script>try{'
-        'localStorage.setItem("cd_theme",${jsonEncode(quale)});'
-        'localStorage.setItem("cd_navbar_mode",${jsonEncode(come)});'
-        '}catch(e){}</script>';
-  }
-
-  String conLePremesse(String pagina) {
-    final quale = pannello;
-    final premessa =
-        '<script>'
-        'window.__DASHBOARDMODERN_HOSTED__=true;'
-        'window.__DASHBOARDMODERN_BRIDGE_WS__=(function(Vera){'
-        'var dove=(location.protocol==="https:"?"wss://":"ws://")+location.host+"/api/websocket";'
-        'function Cucita(_indirizzo,protocolli){'
-        'return protocolli===undefined?new Vera(dove):new Vera(dove,protocolli);}'
-        'Cucita.prototype=Vera.prototype;'
-        'Cucita.CONNECTING=0;Cucita.OPEN=1;Cucita.CLOSING=2;Cucita.CLOSED=3;'
-        'return Cucita;})(window.WebSocket);'
-        'window.__DASHBOARDMODERN_INSTANCE__=${jsonEncode(quale?.istanza ?? '')};'
-        'window.__DASHBOARDMODERN_PROFILE__=${jsonEncode(quale?.profilo ?? 'primary')};'
-        'window.__DASHBOARDMODERN_PRIMARY__=${quale?.primario ?? true};'
-        'window.__DASHBOARDMODERN_LOCALE__=${jsonEncode(lingua)};'
-        'window.__GDAHOME__=true;'
-        '</script>'
-        '$leMieMisureDellaPlancia'
-        '${leggera ? stileLeggero : ''}';
-    final testa = RegExp(
-      r'<head[^>]*>',
-      caseSensitive: false,
-    ).firstMatch(pagina);
-    final conLaPremessa = testa == null
-        ? '$premessa$pagina'
-        : pagina.replaceRange(testa.end, testa.end, premessa);
-
-    /* Le misure e la Config tolta vanno in fondo: vedi [stileDelleMisure],
-     * che spiega perche' in testa perdevano contro lo stile della plancia. */
-    final inFondo = '$stileDelleMisure$senzaConfig';
-    final fine = RegExp(
-      r'</body\s*>',
-      caseSensitive: false,
-    ).firstMatch(conLaPremessa);
-    if (fine == null) return '$conLaPremessa$inFondo';
-    return conLaPremessa.replaceRange(fine.start, fine.start, inFondo);
-  }
+  String conLePremesse(String pagina) =>
+      premesse.conLePremesse(pagina, ilWebSocket: ilWebSocketDelServitore);
 
   /* ─── Le chiamate REST ─────────────────────────────────────────────────── */
 
@@ -829,158 +696,23 @@ class _Scaricato {
 
 /* ─── La cucitura ───────────────────────────────────────────────────────── */
 
-/// Un WebSocket della pagina, cucito sul filo dell'app.
+/// La pagina, vista dalla cucitura: qui e' un WebSocket vero.
 ///
-/// Dalla parte della pagina si comporta come il ponte del pannello di Home
-/// Assistant: dice `auth_ok` e basta, appena il filo c'e'. Non c'e' niente da
-/// autenticare — il filo lo e' gia', e la porta ha la sua chiave — e la
-/// plancia ospitata in un punto aspetta `auth_ok` senza mandare nessun
-/// `auth`. Un `auth` che arriva lo stesso si lascia cadere. Da li' in poi ogni
-/// messaggio va sul filo col numero del filo e torna col numero della pagina.
-///
-/// Quando il filo cade, la pagina si vede chiudere il WebSocket: e' quello che
-/// vedrebbe con Home Assistant, e sa cosa fare — riprova da sola dopo cinque
-/// secondi, e ricomincia da capo con le sue sottoscrizioni.
-class _Cucitura {
-  _Cucitura(this._servitore, this._presa);
+/// La cucitura sta in `cucitura.dart` e non sa che trasporto ha sotto: sul
+/// telefono e' questo, nel browser sono due pagine che si parlano. La
+/// rinumerazione dei messaggi e' la stessa, ed e' l'unica cosa che conta.
+class _LaPresa implements VersoLaPagina {
+  _LaPresa(this._presa);
 
-  final Servitore _servitore;
   final WebSocket _presa;
-  final _numeri = <int, int>{};
-  final _finita = Completer<void>();
 
-  Filo? _filo;
-  StreamSubscription<StatoDelFilo>? _guardaIlFilo;
-  bool _dentro = false;
+  @override
+  bool get aperta => _presa.readyState == WebSocket.open;
 
-  Future<void> avvia() {
-    _presa.listen(
-      (dynamic grezzo) => unawaited(_dallaPagina(grezzo)),
-      onDone: _pagina,
-      onError: (Object _) => _pagina(),
-      cancelOnError: true,
-    );
-    unawaited(_entra());
-    return _finita.future;
-  }
+  @override
+  void manda(String testo) => _presa.add(testo);
 
-  Future<void> _dallaPagina(dynamic grezzo) async {
-    if (grezzo is! String) return;
-    final Map<String, dynamic> detto;
-    try {
-      final letto = jsonDecode(grezzo);
-      if (letto is! Map<String, dynamic>) return;
-      detto = letto;
-    } catch (_) {
-      return;
-    }
-
-    /* Un `auth` non serve a niente qui, e prima di `auth_ok` non si
-     * ascolta: quello che arriva prima lo manda una pagina che non ha
-     * aspettato, e non e' un comando. */
-    if (!_dentro || detto['type'] == 'auth') return;
-
-    final filo = _filo;
-    if (filo == null || !filo.dentro) {
-      await chiudi();
-      return;
-    }
-
-    final suo = detto['id'];
-    if (suo is! int) return;
-    final tipo = detto['type'];
-    final messaggio = Map<String, dynamic>.of(detto)..remove('id');
-
-    /* Una disdetta parla del numero della sottoscrizione, e quel numero e' il
-     * suo: va tradotto nel nostro, e poi dimenticato. */
-    if (tipo == 'unsubscribe_events') {
-      final quale = messaggio['subscription'];
-      final mio = quale is int ? _numeri.remove(quale) : null;
-      if (mio != null) {
-        messaggio['subscription'] = mio;
-        filo.dimentica(mio);
-      }
-    }
-
-    try {
-      late final int mio;
-      mio = filo.instrada(messaggio, (risposta) {
-        /* Il testo cosi' com'e' arrivato, col suo numero rimesso in testa:
-         * niente da aprire e richiudere, che su un `get_states` grosso era
-         * un decimo di secondo di schermo fermo. */
-        _mandaTesto(risposta.conNumero(suo));
-        /* Un comando che ha avuto la sua risposta e non manda eventi non
-         * serve piu' a nessuno. */
-        if (risposta.tipo == 'result' &&
-            (tipo is! String ||
-                !_continua(tipo) ||
-                risposta.successo != true)) {
-          filo.dimentica(mio);
-          _numeri.remove(suo);
-        }
-      });
-      _numeri[suo] = mio;
-    } on FiloCaduto {
-      await chiudi();
-    }
-  }
-
-  static bool _continua(String tipo) =>
-      _cheContinuano.contains(tipo) || tipo.startsWith('subscribe_');
-
-  Future<void> _entra() async {
-    final filo = await _servitore._filoPronto();
-    if (_finita.isCompleted) return;
-    if (filo == null) {
-      _manda({'type': 'auth_invalid', 'message': 'la casa non risponde'});
-      await chiudi();
-      return;
-    }
-    _filo = filo;
-    _dentro = true;
-    _guardaIlFilo = filo.stato.listen((stato) {
-      if (stato != StatoDelFilo.dentro) unawaited(chiudi());
-    });
-    _manda({'type': 'auth_ok', 'ha_version': 'gdahome'});
-  }
-
-  void _manda(Map<String, dynamic> cosa) => _mandaTesto(jsonEncode(cosa));
-
-  void _mandaTesto(String testo) {
-    if (_presa.readyState != WebSocket.open) return;
-    try {
-      _presa.add(testo);
-    } catch (_) {
-      /* Chiusa fra il controllo e la scrittura. */
-    }
-  }
-
-  /// La pagina se n'e' andata.
-  void _pagina() {
-    _dimenticaTutto();
-    if (!_finita.isCompleted) _finita.complete();
-  }
-
-  /// Si chiude da questa parte: il filo e' caduto, o il servitore si spegne.
-  Future<void> chiudi() async {
-    _dimenticaTutto();
-    try {
-      await _presa.close(WebSocketStatus.goingAway, 'il filo e\' caduto');
-    } catch (_) {
-      /* Gia' chiusa. */
-    }
-    if (!_finita.isCompleted) _finita.complete();
-  }
-
-  void _dimenticaTutto() {
-    unawaited(_guardaIlFilo?.cancel());
-    _guardaIlFilo = null;
-    final filo = _filo;
-    if (filo != null) {
-      for (final mio in _numeri.values) {
-        filo.dimentica(mio);
-      }
-    }
-    _numeri.clear();
-  }
+  @override
+  Future<void> chiudi() =>
+      _presa.close(WebSocketStatus.goingAway, 'il filo e\' caduto');
 }
