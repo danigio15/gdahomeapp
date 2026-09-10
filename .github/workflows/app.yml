@@ -96,7 +96,7 @@ jobs:
           # costa l'abbinamento. Adesso c'e' scritto in fondo alla schermata.
           CORSA: ${{ github.run_number }}
         run: |
-          VERSIONE="$CORSA·${GITHUB_SHA:0:7}"
+          VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
           echo "Questo pacchetto e' il $VERSIONE"
           if [ -n "$CENTRALINO" ]; then
             flutter build apk --release --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
@@ -133,13 +133,21 @@ jobs:
       # stanno in piedi, i permessi sono scritti giusti, niente e' rimasto
       # indietro. E' la differenza fra «iOS lo faremo» e «iOS c'e', manca la
       # firma di Apple».
+      # Il nome del pacchetto sta in ASCII, e non e' una scelta di stile.
+      #
+      # Era `29·abc1234`, col punto in mezzo. Su Linux passa; su un Mac quel
+      # `--dart-define` non arriva nemmeno all'inizio della costruzione:
+      # «Dart_NewStringFromUTF8 expects argument 'str' to be valid UTF-8», e
+      # il lavoro finisce in mezzo secondo. Il punto era l'unico byte non
+      # ASCII sulla riga di comando. Un trattino fa la stessa cosa in tutti e
+      # tre i posti.
       - name: Compila (senza firma)
         working-directory: app
         env:
           CENTRALINO: ${{ inputs.centralino }}
           CORSA: ${{ github.run_number }}
         run: |
-          VERSIONE="$CORSA·${GITHUB_SHA:0:7}"
+          VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
           if [ -n "$CENTRALINO" ]; then
             flutter build ios --release --no-codesign --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
           else
@@ -264,7 +272,7 @@ jobs:
           # plancia chiama per indirizzo assoluto — e chi arriva secondo
           # scalza il primo. Quello di Flutter serve a far partire l'app senza
           # rete, e senza casa l'app non serve a niente.
-          VERSIONE="$CORSA·${GITHUB_SHA:0:7}"
+          VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
           if [ -n "$CENTRALINO" ]; then
             flutter build web --release --pwa-strategy=none --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
           else
