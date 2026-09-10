@@ -31,6 +31,16 @@ plancia**, `#page-config`, e dentro ci sta tutto:
 | 🎫 Segnalazioni | la sua strada passa dall'integrazione: nell'app resta nascosta, vedi sotto |
 | 💬 Assistenza | si toglie da sé quando la chat non risponde |
 
+Dentro la plancia le porte della Configurazione sono tre: la linguetta nella
+barra, l'ingranaggio in cima e il menu del tasto ☰. Nella dashboard ci vogliono
+tutte — lì la Config è una pagina come le altre — e nell'app no: la porta è la
+voce del menu, e tre porte sulla stessa stanza sono due di troppo. Nell'app
+restano nascoste tutte e tre, e con loro il tasto «← HOME» che la pagina si
+disegna in cima: chi ci arriva dal menu torna col menu, non con un tasto che lo
+riporta sulla Home della plancia. Col ☰ se ne va anche il «Reset totale», che
+cancella tutta la configurazione: nell'app non si perde niente che non si possa
+rifare dalla Config, e non si tocca per sbaglio.
+
 Di quella pagina, l'app sposta **la porta e non la stanza**:
 
 - dalla barra in fondo alla plancia la voce sparisce — su un telefono quella
@@ -85,7 +95,7 @@ conto da tenere onesto, perché non c'è una seconda Config che possa restare
 indietro. Se la dashboard aggiunge una casella, quella casella nell'app c'è
 il giorno in cui il ponte porta la plancia nuova.
 
-Restano nel ponte le cose che la plancia 1.4.17 chiede al suo backend, e che
+Restano nel ponte le cose che la plancia 1.4.18 chiede al suo backend, e che
 in un add-on senza integrazione nessuno le darebbe:
 
 - lo spegnimento programmato del clima

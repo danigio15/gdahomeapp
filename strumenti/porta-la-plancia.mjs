@@ -65,9 +65,20 @@ const CARTELLE = ["legacy", "src", "avatars", "brands"];
 
 const checkout = process.argv[2];
 if (!checkout) {
-  process.stderr.write("Uso: node strumenti/porta-la-plancia.mjs /dove/sta/dashboardmodern-v2\n");
+  process.stderr.write(
+    "Uso: node strumenti/porta-la-plancia.mjs /dove/sta/dashboardmodern-v2 [--commit=<sha>]\n",
+  );
   process.exit(64);
 }
+
+/* Da dove viene, quando non e' un checkout di git.
+ *
+ * Senza un computer la plancia si prende come si puo': il pacchetto di una
+ * versione, scaricato da GitHub, che di `.git` non ha niente. Il commit
+ * allora si dice qui — `--commit=3e0f8a5…` — e finisce in `ORIGINE.json`
+ * come se venisse da un checkout, perche' e' lo stesso fatto: quei file
+ * vengono da li'. */
+const dettoIlCommit = process.argv.slice(3).find((uno) => uno.startsWith("--commit="));
 const frontend = join(checkout, "custom_components", "dashboardmodern", "frontend");
 if (!existsSync(join(frontend, "legacy", "dashboard.html"))) {
   process.stderr.write(`In ${frontend} non c'e' la plancia (manca legacy/dashboard.html).\n`);
@@ -120,11 +131,16 @@ for (const cartella of CARTELLE) {
  * firma. Firmare ottocento righe una per una non aggiungerebbe niente. */
 const sigillo = sigilloDi(impronte);
 
-let commit = "";
-try {
-  commit = execFileSync("git", ["-C", checkout, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
-} catch (_errore) {
-  /* Non e' un checkout di git: si scrive quello che si sa. */
+let commit = dettoIlCommit ? dettoIlCommit.slice("--commit=".length).trim() : "";
+if (!commit) {
+  try {
+    commit = execFileSync("git", ["-C", checkout, "rev-parse", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+  } catch (_errore) {
+    /* Non e' un checkout di git, e nessuno ha detto da dove viene: si scrive
+     * quello che si sa. */
+  }
 }
 
 /* Che versione e', detta com'e' scritta nel manifesto dell'integrazione: e'

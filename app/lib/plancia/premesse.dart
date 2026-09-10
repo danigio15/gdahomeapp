@@ -103,6 +103,13 @@ class Premesse {
   /// per tre comandi che c'erano gia', e due padroni per la stessa
   /// preferenza. Ne resta uno: il suo.
   ///
+  /// Dentro la plancia le porte della Config erano tre: la linguetta nella
+  /// barra, l'ingranaggio in cima e il menu del tasto ☰. Nella dashboard ci
+  /// vogliono tutte — li' la Config e' una pagina come le altre — e nell'app
+  /// no: la porta e' la voce del menu. Restano nascoste tutte e tre, e con
+  /// loro il tasto «← HOME» che la pagina si disegna in cima: dal menu si
+  /// torna col menu.
+  ///
   /// Resta nascosta una tessera sola, `#dm-tkt-card`: le Segnalazioni. Non
   /// per grafica — quella e' buona — ma perche' la sua strada non c'e'. La
   /// tessera della plancia parla all'integrazione di Home Assistant, che
@@ -125,6 +132,20 @@ class Premesse {
       '<style id="gdahome-config-fuori">'
       '#tab-config,.tab[data-tab="config"]{display:none!important}'
       '#page-config #dm-tkt-card{display:none!important}'
+      /* Il tasto «← HOME» in cima alla Configurazione: nella plancia porta
+         alla sua Home, e chi ci arriva dal menu dell'app si ritrova sulla
+         plancia senza aver chiesto niente. Dal menu si torna col menu. Sulle
+         altre pagine resta: li' e' l'unico modo di uscire. */
+      'html body #page-config .back-home-btn{display:none!important}'
+      /* Le altre due porte della Config, dentro la plancia: l'ingranaggio in
+         cima e il menu che apre il tasto ☰. Nella dashboard ci vogliono —
+         li' la Config e' una pagina come le altre — nell'app no: la porta e'
+         la voce del menu, e tre porte sulla stessa stanza sono due di
+         troppo. Col ☰ se ne va anche il «Reset totale», che cancella tutta
+         la configurazione: nell'app non si perde niente che non si possa
+         rifare dalla Config, e non si tocca per sbaglio. */
+      'html body header .dm-editor-entry,'
+      'html body header .ha-menu-btn{display:none!important}'
       '</style>'
       '<script>(function(){'
       /* Le linguette si cercano senza virgolette dentro le virgolette: un

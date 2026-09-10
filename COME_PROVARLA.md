@@ -298,11 +298,17 @@ Prima di tutto le cose arrivate per ultime, che sono quelle da bocciare subito
 se non funzionano:
 
 - **Menu → Configurazione.** Deve comparire la pagina **CONFIGURAZIONE** della
-  dashboard, con la sua insegna e la versione della plancia, e sotto le sue
+  dashboard, con la sua insegna e la versione della plancia — **v1.4.18**, e se
+  ne dice una più vecchia il ponte non è aggiornato — e sotto le sue
   tessere: 🧩 Configura Entità, 🎨 Tema con le sei tavolozze, 📌 Barra di
   navigazione, 💙 Sostieni il progetto. Toccando 🧩 si apre il suo editor, col
   cercatore e le sette famiglie. Poi **menu → Plancia**: la plancia torna
   dov'era.
+- **Una porta sola per la Config.** In cima alla plancia non c'è più
+  l'ingranaggio ⚙️, e non c'è più il tasto ☰: la Config si apre dal menu
+  dell'app e da nessun altro posto. Nella pagina Configurazione non c'è più
+  nemmeno il tasto «← HOME», che riportava sulla Home della plancia senza che
+  nessuno lo avesse chiesto.
 - **Il tema, dalle sue tessere.** Chiaro, scuro, una tavolozza: la plancia
   cambia colore. Chiudi e riapri l'app: la scelta deve **restare**. Prima
   l'app la riscriveva a ogni caricamento e tornava indietro.
