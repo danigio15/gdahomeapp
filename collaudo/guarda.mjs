@@ -1000,6 +1000,84 @@ try {
    * cosi' si perdevano il Tema, la Tavolozza, la Barra e le donazioni, che
    * stanno nella pagina e non nell'editor. Adesso si apre la pagina: di
    * rifatto non c'e' niente, e si guarda che sia la sua. */
+  /* La plancia si ricarica, e si deve **ricollegare**.
+   *
+   * Nel browser la pagina della plancia si ricarica per un sacco di ragioni
+   * normali: si preme «Salva» nella Configurazione, si tocca «Plancia»
+   * essendoci gia', si cambia «Plancia leggera», la casa arriva dopo che la
+   * pagina si era aperta. Ogni ricarica e' un documento nuovo, con un
+   * WebSocket nuovo — e quello nuovo trovava la cucitura del documento di
+   * prima, ancora viva, e non ne apriva un'altra: niente `auth_ok`, pallino
+   * rosso, nessuno stato e nessuna configurazione. Cioe' «non hai ancora
+   * collegato le tue entita'» su una casa configurata, con il filo vivo.
+   *
+   * Il collaudo non lo vedeva perche' **non ricaricava mai**: apriva la
+   * plancia una volta e da li' in poi cambiava solo pagina, che e' un'altra
+   * cosa. Adesso ricarica, e guarda il pallino. */
+  racconta("ricarico la plancia, e guardo che si ricolleghi");
+  /* Si ricarica **dal di dentro**, e non dal menu dell'app.
+   *
+   * Quello che rompe la cucitura e' «un documento nuovo in quel riquadro», e
+   * `location.reload()` e' quello nella sua forma piu' pulita: la stessa cosa
+   * che fa `ricarica()` dell'app quando si salva nella Configurazione, senza
+   * dover passare da una voce del menu — che in un collaudo si preme quando
+   * la barra si lascia premere, e non e' quello che si sta provando.
+   *
+   * Il segno sul documento di prima serve a sapere quale riquadro si sta
+   * guardando: quello vecchio resta li' per qualche decimo, e senza il segno
+   * si finirebbe a fare le domande alla pagina sbagliata e a dirsi che va
+   * tutto bene. */
+  await plancia.evaluate(() => {
+    window.__collaudoVecchia = true;
+    location.reload();
+  });
+  const fineDellaRicarica = Date.now() + 60_000;
+  let ricaricata = null;
+  while (Date.now() < fineDellaRicarica) {
+    const quale = pagina.frames().find((f) => f.url().includes("/dashboardmodern_static/"));
+    if (quale) {
+      const vecchia = await quale
+        .evaluate(() => Boolean(window.__collaudoVecchia))
+        .catch(() => true);
+      if (!vecchia) {
+        ricaricata = quale;
+        break;
+      }
+    }
+    await attendi(250);
+  }
+  if (!ricaricata) throw new Error("la plancia non si e' ricaricata");
+  /* Il pallino diventa verde su `auth_ok`, e la scritta accanto lo dice: sono
+   * la prima cosa che si guarda, e quella che si vedeva rossa. */
+  const fineDelPallino = Date.now() + 45_000;
+  let come = null;
+  while (Date.now() < fineDelPallino) {
+    come = await ricaricata
+      .evaluate(() => ({
+        collegato: Boolean(document.getElementById("live-dot")?.classList.contains("connected")),
+        scritta: (document.getElementById("conn-text")?.textContent || "").trim(),
+        senzaEntita: Boolean(document.getElementById("cd-empty-banner")),
+      }))
+      .catch(() => null);
+    if (come?.collegato) break;
+    await attendi(300);
+  }
+  if (!come?.collegato) {
+    throw new Error(
+      `ricaricata la plancia, il pallino non e' verde: «${come?.scritta || "niente"}»` +
+        `${come?.senzaEntita ? ", e dice che le entita' non sono collegate" : ""}`,
+    );
+  }
+  /* E la configurazione e' tornata con lei: l'avviso «non hai ancora
+   * collegato le tue entita'» compare proprio quando la configurazione non e'
+   * arrivata, ed e' il secondo segno di quel difetto. */
+  if (come.senzaEntita) {
+    throw new Error("ricaricata la plancia, dice che le entita' non sono collegate");
+  }
+  racconta(`la plancia si e' ricollegata: ${come.scritta || "pallino verde"}`);
+  await attendi(700);
+  await scatta(pagina, "3d-plancia-ricaricata");
+
   racconta("apro la Configurazione della plancia dal menu");
   const laConfig = await laPlancia(pagina);
   await apriIlMenu();

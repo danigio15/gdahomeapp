@@ -233,6 +233,12 @@ class Filo {
   StatoDelFilo get statoAdesso => _adesso;
 
   /* Quanto passa sul filo. Per la diagnostica, non per la logica. */
+  /* Da quando questo filo esiste. Le cadute si contano da qui, e senza questo
+   * numero non si leggono: «caduto 320 volte» in dieci minuti e' un guasto,
+   * in otto ore di scheda aperta su un computer che ogni tanto si addormenta
+   * e' la vita normale di un browser. Sono due conclusioni opposte tirate
+   * dallo stesso numero, ed e' il numero che era incompleto. */
+  final DateTime _natoIl = DateTime.now();
   int _messaggiArrivati = 0;
   int _byteArrivati = 0;
   int _eventiArrivati = 0;
@@ -251,8 +257,8 @@ class Filo {
     final cadutoIl = _cadutoIl;
     final cadute = _cadute == 0
         ? 'mai caduto'
-        : 'caduto $_cadute volte, l\'ultima ${_daQuanto(cadutoIl)} fa: '
-              '$_ultimaCaduta';
+        : 'caduto $_cadute volte in ${_quanto(DateTime.now().difference(_natoIl))}, '
+              'l\'ultima ${_daQuanto(cadutoIl)} fa: $_ultimaCaduta';
     final presa = _presa;
     final sulFilo = presa is PresaCifrata
         ? ' (${_megabyte(presa.caratteriArrivati)} sul filo'
@@ -262,6 +268,13 @@ class Filo {
         '${_megabyte(_byteArrivati)} giu\'$sulFilo, $_messaggiMandati su, '
         'in ${minuti < 1 ? '${(minuti * 60).round()} s' : '${minuti.round()} min'}; '
         '$cadute';
+  }
+
+  /// Una durata come si dice a voce: «40 s», «12 min», «8 h».
+  static String _quanto(Duration quanta) {
+    if (quanta.inMinutes < 1) return '${quanta.inSeconds} s';
+    if (quanta.inHours < 1) return '${quanta.inMinutes} min';
+    return '${quanta.inHours} h';
   }
 
   static String _megabyte(int quanti) =>
