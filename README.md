@@ -140,6 +140,11 @@ Il pacchetto Android lo costruisce GitHub, quindi non serve installarsi l'SDK:
 `gdahome-android`. I passi per intero — ponte compreso, e cosa guardare una
 volta dentro — stanno in [`COME_PROVARLA.md`](COME_PROVARLA.md).
 
+Questa repository e' **privata**, e cosa cambierebbe ad aprirla — cosa si
+vedrebbe, cosa no, e cosa succede alle due repository se la dashboard va in
+privato — sta in
+[`docs/APRIRE_LA_REPOSITORY.md`](docs/APRIRE_LA_REPOSITORY.md).
+
 ## Le prove
 
 ```bash
