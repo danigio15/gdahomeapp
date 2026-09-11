@@ -21,34 +21,6 @@ compatibility_date = "2025-04-01"
 # nessun dominio da comprare.
 workers_dev = true
 
-# gdahome da aprire in un browser, servita da qui.
-#
-# Il perche': dentro Home Assistant l'app web sta dietro l'ingress, e
-# quell'indirizzo non e' un link — vive finche' vive la pagina di Home
-# Assistant che lo tiene aperto, e in una scheda a parte dopo qualche minuto
-# risponde «401». Serviva un indirizzo vero, da aprire ovunque e anche fuori
-# casa, e questo e' il posto giusto: il centralino e' gia' pubblico, e' gia'
-# in `https` — che serve, perche' la plancia nel browser la disegna un service
-# worker e i browser i service worker li accendono solo su `https` — e non
-# costa niente di piu'.
-#
-# Cosa diventa pubblico: **solo l'app**. Non la plancia, che la serve l'add-on
-# di casa e passa dal filo cifrato; non la configurazione; non nessuna casa.
-# Chi apre quel link vede la schermata «Colleghiamo la casa» e senza un codice
-# di abbinamento non va da nessuna parte — e' la stessa porta del telefono.
-#
-# I file stanno in `pubblico/app/`, che non e' nella repository: ce li mette il
-# bottone «Il centralino» su Actions copiandoli da `ponte/app` — la stessa app
-# costruita che sta dentro l'add-on, cosi' non ce n'e' una seconda da tenere
-# aggiornata.
-#
-# `not_found_handling = "none"`: quello che qui sotto non c'e' passa al
-# centralino, che e' quello che deve succedere per `/casa/…`, `/telefono/…` e
-# `/abbinamento/…`.
-[assets]
-directory = "./pubblico"
-not_found_handling = "none"
-
 # Ogni versione pubblicata, se non si dice il contrario, resta raggiungibile
 # per sempre al proprio indirizzo. Per un centralino non serve a niente e non
 # e' ordinato: le case chiamano l'indirizzo di adesso, e le versioni di ieri
@@ -85,3 +57,37 @@ enabled = true
 # «segnalazioni non configurate», e l'app lo dice.
 [vars]
 GITHUB_REPO = "danigio15/gdahome-segnalazioni"
+
+# gdahome da aprire in un browser, servita da qui.
+#
+# **Questo blocco sta in fondo apposta.** In TOML tutto quello che viene dopo
+# un `[tabella]` ci finisce dentro: mettendolo in mezzo si e' portato via
+# `preview_urls`, che e' una riga di primo livello, e Cloudflare ha risposto
+# «Unexpected fields found in assets field: preview_urls» riaccendendo le
+# Preview URL. Le righe sciolte vanno tutte prima della prima tabella.
+#
+# Il perche' di tutto il resto: dentro Home Assistant l'app web sta dietro
+# l'ingress, e quell'indirizzo non e' un link — vive finche' vive la pagina di
+# Home Assistant che lo tiene aperto, e in una scheda a parte dopo qualche
+# minuto risponde «401». Serviva un indirizzo vero, da aprire ovunque e anche
+# fuori casa, e questo e' il posto giusto: il centralino e' gia' pubblico, e'
+# gia' in `https` — che serve, perche' la plancia nel browser la disegna un
+# service worker e i browser i service worker li accendono solo su `https` — e
+# non costa niente di piu'.
+#
+# Cosa diventa pubblico: **solo l'app**. Non la plancia, che la serve l'add-on
+# di casa e passa dal filo cifrato; non la configurazione; non nessuna casa.
+# Chi apre quel link vede «Colleghiamo la casa» e senza un codice di
+# abbinamento non va da nessuna parte — e' la stessa porta del telefono.
+#
+# I file stanno in `pubblico/app/`, che non e' nella repository: ce li mette il
+# bottone «Il centralino» su Actions copiandoli da `ponte/app` — la stessa app
+# costruita che sta dentro l'add-on, cosi' non ce n'e' una seconda da tenere
+# aggiornata.
+#
+# `not_found_handling = "none"`: quello che qui dentro non c'e' passa al
+# centralino, che e' quello che deve succedere per `/casa/…`, `/telefono/…` e
+# `/abbinamento/…`.
+[assets]
+directory = "./pubblico"
+not_found_handling = "none"
