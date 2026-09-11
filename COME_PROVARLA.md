@@ -84,19 +84,44 @@ printf 'Token di GitHub (non si vede mentre lo incolli), poi Invio: '; stty -ech
 G=$(printf '%s' "$G" | tr -d '[:space:]"'"'"''); case "$G" in github_pat_*|ghp_*) ;; *) G="github_pat_$G";; esac
 rm -rf /tmp/gdahomeapp && mkdir -p /tmp/gdahomeapp \
 && curl -fsSL -H "Authorization: Bearer $G" https://api.github.com/repos/danigio15/gdahomeapp/tarball/main | tar -xzf - -C /tmp/gdahomeapp \
+&& test -f /tmp/gdahomeapp/*/ponte/config.yaml \
 && rm -rf /addons/ponte && cp -r /tmp/gdahomeapp/*/ponte /addons/ponte && rm -rf /tmp/gdahomeapp \
-&& grep '^version' /addons/ponte/config.yaml \
-&& ha addons reload && (ha addons update local_ponte || ha addons rebuild local_ponte) && ha addons restart local_ponte \
-&& ha addons info local_ponte | grep -E '^(version|state):' \
-&& echo "Fatto: il ponte e' aggiornato." || echo "Qualcosa non e' andato: leggi la riga sopra."
+&& echo "nella cartella adesso c'e' la $(sed -n 's/^version: "\(.*\)"/\1/p' /addons/ponte/config.yaml)" \
+|| echo "Il codice nuovo non e' arrivato: la cartella e' quella di prima, non si e' rotto niente."
 unset G
+ha store reload 2>/dev/null || ha addons reload 2>/dev/null || echo "(il negozio non si e' ricaricato: si va avanti)"
+ha addons update local_ponte || ha addons rebuild local_ponte || echo "(ne' aggiornato ne' ricostruito)"
+ha addons restart local_ponte || echo "(non riavviato)"
+ha addons info local_ponte | grep -E '^(version|version_latest|state|update_available):'
 ```
 
-Scarica il codice, sostituisce `addons/ponte`, ricarica il negozio,
-aggiorna (o ricostruisce) l'add-on e lo riavvia: alla fine stampa versione e
-stato. La cartella vecchia la toglie **solo dopo** che il codice nuovo è
-arrivato, quindi se il token è sbagliato non si rompe niente. Ci mette
+Scarica il codice, sostituisce `addons/ponte`, ricarica il negozio, aggiorna
+(o ricostruisce) l'add-on e lo riavvia: alla fine stampa quello che Home
+Assistant ne pensa. La cartella vecchia la toglie **solo dopo** che il codice
+nuovo è arrivato, quindi se il token è sbagliato non si rompe niente. Ci mette
 qualche minuto, che è la ricostruzione.
+
+**Le ultime quattro righe sono staccate apposta**, e non è pignoleria: prima
+erano attaccate alle altre con `&&`, e siccome nelle versioni nuove di Home
+Assistant `ha addons reload` non c'è più — si chiama `ha store reload` —
+quella riga finiva in errore e **tutto quello che veniva dopo non girava**. Il
+risultato era il caso peggiore: i file nuovi nella cartella, e Home Assistant
+ancora sulla versione di prima, senza che niente dicesse cosa era andato
+storto. Adesso ogni riga va per conto suo e si vede quale si lamenta.
+
+**Due numeri, non uno.** Se qualcosa non torna, questi due si guardano
+separatamente — senza token, e senza toccare niente:
+
+```sh
+sed -n 's/^version: "\(.*\)"/\1/p' /addons/ponte/config.yaml
+ha addons info local_ponte | grep -E '^(version|version_latest|state|update_available):'
+```
+
+Il primo è quello che c'è **sul disco**; il secondo è quello che Home
+Assistant ha **installato**. Se sono diversi, i file sono arrivati e manca
+solo il giro del Supervisor: `ha store reload`, poi `ha addons rebuild
+local_ponte`. Se il primo è già quello vecchio, il codice nuovo non è mai
+arrivato: rifà il blocco qui sopra col token.
 
 ### B. Con l'indirizzo, se la rendi pubblica
 
