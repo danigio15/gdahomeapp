@@ -10,9 +10,9 @@
  * Un messaggio per parte, in chiaro. E' l'unico pezzo che il centralino vede,
  * e non c'e' niente dentro che gli serva.
  *
- *   telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true}   un telefono noto
+ *   telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true, mucchio:true}
  *   telefono → casa   {v:1, abbina:true, apertura:"…", mia:"…", gzip:true}  un telefono nuovo
- *   casa → telefono   {v:1, pronto:true, mia:"…", gzip:true}
+ *   casa → telefono   {v:1, pronto:true, mia:"…", gzip:true, mucchio:true}
  *   casa → telefono   {v:1, no:"…"}                          e basta
  *   casa → telefono   {v:1, no:"…", riabbina:true}           questo telefono non c'e' piu'
  *
@@ -135,14 +135,25 @@ export class Portiere {
      * tutto questo. */
     this.ponte.accogli(
       new PresaCifrata(presa, chiaveDiQuestoFilo, { comprime: detto.gzip === true }),
-      { da },
+      /* `mucchio: true` dice «so spacchettare un mucchio di eventi». Come il
+       * gzip: chi non lo dice riceve un messaggio per evento, come prima. */
+      { da, mucchio: detto.mucchio === true },
     );
   }
 
   /* La risposta a chi ha stretto la mano: la mia chiave effimera, e che qui
    * il gzip si sa aprire. */
   _pronto(mia) {
-    return { v: VERSIONE, pronto: true, mia: mia.pubblica.toString("base64"), gzip: true };
+    return {
+      v: VERSIONE,
+      pronto: true,
+      mia: mia.pubblica.toString("base64"),
+      gzip: true,
+      /* Che di qua gli eventi si sanno raggruppare. Al telefono serve per
+       * dirlo in diagnostica: quanti messaggi sono arrivati, e in quante
+       * buste — che passando dal centralino e' il numero che si paga. */
+      mucchio: true,
+    };
   }
 
   /* ─── L'abbinamento, dentro il cifrato ───────────────────────────────── */

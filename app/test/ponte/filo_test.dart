@@ -410,6 +410,65 @@ void main() {
     },
   );
 
+  test('un mucchio di eventi si spacchetta, e le buste si contano', () async {
+    /* Da fuori casa il ponte manda gli eventi insieme, in una busta sola:
+     * passando dal centralino ogni messaggio e' una richiesta contata, e una
+     * casa vera ne manda cinque al secondo — quarantamila all'ora, contro le
+     * centomila al giorno che il piano gratuito regala. Qui si prova che chi
+     * li riceve non se ne accorge: ogni pezzo rifa' la strada che avrebbe
+     * fatto da solo. */
+    final filo = filoCon();
+    await filo.apri();
+    final tornati = <Instradato>[];
+    final numero = filo.instrada({'type': 'subscribe_events'}, tornati.add);
+    await _finoA(() => tornati.isNotEmpty, entro: const Duration(seconds: 3));
+    final prima = tornati.length;
+
+    ponte.mucchio(numero, [
+      {
+        'event_type': 'state_changed',
+        'data': {
+          'entity_id': 'light.cucina',
+          'new_state': {'state': 'on'},
+        },
+      },
+      {
+        'event_type': 'state_changed',
+        'data': {
+          'entity_id': 'light.salotto',
+          'new_state': {'state': 'off'},
+        },
+      },
+      {
+        'event_type': 'state_changed',
+        'data': {
+          'entity_id': 'sensor.frigo',
+          'new_state': {'state': '4'},
+        },
+      },
+    ]);
+
+    await _finoA(
+      () => tornati.length - prima == 3,
+      entro: const Duration(seconds: 3),
+    );
+    /* Nell'ordine in cui la casa ha parlato, e interi. */
+    final entita = tornati
+        .skip(prima)
+        .map(
+          (uno) =>
+              (((uno.detto['event'] as Map)['data'] as Map)['entity_id']
+                  as String),
+        )
+        .toList();
+    expect(entita, ['light.cucina', 'light.salotto', 'sensor.frigo']);
+
+    /* E in diagnostica le due cose si vedono separate: i messaggi, e le
+     * buste — che sono quello che il centralino fa pagare. */
+    expect(filo.traffico, contains(' buste'));
+    await filo.chiudi();
+  });
+
   test('al risveglio un filo morto in silenzio si chiude e ribussa', () async {
     final filo = Filo.fisso(
       indirizzo: ponte.indirizzo,

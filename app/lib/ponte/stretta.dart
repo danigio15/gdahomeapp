@@ -18,13 +18,17 @@
 ///
 ///     telefono → casa   {v:1, chi:"dm_…", apertura:"…", mia:"…", gzip:true}   telefono noto
 ///     telefono → casa   {v:1, abbina:true, apertura:"…", mia:"…", gzip:true}  telefono nuovo
-///     casa → telefono   {v:1, pronto:true, mia:"…", gzip:true}
+///     casa → telefono   {v:1, pronto:true, mia:"…", gzip:true, mucchio:true}
 ///     casa → telefono   {v:1, no:"…"}                              e basta
 ///     casa → telefono   {v:1, no:"…", riabbina:true}               non ti conosco piu'
 ///
 /// `gzip: true` dice «so aprire una busta compressa»: chi manda comprime solo
 /// se l'altro l'ha detto, e chi non lo dice — un ponte vecchio, l'app nel
 /// browser — riceve e manda tutto com'era. Vedi `cifra.dart`.
+///
+/// `mucchio: true` dice «so spacchettare un mucchio di eventi»: il ponte, da
+/// fuori casa, li manda insieme invece di uno per uno. Vedi `filo.dart` e
+/// `ponte/src/ponte.js`.
 ///
 /// Dall'altra parte c'e' `ponte/src/portiere.js`, e le due descrizioni devono
 /// restare la stessa descrizione.
@@ -121,6 +125,11 @@ Future<Presa> stringiLaMano(
       'mia': mia.inBase64,
       /* Sul telefono si'; nel browser no, e non lo si dice. */
       if (gzipDisponibile) 'gzip': true,
+      /* Un mucchio di eventi in un messaggio solo: qui si sa spacchettare, e
+       * si dice sempre — nel browser come sul telefono. Il ponte lo fa solo
+       * passando dal centralino, che e' dove ogni messaggio e' una richiesta
+       * contata; in casa manda come prima. Vedi `ponte/src/ponte.js`. */
+      'mucchio': true,
     }),
   );
 

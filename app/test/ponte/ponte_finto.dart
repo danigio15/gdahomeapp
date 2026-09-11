@@ -18,6 +18,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:gdahome/ponte/cifra.dart';
+import 'package:gdahome/ponte/filo.dart' show segnoDelMucchio;
 import 'package:gdahome/ponte/indirizzo.dart';
 
 const String segnoBuono = 'un-segno-che-va-bene';
@@ -506,6 +507,18 @@ class PonteFinto {
   void evento(int id, Map<String, dynamic> cosa) {
     for (final presa in List.of(prese)) {
       _manda(presa, {'id': id, 'type': 'event', 'event': cosa});
+    }
+  }
+
+  /// Piu' eventi in **una busta sola**, com'e' fatto il mucchio che il ponte
+  /// manda quando il filo passa dal centralino: il suo segno, e poi un
+  /// messaggio per riga.
+  void mucchio(int id, List<Map<String, dynamic>> eventi) {
+    final righe = eventi.map(
+      (cosa) => jsonEncode({'id': id, 'type': 'event', 'event': cosa}),
+    );
+    for (final presa in List.of(prese)) {
+      presa.manda('$segnoDelMucchio${righe.join('\n')}');
     }
   }
 

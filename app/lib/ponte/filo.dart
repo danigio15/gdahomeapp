@@ -41,6 +41,15 @@ import 'indirizzo.dart';
 import 'presa.dart';
 import 'stretta.dart';
 
+/// Il segno con cui comincia un **mucchio**: piu' messaggi in una busta sola,
+/// uno per riga.
+///
+/// Il ponte li raggruppa quando il filo passa dal centralino, dove ogni
+/// messaggio e' una richiesta contata e una casa vera ne manda cinque al
+/// secondo. Deve restare identico a `SEGNO_DEL_MUCCHIO` in
+/// `ponte/src/ponte.js`.
+const segnoDelMucchio = 'mucchio\n';
+
 enum StatoDelFilo {
   /// Mai aperto, o chiuso apposta.
   spento,
@@ -233,6 +242,11 @@ class Filo {
   StatoDelFilo get statoAdesso => _adesso;
 
   /* Quanto passa sul filo. Per la diagnostica, non per la logica. */
+  /* Le **buste**: i messaggi veri sul WebSocket, prima di spacchettare i
+   * mucchi. Passando dal centralino e' il numero che si paga — ogni busta e'
+   * una richiesta contata — e senza questo conto non si vedrebbe mai se il
+   * raggruppamento serve a qualcosa. */
+  int _busteArrivate = 0;
   /* Da quando questo filo esiste. Le cadute si contano da qui, e senza questo
    * numero non si leggono: «caduto 320 volte» in dieci minuti e' un guasto,
    * in otto ore di scheda aperta su un computer che ogni tanto si addormenta
@@ -264,7 +278,13 @@ class Filo {
         ? ' (${_megabyte(presa.caratteriArrivati)} sul filo'
               '${presa.comprime ? ', gzip' : ', senza gzip'})'
         : '';
-    return '$_messaggiArrivati msg, $_eventiArrivati eventi, '
+    /* Le buste si dicono solo quando sono meno dei messaggi, cioe' quando il
+     * ponte ha raggruppato: e' il numero che si paga passando dal centralino,
+     * e vederlo accanto ai messaggi dice in un colpo quanto e' servito. */
+    final buste = _busteArrivate < _messaggiArrivati
+        ? ' in $_busteArrivate buste'
+        : '';
+    return '$_messaggiArrivati msg$buste, $_eventiArrivati eventi, '
         '${_megabyte(_byteArrivati)} giu\'$sulFilo, $_messaggiMandati su, '
         'in ${minuti < 1 ? '${(minuti * 60).round()} s' : '${minuti.round()} min'}; '
         '$cadute';
@@ -439,6 +459,27 @@ class Filo {
   /* ─── Quello che arriva ────────────────────────────────────────────────── */
 
   void _arrivato(String grezzo) {
+    _busteArrivate += 1;
+    /* Un mucchio: dentro ci sono piu' messaggi, uno per riga.
+     *
+     * Non e' JSON, ed e' apposta: un JSON non contiene mai un ritorno a capo
+     * vero — dentro una stringa e' `\n`, due caratteri — quindi spezzare su
+     * quello e' esatto e non costa ne' una lettura ne' una riscrittura dei
+     * messaggi che stanno dentro. Ognuno riprende la strada che avrebbe
+     * fatto da solo: chi lo riceve non sa di essere arrivato in compagnia. */
+    if (grezzo.startsWith(segnoDelMucchio)) {
+      _byteArrivati += segnoDelMucchio.length;
+      for (final pezzo
+          in grezzo.substring(segnoDelMucchio.length).split('\n')) {
+        if (pezzo.isEmpty) continue;
+        _unMessaggio(pezzo);
+      }
+      return;
+    }
+    _unMessaggio(grezzo);
+  }
+
+  void _unMessaggio(String grezzo) {
     _messaggiArrivati += 1;
     _byteArrivati += grezzo.length;
     /* Qualunque cosa arrivi dice che il filo e' vivo: un fiume di eventi
@@ -532,6 +573,7 @@ class Filo {
      * righe della diagnostica parlano dello stesso pezzo di tempo. */
     Lavori.io.azzera();
     _messaggiArrivati = 0;
+    _busteArrivate = 0;
     _byteArrivati = 0;
     _eventiArrivati = 0;
     _messaggiMandati = 0;
