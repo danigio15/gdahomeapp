@@ -1019,6 +1019,22 @@ try {
   await attendi(1800);
   await scatta(pagina, "6g-la-config-della-plancia");
 
+  /* Sulla Configurazione la barra in fondo alla plancia non c'e'.
+   *
+   * Nella dashboard ci sta — li' la Config e' una pagina come le altre — e
+   * nell'app no: la Config si apre dal menu, e due barre a schermo vogliono
+   * dire toccare una sezione della plancia e ritrovarsi altrove senza sapere
+   * da dove. Una schermata, una barra. */
+  racconta("controllo che la barra della plancia sparisca");
+  const laBarraDellaPlancia = await laConfig.evaluate(() => {
+    const barra = document.querySelector("nav.tabs.bottom-nav-bar");
+    if (!barra) return "non c'e' proprio";
+    return getComputedStyle(barra).display === "none" ? "" : "si vede";
+  });
+  if (laBarraDellaPlancia) {
+    throw new Error(`la barra della plancia sulla Config: ${laBarraDellaPlancia}`);
+  }
+
   /* «Sostieni il progetto» nell'app non c'e': la tessera della dashboard e'
    * nascosta, perche' qui gli acquisti ci sono e una donazione accanto a un
    * listino e' la stessa domanda fatta due volte. Si guarda che non ci sia. */
@@ -1087,6 +1103,14 @@ try {
   );
   if (!laConfigSiEChiusa) {
     throw new Error("la plancia non e' tornata dalla Configurazione");
+  }
+  /* E la barra della plancia e' tornata con lei. */
+  const laBarraETornata = await laConfig.evaluate(() => {
+    const barra = document.querySelector("nav.tabs.bottom-nav-bar");
+    return !!barra && getComputedStyle(barra).display !== "none";
+  });
+  if (!laBarraETornata) {
+    throw new Error("tornati alla plancia, la sua barra non e' tornata");
   }
 
   /* «Come va l'app»: quello che e' dell'app e non della plancia — i

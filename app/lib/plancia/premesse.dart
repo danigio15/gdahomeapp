@@ -156,6 +156,18 @@ class Premesse {
       'html body #page-config .dm-sostieni-tessera,'
       'html body #editor-modal .dm-sostieni-pastiglia,'
       'html body #ed-body .dm-sostieni-card{display:none!important}'
+      /* Sulla Configurazione la barra in fondo alla plancia se ne va, e con
+         lei la sua maniglia.
+         Nella dashboard ci sta: li' la Config e' una pagina come le altre, e
+         dalla barra si passa da una all'altra. Nell'app no: la Config si
+         apre dal menu, e con tutt'e due le barre a schermo si toccava una
+         sezione della plancia e ci si ritrovava altrove senza sapere da
+         dove. Una schermata, una barra: quella del menu.
+         La classe la mette il programma qui sotto, perche' il fondo della
+         pagina non e' figlio della pagina aperta e il foglio di stile da
+         solo non arriva. */
+      'html body.gdahome-in-config nav.tabs.bottom-nav-bar,'
+      'html body.gdahome-in-config .bottom-nav-handle{display:none!important}'
       '</style>'
       '<script>(function(){'
       /* Le linguette si cercano senza virgolette dentro le virgolette: un
@@ -182,11 +194,12 @@ class Premesse {
       '}'
       'if(prove<120)setTimeout(function(){apri(prove+1);},60);'
       '};'
-      'window.gdahomeApriLaConfig=function(){apri(0);};'
+      'window.gdahomeApriLaConfig=function(){apri(0);setTimeout(guarda,0);};'
       'window.gdahomeTornaDallaConfig=function(){'
       'if(!ciSiamo())return;'
       'var voce=laVoce(dove)||laVoce("home");'
       'if(voce)try{voce.click();}catch(male){}'
+      'setTimeout(guarda,0);'
       '};'
       /* Quando la plancia cambia pagina, l'app lo viene a sapere.
        *
@@ -210,8 +223,13 @@ class Premesse {
       'var attiva=document.querySelector(".tab.active");'
       'return attiva?(attiva.getAttribute("data-tab")||""):"";'
       '};'
+      'var segna=function(){'
+      'try{document.body.classList.toggle("gdahome-in-config",ciSiamo());}'
+      'catch(male){}'
+      '};'
       'var ultima="";'
       'var guarda=function(){'
+      'segna();'
       'var adesso=quale();'
       'if(adesso&&adesso!==ultima){ultima=adesso;dico(adesso);}'
       '};'
