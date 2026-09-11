@@ -1,36 +1,48 @@
 /* Porta nel sito le cose che nel sito non si scrivono a mano.
  *
- * Il sito in `sito/` racconta il progetto, e per raccontarlo bene deve far
- * vedere **le cose vere**: il marchio dell'app, le sue icone, i suoi
- * caratteri, e una plancia che si tocca con dentro i numeri di una casa. Se
- * quelle quattro cose si copiassero a mano, il giorno che cambiano il sito
- * resta indietro e nessuno se ne accorge.
- *
  *     node strumenti/porta-nel-sito.mjs
  *
- * Quello che porta, e da dove:
+ * Il sito in `sito/` racconta il progetto, e per raccontarlo bene deve far
+ * vedere **le cose vere**. Non delle riproduzioni: le cose. Quello che porta,
+ * e da dove:
  *
- *  - **il marchio**, da `app/assets/marchio/gda.png` — lo stesso quadrato che
- *    sta sulla schermata del telefono;
- *  - **le icone**, da `app/assets/oggetti/` — quarantasette disegni, gli
- *    stessi che l'app mette sulle sue voci;
- *  - **i caratteri**, da `ponte/plancia/legacy/vendor/fonts/` — Inter per
- *    quello che si legge, Oswald per i numeri grandi. Sono quelli della
- *    plancia, non due che gli somigliano, e stanno qui dentro: un sito che
- *    va a prendersi i caratteri da Google racconta una cosa e ne fa
- *    un'altra;
+ *  - **la plancia**, da `ponte/plancia/` — quella di DashboardModern, gli
+ *    stessi file che stanno dentro l'add-on. Non una copia rifatta a mano, non
+ *    delle fotografie: la plancia, che nel sito gira davvero;
  *  - **la casa demo**, da `collaudo/casa-demo.json` — la stessa che il
- *    collaudo accende per fotografare l'app. Duecentotrentaquattro entita'
- *    di una casa che esiste: sette stanze, otto luci, cinque termostati, un
- *    fotovoltaico con la batteria, sei elettrodomestici.
+ *    collaudo accende per fotografare l'app, con cui la plancia del sito si
+ *    riempie: duecentotrentacinque entita' di una casa che esiste;
+ *  - **il marchio**, da `app/assets/marchio/gda.png`;
+ *  - **le icone**, da `app/assets/oggetti/` — le stesse che l'app mette sulle
+ *    sue voci;
+ *  - **i caratteri**, da `ponte/plancia/legacy/vendor/fonts/` — Inter e
+ *    Oswald, quelli della plancia. Stanno qui dentro: un sito che racconta che
+ *    la casa non parla con nessuno e poi va a prendersi i caratteri da Google
+ *    si smentisce da solo.
  *
- * L'ultima e' la piu' importante: **i numeri della plancia del sito sono
- * quelli delle prove**. Non sono inventati per la vetrina, e il giorno che
- * la casa finta cambia cambia anche il sito.
+ * ## Le due meta', e perche' una sola sta nella repository
  *
- * Quello che esce sta in `sito/statico/`, ed e' salvato nella repository
- * apposta: il sito si pubblica com'e', senza costruire niente. Questo script
- * si rilancia quando cambia una delle quattro cose qui sopra.
+ * Quello che finisce in `sito/statico/` sono seicento kilobyte, ed e'
+ * salvato: la pagina si apre e si pubblica com'e'.
+ *
+ * La plancia invece sono **diciassette megabyte e ottocentottantasette file**,
+ * ed e' una copia identica di roba che nella repository c'e' gia'. Perche' non
+ * ce ne sia una seconda, `sito/plancia/` sta fuori da git (`.gitignore`) e si
+ * rifa' con questo script — in locale prima di guardare il sito, e nella
+ * pagina «Il sito» di GitHub prima di pubblicarlo.
+ *
+ * ## L'unica cosa che si tocca della plancia
+ *
+ * Una riga, in `dashboard.html`: due `<script>` infilati prima del preludio.
+ * Il preludio (`legacy/bridge-prelude.js`) ha un gancio fatto apposta — se
+ * trova un `__DASHBOARDMODERN_BRIDGE_WS__` gia' messo nella finestra, lo usa
+ * al posto del WebSocket vero — ed e' lo stesso gancio con cui l'app sul
+ * telefono le cuce addosso il proprio filo. Dall'altra parte del gancio, qui,
+ * c'e' `sito/casa-in-pagina.js`: una Home Assistant finta dentro la pagina.
+ *
+ * Tutto il resto della plancia arriva **byte per byte** come sta nell'add-on,
+ * e lo script lo controlla: se `dashboard.html` non ha piu' il preludio dove
+ * se lo aspetta, si ferma invece di pubblicare una plancia che non parte.
  */
 
 import {
@@ -48,7 +60,15 @@ import { fileURLToPath } from "node:url";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 const RADICE = dirname(QUI);
-const STATICO = join(RADICE, "sito", "statico");
+const SITO = join(RADICE, "sito");
+const STATICO = join(SITO, "statico");
+/* La plancia va in una cartella che si chiama **cosi'**, e non e' un vezzo:
+ * la plancia ricava da se' dove stanno i suoi ritratti guardando il proprio
+ * indirizzo (`src/sections/person-avatar-section.js`), e quello che cerca e'
+ * `/dashboardmodern_static/`. E' il nome con cui la serve Home Assistant, ed
+ * e' il nome con cui la serve il ponte. Chiamandola in un altro modo, i
+ * ritratti delle persone finiscono a 404. */
+const PLANCIA_NEL_SITO = join(SITO, "dashboardmodern_static");
 
 /* I caratteri: solo i sottoinsiemi che servono a una pagina in italiano.
  *
@@ -67,151 +87,98 @@ const CARATTERI = [
   "oswald-latin-ext-500-normal.woff2",
 ];
 
+/* Dove si infilano i due script: subito prima del preludio della plancia, che
+ * e' il primo codice suo che gira. */
+const PRELUDIO = '<script src="./bridge-prelude.js"></script>';
+const DA_INFILARE =
+  '<script src="../../statico/casa.js"></script>\n' +
+  '<script src="../../casa-in-pagina.js"></script>\n';
+
 function fermati(perche) {
   process.stderr.write(`${perche}\n`);
   process.exit(66);
 }
 
-/* ── Le sezioni della plancia ─────────────────────────────────────────────
- *
- * Quali sezioni ha una plancia non lo decide il sito: lo decide la casa, in
- * `cd_sections`, e sono quelle che la scheda Impostazioni accende e spegne.
- * Il sito prende quell'elenco **cosi' com'e'**: far vedere sezioni che nella
- * plancia vera non esistono, o cambiarne i nomi, e' il modo piu' rapido di
- * far arrivare qualcuno all'app e non fargli ritrovare niente di quello che
- * gli e' stato mostrato.
- *
- * Qui sotto c'e' solo **l'ordine e il nome** di ognuna, che sono quelli della
- * fila dell'editor letta dalla release 1.4.15 e scritta in `docs/CONFIG.md`.
- * `temp` e `temperature` sono due chiavi per la stessa sezione: la plancia le
- * tiene tutte e due per compatibilita'.
- *
- * Se un giorno la casa demo accende una sezione che non e' in questa lista,
- * lo script si ferma invece di lasciarla fuori in silenzio. */
-const SEZIONI = [
-  { chiave: "home", nome: "Home", disegno: "home" },
-  { chiave: "energy", nome: "Energia", disegno: "energia" },
-  { chiave: "ev", nome: "Auto elettrica", disegno: "ev" },
-  { chiave: "boiler", nome: "Solare termico", disegno: "scaldabagno" },
-  { chiave: "security", nome: "Sicurezza", disegno: "sicurezza" },
-  { chiave: "server", nome: "MiniPC", disegno: "minipc" },
-  { chiave: "temp", nome: "Temperatura", disegno: "temperatura", anche: ["temperature"] },
-  { chiave: "clima", nome: "Clima", disegno: "clima" },
-  { chiave: "piscina", nome: "Piscina", disegno: "piscina" },
-  { chiave: "irrigazione", nome: "Irrigazione", disegno: "irrigazione" },
-  { chiave: "tapparelle", nome: "Finestre", disegno: "tapparelle" },
-  { chiave: "stanze", nome: "Stanze", disegno: "stanze" },
-  { chiave: "luci", nome: "Luci", disegno: "luci" },
-  { chiave: "prese", nome: "Prese", disegno: "prese" },
-  { chiave: "appliances", nome: "Elettrodomestici", disegno: "elettrodomestici" },
-  { chiave: "robot", nome: "Robot", disegno: "robot" },
-  { chiave: "media", nome: "Media", disegno: "media" },
-  { chiave: "porte", nome: "Porte", disegno: "aperture" },
-  { chiave: "ups", nome: "UPS", disegno: "ups" },
-  { chiave: "calendario", nome: "Calendario", disegno: "agenda" },
-];
-
 /* ── La casa demo ─────────────────────────────────────────────────────────
  *
- * Il file del collaudo ha due meta': le entita', e la configurazione della
- * plancia come Home Assistant la restituirebbe — con dentro, in una stringa,
- * lo stato vero della dashboard. Al sito servono tutte e due, ma non cosi':
- * le entita' gli servono per chiave, e della configurazione gli serve quello
- * che si disegna.
+ * Esce **come sta**: le entita' nella forma di Home Assistant e la
+ * configurazione nella forma del ponte, perche' e' cosi' che la casa finta in
+ * pagina le deve rispondere alla plancia. Qui non si interpreta niente — il
+ * giorno che si interpretasse, il sito farebbe vedere una casa che non e'
+ * quella delle prove.
  *
- * E la configurazione sta in due posti, che servono tutti e due:
- * `dm_dashboard_state` per le cose che la plancia ha gia' rifatto — stanze,
- * luci, clima, tapparelle, elettrodomestici, telecamere, energia, piscina,
- * irrigazione — e le chiavi `cd_*` per quelle che stanno ancora nel modo
- * vecchio: prese, lettori, serrature, UPS, calendari, liste, persone, e le
- * sezioni e le entita' che l'utente si e' fatto da se'. */
+ * Esce come JavaScript e non come JSON per una ragione sola: un `fetch` di un
+ * file JSON non funziona quando la pagina si apre col doppio clic, perche' su
+ * `file://` il browser non lascia leggere niente di fianco. Un `<script>`
+ * invece si legge sempre. */
 function laCasa() {
   const origine = join(RADICE, "collaudo", "casa-demo.json");
   if (!existsSync(origine)) fermati(`Non trovo ${origine}.`);
   const crudo = JSON.parse(readFileSync(origine, "utf8"));
 
-  const entita = {};
-  for (const voce of crudo.entita ?? []) {
-    /* `last_changed` e `last_updated` sono due date del giorno in cui la casa
-     * finta e' stata scritta: nel sito farebbero solo invecchiare la pagina. */
-    entita[voce.entity_id] = {
-      stato: voce.state,
-      attributi: voce.attributes ?? {},
-    };
-  }
-  if (Object.keys(entita).length === 0) fermati("La casa demo non ha entita'.");
-
-  const valori = crudo.configurazione?.snapshot?.values ?? {};
-  if (!valori.dm_dashboard_state) fermati("Nella casa demo non c'e' lo stato della plancia.");
-  const stato = JSON.parse(valori.dm_dashboard_state);
-  const sezioni = stato.sections ?? {};
-
-  const inOrdine = (elenco) => [...(elenco ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  const letta = (chiave, difetto) => {
-    const grezza = valori[chiave];
-    if (grezza === undefined || grezza === null || grezza === "") return difetto;
-    if (typeof grezza !== "string") return grezza;
-    try {
-      return JSON.parse(grezza);
-    } catch {
-      return grezza;
-    }
-  };
-
-  /* Le sezioni accese, nell'ordine della plancia. */
-  const accese = letta("cd_sections", stato.visibility ?? {});
-  const conosciute = new Set();
-  const inFila = [];
-  for (const sezione of SEZIONI) {
-    const chiavi = [sezione.chiave, ...(sezione.anche ?? [])];
-    for (const una of chiavi) conosciute.add(una);
-    if (!chiavi.some((una) => accese[una])) continue;
-    inFila.push({ chiave: sezione.chiave, nome: sezione.nome, disegno: sezione.disegno });
-  }
-  const ignote = Object.keys(accese).filter((chiave) => accese[chiave] && !conosciute.has(chiave));
-  if (ignote.length)
-    fermati(
-      `La casa demo accende sezioni che il sito non sa disegnare: ${ignote.join(", ")}.\n` +
-        "Vanno aggiunte a SEZIONI qui dentro e a sito/plancia.js — se no il sito\n" +
-        "farebbe vedere una plancia con dentro meno di quella vera.",
-    );
-  if (inFila.length === 0) fermati("La casa demo non ha nessuna sezione accesa.");
+  if (!Array.isArray(crudo.entita) || crudo.entita.length === 0)
+    fermati("La casa demo non ha entita'.");
+  if (!crudo.configurazione?.snapshot?.values)
+    fermati("Nella casa demo non c'e' la configurazione della plancia.");
 
   return {
     origine: "collaudo/casa-demo.json",
-    entita,
-    plancia: {
-      sezioni: inFila,
-      /* Quello che la plancia ha gia' rifatto. */
-      stanze: inOrdine(sezioni.rooms),
-      luci: inOrdine(sezioni.lights),
-      clima: inOrdine(sezioni.climate),
-      tapparelle: inOrdine(sezioni.covers),
-      elettrodomestici: inOrdine(sezioni.appliances),
-      telecamere: sezioni.cameras ?? [],
-      carichi: inOrdine(sezioni.energyLoads),
-      robot: sezioni.robots ?? [],
-      energia: sezioni.energy ?? {},
-      auto: sezioni.ev ?? [],
-      piscina: sezioni.pool ?? {},
-      irrigazione: sezioni.irrigation ?? {},
-      /* Quello che sta ancora nel modo vecchio. */
-      prese: letta("cd_prese", []),
-      media: letta("cd_media_player", []),
-      porte: letta("cd_security_doors", []),
-      ups: letta("cd_ups", {}),
-      calendari: letta("cd_calendari", []),
-      liste: letta("cd_todo", []),
-      avvisi: letta("cd_avvisi_custom", []),
-      persone: letta("cd_people", []),
-      /* Quello che l'utente si e' fatto da se': una sezione in piu' nella
-       * fila, e delle entita' appese a una sezione che c'e' gia'. Sono due
-       * funzioni vere della plancia, e nel sito si vedono. */
-      sezioniMie: letta("cd_sezioni_mie", []),
-      entitaMie: letta("cd_entita_mie", []),
-      costoKwh: Number(letta("cd_costo_kwh", 0.28)) || 0.28,
-    },
+    /* `last_changed` e `last_updated` non servono: la casa in pagina le
+     * rimette a adesso, se no la plancia direbbe «visto 40 giorni fa». */
+    entita: crudo.entita.map(({ entity_id, state, attributes }) => ({
+      entity_id,
+      state,
+      attributes: attributes ?? {},
+    })),
+    configurazione: crudo.configurazione,
   };
+}
+
+/* ── La plancia ─────────────────────────────────────────────────────────── */
+
+function portaLaPlancia() {
+  const da = join(RADICE, "ponte", "plancia");
+  if (!existsSync(join(da, "legacy", "dashboard.html")))
+    fermati(
+      `In ${da} non c'e' la plancia.\n` +
+        "La porta dentro l'add-on `node strumenti/porta-la-plancia.mjs`, o la\n" +
+        "pagina «La plancia nuova» di GitHub.",
+    );
+
+  rmSync(PLANCIA_NEL_SITO, { recursive: true, force: true });
+  cpSync(da, PLANCIA_NEL_SITO, { recursive: true });
+
+  /* I due script, prima del preludio. E' l'unica riga della plancia che
+   * cambia: se un giorno il preludio si chiamasse diversamente, meglio
+   * fermarsi qui che pubblicare una plancia che resta sul velo d'avvio. */
+  for (const pagina of ["dashboard.html", "dashboard-en.html"]) {
+    const dove = join(PLANCIA_NEL_SITO, "legacy", pagina);
+    if (!existsSync(dove)) continue;
+    const testo = readFileSync(dove, "utf8");
+    if (!testo.includes(PRELUDIO))
+      fermati(
+        `In ${pagina} non trovo il preludio della plancia.\n` +
+          `Cercavo: ${PRELUDIO}\n` +
+          "Senza, la casa finta non si attacca e la plancia del sito resta al velo.",
+      );
+    writeFileSync(dove, testo.replace(PRELUDIO, DA_INFILARE + PRELUDIO));
+  }
+
+  let quanti = 0;
+  let byte = 0;
+  const guarda = (cartella) => {
+    for (const nome of readdirSync(cartella)) {
+      const intero = join(cartella, nome);
+      const dati = statSync(intero);
+      if (dati.isDirectory()) guarda(intero);
+      else {
+        quanti += 1;
+        byte += dati.size;
+      }
+    }
+  };
+  guarda(PLANCIA_NEL_SITO);
+  return { quanti, byte };
 }
 
 /* ── Il giro ──────────────────────────────────────────────────────────── */
@@ -221,7 +188,7 @@ mkdirSync(join(STATICO, "oggetti"), { recursive: true });
 mkdirSync(join(STATICO, "font"), { recursive: true });
 
 const fatto = [];
-const conta = (che, quanti, byte) => fatto.push({ che, quanti, byte });
+const conta = (che, quanti, byte, unita = "file") => fatto.push({ che, quanti, byte, unita });
 
 /* Il marchio. */
 const marchio = join(RADICE, "app", "assets", "marchio", "gda.png");
@@ -248,20 +215,14 @@ const font = join(RADICE, "ponte", "plancia", "legacy", "vendor", "fonts");
 if (!existsSync(font)) fermati(`Non trovo i caratteri in ${font}.`);
 let fontByte = 0;
 for (const nome of CARATTERI) {
-  const da = join(font, nome);
-  if (!existsSync(da)) fermati(`Nella plancia manca il carattere ${nome}.`);
-  cpSync(da, join(STATICO, "font", nome));
+  const daQui = join(font, nome);
+  if (!existsSync(daQui)) fermati(`Nella plancia manca il carattere ${nome}.`);
+  cpSync(daQui, join(STATICO, "font", nome));
   fontByte += statSync(join(STATICO, "font", nome)).size;
 }
 conta("i caratteri", CARATTERI.length, fontByte);
 
-/* La casa demo.
- *
- * Esce come JavaScript e non come JSON, per una ragione sola: un `fetch` di
- * un file JSON non funziona quando la pagina si apre col doppio clic, perche'
- * su `file://` il browser non lascia leggere niente di fianco. Un `<script>`
- * invece si legge sempre. Cosi' il sito si guarda anche senza metterlo su un
- * server, che e' la prima cosa che uno fa. */
+/* La casa demo. */
 const casa = laCasa();
 const dove = join(STATICO, "casa.js");
 writeFileSync(
@@ -270,14 +231,19 @@ writeFileSync(
     " * Non si scrive a mano: si rilancia lo script. */\n" +
     `window.CASA_DEMO = ${JSON.stringify(casa)};\n`,
 );
-conta("la casa demo", Object.keys(casa.entita).length, statSync(dove).size);
+conta("la casa demo", casa.entita.length, statSync(dove).size, "entita'");
+
+/* La plancia vera. */
+const plancia = portaLaPlancia();
+conta("la plancia", plancia.quanti, plancia.byte);
 
 const scritti = (n) =>
   n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.round(n / 1024)} kB`;
 
-process.stdout.write(`Nel sito, in sito/statico/:\n`);
-for (const { che, quanti, byte } of fatto)
-  process.stdout.write(
-    `  ${che}: ${quanti} ${che === "la casa demo" ? "entita'" : "file"}, ${scritti(byte)}\n`,
-  );
-process.stdout.write(`  in tutto: ${scritti(fatto.reduce((somma, x) => somma + x.byte, 0))}\n`);
+process.stdout.write("Nel sito:\n");
+for (const { che, quanti, byte, unita } of fatto)
+  process.stdout.write(`  ${che}: ${quanti} ${unita}, ${scritti(byte)}\n`);
+process.stdout.write(
+  `  in tutto: ${scritti(fatto.reduce((somma, x) => somma + x.byte, 0))}\n` +
+    "  (sito/plancia/ sta fuori da git: si rifa' con questo script)\n",
+);

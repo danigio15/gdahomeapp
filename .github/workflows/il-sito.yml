@@ -29,11 +29,18 @@
 # racconta e' peggio di non averlo. Da un altro ramo esce un'anteprima col
 # suo indirizzo, e quello pubblico non si tocca.
 #
-# **Cosa non pubblica.** Se la plancia dimostrativa non risponde, non si
-# pubblica niente: `collaudo/guarda-il-sito.mjs` la apre con un browser vero
-# e prova che ogni sezione della barra disegni qualcosa. Il pezzo per cui il
-# sito esiste e' quello, e pubblicarlo rotto vuol dire far arrivare qualcuno
-# a una pagina che non fa quello che promette.
+# **Cosa si costruisce prima.** Il sito fa vedere la **plancia vera** —
+# DashboardModern, gli stessi file dell'add-on — e quella nella repository non
+# c'e' due volte: `node strumenti/porta-nel-sito.mjs` la copia da
+# `ponte/plancia/` dentro `sito/dashboardmodern_static/` prima di pubblicare.
+# Sono diciassette megabyte e ottocentottantotto file.
+#
+# **Cosa non pubblica.** Se la plancia non parte, non si pubblica niente:
+# `collaudo/guarda-il-sito.mjs` apre il sito con un browser vero, aspetta che
+# la plancia esca dal velo d'avvio, conta le voci della sua barra, ne apre le
+# pagine e le manda un comando. Il pezzo per cui il sito esiste e' quello, e
+# pubblicarlo rotto vuol dire far arrivare qualcuno a una pagina che promette
+# una cosa e ne fa un'altra.
 name: Il sito
 
 on:
@@ -106,11 +113,13 @@ jobs:
           PAGES_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN }}
           WORKERS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-      # Quello che sta in `sito/statico/` e' roba portata da altrove — il
-      # marchio, le icone, i caratteri, la casa demo. Si rifa' qui, cosi' il
-      # sito pubblicato non puo' essere indietro rispetto all'app; e se era
-      # indietro lo si dice, perche' vuol dire che qualcuno ha dimenticato di
-      # rilanciare lo script.
+      # La plancia vera, la casa demo, il marchio, le icone, i caratteri.
+      #
+      # La plancia nella repository non sta due volte: `sito/dashboardmodern_static/`
+      # e' fuori da git e nasce qui, copiata da `ponte/plancia/`. Il resto —
+      # `sito/statico/` — e' salvato, ed e' piccolo: si rifa' lo stesso, cosi'
+      # il sito pubblicato non puo' essere indietro rispetto all'app, e se era
+      # indietro lo si dice.
       - name: Porta nel sito le cose vere
         run: |
           set -eu
@@ -122,9 +131,9 @@ jobs:
             echo "In \`sito/statico\` c'era roba vecchia. Il sito pubblicato e' aggiornato, la repository no." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      # La plancia dimostrativa e' il pezzo per cui il sito esiste. Se non
-      # risponde, non si pubblica: questo la apre con un browser vero, a tre
-      # larghezze, e controlla che ogni sezione della barra disegni qualcosa.
+      # La plancia e' il pezzo per cui il sito esiste. Se non parte, non si
+      # pubblica: questo la apre con un browser vero, a tre larghezze, e le
+      # prova dentro.
       - name: Le dipendenze del collaudo
         run: npm ci --no-audit --no-fund
         working-directory: collaudo

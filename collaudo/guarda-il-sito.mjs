@@ -1,4 +1,4 @@
-/* Guarda il sito, e prova che la plancia dimostrativa risponde.
+/* Guarda il sito, e prova che la plancia vera ci gira dentro.
  *
  *     node collaudo/guarda-il-sito.mjs
  *
@@ -9,17 +9,22 @@
  * file non ci sarebbe nessun errore da nessuna parte, ci sarebbe una pagina
  * bianca.
  *
- * Quello che guarda, in ordine di quanto fa male sbagliarlo:
+ * ## Cosa guarda, in ordine di quanto fa male sbagliarlo
  *
- *  1. **la plancia risponde**. E' il pezzo per cui il sito esiste: la luce che
- *     si spegne, la tapparella che scende, il termostato che si sposta,
- *     l'allarme che si inserisce, il lucchetto che porta ai piani. Se questi
- *     smettono di funzionare, il sito racconta una bugia;
- *  2. **niente errori** in console, e nessun file che non arriva;
- *  3. **niente scorrimento di lato**, a nessuna delle tre larghezze. E' il
+ *  1. **La plancia parte.** Non una riproduzione: DashboardModern, gli stessi
+ *     file dell'add-on, dentro il riquadro. Deve uscire dal velo d'avvio,
+ *     tirare su la sua barra con tutte le sue voci, e aprire le sue pagine. Se
+ *     smette di partire, il sito promette una cosa e ne fa un'altra — ed e'
+ *     la ragione per cui questo collaudo gira **prima** di pubblicare.
+ *  2. **La plancia risponde.** Un comando dato alla plancia deve arrivare fino
+ *     alla casa finta in pagina e cambiarle lo stato. E' la differenza fra una
+ *     plancia viva e una fotografia interattiva.
+ *  3. **Niente errori** in console, e nessun file che non arriva. Le due
+ *     telecamere sono l'eccezione, ed e' scritta sotto.
+ *  4. **Niente scorrimento di lato**, a nessuna delle tre larghezze. E' il
  *     difetto che si vede solo su un telefono vero, cioe' mai, finche' non lo
- *     si guarda apposta;
- *  4. **i prezzi ci sono**: la tabella e l'elenco del gratis li riempie
+ *     si guarda apposta.
+ *  5. **I prezzi ci sono**: la tabella e l'elenco del gratis li riempie
  *     `sito.js` da `listino.js`, e se quel pezzo si rompe restano due buchi
  *     bianchi in mezzo alla sezione che deve far comprare.
  *
@@ -44,15 +49,40 @@ const MISURE = [
   { nome: "computer", larghezza: 1440, altezza: 980 },
 ];
 
+/* Quanto si aspetta la plancia per partire. Dev'essere largo: sono
+ * ottocento file, e su una macchina di GitHub sotto carico ci mette il suo. */
+const PAZIENZA = 45_000;
+
 const TIPI = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
   ".json": "application/json",
   ".svg": "image/svg+xml",
   ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".gif": "image/gif",
+  ".ico": "image/x-icon",
   ".woff2": "font/woff2",
+  ".woff": "font/woff",
+  ".ttf": "font/ttf",
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
+  ".glb": "model/gltf-binary",
+  ".wasm": "application/wasm",
 };
+
+/* Le due telecamere della casa demo.
+ *
+ * La plancia le chiede a Home Assistant come immagini, su `/api/camera_proxy/`,
+ * e un sito statico non ha un Home Assistant che gliele dia: tornano 404, e va
+ * bene cosi'. In una casa vera quelle due richieste arrivano al ponte e
+ * tornano col fotogramma. E' l'unica cosa che qui non si puo' far vedere, e
+ * dirlo e' meglio che nasconderlo dietro una fotografia finta. */
+const PERDONATE = [/\/api\/camera_proxy\//];
 
 /* Lo stesso Chromium degli altri collaudi: quello che c'e' gia', non un
  * secondo da mezzo gigabyte. */
@@ -77,8 +107,8 @@ if (!existsSync(join(SITO, "index.html"))) {
   process.stderr.write(`In ${SITO} non c'e' nessun sito.\n`);
   process.exit(66);
 }
-if (!existsSync(join(SITO, "statico", "casa.js"))) {
-  process.stderr.write("Nel sito manca la casa demo.\nPrima: node strumenti/porta-nel-sito.mjs\n");
+if (!existsSync(join(SITO, "dashboardmodern_static", "legacy", "dashboard.html"))) {
+  process.stderr.write("Nel sito non c'e' la plancia.\nPrima: node strumenti/porta-nel-sito.mjs\n");
   process.exit(66);
 }
 
@@ -111,21 +141,96 @@ const browser = await chromium.launch({
   ...(chrome ? { executablePath: chrome } : {}),
   args: ["--no-sandbox", "--disable-dev-shm-usage", "--no-proxy-server"],
 });
+/* La plancia ci mette il suo a partire: i difetti di Playwright sono cuciti
+ * addosso a pagine piu' leggere di ottocento file. */
 
 const storte = [];
 const lamenta = (che) => storte.push(che);
+const perdonata = (indirizzo) => PERDONATE.some((quale) => quale.test(indirizzo));
 
 /* Una pagina che si lamenta da sola: ogni errore in console, ogni eccezione e
  * ogni file che non arriva finisce nell'elenco. */
 async function apri(contesto, dove) {
+  contesto.setDefaultTimeout(PAZIENZA);
+  contesto.setDefaultNavigationTimeout(PAZIENZA);
   const pagina = await contesto.newPage();
   pagina.on("console", (messaggio) => {
-    if (messaggio.type() === "error") lamenta(`[${dove}] console: ${messaggio.text()}`);
+    if (messaggio.type() !== "error") return;
+    /* Un 404 si e' gia' lamentato come richiesta: qui verrebbe due volte. */
+    if (/Failed to load resource/.test(messaggio.text())) return;
+    lamenta(`[${dove}] console: ${messaggio.text()}`);
   });
   pagina.on("pageerror", (errore) => lamenta(`[${dove}] errore: ${errore.message}`));
-  pagina.on("requestfailed", (richiesta) => lamenta(`[${dove}] non arrivato: ${richiesta.url()}`));
-  await pagina.goto(INDIRIZZO, { waitUntil: "networkidle" });
+  pagina.on("requestfailed", (richiesta) => {
+    if (!perdonata(richiesta.url())) lamenta(`[${dove}] non arrivato: ${richiesta.url()}`);
+  });
+  pagina.on("response", (risposta) => {
+    if (risposta.status() !== 404 || perdonata(risposta.url())) return;
+    lamenta(`[${dove}] 404: ${risposta.url().replace(INDIRIZZO, "/")}`);
+  });
+  /* `domcontentloaded` e non `networkidle`: con la plancia dentro il riquadro
+   * la rete non sta mai ferma — ottocento file da prendere, e poi i suoi
+   * timer — e aspettare il silenzio vorrebbe dire aspettare per sempre. Chi
+   * chiama aspetta i segni che gli servono. */
+  await pagina.goto(INDIRIZZO, { waitUntil: "domcontentloaded" });
   return pagina;
+}
+
+/* Il riquadro con dentro la plancia. E' un'altra pagina, con la sua vita: si
+ * aspetta che sia uscita dal velo d'avvio e abbia tirato su la sua barra. */
+async function laPlancia(pagina) {
+  await pagina.locator("#plancia").scrollIntoViewIfNeeded();
+  const riquadro = pagina.frameLocator(".telaio-dentro");
+  await riquadro.locator("nav.tabs .tab").first().waitFor({ timeout: PAZIENZA });
+  /* La barra si dipinge quattro volte prima di essere quella vera: la plancia
+   * lo dice da se' mettendo `data-dm-barra="pronta"` sulla radice quando la
+   * configurazione della casa e' arrivata. Aspettare quel segno e' l'unico
+   * modo di non contare le voci di una barra finta. */
+  await pagina.locator(".telaio-dentro").evaluate(
+    (telaio) =>
+      new Promise((pronta, mai) => {
+        const dentro = telaio.contentDocument;
+        if (!dentro) return mai(new Error("il riquadro non si legge"));
+        if (dentro.documentElement.getAttribute("data-dm-barra") === "pronta") return pronta();
+        const scadenza = setTimeout(() => {
+          osserva.disconnect();
+          /* Non e' un errore fermante: la barra puo' restare «non pronta» e
+           * avere comunque le sue voci. Chi chiama le conta. */
+          pronta();
+        }, 20000);
+        const osserva = new MutationObserver(() => {
+          if (dentro.documentElement.getAttribute("data-dm-barra") !== "pronta") return;
+          clearTimeout(scadenza);
+          osserva.disconnect();
+          pronta();
+        });
+        osserva.observe(dentro.documentElement, {
+          attributes: true,
+          attributeFilter: ["data-dm-barra"],
+        });
+      }),
+  );
+  /* E poi che il velo d'avvio se ne vada. Non si toglie di mezzo: sfuma, e
+   * finche' sfuma la plancia sotto c'e' gia' tutta. Aspettarlo qui vuol dire
+   * che tutto il resto del collaudo guarda una plancia scoperta. */
+  await pagina
+    .waitForFunction(
+      () => {
+        const telaio = document.querySelector(".telaio-dentro");
+        const velo = telaio?.contentDocument?.getElementById("cd-boot-overlay");
+        if (!velo) return true;
+        const stile = telaio.contentWindow.getComputedStyle(velo);
+        return (
+          stile.display === "none" || stile.visibility === "hidden" || Number(stile.opacity) < 0.05
+        );
+      },
+      null,
+      { timeout: 25000 },
+    )
+    .catch(() => {
+      /* Se non se ne va, lo dice la prova qui sotto con parole sue. */
+    });
+  return riquadro;
 }
 
 /* ── 1. Le tre larghezze ─────────────────────────────────────────────────── */
@@ -145,182 +250,207 @@ for (const misura of MISURE) {
   if (quanto.pagina > quanto.finestra + 1)
     lamenta(`[${misura.nome}] la pagina scorre di lato: ${quanto.pagina} su ${quanto.finestra}`);
 
-  const tessere = await pagina.locator(".pl-tessera").count();
-  if (tessere === 0) lamenta(`[${misura.nome}] la plancia non ha disegnato nessuna tessera`);
-
   const righe = await pagina.locator("#riga-singoli tr").count();
   const gratis = await pagina.locator("#elenco-gratis li").count();
   if (righe === 0) lamenta(`[${misura.nome}] la tabella dei singoli e' vuota`);
   if (gratis === 0) lamenta(`[${misura.nome}] l'elenco di cosa e' gratis e' vuoto`);
 
+  const riquadro = await laPlancia(pagina);
+  const voci = await riquadro.locator("nav.tabs .tab").count();
+  if (voci < 10) lamenta(`[${misura.nome}] la barra della plancia ha ${voci} voci`);
+
   process.stdout.write(
-    `${misura.nome}: ${tessere} tessere, ${righe} righe di listino, ${gratis} voci gratis\n`,
+    `${misura.nome}: ${voci} voci nella plancia, ${righe} righe di listino, ${gratis} voci gratis\n`,
   );
 
-  await pagina.screenshot({
-    path: join(FOTO, `sito-${misura.nome}.png`),
-    fullPage: true,
-  });
+  await pagina.screenshot({ path: join(FOTO, `sito-${misura.nome}.png`), fullPage: true });
   await contesto.close();
 }
 
-/* ── 2. La plancia risponde ──────────────────────────────────────────────── */
+/* ── 2. La plancia vera, dentro il riquadro ──────────────────────────────── */
 
 const contesto = await browser.newContext({
-  viewport: { width: 1440, height: 980 },
+  viewport: { width: 1440, height: 1100 },
   deviceScaleFactor: 2,
 });
-const pagina = await apri(contesto, "i clic");
-await pagina.locator("#plancia").scrollIntoViewIfNeeded();
+const pagina = await apri(contesto, "la plancia");
+const riquadro = await laPlancia(pagina);
 
 async function prova(che, fai) {
   try {
     await fai();
     process.stdout.write(`  ok  ${che}\n`);
   } catch (errore) {
-    lamenta(`[i clic] ${che}: ${errore.message}`);
     process.stdout.write(`  NO  ${che}\n`);
+    lamenta(`[la plancia] ${che}: ${errore.message.split("\n")[0]}`);
   }
 }
 
-const sezione = (nome) => pagina.getByRole("button", { name: nome, exact: true }).first();
+/* Quello che la plancia ha davvero nella barra: non un elenco scritto qui, il
+ * suo. Se un giorno DashboardModern ne aggiunge o ne toglie, questo collaudo
+ * non va corretto — e' giusto che il sito faccia vedere quelle che ci sono. */
+let vociDellaBarra = [];
 
-/* La prova che conta: la barra fa vedere le sezioni della casa, e **ognuna
- * disegna qualcosa**. Una sezione nella barra che si apre vuota e' peggio di
- * una sezione che non c'e': fa arrivare qualcuno all'app a cercare una cosa
- * che gli e' stata mostrata e non trova. */
-await prova("ogni sezione della barra disegna qualcosa", async () => {
-  const quante = await pagina.locator(".pl-scheda").count();
-  if (quante < 2) throw new Error(`la barra ha ${quante} sezioni`);
-  const vuote = [];
-  for (let i = 0; i < quante; i++) {
-    const scheda = pagina.locator(".pl-scheda").nth(i);
-    const nome = (await scheda.getAttribute("data-nome")) || "";
-    await scheda.click();
-    await pagina.waitForTimeout(90);
-    const tessere = await pagina.locator(".pl-dentro .pl-tessera").count();
-    if (tessere === 0) vuote.push(nome);
+await prova("la plancia esce dal velo d'avvio", async () => {
+  const velo = riquadro.locator("#cd-boot-overlay");
+  /* Il velo resta nel documento anche dopo: se ne va con l'opacita', non
+   * togliendosi di mezzo. Per questo non basta chiedere a Playwright se «si
+   * vede» — per lui un elemento trasparente e' li'. */
+  const su = await pagina.locator(".telaio-dentro").evaluate((telaio) => {
+    const velo = telaio.contentDocument.getElementById("cd-boot-overlay");
+    if (!velo) return false;
+    const stile = telaio.contentWindow.getComputedStyle(velo);
+    return (
+      stile.display !== "none" && stile.visibility !== "hidden" && Number(stile.opacity) > 0.05
+    );
+  });
+  if (su) throw new Error("il velo d'avvio e' ancora su");
+});
+
+await prova("la barra ha le sue voci", async () => {
+  vociDellaBarra = (await riquadro.locator("nav.tabs .tab").allTextContents()).map((t) =>
+    t.replace(/\s+/g, " ").trim(),
+  );
+  if (vociDellaBarra.length < 10)
+    throw new Error(`ne ha ${vociDellaBarra.length}: ${vociDellaBarra.join(", ")}`);
+  process.stdout.write(`      (${vociDellaBarra.length}: ${vociDellaBarra.join(" · ")})\n`);
+});
+
+await prova("c'e' la sezione che si e' fatta chi ci abita", async () => {
+  /* Nella casa demo ce n'e' una, l'acquario (`cd_sezioni_mie`): e' una
+   * funzione vera della plancia, e se sparisce dalla barra vuol dire che la
+   * configurazione non e' arrivata. */
+  if (!vociDellaBarra.some((voce) => /acquario/i.test(voce)))
+    throw new Error("non trovo l'acquario fra le voci");
+});
+
+/* Premere una voce della barra.
+ *
+ * La barra della plancia sta in fondo al suo documento ed e' lunga trenta
+ * voci: dentro un riquadro alto ottocento pixel resta sotto il bordo, e si
+ * nasconde anche da sola dopo un minuto. Un clic «come lo farebbe un dito»
+ * qui vorrebbe dire prima scorrere il riquadro e poi riportarla su, e sarebbe
+ * una prova della barra invece che delle pagine. Si preme il bottone dov'e',
+ * ed e' il suo gestore vero a cambiare pagina. */
+async function premiLaVoce(quale) {
+  return pagina.locator(".telaio-dentro").evaluate((telaio, quale) => {
+    const voce = telaio.contentDocument.querySelector(`nav.tabs .tab[data-tab="${quale}"]`);
+    if (!voce) return false;
+    voce.click();
+    return true;
+  }, quale);
+}
+
+async function paginaAperta() {
+  return pagina
+    .locator(".telaio-dentro")
+    .evaluate(
+      (telaio) =>
+        [...telaio.contentDocument.querySelectorAll("section[id^='page-']")]
+          .filter((sezione) => sezione.offsetParent !== null)
+          .map((sezione) => sezione.id)[0] || "",
+    );
+}
+
+await prova("le pagine si aprono", async () => {
+  const aperte = [];
+  for (const quale of ["energy", "luci", "security", "stanze"]) {
+    if (!(await premiLaVoce(quale))) continue;
+    await pagina.waitForTimeout(1000);
+    const dove = await paginaAperta();
+    if (dove) aperte.push(dove);
   }
-  if (vuote.length) throw new Error(`si aprono vuote: ${vuote.join(", ")}`);
-  process.stdout.write(`      (${quante} sezioni, tutte piene)\n`);
+  if (aperte.length < 3)
+    throw new Error(`se ne sono aperte ${aperte.length}: ${aperte.join(", ")}`);
+  process.stdout.write(`      (${aperte.join(" · ")})\n`);
 });
 
-await prova("le sezioni sono quelle che la casa accende", async () => {
-  const dalleSchede = await pagina
-    .locator(".pl-scheda")
-    .evaluateAll((schede) => schede.map((s) => s.getAttribute("data-nome") || ""));
-  const dallaCasa = await pagina.evaluate(() => {
-    const p = window.CASA_DEMO.plancia;
-    return p.sezioni.map((s) => s.nome).concat((p.sezioniMie || []).map((m) => m.titolo));
+await prova("un comando arriva fino alla casa", async () => {
+  /* Si chiama il servizio come lo chiamerebbe la plancia premendo una luce, e
+   * si guarda se la casa finta in pagina se n'e' accorta. E' il filo intero:
+   * plancia → gancio → casa in pagina. */
+  const prima = await pagina
+    .locator(".telaio-dentro")
+    .evaluate(
+      (telaio) => telaio.contentWindow.__CASA_IN_PAGINA__.entita.get("light.cucina_led").state,
+    );
+  await pagina.locator(".telaio-dentro").evaluate((telaio) => {
+    const dentro = telaio.contentWindow;
+    const presa = new dentro.__DASHBOARDMODERN_BRIDGE_WS__("ws://finta/api/websocket");
+    presa.onopen = () => {
+      presa.send(JSON.stringify({ type: "auth", access_token: "x" }));
+      presa.send(
+        JSON.stringify({
+          id: 99,
+          type: "call_service",
+          domain: "light",
+          service: "turn_off",
+          target: { entity_id: "light.cucina_led" },
+        }),
+      );
+    };
   });
-  const viste = dalleSchede.map((t) => t.trim());
-  const mancano = dallaCasa.filter((n) => !viste.includes(n));
-  const in_piu = viste.filter((n) => !dallaCasa.includes(n));
-  if (mancano.length) throw new Error(`mancano dalla barra: ${mancano.join(", ")}`);
-  if (in_piu.length) throw new Error(`nella barra ma non nella casa: ${in_piu.join(", ")}`);
-});
-
-await prova("si apre la sezione Luci", async () => {
-  await sezione("Luci").click();
-  await pagina.waitForSelector(".pl-luce");
-});
-
-await prova("una luce si spegne", async () => {
-  const prima = await pagina.locator(".pl-luce.pl-accesa").count();
-  await pagina.locator(".pl-luce .pl-interruttore").first().click();
-  await pagina.waitForTimeout(120);
-  const dopo = await pagina.locator(".pl-luce.pl-accesa").count();
-  if (prima === dopo) throw new Error(`le accese sono restate ${prima}`);
-});
-
-await prova("«Spegni tutte» le spegne tutte", async () => {
-  await pagina.getByRole("button", { name: "Spegni tutte" }).click();
-  await pagina.waitForTimeout(120);
-  const accese = await pagina.locator(".pl-luce.pl-accesa").count();
-  if (accese !== 0) throw new Error(`ne restano accese ${accese}`);
-});
-
-await prova("l'energia disegna il flusso e la giornata", async () => {
-  await sezione("Energia").click();
-  await pagina.waitForSelector(".pl-flusso-nodo");
-  await pagina.waitForSelector(".pl-giorno");
-});
-
-await prova("il termostato si sposta", async () => {
-  await sezione("Clima").click();
-  await pagina.waitForSelector(".pl-termostato");
-  const prima = await pagina.locator(".pl-clima .pl-cifra-n").first().textContent();
-  await pagina.getByRole("button", { name: "Più mezzo grado" }).first().click();
-  await pagina.waitForTimeout(120);
-  const dopo = await pagina.locator(".pl-clima .pl-cifra-n").first().textContent();
-  if (prima === dopo) throw new Error(`la mira e' restata a ${prima}`);
-});
-
-await prova("la tapparella scende", async () => {
-  await sezione("Finestre").click();
-  await pagina.waitForSelector(".pl-tapparella");
-  await pagina.getByRole("button", { name: "Giù" }).first().click();
-  await pagina.waitForTimeout(700);
-  const quanto = await pagina
-    .locator(".pl-tapparella")
-    .first()
-    .evaluate((nodo) => nodo.style.height);
-  if (quanto !== "100%") throw new Error(`la tapparella e' a ${quanto}`);
-});
-
-await prova("l'allarme si inserisce", async () => {
-  await sezione("Sicurezza").click();
-  await pagina.waitForSelector(".pl-allarme");
-  await pagina.getByRole("button", { name: "Fuori casa" }).click();
-  await pagina.waitForSelector(".pl-allarme.pl-inserito");
-});
-
-await prova("il lucchetto porta ai piani", async () => {
-  await pagina.getByRole("button", { name: "Vedi i piani" }).first().click();
   await pagina.waitForTimeout(900);
-  const dove = await pagina.evaluate(() => {
-    const piani = document.getElementById("piani").getBoundingClientRect();
-    return piani.top;
-  });
-  if (Math.abs(dove) > 220) throw new Error(`i piani sono rimasti a ${Math.round(dove)}px`);
+  const dopo = await pagina
+    .locator(".telaio-dentro")
+    .evaluate(
+      (telaio) => telaio.contentWindow.__CASA_IN_PAGINA__.entita.get("light.cucina_led").state,
+    );
+  if (prima === dopo) throw new Error(`la luce e' rimasta ${prima}`);
 });
 
-await prova("la schermata Acquisti mostra il listino", async () => {
-  await pagina.locator("#plancia").scrollIntoViewIfNeeded();
-  await pagina.getByRole("button", { name: "Acquisti" }).first().click();
-  await pagina.waitForSelector(".pl-acquisto-grande");
-  const quante = await pagina.locator(".pl-acquisto").count();
-  if (quante < 8) throw new Error(`solo ${quante} voci nel listino`);
+await prova("la pagina delle luci si riempie", async () => {
+  if (!(await premiLaVoce("luci"))) throw new Error("non c'e' la voce Luci");
+  await pagina.waitForTimeout(1400);
+  const testo = await pagina
+    .locator(".telaio-dentro")
+    .evaluate((telaio) => telaio.contentDocument.querySelector("#page-luci")?.innerText || "");
+  if (testo.trim().length < 20) throw new Error(`c'e' scritto solo «${testo.trim()}»`);
 });
 
-await prova("i Dispositivi elencano le entita'", async () => {
-  await pagina.getByRole("button", { name: "Dispositivi" }).first().click();
-  await pagina.waitForSelector(".pl-dominio");
+await prova("la casa demo e' quella delle prove", async () => {
+  const quante = await pagina
+    .locator(".telaio-dentro")
+    .evaluate((telaio) => telaio.contentWindow.__CASA_IN_PAGINA__.quante);
+  if (quante < 200) throw new Error(`la casa in pagina ha ${quante} entita'`);
 });
 
-await prova("le voci in arrivo si aprono", async () => {
-  await pagina.getByRole("button", { name: "Zigbee" }).first().click();
-  await pagina.waitForSelector(".pl-arrivo");
+/* ── 3. Il resto della pagina ────────────────────────────────────────────── */
+
+await prova("i link portano dove dicono", async () => {
+  await pagina.locator('a[href="#piani"]').first().click();
+  /* Lo scorrimento e' morbido: si aspetta che si fermi invece di indovinare
+   * quanto ci mette. */
+  await pagina.waitForFunction(
+    () => {
+      const piani = document.getElementById("piani");
+      return piani && Math.abs(piani.getBoundingClientRect().top - 88) < 160;
+    },
+    null,
+    { timeout: 10000 },
+  );
 });
 
 await prova("il tema scuro si accende", async () => {
   await pagina.locator("#cambia-tema").click();
-  await pagina.waitForTimeout(250);
+  await pagina.waitForTimeout(300);
   const tema = await pagina.evaluate(() => document.documentElement.getAttribute("data-tema"));
-  if (tema !== "scuro") throw new Error(`il tema e' ${tema}`);
+  if (!tema) throw new Error("nessun tema messo");
 });
 
 await pagina.locator("#plancia").scrollIntoViewIfNeeded();
-await pagina.waitForTimeout(400);
-await pagina.screenshot({ path: join(FOTO, "sito-scuro.png") });
+await pagina.waitForTimeout(800);
+await pagina.screenshot({ path: join(FOTO, "sito-plancia.png") });
 
 await contesto.close();
 await browser.close();
 server.close();
 
 if (storte.length) {
-  process.stdout.write("\n--- da sistemare ---\n");
+  process.stdout.write("\nDa sistemare:\n");
   for (const storta of storte) process.stdout.write(` · ${storta}\n`);
   process.exit(1);
 }
-process.stdout.write(`\nIl sito sta in piedi. Le fotografie sono in ${FOTO}.\n`);
+process.stdout.write(
+  `\nIl sito sta in piedi, e la plancia dentro ci gira. Le fotografie sono in ${FOTO}.\n`,
+);

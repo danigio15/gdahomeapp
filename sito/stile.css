@@ -676,6 +676,107 @@ section {
   }
 }
 
+/* ── Il riquadro con dentro la plancia ──────────────────────────────────
+ *
+ * Il telaio è una cornice, non un'interfaccia: tre pallini, il nome della casa
+ * e la spia del filo. Dentro non c'è niente di disegnato da noi — c'è la
+ * plancia vera, in un `iframe`, servita da `dashboardmodern_static/` come la
+ * serve il ponte.
+ *
+ * Si carica quando si arriva (`loading="lazy"`): sono diciassette megabyte e
+ * ottocento file, e chi si ferma a leggere i piani non ha ragione di
+ * scaricarli. */
+.telaio {
+  margin: 30px 0 0;
+  background: var(--carta);
+  border: 1px solid var(--bordo);
+  border-radius: var(--raggio);
+  box-shadow: var(--ombra-alta);
+  overflow: hidden;
+}
+.telaio-cima {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--bordo-tenue);
+  background: var(--carta-alta);
+}
+.telaio-pallini {
+  flex-shrink: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--bordo);
+  box-shadow:
+    17px 0 0 var(--bordo),
+    34px 0 0 var(--bordo);
+  margin-right: 34px;
+}
+.telaio-nome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.telaio-nome img {
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.telaio-spia {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--bene);
+  background: color-mix(in srgb, var(--bene) 13%, transparent);
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.telaio-spia::before {
+  content: "● ";
+  font-size: 0.7em;
+  vertical-align: 1px;
+}
+.telaio-dentro {
+  display: block;
+  width: 100%;
+  height: min(78vh, 860px);
+  min-height: 520px;
+  border: 0;
+  background: #f0f4f8;
+}
+.telaio figcaption {
+  padding: 14px 18px;
+  border-top: 1px solid var(--bordo-tenue);
+  font-size: 0.88rem;
+  color: var(--testo-lieve);
+  background: var(--carta-alta);
+}
+
+.carte-strette {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+@media (max-width: 620px) {
+  .telaio-pallini {
+    display: none;
+  }
+  .telaio-spia {
+    display: none;
+  }
+  .telaio-dentro {
+    height: min(76vh, 680px);
+    min-height: 460px;
+  }
+}
+
 /* ── Le funzioni ────────────────────────────────────────────────────────── */
 
 .elenco-segni {

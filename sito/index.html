@@ -21,7 +21,6 @@
     <link rel="apple-touch-icon" href="statico/marchio.png" />
     <link rel="preload" as="image" href="statico/marchio.png" />
     <link rel="stylesheet" href="stile.css" />
-    <link rel="stylesheet" href="plancia.css" />
   </head>
   <body>
     <!-- ── La barra in cima ─────────────────────────────────────────────── -->
@@ -90,7 +89,7 @@
           </h1>
           <p class="guida">
             gdahome è l'app per Android e iPhone che fa vedere la casa come una plancia — quella
-            vera di DashboardModern, con le sue ventitré sezioni — e che sa fare le tre cose che in
+            vera di DashboardModern, con le sue trenta sezioni — e che sa fare le tre cose che in
             Home Assistant stanno nascoste in fondo a un menu: abbinare un dispositivo Zigbee,
             scrivere un'automazione, creare un aiutante.
           </p>
@@ -105,7 +104,7 @@
 
           <div class="numeroni">
             <div class="numerone"><b>393</b><span>prove che girano a ogni commit</span></div>
-            <div class="numerone"><b>23</b><span>sezioni della plancia, già funzionanti</span></div>
+            <div class="numerone"><b>30</b><span>sezioni della plancia, già funzionanti</span></div>
             <div class="numerone"><b>0</b><span>porte da aprire sul router</span></div>
             <div class="numerone">
               <b>0 €</b><span>quanto costa tenere in piedi il centralino</span>
@@ -407,27 +406,61 @@
       <section id="plancia">
         <div class="limite">
           <p class="invito">Toccala: è viva</p>
-          <h2>Questa è la plancia. Non è una fotografia.</h2>
+          <h2>Questa non è una riproduzione della plancia. È la plancia.</h2>
           <p class="guida">
-            Accendi una luce e guarda il consumo salire nella pagina dell'energia. Chiudi le
-            tapparelle, sposta un termostato, inserisci l'allarme. I numeri sono quelli della casa
-            demo del collaudo — le stesse 234 entità contro cui girano le prove del progetto.
+            Qui sotto gira <b>DashboardModern</b>: gli stessi file che stanno dentro l'add-on, non
+            un disegno che gli somiglia. Le trenta voci della barra sono le sue, le tessere sono le
+            sue, i ritratti delle persone sono i suoi. Accendi una luce e la vedi accendersi; apri
+            una pagina e ci trovi quello che ci troveresti in casa.
           </p>
           <p class="guida">
-            E le sezioni nella barra sono <b>quelle vere</b>: le stesse che la scheda Impostazioni
-            accende e spegne, coi loro nomi e nel loro ordine. Venti, più l'ultima — l'acquario —
-            che non è della plancia: se l'è fatta chi ci abita, scegliendo un nome, un'icona e quali
-            entità metterci dentro. Qui non c'è niente che nell'app poi non si trovi.
+            Riempirla è la casa demo del collaudo — duecentotrentacinque entità, sette stanze, un
+            fotovoltaico con la batteria, un'auto, una piscina: le stesse contro cui girano le prove
+            del progetto.
           </p>
 
-          <div class="telaio-fuori appare" id="plancia-viva"></div>
+          <figure class="telaio appare">
+            <div class="telaio-cima">
+              <span class="telaio-pallini" aria-hidden="true"></span>
+              <span class="telaio-nome">
+                <img src="statico/marchio.png" alt="" width="20" height="20" />
+                gdahome — Casa demo
+              </span>
+              <span class="telaio-spia">dentro casa · cifrato</span>
+            </div>
+            <iframe
+              class="telaio-dentro"
+              src="dashboardmodern_static/legacy/dashboard.html"
+              title="La plancia di DashboardModern, con dentro la casa demo"
+              loading="lazy"
+            ></iframe>
+            <figcaption>
+              Nell'app sta esattamente così: in un riquadro, servita dall'add-on. Qui il riquadro è
+              una pagina invece che un telefono, e dietro invece della casa c'è una casa finta.
+            </figcaption>
+          </figure>
 
-          <p class="guida" style="margin-top: 20px">
-            Quello che è finto, ed è giusto dirlo: dall'altra parte non c'è nessuna casa. I comandi
-            cambiano una mappa in memoria, non un'entità di Home Assistant. Il fotovoltaico segue
-            l'ora vera di chi guarda — di notte non produce, e la casa tira dalla batteria — perché
-            una vetrina che mostra il sole a mezzanotte si riconosce subito.
-          </p>
+          <div class="carte carte-strette">
+            <article class="carta">
+              <h3>Come fa a girare senza una casa</h3>
+              <p>
+                Una plancia vuole un Home Assistant dietro, e un sito non ce l'ha. Ma la plancia ha
+                <b>un gancio fatto apposta</b>: se trova un WebSocket già messo nella pagina, usa
+                quello invece di aprirne uno. È lo stesso gancio con cui l'app sul telefono le cuce
+                addosso il proprio filo. Di qua dal gancio, qui, c'è una Home Assistant finta
+                scritta in trecento righe.
+              </p>
+            </article>
+            <article class="carta">
+              <h3>Cosa è finto, e va detto</h3>
+              <p>
+                Dall'altra parte non c'è nessuna casa: gli stati stanno in una mappa nella pagina.
+                Premere un interruttore la cambia, e il cambiamento torna indietro come tornerebbe
+                da Home Assistant — quindi la plancia si muove per davvero — ma non si accende
+                niente da nessuna parte, e ricaricando la pagina torna tutto com'era.
+              </p>
+            </article>
+          </div>
         </div>
       </section>
 
@@ -744,8 +777,9 @@
               </div>
               <h3>La plancia</h3>
               <p>
-                DashboardModern, le ventitré sezioni che gdahome mostra. Sta per conto suo, si
-                installa da HACS, e l'app se la porta dentro l'add-on da sola a ogni versione nuova.
+                DashboardModern, le sezioni che gdahome mostra — quelle vere, qui sopra. Sta per
+                conto suo, si installa da HACS, e l'app se la porta dentro l'add-on da sola a ogni
+                versione nuova.
               </p>
               <span class="come">Vai a DashboardModern →</span>
             </a>
@@ -854,9 +888,7 @@
       </div>
     </footer>
 
-    <script src="statico/casa.js"></script>
     <script src="listino.js"></script>
-    <script src="plancia.js"></script>
     <script src="sito.js"></script>
   </body>
 </html>

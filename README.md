@@ -49,22 +49,22 @@ risponde — e lo rifa' **a ogni tentativo di riconnessione**, non una volta
 all'avvio. Con una regola in piu': in casa **vince sempre la strada diretta**,
 se no ogni comando farebbe il giro del mondo per arrivare a tre metri.
 
-| | dove sta | cosa fa |
-|---|---|---|
-| **il ponte** | `ponte/` | l'add-on di Home Assistant che fa entrare l'app, da dentro e da fuori casa |
-| **il centralino** | `nuvola/`, `centralino/` | fa incontrare un telefono e la sua casa, senza capire niente di quello che si dicono |
-| **l'app** | `app/` | Flutter, per Android e iPhone: si abbina, si collega, comanda |
-| **la plancia** | [dashboardmodern-v2](https://github.com/danigio15/dashboardmodern-v2) | le ventitre sezioni che gia' esistono e funzionano |
-| **il sito** | [`sito/`](sito/README.md) | racconta il progetto, e ne fa toccare la plancia da un browser |
+|                   | dove sta                                                              | cosa fa                                                                              |
+| ----------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| **il ponte**      | `ponte/`                                                              | l'add-on di Home Assistant che fa entrare l'app, da dentro e da fuori casa           |
+| **il centralino** | `nuvola/`, `centralino/`                                              | fa incontrare un telefono e la sua casa, senza capire niente di quello che si dicono |
+| **l'app**         | `app/`                                                                | Flutter, per Android e iPhone: si abbina, si collega, comanda                        |
+| **la plancia**    | [dashboardmodern-v2](https://github.com/danigio15/dashboardmodern-v2) | le ventitre sezioni che gia' esistono e funzionano                                   |
+| **il sito**       | [`sito/`](sito/README.md)                                             | racconta il progetto, e ne fa toccare la plancia da un browser                       |
 
 ## Perche' un ponte, e non un segno incollato a mano
 
 Un'app sul telefono deve entrare in Home Assistant, e le due strade classiche
 sono sbagliate tutte e due per un'app che si da' anche a qualcun altro:
 
-* **un segno lungo incollato a mano** vive anni, vale tutto, e per revocarlo
+- **un segno lungo incollato a mano** vive anni, vale tutto, e per revocarlo
   bisogna ricordarsi quale dei sette in elenco era quello del telefono perso;
-* **l'autenticazione di Home Assistant dentro l'app** mette in mano al telefono
+- **l'autenticazione di Home Assistant dentro l'app** mette in mano al telefono
   un segno di aggiornamento vero, e da fuori casa non risolve niente comunque.
 
 Il ponte prende una terza strada: il telefono riceve **un segno suo**, che vale
@@ -76,23 +76,23 @@ Il resto — le due porte, l'abbinamento, cosa finisce sul disco — sta in
 
 ## Cosa c'e' gia', e cosa no
 
-| | |
-|---|---|
-| ✅ | Il ponte: abbinamento, revoca, filo verso Home Assistant, console dentro HA |
-| ✅ | **Otto lettere e basta**: nessun indirizzo, nessuna credenziale di Home Assistant |
-| ✅ | **Il centralino**: la casa chiama fuori, e da fuori si entra senza configurare niente |
-| ✅ | **Cifrato punta a punta**: il centralino instrada e non puo' leggere |
-| ✅ | **Piu' case**: ognuna col suo segno, si passa dall'una all'altra senza riabbinare |
-| ✅ | **Dentro e fuori casa**: tre strade per la stessa istanza, scelte da sole |
-| ✅ | Il filo: si rialza da solo, cambia approdo, rifa' le sottoscrizioni cadute |
-| ✅ | **La plancia dentro l'app**: quella vera di DashboardModern, in un WebView; i file e la configurazione li ha l'add-on, in Home Assistant non serve niente |
-| ✅ | I dispositivi: tutte le entita' divise per dominio, con gli interruttori |
-| ✅ | **Segnalazioni e chat di assistenza** nell'app: arrivano a chi la fa come issue di GitHub, passando dal ponte e dal centralino, con la diagnostica raccolta da sola |
-| ✅ | **393 prove** — 195 sul ponte, 19 sul centralino, 179 sull'app — senza rete, senza Home Assistant, senza telefono |
-| ⬜ | Gli aiutanti (i sette classici, nativi) |
-| ⬜ | Zigbee: ZHA **e** Zigbee2MQTT |
-| ⬜ | Il mago delle automazioni |
-| ⬜ | Notifiche, impronta digitale, pubblicazione sui negozi |
+|     |                                                                                                                                                                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅  | Il ponte: abbinamento, revoca, filo verso Home Assistant, console dentro HA                                                                                         |
+| ✅  | **Otto lettere e basta**: nessun indirizzo, nessuna credenziale di Home Assistant                                                                                   |
+| ✅  | **Il centralino**: la casa chiama fuori, e da fuori si entra senza configurare niente                                                                               |
+| ✅  | **Cifrato punta a punta**: il centralino instrada e non puo' leggere                                                                                                |
+| ✅  | **Piu' case**: ognuna col suo segno, si passa dall'una all'altra senza riabbinare                                                                                   |
+| ✅  | **Dentro e fuori casa**: tre strade per la stessa istanza, scelte da sole                                                                                           |
+| ✅  | Il filo: si rialza da solo, cambia approdo, rifa' le sottoscrizioni cadute                                                                                          |
+| ✅  | **La plancia dentro l'app**: quella vera di DashboardModern, in un WebView; i file e la configurazione li ha l'add-on, in Home Assistant non serve niente           |
+| ✅  | I dispositivi: tutte le entita' divise per dominio, con gli interruttori                                                                                            |
+| ✅  | **Segnalazioni e chat di assistenza** nell'app: arrivano a chi la fa come issue di GitHub, passando dal ponte e dal centralino, con la diagnostica raccolta da sola |
+| ✅  | **393 prove** — 195 sul ponte, 19 sul centralino, 179 sull'app — senza rete, senza Home Assistant, senza telefono                                                   |
+| ⬜  | Gli aiutanti (i sette classici, nativi)                                                                                                                             |
+| ⬜  | Zigbee: ZHA **e** Zigbee2MQTT                                                                                                                                       |
+| ⬜  | Il mago delle automazioni                                                                                                                                           |
+| ⬜  | Notifiche, impronta digitale, pubblicazione sui negozi                                                                                                              |
 
 ### La plancia, com'e' fatta
 
@@ -120,7 +120,7 @@ commissione `ponte/http`, in `ponte/src/commissioni.js` — e li tiene sul
 disco: il percorso ha dentro un'impronta che cambia a ogni aggiornamento della
 plancia nell'add-on, quindi un file preso una volta vale finche' esiste. Il
 WebSocket della pagina lo cuce sullo stesso filo, coi numeri del filo. Alla
-pagina si dice di essere *ospitata*, come quando gira dentro un pannello:
+pagina si dice di essere _ospitata_, come quando gira dentro un pannello:
 cosi' non chiede nessun segno, e nessuna credenziale di Home Assistant tocca
 ne' la pagina ne' il telefono.
 
@@ -142,21 +142,26 @@ volta dentro — stanno in [`COME_PROVARLA.md`](COME_PROVARLA.md).
 
 In [`sito/`](sito/README.md) c'e' il posto dove il progetto si racconta a chi
 non l'ha mai visto: com'e' fatto, cosa fa, quanto costa. E in mezzo, il pezzo
-per cui esiste: **una plancia che si tocca**. Non un filmato e non delle
-fotografie — l'app disegnata in HTML, con dentro la casa demo del collaudo, le
-stesse 234 entita' contro cui girano le prove. Si accende una luce e il
-consumo sale, si chiude una tapparella e scende, si inserisce l'allarme e la
-casa cambia stato.
+per cui esiste: **la plancia vera, che ci gira dentro**.
 
-Le sezioni nella barra non le sceglie il sito: le sceglie la casa, e sono le
-stesse che la scheda Impostazioni accende e spegne. Chi arriva dal sito
-all'app ritrova quello che ha visto.
+Non una riproduzione e non delle fotografie: DashboardModern, gli stessi file
+che stanno nell'add-on, in un riquadro dentro la pagina. Le trenta voci della
+barra sono le sue, le tessere sono le sue, i ritratti delle persone sono i
+suoi. Chi arriva dal sito all'app ritrova esattamente quello che ha visto.
 
-Sono file statici: si aprono col doppio clic e si pubblicano dove si vuole —
-per Cloudflare Pages c'e' il bottone, **Actions → «Il sito» → Run workflow**.
-Quello che non si scrive a mano — il marchio, le icone, i caratteri, la casa
-demo — lo porta `node strumenti/porta-nel-sito.mjs`, e che il sito stia in
-piedi lo dice `node collaudo/guarda-il-sito.mjs`, con un browser vero.
+Una plancia vuole un Home Assistant dietro, e un sito non ce l'ha. Ma la
+plancia ha un gancio fatto apposta — lo stesso con cui l'app sul telefono le
+cuce addosso il proprio filo — e di qua dal gancio c'e' `sito/casa-in-pagina.js`:
+una Home Assistant finta dentro la pagina, che risponde come quella del
+collaudo e ha dentro la stessa casa demo. Si accende una luce e si accende, si
+chiude una tapparella e scende.
+
+Si pubblica dove si vuole — per Cloudflare Pages c'e' il bottone, **Actions →
+«Il sito» → Run workflow**. Quello che non si scrive a mano — la plancia, il
+marchio, le icone, i caratteri, la casa demo — lo porta
+`node strumenti/porta-nel-sito.mjs`, e che il sito stia in piedi lo dice
+`node collaudo/guarda-il-sito.mjs`, con un browser vero: se la plancia non
+parte, non si pubblica.
 
 ## Le prove
 

@@ -2,84 +2,112 @@
 
 Il posto dove il progetto si racconta a chi non l'ha mai visto: cos'è l'app,
 come fa la casa a rispondere da fuori senza che si apra niente sul router,
-**una plancia che si tocca**, e quanto costa.
+**la plancia vera che ci gira dentro**, e quanto costa.
 
-Sta tutto in questa cartella, sono file statici, e non c'è niente da
-costruire: si copiano da qualche parte e sono un sito.
+## La plancia non è una riproduzione: è la plancia
 
-## La plancia che si tocca
+È il pezzo per cui il sito esiste, ed è anche la cosa che il sito **non**
+disegna. In un riquadro, nella pagina, gira **DashboardModern**: gli stessi
+file che stanno dentro l'add-on, `ponte/plancia/`, copiati byte per byte. Le
+trenta voci della barra sono le sue, le tessere sono le sue, i ritratti 3D
+delle persone sono i suoi.
 
-È il pezzo per cui il sito esiste. Non è un filmato e non sono fotografie: è
-l'app disegnata in HTML, con dentro la **casa demo del collaudo** — le stesse
-234 entità di `collaudo/casa-demo.json` contro cui girano le prove. Sette
-stanze, otto luci, cinque termostati, un fotovoltaico con la batteria, sei
-elettrodomestici, due telecamere.
+C'era una versione precedente di questa pagina in cui la plancia era
+ridisegnata a mano in duemila righe di HTML. Somigliava, e si vedeva che non
+era lei — che è esattamente quello che `docs/PIANO.md` dice di non fare:
 
-Chi arriva sul sito accende una luce e vede il consumo salire nella pagina
-dell'energia; chiude le tapparelle e le vede scendere; sposta un termostato,
-inserisce l'allarme, apre la schermata Acquisti e trova il listino vero. Un
-filmato lo si guarda; una plancia la si tocca.
+> un renderer parallelo […] o viene identico, e allora riscriverlo non è
+> servito a niente, o viene diverso, e l'utente lo riconosce come peggiore.
 
-**Le sezioni sono quelle vere.** Non le sceglie il sito: le sceglie la casa,
-in `cd_sections`, che è la stessa cosa che la scheda Impostazioni accende e
-spegne. `porta-nel-sito.mjs` le porta qui dentro già in fila, coi loro nomi e
-nel loro ordine, e **si ferma** se la casa ne accende una che il sito non sa
-disegnare — perché una plancia dimostrativa con dentro meno di quella vera fa
-arrivare la gente all'app a cercare cose che non trova. Nella casa demo sono
-venti, più una che non è della plancia: l'acquario, che se l'è fatta chi ci
-abita (`cd_sezioni_mie`). Anche quella è una funzione vera, e nel sito si
-vede.
+### Come fa a girare senza una casa
 
-**Quello che è finto, e il sito lo scrive.** Dall'altra parte non c'è nessuna
-casa: i comandi cambiano una mappa in memoria, non un'entità di Home
-Assistant. Il fotovoltaico segue l'ora vera di chi guarda — di notte non
-produce, e la casa tira dalla batteria — perché una vetrina che mostra il sole
-a mezzanotte si riconosce subito. L'unica cosa inventata nel disegno della
-giornata è la curva dei consumi: la casa demo è la fotografia di un istante,
-non di un giorno.
+Una plancia vuole un Home Assistant dietro, e un sito statico non ce l'ha: non
+può aprire un WebSocket verso casa, e non ci sarebbe nessuna casa a cui
+aprirlo.
+
+Ma la plancia ha **un gancio fatto apposta**. Il suo preludio
+(`legacy/bridge-prelude.js`) guarda se qualcuno ha già messo un
+`__DASHBOARDMODERN_BRIDGE_WS__` nella finestra, e se c'è usa quello invece del
+WebSocket vero. È lo stesso gancio con cui l'app sul telefono le cuce addosso
+il proprio filo, ed è scritto in [`docs/WEB.md`](../docs/WEB.md): «non è un
+WebSocket: è un oggetto finto, messo nella pagina insieme alle altre
+premesse».
+
+Di qua dal gancio c'è `casa-in-pagina.js`: una Home Assistant finta che parla
+il protocollo vero, con le stesse risposte di `collaudo/casa-finta.js` — la
+Home Assistant finta contro cui girano le prove dal vivo. Quello che lì è un
+server in Node, qui è un oggetto in pagina: cambia chi consegna le buste, non
+cosa c'è dentro. Due comandi non sono di Home Assistant ma del **ponte** —
+`dashboardmodern/config/get` e `config/set` — e sono risposti come li risponde
+lui, regole comprese (i valori si sostituiscono, una scrittura vuota sopra una
+plancia configurata si rifiuta, la revisione cresce e basta).
+
+Dentro c'è la **casa demo del collaudo**: le stesse 235 entità di
+`collaudo/casa-demo.json` contro cui girano le prove. Sette stanze, otto luci,
+cinque termostati, un fotovoltaico con la batteria, sei elettrodomestici,
+un'auto, una piscina.
+
+### Quello che è finto, e il sito lo scrive
+
+Dall'altra parte non c'è nessuna casa: gli stati stanno in una mappa nella
+pagina. Premere un interruttore la cambia, e il cambiamento torna indietro
+come tornerebbe da Home Assistant — quindi la plancia si muove per davvero —
+ma non si accende niente da nessuna parte, e ricaricando la pagina torna tutto
+com'era.
+
+Le **due telecamere** sono l'unica cosa che non si può far vedere: la plancia
+le chiede come immagini su `/api/camera_proxy/`, e un sito statico non ha un
+Home Assistant che gliele dia. In casa quelle due richieste passano dal ponte e
+tornano col fotogramma.
 
 ## Come si guarda
 
-Basta un doppio clic su `index.html`: la casa demo è un `<script>` e non un
-file da scaricare, quindi funziona anche su `file://`, senza server.
-
-Con un server, se si preferisce:
+La plancia non sta nella repository due volte: `sito/dashboardmodern_static/`
+è fuori da git e si fa con un comando.
 
 ```bash
+node strumenti/porta-nel-sito.mjs
 cd sito && python3 -m http.server 8099
 ```
 
+Poi `http://127.0.0.1:8099/`. Un server ci vuole: un `iframe` su `file://` non
+carica i moduli della plancia.
+
 ## I file
 
-| | |
-|---|---|
-| `index.html` | la pagina: il colpo d'occhio, come funziona, la plancia, cosa fa, i piani, i download, i documenti |
-| `stile.css` | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni |
-| `plancia.css` | il vestito della plancia dimostrativa: tutto quello che comincia per `pl-` |
-| `plancia.js` | la plancia dimostrativa: le sezioni, le schermate dell'app, il bilancio dell'energia |
-| `listino.js` | i prezzi |
-| `sito.js` | chiaro e scuro, l'ombra sotto la barra, le schede che compaiono, i prezzi nella tabella |
-| `statico/` | roba portata da altrove: **non si tocca a mano** |
+|                           |                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `index.html`              | la pagina: il colpo d'occhio, come funziona, la plancia, cosa fa, i piani, i download, i documenti                 |
+| `stile.css`               | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni, il telaio del riquadro |
+| `casa-in-pagina.js`       | la Home Assistant finta che fa girare la plancia                                                                   |
+| `listino.js`              | i prezzi                                                                                                           |
+| `sito.js`                 | chiaro e scuro, l'ombra sotto la barra, le schede che compaiono, i prezzi nella tabella                            |
+| `statico/`                | roba portata da altrove — **non si tocca a mano**, è salvata nella repository                                      |
+| `dashboardmodern_static/` | la plancia vera — **non si tocca a mano**, ed è fuori da git                                                       |
 
 ## Le due cose da non ribattere a mano
 
 **I prezzi.** `listino.js` è la copia di
 `app/lib/schermate/acquisti/catalogo.dart`, che nel progetto è il posto dove
-stanno i prezzi. Li leggono la schermata Acquisti dentro la plancia
-dimostrativa e la tabella della sezione «Piani»: quando cambia il catalogo
-dell'app, cambia anche quel file. Tre posti che dicono tre prezzi diversi è il
-modo più rapido di perdere la fiducia di chi paga.
+stanno i prezzi. Quando cambia il catalogo dell'app, cambia anche quel file.
+Tre posti che dicono tre prezzi diversi è il modo più rapido di perdere la
+fiducia di chi paga.
 
-**Tutto quello che sta in `statico/`.** Il marchio, le 47 icone, i caratteri
-Inter e Oswald, la casa demo: li porta uno script, dalle cartelle dove stanno
-per davvero.
+**Tutto quello che porta lo script.** Il marchio, le 47 icone, i caratteri
+Inter e Oswald, la casa demo, e la plancia intera:
 
 ```bash
 node strumenti/porta-nel-sito.mjs
 ```
 
-Si rilancia quando cambia il marchio, un'icona, la casa demo del collaudo.
-Quello che esce è salvato nella repository apposta: il sito si pubblica com'è.
+Si rilancia quando cambia il marchio, un'icona, la casa demo, o quando arriva
+una versione nuova della plancia. Quello che finisce in `statico/` è salvato
+nella repository (seicento kilobyte); la plancia no, perché sono diciassette
+megabyte identici a quelli che stanno già in `ponte/plancia/`.
+
+Lo script **si ferma** se in `dashboard.html` non trova più il preludio dove
+se lo aspetta: meglio fermarsi che pubblicare una plancia che resta sul velo
+d'avvio.
 
 ## Dove si pubblica
 
@@ -96,8 +124,9 @@ Sono file statici: va bene qualunque posto che serva una cartella.
 
   Da lì in poi si ripubblica da sé a ogni modifica di `sito/` sul ramo
   principale; da un altro ramo esce un'anteprima col suo indirizzo, e quello
-  pubblico non si tocca. E non pubblica niente se la plancia dimostrativa non
-  risponde: prima di caricare, il workflow la apre con un browser vero.
+  pubblico non si tocca. E non pubblica niente se la plancia non parte: prima
+  di caricare, il workflow la apre con un browser vero.
+
 - **GitHub Pages** — funziona, con un avvertimento: finché la repository è
   privata, un sito Pages pubblico richiede un piano a pagamento; se no lo
   vede solo chi ha accesso alla repository.
@@ -114,17 +143,25 @@ accesso. La pagina lo dice, invece di far sbattere la gente contro un 404.
 Con un browser vero, come tutto il resto del collaudo:
 
 ```bash
+node strumenti/porta-nel-sito.mjs
 cd collaudo && npm install && cd ..
 node collaudo/guarda-il-sito.mjs
 ```
 
-Serve `sito/`, lo apre a tre larghezze — telefono, tablet, computer — e
-guarda quattro cose: che **la plancia risponda ai clic** (la luce che si
-spegne, la tapparella che scende, il termostato che si sposta, l'allarme che
-si inserisce, il lucchetto che porta ai piani), che non ci siano errori in
-console né file che non arrivano, che la pagina non scorra di lato a nessuna
-larghezza, e che i prezzi ci siano davvero. Le fotografie finiscono in
-`collaudo/foto/sito-*.png`.
+Apre il sito a tre larghezze — telefono, tablet, computer — e guarda, in
+ordine di quanto fa male sbagliarlo:
+
+1. **la plancia parte**: esce dal velo d'avvio, tira su la sua barra con tutte
+   le sue voci (compresa quella che si è fatta chi ci abita, l'acquario), e
+   apre le sue pagine;
+2. **la plancia risponde**: un comando dato alla plancia arriva fino alla casa
+   finta in pagina e le cambia lo stato;
+3. **niente errori** in console e nessun file che non arriva — le due
+   telecamere sono l'eccezione, ed è scritta nel collaudo;
+4. **niente scorrimento di lato** a nessuna larghezza;
+5. **i prezzi ci sono**.
+
+Le fotografie finiscono in `collaudo/foto/sito-*.png`.
 
 Se la pagina non trovasse i suoi file non ci sarebbe nessun errore da nessuna
 parte: ci sarebbe una pagina bianca. Per questo si guarda con un browser vero.
