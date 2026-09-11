@@ -19,6 +19,7 @@ import {
   inBase64,
   nomeDiFile,
   paroleDellaPersona,
+  statoDellaIssue,
 } from "../src/segnalazioni.js";
 
 /* Un archivio come quello del Durable Object: get, put, e basta. */
@@ -405,4 +406,39 @@ test("i nomi dei file si puliscono, e il peso si legge", () => {
   assert.equal(nomeDiFile("../../segreti/../foto di casa.JPG"), "segreti_.._foto_di_casa.JPG");
   assert.equal(nomeDiFile("   "), "allegato");
   assert.equal(nomeDiFile("a".repeat(100)).length, 60);
+});
+
+test("tre stati e non due: chiusa, in lavorazione, aperta", () => {
+  /* I filtri dell'app sono tre gruppi, gli stessi della dashboard, e senza il
+   * mezzo una segnalazione che qualcuno ha gia' preso in mano resta scritta
+   * «da lavorare» — chi l'ha aperta non sa se e' stata vista.
+   *
+   * Su GitHub «presa in carico» non e' uno stato: sono due segni, e valgono
+   * tutti e due. Assegnarsi una issue e' il modo naturale; l'etichetta serve a
+   * chi preferisce dirlo cosi'. */
+  assert.equal(statoDellaIssue({ state: "open" }), "aperta");
+  assert.equal(statoDellaIssue({ state: "open", assignee: { login: "tizio" } }), "in-carico");
+  assert.equal(statoDellaIssue({ state: "open", assignees: [{ login: "tizio" }] }), "in-carico");
+  assert.equal(statoDellaIssue({ state: "open", labels: [{ name: "in-carico" }] }), "in-carico");
+  /* Le etichette arrivano anche come parole sole, e con le maiuscole di chi
+   * le ha scritte. */
+  assert.equal(statoDellaIssue({ state: "open", labels: ["In-Carico"] }), "in-carico");
+  /* Un'etichetta qualsiasi non e' «presa in carico». */
+  assert.equal(statoDellaIssue({ state: "open", labels: [{ name: "gdahome" }] }), "aperta");
+  /* Chiusa vince su tutto: una risolta non e' in lavorazione. */
+  assert.equal(statoDellaIssue({ state: "closed", assignee: { login: "tizio" } }), "chiusa");
+  /* E una issue che non si e' potuta leggere non inventa niente. */
+  assert.equal(statoDellaIssue(null), "aperta");
+});
+
+test("il filo porta lo stato dei tre gruppi, e l'elenco se lo tiene", async () => {
+  /* Quello che l'app filtra e' il campo `stato` che arriva da qui: se il filo
+   * dicesse solo «aperta» o «chiusa», il gruppo di mezzo nell'app non
+   * esisterebbe per nessuna segnalazione. */
+  const dentro = filo(
+    { numero: 7, tipo: "problema", titolo: "La luce" },
+    { number: 7, state: "open", assignees: [{ login: "tizio" }], body: "non va" },
+    [],
+  );
+  assert.equal(dentro.stato, "in-carico");
 });

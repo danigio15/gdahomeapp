@@ -336,4 +336,109 @@ void main() {
       await ponte.spegni();
     });
   });
+
+  testWidgets('i filtri dell\'elenco: gli stessi della dashboard, coi conti', (
+    tester,
+  ) async {
+    late PonteFinto ponte;
+    late Collegamento collegamento;
+    await tester.runAsync(() async {
+      ponte = await PonteFinto.alza();
+      collegamento = await _casaCollegata(ponte);
+      /* Tre segnalazioni, una per gruppo: e' la coda su cui i filtri hanno
+       * qualcosa da dire. Lo stato lo scrive il centralino, e «in-carico» e'
+       * quello che mette quando una issue e' assegnata a qualcuno. */
+      ponte.segnalazioni.addAll([
+        {
+          'numero': 1,
+          'tipo': 'problema',
+          'titolo': 'La luce della cucina',
+          'stato': 'aperta',
+          'aperta_il': '2026-09-08T10:00:00Z',
+          'url': '',
+          'messaggi': [
+            {'da': 'casa', 'testo': 'non si accende', 'il': ''},
+          ],
+        },
+        {
+          'numero': 2,
+          'tipo': 'idea',
+          'titolo': 'Una tessera per la piscina',
+          'stato': 'in-carico',
+          'aperta_il': '2026-09-08T11:00:00Z',
+          'url': '',
+          'messaggi': [
+            {'da': 'casa', 'testo': 'sarebbe bello', 'il': ''},
+          ],
+        },
+        {
+          'numero': 3,
+          'tipo': 'domanda',
+          'titolo': 'Come si abbina un telefono',
+          'stato': 'chiusa',
+          'aperta_il': '2026-09-08T12:00:00Z',
+          'url': '',
+          'messaggi': [
+            {'da': 'casa', 'testo': 'come si fa?', 'il': ''},
+          ],
+        },
+      ]);
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SchermataDelleSegnalazioni(
+          collegamento: collegamento,
+          diagnostica: _diagnostica,
+        ),
+      ),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await tester.pumpAndSettle();
+
+    /* I quattro tasti ci sono, con le parole della dashboard. */
+    for (final nome in ['Da lavorare', 'In lavorazione', 'Chiuse', 'Tutte']) {
+      expect(find.text(nome), findsOneWidget, reason: nome);
+    }
+    /* E i conti: uno per gruppo, e tre in «Tutte». Sono quello che dice cosa
+     * c'e' prima di premere. */
+    expect(find.text('3'), findsOneWidget);
+    expect(find.text('1'), findsNWidgets(3));
+
+    /* Si parte da «Tutte»: ci sono tutte e tre. */
+    expect(find.text('La luce della cucina'), findsOneWidget);
+    expect(find.text('Una tessera per la piscina'), findsOneWidget);
+    expect(find.text('Come si abbina un telefono'), findsOneWidget);
+
+    /* «Chiuse» lascia la chiusa e porta via le altre. */
+    await tester.tap(find.text('Chiuse'));
+    await tester.pumpAndSettle();
+    expect(find.text('Come si abbina un telefono'), findsOneWidget);
+    expect(find.text('La luce della cucina'), findsNothing);
+    expect(find.text('Una tessera per la piscina'), findsNothing);
+
+    /* «In lavorazione» e' il gruppo di mezzo, quello che senza tre stati non
+     * si potrebbe nemmeno mostrare. */
+    await tester.tap(find.text('In lavorazione'));
+    await tester.pumpAndSettle();
+    expect(find.text('Una tessera per la piscina'), findsOneWidget);
+    expect(find.text('in lavorazione'), findsOneWidget);
+    expect(find.text('Come si abbina un telefono'), findsNothing);
+
+    /* Un gruppo vuoto lo dice, e dice anche cosa premere. */
+    await tester.tap(find.text('Da lavorare'));
+    await tester.pumpAndSettle();
+    expect(find.text('La luce della cucina'), findsOneWidget);
+
+    await tester.tap(find.text('Tutte'));
+    await tester.pumpAndSettle();
+    expect(find.text('Come si abbina un telefono'), findsOneWidget);
+
+    await tester.runAsync(() async {
+      await collegamento.chiudi();
+      await ponte.spegni();
+    });
+  });
 }

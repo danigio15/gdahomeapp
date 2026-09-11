@@ -117,13 +117,38 @@ export function classifica(commento) {
   };
 }
 
+/* In che stato e' una segnalazione: aperta, in lavorazione, chiusa.
+ *
+ * Tre e non due, perche' tre sono i gruppi che l'app mostra nei filtri — gli
+ * stessi della dashboard: «Da lavorare», «In lavorazione», «Chiuse». Senza il
+ * mezzo, una segnalazione che qualcuno ha gia' preso in mano resta scritta
+ * «da lavorare», e chi l'ha aperta non sa se e' stata vista.
+ *
+ * Su GitHub «presa in carico» non e' uno stato: sono due segni, e valgono
+ * tutti e due. **Assegnata a qualcuno** e' il modo naturale — prendersi una
+ * issue vuol dire mettersi il proprio nome sopra — e **l'etichetta**
+ * `in-carico` serve a chi preferisce dirlo cosi'. Chiusa vince su tutto: una
+ * segnalazione risolta non e' in lavorazione.
+ */
+export function statoDellaIssue(issue) {
+  if (issue?.state === "closed") return "chiusa";
+  const etichette = (Array.isArray(issue?.labels) ? issue.labels : []).map((una) =>
+    String((una && una.name) || una || "")
+      .trim()
+      .toLowerCase(),
+  );
+  const assegnata =
+    Boolean(issue?.assignee) || (Array.isArray(issue?.assignees) ? issue.assignees.length : 0) > 0;
+  return assegnata || etichette.includes("in-carico") ? "in-carico" : "aperta";
+}
+
 /* Il filo intero: la issue e i suoi commenti, nella forma dell'app. */
 export function filo(voce, issue, commenti) {
   return {
     numero: Number(issue?.number ?? voce?.numero),
     tipo: voce?.tipo || "problema",
     titolo: voce?.titolo || String(issue?.title ?? ""),
-    stato: issue?.state === "closed" ? "chiusa" : "aperta",
+    stato: statoDellaIssue(issue),
     aperta_il: issue?.created_at || voce?.aperta_il || "",
     aggiornata_il: issue?.updated_at || "",
     url: issue?.html_url || voce?.url || "",
@@ -418,7 +443,7 @@ export class Segnalazioni {
   }
 
   async _aggiorna(voce, issue) {
-    const stato = issue?.state === "closed" ? "chiusa" : "aperta";
+    const stato = statoDellaIssue(issue);
     if (voce.stato === stato) return;
     const elenco = await this.elenco();
     await this.storage.put(

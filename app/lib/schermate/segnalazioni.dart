@@ -43,6 +43,10 @@ class SchermataDelleSegnalazioni extends StatefulWidget {
 class _SchermataDelleSegnalazioniState
     extends State<SchermataDelleSegnalazioni> {
   ElencoDelleSegnalazioni? _elenco;
+
+  /// Quale gruppo si sta guardando. `null` e' «Tutte», ed e' come si parte:
+  /// chi apre la scheda vuole vedere le sue, tutte, e poi restringere.
+  Gruppo? _filtro;
   String? _perche;
   bool _caricando = false;
 
@@ -152,6 +156,15 @@ class _SchermataDelleSegnalazioniState
     );
   }
 
+  /* Quelle del gruppo scelto. `null` vuol dire «Tutte»: si torna la coda
+   * intera, come fa `perStato` nella dashboard con un filtro che non
+   * riconosce. */
+  List<Segnalazione> _leMie(List<Segnalazione> tutte) {
+    final quale = _filtro;
+    if (quale == null) return tutte;
+    return tutte.where((una) => una.gruppo == quale).toList();
+  }
+
   Widget _corpo(BuildContext context, ElencoDelleSegnalazioni? elenco) {
     if (elenco == null) {
       if (_caricando) {
@@ -209,12 +222,142 @@ class _SchermataDelleSegnalazioniState
           )
         else ...[
           const Insegna('Le tue segnalazioni'),
-          for (final una in elenco.segnalazioni) ...[
-            _RigaDellaSegnalazione(una, quandoPremuta: () => _apri(una)),
-            const SizedBox(height: 10),
-          ],
+          /* I filtri, gli stessi della dashboard: «Da lavorare», «In
+           * lavorazione», «Chiuse», «Tutte», e sotto ognuno il conto.
+           *
+           * Ci sono **sempre**, appena c'e' una segnalazione: comparivano
+           * solo con piu' di uno stato, e chi ne aveva una sola apriva la
+           * scheda, non trovava il filtro e lo segnalava come mancante — un
+           * comando che va e viene non e' un comando, e' una sorpresa. Quello
+           * che li rende utili anche con una segnalazione sola e' il conto:
+           * dice cosa c'e' prima di premere, e una riga di zeri accanto a un
+           * uno si legge in un colpo. */
+          _FilaDeiFiltri(
+            segnalazioni: elenco.segnalazioni,
+            scelto: _filtro,
+            quandoScelto: (quale) => setState(() => _filtro = quale),
+          ),
+          const SizedBox(height: 12),
+          if (_leMie(elenco.segnalazioni).isEmpty)
+            const StatoVuoto(
+              dentroUnaLista: true,
+              icona: Icons.filter_list_off_rounded,
+              titolo: 'Nessuna segnalazione in questo stato',
+              sotto: 'Prova «Tutte»: le altre sono negli altri gruppi.',
+            )
+          else
+            for (final una in _leMie(elenco.segnalazioni)) ...[
+              _RigaDellaSegnalazione(una, quandoPremuta: () => _apri(una)),
+              const SizedBox(height: 10),
+            ],
         ],
       ],
+    );
+  }
+}
+
+/// La fila dei filtri dell'elenco: gli stessi tasti della dashboard, con gli
+/// stessi nomi e lo stesso conto sotto ognuno.
+///
+/// Nella dashboard e' `filaMarkup(statiColConto, …)`: pastiglie tonde, quella
+/// scelta piena col colore dell'accento, e dentro il numero di quante ce ne
+/// sono in quel gruppo. Qui la forma e' quella dell'app — il colore lo da' il
+/// tema, non un `--accent` — ma le parole, l'ordine e il conto sono i suoi.
+class _FilaDeiFiltri extends StatelessWidget {
+  const _FilaDeiFiltri({
+    required this.segnalazioni,
+    required this.scelto,
+    required this.quandoScelto,
+  });
+
+  final List<Segnalazione> segnalazioni;
+
+  /// `null` e' «Tutte».
+  final Gruppo? scelto;
+  final ValueChanged<Gruppo?> quandoScelto;
+
+  @override
+  Widget build(BuildContext context) {
+    int quante(Gruppo? quale) => quale == null
+        ? segnalazioni.length
+        : segnalazioni.where((una) => una.gruppo == quale).length;
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final quale in <Gruppo?>[...Gruppo.values, null])
+          _Pastiglia(
+            nome: quale?.nome ?? 'Tutte',
+            quante: quante(quale),
+            attiva: scelto == quale,
+            quandoPremuta: () => quandoScelto(quale),
+          ),
+      ],
+    );
+  }
+}
+
+class _Pastiglia extends StatelessWidget {
+  const _Pastiglia({
+    required this.nome,
+    required this.quante,
+    required this.attiva,
+    required this.quandoPremuta,
+  });
+
+  final String nome;
+  final int quante;
+  final bool attiva;
+  final VoidCallback quandoPremuta;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    final sopra = attiva ? colori.onPrimary : colori.onSurfaceVariant;
+    return Material(
+      color: attiva ? colori.primary : colori.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(50),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(50),
+        onTap: quandoPremuta,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                nome,
+                style: testi.labelLarge?.copyWith(
+                  color: sopra,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: 7),
+              /* Il conto: dice cosa c'e' prima di premere. Sta dentro la
+               * pastiglia, come nella dashboard, e non di fianco: di fianco
+               * sarebbe un secondo numero da leggere invece dello stesso
+               * tasto. */
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+                decoration: BoxDecoration(
+                  color: attiva
+                      ? colori.onPrimary.withValues(alpha: 0.25)
+                      : colori.surface,
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                child: Text(
+                  '$quante',
+                  style: testi.labelSmall?.copyWith(
+                    color: sopra,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -247,11 +390,22 @@ class _RigaDellaSegnalazione extends StatelessWidget {
                       colore: _coloreDelTipo(segnalazione.tipo),
                     ),
                     const SizedBox(width: 8),
+                    /* Tre stati e non due: una segnalazione che qualcuno ha
+                     * gia' preso in mano non e' «aperta» come una che aspetta
+                     * ancora, e chi l'ha scritta la differenza la vuole
+                     * sapere. Sono i tre gruppi dei filtri, con le parole
+                     * della riga invece di quelle del tasto. */
                     Bollino(
-                      segnalazione.aperta ? 'aperta' : 'chiusa',
-                      colore: segnalazione.aperta
-                          ? Colori.bene
-                          : colori.onSurfaceVariant,
+                      switch (segnalazione.gruppo) {
+                        Gruppo.aperte => 'aperta',
+                        Gruppo.inCarico => 'in lavorazione',
+                        Gruppo.chiuse => 'chiusa',
+                      },
+                      colore: switch (segnalazione.gruppo) {
+                        Gruppo.aperte => Colori.bene,
+                        Gruppo.inCarico => Colori.ambraScura,
+                        Gruppo.chiuse => colori.onSurfaceVariant,
+                      },
                     ),
                   ],
                 ),

@@ -1209,6 +1209,27 @@ try {
   await premi(pagina, "Back", { inAlto: true });
   await attendi(800);
 
+  /* I filtri dell'elenco, quelli della dashboard: quattro tasti coi conti.
+   *
+   * Ci sono appena c'e' una segnalazione — e non solo quando gli stati sono
+   * piu' d'uno: un comando che appare e sparisce non e' un comando. Si
+   * guarda che ci siano tutti e quattro e che premerne uno filtri davvero. */
+  racconta("i filtri delle segnalazioni");
+  for (const nome of ["Da lavorare", "In lavorazione", "Chiuse", "Tutte"]) {
+    await aspettaCheCompaia(pagina, nome);
+  }
+  await attendi(500);
+  await scatta(pagina, "6d2-segnalazioni-filtri");
+  /* «Chiuse» non ne ha nessuna: lo dice, invece di mostrare una lista
+   * vuota senza spiegazione. */
+  await premi(pagina, "Chiuse");
+  await aspettaCheCompaia(pagina, "Nessuna segnalazione in questo stato");
+  await attendi(400);
+  await scatta(pagina, "6d3-segnalazioni-filtro-vuoto");
+  await premi(pagina, "Tutte");
+  await aspettaCheCompaia(pagina, "Una tessera per la piscina");
+  await attendi(400);
+
   racconta("apro l'assistenza");
   await vaiA("Assistenza", "Qui si parla con chi fa");
   await attendi(600);

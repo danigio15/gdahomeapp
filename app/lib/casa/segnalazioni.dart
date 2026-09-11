@@ -85,6 +85,40 @@ class Messaggio {
   );
 }
 
+/// In quale dei tre gruppi cade una segnalazione.
+///
+/// E' la **stessa regola della dashboard** — `bucketDelloStato` in
+/// `segnalazioni-section.js` — e i nomi sono i suoi: chi guarda la stessa
+/// segnalazione nei due posti deve trovarla nello stesso gruppo, se no i due
+/// filtri direbbero due cose diverse della stessa coda.
+///
+/// Tre e non due: senza il mezzo, una segnalazione che qualcuno ha gia' preso
+/// in mano resta scritta «da lavorare», e chi l'ha aperta non sa se e' stata
+/// vista. Chi decide quale sia lo stato e' il centralino
+/// (`statoDellaIssue`): chiusa vince su tutto, poi «presa in carico» —
+/// assegnata a qualcuno, o con la sua etichetta — poi aperta.
+enum Gruppo {
+  aperte('aperte', 'Da lavorare'),
+  inCarico('in-carico', 'In lavorazione'),
+  chiuse('chiuse', 'Chiuse');
+
+  const Gruppo(this.chiave, this.nome);
+
+  final String chiave;
+
+  /// Come si chiama sul tasto del filtro: le parole della dashboard.
+  final String nome;
+
+  static Gruppo diUnoStato(Object? stato) {
+    final detto = stato?.toString().trim().toLowerCase() ?? '';
+    if (detto == 'chiusa' || detto == 'chiuso' || detto == 'risolto') {
+      return Gruppo.chiuse;
+    }
+    if (detto == 'in-carico') return Gruppo.inCarico;
+    return Gruppo.aperte;
+  }
+}
+
 /// Una segnalazione, o la chat: il filo intero quando lo si e' letto, solo la
 /// riga dell'elenco altrimenti.
 class Segnalazione {
@@ -92,7 +126,7 @@ class Segnalazione {
     required this.numero,
     required this.tipo,
     required this.titolo,
-    required this.aperta,
+    required this.gruppo,
     this.apertaIl,
     this.url = '',
     this.messaggi = const [],
@@ -103,7 +137,11 @@ class Segnalazione {
   final int numero;
   final TipoDiSegnalazione tipo;
   final String titolo;
-  final bool aperta;
+  final Gruppo gruppo;
+
+  /// Tutto quello che non e' chiuso e' aperto: e' il conto che serve a chi
+  /// guarda una riga, mentre i filtri guardano il gruppo.
+  bool get aperta => gruppo != Gruppo.chiuse;
   final DateTime? apertaIl;
   final String url;
   final List<Messaggio> messaggi;
@@ -123,7 +161,7 @@ class Segnalazione {
       numero: (grezzo['numero'] as num?)?.toInt() ?? 0,
       tipo: TipoDiSegnalazione.leggi(grezzo['tipo']),
       titolo: grezzo['titolo']?.toString() ?? '',
-      aperta: grezzo['stato'] != 'chiusa',
+      gruppo: Gruppo.diUnoStato(grezzo['stato']),
       apertaIl: _quando(grezzo['aperta_il']),
       url: grezzo['url']?.toString() ?? '',
       messaggi: elenco,
