@@ -450,3 +450,129 @@ export function stessoModello(a, b) {
   if (uno === due) return true;
   return ` ${uno} `.includes(` ${due} `) || ` ${due} `.includes(` ${uno} `);
 }
+
+/**
+ * Di quale vettura sono le caselle che si stanno salvando.
+ *
+ * La domanda ha una risposta sola quando si salva, e questa e' la regola che
+ * la da'. Stava dentro la sezione, in mezzo al documento, e per questo non si
+ * poteva provare con i numeri: e' logica pura — un elenco, una chiave, un nome
+ * — e adesso sta dove sta la logica pura.
+ *
+ * Torna l'auto e, quando non ce n'e' una, il MOTIVO. Il motivo non e' un
+ * ornamento: prima questa decisione rifiutava in quattro punti diversi senza
+ * dire niente a nessuno, e un salvataggio che non arriva nel profilo si vedeva
+ * solo dall'esterno, come «lo schermo dice AdBlue e il grafico dice gasolio»
+ * (#444). Un rifiuto che non si sa spiegare costa un'indagine ogni volta.
+ *
+ * Le regole, in ordine:
+ *
+ *  - `chiave` vuota e' il gesto «＋ Nuova auto»: i campi sono di una vettura
+ *    che sta nascendo e non sono di nessuno finche' non la si salva.
+ *  - `chiave` piena e' la matita: quelle caselle sono di QUELL'auto, e di
+ *    nessun'altra. Se l'auto che la chiave nomina non c'e' piu' — cancellata,
+ *    o un elenco riletto che le ha dato un'altra identita' — non si ripiega
+ *    sull'auto in uso. Ci avevo provato, ed e' un modo per rifare il difetto
+ *    che questa regola esiste per impedire: cancellare la vettura aperta con
+ *    la matita non azzera la chiave, quindi il «Salva sezione» dopo avrebbe
+ *    versato le caselle di quella cancellata dentro un'altra macchina. Sono
+ *    caselle che descrivono un'auto che non esiste, e la risposta giusta e'
+ *    nessuno. La sessione si rimette a posto da sola al primo ridisegno, che
+ *    la chiave la riscrive su una vettura vera.
+ *  - Senza chiave comanda il NOME scritto: un nome gia' in elenco sceglie
+ *    l'auto che lo porta; un nome nuovo e' una vettura che nasce, e le sue
+ *    caselle aspettano. Nessun nome vuol dire l'auto in uso.
+ *
+ * Versare le caselle nell'auto in uso quando un nome NUOVO e' scritto sarebbe
+ * il modo in cui due auto si mescolano: si mappa la Zoe, si salva, si rimappa
+ * per la Tesla, e la Zoe si prende la batteria della Tesla prima che la Tesla
+ * esista.
+ */
+export function laVetturaDelleCaselle({
+  elenco = [],
+  chiave = null,
+  nomeScritto = "",
+  inUso = null,
+} = {}) {
+  const auto = array(elenco);
+  if (!auto.length) return { auto: null, motivo: "nessuna-auto" };
+  if (chiave === "") return { auto: null, motivo: "auto-che-nasce" };
+  const cercata = clean(chiave);
+  if (cercata) {
+    const trovata = auto.find((car) => clean(car?.[VEHICLE_KEY_FIELD]) === cercata) || null;
+    if (trovata) return { auto: trovata, motivo: "" };
+    /* La chiave nomina un'auto che non c'e' piu': non si scrive su nessuna, e
+     * si dice perche'. Il rumore era quello che mancava, non il ripiego. */
+    return { auto: null, motivo: "chiave-sparita" };
+  }
+  const nome = clean(nomeScritto);
+  const omonima = nome ? auto.find((car) => clean(car?.name) === nome) || null : null;
+  if (nome && !omonima) return { auto: null, motivo: "nome-nuovo" };
+  if (omonima) return { auto: omonima, motivo: "" };
+  return inUso ? { auto: inUso, motivo: "" } : { auto: null, motivo: "nessuna-in-uso" };
+}
+
+/* Perche' Home Assistant ha rifiutato un comando all'auto.
+ *
+ * «Continua ad esserci il problema nel cambio percentuale ricarica», con la
+ * pastiglia che diceva: «Home Assistant ha rifiutato il target: Leapmotor
+ * remote control result failed: Token is invalid».
+ *
+ * Quel rifiuto non e' nostro, ed e' giusto che si veda: e' il comando che non
+ * e' arrivato all'auto. Ma scritto cosi' non si sa da che parte prenderlo. Un
+ * gettone scaduto ha un rimedio preciso — si riconnette l'integrazione — e chi
+ * legge ha il diritto di sapere che c'e', invece di riprovare la tendina
+ * all'infinito.
+ *
+ * Il modulo e' puro e non traduce: torna una chiave — chi disegna sa in che
+ * lingua parlare. Le chiavi sono tre, piu' il silenzio:
+ *
+ *   · `autenticazione`: l'integrazione non e' piu' collegata all'account
+ *     dell'auto. Si riconnette dalle Impostazioni di Home Assistant;
+ *   · `permesso`: l'integrazione sta bene, ma Home Assistant non autorizza chi
+ *     guarda a comandare quell'entita'. E' un'altra cosa, e ha un altro
+ *     rimedio: riconnettere l'integrazione non servirebbe a niente;
+ *   · `non-raggiungibile`: l'auto non ha risposto in tempo. Le auto in cloud
+ *     dormono, e spesso basta riprovare;
+ *   · `""`: non si sa, e allora si dice quello che ha detto Home Assistant
+ *     invece di indovinare.
+ *
+ * Le parole su cui si riconosce sono quelle che scrivono le integrazioni e i
+ * server sotto: si guarda il messaggio intero, in qualunque lingua l'abbia
+ * scritto chi l'ha scritto, perche' i codici HTTP e le parole inglesi passano
+ * comunque.
+ */
+const PAROLE_DEL_RIFIUTO = Object.freeze([
+  Object.freeze({
+    /* L'integrazione dell'auto non parla piu' col suo servizio.
+     *
+     * Si riconosce dalle parole che scrive l'integrazione stessa — gettone,
+     * sessione scaduta, credenziali — non da un codice HTTP. Un 401 o un 403
+     * nudi sono un'altra cosa (vedi sotto), e confonderli manderebbe chi legge
+     * a riconnettere un'integrazione che sta benissimo. */
+    chiave: "autenticazione",
+    segni:
+      /\btoken\b|authenticat|autentic|credential|session (has )?expired|expired session|invalid.{0,12}(login|session|key)|re-?auth/i,
+  }),
+  Object.freeze({
+    /* Home Assistant non autorizza CHI GUARDA a comandare quell'entita'.
+     *
+     * «Unauthorized», «Forbidden», un 401 o un 403 senza altro: qui
+     * l'integrazione dell'auto e' sana, e a mancare e' il permesso dell'utente
+     * della plancia — o l'entita' e' esposta in sola lettura. Riconnettere
+     * l'integrazione non servirebbe a niente. */
+    chiave: "permesso",
+    segni: /unauthor|not authorized|forbidden|not allowed|permission|\b401\b|\b403\b/i,
+  }),
+  Object.freeze({
+    chiave: "non-raggiungibile",
+    segni:
+      /time[ -]?out|timed out|unreachable|unavailable|not responding|no response|offline|connection (refused|reset|error)|\b50[234]\b/i,
+  }),
+]);
+
+export function ragioneDelRifiuto(messaggio) {
+  const testo = String(messaggio ?? "").trim();
+  if (!testo) return "";
+  return PAROLE_DEL_RIFIUTO.find((voce) => voce.segni.test(testo))?.chiave || "";
+}
