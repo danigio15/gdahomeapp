@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Assistenza gdahome</title>
+    <!--
+      La console della chat: la casella dove arrivano le domande.
+
+      Sta sulla stessa macchina del tramite e non porta niente da fuori —
+      niente font, niente librerie, nessuna richiesta a nessuno. Una pagina
+      sola, che si apre anche dal telefono.
+
+      Quello che si vede qui e' tutto quello che il centralino sa di una casa:
+      un numero che si e' fabbricata da sola, la versione della plancia, quella
+      di Home Assistant, la lingua, e un nome se ha voluto darlo. Niente
+      indirizzi, niente entita', niente da cui risalire a una persona.
+    -->
+    <style>
+      :root {
+        --carta: #eef1f0;
+        --quadro: #ffffff;
+        --velo: #f6f8f7;
+        --inchiostro: #13212a;
+        --smorzato: #52636a;
+        --tenue: #7e8d92;
+        --linea: #d5dcda;
+        --ottone: #8a5710;
+        --spia: #1f6b4a;
+        --allarme: #a5392c;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --carta: #0e181d;
+          --quadro: #15232a;
+          --velo: #1a2a31;
+          --inchiostro: #dce6e4;
+          --smorzato: #9badb1;
+          --tenue: #7a8d92;
+          --linea: #243740;
+          --ottone: #dca45c;
+          --spia: #5fc493;
+          --allarme: #e98b7d;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--carta);
+        color: var(--inchiostro);
+        font:
+          16px/1.5 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: var(--carta);
+        border-bottom: 1px solid var(--linea);
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mono {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 0.82em;
+      }
+
+      button {
+        font: inherit;
+        color: var(--inchiostro);
+        background: var(--quadro);
+        border: 1px solid var(--linea);
+        border-radius: 3px;
+        padding: 7px 12px;
+        cursor: pointer;
+      }
+
+      button.forte {
+        color: var(--quadro);
+        background: var(--ottone);
+        border-color: var(--ottone);
+      }
+
+      button.male {
+        color: var(--allarme);
+        border-color: var(--allarme);
+        background: transparent;
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+
+      input,
+      textarea {
+        font: inherit;
+        color: var(--inchiostro);
+        background: var(--quadro);
+        border: 1px solid var(--linea);
+        border-radius: 3px;
+        padding: 9px 11px;
+        width: 100%;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 70px;
+      }
+
+      main {
+        max-width: 46rem;
+        margin-inline: auto;
+        padding: 16px;
+      }
+
+      .riquadro {
+        background: var(--quadro);
+        border: 1px solid var(--linea);
+        border-radius: 4px;
+        padding: 16px;
+      }
+
+      .avviso {
+        border-left: 3px solid var(--allarme);
+        background: var(--velo);
+        padding: 10px 14px;
+        border-radius: 3px;
+        color: var(--allarme);
+        margin-bottom: 14px;
+      }
+
+      ul.linee {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      ul.linee button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 12px 14px;
+      }
+
+      .capo {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+      }
+
+      .capo strong {
+        font-weight: 600;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .capo button {
+        flex: none;
+      }
+
+      .quando {
+        margin-left: auto;
+        color: var(--tenue);
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+
+      .bollo {
+        display: inline-block;
+        min-width: 1.4em;
+        text-align: center;
+        padding: 1px 6px;
+        border-radius: 999px;
+        background: var(--spia);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+
+      .note {
+        color: var(--tenue);
+        font-size: 0.8rem;
+        margin-top: 3px;
+      }
+
+      .ultimo {
+        color: var(--smorzato);
+        margin-top: 5px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .filo {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 14px 0;
+      }
+
+      .detto {
+        max-width: 85%;
+        padding: 9px 13px;
+        border-radius: 12px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .detto.casa {
+        align-self: flex-start;
+        background: var(--velo);
+        border: 1px solid var(--linea);
+        border-bottom-left-radius: 3px;
+      }
+
+      .detto.console {
+        align-self: flex-end;
+        background: var(--ottone);
+        color: #fff;
+        border-bottom-right-radius: 3px;
+      }
+
+      .detto .ora {
+        display: block;
+        margin-top: 4px;
+        font-size: 0.72rem;
+        opacity: 0.7;
+      }
+
+      .fila {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+      }
+
+      .fila textarea {
+        flex: 1;
+      }
+
+      .vuoto {
+        color: var(--tenue);
+        text-align: center;
+        padding: 28px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Assistenza gdahome</h1>
+      <span id="conta" class="mono"></span>
+      <button id="indietro" hidden>Indietro</button>
+      <button id="dimentica" hidden>Esci</button>
+    </header>
+
+    <main>
+      <section id="porta" class="riquadro" hidden>
+        <p style="margin-top: 0">
+          La chiave della console. E' quella che sta sulla macchina come
+          <span class="mono">CHIAVE_CONSOLE</span>: non la sa nessun altro, e non esce da questa
+          pagina.
+        </p>
+        <div class="fila">
+          <input
+            id="chiave"
+            type="password"
+            autocomplete="current-password"
+            placeholder="la chiave"
+          />
+          <button id="entra" class="forte">Entra</button>
+        </div>
+        <p id="male" class="avviso" hidden style="margin-bottom: 0"></p>
+      </section>
+
+      <section id="elenco" hidden></section>
+
+      <section id="conversazione" hidden>
+        <div class="riquadro">
+          <div class="capo">
+            <strong id="chi" class="mono"></strong>
+            <button id="butta" class="male" style="margin-left: auto">Cancella</button>
+          </div>
+          <div id="note-chi" class="note"></div>
+          <div id="filo" class="filo"></div>
+          <div class="fila">
+            <textarea id="risposta" placeholder="Rispondi…"></textarea>
+            <button id="manda" class="forte">Manda</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      "use strict";
+
+      /* La chiave resta nel browser, non nella pagina: chi risponde apre questa
+       * console dal telefono dieci volte al giorno, e ribatterla ogni volta
+       * finirebbe con una chiave corta. Un bottone la butta via. */
+      const CHIAVE = "gdahome.console.chiave";
+      const OGNI = 10_000;
+
+      const q = (id) => document.getElementById(id);
+      const porta = q("porta");
+      const elenco = q("elenco");
+      const conversazione = q("conversazione");
+
+      let chiave = "";
+      let aperta = null;
+      let fino = 0;
+      let giro = null;
+
+      try {
+        chiave = localStorage.getItem(CHIAVE) || "";
+      } catch (_errore) {
+        /* Finestra privata: si ribatte e pazienza. */
+      }
+
+      async function chiama(via, opzioni = {}) {
+        const risposta = await fetch(`/console/conversazioni${via}`, {
+          ...opzioni,
+          headers: {
+            authorization: `Bearer ${chiave}`,
+            ...(opzioni.body ? { "content-type": "application/json" } : {}),
+          },
+        });
+        let letto = null;
+        try {
+          letto = await risposta.json();
+        } catch (_errore) {
+          /* Senza corpo. */
+        }
+        if (!risposta.ok) {
+          const male = new Error(letto?.errore || `il centralino ha risposto ${risposta.status}`);
+          male.stato = risposta.status;
+          throw male;
+        }
+        return letto || {};
+      }
+
+      const quando = (millesimi) => {
+        if (!millesimi) return "";
+        const data = new Date(Number(millesimi));
+        const oggi = new Date();
+        const stessoGiorno = data.toDateString() === oggi.toDateString();
+        return stessoGiorno
+          ? data.toLocaleTimeString("it", { hour: "2-digit", minute: "2-digit" })
+          : data.toLocaleDateString("it", { day: "numeric", month: "short" });
+      };
+
+      const testo = (dove, cosa) => {
+        dove.textContent = cosa == null ? "" : String(cosa);
+      };
+
+      function mostra(quale) {
+        porta.hidden = quale !== "porta";
+        elenco.hidden = quale !== "elenco";
+        conversazione.hidden = quale !== "conversazione";
+        q("indietro").hidden = quale !== "conversazione";
+        q("dimentica").hidden = quale === "porta";
+        q("conta").hidden = quale !== "elenco";
+      }
+
+      function inciampo(errore) {
+        if (errore?.stato === 403) {
+          chiave = "";
+          try {
+            localStorage.removeItem(CHIAVE);
+          } catch (_e) {
+            /* pazienza */
+          }
+          const male = q("male");
+          testo(male, "La chiave non va bene.");
+          male.hidden = false;
+          mostra("porta");
+          return;
+        }
+        const male = q("male");
+        testo(male, errore?.message || "qualcosa non ha funzionato");
+        male.hidden = false;
+      }
+
+      /* ─── L'elenco ─────────────────────────────────────────────────── */
+
+      async function disegnaElenco() {
+        const { conversazioni } = await chiama("");
+        const nonLetti = conversazioni.reduce(
+          (somma, una) => somma + Number(una.non_letti || 0),
+          0,
+        );
+        testo(q("conta"), nonLetti ? `${nonLetti} da leggere` : `${conversazioni.length} linee`);
+
+        elenco.replaceChildren();
+        if (!conversazioni.length) {
+          const vuoto = document.createElement("p");
+          vuoto.className = "vuoto";
+          testo(vuoto, "Nessuna conversazione. Buon segno.");
+          elenco.append(vuoto);
+          return;
+        }
+
+        const lista = document.createElement("ul");
+        lista.className = "linee";
+        for (const una of conversazioni) {
+          const voce = document.createElement("li");
+          const bottone = document.createElement("button");
+          bottone.addEventListener("click", () => apri(una));
+
+          const capo = document.createElement("div");
+          capo.className = "capo";
+          const nome = document.createElement("strong");
+          testo(nome, una.nome || una.id.slice(0, 13));
+          capo.append(nome);
+          if (Number(una.non_letti) > 0) {
+            const bollo = document.createElement("span");
+            bollo.className = "bollo";
+            testo(bollo, una.non_letti);
+            capo.append(bollo);
+          }
+          const ora = document.createElement("span");
+          ora.className = "quando";
+          testo(ora, quando(una.ultimo_il));
+          capo.append(ora);
+
+          const note = document.createElement("div");
+          note.className = "note mono";
+          testo(
+            note,
+            [una.id.slice(0, 13), una.versione, una.ha && `HA ${una.ha}`, una.lingua]
+              .filter(Boolean)
+              .join(" · "),
+          );
+
+          const ultimo = document.createElement("div");
+          ultimo.className = "ultimo";
+          testo(ultimo, una.ultimo || "—");
+
+          bottone.append(capo, note, ultimo);
+          voce.append(bottone);
+          lista.append(voce);
+        }
+        elenco.append(lista);
+      }
+
+      /* ─── Una conversazione ────────────────────────────────────────── */
+
+      function unDetto(messaggio) {
+        const riga = document.createElement("div");
+        riga.className = `detto ${messaggio.da === "console" ? "console" : "casa"}`;
+        testo(riga, messaggio.testo);
+        const ora = document.createElement("span");
+        ora.className = "ora";
+        testo(ora, quando(messaggio.scritto_il));
+        riga.append(ora);
+        return riga;
+      }
+
+      async function apri(una) {
+        aperta = una;
+        fino = 0;
+        /* Corto, come nell'elenco: le prime tredici lettere bastano a
+         * riconoscerla, e l'intero — trentasette lettere — butterebbe fuori
+         * dalla riga il bottone che cancella. Chi lo vuole tutto lo trova
+         * tenendo premuto. */
+        const chi = q("chi");
+        testo(chi, una.id.slice(0, 13));
+        chi.title = una.id;
+        testo(
+          q("note-chi"),
+          [una.nome, una.versione, una.ha && `HA ${una.ha}`, una.lingua]
+            .filter(Boolean)
+            .join(" · "),
+        );
+        q("filo").replaceChildren();
+        mostra("conversazione");
+        await aggiornaIlFilo();
+      }
+
+      async function aggiornaIlFilo() {
+        if (!aperta) return;
+        const { messaggi } = await chiama(`/${aperta.id}?dopo=${fino}`);
+        if (!messaggi.length) return;
+        const filo = q("filo");
+        for (const uno of messaggi) filo.append(unDetto(uno));
+        fino = messaggi[messaggi.length - 1].id;
+        filo.lastElementChild?.scrollIntoView({ block: "nearest" });
+      }
+
+      async function manda() {
+        const casella = q("risposta");
+        const detto = casella.value.trim();
+        if (!detto || !aperta) return;
+        q("manda").disabled = true;
+        try {
+          await chiama(`/${aperta.id}`, { method: "POST", body: JSON.stringify({ testo: detto }) });
+          casella.value = "";
+          await aggiornaIlFilo();
+        } catch (errore) {
+          inciampo(errore);
+        } finally {
+          q("manda").disabled = false;
+        }
+      }
+
+      async function butta() {
+        if (!aperta) return;
+        if (!confirm("Cancellare questa conversazione? Sparisce anche dalla casa.")) return;
+        try {
+          await chiama(`/${aperta.id}`, { method: "DELETE" });
+          aperta = null;
+          mostra("elenco");
+          await disegnaElenco();
+        } catch (errore) {
+          inciampo(errore);
+        }
+      }
+
+      /* ─── Il giro ──────────────────────────────────────────────────── */
+
+      async function unGiro() {
+        if (document.hidden || !chiave) return;
+        try {
+          if (aperta) await aggiornaIlFilo();
+          else if (!elenco.hidden) await disegnaElenco();
+        } catch (errore) {
+          inciampo(errore);
+        }
+      }
+
+      async function entra(quale) {
+        chiave = quale;
+        try {
+          await disegnaElenco();
+        } catch (errore) {
+          inciampo(errore);
+          return;
+        }
+        try {
+          localStorage.setItem(CHIAVE, chiave);
+        } catch (_errore) {
+          /* pazienza */
+        }
+        q("male").hidden = true;
+        mostra("elenco");
+      }
+
+      q("entra").addEventListener("click", () => entra(q("chiave").value.trim()));
+      q("chiave").addEventListener("keydown", (evento) => {
+        if (evento.key === "Enter") entra(q("chiave").value.trim());
+      });
+      q("manda").addEventListener("click", manda);
+      q("butta").addEventListener("click", butta);
+      q("indietro").addEventListener("click", async () => {
+        aperta = null;
+        mostra("elenco");
+        await unGiro();
+      });
+      q("dimentica").addEventListener("click", () => {
+        chiave = "";
+        aperta = null;
+        try {
+          localStorage.removeItem(CHIAVE);
+        } catch (_errore) {
+          /* pazienza */
+        }
+        q("chiave").value = "";
+        mostra("porta");
+      });
+
+      mostra(chiave ? "elenco" : "porta");
+      if (chiave) entra(chiave);
+      giro = setInterval(unGiro, OGNI);
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) unGiro();
+      });
+    </script>
+  </body>
+</html>

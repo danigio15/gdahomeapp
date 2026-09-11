@@ -178,7 +178,7 @@ export class Sportello {
  * `content-length` lo scrive chi bussa, quindi da solo non difende niente: si
  * conta quello che arriva davvero, e alla prima riga oltre il tetto si chiude
  * invece di tenere in memoria un fiume. */
-async function byteDi(richiesta, massimo) {
+export async function byteDi(richiesta, massimo) {
   const dichiarato = Number(richiesta.headers["content-length"] || 0);
   if (dichiarato > massimo)
     throw new RichiestaSbagliata("troppo_grande", "Il corpo e' troppo grande.", 413);
@@ -195,7 +195,7 @@ async function byteDi(richiesta, massimo) {
   return Buffer.concat(pezzi);
 }
 
-async function corpoDi(richiesta) {
+export async function corpoDi(richiesta) {
   const testo = (await byteDi(richiesta, CORPO_MASSIMO)).toString("utf8");
   if (!testo.trim()) return {};
   try {

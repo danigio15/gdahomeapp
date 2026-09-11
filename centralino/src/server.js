@@ -12,6 +12,7 @@
  * filo, verso la casa, che e' l'unica che lo puo' verificare.
  */
 
+import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 
 import { CASA_VALIDA } from "./case.js";
@@ -21,11 +22,44 @@ import { json } from "./sportello.js";
 
 const IMPRONTA_VALIDA = /^[0-9a-f]{64}$/;
 
+/* La console della chat: una pagina sola, servita da qui.
+ *
+ * Sta sulla macchina e non porta niente da fuori. Si legge dal disco al primo
+ * che la chiede e poi resta in memoria: sono venti kilobyte, e chi apre la
+ * console la apre dieci volte al giorno. */
+const PAGINA_DELLA_CONSOLE = new URL("../console/index.html", import.meta.url);
+let paginaDellaConsole;
+
+function laConsole(risposta) {
+  try {
+    if (paginaDellaConsole === undefined) paginaDellaConsole = readFileSync(PAGINA_DELLA_CONSOLE);
+  } catch (_errore) {
+    paginaDellaConsole = null;
+  }
+  if (!paginaDellaConsole) {
+    json(risposta, { errore: "la console non c'e'" }, 404);
+    return;
+  }
+  risposta.writeHead(200, {
+    "content-type": "text/html; charset=utf-8",
+    "cache-control": "no-store",
+    "content-length": paginaDellaConsole.length,
+  });
+  risposta.end(paginaDellaConsole);
+}
+
 export const rotta = (richiesta) => new URL(richiesta.url || "/", "http://centralino").pathname;
 
-export function costruisciIlServer({ centralino, sportello = null, acceso = Date.now() }) {
+export function costruisciIlServer({
+  centralino,
+  sportello = null,
+  chat = null,
+  registro = null,
+  acceso = Date.now(),
+}) {
   const server = createServer((richiesta, risposta) => {
-    const via = rotta(richiesta);
+    const indirizzo = new URL(richiesta.url || "/", "http://centralino");
+    const via = indirizzo.pathname;
 
     /* `/salute` dice tre cose, e sono le tre che servono quando qualcosa non
      * va: che e' vivo, da quanto — un numero piccolo dopo che nessuno ha
@@ -38,34 +72,36 @@ export function costruisciIlServer({ centralino, sportello = null, acceso = Date
         case: centralino.quanteCase(),
         telefoni: centralino.quantiTelefoni(),
         segnalazioni: Boolean(sportello?.pronto),
+        chat: chat ? { linee: chat.archivio.quanteLinee(), console: chat.consoleAperta } : false,
       });
       return;
     }
 
-    /* Lo sportello: le vie che non sono del filo. E' lento per mestiere — un
-     * corpo da leggere, GitHub da aspettare — quindi la risposta arriva dopo,
-     * e il 404 si dice solo se la via non era sua. */
-    if (sportello) {
-      sportello
-        .forseServe(richiesta, risposta, via)
-        .then((suo) => {
-          if (!suo) json(risposta, { errore: "qui non c'e' niente" }, 404);
-        })
-        .catch((errore) => {
-          if (risposta.headersSent) {
-            risposta.end();
-            return;
-          }
-          json(
-            risposta,
-            { errore: "centralino", spiegazione: String(errore?.message || errore) },
-            500,
-          );
-        });
+    /* La pagina della console. Le vie `/console/conversazioni…` sono della
+     * chat e passano di sotto: questa e' soltanto la pagina che le chiama. */
+    if ((via === "/console" || via === "/console/") && richiesta.method === "GET") {
+      laConsole(risposta);
       return;
     }
 
-    json(risposta, { errore: "qui non c'e' niente" }, 404);
+    /* Le porte lente, una in fila all'altra: la chat e lo sportello leggono un
+     * corpo, aspettano un archivio o GitHub, e la risposta arriva dopo. La
+     * prima che riconosce la via risponde; se nessuna la riconosce e' un 404.
+     *
+     * L'errore che scappa da qui non racconta niente a chi bussa: il motivo
+     * vero finisce nel registro, non nella risposta. */
+    (async () => {
+      if (chat && (await chat.forseServe(richiesta, risposta, indirizzo))) return;
+      if (sportello && (await sportello.forseServe(richiesta, risposta, via))) return;
+      json(risposta, { errore: "qui non c'e' niente" }, 404);
+    })().catch((errore) => {
+      registro?.errore?.(`una porta e' inciampata: ${errore?.stack || errore}`);
+      if (risposta.headersSent) {
+        risposta.end();
+        return;
+      }
+      json(risposta, { errore: "centralino" }, 500);
+    });
   });
 
   server.on("upgrade", (richiesta, socket) => {
