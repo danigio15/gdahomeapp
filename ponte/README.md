@@ -151,7 +151,7 @@ Questa casa, per quel centralino, e' un nome di 128 bit e un segreto di 256
 presi dal caso alla prima parola scritta, tenuti in `/data/chat.json`: niente
 entita', niente indirizzi, nessun identificativo di questo Home Assistant, e
 il segreto non esce dal ponte. Insieme alle parole parte un'etichetta di
-quaranta caratteri — `plancia 1.4.19 ponte 0.16.0 app 1.0.2` — che e' quello
+quaranta caratteri — `plancia 1.4.19 ponte 0.17.0 app 1.0.2` — che e' quello
 che chi risponde chiederebbe per primo. L'**app** usa la stessa chat, con
 `ponte/chat/leggi` e `ponte/chat/scrivi`; un allegato no, e si dice dove
 metterlo.

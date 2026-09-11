@@ -419,6 +419,13 @@ perché.
 Prima di tutto le cose arrivate per ultime, che sono quelle da bocciare subito
 se non funzionano:
 
+- **L'Assistenza, e la chat della plancia.** Nell'app, sezione
+  **Assistenza**: scrivi una frase e premi manda. Non deve dire niente di
+  rosso — vuol dire che il centralino della chat ha risposto — e la frase
+  resta lì anche chiudendo e riaprendo l'app. La stessa conversazione si apre
+  dalla plancia, dalla sua Configurazione: le stesse parole, perché sotto è
+  la stessa chat. La graffetta 📎 qui non c'è più, e non è una dimenticanza:
+  questa chat passa parole, e una foto si allega a una segnalazione.
 - **Menu → Configurazione.** Deve comparire la pagina **CONFIGURAZIONE** della
   dashboard, con la sua insegna e la versione della plancia — **v1.4.19**, e se
   ne dice una più vecchia il ponte non è aggiornato — e sotto le sue
