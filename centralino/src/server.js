@@ -17,36 +17,54 @@ import { createServer } from "node:http";
 import { CASA_VALIDA } from "./case.js";
 import { MESSAGGIO_MASSIMO } from "./centralino.js";
 import { accetta, eUnaSalita } from "./presa.js";
+import { json } from "./sportello.js";
 
 const IMPRONTA_VALIDA = /^[0-9a-f]{64}$/;
 
-function json(risposta, corpo, stato = 200) {
-  const testo = JSON.stringify(corpo);
-  risposta.writeHead(stato, {
-    "content-type": "application/json; charset=utf-8",
-    "cache-control": "no-store",
-    "content-length": Buffer.byteLength(testo),
-    /* Il centralino lo chiama anche una versione web dell'app, da un'origine
-     * qualunque. Non c'e' niente da difendere con l'origine: qui non ci sono
-     * biscotti e nessuna autorita' implicita — chi bussa senza sapere niente
-     * non ottiene niente. */
-    "access-control-allow-origin": "*",
-  });
-  risposta.end(testo);
-}
-
 export const rotta = (richiesta) => new URL(richiesta.url || "/", "http://centralino").pathname;
 
-export function costruisciIlServer({ centralino }) {
+export function costruisciIlServer({ centralino, sportello = null, acceso = Date.now() }) {
   const server = createServer((richiesta, risposta) => {
-    if (rotta(richiesta) === "/salute" && richiesta.method === "GET") {
+    const via = rotta(richiesta);
+
+    /* `/salute` dice tre cose, e sono le tre che servono quando qualcosa non
+     * va: che e' vivo, da quanto — un numero piccolo dopo che nessuno ha
+     * toccato niente vuol dire che si e' riacceso da solo — e se le
+     * segnalazioni hanno il loro gettone. */
+    if (via === "/salute" && richiesta.method === "GET") {
       json(risposta, {
         vivo: true,
+        acceso_da: Math.round((Date.now() - acceso) / 1000),
         case: centralino.quanteCase(),
         telefoni: centralino.quantiTelefoni(),
+        segnalazioni: Boolean(sportello?.pronto),
       });
       return;
     }
+
+    /* Lo sportello: le vie che non sono del filo. E' lento per mestiere — un
+     * corpo da leggere, GitHub da aspettare — quindi la risposta arriva dopo,
+     * e il 404 si dice solo se la via non era sua. */
+    if (sportello) {
+      sportello
+        .forseServe(richiesta, risposta, via)
+        .then((suo) => {
+          if (!suo) json(risposta, { errore: "qui non c'e' niente" }, 404);
+        })
+        .catch((errore) => {
+          if (risposta.headersSent) {
+            risposta.end();
+            return;
+          }
+          json(
+            risposta,
+            { errore: "centralino", spiegazione: String(errore?.message || errore) },
+            500,
+          );
+        });
+      return;
+    }
+
     json(risposta, { errore: "qui non c'e' niente" }, 404);
   });
 

@@ -14,3 +14,19 @@ momento in cui divergono. La copia si aggiorna cosi':
 ```bash
 cp ponte/src/{presa,segreti,archivio}.js centralino/src/
 ```
+
+## E uno preso dalla nuvola
+
+`segnalazioni.js` e' una copia identica di `../../nuvola/src/segnalazioni.js`,
+e la ragione e' un'altra: per un po' la stessa cosa gira in due posti — il
+Worker per le case che non hanno ancora aggiornato, la macchina per le altre —
+e due copie che divergono vorrebbero dire due comportamenti diversi a seconda
+di dove una casa e' finita.
+
+```bash
+cp nuvola/src/segnalazioni.js centralino/src/
+```
+
+Quando il Worker si spegnera', questa copia diventa l'originale e la riga qui
+sopra si cancella.
+
