@@ -33,6 +33,7 @@ import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 import { impronta, stessoSegreto } from "./segreti.js";
+import { tagliaBene } from "./testo.js";
 import { corpoDi } from "./sportello.js";
 
 export const LIMITI = Object.freeze({
@@ -89,8 +90,12 @@ CREATE INDEX IF NOT EXISTS messaggi_per_linea ON messaggi (linea, id);
 CREATE INDEX IF NOT EXISTS linee_per_visita ON linee (vista_il DESC);
 `;
 
+/* Il taglio non spezza un emoji: `slice` conta le unita' UTF-16, e mezza
+ * coppia scritta come UTF-8 diventa il rombo col punto di domanda — nel JSON
+ * che parte e nell'archivio che lo conserva. Sta in `testo.js` insieme al
+ * perche'. */
 const testoPulito = (valore, massimo) =>
-  typeof valore === "string" ? valore.trim().slice(0, massimo) : "";
+  typeof valore === "string" ? tagliaBene(valore.trim(), massimo) : "";
 
 /* ─── L'archivio ─────────────────────────────────────────────────────────── */
 

@@ -73,10 +73,29 @@ export function pesoLeggibile(byte) {
   return `${(byte / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-const testo = (valore, massimo) =>
-  String(valore ?? "")
-    .trim()
-    .slice(0, massimo);
+/* Tagliare senza spezzare un emoji.
+ *
+ * `slice` conta le unita' UTF-16 e un emoji ne occupa due: un titolo che
+ * finisce esattamente sul limite lascerebbe mezza coppia, che non e' un
+ * carattere. Il JSON la scappa e la porta fin la' intatta — in rete non si
+ * rompe niente — e a rompersi e' quello che ne resta scritto nella issue: il
+ * rombo col punto di domanda, per sempre.
+ *
+ * Qui si contano i punti di codice e non i gruppi, al contrario di quello che
+ * fa la chat: questo file gira anche su Cloudflare, e `Intl.Segmenter` non e'
+ * detto che ci sia. Senza i gruppi una bandiera tagliata a meta' diventa due
+ * lettere, che e' brutto ma e' un carattere vero; con `slice` diventava un
+ * buco. */
+const testo = (valore, massimo) => {
+  const pulito = String(valore ?? "").trim();
+  if (pulito.length <= massimo) return pulito;
+  let fuori = "";
+  for (const pezzo of Array.from(pulito)) {
+    if (fuori.length + pezzo.length > massimo) break;
+    fuori += pezzo;
+  }
+  return fuori;
+};
 
 /* ─── Le forme ───────────────────────────────────────────────────────────── */
 

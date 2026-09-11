@@ -263,6 +263,21 @@
         align-items: flex-end;
       }
 
+      .emoji {
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        margin-bottom: 8px;
+      }
+
+      .emoji button {
+        flex: none;
+        padding: 4px 8px;
+        font-size: 1.2rem;
+        line-height: 1.1;
+      }
+
       .fila textarea {
         flex: 1;
       }
@@ -311,6 +326,7 @@
           </div>
           <div id="note-chi" class="note"></div>
           <div id="filo" class="filo"></div>
+          <div id="emoji" class="emoji"></div>
           <div class="fila">
             <textarea id="risposta" placeholder="Rispondi…"></textarea>
             <button id="manda" class="forte">Manda</button>
@@ -500,6 +516,7 @@
             .join(" · "),
         );
         q("filo").replaceChildren();
+        disegnaGliEmoji();
         mostra("conversazione");
         await aggiornaIlFilo();
       }
@@ -512,6 +529,48 @@
         for (const uno of messaggi) filo.append(unDetto(uno));
         fino = messaggi[messaggi.length - 1].id;
         filo.lastElementChild?.scrollIntoView({ block: "nearest" });
+      }
+
+      /* Quelli che servono davvero rispondendo a qualcuno, e nient'altro: la
+       * tastiera del telefono ce li ha tutti, ma da computer no, e una faccia
+       * al posto di un «ok» secco cambia il tono di una risposta. Si infilano
+       * dove sta il cursore, non in fondo. */
+      const EMOJI = [
+        "\u{1F44D}",
+        "\u2705",
+        "\u274C",
+        "\u{1F642}",
+        "\u{1F64F}",
+        "\u26A0\uFE0F",
+        "\u{1F527}",
+        "\u{1F4F7}",
+        "\u23F3",
+        "\u{1F504}",
+        "\u{1F4A1}",
+        "\u{1F389}",
+      ];
+
+      function infila(simbolo) {
+        const casella = q("risposta");
+        const da = casella.selectionStart ?? casella.value.length;
+        const a = casella.selectionEnd ?? da;
+        casella.value = casella.value.slice(0, da) + simbolo + casella.value.slice(a);
+        const dopo = da + simbolo.length;
+        casella.setSelectionRange(dopo, dopo);
+        casella.focus();
+      }
+
+      function disegnaGliEmoji() {
+        const riga = q("emoji");
+        if (riga.childElementCount) return;
+        for (const simbolo of EMOJI) {
+          const bottone = document.createElement("button");
+          bottone.type = "button";
+          testo(bottone, simbolo);
+          bottone.title = `Metti ${simbolo}`;
+          bottone.addEventListener("click", () => infila(simbolo));
+          riga.append(bottone);
+        }
       }
 
       async function manda() {

@@ -21,7 +21,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { Chat, ChatHaDettoNo, unaIdentita } from "../src/chat.js";
+import { Chat, ChatHaDettoNo, TESTO_MASSIMO, unaIdentita } from "../src/chat.js";
 
 const ZITTO = { info() {}, attenzione() {}, errore() {} };
 
@@ -319,6 +319,52 @@ test("dimenticare cancella dal centralino, non solo da qua", async () => {
     chat.dati.messaggi = [{ id: 1, da: "casa", testo: "resta", scritto_il: 1 }];
     await assert.rejects(() => chat.dimentica());
     assert.equal(chat.messaggi.length, 1);
+  } finally {
+    via();
+  }
+});
+
+test("un nome con un emoji non spegne la chat, e arriva nel corpo", async () => {
+  const centralino = centralinoFinto();
+  const { chat, via } = unaChat(centralino, { giaAperta: true });
+  try {
+    await chat.scrivi("Ciao", { nome: "Giovanni 🙂" });
+
+    /* Il nome per davvero viaggia nel **corpo**, e li' l'emoji ci sta. */
+    const scritta = centralino.chiamate.find((una) => una.metodo === "POST");
+    assert.equal(scritta.corpo.nome, "Giovanni 🙂");
+
+    /* Nelle intestazioni no, e non e' pignoleria: un'intestazione HTTP porta
+     * un byte per carattere, e `fetch` su un nome con un emoji non ci prova
+     * nemmeno — solleva. Il ponte lo raccontava come «Centralino non
+     * raggiungibile», e un emoji nel nome spegneva la chat tutta. */
+    for (const una of centralino.chiamate) {
+      for (const [nome, valore] of Object.entries(una.intestazioni || {})) {
+        for (const pezzo of String(valore ?? "")) {
+          assert.ok(
+            pezzo.codePointAt(0) <= 0xff,
+            `l'intestazione «${nome}» porta un carattere che non ci sta`,
+          );
+        }
+      }
+    }
+
+    /* E il giro in cui si rompeva — la rilettura, che rimanda le note — passa. */
+    const detta = await chat.conversazione();
+    assert.equal(detta.name, "Giovanni 🙂");
+  } finally {
+    via();
+  }
+});
+
+test("un messaggio con emoji non si spezza sul limite", async () => {
+  const centralino = centralinoFinto();
+  const { chat, via } = unaChat(centralino, { giaAperta: true });
+  try {
+    await chat.scrivi("a".repeat(TESTO_MASSIMO - 1) + "🙏");
+    const scritta = centralino.chiamate.find((una) => una.metodo === "POST");
+    assert.ok(!scritta.corpo.testo.includes("�"), "e' partito mezzo emoji");
+    assert.equal(scritta.corpo.testo, "a".repeat(TESTO_MASSIMO - 1));
   } finally {
     via();
   }

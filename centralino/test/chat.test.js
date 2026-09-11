@@ -335,3 +335,90 @@ test("la pagina della console si apre, e non chiede la chiave per aprirsi", asyn
     await b.spegni();
   }
 });
+
+/* ─── Gli emoji ─────────────────────────────────────────────────────────── */
+
+/* Il rombo col punto di domanda: quello che compare quando mezza coppia UTF-16
+ * viene scritta come UTF-8. E' il segno che un taglio ha spezzato un emoji. */
+const ROTTO = "�";
+
+test("un emoji va e torna intero, anche quelli composti", async () => {
+  const b = await banco();
+  try {
+    /* Un pollice col colore della pelle, una bandiera, una famiglia: tre
+     * emoji che sono piu' punti di codice tenuti insieme da giunture. */
+    const detto = "Grazie 🙏 tutto ok 👍🏽 dall'Italia 🇮🇹 con la famiglia 👨‍👩‍👧‍👦";
+    await b.casa("", { metodo: "POST", corpo: { testo: detto } });
+    const letti = await (await b.casa()).json();
+    assert.equal(letti.messaggi[0].testo, detto);
+
+    /* E la console lo vede uguale. */
+    const elenco = await (await b.console()).json();
+    assert.equal(elenco.conversazioni[0].ultimo, detto);
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("un emoji sul limite viene lasciato fuori intero, non spezzato", async () => {
+  const b = await banco();
+  try {
+    /* Un testo che arriva a un carattere dal tetto, e poi un emoji che ne
+     * occupa due: con `slice` ne passava mezzo. */
+    const detto = "a".repeat(LIMITI.testo - 1) + "🙏";
+    await b.casa("", { metodo: "POST", corpo: { testo: detto } });
+    const { messaggi } = await (await b.casa()).json();
+    const arrivato = messaggi[0].testo;
+    assert.ok(!arrivato.includes(ROTTO), "e' arrivato mezzo emoji");
+    assert.ok(arrivato.length <= LIMITI.testo, "ha sfondato il tetto");
+    assert.equal(arrivato, "a".repeat(LIMITI.testo - 1));
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("nemmeno il nome e l'anteprima spezzano un emoji", async () => {
+  const b = await banco();
+  try {
+    /* Il nome viaggia nel **corpo**, non in un'intestazione: un'intestazione
+     * HTTP porta un byte per carattere, e un emoji non ci entra — `fetch` non
+     * ci prova nemmeno e solleva. Il ponte lo manda cosi' quando scrive, ed e'
+     * l'unico momento in cui il nome serve. */
+    await b.casa("", {
+      metodo: "POST",
+      corpo: {
+        testo: "b".repeat(159) + "🎉",
+        nome: "c".repeat(LIMITI.nome - 1) + "🙂",
+      },
+    });
+    const { conversazioni } = await (await b.console()).json();
+    assert.ok(!conversazioni[0].nome.includes(ROTTO), "mezzo emoji nel nome");
+    assert.ok(!conversazioni[0].ultimo.includes(ROTTO), "mezzo emoji nell'anteprima");
+    assert.equal(conversazioni[0].nome, "c".repeat(LIMITI.nome - 1));
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("un nome tutto emoji arriva intero, se ci sta", async () => {
+  const b = await banco();
+  try {
+    await b.casa("", { metodo: "POST", corpo: { testo: "Ciao", nome: "Giovanni 🙂" } });
+    const { conversazioni } = await (await b.console()).json();
+    assert.equal(conversazioni[0].nome, "Giovanni 🙂");
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("la console ha gli emoji da mettere in una risposta", async () => {
+  const b = await banco();
+  try {
+    const pagina = await (await fetch(`${b.base}/console/`)).text();
+    /* Non un elenco a caso: quelli che servono rispondendo. */
+    assert.match(pagina, /const EMOJI = \[/);
+    assert.match(pagina, /selectionStart/, "vanno dove sta il cursore, non in fondo");
+  } finally {
+    await b.spegni();
+  }
+});

@@ -21,7 +21,7 @@ const CENTRALINO = join(QUI, "..", "src");
 const PONTE = join(QUI, "..", "..", "ponte", "src");
 const NUVOLA = join(QUI, "..", "..", "nuvola", "src");
 
-const COPIATI = ["presa.js", "segreti.js", "archivio.js", "registro.js"];
+const COPIATI = ["presa.js", "segreti.js", "archivio.js", "registro.js", "testo.js"];
 
 test("le copie prese dal ponte sono ancora identiche", () => {
   for (const nome of COPIATI) {

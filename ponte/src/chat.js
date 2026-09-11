@@ -35,6 +35,7 @@ import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 
 import { Archivio } from "./archivio.js";
+import { tagliaBene } from "./testo.js";
 
 /* Il centralino della chat della dashboard. E' scritto qui come sta scritto
  * in `const.py` dell'integrazione — `CHAT_CENTRALINO` — e non e' quello di
@@ -67,6 +68,17 @@ export class ChatHaDettoNo extends Error {
  * Sedici byte sono 128 bit: il nome della casa non si indovina, e non c'e'
  * niente da indovinare che valga la pena. Il segreto e' il doppio, e serve a
  * dimostrare al centralino che chi bussa e' la stessa casa di ieri. */
+/* Quello che ci sta in un'intestazione HTTP: un byte per carattere, cioe'
+ * niente sopra U+00FF. Se non ci sta, torna vuoto — meglio non dire niente che
+ * dire una cosa storpiata o non partire affatto. */
+export function perUnIntestazione(valore) {
+  const testo = String(valore ?? "");
+  for (const pezzo of testo) {
+    if (pezzo.codePointAt(0) > 0xff) return "";
+  }
+  return testo;
+}
+
 export function unaIdentita() {
   return {
     casa: `casa_${randomBytes(16).toString("hex")}`,
@@ -161,9 +173,7 @@ export class Chat {
       opened: this.aperta,
       name: String(this.dati.nome || ""),
       unread: nonLetti.length,
-      preview: String(ultima.testo || "")
-        .trim()
-        .slice(0, 200),
+      preview: tagliaBene(String(ultima.testo || "").trim(), 200),
       written_at: Number(ultima.scritto_il || 0),
       messages: this.messaggi.length,
     };
@@ -215,12 +225,10 @@ export class Chat {
     if (!this.accesa) {
       throw new ChatHaDettoNo("disabled", "La chat non e' disponibile su questa plancia.");
     }
-    const pulito = String(testo ?? "")
-      .trim()
-      .slice(0, TESTO_MASSIMO);
+    const pulito = tagliaBene(String(testo ?? "").trim(), TESTO_MASSIMO);
     if (!pulito) throw new ChatHaDettoNo("empty", "Non c'e' niente da mandare.");
     if (nome) {
-      this.dati.nome = String(nome).slice(0, NOME_MASSIMO);
+      this.dati.nome = tagliaBene(nome, NOME_MASSIMO);
       this.archivio.salva();
     }
     /* La versione dell'app resta scritta qui, e non vale solo per questo
@@ -228,7 +236,7 @@ export class Chat {
      * e una nota che parte solo insieme a una frase verrebbe cancellata dal
      * primo giro di rilettura. */
     if (app && String(app) !== String(this.dati.app || "")) {
-      this.dati.app = String(app).slice(0, ETICHETTA_MASSIMA);
+      this.dati.app = tagliaBene(app, ETICHETTA_MASSIMA);
       this.archivio.salva();
     }
     const identita = this._identita();
@@ -438,7 +446,18 @@ export class Chat {
        * invece di far credere a chi risponde una versione che non esiste. */
       "x-ha": "",
       "x-lingua": String(note.lingua || this.lingua || ""),
-      "x-nome": String(note.nome || ""),
+      /* Il nome nell'intestazione solo se ci sta.
+       *
+       * Un'intestazione HTTP porta un byte per carattere, e chi si fa chiamare
+       * «Giovanni 🙂» ne ha uno che non ci entra: `fetch` non ci prova nemmeno,
+       * solleva, e il ponte lo raccontava come «Centralino non
+       * raggiungibile». Un emoji nel nome spegneva la chat, tutta, per sempre.
+       *
+       * Non lo si taglia e non lo si storpia: lo si lascia fuori. Il nome
+       * viaggia per davvero nel **corpo**, quando si scrive, e il centralino
+       * tiene quello di ieri quando arriva vuoto — quindi ometterlo su una
+       * rilettura non perde niente. */
+      "x-nome": perUnIntestazione(note.nome),
     };
     if (corpo) intestazioni["content-type"] = "application/json";
     let risposta;
