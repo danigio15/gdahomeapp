@@ -1087,6 +1087,36 @@ try {
   await laConfig.evaluate(() => document.getElementById("editor-modal")?.remove());
   await attendi(900);
 
+  /* La barra della plancia «a scomparsa», che e' il caso vero.
+   *
+   * Qui dentro la barra e' **fissa**, che e' il difetto della dashboard; su un
+   * telefono chi la mette a scomparsa — dalla tessera «Barra di navigazione»,
+   * due dita sopra — non riusciva piu' a uscire dalla Configurazione: il
+   * ritorno alla plancia tocca una linguetta di quella barra, e una barra a
+   * scomparsa **che noi abbiamo nascosto** quel tocco non lo prende.
+   *
+   * La si mette a scomparsa come la mette la sua tessera — la chiave nel
+   * deposito locale, e l'avviso che la plancia ascolta da se' — e il ritorno
+   * si prova cosi'. Senza questo passo il collaudo era verde e il telefono no.
+   */
+  racconta("metto la barra della plancia «a scomparsa», come su un telefono");
+  await laConfig.evaluate(() => {
+    localStorage.setItem("cd_navbar_mode", "auto");
+    window.dispatchEvent(new Event("dashboardmodern:persistence-restored"));
+  });
+  await attendi(700);
+
+  /* E si scrive nell'indirizzo l'ordine «apri la Config», come fa il telefono.
+   *
+   * Sul telefono, se la chiamata diretta non riesce al primo colpo, il ripiego
+   * porta il riquadro su `…#gdahome-config`. Quell'ordine serve **una volta**:
+   * restando scritto, ogni ricarica riapriva la Configurazione, e chi dal menu
+   * tornava alla Plancia si rivedeva la Config senza capire da dove. */
+  await laConfig.evaluate(() => {
+    location.hash = "gdahome-config";
+  });
+  await attendi(300);
+
   /* Dalla Configurazione alla Plancia: la plancia torna dov'era, e la pagina
    * Config si chiude come si chiuderebbe toccando un'altra linguetta della
    * sua barra. */
@@ -1102,8 +1132,26 @@ try {
     () => !document.getElementById("page-config")?.classList.contains("active"),
   );
   if (!laConfigSiEChiusa) {
-    throw new Error("la plancia non e' tornata dalla Configurazione");
+    throw new Error(
+      "la plancia non e' tornata dalla Configurazione (con la barra «a scomparsa»)",
+    );
   }
+  /* E l'ordine nell'indirizzo se n'e' andato con l'uscita: se restasse, la
+   * prima ricarica della pagina riaprirebbe la Configurazione. */
+  const restaLOrdine = await laConfig.evaluate(() => /gdahome-config/.test(location.hash));
+  if (restaLOrdine) {
+    throw new Error(
+      "l'indirizzo tiene ancora «apri la Config»: alla prima ricarica tornerebbe la Config",
+    );
+  }
+
+  /* La barra torna fissa, com'era: quello che viene dopo la guarda, e una
+   * barra a scomparsa si nasconde da se' dopo quattro secondi. */
+  await laConfig.evaluate(() => {
+    localStorage.setItem("cd_navbar_mode", "fixed");
+    window.dispatchEvent(new Event("dashboardmodern:persistence-restored"));
+  });
+  await attendi(700);
   /* E la barra della plancia e' tornata con lei. */
   const laBarraETornata = await laConfig.evaluate(() => {
     const barra = document.querySelector("nav.tabs.bottom-nav-bar");

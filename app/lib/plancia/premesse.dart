@@ -194,13 +194,37 @@ class Premesse {
       '}'
       'if(prove<120)setTimeout(function(){apri(prove+1);},60);'
       '};'
+      /* «Apri la Config» scritto nell'indirizzo e' un **ordine**, non uno
+         stato: si esegue una volta e si cancella.
+         Lasciandolo li', ogni ricarica della pagina riapriva la
+         Configurazione — e chi dal menu tornava alla Plancia si vedeva
+         ancora la Config senza capire perche'. Quell'indirizzo col
+         cancelletto lo scrive il ripiego del telefono
+         (`riquadro/sul_telefono.dart`) quando la chiamata diretta non riesce
+         al primo colpo: serve una volta, non per sempre. */
+      'var scordaLIndirizzo=function(){'
+      'try{if(/gdahome-config/.test(location.hash)&&history.replaceState)'
+      'history.replaceState(null,"",location.pathname+location.search);}'
+      'catch(male){}'
+      '};'
       'window.gdahomeApriLaConfig=function(){apri(0);setTimeout(guarda,0);};'
-      'window.gdahomeTornaDallaConfig=function(){'
-      'if(!ciSiamo())return;'
+      /* Il ritorno alla plancia tocca una linguetta della barra in fondo:
+         e' la porta della dashboard, la stessa che usa il suo «← HOME». Ma
+         quella barra, mentre si sta in Config, la nascondiamo noi — e su una
+         cosa nascosta un tocco non fa quello che farebbe un dito. Allora la
+         classe se ne va **prima**; poi si guarda se ci si e' riusciti, e se
+         no si riprova, perche' la pagina puo' essere ancora a meta' del suo
+         lavoro. */
+      'var torna=function(prove){'
+      'if(!ciSiamo()){scordaLIndirizzo();setTimeout(guarda,0);return;}'
+      'try{document.body.classList.remove("gdahome-in-config");}catch(male){}'
       'var voce=laVoce(dove)||laVoce("home");'
       'if(voce)try{voce.click();}catch(male){}'
+      'if(!ciSiamo()){scordaLIndirizzo();setTimeout(guarda,0);return;}'
+      'if(prove<60){setTimeout(function(){torna(prove+1);},60);return;}'
       'setTimeout(guarda,0);'
       '};'
+      'window.gdahomeTornaDallaConfig=function(){torna(0);};'
       /* Quando la plancia cambia pagina, l'app lo viene a sapere.
        *
        * La barra della plancia resta li' anche sulla Configurazione — e' una
@@ -242,7 +266,12 @@ class Premesse {
       '},true);'
       'document.addEventListener("DOMContentLoaded",guarda);'
       'var dallIndirizzo=function(){'
-      'if(/gdahome-config/.test(location.hash))apri(0);'
+      'if(!/gdahome-config/.test(location.hash))return;'
+      /* Si cancella **prima** di aprire: se la pagina si ricarica mentre la
+         Config e' aperta, quell'ordine e' gia' stato eseguito e non deve
+         valere una seconda volta. */
+      'scordaLIndirizzo();'
+      'apri(0);'
       '};'
       'document.addEventListener("DOMContentLoaded",dallIndirizzo);'
       'dallIndirizzo();'
