@@ -110,7 +110,9 @@ class Premesse {
   /// loro il tasto «← HOME» che la pagina si disegna in cima: dal menu si
   /// torna col menu.
   ///
-  /// Resta nascosta una tessera sola, `#dm-tkt-card`: le Segnalazioni. Non
+  /// Restano nascoste due tessere. «**Sostieni il progetto**», perche' qui
+  /// gli acquisti ci sono: una donazione accanto a un listino e' la stessa
+  /// domanda fatta due volte. E le **Segnalazioni**, `#dm-tkt-card`. Non
   /// per grafica — quella e' buona — ma perche' la sua strada non c'e'. La
   /// tessera della plancia parla all'integrazione di Home Assistant, che
   /// nell'app non esiste, e vuole un conto GitHub di chi scrive; le
@@ -146,6 +148,14 @@ class Premesse {
          rifare dalla Config, e non si tocca per sbaglio. */
       'html body header .dm-editor-entry,'
       'html body header .ha-menu-btn{display:none!important}'
+      /* «Sostieni il progetto»: nella plancia e' il grazie di un progetto
+         che vive di tempo libero, e li' ci sta. Nell'app no: qui gli
+         acquisti ci sono, e chiedere una donazione accanto a un listino e'
+         chiedere due volte la stessa cosa in due modi diversi. La tessera,
+         la pastiglia dell'editor e la card di Impostazioni: tutte e tre. */
+      'html body #page-config .dm-sostieni-tessera,'
+      'html body #editor-modal .dm-sostieni-pastiglia,'
+      'html body #ed-body .dm-sostieni-card{display:none!important}'
       '</style>'
       '<script>(function(){'
       /* Le linguette si cercano senza virgolette dentro le virgolette: un

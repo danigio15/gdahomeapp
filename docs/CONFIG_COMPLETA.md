@@ -27,7 +27,7 @@ plancia**, `#page-config`, e dentro ci sta tutto:
 | 🧩 Configura Entità | apre `apriConfigEntita()`, l'editor col cercatore, le sette famiglie, le pastiglie |
 | 🎨 Tema | chiaro, scuro, auto — «su questo dispositivo», lo scrive lei — con le sei tavolozze innestate sotto (`tavolozze-section.js`) |
 | 📌 Barra di navigazione | a scomparsa o fissa, anche questa del dispositivo |
-| 💙 Sostieni il progetto | il collegamento delle donazioni, uno, lo stesso del README |
+| 💙 Sostieni il progetto | il collegamento delle donazioni; **nascosta nell'app**, dove gli acquisti ci sono |
 | 🎫 Segnalazioni | la sua strada passa dall'integrazione: nell'app resta nascosta, vedi sotto |
 | 💬 Assistenza | si toglie da sé quando la chat non risponde |
 

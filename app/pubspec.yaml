@@ -32,6 +32,13 @@ dependencies:
   # chilobyte e non dieci megabyte.
   image_picker: ^1.1.2
 
+  # Il selettore dei file, per le caselle `<input type="file">` che non
+  # chiedono una foto: il ripristino di un backup vuole un `.json`, e la
+  # galleria delle foto non ne ha. E' del gruppo di Flutter, come
+  # `image_picker`, e su Android passa dallo Storage Access Framework: si
+  # apre l'archivio del telefono, non le immagini.
+  file_selector: ^1.0.0
+
   # I collegamenti che portano fuori: la plancia ne ha qualcuno — il tasto
   # delle donazioni, il meteo di Windy, la mappa — e dentro il riquadro non
   # c'e' nessun posto dove aprirli. Si aprono nel browser del telefono, che e'

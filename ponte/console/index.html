@@ -55,9 +55,21 @@
           La stessa app del telefono, aperta qui dentro. Si adatta da sola allo schermo: computer,
           tablet o telefono. Ci arriva solo chi e' entrato in Home Assistant.
         </p>
+        <!-- Si apre **in questa scheda**, e non in una nuova.
+             La sessione di questo indirizzo la tiene viva la pagina di Home
+             Assistant, che la rinfresca finche' il riquadro e' aperto: una
+             scheda a parte se ne va per conto suo e dopo un po' si sente
+             rispondere «401: Unauthorized» da un indirizzo che sembrava
+             buono. Di qui si torna con la voce «Il ponte» nella barra. -->
         <div class="bottoni">
-          <a class="bottone" id="apri-app" href="app/" target="_blank" rel="noopener">Apri gdahome</a>
+          <a class="bottone" id="apri-app" href="app/">Apri gdahome</a>
         </div>
+        <p class="spiegazione">
+          Si apre qui dentro: per tornare a questa pagina, «Il ponte» nella barra di Home
+          Assistant. Aprendola in una scheda a parte, dopo qualche minuto quell'indirizzo
+          risponde <strong>401</strong> — la sessione la tiene viva Home Assistant, non la
+          scheda.
+        </p>
         <p class="spiegazione" id="avviso-sicuro" hidden>
           Questa pagina e' aperta su un indirizzo <strong>http</strong>. Tutto funziona tranne la
           plancia: per disegnarla nel browser serve un indirizzo <strong>https</strong> — e' una

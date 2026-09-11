@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:flutter/painting.dart' show Color;
 import 'package:flutter/widgets.dart' show Widget;
+import 'package:file_selector/file_selector.dart' as archivio;
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -67,10 +68,11 @@ WebViewController costruisciIlControllore({
     /* Le foto della Config: nella plancia si caricano con una casella
      * `<input type="file">`, e su Android un WebView non ha di suo nessuna
      * finestra da aprire — si toccava «scegli una foto» e non succedeva
-     * niente. Gliela si da': la galleria del telefono, e il file torna alla
+     * niente. Gliela si da': la galleria quando la pagina chiede un'immagine,
+     * l'archivio del telefono quando chiede altro, e il file torna alla
      * pagina come se l'avesse scelto un browser. Sull'iPhone il WebView ce
      * l'ha gia'. */
-    unawaited(piattaforma.setOnShowFileSelector(_scegliUnaFoto));
+    unawaited(piattaforma.setOnShowFileSelector(_scegli));
   }
   /* I tre dialoghi della pagina: `alert`, `confirm`, `prompt`.
    *
@@ -114,21 +116,75 @@ WebViewController costruisciIlControllore({
   return controllore;
 }
 
-/// La foto che la pagina ha chiesto, dalla galleria del telefono.
+/// Quello che la pagina ha chiesto con una casella `<input type="file">`.
 ///
-/// Una sola, e un'immagine: sono le caselle della Config — la foto di una
-/// persona, di un elettrodomestico, di un'auto — e chiedere «un file
-/// qualunque» vorrebbe dire lasciar scegliere un PDF a chi cerca una faccia.
-Future<List<String>> _scegliUnaFoto(FileSelectorParams parametri) async {
+/// **Quello che ha chiesto lei**, e non una foto per tutti. Le caselle della
+/// Config chiedono immagini — la faccia di una persona, un elettrodomestico,
+/// un'auto — e li' la galleria e' la cosa giusta: e' dove stanno le foto, e
+/// il selettore del sistema le mostra grandi. Ma non tutte le caselle
+/// chiedono un'immagine: il ripristino di un backup vuole un `.json`, e nella
+/// galleria di JSON non ce n'e' uno. Con la galleria per tutti, quel tasto
+/// apriva le foto e non c'era niente da scegliere.
+///
+/// Quindi si guarda cosa dice `accept`: se chiede immagini, la galleria; se
+/// chiede altro — o non dice niente — l'archivio del telefono.
+Future<List<String>> _scegli(FileSelectorParams parametri) async {
+  if (_chiedeUnImmagine(parametri.acceptTypes)) {
+    try {
+      final scelta = await ImagePicker().pickImage(source: ImageSource.gallery);
+      return scelta == null ? const <String>[] : ['file://${scelta.path}'];
+    } catch (_) {
+      /* Permesso negato, o non c'e' galleria: alla pagina si dice niente, che
+       * e' quello che dice un browser quando si annulla. */
+      return const <String>[];
+    }
+  }
   try {
-    final scelta = await ImagePicker().pickImage(source: ImageSource.gallery);
-    return scelta == null ? const <String>[] : ['file://${scelta.path}'];
+    final gruppo = archivio.XTypeGroup(
+      label: 'file',
+      extensions: _leEstensioni(parametri.acceptTypes),
+      mimeTypes: _iTipi(parametri.acceptTypes),
+    );
+    final scelto = await archivio.openFile(
+      acceptedTypeGroups: gruppo.allowsAny ? const [] : [gruppo],
+    );
+    return scelto == null ? const <String>[] : ['file://${scelto.path}'];
   } catch (_) {
-    /* Permesso negato, o non c'e' galleria: alla pagina si dice niente, che
-     * e' quello che dice un browser quando si annulla. */
     return const <String>[];
   }
 }
+
+/* `accept` arriva come lo scrive la pagina: «tutte le immagini», `.json`,
+ * `application/json`, o niente. Un elenco vuoto vuol dire «un file
+ * qualunque», e un file qualunque non e' una foto.
+ *
+ * La parola che vuol dire «tutte le immagini» qui non si scrive per esteso:
+ * in Dart i commenti si annidano, e quella parola dentro un commento apre un
+ * commento che non si chiude piu' — si e' mangiata meta' del file. */
+bool _chiedeUnImmagine(List<String> chiesti) =>
+    chiesti.isNotEmpty &&
+    chiesti.every(
+      (uno) =>
+          uno.startsWith('image/') ||
+          const [
+            '.jpg',
+            '.jpeg',
+            '.png',
+            '.webp',
+            '.gif',
+            '.heic',
+          ].contains(uno.toLowerCase()),
+    );
+
+List<String> _leEstensioni(List<String> chiesti) => [
+  for (final uno in chiesti)
+    if (uno.startsWith('.')) uno.substring(1).toLowerCase(),
+];
+
+List<String> _iTipi(List<String> chiesti) => [
+  for (final uno in chiesti)
+    if (uno.contains('/')) uno.toLowerCase(),
+];
 
 /// Un collegamento che porta fuori dalla plancia: si apre nel browser del
 /// telefono, non nel riquadro.

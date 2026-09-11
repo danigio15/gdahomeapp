@@ -1019,29 +1019,18 @@ try {
   await attendi(1800);
   await scatta(pagina, "6g-la-config-della-plancia");
 
-  /* «Sostieni il progetto»: una tessera della pagina
-   * (`sostieni-il-progetto-section.js`), e la finestra che racconta il
-   * perche' prima del collegamento. Nell'app c'e' perche' c'e' la sua
-   * pagina — non perche' l'abbiamo rifatta — e prima, con la pagina murata,
-   * non c'era nessun modo di arrivarci. Il tasto va su PayPal: nel browser
-   * si apre in una scheda, sul telefono lo apre il browser del telefono
-   * (`riquadro/sul_telefono.dart`). */
-  racconta("apro «Sostieni il progetto» dalla sua tessera");
+  /* «Sostieni il progetto» nell'app non c'e': la tessera della dashboard e'
+   * nascosta, perche' qui gli acquisti ci sono e una donazione accanto a un
+   * listino e' la stessa domanda fatta due volte. Si guarda che non ci sia. */
+  racconta("controllo che le donazioni non compaiano");
   const laTesseraDelleDonazioni = await laConfig.evaluate(() => {
     const tessera = document.querySelector("#page-config .dm-sostieni-tessera");
     if (!tessera) return false;
-    tessera.click();
-    return true;
+    return tessera.getBoundingClientRect().height > 0;
   });
-  if (!laTesseraDelleDonazioni) {
-    throw new Error("nella pagina Config non c'e' la tessera delle donazioni");
+  if (laTesseraDelleDonazioni) {
+    throw new Error("la tessera delle donazioni si vede, e nell'app non deve");
   }
-  await attendi(1200);
-  await scatta(pagina, "6g2-config-sostieni");
-  await laConfig.evaluate(() =>
-    document.getElementById("dm-sostieni-modal")?.classList.remove("show"),
-  );
-  await attendi(600);
 
   /* L'editor si apre da dentro la pagina, dalla sua tessera: e' il giro che
    * si fa nella dashboard. */

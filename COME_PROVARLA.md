@@ -301,9 +301,10 @@ se non funzionano:
   dashboard, con la sua insegna e la versione della plancia — **v1.4.18**, e se
   ne dice una più vecchia il ponte non è aggiornato — e sotto le sue
   tessere: 🧩 Configura Entità, 🎨 Tema con le sei tavolozze, 📌 Barra di
-  navigazione, 💙 Sostieni il progetto. Toccando 🧩 si apre il suo editor, col
-  cercatore e le sette famiglie. Poi **menu → Plancia**: la plancia torna
-  dov'era.
+  navigazione. «Sostieni il progetto» qui **non c'è**: nell'app gli acquisti
+  ci sono, e una donazione accanto a un listino è la stessa domanda fatta due
+  volte. Toccando 🧩 si apre il suo editor, col cercatore e le sette famiglie.
+  Poi **menu → Plancia**: la plancia torna dov'era.
 - **Una porta sola per la Config.** In cima alla plancia non c'è più
   l'ingranaggio ⚙️, e non c'è più il tasto ☰: la Config si apre dal menu
   dell'app e da nessun altro posto. Nella pagina Configurazione non c'è più
@@ -312,10 +313,13 @@ se non funzionano:
 - **Il tema, dalle sue tessere.** Chiaro, scuro, una tavolozza: la plancia
   cambia colore. Chiudi e riapri l'app: la scelta deve **restare**. Prima
   l'app la riscriveva a ogni caricamento e tornava indietro.
-- **💙 Sostieni il progetto → «Dona con PayPal».** Si deve aprire il **browser
-  del telefono** su PayPal. Prima non succedeva niente: valeva per tutti i
-  collegamenti che portano fuori dalla plancia (anche il meteo di Windy e
-  l'indirizzo su una mappa).
+- **Un collegamento che porta fuori** — il meteo di Windy sotto le previsioni,
+  un indirizzo su una mappa nella scheda di una persona: si deve aprire il
+  **browser del telefono**. Prima non succedeva niente.
+- **Ripristina un backup** (Config → Salva/Ripristina → «Scegli il file»):
+  deve aprirsi l'**archivio del telefono**, non la galleria delle foto. Le
+  caselle che chiedono un'immagine — la faccia di una persona, l'auto —
+  aprono la galleria come prima.
 - **Cancella qualcosa nell'editor** — una stanza, una presa, un
   elettrodomestico. Deve comparire una **finestra che chiede conferma**. Prima,
   sull'iPhone, quella domanda non si vedeva e la risposta era «no» da sola:
