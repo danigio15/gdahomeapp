@@ -1027,26 +1027,60 @@ test("l'elenco delle foto dice in quale cartella si guarda, e quali ci sono", as
       fotoDiCasa,
     });
 
-    /* Senza dire niente si guarda nel ponte: e' come era prima, e una
-     * versione vecchia dell'app non deve trovarsi sotto le mani una cartella
-     * che non si aspetta. */
-    const suo = await commissioni.rispondi({ id: 1, type: "dashboardmodern/www/list" });
+    /* Senza dire niente si guarda in quella di Home Assistant.
+     *
+     * Chi chiede senza dire niente e' la maschera delle foto della dashboard,
+     * e per lei `/local` vuol dire `config/www` di Home Assistant. Prima si
+     * guardava nel ponte, e a chi ha duecento foto in `config/www` la
+     * maschera diceva «la cartella config/www non esiste ancora: creala»:
+     * rispondeva di un'altra cartella, e dava torto a chi aveva ragione. */
+    const senzaDirniente = await commissioni.rispondi({ id: 1, type: "dashboardmodern/www/list" });
+    assert.equal(senzaDirniente.result.root, "casa");
+    /* Anche quella col nome «normale», con lo spazio dentro: l'elenco la
+     * mostra, e il suo indirizzo lo sa portare. */
+    assert.deepEqual(senzaDirniente.result.images.map((una) => una.url).sort(), [
+      "/local/auto.png",
+      "/local/mia auto.png",
+    ]);
+    assert.deepEqual(senzaDirniente.result.roots, { ponte: false, casa: true });
+
+    /* Chi vuole quella del ponte — dove finisce quello che si carica
+     * dall'app — la chiede per nome. */
+    const suo = await commissioni.rispondi({
+      id: 2,
+      type: "dashboardmodern/www/list",
+      root: "ponte",
+    });
     assert.equal(suo.result.root, "ponte");
     assert.deepEqual(suo.result.images, []);
-    assert.deepEqual(suo.result.roots, { ponte: false, casa: true });
 
     const diCasa = await commissioni.rispondi({
-      id: 2,
+      id: 3,
       type: "dashboardmodern/www/list",
       root: "casa",
     });
     assert.equal(diCasa.result.root, "casa");
-    /* Anche quella col nome «normale», con lo spazio dentro: l'elenco la
-     * mostra, e il suo indirizzo lo sa portare. */
-    assert.deepEqual(diCasa.result.images.map((una) => una.url).sort(), [
-      "/local/auto.png",
-      "/local/mia auto.png",
-    ]);
+  } finally {
+    via();
+  }
+});
+
+test("senza la cartella di Home Assistant montata si ripiega su quella del ponte", async () => {
+  /* L'add-on aggiornato e non ancora riavviato, o senza il permesso nel
+   * manifesto: `/homeassistant/www` non c'e'. Meglio mostrare le foto
+   * caricate dall'app che non mostrare niente — e soprattutto non si risponde
+   * di una cartella che non si e' nemmeno in grado di guardare. */
+  const { foto, via } = dueCartelle();
+  try {
+    const commissioni = new Commissioni({
+      casa: casaDiProva(),
+      registro: ZITTO,
+      foto,
+      fotoDiCasa: new Foto({ cartella: "", base: BASE_DI_CASA, scrivibile: false }),
+    });
+    const risposta = await commissioni.rispondi({ id: 1, type: "dashboardmodern/www/list" });
+    assert.equal(risposta.result.root, "ponte");
+    assert.deepEqual(risposta.result.roots, { ponte: false, casa: false });
   } finally {
     via();
   }

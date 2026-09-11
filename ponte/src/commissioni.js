@@ -420,12 +420,24 @@ export class Commissioni {
     const percorso = detto.path ?? "";
     if (typeof percorso !== "string" || percorso.length > 512)
       return no(id, "invalid_format", "percorso non valido");
-    /* Da quale delle due cartelle: quella del ponte — dove finisce quello che
-     * si carica dall'app — o quella di Home Assistant, dove c'e' quello che
-     * c'era gia'. Senza dire niente si guarda nel ponte, che e' come era
-     * prima: una versione vecchia dell'app non deve trovarsi sotto le mani
-     * una cartella che non si aspetta. */
-    const diCasa = detto.root === "casa";
+    /* Da quale delle due cartelle: quella di Home Assistant — dove c'e' quello
+     * che c'era gia' — o quella del ponte, dove finisce quello che si carica
+     * dall'app.
+     *
+     * Senza dire niente si guarda in **quella di Home Assistant**, e non e'
+     * una preferenza: chi chiede senza dire niente e' la maschera delle foto
+     * della dashboard, e per lei `/local` vuol dire `config/www` di Home
+     * Assistant. Prima si guardava nel ponte, e allora a chi ha duecento foto
+     * in `config/www` la maschera diceva «la cartella config/www non esiste
+     * ancora: creala» — rispondendo di un'altra cartella, e dando torto a una
+     * persona che aveva ragione.
+     *
+     * Se la cartella di Home Assistant non e' montata — l'add-on senza
+     * `homeassistant_config:ro`, o aggiornato e non ancora riavviato — si
+     * ripiega su quella del ponte: e' meglio mostrare le foto caricate
+     * dall'app che non mostrare niente. */
+    const diCasa =
+      detto.root === "casa" || (detto.root !== "ponte" && Boolean(this.fotoDiCasa?.cE));
     const dove = diCasa ? this.fotoDiCasa : this.foto;
     if (!dove) return no(id, "not_found", "Questa cartella non c'e'");
     const elenco = dove.elenca(percorso);

@@ -12,7 +12,7 @@
 # finire esposta. Su quella non c'e' nessuna console: si puo' solo presentare
 # un codice di abbinamento valido, o un segno di riconoscimento gia' avuto.
 name: Il ponte di DashboardModern
-version: "0.15.0"
+version: "0.16.0"
 slug: ponte
 description: Fa parlare l'app di DashboardModern con questa casa, da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.
 url: https://github.com/danigio15/dashboardmodern-v2/tree/main/ponte
@@ -55,6 +55,20 @@ homeassistant_api: true
 # quello che si carica dall'app finisce nella sua cartella, non nella loro.
 map:
   - homeassistant_config:ro
+  # La cartella degli add-on locali, in **scrittura**.
+  #
+  # Serve a una cosa sola, e non se ne puo' fare a meno: aggiornare questo
+  # add-on. Un add-on locale non ha nessun negozio dietro — Home Assistant
+  # guarda il manifesto che trova in `/addons/ponte`, e quella e' l'unica
+  # versione che conosce — quindi finche' qualcuno non porta i file nuovi in
+  # quella cartella, «Aggiorna» non compare mai. Portarli a mano vuol dire un
+  # terminale e un gettone di GitHub a ogni giro: esattamente la cosa che chi
+  # non ha un computer non puo' fare, cioe' la persona per cui questa app c'e'.
+  #
+  # Con questa riga il ponte se li porta da se', da un bottone nella sua
+  # console. Cosa ci mette dentro, e cosa controlla prima di metterlo, sta
+  # tutto in `src/aggiornamento.js`.
+  - addons:rw
 
 # Serve a una cosa sola: chiedere al Supervisor su quali indirizzi si trova
 # questa casa sulla rete locale, per poterlo dire ai telefoni quando si
@@ -62,6 +76,19 @@ map:
 # centralino. Se si toglie, tutto funziona lo stesso — solo piu' lento sul
 # divano.
 hassio_api: true
+
+# Per chiedere al Supervisor di ricostruirsi, dopo essersi aggiornato.
+#
+# E' il permesso piu' grosso di questo manifesto, e va detto chiaro invece che
+# nascosto: con `manager` il ponte parla al Supervisor come un amministratore.
+# Il ponte lo usa per due chiamate sole — rileggi il negozio, ricostruisci me
+# stesso — e stanno tutte in `src/aggiornamento.js`, in chiaro.
+#
+# Senza, l'aggiornamento funziona a meta': i file nuovi arrivano in
+# `/addons/ponte`, ma poi tocca aprire Home Assistant e premere
+# «Ricostruisci» a mano — di nuovo una cosa da spiegare a chi non deve
+# imparare niente.
+hassio_role: manager
 
 options:
   # Da fuori casa l'app entra passando da un centralino: il ponte non aspetta
@@ -83,6 +110,16 @@ options:
   # Quanto vive il segno di un telefono senza farsi vedere, in giorni.
   # Zero vuol dire per sempre.
   giorni_di_silenzio: 90
+  # Il gettone di GitHub con cui il ponte si scarica le versioni nuove.
+  #
+  # Serve solo se la repository dell'app e' privata — e la nostra lo e'. Si
+  # scrive **una volta**: Home Assistant lo tiene nascosto e non lo rimostra
+  # piu'. Un gettone a grana fine sulla sola repository dell'app, con
+  # **Contents: Read-only** e nient'altro: con quello non si scrive niente da
+  # nessuna parte, si legge e basta.
+  #
+  # Vuoto vuol dire: non ti aggiorni da te'. Tutto il resto funziona uguale.
+  gettone: ""
   registro: info
 
 schema:
@@ -92,4 +129,8 @@ schema:
   dispositivi_massimi: int(1,100)
   minuti_del_codice: int(1,60)
   giorni_di_silenzio: int(0,3650)
+  # `password` perche' Home Assistant lo nasconda mentre si scrive e non lo
+  # rimostri dopo; il `?` perche' chi non ne ha bisogno non deve trovarsi un
+  # campo obbligatorio da riempire.
+  gettone: password?
   registro: list(debug|info|attenzione|errore)

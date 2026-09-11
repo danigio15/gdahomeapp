@@ -249,6 +249,7 @@ export function costruisciLaConsole({
   identita,
   ritorno,
   plancia,
+  aggiornamento,
   cartellaDellaConsole,
   cartellaDellApp,
 }) {
@@ -281,6 +282,7 @@ export function costruisciLaConsole({
           identita,
           ritorno,
           plancia,
+          aggiornamento,
         });
       } catch (errore) {
         registro.errore(`la console e' inciampata: ${errore?.message || errore}`);
@@ -339,7 +341,58 @@ async function api({
   identita,
   ritorno,
   plancia,
+  aggiornamento,
 }) {
+  /* C'e' una versione nuova del ponte?
+   *
+   * Sta in una via sua e non dentro `/api/stato` perche' la risposta arriva da
+   * GitHub: `/api/stato` la console lo chiede ogni dieci secondi, e dieci
+   * secondi non sono il passo di una cosa che cambia una volta al giorno.
+   */
+  if (via === "/api/aggiornamento" && metodo === "GET") {
+    if (!aggiornamento) {
+      json(risposta, { locale: false });
+      return;
+    }
+    json(risposta, await aggiornamento.stato());
+    return;
+  }
+
+  /* «Portati dentro la versione nuova.»
+   *
+   * Si risponde **prima** di chiedere la ricostruzione, perche' la
+   * ricostruzione ammazza questo stesso programma: una risposta che non arriva
+   * mai, a chi guarda, e' un guasto. Cosi' invece la console sa che e' andata,
+   * e sa anche che fra un minuto la pagina torna.
+   */
+  if (via === "/api/aggiornamento" && metodo === "POST") {
+    if (!aggiornamento) {
+      male(risposta, 409, "questo ponte non si sa aggiornare da se'");
+      return;
+    }
+    let versione;
+    try {
+      versione = await aggiornamento.porta();
+    } catch (errore) {
+      registro.attenzione(`l'aggiornamento non e' andato: ${errore?.message || errore}`);
+      male(risposta, 409, String(errore?.message || errore));
+      return;
+    }
+    json(risposta, { versione, ricostruisco: true });
+    /* Dopo la risposta, e non prima. Il mezzo secondo e' perche' la risposta
+     * arrivi davvero a destinazione e non resti in un buffer di un processo
+     * che sta per morire. */
+    setTimeout(() => {
+      aggiornamento
+        .rifalla()
+        .then((esito) => {
+          if (!esito.chiesto) registro.attenzione(esito.perche);
+        })
+        .catch((errore) => registro.attenzione(`ricostruzione: ${errore?.message || errore}`));
+    }, 500);
+    return;
+  }
+
   if (via === "/api/stato" && metodo === "GET") {
     const saluto = await casa.saluta();
     const collegati = ponte.collegatiPerDispositivo();

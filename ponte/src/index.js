@@ -10,6 +10,7 @@ import { pathToFileURL } from "node:url";
 import { join } from "node:path";
 
 import { Abbinamento } from "./abbinamento.js";
+import { Aggiornamento } from "./aggiornamento.js";
 import { Casa } from "./casa.js";
 import { Chiamata } from "./chiamata.js";
 import { Commissioni } from "./commissioni.js";
@@ -118,6 +119,25 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     porta: opzioni.portaDellApp,
     registro,
   });
+  /* Il ponte si aggiorna da se'.
+   *
+   * Un add-on locale non ha nessun negozio dietro: se nessuno porta i file
+   * nuovi in `/addons/ponte`, in Home Assistant non compare mai nessun
+   * «Aggiorna». Prima quei file li portava dentro un comando da terminale con
+   * un gettone da incollare ogni volta; adesso e' un bottone nella console. */
+  const aggiornamento = new Aggiornamento({
+    mia: opzioni.versione,
+    gettone: opzioni.gettone,
+    registro,
+  });
+  if (aggiornamento.locale()) {
+    registro.info(
+      aggiornamento.gettone
+        ? "questo ponte si sa aggiornare da se': il bottone sta nella console"
+        : "questo ponte si aggiornerebbe da se', ma nella scheda dell'add-on non c'e' nessun gettone",
+    );
+  }
+
   const portiere = new Portiere({ ponte, dispositivi, abbinamento, registro, ritorno });
   const chiamata = new Chiamata({
     dove: opzioni.centralino,
@@ -152,6 +172,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     /* Da dove viene la plancia che questo ponte serve: la console lo dice,
      * cosi' chi si chiede se sia quella originale ha la risposta li'. */
     plancia,
+    /* Se c'e' una versione nuova del ponte, e il bottone per portarsela
+     * dentro: l'unico posto da cui chi non ha un computer puo' aggiornare. */
+    aggiornamento,
     cartellaDellaConsole: opzioni.console,
     /* E gdahome da aprire in un browser, se questo add-on se la porta dietro.
      * E' il link: chi ha l'add-on ha gia' l'app, e non deve installare

@@ -46,9 +46,30 @@ difficile, è solo un'altra strada.
    minuti. Le volte dopo è immediato.
 6. Avvialo.
 
-Per aggiornarlo: riscarichi lo ZIP, risostituisci la cartella, e nel negozio
-premi **Ricarica**; poi nella pagina dell'add-on premi **Aggiorna** (o, dai
-tre puntini, **Ricostruisci**).
+#### Per aggiornarlo: glielo chiedi, e lo fa lui
+
+Dalla **0.16.0** il ponte si aggiorna da sé. Una volta sola, nella scheda
+dell'add-on (**Impostazioni → Add-on → Il ponte → Configurazione**), nella
+casella **`gettone`** incolli un token di GitHub: a grana fine su `gdahomeapp`
+soltanto, con **Contents: Read-only** e nient'altro. Home Assistant lo tiene
+nascosto e non lo rimostra più. Salvi, riavvii l'add-on.
+
+Da lì in poi: apri **Il ponte** dalla barra laterale, e in fondo alla pagina
+la scheda **«Il ponte»** dice che versione è e se ce n'è una più nuova. Il
+bottone **«Aggiorna il ponte»** se la scarica, la mette al posto di questa e
+si ricostruisce. Ci mette qualche minuto, e mentre lo fa quella pagina non
+risponde: è normale, torna da sé.
+
+**Perché serve tutto questo.** Un add-on installato così — i file in
+`/addons/ponte` — non ha nessun negozio dietro: Home Assistant guarda il
+manifesto che trova in quella cartella, e quella è l'unica versione che
+conosce. Finché quei file non cambiano **sul disco di casa**, «Aggiorna» non
+compare mai, per quante versioni si pubblichino. Non è un difetto del negozio:
+è che il negozio non c'è.
+
+A mano si può ancora: riscarichi lo ZIP, risostituisci la cartella, e nel
+negozio premi **Ricarica**; poi nella pagina dell'add-on premi **Aggiorna**
+(o, dai tre puntini, **Ricostruisci**).
 
 #### Dal terminale, in un colpo solo
 

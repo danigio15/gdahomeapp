@@ -192,6 +192,22 @@
         </details>
       </section>
 
+      <!-- L'aggiornamento del ponte.
+           Sta qui e non in Home Assistant perché un add-on locale non ha
+           nessun negozio dietro: HA guarda il manifesto che trova in
+           `/addons/ponte`, quindi finché quei file non cambiano «Aggiorna»
+           non compare mai. Da questo bottone il ponte se li porta da sé. -->
+      <section class="scheda" id="aggiornamento" hidden>
+        <h2>Il ponte</h2>
+        <p class="riga-di-stato" id="aggiornamento-riga">…</p>
+        <p class="spiegazione" id="aggiornamento-spiega"></p>
+        <div class="bottoni">
+          <button id="aggiorna-il-ponte" type="button" hidden>Aggiorna il ponte</button>
+          <button id="riguarda" type="button" class="tenue">Guarda se c'è una versione nuova</button>
+        </div>
+        <p class="avviso" id="aggiornamento-avviso" hidden></p>
+      </section>
+
       <section class="scheda tenue-sfondo">
         <h2>Da fuori casa</h2>
         <p class="riga-di-stato" id="stato-centralino">…</p>

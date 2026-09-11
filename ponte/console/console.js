@@ -223,6 +223,86 @@
     trova("avviso-sicuro").hidden = window.isSecureContext !== false;
   }
 
+  /* ─── L'aggiornamento del ponte ──────────────────────────────────────────
+   *
+   * Un add-on locale non ha nessun negozio dietro: Home Assistant guarda il
+   * manifesto che trova in `/addons/ponte`, e quella e' l'unica versione che
+   * conosce. Finche' quei file non cambiano, «Aggiorna» non compare mai —
+   * e a cambiarli serviva un terminale e un gettone da incollare ogni volta.
+   * Da qui lo fa il ponte.
+   */
+  function avvisaSullAggiornamento(testo) {
+    var avviso = trova("aggiornamento-avviso");
+    avviso.textContent = testo || "";
+    avviso.hidden = !testo;
+  }
+
+  function disegnaLAggiornamento(stato) {
+    trova("aggiornamento").hidden = !stato.locale;
+    if (!stato.locale) return;
+    var riga = "Questo ponte è la versione " + (stato.mia || "—") + ".";
+    var spiega = "";
+    var siPuo = false;
+    if (!stato.gettone) {
+      riga += " Non so se ce n'è una più nuova.";
+      spiega =
+        "Per guardare da sé serve un gettone di GitHub, una volta sola: " +
+        "Impostazioni → Add-on → Il ponte → Configurazione, casella «gettone». " +
+        "Un gettone a grana fine sulla sola repository dell'app, con Contents: Read-only.";
+    } else if (stato.cE === true) {
+      riga += " C'è la " + stato.nuova + ".";
+      spiega =
+        "Il ponte se la scarica, la mette al posto di questa e si ricostruisce. " +
+        "Ci mette qualche minuto, e mentre lo fa questa pagina non risponde: è normale, " +
+        "torna da sé.";
+      siPuo = true;
+    } else if (stato.cE === false) {
+      riga += " È l'ultima.";
+      spiega = "";
+    } else {
+      riga += " Non riesco a sapere se ce n'è una più nuova.";
+      spiega = stato.guaio || "";
+    }
+    trova("aggiornamento-riga").textContent = riga;
+    trova("aggiornamento-spiega").textContent = spiega;
+    trova("aggiorna-il-ponte").hidden = !siPuo;
+    trova("riguarda").hidden = !stato.gettone;
+  }
+
+  function guardaLAggiornamento() {
+    return chiedi("api/aggiornamento")
+      .then(disegnaLAggiornamento)
+      .catch(function () {
+        /* Un ponte vecchio non ha questa via: la scheda resta nascosta, e non
+         * si scrive nessun errore per una cosa che non c'e' ancora. */
+      });
+  }
+
+  trova("riguarda").addEventListener("click", function () {
+    avvisaSullAggiornamento("");
+    trova("riguarda").disabled = true;
+    guardaLAggiornamento().then(function () {
+      trova("riguarda").disabled = false;
+    });
+  });
+
+  trova("aggiorna-il-ponte").addEventListener("click", function () {
+    avvisaSullAggiornamento("Sto scaricando la versione nuova…");
+    trova("aggiorna-il-ponte").disabled = true;
+    chiedi("api/aggiornamento", { method: "POST" })
+      .then(function (fatto) {
+        avvisaSullAggiornamento(
+          "La " +
+            fatto.versione +
+            " è dentro. Mi sto ricostruendo: fra un minuto o due ricarica questa pagina.",
+        );
+      })
+      .catch(function (errore) {
+        avvisaSullAggiornamento(errore.message);
+        trova("aggiorna-il-ponte").disabled = false;
+      });
+  });
+
   function aggiornaTutto() {
     return chiedi("api/stato")
       .then(function (stato) {
@@ -283,4 +363,9 @@
 
   aggiornaTutto();
   setInterval(aggiornaTutto, 10000);
+  /* La versione nuova si guarda all'apertura e poi ogni dieci minuti: la
+   * risposta arriva da GitHub, e una cosa che cambia una volta al giorno non
+   * si chiede ogni dieci secondi come il resto. */
+  guardaLAggiornamento();
+  setInterval(guardaLAggiornamento, 10 * 60 * 1000);
 })();

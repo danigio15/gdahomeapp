@@ -9,8 +9,16 @@
 # Allora ci pensa questa pagina: una volta al giorno guarda l'ultima release
 # della dashboard, e se e' piu' nuova di quella che l'add-on ha dentro la
 # scarica, la porta in `ponte/plancia/`, alza di un numero la versione
-# dell'add-on e salva. Da li' in poi Home Assistant dice «Aggiorna» da solo,
-# e le Prove girano su quello che si e' appena salvato.
+# dell'add-on e salva. Le Prove girano su quello che si e' appena salvato.
+#
+# Attenzione a cosa **non** fa: non arriva a casa di nessuno. Un add-on
+# installato in `/addons/ponte` non ha nessun negozio dietro — Home Assistant
+# guarda il manifesto che trova in quella cartella, e quella e' l'unica
+# versione che conosce — quindi finche' quei file non cambiano **sul disco di
+# casa**, «Aggiorna» non compare. L'ultimo miglio lo fa il ponte da se', col
+# bottone «Aggiorna il ponte» nella sua console: guarda qui, si scarica la
+# versione nuova e si ricostruisce (`ponte/src/aggiornamento.js`). Questa
+# corsa e' il passo prima: mettere qui quello che il ponte va a prendere.
 #
 # Si accende anche a mano: Actions → «La plancia nuova» → Run workflow.
 name: La plancia nuova
