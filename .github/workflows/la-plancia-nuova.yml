@@ -168,7 +168,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ponte/plancia ponte/config.yaml
           git commit -m "La plancia $VERSIONE, e l'add-on $PONTE"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          # Come sopra: se il ramo si e' mosso ci si rimette sopra e si riprova,
+          # invece di perdere la plancia gia' portata dentro.
+          strumenti/spingi.sh
           {
             echo "### La plancia e' la $VERSIONE"
             echo ""

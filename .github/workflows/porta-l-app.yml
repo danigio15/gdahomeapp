@@ -82,7 +82,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ponte/app
           git commit -m "gdahome dentro l'add-on, dalla corsa ${{ github.run_number }}"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          # Non un `git push` secco: mentre si costruiva il ramo puo' essersi
+          # mosso, e un rifiuto qui butterebbe via la costruzione.
+          strumenti/spingi.sh
           {
             echo "### gdahome e' dentro l'add-on"
             echo ""
