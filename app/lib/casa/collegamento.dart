@@ -113,7 +113,39 @@ class Collegamento {
 
   /// L'app e' tornata in primo piano: il filo si controlla subito, invece di
   /// aspettare il battito.
-  void sveglia() => _filo?.sveglia();
+  /// L'app e' tornata davanti: si controlla il filo, o lo si riapre se era a
+  /// riposo.
+  void sveglia() {
+    if (_aRiposo) {
+      _aRiposo = false;
+      unawaited(apri(forza: true));
+      return;
+    }
+    _filo?.sveglia();
+  }
+
+  /// L'app e' andata via da un pezzo: **si chiude il filo**.
+  ///
+  /// Non e' un risparmio di batteria: e' un risparmio di **richieste**. Da
+  /// fuori casa il filo passa dal centralino, e li' ogni messaggio e' una
+  /// richiesta contata — centomila al giorno, sul piano gratuito. Una casa
+  /// vera manda cinque eventi al secondo, e li mandava anche con l'app in
+  /// tasca o con la scheda del browser nascosta dietro le altre: ore di
+  /// eventi che nessuno stava guardando, pagati come quelli guardati.
+  ///
+  /// Chi lo chiama aspetta un po' prima (`main.dart`): un'app che si guarda
+  /// per due secondi e torna non deve rifare la strada da capo.
+  Future<void> riposa() async {
+    if (!_avviato || _filo == null || _aRiposo) return;
+    _aRiposo = true;
+    await _chiudiIlFilo();
+    _vai(ComeVa.inCammino);
+  }
+
+  /// Se il filo e' chiuso perche' l'app non e' davanti. Diverso da «caduto»:
+  /// qui non si riprova, si aspetta che qualcuno torni a guardare.
+  bool get aRiposo => _aRiposo;
+  bool _aRiposo = false;
 
   ComeVa get comeVa => _comeVa;
   String? get perche => _perche;
@@ -148,6 +180,7 @@ class Collegamento {
   /// vuole il gesto di tirare giu' per aggiornare.
   Future<void> apri({bool forza = false}) async {
     _avviato = true;
+    _aRiposo = false;
     if (!forza &&
         _comeVa == ComeVa.aperta &&
         dentro &&

@@ -189,6 +189,47 @@ void main() {
     },
   );
 
+  test('a riposo il filo si chiude, e al risveglio torna', () async {
+    /* Con l'app non davanti — il telefono in tasca, la scheda del browser
+     * dietro le altre — la casa continuava a mandare i suoi eventi, e da
+     * fuori ognuno e' una richiesta che il centralino fa pagare. Ore di
+     * eventi che nessuno guardava. Adesso il filo si chiude, e torna appena
+     * si torna a guardare. */
+    final ponte = await PonteFinto.alza();
+    await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+    );
+    await collegamento.apri();
+    expect(collegamento.dentro, isTrue);
+    expect(ponte.prese, hasLength(1));
+
+    await collegamento.riposa();
+    expect(collegamento.aRiposo, isTrue);
+    expect(collegamento.dentro, isFalse);
+    /* Il ponte se ne accorge: la presa non c'e' piu', e con lei il filo che
+     * teneva aperto con Home Assistant. */
+    await _finoA(() => ponte.prese.isEmpty);
+
+    /* E non riprova da solo: aspetta che qualcuno torni a guardare. Se
+     * riprovasse, il risparmio sarebbe finto. */
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    expect(ponte.prese, isEmpty);
+
+    collegamento.sveglia();
+    await _finoA(() => collegamento.dentro, entro: const Duration(seconds: 5));
+    expect(collegamento.aRiposo, isFalse);
+    expect(ponte.prese, hasLength(1));
+    await ponte.spegni();
+  });
+
   test('quando il filo torna su da solo, l\'app se ne accorge', () async {
     /* Il difetto si vedeva solo dalla seconda volta in poi: la prima ci
      * pensa l'apertura, e dalla seconda nessuno rimetteva lo stato a posto.
