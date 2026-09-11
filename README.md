@@ -55,6 +55,7 @@ se no ogni comando farebbe il giro del mondo per arrivare a tre metri.
 | **il centralino** | `nuvola/`, `centralino/` | fa incontrare un telefono e la sua casa, senza capire niente di quello che si dicono |
 | **l'app** | `app/` | Flutter, per Android e iPhone: si abbina, si collega, comanda |
 | **la plancia** | [dashboardmodern-v2](https://github.com/danigio15/dashboardmodern-v2) | le ventitre sezioni che gia' esistono e funzionano |
+| **il sito** | [`sito/`](sito/README.md) | racconta il progetto, e ne fa toccare la plancia da un browser |
 
 ## Perche' un ponte, e non un segno incollato a mano
 
@@ -136,6 +137,21 @@ Il pacchetto Android lo costruisce GitHub, quindi non serve installarsi l'SDK:
 **Actions → «L'app da provare» → Run workflow**, e a fine corsa si scarica
 `gdahome-android`. I passi per intero — ponte compreso, e cosa guardare una
 volta dentro — stanno in [`COME_PROVARLA.md`](COME_PROVARLA.md).
+
+## Il sito
+
+In [`sito/`](sito/README.md) c'e' il posto dove il progetto si racconta a chi
+non l'ha mai visto: com'e' fatto, cosa fa, quanto costa. E in mezzo, il pezzo
+per cui esiste: **una plancia che si tocca**. Non un filmato e non delle
+fotografie — l'app disegnata in HTML, con dentro la casa demo del collaudo, le
+stesse 234 entita' contro cui girano le prove. Si accende una luce e il
+consumo sale, si chiude una tapparella e scende, si inserisce l'allarme e la
+casa cambia stato.
+
+Sono file statici: si aprono col doppio clic e si pubblicano dove si vuole.
+Quello che non si scrive a mano — il marchio, le icone, i caratteri, la casa
+demo — lo porta `node strumenti/porta-nel-sito.mjs`, e che il sito stia in
+piedi lo dice `node collaudo/guarda-il-sito.mjs`, con un browser vero.
 
 ## Le prove
 
