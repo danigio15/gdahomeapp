@@ -1,0 +1,97 @@
+# Manda in produzione il tramite.
+#
+# La macchina non segue `main`: segue un **segno**, che si chiama `tramite`.
+# Su main si spinge dieci volte al giorno, e una macchina che seguisse main si
+# riavvierebbe dieci volte al giorno — a volte su un commit scritto a meta',
+# mentre qualcuno e' fuori casa e sta aprendo il cancello.
+#
+# Questo bottone sposta il segno. Da li' in poi la macchina se ne accorge entro
+# dieci minuti, si scarica quella versione, la **prova**, e solo se le prove
+# passano si riavvia. Nessuna chiave SSH da nessuna parte, nessuna porta nuova
+# aperta: e' la macchina che va a vedere, non noi che entriamo.
+#
+# Le prove girano anche qui, prima di spostare il segno. Due volte non e'
+# pignoleria: qui si scopre subito, la' si scopre comunque — e se la macchina
+# dovesse trovarle rotte, resterebbe sulla versione di prima invece di
+# accendere una cosa che non parte.
+name: Il tramite
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: "Quale commit mandare in produzione (vuoto: l'ultimo di main)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: il-tramite
+  cancel-in-progress: false
+
+jobs:
+  manda:
+    name: Sposta il segno
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Quale commit
+        id: quale
+        run: |
+          set -euo pipefail
+          scelto="${{ inputs.commit }}"
+          if [ -z "$scelto" ]; then
+            scelto="$(git rev-parse origin/main)"
+          fi
+          git rev-parse --verify "$scelto^{commit}" >/dev/null || {
+            echo "«$scelto» non e' un commit di questa repository." >&2
+            exit 1
+          }
+          intero="$(git rev-parse "$scelto^{commit}")"
+          echo "sha=$intero" >>"$GITHUB_OUTPUT"
+          echo "corto=${intero:0:8}" >>"$GITHUB_OUTPUT"
+          echo "titolo=$(git log -1 --format=%s "$intero")" >>"$GITHUB_OUTPUT"
+
+      - name: Le prove del tramite, su quel commit
+        run: |
+          set -euo pipefail
+          git checkout --quiet "${{ steps.quale.outputs.sha }}"
+          cd centralino && node --test test/*.test.js
+
+      - name: Sposta il segno
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f tramite "${{ steps.quale.outputs.sha }}"
+          git push -f origin tramite
+
+      - name: Cosa e' successo
+        run: |
+          {
+            echo "## Il segno e' sulla \`${{ steps.quale.outputs.corto }}\`"
+            echo
+            echo "> ${{ steps.quale.outputs.titolo }}"
+            echo
+            echo "La macchina se ne accorge entro dieci minuti, scarica quella"
+            echo "versione, la prova, e solo se le prove passano si riavvia."
+            echo
+            echo "Come si controlla che sia arrivata, dal telefono:"
+            echo
+            echo '```'
+            echo "https://tramite.gdahome.org/salute"
+            echo '```'
+            echo
+            echo "Il campo \`acceso_da\` torna a un numero piccolo quando si e'"
+            echo "riavviata. Se resta grande, non e' ancora passata: il giro e'"
+            echo "ogni dieci minuti."
+          } >>"$GITHUB_STEP_SUMMARY"
