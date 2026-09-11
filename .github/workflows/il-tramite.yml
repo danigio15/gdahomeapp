@@ -50,7 +50,11 @@ jobs:
           set -euo pipefail
           scelto="${{ inputs.commit }}"
           if [ -z "$scelto" ]; then
-            scelto="$(git rev-parse origin/main)"
+            # Quello su cui gira questa corsa: il bottone si preme dal ramo
+            # principale, quindi e' l'ultimo commit di main. Chiederlo a
+            # `origin/main` dipenderebbe da cosa il checkout si e' portato
+            # dietro; `HEAD` no.
+            scelto="$(git rev-parse HEAD)"
           fi
           git rev-parse --verify "$scelto^{commit}" >/dev/null || {
             echo "«$scelto» non e' un commit di questa repository." >&2
