@@ -1,0 +1,178 @@
+# Guarda se DashboardModern ha una versione nuova, e la porta dentro.
+#
+# La plancia dell'app **e' la sua**: i file stanno in `ponte/plancia/`, portati
+# da una release di `dashboardmodern-v2` e con dentro l'impronta di ognuno
+# (`ORIGINE.json`). Finche' li si portava a mano, l'app restava indietro di
+# una versione ogni volta che la dashboard ne pubblicava una — e chi non ha un
+# computer non ha nessun modo di portarsela da se'.
+#
+# Allora ci pensa questa pagina: una volta al giorno guarda l'ultima release
+# della dashboard, e se e' piu' nuova di quella che l'add-on ha dentro la
+# scarica, la porta in `ponte/plancia/`, alza di un numero la versione
+# dell'add-on e salva. Da li' in poi Home Assistant dice «Aggiorna» da solo,
+# e le Prove girano su quello che si e' appena salvato.
+#
+# Si accende anche a mano: Actions → «La plancia nuova» → Run workflow.
+name: La plancia nuova
+
+on:
+  schedule:
+    # Le sei del mattino, ora nostra: la release si trova gia' pubblicata e
+    # l'aggiornamento e' li' quando ci si sveglia. Il minuto non e' tondo
+    # apposta — a quelli tondi GitHub ha la fila.
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+# Qui si scrive nella repository: e' l'unico modo perche' la plancia nuova
+# arrivi dentro l'add-on senza passare da un computer.
+permissions:
+  contents: write
+
+jobs:
+  guarda:
+    name: C'e' una versione nuova?
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Il gettone serve solo se la repository della dashboard e' privata.
+      # Senza, si prova lo stesso: se e' pubblica basta cosi', e se non lo e'
+      # il lavoro finisce verde dicendo cosa manca — un lavoro rosso per una
+      # cosa che non e' rotta insegna a non guardare i lavori rossi.
+      - name: L'ultima release della dashboard
+        id: la
+        env:
+          GETTONE: ${{ secrets.GETTONE_PLANCIA }}
+        run: |
+          set -u
+          intestazioni=(-H "accept: application/vnd.github+json")
+          if [ -n "${GETTONE:-}" ]; then
+            intestazioni+=(-H "authorization: Bearer $GETTONE")
+          fi
+          risposta=$(curl -sS "${intestazioni[@]}" \
+            https://api.github.com/repos/danigio15/dashboardmodern-v2/releases/latest || true)
+          etichetta=$(printf '%s' "$risposta" | node -e '
+            let dentro = "";
+            process.stdin.on("data", (pezzo) => (dentro += pezzo));
+            process.stdin.on("end", () => {
+              try {
+                const detto = JSON.parse(dentro);
+                process.stdout.write(String(detto.tag_name || ""));
+              } catch (_male) {
+                process.stdout.write("");
+              }
+            });
+          ')
+          sha=$(printf '%s' "$risposta" | node -e '
+            let dentro = "";
+            process.stdin.on("data", (pezzo) => (dentro += pezzo));
+            process.stdin.on("end", () => {
+              try {
+                const detto = JSON.parse(dentro);
+                process.stdout.write(String(detto.target_commitish || ""));
+              } catch (_male) {
+                process.stdout.write("");
+              }
+            });
+          ')
+          if [ -z "$etichetta" ]; then
+            {
+              echo "### Non sono riuscito a leggere le release"
+              echo ""
+              echo "Se \`dashboardmodern-v2\` e' privata serve un gettone: un token a"
+              echo "grana fine su quella repository sola, con **Contents: Read-only**,"
+              echo "messo fra i segreti di questa repository come \`GETTONE_PLANCIA\`"
+              echo "(Settings → Secrets and variables → Actions)."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::senza gettone non si leggono le release della dashboard"
+            echo "nuova=no" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          versione=${etichetta#v}
+          dentro=$(node -e '
+            const { readFileSync } = require("node:fs");
+            const origine = JSON.parse(readFileSync("ponte/plancia/ORIGINE.json", "utf8"));
+            process.stdout.write(String(origine.versione || ""));
+          ')
+          echo "l'add-on ha la $dentro, l'ultima pubblicata e' la $versione"
+          echo "versione=$versione" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          if [ "$versione" = "$dentro" ]; then
+            {
+              echo "### Gia' aggiornata"
+              echo ""
+              echo "La plancia dentro l'add-on e' la **$dentro**, che e' l'ultima."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "nuova=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "nuova=si" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Portala dentro
+        if: steps.la.outputs.nuova == 'si'
+        env:
+          GETTONE: ${{ secrets.GETTONE_PLANCIA }}
+          VERSIONE: ${{ steps.la.outputs.versione }}
+          SHA: ${{ steps.la.outputs.sha }}
+        run: |
+          set -eu
+          intestazioni=(-H "accept: application/vnd.github+json")
+          if [ -n "${GETTONE:-}" ]; then
+            intestazioni+=(-H "authorization: Bearer $GETTONE")
+          fi
+          rm -rf /tmp/plancia && mkdir -p /tmp/plancia
+          curl -fsSL "${intestazioni[@]}" \
+            "https://api.github.com/repos/danigio15/dashboardmodern-v2/tarball/v$VERSIONE" \
+            -o /tmp/plancia.tar.gz
+          tar -xzf /tmp/plancia.tar.gz -C /tmp/plancia
+          dove=$(find /tmp/plancia -maxdepth 1 -mindepth 1 -type d | head -1)
+          # Il commit si dice a mano: un pacchetto scaricato di `.git` non ha
+          # niente, e da dove viene la plancia deve restare scritto lo stesso.
+          node strumenti/porta-la-plancia.mjs "$dove" --commit="$SHA"
+
+      # La versione dell'add-on e' il numero che Home Assistant guarda per
+      # dire «Aggiorna»: se non cambia, chi ha l'add-on in casa non se ne
+      # accorge, e la plancia nuova resta qui dentro senza arrivare a lui.
+      - name: Alza la versione dell'add-on
+        if: steps.la.outputs.nuova == 'si'
+        run: |
+          set -eu
+          vecchia=$(sed -n 's/^version: "\(.*\)"/\1/p' ponte/config.yaml)
+          nuova=$(node -e '
+            const [a, b] = process.argv[1].split(".");
+            process.stdout.write(`${a}.${Number(b) + 1}.0`);
+          ' "$vecchia")
+          sed -i "s/^version: \".*\"/version: \"$nuova\"/" ponte/config.yaml
+          echo "add-on dalla $vecchia alla $nuova"
+          echo "PONTE=$nuova" >> "$GITHUB_ENV"
+
+      - name: Le prove del ponte
+        if: steps.la.outputs.nuova == 'si'
+        run: npm test
+        working-directory: ponte
+
+      - name: Salvala nella repository
+        if: steps.la.outputs.nuova == 'si'
+        env:
+          VERSIONE: ${{ steps.la.outputs.versione }}
+        run: |
+          set -eu
+          if git diff --quiet -- ponte/plancia ponte/config.yaml; then
+            echo "### Niente da cambiare" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ponte/plancia ponte/config.yaml
+          git commit -m "La plancia $VERSIONE, e l'add-on $PONTE"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          {
+            echo "### La plancia e' la $VERSIONE"
+            echo ""
+            echo "L'add-on e' passato alla **$PONTE**: in Home Assistant compare"
+            echo "«Aggiorna» sulla pagina de «Il ponte», e da li' la plancia nuova"
+            echo "arriva a tutti i telefoni abbinati."
+          } >> "$GITHUB_STEP_SUMMARY"

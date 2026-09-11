@@ -109,6 +109,19 @@ class _HomeState extends State<Home> {
     setState(() => _sezione = dove);
   }
 
+  /* La plancia e' andata su un'altra sua pagina.
+   *
+   * La sua barra in fondo resta anche sulla Configurazione — e' una pagina
+   * come le altre, e da li' si tocca «Energia» e si va sull'energia — ma il
+   * menu dell'app restava segnato su «Configurazione» con sotto un'altra
+   * pagina. Adesso la pagina lo dice (`plancia/premesse.dart`) e il menu si
+   * sposta da se': sulla Configurazione ci si resta finche' ci si e'. */
+  void _laPlanciaEAltrove(String pagina) {
+    if (!mounted) return;
+    if (_sezione != Sezione.configurazione || pagina == 'config') return;
+    setState(() => _sezione = Sezione.plancia);
+  }
+
   @override
   Widget build(BuildContext context) {
     final collegamento = widget.collegamento;
@@ -222,6 +235,7 @@ class _HomeState extends State<Home> {
                           fabbrica: widget.plancia,
                           impostazioni: widget.impostazioni,
                           vaiAlleCase: widget.vaiAlleCase,
+                          quandoCambiaPagina: _laPlanciaEAltrove,
                         ),
                         Sezione.dispositivi => Dispositivi(
                           collegamento: collegamento,

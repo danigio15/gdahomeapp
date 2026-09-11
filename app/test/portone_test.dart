@@ -23,6 +23,7 @@ import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/aggiungi_casa.dart';
 import 'package:gdahome/schermate/barra.dart';
+import 'package:gdahome/schermate/menu.dart';
 import 'package:gdahome/schermate/lettore.dart';
 import 'package:gdahome/plancia/pannello.dart';
 import 'package:gdahome/plancia/servitore_qui/qui.dart';
@@ -59,6 +60,10 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
     String lingua = 'it',
   }) async => _ServitoreFinto();
 
+  /// Quello che la pagina direbbe all'app quando cambia pagina da se':
+  /// qui non c'e' nessuna pagina, e lo dice la prova al posto suo.
+  void Function(String pagina)? cambioPagina;
+
   @override
   Widget riquadro(
     Uri pagina, {
@@ -67,7 +72,15 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
     required void Function(String perche) quandoFallisce,
     bool ibrido = false,
     ({double alto, double basso}) margini = (alto: 0, basso: 0),
-  }) => _RiquadroFinto(key: chiave, pagina: pagina, caricata: quandoCaricata);
+    void Function(String pagina)? quandoCambiaPagina,
+  }) {
+    cambioPagina = quandoCambiaPagina;
+    return _RiquadroFinto(
+      key: chiave,
+      pagina: pagina,
+      caricata: quandoCaricata,
+    );
+  }
 }
 
 class _ServitoreFinto implements ServitoreDiQuestoSistema {
@@ -491,8 +504,9 @@ void main() {
         await _finoAllaPlancia(collegamento);
       });
 
+      final plancia = _PlanciaFinta();
       await tester.pumpWidget(
-        AppDiCasa(collegamento: collegamento, plancia: _PlanciaFinta()),
+        AppDiCasa(collegamento: collegamento, plancia: plancia),
       );
       await tester.pump();
       await tester.pump();
@@ -548,6 +562,39 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
       expect(barra.aperta, isFalse, reason: 'da sola si chiude');
+      await apriLaBarra(tester);
+
+      /* La Configurazione, e quello che succede quando la plancia se ne va
+       * da sola.
+       *
+       * La sua barra in fondo resta anche sulla pagina Config — e' una
+       * pagina come le altre — e da li' si tocca «Energia» e si va
+       * sull'energia. Il menu dell'app restava segnato su «Configurazione»
+       * con sotto un'altra pagina: due barre che dicevano due cose diverse.
+       * Adesso la pagina dice dov'e' andata, e il menu la segue. */
+      await tester.tap(nellaBarra('CONFIGURAZIONE'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<BarraDelleSezioni>(find.byType(BarraDelleSezioni)).aperta,
+        Sezione.configurazione,
+      );
+      plancia.cambioPagina?.call('energy');
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<BarraDelleSezioni>(find.byType(BarraDelleSezioni)).aperta,
+        Sezione.plancia,
+        reason: 'la plancia e\' andata altrove, e il menu la segue',
+      );
+      /* Tornando sulla Config, invece, ci si resta. */
+      await apriLaBarra(tester);
+      await tester.tap(nellaBarra('CONFIGURAZIONE'));
+      await tester.pumpAndSettle();
+      plancia.cambioPagina?.call('config');
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<BarraDelleSezioni>(find.byType(BarraDelleSezioni)).aperta,
+        Sezione.configurazione,
+      );
       await apriLaBarra(tester);
 
       /* Da li' ai dispositivi: la barra si richiude, la sezione cambia, e le

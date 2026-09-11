@@ -26,9 +26,43 @@ WebViewController costruisciIlControllore({
   Future<void> Function(String messaggio)? dice,
   Future<bool> Function(String domanda)? chiede,
   Future<String> Function(String domanda, String diSerie)? faScrivere,
+  void Function(String pagina)? quandoCambiaPagina,
 }) {
   scheduleMicrotask(quandoCaricata);
+  if (quandoCambiaPagina != null) _ascoltaIlRiquadro(quandoCambiaPagina);
   return WebViewController();
+}
+
+/// Quale pagina della plancia si e' accesa, detta dal riquadro.
+///
+/// Nel browser il riquadro e' un `iframe` e parla a chi lo ospita con un
+/// messaggio; sul telefono c'e' un canale del WebView. La pagina prova tutte
+/// e due le strade e non sa quale delle due c'e' (`premesse.dart`).
+///
+/// Si ascolta una volta sola: il riquadro puo' rinascere — cambia la
+/// composizione, si ricarica — e un ascolto per ogni nascita vorrebbe dire
+/// dieci ascolti che dicono la stessa cosa dieci volte.
+bool _ascolto = false;
+
+void _ascoltaIlRiquadro(void Function(String pagina) quandoCambiaPagina) {
+  if (_ascolto) return;
+  _ascolto = true;
+  web.window.addEventListener(
+    'message',
+    ((web.MessageEvent evento) {
+      final detto = evento.data;
+      if (detto == null || !detto.isA<JSObject>()) return;
+      final oggetto = detto as JSObject;
+      try {
+        if (oggetto.getProperty('gdahome'.toJS)?.dartify() != 'pagina') return;
+        final dove = oggetto.getProperty('dove'.toJS)?.dartify();
+        if (dove is String && dove.isNotEmpty) quandoCambiaPagina(dove);
+      } catch (_) {
+        /* Un messaggio di qualcun altro, fatto in un altro modo: non e'
+         * nostro e non ci riguarda. */
+      }
+    }).toJS,
+  );
 }
 
 /// Sul web un `iframe` non si ricarica: si ricarica la pagina.

@@ -188,6 +188,41 @@ class Premesse {
       'var voce=laVoce(dove)||laVoce("home");'
       'if(voce)try{voce.click();}catch(male){}'
       '};'
+      /* Quando la plancia cambia pagina, l'app lo viene a sapere.
+       *
+       * La barra della plancia resta li' anche sulla Configurazione — e' una
+       * sua pagina come le altre — e da li' si tocca «Energia» e si va
+       * sull'energia: giusto. Quello che non era giusto e' che il menu
+       * dell'app restasse segnato su «Configurazione» mentre sotto c'era
+       * l'energia. Adesso la pagina lo dice, e il menu si sposta da se'.
+       *
+       * Due strade perche' i posti dove l'app gira sono due: sul telefono
+       * un canale del WebView, nel browser il riquadro che parla a chi lo
+       * ospita. Chi non c'e' non risponde, e non fa danni. */
+      'var dico=function(quale){'
+      'try{if(window.gdahomeDice&&window.gdahomeDice.postMessage)'
+      'window.gdahomeDice.postMessage(quale);}catch(male){}'
+      'try{if(window.parent&&window.parent!==window)'
+      'window.parent.postMessage({gdahome:"pagina",dove:quale},"*");}'
+      'catch(male){}'
+      '};'
+      'var quale=function(){'
+      'var attiva=document.querySelector(".tab.active");'
+      'return attiva?(attiva.getAttribute("data-tab")||""):"";'
+      '};'
+      'var ultima="";'
+      'var guarda=function(){'
+      'var adesso=quale();'
+      'if(adesso&&adesso!==ultima){ultima=adesso;dico(adesso);}'
+      '};'
+      /* Si guarda **dopo** il tocco, non al posto suo: quale pagina si
+       * accende lo decide la plancia, e leggerlo prima vorrebbe dire
+       * indovinarlo. Il giro dopo, la classe «active» e' gia' dove deve. */
+      'document.addEventListener("click",function(evento){'
+      'if(evento.target&&evento.target.closest&&evento.target.closest(".tab"))'
+      'setTimeout(guarda,0);'
+      '},true);'
+      'document.addEventListener("DOMContentLoaded",guarda);'
       'var dallIndirizzo=function(){'
       'if(/gdahome-config/.test(location.hash))apri(0);'
       '};'

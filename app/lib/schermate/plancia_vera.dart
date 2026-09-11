@@ -65,6 +65,7 @@ class FabbricaDellaPlancia {
     required void Function(String perche) quandoFallisce,
     bool ibrido = false,
     ({double alto, double basso}) margini = (alto: 0, basso: 0),
+    void Function(String pagina)? quandoCambiaPagina,
   }) => RiquadroDellaPlancia(
     key: chiave,
     pagina: pagina,
@@ -72,6 +73,7 @@ class FabbricaDellaPlancia {
     margini: margini,
     quandoCaricata: quandoCaricata,
     quandoFallisce: quandoFallisce,
+    quandoCambiaPagina: quandoCambiaPagina,
   );
 }
 
@@ -82,12 +84,19 @@ class PlanciaVera extends StatefulWidget {
     required this.fabbrica,
     required this.impostazioni,
     this.vaiAlleCase,
+    this.quandoCambiaPagina,
   });
 
   final Collegamento collegamento;
   final FabbricaDellaPlancia fabbrica;
   final Impostazioni impostazioni;
   final VoidCallback? vaiAlleCase;
+
+  /// Quale pagina della plancia si e' accesa, quando cambia. Serve al menu
+  /// dell'app: la barra della plancia resta anche sulla Configurazione, e da
+  /// li' si va dove si vuole — il menu non puo' restare segnato su una voce
+  /// mentre sotto c'e' un'altra pagina.
+  final void Function(String pagina)? quandoCambiaPagina;
 
   @override
   State<PlanciaVera> createState() => PlanciaVeraState();
@@ -386,6 +395,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
               quandoFallisce: (perche) {
                 if (mounted) setState(() => _perche = perche);
               },
+              quandoCambiaPagina: widget.quandoCambiaPagina,
             ),
           ),
         ),
@@ -430,6 +440,7 @@ class RiquadroDellaPlancia extends StatefulWidget {
     required this.pagina,
     required this.quandoCaricata,
     required this.quandoFallisce,
+    this.quandoCambiaPagina,
     this.ibrido = false,
     this.margini = (alto: 0, basso: 0),
   });
@@ -444,6 +455,10 @@ class RiquadroDellaPlancia extends StatefulWidget {
   final ({double alto, double basso}) margini;
   final VoidCallback quandoCaricata;
   final void Function(String perche) quandoFallisce;
+
+  /// Quale pagina della plancia si e' accesa: lo dice la pagina servita, e
+  /// arriva da un canale del WebView o da un messaggio del riquadro.
+  final void Function(String pagina)? quandoCambiaPagina;
 
   @override
   State<RiquadroDellaPlancia> createState() => RiquadroDellaPlanciaState();
@@ -570,6 +585,7 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
       dice: _laPaginaDice,
       chiede: _laPaginaChiede,
       faScrivere: _laPaginaFaScrivere,
+      quandoCambiaPagina: widget.quandoCambiaPagina,
       /* Lo stesso fondo dell'app: sotto la pagina, finche' non arriva, non
        * si vede un lampo di un altro colore. */
       sfondo: Theme.of(context).colorScheme.surface,

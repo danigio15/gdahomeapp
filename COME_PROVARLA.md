@@ -215,6 +215,23 @@ La prima volta ci mette qualche secondo, di più se sei fuori casa: i file
 passano dal ponte e restano sul telefono, e dalla seconda volta in poi si apre
 subito. Toccare **«Plancia»** nella barra quando ci sei già la ricarica.
 
+### La plancia si aggiorna da sola
+
+Quando DashboardModern pubblica una versione nuova, l'add-on se la porta dietro
+senza che nessuno faccia niente: una volta al giorno la corsa **«La plancia
+nuova»** guarda l'ultima release di `dashboardmodern-v2`, e se è più nuova di
+quella che l'add-on ha dentro la scarica, la mette in `ponte/plancia/`, alza di
+un numero la versione dell'add-on e salva. In Home Assistant compare
+**Aggiorna** sulla pagina de «Il ponte», e da lì la plancia nuova arriva a tutti
+i telefoni abbinati.
+
+Si può anche accendere a mano: **Actions → «La plancia nuova» → Run workflow**.
+
+Se `dashboardmodern-v2` è privata serve un gettone, una volta sola: un token a
+grana fine su quella repository sola, con **Contents: Read-only**, messo fra i
+segreti di questa repository come **`GETTONE_PLANCIA`** (Settings → Secrets and
+variables → Actions). Senza, la corsa finisce verde e scrive che manca quello.
+
 ### Dal browser, senza installare niente *(la più rapida in assoluto)*
 
 Il link ce l'hai già: lo dà l'add-on.

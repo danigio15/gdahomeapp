@@ -35,6 +35,7 @@ WebViewController costruisciIlControllore({
   Future<void> Function(String messaggio)? dice,
   Future<bool> Function(String domanda)? chiede,
   Future<String> Function(String domanda, String diSerie)? faScrivere,
+  void Function(String pagina)? quandoCambiaPagina,
 }) {
   final PlatformWebViewControllerCreationParams parametri;
   if (WebViewPlatform.instance is WebKitWebViewPlatform) {
@@ -62,6 +63,18 @@ WebViewController costruisciIlControllore({
         },
       ),
     );
+  /* Il canale da cui la pagina parla all'app: dice quale sua pagina si e'
+   * accesa, e serve al menu dell'app per non restare segnato su una voce
+   * mentre sotto c'e' un'altra pagina. Il nome e' quello che la pagina
+   * cerca (`premesse.dart`). */
+  if (quandoCambiaPagina != null) {
+    unawaited(
+      controllore.addJavaScriptChannel(
+        'gdahomeDice',
+        onMessageReceived: (messaggio) => quandoCambiaPagina(messaggio.message),
+      ),
+    );
+  }
   final piattaforma = controllore.platform;
   if (piattaforma is AndroidWebViewController) {
     unawaited(piattaforma.setMediaPlaybackRequiresUserGesture(false));
