@@ -148,7 +148,12 @@ stesse 234 entita' contro cui girano le prove. Si accende una luce e il
 consumo sale, si chiude una tapparella e scende, si inserisce l'allarme e la
 casa cambia stato.
 
-Sono file statici: si aprono col doppio clic e si pubblicano dove si vuole.
+Le sezioni nella barra non le sceglie il sito: le sceglie la casa, e sono le
+stesse che la scheda Impostazioni accende e spegne. Chi arriva dal sito
+all'app ritrova quello che ha visto.
+
+Sono file statici: si aprono col doppio clic e si pubblicano dove si vuole —
+per Cloudflare Pages c'e' il bottone, **Actions → «Il sito» → Run workflow**.
 Quello che non si scrive a mano — il marchio, le icone, i caratteri, la casa
 demo — lo porta `node strumenti/porta-nel-sito.mjs`, e che il sito stia in
 piedi lo dice `node collaudo/guarda-il-sito.mjs`, con un browser vero.

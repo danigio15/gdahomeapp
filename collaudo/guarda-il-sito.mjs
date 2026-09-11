@@ -185,6 +185,41 @@ async function prova(che, fai) {
 
 const sezione = (nome) => pagina.getByRole("button", { name: nome, exact: true }).first();
 
+/* La prova che conta: la barra fa vedere le sezioni della casa, e **ognuna
+ * disegna qualcosa**. Una sezione nella barra che si apre vuota e' peggio di
+ * una sezione che non c'e': fa arrivare qualcuno all'app a cercare una cosa
+ * che gli e' stata mostrata e non trova. */
+await prova("ogni sezione della barra disegna qualcosa", async () => {
+  const quante = await pagina.locator(".pl-scheda").count();
+  if (quante < 2) throw new Error(`la barra ha ${quante} sezioni`);
+  const vuote = [];
+  for (let i = 0; i < quante; i++) {
+    const scheda = pagina.locator(".pl-scheda").nth(i);
+    const nome = (await scheda.getAttribute("data-nome")) || "";
+    await scheda.click();
+    await pagina.waitForTimeout(90);
+    const tessere = await pagina.locator(".pl-dentro .pl-tessera").count();
+    if (tessere === 0) vuote.push(nome);
+  }
+  if (vuote.length) throw new Error(`si aprono vuote: ${vuote.join(", ")}`);
+  process.stdout.write(`      (${quante} sezioni, tutte piene)\n`);
+});
+
+await prova("le sezioni sono quelle che la casa accende", async () => {
+  const dalleSchede = await pagina
+    .locator(".pl-scheda")
+    .evaluateAll((schede) => schede.map((s) => s.getAttribute("data-nome") || ""));
+  const dallaCasa = await pagina.evaluate(() => {
+    const p = window.CASA_DEMO.plancia;
+    return p.sezioni.map((s) => s.nome).concat((p.sezioniMie || []).map((m) => m.titolo));
+  });
+  const viste = dalleSchede.map((t) => t.trim());
+  const mancano = dallaCasa.filter((n) => !viste.includes(n));
+  const in_piu = viste.filter((n) => !dallaCasa.includes(n));
+  if (mancano.length) throw new Error(`mancano dalla barra: ${mancano.join(", ")}`);
+  if (in_piu.length) throw new Error(`nella barra ma non nella casa: ${in_piu.join(", ")}`);
+});
+
 await prova("si apre la sezione Luci", async () => {
   await sezione("Luci").click();
   await pagina.waitForSelector(".pl-luce");

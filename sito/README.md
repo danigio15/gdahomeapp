@@ -20,6 +20,16 @@ dell'energia; chiude le tapparelle e le vede scendere; sposta un termostato,
 inserisce l'allarme, apre la schermata Acquisti e trova il listino vero. Un
 filmato lo si guarda; una plancia la si tocca.
 
+**Le sezioni sono quelle vere.** Non le sceglie il sito: le sceglie la casa,
+in `cd_sections`, che è la stessa cosa che la scheda Impostazioni accende e
+spegne. `porta-nel-sito.mjs` le porta qui dentro già in fila, coi loro nomi e
+nel loro ordine, e **si ferma** se la casa ne accende una che il sito non sa
+disegnare — perché una plancia dimostrativa con dentro meno di quella vera fa
+arrivare la gente all'app a cercare cose che non trova. Nella casa demo sono
+venti, più una che non è della plancia: l'acquario, che se l'è fatta chi ci
+abita (`cd_sezioni_mie`). Anche quella è una funzione vera, e nel sito si
+vede.
+
 **Quello che è finto, e il sito lo scrive.** Dall'altra parte non c'è nessuna
 casa: i comandi cambiano una mappa in memoria, non un'entità di Home
 Assistant. Il fotovoltaico segue l'ora vera di chi guarda — di notte non
@@ -46,7 +56,7 @@ cd sito && python3 -m http.server 8099
 | `index.html` | la pagina: il colpo d'occhio, come funziona, la plancia, cosa fa, i piani, i download, i documenti |
 | `stile.css` | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni |
 | `plancia.css` | il vestito della plancia dimostrativa: tutto quello che comincia per `pl-` |
-| `plancia.js` | la plancia dimostrativa: le nove sezioni, le schermate dell'app, il bilancio dell'energia |
+| `plancia.js` | la plancia dimostrativa: le sezioni, le schermate dell'app, il bilancio dell'energia |
 | `listino.js` | i prezzi |
 | `sito.js` | chiaro e scuro, l'ombra sotto la barra, le schede che compaiono, i prezzi nella tabella |
 | `statico/` | roba portata da altrove: **non si tocca a mano** |
@@ -75,11 +85,19 @@ Quello che esce è salvato nella repository apposta: il sito si pubblica com'è.
 
 Sono file statici: va bene qualunque posto che serva una cartella.
 
-- **Cloudflare Pages** — è la strada naturale, perché il centralino ci gira
-  già sopra ed è gratis: si punta il progetto a questa repository con
-  `sito` come cartella di uscita, oppure si carica la cartella da
-  `wrangler pages deploy sito`. La repository resta privata e il sito è
-  pubblico.
+- **Cloudflare Pages** — c'è già il bottone: **Actions → «Il sito» → Run
+  workflow**. Ci vuole una cosa sola, una volta sola: un gettone di Cloudflare
+  fra i segreti della repository (`CLOUDFLARE_PAGES_TOKEN`, o
+  `CLOUDFLARE_API_TOKEN` se è lo stesso del centralino), fatto con «Cloudflare
+  Pages: Edit» e «Account Settings: Read». Il progetto su Cloudflare lo crea
+  la prima corsa, e l'indirizzo diventa `https://gdahome.pages.dev`. La
+  repository resta privata e il sito è pubblico, e non costa niente — come il
+  centralino, che ci gira già sopra.
+
+  Da lì in poi si ripubblica da sé a ogni modifica di `sito/` sul ramo
+  principale; da un altro ramo esce un'anteprima col suo indirizzo, e quello
+  pubblico non si tocca. E non pubblica niente se la plancia dimostrativa non
+  risponde: prima di caricare, il workflow la apre con un browser vero.
 - **GitHub Pages** — funziona, con un avvertimento: finché la repository è
   privata, un sito Pages pubblico richiede un piano a pagamento; se no lo
   vede solo chi ha accesso alla repository.

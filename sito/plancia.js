@@ -81,6 +81,20 @@
     });
   }
 
+  /* Un numero scritto all'italiana: la virgola per i decimali e il punto per
+   * le migliaia. Senza, una pagina in italiano scrive «1.2 kWh» e chi legge
+   * capisce milleduecento. */
+  function numeroIt(quanto, decimali) {
+    var n = Number(quanto);
+    if (!isFinite(n)) return String(quanto);
+    return n.toLocaleString(
+      "it-IT",
+      decimali === undefined
+        ? { maximumFractionDigits: 2 }
+        : { minimumFractionDigits: decimali, maximumFractionDigits: decimali },
+    );
+  }
+
   /* Un numero come lo scrive la plancia: Oswald, stretto e alto, con l'unità
    * più piccola di fianco. Sulla plancia i numeri non sono scritti col
    * carattere del testo, ed è la prima cosa che si vede di una tessera. */
@@ -458,7 +472,11 @@
       ? h(
           "div",
           { classe: "pl-testa" },
-          o.disegno ? icona(o.disegno, 22) : null,
+          o.emoji
+            ? h("span", { classe: "pl-segno-suo", testo: o.emoji })
+            : o.disegno
+              ? icona(o.disegno, 22)
+              : null,
           h("span", { classe: "pl-titolo", testo: o.titolo, title: o.titolo }),
           o.lato ? h("span", { classe: "pl-lato", testo: o.lato }) : null,
         )
@@ -653,17 +671,17 @@
             : aperte === 1
               ? "Una finestra aperta"
               : aperte + " finestre aperte",
-          "finestre",
+          "tapparelle",
         ),
         rigaVai(
           val("alarm_control_panel.casa") === "disarmed"
             ? "Allarme disinserito"
             : "Allarme inserito",
-          "sicurezza",
+          "security",
         ),
         rigaVai(
           val("vacuum.robot") === "cleaning" ? "Il robot sta pulendo" : "Il robot è alla base",
-          "stanze",
+          "robot",
         ),
       ),
     );
@@ -909,21 +927,21 @@
           "div",
           null,
           h("p", { classe: "pl-sotto", testo: "Prodotto" }),
-          cifra(num("sensor.fv_energia_oggi", 21.6).toFixed(1), "kWh", "pl-oro"),
+          cifra(numeroIt(num("sensor.fv_energia_oggi", 21.6), 1), "kWh", "pl-oro"),
         ),
         h(
           "div",
           null,
           h("p", { classe: "pl-sotto", testo: "Consumato" }),
-          cifra(num("sensor.casa_energia_oggi", 14.6).toFixed(1), "kWh"),
+          cifra(numeroIt(num("sensor.casa_energia_oggi", 14.6), 1), "kWh"),
         ),
       ),
       h(
         "div",
         { classe: "pl-righe" },
-        riga("Preso dalla rete", num("sensor.rete_prelievo_oggi", 3.2) + " kWh"),
-        riga("Dato alla rete", num("sensor.rete_immissione_oggi", 7.9) + " kWh"),
-        riga("In batteria", num("sensor.batteria_caricata_oggi", 6.4) + " kWh"),
+        riga("Preso dalla rete", numeroIt(num("sensor.rete_prelievo_oggi", 3.2)) + " kWh"),
+        riga("Dato alla rete", numeroIt(num("sensor.rete_immissione_oggi", 7.9)) + " kWh"),
+        riga("In batteria", numeroIt(num("sensor.batteria_caricata_oggi", 6.4)) + " kWh"),
       ),
     );
 
@@ -1245,6 +1263,67 @@
     armed_away: "Inserito, fuori casa",
   };
 
+  /* Un sensore di movimento non è «aperto», e uno di fumo nemmeno: Home
+   * Assistant lo dice nella classe, e chi legge la plancia si aspetta la
+   * parola giusta. */
+  var PAROLE = {
+    motion: ["movimento", "fermo"],
+    smoke: ["fumo!", "pulito"],
+    moisture: ["bagnato", "asciutto"],
+    connectivity: ["collegato", "giù"],
+    power: ["c'è", "manca"],
+    running: ["gira", "ferma"],
+    door: ["aperto", "chiuso"],
+    window: ["aperta", "chiusa"],
+  };
+  function comeSta(id) {
+    var due = PAROLE[attr(id, "device_class", "door")] || PAROLE.door;
+    return acceso(id) ? due[0] : due[1];
+  }
+
+  /* Quanto vale un'entità, scritta come la scriverebbe la plancia. */
+  function comeSiLegge(id) {
+    if (id.indexOf("binary_sensor.") === 0) return comeSta(id);
+    var quanto = val(id, "—");
+    var unita = attr(id, "unit_of_measurement", "");
+    if (quanto !== "" && isFinite(Number(quanto))) quanto = numeroIt(quanto);
+    return quanto + (unita ? " " + unita : "");
+  }
+
+  function siComanda(id) {
+    return id.indexOf("switch.") === 0 || id.indexOf("light.") === 0;
+  }
+
+  /* Le entità che uno si è appeso a una sezione dalla Config. È una funzione
+   * vera della plancia — `cd_entita_mie` — e nella casa demo ce ne sono tre:
+   * la cisterna sotto Irrigazione, il contatore dell'acqua sotto Energia, il
+   * cancello pedonale sotto Sicurezza. */
+  function tueEntita(chiave) {
+    var mie = (P.entitaMie || []).filter(function (e) {
+      return e.sezione === chiave;
+    });
+    if (!mie.length) return null;
+    return tessera(
+      { titolo: "Le tue entità", disegno: "mie", lato: "messe da te" },
+      h(
+        "div",
+        { classe: "pl-righe" },
+        mie.map(function (e) {
+          return h(
+            "div",
+            { classe: "pl-riga" },
+            h("span", null, h("span", { classe: "pl-emoji", testo: e.icona || "" }), e.nome),
+            siComanda(e.entity)
+              ? interruttore(acceso(e.entity), function () {
+                  scambia(e.entity, "on", "off");
+                })
+              : h("span", { classe: "pl-riga-v", testo: comeSiLegge(e.entity) }),
+          );
+        }),
+      ),
+    );
+  }
+
   function sezioneSicurezza() {
     var s = val("alarm_control_panel.casa", "disarmed");
 
@@ -1276,74 +1355,21 @@
       ),
     );
 
-    var varchi = [
-      "binary_sensor.porta_ingresso",
-      "binary_sensor.cancello_pedonale",
-      "binary_sensor.finestra_cucina",
-      "binary_sensor.finestra_soggiorno",
-      "binary_sensor.movimento_giardino",
-      "binary_sensor.fumo_cucina",
-    ];
-    var aperti = varchi.filter(acceso).length;
-
-    /* Un sensore di movimento non è «aperto», e uno di fumo nemmeno: Home
-     * Assistant lo dice nella classe, e chi legge la plancia si aspetta la
-     * parola giusta. */
-    var PAROLE = {
-      motion: ["movimento", "fermo"],
-      smoke: ["fumo!", "pulito"],
-      moisture: ["bagnato", "asciutto"],
-      door: ["aperto", "chiuso"],
-      window: ["aperta", "chiusa"],
-    };
-    function comeSta(id) {
-      var classe = attr(id, "device_class", "door");
-      var due = PAROLE[classe] || PAROLE.door;
-      return acceso(id) ? due[0] : due[1];
-    }
-    var tVarchi = tessera(
-      {
-        titolo: "Porte e finestre",
-        disegno: "varchi",
-        lato: aperti === 0 ? "tutto chiuso" : aperti + " da guardare",
-      },
+    /* Il quadro avvisi: le entità che uno ha scelto di tenere d'occhio. */
+    var tAvvisi = tessera(
+      { titolo: "Da tenere d'occhio", disegno: "avvisi" },
       h(
         "div",
         { classe: "pl-righe" },
-        varchi.map(function (id) {
-          var su = acceso(id);
+        (P.avvisi || []).map(function (a) {
+          var su = acceso(a.entity);
           return h(
             "div",
             { classe: "pl-riga" },
-            h("span", { testo: nomeDi(id) }),
+            h("span", null, h("span", { classe: "pl-emoji", testo: a.icon || "" }), a.name),
             h("span", {
               classe: "pl-pallino " + (su ? "pl-pallino-sì" : "pl-pallino-no"),
-              testo: comeSta(id),
-            }),
-          );
-        }),
-      ),
-    );
-
-    var tSerrature = tessera(
-      { titolo: "Serrature", disegno: "aperture" },
-      h(
-        "div",
-        { classe: "pl-righe" },
-        ["lock.portone", "lock.garage"].map(function (id) {
-          var chiusa = val(id) === "locked";
-          return h(
-            "div",
-            { classe: "pl-riga" },
-            h("span", { testo: nomeDi(id) }),
-            h("button", {
-              classe: "pl-modo" + (chiusa ? " pl-sì" : ""),
-              type: "button",
-              testo: chiusa ? "Chiusa" : "Aperta",
-              onclick: function () {
-                poni(id, chiusa ? "unlocked" : "locked");
-                disegna();
-              },
+              testo: comeSta(a.entity),
             }),
           );
         }),
@@ -1373,7 +1399,92 @@
       );
     });
 
-    return griglia([tAllarme, tVarchi, tSerrature].concat(tessereCamere));
+    return griglia([tAllarme, tAvvisi].concat(tessereCamere, [tueEntita("security")]));
+  }
+
+  /* ── Porte ────────────────────────────────────────────────────────────── */
+
+  function sezionePorte() {
+    var contatti = [
+      "binary_sensor.porta_ingresso",
+      "binary_sensor.cancello_pedonale",
+      "binary_sensor.finestra_cucina",
+      "binary_sensor.finestra_soggiorno",
+      "binary_sensor.movimento_giardino",
+      "binary_sensor.fumo_cucina",
+    ];
+    var aperti = contatti.filter(acceso).length;
+
+    var tSerrature = tessera(
+      { titolo: "Le serrature", disegno: "aperture" },
+      h(
+        "div",
+        { classe: "pl-righe" },
+        (P.porte || []).map(function (p) {
+          var chiusa = val(p.entity) === "locked";
+          return h(
+            "div",
+            { classe: "pl-riga" },
+            h("span", null, h("span", { classe: "pl-emoji", testo: p.icon || "" }), p.name),
+            h("button", {
+              classe: "pl-modo" + (chiusa ? " pl-sì" : ""),
+              type: "button",
+              testo: chiusa ? "Chiusa" : "Aperta",
+              onclick: function () {
+                poni(p.entity, chiusa ? "unlocked" : "locked");
+                disegna();
+              },
+            }),
+          );
+        }),
+      ),
+    );
+
+    var tContatti = tessera(
+      {
+        titolo: "I contatti",
+        disegno: "varchi",
+        lato: aperti === 0 ? "tutto chiuso" : aperti + " da guardare",
+      },
+      h(
+        "div",
+        { classe: "pl-righe" },
+        contatti.map(function (id) {
+          var su = acceso(id);
+          return h(
+            "div",
+            { classe: "pl-riga" },
+            h("span", { testo: nomeDi(id) }),
+            h("span", {
+              classe: "pl-pallino " + (su ? "pl-pallino-sì" : "pl-pallino-no"),
+              testo: comeSta(id),
+            }),
+          );
+        }),
+      ),
+    );
+
+    var tCancello = tessera(
+      { titolo: "Il cancello", disegno: "azioni" },
+      h("p", { classe: "pl-sotto", testo: "Lo script che apre il cancello carraio." }),
+      h(
+        "div",
+        { classe: "pl-azioni" },
+        azione("Apri il cancello", function () {
+          poni("script.apri_cancello", "on");
+          disegna();
+          setTimeout(function () {
+            poni("script.apri_cancello", "off");
+            disegna();
+          }, 2200);
+        }),
+      ),
+      val("script.apri_cancello") === "on"
+        ? h("p", { classe: "pl-sotto", testo: "Sta andando…" })
+        : null,
+    );
+
+    return griglia([tSerrature, tContatti, tCancello]);
   }
 
   /* ── Stanze ───────────────────────────────────────────────────────────── */
@@ -1492,7 +1603,10 @@
             "div",
             { classe: "pl-riga" },
             h("span", {
-              testo: "Oggi " + (a.daily_energy_entity ? num(a.daily_energy_entity, 0) : 0) + " kWh",
+              testo:
+                "Oggi " +
+                numeroIt(a.daily_energy_entity ? num(a.daily_energy_entity, 0) : 0) +
+                " kWh",
             }),
             a.control_entity
               ? interruttore(su, function () {
@@ -1503,6 +1617,816 @@
         );
       }),
     );
+  }
+
+  /* Un numero della configurazione, o il suo difetto se la casa non ce l'ha. */
+  function quanto(valore, difetto) {
+    return valore === undefined || valore === null || valore === "" ? difetto : Number(valore);
+  }
+
+  /* ── Auto elettrica ───────────────────────────────────────────────────── */
+
+  var MODI_RICARICA = {
+    off: "Ferma",
+    now: "Subito",
+    minpv: "Sole, e la rete se manca",
+    pv: "Solo col sole",
+  };
+
+  function sezioneAuto() {
+    var auto = P.auto[0] || { name: "Auto", brand: "", model: "" };
+    var soc = num("sensor.auto_batteria", 74);
+    var mira = num("select.auto_target_soc", 80);
+
+    var tAuto = tessera(
+      {
+        titolo: auto.name,
+        disegno: "ev",
+        lato: ((auto.brand || "") + " " + (auto.model || "")).trim() || null,
+      },
+      h(
+        "div",
+        { classe: "pl-due" },
+        h(
+          "div",
+          null,
+          cifra(Math.round(soc), "%", "pl-grande"),
+          h("p", { classe: "pl-sotto", testo: "nella batteria" }),
+        ),
+        h(
+          "div",
+          null,
+          cifra(num("sensor.auto_autonomia", 312), "km"),
+          h("p", { classe: "pl-sotto", testo: "di autonomia" }),
+        ),
+      ),
+      h(
+        "div",
+        { classe: "pl-livello" },
+        h("div", {
+          classe: "pl-livello-dentro",
+          stile: "width:" + soc + "%;background:linear-gradient(90deg,#16a34a,#4ade80)",
+        }),
+        h("div", { classe: "pl-livello-mira", stile: "left:" + mira + "%" }),
+      ),
+      h(
+        "div",
+        { classe: "pl-righe" },
+        riga("Si ferma al", mira + " %"),
+        riga("Al limite di carica", numeroIt(num("sensor.auto_autonomia_limite", 386)) + " km"),
+        riga("Dall'ultima ricarica", numeroIt(num("sensor.auto_km_ultima_ricarica", 142)) + " km"),
+        riga("Contachilometri", num("sensor.auto_odometro", 18460).toLocaleString("it-IT") + " km"),
+      ),
+    );
+
+    var potenzaWallbox = cifra("—", "W", "pl-grande");
+    vivi(function () {
+      potenzaWallbox.firstChild.textContent = bilancio().auto.toLocaleString("it-IT");
+    });
+
+    var tWallbox = tessera(
+      { titolo: "Wallbox", disegno: "energia", lato: val("sensor.wallbox_stato", "—") },
+      h(
+        "div",
+        { classe: "pl-due" },
+        h("div", null, potenzaWallbox, h("p", { classe: "pl-sotto", testo: "adesso" })),
+        h(
+          "div",
+          null,
+          cifra(numeroIt(num("sensor.wallbox_sessione", 9.8), 1), "kWh"),
+          h("p", { classe: "pl-sotto", testo: "in questa sessione" }),
+        ),
+      ),
+      h(
+        "div",
+        { classe: "pl-righe" },
+        riga(
+          "Quanto ne è venuto dal sole",
+          numeroIt(num("sensor.wallbox_solare_sessione", 84)) + " %",
+        ),
+        riga("Oggi", numeroIt(num("sensor.wallbox_energia_oggi", 6.4)) + " kWh"),
+        riga("Tensione", numeroIt(num("sensor.wallbox_tensione", 231)) + " V"),
+        riga("Temperatura", numeroIt(num("sensor.wallbox_temperatura", 34.2)) + " °C"),
+      ),
+    );
+
+    var modo = val("select.wallbox_modalita", "pv");
+    var tComeRicarica = tessera(
+      { titolo: "Come si ricarica", disegno: "solare" },
+      h("p", {
+        classe: "pl-sotto",
+        testo:
+          "Col sole, la wallbox prende quello che avanza dopo la casa e si " +
+          "ferma quando non ne avanza più.",
+      }),
+      h(
+        "div",
+        { classe: "pl-modi" },
+        (attr("select.wallbox_modalita", "options", ["off", "now", "minpv", "pv"]) || []).map(
+          function (m) {
+            return h("button", {
+              classe: "pl-modo" + (m === modo ? " pl-sì" : ""),
+              type: "button",
+              testo: MODI_RICARICA[m] || m,
+              onclick: function () {
+                poni("select.wallbox_modalita", m);
+                disegna();
+              },
+            });
+          },
+        ),
+      ),
+      h("p", { classe: "pl-sotto", testo: "Fino a che percentuale" }),
+      h(
+        "div",
+        { classe: "pl-modi" },
+        (attr("select.auto_target_soc", "options", []) || []).map(function (q) {
+          return h("button", {
+            classe: "pl-modo" + (Number(q) === mira ? " pl-sì" : ""),
+            type: "button",
+            testo: q + " %",
+            onclick: function () {
+              poni("select.auto_target_soc", q);
+              disegna();
+            },
+          });
+        }),
+      ),
+    );
+
+    return griglia([tAuto, tWallbox, tComeRicarica]);
+  }
+
+  /* ── Solare termico ───────────────────────────────────────────────────── */
+
+  function sezioneBoiler() {
+    /* Le tre sonde del boiler, una sopra l'altra come stanno nel serbatoio:
+     * in alto l'acqua calda, in fondo quella fredda. È il disegno che fa
+     * capire in un colpo d'occhio se c'è acqua per una doccia. */
+    var sonde = [
+      { id: "sensor.boiler_sonda_1", dove: "in alto" },
+      { id: "sensor.boiler_sonda_2", dove: "a metà" },
+      { id: "sensor.boiler_sonda_3", dove: "in fondo" },
+    ];
+    var tBoiler = tessera(
+      { titolo: "Il boiler", disegno: "scaldabagno", lato: "tre sonde" },
+      h(
+        "div",
+        { classe: "pl-serbatoio" },
+        sonde.map(function (s) {
+          var gradi = num(s.id, 40);
+          /* Da 20 a 80 gradi: sotto è freddo, sopra è doccia.
+           *
+           * Il colore passa per un beige chiaro invece di andare dritto
+           * dall'azzurro all'ambra: in mezzo a quella strada c'è un verde
+           * spento che sembra un errore di stampa, e un serbatoio tiepido
+           * non è verde. */
+          var caldo = Math.max(0, Math.min(1, (gradi - 20) / 60));
+          var colore =
+            caldo < 0.5
+              ? "color-mix(in srgb, #e8eef5 " + Math.round(caldo * 200) + "%, #38bdf8)"
+              : "color-mix(in srgb, #f59e0b " + Math.round((caldo - 0.5) * 200) + "%, #e8eef5)";
+          return h(
+            "div",
+            { classe: "pl-sonda", stile: "background:" + colore },
+            h("span", { classe: "pl-sonda-dove", testo: s.dove }),
+            h("span", {
+              classe: "pl-sonda-gradi",
+              testo: gradi.toFixed(1).replace(".", ",") + " °C",
+            }),
+          );
+        }),
+      ),
+    );
+
+    var gira = acceso("switch.pompa_solare");
+    var tCentralina = tessera(
+      {
+        titolo: "La centralina",
+        disegno: "solare",
+        lato: val("sensor.solare_centralina", "—"),
+      },
+      cifra(num("sensor.solare_delta", 12.4).toFixed(1).replace(".", ","), "°C", "pl-grande"),
+      h("p", {
+        classe: "pl-sotto",
+        testo:
+          "Quanto è più caldo il pannello del serbatoio. Finché c'è " +
+          "differenza la pompa gira e porta il caldo giù.",
+      }),
+      h(
+        "div",
+        { classe: "pl-riga" },
+        h("span", { testo: "Pompa di circolazione" }),
+        interruttore(gira, function () {
+          scambia("switch.pompa_solare", "on", "off");
+        }),
+      ),
+      h(
+        "div",
+        { classe: "pl-riga" },
+        h("span", { testo: "Impianto acceso" }),
+        interruttore(acceso("switch.solare_termico"), function () {
+          scambia("switch.solare_termico", "on", "off");
+        }),
+      ),
+    );
+
+    var oggi = num("sensor.boiler_energia_oggi", 1.2);
+    var tResistenza = tessera(
+      { titolo: "La resistenza", disegno: "energia" },
+      h("p", {
+        classe: "pl-sotto",
+        testo: "Quella che scalda quando il sole non basta. Si paga, e si vede.",
+      }),
+      h(
+        "div",
+        { classe: "pl-riga" },
+        h("span", { testo: "Accesa" }),
+        interruttore(acceso("switch.boiler"), function () {
+          scambia("switch.boiler", "on", "off");
+        }),
+      ),
+      h(
+        "div",
+        { classe: "pl-righe" },
+        riga("Adesso", num("sensor.boiler_potenza", 0).toLocaleString("it-IT") + " W"),
+        riga("Oggi", oggi + " kWh"),
+        riga("Che sono", soldi(oggi * P.costoKwh)),
+        riga("Questo mese", numeroIt(num("sensor.boiler_energia_mese", 42.6)) + " kWh"),
+      ),
+    );
+
+    return griglia([tBoiler, tCentralina, tResistenza]);
+  }
+
+  function soldi(quanti) {
+    return quanti.toFixed(2).replace(".", ",") + " €";
+  }
+
+  /* ── MiniPC ───────────────────────────────────────────────────────────── */
+
+  function sezioneServer() {
+    function barra(titolo, id, colore) {
+      var q = num(id, 0);
+      return h(
+        "div",
+        { classe: "pl-carico" },
+        h(
+          "div",
+          { classe: "pl-carico-testa" },
+          h("span", { testo: titolo }),
+          h("span", { classe: "pl-riga-v", testo: Math.round(q) + " %" }),
+        ),
+        h(
+          "div",
+          { classe: "pl-carico-fuori" },
+          h("div", {
+            classe: "pl-carico-dentro",
+            stile: "width:" + Math.min(100, q) + "%;background:" + colore,
+          }),
+        ),
+      );
+    }
+
+    var acceso_da = val("sensor.minipc_uptime", "");
+    var giorni = 0;
+    if (acceso_da) {
+      var quando = Date.parse(acceso_da);
+      if (!isNaN(quando)) giorni = Math.max(0, Math.round((Date.now() - quando) / 86400000));
+    }
+
+    var tMiniPc = tessera(
+      {
+        titolo: "MiniPC",
+        disegno: "minipc",
+        lato: giorni ? "acceso da " + giorni + " giorni" : null,
+      },
+      h(
+        "div",
+        { classe: "pl-carichi" },
+        barra("CPU", "sensor.minipc_cpu", "var(--azzurro)"),
+        barra("Memoria", "sensor.minipc_ram", "#7c3aed"),
+        barra("Disco", "sensor.minipc_disco", "var(--ambra)"),
+      ),
+      h(
+        "div",
+        { classe: "pl-righe" },
+        riga("Temperatura della CPU", numeroIt(num("sensor.minipc_cpu_temp", 52.4)) + " °C"),
+        riga("Quanto tira", numeroIt(num("sensor.minipc_potenza", 14)) + " W"),
+      ),
+    );
+
+    var rete = [
+      "binary_sensor.internet",
+      "binary_sensor.ping_internet",
+      "binary_sensor.google",
+      "binary_sensor.internet_lavanderia",
+    ];
+    var giu = rete.filter(function (id) {
+      return !acceso(id);
+    }).length;
+    var tRete = tessera(
+      {
+        titolo: "La rete",
+        disegno: "runtime",
+        lato: giu === 0 ? "tutto su" : giu + " giù",
+      },
+      h(
+        "div",
+        { classe: "pl-righe" },
+        rete.map(function (id) {
+          var su = acceso(id);
+          return h(
+            "div",
+            { classe: "pl-riga" },
+            h("span", { testo: nomeDi(id) }),
+            h("span", {
+              classe: "pl-pallino " + (su ? "pl-pallino-no" : "pl-pallino-sì"),
+              testo: comeSta(id),
+            }),
+          );
+        }),
+      ),
+    );
+
+    return griglia([tMiniPc, tRete]);
+  }
+
+  /* ── Piscina ──────────────────────────────────────────────────────────── */
+
+  function sezionePiscina() {
+    var p = P.piscina || {};
+
+    var tPiscina = tessera(
+      { titolo: "La piscina", disegno: "piscina" },
+      cifra(num(p.tempEnt, 27.4).toFixed(1).replace(".", ","), "°C", "pl-grande"),
+      h("p", { classe: "pl-sotto", testo: "temperatura dell'acqua" }),
+      h(
+        "div",
+        { classe: "pl-righe" },
+        h(
+          "div",
+          { classe: "pl-riga" },
+          h("span", { testo: "Pompa di filtrazione" }),
+          interruttore(acceso(p.pumpEnt), function () {
+            scambia(p.pumpEnt, "on", "off");
+          }),
+        ),
+        h(
+          "div",
+          { classe: "pl-riga" },
+          h("span", { testo: "Riscaldamento" }),
+          interruttore(acceso(p.heatEnt), function () {
+            scambia(p.heatEnt, "on", "off");
+          }),
+        ),
+        h(
+          "div",
+          { classe: "pl-riga" },
+          h("span", { testo: "Luci" }),
+          interruttore(acceso(p.lightEnt), function () {
+            scambia(p.lightEnt, "on", "off");
+          }),
+        ),
+      ),
+    );
+
+    /* pH e cloro non si leggono da soli: quello che conta è se stanno dentro
+     * la finestra buona, e la finestra la decide chi ha la piscina. */
+    function dentroLaFinestra(titolo, id, minimo, massimo, sotto, sopra) {
+      var q = num(id, 0);
+      var dentro = q >= minimo && q <= massimo;
+      var largo = massimo - minimo;
+      var dove = Math.max(0, Math.min(100, ((q - (minimo - largo)) / (largo * 3)) * 100));
+      return h(
+        "div",
+        { classe: "pl-misura" },
+        h(
+          "div",
+          { classe: "pl-carico-testa" },
+          h("span", { testo: titolo }),
+          h("span", {
+            classe: "pl-pallino " + (dentro ? "pl-pallino-no" : "pl-pallino-sì"),
+            testo: dentro ? "a posto" : q < minimo ? sotto : sopra,
+          }),
+        ),
+        h(
+          "div",
+          { classe: "pl-finestra-buona" },
+          h("div", { classe: "pl-finestra-dentro" }),
+          h("div", { classe: "pl-finestra-punto", stile: "left:" + dove + "%" }),
+        ),
+        h("p", {
+          classe: "pl-sotto",
+          testo: numeroIt(q) + " · va bene fra " + numeroIt(minimo) + " e " + numeroIt(massimo),
+        }),
+      );
+    }
+
+    var tAcqua = tessera(
+      { titolo: "L'acqua", disegno: "allagamenti" },
+      dentroLaFinestra("pH", p.phEnt, quanto(p.phMin, 7), quanto(p.phMax, 7.6), "acida", "basica"),
+      dentroLaFinestra(
+        "Cloro",
+        p.clEnt,
+        quanto(p.clMin, 0.5),
+        quanto(p.clMax, 1.5),
+        "poco",
+        "troppo",
+      ),
+    );
+
+    var tFiltrazione = tessera(
+      { titolo: "La filtrazione", disegno: "agenda" },
+      h(
+        "div",
+        { classe: "pl-righe" },
+        riga("Parte alle", p.filterStart || "09:00"),
+        riga("Per", (p.hours || 8) + " ore"),
+        riga("Quante ore", p.autoHours ? "le decide la temperatura" : "sempre le stesse"),
+      ),
+      h("p", {
+        classe: "pl-sotto",
+        testo: p.autoHours
+          ? "Più l'acqua è calda, più a lungo filtra: è la regola che la plancia applica da sé."
+          : "",
+      }),
+    );
+
+    return griglia([tPiscina, tAcqua, tFiltrazione]);
+  }
+
+  /* ── Irrigazione ──────────────────────────────────────────────────────── */
+
+  function sezioneIrrigazione() {
+    var irr = P.irrigazione || {};
+    var zone = irr.zones || [];
+    var bagnate = zone.filter(function (z) {
+      return acceso(z.entity);
+    }).length;
+
+    var tZone = tessera(
+      {
+        titolo: "Le zone",
+        disegno: "irrigazione",
+        lato: bagnate ? bagnate + " in funzione" : "tutte ferme",
+      },
+      h(
+        "div",
+        { classe: "pl-righe" },
+        zone.map(function (z) {
+          return h(
+            "div",
+            { classe: "pl-riga" },
+            h(
+              "span",
+              null,
+              z.name,
+              h("span", {
+                classe: "pl-riga-nota",
+                testo: z.mins + " min" + (z.room ? " · " + z.room : ""),
+              }),
+            ),
+            interruttore(acceso(z.entity), function () {
+              scambia(z.entity, "on", "off");
+            }),
+          );
+        }),
+      ),
+    );
+
+    var piove = acceso(irr.rainEnt);
+    var tPioggia = tessera(
+      {
+        titolo: "La pioggia",
+        disegno: "aria",
+        lato: piove ? "sta piovendo" : "asciutto",
+      },
+      h("p", {
+        classe: "pl-sotto",
+        testo:
+          "Se piove, o se è prevista pioggia sopra il " +
+          quanto(irr.rainThr, 40) +
+          " %, l'irrigazione non parte.",
+      }),
+      h(
+        "div",
+        { classe: "pl-righe" },
+        riga("Sensore di pioggia", comeSta(irr.rainEnt)),
+        riga(
+          "Previsione",
+          METEO[val("weather.casa", "sunny")] ? METEO[val("weather.casa", "sunny")][0] : "—",
+        ),
+        riga("Parte alle", irr.time || "06:30"),
+      ),
+    );
+
+    return griglia([tZone, tPioggia, tueEntita("irrigazione")]);
+  }
+
+  /* ── Prese ────────────────────────────────────────────────────────────── */
+
+  function sezionePrese() {
+    return griglia(
+      (P.prese || []).map(function (presa) {
+        var stanza = stanzaDi(presa.room_id);
+        var su = acceso(presa.entity);
+        return tessera(
+          {
+            titolo: presa.name,
+            disegno: "prese",
+            lato: stanza ? stanza.name : null,
+            classe: su ? "pl-attivo" : "",
+          },
+          h(
+            "div",
+            { classe: "pl-presa" },
+            h("span", { classe: "pl-presa-segno", testo: presa.icon || "🔌" }),
+            h(
+              "div",
+              null,
+              cifra(su ? WATT[presa.entity] || 0 : 0, "W"),
+              h("p", { classe: "pl-sotto", testo: su ? "accesa" : "spenta" }),
+            ),
+            interruttore(su, function () {
+              scambia(presa.entity, "on", "off");
+            }),
+          ),
+        );
+      }),
+    );
+  }
+
+  /* ── Robot ────────────────────────────────────────────────────────────── */
+
+  var ROBOT = {
+    cleaning: "Sta pulendo",
+    docked: "Alla base",
+    returning: "Sta tornando",
+    paused: "In pausa",
+    idle: "Ferma",
+  };
+  var VENTOLE = { quiet: "Piano", balanced: "Normale", medium: "Media", turbo: "Forte" };
+
+  function sezioneRobot() {
+    return griglia(
+      (P.robot || []).map(function (r) {
+        var id = r.entity;
+        var s = val(id, "docked");
+        var stanza = stanzaDi(r.room_id);
+        var ventola = attr(id, "fan_speed", "medium");
+
+        return tessera(
+          {
+            titolo: r.name,
+            disegno: "robot",
+            lato: stanza ? stanza.name : null,
+            classe: s === "cleaning" ? "pl-attivo" : "",
+          },
+          h(
+            "div",
+            { classe: "pl-due" },
+            h(
+              "div",
+              null,
+              cifra(Math.round(attr(id, "battery_level", 63)), "%", "pl-grande"),
+              h("p", { classe: "pl-sotto", testo: "di batteria" }),
+            ),
+            h(
+              "div",
+              null,
+              h("p", { classe: "pl-allarme-stato", testo: ROBOT[s] || s }),
+              h("p", { classe: "pl-sotto", testo: attr(id, "status", "") }),
+            ),
+          ),
+          h(
+            "div",
+            { classe: "pl-modi" },
+            (attr(id, "fan_speed_list", []) || []).map(function (v) {
+              return h("button", {
+                classe: "pl-modo" + (v === ventola ? " pl-sì" : ""),
+                type: "button",
+                testo: VENTOLE[v] || v,
+                onclick: function () {
+                  poni(id, s, { fan_speed: v });
+                  disegna();
+                },
+              });
+            }),
+          ),
+          h(
+            "div",
+            { classe: "pl-azioni" },
+            azione(s === "cleaning" ? "Metti in pausa" : "Mandalo a pulire", function () {
+              poni(id, s === "cleaning" ? "paused" : "cleaning", {
+                status: s === "cleaning" ? "In pausa" : "In pulizia",
+              });
+              disegna();
+            }),
+            azione("Alla base", function () {
+              poni(id, "docked", { status: "Alla base" });
+              disegna();
+            }),
+          ),
+        );
+      }),
+    );
+  }
+
+  /* ── Media ────────────────────────────────────────────────────────────── */
+
+  function sezioneMedia() {
+    return griglia(
+      (P.media || []).map(function (m) {
+        var id = m.entity;
+        var suona = acceso(id);
+        var stanza = stanzaDi(m.room_id);
+        var volume = Math.round(Number(attr(id, "volume_level", 0.3)) * 100);
+        var etichetta = h("span", { classe: "pl-riga-v", testo: volume + " %" });
+
+        return tessera(
+          {
+            titolo: m.nome || nomeDi(id),
+            disegno: "media",
+            lato: attr(id, "source", stanza ? stanza.name : null),
+            classe: suona ? "pl-attivo" : "",
+          },
+          h(
+            "div",
+            { classe: "pl-media" },
+            h(
+              "div",
+              null,
+              h("p", {
+                classe: "pl-media-titolo",
+                testo: attr(id, "media_title", suona ? "—" : "Spento"),
+              }),
+              h("p", { classe: "pl-sotto", testo: attr(id, "media_artist", "") }),
+            ),
+            h("button", {
+              classe: "pl-tondo-bottone" + (suona ? " pl-sì" : ""),
+              type: "button",
+              "aria-label": suona ? "Metti in pausa" : "Fai partire",
+              html: suona
+                ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="7" y="5" width="4" height="14" rx="1"/><rect x="13" y="5" width="4" height="14" rx="1"/></svg>'
+                : '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>',
+              onclick: function () {
+                poni(id, suona ? "paused" : "playing");
+                disegna();
+              },
+            }),
+          ),
+          h("div", { classe: "pl-luce-riga" }, h("span", { testo: "Volume" }), etichetta),
+          h("input", {
+            classe: "pl-cursore pl-cursore-azzurro",
+            type: "range",
+            min: "0",
+            max: "100",
+            value: String(volume),
+            "aria-label": "Volume di " + (m.nome || nomeDi(id)),
+            oninput: function (e) {
+              var v = Number(e.target.value);
+              poni(id, val(id), { volume_level: v / 100 });
+              etichetta.textContent = v + " %";
+            },
+          }),
+        );
+      }),
+    );
+  }
+
+  /* ── UPS ──────────────────────────────────────────────────────────────── */
+
+  function sezioneUps() {
+    var u = P.ups || {};
+    var suRete = acceso(u.rete);
+    var carica = num(u.batteria, 100);
+    var carico = num(u.carico, 23);
+
+    var tUps = tessera(
+      {
+        titolo: u.name || "UPS",
+        disegno: "ups",
+        lato: suRete ? "sulla rete" : "a batteria",
+        classe: suRete ? "" : "pl-attivo",
+      },
+      h(
+        "div",
+        { classe: "pl-due" },
+        h(
+          "div",
+          null,
+          cifra(Math.round(carica), "%", "pl-grande"),
+          h("p", { classe: "pl-sotto", testo: "di batteria" }),
+        ),
+        h(
+          "div",
+          null,
+          cifra(num(u.autonomia, 48), "min"),
+          h("p", { classe: "pl-sotto", testo: "di autonomia" }),
+        ),
+      ),
+      h(
+        "div",
+        { classe: "pl-livello" },
+        h("div", {
+          classe: "pl-livello-dentro",
+          stile: "width:" + carica + "%;background:linear-gradient(90deg,#16a34a,#4ade80)",
+        }),
+      ),
+      h(
+        "div",
+        { classe: "pl-righe" },
+        riga("Carico", Math.round(carico) + " %"),
+        riga("Assorbe", numeroIt(num(u.potenza, 74)) + " W"),
+        riga("Tensione di rete", numeroIt(num(u.tensione, 231.4)) + " V"),
+        riga("Temperatura", numeroIt(num(u.temperatura, 31.6)) + " °C"),
+        riga("Come sta", val(u.stato, "OL") === "OL" ? "OL — va sulla rete" : val(u.stato, "—")),
+      ),
+    );
+
+    return griglia([tUps]);
+  }
+
+  /* ── Calendario ───────────────────────────────────────────────────────── */
+
+  function quandoInParole(quando) {
+    if (!quando) return "";
+    var data = new Date(String(quando).replace(" ", "T"));
+    if (isNaN(data.getTime())) return String(quando);
+    return data.toLocaleString("it-IT", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function sezioneCalendario() {
+    var calendari = (P.calendari || []).map(function (c) {
+      return tessera(
+        { titolo: c.name || nomeDi(c.entity), disegno: "agenda" },
+        h("p", {
+          classe: "pl-media-titolo",
+          testo: attr(c.entity, "message", "Niente in programma"),
+        }),
+        h("p", {
+          classe: "pl-sotto",
+          testo: quandoInParole(attr(c.entity, "start_time", "")) || "—",
+        }),
+        attr(c.entity, "all_day", false)
+          ? h("p", { classe: "pl-sotto", testo: "tutto il giorno" })
+          : null,
+      );
+    });
+
+    var liste = (P.liste || []).map(function (l) {
+      var quante = num(l.entity, 0);
+      return tessera(
+        { titolo: l.name || nomeDi(l.entity), disegno: "todo" },
+        cifra(quante, quante === 1 ? "cosa" : "cose", "pl-grande"),
+        h("p", { classe: "pl-sotto", testo: "da fare" }),
+      );
+    });
+
+    return griglia(calendari.concat(liste));
+  }
+
+  /* ── Le sezioni che uno si è fatto da sé ──────────────────────────────── */
+
+  function sezioneMia(mia) {
+    return griglia([
+      tessera(
+        { titolo: mia.titolo, emoji: mia.icona, lato: "sezione tua" },
+        h(
+          "div",
+          { classe: "pl-righe" },
+          (mia.voci || []).map(function (v) {
+            return h(
+              "div",
+              { classe: "pl-riga" },
+              h("span", null, h("span", { classe: "pl-emoji", testo: v.icona || "" }), v.nome),
+              siComanda(v.entity)
+                ? interruttore(acceso(v.entity), function () {
+                    scambia(v.entity, "on", "off");
+                  })
+                : h("span", { classe: "pl-riga-v", testo: comeSiLegge(v.entity) }),
+            );
+          }),
+        ),
+      ),
+      tessera(
+        { titolo: "Da dove arriva", disegno: "impostazioni" },
+        h("p", {
+          classe: "pl-sotto",
+          testo:
+            "Questa sezione non ce l'ha la plancia: se l'è fatta chi ci abita, " +
+            "dalla Config, scegliendo un nome, un'icona e quali entità metterci " +
+            "dentro. Compare nella barra come tutte le altre.",
+        }),
+      ),
+    ]);
   }
 
   /* ── Le schermate che sono dell'app, non della plancia ────────────────── */
@@ -1673,47 +2597,67 @@
 
   /* ── Le voci del menu e le sezioni ────────────────────────────────────── */
 
-  var SEZIONI = [
-    { chiave: "home", nome: "Home", disegno: "home", disegna: sezioneHome },
-    {
-      chiave: "energia",
-      nome: "Energia",
-      disegno: "energia",
-      disegna: sezioneEnergia,
-    },
-    { chiave: "luci", nome: "Luci", disegno: "luci", disegna: sezioneLuci },
-    { chiave: "clima", nome: "Clima", disegno: "clima", disegna: sezioneClima },
-    {
-      chiave: "temperatura",
-      nome: "Temperatura",
-      disegno: "temperatura",
-      disegna: sezioneTemperatura,
-    },
-    {
-      chiave: "finestre",
-      nome: "Finestre",
-      disegno: "tapparelle",
-      disegna: sezioneFinestre,
-    },
-    {
-      chiave: "sicurezza",
-      nome: "Sicurezza",
-      disegno: "sicurezza",
-      disegna: sezioneSicurezza,
-    },
-    {
-      chiave: "stanze",
-      nome: "Stanze",
-      disegno: "stanze",
-      disegna: sezioneStanze,
-    },
-    {
-      chiave: "elettrodomestici",
-      nome: "Elettrodomestici",
-      disegno: "elettrodomestici",
-      disegna: sezioneElettrodomestici,
-    },
-  ];
+  /* Le sezioni della plancia.
+   *
+   * Quali sono, come si chiamano e in che ordine stanno **non lo decide
+   * questo file**: lo decide la casa, in `cd_sections`, ed è la stessa cosa
+   * che la scheda Impostazioni accende e spegne. `porta-nel-sito.mjs` le
+   * porta qui dentro già in fila, e si ferma se la casa ne accende una che
+   * non c'è qui sotto — perché una plancia dimostrativa con dentro meno
+   * sezioni di quella vera fa arrivare la gente all'app a cercare cose che
+   * non trova.
+   *
+   * Qui c'è solo chi le disegna. */
+  var DISEGNI = {
+    home: sezioneHome,
+    energy: sezioneEnergia,
+    ev: sezioneAuto,
+    boiler: sezioneBoiler,
+    security: sezioneSicurezza,
+    server: sezioneServer,
+    temp: sezioneTemperatura,
+    clima: sezioneClima,
+    piscina: sezionePiscina,
+    irrigazione: sezioneIrrigazione,
+    tapparelle: sezioneFinestre,
+    stanze: sezioneStanze,
+    luci: sezioneLuci,
+    prese: sezionePrese,
+    appliances: sezioneElettrodomestici,
+    robot: sezioneRobot,
+    media: sezioneMedia,
+    porte: sezionePorte,
+    ups: sezioneUps,
+    calendario: sezioneCalendario,
+  };
+
+  var SEZIONI = (P.sezioni || [])
+    .filter(function (s) {
+      return DISEGNI[s.chiave];
+    })
+    .map(function (s) {
+      return {
+        chiave: s.chiave,
+        nome: s.nome,
+        disegno: s.disegno,
+        disegna: DISEGNI[s.chiave],
+      };
+    });
+
+  /* E in fondo alla fila, le sezioni che uno si è fatto da sé: nella casa
+   * demo ce n'è una, l'acquario. Non è un esempio inventato per il sito —
+   * è `cd_sezioni_mie`, e la plancia le mette nella barra come le altre. */
+  (P.sezioniMie || []).forEach(function (mia) {
+    SEZIONI.push({
+      chiave: "mia:" + mia.id,
+      nome: mia.titolo,
+      disegno: "custom",
+      emoji: mia.icona,
+      disegna: function () {
+        return sezioneMia(mia);
+      },
+    });
+  });
 
   var VOCI = [
     { chiave: "plancia", nome: "Plancia", disegno: "home" },
@@ -1744,7 +2688,10 @@
 
   /* ── Il disegno ───────────────────────────────────────────────────────── */
 
-  var vista = { voce: "plancia", sezione: "home" };
+  var vista = {
+    voce: "plancia",
+    sezione: SEZIONI.length ? SEZIONI[0].chiave : "home",
+  };
   var dentro = null; /* dove si disegna il contenuto */
   var barra = null; /* la fila delle sezioni della plancia */
   var menu = null;
@@ -1801,12 +2748,16 @@
             {
               classe: "pl-scheda" + (s.chiave === vista.sezione ? " pl-sì" : ""),
               type: "button",
+              /* Il nome per intero, per chi guarda da fuori: nella scheda
+               * può esserci anche un'emoji davanti, e il collaudo confronta
+               * questo con quello che la casa dice di avere. */
+              "data-nome": s.nome,
               onclick: function () {
                 vista.sezione = s.chiave;
                 disegna();
               },
             },
-            icona(s.disegno, 18),
+            s.emoji ? h("span", { classe: "pl-segno-suo", testo: s.emoji }) : icona(s.disegno, 18),
             h("span", { testo: s.nome }),
           ),
         );

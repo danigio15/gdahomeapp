@@ -977,6 +977,144 @@
   border-color: color-mix(in srgb, var(--ambra) 34%, transparent);
 }
 
+/* ── I pezzi delle sezioni nuove ────────────────────────────────────────── */
+
+/* Una tessera che sta facendo qualcosa: il robot che pulisce, la presa
+ * accesa, l'UPS che è passato a batteria. */
+.pl-tessera.pl-attivo {
+  border-color: color-mix(in srgb, var(--ambra) 40%, transparent);
+}
+
+/* Le icone che nella plancia sono emoji e non disegni: le mette chi
+ * configura, e sono le sue. */
+.pl-emoji {
+  margin-right: 7px;
+}
+
+/* Il segno di una sezione che uno si è fatto da sé: nella plancia è un'emoji
+ * scelta da lui, non un'icona nostra. */
+.pl-segno-suo {
+  font-size: 1.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.pl-riga-nota {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--testo-lieve);
+}
+
+/* Una barra di livello, con un segno dove si fermerà (la batteria dell'auto
+ * che si carica fino all'ottanta per cento). */
+.pl-livello {
+  position: relative;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--bordo);
+  overflow: hidden;
+}
+.pl-livello-dentro {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+.pl-livello-mira {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--testo);
+  opacity: 0.55;
+}
+
+/* Il boiler: tre sonde una sopra l'altra come stanno nel serbatoio. Il
+ * colore va dall'azzurro dell'acqua fredda all'ambra di quella da doccia. */
+.pl-serbatoio {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.pl-sonda {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 13px;
+  color: #0b1220;
+}
+.pl-sonda-dove {
+  font-size: 0.8rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
+.pl-sonda-gradi {
+  font-family: "Oswald", "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+
+/* pH e cloro: quello che conta non è il numero, è se sta dentro la finestra
+ * buona. La fascia chiara in mezzo è quella. */
+.pl-misura {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pl-finestra-buona {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--male) 22%, var(--bordo));
+  overflow: visible;
+}
+.pl-finestra-dentro {
+  position: absolute;
+  left: 33.33%;
+  width: 33.34%;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--bene) 45%, transparent);
+}
+.pl-finestra-punto {
+  position: absolute;
+  top: 50%;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--pl-tessera);
+  border: 3px solid var(--testo);
+  transform: translate(-50%, -50%);
+  transition: left 0.5s ease;
+}
+
+/* Le prese: l'emoji che ci ha messo chi configura, quanto tira, e il tasto. */
+.pl-presa {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pl-presa-segno {
+  font-size: 1.9rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.pl-presa > div {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Il volume non è una luce: il cursore prende l'azzurro del «premi qui». */
+.pl-cursore-azzurro::-webkit-slider-thumb {
+  background: var(--azzurro);
+}
+.pl-cursore-azzurro::-moz-range-thumb {
+  background: var(--azzurro);
+}
+
 /* ── Il lucchetto ───────────────────────────────────────────────────────── */
 
 .pl-chiuso {

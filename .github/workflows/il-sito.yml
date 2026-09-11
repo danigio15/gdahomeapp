@@ -1,0 +1,201 @@
+# Pubblica il sito su Cloudflare Pages.
+#
+# Il sito in `sito/` e' fatto di file statici: non c'e' niente da costruire,
+# e non serve un computer per metterlo online. Ci vuole una cosa sola, una
+# volta sola — un gettone di Cloudflare fra i segreti di questa repository,
+# come `CLOUDFLARE_API_TOKEN` — e da li' in poi si pubblica da questa pagina.
+#
+# **Il gettone non e' lo stesso del centralino.** Quello e' per i Worker;
+# qui serve Cloudflare Pages. Su dash.cloudflare.com, in fondo al menu a
+# sinistra: «Manage Account → Account API Tokens → Create Token → Create
+# Custom Token», e si danno due permessi:
+#
+#   * Account · Cloudflare Pages · Edit
+#   * Account · Account Settings · Read
+#
+# Lo stesso gettone puo' avere anche «Workers Scripts · Edit», e allora ne
+# basta uno per tutti e due i bottoni. Se si tengono separati, questo va in
+# un segreto suo: `CLOUDFLARE_PAGES_TOKEN` (se c'e', vince su quello dei
+# Worker).
+#
+# **Il progetto su Cloudflare lo fa questa pagina**, se non c'e' gia': la
+# prima corsa lo crea col nome `gdahome`, e l'indirizzo diventa
+# `https://gdahome.pages.dev`. Per chiamarlo diversamente si mette una
+# variabile di repository `SITO_PAGES` (Settings → Secrets and variables →
+# Actions → Variables), oppure si scrive il nome nella casella qui sotto.
+#
+# **Quando gira.** A mano da Actions, e da sola a ogni modifica di `sito/`
+# sul ramo principale: un sito che resta indietro rispetto a quello che
+# racconta e' peggio di non averlo. Da un altro ramo esce un'anteprima col
+# suo indirizzo, e quello pubblico non si tocca.
+#
+# **Cosa non pubblica.** Se la plancia dimostrativa non risponde, non si
+# pubblica niente: `collaudo/guarda-il-sito.mjs` la apre con un browser vero
+# e prova che ogni sezione della barra disegni qualcosa. Il pezzo per cui il
+# sito esiste e' quello, e pubblicarlo rotto vuol dire far arrivare qualcuno
+# a una pagina che non fa quello che promette.
+name: Il sito
+
+on:
+  workflow_dispatch:
+    inputs:
+      progetto:
+        description: >-
+          Il nome del progetto su Cloudflare Pages. Lasciandolo vuoto si usa
+          la variabile SITO_PAGES, e se non c'e' nemmeno quella, «gdahome».
+        required: false
+        default: ""
+  push:
+    branches:
+      - main
+    paths:
+      - "sito/**"
+      - ".github/workflows/il-sito.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: il-sito-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pubblica:
+    name: Pubblica il sito
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      # Il gettone si guarda **prima** di provare a usarlo: se e' storto,
+      # Cloudflare risponde «Invalid format for Authorization header», che e'
+      # vero e non serve a niente. Qui si dice cosa c'e' che non va, senza mai
+      # stampare il gettone.
+      - name: C'e' il gettone, ed e' fatto bene?
+        run: |
+          set -eu
+          gettone="${PAGES_TOKEN:-${WORKERS_TOKEN:-}}"
+          if [ -z "$gettone" ]; then
+            echo "::error::Manca il gettone di Cloudflare."
+            echo "Si mette in Settings → Secrets and variables → Actions → New repository secret,"
+            echo "come CLOUDFLARE_PAGES_TOKEN (o CLOUDFLARE_API_TOKEN, se e' lo stesso del centralino)."
+            echo "Il gettone si fa su dash.cloudflare.com → Manage Account → Account API Tokens →"
+            echo "Create Custom Token, con «Cloudflare Pages: Edit» e «Account Settings: Read»."
+            exit 1
+          fi
+
+          quanto=${#gettone}
+          # Un gettone di Cloudflare e' una riga sola di lettere, numeri,
+          # trattini e trattini bassi. Nient'altro.
+          if ! printf '%s' "$gettone" | grep -qE '^[A-Za-z0-9_-]+$'; then
+            echo "::error::Il gettone contiene qualcosa che non ci va (uno spazio, un a capo, delle virgolette, o del testo intorno)."
+            echo "Nel segreto va **solo** la stringa del token: non «Bearer …», non il comando curl."
+            echo "Lungo $quanto caratteri."
+            exit 1
+          fi
+          if [ "$quanto" -lt 30 ]; then
+            echo "::error::Il gettone e' troppo corto ($quanto caratteri): ne servono una quarantina."
+            echo "Forse e' stato copiato a meta'."
+            exit 1
+          fi
+
+          echo "Il gettone c'e' ed e' fatto bene ($quanto caratteri)."
+        env:
+          PAGES_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN }}
+          WORKERS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      # Quello che sta in `sito/statico/` e' roba portata da altrove — il
+      # marchio, le icone, i caratteri, la casa demo. Si rifa' qui, cosi' il
+      # sito pubblicato non puo' essere indietro rispetto all'app; e se era
+      # indietro lo si dice, perche' vuol dire che qualcuno ha dimenticato di
+      # rilanciare lo script.
+      - name: Porta nel sito le cose vere
+        run: |
+          set -eu
+          node strumenti/porta-nel-sito.mjs
+          if git diff --quiet -- sito/statico; then
+            echo "Quello che sta nella repository era gia' aggiornato."
+          else
+            echo "::warning::sito/statico era indietro: si pubblica quello aggiornato, ma nella repository resta il vecchio. Rilancia «node strumenti/porta-nel-sito.mjs» e salvalo."
+            echo "In \`sito/statico\` c'era roba vecchia. Il sito pubblicato e' aggiornato, la repository no." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # La plancia dimostrativa e' il pezzo per cui il sito esiste. Se non
+      # risponde, non si pubblica: questo la apre con un browser vero, a tre
+      # larghezze, e controlla che ogni sezione della barra disegni qualcosa.
+      - name: Le dipendenze del collaudo
+        run: npm ci --no-audit --no-fund
+        working-directory: collaudo
+
+      - name: Il browser
+        run: npx playwright install --with-deps chromium
+        working-directory: collaudo
+
+      - name: La plancia risponde?
+        run: node collaudo/guarda-il-sito.mjs
+
+      - name: Quale progetto
+        run: |
+          set -eu
+          nome="${SCRITTO:-}"
+          [ -n "$nome" ] || nome="${VARIABILE:-}"
+          [ -n "$nome" ] || nome="gdahome"
+          echo "PROGETTO=$nome" >> "$GITHUB_ENV"
+          echo "Il progetto su Cloudflare Pages si chiama «$nome»."
+        env:
+          SCRITTO: ${{ inputs.progetto }}
+          VARIABILE: ${{ vars.SITO_PAGES }}
+
+      # La prima volta il progetto non c'e': lo si crea. Le volte dopo questo
+      # passo non fa niente. Cosi' il sito si mette online col bottone e
+      # basta, senza passare dal pannello di Cloudflare.
+      - name: Il progetto c'e', o si fa
+        run: |
+          set -eu
+          if npx --yes wrangler@4 pages project list 2>/dev/null | grep -qE "(^|[[:space:]])${PROGETTO}([[:space:]]|$)"; then
+            echo "Il progetto «${PROGETTO}» c'e' gia'."
+          else
+            echo "Il progetto «${PROGETTO}» non c'e': lo faccio adesso."
+            npx --yes wrangler@4 pages project create "${PROGETTO}" \
+              --production-branch=main
+          fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+          # Serve solo se sul gettone c'e' piu' di un account. Se ce n'e' uno
+          # solo, wrangler lo trova da se' e questo puo' restare vuoto.
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # Dal ramo principale esce il sito vero; da qualunque altro ramo esce
+      # un'anteprima col suo indirizzo, e quello pubblico non si tocca.
+      - name: Pubblica
+        run: |
+          set -eu
+          npx --yes wrangler@4 pages deploy sito \
+            --project-name="${PROGETTO}" \
+            --branch="${GITHUB_REF_NAME}" \
+            --commit-dirty=true | tee /tmp/uscita.txt
+
+          indirizzo=$(grep -oE 'https://[A-Za-z0-9.-]+\.pages\.dev' /tmp/uscita.txt | tail -1 || true)
+          {
+            echo "## Il sito e' online"
+            echo ""
+            if [ -n "$indirizzo" ]; then
+              echo "$indirizzo"
+            else
+              echo "Pubblicato, ma l'indirizzo non si e' letto dall'uscita di wrangler:"
+              echo "sta nel pannello di Cloudflare, sotto Workers & Pages → ${PROGETTO}."
+            fi
+            echo ""
+            if [ "${GITHUB_REF_NAME}" = "main" ]; then
+              echo "E' il sito vero: viene dal ramo principale."
+            else
+              echo "E' un'anteprima del ramo \`${GITHUB_REF_NAME}\`. Il sito pubblico non e' cambiato."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+          # Serve solo se sul gettone c'e' piu' di un account. Se ce n'e' uno
+          # solo, wrangler lo trova da se' e questo puo' restare vuoto.
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

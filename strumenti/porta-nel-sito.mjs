@@ -72,18 +72,59 @@ function fermati(perche) {
   process.exit(66);
 }
 
+/* ── Le sezioni della plancia ─────────────────────────────────────────────
+ *
+ * Quali sezioni ha una plancia non lo decide il sito: lo decide la casa, in
+ * `cd_sections`, e sono quelle che la scheda Impostazioni accende e spegne.
+ * Il sito prende quell'elenco **cosi' com'e'**: far vedere sezioni che nella
+ * plancia vera non esistono, o cambiarne i nomi, e' il modo piu' rapido di
+ * far arrivare qualcuno all'app e non fargli ritrovare niente di quello che
+ * gli e' stato mostrato.
+ *
+ * Qui sotto c'e' solo **l'ordine e il nome** di ognuna, che sono quelli della
+ * fila dell'editor letta dalla release 1.4.15 e scritta in `docs/CONFIG.md`.
+ * `temp` e `temperature` sono due chiavi per la stessa sezione: la plancia le
+ * tiene tutte e due per compatibilita'.
+ *
+ * Se un giorno la casa demo accende una sezione che non e' in questa lista,
+ * lo script si ferma invece di lasciarla fuori in silenzio. */
+const SEZIONI = [
+  { chiave: "home", nome: "Home", disegno: "home" },
+  { chiave: "energy", nome: "Energia", disegno: "energia" },
+  { chiave: "ev", nome: "Auto elettrica", disegno: "ev" },
+  { chiave: "boiler", nome: "Solare termico", disegno: "scaldabagno" },
+  { chiave: "security", nome: "Sicurezza", disegno: "sicurezza" },
+  { chiave: "server", nome: "MiniPC", disegno: "minipc" },
+  { chiave: "temp", nome: "Temperatura", disegno: "temperatura", anche: ["temperature"] },
+  { chiave: "clima", nome: "Clima", disegno: "clima" },
+  { chiave: "piscina", nome: "Piscina", disegno: "piscina" },
+  { chiave: "irrigazione", nome: "Irrigazione", disegno: "irrigazione" },
+  { chiave: "tapparelle", nome: "Finestre", disegno: "tapparelle" },
+  { chiave: "stanze", nome: "Stanze", disegno: "stanze" },
+  { chiave: "luci", nome: "Luci", disegno: "luci" },
+  { chiave: "prese", nome: "Prese", disegno: "prese" },
+  { chiave: "appliances", nome: "Elettrodomestici", disegno: "elettrodomestici" },
+  { chiave: "robot", nome: "Robot", disegno: "robot" },
+  { chiave: "media", nome: "Media", disegno: "media" },
+  { chiave: "porte", nome: "Porte", disegno: "aperture" },
+  { chiave: "ups", nome: "UPS", disegno: "ups" },
+  { chiave: "calendario", nome: "Calendario", disegno: "agenda" },
+];
+
 /* ── La casa demo ─────────────────────────────────────────────────────────
  *
  * Il file del collaudo ha due meta': le entita', e la configurazione della
  * plancia come Home Assistant la restituirebbe — con dentro, in una stringa,
  * lo stato vero della dashboard. Al sito servono tutte e due, ma non cosi':
- * le entita' gli servono per chiave, e della configurazione gli serve solo
- * quello che disegna (le stanze, le luci, i termostati, le tapparelle, gli
- * elettrodomestici, le telecamere, i carichi, l'energia).
+ * le entita' gli servono per chiave, e della configurazione gli serve quello
+ * che si disegna.
  *
- * Il resto della configurazione sono le chiavi `cd_*`, che sono la stessa
- * roba scritta nel modo vecchio: la plancia le tiene per compatibilita', al
- * sito non dicono niente. */
+ * E la configurazione sta in due posti, che servono tutti e due:
+ * `dm_dashboard_state` per le cose che la plancia ha gia' rifatto — stanze,
+ * luci, clima, tapparelle, elettrodomestici, telecamere, energia, piscina,
+ * irrigazione — e le chiavi `cd_*` per quelle che stanno ancora nel modo
+ * vecchio: prese, lettori, serrature, UPS, calendari, liste, persone, e le
+ * sezioni e le entita' che l'utente si e' fatto da se'. */
 function laCasa() {
   const origine = join(RADICE, "collaudo", "casa-demo.json");
   if (!existsSync(origine)) fermati(`Non trovo ${origine}.`);
@@ -102,14 +143,46 @@ function laCasa() {
 
   const valori = crudo.configurazione?.snapshot?.values ?? {};
   if (!valori.dm_dashboard_state) fermati("Nella casa demo non c'e' lo stato della plancia.");
-  const sezioni = JSON.parse(valori.dm_dashboard_state).sections ?? {};
+  const stato = JSON.parse(valori.dm_dashboard_state);
+  const sezioni = stato.sections ?? {};
 
   const inOrdine = (elenco) => [...(elenco ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const letta = (chiave, difetto) => {
+    const grezza = valori[chiave];
+    if (grezza === undefined || grezza === null || grezza === "") return difetto;
+    if (typeof grezza !== "string") return grezza;
+    try {
+      return JSON.parse(grezza);
+    } catch {
+      return grezza;
+    }
+  };
+
+  /* Le sezioni accese, nell'ordine della plancia. */
+  const accese = letta("cd_sections", stato.visibility ?? {});
+  const conosciute = new Set();
+  const inFila = [];
+  for (const sezione of SEZIONI) {
+    const chiavi = [sezione.chiave, ...(sezione.anche ?? [])];
+    for (const una of chiavi) conosciute.add(una);
+    if (!chiavi.some((una) => accese[una])) continue;
+    inFila.push({ chiave: sezione.chiave, nome: sezione.nome, disegno: sezione.disegno });
+  }
+  const ignote = Object.keys(accese).filter((chiave) => accese[chiave] && !conosciute.has(chiave));
+  if (ignote.length)
+    fermati(
+      `La casa demo accende sezioni che il sito non sa disegnare: ${ignote.join(", ")}.\n` +
+        "Vanno aggiunte a SEZIONI qui dentro e a sito/plancia.js — se no il sito\n" +
+        "farebbe vedere una plancia con dentro meno di quella vera.",
+    );
+  if (inFila.length === 0) fermati("La casa demo non ha nessuna sezione accesa.");
 
   return {
     origine: "collaudo/casa-demo.json",
     entita,
     plancia: {
+      sezioni: inFila,
+      /* Quello che la plancia ha gia' rifatto. */
       stanze: inOrdine(sezioni.rooms),
       luci: inOrdine(sezioni.lights),
       clima: inOrdine(sezioni.climate),
@@ -119,6 +192,24 @@ function laCasa() {
       carichi: inOrdine(sezioni.energyLoads),
       robot: sezioni.robots ?? [],
       energia: sezioni.energy ?? {},
+      auto: sezioni.ev ?? [],
+      piscina: sezioni.pool ?? {},
+      irrigazione: sezioni.irrigation ?? {},
+      /* Quello che sta ancora nel modo vecchio. */
+      prese: letta("cd_prese", []),
+      media: letta("cd_media_player", []),
+      porte: letta("cd_security_doors", []),
+      ups: letta("cd_ups", {}),
+      calendari: letta("cd_calendari", []),
+      liste: letta("cd_todo", []),
+      avvisi: letta("cd_avvisi_custom", []),
+      persone: letta("cd_people", []),
+      /* Quello che l'utente si e' fatto da se': una sezione in piu' nella
+       * fila, e delle entita' appese a una sezione che c'e' gia'. Sono due
+       * funzioni vere della plancia, e nel sito si vedono. */
+      sezioniMie: letta("cd_sezioni_mie", []),
+      entitaMie: letta("cd_entita_mie", []),
+      costoKwh: Number(letta("cd_costo_kwh", 0.28)) || 0.28,
     },
   };
 }
