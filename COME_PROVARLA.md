@@ -82,46 +82,61 @@ scrive da nessuna parte: si incolla e sparisce.
 ```sh
 printf 'Token di GitHub (non si vede mentre lo incolli), poi Invio: '; stty -echo; read -r G; stty echo; echo
 G=$(printf '%s' "$G" | tr -d '[:space:]"'"'"''); case "$G" in github_pat_*|ghp_*) ;; *) G="github_pat_$G";; esac
-rm -rf /tmp/gdahomeapp && mkdir -p /tmp/gdahomeapp \
-&& curl -fsSL -H "Authorization: Bearer $G" https://api.github.com/repos/danigio15/gdahomeapp/tarball/main | tar -xzf - -C /tmp/gdahomeapp \
-&& test -f /tmp/gdahomeapp/*/ponte/config.yaml \
-&& rm -rf /addons/ponte && cp -r /tmp/gdahomeapp/*/ponte /addons/ponte && rm -rf /tmp/gdahomeapp \
-&& echo "nella cartella adesso c'e' la $(sed -n 's/^version: "\(.*\)"/\1/p' /addons/ponte/config.yaml)" \
-|| echo "Il codice nuovo non e' arrivato: la cartella e' quella di prima, non si e' rotto niente."
+echo "Il gettone e' lungo ${#G} caratteri e comincia con $(printf '%s' "$G" | cut -c1-11)"
+echo "Sulla repository GitHub risponde: $(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $G" -H 'Accept: application/vnd.github+json' https://api.github.com/repos/danigio15/gdahomeapp)  (200 = va bene; 401 = gettone non valido o revocato; 404 = il gettone non vede questa repository; 403 = bloccato)"
+rm -rf /tmp/gdahome && mkdir -p /tmp/gdahome
+echo "Il pacchetto: HTTP $(curl -sS -L -o /tmp/gdahome/ponte.tar.gz -w '%{http_code}' -H "Authorization: Bearer $G" https://api.github.com/repos/danigio15/gdahomeapp/tarball/main), $(wc -c < /tmp/gdahome/ponte.tar.gz) byte  (sotto il milione di byte non e' il pacchetto, e' un messaggio di errore)"
 unset G
-ha store reload 2>/dev/null || ha addons reload 2>/dev/null || echo "(il negozio non si e' ricaricato: si va avanti)"
-ha addons update local_ponte || ha addons rebuild local_ponte || echo "(ne' aggiornato ne' ricostruito)"
-ha addons restart local_ponte || echo "(non riavviato)"
-ha addons info local_ponte | grep -E '^(version|version_latest|state|update_available):'
+tar -xzf /tmp/gdahome/ponte.tar.gz -C /tmp/gdahome 2>/dev/null && dove=$(find /tmp/gdahome -maxdepth 1 -mindepth 1 -type d | head -1) || dove=""
+if [ -n "$dove" ] && [ -f "$dove/ponte/config.yaml" ]; then
+  echo "Nel pacchetto c'e' la $(sed -n 's/^version: "\(.*\)"/\1/p' "$dove/ponte/config.yaml")"
+  rm -rf /addons/ponte && cp -r "$dove/ponte" /addons/ponte && rm -rf /tmp/gdahome
+  echo "Nella cartella adesso c'e' la $(sed -n 's/^version: "\(.*\)"/\1/p' /addons/ponte/config.yaml)"
+else
+  echo "Il codice nuovo non e' arrivato: leggi le righe qui sopra. La cartella e' quella di prima, non si e' rotto niente."
+fi
+ha store reload 2>/dev/null || echo "(il negozio non si e' ricaricato: si va avanti)"
+( ha apps rebuild local_ponte || ha addons rebuild local_ponte ) 2>/dev/null || echo "(non ricostruito)"
+( ha apps restart local_ponte || ha addons restart local_ponte ) 2>/dev/null || echo "(non riavviato)"
+( ha apps info local_ponte || ha addons info local_ponte ) 2>/dev/null | grep -E '^(version|version_latest|state|update_available):'
 ```
 
-Scarica il codice, sostituisce `addons/ponte`, ricarica il negozio, aggiorna
-(o ricostruisce) l'add-on e lo riavvia: alla fine stampa quello che Home
-Assistant ne pensa. La cartella vecchia la toglie **solo dopo** che il codice
-nuovo è arrivato, quindi se il token è sbagliato non si rompe niente. Ci mette
-qualche minuto, che è la ricostruzione.
+Scarica il codice, sostituisce `addons/ponte`, ricarica il negozio,
+ricostruisce l'add-on e lo riavvia: alla fine stampa quello che Home Assistant
+ne pensa. La cartella vecchia la toglie **solo dopo** che il pacchetto è
+arrivato ed è stato riconosciuto, quindi se il token è sbagliato non si rompe
+niente. Ci mette qualche minuto, che è la ricostruzione.
 
-**Le ultime quattro righe sono staccate apposta**, e non è pignoleria: prima
-erano attaccate alle altre con `&&`, e siccome nelle versioni nuove di Home
-Assistant `ha addons reload` non c'è più — si chiama `ha store reload` —
-quella riga finiva in errore e **tutto quello che veniva dopo non girava**. Il
-risultato era il caso peggiore: i file nuovi nella cartella, e Home Assistant
-ancora sulla versione di prima, senza che niente dicesse cosa era andato
-storto. Adesso ogni riga va per conto suo e si vede quale si lamenta.
+**Perché è scritto così**, e sono due lezioni pagate:
+
+- **Ogni riga del Supervisor va per conto suo.** Prima erano attaccate con
+  `&&`, e siccome nelle versioni nuove `ha addons reload` non c'è più — si
+  chiama `ha store reload` — quella riga andava in errore e tutto quello che
+  veniva dopo non girava. Risultato: i file nuovi nella cartella e Home
+  Assistant ancora sulla versione di prima, senza che niente dicesse cosa era
+  andato storto. E `addons` ormai si chiama **`apps`**: si prova il nome
+  nuovo, e se non c'è si usa quello vecchio.
+- **Il download dice cosa risponde GitHub.** Prima era `curl -fsSL`, che
+  tace: un token revocato e un token senza permessi davano la stessa riga —
+  «non è arrivato» — senza dire quale delle due. Adesso si vedono il codice
+  HTTP e quanti byte sono arrivati. Del gettone si stampano solo la lunghezza
+  e le prime undici lettere, che sono sempre `github_pat_`: il gettone in
+  chiaro non finisce da nessuna parte.
 
 **Due numeri, non uno.** Se qualcosa non torna, questi due si guardano
 separatamente — senza token, e senza toccare niente:
 
 ```sh
 sed -n 's/^version: "\(.*\)"/\1/p' /addons/ponte/config.yaml
-ha addons info local_ponte | grep -E '^(version|version_latest|state|update_available):'
+( ha apps info local_ponte || ha addons info local_ponte ) 2>/dev/null | grep -E '^(version|version_latest|state|update_available):'
 ```
 
 Il primo è quello che c'è **sul disco**; il secondo è quello che Home
 Assistant ha **installato**. Se sono diversi, i file sono arrivati e manca
-solo il giro del Supervisor: `ha store reload`, poi `ha addons rebuild
+solo il giro del Supervisor: `ha store reload`, poi `ha apps rebuild
 local_ponte`. Se il primo è già quello vecchio, il codice nuovo non è mai
-arrivato: rifà il blocco qui sopra col token.
+arrivato: rifà il blocco qui sopra col token, e stavolta le righe dicono
+perché.
 
 ### B. Con l'indirizzo, se la rendi pubblica
 
