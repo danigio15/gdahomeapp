@@ -108,10 +108,10 @@ stringa da un filo all'altro.
 Se un giorno le case diventassero tante da uscire dal piano gratuito, sarebbe
 un bel problema da avere.
 
-## Le segnalazioni e la chat
+## Le segnalazioni
 
-Il centralino riceve dal ponte le segnalazioni e i messaggi della chat di
-assistenza e li apre come **issue di GitHub**, in `GITHUB_REPO`
+Il centralino riceve dal ponte le segnalazioni e le apre come **issue di
+GitHub**, in `GITHUB_REPO`
 (`wrangler.toml`), col gettone `GITHUB_SEGNALAZIONI`, che e' un segreto del
 worker: lo porta li' il bottone **Il centralino** su Actions, prendendolo dal
 segreto `GETTONE_SEGNALAZIONI` di questa repository; o, da un terminale,
@@ -127,9 +127,16 @@ commenti della casa portano un segno invisibile in testa, cosi' si sa chi ha
 scritto cosa anche se il gettone e' uno solo. Sta in `src/segnalazioni.js`,
 con le sue prove in `test/`.
 
+La **chat di assistenza** da qui non passa, e prima passava: era una issue
+sola per casa, con l'etichetta «chat». Chiedere aiuto non e' segnalare un
+difetto — si incolla un pezzo di configurazione, il nome delle proprie
+entita' — e non si chiede a nessuno di farlo su una pagina che chiunque puo'
+leggere. Quella e' la chat della dashboard, ha un centralino suo, e la fa il
+ponte (`ponte/src/chat.js`).
+
 Gli **allegati** — foto e video — arrivano dal ponte in binario, con
-`POST /casa/<id>/segnalazioni/<n>/allegati` (o `/chat/allegati`), il tipo nel
-`content-type` e il nome in `x-gdahome-nome`. Il centralino li mette nella
+`POST /casa/<id>/segnalazioni/<n>/allegati`, il tipo nel `content-type` e il
+nome in `x-gdahome-nome`. Il centralino li mette nella
 repository con l'API dei contenuti, sotto `allegati/<n>/`, e scrive sotto la
 issue un commento col nome, il peso e il link. Dieci megabyte al massimo, e
 solo foto e video: e' un tetto che vale uguale nell'app, nel ponte e qui.

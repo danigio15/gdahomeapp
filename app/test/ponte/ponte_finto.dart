@@ -288,36 +288,33 @@ class PonteFinto {
           return no('troppo_grande', 'troppo grande');
         }
         allegati.add(allegato);
+        /* Il disegno lo sceglie il tipo, come fa il centralino: una foto o un
+         * video non si distinguono dal nome. */
+        final disegno = (allegato['tipo']! as String).startsWith('image/')
+            ? '📷'
+            : '🎬';
         (una['messaggi'] as List).add({
           'da': 'casa',
-          'testo': '📷 ${allegato['nome']} (${allegato['byte']} B)',
+          'testo': '$disegno ${allegato['nome']} (${allegato['byte']} B)',
           'il': '2026-09-08T12:30:00Z',
         });
         return si(filo(una));
+      /* Alla chat non si allega niente: quella passa parole, e il ponte lo
+       * dice con una frase invece di «non conosco». */
       case 'ponte/chat/allega':
-        final allegato = _unAllegato(detto);
-        if (allegato == null) return no('invalid_format', 'manca il file');
-        allegati.add(allegato);
-        chat ??= {
-          'numero': _prossimaSegnalazione++,
-          'tipo': 'chat',
-          'titolo': 'Chat di assistenza',
-          'stato': 'aperta',
-          'aperta_il': '2026-09-08T10:00:00Z',
-          'url': 'https://github.com/x/y/issues/9',
-          'messaggi': <Map<String, dynamic>>[],
-        };
-        (chat!['messaggi'] as List).add({
-          'da': 'casa',
-          'testo': '🎬 ${allegato['nome']} (${allegato['byte']} B)',
-          'il': '2026-09-08T12:30:00Z',
-        });
-        return si(filo(chat!));
+        return no(
+          'not_supported',
+          'La chat di assistenza passa parole. Una foto si allega a una '
+              'segnalazione.',
+        );
       case 'ponte/chat/leggi':
         return si({'chat': chat == null ? null : filo(chat!)});
       case 'ponte/chat/scrivi':
+        /* Come la disegna `comeLaVuoleLApp()` nel ponte: numero zero e
+         * nessun indirizzo, perche' questa conversazione non e' una pagina
+         * di GitHub — sta nel centralino della chat e in casa. */
         chat ??= {
-          'numero': _prossimaSegnalazione++,
+          'numero': 0,
           'tipo': 'chat',
           'titolo': 'Chat di assistenza',
           'stato': 'aperta',

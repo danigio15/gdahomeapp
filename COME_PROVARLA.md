@@ -363,14 +363,24 @@ strada, e non c'è modo di aggirarla.
 
 ---
 
-## Le segnalazioni e la chat, per chi mantiene l'app
+## Le segnalazioni, per chi mantiene l'app
 
-Nell'app ci sono **Segnalazioni** e **Assistenza**: chi la usa scrive da lì,
-e quello che scrive arriva a te come **issue di GitHub**, in una repository
-che scegli tu. Rispondi da GitHub con un commento, e la risposta torna
-nell'app. Nessuna console da tenere accesa: la console è GitHub.
+Nell'app ci sono **Segnalazioni** e **Assistenza**, e sono due strade diverse.
 
-Per accenderle, una volta sola:
+Una **segnalazione** — un difetto, un'idea, una domanda che deve restare
+scritta — arriva a te come **issue di GitHub**, in una repository che scegli
+tu. Rispondi da GitHub con un commento, e la risposta torna nell'app. Nessuna
+console da tenere accesa: la console è GitHub.
+
+L'**Assistenza** invece è la chat della plancia, la stessa che si apre dalla
+sua Configurazione: passa dal suo centralino, e da GitHub non passa. Non c'è
+niente da accendere — funziona appena l'add-on è su — e chi risponde la legge
+dalla dashboard di chi mantiene, dove legge quelle di tutte le case. Chiedere
+aiuto non è segnalare un difetto: si incolla un pezzo di configurazione, il
+nome delle proprie entità, e quelle parole non vanno su una pagina che
+chiunque può leggere.
+
+Per le segnalazioni, una volta sola:
 
 1. Crea una repository per le segnalazioni (privata va bene), per esempio
    `gdahome-segnalazioni`, e scrivila in `nuvola/wrangler.toml` alla voce
@@ -393,10 +403,12 @@ Chi ha un terminale può fare le stesse due cose dalla cartella `nuvola`, con
 Senza il segreto tutto il resto funziona: l'app dice che il centralino non
 ha le segnalazioni accese, e basta.
 
-**Le foto e i video.** A una segnalazione, e alla chat, si allegano dal
-telefono: dalla galleria o scattando al momento. Finiscono nella stessa
-repository, in una cartella `allegati/<numero della issue>/`, e sotto la
-issue compare un commento con il nome del file e il link per aprirlo. Le foto
+**Le foto e i video.** A una segnalazione si allegano dal telefono: dalla
+galleria o scattando al momento. Finiscono nella stessa repository, in una
+cartella `allegati/<numero della issue>/`, e sotto la issue compare un
+commento con il nome del file e il link per aprirlo. Alla chat non si allega
+niente — quella passa parole — e una prova sta meglio dentro una
+segnalazione, accanto al difetto che mostra. Le foto
 partono già ridotte (1600 punti sul lato lungo); un video deve stare sotto i
 10 MB, cioè venti o trenta secondi. Se il token non ha il permesso sui
 contenuti, la segnalazione parte lo stesso e l'app dice che l'allegato no, e

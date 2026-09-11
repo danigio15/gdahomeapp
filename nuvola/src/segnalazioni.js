@@ -1,11 +1,16 @@
-/* Le segnalazioni e la chat: dall'app a chi mantiene il progetto, e ritorno.
+/* Le segnalazioni: dall'app a chi mantiene il progetto, e ritorno.
  *
  * Una segnalazione aperta dall'app diventa una **issue** in una repository di
- * GitHub scelta da chi mantiene il progetto; la chat di assistenza e' una
- * issue sola per casa, che resta aperta e cresce di commento in commento. Il
- * manutentore risponde da GitHub — un commento sotto la issue — e chi ha
- * scritto se lo ritrova nell'app. Nessuna console da costruire: la console
- * e' GitHub.
+ * GitHub scelta da chi mantiene il progetto. Il manutentore risponde da GitHub
+ * — un commento sotto la issue — e chi ha scritto se lo ritrova nell'app.
+ * Nessuna console da costruire: la console e' GitHub.
+ *
+ * La chat di assistenza da qui non passa, e prima passava: era una issue sola
+ * per casa, con l'etichetta «chat». Chiedere aiuto non e' segnalare un
+ * difetto — si incolla un pezzo di configurazione, il nome delle proprie
+ * entita' — e non si chiede a nessuno di farlo su una pagina che chiunque
+ * puo' leggere. Quella chat e' la chat della dashboard, ha un centralino suo,
+ * e la fa il ponte (`ponte/src/chat.js`).
  *
  * Perche' passa dal centralino e non dal telefono: il gettone di GitHub e'
  * del manutentore e non deve stare su nessun telefono e in nessun ponte. Sta
@@ -18,7 +23,7 @@
  * testa, invisibile su GitHub; gli altri sono del manutentore.
  */
 
-export const TIPI = Object.freeze(["problema", "idea", "domanda", "chat"]);
+export const TIPI = Object.freeze(["problema", "idea", "domanda"]);
 export const TITOLO_MASSIMO = 120;
 export const CORPO_MASSIMO = 8000;
 export const MESSAGGIO_MASSIMO = 4000;
@@ -276,7 +281,7 @@ export class Segnalazioni {
 
   async crea({ tipo, titolo, corpo, diagnostica }) {
     this._pronto();
-    const quale = TIPI.includes(tipo) && tipo !== "chat" ? tipo : "problema";
+    const quale = TIPI.includes(tipo) ? tipo : "problema";
     const titoloPulito = testo(titolo, TITOLO_MASSIMO);
     const corpoPulito = testo(corpo, CORPO_MASSIMO);
     if (!titoloPulito) throw new RichiestaSbagliata("manca_il_titolo", "Manca il titolo.");
@@ -338,24 +343,6 @@ export class Segnalazioni {
     return this.leggi(voce.numero);
   }
 
-  /* Un allegato alla chat. Se la chat non e' ancora nata, nasce con lui. */
-  async allegaAllaChat(allegato, diagnostica) {
-    this._pronto();
-    await this._contaUnaScrittura();
-    let numero = await this.storage.get("chat");
-    if (!numero) {
-      const issue = await this.github.apriIssue({
-        titolo: `[chat] Casa ${String(this.casa || "").slice(0, 12)}`,
-        corpo: corpoDellaIssue({ corpo: "(un allegato)", diagnostica, casa: this.casa }),
-        etichette: ["gdahome", "chat"],
-      });
-      numero = issue.number;
-      await this.storage.put("chat", numero);
-    }
-    await this._allega(numero, allegato);
-    return this.chat();
-  }
-
   async _allega(numero, { nome, tipo, byte }) {
     if (!(byte instanceof Uint8Array) || byte.length === 0)
       throw new RichiestaSbagliata("manca_il_file", "Manca il file.");
@@ -384,41 +371,6 @@ export class Segnalazioni {
       `${MARCATORE_CASA}\n${foto ? "📷" : "🎬"} ${pulito} (${pesoLeggibile(byte.length)})\n${messo.url}`,
     );
     return messo;
-  }
-
-  /* La chat: una issue sola per casa, che nasce alla prima parola. */
-  async chat() {
-    this._pronto();
-    const numero = await this.storage.get("chat");
-    if (numero) {
-      const voce = { numero, tipo: "chat", titolo: "Chat di assistenza" };
-      const [issue, commenti] = await Promise.all([
-        this.github.leggiIssue(numero),
-        this.github.commenti(numero),
-      ]);
-      return filo(voce, issue, commenti);
-    }
-    return null;
-  }
-
-  async chatta(messaggio, diagnostica) {
-    this._pronto();
-    const pulito = testo(messaggio, MESSAGGIO_MASSIMO);
-    if (!pulito) throw new RichiestaSbagliata("manca_il_testo", "Manca il testo.");
-    await this._contaUnaScrittura();
-    let numero = await this.storage.get("chat");
-    if (!numero) {
-      const issue = await this.github.apriIssue({
-        titolo: `[chat] Casa ${String(this.casa || "").slice(0, 12)}`,
-        corpo: corpoDellaIssue({ corpo: pulito, diagnostica, casa: this.casa }),
-        etichette: ["gdahome", "chat"],
-      });
-      numero = issue.number;
-      await this.storage.put("chat", numero);
-      return filo({ numero, tipo: "chat", titolo: "Chat di assistenza" }, issue, []);
-    }
-    await this.github.commenta(numero, `${MARCATORE_CASA}\n${pulito}`);
-    return this.chat();
   }
 
   _pronto() {

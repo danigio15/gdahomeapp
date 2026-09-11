@@ -86,8 +86,9 @@ Il resto — le due porte, l'abbinamento, cosa finisce sul disco — sta in
 | ✅ | Il filo: si rialza da solo, cambia approdo, rifa' le sottoscrizioni cadute |
 | ✅ | **La plancia dentro l'app**: quella vera di DashboardModern, in un WebView; i file e la configurazione li ha l'add-on, in Home Assistant non serve niente |
 | ✅ | I dispositivi: tutte le entita' divise per dominio, con gli interruttori |
-| ✅ | **Segnalazioni e chat di assistenza** nell'app: arrivano a chi la fa come issue di GitHub, passando dal ponte e dal centralino, con la diagnostica raccolta da sola |
-| ✅ | **393 prove** — 195 sul ponte, 19 sul centralino, 179 sull'app — senza rete, senza Home Assistant, senza telefono |
+| ✅ | **Segnalazioni** nell'app: arrivano a chi la fa come issue di GitHub, passando dal ponte e dal centralino, con la diagnostica raccolta da sola |
+| ✅ | **La chat di assistenza**: quella della dashboard, che non passa da GitHub — la fa il ponte (`ponte/src/chat.js`), e si apre dalla plancia come dall'app |
+| ✅ | **521 prove** — 272 sul ponte, 19 sul centralino, 13 sulla nuvola, 217 sull'app — senza rete, senza Home Assistant, senza telefono |
 | ⬜ | Gli aiutanti (i sette classici, nativi) |
 | ⬜ | Zigbee: ZHA **e** Zigbee2MQTT |
 | ⬜ | Il mago delle automazioni |
@@ -110,8 +111,10 @@ integrazioni per scegliere elettrodomestici, auto e robot
 (`ponte/src/catalogo.js`, dai registri di Home Assistant), le foto caricate
 (`ponte/src/foto.js`). Si configura dall'app, dalla sezione Config della
 plancia, e ogni telefono di casa vede la stessa configurazione. Le
-segnalazioni e la chat di assistenza invece escono dalla plancia e diventano
-dell'app: il piano in due binari sta in `docs/PIANO.md`.
+segnalazioni invece escono dalla plancia e diventano dell'app: il piano in due
+binari sta in `docs/PIANO.md`. La chat di assistenza no: quella resta la sua,
+e il ponte fa il mestiere che nell'integrazione fa `chat.py`
+(`ponte/src/chat.js`).
 
 Sul telefono un server che sta **dentro l'app**, su `127.0.0.1`
 (`app/lib/plancia/servitore.dart`), chiede i file al ponte sul filo — la

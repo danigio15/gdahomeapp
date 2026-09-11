@@ -1,13 +1,16 @@
 /// La chat di assistenza: si scrive a chi fa l'app, e la risposta torna qui.
 ///
 /// E' un filo solo per casa, che nasce alla prima parola: non c'e' niente da
-/// aprire e niente da scegliere. Passa dal ponte e dal centralino come le
-/// segnalazioni, con dentro le stesse informazioni raccolte da sole.
+/// aprire e niente da scegliere. Sotto c'e' la chat della plancia, la stessa
+/// che si apre dalla sua Configurazione: la fa il ponte, e non passa da
+/// GitHub.
+///
+/// Da qui passano parole, e nient'altro: una foto si allega a una
+/// segnalazione, dove resta scritta accanto al difetto che mostra.
 library;
 
 import 'package:flutter/material.dart';
 
-import '../casa/allegati.dart';
 import '../casa/collegamento.dart';
 import '../casa/impostazioni.dart';
 import '../casa/segnalazioni.dart';
@@ -22,7 +25,6 @@ class SchermataDellAssistenza extends StatefulWidget {
     required this.collegamento,
     required this.diagnostica,
     this.impostazioni,
-    this.scegli = scegliDalTelefono,
   });
 
   final Collegamento collegamento;
@@ -30,9 +32,6 @@ class SchermataDellAssistenza extends StatefulWidget {
 
   /// Con le impostazioni c'e' anche la porta di «Come va l'app».
   final Impostazioni? impostazioni;
-
-  /// Come si sceglie una foto o un video da allegare.
-  final ScegliUnAllegato scegli;
 
   @override
   State<SchermataDellAssistenza> createState() =>
@@ -73,11 +72,14 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
       _perche = null;
     });
     try {
-      final chat = await Segnalazioni(filo).chat();
+      final letta = await Segnalazioni(filo).chat();
       if (mounted) {
         setState(() {
-          _chat = chat;
+          _chat = letta.filo;
           _letta = true;
+          /* Il centralino dell'assistenza non ha risposto: le parole che
+           * c'erano si vedono ancora, e questo si dice accanto. */
+          _perche = letta.guaio.isEmpty ? null : letta.guaio;
         });
       }
     } catch (errore) {
@@ -92,18 +94,6 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
     if (filo == null) throw const FiloCadutoQui();
     final chat = await Segnalazioni(filo)
         .chatta(testo, diagnostica: widget.diagnostica());
-    if (mounted) {
-      setState(() {
-        _chat = chat;
-        _letta = true;
-      });
-    }
-  }
-
-  Future<void> _allega(Allegato allegato) async {
-    final filo = _filo;
-    if (filo == null) throw const FiloCadutoQui();
-    final chat = await Segnalazioni(filo).allegaAllaChat(allegato);
     if (mounted) {
       setState(() {
         _chat = chat;
@@ -145,12 +135,12 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
         titolo: 'Ciao',
         sotto:
             'Qui si parla con chi fa l\'app. Scrivi quello che vuoi: la '
-            'risposta arriva qui sotto, e con le parole partono anche la '
-            'versione dell\'app e del ponte, cosi\' non te le chiediamo.',
+            'risposta arriva qui sotto, e con le parole partono anche le '
+            'versioni della plancia, del ponte e dell\'app, cosi\' non te '
+            'le chiediamo. Per una foto apri una segnalazione: li\' resta '
+            'scritta accanto a quello che mostra.',
       ),
       manda: _scrivi,
-      allega: _allega,
-      scegli: widget.scegli,
       rileggi: _carica,
     );
   }

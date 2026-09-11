@@ -101,12 +101,17 @@ void main() {
       );
       expect(base64.decode(mandato['byte'] as String), foto.byte);
 
-      /* Anche alla chat, che nasce con lui se non c'era. */
-      final chat = await mie.allegaAllaChat(
-        Allegato(nome: 'clip.mp4', tipo: 'video/mp4', byte: Uint8List(4)),
+      /* Un video, e il suo disegno. Alla chat non si allega niente: quella
+       * passa parole, e una prova va dove resta scritta accanto al difetto
+       * che mostra. */
+      final clip = Allegato(
+        nome: 'clip.mp4',
+        tipo: 'video/mp4',
+        byte: Uint8List(4),
       );
-      expect(chat.chat, isTrue);
-      expect(chat.messaggi.last.testo, '🎬 clip.mp4 (4 B)');
+      expect(clip.foto, isFalse);
+      final conClip = await mie.allega(aperta.numero, clip);
+      expect(conClip.messaggi.last.testo, '🎬 clip.mp4 (4 B)');
     },
   );
 
@@ -132,7 +137,7 @@ void main() {
 
   test('la chat: niente, poi un filo solo', () async {
     final mie = Segnalazioni(filo);
-    expect(await mie.chat(), isNull);
+    expect((await mie.chat()).filo, isNull);
     final prima = await mie.chatta(
       'Buongiorno',
       diagnostica: const {'app': '10'},
@@ -147,7 +152,11 @@ void main() {
       'Dimmi pure.',
       'Come si fa a…',
     ]);
-    expect((await mie.chat())!.messaggi, hasLength(3));
+    final riletta = await mie.chat();
+    expect(riletta.filo!.messaggi, hasLength(3));
+    /* Nessun guasto: il ponte finto risponde, e allora non c'e' niente da
+     * dire accanto alle parole. */
+    expect(riletta.guaio, isEmpty);
   });
 
   test('i no del ponte diventano frasi', () async {

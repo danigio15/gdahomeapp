@@ -328,6 +328,10 @@ async function main() {
       /* Il ponte chiama il centralino finto: la chiamata riesce, e le
        * segnalazioni hanno una strada per uscire. */
       PONTE_CENTRALINO: centralino.indirizzo,
+      /* E la chat dell'assistenza bussa allo stesso posto, sull'altro suo
+       * sportello: nella vita e' un centralino diverso — quello della
+       * dashboard — e da qui non si esce sulla rete vera. */
+      PONTE_CHAT: centralino.dellaChat,
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -1132,9 +1136,7 @@ try {
     () => !document.getElementById("page-config")?.classList.contains("active"),
   );
   if (!laConfigSiEChiusa) {
-    throw new Error(
-      "la plancia non e' tornata dalla Configurazione (con la barra «a scomparsa»)",
-    );
+    throw new Error("la plancia non e' tornata dalla Configurazione (con la barra «a scomparsa»)");
   }
   /* E l'ordine nell'indirizzo se n'e' andato con l'uscita: se restasse, la
    * prima ricarica della pagina riaprirebbe la Configurazione. */

@@ -17,6 +17,7 @@ import { gunzipSync } from "node:zlib";
 
 import { accetta } from "../src/presa.js";
 import { Casa, RispostaNegativa } from "../src/casa.js";
+import { Chat } from "../src/chat.js";
 import {
   Commissioni,
   eUnaCommissione,
@@ -510,8 +511,8 @@ test("si riconosce cosa fa il ponte e cosa va in Home Assistant", () => {
     false,
   );
   assert.equal(con.riconosce({ id: 12, type: "frontend/set_user_data", key: "altro" }), false);
-  /* Senza il catalogo e le foto, quelli vanno in casa; le segnalazioni e la
-   * chat invece si fermano sempre qui, per dire dove stanno. */
+  /* Senza il catalogo e le foto, quelli vanno in casa; le segnalazioni invece
+   * si fermano sempre qui, per dire dove stanno. */
   for (const tipo of ["get_states", "dashboardmodern/www/list", "call_service"]) {
     assert.equal(con.riconosce({ type: tipo }), false, tipo);
   }
@@ -810,7 +811,12 @@ test("si riconoscono il catalogo, le foto e le cose che stanno nell'app", () => 
   assert.equal(con.riconosce({ type: "dashboardmodern/www/list" }), true);
   assert.equal(con.riconosce({ type: "dashboardmodern/www/upload" }), true);
   assert.equal(con.riconosce({ type: "dashboardmodern/tickets/list" }), true);
-  assert.equal(con.riconosce({ type: "dashboardmodern/chat/send" }), true);
+  /* La chat di chi chiede la fa il ponte, e solo se ce l'ha: senza, e' un
+   * comando che non sa fare, non una cosa da rifiutare con una frase. */
+  assert.equal(con.riconosce({ type: "dashboardmodern/chat/send" }), false);
+  /* La coda di chi risponde invece si ferma sempre qui, per dire cos'e': non
+   * e' roba di una casa, e «non conosco» non spiegherebbe niente. */
+  assert.equal(con.riconosce({ type: "dashboardmodern/chat/queue" }), true);
   assert.equal(con.riconosce({ type: "dashboardmodern/altro" }), false);
 
   const senza = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
@@ -820,7 +826,7 @@ test("si riconoscono il catalogo, le foto e le cose che stanno nell'app", () => 
   rmSync(cartella, { recursive: true, force: true });
 });
 
-test("le segnalazioni e la chat rispondono con una frase, non con un comando sconosciuto", async () => {
+test("le segnalazioni rispondono con una frase, non con un comando sconosciuto", async () => {
   const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
   const risposta = await con.rispondi({
     id: 4,
@@ -830,6 +836,181 @@ test("le segnalazioni e la chat rispondono con una frase, non con un comando sco
   assert.equal(risposta.success, false);
   assert.equal(risposta.error.code, "not_supported");
   assert.match(risposta.error.message, /nell'app/);
+
+  /* La coda dell'assistenza vuole la chiave della console, che sta nella
+   * dashboard di chi mantiene: si dice cos'e', non «non conosco». */
+  const coda = await con.rispondi({ id: 5, type: "dashboardmodern/chat/queue" });
+  assert.equal(coda.success, false);
+  assert.equal(coda.error.code, "not_supported");
+  assert.match(coda.error.message, /chi mantiene/);
+});
+
+/* ─── La chat dell'assistenza ─────────────────────────────────────────────── */
+
+/* Un centralino della chat finto, quel tanto che basta per vedere dove
+ * finiscono le parole: tiene le righe e le da' «dopo il numero N». Le regole
+ * della chat stanno in `chat.test.js`; qui si guarda l'instradamento. */
+function chatDiProva(cartella) {
+  const righe = [];
+  const intestazioni = [];
+  const prendi = async (indirizzo, opzioni = {}) => {
+    const via = new URL(indirizzo);
+    intestazioni.push(opzioni.headers || {});
+    if (opzioni.method === "POST") {
+      const riga = {
+        id: righe.length + 1,
+        da: "casa",
+        testo: JSON.parse(opzioni.body).testo,
+        scritto_il: 1000,
+      };
+      righe.push(riga);
+      return { ok: true, status: 201, json: async () => ({ messaggio: riga, nuova: true }) };
+    }
+    if (opzioni.method === "DELETE") {
+      righe.length = 0;
+      return { ok: true, status: 200, json: async () => ({ cancellata: true }) };
+    }
+    const dopo = Number(via.searchParams.get("dopo") || 0);
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ aperta: true, messaggi: righe.filter((una) => una.id > dopo) }),
+    };
+  };
+  const chat = new Chat({
+    cartella,
+    centralino: "https://centralino.esempio",
+    versione: "0.16.0",
+    plancia: "1.4.19",
+    fetch: prendi,
+    registro: ZITTO,
+  });
+  return { chat, righe, intestazioni };
+}
+
+test("la finestra dell'assistenza della plancia arriva alla chat, non a un rifiuto", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-chat-"));
+  try {
+    const finto = chatDiProva(cartella);
+    const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO, chat: finto.chat });
+    /* Prima di tutto: i quattro comandi di chi chiede si riconoscono, e la
+     * porta si disegna perche' un posto dove scrivere c'e'. */
+    assert.equal(con.riconosce({ type: "dashboardmodern/chat/state" }), true);
+    const stato = await con.rispondi({ id: 1, type: "dashboardmodern/chat/state" });
+    assert.equal(stato.success, true);
+    assert.deepEqual(stato.result, {
+      enabled: true,
+      console: false,
+      opened: false,
+      name: "",
+      unread: 0,
+      preview: "",
+      written_at: 0,
+      messages: 0,
+    });
+
+    /* Si scrive, e si legge quello che si e' scritto. Le chiavi sono quelle
+     * dell'integrazione: la finestra e' la sua e non sa che dietro c'e' il
+     * ponte. */
+    const mandato = await con.rispondi({
+      id: 2,
+      type: "dashboardmodern/chat/send",
+      message: "Buongiorno, una domanda.",
+      name: "Giovanni",
+      locale: "it",
+    });
+    assert.equal(mandato.result.message.testo, "Buongiorno, una domanda.");
+    const filo = await con.rispondi({ id: 3, type: "dashboardmodern/chat/thread" });
+    assert.equal(filo.result.enabled, true);
+    assert.equal(filo.result.name, "Giovanni");
+    assert.deepEqual(
+      filo.result.messages.map((una) => una.testo),
+      ["Buongiorno, una domanda."],
+    );
+
+    /* Una frase vuota non parte, e il no e' quello della chat: la finestra
+     * sa cosa farne. */
+    const vuoto = await con.rispondi({ id: 4, type: "dashboardmodern/chat/send", message: "  " });
+    assert.equal(vuoto.success, false);
+    assert.equal(vuoto.error.code, "empty");
+
+    /* Dimenticare cancella anche dal centralino. */
+    const via = await con.rispondi({ id: 5, type: "dashboardmodern/chat/forget" });
+    assert.deepEqual(via.result, { forgotten: true });
+    assert.equal(finto.righe.length, 0);
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("dall'app la chat e' la stessa, e un allegato non ci sta", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-chat-"));
+  try {
+    const finto = chatDiProva(cartella);
+    const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO, chat: finto.chat });
+    /* Niente di scritto: l'app non disegna nessun filo, e non e' un errore. */
+    assert.deepEqual((await con.rispondi({ id: 1, type: "ponte/chat/leggi" })).result, {
+      chat: null,
+      guaio: "",
+    });
+
+    const scritto = await con.rispondi({
+      id: 2,
+      type: "ponte/chat/scrivi",
+      testo: "Buongiorno, una domanda.",
+      diagnostica: { app: "1.0.2", schermo: "400x800" },
+    });
+    /* La forma e' quella di una conversazione, come la legge la schermata
+     * dell'app: la stessa di prima, quando sotto c'era una issue. */
+    assert.equal(scritto.result.tipo, "chat");
+    assert.equal(scritto.result.numero, 0);
+    assert.deepEqual(
+      scritto.result.messaggi.map((uno) => [uno.da, uno.testo]),
+      [["casa", "Buongiorno, una domanda."]],
+    );
+
+    /* Le versioni partono con le parole, e ci sta solo quello: l'etichetta
+     * del centralino tiene quaranta caratteri, e la diagnostica per bene sta
+     * nell'app. */
+    const posta = finto.intestazioni.find((une) => une["x-casa"]);
+    assert.equal(posta["x-versione"], "plancia 1.4.19 ponte 0.16.0 app 1.0.2");
+    assert.ok(posta["x-versione"].length <= 40);
+
+    /* E la stessa conversazione si rilegge, senza niente da dire accanto. */
+    const letto = await con.rispondi({ id: 3, type: "ponte/chat/leggi" });
+    assert.equal(letto.result.chat.messaggi.length, 1);
+    assert.equal(letto.result.guaio, "");
+
+    /* Da qui in poi il centralino della chat non risponde. Le parole che
+     * c'erano si vedono ancora — la copia in casa esiste per questo — e il
+     * guasto arriva **accanto**, non al posto loro: un errore qui darebbe
+     * all'app una schermata vuota al posto di una conversazione che c'e'. */
+    finto.chat.prendi = async () => {
+      throw new Error("ECONNREFUSED");
+    };
+    finto.chat._lettoIl = 0;
+    const giu = await con.rispondi({ id: 6, type: "ponte/chat/leggi" });
+    assert.equal(giu.success, true);
+    assert.equal(giu.result.chat.messaggi.length, 1);
+    assert.match(giu.result.guaio, /raggiungibile/);
+
+    /* Un allegato no: questa chat passa parole, e si dice dove metterlo. */
+    const foto = await con.rispondi({ id: 4, type: "ponte/chat/allega", nome: "x.jpg" });
+    assert.equal(foto.success, false);
+    assert.equal(foto.error.code, "not_supported");
+    assert.match(foto.error.message, /segnalazione/);
+
+    /* Senza la chat — un ponte senza indirizzo del centralino non la
+     * costruisce — quelle porte non ci sono: «non conosco» e' la risposta
+     * giusta, e l'app ne fa una frase che dice di aggiornare l'add-on. */
+    const senza = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
+    assert.equal(
+      (await senza.rispondi({ id: 5, type: "ponte/chat/leggi" })).error.code,
+      "unknown_command",
+    );
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
 });
 
 test("il catalogo passa dal ponte, coi dispositivi chiesti", async () => {

@@ -10,6 +10,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { CENTRALINO_DELLA_CHAT } from "./chat.js";
+
 /* Il centralino dell'app, quello che accende chi la distribuisce.
  *
  * Sta qui perche' **l'utente non lo deve battere**. Chi installa l'add-on non
@@ -117,6 +119,12 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
      * riavviato, o una prova — non e' un guaio: quella meta' della maschera
      * delle foto semplicemente non compare. */
     wwwDiCasa: process.env.PONTE_WWW_CASA || "/homeassistant/www",
+    /* Il centralino della **chat** di assistenza, che non e' quello di
+     * gdahome: e' quello della dashboard, scritto in `chat.js` com'e' scritto
+     * in `const.py` dell'integrazione. Non c'e' niente da configurare — chi
+     * installa l'add-on non deve sapere che esiste — e si cambia solo da qui,
+     * che serve al collaudo per farlo bussare a un centralino finto. */
+    chat: String(process.env.PONTE_CHAT || CENTRALINO_DELLA_CHAT),
     versione: versioneDelPonte(),
   };
 }

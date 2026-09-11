@@ -128,16 +128,33 @@ chiamate REST della pagina, lo storico e le istantanee, passano dal Supervisor
 col suo segno. Nient'altro passa di li'. Sta scritto in `src/commissioni.js`,
 `src/plancia.js` e `src/configurazione.js`.
 
-Le **segnalazioni** e la **chat di assistenza** dell'app passano anche loro
-dal ponte, con `ponte/segnalazioni/…` e `ponte/chat/…`: il ponte le porta al
-centralino — presentandosi col segreto della casa, lo stesso della chiamata —
-e il centralino le apre come issue di GitHub per chi mantiene l'app. Qui non
-c'e' nessun gettone di nessuno; una copia di quello che si e' scritto sta in
+Le **segnalazioni** dell'app passano anche loro dal ponte, con
+`ponte/segnalazioni/…`: il ponte le porta al centralino — presentandosi col
+segreto della casa, lo stesso della chiamata — e il centralino le apre come
+issue di GitHub per chi mantiene l'app. Qui non c'e' nessun gettone di
+nessuno; una copia di quello che si e' scritto sta in
 `/data/segnalazioni.json`, cosi' l'app vede subito qualcosa anche quando il
 centralino e' lento. Senza centralino non c'e' dove spedire, e si dice cosi'.
-Con `ponte/segnalazioni/allega` e `ponte/chat/allega` passano anche le foto e
-i video: arrivano dall'app in base64 dentro il messaggio, e al centralino
-vanno cosi' come sono, in binario. Dieci megabyte al massimo.
+Con `ponte/segnalazioni/allega` passano anche le foto e i video: arrivano
+dall'app in base64 dentro il messaggio, e al centralino vanno cosi' come
+sono, in binario. Dieci megabyte al massimo.
+
+La **chat di assistenza** invece non passa da GitHub, ed e' quella della
+plancia: gli otto comandi `dashboardmodern/chat/*` che nell'integrazione fa
+`chat.py`, qui li fa `src/chat.js`. I quattro di chi chiede — stato, filo,
+manda, dimentica — arrivano al centralino della chat della dashboard, che e'
+un altro posto dal centralino di gdahome; i quattro di chi risponde, che
+sono la coda di tutte le case, si fermano qui con una frase: quella coda si
+apre dalla dashboard di chi mantiene, non da una casa.
+
+Questa casa, per quel centralino, e' un nome di 128 bit e un segreto di 256
+presi dal caso alla prima parola scritta, tenuti in `/data/chat.json`: niente
+entita', niente indirizzi, nessun identificativo di questo Home Assistant, e
+il segreto non esce dal ponte. Insieme alle parole parte un'etichetta di
+quaranta caratteri — `plancia 1.4.19 ponte 0.16.0 app 1.0.2` — che e' quello
+che chi risponde chiederebbe per primo. L'**app** usa la stessa chat, con
+`ponte/chat/leggi` e `ponte/chat/scrivi`; un allegato no, e si dice dove
+metterlo.
 
 ## Le opzioni
 

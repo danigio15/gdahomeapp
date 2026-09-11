@@ -48,8 +48,17 @@ paletto.
 | La plancia anche dalla console del ponte, nel browser | il ponte la serve sotto ingress | ⬜ |
 | Il ritratto delle persone, la lingua, i temi: come nel pannello | la premessa in testa alla pagina | ✅ |
 
-Le **segnalazioni** e la **chat di assistenza** escono da questo binario: nella
-plancia i loro bottoni rispondono «stanno nell'app», e il resto sta sotto.
+Le **segnalazioni** escono da questo binario: nella plancia i loro bottoni
+rispondono «stanno nell'app», e il resto sta sotto.
+
+La **chat di assistenza** invece resta della plancia, e qui c'e' stato un
+errore mio: era in quell'elenco, e la sua finestra si apriva su un rifiuto.
+Quella chat non passa da GitHub — ha un centralino suo, quello della
+dashboard — e adesso il ponte fa il mestiere che nell'integrazione fa
+`chat.py` (`ponte/src/chat.js`): gli otto comandi
+`dashboardmodern/chat/*`, i quattro di chi chiede fatti qui e i quattro
+della coda di chi risponde fermati con una frase. L'app usa la stessa
+chat.
 
 **Binario B — l'app, e quello che e' suo.** Le cose che in Home Assistant
 stanno nascoste o non esistono, scritte native in Flutter, con il ponte che fa
@@ -61,8 +70,8 @@ da tramite verso Home Assistant.
 | La barra: la casa in cui si e', da dove si passa, le sezioni | ✅ |
 | I dispositivi: tutte le entita' per dominio, con gli interruttori | ✅ (elenco) |
 | **Segnalazioni**: si aprono dall'app, con i dati della casa raccolti da soli; dal ponte al centralino, che le apre come issue di GitHub | ✅ |
-| **Chat di assistenza**: dall'app, con chi mantiene il progetto, sullo stesso filo | ✅ |
-| **Foto e video** allegati alle segnalazioni e alla chat, nella repository sotto `allegati/` | ✅ |
+| **Chat di assistenza**: quella della plancia, che non passa da GitHub; dall'app si apre la stessa | ✅ |
+| **Foto e video** allegati alle segnalazioni, nella repository sotto `allegati/` | ✅ |
 | **L'app fluida** con la plancia com'e' disegnata, animazioni comprese: il lavoro pesante fuori dal filo che disegna, il riquadro composto da Android, le buste compresse, «Come va l'app» con le misure vere | 🔄 (fase 1c) |
 | Zigbee: ZHA **e** Zigbee2MQTT, dietro un'interfaccia sola | ⬜ (fase 3) |
 | I dispositivi: aggiungerli, rinominarli, metterli in una stanza | ⬜ |
@@ -230,15 +239,25 @@ Quindi non c'e' niente da smontare: c'e' da costruire.
 ### Fase 1b — segnalazioni e chat, nell'app
 
 Nella plancia erano due sezioni che parlavano col backend dell'integrazione,
-che a sua volta parlava con GitHub e con un relay. Qui diventano dell'app:
-una schermata per aprire una segnalazione — con dentro, raccolti da soli, la
-versione dell'app e del ponte, il telefono, com'e' andato l'ultimo
-collegamento — e una per la chat con chi mantiene il progetto. Passano dal
-ponte, che e' l'unico che puo' parlare fuori per conto della casa, e nessun
-segreto sta sul telefono. Nella plancia i due bottoni rispondono che quelle
-cose stanno nell'app. A una segnalazione si allegano foto e video, dalla
-galleria o scattati al momento: viaggiano per intero dal filo al ponte al
-centralino, che li mette nella stessa repository delle issue.
+che a sua volta parlava con GitHub e con un relay.
+
+Le **segnalazioni** diventano dell'app: una schermata per aprirne una — con
+dentro, raccolti da soli, la versione dell'app e del ponte, il telefono,
+com'e' andato l'ultimo collegamento — che passa dal ponte, l'unico che puo'
+parlare fuori per conto della casa, e dal centralino, che la apre come issue.
+Nessun segreto sta sul telefono, e nella plancia quei bottoni rispondono che
+le segnalazioni stanno nell'app. Si allegano foto e video, dalla galleria o
+scattati al momento: viaggiano per intero dal filo al ponte al centralino,
+che li mette nella stessa repository delle issue.
+
+La **chat** invece e' rimasta dov'era, e il ponte ha imparato a farla: e' la
+chat della dashboard, con il suo centralino, e chi la mantiene la legge dalla
+propria dashboard insieme a quelle di tutte le altre case. Per un po' era
+finita nell'elenco delle cose «che stanno nell'app», e la sua finestra si
+apriva su un rifiuto: era un errore, perche' chiedere aiuto non e' segnalare
+un difetto — quelle parole non vanno su una pagina pubblica — e perche' una
+seconda chat da tenere allineata a mano non serviva a nessuno. Nell'app la
+schermata Assistenza e' la stessa di prima; sotto, adesso, c'e' la sua.
 
 ### Fase 1c — l'app che non va a scatti
 

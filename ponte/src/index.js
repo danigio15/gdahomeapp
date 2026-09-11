@@ -12,6 +12,7 @@ import { join } from "node:path";
 import { Abbinamento } from "./abbinamento.js";
 import { Aggiornamento } from "./aggiornamento.js";
 import { Casa } from "./casa.js";
+import { Chat } from "./chat.js";
 import { Chiamata } from "./chiamata.js";
 import { Commissioni } from "./commissioni.js";
 import { Catalogo } from "./catalogo.js";
@@ -92,6 +93,19 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * cosi' un riavvio nel mezzo della notte non lascia acceso niente. */
   const spegnimento = new Spegnimento({ casa, cartella: opzioni.cartella, registro });
   spegnimento.carica();
+  /* La chat di assistenza della plancia: quella della dashboard, che non passa
+   * da GitHub. Nell'integrazione la fa `chat.py`; qui la fa il ponte, e la
+   * finestra dell'assistenza resta la sua senza saperlo. */
+  const chat = new Chat({
+    cartella: opzioni.cartella,
+    centralino: opzioni.chat,
+    versione: opzioni.versione,
+    /* La versione della plancia che questo ponte serve: e' quella che
+     * l'integrazione manda al centralino, ed e' quella di cui si parla
+     * quando si chiede aiuto. */
+    plancia: plancia.cE ? plancia.provenienza.versione : "",
+    registro,
+  });
   const commissioni = new Commissioni({
     casa,
     registro,
@@ -101,6 +115,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     foto,
     fotoDiCasa,
     segnalazioni,
+    chat,
     spegnimento,
   });
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni });
