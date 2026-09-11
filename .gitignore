@@ -24,3 +24,8 @@ node_modules/
 /app/ios/Flutter/Flutter.podspec
 /app/ios/Flutter/flutter_export_environment.sh
 /app/ios/Flutter/Generated.xcconfig
+
+# gdahome copiata accanto al centralino dal bottone «Il centralino»: e la
+# stessa che sta in `ponte/app`, e una copia in piu nella repository non
+# serve a nessuno.
+nuvola/pubblico/

@@ -277,6 +277,38 @@ regola loro. Con Nabu Casa acceso, o con un proxy che mette il certificato,
 `https` c'è e la plancia si vede. Sul telefono la plancia si vede sempre, perché
 lì il server sta dentro l'app.
 
+### Un link vero, da usare ovunque — anche fuori casa
+
+Quello dell'add-on **non è un link**: vive finché vive la pagina di Home
+Assistant che lo tiene aperto, e in una scheda a parte dopo qualche minuto
+risponde **401**. Per averne uno da salvare fra i preferiti, da aprire da
+qualsiasi rete e da mandare a qualcuno, gdahome sta **anche sul centralino**:
+
+```
+https://gdahome-centralino.<il-tuo-nome>.workers.dev/app/
+```
+
+L'indirizzo corto — senza `/app/` — porta lì da solo. Lo trovi già scritto,
+pronto da copiare, nella console dell'add-on: **Il ponte → gdahome in un
+browser → «Da fuori casa, o da un browser qualsiasi»**.
+
+Si accende insieme al centralino: **Actions → «Il centralino» → Run
+workflow**. Quel bottone copia accanto al centralino la stessa app che sta
+dentro l'add-on (`ponte/app`) — non ne costruisce una seconda, così non
+possono diventare diverse. Se l'add-on non se la porta ancora dietro, prima
+**«gdahome dentro l'add-on»**, poi questo.
+
+**Cosa diventa pubblico: solo l'app.** Non la plancia — quella la serve
+l'add-on di casa e passa dal filo cifrato; non la configurazione; non nessuna
+casa. Chi apre quel link trova «Colleghiamo la casa», ed è la stessa porta del
+telefono: senza un codice di abbinamento non va da nessuna parte. Il link è
+**uguale per tutti**, ed è giusto che lo sia: è l'indirizzo dell'app, come
+quello di qualsiasi sito. Quello che è di ognuno non è il link, è
+l'abbinamento.
+
+E lì `https` c'è sempre, quindi **la plancia si disegna** — a differenza di un
+Home Assistant aperto su `http`.
+
 ### Dal codice, con Flutter *(per lavorarci)*
 
 ```bash

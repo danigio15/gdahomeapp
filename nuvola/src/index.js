@@ -54,6 +54,19 @@ export default {
       return risposta({ vivo: true });
     }
 
+    /* L'indirizzo nudo porta a gdahome.
+     *
+     * Il link che si da' a una persona e' quello corto — niente `/app/` da
+     * ricordare e da dettare al telefono. I file dell'app li serve Cloudflare
+     * da `pubblico/app/` prima che si arrivi qui; questa riga c'e' per chi
+     * apre l'indirizzo e basta.
+     *
+     * Il resto — `/casa/…`, `/telefono/…`, `/abbinamento/…` — non passa da
+     * qui: sono vie loro, e chi le chiama sa dove va. */
+    if ((via === "/" || via === "/app") && richiesta.method === "GET") {
+      return Response.redirect(new URL("/app/", richiesta.url).href, 302);
+    }
+
     if (richiesta.headers.get("Upgrade") !== "websocket") {
       /* Le segnalazioni e la chat di una casa: HTTP, verso il suo oggetto,
        * che e' l'unico a sapere se il segreto e' il suo. */

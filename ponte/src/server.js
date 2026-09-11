@@ -407,6 +407,10 @@ async function api({
         dentro: chiamata?.dentro ?? false,
         rifiutata: chiamata?.rifiutata ?? null,
         casa: identita?.casa ?? null,
+        /* L'indirizzo del centralino, che non e' un segreto: e' un indirizzo
+         * pubblico, e la console lo usa per comporre il link di gdahome da
+         * aprire in un browser — lo stesso posto, con `https` davanti. */
+        dove: chiamata?.dove || null,
       },
       porta: opzioni.portaDellApp,
       massimi: opzioni.dispositiviMassimi,

@@ -223,6 +223,36 @@
     trova("avviso-sicuro").hidden = window.isSecureContext !== false;
   }
 
+  /* L'indirizzo di gdahome da aprire fuori casa.
+   *
+   * Il centralino serve anche l'app, sotto `/app/`: e' lo stesso posto dove
+   * la casa sta in attesa, ed e' pubblico e in `https`. L'indirizzo lo dice
+   * il ponte — e' quello che ha in configurazione — e qui si trasforma da
+   * `wss://…` in `https://…/app/`: sono lo stesso posto, e chiederlo due
+   * volte a chi installa sarebbe chiederglielo una volta di troppo.
+   *
+   * Se il centralino e' spento («da fuori casa» a no) non c'e' nessun link da
+   * dare, e la riga non compare. */
+  function disegnaIlLinkDiFuori(dove) {
+    var riquadro = trova("link-di-fuori");
+    var indirizzo = "";
+    try {
+      if (dove) {
+        var suo = new URL(String(dove).replace(/^ws/, "http"));
+        /* Solo `https`: un link `http` non farebbe girare il service worker,
+         * e la plancia nel browser non si disegnerebbe. Meglio nessun link
+         * che un link che mostra mezza app. */
+        if (suo.protocol === "https:") indirizzo = suo.origin + "/app/";
+      }
+    } catch (_male) {
+      indirizzo = "";
+    }
+    riquadro.hidden = !indirizzo;
+    if (!indirizzo) return;
+    trova("link-di-fuori-indirizzo").textContent = indirizzo;
+    trova("apri-di-fuori").href = indirizzo;
+  }
+
   /* ─── L'aggiornamento del ponte ──────────────────────────────────────────
    *
    * Un add-on locale non ha nessun negozio dietro: Home Assistant guarda il
@@ -313,6 +343,7 @@
         trova("stato-centralino").textContent = comeVaIlCentralino(stato.centralino);
         disegnaLaProvenienza(stato.plancia);
         disegnaIlLink(stato.app);
+        disegnaIlLinkDiFuori(stato.app ? stato.centralino.dove : "");
         disegnaIDispositivi(stato.dispositivi, stato.massimi);
         trova("fabbrica").disabled = stato.dispositivi.length >= stato.massimi;
         if (!stato.abbinamento.attivo) nascondiIlCodice();

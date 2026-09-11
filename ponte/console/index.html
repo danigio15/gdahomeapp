@@ -70,6 +70,29 @@
           risponde <strong>401</strong> — la sessione la tiene viva Home Assistant, non la
           scheda.
         </p>
+        <!-- Il link vero, quello da usare fuori casa.
+             L'indirizzo di qui sopra non è un link: vive finché vive la pagina
+             di Home Assistant che lo tiene aperto. gdahome sta anche sul
+             centralino, che è pubblico e in https — quello è un indirizzo da
+             aprire ovunque, e chi lo apre senza un codice di abbinamento non
+             entra in casa di nessuno. -->
+        <div id="link-di-fuori" hidden>
+          <p class="spiegazione">
+            <strong>Da fuori casa, o da un browser qualsiasi</strong>: questo invece è un
+            indirizzo vero, si salva fra i preferiti e si può mandare a qualcuno.
+          </p>
+          <p class="codice" id="link-di-fuori-indirizzo"></p>
+          <div class="bottoni">
+            <a class="bottone tenue" id="apri-di-fuori" href="#" target="_blank" rel="noopener"
+              >Aprilo in una scheda nuova</a
+            >
+          </div>
+          <p class="spiegazione">
+            Chi lo apre trova «Colleghiamo la casa»: per entrare serve un codice di abbinamento,
+            quello che si fabbrica qui sopra. È uguale per tutti — è l'indirizzo dell'app, non
+            della casa.
+          </p>
+        </div>
         <p class="spiegazione" id="avviso-sicuro" hidden>
           Questa pagina e' aperta su un indirizzo <strong>http</strong>. Tutto funziona tranne la
           plancia: per disegnarla nel browser serve un indirizzo <strong>https</strong> — e' una

@@ -76,6 +76,29 @@ jobs:
       - run: npm ci --no-audit --no-fund
         working-directory: nuvola
 
+      # gdahome da aprire in un browser, servita dal centralino.
+      #
+      # Non si ricostruisce niente: si copia quella che sta gia' dentro
+      # l'add-on (`ponte/app`), messa li' dal bottone «gdahome dentro
+      # l'add-on». Una sola app costruita, in due posti — se se ne
+      # costruisse un'altra qui, prima o poi le due sarebbero diverse e
+      # nessuno saprebbe quale.
+      - name: Porta gdahome accanto al centralino
+        run: |
+          set -eu
+          rm -rf nuvola/pubblico && mkdir -p nuvola/pubblico
+          if [ -d ponte/app ] && [ -f ponte/app/index.html ]; then
+            cp -r ponte/app nuvola/pubblico/app
+            quanti=$(find nuvola/pubblico/app -type f | wc -l)
+            echo "gdahome: $quanti file, serviti da /app/"
+            echo "GDAHOME=si" >> "$GITHUB_ENV"
+          else
+            # Senza app il centralino si accende lo stesso: fa il suo mestiere,
+            # che e' instradare. Il link nel browser semplicemente non c'e'.
+            echo "::warning::in ponte/app non c'e' nessuna app costruita: il centralino si accende senza il link per il browser. Lancia «gdahome dentro l'add-on» e poi questo."
+            echo "GDAHOME=no" >> "$GITHUB_ENV"
+          fi
+
       - name: Accendi
         run: npx wrangler deploy
         working-directory: nuvola
@@ -183,6 +206,14 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "L'indirizzo è scritto qui sopra, nel passo «Accendi»: è la riga che" >> "$GITHUB_STEP_SUMMARY"
           echo 'finisce per `.workers.dev`.' >> "$GITHUB_STEP_SUMMARY"
+          if [ "${GDAHOME:-no}" = "si" ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "**gdahome si apre lì**: quello stesso indirizzo, con \`https://\` davanti," >> "$GITHUB_STEP_SUMMARY"
+            echo "è il link da aprire in un browser — da qualsiasi rete, anche fuori casa." >> "$GITHUB_STEP_SUMMARY"
+            echo "Chi lo apre trova «Colleghiamo la casa»: per entrare serve un codice di" >> "$GITHUB_STEP_SUMMARY"
+            echo "abbinamento, fabbricato dalla console dell'add-on. Il link è uguale per" >> "$GITHUB_STEP_SUMMARY"
+            echo "tutti — è l'indirizzo dell'app, non della casa." >> "$GITHUB_STEP_SUMMARY"
+          fi
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "Va messo in due posti, **con \`wss://\` davanti invece di \`https://\`**:" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
