@@ -315,7 +315,7 @@ Prima di tutto le cose arrivate per ultime, che sono quelle da bocciare subito
 se non funzionano:
 
 - **Menu → Configurazione.** Deve comparire la pagina **CONFIGURAZIONE** della
-  dashboard, con la sua insegna e la versione della plancia — **v1.4.18**, e se
+  dashboard, con la sua insegna e la versione della plancia — **v1.4.19**, e se
   ne dice una più vecchia il ponte non è aggiornato — e sotto le sue
   tessere: 🧩 Configura Entità, 🎨 Tema con le sei tavolozze, 📌 Barra di
   navigazione. «Sostieni il progetto» qui **non c'è**: nell'app gli acquisti
@@ -327,6 +327,12 @@ se non funzionano:
   dell'app e da nessun altro posto. Nella pagina Configurazione non c'è più
   nemmeno il tasto «← HOME», che riportava sulla Home della plancia senza che
   nessuno lo avesse chiesto.
+- **Una schermata, una barra.** In Configurazione la barra in fondo alla
+  plancia — Home, Energia, Sicurezza… — **non c'è**, e non c'è nemmeno la sua
+  maniglia: resta solo quella del menu dell'app. Prima c'erano tutt'e due, si
+  toccava «Energia» su quella della plancia e la plancia ci andava mentre il
+  menu restava segnato su «Configurazione»: una schermata e due posti dove si
+  credeva di essere. Appena si esce dalla Config la barra torna dov'era.
 - **Il tema, dalle sue tessere.** Chiaro, scuro, una tavolozza: la plancia
   cambia colore. Chiudi e riapri l'app: la scelta deve **restare**. Prima
   l'app la riscriveva a ogni caricamento e tornava indietro.

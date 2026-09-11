@@ -95,7 +95,7 @@ conto da tenere onesto, perché non c'è una seconda Config che possa restare
 indietro. Se la dashboard aggiunge una casella, quella casella nell'app c'è
 il giorno in cui il ponte porta la plancia nuova.
 
-Restano nel ponte le cose che la plancia 1.4.18 chiede al suo backend, e che
+Restano nel ponte le cose che la plancia 1.4.19 chiede al suo backend, e che
 in un add-on senza integrazione nessuno le darebbe:
 
 - lo spegnimento programmato del clima
