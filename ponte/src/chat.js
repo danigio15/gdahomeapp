@@ -51,7 +51,7 @@ import { tagliaBene } from "./testo.js";
 /* Il centralino della chat della dashboard. E' scritto qui come sta scritto
  * in `const.py` dell'integrazione — `CHAT_CENTRALINO` — e non e' quello di
  * gdahome: sono due posti diversi, e questa chat e' la sua. */
-export const CENTRALINO_DELLA_CHAT = "https://centralino.danigio15.workers.dev";
+export const CENTRALINO_DELLA_CHAT = "https://tramite.gdahome.org";
 
 /* Gli stessi tetti dell'integrazione. */
 export const TESTO_MASSIMO = 4000;

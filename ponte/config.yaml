@@ -12,7 +12,7 @@
 # finire esposta. Su quella non c'e' nessuna console: si puo' solo presentare
 # un codice di abbinamento valido, o un segno di riconoscimento gia' avuto.
 name: Il ponte di DashboardModern
-version: "0.21.0"
+version: "0.22.0"
 slug: ponte
 description: Fa parlare l'app di DashboardModern con questa casa, da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.
 url: https://github.com/danigio15/gdahomeapp/tree/main/ponte

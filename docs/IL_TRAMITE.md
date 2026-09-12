@@ -6,6 +6,13 @@ telefono**: non serve un computer, non serve un terminale, non serve SSH.
 Questo documento racconta com'e' andata davvero, non come si sarebbe potuta
 fare: i nomi, il fornitore e gli indirizzi qui dentro sono quelli veri.
 
+> **Fatto: le case stanno sul tramite** (12 settembre 2026, add-on 0.22.0).
+> L'indirizzo di serie non e' piu' il Worker di Cloudflare: e'
+> `wss://tramite.gdahome.org`, scritto nei tre posti dove sta —
+> `ponte/src/opzioni.js`, `app/lib/ponte/centralino.dart`, `ponte/src/chat.js`
+> — con `node strumenti/centralino.mjs`. Come si spostano le case che ci sono
+> gia', e i telefoni, sta nel §11 in fondo.
+
 ---
 
 ## Perche' si fa
@@ -292,7 +299,11 @@ stesso.
 ## 10. Quello che serve da te
 
 1. il **gettone di lettura**: un fine-grained token che veda
-   `danigio15/gdahomeapp` con **Contents: Read**, e nient'altro;
+   `danigio15/gdahomeapp` con **Contents: Read**, e nient'altro. Da quando
+   quella repository e' **pubblica** non serve piu' a niente: GitHub i file
+   pubblici li da' a chiunque li chieda, senza presentarsi. `accendi.sh` lo
+   chiede ancora perche' non e' stato ancora cambiato — si puo' battere
+   qualunque cosa, e il giorno che lo si sistema quella domanda sparisce;
 2. il **gettone delle segnalazioni**: un secondo token, che veda
    `danigio15/gdahome-segnalazioni` con **Issues: Read and write** e
    **Contents: Read and write** (gli allegati finiscono li');
@@ -305,3 +316,73 @@ stessi permessi su tutte le repository che vede. Uno solo, per poter aprire le
 segnalazioni, dovrebbe avere **Contents: Read and write** — e su `gdahomeapp`
 vorrebbe dire che chi entrasse nella macchina potrebbe riscrivere il codice che
 poi tutte le case si scaricano. Due gettoni separati tolgono quella strada.
+
+---
+
+## 11. Lo spostamento delle case, e dei telefoni
+
+L'indirizzo del centralino sta scritto in **tre posti**, e si cambiano tutti e
+tre con un comando solo — se divergessero, i telefoni cercherebbero le case in
+un posto e le case aspetterebbero in un altro, e l'app direbbe soltanto «non
+trovo la casa»:
+
+```
+node strumenti/centralino.mjs wss://tramite.gdahome.org
+```
+
+Scrive il difetto dell'add-on (`ponte/src/opzioni.js`), quello dell'app
+(`app/lib/ponte/centralino.dart`) e quello della chat (`ponte/src/chat.js`,
+convertito in `https://`). Che i primi due restino identici lo tiene fermo
+`ponte/test/centralino-di-difetto.test.js`, cosi' non dipende dal fatto che
+qualcuno si ricordi di usare il comando.
+
+### Una casa si sposta quando aggiorna l'add-on
+
+Il difetto e' scritto nel programma dell'add-on: una casa lo prende quando
+aggiorna, e da quel momento chiama il tramite invece del Worker. Chi nelle
+opzioni ha scritto un centralino suo non si muove — e' quello il senso di
+quella casella.
+
+### Un telefono gia' abbinato **non** si sposta da solo
+
+L'indirizzo del centralino l'app lo tiene **per casa**, e glielo dice il ponte
+una volta sola: quando si abbina (`ponte/src/portiere.js`, il messaggio
+`ecco`). Dopo, nessuno gli dice piu' niente. Quindi, appena la casa aggiorna:
+
+- **in casa** tutto continua a funzionare, perche' li' l'app va dritta
+  all'indirizzo di rete locale e il centralino non c'entra;
+- **da fuori** il telefono cerca la casa dove non c'e' piu', e dice «non trovo
+  la casa».
+
+Si rimette a posto **riabbinando**: nella console dell'add-on si stacca quel
+telefono, si fabbrica un codice, e si inquadra il quadretto. Trenta secondi per
+telefono, una volta sola.
+
+> Si potrebbe togliere di mezzo per sempre — il ponte che dice il suo
+> centralino a **ogni** collegamento e l'app che lo aggiorna quando e'
+> cambiato — e allora i telefoni seguirebbero la loro casa da soli, anche il
+> giorno che si cambia di nuovo fornitore. Per adesso si e' scelto di
+> riabbinare a mano: i telefoni sono pochi e sono nostri.
+
+### La chat si sposta con loro, le conversazioni no
+
+`ponte/src/chat.js` adesso punta al tramite. Le conversazioni aperte prima
+stanno nell'archivio del **Worker di prima** e non si spostano: chi aveva una
+chat aperta, dal primo messaggio dopo l'aggiornamento ne apre una nuova sul
+tramite. Per chi risponde vuol dire che la coda sulla console del tramite
+parte vuota.
+
+E la **chiave della console** e' quella del tramite — quella in
+`/etc/tramite/ambiente`, che si rilegge con `tramite-chiave` — non quella del
+Worker di prima. Va rimessa nelle opzioni dell'add-on, alla voce
+`chiave_console`.
+
+### Il pacchetto dell'app
+
+Il difetto scritto nell'app serve a **trovare una casa che non si conosce
+ancora**: abbinandosi col solo codice da fuori, il telefono deve sapere dove
+sta il centralino prima di aver sentito la casa. Per quello va rifatto il
+pacchetto — **Actions → «L'app da provare» → Run workflow** — se no un
+telefono nuovo, da fuori casa, cercherebbe sul Worker. In casa, col
+quadretto, l'indirizzo arriva dentro il codice a quadretti e il difetto non
+serve.

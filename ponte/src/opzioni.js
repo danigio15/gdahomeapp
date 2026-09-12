@@ -29,7 +29,7 @@ import { CENTRALINO_DELLA_CHAT } from "./chat.js";
  * casa l'app direbbe soltanto «non trovo la casa». Li tiene insieme
  * `ponte/test/centralino-di-difetto.test.js`, e si cambiano tutti e due con
  * `node strumenti/centralino.mjs <indirizzo>`. */
-export const CENTRALINO_DI_DIFETTO = "wss://gdahome-centralino.danigio15.workers.dev";
+export const CENTRALINO_DI_DIFETTO = "wss://tramite.gdahome.org";
 
 const DIFETTO = Object.freeze({
   centralino: CENTRALINO_DI_DIFETTO,

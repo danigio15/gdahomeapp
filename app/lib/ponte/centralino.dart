@@ -40,7 +40,7 @@ import 'indirizzo.dart';
 /// formattatore lo fa da solo — ma il nome e le virgolette vanno lasciati
 /// com'e' scritto: e' cosi' che la ritrova.
 const String centralinoDiDifettoScritto =
-    "wss://gdahome-centralino.danigio15.workers.dev";
+    "wss://tramite.gdahome.org";
 
 /* Vuoto vuol dire **non detto**, non «nessuno».
  *
