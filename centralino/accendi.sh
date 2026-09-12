@@ -409,12 +409,12 @@ ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes
 ReadWritePaths=$DATI
-# `AF_UNIX` e `AF_NETLINK` non sono un di piu': Node li usa per parlare col
+# AF_UNIX e AF_NETLINK non sono un di piu': Node li usa per parlare col
 # sistema — i socket interni, e la lista delle interfacce di rete. Senza, non
 # parte.
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
 LockPersonality=yes
-# Qui NON ci va `MemoryDenyWriteExecute`.
+# Qui NON ci va MemoryDenyWriteExecute.
 #
 # Vieterebbe alla memoria di essere scrivibile ed eseguibile insieme, che su
 # quasi tutti i servizi e' una buona idea. Ma Node compila il JavaScript in

@@ -175,3 +175,29 @@ test("il servizio non ha il divieto che ammazza Node", () => {
     assert.ok(famiglie[1].includes(quale), `manca ${quale}`);
   }
 });
+
+test("nei pezzi scritti col cuore aperto non ci sono controaccenti", () => {
+  /* `cat <<FINE` senza virgolette lascia viva la shell dentro il testo: un
+   * controaccento esegue un comando, e `$(...)` pure. Tre parole messe fra
+   * controaccenti dentro un commento — «AF_UNIX», «AF_NETLINK» — sono finite
+   * in pasto alla shell e hanno stampato «command not found» in mezzo
+   * all'installazione. Era innocuo per un pelo: in quel punto girava da root.
+   *
+   * Dove serve la sostituzione la si scrive apposta, con `$VARIABILE`. I
+   * controaccenti no, mai. */
+  const aperti = /cat >"?[^"\s]+"? <<FINE\n([\s\S]*?)\nFINE\n/g;
+  let uno;
+  let quanti = 0;
+  while ((uno = aperti.exec(ACCENDI)) !== null) {
+    quanti += 1;
+    const testo = uno[1];
+    const controaccenti = [...testo.matchAll(/(^|[^\\])`/g)];
+    assert.equal(
+      controaccenti.length,
+      0,
+      `un controaccento non protetto in un heredoc aperto: ${controaccenti[0]?.[0]}`,
+    );
+    assert.doesNotMatch(testo, /(^|[^\\])\$\(/, "una sostituzione di comando in un heredoc aperto");
+  }
+  assert.ok(quanti >= 2, "mi aspettavo almeno due heredoc col cuore aperto");
+});
