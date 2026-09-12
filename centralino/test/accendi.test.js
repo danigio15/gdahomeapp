@@ -147,3 +147,14 @@ test("i due nomi si controllano prima di installare qualunque cosa", () => {
   assert.ok(dnsQui >= 0 && primoApt >= 0);
   assert.ok(dnsQui < primoApt, "installa prima di guardare dove puntano i nomi");
 });
+
+test("installare non deve buttare fuori chi sta installando", () => {
+  /* Ubuntu 24.04, dopo ogni installazione, passa `needrestart` e riavvia i
+   * servizi collegati alle librerie aggiornate. Fra quelli c'e' **ssh**: chi
+   * stava lanciando lo script da ssh si trova buttato fuori a meta', nel punto
+   * peggiore, e non sa nemmeno dove era arrivato. E' successo davvero. */
+  const sospende = ACCENDI.indexOf("NEEDRESTART_SUSPEND=1");
+  const primoApt = ACCENDI.indexOf("apt-get update");
+  assert.ok(sospende >= 0, "non sospende needrestart: riavviera' ssh e tagliera' il filo");
+  assert.ok(sospende < primoApt, "lo sospende dopo aver gia' installato qualcosa");
+});

@@ -216,6 +216,18 @@ passo "Installo quello che serve"
 
 export DEBIAN_FRONTEND=noninteractive
 
+# Ubuntu 24.04 dopo ogni installazione passa `needrestart`, che riavvia i
+# servizi collegati alle librerie aggiornate. Fra quelli c'e' **ssh**, e
+# riavviare ssh mentre si e' collegati da ssh butta fuori chi sta guardando: lo
+# script muore a meta', nel punto peggiore, e chi lo aveva lanciato non sa
+# nemmeno a che punto era arrivato.
+#
+# Qui non serve riavviare niente: quello che installiamo lo accendiamo noi piu'
+# sotto, e per il resto la macchina e' appena nata. Quindi si sospende, e si
+# lascia scritto perche' non ricapiti agli aggiornamenti automatici.
+export NEEDRESTART_SUSPEND=1
+export NEEDRESTART_MODE=l
+
 apt-get update -qq
 apt-get install -y -qq ca-certificates curl gnupg tar fail2ban unattended-upgrades >/dev/null
 bene "pacchetti di base, blocco delle password a raffica, aggiornamenti automatici"
@@ -243,7 +255,15 @@ cat >/etc/apt/apt.conf.d/20auto-upgrades <<'FINE'
 APT::Periodic::Update-Package-Lists "1";
 APT::Periodic::Unattended-Upgrade "1";
 FINE
-bene "gli aggiornamenti di sicurezza si installano da soli"
+
+# E `needrestart` non riavvia piu' niente da solo, nemmeno domani: elenca e
+# basta. Un servizio riavviato a sorpresa, su una macchina che fa da tramite,
+# vuol dire qualcuno che resta fuori casa senza che nessuno abbia toccato
+# niente. I riavvii si fanno quando li decidiamo noi.
+if [[ -d /etc/needrestart/conf.d ]]; then
+  printf '$nrconf{restart} = %s;\n' "'l'" >/etc/needrestart/conf.d/tramite.conf
+fi
+bene "gli aggiornamenti di sicurezza si installano da soli, senza riavvii a sorpresa"
 
 # ─── 4. Il tramite ───────────────────────────────────────────────────────────
 
