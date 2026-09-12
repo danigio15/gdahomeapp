@@ -647,6 +647,28 @@ void main() {
     await filo.chiudi();
   });
 
+  test('un filo chiuso apposta non e\' una caduta', () async {
+    /* Quando l'app non e' davanti il filo si chiude da se': e' voluto, ed e'
+     * quello che non tiene una casa aperta in tasca per niente. Solo che
+     * chiudere una presa fa scattare il suo `onDone`, e quello finiva contato
+     * fra le cadute: nella diagnostica si leggeva «caduto 1 volte: il filo si
+     * e' chiuso» sotto «app messa da parte 1 volte» — la stessa cosa scritta
+     * due volte, una delle quali come guasto. Chi guarda quel pannello per
+     * capire se qualcosa non va si mette a inseguire un fantasma. */
+    final filo = Filo.fisso(
+      indirizzo: ponte.indirizzo,
+      segno: segnoBuono,
+      chi: chiBuono,
+      chiave: chiaveBuona,
+    );
+    await filo.apri();
+    expect(filo.dentro, isTrue);
+
+    await filo.chiudi();
+    expect(filo.ultimeCadute, isEmpty);
+    expect(filo.traffico, contains('mai caduto'));
+  });
+
   test('senza filo non si instrada niente', () async {
     final filo = filoCon();
     expect(

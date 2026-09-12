@@ -916,11 +916,25 @@ class Filo {
   }
 
   void _caduto(String perche) {
-    _cadute += 1;
-    _ultimaCaduta = perche;
-    _cadutoIl = DateTime.now();
-    _ultimeCadute.add(perche);
-    if (_ultimeCadute.length > quanteCaduteSiTengono) _ultimeCadute.removeAt(0);
+    /* Un filo chiuso **apposta** non e' una caduta, e non va fra le cadute.
+     *
+     * Quando l'app non e' davanti il filo si chiude da se' — e' voluto, ed e'
+     * quello che non tiene una casa aperta in tasca per niente. Solo che
+     * chiudere una presa fa scattare il suo `onDone`, che arriva qui, e finiva
+     * contato insieme alle cadute vere: nella diagnostica si leggeva «caduto 1
+     * volte: il filo si e' chiuso» sotto «app messa da parte 1 volte», cioe' la
+     * stessa cosa scritta due volte, una delle quali come guasto. Chi guarda
+     * quel pannello per capire se qualcosa non va si mette a inseguire un
+     * fantasma. */
+    if (!_spentoApposta) {
+      _cadute += 1;
+      _ultimaCaduta = perche;
+      _cadutoIl = DateTime.now();
+      _ultimeCadute.add(perche);
+      if (_ultimeCadute.length > quanteCaduteSiTengono) {
+        _ultimeCadute.removeAt(0);
+      }
+    }
     _smettiDiBattere();
     _stacca();
     /* Le richieste in volo muoiono: la loro risposta non arrivera' mai. Ma chi
