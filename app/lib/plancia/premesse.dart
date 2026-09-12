@@ -225,6 +225,28 @@ class Premesse {
       'setTimeout(guarda,0);'
       '};'
       'window.gdahomeTornaDallaConfig=function(){torna(0);};'
+      /* Le stesse due maniglie, bussando da fuori con un messaggio.
+       *
+       * Nel browser l'app le tira **chiamando** la funzione dentro il
+       * riquadro, e una funzione dentro un riquadro si chiama solo se la
+       * pagina e l'app stanno sulla stessa origine. In casa e' cosi' — la
+       * plancia la serve il service worker dell'app, stesso posto — ma non
+       * sempre: il collaudo la serve da una porta sua, perche' nel browser un
+       * server dentro la pagina non si apre. Li' il browser blocca la
+       * chiamata, il tentativo muore dentro un `catch`, e il tasto
+       * «Configurazione» sembra rotto senza dire niente a nessuno.
+       *
+       * Un messaggio invece le origini le attraversa. Si accetta solo da chi
+       * ospita questo riquadro — non da un'altra pagina qualunque — e porta
+       * un ordine solo: aprire o chiudere una pagina che in questa plancia
+       * c'e' gia'. */
+      'window.addEventListener("message",function(evento){'
+      'var detto=evento.data;'
+      'if(!detto||typeof detto!=="object")return;'
+      'if(evento.source!==window.parent)return;'
+      'if(detto.gdahome==="apri-la-config")apri(0);'
+      'else if(detto.gdahome==="torna-dalla-config")torna(0);'
+      '});'
       /* Quando la plancia cambia pagina, l'app lo viene a sapere.
        *
        * La barra della plancia resta li' anche sulla Configurazione — e' una
@@ -277,6 +299,52 @@ class Premesse {
       'dallIndirizzo();'
       '})();</script>';
 
+  /// La tenda sulla barra si alza comunque, anche in un riquadro che non si
+  /// sta disegnando.
+  ///
+  /// La plancia copre la barra in fondo finche' non sa quali voci mostrare —
+  /// senza la tenda «resta sempre la barra totale, per poi diventare come
+  /// l'ho configurata: dura quattro o cinque secondi» — e la scopre mettendo
+  /// un segno sul documento: `data-dm-barra="pronta"`, che il suo foglio di
+  /// stile aspetta (`bridge-prelude.js`, `navigation-section.js`).
+  ///
+  /// Quel segno lo mette dentro un `requestAnimationFrame`: aspetta la fine di
+  /// un fotogramma per leggere le larghezze delle voci e capire se la barra ha
+  /// finito di prendere forma. E' la cosa giusta in una pagina che si disegna.
+  ///
+  /// **In un riquadro che non si disegna quel fotogramma non arriva mai.** E
+  /// succede tutte le volte che la pagina della plancia si carica mentre si
+  /// sta guardando un'altra sezione dell'app: si salva nella Config, si cambia
+  /// «Plancia leggera», la casa arriva dopo che la pagina si era aperta — ogni
+  /// volta e' una pagina nuova in un riquadro che in quel momento nessuno
+  /// guarda. Nemmeno la scadenza di riserva della plancia rimedia: chiama la
+  /// stessa funzione, che trova un fotogramma gia' in coda e torna indietro
+  /// senza fare niente. Il segno non arriva, la barra resta a opacita' zero, e
+  /// una plancia senza la sua barra e' una plancia da cui non si esce.
+  ///
+  /// Qui si mette **solo quel segno**, e solo se dopo cinque secondi non c'e'
+  /// ancora. La plancia da sola ce ne mette al massimo quattro — 2500
+  /// millisecondi di attesa piu' 1500 se la forma cambia sotto le mani —
+  /// quindi in una pagina che si disegna questo non vince mai, e non toglie
+  /// niente alla tenda. In una che non si disegna e' l'unica cosa che si
+  /// muove: un `setTimeout` e nient'altro, perche' i timer girano anche dove i
+  /// fotogrammi non arrivano.
+  ///
+  /// Non si tocca `navigation-section.js`, che e' un file della dashboard: i
+  /// file restano quelli pubblicati, e il ponte li ricontrolla uno per uno.
+  static const String laTendaSiAlzaComunque =
+      '<script>(function(){'
+      'var alza=function(){'
+      'try{'
+      'var radice=document.documentElement;'
+      /* C'e' gia': l'ha messo la plancia, e va lasciato come sta. */
+      'if(!radice||radice.getAttribute("data-dm-barra"))return;'
+      'radice.setAttribute("data-dm-barra","pronta");'
+      '}catch(male){}'
+      '};'
+      'setTimeout(alza,5000);'
+      '})();</script>';
+
   /* Il tema, la tavolozza e la barra qui non si scrivono, e non e' una
    * dimenticanza. Sono tre comandi della pagina Config della plancia — «su
    * questo dispositivo», lo dice lei — e la pagina se li tiene nel deposito
@@ -315,7 +383,8 @@ class Premesse {
     /* Le misure e la porta della Config vanno in fondo: vedi
      * [stileDelleMisure], che spiega perche' in testa perdevano contro lo
      * stile della plancia. */
-    final inFondo = '$stileDelleMisure$laConfigFuoriDallaPlancia';
+    final inFondo =
+        '$stileDelleMisure$laConfigFuoriDallaPlancia$laTendaSiAlzaComunque';
     final fine = RegExp(
       r'</body\s*>',
       caseSensitive: false,

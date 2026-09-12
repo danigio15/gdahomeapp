@@ -89,14 +89,31 @@ Future<void> diciLeMisure(
 /// non se ne accorgerebbe. Si prova su ogni riquadro: quello della plancia
 /// e' l'unico che la maniglia ce l'ha.
 Future<void> apriLaConfig(WebViewController controllore, Uri pagina) async =>
-    _tira('gdahomeApriLaConfig');
+    _tira('gdahomeApriLaConfig', 'apri-la-config');
 
 /// Riporta la plancia dov'era prima della Configurazione.
 Future<void> tornaDallaConfig(WebViewController controllore) async =>
-    _tira('gdahomeTornaDallaConfig');
+    _tira('gdahomeTornaDallaConfig', 'torna-dalla-config');
 
 /// Tira una delle maniglie che il servitore ha messo nella pagina servita.
-void _tira(String maniglia) {
+///
+/// Due strade per la stessa cosa, e la seconda non e' un lusso.
+///
+/// La prima e' **chiamare** la funzione dentro il riquadro: e' immediata, e
+/// funziona finche' la pagina e l'app stanno sulla stessa origine — in casa
+/// e' cosi', perche' la plancia la serve il service worker dell'app.
+///
+/// Dove non lo e', il browser non lascia nemmeno guardare se quella funzione
+/// esiste: solleva, e prima qui si passava al riquadro dopo — che non c'e' —
+/// e il tasto «Configurazione» non faceva niente senza dire niente. Succede
+/// nel collaudo, dove la plancia arriva da una porta sua perche' nel browser
+/// un server dentro la pagina non si apre; e basta che un giorno la plancia
+/// stia altrove perche' succeda anche in casa.
+///
+/// Allora, quando la chiamata non arriva, si **bussa**: un messaggio
+/// attraversa le origini, e la pagina servita sa cosa farne
+/// (`Premesse.laConfigFuoriDallaPlancia`).
+void _tira(String maniglia, String ordine) {
   final riquadri = web.document.querySelectorAll('iframe');
   for (var quale = 0; quale < riquadri.length; quale += 1) {
     final uno = riquadri.item(quale);
@@ -106,12 +123,22 @@ void _tira(String maniglia) {
     final dentro = (uno as web.HTMLIFrameElement).contentWindow;
     if (dentro == null) continue;
     try {
-      if (!dentro.has(maniglia)) continue;
-      dentro.callMethod(maniglia.toJS);
-      return;
+      if (dentro.has(maniglia)) {
+        dentro.callMethod(maniglia.toJS);
+        return;
+      }
+      /* La finestra si guarda, e quella maniglia non ce l'ha: non e' la
+       * plancia, e non c'e' niente da bussarle. */
+      continue;
     } catch (_) {
-      /* Un riquadro di un'altra origine non si guarda nemmeno: si passa al
-       * prossimo. */
+      /* Un riquadro di un'altra origine non si lascia guardare. Non vuol dire
+       * che non sia il nostro: si bussa. */
+    }
+    try {
+      dentro.postMessage({'gdahome': ordine}.jsify(), '*'.toJS);
+    } catch (_) {
+      /* Se non si puo' nemmeno bussare, quel riquadro non e' raggiungibile:
+       * si passa al prossimo. */
     }
   }
 }

@@ -1084,6 +1084,40 @@ try {
   await attendi(700);
   await scatta(pagina, "3d-plancia-ricaricata");
 
+  /* E la tenda sulla barra si alza, **senza tornare sulla plancia**.
+   *
+   * La plancia copre la barra in fondo finche' non sa quali voci mostrare, e
+   * la scopre mettendo `data-dm-barra="pronta"` sul documento. Quel segno lo
+   * mette dentro un `requestAnimationFrame` — e qui, adesso, siamo su
+   * «Dispositivi»: il riquadro della plancia non si sta disegnando, e quel
+   * fotogramma non arriva mai. Nemmeno la scadenza di riserva della plancia
+   * rimedia: chiama la stessa funzione, che trova il fotogramma gia' in coda
+   * e torna indietro. La barra resta a opacita' zero, e una plancia senza la
+   * sua barra e' una plancia da cui non si esce.
+   *
+   * E' il difetto vero di questo pezzo di collaudo: si e' visto perche' il
+   * passo dopo aspetta quel segno, e aspettava per sempre. La toppa sta nelle
+   * premesse della pagina servita (`Premesse.laTendaSiAlzaComunque`), che dopo
+   * cinque secondi mette il segno se non c'e' — non nella plancia, che e' un
+   * file della dashboard e non si tocca. */
+  racconta("guardo che la barra si scopra anche a riquadro nascosto");
+  const fineDellaTenda = Date.now() + 20_000;
+  let laTenda = null;
+  while (Date.now() < fineDellaTenda) {
+    laTenda = await ricaricata
+      .evaluate(() => document.documentElement.getAttribute("data-dm-barra"))
+      .catch(() => null);
+    if (laTenda === "pronta") break;
+    await attendi(250);
+  }
+  if (laTenda !== "pronta") {
+    throw new Error(
+      "ricaricata la plancia mentre il suo riquadro non si vede, la tenda sulla barra non si e'" +
+        ` alzata: la barra resta invisibile (data-dm-barra=${laTenda})`,
+    );
+  }
+  racconta("la barra si e' scoperta da se'");
+
   racconta("apro la Configurazione della plancia dal menu");
   const laConfig = await laPlancia(pagina);
   await apriIlMenu();
@@ -1335,6 +1369,19 @@ try {
   await attendi(700);
   await scatta(pagina, "6e-assistenza");
 
+  /* «Come va l'app»: i numeri di come disegna, e quanto passa sul filo. E'
+   * la pagina che si chiede di fotografare quando l'app va a scatti, quindi
+   * la si fotografa anche qui. */
+  racconta("apro «Come va l'app»");
+  await premi(pagina, "Come va l'app");
+  await aspettaCheCompaia(pagina, "Fotogrammi");
+  await attendi(1500);
+  await scatta(pagina, "6f-come-va-l-app");
+  /* Il bottone per tornare: in inglese, che e' la lingua del browser del collaudo. */
+  await premi(pagina, "Back");
+  await aspettaCheCompaia(pagina, "Scrivi a chi fa l'app");
+  await attendi(400);
+
   /* La Console: la stessa conversazione, vista dall'altra parte.
    *
    * La voce c'e' perche' questa casa ha la chiave; in una casa qualunque non
@@ -1353,19 +1400,6 @@ try {
   await aspettaCheCompaia(pagina, "Dalla home, in alto a sinistra");
   await attendi(700);
   await scatta(pagina, "6e3-console-filo");
-
-  /* «Come va l'app»: i numeri di come disegna, e quanto passa sul filo. E'
-   * la pagina che si chiede di fotografare quando l'app va a scatti, quindi
-   * la si fotografa anche qui. */
-  racconta("apro «Come va l'app»");
-  await premi(pagina, "Come va l'app");
-  await aspettaCheCompaia(pagina, "Fotogrammi");
-  await attendi(1500);
-  await scatta(pagina, "6f-come-va-l-app");
-  /* Il bottone per tornare: in inglese, che e' la lingua del browser del collaudo. */
-  await premi(pagina, "Back");
-  await aspettaCheCompaia(pagina, "Scrivi a chi fa l'app");
-  await attendi(400);
 
   racconta("torno alla plancia");
   await apriIlMenu();
