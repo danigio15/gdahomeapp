@@ -409,9 +409,21 @@ ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes
 ReadWritePaths=$DATI
-RestrictAddressFamilies=AF_INET AF_INET6
+# `AF_UNIX` e `AF_NETLINK` non sono un di piu': Node li usa per parlare col
+# sistema — i socket interni, e la lista delle interfacce di rete. Senza, non
+# parte.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
 LockPersonality=yes
-MemoryDenyWriteExecute=yes
+# Qui NON ci va `MemoryDenyWriteExecute`.
+#
+# Vieterebbe alla memoria di essere scrivibile ed eseguibile insieme, che su
+# quasi tutti i servizi e' una buona idea. Ma Node compila il JavaScript in
+# istruzioni vere mentre gira — e' il suo mestiere — e quelle istruzioni le
+# scrive in memoria che poi esegue. Con quel divieto non si avvia: muore con un
+# segnale, senza un messaggio che spieghi niente, e chi guarda vede solo «a
+# fatal signal was delivered».
+#
+# E' successo davvero, alla prima accensione.
 
 [Install]
 WantedBy=multi-user.target

@@ -158,3 +158,20 @@ test("installare non deve buttare fuori chi sta installando", () => {
   assert.ok(sospende >= 0, "non sospende needrestart: riavviera' ssh e tagliera' il filo");
   assert.ok(sospende < primoApt, "lo sospende dopo aver gia' installato qualcosa");
 });
+
+test("il servizio non ha il divieto che ammazza Node", () => {
+  /* `MemoryDenyWriteExecute` vieta alla memoria di essere scrivibile ed
+   * eseguibile insieme. Su quasi tutti i servizi e' una buona idea; su Node no,
+   * perche' Node compila il JavaScript in istruzioni vere mentre gira e quelle
+   * istruzioni le scrive in memoria che poi esegue. Con quel divieto muore con
+   * un segnale e senza un messaggio che spieghi niente. E' successo davvero. */
+  assert.doesNotMatch(ACCENDI, /^MemoryDenyWriteExecute=yes$/m);
+
+  /* E i socket interni e la lista delle interfacce servono: senza `AF_UNIX` e
+   * `AF_NETLINK`, Node non parte. */
+  const famiglie = /^RestrictAddressFamilies=(.+)$/m.exec(ACCENDI);
+  assert.ok(famiglie, "non trovo le famiglie di socket ammesse");
+  for (const quale of ["AF_INET", "AF_INET6", "AF_UNIX", "AF_NETLINK"]) {
+    assert.ok(famiglie[1].includes(quale), `manca ${quale}`);
+  }
+});
