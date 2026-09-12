@@ -435,7 +435,7 @@ se non funzionano:
   la stessa chat. La graffetta 📎 qui non c'è più, e non è una dimenticanza:
   questa chat passa parole, e una foto si allega a una segnalazione.
 - **Menu → Configurazione.** Deve comparire la pagina **CONFIGURAZIONE** della
-  dashboard, con la sua insegna e la versione della plancia — **v1.4.19**, e se
+  dashboard, con la sua insegna e la versione della plancia — **v1.4.23**, e se
   ne dice una più vecchia il ponte non è aggiornato — e sotto le sue
   tessere: 🧩 Configura Entità, 🎨 Tema con le sei tavolozze, 📌 Barra di
   navigazione. «Sostieni il progetto» qui **non c'è**: questa pagina si presenta come

@@ -40,6 +40,12 @@ import {
 } from "../core/racconto-tessera.js";
 import { analisiDellaSezione } from "../core/analisi-sezione.js";
 import { escluseDellaTessera } from "../core/fuori-dai-widget.js";
+import {
+  CHIAVE_SEZIONI_MIE,
+  chiaveDellaSezione,
+  eUnaSezioneMia,
+  sezioniDaMostrare,
+} from "../core/sezioni-mie.js";
 import { PERIOD_SOURCES } from "../core/period-service.js";
 import {
   TONO_DEL_GRADO,
@@ -82,6 +88,13 @@ import {
   letturaUps,
   normalizzaUps,
 } from "../core/ups-model.js";
+import {
+  LIVELLO_QUIETE,
+  SOGLIA_POTENZA_KEY,
+  SORGENTE_RETE,
+  coloreDelLivello,
+  livelloDellaPotenza,
+} from "../core/la-soglia-della-potenza.js";
 import {
   TESSERA_PER_IMPIANTO,
   TESSERE_IMPIANTI_KEY,
@@ -148,6 +161,7 @@ import {
   rifiutiConfigurati,
 } from "../core/rifiuti-model.js";
 import { nomeDellaRiga, parolaDelQuando } from "./rifiuti-section.js";
+import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
 import { CHIAVE_VMC, entitaDellaVmc, letturaVmc, vmcDisegnabili, vmcParla } from "../core/vmc-model.js";
 import { avvisiAppenaAccesi } from "../core/avvisi-che-si-aprono.js";
 import { comandiMediaMarkup, sottoDelLettore, titoloDelLettore } from "./media-player-section.js";
@@ -164,9 +178,20 @@ import {
   isRelayEntity,
   relayCoverCommands,
 } from "../core/cover-kind.js";
+import { aggiornamentiDaFare } from "../core/aggiornamenti-da-fare.js";
+import {
+  CHIAVE_SOGLIA_UMIDITA,
+  finestreDaArieggiare,
+  sogliaDellaFinestra,
+  stanzaDiUnaFinestra,
+} from "../core/arieggiare.js";
 import { azioniDellaPorta } from "../core/security-door-model.js";
 import { humidityEntry } from "../core/room-overview.js";
 import { CHIAVE_VARCHI, contoDeiVarchi, varchiDiCasa } from "../core/varchi-di-casa.js";
+import {
+  CHIAVE_RILEVAMENTI,
+  rilevamentiAccesi,
+} from "../core/rilevamenti-telecamera.js";
 import {
   CHIAVE_VERSO_BATTERIA,
   batteriaGirata,
@@ -202,11 +227,12 @@ import { EVENTO_PIATTAFORME, piattaformeConosciute } from "./di-chi-e-unentita-s
  * si leggono da li': la tessera e la pagina devono contare le stesse righe. */
 import { serverPerDispositivo } from "./macchine-e-rete-section.js";
 import {
+  APERTURE_TAB,
   configuredSecurityDoors,
   iconaPortaMarkup,
   parolaDelGesto,
 } from "./security-doors-section.js";
-import { wattsFromState } from "../core/signed-energy.js";
+import { applySignedSources, wattsFromState } from "../core/signed-energy.js";
 import {
   contactEntity,
   inferriataEntity,
@@ -233,6 +259,7 @@ import {
 import { loadCameraFrame } from "./live-ui-section.js";
 import { hasConfiguredData } from "../core/dashboard-store.js";
 import {
+  activeLocale,
   allStates,
   clean,
   doc,
@@ -1130,6 +1157,10 @@ function coversModel(states) {
       return {
         soloSensore: Boolean(soloSensore),
         entity,
+        /* La riga si porta dietro la sua configurazione: la stanza e la soglia
+         * dell'umidita' stanno scritte li', e cercarle una seconda volta per
+         * entita' vorrebbe dire rifare il giro che qui e' gia' fatto. */
+        config: item,
         name: etichetta,
         open,
         invertita: girata,
@@ -1169,7 +1200,48 @@ function coversModel(states) {
    * la regola sta tutta in `contoDelleAperture`, che e' pura e si prova con i
    * numeri invece che rileggendo queste righe. */
   const { alzate, aperte, soloMotori, insieme, contate } = contoDelleAperture(rows);
+  /* «L'avviso di arieggiare funziona ma e' presente solo se entri nella
+   * sezione, andrebbe messo a livello di widget» (#500).
+   *
+   * Il consiglio c'era gia' e funzionava: quello che mancava era che si
+   * vedesse da fuori. Un avviso che si scopre soltanto entrando nella stanza
+   * dove sta scritto non ha avvisato nessuno.
+   *
+   * La regola non si rifa': e' quella del nucleo, la stessa che disegna la
+   * riga sotto la card. Qui si vanno solo a prendere i numeri — l'umidita'
+   * della stanza a cui la finestra appartiene, la soglia sua o quella di casa,
+   * e se l'anta e' gia' aperta, che e' il caso in cui aprire non si consiglia
+   * perche' sta gia' arieggiando. */
+  const stanzeDiCasa = root.getStanze?.() || readJson("cd_stanze", []);
+  const sogliaDiCasa = readJson(CHIAVE_SOGLIA_UMIDITA, null);
+  /* I numeri si passano com'e' li scrive Home Assistant: a leggerli e a
+   * scartare «unavailable» ci pensa il nucleo, che sa anche la virgola. */
+  const umiditaFuori = stateOf(states, "dm.home_meteo_umidita")?.state ?? null;
+  const daArieggiare = finestreDaArieggiare(
+    rows.map((riga) => {
+      const stanza = stanzaDiUnaFinestra(riga.config, stanzeDiCasa);
+      return {
+        nome: riga.name,
+        stanza: clean(stanza?.name),
+        dentro: stateOf(states, stanza?.hum)?.state ?? null,
+        soglia: sogliaDellaFinestra(riga.config, sogliaDiCasa),
+        fuori: umiditaFuori,
+        aperta: riga.open,
+      };
+    }),
+  );
   const didascalia = () => {
+    /* Quando c'e' da arieggiare lo dice la didascalia, al posto del conto: e'
+     * l'unica cosa della tessera su cui si puo' fare qualcosa adesso. */
+    if (daArieggiare.length) {
+      const prima = daArieggiare[0];
+      const dove = prima.stanza || prima.nome;
+      /* Le altre si contano con un segno, non con una frase: una chiave di
+       * traduzione con dentro un numero non e' una chiave, e' codice che
+       * cambia a ogni lettura del sensore. */
+      const quante = daArieggiare.length > 1 ? ` · +${daArieggiare.length - 1}` : "";
+      return `${t("Arieggia", "Air out")}: ${dove} ${Math.round(prima.esito.dentro)}%${quante}`;
+    }
     if (soloMotori) return nomiAccesi(alzate, () => true, t("Tutte abbassate", "All down"));
     /* Le finestre aperte si NOMINANO, una per una.
      *
@@ -1193,6 +1265,11 @@ function coversModel(states) {
     value: String(contate.length),
     caption: didascalia(),
     ring: Math.round((contate.length / insieme.length) * 100),
+    /* Rosso solo quando c'e' da fare: una tessera che avvisa sempre non
+     * avvisa. Le finestre aperte sono uno stato, non un avviso — quello lo
+     * dicono i Varchi. */
+    alert: daArieggiare.length > 0,
+    arieggia: daArieggiare,
     rows,
     /* Le aperture escono col modello, come le luci accese: chi le conta senza
      * disegnarle legge questo campo invece di rifiltrare le righe per conto
@@ -1283,6 +1360,46 @@ export function porteAperte(doors = [], states = {}) {
   });
 }
 
+/* Cosa c'e' da aggiornare in casa (#498).
+ *
+ * «Creare un avviso che segnali gli aggiornamenti presenti da effettuare,
+ * compresi quelli della fantastica dashmodern.»
+ *
+ * Home Assistant lo sa gia': ogni integrazione, ogni add-on e il sistema
+ * stesso pubblicano un'entita' `update.` che sta a ON quando c'e' una versione
+ * nuova. Qui non si va a chiedere niente fuori e non si configura niente —
+ * un elenco scritto a mano invecchierebbe al primo add-on installato.
+ *
+ * La tessera compare SOLO quando c'e' qualcosa da fare. Una tessera
+ * «Aggiornamenti: 0» occupa un posto per dire che non e' successo niente, e in
+ * una Home dove ogni posto e' una cosa che si guarda quello e' un posto
+ * sprecato.
+ *
+ * Non e' rossa: un aggiornamento non e' un guasto, e il rosso in questa Home
+ * vuol dire «vai a vedere adesso». E' ambra, come le cose da fare con calma.
+ */
+function aggiornamentiModel(states) {
+  const fuori = widgetExcludedEntities("aggiornamenti");
+  const fila = aggiornamentiDaFare(states).filter((voce) => widgetIncludes(voce.entity, fuori));
+  if (!fila.length) return null;
+  const primo = fila[0];
+  return {
+    key: "aggiornamenti",
+    accent: "#d97706",
+    icon: "⬆️",
+    label: t("Aggiornamenti", "Updates"),
+    value: String(fila.length),
+    /* Si nomina il primo — la plancia quando c'e', che e' quella per cui
+     * questa tessera e' stata chiesta — e si dice a che versione va. Gli altri
+     * si contano: i nomi di sei add-on in una didascalia non si leggono. */
+    caption:
+      fila.length === 1
+        ? `${primo.nome}${primo.a ? ` → ${primo.a}` : ""}`
+        : `${primo.nome} · +${fila.length - 1}`,
+    aggiornamenti: fila,
+  };
+}
+
 function porteModel(states) {
   const fuori = widgetExcludedEntities("porte");
   /* Le entita' delle Prese non sono porte: la lista arriva gia' filtrata. */
@@ -1296,7 +1413,13 @@ function porteModel(states) {
     accent: aperte.length ? "#dc2626" : serrature.length ? "#16a34a" : "#d97706",
     icon: "🚪",
     alert: aperte.length > 0,
-    label: t("Porte", "Doors"),
+    /* «Porte» dice cosa c'e' dentro, non cosa fa: e cio' che c'e' dentro sono
+     * i comandi che aprono — «alla fine dentro ci si aggiunge i comandi che
+     * sbloccano qualcosa» (#513). Una tessera che si chiama come la cosa che
+     * sorveglia la si confonde coi Varchi, che le porte le guardano davvero.
+     * «Apri porte» e' gia' il nome della pagina che questa tessera apre: erano
+     * due nomi per lo stesso posto, adesso e' uno. */
+    label: t("Apri porte", "Openers"),
     value: String(serrature.length ? aperte.length : doors.length),
     caption: aperte.length
       ? aperte.map(nome).join(" · ")
@@ -1327,7 +1450,7 @@ function formatWatts(value) {
   return `${formatNumber(value, 0)} W`;
 }
 
-function camerasModel() {
+function camerasModel(states = allStates()) {
   const fuori = widgetExcludedEntities("telecamere");
   let cameras = [];
   try {
@@ -1340,16 +1463,51 @@ function camerasModel() {
     }))
     .filter((row) => row.entity && widgetIncludes(row.entity, fuori));
   if (!rows.length) return null;
+  /* Cosa stanno vedendo adesso (#394).
+   *
+   * «Che la Dashboard metta l'avviso con il fotogramma.» La tessera delle
+   * telecamere e' il posto: e' quella che i fotogrammi li carica gia', ed e'
+   * quella che uno guarda per sapere se fuori c'e' qualcuno. Un avviso a parte
+   * sarebbe una seconda tessera che dice di una cosa sola, accesa quasi mai.
+   *
+   * Quando qualcosa si vede, il numero grande smette di contare le telecamere
+   * e dice cosa e' stato visto: «quante telecamere ho» e' una domanda che non
+   * si fa mentre c'e' una persona in giardino. */
+  const visti = rilevamentiAccesi(
+    readJson(CHIAVE_RILEVAMENTI, {}),
+    states,
+    rows,
+    activeLocale(),
+  );
+  const primo = visti[0] || null;
   return {
     key: "telecamere",
-    accent: "#0284c7",
-    icon: "📹",
+    accent: primo ? "#dc2626" : "#0284c7",
+    icon: primo ? primo.segno : "📹",
     label: t("Telecamere", "Cameras"),
-    value: String(rows.length),
-    caption: rows[0].name,
+    value: primo ? primo.parola : String(rows.length),
+    caption: primo ? `${primo.nome} · ${oraDelRilevamento(primo.quando)}` : rows[0].name,
     ring: null,
+    /* Acceso solo quando c'e' davvero qualcosa: una tessera che si accende
+     * sempre non e' piu' un avviso. E' la stessa regola dei Varchi. */
+    alert: Boolean(primo),
+    visti,
     rows,
   };
+}
+
+/* L'ora di un rilevamento, come la si legge passando. Solo l'ora e i minuti:
+ * il giorno lo si sa, ed e' successo adesso o non sarebbe acceso. */
+function oraDelRilevamento(quando) {
+  if (!Number.isFinite(quando)) return "";
+  try {
+    return new Date(quando).toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch (_errore) {
+    return "";
+  }
 }
 
 const ENERGY_SLOTS = Object.freeze([
@@ -1403,21 +1561,64 @@ function oggiDellImpianto(states, impianto, primo) {
  * scritte nel loro gruppo. Senza questa distinzione il secondo impianto, coi
  * campi vuoti, avrebbe letto le entità del primo e detto gli stessi numeri. */
 function lettureDellImpianto(states, impianto, primo) {
+  /* La potenza non e' sempre nella casella `power` (#435).
+   *
+   * Chi ha dichiarato un sensore unico col segno, o DUE sensori uno per verso
+   * — la coppia carica/scarica della batteria, prelievo/immissione della rete
+   * — la casella di sempre ce l'ha vuota, o ce l'ha con dentro un verso solo.
+   * La mappa del flusso lo sapeva e passava da `applySignedSources`; queste
+   * righe no, e leggevano il campo grezzo: con una coppia il numero era quello
+   * del verso FERMO. Dal campo, con la casa a 725 W e il sole a 485: la bolla
+   * della batteria diceva «▲ 236 W» — il conto torna — e la casella accanto
+   * diceva «0 W», perche' leggeva il sensore della carica mentre la batteria
+   * si scaricava. Due letture della stessa corrente, due numeri.
+   *
+   * Le letture ricavate le pubblica `energy-signed-section` sugli stati, e le
+   * pubblica per il PRIMO impianto — il primo livello del documento Energia E'
+   * il primo impianto. Per gli altri si legge quello che c'e' scritto, come
+   * prima: prendere gli id ricavati vorrebbe dire mostrare la batteria di casa
+   * dentro la casa dell'altro. */
+  const risolto = primo ? applySignedSources(impianto || {}) : impianto;
   const readings = ENERGY_SLOTS.map(([group, field, slot]) => ({
     group,
-    watts: wattsOf(states, clean(impianto?.[group]?.[field]) || (primo ? slot : "")),
+    watts: wattsOf(states, clean(risolto?.[group]?.[field]) || (primo ? slot : "")),
   }));
   const soc = numOf(
     states,
-    clean(impianto?.battery?.soc) || (primo ? "dm.energy_stato_carica_batteria" : ""),
+    clean(risolto?.battery?.soc) || (primo ? "dm.energy_stato_carica_batteria" : ""),
   );
+  /* La batteria entra qui gia' nella convenzione di casa: positivo = scarica.
+   *
+   * Meta' dei sensori scrive positivo quando la batteria si CARICA, e il verso
+   * lo dichiara chi abita la casa una volta sola (#434). Quel verso lo girava
+   * solo la mappa dei flussi; queste righe portavano il numero grezzo, e ci
+   * leggevano sopra tre cose diverse:
+   *
+   *   · la frase della tessera, che con un sensore girato scriveva «La
+   *     batteria copre 3,12 kW» mentre la mappa, accanto, disegnava la stessa
+   *     batteria che si caricava. Dal campo: «segna che la batteria copre la
+   *     casa a 3.12 kW» con il sole a 3,94 kW, la casa a 727 W e la rete a
+   *     zero — cioe' un bilancio in cui quei 3,12 kW non possono che ENTRARE
+   *     nella batteria;
+   *   · il soggetto del racconto, che diventa «quando sara' piena» solo sotto
+   *     i -10 W e quindi non ci arrivava mai;
+   *   · la casella del popup, che stampava il numero grezzo.
+   *
+   * Girarlo in tre posti sarebbe stato lo stesso errore tre volte. Si gira
+   * qui, dove la riga nasce, e da qui in poi c'e' una convenzione sola. */
+  const battuta = readings.find((row) => row.group === "battery");
+  if (battuta)
+    battuta.watts = potenzaDellaBatteria(
+      battuta.watts,
+      batteriaGirata(readJson(CHIAVE_VERSO_BATTERIA, {})),
+    );
   const rows = readings.filter((row) => row.watts != null);
   if (soc != null) {
     const batteria = rows.find((row) => row.group === "battery");
     if (batteria) batteria.soc = soc;
     else rows.push({ group: "battery", watts: null, soc });
   }
-  const oggi = oggiDellImpianto(states, impianto, primo);
+  const oggi = oggiDellImpianto(states, risolto, primo);
   return {
     rows,
     house: readings.find((row) => row.group === "house")?.watts ?? null,
@@ -1452,13 +1653,10 @@ export function lettureDiCasa(states = allStates()) {
   return {
     solare: di("solar")?.watts ?? null,
     rete: di("grid")?.watts ?? null,
-    /* La batteria nella convenzione di casa: positivo = scarica. Meta' dei
-     * sensori scrive positivo quando si CARICA, e il verso lo dice la casa una
-     * volta sola — sennò la mappa disegna le frecce all'incontrario (#434). */
-    batteria: potenzaDellaBatteria(
-      di("battery")?.watts ?? null,
-      batteriaGirata(readJson(CHIAVE_VERSO_BATTERIA, {})),
-    ),
+    /* La batteria e' gia' nella convenzione di casa — positivo = scarica —
+     * perche' il verso lo gira `lettureDellImpianto`, dove la riga nasce.
+     * Girarlo di nuovo qui lo rimetterebbe com'era: una doppia negazione. */
+    batteria: di("battery")?.watts ?? null,
     casa: sommaNumeri(letture.map((lettura) => lettura.house)),
     soc: di("battery")?.soc ?? null,
   };
@@ -1517,18 +1715,63 @@ function didascaliaDiOggi(oggi) {
   return altre.length ? `${testa} · ${altre.join(" · ")}` : testa;
 }
 
-function tesseraEnergia(rows, house, today, { key = "energia", label, impianto = "", oggi } = {}) {
+/* Il verdetto della soglia su queste letture (#508).
+ *
+ * La regola sta in `core/la-soglia-della-potenza.js` e i numeri sono quelli
+ * che la tessera ha gia' in mano: leggere i sensori una seconda volta qui
+ * vorrebbe dire una tessera che si colora su una corrente e ne scrive
+ * un'altra. La rete si pesca dalle righe, dove sta gia' col suo segno. */
+function sovraccaricoDellaTessera(rows, house) {
+  return livelloDellaPotenza(readJson(SOGLIA_POTENZA_KEY, {}), {
+    casa: house,
+    rete: rows.find((riga) => riga.group === "grid")?.watts ?? null,
+  });
+}
+
+/* Come si dice, in testa alla didascalia, che si sta tirando troppo.
+ *
+ * Il colore da solo dice «qualcosa non va» e non dice cosa: la parola dice su
+ * quale dei due carichi — casa o rete — e oltre quale numero, che e' la
+ * differenza fra una tessera arancione e una tessera che si capisce. */
+function paroleDelSovraccarico(verdetto) {
+  if (verdetto.livello === LIVELLO_QUIETE) return "";
+  const dove =
+    verdetto.sorgente === SORGENTE_RETE ? t("dalla rete", "from the grid") : t("in casa", "at home");
+  return `⚠️ ${t("Sovraccarico", "Overload")} ${dove} · ${formatWatts(verdetto.watt)} / ${formatWatts(verdetto.limite)}`;
+}
+
+function tesseraEnergia(
+  rows,
+  house,
+  today,
+  { key = "energia", label, impianto = "", oggi, verdetto: dato } = {},
+) {
   if (house == null && !rows.length) return null;
+  /* Il verdetto si puo' passare da fuori: con una tessera per impianto quello
+   * che conta e' la soglia della CASA, e la casa e' la somma. */
+  const verdetto = dato || sovraccaricoDellaTessera(rows, house);
+  const avviso = paroleDelSovraccarico(verdetto);
   return {
     key,
-    accent: "#f97316",
+    /* Sopra la soglia la tessera cambia colore, e il colore E' la risposta
+     * alla segnalazione: ambra «occhio», rosso «adesso salta». Sotto la
+     * soglia — e senza soglia scritta — resta l'arancione di sempre, cosi'
+     * chi non ha chiesto niente non si accorge che questa riga e' cambiata. */
+    accent: coloreDelLivello(verdetto.livello) || "#f97316",
+    /* L'avviso e' cio' che fa muovere la pastiglia e accende la tessera: e'
+     * lo stesso segnale con cui una porta aperta si fa notare. */
+    alert: verdetto.livello !== LIVELLO_QUIETE,
     icon: "⚡",
     label: label || t("Energia", "Energy"),
     /* Di quale impianto parla: la sua finestra porta alla sezione aperta su
      * di lui, non su quello che era rimasto acceso (#286, dal campo). */
     impianto: clean(impianto),
     value: formatWatts(house),
-    caption: didascaliaDiOggi(oggi || (today == null ? {} : { house: today })),
+    /* Il sovraccarico va in testa, prima dei numeri del giorno: la didascalia
+     * scorre, e cio' che si legge senza aspettare e' l'inizio. */
+    caption: [avviso, didascaliaDiOggi(oggi || (today == null ? {} : { house: today }))]
+      .filter(Boolean)
+      .join(" · "),
     ring: null,
     rows,
     today,
@@ -1563,6 +1806,18 @@ function energyModels(states) {
   if (
     comeSiVedeLEnergia(root.localStorage?.getItem?.(TESSERE_IMPIANTI_KEY)) === TESSERA_PER_IMPIANTO
   ) {
+    /* La soglia e' della CASA, e la casa e' la somma.
+     *
+     * Il numero che si scrive dice «oltre qui salta il contatore», e il
+     * contatore e' uno. Valutarlo un impianto per volta lo sbaglia a meta':
+     * due misuratori che tirano 2 kW l'uno restano in quiete sotto una soglia
+     * di 3,3 kW, mentre la pagina Energia — che somma — dice giustamente che
+     * la casa ne sta tirando 4. Un verdetto solo, portato su ogni tessera: il
+     * colore e le parole dicono la stessa cosa da qualunque parte si guardi. */
+    const dellaCasa = sovraccaricoDellaTessera(
+      sommaLetture(letture.map((lettura) => lettura.rows)),
+      sommaNumeri(letture.map((lettura) => lettura.house)),
+    );
     /* Una per impianto. La prima tiene la chiave di sempre, così l'ordine e la
      * visibilità che si erano già scelti restano suoi; le altre portano il
      * loro id, come fanno le tariffe e i contatori. */
@@ -1573,6 +1828,7 @@ function energyModels(states) {
           label: plantLabel(impianto, indice, t("Impianto", "Plant")),
           impianto: clean(impianto?.id) || PRIMO_IMPIANTO,
           oggi: letture[indice].oggi,
+          verdetto: dellaCasa,
         }),
       )
       .filter(Boolean);
@@ -1799,6 +2055,21 @@ function letturaVettura(states, auto, fuori, indice, visti = new Set()) {
   const misura = (riferimento) => {
     const entity = clean(mappa[riferimento]);
     if (!entity || !widgetIncludes(entity, fuori)) return null;
+    /* Un'entita' che Home Assistant non ha PIU' non e' una casella vuota: e'
+     * una casella che punta a un fantasma (#348).
+     *
+     * «Vedo ancora le 5 entita'.» Quando un'integrazione si toglie e si
+     * rimette, Home Assistant non riusa i nomi: il sensore di carica torna
+     * come `..._2`, `..._3`, e il profilo salvato quella volta resta a
+     * indicare quello di prima, che non esiste piu'. Qui si rispondeva lo
+     * stesso — un valore vuoto, ma una casella compilata — e quel profilo
+     * continuava a contare come una vettura: cinque auto, cinque righe della
+     * ricarica, tutte sullo stesso sensore vivo.
+     *
+     * Attenzione a cosa si sta dicendo: un'auto che dorme c'e' e risponde
+     * «unavailable», e quella deve restare. Qui si guarda se l'entita' esiste
+     * nel registro degli stati, non cosa dice. */
+    if (!stateOf(states, entity)) return null;
     visti.add(entity);
     return { entity, value: numOf(states, entity), state: clean(states?.[entity]?.state) };
   };
@@ -1845,6 +2116,11 @@ function letturaVettura(states, auto, fuori, indice, visti = new Set()) {
     carburante: Boolean(serbatoio),
     km: autonomia?.value == null ? null : autonomia.value,
     ricarica: ricaricaDellaVettura(states, mappa, stato),
+    /* Da quale entita' viene ognuna delle tre righe: serve a non raccontare
+     * due volte la stessa, quando due vetture leggono lo stesso sensore. */
+    caricaEntita: carica?.entity || "",
+    kmEntita: autonomia?.entity || "",
+    ricaricaEntita: stato?.entity || "",
     kw: sbircia("dm.ev_potenza_ricarica"),
     target: sbircia("dm.ev_target_soc"),
     altre: altreCaselleEv(states, mappa, fuori, visti),
@@ -1936,6 +2212,9 @@ function glifoEv(riferimento) {
 
 /* Tutte le caselle dell'auto che sono state mappate, meno quelle gia' dette e
  * quelle che l'interruttore ha messo fuori. */
+/** La casella che dice se il motore gira: la stessa della pagina Auto. */
+const RIF_MOTORE = "dm.ev_motore";
+
 function altreCaselleEv(states, mappa, fuori, visti) {
   const righe = [];
   for (const riferimento of Object.keys(mappa || {}).sort()) {
@@ -1948,7 +2227,11 @@ function altreCaselleEv(states, mappa, fuori, visti) {
     /* Le caselle della colonnina sono della casa, non di questa vettura: la
      * riga non porta il nome dell'auto, perche' il cavo e' lo stesso qualunque
      * macchina ci sia attaccata. */
-    righe.push(eDellaWallbox(riferimento) ? { ...riga, diCasa: true } : riga);
+    const vestita = eDellaWallbox(riferimento) ? { ...riga, diCasa: true } : riga;
+    /* Il motore porta scritto che e' il motore. Fra venti caselle tutte uguali
+     * era una riga come le altre, e chi racconta la tessera non aveva modo di
+     * sapere se la macchina e' accesa: diceva «ferma» a prescindere (#326). */
+    righe.push(riferimento === RIF_MOTORE ? { ...vestita, ruolo: "motore" } : vestita);
   }
   return righe;
 }
@@ -1984,6 +2267,9 @@ function letturaAttiva(states, fuori) {
     carburante: Boolean(serbatoio),
     km: autonomia?.value == null ? null : autonomia.value,
     ricarica: ricaricaDellaVettura(states, mappa, stato),
+    caricaEntita: carica?.entity || "",
+    kmEntita: autonomia?.entity || "",
+    ricaricaEntita: stato?.entity || "",
     kw: refValue(states, "dm.ev_potenza_ricarica", fuori)?.value ?? null,
     target: refValue(states, "dm.ev_target_soc", fuori)?.value ?? null,
     altre: altreCaselleEv(states, mappa, fuori, visti),
@@ -1993,22 +2279,33 @@ function letturaAttiva(states, fuori) {
 function righeVettura(lettura, conNome) {
   const righe = [];
   const prefisso = conNome && lettura.nome ? `${lettura.nome} · ` : "";
+  /* Ogni riga porta il suo `carburante` (#326).
+   *
+   * Chi racconta la tessera distingue il pieno di benzina dalla carica
+   * guardando le righe: se vanno TUTTE a carburante, la spina non esiste e non
+   * se ne parla. La distinzione era scritta ma nessuno la scriveva sulle
+   * righe, e cosi' di un serbatoio si continuava a dire che era «ferma» —
+   * parola della colonnina, non del motore. */
+  const dellaVettura = (riga) => ({ ...riga, carburante: lettura.carburante === true });
   if (lettura.percentuale != null)
-    righe.push({
+    righe.push(dellaVettura({
       glyph: lettura.carburante ? "⛽" : "🔋",
       name: `${prefisso}${lettura.carburante ? t("Carburante", "Fuel") : t("Carica", "Charge")}`,
+      entity: lettura.caricaEntita || "",
       value: `${Math.round(lettura.percentuale)}%`,
-    });
+    }));
   if (lettura.km != null)
-    righe.push({
+    righe.push(dellaVettura({
       glyph: "🛣️",
       name: `${prefisso}${t("Autonomia", "Range")}`,
+      entity: lettura.kmEntita || "",
       value: `${formatNumber(lettura.km, 0)} km`,
-    });
+    }));
   if (lettura.ricarica)
-    righe.push({
+    righe.push(dellaVettura({
       glyph: "🔌",
       name: `${prefisso}${t("Ricarica", "Charging")}`,
+      entity: lettura.ricaricaEntita || "",
       /* La parola, non il codice: «C» e' il gergo della wallbox, e in una
        * casella si legge malissimo. La lettera la decide il nucleo della
        * pastiglia (#348), e le parole sono le stesse del popup dell'auto;
@@ -2016,12 +2313,14 @@ function righeVettura(lettura, conNome) {
       value:
         statoUmanoEV(lettura.ricarica) ||
         (autoAllaPresa(lettura.ricarica) ? t("In carica", "Charging") : t("Scollegata", "Unplugged")),
-    });
+    }));
   /* E tutte le altre caselle mappate di questa vettura: sono quelle su cui
    * l'interruttore «nel widget» sta acceso, e finora non uscivano. Quelle
    * della colonnina sono della casa e non portano il nome dell'auto. */
   for (const riga of lettura.altre || [])
-    righe.push(prefisso && !riga.diCasa ? { ...riga, name: `${prefisso}${riga.name}` } : riga);
+    righe.push(
+      dellaVettura(prefisso && !riga.diCasa ? { ...riga, name: `${prefisso}${riga.name}` } : riga),
+    );
   return righe;
 }
 
@@ -2065,7 +2364,23 @@ function evModel(states) {
   const letture = profilate.length ? profilate : [letturaAttiva(states, fuori)].filter(Boolean);
   if (!letture.length) return null;
   const piu = letture.length > 1;
-  const rows = letture.flatMap((lettura) => righeVettura(lettura, piu));
+  /* Una entita' fa UNA riga, anche quando la leggono due vetture.
+   *
+   * Il cavo della colonnina e' uno solo, e chi ha due auto sullo stesso
+   * attacco lo ha scritto in tutti e due i profili: la riga della ricarica
+   * usciva una volta per vettura, identica, e da fuori sembravano due cose
+   * diverse che dicono la stessa. Le caselle in fondo erano gia' cosi' — qui
+   * la regola vale anche per le tre righe di testa. */
+  const dette = new Set();
+  const rows = letture
+    .flatMap((lettura) => righeVettura(lettura, piu))
+    .filter((riga) => {
+      const entity = clean(riga?.entity);
+      if (!entity) return true;
+      if (dette.has(entity)) return false;
+      dette.add(entity);
+      return true;
+    });
   if (!rows.length) return null;
 
   /* Con piu' auto la tessera mostra la piu' scarica: e' quella che chiede
@@ -4107,6 +4422,61 @@ export function evidenzeSingole(states) {
     .filter(Boolean);
 }
 
+/* Le tessere delle sezioni che si fa l'utente (#262, e la richiesta di #473).
+ *
+ * Una sezione propria nasceva con la sua voce nella barra e la sua pagina, e
+ * si fermava li': in Home non arrivava mai. Ma la Home e' il posto da cui si
+ * guarda la casa senza aprire niente, e chi si e' fatto una sezione per le due
+ * valvole del serbatoio sul tetto vuole vedere da li' se sono aperte — non
+ * andare a cercare una pagina.
+ *
+ * La tessera si disegna come quella delle evidenze, perche' e' la stessa cosa:
+ * un pugno di entita' scelte a mano, col loro nome e il loro valore. Una
+ * tessera per sezione, con il titolo e il disegno che le ha dato chi l'ha
+ * fatta; per ordine e visibilita' contano tutte insieme sotto «Sezioni mie»,
+ * come gli avvisi personalizzati sotto `custom`.
+ */
+export function sezioniMieModels(states) {
+  let sezioni = [];
+  try {
+    sezioni = sezioniDaMostrare(readJson(CHIAVE_SEZIONI_MIE, []));
+  } catch (_errore) {
+    return [];
+  }
+  if (!sezioni.length) return [];
+  const elenco = widgetPreferences().excluded;
+  return sezioni
+    .map((sezione) => {
+      const chiave = chiaveDellaSezione(sezione.id);
+      const fuori = escluseDellaTessera(elenco, chiave);
+      const rows = sezione.voci
+        .map((voce) =>
+          rigaInEvidenza(
+            states,
+            { entity: voce.entity, name: voce.nome, icon: voce.icona || sezione.icona },
+            fuori,
+          ),
+        )
+        .filter(Boolean);
+      if (!rows.length) return null;
+      return {
+        key: chiave,
+        accent: "#f59e0b",
+        icon: sezione.icona || "⭐",
+        label: sezione.titolo,
+        /* Quante cose ci sono dentro. Quali sono accese lo dice la didascalia
+         * una per una, che e' l'unico modo onesto quando le righe sono di
+         * generi diversi: due valvole e due batterie non fanno un numero. */
+        value: String(rows.length),
+        caption: rows.map((riga) => clean(`${riga.name} ${riga.value}`)).join(" · "),
+        ring: null,
+        attiva: rows.some((riga) => riga.on === true),
+        rows,
+      };
+    })
+    .filter(Boolean);
+}
+
 export function evidenzaModels(states) {
   return [evidenzaModel(states), ...evidenzeSingole(states)].filter(Boolean);
 }
@@ -4281,9 +4651,15 @@ export function applyWidgetPreferences(models, preferences = widgetPreferences()
       ? "custom"
       : widget.key.startsWith("evidenza-")
         ? "evidenza"
-        : eUnaTesseraEnergia(widget.key)
-          ? "energia"
-          : widget.key;
+        : /* Le sezioni che si fa l'utente si spostano e si spengono insieme,
+           * sotto la voce unica «Sezioni mie»: sono tante quante uno se ne fa,
+           * e una riga a testa nel catalogo lo riempirebbe di voci che
+           * cambiano da una casa all'altra. */
+          eUnaSezioneMia(widget.key)
+          ? "mie"
+          : eUnaTesseraEnergia(widget.key)
+            ? "energia"
+            : widget.key;
   const rank = (widget) => {
     const nome = chiave(widget);
     const index = preferences.order.indexOf(nome);
@@ -4499,6 +4875,47 @@ function allerteModel(states) {
  * Il numero grande e' la parola del quando — «Domani» — e la didascalia dice
  * cosa: e' la risposta alla domanda della sera. Si accende il giorno prima e
  * il giorno stesso, che sono i due momenti in cui serve vederla. */
+/* Il segno di un ritiro (#384).
+ *
+ * «Nel widget visualizzare l'immagine del rifiuto oltre alla descrizione,
+ *  sarebbe una chicca.»
+ *
+ * Un ritiro si riconosce dal segno prima che dalla parola — il barattolo, la
+ * bottiglia, la mela — ed e' lo stesso segno che la riga porta gia' nella sua
+ * casella: qui non se ne inventa un altro, si prende quello.
+ *
+ * Il calendario e' il caso a parte. Quando dal messaggio si capisce il
+ * materiale porta il segno di quel materiale; quando non si capisce, il
+ * materiale e' «altro» e il segno resta quello del calendario — «♻️ Altro»
+ * sarebbe una risposta, e li' una risposta non c'e'. */
+function segnoDelRitiro(riga, dalCalendario = false) {
+  if (dalCalendario && (!clean(riga?.materiale) || riga.materiale === "altro")) return "📅";
+  return clean(riga?.icona) || "♻️";
+}
+
+/* E il disegno vero, dove si puo' disegnare.
+ *
+ * «Le icone non sono quelle, non mettere cose che non appartengono al nostro
+ *  catalogo.»
+ *
+ * Il segno qui sopra e' una PAROLA, e serve dove ci sta solo testo: la
+ * didascalia della tessera e la fascia «come sta la casa», che scrivono quello
+ * che ricevono e basta. Dove invece si puo' disegnare — le caselle della
+ * finestra — si disegna il bidone nostro, quello di `core/disegni-rifiuti.js`:
+ * lo stesso della pagina Rifiuti, della scheda in configurazione e del foglio
+ * con cui si sceglie il materiale.
+ *
+ * Non sono due icone per la stessa cosa: e' la stessa cosa, e la parola e' il
+ * ripiego per i posti dove un disegno non entra. Il calendario che non ha
+ * saputo dire quale materiale non si disegna: un bidone qualunque direbbe una
+ * frazione che nessuno ha letto. */
+function disegnoDelRitiro(riga, dalCalendario = false) {
+  const materiale = clean(riga?.materiale);
+  if (!materiale) return "";
+  if (dalCalendario && materiale === "altro") return "";
+  return disegnoDelBidone(materiale, clean(riga?.colore), 18);
+}
+
 function rifiutiModel(states) {
   const grezza = readJson(CHIAVE_RIFIUTI, {});
   /* L'interruttore «Nel widget» toglie le entita' una per una: quello che ha
@@ -4524,16 +4941,20 @@ function rifiutiModel(states) {
   const lettura = letturaRifiuti(config, states, root.resolveEntity || ((value) => value));
   const dalCalendario =
     lettura.calendario && lettura.calendario.giorni !== null && lettura.calendario.giorni >= 0
-      ? [{ ...lettura.calendario, nome: lettura.calendario.nome }]
+      ? [{ ...lettura.calendario, nome: lettura.calendario.nome, dalCalendario: true }]
       : [];
   const prossimi = (lettura.prossimi.length ? lettura.prossimi : dalCalendario).map((riga) => ({
     name: nomeDellaRiga(riga) || t("Calendario dei ritiri", "Collection calendar"),
+    /* Il segno del materiale viaggia a parte dal nome: la didascalia lo mostra,
+     * la frase parlata no — «Domani ritirano 🧴 Plastica» si legge male. */
+    glyph: segnoDelRitiro(riga, Boolean(riga.dalCalendario)),
     quando: riga.quando,
     giorni: riga.giorni,
   }));
   const primo = prossimi[0] || null;
-  const rigaDi = (riga, glyph) => ({
+  const rigaDi = (riga, glyph, disegno) => ({
     glyph,
+    disegno,
     name: nomeDellaRiga(riga) || t("Calendario dei ritiri", "Collection calendar"),
     entity: riga.entity,
     value: parolaDelQuando(riga),
@@ -4541,8 +4962,16 @@ function rifiutiModel(states) {
     giorni: riga.giorni,
   });
   const rows = [
-    ...lettura.righe.map((riga) => rigaDi(riga, riga.icona)),
-    ...(lettura.calendario ? [rigaDi(lettura.calendario, "📅")] : []),
+    ...lettura.righe.map((riga) => rigaDi(riga, segnoDelRitiro(riga), disegnoDelRitiro(riga))),
+    ...(lettura.calendario
+      ? [
+          rigaDi(
+            lettura.calendario,
+            segnoDelRitiro(lettura.calendario, true),
+            disegnoDelRitiro(lettura.calendario, true),
+          ),
+        ]
+      : []),
   ];
   const primaRiga = lettura.prossimi[0] || dalCalendario[0] || null;
   return {
@@ -4550,10 +4979,28 @@ function rifiutiModel(states) {
     accent: "#22c55e",
     icon: "♻️",
     label: t("Rifiuti", "Waste"),
+    /* La faccia della tessera e' il bidone del prossimo ritiro (#384).
+     *
+     * «Nel widget visualizzare l'immagine del rifiuto oltre alla descrizione.»
+     * E poi: «le icone non sono quelle, non mettere cose che non appartengono
+     * al nostro catalogo». Il disegno e' quello di `core/disegni-rifiuti.js` —
+     * lo stesso della pagina, della scheda e del foglio con cui si sceglie il
+     * materiale — e sta dove la tessera ha gia' il suo posto per una faccia,
+     * al posto del simbolo del riciclo che dice solo «questa e' la tessera dei
+     * rifiuti», cosa che dice gia' il nome.
+     *
+     * Quando il prossimo ritiro non si sa, o arriva da un calendario che non
+     * ha detto quale frazione, il disegno non c'e' e resta il simbolo di
+     * sempre: meglio dire «rifiuti» che disegnare un bidone a caso. */
+    faccia: primaRiga ? disegnoDelRitiro(primaRiga, Boolean(primaRiga.dalCalendario)) : "",
+    facciaFirma: primaRiga ? `${clean(primaRiga.materiale)}~${clean(primaRiga.quando)}` : "",
     value: primaRiga ? parolaDelQuando(primaRiga) : "—",
     /* Quando il ritiro e' domani, la tessera dice il gesto e non solo il
      * giorno (#441): «Da mettere fuori stasera» e' quello che uno deve fare
      * adesso, mentre «Domani» lascia a chi legge il passo che conta. */
+    /* La didascalia e' parole: il disegno del ritiro lo porta la faccia della
+     * tessera, qui sopra, e un'emoji al suo fianco sarebbe un'icona che nostra
+     * non e'. */
     caption: primo
       ? primo.quando === "domani"
         ? `${t("Da mettere fuori stasera", "Put it out tonight")} · ${prossimi
@@ -4644,7 +5091,12 @@ export function modelliDelleTessere(states) {
        * Chi lo vuole altrove lo sposta dalla scheda Widget. */
       chatModel(),
       ...evidenzaModels(states),
+      /* Le sezioni che si fa l'utente arrivano in Home accanto alle evidenze:
+       * sono la stessa cosa fatta in grande — entita' scelte a mano — e chi le
+       * cerca le cerca li'. */
+      ...sezioniMieModels(states),
       segnalazioniModel(),
+      aggiornamentiModel(states),
       agendaModel(states),
       lightsModel(states),
       climateModel(states),
@@ -5788,6 +6240,32 @@ function fumoDetail(widget) {
     .join("");
 }
 
+/* La finestra degli aggiornamenti (#498): cosa aspetta, e da che versione a
+ * che versione.
+ *
+ * La tessera dice quanti sono e nomina il primo, perche' i nomi di sei add-on
+ * in una didascalia non si leggono. Chi la apre li vuole vedere tutti: senza
+ * questa funzione la finestra rispondeva «niente da mostrare», che con la
+ * tessera accesa su sei aggiornamenti e' la risposta sbagliata.
+ *
+ * Il tasto per installare non c'e' e non ci va: si installa da Home Assistant,
+ * dove accanto al tasto ci sono le note di rilascio — e un aggiornamento
+ * lanciato da qui, senza averle lette, e' un aggiornamento fatto al buio. */
+function aggiornamentiDetail(widget) {
+  return (widget.aggiornamenti || [])
+    .map((voce) => {
+      const da = clean(voce?.da);
+      const a = clean(voce?.a);
+      const versioni = da && a ? `${da} \u2192 ${a}` : a || da;
+      return rowShell(
+        `<span class="dm-w-glyph" data-on="true" aria-hidden="true">\u2B06\uFE0F</span>
+         <span class="dm-w-name">${esc(clean(voce?.nome) || clean(voce?.entity))}</span>
+         <span class="dm-w-val">${esc(versioni || t("Disponibile", "Available"))}</span>`,
+      );
+    })
+    .join("");
+}
+
 /* Anche gli avvisi personalizzati sono caselle: nome e stato, in carta. */
 function customDetail() {
   return "";
@@ -5951,8 +6429,12 @@ const eUnaTesseraEnergia = (chiave) =>
   clean(chiave) === "energia" || clean(chiave).startsWith("energia_");
 
 function carteDalleRighe(widget) {
-  /* Una tessera «a se'» delle evidenze si disegna come la tessera madre. */
-  const chiave = clean(widget.key).startsWith("evidenza-") ? "evidenza" : clean(widget.key);
+  /* Una tessera «a se'» delle evidenze si disegna come la tessera madre, e
+   * cosi' anche quella di una sezione propria: sono entrambe un pugno di
+   * entita' scelte a mano, col loro nome e il loro valore. */
+  const grezza = clean(widget.key);
+  const chiave =
+    grezza.startsWith("evidenza-") || eUnaSezioneMia(grezza) ? "evidenza" : grezza;
   if (!(CHIAVI_A_CARTE.has(chiave) || eUnaTesseraEnergia(chiave) || chiave.startsWith("custom-")))
     return [];
   const righe = Array.isArray(widget.rows) ? widget.rows : [];
@@ -6040,7 +6522,10 @@ function carteDalleRighe(widget) {
   return righe
     .filter((riga) => !riga.comando && typeof riga?.on !== "boolean")
     .map((riga) => ({
-      glyph: riga.glyph || "•",
+      /* Il disegno vince sulla parola: dove una riga porta il suo disegno — i
+       * bidoni dei rifiuti — la casella lo mostra, invece dell'emoji che serve
+       * dove ci sta solo testo. */
+      glyph: riga.disegno || riga.glyph || "•",
       valore: clean(riga.value) || (riga.raw == null ? "—" : String(riga.raw)),
       etichetta: clean(riga.name),
     }));
@@ -6593,6 +7078,7 @@ function detailRows(widget, states) {
   if (widget.key === "batterie") return batteriesDetail(widget);
   if (widget.key === "allagamenti") return floodDetail(widget);
   if (widget.key === "fumo") return fumoDetail(widget);
+  if (widget.key === "aggiornamenti") return aggiornamentiDetail(widget);
   if (widget.key.startsWith("custom-")) return customDetail(widget);
   return "";
 }
@@ -6614,10 +7100,31 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
   clima: "clima",
   tapparelle: "tapparelle",
   sicurezza: "security",
-  /* Le porte e i cancelli si configurano e si aprono nella Sicurezza: e' la
-   * sezione che li contiene davvero, anche se in Home hanno tessera loro. */
-  porte: "security",
+  /* Le porte e i cancelli hanno la loro pagina da quando sono usciti dalla
+   * Sicurezza (#275): «Apri porte». Questa riga era rimasta indietro, e il
+   * tasto «Apri sezione» della tessera portava ancora nella Sicurezza — cioe'
+   * in una pagina dove quelle porte non ci sono piu' (#501).
+   *
+   * Il nome della voce si chiede alla sezione che la crea: scritto a mano qui,
+   * sarebbe la stessa riga rimasta indietro un'altra volta. E se la sezione e'
+   * spenta o non ha aperture da comandare, la sua voce sta nascosta e il tasto
+   * non compare — che e' meglio di un tasto che porta altrove. */
+  porte: APERTURE_TAB,
   telecamere: "security",
+  /* Le tessere che una pagina ce l'hanno da un pezzo, e qui non erano mai
+   * arrivate: il tasto «Apri sezione» non compariva affatto, e chi guardava i
+   * varchi o le batterie dalla finestra doveva cercarsi la voce nella barra.
+   * Il nome della voce lo dichiara la sezione che la crea, e che qui sia
+   * scritto lo stesso nome lo tiene una prova — la stessa che ha trovato le
+   * porte rimaste indietro. */
+  varchi: "varchi",
+  presenza: "presenza",
+  batterie: "batterie",
+  citofono: "citofono",
+  stampanti: "stampanti",
+  /* Le macchine di casa e la rete contano le stesse integrazioni della pagina
+   * Server: e' quella la loro pagina, la stessa del mini PC. */
+  macchine: "server",
   energia: "energy",
   elettrodomestici: "appliances-main",
   temperatura: "temp",
@@ -6644,8 +7151,17 @@ const SEZIONE_DEL_WIDGET = Object.freeze({
  * le scrive `display:none` addosso — e portarci sarebbe peggio che non
  * offrirlo: si aprirebbe una pagina che l'utente ha deciso di non avere. */
 function voceDellaSezione(chiave) {
-  /* Ogni tessera energia porta alla sezione, non solo la prima (#286). */
-  const tab = SEZIONE_DEL_WIDGET[eUnaTesseraEnergia(chiave) ? "energia" : clean(chiave)];
+  const grezza = clean(chiave);
+  /* Le sezioni che si fa chi ha la casa (#504) non stanno nell'elenco qui
+   * sopra, e non possono starci: cambiano da una casa all'altra. La loro voce
+   * pero' si chiama esattamente come la loro tessera — le da' lo stesso nome
+   * la stessa funzione — e chiedere l'elenco voleva dire non trovarla mai. Il
+   * tasto «Apri sezione» non compariva proprio dove serviva di piu': su una
+   * pagina che uno si e' costruito apposta per andarci. */
+  const tab = eUnaSezioneMia(grezza)
+    ? grezza
+    : /* Ogni tessera energia porta alla sezione, non solo la prima (#286). */
+      SEZIONE_DEL_WIDGET[eUnaTesseraEnergia(grezza) ? "energia" : grezza];
   if (!tab) return null;
   const voce = doc?.querySelector?.(`.tab[data-tab="${tab}"]`);
   if (!voce || voce.style?.display === "none") return null;
@@ -6659,16 +7175,26 @@ function bricioleDelWidget(widget) {
   return bricioleDellaSezione(widget.key, t).join(" · ") || clean(widget.caption);
 }
 
-function detailMarkup(widget, states) {
-  const vaiAllaSezione = voceDellaSezione(widget.key)
-    ? `<footer class="dm-w-piede">
+/* Il piede della finestra: il tasto che porta alla sezione, quando c'e' dove
+ * andare. Sta in una funzione sua perche' non si disegna una volta sola —
+ * `sincronizzaPopup` lo rifa' a ogni giro, e il perche' e' scritto li'. */
+function firmaDelPiede(widget) {
+  return `${widget.key}|${clean(widget.impianto)}`;
+}
+
+function piedeDellaSezione(widget) {
+  if (!voceDellaSezione(widget.key)) return "";
+  return `<footer class="dm-w-piede" data-dm-piede="${esc(firmaDelPiede(widget))}">
         <button type="button" class="dm-w-vai" data-dm-w-sezione="${esc(widget.key)}"${
           widget.impianto ? ` data-dm-w-impianto="${esc(widget.impianto)}"` : ""
         }>
           ${esc(t("Apri sezione", "Open section"))} <span aria-hidden="true">→</span>
         </button>
-      </footer>`
-    : "";
+      </footer>`;
+}
+
+function detailMarkup(widget, states) {
+  const vaiAllaSezione = piedeDellaSezione(widget);
   return `<article class="dm-widget-detail" data-dm-widget-detail="${widget.key}"
       style="--dm-widget-accent:${widget.accent}">
       <header class="dm-w-head">
@@ -7090,6 +7616,23 @@ export function renderHomeWidgets() {
         const briciole = bricioleDelWidget(widget);
         if (captionDetail && captionDetail.textContent !== briciole)
           captionDetail.textContent = briciole;
+        /* Il tasto «Apri sezione» si rifa' a ogni giro, non solo all'apertura.
+         *
+         * La voce di una sezione la crea il suo modulo, e puo' nascere DOPO
+         * che la tessera e' stata aperta — su un telefono, dove la plancia
+         * parte piu' adagio, capita davvero: il tasto non c'era, e non
+         * compariva piu' finche' non si chiudeva e si riapriva la finestra.
+         * Vale anche al contrario: una sezione spenta mentre la finestra e'
+         * aperta deve portarsi via il tasto, invece di lasciarlo li' a
+         * promettere una pagina che non c'e' piu'. */
+        const scheda = doc.querySelector("#dm-widget-popup [data-dm-widget-detail]");
+        if (scheda) {
+          const vuole = piedeDellaSezione(widget);
+          const piede = scheda.querySelector(":scope > .dm-w-piede");
+          if (!vuole) piede?.remove();
+          else if (!piede) scheda.insertAdjacentHTML("beforeend", vuole);
+          else if (piede.dataset.dmPiede !== firmaDelPiede(widget)) piede.outerHTML = vuole;
+        }
         const body = doc.querySelector("#dm-widget-popup .dm-w-body");
         const markup = detailBody(widget, states);
         const scritto = state.corpo.chiave === widget.key && state.corpo.markup === markup;
@@ -7855,7 +8398,7 @@ function installStyles() {
  * Piu' volte al secondo.
  *
  * Non e' il disegno che si rifa': e' il compositore. Chiedendo a Chromium
- * l'elenco degli strati, con la finestra aperta, #dm-widget-popup risulta
+ * l'elenco degli strati, con la finestra aperta, :is(#dm-widget-popup,#dm-casa-popup) risulta
  * un unico strato di tutto lo schermo — e ci sono dipinti dentro la card e la
  * testata, mentre il corpo, che scorre, ha uno strato suo. Lo backdrop-filter e'
  * quello che obbliga a tenerli insieme: sfocare cio' che sta dietro
@@ -7867,17 +8410,26 @@ function installStyles() {
  * Qui il velo diventa un ::before: sfoca lui, e la card gli e' sorella
  * invece che figlia. Il ridisegno del velo non puo' piu' portarsi via la
  * finestra. */
-#dm-widget-popup{
+/* Due finestre, una veste sola.
+ *
+ * Questo foglio disegna «una finestra della plancia»: il velo sfocato, la card
+ * che sale, l'intestazione col disegno e il titolo, il corpo che scorre. Ce ne
+ * sono due che la vogliono — la tessera aperta dalla Home e l'elenco di cosa e'
+ * acceso aperto dalla barra sotto il meteo — e ripetere le stesse regole nel
+ * modulo della barra vorrebbe dire due vesti che si scollano alla prima
+ * ritoccata. Cosi' invece la veste e' scritta una volta, e chi la vuole si
+ * chiama come si chiama: il contenuto resta affare di ciascuno. */
+:is(#dm-widget-popup,#dm-casa-popup){
   position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
   padding:20px;background:transparent;
   animation:dmWidgetPopupIn .2s ease-out}
-#dm-widget-popup::before{
+:is(#dm-widget-popup,#dm-casa-popup)::before{
   content:"";position:absolute;inset:0;
   background:color-mix(in srgb,var(--bg-sculpted,#e6ebf1) 62%,rgba(15,23,42,.34));
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-:root:is([data-theme="dark"]) #dm-widget-popup::before,
-html[data-theme="dark"] #dm-widget-popup::before{background:color-mix(in srgb,#060a14 74%,rgba(2,6,15,.9))}
-#dm-widget-popup[hidden]{display:none}
+:root:is([data-theme="dark"]) :is(#dm-widget-popup,#dm-casa-popup)::before,
+html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup)::before{background:color-mix(in srgb,#060a14 74%,rgba(2,6,15,.9))}
+:is(#dm-widget-popup,#dm-casa-popup)[hidden]{display:none}
 /* Una conferma sta sopra a chi la chiede (#275).
  *
  * «Dalla home cliccando sicurezza mostra le porte per aprire, si clicca il
@@ -7905,7 +8457,7 @@ html.dm-widget-popup-open{overflow:hidden}
  *
  * Via anche l'anello bianco cucito dentro il bordo: valeva solo sul tema
  * chiaro, e sullo scuro era una riga luminosa in mezzo al buio. */
-#dm-widget-popup .dm-widget-detail{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail{
   /* Chi scorre e' il corpo, non la finestra.
    *
    * La finestra deve restare a contenuto tagliato — glielo chiede la regola che
@@ -7938,7 +8490,7 @@ html.dm-widget-popup-open{overflow:hidden}
  * prima. */
 /* Chi ha chiesto meno movimento non lo riceve: la finestra c'e' o non c'e'. */
 @media(prefers-reduced-motion:reduce){
-  #dm-widget-popup,#dm-widget-popup .dm-widget-detail{animation:none}
+  :is(#dm-widget-popup,#dm-casa-popup),:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail{animation:none}
 }
 /* L'intestazione parla come le altre della plancia: maiuscoletto spaziato,
  * riga di separazione, il tondo per chiudere. Il velo colorato era un
@@ -7962,7 +8514,7 @@ html.dm-widget-popup-open{overflow:hidden}
  *
  * Titolo e sottotitolo vanno incolonnati, non affiancati: affiancati, il
  * sottotitolo di una sezione con sei voci finiva sempre coi puntini. */
-#dm-widget-popup .dm-widget-detail .dm-w-head{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-head{
   flex:0 0 auto;position:relative;overflow:hidden;
   /* Tre righe: «Chiudi» in cima da solo, poi l'icona col nome della sezione, e
      sotto le briciole. E' la testata del progetto: la via d'uscita si vede
@@ -7981,14 +8533,14 @@ html.dm-widget-popup-open{overflow:hidden}
     var(--card-bg,#fff)}
 /* La riga in fondo alla fascia: due pixel che partono dal colore e sfumano,
    come in cima a ogni pagina. */
-#dm-widget-popup .dm-widget-detail .dm-w-head::after{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-head::after{
   content:"";position:absolute;inset:auto 0 0 0;height:2px;opacity:.7;
   background:linear-gradient(90deg,
     var(--dm-widget-accent,#0ea5e9),
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 45%,transparent) 62%,transparent)}
 /* La pastiglia dell'icona: la tinta della sezione, appena posata, con l'anello
  * sottile che hanno tutte le pastiglie della plancia. */
-#dm-widget-popup .dm-widget-detail .dm-w-head-ic{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-head-ic{
   grid-column:1;grid-row:2/4;flex:0 0 48px;width:48px;height:48px;display:grid;place-items:center;
   border-radius:16px;font-size:23px;
   background:linear-gradient(140deg,
@@ -8001,17 +8553,17 @@ html.dm-widget-popup-open{overflow:hidden}
     0 9px 18px -11px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 70%,transparent)}
 /* L'oggetto disegnato dentro la pastiglia della finestra e' lo stesso della
    tessera da cui si e' arrivati, un po' piu' grande perche' qui c'e' posto. */
-#dm-widget-popup .dm-widget-detail .dm-w-head-ic .dm-oggetto{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-head-ic .dm-oggetto{
   width:30px;height:30px;display:block;filter:drop-shadow(0 2px 3px rgba(15,23,42,.22))}
 /* Il selettore e' lungo apposta: le stesse righe le riscrive piu' in basso la
  * regola condivisa con la tessera aperta in griglia, che a parita' di peso
  * vincerebbe perche' viene dopo. */
-#dm-widget-popup .dm-widget-detail .dm-w-head strong{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-head strong{
   grid-column:2;grid-row:2;min-width:0;white-space:nowrap;overflow:hidden;
   font-family:'Oswald',system-ui,sans-serif;font-weight:700;
   font-size:clamp(19px,2.4vw,25px);line-height:1.05;letter-spacing:2px;text-transform:uppercase;
   color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 78%,#0f172a)}
-#dm-widget-popup .dm-widget-detail .dm-w-head small{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-head small{
   grid-column:2;grid-row:3;flex:none;
   font-size:11px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;
   color:var(--text-dim,#64748b);
@@ -8027,7 +8579,7 @@ html.dm-widget-popup-open{overflow:hidden}
  * quale un dito manca. */
 /* A destra, come in tutti gli altri popup della plancia: a sinistra stava
  * addosso alla testata — «li non mi piace, e' vicino alla testata». */
-#dm-widget-popup .dm-widget-detail .dm-w-close{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-close{
   grid-column:1/-1;grid-row:1;justify-self:end;
   display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:0 12px 0 9px;
   border:1px solid var(--card-border,#e2e8f0);border-radius:999px;
@@ -8035,16 +8587,16 @@ html.dm-widget-popup-open{overflow:hidden}
   font-size:11px;font-weight:900;letter-spacing:1.4px;text-transform:uppercase;
   color:var(--text,#0f172a);cursor:pointer;
   transition:color .18s ease,background .18s ease,border-color .18s ease}
-#dm-widget-popup .dm-widget-detail .dm-w-close span{font-size:15px;letter-spacing:0;line-height:1}
-#dm-widget-popup .dm-widget-detail .dm-w-close:hover{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-close span{font-size:15px;letter-spacing:0;line-height:1}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-close:hover{
   color:#dc2626;border-color:color-mix(in srgb,#dc2626 40%,transparent);
   background:color-mix(in srgb,#dc2626 8%,var(--card-bg,#fff))}
-#dm-widget-popup .dm-widget-detail .dm-w-close:focus-visible{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-close:focus-visible{
   outline:2px solid var(--dm-widget-accent,#0ea5e9);outline-offset:2px}
-html[data-theme="dark"] #dm-widget-popup .dm-widget-detail .dm-w-close:hover{color:#fca5a5}
+html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-close:hover{color:#fca5a5}
 /* E la finestra non ha piu' bisogno del filo di colore sul bordo alto: adesso
  * il colore ce l'ha la fascia. */
-#dm-widget-popup .dm-widget-detail::before{display:none}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail::before{display:none}
 /* ── una forma sola: il verdetto, la frase, la misura con la sua corsa ─────
  *
  * Il blocco in cima alla finestra. Prende la tinta della sezione appena
@@ -8054,49 +8606,49 @@ html[data-theme="dark"] #dm-widget-popup .dm-widget-detail .dm-w-close:hover{col
 /* Il lettore dentro la finestra: copertina quadrata, due righe di testo e i
    tasti sotto. Su una finestra larga un palmo i tasti non ci stanno in fila
    col resto, e mandarli a capo e' meglio che stringerli. */
-#dm-widget-popup .dm-w-media{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media{
   display:grid;grid-template-columns:56px minmax(0,1fr);gap:11px;align-items:center;
   padding:11px;border-radius:16px;margin-bottom:9px;
   background:var(--bg-sculpted,#f0f4f8);border:1px solid var(--card-border,#e2e8f0)}
-#dm-widget-popup .dm-w-media[data-muta="true"]{opacity:.6}
-#dm-widget-popup .dm-w-media-arte{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media[data-muta="true"]{opacity:.6}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media-arte{
   width:56px;height:56px;border-radius:13px;object-fit:cover;
   background:var(--card-bg,#fff);box-shadow:0 8px 16px -10px rgba(2,6,23,.6)}
-#dm-widget-popup .dm-w-media-vuota{display:grid;place-items:center;font-size:24px}
-#dm-widget-popup .dm-w-media-vuota .dm-oggetto{width:34px;height:34px}
-#dm-widget-popup .dm-w-media-testo{display:grid;gap:2px;min-width:0}
-#dm-widget-popup .dm-w-media-dove{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media-vuota{display:grid;place-items:center;font-size:24px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media-vuota .dm-oggetto{width:34px;height:34px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media-testo{display:grid;gap:2px;min-width:0}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media-dove{
   font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
   color:var(--text-dim,#64748b)}
-#dm-widget-popup .dm-w-media-titolo{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media-titolo{
   font-size:13.5px;font-weight:800;color:var(--text,#0f172a);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#dm-widget-popup .dm-w-media-sotto{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media-sotto{
   font-size:11px;font-weight:600;color:var(--text-dim,#64748b);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#dm-widget-popup .dm-w-media .dm-mp-comandi{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media .dm-mp-comandi{
   grid-column:1/-1;display:flex;gap:7px;margin:2px 0 0;flex-wrap:wrap}
-#dm-widget-popup .dm-w-racconto{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-racconto{
   display:grid;gap:11px;margin:0 0 18px;padding:15px 16px 14px;
   border-radius:18px;
   border:1px solid color-mix(in srgb,var(--dm-verdetto,#10b981) 24%,transparent);
   background:linear-gradient(160deg,
     color-mix(in srgb,var(--dm-verdetto,#10b981) 11%,var(--card-bg,#fff)),
     var(--card-bg,#fff) 72%)}
-#dm-widget-popup .dm-w-racconto[data-dm-verdetto="bene"]{--dm-verdetto:#10b981}
-#dm-widget-popup .dm-w-racconto[data-dm-verdetto="corso"]{--dm-verdetto:#f59e0b}
-#dm-widget-popup .dm-w-racconto[data-dm-verdetto="guarda"]{--dm-verdetto:#e11d48}
-#dm-widget-popup .dm-w-verdetto{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-racconto[data-dm-verdetto="bene"]{--dm-verdetto:#10b981}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-racconto[data-dm-verdetto="corso"]{--dm-verdetto:#f59e0b}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-racconto[data-dm-verdetto="guarda"]{--dm-verdetto:#e11d48}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-verdetto{
   justify-self:start;display:inline-flex;align-items:center;gap:6px;
   padding:4px 10px;border-radius:999px;
   background:color-mix(in srgb,var(--dm-verdetto,#10b981) 16%,transparent);
   color:color-mix(in srgb,var(--dm-verdetto,#10b981) 82%,#0f172a);
   font-size:9.5px;font-weight:900;letter-spacing:1.4px;text-transform:uppercase}
-#dm-widget-popup .dm-w-verdetto::before{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-verdetto::before{
   content:"";width:6px;height:6px;border-radius:50%;background:var(--dm-verdetto,#10b981)}
 /* La frase e' la cosa che si legge davvero: sta grande come un testo, non come
    un'etichetta, e va a capo invece di finire in tre puntini. */
-#dm-widget-popup .dm-w-frase{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-frase{
   margin:0;font-size:14.5px;line-height:1.45;font-weight:700;
   color:var(--text,#0f172a);text-wrap:balance}
 /* I punti che sostengono la frase: piccoli, sotto, uno per riga. La frase
@@ -8105,142 +8657,142 @@ html[data-theme="dark"] #dm-widget-popup .dm-widget-detail .dm-w-close:hover{col
  * starebbero senza farne un paragrafo. */
 /* La barra del livello: sta sotto il nome, larga quanto la colonna, e non
    sposta niente — due pixel e mezzo di altezza dentro la riga che c'era gia'. */
-#dm-widget-popup .dm-w-livello{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-livello{
   display:block;margin-top:5px;height:3px;border-radius:999px;overflow:hidden;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 22%,transparent)}
-#dm-widget-popup .dm-w-livello>i{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-livello>i{
   display:block;height:100%;border-radius:inherit;
   background:var(--dm-widget-accent,#0ea5e9);
   transition:width .3s ease}
-#dm-widget-popup .dm-w-livello[data-basso="true"]>i{background:#e11d48}
-#dm-widget-popup .dm-w-punti{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-livello[data-basso="true"]>i{background:#e11d48}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-punti{
   margin:2px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
-#dm-widget-popup .dm-w-punti li{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-punti li{
   position:relative;padding-inline-start:13px;font-size:12.5px;line-height:1.4;
   font-weight:650;color:var(--text-dim,#64748b)}
-#dm-widget-popup .dm-w-punti li::before{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-punti li::before{
   content:"";position:absolute;inset-inline-start:2px;top:.62em;
   width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.55}
-#dm-widget-popup .dm-w-misura{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-#dm-widget-popup .dm-w-misura b{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-misura{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-misura b{
   font-family:'Oswald',system-ui,sans-serif;font-weight:300;
   font-size:clamp(30px,9vw,42px);line-height:1;letter-spacing:-.01em;
   color:var(--text,#0f172a);font-variant-numeric:tabular-nums}
-#dm-widget-popup .dm-w-misura small{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-misura small{
   font-size:11px;font-weight:800;line-height:1.35;
   color:color-mix(in srgb,var(--dm-verdetto,#10b981) 70%,var(--text-dim,#64748b))}
 /* La corsa: dov'era, dov'e' arrivata. Senza numeri sopra — quelli stanno gia'
    accanto — perche' quello che serve e' la forma. */
-#dm-widget-popup .dm-w-corsa{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-corsa{
   display:grid;grid-template-columns:1fr 1fr;align-items:end;gap:2px 0;margin-top:2px}
-#dm-widget-popup .dm-w-corsa svg{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-corsa svg{
   grid-column:1/-1;width:100%;height:34px;overflow:visible}
-#dm-widget-popup .dm-w-corsa polyline{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-corsa polyline{
   fill:none;stroke:var(--dm-verdetto,#10b981);stroke-width:1.6;
   stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-#dm-widget-popup .dm-w-corsa circle{fill:var(--dm-verdetto,#10b981)}
-#dm-widget-popup .dm-w-corsa span{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-corsa circle{fill:var(--dm-verdetto,#10b981)}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-corsa span{
   font-size:9px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;
   color:var(--text-dim,#94a3b8)}
-#dm-widget-popup .dm-w-corsa span:last-child{text-align:right}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-corsa span:last-child{text-align:right}
 /* ── le caselle e le pillole ──────────────────────────────────────────── */
-#dm-widget-popup .dm-w-titoletto{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-titoletto{
   margin:18px 0 8px;font-size:9.5px;font-weight:900;letter-spacing:1.7px;
   text-transform:uppercase;color:var(--text-dim,#94a3b8)}
-#dm-widget-popup .dm-w-caselle{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-caselle{
   display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 /* La porta verso il cruscotto: un tasto pieno, del colore della tessera. Con
    il vestito delle righe sembrava una barra grigia — cioe' una cosa disabilitata
    invece dell'unico gesto che questa finestra offre. */
 /* La lettura del tempo: una riga sola, sopra i conti, in inchiostro pieno —
    e' una frase da leggere, non un'etichetta da scorrere. */
-#dm-widget-popup .dm-w-lettura{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-lettura{
   margin:0 0 10px;font-size:13px;font-weight:700;
   color:var(--text,#0f172a);line-height:1.35}
 /* Cosa e' arrivato oggi: l'etichetta a sinistra, poi una pastiglia per genere
    con il suo conto in coda al nome — «Difetti 1», come i filtri del cruscotto,
    che toglie di mezzo il singolare e il plurale. */
-#dm-widget-popup .dm-w-oggi{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-oggi{
   display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:0 0 10px}
-#dm-widget-popup .dm-w-oggi-lbl{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-oggi-lbl{
   font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
   color:var(--text-dim,#64748b)}
-#dm-widget-popup .dm-w-genere{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-genere{
   display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:50px;
   font-size:12px;font-weight:700;color:var(--text,#0f172a);
   background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 12%,transparent);
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 26%,transparent)}
-#dm-widget-popup .dm-w-genere b{opacity:.8}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-genere b{opacity:.8}
 /* Le conversazioni che aspettano. Un riquadro suo, in inchiostro d'accento,
    perche' e' la sola cosa di questa finestra che chiede di essere aperta: alla
    pari con i conti sarebbe passata per un'altra statistica. */
-#dm-widget-popup .dm-w-chat{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat{
   margin:0 0 11px;padding:10px 11px;border-radius:14px;
   background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 10%,transparent);
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 28%,transparent)}
-#dm-widget-popup .dm-w-chat-testa{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat-testa{
   display:flex;align-items:center;gap:6px;margin-bottom:7px;
   font-size:12px;color:var(--text,#0f172a)}
-#dm-widget-popup .dm-w-chat-riga{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat-riga{
   display:flex;align-items:center;gap:8px;padding:3px 0;
   font-size:12px;color:var(--text,#0f172a)}
 /* Il titolo per intero non ci sta, e mandarlo a capo farebbe righe di altezza
    diversa: si taglia, e chi vuole leggerlo apre il cruscotto. */
-#dm-widget-popup .dm-w-chat-tit{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat-tit{
   flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#dm-widget-popup .dm-w-chat-n{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat-n{
   flex:none;min-width:18px;padding:1px 6px;border-radius:50px;text-align:center;
   font-size:11px;font-weight:800;color:#fff;
   background:var(--dm-widget-accent,#0ea5e9);font-variant-numeric:tabular-nums}
-#dm-widget-popup .dm-w-chat-altre{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat-altre{
   margin-top:5px;font-size:11px;color:var(--text-dim,#64748b)}
 /* L'ultima risposta dell'assistenza, intera: e' la cosa che si e' venuti a
    leggere, e non si taglia. L'ora sta a destra, in piccolo. */
-#dm-widget-popup .dm-w-chat-quando{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat-quando{
   margin-left:auto;font-size:11px;color:var(--text-dim,#64748b)}
-#dm-widget-popup .dm-w-chat-testo{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat-testo{
   margin:0;font-size:13px;line-height:1.45;color:var(--text,#0f172a);
   overflow-wrap:anywhere}
-#dm-widget-popup .dm-w-porta{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-porta{
   width:100%;margin-top:10px;padding:11px 14px;border:0;border-radius:14px;
   cursor:pointer;font-size:13px;font-weight:800;color:#fff;
   background:var(--dm-widget-accent,#0ea5e9)}
-#dm-widget-popup .dm-w-porta:hover{filter:brightness(1.08)}
-#dm-widget-popup .dm-w-casella{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-porta:hover{filter:brightness(1.08)}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-casella{
   display:grid;gap:2px;padding:10px 11px;border-radius:14px;
   border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
-#dm-widget-popup .dm-w-caselle .dm-w-casella[hidden],
-#dm-widget-popup .dm-w-pillole .dm-w-pillola[hidden]{display:none}
-#dm-widget-popup .dm-w-tutte-misure{margin-top:8px;justify-content:center}
-#dm-widget-popup .dm-w-casella-ic{font-size:15px;line-height:1}
-#dm-widget-popup .dm-w-casella-ic svg{width:18px;height:18px;display:block}
-#dm-widget-popup .dm-w-casella b{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-caselle .dm-w-casella[hidden],
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillole .dm-w-pillola[hidden]{display:none}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-tutte-misure{margin-top:8px;justify-content:center}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-casella-ic{font-size:15px;line-height:1}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-casella-ic svg{width:18px;height:18px;display:block}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-casella b{
   font-family:'Oswald',system-ui,sans-serif;font-weight:400;font-size:19px;line-height:1.1;
   color:var(--text,#0f172a);font-variant-numeric:tabular-nums;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* La seconda misura della casella — l'umidita' accanto ai gradi — sta sotto il
  * numero grande, in tondo e col suo colore: si legge come un'altra cosa. */
-#dm-widget-popup .dm-w-casella-sotto{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-casella-sotto{
   font-style:normal;font-size:11.5px;font-weight:800;line-height:1.2;
   color:color-mix(in srgb,#0ea5e9 72%,var(--text-dim,#64748b));
   font-variant-numeric:tabular-nums}
 /* L'etichetta va a capo invece di finire nei puntini: «TEMPERATURA PANNELLO…»
  * non diceva piu' quale pannello. Due righe bastano a ogni nome vero. */
-#dm-widget-popup .dm-w-casella span{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-casella span{
   font-size:8.5px;font-weight:900;letter-spacing:1.1px;text-transform:uppercase;
   color:var(--text-dim,#94a3b8);line-height:1.4;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-#dm-widget-popup .dm-w-pillole{display:flex;flex-wrap:wrap;gap:6px}
-#dm-widget-popup .dm-w-pillola{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillole{display:flex;flex-wrap:wrap;gap:6px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola{
   display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;
   font-size:10.5px;font-weight:800;
   border:1px solid var(--card-border,#e2e8f0);
   background:var(--surface-2,#f8fafc);color:var(--text-dim,#94a3b8)}
-#dm-widget-popup .dm-w-pillola::before{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola::before{
   content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
-#dm-widget-popup .dm-w-pillola-ic{display:inline-grid;place-items:center;font-size:12px;line-height:1}
-#dm-widget-popup .dm-w-pillola-ic svg{width:14px;height:14px}
-#dm-widget-popup .dm-w-pillola[data-acceso="true"]{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola-ic{display:inline-grid;place-items:center;font-size:12px;line-height:1}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola-ic svg{width:14px;height:14px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola[data-acceso="true"]{
   border-color:color-mix(in srgb,#10b981 34%,transparent);
   background:color-mix(in srgb,#10b981 12%,transparent);
   color:color-mix(in srgb,#10b981 76%,#0f172a)}
@@ -8248,37 +8800,37 @@ html[data-theme="dark"] #dm-widget-popup .dm-widget-detail .dm-w-close:hover{col
  * verde non e' sempre quello buono. Un varco aperto e' rosso e uno chiuso e'
  * verde (#367): senza questi due, un'apertura accesa sarebbe uscita verde
  * come una presa in funzione. */
-#dm-widget-popup .dm-w-pillola[data-tono="allarme"]{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola[data-tono="allarme"]{
   border-color:color-mix(in srgb,#dc2626 34%,transparent);
   background:color-mix(in srgb,#dc2626 12%,transparent);
   color:color-mix(in srgb,#dc2626 78%,#0f172a)}
 /* «Acceso» non e' «allarme»: e' una cosa che sta succedendo e che si vuole
    vedere — una stanza con dentro qualcuno (#432) — non una da guardare
    subito. Il rosso resta a chi deve alzare la testa. */
-#dm-widget-popup .dm-w-pillola[data-tono="acceso"]{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola[data-tono="acceso"]{
   border-color:color-mix(in srgb,#2563eb 34%,transparent);
   background:color-mix(in srgb,#2563eb 12%,transparent);
   color:color-mix(in srgb,#2563eb 78%,#0f172a)}
-#dm-widget-popup .dm-w-pillola[data-tono="quiete"]{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola[data-tono="quiete"]{
   border-color:color-mix(in srgb,#16a34a 30%,transparent);
   background:color-mix(in srgb,#16a34a 10%,transparent);
   color:color-mix(in srgb,#16a34a 74%,#0f172a)}
 /* Nome e stato si distinguono: il nome respira, lo stato e' la parola in
  * maiuscoletto dopo il punto — «non si capisce» era tutto sullo stesso tono. */
-#dm-widget-popup .dm-w-pillola{font-size:11px}
-#dm-widget-popup .dm-w-pillola-nome{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola{font-size:11px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola-nome{
   min-width:0;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   color:var(--text,#0f172a);font-weight:700}
-#dm-widget-popup .dm-w-pillola[data-acceso="true"] .dm-w-pillola-nome{color:inherit}
-#dm-widget-popup .dm-w-pillola b{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola[data-acceso="true"] .dm-w-pillola-nome{color:inherit}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola b{
   font-weight:900;color:inherit;text-transform:uppercase;font-size:9.5px;letter-spacing:.8px}
-#dm-widget-popup .dm-w-pillola b::before{content:"·";margin-right:5px;font-size:11px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola b::before{content:"·";margin-right:5px;font-size:11px}
 @media(max-width:420px){
-  #dm-widget-popup .dm-w-caselle{grid-template-columns:repeat(2,minmax(0,1fr))}
+  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-caselle{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-#dm-widget-popup .dm-w-piede{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-piede{
   display:flex;padding:0 15px 15px;margin:0}
-#dm-widget-popup .dm-w-vai{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-vai{
   flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;
   min-height:46px;padding:12px 16px;border-radius:15px;
   border:1px solid var(--divider-color,#dbe4ee);
@@ -8286,10 +8838,10 @@ html[data-theme="dark"] #dm-widget-popup .dm-widget-detail .dm-w-close:hover{col
   color:var(--dm-widget-accent,#0369a1);
   font:inherit;font-size:13px;font-weight:800;letter-spacing:.4px;cursor:pointer;
   transition:transform .18s ease,box-shadow .18s ease}
-#dm-widget-popup .dm-w-vai:hover{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-vai:hover{
   transform:translateY(-1px);box-shadow:0 10px 22px -16px rgba(15,23,42,.7)}
-#dm-widget-popup .dm-w-vai:active{transform:none}
-#dm-widget-popup .dm-w-body{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-vai:active{transform:none}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-body{
   padding:16px 18px 20px;display:grid;gap:9px;
   /* L'altezza minima azzerata perche' un figlio di colonna flex, per difetto,
      non scende sotto il proprio contenuto: senza, la lista non si accorcia mai
@@ -8301,9 +8853,9 @@ html[data-theme="dark"] #dm-widget-popup .dm-widget-detail .dm-w-close:hover{col
      dove finisce la finestra. */
   scrollbar-width:thin;
   scrollbar-color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 42%,transparent) transparent}
-#dm-widget-popup .dm-w-body::-webkit-scrollbar{width:9px}
-#dm-widget-popup .dm-w-body::-webkit-scrollbar-track{background:transparent}
-#dm-widget-popup .dm-w-body::-webkit-scrollbar-thumb{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-body::-webkit-scrollbar{width:9px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-body::-webkit-scrollbar-track{background:transparent}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-body::-webkit-scrollbar-thumb{
   border-radius:100px;border:2px solid transparent;background-clip:padding-box;
   background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 38%,transparent)}
 /* Ogni riga e' una tessera coricata.
@@ -8325,99 +8877,114 @@ html[data-theme="dark"] #dm-widget-popup .dm-widget-detail .dm-w-close:hover{col
  * mettersi a leggere le righe. Stessa aria delle tessere della Home — numero
  * in Oswald, etichetta minuscola sotto — dentro un vassoio appena tinto del
  * colore della sezione. */
-#dm-widget-popup .dm-w-summary{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-summary{
   display:flex;margin:0 0 4px;border-radius:18px;
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 22%,transparent);
   background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 5%,var(--card-bg,#fff))}
-#dm-widget-popup .dm-w-stat{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-stat{
   flex:1;min-width:0;display:grid;gap:2px;justify-items:center;padding:11px 8px 10px}
 /* Le colonne le separa una riga, non un buco nello sfondo: il vassoio a
    griglia con la fessura da un pixel veniva misurato piu' corto di quello che
    e' e tagliava le etichette. */
-#dm-widget-popup .dm-w-stat+.dm-w-stat{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-stat+.dm-w-stat{
   border-left:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 18%,transparent)}
-#dm-widget-popup .dm-w-stat b{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-stat b{
   font-family:'Oswald',system-ui,sans-serif;font-size:21px;font-weight:600;line-height:1;
   font-variant-numeric:tabular-nums;
   color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 72%,#0f172a)}
-#dm-widget-popup .dm-w-stat span{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-stat span{
   font-size:10px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;
   color:var(--text-dim,#94a3b8);text-align:center}
 /* La rotella: apre il pannello della riga, e quando e' aperto si tinge —
  * altrimenti, con il pannello sotto, non si capiva quale riga l'aveva
  * aperto. */
-#dm-widget-popup .dm-w-row .dm-w-more{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-more{
   flex:0 0 32px;width:32px;height:32px;display:grid;place-items:center;
   border-radius:11px;font-size:14px;cursor:pointer;
   border:1px solid var(--card-border,#e8edf3);background:var(--surface-2,#f8fafc);
   transition:background .18s ease,border-color .18s ease,transform .25s ease}
-#dm-widget-popup .dm-w-row[data-dm-w-open="true"] .dm-w-more{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row[data-dm-w-open="true"] .dm-w-more{
   background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 14%,transparent);
   border-color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 40%,transparent);
   transform:rotate(60deg)}
-/* Il pannello si accoda alla riga: margine negativo per chiudere lo spazio
- * fra le righe, angoli alti squadrati e nessun bordo in cima. Le due cose
- * diventano una card sola. */
-:is(#dm-widget-popup,#clima-popup-overlay) .dm-w-panel{
-  display:grid;gap:10px;margin:-9px 0 0;padding:14px 14px 15px;
-  border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 40%,transparent);
-  border-top:0;border-radius:0 0 18px 18px;
-  background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 5%,var(--card-bg,#fff));
-  box-shadow:0 14px 30px -22px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 90%,transparent)}
-:is(#dm-widget-popup,#clima-popup-overlay) .dm-w-panel[hidden]{display:none}
-/* Da sola non e' accodata a niente: torna una card intera, con tutti e quattro
-   gli angoli e il bordo in cima. */
-:is(#dm-widget-popup,#clima-popup-overlay) .dm-w-panel-solo{
-  margin:0;border-top:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 40%,transparent);
-  border-radius:18px}
-:is(#dm-widget-popup,#clima-popup-overlay) .dm-w-panel-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-:is(#dm-widget-popup,#clima-popup-overlay) .dm-w-panel-lbl{
+/* Cosa c'e' DENTRO il pannello: le righe, le etichette, le pastiglie, il passo
+ * della temperatura. Vale dovunque il pannello si trovi, e non chiede di chi
+ * sia figlio.
+ *
+ * Prima ognuna di queste righe cominciava con l'elenco delle due finestre che
+ * allora lo ospitavano. Poi lo stesso pannello e' finito anche dentro le card
+ * della pagina Stanze (#467) — stesso markup, stessi tasti, stesso giro che li
+ * ascolta — e li' nessuno dei due antenati c'e': i comandi del clima uscivano
+ * nudi, bottoni di sistema incolonnati che sbordavano dalla card.
+ *
+ * Un elenco di ospiti non si tiene aggiornato da solo, e il terzo che arriva
+ * non sa di doverci entrare. Il pannello si veste da se'. */
+.dm-w-panel{display:grid;gap:10px}
+.dm-w-panel[hidden]{display:none}
+.dm-w-panel-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dm-w-panel-lbl{
   flex:0 0 82px;font-size:10px;font-weight:800;letter-spacing:.9px;
   text-transform:uppercase;color:var(--text-dim,#94a3b8)}
-:is(#dm-widget-popup,#clima-popup-overlay) .dm-w-chips{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0}
-:is(#dm-widget-popup,#clima-popup-overlay) .dm-w-chip{
+.dm-w-chips{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0}
+.dm-w-chip{
   padding:6px 11px;border-radius:999px;cursor:pointer;
   border:1px solid var(--card-border,#e8edf3);background:var(--card-bg,#fff);
   font:inherit;font-size:11.5px;font-weight:800;color:var(--text-dim,#64748b);
   transition:background .18s ease,border-color .18s ease,color .18s ease}
-:is(#dm-widget-popup,#clima-popup-overlay) .dm-w-chip:hover{
+.dm-w-chip:hover{
   border-color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 45%,transparent)}
-:is(#dm-widget-popup,#clima-popup-overlay) .dm-w-chip[data-on="true"]{
+.dm-w-chip[data-on="true"]{
   background:var(--dm-widget-accent,#0ea5e9);border-color:transparent;color:#fff;
   box-shadow:0 6px 14px -9px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 90%,transparent)}
 /* Il passo della temperatura: meno, il numero, piu'. */
-:is(#dm-widget-popup,#clima-popup-overlay) .dm-w-stepper{
+.dm-w-stepper{
   display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:12px;
   background:var(--card-bg,#fff);box-shadow:inset 0 0 0 1px var(--card-border,#e8edf3)}
-:is(#dm-widget-popup,#clima-popup-overlay) .dm-w-stepper button{
+.dm-w-stepper button{
   width:30px;height:28px;display:grid;place-items:center;border:0;border-radius:10px;
   background:transparent;color:var(--text,#0f172a);
   font:inherit;font-size:16px;font-weight:800;line-height:1;cursor:pointer;
   transition:background .15s ease}
-:is(#dm-widget-popup,#clima-popup-overlay) .dm-w-stepper button:hover{
+.dm-w-stepper button:hover{
   background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 14%,transparent)}
-:is(#dm-widget-popup,#clima-popup-overlay) .dm-w-stepper b{
+.dm-w-stepper b{
   min-width:52px;text-align:center;
   font-family:'Oswald',system-ui,sans-serif;font-size:17px;font-weight:600;
   font-variant-numeric:tabular-nums}
-:is(#dm-widget-popup,#clima-popup-overlay) .dm-w-panel-note{
+.dm-w-panel-note{
   margin:0;font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8)}
 /* Sul telefono l'etichetta va sopra: ottantadue pixel di colonna, su
    trecentonovanta, lasciavano alle modalita' una pastiglia per riga.
-   Le tre righe valgono per tutt'e due le finestre. Le ultime due erano scritte
-   per la sola «#dm-widget-popup», e la gemella e' rimasta indietro: nella
-   finestra del Clima la riga diventava una colonna ma l'etichetta teneva il
-   suo «flex:0 0 82px», che in colonna non e' piu' una larghezza ma
-   un'altezza. Misurato: la parola «Modalita'» alta ottantadue pixel, con
-   sotto il vuoto — sono i buchi che si vedevano fra «MODALITA'» e le
-   pastiglie, fra «TEMPERATURA» e il suo passo, fra «VENTOLA» e i numeri.
-   La riga sopra le nominava gia' tutt'e due; queste due no. */
+   Misurato quando le tre righe qui sotto erano scritte per la sola finestra
+   dei widget e la gemella era rimasta indietro: la riga diventava una colonna
+   ma l'etichetta teneva il suo «flex:0 0 82px», che in colonna non e' piu' una
+   larghezza ma un'altezza — la parola «Modalita'» alta ottantadue pixel, col
+   vuoto sotto. Adesso non c'e' nessuna gemella da tenere allineata: la regola
+   e' una, come il pannello. */
 @media(max-width:600px){
-  :is(#dm-widget-popup,#clima-popup-overlay) .dm-w-panel-row{flex-direction:column;align-items:stretch;gap:6px}
-  :is(#dm-widget-popup,#clima-popup-overlay) .dm-w-panel-lbl{flex:none}
-  :is(#dm-widget-popup,#clima-popup-overlay) .dm-w-stepper{align-self:flex-start}
+  .dm-w-panel-row{flex-direction:column;align-items:stretch;gap:6px}
+  .dm-w-panel-lbl{flex:none}
+  .dm-w-stepper{align-self:flex-start}
 }
-#dm-widget-popup .dm-w-row{
+/* Il GUSCIO invece resta delle due finestre, perche' e' li' che il pannello e'
+ * una card per conto suo. Dentro la card di una stanza la card c'e' gia', e un
+ * riquadro dentro il riquadro sarebbe una cornice di troppo.
+ *
+ * Si accoda alla riga: margine negativo per chiudere lo spazio fra le righe,
+ * angoli alti squadrati e nessun bordo in cima. Le due cose diventano una card
+ * sola. */
+:is(:is(#dm-widget-popup,#dm-casa-popup),#clima-popup-overlay) .dm-w-panel{
+  margin:-9px 0 0;padding:14px 14px 15px;
+  border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 40%,transparent);
+  border-top:0;border-radius:0 0 18px 18px;
+  background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 5%,var(--card-bg,#fff));
+  box-shadow:0 14px 30px -22px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 90%,transparent)}
+/* Da sola non e' accodata a niente: torna una card intera, con tutti e quattro
+   gli angoli e il bordo in cima. */
+:is(:is(#dm-widget-popup,#dm-casa-popup),#clima-popup-overlay) .dm-w-panel-solo{
+  margin:0;border-top:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 40%,transparent);
+  border-radius:18px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row{
   position:relative;display:flex;align-items:center;gap:12px;
   padding:10px 12px;border-radius:18px;
   border:1px solid var(--card-border,#eef2f7);
@@ -8426,175 +8993,175 @@ html[data-theme="dark"] #dm-widget-popup .dm-widget-detail .dm-w-close:hover{col
   transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
 /* Il binario di colore sul fianco non serve piu': il colore ce l'ha la
    pastiglia, e due cose colorate sulla stessa riga erano una di troppo. */
-#dm-widget-popup .dm-w-row::before{display:none}
-#dm-widget-popup .dm-w-row:hover{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row::before{display:none}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row:hover{
   border-color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 32%,transparent);
   box-shadow:0 6px 16px -10px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 60%,transparent)}
 /* Aperta, la riga apre gli angoli in basso e lascia entrare il pannello. */
-#dm-widget-popup .dm-w-row[data-dm-w-open="true"]{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row[data-dm-w-open="true"]{
   border-color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 40%,transparent);
   border-bottom-color:transparent;
   border-bottom-left-radius:0;border-bottom-right-radius:0;
   box-shadow:none}
 /* Accesa: la velatura sulla riga. Lo stato lo dice il comando o l'icona, a
    seconda di cosa quella sezione mette in riga — si guardano tutti e tre. */
-#dm-widget-popup .dm-w-row:is(
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row:is(
   :has(.dm-w-glyph[data-on="true"]),
   :has(.dm-w-switch[data-on="true"]),
   :has(.dm-w-power[data-on="true"])){
   background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 5%,var(--card-bg,#fff));
   border-color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 22%,var(--card-border,#eef2f7))}
 /* La pastiglia dell'icona: la stessa della tessera in Home. */
-#dm-widget-popup .dm-w-row .dm-w-glyph{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-glyph{
   flex:0 0 38px;width:38px;height:38px;display:grid;place-items:center;
   border-radius:13px;font-size:18px;filter:none;opacity:1;
   background:var(--surface-2,#f8fafc);
   box-shadow:inset 0 0 0 1px var(--card-border,#e8edf3);
   transition:background .2s ease,box-shadow .2s ease,filter .2s ease}
-#dm-widget-popup .dm-w-row .dm-w-glyph[data-on="true"]{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-glyph[data-on="true"]{
   background:linear-gradient(150deg,
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 20%,#fff),
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 11%,#fff));
   box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 26%,transparent)}
 /* Spenta: il grigio sta sulla pastiglia intera, ma il fondo e' gia' quasi
    grigio — a cambiare e' solo l'emoji, che e' quello che si vuole. */
-#dm-widget-popup .dm-w-row .dm-w-glyph[data-on="false"]{filter:grayscale(1);opacity:.5}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-glyph[data-on="false"]{filter:grayscale(1);opacity:.5}
 /* Il nome pesa piu' di quello che ha sotto: prima erano quasi uguali e la riga
    si leggeva tutta insieme, senza un ordine. */
-#dm-widget-popup .dm-w-row .dm-w-name{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-name{
   gap:2px;font-size:14px;font-weight:800;letter-spacing:.1px}
-#dm-widget-popup .dm-w-row .dm-w-name small{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-name small{
   font-size:11px;font-weight:700;letter-spacing:.2px;color:var(--text-dim,#94a3b8)}
 /* I numeri in Oswald, come tutti i numeri della plancia, e incolonnabili. */
-#dm-widget-popup .dm-w-row .dm-w-val{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-val{
   font-family:'Oswald',system-ui,sans-serif;font-size:18px;font-weight:600;
   font-variant-numeric:tabular-nums;color:var(--text,#0f172a)}
 /* Il tasto di accensione: pastiglia quadrata come le altre, non un cerchio
    con l'alone — l'alone era l'unica cosa che si vedeva della riga. */
-#dm-widget-popup .dm-w-row .dm-w-power{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-power{
   flex:0 0 36px;width:36px;height:36px;border-radius:12px;font-size:15px;
   border:1px solid var(--card-border,#e8edf3);background:var(--surface-2,#f8fafc);
   color:var(--text-dim,#94a3b8);box-shadow:none}
-#dm-widget-popup .dm-w-row .dm-w-power[data-on="true"]{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-power[data-on="true"]{
   border-color:transparent;background:var(--dm-widget-accent,#0ea5e9);color:#fff;
   box-shadow:0 6px 14px -8px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 85%,transparent)}
 /* «Spegni tutte»: una riga sola sopra l'elenco, larga quanto la finestra, che
    si legge come un'azione e non come una luce in piu'. */
-#dm-widget-popup .dm-w-tutte{padding:0}
-#dm-widget-popup .dm-w-tutte-btn{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-tutte{padding:0}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-tutte-btn{
   display:flex;align-items:center;gap:9px;width:100%;padding:10px 14px;
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 35%,transparent);
   border-radius:14px;cursor:pointer;font:inherit;font-size:13px;font-weight:800;
   color:var(--text,#0f172a);
   background:color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 10%,transparent)}
-#dm-widget-popup .dm-w-tutte-btn:hover{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-tutte-btn:hover{
   background:color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 18%,transparent)}
-#dm-widget-popup .dm-w-tutte-btn>b{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-tutte-btn>b{
   margin-left:auto;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:900;
   background:color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 22%,transparent)}
 /* L'interruttore: un filo piu' largo, e da spento un grigio che si vede senza
    gridare. */
-#dm-widget-popup .dm-w-row .dm-w-switch{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-switch{
   flex:0 0 44px;width:44px;height:26px;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 26%,transparent)}
-#dm-widget-popup .dm-w-row .dm-w-switch i{top:3px;left:3px;width:20px;height:20px}
-#dm-widget-popup .dm-w-row .dm-w-switch[data-on="true"] i{transform:translateX(18px)}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-switch i{top:3px;left:3px;width:20px;height:20px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-switch[data-on="true"] i{transform:translateX(18px)}
 /* I comandi minori — la tendina della posizione, le frecce — prendono la
    stessa forma della pastiglia, cosi' la riga ha un solo raggio. */
-#dm-widget-popup .dm-w-row :is(.dm-w-position,.dm-w-arrows button,.dm-w-alarm button){
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row :is(.dm-w-position,.dm-w-arrows button,.dm-w-alarm button){
   border-radius:11px;background:var(--surface-2,#f8fafc);
   border:1px solid var(--card-border,#e8edf3)}
-#dm-widget-popup .dm-w-row .dm-w-position{height:30px;width:38px}
-#dm-widget-popup .dm-w-row .dm-w-arrows button{width:32px;height:32px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-position{height:30px;width:38px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-arrows button{width:32px;height:32px}
 /* Il titolo di un gruppo dentro la lista: maiuscoletto spaziato con la sua
    riga sottile, come le altre separazioni della plancia. */
 /* Il tasto che apre una porta: la stessa pastiglia quadrata degli altri
  * comandi di riga, in verde perche' apre. */
-#dm-widget-popup .dm-w-row .dm-w-door{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-door{
   flex:0 0 36px;width:36px;height:36px;display:grid;place-items:center;
   border-radius:12px;font-size:16px;cursor:pointer;
   border:1px solid var(--card-border,#e8edf3);background:var(--surface-2,#f8fafc);
   transition:background .18s ease,border-color .18s ease,transform .15s ease}
-#dm-widget-popup .dm-w-row .dm-w-door:hover{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-door:hover{
   background:color-mix(in srgb,var(--dm-widget-accent,#10b981) 14%,transparent);
   border-color:color-mix(in srgb,var(--dm-widget-accent,#10b981) 45%,transparent)}
-#dm-widget-popup .dm-w-row .dm-w-door:active{transform:scale(.94)}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-door:active{transform:scale(.94)}
 @media(prefers-reduced-motion:reduce){
-  #dm-widget-popup .dm-w-row .dm-w-door{transition:none}
-  #dm-widget-popup .dm-w-row .dm-w-door:active{transform:none}
+  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-door{transition:none}
+  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-door:active{transform:none}
 }
 /* La riga per scrivere: una casella e un piu', larghi quanto la lista. */
-:is(#dm-widget-popup,#page-calendario) .dm-todo-add{
+:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-add{
   display:flex;gap:8px;margin:9px 0 2px}
-:is(#dm-widget-popup,#page-calendario) .dm-todo-new{
+:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-new{
   flex:1 1 auto;min-width:0;height:38px;padding:0 13px;border-radius:13px;
   border:1px solid var(--card-border,#e8edf3);background:var(--card-bg,#fff);
   font:inherit;font-size:13px;font-weight:700;color:var(--text,#0f172a);
   transition:border-color .18s ease,box-shadow .18s ease}
-:is(#dm-widget-popup,#page-calendario) .dm-todo-new::placeholder{color:var(--text-dim,#94a3b8);font-weight:600}
-:is(#dm-widget-popup,#page-calendario) .dm-todo-new:focus{
+:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-new::placeholder{color:var(--text-dim,#94a3b8);font-weight:600}
+:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-new:focus{
   outline:none;border-color:var(--dm-widget-accent,#0ea5e9);
   box-shadow:0 0 0 3px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 18%,transparent)}
-:is(#dm-widget-popup,#page-calendario) .dm-todo-plus{
+:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-plus{
   flex:0 0 38px;width:38px;height:38px;display:grid;place-items:center;
   border:0;border-radius:13px;cursor:pointer;
   background:var(--dm-widget-accent,#0ea5e9);color:#fff;
   font:inherit;font-size:19px;font-weight:800;line-height:1;
   box-shadow:0 8px 18px -10px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 90%,transparent);
   transition:transform .15s ease,filter .18s ease}
-:is(#dm-widget-popup,#page-calendario) .dm-todo-plus:hover{filter:brightness(1.06)}
-:is(#dm-widget-popup,#page-calendario) .dm-todo-plus:active{transform:scale(.94)}
+:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-plus:hover{filter:brightness(1.06)}
+:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-plus:active{transform:scale(.94)}
 /* Il cestino sta in fondo alla riga e si fa vedere quando serve: sempre sul
    telefono, dove non c'e' un puntatore da avvicinare. */
-:is(#dm-widget-popup,#page-calendario) .dm-todo-del{
+:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-del{
   flex:0 0 30px;width:30px;height:30px;display:grid;place-items:center;
   margin-left:auto;border:0;border-radius:10px;cursor:pointer;
   background:transparent;font-size:14px;line-height:1;opacity:.35;
   transition:opacity .18s ease,background .18s ease}
-:is(#dm-widget-popup,#page-calendario) .dm-todo-item:hover .dm-todo-del{opacity:1}
-:is(#dm-widget-popup,#page-calendario) .dm-todo-del:hover{background:#fee2e2;opacity:1}
-@media(hover:none){:is(#dm-widget-popup,#page-calendario) .dm-todo-del{opacity:.7}}
+:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-item:hover .dm-todo-del{opacity:1}
+:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-del:hover{background:#fee2e2;opacity:1}
+@media(hover:none){:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-del{opacity:.7}}
 @media(prefers-reduced-motion:reduce){
-  :is(#dm-widget-popup,#page-calendario) .dm-todo-plus:active{transform:none}
+  :is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-plus:active{transform:none}
 }
-#dm-widget-popup .dm-w-block-title{
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-block-title{
   padding:10px 4px 8px;font-size:10.5px;letter-spacing:1.2px;
   border-bottom:1px solid var(--card-border,#eef2f7);margin-bottom:2px}
-#dm-widget-popup .dm-w-empty{margin:6px 4px;font-size:13px}
-#dm-widget-popup .dm-w-appl-chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 10px;padding-top:12px;border-top:1px solid var(--card-border,#e2e8f0)}
-#dm-widget-popup .dm-w-appl-chip{display:inline-flex;align-items:center;gap:8px;min-width:0;padding:7px 12px 7px 8px;border-radius:14px;cursor:pointer;font:inherit;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);color:var(--text,#0f172a);transition:border-color .16s ease,background .16s ease}
-#dm-widget-popup .dm-w-appl-chip[aria-expanded="true"]{border-color:color-mix(in srgb,#0ea5e9 46%,transparent);background:color-mix(in srgb,#0ea5e9 10%,transparent)}
-#dm-widget-popup .dm-w-appl-chip[data-on="false"] .dm-w-appl-art{color:var(--text-dim,#94a3b8);opacity:.7}
-#dm-widget-popup .dm-w-appl-chip[data-on="false"] .dm-w-appl-nome{font-weight:750;color:var(--text-dim,#64748b)}
-#dm-widget-popup .dm-w-appl-chip[data-on="true"] .dm-w-appl-nome::after{content:"";display:inline-block;width:5px;height:5px;margin-left:6px;border-radius:50%;background:#16a34a;vertical-align:middle}
-#dm-widget-popup .dm-w-appl-art{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;color:#0ea5e9}
-#dm-widget-popup .dm-w-appl-art svg{width:26px;height:26px}
-#dm-widget-popup .dm-w-appl-nome{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:850}
-#dm-widget-popup .dm-w-appl-watt{flex:0 0 auto;font-size:11px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--text-dim,#64748b)}
-#dm-widget-popup .dm-w-appl-invito{margin:0 4px;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
-#dm-widget-popup .dm-w-appl-card{display:block;gap:0;padding:0}
-#dm-widget-popup .dm-w-appl-card .appl-wide-card.dm-ap-card{cursor:default;box-shadow:none}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-empty{margin:6px 4px;font-size:13px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 10px;padding-top:12px;border-top:1px solid var(--card-border,#e2e8f0)}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-chip{display:inline-flex;align-items:center;gap:8px;min-width:0;padding:7px 12px 7px 8px;border-radius:14px;cursor:pointer;font:inherit;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);color:var(--text,#0f172a);transition:border-color .16s ease,background .16s ease}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-chip[aria-expanded="true"]{border-color:color-mix(in srgb,#0ea5e9 46%,transparent);background:color-mix(in srgb,#0ea5e9 10%,transparent)}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-chip[data-on="false"] .dm-w-appl-art{color:var(--text-dim,#94a3b8);opacity:.7}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-chip[data-on="false"] .dm-w-appl-nome{font-weight:750;color:var(--text-dim,#64748b)}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-chip[data-on="true"] .dm-w-appl-nome::after{content:"";display:inline-block;width:5px;height:5px;margin-left:6px;border-radius:50%;background:#16a34a;vertical-align:middle}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-art{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;color:#0ea5e9}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-art svg{width:26px;height:26px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-nome{min-width:0;overflow-wrap:anywhere;font-size:12.5px;font-weight:850}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-watt{flex:0 0 auto;font-size:11px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--text-dim,#64748b)}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-invito{margin:0 4px;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-card{display:block;gap:0;padding:0}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-card .appl-wide-card.dm-ap-card{cursor:default;box-shadow:none}
 /* Le miniature delle telecamere: lo stesso angolo delle righe. */
-#dm-widget-popup .dm-w-cam{border-radius:16px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-cam{border-radius:16px}
 /* Nella finestra la colonna e' larga il doppio della tessera: con la stessa
  * misura minima i riquadri raddoppiavano, e quattro telecamere diventavano
  * quattro manifesti. Qui la traccia minima e' piu' stretta, cosi' le
  * miniature restano miniature e ce ne stanno tre per riga. */
-#dm-widget-popup .dm-w-cams{grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-cams{grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
 @media(prefers-reduced-motion:reduce){
-  #dm-widget-popup .dm-w-row,#dm-widget-popup .dm-w-close,
-  #dm-widget-popup .dm-w-row .dm-w-more{transition:none}
-  #dm-widget-popup .dm-w-row[data-dm-w-open="true"] .dm-w-more{transform:none}
-  #dm-widget-popup .dm-w-close:hover{transform:none}
+  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-row,:is(#dm-widget-popup,#dm-casa-popup) .dm-w-close,
+  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-more{transition:none}
+  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-row[data-dm-w-open="true"] .dm-w-more{transform:none}
+  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-close:hover{transform:none}
 }
-#dm-widget-popup .dm-w-name{font-size:13.5px;font-weight:800}
-#dm-widget-popup .dm-w-val{font-size:14.5px;font-weight:900}
-#dm-widget-popup .dm-w-glyph{font-size:17px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-name{font-size:13.5px;font-weight:800}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-val{font-size:14.5px;font-weight:900}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-glyph{font-size:17px}
 @media(max-width:600px){
-  #dm-widget-popup{padding:16px}
-  #dm-widget-popup .dm-widget-detail{border-radius:22px;max-height:82dvh}
-  #dm-widget-popup .dm-widget-detail .dm-w-head{padding:16px 16px 15px;column-gap:12px}
-  #dm-widget-popup .dm-w-body{padding:13px 15px 18px}
+  :is(#dm-widget-popup,#dm-casa-popup){padding:16px}
+  :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail{border-radius:22px;max-height:82dvh}
+  :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-head{padding:16px 16px 15px;column-gap:12px}
+  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-body{padding:13px 15px 18px}
 }
 /* ── «In primo piano»: il ponte dei widget della Home ─────────────────── */
 #dm-widgets{display:block;margin:16px 0 6px}
@@ -8631,22 +9198,22 @@ html[data-theme="dark"] #dm-widget-popup .dm-widget-detail .dm-w-close:hover{col
  * su quello di sotto, ombra corta attaccata alla carta e ombra lunga sfumata
  * sotto. E' quello che fa sembrare le tessere appoggiate sulla pagina invece
  * che stampate sopra. */
-:is(#dm-widgets,#dm-widget-popup){
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)){
   --dm-vetrino:rgba(255,255,255,.72);
   --dm-velo:9%;
   --dm-cuscino:15%;
   --dm-grana:.5;
   --dm-alone:.26}
-html[data-theme="dark"] :is(#dm-widgets,#dm-widget-popup),
-body.dark-theme :is(#dm-widgets,#dm-widget-popup){
+html[data-theme="dark"] :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)),
+body.dark-theme :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)){
   --dm-vetrino:rgba(255,255,255,.06);
   --dm-velo:14%;
   --dm-cuscino:22%;
   --dm-grana:.34;
   --dm-alone:.55}
-:is(#dm-widgets,#dm-widget-popup) .dm-widgets-grid{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-widgets-grid{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile{
   position:relative;overflow:hidden;display:flex;flex-direction:column;gap:10px;
   min-height:118px;padding:15px 16px 17px;border:0;border-radius:22px;
   background:linear-gradient(180deg,var(--card-bg,#fff),
@@ -8660,14 +9227,14 @@ body.dark-theme :is(#dm-widgets,#dm-widget-popup){
   transition:transform .18s cubic-bezier(.16,1,.3,1),box-shadow .2s ease,background .45s ease}
 /* La grana: la carta vera non e' mai perfettamente liscia, e senza quel velo
    le tessere sembrano vetro stampato. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile::before{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile::before{
   content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
   background-size:140px 140px;mix-blend-mode:soft-light;opacity:var(--dm-grana)}
 /* Accesa: il velo del suo colore, il bordo che si scalda e l'ombra lunga che
    prende la tinta della sezione. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile[data-acceso="true"],
-:is(#dm-widgets,#dm-widget-popup) .dm-tile[data-open="true"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-acceso="true"],
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-open="true"]{
   background:
     radial-gradient(135% 105% at 100% 0%,
       color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) var(--dm-velo),transparent),transparent 66%),
@@ -8681,42 +9248,42 @@ body.dark-theme :is(#dm-widgets,#dm-widget-popup){
     0 16px 32px -18px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 60%,rgba(15,23,42,.5))}
 /* L'alone che respira: sta dietro la tessera che chiede attenzione, e si
    spegne appena la cosa rientra. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-alone{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-alone{
   position:absolute;inset:-40% -30% auto -30%;height:150%;pointer-events:none;opacity:0;
   background:radial-gradient(60% 60% at 50% 0%,
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 55%,transparent),transparent 70%);
   transition:opacity .5s ease}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile[data-alert="true"] .dm-tile-alone{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-alert="true"] .dm-tile-alone{
   opacity:var(--dm-alone);animation:dmTileRespiro 3.4s ease-in-out infinite}
 @keyframes dmTileRespiro{
   0%,100%{opacity:calc(var(--dm-alone) * .45);transform:translateY(4px) scale(.97)}
   50%{opacity:var(--dm-alone);transform:translateY(-2px) scale(1.03)}}
 /* La lama: quando una tessera si accende, una luce del suo colore la
    attraversa una volta sola. E' l'unico momento in cui la plancia alza la voce. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile[data-dm-accende]::after{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-dm-accende]::after{
   content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
   background:linear-gradient(105deg,transparent 30%,
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 26%,transparent) 48%,transparent 66%);
   transform:translateX(-120%);animation:dmTileLama .85s cubic-bezier(.3,.7,.3,1)}
 @keyframes dmTileLama{to{transform:translateX(120%)}}
 /* L'ingresso e' per chi entra adesso: una tessera gia' vista non rianima. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile:not([data-dm-seen]){
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile:not([data-dm-seen]){
   animation:dmTileIn .42s cubic-bezier(.16,1,.3,1) both;
   animation-delay:calc(var(--dm-tile-i,0) * 55ms)}
 @keyframes dmTileIn{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
 @media(hover:hover){
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile:hover{transform:translateY(-2px)}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile:hover{transform:translateY(-2px)}
 }
-:is(#dm-widgets,#dm-widget-popup) .dm-tile:active{transform:translateY(1px) scale(.995)}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile:focus-visible{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile:active{transform:translateY(1px) scale(.995)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile:focus-visible{
   outline:2px solid var(--dm-widget-accent,#0ea5e9);outline-offset:3px}
 
 /* La prima riga: la pastiglia e il nome, e nient'altro. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-cima{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-cima{
   position:relative;display:flex;align-items:center;gap:11px;min-width:0}
 /* La pastiglia e' un cuscino: gradiente, anello sottile, incavo in basso, e
    l'oggetto che ci posa sopra con la sua ombra. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-chip{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip{
   flex:0 0 41px;width:41px;height:41px;display:grid;place-items:center;border-radius:15px;font-size:20px;
   background:linear-gradient(158deg,
     color-mix(in srgb,var(--text,#0f172a) 8%,var(--card-bg,#fff)),
@@ -8727,8 +9294,8 @@ body.dark-theme :is(#dm-widgets,#dm-widget-popup){
     inset 0 -3px 6px -4px color-mix(in srgb,var(--text,#0f172a) 30%,transparent),
     0 5px 11px -9px rgba(15,23,42,.8);
   transition:background .5s ease,box-shadow .5s ease}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile[data-acceso="true"] .dm-tile-chip,
-:is(#dm-widgets,#dm-widget-popup) .dm-tile[data-open="true"] .dm-tile-chip{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-acceso="true"] .dm-tile-chip,
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-open="true"] .dm-tile-chip{
   background:linear-gradient(158deg,
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) var(--dm-cuscino),var(--card-bg,#fff)),
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 9%,var(--card-bg,#fff)));
@@ -8737,23 +9304,23 @@ body.dark-theme :is(#dm-widgets,#dm-widget-popup){
     inset 0 0 0 1px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 32%,transparent),
     inset 0 -3px 7px -4px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 55%,transparent),
     0 10px 18px -11px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 90%,transparent)}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-chip .dm-oggetto{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip .dm-oggetto{
   width:26px;height:26px;display:block;filter:drop-shadow(0 2px 3px rgba(15,23,42,.22))}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-chip[data-dm-sboccia]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip[data-dm-sboccia]{
   animation:dmTileSboccia .62s cubic-bezier(.2,.9,.25,1)}
 @keyframes dmTileSboccia{
   0%{transform:scale(1)}35%{transform:scale(1.2)}70%{transform:scale(.96)}100%{transform:scale(1)}}
 /* Il nome non finisce mai coi puntini: se non entra si stringe la spaziatura,
    poi si scende di corpo, e solo alla fine va su due righe. Chi lo stringe e'
    il codice, qui c'e' solo il punto di partenza. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-label{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-label{
   flex:1;min-width:0;font-size:9.8px;font-weight:900;letter-spacing:.11em;line-height:1.25;
   text-transform:uppercase;color:var(--text-dim,#64748b);
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
   word-break:normal;overflow-wrap:normal}
 
 /* La seconda riga: il numero, e l'unita' che gli sta accanto senza pesare. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-val{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-val{
   /* Il numero e la sua unita' devono restare attaccati anche per chi il testo
      lo legge invece di guardarlo: due riquadri di blocco affiancati diventano
      «42 %» quando si copiano o si ascoltano. Qui sono due pezzi in riga. */
@@ -8780,107 +9347,115 @@ body.dark-theme :is(#dm-widgets,#dm-widget-popup){
    niente si sposta, e dentro c'e' finalmente il posto per il disegno intero.
    L'interlinea che tiene i numeri vicini non l'ha decisa la finestra: la
    decide il margine. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-value{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value{
   max-width:100%;overflow:hidden;padding:0;margin:-13.6px 0;
   display:inline-flex;align-items:baseline;vertical-align:baseline;
   font-family:'Oswald','Inter',sans-serif;font-weight:200;font-size:40px;line-height:1.6;
   letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
 /* Una parola al posto di un numero si rimpicciolisce quanto basta a entrare
    intera: meglio leggerla tutta che leggerne meta' in grande. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-value[data-dm-len="medio"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value[data-dm-len="medio"]{
   font-family:'Inter',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.01em}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-value[data-dm-len="lungo"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value[data-dm-len="lungo"]{
   font-family:'Inter',sans-serif;font-weight:800;font-size:16px;letter-spacing:0;
   white-space:normal;line-height:1.15;
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-unit{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-unit{
   display:inline;margin-left:6px;font-style:normal;font-size:10.5px;font-weight:900;letter-spacing:.12em;
   text-transform:uppercase;color:var(--text-dim,#94a3b8)}
 /* Il grado e la percentuale sono parte del numero, non un'etichetta: stanno
    attaccati e grandi quanto basta a leggerli. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-unit[data-simbolo="true"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-unit[data-simbolo="true"]{
   margin-left:1px;font-size:17px;font-weight:300;letter-spacing:0;
   font-family:'Oswald','Inter',sans-serif;color:var(--text-dim,#64748b)}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-unit:empty{display:none}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-unit:empty{display:none}
 /* Il numero gira come un contatore: si muovono solo le cifre che cambiano. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-value .dm-cifra{display:inline-block}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-value .dm-cifra[data-verso="su"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value .dm-cifra{display:inline-block}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value .dm-cifra[data-verso="su"]{
   animation:dmCifraSu .46s cubic-bezier(.2,.9,.25,1) both}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-value .dm-cifra[data-verso="giu"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value .dm-cifra[data-verso="giu"]{
   animation:dmCifraGiu .46s cubic-bezier(.2,.9,.25,1) both}
 @keyframes dmCifraSu{0%{transform:translateY(70%);opacity:0}100%{transform:none;opacity:1}}
 @keyframes dmCifraGiu{0%{transform:translateY(-70%);opacity:0}100%{transform:none;opacity:1}}
 
 /* La terza riga: il dettaglio, e la misura che gli sta accanto. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-fondo{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-fondo{
   display:flex;align-items:center;gap:10px;min-width:0;margin-top:auto}
 /* Le due righe del fondo stanno in colonna: la didascalia e, sotto, la riga
    che la qualifica — l'artista di quel brano. La seconda c'e' solo dove il
    modello la scrive, e la mattonella resta la mattonella di sempre. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-testo{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-testo{
   flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-sotto{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-sotto{
   min-width:0;font-size:9.5px;font-weight:700;letter-spacing:.2px;
   color:var(--text-dim,#94a3b8);opacity:.72;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* I tre puntini: dentro non c'e' una lista, ci sono i comandi. Non sono un
    secondo tasto — toccare la mattonella apre gia' la finestra — sono il segno
    che li' dentro si comanda qualcosa. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-menu{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-menu{
   position:absolute;top:0;right:0;line-height:1;font-size:16px;font-weight:900;
   color:var(--text-dim,#94a3b8);opacity:.72;letter-spacing:0}
 /* La copertina riempie la pastiglia: e' l'unico disegno che non e' un'icona. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-arte{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-arte{
   width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-chip:has(.dm-tile-arte){overflow:hidden;padding:0}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-caption{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip:has(.dm-tile-arte){overflow:hidden;padding:0}
+/* Un disegno nostro dentro la pastiglia — il bidone del prossimo ritiro —
+   prende la misura della pastiglia, come farebbe un'icona: e' un disegno, non
+   una fotografia, quindi non la riempie da bordo a bordo. */
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip .dm-catalogo-art svg{width:26px;height:26px;display:block}
+@media(max-width:520px){
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip .dm-catalogo-art svg{width:23px;height:23px}
+}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-caption{
   flex:1;min-width:0;font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8);
   white-space:nowrap;overflow:hidden;
   /* Sfuma sul bordo invece di tagliare: si capisce che il testo continua. */
   mask-image:linear-gradient(90deg,#000 84%,transparent);
   -webkit-mask-image:linear-gradient(90deg,#000 84%,transparent)}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-scroll{display:inline-block;white-space:nowrap}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-scroll[data-dm-scroll="true"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-scroll{display:inline-block;white-space:nowrap}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-scroll[data-dm-scroll="true"]{
   animation:dmTileScroll var(--dm-scroll-dur,10s) ease-in-out infinite alternate;
   animation-delay:1.2s}
 @keyframes dmTileScroll{
   0%,12%{transform:translateX(0)}
   88%,100%{transform:translateX(var(--dm-scroll-x,0))}}
 @media(prefers-reduced-motion:reduce){
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile-scroll[data-dm-scroll="true"]{animation:none}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-scroll[data-dm-scroll="true"]{animation:none}
 }
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-misura{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-misura{
   flex:0 0 auto;display:flex;align-items:center}
 /* I segmenti: quanti su quanti, senza leggere il numero. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-punti{display:flex;gap:3px}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-punti i{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-punti{display:flex;gap:3px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-punti i{
   width:8px;height:18px;border-radius:4px;
   background:color-mix(in srgb,var(--text,#0f172a) 9%,transparent);
   box-shadow:inset 0 1px 0 var(--dm-vetrino);
   transition:background .4s ease,box-shadow .4s ease}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-punti i[data-on="true"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-punti i[data-on="true"]{
   background:linear-gradient(180deg,
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 78%,#fff),var(--dm-widget-accent,#0ea5e9));
   box-shadow:0 5px 10px -6px var(--dm-widget-accent,#0ea5e9),inset 0 1px 0 rgba(255,255,255,.5)}
 /* La barra: il letto incavato e il pieno lucido. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-scala{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-scala{
   position:relative;width:62px;height:5px;border-radius:99px;overflow:hidden;
   background:color-mix(in srgb,var(--text,#0f172a) 10%,transparent);
   box-shadow:inset 0 1px 2px rgba(15,23,42,.16)}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-scala i{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-scala i{
   display:block;height:100%;border-radius:99px;
   background:linear-gradient(90deg,
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 55%,#fff),var(--dm-widget-accent,#0ea5e9));
   transition:width .5s cubic-bezier(.16,1,.3,1)}
 /* La batteria: si riempie, col vetrino sopra e il polo di lato. */
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-batt{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-batt{
   position:relative;display:flex;align-items:center;width:37px;height:18px;border-radius:6px;padding:2.6px;
   box-shadow:inset 0 0 0 1.8px color-mix(in srgb,var(--text,#0f172a) 20%,transparent),
              inset 0 1px 0 var(--dm-vetrino)}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-batt::after{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-batt::after{
   content:"";position:absolute;right:-4.5px;top:5px;width:3.4px;height:8px;border-radius:0 2px 2px 0;
   background:color-mix(in srgb,var(--text,#0f172a) 20%,transparent)}
-:is(#dm-widgets,#dm-widget-popup) .dm-tile-batt i{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-batt i{
   display:block;height:100%;border-radius:3px;
   background:linear-gradient(180deg,
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 75%,#fff),var(--dm-widget-accent,#0ea5e9));
@@ -8888,22 +9463,22 @@ body.dark-theme :is(#dm-widgets,#dm-widget-popup){
 
 /* Sugli schermi stretti scala tutto insieme, invece di tagliare. */
 @media(max-width:768px){
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile{padding:13px 13px 15px;min-height:110px;gap:9px}
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile-chip{flex-basis:36px;width:36px;height:36px;border-radius:13px}
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile-chip .dm-oggetto{width:23px;height:23px}
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile-cima{gap:9px}
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile-label{font-size:9.2px;letter-spacing:.07em}
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile-value{font-size:34px}
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile-caption{font-size:10.5px}
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile-scala{width:44px}
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile-punti i{width:6px;height:15px}
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile-batt{width:31px;height:16px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile{padding:13px 13px 15px;min-height:110px;gap:9px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip{flex-basis:36px;width:36px;height:36px;border-radius:13px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip .dm-oggetto{width:23px;height:23px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-cima{gap:9px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-label{font-size:9.2px;letter-spacing:.07em}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value{font-size:34px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-caption{font-size:10.5px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-scala{width:44px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-punti i{width:6px;height:15px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-batt{width:31px;height:16px}
 }
 @media(prefers-reduced-motion:reduce){
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile-alone,
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile[data-dm-accende]::after,
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile-chip[data-dm-sboccia],
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile-value .dm-cifra{animation:none}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-alone,
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-dm-accende]::after,
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip[data-dm-sboccia],
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value .dm-cifra{animation:none}
 }
 :is(#dm-widgets) .dm-widgets-sub{
   overflow:hidden;white-space:nowrap;text-overflow:clip}
@@ -8914,13 +9489,13 @@ body.dark-theme :is(#dm-widgets,#dm-widget-popup){
 @media(prefers-reduced-motion:reduce){
   :is(#dm-widgets) .dm-sub-scroll[data-dm-scroll="true"]{animation:none}
 }
-:is(#dm-widgets,#dm-widget-popup) .dm-widget-detail{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-widget-detail{
   grid-column:1/-1;position:relative;overflow:hidden;
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 26%,var(--card-border,#e8edf3));
   border-radius:20px;background:var(--card-bg,#fff);
   box-shadow:0 16px 36px rgba(15,23,42,.10);
   animation:dmWidgetIn .32s cubic-bezier(.16,1,.3,1)}
-:is(#dm-widgets,#dm-widget-popup) .dm-widget-detail::before{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-widget-detail::before{
   content:"";position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,transparent,var(--dm-widget-accent,#0ea5e9) 30%,var(--dm-widget-accent,#0ea5e9) 70%,transparent)}
 @keyframes dmWidgetIn{from{opacity:0;transform:translateY(-7px) scale(.985)}to{opacity:1;transform:none}}
@@ -8929,31 +9504,31 @@ body.dark-theme :is(#dm-widgets,#dm-widget-popup){
  * dissolvenza del telefono, ne' il rispetto di chi ha chiesto meno movimento
  * (osservazione giusta della review). */
 @media(pointer:coarse){
-  :is(#dm-widgets,#dm-widget-popup) .dm-widget-detail{animation:dmWidgetPopupIn .22s ease-out}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-widget-detail{animation:dmWidgetPopupIn .22s ease-out}
   /* E il velo sfocato dietro la card non si anima: ricomporre il fondale
    * sfumato a ogni fotogramma della dissolvenza e' il lavoro che sul telefono
    * faceva vibrare tutto lo sfondo. Il velo c'e' o non c'e'; a dissolversi
    * e' solo la card, che e' piccola. */
-  #dm-widget-popup{animation:none}
+  :is(#dm-widget-popup,#dm-casa-popup){animation:none}
 }
 @media(prefers-reduced-motion:reduce){
-  :is(#dm-widgets,#dm-widget-popup) .dm-widget-detail{animation:none}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-widget-detail{animation:none}
 }
-:is(#dm-widgets,#dm-widget-popup) .dm-w-head{display:flex;align-items:center;gap:9px;padding:13px 16px 10px}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-head-ic{font-size:16px}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-head strong{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-head{display:flex;align-items:center;gap:9px;padding:13px 16px 10px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-head-ic{font-size:16px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-head strong{
   font-size:12.5px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-head small{flex:1;min-width:0;font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8);
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-head small{flex:1;min-width:0;font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Il tondino da 28px e' della tessera in griglia: dentro la finestra di
  * dettaglio il Chiudi e' la pillola scritta della testata, e questa regola —
  * che viene dopo — la schiacciava a 28px facendo traboccare la scritta
  * («la x con chiudi ancora sballato»). */
-:is(#dm-widgets,#dm-widget-popup) .dm-w-close:not(.dm-widget-detail .dm-w-close){
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-close:not(.dm-widget-detail .dm-w-close){
   flex:0 0 28px;width:28px;height:28px;display:grid;place-items:center;border:0;border-radius:9px;
   background:var(--surface-3,#f1f5f9);color:var(--text-dim,#64748b);font-size:12px;cursor:pointer}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-body{display:grid;gap:2px;padding:0 10px 12px}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-row{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-body{display:grid;gap:2px;padding:0 10px 12px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-row{
   display:flex;align-items:center;gap:11px;min-height:42px;padding:5px 8px;border-radius:12px;
   animation:none;
   transition:background .2s ease}
@@ -8964,89 +9539,89 @@ body.dark-theme :is(#dm-widgets,#dm-widget-popup){
  * sfalsamenti qui sotto ritardavano un'animazione che era none. Non si
  * ripara: righe che scivolano dentro una card che sta ancora salendo sono
  * un secondo movimento sopra il primo, cioe' il tremolio. Se ne va tutto. */
-:is(#dm-widgets,#dm-widget-popup) .dm-w-row:hover{background:var(--surface-3,#f1f5f9)}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-glyph{flex:0 0 auto;font-size:15px;transition:filter .25s ease,opacity .25s ease}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-glyph[data-on="false"]{filter:grayscale(1);opacity:.4}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-appl-ic{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-row:hover{background:var(--surface-3,#f1f5f9)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-glyph{flex:0 0 auto;font-size:15px;transition:filter .25s ease,opacity .25s ease}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-glyph[data-on="false"]{filter:grayscale(1);opacity:.4}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic{
   flex:0 0 auto;display:grid;place-items:center;width:24px;height:24px;
   color:var(--dm-widget-accent,#06b6d4)}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-appl-ic svg{width:20px;height:20px;display:block;stroke:currentColor;fill:none}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-appl-ic svg [stroke],:is(#dm-widgets,#dm-widget-popup) .dm-w-appl-ic svg path,
-:is(#dm-widgets,#dm-widget-popup) .dm-w-appl-ic svg rect,:is(#dm-widgets,#dm-widget-popup) .dm-w-appl-ic svg circle,
-:is(#dm-widgets,#dm-widget-popup) .dm-w-appl-ic svg line{stroke:currentColor}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-appl-ic svg [fill="currentColor"]{fill:currentColor}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-alarm{display:inline-flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin-left:auto}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-alarm button{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg{width:20px;height:20px;display:block;stroke:currentColor;fill:none}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg [stroke],:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg path,
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg rect,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg circle,
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg line{stroke:currentColor}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg [fill="currentColor"]{fill:currentColor}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-alarm{display:inline-flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin-left:auto}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-alarm button{
   width:32px;height:28px;border-radius:9px;border:1px solid var(--card-border,#e2e8f0);
   background:var(--surface-2,#f8fafc);font-size:13px;line-height:1;cursor:pointer;
   transition:transform .15s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-alarm button:hover{transform:translateY(-1px)}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-alarm button[data-on="true"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-alarm button:hover{transform:translateY(-1px)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-alarm button[data-on="true"]{
   background:color-mix(in srgb,var(--dm-widget-accent,#10b981) 16%,transparent);
   border-color:var(--dm-widget-accent,#10b981);
   box-shadow:0 0 0 3px color-mix(in srgb,var(--dm-widget-accent,#10b981) 14%,transparent)}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-name{min-width:0;flex:1;display:grid;gap:0;font-size:13px;font-weight:700;
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-name{min-width:0;flex:1;display:grid;gap:0;font-size:13px;font-weight:700;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-name small{font-size:10.5px;font-weight:700;color:var(--text-dim,#94a3b8)}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-val{flex:0 0 auto;font-family:'Oswald',sans-serif;font-size:14px;font-weight:600}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-empty{margin:4px 8px;font-size:12.5px;font-weight:700;color:var(--text-dim,#64748b)}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-block{padding:4px 6px 6px}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-block-title{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-name small{font-size:10.5px;font-weight:700;color:var(--text-dim,#94a3b8)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-val{flex:0 0 auto;font-family:'Oswald',sans-serif;font-size:14px;font-weight:600}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-empty{margin:4px 8px;font-size:12.5px;font-weight:700;color:var(--text-dim,#64748b)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-block{padding:4px 6px 6px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-block-title{
   display:block;padding:4px 2px 7px;font-size:10.5px;font-weight:900;letter-spacing:1px;
   text-transform:uppercase;color:var(--text-dim,#64748b)}
 
 /* L'interruttore delle luci: una pillola che scatta. */
-:is(#dm-widgets,#dm-widget-popup) .dm-w-switch{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-switch{
   flex:0 0 40px;width:40px;height:23px;position:relative;border:0;border-radius:999px;cursor:pointer;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 32%,transparent);transition:background .25s ease}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-switch i{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-switch i{
   position:absolute;top:2.5px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;
   box-shadow:0 2px 6px rgba(15,23,42,.25);transition:transform .25s cubic-bezier(.16,1,.3,1)}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-switch[data-on="true"]{background:var(--dm-widget-accent,#f59e0b)}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-switch[data-on="true"] i{transform:translateX(16px)}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-power{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-switch[data-on="true"]{background:var(--dm-widget-accent,#f59e0b)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-switch[data-on="true"] i{transform:translateX(16px)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-power{
   flex:0 0 32px;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;cursor:pointer;
   border:1.5px solid var(--card-border,#e8edf3);background:transparent;color:var(--text-dim,#94a3b8);
   font-size:14px;transition:all .25s ease}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-power[data-on="true"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-power[data-on="true"]{
   border-color:transparent;background:var(--dm-widget-accent,#0ea5e9);color:#fff;
   box-shadow:0 4px 12px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 40%,transparent)}
 /* Il disegno dell'accensione sta al centro e prende il colore del tasto. */
-:is(#dm-widgets,#dm-widget-popup) .dm-w-power svg{display:block;width:17px;height:17px}
-#dm-widget-popup .dm-w-row .dm-w-power{display:grid;place-items:center}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-position{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-power svg{display:block;width:17px;height:17px}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-power{display:grid;place-items:center}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-position{
   appearance:none;-webkit-appearance:none;flex:0 0 auto;margin-left:5px;height:26px;
   width:34px;text-align:center;text-align-last:center;
   padding:0;border:1px solid var(--card-border,#e2e8f0);border-radius:9px;
   background:var(--surface-2,#f8fafc);color:var(--text,#0f172a);
   font:inherit;font-size:12px;font-weight:800;line-height:1;cursor:pointer;
   transition:border-color .2s ease,background .2s ease}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-position:hover{border-color:var(--dm-widget-accent,#8b5cf6)}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-arrows{display:inline-flex;gap:5px}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-arrows button{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-position:hover{border-color:var(--dm-widget-accent,#8b5cf6)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-arrows{display:inline-flex;gap:5px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-arrows button{
   width:29px;height:29px;display:grid;place-items:center;border-radius:9px;cursor:pointer;
   border:1px solid var(--card-border,#e8edf3);background:var(--surface-3,#f1f5f9);
   color:var(--text,#0f172a);font-size:11px;transition:all .2s ease}
 /* I tre comandi sono disegni, non caratteri: qui si dice solo quanto sono
    grandi, il colore lo prendono dalla riga come tutto il resto. */
-:is(#dm-widgets,#dm-widget-popup) .dm-w-arrows button svg{display:block;width:15px;height:15px}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-more svg{display:block;width:15px;height:15px}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-more{display:grid;place-items:center}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-arrows button:hover{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-arrows button svg{display:block;width:15px;height:15px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-more svg{display:block;width:15px;height:15px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-more{display:grid;place-items:center}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-arrows button:hover{
   background:var(--dm-widget-accent,#8b5cf6);border-color:transparent;color:#fff}
 
 /* Le miniature delle telecamere: il letterbox scuro del muro, in piccolo. */
-:is(#dm-widgets,#dm-widget-popup) .dm-w-cams{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:2px 6px 4px}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-cam{position:relative;margin:0;border-radius:14px;overflow:hidden;background:#0b1220;aspect-ratio:16/9}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-cam img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cams{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:2px 6px 4px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam{position:relative;margin:0;border-radius:14px;overflow:hidden;background:#0b1220;aspect-ratio:16/9}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;
   transition:opacity .4s ease,transform .6s cubic-bezier(.16,1,.3,1)}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-cam:hover img{transform:scale(1.06)}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-cam-live{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam:hover img{transform:scale(1.06)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam-live{
   display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;
   background:#f87171;vertical-align:1px;animation:dmWidgetLive 1.6s steps(1) infinite}
 @keyframes dmWidgetLive{0%,100%{opacity:1}50%{opacity:.25}}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-cam img[data-dm-camera-state="ready"]{opacity:1}
-:is(#dm-widgets,#dm-widget-popup) .dm-w-cam figcaption{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam img[data-dm-camera-state="ready"]{opacity:1}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam figcaption{
   position:absolute;left:0;right:0;bottom:0;padding:5px 9px;
   font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#e2eefb;
   background:linear-gradient(0deg,rgba(2,6,15,.72),transparent)}
@@ -9061,83 +9636,83 @@ body.dark-theme :is(#dm-widgets,#dm-widget-popup){
 /* I due pezzi dell'Agenda (#259): impegni sopra, cose da fare sotto. Il
    titolo di ognuno e' quello che li tiene distinti — mescolarli in un elenco
    solo darebbe righe che si somigliano e non fanno la stessa cosa. */
-:is(#dm-widgets,#dm-widget-popup) .dm-ag-parte + .dm-ag-parte{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-ag-parte + .dm-ag-parte{
   margin-top:18px;padding-top:16px;border-top:1px solid var(--card-border,#e2e8f0)}
-:is(#dm-widgets,#dm-widget-popup) .dm-ag-titolo{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-ag-titolo{
   margin:0 0 10px;font-size:12px;font-weight:900;letter-spacing:.4px;
   color:var(--text,#0f172a)}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-cal-lista{list-style:none;margin:0;padding:0 2px;display:grid;gap:9px}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-cal-evento{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-lista{list-style:none;margin:0;padding:0 2px;display:grid;gap:9px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-evento{
   display:flex;align-items:flex-start;gap:11px;min-width:0}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-cal-ora{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-ora{
   flex:0 0 auto;min-width:78px;font-size:11.5px;font-weight:800;line-height:1.5;
   font-variant-numeric:tabular-nums;color:var(--text-dim,#64748b);padding-top:1px}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-cal-testo{display:grid;gap:1px;min-width:0;flex:1}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-cal-testo b{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-testo{display:grid;gap:1px;min-width:0;flex:1}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-testo b{
   font-size:13px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-cal-testo small{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-testo small{
   font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8);overflow-wrap:anywhere}
 /* Quello che sta succedendo adesso si stacca dagli altri: e' la riga per cui
    si e' aperta la finestra. */
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-cal-evento[data-adesso="true"] .dm-cal-ora,
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-cal-evento[data-adesso="true"] .dm-cal-testo b{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-evento[data-adesso="true"] .dm-cal-ora,
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-evento[data-adesso="true"] .dm-cal-testo b{
   color:var(--dm-widget-accent,#6366f1)}
 /* Il fondo del pannello, dove sta il tasto per segnare un impegno nuovo. */
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-cal-fondo{display:flex;justify-content:center;padding:6px 0 2px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-fondo{display:flex;justify-content:center;padding:6px 0 2px}
 /* Una scadenza dentro l'agenda (#259): la casella al posto dei tasti, e la
    parola «Da fare» dove gli altri hanno l'ora. Si vede che e' un'altra cosa
    senza doverla leggere. */
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-cal-evento[data-scadenza="true"] .dm-cal-ora{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-evento[data-scadenza="true"] .dm-cal-ora{
   color:var(--dm-widget-accent,#6366f1);opacity:.85}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-cal-evento[data-scadenza="true"] .dm-todo-check{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-evento[data-scadenza="true"] .dm-todo-check{
   margin-top:0;flex:0 0 19px;width:19px;height:19px}
 /* Quello che e' scaduto: il blocco si stacca dagli altri, perche' e' la riga
    per cui si apre l'agenda. */
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-w-block[data-dm-ritardo="true"] .dm-w-block-title{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-w-block[data-dm-ritardo="true"] .dm-w-block-title{
   color:#b91c1c}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-w-block[data-dm-ritardo="true"] .dm-cal-ora{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-w-block[data-dm-ritardo="true"] .dm-cal-ora{
   color:#b91c1c;opacity:1}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-cal-adesso{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-adesso{
   flex:0 0 auto;align-self:center;padding:3px 9px;border-radius:999px;
   font-size:9.5px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:#fff;
   background:var(--dm-widget-accent,#6366f1)}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-todo-items{list-style:none;margin:0;padding:0 2px;display:grid;gap:8px}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-todo-item{display:flex;align-items:flex-start;gap:10px;min-width:0}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-todo-check{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-items{list-style:none;margin:0;padding:0 2px;display:grid;gap:8px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-item{display:flex;align-items:flex-start;gap:10px;min-width:0}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-check{
   position:relative;flex:0 0 21px;width:21px;height:21px;margin-top:1px;border-radius:50%;cursor:pointer;
   border:2px solid color-mix(in srgb,var(--text-dim,#94a3b8) 55%,transparent);background:transparent;padding:0;
   transition:border-color .2s ease,background .25s ease,transform .15s ease}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-todo-check:hover{border-color:var(--dm-widget-accent,#059669);transform:scale(1.08)}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-todo-check::after{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-check:hover{border-color:var(--dm-widget-accent,#059669);transform:scale(1.08)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-check::after{
   content:"✓";position:absolute;inset:0;display:grid;place-items:center;
   color:#fff;font-size:12px;font-weight:900;opacity:0;transform:scale(.4);
   transition:opacity .2s ease,transform .25s cubic-bezier(.16,1,.3,1)}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-todo-item.is-done .dm-todo-check{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-item.is-done .dm-todo-check{
   border-color:var(--dm-widget-accent,#059669);background:var(--dm-widget-accent,#059669)}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-todo-item.is-done .dm-todo-check::after{opacity:1;transform:scale(1)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-item.is-done .dm-todo-check::after{opacity:1;transform:scale(1)}
 /* Il testo si prende lo spazio che avanza, cosi' la matita e il cestino
    restano insieme a destra: senza, la matita resta attaccata alla parola e il
    cestino se ne va da solo in fondo. */
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-todo-text{flex:1;min-width:0;font-size:13.5px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-todo-item.is-done .dm-todo-text{color:var(--text-dim,#94a3b8);text-decoration:line-through}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-todo-due{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-text{flex:1;min-width:0;font-size:13.5px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-item.is-done .dm-todo-text{color:var(--text-dim,#94a3b8);text-decoration:line-through}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-due{
   display:inline-flex;align-items:center;gap:3px;margin-left:7px;padding:1px 7px;border-radius:999px;
   background:var(--surface-3,#f1f5f9);border:1px solid var(--card-border,#e8edf3);
   font-size:10.5px;font-weight:800;color:var(--text-dim,#64748b);white-space:nowrap;vertical-align:1px}
-:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-todo-due[data-overdue="true"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-due[data-overdue="true"]{
   background:rgba(244,63,94,.10);border-color:rgba(244,63,94,.30);color:#be123c}
 
 @media (prefers-reduced-motion:reduce){
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile,:is(#dm-widgets,#dm-widget-popup) .dm-tile-chevron,:is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-todo-check,
-  :is(#dm-widgets,#dm-widget-popup,#page-calendario) .dm-todo-check::after,:is(#dm-widgets,#dm-widget-popup) .dm-w-switch,:is(#dm-widgets,#dm-widget-popup) .dm-w-switch i,
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile-chip,:is(#dm-widgets,#dm-widget-popup) .dm-w-cam img,
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile .dm-tile-shine{transition:none}
-  :is(#dm-widgets,#dm-widget-popup) .dm-widget-detail,:is(#dm-widgets,#dm-widget-popup) .dm-tile,:is(#dm-widgets,#dm-widget-popup) .dm-w-row,
-  :is(#dm-widgets,#dm-widget-popup) .dm-tile[data-alert="true"] .dm-tile-chip::after,
-  :is(#dm-widgets,#dm-widget-popup) .dm-w-cam-live{animation:none}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chevron,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-check,
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-check::after,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-switch,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-switch i,
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam img,
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile .dm-tile-shine{transition:none}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-widget-detail,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-row,
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-alert="true"] .dm-tile-chip::after,
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam-live{animation:none}
 }
 @media (max-width:520px){
-  :is(#dm-widgets,#dm-widget-popup) .dm-widgets-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-widgets-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 }
 ${regoleCompatte()}
 `,

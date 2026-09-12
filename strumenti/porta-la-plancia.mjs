@@ -154,6 +154,51 @@ try {
 } catch (_errore) {
   /* Senza manifesto si va avanti col commit. */
 }
+/* La licenza della dashboard, accanto al suo codice — e il foglietto che dice
+ * di chi e' quella cartella.
+ *
+ * Li scrive **questo script**, e non e' un dettaglio: erano stati messi a mano
+ * il giorno che la repository e' diventata pubblica, e il primo import li ha
+ * cancellati tutti e due senza dire niente (la cartella si svuota prima di
+ * copiare). Una licenza che sparisce al prossimo aggiornamento della plancia
+ * non e' una licenza: e' un file. Adesso rinasce a ogni import, e si prende da
+ * dove sta di casa — la `LICENSE` del checkout da cui si copia — cosi' e'
+ * sempre la sua versione e non una copia che invecchia.
+ *
+ * Stanno **sopra** le cartelle firmate (`legacy`, `src`, `avatars`, `brands`),
+ * quindi il sigillo non se ne accorge: vedi `ponte/src/provenienza.js`. */
+const LA_SUA_LICENZA = join(checkout, "LICENSE");
+if (existsSync(LA_SUA_LICENZA)) {
+  cpSync(LA_SUA_LICENZA, join(DESTINAZIONE, "LICENSE"));
+}
+writeFileSync(
+  join(DESTINAZIONE, "LEGGIMI.txt"),
+  "Questa cartella non e' di gdahome: e' una copia di DashboardModern.\n" +
+    "\n" +
+    "Che versione, da quale commit e con quali impronte sta scritto in\n" +
+    "ORIGINE.json, accanto. La porta dentro strumenti/porta-la-plancia.mjs, e il\n" +
+    "ponte la ricontrolla a ogni avvio (ponte/src/provenienza.js): se un file e'\n" +
+    "cambiato, lo dice invece di servirlo come se fosse l'originale.\n" +
+    "\n" +
+    "**La sua licenza e' la sua, e sta qui accanto: LICENSE.** Non e' quella di\n" +
+    "gdahome, che sta alla radice della repository. Sono due licenze diverse\n" +
+    "perche' sono due lavori diversi dello stesso autore, e quella di\n" +
+    "DashboardModern vieta a chiunque altro di ridistribuirla, di farne versioni\n" +
+    "derivate e di metterla in un prodotto a pagamento.\n" +
+    "\n" +
+    "Detto per chi passa di qui: il fatto che questo codice si legga non vuol dire\n" +
+    "che si possa prendere. Si legge perche' un add-on di Home Assistant e' fatto\n" +
+    "di file che stanno sul disco di chi lo installa, e nasconderli sarebbe\n" +
+    "teatro.\n" +
+    "\n" +
+    "Non si modifica niente qui dentro, e non servirebbe: al prossimo import\n" +
+    "questa cartella si rifa' da zero. Le aggiunte di gdahome alla plancia — il\n" +
+    "nome, il marchio, le tessere che nell'app non ci vanno — stanno nella pagina\n" +
+    "servita: ponte/src/premesse.js per Home Assistant,\n" +
+    "app/lib/plancia/premesse.dart per l'app. E' per quello che questa cartella\n" +
+    "resta quella che e'.\n",
+);
+
 writeFileSync(
   join(DESTINAZIONE, "ORIGINE.json"),
   JSON.stringify(

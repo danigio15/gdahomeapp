@@ -44,8 +44,17 @@ import {
   overridesPerCentrale,
 } from "../core/alarm-panel.js";
 import {
+  ceQualcosaDaMostrare,
+  ingressiDellaCentrale,
+  zoneDellaCentrale,
+} from "../core/le-zone-della-centrale.js";
+import { CHIAVE_PRESENZA, contoDellaPresenza, presenzaDiCasa } from "../core/presenza-in-casa.js";
+import { CHIAVE_VARCHI, contoDeiVarchi, varchiDiCasa } from "../core/varchi-di-casa.js";
+import {
   CHIAVE_ANTIFURTO_SU_MISURA,
   chiamataDelModo,
+  ilCodiceApreIlModo,
+  ilModoChiedeIlCodice,
   modoDalServizio,
   modoSuMisuraAcceso,
   normalizzaModiSuMisura,
@@ -109,6 +118,35 @@ const copy = () => ({
     custom: { label: t("Parziale", "Partial"), hint: t("Con esclusioni", "With bypass") },
     disarm: { label: t("Sblocca", "Disarm"), hint: t("Disinserisci", "Turn off") },
   },
+  /* Il vocabolario della centrale (#511): quello che la plancia chiama presenza
+   * e varco, sul pannello si chiama zona e ingresso. */
+  zoneTitolo: t("Zone e ingressi", "Zones and entry points"),
+  zone: t("Zone", "Zones"),
+  ingressi: t("Ingressi", "Entry points"),
+  /* Chi non risponde non si conta fra quelli a posto.
+   *
+   * E' la stessa regola delle pastiglie qui sotto — un sensore muto e' smorto,
+   * non verde — ma il sommario la tradiva: contava sul TOTALE, e con quattro
+   * zone tutte scollegate scriveva «4 in quiete», «4 chiusi». Su una sezione
+   * Sicurezza quella non e' un'imprecisione: e' presentare come sorvegliata
+   * una centrale che non sta guardando niente. I contatori tengono `liberi`,
+   * `chiusi` e `muti` proprio per questo, e qui si usano quelli. */
+  zoneSommario: (attive, libere, mute) =>
+    [
+      attive ? `${attive} ${t("in allarme", "triggered")}` : "",
+      libere ? `${libere} ${t("in quiete", "quiet")}` : "",
+      mute ? `${mute} ${t("non rispondono", "not answering")}` : "",
+    ]
+      .filter(Boolean)
+      .join(" · "),
+  ingressiSommario: (aperti, chiusi, muti) =>
+    [
+      aperti ? `${aperti} ${t("aperti", "open")}` : "",
+      chiusi ? `${chiusi} ${t("chiusi", "closed")}` : "",
+      muti ? `${muti} ${t("non rispondono", "not answering")}` : "",
+    ]
+      .filter(Boolean)
+      .join(" · "),
   cctv: t("Videosorveglianza", "Video surveillance"),
   rec: "REC",
   live: "LIVE",
@@ -268,6 +306,104 @@ function syncAree(shell, labels) {
   }
   const markup = filaDelleAree(lista, labels);
   if (fila.innerHTML !== markup) fila.innerHTML = markup;
+  return true;
+}
+
+/* ── le zone e gli ingressi della centrale (#511) ──────────────────────────
+ *
+ * «Tutti i miei sensori di presenza sono riferiti alla centrale: magari
+ * aprendo Sicurezza, dove leggo zone — sarebbero i sensori di presenza — e dove
+ * leggo ingressi — sarebbero i varchi mappati dalla centrale.»
+ *
+ * E' il vocabolario di chi una centrale ce l'ha davvero: quello che la plancia
+ * chiama «presenza» sul pannello si chiama zona, quello che chiama «varco» si
+ * chiama ingresso. Le due pagine restano dove sono; qui le stesse righe si
+ * rivedono dalla parte della Sicurezza, che e' il posto da cui si guarda prima
+ * di inserire l'antifurto.
+ *
+ * Le righe non si rifanno: sono quelle che la Presenza e i Varchi costruiscono
+ * gia', con gli stessi nomi e gli stessi stati. Chi appartiene a questa
+ * centrale lo dice `core/le-zone-della-centrale.js`, e la sua regola e' quella
+ * che fa funzionare la cosa senza configurare niente: una centrale che non ha
+ * dichiarato le sue zone le ha tutte. */
+function righeDellaPresenza() {
+  return presenzaDiCasa(allStates(), readJson(CHIAVE_PRESENZA, {}), (entity) =>
+    clean(allStates()?.[entity]?.attributes?.friendly_name),
+  );
+}
+
+function righeDeiVarchi() {
+  return varchiDiCasa(
+    allStates(),
+    readJson(CHIAVE_VARCHI, {}),
+    readJson("cd_stati_invertiti", []),
+    (entity) => clean(allStates()?.[entity]?.attributes?.friendly_name),
+  );
+}
+
+function pastigliaDellaZona(riga) {
+  /* Attivo, libero, muto: gli stessi tre stati della pagina Presenza, con gli
+   * stessi colori. Uno che non risponde non e' «libero» — contarlo libero
+   * sarebbe la bugia tranquillizzante che quella pagina evita gia'. */
+  const come = riga.stato === "attivo" ? "attiva" : riga.stato === "libero" ? "libera" : "muta";
+  return `<span class="dm-sec-zona" data-stato="${esc(come)}" title="${esc(riga.entity)}">
+    <i aria-hidden="true">${riga.glifo}</i><b>${esc(riga.name)}</b></span>`;
+}
+
+function pastigliaDellIngresso(riga) {
+  const come = riga.stato === "aperto" ? "aperto" : riga.stato === "chiuso" ? "chiuso" : "muto";
+  return `<span class="dm-sec-zona" data-stato="${esc(come)}" title="${esc(riga.entity)}">
+    <i aria-hidden="true">${riga.glifo}</i><b>${esc(riga.name)}</b></span>`;
+}
+
+function riquadroDelleZone(zone, ingressi, labels) {
+  const conto = contoDellaPresenza(zone);
+  const varchi = contoDeiVarchi(ingressi);
+  const fila = (titolo, sommario, pastiglie) =>
+    pastiglie
+      ? `<div class="dm-sec-zone-fila">
+          <div class="dm-sec-zone-cap"><strong>${esc(titolo)}</strong><span>${esc(sommario)}</span></div>
+          <div class="dm-sec-zone-righe">${pastiglie}</div>
+        </div>`
+      : "";
+  return `<div class="dm-sec-zone-head">
+      <span class="dm-sec-zone-ic" aria-hidden="true">${ICONS.shield}</span>
+      <h3>${esc(labels.zoneTitolo)}</h3>
+    </div>
+    ${fila(
+      labels.zone,
+      labels.zoneSommario(conto.attivi, conto.liberi, conto.muti),
+      zone.map(pastigliaDellaZona).join(""),
+    )}
+    ${fila(
+      labels.ingressi,
+      labels.ingressiSommario(varchi.aperti, varchi.chiusi, varchi.muti),
+      ingressi.map(pastigliaDellIngresso).join(""),
+    )}`;
+}
+
+function syncZone(shell, labels) {
+  const stage = shell.querySelector("#alarm-stage");
+  if (!stage) return false;
+  const lista = centraliDiCasa();
+  const centrale = lista.find((riga) => riga.corrente === true) || lista[0] || {};
+  const zone = zoneDellaCentrale(righeDellaPresenza(), centrale);
+  const ingressi = ingressiDellaCentrale(righeDeiVarchi(), centrale);
+  let riquadro = shell.querySelector("[data-dm-sec-zone]");
+  /* Senza niente da dire il riquadro non c'e': un titolo «Zone» sopra il vuoto
+   * non dice che non ci sono zone, sembra che la pagina si sia rotta. */
+  if (!ceQualcosaDaMostrare(zone, ingressi)) {
+    riquadro?.remove();
+    return false;
+  }
+  if (!riquadro) {
+    riquadro = doc.createElement("section");
+    riquadro.className = "dm-sec-zone";
+    riquadro.dataset.dmSecZone = "true";
+    stage.after(riquadro);
+  }
+  const markup = riquadroDelleZone(zone, ingressi, labels);
+  if (riquadro.innerHTML !== markup) riquadro.innerHTML = markup;
   return true;
 }
 
@@ -596,6 +732,9 @@ export function renderSecurity() {
   syncModes(shell, labels);
   /* E la fila delle aree, quando ce n'è più d'una. */
   syncAree(shell, labels);
+  /* Le zone e gli ingressi della centrale (#511): le stesse righe della
+   * Presenza e dei Varchi, chiamate col nome che hanno sul pannello. */
+  syncZone(shell, labels);
 
   const models = cameraModels();
   // A rebuilt wall is a wall of empty <img> elements: whatever frame the live
@@ -735,6 +874,17 @@ async function premiIlModoSuMisura(id) {
   }
 }
 
+/* Il nome del tasto scritto sul tastierino del guscio.
+ *
+ * Il guscio la scritta la pesca da una tabella di servizi della centrale, e
+ * per un tasto su misura non la trova: scrive «Azione». Il tasto un nome ce
+ * l'ha — l'ha battuto chi ha configurato — ed e' l'unica cosa che dice a chi
+ * ha il tastierino davanti cosa sta per far partire. */
+function nominaIlTastierino(modo) {
+  const riquadro = doc?.getElementById?.("keypad-action-name");
+  if (riquadro) riquadro.textContent = clean(modo?.nome) || clean(modo?.entita);
+}
+
 function agganciaIModiSuMisura() {
   const nome = "promptPinAndSet";
   const originale = root[nome];
@@ -745,7 +895,51 @@ function agganciaIModiSuMisura() {
      * tastierino compreso. Chiamarlo con un nome che non e' un servizio di
      * `alarm_control_panel` sarebbe l'unico modo di romperlo. */
     if (!id) return originale.apply(this, argomenti);
+    /* Un tasto col PIN passa dal guscio come tutti gli altri (#336): lui
+     * chiede a `dmAlarmCodeNeeded` — che adesso risponde anche per noi —, apre
+     * il SUO tastierino e, all'OK, chiama `callAlarmService` col codice
+     * digitato. Li' sotto lo riprendiamo. Un secondo tastierino uguale accanto
+     * al primo sarebbe due posti dove si scrive un codice e due modi di
+     * sbagliarlo. */
+    const modo = modiSuMisura().find((voce) => voce.id === id);
+    if (ilModoChiedeIlCodice(modo)) {
+      const esito = originale.apply(this, argomenti);
+      nominaIlTastierino(modo);
+      return esito;
+    }
     premiIlModoSuMisura(id);
+    return undefined;
+  }
+  Object.assign(avvolta, originale);
+  avvolta.__dmAntifurtoSuMisura = true;
+  avvolta.__dmPrevious = originale;
+  root[nome] = avvolta;
+  return true;
+}
+
+/* L'OK del tastierino, per un tasto scritto a mano (#336).
+ *
+ * Premuto OK, il guscio chiama `callAlarmService(servizio, codice)` — che sa
+ * mandare solo servizi di `alarm_control_panel` sulla centrale scritta nella
+ * mappatura. Per un tasto su misura quella chiamata non esiste: qui si
+ * intercetta, si confronta il codice digitato con quello della riga, e solo se
+ * combacia parte l'entita'.
+ *
+ * Il codice sbagliato non fa partire niente e non dice niente da qui: il
+ * tastierino del guscio si e' gia' chiuso quando questa viene chiamata, e una
+ * finestra d'errore aperta su una finestra appena chiusa e' il modo peggiore
+ * di dirlo. Non succedere e' la risposta: chi ha sbagliato riapre e riprova,
+ * che e' esattamente quello che fa la centrale vera quando Home Assistant le
+ * rifiuta il codice. */
+function agganciaIlCodiceDeiModiSuMisura() {
+  const nome = "callAlarmService";
+  const originale = root[nome];
+  if (typeof originale !== "function" || originale.__dmAntifurtoSuMisura) return false;
+  function avvolta(...argomenti) {
+    const id = modoDalServizio(argomenti[0]);
+    if (!id) return originale.apply(this, argomenti);
+    const modo = modiSuMisura().find((voce) => voce.id === id);
+    if (modo && ilCodiceApreIlModo(modo, argomenti[1])) premiIlModoSuMisura(id);
     return undefined;
   }
   Object.assign(avvolta, originale);
@@ -762,7 +956,18 @@ function agganciaIModiSuMisura() {
  * restare una sola: sta in `core/alarm-panel.js`, e qui le si apre una porta.
  * Se questi non ci sono, il runtime si comporta come si e' sempre comportato. */
 function publishAlarmHelpers() {
-  root.dmAlarmCodeNeeded = (service) => alarmCodeNeeded(alarmStateObject(), service);
+  /* Se prima di questo tasto va chiesto il codice.
+   *
+   * Per la centrale lo dice la centrale, con `code_format`. Per un tasto
+   * scritto a mano lo dice chi l'ha scritto, col PIN nella sua riga (#336):
+   * uno script un codice non lo accetta, quindi chiederlo qui e' l'unico modo
+   * di averlo. Una domanda sola per tutti e due, perche' il tastierino che si
+   * apre e' lo stesso. */
+  root.dmAlarmCodeNeeded = (service) => {
+    const id = modoDalServizio(service);
+    if (id) return ilModoChiedeIlCodice(modiSuMisura().find((voce) => voce.id === id));
+    return alarmCodeNeeded(alarmStateObject(), service);
+  };
   /* Quale tasto e' acceso, con due domande separate.
    *
    * Il ripiego su «Fuori» dentro `alarmActiveMode` serve per le centrali che
@@ -788,6 +993,7 @@ export function installSecurityShowcaseSection() {
   publishAlarmHelpers();
   installOverrides();
   agganciaIModiSuMisura();
+  agganciaIlCodiceDeiModiSuMisura();
   agganciaLaFinestraRapida();
   if (!state.listeners) {
     state.listeners = true;
@@ -804,6 +1010,7 @@ export function installSecurityShowcaseSection() {
       root.addEventListener?.(eventName, () => {
         installOverrides();
         agganciaIModiSuMisura();
+        agganciaIlCodiceDeiModiSuMisura();
         agganciaLaFinestraRapida();
         renderSecurity();
       });
@@ -974,6 +1181,33 @@ function securityCss() {
 /* Le aree (#285): la fila sopra il quadrante, con lo stato di ognuna.
    Con due aree si vuole sapere se l'altra è inserita senza passare di là. */
 .dm-sec-aree{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+/* Le zone e gli ingressi della centrale (#511): stessa carta delle altre
+   sezioni della pagina, e le pastiglie col colore del loro stato — lo stesso
+   rosso delle aperture, lo stesso verde della quiete. Le righe scorrono se non
+   ci stanno: una casa con trenta sensori non deve allungare la pagina. */
+.dm-sec-zone{margin:0 0 16px;padding:14px 16px;border-radius:20px;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
+.dm-sec-zone-head{display:flex;align-items:center;gap:9px;margin:0 0 10px}
+.dm-sec-zone-head h3{margin:0;font-size:13px;font-weight:900;letter-spacing:.8px;text-transform:uppercase}
+.dm-sec-zone-ic{display:inline-flex;width:22px;height:22px;opacity:.7}
+.dm-sec-zone-ic svg{width:100%;height:100%}
+.dm-sec-zone-fila{display:grid;gap:6px;margin:0 0 10px}
+.dm-sec-zone-fila:last-child{margin-bottom:0}
+.dm-sec-zone-cap{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.dm-sec-zone-cap strong{font-size:11.5px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}
+.dm-sec-zone-cap span{font-size:11px;font-weight:700;color:var(--secondary-text-color,#94a3b8)}
+.dm-sec-zone-righe{display:flex;gap:7px;flex-wrap:wrap}
+.dm-sec-zona{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:11.5px;font-weight:800;border:1px solid var(--card-border,#e2e8f0);background:var(--card-background-color,#fff)}
+.dm-sec-zona i{font-style:normal;line-height:1;display:inline-flex}
+.dm-sec-zona i svg{width:15px;height:15px}
+.dm-sec-zona[data-stato="attiva"],.dm-sec-zona[data-stato="aperto"]{
+  border-color:color-mix(in srgb,#dc2626 42%,transparent);
+  background:color-mix(in srgb,#dc2626 13%,var(--card-bg,#fff));color:#b91c1c}
+.dm-sec-zona[data-stato="libera"],.dm-sec-zona[data-stato="chiuso"]{
+  border-color:color-mix(in srgb,#16a34a 38%,transparent);
+  background:color-mix(in srgb,#16a34a 11%,var(--card-bg,#fff));color:#15803d}
+/* Chi non risponde non e' verde: contarlo a posto sarebbe la bugia
+   tranquillizzante che le due pagine evitano gia' nel loro conto. */
+.dm-sec-zona[data-stato="muta"],.dm-sec-zona[data-stato="muto"]{opacity:.6}
 .dm-sec-area{
   flex:1 1 140px;display:flex;flex-direction:column;gap:2px;align-items:flex-start;
   padding:9px 13px;border-radius:14px;font:inherit;text-align:left;cursor:pointer;
@@ -1064,7 +1298,7 @@ function securityCss() {
   color:var(--dm-sec-dim);padding:4px 11px;border-radius:9px;
   background:var(--surface-3,#f1f5f9);border:1px solid var(--dm-sec-border)
 }
-.dm-sec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));gap:16px}
+.dm-sec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(288px,100%),1fr));gap:16px}
 .dm-sec-grid[hidden]{display:none}
 .dm-sec-cctv.is-empty .dm-sec-rec{display:none}
 
@@ -1186,7 +1420,7 @@ function securityCss() {
    than as one full-width status line above a very wide keypad. */
 @media(min-width:1000px){
   .dm-sec-alarm{
-    display:grid;grid-template-columns:minmax(0,1fr) minmax(370px,.82fr);
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(min(370px,100%),.82fr);
     align-items:center;gap:30px;padding:30px
   }
   .dm-sec-modes{margin-top:0}

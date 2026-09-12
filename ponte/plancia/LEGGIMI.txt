@@ -16,7 +16,9 @@ che si possa prendere. Si legge perche' un add-on di Home Assistant e' fatto
 di file che stanno sul disco di chi lo installa, e nasconderli sarebbe
 teatro.
 
-Non si modifica niente qui dentro. Le aggiunte di gdahome alla plancia
-stanno nella pagina servita — ponte/src/premesse.js per Home Assistant,
-app/lib/plancia/premesse.dart per l'app — proprio perche' questa cartella
-resti quella che e'.
+Non si modifica niente qui dentro, e non servirebbe: al prossimo import
+questa cartella si rifa' da zero. Le aggiunte di gdahome alla plancia — il
+nome, il marchio, le tessere che nell'app non ci vanno — stanno nella pagina
+servita: ponte/src/premesse.js per Home Assistant,
+app/lib/plancia/premesse.dart per l'app. E' per quello che questa cartella
+resta quella che e'.

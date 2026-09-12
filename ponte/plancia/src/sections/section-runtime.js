@@ -52,7 +52,7 @@ import { installTelecameraWebRtc } from "./telecamera-webrtc-section.js";
 import { installConnectionRecoverySection } from "./connection-recovery-section.js";
 import { installAlarmModesEditorSection } from "./alarm-modes-editor-section.js";
 import { installAntifurtoSuMisuraEditorSection } from "./antifurto-su-misura-editor-section.js";
-import { installFlussoDiCasaSection } from "./flusso-di-casa-section.js";
+import { installRilevamentiEditorSection } from "./rilevamenti-editor-section.js";
 import { installQuickClimateEditorSection } from "./quick-climate-editor-section.js";
 import { installVmcEditor } from "./vmc-editor-section.js";
 import { installAssistSection } from "./assist-section.js";
@@ -83,15 +83,18 @@ import { installAzioniRapideVassoio } from "./azioni-rapide-vassoio-section.js";
 import { installAzioniServizioGiusto } from "./azioni-servizio-giusto-section.js";
 import { installFoglioDelGuscio } from "./foglio-del-guscio-section.js";
 import { installStrisceDiLinguette } from "./le-strisce-di-linguette-section.js";
+import { installLaCardDelMeteo } from "./la-card-del-meteo-section.js";
 import { installWeatherInMasthead } from "./weather-in-masthead-section.js";
 import { installShutterSceneSection } from "./shutter-scene-section.js";
 import { installClimatePowerSection } from "./climate-power-section.js";
 import { installAlberatura } from "./alberatura-del-config-section.js";
 import { installIlDitoScorreOTocca } from "./il-dito-scorre-o-tocca-section.js";
 import { installElencoDelleSezioni } from "./lelenco-delle-sezioni-section.js";
+import { installModoChiosco } from "./modo-chiosco-section.js";
 import { installBatterie } from "./batterie-section.js";
 import { installBatterieEditor } from "./batterie-editor-section.js";
 import { installVideoSiMuove } from "./telecamera-il-video-si-muove-section.js";
+import { installTelecameraCapacita } from "./telecamera-capacita-section.js";
 import { installTelecameraSubito } from "./telecamera-subito-section.js";
 import { installShutterSkySection } from "./shutter-sky-section.js";
 import { installShutterWindowSection } from "./shutter-window-section.js";
@@ -102,8 +105,10 @@ import { installRobotSection } from "./robot-section.js";
 import { installAnimaliSection } from "./animali-section.js";
 import { installPreseSection } from "./prese-section.js";
 import { installEnergyPlantsSection } from "./energy-plants-section.js";
+import { installLaSogliaDellaPotenza } from "./la-soglia-della-potenza-section.js";
 import { installRoomAssignSection } from "./room-assign-section.js";
 import { installRoomsPageSection } from "./rooms-page-section.js";
+import { installStanzeInPlancia } from "./stanze-in-plancia-section.js";
 import { installRoomsOrderEditor } from "./rooms-order-editor-section.js";
 import { installAutoIntegrazione } from "./auto-integrazione-section.js";
 import { installEnergiaCerchiStorico } from "./energia-cerchi-storico-section.js";
@@ -913,7 +918,7 @@ export function installSectionRuntime() {
      * accetta: si installa dopo di lei, che quella risposta la pubblica. */
     installAlarmModesEditorSection();
     installAntifurtoSuMisuraEditorSection();
-    installFlussoDiCasaSection();
+    installRilevamentiEditorSection();
     installClimateThermalSection();
     /* Le voci termiche del popup Caldo: dopo chi disegna il popup, cosi' il
      * pannello passa di mano una volta sola. */
@@ -969,6 +974,7 @@ export function installSectionRuntime() {
      * si prova per prima la volta dopo: «sono lentissime e non carica
      * immediatamente immagine». Si installa DOPO chi avvolge le singole
      * strade, cosi' la scorciatoia chiama quelle gia' corrette. */
+    installTelecameraCapacita();
     installTelecameraSubito();
     /* Le linguette del Config in ordine di alberatura, con l'insegna della
      * famiglia davanti a ognuna: si installa dopo tutti gli editor che una
@@ -981,6 +987,10 @@ export function installSectionRuntime() {
     /* L'elenco unico delle sezioni, in ⚙️ Impostazioni: cosa c'e' e se si
      * vede, senza aprire ventiquattro schede per scoprirlo. */
     installElencoDelleSezioni();
+    /* E l'interruttore del modo chiosco, nella stessa scheda (#480): c'era gia'
+     * ma si accendeva solo tenendo premuto l'hamburger o scrivendo ?kiosk=1
+     * nell'indirizzo, cioe' per chi lo cercava non c'era. */
+    installModoChiosco();
     /* Le batterie hanno la loro pagina e la loro scheda (#398): «le batterie
      * quelle cariche non le fa vedere? sarebbe carino che stessero nel config
      * come le altre cose». */
@@ -992,6 +1002,10 @@ export function installSectionRuntime() {
      * dopo le intestazioni di pagina, che dell'intestazione della plancia non
      * si occupano, ma e' li' che si va a cercarle. */
     installWeatherInMasthead();
+    /* E quando il riquadro scende in pagina diventa una card: si installa dopo
+     * chi lo possiede, perche' la card e' il suo vestito da fuori — il
+     * riquadro resta uno solo, e chi lo sposta resta uno solo. */
+    installLaCardDelMeteo();
     /* Le azioni rapide entrano nel loro ripiano: si installa dopo chi disegna
      * la Home, perche' il ripiano si mette attorno a una griglia che deve
      * gia' esistere. */
@@ -1010,6 +1024,9 @@ export function installSectionRuntime() {
     /* Le Stanze leggono le assegnazioni di tutte le altre sezioni e
      * riusano la card della pagina Luci: si installano dopo di lei. */
     installRoomsPageSection();
+    /* Il blocco delle stanze in plancia (#493) chiede alla pagina Stanze chi
+     * c'e' e dove portare col tocco: si installa dopo di lei. */
+    installStanzeInPlancia();
     /* L'ordine delle stanze si cambia in configurazione: le frecce si
      * appoggiano alle righe che disegna il documento vendorizzato. */
     installRoomsOrderEditor();
@@ -1019,6 +1036,10 @@ export function installSectionRuntime() {
     /* Le linguette degli impianti leggono la sezione Energia e le si
      * posano sopra: si installano dopo di lei. */
     installEnergyPlantsSection();
+    /* La soglia di potenza (#508) sta nelle impostazioni dell'Energia e legge
+     * le letture che fa il ponte dei widget: si installa dopo l'una e dopo
+     * l'altro, cosi' la sua scheda trova il pannello gia' in piedi. */
+    installLaSogliaDellaPotenza();
     installEditorEntrySection();
     installMediaPickerSection();
     /* Le persone leggono `cd_people` e basta; il loro editor usa il selettore
