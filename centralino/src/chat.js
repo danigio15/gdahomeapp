@@ -59,6 +59,19 @@ export const LIMITI = Object.freeze({
 
 const ORA = 60 * 60 * 1000;
 
+/* Quanti tentativi sbagliati prima di chiudere la porta, e per quanto.
+ *
+ * Serve da quando la chiave della console la puo' **scegliere** una persona, e
+ * una chiave scelta da una persona si prova. Senza un freno, provarle da fuori
+ * costa solo il tempo che ci mette la macchina a rispondere — qualche migliaio
+ * al minuto, e una parola che uno si ricorda cade in mezz'ora. Con il freno ne
+ * passano dieci ogni quarto d'ora, e non cade piu' niente.
+ *
+ * Si conta per indirizzo e non in totale: un totale unico vorrebbe dire che
+ * chiunque, provando a caso, chiude fuori anche chi risponde. */
+const SBAGLI_PRIMA_DI_CHIUDERE = 10;
+const QUANTO_RESTA_CHIUSA = 15 * 60 * 1000;
+
 export const LINEA_VALIDA = /^casa_[0-9a-f]{32}$/;
 
 export const VIA_DELLA_CASA = "/casa/messaggi";
@@ -322,9 +335,53 @@ function chiaveDellaRichiesta(richiesta) {
 }
 
 export class Chat {
-  constructor({ archivio, chiaveDellaConsole = "" }) {
+  constructor({ archivio, chiaveDellaConsole = "", adesso = () => Date.now() }) {
     this.archivio = archivio;
     this.chiaveDellaConsole = String(chiaveDellaConsole || "");
+    this.adesso = adesso;
+    /* Chi ha sbagliato, quante volte, e fino a quando resta fuori. Sta in
+     * memoria e basta: un riavvio la azzera, ed e' giusto — chi riavvia il
+     * tramite e' chi ce l'ha in mano. */
+    this._sbagli = new Map();
+  }
+
+  /* Da dove bussa davvero.
+   *
+   * Davanti c'e' Caddy, quindi il socket dice sempre 127.0.0.1 e contare per
+   * socket vorrebbe dire contare tutti insieme. Caddy **aggiunge in coda** a
+   * `x-forwarded-for` l'indirizzo di chi ha bussato: l'ultimo della lista e'
+   * quello vero, quelli prima li puo' aver scritti chiunque. */
+  _daDove(richiesta) {
+    const pezzi = String(richiesta.headers["x-forwarded-for"] || "")
+      .split(",")
+      .map((uno) => uno.trim())
+      .filter(Boolean);
+    return pezzi.length ? pezzi[pezzi.length - 1] : richiesta.socket?.remoteAddress || "?";
+  }
+
+  _chiusaPer(da) {
+    const segnato = this._sbagli.get(da);
+    if (!segnato) return 0;
+    const quanto = segnato.chiusaFino - this.adesso();
+    return quanto > 0 ? quanto : 0;
+  }
+
+  _unoSbagliato(da) {
+    const ora = this.adesso();
+    /* Una pulita ai vecchi, cosi' la memoria non cresce all'infinito con gli
+     * indirizzi di chi ha provato una volta sei mesi fa. */
+    if (this._sbagli.size > 1000) {
+      for (const [chi, quando] of this._sbagli) {
+        if (quando.chiusaFino < ora) this._sbagli.delete(chi);
+      }
+    }
+    const segnato = this._sbagli.get(da) ?? { quanti: 0, chiusaFino: 0 };
+    segnato.quanti += 1;
+    if (segnato.quanti >= SBAGLI_PRIMA_DI_CHIUDERE) {
+      segnato.quanti = 0;
+      segnato.chiusaFino = ora + QUANTO_RESTA_CHIUSA;
+    }
+    this._sbagli.set(da, segnato);
   }
 
   /* Se la console si puo' aprire. Senza chiave lo sportello della casa
@@ -435,10 +492,23 @@ export class Chat {
   /* ─── Lo sportello della console ────────────────────────────────────── */
 
   async _console(richiesta, risposta, indirizzo) {
+    const da = this._daDove(richiesta);
+    const chiusaPer = this._chiusaPer(da);
+    if (chiusaPer) {
+      return male(
+        risposta,
+        429,
+        `troppi tentativi: riprova fra ${Math.ceil(chiusaPer / 60000)} minuti`,
+      );
+    }
+
     const chiave = chiaveDellaRichiesta(richiesta);
     if (!this.consoleAperta || !stessoSegreto(chiave, this.chiaveDellaConsole)) {
+      this._unoSbagliato(da);
       return male(risposta, 403, "chiave sbagliata");
     }
+    /* Entrato: quello che aveva sbagliato prima non conta piu'. */
+    this._sbagli.delete(da);
 
     const pezzi = indirizzo.pathname.split("/").filter(Boolean);
     const linea = pezzi[2] ? testoPulito(pezzi[2], 64) : "";

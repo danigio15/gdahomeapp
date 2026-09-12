@@ -587,18 +587,96 @@ cat <<FINE
 
       $CHIAVE_CONSOLE
 
-  Se la perdi non e' un disastro: si rifa' con
-      tramite-chiave-nuova
+  Se la perdi non serve rifarla: e' scritta sulla macchina, e si rilegge.
+
+      tramite-chiave            la dice
+      tramite-chiave --nuova    ne fa una nuova
+      tramite-chiave <la tua>   mette quella che scegli tu
 
 FINE
 
-# Un comando per rifare la chiave, cosi' non serve ricordare dove sta scritta.
+# Tre cose sole sulla chiave della console: dirla, cambiarla, rifarla.
+#
+# La prima e' quella che conta. Prima si vedeva una volta e basta, e chi la
+# perdeva doveva rifarla — una scomodita' inventata, perche' quella chiave sta
+# gia' scritta sulla macchina, in un file che legge solo root. Bastava poterla
+# rileggere.
+cat >/usr/local/bin/tramite-chiave <<'FINE'
+#!/usr/bin/env bash
+#
+# La chiave della console della chat.
+#
+#   tramite-chiave              la dice
+#   tramite-chiave --nuova      ne fa una nuova, presa dal caso
+#   tramite-chiave <la tua>     mette quella che scegli tu
+#
+# Sta in /etc/tramite/ambiente, che legge solo root: non c'e' niente da
+# ricordare a memoria, e niente da perdere.
+set -euo pipefail
+AMBIENTE=/etc/tramite/ambiente
+
+[ -r "$AMBIENTE" ] || {
+  echo "non trovo $AMBIENTE: il tramite e' installato su questa macchina?" >&2
+  exit 1
+}
+
+dilla() { sed -n 's/^CHIAVE_CONSOLE=//p' "$AMBIENTE"; }
+
+mettila() {
+  nuova="$1"
+  # Non con `sed`: una chiave puo' contenere caratteri che sed interpreta come
+  # parte del comando. Con awk il valore entra come dato, non come programma.
+  tmp="$(mktemp)"
+  awk -v chiave="$nuova" '
+    /^CHIAVE_CONSOLE=/ { print "CHIAVE_CONSOLE=" chiave; fatto = 1; next }
+    { print }
+    END { if (!fatto) print "CHIAVE_CONSOLE=" chiave }
+  ' "$AMBIENTE" >"$tmp"
+  chmod 600 "$tmp"
+  chown root:root "$tmp"
+  mv "$tmp" "$AMBIENTE"
+  systemctl restart tramite
+}
+
+case "${1:-}" in
+  "")
+    printf '\nla chiave della console e:\n\n    %s\n\nsi apre qui:  https://%s/console/\n\n' \
+      "$(dilla)" "$(sed -n 's/^NOME_DEL_TRAMITE=//p' "$AMBIENTE" 2>/dev/null || true)"
+    ;;
+  --nuova)
+    nuova="$(head -c 48 /dev/urandom | base64 | tr -d '=+/' | cut -c1-48)"
+    mettila "$nuova"
+    printf '\nla chiave nuova e:\n\n    %s\n\nquella di prima non apre piu nulla.\n\n' "$nuova"
+    ;;
+  -h | --aiuto | --help)
+    sed -n '3,12p' "$0" | sed 's/^# \{0,1\}//'
+    ;;
+  *)
+    scelta="$1"
+    # Almeno sedici caratteri, e niente che rompa il file dove va scritta.
+    if [ "${#scelta}" -lt 16 ]; then
+      echo "troppo corta: almeno 16 caratteri (questa ne ha ${#scelta})." >&2
+      echo "Una chiave che si prova a indovinare va provata: corta, cade." >&2
+      exit 1
+    fi
+    case "$scelta" in
+      *[[:space:]]* | *\\*)
+        echo "niente spazi e niente barre rovesciate: la chiave finisce in un file" >&2
+        echo "di configurazione, e li' quei caratteri vogliono dire un'altra cosa." >&2
+        exit 1
+        ;;
+    esac
+    mettila "$scelta"
+    printf '\nfatto: da adesso si entra con quella che hai scelto.\n\n'
+    ;;
+esac
+FINE
+chmod 700 /usr/local/bin/tramite-chiave
+
+# Il nome vecchio continua a funzionare: e' scritto in giro, e un comando che
+# sparisce e' un comando che qualcuno cerchera' invano.
 cat >/usr/local/bin/tramite-chiave-nuova <<'FINE'
 #!/usr/bin/env bash
-set -euo pipefail
-nuova="$(head -c 48 /dev/urandom | base64 | tr -d '=+/' | cut -c1-48)"
-sed -i "s|^CHIAVE_CONSOLE=.*|CHIAVE_CONSOLE=$nuova|" /etc/tramite/ambiente
-systemctl restart tramite
-printf '\nla chiave nuova e:\n\n    %s\n\n' "$nuova"
+exec /usr/local/bin/tramite-chiave --nuova
 FINE
 chmod 700 /usr/local/bin/tramite-chiave-nuova

@@ -22,7 +22,7 @@ const centralinoFinto = { quanteCase: () => 0, quantiTelefoni: () => 0 };
 async function banco({ chiave = CHIAVE } = {}) {
   let orologio = Date.UTC(2026, 0, 1);
   const archivio = new ArchivioDellaChat(":memory:", { adesso: () => orologio });
-  const chat = new Chat({ archivio, chiaveDellaConsole: chiave });
+  const chat = new Chat({ archivio, chiaveDellaConsole: chiave, adesso: () => orologio });
   const server = costruisciIlServer({ centralino: centralinoFinto, chat });
   await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -418,6 +418,44 @@ test("la console ha gli emoji da mettere in una risposta", async () => {
     /* Non un elenco a caso: quelli che servono rispondendo. */
     assert.match(pagina, /const EMOJI = \[/);
     assert.match(pagina, /selectionStart/, "vanno dove sta il cursore, non in fondo");
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("chi prova le chiavi a raffica trova la porta chiusa", async () => {
+  const b = await banco();
+  try {
+    /* Nove tentativi sbagliati passano — chi sbaglia due volte a incollare non
+     * deve restare fuori. */
+    for (let i = 0; i < 9; i += 1) {
+      assert.equal((await b.console("", { chiave: `sbagliata-${i}` })).status, 403);
+    }
+    /* Al decimo la porta si chiude, e resta chiusa anche per chi ha la chiave
+     * giusta: chi sta provando a indovinare non deve poter capire quando ci ha
+     * azzeccato. */
+    assert.equal((await b.console("", { chiave: "sbagliata-9" })).status, 403);
+    const chiusa = await b.console();
+    assert.equal(chiusa.status, 429);
+    assert.match((await chiusa.json()).errore, /troppi tentativi/);
+
+    /* Un quarto d'ora dopo si riapre. */
+    b.avanti(16 * 60 * 1000);
+    assert.equal((await b.console()).status, 200);
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("chi entra si porta via i propri sbagli", async () => {
+  const b = await banco();
+  try {
+    for (let i = 0; i < 5; i += 1) await b.console("", { chiave: "no" });
+    /* Entra con quella giusta: il conto riparte da zero, se no bastherebbero
+     * cinque errori sparsi in un mese per chiudersi fuori da soli. */
+    assert.equal((await b.console()).status, 200);
+    for (let i = 0; i < 9; i += 1) await b.console("", { chiave: "no" });
+    assert.equal((await b.console()).status, 200);
   } finally {
     await b.spegni();
   }
