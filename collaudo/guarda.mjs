@@ -1160,14 +1160,29 @@ try {
   /* «Sostieni il progetto» nell'app non c'e': la tessera della dashboard e'
    * nascosta, perche' qui gli acquisti ci sono e una donazione accanto a un
    * listino e' la stessa domanda fatta due volte. Si guarda che non ci sia. */
-  racconta("controllo che le donazioni non compaiano");
-  const laTesseraDelleDonazioni = await laConfig.evaluate(() => {
-    const tessera = document.querySelector("#page-config .dm-sostieni-tessera");
-    if (!tessera) return false;
-    return tessera.getBoundingClientRect().height > 0;
-  });
-  if (laTesseraDelleDonazioni) {
-    throw new Error("la tessera delle donazioni si vede, e nell'app non deve");
+  /* Le tessere che nell'app non ci vanno, perche' quella porta c'e' gia' ed e'
+   * una voce del menu: le donazioni — qui ci sono gli acquisti — le
+   * Segnalazioni e l'**Assistenza**, che nel menu ha due voci sue, «Assistenza»
+   * per chi chiede aiuto e «Console» per chi risponde. Si guarda l'altezza e
+   * non lo stile: una tessera si puo' nascondere in tre modi, e quello che
+   * conta e' che non occupi posto. */
+  racconta("controllo che le tessere doppie non compaiano nella Config");
+  const siVedono = await laConfig.evaluate(() =>
+    [
+      ["donazioni", "#page-config .dm-sostieni-tessera"],
+      ["segnalazioni", "#page-config #dm-tkt-card"],
+      ["assistenza", "#page-config #dm-chat-card"],
+    ]
+      .filter(([, quale]) => {
+        const tessera = document.querySelector(quale);
+        return tessera ? tessera.getBoundingClientRect().height > 0 : false;
+      })
+      .map(([nome]) => nome),
+  );
+  if (siVedono.length) {
+    throw new Error(
+      `nella Config si vedono tessere che nell'app hanno gia' la loro voce nel menu: ${siVedono.join(", ")}`,
+    );
   }
 
   /* L'editor si apre da dentro la pagina, dalla sua tessera: e' il giro che

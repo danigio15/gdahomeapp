@@ -77,6 +77,32 @@ void main() {
     expect(Premesse.laTendaSiAlzaComunque, isNot(contains('MutationObserver')));
   });
 
+  test(
+    'dalla Config escono le tessere che nel menu hanno gia\' la loro voce',
+    () {
+      /* Tre porte per tre stanze che nell'app hanno gia' la loro voce:
+     * «Sostieni il progetto» (qui ci sono gli acquisti), le Segnalazioni
+     * (quella della plancia vuole un conto GitHub, quella dell'app no) e
+     * l'Assistenza, che ha due voci sue — «Assistenza» per chi chiede aiuto e
+     * «Console» per chi risponde.
+     *
+     * L'Assistenza non c'era in questo elenco, e non per dimenticanza: quella
+     * tessera si toglieva da se' perche' la chat non rispondeva. Da quando il
+     * ponte quei comandi li fa, compare — e va tolta come le altre due. */
+      for (final quale in [
+        '#page-config #dm-tkt-card',
+        '#page-config #dm-chat-card',
+        'html body #page-config .dm-sostieni-tessera',
+      ]) {
+        expect(
+          Premesse.laConfigFuoriDallaPlancia,
+          contains(quale),
+          reason: '«$quale» si vedrebbe nella Config servita',
+        );
+      }
+    },
+  );
+
   test('la porta della Config si tira da dentro o si bussa da fuori', () {
     /* Nel browser l'app chiama la funzione dentro il riquadro, e una funzione
      * dentro un riquadro si chiama solo dalla stessa origine. Dove la plancia

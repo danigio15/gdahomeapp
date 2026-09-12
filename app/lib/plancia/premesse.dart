@@ -110,18 +110,26 @@ class Premesse {
   /// loro il tasto «← HOME» che la pagina si disegna in cima: dal menu si
   /// torna col menu.
   ///
-  /// Restano nascoste due tessere. «**Sostieni il progetto**», perche' qui
-  /// gli acquisti ci sono: una donazione accanto a un listino e' la stessa
-  /// domanda fatta due volte. E le **Segnalazioni**, `#dm-tkt-card`. Non
-  /// per grafica — quella e' buona — ma perche' la sua strada non c'e'. La
-  /// tessera della plancia parla all'integrazione di Home Assistant, che
-  /// nell'app non esiste, e vuole un conto GitHub di chi scrive; le
-  /// segnalazioni dell'app passano dal ponte e dal centralino, col gettone
-  /// che sta nel Worker, e chi manda non ha bisogno di nessun conto. Due
-  /// porte per la stessa cosa, e una delle due si scuserebbe: si lascia
-  /// quella che funziona, nel menu. La tessera dell'Assistenza si toglie da
-  /// se' quando la chat non risponde (`assistenza-section.js`), e non c'e'
-  /// niente da nascondere.
+  /// Restano nascoste tre tessere, e per la stessa ragione: nell'app quella
+  /// porta c'e' gia', ed e' una voce del menu.
+  ///
+  /// «**Sostieni il progetto**», perche' qui gli acquisti ci sono: una
+  /// donazione accanto a un listino e' la stessa domanda fatta due volte.
+  ///
+  /// Le **Segnalazioni**, `#dm-tkt-card`. Non per grafica — quella e' buona —
+  /// ma perche' la sua strada non c'e': la tessera della plancia parla
+  /// all'integrazione di Home Assistant, che nell'app non esiste, e vuole un
+  /// conto GitHub di chi scrive; le segnalazioni dell'app passano dal ponte e
+  /// dal centralino, e chi manda non ha bisogno di nessun conto.
+  ///
+  /// E l'**Assistenza**, `#dm-chat-card`. Qui era scritto che non c'era
+  /// niente da nascondere, perche' quella tessera si togliesse da se' quando
+  /// la chat non risponde (`assistenza-section.js`) — e nell'app la chat non
+  /// rispondeva, perche' il ponte quei comandi li rifiutava. Adesso li fa
+  /// (`ponte/src/chat.js`), quindi la tessera compare, ed e' la seconda porta
+  /// per una stanza che nel menu ha gia' la sua: «Assistenza» per chi chiede
+  /// aiuto, «Console» per chi risponde. Restano quelle, che sono schermate
+  /// dell'app e non una finestra dentro una pagina dentro un riquadro.
   ///
   /// `gdahomeApriLaConfig` e' la maniglia che l'app tira, e riprova per
   /// qualche secondo: una pagina appena aperta i suoi script li sta ancora
@@ -134,6 +142,7 @@ class Premesse {
       '<style id="gdahome-config-fuori">'
       '#tab-config,.tab[data-tab="config"]{display:none!important}'
       '#page-config #dm-tkt-card{display:none!important}'
+      '#page-config #dm-chat-card{display:none!important}'
       /* Il tasto «← HOME» in cima alla Configurazione: nella plancia porta
          alla sua Home, e chi ci arriva dal menu dell'app si ritrova sulla
          plancia senza aver chiesto niente. Dal menu si torna col menu. Sulle
