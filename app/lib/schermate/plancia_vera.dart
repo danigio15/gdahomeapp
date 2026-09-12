@@ -591,14 +591,21 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
       sfondo: Theme.of(context).colorScheme.surface,
     );
     _controllore = controllore;
-    unawaited(controllore.loadRequest(widget.pagina));
+    unawaited(riquadro.apriLaPagina(controllore, widget.pagina));
   }
 
   @override
   void didUpdateWidget(RiquadroDellaPlancia oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.pagina != widget.pagina) {
-      unawaited(_controllore?.loadRequest(widget.pagina));
+      final controllore = _controllore;
+      /* `apriLaPagina` e non `loadRequest`: sul web l'`iframe` non dice
+       * quando ha finito, e chi apre la pagina e' anche chi deve dire che e'
+       * arrivata. Senza, scegliere un'altra plancia lasciava «Apro la
+       * plancia…» sopra una plancia gia' aperta. */
+      if (controllore != null) {
+        unawaited(riquadro.apriLaPagina(controllore, widget.pagina));
+      }
       return;
     }
     if (oldWidget.margini != widget.margini) _leMisure();

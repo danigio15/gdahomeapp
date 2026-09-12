@@ -97,11 +97,43 @@ export class QuellaPlanciaNo extends Error {
 }
 
 export class Plance {
-  constructor({ cartella, percorso = null, adesso = () => Date.now(), registro } = {}) {
+  constructor({
+    cartella,
+    percorso = null,
+    adesso = () => Date.now(),
+    registro,
+    /* Chi va avvisato quando l'elenco cambia.
+     *
+     * Serve a una cosa sola: le voci fra le «Plance» di Home Assistant, che
+     * devono comparire nel momento in cui si aggiunge una plancia e non al
+     * prossimo riavvio dell'add-on. Sta qui e non nei due posti da cui si
+     * aggiunge — la scheda dell'add-on e l'app — perche' sono due, e domani
+     * potrebbero essere tre: un avviso solo, dove le plance cambiano
+     * davvero. */
+    quandoCambia = null,
+  } = {}) {
     this.archivio = new Archivio(percorso || join(cartella, "plance.json"), DIFETTO);
     this.adesso = adesso;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
+    this.quandoCambia = quandoCambia;
     this._sistema();
+  }
+
+  /* L'avviso, dopo che l'elenco e' cambiato **e** salvato.
+   *
+   * Non si aspetta e non si solleva: chi aggiunge una plancia deve vedere la
+   * sua risposta subito, e se Home Assistant e' in modalita' YAML — dove le
+   * Plance non si aggiungono da fuori — la plancia esiste comunque, la si apre
+   * dall'app e dall'ingress. */
+  _cambiato() {
+    if (typeof this.quandoCambia !== "function") return;
+    try {
+      Promise.resolve(this.quandoCambia(this.elenco())).catch((errore) =>
+        this.registro.attenzione(`dopo le plance: ${errore?.message || errore}`),
+      );
+    } catch (errore) {
+      this.registro.attenzione(`dopo le plance: ${errore?.message || errore}`);
+    }
   }
 
   /* La prima plancia esiste sempre, e sta sempre per prima.
@@ -188,6 +220,7 @@ export class Plance {
     this.archivio.dati.plance.push(nuova);
     this.archivio.salva();
     this.registro.info(`una plancia in piu': «${nome}»`);
+    this._cambiato();
     return this.quale(profilo);
   }
 
@@ -199,6 +232,7 @@ export class Plance {
     if (nome === una.titolo) return this.quale(una.profilo);
     una.titolo = nome;
     this.archivio.salva();
+    this._cambiato();
     return this.quale(una.profilo);
   }
 
@@ -235,6 +269,7 @@ export class Plance {
       }
     }
     this.registro.info(`una plancia in meno: «${via.titolo}»`);
+    this._cambiato();
     return this.elenco();
   }
 }

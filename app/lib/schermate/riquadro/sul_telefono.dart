@@ -225,6 +225,11 @@ Future<void> _fuori(String indirizzo) async {
 Future<void> ricarica(WebViewController controllore, Uri pagina) =>
     controllore.reload();
 
+/// Apre una pagina nel riquadro. Qui basta chiederlo: quando la pagina e'
+/// arrivata lo dice il WebView, con `onPageFinished`.
+Future<void> apriLaPagina(WebViewController controllore, Uri pagina) =>
+    controllore.loadRequest(pagina);
+
 /// Dice alla pagina quanto prendono le barre del telefono, adesso.
 ///
 /// Sono due variabili CSS, e la pagina le usa nei suoi margini: cambiarle

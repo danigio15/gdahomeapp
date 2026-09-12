@@ -138,20 +138,54 @@ class PonteFinto {
     }
     if (detto['type'] == 'ponte/plancia') {
       final sua = planciaDelPonte;
-      _manda(
-        presa,
-        sua == null
-            ? {
-                'id': id,
-                'type': 'result',
-                'success': false,
-                'error': {
-                  'code': 'not_found',
-                  'message': 'questo ponte non ha la plancia',
-                },
-              }
-            : {'id': id, 'type': 'result', 'success': true, 'result': sua},
-      );
+      if (sua == null) {
+        _manda(presa, {
+          'id': id,
+          'type': 'result',
+          'success': false,
+          'error': {
+            'code': 'not_found',
+            'message': 'questo ponte non ha la plancia',
+          },
+        });
+        return;
+      }
+      /* Quale plancia, per chi ne ha piu' d'una. Senza, la prima — che e' la
+       * risposta di sempre. Una che non c'e' e' un `not_found`, come nel ponte
+       * vero: e' il caso che fa tornare l'app alla prima invece di restare su
+       * una schermata vuota. */
+      final voluto = detto['profilo'] as String? ?? '';
+      final scelte = plance.where((una) => una['profilo'] == voluto);
+      if (voluto.isNotEmpty && scelte.isEmpty) {
+        _manda(presa, {
+          'id': id,
+          'type': 'result',
+          'success': false,
+          'error': {
+            'code': 'not_found',
+            'message': 'quella plancia non c\'e\'',
+          },
+        });
+        return;
+      }
+      final quale = voluto.isEmpty
+          ? (plance.isEmpty ? null : plance.first)
+          : scelte.first;
+      _manda(presa, {
+        'id': id,
+        'type': 'result',
+        'success': true,
+        'result': {
+          ...sua,
+          if (quale != null) ...{
+            'titolo': quale['titolo'],
+            'istanza': quale['istanza'],
+            'profilo': quale['profilo'],
+            'primario': quale['primaria'],
+          },
+          'plance': plance,
+        },
+      });
       return;
     }
     _manda(presa, {
@@ -171,6 +205,34 @@ class PonteFinto {
   /// Quello che risponde `ponte/plancia`: la plancia dentro l'add-on. `null`
   /// e' un ponte che non ce l'ha, e dice di no.
   Map<String, dynamic>? planciaDelPonte = planciaNelPonte();
+
+  /// Le plance di questa casa. Una c'e' sempre — quella di sempre — e chi ne
+  /// prova piu' d'una ne aggiunge a questa lista.
+  final List<Map<String, dynamic>> plance = [
+    {
+      'profilo': 'primary',
+      'titolo': 'DashboardModern',
+      'istanza': 'ponte',
+      'primaria': true,
+      'creata_il': 0,
+    },
+  ];
+
+  /// Una plancia in piu', come la aggiunge il ponte vero: il cassetto ricavato
+  /// dal titolo, e l'istanza col suo nome dietro.
+  Map<String, dynamic> unaPlanciaInPiu(String titolo, {String? profilo}) {
+    final quale =
+        profilo ?? titolo.toLowerCase().replaceAll(RegExp('[^a-z0-9]+'), '-');
+    final nuova = {
+      'profilo': quale,
+      'titolo': titolo,
+      'istanza': 'ponte-$quale',
+      'primaria': false,
+      'creata_il': 1,
+    };
+    plance.add(nuova);
+    return nuova;
+  }
 
   /// Se questa casa passa da un centralino: senza, le segnalazioni non si
   /// spediscono, e il ponte lo dice.

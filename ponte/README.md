@@ -175,7 +175,60 @@ Se ne tengono otto.
 
 E `ponte/plancia` accetta un `profilo`: senza, risponde con la prima — che e' la
 risposta di sempre — e insieme manda l'elenco, cosi' chi disegna un selettore
-non deve chiedere due volte.
+non deve chiedere due volte. Nell'app il selettore sta in cima alla barra delle
+sezioni, sotto la casa, e c'e' solo per chi ha piu' d'una plancia; la scelta si
+ricorda **per casa**, perche' chi ha una plancia al mare e una in citta' non
+vuole che cambiando casa gli resti quella di prima.
+
+### E fra le «Plance» di Home Assistant
+
+Nella dashboard ogni istanza registra un pannello suo, e la barra laterale di
+Home Assistant ha la sua voce. L'integrazione va dismessa, e allora quel
+mestiere lo fa il ponte (`src/plance-in-casa.js`): a ogni avvio, e ogni volta
+che le plance cambiano, mette a posto **una Plancia per plancia** —
+`gdahome-<profilo>`, col titolo che le ha dato chi ci abita, una vista sola a
+pagina intera. Chi apre Home Assistant trova la sua plancia dove l'ha sempre
+trovata.
+
+Servono tre pezzi, e servono tutti e tre:
+
+1. la **cartina** `carta/plancia.js`, copiata in `config/www/gdahome/`;
+2. quel file **dichiarato a Lovelace** come risorsa, con la versione dell'add-on
+   nell'indirizzo — se no il browser si tiene quella di ieri;
+3. una **Plancia** per plancia, con dentro la cartina.
+
+La cartina non puo' stare dentro l'add-on, e questo e' il motivo per cui il
+ponte chiede di poter scrivere nella cartella di Home Assistant: quel file lo
+carica il browser **dentro** la pagina di Home Assistant, e da un add-on non lo
+saprebbe prendere — all'ingress serve una sessione, e per chiederla serve del
+programma che gira in quella pagina. La cartina chiede la sessione (la stessa
+chiamata che fa il frontend di Home Assistant quando apri la scheda di un
+add-on), la rinfresca ogni mezzo minuto, chiede al Supervisor dove si entra
+adesso — l'indirizzo dell'ingress porta un gettone che Home Assistant puo'
+rifare, e una Plancia salvata sei mesi fa ne avrebbe uno morto — e solo dopo
+apre il riquadro. Se qualcosa non riesce, lo scrive a schermo invece di lasciare
+un rettangolo bianco.
+
+Il permesso e' grosso e va detto chiaro: `homeassistant_config:rw` da' al ponte
+tutta la cartella di chi ci abita — automazioni, temi, segreti — perche' Home
+Assistant non sa mappare una sottocartella. Quello che il ponte ci scrive sta in
+un metodo solo, `doveVaLaCarta`, e una prova
+(`test/plance-in-casa.test.js`) elenca tutto quello che compare dentro quella
+cartella e lo confronta riga per riga: `www/gdahome/plancia.js` e un
+`LEGGIMI.txt` accanto, e niente altro.
+
+Non tocca le Plance di nessun altro: guarda solo quelle il cui indirizzo
+comincia per `gdahome-`, che sono le sue. E dove non riesce — Lovelace in
+modalita' YAML, dove le Plance non si aggiungono da fuori — lo scrive nel
+registro e lascia tutto il resto in piedi: la plancia dall'app e dall'ingress
+funziona uguale, e questa e' una comodita' in piu', non la strada.
+
+La stessa pagina si apre anche senza passare da una Plancia, dalla porta
+dell'ingress: `plancia/` per la prima, `plancia/<profilo>/` per le altre — e'
+il tasto «Apri» accanto a ogni riga nella scheda dell'add-on. La serve il ponte
+con le sue premesse (`src/premesse.js`), e il WebSocket che quella pagina apre
+torna a lui (`src/cucitura.js`), che risponde da se' alle commissioni e gira
+tutto il resto a Home Assistant.
 
 La **chat di assistenza** invece non passa da GitHub, ed e' quella della
 plancia: gli otto comandi `dashboardmodern/chat/*` che nell'integrazione fa

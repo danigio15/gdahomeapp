@@ -19,6 +19,9 @@ import { CodiceSbagliato, TroppiTentativi } from "./abbinamento.js";
 import { TroppiDispositivi } from "./dispositivi.js";
 import { invito } from "./invito.js";
 import { accetta, eUnaSalita } from "./presa.js";
+import { BASE } from "./plancia.js";
+import { Cucitura } from "./cucitura.js";
+import { conLePremesse, linguaPulita, paginaDellaLingua } from "./premesse.js";
 import { qrInSvg } from "./qr.js";
 import { impronta } from "./segreti.js";
 
@@ -251,6 +254,11 @@ export function costruisciLaConsole({
   plancia,
   plance,
   configurazione,
+  /* Le commissioni: i comandi che il ponte fa da se' invece di girarli a Home
+   * Assistant. Servono alla plancia servita qui — l'integrazione che li faceva
+   * non c'e' piu' — e sono le stesse che riceve l'app. Una lista sola, se no
+   * la plancia si comporterebbe in due modi a seconda di dove e' aperta. */
+  commissioni,
   aggiornamento,
   cartellaDellaConsole,
   cartellaDellApp,
@@ -263,7 +271,7 @@ export function costruisciLaConsole({
    * risposta non viene mai chiusa, e chi ha chiamato aspetta per sempre. Un
    * pezzo che manca deve dare un 500, non una rotella che gira. */
   const registro = scritto ?? { info() {}, attenzione() {}, errore() {} };
-  return createServer(async (richiesta, risposta) => {
+  const server = createServer(async (richiesta, risposta) => {
     const via = rotta(richiesta);
     const metodo = String(richiesta.method || "").toUpperCase();
 
@@ -326,8 +334,139 @@ export function costruisciLaConsole({
       return;
     }
 
+    /* La plancia, dentro Home Assistant.
+     *
+     * Nella dashboard la plancia e' un pannello dell'integrazione: la serve
+     * lei, e la barra laterale ha la sua voce. L'integrazione va dismessa, e
+     * allora quel mestiere lo fa il ponte: la pagina la serve lui, con le sue
+     * premesse (`premesse.js`), e il WebSocket che quella pagina apre torna
+     * qui (`cucitura.js`).
+     *
+     * Sta sulla porta dell'**ingress** e non su quella dell'app: cosi' ci
+     * arriva solo chi e' entrato in Home Assistant, e non serve nessun altro
+     * segno da chiedere a nessuno. */
+    if (via === "/plancia" || via.startsWith("/plancia/")) {
+      laPlanciaServita({ via, richiesta, risposta, plancia, plance });
+      return;
+    }
+
+    /* E i suoi file, gli stessi che la porta dell'app serve al telefono. Senza
+     * questi la pagina arriverebbe nuda: il foglio di stile, i moduli e i
+     * caratteri li chiede lei, per nome relativo, e da qui. */
+    if (via.startsWith(`${BASE}/`)) {
+      if (!plancia?.cE) {
+        male(risposta, 404, "questo add-on non si porta dietro la plancia");
+        return;
+      }
+      const letto = plancia.leggi(via);
+      if (letto.stato !== 200) {
+        male(risposta, letto.stato, "questo file non c'e'");
+        return;
+      }
+      risposta.writeHead(200, {
+        "content-type": letto.tipo,
+        /* Nell'indirizzo c'e' l'impronta: quello che c'e' non cambia mai, e il
+         * browser se lo puo' tenere. */
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-length": letto.corpo.length,
+      });
+      risposta.end(letto.corpo);
+      return;
+    }
+
     servi(risposta, cartellaDellaConsole, via);
   });
+
+  /* Il WebSocket della plancia servita qui.
+   *
+   * La pagina crede di parlare con Home Assistant: parla con la cucitura, che
+   * risponde ai comandi del ponte e gira il resto alla casa. Ogni pagina si
+   * prende un filo suo, come ogni telefono: i numeri dei messaggi sono i suoi
+   * e non c'e' niente da rinumerare. */
+  server.on("upgrade", (richiesta, socket) => {
+    if (rotta(richiesta) !== "/plancia/api/websocket" || !eUnaSalita(richiesta)) {
+      socket.end("HTTP/1.1 404 Not Found\r\n\r\n");
+      return;
+    }
+    if (!casa) {
+      socket.end("HTTP/1.1 503 Service Unavailable\r\n\r\n");
+      return;
+    }
+    const presa = accetta(richiesta, socket, {});
+    if (!presa) return;
+    const cucitura = new Cucitura({
+      presa,
+      casa,
+      commissioni,
+      registro,
+      da: socket.remoteAddress || "?",
+    });
+    cucitura.avvia().catch((errore) => {
+      registro.errore(`la cucitura della plancia e' andata storta: ${errore?.message || errore}`);
+      cucitura.chiudi(1011, "non ha funzionato");
+    });
+  });
+
+  return server;
+}
+
+/* La pagina della plancia, servita dentro Home Assistant.
+ *
+ * `/plancia/` e' la prima; `/plancia/<profilo>/` una delle altre. La barra in
+ * fondo non e' un dettaglio: senza, il browser crede che la pagina stia nella
+ * cartella sopra. Il rimando si scrive **relativo** — `<profilo>/` e non
+ * `/plancia/<profilo>/` — perche' sotto l'ingress davanti c'e' un prefisso che
+ * qui non si conosce e non si deve conoscere.
+ */
+function laPlanciaServita({ via, richiesta, risposta, plancia, plance }) {
+  if (!plancia?.cE) {
+    male(risposta, 404, "questo add-on non si porta dietro la plancia");
+    return;
+  }
+  if (via === "/plancia") {
+    risposta.writeHead(302, { location: "plancia/", "cache-control": "no-store" });
+    risposta.end();
+    return;
+  }
+  const profilo = via.slice("/plancia/".length).replace(/\/+$/, "");
+  const quale = profilo ? (plance?.quale(profilo) ?? null) : (plance?.prima ?? null);
+  if (profilo && !quale) {
+    male(risposta, 404, "quella plancia non c'e'");
+    return;
+  }
+  if (profilo && !via.endsWith("/")) {
+    risposta.writeHead(302, { location: `${profilo}/`, "cache-control": "no-store" });
+    risposta.end();
+    return;
+  }
+  const lingua = linguaPulita(
+    new URL(richiesta.url || "/", "http://ponte").searchParams.get("lingua"),
+  );
+  const nome = paginaDellaLingua(plancia.varianti(), lingua);
+  const letto = plancia.leggi(`${plancia.base}/legacy/${nome}`);
+  if (letto.stato !== 200) {
+    male(risposta, 500, "la pagina della plancia non si legge");
+    return;
+  }
+  /* Il prefisso dell'ingress: Home Assistant lo dice, e va scritto dentro la
+   * pagina — nel `<base>` e nell'indirizzo del WebSocket — perche' la pagina
+   * da sola non lo puo' indovinare. */
+  const davanti = String(richiesta.headers["x-ingress-path"] || "");
+  const pagina = conLePremesse(letto.corpo.toString("utf8"), {
+    base: `${davanti}${plancia.base}/legacy`,
+    quale,
+    lingua,
+    doveIlWebSocket: `${davanti}/plancia/api/websocket`,
+  });
+  const byte = Buffer.from(pagina, "utf8");
+  risposta.writeHead(200, {
+    "content-type": "text/html; charset=utf-8",
+    /* La pagina no: dentro ci sono le premesse, e cambiano con la plancia
+     * scelta e col prefisso dell'ingress. */
+    "cache-control": "no-store",
+    "content-length": byte.length,
+  });
+  risposta.end(byte);
 }
 
 async function api({

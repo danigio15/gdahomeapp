@@ -233,7 +233,21 @@ class Servitore {
     pannello = quale;
     return radice.replace(
       path: quale.percorsoDellaPagina(lingua),
-      queryParameters: {_ingresso: chiave},
+      queryParameters: {
+        _ingresso: chiave,
+        /* Quale plancia, scritto nell'indirizzo.
+         *
+         * La pagina non lo legge — le premesse le arrivano dal servitore — e
+         * serve a una cosa sola: **essere un indirizzo diverso**. Chi guarda
+         * il riquadro lo rifa' quando l'indirizzo cambia, e due plance dello
+         * stesso ponte hanno gli stessi file e la stessa pagina: senza questa
+         * riga, scegliere l'altra plancia non cambierebbe niente a schermo.
+         *
+         * Solo per quelle in piu': l'indirizzo della prima e' quello di
+         * sempre, e chi ne ha una sola non vede comparire niente. */
+        if (!quale.primario && quale.profilo.isNotEmpty)
+          'plancia': quale.profilo,
+      },
     );
   }
 

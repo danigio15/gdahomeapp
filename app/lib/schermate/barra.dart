@@ -145,6 +145,24 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
    * rovescia riparte a ogni tocco: quando il dito si ferma, riprende a
    * scorrere il tempo, non prima. */
   void _laStaUsando() {
+    if (_trattenuta) return;
+    if (aperta && !_resta) _rimanda(_daSola);
+  }
+
+  /* Un menu aperto sopra la barra la trattiene.
+   *
+   * Senza, la barra scivolerebbe via dopo quattro secondi lasciando il menu a
+   * mezz'aria: nessun tocco arriva a lei mentre si legge un elenco che le sta
+   * sopra, e il conto alla rovescia non lo sa. */
+  bool _trattenuta = false;
+
+  void _trattieni() {
+    _trattenuta = true;
+    _daChiudere?.cancel();
+  }
+
+  void _lascia() {
+    _trattenuta = false;
     if (aperta && !_resta) _rimanda(_daSola);
   }
 
@@ -213,6 +231,22 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                                   _LaCasa(
                                     collegamento: widget.collegamento!,
                                     quandoPremuta: widget.vaiAlleCase,
+                                  ),
+                                /* Quale plancia, per chi ne ha piu' d'una.
+                                 *
+                                 * Sotto la casa perche' e' la stessa domanda
+                                 * un gradino piu' in basso: prima in quale
+                                 * casa si e', poi quale delle sue plance si
+                                 * guarda. E non c'e' affatto per chi ne ha
+                                 * una sola, che sono quasi tutti: una riga
+                                 * per scegliere fra una cosa sola e' una riga
+                                 * di troppo. */
+                                if (widget.collegamento?.pannello?.piuDiUna ??
+                                    false)
+                                  _LePlance(
+                                    collegamento: widget.collegamento!,
+                                    trattieni: _trattieni,
+                                    lascia: _lascia,
                                   ),
                                 Flexible(
                                   child: ListView.separated(
@@ -366,6 +400,119 @@ class _LaCasa extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Quale plancia si guarda, per chi ne ha piu' d'una.
+///
+/// Nella dashboard le plance sono voci di Home Assistant, e si scelgono dalla
+/// sua barra laterale. Nell'app non c'e' nessuna barra laterale di Home
+/// Assistant, e allora la scelta sta dov'e' l'altra dello stesso tipo: sotto
+/// la casa, in cima alla barra delle sezioni.
+///
+/// Un menu e non un elenco di righe: le plance sono al massimo otto, e otto
+/// righe in cima alla barra mangerebbero il posto delle venti sezioni — che
+/// sono la ragione per cui quella barra esiste.
+class _LePlance extends StatelessWidget {
+  const _LePlance({
+    required this.collegamento,
+    required this.trattieni,
+    required this.lascia,
+  });
+
+  final Collegamento collegamento;
+
+  /// La barra si chiude da sola dopo qualche secondo, e mentre si legge un
+  /// menu che le sta sopra non le arriva nessun tocco: la si trattiene finche'
+  /// il menu e' aperto, e la si lascia quando si chiude.
+  final VoidCallback trattieni;
+  final VoidCallback lascia;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    final plance = collegamento.plance;
+    final scelta = collegamento.planciaScelta;
+    final trovate = plance.where((una) => una.profilo == scelta);
+    final quale = trovate.isEmpty ? plance.first : trovate.first;
+
+    return Material(
+      color: Colors.transparent,
+      child: PopupMenuButton<String>(
+        tooltip: 'Quale plancia',
+        position: PopupMenuPosition.under,
+        onOpened: trattieni,
+        onCanceled: lascia,
+        onSelected: (profilo) {
+          lascia();
+          unawaited(collegamento.cambiaPlancia(profilo));
+        },
+        itemBuilder: (context) => [
+          for (final una in plance)
+            PopupMenuItem<String>(
+              value: una.profilo,
+              child: Row(
+                children: [
+                  Icon(
+                    una.profilo == quale.profilo
+                        ? Icons.radio_button_checked_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    size: 18,
+                    color: una.profilo == quale.profilo
+                        ? colori.primary
+                        : colori.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      una.titolo,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(19, 9, 12, 9),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: colori.onSurface.withValues(alpha: 0.08),
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.dashboard_rounded,
+                size: 17,
+                color: colori.onSurfaceVariant,
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  quale.titolo,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: testi.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.1,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.expand_more_rounded,
+                size: 18,
+                color: colori.onSurfaceVariant,
+              ),
+            ],
           ),
         ),
       ),

@@ -20,6 +20,7 @@ import { Configurazione } from "./configurazione.js";
 import { BASE_DI_CASA, Foto } from "./foto.js";
 import { Plancia } from "./plancia.js";
 import { Plance } from "./plance.js";
+import { PlanceInCasa } from "./plance-in-casa.js";
 import { Identita } from "./identita.js";
 import { Dispositivi } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
@@ -130,6 +131,24 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   });
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni });
 
+  /* Le plance fra le «Plance» di Home Assistant, una voce per ognuna.
+   *
+   * E' quello che faceva l'integrazione, e che da qui in avanti fa il ponte:
+   * chi apre Home Assistant trova la sua plancia nella barra laterale, dove
+   * l'ha sempre trovata, senza sapere che sotto e' cambiato tutto.
+   *
+   * Si rifa' a ogni accensione e ogni volta che le plance cambiano — non
+   * appena, perche' una plancia aggiunta che compare al prossimo riavvio e'
+   * una plancia che sembra non essere stata aggiunta. */
+  const planceInCasa = new PlanceInCasa({
+    casa,
+    plance,
+    www: opzioni.wwwDiCasa,
+    versione: opzioni.versione,
+    registro,
+  });
+  plance.quandoCambia = () => planceInCasa.sistema();
+
   /* La chiamata verso il centralino: e' cosi' che si entra da fuori casa,
    * senza che chi ha installato l'add-on apra o configuri niente. */
   /* Nessuno parla col ponte direttamente: si passa dal portiere, che fa la
@@ -202,6 +221,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * istanza dell'integrazione. */
     plance,
     configurazione,
+    /* Le commissioni servono anche qui: la plancia servita dentro Home
+     * Assistant chiede al ponte le stesse cose che gli chiede quella dentro
+     * l'app, e le fa lo stesso oggetto. */
+    commissioni,
     /* Se c'e' una versione nuova del ponte, e il bottone per portarsela
      * dentro: l'unico posto da cui chi non ha un computer puo' aggiornare. */
     aggiornamento,
@@ -228,6 +251,12 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   const saluto = await casa.saluta();
   if (saluto.viva) registro.info("Home Assistant risponde");
   else registro.attenzione(`Home Assistant non risponde: ${saluto.perche}`);
+
+  /* Le voci fra le Plance, dopo il saluto: i comandi di Lovelace vanno sul
+   * filo, e un filo che non c'e' darebbe un errore invece di una voce. Se
+   * Home Assistant non risponde non si prova nemmeno: al prossimo avvio, o
+   * alla prossima plancia aggiunta. */
+  if (saluto.viva) await planceInCasa.sistema();
 
   const giro = setInterval(() => {
     const andati = dispositivi.potatura();
@@ -257,6 +286,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
     app,
     console: console_,
+    planceInCasa,
     abbassa,
   };
 }

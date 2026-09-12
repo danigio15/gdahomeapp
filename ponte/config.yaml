@@ -12,7 +12,7 @@
 # finire esposta. Su quella non c'e' nessuna console: si puo' solo presentare
 # un codice di abbinamento valido, o un segno di riconoscimento gia' avuto.
 name: Il ponte di DashboardModern
-version: "0.20.0"
+version: "0.21.0"
 slug: ponte
 description: Fa parlare l'app di DashboardModern con questa casa, da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.
 url: https://github.com/danigio15/dashboardmodern-v2/tree/main/ponte
@@ -43,18 +43,29 @@ ports_description:
 # esattamente il motivo per cui il ponte esiste.
 homeassistant_api: true
 
-# La cartella `www` di Home Assistant, in **sola lettura**.
+# La cartella di Home Assistant. Si legge tutta, e si scrive **una cartella
+# sola**: `www/gdahome/`.
 #
-# Serve a una cosa sola: far scegliere, dalla Config dell'app, le immagini che
-# ci sono gia' — le foto delle auto, i loghi, gli sfondi che chi ha una casa da
-# qualche anno tiene li' e che la plancia ha sempre usato con `/local/…`. Senza
-# questa riga la maschera delle foto dice «nessuna foto» a chi ne ha duecento.
+# Si legge per far scegliere, dalla Config dell'app, le immagini che ci sono
+# gia' — le foto delle auto, i loghi, gli sfondi che chi ha una casa da qualche
+# anno tiene li' e che la plancia ha sempre usato con `/local/…`. Senza questa
+# riga la maschera delle foto dice «nessuna foto» a chi ne ha duecento.
 #
-# In sola lettura, e non e' prudenza generica: li' dentro ci sono le
-# automazioni, i temi e i segreti di chi ci abita. Il ponte guarda e non tocca;
-# quello che si carica dall'app finisce nella sua cartella, non nella loro.
+# Si scrive per un file solo: la cartina che apre la plancia fra le «Plance»
+# di Home Assistant (`src/plance-in-casa.js`). Deve stare li' e non dentro
+# l'add-on perche' quel file lo carica il browser **dentro** la pagina di Home
+# Assistant, e da un add-on non lo saprebbe prendere: all'ingress serve una
+# sessione, e per chiederla serve del programma che gira in quella pagina.
+#
+# Era in sola lettura, e il cambio va detto chiaro invece che nascosto: li'
+# dentro ci sono le automazioni, i temi e i segreti di chi ci abita, e Home
+# Assistant non sa mappare una sottocartella — o tutta in lettura, o tutta in
+# scrittura. Quello che il ponte ci scrive sta in un metodo solo,
+# `doveVaLaCarta`, e una prova tiene fermo che l'unico percorso scritto
+# cominci per `www/gdahome/`. Il resto lo guarda e non lo tocca; quello che si
+# carica dall'app finisce nella cartella dell'add-on, non nella loro.
 map:
-  - homeassistant_config:ro
+  - homeassistant_config:rw
   # La cartella degli add-on locali, in **scrittura**.
   #
   # Serve a una cosa sola, e non se ne puo' fare a meno: aggiornare questo

@@ -363,6 +363,29 @@ async function main() {
   }
   racconta(`il ponte vero sulla ${portaDelPonte}, console sulla ${portaDellaConsole}`);
 
+  /* Una seconda plancia, come se l'avesse aggiunta chi ci abita dalla scheda
+   * dell'add-on.
+   *
+   * Si aggiunge **prima** che l'app si abbini: il selettore lo disegna chi ha
+   * chiesto la plancia, e l'elenco arriva insieme a quella risposta. Aggiunta
+   * dopo, comparirebbe alla prossima lettura e non in questa fotografia.
+   *
+   * Nella dashboard questa e' una seconda istanza dell'integrazione; qui e'
+   * una riga in `/data/plance.json`, e in Home Assistant e' una voce in piu'
+   * fra le «Plance». */
+  {
+    const risposta = await fetch(`http://127.0.0.1:${portaDellaConsole}/api/plance`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ titolo: "Casa al mare" }),
+    });
+    const detto = await risposta.json();
+    if (!risposta.ok) throw new Error(`la seconda plancia non si e' aggiunta: ${detto?.errore}`);
+    racconta(
+      `le plance sono ${detto.plance.length}: ${detto.plance.map((una) => una.titolo).join(", ")}`,
+    );
+  }
+
   /* 3. Il servitore della plancia. E' il pezzo dell'app che sul web non puo'
    * girare — un server dentro una pagina non si apre — quindi lo si accende
    * qui a parte, uguale a com'e' nell'app: si abbina al ponte con un codice
@@ -989,6 +1012,46 @@ try {
   racconta("apro la barra dell'app");
   await apriIlMenu();
   await scatta(pagina, "5-barra");
+
+  /* Il selettore delle plance, in cima alla barra.
+   *
+   * C'e' perche' questa casa ne ha due: chi ne ha una sola non lo vede, ed e'
+   * la ragione per cui questo controllo sta **dopo** aver aggiunto la
+   * seconda. Si guarda che ci sia, che dica il nome di quella aperta, e che
+   * aprendolo si vedano tutte e due. */
+  racconta("guardo il selettore delle plance");
+  {
+    if (!(await ilBottone(pagina, "Quale plancia", { aspetta: false }))) {
+      const cEra = await cosaCeDaPremere(pagina);
+      throw new Error(
+        `il selettore delle plance non e' comparso in cima alla barra. A schermo c'e': ${cEra.join(" · ")}`,
+      );
+    }
+    await premi(pagina, "Quale plancia");
+    await attendi(700);
+    await scatta(pagina, "5b-quale-plancia");
+    /* Si guardano le voci con le stesse regole con cui poi si premono — non
+     * col testo della pagina: una plancia e' disegnata su una tela, e a
+     * schermo, come testo, non c'e' niente. */
+    for (const nome of ["DashboardModern", "Casa al mare"]) {
+      if (!(await ilBottone(pagina, nome, { aspetta: false }))) {
+        const cEra = await cosaCeDaPremere(pagina);
+        throw new Error(`nel selettore non c'e' «${nome}». A schermo c'e': ${cEra.join(" · ")}`);
+      }
+    }
+    /* Si sceglie l'altra, e la si guarda aprire: il riquadro si rifa' — due
+     * plance dello stesso ponte hanno gli stessi file, ed e' il pezzo
+     * `?plancia=` nell'indirizzo a farlo ripartire. */
+    await premi(pagina, "Casa al mare");
+    await attendi(2500);
+    await scatta(pagina, "5c-la-seconda-plancia");
+    /* E si torna su quella di sempre, che il resto del collaudo guarda lei. */
+    await apriIlMenu();
+    await premi(pagina, "Quale plancia");
+    await attendi(700);
+    await premi(pagina, "DashboardModern");
+    await attendi(2500);
+  }
 
   racconta("apro i dispositivi");
   await vaiA("Dispositivi", "Cerca fra");

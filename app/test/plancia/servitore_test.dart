@@ -176,6 +176,38 @@ void main() {
     },
   );
 
+  test(
+    'ogni plancia ha il suo indirizzo, e la prima tiene quello di sempre',
+    () async {
+      /* La pagina non legge quel pezzo — le premesse le mette il servitore — e
+     * serve a una cosa sola: **essere un indirizzo diverso**. Chi guarda il
+     * riquadro lo rifa' quando l'indirizzo cambia, e due plance dello stesso
+     * ponte hanno gli stessi file e la stessa pagina: senza, scegliere l'altra
+     * plancia non cambierebbe niente a schermo. */
+      final prima = servitore.paginaDi(pannello());
+      expect(prima.queryParameters.containsKey('plancia'), isFalse);
+
+      final altra = servitore.paginaDi(
+        PannelloDellaPlancia(
+          percorso: 'ponte',
+          titolo: 'Casa al mare',
+          base: _base,
+          istanza: 'ponte-casa-al-mare',
+          profilo: 'casa-al-mare',
+          primario: false,
+          varianti: const ['dashboard.html'],
+        ),
+      );
+      expect(altra.queryParameters['plancia'], 'casa-al-mare');
+      expect(altra, isNot(prima));
+      /* Ma la chiave c'e' ancora: da qui non passa niente senza. */
+      expect(altra.queryParameters['ingresso'], servitore.chiave);
+      /* E il servitore sa quale plancia sta servendo: e' da li' che la pagina
+     * prende il suo profilo e la sua istanza. */
+      expect(servitore.pannello!.profilo, 'casa-al-mare');
+    },
+  );
+
   test('la pagina arriva dal ponte, con le premesse in testa e la chiave '
       'nell\'indirizzo', () async {
     final dove = servitore.paginaDi(pannello());

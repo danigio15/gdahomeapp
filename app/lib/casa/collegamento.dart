@@ -159,6 +159,16 @@ class Collegamento {
   PannelloDellaPlancia? get pannello => _pannello;
   bool get pannelloLetto => _pannelloLetto;
 
+  /// Le plance di questa casa: piu' d'una per chi se n'e' aggiunta.
+  ///
+  /// Arrivano insieme a dove sta la plancia, e vuota vuol dire un ponte che
+  /// non le sa tenere: allora di plancia ce n'e' una, com'e' sempre stato.
+  List<UnaPlancia> get plance => _pannello?.plance ?? const [];
+
+  /// Quale si sta guardando, per chi ne ha piu' d'una. Vuoto vuol dire la
+  /// prima, che e' la risposta di sempre.
+  String get planciaScelta => _pannello?.profilo ?? '';
+
   /// Da dove si sta passando adesso: serve a scrivere «in casa» o «da fuori».
   DaDove? get daDove => _daDove;
 
@@ -322,9 +332,13 @@ class Collegamento {
   ///
   /// Un errore qui non e' un errore della casa: la casa e' aperta e le entita'
   /// ci sono. Si segna che si e' chiesto, e la schermata dice quello che sa.
-  Future<void> _leggiLaPlancia(Filo filo) async {
+  Future<void> _leggiLaPlancia(Filo filo, {String? profilo}) async {
+    /* Quella scelta l'ultima volta in **questa** casa. Chi ne ha una sola non
+     * ha mai scelto niente, e qui non c'e' scritto niente: si chiede la
+     * prima, ed e' la domanda di sempre. */
+    final voluto = profilo ?? _casa?.plancia ?? '';
     try {
-      _pannello = await trovaLaPlancia(filo);
+      _pannello = await trovaLaPlancia(filo, profilo: voluto);
     } on ErroreDelPonte {
       _pannello = null;
     }
@@ -339,6 +353,32 @@ class Collegamento {
     final filo = _filo;
     if (filo == null || !filo.dentro) return;
     await _leggiLaPlancia(filo);
+  }
+
+  /// Apre un'altra plancia di questa casa.
+  ///
+  /// La scelta si **ricorda**, e si ricorda per casa: chi ha una plancia al
+  /// mare e una in citta' non vuole che cambiando casa gli resti quella di
+  /// prima. Si scrive dopo aver letto, e solo se la plancia c'era davvero:
+  /// ricordare una scelta che non ha funzionato vorrebbe dire riaprire ogni
+  /// volta su un errore.
+  Future<void> cambiaPlancia(String profilo) async {
+    final filo = _filo;
+    if (filo == null || !filo.dentro) return;
+    if (profilo == planciaScelta) return;
+    await _leggiLaPlancia(filo, profilo: profilo);
+    final casa = _casa;
+    if (casa == null) return;
+    /* Quella che si e' aperta davvero, che non e' detto sia quella chiesta:
+     * una plancia tolta da un altro telefono fa tornare alla prima. */
+    final aperta = _pannello?.profilo ?? '';
+    await archivio.segnaLaPlancia(
+      casa.id,
+      _pannello?.primario ?? true ? '' : aperta,
+    );
+    _casa = archivio.quella(casa.id) ?? casa;
+    _planciaCambiata.add(null);
+    _avvisa();
   }
 
   /// Quando il filo si rialza per conto suo, si riprende da dove si era

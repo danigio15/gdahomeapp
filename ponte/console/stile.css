@@ -194,6 +194,22 @@ button.tenue {
   border: 1px solid var(--bordo);
 }
 
+/* Un link tenue, vestito come i tasti che gli stanno accanto.
+   E' un link e non un bottone perche' porta davvero da un'altra parte: si
+   deve poter aprire in una scheda nuova, tenere premuto, copiare. */
+a.tenue {
+  font: inherit;
+  border: 1px solid var(--bordo);
+  border-radius: 10px;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--tenue);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
 button:disabled {
   opacity: 0.5;
   cursor: default;

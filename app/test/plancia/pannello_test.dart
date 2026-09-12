@@ -183,4 +183,99 @@ void main() {
       await ponte.spegni();
     },
   );
+
+  test('l\'elenco delle plance viaggia con la plancia', () {
+    /* Un ponte di ieri non lo manda: allora di plancia ce n'e' una, com'e'
+     * sempre stato, e il selettore non si vede. */
+    final sola = leggiLaPlanciaDelPonte(PonteFinto.planciaNelPonte())!;
+    expect(sola.plance, isEmpty);
+    expect(sola.piuDiUna, isFalse);
+
+    final due = leggiLaPlanciaDelPonte({
+      ...PonteFinto.planciaNelPonte(),
+      'plance': [
+        {
+          'profilo': 'primary',
+          'titolo': 'DashboardModern',
+          'istanza': 'ponte',
+          'primaria': true,
+        },
+        {
+          'profilo': 'casa-al-mare',
+          'titolo': 'Casa al mare',
+          'istanza': 'ponte-casa-al-mare',
+          'primaria': false,
+        },
+        /* Roba che non e' una plancia si butta, invece di farne una senza
+         * nome che nel selettore comparirebbe come una riga vuota. */
+        {'titolo': 'senza profilo'},
+        'boh',
+      ],
+    })!;
+    expect(due.piuDiUna, isTrue);
+    expect(due.plance.map((una) => una.profilo), ['primary', 'casa-al-mare']);
+    expect(due.plance.last.titolo, 'Casa al mare');
+    expect(due.plance.last.istanza, 'ponte-casa-al-mare');
+    expect(due.plance.last.primaria, isFalse);
+    expect(due.plance.first.primaria, isTrue);
+
+    /* I difetti: senza titolo si mostra il nome del cassetto — brutto e
+     * leggibile — e senza istanza si tiene quella di sempre. */
+    final scarna = UnaPlancia.daJson({'profilo': 'x'})!;
+    expect(scarna.titolo, 'x');
+    expect(scarna.istanza, 'ponte');
+    expect(scarna.primaria, isFalse);
+    expect(UnaPlancia.daJson({'profilo': ''}), isNull);
+    expect(UnaPlancia.daJson(null), isNull);
+  });
+
+  test(
+    'si chiede una plancia in particolare, e se non c\'e\' si torna alla prima',
+    () async {
+      final ponte = await PonteFinto.alza();
+      ponte.unaPlanciaInPiu('Casa al mare');
+      final filo = Filo.fisso(
+        indirizzo: ponte.indirizzo,
+        segno: segnoBuono,
+        chi: chiBuono,
+        chiave: chiaveBuona,
+      );
+      await filo.apri();
+
+      /* Senza chiedere niente: la prima, che e' la risposta di sempre. E
+     * l'elenco arriva insieme, senza una seconda domanda sul filo. */
+      final prima = (await trovaLaPlancia(filo))!;
+      expect(prima.profilo, 'primary');
+      expect(prima.primario, isTrue);
+      expect(prima.plance, hasLength(2));
+
+      /* Quella scelta. */
+      final mare = (await trovaLaPlancia(filo, profilo: 'casa-al-mare'))!;
+      expect(mare.profilo, 'casa-al-mare');
+      expect(mare.istanza, 'ponte-casa-al-mare');
+      expect(mare.titolo, 'Casa al mare');
+      expect(mare.primario, isFalse);
+
+      /* Tolta da un altro telefono: non e' un guasto, e non e' una schermata
+     * vuota. Si richiede senza profilo, e si apre quella di sempre. */
+      ponte.plance.removeWhere((una) => una['profilo'] == 'casa-al-mare');
+      ponte.arrivati.clear();
+      final tornata = (await trovaLaPlancia(filo, profilo: 'casa-al-mare'))!;
+      expect(tornata.profilo, 'primary');
+      expect(
+        ponte.arrivati
+            .where((uno) => uno['type'] == 'ponte/plancia')
+            .map((uno) => uno['profilo']),
+        ['casa-al-mare', null],
+      );
+      /* E non si e' andati a chiedere a Home Assistant: la plancia c'era. */
+      expect(
+        ponte.arrivati.where((uno) => uno['type'] == 'get_panels'),
+        isEmpty,
+      );
+
+      await filo.chiudi();
+      await ponte.spegni();
+    },
+  );
 }

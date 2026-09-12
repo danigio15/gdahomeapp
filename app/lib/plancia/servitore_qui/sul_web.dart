@@ -182,9 +182,16 @@ class _ServitoreSulWeb implements ServitoreDiQuestoSistema {
      * Home Assistant la radice non e' dove sta l'app. Il service worker
      * guarda dove il percorso **contiene** la cartella, non dove comincia, ed
      * e' per questo che regge tutti e due i casi. */
-    return Uri.base.resolve(
+    final dove = Uri.base.resolve(
       quale.percorsoDellaPagina(premesse.lingua).replaceFirst('/', ''),
     );
+    /* Quale plancia, nell'indirizzo: non per la pagina — le premesse le mette
+     * il lavoratore — ma perche' due plance dello stesso ponte hanno gli
+     * stessi file, e chi guarda il riquadro lo rifa' solo quando l'indirizzo
+     * cambia. Solo per quelle in piu': la prima tiene l'indirizzo di
+     * sempre. */
+    if (quale.primario || quale.profilo.isEmpty) return dove;
+    return dove.replace(queryParameters: {'plancia': quale.profilo});
   }
 
   @override

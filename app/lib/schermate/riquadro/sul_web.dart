@@ -28,9 +28,30 @@ WebViewController costruisciIlControllore({
   Future<String> Function(String domanda, String diSerie)? faScrivere,
   void Function(String pagina)? quandoCambiaPagina,
 }) {
+  final controllore = WebViewController();
+  /* Chi va avvisato quando la pagina «arriva». Si tiene da parte perche'
+   * serve **ogni volta** che si apre una pagina, non solo la prima: qui non
+   * c'e' nessun «pagina finita» da ascoltare, e chi disegna resta dietro il
+   * velo finche' qualcuno non gli dice che puo' togliersi. */
+  _laFine[controllore] = quandoCaricata;
   scheduleMicrotask(quandoCaricata);
   if (quandoCambiaPagina != null) _ascoltaIlRiquadro(quandoCambiaPagina);
-  return WebViewController();
+  return controllore;
+}
+
+final _laFine = Expando<void Function()>('quandoCaricata');
+
+/// Apre una pagina nel riquadro.
+///
+/// Sul web l'`iframe` non dice quando ha finito, quindi la pagina si da' per
+/// arrivata subito — come alla prima costruzione. **Non e' un dettaglio**: il
+/// velo sopra il riquadro si alza quando arriva quell'avviso, e senza questa
+/// riga cambiare pagina — scegliere un'altra plancia — lasciava «Apro la
+/// plancia…» a schermo per sempre, con la plancia gia' aperta sotto.
+Future<void> apriLaPagina(WebViewController controllore, Uri pagina) async {
+  await controllore.loadRequest(pagina);
+  final fine = _laFine[controllore];
+  if (fine != null) scheduleMicrotask(fine);
 }
 
 /// Quale pagina della plancia si e' accesa, detta dal riquadro.
@@ -65,9 +86,15 @@ void _ascoltaIlRiquadro(void Function(String pagina) quandoCambiaPagina) {
   );
 }
 
-/// Sul web un `iframe` non si ricarica: si ricarica la pagina.
+/// Sul web un `iframe` non si ricarica: si riapre la pagina.
+///
+/// E si riapre con [apriLaPagina], non con `loadRequest`: e' la stessa cosa
+/// piu' l'avviso che la pagina e' arrivata, e senza quell'avviso il velo
+/// sopra il riquadro non si alza mai piu'. Il velo si mette **prima** di
+/// ricaricare — lo mette chi disegna la schermata — e qui non c'e' nessun
+/// «pagina finita» da ascoltare: chi la apre e' anche chi deve dire che c'e'.
 Future<void> ricarica(WebViewController controllore, Uri pagina) =>
-    controllore.loadRequest(pagina);
+    apriLaPagina(controllore, pagina);
 
 /// Nel browser le barre del telefono non ci sono, e non c'e' niente da dire.
 Future<void> diciLeMisure(

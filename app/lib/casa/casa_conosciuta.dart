@@ -34,6 +34,7 @@ class CasaConosciuta {
     this.inCasa,
     this.daFuoriCasa,
     this.ultimoApprodo,
+    this.plancia,
   });
 
   /// Identificativo interno dell'app, mai mostrato. Non e' quello del ponte.
@@ -74,6 +75,15 @@ class CasaConosciuta {
   /// Da dove si e' entrati l'ultima volta. Si prova prima quello: nove volte
   /// su dieci il telefono e' dove era ieri.
   final DaDove? ultimoApprodo;
+
+  /// Quale plancia si guarda in questa casa, per chi ne ha piu' d'una.
+  ///
+  /// E' il nome del cassetto della sua configurazione — il `profilo` — e sta
+  /// qui e non fra le impostazioni dell'app perche' e' una scelta **di questa
+  /// casa**: chi ha una plancia al mare e una in citta' non vuole che
+  /// cambiando casa gli resti quella di prima. `null` vuol dire la prima, che
+  /// e' la risposta di sempre.
+  final String? plancia;
 
   /// `true` quando questa casa e' stata abbinata prima che esistessero le
   /// chiavi, e adesso non basta piu'.
@@ -129,8 +139,10 @@ class CasaConosciuta {
     IndirizzoDelPonte? inCasa,
     IndirizzoDelPonte? daFuoriCasa,
     DaDove? ultimoApprodo,
+    String? plancia,
     bool togliInCasa = false,
     bool togliDaFuori = false,
+    bool togliLaPlancia = false,
   }) => CasaConosciuta(
     id: id,
     nome: nome ?? this.nome,
@@ -142,6 +154,10 @@ class CasaConosciuta {
     inCasa: togliInCasa ? null : (inCasa ?? this.inCasa),
     daFuoriCasa: togliDaFuori ? null : (daFuoriCasa ?? this.daFuoriCasa),
     ultimoApprodo: ultimoApprodo ?? this.ultimoApprodo,
+    /* `togliLaPlancia` e non `plancia: null`: tornare alla prima e' una scelta
+     * come un'altra, e senza questo non si potrebbe dire — `null` vorrebbe
+     * dire «lascia com'era». */
+    plancia: togliLaPlancia ? null : (plancia ?? this.plancia),
   );
 
   Map<String, dynamic> inJson() => {
@@ -155,6 +171,7 @@ class CasaConosciuta {
     if (inCasa != null) 'in_casa': inCasa.toString(),
     if (daFuoriCasa != null) 'da_fuori': daFuoriCasa.toString(),
     if (ultimoApprodo != null) 'ultimo_approdo': ultimoApprodo!.name,
+    if (plancia != null && plancia!.isNotEmpty) 'plancia': plancia,
   };
 
   /// Torna `null` quando quello che c'e' scritto non e' una casa: un archivio
@@ -180,6 +197,10 @@ class CasaConosciuta {
         'daDentro' => DaDove.daDentro,
         'daFuori' => DaDove.daFuori,
         'dalCentralino' => DaDove.dalCentralino,
+        _ => null,
+      },
+      plancia: switch (grezza['plancia']) {
+        final String s when s.isNotEmpty => s,
         _ => null,
       },
     );

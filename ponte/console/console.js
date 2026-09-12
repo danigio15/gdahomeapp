@@ -245,6 +245,22 @@
       var tasti = vediPagina.createElement("div");
       tasti.className = "tasti";
 
+      /* «Apri»: la plancia, servita dal ponte, qui dentro.
+       *
+       * E' lo stesso indirizzo che apre la sua voce fra le «Plance» di Home
+       * Assistant, e sta qui perche' e' il posto dove si guarda quando si e'
+       * appena aggiunta una plancia — prima di andare a cercarla nella barra
+       * laterale. Relativo, non assoluto: davanti c'e' il prefisso
+       * dell'ingress, che cambia a ogni riavvio di Home Assistant e che da
+       * qui non si conosce. */
+      var apri = vediPagina.createElement("a");
+      apri.className = "tenue";
+      apri.textContent = "Apri";
+      apri.target = "_blank";
+      apri.rel = "noopener";
+      apri.href = una.primaria ? "plancia/" : "plancia/" + encodeURIComponent(una.profilo) + "/";
+      tasti.appendChild(apri);
+
       var rinomina = vediPagina.createElement("button");
       rinomina.className = "tenue";
       rinomina.type = "button";
