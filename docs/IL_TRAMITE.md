@@ -175,6 +175,14 @@ E gli altri due indirizzi:
 - l'app da browser: `https://webapp.gdahome.org`
 - la chat, per rispondere: `https://tramite.gdahome.org/console/`
 
+Quella pagina e' la scorciatoia: si apre da qualunque browser e la chiave la
+chiede una volta sola. Il posto per bene invece e' **dentro l'app**: si incolla
+la chiave nelle opzioni dell'add-on, alla voce «chiave_console», e da quel
+momento compaiono da soli la voce **Console** nel menu dell'app e il
+**Cruscotto** nella finestra dell'assistenza della plancia. Cosi' non c'e'
+niente da ricordarsi: la chiave sta dove stanno le altre impostazioni della
+casa, e non passa mai dal telefono.
+
 Se invece:
 
 - **non si apre proprio**: il nome non punta ancora. Rifai il passo 3;
@@ -252,9 +260,20 @@ faccia. Il riavvio si fa a mano, due volte l'anno, dal pannello.
 
 ### La chiave della console
 
-Si rifa' sulla macchina con `tramite-chiave-nuova`: ne stampa una nuova, la
-scrive nella configurazione e riavvia il tramite. Chi aveva la vecchia non
-entra piu'.
+Sulla macchina si fa tutto con `tramite-chiave`:
+
+| | |
+|---|---|
+| `tramite-chiave` | la dice: e' li' e si rilegge, non e' persa |
+| `tramite-chiave --nuova` | ne fa una nuova, presa dal caso |
+| `tramite-chiave <la tua>` | mette quella che scegli tu (almeno 16 caratteri) |
+
+Le ultime due riavviano il tramite, e chi aveva la vecchia non entra piu'.
+Cambiandola va rimessa anche nelle opzioni dell'add-on, dove sta la sua copia:
+sono la stessa chiave, e il ponte bussa con quella.
+
+Chi prova a indovinarla ha dieci tentativi: al decimo, quell'indirizzo resta
+fuori per un quarto d'ora.
 
 ---
 
@@ -278,7 +297,8 @@ stesso.
    `danigio15/gdahome-segnalazioni` con **Issues: Read and write** e
    **Contents: Read and write** (gli allegati finiscono li');
 3. incollare la riga del passo 4 nella console di Contabo;
-4. mettere la chiave della console nel gestore di password.
+4. mettere la chiave della console nelle opzioni dell'add-on — e nel gestore
+   di password, che e' dove si guarda quando la macchina non risponde.
 
 **Due gettoni e non uno**, e la ragione e' che un gettone di GitHub porta gli
 stessi permessi su tutte le repository che vede. Uno solo, per poter aprire le

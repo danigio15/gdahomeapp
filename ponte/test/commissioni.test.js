@@ -814,9 +814,10 @@ test("si riconoscono il catalogo, le foto e le cose che stanno nell'app", () => 
   /* La chat di chi chiede la fa il ponte, e solo se ce l'ha: senza, e' un
    * comando che non sa fare, non una cosa da rifiutare con una frase. */
   assert.equal(con.riconosce({ type: "dashboardmodern/chat/send" }), false);
-  /* La coda di chi risponde invece si ferma sempre qui, per dire cos'e': non
-   * e' roba di una casa, e «non conosco» non spiegherebbe niente. */
-  assert.equal(con.riconosce({ type: "dashboardmodern/chat/queue" }), true);
+  /* E la coda di chi risponde e' la stessa cosa: la fa il ponte, e solo se
+   * ce l'ha. Prima si fermava qui con una frase — «si apre dalla dashboard di
+   * chi mantiene» — che era vera finche' chi mantiene non aveva l'app. */
+  assert.equal(con.riconosce({ type: "dashboardmodern/chat/queue" }), false);
   assert.equal(con.riconosce({ type: "dashboardmodern/altro" }), false);
 
   const senza = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
@@ -837,12 +838,11 @@ test("le segnalazioni rispondono con una frase, non con un comando sconosciuto",
   assert.equal(risposta.error.code, "not_supported");
   assert.match(risposta.error.message, /nell'app/);
 
-  /* La coda dell'assistenza vuole la chiave della console, che sta nella
-   * dashboard di chi mantiene: si dice cos'e', non «non conosco». */
+  /* La coda dell'assistenza, su un ponte senza chat, e' un comando che non sa
+   * fare — come lo e' scrivere. */
   const coda = await con.rispondi({ id: 5, type: "dashboardmodern/chat/queue" });
   assert.equal(coda.success, false);
-  assert.equal(coda.error.code, "not_supported");
-  assert.match(coda.error.message, /chi mantiene/);
+  assert.equal(coda.error.code, "unknown_command");
 });
 
 /* ─── La chat dell'assistenza ─────────────────────────────────────────────── */
@@ -850,12 +850,43 @@ test("le segnalazioni rispondono con una frase, non con un comando sconosciuto",
 /* Un centralino della chat finto, quel tanto che basta per vedere dove
  * finiscono le parole: tiene le righe e le da' «dopo il numero N». Le regole
  * della chat stanno in `chat.test.js`; qui si guarda l'instradamento. */
-function chatDiProva(cartella) {
+function chatDiProva(cartella, { chiave = "" } = {}) {
   const righe = [];
   const intestazioni = [];
   const prendi = async (indirizzo, opzioni = {}) => {
     const via = new URL(indirizzo);
     intestazioni.push(opzioni.headers || {});
+    /* L'altro sportello: quello di chi risponde, che non porta nessuna casa e
+     * apre tutte le linee con una chiave sola. */
+    if (via.pathname.startsWith("/console/conversazioni")) {
+      if (via.pathname === "/console/conversazioni") {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ conversazioni: [{ id: "casa_1", nome: "Giovanni", non_letti: 1 }] }),
+        };
+      }
+      if (opzioni.method === "DELETE") {
+        return { ok: true, status: 200, json: async () => ({ cancellata: true }) };
+      }
+      if (opzioni.method === "POST") {
+        return {
+          ok: true,
+          status: 201,
+          json: async () => ({
+            messaggio: { id: 9, da: "console", testo: JSON.parse(opzioni.body).testo },
+          }),
+        };
+      }
+      const daDove = Number(via.searchParams.get("dopo") || 0);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          messaggi: daDove ? [] : [{ id: 1, da: "casa", testo: "non parte" }],
+        }),
+      };
+    }
     if (opzioni.method === "POST") {
       const riga = {
         id: righe.length + 1,
@@ -883,6 +914,7 @@ function chatDiProva(cartella) {
     versione: "0.16.0",
     plancia: "1.4.19",
     fetch: prendi,
+    chiaveDellaConsole: chiave,
     registro: ZITTO,
   });
   return { chat, righe, intestazioni };
@@ -1331,4 +1363,88 @@ test("senza la cartella di Home Assistant non succede niente di male", async () 
   });
   assert.equal(detto.result.available, false);
   assert.deepEqual(detto.result.roots, { ponte: false, casa: false });
+});
+
+test("la coda di chi risponde passa dal ponte, e solo con la chiave", async () => {
+  /* Due cartelle: due chat sullo stesso file si pesterebbero i piedi. */
+  const senzaChiave = mkdtempSync(join(tmpdir(), "commissioni-coda-"));
+  const conChiave = mkdtempSync(join(tmpdir(), "commissioni-coda-"));
+  try {
+    /* In una casa qualunque — cioe' in tutte tranne una — la coda non c'e'.
+     * Non e' un comando sconosciuto: e' una porta che esiste e che in questa
+     * casa non si apre, e si dice cosi'. */
+    const normale = chatDiProva(senzaChiave);
+    const casaQualunque = new Commissioni({
+      casa: casaDiProva(),
+      registro: ZITTO,
+      chat: normale.chat,
+    });
+    const spenta = await casaQualunque.rispondi({ id: 1, type: "dashboardmodern/chat/state" });
+    assert.equal(spenta.result.console, false);
+    const negata = await casaQualunque.rispondi({ id: 2, type: "dashboardmodern/chat/queue" });
+    assert.equal(negata.success, false);
+    assert.equal(negata.error.code, "forbidden");
+
+    /* E nella casa che la chiave ce l'ha, il Cruscotto si accende da solo: e'
+     * lo stesso `console: true` che l'integrazione manda alla finestra. */
+    const dove = chatDiProva(conChiave, { chiave: "una-chiave-lunga-abbastanza-davvero" });
+    const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO, chat: dove.chat });
+    const acceso = await con.rispondi({ id: 3, type: "dashboardmodern/chat/state" });
+    assert.equal(acceso.result.console, true);
+
+    /* Le quattro risposte hanno i nomi di `websocket_api.py`, perche' a
+     * leggerle c'e' il Cruscotto della plancia, che e' scritto per quelli. */
+    const coda = await con.rispondi({ id: 4, type: "dashboardmodern/chat/queue" });
+    assert.deepEqual(coda.result, {
+      conversations: [{ id: "casa_1", nome: "Giovanni", non_letti: 1 }],
+    });
+    const filo = await con.rispondi({
+      id: 5,
+      type: "dashboardmodern/chat/open",
+      line: "casa_1",
+    });
+    assert.deepEqual(filo.result, { messages: [{ id: 1, da: "casa", testo: "non parte" }] });
+    const risposto = await con.rispondi({
+      id: 6,
+      type: "dashboardmodern/chat/answer",
+      line: "casa_1",
+      message: "Ci guardo subito.",
+    });
+    assert.equal(risposto.result.message.testo, "Ci guardo subito.");
+    const buttata = await con.rispondi({
+      id: 7,
+      type: "dashboardmodern/chat/drop",
+      line: "casa_1",
+    });
+    assert.deepEqual(buttata.result, { dropped: true });
+
+    /* Gli stessi quattro sportelli, coi nomi che usa l'app: sotto c'e' lo
+     * stesso metodo, e una linea si chiama `linea` invece che `line`. */
+    const codaDellApp = await con.rispondi({ id: 8, type: "ponte/console/coda" });
+    assert.deepEqual(codaDellApp.result, coda.result);
+    const filoDellApp = await con.rispondi({
+      id: 9,
+      type: "ponte/console/apri",
+      linea: "casa_1",
+    });
+    assert.deepEqual(filoDellApp.result, filo.result);
+    const rispostaDellApp = await con.rispondi({
+      id: 10,
+      type: "ponte/console/rispondi",
+      linea: "casa_1",
+      testo: "Ci guardo subito.",
+    });
+    assert.equal(rispostaDellApp.result.message.testo, "Ci guardo subito.");
+
+    /* E il segreto della propria chat non e' mai finito in una di quelle
+     * chiamate: quello sportello si apre con la chiave, e con nient'altro. */
+    const dellaConsole = dove.intestazioni.filter((una) =>
+      String(una.authorization || "").includes("una-chiave-lunga-abbastanza-davvero"),
+    );
+    assert.ok(dellaConsole.length >= 4);
+    for (const una of dellaConsole) assert.equal(una["x-casa"], undefined);
+  } finally {
+    rmSync(senzaChiave, { recursive: true, force: true });
+    rmSync(conChiave, { recursive: true, force: true });
+  }
 });

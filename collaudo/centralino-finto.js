@@ -18,6 +18,11 @@ import { createServer } from "node:http";
 
 import { accetta, eUnaSalita } from "../ponte/src/presa.js";
 
+/* La chiave con cui si risponde: la stessa che il collaudo scrive nelle
+ * opzioni del ponte, cosi' la casa finta e' anche quella di chi risponde e
+ * nelle fotografie si vede tutta e due le parti della chat. */
+export const CHIAVE_DELLA_CONSOLE = "una-chiave-della-console-per-il-collaudo";
+
 export async function alzaIlCentralinoFinto({
   risposta = "Grazie, guardo subito e ti dico.",
 } = {}) {
@@ -111,6 +116,52 @@ export async function alzaIlCentralinoFinto({
         new URL(richiesta.url, "http://centralino").searchParams.get("dopo") || 0,
       );
       return json({ aperta: true, messaggi: righe.filter((una) => una.id > dopo) });
+    }
+    /* E lo sportello di chi risponde: la coda di tutte le case — qui una — con
+     * la chiave al posto del segreto della casa. */
+    if (dove.startsWith("/console/conversazioni")) {
+      if (richiesta.headers.authorization !== `Bearer ${CHIAVE_DELLA_CONSOLE}`) {
+        return json({ errore: "chiave_sbagliata" }, 403);
+      }
+      const quale = dove.slice("/console/conversazioni".length).replace(/^\//, "");
+      if (!quale) {
+        return json({
+          conversazioni: linea
+            ? [
+                {
+                  id: linea,
+                  nome: "",
+                  versione: "plancia 1.4.19 ponte 0.19.0",
+                  ha: "",
+                  lingua: "it",
+                  non_letti: righe.filter((una) => una.da === "casa").length,
+                  ultimo: righe.length ? righe[righe.length - 1].testo : "",
+                  ultimo_il: righe.length ? righe[righe.length - 1].scritto_il : 0,
+                },
+              ]
+            : [],
+        });
+      }
+      if (quale !== linea) return json({ errore: "non_trovata" }, 404);
+      if (richiesta.method === "DELETE") {
+        righe.length = 0;
+        linea = "";
+        return json({ cancellata: true });
+      }
+      if (richiesta.method === "POST") {
+        const riga = {
+          id: prossimaRiga++,
+          da: "console",
+          testo: String(detto.testo || "").slice(0, 4000),
+          scritto_il: Math.floor(Date.now() / 1000),
+        };
+        righe.push(riga);
+        return json({ messaggio: riga }, 201);
+      }
+      const daDove = Number(
+        new URL(richiesta.url, "http://centralino").searchParams.get("dopo") || 0,
+      );
+      return json({ messaggi: righe.filter((una) => una.id > daDove) });
     }
     if (!/^Casa .+/.test(richiesta.headers.authorization || "")) {
       return json({ errore: "senza_segreto", spiegazione: "serve il segreto della casa" }, 401);

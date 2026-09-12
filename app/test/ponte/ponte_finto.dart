@@ -124,7 +124,8 @@ class PonteFinto {
     final tipo = detto['type'];
     if (tipo is String &&
         (tipo.startsWith('ponte/segnalazioni/') ||
-            tipo.startsWith('ponte/chat/'))) {
+            tipo.startsWith('ponte/chat/') ||
+            tipo.startsWith('ponte/console/'))) {
       _manda(presa, {'id': id, ..._segnalazione(detto)});
       return;
     }
@@ -179,6 +180,48 @@ class PonteFinto {
   final List<Map<String, dynamic>> segnalazioni = [];
   Map<String, dynamic>? chat;
   int _prossimaSegnalazione = 7;
+
+  /// Se da questa casa si risponde alle chat delle altre.
+  ///
+  /// Nel ponte vero e' la chiave della console scritta nelle opzioni
+  /// dell'add-on; qui e' un interruttore, perche' quello che cambia per l'app
+  /// e' solo il si' o il no.
+  bool laConsole = false;
+
+  /// La coda di chi risponde: le linee, e per ognuna il suo filo.
+  final List<Map<String, dynamic>> conversazioni = [];
+  final Map<String, List<Map<String, dynamic>>> fili = {};
+  int _prossimoDellaConsole = 1;
+
+  /// Una casa chiede aiuto: nasce una linea, o si aggiunge al suo filo.
+  void unaCasaChiedeAiuto(String linea, String testo, {String nome = ''}) {
+    final riga = {
+      'id': _prossimoDellaConsole++,
+      'da': 'casa',
+      'testo': testo,
+      'scritto_il': 1757328000,
+    };
+    (fili[linea] ??= []).add(riga);
+    final quale = conversazioni.cast<Map<String, dynamic>?>().firstWhere(
+      (una) => una!['id'] == linea,
+      orElse: () => null,
+    );
+    if (quale == null) {
+      conversazioni.add({
+        'id': linea,
+        'nome': nome,
+        'versione': 'plancia 1.4.19 ponte 0.19.0',
+        'ha': '',
+        'lingua': 'it',
+        'non_letti': 1,
+        'ultimo': testo,
+        'ultimo_il': 1757328000,
+      });
+    } else {
+      quale['non_letti'] = (quale['non_letti'] as int) + 1;
+      quale['ultimo'] = testo;
+    }
+  }
 
   /// Il manutentore risponde a una segnalazione, o alla chat.
   void rispondeIlManutentore(int numero, String testo) {
@@ -308,6 +351,51 @@ class PonteFinto {
           'La chat di assistenza passa parole. Una foto si allega a una '
               'segnalazione.',
         );
+      case 'ponte/chat/stato':
+        return si({
+          'enabled': true,
+          'console': laConsole,
+          'opened': chat != null,
+          'name': '',
+          'unread': 0,
+          'preview': '',
+          'written_at': 0,
+          'messages': chat == null ? 0 : (chat!['messaggi'] as List).length,
+        });
+      /* I quattro sportelli di chi risponde. Senza la chiave della console il
+       * ponte vero risponde «forbidden» — non «non conosco»: la porta esiste,
+       * e in questa casa non si apre. */
+      case 'ponte/console/coda':
+      case 'ponte/console/apri':
+      case 'ponte/console/rispondi':
+      case 'ponte/console/butta':
+        if (!laConsole) {
+          return no('forbidden', 'Questa casa non risponde alle chat.');
+        }
+        final linea = detto['linea']?.toString() ?? '';
+        switch (detto['type']) {
+          case 'ponte/console/coda':
+            return si({'conversations': List.of(conversazioni)});
+          case 'ponte/console/apri':
+            /* Aperta vuol dire letta, come nel centralino vero. */
+            for (final una in conversazioni) {
+              if (una['id'] == linea) una['non_letti'] = 0;
+            }
+            return si({'messages': List.of(fili[linea] ?? const [])});
+          case 'ponte/console/rispondi':
+            final riga = {
+              'id': _prossimoDellaConsole++,
+              'da': 'console',
+              'testo': detto['testo'],
+              'scritto_il': 1757328600,
+            };
+            (fili[linea] ??= []).add(riga);
+            return si({'message': riga});
+          default:
+            conversazioni.removeWhere((una) => una['id'] == linea);
+            fili.remove(linea);
+            return si({'dropped': true});
+        }
       case 'ponte/chat/leggi':
         return si({'chat': chat == null ? null : filo(chat!)});
       case 'ponte/chat/scrivi':

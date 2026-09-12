@@ -71,7 +71,7 @@ function centralinoFinto({ righe = [], aperta = true, rotto = false } = {}) {
   return { prendi, chiamate, righe };
 }
 
-function unaChat(centralino, { adesso = () => 1000, giaAperta = false } = {}) {
+function unaChat(centralino, { adesso = () => 1000, giaAperta = false, chiave = "" } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "chat-"));
   const chat = new Chat({
     cartella,
@@ -79,6 +79,7 @@ function unaChat(centralino, { adesso = () => 1000, giaAperta = false } = {}) {
     versione: "0.16.0",
     plancia: "1.4.19",
     fetch: centralino.prendi,
+    chiaveDellaConsole: chiave,
     registro: ZITTO,
     adesso,
   });
@@ -365,6 +366,234 @@ test("un messaggio con emoji non si spezza sul limite", async () => {
     const scritta = centralino.chiamate.find((una) => una.metodo === "POST");
     assert.ok(!scritta.corpo.testo.includes("�"), "e' partito mezzo emoji");
     assert.equal(scritta.corpo.testo, "a".repeat(TESTO_MASSIMO - 1));
+  } finally {
+    via();
+  }
+});
+
+/* ─── L'altra meta': chi risponde ──────────────────────────────────────────
+ *
+ * La coda di tutte le case. Qui non c'e' nessuna casa che si presenta: c'e'
+ * una chiave che apre tutte le linee, e quella chiave la scrive una
+ * installazione sola al mondo nelle opzioni dell'add-on.
+ *
+ * Le regole che, sbagliate, si pagano care: senza chiave non si bussa nemmeno;
+ * una conversazione si legge **intera** e non solo la prima pagina; e il nome
+ * di una linea, che arriva da fuori, non finisce in un indirizzo senza essere
+ * guardato.
+ */
+
+/* Un centralino visto dallo sportello della console. */
+function laCoda({ conversazioni = [], messaggi = [], pagina = 100, ignoraDopo = false } = {}) {
+  const chiamate = [];
+  const prendi = async (url, opzioni = {}) => {
+    const via = new URL(url);
+    chiamate.push({
+      via: via.pathname + via.search,
+      metodo: opzioni.method,
+      intestazioni: opzioni.headers,
+      corpo: opzioni.body ? JSON.parse(opzioni.body) : null,
+    });
+    if (via.pathname === "/console/conversazioni") {
+      return { ok: true, status: 200, json: async () => ({ conversazioni }) };
+    }
+    const quale = /^\/console\/conversazioni\/([^/]+)$/.exec(via.pathname)?.[1];
+    if (!quale) return { ok: false, status: 404, json: async () => ({ errore: "non_trovato" }) };
+    if (opzioni.method === "DELETE") {
+      return { ok: true, status: 200, json: async () => ({ cancellata: true }) };
+    }
+    if (opzioni.method === "POST") {
+      const riga = {
+        id: messaggi.reduce((piu, una) => Math.max(piu, una.id), 0) + 1,
+        da: "console",
+        testo: JSON.parse(opzioni.body).testo,
+        scritto_il: 2000,
+      };
+      messaggi.push(riga);
+      return { ok: true, status: 201, json: async () => ({ messaggio: riga }) };
+    }
+    const dopo = Number(via.searchParams.get("dopo") || 0);
+    const avanti = ignoraDopo ? messaggi : messaggi.filter((riga) => riga.id > dopo);
+    return { ok: true, status: 200, json: async () => ({ messaggi: avanti.slice(0, pagina) }) };
+  };
+  return { prendi, chiamate, messaggi };
+}
+
+const CHIAVE = "una-chiave-della-console-lunga-abbastanza";
+const LINEA = "casa_0123456789abcdef0123456789abcdef";
+
+test("senza la chiave non c'e' nessuna console, e non si bussa nemmeno", async () => {
+  const centralino = laCoda();
+  const { chat, via } = unaChat(centralino);
+  try {
+    assert.equal(chat.eLaConsole, false);
+    assert.equal(chat.stato().console, false);
+    for (const fare of [
+      () => chat.coda(),
+      () => chat.apri(LINEA),
+      () => chat.replica(LINEA, "ciao"),
+      () => chat.butta(LINEA),
+    ]) {
+      await assert.rejects(fare, (errore) => {
+        assert.ok(errore instanceof ChatHaDettoNo);
+        assert.equal(errore.codice, "forbidden");
+        return true;
+      });
+    }
+    /* E nessuna di quelle quattro e' uscita di casa: un rifiuto che passa
+     * comunque dalla rete direbbe al centralino che questa casa ci prova. */
+    assert.equal(centralino.chiamate.length, 0);
+  } finally {
+    via();
+  }
+});
+
+test("con la chiave si apre la coda, e il segreto della casa non c'entra", async () => {
+  const centralino = laCoda({
+    conversazioni: [{ id: LINEA, nome: "Giovanni", non_letti: 2, ultimo: "non parte" }],
+  });
+  const { chat, via } = unaChat(centralino, { chiave: CHIAVE, giaAperta: true });
+  try {
+    assert.equal(chat.stato().console, true);
+    const coda = await chat.coda();
+    /* Le colonne sono quelle del centralino e si passano com'e': il Cruscotto
+     * della plancia legge `non_letti` e `ultimo`, e riscriverle qui vorrebbe
+     * dire tenerle allineate a mano. */
+    assert.deepEqual(coda, [{ id: LINEA, nome: "Giovanni", non_letti: 2, ultimo: "non parte" }]);
+
+    const bussata = centralino.chiamate.at(-1);
+    assert.equal(bussata.via, "/console/conversazioni");
+    assert.equal(bussata.intestazioni.authorization, `Bearer ${CHIAVE}`);
+    /* Chi risponde non e' una casa: non ha un nome di linea da dire, e il
+     * segreto della propria chat non c'entra con questo sportello. */
+    assert.equal(bussata.intestazioni["x-casa"], undefined);
+    assert.doesNotMatch(JSON.stringify(bussata.intestazioni), /[0-9a-f]{64}/);
+  } finally {
+    via();
+  }
+});
+
+test("una conversazione si legge intera, non solo la prima pagina", async () => {
+  /* Il centralino ne conserva duecento e ne da' cento per volta. Chiedere la
+   * prima pagina e fermarsi vorrebbe dire che dalla centunesima in poi non si
+   * leggono mai — nemmeno riaprendo, perche' si riaprirebbe sulle stesse. */
+  const messaggi = Array.from({ length: 150 }, (_uno, indice) => ({
+    id: indice + 1,
+    da: indice % 2 ? "console" : "casa",
+    testo: `numero ${indice + 1}`,
+    scritto_il: 1000 + indice,
+  }));
+  const centralino = laCoda({ messaggi, pagina: 100 });
+  const { chat, via } = unaChat(centralino, { chiave: CHIAVE });
+  try {
+    const filo = await chat.apri(LINEA);
+    assert.equal(filo.length, 150);
+    assert.equal(filo[0].id, 1);
+    assert.equal(filo.at(-1).id, 150);
+    assert.equal(new Set(filo.map((riga) => riga.id)).size, 150, "ci sono righe doppie");
+    /* Due giri per le due pagine, piu' quello che torna vuoto e ferma il
+     * ciclo. */
+    assert.equal(centralino.chiamate.length, 3);
+    assert.equal(centralino.chiamate[1].via, `/console/conversazioni/${LINEA}?dopo=100`);
+  } finally {
+    via();
+  }
+});
+
+test("un centralino che ignora «dopo» non riempie il filo di doppioni", async () => {
+  /* Fidarsi che la risposta rispetti il «dopo N» basta finche' i due lati
+   * restano d'accordo. Il giorno che non lo fossero, senza questo controllo il
+   * filo si riempirebbe di righe doppie e nessuno saprebbe perche'. */
+  const messaggi = Array.from({ length: 30 }, (_uno, indice) => ({
+    id: indice + 1,
+    da: "casa",
+    testo: `numero ${indice + 1}`,
+    scritto_il: 1000,
+  }));
+  const centralino = laCoda({ messaggi, pagina: 10, ignoraDopo: true });
+  const { chat, via } = unaChat(centralino, { chiave: CHIAVE });
+  try {
+    const filo = await chat.apri(LINEA);
+    assert.equal(filo.length, 10);
+    assert.equal(new Set(filo.map((riga) => riga.id)).size, 10);
+    assert.ok(centralino.chiamate.length <= 4, "ha continuato a chiedere pagine");
+  } finally {
+    via();
+  }
+});
+
+test("il nome di una linea si guarda prima di infilarlo in un indirizzo", async () => {
+  const centralino = laCoda();
+  const { chat, via } = unaChat(centralino, { chiave: CHIAVE });
+  try {
+    for (const storto of [
+      "",
+      "  ",
+      "../salute",
+      "casa_1/../../console",
+      "casa 1",
+      "a".repeat(65),
+    ]) {
+      await assert.rejects(
+        () => chat.apri(storto),
+        (errore) => errore instanceof ChatHaDettoNo && errore.codice === "unknown_line",
+        `«${storto}» e' passato`,
+      );
+    }
+    assert.equal(centralino.chiamate.length, 0, "una linea storta e' arrivata al centralino");
+  } finally {
+    via();
+  }
+});
+
+test("si risponde, e una risposta con emoji non si spezza sul limite", async () => {
+  const centralino = laCoda();
+  const { chat, via } = unaChat(centralino, { chiave: CHIAVE });
+  try {
+    await assert.rejects(
+      () => chat.replica(LINEA, "   "),
+      (errore) => errore instanceof ChatHaDettoNo && errore.codice === "empty",
+    );
+    assert.equal(centralino.chiamate.length, 0);
+
+    const messaggio = await chat.replica(LINEA, "a".repeat(TESTO_MASSIMO - 1) + "🙏");
+    const scritta = centralino.chiamate.at(-1);
+    assert.equal(scritta.metodo, "POST");
+    assert.equal(scritta.via, `/console/conversazioni/${LINEA}`);
+    assert.ok(!scritta.corpo.testo.includes("\uFFFD"), "e' partito mezzo emoji");
+    assert.equal(scritta.corpo.testo, "a".repeat(TESTO_MASSIMO - 1));
+    assert.equal(messaggio.da, "console");
+  } finally {
+    via();
+  }
+});
+
+test("una conversazione si butta via, e la si butta per tutti e due", async () => {
+  const centralino = laCoda();
+  const { chat, via } = unaChat(centralino, { chiave: CHIAVE });
+  try {
+    assert.equal(await chat.butta(LINEA), true);
+    const bussata = centralino.chiamate.at(-1);
+    assert.equal(bussata.metodo, "DELETE");
+    assert.equal(bussata.via, `/console/conversazioni/${LINEA}`);
+  } finally {
+    via();
+  }
+});
+
+test("con la chat spenta non si risponde, nemmeno avendo la chiave", async () => {
+  /* Spegnere la chat promette che «non esce niente di casa», e la promessa
+   * vale anche per chi risponde: senza questo controllo, una finestra gia'
+   * aperta continuerebbe a parlare col centralino a interruttore spento. */
+  const centralino = laCoda();
+  const { chat, via } = unaChat(centralino, { chiave: CHIAVE });
+  try {
+    chat.centralino = "";
+    assert.equal(chat.eLaConsole, false);
+    await assert.rejects(
+      () => chat.coda(),
+      (errore) => errore instanceof ChatHaDettoNo && errore.codice === "disabled",
+    );
   } finally {
     via();
   }

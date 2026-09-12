@@ -38,7 +38,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
 import { alzaLaCasaFinta, SCATTO_DEMO, SEGNO_DEL_SUPERVISOR } from "./casa-finta.js";
-import { alzaIlCentralinoFinto } from "./centralino-finto.js";
+import { alzaIlCentralinoFinto, CHIAVE_DELLA_CONSOLE } from "./centralino-finto.js";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 const RADICE = dirname(QUI);
@@ -332,6 +332,12 @@ async function main() {
        * sportello: nella vita e' un centralino diverso — quello della
        * dashboard — e da qui non si esce sulla rete vera. */
       PONTE_CHAT: centralino.dellaChat,
+      /* E questa casa finta e' anche quella di **chi risponde**: con la
+       * chiave della console compaiono la voce «Console» nel menu dell'app e
+       * il Cruscotto nella finestra dell'assistenza della plancia. Nella vita
+       * ce l'ha una casa sola al mondo; qui ce l'ha perche' le due meta' della
+       * chat si vedano nella stessa fotografia. */
+      PONTE_CHIAVE_CONSOLE: CHIAVE_DELLA_CONSOLE,
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -1328,6 +1334,25 @@ try {
   await aspettaCheCompaia(pagina, "Grazie, guardo subito");
   await attendi(700);
   await scatta(pagina, "6e-assistenza");
+
+  /* La Console: la stessa conversazione, vista dall'altra parte.
+   *
+   * La voce c'e' perche' questa casa ha la chiave; in una casa qualunque non
+   * comparirebbe. Quello che si vede qui e' la domanda appena scritta
+   * dall'Assistenza, arrivata nella coda di chi risponde. */
+  racconta("apro la console dell'assistenza");
+  await vaiA("Console", "CONVERSAZIONI");
+  await attendi(800);
+  await scatta(pagina, "6e2-console-coda");
+
+  await premi(pagina, "casa_");
+  await aspettaCheCompaia(pagina, "Tutte le conversazioni");
+  await attendi(800);
+  await scriviIn(pagina, "Rispondi a", "Dalla home, in alto a sinistra.");
+  await premi(pagina, "Manda");
+  await aspettaCheCompaia(pagina, "Dalla home, in alto a sinistra");
+  await attendi(700);
+  await scatta(pagina, "6e3-console-filo");
 
   /* «Come va l'app»: i numeri di come disegna, e quanto passa sul filo. E'
    * la pagina che si chiede di fotografare quando l'app va a scatti, quindi

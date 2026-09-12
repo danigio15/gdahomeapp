@@ -12,7 +12,7 @@
 # finire esposta. Su quella non c'e' nessuna console: si puo' solo presentare
 # un codice di abbinamento valido, o un segno di riconoscimento gia' avuto.
 name: Il ponte di DashboardModern
-version: "0.18.0"
+version: "0.19.0"
 slug: ponte
 description: Fa parlare l'app di DashboardModern con questa casa, da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.
 url: https://github.com/danigio15/dashboardmodern-v2/tree/main/ponte
@@ -120,6 +120,16 @@ options:
   #
   # Vuoto vuol dire: non ti aggiorni da te'. Tutto il resto funziona uguale.
   gettone: ""
+  # La chiave con cui si **risponde** alle chat di assistenza.
+  #
+  # Lasciala vuota. Serve a UNA installazione al mondo — quella di chi l'app la
+  # mantiene — per leggere le conversazioni di tutti e rispondere. In tutte le
+  # altre case non cambia niente e non si vede niente: la chat resta quella di
+  # chi chiede aiuto, che e' quello che serve.
+  #
+  # E' la stessa chiave messa fra i segreti del centralino, e non si inventa
+  # qui: si copia da li'.
+  chiave_console: ""
   registro: info
 
 schema:
@@ -133,4 +143,8 @@ schema:
   # rimostri dopo; il `?` perche' chi non ne ha bisogno non deve trovarsi un
   # campo obbligatorio da riempire.
   gettone: password?
+  # `password` per la stessa ragione del gettone: Home Assistant la nasconde
+  # mentre si scrive. A differenza del gettone, questa si puo' sempre rileggere
+  # da dove sta di casa — sulla macchina, con `tramite-chiave`.
+  chiave_console: password?
   registro: list(debug|info|attenzione|errore)

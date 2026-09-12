@@ -142,10 +142,20 @@ sono, in binario. Dieci megabyte al massimo.
 La **chat di assistenza** invece non passa da GitHub, ed e' quella della
 plancia: gli otto comandi `dashboardmodern/chat/*` che nell'integrazione fa
 `chat.py`, qui li fa `src/chat.js`. I quattro di chi chiede — stato, filo,
-manda, dimentica — arrivano al centralino della chat della dashboard, che e'
-un altro posto dal centralino di gdahome; i quattro di chi risponde, che
-sono la coda di tutte le case, si fermano qui con una frase: quella coda si
-apre dalla dashboard di chi mantiene, non da una casa.
+manda, dimentica — li ha ogni casa. I quattro di chi risponde — la coda di
+tutte le case, aprirne una, rispondere, buttarla via — li ha **una casa sola
+al mondo**: quella che nelle opzioni ha scritto `chiave_console`. Dove quella
+chiave non c'e', quei quattro rispondono `forbidden` — la porta esiste, e in
+quella casa non si apre — e nella finestra dell'assistenza non compare
+niente.
+
+Quando c'e', si accendono due cose insieme, senza che nessuno le installi: il
+**Cruscotto** della plancia, la scheda con la coda che nella dashboard e' li'
+da sempre, e la voce **Console** nel menu dell'app. La chiave non esce dalle
+opzioni: bussa il ponte, e al telefono arrivano solo le conversazioni. L'app
+usa gli stessi quattro sportelli coi suoi nomi — `ponte/console/coda`,
+`/apri`, `/rispondi`, `/butta` — e chiede a `ponte/chat/stato` se quella voce
+va disegnata.
 
 Questa casa, per quel centralino, e' un nome di 128 bit e un segreto di 256
 presi dal caso alla prima parola scritta, tenuti in `/data/chat.json`: niente
@@ -165,6 +175,8 @@ metterlo.
 | `dispositivi_massimi` | quanti telefoni possono restare abbinati insieme (difetto: 10) |
 | `minuti_del_codice` | quanto vive un codice di abbinamento (difetto: 5) |
 | `giorni_di_silenzio` | dopo quanto un telefono sparito viene tolto da solo; zero vuol dire mai (difetto: 90) |
+| `gettone` | il gettone di GitHub con cui il ponte si aggiorna da se'; vuoto = non si aggiorna |
+| `chiave_console` | la chiave con cui si **risponde** alle chat di tutte le case. Lasciala vuota: serve a una installazione al mondo. E' la stessa messa fra i segreti del centralino |
 | `registro` | `debug`, `info`, `attenzione`, `errore` |
 
 ## I due sportelli della porta dell'app

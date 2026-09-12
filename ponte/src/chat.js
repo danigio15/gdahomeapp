@@ -17,6 +17,17 @@
  * `chat_store.py` dell'integrazione: le stesse chiamate, le stesse risposte,
  * le stesse regole. Non una seconda chat da tenere allineata a mano.
  *
+ * **Le due meta'.** Quattro comandi sono di chi chiede — lo stato, il filo,
+ * scrivi, dimentica — e li ha ogni casa. Quattro sono di chi risponde — la
+ * coda di tutte le case, aprine una, rispondere, buttarla via — e li ha una
+ * casa sola al mondo: quella che nelle opzioni dell'add-on ha scritto la
+ * chiave della console. Dove quella chiave non c'e', questa meta' del file non
+ * si accende, e nella finestra dell'assistenza non compare niente.
+ *
+ * Prima quei quattro comandi il ponte li rifiutava dicendo «si aprono dalla
+ * dashboard di chi mantiene». Era vero finche' chi mantiene aveva la plancia
+ * e non l'app; adesso non lo e' piu', e la coda si apre da dove si risponde.
+ *
  * **Chi e' questa casa.** Un nome di 128 bit e un segreto di 256, presi dal
  * caso alla prima parola scritta e tenuti in `/data/chat.json`. Chi risponde
  * vede che la linea `casa_9f3a…` ha scritto, e non ha modo di sapere altro:
@@ -49,6 +60,18 @@ const NOME_MASSIMO = 60;
 /* Quanto tiene il centralino di un'etichetta — `LIMITI.etichetta` — e quindi
  * quanto vale la pena mandargliene: piu' di cosi' lo taglia lui. */
 const ETICHETTA_MASSIMA = 40;
+
+/* Quante pagine si e' disposti a chiedere per una conversazione sola, dalla
+ * parte di chi risponde. Il centralino ne tiene duecento e ne da' cento per
+ * volta: due giri bastano, il terzo e' il margine perche' quei due numeri non
+ * si tocchino. */
+const MAX_PAGINE = 4;
+
+/* Com'e' fatto il nome di una linea. Si controlla prima di infilarlo in un
+ * indirizzo: quello che arriva dalla finestra l'ha scritto qualcuno, e un nome
+ * con dentro una barra o un punto interrogativo chiederebbe al centralino una
+ * cosa diversa da quella che si voleva chiedere. */
+const LINEA_VALIDA = /^[A-Za-z0-9_-]{1,64}$/;
 
 const ATTESA = 20_000;
 /* Quanto vale la rilettura prima di richiederla: la finestra la chiede a ogni
@@ -108,6 +131,7 @@ export class Chat {
     versione = "",
     plancia = "",
     lingua = "",
+    chiaveDellaConsole = "",
     fetch: prendi = globalThis.fetch,
     registro,
     adesso = () => Date.now(),
@@ -118,6 +142,14 @@ export class Chat {
     this.versione = String(versione || "");
     this.plancia = String(plancia || "");
     this.lingua = String(lingua || "");
+    /* La chiave con cui si leggono le conversazioni di **tutte** le case.
+     *
+     * Sta nelle opzioni dell'add-on di un Home Assistant solo al mondo, come
+     * nell'integrazione sta nelle opzioni di una plancia sola: il centralino
+     * non conosce nessuno, sa distinguere solo chi ce l'ha da chi non ce l'ha.
+     * Vuota — cioe' in tutte le case tranne una — questa meta' del ponte non
+     * esiste e non si vede. */
+    this.chiaveDellaConsole = String(chiaveDellaConsole || "");
     this.prendi = prendi;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
@@ -129,6 +161,15 @@ export class Chat {
    * disegna nemmeno: meglio nessuna porta che una porta che non si apre. */
   get accesa() {
     return Boolean(this.centralino) && typeof this.prendi === "function";
+  }
+
+  /* Se da questa casa si risponde alle altre.
+   *
+   * Due cose insieme, come nell'integrazione: la chiave, e la chat accesa.
+   * Spegnere la chat promette che «non esce niente di casa», e la promessa
+   * vale anche per chi risponde. */
+  get eLaConsole() {
+    return this.accesa && Boolean(this.chiaveDellaConsole);
   }
 
   get dati() {
@@ -167,9 +208,11 @@ export class Chat {
     const ultima = nonLetti.length ? nonLetti[nonLetti.length - 1] : {};
     return {
       enabled: this.accesa,
-      /* La console e' il capo di chi risponde, e nell'app non c'e': qui si
-       * sta sempre dalla parte di chi chiede. */
-      console: false,
+      /* Se questa casa e' anche quella di chi risponde. E' quello che accende
+       * il Cruscotto nella finestra dell'assistenza della plancia — la scheda
+       * con la coda di tutte le case — e la voce «Console» nell'app. In tutte
+       * le altre case e' falso, e non c'e' niente da vedere. */
+      console: this.eLaConsole,
       opened: this.aperta,
       name: String(this.dati.nome || ""),
       unread: nonLetti.length,
@@ -322,6 +365,100 @@ export class Chat {
     };
   }
 
+  /* ─── Il lato di chi risponde ──────────────────────────────────────────── */
+
+  /* La chiave, e il permesso di usarla.
+   *
+   * Due domande e non una, come in `chat.py`. La prima e' se da questa casa si
+   * risponda alle chat, e la dice la chiave. La seconda e' se la chat sia
+   * accesa: senza questo controllo, chi ha spento la chat e ha una finestra
+   * gia' aperta continuerebbe a parlare col centralino con l'interruttore su
+   * spento. */
+  _chiaveDiChiRisponde() {
+    if (!this.accesa) {
+      throw new ChatHaDettoNo("disabled", "La chat non e' disponibile su questa plancia.");
+    }
+    if (!this.chiaveDellaConsole) {
+      throw new ChatHaDettoNo("forbidden", "Questa casa non risponde alle chat di assistenza.");
+    }
+    return this.chiaveDellaConsole;
+  }
+
+  /* Il nome di una linea, controllato prima di finire in un indirizzo. */
+  _unaLinea(linea) {
+    const quale = String(linea ?? "").trim();
+    if (!LINEA_VALIDA.test(quale)) {
+      throw new ChatHaDettoNo("unknown_line", "Quella conversazione non esiste.");
+    }
+    return quale;
+  }
+
+  /* `chat/queue`: le conversazioni aperte, con i non letti e l'ultima cosa
+   * detta. Quello che arriva dal centralino si passa com'e': le colonne sono
+   * le sue, e riscriverle qui vorrebbe dire tenerle allineate a mano. */
+  async coda() {
+    const detto = await this._chiamaConsole("GET", "/console/conversazioni");
+    const righe = detto?.conversazioni;
+    return Array.isArray(righe) ? righe.filter((riga) => riga && typeof riga === "object") : [];
+  }
+
+  /* `chat/open`: una conversazione intera.
+   *
+   * Intera davvero: il centralino ne da' cento per volta e ne conserva
+   * duecento, quindi chiedere la prima pagina e fermarsi vorrebbe dire che
+   * dalla centunesima in poi non si leggono mai — nemmeno riaprendo, perche'
+   * si riaprirebbe sulle stesse cento.
+   *
+   * Di ogni pagina si tiene solo quello che viene davvero dopo il segnalibro:
+   * fidarsi che la risposta rispetti il «dopo N» basterebbe finche' i due lati
+   * restano d'accordo, e il giorno che non lo fossero il filo si riempirebbe
+   * di righe doppie senza che nessuno sappia perche'. */
+  async apri(linea) {
+    const quale = this._unaLinea(linea);
+    const filo = [];
+    let dopo = 0;
+    for (let giro = 0; giro < MAX_PAGINE; giro += 1) {
+      const detto = await this._chiamaConsole(
+        "GET",
+        `/console/conversazioni/${quale}?dopo=${dopo}`,
+      );
+      const righe = Array.isArray(detto?.messaggi) ? detto.messaggi : [];
+      const avanti = righe.filter((riga) => riga && (Number(riga.id) || 0) > dopo);
+      if (!avanti.length) break;
+      filo.push(...avanti);
+      dopo = avanti.reduce((piuAlto, riga) => Math.max(piuAlto, Number(riga.id) || 0), dopo);
+    }
+    return filo;
+  }
+
+  /* `chat/answer`: rispondi a una casa. */
+  async replica(linea, testo) {
+    const quale = this._unaLinea(linea);
+    const pulito = tagliaBene(String(testo ?? "").trim(), TESTO_MASSIMO);
+    if (!pulito) throw new ChatHaDettoNo("empty", "Non c'e' niente da mandare.");
+    const detto = await this._chiamaConsole("POST", `/console/conversazioni/${quale}`, {
+      testo: pulito,
+    });
+    const messaggio = detto?.messaggio;
+    return messaggio && typeof messaggio === "object" ? messaggio : {};
+  }
+
+  /* `chat/drop`: butta via una conversazione dalla coda di chi risponde.
+   *
+   * La casa la propria puo' cancellarla da sempre; chi risponde non poteva
+   * cancellare niente, e una coda dove non si butta via nulla si riempie di
+   * prove, di domande gia' risolte e di righe aperte per sbaglio, finche'
+   * quella vera non si trova piu'.
+   *
+   * Cancella davvero, e per tutti e due: la linea sparisce dal centralino e
+   * con lei quello che si erano detti — anche dalla plancia di quella casa. E'
+   * il verso giusto della promessa scritta prima della prima riga. */
+  async butta(linea) {
+    const quale = this._unaLinea(linea);
+    const detto = await this._chiamaConsole("DELETE", `/console/conversazioni/${quale}`);
+    return Boolean(detto?.cancellata);
+  }
+
   /* ─── Il di dentro ─────────────────────────────────────────────────────── */
 
   /* Il centralino conta i secondi; l'app legge le date come le scrive
@@ -459,7 +596,29 @@ export class Chat {
        * rilettura non perde niente. */
       "x-nome": perUnIntestazione(note.nome),
     };
+    return this._bussa(metodo, via, intestazioni, corpo);
+  }
+
+  /* Una chiamata al centralino per conto di chi risponde.
+   *
+   * Le intestazioni sono meno: qui non c'e' nessuna casa che si presenta, c'e'
+   * una chiave che apre tutte le linee. Niente `x-casa`, niente segreto, e
+   * niente note — le note le scrive chi chiede, non chi risponde. */
+  async _chiamaConsole(metodo, via, corpo = null) {
+    const chiave = this._chiaveDiChiRisponde();
+    const intestazioni = {
+      accept: "application/json",
+      "user-agent": "gdahome-ponte",
+      authorization: `Bearer ${chiave}`,
+    };
     if (corpo) intestazioni["content-type"] = "application/json";
+    return this._bussa(metodo, via, intestazioni, corpo);
+  }
+
+  /* Bussare, e capire cosa e' tornato. E' lo stesso per tutti e due gli
+   * sportelli, e sta in un posto solo: un centralino giu' deve raccontarsi
+   * nello stesso modo a chi chiede aiuto e a chi lo da'. */
+  async _bussa(metodo, via, intestazioni, corpo) {
     let risposta;
     try {
       risposta = await this.prendi(`${this.centralino}${via}`, {

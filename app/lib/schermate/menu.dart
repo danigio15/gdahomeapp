@@ -39,6 +39,11 @@ enum Sezione {
   acquisti('Acquisti', 'evidenza', pronta: true),
   segnalazioni('Segnalazioni', 'segnalazioni', pronta: true),
   assistenza('Assistenza', 'assistenza', pronta: true),
+  /* La coda di chi risponde. Non e' una voce come le altre: compare **in una
+   * casa sola al mondo**, quella che nelle opzioni del ponte ha la chiave
+   * della console. Chi la voce ce l'ha lo decide il ponte, non l'app — vedi
+   * `vociDellaBarra`. */
+  console('Console', 'avvisi', pronta: true),
   aiutanti('Aiutanti', 'mie'),
   zigbee('Zigbee', 'runtime'),
   automazioni('Automazioni', 'azioni');

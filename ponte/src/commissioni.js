@@ -77,21 +77,32 @@ const NELLAPP = /^dashboardmodern\/tickets\//;
 const DETTO_NELLAPP = "Le segnalazioni stanno nell'app, non nella plancia.";
 
 /* La chat di assistenza della dashboard: quattro comandi sono di chi chiede, e
- * li fa il ponte; quattro sono di chi risponde — la coda di tutte le case — e
- * vogliono la chiave della console, che sta nella dashboard di chi mantiene e
- * non in una casa. A quelli si risponde dicendo cos'e', non «non conosco». */
+ * li fa il ponte per ogni casa. */
 const CHAT_STATO = "dashboardmodern/chat/state";
 const CHAT_FILO = "dashboardmodern/chat/thread";
 const CHAT_MANDA = "dashboardmodern/chat/send";
 const CHAT_DIMENTICA = "dashboardmodern/chat/forget";
-const CHAT_DI_CHI_RISPONDE = new Set([
-  "dashboardmodern/chat/queue",
-  "dashboardmodern/chat/open",
-  "dashboardmodern/chat/answer",
-  "dashboardmodern/chat/drop",
+
+/* E quattro sono di chi risponde: la coda di tutte le case, aprirne una,
+ * rispondere, buttarla via. Li fa lo stesso ponte, ma solo dove c'e' la chiave
+ * della console — cioe' in una casa sola al mondo.
+ *
+ * Due nomi per la stessa porta, e non e' una svista. Quelli col prefisso della
+ * dashboard sono i comandi che la finestra dell'assistenza **gia' manda**: e'
+ * il Cruscotto della plancia, mille e duecento righe scritte e tradotte, e
+ * riscriverlo per cambiargli il nome ai comandi sarebbe stato l'unico lavoro
+ * di tutta la giornata. Quelli col prefisso del ponte sono per l'app, che la
+ * dashboard non la nomina da nessuna parte. Sotto c'e' lo stesso metodo. */
+const DI_CHI_RISPONDE = new Map([
+  ["dashboardmodern/chat/queue", "coda"],
+  ["dashboardmodern/chat/open", "apri"],
+  ["dashboardmodern/chat/answer", "rispondi"],
+  ["dashboardmodern/chat/drop", "butta"],
+  ["ponte/console/coda", "coda"],
+  ["ponte/console/apri", "apri"],
+  ["ponte/console/rispondi", "rispondi"],
+  ["ponte/console/butta", "butta"],
 ]);
-const DETTA_LA_CONSOLE =
-  "La coda dell'assistenza si apre dalla dashboard di chi mantiene, non da una casa.";
 
 /* La pagina, per abitudine vecchia, tiene anche una copia per utente della
  * configurazione in Home Assistant (`frontend/*_user_data`), con questa
@@ -235,7 +246,10 @@ export class Commissioni {
     if (tipo === FOTO_ELENCO || tipo === FOTO_CARICA) return Boolean(this.foto);
     if (tipo === CHAT_STATO || tipo === CHAT_FILO || tipo === CHAT_MANDA || tipo === CHAT_DIMENTICA)
       return Boolean(this.chat);
-    if (CHAT_DI_CHI_RISPONDE.has(tipo)) return true;
+    /* E la coda di chi risponde: la fa lo stesso ponte, e se la chat non c'e'
+     * non e' roba sua. Che poi la chiave ci sia o no lo dice la chat, con una
+     * frase — qui si decide solo chi risponde a questo comando. */
+    if (DI_CHI_RISPONDE.has(tipo)) return Boolean(this.chat);
     if (tipo === TIMER_ELENCO || tipo === TIMER_METTI || tipo === TIMER_TOGLI)
       return Boolean(this.spegnimento);
     if (NELLAPP.test(tipo)) return true;
@@ -260,7 +274,7 @@ export class Commissioni {
     if (tipo === FOTO_CARICA) return this._caricaUnaFoto(detto);
     if (tipo === CHAT_STATO || tipo === CHAT_FILO || tipo === CHAT_MANDA || tipo === CHAT_DIMENTICA)
       return this._chat(detto);
-    if (CHAT_DI_CHI_RISPONDE.has(tipo)) return no(id, "not_supported", DETTA_LA_CONSOLE);
+    if (DI_CHI_RISPONDE.has(tipo)) return this._laConsoleDellaChat(detto);
     if (tipo === TIMER_ELENCO || tipo === TIMER_METTI || tipo === TIMER_TOGLI)
       return this._timerDelClima(detto);
     if (typeof tipo === "string" && NELLAPP.test(tipo))
@@ -378,6 +392,58 @@ export class Commissioni {
     }
   }
 
+  /* L'altra meta': la coda di tutte le case, per chi risponde.
+   *
+   * Le risposte hanno i nomi di `websocket_api.py` — `conversations`,
+   * `messages`, `message`, `dropped` — perche' a leggerle c'e' il Cruscotto
+   * della plancia, che e' scritto per quelli.
+   *
+   * **Chi puo' chiedere.** Chiunque sia gia' entrato: un telefono abbinato o
+   * una finestra della plancia dentro Home Assistant. Nel ponte non c'e'
+   * nessun grado di amministratore da controllare — chi e' passato
+   * dall'abbinamento e' gia' dentro casa — e il confine vero e' un altro: la
+   * chiave della console. Sta nelle opzioni dell'add-on, che si aprono solo da
+   * Home Assistant e solo da chi lo amministra, e senza quella qui non si
+   * apre niente in nessuna casa del mondo. */
+  async _laConsoleDellaChat(detto) {
+    const id = detto.id ?? null;
+    const chat = this.chat;
+    if (!chat) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    /* Una linea la si nomina in due modi, perche' due finestre la nominano in
+     * due modi: `line` e' come la chiama la plancia, `linea` come la chiama
+     * l'app. Il primo che c'e' vale. */
+    const linea =
+      typeof detto.line === "string"
+        ? detto.line
+        : typeof detto.linea === "string"
+          ? detto.linea
+          : "";
+    const testo =
+      typeof detto.message === "string"
+        ? detto.message
+        : typeof detto.testo === "string"
+          ? detto.testo
+          : "";
+    try {
+      switch (DI_CHI_RISPONDE.get(detto.type)) {
+        case "coda":
+          return si(id, { conversations: await chat.coda() });
+        case "apri":
+          return si(id, { messages: await chat.apri(linea) });
+        case "rispondi":
+          return si(id, { message: await chat.replica(linea, testo) });
+        case "butta":
+          return si(id, { dropped: await chat.butta(linea) });
+        default:
+          return no(id, "unknown_command", `non conosco ${detto.type}`);
+      }
+    } catch (errore) {
+      if (errore instanceof ChatHaDettoNo) return no(id, errore.codice, errore.message);
+      this.registro.errore(`la console della chat e' andata storta: ${errore?.message || errore}`);
+      return no(id, "ponte_chat", "non ha funzionato");
+    }
+  }
+
   /* La chat dell'app: **la stessa** di quella della plancia, e non passa da
    * GitHub — «la chat non deve passare per github, puoi utilizzare la stessa
    * chat della dashboardmodern v2».
@@ -396,6 +462,12 @@ export class Commissioni {
     if (!chat) return no(id, "unknown_command", `non conosco ${detto.type}`);
     try {
       switch (detto.type) {
+        /* Come sta la chat, senza uscire di casa: serve all'app per sapere
+         * se questa e' la casa di chi risponde — e quindi se disegnare la
+         * voce «Console» — senza chiedere la coda per scoprirlo. E' lo stesso
+         * `chat/state` che riceve la finestra della plancia. */
+        case "ponte/chat/stato":
+          return si(id, chat.stato());
         case "ponte/chat/leggi": {
           /* Un centralino giu' non e' una schermata vuota: le parole che
            * c'erano si vedono ancora, e il guasto si dice **accanto** — nella

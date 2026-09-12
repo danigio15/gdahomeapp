@@ -125,6 +125,17 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
      * installa l'add-on non deve sapere che esiste — e si cambia solo da qui,
      * che serve al collaudo per farlo bussare a un centralino finto. */
     chat: String(process.env.PONTE_CHAT || CENTRALINO_DELLA_CHAT),
+    /* La chiave con cui si risponde alle chat di tutte le case.
+     *
+     * Vuota e' la cosa normale, ed e' il caso di chiunque installi l'add-on:
+     * da quella parte non c'e' niente da vedere e non si vede niente. La
+     * scrive **una casa sola al mondo** — quella di chi l'app la mantiene — e
+     * da quel momento nella finestra dell'assistenza compare la coda di tutte
+     * le altre.
+     *
+     * E' la stessa che sta fra i segreti del centralino: non si inventa qui,
+     * si copia da li'. */
+    chiaveDellaConsole: String(process.env.PONTE_CHIAVE_CONSOLE || scritte.chiave_console || ""),
     versione: versioneDelPonte(),
   };
 }

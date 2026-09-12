@@ -578,7 +578,17 @@ class _LaManiglia extends StatelessWidget {
 }
 
 /// Le voci della barra: la plancia, i dispositivi, e quello che verra'.
-List<Sezione> vociDellaBarra() => Sezione.values;
+///
+/// Tutte tranne una. La **Console** — la coda delle richieste di aiuto di
+/// tutte le case — la vede solo chi risponde, cioe' la casa che nelle opzioni
+/// del ponte ha la chiave della console. In tutte le altre quella voce non c'e'
+/// proprio: una porta che non si apre e' peggio di una porta che non c'e'.
+List<Sezione> vociDellaBarra({bool conLaConsole = false}) => conLaConsole
+    ? Sezione.values
+    : [
+        for (final una in Sezione.values)
+          if (una != Sezione.console) una,
+      ];
 
 /// Come si chiama la maniglia per chi non la vede: il lettore di schermo la
 /// legge cosi', e le prove la cercano con questo nome.

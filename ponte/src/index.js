@@ -104,6 +104,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * l'integrazione manda al centralino, ed e' quella di cui si parla
      * quando si chiede aiuto. */
     plancia: plancia.cE ? plancia.provenienza.versione : "",
+    /* E se questa e' la casa di chi risponde, anche la chiave per farlo.
+     * Dove non c'e' — cioe' dappertutto tranne una — quella meta' della chat
+     * non si accende. */
+    chiaveDellaConsole: opzioni.chiaveDellaConsole,
     registro,
   });
   const commissioni = new Commissioni({
