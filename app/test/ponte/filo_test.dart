@@ -368,6 +368,16 @@ void main() {
      * solo quello: il resto e' lo stesso, byte per byte. */
     final riscritto = jsonDecode(tornati.single.conNumero(99));
     expect(riscritto, {...tornati.single.detto, 'id': 99});
+    /* E per lo **stesso** numero non si riscrive niente: si riconsegna quella
+     * stessa stringa. Su un `get_states` da un megabyte e mezzo una copia
+     * risparmiata non e' tempo — un megabyte si copia in pochi millesimi — e'
+     * roba da buttare in meno, e i decimi di secondo di quella si pagano dopo,
+     * sul filo che disegna, quando il raccoglitore passa. */
+    expect(
+      tornati.single.conNumero(numero),
+      same(tornati.single.testo),
+      reason: 'col suo numero non si alloca una stringa nuova',
+    );
     expect(
       ponte.arrivati.where((uno) => uno['type'] == 'get_states').single['id'],
       numero,

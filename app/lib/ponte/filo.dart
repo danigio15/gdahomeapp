@@ -1075,9 +1075,25 @@ class Instradato {
 
   /// Lo stesso messaggio, col numero di chi l'aveva chiesto al posto di
   /// quello del filo. Il numero sta in testa, e si cambia solo quello.
+  ///
+  /// **Una copia sola, non due.** Prima erano
+  /// `'{"id": \$altro' + testo.substring(dopo)`, e su un `get_states` da un
+  /// megabyte e mezzo sono due stringhe da un megabyte e mezzo invece di una:
+  /// la sottostringa, e poi il risultato della somma. Non e' tempo speso in
+  /// un lavoro — un megabyte si copia in pochi millesimi — e' **roba da
+  /// buttare** che si accumula, e i decimi di secondo si pagano dopo, quando
+  /// il raccoglitore passa. E si pagano sul filo che disegna.
+  ///
+  /// `replaceRange` fa lo stesso mestiere allocando una volta.
   String conNumero(int altro) {
     final dopo = _dopoIlNumero;
-    if (dopo != null) return '{"id": $altro${testo.substring(dopo)}';
+    if (dopo != null) {
+      if (altro == id) return testo;
+      return Lavori.io.subito(
+        'rinumerati per la plancia',
+        () => testo.replaceRange(0, dopo, '{"id": $altro'),
+      );
+    }
     return jsonEncode({...detto, 'id': altro});
   }
 }

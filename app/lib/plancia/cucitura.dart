@@ -17,6 +17,7 @@ library;
 import 'dart:async';
 import 'dart:convert';
 
+import '../misure/lavori.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 
@@ -181,10 +182,18 @@ class Cucitura {
 
   void _manda(Map<String, dynamic> cosa) => _mandaTesto(jsonEncode(cosa));
 
+  /* Il passaggio alla pagina, contato.
+   *
+   * E' l'ultimo pezzo di strada di un messaggio, ed era l'unico senza un
+   * contatore: un `get_states` da un megabyte e mezzo si decifra altrove — e
+   * quello si vede — poi si rinumera e si **scrive nella presa verso la
+   * pagina**, e quel pezzo non lo misurava nessuno. Chi guardava la
+   * diagnostica vedeva lavori tutti piccoli e blocchi da mezzo secondo, senza
+   * niente in mezzo a cui darne la colpa. Adesso c'e'. */
   void _mandaTesto(String testo) {
     if (!_verso.aperta) return;
     try {
-      _verso.manda(testo);
+      Lavori.io.subito('passati alla plancia', () => _verso.manda(testo));
     } catch (_) {
       /* Chiusa fra il controllo e la scrittura. */
     }
