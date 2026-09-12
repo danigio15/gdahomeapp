@@ -50,9 +50,24 @@ import { DISPOSITIVI_MASSIMI, ENTITA_MASSIME } from "./catalogo.js";
 import { BASE_DELLE_FOTO, BASE_DI_CASA, FOTO_MASSIMA } from "./foto.js";
 import { ChatHaDettoNo } from "./chat.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
+import { QuellaPlanciaNo, TroppePlance } from "./plance.js";
 
 export const TIPO = "ponte/http";
 export const TIPO_PLANCIA = "ponte/plancia";
+
+/* Le plance di questa casa: piu' d'una, come nella dashboard.
+ *
+ * Aggiungerne una e togliere una sono atti di configurazione, come abbinare un
+ * telefono: si fanno dalla scheda dell'add-on, dietro l'autenticazione di Home
+ * Assistant, e si fanno anche dall'app. Non e' una svista: un telefono
+ * abbinato riscrive gia' la configurazione di una plancia intera con
+ * `config/set`, e tenerlo fuori da qui non proteggerebbe niente. */
+const PLANCE = new Map([
+  ["ponte/plance/elenco", "elenco"],
+  ["ponte/plance/aggiungi", "aggiungi"],
+  ["ponte/plance/rinomina", "rinomina"],
+  ["ponte/plance/togli", "togli"],
+]);
 const CONFIG_GET = "dashboardmodern/config/get";
 const CONFIG_SET = "dashboardmodern/config/set";
 const CONFIG_RESTORE = "dashboardmodern/config/restore";
@@ -196,6 +211,7 @@ export class Commissioni {
     casa,
     registro,
     plancia = null,
+    plance = null,
     configurazione = null,
     catalogo = null,
     foto = null,
@@ -212,6 +228,10 @@ export class Commissioni {
      * sul banco, senza la cartella — i file si chiedono a Home Assistant,
      * dove ci sarebbero solo con l'integrazione. */
     this.plancia = plancia;
+    /* Quali plance ci sono: i file sono gli stessi per tutte, e questo dice
+     * quante sono, come si chiamano e in quale cassetto tiene la sua
+     * configurazione ognuna (`plance.js`). */
+    this.plance = plance;
     this.configurazione = configurazione;
     /* Il catalogo delle integrazioni e le foto: le altre due cose che la
      * plancia chiedeva all'integrazione. */
@@ -263,7 +283,8 @@ export class Commissioni {
     const id = detto?.id ?? null;
     const tipo = detto?.type;
     if (tipo === TIPO) return this._http(detto);
-    if (tipo === TIPO_PLANCIA) return this._laPlancia(id);
+    if (tipo === TIPO_PLANCIA) return this._laPlancia(detto);
+    if (PLANCE.has(tipo)) return this._lePlance(detto);
     if (typeof tipo === "string" && tipo.startsWith("ponte/chat/")) return this._chatDellApp(detto);
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
       return this._segnalazioni(detto);
@@ -313,9 +334,66 @@ export class Commissioni {
     }
   }
 
-  _laPlancia(id) {
+  /* Dove stanno i file della plancia, e quale plancia aprire.
+   *
+   * Senza `profilo` si risponde con la **prima**, che e' la risposta di
+   * sempre: chi ha un'app di ieri non si accorge di niente. Chi lo passa ha
+   * scelto una delle altre. E l'elenco viaggia insieme, perche' il selettore
+   * lo disegna chi ha appena chiesto la plancia: una seconda domanda per
+   * sapere quante sono sarebbe un secondo giro sul filo per niente. */
+  _laPlancia(detto) {
+    const id = detto?.id ?? null;
     if (!this.plancia?.cE) return no(id, "not_found", "questo ponte non ha la plancia");
-    return si(id, this.plancia.descrizione());
+    const voluto = typeof detto?.profilo === "string" ? detto.profilo.trim() : "";
+    const quale = this.plance ? (voluto ? this.plance.quale(voluto) : this.plance.prima) : null;
+    if (voluto && !quale) return no(id, "not_found", "quella plancia non c'e'");
+    return si(id, {
+      ...this.plancia.descrizione(quale),
+      plance: this.plance ? this.plance.elenco() : [],
+    });
+  }
+
+  /* Aggiungere, rinominare e togliere una plancia.
+   *
+   * Togliendone una va via anche il suo cassetto nella configurazione: se
+   * restasse, chi rifacesse una plancia con lo stesso nome si ritroverebbe
+   * dentro il lavoro di quella di prima. Quel cassetto lo tiene la cassetta
+   * della configurazione, e a lei si chiede. */
+  _lePlance(detto) {
+    const id = detto?.id ?? null;
+    const plance = this.plance;
+    if (!plance) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    const titolo = typeof detto.titolo === "string" ? detto.titolo : "";
+    const profilo = typeof detto.profilo === "string" ? detto.profilo : "";
+    try {
+      switch (PLANCE.get(detto.type)) {
+        case "elenco":
+          return si(id, { plance: plance.elenco() });
+        case "aggiungi": {
+          const nuova = plance.aggiungi(titolo);
+          return si(id, { plance: plance.elenco(), quale: nuova });
+        }
+        case "rinomina":
+          return si(id, {
+            quale: plance.rinomina(profilo, titolo),
+            plance: plance.elenco(),
+          });
+        case "togli":
+          return si(id, {
+            plance: plance.togli(profilo, {
+              dimentica: (quello) => this.configurazione?.dimentica(quello),
+            }),
+          });
+        default:
+          return no(id, "unknown_command", `non conosco ${detto.type}`);
+      }
+    } catch (errore) {
+      if (errore instanceof TroppePlance || errore instanceof QuellaPlanciaNo) {
+        return no(id, errore.codice, errore.message);
+      }
+      this.registro.errore(`le plance sono andate storte: ${errore?.message || errore}`);
+      return no(id, "ponte_plance", "non ha funzionato");
+    }
   }
 
   _configurazione(detto) {

@@ -139,6 +139,44 @@ Con `ponte/segnalazioni/allega` passano anche le foto e i video: arrivano
 dall'app in base64 dentro il messaggio, e al centralino vanno cosi' come
 sono, in binario. Dieci megabyte al massimo.
 
+## Piu' di una plancia
+
+Nella dashboard una seconda plancia e' una seconda **istanza**
+dell'integrazione: la si aggiunge da «Dispositivi e servizi», e in Home
+Assistant compaiono due voci, ognuna con la sua configurazione. Qui
+l'integrazione non c'e', e quel mestiere lo fa il ponte: l'elenco delle plance
+sta in `/data/plance.json` (`src/plance.js`), e la configurazione di ognuna nel
+suo cassetto dentro `/data/plancia.json` — dove stava gia', per profilo.
+
+Una plancia e' **tre nomi** che fanno tre mestieri: il `profilo`, che e' il
+cassetto dove sta la configurazione; il `titolo`, che e' come la chiama chi ci
+abita; e l'`istanza`, che e' il nome con cui la pagina tiene separate le proprie
+cose nel deposito del browser — il tema, la tavolozza, la barra. Rinominare una
+plancia cambia il titolo e non gli altri due, se no le cancellerebbe il lavoro.
+
+La prima c'e' sempre, si chiama «DashboardModern», tiene il profilo `primary` e
+non si toglie: chi ha l'add-on da prima non si accorge di niente. Le altre si
+aggiungono, si rinominano e si tolgono dalla **scheda dell'add-on** — che sta
+dietro l'autenticazione di Home Assistant, come quella pagina di Home Assistant
+— o dall'app. Togliendone una va via anche il suo cassetto: se restasse, chi ne
+rifacesse una con lo stesso nome si ritroverebbe dentro il lavoro di prima.
+Se ne tengono otto.
+
+| | |
+|---|---|
+| `GET /api/plance` | l'elenco (sta anche dentro `/api/stato`) |
+| `POST /api/plance` | `{titolo}` — una in piu' |
+| `PATCH /api/plance` | `{profilo, titolo}` — come si chiama |
+| `DELETE /api/plance` | `{profilo}` — via lei e il suo cassetto |
+| `ponte/plance/elenco` | gli stessi quattro, dall'app |
+| `ponte/plance/aggiungi` | `{titolo}` |
+| `ponte/plance/rinomina` | `{profilo, titolo}` |
+| `ponte/plance/togli` | `{profilo}` |
+
+E `ponte/plancia` accetta un `profilo`: senza, risponde con la prima — che e' la
+risposta di sempre — e insieme manda l'elenco, cosi' chi disegna un selettore
+non deve chiedere due volte.
+
 La **chat di assistenza** invece non passa da GitHub, ed e' quella della
 plancia: gli otto comandi `dashboardmodern/chat/*` che nell'integrazione fa
 `chat.py`, qui li fa `src/chat.js`. I quattro di chi chiede — stato, filo,

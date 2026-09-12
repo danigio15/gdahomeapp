@@ -88,6 +88,7 @@ Il resto — le due porte, l'abbinamento, cosa finisce sul disco — sta in
 | ✅ | I dispositivi: tutte le entita' divise per dominio, con gli interruttori |
 | ✅ | **Segnalazioni** nell'app: arrivano a chi la fa come issue di GitHub, passando dal ponte e dal centralino, con la diagnostica raccolta da sola |
 | ✅ | **La chat di assistenza**: quella della dashboard, che non passa da GitHub — la fa il ponte (`ponte/src/chat.js`), e si apre dalla plancia come dall'app |
+| ✅ | **Piu' di una plancia**: come una seconda istanza dell'integrazione nella dashboard — ognuna con la sua configurazione, le sue sezioni, le sue stanze. Si aggiungono dalla scheda dell'add-on o dall'app (`ponte/src/plance.js`) |
 | ✅ | **La console dell'assistenza**: la coda di tutte le case, per chi risponde. La accende la chiave nelle opzioni dell'add-on, e compare in una casa sola al mondo — nel menu dell'app e nel Cruscotto della plancia |
 | ✅ | **521 prove** — 272 sul ponte, 19 sul centralino, 13 sulla nuvola, 217 sull'app — senza rete, senza Home Assistant, senza telefono |
 | ⬜ | Gli aiutanti (i sette classici, nativi) |

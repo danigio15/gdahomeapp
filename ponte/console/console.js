@@ -12,6 +12,11 @@
   var vediPagina = document;
   var quandoScade = null;
 
+  /* Quante plance si tengono: lo stesso numero che ha il ponte
+   * (`plance.js`). Qui serve solo a spegnere il tasto quando si e' arrivati
+   * al tetto, invece di farlo premere per sentirsi dire di no. */
+  var PLANCE_AL_MASSIMO = 8;
+
   function trova(id) {
     return vediPagina.getElementById(id);
   }
@@ -207,6 +212,99 @@
     });
   }
 
+  /* Le plance di questa casa.
+   *
+   * Una riga per plancia: come si chiama, e — per quelle che non sono la prima
+   * — il tasto per toglierla. Il nome si cambia premendoci sopra: e' la stessa
+   * cosa che si fa in Home Assistant col nome di un'integrazione, e non vale
+   * una finestra tutta sua.
+   *
+   * La prima non si toglie, e il tasto non c'e': un tasto che c'e' e che
+   * risponde «questa no» e' peggio di un tasto che non c'e'. */
+  function disegnaLePlance(plance) {
+    var elenco = trova("elenco-plance");
+    if (!elenco) return;
+    elenco.textContent = "";
+    var quante = plance ? plance.length : 0;
+    trova("aggiungi-plancia").disabled = quante >= PLANCE_AL_MASSIMO;
+
+    (plance || []).forEach(function (una) {
+      var riga = vediPagina.createElement("li");
+
+      var nome = vediPagina.createElement("div");
+      nome.className = "nome";
+      var forte = vediPagina.createElement("strong");
+      /* `textContent`, mai `innerHTML`: il titolo l'ha scritto una persona. */
+      forte.textContent = una.titolo;
+      var sotto = vediPagina.createElement("span");
+      sotto.textContent = una.primaria ? "la prima, quella di sempre" : "aggiunta da te";
+      nome.appendChild(forte);
+      nome.appendChild(sotto);
+      riga.appendChild(nome);
+
+      var tasti = vediPagina.createElement("div");
+      tasti.className = "tasti";
+
+      var rinomina = vediPagina.createElement("button");
+      rinomina.className = "tenue";
+      rinomina.type = "button";
+      rinomina.textContent = "Rinomina";
+      rinomina.addEventListener("click", function () {
+        var come = window.prompt("Come si chiama questa plancia?", una.titolo);
+        if (come === null) return;
+        rinomina.disabled = true;
+        chiedi("api/plance", {
+          method: "PATCH",
+          body: JSON.stringify({ profilo: una.profilo, titolo: come }),
+        })
+          .then(aggiornaTutto)
+          .catch(function (errore) {
+            rinomina.disabled = false;
+            avvisaLePlance(errore.message);
+          });
+      });
+      tasti.appendChild(rinomina);
+
+      if (!una.primaria) {
+        var togli = vediPagina.createElement("button");
+        togli.className = "tenue";
+        togli.type = "button";
+        togli.textContent = "Togli";
+        togli.addEventListener("click", function () {
+          if (
+            !window.confirm(
+              "Togliere «" +
+                una.titolo +
+                "»? Va via anche come l'hai configurata: sezioni, tessere, stanze. Non si rimette a posto.",
+            )
+          )
+            return;
+          togli.disabled = true;
+          chiedi("api/plance", {
+            method: "DELETE",
+            body: JSON.stringify({ profilo: una.profilo }),
+          })
+            .then(aggiornaTutto)
+            .catch(function (errore) {
+              togli.disabled = false;
+              avvisaLePlance(errore.message);
+            });
+        });
+        tasti.appendChild(togli);
+      }
+
+      riga.appendChild(tasti);
+      elenco.appendChild(riga);
+    });
+  }
+
+  function avvisaLePlance(testo) {
+    var avviso = trova("avviso-plance");
+    if (!avviso) return;
+    avviso.textContent = testo || "";
+    avviso.hidden = !testo;
+  }
+
   /* Il link a gdahome da browser.
    *
    * Si vede solo se l'app c'e' davvero dentro questo add-on: un link che porta
@@ -345,6 +443,7 @@
         disegnaIlLink(stato.app);
         disegnaIlLinkDiFuori(stato.app ? stato.centralino.dove : "");
         disegnaIDispositivi(stato.dispositivi, stato.massimi);
+        disegnaLePlance(stato.plance);
         trova("fabbrica").disabled = stato.dispositivi.length >= stato.massimi;
         if (!stato.abbinamento.attivo) nascondiIlCodice();
         avvisa("");
@@ -383,6 +482,35 @@
       .catch(function (errore) {
         avvisa(errore.message);
       });
+  });
+
+  /* Aggiungere una plancia: un nome, e il tasto.
+   *
+   * Il nome non e' obbligatorio — chi lascia la casella vuota si prende
+   * «Plancia», che si rinomina dopo — e con Invio si aggiunge, che e' quello
+   * che fa un dito su una casella di testo. */
+  function aggiungiUnaPlancia() {
+    var casella = trova("titolo-plancia");
+    var tasto = trova("aggiungi-plancia");
+    avvisaLePlance("");
+    tasto.disabled = true;
+    chiedi("api/plance", {
+      method: "POST",
+      body: JSON.stringify({ titolo: casella.value }),
+    })
+      .then(function () {
+        casella.value = "";
+        return aggiornaTutto();
+      })
+      .catch(function (errore) {
+        tasto.disabled = false;
+        avvisaLePlance(errore.message);
+      });
+  }
+
+  trova("aggiungi-plancia").addEventListener("click", aggiungiUnaPlancia);
+  trova("titolo-plancia").addEventListener("keydown", function (evento) {
+    if (evento.key === "Enter") aggiungiUnaPlancia();
   });
 
   trova("annulla").addEventListener("click", function () {

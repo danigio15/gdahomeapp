@@ -249,6 +249,8 @@ export function costruisciLaConsole({
   identita,
   ritorno,
   plancia,
+  plance,
+  configurazione,
   aggiornamento,
   cartellaDellaConsole,
   cartellaDellApp,
@@ -282,6 +284,8 @@ export function costruisciLaConsole({
           identita,
           ritorno,
           plancia,
+          plance,
+          configurazione,
           aggiornamento,
         });
       } catch (errore) {
@@ -341,6 +345,8 @@ async function api({
   identita,
   ritorno,
   plancia,
+  plance,
+  configurazione,
   aggiornamento,
 }) {
   /* C'e' una versione nuova del ponte?
@@ -393,6 +399,64 @@ async function api({
     return;
   }
 
+  /* Le plance di questa casa.
+   *
+   * E' il posto dove se ne aggiunge una: la scheda dell'add-on sta dietro
+   * l'autenticazione di Home Assistant, ed e' li' che in Home Assistant si
+   * aggiunge una seconda istanza dell'integrazione. Le stesse cose si fanno
+   * anche dall'app, coi comandi `ponte/plance/*`.
+   *
+   * Chi non ha le plance — un ponte sul banco — risponde 404: meglio che una
+   * pagina che mostra un elenco vuoto e un tasto che non fa niente. */
+  if (via === "/api/plance") {
+    if (!plance) {
+      json(risposta, { errore: "senza_plance" }, 404);
+      return;
+    }
+    if (metodo === "GET") {
+      json(risposta, { plance: plance.elenco() });
+      return;
+    }
+    let detto = {};
+    if (metodo === "POST" || metodo === "PATCH" || metodo === "DELETE") {
+      try {
+        detto = await corpoDiJson(richiesta);
+      } catch (errore) {
+        male(risposta, 400, errore.message);
+        return;
+      }
+    }
+    try {
+      if (metodo === "POST") {
+        const quale = plance.aggiungi(detto?.titolo);
+        json(risposta, { plance: plance.elenco(), quale }, 201);
+        return;
+      }
+      if (metodo === "PATCH") {
+        const quale = plance.rinomina(detto?.profilo, detto?.titolo);
+        json(risposta, { plance: plance.elenco(), quale });
+        return;
+      }
+      if (metodo === "DELETE") {
+        json(risposta, {
+          plance: plance.togli(detto?.profilo, {
+            dimentica: (quello) => configurazione?.dimentica(quello),
+          }),
+        });
+        return;
+      }
+    } catch (errore) {
+      json(
+        risposta,
+        { errore: errore?.codice || "plance", spiegazione: errore?.message || "" },
+        400,
+      );
+      return;
+    }
+    male(risposta, 405, "metodo non previsto");
+    return;
+  }
+
   if (via === "/api/stato" && metodo === "GET") {
     const saluto = await casa.saluta();
     const collegati = ponte.collegatiPerDispositivo();
@@ -424,6 +488,12 @@ async function api({
        * risposta a «questa e' quella vera?», e chi se lo chiede se lo chiede
        * guardando qui. */
       plancia: plancia?.cE ? plancia.provenienza : null,
+      /* Quante plance ha questa casa, e come si chiamano.
+       *
+       * Viaggiano insieme allo stato e non in una chiamata loro: questa pagina
+       * lo stato lo chiede ogni dieci secondi, e un secondo giro per tre
+       * righe sarebbe un giro per niente. */
+      plance: plance ? plance.elenco() : [],
       abbinamento: abbinamento.stato(),
       dispositivi: dispositivi
         .elenco()

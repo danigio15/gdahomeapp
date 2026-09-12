@@ -29,6 +29,7 @@ import { Configurazione } from "../src/configurazione.js";
 import { BASE_DELLE_FOTO, BASE_DI_CASA, Foto } from "../src/foto.js";
 import { Dispositivi } from "../src/dispositivi.js";
 import { Plancia } from "../src/plancia.js";
+import { Plance } from "../src/plance.js";
 import { Ponte } from "../src/ponte.js";
 
 const SEGNO_DEL_SUPERVISOR = "il-segno-del-supervisor";
@@ -1446,5 +1447,108 @@ test("la coda di chi risponde passa dal ponte, e solo con la chiave", async () =
   } finally {
     rmSync(senzaChiave, { recursive: true, force: true });
     rmSync(conChiave, { recursive: true, force: true });
+  }
+});
+
+test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-plance-"));
+  try {
+    const plance = new Plance({ cartella, registro: ZITTO, adesso: () => 5000 });
+    const cassetta = new Configurazione({ cartella, adesso: () => 5000 });
+    const con = new Commissioni({
+      casa: casaDiProva(),
+      registro: ZITTO,
+      plancia: new Plancia(),
+      plance,
+      configurazione: cassetta,
+    });
+
+    /* Senza chiedere niente si ha la **prima**: e' la risposta di sempre, e
+     * un'app di ieri non si accorge che da oggi ce ne possono essere altre. */
+    const sola = await con.rispondi({ id: 1, type: "ponte/plancia" });
+    assert.equal(sola.result.titolo, "DashboardModern");
+    assert.equal(sola.result.istanza, "ponte");
+    assert.equal(sola.result.profilo, "primary");
+    assert.equal(sola.result.primario, true);
+    /* E l'elenco viaggia insieme: il selettore lo disegna chi ha appena
+     * chiesto la plancia, e un secondo giro sul filo per sapere quante sono
+     * sarebbe un giro per niente. */
+    assert.deepEqual(
+      sola.result.plance.map((una) => una.profilo),
+      ["primary"],
+    );
+
+    const aggiunta = await con.rispondi({
+      id: 2,
+      type: "ponte/plance/aggiungi",
+      titolo: "Casa al mare",
+    });
+    assert.equal(aggiunta.result.quale.profilo, "casa-al-mare");
+    assert.deepEqual(
+      aggiunta.result.plance.map((una) => una.titolo),
+      ["DashboardModern", "Casa al mare"],
+    );
+
+    /* Chiedendo quella, si apre quella: stessi file, altro cassetto, altra
+     * istanza. */
+    const altra = await con.rispondi({
+      id: 3,
+      type: "ponte/plancia",
+      profilo: "casa-al-mare",
+    });
+    assert.equal(altra.result.titolo, "Casa al mare");
+    assert.equal(altra.result.istanza, "ponte-casa-al-mare");
+    assert.equal(altra.result.profilo, "casa-al-mare");
+    assert.equal(altra.result.primario, false);
+    /* I file sono gli stessi per tutte: una plancia sul disco, una impronta. */
+    assert.equal(altra.result.base, sola.result.base);
+    assert.equal(altra.result.impronta, sola.result.impronta);
+
+    /* Una plancia che non c'e' non si apre, e si dice quale. */
+    const mai = await con.rispondi({ id: 4, type: "ponte/plancia", profilo: "mai-esistita" });
+    assert.equal(mai.success, false);
+    assert.equal(mai.error.code, "not_found");
+
+    /* Rinominare tocca il titolo e nient'altro. */
+    const rinominata = await con.rispondi({
+      id: 5,
+      type: "ponte/plance/rinomina",
+      profilo: "casa-al-mare",
+      titolo: "Al mare",
+    });
+    assert.equal(rinominata.result.quale.titolo, "Al mare");
+    assert.equal(rinominata.result.quale.istanza, "ponte-casa-al-mare");
+
+    /* Togliendola va via anche il suo cassetto nella configurazione. */
+    cassetta.scrivi("casa-al-mare", { "dm-home": '{"x":1}' }, { updated_at: 5000 });
+    assert.ok(cassetta.leggi("casa-al-mare").snapshot);
+    const tolta = await con.rispondi({
+      id: 6,
+      type: "ponte/plance/togli",
+      profilo: "casa-al-mare",
+    });
+    assert.deepEqual(
+      tolta.result.plance.map((una) => una.profilo),
+      ["primary"],
+    );
+    assert.equal(cassetta.leggi("casa-al-mare").snapshot, null);
+
+    /* La prima non si toglie, e il no e' quello delle plance: la schermata sa
+     * cosa farne. */
+    const negata = await con.rispondi({ id: 7, type: "ponte/plance/togli", profilo: "primary" });
+    assert.equal(negata.success, false);
+    assert.equal(negata.error.code, "non_la_prima");
+
+    /* Un ponte senza plance quei comandi li riconosce comunque — tutto
+     * quello che comincia per «ponte/» e' roba sua, e mandarlo a Home
+     * Assistant vorrebbe dire chiedere a lui una cosa che non sa — e risponde
+     * che non lo sa fare. */
+    const senza = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
+    assert.equal(senza.riconosce({ type: "ponte/plance/elenco" }), true);
+    const detta = await senza.rispondi({ id: 8, type: "ponte/plance/elenco" });
+    assert.equal(detta.success, false);
+    assert.equal(detta.error.code, "unknown_command");
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
   }
 });

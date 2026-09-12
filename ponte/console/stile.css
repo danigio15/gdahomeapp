@@ -137,6 +137,29 @@ h2 {
   flex-wrap: wrap;
 }
 
+/* La riga per aggiungere una plancia: una casella e un tasto, in fila e a
+   capo quando lo schermo e' stretto. E' l'unica casella di testo di questa
+   pagina, e si veste come i tasti che le stanno accanto: un campo di serie,
+   fra due tasti arrotondati, si vede che non era previsto. */
+.riga-di-tasti {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.riga-di-tasti input[type="text"] {
+  font: inherit;
+  flex: 1 1 14em;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--bordo);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+}
+
 button {
   font: inherit;
   border: 0;
@@ -188,6 +211,11 @@ button:disabled {
   gap: 12px;
   padding: 12px 0;
   border-top: 1px solid var(--bordo);
+  /* Su uno schermo stretto i tasti vanno a capo invece di mangiarsi il nome:
+     una riga con due tasti lasciava al titolo una colonna da dieci lettere, e
+     «Quella dei bambini» diventava «Quella dei bam…». Il nome e' la cosa per
+     cui si guarda l'elenco. */
+  flex-wrap: wrap;
 }
 
 .elenco li:first-child {
@@ -195,8 +223,21 @@ button:disabled {
 }
 
 .elenco .nome {
-  flex: 1;
+  /* Quindici caratteri di base, non «quello che resta»: con due tasti di
+     fianco la riga non ci sta piu' e i tasti vanno a capo — che e' quello che
+     si vuole, perche' il nome e' la cosa per cui si guarda l'elenco. Con un
+     tasto solo, come nei telefoni abbinati, ci sta e la riga resta una. */
+  flex: 1 1 15em;
   min-width: 0;
+}
+
+/* I tasti di una riga stanno insieme: o ci stanno in riga col nome, o vanno a
+   capo tutti e due. Uno sopra e uno sotto era una riga alta il doppio per
+   niente. */
+.elenco .tasti {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .elenco .nome strong {

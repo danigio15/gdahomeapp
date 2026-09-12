@@ -100,6 +100,36 @@
         </p>
       </section>
 
+      <!-- Le plance di questa casa.
+           Nella dashboard una seconda plancia e' una seconda istanza
+           dell'integrazione, e si aggiunge da «Dispositivi e servizi». Qui
+           l'integrazione non c'e', e il posto e' questo: la scheda
+           dell'add-on sta dietro l'autenticazione di Home Assistant, come
+           quella pagina. -->
+      <section class="scheda" id="plance">
+        <h2>Le plance di questa casa</h2>
+        <p class="spiegazione">
+          Una plancia e' una configurazione a se': le sue sezioni, le sue
+          tessere, le sue stanze. I file sono gli stessi per tutte — la
+          plancia sul disco e' una — e quello che cambia e' quello che ci hai
+          messo dentro. Serve a chi tiene due case sullo stesso Home
+          Assistant, e a chi ne vuole una per se' e una per chi ci abita.
+          Nell'app si scelgono dal menu.
+        </p>
+        <ul id="elenco-plance" class="elenco"></ul>
+        <div class="riga-di-tasti">
+          <input
+            id="titolo-plancia"
+            type="text"
+            maxlength="40"
+            placeholder="Come si chiama, per esempio «Casa al mare»"
+            aria-label="Come si chiama la plancia nuova"
+          />
+          <button id="aggiungi-plancia" type="button">Aggiungi una plancia</button>
+        </div>
+        <p class="avviso" id="avviso-plance" hidden></p>
+      </section>
+
       <section class="scheda">
         <h2>Telefoni abbinati</h2>
         <p class="spiegazione" id="conteggio"></p>

@@ -19,6 +19,7 @@ import { Catalogo } from "./catalogo.js";
 import { Configurazione } from "./configurazione.js";
 import { BASE_DI_CASA, Foto } from "./foto.js";
 import { Plancia } from "./plancia.js";
+import { Plance } from "./plance.js";
 import { Identita } from "./identita.js";
 import { Dispositivi } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
@@ -47,6 +48,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * nessuna integrazione. */
   const plancia = new Plancia();
   const configurazione = new Configurazione({ cartella: opzioni.cartella });
+  /* Quante plance ha questa casa. Una c'e' sempre — quella di sempre — e chi
+   * ne vuole un'altra la aggiunge dalla scheda dell'add-on o dall'app, come
+   * nella dashboard si aggiunge una seconda istanza. */
+  const plance = new Plance({ cartella: opzioni.cartella, registro });
   if (plancia.cE) {
     registro.info(
       `la plancia c'e': ${plancia.descrizione().file} file, impronta ${plancia.impronta}`,
@@ -114,6 +119,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     casa,
     registro,
     plancia,
+    plance,
     configurazione,
     catalogo,
     foto,
@@ -191,6 +197,11 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     /* Da dove viene la plancia che questo ponte serve: la console lo dice,
      * cosi' chi si chiede se sia quella originale ha la risposta li'. */
     plancia,
+    /* E quante plance ha questa casa: la scheda dell'add-on e' il posto dove
+     * se ne aggiunge una, come in Home Assistant si aggiunge una seconda
+     * istanza dell'integrazione. */
+    plance,
+    configurazione,
     /* Se c'e' una versione nuova del ponte, e il bottone per portarsela
      * dentro: l'unico posto da cui chi non ha un computer puo' aggiornare. */
     aggiornamento,

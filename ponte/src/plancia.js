@@ -129,17 +129,23 @@ export class Plancia {
   /* Quello che il telefono chiede con `ponte/plancia`: dove stanno i file, e
    * come la pagina deve presentarsi. E' la stessa forma che l'integrazione
    * scrive nel suo pannello, cosi' l'app le legge tutte e due allo stesso
-   * modo. */
-  descrizione() {
+   * modo.
+   *
+   * I file sono **gli stessi per tutte le plance** — una sola plancia sul
+   * disco, una sola impronta — e quello che cambia da una all'altra sono tre
+   * nomi: il titolo, il cassetto della configurazione e l'istanza. Chi non ne
+   * passa nessuno ha la prima, che e' il caso di chiunque non abbia mai
+   * aggiunto niente. */
+  descrizione(quale = null) {
     const origine = this.origine();
     return {
       base: this.base,
       impronta: this.impronta,
       varianti: this.varianti(),
-      titolo: "DashboardModern",
-      istanza: "ponte",
-      profilo: "primary",
-      primario: true,
+      titolo: quale?.titolo || "DashboardModern",
+      istanza: quale?.istanza || "ponte",
+      profilo: quale?.profilo || "primary",
+      primario: quale ? quale.primaria !== false : true,
       file: this._quanti,
       commit: typeof origine.commit === "string" ? origine.commit : "",
       portata_il: typeof origine.portata_il === "string" ? origine.portata_il : "",
