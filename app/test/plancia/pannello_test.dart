@@ -110,7 +110,7 @@ void main() {
       },
     })!;
     expect(pannello.percorso, 'dashboardmodern');
-    expect(pannello.titolo, 'DashboardModern');
+    expect(pannello.titolo, 'gdahome');
     expect(pannello.profilo, 'primary');
     expect(pannello.istanza, '');
     expect(pannello.primario, isFalse);
@@ -134,7 +134,7 @@ void main() {
       'base': '/dashboardmodern_static/x/',
     })!;
     expect(scarna.base, '/dashboardmodern_static/x');
-    expect(scarna.titolo, 'DashboardModern');
+    expect(scarna.titolo, 'gdahome');
     expect(scarna.varianti, isEmpty);
   });
 

@@ -46,7 +46,18 @@ export const TITOLO_MASSIMO = 40;
  * fa lui. */
 export const QUANTE_AL_MASSIMO = 8;
 
-const TITOLO_DELLA_PRIMA = "DashboardModern";
+/* Come si chiama la prima plancia, quella che c'e' sempre. */
+const TITOLO_DELLA_PRIMA = "gdahome";
+
+/* Come si chiamava prima, e perche' si cambia in casa di chi ce l'ha gia'.
+ *
+ * Quel titolo non l'ha scelto nessuno: l'avevamo scritto noi, ed e' il nome di
+ * un altro prodotto. Chi apre l'app dopo l'aggiornamento troverebbe «gdahome»
+ * in cima e «DashboardModern» nel selettore delle plance, cioe' due nomi per
+ * la stessa cosa. Quindi si cambia — ma **solo se e' ancora quello**: un
+ * titolo che chi ci abita ha scritto lui non si tocca, nemmeno se somiglia a
+ * questo. */
+const TITOLO_DI_PRIMA = "DashboardModern";
 
 const DIFETTO = Object.freeze({ plance: [] });
 
@@ -154,6 +165,13 @@ export class Plance {
         titolo: titoloPulito(una?.titolo, profilo),
         creata_il: Number(una?.creata_il) || 0,
       });
+    }
+    /* La prima plancia che si chiama ancora come il prodotto di prima prende
+     * il nome nuovo. Una volta sola, e solo se nessuno l'ha rinominata. */
+    for (const una of buone) {
+      if (una.profilo === PROFILO_PRINCIPALE && una.titolo === TITOLO_DI_PRIMA) {
+        una.titolo = TITOLO_DELLA_PRIMA;
+      }
     }
     if (!prese.has(PROFILO_PRINCIPALE)) {
       buone.unshift({

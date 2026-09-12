@@ -208,7 +208,7 @@ test("una Plancia per plancia, e la vista e' una pagina intera", async () => {
     assert.deepEqual(
       b.casa.plance.map((una) => [una.url_path, una.title, una.show_in_sidebar, una.require_admin]),
       [
-        ["gdahome-primary", "DashboardModern", true, false],
+        ["gdahome-primary", "gdahome", true, false],
         ["gdahome-casa-al-mare", "Casa al mare", true, false],
       ],
     );

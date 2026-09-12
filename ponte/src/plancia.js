@@ -23,6 +23,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { NOME, vestiDiGdahome } from "./marchio.js";
 import { guardaLaPlancia, inDueParole } from "./provenienza.js";
 
 export const BASE = "/dashboardmodern_static";
@@ -142,7 +143,7 @@ export class Plancia {
       base: this.base,
       impronta: this.impronta,
       varianti: this.varianti(),
-      titolo: quale?.titolo || "DashboardModern",
+      titolo: quale?.titolo || NOME,
       istanza: quale?.istanza || "ponte",
       profilo: quale?.profilo || "primary",
       primario: quale ? quale.primaria !== false : true,
@@ -179,7 +180,16 @@ export class Plancia {
     if (!dove.startsWith(this.cartella + sep)) return questoNo();
     try {
       if (!statSync(dove).isFile()) return questoNo();
-      return { stato: 200, tipo, corpo: readFileSync(dove) };
+      /* E qui la plancia prende la faccia di gdahome: il logo, il velo
+       * d'avvio, il titolo della pagina.
+       *
+       * Al momento di servire, e non nella cartella: quella e' una copia
+       * verbatim della dashboard, sigillata, e al prossimo
+       * `porta-la-plancia.mjs` si rifa' da zero. Vestirla qui vuol dire che
+       * la versione dopo, e quella dell'anno prossimo, arrivano vestite senza
+       * che nessuno rifaccia niente. Vedi `marchio.js`. */
+      const vestito = vestiDiGdahome(relativi.join("/"), readFileSync(dove), tipo);
+      return { stato: 200, tipo: vestito.tipo, corpo: vestito.corpo };
     } catch (_errore) {
       return questoNo();
     }

@@ -1033,7 +1033,7 @@ try {
     /* Si guardano le voci con le stesse regole con cui poi si premono — non
      * col testo della pagina: una plancia e' disegnata su una tela, e a
      * schermo, come testo, non c'e' niente. */
-    for (const nome of ["DashboardModern", "Casa al mare"]) {
+    for (const nome of ["gdahome", "Casa al mare"]) {
       if (!(await ilBottone(pagina, nome, { aspetta: false }))) {
         const cEra = await cosaCeDaPremere(pagina);
         throw new Error(`nel selettore non c'e' «${nome}». A schermo c'e': ${cEra.join(" · ")}`);
@@ -1049,7 +1049,7 @@ try {
     await apriIlMenu();
     await premi(pagina, "Quale plancia");
     await attendi(700);
-    await premi(pagina, "DashboardModern");
+    await premi(pagina, "gdahome");
     await attendi(2500);
   }
 

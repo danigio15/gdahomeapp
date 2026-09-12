@@ -36,14 +36,14 @@ function lePlance(cartella, { adesso = () => 1000 } = {}) {
   return new Plance({ cartella, registro: ZITTO, adesso });
 }
 
-test("la prima plancia c'e' sempre, e si chiama come si e' sempre chiamata", () => {
+test("la prima plancia c'e' sempre, e si chiama come il prodotto", () => {
   const { cartella, via } = unPosto();
   try {
     const plance = lePlance(cartella);
     assert.deepEqual(plance.elenco(), [
       {
         profilo: "primary",
-        titolo: "DashboardModern",
+        titolo: "gdahome",
         istanza: "ponte",
         primaria: true,
         creata_il: 0,

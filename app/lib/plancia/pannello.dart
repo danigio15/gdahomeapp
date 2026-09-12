@@ -86,8 +86,9 @@ class PannelloDellaPlancia {
   /// `dashboardmodern-mare` per una seconda plancia.
   final String percorso;
 
-  /// Come si chiama la plancia: «DashboardModern», o come l'ha chiamata chi
-  /// ne ha piu' d'una.
+  /// Come si chiama la plancia: «gdahome», o come l'ha chiamata chi ne ha
+  /// piu' d'una. Il nome glielo dice il ponte; questo e' il ripiego per un
+  /// ponte che non lo dice.
   final String titolo;
 
   /// Dove stanno i file: `/dashboardmodern_static/<impronta>`. L'impronta
@@ -193,7 +194,7 @@ PannelloDellaPlancia? leggiLaPlanciaDelPonte(Object? risposta) {
     percorso: 'ponte',
     titolo: switch (risposta['titolo']) {
       final String s when s.isNotEmpty => s,
-      _ => 'DashboardModern',
+      _ => 'gdahome',
     },
     base: base.replaceAll(RegExp(r'/+$'), ''),
     istanza: risposta['istanza']?.toString() ?? 'ponte',
@@ -243,7 +244,7 @@ PannelloDellaPlancia? leggiIPannelli(Object? risposta) {
             : voce.key.toString(),
         titolo: switch (config['title']) {
           final String s when s.isNotEmpty => s,
-          _ => 'DashboardModern',
+          _ => 'gdahome',
         },
         base: base.replaceAll(RegExp(r'/+$'), ''),
         istanza: config['instance_id']?.toString() ?? '',

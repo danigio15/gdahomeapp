@@ -521,7 +521,7 @@ test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-
     assert.deepEqual(prima.plance, [
       {
         profilo: "primary",
-        titolo: "DashboardModern",
+        titolo: "gdahome",
         istanza: "ponte",
         primaria: true,
         creata_il: 0,
