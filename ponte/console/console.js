@@ -324,6 +324,42 @@
     });
   }
 
+  /* Chi parla di piu' in casa, e quanto. */
+  function disegnaIChiacchieroni(come) {
+    var riga = trova("stato-chiacchieroni");
+    var elenco = trova("elenco-chiacchieroni");
+    if (!riga || !elenco) return;
+    elenco.textContent = "";
+    if (!come) {
+      riga.textContent = "Non lo so ancora: nessun telefono collegato.";
+      return;
+    }
+    var quanti = Number(come.eventi) || 0;
+    var quando = come.intero ? "nell'ultimo minuto" : "negli ultimi " + come.secondi + " s";
+    riga.textContent =
+      quanti === 0
+        ? "Nessun evento " + quando + ": la casa sta zitta."
+        : quanti + (quanti === 1 ? " evento " : " eventi ") + quando + ".";
+    (come.quali || []).forEach(function (una) {
+      var voce = vediPagina.createElement("li");
+      var nome = vediPagina.createElement("div");
+      nome.className = "nome";
+      var forte = vediPagina.createElement("strong");
+      /* `textContent`: il nome di un'entita' lo ha scritto chi ci abita. */
+      forte.textContent = una.entita;
+      var sotto = vediPagina.createElement("span");
+      var suoi = Number(una.eventi) || 0;
+      sotto.textContent =
+        suoi +
+        (suoi === 1 ? " evento" : " eventi") +
+        (quanti ? " · " + Math.round((suoi / quanti) * 100) + "% del traffico" : "");
+      nome.appendChild(forte);
+      nome.appendChild(sotto);
+      voce.appendChild(nome);
+      elenco.appendChild(voce);
+    });
+  }
+
   /* Se le plance sono davvero comparse fra le «Plance» di Home Assistant.
    *
    * E' la riga che mancava. Le plance le tiene il ponte, ma la voce nella
@@ -487,6 +523,7 @@
           : "Home Assistant non risponde: " + stato.casa.perche;
         trova("porta").textContent = stato.porta;
         trova("stato-centralino").textContent = comeVaIlCentralino(stato.centralino);
+        disegnaIChiacchieroni(stato.chiacchieroni);
         disegnaLaProvenienza(stato.plancia);
         disegnaIlLink(stato.app);
         disegnaIlLinkDiFuori(stato.app ? stato.centralino.dove : "");

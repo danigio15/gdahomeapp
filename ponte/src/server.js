@@ -633,6 +633,13 @@ async function api({
        * risposta a «questa e' quella vera?», e chi se lo chiede se lo chiede
        * guardando qui. */
       plancia: plancia?.cE ? plancia.provenienza : null,
+      /* Chi parla di piu' in questa casa, nell'ultimo minuto.
+       *
+       * E' la riga che risponde a «l'app va a scatti»: seicento eventi al
+       * minuto non sono mille entita' che cambiano una volta, sono due o tre
+       * che cambiano di continuo, e finche' non si sa quali non c'e' niente
+       * da fare. Vedi `chiacchieroni.js`. */
+      chiacchieroni: ponte?.chiacchieroni?.elenco() ?? null,
       /* E come e' andata a metterle fra le «Plance» di Home Assistant.
        *
        * Sta qui perche' e' il posto dove si guarda: chi ha aggiunto una

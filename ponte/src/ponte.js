@@ -20,6 +20,7 @@
  */
 
 import { CasaIrraggiungibile } from "./casa.js";
+import { Chiacchieroni } from "./chiacchieroni.js";
 import { eUnaCommissione, no } from "./commissioni.js";
 
 /* Quanti messaggi al secondo puo' mandare un telefono.
@@ -98,6 +99,11 @@ export class Ponte {
      * invece di finire in Home Assistant, che non saprebbe cosa farsene. */
     this.commissioni = commissioni;
     this.collegamenti = new Set();
+    /* Chi parla di piu' in questa casa. Serve a una domanda sola, e non c'e'
+     * altro posto da cui rispondere: un telefono che riceve seicento eventi
+     * al minuto vede il numero e non i nomi, e i nomi sono tutto il rimedio.
+     * Vedi `chiacchieroni.js`. */
+    this.chiacchieroni = new Chiacchieroni();
   }
 
   /* Un telefono ha appena aperto una presa. */
@@ -295,6 +301,10 @@ class Collegamento {
    */
   _alTelefono(testo) {
     if (this.chiuso) return;
+    /* Prima di tutto il resto, e costa un'espressione regolare sui primi
+     * quattrocento caratteri: il ponte gli eventi non li apre, e questo non
+     * comincia adesso. */
+    this.ponte.chiacchieroni.segna(testo);
     if (!this.faIlMucchio || !eUnEvento(testo)) {
       /* Prima quello che aspetta, poi questo: l'ordine con cui Home Assistant
        * ha parlato non si cambia. Una risposta che scavalca l'evento che l'ha

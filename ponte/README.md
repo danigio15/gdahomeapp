@@ -279,6 +279,29 @@ che chi risponde chiederebbe per primo. L'**app** usa la stessa chat, con
 `ponte/chat/leggi` e `ponte/chat/scrivi`; un allegato no, e si dice dove
 metterlo.
 
+## Chi parla di piu'
+
+Ogni cambiamento in casa e' un **evento**, e ogni evento arriva a tutti i
+telefoni collegati. Una casa che ne fa seicento al minuto — dieci al secondo —
+non ha seicento cose che cambiano: ne ha **due o tre** che cambiano di
+continuo, un contatore di potenza, un sensore di consumo istantaneo, una presa
+che misura i watt; le altre duecento stanno ferme per ore.
+
+Finche' non si sa **quali**, non c'e' niente da fare: si guarda una
+diagnostica che dice «seicento eventi» e si tira a indovinare. La scheda
+dell'add-on adesso li nomina — le cinque entita' che hanno mandato piu' eventi
+nell'ultimo minuto, con la loro fetta del traffico — e da li' il rimedio sta in
+Home Assistant e costa un minuto: a quelle due o tre si mette un filtro, o si
+tolgono dalla registrazione, e il traffico cala di dieci volte senza toccare
+una riga di questo programma.
+
+Contarli costa un'espressione regolare sui primi quattrocento caratteri, e
+niente altro (`src/chiacchieroni.js`): il nome dell'entita' sta in testa al
+messaggio, e leggere il JSON per intero — su seicento eventi al minuto —
+vorrebbe dire fare per misurare il lavoro che si sta misurando. Il ponte gli
+eventi non li apre mai, li gira come sono, ed e' per questo che sta dietro a
+una casa che parla molto.
+
 ## Le opzioni
 
 | | |
