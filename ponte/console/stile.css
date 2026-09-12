@@ -104,21 +104,6 @@ h2 {
 }
 
 /* Le sedici lettere, per chi non puo' inquadrare: chiuse, ma a un tocco. */
-.a-mano {
-  border-top: 1px solid var(--bordo);
-  padding-top: 10px;
-  margin-bottom: 12px;
-}
-
-.a-mano summary {
-  cursor: pointer;
-  color: var(--tenue);
-  font-size: 0.9rem;
-}
-
-.a-mano .spiegazione {
-  margin-top: 8px;
-}
 
 .codice {
   font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -294,48 +279,4 @@ button:disabled {
   color: var(--tenue);
   font-size: 0.9rem;
   padding: 8px 0;
-}
-
-/* Il listino.
- *
- * Le stesse righe dell'elenco dei telefoni — nome sopra, spiegazione sotto —
- * con il prezzo in fondo a destra. Il prezzo sta a destra e non accanto al
- * nome perche' chi legge un listino scorre la colonna dei prezzi, non le
- * righe: incolonnarli e' la differenza fra un listino e un elenco. */
-.listino .prezzo {
-  flex: 0 0 auto;
-  font-weight: 700;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.listino .prezzo span {
-  color: var(--tenue);
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 400;
-}
-
-/* «consigliato»: una pastiglia, non un colore diverso al titolo. Un titolo di
-   colore diverso sembra un collegamento. */
-.bollino {
-  background: var(--bene);
-  border-radius: 99px;
-  color: #fff;
-  font-size: 0.66rem;
-  font-style: normal;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  margin-left: 6px;
-  padding: 2px 7px;
-  text-transform: uppercase;
-  vertical-align: 2px;
-}
-
-/* La riga che dice dove si compra: si stacca, perche' e' quella che risponde
-   alla domanda che uno si fa guardando un listino senza bottoni. */
-.compra-nell-app {
-  border-top: 1px solid var(--bordo);
-  margin-top: 16px;
-  padding-top: 14px;
 }

@@ -22,7 +22,6 @@ import '../casa/impostazioni.dart';
 import '../misure/lavori.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
-import 'acquisti.dart';
 import 'assistenza.dart';
 import '../vestito/quanto_e_largo.dart';
 import 'barra.dart';
@@ -295,9 +294,6 @@ class _HomeState extends State<Home> {
                           collegamento: collegamento,
                           impostazioni: widget.impostazioni,
                           nuda: true,
-                        ),
-                        Sezione.acquisti => SchermataDegliAcquisti(
-                          collegamento: collegamento,
                         ),
                         Sezione.segnalazioni => SchermataDelleSegnalazioni(
                           collegamento: collegamento,

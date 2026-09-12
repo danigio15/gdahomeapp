@@ -78,7 +78,6 @@ tutte e diciannove le schede:
     Plancia            la casa, com'è
     Dispositivi        tutte le entità, in elenco
     Configurazione  ←  qui dentro c'è la Config
-    Acquisti           cosa è acceso, cosa si può sbloccare
     Segnalazioni
     Assistenza
     Aiutanti           (in arrivo)
@@ -130,7 +129,6 @@ più due nuove. Non si perde niente e non si inventa niente: si raggruppa.
     L'app                                                        (nuova)
       Plancia leggera
       Come va l'app
-      Acquisti
 
 Le voci marcate `←` sono la stessa scheda della plancia, con lo stesso nome e
 gli stessi campi. Le due famiglie in fondo nella plancia non ci sono: la prima

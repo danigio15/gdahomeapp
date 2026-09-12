@@ -79,9 +79,11 @@ da tramite verso Home Assistant.
 | Il mago delle automazioni | ⬜ (fase 4) |
 | Notifiche, impronta digitale, negozi | ⬜ (fasi 5 e 6) |
 
-**Binario C — gli acquisti in app.** Alcune sezioni, dell'app e della plancia,
-saranno a pagamento. Prima il disegno, poi la proposta commerciale, poi il
-codice.
+**Binario C — gli acquisti in app.** *Messo da parte il 12 settembre 2026: la
+sezione è stata tolta dall'app e dalla console, e il ragionamento resta in
+[`ACQUISTI.md`](ACQUISTI.md) come piano.* L'idea era che alcune sezioni,
+dell'app e della plancia, fossero a pagamento: prima il disegno, poi la
+proposta commerciale, poi il codice. Il primo rilascio va fuori senza.
 
 * **I diritti.** Ogni sezione a pagamento ha una chiave — `plancia.energia`,
   `plancia.elettrodomestici`, `app.zigbee`, `app.automazioni` — e un diritto
@@ -165,10 +167,10 @@ chiudere l'app. Non far pagare le segnalazioni: chi segnala aiuta.
 | pezzo | dove | stato |
 |---|---|---|
 | Le chiavi delle sezioni e l'elenco di cosa e' a pagamento | `docs/`, poi codice comune | ⬜ da decidere |
-| Il registro degli acquisti e la firma dei diritti | `nuvola/` (centralino) | ⬜ |
+| Il registro degli acquisti e la firma dei diritti | — | ⬛ messo da parte |
 | La verifica delle ricevute presso Google e Apple | `nuvola/` | ⬜ |
 | I diritti nel ponte, la configurazione filtrata, la premessa | `ponte/src/diritti.js` | ⬜ |
-| L'acquisto e il ripristino nell'app | `app/lib/acquisti/` | ⬜ |
+| L'acquisto e il ripristino nell'app | — | ⬛ messo da parte |
 | La console del centralino: vedere, regalare, revocare | `nuvola/` | ⬜ |
 
 ## Cosa manca davvero
@@ -381,7 +383,7 @@ quella pagina sono tornati suoi).
 
 | pezzo | dove | stato |
 |---|---|---|
-| La voce nel menu, e quella degli acquisti | `app/lib/schermate/menu.dart` | ✅ |
+| La voce nel menu | `app/lib/schermate/menu.dart` | ✅ |
 | La porta: la maniglia nella pagina servita | `app/lib/plancia/premesse.dart` | ✅ |
 | Chi la tira, dal menu | `app/lib/schermate/plancia_vera.dart` | ✅ |
 | Quello che e' dell'app e non della plancia (plancia leggera, composizione ibrida) | `app/lib/schermate/diagnostica.dart` | ✅ |

@@ -11,10 +11,23 @@
 # `ports` invece e' la porta su cui bussa l'app, ed e' l'unica che puo'
 # finire esposta. Su quella non c'e' nessuna console: si puo' solo presentare
 # un codice di abbinamento valido, o un segno di riconoscimento gia' avuto.
-name: Il ponte di DashboardModern
-version: "0.24.0"
+# Come si chiama nella barra laterale di Home Assistant: **gdahome**.
+#
+# Lo `slug` resta `ponte`, e non e' pigrizia: il Supervisor riconosce un add-on
+# dallo slug, e cambiarlo vorrebbe dire che per Home Assistant questo e' un
+# add-on **nuovo** — installato da zero, senza le opzioni, senza i telefoni
+# abbinati e senza la configurazione delle plance, e con quello di prima
+# rimasto li' accanto da disinstallare a mano. Un nome si cambia, l'identita'
+# no.
+#
+# Dentro il codice e nei documenti il pezzo continua a chiamarsi «il ponte»,
+# perche' e' quello che fa e perche' e' uno dei tre pezzi (il ponte, il
+# centralino, l'app). «gdahome» e' il nome del prodotto, e va dove il prodotto
+# si vede.
+name: gdahome
+version: "1.4.24"
 slug: ponte
-description: Fa parlare l'app di DashboardModern con questa casa, da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.
+description: La plancia e l'app di gdahome, per questa casa: da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.
 url: https://github.com/danigio15/gdahomeapp/tree/main/ponte
 arch:
   - aarch64
@@ -30,13 +43,13 @@ boot: auto
 ingress: true
 ingress_port: 8099
 panel_icon: mdi:bridge
-panel_title: Il ponte
+panel_title: gdahome
 
 # La porta dell'app.
 ports:
   8098/tcp: 8098
 ports_description:
-  8098/tcp: L'app di DashboardModern bussa qui. In casa basta cosi'; da fuori serve farla arrivare fin qui.
+  8098/tcp: L'app di gdahome bussa qui. In casa basta cosi'; da fuori serve farla arrivare fin qui.
 
 # Il ponte parla con Home Assistant per conto dell'app, e per farlo gli serve
 # il segno del Supervisor. Quel segno non esce mai da questo add-on: e'

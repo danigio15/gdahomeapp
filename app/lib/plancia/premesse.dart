@@ -113,8 +113,11 @@ class Premesse {
   /// Restano nascoste tre tessere, e per la stessa ragione: nell'app quella
   /// porta c'e' gia', ed e' una voce del menu.
   ///
-  /// «**Sostieni il progetto**», perche' qui gli acquisti ci sono: una
-  /// donazione accanto a un listino e' la stessa domanda fatta due volte.
+  /// «**Sostieni il progetto**». Nella plancia e' il grazie di un progetto che
+  /// vive di tempo libero, e li' ci sta. Qui no, e adesso per una ragione
+  /// diversa da prima: questa pagina si presenta come gdahome — nome e
+  /// marchio — e una donazione che porta a un altro progetto, dentro una
+  /// pagina che ne porta il nome, e' una cosa che chi la legge non capisce.
   ///
   /// Le **Segnalazioni**, `#dm-tkt-card`. Non per grafica — quella e' buona —
   /// ma perche' la sua strada non c'e': la tessera della plancia parla
@@ -158,10 +161,11 @@ class Premesse {
       'html body header .dm-editor-entry,'
       'html body header .ha-menu-btn{display:none!important}'
       /* «Sostieni il progetto»: nella plancia e' il grazie di un progetto
-         che vive di tempo libero, e li' ci sta. Nell'app no: qui gli
-         acquisti ci sono, e chiedere una donazione accanto a un listino e'
-         chiedere due volte la stessa cosa in due modi diversi. La tessera,
-         la pastiglia dell'editor e la card di Impostazioni: tutte e tre. */
+         che vive di tempo libero, e li' ci sta. Qui no: questa pagina si
+         presenta come gdahome, e una donazione che porta a un altro
+         progetto, dentro una pagina che ne porta il nome, e' una cosa che
+         chi la legge non capisce. La tessera, la pastiglia dell'editor e la
+         card di Impostazioni: tutte e tre. */
       'html body #page-config .dm-sostieni-tessera,'
       'html body #editor-modal .dm-sostieni-pastiglia,'
       'html body #ed-body .dm-sostieni-card{display:none!important}'

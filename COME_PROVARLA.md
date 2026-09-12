@@ -438,41 +438,9 @@ se non funzionano:
   dashboard, con la sua insegna e la versione della plancia — **v1.4.19**, e se
   ne dice una più vecchia il ponte non è aggiornato — e sotto le sue
   tessere: 🧩 Configura Entità, 🎨 Tema con le sei tavolozze, 📌 Barra di
-  navigazione. «Sostieni il progetto» qui **non c'è**: nell'app gli acquisti
-  ci sono, e una donazione accanto a un listino è la stessa domanda fatta due
-  volte. Toccando 🧩 si apre il suo editor, col cercatore e le sette famiglie.
-  Poi **menu → Plancia**: la plancia torna dov'era.
-- **Una porta sola per la Config.** In cima alla plancia non c'è più
-  l'ingranaggio ⚙️, e non c'è più il tasto ☰: la Config si apre dal menu
-  dell'app e da nessun altro posto. Nella pagina Configurazione non c'è più
-  nemmeno il tasto «← HOME», che riportava sulla Home della plancia senza che
-  nessuno lo avesse chiesto.
-- **Una schermata, una barra.** In Configurazione la barra in fondo alla
-  plancia — Home, Energia, Sicurezza… — **non c'è**, e non c'è nemmeno la sua
-  maniglia: resta solo quella del menu dell'app. Prima c'erano tutt'e due, si
-  toccava «Energia» su quella della plancia e la plancia ci andava mentre il
-  menu restava segnato su «Configurazione»: una schermata e due posti dove si
-  credeva di essere. Appena si esce dalla Config la barra torna dov'era.
-- **Il tema, dalle sue tessere.** Chiaro, scuro, una tavolozza: la plancia
-  cambia colore. Chiudi e riapri l'app: la scelta deve **restare**. Prima
-  l'app la riscriveva a ogni caricamento e tornava indietro.
-- **Un collegamento che porta fuori** — il meteo di Windy sotto le previsioni,
-  un indirizzo su una mappa nella scheda di una persona: si deve aprire il
-  **browser del telefono**. Prima non succedeva niente.
-- **Ripristina un backup** (Config → Salva/Ripristina → «Scegli il file»):
-  deve aprirsi l'**archivio del telefono**, non la galleria delle foto. Le
-  caselle che chiedono un'immagine — la faccia di una persona, l'auto —
-  aprono la galleria come prima.
-- **Cancella qualcosa nell'editor** — una stanza, una presa, un
-  elettrodomestico. Deve comparire una **finestra che chiede conferma**. Prima,
-  sull'iPhone, quella domanda non si vedeva e la risposta era «no» da sola:
-  ogni cestino sembrava rotto.
-- **Le tessere della plancia vibrano** quando le tocchi (su Android; se hai la
-  vibrazione spenta nel telefono, no).
-- **La testata della plancia** («SMART HOME», con la pastiglia dello stato) non
-  deve finire sotto l'orologio del telefono.
-- **Una foto di casa col nome normale.** Se in `config/www` hai un file che si
-  chiama «mia auto.png», con lo spazio: adesso si vede.
+  navigazione. «Sostieni il progetto» qui **non c'è**: questa pagina si presenta come
+  gdahome, e una donazione che porta a un altro progetto, dentro una pagina
+  che ne porta il nome, è una cosa che chi la legge non capisce.
 
 E poi tutto il resto:
 

@@ -36,7 +36,6 @@ enum Sezione {
   dispositivi('Dispositivi', 'widget', pronta: true),
   configurazione('Configurazione', 'impostazioni', pronta: true),
   comeVaLApp('Come va l\'app', 'minipc', pronta: true),
-  acquisti('Acquisti', 'evidenza', pronta: true),
   segnalazioni('Segnalazioni', 'segnalazioni', pronta: true),
   assistenza('Assistenza', 'assistenza', pronta: true),
   /* La coda di chi risponde. Non e' una voce come le altre: compare **in una

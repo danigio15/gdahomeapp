@@ -1220,15 +1220,17 @@ try {
     throw new Error(`la barra della plancia sulla Config: ${laBarraDellaPlancia}`);
   }
 
-  /* «Sostieni il progetto» nell'app non c'e': la tessera della dashboard e'
-   * nascosta, perche' qui gli acquisti ci sono e una donazione accanto a un
-   * listino e' la stessa domanda fatta due volte. Si guarda che non ci sia. */
-  /* Le tessere che nell'app non ci vanno, perche' quella porta c'e' gia' ed e'
-   * una voce del menu: le donazioni — qui ci sono gli acquisti — le
-   * Segnalazioni e l'**Assistenza**, che nel menu ha due voci sue, «Assistenza»
-   * per chi chiede aiuto e «Console» per chi risponde. Si guarda l'altezza e
-   * non lo stile: una tessera si puo' nascondere in tre modi, e quello che
-   * conta e' che non occupi posto. */
+  /* Le tessere che nell'app non ci vanno.
+   *
+   * «Sostieni il progetto», perche' questa pagina si presenta come gdahome e
+   * una donazione che porta a un altro progetto, dentro una pagina che ne
+   * porta il nome, e' una cosa che chi la legge non capisce. Le
+   * **Segnalazioni** e l'**Assistenza**, perche' quella porta c'e' gia' ed e'
+   * una voce del menu — e l'Assistenza ne ha due, «Assistenza» per chi chiede
+   * aiuto e «Console» per chi risponde.
+   *
+   * Si guarda l'altezza e non lo stile: una tessera si puo' nascondere in tre
+   * modi, e quello che conta e' che non occupi posto. */
   racconta("controllo che le tessere doppie non compaiano nella Config");
   const siVedono = await laConfig.evaluate(() =>
     [
@@ -1369,14 +1371,6 @@ try {
   await vaiA("Come va l'app", "L'ultimo minuto");
   await attendi(900);
   await scatta(pagina, "6l2-come-va-l-app");
-
-  racconta("apro gli acquisti");
-  await vaiA("Acquisti", "Prova aperta su");
-  await attendi(900);
-  await scatta(pagina, "6l-acquisti");
-  await scorri(pagina, 1100);
-  await attendi(700);
-  await scatta(pagina, "6m-acquisti-listino");
 
   racconta("apro le segnalazioni");
   await vaiA("Segnalazioni", "Nessuna segnalazione");
