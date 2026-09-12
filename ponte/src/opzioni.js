@@ -73,8 +73,21 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
     cartella,
     /* Dove chiamare per farsi raggiungere da fuori.
      *
-     * Chi non scrive niente prende quello dell'app: e' il caso di chiunque
-     * installi l'add-on e basta, che e' come deve essere.
+     * **Nella scheda dell'add-on non c'e' nessuna casella**, e non e' una
+     * dimenticanza: c'era, e stava sempre vuota. L'indirizzo giusto e' quello
+     * qui sotto, lo stesso scritto dentro l'app — e una casella che non va
+     * toccata e' una casella che prima o poi qualcuno tocca, scrivendoci
+     * qualcosa di storto o congelando per quella casa un indirizzo che il
+     * giorno che cambia non cambia piu'.
+     *
+     * `scritte.centralino` si legge ancora, e non e' codice morto: e' quello
+     * che ha in casa chi aggiorna da una versione in cui la casella c'era. Se
+     * ci aveva scritto qualcosa, continua a valere finche' non la cancella —
+     * togliere una casella non e' un buon momento per cambiare di nascosto
+     * dove chiama la casa di qualcuno.
+     *
+     * `PONTE_CENTRALINO` e' per il banco: il collaudo accende un centralino
+     * finto e ce lo dice da li'.
      *
      * Chi non vuole passare da nessun centralino spegne `da_fuori_casa`. E'
      * un interruttore e non una casella da svuotare apposta, perche' «voglio

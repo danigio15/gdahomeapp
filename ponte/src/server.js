@@ -253,6 +253,10 @@ export function costruisciLaConsole({
   ritorno,
   plancia,
   plance,
+  /* Com'e' andata a mettere le plance fra le «Plance» di Home Assistant: la
+   * scheda dell'add-on lo dice, perche' e' li' che si guarda quando una voce
+   * nella barra laterale non c'e'. */
+  planceInCasa,
   configurazione,
   /* Le commissioni: i comandi che il ponte fa da se' invece di girarli a Home
    * Assistant. Servono alla plancia servita qui — l'integrazione che li faceva
@@ -293,6 +297,7 @@ export function costruisciLaConsole({
           ritorno,
           plancia,
           plance,
+          planceInCasa,
           configurazione,
           aggiornamento,
         });
@@ -485,6 +490,7 @@ async function api({
   ritorno,
   plancia,
   plance,
+  planceInCasa,
   configurazione,
   aggiornamento,
 }) {
@@ -627,6 +633,13 @@ async function api({
        * risposta a «questa e' quella vera?», e chi se lo chiede se lo chiede
        * guardando qui. */
       plancia: plancia?.cE ? plancia.provenienza : null,
+      /* E come e' andata a metterle fra le «Plance» di Home Assistant.
+       *
+       * Sta qui perche' e' il posto dove si guarda: chi ha aggiunto una
+       * plancia e non la trova nella barra laterale deve leggere **in questa
+       * pagina** perche', non andare a cercare una riga nel registro. `null`
+       * vuol dire che non si e' ancora provato. */
+      plance_in_casa: planceInCasa?.esito ?? null,
       /* Quante plance ha questa casa, e come si chiamano.
        *
        * Viaggiano insieme allo stato e non in una chiamata loro: questa pagina

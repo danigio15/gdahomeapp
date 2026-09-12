@@ -353,6 +353,44 @@ test("la vista non si riscrive se non e' cambiata", async () => {
   }
 });
 
+test("se la risorsa non si dichiara, le Plance si fanno comunque", async () => {
+  /* Il difetto che questa prova tiene fermo, e che c'e' stato davvero.
+   *
+   * I tre pezzi stavano in un `try` solo: se la cartina non si dichiarava a
+   * Lovelace — modalita' YAML, un permesso che manca, una versione di Home
+   * Assistant che quel comando non ce l'ha — saltava anche la creazione delle
+   * Plance. Cioe' la voce nella barra laterale non compariva **per un motivo
+   * che non la riguardava**, e a chi guardava sembrava che non funzionasse
+   * niente. Adesso quello che riesce riesce. */
+  const b = banco();
+  try {
+    const vera = b.casa.chiedi;
+    b.casa.chiedi = async (comando) => {
+      if (String(comando.type).startsWith("lovelace/resources")) {
+        throw new Error("lovelace in modalita' YAML");
+      }
+      return vera(comando);
+    };
+    const esito = await b.in_casa.sistema();
+
+    /* Non e' «a posto», e lo dice per nome. */
+    assert.equal(esito.fatto, false);
+    assert.match(esito.perche, /non si e' dichiarata a Lovelace/);
+    /* Ma la Plancia c'e', ed e' quello che si vede nella barra laterale. */
+    assert.equal(esito.quante, 1);
+    assert.deepEqual(
+      b.casa.plance.map((una) => una.url_path),
+      ["gdahome-primary"],
+    );
+    /* E l'esito resta da parte, perche' la console lo mostri: un guasto che si
+     * legge solo nel registro e' un guasto che nessuno legge. */
+    assert.equal(b.in_casa.esito.fatto, false);
+    assert.match(b.in_casa.esito.quando, /^\d{4}-\d{2}-\d{2}T/);
+  } finally {
+    b.via();
+  }
+});
+
 test("se Home Assistant dice no, il ponte resta in piedi", async () => {
   const b = banco();
   try {
@@ -365,6 +403,9 @@ test("se Home Assistant dice no, il ponte resta in piedi", async () => {
     const esito = await b.in_casa.sistema();
     assert.equal(esito.fatto, false);
     assert.match(esito.perche, /YAML/);
+    /* E niente Plance: quando non risponde a nessun comando, non c'e' niente
+     * da salvare a meta'. */
+    assert.equal(esito.quante, 0);
   } finally {
     b.via();
   }

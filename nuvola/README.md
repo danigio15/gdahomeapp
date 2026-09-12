@@ -37,13 +37,23 @@ Alla fine stampa l'indirizzo, che è fatto così:
 
     https://gdahome-centralino.<il-tuo-nome>.workers.dev
 
-Quello si mette nella scheda dell'add-on, alla voce `centralino`, con `wss://`
-davanti:
+Quello si scrive **dentro l'add-on**, non nella sua scheda: nella scheda una
+casella per l'indirizzo non c'è più, e il perché sta in
+[`../ponte/README.md`](../ponte/README.md#da-fuori-casa) — una casella che non
+va toccata è una casella che prima o poi qualcuno tocca.
 
-    centralino: wss://gdahome-centralino.<il-tuo-nome>.workers.dev
+Quindi: si tiene una copia locale dell'add-on (la cartella `ponte` dentro
+`addons` di Home Assistant), e una volta sola —
+
+    node strumenti/centralino.mjs wss://gdahome-centralino.<il-tuo-nome>.workers.dev
+
+che scrive i tre posti dove quell'indirizzo sta: il difetto dell'add-on, quello
+dell'app e quello della chat. Poi **Negozio degli add-on → Ricarica**, e si
+installa (o si ricostruisce) da lì.
 
 Il ponte da quel momento **chiama fuori da solo**. Nella sua console, in Home
-Assistant, si vede se è arrivato.
+Assistant, sotto «Da fuori casa» c'è scritto a quale indirizzo — ed è lì che si
+controlla che sia il proprio e non quello di gdahome.
 
 ## Come è fatto
 

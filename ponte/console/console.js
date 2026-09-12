@@ -98,11 +98,21 @@
    * quello che vedrebbe sarebbe soltanto un'app che «non trova la casa». */
   function comeVaIlCentralino(centralino) {
     if (!centralino || !centralino.configurato) {
-      return "Nessun centralino: da fuori casa l'app non entra. Si mette nelle opzioni di questo add-on.";
+      return (
+        "Nessun centralino: da fuori casa l'app non entra. Si riaccende con " +
+        "«da fuori casa» nelle opzioni di questo add-on."
+      );
     }
+    /* E **dove** chiama, non solo se ci arriva.
+     *
+     * Da quando nelle opzioni non c'e' piu' la casella dell'indirizzo, questa
+     * riga e' l'unico posto dove si legge: chi vuole sapere se la sua casa sta
+     * sul centralino nuovo o su quello di prima lo guarda qui, invece di
+     * andarselo a cercare nel programma. */
+    var dove = centralino.dove || "";
     if (centralino.rifiutata) return "Il centralino ci rifiuta: " + centralino.rifiutata;
-    if (!centralino.dentro) return "Sto chiamando il centralino…";
-    return "Collegato al centralino: da fuori casa si entra.";
+    if (!centralino.dentro) return "Sto chiamando " + (dove || "il centralino") + "…";
+    return "Collegato a " + (dove || "il centralino") + ": da fuori casa si entra.";
   }
 
   /* Da dove viene la plancia, in tre righe.
@@ -314,6 +324,28 @@
     });
   }
 
+  /* Se le plance sono davvero comparse fra le «Plance» di Home Assistant.
+   *
+   * E' la riga che mancava. Le plance le tiene il ponte, ma la voce nella
+   * barra laterale la fa Home Assistant, e fra le due cose ci sono tre
+   * passaggi che possono non riuscire — la cartina da scrivere, la risorsa da
+   * dichiarare, la Plancia da creare. Quando non riescono, il ponte lo scrive
+   * nel registro: cioe' in un posto dove nessuno guarda. Qui invece sta dove
+   * si guarda, che e' accanto all'elenco. */
+  function comeVannoLePlanceInCasa(esito) {
+    if (!esito) return "Sto guardando se le plance sono fra le «Plance» di Home Assistant…";
+    if (esito.fatto) {
+      var quante = Number(esito.quante) || 0;
+      return (
+        "Nella barra laterale di Home Assistant ci sono " +
+        (quante === 1 ? "1 voce" : quante + " voci") +
+        (esito.tolte ? ", e " + esito.tolte + " sono state levate" : "") +
+        "."
+      );
+    }
+    return "Le plance non sono nella barra laterale di Home Assistant: " + (esito.perche || "");
+  }
+
   function avvisaLePlance(testo) {
     var avviso = trova("avviso-plance");
     if (!avviso) return;
@@ -460,6 +492,7 @@
         disegnaIlLinkDiFuori(stato.app ? stato.centralino.dove : "");
         disegnaIDispositivi(stato.dispositivi, stato.massimi);
         disegnaLePlance(stato.plance);
+        trova("stato-plance-in-casa").textContent = comeVannoLePlanceInCasa(stato.plance_in_casa);
         trova("fabbrica").disabled = stato.dispositivi.length >= stato.massimi;
         if (!stato.abbinamento.attivo) nascondiIlCodice();
         avvisa("");

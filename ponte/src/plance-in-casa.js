@@ -79,6 +79,10 @@ export class PlanceInCasa {
     this.prendi = prendi;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this._io = null;
+    /* Com'e' andata l'ultima volta. `null` vuol dire che non si e' ancora
+     * provato: e' diverso da «e' andata male», e la console lo dice
+     * diversamente. */
+    this.esito = null;
   }
 
   /* C'e' una cartella di Home Assistant dove scrivere?
@@ -149,26 +153,99 @@ export class PlanceInCasa {
    * dall'ingress funzionano comunque, e quella qui e' una comodita' in piu',
    * non la strada. */
   async sistema() {
-    if (!this.plance) return { fatto: false, perche: "non ci sono plance" };
-    if (!this.cE) return { fatto: false, perche: "qui non c'e' nessuna Home Assistant" };
-    try {
-      const copiata = this.laCarta();
-      const io = await this._chiSiamo();
-      await this.laRisorsa();
-      const quali = this.plance.elenco();
-      for (const una of quali) await this.unaPlancia(una, io);
-      const via = await this.pulisci(quali);
-      this.registro.info(
-        `le plance in Home Assistant sono a posto: ${quali.length} ${quali.length === 1 ? "voce" : "voci"}` +
-          `${via ? `, ${via} tolte` : ""}${copiata ? ", cartina aggiornata" : ""}`,
-      );
-      return { fatto: true, quante: quali.length, tolte: via };
-    } catch (errore) {
-      this.registro.attenzione(
-        `le plance in Home Assistant non si sono sistemate: ${errore?.message || errore}`,
-      );
-      return { fatto: false, perche: String(errore?.message || errore) };
+    if (!this.plance) return this._esito({ fatto: false, perche: "non ci sono plance" });
+    if (!this.cE) {
+      return this._esito({ fatto: false, perche: "qui non c'e' nessuna Home Assistant" });
     }
+
+    /* I tre pezzi, **uno per volta e ognuno per conto suo**.
+     *
+     * Prima erano in un `try` solo, e quello era un difetto: se la risorsa non
+     * si dichiarava — Lovelace in modalita' YAML, o un permesso che manca —
+     * saltava anche la creazione delle Plance, cioe' la voce nella barra
+     * laterale non compariva **per un motivo che non la riguardava**. Adesso
+     * quello che riesce riesce, e quello che non riesce si dice per nome. */
+    const guai = [];
+    let copiata = false;
+    try {
+      copiata = this.laCarta();
+    } catch (errore) {
+      guai.push(`la cartina non si e' scritta (${errore?.message || errore})`);
+    }
+
+    const io = await this._chiSiamo();
+
+    try {
+      await this.laRisorsa();
+    } catch (errore) {
+      guai.push(`la cartina non si e' dichiarata a Lovelace (${errore?.message || errore})`);
+    }
+
+    const quali = this.plance.elenco();
+    let fatte = 0;
+    for (const una of quali) {
+      try {
+        await this.unaPlancia(una, io);
+        fatte += 1;
+      } catch (errore) {
+        guai.push(`«${una.titolo}» non si e' messa fra le Plance (${errore?.message || errore})`);
+      }
+    }
+
+    let via = 0;
+    try {
+      via = await this.pulisci(quali);
+    } catch (errore) {
+      guai.push(`le Plance di plance tolte non si sono levate (${errore?.message || errore})`);
+    }
+
+    if (guai.length) {
+      const perche = guai.join("; ");
+      this.registro.attenzione(`le plance in Home Assistant, a meta': ${perche}`);
+      return this._esito({ fatto: false, quante: fatte, tolte: via, perche });
+    }
+    this.registro.info(
+      `le plance in Home Assistant sono a posto: ${fatte} ${fatte === 1 ? "voce" : "voci"}` +
+        `${via ? `, ${via} tolte` : ""}${copiata ? ", cartina aggiornata" : ""}`,
+    );
+    return this._esito({ fatto: true, quante: fatte, tolte: via });
+  }
+
+  /* L'ultimo esito, tenuto da parte perche' la console lo mostri.
+   *
+   * Il registro ce l'ha gia', e non basta: chi apre la scheda dell'add-on e
+   * non trova la plancia fra le Plance deve poter leggere **li'** perche', non
+   * andare a cercare una riga fra mille in una linguetta accanto. Un guasto
+   * che si vede solo nel registro e' un guasto che nessuno vede. */
+  _esito(come) {
+    this.esito = { ...come, quando: new Date().toISOString() };
+    return this.esito;
+  }
+
+  /* Ci si riprova, se Home Assistant non c'era.
+   *
+   * All'avvio dell'add-on Home Assistant sta spesso ancora partendo: il
+   * saluto non torna, i comandi di Lovelace non arrivano a nessuno, e senza
+   * questo la voce nella barra laterale comparirebbe solo al riavvio dopo —
+   * o alla prossima plancia aggiunta, che e' un modo di dire «mai».
+   *
+   * Tre tentativi che si allontanano, e poi si smette: se dopo un quarto d'ora
+   * Home Assistant non risponde ai comandi di Lovelace, il problema non e' che
+   * stava partendo, e riprovare per sempre riempirebbe il registro senza
+   * aggiustare niente. */
+  async sistemaConCalma(attese = [30_000, 120_000, 600_000]) {
+    const esito = await this.sistema();
+    if (esito.fatto || !this.cE) return esito;
+    for (const quanto of attese) {
+      await new Promise((ok) => {
+        const giro = setTimeout(ok, quanto);
+        giro.unref?.();
+      });
+      this.registro.info("riprovo a mettere le plance fra le Plance di Home Assistant");
+      const dinuovo = await this.sistema();
+      if (dinuovo.fatto) return dinuovo;
+    }
+    return this.esito;
   }
 
   /* La cartina nella `www`. Torna `true` se l'ha davvero riscritta: si copia

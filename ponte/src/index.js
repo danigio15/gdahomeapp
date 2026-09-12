@@ -220,6 +220,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * se ne aggiunge una, come in Home Assistant si aggiunge una seconda
      * istanza dell'integrazione. */
     plance,
+    /* E com'e' andata a metterle fra le «Plance» di Home Assistant: la scheda
+     * dell'add-on e' il posto dove si guarda quando una voce nella barra
+     * laterale non c'e'. */
+    planceInCasa,
     configurazione,
     /* Le commissioni servono anche qui: la plancia servita dentro Home
      * Assistant chiede al ponte le stesse cose che gli chiede quella dentro
@@ -252,11 +256,14 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   if (saluto.viva) registro.info("Home Assistant risponde");
   else registro.attenzione(`Home Assistant non risponde: ${saluto.perche}`);
 
-  /* Le voci fra le Plance, dopo il saluto: i comandi di Lovelace vanno sul
-   * filo, e un filo che non c'e' darebbe un errore invece di una voce. Se
-   * Home Assistant non risponde non si prova nemmeno: al prossimo avvio, o
-   * alla prossima plancia aggiunta. */
-  if (saluto.viva) await planceInCasa.sistema();
+  /* Le voci fra le Plance.
+   *
+   * Non si aspetta, e si riprova: all'avvio dell'add-on Home Assistant sta
+   * spesso ancora partendo, e i comandi di Lovelace arrivano a nessuno.
+   * Aspettare qui vorrebbe dire tenere giu' il ponte — l'app e la plancia
+   * funzionano comunque — e non riprovare vorrebbe dire una voce che compare
+   * solo al riavvio dopo. */
+  void planceInCasa.sistemaConCalma();
 
   const giro = setInterval(() => {
     const andati = dispositivi.potatura();

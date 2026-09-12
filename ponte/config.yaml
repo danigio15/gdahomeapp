@@ -12,7 +12,7 @@
 # finire esposta. Su quella non c'e' nessuna console: si puo' solo presentare
 # un codice di abbinamento valido, o un segno di riconoscimento gia' avuto.
 name: Il ponte di DashboardModern
-version: "0.22.0"
+version: "0.23.0"
 slug: ponte
 description: Fa parlare l'app di DashboardModern con questa casa, da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.
 url: https://github.com/danigio15/gdahomeapp/tree/main/ponte
@@ -107,12 +107,22 @@ options:
   # porta da aprire sul router, nessun indirizzo pubblico da avere, e nessuna
   # VPN da installare.
   #
-  # Lasciando questo acceso non c'e' niente da fare: si usa quello dell'app.
-  # Spegnendolo, la casa si raggiunge solo dalla propria rete.
+  # Acceso, si usa il centralino di gdahome, e non c'e' niente da scrivere da
+  # nessuna parte. Spento, la casa si raggiunge solo dalla propria rete.
+  #
+  # **Qui non c'e' nessuna casella per l'indirizzo, e non e' una dimenticanza.**
+  # Prima c'era, e stava sempre vuota: l'indirizzo giusto e' quello scritto nel
+  # programma (`src/opzioni.js`, e identico dentro l'app), e una casella che non
+  # va toccata e' una casella che prima o poi qualcuno tocca — scrivendoci
+  # qualcosa di storto, o congelando per quella casa un indirizzo che il giorno
+  # che cambia non cambia piu'. Dove chiama questa casa lo dice la console,
+  # nella scheda «Da fuori casa».
+  #
+  # Chi vuole un centralino suo se ne accende uno (`nuvola/README.md`) e si
+  # tiene una copia locale di questo add-on, dove quella riga si cambia una
+  # volta: e' una cosa da chi sa cos'e' un centralino, e chi lo sa sa anche
+  # cambiare una riga.
   da_fuori_casa: true
-  # Il proprio centralino, per chi se l'e' acceso. Vuoto vuol dire: quello
-  # dell'app. La maggior parte delle persone non tocca questa riga.
-  centralino: ""
   porta_app: 8098
   # Quanti telefoni possono restare abbinati insieme.
   dispositivi_massimi: 10
@@ -148,7 +158,6 @@ options:
 
 schema:
   da_fuori_casa: bool
-  centralino: str?
   porta_app: int(1024,65535)
   dispositivi_massimi: int(1,100)
   minuti_del_codice: int(1,60)

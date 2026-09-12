@@ -178,15 +178,23 @@ Alla fine stampa l'indirizzo, fatto così:
 https://centralino.<il-tuo-nome>.workers.dev
 ```
 
-Poi, in Home Assistant: **Impostazioni → Add-on → Il ponte → Configurazione**,
-e nella voce `centralino` scrivi lo stesso indirizzo **con `wss://` davanti**:
+Poi quell'indirizzo va scritto **dentro l'add-on**: nella sua scheda una
+casella per metterlo non c'è, apposta — l'indirizzo giusto è quello di gdahome,
+e una casella che non va toccata prima o poi qualcuno la tocca. Con una copia
+locale dell'add-on si fa una volta sola:
 
 ```
-wss://centralino.<il-tuo-nome>.workers.dev
+node strumenti/centralino.mjs wss://centralino.<il-tuo-nome>.workers.dev
 ```
 
-Salva e riavvia l'add-on. Apri **Il ponte** nella barra laterale: sotto «Da
-fuori casa» deve dire **«Collegato al centralino: da fuori casa si entra.»**
+Scrive i tre posti dove quell'indirizzo sta — il difetto dell'add-on, quello
+dell'app, quello della chat — e una prova tiene fermo che i primi due restino
+identici. Poi **Negozio degli add-on → Ricarica**, e si installa da lì.
+
+Apri **Il ponte** nella barra laterale: sotto «Da fuori casa» deve dire
+**«Collegato a wss://…: da fuori casa si entra.»**, con dentro il tuo
+indirizzo. Se invece c'è quello di gdahome, l'add-on che gira non è la tua
+copia.
 
 Se dice altro, lì c'è scritto cosa non va.
 

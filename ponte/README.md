@@ -95,14 +95,28 @@ e con quel segno non si rientra piu'.
 
 In casa l'app trova il ponte sulla porta 8098, e basta cosi'.
 
-Da fuori il ponte **chiama lui**. Nell'opzione `centralino` si scrive
-l'indirizzo di un centralino, e da quel momento il ponte apre un filo verso
-quello e lo tiene aperto; i telefoni arrivano da quella parte. Non c'e' nessuna
+Da fuori il ponte **chiama lui**: apre un filo verso il centralino di gdahome
+e lo tiene aperto, e i telefoni arrivano da quella parte. Non c'e' nessuna
 porta da aprire sul router, nessun indirizzo pubblico da avere, nessuna VPN da
 installare, e funziona anche a chi non ha ne' un dominio ne' un abbonamento.
 
-Lasciando l'opzione vuota il ponte non chiama nessuno, e l'app funziona solo
+**L'indirizzo non si scrive da nessuna parte, e nella scheda dell'add-on non
+c'e' nessuna casella per metterlo.** C'era, e stava sempre vuota: l'indirizzo
+giusto e' quello scritto nel programma — `src/opzioni.js`, e identico dentro
+l'app, tenuti uguali da una prova — e una casella che non va toccata e' una
+casella che prima o poi qualcuno tocca: scrivendoci qualcosa di storto, o
+congelando per quella casa un indirizzo che il giorno che cambia non cambia
+piu'. Dove chiama **questa** casa lo dice la console, nella scheda «Da fuori
+casa»: e' la riga da guardare quando qualcosa non torna.
+
+Spegnendo `da_fuori_casa` il ponte non chiama nessuno, e l'app funziona solo
 sotto il Wi-Fi di casa. Per chi la casa la guarda dal divano va benissimo.
+
+Chi vuole un **centralino suo** se ne accende uno — sta tutto in
+[`../nuvola/README.md`](../nuvola/README.md) — e si tiene una copia locale di
+questo add-on, dove quella riga si cambia con
+`node strumenti/centralino.mjs <indirizzo>`. E' una cosa da chi sa cos'e' un
+centralino, e chi lo sa sa anche cambiare una riga.
 
 Il perche' di questa strada, e le tre che sono state scartate, stanno in
 [`../docs/PIANO.md`](../docs/PIANO.md). In due righe: l'accesso remoto di Home
@@ -269,7 +283,7 @@ metterlo.
 
 | | |
 |---|---|
-| `centralino` | dove chiamare per farsi raggiungere da fuori casa; vuoto = solo in casa |
+| `da_fuori_casa` | acceso: si passa dal centralino di gdahome, e non c'e' niente da scrivere. Spento: solo la rete di casa. L'indirizzo del centralino **non e' un'opzione**, e il perche' sta due sezioni piu' su |
 | `porta_app` | la porta su cui bussa l'app (difetto: 8098) |
 | `dispositivi_massimi` | quanti telefoni possono restare abbinati insieme (difetto: 10) |
 | `minuti_del_codice` | quanto vive un codice di abbinamento (difetto: 5) |
