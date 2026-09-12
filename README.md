@@ -13,6 +13,25 @@ entita' di Home Assistant come le altre.
 > La plancia c'e': la home e' la plancia, e le sue pagine stanno nel menu. Le
 > tre funzioni nuove — aiutanti, Zigbee, automazioni — sono le fasi 2, 3 e 4.
 
+## Metterla in casa
+
+L'add-on si installa **dal negozio di Home Assistant**: Impostazioni → Add-on →
+Negozio degli add-on → i tre puntini in alto a destra → **Archivi**, e si
+incolla
+
+```
+https://github.com/danigio15/gdahomeapp
+```
+
+Compare una sezione **gdahome** con dentro **Il ponte**. Si installa — la prima
+volta ci mette qualche minuto, perche' Home Assistant se lo costruisce sul
+posto — e nella barra laterale compare la sua console. Da li' si fabbrica il
+quadretto da inquadrare col telefono, e la plancia compare fra le **Plance**
+di Home Assistant.
+
+I dettagli, i permessi che l'add-on chiede e perche', stanno in
+[`ponte/README.md`](ponte/README.md).
+
 ## Come ci si arriva
 
 ```
@@ -54,7 +73,7 @@ se no ogni comando farebbe il giro del mondo per arrivare a tre metri.
 | **il ponte** | `ponte/` | l'add-on di Home Assistant che fa entrare l'app, da dentro e da fuori casa |
 | **il centralino** | `nuvola/`, `centralino/` | fa incontrare un telefono e la sua casa, senza capire niente di quello che si dicono |
 | **l'app** | `app/` | Flutter, per Android e iPhone: si abbina, si collega, comanda |
-| **la plancia** | [dashboardmodern-v2](https://github.com/danigio15/dashboardmodern-v2) | le ventitre sezioni che gia' esistono e funzionano |
+| **la plancia** | `ponte/plancia/` | le ventitre sezioni che gia' esistono e funzionano: una copia di [DashboardModern](https://github.com/danigio15/dashboardmodern-v2), **con la sua licenza**, che il ponte serve dal disco |
 
 ## Perche' un ponte, e non un segno incollato a mano
 
@@ -143,9 +162,11 @@ Il pacchetto Android lo costruisce GitHub, quindi non serve installarsi l'SDK:
 `gdahome-android`. I passi per intero — ponte compreso, e cosa guardare una
 volta dentro — stanno in [`COME_PROVARLA.md`](COME_PROVARLA.md).
 
-Questa repository e' **privata**, e cosa cambierebbe ad aprirla — cosa si
-vedrebbe, cosa no, e cosa succede alle due repository se la dashboard va in
-privato — sta in
+Questa repository e' **pubblica**, perche' e' cosi' che Home Assistant
+scarica un add-on: il Supervisor va a prendere gli archivi senza presentarsi, e
+da una repository privata si sente rispondere «non esiste». Cosa si vede e cosa
+no — e le due cose che restano da mettere a posto, la chiave con cui si firmano
+i pacchetti Android fra tutte — sta in
 [`docs/APRIRE_LA_REPOSITORY.md`](docs/APRIRE_LA_REPOSITORY.md).
 
 ## Le prove

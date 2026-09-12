@@ -15,7 +15,7 @@ name: Il ponte di DashboardModern
 version: "0.21.0"
 slug: ponte
 description: Fa parlare l'app di DashboardModern con questa casa, da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.
-url: https://github.com/danigio15/dashboardmodern-v2/tree/main/ponte
+url: https://github.com/danigio15/gdahomeapp/tree/main/ponte
 arch:
   - aarch64
   - amd64
@@ -123,13 +123,16 @@ options:
   giorni_di_silenzio: 90
   # Il gettone di GitHub con cui il ponte si scarica le versioni nuove.
   #
-  # Serve solo se la repository dell'app e' privata — e la nostra lo e'. Si
-  # scrive **una volta**: Home Assistant lo tiene nascosto e non lo rimostra
-  # piu'. Un gettone a grana fine sulla sola repository dell'app, con
-  # **Contents: Read-only** e nient'altro: con quello non si scrive niente da
-  # nessuna parte, si legge e basta.
+  # **Lascialo vuoto.** Da quando la repository dell'app e' pubblica non serve
+  # a nessuno: chi installa l'add-on dal negozio riceve gli aggiornamenti dal
+  # negozio, come per ogni altro add-on, e chi lo tiene come add-on locale li
+  # prende col bottone nella console — che legge un manifesto pubblico, senza
+  # presentarsi.
   #
-  # Vuoto vuol dire: non ti aggiorni da te'. Tutto il resto funziona uguale.
+  # Resta perche' su una repository privata quel bottone senza gettone non
+  # funziona, e qualcuno potrebbe tenere una sua copia privata. In quel caso:
+  # un gettone a grana fine sulla sola repository dell'app, con **Contents:
+  # Read-only** e nient'altro.
   gettone: ""
   # La chiave con cui si **risponde** alle chat di assistenza.
   #

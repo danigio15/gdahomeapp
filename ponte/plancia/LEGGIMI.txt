@@ -1,0 +1,22 @@
+Questa cartella non e' di gdahome: e' una copia di DashboardModern.
+
+Che versione, da quale commit e con quali impronte sta scritto in
+ORIGINE.json, accanto. La porta dentro strumenti/porta-la-plancia.mjs, e il
+ponte la ricontrolla a ogni avvio (ponte/src/provenienza.js): se un file e'
+cambiato, lo dice invece di servirlo come se fosse l'originale.
+
+**La sua licenza e' la sua, e sta qui accanto: LICENSE.** Non e' quella di
+gdahome, che sta alla radice della repository. Sono due licenze diverse
+perche' sono due lavori diversi dello stesso autore, e quella di
+DashboardModern vieta a chiunque altro di ridistribuirla, di farne versioni
+derivate e di metterla in un prodotto a pagamento.
+
+Detto per chi passa di qui: il fatto che questo codice si legga non vuol dire
+che si possa prendere. Si legge perche' un add-on di Home Assistant e' fatto
+di file che stanno sul disco di chi lo installa, e nasconderli sarebbe
+teatro.
+
+Non si modifica niente qui dentro. Le aggiunte di gdahome alla plancia
+stanno nella pagina servita — ponte/src/premesse.js per Home Assistant,
+app/lib/plancia/premesse.dart per l'app — proprio perche' questa cartella
+resti quella che e'.

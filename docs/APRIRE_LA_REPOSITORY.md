@@ -1,7 +1,20 @@
 # Aprire la repository: cosa si vede, e cosa succede alle due repository
 
-Due domande, e sotto le risposte con le prove. Non c'è niente da fare
-subito: è un documento per decidere.
+> **Fatto: `gdahomeapp` è pubblica** (12 settembre 2026), perché è così che
+> Home Assistant scarica un add-on — il Supervisor va a prendere gli archivi
+> senza presentarsi, e da una repository privata si sente rispondere «non
+> esiste». È la via **(a)** in fondo a questo documento.
+>
+> Messo a posto contestualmente: la licenza della dashboard dentro
+> `ponte/plancia/` con la sua nota, gli indirizzi dell'archivio di add-on che
+> puntavano ancora alla repository privata, e il `gettone` dichiarato inutile
+> nelle opzioni.
+>
+> **Resta una cosa, e va fatta prima di dare l'app a qualcuno: la chiave
+> Android.** Vedi il punto qui sotto — è l'unica conseguenza dell'apertura
+> che non è una decisione ma un difetto.
+
+Due domande, e sotto le risposte con le prove.
 
 > 1. Gli utenti mica possono recuperare dalla repository l'APK e tutti i
 >    dati del centralino?
@@ -197,3 +210,57 @@ Le combinazioni che stanno in piedi sono tre:
 Quello che non sta in piedi è **`gdahomeapp` pubblica con la plancia dentro
 e `dashboardmodern-v2` privata**: il lavoro di chiudere una porta, con
 l'altra aperta accanto.
+
+---
+
+## Dopo: cosa è stato fatto e cosa manca
+
+Si è scelta la **(a)**, e la scelta è già in piedi. Il conto, onesto:
+
+**Fatto**
+
+- `ponte/plancia/LICENSE` — la licenza di DashboardModern, accanto al suo
+  codice — e `ponte/plancia/LEGGIMI.txt`, che dice a chi passa di lì che
+  quella cartella non è di gdahome e che leggere non vuol dire poter
+  prendere. Il sigillo della plancia non se ne accorge: `provenienza.js`
+  guarda solo `legacy/`, `src/`, `avatars/` e `brands/`, e questi due file
+  stanno sopra.
+- `repository.yaml` e `ponte/config.yaml` non puntano più alla repository
+  privata: chi apre la scheda dell'add-on trova un indirizzo che esiste.
+- Il `gettone` fra le opzioni: dichiarato inutile. Chi installa dal negozio
+  riceve gli aggiornamenti dal negozio; chi tiene l'add-on come copia locale
+  usa il bottone nella console, che adesso legge un manifesto pubblico senza
+  presentarsi. Resta solo per chi si tenesse una copia privata.
+- Verificato con `git log --all -p` su tutti i 198 commit: **nessun gettone,
+  nessuna chiave privata, nessun segreto** in tutta la storia.
+
+**Manca, e non è una decisione: la chiave con cui si firmano i pacchetti
+Android.**
+
+`app/android/app/chiave-di-prova.jks` sta nella repository, e la sua password
+— `gdahome` — è scritta in chiaro in `build.gradle.kts`. Era voluto e il
+commento lo spiega: senza una chiave ferma, ogni macchina che compila ne
+genera una nuova, Android vede due firme diverse e **rifiuta di installare il
+pacchetto nuovo sopra il vecchio**; chi lo prova deve disinstallare, e
+disinstallando perde l'abbinamento.
+
+Su una repository pubblica quella chiave ce l'hanno tutti. E su Android
+**l'identità di un'app è la sua firma**: chi ha la chiave può firmare un
+pacchetto che il telefono di chi ha gdahome accetta come *aggiornamento*.
+Oggi non è ancora un danno — i soli pacchetti in giro sono quelli di prova,
+installati da chi li ha costruiti — ma va chiuso prima di darne uno a
+qualcuno.
+
+Le due metà del lavoro:
+
+1. **Una chiave vera, generata una volta, che non passa da qui** (`keytool
+   -genkeypair`), messa fra i segreti di Actions come `CHIAVE_ANDROID` (il
+   keystore in base64) e `CHIAVE_ANDROID_PASSWORD`. Questa metà la può fare
+   solo chi ha la repository: un segreto di Actions non si scrive da dentro
+   una corsa.
+2. **Il progetto che la usa quando c'è** e ricade sulla chiave di prova
+   quando non c'è, così le compilazioni sul banco continuano a funzionare e
+   i pacchetti che si danno alla gente sono firmati con quella vera. Questa
+   metà è codice, e si fa qui.
+
+Finché la (1) non c'è, la (2) non cambia niente: per questo è la prima.

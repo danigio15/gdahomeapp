@@ -43,23 +43,31 @@ che esiste gia'. E' la differenza fra un ponte e una porta aperta.
 
 ## Come si mette su
 
-**Se la repository e' privata**, l'indirizzo non funziona: Home Assistant va a
-prendere gli archivi di add-on senza presentarsi, e da una repository privata
-si sente rispondere «non esiste». Si installa a mano, ed e' altrettanto
-semplice:
+Dal negozio di Home Assistant, come qualunque altro add-on:
 
-1. Si scarica il codice — **Code → Download ZIP** — e si copia la cartella
-   `ponte` dentro la cartella `addons` di Home Assistant. Ci si arriva con
-   l'add-on **Samba share**, con **Advanced SSH & Web Terminal**, o con
-   **Studio Code Server**. Alla fine deve esserci `addons/ponte/config.yaml`.
-2. **Impostazioni → Add-on → Negozio degli add-on**, menu in alto a destra →
-   **Ricarica**. Compare una sezione **Local add-ons**.
-3. Si installa. La prima volta ci mette qualche minuto, perche' se lo
-   costruisce sul posto invece di scaricarlo gia' pronto.
+1. **Impostazioni → Add-on → Negozio degli add-on**, i tre puntini in alto a
+   destra → **Archivi**.
+2. Si incolla `https://github.com/danigio15/gdahomeapp` e si preme
+   **Aggiungi**.
+3. Compare una sezione **gdahome** con dentro **Il ponte**. Si installa.
 
-**Se la repository e' pubblica**, si fa prima: **Impostazioni → Add-on →
-Negozio degli add-on**, menu in alto a destra → **Archivi**, e si incolla
-l'indirizzo della repository.
+La prima volta ci mette qualche minuto: il Supervisor se lo **costruisce sul
+posto** dal `Dockerfile` invece di scaricare un'immagine gia' pronta. E' anche
+il motivo per cui non c'e' niente da fidarsi: quello che gira in casa e' fatto
+dai file che si leggono qui.
+
+Da li' in poi gli aggiornamenti arrivano dal negozio, e nella scheda
+dell'add-on compare **Aggiorna** quando c'e' una versione nuova. Il bottone
+dentro la console — quello che il ponte usa per portarsi dentro i file da se' —
+in questo caso **non si mostra affatto**: serviva a chi tiene l'add-on come
+copia locale, dove nessun negozio glielo dice.
+
+**A mano**, per chi vuole tenersene una copia sua o lavorarci sopra: si copia
+la cartella `ponte` dentro la cartella `addons` di Home Assistant — con
+**Samba share**, **Advanced SSH & Web Terminal** o **Studio Code Server**,
+finche' c'e' `addons/ponte/config.yaml` — poi **Negozio degli add-on → i tre
+puntini → Ricarica**, e compare una sezione **Local add-ons**. Li' il bottone
+nella console c'e', e si porta dentro le versioni nuove da se'.
 
 In tutti e due i casi, alla fine nella barra laterale compare **Il ponte**. E'
 la console.
@@ -266,7 +274,7 @@ metterlo.
 | `dispositivi_massimi` | quanti telefoni possono restare abbinati insieme (difetto: 10) |
 | `minuti_del_codice` | quanto vive un codice di abbinamento (difetto: 5) |
 | `giorni_di_silenzio` | dopo quanto un telefono sparito viene tolto da solo; zero vuol dire mai (difetto: 90) |
-| `gettone` | il gettone di GitHub con cui il ponte si aggiorna da se'; vuoto = non si aggiorna |
+| `gettone` | **lascialo vuoto**: da quando la repository e' pubblica non serve. Resta per chi tiene una copia privata, dove il bottone della console senza gettone non arriverebbe al manifesto |
 | `chiave_console` | la chiave con cui si **risponde** alle chat di tutte le case. Lasciala vuota: serve a una installazione al mondo. E' la stessa messa fra i segreti del centralino |
 | `registro` | `debug`, `info`, `attenzione`, `errore` |
 
