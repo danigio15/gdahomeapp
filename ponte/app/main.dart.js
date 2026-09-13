@@ -28919,7 +28919,7 @@ r=null
 if(s){r=a.b
 q=r
 q="senza_centralino"===q}else q=!1
-if(q){q="Questa casa non passa da nessun centralino: le segnalazioni non si possono spedire. Accendi \xabda fuori casa\xbb nelle opzioni del ponte."
+if(q){q="Questa casa non passa da nessun centralino: le segnalazioni non si possono spedire. Accendi \xabda fuori casa\xbb nelle opzioni di gdahome."
 break A}if(s)q="non_configurate"===r
 else q=!1
 if(q){q="Il centralino non ha ancora le segnalazioni accese. Riprova piu' tardi."
@@ -28928,10 +28928,10 @@ else q=!1
 if(q){q="Troppe segnalazioni in poco tempo: riprova fra un po'."
 break A}if(s)q="non_ti_riconosco"===r
 else q=!1
-if(q){q="Il centralino non riconosce questa casa: il ponte deve prima collegarsi da fuori una volta."
+if(q){q="Il centralino non riconosce questa casa: gdahome in casa deve prima collegarsi da fuori una volta."
 break A}if(s)q="unknown_command"===r
 else q=!1
-if(q){q="Il ponte in casa e' piu' vecchio dell'app e questa cosa non la sa ancora fare: aggiorna l'add-on \xabgdahome\xbb."
+if(q){q="gdahome in casa e' piu' vecchio dell'app e questa cosa non la sa ancora fare: aggiorna l'add-on in Home Assistant."
 break A}if(s)q="troppo_grande"===r
 else q=!1
 if(q){q="L'allegato e' troppo grande: al massimo 10 MB. Un video va tenuto corto."
@@ -29381,7 +29381,7 @@ if(J.c(h.h(e,"t"),"no")){f=A.aR(h.h(e,"perche"))
 if(f==null)f="non ha funzionato"
 if(B.c.p(f,"troppi tentativi"))A.W(A.b0O(f))
 if(B.c.p(f,"telefoni"))A.W(A.b0N(f))
-A.W(A.aXU(f))}if(!J.c(h.h(e,"t"),"ecco"))A.W(B.YO)
+A.W(A.aXU(f))}if(!J.c(h.h(e,"t"),"ecco"))A.W(B.YN)
 e=A.aXf(e)
 q=e
 n=[1]
@@ -29435,7 +29435,7 @@ case 429:g=A.b0O(A.abr(l,"troppi tentativi: riprova fra un quarto d'ora"))
 throw A.d(g)
 case 409:g=A.b0N(A.abr(l,"questa casa ha gia' tutti i telefoni che puo' avere"))
 throw A.d(g)
-default:g=A.VV(A.abr(l,"il ponte ha risposto "+m.b))
+default:g=A.VV(A.abr(l,"gdahome ha risposto "+m.b))
 throw A.d(g)}n.push(6)
 s=5
 break
@@ -29533,11 +29533,11 @@ b8M(a){var s=new A.ac($.ag,t.zs),r=new A.aO(s,t.H_)
 a.gFM().kq(new A.abo(r),new A.abp(r),new A.abq(r))
 return s},
 aXf(a){var s,r,q,p,o,n,m,l,k=J.ad(a),j=k.h(a,"segno"),i=k.h(a,"chiave"),h=k.h(a,"dispositivo")
-if(typeof j!="string"||j.length===0)throw A.d(B.YM)
-if(typeof i!="string"||i.length===0)throw A.d(B.YL)
+if(typeof j!="string"||j.length===0)throw A.d(B.YL)
+if(typeof i!="string"||i.length===0)throw A.d(B.YK)
 s=t.f.b(h)
 r=s?J.aG(h,"id"):null
-if(typeof r!="string"||r.length===0)throw A.d(B.YI)
+if(typeof r!="string"||r.length===0)throw A.d(B.YP)
 q=k.h(a,"ritorno")
 p=t.a.b(q)?q:B.d_
 k=s?A.aR(J.aG(h,"nome")):null
@@ -29917,9 +29917,9 @@ b0i(a){var s
 if(a.gNN())return"Questa casa e' stata abbinata con una versione vecchia dell'app: va riabbinata: e' un quadretto da inquadrare."
 s=a.x
 s=s==null?null:B.c.hj(s.a,".ui.nabu.casa")
-if(s===!0)return"L'accesso remoto di Home Assistant non arriva agli add-on: il suo tunnel finisce dentro Home Assistant, e il ponte sta su una porta sua. Non e' una cosa che si possa configurare \u2014 e non serve: il ponte chiama fuori da solo, basta dirgli un centralino nella sua scheda in Home Assistant."
+if(s===!0)return"L'accesso remoto di Home Assistant non arriva agli add-on: il suo tunnel finisce dentro Home Assistant, e gdahome sta su una porta sua. Non e' una cosa che si possa configurare \u2014 e non serve: gdahome chiama fuori da solo, e il centralino ce l'ha gia' scritto dentro."
 if(a.ML().length===0)return"Non so piu' dove sia \xab"+a.b+"\xbb: riabbinala."
-if(a.gSz())return"Non trovo \xab"+a.b+"\xbb. Questa casa si raggiunge solo dalla sua rete: nella scheda del ponte, in Home Assistant, non e' stato messo nessun centralino."
+if(a.gSz())return"Non trovo \xab"+a.b+"\xbb. Questa casa si raggiunge solo dalla sua rete: nella scheda di gdahome, in Home Assistant, \xabda fuori casa\xbb e' spento, e senza un centralino da fuori non si entra."
 return"Non trovo \xab"+a.b+"\xbb, ne' in casa ne' da fuori."},
 ayl:function ayl(){},
 ayp:function ayp(a,b,c,d){var _=this
@@ -103886,7 +103886,7 @@ A.Q3.prototype={
 k(a){return"Abbinato("+this.d+", "+this.c+")"}}
 A.pK.prototype={}
 A.abs.prototype={
-$0(){return A.W(B.YJ)},
+$0(){return A.W(B.YI)},
 $S:82}
 A.abv.prototype={
 $1(a){return A.Q1(a)},
@@ -103916,7 +103916,7 @@ if((s.a.a&30)===0)s.dK(a)},
 $S:19}
 A.abp.prototype={
 $0(){var s=this.a
-if((s.a.a&30)===0)s.dK(B.YN)},
+if((s.a.a&30)===0)s.dK(B.YM)},
 $S:0}
 A.aRp.prototype={
 $1(a){return B.c.lh(B.e.i0(a,16),2,"0")},
@@ -104444,7 +104444,7 @@ return A.m(q.at.ar(0),$async$bS)
 case 8:return A.o(null,r)}})
 return A.p($async$bS,r)}}
 A.aiK.prototype={
-$0(){return A.W(B.YP)},
+$0(){return A.W(B.YO)},
 $S:82}
 A.aiz.prototype={
 $1(a){var s=a instanceof A.eQ?a.a:"il filo si e' interrotto"
@@ -104701,11 +104701,11 @@ $1(a){return this.a8d(a)},
 a8d(a){var s=0,r=A.q(t.hG),q,p=this,o,n,m,l
 var $async$$1=A.r(function(b,c){if(b===1)return A.n(c,r)
 for(;;)switch(s){case 0:l=J.ad(a)
-if(!J.c(l.h(a,"v"),1))throw A.d(B.a1R)
+if(!J.c(l.h(a,"v"),1))throw A.d(B.a1S)
 o=l.h(a,"no")
 if(typeof o=="string")throw A.d(J.c(l.h(a,"riabbina"),!0)?A.beT(o):A.bfn(o))
 n=l.h(a,"mia")
-if(!J.c(l.h(a,"pronto"),!0)||typeof n!="string")throw A.d(B.a1S)
+if(!J.c(l.h(a,"pronto"),!0)||typeof n!="string")throw A.d(B.a1R)
 l=p.a
 m=B.bp.bC(n)
 q=A.aaL(p.b,p.c,l.b,B.bp.bC(n),l.a,m)
@@ -104715,7 +104715,7 @@ case 1:return A.o(q,r)}})
 return A.p($async$$1,r)},
 $S:603}
 A.aS7.prototype={
-$0(){return A.W(B.YK)},
+$0(){return A.W(B.YJ)},
 $S:82}
 A.H2.prototype={
 gFM(){var s=this.b
@@ -105008,15 +105008,15 @@ auv(a,b){var s,r
 if(!(a instanceof A.hg))return a.a
 s=b==null
 r=s?null:B.c.hj(b.a,".ui.nabu.casa")
-if(r===!0)return"L'accesso remoto di Home Assistant non arriva agli add-on: il suo tunnel finisce dentro Home Assistant, e il ponte sta su una porta sua. Mettiti sul Wi-Fi di casa e scrivi l'indirizzo che ha il tuo Home Assistant su quella rete."
-if(!s)return"Non trovo nessun ponte a quell'indirizzo. Controlla che l'add-on sia acceso e che il telefono sia sulla rete di casa.\n\n("+a.a+")"
+if(r===!0)return"L'accesso remoto di Home Assistant non arriva agli add-on: il suo tunnel finisce dentro Home Assistant, e gdahome sta su una porta sua. Mettiti sul Wi-Fi di casa e scrivi l'indirizzo che ha il tuo Home Assistant su quella rete."
+if(!s)return"Non trovo gdahome a quell'indirizzo. Controlla che l'add-on sia acceso e che il telefono sia sulla rete di casa.\n\n("+a.a+")"
 return"Non trovo la casa. Controlla che l'add-on sia acceso, e che il codice non sia scaduto: dura cinque minuti.\n\n("+a.a+")"},
 J(a){var s,r,q,p,o=this,n=null,m=A.N(a).ax,l=A.N(a).ok,k=o.a.c.b.length===0,j=k?n:A.wY(n,n,n,n,n,n,n,B.a79,n),i=t.p,h=A.b([],i)
 if(k)B.b.H(h,A.b([B.Iv,B.DP,A.b3("Colleghiamo la casa",n,n,n,n,l.e,B.bH,n),B.dN],i))
 s=l.y
 if(s==null)s=n
 else{r=m.rx
-s=s.b4(r==null?m.k3:r)}h.push(A.b3("In Home Assistant apri \xabgdahome\xbb dalla barra laterale e premi \xabFabbrica un codice\xbb. Poi inquadra il quadretto.",n,n,n,n,s,B.bH,n))
+s=s.b4(r==null?m.k3:r)}h.push(A.b3("In Home Assistant apri \xabgdahome\xbb dalla barra laterale e premi \xabGenera QR code\xbb. Poi inquadralo.",n,n,n,n,s,B.bH,n))
 h.push(B.nN)
 s=o.r?n:o.gaoF()
 r=A.aTo(n,n,B.a1h,n,n,n)
@@ -105042,7 +105042,7 @@ else{p=m.k1
 q=q.b4(p==null?m.go:p)}B.b.H(h,A.b([B.k_,new A.hh(A.b3(s,n,n,n,n,q,n,n),B.O8,n,r,n,n)],i))}h.push(B.rt)
 return A.ve(j,n,A.qM(!0,A.f0(A.b03(new A.e7(B.GM,A.dM(h,B.dm,B.A,B.aO),n),B.Om),n,n),B.ac,!0),!1,n)},
 aon(){var s=null
-return A.b([B.dN,A.A9(B.a7e,s,s,this.r?s:new A.aC9(this),s,s)],t.p)},
+return A.b([B.dN,A.A9(B.a7d,s,s,this.r?s:new A.aC9(this),s,s)],t.p)},
 apb(a){var s,r,q,p=this,o=null,n=p.r,m=a.r
 m=m==null?o:m.aA8("monospace",3)
 m=A.Ae(!1,!0,p.f,B.R0,!n,o,o,1,o,o,m,B.bH,B.a2m,B.o9)
@@ -105051,7 +105051,7 @@ n=A.Ae(!1,!1,p.e,A.alP(o,o,o,o,o,o,o,o,!0,o,o,o,o,o,o,o,o,o,o,o,o,o,o,o,2,o,"Sta
 s=p.r
 r=s?o:p.gaf8()
 q=t.p
-return A.b([B.k_,new A.hh(A.dM(A.b([m,B.eN,n,B.k_,A.aTm(s?B.a1o:B.a7i,r,o)],q),B.dm,B.A,B.P),B.bY,o,o,o,o)],q)}}
+return A.b([B.k_,new A.hh(A.dM(A.b([m,B.eN,n,B.k_,A.aTm(s?B.a1o:B.a7h,r,o)],q),B.dm,B.A,B.P),B.bY,o,o,o,o)],q)}}
 A.aCa.prototype={
 $0(){return this.a.x=null},
 $S:0}
@@ -105186,7 +105186,7 @@ r=r==null?n:r.r
 if(r==null)r=B.eq
 q=o.r
 p=A.arf(B.QA,B.Ew,new A.aMp(o,a,s))
-return A.aSW(n,new A.et(B.e_,n,n,p,n),"chi fa l'app",o.gatw(),r,q,o.gag0(),A.aaJ(),"Scrivi a chi fa l'app\u2026",B.a1M)}}
+return A.aSW(n,new A.et(B.e_,n,n,p,n),"chi fa l'app",o.gatw(),r,q,o.gag0(),A.aaJ(),"Scrivi a chi fa l'app\u2026",B.a1N)}}
 A.aMi.prototype={
 $0(){return this.a.r="La casa non e' collegata."},
 $S:0}
@@ -105630,7 +105630,7 @@ $0(){return this.a.x=A.pf(this.b)},
 $S:0}
 A.aMt.prototype={
 $1(a){var s=null,r=A.b3("Sparisce dal centralino e con lei quello che vi siete detti \u2014 anche dalla plancia di "+this.a.gqF()+". Non si rimette a posto.",s,s,s,s,s,s,s)
-return A.aXj(A.b([A.A9(B.a7k,s,s,new A.aMr(a),s,s),A.aTm(B.a7m,new A.aMs(a),s)],t.p),r,B.a7a)},
+return A.aXj(A.b([A.A9(B.a7j,s,s,new A.aMr(a),s,s),A.aTm(B.a7m,new A.aMs(a),s)],t.p),r,B.a7a)},
 $S:237}
 A.aMr.prototype={
 $0(){return A.dF(this.a,!1).lk(!1)},
@@ -105797,7 +105797,7 @@ if(m)h=a3
 else{h=a4.rx
 h=q.b4(h==null?a4.k3:h)}i.push(A.b3("Se un lavoro da solo dura quanto un blocco, il colpevole e' quello. Se sono tutti piccoli e i blocchi restano, e' la roba da buttare che si accumula.",a3,a3,a3,a3,h,a3,a3))
 i=A.dM(i,B.av,B.A,B.P)
-k=A.b([A.b3("La plancia",a3,a3,a3,a3,k,a3,a3),B.bG,n.$2("Barre del telefono","in cima "+A.b3b(a6,!0)+", in fondo "+A.b3b(a6,!1)),B.bG,A.bft(B.ac,new A.aMN(p),B.a7b,B.a7h,p.e)],d)
+k=A.b([A.b3("La plancia",a3,a3,a3,a3,k,a3,a3),B.bG,n.$2("Barre del telefono","in cima "+A.b3b(a6,!0)+", in fondo "+A.b3b(a6,!1)),B.bG,A.bft(B.ac,new A.aMN(p),B.a7b,B.a7g,p.e)],d)
 k.push(B.eO)
 if(m)q=a3
 else{m=a4.rx
@@ -106049,7 +106049,7 @@ if(o==null)o="nessun centralino"
 p=A.N(a).ok.Q
 if(p==null)p=r
 else{s=q.rx
-p=p.yo((s==null?q.k3:s).fw(0.7),11)}return new A.bH(new A.ar(0,24,0,0),A.b3("gdahome 28-36908ce \xb7 "+o,r,r,r,r,p,B.bH,r),r)}}
+p=p.yo((s==null?q.k3:s).fw(0.7),11)}return new A.bH(new A.ar(0,24,0,0),A.b3("gdahome 29-680b990 \xb7 "+o,r,r,r,r,p,B.bH,r),r)}}
 A.F2.prototype={
 ai(){return new A.LH(new A.bt(null,t.Pq),new A.bt(null,t.dS),B.d4)}}
 A.LH.prototype={
@@ -106077,7 +106077,7 @@ case 1:return A.o(q,r)}})
 return A.p($async$xA,r)},
 ais(){var s,r,q,p,o,n,m=null,l=this.a.c,k=t.N
 k=A.w(k,k)
-k.m(0,"app","28-36908ce")
+k.m(0,"app","29-680b990")
 k.m(0,"sistema","web")
 s=l.z
 s=s==null?m:s.b
@@ -106173,7 +106173,7 @@ $S:0}
 A.a2G.prototype={
 J(a){return new A.hO(B.Px,this.c.c+": in arrivo","Questa parte dell'app non e' ancora scritta.",null,!1,null)}}
 A.yv.prototype={
-J(a){var s,r,q,p,o,n,m,l,k=this,j=null,i=k.c,h=i.z,g=A.wY(j,j,j,j,j,j,j,B.a75,j),f=i.a.b,e=f.length>=10?j:A.aYI(B.Qr,B.a7g,k.d),d=t.p,c=A.b([],d)
+J(a){var s,r,q,p,o,n,m,l,k=this,j=null,i=k.c,h=i.z,g=A.wY(j,j,j,j,j,j,j,B.a75,j),f=i.a.b,e=f.length>=10?j:A.aYI(B.Qr,B.a7e,k.d),d=t.p,c=A.b([],d)
 for(s=A.j3(f,t.NP),r=s.length,q=h==null,p=0;p<r;++p){o=s[p]
 n=o.a
 m=q?j:h.a
@@ -106206,7 +106206,7 @@ $0(){return this.a.wp(this.b,this.c)},
 $S:0}
 A.amM.prototype={
 $1(a){var s=null,r=A.b3("Dimenticare \xab"+this.a.b+"\xbb?",s,s,s,s,s,s,s)
-return A.aXj(A.b([A.A9(B.a7l,s,s,new A.amK(a),s,s),A.aTm(B.a7j,new A.amL(a),A.aTo(s,s,B.a18,s,s,s))],t.p),B.a7f,r)},
+return A.aXj(A.b([A.A9(B.a7k,s,s,new A.amK(a),s,s),A.aTm(B.a7i,new A.amL(a),A.aTo(s,s,B.a18,s,s,s))],t.p),B.a7l,r)},
 $S:237}
 A.amK.prototype={
 $0(){return A.dF(this.a,!1).lk(!1)},
@@ -106394,13 +106394,13 @@ o=new A.MK(q,0)
 switch(h.as.a){case 0:return new A.rG(h,B.mv,"Nessuna casa","Aggiungine una per cominciare.",j.a.f,i)
 case 3:s=j.a.f
 n=h.at
-return new A.rG(h,B.PK,"Questo telefono e' stato staccato",n==null?"Riabbina la casa con un quadretto nuovo dalla console del ponte.":n,s,i)
+return new A.rG(h,B.PK,"Questo telefono e' stato staccato",n==null?"Riabbina la casa con un quadretto nuovo dalla pagina di gdahome in Home Assistant.":n,s,i)
 case 4:s=j.a.f
 n=h.at
 return new A.rG(h,B.iU,"Non trovo la casa",n==null?"Sto continuando a provare.":n,s,i)
 case 1:case 2:break}if(!h.y)return new A.AJ(h,"Cerco la plancia\u2026",i)
 m=h.x
-if(m==null)return new A.rG(h,B.Py,"Il ponte non ha la plancia","La plancia la porta il ponte, dalla versione 0.7.0: aggiorna l'add-on in Home Assistant e comparira' qui. Intanto, dalla barra, ci sono i dispositivi.",j.a.f,i)
+if(m==null)return new A.rG(h,B.Py,"L'add-on non ha la plancia","La plancia arriva con l'add-on: aggiorna gdahome in Home Assistant e comparira' qui. Intanto, dalla barra, ci sono i dispositivi.",j.a.f,i)
 l=j.e
 if(l==null){if(!j.f){j.Be()
 return new A.AJ(h,"Accendo la plancia\u2026",i)}return new A.rG(h,B.rK,"La plancia vuole un indirizzo sicuro","Il browser fa girare quello che serve alla plancia solo su un indirizzo che comincia per https, o su localhost. Da un indirizzo http la casa si comanda lo stesso \u2014 dispositivi, configurazione, tutto \u2014 ma la plancia resta fuori. Apri gdahome dall'indirizzo sicuro della tua Home Assistant.",j.a.f,i)}l.b.d=o
@@ -106655,7 +106655,7 @@ if(q){p=A.N(a).ax
 o=p.rx
 r.push(new A.hh(A.dh(A.b([A.hC(B.PI,o==null?p.k3:o,k,k),B.DM,B.OL],s),B.M,B.A,B.P,0),B.bY,k,k,k,k))}if(q)r.push(B.d5)
 q=b.b
-if(q.length===0)r.push(B.a1N)
+if(q.length===0)r.push(B.a1M)
 else{p=A.b([B.R4,new A.a1S(q,l.e,new A.aN_(l),k),B.d5],s)
 if(l.XP(q).length===0)p.push(B.a1P)
 else for(q=l.XP(q),o=q.length,n=0;n<q.length;q.length===o||(0,A.D)(q),++n){m=q[n]
@@ -107011,7 +107011,7 @@ q.push(new A.U2(l,k,o?i:new A.ak8(j,m),"Togli",i))}B.b.H(s,A.b([B.dN,A.aBu(q,6,8
 f=j.e!=null
 q=A.arf(B.Qw,B.a76,!f||j.d?i:new A.ak9(j))
 p=A.arf(B.Qq,B.a74,!f||j.d?i:new A.aka(j))
-r=A.b([q,p,A.arf(B.Qv,B.a7d,!f||j.d?i:new A.akb(j))],r)
+r=A.b([q,p,A.arf(B.Qv,B.a7c,!f||j.d?i:new A.akb(j))],r)
 if(j.d)r.push(B.XQ)
 s.push(A.aBu(r,6,8))
 return A.dM(s,B.av,B.A,B.P)}}
@@ -118706,8 +118706,8 @@ B.M7=new A.H(0.3764705882352941,0.09803921568627451,0.09803921568627451,0.098039
 B.Ma=new A.H(1,0.047058823529411764,0.16862745098039217,0.26666666666666666,B.f)
 B.Mf=new A.H(0.9411764705882353,0.7529411764705882,0.7529411764705882,0.7529411764705882,B.f)
 B.Mi=new A.DI(B.l,!0,null,null)
-B.qw=new A.nr(null,"il ponte ha risposto una cosa strana")
-B.Mj=new A.nr(null,"il ponte ha compresso, e qui non si apre: aggiorna l'add-on")
+B.Mj=new A.nr(null,"la casa ha compresso, e qui non si apre: aggiorna l'add-on")
+B.qw=new A.nr(null,"la casa ha risposto una cosa strana")
 B.lt=new A.tn(0,"nessunaCasa")
 B.e8=new A.tn(1,"inCammino")
 B.dl=new A.tn(2,"aperta")
@@ -119058,8 +119058,8 @@ B.mk=new A.tB(!1,!1,!1,!0)
 B.rc=new A.tC(!1,!1,!1,!1)
 B.rd=new A.tC(!1,!1,!1,!0)
 B.iL=new A.T5(0,"tight")
-B.a7c=new A.dd("Questa casa non passa da nessun centralino, e le segnalazioni non hanno una strada per uscire. Si accende \xabda fuori casa\xbb nelle opzioni del ponte.",null,null,null,null,null,null,null,null,null)
-B.OL=new A.y7(1,B.iL,B.a7c,null)
+B.a7f=new A.dd("Questa casa non passa da nessun centralino, e le segnalazioni non hanno una strada per uscire. Si accende \xabda fuori casa\xbb nelle opzioni di gdahome.",null,null,null,null,null,null,null,null,null)
+B.OL=new A.y7(1,B.iL,B.a7f,null)
 B.OM=new A.y8(null,null,null,null,null,null,null,null,null,null,null,null,null)
 B.ON=new A.y8(null,null,null,null,null,null,null,null,null,B.hQ,B.hQ,null,null)
 B.iC=new A.nA(!1,!1,!1,!1)
@@ -120951,14 +120951,14 @@ B.ho=new A.z9(0,"none")
 B.YF=new A.z9(1,"scroll")
 B.YG=new A.z9(3,"scale")
 B.YH=new A.z9(4,"unknown")
-B.YI=new A.hg("il ponte ha risposto senza dire chi siamo")
-B.YJ=new A.hg("la casa non ha risposto al codice")
-B.YK=new A.hg("la casa non ha risposto alla stretta di mano")
-B.YL=new A.hg("questo ponte e' di una versione vecchia: aggiornalo in Home Assistant")
-B.YM=new A.hg("il ponte ha risposto senza segno")
-B.YN=new A.hg("la casa ha chiuso senza rispondere")
-B.YO=new A.hg("la casa ha risposto qualcosa che non capisco")
-B.YP=new A.hg("il ponte non risponde")
+B.YI=new A.hg("la casa non ha risposto al codice")
+B.YJ=new A.hg("la casa non ha risposto alla stretta di mano")
+B.YK=new A.hg("questo ponte e' di una versione vecchia: aggiornalo in Home Assistant")
+B.YL=new A.hg("gdahome ha risposto senza segno")
+B.YM=new A.hg("la casa ha chiuso senza rispondere")
+B.YN=new A.hg("la casa ha risposto qualcosa che non capisco")
+B.YO=new A.hg("gdahome in casa non risponde")
+B.YP=new A.hg("gdahome ha risposto senza dire chi siamo")
 B.YQ=new A.hg("questo codice non dice da dove si entra, e questa app non ha un centralino a cui chiedere")
 B.YR=new A.asu(1,"under")
 B.YS=new A.ze(null,null,null,null,null,null,null,null,null,null,null,null,null)
@@ -121327,17 +121327,17 @@ B.nR=new A.mD(1,"chiamando")
 B.aC=new A.mD(2,"dentro")
 B.Q0=new A.aP(983356,"MaterialIcons",!1)
 B.a1L=new A.hO(B.Q0,"Niente con questo nome","Prova con una parola piu' corta.",null,!0,null)
+B.a1M=new A.hO(B.rH,"Nessuna segnalazione","Se qualcosa non va, o hai un'idea, scrivila qui: arriva a chi fa l'app con dentro gia' le informazioni che servono, e la risposta torna qui sotto.",null,!0,null)
 B.Q9=new A.aP(983541,"MaterialIcons",!1)
-B.a1M=new A.hO(B.Q9,"Ciao","Qui si parla con chi fa l'app. Scrivi quello che vuoi: la risposta arriva qui sotto, e con le parole partono anche le versioni della plancia, del ponte e dell'app, cosi' non te le chiediamo. Per una foto apri una segnalazione: li' resta scritta accanto a quello che mostra.",null,!0,null)
-B.a1N=new A.hO(B.rH,"Nessuna segnalazione","Se qualcosa non va, o hai un'idea, scrivila qui: arriva a chi fa l'app con dentro gia' le informazioni che servono, e la risposta torna qui sotto.",null,!0,null)
+B.a1N=new A.hO(B.Q9,"Ciao","Qui si parla con chi fa l'app. Scrivi quello che vuoi: la risposta arriva qui sotto, e con le parole partono anche le versioni della plancia, dell'add-on e dell'app, cosi' non te le chiediamo. Per una foto apri una segnalazione: li' resta scritta accanto a quello che mostra.",null,!0,null)
 B.PH=new A.aP(63507,"MaterialIcons",!1)
 B.a1O=new A.hO(B.PH,"Casa vuota","Home Assistant non ha nessuna entita' da mostrare.",null,!1,null)
 B.Qg=new A.aP(983834,"MaterialIcons",!1)
 B.a1P=new A.hO(B.Qg,"Nessuna segnalazione in questo stato","Prova \xabTutte\xbb: le altre sono negli altri gruppi.",null,!0,null)
 B.a1Q=new A.hO(B.mv,"Nessuna casa","Aggiungine una col bottone qui sotto.",null,!0,null)
-B.a1R=new A.r3("questa casa parla una lingua che non conosco: aggiorna il ponte, o l'app")
-B.a1S=new A.r3("la casa non ha stretto la mano")
+B.a1R=new A.r3("la casa non ha stretto la mano")
 B.DW=new A.r3("la casa ha risposto qualcosa che non e' una risposta")
+B.a1S=new A.r3("questa casa parla una lingua che non conosco: aggiorna gdahome, o l'app")
 B.bw=new A.em("")
 B.a1T=new A.J0(0,"butt")
 B.a1U=new A.J0(1,"round")
@@ -121717,18 +121717,18 @@ B.a78=new A.dd("Scrivilo a mano",null,null,null,null,null,null,null,null,null)
 B.a79=new A.dd("Aggiungi una casa",null,null,null,null,null,null,null,null,null)
 B.a7a=new A.dd("Buttare questa conversazione?",null,null,null,null,null,null,null,null,null)
 B.a7b=new A.dd("Spenta di serie. Ferma le animazioni che non finiscono mai e toglie le sfocature dietro le tessere: la plancia cambia aspetto. Solo se il telefono proprio non ce la fa.",null,null,null,null,null,null,null,null,null)
-B.a7d=new A.dd("Video",null,null,null,null,null,null,null,null,null)
-B.a7e=new A.dd("Non puoi inquadrarlo? Scrivilo a mano",null,null,null,null,null,null,null,null,null)
-B.a7f=new A.dd("Il telefono resta abbinato dalla parte del ponte: per staccarlo davvero, toglilo anche dalla console dell'add-on.",null,null,null,null,null,null,null,null,null)
-B.a7g=new A.dd("Aggiungi",null,null,null,null,null,null,null,null,null)
+B.a7c=new A.dd("Video",null,null,null,null,null,null,null,null,null)
+B.a7d=new A.dd("Non puoi inquadrarlo? Scrivilo a mano",null,null,null,null,null,null,null,null,null)
+B.a7e=new A.dd("Aggiungi",null,null,null,null,null,null,null,null,null)
 B.Eu=new A.dd("Riprova",null,null,null,null,null,null,null,null,null)
-B.a7h=new A.dd("Plancia leggera",null,null,null,null,null,null,null,null,null)
+B.a7g=new A.dd("Plancia leggera",null,null,null,null,null,null,null,null,null)
 B.Ev=new A.dd("Inquadra il codice",null,null,null,null,null,null,null,null,null)
-B.a7i=new A.dd("Abbina",null,null,null,null,null,null,null,null,null)
-B.a7j=new A.dd("Dimentica",null,null,null,null,null,null,null,null,null)
-B.a7k=new A.dd("Lascia stare",null,null,null,null,null,null,null,null,null)
-B.a7l=new A.dd("No",null,null,null,null,null,null,null,null,null)
+B.a7h=new A.dd("Abbina",null,null,null,null,null,null,null,null,null)
+B.a7i=new A.dd("Dimentica",null,null,null,null,null,null,null,null,null)
+B.a7j=new A.dd("Lascia stare",null,null,null,null,null,null,null,null,null)
+B.a7k=new A.dd("No",null,null,null,null,null,null,null,null,null)
 B.Ew=new A.dd("Come va l'app",null,null,null,null,null,null,null,null,null)
+B.a7l=new A.dd("Il telefono resta abbinato dalla parte della casa: per staccarlo davvero, toglilo anche dalla pagina di gdahome in Home Assistant.",null,null,null,null,null,null,null,null,null)
 B.a7m=new A.dd("Butta via",null,null,null,null,null,null,null,null,null)
 B.abw=new A.aAg(0,"system")
 B.Xk=new A.i(0.056,0.024)
