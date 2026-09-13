@@ -99,7 +99,7 @@ carica i moduli della plancia.
 
 |                             |                                                                                                                    |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `index.html`                | la pagina: il colpo d'occhio, come funziona, la plancia, cosa fa, i download, i documenti                          |
+| `index.html`                | la pagina: il colpo d'occhio, le schermate, come funziona, la plancia, cosa fa, dove sta                           |
 | `privacy.html`              | l'informativa — la gemella di `docs/PRIVACY.md`, ed è l'indirizzo che il Play Store tiene da parte                 |
 | `stile.css`                 | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni, il telaio del riquadro |
 | `privacy.css`               | l'unica cosa che nell'informativa è diversa: una colonna stretta, da leggere                                       |
