@@ -136,7 +136,7 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
         sotto:
             'Qui si parla con chi fa l\'app. Scrivi quello che vuoi: la '
             'risposta arriva qui sotto, e con le parole partono anche le '
-            'versioni della plancia, del ponte e dell\'app, cosi\' non te '
+            'versioni della plancia, dell\'add-on e dell\'app, cosi\' non te '
             'le chiediamo. Per una foto apri una segnalazione: li\' resta '
             'scritta accanto a quello che mostra.',
       ),

@@ -71,8 +71,8 @@ class LeCase extends StatelessWidget {
       builder: (contesto) => AlertDialog(
         title: Text('Dimenticare «${casa.nome}»?'),
         content: const Text(
-          'Il telefono resta abbinato dalla parte del ponte: per staccarlo '
-          'davvero, toglilo anche dalla console dell\'add-on.',
+          'Il telefono resta abbinato dalla parte della casa: per staccarlo '
+          'davvero, toglilo anche dalla pagina di gdahome in Home Assistant.',
         ),
         actions: [
           TextButton(

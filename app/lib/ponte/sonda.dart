@@ -145,18 +145,18 @@ class Sonda {
      * c'e'. */
     if (casa.daFuoriCasa?.eLAccessoRemotoDiHomeAssistant ?? false) {
       return 'L\'accesso remoto di Home Assistant non arriva agli add-on: il suo '
-          'tunnel finisce dentro Home Assistant, e il ponte sta su una porta '
-          'sua. Non e\' una cosa che si possa configurare — e non serve: il '
-          'ponte chiama fuori da solo, basta dirgli un centralino nella sua '
-          'scheda in Home Assistant.';
+          'tunnel finisce dentro Home Assistant, e gdahome sta su una porta '
+          'sua. Non e\' una cosa che si possa configurare — e non serve: '
+          'gdahome chiama fuori da solo, e il centralino ce l\'ha gia\' '
+          'scritto dentro.';
     }
     if (casa.approdi().isEmpty) {
       return 'Non so piu\' dove sia «${casa.nome}»: riabbinala.';
     }
     if (casa.soloInCasa) {
       return 'Non trovo «${casa.nome}». Questa casa si raggiunge solo dalla sua '
-          'rete: nella scheda del ponte, in Home Assistant, non e\' stato '
-          'messo nessun centralino.';
+          'rete: nella scheda di gdahome, in Home Assistant, «da fuori casa» '
+          'e\' spento, e senza un centralino da fuori non si entra.';
     }
     return 'Non trovo «${casa.nome}», ne\' in casa ne\' da fuori.';
   }

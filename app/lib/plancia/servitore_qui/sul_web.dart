@@ -341,11 +341,11 @@ extension on _ServitoreSulWeb {
     final letto = jsonDecode(testo);
     final risposta = letto is Map ? letto['result'] : null;
     if (risposta is! Map) {
-      throw const ComandoRifiutato('il ponte ha risposto una cosa strana');
+      throw const ComandoRifiutato('la casa ha risposto una cosa strana');
     }
     if (risposta['compresso'] == 'gzip') {
       throw const ComandoRifiutato(
-        'il ponte ha compresso, e qui non si apre: aggiorna l\'add-on',
+        'la casa ha compresso, e qui non si apre: aggiorna l\'add-on',
       );
     }
     final corpo = risposta['corpo'];

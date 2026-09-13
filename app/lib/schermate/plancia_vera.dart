@@ -276,7 +276,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
           vaiAlleCase: widget.vaiAlleCase,
           icona: Icons.link_off_rounded,
           titolo: 'Questo telefono e\' stato staccato',
-          sotto: collegamento.perche ?? 'Riabbina la casa con un quadretto nuovo dalla console del ponte.',
+          sotto: collegamento.perche ?? 'Riabbina la casa con un quadretto nuovo dalla pagina di gdahome in Home Assistant.',
         );
       case ComeVa.irraggiungibile:
         return _Stato(
@@ -300,11 +300,11 @@ class PlanciaVeraState extends State<PlanciaVera> {
         collegamento: collegamento,
         vaiAlleCase: widget.vaiAlleCase,
         icona: Icons.dashboard_customize_rounded,
-        titolo: 'Il ponte non ha la plancia',
+        titolo: 'L\'add-on non ha la plancia',
         sotto:
-            'La plancia la porta il ponte, dalla versione 0.7.0: aggiorna '
-            'l\'add-on in Home Assistant e comparira\' qui. Intanto, dalla '
-            'barra, ci sono i dispositivi.',
+            'La plancia arriva con l\'add-on: aggiorna gdahome in Home '
+            'Assistant e comparira\' qui. Intanto, dalla barra, ci sono i '
+            'dispositivi.',
       );
     }
 

@@ -337,7 +337,7 @@ class Filo {
     return stretta.future.timeout(
       entro,
       onTimeout: () =>
-          throw const PonteIrraggiungibile('il ponte non risponde'),
+          throw const PonteIrraggiungibile('gdahome in casa non risponde'),
     );
   }
 

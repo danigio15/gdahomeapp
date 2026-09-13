@@ -88,7 +88,7 @@ Future<Presa> stringiLaMano(
     laPrima: (detto) async {
       if (detto['v'] != versioneDelProtocollo) {
         throw const StrettaRifiutata(
-          'questa casa parla una lingua che non conosco: aggiorna il ponte, o l\'app',
+          'questa casa parla una lingua che non conosco: aggiorna gdahome, o l\'app',
         );
       }
       final no = detto['no'];

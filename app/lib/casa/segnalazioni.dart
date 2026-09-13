@@ -275,7 +275,7 @@ class Segnalazioni {
 
   static Segnalazione _una(Object? letto) {
     if (letto is! Map) {
-      throw const ComandoRifiutato('il ponte ha risposto una cosa strana');
+      throw const ComandoRifiutato('la casa ha risposto una cosa strana');
     }
     return Segnalazione.leggi(Map<String, dynamic>.from(letto));
   }
@@ -299,18 +299,18 @@ class LaChat {
 String spiegaLErrore(Object errore) => switch (errore) {
   ComandoRifiutato(codice: 'senza_centralino') =>
     'Questa casa non passa da nessun centralino: le segnalazioni non si '
-        'possono spedire. Accendi «da fuori casa» nelle opzioni del ponte.',
+        'possono spedire. Accendi «da fuori casa» nelle opzioni di gdahome.',
   ComandoRifiutato(codice: 'non_configurate') =>
     'Il centralino non ha ancora le segnalazioni accese. Riprova piu\' '
         'tardi.',
   ComandoRifiutato(codice: 'troppe') =>
     'Troppe segnalazioni in poco tempo: riprova fra un po\'.',
   ComandoRifiutato(codice: 'non_ti_riconosco') =>
-    'Il centralino non riconosce questa casa: il ponte deve prima '
+    'Il centralino non riconosce questa casa: gdahome in casa deve prima '
         'collegarsi da fuori una volta.',
   ComandoRifiutato(codice: 'unknown_command') =>
-    'Il ponte in casa e\' piu\' vecchio dell\'app e questa cosa non la sa '
-        'ancora fare: aggiorna l\'add-on «gdahome».',
+    'gdahome in casa e\' piu\' vecchio dell\'app e questa cosa non la sa '
+        'ancora fare: aggiorna l\'add-on in Home Assistant.',
   ComandoRifiutato(codice: 'troppo_grande') =>
     'L\'allegato e\' troppo grande: al massimo 10 MB. Un video va tenuto '
         'corto.',

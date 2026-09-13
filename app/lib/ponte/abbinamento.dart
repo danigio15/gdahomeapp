@@ -256,7 +256,7 @@ class Abbinamento {
           );
         default:
           throw PonteIrraggiungibile(
-            _perche(corpo, 'il ponte ha risposto ${risposta.statusCode}'),
+            _perche(corpo, 'gdahome ha risposto ${risposta.statusCode}'),
           );
       }
     } on ErroreDelPonte {
@@ -398,7 +398,7 @@ class Abbinamento {
     final chiave = corpo['chiave'];
     final dispositivo = corpo['dispositivo'];
     if (segno is! String || segno.isEmpty) {
-      throw const PonteIrraggiungibile('il ponte ha risposto senza segno');
+      throw const PonteIrraggiungibile('gdahome ha risposto senza segno');
     }
     if (chiave is! String || chiave.isEmpty) {
       throw const PonteIrraggiungibile(
@@ -408,7 +408,7 @@ class Abbinamento {
     final identificativo = dispositivo is Map ? dispositivo['id'] : null;
     if (identificativo is! String || identificativo.isEmpty) {
       throw const PonteIrraggiungibile(
-        'il ponte ha risposto senza dire chi siamo',
+        'gdahome ha risposto senza dire chi siamo',
       );
     }
 

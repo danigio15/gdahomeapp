@@ -254,12 +254,12 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
      * e chi lo mette va a cercare il guasto dove non c'e'. */
     if (inCasa?.eLAccessoRemotoDiHomeAssistant ?? false) {
       return 'L\'accesso remoto di Home Assistant non arriva agli add-on: il suo '
-          'tunnel finisce dentro Home Assistant, e il ponte sta su una porta '
+          'tunnel finisce dentro Home Assistant, e gdahome sta su una porta '
           'sua. Mettiti sul Wi-Fi di casa e scrivi l\'indirizzo che ha il tuo '
           'Home Assistant su quella rete.';
     }
     if (inCasa != null) {
-      return 'Non trovo nessun ponte a quell\'indirizzo. Controlla che l\'add-on '
+      return 'Non trovo gdahome a quell\'indirizzo. Controlla che l\'add-on '
           'sia acceso e che il telefono sia sulla rete di casa.\n\n'
           '(${errore.spiegazione})';
     }

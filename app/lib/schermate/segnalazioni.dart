@@ -203,7 +203,7 @@ class _SchermataDelleSegnalazioniState
                   child: Text(
                     'Questa casa non passa da nessun centralino, e le '
                     'segnalazioni non hanno una strada per uscire. Si accende '
-                    '«da fuori casa» nelle opzioni del ponte.',
+                    '«da fuori casa» nelle opzioni di gdahome.',
                   ),
                 ),
               ],
