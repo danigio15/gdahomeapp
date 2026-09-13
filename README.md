@@ -1,23 +1,40 @@
-# gdahome
+<p align="center">
+  <img src="docs/immagini/banner.png" alt="gdahome" width="640">
+</p>
 
-La tua casa in una plancia: **Home Assistant sul telefono**, in una pagina sola
-fatta per essere guardata — le luci, il clima, le tapparelle, le telecamere, i
-consumi, le persone. Quello che in Home Assistant sta in dieci pagine diverse,
-qui sta dove lo cerchi.
+<h3 align="center">La tua casa in una plancia.</h3>
 
-Sono due pezzi, e lavorano insieme:
+<p align="center">
+  Home Assistant sul telefono, in una pagina sola fatta per essere guardata:<br>
+  le luci, il clima, le tapparelle, le telecamere, i consumi, le persone.
+</p>
+
+<p align="center">
+  <a href="https://gdahome.org"><b>Il sito</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://webapp.gdahome.org"><b>Aprila dal browser</b></a>
+  &nbsp;·&nbsp;
+  <a href="COME_PROVARLA.md"><b>Come si prova</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://gdahome.org/privacy.html"><b>Privacy</b></a>
+</p>
+
+<p align="center">
+  <img src="docs/immagini/3-le-luci.png" alt="Le luci" width="31%">
+  <img src="docs/immagini/4-il-clima.png" alt="Il clima" width="31%">
+  <img src="docs/immagini/1-la-plancia.png" alt="La plancia" width="31%">
+</p>
+
+---
+
+Quello che in Home Assistant sta in dieci pagine diverse, qui sta dove lo
+cerchi. Sono due pezzi, e lavorano insieme:
 
 - **un add-on** che si installa in Home Assistant, serve la plancia al telefono
   e tiene il segreto della casa — quello non esce mai da lì;
 - **un'app** per Android, iPhone e browser, che si abbina inquadrando un codice
   a quadretti: nessuna password da inserire, nessun token da copiare, nessuna
   porta da aprire sul router.
-
-Il sito: **[gdahome.org](https://gdahome.org)** · L'app dal browser:
-**[webapp.gdahome.org](https://webapp.gdahome.org)** · L'informativa privacy:
-**[gdahome.org/privacy.html](https://gdahome.org/privacy.html)**
-
----
 
 ## Metterla in casa
 
@@ -38,8 +55,6 @@ Dal telefono si inquadra, e la casa è abbinata.
 
 Tutto passo per passo, e cosa guardare una volta dentro, sta in
 **[`COME_PROVARLA.md`](COME_PROVARLA.md)**.
-
----
 
 ## Come ci si arriva
 
@@ -78,8 +93,6 @@ di rispondere a metà frase. L'app le chiede tutte insieme e tiene la prima che
 risponde — e lo rifà a ogni tentativo di riconnessione, non una volta
 all'avvio. Con una regola in più: in casa **vince sempre la strada diretta**,
 se no ogni comando farebbe il giro del mondo per arrivare a tre metri.
-
----
 
 ## Com'è fatta
 
@@ -124,8 +137,6 @@ di Home Assistant non esce mai dall'add-on. Il resto — le due porte,
 l'abbinamento, cosa finisce sul disco — sta in
 [`ponte/README.md`](ponte/README.md).
 
----
-
 ## Cosa fa, oggi
 
 | | |
@@ -143,8 +154,6 @@ l'abbinamento, cosa finisce sul disco — sta in
 | ⬜ | Zigbee: abbinare un dispositivo da qui (ZHA e Zigbee2MQTT) |
 | ⬜ | Le automazioni, scritte dall'app |
 | ⬜ | Notifiche, impronta digitale, l'app sul Play Store per tutti |
-
----
 
 ## Le prove
 
@@ -187,8 +196,6 @@ cd app && CENTRALINO_ESTERNO=ws://127.0.0.1:8787 flutter test test/integrazione/
 
 E per **guardarla** girare, con le fotografie delle schermate, c'è
 [`collaudo/`](collaudo/README.md).
-
----
 
 ## La licenza, e le due repository
 
