@@ -57,9 +57,9 @@
             </h1>
             <p class="guida">
               gdahome è l'app per Android e iPhone che fa vedere la casa come una plancia — quella
-              vera di DashboardModern, con le sue trenta sezioni — e che sa fare le tre cose che in
-              Home Assistant stanno nascoste in fondo a un menu: abbinare un dispositivo Zigbee,
-              scrivere un'automazione, creare un aiutante.
+              vera, con le sue trenta sezioni — e che sa fare le tre cose che in Home Assistant
+              stanno nascoste in fondo a un menu: abbinare un dispositivo Zigbee, scrivere
+              un'automazione, creare un aiutante.
             </p>
             <div class="bottoni">
               <a class="bottone bottone-ambra" href="#plancia">Guarda la plancia</a>
@@ -458,10 +458,10 @@
           <p class="invito">Toccala: è viva</p>
           <h2>Questa non è una riproduzione della plancia. È la plancia.</h2>
           <p class="guida">
-            Qui sotto gira <b>DashboardModern</b>: gli stessi file che stanno dentro l'add-on, non
-            un disegno che gli somiglia. Le trenta voci della barra sono le sue, le tessere sono le
-            sue, i ritratti delle persone sono i suoi. Accendi una luce e la vedi accendersi; apri
-            una pagina e ci trovi quello che ci troveresti in casa.
+            Qui sotto gira <b>la plancia di gdahome</b>: gli stessi file che stanno dentro l'add-on,
+            non un disegno che gli somiglia. Le trenta voci della barra sono le sue, le tessere sono
+            le sue, i ritratti delle persone sono i suoi. Accendi una luce e la vedi accendersi;
+            apri una pagina e ci trovi quello che ci troveresti in casa.
           </p>
           <p class="guida">
             Riempirla è la casa demo del collaudo — duecentotrentacinque entità, sette stanze, un
@@ -478,10 +478,16 @@
               </span>
               <span class="telaio-spia">dentro casa · cifrato</span>
             </div>
+            <!-- La cartella si chiama cosi' e non si puo' cambiare, anche se il
+                 nome non si usa piu' da nessuna parte: la plancia ricava da se'
+                 dove stanno i suoi ritratti guardando il proprio indirizzo, e
+                 quello che cerca e' `/dashboardmodern_static/`. E' anche il nome
+                 con cui la serve Home Assistant. Rinominarla manda i ritratti
+                 delle persone a 404. -->
             <iframe
               class="telaio-dentro"
               src="dashboardmodern_static/legacy/dashboard.html"
-              title="La plancia di DashboardModern, con dentro la casa demo"
+              title="La plancia di gdahome, con dentro la casa demo"
               loading="lazy"
             ></iframe>
             <!-- Se la plancia non fosse arrivata sul server, qui resterebbe un
@@ -494,9 +500,9 @@
             <div class="telaio-senza" hidden>
               <p><b>La plancia non è arrivata su questo server.</b></p>
               <p>
-                Qui dentro gira DashboardModern per davvero, e in questa copia dei file manca. La si
-                vede comunque: è la stessa che sta nelle fotografie qui sopra, ed è quella che l'app
-                apre sul telefono.
+                Qui dentro gira la plancia per davvero, e in questa copia dei file manca. La si vede
+                comunque: è la stessa che sta nelle fotografie qui sopra, ed è quella che l'app apre
+                sul telefono.
               </p>
               <a class="bottone bottone-vuoto" href="#scarica">Vai a come si prende</a>
             </div>
@@ -694,29 +700,6 @@
                 <b>Code → Download ZIP</b>, o un <code>git clone</code>.
               </p>
               <span class="come">Vai alla repository →</span>
-            </a>
-
-            <a
-              class="scarico appare"
-              href="https://github.com/danigio15/dashboardmodern-v2"
-              rel="noopener"
-            >
-              <div class="segno">
-                <img
-                  src="statico/oggetti/evidenza.svg"
-                  alt=""
-                  width="28"
-                  height="28"
-                  loading="lazy"
-                />
-              </div>
-              <h3>La plancia</h3>
-              <p>
-                DashboardModern, le sezioni che gdahome mostra — quelle vere, qui sopra. Sta per
-                conto suo, si installa da HACS, e l'app se la porta dentro l'add-on da sola a ogni
-                versione nuova.
-              </p>
-              <span class="come">Vai a DashboardModern →</span>
             </a>
           </div>
         </div>

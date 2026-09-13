@@ -9,7 +9,7 @@ Sta su **[gdahome.org](https://gdahome.org)**.
 ## La plancia non è una riproduzione: è la plancia
 
 È il pezzo per cui il sito esiste, ed è anche la cosa che il sito **non**
-disegna. In un riquadro, nella pagina, gira **DashboardModern**: gli stessi
+disegna. In un riquadro, nella pagina, gira **la plancia di gdahome**: gli stessi
 file che stanno dentro l'add-on, `ponte/plancia/`, copiati byte per byte. Le
 trenta voci della barra sono le sue, le tessere sono le sue, i ritratti 3D
 delle persone sono i suoi.
