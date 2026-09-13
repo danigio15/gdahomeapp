@@ -16,6 +16,25 @@ COPY package.json /app/
 # vuoto, e il confronto non si puo' nemmeno fare.
 COPY config.yaml /app/
 COPY console/ /app/console/
+# La cartina: il file che il ponte copia nella `www` di Home Assistant perche'
+# la voce nella barra laterale sappia aprire la plancia.
+#
+# Questa riga mancava, e il difetto che ne veniva fuori e' il piu' cattivo di
+# tutti: l'add-on parte, dice tutto a posto, la voce nella barra laterale c'e',
+# e aprendola esce «Errore di configurazione» e niente altro — perche' il file
+# che la Plancia chiede non e' mai stato scritto, e il motivo Home Assistant lo
+# mostra solo dentro l'editor delle tessere. Tre giri di ipotesi, e la risposta
+# stava nel registro dell'add-on: `ENOENT: copyfile '/app/carta/plancia.js'`.
+COPY carta/ /app/carta/
+# Il marchio: il logo e il velo d'avvio di gdahome, che si mettono alla plancia
+# al momento di servirla (`src/marchio.js`).
+#
+# Anche questa mancava, e non lo diceva nessuno: senza quei due file il
+# vestito non si mette e la plancia si vede col nome e col logo di prima. Un
+# marchio che manca non solleva niente — e' scritto apposta cosi', perche' una
+# plancia vestita male vale infinitamente piu' di una plancia che non si apre —
+# e quindi passava intero.
+COPY marchio/ /app/marchio/
 # La plancia di DashboardModern, com'e': la serve il ponte al telefono, e
 # in Home Assistant non serve nessuna integrazione. La porta dentro
 # `strumenti/porta-la-plancia.mjs`.
