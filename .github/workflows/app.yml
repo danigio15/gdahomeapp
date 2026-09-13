@@ -181,6 +181,45 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      # Il pacchetto per il Play Store, che gli APK non li prende.
+      #
+      # Si costruisce **solo con la chiave vera**: un bundle firmato di prova
+      # non si puo' caricare da nessuna parte, e costruirlo per niente sarebbe
+      # tre minuti di corsa buttati a ogni giro. Non va nella release — quello
+      # che si manda a una persona e' l'APK — ma resta fra gli artefatti, che
+      # e' da dove lo si prende per caricarlo nel Play Console.
+      - name: Il pacchetto per il negozio
+        if: steps.chiave.outputs.vera == 'si'
+        working-directory: app
+        env:
+          CENTRALINO: ${{ inputs.centralino }}
+          CORSA: ${{ github.run_number }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            VERSIONE="${GITHUB_REF_NAME#v}"
+          else
+            VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
+          fi
+          if [ -n "$CENTRALINO" ]; then
+            flutter build appbundle --release --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
+          else
+            flutter build appbundle --release --dart-define=VERSIONE="$VERSIONE"
+          fi
+          {
+            echo "### Il pacchetto per il Play Store"
+            echo ""
+            echo "L'\`.aab\` e' fra gli artefatti di questa corsa. Come si carica:"
+            echo "\`docs/GOOGLE_PLAY.md\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.chiave.outputs.vera == 'si'
+        with:
+          name: gdahome-android-negozio
+          path: app/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
       # Il pacchetto dove chi lo deve installare lo trova.
       #
       # Da «Actions» lo scarica solo chi e' entrato in GitHub, e dopo trenta

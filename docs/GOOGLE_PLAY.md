@@ -1,0 +1,158 @@
+# Pubblicare gdahome su Android
+
+Due strade, e conviene farle in quest'ordine: la prima è pronta oggi e non
+costa niente, la seconda richiede venticinque euro e qualche settimana di
+attesa che non dipende da noi.
+
+---
+
+## A. Il pacchetto firmato, da una release *(pronta, manca solo la chiave)*
+
+Un indirizzo che si apre dal telefono, si tocca il file e Android installa.
+È quello che si manda a una persona.
+
+**Cosa c'è già:** Gradle firma con la chiave vera quando la trova, il workflow
+la scrive dai segreti, e su un'etichetta `vX.Y.Z` il pacchetto finisce in una
+release di GitHub con le istruzioni dentro. Senza chiave vera la release non si
+fa — e non è pigrizia: la chiave di prova sta scritta nella repository, e un
+pacchetto pubblico firmato con quella lo rifà chiunque.
+
+**Cosa manca:** la chiave, che devi fare tu. Cinque minuti:
+`docs/LA_CHIAVE_ANDROID.md`.
+
+Poi:
+
+```sh
+git tag v1.4.25 && git push origin v1.4.25
+```
+
+e la corsa «L'app da provare» costruisce, firma e pubblica.
+
+**Cosa vede chi la installa.** Android chiede il permesso di installare da
+quella fonte — è la stessa domanda che fa per qualunque app fuori dal negozio —
+e poi si comporta come tutte le altre. Gli aggiornamenti si installano sopra,
+senza perdere l'abbinamento, **finché la chiave resta la stessa**.
+
+---
+
+## B. Il Play Store
+
+Serve se vuoi che la trovi chi non ti conosce. Costa 25 $ una volta sola, più
+del tempo.
+
+### Il muro da sapere prima di cominciare
+
+Un account **personale** aperto oggi non può pubblicare in produzione subito:
+Google chiede prima un **test chiuso con almeno 12 tester per 14 giorni
+consecutivi**, e solo dopo si può fare domanda per la produzione. Non è
+aggirabile e non dipende da noi.
+
+Un account **organizzazione** (serve un numero D-U-N-S, gratis, un paio di
+settimane per averlo) quel passaggio non ce l'ha. Se gdahome deve diventare un
+prodotto, l'account organizzazione è la strada più corta anche se all'inizio
+sembra la più lunga.
+
+### Quello che il negozio chiede, e quello che abbiamo
+
+| cosa | stato |
+|---|---|
+| `.aab` firmato (il Play Store non prende gli APK) | lo costruisce la corsa «L'app da provare» quando c'è la chiave, e lo lascia fra gli artefatti |
+| Icona 512×512 | `docs/negozio/icona-512.png` |
+| Grafica 1024×500 | `docs/negozio/grafica-1024x500.png` |
+| Almeno 2 fotografie del telefono | `docs/negozio/1-…` → `5-…`, cinque, già della misura giusta |
+| Informativa privacy a un indirizzo pubblico | `docs/PRIVACY.md` — l'indirizzo è `https://github.com/danigio15/gdahomeapp/blob/main/docs/PRIVACY.md` |
+| Titolo, descrizione breve e lunga | qui sotto, da copiare |
+| Modulo «Sicurezza dei dati» | le risposte qui sotto |
+| Fascia d'età, categoria, contatti | si compilano lì, cinque minuti |
+
+### Il nome e le descrizioni
+
+**Titolo** (max 30):
+
+```
+gdahome
+```
+
+**Descrizione breve** (max 80):
+
+```
+La tua casa in una plancia: Home Assistant, sul telefono, senza complicazioni.
+```
+
+**Descrizione lunga** (max 4000):
+
+```
+gdahome apre la tua casa sul telefono.
+
+Una plancia sola, fatta per essere guardata: le luci, il clima, le tapparelle,
+le telecamere, i consumi, le persone. Quello che in Home Assistant sta in dieci
+pagine diverse, qui sta dove lo cerchi.
+
+Serve Home Assistant in casa, con l'add-on gdahome installato: si aggiunge dal
+negozio degli add-on in cinque minuti, e da lì in poi l'app si abbina
+inquadrando un codice a quadretti. Nessuna password da inserire, nessun token
+da copiare, nessuna porta da aprire sul router.
+
+• Da dentro casa l'app trova il ponte da sola.
+• Da fuori passa da un centralino, e quello che gira è cifrato fra il telefono
+  e la tua casa: il centralino instrada e non legge niente.
+• Nessun account gdahome, nessuna pubblicità, nessun tracciamento.
+
+La plancia è quella di DashboardModern, servita dalla tua casa: le sue sezioni,
+le sue tessere, la sua configurazione. Si configura dal telefono, e quello che
+cambi è tuo e resta a casa tua.
+
+gdahome è un progetto aperto: il codice è su github.com/danigio15/gdahomeapp.
+```
+
+*(Il testo è una proposta: leggilo e cambialo dove non ti suona. Le parole del
+negozio sono le tue, non mie.)*
+
+### Il modulo «Sicurezza dei dati», risposta per risposta
+
+Google chiede di dichiarare cosa raccogli. Per gdahome:
+
+- **Raccogli o condividi dati utente?** Sì — ma solo quelli qui sotto, e solo
+  quando è l'utente a mandarli.
+- **Foto e video**: *raccolti*, **facoltativi**, per **assistenza clienti** —
+  sono gli allegati che si attaccano a una segnalazione. Non condivisi con
+  terzi.
+- **Messaggi degli utenti**: *raccolti*, **facoltativi**, per **assistenza
+  clienti** — il testo della segnalazione e la chat di assistenza.
+- **Log di diagnostica dell'app**: *raccolti*, **facoltativi**, per
+  **assistenza clienti** — le poche righe sullo stato dell'app allegate a una
+  segnalazione.
+- **Posizione, contatti, rubrica, salute, finanza, identificatori
+  pubblicitari**: *no*, niente di tutto questo.
+- **I dati sono cifrati in transito?** Sì.
+- **L'utente può chiedere la cancellazione?** Sì, dalla chat di assistenza.
+
+La fotocamera non va dichiarata come raccolta dati: serve a leggere il codice
+di abbinamento, l'immagine non si salva e non esce dal telefono.
+
+### L'ordine delle cose
+
+1. Fai la chiave (`docs/LA_CHIAVE_ANDROID.md`) e metti i due segreti su GitHub.
+2. Metti l'etichetta: `git tag v1.4.25 && git push origin v1.4.25`. Esce la
+   release con l'APK **e** l'`.aab` fra gli artefatti della corsa.
+3. Apri l'account Play (25 $). Personale o organizzazione: vedi il muro qui
+   sopra.
+4. Crea l'app, carica l'`.aab` in **test interno** — quello è immediato, e ti
+   serve a vedere la scheda vera con le tue fotografie.
+5. Compila scheda, privacy e sicurezza dei dati con la roba di questa pagina.
+6. Poi la strada lunga: test chiuso, i 12 tester, i 14 giorni, la domanda per
+   la produzione.
+
+**Il Play App Signing.** Quando carichi il primo `.aab`, Google propone di
+tenere lui la chiave di firma finale. Conviene dire di sì: da quel momento la
+chiave che hai fatto tu serve solo a firmare quello che carichi, e se la perdi
+Google te la fa ri-registrare invece di lasciarti con un'app che non si può più
+aggiornare. Senza Play App Signing, perdere la chiave vuol dire perdere l'app.
+
+---
+
+## E l'iPhone?
+
+Compila già — la corsa lo costruisce a ogni giro, senza firma — e per
+installarlo serve l'account sviluppatore Apple (99 €/anno) e quattro segreti su
+GitHub: sta in `docs/IPHONE.md`. Non è in programma adesso.
