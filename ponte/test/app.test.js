@@ -247,3 +247,29 @@ test("i motori che non si usano restano fuori, e la pagina non li chiede", { ski
     assert.equal(existsSync(join(APP_VERA, quale)), false, `${quale} non ci va`);
   }
 });
+
+test("la diagnostica del traffico sta dietro la stessa chiave", () => {
+  /* «Chi parla di piu'» elenca entita' col nome tecnico, conta eventi al
+   * minuto e parla di filtri da mettere in Home Assistant: a chi ha gdahome
+   * in casa non serve, e spaventa piu' di quanto spieghi. Serve a chi guarda
+   * una casa che va a scatti, cioe' a chi risponde alle segnalazioni.
+   *
+   * Due cose la tengono ferma: la scheda nasce nascosta nell'HTML — se no si
+   * vedrebbe per un istante prima che la pagina sappia com'e' fatta questa
+   * casa — e si accende con la stessa condizione dell'assistenza. */
+  const pagina = readFileSync(join(QUI, "..", "console", "index.html"), "utf8");
+  assert.match(
+    pagina,
+    /<section class="scheda tenue-sfondo" id="chiacchieroni" hidden>/,
+    "la scheda della diagnostica non nasce nascosta",
+  );
+
+  const console_ = readFileSync(join(QUI, "..", "console", "console.js"), "utf8");
+  assert.match(
+    console_,
+    /trova\("chiacchieroni"\)\.hidden = !risponde;/,
+    "la diagnostica non si lega alla chiave della console",
+  );
+  /* E i dati non si disegnano nemmeno, dove la scheda non si vede. */
+  assert.match(console_, /if \(risponde\) disegnaIChiacchieroni\(stato\.chiacchieroni\);/);
+});

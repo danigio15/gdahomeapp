@@ -18,24 +18,6 @@ L'add-on si chiama **gdahome**, e la repository è pubblica: si installa **dal
 negozio**, come qualunque altro add-on. Cinque minuti la prima volta, e poi si
 aggiorna da sé.
 
-> **Da questa versione l'add-on ha un'identità nuova.** Quello con cui il
-> Supervisor lo riconosce — lo `slug` — era `ponte`, e adesso è `gdahome`. Per
-> Home Assistant è quindi un add-on **nuovo**, e vuol dire tre cose, una volta
-> sola:
->
-> - **il vecchio si disinstalla**, e non basta fermarlo: i due chiedono la
->   stessa porta (8098) e la stessa cartella in `www`, e chi parte per secondo
->   non parte;
-> - **i telefoni si riabbinano**: quello che un add-on si tiene sta in una
->   cartella che il Supervisor gli dà per identità, e quella nuova comincia
->   vuota;
-> - **le plance si rifanno**: la prima ricompare da sé al primo avvio, quelle
->   aggiunte a mano si riaggiungono dalla console.
->
-> Si è fatto adesso perché l'add-on ce l'ha una persona sola, su una macchina
-> di prova. Più avanti quel prezzo lo pagherebbe chi ce l'ha installato, e
-> allora lo slug non si toccherebbe più.
-
 ### A. Dal negozio *(questa)*
 
 1. **Impostazioni → Add-on → Negozio degli add-on**, menu in alto a destra →
@@ -167,10 +149,14 @@ Il ponte, da solo, si raggiunge solo dalla rete di casa. Per entrare da fuori
 chiama fuori e resta in attesa in un posto dove il telefono lo va a trovare.
 Quel posto è il centralino.
 
-Gira su Cloudflare, sul piano gratuito, e l'indirizzo arriva insieme: non c'è
-niente da pagare e nessun dominio da comprare.
+Il centralino di gdahome è `tramite.gdahome.org`, ed è quello che l'app usa
+senza che nessuno configuri niente: sta scritto nel codice, e il ponte lo
+chiama da sé. **Questo punto serve solo a chi vuole il proprio**, e ci sono due
+modi.
 
-Dal computer, una volta sola:
+**Su Cloudflare**, piano gratuito, indirizzo compreso: non c'è niente da pagare
+e nessun dominio da comprare. È in [`nuvola/`](nuvola/README.md), e dal
+computer si fa una volta sola:
 
 ```bash
 git clone https://github.com/danigio15/gdahomeapp
@@ -198,6 +184,11 @@ node strumenti/centralino.mjs wss://centralino.<il-tuo-nome>.workers.dev
 Scrive i tre posti dove quell'indirizzo sta — il difetto dell'add-on, quello
 dell'app, quello della chat — e una prova tiene fermo che i primi due restino
 identici. Poi **Negozio degli add-on → Ricarica**, e si installa da lì.
+
+**Su una macchina propria**, se si preferisce non dipendere da Cloudflare:
+la stessa cosa scritta in Node sta in [`centralino/`](centralino/README.md),
+con uno script che la mette in piedi da zero. I due sono intercambiabili, e la
+prova dal vivo passa identica contro tutti e due.
 
 Apri **gdahome** nella barra laterale: sotto «Da fuori casa» deve dire
 **«Collegato a wss://…: da fuori casa si entra.»**, con dentro il tuo
@@ -230,7 +221,7 @@ Non serve installare niente sul computer: lo costruisce GitHub.
 1. Sulla repository: **Actions → «L'app da provare» → Run workflow**.
 2. C'è una casella **centralino**: incollaci `wss://centralino.<nome>.workers.dev`.
    Puoi anche lasciarla vuota: inquadrando il quadretto, il centralino glielo
-   dice la casa. Serve solo a chi vuole battere le lettere a mano da fuori.
+   dice la casa. Serve solo a chi vuole digitare le lettere a mano da fuori.
 3. Quando finisce (cinque minuti circa), in fondo alla pagina della corsa c'è
    **gdahome-android**: scaricalo. Dentro c'è `app-release.apk`.
 4. Passa il file sul telefono e aprilo. Android chiederà di consentire
@@ -241,11 +232,10 @@ Il pacchetto è di *release*, firmato con la chiave di sviluppo: non è quello
 che andrebbe su un negozio, ma è compilato per davvero — quello di *debug*
 girava interpretato, con tutti i controlli accesi, ed era lento e scaldava.
 
-> **Il ponte va tenuto al passo.** Dalla 0.11.0 il ponte e l'app comprimono
-> quello che si mandano (cinque, otto volte meno byte, e meno lavoro per
-> decifrarli): un'app nuova con un ponte vecchio funziona lo stesso, ma senza.
-> Da «Come va l'app» si vede: nella riga del traffico c'è «gzip» oppure
-> «senza gzip».
+> **Il ponte va tenuto al passo.** Il ponte e l'app comprimono quello che si
+> mandano (cinque, otto volte meno byte, e meno lavoro per decifrarli): un'app
+> nuova con un ponte vecchio funziona lo stesso, ma senza. Da «Come va l'app»
+> si vede: nella riga del traffico c'è «gzip» oppure «senza gzip».
 
 ### La prima accensione
 
@@ -443,8 +433,9 @@ se non funzionano:
   la stessa chat. La graffetta 📎 qui non c'è più, e non è una dimenticanza:
   questa chat passa parole, e una foto si allega a una segnalazione.
 - **Menu → Configurazione.** Deve comparire la pagina **CONFIGURAZIONE** della
-  dashboard, con la sua insegna e la versione della plancia — **v1.4.23**, e se
-  ne dice una più vecchia il ponte non è aggiornato — e sotto le sue
+  dashboard, con la sua insegna e la versione della plancia — deve essere
+  quella scritta nella scheda dell'add-on, e se ne dice una più vecchia il
+  ponte non è aggiornato — e sotto le sue
   tessere: 🧩 Configura Entità, 🎨 Tema con le sei tavolozze, 📌 Barra di
   navigazione. «Sostieni il progetto» qui **non c'è**: questa pagina si presenta come
   gdahome, e una donazione che porta a un altro progetto, dentro una pagina
@@ -495,5 +486,5 @@ E poi tutto il resto:
 | La console dice «Il centralino ci rifiuta» | c'è già un'altra casa registrata con quell'identificativo su quel centralino |
 | Il codice viene rifiutato | dura cinque minuti e vale una volta sola: fanne un altro |
 | L'app dice che la casa va riabbinata | il telefono è stato staccato dalla console, o è stato abbinato con una versione vecchia |
-| L'app dice «Il ponte non ha la plancia» | il ponte è più vecchio della 0.7.0, o la cartella `plancia` non è finita dentro l'add-on: ricopia la cartella `ponte` intera e ricostruiscilo |
+| L'app dice «Il ponte non ha la plancia» | la cartella `plancia` non è finita dentro l'add-on: ricopia la cartella `ponte` intera e ricostruiscilo |
 | La plancia resta su «Apro la plancia…» o dice che non è arrivata | il telefono è fuori casa e i file stanno ancora arrivando: la prima volta ci mette qualche secondo. Se non arriva mai, guarda il registro dell'add-on |

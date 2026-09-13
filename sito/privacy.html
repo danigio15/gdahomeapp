@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy di gdahome</title>
+    <meta
+      name="description"
+      content="Quali dati ci sono di mezzo in gdahome, dove stanno e chi li puo' leggere. In italiano e senza giri."
+    />
+    <link rel="icon" href="gdahome.png" />
+    <meta property="og:title" content="Privacy di gdahome" />
+    <meta
+      property="og:description"
+      content="I dati della tua casa restano in casa tua: non c'e' nessun server che li raccolga."
+    />
+    <meta property="og:image" content="gdahome.png" />
+    <!-- La gemella di docs/PRIVACY.md: stesso testo, stesse sezioni, stessa
+         data. Questo e' l'indirizzo pubblico che il Play Store vuole, e una
+         prova (centralino/test/sito.test.js) tiene le due copie allineate. -->
+    <link rel="stylesheet" href="stile.css" />
+  </head>
+  <body>
+    <div class="dentro">
+      <header class="stretta">
+        <a class="indietro" href="/"
+          ><img src="gdahome.png" alt="" width="40" height="40" />gdahome</a
+        >
+        <h1>Privacy</h1>
+        <p class="sottotitolo">Ultimo aggiornamento: 13 settembre 2026.</p>
+      </header>
+
+      <section>
+        <p>
+          gdahome è l'app di casa che apre la plancia di Home Assistant sul telefono. Questa pagina
+          dice, in italiano e senza giri,
+          <strong>quali dati ci sono di mezzo, dove stanno e chi li può leggere</strong>. È la
+          stessa cosa che il Play Store chiede di dichiarare, e vale la pena leggerla anche se non
+          si ha intenzione di dichiarare niente a nessuno.
+        </p>
+      </section>
+
+      <section>
+        <h2>La regola che viene prima di tutte</h2>
+        <p>
+          <strong>I dati della tua casa restano in casa tua.</strong> gdahome non ha nessun server
+          che li raccolga, non ha un account da fare, e non c'è nessun posto dove finiscano per
+          essere guardati. Le luci, le temperature, le telecamere, le persone: quelle stanno nel tuo
+          Home Assistant, e l'app le chiede a lui.
+        </p>
+        <p>
+          Chi sviluppa gdahome non vede la tua casa. Non è una promessa di buona volontà: non c'è
+          proprio il posto dove guardarla.
+        </p>
+      </section>
+
+      <section>
+        <h2>Cosa c'è sul telefono</h2>
+        <ul>
+          <li>
+            <strong>Il segno di riconoscimento della casa</strong>, uno per casa abbinata. Serve a
+            entrare, sta nel portachiavi del telefono e non esce da lì. Si disinstalla l'app, se ne
+            va con lei; si stacca il telefono dalla console dell'add-on e smette di valere.
+          </li>
+          <li><strong>L'indirizzo della casa</strong> e il nome che le hai dato.</li>
+          <li>
+            <strong>Quello che la plancia si tiene per sé</strong> — il tema, la tavolozza, la barra
+            — nel deposito del browser interno all'app.
+          </li>
+        </ul>
+        <p>Niente di tutto questo viene mandato da nessuna parte.</p>
+      </section>
+
+      <section>
+        <h2>Cosa passa dal centralino, e solo quando serve</h2>
+        <p>
+          Da fuori casa l'app non può bussare direttamente a Home Assistant, quindi passa da un
+          <strong>centralino</strong>: un punto d'incontro dove il ponte è già in attesa. Due cose
+          vanno dette con precisione:
+        </p>
+        <ul>
+          <li>
+            quello che passa è <strong>cifrato fra il telefono e il ponte</strong>: il centralino
+            instrada e non può leggere niente di quello che gira;
+          </li>
+          <li>il centralino tiene in piedi il collegamento e non conserva il contenuto.</li>
+        </ul>
+        <p>
+          Il centralino di gdahome è <code>tramite.gdahome.org</code>. Chi vuole, se ne accende uno
+          suo — è nel codice, ed è gratis.
+        </p>
+      </section>
+
+      <section>
+        <h2>Le segnalazioni e la chat di assistenza</h2>
+        <p>
+          Sono l'unica cosa che <strong>tu</strong> puoi decidere di mandare fuori, e succede solo
+          quando la scrivi:
+        </p>
+        <ul>
+          <li>il testo della segnalazione, e le foto o i video che ci alleghi;</li>
+          <li>
+            qualche riga su come sta l'app in quel momento (versione, se il filo con la casa regge),
+            che serve a capire il problema;
+          </li>
+          <li>quello che scrivi nella chat di assistenza.</li>
+        </ul>
+        <p>
+          Vanno a chi mantiene gdahome, per rispondere. Non vanno a nessun altro, non vengono usate
+          per profilare niente e non finiscono in nessuna pubblicità. Se non scrivi una
+          segnalazione, non parte niente.
+        </p>
+      </section>
+
+      <section>
+        <h2>La fotocamera</h2>
+        <p>
+          Serve a una cosa sola: <strong>inquadrare il codice a quadretti</strong> che abbina il
+          telefono alla casa. L'immagine non viene salvata né mandata da nessuna parte — si legge il
+          codice e basta. Se preferisci, il codice si batte a mano e la fotocamera non serve.
+        </p>
+      </section>
+
+      <section>
+        <h2>Quello che non c'è</h2>
+        <p>
+          Nessuna pubblicità. Nessun tracciamento. Nessun account. Nessuna raccolta di dati per
+          statistiche o profilazione. Nessuna vendita o condivisione di dati con terzi. Nessun
+          servizio di analisi dentro l'app.
+        </p>
+      </section>
+
+      <section>
+        <h2>I bambini</h2>
+        <p>
+          L'app non è rivolta ai bambini e non raccoglie niente da nessuno, quindi nemmeno da loro.
+        </p>
+      </section>
+
+      <section>
+        <h2>Cancellare tutto</h2>
+        <p>
+          Si disinstalla l'app: quello che c'era sul telefono se ne va con lei. Dalla console
+          dell'add-on, «Telefoni abbinati → Togli associazione», il segno di quel telefono smette di
+          valere all'istante. Le segnalazioni già mandate si cancellano chiedendolo dalla chat di
+          assistenza.
+        </p>
+      </section>
+
+      <section>
+        <h2>Chi risponde</h2>
+        <p>
+          gdahome è mantenuta da danigio15 —
+          <a href="https://github.com/danigio15/gdahomeapp">github.com/danigio15/gdahomeapp</a>. Per
+          qualunque cosa su questa pagina, si apre una segnalazione dall'app o una issue sulla
+          repository.
+        </p>
+      </section>
+
+      <footer>
+        <div class="dentro" style="padding: 0">
+          <p><a href="/">Torna a gdahome</a></p>
+          <p>
+            La stessa informativa, nel codice:
+            <a href="https://github.com/danigio15/gdahomeapp/blob/main/docs/PRIVACY.md"
+              >docs/PRIVACY.md</a
+            >.
+          </p>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -201,3 +201,78 @@ test("nei pezzi scritti col cuore aperto non ci sono controaccenti", () => {
   }
   assert.ok(quanti >= 2, "mi aspettavo almeno due heredoc col cuore aperto");
 });
+
+test("rilanciarlo non cambia la chiave della console", () => {
+  /* Prima la chiave si rigenerava a ogni giro, in una riga senza `if`. Chi
+   * reincollava la riga per aggiungere un pezzo — ed e' quello che lo script
+   * promette di poter fare, due righe sopra — si ritrovava la chat chiusa con
+   * una chiave che non aveva mai visto, e nessun messaggio che lo dicesse.
+   *
+   * Quindi: la si genera solo se non c'e'. */
+  const genera = ACCENDI.indexOf("head -c 48 /dev/urandom");
+  assert.ok(genera >= 0, "non genera nessuna chiave");
+  const prima = ACCENDI.slice(0, genera);
+  assert.match(
+    prima,
+    /CHIAVE_CONSOLE="\$\(gia_scritto [^)]*\)"/,
+    "non guarda se la chiave c'e' gia': la rifa' e la porta via",
+  );
+  assert.match(
+    ACCENDI,
+    /if \[\[ -z "\$CHIAVE_CONSOLE" \]\]; then\n\s+CHIAVE_CONSOLE="\$\(head -c 48/,
+    "genera la chiave senza prima chiedersi se ce n'e' una",
+  );
+});
+
+test("e non chiede di nuovo i gettoni che sono gia' sulla macchina", () => {
+  /* Richiedere un segreto che c'e' gia' vuol dire, nella pratica, cambiarlo:
+   * chi non ce l'ha sotto mano tira avanti, e quello di prima smette di
+   * valere. */
+  for (const [quale, chiave, dove] of [
+    ["GETTONE_LETTURA", "GETTONE_LETTURA", "lettura"],
+    ["GETTONE_SEGNALAZIONI", "GITHUB_SEGNALAZIONI", "ambiente"],
+    ["REPO_SEGNALAZIONI", "GITHUB_REPO", "ambiente"],
+  ]) {
+    const atteso = `${quale}="\${${quale}:-$(gia_scritto "$CONFIGURAZIONE/${dove}" ${chiave})}"`;
+    assert.ok(
+      ACCENDI.includes(atteso),
+      `«${quale}» non si rilegge da «${dove}»: lo richiede, e cosi' lo cambia`,
+    );
+  }
+});
+
+test("il sito viaggia con tutto il resto, e ha il suo nome davanti", () => {
+  const scarica = pezziScritti().find((uno) => uno.dove.endsWith("scarica.sh"));
+  assert.match(
+    scarica.testo,
+    /cp -a "\$radice\/sito" "\$DOVE\/sito\.nuovo"/,
+    "non porta dentro il sito",
+  );
+  assert.match(scarica.testo, /mv "\$DOVE\/sito\.nuovo" "\$DOVE\/sito"/, "non scambia il sito");
+
+  /* Una versione che non ha la cartella del sito non deve svuotare un nome
+   * pubblico: se non c'e', resta quello di prima. */
+  assert.match(scarica.testo, /if \[ -d "\$radice\/sito" \]; then/);
+  assert.doesNotMatch(scarica.testo, /mkdir -p "\$DOVE\/sito\.nuovo"/);
+
+  /* E davanti ci sta Caddy, col nome nudo e col `www` che manda la'. */
+  assert.match(ACCENDI, /^\$NOME_DEL_SITO \{$/m);
+  assert.match(ACCENDI, /root \* \$DOVE\/sito/);
+  assert.match(ACCENDI, /^www\.\$NOME_DEL_SITO \{$/m);
+  assert.match(ACCENDI, /redir https:\/\/\$NOME_DEL_SITO\{uri\} permanent/);
+});
+
+test("i nomi che Caddy serve sono quelli che si controllano prima", () => {
+  /* Un nome servito ma non controllato e' un certificato che non arriva, e
+   * venti minuti persi a capire perche'. */
+  const controllati = /^for nome in (.+); do$/m.exec(ACCENDI);
+  assert.ok(controllati, "non trovo il giro che controlla i nomi");
+  for (const quale of [
+    "$NOME_DEL_TRAMITE",
+    "$NOME_DELL_APP",
+    "$NOME_DEL_SITO",
+    "www.$NOME_DEL_SITO",
+  ]) {
+    assert.ok(controllati[1].includes(`"${quale}"`), `«${quale}» non si controlla prima`);
+  }
+});

@@ -78,9 +78,9 @@ nemmeno da loro.
 ## Cancellare tutto
 
 Si disinstalla l'app: quello che c'era sul telefono se ne va con lei. Dalla
-console dell'add-on, «Telefoni abbinati → Stacca», il segno di quel telefono
-smette di valere all'istante. Le segnalazioni già mandate si cancellano
-chiedendolo dalla chat di assistenza.
+console dell'add-on, «Telefoni abbinati → Togli associazione», il segno di quel
+telefono smette di valere all'istante. Le segnalazioni già mandate si
+cancellano chiedendolo dalla chat di assistenza.
 
 ## Chi risponde
 

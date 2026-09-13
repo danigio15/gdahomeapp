@@ -88,7 +88,7 @@ Sotto al quadretto, per chi non puo' inquadrare, ci sono le stesse cose in
 lettere: sedici, in quattro gruppi da quattro. Sono sedici e non otto apposta —
 otto si indovinano provandole a raffica lontano da qui, e sedici no.
 
-**Stacca** spegne un telefono subito: il filo aperto cade nello stesso istante,
+**Togli associazione** spegne un telefono subito: il filo aperto cade nello stesso istante,
 e con quel segno non si rientra piu'.
 
 ## Da fuori casa
@@ -119,7 +119,7 @@ questo add-on, dove quella riga si cambia con
 centralino, e chi lo sa sa anche cambiare una riga.
 
 Il perche' di questa strada, e le tre che sono state scartate, stanno in
-[`../docs/PIANO.md`](../docs/PIANO.md). In due righe: l'accesso remoto di Home
+`ponte/src/ritorno.js`. In due righe: l'accesso remoto di Home
 Assistant le porte degli add-on non le fa passare — e non e' cosa che si
 configuri — mentre una VPN o un proxy inverso funzionano ma chiedono a chi usa
 l'app di installare e configurare qualcosa, che e' esattamente cio' che questo
