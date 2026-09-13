@@ -40,41 +40,6 @@
           <a href="#scarica">Scarica</a>
         </nav>
         <div class="attrezzi">
-          <button
-            class="interruttore-tema"
-            id="cambia-tema"
-            type="button"
-            aria-label="Cambia fra chiaro e scuro"
-            title="Cambia fra chiaro e scuro"
-          >
-            <svg
-              class="solo-scuro"
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-            >
-              <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z" />
-            </svg>
-            <svg
-              class="solo-chiaro"
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-            >
-              <circle cx="12" cy="12" r="4.2" />
-              <path
-                d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"
-              />
-            </svg>
-          </button>
           <a class="bottone bottone-pieno" href="#scarica">Scarica</a>
         </div>
       </div>
@@ -83,32 +48,117 @@
     <main>
       <!-- ── Il colpo d'occhio ──────────────────────────────────────────── -->
       <section class="apertura" id="inizio">
-        <div class="limite">
-          <p class="occhiello">Per Home Assistant</p>
-          <h1>
-            La tua casa in una plancia.<br />
-            Anche da fuori, <span class="filo">senza aprire niente</span>.
-          </h1>
-          <p class="guida">
-            gdahome è l'app per Android e iPhone che fa vedere la casa come una plancia — quella
-            vera di DashboardModern, con le sue trenta sezioni — e che sa fare le tre cose che in
-            Home Assistant stanno nascoste in fondo a un menu: abbinare un dispositivo Zigbee,
-            scrivere un'automazione, creare un aiutante.
-          </p>
-          <div class="bottoni">
-            <a class="bottone bottone-ambra" href="#plancia">Provala qui sotto</a>
-            <a class="bottone bottone-vuoto" href="#scarica">Scarica l'app</a>
+        <div class="limite apertura-dentro">
+          <div class="apertura-detto">
+            <p class="occhiello">Per Home Assistant</p>
+            <h1>
+              La tua casa in una plancia. Anche da fuori,
+              <span class="filo">senza aprire niente</span>.
+            </h1>
+            <p class="guida">
+              gdahome è l'app per Android e iPhone che fa vedere la casa come una plancia — quella
+              vera di DashboardModern, con le sue trenta sezioni — e che sa fare le tre cose che in
+              Home Assistant stanno nascoste in fondo a un menu: abbinare un dispositivo Zigbee,
+              scrivere un'automazione, creare un aiutante.
+            </p>
+            <div class="bottoni">
+              <a class="bottone bottone-ambra" href="#plancia">Provala qui sotto</a>
+              <a class="bottone bottone-vuoto" href="#scarica">Scarica l'app</a>
+            </div>
+            <p class="sottobottoni">
+              Ci si abbina inquadrando un quadretto: nessun indirizzo da battere, nessuna
+              credenziale di Home Assistant.
+            </p>
           </div>
-          <p class="sottobottoni">
-            Ci si abbina inquadrando un quadretto: nessun indirizzo da battere, nessuna credenziale
-            di Home Assistant.
-          </p>
 
+          <!-- Il prodotto, non il racconto del prodotto. È una fotografia vera
+               dell'app — la stessa che sta sul negozio — e sta qui in cima
+               perché la prima domanda di chiunque arrivi è «ma com'è?». -->
+          <div class="apertura-telefono">
+            <div class="telefono">
+              <img
+                src="statico/schermate/3-le-luci.png"
+                alt="Le luci di casa in gdahome, divise per stanza: ognuna col suo colore, la sua
+                     intensità e il suo interruttore."
+                width="380"
+                height="760"
+                fetchpriority="high"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="limite">
           <div class="numeroni">
-            <div class="numerone"><b>521</b><span>prove che girano a ogni commit</span></div>
             <div class="numerone"><b>30</b><span>sezioni della plancia, già funzionanti</span></div>
             <div class="numerone"><b>0</b><span>porte da aprire sul router</span></div>
-            <div class="numerone"><b>8</b><span>le lettere per abbinare un telefono</span></div>
+            <div class="numerone"><b>8</b><span>lettere, e il telefono è abbinato</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Le schermate ───────────────────────────────────────────────── -->
+      <!-- Quattro fotografie vere, in fila. Prima c'era una griglia di schede
+           di testo che diceva le stesse cose a parole: chi arriva su una
+           copertina vuole vedere, non leggere che è bello. -->
+      <section id="schermate">
+        <div class="limite">
+          <p class="occhiello">Com'è</p>
+          <h2>Una plancia, non un elenco di interruttori.</h2>
+          <p class="guida">
+            Le stanze, le luci col colore, il clima con le sue curve, le segnalazioni. Sono
+            fotografie dell'app vera: quello che si vede qui è quello che si trova installandola.
+          </p>
+
+          <div class="fila-schermate appare">
+            <figure>
+              <div class="telefono telefono-piccolo">
+                <img
+                  src="statico/schermate/2-le-plance.png"
+                  alt="L'elenco delle plance di casa, con quella scelta in evidenza."
+                  width="380"
+                  height="760"
+                  loading="lazy"
+                />
+              </div>
+              <figcaption>Le plance di casa</figcaption>
+            </figure>
+            <figure>
+              <div class="telefono telefono-piccolo">
+                <img
+                  src="statico/schermate/1-la-plancia.png"
+                  alt="La plancia di casa: la temperatura, l'antifurto, le persone e le sezioni."
+                  width="380"
+                  height="760"
+                  loading="lazy"
+                />
+              </div>
+              <figcaption>La plancia di casa</figcaption>
+            </figure>
+            <figure>
+              <div class="telefono telefono-piccolo">
+                <img
+                  src="statico/schermate/4-il-clima.png"
+                  alt="Il clima: i termostati della casa con la temperatura voluta e quella vera."
+                  width="380"
+                  height="760"
+                  loading="lazy"
+                />
+              </div>
+              <figcaption>Il clima</figcaption>
+            </figure>
+            <figure>
+              <div class="telefono telefono-piccolo">
+                <img
+                  src="statico/schermate/5-le-segnalazioni.png"
+                  alt="Le segnalazioni: si scrive cosa non va e si manda, dall'app."
+                  width="380"
+                  height="760"
+                  loading="lazy"
+                />
+              </div>
+              <figcaption>Le segnalazioni</figcaption>
+            </figure>
           </div>
         </div>
       </section>
@@ -343,11 +393,11 @@
               <span>Se no ogni comando farebbe il giro del mondo per arrivare a tre metri.</span>
             </li>
             <li>
-              <b>Il centralino non costa niente</b>
+              <b>Il centralino è di gdahome</b>
               <span
-                >Gira su Cloudflare, piano gratuito, indirizzo compreso. Chi preferisce il proprio
-                ha la stessa cosa in Node: sono intercambiabili, e la prova dal vivo passa identica
-                contro tutti e due.</span
+                >Gira su una macchina nostra, e non c'è niente da mettere in piedi né da pagare. Chi
+                preferisce il proprio se lo accende: è lo stesso codice, e la prova dal vivo passa
+                identica contro tutti e due.</span
               >
             </li>
           </ul>
@@ -434,6 +484,22 @@
               title="La plancia di DashboardModern, con dentro la casa demo"
               loading="lazy"
             ></iframe>
+            <!-- Se la plancia non fosse arrivata sul server, qui resterebbe un
+                 riquadro vuoto alto seicento pixel in mezzo alla pagina, e
+                 nessun errore da nessuna parte. Questo pezzo prende il suo
+                 posto: `sito.js` lo scopre e lo mette in mostra. Sta nella
+                 pagina e non nel codice perche' senza JavaScript il sito deve
+                 leggersi lo stesso — e nasconderlo e' compito di chi lo
+                 mostra, non il contrario. -->
+            <div class="telaio-senza" hidden>
+              <p><b>La plancia non è arrivata su questo server.</b></p>
+              <p>
+                Qui dentro gira DashboardModern per davvero, e in questa copia dei file manca. La si
+                vede comunque: è la stessa che sta nelle fotografie qui sopra, ed è quella che l'app
+                apre sul telefono.
+              </p>
+              <a class="bottone bottone-vuoto" href="#scarica">Vai a come si prende</a>
+            </div>
             <figcaption>
               Nell'app sta esattamente così: in un riquadro, servita dall'add-on. Qui il riquadro è
               una pagina invece che un telefono, e dietro invece della casa c'è una casa finta.
@@ -514,29 +580,6 @@
               </p>
             </article>
           </div>
-
-          <div class="fasi">
-            <div class="fase fatta">
-              <span class="stato">chiusa</span>
-              <b>Fase 1</b>
-              <p>Il ponte, il centralino, l'abbinamento, più case, la plancia dentro l'app.</p>
-            </div>
-            <div class="fase">
-              <span class="stato">da fare</span>
-              <b>Fase 2</b>
-              <p>Gli aiutanti: interruttori, numeri, testi, orari.</p>
-            </div>
-            <div class="fase">
-              <span class="stato">da fare</span>
-              <b>Fase 3</b>
-              <p>Zigbee, con ZHA e Zigbee2MQTT dietro un'interfaccia sola.</p>
-            </div>
-            <div class="fase">
-              <span class="stato">da fare</span>
-              <b>Fase 4</b>
-              <p>Il mago delle automazioni.</p>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -585,11 +628,12 @@
               </div>
               <h3>2 · Il centralino</h3>
               <p>
-                Solo per entrare da fuori casa. Si accende da GitHub con un bottone, gira su
-                Cloudflare nel piano gratuito e non costa niente. Ci vuole una cosa sola, una volta
-                sola: un gettone di Cloudflare.
+                Serve solo per entrare da fuori casa, e non passa da nessuno: gira su una macchina
+                di gdahome, la stessa di questo sito. Fa incontrare un telefono e la sua casa senza
+                capire niente di quello che si dicono — quello che passa è già cifrato quando
+                arriva, e lui non ha le chiavi.
               </p>
-              <span class="come">Accendilo da Actions →</span>
+              <span class="come">Com'è fatto →</span>
             </a>
 
             <a
@@ -608,8 +652,9 @@
               </div>
               <h3>3 · L'app, per Android</h3>
               <p>
-                Il pacchetto lo costruisce GitHub, quindi non serve installarsi l'SDK:
-                <b>Actions → «L'app da provare» → Run workflow</b>, e a fine corsa si scarica
+                Adesso è <b>in prova chiusa</b>: il pacchetto va a chi sta provandola. Sul
+                <b>Play Store per tutti fra due settimane</b>. Chi non aspetta se la costruisce da
+                sé — <b>Actions → «L'app da provare» → Run workflow</b>, e a fine corsa si scarica
                 <code>gdahome-android</code>.
               </p>
               <span class="come">Costruiscila da Actions →</span>
@@ -628,8 +673,8 @@
               </div>
               <h3>L'app, per iPhone</h3>
               <p>
-                Il codice è lo stesso — è Flutter, una app sola per tutti e due i telefoni. Quello
-                che manca è la firma e la distribuzione: sta nella fase 6, insieme ai negozi.
+                <b>Prossimamente.</b> Il codice è lo stesso — è Flutter, una app sola per tutti e
+                due i telefoni: quello che manca è la firma e la distribuzione, non l'app.
               </p>
             </div>
 

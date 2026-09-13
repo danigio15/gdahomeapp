@@ -160,6 +160,12 @@ async function apri(contesto, dove) {
   });
   pagina.on("pageerror", (errore) => lamenta(`[${dove}] errore: ${errore.message}`));
   pagina.on("requestfailed", (richiesta) => {
+    /* Una richiesta **annullata** non e' una richiesta che non arriva: e'
+     * quello che succede a tutto quello che era ancora per aria quando la
+     * pagina si chiude, e qui le pagine si chiudono appena hanno risposto.
+     * Contarla vorrebbe dire che il collaudo diventa rosso a seconda di quanto
+     * ci mette una risposta, che e' il modo migliore per non credergli piu'. */
+    if (richiesta.failure()?.errorText === "net::ERR_ABORTED") return;
     if (!perdonata(richiesta.url())) lamenta(`[${dove}] non arrivato: ${richiesta.url()}`);
   });
   pagina.on("response", (risposta) => {
@@ -422,11 +428,62 @@ await prova("i link portano dove dicono", async () => {
   );
 });
 
-await prova("il tema scuro si accende", async () => {
-  await pagina.locator("#cambia-tema").click();
-  await pagina.waitForTimeout(300);
-  const tema = await pagina.evaluate(() => document.documentElement.getAttribute("data-tema"));
-  if (!tema) throw new Error("nessun tema messo");
+/* Le schermate dell'app sono il pezzo che regge la copertina: senza di loro
+ * chi arriva legge di un'app senza averla mai vista. E un'immagine che non
+ * arriva non fa nessun rumore — lascia un buco, e la pagina intorno sta in
+ * piedi lo stesso. Per questo si guardano una per una, e non basta che il tag
+ * ci sia: si chiede al browser se ha davvero dei pixel dentro. */
+/* Il pezzo di ricambio deve restare zitto quando la plancia c'e'. E' la
+ * direzione che fa piu' danno: un riquadro che funziona e che sopra ci mette
+ * «la plancia non e' arrivata» dice una bugia a chi guarda, e nessuna prova
+ * sulla plancia se ne accorgerebbe — lei parte lo stesso, sotto. */
+await prova("quando la plancia c'e', nessuno dice che manca", async () => {
+  const detto = await pagina.evaluate(() => {
+    const invece = document.querySelector(".telaio-senza");
+    const telaio = document.querySelector(".telaio-dentro");
+    return { invece: invece ? !invece.hidden : null, telaioVia: telaio ? telaio.hidden : null };
+  });
+  if (detto.invece === null) throw new Error("il pezzo di ricambio non c'e' piu' nella pagina");
+  if (detto.invece) throw new Error("la pagina dice che la plancia manca, e invece sta girando");
+  if (detto.telaioVia) throw new Error("il riquadro e' nascosto, e la plancia dentro ci gira");
+});
+
+await prova("le schermate dell'app si vedono", async () => {
+  const come = await pagina.evaluate(() =>
+    [...document.querySelectorAll('img[src*="statico/schermate/"]')].map((una) => ({
+      quale: una.getAttribute("src"),
+      arrivata: una.complete && una.naturalWidth > 0,
+      larga: una.naturalWidth,
+    })),
+  );
+  if (come.length < 4)
+    throw new Error(`mi aspettavo almeno 4 schermate, ne ho trovate ${come.length}`);
+  const rotte = come.filter((una) => !una.arrivata);
+  if (rotte.length) throw new Error(`non arrivano: ${rotte.map((una) => una.quale).join(", ")}`);
+});
+
+/* Una luce sola: il sito non ha piu' un tema scuro, e non deve tornare ad
+ * averne uno per sbaglio — chi lo aprisse con un telefono in tema scuro si
+ * ritroverebbe la copertina quasi nera, cioe' una pagina diversa da quella
+ * che gli e' stata mostrata, e le schermate dell'app ci galleggerebbero
+ * sopra come ritagli. Qui si guarda col browser che dice di preferire il
+ * scuro: il fondo deve restare chiaro lo stesso. */
+await prova("anche a chi preferisce il scuro, la copertina resta chiara", async () => {
+  const alBuio = await browser.newContext({
+    viewport: { width: 1280, height: 900 },
+    colorScheme: "dark",
+  });
+  try {
+    const suaPagina = await alBuio.newPage();
+    await suaPagina.goto(INDIRIZZO, { waitUntil: "domcontentloaded" });
+    const fondo = await suaPagina.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    const [r, g, b] = fondo.match(/\d+/g).map(Number);
+    /* Chiaro vuol dire chiaro: la media dei tre canali sopra la meta'. Il
+     * fondo del sito e' #f0f4f8, cioe' 244; quello scuro di prima era 17. */
+    if ((r + g + b) / 3 < 128) throw new Error(`il fondo e' ${fondo}: e' tornato scuro`);
+  } finally {
+    await alBuio.close();
+  }
 });
 
 await pagina.locator("#plancia").scrollIntoViewIfNeeded();
