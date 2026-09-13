@@ -11,6 +11,33 @@
 (function () {
   "use strict";
 
+  /* ── Se la plancia non c'è ────────────────────────────────────────────
+   *
+   * La plancia dentro il riquadro non sta nella repository: la rimette lo
+   * script quando si pubblica. Se quel passo non fosse stato fatto, la pagina
+   * si aprirebbe **senza un errore da nessuna parte** e in mezzo ci sarebbe un
+   * riquadro vuoto alto seicento pixel — che è il modo peggiore di rompersi,
+   * perché sembra la pagina.
+   *
+   * Quindi si chiede, e basta una testa: il file c'è o non c'è. È dello
+   * stesso indirizzo, quindi nessuno lo vieta. Se non c'è, al posto del
+   * riquadro va un pezzo che dice cosa manca e dove guardare — e se la
+   * domanda stessa non si potesse fare, non si tocca niente: meglio un
+   * riquadro vuoto che una pagina che si cancella un pezzo da sola. */
+  var telaio = document.querySelector(".telaio-dentro");
+  var invece = document.querySelector(".telaio-senza");
+  if (telaio && invece && window.fetch) {
+    fetch(telaio.getAttribute("src"), { method: "HEAD" })
+      .then(function (risposta) {
+        if (risposta.ok) return;
+        telaio.hidden = true;
+        invece.hidden = false;
+      })
+      .catch(function () {
+        /* Nessuna risposta: non si sa, e nel dubbio si lascia com'è. */
+      });
+  }
+
   /* ── L'ombra sotto la barra ───────────────────────────────────────────── */
   var cappello = document.getElementById("cappello");
   if (cappello) {

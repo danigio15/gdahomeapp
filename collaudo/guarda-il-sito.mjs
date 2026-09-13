@@ -160,6 +160,12 @@ async function apri(contesto, dove) {
   });
   pagina.on("pageerror", (errore) => lamenta(`[${dove}] errore: ${errore.message}`));
   pagina.on("requestfailed", (richiesta) => {
+    /* Una richiesta **annullata** non e' una richiesta che non arriva: e'
+     * quello che succede a tutto quello che era ancora per aria quando la
+     * pagina si chiude, e qui le pagine si chiudono appena hanno risposto.
+     * Contarla vorrebbe dire che il collaudo diventa rosso a seconda di quanto
+     * ci mette una risposta, che e' il modo migliore per non credergli piu'. */
+    if (richiesta.failure()?.errorText === "net::ERR_ABORTED") return;
     if (!perdonata(richiesta.url())) lamenta(`[${dove}] non arrivato: ${richiesta.url()}`);
   });
   pagina.on("response", (risposta) => {
@@ -427,6 +433,21 @@ await prova("i link portano dove dicono", async () => {
  * arriva non fa nessun rumore — lascia un buco, e la pagina intorno sta in
  * piedi lo stesso. Per questo si guardano una per una, e non basta che il tag
  * ci sia: si chiede al browser se ha davvero dei pixel dentro. */
+/* Il pezzo di ricambio deve restare zitto quando la plancia c'e'. E' la
+ * direzione che fa piu' danno: un riquadro che funziona e che sopra ci mette
+ * «la plancia non e' arrivata» dice una bugia a chi guarda, e nessuna prova
+ * sulla plancia se ne accorgerebbe — lei parte lo stesso, sotto. */
+await prova("quando la plancia c'e', nessuno dice che manca", async () => {
+  const detto = await pagina.evaluate(() => {
+    const invece = document.querySelector(".telaio-senza");
+    const telaio = document.querySelector(".telaio-dentro");
+    return { invece: invece ? !invece.hidden : null, telaioVia: telaio ? telaio.hidden : null };
+  });
+  if (detto.invece === null) throw new Error("il pezzo di ricambio non c'e' piu' nella pagina");
+  if (detto.invece) throw new Error("la pagina dice che la plancia manca, e invece sta girando");
+  if (detto.telaioVia) throw new Error("il riquadro e' nascosto, e la plancia dentro ci gira");
+});
+
 await prova("le schermate dell'app si vedono", async () => {
   const come = await pagina.evaluate(() =>
     [...document.querySelectorAll('img[src*="statico/schermate/"]')].map((una) => ({

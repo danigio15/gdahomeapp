@@ -393,11 +393,11 @@
               <span>Se no ogni comando farebbe il giro del mondo per arrivare a tre metri.</span>
             </li>
             <li>
-              <b>Il centralino non costa niente</b>
+              <b>Il centralino è di gdahome</b>
               <span
-                >Gira su Cloudflare, piano gratuito, indirizzo compreso. Chi preferisce il proprio
-                ha la stessa cosa in Node: sono intercambiabili, e la prova dal vivo passa identica
-                contro tutti e due.</span
+                >Gira su una macchina nostra, e non c'è niente da mettere in piedi né da pagare. Chi
+                preferisce il proprio se lo accende: è lo stesso codice, e la prova dal vivo passa
+                identica contro tutti e due.</span
               >
             </li>
           </ul>
@@ -484,6 +484,22 @@
               title="La plancia di DashboardModern, con dentro la casa demo"
               loading="lazy"
             ></iframe>
+            <!-- Se la plancia non fosse arrivata sul server, qui resterebbe un
+                 riquadro vuoto alto seicento pixel in mezzo alla pagina, e
+                 nessun errore da nessuna parte. Questo pezzo prende il suo
+                 posto: `sito.js` lo scopre e lo mette in mostra. Sta nella
+                 pagina e non nel codice perche' senza JavaScript il sito deve
+                 leggersi lo stesso — e nasconderlo e' compito di chi lo
+                 mostra, non il contrario. -->
+            <div class="telaio-senza" hidden>
+              <p><b>La plancia non è arrivata su questo server.</b></p>
+              <p>
+                Qui dentro gira DashboardModern per davvero, e in questa copia dei file manca. La si
+                vede comunque: è la stessa che sta nelle fotografie qui sopra, ed è quella che l'app
+                apre sul telefono.
+              </p>
+              <a class="bottone bottone-vuoto" href="#scarica">Vai a come si prende</a>
+            </div>
             <figcaption>
               Nell'app sta esattamente così: in un riquadro, servita dall'add-on. Qui il riquadro è
               una pagina invece che un telefono, e dietro invece della casa c'è una casa finta.
@@ -612,11 +628,12 @@
               </div>
               <h3>2 · Il centralino</h3>
               <p>
-                Solo per entrare da fuori casa. Si accende da GitHub con un bottone, gira su
-                Cloudflare nel piano gratuito e non costa niente. Ci vuole una cosa sola, una volta
-                sola: un gettone di Cloudflare.
+                Serve solo per entrare da fuori casa, e non passa da nessuno: gira su una macchina
+                di gdahome, la stessa di questo sito. Fa incontrare un telefono e la sua casa senza
+                capire niente di quello che si dicono — quello che passa è già cifrato quando
+                arriva, e lui non ha le chiavi.
               </p>
-              <span class="come">Accendilo da Actions →</span>
+              <span class="come">Com'è fatto →</span>
             </a>
 
             <a
@@ -635,8 +652,9 @@
               </div>
               <h3>3 · L'app, per Android</h3>
               <p>
-                Il pacchetto lo costruisce GitHub, quindi non serve installarsi l'SDK:
-                <b>Actions → «L'app da provare» → Run workflow</b>, e a fine corsa si scarica
+                Adesso è <b>in prova chiusa</b>: il pacchetto va a chi sta provandola. Sul
+                <b>Play Store per tutti fra due settimane</b>. Chi non aspetta se la costruisce da
+                sé — <b>Actions → «L'app da provare» → Run workflow</b>, e a fine corsa si scarica
                 <code>gdahome-android</code>.
               </p>
               <span class="come">Costruiscila da Actions →</span>
@@ -655,8 +673,8 @@
               </div>
               <h3>L'app, per iPhone</h3>
               <p>
-                Il codice è lo stesso — è Flutter, una app sola per tutti e due i telefoni. Quello
-                che manca è la firma e la distribuzione: sta nella fase 6, insieme ai negozi.
+                <b>Prossimamente.</b> Il codice è lo stesso — è Flutter, una app sola per tutti e
+                due i telefoni: quello che manca è la firma e la distribuzione, non l'app.
               </p>
             </div>
 

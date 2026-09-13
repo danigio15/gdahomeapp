@@ -785,6 +785,39 @@ section {
   border: 0;
   background: #f0f4f8;
 }
+/* `hidden` da solo qui non basta: la riga sopra mette un `display`, e una
+ * classe batte l'attributo. Senza questa, nascondere il riquadro lo lascia
+ * dov'e' — alto cinquecento pixel e vuoto, che e' proprio la cosa da cui si
+ * scappa. */
+.telaio-dentro[hidden] {
+  display: none;
+}
+
+/* Il pezzo che prende il posto della plancia quando la plancia non c'e'.
+ * Stessa altezza del riquadro, cosi' la pagina non salta, e l'aria di una
+ * cosa voluta invece che di una cosa rotta. */
+.telaio-senza {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  min-height: clamp(280px, 42vw, 420px);
+  padding: clamp(28px, 5vw, 52px);
+  background: var(--carta-alta);
+}
+.telaio-senza p {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--testo-lieve);
+}
+.telaio-senza b {
+  color: var(--testo);
+}
+.telaio-senza .bottone {
+  margin-top: 8px;
+}
 .telaio figcaption {
   padding: 14px 18px;
   border-top: 1px solid var(--bordo-tenue);
