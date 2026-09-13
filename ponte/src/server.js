@@ -11,7 +11,7 @@
  * filo con un segno gia' avuto. Nient'altro esiste su quella porta.
  */
 
-import { createReadStream, existsSync } from "node:fs";
+import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
 
@@ -354,7 +354,10 @@ export function costruisciLaConsole({
         risposta.end();
         return;
       }
-      servi(risposta, cartellaDellApp, via.slice("/app".length), { deposito: true });
+      servi(risposta, cartellaDellApp, via.slice("/app".length), {
+        deposito: true,
+        richiesta,
+      });
       return;
     }
 
@@ -1028,17 +1031,88 @@ async function unInvito(codice, ritorno, chiamata) {
  * ogni apertura su una rete di casa e' tempo perso a guardare una pagina
  * bianca. La pagina d'ingresso no — quella dice qual e' la versione, e va
  * chiesta ogni volta. */
-function servi(risposta, cartella, via, { deposito = false } = {}) {
+/* Quanto vale un file, per chi ce l'ha gia' in tasca.
+ *
+ * Grandezza piu' ora dell'ultima scrittura: se il file cambia, cambia questo.
+ * Il contenuto non si legge — sarebbe leggere tre megabyte per dire «e'
+ * identico a prima» — e non serve: i file dell'app li riscrive l'add-on
+ * quando si aggiorna, e riscriverli cambia l'ora.
+ *
+ * Torna `null` se il file non si lascia guardare. Allora si serve senza
+ * contrassegno, che vuol dire «richiedimelo sempre»: si perde un pezzo di
+ * traffico, non si perde un aggiornamento. */
+function laSchedaDi(dentro) {
+  try {
+    const { size, mtimeMs } = statSync(dentro);
+    return {
+      contrassegno: `"${size.toString(36)}-${Math.trunc(mtimeMs).toString(36)}"`,
+      quanto: size,
+    };
+  } catch (_errore) {
+    return { contrassegno: null, quanto: null };
+  }
+}
+
+/* Se chi chiede ha gia' questa versione del file.
+ *
+ * Il browser rimanda indietro il contrassegno che gli abbiamo dato. Puo'
+ * rimandarne piu' d'uno, e puo' metterci davanti `W/`: si guardano tutti,
+ * perche' un confronto troppo stretto qui non da' errore — da' un file
+ * riscaricato per niente ogni volta, che e' il tipo di guaio che non si
+ * vede. */
+function loHaGia(richiesta, contrassegno) {
+  const detto = richiesta?.headers?.["if-none-match"];
+  if (!detto || !contrassegno) return false;
+  return String(detto)
+    .split(",")
+    .some((uno) => uno.trim() === contrassegno || uno.trim() === `W/${contrassegno}`);
+}
+
+/* I file di una cartella, serviti.
+ *
+ * `deposito` vuol dire «il browser puo' tenerseli», e non e' un lusso:
+ * `main.dart.js` sono piu' di tre megabyte, e riscaricarli a ogni apertura,
+ * da fuori casa, si sente tutto.
+ *
+ * Ma tenerseli **senza chiedere** no. In Flutter quel file non ha l'impronta
+ * nel nome — si chiama `main.dart.js` e basta — e la pagina lo chiama sempre
+ * cosi'. Un browser che se lo teneva un'ora si teneva **l'app di prima** per
+ * un'ora, con l'add-on gia' aggiornato: e dall'altra parte l'unica cosa
+ * visibile era «ho aggiornato e non e' cambiato niente». Non bastava tenere
+ * fresca la pagina: la pagina diceva la versione nuova e caricava il
+ * programma vecchio. E non e' solo il programma: il carattere delle icone
+ * viene sfoltito a ogni costruzione, quindi uno vecchio vuol dire icone
+ * sbagliate.
+ *
+ * Allora si tengono, ma si richiedono sempre. `no-cache` non vuol dire «non
+ * tenerlo»: vuol dire «prima di usarlo chiedimi se va ancora bene». Se va
+ * bene si risponde 304 senza corpo — duecento byte — e il browser usa il suo;
+ * se e' cambiato arriva quello nuovo. Nessuno resta indietro, e non si
+ * riscarica niente per niente. */
+function servi(risposta, cartella, via, { deposito = false, richiesta = null } = {}) {
   const chiesto = via === "/" || via === "" ? "/index.html" : via;
   const dentro = normalize(join(cartella, chiesto));
   if (!dentro.startsWith(normalize(cartella)) || !existsSync(dentro)) {
     male(risposta, 404, "qui non c'e' niente");
     return;
   }
-  const laPagina = chiesto === "/index.html";
+  const { contrassegno, quanto } = deposito
+    ? laSchedaDi(dentro)
+    : { contrassegno: null, quanto: null };
+  if (loHaGia(richiesta, contrassegno)) {
+    risposta.writeHead(304, { etag: contrassegno, "cache-control": "no-cache" });
+    risposta.end();
+    return;
+  }
   risposta.writeHead(200, {
     "content-type": TIPI[extname(dentro)] || "application/octet-stream",
-    "cache-control": deposito && !laPagina ? "public, max-age=3600" : "no-store",
+    "cache-control": deposito ? "no-cache" : "no-store",
+    ...(contrassegno ? { etag: contrassegno } : {}),
+    /* Quanto pesa, quando lo sappiamo. Senza, la risposta esce a pezzi e chi
+     * la riceve non sa quanti ne mancano: il browser non puo' mostrare quanto
+     * resta, e chi mette da parte le risposte ci pensa due volte prima di
+     * tenersela. */
+    ...(quanto === null ? {} : { "content-length": quanto }),
   });
   createReadStream(dentro).pipe(risposta);
 }

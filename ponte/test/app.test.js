@@ -83,14 +83,17 @@ test("la pagina si serve, e i file si possono tenere; la pagina no", async () =>
     assert.equal(pagina.status, 200);
     assert.match(pagina.headers.get("content-type"), /^text\/html/);
     assert.match(await pagina.text(), /gdahome/);
-    /* La pagina si chiede ogni volta: e' quella che dice qual e' la versione,
-     * e una tenuta in tasca vuol dire un aggiornamento che non si vede. */
-    assert.equal(pagina.headers.get("cache-control"), "no-store");
+    /* Niente si usa senza chiedere prima: `no-cache` vuol dire «tienilo, ma
+     * prima di usarlo chiedimi se va ancora bene». */
+    assert.equal(pagina.headers.get("cache-control"), "no-cache");
 
     const programma = await c.chiedi("/app/main.dart.js");
     assert.equal(programma.status, 200);
     assert.match(programma.headers.get("content-type"), /^text\/javascript/);
-    assert.equal(programma.headers.get("cache-control"), "public, max-age=3600");
+    /* Il programma **soprattutto**: non ha l'impronta nel nome, e uno tenuto
+     * in tasca vuol dire l'app di prima con l'add-on nuovo. */
+    assert.equal(programma.headers.get("cache-control"), "no-cache");
+    assert.ok(programma.headers.get("etag"), "senza contrassegno non si puo' richiedere");
 
     const tela = await c.chiedi("/app/canvaskit/canvaskit.wasm");
     assert.equal(tela.status, 200);
@@ -272,4 +275,86 @@ test("la diagnostica del traffico sta dietro la stessa chiave", () => {
   );
   /* E i dati non si disegnano nemmeno, dove la scheda non si vede. */
   assert.match(console_, /if \(risponde\) disegnaIChiacchieroni\(stato\.chiacchieroni\);/);
+});
+
+test("chi ha gia' un file si sente dire di tenerselo, e non lo riscarica", async () => {
+  const cartella = appFinta();
+  const c = await unaConsole({ cartellaDellApp: cartella });
+  try {
+    const prima = await c.chiedi("/app/main.dart.js");
+    assert.equal(prima.status, 200);
+    const contrassegno = prima.headers.get("etag");
+    assert.ok(contrassegno);
+    await prima.text();
+
+    const ancora = await c.chiedi("/app/main.dart.js", {
+      headers: { "if-none-match": contrassegno },
+    });
+    assert.equal(ancora.status, 304, "lo ha gia': 304");
+    assert.equal(await ancora.text(), "", "e senza corpo, che e' tutto il risparmio");
+    assert.equal(ancora.headers.get("etag"), contrassegno);
+  } finally {
+    await c.spegni();
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("ma se l'add-on si aggiorna, quello che aveva non vale piu'", async () => {
+  const cartella = appFinta();
+  const c = await unaConsole({ cartellaDellApp: cartella });
+  try {
+    const prima = await c.chiedi("/app/main.dart.js");
+    const vecchio = prima.headers.get("etag");
+    await prima.text();
+
+    /* L'app nuova al posto di quella di prima: e' quello che fa un
+     * aggiornamento dell'add-on. */
+    writeFileSync(join(cartella, "main.dart.js"), "console.log('la barra si apre');");
+
+    const dopo = await c.chiedi("/app/main.dart.js", {
+      headers: { "if-none-match": vecchio },
+    });
+    assert.equal(dopo.status, 200, "e' cambiato: niente 304");
+    assert.notEqual(dopo.headers.get("etag"), vecchio);
+    assert.match(await dopo.text(), /la barra si apre/);
+  } finally {
+    await c.spegni();
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("il contrassegno vale anche rimandato indietro come debole", async () => {
+  const cartella = appFinta();
+  const c = await unaConsole({ cartellaDellApp: cartella });
+  try {
+    const prima = await c.chiedi("/app/main.dart.js");
+    const contrassegno = prima.headers.get("etag");
+    await prima.text();
+
+    /* Qualcuno in mezzo — un proxy — puo' rimandarlo indietro cosi', o
+     * insieme a un altro. Un confronto troppo stretto non darebbe errore:
+     * darebbe tre megabyte riscaricati ogni volta, senza dirlo a nessuno. */
+    const debole = await c.chiedi("/app/main.dart.js", {
+      headers: { "if-none-match": `"altro", W/${contrassegno}` },
+    });
+    assert.equal(debole.status, 304);
+  } finally {
+    await c.spegni();
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("la console invece non si tiene affatto: e' piccola e cambia con l'add-on", async () => {
+  const cartella = appFinta();
+  const c = await unaConsole({ cartellaDellApp: cartella });
+  try {
+    const pagina = await c.chiedi("/");
+    assert.equal(pagina.status, 200);
+    assert.equal(pagina.headers.get("cache-control"), "no-store");
+    assert.equal(pagina.headers.get("etag"), null);
+    await pagina.text();
+  } finally {
+    await c.spegni();
+    rmSync(cartella, { recursive: true, force: true });
+  }
 });
