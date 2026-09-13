@@ -37,10 +37,10 @@
           <a href="#come">Come funziona</a>
           <a href="#plancia">La plancia</a>
           <a href="#funzioni">Cosa fa</a>
-          <a href="#scarica">Scarica</a>
+          <a href="#scarica">Dove sta</a>
         </nav>
         <div class="attrezzi">
-          <a class="bottone bottone-pieno" href="#scarica">Scarica</a>
+          <a class="bottone bottone-pieno" href="#scarica">Installa l'add-on</a>
         </div>
       </div>
     </header>
@@ -62,8 +62,8 @@
               scrivere un'automazione, creare un aiutante.
             </p>
             <div class="bottoni">
-              <a class="bottone bottone-ambra" href="#plancia">Provala qui sotto</a>
-              <a class="bottone bottone-vuoto" href="#scarica">Scarica l'app</a>
+              <a class="bottone bottone-ambra" href="#plancia">Guarda la plancia</a>
+              <a class="bottone bottone-vuoto" href="#scarica">Installa l'add-on</a>
             </div>
             <p class="sottobottoni">
               Ci si abbina inquadrando un quadretto: nessun indirizzo da battere, nessuna
@@ -586,12 +586,13 @@
       <!-- ── Scarica ────────────────────────────────────────────────────── -->
       <section id="scarica">
         <div class="limite">
-          <p class="occhiello">Provala</p>
-          <h2>Tre pezzi, in quest'ordine.</h2>
+          <p class="occhiello">Dove sta</p>
+          <h2>L'add-on c'è. L'app sta arrivando.</h2>
           <p class="guida">
-            Prima il ponte, che è l'add-on dentro Home Assistant: senza, l'app non ha niente a cui
-            bussare. Poi il centralino, che serve solo per entrare da fuori casa. Poi l'app. Se vuoi
-            provarla sul divano, il secondo puoi saltarlo.
+            Dentro Home Assistant gdahome si installa oggi, dal negozio degli add-on. L'app invece è
+            <b>in prova chiusa</b>, e va a chi la sta provando: sul Play Store per tutti fra due
+            settimane, e su iPhone a seguire. Quello che farà lo si vede qui sopra — la plancia in
+            questa pagina è la sua, e ci si può girare dentro.
           </p>
 
           <div class="scarichi">
@@ -614,7 +615,7 @@
 
             <a
               class="scarico appare"
-              href="https://github.com/danigio15/gdahomeapp/actions/workflows/centralino.yml"
+              href="https://github.com/danigio15/gdahomeapp/blob/main/centralino/README.md"
               rel="noopener"
             >
               <div class="segno">
@@ -626,7 +627,7 @@
                   loading="lazy"
                 />
               </div>
-              <h3>2 · Il centralino</h3>
+              <h3>Il centralino</h3>
               <p>
                 Serve solo per entrare da fuori casa, e non passa da nessuno: gira su una macchina
                 di gdahome, la stessa di questo sito. Fa incontrare un telefono e la sua casa senza
@@ -636,11 +637,8 @@
               <span class="come">Com'è fatto →</span>
             </a>
 
-            <a
-              class="scarico appare"
-              href="https://github.com/danigio15/gdahomeapp/actions/workflows/app.yml"
-              rel="noopener"
-            >
+            <div class="scarico spento appare">
+              <span class="fra-poco">in prova</span>
               <div class="segno">
                 <img
                   src="statico/oggetti/widget.svg"
@@ -650,18 +648,15 @@
                   loading="lazy"
                 />
               </div>
-              <h3>3 · L'app, per Android</h3>
+              <h3>2 · L'app, per Android</h3>
               <p>
-                Adesso è <b>in prova chiusa</b>: il pacchetto va a chi sta provandola. Sul
-                <b>Play Store per tutti fra due settimane</b>. Chi non aspetta se la costruisce da
-                sé — <b>Actions → «L'app da provare» → Run workflow</b>, e a fine corsa si scarica
-                <code>gdahome-android</code>.
+                <b>In prova chiusa</b>, e va a chi la sta provando. Sul
+                <b>Play Store per tutti fra due settimane</b>.
               </p>
-              <span class="come">Costruiscila da Actions →</span>
-            </a>
+            </div>
 
             <div class="scarico spento appare">
-              <span class="fra-poco">fra poco</span>
+              <span class="fra-poco">prossimamente</span>
               <div class="segno">
                 <img
                   src="statico/oggetti/macchine.svg"
@@ -671,7 +666,7 @@
                   loading="lazy"
                 />
               </div>
-              <h3>L'app, per iPhone</h3>
+              <h3>3 · L'app, per iPhone</h3>
               <p>
                 <b>Prossimamente.</b> Il codice è lo stesso — è Flutter, una app sola per tutti e
                 due i telefoni: quello che manca è la firma e la distribuzione, non l'app.
@@ -695,7 +690,8 @@
               <h3>La repository</h3>
               <p>
                 Il codice per intero, ed è <b>pubblica</b>: il ponte, il centralino, l'app, gli
-                strumenti e le 521 prove. <b>Code → Download ZIP</b>, o un <code>git clone</code>.
+                strumenti, e le prove che ci girano sopra a ogni modifica.
+                <b>Code → Download ZIP</b>, o un <code>git clone</code>.
               </p>
               <span class="come">Vai alla repository →</span>
             </a>
@@ -799,7 +795,7 @@
         <nav aria-label="Link utili">
           <a href="#come">Come funziona</a>
           <a href="#plancia">La plancia</a>
-          <a href="#scarica">Scarica</a>
+          <a href="#scarica">Dove sta</a>
           <a href="privacy.html">Privacy</a>
           <a href="https://github.com/danigio15/gdahomeapp" rel="noopener">GitHub</a>
         </nav>
