@@ -62,6 +62,26 @@ le chiede come immagini su `/api/camera_proxy/`, e un sito statico non ha un
 Home Assistant che gliele dia. In casa quelle due richieste passano dal ponte e
 tornano col fotogramma.
 
+## Una luce sola, e il prodotto in faccia
+
+Due scelte che valgono più di tutto il resto, e che si possono disfare per
+distrazione.
+
+**Niente tema scuro.** C'era, e seguiva quello del sistema. Chi apriva
+gdahome.org con un telefono in tema scuro si trovava una pagina quasi nera —
+cioè una pagina diversa da quella che gli era stata mostrata — e le schermate
+dell'app, che sono chiare, ci galleggiavano sopra come ritagli. Una copertina
+si presenta sempre allo stesso modo. Dentro l'app il chiaro e scuro c'è, e lì
+ha senso: quella si guarda di notte, in corridoio, con una mano sola.
+
+**Le schermate vere, in cima.** Sono `docs/immagini/`, le stesse del README e
+del negozio: fotografie dell'app, non dei mockup disegnati. Prima la copertina
+raccontava l'app a parole e chiedeva di fidarsi; adesso la fa vedere nella
+prima schermata. La fotografia di copertina è quella delle **luci** e non
+quella della plancia: la seconda mostra una casa non ancora configurata, col
+riquadro «La dashboard è quasi pronta», che è la schermata giusta per il
+manuale e la peggiore possibile per una copertina.
+
 ## Come si guarda
 
 La plancia non sta nella repository due volte: `sito/dashboardmodern_static/`
@@ -84,8 +104,8 @@ carica i moduli della plancia.
 | `stile.css`                 | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni, il telaio del riquadro |
 | `privacy.css`               | l'unica cosa che nell'informativa è diversa: una colonna stretta, da leggere                                       |
 | `casa-in-pagina.js`         | la Home Assistant finta che fa girare la plancia                                                                   |
-| `sito.js`                   | chiaro e scuro, l'ombra sotto la barra, le schede che compaiono — lo caricano tutte e due le pagine                |
-| `statico/`                  | roba portata da altrove — **non si tocca a mano**, è salvata nella repository                                      |
+| `sito.js`                   | l'ombra sotto la barra, le schede che compaiono — lo caricano tutte e due le pagine                                |
+| `statico/`                  | marchio, icone, caratteri, casa demo e **le schermate dell'app** — **non si tocca a mano**, è salvata nella repository |
 | `dashboardmodern_static/`   | la plancia vera — **non si tocca a mano**, ed è fuori da git                                                       |
 | `gdahome.png`               | il marchio dell'informativa                                                                                        |
 | `robots.txt`, `sitemap.xml` | si può guardare tutto, e le pagine sono due                                                                        |
@@ -180,8 +200,12 @@ ordine di quanto fa male sbagliarlo:
 3. **niente errori** in console e nessun file che non arriva — le due
    telecamere sono l'eccezione, ed è scritta nel collaudo;
 4. **niente scorrimento di lato** a nessuna larghezza;
-5. **i link portano dove dicono**, e il chiaro e scuro si accende;
-6. **l'informativa è vestita come il sito**: i caratteri giusti, il fondo
+5. **i link portano dove dicono**;
+6. **le schermate dell'app si vedono** — non basta che il tag ci sia: si chiede
+   al browser se dentro ci sono davvero dei pixel, perché un'immagine che non
+   arriva lascia un buco e non fa nessun rumore;
+7. **la copertina resta chiara** anche a chi preferisce il tema scuro;
+8. **l'informativa è vestita come il sito**: i caratteri giusti, il fondo
    giusto, una colonna da leggere e i collegamenti che si distinguono dal
    testo. Che il testo sia quello giusto lo tiene una prova del centralino;
    questa tiene l'altra metà, che nessuna prova sul testo vedrebbe. È già

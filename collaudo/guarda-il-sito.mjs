@@ -422,11 +422,47 @@ await prova("i link portano dove dicono", async () => {
   );
 });
 
-await prova("il tema scuro si accende", async () => {
-  await pagina.locator("#cambia-tema").click();
-  await pagina.waitForTimeout(300);
-  const tema = await pagina.evaluate(() => document.documentElement.getAttribute("data-tema"));
-  if (!tema) throw new Error("nessun tema messo");
+/* Le schermate dell'app sono il pezzo che regge la copertina: senza di loro
+ * chi arriva legge di un'app senza averla mai vista. E un'immagine che non
+ * arriva non fa nessun rumore — lascia un buco, e la pagina intorno sta in
+ * piedi lo stesso. Per questo si guardano una per una, e non basta che il tag
+ * ci sia: si chiede al browser se ha davvero dei pixel dentro. */
+await prova("le schermate dell'app si vedono", async () => {
+  const come = await pagina.evaluate(() =>
+    [...document.querySelectorAll('img[src*="statico/schermate/"]')].map((una) => ({
+      quale: una.getAttribute("src"),
+      arrivata: una.complete && una.naturalWidth > 0,
+      larga: una.naturalWidth,
+    })),
+  );
+  if (come.length < 4)
+    throw new Error(`mi aspettavo almeno 4 schermate, ne ho trovate ${come.length}`);
+  const rotte = come.filter((una) => !una.arrivata);
+  if (rotte.length) throw new Error(`non arrivano: ${rotte.map((una) => una.quale).join(", ")}`);
+});
+
+/* Una luce sola: il sito non ha piu' un tema scuro, e non deve tornare ad
+ * averne uno per sbaglio — chi lo aprisse con un telefono in tema scuro si
+ * ritroverebbe la copertina quasi nera, cioe' una pagina diversa da quella
+ * che gli e' stata mostrata, e le schermate dell'app ci galleggerebbero
+ * sopra come ritagli. Qui si guarda col browser che dice di preferire il
+ * scuro: il fondo deve restare chiaro lo stesso. */
+await prova("anche a chi preferisce il scuro, la copertina resta chiara", async () => {
+  const alBuio = await browser.newContext({
+    viewport: { width: 1280, height: 900 },
+    colorScheme: "dark",
+  });
+  try {
+    const suaPagina = await alBuio.newPage();
+    await suaPagina.goto(INDIRIZZO, { waitUntil: "domcontentloaded" });
+    const fondo = await suaPagina.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    const [r, g, b] = fondo.match(/\d+/g).map(Number);
+    /* Chiaro vuol dire chiaro: la media dei tre canali sopra la meta'. Il
+     * fondo del sito e' #f0f4f8, cioe' 244; quello scuro di prima era 17. */
+    if ((r + g + b) / 3 < 128) throw new Error(`il fondo e' ${fondo}: e' tornato scuro`);
+  } finally {
+    await alBuio.close();
+  }
 });
 
 await pagina.locator("#plancia").scrollIntoViewIfNeeded();

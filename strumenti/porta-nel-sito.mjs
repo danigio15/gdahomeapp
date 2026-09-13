@@ -210,6 +210,25 @@ for (const nome of readdirSync(oggetti).sort()) {
 if (icone === 0) fermati("Non ho trovato nessuna icona da portare.");
 conta("le icone", icone, iconeByte);
 
+/* Le schermate dell'app.
+ *
+ * Sono le stesse che stanno nel README e sul negozio: fotografie vere di
+ * quello che si vede sul telefono, non dei mockup. Una copertina che racconta
+ * un'app senza farla vedere chiede a chi legge di fidarsi; queste tolgono di
+ * mezzo la domanda. */
+const schermate = join(RADICE, "docs", "immagini");
+if (!existsSync(schermate)) fermati(`Non trovo le schermate in ${schermate}.`);
+let quanteSchermate = 0;
+let schermateByte = 0;
+for (const nome of readdirSync(schermate).sort()) {
+  if (!nome.endsWith(".png")) continue;
+  cpSync(join(schermate, nome), join(STATICO, "schermate", nome));
+  quanteSchermate += 1;
+  schermateByte += statSync(join(STATICO, "schermate", nome)).size;
+}
+if (quanteSchermate === 0) fermati("Non ho trovato nessuna schermata da portare.");
+conta("le schermate", quanteSchermate, schermateByte);
+
 /* I caratteri. */
 const font = join(RADICE, "ponte", "plancia", "legacy", "vendor", "fonts");
 if (!existsSync(font)) fermati(`Non trovo i caratteri in ${font}.`);
