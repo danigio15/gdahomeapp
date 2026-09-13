@@ -106163,7 +106163,7 @@ if(o==null)o="nessun centralino"
 p=A.N(a).ok.Q
 if(p==null)p=r
 else{s=q.rx
-p=p.yo((s==null?q.k3:s).fw(0.7),11)}return new A.bH(new A.ar(0,24,0,0),A.b3("gdahome 34-066903a \xb7 "+o,r,r,r,r,p,B.bH,r),r)}}
+p=p.yo((s==null?q.k3:s).fw(0.7),11)}return new A.bH(new A.ar(0,24,0,0),A.b3("gdahome 35-ac39835 \xb7 "+o,r,r,r,r,p,B.bH,r),r)}}
 A.F2.prototype={
 ai(){return new A.LI(new A.bt(null,t.Pq),new A.bt(null,t.dS),B.d4)}}
 A.LI.prototype={
@@ -106191,7 +106191,7 @@ case 1:return A.o(q,r)}})
 return A.p($async$xA,r)},
 ais(){var s,r,q,p,o,n,m=null,l=this.a.c,k=t.N
 k=A.w(k,k)
-k.m(0,"app","34-066903a")
+k.m(0,"app","35-ac39835")
 k.m(0,"sistema","web")
 s=l.Q
 s=s==null?m:s.b
