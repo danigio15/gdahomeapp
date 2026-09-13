@@ -47,6 +47,10 @@ test("la prima plancia c'e' sempre, e si chiama come il prodotto", () => {
         istanza: "gdahome",
         primaria: true,
         creata_il: 0,
+        /* Vuoto: la vedono tutti. E' come nasce una plancia, ed e' come si
+         * ritrovano quelle di chi ha l'add-on da prima. */
+        utenti: [],
+        solo_admin: false,
       },
     ]);
     /* «gdahome» e non «gdahome-primary»: la prima c'e' sempre, e il suo nome
@@ -71,6 +75,8 @@ test("una plancia in piu' ha un cassetto suo, e un'istanza sua", () => {
       istanza: "gdahome-casa-al-mare",
       primaria: false,
       creata_il: 7000,
+      utenti: [],
+      solo_admin: false,
     });
     /* La prima resta la prima, e resta in cima. */
     assert.deepEqual(

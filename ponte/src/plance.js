@@ -38,6 +38,78 @@ import { NOME } from "./marchio.js";
 /* Come si chiama una plancia: abbastanza per un nome, non per una frase. */
 export const TITOLO_MASSIMO = 40;
 
+/* Quanti utenti si possono elencare per una plancia.
+ *
+ * Non e' un limite di Home Assistant: e' che una lista di cinquanta spunte non
+ * si legge, e una casa con cinquanta utenti non sta scegliendo chi vede una
+ * plancia. */
+export const UTENTI_AL_MASSIMO = 50;
+
+/* Chi la vede: l'elenco degli utenti di Home Assistant abilitati.
+ *
+ * **Vuoto vuol dire tutti**, e non «nessuno». E' la scelta che tiene in piedi
+ * le case di chi c'e' gia': nessuna plancia ha questo campo prima di oggi, e
+ * dopo l'aggiornamento devono continuare a vedersi come ieri. Ed e' anche
+ * quella giusta per una casa nuova: chi non ha mai aperto questa impostazione
+ * non ha detto «solo io», ha detto niente.
+ *
+ * Questo elenco lo sa **solo** il posto dove la plancia si apre — l'add-on.
+ * Non e' un permesso di Home Assistant e non ne fa le veci: Home Assistant
+ * continua a decidere chi entra in casa, e questo decide quale plancia gli si
+ * apre quando e' dentro. */
+export function utentiPuliti(dentro) {
+  const elenco = Array.isArray(dentro) ? dentro : [];
+  const visti = new Set();
+  const buoni = [];
+  for (const uno of elenco) {
+    const chi = String(uno || "").trim();
+    /* Gli identificativi di Home Assistant sono trentadue cifre esadecimali.
+     * Tenere solo quella forma vuol dire che nessuno ci scrive dentro una
+     * frase, e che un elenco arrivato storto non diventa un elenco di
+     * fantasmi che non corrispondono a nessuno. */
+    if (!/^[a-f0-9]{32}$/i.test(chi) || visti.has(chi)) continue;
+    visti.add(chi);
+    buoni.push(chi);
+    if (buoni.length >= UTENTI_AL_MASSIMO) break;
+  }
+  return buoni;
+}
+
+/* Se questa plancia si apre a questo utente.
+ *
+ * `chi` e' l'identificativo che l'ingress di Home Assistant scrive in testa a
+ * ogni richiesta (`X-Remote-User-Id`). Quando la plancia non ha un elenco, si
+ * apre a tutti e non importa chi bussa; quando ce l'ha e non si sa chi bussa,
+ * **non** si apre: chi ha scritto un elenco ha chiesto una restrizione, e una
+ * restrizione che si spegne da sola quando non si sa niente non e' una
+ * restrizione.
+ *
+ * **Le due restrizioni si sommano, non si scelgono.** Una plancia puo' avere
+ * un elenco di utenti e chiedere che siano amministratori: chi la apre deve
+ * passare le due cose. Sono due domande diverse — «e' lui?» e «amministra?» —
+ * e chi le mette entrambe intende entrambe.
+ *
+ * `amministra` e' il terzo stato che serve per forza: `true`, `false`, e
+ * `null` per «non lo so ancora». Chi non lo sa e trova una plancia riservata a
+ * chi amministra non fa passare — stessa regola di sopra. */
+export function laVede(quale, chi, amministra = null) {
+  const elenco = utentiPuliti(quale?.utenti);
+  const chiBussa = String(chi || "").trim();
+  if (elenco.length > 0 && !elenco.includes(chiBussa)) return false;
+  if (quale?.solo_admin && amministra !== true) return false;
+  return true;
+}
+
+/* Se a questo utente si apre almeno una plancia di questa casa.
+ *
+ * Serve al WebSocket della plancia, che e' uno per tutte e non sa quale pagina
+ * l'ha aperto: chi non vede nessuna plancia non ha niente da chiedere. */
+export function vedeQualcosa(elenco, chi, amministra = null) {
+  const plance = Array.isArray(elenco) ? elenco : [];
+  if (plance.length === 0) return true;
+  return plance.some((una) => laVede(una, chi, amministra));
+}
+
 /* Quante se ne possono tenere.
  *
  * Non e' un limite tecnico — i profili starebbero in mille — e' il selettore:
@@ -165,6 +237,8 @@ export class Plance {
         profilo,
         titolo: titoloPulito(una?.titolo, profilo),
         creata_il: Number(una?.creata_il) || 0,
+        utenti: utentiPuliti(una?.utenti),
+        solo_admin: una?.solo_admin === true,
       });
     }
     /* La prima plancia che si chiama ancora come il prodotto di prima prende
@@ -179,6 +253,8 @@ export class Plance {
         profilo: PROFILO_PRINCIPALE,
         titolo: TITOLO_DELLA_PRIMA,
         creata_il: 0,
+        utenti: [],
+        solo_admin: false,
       });
     }
     buone.sort((una, altra) =>
@@ -209,6 +285,14 @@ export class Plance {
       istanza: una.profilo === PROFILO_PRINCIPALE ? NOME : `${NOME}-${una.profilo}`,
       primaria: una.profilo === PROFILO_PRINCIPALE,
       creata_il: una.creata_il,
+      /* Chi la vede. Una copia, non l'array del disco: chi legge l'elenco non
+       * deve poter cambiare quello che c'e' scritto scrivendoci dentro. */
+      utenti: utentiPuliti(una.utenti),
+      /* Se la vedono solo gli amministratori della casa. Questa la fa
+       * rispettare anche Home Assistant da se' — la voce fra le «Plance»
+       * nasce con `require_admin` — e la fa rispettare l'add-on, che e' la
+       * parte che non si aggira aprendo l'indirizzo a mano. */
+      solo_admin: una.solo_admin === true,
     }));
   }
 
@@ -240,7 +324,13 @@ export class Plance {
     const prese = new Set(this.archivio.dati.plance.map((una) => una.profilo));
     const nome = titoloPulito(titolo, "Plancia");
     const profilo = nomeDelCassetto(nome, prese);
-    const nuova = { profilo, titolo: nome, creata_il: this.adesso() };
+    const nuova = {
+      profilo,
+      titolo: nome,
+      creata_il: this.adesso(),
+      utenti: [],
+      solo_admin: false,
+    };
     this.archivio.dati.plance.push(nuova);
     this.archivio.salva();
     this.registro.info(`una plancia in piu': «${nome}»`);
@@ -256,6 +346,72 @@ export class Plance {
     if (nome === una.titolo) return this.quale(una.profilo);
     una.titolo = nome;
     this.archivio.salva();
+    this._cambiato();
+    return this.quale(una.profilo);
+  }
+
+  /* Chi la vede: l'elenco degli utenti di Home Assistant abilitati.
+   *
+   * Un elenco vuoto la riapre a tutti, ed e' il modo di annullare la scelta:
+   * non serve un secondo comando per dire «come prima».
+   *
+   * **La prima plancia si restringe come le altre.** Nella dashboard era
+   * un'opzione dell'istanza, e valeva anche per la prima; qui non c'e' motivo
+   * di fare un'eccezione — chi tiene una plancia per se' e una per chi abita
+   * con lui vuole restringere proprio quella di sempre.
+   *
+   * Non ci si chiude fuori per sbaglio: questa scelta si cambia dalla pagina
+   * di gdahome, che sta dietro l'ingress e la aprono gli amministratori della
+   * casa, non dalla plancia che si e' appena nascosta. */
+  chiLaVede(profilo, utenti) {
+    const una = this.archivio.dati.plance.find((quella) => quella.profilo === String(profilo));
+    if (!una) throw new QuellaPlanciaNo("quella plancia non c'e'");
+    const voluti = utentiPuliti(utenti);
+    if (JSON.stringify(voluti) === JSON.stringify(utentiPuliti(una.utenti))) {
+      return this.quale(una.profilo);
+    }
+    una.utenti = voluti;
+    this.archivio.salva();
+    this.registro.info(
+      voluti.length === 0
+        ? `la plancia «${una.titolo}» la vedono tutti`
+        : `la plancia «${una.titolo}» la vedono ${voluti.length} utenti`,
+    );
+    /* Le voci fra le «Plance» di Home Assistant vanno riscritte: dentro la
+     * vista c'e' l'elenco, ed e' quello che fa dire alla cartina «questa non
+     * e' abilitata per te» senza chiedere niente a nessuno. */
+    this._cambiato();
+    return this.quale(una.profilo);
+  }
+
+  /* Se la vedono solo gli amministratori della casa.
+   *
+   * E' l'altra meta' di «chi la vede», e serve un caso diverso: non «questi
+   * tre», ma «chi ha le chiavi di casa» — chiunque sia, anche chi arrivera'
+   * domani. Un elenco di nomi va rifatto ogni volta che cambia qualcosa; il
+   * gruppo degli amministratori si aggiorna da se'.
+   *
+   * Home Assistant sa farlo da se': una Plancia con `require_admin` non
+   * compare nella barra laterale di chi non amministra, e la sua
+   * configurazione non gliela da'. Ma l'indirizzo dell'ingress si puo' aprire
+   * anche senza passare da quella voce, e allora il controllo lo rifa'
+   * l'add-on. Due volte la stessa cosa, in due posti: quello che HA blocca non
+   * arriva nemmeno, e quello che gli gira intorno lo blocca il secondo. */
+  soloChiAmministra(profilo, si) {
+    const una = this.archivio.dati.plance.find((quella) => quella.profilo === String(profilo));
+    if (!una) throw new QuellaPlanciaNo("quella plancia non c'e'");
+    const voluto = si === true;
+    if (voluto === (una.solo_admin === true)) return this.quale(una.profilo);
+    una.solo_admin = voluto;
+    this.archivio.salva();
+    this.registro.info(
+      voluto
+        ? `la plancia «${una.titolo}» la vedono solo gli amministratori`
+        : `la plancia «${una.titolo}» non chiede piu' di amministrare`,
+    );
+    /* La voce fra le «Plance» di Home Assistant va riscritta: `require_admin`
+     * sta li', e senza questo avviso resterebbe come prima fino al prossimo
+     * riavvio dell'add-on. */
     this._cambiato();
     return this.quale(una.profilo);
   }

@@ -46,6 +46,21 @@
     if (testo) testo.textContent = corto;
   }
 
+  /* Il riquadro tondo col disegno, in testa a una riga di elenco. Il disegno
+   * sta nel foglio dei simboli in cima alla pagina: niente si scarica. */
+  function unaFaccia(quale, come) {
+    var faccia = vediPagina.createElement("span");
+    faccia.className = "faccia" + (come ? " " + come : "");
+    var disegno = vediPagina.createElementNS("http://www.w3.org/2000/svg", "svg");
+    disegno.setAttribute("class", "ic");
+    disegno.setAttribute("aria-hidden", "true");
+    var uso = vediPagina.createElementNS("http://www.w3.org/2000/svg", "use");
+    uso.setAttribute("href", "#" + quale);
+    disegno.appendChild(uso);
+    faccia.appendChild(disegno);
+    return faccia;
+  }
+
   function avvisa(testo) {
     var avviso = trova("avviso");
     avviso.textContent = testo || "";
@@ -263,10 +278,12 @@
     dispositivi.forEach(function (uno) {
       var riga = vediPagina.createElement("li");
 
-      var pallino = vediPagina.createElement("span");
-      pallino.className = "pallino" + (uno.collegati ? " acceso" : "");
-      pallino.title = uno.collegati ? "collegato adesso" : "non collegato";
-      riga.appendChild(pallino);
+      /* La faccia della riga: un riquadro tondo col disegno di un telefono,
+       * verde quando quel telefono e' collegato adesso. Prima c'erano un
+       * pallino e una parola nel `title`, che si legge solo col mouse fermo
+       * sopra: sul telefono, cioe' dove si guarda questa pagina, non c'era
+       * nessun modo di saperlo. */
+      riga.appendChild(unaFaccia("ic-telefono", uno.collegati ? "acceso" : ""));
 
       var nome = vediPagina.createElement("div");
       nome.className = "nome";
@@ -275,7 +292,10 @@
        * arriva dalla porta esposta. */
       forte.textContent = uno.nome;
       var sotto = vediPagina.createElement("span");
-      sotto.textContent = uno.sistema + " · visto " + dataLeggibile(uno.vistoIl);
+      sotto.textContent =
+        uno.sistema +
+        " · " +
+        (uno.collegati ? "collegato adesso" : "visto " + dataLeggibile(uno.vistoIl));
       nome.appendChild(forte);
       nome.appendChild(sotto);
       riga.appendChild(nome);
@@ -323,6 +343,7 @@
 
     (plance || []).forEach(function (una) {
       var riga = vediPagina.createElement("li");
+      riga.appendChild(unaFaccia("ic-plance", una.primaria ? "acceso" : ""));
 
       var nome = vediPagina.createElement("div");
       nome.className = "nome";
@@ -330,7 +351,17 @@
       /* `textContent`, mai `innerHTML`: il titolo l'ha scritto una persona. */
       forte.textContent = una.titolo;
       var sotto = vediPagina.createElement("span");
-      sotto.textContent = una.primaria ? "la prima, quella di sempre" : "aggiunta da te";
+      var suoi = Array.isArray(una.utenti) ? una.utenti.filter(Boolean) : [];
+      /* Le due restrizioni si sommano, e la riga le dice tutte e due: chi
+       * legge «la vede 1 utente» e non sa che chiede anche di amministrare
+       * cerca il guaio dove non c'e'. */
+      var chi = [];
+      if (suoi.length === 1) chi.push("la vede 1 utente");
+      else if (suoi.length > 1) chi.push("la vedono " + suoi.length + " utenti");
+      if (una.solo_admin) chi.push("solo amministratori");
+      if (chi.length === 0) chi.push("la vedono tutti");
+      sotto.textContent =
+        (una.primaria ? "la prima, quella di sempre" : "aggiunta da te") + " · " + chi.join(" · ");
       nome.appendChild(forte);
       nome.appendChild(sotto);
       riga.appendChild(nome);
@@ -402,9 +433,203 @@
         tasti.appendChild(togli);
       }
 
+      /* «Chi la vede»: le spunte, sotto la riga.
+       *
+       * Sotto e non in una finestra: le spunte sono poche — quanti utenti ha
+       * una casa — e una finestra per tre caselle e' una finestra da chiudere.
+       * Si apre una riga per volta: aprirne un'altra chiude quella di prima,
+       * se no l'elenco delle plance diventa un muro di caselle. */
+      var chiLaVede = vediPagina.createElement("button");
+      chiLaVede.className = "tenue";
+      chiLaVede.type = "button";
+      chiLaVede.textContent = "Chi la vede";
+      chiLaVede.setAttribute("aria-expanded", "false");
+      tasti.appendChild(chiLaVede);
+
       riga.appendChild(tasti);
+
+      var spunte = vediPagina.createElement("div");
+      spunte.className = "chi-la-vede";
+      spunte.hidden = true;
+      riga.appendChild(spunte);
+
+      chiLaVede.addEventListener("click", function () {
+        /* Aprirne uno chiude l'altro: una per volta, se no l'elenco delle
+         * plance diventa un muro di caselle. */
+        cassettoAperto = cassettoAperto === una.profilo ? "" : una.profilo;
+        disegnaLePlance(plance);
+      });
+
+      if (cassettoAperto === una.profilo) {
+        spunte.hidden = false;
+        chiLaVede.setAttribute("aria-expanded", "true");
+        riempiLeSpunte(spunte, una);
+      }
+
       elenco.appendChild(riga);
     });
+  }
+
+  /* Gli utenti della casa, chiesti una volta e tenuti da parte.
+   *
+   * Non cambiano mentre si guarda questa pagina, e chiederli a ogni apertura
+   * di un cassetto vorrebbe dire una chiamata a Home Assistant per ogni clic.
+   * Si rileggono alla prossima apertura della pagina. */
+  var gliUtenti = null;
+
+  /* Quale cassetto «chi la vede» e' aperto, se ce n'e' uno.
+   *
+   * Sta fuori dalla funzione che disegna perche' la pagina si ridisegna da
+   * sola ogni dieci secondi: senza questa riga, il cassetto si chiuderebbe da
+   * solo mentre uno sta spuntando le caselle — e si chiuderebbe anche subito
+   * dopo aver spuntato, perche' salvare ridisegna. */
+  var cassettoAperto = "";
+
+  function chiediGliUtenti() {
+    if (gliUtenti) return Promise.resolve(gliUtenti);
+    return chiedi("api/utenti").then(function (detto) {
+      gliUtenti = Array.isArray(detto.utenti) ? detto.utenti : [];
+      return gliUtenti;
+    });
+  }
+
+  /* Le spunte: un utente per riga, e «la vedono tutti» come stato di partenza.
+   *
+   * Si salva a ogni spunta e non con un tasto «Salva»: sono due stati e non un
+   * modulo da compilare, e un tasto «Salva» che si dimentica di premere e' un
+   * tasto che fa credere di aver cambiato qualcosa. */
+  function riempiLeSpunte(dove, quale) {
+    /* Gli utenti li abbiamo gia'? Allora si disegna subito, senza passare per
+     * una riga d'attesa. Non e' una finezza: questo cassetto si ridisegna
+     * insieme alla pagina ogni dieci secondi, e un «sto chiedendo…» che
+     * lampeggia ogni dieci secondi si vede. */
+    if (!gliUtenti) {
+      dove.textContent = "";
+      var attesa = vediPagina.createElement("p");
+      attesa.className = "minuta";
+      attesa.textContent = "Sto chiedendo a Home Assistant chi c'e' in casa…";
+      dove.appendChild(attesa);
+    }
+
+    chiediGliUtenti()
+      .then(function (utenti) {
+        dove.textContent = "";
+        var suoi = Array.isArray(quale.utenti) ? quale.utenti.filter(Boolean).map(String) : [];
+
+        /* La riga in cima dice **come sta adesso**, non come si fa a cambiarla.
+         *
+         * Le due scelte si sommano, e una riga che dicesse solo una delle due
+         * mentirebbe: chi ha spuntato due nomi e acceso l'interruttore
+         * leggerebbe «la vedono solo gli utenti spuntati» e non capirebbe
+         * perche' uno dei due non la vede. */
+        var spiega = vediPagina.createElement("p");
+        spiega.className = "minuta";
+        var admin = quale.solo_admin === true;
+        if (suoi.length === 0 && !admin) {
+          spiega.textContent =
+            "La vedono tutti quelli che entrano in questa casa. Riservala qui sotto.";
+        } else if (suoi.length === 0) {
+          spiega.textContent =
+            "La vedono solo gli amministratori della casa. Spegni tutto per riaprirla a tutti.";
+        } else if (!admin) {
+          spiega.textContent =
+            "La vedono solo gli utenti spuntati. Spegni tutto per riaprirla a tutti.";
+        } else {
+          spiega.textContent =
+            "La vedono solo gli utenti spuntati, e solo se amministrano la casa. " +
+            "Spegni tutto per riaprirla a tutti.";
+        }
+        dove.appendChild(spiega);
+
+        /* «Solo gli amministratori»: l'altra meta', e sta nello stesso
+         * cassetto perche' e' la stessa domanda — chi la vede — fatta in un
+         * altro modo. Un elenco di nomi va rifatto ogni volta che cambia
+         * qualcuno; «chi ha le chiavi di casa» si aggiorna da se'. */
+        var soloAdmin = vediPagina.createElement("label");
+        soloAdmin.className = "spunta capo";
+        var interruttore = vediPagina.createElement("input");
+        interruttore.type = "checkbox";
+        interruttore.checked = quale.solo_admin === true;
+        var comeSiChiama = vediPagina.createElement("span");
+        comeSiChiama.textContent = "Solo gli amministratori della casa";
+        soloAdmin.appendChild(interruttore);
+        soloAdmin.appendChild(comeSiChiama);
+        dove.appendChild(soloAdmin);
+
+        interruttore.addEventListener("change", function () {
+          interruttore.disabled = true;
+          chiedi("api/plance", {
+            method: "PATCH",
+            body: JSON.stringify({ profilo: quale.profilo, solo_admin: interruttore.checked }),
+          })
+            .then(aggiornaTutto)
+            .catch(function (errore) {
+              interruttore.disabled = false;
+              interruttore.checked = !interruttore.checked;
+              avvisaLePlance(errore.message);
+            });
+        });
+
+        /* «e anche», non «oppure»: le due si sommano, e un'etichetta che
+         * dicesse «oppure» farebbe credere che accenderne una spenga
+         * l'altra. */
+        var quali = vediPagina.createElement("p");
+        quali.className = "etichetta";
+        quali.textContent = "e anche, solo questi utenti";
+        dove.appendChild(quali);
+
+        if (utenti.length === 0) {
+          var vuoto = vediPagina.createElement("p");
+          vuoto.className = "minuta";
+          vuoto.textContent = "In questa casa c'e' un utente solo: non c'e' niente da scegliere.";
+          dove.appendChild(vuoto);
+          return;
+        }
+
+        utenti.forEach(function (uno) {
+          var riga = vediPagina.createElement("label");
+          riga.className = "spunta utente";
+          var casella = vediPagina.createElement("input");
+          casella.type = "checkbox";
+          casella.checked = suoi.indexOf(uno.id) !== -1;
+          var nome = vediPagina.createElement("span");
+          /* `textContent`: il nome di un utente l'ha scritto una persona. */
+          nome.textContent = uno.nome + (uno.amministratore ? " · amministratore" : "");
+          riga.appendChild(casella);
+          riga.appendChild(nome);
+          dove.appendChild(riga);
+
+          casella.addEventListener("change", function () {
+            var scelti = [];
+            /* Solo le caselle degli **utenti**, non tutte quelle del cassetto:
+             * in cima c'e' l'interruttore degli amministratori, e contandolo
+             * ogni utente prenderebbe l'identificativo di quello dopo. */
+            var caselle = dove.querySelectorAll(".spunta.utente input");
+            for (var i = 0; i < caselle.length; i += 1) {
+              if (caselle[i].checked) scelti.push(utenti[i].id);
+            }
+            for (var j = 0; j < caselle.length; j += 1) caselle[j].disabled = true;
+            chiedi("api/plance", {
+              method: "PATCH",
+              body: JSON.stringify({ profilo: quale.profilo, utenti: scelti }),
+            })
+              .then(aggiornaTutto)
+              .catch(function (errore) {
+                for (var k = 0; k < caselle.length; k += 1) caselle[k].disabled = false;
+                casella.checked = !casella.checked;
+                avvisaLePlance(errore.message);
+              });
+          });
+        });
+      })
+      .catch(function (errore) {
+        dove.textContent = "";
+        var male = vediPagina.createElement("p");
+        male.className = "avviso";
+        male.textContent =
+          "Non riesco a chiedere a Home Assistant chi c'e' in casa: " + errore.message;
+        dove.appendChild(male);
+      });
   }
 
   /* Chi parla di piu' in casa, e quanto. */
@@ -432,12 +657,25 @@
       forte.textContent = una.entita;
       var sotto = vediPagina.createElement("span");
       var suoi = Number(una.eventi) || 0;
+      var fetta = quanti ? Math.round((suoi / quanti) * 100) : 0;
       sotto.textContent =
         suoi +
         (suoi === 1 ? " evento" : " eventi") +
-        (quanti ? " · " + Math.round((suoi / quanti) * 100) + "% del traffico" : "");
+        (quanti ? " · " + fetta + "% del traffico" : "");
       nome.appendChild(forte);
       nome.appendChild(sotto);
+      /* La stessa percentuale, disegnata: tre numeri in colonna si confrontano
+       * contando, tre barre si confrontano guardando. E' la stessa scala della
+       * scritta di sopra — quanta parte del traffico di tutta la casa — non una
+       * scala sua che farebbe sembrare la prima voce sempre piena. */
+      if (quanti) {
+        var quota = vediPagina.createElement("div");
+        quota.className = "quota";
+        var dentro = vediPagina.createElement("i");
+        dentro.style.width = fetta + "%";
+        quota.appendChild(dentro);
+        nome.appendChild(quota);
+      }
       voce.appendChild(nome);
       elenco.appendChild(voce);
     });
@@ -743,7 +981,7 @@
   function disegnaLAggiornamento(stato) {
     trova("aggiornamento").hidden = !stato.locale;
     if (!stato.locale) return;
-    var riga = "Questo ponte è la versione " + (stato.mia || "—") + ".";
+    var riga = "Questo add-on è la versione " + (stato.mia || "—") + ".";
     var spiega = "";
     var siPuo = false;
     /* Il gettone non c'entra più niente.
@@ -756,7 +994,7 @@
     if (stato.cE === true) {
       riga += " C'è la " + stato.nuova + ".";
       spiega =
-        "Il ponte se la scarica, la mette al posto di questa e si ricostruisce. " +
+        "gdahome se la scarica, la mette al posto di questa e si ricostruisce. " +
         "Ci mette qualche minuto, e mentre lo fa questa pagina non risponde: è normale, " +
         "torna da sé.";
       siPuo = true;

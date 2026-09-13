@@ -21,6 +21,7 @@ import { BASE_DI_CASA, Foto } from "./foto.js";
 import { Plancia } from "./plancia.js";
 import { Plance } from "./plance.js";
 import { PlanceInCasa } from "./plance-in-casa.js";
+import { UtentiDiCasa } from "./utenti.js";
 import { Identita } from "./identita.js";
 import { Dispositivi } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
@@ -149,6 +150,14 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   });
   plance.quandoCambia = () => planceInCasa.sistema();
 
+  /* Chi c'e' in questa casa, e chi la amministra.
+   *
+   * Non si tiene niente sul disco: si chiede a Home Assistant e la risposta
+   * vale un minuto. Serve a disegnare le spunte di «chi la vede», e a
+   * rispondere alla sola domanda che l'ingress non sa — «questo utente
+   * amministra?» — quando una plancia e' riservata a chi amministra. */
+  const utenti = new UtentiDiCasa({ casa, registro });
+
   /* La chiamata verso il centralino: e' cosi' che si entra da fuori casa,
    * senza che chi ha installato l'add-on apra o configuri niente. */
   /* Nessuno parla col ponte direttamente: si passa dal portiere, che fa la
@@ -220,6 +229,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * se ne aggiunge una, come in Home Assistant si aggiunge una seconda
      * istanza dell'integrazione. */
     plance,
+    /* E chi c'e' in casa: le spunte di «chi la vede», e la risposta a
+     * «amministra?» per le plance riservate a chi amministra. */
+    utenti,
     /* La chat di assistenza: alla console serve per dire se questa casa
      * risponde, che e' l'unico modo di sapere che la chiave e' arrivata. */
     chat,

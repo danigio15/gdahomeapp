@@ -50,7 +50,7 @@ mette qualche minuto — su un Raspberry anche dieci — perché Home Assistant 
 se lo scarica già pronto, se lo costruisce sul posto. Le volte dopo è
 immediato, e gli aggiornamenti arrivano come per ogni altro add-on.
 
-Poi si apre **gdahome** dalla barra laterale e si preme **Fabbrica un codice**.
+Poi si apre **gdahome** dalla barra laterale e si preme **Genera QR code**.
 Dal telefono si inquadra, e la casa è abbinata.
 
 Tutto passo per passo, e cosa guardare una volta dentro, sta in

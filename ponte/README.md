@@ -10,14 +10,14 @@ Nella barra laterale di Home Assistant compare **gdahome**: è la sua pagina, ed
 ## Comincia da qui
 
 1. Apri **gdahome** dalla barra laterale.
-2. Premi **Fabbrica un codice**: compare un quadretto.
+2. Premi **Genera QR code**: compare il QR code.
 3. Apri gdahome sul telefono e inquadralo.
 
 Fatto: il telefono è dentro, e da quel momento entra da solo. Il codice vale
-**cinque minuti e una volta sola**; sotto al quadretto ci sono le stesse cose in
+**cinque minuti e una volta sola**; sotto al QR code ci sono le stesse cose in
 lettere — sedici, in quattro gruppi da quattro — per chi non può inquadrare.
 
-Dentro al quadretto non c'è solo il codice: c'è anche **dove sta questa casa**,
+Dentro al QR code non c'è solo il codice: c'è anche **dove sta questa casa**,
 cioè su quali indirizzi la si trova sul Wi-Fi e a quale centralino chiama. È il
 motivo per cui non si deve scrivere nessun indirizzo, nemmeno la prima volta e
 nemmeno da fuori.
@@ -27,14 +27,51 @@ app, dentro il browser, senza installare niente.
 
 ## Cosa c'è nella pagina
 
-|                           |                                                                                                                                           |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| **la striscia in cima**   | tre pastiglie con un pallino: Home Assistant, Da fuori casa, La plancia. È il «come sta», e si legge in un secondo                        |
-| **Abbina un telefono**    | il quadretto e il codice                                                                                                                  |
-| **Telefoni abbinati**     | chi entra in questa casa. **Togli associazione** spegne un telefono all'istante: il filo aperto cade, e con quel segno non si rientra più |
-| **Le plance**             | se ne tengono fino a otto, ognuna con le sue sezioni, le sue tessere, le sue stanze. Compaiono anche fra le «Plance» di Home Assistant    |
-| **Aprila in un browser**  | l'app qui dentro, e l'indirizzo per aprirla da fuori                                                                                      |
-| **Se qualcosa non torna** | chiuso: dentro c'è lo stato per bene e i rimedi. È il posto da aprire il giorno che qualcosa non va                                       |
+|                           |                                                                                                                                                                              |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **la striscia in cima**   | tre pastiglie con un pallino: Home Assistant, Da fuori casa, La plancia. È il «come sta», e si legge in un secondo                                                           |
+| **Abbina un telefono**    | il QR code e il codice in lettere                                                                                                                                            |
+| **Telefoni abbinati**     | chi entra in questa casa. **Togli associazione** spegne un telefono all'istante: il filo aperto cade, e con quel segno non si rientra più                                    |
+| **Le plance**             | se ne tengono fino a otto, ognuna con le sue sezioni, le sue tessere, le sue stanze, e ognuna con i suoi utenti abilitati. Compaiono anche fra le «Plance» di Home Assistant |
+| **Aprila in un browser**  | l'app qui dentro, e l'indirizzo per aprirla da fuori                                                                                                                         |
+| **Se qualcosa non torna** | chiuso: dentro c'è lo stato per bene e i rimedi. È il posto da aprire il giorno che qualcosa non va                                                                          |
+
+## Chi vede quale plancia
+
+Le plance si tengono fino a otto, e ognuna può essere riservata a **chi decidi
+tu**: nella scheda «Le plance» ogni riga ha **Chi la vede**, e sotto ci sono due
+modi di dirlo. Serve a chi tiene una plancia per sé e una per chi abita con lui,
+e a chi ha un tablet in cucina che deve aprire una plancia sola.
+
+|                                        |                                                                                                             |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Solo gli amministratori della casa** | chiunque abbia le chiavi di casa, anche chi arriverà domani. Si aggiorna da sé: non c'è una lista da rifare |
+| **e anche, solo questi utenti**        | gli utenti di questa casa, con una spunta per ognuno. Quando sai esattamente chi                            |
+
+- **Niente di spuntato vuol dire tutti**, ed è come nascono le plance: chi non
+  apre questa impostazione non se ne accorge.
+- Le due cose **si sommano**: se metti l'interruttore _e_ spunti due nomi, la
+  plancia la vedono quei due, e solo se amministrano.
+- Tutto si salva appena lo tocchi. Per riaprirla a tutti, spegni l'interruttore
+  e togli le spunte.
+- Vale anche per la prima plancia, quella di sempre.
+- Gli utenti li chiede Home Assistant al momento: se togli una persona da casa,
+  sparisce anche da qui.
+
+**Cosa fa, per bene.** Chi non è abilitato apre quella voce e trova scritto che
+non è abilitato: la plancia non gli arriva. Non gli arriva nascosta — non gli
+arriva. Il controllo lo fa l'add-on, e sa chi sta guardando perché è Home
+Assistant a dirglielo su ogni richiesta, non la pagina: non c'è niente da
+aggirare togliendo un pezzo di pagina col browser.
+
+Con **Solo gli amministratori** ci sono due lucchetti invece di uno: quella voce
+Home Assistant non la mette nemmeno nella barra laterale di chi non amministra,
+e chi prova ad arrivarci per un'altra strada lo ferma l'add-on.
+
+**Cosa non fa.** Non è un permesso di Home Assistant e non ne fa le veci: chi
+entra in casa continua a deciderlo Home Assistant, e questo decide quale
+plancia gli si apre quando è dentro. Chi in Home Assistant è amministratore può
+cambiare queste spunte, perché questa pagina la aprono gli amministratori.
 
 ## Da fuori casa
 
@@ -145,7 +182,21 @@ Una plancia è **tre nomi** con tre mestieri: il `profilo` (il cassetto dove sta
 la configurazione), il `titolo` (come la chiama chi ci abita) e l'`istanza` (il
 nome con cui la pagina tiene separate le proprie cose nel deposito del browser).
 Rinominarla cambia il titolo e non gli altri due, se no le si cancellerebbe il
-lavoro. La prima c'è sempre, tiene il profilo `primary` e non si toglie; le
+lavoro. E ha due cose che non sono nomi: `utenti`, gli identificativi degli
+utenti di Home Assistant abilitati a vederla — vuoto vuol dire tutti — e
+`solo_admin`, che finisce su `require_admin` della sua voce fra le «Plance».
+Le due si sommano in `laVede`, che è il posto unico dove sta la regola.
+Quell'elenco lo guarda `laPlanciaServita` prima di leggere la pagina dal disco,
+confrontandolo con la riga `X-Remote-User-Id` che il Supervisor scrive su ogni
+richiesta che passa dall'ingress: non arriva dalla pagina, quindi non è la
+pagina a poterla cambiare. «Amministra?» è l'unico pezzo che l'ingress non dice,
+e lo chiede `utenti.js` a Home Assistant (`config/auth/list`, risposta tenuta un
+minuto, e se Home Assistant non risponde si riusa l'ultima buona invece di
+chiudere la porta in faccia a chi amministra). Il filo della plancia — uno per
+tutte, e non sa quale pagina l'ha aperto — si chiude a chi non vede **nessuna**
+plancia di questa casa. La cartina si porta dietro le stesse due cose per un
+motivo solo: dire subito «non è abilitata per te» invece di lasciare un riquadro
+bianco. La prima c'è sempre, tiene il profilo `primary` e non si toglie; le
 altre si aggiungono, si rinominano e si tolgono dalla pagina o dall'app. Ogni
 plancia ha la sua voce fra le «Plance» di Home Assistant, e ce la mette l'add-on
 (`src/plance-in-casa.js`) scrivendo la cartina in `www/gdahome/` — l'unica cosa

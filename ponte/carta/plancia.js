@@ -78,8 +78,37 @@ class PlanciaDiGdahome extends HTMLElement {
     }
   }
 
+  /* Se questa plancia si apre a chi la sta guardando.
+   *
+   * L'elenco arriva dalla vista, e l'ha scritto l'add-on; `hass.user.id` e'
+   * l'utente della sessione di Home Assistant. Vuoto vuol dire tutti.
+   *
+   * Non e' **questo** il cancello: il cancello sta nell'add-on, che guarda chi
+   * bussa (`X-Remote-User-Id`, che gli arriva dall'ingress e non dalla pagina)
+   * e a chi non e' abilitato non serve la plancia. Questo e' cosa si legge
+   * invece di un riquadro bianco — e serve anche a non chiedere una sessione
+   * dell'ingress per una pagina che non arrivera'. */
+  _laVede() {
+    const elenco = Array.isArray(this._config.utenti)
+      ? this._config.utenti.filter(Boolean).map(String)
+      : [];
+    if (elenco.length > 0 && !elenco.includes(String(this._hass?.user?.id || ""))) return false;
+    /* «Solo gli amministratori»: qui la risposta ce l'abbiamo in mano — e'
+     * `hass.user.is_admin`, che Home Assistant mette nella sessione — e non
+     * c'e' niente da chiedere a nessuno. A questa voce Home Assistant non ci
+     * fa nemmeno arrivare chi non amministra (`require_admin` sulla Plancia);
+     * questa riga e' per le altre strade. */
+    if (this._config.solo_admin === true && this._hass?.user?.is_admin !== true) return false;
+    return true;
+  }
+
   async _disegna() {
     if (this._montata || !this._hass || !this.isConnected) return;
+    if (!this._laVede()) {
+      this._montata = true;
+      this._nonPerTe();
+      return;
+    }
     this._montata = true;
     try {
       const dove = await this._doveSta();
@@ -223,6 +252,33 @@ class PlanciaDiGdahome extends HTMLElement {
       }
     }
     return "non ha funzionato, e non ha detto perche'";
+  }
+
+  /* Una plancia riservata a qualcun altro. Non e' un errore, e non si scrive
+   * come tale: non c'e' niente di rotto. Chi legge vuole sapere chi glielo
+   * puo' aprire, e dove. */
+  _nonPerTe() {
+    const titolo = String(this._config.titolo || "Questa plancia");
+    this.shadowRoot.innerHTML = `
+      <style>
+        .chiusa { display: grid; place-items: center; min-height: 60vh; padding: 24px;
+          font: inherit; line-height: 1.55; text-align: center; }
+        .chiusa div { max-width: 26rem; }
+        .chiusa b { display: block; margin-bottom: 8px; font-size: 1.15rem; }
+        .chiusa span { color: var(--secondary-text-color, #5b6471); }
+      </style>
+      <div class="chiusa"><div>
+        <b></b>
+        <span></span>
+      </div></div>`;
+    /* `textContent`: il titolo l'ha scritto chi ci abita. */
+    this.shadowRoot.querySelector(".chiusa b").textContent = `${titolo} non e' abilitata per te`;
+    const soloAdmin = this._config.solo_admin === true && this._hass?.user?.is_admin !== true;
+    this.shadowRoot.querySelector(".chiusa span").textContent =
+      (soloAdmin
+        ? "In questa casa questa plancia la vedono solo gli amministratori."
+        : "In questa casa questa plancia la vedono solo alcuni utenti.") +
+      " Chi amministra la casa puo' cambiarlo dalla pagina di gdahome, alla voce \u00abLe plance\u00bb.";
   }
 
   _male(errore) {

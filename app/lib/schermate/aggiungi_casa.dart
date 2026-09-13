@@ -300,7 +300,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                   ],
                   Text(
                     'In Home Assistant apri «gdahome» dalla barra laterale e '
-                    'premi «Fabbrica un codice». Poi inquadra il quadretto.',
+                    'premi «Genera QR code». Poi inquadralo.',
                     textAlign: TextAlign.center,
                     style: testi.bodyLarge?.copyWith(
                       color: colori.onSurfaceVariant,

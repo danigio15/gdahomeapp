@@ -14,7 +14,7 @@
  *   1. la STRISCIA: tre pastiglie con un pallino, «come sta» in un secondo;
  *   2. la scheda GROSSA: abbinare un telefono, che e' il motivo per cui si apre
  *      questa pagina;
- *   3. DUE schede di fianco: i telefoni e le plance;
+ *   3. DUE colonne: i telefoni e il link a sinistra, le plance a destra;
  *   4. il CASSETTO «se qualcosa non torna», chiuso: tutta la prosa e i rimedi
  *      stanno li', ci sono quando servono e non si mettono in mezzo quando no.
  */
@@ -301,10 +301,29 @@ h2 {
   margin-bottom: 0;
 }
 
-/* Due schede di fianco quando c'e' spazio, una sotto l'altra quando no. */
+/* Due colonne quando c'e' spazio, una quando no.
+ *
+ * Dentro ci stanno tre schede: i telefoni, il link, le plance. Le plance sono
+ * la scheda alta — un elenco, una casella e una spiegazione — e da sole
+ * lasciavano mezza pagina bianca di fianco ai telefoni.
+ *
+ * Sono due colonne vere, non sei schede buttate in una griglia: in una
+ * griglia la riga e' alta quanto la scheda piu' alta, e la scheda che viene
+ * dopo parte da sotto quell'altezza — il buco si sposta, non si chiude. Due
+ * colonne, ognuna con le sue schede in fila, si riempiono per conto loro.
+ *
+ * `align-content: start` tiene le schede appoggiate in cima: se si allungano
+ * per pareggiare le colonne, si vede che sono mezze vuote. */
 .due {
   display: grid;
   gap: 14px;
+}
+
+.colonna {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-width: 0;
 }
 
 @media (min-width: 880px) {
@@ -434,12 +453,22 @@ a.tenue {
   font-weight: 650;
 }
 
+/* I tasti che non sono «il» tasto della scheda. Erano trasparenti col solo
+   filo intorno: su un tema dove il filo e' quasi del colore della carta non si
+   capiva che fossero tasti. Un ripieno appena accennato basta. */
 button.tenue,
 a.tenue {
-  background: transparent;
+  background: color-mix(in srgb, var(--testo) 4%, transparent);
   color: var(--testo);
-  border: 1px solid var(--bordo);
+  border: 1px solid color-mix(in srgb, var(--testo) 9%, transparent);
   font-weight: 550;
+}
+
+@media (hover: hover) {
+  button.tenue:hover:not(:disabled),
+  a.tenue:hover {
+    background: color-mix(in srgb, var(--testo) 8%, transparent);
+  }
 }
 
 button:disabled {
@@ -513,6 +542,38 @@ summary:focus-visible {
   }
 }
 
+/* La faccia: il riquadro col disegno in testa alla riga. Prima c'era un
+   pallino di otto punti, che diceva una cosa sola (acceso o no) e la diceva
+   piano; il riquadro dice due cose — che roba e' (un telefono, una plancia) e
+   se e' viva — e si vede scorrendo l'elenco col pollice. */
+.faccia {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--testo) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--testo) 7%, transparent);
+}
+
+.faccia .ic {
+  width: 19px;
+  height: 19px;
+  color: var(--tenue);
+}
+
+/* Viva adesso: la faccia si accende del verde che la striscia usa la' sopra,
+   cosi' «collegato» vuol dire lo stesso colore in tutta la pagina. */
+.faccia.acceso {
+  background: color-mix(in srgb, var(--bene) 13%, transparent);
+  border-color: color-mix(in srgb, var(--bene) 26%, transparent);
+}
+
+.faccia.acceso .ic {
+  color: var(--bene);
+}
+
 .elenco .nome {
   flex: 1 1 13em;
   min-width: 0;
@@ -542,6 +603,79 @@ summary:focus-visible {
   min-height: 38px;
   padding: 7px 14px;
   font-size: 0.88rem;
+}
+
+/* La barra della quota, sotto il nome di un'entita' chiacchierona. Sottile:
+   deve far confrontare tre righe di sfuggita, non diventare un grafico. */
+.quota {
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--testo) 8%, transparent);
+  overflow: hidden;
+  max-width: 320px;
+}
+
+.quota i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--acceso);
+}
+
+/* «Chi la vede»: il cassetto delle spunte, sotto la riga di una plancia.
+ *
+ * Prende la riga intera (`flex-basis: 100%`) perche' la riga e' una flex che
+ * va a capo: senza, il cassetto si metterebbe di fianco ai tasti e verrebbe
+ * schiacciato in una colonna di tre centimetri. */
+.chi-la-vede {
+  flex: 1 1 100%;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--testo) 4%, transparent);
+  border: 1px solid color-mix(in srgb, var(--testo) 8%, transparent);
+}
+
+.chi-la-vede .minuta:first-child {
+  margin-top: 0;
+}
+
+/* Un utente per riga: la casella e il nome, e tutta la riga si tocca. Su un
+   tablet in cucina una casella di tredici punti non si prende col pollice. */
+.spunta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.spunta input {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  accent-color: var(--acceso);
+  cursor: pointer;
+}
+
+.spunta input:disabled {
+  cursor: default;
+}
+
+/* L'interruttore degli amministratori: sta in cima al cassetto e pesa piu'
+   delle spunte, perche' e' una scelta che vale per chiunque — anche per chi
+   arrivera' domani — e non per tre nomi. */
+.spunta.capo {
+  font-weight: 600;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid color-mix(in srgb, var(--testo) 8%, transparent);
+}
+
+.chi-la-vede .etichetta {
+  margin: 10px 0 2px;
 }
 
 .vuoto {
@@ -691,6 +825,33 @@ code {
   border-top: 1px solid var(--bordo);
 }
 
+/* Su uno schermo largo l'etichetta del blocco si sposta nel margine e le
+   spiegazioni si incolonnano tutte allo stesso punto: il cassetto si legge
+   come una scheda — «cosa» a sinistra, «come sta» a destra — invece che come
+   sei paragrafi uno sotto l'altro. Stretto, torna in colonna da sola. */
+@media (min-width: 760px) {
+  .blocco {
+    display: grid;
+    /* La seconda colonna e' larga quanto una riga che si legge — una
+       settantina di lettere — e non quanto lo schermo: su un monitor largo
+       una spiegazione di centoventi lettere per riga si perde da una riga
+       all'altra. */
+    grid-template-columns: 148px minmax(0, 72ch);
+    gap: 0 22px;
+    align-items: start;
+  }
+
+  .blocco > .etichetta {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    margin: 2px 0 0;
+  }
+
+  .blocco > *:not(.etichetta) {
+    grid-column: 2;
+  }
+}
+
 .etichetta {
   margin: 0 0 6px;
   color: var(--tenue);
@@ -709,6 +870,11 @@ code {
 
 .di-chi-risponde .etichetta {
   color: var(--acceso);
+}
+
+/* Anche qui la riga si ferma dove si legge, non dove finisce la scheda. */
+.di-chi-risponde p {
+  max-width: 72ch;
 }
 
 /* ─── Le icone ───────────────────────────────────────────────────────────────
@@ -741,7 +907,25 @@ h2 {
   letter-spacing: -0.01em;
 }
 
+/* Il disegno in testa a un titolo sta in una piastrella. Da solo, appoggiato
+   al testo, sembrava il punto elenco di una lista; nella piastrella e' la
+   targhetta della sezione, e si vede da lontano a quale sezione appartiene una
+   cosa che si sta leggendo. */
+h2 > .ic {
+  box-sizing: border-box;
+  width: 29px;
+  height: 29px;
+  padding: 5.5px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--acceso) 11%, transparent);
+}
+
 .di-chi-risponde .ic,
 .cassetto .ic {
   color: var(--tenue);
+}
+
+.cassetto h2 > .ic,
+.di-chi-risponde h2 > .ic {
+  background: color-mix(in srgb, var(--testo) 6%, transparent);
 }

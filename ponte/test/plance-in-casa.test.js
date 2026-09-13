@@ -53,6 +53,7 @@ function casaFinta({ plance = [], risorse = [] } = {}) {
           const quale = plance.find((una) => una.id === comando.dashboard_id);
           if (!quale) throw new Error("quella Plancia non c'e'");
           if (comando.title !== undefined) quale.title = comando.title;
+          if (comando.require_admin !== undefined) quale.require_admin = comando.require_admin;
           return { ...quale };
         }
         case "lovelace/dashboards/delete": {
@@ -199,6 +200,53 @@ test("la cartina si dichiara a Lovelace, con la versione dentro l'indirizzo", as
   }
 });
 
+test("«solo amministratori» finisce sulla voce di Home Assistant, e nella cartina", async () => {
+  /* Questa e' la meta' che fa Home Assistant da se': con `require_admin` quella
+   * voce non compare nella barra laterale di chi non amministra, e la sua
+   * configurazione non gliela da'. L'altra meta' — l'add-on che rifiuta la
+   * pagina a chi ci arriva per un'altra strada — sta in «plancia-in-casa».
+   *
+   * E si guarda anche che si **spenga**: una voce rimasta per sempre solo
+   * degli amministratori perche' nessuno ha riscritto quella riga sarebbe un
+   * guaio che si scopre mesi dopo. */
+  const b = banco();
+  const IO = "a1b2c3d4e5f60718293a4b5c6d7e8f90";
+  try {
+    await b.in_casa.sistema();
+    /* Di serie no: la plancia la guarda anche chi abita la casa. */
+    assert.equal(b.casa.plance[0].require_admin, false);
+
+    b.plance.soloChiAmministra("primary", true);
+    await b.in_casa.sistema();
+    assert.equal(b.casa.plance[0].require_admin, true, "la voce non lo ha saputo");
+
+    /* E la cartina se lo porta dietro, per dirlo invece di restare bianca. */
+    const dentro = b.casa.viste.get("gdahome-primary");
+    assert.equal(dentro.views[0].cards[0].solo_admin, true);
+
+    /* Riscrivere la stessa cosa non manda un aggiornamento: salvare una
+     * Plancia fa ridisegnare tutte le pagine aperte di Home Assistant, e non
+     * si fa per niente. */
+    const prima = b.casa.dette.filter((una) => una.type === "lovelace/dashboards/update").length;
+    await b.in_casa.sistema();
+    const dopo = b.casa.dette.filter((una) => una.type === "lovelace/dashboards/update").length;
+    assert.equal(dopo, prima, "ha riscritto la voce per dirle la stessa cosa");
+
+    /* Spegnendola, la voce torna di tutti. */
+    b.plance.soloChiAmministra("primary", false);
+    await b.in_casa.sistema();
+    assert.equal(b.casa.plance[0].require_admin, false, "la voce e' rimasta chiusa");
+
+    /* Le spunte, invece, Home Assistant non le sa e non le deve sapere: quelle
+     * le fa rispettare l'add-on. Finiscono solo dentro la cartina. */
+    b.plance.chiLaVede("primary", [IO]);
+    await b.in_casa.sistema();
+    assert.deepEqual(b.casa.viste.get("gdahome-primary").views[0].cards[0].utenti, [IO]);
+  } finally {
+    b.via();
+  }
+});
+
 test("una Plancia per plancia, e la vista e' una pagina intera", async () => {
   const b = banco();
   try {
@@ -232,6 +280,12 @@ test("una Plancia per plancia, e la vista e' una pagina intera", async () => {
               profilo: "casa-al-mare",
               addon: "",
               ingresso: "",
+              /* Chi la vede, e come si chiama: servono alla cartina per dire
+               * «non e' abilitata per te» invece di restare bianca. Vuoto
+               * vuol dire tutti. */
+              utenti: [],
+              titolo: "Casa al mare",
+              solo_admin: false,
             },
           ],
         },

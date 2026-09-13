@@ -104,7 +104,7 @@
           </div>
           <div class="quadretto-suo sagoma" id="senza-codice">
             <svg class="sagoma-segno" aria-hidden="true"><use href="#ic-quadretto" /></svg>
-            <p class="minuta">Il quadretto compare qui.</p>
+            <p class="minuta">Il QR code compare qui.</p>
           </div>
           <div class="parole">
             <!-- Il contenuto di ogni passo sta dentro **un** elemento: la riga e'
@@ -113,11 +113,11 @@
             <ol class="passi">
               <li><span>Apri gdahome sul telefono.</span></li>
               <li>
-                <span>Premi <b>Fabbrica un codice</b>, e inquadralo.</span>
+                <span>Premi <b>Genera QR code</b>, e inquadralo.</span>
               </li>
             </ol>
             <div class="bottoni">
-              <button id="fabbrica" type="button">Fabbrica un codice</button>
+              <button id="fabbrica" type="button">Genera QR code</button>
               <button id="annulla" type="button" class="tenue" hidden>Annulla</button>
             </div>
             <p class="minuta">Vale una volta sola, e per pochi minuti.</p>
@@ -135,94 +135,103 @@
       </section>
 
       <div class="due">
-        <!-- ② Chi è abbinato. Prima stava sesta, ed è la seconda cosa che si
-             guarda: chi entra in casa mia. -->
-        <section class="scheda">
-          <div class="testa-di-scheda">
-            <h2>
-              <svg class="ic" aria-hidden="true"><use href="#ic-telefono" /></svg>Telefoni abbinati
-            </h2>
-          </div>
-          <ul id="elenco" class="elenco"></ul>
-        </section>
+        <!-- La colonna di sinistra: chi entra in casa, e da dove si apre. -->
+        <div class="colonna">
+          <!-- ② Chi è abbinato. Prima stava sesta, ed è la seconda cosa che si
+               guarda: chi entra in casa mia. -->
+          <section class="scheda">
+            <div class="testa-di-scheda">
+              <h2>
+                <svg class="ic" aria-hidden="true"><use href="#ic-telefono" /></svg>Telefoni
+                abbinati
+              </h2>
+            </div>
+            <ul id="elenco" class="elenco"></ul>
+          </section>
 
-        <!-- ③ Le plance. Nella dashboard una seconda plancia era una seconda
-             istanza dell'integrazione, da «Dispositivi e servizi». Qui
-             l'integrazione non c'è, e il posto è questo. -->
-        <section class="scheda" id="plance">
-          <div class="testa-di-scheda">
-            <h2>
-              <svg class="ic" aria-hidden="true"><use href="#ic-plance" /></svg>Le plance
-            </h2>
-          </div>
-          <ul id="elenco-plance" class="elenco"></ul>
-          <div class="riga-di-tasti">
-            <input
-              id="titolo-plancia"
-              type="text"
-              maxlength="40"
-              placeholder="Per esempio «Casa al mare»"
-              aria-label="Come si chiama la plancia nuova"
-            />
-            <button id="aggiungi-plancia" type="button">Aggiungi</button>
-          </div>
-          <p class="minuta">
-            Ognuna ha le sue sezioni, le sue tessere, le sue stanze — i file sono gli stessi.
-            Nell'app si scelgono dal menu; in Home Assistant stanno fra le «Plance».
-          </p>
-          <p class="avviso" id="avviso-plance" hidden></p>
-        </section>
-      </div>
-
-      <!-- ④ Il link. Chi ha l'add-on acceso ha già gdahome: non c'è niente da
-           scaricare. La scheda si vede solo se l'app c'è davvero dentro questo
-           add-on — un link che porta a un 404 è peggio di nessun link. -->
-      <section class="scheda" id="scheda-app" hidden>
-        <div class="testa-di-scheda">
-          <h2>
-            <svg class="ic" aria-hidden="true"><use href="#ic-browser" /></svg>Aprila in un browser
-          </h2>
+          <!-- ④ Il link. Chi ha l'add-on acceso ha già gdahome: non c'è niente da
+               scaricare. La scheda si vede solo se l'app c'è davvero dentro questo
+               add-on — un link che porta a un 404 è peggio di nessun link. -->
+          <section class="scheda" id="scheda-app" hidden>
+            <div class="testa-di-scheda">
+              <h2>
+                <svg class="ic" aria-hidden="true"><use href="#ic-browser" /></svg>Aprila in un
+                browser
+              </h2>
+            </div>
+            <ul class="righe">
+              <li>
+                <span class="che-cosa">
+                  <b>Qui dentro</b>
+                  <span class="minuta">Nella pagina di Home Assistant, come una plancia.</span>
+                </span>
+                <!-- Si apre **in questa scheda** e non in una nuova: la sessione di
+                     questo indirizzo la tiene viva la pagina di Home Assistant, e
+                     una scheda a parte dopo un po' si sente rispondere «401». -->
+                <a class="bottone" id="apri-app" href="app/">Apri gdahome</a>
+              </li>
+              <li id="link-di-fuori" hidden>
+                <span class="che-cosa">
+                  <b>Da fuori casa</b>
+                  <span class="minuta"
+                    >Un indirizzo vero: si salva fra i preferiti, si può mandare.</span
+                  >
+                  <code id="link-di-fuori-indirizzo"></code>
+                </span>
+                <a class="tenue" id="apri-di-fuori" href="#" target="_blank" rel="noopener">Apri</a>
+              </li>
+            </ul>
+            <details class="apribile">
+              <summary>Due cose da sapere</summary>
+              <p class="spiegazione">
+                <b>Qui dentro</b> si apre in questa stessa scheda: per tornare, «gdahome» nella
+                barra di Home Assistant. Aprendolo in una scheda a parte, dopo qualche minuto
+                quell'indirizzo risponde <b>401</b> — la sessione la tiene viva Home Assistant, non
+                la scheda.
+              </p>
+              <p class="spiegazione">
+                <b>Da fuori casa</b> è l'indirizzo dell'app, non della casa: è uguale per tutti, e
+                chi lo apre senza un codice di abbinamento non entra in casa di nessuno.
+              </p>
+            </details>
+            <p class="avviso giallo" id="avviso-sicuro" hidden>
+              Questa pagina è aperta su un indirizzo <b>http</b>. Tutto funziona tranne la plancia:
+              per disegnarla nel browser serve <b>https</b> — è una regola dei browser, non nostra.
+              Sul telefono la plancia si vede comunque.
+            </p>
+          </section>
         </div>
-        <ul class="righe">
-          <li>
-            <span class="che-cosa">
-              <b>Qui dentro</b>
-              <span class="minuta">Nella pagina di Home Assistant, come una plancia.</span>
-            </span>
-            <!-- Si apre **in questa scheda** e non in una nuova: la sessione di
-                 questo indirizzo la tiene viva la pagina di Home Assistant, e
-                 una scheda a parte dopo un po' si sente rispondere «401». -->
-            <a class="bottone" id="apri-app" href="app/">Apri gdahome</a>
-          </li>
-          <li id="link-di-fuori" hidden>
-            <span class="che-cosa">
-              <b>Da fuori casa</b>
-              <span class="minuta"
-                >Un indirizzo vero: si salva fra i preferiti, si può mandare.</span
-              >
-              <code id="link-di-fuori-indirizzo"></code>
-            </span>
-            <a class="tenue" id="apri-di-fuori" href="#" target="_blank" rel="noopener">Apri</a>
-          </li>
-        </ul>
-        <details class="apribile">
-          <summary>Due cose da sapere</summary>
-          <p class="spiegazione">
-            <b>Qui dentro</b> si apre in questa stessa scheda: per tornare, «gdahome» nella barra di
-            Home Assistant. Aprendolo in una scheda a parte, dopo qualche minuto quell'indirizzo
-            risponde <b>401</b> — la sessione la tiene viva Home Assistant, non la scheda.
-          </p>
-          <p class="spiegazione">
-            <b>Da fuori casa</b> è l'indirizzo dell'app, non della casa: è uguale per tutti, e chi
-            lo apre senza un codice di abbinamento non entra in casa di nessuno.
-          </p>
-        </details>
-        <p class="avviso giallo" id="avviso-sicuro" hidden>
-          Questa pagina è aperta su un indirizzo <b>http</b>. Tutto funziona tranne la plancia: per
-          disegnarla nel browser serve <b>https</b> — è una regola dei browser, non nostra. Sul
-          telefono la plancia si vede comunque.
-        </p>
-      </section>
+
+        <!-- La colonna di destra: le plance, che sono la scheda alta. -->
+        <div class="colonna">
+          <!-- ③ Le plance. Nella dashboard una seconda plancia era una seconda
+               istanza dell'integrazione, da «Dispositivi e servizi». Qui
+               l'integrazione non c'è, e il posto è questo. -->
+          <section class="scheda" id="plance">
+            <div class="testa-di-scheda">
+              <h2>
+                <svg class="ic" aria-hidden="true"><use href="#ic-plance" /></svg>Le plance
+              </h2>
+            </div>
+            <ul id="elenco-plance" class="elenco"></ul>
+            <div class="riga-di-tasti">
+              <input
+                id="titolo-plancia"
+                type="text"
+                maxlength="40"
+                placeholder="Per esempio «Casa al mare»"
+                aria-label="Come si chiama la plancia nuova"
+              />
+              <button id="aggiungi-plancia" type="button">Aggiungi</button>
+            </div>
+            <p class="minuta">
+              Ognuna ha le sue sezioni, le sue tessere, le sue stanze — i file sono gli stessi.
+              Nell'app si scelgono dal menu; in Home Assistant stanno fra le «Plance».
+            </p>
+            <p class="avviso" id="avviso-plance" hidden></p>
+          </section>
+        </div>
+      </div>
 
       <!-- ⑤ Tutto quello che serve **quando qualcosa non va**, in un posto solo
            e chiuso. Qui dentro stanno le quattro schede che prima erano quattro

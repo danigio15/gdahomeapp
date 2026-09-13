@@ -63,6 +63,44 @@ async function casaFinta() {
           return;
         }
         arrivati.push(detto);
+        /* Chi c'e' in casa. Home Assistant risponde con l'elenco degli utenti,
+         * e in mezzo ci mette anche i suoi — quelli che fa da se' per gli
+         * add-on — che in una lista di «chi vede la plancia» non sono
+         * persone. */
+        if (detto.type === "config/auth/list") {
+          presa.manda(
+            JSON.stringify({
+              id: detto.id,
+              type: "result",
+              success: true,
+              result: [
+                {
+                  id: "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+                  name: "Giovanni",
+                  is_owner: true,
+                  is_active: true,
+                  system_generated: false,
+                  group_ids: ["system-admin"],
+                },
+                {
+                  id: "0f9e8d7c6b5a49382716f5e4d3c2b1a0",
+                  name: "Marta",
+                  is_owner: false,
+                  is_active: true,
+                  system_generated: false,
+                  group_ids: ["system-users"],
+                },
+                {
+                  id: "11111111111111111111111111111111",
+                  name: "Home Assistant Content",
+                  system_generated: true,
+                  group_ids: [],
+                },
+              ],
+            }),
+          );
+          return;
+        }
         presa.manda(
           JSON.stringify({ id: detto.id, type: "result", success: true, result: "dalla casa" }),
         );
@@ -262,6 +300,192 @@ test("ogni plancia apre il suo cassetto, e quella che non c'e' non si apre", asy
     assert.equal(senzaBarra.headers.get("location"), "casa-al-mare/");
 
     assert.equal((await fetch(`${b.consolle}/plancia/mai-esistita/`)).status, 404);
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("a chi non e' abilitato la pagina della plancia non arriva", async () => {
+  /* E' la prova che dice se «chi la vede» e' un cancello o un velo.
+   *
+   * Nella dashboard era un velo: l'elenco lo guardava il pannello, nel
+   * browser. Qui lo guarda l'add-on, e guarda la riga che gli scrive
+   * l'ingress — `X-Remote-User-Id` — che la pagina non puo' toccare. Percio'
+   * qui si chiede la cosa vera: la pagina arriva o no.
+   */
+  const b = await banco();
+  const IO = "a1b2c3d4e5f60718293a4b5c6d7e8f90";
+  const LEI = "0f9e8d7c6b5a49382716f5e4d3c2b1a0";
+  try {
+    /* Finche' nessuno ha scelto niente, la plancia si apre a tutti — anche a
+     * chi non dice chi e'. E' come si aprono le case di chi c'e' gia'. */
+    assert.equal((await fetch(`${b.consolle}/plancia/`)).status, 200);
+    assert.equal(
+      (await fetch(`${b.consolle}/plancia/`, { headers: { "x-remote-user-id": LEI } })).status,
+      200,
+    );
+
+    /* Adesso la prima plancia e' solo mia. */
+    const messa = await fetch(`${b.consolle}/api/plance`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ profilo: "primary", utenti: [IO] }),
+    });
+    assert.equal(messa.status, 200);
+
+    /* A me arriva. */
+    const mia = await fetch(`${b.consolle}/plancia/`, {
+      headers: { "x-remote-user-id": IO },
+    });
+    assert.equal(mia.status, 200);
+    assert.match(await mia.text(), /__DASHBOARDMODERN_HOSTED__/);
+
+    /* A lei no, e non le arriva **nascosta**: non le arriva. La risposta e'
+     * una pagina, perche' dall'altra parte c'e' una persona dentro un riquadro
+     * della sua Home Assistant. */
+    const sua = await fetch(`${b.consolle}/plancia/`, {
+      headers: { "x-remote-user-id": LEI },
+    });
+    assert.equal(sua.status, 403);
+    const detto = await sua.text();
+    assert.match(detto, /non e' abilitata per te/);
+    assert.doesNotMatch(detto, /__DASHBOARDMODERN_HOSTED__/, "la plancia e' arrivata comunque");
+
+    /* E a chi non dice chi e' nemmeno: con un elenco addosso, non sapere chi
+     * bussa e' un no. */
+    assert.equal((await fetch(`${b.consolle}/plancia/`)).status, 403);
+
+    /* Una seconda plancia nasce aperta a tutti, e resta aperta: restringere
+     * una non restringe le altre. */
+    const { quale } = await (
+      await fetch(`${b.consolle}/api/plance`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ titolo: "Casa al mare" }),
+      })
+    ).json();
+    const altra = await fetch(`${b.consolle}/plancia/${quale.profilo}/`, {
+      headers: { "x-remote-user-id": LEI },
+    });
+    assert.equal(altra.status, 200);
+
+    /* Togliendo le spunte torna di tutti. */
+    await fetch(`${b.consolle}/api/plance`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ profilo: "primary", utenti: [] }),
+    });
+    assert.equal(
+      (await fetch(`${b.consolle}/plancia/`, { headers: { "x-remote-user-id": LEI } })).status,
+      200,
+    );
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("«solo amministratori»: a chi non amministra la pagina non arriva", async () => {
+  /* E' il pezzo che la vecchia integrazione non aveva. Home Assistant sa gia'
+   * nascondere una Plancia a chi non amministra (`require_admin`, e quella
+   * meta' si prova in «plance-in-casa»); ma l'indirizzo dell'ingress si apre
+   * anche senza passare da quella voce, e allora il controllo lo rifa'
+   * l'add-on — che «amministra?» lo chiede a Home Assistant, perche' l'ingress
+   * gli dice chi sta guardando e non se ha le chiavi. */
+  const b = await banco();
+  const IO = "a1b2c3d4e5f60718293a4b5c6d7e8f90";
+  const LEI = "0f9e8d7c6b5a49382716f5e4d3c2b1a0";
+  try {
+    const messa = await fetch(`${b.consolle}/api/plance`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ profilo: "primary", solo_admin: true }),
+    });
+    assert.equal(messa.status, 200);
+    assert.equal((await messa.json()).quale.solo_admin, true);
+
+    /* Giovanni amministra questa casa — lo dice la Home Assistant finta — e la
+     * pagina gli arriva. */
+    const mia = await fetch(`${b.consolle}/plancia/`, { headers: { "x-remote-user-id": IO } });
+    assert.equal(mia.status, 200);
+    assert.match(await mia.text(), /__DASHBOARDMODERN_HOSTED__/);
+
+    /* Marta no, e non le arriva. Il messaggio dice **quale** delle due cose
+     * l'ha fermata: sapere che una plancia e' «solo degli amministratori» e'
+     * un'informazione che puo' usare, «solo di alcuni utenti» la manderebbe a
+     * chiedere la cosa sbagliata. */
+    const sua = await fetch(`${b.consolle}/plancia/`, { headers: { "x-remote-user-id": LEI } });
+    assert.equal(sua.status, 403);
+    const detto = await sua.text();
+    assert.match(detto, /solo gli amministratori/);
+    assert.doesNotMatch(detto, /__DASHBOARDMODERN_HOSTED__/);
+
+    /* E a chi non dice chi e' nemmeno. */
+    assert.equal((await fetch(`${b.consolle}/plancia/`)).status, 403);
+
+    /* Spegnendola torna di tutti. */
+    await fetch(`${b.consolle}/api/plance`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ profilo: "primary", solo_admin: false }),
+    });
+    assert.equal(
+      (await fetch(`${b.consolle}/plancia/`, { headers: { "x-remote-user-id": LEI } })).status,
+      200,
+    );
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("gli utenti della casa li chiede a Home Assistant, e non conta i suoi", async () => {
+  /* L'elenco non lo teniamo noi, e non e' un dettaglio: un elenco copiato da
+   * qualche parte invecchia, e chi ha tolto una persona da casa se la
+   * ritroverebbe ancora spuntata. */
+  const b = await banco();
+  try {
+    const detto = await (await fetch(`${b.consolle}/api/utenti`)).json();
+    assert.deepEqual(detto.utenti, [
+      {
+        id: "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+        nome: "Giovanni",
+        amministratore: true,
+        attivo: true,
+      },
+      {
+        id: "0f9e8d7c6b5a49382716f5e4d3c2b1a0",
+        nome: "Marta",
+        amministratore: false,
+        attivo: true,
+      },
+    ]);
+    /* «Home Assistant Content» non c'e': e' un utente che Home Assistant fa da
+     * se', e in questa lista sarebbe una riga che non e' una persona. */
+    assert.ok(
+      !detto.utenti.some((uno) => uno.nome.startsWith("Home Assistant")),
+      "in elenco c'e' un utente di sistema",
+    );
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("il filo della plancia si chiude a chi non vede nessuna plancia", async () => {
+  /* Il filo e' uno per tutte le plance e non sa quale pagina l'ha aperto: non
+   * puo' dire «questa no». Ma chi non vede **nessuna** plancia non ha niente
+   * da chiedere, e quello lo sa dire.
+   *
+   * Qui si apre il filo senza la riga dell'ingress — che e' il caso di chi non
+   * si sa chi sia — con l'unica plancia della casa riservata a qualcun altro. */
+  const b = await banco();
+  try {
+    await fetch(`${b.consolle}/api/plance`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ profilo: "primary", utenti: ["a1b2c3d4e5f60718293a4b5c6d7e8f90"] }),
+    });
+
+    const pagina = unaPagina(`${b.consolle.replace("http", "ws")}/plancia/api/websocket`);
+    await assert.rejects(pagina.aperta, /non si e' aperto/);
   } finally {
     await b.spegni();
   }

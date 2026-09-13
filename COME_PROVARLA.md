@@ -209,8 +209,8 @@ Se dice altro, lì c'è scritto cosa non va.
 
 ### Il codice
 
-Nella barra laterale di Home Assistant apri **gdahome** e premi **Fabbrica un
-codice**. Compare un **quadretto**, e vale cinque minuti. (Sotto, per chi non
+Nella barra laterale di Home Assistant apri **gdahome** e premi **Genera QR
+code**. Compare il **QR code**, e vale cinque minuti. (Sotto, per chi non
 può inquadrarlo, ci sono le stesse cose in lettere: sedici, in quattro gruppi
 da quattro.)
 

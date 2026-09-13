@@ -525,6 +525,9 @@ test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-
         istanza: "gdahome",
         primaria: true,
         creata_il: 0,
+        /* Vuoto: la vedono tutti quelli che entrano in casa. */
+        utenti: [],
+        solo_admin: false,
       },
     ]);
 

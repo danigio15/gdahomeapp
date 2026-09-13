@@ -20,6 +20,7 @@ import { TroppiDispositivi } from "./dispositivi.js";
 import { invito } from "./invito.js";
 import { accetta, eUnaSalita } from "./presa.js";
 import { BASE } from "./plancia.js";
+import { laVede, vedeQualcosa } from "./plance.js";
 import { Cucitura } from "./cucitura.js";
 import { conLePremesse, linguaPulita, paginaDellaLingua } from "./premesse.js";
 import { qrInSvg } from "./qr.js";
@@ -257,6 +258,11 @@ export function costruisciLaConsole({
   ritorno,
   plancia,
   plance,
+  /* Chi c'e' in questa casa e chi la amministra (`utenti.js`). Serve a due
+   * cose: disegnare le spunte di «chi la vede», e rispondere alla domanda che
+   * l'ingress non sa — «questo utente amministra?» — quando una plancia e'
+   * riservata a chi amministra. */
+  utenti,
   /* Com'e' andata a mettere le plance fra le «Plance» di Home Assistant: la
    * scheda dell'add-on lo dice, perche' e' li' che si guarda quando una voce
    * nella barra laterale non c'e'. */
@@ -304,6 +310,7 @@ export function costruisciLaConsole({
           ritorno,
           plancia,
           plance,
+          utenti,
           planceInCasa,
           configurazione,
           chat,
@@ -359,7 +366,7 @@ export function costruisciLaConsole({
      * arriva solo chi e' entrato in Home Assistant, e non serve nessun altro
      * segno da chiedere a nessuno. */
     if (via === "/plancia" || via.startsWith("/plancia/")) {
-      laPlanciaServita({ via, richiesta, risposta, plancia, plance });
+      await laPlanciaServita({ via, richiesta, risposta, plancia, plance, utenti });
       return;
     }
 
@@ -405,6 +412,22 @@ export function costruisciLaConsole({
       socket.end("HTTP/1.1 503 Service Unavailable\r\n\r\n");
       return;
     }
+    /* Questo filo e' uno per tutte le plance e non sa quale pagina l'ha
+     * aperto: non puo' dire «questa plancia no». Ma puo' dire l'unica cosa che
+     * sa, e che basta: chi non e' abilitato a **nessuna** plancia di questa
+     * casa non ha niente da chiedere qui. Le pagine a cui non e' abilitato non
+     * gliele serviamo (`laPlanciaServita`), quindi il filo che resta e' quello
+     * di una plancia che gli si apre. */
+    const chi = chiGuarda(richiesta);
+    /* «Amministra?» qui si prende solo da quello che c'e' **gia' in mano**: una
+     * salita va accettata o rifiutata subito, e non si tiene un browser
+     * appeso mentre si chiede a Home Assistant. Se non lo sappiamo, questo
+     * filo non lo si chiude per quello: per aprirlo bisogna aver ricevuto la
+     * pagina della plancia, e quella l'ha chiesto per davvero. */
+    if (!vedeQualcosa(plance?.elenco?.() ?? [], chi, utenti?.amministratoreSubito?.(chi) ?? null)) {
+      socket.end("HTTP/1.1 403 Forbidden\r\n\r\n");
+      return;
+    }
     const presa = accetta(richiesta, socket, {
       onGuasto: (errore) => registro.errore(`la plancia: ${errore?.stack || errore}`),
     });
@@ -425,6 +448,79 @@ export function costruisciLaConsole({
   return server;
 }
 
+/* La porta chiusa: cosa vede chi apre una plancia che non e' sua.
+ *
+ * Non e' un errore e non si scrive come tale: non c'e' niente di rotto e non
+ * c'e' niente da riparare. E' una plancia che in questa casa e' stata
+ * riservata a qualcun altro, e la riga dice **dove** si cambia — la pagina di
+ * gdahome — perche' chi legge questo messaggio e non se l'aspettava vuole
+ * sapere chi glielo puo' aprire, non un codice di stato.
+ *
+ * 403 e non 404: la plancia esiste, e dirlo non svela niente che chi abita in
+ * questa casa non veda gia' nella barra laterale. */
+function laPortaChiusa(risposta, quale, perche = "utenti") {
+  /* Il titolo l'ha scritto chi ci abita, e finisce dentro del markup: si
+   * riscrive prima. Non e' un pericolo vero — chi lo scrive e' chi amministra
+   * la casa, e lo rileggerebbe lui — ma una funzione che costruisce una pagina
+   * si difende da sola, cosi' resta vera anche domani. */
+  const titolo = String(quale?.titolo || "Questa plancia")
+    .slice(0, 40)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  const pagina = `<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${titolo}</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: #f2f4f7; color: #101317;
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 26rem; margin: 24px; padding: 26px 28px; border-radius: 20px;
+    background: #fff; box-shadow: 0 1px 3px rgba(16,24,40,.09); text-align: center; }
+  h1 { margin: 0 0 10px; font-size: 1.2rem; letter-spacing: -.01em; }
+  p { margin: 0; color: #5b6471; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #10141a; color: #e8ebf0; }
+    main { background: #1a1f27; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+    p { color: #9aa4b2; }
+  }
+</style></head>
+<body><main>
+  <h1>${titolo} non e' abilitata per te</h1>
+  <p>${
+    perche === "admin"
+      ? "In questa casa questa plancia la vedono solo gli amministratori."
+      : "In questa casa questa plancia la vedono solo alcuni utenti."
+  } Chi amministra la casa puo' cambiarlo dalla pagina di <b>gdahome</b>, alla
+  voce &laquo;Le plance&raquo;.</p>
+</main></body></html>`;
+  const byte = Buffer.from(pagina, "utf8");
+  risposta.writeHead(403, {
+    "content-type": "text/html; charset=utf-8",
+    "cache-control": "no-store",
+    "content-length": byte.length,
+  });
+  risposta.end(byte);
+}
+
+/* Chi sta guardando, secondo l'ingress di Home Assistant.
+ *
+ * Il Supervisor, su ogni richiesta che passa dall'ingress, scrive in testa
+ * `X-Remote-User-Id` con l'identificativo dell'utente che ha la sessione, e
+ * `X-Remote-User-Display-Name` col suo nome. Non e' una cosa che ci arriva
+ * dalla pagina — quindi non e' una cosa che la pagina possa cambiare — ed e'
+ * il motivo per cui «chi la vede» qui e' un cancello vero e non un velo
+ * disegnato: la pagina della plancia non parte nemmeno, e non c'e' niente da
+ * aggirare togliendo un pezzo di HTML col browser.
+ *
+ * Fuori dall'ingress quella riga non c'e' e questa funzione risponde stringa
+ * vuota; `laVede` sa cosa farne. */
+function chiGuarda(richiesta) {
+  return String(richiesta.headers?.["x-remote-user-id"] || "").trim();
+}
+
 /* La pagina della plancia, servita dentro Home Assistant.
  *
  * `/plancia/` e' la prima; `/plancia/<profilo>/` una delle altre. La barra in
@@ -433,7 +529,7 @@ export function costruisciLaConsole({
  * `/plancia/<profilo>/` — perche' sotto l'ingress davanti c'e' un prefisso che
  * qui non si conosce e non si deve conoscere.
  */
-function laPlanciaServita({ via, richiesta, risposta, plancia, plance }) {
+async function laPlanciaServita({ via, richiesta, risposta, plancia, plance, utenti }) {
   if (!plancia?.cE) {
     male(risposta, 404, "questo add-on non si porta dietro la plancia");
     return;
@@ -452,6 +548,38 @@ function laPlanciaServita({ via, richiesta, risposta, plancia, plance }) {
   if (profilo && !via.endsWith("/")) {
     risposta.writeHead(302, { location: `${profilo}/`, "cache-control": "no-store" });
     risposta.end();
+    return;
+  }
+  /* Chi la vede.
+   *
+   * Si guarda **prima** di leggere la pagina dal disco: a chi non e' abilitato
+   * non si serve la plancia, non gliela si serve nascosta. La risposta e' una
+   * pagina e non un JSON perche' qui dall'altra parte c'e' una persona dentro
+   * un riquadro della sua Home Assistant, non un programma.
+   *
+   * «Amministra?» si chiede a Home Assistant, e **solo se serve**: e' l'unico
+   * pezzo che l'ingress non dice, e una plancia che non lo chiede non deve
+   * pagare una domanda a Home Assistant per ogni apertura. Se Home Assistant
+   * non risponde e non c'e' nemmeno una risposta vecchia da riusare, la
+   * plancia non si apre: e' la stessa regola dell'elenco — una restrizione
+   * che cade quando non si sa niente non e' una restrizione. */
+  const chi = chiGuarda(richiesta);
+  let amministra = null;
+  if (quale?.solo_admin === true && utenti) {
+    try {
+      amministra = await utenti.amministratore(chi);
+    } catch (_errore) {
+      amministra = null;
+    }
+  }
+  if (!laVede(quale, chi, amministra)) {
+    /* Quale delle due l'ha fermato, per dirgli quella giusta: sapere che una
+     * plancia «e' solo degli amministratori» e' un'informazione che puo'
+     * usare — va a chiedere a chi amministra — mentre «e' solo di alcuni
+     * utenti» quando in realta' gli manca il gruppo lo manderebbe a chiedere
+     * la cosa sbagliata. */
+    const soloAdmin = quale?.solo_admin === true && amministra !== true;
+    laPortaChiusa(risposta, quale, soloAdmin ? "admin" : "utenti");
     return;
   }
   const lingua = linguaPulita(
@@ -500,6 +628,7 @@ async function api({
   ritorno,
   plancia,
   plance,
+  utenti,
   planceInCasa,
   configurazione,
   chat,
@@ -589,7 +718,17 @@ async function api({
         return;
       }
       if (metodo === "PATCH") {
-        const quale = plance.rinomina(detto?.profilo, detto?.titolo);
+        /* Tre cose si cambiano di una plancia, e da qui si cambia quella che
+         * e' stata detta: `utenti` vuol dire «chi la vede», `solo_admin` vuol
+         * dire «solo gli amministratori», e senza nessuna delle due vuol dire
+         * «rinomina». Un solo comando e non tre perche' e' la stessa cosa — la
+         * scheda di una plancia — e perche' cosi' l'elenco che torna e' sempre
+         * quello aggiornato di tutto. */
+        let quale;
+        if (Array.isArray(detto?.utenti)) quale = plance.chiLaVede(detto?.profilo, detto.utenti);
+        else if (typeof detto?.solo_admin === "boolean")
+          quale = plance.soloChiAmministra(detto?.profilo, detto.solo_admin);
+        else quale = plance.rinomina(detto?.profilo, detto?.titolo);
         json(risposta, { plance: plance.elenco(), quale });
         return;
       }
@@ -610,6 +749,40 @@ async function api({
       return;
     }
     male(risposta, 405, "metodo non previsto");
+    return;
+  }
+
+  /* Gli utenti di Home Assistant, per la sola cosa a cui servono qui:
+   * scegliere chi vede una plancia.
+   *
+   * Li chiede Home Assistant, non li teniamo noi — e' importante: un elenco di
+   * utenti copiato da qualche parte invecchia, e chi ha tolto una persona da
+   * casa se la ritroverebbe ancora spuntata. Di ognuno passa il minimo:
+   * l'identificativo, il nome, e se amministra. Non la password, non le
+   * credenziali, non i gruppi.
+   *
+   * Gli utenti **di sistema** non passano: sono quelli che Home Assistant fa
+   * da se' per gli add-on e per le integrazioni — questo add-on ne ha uno — e
+   * in una lista di «chi vede la plancia» sarebbero righe che non sono persone
+   * e non aprono niente. */
+  if (via === "/api/utenti" && metodo === "GET") {
+    if (!utenti) {
+      json(risposta, { errore: "senza_utenti" }, 404);
+      return;
+    }
+    try {
+      json(risposta, { utenti: await utenti.elenco() });
+    } catch (errore) {
+      /* Se la casa non risponde, la console lo dice e lascia stare: «chi la
+       * vede» e' una scelta che si fa un giorno ogni tanto, e rifarla domani
+       * non costa niente. Quello che non deve succedere e' che la pagina resti
+       * con una rotella che gira. */
+      json(
+        risposta,
+        { errore: "senza_utenti", spiegazione: String(errore?.message || errore).slice(0, 120) },
+        502,
+      );
+    }
     return;
   }
 
