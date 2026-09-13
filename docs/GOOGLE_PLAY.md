@@ -52,6 +52,28 @@ settimane per averlo) quel passaggio non ce l'ha. Se gdahome deve diventare un
 prodotto, l'account organizzazione è la strada più corta anche se all'inizio
 sembra la più lunga.
 
+### Aprire l'account, passo per passo
+
+Serve un account Google — va bene quello che hai gia', e **e' per sempre**:
+quell'account possiede le app, e spostarle dopo e' un giro lungo. Se gdahome
+deve durare, conviene aprirlo con l'indirizzo che userai anche fra cinque anni,
+non con quello del telefono di adesso.
+
+1. `play.google.com/console`, entra con l'account Google.
+2. **Scegli il tipo, e scegli bene**: personale oppure organizzazione. Non si
+   cambia dopo — per cambiarlo si apre un altro account e si ricomincia. E'
+   qui che si decide se dovrai fare i 12 tester per 14 giorni (personale) o no
+   (organizzazione).
+3. **Nome dello sviluppatore**: e' pubblico, sta sotto il nome dell'app nel
+   negozio. «gdahome» va bene.
+4. Paga i **25 $**, una volta sola e per sempre.
+5. **Verifica dell'identita'**: un documento e l'indirizzo. Per
+   l'organizzazione anche il numero D-U-N-S e i dati della societa'. Di solito
+   rispondono in uno o tre giorni; qualche volta di piu', e non c'e' niente da
+   fare che aspettare.
+6. Dentro la console: **Crea app** → nome, lingua, «App» e non «Gioco»,
+   gratuita. Da li' in poi le caselle sono quelle della tabella qui sotto.
+
 ### Quello che il negozio chiede, e quello che abbiamo
 
 | cosa | stato |
