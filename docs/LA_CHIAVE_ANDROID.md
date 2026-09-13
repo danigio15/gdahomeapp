@@ -41,8 +41,24 @@ keytool -genkeypair -v \
 Chiede una parola — sceglila lunga e **scrivila dove tieni le altre**, in un
 gestore di password — e poi nome, organizzazione, città e paese. Quei campi
 finiscono dentro il certificato e non si cambiano più: metti il tuo nome e
-`gdahome`, il resto è indifferente. Quando chiede la parola della chiave, dai
-la stessa del portachiavi (invio) — il workflow si aspetta quello.
+`gdahome`, il resto è indifferente.
+
+> **L'ultima domanda è quella che si sbaglia.** «Immettere la password della
+> chiave per \<gdahome\> (INVIO se corrisponde a quella del keystore)»: lì si
+> preme **solo invio**. Un portachiavi ha infatti **due** parole — una apre il
+> portachiavi, l'altra apre la chiave che c'è dentro — e battendone una
+> seconda ci si ritrova con due parole diverse.
+>
+> Come ci si accorge di averlo fatto: se dopo quella domanda `keytool` chiede
+> «Immettere nuovamente la nuova password», la parola l'hai battuta. Con
+> l'invio non lo chiede.
+>
+> Non è un disastro: o si mette la seconda parola nel segreto
+> `CHIAVE_ANDROID_KEY_PASSWORD`, o si fanno tornare uguali con
+>
+> ```sh
+> keytool -keypasswd -keystore chiave-gdahome.jks -alias gdahome
+> ```
 
 `-validity 10000` sono ventisette anni. Non è esagerazione: una chiave scaduta
 non firma più, e rifarla vuol dire che nessuno può più aggiornare l'app.
@@ -64,8 +80,12 @@ repository secret**, e due segreti:
 | `CHIAVE_ANDROID` | tutto il contenuto di `chiave-gdahome.txt` |
 | `CHIAVE_ANDROID_PASSWORD` | la parola del portachiavi |
 
-Se hai usato un alias diverso da `gdahome`, aggiungi anche
-`CHIAVE_ANDROID_ALIAS` col nome che hai scelto.
+E due facoltativi, per i casi che capitano:
+
+| nome | quando serve |
+|---|---|
+| `CHIAVE_ANDROID_ALIAS` | se hai usato un alias diverso da `gdahome` |
+| `CHIAVE_ANDROID_KEY_PASSWORD` | se la parola della chiave non è quella del portachiavi |
 
 Poi cancella `chiave-gdahome.txt` (il `.jks` no, quello si tiene).
 
@@ -85,7 +105,14 @@ computer di tutti i giorni. Perderla costa questo:
 
 Niente. Il workflow «L'app da provare» guarda se i due segreti ci sono: se
 ci sono firma con la chiave vera e lo scrive nel riepilogo della corsa; se non
-ci sono firma con quella di prova e lo scrive uguale. Quale delle due ha
+ci sono firma con quella di prova e lo scrive uguale.
+
+E prima di costruire prova **tutto quello che Gradle chiederà**: che sia un
+portachiavi, che la parola lo apra, che dentro ci sia una chiave con quel
+nome, e che si riesca ad aprirla. Sono quattro controlli e non uno perché
+falliscono per quattro ragioni diverse, e chi legge deve sapere quale — la
+differenza è fra un errore in due secondi che dice cosa fare e uno dopo sei
+minuti, dentro Gradle, che dice «Cannot recover key». Quale delle due ha
 firmato è sempre a schermo, perché è la differenza fra un pacchetto che si può
 dare a qualcuno e uno che si tiene per sé.
 

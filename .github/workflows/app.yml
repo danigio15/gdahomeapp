@@ -100,6 +100,13 @@ jobs:
         env:
           CHIAVE: ${{ secrets.CHIAVE_ANDROID }}
           PAROLA: ${{ secrets.CHIAVE_ANDROID_PASSWORD }}
+          # Un portachiavi ha **due** parole: una apre il portachiavi, l'altra
+          # apre la chiave che c'e' dentro. `keytool` propone di farle uguali e
+          # quasi sempre si fa cosi', ma chi ne batte una diversa al prompt
+          # «(INVIO se corrisponde...)» si ritrova con due parole, ed e' un
+          # caso normale. Se questo segreto non c'e', vale quella del
+          # portachiavi.
+          PAROLA_DELLA_CHIAVE: ${{ secrets.CHIAVE_ANDROID_KEY_PASSWORD }}
           COME_SI_CHIAMA: ${{ secrets.CHIAVE_ANDROID_ALIAS }}
         run: |
           if [ -z "$CHIAVE" ] || [ -z "$PAROLA" ]; then
@@ -118,11 +125,36 @@ jobs:
           fi
           dove="$RUNNER_TEMP/chiave.jks"
           printf '%s' "$CHIAVE" | tr -d '[:space:]' | base64 -d > "$dove"
-          # Che sia davvero un portachiavi e che la parola lo apra si guarda
-          # **qui**: se no il guasto salta fuori mille righe dopo, dentro
-          # Gradle, con un messaggio che parla d'altro.
+          come_si_chiama="${COME_SI_CHIAMA:-gdahome}"
+          parola_della_chiave="${PAROLA_DELLA_CHIAVE:-$PAROLA}"
+
+          # Qui si guarda **tutto quello che Gradle chiedera'**, e si guarda
+          # adesso: il portachiavi, la chiave dentro, e le due parole che le
+          # aprono. Se no il guasto salta fuori sei minuti dopo, dentro Gradle,
+          # con un messaggio che parla d'altro.
+          #
+          # Tre controlli e non uno, perche' falliscono per tre ragioni
+          # diverse e chi legge deve sapere quale:
           if ! keytool -list -keystore "$dove" -storepass "$PAROLA" > /dev/null 2>&1; then
             echo "::error::CHIAVE_ANDROID non e' un portachiavi, o CHIAVE_ANDROID_PASSWORD non lo apre."
+            exit 1
+          fi
+          if ! keytool -list -keystore "$dove" -storepass "$PAROLA" -alias "$come_si_chiama" > /dev/null 2>&1; then
+            echo "::error::nel portachiavi non c'e' nessuna chiave che si chiama «$come_si_chiama»."
+            echo "::error::I nomi che ci sono si vedono cosi': keytool -list -keystore <il tuo .jks>"
+            echo "::error::Se il tuo si chiama in un altro modo, mettilo nel segreto CHIAVE_ANDROID_ALIAS."
+            exit 1
+          fi
+          # `-list` apre il portachiavi ma **non tocca la chiave**, e per
+          # questo non si accorgeva del caso piu' comune: le due parole
+          # diverse. `-certreq` la chiave la deve tirare fuori davvero, quindi
+          # fallisce qui, in due secondi, invece che dentro Gradle.
+          if ! keytool -certreq -keystore "$dove" -storepass "$PAROLA" \
+            -alias "$come_si_chiama" -keypass "$parola_della_chiave" > /dev/null 2>&1; then
+            echo "::error::la parola apre il portachiavi ma non apre la chiave «$come_si_chiama» (Cannot recover key)."
+            echo "::error::Un portachiavi ha due parole. Se sono diverse, quella della chiave va"
+            echo "::error::nel segreto CHIAVE_ANDROID_KEY_PASSWORD; per farle uguali:"
+            echo "::error::  keytool -keypasswd -keystore <il tuo .jks> -alias $come_si_chiama"
             exit 1
           fi
           # Le quattro righe che legge Gradle. Il file sta fuori dalla
@@ -131,8 +163,8 @@ jobs:
           {
             echo "storeFile=$dove"
             echo "storePassword=$PAROLA"
-            echo "keyAlias=${COME_SI_CHIAMA:-gdahome}"
-            echo "keyPassword=$PAROLA"
+            echo "keyAlias=$come_si_chiama"
+            echo "keyPassword=$parola_della_chiave"
           } > android/chiave.properties
           echo "vera=si" >> "$GITHUB_OUTPUT"
           {
