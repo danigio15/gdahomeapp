@@ -1,0 +1,15 @@
+# Un solo indirizzo, e l'altro ci porta.
+#
+# Cloudflare Pages legge questo file e lo applica prima di servire i file.
+# Serve a una cosa sola: che il sito abbia **un** indirizzo. Con `www` e senza
+# che rispondono tutti e due, gli stessi contenuti stanno in due posti — chi
+# li cerca ne trova due, chi li collega ne collega uno a caso, e il giorno che
+# si sposta qualcosa se ne rompe meta'.
+#
+# `gdahome.pages.dev` qui **non** c'e' apposta: e' l'indirizzo che Cloudflare
+# da' subito, e finche' il dominio non e' arrivato e' l'unico che risponde.
+# Mandarlo altrove vorrebbe dire non avere nessun sito fino al primo cambio di
+# DNS. Che sia `gdahome.org` quello buono lo dice il `<link rel="canonical">`
+# nella pagina, che e' il modo giusto di dirlo a chi indicizza.
+
+https://www.gdahome.org/*   https://gdahome.org/:splat   301

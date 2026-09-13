@@ -1,11 +1,11 @@
 /* Le poche cose che il sito fa da sé.
  *
- * Sono quattro, e nessuna è indispensabile: la pagina si legge tutta anche
- * senza JavaScript. Qui c'è il chiaro e scuro, l'ombra sotto la barra quando
- * si scende, le schede che compaiono salendo, e i prezzi presi da
- * `listino.js` invece che ribattuti a mano nell'HTML — che è l'unico pezzo
- * che, se andasse storto, lascerebbe un buco visibile, e per questo è anche
- * l'unico scritto in modo che si veda subito.
+ * Sono tre, e nessuna è indispensabile: la pagina si legge tutta anche senza
+ * JavaScript. Il chiaro e scuro, l'ombra sotto la barra quando si scende, e
+ * le schede che compaiono salendo.
+ *
+ * Quello che conta — la plancia — non sta qui: sta nel riquadro, ed è un
+ * documento suo con la sua vita.
  */
 
 (function () {
@@ -84,57 +84,4 @@
     );
     for (var k = 0; k < daMostrare.length; k++) occhio.observe(daMostrare[k]);
   }
-
-  /* ── I prezzi, presi da listino.js ────────────────────────────────────
-   *
-   * L'alternativa era ribatterli nell'HTML, e allora il giorno che cambia un
-   * prezzo ce ne sarebbero due diversi nella stessa pagina. */
-  var L = window.LISTINO;
-  if (!L) return;
-
-  var gratis = document.getElementById("elenco-gratis");
-  if (gratis)
-    L.sempreGratis.forEach(function (riga) {
-      var li = document.createElement("li");
-      li.textContent = riga;
-      gratis.appendChild(li);
-    });
-
-  var corpo = document.getElementById("riga-singoli");
-  if (corpo)
-    L.singoli.forEach(function (a) {
-      var tr = document.createElement("tr");
-
-      var td1 = document.createElement("td");
-      var cosa = document.createElement("div");
-      cosa.className = "cosa";
-      var img = document.createElement("img");
-      img.src = "statico/oggetti/" + a.disegno + ".svg";
-      img.alt = "";
-      img.width = 24;
-      img.height = 24;
-      img.loading = "lazy";
-      var testo = document.createElement("div");
-      testo.appendChild(document.createTextNode(a.titolo));
-      var piccolo = document.createElement("small");
-      piccolo.textContent = a.sotto;
-      testo.appendChild(piccolo);
-      cosa.appendChild(img);
-      cosa.appendChild(testo);
-      td1.appendChild(cosa);
-
-      var td2 = document.createElement("td");
-      td2.textContent = a.gratis;
-
-      var td3 = document.createElement("td");
-      var soldi = document.createElement("span");
-      soldi.className = "soldi";
-      soldi.textContent = a.soldi;
-      td3.appendChild(soldi);
-
-      tr.appendChild(td1);
-      tr.appendChild(td2);
-      tr.appendChild(td3);
-      corpo.appendChild(tr);
-    });
 })();

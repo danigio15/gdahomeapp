@@ -1,8 +1,10 @@
 # Il sito
 
 Il posto dove il progetto si racconta a chi non l'ha mai visto: cos'è l'app,
-come fa la casa a rispondere da fuori senza che si apra niente sul router,
-**la plancia vera che ci gira dentro**, e quanto costa.
+come fa la casa a rispondere da fuori senza che si apra niente sul router, e
+**la plancia vera che ci gira dentro**.
+
+Sta su **[gdahome.org](https://gdahome.org)**.
 
 ## La plancia non è una riproduzione: è la plancia
 
@@ -75,26 +77,22 @@ carica i moduli della plancia.
 
 ## I file
 
-|                           |                                                                                                                    |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `index.html`              | la pagina: il colpo d'occhio, come funziona, la plancia, cosa fa, i piani, i download, i documenti                 |
-| `stile.css`               | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni, il telaio del riquadro |
-| `casa-in-pagina.js`       | la Home Assistant finta che fa girare la plancia                                                                   |
-| `listino.js`              | i prezzi                                                                                                           |
-| `sito.js`                 | chiaro e scuro, l'ombra sotto la barra, le schede che compaiono, i prezzi nella tabella                            |
-| `statico/`                | roba portata da altrove — **non si tocca a mano**, è salvata nella repository                                      |
-| `dashboardmodern_static/` | la plancia vera — **non si tocca a mano**, ed è fuori da git                                                       |
+|                             |                                                                                                                    |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `index.html`                | la pagina: il colpo d'occhio, come funziona, la plancia, cosa fa, i download, i documenti                          |
+| `stile.css`                 | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni, il telaio del riquadro |
+| `casa-in-pagina.js`         | la Home Assistant finta che fa girare la plancia                                                                   |
+| `sito.js`                   | chiaro e scuro, l'ombra sotto la barra, le schede che compaiono                                                    |
+| `statico/`                  | roba portata da altrove — **non si tocca a mano**, è salvata nella repository                                      |
+| `dashboardmodern_static/`   | la plancia vera — **non si tocca a mano**, ed è fuori da git                                                       |
+| `_redirects`                | `www` porta all'indirizzo senza `www`                                                                              |
+| `_headers`                  | quanto tenere in cache: la pagina no, la plancia un giorno                                                         |
+| `robots.txt`, `sitemap.xml` | si può guardare tutto, e c'è una pagina sola                                                                       |
 
-## Le due cose da non ribattere a mano
+## Quello che non si ribatte a mano
 
-**I prezzi.** `listino.js` è la copia di
-`app/lib/schermate/acquisti/catalogo.dart`, che nel progetto è il posto dove
-stanno i prezzi. Quando cambia il catalogo dell'app, cambia anche quel file.
-Tre posti che dicono tre prezzi diversi è il modo più rapido di perdere la
-fiducia di chi paga.
-
-**Tutto quello che porta lo script.** Il marchio, le 47 icone, i caratteri
-Inter e Oswald, la casa demo, e la plancia intera:
+Il marchio, le 47 icone, i caratteri Inter e Oswald, la casa demo, e la
+plancia intera: li porta uno script, dalle cartelle dove stanno per davvero.
 
 ```bash
 node strumenti/porta-nel-sito.mjs
@@ -126,6 +124,14 @@ Sono file statici: va bene qualunque posto che serva una cartella.
   principale; da un altro ramo esce un'anteprima col suo indirizzo, e quello
   pubblico non si tocca. E non pubblica niente se la plancia non parte: prima
   di caricare, il workflow la apre con un browser vero.
+
+  **Il dominio.** Il workflow chiede a Cloudflare di mettere `gdahome.org` (e
+  il suo `www`) davanti al progetto. L'unica cosa che non può fare è portarci
+  il dominio: o il dominio è già un sito Cloudflare sullo stesso account — e
+  allora i record li scrive Cloudflare — oppure nel pannello di chi tiene il
+  dominio ci vuole un `CNAME` da `gdahome.org` e da `www.gdahome.org` a
+  `gdahome.pages.dev`. Finché non arriva, il sito c'è lo stesso su
+  `.pages.dev`: quell'indirizzo non si tocca mai.
 
 - **GitHub Pages** — funziona, con un avvertimento: finché la repository è
   privata, un sito Pages pubblico richiede un piano a pagamento; se no lo
@@ -159,7 +165,7 @@ ordine di quanto fa male sbagliarlo:
 3. **niente errori** in console e nessun file che non arriva — le due
    telecamere sono l'eccezione, ed è scritta nel collaudo;
 4. **niente scorrimento di lato** a nessuna larghezza;
-5. **i prezzi ci sono**.
+5. **i link portano dove dicono**, e il chiaro e scuro si accende.
 
 Le fotografie finiscono in `collaudo/foto/sito-*.png`.
 

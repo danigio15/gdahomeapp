@@ -24,9 +24,7 @@
  *  4. **Niente scorrimento di lato**, a nessuna delle tre larghezze. E' il
  *     difetto che si vede solo su un telefono vero, cioe' mai, finche' non lo
  *     si guarda apposta.
- *  5. **I prezzi ci sono**: la tabella e l'elenco del gratis li riempie
- *     `sito.js` da `listino.js`, e se quel pezzo si rompe restano due buchi
- *     bianchi in mezzo alla sezione che deve far comprare.
+ *  5. **I link portano dove dicono**, e il chiaro e scuro si accende.
  *
  * Le fotografie finiscono in `collaudo/foto/sito-*.png`.
  */
@@ -250,18 +248,11 @@ for (const misura of MISURE) {
   if (quanto.pagina > quanto.finestra + 1)
     lamenta(`[${misura.nome}] la pagina scorre di lato: ${quanto.pagina} su ${quanto.finestra}`);
 
-  const righe = await pagina.locator("#riga-singoli tr").count();
-  const gratis = await pagina.locator("#elenco-gratis li").count();
-  if (righe === 0) lamenta(`[${misura.nome}] la tabella dei singoli e' vuota`);
-  if (gratis === 0) lamenta(`[${misura.nome}] l'elenco di cosa e' gratis e' vuoto`);
-
   const riquadro = await laPlancia(pagina);
   const voci = await riquadro.locator("nav.tabs .tab").count();
   if (voci < 10) lamenta(`[${misura.nome}] la barra della plancia ha ${voci} voci`);
 
-  process.stdout.write(
-    `${misura.nome}: ${voci} voci nella plancia, ${righe} righe di listino, ${gratis} voci gratis\n`,
-  );
+  process.stdout.write(`${misura.nome}: ${voci} voci nella plancia\n`);
 
   await pagina.screenshot({ path: join(FOTO, `sito-${misura.nome}.png`), fullPage: true });
   await contesto.close();
@@ -418,13 +409,13 @@ await prova("la casa demo e' quella delle prove", async () => {
 /* ── 3. Il resto della pagina ────────────────────────────────────────────── */
 
 await prova("i link portano dove dicono", async () => {
-  await pagina.locator('a[href="#piani"]').first().click();
+  await pagina.locator('.navigazione a[href="#scarica"]').first().click();
   /* Lo scorrimento e' morbido: si aspetta che si fermi invece di indovinare
    * quanto ci mette. */
   await pagina.waitForFunction(
     () => {
-      const piani = document.getElementById("piani");
-      return piani && Math.abs(piani.getBoundingClientRect().top - 88) < 160;
+      const dove = document.getElementById("scarica");
+      return dove && Math.abs(dove.getBoundingClientRect().top - 88) < 160;
     },
     null,
     { timeout: 10000 },

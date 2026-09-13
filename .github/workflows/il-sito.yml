@@ -24,6 +24,21 @@
 # variabile di repository `SITO_PAGES` (Settings → Secrets and variables →
 # Actions → Variables), oppure si scrive il nome nella casella qui sotto.
 #
+# **Il dominio e' `gdahome.org`**, e lo attacca questa pagina: chiede a
+# Cloudflare di mettere il dominio (e il suo `www`) davanti al progetto Pages.
+# Per un altro dominio si mette la variabile `SITO_DOMINIO`.
+#
+# Perche' funzioni ci vuole una cosa che questa pagina non puo' fare: il
+# dominio deve **arrivare a Cloudflare**. Due strade:
+#
+#   * il dominio e' gia' un sito Cloudflare (sullo stesso account del
+#     gettone): allora non c'e' altro da fare, i record li scrive Cloudflare;
+#   * il dominio sta da un altro registrar: nel suo pannello si mette un
+#     `CNAME` da `gdahome.org` e da `www.gdahome.org` a `gdahome.pages.dev`.
+#
+# Finche' il dominio non risponde, il sito c'e' lo stesso su `.pages.dev`:
+# quello e' il primo indirizzo, e non gli si toglie mai.
+#
 # **Quando gira.** A mano da Actions, e da sola a ogni modifica di `sito/`
 # sul ramo principale: un sito che resta indietro rispetto a quello che
 # racconta e' peggio di non averlo. Da un altro ramo esce un'anteprima col
@@ -176,6 +191,16 @@ jobs:
           # solo, wrangler lo trova da se' e questo puo' restare vuoto.
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
+      - name: Quale dominio
+        run: |
+          set -eu
+          nome="${VARIABILE:-}"
+          [ -n "$nome" ] || nome="gdahome.org"
+          echo "DOMINIO=$nome" >> "$GITHUB_ENV"
+          echo "Il dominio del sito e' «$nome»."
+        env:
+          VARIABILE: ${{ vars.SITO_DOMINIO }}
+
       # Dal ramo principale esce il sito vero; da qualunque altro ramo esce
       # un'anteprima col suo indirizzo, e quello pubblico non si tocca.
       - name: Pubblica
@@ -207,4 +232,80 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
           # Serve solo se sul gettone c'e' piu' di un account. Se ce n'e' uno
           # solo, wrangler lo trova da se' e questo puo' restare vuoto.
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # Il dominio davanti al progetto.
+      #
+      # Va **dopo** aver pubblicato: un dominio si puo' mettere solo davanti a
+      # un sito che esiste. Wrangler non ha un comando per questo, e allora si
+      # chiede a Cloudflare direttamente.
+      #
+      # Se non va — il gettone non ha i permessi, il dominio sta da un altro
+      # registrar e non e' ancora arrivato — **non si ferma niente**: il sito
+      # e' gia' online su `.pages.dev`, e qui si scrive cosa manca.
+      #
+      # Da un ramo che non e' quello principale non si tocca: le anteprime
+      # hanno il loro indirizzo, e il dominio resta dov'e'.
+      - name: Il dominio davanti al sito
+        if: github.ref_name == 'main'
+        run: |
+          set -eu
+
+          cf() {
+            metodo=$1
+            pezzo=$2
+            shift 2
+            curl -sS -X "$metodo" \
+              -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+              -H "Content-Type: application/json" \
+              "https://api.cloudflare.com/client/v4${pezzo}" "$@"
+          }
+
+          # L'identificativo dell'account: quello messo fra i segreti, o
+          # l'unico che il gettone vede.
+          conto="${CLOUDFLARE_ACCOUNT_ID:-}"
+          if [ -z "$conto" ]; then
+            conto=$(cf GET "/accounts?per_page=2" | sed -n 's/.*"id":"\([0-9a-f]\{32\}\)".*/\1/p' | head -1)
+          fi
+          if [ -z "$conto" ]; then
+            echo "::warning::Non riesco a sapere l'identificativo dell'account Cloudflare: il dominio non l'ho attaccato. Al gettone serve «Account Settings: Read», oppure si mette il segreto CLOUDFLARE_ACCOUNT_ID."
+            echo "Il dominio **non** e' stato attaccato: manca l'identificativo dell'account." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          gia=$(cf GET "/accounts/${conto}/pages/projects/${PROGETTO}/domains" || echo "")
+
+          attacca() {
+            quale=$1
+            if printf '%s' "$gia" | grep -q "\"name\":\"${quale}\""; then
+              echo "«${quale}» c'era gia'."
+              return 0
+            fi
+            risposta=$(cf POST "/accounts/${conto}/pages/projects/${PROGETTO}/domains" \
+              --data "{\"name\":\"${quale}\"}" || echo "")
+            if printf '%s' "$risposta" | grep -q '"success":true'; then
+              echo "«${quale}» attaccato."
+            else
+              perche=$(printf '%s' "$risposta" | sed -n 's/.*"message":"\([^"]*\)".*/\1/p' | head -1)
+              echo "::warning::«${quale}» non si e' attaccato: ${perche:-Cloudflare non lo dice}"
+              echo "Il dominio \`${quale}\` non si e' attaccato: ${perche:-Cloudflare non lo dice}." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          }
+
+          attacca "${DOMINIO}"
+          attacca "www.${DOMINIO}"
+
+          {
+            echo ""
+            echo "### Il dominio"
+            echo ""
+            echo "\`https://${DOMINIO}\` — e \`www\` ci reindirizza."
+            echo ""
+            echo "Se non risponde ancora, al dominio manca la strada verso Cloudflare:"
+            echo "un \`CNAME\` da \`${DOMINIO}\` e da \`www.${DOMINIO}\` a \`${PROGETTO}.pages.dev\`,"
+            echo "nel pannello di chi tiene il dominio. Se il dominio e' gia' un sito"
+            echo "Cloudflare sullo stesso account, i record li ha scritti Cloudflare da se'."
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

@@ -140,9 +140,10 @@ volta dentro — stanno in [`COME_PROVARLA.md`](COME_PROVARLA.md).
 
 ## Il sito
 
-In [`sito/`](sito/README.md) c'e' il posto dove il progetto si racconta a chi
-non l'ha mai visto: com'e' fatto, cosa fa, quanto costa. E in mezzo, il pezzo
-per cui esiste: **la plancia vera, che ci gira dentro**.
+Su **[gdahome.org](https://gdahome.org)**, e in [`sito/`](sito/README.md),
+c'e' il posto dove il progetto si racconta a chi non l'ha mai visto: com'e'
+fatto e cosa fa. E in mezzo, il pezzo per cui esiste: **la plancia vera, che
+ci gira dentro**.
 
 Non una riproduzione e non delle fotografie: DashboardModern, gli stessi file
 che stanno nell'add-on, in un riquadro dentro la pagina. Le trenta voci della

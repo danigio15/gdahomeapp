@@ -15,8 +15,12 @@
       property="og:description"
       content="La plancia vera di Home Assistant sul telefono. Ci si abbina con otto lettere, si entra da dentro e da fuori casa senza aprire niente sul router, e il centralino che fa da tramite non può leggere niente."
     />
-    <meta property="og:image" content="statico/marchio.png" />
+    <meta property="og:image" content="https://gdahome.org/statico/marchio.png" />
+    <meta property="og:url" content="https://gdahome.org/" />
+    <meta property="og:site_name" content="gdahome" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta property="og:locale" content="it_IT" />
+    <link rel="canonical" href="https://gdahome.org/" />
     <link rel="icon" href="statico/marchio.png" />
     <link rel="apple-touch-icon" href="statico/marchio.png" />
     <link rel="preload" as="image" href="statico/marchio.png" />
@@ -34,7 +38,6 @@
           <a href="#come">Come funziona</a>
           <a href="#plancia">La plancia</a>
           <a href="#funzioni">Cosa fa</a>
-          <a href="#piani">Piani</a>
           <a href="#scarica">Scarica</a>
         </nav>
         <div class="attrezzi">
@@ -106,9 +109,7 @@
             <div class="numerone"><b>393</b><span>prove che girano a ogni commit</span></div>
             <div class="numerone"><b>30</b><span>sezioni della plancia, già funzionanti</span></div>
             <div class="numerone"><b>0</b><span>porte da aprire sul router</span></div>
-            <div class="numerone">
-              <b>0 €</b><span>quanto costa tenere in piedi il centralino</span>
-            </div>
+            <div class="numerone"><b>8</b><span>le lettere per abbinare un telefono</span></div>
           </div>
         </div>
       </section>
@@ -534,118 +535,6 @@
         </div>
       </section>
 
-      <!-- ── I piani ────────────────────────────────────────────────────── -->
-      <section id="piani">
-        <div class="limite">
-          <p class="occhiello">Quanto costa</p>
-          <h2>Vedere e comandare casa tua non si paga. Mai.</h2>
-          <p class="guida">
-            Compreso l'accesso da fuori: tenerlo in piedi costa zero, ed è il motivo per cui l'app
-            esiste. Si paga <b>per casa e non per telefono</b>: chi compra lo vede sul suo telefono,
-            sul tablet in cucina e su quello di sua moglie.
-          </p>
-
-          <div class="piani">
-            <article class="piano piano-gratis appare">
-              <h3>Gratis</h3>
-              <div class="prezzo"><b>0 €</b><span>per sempre</span></div>
-              <p>Tutto quello che serve a vedere e comandare la propria casa.</p>
-              <ul class="elenco-segni" id="elenco-gratis"></ul>
-              <a class="bottone bottone-vuoto" href="#scarica">Scarica l'app</a>
-            </article>
-
-            <article class="piano piano-primo appare">
-              <h3>Casa completa</h3>
-              <div class="prezzo"><b>19,99 €</b><span>una volta</span></div>
-              <p>
-                Toglie tutti i limiti, per sempre e per tutta la casa. Comprende la precedenza nelle
-                risposte alle segnalazioni.
-              </p>
-              <ul class="elenco-segni">
-                <li>Dispositivi collegati senza limite</li>
-                <li>Telecamere senza limite</li>
-                <li>Energia: report, analisi, confronti nel tempo</li>
-                <li>Automazioni e aiutanti senza limite</li>
-                <li>Zigbee senza limite</li>
-                <li>Precedenza nelle risposte</li>
-              </ul>
-              <a class="bottone bottone-pieno" href="#scarica">Si compra dall'app</a>
-            </article>
-
-            <article class="piano appare">
-              <h3>Casa completa, a mesi</h3>
-              <div class="prezzo"><b>1,99 €</b><span>al mese</span></div>
-              <p>
-                Le stesse identiche cose, e si disdice quando si vuole. Non è un secondo prodotto: è
-                la stessa cosa per chi non vuole decidere subito.
-              </p>
-              <ul class="elenco-segni">
-                <li>Tutto quello di Casa completa</li>
-                <li>Si disdice dal negozio, in due tocchi</li>
-                <li>Quattordici giorni di prova prima, senza carta e senza chiederlo</li>
-              </ul>
-              <a class="bottone bottone-vuoto" href="#scarica">Si compra dall'app</a>
-            </article>
-          </div>
-
-          <div class="singoli appare">
-            <div class="singoli-testa">
-              <h3>Oppure una cosa sola</h3>
-              <p>
-                Messi insieme costano 35,94 €, quasi il doppio del pacchetto, ed è voluto: chi ne
-                prende due deve accorgersi da sé che gli conviene l'altro.
-              </p>
-            </div>
-            <div class="tabella-fuori">
-              <table>
-                <thead>
-                  <tr>
-                    <th scope="col">Cosa si sblocca</th>
-                    <th scope="col">Gratis</th>
-                    <th scope="col">Prezzo</th>
-                  </tr>
-                </thead>
-                <tbody id="riga-singoli"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="sblocchi">
-            <div class="sblocco appare">
-              <b>La prova di quattordici giorni</b>
-              <p>
-                Al primo abbinamento tutto è acceso per due settimane, senza carta e senza chiedere
-                niente. Serve a far vedere cosa si perde, che è il modo più onesto di far comprare.
-              </p>
-            </div>
-            <div class="sblocco appare">
-              <b>Un codice di sblocco</b>
-              <p>
-                Da chi ti ha installato la casa, da una fiera, da noi: si batte nell'app e vale
-                subito. Nessun negozio di mezzo.
-              </p>
-            </div>
-            <div class="sblocco appare">
-              <b>Chiedere lo sblocco</b>
-              <p>
-                Se collaudi l'app, se ci aiuti, o se hai un motivo: si chiede dall'app e la
-                richiesta arriva a chi può concederlo. È la differenza fra «scrivimi una mail» e
-                «tocca qui».
-              </p>
-            </div>
-          </div>
-
-          <div class="avvertenza">
-            <p>
-              <b>Dove siamo, per davvero.</b> Il listino è deciso e sta scritto nel codice in un
-              posto solo; quello che incassa — la verifica delle ricevute presso Google e Apple, i
-              diritti firmati dal centralino, i limiti contati dal ponte — è ancora da scrivere.
-              Finché non c'è, non si paga niente e non c'è niente di chiuso.
-            </p>
-          </div>
-        </div>
-      </section>
-
       <!-- ── Scarica ────────────────────────────────────────────────────── -->
       <section id="scarica">
         <div class="limite">
@@ -829,11 +718,11 @@
             </a>
             <a
               class="documento"
-              href="https://github.com/danigio15/gdahomeapp/blob/main/docs/ACQUISTI.md"
+              href="https://github.com/danigio15/gdahomeapp/blob/main/docs/RITRATTO.md"
               rel="noopener"
             >
-              <b>Gli acquisti</b>
-              <span>Il listino, il giro dei soldi, e quanto regge</span>
+              <b>Il ritratto di una persona</b>
+              <span>La faccia non è una foto: si compone, e si salvano le scelte</span>
             </a>
             <a
               class="documento"
@@ -881,14 +770,12 @@
         <nav aria-label="Link utili">
           <a href="#come">Come funziona</a>
           <a href="#plancia">La plancia</a>
-          <a href="#piani">Piani</a>
           <a href="#scarica">Scarica</a>
           <a href="https://github.com/danigio15/gdahomeapp" rel="noopener">GitHub</a>
         </nav>
       </div>
     </footer>
 
-    <script src="listino.js"></script>
     <script src="sito.js"></script>
   </body>
 </html>
