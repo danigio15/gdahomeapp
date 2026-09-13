@@ -174,6 +174,38 @@ non con quello del telefono di adesso.
 6. Dentro la console: **Crea app** → nome, lingua, «App» e non «Gioco»,
    gratuita. Da li' in poi le caselle sono quelle della tabella qui sotto.
 
+### Il passo «About you»
+
+Tre caselle, e una e' delicata.
+
+**«Your Play Console and Android experience»** — testo libero, lo legge solo
+Google, serve a capire chi sei. Si risponde come stanno le cose. Qualcosa cosi',
+da incollare e correggere:
+
+```
+This is my first Google Play Console account; I have never published an app
+on Google Play before.
+
+I develop gdahome (https://github.com/danigio15/gdahomeapp), an open-source
+project made of two parts: a Home Assistant add-on and a Flutter app for
+Android, iOS and web that shows a home dashboard on the phone. The code is
+public and the builds are made with GitHub Actions.
+
+My Android experience comes from this project: Flutter and Dart, a
+WebView-based interface, release builds and app signing. The app is currently
+distributed as a signed APK from GitHub Releases, and I would now like to
+publish it on Google Play.
+```
+
+**«Other Google accounts»** — se hai usato **altri** account per entrare nel
+Play Console negli ultimi sei mesi. E' la domanda con cui Google prende chi si
+rifa' un account dopo esserselo fatto chiudere: si risponde la verita', e se e'
+il primo la verita' e' **No**.
+
+**«Website»** — serve a verificare l'identita' e **non** si vede sul negozio.
+Va bene `https://github.com/danigio15/gdahomeapp`: e' pubblico, dice cos'e'
+gdahome e porta il tuo nome. In alternativa `https://webapp.gdahome.org`.
+
 ### Quello che il negozio chiede, e quello che abbiamo
 
 | cosa | stato |
