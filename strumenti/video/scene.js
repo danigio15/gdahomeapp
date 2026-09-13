@@ -934,7 +934,7 @@ scena(
     </div>
     <div class="vetro en" style="--t:1.45s;padding:22px 24px;margin-top:16px;border-color:rgba(245,158,11,.35)">
       <h3 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#fcd34d">Come è adesso</h3>
-      <p style="margin:0;font-size:17px;line-height:1.55;color:var(--tenue)">Sul Play Store e sull'App Store l'app <b style="color:#fcd34d">non è ancora pubblicata</b>: nel piano è l'ultima riga della fase 1. Intanto si prova in altri due modi, e sono qui sotto.</p>
+      <p style="margin:0;font-size:17px;line-height:1.55;color:var(--tenue)">Sul Play Store l'app <b style="color:#fcd34d">non è ancora pubblicata</b>: nel piano è l'ultima riga della fase 1. Intanto si apre dal browser, ed è qui sotto. <b style="color:#fcd34d">Per iOS: prossimamente.</b></p>
     </div>
   </div>
 
@@ -945,71 +945,60 @@ scena(
       testo: "Quando sarà pubblicata sarà questa la strada: cercarla e premere <b>Installa</b>.",
     },
     { t: 4.8, t2: 9.4, testo: "Nessun file da passare, nessun permesso strano da concedere." },
-    { t: 9.6, testo: "Oggi però sui negozi non c'è: si prova negli altri due modi." },
+    { t: 9.6, testo: "Oggi però sui negozi non c'è: intanto si apre dal browser." },
   ])}`,
 );
 
-/* ══ 7. Come si prova oggi ═════════════════════════════════════════════ */
+/* ══ 7. Come si prova oggi ═════════════════════════════════════════════
+ *
+ * Una strada sola, quella che funziona senza installare niente. L'apk da
+ * scaricare a mano stava qui e non ci sta piu': e' roba da chi prova, non da
+ * chi guarda un video per capire cos'e'. Dell'iPhone si dice quello che c'e'
+ * da dire, cioe' quando. */
 
-const strada = (x, t, numero, tinta, titolo, righe, coda) => `
-  <div class="vetro en" style="--t:${t}s;position:absolute;left:${x}px;top:170px;width:340px;height:296px;padding:24px 22px">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="width:34px;height:34px;border-radius:10px;background:${tinta}22;border:1px solid ${tinta}66;display:grid;place-items:center;font-weight:800;color:${tinta}">${numero}</div>
-      <h3 style="margin:0;font-size:21px;font-weight:700">${titolo}</h3>
-    </div>
-    <div style="margin-top:16px;font-size:16px;line-height:1.55;color:var(--tenue)">${righe}</div>
-    ${coda ? `<div style="position:absolute;left:22px;right:22px;bottom:20px;font-size:14px;color:#7dd3fc;font-weight:600">${coda}</div>` : ""}
+const passo = (numero, testo) => `
+  <div style="display:flex;align-items:center;gap:12px;margin-top:14px">
+    <div style="flex:0 0 auto;width:28px;height:28px;border-radius:9px;background:rgba(14,165,233,.16);
+                border:1px solid rgba(14,165,233,.4);display:grid;place-items:center;
+                font-size:14px;font-weight:800;color:#38bdf8">${numero}</div>
+    <div style="font-size:18px;color:#dbe7f7">${testo}</div>
   </div>`;
 
 scena(
   "come-si-prova-oggi",
-  12.5,
+  11.5,
   () => `
-  ${cartello(7, "Intanto, oggi", "tre strade che funzionano già")}
-  ${strada(
-    98,
-    0.4,
-    "1",
-    "#38bdf8",
-    "Dal browser",
-    "La più rapida: non si installa niente.<br /><br />In Home Assistant, barra laterale → <b style='color:#cfe0f5'>gdahome</b> → scheda «gdahome in un browser» → <b style='color:#cfe0f5'>Apri gdahome</b>.",
-    "È la stessa app del telefono",
-  )}
-  ${strada(
-    470,
-    0.7,
-    "2",
-    "#fbbf24",
-    "L'apk, su Android",
-    "Lo costruisce GitHub, non serve niente sul computer.<br /><br />Actions → <b style='color:#cfe0f5'>«L'app da provare»</b> → Run workflow. In fondo alla corsa c'è <b style='color:#cfe0f5'>gdahome-android</b>.",
-    "Dentro c'è app-release.apk",
-  )}
-  ${strada(
-    842,
-    1.0,
-    "3",
-    "#4ade80",
-    "Sull'iPhone",
-    "L'app c'è e compila a ogni giro; quello che manca è la firma di Apple.<br /><br />Senza un computer la strada è <b style='color:#cfe0f5'>TestFlight</b>, e TestFlight vuole l'account sviluppatore.",
-    "I passi stanno in docs/IPHONE.md",
-  )}
-  <div class="ap" style="--t:1.4s;position:absolute;left:98px;top:512px;right:98px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent)"></div>
-  <div class="ap" style="--t:1.6s;position:absolute;left:0;right:0;top:534px;text-align:center;font-size:19px;color:#7f93b0">
-    Tutte e tre aprono la stessa app. Quello che serve in casa è sempre l'add-on acceso.
+  ${cartello(7, "Intanto, oggi", "senza installare niente")}
+
+  <div class="vetro en" style="--t:.4s;position:absolute;left:240px;top:160px;width:800px;padding:26px 30px 30px">
+    <h3 style="margin:0;font-size:24px;font-weight:700">Dal browser</h3>
+    <p style="margin:6px 0 0;font-size:17px;color:var(--tenue)">
+      L'indirizzo lo dà l'add-on, e non c'è niente da scaricare.
+    </p>
+    ${passo(1, "In Home Assistant, barra laterale → <b style='color:#fff'>gdahome</b>")}
+    ${passo(2, "Scheda «gdahome in un browser» → <b style='color:#fff'>Apri gdahome</b>")}
+    <div style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.1);
+                font-size:16px;line-height:1.5;color:#7f93b0">
+      È la stessa app del telefono, e si adatta da sola allo schermo: computer, tablet o telefono.
+      Ci arriva solo chi è già entrato in Home Assistant.
+    </div>
   </div>
+
+  <div class="ap" style="--t:1.6s;position:absolute;left:0;right:0;top:494px;display:flex;justify-content:center">
+    <div class="vetro" style="display:flex;align-items:center;gap:12px;padding:14px 24px;border-color:rgba(245,158,11,.4)">
+      ${segno("telefono", 22, "#fbbf24")}
+      <span style="font-size:20px;color:#fcd34d;font-weight:600">Per iOS: prossimamente</span>
+    </div>
+  </div>
+
   ${didascalia([
     {
-      t: 1.6,
-      t2: 5.0,
+      t: 1.4,
+      t2: 6.0,
       testo:
-        "La più rapida non installa niente: l'app si apre <b>dal browser</b>, e l'indirizzo lo dà l'add-on.",
+        "Intanto l'app si apre <b>dal browser</b>, e non si installa niente: l'indirizzo lo dà l'add-on.",
     },
-    {
-      t: 5.2,
-      t2: 9.0,
-      testo: "Su Android il pacchetto lo costruisce GitHub: si scarica e si apre.",
-    },
-    { t: 9.2, testo: "Su iPhone serve la firma di Apple — è l'ultimo pezzo che manca." },
+    { t: 6.2, testo: "È la stessa app, su qualunque schermo. <b>Per iOS: prossimamente.</b>" },
   ])}`,
 );
 

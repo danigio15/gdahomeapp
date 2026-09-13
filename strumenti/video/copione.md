@@ -120,26 +120,25 @@ In alto, per tutta la scena: **«Anteprima: sui negozi non c'è ancora»**.
 >
 > (4,8s) Nessun file da passare, nessun permesso strano da concedere.
 >
-> (9,6s) Oggi però sui negozi non c'è: si prova negli altri due modi.
+> (9,6s) Oggi però sui negozi non c'è: intanto si apre dal browser.
 
-### **2:17** — Intanto, oggi *(12,5s)*
+### **2:17** — Intanto, oggi *(11,5s)*
 
-Le tre strade: dal browser, l'apk da GitHub, TestFlight sull'iPhone.
+Una strada sola — dal browser — in due passi, e sotto la pastiglia **«Per iOS:
+prossimamente»**.
 
-> (1,6s) La più rapida non installa niente: l'app si apre **dal browser**, e
+> (1,4s) Intanto l'app si apre **dal browser**, e non si installa niente:
 > l'indirizzo lo dà l'add-on.
 >
-> (5,2s) Su Android il pacchetto lo costruisce GitHub: si scarica e si apre.
->
-> (9,2s) Su iPhone serve la firma di Apple — è l'ultimo pezzo che manca.
+> (6,2s) È la stessa app, su qualunque schermo. **Per iOS: prossimamente.**
 
-### **2:29** — Chiusura *(9,5s)*
+### **2:28** — Chiusura *(9,5s)*
 
 > (2,4s) Un indirizzo da incollare, e un quadretto da inquadrare.
 >
 > (6,4s) **github.com/danigio15/gdahomeapp**
 
-**Fine: 2:38.**
+**Fine: 2:37.**
 
 ---
 

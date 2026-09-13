@@ -77,14 +77,19 @@ la seconda non c'è ancora.
 
 ## La scena del Play Store dice che è un'anteprima
 
-L'app **sui negozi non c'è ancora** — nel README sta fra le cose da fare, e
-`COME_PROVARLA.md` spiega le strade che funzionano oggi. La scena che fa vedere
-«Installa» sul telefono porta scritto in alto **«Anteprima: sui negozi non c'è
-ancora»**, e subito dopo viene la scena con i tre modi veri: dal browser,
-l'apk da GitHub, e TestFlight per l'iPhone.
+L'app **sui negozi non c'è ancora** — nel README sta fra le cose da fare. La
+scena che fa vedere «Installa» sul telefono porta scritto in alto **«Anteprima:
+sui negozi non c'è ancora»**, e subito dopo viene quella con la strada che
+funziona oggi: **dal browser**, in due passi, con sotto la pastiglia **«Per iOS:
+prossimamente»**.
 
-Il giorno che l'app va sui negozi, quella scena si toglie l'etichetta e la scena
-dopo si accorcia: sono due righe in `scene.js`.
+Nel video non c'è come si scarica l'apk a mano, e non c'è la spiegazione di
+TestFlight: stanno in [`COME_PROVARLA.md`](../../COME_PROVARLA.md) e in
+[`docs/IPHONE.md`](../../docs/IPHONE.md), che è il posto di chi prova l'app —
+non di chi guarda un video per capire cos'è.
+
+Il giorno che l'app va sui negozi, quella scena si toglie l'etichetta e la
+pastiglia dell'iOS cambia parola: sono due righe in `scene.js`.
 
 ## Il suono
 
