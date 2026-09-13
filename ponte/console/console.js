@@ -382,12 +382,12 @@
      * La prima e' provata, non indovinata: `laCartinaSiScarica` la chiede a
      * Home Assistant da questa pagina, che sta sul suo stesso indirizzo. */
     if (cartinaChe === "no") {
-      riga +=
-        " ⚠️ Home Assistant non serve la cartina della plancia, e senza quella" +
-        " aprendola esce «Errore di configurazione». Riavvialo una volta" +
-        " (Impostazioni → Sistema → Riavvia): apre la cartella «www» quando parte," +
-        " e i file che ci sono finiti dopo li serve solo dal riavvio dopo.";
-    } else if (esito.riavvia && cartinaChe !== "si") {
+      riga += " ⚠️ Home Assistant non serve la cartina della plancia.";
+    } else if (cartinaChe === "rotta") {
+      riga += " ⚠️ La cartina si scarica ma non registra la tessera.";
+    } else if (cartinaChe === "si") {
+      riga += " La cartina si scarica, e la tessera si registra.";
+    } else if (esito.riavvia) {
       riga +=
         " ⚠️ Riavvia Home Assistant una volta (Impostazioni → Sistema → Riavvia):" +
         " la cartella «www» non c'era e l'ho fatta io, e Home Assistant i file che" +
@@ -413,18 +413,76 @@
    * sbagliato meta' delle volte. */
   var cartinaChe = "";
 
+  /* Come si chiama la tessera: lo stesso nome sta in `carta/plancia.js`, ed e'
+   * quello con cui Lovelace la cerca. Se nessuno l'ha registrata,
+   * `custom:gdahome-plancia` non esiste e Home Assistant disegna «Errore di
+   * configurazione» — senza dire questo, e senza dire niente altro. */
+  var LA_TESSERA = "gdahome-plancia";
+
   function laCartinaSiScarica(dove) {
     if (!dove || cartinaChe === "si") return Promise.resolve(cartinaChe);
     return fetch(dove, { cache: "no-store" })
       .then(function (risposta) {
-        cartinaChe = risposta.ok ? "si" : "no";
-        return cartinaChe;
+        if (!risposta.ok) {
+          cartinaChe = "no";
+          return cartinaChe;
+        }
+        /* Si scarica. Allora si prova anche a **eseguirla**, perche' «il file
+         * c'e'» e «la tessera esiste» sono due cose diverse e portano a due
+         * rimedi diversi: un file che si scarica e non registra la tessera e'
+         * un file rotto, e una tessera che si registra qui ma in una Plancia
+         * non esiste vuol dire che Lovelace quella risorsa non la carica — il
+         * browser che non l'ha ancora vista, o le dashboard tenute in YAML,
+         * dove le risorse dallo storage non si leggono. */
+        return import(dove).then(
+          function () {
+            cartinaChe = window.customElements.get(LA_TESSERA) ? "si" : "rotta";
+            return cartinaChe;
+          },
+          function () {
+            cartinaChe = "rotta";
+            return cartinaChe;
+          },
+        );
       })
       .catch(function () {
         /* Senza rete non si sa, e non si dice niente: la riga resta quella. */
         cartinaChe = "";
         return cartinaChe;
       });
+  }
+
+  /* Il foglietto sotto la riga: si vede solo quando c'e' qualcosa da fare, e
+   * dice **cosa** fare — non com'e' fatto il mondo. */
+  function avvisaSullaCartina() {
+    var dove = trova("avviso-cartina");
+    if (!dove) return;
+    var testo = "";
+    if (cartinaChe === "no") {
+      testo =
+        "Home Assistant non serve la cartina della plancia, e senza quella la plancia " +
+        "aperta dalle «Plance» esce con «Errore di configurazione». Riavvialo una volta " +
+        "(Impostazioni → Sistema → Riavvia): la cartella «www» la apre quando parte, e i " +
+        "file arrivati dopo li serve solo dal riavvio dopo.";
+    } else if (cartinaChe === "rotta") {
+      testo =
+        "La cartina si scarica ma non registra la tessera: il file e' arrivato rotto. " +
+        "Riavvia l'add-on, che la riscrive da se' a ogni avvio; se succede ancora, " +
+        "scrivilo dalle segnalazioni.";
+    } else if (cartinaChe === "si") {
+      testo =
+        "Se aprendo la plancia dalle «Plance» esce «Errore di configurazione»: da qui la " +
+        "cartina si scarica e la tessera si registra, quindi il file e' a posto ed e' " +
+        "Lovelace che non la carica. Due cose, in quest'ordine. 1) Ricarica a fondo la " +
+        "pagina di Home Assistant — nell'app: Impostazioni → App companion → Svuota la " +
+        "cache, e riapri: una risorsa aggiunta adesso il browser la vede al giro dopo. " +
+        "2) Se succede anche da un browser che non l'ha mai aperta, Home Assistant tiene " +
+        "le dashboard in YAML (lovelace: mode: yaml) e le risorse dallo storage non le " +
+        "legge: allora va dichiarata a mano in configuration.yaml — lovelace: resources: " +
+        "- url: /local/gdahome/plancia.js  type: module.";
+    }
+    dove.textContent = testo;
+    dove.hidden = !testo;
   }
 
   function avvisaLePlance(testo) {
@@ -580,6 +638,7 @@
         trova("stato-plance-in-casa").textContent = comeVannoLePlanceInCasa(stato.plance_in_casa);
         laCartinaSiScarica(stato.plance_in_casa && stato.plance_in_casa.cartina).then(function () {
           trova("stato-plance-in-casa").textContent = comeVannoLePlanceInCasa(stato.plance_in_casa);
+          avvisaSullaCartina();
         });
         trova("fabbrica").disabled = stato.dispositivi.length >= stato.massimi;
         if (!stato.abbinamento.attivo) nascondiIlCodice();

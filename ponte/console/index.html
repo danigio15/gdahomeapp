@@ -21,8 +21,7 @@
       <section class="scheda">
         <h2>Abbinare un telefono</h2>
         <p class="spiegazione">
-          Apri gdahome sul telefono e inquadra il quadretto. Vale una volta sola e per pochi
-          minuti.
+          Apri gdahome sul telefono e inquadra il quadretto. Vale una volta sola e per pochi minuti.
         </p>
         <div id="codice-vivo" hidden>
           <!-- Il disegno lo fa il ponte: la console non scarica niente da
@@ -65,10 +64,9 @@
           <a class="bottone" id="apri-app" href="app/">Apri gdahome</a>
         </div>
         <p class="spiegazione">
-          Si apre qui dentro: per tornare a questa pagina, «gdahome» nella barra di Home
-          Assistant. Aprendola in una scheda a parte, dopo qualche minuto quell'indirizzo
-          risponde <strong>401</strong> — la sessione la tiene viva Home Assistant, non la
-          scheda.
+          Si apre qui dentro: per tornare a questa pagina, «gdahome» nella barra di Home Assistant.
+          Aprendola in una scheda a parte, dopo qualche minuto quell'indirizzo risponde
+          <strong>401</strong> — la sessione la tiene viva Home Assistant, non la scheda.
         </p>
         <!-- Il link vero, quello da usare fuori casa.
              L'indirizzo di qui sopra non è un link: vive finché vive la pagina
@@ -78,8 +76,8 @@
              entra in casa di nessuno. -->
         <div id="link-di-fuori" hidden>
           <p class="spiegazione">
-            <strong>Da fuori casa, o da un browser qualsiasi</strong>: questo invece è un
-            indirizzo vero, si salva fra i preferiti e si può mandare a qualcuno.
+            <strong>Da fuori casa, o da un browser qualsiasi</strong>: questo invece è un indirizzo
+            vero, si salva fra i preferiti e si può mandare a qualcuno.
           </p>
           <p class="codice" id="link-di-fuori-indirizzo"></p>
           <div class="bottoni">
@@ -89,8 +87,8 @@
           </div>
           <p class="spiegazione">
             Chi lo apre trova «Colleghiamo la casa»: per entrare serve un codice di abbinamento,
-            quello che si fabbrica qui sopra. È uguale per tutti — è l'indirizzo dell'app, non
-            della casa.
+            quello che si fabbrica qui sopra. È uguale per tutti — è l'indirizzo dell'app, non della
+            casa.
           </p>
         </div>
         <p class="spiegazione" id="avviso-sicuro" hidden>
@@ -109,14 +107,18 @@
       <section class="scheda" id="plance">
         <h2>Le plance di questa casa</h2>
         <p class="spiegazione">
-          Una plancia e' una configurazione a se': le sue sezioni, le sue
-          tessere, le sue stanze. I file sono gli stessi per tutte — la
-          plancia sul disco e' una — e quello che cambia e' quello che ci hai
-          messo dentro. Serve a chi tiene due case sullo stesso Home
-          Assistant, e a chi ne vuole una per se' e una per chi ci abita.
-          Nell'app si scelgono dal menu.
+          Una plancia e' una configurazione a se': le sue sezioni, le sue tessere, le sue stanze. I
+          file sono gli stessi per tutte — la plancia sul disco e' una — e quello che cambia e'
+          quello che ci hai messo dentro. Serve a chi tiene due case sullo stesso Home Assistant, e
+          a chi ne vuole una per se' e una per chi ci abita. Nell'app si scelgono dal menu.
         </p>
         <p class="riga-di-stato" id="stato-plance-in-casa">…</p>
+        <!-- Cosa fare quando la plancia, aperta dalle «Plance», esce con
+             «Errore di configurazione». Quel messaggio lo scrive Home
+             Assistant e il motivo non lo mostra; qui invece si prova la
+             cartina da questa pagina — che sta sul suo stesso indirizzo — e
+             si dice quale dei due casi e'. -->
+        <p class="avviso" id="avviso-cartina" hidden></p>
         <ul id="elenco-plance" class="elenco"></ul>
         <div class="riga-di-tasti">
           <input
@@ -162,7 +164,9 @@
         <p class="spiegazione" id="aggiornamento-spiega"></p>
         <div class="bottoni">
           <button id="aggiorna-il-ponte" type="button" hidden>Aggiorna gdahome</button>
-          <button id="riguarda" type="button" class="tenue">Guarda se c'è una versione nuova</button>
+          <button id="riguarda" type="button" class="tenue">
+            Guarda se c'è una versione nuova
+          </button>
         </div>
         <p class="avviso" id="aggiornamento-avviso" hidden></p>
       </section>
@@ -175,12 +179,12 @@
         <p class="riga-di-stato" id="stato-chiacchieroni">…</p>
         <ul id="elenco-chiacchieroni" class="elenco"></ul>
         <p class="spiegazione">
-          Ogni cambiamento in casa e' un evento, e ogni evento arriva a tutti i telefoni
-          collegati. Una casa che ne fa centinaia al minuto non ha centinaia di cose che
-          cambiano: ne ha <strong>due o tre</strong> che cambiano di continuo — un contatore di
-          potenza, un sensore di consumo — e le altre stanno ferme. Se l'app va a scatti, e' da
-          qui che si comincia: a quelle due o tre si mette un filtro in Home Assistant, e il
-          traffico cala di dieci volte senza toccare niente.
+          Ogni cambiamento in casa e' un evento, e ogni evento arriva a tutti i telefoni collegati.
+          Una casa che ne fa centinaia al minuto non ha centinaia di cose che cambiano: ne ha
+          <strong>due o tre</strong> che cambiano di continuo — un contatore di potenza, un sensore
+          di consumo — e le altre stanno ferme. Se l'app va a scatti, e' da qui che si comincia: a
+          quelle due o tre si mette un filtro in Home Assistant, e il traffico cala di dieci volte
+          senza toccare niente.
         </p>
       </section>
 
@@ -188,10 +192,10 @@
         <h2>Da fuori casa</h2>
         <p class="riga-di-stato" id="stato-centralino">…</p>
         <p class="spiegazione">
-          In casa l'app trova il ponte da sola sulla porta <strong id="porta">…</strong>. Da fuori
-          è il ponte che chiama un centralino e ci resta in attesa: nessuna porta da aprire sul
-          router, nessun indirizzo pubblico, niente da installare. Il centralino instrada e non
-          può leggere niente di quello che passa.
+          In casa l'app trova il ponte da sola sulla porta <strong id="porta">…</strong>. Da fuori è
+          il ponte che chiama un centralino e ci resta in attesa: nessuna porta da aprire sul
+          router, nessun indirizzo pubblico, niente da installare. Il centralino instrada e non può
+          leggere niente di quello che passa.
         </p>
         <p class="spiegazione">
           L'indirizzo non si scrive da nessuna parte: è quello di gdahome, e sta dentro l'add-on.
