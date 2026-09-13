@@ -29,6 +29,10 @@ jobs:
   android:
     name: Android (APK)
     runs-on: ubuntu-latest
+    # Per attaccare il pacchetto a una release, e solo per quello: gli altri
+    # lavori restano in sola lettura.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v4
@@ -78,6 +82,65 @@ jobs:
           fi
         working-directory: app
 
+      # Con quale chiave si firma, e **quale** lo dice il riepilogo.
+      #
+      # Due chiavi, e la differenza conta. Quella di prova sta nel progetto e
+      # non e' un segreto: firma i pacchetti che si passano a mano, e serve a
+      # una cosa sola — che il pacchetto nuovo si installi **sopra** il vecchio
+      # senza disinstallare, perche' disinstallare costa l'abbinamento. Quella
+      # vera sta fuori da qui, in due segreti di GitHub, e non l'ha mai vista
+      # nessuno tranne chi l'ha fatta.
+      #
+      # Se i segreti non ci sono si firma di prova e si va avanti: un lavoro
+      # che si ferma perche' manca un segreto ferma anche chi voleva solo
+      # provare l'app.
+      - name: La chiave
+        id: chiave
+        working-directory: app
+        env:
+          CHIAVE: ${{ secrets.CHIAVE_ANDROID }}
+          PAROLA: ${{ secrets.CHIAVE_ANDROID_PASSWORD }}
+          COME_SI_CHIAMA: ${{ secrets.CHIAVE_ANDROID_ALIAS }}
+        run: |
+          if [ -z "$CHIAVE" ] || [ -z "$PAROLA" ]; then
+            echo "vera=no" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Firmato con la chiave di prova"
+              echo ""
+              echo "Si installa e va veloce, e sopra un pacchetto firmato con la stessa"
+              echo "chiave si aggiorna senza perdere l'abbinamento. Per i negozi, e per"
+              echo "una release pubblica, serve la chiave vera: due segreti,"
+              echo '`CHIAVE_ANDROID` (il portachiavi in base64) e'
+              echo '`CHIAVE_ANDROID_PASSWORD`. Come si fa, in cinque minuti:'
+              echo '`docs/LA_CHIAVE_ANDROID.md`.'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          dove="$RUNNER_TEMP/chiave.jks"
+          printf '%s' "$CHIAVE" | tr -d '[:space:]' | base64 -d > "$dove"
+          # Che sia davvero un portachiavi e che la parola lo apra si guarda
+          # **qui**: se no il guasto salta fuori mille righe dopo, dentro
+          # Gradle, con un messaggio che parla d'altro.
+          if ! keytool -list -keystore "$dove" -storepass "$PAROLA" > /dev/null 2>&1; then
+            echo "::error::CHIAVE_ANDROID non e' un portachiavi, o CHIAVE_ANDROID_PASSWORD non lo apre."
+            exit 1
+          fi
+          # Le quattro righe che legge Gradle. Il file sta fuori dalla
+          # repository — `android/.gitignore` lo tiene fuori — e la macchina di
+          # GitHub la si butta appena finito.
+          {
+            echo "storeFile=$dove"
+            echo "storePassword=$PAROLA"
+            echo "keyAlias=${COME_SI_CHIAMA:-gdahome}"
+            echo "keyPassword=$PAROLA"
+          } > android/chiave.properties
+          echo "vera=si" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Firmato con la chiave vera"
+            echo ""
+            echo "Questo pacchetto si puo' pubblicare."
+          } >> "$GITHUB_STEP_SUMMARY"
+
       # Il `--dart-define` si passa **solo se c'e' qualcosa da dire**.
       #
       # Passarlo vuoto non e' come non passarlo: definisce la chiave con la
@@ -96,7 +159,14 @@ jobs:
           # costa l'abbinamento. Adesso c'e' scritto in fondo alla schermata.
           CORSA: ${{ github.run_number }}
         run: |
-          VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
+          # Su un'etichetta il numero e' quello del rilascio, e non «37-a0566bd»:
+          # chi ha installato una release deve poter dire quale ha, con le stesse
+          # parole con cui gliel'hanno data.
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            VERSIONE="${GITHUB_REF_NAME#v}"
+          else
+            VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
+          fi
           echo "Questo pacchetto e' il $VERSIONE"
           if [ -n "$CENTRALINO" ]; then
             flutter build apk --release --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
@@ -110,6 +180,57 @@ jobs:
           path: app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
+
+      # Il pacchetto dove chi lo deve installare lo trova.
+      #
+      # Da «Actions» lo scarica solo chi e' entrato in GitHub, e dopo trenta
+      # giorni non c'e' piu'. Una **release** invece e' un indirizzo che si apre
+      # dal telefono: si tocca il file e Android lo installa. E' quello che si
+      # manda a qualcuno.
+      #
+      # **Solo firmato con la chiave vera.** Un pacchetto pubblico firmato con
+      # la chiave di prova sarebbe un invito: quella chiave e la sua parola
+      # stanno scritte nella repository, chiunque ne firmerebbe un altro, e il
+      # telefono se lo prenderebbe come un aggiornamento di questo. Finche' la
+      # chiave vera non c'e', il pacchetto resta fra gli artefatti — dove lo
+      # prende chi sa cos'e'.
+      - name: La release
+        if: github.ref_type == 'tag' && steps.chiave.outputs.vera == 'si'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          quale="${GITHUB_REF_NAME#v}"
+          cp app/build/app/outputs/flutter-apk/app-release.apk "gdahome-$quale.apk"
+          {
+            echo "L'app di gdahome per Android, versione $quale."
+            echo ""
+            echo "Si scarica il file .apk dal telefono e si tocca. Android chiede il"
+            echo "permesso di installare da qui: e' la stessa domanda che fa per"
+            echo "qualunque app che non venga dal suo negozio."
+            echo ""
+            echo "Serve l'add-on **gdahome** dentro Home Assistant, e un codice di"
+            echo "abbinamento fatto dalla sua scheda. Come si mette in piedi tutto:"
+            echo "COME_PROVARLA.md."
+          } > note.md
+          gh release create "$GITHUB_REF_NAME" \
+            --title "gdahome $quale" --notes-file note.md "gdahome-$quale.apk" ||
+            gh release upload "$GITHUB_REF_NAME" "gdahome-$quale.apk" --clobber
+          {
+            echo "### Pubblicato"
+            echo ""
+            gh release view "$GITHUB_REF_NAME" --json url --jq .url
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Niente release senza la chiave vera
+        if: github.ref_type == 'tag' && steps.chiave.outputs.vera != 'si'
+        run: |
+          {
+            echo "### Nessuna release"
+            echo ""
+            echo "Questo pacchetto e' firmato con la chiave di prova, e una release"
+            echo "pubblica firmata cosi' non si fa: quella chiave sta nella repository."
+            echo "Il pacchetto e' qui sopra, fra gli artefatti."
+          } >> "$GITHUB_STEP_SUMMARY"
 
   iphone:
     name: iPhone (IPA)

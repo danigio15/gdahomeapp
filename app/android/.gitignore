@@ -10,6 +10,10 @@ GeneratedPluginRegistrant.java
 # Remember to never publicly share your keystore.
 # See https://flutter.dev/to/reference-keystore
 key.properties
+# Lo stesso file, col nome che ha qui: dove sta la chiave vera e con che
+# parola si apre. Non entra nella repository **mai** — chi costruisce se lo
+# scrive, e sulla macchina di GitHub lo scrive il workflow dai segreti.
+chiave.properties
 **/*.keystore
 **/*.jks
 
