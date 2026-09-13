@@ -1,8 +1,14 @@
 # Pubblicare gdahome su Android
 
-Due strade, e conviene farle in quest'ordine: la prima è pronta oggi e non
-costa niente, la seconda richiede venticinque euro e qualche settimana di
-attesa che non dipende da noi.
+**La strada scelta è il Play Store, con un account personale** (13 settembre
+2026). Quello che segue è come ci si arriva, e cosa serve.
+
+Resta anche l'altra strada — il pacchetto firmato in una release — ma con un
+mestiere diverso da prima: non è più «la distribuzione», è **il modo di provare
+adesso**, per te e per chi non vuole aspettare il negozio. Le due non si
+mescolano: sono firmate diversamente, e un telefono che parte da una non passa
+all'altra senza disinstallare. Sta scritto anche nelle note della release, così
+chi la installa lo sa prima e non dopo.
 
 ---
 

@@ -250,6 +250,16 @@ jobs:
             echo "Serve l'add-on **gdahome** dentro Home Assistant, e un codice di"
             echo "abbinamento fatto dalla sua scheda. Come si mette in piedi tutto:"
             echo "COME_PROVARLA.md."
+            echo ""
+            echo "---"
+            echo ""
+            echo "**Una cosa da sapere prima di installarlo.** Questo pacchetto e'"
+            echo "firmato con la chiave di gdahome; quello del Play Store lo firma"
+            echo "Google. Android non installa un pacchetto sopra uno con firma"
+            echo "diversa: chi parte da qui, il giorno che gdahome sara' sul negozio,"
+            echo "per passare di la' dovra' disinstallare e riabbinare il telefono."
+            echo "Fra pacchetti di **questa** serie invece si aggiorna sopra, senza"
+            echo "perdere niente."
           } > note.md
           gh release create "$GITHUB_REF_NAME" \
             --title "gdahome $quale" --notes-file note.md "gdahome-$quale.apk" ||
