@@ -423,6 +423,10 @@
    * sbagliato meta' delle volte. */
   var cartinaChe = "";
 
+  /* Dove sta la cartina, come l'ha detta il ponte: serve al bottone qui
+   * sotto, che la carica nella pagina di Home Assistant. */
+  var laCartina = "";
+
   /* Come si chiama la tessera: lo stesso nome sta in `carta/plancia.js`, ed e'
    * quello con cui Lovelace la cerca. Se nessuno l'ha registrata,
    * `custom:gdahome-plancia` non esiste e Home Assistant disegna «Errore di
@@ -430,6 +434,7 @@
   var LA_TESSERA = "gdahome-plancia";
 
   function laCartinaSiScarica(dove) {
+    if (dove) laCartina = dove;
     if (!dove || cartinaChe === "si") return Promise.resolve(cartinaChe);
     return fetch(dove, { cache: "no-store" })
       .then(function (risposta) {
@@ -464,6 +469,58 @@
 
   /* Il foglietto sotto la riga: si vede solo quando c'e' qualcosa da fare, e
    * dice **cosa** fare — non com'e' fatto il mondo. */
+  /* La tessera **nella pagina di Home Assistant**, non in questa.
+   *
+   * Questa pagina gira dentro un riquadro, sullo stesso indirizzo di Home
+   * Assistant: puo' guardare la sua. Ed e' li' che la tessera deve esistere —
+   * qui non serve a niente.
+   *
+   * E' la differenza che mancava. Home Assistant l'elenco delle risorse lo
+   * legge **quando la pagina si carica**: una pagina aperta prima che la
+   * cartina esistesse non la conosce, e continua a non conoscerla finche' non
+   * si ricarica per davvero — che nell'app di Home Assistant vuol dire
+   * svuotarle la cache, non riaprirla. Da fuori sembra che l'add-on non
+   * funzioni, e invece e' a posto da un pezzo. */
+  function laTesseraNellaPagina() {
+    try {
+      var fuori = window.parent;
+      if (!fuori || fuori === window || !fuori.customElements) return "non-lo-so";
+      return fuori.customElements.get(LA_TESSERA) ? "si" : "no";
+    } catch (_errore) {
+      /* Se il riquadro non ci lascia guardare fuori, non si sa: e non si dice
+       * niente, invece di dire una cosa a caso. */
+      return "non-lo-so";
+    }
+  }
+
+  /* E caricarcela, adesso.
+   *
+   * E' la stessa cosa che fa Home Assistant con le risorse di Lovelace — un
+   * `<script type="module">` nella sua pagina — fatta a mano una volta sola.
+   * Da li' in poi la tessera esiste in quella pagina e la Plancia si apre,
+   * senza aspettare una ricarica che nell'app non si sa come si fa. */
+  function caricaLaCartinaDiLa(dove) {
+    try {
+      var fuori = window.parent;
+      if (!fuori || fuori === window) return Promise.resolve(false);
+      var documento = fuori.document;
+      var segno = documento.createElement("script");
+      segno.type = "module";
+      segno.src = new URL(dove, fuori.location.origin).href;
+      return new Promise(function (finito) {
+        segno.onload = function () {
+          finito(laTesseraNellaPagina() === "si");
+        };
+        segno.onerror = function () {
+          finito(false);
+        };
+        documento.head.appendChild(segno);
+      });
+    } catch (_errore) {
+      return Promise.resolve(false);
+    }
+  }
+
   function avvisaSullaCartina(ilGuaioDellaRisorsa) {
     var dove = trova("avviso-cartina");
     if (!dove) return;
@@ -490,6 +547,15 @@
         "La cartina si scarica ma non registra la tessera: il file e' arrivato rotto. " +
         "Riavvia l'add-on, che la riscrive da se' a ogni avvio; se succede ancora, " +
         "scrivilo dalle segnalazioni.";
+    } else if (cartinaChe === "si" && laTesseraNellaPagina() === "no") {
+      testo =
+        "La cartina c'e' e si scarica, ma **questa pagina di Home Assistant non ce l'ha**: " +
+        "l'elenco delle risorse lo legge quando si carica, e questa si e' caricata prima che " +
+        "la cartina esistesse. Finche' resta cosi', la plancia esce con «Errore di " +
+        "configurazione» qualunque cosa faccia l'add-on. Il bottone qui sotto gliela mette " +
+        "adesso: poi apri la plancia dalla barra laterale e si apre. Una volta sola — dalla " +
+        "prossima ricarica vera se la prende da se'. Nell'app di Home Assistant la ricarica " +
+        "vera e' Impostazioni → App companion → Svuota la cache, e riaprire.";
     } else if (cartinaChe === "si") {
       testo =
         "Se aprendo la plancia dalle «Plance» esce «Errore di configurazione»: da qui la " +
@@ -504,7 +570,25 @@
     }
     dove.textContent = testo;
     dove.hidden = !testo;
+    /* Il bottone si vede solo quando c'e' davvero da premerlo. */
+    var tasti = trova("ripara-cartina");
+    if (tasti) tasti.hidden = !(cartinaChe === "si" && laTesseraNellaPagina() === "no");
   }
+
+  trova("carica-la-cartina").addEventListener("click", function () {
+    var tasto = trova("carica-la-cartina");
+    tasto.disabled = true;
+    caricaLaCartinaDiLa(laCartina).then(function (andata) {
+      tasto.disabled = false;
+      trova("avviso-cartina").textContent = andata
+        ? "Fatto: adesso apri la plancia dalla barra laterale, si apre. Se la chiudi e " +
+          "riapri l'app di Home Assistant senza svuotarle la cache, questa pagina torna " +
+          "com'era e il bottone ricompare."
+        : "Non ci sono riuscito da qui. Allora: Impostazioni → App companion → Svuota la " +
+          "cache, e riapri Home Assistant.";
+      if (andata) trova("ripara-cartina").hidden = true;
+    });
+  });
 
   function avvisaLePlance(testo) {
     var avviso = trova("avviso-plance");

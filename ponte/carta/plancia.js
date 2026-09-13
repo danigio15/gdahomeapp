@@ -36,6 +36,7 @@ class PlanciaDiGdahome extends HTMLElement {
     this._hass = null;
     this._config = {};
     this._dove = "";
+    this._sessione = "";
     this._giro = 0;
     this._montata = false;
   }
@@ -84,7 +85,7 @@ class PlanciaDiGdahome extends HTMLElement {
       const dove = await this._doveSta();
       await this._laSessione();
       this._giro = setInterval(() => {
-        this._laSessione().catch(() => {
+        this._rinfresca().catch(() => {
           /* Se il rinnovo non riesce si riprova al giro dopo: il riquadro
              sta ancora in piedi con la sessione di prima. */
         });
@@ -124,13 +125,63 @@ class PlanciaDiGdahome extends HTMLElement {
    *
    * `SameSite=Strict` e il percorso ristretto all'ingress sono gli stessi che
    * mette il frontend: quel biscotto non deve viaggiare da nessun'altra parte.
-   */
+   *
+   * **Si chiede sul WebSocket, e prima si chiedeva con una chiamata REST.**
+   * `POST /api/hassio/ingress/session` era la via di una volta, e Home
+   * Assistant non la tiene piu': rispondeva con un errore che non era nemmeno
+   * un errore — un oggetto senza `message` — e la tessera lo mostrava come
+   * «[object Object]», cioe' come niente. Adesso si fa `supervisor/api` con
+   * `/ingress/session`, che e' quello che fa il frontend di Home Assistant
+   * quando apri la scheda di un add-on. La via vecchia resta come ripiego per
+   * le versioni in cui quella nuova non c'e' ancora. */
   async _laSessione() {
-    const detto = await this._hass.callApi("POST", "hassio/ingress/session");
-    const sessione = String(detto?.data?.session || detto?.session || "");
-    if (!sessione) throw new Error("Home Assistant non ha dato una sessione per l'ingresso");
+    let guaio = null;
+    try {
+      const detto = await this._hass.callWS({
+        type: "supervisor/api",
+        endpoint: "/ingress/session",
+        method: "post",
+      });
+      const sessione = String(detto?.session || detto?.data?.session || "");
+      if (sessione) return this._metti(sessione);
+      guaio = new Error("Home Assistant non ha dato una sessione per l'ingresso");
+    } catch (errore) {
+      guaio = errore;
+    }
+    try {
+      const detto = await this._hass.callApi("POST", "hassio/ingress/session");
+      const sessione = String(detto?.data?.session || detto?.session || "");
+      if (sessione) return this._metti(sessione);
+    } catch (_vecchio) {
+      /* Falliscono tutte e due: si racconta la prima, che e' quella buona. */
+    }
+    throw guaio;
+  }
+
+  _metti(sessione) {
+    this._sessione = sessione;
     const sicuro = document.location.protocol === "https:" ? ";Secure" : "";
     document.cookie = `ingress_session=${sessione};path=/api/hassio_ingress/;SameSite=Strict${sicuro}`;
+  }
+
+  /* Tenerla viva. Home Assistant non ne fabbrica una nuova ogni mezzo minuto:
+   * dice al Supervisor che quella di prima e' ancora in uso, e il Supervisor
+   * le allunga la vita. Se non vale piu' — l'add-on si e' riavviato, il
+   * Supervisor l'ha buttata — se ne fa una nuova. */
+  async _rinfresca() {
+    if (!this._sessione) return this._laSessione();
+    try {
+      await this._hass.callWS({
+        type: "supervisor/api",
+        endpoint: "/ingress/validate_session",
+        method: "post",
+        data: { session: this._sessione },
+      });
+      return undefined;
+    } catch (_errore) {
+      this._sessione = "";
+      return this._laSessione();
+    }
   }
 
   _riquadro(dove) {
@@ -144,8 +195,38 @@ class PlanciaDiGdahome extends HTMLElement {
     this.shadowRoot.querySelector("iframe").src = dove;
   }
 
+  /* Cosa e' andato storto, **leggibile**.
+   *
+   * `String(errore)` su un oggetto da «[object Object]», e quella riga ha
+   * nascosto il guasto vero per tre ore: la tessera si apriva, diceva di non
+   * essere riuscita, e non diceva perche'. Un messaggio d'errore che non dice
+   * niente e' peggio di nessun messaggio, perche' fa credere di aver guardato.
+   * Quindi: il `message` se c'e', se no quello che c'e' dentro, e in ultimo il
+   * JSON — che sara' brutto da leggere ma si legge. */
+  _perche(errore) {
+    if (typeof errore === "string" && errore) return errore;
+    if (errore && typeof errore.message === "string" && errore.message) return errore.message;
+    if (errore && typeof errore.body === "object" && typeof errore.body?.message === "string") {
+      return errore.body.message;
+    }
+    if (errore && typeof errore === "object") {
+      const pezzi = [];
+      if (errore.code !== undefined) pezzi.push(`codice ${errore.code}`);
+      if (errore.status_code !== undefined) pezzi.push(`HTTP ${errore.status_code}`);
+      if (errore.error) pezzi.push(String(errore.error));
+      if (pezzi.length) return pezzi.join(", ");
+      try {
+        const scritto = JSON.stringify(errore);
+        if (scritto && scritto !== "{}") return scritto;
+      } catch (_errore) {
+        /* Se non si puo' nemmeno scrivere, si va avanti col ripiego. */
+      }
+    }
+    return "non ha funzionato, e non ha detto perche'";
+  }
+
   _male(errore) {
-    const perche = String(errore?.message || errore || "non ha funzionato");
+    const perche = this._perche(errore);
     this.shadowRoot.innerHTML = `
       <style>
         .male { padding: 24px; font: inherit; line-height: 1.5; }
