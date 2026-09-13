@@ -23,7 +23,8 @@ incolla
 https://github.com/danigio15/gdahomeapp
 ```
 
-Compare una sezione **gdahome** con dentro **Il ponte**. Si installa — la prima
+Compare una sezione **gdahome** con dentro l'add-on **gdahome** — il pezzo
+dentro il codice continua a chiamarsi «il ponte», nel negozio no. Si installa — la prima
 volta ci mette qualche minuto, perche' Home Assistant se lo costruisce sul
 posto — e nella barra laterale compare la sua console. Da li' si fabbrica il
 quadretto da inquadrare col telefono, e la plancia compare fra le **Plance**
@@ -31,6 +32,10 @@ di Home Assistant.
 
 I dettagli, i permessi che l'add-on chiede e perche', stanno in
 [`ponte/README.md`](ponte/README.md).
+
+**C'e' un video** di due minuti e mezzo che fa vedere tutta questa strada — il
+negozio, l'archivio da incollare, Installa, Avvia, il quadretto da inquadrare e
+la plancia sul telefono: [`strumenti/video/`](strumenti/video/README.md).
 
 ## Come ci si arriva
 
