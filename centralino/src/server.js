@@ -130,6 +130,14 @@ export function costruisciIlServer({
     });
   });
 
+  /* Se chi legge un messaggio inciampa, il filo si chiude — e il motivo va
+   * **scritto qui**. Prima finiva in un `catch` vuoto dentro la presa: la casa
+   * vedeva cadere il filo, ribussava dopo un minuto, e in nessuno dei due
+   * registri c'era una riga. Un guasto dentro di noi travestito da guasto di
+   * rete e' la cosa piu' costosa da cercare. */
+  const ilGuasto = (dove) => (errore) =>
+    registro?.errore?.(`${dove}: ${errore?.stack || errore?.message || errore}`);
+
   server.on("upgrade", (richiesta, socket) => {
     const via = rotta(richiesta);
     if (!eUnaSalita(richiesta)) {
@@ -145,21 +153,30 @@ export function costruisciIlServer({
      * prima ancora di accettarlo. Le due punte parlano la stessa lingua a
      * tutti e due. */
     if (via === "/casa" || /^\/casa\/[A-Za-z0-9_]+$/.test(via)) {
-      const presa = accetta(richiesta, socket, { messaggioMassimo: MESSAGGIO_MASSIMO });
+      const presa = accetta(richiesta, socket, {
+        messaggioMassimo: MESSAGGIO_MASSIMO,
+        onGuasto: ilGuasto("una casa"),
+      });
       if (presa) centralino.accogliUnaCasa(presa, { da });
       return;
     }
 
     const alTelefono = /^\/telefono\/([A-Za-z0-9_]+)$/.exec(via);
     if (alTelefono && CASA_VALIDA.test(alTelefono[1])) {
-      const presa = accetta(richiesta, socket, { messaggioMassimo: MESSAGGIO_MASSIMO });
+      const presa = accetta(richiesta, socket, {
+        messaggioMassimo: MESSAGGIO_MASSIMO,
+        onGuasto: ilGuasto("un telefono"),
+      });
       if (presa) centralino.accogliUnTelefono(presa, { casa: alTelefono[1], da });
       return;
     }
 
     const inAbbinamento = /^\/abbinamento\/([0-9a-f]+)$/.exec(via);
     if (inAbbinamento && IMPRONTA_VALIDA.test(inAbbinamento[1])) {
-      const presa = accetta(richiesta, socket, { messaggioMassimo: MESSAGGIO_MASSIMO });
+      const presa = accetta(richiesta, socket, {
+        messaggioMassimo: MESSAGGIO_MASSIMO,
+        onGuasto: ilGuasto("un abbinamento"),
+      });
       if (presa) centralino.accogliUnAbbinamento(presa, { impronta: inAbbinamento[1], da });
       return;
     }

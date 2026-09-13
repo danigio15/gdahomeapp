@@ -229,7 +229,11 @@ export function costruisciLaPortaDellApp({
       socket.end("HTTP/1.1 404 Not Found\r\n\r\n");
       return;
     }
-    const presa = accetta(richiesta, socket, {});
+    const presa = accetta(richiesta, socket, {
+      /* Se chi legge inciampa, il filo cade: il motivo va nel registro, se no
+       * si vede un telefono che si scollega e non si sa perche'. */
+      onGuasto: (errore) => registro.errore(`un telefono: ${errore?.stack || errore}`),
+    });
     /* Anche in casa si passa dal portiere: la rete di casa non e' cifrata, e
      * chi ci sta sopra non deve poter leggere piu' di chi sta sul centralino.
      * E soprattutto: cosi' l'app ha **una strada sola** invece di due. */
@@ -401,7 +405,9 @@ export function costruisciLaConsole({
       socket.end("HTTP/1.1 503 Service Unavailable\r\n\r\n");
       return;
     }
-    const presa = accetta(richiesta, socket, {});
+    const presa = accetta(richiesta, socket, {
+      onGuasto: (errore) => registro.errore(`la plancia: ${errore?.stack || errore}`),
+    });
     if (!presa) return;
     const cucitura = new Cucitura({
       presa,

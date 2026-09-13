@@ -146,3 +146,37 @@ test("il motivo arriva fino alla pagina: nello stato, e nella riga che si legge"
     "la console non scrive il motivo dell'ultimo tentativo",
   );
 });
+
+test("un guasto di chi legge non si traveste da caduta di rete", async () => {
+  /* L'altra meta' della stessa cecita', e quella che e' costata di piu'.
+   *
+   * Dentro la presa c'era un `catch` vuoto: se chi legge un messaggio
+   * inciampava — un disco che non si scrive, un archivio rotto — il filo si
+   * chiudeva **senza motivo** e l'errore sparivano. Dall'altra parte si vedeva
+   * una caduta come tutte le altre, si ribussava dopo un minuto, e in nessuno
+   * dei due registri c'era una riga. Adesso il guasto esce da due parti: a chi
+   * ospita, e dentro il motivo della chiusura. */
+  const { accetta } = await import("../src/presa.js");
+  const sorgente = readFileSync(join(QUI, "..", "src", "presa.js"), "utf8");
+  assert.doesNotMatch(
+    sorgente,
+    /catch \(_errore\) \{\n\s*this\.chiudi\(CHIUSURA\.guasto, ""\);/,
+    "la presa richiude il filo senza dire perche'",
+  );
+  assert.match(sorgente, /this\.onGuasto\(errore\)/, "la presa non avvisa chi la ospita");
+  assert.match(
+    sorgente,
+    /this\.chiudi\(CHIUSURA\.guasto, detto\)/,
+    "la chiusura non porta il motivo",
+  );
+  assert.equal(typeof accetta, "function");
+
+  /* E il centralino lo scrive davvero: tutte e tre le porte del filo. */
+  const server = readFileSync(join(QUI, "..", "..", "centralino", "src", "server.js"), "utf8");
+  for (const chi of ["una casa", "un telefono", "un abbinamento"]) {
+    assert.ok(
+      server.includes(`onGuasto: ilGuasto("${chi}")`),
+      `«${chi}» puo' ancora inciampare in silenzio`,
+    );
+  }
+});
