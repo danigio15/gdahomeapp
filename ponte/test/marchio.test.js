@@ -93,3 +93,46 @@ test("vestire non solleva mai, e quello che non riguarda passa com'e'", () => {
   assert.ok(Buffer.isBuffer(storto.corpo));
   assert.equal(NOME, "gdahome");
 });
+
+test("il manifesto dice gdahome tre volte: il nome, lo slug e la voce nella barra", () => {
+  const manifesto = readFileSync(fileURLToPath(new URL("../config.yaml", import.meta.url)), "utf8");
+
+  /* Tre righe, e tre mestieri diversi: il `name` e' quello che si legge nel
+   * negozio degli add-on, il `panel_title` e' come si chiama la console nella
+   * barra laterale, e lo `slug` e' l'identita' dell'add-on per il Supervisor.
+   *
+   * Lo slug sta in una prova perche' cambiarlo costa caro: Home Assistant lo
+   * vedrebbe come un add-on **nuovo**, e chi ce l'ha si ritroverebbe senza
+   * opzioni, senza telefoni abbinati e senza plance. Cambiarlo si puo' — si e'
+   * fatto, da `ponte` a `gdahome`, quando ce l'aveva una macchina di prova
+   * sola — ma deve essere una cosa voluta, non un riordino. */
+  assert.match(manifesto, new RegExp(`^name: ${NOME}$`, "m"));
+  assert.match(manifesto, new RegExp(`^slug: ${NOME}$`, "m"));
+  assert.match(manifesto, new RegExp(`^panel_title: ${NOME}$`, "m"));
+
+  /* E il nome di prima non ci sta piu' da nessuna parte. */
+  assert.equal(manifesto.includes(NOME_DI_PRIMA), false);
+});
+
+test("l'app e l'add-on portano lo stesso numero", () => {
+  const manifesto = readFileSync(fileURLToPath(new URL("../config.yaml", import.meta.url)), "utf8");
+  const pubspec = readFileSync(
+    fileURLToPath(new URL("../../app/pubspec.yaml", import.meta.url)),
+    "utf8",
+  );
+
+  const dellAddon = /^version: "([^"]+)"$/m.exec(manifesto);
+  const dellApp = /^version: ([0-9]+)\.([0-9]+)\.([0-9]+)\+([0-9]+)$/m.exec(pubspec);
+  assert.ok(dellAddon, "il manifesto non dice che versione e'");
+  assert.ok(dellApp, "il pubspec non dice che versione e'");
+
+  /* Lo stesso numero, perche' sono la stessa cosa: chi apre l'app e apre la
+   * console si aspetta di leggere due volte quello che ha installato. */
+  const [, grande, medio, piccolo, costruzione] = dellApp;
+  assert.equal(`${grande}.${medio}.${piccolo}`, dellAddon[1]);
+
+  /* E il numero di costruzione — quello che vogliono i negozi, che deve solo
+   * crescere — si deriva dal nome: 1.4.24 diventa 10424. Cosi' non c'e' un
+   * secondo numero da ricordarsi. */
+  assert.equal(Number(costruzione), Number(grande) * 10000 + Number(medio) * 100 + Number(piccolo));
+});

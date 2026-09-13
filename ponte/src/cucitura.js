@@ -33,6 +33,7 @@
 
 import { CasaIrraggiungibile } from "./casa.js";
 import { eUnaCommissione, no } from "./commissioni.js";
+import { NOME } from "./marchio.js";
 
 function leggi(testo) {
   try {
@@ -91,7 +92,7 @@ export class Cucitura {
     this.registro.info(
       `la plancia${this.quale?.titolo ? ` «${this.quale.titolo}»` : ""} si e' aperta da ${this.da}`,
     );
-    this._manda({ type: "auth_ok", ha_version: "ponte" });
+    this._manda({ type: "auth_ok", ha_version: NOME });
   }
 
   _dallaPagina(testo) {

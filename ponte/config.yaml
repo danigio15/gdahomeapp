@@ -13,12 +13,16 @@
 # un codice di abbinamento valido, o un segno di riconoscimento gia' avuto.
 # Come si chiama nella barra laterale di Home Assistant: **gdahome**.
 #
-# Lo `slug` resta `ponte`, e non e' pigrizia: il Supervisor riconosce un add-on
-# dallo slug, e cambiarlo vorrebbe dire che per Home Assistant questo e' un
-# add-on **nuovo** — installato da zero, senza le opzioni, senza i telefoni
-# abbinati e senza la configurazione delle plance, e con quello di prima
-# rimasto li' accanto da disinstallare a mano. Un nome si cambia, l'identita'
-# no.
+# Lo `slug` e' `gdahome`, come il resto. Lo slug e' l'identita' dell'add-on per
+# il Supervisor, e cambiarlo vuol dire che per Home Assistant questo e' un
+# add-on **nuovo**: installato da zero, senza le opzioni, senza i telefoni
+# abbinati e senza la configurazione delle plance, con quello di prima rimasto
+# li' accanto da disinstallare a mano.
+#
+# Quel prezzo si paga una volta sola, e si e' scelto di pagarlo **adesso**:
+# l'add-on ce l'ha una persona, su una macchina di prova. Il giorno che ce
+# l'avesse qualcuno, a pagarlo sarebbe lui — e allora lo slug non si toccherebbe
+# piu', per nessun motivo.
 #
 # Dentro il codice e nei documenti il pezzo continua a chiamarsi «il ponte»,
 # perche' e' quello che fa e perche' e' uno dei tre pezzi (il ponte, il
@@ -26,7 +30,7 @@
 # si vede.
 name: gdahome
 version: "1.4.24"
-slug: ponte
+slug: gdahome
 description: La plancia e l'app di gdahome, per questa casa: da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.
 url: https://github.com/danigio15/gdahomeapp/tree/main/ponte
 arch:
@@ -83,7 +87,7 @@ map:
   #
   # Serve a una cosa sola, e non se ne puo' fare a meno: aggiornare questo
   # add-on. Un add-on locale non ha nessun negozio dietro — Home Assistant
-  # guarda il manifesto che trova in `/addons/ponte`, e quella e' l'unica
+  # guarda il manifesto che trova in `/addons/gdahome`, e quella e' l'unica
   # versione che conosce — quindi finche' qualcuno non porta i file nuovi in
   # quella cartella, «Aggiorna» non compare mai. Portarli a mano vuol dire un
   # terminale e un gettone di GitHub a ogni giro: esattamente la cosa che chi
@@ -109,7 +113,7 @@ hassio_api: true
 # stesso — e stanno tutte in `src/aggiornamento.js`, in chiaro.
 #
 # Senza, l'aggiornamento funziona a meta': i file nuovi arrivano in
-# `/addons/ponte`, ma poi tocca aprire Home Assistant e premere
+# `/addons/gdahome`, ma poi tocca aprire Home Assistant e premere
 # «Ricostruisci» a mano — di nuovo una cosa da spiegare a chi non deve
 # imparare niente.
 hassio_role: manager

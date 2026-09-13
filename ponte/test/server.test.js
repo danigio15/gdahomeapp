@@ -359,7 +359,7 @@ test("la console serve la sua pagina e non esce dalla sua cartella", async () =>
   try {
     const pagina = await prendi(`${b.consolle}/`);
     assert.equal(pagina.status, 200);
-    assert.match(await pagina.text(), /Il ponte/);
+    assert.match(await pagina.text(), /<h1>gdahome<\/h1>/);
 
     const fuori = mkdtempSync(join(tmpdir(), "fuori-"));
     writeFileSync(join(fuori, "segreto.txt"), "questo non si deve leggere", "utf8");
@@ -522,7 +522,7 @@ test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-
       {
         profilo: "primary",
         titolo: "gdahome",
-        istanza: "ponte",
+        istanza: "gdahome",
         primaria: true,
         creata_il: 0,
       },
@@ -537,7 +537,7 @@ test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-
     assert.equal(aggiunta.status, 201);
     const { quale } = await aggiunta.json();
     assert.equal(quale.profilo, "casa-al-mare");
-    assert.equal(quale.istanza, "ponte-casa-al-mare");
+    assert.equal(quale.istanza, "gdahome-casa-al-mare");
     assert.equal(quale.primaria, false);
 
     /* Rinominare cambia il titolo e non il cassetto: se no rinominare una

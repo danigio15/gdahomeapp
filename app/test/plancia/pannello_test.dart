@@ -121,10 +121,10 @@ void main() {
   test('la plancia del ponte si legge com\'e\', con i difetti giusti', () {
     final dalPonte = leggiLaPlanciaDelPonte(PonteFinto.planciaNelPonte())!;
     expect(dalPonte.base, '/dashboardmodern_static/ponte1234');
-    expect(dalPonte.istanza, 'ponte');
+    expect(dalPonte.istanza, 'gdahome');
     expect(dalPonte.profilo, 'primary');
     expect(dalPonte.primario, isTrue);
-    expect(dalPonte.percorso, 'ponte');
+    expect(dalPonte.percorso, 'gdahome');
     expect(dalPonte.pagina('it'), 'dashboard.html');
     expect(dalPonte.pagina('en'), 'dashboard-en.html');
 
@@ -197,13 +197,13 @@ void main() {
         {
           'profilo': 'primary',
           'titolo': 'DashboardModern',
-          'istanza': 'ponte',
+          'istanza': 'gdahome',
           'primaria': true,
         },
         {
           'profilo': 'casa-al-mare',
           'titolo': 'Casa al mare',
-          'istanza': 'ponte-casa-al-mare',
+          'istanza': 'gdahome-casa-al-mare',
           'primaria': false,
         },
         /* Roba che non e' una plancia si butta, invece di farne una senza
@@ -215,7 +215,7 @@ void main() {
     expect(due.piuDiUna, isTrue);
     expect(due.plance.map((una) => una.profilo), ['primary', 'casa-al-mare']);
     expect(due.plance.last.titolo, 'Casa al mare');
-    expect(due.plance.last.istanza, 'ponte-casa-al-mare');
+    expect(due.plance.last.istanza, 'gdahome-casa-al-mare');
     expect(due.plance.last.primaria, isFalse);
     expect(due.plance.first.primaria, isTrue);
 
@@ -223,7 +223,7 @@ void main() {
      * leggibile — e senza istanza si tiene quella di sempre. */
     final scarna = UnaPlancia.daJson({'profilo': 'x'})!;
     expect(scarna.titolo, 'x');
-    expect(scarna.istanza, 'ponte');
+    expect(scarna.istanza, 'gdahome');
     expect(scarna.primaria, isFalse);
     expect(UnaPlancia.daJson({'profilo': ''}), isNull);
     expect(UnaPlancia.daJson(null), isNull);
@@ -252,7 +252,7 @@ void main() {
       /* Quella scelta. */
       final mare = (await trovaLaPlancia(filo, profilo: 'casa-al-mare'))!;
       expect(mare.profilo, 'casa-al-mare');
-      expect(mare.istanza, 'ponte-casa-al-mare');
+      expect(mare.istanza, 'gdahome-casa-al-mare');
       expect(mare.titolo, 'Casa al mare');
       expect(mare.primario, isFalse);
 

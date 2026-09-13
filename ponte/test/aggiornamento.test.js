@@ -1,7 +1,7 @@
 /* Il ponte si aggiorna da se': le prove.
  *
  * Qui sotto non si tocca nessun disco vero. Non e' comodita': una prova che
- * scambia `/addons/ponte` e' una prova che non si puo' lanciare, e allora non
+ * scambia `/addons/gdahome` e' una prova che non si puo' lanciare, e allora non
  * la si lancerebbe mai — cioe' esattamente il pezzo di codice piu' delicato
  * dell'add-on resterebbe l'unico senza prove. Gli attrezzi che toccano il
  * disco stanno raccolti in un posto solo proprio per poterne mettere un'altra
@@ -96,7 +96,7 @@ function unPonte({
   segno = "unSegno",
 } = {}) {
   const strumenti =
-    attrezzi ?? attrezziFinti({ ci: ["/addons/ponte", "/addons/ponte/config.yaml"] });
+    attrezzi ?? attrezziFinti({ ci: ["/addons/gdahome", "/addons/gdahome/config.yaml"] });
   return new Aggiornamento({
     mia,
     gettone,
@@ -196,7 +196,7 @@ describe("cosa dice la console", () => {
 
 describe("portarsela dentro", () => {
   it("lo scambio lascia sempre un add-on valido: il manifesto si mette per ultimo", async () => {
-    const attrezzi = attrezziFinti({ ci: ["/addons/ponte", "/addons/ponte/config.yaml"] });
+    const attrezzi = attrezziFinti({ ci: ["/addons/gdahome", "/addons/gdahome/config.yaml"] });
     const ponte = unPonte({
       attrezzi,
       prendi: async () => risposta({}),
@@ -205,41 +205,41 @@ describe("portarsela dentro", () => {
 
     const scambio = attrezzi.mosse.filter((mossa) => mossa.includes("/addons/"));
     assert.deepEqual(scambio, [
-      "togli /addons/ponte.nuova",
-      "copia /passaggio/ponte-nuovo/danigio15-gdahomeapp-abc1234/ponte → /addons/ponte.nuova",
-      "sposta /addons/ponte.nuova/config.yaml → /addons/ponte.nuova/config.yaml.arrivato",
-      "togli /addons/ponte",
-      "sposta /addons/ponte.nuova → /addons/ponte",
-      "sposta /addons/ponte/config.yaml.arrivato → /addons/ponte/config.yaml",
+      "togli /addons/gdahome.nuova",
+      "copia /passaggio/ponte-nuovo/danigio15-gdahomeapp-abc1234/ponte → /addons/gdahome.nuova",
+      "sposta /addons/gdahome.nuova/config.yaml → /addons/gdahome.nuova/config.yaml.arrivato",
+      "togli /addons/gdahome",
+      "sposta /addons/gdahome.nuova → /addons/gdahome",
+      "sposta /addons/gdahome/config.yaml.arrivato → /addons/gdahome/config.yaml",
     ]);
     /* La cosa che conta di quell'ordine: quando la cartella vecchia se ne va,
      * quella nuova e' gia' pronta e senza manifesto — per il Supervisor non
      * e' un add-on, quindi non ce ne sono due con lo stesso nome. */
-    const quandoTolgo = scambio.indexOf("togli /addons/ponte");
+    const quandoTolgo = scambio.indexOf("togli /addons/gdahome");
     const quandoCopio = scambio.findIndex((mossa) => mossa.startsWith("copia "));
     assert.ok(quandoCopio < quandoTolgo);
   });
 
   it("un pacchetto senza un ponte vero dentro non entra", async () => {
     const attrezzi = attrezziFinti({
-      ci: ["/addons/ponte", "/addons/ponte/config.yaml"],
+      ci: ["/addons/gdahome", "/addons/gdahome/config.yaml"],
       dentroIlPacchetto: ["config.yaml", "Dockerfile", "run.sh"],
     });
     const ponte = unPonte({ attrezzi, prendi: async () => risposta({}) });
     await assert.rejects(() => ponte.porta(), /manca src\/index\.js/);
     /* E soprattutto: la cartella di prima e' ancora al suo posto. */
-    assert.ok(attrezzi.esistono.has("/addons/ponte/config.yaml"));
-    assert.ok(!attrezzi.mosse.includes("togli /addons/ponte"));
+    assert.ok(attrezzi.esistono.has("/addons/gdahome/config.yaml"));
+    assert.ok(!attrezzi.mosse.includes("togli /addons/gdahome"));
   });
 
   it("se GitHub non da' il pacchetto non si tocca niente", async () => {
-    const attrezzi = attrezziFinti({ ci: ["/addons/ponte", "/addons/ponte/config.yaml"] });
+    const attrezzi = attrezziFinti({ ci: ["/addons/gdahome", "/addons/gdahome/config.yaml"] });
     const ponte = unPonte({
       attrezzi,
       prendi: async () => risposta({ ok: false, status: 500 }),
     });
     await assert.rejects(() => ponte.porta(), /500/);
-    assert.ok(!attrezzi.mosse.includes("togli /addons/ponte"));
+    assert.ok(!attrezzi.mosse.includes("togli /addons/gdahome"));
   });
 
   it("fuori da un add-on locale non si prova nemmeno", async () => {

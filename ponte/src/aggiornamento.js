@@ -1,10 +1,10 @@
 /* Il ponte si aggiorna da se'.
  *
- * Un add-on **locale** — quello che sta in `/addons/ponte`, installato
+ * Un add-on **locale** — quello che sta in `/addons/gdahome`, installato
  * copiandoci i file dentro — non ha nessun negozio dietro: Home Assistant
  * guarda il `config.yaml` che trova in quella cartella, e la versione che
  * legge li' e' l'unica che conosce. Su GitHub puo' esserci una versione
- * nuova per settimane: se nessuno porta quei file dentro `/addons/ponte`,
+ * nuova per settimane: se nessuno porta quei file dentro `/addons/gdahome`,
  * in Home Assistant non compare mai nessun «Aggiorna». Non e' un difetto
  * del negozio, e' che il negozio non c'e'.
  *
@@ -14,16 +14,18 @@
  * ogni giro, e l'unica cosa che gli tocca fare e' la sola che non sa fare.
  *
  * Allora lo fa il ponte: guarda la versione pubblicata, la scarica, la mette
- * dentro `/addons/ponte` e chiede al Supervisor di ricostruirsi. Il gettone si
- * scrive **una volta** nella scheda dell'add-on, dove Home Assistant lo tiene
- * nascosto; da li' in poi e' un bottone nella console.
+ * dentro `/addons/gdahome` e chiede al Supervisor di ricostruirsi. E' un bottone
+ * nella console, e non serve altro: da quando la repository e' pubblica, il
+ * manifesto e il pacchetto li legge chiunque senza presentarsi. La casella
+ * `gettone` nella scheda dell'add-on e' rimasta per chi si tiene una copia sua
+ * e privata di questo add-on; chi usa questa la lascia vuota.
  *
  * Le tre cose che rendono questo sicuro:
  *
  * 1. **Non si tocca niente finche' non c'e' tutto.** Si scarica in un posto
  *    di passaggio, si controlla che dentro ci sia un ponte vero (il manifesto,
  *    il programma, la plancia), e solo dopo si scambia la cartella. Se la rete
- *    cade a meta', in `/addons/ponte` c'e' ancora quello di prima.
+ *    cade a meta', in `/addons/gdahome` c'e' ancora quello di prima.
  * 2. **Lo scambio lascia sempre un add-on valido.** Il Supervisor riconosce un
  *    add-on dalla presenza del `config.yaml`: la copia nuova si mette senza
  *    manifesto, si toglie la vecchia, si sposta la nuova al suo posto e il
@@ -80,7 +82,7 @@ const eseguibile = (comando, argomenti) =>
  *
  * Stanno raccolti qui — e non sparsi dentro i metodi — perche' e' la parte che
  * nelle prove non si puo' far girare davvero: una prova che scambia
- * `/addons/ponte` sul computer di chi la lancia e' una prova che non si puo'
+ * `/addons/gdahome` sul computer di chi la lancia e' una prova che non si puo'
  * lanciare. Nelle prove ne arriva un'altra copia, che scrive su un foglio.
  */
 export const ATTREZZI = Object.freeze({
@@ -144,7 +146,7 @@ export class Aggiornamento {
      * manifesto chiede `addons:rw`. Fuori dal Supervisor non c'e', e allora
      * non si aggiorna niente: lo si dice, invece di provarci. */
     addon = process.env.PONTE_ADDONS || "/addons",
-    nome = "ponte",
+    nome = "gdahome",
     passaggio = process.env.PONTE_PASSAGGIO || join(tmpdir(), "ponte-nuovo"),
     supervisor = process.env.PONTE_SUPERVISOR || "http://supervisor",
     segno = process.env.SUPERVISOR_TOKEN || "",
@@ -208,14 +210,22 @@ export class Aggiornamento {
         signal: AbortSignal.timeout(ATTESA),
       });
       if (!risposta.ok) {
-        /* Su una repository privata senza gettone GitHub risponde «non
-         * trovata», non «non autorizzato»: e' voluto, cosi' chi non ha i
-         * permessi non scopre nemmeno che esiste. Da qui dentro pero'
-         * sappiamo qual e' delle due, e chi legge la console si merita la
-         * riga giusta invece di «404». */
+        /* Un «404» non si mostra a nessuno: e' un numero, e chi legge la
+         * console si merita una riga.
+         *
+         * La repository di gdahome e' pubblica, e il manifesto lo legge
+         * chiunque senza presentarsi: un 404 vuol dire che su quel ramo non
+         * c'e' nessun `ponte/config.yaml`. Ma GitHub risponde «non trovata»
+         * anche a chi chiede una repository privata senza permessi — e' voluto,
+         * cosi' non scopre nemmeno che esiste — e chi si tiene una copia sua,
+         * privata, di questo add-on finisce qui: per lui la casella `gettone`
+         * c'e' ancora, e la riga glielo dice. */
         const male =
-          risposta.status === 404 && !this.gettone
-            ? "la repository non risponde senza gettone: scrivilo nella scheda dell'add-on"
+          risposta.status === 404
+            ? `su ${this.ramo} non trovo ponte/config.yaml` +
+              (this.gettone
+                ? ""
+                : " (se la repository e' una copia tua ed e' privata, serve un gettone)")
             : `GitHub ha risposto ${risposta.status}`;
         this._errore = male;
         this.registro.attenzione(`non riesco a sapere se c'e' una versione nuova: ${male}`);
@@ -251,7 +261,7 @@ export class Aggiornamento {
     };
   }
 
-  /* Scarica la versione pubblicata e la mette dentro `/addons/ponte`.
+  /* Scarica la versione pubblicata e la mette dentro `/addons/gdahome`.
    *
    * Torna la versione portata dentro. Non ricostruisce niente: quella e' la
    * mossa dopo, e la fa chi ha chiamato quando ha finito di rispondere a chi
@@ -261,7 +271,7 @@ export class Aggiornamento {
   async porta() {
     if (!this.locale()) {
       throw new Error(
-        "questo ponte non e' un add-on locale: la cartella /addons/ponte non c'e', e non c'e' niente da scambiare",
+        "questo ponte non e' un add-on locale: la cartella /addons/gdahome non c'e', e non c'e' niente da scambiare",
       );
     }
     if (this._staPortando) {
@@ -364,7 +374,7 @@ export class Aggiornamento {
     return {
       chiesto: false,
       perche:
-        "il Supervisor non mi lascia ricostruire da qui: apri «Il ponte» in Home Assistant e premi «Ricostruisci»",
+        "il Supervisor non mi lascia ricostruire da qui: apri «gdahome» in Home Assistant e premi «Ricostruisci»",
     };
   }
 

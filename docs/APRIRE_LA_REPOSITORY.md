@@ -163,12 +163,12 @@ Da lì in poi l'import funziona come prima.
 | cosa si rilascia | dove | come |
 |---|---|---|
 | **La plancia** | `dashboardmodern-v2` | si lavora lì e si fa una **release `vX.Y.Z`**: è quella che il bottone «La plancia nuova» va a prendere |
-| **L'add-on (il ponte)** | `gdahomeapp` | si alza `version` in `ponte/config.yaml` — è quel numero che fa comparire «Aggiorna il ponte» nella console — e si spinge su `main` |
+| **L'add-on (il ponte)** | `gdahomeapp` | si alza `version` in `ponte/config.yaml` — è quel numero che fa comparire «Aggiorna gdahome» nella console — e si spinge su `main` |
 | **L'app** (Android, iPhone, web) | `gdahomeapp` | Actions → «L'app da provare»; e «gdahome dentro l'add-on» per l'app web che l'add-on si porta dietro |
 | **Il centralino di gdahome** | `gdahomeapp` | Actions → «Il centralino» |
 | **Il centralino della chat** | `dashboardmodern-v2/centralino` | da lì, quando serve: è già acceso |
 
-Un add-on tenuto in `/addons/ponte` non ha nessun negozio dietro, quindi
+Un add-on tenuto in `/addons/gdahome` non ha nessun negozio dietro, quindi
 **la versione nel manifesto è l'unico modo** perché una casa sappia che c'è
 qualcosa di nuovo. Rilasciare senza alzarla significa non rilasciare.
 

@@ -189,10 +189,10 @@ void main() {
 
       final altra = servitore.paginaDi(
         PannelloDellaPlancia(
-          percorso: 'ponte',
+          percorso: 'gdahome',
           titolo: 'Casa al mare',
           base: _base,
-          istanza: 'ponte-casa-al-mare',
+          istanza: 'gdahome-casa-al-mare',
           profilo: 'casa-al-mare',
           primario: false,
           varianti: const ['dashboard.html'],

@@ -1467,7 +1467,7 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
      * un'app di ieri non si accorge che da oggi ce ne possono essere altre. */
     const sola = await con.rispondi({ id: 1, type: "ponte/plancia" });
     assert.equal(sola.result.titolo, "gdahome");
-    assert.equal(sola.result.istanza, "ponte");
+    assert.equal(sola.result.istanza, "gdahome");
     assert.equal(sola.result.profilo, "primary");
     assert.equal(sola.result.primario, true);
     /* E l'elenco viaggia insieme: il selettore lo disegna chi ha appena
@@ -1497,7 +1497,7 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
       profilo: "casa-al-mare",
     });
     assert.equal(altra.result.titolo, "Casa al mare");
-    assert.equal(altra.result.istanza, "ponte-casa-al-mare");
+    assert.equal(altra.result.istanza, "gdahome-casa-al-mare");
     assert.equal(altra.result.profilo, "casa-al-mare");
     assert.equal(altra.result.primario, false);
     /* I file sono gli stessi per tutte: una plancia sul disco, una impronta. */
@@ -1517,7 +1517,7 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
       titolo: "Al mare",
     });
     assert.equal(rinominata.result.quale.titolo, "Al mare");
-    assert.equal(rinominata.result.quale.istanza, "ponte-casa-al-mare");
+    assert.equal(rinominata.result.quale.istanza, "gdahome-casa-al-mare");
 
     /* Togliendola va via anche il suo cassetto nella configurazione. */
     cassetta.scrivi("casa-al-mare", { "dm-home": '{"x":1}' }, { updated_at: 5000 });

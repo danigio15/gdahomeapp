@@ -188,7 +188,7 @@ test("la pagina della plancia arriva con le sue premesse e col suo «base»", as
      * servitore dentro l'app: una plancia che si apre in due posti non deve
      * sapere due cose diverse. */
     assert.match(pagina, /window\.__DASHBOARDMODERN_HOSTED__=true;/);
-    assert.match(pagina, /window\.__DASHBOARDMODERN_INSTANCE__="ponte";/);
+    assert.match(pagina, /window\.__DASHBOARDMODERN_INSTANCE__="gdahome";/);
     assert.match(pagina, /window\.__DASHBOARDMODERN_PROFILE__="primary";/);
     assert.match(pagina, /window\.__DASHBOARDMODERN_PRIMARY__=true;/);
     assert.match(pagina, /window\.__DASHBOARDMODERN_LOCALE__="it";/);
@@ -253,7 +253,7 @@ test("ogni plancia apre il suo cassetto, e quella che non c'e' non si apre", asy
 
     const pagina = await (await fetch(`${b.consolle}/plancia/casa-al-mare/`)).text();
     assert.match(pagina, /window\.__DASHBOARDMODERN_PROFILE__="casa-al-mare";/);
-    assert.match(pagina, /window\.__DASHBOARDMODERN_INSTANCE__="ponte-casa-al-mare";/);
+    assert.match(pagina, /window\.__DASHBOARDMODERN_INSTANCE__="gdahome-casa-al-mare";/);
     assert.match(pagina, /window\.__DASHBOARDMODERN_PRIMARY__=false;/);
 
     /* Senza la barra in fondo si rimanda, sempre in relativo. */
@@ -275,7 +275,7 @@ test("il filo della pagina: «auth_ok» senza chiedere, e chi risponde a cosa", 
     /* La plancia ospitata non manda nessun `auth`: se qui si aspettasse di
      * riceverlo, resterebbe ad aspettare per sempre. */
     const dentro = await pagina.aspetta((detto) => detto.type === "auth_ok");
-    assert.equal(dentro.ha_version, "ponte");
+    assert.equal(dentro.ha_version, "gdahome");
 
     /* La configurazione la fa il ponte: nella dashboard la faceva
      * l'integrazione, e a Home Assistant non deve arrivare. */

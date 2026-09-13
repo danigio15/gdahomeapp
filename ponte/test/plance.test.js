@@ -44,16 +44,14 @@ test("la prima plancia c'e' sempre, e si chiama come il prodotto", () => {
       {
         profilo: "primary",
         titolo: "gdahome",
-        istanza: "ponte",
+        istanza: "gdahome",
         primaria: true,
         creata_il: 0,
       },
     ]);
-    /* «ponte» e non «ponte-primary»: quel nome sta gia' scritto nei depositi
-     * dei telefoni di chi ce l'ha da prima, e cambiarlo vorrebbe dire una
-     * plancia che si ritrova il tema di serie senza che nessuno l'abbia
-     * toccato. */
-    assert.equal(plance.prima.istanza, "ponte");
+    /* «gdahome» e non «gdahome-primary»: la prima c'e' sempre, e il suo nome
+     * non ha bisogno di dire quale e'. */
+    assert.equal(plance.prima.istanza, "gdahome");
 
     /* E riaprendo lo stesso posto non nasce niente di nuovo. */
     assert.equal(lePlance(cartella).quante, 1);
@@ -70,7 +68,7 @@ test("una plancia in piu' ha un cassetto suo, e un'istanza sua", () => {
     assert.deepEqual(nuova, {
       profilo: "casa-al-mare",
       titolo: "Casa al mare",
-      istanza: "ponte-casa-al-mare",
+      istanza: "gdahome-casa-al-mare",
       primaria: false,
       creata_il: 7000,
     });

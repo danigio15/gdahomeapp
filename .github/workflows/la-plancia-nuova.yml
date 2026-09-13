@@ -12,7 +12,7 @@
 # dell'add-on e salva. Le Prove girano su quello che si e' appena salvato.
 #
 # Attenzione a cosa **non** fa: non arriva a casa di nessuno. Un add-on
-# installato in `/addons/ponte` non ha nessun negozio dietro — Home Assistant
+# installato in `/addons/gdahome` non ha nessun negozio dietro — Home Assistant
 # guarda il manifesto che trova in quella cartella, e quella e' l'unica
 # versione che conosce — quindi finche' quei file non cambiano **sul disco di
 # casa**, «Aggiorna» non compare. L'ultimo miglio lo fa il ponte da se', col

@@ -1,6 +1,6 @@
 # Il ponte
 
-L'add-on che fa parlare l'app di DashboardModern con questa casa — da dentro e
+L'add-on che fa parlare l'app di gdahome con questa casa — da dentro e
 da fuori — senza che nessun segreto di Home Assistant finisca sul telefono.
 
 ## Il problema che risolve
@@ -176,8 +176,8 @@ abita; e l'`istanza`, che e' il nome con cui la pagina tiene separate le proprie
 cose nel deposito del browser — il tema, la tavolozza, la barra. Rinominare una
 plancia cambia il titolo e non gli altri due, se no le cancellerebbe il lavoro.
 
-La prima c'e' sempre, si chiama «DashboardModern», tiene il profilo `primary` e
-non si toglie: chi ha l'add-on da prima non si accorge di niente. Le altre si
+La prima c'e' sempre, si chiama «gdahome», tiene il profilo `primary` e non si
+toglie. Le altre si
 aggiungono, si rinominano e si tolgono dalla **scheda dell'add-on** — che sta
 dietro l'autenticazione di Home Assistant, come quella pagina di Home Assistant
 — o dall'app. Togliendone una va via anche il suo cassetto: se restasse, chi ne

@@ -169,8 +169,8 @@ window.customCards = window.customCards || [];
 if (!window.customCards.some((una) => una.type === NOME)) {
   window.customCards.push({
     type: NOME,
-    name: "DashboardModern (gdahome)",
-    description: "La plancia servita dall'add-on «Il ponte».",
+    name: "gdahome",
+    description: "La plancia di gdahome, servita dall'add-on.",
     preview: false,
   });
 }

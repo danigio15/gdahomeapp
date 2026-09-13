@@ -267,7 +267,7 @@ export class PlanceInCasa {
     try {
       writeFileSync(
         join(dirname(dove), "LEGGIMI.txt"),
-        "Questa cartella la tiene l'add-on «Il ponte» di gdahome.\n" +
+        "Questa cartella la tiene l'add-on «gdahome».\n" +
           "Dentro c'e' una cosa sola: la cartina che apre la plancia nelle\n" +
           "Plance di Home Assistant. Si rifa' da se' a ogni avvio dell'add-on.\n" +
           "Cancellarla non rompe niente: torna al prossimo avvio.\n",

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Il ponte</title>
+    <title>gdahome</title>
     <link rel="icon" href="marchio.png" />
     <link rel="stylesheet" href="stile.css" />
   </head>
@@ -14,7 +14,7 @@
              pagina dal pannello di Home Assistant deve riconoscere al primo
              sguardo che e' la stessa cosa che ha sul telefono. -->
         <img class="marchio" src="marchio.png" alt="" width="40" height="40" />
-        <h1>Il ponte</h1>
+        <h1>gdahome</h1>
         <p id="stato-casa" class="riga-di-stato">…</p>
       </header>
 
@@ -60,12 +60,12 @@
              Assistant, che la rinfresca finche' il riquadro e' aperto: una
              scheda a parte se ne va per conto suo e dopo un po' si sente
              rispondere «401: Unauthorized» da un indirizzo che sembrava
-             buono. Di qui si torna con la voce «Il ponte» nella barra. -->
+             buono. Di qui si torna con la voce «gdahome» nella barra. -->
         <div class="bottoni">
           <a class="bottone" id="apri-app" href="app/">Apri gdahome</a>
         </div>
         <p class="spiegazione">
-          Si apre qui dentro: per tornare a questa pagina, «Il ponte» nella barra di Home
+          Si apre qui dentro: per tornare a questa pagina, «gdahome» nella barra di Home
           Assistant. Aprendola in una scheda a parte, dopo qualche minuto quell'indirizzo
           risponde <strong>401</strong> — la sessione la tiene viva Home Assistant, non la
           scheda.
@@ -154,14 +154,14 @@
       <!-- L'aggiornamento del ponte.
            Sta qui e non in Home Assistant perché un add-on locale non ha
            nessun negozio dietro: HA guarda il manifesto che trova in
-           `/addons/ponte`, quindi finché quei file non cambiano «Aggiorna»
+           `/addons/gdahome`, quindi finché quei file non cambiano «Aggiorna»
            non compare mai. Da questo bottone il ponte se li porta da sé. -->
       <section class="scheda" id="aggiornamento" hidden>
-        <h2>Il ponte</h2>
+        <h2>La versione</h2>
         <p class="riga-di-stato" id="aggiornamento-riga">…</p>
         <p class="spiegazione" id="aggiornamento-spiega"></p>
         <div class="bottoni">
-          <button id="aggiorna-il-ponte" type="button" hidden>Aggiorna il ponte</button>
+          <button id="aggiorna-il-ponte" type="button" hidden>Aggiorna gdahome</button>
           <button id="riguarda" type="button" class="tenue">Guarda se c'è una versione nuova</button>
         </div>
         <p class="avviso" id="aggiornamento-avviso" hidden></p>

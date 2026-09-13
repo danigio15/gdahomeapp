@@ -310,7 +310,7 @@ String spiegaLErrore(Object errore) => switch (errore) {
         'collegarsi da fuori una volta.',
   ComandoRifiutato(codice: 'unknown_command') =>
     'Il ponte in casa e\' piu\' vecchio dell\'app e questa cosa non la sa '
-        'ancora fare: aggiorna l\'add-on «Il ponte».',
+        'ancora fare: aggiorna l\'add-on «gdahome».',
   ComandoRifiutato(codice: 'troppo_grande') =>
     'L\'allegato e\' troppo grande: al massimo 10 MB. Un video va tenuto '
         'corto.',

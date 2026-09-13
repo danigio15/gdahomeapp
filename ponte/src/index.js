@@ -166,7 +166,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   /* Il ponte si aggiorna da se'.
    *
    * Un add-on locale non ha nessun negozio dietro: se nessuno porta i file
-   * nuovi in `/addons/ponte`, in Home Assistant non compare mai nessun
+   * nuovi in `/addons/gdahome`, in Home Assistant non compare mai nessun
    * «Aggiorna». Prima quei file li portava dentro un comando da terminale con
    * un gettone da incollare ogni volta; adesso e' un bottone nella console. */
   const aggiornamento = new Aggiornamento({

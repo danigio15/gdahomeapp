@@ -107,7 +107,7 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
      *
      * Vuoto e' la cosa normale per chi ha installato l'add-on da un archivio:
      * li' gli aggiornamenti arrivano dal negozio, e questo non serve. Serve a
-     * chi lo tiene in `/addons/ponte` con la repository privata — cioe' a noi
+     * chi lo tiene in `/addons/gdahome` con la repository privata — cioe' a noi
      * — e si scrive una volta sola nella scheda dell'add-on.
      *
      * Non finisce in nessun registro e non esce da nessuna risposta: alla

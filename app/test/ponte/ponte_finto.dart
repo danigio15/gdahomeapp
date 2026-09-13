@@ -89,7 +89,7 @@ class PonteFinto {
       _manda(
         presa,
         buono
-            ? {'type': 'auth_ok', 'ha_version': 'ponte'}
+            ? {'type': 'auth_ok', 'ha_version': 'gdahome'}
             : {'type': 'auth_invalid', 'message': 'segno non valido'},
       );
       if (!buono) unawaited(presa.chiudi());
@@ -212,7 +212,7 @@ class PonteFinto {
     {
       'profilo': 'primary',
       'titolo': 'gdahome',
-      'istanza': 'ponte',
+      'istanza': 'gdahome',
       'primaria': true,
       'creata_il': 0,
     },
@@ -226,7 +226,7 @@ class PonteFinto {
     final nuova = {
       'profilo': quale,
       'titolo': titolo,
-      'istanza': 'ponte-$quale',
+      'istanza': 'gdahome-$quale',
       'primaria': false,
       'creata_il': 1,
     };
@@ -496,7 +496,7 @@ class PonteFinto {
     'impronta': base.split('/').last,
     'varianti': ['dashboard-en.html', 'dashboard.html'],
     'titolo': 'gdahome',
-    'istanza': 'ponte',
+    'istanza': 'gdahome',
     'profilo': 'primary',
     'primario': true,
     'file': 294,
@@ -765,7 +765,7 @@ class TelefonoCollegato {
       io: DaChi.casa,
       comprime: _ponte.conosceIlGzip && detto['gzip'] == true,
     );
-    _ponte._manda(this, {'type': 'auth_required', 'ha_version': 'ponte'});
+    _ponte._manda(this, {'type': 'auth_required', 'ha_version': 'gdahome'});
   }
 
   /// Scrive solo se dall'altra parte c'e' ancora qualcuno.

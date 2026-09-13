@@ -21,6 +21,11 @@
  * plancia deve sapere: quelle si', identiche, e una prova le guarda.
  */
 
+/* Il nome del prodotto, da una parte sola: e' l'istanza della prima plancia,
+ * cioe' il nome sotto cui la pagina tiene le proprie cose nel deposito del
+ * browser. */
+import { NOME } from "./marchio.js";
+
 /* La lingua di serie. La plancia ha una pagina per lingua — `dashboard.html`
  * e' l'italiano — e quale aprire lo decide questa. Home Assistant la sua
  * lingua non la dice a un add-on, quindi si prende l'italiano e si lascia
@@ -89,7 +94,7 @@ export function conLePremesse(pagina, { base, quale = null, lingua, doveIlWebSoc
     "<script>" +
     "window.__DASHBOARDMODERN_HOSTED__=true;" +
     `window.__DASHBOARDMODERN_BRIDGE_WS__=${ilWebSocket(doveIlWebSocket)};` +
-    `window.__DASHBOARDMODERN_INSTANCE__=${JSON.stringify(quale?.istanza || "ponte")};` +
+    `window.__DASHBOARDMODERN_INSTANCE__=${JSON.stringify(quale?.istanza || NOME)};` +
     `window.__DASHBOARDMODERN_PROFILE__=${JSON.stringify(quale?.profilo || "primary")};` +
     `window.__DASHBOARDMODERN_PRIMARY__=${quale ? quale.primaria !== false : true};` +
     `window.__DASHBOARDMODERN_LOCALE__=${JSON.stringify(linguaPulita(lingua))};` +

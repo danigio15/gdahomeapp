@@ -144,7 +144,7 @@ export class Plancia {
       impronta: this.impronta,
       varianti: this.varianti(),
       titolo: quale?.titolo || NOME,
-      istanza: quale?.istanza || "ponte",
+      istanza: quale?.istanza || NOME,
       profilo: quale?.profilo || "primary",
       primario: quale ? quale.primaria !== false : true,
       file: this._quanti,

@@ -19,6 +19,12 @@ import '../ponte/filo.dart';
 /// proprio questo percorso; gli altri gli mettono dietro un trattino.
 const _dominio = 'dashboardmodern';
 
+/// Il nome del prodotto, per quando il ponte non dice il suo. E' quello che il
+/// ponte scrive in `ponte/plance` — il titolo della prima plancia e la sua
+/// istanza — e qui serve solo a non restare senza niente parlando con un ponte
+/// piu' vecchio di questa app.
+const _gdahome = 'gdahome';
+
 /// Una delle plance di questa casa, nell'elenco che si sceglie.
 ///
 /// Nella dashboard ognuna e' una **istanza** dell'integrazione, e chi ne ha due
@@ -60,7 +66,7 @@ class UnaPlancia {
       titolo: titolo is String && titolo.isNotEmpty ? titolo : profilo,
       istanza: switch (grezza['istanza']) {
         final String s when s.isNotEmpty => s,
-        _ => 'ponte',
+        _ => _gdahome,
       },
       primaria: grezza['primaria'] == true,
     );
@@ -191,13 +197,13 @@ PannelloDellaPlancia? leggiLaPlanciaDelPonte(Object? risposta) {
   final varianti = risposta['varianti'];
   final elenco = risposta['plance'];
   return PannelloDellaPlancia(
-    percorso: 'ponte',
+    percorso: _gdahome,
     titolo: switch (risposta['titolo']) {
       final String s when s.isNotEmpty => s,
-      _ => 'gdahome',
+      _ => _gdahome,
     },
     base: base.replaceAll(RegExp(r'/+$'), ''),
-    istanza: risposta['istanza']?.toString() ?? 'ponte',
+    istanza: risposta['istanza']?.toString() ?? _gdahome,
     profilo: switch (risposta['profilo']) {
       final String s when s.isNotEmpty => s,
       _ => 'primary',

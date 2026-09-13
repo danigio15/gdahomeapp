@@ -14,58 +14,84 @@ Se vuoi solo provarla sul divano, il 2 puoi saltarlo.
 
 ## 1. Il ponte
 
-Due strade, e **quale delle due dipende da una cosa sola: se la repository è
-privata**.
+L'add-on si chiama **gdahome**, e la repository è pubblica: si installa **dal
+negozio**, come qualunque altro add-on. Cinque minuti la prima volta, e poi si
+aggiorna da sé.
 
-Home Assistant, quando gli si dà l'indirizzo di un archivio di add-on, va a
-prenderlo **senza presentarsi a nessuno**. Su una repository privata quella
-richiesta torna indietro come «non esiste», e nel negozio non compare niente.
-Non è un errore da aggiustare: è che il Supervisor non ha nessuna chiave da
-mostrare, e non c'è modo di dargliene una senza scriverla dentro la
-configurazione di Home Assistant.
+> **Da questa versione l'add-on ha un'identità nuova.** Quello con cui il
+> Supervisor lo riconosce — lo `slug` — era `ponte`, e adesso è `gdahome`. Per
+> Home Assistant è quindi un add-on **nuovo**, e vuol dire tre cose, una volta
+> sola:
+>
+> - **il vecchio si disinstalla**, e non basta fermarlo: i due chiedono la
+>   stessa porta (8098) e la stessa cartella in `www`, e chi parte per secondo
+>   non parte;
+> - **i telefoni si riabbinano**: quello che un add-on si tiene sta in una
+>   cartella che il Supervisor gli dà per identità, e quella nuova comincia
+>   vuota;
+> - **le plance si rifanno**: la prima ricompare da sé al primo avvio, quelle
+>   aggiunte a mano si riaggiungono dalla console.
+>
+> Si è fatto adesso perché l'add-on ce l'ha una persona sola, su una macchina
+> di prova. Più avanti quel prezzo lo pagherebbe chi ce l'ha installato, e
+> allora lo slug non si toccherebbe più.
 
-Quindi: **se vuoi tenere la repository privata, si installa a mano.** Non è più
-difficile, è solo un'altra strada.
+### A. Dal negozio *(questa)*
 
-### A. A mano, con la repository che resta privata *(consigliata)*
+1. **Impostazioni → Add-on → Negozio degli add-on**, menu in alto a destra →
+   **Archivi**: incolla `https://github.com/danigio15/gdahomeapp`, premi
+   **Aggiungi**, chiudi.
+2. Nell'elenco compare **gdahome**. Aprilo e premi **Installa**. **La prima
+   volta ci mette qualche minuto**: Home Assistant non se lo scarica già
+   pronto, se lo costruisce sul posto — su un Raspberry anche cinque o dieci
+   minuti. Le volte dopo è immediato.
+3. **Avvialo.** Nella barra laterale compare **gdahome**: è la console, quella
+   che fa i codici di abbinamento e che stacca i telefoni.
 
-1. **Scarica il codice.** Sulla pagina della repository: **Code → Download
-   ZIP**. Funziona anche se è privata, perché tu sei dentro.
+Da qui in poi gli aggiornamenti arrivano come per ogni altro add-on: quando si
+pubblica una versione nuova, la scheda dell'add-on mostra **Aggiorna**. Non
+serve nessun gettone di GitHub, e il bottone «Aggiorna gdahome» dentro la
+console non compare nemmeno — in un add-on che ha un negozio dietro non
+servirebbe a niente, e un bottone che non può funzionare è peggio di nessun
+bottone.
+
+### B. A mano, per svilupparlo
+
+Serve a chi cambia il codice e lo vuole provare senza pubblicare niente.
+
+1. **Scarica il codice**: sulla pagina della repository, **Code → Download
+   ZIP**.
 2. **Apri la cartella `addons` di Home Assistant.** Ci si arriva con uno
    qualunque di questi, quello che hai già:
    - l'add-on **Samba share**, che la fa comparire come cartella di rete;
    - l'add-on **Advanced SSH & Web Terminal**;
    - l'add-on **Studio Code Server** o **File editor**.
-3. **Copiaci dentro la cartella `ponte`** presa dallo ZIP, così com'è. Alla
-   fine deve esserci `addons/ponte/config.yaml`.
-4. In Home Assistant: **Impostazioni → Add-on → Negozio degli add-on**, menu in
-   alto a destra → **Ricarica**. Compare una sezione **Local add-ons** con
-   dentro **Il ponte di DashboardModern**.
-5. Installalo. **La prima volta ci mette qualche minuto**: non lo scarica già
-   pronto, se lo costruisce sul posto — su un Raspberry anche cinque o dieci
-   minuti. Le volte dopo è immediato.
-6. Avvialo.
+3. **Copiaci dentro la cartella `ponte` dello ZIP, chiamandola `gdahome`.**
+   Alla fine deve esserci `addons/gdahome/config.yaml`. Il nome della cartella
+   in sé è libero — l'identità Home Assistant la legge dal manifesto — ma
+   tenerlo uguale allo slug è l'unico modo per non perdersi fra i comandi qui
+   sotto.
+4. **Negozio degli add-on**, menu in alto a destra → **Ricarica**: compare una
+   sezione **Local add-ons** con dentro **gdahome**.
+5. Installalo e avvialo.
 
 #### Per aggiornarlo: glielo chiedi, e lo fa lui
 
-Dalla **0.16.0** il ponte si aggiorna da sé. Una volta sola, nella scheda
-dell'add-on (**Impostazioni → Add-on → Il ponte → Configurazione**), nella
-casella **`gettone`** incolli un token di GitHub: a grana fine su `gdahomeapp`
-soltanto, con **Contents: Read-only** e nient'altro. Home Assistant lo tiene
-nascosto e non lo rimostra più. Salvi, riavvii l'add-on.
+Un add-on tenuto in `/addons/gdahome` non ha nessun negozio dietro: Home
+Assistant guarda il manifesto che trova in quella cartella, e quella è l'unica
+versione che conosce. Finché quei file non cambiano **sul disco di casa**,
+«Aggiorna» non compare mai, per quante versioni si pubblichino. Non è un
+difetto del negozio: è che il negozio non c'è.
 
-Da lì in poi: apri **Il ponte** dalla barra laterale, e in fondo alla pagina
-la scheda **«Il ponte»** dice che versione è e se ce n'è una più nuova. Il
-bottone **«Aggiorna il ponte»** se la scarica, la mette al posto di questa e
-si ricostruisce. Ci mette qualche minuto, e mentre lo fa quella pagina non
+Quindi ci pensa lui. Apri **gdahome** dalla barra laterale, e in fondo alla
+pagina la scheda **«La versione»** dice che versione è e se ce n'è una più
+nuova. Il bottone **«Aggiorna gdahome»** se la scarica, la mette al posto di
+questa e si ricostruisce. Ci mette qualche minuto, e mentre lo fa quella pagina non
 risponde: è normale, torna da sé.
 
-**Perché serve tutto questo.** Un add-on installato così — i file in
-`/addons/ponte` — non ha nessun negozio dietro: Home Assistant guarda il
-manifesto che trova in quella cartella, e quella è l'unica versione che
-conosce. Finché quei file non cambiano **sul disco di casa**, «Aggiorna» non
-compare mai, per quante versioni si pubblichino. Non è un difetto del negozio:
-è che il negozio non c'è.
+La casella **`gettone`** nella configurazione dell'add-on serviva a quando la
+repository era privata: senza un gettone GitHub non dava né il manifesto né il
+pacchetto. Adesso è pubblica, e quella casella si lascia vuota.
 
 A mano si può ancora: riscarichi lo ZIP, risostituisci la cartella, e nel
 negozio premi **Ricarica**; poi nella pagina dell'add-on premi **Aggiorna**
@@ -73,38 +99,30 @@ negozio premi **Ricarica**; poi nella pagina dell'add-on premi **Aggiorna**
 
 #### Dal terminale, in un colpo solo
 
-Se hai l'add-on **Terminal & SSH** (o **Advanced SSH & Web Terminal**), lo
-stesso giro lo fa questo, incollato nel suo terminale. Chiede un token di
-GitHub perché la repository è privata: un token a grana fine su
-`gdahomeapp` soltanto, con **Contents: Read-only** e nient'altro. Non lo
-scrive da nessuna parte: si incolla e sparisce.
+Lo stesso giro, se hai l'add-on **Terminal & SSH** (o **Advanced SSH & Web
+Terminal**): si incolla nel suo terminale e non chiede niente.
 
 ```sh
-printf 'Token di GitHub (non si vede mentre lo incolli), poi Invio: '; stty -echo; read -r G; stty echo; echo
-G=$(printf '%s' "$G" | tr -d '[:space:]"'"'"''); case "$G" in github_pat_*|ghp_*) ;; *) G="github_pat_$G";; esac
-echo "Il gettone e' lungo ${#G} caratteri e comincia con $(printf '%s' "$G" | cut -c1-11)"
-echo "Sulla repository GitHub risponde: $(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $G" -H 'Accept: application/vnd.github+json' https://api.github.com/repos/danigio15/gdahomeapp)  (200 = va bene; 401 = gettone non valido o revocato; 404 = il gettone non vede questa repository; 403 = bloccato)"
 rm -rf /tmp/gdahome && mkdir -p /tmp/gdahome
-echo "Il pacchetto: HTTP $(curl -sS -L -o /tmp/gdahome/ponte.tar.gz -w '%{http_code}' -H "Authorization: Bearer $G" https://api.github.com/repos/danigio15/gdahomeapp/tarball/main), $(wc -c < /tmp/gdahome/ponte.tar.gz) byte  (sotto il milione di byte non e' il pacchetto, e' un messaggio di errore)"
-unset G
+echo "Il pacchetto: HTTP $(curl -sS -L -o /tmp/gdahome/ponte.tar.gz -w '%{http_code}' https://api.github.com/repos/danigio15/gdahomeapp/tarball/main), $(wc -c < /tmp/gdahome/ponte.tar.gz) byte  (sotto il milione di byte non e' il pacchetto, e' un messaggio di errore)"
 tar -xzf /tmp/gdahome/ponte.tar.gz -C /tmp/gdahome 2>/dev/null && dove=$(find /tmp/gdahome -maxdepth 1 -mindepth 1 -type d | head -1) || dove=""
 if [ -n "$dove" ] && [ -f "$dove/ponte/config.yaml" ]; then
   echo "Nel pacchetto c'e' la $(sed -n 's/^version: "\(.*\)"/\1/p' "$dove/ponte/config.yaml")"
-  rm -rf /addons/ponte && cp -r "$dove/ponte" /addons/ponte && rm -rf /tmp/gdahome
-  echo "Nella cartella adesso c'e' la $(sed -n 's/^version: "\(.*\)"/\1/p' /addons/ponte/config.yaml)"
+  rm -rf /addons/gdahome && cp -r "$dove/ponte" /addons/gdahome && rm -rf /tmp/gdahome
+  echo "Nella cartella adesso c'e' la $(sed -n 's/^version: "\(.*\)"/\1/p' /addons/gdahome/config.yaml)"
 else
   echo "Il codice nuovo non e' arrivato: leggi le righe qui sopra. La cartella e' quella di prima, non si e' rotto niente."
 fi
 ha store reload 2>/dev/null || echo "(il negozio non si e' ricaricato: si va avanti)"
-( ha apps rebuild local_ponte || ha addons rebuild local_ponte ) 2>/dev/null || echo "(non ricostruito)"
-( ha apps restart local_ponte || ha addons restart local_ponte ) 2>/dev/null || echo "(non riavviato)"
-( ha apps info local_ponte || ha addons info local_ponte ) 2>/dev/null | grep -E '^(version|version_latest|state|update_available):'
+( ha apps rebuild local_gdahome || ha addons rebuild local_gdahome ) 2>/dev/null || echo "(non ricostruito)"
+( ha apps restart local_gdahome || ha addons restart local_gdahome ) 2>/dev/null || echo "(non riavviato)"
+( ha apps info local_gdahome || ha addons info local_gdahome ) 2>/dev/null | grep -E '^(version|version_latest|state|update_available):'
 ```
 
-Scarica il codice, sostituisce `addons/ponte`, ricarica il negozio,
+Scarica il codice, sostituisce `/addons/gdahome`, ricarica il negozio,
 ricostruisce l'add-on e lo riavvia: alla fine stampa quello che Home Assistant
 ne pensa. La cartella vecchia la toglie **solo dopo** che il pacchetto è
-arrivato ed è stato riconosciuto, quindi se il token è sbagliato non si rompe
+arrivato ed è stato riconosciuto, quindi se qualcosa va storto non si rompe
 niente. Ci mette qualche minuto, che è la ricostruzione.
 
 **Perché è scritto così**, e sono due lezioni pagate:
@@ -117,38 +135,28 @@ niente. Ci mette qualche minuto, che è la ricostruzione.
   andato storto. E `addons` ormai si chiama **`apps`**: si prova il nome
   nuovo, e se non c'è si usa quello vecchio.
 - **Il download dice cosa risponde GitHub.** Prima era `curl -fsSL`, che
-  tace: un token revocato e un token senza permessi davano la stessa riga —
-  «non è arrivato» — senza dire quale delle due. Adesso si vedono il codice
-  HTTP e quanti byte sono arrivati. Del gettone si stampano solo la lunghezza
-  e le prime undici lettere, che sono sempre `github_pat_`: il gettone in
-  chiaro non finisce da nessuna parte.
+  tace: se il pacchetto non arrivava la riga era sempre la stessa — «non è
+  arrivato» — senza dire perché. Adesso si vedono il codice HTTP e quanti
+  byte sono arrivati, e i byte bastano a capirlo: un messaggio di errore di
+  GitHub sta in poche centinaia.
 
 **Due numeri, non uno.** Se qualcosa non torna, questi due si guardano
-separatamente — senza token, e senza toccare niente:
+separatamente:
 
 ```sh
-sed -n 's/^version: "\(.*\)"/\1/p' /addons/ponte/config.yaml
-( ha apps info local_ponte || ha addons info local_ponte ) 2>/dev/null | grep -E '^(version|version_latest|state|update_available):'
+sed -n 's/^version: "\(.*\)"/\1/p' /addons/gdahome/config.yaml
+( ha apps info local_gdahome || ha addons info local_gdahome ) 2>/dev/null | grep -E '^(version|version_latest|state|update_available):'
 ```
 
 Il primo è quello che c'è **sul disco**; il secondo è quello che Home
 Assistant ha **installato**. Se sono diversi, i file sono arrivati e manca
 solo il giro del Supervisor: `ha store reload`, poi `ha apps rebuild
-local_ponte`. Se il primo è già quello vecchio, il codice nuovo non è mai
-arrivato: rifà il blocco qui sopra col token, e stavolta le righe dicono
-perché.
-
-### B. Con l'indirizzo, se la rendi pubblica
-
-1. **Impostazioni → Add-on → Negozio degli add-on**, menu in alto a destra →
-   **Archivi**, e incolla `https://github.com/danigio15/gdahomeapp`.
-2. Nell'elenco compare **Il ponte di DashboardModern**: installalo e avvialo.
-
-Più comodo, e si aggiorna da solo. Ma vuol dire che il codice lo legge
-chiunque.
+local_gdahome`. Se il primo è già quello vecchio, il codice nuovo non è mai
+arrivato: rifà il blocco qui sopra, e stavolta le righe dicono perché.
 
 > **L'app invece non c'entra niente con tutto questo.** L'APK si scarica da
-> Actions, e lì sei autenticato: la repository può restare privata quanto vuoi.
+> Actions, e quello vale per chiunque abbia accesso alla repository.
+
 
 ---
 
@@ -191,7 +199,7 @@ Scrive i tre posti dove quell'indirizzo sta — il difetto dell'add-on, quello
 dell'app, quello della chat — e una prova tiene fermo che i primi due restino
 identici. Poi **Negozio degli add-on → Ricarica**, e si installa da lì.
 
-Apri **Il ponte** nella barra laterale: sotto «Da fuori casa» deve dire
+Apri **gdahome** nella barra laterale: sotto «Da fuori casa» deve dire
 **«Collegato a wss://…: da fuori casa si entra.»**, con dentro il tuo
 indirizzo. Se invece c'è quello di gdahome, l'add-on che gira non è la tua
 copia.
@@ -210,7 +218,7 @@ Se dice altro, lì c'è scritto cosa non va.
 
 ### Il codice
 
-Nella barra laterale di Home Assistant apri **Il ponte** e premi **Fabbrica un
+Nella barra laterale di Home Assistant apri **gdahome** e premi **Fabbrica un
 codice**. Compare un **quadretto**, e vale cinque minuti. (Sotto, per chi non
 può inquadrarlo, ci sono le stesse cose in lettere: sedici, in quattro gruppi
 da quattro.)
@@ -291,7 +299,7 @@ senza che nessuno faccia niente: una volta al giorno la corsa **«La plancia
 nuova»** guarda l'ultima release di `dashboardmodern-v2`, e se è più nuova di
 quella che l'add-on ha dentro la scarica, la mette in `ponte/plancia/`, alza di
 un numero la versione dell'add-on e salva. In Home Assistant compare
-**Aggiorna** sulla pagina de «Il ponte», e da lì la plancia nuova arriva a tutti
+**Aggiorna** sulla pagina di «gdahome», e da lì la plancia nuova arriva a tutti
 i telefoni abbinati.
 
 Si può anche accendere a mano: **Actions → «La plancia nuova» → Run workflow**.
@@ -305,7 +313,7 @@ variables → Actions). Senza, la corsa finisce verde e scrive che manca quello.
 
 Il link ce l'hai già: lo dà l'add-on.
 
-1. In Home Assistant, barra laterale → **Il ponte**.
+1. In Home Assistant, barra laterale → **gdahome**.
 2. Scheda «gdahome in un browser» → **Apri gdahome**.
 
 È la stessa app del telefono, e si adatta da sola allo schermo: su un computer
@@ -337,7 +345,7 @@ https://gdahome-centralino.<il-tuo-nome>.workers.dev/app/
 ```
 
 L'indirizzo corto — senza `/app/` — porta lì da solo. Lo trovi già scritto,
-pronto da copiare, nella console dell'add-on: **Il ponte → gdahome in un
+pronto da copiare, nella console dell'add-on: **gdahome → gdahome in un
 browser → «Da fuori casa, o da un browser qualsiasi»**.
 
 Si accende insieme al centralino: **Actions → «Il centralino» → Run

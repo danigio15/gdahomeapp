@@ -33,6 +33,7 @@ import { join } from "node:path";
 
 import { Archivio } from "./archivio.js";
 import { PROFILO_PRINCIPALE } from "./configurazione.js";
+import { NOME } from "./marchio.js";
 
 /* Come si chiama una plancia: abbastanza per un nome, non per una frase. */
 export const TITOLO_MASSIMO = 40;
@@ -196,11 +197,16 @@ export class Plance {
       profilo: una.profilo,
       titolo: una.titolo,
       /* L'istanza: il nome con cui la pagina tiene separate le proprie cose.
-       * Per la prima e' «ponte» e non «ponte-primary», perche' quel nome e'
-       * gia' scritto nei depositi dei telefoni di chi ce l'ha da prima: e
-       * cambiarlo vorrebbe dire una plancia che si ritrova il tema di serie
-       * senza che nessuno l'abbia toccato. */
-      istanza: una.profilo === PROFILO_PRINCIPALE ? "ponte" : `ponte-${una.profilo}`,
+       * Per la prima e' «gdahome» e non «gdahome-primary», perche' e' quella
+       * che c'e' sempre e il suo nome non ha bisogno di dire quale e'.
+       *
+       * Fino a ieri era «ponte», e cambiarlo costa una cosa: le plance di chi
+       * ce l'aveva si ritrovano il tema di serie, perche' il deposito del
+       * browser le loro cose le teneva sotto quel nome. Si e' cambiato adesso
+       * per lo stesso motivo dello slug — ce l'ha una persona, su una macchina
+       * di prova — e adesso e' l'unico momento in cui costa questo e non
+       * di piu'. */
+      istanza: una.profilo === PROFILO_PRINCIPALE ? NOME : `${NOME}-${una.profilo}`,
       primaria: una.profilo === PROFILO_PRINCIPALE,
       creata_il: una.creata_il,
     }));

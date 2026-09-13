@@ -22,6 +22,7 @@
 import { CasaIrraggiungibile } from "./casa.js";
 import { Chiacchieroni } from "./chiacchieroni.js";
 import { eUnaCommissione, no } from "./commissioni.js";
+import { NOME } from "./marchio.js";
 
 /* Quanti messaggi al secondo puo' mandare un telefono.
  *
@@ -185,7 +186,7 @@ class Collegamento {
       this.vistoIl = Date.now();
     };
     /* Come Home Assistant: la prima parola la dice il server. */
-    this.presa.manda(JSON.stringify({ type: "auth_required", ha_version: "ponte" }));
+    this.presa.manda(JSON.stringify({ type: "auth_required", ha_version: NOME }));
     this.battito = setInterval(() => this._controlla(), BATTITO);
   }
 
@@ -293,7 +294,7 @@ class Collegamento {
 
     this.dispositivo = dispositivo;
     this.ponte.registro?.info?.(`${dispositivo.nome} e' entrato da ${this.da}`);
-    this.presa.manda(JSON.stringify({ type: "auth_ok", ha_version: "ponte" }));
+    this.presa.manda(JSON.stringify({ type: "auth_ok", ha_version: NOME }));
   }
 
   /* Quello che va al telefono. Da qui passa **solo** cio' che arriva da Home

@@ -438,7 +438,7 @@
   /* ─── L'aggiornamento del ponte ──────────────────────────────────────────
    *
    * Un add-on locale non ha nessun negozio dietro: Home Assistant guarda il
-   * manifesto che trova in `/addons/ponte`, e quella e' l'unica versione che
+   * manifesto che trova in `/addons/gdahome`, e quella e' l'unica versione che
    * conosce. Finche' quei file non cambiano, «Aggiorna» non compare mai —
    * e a cambiarli serviva un terminale e un gettone da incollare ogni volta.
    * Da qui lo fa il ponte.
@@ -455,13 +455,14 @@
     var riga = "Questo ponte è la versione " + (stato.mia || "—") + ".";
     var spiega = "";
     var siPuo = false;
-    if (!stato.gettone) {
-      riga += " Non so se ce n'è una più nuova.";
-      spiega =
-        "Per guardare da sé serve un gettone di GitHub, una volta sola: " +
-        "Impostazioni → Add-on → Il ponte → Configurazione, casella «gettone». " +
-        "Un gettone a grana fine sulla sola repository dell'app, con Contents: Read-only.";
-    } else if (stato.cE === true) {
+    /* Il gettone non c'entra più niente.
+     *
+     * Finché la repository era privata, senza un gettone di GitHub non si
+     * poteva nemmeno sapere che versione c'è: la richiesta tornava «non
+     * esiste». Adesso è pubblica, il manifesto lo legge chiunque, e questa
+     * scheda dice quello che sa — non se qualcuno ha incollato un gettone in
+     * una casella. Quella casella è rimasta e si lascia vuota. */
+    if (stato.cE === true) {
       riga += " C'è la " + stato.nuova + ".";
       spiega =
         "Il ponte se la scarica, la mette al posto di questa e si ricostruisce. " +
@@ -478,7 +479,6 @@
     trova("aggiornamento-riga").textContent = riga;
     trova("aggiornamento-spiega").textContent = spiega;
     trova("aggiorna-il-ponte").hidden = !siPuo;
-    trova("riguarda").hidden = !stato.gettone;
   }
 
   function guardaLAggiornamento() {
