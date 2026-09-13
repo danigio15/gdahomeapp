@@ -133,8 +133,8 @@ integrazioni per scegliere elettrodomestici, auto e robot
 (`ponte/src/catalogo.js`, dai registri di Home Assistant), le foto caricate
 (`ponte/src/foto.js`). Si configura dall'app, dalla sezione Config della
 plancia, e ogni telefono di casa vede la stessa configurazione. Le
-segnalazioni invece escono dalla plancia e diventano dell'app: il piano in due
-binari sta in `docs/PIANO.md`. La chat di assistenza no: quella resta la sua,
+segnalazioni invece escono dalla plancia e diventano dell'app. La chat di
+assistenza no: quella resta la sua,
 e il ponte fa il mestiere che nell'integrazione fa `chat.py`
 (`ponte/src/chat.js`).
 
@@ -153,8 +153,6 @@ passa, la plancia, i dispositivi, e quello che verra'. Le pagine della plancia
 — le luci, il clima, l'energia, la configurazione — stanno dentro la plancia,
 nella sua barra: qui non si ripetono.
 
-Il piano per intero, fase per fase, sta in [`docs/PIANO.md`](docs/PIANO.md).
-
 ## Provarla davvero, sul telefono
 
 Il pacchetto Android lo costruisce GitHub, quindi non serve installarsi l'SDK:
@@ -164,10 +162,7 @@ volta dentro — stanno in [`COME_PROVARLA.md`](COME_PROVARLA.md).
 
 Questa repository e' **pubblica**, perche' e' cosi' che Home Assistant
 scarica un add-on: il Supervisor va a prendere gli archivi senza presentarsi, e
-da una repository privata si sente rispondere «non esiste». Cosa si vede e cosa
-no — e le due cose che restano da mettere a posto, la chiave con cui si firmano
-i pacchetti Android fra tutte — sta in
-[`docs/APRIRE_LA_REPOSITORY.md`](docs/APRIRE_LA_REPOSITORY.md).
+da una repository privata si sente rispondere «non esiste».
 
 ## Le prove
 

@@ -13,7 +13,7 @@
  *     quale filo tornare.
  *   - **centralino**: dove chiamare per entrare da fuori. E' lo stesso a cui
  *     chiama questa casa: se un giorno cambia, i telefoni gia' abbinati lo
- *     scoprono da soli — vedi `PIANO.md`.
+ *     scoprono da soli.
  *   - **indirizzi**: dove sta questa casa sulla rete di casa.
  *
  * L'ultimo e' quello che fa la differenza tutti i giorni. Senza, un telefono

@@ -205,9 +205,14 @@
       var stacca = vediPagina.createElement("button");
       stacca.className = "tenue";
       stacca.type = "button";
-      stacca.textContent = "Stacca";
+      stacca.textContent = "Togli associazione";
       stacca.addEventListener("click", function () {
-        if (!window.confirm("Staccare «" + uno.nome + "»? Dovra' riabbinarsi da capo.")) return;
+        if (
+          !window.confirm(
+            "Togliere l'associazione di «" + uno.nome + "»? Dovra' riabbinarsi da capo.",
+          )
+        )
+          return;
         stacca.disabled = true;
         chiedi("api/dispositivi/" + encodeURIComponent(uno.id), { method: "DELETE" })
           .then(aggiornaTutto)
@@ -743,7 +748,18 @@
           trova("stato-assistenza").textContent =
             "Questa casa risponde alle chat di assistenza: la console e' accesa.";
         }
-        disegnaIChiacchieroni(stato.chiacchieroni);
+        /* La diagnostica del traffico si vede **solo dove si risponde**.
+         *
+         * A chi ha gdahome in casa quella scheda non serve e spaventa: elenca
+         * entita' col nome tecnico, conta eventi al minuto, e parla di filtri
+         * da mettere in Home Assistant. Serve a chi guarda una casa che va a
+         * scatti per capire da dove comincia il traffico — e quello e' chi
+         * risponde alle segnalazioni, cioe' chi ha la chiave della console.
+         *
+         * Si appoggia alla stessa condizione dell'assistenza apposta: una
+         * condizione sola, un posto solo dove cambiarla. */
+        trova("chiacchieroni").hidden = !risponde;
+        if (risponde) disegnaIChiacchieroni(stato.chiacchieroni);
         disegnaLaProvenienza(stato.plancia);
         disegnaIlLink(stato.app);
         disegnaIlLinkDiFuori(stato.app ? stato.centralino.dove : "");

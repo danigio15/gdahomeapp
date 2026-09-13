@@ -118,8 +118,8 @@ jobs:
               echo "chiave si aggiorna senza perdere l'abbinamento. Per i negozi, e per"
               echo "una release pubblica, serve la chiave vera: due segreti,"
               echo '`CHIAVE_ANDROID` (il portachiavi in base64) e'
-              echo '`CHIAVE_ANDROID_PASSWORD`. Come si fa, in cinque minuti:'
-              echo '`docs/LA_CHIAVE_ANDROID.md`.'
+              echo '`CHIAVE_ANDROID_PASSWORD` — il portachiavi si fa con'
+              echo '`keytool -genkeypair`, e la stessa parola apre portachiavi e chiave.'
             } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
@@ -240,8 +240,8 @@ jobs:
           {
             echo "### Il pacchetto per il Play Store"
             echo ""
-            echo "L'\`.aab\` e' fra gli artefatti di questa corsa. Come si carica:"
-            echo "\`docs/GOOGLE_PLAY.md\`."
+            echo "L'\`.aab\` e' fra gli artefatti di questa corsa: si carica dal"
+            echo "Play Console, in Test and release."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
@@ -375,8 +375,7 @@ jobs:
               echo ""
               echo "Compila: i plugin nativi stanno in piedi e i permessi sono a posto."
               echo "Per installarla su un iPhone serve l'account sviluppatore Apple"
-              echo "(99 €/anno) e quattro segreti su GitHub — come si prendono sta"
-              echo "scritto in \`docs/IPHONE.md\`."
+              echo "(99 €/anno) e quattro segreti su GitHub."
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
