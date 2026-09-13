@@ -38,7 +38,7 @@ name: gdahome
 # non cambia, e nel negozio «Aggiorna» compare **solo** se questo numero si
 # alza: da qui il quarto. `1.4.24.1` si legge «la plancia 1.4.24, la prima
 # correzione nostra».
-version: "1.4.25"
+version: "1.4.25.1"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
@@ -162,19 +162,6 @@ options:
   # Quanto vive il segno di un telefono senza farsi vedere, in giorni.
   # Zero vuol dire per sempre.
   giorni_di_silenzio: 90
-  # Il gettone di GitHub con cui il ponte si scarica le versioni nuove.
-  #
-  # **Lascialo vuoto.** Da quando la repository dell'app e' pubblica non serve
-  # a nessuno: chi installa l'add-on dal negozio riceve gli aggiornamenti dal
-  # negozio, come per ogni altro add-on, e chi lo tiene come add-on locale li
-  # prende col bottone nella console — che legge un manifesto pubblico, senza
-  # presentarsi.
-  #
-  # Resta perche' su una repository privata quel bottone senza gettone non
-  # funziona, e qualcuno potrebbe tenere una sua copia privata. In quel caso:
-  # un gettone a grana fine sulla sola repository dell'app, con **Contents:
-  # Read-only** e nient'altro.
-  gettone: ""
   # La chiave con cui si **risponde** alle chat di assistenza.
   #
   # Lasciala vuota. Serve a UNA installazione al mondo — quella di chi l'app la
@@ -193,12 +180,10 @@ schema:
   dispositivi_massimi: int(1,100)
   minuti_del_codice: int(1,60)
   giorni_di_silenzio: int(0,3650)
-  # `password` perche' Home Assistant lo nasconda mentre si scrive e non lo
-  # rimostri dopo; il `?` perche' chi non ne ha bisogno non deve trovarsi un
-  # campo obbligatorio da riempire.
-  gettone: password?
-  # `password` per la stessa ragione del gettone: Home Assistant la nasconde
-  # mentre si scrive. A differenza del gettone, questa si puo' sempre rileggere
-  # da dove sta di casa — sulla macchina, con `tramite-chiave`.
+  # `password` perche' Home Assistant la nasconda mentre si scrive e non la
+  # rimostri dopo; il `?` perche' chi non ne ha bisogno — cioe' chiunque tranne
+  # una installazione al mondo — non deve trovarsi un campo obbligatorio da
+  # riempire. Si puo' sempre rileggere da dove sta di casa: sulla macchina,
+  # con `tramite-chiave`.
   chiave_console: password?
   registro: list(debug|info|attenzione|errore)

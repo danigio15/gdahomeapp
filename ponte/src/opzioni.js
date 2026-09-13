@@ -105,13 +105,17 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
     registro: String(scritte.registro || DIFETTO.registro),
     /* Il gettone con cui il ponte si scarica le versioni nuove di se stesso.
      *
-     * Vuoto e' la cosa normale per chi ha installato l'add-on da un archivio:
-     * li' gli aggiornamenti arrivano dal negozio, e questo non serve. Serve a
-     * chi lo tiene in `/addons/gdahome` con la repository privata — cioe' a noi
-     * — e si scrive una volta sola nella scheda dell'add-on.
+     * **Nella scheda dell'add-on non c'e' piu' nessuna casella.** La
+     * repository di gdahome e' pubblica: chi installa dal negozio riceve gli
+     * aggiornamenti dal negozio, e chi tiene l'add-on in `/addons/gdahome` li
+     * prende col bottone nella console, che legge un manifesto pubblico senza
+     * presentarsi. Una casella che tutti devono lasciare vuota e' una casella
+     * che prima o poi qualcuno riempie.
      *
-     * Non finisce in nessun registro e non esce da nessuna risposta: alla
-     * console si dice soltanto se c'e' o no. */
+     * La riga resta per chi si tiene una copia **privata** di questo add-on:
+     * li' il manifesto senza gettone non si legge, e glielo si passa
+     * dall'ambiente. Non finisce in nessun registro e non esce da nessuna
+     * risposta. */
     gettone: String(process.env.PONTE_GETTONE || scritte.gettone || ""),
     /* La cartella della console si cerca di fianco al codice, non dentro la
      * cartella da cui si e' stati lanciati: `npm test` e l'add-on partono da

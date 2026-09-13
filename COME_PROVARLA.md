@@ -89,9 +89,9 @@ nuova. Il bottone **«Aggiorna gdahome»** se la scarica, la mette al posto di
 questa e si ricostruisce. Ci mette qualche minuto, e mentre lo fa quella pagina non
 risponde: è normale, torna da sé.
 
-La casella **`gettone`** nella configurazione dell'add-on serviva a quando la
-repository era privata: senza un gettone GitHub non dava né il manifesto né il
-pacchetto. Adesso è pubblica, e quella casella si lascia vuota.
+Non serve nessun gettone di GitHub, e infatti nella configurazione
+dell'add-on quella casella non c'è più: serviva a quando la repository era
+privata, e adesso è pubblica — il manifesto e il pacchetto li legge chiunque.
 
 A mano si può ancora: riscarichi lo ZIP, risostituisci la cartella, e nel
 negozio premi **Ricarica**; poi nella pagina dell'add-on premi **Aggiorna**
