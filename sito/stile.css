@@ -859,31 +859,6 @@ section {
   color: var(--bene);
 }
 
-/* ── L'avvertenza ───────────────────────────────────────────────────────── */
-
-.avvertenza {
-  margin-top: 26px;
-  padding: 18px 22px;
-  border-radius: var(--raggio-piccolo);
-  background: color-mix(in srgb, var(--ambra) 12%, var(--carta));
-  border: 1px solid color-mix(in srgb, var(--ambra) 30%, transparent);
-  font-size: 0.93rem;
-}
-.avvertenza p {
-  margin: 0;
-}
-.avvertenza b {
-  color: var(--ambra-scura);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-tema="chiaro"]) .avvertenza b {
-    color: var(--ambra);
-  }
-}
-:root[data-tema="scuro"] .avvertenza b {
-  color: var(--ambra);
-}
-
 /* ── I download ─────────────────────────────────────────────────────────── */
 
 .scarichi {

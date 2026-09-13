@@ -133,16 +133,11 @@ Sono file statici: va bene qualunque posto che serva una cartella.
   `gdahome.pages.dev`. Finché non arriva, il sito c'è lo stesso su
   `.pages.dev`: quell'indirizzo non si tocca mai.
 
-- **GitHub Pages** — funziona, con un avvertimento: finché la repository è
-  privata, un sito Pages pubblico richiede un piano a pagamento; se no lo
-  vede solo chi ha accesso alla repository.
+- **GitHub Pages** — funziona anche quello, adesso che la repository è
+  pubblica. Ma senza il `_redirects` e il `_headers`, che sono di Cloudflare.
 - **Qualunque altro posto** — un bucket, un hosting qualunque, la cartella
   `www` di un server. Non serve Node, non serve un passo di costruzione, non
   ci sono richieste verso l'esterno: i caratteri stanno qui dentro.
-
-Una sola avvertenza sui contenuti: i bottoni dei download puntano a GitHub, e
-**finché la repository è privata rispondono «non esiste»** a chi non ci ha
-accesso. La pagina lo dice, invece di far sbattere la gente contro un 404.
 
 ## Come si prova
 
