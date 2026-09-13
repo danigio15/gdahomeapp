@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>gdahome — la tua casa in una plancia</title>
+    <meta
+      name="description"
+      content="gdahome apre Home Assistant sul telefono: una plancia sola, fatta per essere guardata. Un add-on per la casa, un'app per il telefono."
+    />
+    <link rel="icon" href="gdahome.png" />
+    <meta property="og:title" content="gdahome" />
+    <meta
+      property="og:description"
+      content="La tua casa in una plancia: Home Assistant, sul telefono, senza complicazioni."
+    />
+    <meta property="og:image" content="gdahome.png" />
+    <!-- Una pagina sola, senza niente da fuori: nessun carattere scaricato,
+         nessuna libreria, nessun contatore. Chi apre questa pagina non viene
+         seguito da nessuno, ed e' la stessa promessa che fa l'app. -->
+    <style>
+      :root {
+        --fondo: #08080c;
+        --fondo-chiaro: #101018;
+        --riga: #23232e;
+        --inchiostro: #f2f2f5;
+        --tenue: #a6a6b3;
+        --oro: #e8b063;
+        --blu: #5aa9f8;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--fondo);
+        color: var(--inchiostro);
+        font:
+          16px/1.6 system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .dentro {
+        width: 100%;
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+      header {
+        padding: 64px 0 40px;
+        text-align: center;
+      }
+      header img {
+        width: 112px;
+        height: 112px;
+        border-radius: 26px;
+      }
+      h1 {
+        margin: 20px 0 6px;
+        font-size: 40px;
+        letter-spacing: -0.02em;
+      }
+      .sottotitolo {
+        margin: 0;
+        color: var(--tenue);
+        font-size: 19px;
+      }
+      .tasti {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: center;
+        margin: 28px 0 0;
+      }
+      .tasto {
+        display: inline-block;
+        padding: 13px 22px;
+        border-radius: 999px;
+        text-decoration: none;
+        font-weight: 600;
+        border: 1px solid var(--riga);
+        color: var(--inchiostro);
+      }
+      .tasto.primo {
+        background: var(--blu);
+        border-color: var(--blu);
+        color: #04040a;
+      }
+      section {
+        padding: 36px 0;
+        border-top: 1px solid var(--riga);
+      }
+      h2 {
+        margin: 0 0 14px;
+        font-size: 24px;
+        letter-spacing: -0.01em;
+      }
+      p {
+        margin: 0 0 14px;
+        color: var(--tenue);
+      }
+      p strong,
+      li strong {
+        color: var(--inchiostro);
+      }
+      ol,
+      ul {
+        margin: 0 0 14px;
+        padding-left: 22px;
+        color: var(--tenue);
+      }
+      li {
+        margin-bottom: 10px;
+      }
+      code {
+        background: var(--fondo-chiaro);
+        border: 1px solid var(--riga);
+        border-radius: 6px;
+        padding: 2px 7px;
+        font-size: 14px;
+        color: var(--oro);
+        overflow-wrap: anywhere;
+      }
+      a {
+        color: var(--blu);
+      }
+      .griglia {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+      }
+      .riquadro {
+        background: var(--fondo-chiaro);
+        border: 1px solid var(--riga);
+        border-radius: 14px;
+        padding: 18px;
+      }
+      .riquadro h3 {
+        margin: 0 0 8px;
+        font-size: 17px;
+      }
+      .riquadro p {
+        margin: 0;
+        font-size: 15px;
+      }
+      footer {
+        padding: 36px 0 64px;
+        border-top: 1px solid var(--riga);
+        color: var(--tenue);
+        font-size: 14px;
+      }
+      footer a {
+        color: var(--tenue);
+      }
+      @media (max-width: 520px) {
+        header {
+          padding-top: 44px;
+        }
+        h1 {
+          font-size: 32px;
+        }
+        .sottotitolo {
+          font-size: 17px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dentro">
+      <header>
+        <img src="gdahome.png" alt="" width="112" height="112" />
+        <h1>gdahome</h1>
+        <p class="sottotitolo">La tua casa in una plancia.</p>
+        <div class="tasti">
+          <a class="tasto primo" href="https://webapp.gdahome.org">Apri gdahome</a>
+          <a class="tasto" href="https://github.com/danigio15/gdahomeapp">Il codice, su GitHub</a>
+        </div>
+      </header>
+
+      <section>
+        <h2>Cos'è</h2>
+        <p>
+          Home Assistant sa fare tutto, e per farlo chiede molto: pagine, schede, entità con nomi da
+          elettricista. <strong>gdahome</strong> ci mette davanti una plancia sola, fatta per essere
+          guardata — le luci, il clima, le tapparelle, le telecamere, i consumi, le persone — e la
+          porta sul telefono.
+        </p>
+        <p>Sono due pezzi, e lavorano insieme:</p>
+        <div class="griglia">
+          <div class="riquadro">
+            <h3>L'add-on, in casa</h3>
+            <p>
+              Si installa in Home Assistant dal negozio degli add-on. Serve la plancia al telefono e
+              tiene il segreto della casa: quello non esce mai da lì.
+            </p>
+          </div>
+          <div class="riquadro">
+            <h3>L'app, sul telefono</h3>
+            <p>
+              Si abbina inquadrando un codice a quadretti. Nessuna password da inserire, nessun
+              token da copiare, nessuna porta da aprire sul router.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Come si comincia</h2>
+        <ol>
+          <li>
+            In Home Assistant: <strong>Impostazioni → Add-on → Negozio → Archivi</strong>, e si
+            incolla <code>https://github.com/danigio15/gdahomeapp</code>.
+          </li>
+          <li>
+            Nell'elenco compare <strong>gdahome</strong>: si installa e si avvia. La prima volta ci
+            mette qualche minuto, perché se lo costruisce sul posto.
+          </li>
+          <li>
+            Si apre <strong>gdahome</strong> dalla barra laterale e si preme
+            <strong>Fabbrica un codice</strong>. Dal telefono si inquadra, e la casa è abbinata.
+          </li>
+        </ol>
+        <p>
+          Tutto passo per passo:
+          <a href="https://github.com/danigio15/gdahomeapp/blob/main/COME_PROVARLA.md"
+            >COME_PROVARLA.md</a
+          >.
+        </p>
+      </section>
+
+      <section>
+        <h2>Da fuori casa, senza aprire niente</h2>
+        <p>
+          Il telefono, da fuori, non bussa alla casa: è la casa che chiama fuori e resta in attesa
+          in un punto d'incontro. Quindi <strong>nessuna porta sul router</strong>, nessun indirizzo
+          pubblico da avere, nessuna VPN da installare.
+        </p>
+        <p>
+          Quello che gira in mezzo è <strong>cifrato fra il telefono e la casa</strong>: il punto
+          d'incontro instrada e non può leggere niente. Chi non lo vuole usare lo spegne, e la casa
+          si raggiunge solo dalla propria rete.
+        </p>
+      </section>
+
+      <section>
+        <h2>Cosa non fa</h2>
+        <ul>
+          <li>Nessun account gdahome: non c'è niente da registrare.</li>
+          <li>Nessuna pubblicità e nessun tracciamento, né nell'app né in questa pagina.</li>
+          <li>
+            Nessun server che raccolga i dati della tua casa: quelli stanno nel tuo Home Assistant,
+            e lì restano.
+          </li>
+        </ul>
+        <p>
+          Per esteso:
+          <a href="https://github.com/danigio15/gdahomeapp/blob/main/docs/PRIVACY.md"
+            >l'informativa privacy</a
+          >.
+        </p>
+      </section>
+
+      <footer>
+        <div class="dentro" style="padding: 0">
+          <p>
+            gdahome è un progetto aperto: il codice si legge, si copia e si corregge —
+            <a href="https://github.com/danigio15/gdahomeapp">github.com/danigio15/gdahomeapp</a>.
+          </p>
+          <p>
+            La plancia è quella di
+            <a href="https://github.com/danigio15/dashboardmodern-v2">DashboardModern</a>, servita
+            dalla tua casa.
+          </p>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

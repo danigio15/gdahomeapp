@@ -11,7 +11,7 @@ fare: i nomi, il fornitore e gli indirizzi qui dentro sono quelli veri.
 > `wss://tramite.gdahome.org`, scritto nei tre posti dove sta —
 > `ponte/src/opzioni.js`, `app/lib/ponte/centralino.dart`, `ponte/src/chat.js`
 > — con `node strumenti/centralino.mjs`. Come si spostano le case che ci sono
-> gia', e i telefoni, sta nel §11 in fondo.
+> gia', e i telefoni, sta nel §12 in fondo.
 
 ---
 
@@ -49,18 +49,24 @@ vanno a bussare.
 
 ---
 
-## I due nomi
+## I tre nomi
 
-Non uno: due, e fanno mestieri diversi.
+Non uno: tre, e fanno mestieri diversi.
 
 | nome | cos'e' | chi lo apre |
 |---|---|---|
+| `gdahome.org` | la pagina che dice cos'e' e da dove si comincia | chi non sa ancora niente |
+| `webapp.gdahome.org` | i file di gdahome da aprire nel browser | chi ce l'ha gia': e' il link da copiare |
 | `tramite.gdahome.org` | il tubo: `wss://`, dove casa e telefono si parlano | nessuno, mai a mano |
-| `webapp.gdahome.org` | i file di gdahome da aprire nel browser | chiunque: e' il link da copiare |
 
-Li serve la stessa macchina, con lo stesso certificato. Piu' avanti `webapp` si
-potra' mettere dietro la rete di Cloudflare per alleggerirla; `tramite` resta
-diretto per sempre, perche' il certificato se lo prende lui.
+Li serve la stessa macchina, con lo stesso certificato. Il nome nudo — quello
+che si scrive su un negozio o si dice a voce — e' il **sito**: una pagina
+sola, ferma, senza niente che venga da fuori. `www.gdahome.org` non e' un
+secondo sito: manda li'.
+
+Piu' avanti `webapp` si potra' mettere dietro la rete di Cloudflare per
+alleggerirla; `tramite` resta diretto per sempre, perche' il certificato se lo
+prende lui.
 
 ---
 
@@ -109,9 +115,18 @@ Su Namecheap: **Domain List → Manage → Advanced DNS → HOST RECORDS**.
 |---|---|---|---|
 | `A Record` | `tramite` | l'indirizzo della macchina | Automatic |
 | `A Record` | `webapp` | lo stesso indirizzo | Automatic |
+| `A Record` | `@` | lo stesso indirizzo | Automatic |
+| `A Record` | `www` | lo stesso indirizzo | Automatic |
 
-Le righe del parcheggio che Namecheap mette da sola — `CNAME www` e `URL
-Redirect @` — non danno fastidio: sono un altro nome.
+Le prime due righe sono il tramite e l'app; le ultime due sono il **sito**, e
+sono arrivate dopo. `@` vuol dire «il nome nudo», cioe' `gdahome.org` senza
+niente davanti: scritto per esteso, il record finirebbe su
+`gdahome.org.gdahome.org` e non risponderebbe nessuno.
+
+> **Le righe del parcheggio vanno via.** Namecheap ne mette due da sola —
+> `CNAME www` e `URL Redirect @` — e finche' ci sono, `@` e `www` sono suoi,
+> non nostri: si cancellano prima di mettere i due `A Record`. Finche' non lo
+> si fa, l'accensione si ferma e lo dice.
 
 **Come si sa che hanno preso:** apri `http://tramite.gdahome.org` dal telefono.
 Deve dare **connessione rifiutata**, non «sito non trovato». Vuol dire che il
@@ -132,10 +147,11 @@ read -rsp 'gettone: ' G && echo && curl -fsSL \
   | GETTONE_LETTURA="$G" bash
 ```
 
-Chiede subito il **gettone di lettura** — quello che lascia scaricare il codice
-dalla repository privata — e lo chiede al prompt apposta: cosi' non finisce
-nella riga di comando, che sulla macchina la legge chiunque con un `ps`, ne'
-nella cronologia della shell.
+Chiede subito il **gettone di lettura** — quello con cui scarica il codice — e
+lo chiede al prompt apposta: cosi' non finisce nella riga di comando, che sulla
+macchina la legge chiunque con un `ps`, ne' nella cronologia della shell. Lo
+chiede **solo la prima volta**: dalla seconda se lo rilegge da dove l'ha
+scritto (§7), e la riga da incollare diventa piu' corta.
 
 Poi lo script (`centralino/accendi.sh`) fa tutto da solo, in quest'ordine:
 
@@ -221,7 +237,73 @@ Come si controlla che sia arrivata: `acceso_da` in `/salute` torna piccolo.
 
 ---
 
-## 7. La spia
+## 7. Il sito, sul nome nudo
+
+`https://gdahome.org` e' **una pagina sola**: cos'e' gdahome, i due pezzi
+(l'add-on in casa, l'app sul telefono), come si comincia, e cosa non fa. Sta in
+`sito/index.html`, e non ha niente che venga da fuori — nessun carattere
+scaricato, nessuna libreria, nessun contatore. Chi la apre non viene seguito da
+nessuno, che e' la stessa promessa che fa l'app.
+
+Serve a due cose, e la seconda e' quella che l'ha fatta nascere:
+
+- a chi non sa ancora niente, per capire in mezzo minuto se gli interessa;
+- alla casella **«Website»** del Play Console, che vuole un indirizzo nostro e
+  non un link a GitHub.
+
+### Chi la serve
+
+La serve **Caddy**, come i file dell'app: sono file fermi, e il tramite ha
+altro da fare. Il blocco e' il terzo del `Caddyfile`, e `www` non e' un secondo
+sito — manda al nome nudo con un `redir` permanente.
+
+Una differenza con l'app, e non e' un dettaglio: qui **non c'e' `try_files`**.
+L'app decide le sue schermate da sola, quindi tutto quello che non e' un file
+va all'indice; il sito no — una pagina che non esiste deve dire che non esiste.
+
+### Come si tiene aggiornata
+
+Da sola, con lo stesso giro di tutto il resto: `scarica.sh` porta dentro
+`sito/` insieme a `centralino/` e a `ponte/app/`, con lo stesso scambio —
+prima si prova, poi si sostituisce. Quindi si modifica `sito/index.html`, si
+sposta il segno `tramite`, e **entro dieci minuti** la pagina nuova e' la'.
+
+Se una versione non avesse la cartella `sito/`, resta quella di prima: una
+cartella vuota davanti a un nome pubblico vuol dire un sito che smette di
+esistere perche' qualcuno ha spostato un file.
+
+### Su una macchina che e' gia' in piedi
+
+Prima i **due record** su Namecheap (`@` e `www`, §3), poi si sposta il segno
+(Actions → «Il tramite»), e poi si reincolla nella VNC Console la riga che
+accende tutto:
+
+```bash
+curl -fsSL \
+  https://raw.githubusercontent.com/danigio15/gdahomeapp/main/centralino/accendi.sh \
+  | bash
+```
+
+Niente gettoni da battere: quello di lettura e' gia' sulla macchina, e lo
+script se lo rilegge da la'.
+
+> **Rilanciarlo non porta via niente.** I segreti che sono gia' scritti — la
+> chiave della console, il gettone delle segnalazioni, quello di lettura — se
+> li rilegge invece di rifarli, e alla fine lo dice: «la chiave della console
+> e' quella di prima, non l'ho toccata».
+>
+> Prima non era cosi': la chiave si rigenerava a ogni giro, in una riga senza
+> `if`. Chi reincollava la riga per aggiungere un pezzo si ritrovava la chat
+> chiusa con una chiave che non aveva mai visto. Ora c'e' una prova che lo
+> tiene fermo (`centralino/test/accendi.test.js`).
+
+Alla fine lo script controlla anche il sito, e se la cartella e' vuota dice
+perche': quasi sempre e' il segno `tramite` che sta ancora su una versione in
+cui il sito non c'era.
+
+---
+
+## 8. La spia
 
 Se il tramite morisse, senza una spia lo scopriresti da un utente arrabbiato.
 
@@ -233,7 +315,7 @@ Quelle richieste le fa alla **tua** macchina, dove non le conta nessuno.
 
 ---
 
-## 8. Cosa succede dopo
+## 9. Cosa succede dopo
 
 ### Se la macchina si spegne
 
@@ -284,7 +366,7 @@ fuori per un quarto d'ora.
 
 ---
 
-## 9. Come si torna indietro
+## 10. Come si torna indietro
 
 Il Worker su Cloudflare resta dov'e' finche' non lo spegni tu. Se qualcosa non
 va, si rilancia `strumenti/centralino.mjs` con l'indirizzo vecchio, si
@@ -296,7 +378,7 @@ stesso.
 
 ---
 
-## 10. Quello che serve da te
+## 11. Quello che serve da te
 
 1. il **gettone di lettura**: un fine-grained token che veda
    `danigio15/gdahomeapp` con **Contents: Read**, e nient'altro. Da quando
@@ -319,7 +401,7 @@ poi tutte le case si scaricano. Due gettoni separati tolgono quella strada.
 
 ---
 
-## 11. Lo spostamento delle case, e dei telefoni
+## 12. Lo spostamento delle case, e dei telefoni
 
 L'indirizzo del centralino sta scritto in **tre posti**, e si cambiano tutti e
 tre con un comando solo — se divergessero, i telefoni cercherebbero le case in
