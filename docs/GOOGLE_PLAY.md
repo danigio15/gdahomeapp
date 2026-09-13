@@ -52,6 +52,51 @@ settimane per averlo) quel passaggio non ce l'ha. Se gdahome deve diventare un
 prodotto, l'account organizzazione è la strada più corta anche se all'inizio
 sembra la più lunga.
 
+### Personale o organizzazione: le quattro differenze che contano
+
+Non e' una formalita' ed e' la scelta piu' pesante di tutta la pratica, perche'
+**non si cambia**: per passare dall'una all'altra si apre un altro account e si
+trasferisce l'app, che e' una procedura a se'.
+
+| | personale | organizzazione |
+|---|---|---|
+| per aprirlo | un documento e un indirizzo | un'entita' legale e un numero **D-U-N-S** (gratis, una o due settimane) |
+| prima di pubblicare in produzione | **12 tester per 14 giorni** di fila, e poi si fa domanda | niente di tutto questo |
+| cosa si vede nella scheda | il **tuo nome e il tuo indirizzo**: Google obbliga a mostrare i contatti verificati, e per una persona sono quelli di casa | il nome e l'indirizzo della societa' |
+| se un giorno si vende | incassi come persona | incassi come attivita', con la fattura che ti serve comunque |
+
+La terza riga e' quella che sorprende chi non se l'aspetta: la scheda di un'app
+di un account personale mostra il **nome e l'indirizzo fisico** dello
+sviluppatore, e non e' nascondibile.
+
+### E se un giorno si vuole far pagare qualcosa
+
+Tre cose da sapere prima, non dopo:
+
+1. **Quello che si consuma dentro l'app passa da Google.** Una funzione in
+   piu', un abbonamento, uno sblocco: il Play Store vuole il suo sistema di
+   pagamento, e trattiene una percentuale (15% sotto il primo milione di
+   dollari l'anno, 30% sopra — e in Europa le regole sui pagamenti esterni si
+   stanno muovendo, quindi vanno riguardate quando ci si arriva). Quello che
+   **non** si consuma dentro l'app — un servizio, dell'assistenza, del
+   materiale — segue regole diverse.
+2. **Per incassare serve un profilo di pagamento**, cioe' un conto commerciante
+   collegato all'account. Con l'account personale lo si apre come persona
+   fisica.
+3. **Vendere con continuita' e' un'attivita'**, e in Italia un'attivita' vuole
+   la partita IVA. Non e' una cosa su cui dare consigli qui: e' una domanda da
+   commercialista, e va fatta **prima** di aprire l'account, perche' e' la
+   risposta che decide quale dei due aprire.
+
+**Quindi, in breve.** Se c'e' anche solo l'idea di far pagare qualcosa, o di
+dare gdahome a gente che non conosci: **organizzazione**. Costa due settimane
+di attesa per il D-U-N-S e ti risparmia i 12 tester, l'indirizzo di casa nella
+scheda, e un trasloco di account il giorno che vendi il primo abbonamento.
+
+Se invece l'account serve **adesso** per pubblicare gratis e vedere come va, il
+personale va bene: sappi che i 12 tester per 14 giorni li devi fare, e che
+spostarsi dopo costa un account nuovo piu' un trasferimento dell'app.
+
 ### Aprire l'account, passo per passo
 
 Serve un account Google — va bene quello che hai gia', e **e' per sempre**:
