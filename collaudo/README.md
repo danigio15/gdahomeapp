@@ -107,6 +107,24 @@ Serve perche' quando uno di quei pezzi e' storto **non c'e' nessun errore**: c'e
 una pagina bianca, e un errore che non si vede si trova solo guardando. Le
 fotografie restano in `collaudo/foto/link-*.png`.
 
+## E il sito
+
+```bash
+node guarda-il-sito.mjs
+```
+
+Il sito in [`../sito/`](../sito/README.md) e' fatto di file statici e non ha
+prove sue: non c'e' niente da chiamare, non c'e' niente che risponda. L'unico
+modo di sapere se sta in piedi e' aprirlo con un browser e provarci dentro.
+
+Questo lo serve, lo apre a tre larghezze e guarda che **la plancia
+dimostrativa risponda ai clic** — la luce che si spegne, la tapparella che
+scende, il termostato che si sposta, l'allarme che si inserisce, il lucchetto
+che porta ai piani — che non ci siano errori in console ne' file che non
+arrivano, che la pagina non scorra di lato, e che i prezzi presi da
+`listino.js` finiscano davvero nella pagina. Le fotografie restano in
+`collaudo/foto/sito-*.png`.
+
 ## Quello che il collaudo *non* prova
 
 Il tocco simulato sui bottoni della barra del titolo a volte finisce sulla riga

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs>
+      <linearGradient id="dmoTess" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#5eead4"/><stop offset=".55" stop-color="#14b8a6"/>
+        <stop offset="1" stop-color="#0f766e"/></linearGradient></defs>
+    <ellipse cx="16" cy="28" rx="8.8" ry="1.8" fill="#0b1220" opacity=".14"/>
+    <rect x="4.4" y="4.6" width="10.8" height="10.8" rx="2.8" fill="url(#dmoTess)"/>
+    <rect x="17.4" y="4.6" width="10.2" height="6.8" rx="2.4" fill="#cbd5e1"/>
+    <rect x="17.4" y="13.6" width="10.2" height="13.8" rx="2.8" fill="#94a3b8"/>
+    <rect x="4.4" y="17.6" width="10.8" height="9.8" rx="2.8" fill="#cbd5e1"/>
+    <path d="M6.8 7.4a3.4 3.4 0 0 1 2.4-1.4" stroke="#fff" stroke-opacity=".8" stroke-width="1.5"
+      fill="none" stroke-linecap="round"/></svg>

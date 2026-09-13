@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs>
+      <linearGradient id="dmoScocca" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#67e8f9"/><stop offset=".55" stop-color="#06b6d4"/>
+        <stop offset="1" stop-color="#0e7490"/></linearGradient>
+      <linearGradient id="dmoParab" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#f1f9ff"/><stop offset="1" stop-color="#a5c8dd"/></linearGradient></defs>
+    <ellipse cx="16" cy="26.4" rx="10.6" ry="1.8" fill="#0b1220" opacity=".14"/>
+    <path d="M4.4 22.4v-4.2l2.2-5.4A3 3 0 0 1 9.4 11h13.2a3 3 0 0 1 2.8 1.8l2.2 5.4v4.2a1.6 1.6 0 0 1-1.6 1.6h-1.6a1.6 1.6 0 0 1-1.6-1.6v-.8H9.2v.8a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6Z" fill="url(#dmoScocca)"/>
+    <path d="M8.6 17.4 10.2 13h11.6l1.6 4.4Z" fill="url(#dmoParab)"/>
+    <circle cx="9.6" cy="18.9" r="1.5" fill="#0b1220" opacity=".5"/>
+    <circle cx="22.4" cy="18.9" r="1.5" fill="#0b1220" opacity=".5"/>
+    <path d="M6.6 14.8h18.8" stroke="#fff" stroke-opacity=".3" stroke-width="1"/></svg>

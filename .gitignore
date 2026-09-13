@@ -29,3 +29,9 @@ node_modules/
 # stessa che sta in `ponte/app`, e una copia in piu nella repository non
 # serve a nessuno.
 nuvola/pubblico/
+
+# La plancia vera, copiata nel sito da `node strumenti/porta-nel-sito.mjs`.
+# Sono diciassette megabyte identici a quelli che stanno gia' in
+# `ponte/plancia/`: una seconda copia nella repository non serve a nessuno, e
+# si rifa' con un comando. Il bottone «Il sito» la rifa' prima di pubblicare.
+/sito/dashboardmodern_static/

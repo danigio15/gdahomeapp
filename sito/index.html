@@ -1,131 +1,766 @@
 <!doctype html>
-<html lang="it">
+<html lang="it" prefix="og: https://ogp.me/ns#">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>gdahome — la tua casa in una plancia</title>
     <meta
       name="description"
-      content="gdahome apre Home Assistant sul telefono: una plancia sola, fatta per essere guardata. Un add-on per la casa, un'app per il telefono."
+      content="L'app per Android e iPhone che mostra la plancia vera di Home Assistant e ci si abbina inquadrando un quadretto. Da dentro e da fuori casa, senza aprire niente sul router, cifrata punta a punta."
     />
-    <link rel="icon" href="gdahome.png" />
-    <meta property="og:title" content="gdahome" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="gdahome — la tua casa in una plancia" />
     <meta
       property="og:description"
-      content="La tua casa in una plancia: Home Assistant, sul telefono, senza complicazioni."
+      content="La plancia vera di Home Assistant sul telefono. Ci si abbina con otto lettere, si entra da dentro e da fuori casa senza aprire niente sul router, e il centralino che fa da tramite non può leggere niente."
     />
-    <meta property="og:image" content="gdahome.png" />
-    <!-- Una pagina sola, senza niente da fuori: nessun carattere scaricato,
-         nessuna libreria, nessun contatore. Chi apre questa pagina non viene
-         seguito da nessuno, ed e' la stessa promessa che fa l'app. -->
+    <meta property="og:image" content="https://gdahome.org/statico/marchio.png" />
+    <meta property="og:url" content="https://gdahome.org/" />
+    <meta property="og:site_name" content="gdahome" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="og:locale" content="it_IT" />
+    <link rel="icon" href="statico/marchio.png" />
+    <link rel="apple-touch-icon" href="statico/marchio.png" />
+    <link rel="preload" as="image" href="statico/marchio.png" />
     <link rel="stylesheet" href="stile.css" />
   </head>
   <body>
-    <div class="dentro">
-      <header>
-        <img src="gdahome.png" alt="" width="112" height="112" />
-        <h1>gdahome</h1>
-        <p class="sottotitolo">La tua casa in una plancia.</p>
-        <div class="tasti">
-          <a class="tasto primo" href="https://webapp.gdahome.org">Apri gdahome</a>
-          <a class="tasto" href="https://github.com/danigio15/gdahomeapp">Il codice, su GitHub</a>
+    <!-- ── La barra in cima ─────────────────────────────────────────────── -->
+    <header class="cappello" id="cappello">
+      <div class="limite">
+        <a class="marchio" href="#inizio">
+          <img src="statico/marchio.png" alt="Il marchio di gdahome" width="30" height="30" />
+          <span>gdahome</span>
+        </a>
+        <nav class="navigazione" aria-label="Le sezioni del sito">
+          <a href="#come">Come funziona</a>
+          <a href="#plancia">La plancia</a>
+          <a href="#funzioni">Cosa fa</a>
+          <a href="#scarica">Scarica</a>
+        </nav>
+        <div class="attrezzi">
+          <button
+            class="interruttore-tema"
+            id="cambia-tema"
+            type="button"
+            aria-label="Cambia fra chiaro e scuro"
+            title="Cambia fra chiaro e scuro"
+          >
+            <svg
+              class="solo-scuro"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+            >
+              <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z" />
+            </svg>
+            <svg
+              class="solo-chiaro"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+            >
+              <circle cx="12" cy="12" r="4.2" />
+              <path
+                d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"
+              />
+            </svg>
+          </button>
+          <a class="bottone bottone-pieno" href="#scarica">Scarica</a>
         </div>
-      </header>
+      </div>
+    </header>
 
-      <section>
-        <h2>Cos'è</h2>
-        <p>
-          Home Assistant sa fare tutto, e per farlo chiede molto: pagine, schede, entità con nomi da
-          elettricista. <strong>gdahome</strong> ci mette davanti una plancia sola, fatta per essere
-          guardata — le luci, il clima, le tapparelle, le telecamere, i consumi, le persone — e la
-          porta sul telefono.
-        </p>
-        <p>Sono due pezzi, e lavorano insieme:</p>
-        <div class="griglia">
-          <div class="riquadro">
-            <h3>L'add-on, in casa</h3>
-            <p>
-              Si installa in Home Assistant dal negozio degli add-on. Serve la plancia al telefono e
-              tiene il segreto della casa: quello non esce mai da lì.
-            </p>
-          </div>
-          <div class="riquadro">
-            <h3>L'app, sul telefono</h3>
-            <p>
-              Si abbina inquadrando un codice a quadretti. Nessuna password da inserire, nessun
-              token da copiare, nessuna porta da aprire sul router.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <h2>Come si comincia</h2>
-        <ol>
-          <li>
-            In Home Assistant: <strong>Impostazioni → Add-on → Negozio → Archivi</strong>, e si
-            incolla <code>https://github.com/danigio15/gdahomeapp</code>.
-          </li>
-          <li>
-            Nell'elenco compare <strong>gdahome</strong>: si installa e si avvia. La prima volta ci
-            mette qualche minuto, perché se lo costruisce sul posto.
-          </li>
-          <li>
-            Si apre <strong>gdahome</strong> dalla barra laterale e si preme
-            <strong>Fabbrica un codice</strong>. Dal telefono si inquadra, e la casa è abbinata.
-          </li>
-        </ol>
-        <p>
-          Tutto passo per passo:
-          <a href="https://github.com/danigio15/gdahomeapp/blob/main/COME_PROVARLA.md"
-            >COME_PROVARLA.md</a
-          >.
-        </p>
-      </section>
-
-      <section>
-        <h2>Da fuori casa, senza aprire niente</h2>
-        <p>
-          Il telefono, da fuori, non bussa alla casa: è la casa che chiama fuori e resta in attesa
-          in un punto d'incontro. Quindi <strong>nessuna porta sul router</strong>, nessun indirizzo
-          pubblico da avere, nessuna VPN da installare.
-        </p>
-        <p>
-          Quello che gira in mezzo è <strong>cifrato fra il telefono e la casa</strong>: il punto
-          d'incontro instrada e non può leggere niente. Chi non lo vuole usare lo spegne, e la casa
-          si raggiunge solo dalla propria rete.
-        </p>
-      </section>
-
-      <section>
-        <h2>Cosa non fa</h2>
-        <ul>
-          <li>Nessun account gdahome: non c'è niente da registrare.</li>
-          <li>Nessuna pubblicità e nessun tracciamento, né nell'app né in questa pagina.</li>
-          <li>
-            Nessun server che raccolga i dati della tua casa: quelli stanno nel tuo Home Assistant,
-            e lì restano.
-          </li>
-        </ul>
-        <p>
-          Per esteso:
-          <a href="privacy.html">l'informativa privacy</a>.
-        </p>
-      </section>
-
-      <footer>
-        <div class="dentro" style="padding: 0">
-          <p>
-            gdahome è un progetto aperto: il codice si legge, si copia e si corregge —
-            <a href="https://github.com/danigio15/gdahomeapp">github.com/danigio15/gdahomeapp</a>.
+    <main>
+      <!-- ── Il colpo d'occhio ──────────────────────────────────────────── -->
+      <section class="apertura" id="inizio">
+        <div class="limite">
+          <p class="occhiello">Per Home Assistant</p>
+          <h1>
+            La tua casa in una plancia.<br />
+            Anche da fuori, <span class="filo">senza aprire niente</span>.
+          </h1>
+          <p class="guida">
+            gdahome è l'app per Android e iPhone che fa vedere la casa come una plancia — quella
+            vera di DashboardModern, con le sue trenta sezioni — e che sa fare le tre cose che in
+            Home Assistant stanno nascoste in fondo a un menu: abbinare un dispositivo Zigbee,
+            scrivere un'automazione, creare un aiutante.
           </p>
-          <p>
-            La plancia è quella di
-            <a href="https://github.com/danigio15/dashboardmodern-v2">DashboardModern</a>, servita
-            dalla tua casa.
+          <div class="bottoni">
+            <a class="bottone bottone-ambra" href="#plancia">Provala qui sotto</a>
+            <a class="bottone bottone-vuoto" href="#scarica">Scarica l'app</a>
+          </div>
+          <p class="sottobottoni">
+            Ci si abbina inquadrando un quadretto: nessun indirizzo da battere, nessuna credenziale
+            di Home Assistant.
           </p>
+
+          <div class="numeroni">
+            <div class="numerone"><b>521</b><span>prove che girano a ogni commit</span></div>
+            <div class="numerone"><b>30</b><span>sezioni della plancia, già funzionanti</span></div>
+            <div class="numerone"><b>0</b><span>porte da aprire sul router</span></div>
+            <div class="numerone"><b>8</b><span>le lettere per abbinare un telefono</span></div>
+          </div>
         </div>
-      </footer>
-    </div>
+      </section>
+
+      <!-- ── Come funziona ──────────────────────────────────────────────── -->
+      <section id="come">
+        <div class="limite">
+          <p class="occhiello">Come ci si arriva</p>
+          <h2>La casa chiama fuori. È tutto il punto.</h2>
+          <p class="guida">
+            Non c'è nessuna porta da aprire sul router, nessun indirizzo pubblico da avere, nessuna
+            VPN da installare. Il ponte apre lui un filo verso il centralino e lo tiene aperto, e i
+            telefoni arrivano da quella parte.
+          </p>
+
+          <figure class="strada appare">
+            <svg viewBox="0 0 960 320" role="img" aria-labelledby="titolo-strada">
+              <title id="titolo-strada">
+                Il telefono raggiunge il ponte per due strade: in casa direttamente, da fuori
+                passando dal centralino. Il ponte parla con Home Assistant, ed è lui ad aprire il
+                filo verso il centralino: le frecce verso il centralino partono tutte e due da fuori
+                di lui.
+              </title>
+              <defs>
+                <marker
+                  id="punta"
+                  viewBox="0 0 10 10"
+                  refX="8.5"
+                  refY="5"
+                  markerWidth="5.5"
+                  markerHeight="5.5"
+                  orient="auto"
+                >
+                  <path d="M0 1 L9 5 L0 9 z" fill="context-stroke" />
+                </marker>
+              </defs>
+
+              <!-- il telefono chiama il centralino -->
+              <path
+                d="M206 176 C 256 176, 258 64, 306 64"
+                fill="none"
+                stroke="var(--testo-lieve)"
+                stroke-width="2"
+                stroke-dasharray="6 5"
+                marker-end="url(#punta)"
+              />
+              <!-- e il ponte pure: è la casa che chiama fuori -->
+              <path
+                d="M600 150 C 600 126, 616 110, 636 102"
+                fill="none"
+                stroke="var(--ambra)"
+                stroke-width="2.6"
+                marker-end="url(#punta)"
+              />
+              <!-- in casa: dritto -->
+              <path
+                d="M206 200 H 552"
+                fill="none"
+                stroke="var(--azzurro)"
+                stroke-width="2.6"
+                marker-end="url(#punta)"
+              />
+              <!-- il ponte parla con Home Assistant -->
+              <path
+                d="M730 200 H 774"
+                fill="none"
+                stroke="var(--testo-lieve)"
+                stroke-width="2"
+                marker-end="url(#punta)"
+              />
+
+              <!-- il centralino -->
+              <rect
+                x="310"
+                y="26"
+                width="340"
+                height="76"
+                rx="16"
+                fill="var(--carta-alta)"
+                stroke="var(--bordo)"
+                stroke-dasharray="7 5"
+              />
+              <text
+                x="480"
+                y="58"
+                text-anchor="middle"
+                font-size="17"
+                font-weight="700"
+                fill="var(--testo)"
+              >
+                il centralino
+              </text>
+              <text x="480" y="81" text-anchor="middle" font-size="13" fill="var(--testo-lieve)">
+                instrada, e non può leggere niente
+              </text>
+
+              <!-- l'app -->
+              <rect
+                x="36"
+                y="150"
+                width="170"
+                height="100"
+                rx="16"
+                fill="var(--carta-alta)"
+                stroke="var(--bordo)"
+              />
+              <text
+                x="121"
+                y="186"
+                text-anchor="middle"
+                font-size="17"
+                font-weight="700"
+                fill="var(--testo)"
+              >
+                l'app
+              </text>
+              <text x="121" y="209" text-anchor="middle" font-size="13" fill="var(--testo-lieve)">
+                Android e iPhone
+              </text>
+              <text x="121" y="229" text-anchor="middle" font-size="12" fill="var(--testo-lieve)">
+                segno + chiave, revocabili
+              </text>
+
+              <!-- il ponte -->
+              <rect
+                x="560"
+                y="150"
+                width="170"
+                height="100"
+                rx="16"
+                fill="var(--carta-alta)"
+                stroke="var(--azzurro)"
+                stroke-width="2"
+              />
+              <text
+                x="645"
+                y="186"
+                text-anchor="middle"
+                font-size="17"
+                font-weight="700"
+                fill="var(--testo)"
+              >
+                il ponte
+              </text>
+              <text x="645" y="209" text-anchor="middle" font-size="13" fill="var(--testo-lieve)">
+                un add-on, in casa
+              </text>
+              <text x="645" y="229" text-anchor="middle" font-size="12" fill="var(--testo-lieve)">
+                il segreto non esce da qui
+              </text>
+
+              <!-- Home Assistant -->
+              <rect
+                x="774"
+                y="150"
+                width="152"
+                height="100"
+                rx="16"
+                fill="var(--carta-alta)"
+                stroke="var(--bordo)"
+              />
+              <text
+                x="850"
+                y="192"
+                text-anchor="middle"
+                font-size="16"
+                font-weight="700"
+                fill="var(--testo)"
+              >
+                Home
+              </text>
+              <text
+                x="850"
+                y="214"
+                text-anchor="middle"
+                font-size="16"
+                font-weight="700"
+                fill="var(--testo)"
+              >
+                Assistant
+              </text>
+
+              <!-- le etichette delle strade -->
+              <text
+                x="379"
+                y="190"
+                text-anchor="middle"
+                font-size="12.5"
+                font-weight="700"
+                fill="var(--azzurro)"
+              >
+                in casa: dritto, 192.168.1.50:8098
+              </text>
+              <text x="202" y="116" text-anchor="end" font-size="12.5" fill="var(--testo-lieve)">
+                da fuori
+              </text>
+              <text x="662" y="134" font-size="12.5" font-weight="700" fill="var(--ambra-scura)">
+                la casa chiama fuori
+              </text>
+
+              <!-- il tratto cifrato: dal telefono alla casa -->
+              <path
+                d="M121 272 V 286 M121 286 H 645 M645 286 V 272"
+                fill="none"
+                stroke="var(--bordo)"
+                stroke-width="1.5"
+                stroke-dasharray="4 6"
+              />
+              <text x="383" y="308" text-anchor="middle" font-size="12.5" fill="var(--testo-lieve)">
+                fra il telefono e la casa: cifrato punta a punta
+              </text>
+            </svg>
+            <figcaption>
+              Fra il telefono e la casa c'è uno scambio di chiavi che passa dal centralino senza che
+              lui ne ricavi niente, e da lì in poi ogni messaggio è cifrato punta a punta. Non è una
+              promessa: è una prova che registra tutto quello che lo attraversa e controlla che non
+              ci sia dentro niente di leggibile.
+            </figcaption>
+          </figure>
+
+          <ul class="tre-strade">
+            <li>
+              <b>Tre strade, una casa sola</b>
+              <span
+                >Quale funziona dipende da dove sta il telefono adesso, e cambia mentre l'app è
+                aperta. L'app le chiede tutte insieme e tiene la prima che risponde — a ogni
+                riconnessione, non una volta all'avvio.</span
+              >
+            </li>
+            <li>
+              <b>In casa vince sempre la strada diretta</b>
+              <span>Se no ogni comando farebbe il giro del mondo per arrivare a tre metri.</span>
+            </li>
+            <li>
+              <b>Il centralino non costa niente</b>
+              <span
+                >Gira su Cloudflare, piano gratuito, indirizzo compreso. Chi preferisce il proprio
+                ha la stessa cosa in Node: sono intercambiabili, e la prova dal vivo passa identica
+                contro tutti e due.</span
+              >
+            </li>
+          </ul>
+
+          <div class="carte">
+            <article class="carta appare">
+              <div class="segno">
+                <img src="statico/oggetti/mie.svg" alt="" width="26" height="26" loading="lazy" />
+              </div>
+              <h3>Otto lettere e basta</h3>
+              <p>
+                Niente indirizzo, niente credenziali di Home Assistant. Si inquadra un quadretto — o
+                si battono otto lettere — e il telefono riceve <b>un segno suo</b>, che vale solo
+                per quel ponte e per quella casa, e si stacca con un bottone.
+              </p>
+            </article>
+            <article class="carta appare">
+              <div class="segno">
+                <img
+                  src="statico/oggetti/sicurezza.svg"
+                  alt=""
+                  width="26"
+                  height="26"
+                  loading="lazy"
+                />
+              </div>
+              <h3>Il segreto resta nell'add-on</h3>
+              <p>
+                Il token del Supervisor non esce mai dal ponte: né la pagina né il telefono lo
+                vedono mai. Un segno lungo incollato a mano vive anni e vale tutto; questo vale una
+                casa, e si revoca.
+              </p>
+            </article>
+            <article class="carta appare">
+              <div class="segno">
+                <img
+                  src="statico/oggetti/stanze.svg"
+                  alt=""
+                  width="26"
+                  height="26"
+                  loading="lazy"
+                />
+              </div>
+              <h3>Più case, senza riabbinare</h3>
+              <p>
+                Ogni casa col suo segno, e si passa dall'una all'altra dal menu. La casa dei
+                genitori, quella al mare, quella di chi ti ha chiesto una mano: stesse app, stesso
+                telefono.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── La plancia, da toccare ─────────────────────────────────────── -->
+      <section id="plancia">
+        <div class="limite">
+          <p class="invito">Toccala: è viva</p>
+          <h2>Questa non è una riproduzione della plancia. È la plancia.</h2>
+          <p class="guida">
+            Qui sotto gira <b>DashboardModern</b>: gli stessi file che stanno dentro l'add-on, non
+            un disegno che gli somiglia. Le trenta voci della barra sono le sue, le tessere sono le
+            sue, i ritratti delle persone sono i suoi. Accendi una luce e la vedi accendersi; apri
+            una pagina e ci trovi quello che ci troveresti in casa.
+          </p>
+          <p class="guida">
+            Riempirla è la casa demo del collaudo — duecentotrentacinque entità, sette stanze, un
+            fotovoltaico con la batteria, un'auto, una piscina: le stesse contro cui girano le prove
+            del progetto.
+          </p>
+
+          <figure class="telaio appare">
+            <div class="telaio-cima">
+              <span class="telaio-pallini" aria-hidden="true"></span>
+              <span class="telaio-nome">
+                <img src="statico/marchio.png" alt="" width="20" height="20" />
+                gdahome — Casa demo
+              </span>
+              <span class="telaio-spia">dentro casa · cifrato</span>
+            </div>
+            <iframe
+              class="telaio-dentro"
+              src="dashboardmodern_static/legacy/dashboard.html"
+              title="La plancia di DashboardModern, con dentro la casa demo"
+              loading="lazy"
+            ></iframe>
+            <figcaption>
+              Nell'app sta esattamente così: in un riquadro, servita dall'add-on. Qui il riquadro è
+              una pagina invece che un telefono, e dietro invece della casa c'è una casa finta.
+            </figcaption>
+          </figure>
+
+          <div class="carte carte-strette">
+            <article class="carta">
+              <h3>Come fa a girare senza una casa</h3>
+              <p>
+                Una plancia vuole un Home Assistant dietro, e un sito non ce l'ha. Ma la plancia ha
+                <b>un gancio fatto apposta</b>: se trova un WebSocket già messo nella pagina, usa
+                quello invece di aprirne uno. È lo stesso gancio con cui l'app sul telefono le cuce
+                addosso il proprio filo. Di qua dal gancio, qui, c'è una Home Assistant finta
+                scritta in trecento righe.
+              </p>
+            </article>
+            <article class="carta">
+              <h3>Cosa è finto, e va detto</h3>
+              <p>
+                Dall'altra parte non c'è nessuna casa: gli stati stanno in una mappa nella pagina.
+                Premere un interruttore la cambia, e il cambiamento torna indietro come tornerebbe
+                da Home Assistant — quindi la plancia si muove per davvero — ma non si accende
+                niente da nessuna parte, e ricaricando la pagina torna tutto com'era.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Cosa fa ────────────────────────────────────────────────────── -->
+      <section id="funzioni">
+        <div class="limite">
+          <p class="occhiello">Cosa c'è, e cosa no</p>
+          <h2>La plancia non la rifacciamo: la mostriamo.</h2>
+          <p class="guida">
+            L'app non riscrive la dashboard. Mostra quella vera, con le sue tessere, le sue finestre
+            e la sua configurazione, in un riquadro dentro l'app. I file li ha l'add-on: in Home
+            Assistant non serve installare nessuna integrazione.
+          </p>
+
+          <div class="carte">
+            <article class="carta appare">
+              <h3>C'è già, e funziona</h3>
+              <ul class="elenco-segni">
+                <li>Il ponte: abbinamento, revoca, filo verso Home Assistant</li>
+                <li>Otto lettere e basta: nessun indirizzo, nessuna password</li>
+                <li>Il centralino: da fuori casa senza configurare niente</li>
+                <li>Cifrato punta a punta, e una prova che lo dimostra</li>
+                <li>Più case, ognuna col suo segno</li>
+                <li>Tre strade per la stessa casa, scelte da sole</li>
+                <li>Il filo si rialza da solo e rifà le sottoscrizioni cadute</li>
+                <li>La plancia dentro l'app, quella vera</li>
+                <li>I dispositivi: tutte le entità per dominio, con i comandi</li>
+                <li>Segnalazioni: arrivano a chi fa l'app come issue di GitHub</li>
+                <li>La chat di assistenza, che non passa da GitHub: la fa il ponte</li>
+                <li>
+                  <b>Più di una plancia</b>: ognuna con le sue sezioni e le sue stanze, e si
+                  scelgono dalla barra
+                </li>
+                <li>Una voce per plancia fra le «Plance» di Home Assistant</li>
+                <li>gdahome anche in un browser, dal link dell'add-on</li>
+              </ul>
+            </article>
+            <article class="carta appare">
+              <h3>Sta arrivando</h3>
+              <ul class="elenco-segni in-arrivo">
+                <li>Gli aiutanti: i sette classici, nativi <b>(fase 2)</b></li>
+                <li>Zigbee: ZHA <b>e</b> Zigbee2MQTT <b>(fase 3)</b></li>
+                <li>Il mago delle automazioni <b>(fase 4)</b></li>
+                <li>Notifiche e impronta digitale <b>(fase 5)</b></li>
+                <li>La pubblicazione sui negozi <b>(fase 6)</b></li>
+              </ul>
+              <p style="margin-top: 18px">
+                Le tre funzioni nuove non esistono da nessuna parte, quindi scriverle native non
+                costa un minuto in più. Le sezioni che esistono si mostrano in un riquadro; quelle
+                nuove si scrivono da capo.
+              </p>
+            </article>
+          </div>
+
+          <div class="fasi">
+            <div class="fase fatta">
+              <span class="stato">chiusa</span>
+              <b>Fase 1</b>
+              <p>Il ponte, il centralino, l'abbinamento, più case, la plancia dentro l'app.</p>
+            </div>
+            <div class="fase">
+              <span class="stato">da fare</span>
+              <b>Fase 2</b>
+              <p>Gli aiutanti: interruttori, numeri, testi, orari.</p>
+            </div>
+            <div class="fase">
+              <span class="stato">da fare</span>
+              <b>Fase 3</b>
+              <p>Zigbee, con ZHA e Zigbee2MQTT dietro un'interfaccia sola.</p>
+            </div>
+            <div class="fase">
+              <span class="stato">da fare</span>
+              <b>Fase 4</b>
+              <p>Il mago delle automazioni.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Scarica ────────────────────────────────────────────────────── -->
+      <section id="scarica">
+        <div class="limite">
+          <p class="occhiello">Provala</p>
+          <h2>Tre pezzi, in quest'ordine.</h2>
+          <p class="guida">
+            Prima il ponte, che è l'add-on dentro Home Assistant: senza, l'app non ha niente a cui
+            bussare. Poi il centralino, che serve solo per entrare da fuori casa. Poi l'app. Se vuoi
+            provarla sul divano, il secondo puoi saltarlo.
+          </p>
+
+          <div class="scarichi">
+            <a
+              class="scarico appare"
+              href="https://github.com/danigio15/gdahomeapp/blob/main/COME_PROVARLA.md"
+              rel="noopener"
+            >
+              <div class="segno">
+                <img src="statico/oggetti/home.svg" alt="" width="28" height="28" loading="lazy" />
+              </div>
+              <h3>1 · L'add-on</h3>
+              <p>
+                Si chiama <b>gdahome</b>, e si installa <b>dal negozio</b> come qualunque altro
+                add-on: Impostazioni → Add-on → Negozio → Archivi, si incolla l'indirizzo di questa
+                repository, e nell'elenco compare. Da lì in poi si aggiorna da sé.
+              </p>
+              <span class="come">Come si installa →</span>
+            </a>
+
+            <a
+              class="scarico appare"
+              href="https://github.com/danigio15/gdahomeapp/actions/workflows/centralino.yml"
+              rel="noopener"
+            >
+              <div class="segno">
+                <img
+                  src="statico/oggetti/runtime.svg"
+                  alt=""
+                  width="28"
+                  height="28"
+                  loading="lazy"
+                />
+              </div>
+              <h3>2 · Il centralino</h3>
+              <p>
+                Solo per entrare da fuori casa. Si accende da GitHub con un bottone, gira su
+                Cloudflare nel piano gratuito e non costa niente. Ci vuole una cosa sola, una volta
+                sola: un gettone di Cloudflare.
+              </p>
+              <span class="come">Accendilo da Actions →</span>
+            </a>
+
+            <a
+              class="scarico appare"
+              href="https://github.com/danigio15/gdahomeapp/actions/workflows/app.yml"
+              rel="noopener"
+            >
+              <div class="segno">
+                <img
+                  src="statico/oggetti/widget.svg"
+                  alt=""
+                  width="28"
+                  height="28"
+                  loading="lazy"
+                />
+              </div>
+              <h3>3 · L'app, per Android</h3>
+              <p>
+                Il pacchetto lo costruisce GitHub, quindi non serve installarsi l'SDK:
+                <b>Actions → «L'app da provare» → Run workflow</b>, e a fine corsa si scarica
+                <code>gdahome-android</code>.
+              </p>
+              <span class="come">Costruiscila da Actions →</span>
+            </a>
+
+            <div class="scarico spento appare">
+              <span class="fra-poco">fra poco</span>
+              <div class="segno">
+                <img
+                  src="statico/oggetti/macchine.svg"
+                  alt=""
+                  width="28"
+                  height="28"
+                  loading="lazy"
+                />
+              </div>
+              <h3>L'app, per iPhone</h3>
+              <p>
+                Il codice è lo stesso — è Flutter, una app sola per tutti e due i telefoni. Quello
+                che manca è la firma e la distribuzione: sta nella fase 6, insieme ai negozi.
+              </p>
+            </div>
+
+            <a class="scarico appare" href="https://github.com/danigio15/gdahomeapp" rel="noopener">
+              <div class="segno">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="26"
+                  height="26"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 1.5a10.5 10.5 0 0 0-3.32 20.46c.53.1.72-.22.72-.5v-1.93c-2.92.64-3.54-1.24-3.54-1.24-.48-1.22-1.17-1.55-1.17-1.55-.96-.65.07-.64.07-.64 1.06.08 1.61 1.09 1.61 1.09.94 1.6 2.47 1.14 3.07.87.1-.68.37-1.14.67-1.4-2.33-.27-4.78-1.17-4.78-5.2 0-1.15.41-2.09 1.09-2.83-.11-.27-.47-1.34.1-2.79 0 0 .88-.28 2.9 1.08a10 10 0 0 1 5.28 0c2.01-1.36 2.9-1.08 2.9-1.08.57 1.45.21 2.52.1 2.79.68.74 1.09 1.68 1.09 2.83 0 4.04-2.46 4.93-4.8 5.19.38.33.71.97.71 1.96v2.9c0 .29.19.61.72.5A10.5 10.5 0 0 0 12 1.5Z"
+                  />
+                </svg>
+              </div>
+              <h3>La repository</h3>
+              <p>
+                Il codice per intero, ed è <b>pubblica</b>: il ponte, il centralino, l'app, gli
+                strumenti e le 521 prove. <b>Code → Download ZIP</b>, o un <code>git clone</code>.
+              </p>
+              <span class="come">Vai alla repository →</span>
+            </a>
+
+            <a
+              class="scarico appare"
+              href="https://github.com/danigio15/dashboardmodern-v2"
+              rel="noopener"
+            >
+              <div class="segno">
+                <img
+                  src="statico/oggetti/evidenza.svg"
+                  alt=""
+                  width="28"
+                  height="28"
+                  loading="lazy"
+                />
+              </div>
+              <h3>La plancia</h3>
+              <p>
+                DashboardModern, le sezioni che gdahome mostra — quelle vere, qui sopra. Sta per
+                conto suo, si installa da HACS, e l'app se la porta dentro l'add-on da sola a ogni
+                versione nuova.
+              </p>
+              <span class="come">Vai a DashboardModern →</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── I documenti ────────────────────────────────────────────────── -->
+      <!-- Qui ci va solo roba che esiste davvero. La repository e' pubblica da
+           poco e i manuali di lavoro non ci sono piu' dentro: un riquadro che
+           promette «Il piano» e porta a un 404 e' peggio del riquadro che non
+           c'e'. Chi tocca questa parte apra i link, uno per uno. -->
+      <section id="documenti">
+        <div class="limite">
+          <p class="occhiello">Per chi vuole entrarci dentro</p>
+          <h2>È tutto scritto, ed è tutto aperto.</h2>
+          <p class="guida">
+            Il codice è pubblico, la plancia porta la sua licenza, e quello che l'app fa dei tuoi
+            dati sta su una pagina sola, in italiano.
+          </p>
+
+          <div class="documenti">
+            <a
+              class="documento"
+              href="https://github.com/danigio15/gdahomeapp/blob/main/README.md"
+              rel="noopener"
+            >
+              <b>Il progetto</b>
+              <span>Com'è fatto, e perché un ponte e non un segno incollato</span>
+            </a>
+            <a
+              class="documento"
+              href="https://github.com/danigio15/gdahomeapp/blob/main/COME_PROVARLA.md"
+              rel="noopener"
+            >
+              <b>Provarla davvero</b>
+              <span>Il ponte, il centralino e l'app, passo per passo</span>
+            </a>
+            <a
+              class="documento"
+              href="https://github.com/danigio15/gdahomeapp/blob/main/ponte/README.md"
+              rel="noopener"
+            >
+              <b>Il ponte</b>
+              <span>L'add-on: cosa fa entrare, cosa serve, cosa tiene da parte</span>
+            </a>
+            <a
+              class="documento"
+              href="https://github.com/danigio15/gdahomeapp/blob/main/collaudo/README.md"
+              rel="noopener"
+            >
+              <b>Il collaudo</b>
+              <span>Un browser vero che apre l'app e fotografa ogni schermata</span>
+            </a>
+            <a
+              class="documento"
+              href="https://github.com/danigio15/dashboardmodern-v2"
+              rel="noopener"
+            >
+              <b>DashboardModern</b>
+              <span>La plancia che gira qui sopra, con la sua licenza</span>
+            </a>
+            <a class="documento" href="privacy.html">
+              <b>La privacy</b>
+              <span>Quali dati ci sono di mezzo, dove stanno, chi li può leggere</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="fondo-pagina">
+      <div class="limite">
+        <p>
+          gdahome — l'app di casa: la plancia, il ponte, e i comandi che in Home Assistant stanno
+          nascosti. Le prove girano senza rete, senza Home Assistant e senza telefono.
+        </p>
+        <nav aria-label="Link utili">
+          <a href="#come">Come funziona</a>
+          <a href="#plancia">La plancia</a>
+          <a href="#scarica">Scarica</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="https://github.com/danigio15/gdahomeapp" rel="noopener">GitHub</a>
+        </nav>
+      </div>
+    </footer>
+
+    <script src="sito.js"></script>
   </body>
 </html>

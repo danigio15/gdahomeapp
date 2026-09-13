@@ -1,0 +1,113 @@
+# Guarda il sito con un browser vero, prima che ci vada qualcuno.
+#
+# Il sito non si pubblica da qui. Sta su gdahome.org, sulla stessa macchina del
+# tramite, e ci arriva come ci arriva tutto il resto: si sposta il segno
+# (**Actions → «Il tramite»**), la macchina se ne accorge entro dieci minuti,
+# scarica quella versione, la prova, e scambia. Un bottone solo per tutto, e
+# nessun posto in piu' dove una versione possa restare indietro.
+#
+# Questo bottone fa l'altra meta': guarda che il sito, a quel commit, stia in
+# piedi. E' il controllo che una pagina ferma non puo' farsi da sola — se non
+# trovasse i suoi file non ci sarebbe nessun errore da nessuna parte, ci
+# sarebbe una pagina bianca.
+#
+# Perche' ci voglia un browser: dentro la pagina gira **la plancia vera**,
+# quella di DashboardModern, con di qua dal suo gancio una Home Assistant
+# finta. E' codice che parte, chiede, disegna. Che sia tutto al suo posto lo
+# dice una cosa sola, ed e' averla vista partire.
+name: Il sito
+
+on:
+  push:
+    paths:
+      - "sito/**"
+      - "ponte/plancia/**"
+      - "collaudo/guarda-il-sito.mjs"
+      - "strumenti/porta-nel-sito.mjs"
+      - ".github/workflows/il-sito.yml"
+  pull_request:
+    paths:
+      - "sito/**"
+      - "ponte/plancia/**"
+      - "collaudo/guarda-il-sito.mjs"
+      - "strumenti/porta-nel-sito.mjs"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: il-sito-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guarda:
+    name: La plancia parte?
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      # Le due promesse che la pagina fa a parole — niente che venga da fuori,
+      # e l'informativa pubblicata uguale a quella scritta — le guardano le
+      # prove del centralino, che sono anche quelle che la macchina rigira
+      # prima di scambiare una versione con l'altra.
+      - name: Le due promesse della pagina
+        run: npm run test:centralino
+
+      # La plancia vera, la casa demo, il marchio, le icone, i caratteri.
+      #
+      # La plancia nella repository non sta due volte: `sito/dashboardmodern_static/`
+      # e' fuori da git e nasce qui, copiata da `ponte/plancia/` — come nasce
+      # sulla macchina, con lo stesso comando. Il resto — `sito/statico/` — e'
+      # salvato, ed e' piccolo: si rifa' lo stesso, cosi' se era indietro
+      # rispetto all'app lo si viene a sapere.
+      - name: Porta nel sito le cose vere
+        run: |
+          set -eu
+          node strumenti/porta-nel-sito.mjs
+          if git diff --quiet -- sito/statico; then
+            echo "Quello che sta nella repository era gia' aggiornato."
+          else
+            echo "::warning::sito/statico e' indietro. Rilancia «node strumenti/porta-nel-sito.mjs» e salvalo."
+            echo "In \`sito/statico\` c'e' roba vecchia: rilancia \`node strumenti/porta-nel-sito.mjs\` e salvala." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Le dipendenze del collaudo
+        run: npm ci --no-audit --no-fund
+        working-directory: collaudo
+
+      - name: Il browser
+        run: npx playwright install --with-deps chromium
+        working-directory: collaudo
+
+      # A tre larghezze — telefono, tablet, computer. Guarda che la plancia
+      # esca dal velo d'avvio, tiri su la sua barra con tutte le sue voci,
+      # apra le sue pagine, e risponda a un comando fino a cambiare stato.
+      - name: La plancia parte, e risponde
+        run: node collaudo/guarda-il-sito.mjs
+
+      # Se e' andata male, le fotografie dicono cosa si vedeva.
+      - name: Le fotografie
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: il-sito
+          path: collaudo/foto/sito-*.png
+          if-no-files-found: ignore
+
+      - name: Cosa fare adesso
+        if: success()
+        run: |
+          {
+            echo "## Il sito sta in piedi"
+            echo
+            echo "La plancia parte, tira su le sue voci e risponde ai comandi."
+            echo
+            echo "Per portarlo su **https://gdahome.org** si sposta il segno:"
+            echo "**Actions → «Il tramite» → Run workflow**. La macchina se ne"
+            echo "accorge entro dieci minuti e scambia da sola."
+          } >>"$GITHUB_STEP_SUMMARY"

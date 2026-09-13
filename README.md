@@ -103,7 +103,7 @@ se no ogni comando farebbe il giro del mondo per arrivare a tre metri.
 | **la plancia** | `ponte/plancia/` | una copia di [DashboardModern](https://github.com/danigio15/dashboardmodern-v2), **con la sua licenza**, che il ponte serve dal disco |
 | **il centralino** | [`nuvola/`](nuvola/README.md), [`centralino/`](centralino/README.md) | fa incontrare un telefono e la sua casa, senza capire niente di quello che si dicono |
 | **il collaudo** | [`collaudo/`](collaudo/README.md) | guarda l'app davvero, con un ponte vero e le fotografie di ogni schermata |
-| **il sito** | `sito/` | la pagina su gdahome.org: un file solo, e niente che venga da fuori |
+| **il sito** | [`sito/`](sito/README.md) | gdahome.org: racconta il progetto, e ne fa toccare **la plancia vera** da un browser |
 
 ### La plancia è quella vera
 
@@ -154,6 +154,39 @@ l'abbinamento, cosa finisce sul disco — sta in
 | ⬜ | Zigbee: abbinare un dispositivo da qui (ZHA e Zigbee2MQTT) |
 | ⬜ | Le automazioni, scritte dall'app |
 | ⬜ | Notifiche, impronta digitale, l'app sul Play Store per tutti |
+
+## Il sito
+
+Su **[gdahome.org](https://gdahome.org)**, e in [`sito/`](sito/README.md), c'e'
+il posto dove il progetto si racconta a chi non l'ha mai visto: com'e' fatto e
+cosa fa. E in mezzo, il pezzo per cui esiste: **la plancia vera, che ci gira
+dentro**.
+
+Non una riproduzione e non delle fotografie: DashboardModern, gli stessi file
+che stanno nell'add-on, in un riquadro dentro la pagina. Le trenta voci della
+barra sono le sue, le tessere sono le sue, i ritratti delle persone sono i
+suoi. Chi arriva dal sito all'app ritrova esattamente quello che ha visto.
+
+Una plancia vuole un Home Assistant dietro, e un sito non ce l'ha. Ma la
+plancia ha un gancio fatto apposta — lo stesso con cui l'app sul telefono le
+cuce addosso il proprio filo — e di qua dal gancio c'e'
+`sito/casa-in-pagina.js`: una Home Assistant finta dentro la pagina, che
+risponde come quella del collaudo e ha dentro la stessa casa demo. Si accende
+una luce e si accende, si chiude una tapparella e scende.
+
+Sul sito c'e' anche l'informativa — `sito/privacy.html`, l'indirizzo che il
+Play Store tiene da parte — e una prova tiene lei e `docs/PRIVACY.md` allineate
+sezione per sezione, perche' quella che si corregge, quando si corregge, e'
+quasi sempre la seconda.
+
+Si pubblica **da dove si pubblica tutto il resto**: si sposta il segno
+(**Actions → «Il tramite»**) e la macchina di gdahome.org scambia da sola entro
+dieci minuti, dopo aver rigirato le prove. Non c'e' nessun altro posto e
+nessun altro bottone. Quello che non si scrive a mano — la plancia, il marchio,
+le icone, i caratteri, la casa demo — lo porta
+`node strumenti/porta-nel-sito.mjs`, che gira sia qui che sulla macchina; e che
+il sito stia in piedi lo dice `node collaudo/guarda-il-sito.mjs`, con un
+browser vero.
 
 ## Le prove
 

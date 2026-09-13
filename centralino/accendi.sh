@@ -402,11 +402,29 @@ if [ -d "$radice/ponte/app" ]; then
 else
   mkdir -p "$DOVE/app.nuovo"
 fi
-# La pagina che racconta cos'e' gdahome. Se in questa versione non c'e', resta
-# quella di prima: una cartella vuota davanti a un nome pubblico vuol dire un
+# Il sito che racconta cos'e' gdahome. Se in questa versione non c'e', resta
+# quello di prima: una cartella vuota davanti a un nome pubblico vuol dire un
 # sito che smette di esistere perche' qualcuno ha spostato un file.
+#
+# Prima di copiarlo bisogna finirlo. Nel pacchetto il sito arriva senza la sua
+# parte piu' grossa — la plancia vera, che nella pagina gira dentro un riquadro
+# — perche' nella repository non c'e': sarebbe una seconda copia, identica,
+# di quella che sta in `ponte/plancia/`. Ce la mette questo comando, pescandola
+# proprio da li'. E' la stessa cosa che si fa in locale prima di guardare il
+# sito, e serve che ci sia Node — qui c'e' gia', e' quello che ha appena girato
+# le prove.
+#
+# Se non riesce, il sito **non si scambia**: resta quello di prima, intero,
+# invece di diventare una pagina col buco al posto della plancia. Il resto
+# dell'aggiornamento va avanti lo stesso: il tramite e' un servizio, il sito e'
+# una pagina, e non si tiene fermo il primo per la seconda.
 if [ -d "$radice/sito" ]; then
-  cp -a "$radice/sito" "$DOVE/sito.nuovo"
+  if node "$radice/strumenti/porta-nel-sito.mjs" >/dev/null 2>&1 &&
+    [ -s "$radice/sito/dashboardmodern_static/legacy/dashboard.html" ]; then
+    cp -a "$radice/sito" "$DOVE/sito.nuovo"
+  else
+    echo "la plancia non e' entrata nel sito: lascio quello di prima" >&2
+  fi
 fi
 
 rm -rf "$DOVE/centralino.via" "$DOVE/app.via" "$DOVE/sito.via"
@@ -569,6 +587,25 @@ $NOME_DELL_APP {
 $NOME_DEL_SITO {
 	encode zstd gzip
 	root * $DOVE/sito
+
+	# Dentro il sito ci sono due cose diverse, e vanno tenute in cache in due
+	# modi diversi. La plancia e' novecento file e diciassette megabyte, e non
+	# cambiano finche' non cambia la versione: tenerli un giorno vuol dire che
+	# chi torna sul sito, o chi apre la seconda pagina, non se li riscarica.
+	# La pagina invece si rivede ogni volta: un testo corretto che resta in
+	# cache e' un testo corretto che nessuno legge.
+	header /dashboardmodern_static/* Cache-Control "public, max-age=86400"
+	header /statico/* Cache-Control "public, max-age=86400"
+	header /*.html Cache-Control "no-cache"
+	header / Cache-Control "no-cache"
+
+	# Due righe che non cambiano niente di quello che si vede, e tolgono di
+	# mezzo due modi vecchi di fare danno: un file servito per quello che e' e
+	# non per quello che il browser indovina, e l'indirizzo di questa pagina
+	# che non viene raccontato ai siti dove si va cliccando via.
+	header X-Content-Type-Options nosniff
+	header Referrer-Policy strict-origin-when-cross-origin
+
 	file_server
 }
 
@@ -678,14 +715,22 @@ for _ in $(seq 1 60); do
 done
 
 # Il sito e' una cartella di file fermi: non c'e' niente da interrogare, c'e'
-# da guardare che ci siano. E se non ci sono, la ragione e' quasi sempre una
-# sola: il segno «$SEGNO» sta su una versione che il sito non ce l'aveva
-# ancora.
+# da guardare che ci siano. Sono quasi mille, perche' la parte grossa e' la
+# plancia vera che gira dentro la pagina.
 if [[ -s "$DOVE/sito/index.html" ]]; then
-  bene "il sito c'e': $(find "$DOVE/sito" -type f | wc -l) file"
+  quanti="$(find "$DOVE/sito" -type f | wc -l)"
+  bene "il sito c'e': $quanti file"
+  # Senza la plancia la pagina si apre lo stesso, e il riquadro in mezzo resta
+  # vuoto: e' il guasto peggiore, perche' non si vede da nessun'altra parte.
+  if [[ ! -s "$DOVE/sito/dashboardmodern_static/legacy/dashboard.html" ]]; then
+    printf '  %s!%s %s\n' "$giallo" "$spento" "il sito c'e' ma la plancia dentro no: il riquadro restera' vuoto."
+    nota "La rimette «node strumenti/porta-nel-sito.mjs», che gira da se' al"
+    nota "prossimo giro. Se non ci riesce, il motivo lo dice:  journalctl -u tramite-aggiorna -n 40 --no-pager"
+  fi
 else
   printf '  %s!%s %s\n' "$giallo" "$spento" "la cartella del sito e' vuota: https://$NOME_DEL_SITO dara' 404."
-  nota "In questa versione «$SEGNO» il sito non c'era. Si sposta il segno"
+  nota "O in questa versione «$SEGNO» il sito non c'era, o la plancia non e'"
+  nota "entrata e il sito non si e' scambiato apposta. Si sposta il segno"
   nota "(Actions → «Il tramite»), e al giro dopo arriva da solo."
 fi
 
