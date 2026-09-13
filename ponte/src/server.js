@@ -637,6 +637,10 @@ async function api({
          * se dall'altra parte c'e' qualcosa che non e' un centralino. */
         perche: chiamata?.perche || "",
       },
+      /* Che versione e' questo gdahome. La console la scrive accanto al nome,
+       * sempre: la scheda «La versione» c'e' solo sugli add-on locali, e a chi
+       * l'ha installato dal negozio non la diceva nessuno. */
+      versione: opzioni.versione || "",
       porta: opzioni.portaDellApp,
       massimi: opzioni.dispositiviMassimi,
       /* Se questo add-on si porta dietro gdahome da aprire in un browser.

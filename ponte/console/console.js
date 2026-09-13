@@ -34,6 +34,18 @@
     });
   }
 
+  /* Una pastiglia della striscia in cima: il pallino prende il colore, e le
+   * parole restano corte. Il racconto lungo sta nel cassetto, che si apre solo
+   * a chi lo cerca. */
+  function pastiglia(quale, come, corto) {
+    var dove = trova(quale);
+    if (!dove) return;
+    dove.hidden = false;
+    dove.dataset.come = come;
+    var testo = dove.querySelector("[data-corto]");
+    if (testo) testo.textContent = corto;
+  }
+
   function avvisa(testo) {
     var avviso = trova("avviso");
     avviso.textContent = testo || "";
@@ -70,6 +82,7 @@
      * e chi inquadra si abbina con un codice gia' speso. */
     trova("quadretto").src = "api/qr.svg?" + Date.now();
     trova("codice-vivo").hidden = false;
+    trova("a-mano").hidden = false;
     trova("annulla").hidden = false;
     if (quandoScade) clearInterval(quandoScade);
     var aggiorna = function () {
@@ -86,9 +99,27 @@
 
   function nascondiIlCodice() {
     trova("codice-vivo").hidden = true;
+    trova("a-mano").hidden = true;
     trova("annulla").hidden = true;
     if (quandoScade) clearInterval(quandoScade);
     quandoScade = null;
+  }
+
+  /* Come sta il filo con Home Assistant: due parole per la pastiglia, e la
+   * frase intera per il cassetto. */
+  function comeVaLaCasa(casa) {
+    if (casa && casa.viva) {
+      return {
+        come: "bene",
+        corto: "risponde",
+        lungo: "Home Assistant risponde, e gdahome e' in piedi.",
+      };
+    }
+    return {
+      come: "male",
+      corto: "non risponde",
+      lungo: "Home Assistant non risponde: " + ((casa && casa.perche) || "non dice perche'"),
+    };
   }
 
   /* Come va il filo verso il centralino, in una riga.
@@ -98,10 +129,13 @@
    * quello che vedrebbe sarebbe soltanto un'app che «non trova la casa». */
   function comeVaIlCentralino(centralino) {
     if (!centralino || !centralino.configurato) {
-      return (
-        "Nessun centralino: da fuori casa l'app non entra. Si riaccende con " +
-        "«da fuori casa» nelle opzioni di questo add-on."
-      );
+      return {
+        come: "spento",
+        corto: "spento",
+        lungo:
+          "Nessun centralino: da fuori casa l'app non entra. Si riaccende con " +
+          "«da fuori casa» nelle opzioni di questo add-on.",
+      };
     }
     /* E **dove** chiama, non solo se ci arriva.
      *
@@ -110,7 +144,13 @@
      * sul centralino nuovo o su quello di prima lo guarda qui, invece di
      * andarselo a cercare nel programma. */
     var dove = centralino.dove || "";
-    if (centralino.rifiutata) return "Il centralino ci rifiuta: " + centralino.rifiutata;
+    if (centralino.rifiutata) {
+      return {
+        come: "male",
+        corto: "rifiutati",
+        lungo: "Il centralino ci rifiuta: " + centralino.rifiutata,
+      };
+    }
     /* E **perche'** non ci arriva, se non ci arriva.
      *
      * «Sto chiamando…» per un'ora non e' un'informazione: e' un'attesa. Il
@@ -118,14 +158,23 @@
      * una risposta che non e' un WebSocket — e va scritto qui, che e' il posto
      * dove si guarda. */
     if (!centralino.dentro) {
-      return (
-        "Sto chiamando " +
-        (dove || "il centralino") +
-        "…" +
-        (centralino.perche ? " L'ultimo tentativo: " + centralino.perche + "." : "")
-      );
+      return {
+        come: "male",
+        /* Nella pastiglia il motivo vero, corto: «non entra» da solo manderebbe
+         * a cercarlo altrove, ed e' quello che e' costato un pomeriggio. */
+        corto: centralino.perche ? "non entra — " + centralino.perche : "sto chiamando…",
+        lungo:
+          "Sto chiamando " +
+          (dove || "il centralino") +
+          "…" +
+          (centralino.perche ? " L'ultimo tentativo: " + centralino.perche + "." : ""),
+      };
     }
-    return "Collegato a " + (dove || "il centralino") + ": da fuori casa si entra.";
+    return {
+      come: "bene",
+      corto: "si entra",
+      lungo: "Collegato a " + (dove || "il centralino") + ": da fuori casa si entra.",
+    };
   }
 
   /* Da dove viene la plancia, in tre righe.
@@ -139,31 +188,34 @@
     if (!scheda) return;
     if (!plancia) {
       scheda.hidden = true;
+      trova("pas-plancia").hidden = true;
       return;
     }
     scheda.hidden = false;
     var quale = plancia.versione ? "DashboardModern " + plancia.versione : "DashboardModern";
-    var riga = trova("provenienza-riga");
     var spiega = trova("provenienza-spiega");
     var quali = trova("provenienza-quali");
     var acceso = plancia.stato === "originale" || plancia.stato === "non-firmata";
-    riga.innerHTML =
-      '<span class="pallino' +
-      (acceso ? " acceso" : "") +
-      '"></span> ' +
-      quale +
-      " — " +
-      {
-        originale: "originale, firma verificata",
-        "non-firmata": "i file tornano tutti",
-        modificata: "modificata",
-        "senza-origine": "provenienza sconosciuta",
-      }[plancia.stato];
+    /* Nella pastiglia: la versione e una parola. Chi vuole sapere cosa vuol
+     * dire quella parola apre il cassetto e trova la frase intera. */
+    pastiglia(
+      "pas-plancia",
+      acceso ? "bene" : "male",
+      (plancia.versione || "") +
+        " " +
+        {
+          originale: "originale",
+          "non-firmata": "intatta",
+          modificata: "modificata",
+          "senza-origine": "provenienza sconosciuta",
+        }[plancia.stato],
+    );
     spiega.textContent =
       plancia.stato === "originale"
-        ? "Ogni file di questa plancia e' quello pubblicato, e la firma lo conferma."
+        ? quale + ": ogni file e' quello pubblicato, e la firma lo conferma."
         : plancia.stato === "non-firmata"
-          ? "Ogni file torna con le impronte scritte dentro. Manca solo la firma di chi l'ha pubblicata."
+          ? quale +
+            ": ogni file torna con le impronte scritte dentro. Manca solo la firma di chi l'ha pubblicata."
           : plancia.stato === "modificata"
             ? "Qualcosa qui dentro non e' come e' stato pubblicato: " +
               plancia.perche +
@@ -744,11 +796,20 @@
   function aggiornaTutto() {
     return chiedi("api/stato")
       .then(function (stato) {
-        trova("stato-casa").textContent = stato.casa.viva
-          ? "Home Assistant risponde. Il ponte e' in piedi."
-          : "Home Assistant non risponde: " + stato.casa.perche;
+        var laCasa = comeVaLaCasa(stato.casa);
+        pastiglia("pas-casa", laCasa.come, laCasa.corto);
+        trova("spiega-casa").textContent = laCasa.lungo;
         trova("porta").textContent = stato.porta;
-        trova("stato-centralino").textContent = comeVaIlCentralino(stato.centralino);
+        var fuori = comeVaIlCentralino(stato.centralino);
+        pastiglia("pas-fuori", fuori.come, fuori.corto);
+        trova("spiega-centralino").textContent = fuori.lungo;
+        /* La versione, sempre a schermo accanto al nome: oggi si leggeva solo
+         * dentro una scheda che compare soltanto sugli add-on locali, e a chi
+         * l'ha preso dal negozio non la diceva nessuno. */
+        if (stato.versione) {
+          trova("targhetta").textContent = stato.versione;
+          trova("targhetta").hidden = false;
+        }
         /* L'assistenza: la scheda compare solo dove la chiave c'e'.
          *
          * E' l'unico posto dove si legge che quella chiave e' arrivata: Home
@@ -800,7 +861,8 @@
         return undefined;
       })
       .catch(function (errore) {
-        trova("stato-casa").textContent = "La console non riesce a leggere lo stato.";
+        pastiglia("pas-casa", "male", "non si legge");
+        trova("spiega-casa").textContent = "La console non riesce a leggere lo stato di gdahome.";
         avvisa(errore.message);
       });
   }

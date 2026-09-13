@@ -258,11 +258,11 @@ test("la diagnostica del traffico sta dietro la stessa chiave", () => {
    * vedrebbe per un istante prima che la pagina sappia com'e' fatta questa
    * casa — e si accende con la stessa condizione dell'assistenza. */
   const pagina = readFileSync(join(QUI, "..", "console", "index.html"), "utf8");
-  assert.match(
-    pagina,
-    /<section class="scheda tenue-sfondo" id="chiacchieroni" hidden>/,
-    "la scheda della diagnostica non nasce nascosta",
-  );
+  /* Il vestito della pagina cambia; quello che non deve cambiare e' che quella
+   * scheda **nasca nascosta**. Quindi si guarda il fatto, non la classe. */
+  const laSua = /<section[^>]*\bid="chiacchieroni"[^>]*>/.exec(pagina);
+  assert.ok(laSua, "la scheda della diagnostica non c'e' piu'");
+  assert.match(laSua[0], /\shidden\b/, "la scheda della diagnostica non nasce nascosta");
 
   const console_ = readFileSync(join(QUI, "..", "console", "console.js"), "utf8");
   assert.match(

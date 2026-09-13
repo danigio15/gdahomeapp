@@ -8,220 +8,281 @@
     <link rel="stylesheet" href="stile.css" />
   </head>
   <body>
+    <!-- La pagina di gdahome dentro Home Assistant.
+         È fatta per tre domande, in quest'ordine: **come sta la casa** (la
+         striscia in cima, tre pastiglie, si legge in un secondo), **cosa devo
+         fare** (abbinare un telefono: è il motivo per cui questa pagina si
+         apre, e sta tutta di seguito), e **cosa c'è dentro** (i telefoni, le
+         plance, il link per il browser).
+         Tutto il resto — le spiegazioni, i numeri, i rimedi — sta in «Se
+         qualcosa non torna», chiuso: c'è quando serve, e non si mette in mezzo
+         quando non serve. -->
     <main>
-      <header>
-        <!-- Lo stesso marchio dell'app, e non per vezzo: chi apre questa
-             pagina dal pannello di Home Assistant deve riconoscere al primo
-             sguardo che e' la stessa cosa che ha sul telefono. -->
-        <img class="marchio" src="marchio.png" alt="" width="40" height="40" />
-        <h1>gdahome</h1>
-        <p id="stato-casa" class="riga-di-stato">…</p>
+      <header class="testata">
+        <!-- Lo stesso marchio dell'app: chi apre questa pagina dal pannello di
+             Home Assistant deve riconoscere al primo sguardo che è la stessa
+             cosa che ha sul telefono. -->
+        <img class="marchio" src="marchio.png" alt="" width="44" height="44" />
+        <div class="chi">
+          <h1>gdahome</h1>
+          <p class="sottotitolo">La tua casa sul telefono</p>
+        </div>
+        <span class="targhetta" id="targhetta" hidden></span>
       </header>
 
-      <section class="scheda">
-        <h2>Abbinare un telefono</h2>
-        <p class="spiegazione">
-          Apri gdahome sul telefono e inquadra il quadretto. Vale una volta sola e per pochi minuti.
+      <!-- Come sta, in tre pastiglie. Sono le tre cose che si guardano quando
+           qualcosa non va, e prima stavano come testo grigio sparso in tre
+           schede diverse — una delle quali in fondo alla pagina. -->
+      <div class="striscia">
+        <span class="pastiglia" id="pas-casa" data-come="attesa">
+          <i class="pallino"></i>
+          <span><b>Home Assistant</b> <span id="stato-casa" data-corto>…</span></span>
+        </span>
+        <span class="pastiglia" id="pas-fuori" data-come="attesa">
+          <i class="pallino"></i>
+          <span><b>Da fuori casa</b> <span id="stato-centralino" data-corto>…</span></span>
+        </span>
+        <span class="pastiglia" id="pas-plancia" data-come="attesa" hidden>
+          <i class="pallino"></i>
+          <span><b>La plancia</b> <span id="provenienza-riga" data-corto>…</span></span>
+        </span>
+      </div>
+
+      <!-- ① Abbinare un telefono: il motivo per cui questa pagina esiste. -->
+      <section class="scheda grossa">
+        <div class="testa-di-scheda">
+          <h2>Abbina un telefono</h2>
+          <span class="conta" id="conteggio"></span>
+        </div>
+        <div class="abbinamento">
+          <div class="quadretto-suo" id="codice-vivo" hidden>
+            <!-- Il disegno lo fa gdahome: la console non scarica niente da
+                 nessuna parte, e il codice non passa mai per un indirizzo. -->
+            <img id="quadretto" class="quadretto" alt="Codice di abbinamento" />
+            <p class="scadenza" id="scadenza"></p>
+          </div>
+          <div class="parole">
+            <!-- Il contenuto di ogni passo sta dentro **un** elemento: la riga e'
+                 una griglia di due colonne — il numero e il testo — e due pezzi
+                 sciolti diventerebbero due caselle, una sopra l'altra. -->
+            <ol class="passi">
+              <li><span>Apri gdahome sul telefono.</span></li>
+              <li>
+                <span>Premi <b>Fabbrica un codice</b>, e inquadralo.</span>
+              </li>
+            </ol>
+            <div class="bottoni">
+              <button id="fabbrica" type="button">Fabbrica un codice</button>
+              <button id="annulla" type="button" class="tenue" hidden>Annulla</button>
+            </div>
+            <p class="minuta">Vale una volta sola, e per pochi minuti.</p>
+            <details class="apribile" id="a-mano" hidden>
+              <summary>Non riesci a inquadrarlo?</summary>
+              <p class="spiegazione">
+                Nell'app tocca «Scrivilo a mano» e digita queste lettere. Sono sedici: si copiano un
+                gruppo per volta.
+              </p>
+              <p class="codice" id="codice"></p>
+            </details>
+            <p class="avviso" id="avviso" hidden></p>
+          </div>
+        </div>
+      </section>
+
+      <div class="due">
+        <!-- ② Chi è abbinato. Prima stava sesta, ed è la seconda cosa che si
+             guarda: chi entra in casa mia. -->
+        <section class="scheda">
+          <div class="testa-di-scheda">
+            <h2>Telefoni abbinati</h2>
+          </div>
+          <ul id="elenco" class="elenco"></ul>
+        </section>
+
+        <!-- ③ Le plance. Nella dashboard una seconda plancia era una seconda
+             istanza dell'integrazione, da «Dispositivi e servizi». Qui
+             l'integrazione non c'è, e il posto è questo. -->
+        <section class="scheda" id="plance">
+          <div class="testa-di-scheda">
+            <h2>Le plance</h2>
+          </div>
+          <ul id="elenco-plance" class="elenco"></ul>
+          <div class="riga-di-tasti">
+            <input
+              id="titolo-plancia"
+              type="text"
+              maxlength="40"
+              placeholder="Per esempio «Casa al mare»"
+              aria-label="Come si chiama la plancia nuova"
+            />
+            <button id="aggiungi-plancia" type="button">Aggiungi</button>
+          </div>
+          <p class="minuta">
+            Ognuna ha le sue sezioni, le sue tessere, le sue stanze — i file sono gli stessi.
+            Nell'app si scelgono dal menu; in Home Assistant stanno fra le «Plance».
+          </p>
+          <p class="avviso" id="avviso-plance" hidden></p>
+        </section>
+      </div>
+
+      <!-- ④ Il link. Chi ha l'add-on acceso ha già gdahome: non c'è niente da
+           scaricare. La scheda si vede solo se l'app c'è davvero dentro questo
+           add-on — un link che porta a un 404 è peggio di nessun link. -->
+      <section class="scheda" id="scheda-app" hidden>
+        <div class="testa-di-scheda">
+          <h2>Aprila in un browser</h2>
+        </div>
+        <ul class="righe">
+          <li>
+            <span class="che-cosa">
+              <b>Qui dentro</b>
+              <span class="minuta">Nella pagina di Home Assistant, come una plancia.</span>
+            </span>
+            <!-- Si apre **in questa scheda** e non in una nuova: la sessione di
+                 questo indirizzo la tiene viva la pagina di Home Assistant, e
+                 una scheda a parte dopo un po' si sente rispondere «401». -->
+            <a class="bottone" id="apri-app" href="app/">Apri gdahome</a>
+          </li>
+          <li id="link-di-fuori" hidden>
+            <span class="che-cosa">
+              <b>Da fuori casa</b>
+              <span class="minuta"
+                >Un indirizzo vero: si salva fra i preferiti, si può mandare.</span
+              >
+              <code id="link-di-fuori-indirizzo"></code>
+            </span>
+            <a class="tenue" id="apri-di-fuori" href="#" target="_blank" rel="noopener">Apri</a>
+          </li>
+        </ul>
+        <details class="apribile">
+          <summary>Due cose da sapere</summary>
+          <p class="spiegazione">
+            <b>Qui dentro</b> si apre in questa stessa scheda: per tornare, «gdahome» nella barra di
+            Home Assistant. Aprendolo in una scheda a parte, dopo qualche minuto quell'indirizzo
+            risponde <b>401</b> — la sessione la tiene viva Home Assistant, non la scheda.
+          </p>
+          <p class="spiegazione">
+            <b>Da fuori casa</b> è l'indirizzo dell'app, non della casa: è uguale per tutti, e chi
+            lo apre senza un codice di abbinamento non entra in casa di nessuno.
+          </p>
+        </details>
+        <p class="avviso giallo" id="avviso-sicuro" hidden>
+          Questa pagina è aperta su un indirizzo <b>http</b>. Tutto funziona tranne la plancia: per
+          disegnarla nel browser serve <b>https</b> — è una regola dei browser, non nostra. Sul
+          telefono la plancia si vede comunque.
         </p>
-        <div id="codice-vivo" hidden>
-          <!-- Il disegno lo fa il ponte: la console non scarica niente da
-               nessuna parte, e il codice non passa mai per un indirizzo. -->
-          <img id="quadretto" class="quadretto" alt="Codice di abbinamento" />
-          <p class="riga-di-stato" id="scadenza"></p>
-          <details class="a-mano">
-            <summary>Non riesci a inquadrarlo?</summary>
-            <p class="spiegazione">
-              Nell'app tocca «Scrivilo a mano» e digita queste lettere. Sono sedici: si copiano un
-              gruppo per volta.
-            </p>
-            <p class="codice" id="codice"></p>
+      </section>
+
+      <!-- ⑤ Tutto quello che serve **quando qualcosa non va**, in un posto solo
+           e chiuso. Qui dentro stanno le quattro schede che prima erano quattro
+           colonne di prosa: com'è il filo con Home Assistant, dov'è il
+           centralino, se le plance sono comparse nella barra laterale, da dove
+           viene la plancia, e che versione è questa. -->
+      <details class="scheda cassetto" id="non-torna">
+        <summary>
+          <span class="testa-di-scheda">
+            <h2>Se qualcosa non torna</h2>
+            <span class="minuta">Lo stato per bene, e i rimedi</span>
+          </span>
+        </summary>
+
+        <div class="blocco">
+          <p class="etichetta">Home Assistant</p>
+          <p class="spiegazione" id="spiega-casa">…</p>
+        </div>
+
+        <div class="blocco">
+          <p class="etichetta">Da fuori casa</p>
+          <p class="spiegazione" id="spiega-centralino">…</p>
+          <p class="spiegazione">
+            In casa l'app trova gdahome da sola sulla porta <b id="porta">…</b>. Da fuori è la casa
+            che chiama un centralino e ci resta in attesa: nessuna porta da aprire sul router,
+            nessun indirizzo pubblico, niente da installare. Il centralino instrada e non può
+            leggere niente di quello che passa. Chi non vuole passarci spegne <b>da fuori casa</b>
+            nelle opzioni di questo add-on.
+          </p>
+        </div>
+
+        <!-- Cosa fare quando la plancia, aperta dalle «Plance», esce con
+             «Errore di configurazione». Quel messaggio lo scrive Home Assistant
+             e il motivo non lo mostra; qui invece si prova la cartina da questa
+             pagina — che sta sul suo stesso indirizzo — e si dice quale dei due
+             casi è. -->
+        <div class="blocco">
+          <p class="etichetta">Le plance in Home Assistant</p>
+          <p class="spiegazione" id="stato-plance-in-casa">…</p>
+          <p class="avviso" id="avviso-cartina" hidden></p>
+          <div class="bottoni" id="ripara-cartina" hidden>
+            <button id="carica-la-cartina" type="button">Carica la cartina adesso</button>
+          </div>
+        </div>
+
+        <!-- Da dove viene la plancia. È la risposta a «questa è quella
+             originale?». Una copia modificata non viene bloccata: viene detta. -->
+        <div class="blocco" id="provenienza" hidden>
+          <p class="etichetta">La plancia</p>
+          <p class="spiegazione" id="provenienza-spiega"></p>
+          <details class="apribile" id="provenienza-quali" hidden>
+            <summary>Quali file non tornano</summary>
+            <p class="codice piccolo" id="provenienza-elenco"></p>
           </details>
         </div>
-        <div class="bottoni">
-          <button id="fabbrica" type="button">Fabbrica un codice</button>
-          <button id="annulla" type="button" class="tenue" hidden>Annulla</button>
-        </div>
-        <p class="avviso" id="avviso" hidden></p>
-      </section>
 
-      <!-- Il link. Chi ha l'add-on acceso ha gia' gdahome: non c'e' niente da
-           scaricare e niente da installare, si apre e basta. La scheda si vede
-           solo se l'app c'e' davvero dentro questo add-on — un link che porta
-           a un 404 e' peggio di nessun link. -->
-      <section class="scheda" id="scheda-app" hidden>
-        <h2>gdahome in un browser</h2>
-        <p class="spiegazione">
-          La stessa app del telefono, aperta qui dentro. Si adatta da sola allo schermo: computer,
-          tablet o telefono. Ci arriva solo chi e' entrato in Home Assistant.
-        </p>
-        <!-- Si apre **in questa scheda**, e non in una nuova.
-             La sessione di questo indirizzo la tiene viva la pagina di Home
-             Assistant, che la rinfresca finche' il riquadro e' aperto: una
-             scheda a parte se ne va per conto suo e dopo un po' si sente
-             rispondere «401: Unauthorized» da un indirizzo che sembrava
-             buono. Di qui si torna con la voce «gdahome» nella barra. -->
-        <div class="bottoni">
-          <a class="bottone" id="apri-app" href="app/">Apri gdahome</a>
-        </div>
-        <p class="spiegazione">
-          Si apre qui dentro: per tornare a questa pagina, «gdahome» nella barra di Home Assistant.
-          Aprendola in una scheda a parte, dopo qualche minuto quell'indirizzo risponde
-          <strong>401</strong> — la sessione la tiene viva Home Assistant, non la scheda.
-        </p>
-        <!-- Il link vero, quello da usare fuori casa.
-             L'indirizzo di qui sopra non è un link: vive finché vive la pagina
-             di Home Assistant che lo tiene aperto. gdahome sta anche sul
-             centralino, che è pubblico e in https — quello è un indirizzo da
-             aprire ovunque, e chi lo apre senza un codice di abbinamento non
-             entra in casa di nessuno. -->
-        <div id="link-di-fuori" hidden>
-          <p class="spiegazione">
-            <strong>Da fuori casa, o da un browser qualsiasi</strong>: questo invece è un indirizzo
-            vero, si salva fra i preferiti e si può mandare a qualcuno.
-          </p>
-          <p class="codice" id="link-di-fuori-indirizzo"></p>
+        <!-- L'aggiornamento. Sta qui e non in Home Assistant perché un add-on
+             locale non ha nessun negozio dietro: HA guarda il manifesto che
+             trova in `/addons/gdahome`, quindi finché quei file non cambiano
+             «Aggiorna» non compare mai. Da questo bottone se li porta da sé. -->
+        <div class="blocco" id="aggiornamento" hidden>
+          <p class="etichetta">La versione</p>
+          <p class="spiegazione" id="aggiornamento-riga">…</p>
+          <p class="spiegazione" id="aggiornamento-spiega"></p>
           <div class="bottoni">
-            <a class="bottone tenue" id="apri-di-fuori" href="#" target="_blank" rel="noopener"
-              >Aprilo in una scheda nuova</a
-            >
+            <button id="aggiorna-il-ponte" type="button" hidden>Aggiorna gdahome</button>
+            <button id="riguarda" type="button" class="tenue">
+              Guarda se c'è una versione nuova
+            </button>
           </div>
-          <p class="spiegazione">
-            Chi lo apre trova «Colleghiamo la casa»: per entrare serve un codice di abbinamento,
-            quello che si fabbrica qui sopra. È uguale per tutti — è l'indirizzo dell'app, non della
-            casa.
-          </p>
+          <p class="avviso" id="aggiornamento-avviso" hidden></p>
         </div>
-        <p class="spiegazione" id="avviso-sicuro" hidden>
-          Questa pagina e' aperta su un indirizzo <strong>http</strong>. Tutto funziona tranne la
-          plancia: per disegnarla nel browser serve un indirizzo <strong>https</strong> — e' una
-          regola dei browser, non nostra. Sul telefono la plancia si vede comunque.
+      </details>
+
+      <!-- ⑥ Le due schede di chi risponde alle segnalazioni. Si vedono **solo**
+           dove la chiave della console c'è, cioè in una casa al mondo:
+           dappertutto altrove non compaiono, e non c'è niente da spiegare a chi
+           non le può usare. -->
+      <section class="scheda di-chi-risponde" id="assistenza" hidden>
+        <p class="etichetta">Solo per chi risponde</p>
+        <div class="testa-di-scheda">
+          <h2>L'assistenza</h2>
+        </div>
+        <p class="spiegazione" id="stato-assistenza">…</p>
+        <p class="minuta">
+          Da questa casa si leggono le segnalazioni e le chat di tutte le altre, e si risponde. La
+          coda sta nell'app, alla voce <b>Console</b>.
         </p>
       </section>
 
-      <!-- Le plance di questa casa.
-           Nella dashboard una seconda plancia e' una seconda istanza
-           dell'integrazione, e si aggiunge da «Dispositivi e servizi». Qui
-           l'integrazione non c'e', e il posto e' questo: la scheda
-           dell'add-on sta dietro l'autenticazione di Home Assistant, come
-           quella pagina. -->
-      <!-- L'assistenza. Si vede **solo** dove la chiave c'e', cioe' in una
-           casa al mondo: dappertutto altrove questa scheda non compare, e non
-           c'e' niente da spiegare a chi non la puo' usare. -->
-      <section class="scheda tenue-sfondo" id="assistenza" hidden>
-        <h2>L'assistenza</h2>
-        <p class="riga-di-stato" id="stato-assistenza">…</p>
-        <p class="spiegazione">
-          La chiave della console e' arrivata: da questa casa si leggono le segnalazioni e le chat
-          di tutte le altre, e si risponde. La coda sta nell'app, alla voce
-          <strong>Console</strong>.
-        </p>
-      </section>
-
-      <section class="scheda" id="plance">
-        <h2>Le plance di questa casa</h2>
-        <p class="spiegazione">
-          Una plancia e' una configurazione a se': le sue sezioni, le sue tessere, le sue stanze. I
-          file sono gli stessi per tutte — la plancia sul disco e' una — e quello che cambia e'
-          quello che ci hai messo dentro. Serve a chi tiene due case sullo stesso Home Assistant, e
-          a chi ne vuole una per se' e una per chi ci abita. Nell'app si scelgono dal menu.
-        </p>
-        <p class="riga-di-stato" id="stato-plance-in-casa">…</p>
-        <!-- Cosa fare quando la plancia, aperta dalle «Plance», esce con
-             «Errore di configurazione». Quel messaggio lo scrive Home
-             Assistant e il motivo non lo mostra; qui invece si prova la
-             cartina da questa pagina — che sta sul suo stesso indirizzo — e
-             si dice quale dei due casi e'. -->
-        <p class="avviso" id="avviso-cartina" hidden></p>
-        <div class="bottoni" id="ripara-cartina" hidden>
-          <button id="carica-la-cartina" type="button">Carica la cartina adesso</button>
+      <!-- «Chi parla di più»: nasce nascosta, e si accende con la stessa
+           condizione dell'assistenza. A chi ha gdahome in casa non serve, ed è
+           una scheda che spaventa più di quanto spieghi. -->
+      <section class="scheda di-chi-risponde" id="chiacchieroni" hidden>
+        <p class="etichetta">Solo per chi risponde</p>
+        <div class="testa-di-scheda">
+          <h2>Chi parla di più</h2>
+          <span class="conta" id="stato-chiacchieroni">…</span>
         </div>
-        <ul id="elenco-plance" class="elenco"></ul>
-        <div class="riga-di-tasti">
-          <input
-            id="titolo-plancia"
-            type="text"
-            maxlength="40"
-            placeholder="Come si chiama, per esempio «Casa al mare»"
-            aria-label="Come si chiama la plancia nuova"
-          />
-          <button id="aggiungi-plancia" type="button">Aggiungi una plancia</button>
-        </div>
-        <p class="avviso" id="avviso-plance" hidden></p>
-      </section>
-
-      <section class="scheda">
-        <h2>Telefoni abbinati</h2>
-        <p class="spiegazione" id="conteggio"></p>
-        <ul id="elenco" class="elenco"></ul>
-      </section>
-
-      <!-- Da dove viene la plancia.
-           Sta qui perche' e' la risposta a «questa e' quella originale?», e
-           chi se lo chiede se lo chiede guardando questa pagina. Una copia
-           modificata non viene bloccata: viene detta. -->
-      <section class="scheda" id="provenienza" hidden>
-        <h2>La plancia</h2>
-        <p class="riga-di-stato" id="provenienza-riga">…</p>
-        <p class="spiegazione" id="provenienza-spiega"></p>
-        <details class="a-mano" id="provenienza-quali" hidden>
-          <summary>Quali file non tornano</summary>
-          <p class="codice" id="provenienza-elenco"></p>
-        </details>
-      </section>
-
-      <!-- L'aggiornamento del ponte.
-           Sta qui e non in Home Assistant perché un add-on locale non ha
-           nessun negozio dietro: HA guarda il manifesto che trova in
-           `/addons/gdahome`, quindi finché quei file non cambiano «Aggiorna»
-           non compare mai. Da questo bottone il ponte se li porta da sé. -->
-      <section class="scheda" id="aggiornamento" hidden>
-        <h2>La versione</h2>
-        <p class="riga-di-stato" id="aggiornamento-riga">…</p>
-        <p class="spiegazione" id="aggiornamento-spiega"></p>
-        <div class="bottoni">
-          <button id="aggiorna-il-ponte" type="button" hidden>Aggiorna gdahome</button>
-          <button id="riguarda" type="button" class="tenue">
-            Guarda se c'è una versione nuova
-          </button>
-        </div>
-        <p class="avviso" id="aggiornamento-avviso" hidden></p>
-      </section>
-
-      <!-- Chi parla di piu'. Sta accanto a «Da fuori casa» perche' e' la
-           stessa domanda vista da un'altra parte: quanto traffico fa questa
-           casa, e da chi arriva.
-           Nasce nascosta: si vede solo dove c'e' la chiave della console,
-           cioe' a chi risponde alle segnalazioni. A chi ha gdahome in casa
-           non serve, ed e' una scheda che spaventa piu' di quanto spieghi. -->
-      <section class="scheda tenue-sfondo" id="chiacchieroni" hidden>
-        <h2>Chi parla di piu'</h2>
-        <p class="riga-di-stato" id="stato-chiacchieroni">…</p>
         <ul id="elenco-chiacchieroni" class="elenco"></ul>
-        <p class="spiegazione">
-          Ogni cambiamento in casa e' un evento, e ogni evento arriva a tutti i telefoni collegati.
-          Una casa che ne fa centinaia al minuto non ha centinaia di cose che cambiano: ne ha
-          <strong>due o tre</strong> che cambiano di continuo — un contatore di potenza, un sensore
-          di consumo — e le altre stanno ferme. Se l'app va a scatti, e' da qui che si comincia: a
-          quelle due o tre si mette un filtro in Home Assistant, e il traffico cala di dieci volte
-          senza toccare niente.
-        </p>
-      </section>
-
-      <section class="scheda tenue-sfondo">
-        <h2>Da fuori casa</h2>
-        <p class="riga-di-stato" id="stato-centralino">…</p>
-        <p class="spiegazione">
-          In casa l'app trova il ponte da sola sulla porta <strong id="porta">…</strong>. Da fuori è
-          il ponte che chiama un centralino e ci resta in attesa: nessuna porta da aprire sul
-          router, nessun indirizzo pubblico, niente da installare. Il centralino instrada e non può
-          leggere niente di quello che passa.
-        </p>
-        <p class="spiegazione">
-          L'indirizzo non si scrive da nessuna parte: è quello di gdahome, e sta dentro l'add-on.
-          Qui sopra c'è scritto quale, perché è la cosa da guardare il giorno che qualcosa non
-          torna. Chi non vuole passare da nessun centralino spegne <strong>da fuori casa</strong>
-          nelle opzioni.
-        </p>
+        <details class="apribile">
+          <summary>A cosa serve</summary>
+          <p class="spiegazione">
+            Ogni cambiamento in casa è un evento, e ogni evento arriva a tutti i telefoni collegati.
+            Una casa che ne fa centinaia al minuto non ha centinaia di cose che cambiano: ne ha
+            <b>due o tre</b> che cambiano di continuo — un contatore di potenza, un sensore di
+            consumo — e le altre stanno ferme. Se l'app va a scatti è da qui che si comincia: a
+            quelle due o tre si mette un filtro in Home Assistant, e il traffico cala di dieci volte
+            senza toccare niente.
+          </p>
+        </details>
       </section>
     </main>
     <script src="console.js"></script>
