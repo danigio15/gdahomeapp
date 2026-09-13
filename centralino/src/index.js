@@ -27,6 +27,12 @@ export async function alzaIlCentralino({
    * cosa che `/salute` dice invece di farla scoprire il giorno in cui qualcuno
    * chiede aiuto. */
   chiaveDellaConsole = process.env.CHIAVE_CONSOLE || "",
+  /* Come si chiamano il sito e l'app di questo centralino. Non servono a
+   * lavorare — servono alla soglia, cioe' a chi apre l'indirizzo nudo e va
+   * mandato dove si va davvero. Senza, la soglia c'e' comunque e dice una
+   * riga in meno: un centralino proprio non e' detto che abbia un sito. */
+  ilSito = process.env.NOME_DEL_SITO || "",
+  lApp = process.env.NOME_DELL_APP || "",
 } = {}) {
   const registro = apriIlRegistro(livello);
   const case_ = new Case({ cartella, giorniDiSilenzio });
@@ -41,7 +47,13 @@ export async function alzaIlCentralino({
     archivio: new ArchivioDellaChat(join(cartella, "chat.sqlite")),
     chiaveDellaConsole,
   });
-  const server = costruisciIlServer({ centralino, sportello, chat, registro });
+  const server = costruisciIlServer({
+    centralino,
+    sportello,
+    chat,
+    registro,
+    dove: { sito: ilSito, app: lApp },
+  });
 
   await new Promise((riuscito, fallito) => {
     server.once("error", fallito);

@@ -49,7 +49,9 @@ Sul disco finisce l'**impronta** del segreto di ogni casa, mai il segreto.
 
 | | | |
 |---|---|---|
+| `GET /` | — | la soglia: una pagina che dice cos'e' questo indirizzo e dove si va |
 | `GET /salute` | — | dice solo che e' vivo, e quante case ci sono |
+| `GET /console/` | la chiave, per leggere | la console della chat dell'assistenza |
 | `WS /casa` | il segreto della casa, dentro il filo | la casa che chiama fuori |
 | `WS /telefono/<casa_…>` | — | un telefono che va alla sua casa |
 | `WS /abbinamento/<impronta>` | — | un telefono che si sta abbinando |
@@ -57,6 +59,14 @@ Sul disco finisce l'**impronta** del segreto di ogni casa, mai il segreto.
 L'identificativo della casa sta nell'indirizzo, e non e' un segreto: serve a
 instradare, come un numero di telefono. Quello che fa entrare e' il segno, che
 viaggia dentro.
+
+La prima via non serve a niente di tecnico, e serve a una persona: l'indirizzo
+del centralino uno se lo tiene fra i segnalibri e prima o poi lo apre nudo.
+Trovarci un errore in JSON vuol dire crederlo rotto — quindi ci trova una
+porta, che dice cos'e' questa macchina e manda dove si va davvero. I due nomi
+che mostra — il sito e l'app — arrivano da fuori (`NOME_DEL_SITO`,
+`NOME_DELL_APP`): un centralino che non ce li ha dice una riga in meno, e non
+si inventa indirizzi di nessuno.
 
 Sul filo della casa i telefoni sono multiplati, un canale per telefono:
 

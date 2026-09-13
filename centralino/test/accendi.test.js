@@ -276,3 +276,17 @@ test("i nomi che Caddy serve sono quelli che si controllano prima", () => {
     assert.ok(controllati[1].includes(`"${quale}"`), `«${quale}» non si controlla prima`);
   }
 });
+
+test("la macchina dice al tramite come si chiamano il sito e l'app", () => {
+  /* La soglia — quello che trova chi apre l'indirizzo nudo — manda al sito e
+   * all'app, e quei due nomi il centralino da solo non li sa: glieli dice la
+   * macchina. Se non arrivano, la pagina c'e' comunque ma non manda da nessuna
+   * parte, ed e' proprio il buco che doveva chiudere. */
+  for (const chiave of ["NOME_DEL_SITO", "NOME_DELL_APP"]) {
+    assert.match(
+      ACCENDI,
+      new RegExp(`printf '${chiave}=%s\\\\n' "\\$${chiave}"`),
+      `«${chiave}» non arriva al servizio`,
+    );
+  }
+});

@@ -1,11 +1,17 @@
 /* La porta del centralino.
  *
- * Tre vie, e nient'altro. Chi bussa altrove non trova niente.
+ * Poche vie, e chi bussa altrove non trova niente.
  *
+ *   GET  /                            la soglia: cos'e' questo indirizzo
  *   GET  /salute                      dice solo che e' vivo
+ *   GET  /console/                    la console della chat, e le sue vie
  *   WS   /casa/<casa_…>              una casa che chiama fuori
  *   WS   /telefono/<casa_…>           un telefono che va alla sua casa
  *   WS   /abbinamento/<impronta>      un telefono che si sta abbinando
+ *
+ * La prima e' l'unica che non serve a niente di tecnico, ed e' quella che
+ * mancava: l'indirizzo del centralino uno se lo tiene fra i segnalibri e lo
+ * apre nudo, e trovarci un errore in JSON vuol dire crederlo rotto.
  *
  * L'identificativo della casa sta nell'indirizzo e non e' un segreto: serve a
  * instradare. Il segno — quello che fa entrare davvero — viaggia dentro il
@@ -18,6 +24,7 @@ import { createServer } from "node:http";
 import { CASA_VALIDA } from "./case.js";
 import { MESSAGGIO_MASSIMO } from "./centralino.js";
 import { accetta, eUnaSalita } from "./presa.js";
+import { laSoglia } from "./soglia.js";
 import { json } from "./sportello.js";
 
 const IMPRONTA_VALIDA = /^[0-9a-f]{64}$/;
@@ -56,10 +63,29 @@ export function costruisciIlServer({
   chat = null,
   registro = null,
   acceso = Date.now(),
+  /* Come si chiamano il sito e l'app di questo centralino, per la soglia.
+   * Quello che non si sa non si inventa: la riga non compare. */
+  dove = {},
 }) {
+  const soglia = Buffer.from(laSoglia(dove), "utf8");
   const server = createServer((richiesta, risposta) => {
     const indirizzo = new URL(richiesta.url || "/", "http://centralino");
     const via = indirizzo.pathname;
+
+    /* La soglia. Anche a testa in giu' — `curl -I` — perche' e' la prima cosa
+     * che si prova quando si controlla se un indirizzo risponde. */
+    if (
+      (via === "/" || via === "/index.html") &&
+      (richiesta.method === "GET" || richiesta.method === "HEAD")
+    ) {
+      risposta.writeHead(200, {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-store",
+        "content-length": soglia.length,
+      });
+      risposta.end(richiesta.method === "HEAD" ? undefined : soglia);
+      return;
+    }
 
     /* `/salute` dice tre cose, e sono le tre che servono quando qualcosa non
      * va: che e' vivo, da quanto — un numero piccolo dopo che nessuno ha

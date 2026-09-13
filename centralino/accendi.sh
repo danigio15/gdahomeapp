@@ -449,6 +449,10 @@ passo "Accendo il servizio"
   printf 'CHIAVE_CONSOLE=%s\n' "$CHIAVE_CONSOLE"
   printf 'GITHUB_SEGNALAZIONI=%s\n' "$GETTONE_SEGNALAZIONI"
   printf 'GITHUB_REPO=%s\n' "$REPO_SEGNALAZIONI"
+  # I due nomi per la soglia: chi apre l'indirizzo nudo del tramite va mandato
+  # da qualche parte, e questa macchina da sola non sa come si chiama il sito.
+  printf 'NOME_DEL_SITO=%s\n' "$NOME_DEL_SITO"
+  printf 'NOME_DELL_APP=%s\n' "$NOME_DELL_APP"
   printf 'NODE_OPTIONS=--disable-warning=ExperimentalWarning\n'
 } >"$CONFIGURAZIONE/ambiente"
 chmod 600 "$CONFIGURAZIONE/ambiente"
