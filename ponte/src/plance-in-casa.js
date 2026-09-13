@@ -229,8 +229,23 @@ export class PlanceInCasa {
     /* Due cose da dire anche quando e' andato tutto bene, e non sono dettagli:
      * senza la prima la plancia non si apre, e senza la seconda non si apre
      * finche' non si ricarica la pagina. */
-    /* E quello che ne dice Home Assistant, riletto da lui. */
+    /* E quello che ne dice Home Assistant, riletto da lui. Va anche nel
+     * registro, e non solo nella scheda: il registro e' il posto dove si
+     * guarda quando una pagina non si apre, e una riga che sta solo dentro una
+     * pagina non serve a chi quella pagina non riesce ad aprirla. */
     const come = await this.controlla();
+    this.registro.info(
+      `Home Assistant dice: cartina in elenco ${
+        come.risorsa_in_elenco === null ? "non lo so" : come.risorsa_in_elenco ? "si" : "no"
+      }, nella Plancia c'e' «${come.tessera_nella_vista || "niente"}»`,
+    );
+    if (come.altre_plance.length) {
+      this.registro.info(
+        `le Plance di questa casa: ${come.altre_plance
+          .map((una) => `${una.dove} «${una.titolo}»${una.nostra ? "" : " (non e' nostra)"}`)
+          .join(", ")}`,
+      );
+    }
 
     const consigli = {
       ...come,
@@ -467,7 +482,31 @@ export class PlanceInCasa {
    * Non aggiusta niente ed e' apposta: e' l'unica riga che, da qui, dice a chi
    * guarda «Errore di configurazione» dove sta il pezzo che manca. */
   async controlla() {
-    const come = { risorsa_in_elenco: null, tessera_nella_vista: "" };
+    const come = { risorsa_in_elenco: null, tessera_nella_vista: "", altre_plance: [] };
+
+    /* **Tutte** le Plance di questa casa, non solo le nostre.
+     *
+     * Perche' serve: una casa che ha avuto l'integrazione di DashboardModern
+     * si ritrova le sue Plance ancora li', con dentro una tessera di un
+     * pannello che non esiste piu'. Quelle si aprono con «Errore di
+     * configurazione» **per sempre**, qualunque cosa faccia questo add-on — e
+     * in una barra laterale dove ce n'e' una nostra che si chiama uguale, chi
+     * guarda non ha modo di sapere quale ha aperto. Quindi si elencano, e si
+     * dice per ognuna se e' nostra. */
+    try {
+      const dentro = await this.casa.chiedi({ type: "lovelace/dashboards/list" });
+      for (const una of Array.isArray(dentro) ? dentro : []) {
+        const dove = String(una?.url_path || "");
+        if (!dove) continue;
+        come.altre_plance.push({
+          dove,
+          titolo: String(una?.title || ""),
+          nostra: dove.startsWith(DAVANTI),
+        });
+      }
+    } catch (_errore) {
+      /* Se non si puo' chiedere, l'elenco resta vuoto. */
+    }
     try {
       const dentro = await this.casa.chiedi({ type: "lovelace/resources" });
       const elenco = Array.isArray(dentro) ? dentro : [];

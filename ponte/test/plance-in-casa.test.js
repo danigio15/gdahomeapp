@@ -313,9 +313,14 @@ test("la prima plancia non si tocca, e non si tocca nemmeno la sua Plancia", asy
     /* Un secondo giro, senza che niente sia cambiato: la Plancia c'e' gia', il
      * titolo e' quello, e non si crea e non si rinomina niente. */
     await b.in_casa.sistema();
+    /* Tre letture e nessuna scrittura: l'elenco per trovare la sua Plancia,
+     * quello della pulizia, e quello del controllo — che rilegge da Home
+     * Assistant com'e' rimasta la casa. Leggere non e' toccare; quello che
+     * questa prova tiene fermo e' che non ci sia nessun `create`, `update` o
+     * `delete`. */
     assert.deepEqual(
       b.casa.dette.map((una) => una.type).filter((quale) => quale.includes("dashboards")),
-      ["lovelace/dashboards/list", "lovelace/dashboards/list"],
+      ["lovelace/dashboards/list", "lovelace/dashboards/list", "lovelace/dashboards/list"],
     );
   } finally {
     b.via();
@@ -578,6 +583,30 @@ test("se Lovelace non tiene le risorse, l'esito lo dice invece di tacere", async
     /* Ma la Plancia c'e' lo stesso, e dentro c'e' la tessera giusta: il pezzo
      * che manca e' uno solo, e adesso si vede quale. */
     assert.equal(esito.tessera_nella_vista, "custom:gdahome-plancia");
+  } finally {
+    b.via();
+  }
+});
+
+test("l'esito elenca tutte le Plance, e dice quali non sono nostre", async () => {
+  /* La casa che ha avuto l'integrazione di DashboardModern si ritrova le sue
+   * Plance ancora li', con dentro la tessera di un pannello che non esiste
+   * piu': quelle si aprono con «Errore di configurazione» per sempre, e questo
+   * add-on non ci puo' fare niente — non sono sue, e le Plance di qualcun altro
+   * non si toccano. Ma se nella barra laterale ce n'e' una nostra che si chiama
+   * uguale, chi guarda non ha modo di sapere quale ha aperto. Allora si
+   * elencano tutte, e si dice quali sono nostre. */
+  const b = banco({
+    plance: [{ id: "vecchia", url_path: "dashboardmodern", title: "gdahome" }],
+  });
+  try {
+    const esito = await b.in_casa.sistema();
+    assert.deepEqual(esito.altre_plance, [
+      { dove: "dashboardmodern", titolo: "gdahome", nostra: false },
+      { dove: "gdahome-primary", titolo: "gdahome", nostra: true },
+    ]);
+    /* E quella di qualcun altro resta dov'e': si guarda, non si tocca. */
+    assert.ok(b.casa.plance.some((una) => una.url_path === "dashboardmodern"));
   } finally {
     b.via();
   }
