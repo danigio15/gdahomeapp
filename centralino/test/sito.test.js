@@ -40,16 +40,22 @@ test("niente viene da fuori: nessun carattere, nessuna libreria, nessun contator
   /* La pagina lo promette a parole. Qui si guarda che sia vero: tutto quello
    * che la pagina tira su deve stare di fianco a lei. */
   const fuori = /(?:src|href)="(https?:)?\/\/[^"]+"/g;
+
+  /* I collegamenti su cui si clicca sono un'altra cosa: quelli portano via,
+   * non tirano dentro. Si guardano solo le cose che il browser va a prendere
+   * da solo, e quindi gli `<a>` si tolgono di mezzo prima di guardare.
+   *
+   * Si tolgono **per tag e non per riga**. Prima si saltava la riga che
+   * conteneva un `<a`, che e' la stessa cosa finche' un collegamento sta tutto
+   * su una riga sola. Ma un `<a>` con tre attributi e un indirizzo lungo,
+   * prettier lo apre su piu' righe — e l'`href` finisce su una riga dove di
+   * `<a` non c'e' traccia. La prova lo leggeva come un font scaricato da
+   * Google, e falliva su un link su cui si clicca. */
+  const senzaCollegamenti = (pagina) => pagina.replace(/<a\s[^>]*>/g, "");
+
   for (const quale of PAGINE) {
-    const pagina = leggi(quale);
-    for (const riga of pagina.split("\n")) {
-      /* I collegamenti su cui si clicca sono un'altra cosa: quelli portano
-       * via, non tirano dentro. Si guardano solo le cose che il browser va a
-       * prendere da solo. */
-      if (/<a\s/.test(riga)) continue;
-      const preso = riga.match(fuori);
-      assert.equal(preso, null, `«${quale}» si porta dentro una cosa da fuori: ${preso?.[0]}`);
-    }
+    const preso = senzaCollegamenti(leggi(quale)).match(fuori);
+    assert.equal(preso, null, `«${quale}» si porta dentro una cosa da fuori: ${preso?.[0]}`);
   }
 });
 

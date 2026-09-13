@@ -174,12 +174,19 @@ cuce addosso il proprio filo — e di qua dal gancio c'e'
 risponde come quella del collaudo e ha dentro la stessa casa demo. Si accende
 una luce e si accende, si chiude una tapparella e scende.
 
-Si pubblica con un bottone, su Cloudflare Pages: **Actions → «Il sito» → Run
-workflow**. Quello che non si scrive a mano — la plancia, il marchio, le
-icone, i caratteri, la casa demo — lo porta
-`node strumenti/porta-nel-sito.mjs`, e che il sito stia in piedi lo dice
-`node collaudo/guarda-il-sito.mjs`, con un browser vero: se la plancia non
-parte, non si pubblica.
+Sul sito c'e' anche l'informativa — `sito/privacy.html`, l'indirizzo che il
+Play Store tiene da parte — e una prova tiene lei e `docs/PRIVACY.md` allineate
+sezione per sezione, perche' quella che si corregge, quando si corregge, e'
+quasi sempre la seconda.
+
+Si pubblica **da dove si pubblica tutto il resto**: si sposta il segno
+(**Actions → «Il tramite»**) e la macchina di gdahome.org scambia da sola entro
+dieci minuti, dopo aver rigirato le prove. Non c'e' nessun altro posto e
+nessun altro bottone. Quello che non si scrive a mano — la plancia, il marchio,
+le icone, i caratteri, la casa demo — lo porta
+`node strumenti/porta-nel-sito.mjs`, che gira sia qui che sulla macchina; e che
+il sito stia in piedi lo dice `node collaudo/guarda-il-sito.mjs`, con un
+browser vero.
 
 ## Le prove
 

@@ -1,78 +1,37 @@
-# Pubblica il sito su Cloudflare Pages.
+# Guarda il sito con un browser vero, prima che ci vada qualcuno.
 #
-# Il sito in `sito/` e' fatto di file statici: non c'e' niente da costruire,
-# e non serve un computer per metterlo online. Ci vuole una cosa sola, una
-# volta sola — un gettone di Cloudflare fra i segreti di questa repository,
-# come `CLOUDFLARE_API_TOKEN` — e da li' in poi si pubblica da questa pagina.
+# Il sito non si pubblica da qui. Sta su gdahome.org, sulla stessa macchina del
+# tramite, e ci arriva come ci arriva tutto il resto: si sposta il segno
+# (**Actions → «Il tramite»**), la macchina se ne accorge entro dieci minuti,
+# scarica quella versione, la prova, e scambia. Un bottone solo per tutto, e
+# nessun posto in piu' dove una versione possa restare indietro.
 #
-# **Il gettone non e' lo stesso del centralino.** Quello e' per i Worker;
-# qui serve Cloudflare Pages. Su dash.cloudflare.com, in fondo al menu a
-# sinistra: «Manage Account → Account API Tokens → Create Token → Create
-# Custom Token», e si danno due permessi:
+# Questo bottone fa l'altra meta': guarda che il sito, a quel commit, stia in
+# piedi. E' il controllo che una pagina ferma non puo' farsi da sola — se non
+# trovasse i suoi file non ci sarebbe nessun errore da nessuna parte, ci
+# sarebbe una pagina bianca.
 #
-#   * Account · Cloudflare Pages · Edit
-#   * Account · Account Settings · Read
-#
-# Lo stesso gettone puo' avere anche «Workers Scripts · Edit», e allora ne
-# basta uno per tutti e due i bottoni. Se si tengono separati, questo va in
-# un segreto suo: `CLOUDFLARE_PAGES_TOKEN` (se c'e', vince su quello dei
-# Worker).
-#
-# **Il progetto su Cloudflare lo fa questa pagina**, se non c'e' gia': la
-# prima corsa lo crea col nome `gdahome`, e l'indirizzo diventa
-# `https://gdahome.pages.dev`. Per chiamarlo diversamente si mette una
-# variabile di repository `SITO_PAGES` (Settings → Secrets and variables →
-# Actions → Variables), oppure si scrive il nome nella casella qui sotto.
-#
-# **Il dominio e' `gdahome.org`**, e lo attacca questa pagina: chiede a
-# Cloudflare di mettere il dominio (e il suo `www`) davanti al progetto Pages.
-# Per un altro dominio si mette la variabile `SITO_DOMINIO`.
-#
-# Perche' funzioni ci vuole una cosa che questa pagina non puo' fare: il
-# dominio deve **arrivare a Cloudflare**. Due strade:
-#
-#   * il dominio e' gia' un sito Cloudflare (sullo stesso account del
-#     gettone): allora non c'e' altro da fare, i record li scrive Cloudflare;
-#   * il dominio sta da un altro registrar: nel suo pannello si mette un
-#     `CNAME` da `gdahome.org` e da `www.gdahome.org` a `gdahome.pages.dev`.
-#
-# Finche' il dominio non risponde, il sito c'e' lo stesso su `.pages.dev`:
-# quello e' il primo indirizzo, e non gli si toglie mai.
-#
-# **Quando gira.** A mano da Actions, e da sola a ogni modifica di `sito/`
-# sul ramo principale: un sito che resta indietro rispetto a quello che
-# racconta e' peggio di non averlo. Da un altro ramo esce un'anteprima col
-# suo indirizzo, e quello pubblico non si tocca.
-#
-# **Cosa si costruisce prima.** Il sito fa vedere la **plancia vera** —
-# DashboardModern, gli stessi file dell'add-on — e quella nella repository non
-# c'e' due volte: `node strumenti/porta-nel-sito.mjs` la copia da
-# `ponte/plancia/` dentro `sito/dashboardmodern_static/` prima di pubblicare.
-# Sono diciassette megabyte e ottocentottantotto file.
-#
-# **Cosa non pubblica.** Se la plancia non parte, non si pubblica niente:
-# `collaudo/guarda-il-sito.mjs` apre il sito con un browser vero, aspetta che
-# la plancia esca dal velo d'avvio, conta le voci della sua barra, ne apre le
-# pagine e le manda un comando. Il pezzo per cui il sito esiste e' quello, e
-# pubblicarlo rotto vuol dire far arrivare qualcuno a una pagina che promette
-# una cosa e ne fa un'altra.
+# Perche' ci voglia un browser: dentro la pagina gira **la plancia vera**,
+# quella di DashboardModern, con di qua dal suo gancio una Home Assistant
+# finta. E' codice che parte, chiede, disegna. Che sia tutto al suo posto lo
+# dice una cosa sola, ed e' averla vista partire.
 name: Il sito
 
 on:
-  workflow_dispatch:
-    inputs:
-      progetto:
-        description: >-
-          Il nome del progetto su Cloudflare Pages. Lasciandolo vuoto si usa
-          la variabile SITO_PAGES, e se non c'e' nemmeno quella, «gdahome».
-        required: false
-        default: ""
   push:
-    branches:
-      - main
     paths:
       - "sito/**"
+      - "ponte/plancia/**"
+      - "collaudo/guarda-il-sito.mjs"
+      - "strumenti/porta-nel-sito.mjs"
       - ".github/workflows/il-sito.yml"
+  pull_request:
+    paths:
+      - "sito/**"
+      - "ponte/plancia/**"
+      - "collaudo/guarda-il-sito.mjs"
+      - "strumenti/porta-nel-sito.mjs"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -82,59 +41,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  pubblica:
-    name: Pubblica il sito
+  guarda:
+    name: La plancia parte?
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
       - uses: actions/setup-node@v6
         with:
           node-version: "22"
 
-      # Il gettone si guarda **prima** di provare a usarlo: se e' storto,
-      # Cloudflare risponde «Invalid format for Authorization header», che e'
-      # vero e non serve a niente. Qui si dice cosa c'e' che non va, senza mai
-      # stampare il gettone.
-      - name: C'e' il gettone, ed e' fatto bene?
-        run: |
-          set -eu
-          gettone="${PAGES_TOKEN:-${WORKERS_TOKEN:-}}"
-          if [ -z "$gettone" ]; then
-            echo "::error::Manca il gettone di Cloudflare."
-            echo "Si mette in Settings → Secrets and variables → Actions → New repository secret,"
-            echo "come CLOUDFLARE_PAGES_TOKEN (o CLOUDFLARE_API_TOKEN, se e' lo stesso del centralino)."
-            echo "Il gettone si fa su dash.cloudflare.com → Manage Account → Account API Tokens →"
-            echo "Create Custom Token, con «Cloudflare Pages: Edit» e «Account Settings: Read»."
-            exit 1
-          fi
-
-          quanto=${#gettone}
-          # Un gettone di Cloudflare e' una riga sola di lettere, numeri,
-          # trattini e trattini bassi. Nient'altro.
-          if ! printf '%s' "$gettone" | grep -qE '^[A-Za-z0-9_-]+$'; then
-            echo "::error::Il gettone contiene qualcosa che non ci va (uno spazio, un a capo, delle virgolette, o del testo intorno)."
-            echo "Nel segreto va **solo** la stringa del token: non «Bearer …», non il comando curl."
-            echo "Lungo $quanto caratteri."
-            exit 1
-          fi
-          if [ "$quanto" -lt 30 ]; then
-            echo "::error::Il gettone e' troppo corto ($quanto caratteri): ne servono una quarantina."
-            echo "Forse e' stato copiato a meta'."
-            exit 1
-          fi
-
-          echo "Il gettone c'e' ed e' fatto bene ($quanto caratteri)."
-        env:
-          PAGES_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN }}
-          WORKERS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      # Le due promesse che la pagina fa a parole — niente che venga da fuori,
+      # e l'informativa pubblicata uguale a quella scritta — le guardano le
+      # prove del centralino, che sono anche quelle che la macchina rigira
+      # prima di scambiare una versione con l'altra.
+      - name: Le due promesse della pagina
+        run: npm run test:centralino
 
       # La plancia vera, la casa demo, il marchio, le icone, i caratteri.
       #
       # La plancia nella repository non sta due volte: `sito/dashboardmodern_static/`
-      # e' fuori da git e nasce qui, copiata da `ponte/plancia/`. Il resto —
-      # `sito/statico/` — e' salvato, ed e' piccolo: si rifa' lo stesso, cosi'
-      # il sito pubblicato non puo' essere indietro rispetto all'app, e se era
-      # indietro lo si dice.
+      # e' fuori da git e nasce qui, copiata da `ponte/plancia/` — come nasce
+      # sulla macchina, con lo stesso comando. Il resto — `sito/statico/` — e'
+      # salvato, ed e' piccolo: si rifa' lo stesso, cosi' se era indietro
+      # rispetto all'app lo si viene a sapere.
       - name: Porta nel sito le cose vere
         run: |
           set -eu
@@ -142,13 +72,10 @@ jobs:
           if git diff --quiet -- sito/statico; then
             echo "Quello che sta nella repository era gia' aggiornato."
           else
-            echo "::warning::sito/statico era indietro: si pubblica quello aggiornato, ma nella repository resta il vecchio. Rilancia «node strumenti/porta-nel-sito.mjs» e salvalo."
-            echo "In \`sito/statico\` c'era roba vecchia. Il sito pubblicato e' aggiornato, la repository no." >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::sito/statico e' indietro. Rilancia «node strumenti/porta-nel-sito.mjs» e salvalo."
+            echo "In \`sito/statico\` c'e' roba vecchia: rilancia \`node strumenti/porta-nel-sito.mjs\` e salvala." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      # La plancia e' il pezzo per cui il sito esiste. Se non parte, non si
-      # pubblica: questo la apre con un browser vero, a tre larghezze, e le
-      # prova dentro.
       - name: Le dipendenze del collaudo
         run: npm ci --no-audit --no-fund
         working-directory: collaudo
@@ -157,155 +84,30 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: collaudo
 
-      - name: La plancia risponde?
+      # A tre larghezze — telefono, tablet, computer. Guarda che la plancia
+      # esca dal velo d'avvio, tiri su la sua barra con tutte le sue voci,
+      # apra le sue pagine, e risponda a un comando fino a cambiare stato.
+      - name: La plancia parte, e risponde
         run: node collaudo/guarda-il-sito.mjs
 
-      - name: Quale progetto
-        run: |
-          set -eu
-          nome="${SCRITTO:-}"
-          [ -n "$nome" ] || nome="${VARIABILE:-}"
-          [ -n "$nome" ] || nome="gdahome"
-          echo "PROGETTO=$nome" >> "$GITHUB_ENV"
-          echo "Il progetto su Cloudflare Pages si chiama «$nome»."
-        env:
-          SCRITTO: ${{ inputs.progetto }}
-          VARIABILE: ${{ vars.SITO_PAGES }}
+      # Se e' andata male, le fotografie dicono cosa si vedeva.
+      - name: Le fotografie
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: il-sito
+          path: collaudo/foto/sito-*.png
+          if-no-files-found: ignore
 
-      # La prima volta il progetto non c'e': lo si crea. Le volte dopo questo
-      # passo non fa niente. Cosi' il sito si mette online col bottone e
-      # basta, senza passare dal pannello di Cloudflare.
-      - name: Il progetto c'e', o si fa
+      - name: Cosa fare adesso
+        if: success()
         run: |
-          set -eu
-          if npx --yes wrangler@4 pages project list 2>/dev/null | grep -qE "(^|[[:space:]])${PROGETTO}([[:space:]]|$)"; then
-            echo "Il progetto «${PROGETTO}» c'e' gia'."
-          else
-            echo "Il progetto «${PROGETTO}» non c'e': lo faccio adesso."
-            npx --yes wrangler@4 pages project create "${PROGETTO}" \
-              --production-branch=main
-          fi
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
-          # Serve solo se sul gettone c'e' piu' di un account. Se ce n'e' uno
-          # solo, wrangler lo trova da se' e questo puo' restare vuoto.
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
-      - name: Quale dominio
-        run: |
-          set -eu
-          nome="${VARIABILE:-}"
-          [ -n "$nome" ] || nome="gdahome.org"
-          echo "DOMINIO=$nome" >> "$GITHUB_ENV"
-          echo "Il dominio del sito e' «$nome»."
-        env:
-          VARIABILE: ${{ vars.SITO_DOMINIO }}
-
-      # Dal ramo principale esce il sito vero; da qualunque altro ramo esce
-      # un'anteprima col suo indirizzo, e quello pubblico non si tocca.
-      - name: Pubblica
-        run: |
-          set -eu
-          npx --yes wrangler@4 pages deploy sito \
-            --project-name="${PROGETTO}" \
-            --branch="${GITHUB_REF_NAME}" \
-            --commit-dirty=true | tee /tmp/uscita.txt
-
-          indirizzo=$(grep -oE 'https://[A-Za-z0-9.-]+\.pages\.dev' /tmp/uscita.txt | tail -1 || true)
           {
-            echo "## Il sito e' online"
-            echo ""
-            if [ -n "$indirizzo" ]; then
-              echo "$indirizzo"
-            else
-              echo "Pubblicato, ma l'indirizzo non si e' letto dall'uscita di wrangler:"
-              echo "sta nel pannello di Cloudflare, sotto Workers & Pages → ${PROGETTO}."
-            fi
-            echo ""
-            if [ "${GITHUB_REF_NAME}" = "main" ]; then
-              echo "E' il sito vero: viene dal ramo principale."
-            else
-              echo "E' un'anteprima del ramo \`${GITHUB_REF_NAME}\`. Il sito pubblico non e' cambiato."
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
-          # Serve solo se sul gettone c'e' piu' di un account. Se ce n'e' uno
-          # solo, wrangler lo trova da se' e questo puo' restare vuoto.
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
-      # Il dominio davanti al progetto.
-      #
-      # Va **dopo** aver pubblicato: un dominio si puo' mettere solo davanti a
-      # un sito che esiste. Wrangler non ha un comando per questo, e allora si
-      # chiede a Cloudflare direttamente.
-      #
-      # Se non va — il gettone non ha i permessi, il dominio sta da un altro
-      # registrar e non e' ancora arrivato — **non si ferma niente**: il sito
-      # e' gia' online su `.pages.dev`, e qui si scrive cosa manca.
-      #
-      # Da un ramo che non e' quello principale non si tocca: le anteprime
-      # hanno il loro indirizzo, e il dominio resta dov'e'.
-      - name: Il dominio davanti al sito
-        if: github.ref_name == 'main'
-        run: |
-          set -eu
-
-          cf() {
-            metodo=$1
-            pezzo=$2
-            shift 2
-            curl -sS -X "$metodo" \
-              -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-              -H "Content-Type: application/json" \
-              "https://api.cloudflare.com/client/v4${pezzo}" "$@"
-          }
-
-          # L'identificativo dell'account: quello messo fra i segreti, o
-          # l'unico che il gettone vede.
-          conto="${CLOUDFLARE_ACCOUNT_ID:-}"
-          if [ -z "$conto" ]; then
-            conto=$(cf GET "/accounts?per_page=2" | sed -n 's/.*"id":"\([0-9a-f]\{32\}\)".*/\1/p' | head -1)
-          fi
-          if [ -z "$conto" ]; then
-            echo "::warning::Non riesco a sapere l'identificativo dell'account Cloudflare: il dominio non l'ho attaccato. Al gettone serve «Account Settings: Read», oppure si mette il segreto CLOUDFLARE_ACCOUNT_ID."
-            echo "Il dominio **non** e' stato attaccato: manca l'identificativo dell'account." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-
-          gia=$(cf GET "/accounts/${conto}/pages/projects/${PROGETTO}/domains" || echo "")
-
-          attacca() {
-            quale=$1
-            if printf '%s' "$gia" | grep -q "\"name\":\"${quale}\""; then
-              echo "«${quale}» c'era gia'."
-              return 0
-            fi
-            risposta=$(cf POST "/accounts/${conto}/pages/projects/${PROGETTO}/domains" \
-              --data "{\"name\":\"${quale}\"}" || echo "")
-            if printf '%s' "$risposta" | grep -q '"success":true'; then
-              echo "«${quale}» attaccato."
-            else
-              perche=$(printf '%s' "$risposta" | sed -n 's/.*"message":"\([^"]*\)".*/\1/p' | head -1)
-              echo "::warning::«${quale}» non si e' attaccato: ${perche:-Cloudflare non lo dice}"
-              echo "Il dominio \`${quale}\` non si e' attaccato: ${perche:-Cloudflare non lo dice}." >> "$GITHUB_STEP_SUMMARY"
-            fi
-          }
-
-          attacca "${DOMINIO}"
-          attacca "www.${DOMINIO}"
-
-          {
-            echo ""
-            echo "### Il dominio"
-            echo ""
-            echo "\`https://${DOMINIO}\` — e \`www\` ci reindirizza."
-            echo ""
-            echo "Se non risponde ancora, al dominio manca la strada verso Cloudflare:"
-            echo "un \`CNAME\` da \`${DOMINIO}\` e da \`www.${DOMINIO}\` a \`${PROGETTO}.pages.dev\`,"
-            echo "nel pannello di chi tiene il dominio. Se il dominio e' gia' un sito"
-            echo "Cloudflare sullo stesso account, i record li ha scritti Cloudflare da se'."
-          } >> "$GITHUB_STEP_SUMMARY"
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+            echo "## Il sito sta in piedi"
+            echo
+            echo "La plancia parte, tira su le sue voci e risponde ai comandi."
+            echo
+            echo "Per portarlo su **https://gdahome.org** si sposta il segno:"
+            echo "**Actions → «Il tramite» → Run workflow**. La macchina se ne"
+            echo "accorge entro dieci minuti e scambia da sola."
+          } >>"$GITHUB_STEP_SUMMARY"

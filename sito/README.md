@@ -80,14 +80,15 @@ carica i moduli della plancia.
 |                             |                                                                                                                    |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `index.html`                | la pagina: il colpo d'occhio, come funziona, la plancia, cosa fa, i download, i documenti                          |
+| `privacy.html`              | l'informativa — la gemella di `docs/PRIVACY.md`, ed è l'indirizzo che il Play Store tiene da parte                 |
 | `stile.css`                 | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni, il telaio del riquadro |
+| `privacy.css`               | l'unica cosa che nell'informativa è diversa: una colonna stretta, da leggere                                       |
 | `casa-in-pagina.js`         | la Home Assistant finta che fa girare la plancia                                                                   |
-| `sito.js`                   | chiaro e scuro, l'ombra sotto la barra, le schede che compaiono                                                    |
+| `sito.js`                   | chiaro e scuro, l'ombra sotto la barra, le schede che compaiono — lo caricano tutte e due le pagine                |
 | `statico/`                  | roba portata da altrove — **non si tocca a mano**, è salvata nella repository                                      |
 | `dashboardmodern_static/`   | la plancia vera — **non si tocca a mano**, ed è fuori da git                                                       |
-| `_redirects`                | `www` porta all'indirizzo senza `www`                                                                              |
-| `_headers`                  | quanto tenere in cache: la pagina no, la plancia un giorno                                                         |
-| `robots.txt`, `sitemap.xml` | si può guardare tutto, e c'è una pagina sola                                                                       |
+| `gdahome.png`               | il marchio dell'informativa                                                                                        |
+| `robots.txt`, `sitemap.xml` | si può guardare tutto, e le pagine sono due                                                                        |
 
 ## Quello che non si ribatte a mano
 
@@ -109,35 +110,54 @@ d'avvio.
 
 ## Dove si pubblica
 
-Sono file statici: va bene qualunque posto che serva una cartella.
+Su **gdahome.org**, e non c'è nessun posto nuovo dove pubblicarlo: è la stessa
+macchina del tramite, lo stesso Caddy, lo stesso giro con cui si aggiorna tutto
+il resto.
 
-- **Cloudflare Pages** — c'è già il bottone: **Actions → «Il sito» → Run
-  workflow**. Ci vuole una cosa sola, una volta sola: un gettone di Cloudflare
-  fra i segreti della repository (`CLOUDFLARE_PAGES_TOKEN`, o
-  `CLOUDFLARE_API_TOKEN` se è lo stesso del centralino), fatto con «Cloudflare
-  Pages: Edit» e «Account Settings: Read». Il progetto su Cloudflare lo crea
-  la prima corsa, e l'indirizzo diventa `https://gdahome.pages.dev`. La
-  repository resta privata e il sito è pubblico, e non costa niente — come il
-  centralino, che ci gira già sopra.
+Il bottone è **uno solo**, ed è quello di sempre: **Actions → «Il tramite» →
+Run workflow**. Sposta un segno, e da lì in poi non tocca a noi — la macchina
+se ne accorge entro dieci minuti, si scarica quella versione, la prova, e solo
+se le prove passano scambia. Nessuna chiave da nessuna parte, nessuna porta
+nuova aperta.
 
-  Da lì in poi si ripubblica da sé a ogni modifica di `sito/` sul ramo
-  principale; da un altro ramo esce un'anteprima col suo indirizzo, e quello
-  pubblico non si tocca. E non pubblica niente se la plancia non parte: prima
-  di caricare, il workflow la apre con un browser vero.
+### Cosa succede sulla macchina
 
-  **Il dominio.** Il workflow chiede a Cloudflare di mettere `gdahome.org` (e
-  il suo `www`) davanti al progetto. L'unica cosa che non può fare è portarci
-  il dominio: o il dominio è già un sito Cloudflare sullo stesso account — e
-  allora i record li scrive Cloudflare — oppure nel pannello di chi tiene il
-  dominio ci vuole un `CNAME` da `gdahome.org` e da `www.gdahome.org` a
-  `gdahome.pages.dev`. Finché non arriva, il sito c'è lo stesso su
-  `.pages.dev`: quell'indirizzo non si tocca mai.
+`scarica.sh` (che nasce da [`centralino/accendi.sh`](../centralino/accendi.sh))
+scarica il pacchetto della versione e, prima di copiare `sito/`, **rifà la
+plancia**: la stessa `node strumenti/porta-nel-sito.mjs` che si lancia qui, con
+dentro la `ponte/plancia/` di quella versione. Nel pacchetto la plancia dentro
+il sito non c'è — è fuori da git apposta, per non averne due copie — e quindi
+va rimessa lì dove la pagina la va a cercare.
 
-- **GitHub Pages** — funziona anche quello, adesso che la repository è
-  pubblica. Ma senza il `_redirects` e il `_headers`, che sono di Cloudflare.
-- **Qualunque altro posto** — un bucket, un hosting qualunque, la cartella
-  `www` di un server. Non serve Node, non serve un passo di costruzione, non
-  ci sono richieste verso l'esterno: i caratteri stanno qui dentro.
+Se non ci riesce, **il sito non si scambia**: resta quello di prima, intero,
+invece di diventare una pagina col buco al posto della plancia. Il resto
+dell'aggiornamento va avanti lo stesso, perché il tramite è un servizio e il
+sito è una pagina, e non si tiene fermo il primo per la seconda.
+
+Davanti c'è Caddy, che si prende il certificato da solo e serve la cartella
+così com'è. Nel suo blocco ci sono tre cose e basta:
+
+- **niente `try_files`** — una pagina che non esiste deve dire che non esiste,
+  non far finta di essere l'indice;
+- **due velocità di cache** — la plancia e `statico/` un giorno, perché
+  cambiano solo quando cambia la versione; le pagine no, perché un testo
+  corretto che resta in cache è un testo corretto che nessuno legge;
+- **`www` è un redirect vero**, non un secondo sito.
+
+### E prima di spostare il segno
+
+C'è l'altro bottone, **Actions → «Il sito»**, che non pubblica niente: apre il
+sito con un browser vero e guarda che la plancia parta. Parte da sé a ogni
+modifica di `sito/` o di `ponte/plancia/`. È il controllo che una pagina ferma
+non può farsi da sola — se non trovasse i suoi file non ci sarebbe nessun
+errore da nessuna parte, ci sarebbe una pagina bianca.
+
+E le prove che la **macchina** rigira da sé prima di scambiare
+([`centralino/test/sito.test.js`](../centralino/test/sito.test.js)) tengono le
+due promesse che si rompono per distrazione: che la pagina non tiri su niente
+da fuori — nessun carattere scaricato, nessuna libreria, nessun contatore — e
+che l'informativa pubblicata dica quello che dice `docs/PRIVACY.md`, sezione
+per sezione e con la stessa data.
 
 ## Come si prova
 
@@ -160,7 +180,13 @@ ordine di quanto fa male sbagliarlo:
 3. **niente errori** in console e nessun file che non arriva — le due
    telecamere sono l'eccezione, ed è scritta nel collaudo;
 4. **niente scorrimento di lato** a nessuna larghezza;
-5. **i link portano dove dicono**, e il chiaro e scuro si accende.
+5. **i link portano dove dicono**, e il chiaro e scuro si accende;
+6. **l'informativa è vestita come il sito**: i caratteri giusti, il fondo
+   giusto, una colonna da leggere e i collegamenti che si distinguono dal
+   testo. Che il testo sia quello giusto lo tiene una prova del centralino;
+   questa tiene l'altra metà, che nessuna prova sul testo vedrebbe. È già
+   successo: l'informativa era scritta addosso a uno `stile.css` che poi è
+   stato rifatto per l'indice, e da quel momento apriva senza niente addosso.
 
 Le fotografie finiscono in `collaudo/foto/sito-*.png`.
 

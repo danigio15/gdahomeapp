@@ -1,0 +1,151 @@
+/* Il vestito dell'informativa.
+ *
+ * L'indice e l'informativa sono due pagine diverse: una racconta, e ha la sua
+ * barra in cima, le sue schede, la plancia dentro un riquadro; l'altra e' un
+ * testo da leggere e basta, che qualcuno apre dal Play Store per sapere dove
+ * finiscono i suoi dati. Fargli addosso lo stesso impianto dell'indice
+ * vorrebbe dire dargli una pagina che non e' fatta per lui.
+ *
+ * Quindi qui c'e' solo quello che serve a un testo lungo: una colonna stretta,
+ * righe che si leggono, e il resto — i colori, i caratteri, il fondo vivo,
+ * chiaro e scuro — preso da `stile.css`, che la pagina carica prima di questo.
+ * Un colore cambiato di la' cambia tutte e due le pagine, che e' l'unico modo
+ * perche' restino la stessa cosa.
+ */
+
+/* La colonna. Piu' stretta di quella dell'indice apposta: una riga di testo
+ * che passa i settanta caratteri si rilegge male, e questa e' una pagina che
+ * si legge davvero, non si guarda. */
+.dentro {
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+  padding-inline: 22px;
+}
+
+/* ── La testa ──────────────────────────────────────────────────────────── */
+
+header.stretta {
+  padding: 48px 0 8px;
+  text-align: left;
+}
+
+header.stretta h1 {
+  margin: 22px 0 6px;
+  font-size: clamp(2rem, 4.4vw, 2.8rem);
+}
+
+/* La strada per tornare indietro sta in cima e si vede subito: chi arriva qui
+ * da un negozio non sa ancora cos'e' gdahome, e questo e' l'unico posto da cui
+ * puo' andarlo a vedere. */
+.indietro {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--testo-lieve);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.indietro img {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+}
+
+.indietro:hover {
+  color: var(--testo);
+}
+
+.sottotitolo {
+  margin: 0;
+  color: var(--testo-lieve);
+  font-size: 1.05rem;
+}
+
+/* ── Il testo ──────────────────────────────────────────────────────────── */
+
+/* Le sezioni dell'indice respirano (`clamp(56px, 8vw, 104px)`): li' ognuna e'
+ * una schermata. Qui sono i capitoli di un documento, e uno spazio da
+ * schermata fra un capitolo e l'altro obbligherebbe a scorrere per capire se
+ * il testo e' finito. */
+.dentro section {
+  padding-block: 30px 4px;
+  border-top: 1px solid var(--bordo);
+}
+
+.dentro section:first-of-type {
+  border-top: 0;
+}
+
+.dentro section h2 {
+  font-size: clamp(1.3rem, 2.6vw, 1.6rem);
+  margin-bottom: 12px;
+}
+
+.dentro p,
+.dentro li {
+  color: var(--testo-lieve);
+}
+
+.dentro p strong,
+.dentro li strong {
+  color: var(--testo);
+}
+
+.dentro ol,
+.dentro ul {
+  margin: 0 0 1em;
+  padding-left: 24px;
+}
+
+.dentro li {
+  margin-bottom: 10px;
+}
+
+/* I collegamenti qui si devono vedere: in mezzo a un testo di legge, un link
+ * dello stesso colore del testo e' un link che nessuno trova. Sull'indice no —
+ * li' sono bottoni e schede, e si riconoscono dalla forma. */
+.dentro a {
+  color: var(--azzurro);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.dentro .indietro,
+.dentro footer a {
+  text-decoration: none;
+}
+
+.dentro code {
+  background: var(--carta-alta);
+  border: 1px solid var(--bordo);
+  border-radius: 7px;
+  padding: 2px 7px;
+  font-size: 0.86em;
+  overflow-wrap: anywhere;
+}
+
+/* ── Il fondo ──────────────────────────────────────────────────────────── */
+
+.dentro footer {
+  margin-top: 36px;
+  padding: 28px 0 72px;
+  border-top: 1px solid var(--bordo);
+  color: var(--testo-lieve);
+  font-size: 0.92rem;
+}
+
+.dentro footer p {
+  margin: 0 0 6px;
+}
+
+.dentro footer a {
+  color: var(--testo-lieve);
+}
+
+.dentro footer a:hover {
+  color: var(--testo);
+}

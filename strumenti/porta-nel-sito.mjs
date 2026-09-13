@@ -27,7 +27,7 @@
  *
  * La plancia invece sono **diciassette megabyte e ottocentottantasette file**,
  * ed e' una copia identica di roba che nella repository c'e' gia'. Perche' non
- * ce ne sia una seconda, `sito/plancia/` sta fuori da git (`.gitignore`) e si
+ * ce ne sia una seconda, `sito/dashboardmodern_static/` sta fuori da git (`.gitignore`) e si
  * rifa' con questo script — in locale prima di guardare il sito, e nella
  * pagina «Il sito» di GitHub prima di pubblicarlo.
  *
@@ -245,5 +245,5 @@ for (const { che, quanti, byte, unita } of fatto)
   process.stdout.write(`  ${che}: ${quanti} ${unita}, ${scritti(byte)}\n`);
 process.stdout.write(
   `  in tutto: ${scritti(fatto.reduce((somma, x) => somma + x.byte, 0))}\n` +
-    "  (sito/plancia/ sta fuori da git: si rifa' con questo script)\n",
+    "  (sito/dashboardmodern_static/ sta fuori da git: si rifa' con questo script)\n",
 );

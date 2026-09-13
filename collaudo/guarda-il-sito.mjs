@@ -433,6 +433,59 @@ await pagina.locator("#plancia").scrollIntoViewIfNeeded();
 await pagina.waitForTimeout(800);
 await pagina.screenshot({ path: join(FOTO, "sito-plancia.png") });
 
+/* ── 4. L'informativa ────────────────────────────────────────────────────
+ *
+ * La seconda pagina del sito, e quella con l'obbligo piu' serio: e'
+ * l'indirizzo che sta scritto sulla scheda del Play Store. Che il testo sia
+ * quello giusto lo tiene una prova del centralino; qui si guarda l'altra
+ * meta', quella che nessuna prova sul testo vedrebbe — che la pagina **si
+ * vesta**.
+ *
+ * Non e' un timore campato per aria: e' gia' successo. L'informativa era
+ * scritta addosso a un `stile.css` che poi e' stato rifatto da capo per
+ * l'indice, e da quel momento apriva senza niente addosso — il testo giusto,
+ * nero su bianco, senza un margine. Chi rifa' i colori guarda l'indice, non
+ * lei. */
+const altraPagina = await contesto.newPage();
+await altraPagina.goto(`${INDIRIZZO}privacy.html`, { waitUntil: "load" });
+
+await prova("l'informativa e' vestita come il sito", async () => {
+  const com_e = await altraPagina.evaluate(() => {
+    const corpo = getComputedStyle(document.body);
+    const dentro = document.querySelector(".dentro");
+    const link = document.querySelector("section a");
+    return {
+      carattere: corpo.fontFamily,
+      fondo: corpo.backgroundColor,
+      colonna: dentro ? Math.round(dentro.getBoundingClientRect().width) : 0,
+      link: link ? getComputedStyle(link).color : "",
+      inchiostro: corpo.color,
+    };
+  });
+  /* I caratteri del sito, non quelli di sistema: se `stile.css` non fosse
+   * arrivato, qui ci sarebbe il Times del browser. */
+  if (!com_e.carattere.includes("Inter"))
+    throw new Error(`l'informativa non ha i caratteri del sito: ${com_e.carattere}`);
+  /* E il fondo del sito, non il bianco di una pagina senza vestito. */
+  if (com_e.fondo === "rgba(0, 0, 0, 0)" || com_e.fondo === "rgb(255, 255, 255)")
+    throw new Error(`l'informativa non ha il fondo del sito: ${com_e.fondo}`);
+  /* La colonna: un testo di legge largo quanto lo schermo non si rilegge. */
+  if (com_e.colonna === 0 || com_e.colonna > 800)
+    throw new Error(`la colonna dell'informativa e' larga ${com_e.colonna}`);
+  /* I collegamenti dentro il testo si devono distinguere dal testo. */
+  if (com_e.link === com_e.inchiostro)
+    throw new Error("i collegamenti dell'informativa sono del colore del testo");
+});
+
+await prova("dall'informativa si torna indietro", async () => {
+  await altraPagina.locator(".indietro").click();
+  await altraPagina.waitForURL((dove) => !dove.pathname.includes("privacy"), { timeout: 10000 });
+});
+
+await altraPagina.goto(`${INDIRIZZO}privacy.html`, { waitUntil: "load" });
+await altraPagina.screenshot({ path: join(FOTO, "sito-privacy.png") });
+await altraPagina.close();
+
 await contesto.close();
 await browser.close();
 server.close();
