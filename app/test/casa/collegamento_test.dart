@@ -552,6 +552,38 @@ void main() {
 
     await ponte.spegni();
   });
+  test('togliere il permesso vale subito, senza riaprire l\'app', () async {
+    /* Il cancello si e' visto valere «solo alla prossima apertura da zero»,
+       * e non bastava: l'app chiedeva la plancia una volta e poi la teneva,
+       * anche quando il filo cadeva e tornava — che e' quello che fa un
+       * add-on quando si aggiorna. Chi perdeva il permesso continuava a
+       * vedere la plancia. */
+    final ponte = await PonteFinto.alza();
+    await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+    );
+    await collegamento.apri();
+    await _finoA(() => collegamento.pannelloLetto);
+    expect(collegamento.pannello, isNotNull, reason: 'prima la vedeva');
+
+    /* Adesso quella plancia non e' piu' sua. */
+    ponte.nientePerTe = true;
+    await ponte.buttaGiu();
+    await _finoA(() => collegamento.nessunaPlanciaPerMe);
+
+    expect(collegamento.pannello, isNull, reason: 'e non la vede piu\'');
+    await ponte.spegni();
+  });
+
   test(
     'se non ci sono plance per questa utenza, il collegamento lo dice',
     () async {

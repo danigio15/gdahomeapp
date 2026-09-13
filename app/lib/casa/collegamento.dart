@@ -260,8 +260,21 @@ class Collegamento {
           _perche = null;
           _vai(ComeVa.aperta);
           /* Mentre si era via la plancia puo' essere cambiata, o non essere
-           * mai stata letta. */
-          if (!_pannelloLetto) unawaited(_leggiLaPlancia(filo));
+           * mai stata letta: si richiede **ogni volta**.
+           *
+           * Qui c'era `if (!_pannelloLetto)`, e con quella guardia la plancia
+           * si chiedeva una volta e poi mai piu': il commento diceva «puo'
+           * essere cambiata» e la riga sotto non la ricontrollava. Si e' visto
+           * quando serviva: togliere a qualcuno il permesso di vedere una
+           * plancia non gli toglieva niente, perche' l'app teneva quella che
+           * aveva gia' — e il filo che cade e torna, che e' quello che fa un
+           * add-on quando si aggiorna, non bastava. Un cancello che vale solo
+           * alla prossima apertura da zero non e' un cancello.
+           *
+           * Costa una domanda sul filo per ogni ritorno, e la domanda e'
+           * piccola. Se la risposta e' la stessa, la pagina non si ricarica:
+           * l'indirizzo non cambia, e chi disegna guarda l'indirizzo. */
+          unawaited(_leggiLaPlancia(filo));
         }
         return;
       }
