@@ -240,6 +240,42 @@ di abbinamento, l'immagine non si salva e non esce dal telefono.
 6. Poi la strada lunga: test chiuso, i 12 tester, i 14 giorni, la domanda per
    la produzione.
 
+### I 12 tester, in pratica
+
+E' l'unico ostacolo vero dell'account personale, e si risolve con delle
+persone, non con un trucco.
+
+- Servono **12 account Google diversi** iscritti a un **test chiuso**, e devono
+  restare iscritti **14 giorni di fila**: se scendono sotto i dodici, il conto
+  riparte.
+- Devono essere **persone vere**. Google dice esplicitamente di non usare
+  account finti, e chi ci prova rischia l'account: non e' una regola che
+  conviene tirare.
+- Si iscrivono da un **link** che ti da' il Play Console: lo aprono col telefono,
+  accettano, e da li' installano gdahome dal negozio come una qualunque app.
+- Chi non ha Home Assistant puo' comunque installarla e arrivare alla
+  schermata dell'abbinamento: per il conto di Google basta.
+- Dove trovarli: chi usa gia' DashboardModern. Sono le persone a cui gdahome
+  serve davvero, ed e' anche il modo di sapere se funziona a casa d'altri e non
+  solo a casa tua.
+
+Finche' si sta in test chiuso l'app **non e' pubblica**: la scheda, e quindi il
+tuo nome e il tuo indirizzo, si vedono solo quando si passa in produzione.
+
+### Una trappola: le due firme non si parlano
+
+Se distribuisci l'APK dalle release **e** metti l'app sul negozio, sono due
+pacchetti **firmati in modo diverso** — sul negozio firma Google, col Play App
+Signing. Android rifiuta di installare un pacchetto sopra uno con firma
+diversa: chi ha quello delle release non riceve l'aggiornamento dal negozio, e
+deve disinstallare e riabbinare.
+
+Quindi: **una strada per persona**. Chi ce l'ha dalle release resta li' finche'
+non decide di passare al negozio; chi arriva dal negozio ci resta. E se vuoi
+dare a mano un pacchetto che sia lo **stesso** del negozio, si scarica dal Play
+Console (l'APK firmato da Google, sotto il bundle caricato) invece di
+costruirlo qui.
+
 **Il Play App Signing.** Quando carichi il primo `.aab`, Google propone di
 tenere lui la chiave di firma finale. Conviene dire di sì: da quel momento la
 chiave che hai fatto tu serve solo a firmare quello che carichi, e se la perdi
