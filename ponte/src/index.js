@@ -130,7 +130,16 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     chat,
     spegnimento,
   });
-  const ponte = new Ponte({ casa, dispositivi, registro, commissioni });
+  /* Chi c'e' in questa casa, e chi la amministra.
+   *
+   * Non si tiene niente sul disco: si chiede a Home Assistant e la risposta
+   * vale un minuto. Serve a tre cose: disegnare le spunte di «chi la vede»,
+   * rispondere alla sola domanda che l'ingress non sa — «questo utente
+   * amministra?» — e dire al ponte se il telefono che chiede una plancia
+   * riservata a chi amministra ne ha il diritto. */
+  const utenti = new UtentiDiCasa({ casa, registro });
+
+  const ponte = new Ponte({ casa, dispositivi, registro, commissioni, utenti });
 
   /* Le plance fra le «Plance» di Home Assistant, una voce per ognuna.
    *
@@ -149,14 +158,6 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   plance.quandoCambia = () => planceInCasa.sistema();
-
-  /* Chi c'e' in questa casa, e chi la amministra.
-   *
-   * Non si tiene niente sul disco: si chiede a Home Assistant e la risposta
-   * vale un minuto. Serve a disegnare le spunte di «chi la vede», e a
-   * rispondere alla sola domanda che l'ingress non sa — «questo utente
-   * amministra?» — quando una plancia e' riservata a chi amministra. */
-  const utenti = new UtentiDiCasa({ casa, registro });
 
   /* La chiamata verso il centralino: e' cosi' che si entra da fuori casa,
    * senza che chi ha installato l'add-on apra o configuri niente. */

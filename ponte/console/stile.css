@@ -678,6 +678,28 @@ summary:focus-visible {
   margin: 10px 0 2px;
 }
 
+/* «Per chi e'» il codice: l'etichetta e la casella, in fila. La casella si
+   veste come i tasti che le stanno accanto, come fa l'altra di questa pagina. */
+#per-chi-riga .etichetta {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+#per-chi {
+  font: inherit;
+  /* Si ferma dove finisce un nome, non dove finisce la scheda: allargata a
+     tutta la riga sembrava la casella grossa di un modulo, ed e' una scelta
+     fra tre nomi. */
+  flex: 0 1 20em;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--bordo);
+  border-radius: 12px;
+  background: var(--carta);
+  color: inherit;
+}
+
 .vuoto {
   color: var(--tenue);
   padding: 6px 0;

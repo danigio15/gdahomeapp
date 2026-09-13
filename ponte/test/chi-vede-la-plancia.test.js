@@ -30,6 +30,9 @@ import { join } from "node:path";
 
 import { Plance, laVede, utentiPuliti, vedeQualcosa } from "../src/plance.js";
 import { UtentiDiCasa } from "../src/utenti.js";
+import { Abbinamento } from "../src/abbinamento.js";
+import { Dispositivi } from "../src/dispositivi.js";
+import { Commissioni } from "../src/commissioni.js";
 
 const ZITTO = { info() {}, attenzione() {}, errore() {} };
 
@@ -353,6 +356,145 @@ test("cambiare chi la vede riscrive le voci in Home Assistant", () => {
      * Plancia fa ridisegnare tutte le pagine aperte, e non si fa per niente. */
     plance.chiLaVede("primary", [IO]);
     assert.equal(avvisi.length, 1, "ha avvisato per una scrittura che non cambiava niente");
+  } finally {
+    via();
+  }
+});
+
+/* ─── L'utente dentro il codice ──────────────────────────────────────────── */
+
+/* Il buco che «chi la vede» da sola non copriva.
+ *
+ * Il QR abbina un **telefono**, non un utente di Home Assistant. Quel telefono
+ * poi chiede le plance al filo, e senza niente addosso se le prende tutte —
+ * comprese quelle riservate a qualcun altro. Cioe': riservi una plancia a tua
+ * moglie, abbini il telefono di tua moglie, e quel telefono vede anche le tue.
+ *
+ * La cura: chi fabbrica il codice lo firma, il telefono eredita quell'utente,
+ * e l'elenco passa dalla stessa `laVede` che vale dentro Home Assistant.
+ */
+
+test("il codice porta con se' per chi e', e il telefono lo eredita", () => {
+  const a = new Abbinamento({ adesso: () => 1000 });
+  const { codice, utente } = a.nuovo(LEI);
+  assert.equal(utente, LEI, "il codice non si e' intestato a nessuno");
+
+  /* E lo dice a chi lo consuma: e' l'unico posto che lo sa, e chi abbina il
+   * telefono deve poterlo intestare. */
+  assert.deepEqual(a.consuma(codice), { utente: LEI });
+});
+
+test("un codice senza padrone resta senza, e un identificativo storto non conta", () => {
+  const a = new Abbinamento({ adesso: () => 1000 });
+  assert.equal(a.nuovo().utente, "", "un codice non firmato si e' intestato a qualcuno");
+  /* Un valore storto diventa «non si sa di chi e'» — cioe' vede tutto, come
+   * prima — e non un fantasma che non corrisponde a nessuno e non apre
+   * niente. */
+  assert.equal(a.nuovo("mario").utente, "");
+  assert.equal(a.nuovo("tutti").utente, "");
+});
+
+test("il telefono nasce intestato, e l'elenco lo dice", () => {
+  const { cartella, via } = unPosto();
+  try {
+    const suoi = new Dispositivi({ cartella, adesso: () => 1000 });
+    const { dispositivo } = suoi.abbina({
+      nome: "Pixel di Marta",
+      sistema: "Android",
+      utente: LEI,
+    });
+    assert.equal(suoi.utenteDi(dispositivo.id), LEI);
+    assert.equal(suoi.elenco()[0].utente, LEI, "l'elenco non dice di chi e'");
+
+    /* Un telefono abbinato prima di oggi non ha nessun utente addosso, e
+     * quello **vede tutto**: e' la riga che non spegne le case di chi c'e'
+     * gia' il giorno dell'aggiornamento. */
+    const vecchio = suoi.abbina({ nome: "iPhone", sistema: "iOS" });
+    assert.equal(suoi.utenteDi(vecchio.dispositivo.id), "");
+    assert.equal(laVede({ utenti: [IO] }, suoi.utenteDi(vecchio.dispositivo.id)), false);
+    assert.equal(laVede({ utenti: [] }, suoi.utenteDi(vecchio.dispositivo.id)), true);
+  } finally {
+    via();
+  }
+});
+
+test("l'app riceve solo le plance sue, e non sa che le altre esistono", async () => {
+  const { cartella, via } = unPosto();
+  try {
+    const plance = new Plance({ cartella, registro: ZITTO });
+    const mare = plance.aggiungi("Casa al mare");
+    plance.chiLaVede(mare.profilo, [LEI]);
+
+    const commissioni = new Commissioni({
+      plance,
+      plancia: { cE: true, descrizione: () => ({ base: "/x" }) },
+      registro: ZITTO,
+    });
+
+    /* Marta: vede la sua, e la prima che e' di tutti. */
+    const sua = await commissioni.rispondi(
+      { id: 1, type: "ponte/plance/elenco" },
+      { chiChiede: LEI },
+    );
+    assert.deepEqual(
+      sua.result.plance.map((una) => una.profilo),
+      ["primary", mare.profilo],
+    );
+
+    /* Giovanni: la «Casa al mare» non e' sua, e **non compare**. Non «compare
+     * grigia»: non c'e'. */
+    const mia = await commissioni.rispondi(
+      { id: 2, type: "ponte/plance/elenco" },
+      { chiChiede: IO },
+    );
+    assert.deepEqual(
+      mia.result.plance.map((una) => una.profilo),
+      ["primary"],
+    );
+
+    /* E se la chiede per nome, non gli si apre: gli si da' la sua. Senza
+     * spiegargli che quella esiste ed e' di un altro — che e' una cosa che
+     * non deve sapere, e per lui non cambia niente. */
+    const forzata = await commissioni.rispondi(
+      { id: 3, type: "ponte/plancia", profilo: mare.profilo },
+      { chiChiede: IO },
+    );
+    assert.equal(forzata.success, true);
+    assert.deepEqual(
+      forzata.result.plance.map((una) => una.profilo),
+      ["primary"],
+    );
+
+    /* Un telefono che non si sa di chi sia vede tutto: i telefoni abbinati
+     * prima di oggi non si spengono a tradimento. */
+    const vecchio = await commissioni.rispondi(
+      { id: 4, type: "ponte/plance/elenco" },
+      { chiChiede: "" },
+    );
+    assert.equal(vecchio.result.plance.length, 2);
+  } finally {
+    via();
+  }
+});
+
+test("chi non vede nessuna plancia non si apre sul vuoto", async () => {
+  /* Chi riserva **tutte** le plance a qualcun altro non ha chiesto un'app che
+   * si apre su niente: la prima gli si apre comunque. E' l'unico posto dove la
+   * regola si piega, e si piega per non lasciare uno schermo bianco. */
+  const { cartella, via } = unPosto();
+  try {
+    const plance = new Plance({ cartella, registro: ZITTO });
+    plance.chiLaVede("primary", [LEI]);
+    const commissioni = new Commissioni({
+      plance,
+      plancia: { cE: true, descrizione: () => ({ base: "/x" }) },
+      registro: ZITTO,
+    });
+    const detto = await commissioni.rispondi(
+      { id: 1, type: "ponte/plance/elenco" },
+      { chiChiede: IO },
+    );
+    assert.equal(detto.result.plance.length, 1);
   } finally {
     via();
   }

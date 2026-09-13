@@ -257,4 +257,40 @@ void main() {
     );
     expect(casa.toString().contains('IL-SEGNO-SEGRETO'), isFalse);
   });
+
+  /* Una cassaforte che non scrive non si fa passare per una che scrive.
+   *
+   * E' il caso del browser che non considera sicura la sua pagina: quello che
+   * l'app salva lo cifra il browser, e su una pagina «non sicura» la cifratura
+   * non c'e'. La casa a quel punto ci ha **gia'** fatto entrare — codice
+   * consumato, telefono segnato fra i suoi — e se l'archivio si tenesse il
+   * guaio per se', l'app entrerebbe, mostrerebbe la plancia, e alla prossima
+   * apertura chiederebbe di abbinarsi da capo bruciando un altro posto. Senza
+   * che nessuno dica niente.
+   *
+   * Quindi il guaio deve **uscire** da `aggiungi`: e' la riga su cui si appoggia
+   * il messaggio che si legge nella schermata dell'abbinamento. */
+  test('se il segno non si riesce a scrivere, lo si viene a sapere', () async {
+    final rotta = _CassaforteCheNonScrive();
+    final suo = ArchivioDelleCase(rotta);
+    await suo.apri();
+
+    await expectLater(
+      suo.aggiungi(nome: 'Casa', segno: 'IL-SEGNO', inCasa: inRete),
+      throwsA(isA<Exception>()),
+    );
+  });
+}
+
+/// Una cassaforte che legge e non scrive: il browser su una pagina non sicura.
+class _CassaforteCheNonScrive implements Cassaforte {
+  @override
+  Future<String?> leggi(String chiave) async => null;
+
+  @override
+  Future<void> scrivi(String chiave, String valore) async =>
+      throw Exception('la cifratura del browser non c\'e\'');
+
+  @override
+  Future<void> cancella(String chiave) async {}
 }

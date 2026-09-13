@@ -387,6 +387,23 @@ void main() {
     expect(testo, contains('window.gdahomeApriLaConfig=function()'));
     expect(testo, contains('window.gdahomeTornaDallaConfig=function()'));
     expect(testo, contains('getElementById("page-config")'));
+    /* Chi lascia aperto l'editor di una tessera e tocca «Plancia» vuole la
+       * plancia, non aspettare. Una finestra aperta sopra la pagina si mangia
+       * il tocco sulla linguetta della barra, e il ritorno riprovava per tre
+       * secondi e mezzo prima di arrendersi: sembrava un tasto rotto. Adesso
+       * si chiude prima quello che sta sopra, e **prima** di toccare la
+       * linguetta. */
+    expect(testo, contains('var chiudiQuelloChEAperto=function()'));
+    expect(testo, contains('#editor-modal.show'));
+    expect(testo, contains('dialog[open]'));
+    final chiude = testo.indexOf('chiudiQuelloChEAperto();');
+    final tocca = testo.indexOf('var voce=laVoce(dove)||laVoce("home");');
+    expect(chiude, greaterThan(0), reason: 'il ritorno non chiude niente');
+    expect(
+      chiude,
+      lessThan(tocca),
+      reason: 'chiude dopo aver toccato la linguetta: troppo tardi',
+    );
     /* Il tema, la tavolozza e la barra non si scrivono piu' nel deposito
        * della pagina: quelle scelte sono delle sue tessere, e riscriverle a
        * ogni caricamento le cancellava. */

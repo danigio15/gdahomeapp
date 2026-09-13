@@ -198,8 +198,11 @@ export class Portiere {
       return;
     }
 
+    let perChi = "";
     try {
-      this.abbinamento.consuma(detto?.codice);
+      /* `consuma` dice **per chi** era il codice: il telefono si intesta a
+       * quello li', e da quel momento vede le plance che vede lui. */
+      perChi = this.abbinamento.consuma(detto?.codice)?.utente || "";
     } catch (errore) {
       if (errore instanceof TroppiTentativi) {
         this.registro.attenzione(`troppi tentativi di abbinamento da ${da}`);
@@ -216,7 +219,11 @@ export class Portiere {
 
     let abbinato;
     try {
-      abbinato = this.dispositivi.abbina({ nome: detto?.nome, sistema: detto?.sistema });
+      abbinato = this.dispositivi.abbina({
+        nome: detto?.nome,
+        sistema: detto?.sistema,
+        utente: perChi,
+      });
     } catch (errore) {
       const perche = errore instanceof TroppiDispositivi ? errore.message : "non ha funzionato";
       cifrata.manda(JSON.stringify({ t: "no", perche }));

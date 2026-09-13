@@ -291,6 +291,33 @@ test("la macchina dice al tramite come si chiamano il sito e l'app", () => {
   }
 });
 
+test("l'app si serve da un indirizzo solo, e il nome corto ci rimanda", () => {
+  /* E' la prova di una cosa che non si vede guardando Caddy: **il browser
+   * tiene l'abbinamento per indirizzo**. Il segno che apre casa lo tiene il
+   * deposito del browser, e quel deposito e' di quel nome li'.
+   *
+   * Finche' due nomi servivano gli stessi file, chi arrivava dal bottone della
+   * console e chi arrivava dal preferito erano due app diverse per il browser:
+   * ognuna chiedeva di abbinarsi, e ogni abbinamento bruciava uno degli otto
+   * posti dei telefoni. Sembrava un problema dell'app, ed era una riga di
+   * Caddy.
+   *
+   * Quindi: un posto solo che serve i file — quello sotto il tramite, l'unico
+   * che la console sa fabbricare — e il nome corto che ci rimanda, senza
+   * perdere il pezzo di strada che segue. */
+  const corto = new RegExp("^\\$NOME_DELL_APP \\{$([\\s\\S]*?)^\\}$", "m").exec(ACCENDI);
+  assert.ok(corto, "non trovo il blocco del nome corto");
+  assert.match(
+    corto[1],
+    /redir https:\/\/\$NOME_DEL_TRAMITE\/app\{uri\} permanent/,
+    "il nome corto non rimanda all'indirizzo che conta",
+  );
+  /* E non serve niente per conto suo: se servisse ancora i file, sarebbe
+   * un secondo deposito e il guaio tornerebbe identico. */
+  assert.doesNotMatch(corto[1], /file_server/, "il nome corto serve ancora una copia dell'app");
+  assert.doesNotMatch(corto[1], /root \*/, "il nome corto ha ancora una cartella sua");
+});
+
 test("l'app si apre anche dall'indirizzo del tramite, sotto /app/", () => {
   /* Il link per il browser lo fabbrica la console dell'add-on, e lo ricava
    * dall'unica cosa che sa del centralino: il nome che ha in configurazione,

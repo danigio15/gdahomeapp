@@ -228,8 +228,44 @@ class Premesse {
          classe se ne va **prima**; poi si guarda se ci si e' riusciti, e se
          no si riprova, perche' la pagina puo' essere ancora a meta' del suo
          lavoro. */
+      /* Prima di tornare, si chiude quello che sta **sopra**.
+       *
+       * Chi apre l'editor di una tessera e poi tocca «Plancia» nel menu non
+       * ha chiesto di chiudere l'editor: ha chiesto la plancia. Ma l'editor
+       * e' una finestra aperta sopra la pagina, e finche' c'e' un tocco su
+       * una linguetta della barra in fondo non fa quello che farebbe un dito
+       * — la finestra lo copre, o la pagina lo rifiuta. Il risultato era che
+       * «Plancia» non faceva niente per tre secondi e mezzo (sessanta prove
+       * ogni sessanta millesimi) e poi si arrendeva: sembrava un tasto rotto,
+       * ed era un tasto che aspettava.
+       *
+       * Quindi si chiude da noi, e si chiude **come lo chiuderebbe lui**: il
+       * suo tasto di chiusura, se c'e', perche' quel tasto sa anche cosa
+       * scrivere e cosa buttare via. Se non c'e', gli si toglie la classe che
+       * lo mostra, che e' il ripiego. Nessun salvataggio a sorpresa: chi
+       * lascia a meta' un editor e se ne va, se ne va — come toccando fuori.
+       *
+       * Non si sa quale finestra sia aperta e non si tira a indovinare: si
+       * guarda quali ci sono e si chiudono tutte quelle che si vedono. */
+      'var chiudiQuelloChEAperto=function(){'
+      'try{'
+      'var aperte=document.querySelectorAll('
+      '".modal.show,.dm-modal.show,#editor-modal.show,dialog[open]");'
+      'for(var quale=0;quale<aperte.length;quale+=1){'
+      'var finestra=aperte[quale];'
+      'var chiudi=finestra.querySelector('
+      '"[data-dm-close],.modal-close,.dm-modal-close,.close-btn");'
+      'if(chiudi){try{chiudi.click();}catch(male){}}'
+      'if(finestra.classList.contains("show"))'
+      'finestra.classList.remove("show");'
+      'if(finestra.tagName==="DIALOG"&&finestra.open)'
+      'try{finestra.close();}catch(male){}'
+      '}'
+      '}catch(male){}'
+      '};'
       'var torna=function(prove){'
       'if(!ciSiamo()){scordaLIndirizzo();setTimeout(guarda,0);return;}'
+      'chiudiQuelloChEAperto();'
       'try{document.body.classList.remove("gdahome-in-config");}catch(male){}'
       'var voce=laVoce(dove)||laVoce("home");'
       'if(voce)try{voce.click();}catch(male){}'

@@ -292,10 +292,15 @@
        * arriva dalla porta esposta. */
       forte.textContent = uno.nome;
       var sotto = vediPagina.createElement("span");
+      /* Di chi e' questo telefono. Va detto: un telefono senza padrone vede
+       * **tutte** le plance, comprese quelle riservate a qualcuno, ed e'
+       * esattamente quello di cui bisogna accorgersi guardando l'elenco. */
+      var diChi = nomeDellUtente(uno.utente);
       sotto.textContent =
         uno.sistema +
         " · " +
-        (uno.collegati ? "collegato adesso" : "visto " + dataLeggibile(uno.vistoIl));
+        (uno.collegati ? "collegato adesso" : "visto " + dataLeggibile(uno.vistoIl)) +
+        (diChi ? " · " + diChi : "");
       nome.appendChild(forte);
       nome.appendChild(sotto);
       riga.appendChild(nome);
@@ -484,6 +489,20 @@
    * solo mentre uno sta spuntando le caselle — e si chiuderebbe anche subito
    * dopo aver spuntato, perche' salvare ridisegna. */
   var cassettoAperto = "";
+
+  /* Il nome di un utente dal suo identificativo, da quello che si e' gia'
+   * chiesto. Un telefono senza padrone lo dice a parole — «vede tutte le
+   * plance» — perche' e' la cosa vera e la si deve poter leggere. */
+  function nomeDellUtente(chi) {
+    var cercato = String(chi || "").trim();
+    if (!cercato) return "vede tutte le plance";
+    if (!gliUtenti) return "";
+    var uno = null;
+    for (var quale = 0; quale < gliUtenti.length; quale += 1) {
+      if (gliUtenti[quale].id === cercato) uno = gliUtenti[quale];
+    }
+    return uno ? "di " + uno.nome : "";
+  }
 
   function chiediGliUtenti() {
     if (gliUtenti) return Promise.resolve(gliUtenti);
@@ -1128,9 +1147,56 @@
       });
   }
 
+  /* «Per chi e'» il codice: si riempie con gli utenti della casa.
+   *
+   * Compare solo se ce n'e' piu' di uno: in una casa con un utente solo non
+   * c'e' niente da scegliere, e una casella con una voce sola fa una domanda
+   * inutile. Di serie resta su «chi sta usando questa pagina», che e' quello
+   * che serve quasi sempre. */
+  function riempiIlPerChi() {
+    var riga = trova("per-chi-riga");
+    var scelta = trova("per-chi");
+    if (!riga || !scelta) return;
+    chiediGliUtenti()
+      .then(function (utenti) {
+        if (utenti.length < 2) {
+          riga.hidden = true;
+          return;
+        }
+        var prima = scelta.value;
+        scelta.textContent = "";
+        var chiPreme = vediPagina.createElement("option");
+        chiPreme.value = "";
+        chiPreme.textContent = "chi sta usando questa pagina";
+        scelta.appendChild(chiPreme);
+        utenti.forEach(function (uno) {
+          var voce = vediPagina.createElement("option");
+          voce.value = uno.id;
+          /* `textContent`: il nome di un utente l'ha scritto una persona. */
+          voce.textContent = uno.nome;
+          scelta.appendChild(voce);
+        });
+        scelta.value = prima || "";
+        riga.hidden = false;
+      })
+      .catch(function () {
+        /* Senza l'elenco non si puo' scegliere, e non e' un guaio: il codice
+         * si fabbrica comunque, intestato a chi sta premendo. */
+        riga.hidden = true;
+      });
+  }
+
+  riempiIlPerChi();
+
   trova("fabbrica").addEventListener("click", function () {
     avvisa("");
-    chiedi("api/codice", { method: "POST" })
+    var scelta = trova("per-chi");
+    var riga = trova("per-chi-riga");
+    var voluto = scelta && riga && !riga.hidden ? scelta.value : "";
+    chiedi("api/codice", {
+      method: "POST",
+      body: JSON.stringify(voluto ? { utente: voluto } : {}),
+    })
       .then(function (fatto) {
         disegnaIlCodice(fatto.codice, fatto.scadeIl);
       })

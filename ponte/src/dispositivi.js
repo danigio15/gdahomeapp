@@ -43,6 +43,14 @@ const nomePulito = (scritto) =>
     .trim()
     .slice(0, 60);
 
+/* L'identificativo di un utente di Home Assistant: trentadue cifre
+ * esadecimali. Quello che non ha quella forma diventa «non si sa di chi e'» —
+ * cioe' vede tutto, come prima — invece di un fantasma che non apre niente. */
+function utentePulito(chi) {
+  const detto = String(chi || "").trim();
+  return /^[a-f0-9]{32}$/i.test(detto) ? detto : "";
+}
+
 export class Dispositivi {
   constructor({
     cartella = "/data",
@@ -69,13 +77,22 @@ export class Dispositivi {
 
   /* Quello che si puo' far vedere: l'impronta resta dentro. */
   elenco() {
-    return this.lista.map(({ id, nome, sistema, natoIl, vistoIl }) => ({
+    return this.lista.map(({ id, nome, sistema, natoIl, vistoIl, utente }) => ({
       id,
       nome,
       sistema,
       natoIl,
       vistoIl,
+      /* Di chi e'. Va detto a schermo: un telefono senza padrone vede tutte
+       * le plance, ed e' esattamente quello di cui bisogna accorgersi. */
+      utente: utentePulito(utente),
     }));
+  }
+
+  /* Di chi e' questo telefono. `""` per uno che non c'e' e per uno abbinato
+   * prima di oggi — e in tutti e due i casi vuol dire «vede tutto». */
+  utenteDi(id) {
+    return utentePulito(this.lista.find((uno) => uno.id === id)?.utente);
   }
 
   quanti() {
@@ -86,7 +103,7 @@ export class Dispositivi {
    *
    * Il segno esce da qui una volta sola, adesso. Chi lo perde riabbina: non
    * c'e' nessuna strada per rileggerlo, ed e' voluto. */
-  abbina({ nome, sistema } = {}) {
+  abbina({ nome, sistema, utente = "" } = {}) {
     if (this.lista.length >= this.massimi) {
       throw new TroppiDispositivi(`sono gia' abbinati ${this.massimi} dispositivi`);
     }
@@ -100,6 +117,18 @@ export class Dispositivi {
       chiave,
       natoIl: this.adesso(),
       vistoIl: this.adesso(),
+      /* Di chi e' questo telefono, secondo l'utente di Home Assistant che ha
+       * fabbricato il codice.
+       *
+       * Serve a «chi vede quale plancia»: il QR abbina un telefono e non un
+       * utente, e senza questa riga quel telefono chiede le plance al filo e
+       * se le prende **tutte** — comprese quelle riservate a qualcun altro.
+       * Cosi' invece eredita un utente, e vede quello che vede lui.
+       *
+       * Vuoto vuol dire «non si sa di chi e'», e chi non si sa vede tutto: e'
+       * come sono i telefoni abbinati prima di oggi, e non si spengono a
+       * tradimento il giorno dell'aggiornamento. */
+      utente: utentePulito(utente),
     };
     this.lista.push(dispositivo);
     this.archivio.salva();

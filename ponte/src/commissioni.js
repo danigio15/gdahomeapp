@@ -50,7 +50,7 @@ import { DISPOSITIVI_MASSIMI, ENTITA_MASSIME } from "./catalogo.js";
 import { BASE_DELLE_FOTO, BASE_DI_CASA, FOTO_MASSIMA } from "./foto.js";
 import { ChatHaDettoNo } from "./chat.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
-import { QuellaPlanciaNo, TroppePlance } from "./plance.js";
+import { laVede, QuellaPlanciaNo, TroppePlance } from "./plance.js";
 
 export const TIPO = "ponte/http";
 export const TIPO_PLANCIA = "ponte/plancia";
@@ -279,12 +279,24 @@ export class Commissioni {
   /* La risposta a un messaggio riconosciuto, nella forma di Home Assistant.
    * Non solleva mai: un errore e' una risposta con `success: false`, come
    * farebbe Home Assistant per un comando andato storto. */
-  async rispondi(detto) {
+  /* `chiChiede` e' chi sta dall'altra parte del filo, quando si sa: il
+   * telefono che ha aperto il filo — e quindi l'utente di Home Assistant a cui
+   * quel telefono e' intestato — oppure l'utente che sta guardando la plancia
+   * dentro Home Assistant.
+   *
+   * Serve a una cosa: le plance che si riservano a qualcuno non devono
+   * comparire a chi non le vede. Senza questa riga il QR abbinerebbe un
+   * telefono che poi chiede l'elenco e se lo prende tutto — e «chi la vede»
+   * varrebbe solo dentro Home Assistant.
+   *
+   * `null` o vuoto vuol dire «non si sa chi chiede», e chi non si sa vede
+   * tutto: e' come sono i telefoni abbinati prima di oggi. */
+  async rispondi(detto, { chiChiede = "", amministra = null } = {}) {
     const id = detto?.id ?? null;
     const tipo = detto?.type;
     if (tipo === TIPO) return this._http(detto);
-    if (tipo === TIPO_PLANCIA) return this._laPlancia(detto);
-    if (PLANCE.has(tipo)) return this._lePlance(detto);
+    if (tipo === TIPO_PLANCIA) return this._laPlancia(detto, chiChiede, amministra);
+    if (PLANCE.has(tipo)) return this._lePlance(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("ponte/chat/")) return this._chatDellApp(detto);
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
       return this._segnalazioni(detto);
@@ -341,16 +353,36 @@ export class Commissioni {
    * scelto una delle altre. E l'elenco viaggia insieme, perche' il selettore
    * lo disegna chi ha appena chiesto la plancia: una seconda domanda per
    * sapere quante sono sarebbe un secondo giro sul filo per niente. */
-  _laPlancia(detto) {
+  _laPlancia(detto, chiChiede = "", amministra = null) {
     const id = detto?.id ?? null;
     if (!this.plancia?.cE) return no(id, "not_found", "questo ponte non ha la plancia");
     const voluto = typeof detto?.profilo === "string" ? detto.profilo.trim() : "";
-    const quale = this.plance ? (voluto ? this.plance.quale(voluto) : this.plance.prima) : null;
+    const sue = this._lePlanceSue(chiChiede, amministra);
+    let quale = this.plance ? (voluto ? this.plance.quale(voluto) : this.plance.prima) : null;
     if (voluto && !quale) return no(id, "not_found", "quella plancia non c'e'");
+    /* Chiedere una plancia che non e' sua non e' un errore da spiegare: e'
+     * come chiedere la prima. Dirgli «quella esiste ma non e' tua» sarebbe
+     * dirgli una cosa che non deve sapere, e per lui non cambia niente.
+     *
+     * E se **nessuna** e' sua, la prima si apre comunque: una casa dove un
+     * telefono non vede niente e' un telefono che si apre sul vuoto, e chi ha
+     * riservato tutte le plance a qualcun altro non ha chiesto quello. */
+    if (quale && !sue.some((una) => una.profilo === quale.profilo)) {
+      quale = sue[0] ?? this.plance?.prima ?? null;
+    }
     return si(id, {
       ...this.plancia.descrizione(quale),
-      plance: this.plance ? this.plance.elenco() : [],
+      plance: sue.length ? sue : this.plance ? this.plance.elenco() : [],
     });
+  }
+
+  /* Le plance che questo si vede. La regola sta in un posto solo —
+   * `laVede` in `plance.js` — ed e' la stessa che vale dentro Home
+   * Assistant. */
+  _lePlanceSue(chiChiede = "", amministra = null) {
+    const tutte = this.plance ? this.plance.elenco() : [];
+    if (!chiChiede) return tutte;
+    return tutte.filter((una) => laVede(una, chiChiede, amministra));
   }
 
   /* Aggiungere, rinominare e togliere una plancia.
@@ -359,31 +391,34 @@ export class Commissioni {
    * restasse, chi rifacesse una plancia con lo stesso nome si ritroverebbe
    * dentro il lavoro di quella di prima. Quel cassetto lo tiene la cassetta
    * della configurazione, e a lei si chiede. */
-  _lePlance(detto) {
+  _lePlance(detto, chiChiede = "", amministra = null) {
     const id = detto?.id ?? null;
     const plance = this.plance;
     if (!plance) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    const sue = () => {
+      const mie = this._lePlanceSue(chiChiede, amministra);
+      return mie.length ? mie : plance.elenco();
+    };
     const titolo = typeof detto.titolo === "string" ? detto.titolo : "";
     const profilo = typeof detto.profilo === "string" ? detto.profilo : "";
     try {
       switch (PLANCE.get(detto.type)) {
         case "elenco":
-          return si(id, { plance: plance.elenco() });
+          return si(id, { plance: sue() });
         case "aggiungi": {
           const nuova = plance.aggiungi(titolo);
-          return si(id, { plance: plance.elenco(), quale: nuova });
+          return si(id, { plance: sue(), quale: nuova });
         }
         case "rinomina":
           return si(id, {
             quale: plance.rinomina(profilo, titolo),
-            plance: plance.elenco(),
+            plance: sue(),
           });
         case "togli":
-          return si(id, {
-            plance: plance.togli(profilo, {
-              dimentica: (quello) => this.configurazione?.dimentica(quello),
-            }),
+          plance.togli(profilo, {
+            dimentica: (quello) => this.configurazione?.dimentica(quello),
           });
+          return si(id, { plance: sue() });
         default:
           return no(id, "unknown_command", `non conosco ${detto.type}`);
       }

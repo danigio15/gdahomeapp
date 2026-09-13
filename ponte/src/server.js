@@ -176,8 +176,11 @@ export function costruisciLaPortaDellApp({
         male(risposta, 400, errore.message);
         return;
       }
+      let perChi = "";
       try {
-        abbinamento.consuma(corpo.codice);
+        /* `consuma` dice **per chi** era il codice: il telefono si intesta a
+         * quello li', e da quel momento vede le plance che vede lui. */
+        perChi = abbinamento.consuma(corpo.codice)?.utente || "";
       } catch (errore) {
         if (errore instanceof TroppiTentativi) {
           registro.attenzione(`troppi tentativi di abbinamento da ${da}`);
@@ -195,6 +198,7 @@ export function costruisciLaPortaDellApp({
         const { dispositivo, segno, chiave } = dispositivi.abbina({
           nome: corpo.nome,
           sistema: corpo.sistema,
+          utente: perChi,
         });
         /* Il codice e' stato speso: l'attesa al centralino non serve piu', e
          * lasciarla aperta vorrebbe dire tenere una via buona per qualcosa che
@@ -438,6 +442,11 @@ export function costruisciLaConsole({
       commissioni,
       registro,
       da: socket.remoteAddress || "?",
+      /* Chi sta guardando, secondo l'ingress. Serve al selettore delle plance
+       * dentro la pagina: senza, chi apre la plancia che gli e' permessa
+       * vedrebbe comunque in elenco quelle riservate ad altri. */
+      chiGuarda: chi,
+      utenti,
     });
     cucitura.avvia().catch((errore) => {
       registro.errore(`la cucitura della plancia e' andata storta: ${errore?.message || errore}`);
@@ -870,12 +879,50 @@ async function api({
       male(risposta, 409, `sono gia' abbinati ${opzioni.dispositiviMassimi} dispositivi`);
       return;
     }
-    const { codice, scadeIl } = abbinamento.nuovo();
+    /* **Per chi** e' questo codice.
+     *
+     * E' la riga che fa valere «chi vede quale plancia» anche nell'app: il
+     * telefono che usera' questo codice sara' intestato a quest'utente, e
+     * vedra' le plance che vede lui. Senza, il QR abbinerebbe un telefono che
+     * poi chiede l'elenco e se lo prende tutto.
+     *
+     * Di serie e' **chi sta premendo il tasto**, che l'ingress ci dice. Ma chi
+     * genera un codice spesso lo genera **per un altro** — lo fa
+     * l'amministratore, e passa il telefono a chi ci abita — e allora lo puo'
+     * dire (`utente` nel corpo). Si accetta solo un utente che in questa casa
+     * esiste davvero: un identificativo inventato diventerebbe un telefono
+     * intestato a un fantasma, che non vede nessuna plancia riservata e nessuno
+     * capisce perche'. */
+    let perChi = chiGuarda(richiesta);
+    if (metodo === "POST") {
+      let detto = {};
+      try {
+        detto = await corpoDiJson(richiesta);
+      } catch (_errore) {
+        detto = {};
+      }
+      const voluto = String(detto?.utente || "").trim();
+      if (voluto && utenti) {
+        try {
+          const casa = await utenti.elenco();
+          if (casa.some((uno) => uno.id === voluto)) perChi = voluto;
+        } catch (_errore) {
+          /* Home Assistant non risponde: si tiene chi sta premendo. Meglio un
+           * codice intestato a chi lo fabbrica che uno intestato a nessuno. */
+        }
+      }
+    }
+    const { codice, scadeIl, utente } = abbinamento.nuovo(perChi);
     /* Al centralino ne va detta l'**impronta**, perche' possa instradare chi
      * si presenta con questo codice. Il codice li' non arriva mai. */
     chiamata?.apriLAbbinamento(impronta(codice));
     registro.info("codice di abbinamento fabbricato dalla console");
-    json(risposta, { codice, scadeIl, invito: await unInvito(codice, ritorno, chiamata) });
+    json(risposta, {
+      codice,
+      scadeIl,
+      utente,
+      invito: await unInvito(codice, ritorno, chiamata),
+    });
     return;
   }
 

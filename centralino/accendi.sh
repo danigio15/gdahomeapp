@@ -552,7 +552,11 @@ $NOME_DEL_TRAMITE {
 	# che ha in configurazione, \`wss://<nome>\` — e il link per il browser lo
 	# ricava da quello: stesso nome, \`/app/\` in fondo. Sulla nuvola e' cosi'
 	# da sempre; qui l'app stava solo sul nome corto, e quel link finiva su
-	# «qui non c'e' niente». Sono gli stessi file, serviti due volte.
+	# «qui non c'e' niente».
+	#
+	# **Ed e' l'unico posto da cui l'app si serve.** Il nome corto rimanda qui
+	# invece di servire una seconda copia: il browser tiene l'abbinamento per
+	# indirizzo, e due indirizzi vorrebbero dire due abbinamenti da fare.
 	handle /app {
 		redir https://$NOME_DEL_TRAMITE/app/ permanent
 	}
@@ -568,16 +572,23 @@ $NOME_DEL_TRAMITE {
 	}
 }
 
-# I file dell'app, quelli compilati per il browser. Li serve Caddy e non il
-# tramite: sono file fermi, e il tramite ha altro da fare.
+# Il nome corto dell'app **rimanda**, e non serve una seconda copia.
 #
-# \`try_files\` manda all'indice quello che non e' un file: l'app decide le sue
-# schermate da sola, e chi ricarica una pagina interna non deve trovare un 404.
+# Prima serviva gli stessi file, e sembrava comodo: due indirizzi per la stessa
+# app. Non lo era, e il motivo e' il browser. L'abbinamento di un telefono — il
+# segno che apre casa — il browser lo tiene **per indirizzo**: quello che si
+# abbina su un nome non esiste sull'altro. Con due nomi che servono la stessa
+# app, chi ci arriva dal bottone della console (\`<tramite>/app/\`) e chi ci
+# arriva dal preferito sono due app diverse per il browser, e a ognuna tocca
+# abbinarsi di nuovo — bruciando ogni volta uno degli otto posti dei telefoni.
+#
+# Quindi uno solo conta, e l'altro ci porta. Quello che conta e' quello **sotto
+# il tramite**: e' l'unico che la console sa fabbricare da se', sapendo del
+# centralino solo il nome che ha in configurazione. Il nome corto resta valido
+# per sempre — chi l'ha scritto su un biglietto non ha sbagliato — ma ci
+# rimanda, portandosi dietro il pezzo di strada che segue.
 $NOME_DELL_APP {
-	encode zstd gzip
-	root * $DOVE/app
-	try_files {path} /index.html
-	file_server
+	redir https://$NOME_DEL_TRAMITE/app{uri} permanent
 }
 
 # Il nome nudo: una pagina sola, ferma, che dice cos'e' gdahome e da dove si
@@ -759,7 +770,8 @@ fi
 cat <<FINE
 
   Il sito:                  https://$NOME_DEL_SITO
-  L'app da browser:         https://$NOME_DELL_APP
+  L'app da browser:         https://$NOME_DEL_TRAMITE/app/
+  (e https://$NOME_DELL_APP ci rimanda)
   La chat, per rispondere:  https://$NOME_DEL_TRAMITE/console/
 
   ${giallo}$DETTO_DELLA_CHIAVE${spento}

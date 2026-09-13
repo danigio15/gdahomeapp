@@ -58,6 +58,18 @@ e a chi ha un tablet in cucina che deve aprire una plancia sola.
 - Gli utenti li chiede Home Assistant al momento: se togli una persona da casa,
   sparisce anche da qui.
 
+**E vale anche per l'app.** Il QR abbina un telefono, non un utente: perché
+allora il telefono veda le plance giuste, **il codice si intesta a qualcuno**.
+Di serie è chi sta usando la pagina; se il codice lo fai per un altro — lo fai
+tu e passi il telefono — lo dici in **Per chi è**, accanto al tasto. Da quel
+momento quel telefono vede quello che vede lui, e cambiando le spunte cambia
+subito: non c'è niente da riabbinare.
+
+In **Telefoni abbinati** c'è scritto di chi è ogni telefono. Quelli abbinati
+prima di questa versione dicono «vede tutte le plance», perché è così: nessuno
+li aveva intestati, e non si spengono da soli. Per dargli un padrone basta
+togliere l'associazione e rifarla.
+
 **Cosa fa, per bene.** Chi non è abilitato apre quella voce e trova scritto che
 non è abilitato: la plancia non gli arriva. Non gli arriva nascosta — non gli
 arriva. Il controllo lo fa l'add-on, e sa chi sta guardando perché è Home
@@ -194,7 +206,11 @@ e lo chiede `utenti.js` a Home Assistant (`config/auth/list`, risposta tenuta un
 minuto, e se Home Assistant non risponde si riusa l'ultima buona invece di
 chiudere la porta in faccia a chi amministra). Il filo della plancia — uno per
 tutte, e non sa quale pagina l'ha aperto — si chiude a chi non vede **nessuna**
-plancia di questa casa. La cartina si porta dietro le stesse due cose per un
+plancia di questa casa. Nell'app la stessa regola passa dal telefono: il codice
+di abbinamento porta con sé l'utente (`abbinamento.js`), il telefono lo eredita
+(`dispositivi.js`, campo `utente`), e `commissioni.js` filtra l'elenco con la
+stessa `laVede`. Un telefono senza utente — abbinato prima, o con un codice
+fatto fuori dall'ingress — vede tutto, come prima. La cartina si porta dietro le stesse due cose per un
 motivo solo: dire subito «non è abilitata per te» invece di lasciare un riquadro
 bianco. La prima c'è sempre, tiene il profilo `primary` e non si toglie; le
 altre si aggiungono, si rinominano e si tolgono dalla pagina o dall'app. Ogni

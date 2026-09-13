@@ -21,6 +21,16 @@ const MINUTO = 60 * 1000;
 const TENTATIVI_MASSIMI = 10;
 const FINESTRA_DEI_TENTATIVI = 15 * MINUTO;
 
+/* L'identificativo di un utente di Home Assistant: trentadue cifre
+ * esadecimali. Tenere solo quella forma vuol dire che nessuno ci scrive dentro
+ * una frase, e che un valore arrivato storto diventa «non si sa di chi e'» —
+ * cioe' vede tutto, come prima — invece di un fantasma che non corrisponde a
+ * nessuno e non apre niente. */
+function utentePulito(chi) {
+  const detto = String(chi || "").trim();
+  return /^[a-f0-9]{32}$/i.test(detto) ? detto : "";
+}
+
 export class Abbinamento {
   constructor({ minutiDelCodice = 5, adesso = () => Date.now() } = {}) {
     this.minutiDelCodice = minutiDelCodice;
@@ -29,8 +39,21 @@ export class Abbinamento {
     this._sbagliati = [];
   }
 
-  /* Fabbrica un codice nuovo e spegne quello di prima. */
-  nuovo() {
+  /* Fabbrica un codice nuovo e spegne quello di prima.
+   *
+   * `utente` e' **per chi** e' questo codice: l'identificativo dell'utente di
+   * Home Assistant a cui il telefono che lo usera' sara' intestato.
+   *
+   * Serve per una cosa sola, ed e' la riga che tiene in piedi «chi vede quale
+   * plancia» anche nell'app. Il QR abbina un **telefono**, non un utente: quel
+   * telefono poi chiede le plance al filo, e senza questa riga se le prende
+   * tutte — comprese quelle riservate a qualcun altro. Con questa riga il
+   * telefono eredita un utente, e vede quello che vede lui.
+   *
+   * Vuoto vuol dire «non si sa di chi e'», e un telefono senza utente vede
+   * tutto: e' come sono i telefoni abbinati prima di oggi, e non si spengono
+   * a tradimento. */
+  nuovo(utente = "") {
     const codice = codiceNuovo();
     this._codice = {
       /* Il codice **in chiaro**, e solo qui.
@@ -45,11 +68,12 @@ export class Abbinamento {
       codice,
       impronta: impronta(codice),
       scadeIl: this.adesso() + this.minutiDelCodice * MINUTO,
+      utente: utentePulito(utente),
     };
     /* Un codice nuovo azzera i tentativi: chi lo ha appena fabbricato sta
      * guardando lo schermo, e non deve pagare per chi ha bussato prima. */
     this._sbagliati = [];
-    return { codice, scadeIl: this._codice.scadeIl };
+    return { codice, scadeIl: this._codice.scadeIl, utente: this._codice.utente };
   }
 
   /* Il codice vivo, per chi lo deve rimettere a schermo. Non esce mai dalla
@@ -58,7 +82,11 @@ export class Abbinamento {
   vivo() {
     this._scadenza();
     if (!this._codice) return null;
-    return { codice: this._codice.codice, scadeIl: this._codice.scadeIl };
+    return {
+      codice: this._codice.codice,
+      scadeIl: this._codice.scadeIl,
+      utente: this._codice.utente,
+    };
   }
 
   annulla() {
@@ -74,6 +102,7 @@ export class Abbinamento {
     return {
       attivo: Boolean(this._codice),
       scadeIl: this._codice?.scadeIl ?? null,
+      utente: this._codice?.utente ?? "",
       tentativiSbagliati: this._sbagliati.length,
       bloccatoFinoA,
     };
@@ -95,10 +124,16 @@ export class Abbinamento {
     }
 
     /* Usato una volta e finito. Un codice che resta buono fino alla scadenza
-     * abbina due telefoni se qualcuno lo legge da sopra la spalla. */
+     * abbina due telefoni se qualcuno lo legge da sopra la spalla.
+     *
+     * Torna **per chi era**, e non `true`: il telefono va intestato a quello
+     * li', e questo e' l'unico posto che lo sa. Chi chiama lo passa a
+     * `dispositivi.abbina`. Resta vero come prima per chi lo usava come un
+     * sì — una stringa vuota non e' falsa, ma un oggetto sì lo e' sempre. */
+    const utente = this._codice.utente;
     this._codice = null;
     this._sbagliati = [];
-    return true;
+    return { utente };
   }
 
   _scadenza() {

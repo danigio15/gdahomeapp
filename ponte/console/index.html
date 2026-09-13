@@ -116,6 +116,18 @@
                 <span>Premi <b>Genera QR code</b>, e inquadralo.</span>
               </li>
             </ol>
+            <!-- Per chi e' il codice.
+                 Il QR abbina un **telefono**, e il telefono eredita l'utente
+                 di chi ha fatto il codice: da li' in poi vede le plance che
+                 vede lui. Chi amministra la casa spesso fabbrica il codice
+                 **per un altro** — lo fa lui e passa il telefono — e allora
+                 lo deve poter dire, se no quel telefono resta intestato a lui
+                 e vede tutto. Si vede solo dove c'e' piu' di un utente: in
+                 una casa con un utente solo non c'e' niente da scegliere. -->
+            <div class="riga-di-tasti" id="per-chi-riga" hidden>
+              <label class="etichetta" for="per-chi">Per chi è</label>
+              <select id="per-chi"></select>
+            </div>
             <div class="bottoni">
               <button id="fabbrica" type="button">Genera QR code</button>
               <button id="annulla" type="button" class="tenue" hidden>Annulla</button>

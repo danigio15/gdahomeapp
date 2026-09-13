@@ -19,6 +19,7 @@ library;
 
 import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../casa/archivio_delle_case.dart';
@@ -241,6 +242,44 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       setState(() {
         _sto = false;
         _male = errore.spiegazione;
+      });
+    } catch (errore) {
+      /* L'abbinamento e' andato, e non siamo riusciti a ricordarlo.
+       *
+       * A questo punto la casa **ci ha gia' fatto entrare**: ha consumato il
+       * codice e ha segnato questo telefono fra i suoi. Quello che non e'
+       * riuscito e' scriverselo qui, e allora alla prossima apertura l'app
+       * chiede di abbinarsi da capo — e ogni giro brucia un altro posto fra i
+       * telefoni di quella casa, senza che nessuno dica niente.
+       *
+       * Prima questo caso finiva fuori da tutti e due i `catch` di sopra:
+       * l'errore saliva, la rotella restava a girare, e non c'era una riga
+       * da nessuna parte. Adesso si legge, e si legge **cosa fare**.
+       *
+       * Nel browser la causa e' quasi sempre una sola, e vale la pena dirla:
+       * quello che l'app salva lo cifra il browser, e il browser la cifratura
+       * la da' solo a una pagina che considera sicura. Su una pagina segnata
+       * «non sicuro» — un certificato che qualcosa in mezzo ha sostituito, un
+       * indirizzo `http` — la cifratura non c'e', e non c'e' niente che l'app
+       * possa fare per aggirarla. */
+      if (!mounted) return;
+      setState(() {
+        _sto = false;
+        _male = kIsWeb
+            ? 'La casa mi ha fatto entrare, ma questo browser non mi lascia '
+                  'ricordarlo: riaprendo la pagina dovresti abbinarti di nuovo.\n\n'
+                  'Succede quando il browser non considera sicura questa '
+                  'pagina — guarda se accanto all\'indirizzo c\'è scritto '
+                  '«Non sicuro». Un antivirus che controlla il traffico, un '
+                  'filtro, o un indirizzo che non comincia per https bastano.\n\n'
+                  'Intanto togli questo abbinamento da «Telefoni abbinati», '
+                  'nella pagina di gdahome in Home Assistant: il posto resta '
+                  'occupato.'
+            : 'La casa mi ha fatto entrare, ma non riesco a ricordarlo su '
+                  'questo telefono: riaprendo l\'app dovresti abbinarti di '
+                  'nuovo.\n\nTogli questo abbinamento da «Telefoni '
+                  'abbinati», nella pagina di gdahome in Home Assistant, e '
+                  'riprova.\n\n($errore)';
       });
     }
   }
