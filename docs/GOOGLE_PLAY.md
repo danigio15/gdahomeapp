@@ -203,8 +203,10 @@ rifa' un account dopo esserselo fatto chiudere: si risponde la verita', e se e'
 il primo la verita' e' **No**.
 
 **«Website»** — serve a verificare l'identita' e **non** si vede sul negozio.
-Va bene `https://github.com/danigio15/gdahomeapp`: e' pubblico, dice cos'e'
-gdahome e porta il tuo nome. In alternativa `https://webapp.gdahome.org`.
+Ci va `https://gdahome.org`: e' il sito di gdahome, sta su un dominio nostro e
+racconta cos'e' l'app. (Prima qui c'era il link a GitHub, che andava bene
+finche' il sito non c'era: se l'hai gia' mandato cosi', il campo si cambia
+quando vuoi dal profilo sviluppatore.)
 
 ### Quello che il negozio chiede, e quello che abbiamo
 
@@ -214,7 +216,7 @@ gdahome e porta il tuo nome. In alternativa `https://webapp.gdahome.org`.
 | Icona 512×512 | `docs/negozio/icona-512.png` |
 | Grafica 1024×500 | `docs/negozio/grafica-1024x500.png` |
 | Almeno 2 fotografie del telefono | `docs/negozio/1-…` → `5-…`, cinque, già della misura giusta |
-| Informativa privacy a un indirizzo pubblico | `docs/PRIVACY.md` — l'indirizzo è `https://github.com/danigio15/gdahomeapp/blob/main/docs/PRIVACY.md` |
+| Informativa privacy a un indirizzo pubblico | **`https://gdahome.org/privacy.html`** — è `sito/privacy.html`, gemella di `docs/PRIVACY.md` |
 | Titolo, descrizione breve e lunga | qui sotto, da copiare |
 | Modulo «Sicurezza dei dati» | le risposte qui sotto |
 | Fascia d'età, categoria, contatti | si compilano lì, cinque minuti |
