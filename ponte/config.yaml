@@ -38,7 +38,7 @@ name: gdahome
 # non cambia, e nel negozio «Aggiorna» compare **solo** se questo numero si
 # alza: da qui il quarto. `1.4.24.1` si legge «la plancia 1.4.24, la prima
 # correzione nostra».
-version: "1.4.26.11"
+version: "1.4.26.12"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.

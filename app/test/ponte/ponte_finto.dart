@@ -133,6 +133,22 @@ class PonteFinto {
     /* Le commissioni: quello che il ponte vero fa da se', senza passare da
      * Home Assistant. Qui si serve da una cartella in memoria. */
     if (detto['type'] == 'ponte/http') {
+      /* I file della plancia non si servono a chi non vede nessuna plancia:
+       * fa cosi' il ponte vero, e serve che lo faccia anche questo, se no
+       * l'unica strada rifiutata sarebbe quella principale. */
+      final dove = detto['percorso'] as String? ?? '';
+      if (nientePerTe && dove.startsWith('/dashboardmodern_static/')) {
+        _manda(presa, {
+          'id': id,
+          'type': 'result',
+          'success': false,
+          'error': {
+            'code': 'niente_per_te',
+            'message': 'in questa casa non ci sono plance per la tua utenza',
+          },
+        });
+        return;
+      }
       _manda(presa, {'id': id, ..._commissione(detto)});
       return;
     }

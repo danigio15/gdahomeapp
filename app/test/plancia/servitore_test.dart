@@ -587,6 +587,31 @@ void main() {
       },
     );
   });
+  test(
+    'la plancia che non e\' tua lo dice in una pagina che si legge',
+    () async {
+      /* Quello che si vedeva prima era una riga di testo a monospazio
+       * incollata in cima, sotto l'orologio del telefono, che diceva anche
+       * una bugia: «il ponte non ha risposto», proprio mentre il ponte aveva
+       * risposto benissimo — aveva detto no.
+       *
+       * Questa pagina la vede chi ha un add-on di oggi e un'app di ieri:
+       * l'app nuova ha la sua schermata e viene prima. */
+      ponte.nientePerTe = true;
+      final (stato, tipo, byte) = await prendi('$_base/legacy/dashboard.html');
+      final pagina = utf8.decode(byte);
+
+      expect(stato, 403, reason: 'e\' un rifiuto, non un intoppo');
+      expect(tipo, contains('text/html'));
+      expect(pagina, contains('Non hai plance associate alla tua utenza'));
+      expect(pagina, contains('Chi la vede'));
+      expect(
+        pagina,
+        isNot(contains('il ponte non ha risposto')),
+        reason: 'il ponte ha risposto: ha detto no',
+      );
+    },
+  );
 }
 
 Future<void> _finoA(
