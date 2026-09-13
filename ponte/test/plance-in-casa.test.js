@@ -386,6 +386,16 @@ test("se la risorsa non si dichiara, le Plance si fanno comunque", async () => {
      * legge solo nel registro e' un guasto che nessuno legge. */
     assert.equal(b.in_casa.esito.fatto, false);
     assert.match(b.in_casa.esito.quando, /^\d{4}-\d{2}-\d{2}T/);
+
+    /* E **cosa ha risposto Lovelace**, parola per parola, in un campo suo.
+     *
+     * Non e' lo stesso che averlo dentro `perche`: la console su questo campo
+     * cambia consiglio — una cartina che Lovelace non dichiara non si aggiusta
+     * ricaricando la pagina ne' riavviando Home Assistant, va scritta a mano in
+     * `configuration.yaml` — e per cambiare consiglio deve poterlo riconoscere
+     * senza leggere una frase. */
+    assert.equal(esito.risorsa, "");
+    assert.match(esito.risorsa_guaio, /modalita' YAML/);
   } finally {
     b.via();
   }
@@ -502,6 +512,8 @@ test("se la www c'era gia', non si chiede nessun riavvio", async () => {
     /* La cartina e' comunque stata dichiarata adesso, e quello si dice: il
      * browser una risorsa nuova la va a prendere al giro dopo. */
     assert.equal(esito.ricarica, true);
+    assert.equal(esito.risorsa, "aggiunta");
+    assert.equal(esito.risorsa_guaio, "");
   } finally {
     b.via();
   }
@@ -525,6 +537,47 @@ test("al secondo avvio non si chiede ne' riavvio ne' ricarica", async () => {
     assert.equal(esito.fatto, true);
     assert.equal(esito.riavvia, false);
     assert.equal(esito.ricarica, false);
+  } finally {
+    b.via();
+  }
+});
+
+test("l'esito dice cosa ne pensa Home Assistant, riletto da lui", async () => {
+  /* Tre passaggi riusciti non vogliono dire che Home Assistant l'abbia preso.
+   * Le risposte le abbiamo viste noi; questa riga dice cosa c'e' scritto **da
+   * lui** adesso — se la cartina e' nel suo elenco delle risorse, e che tessera
+   * c'e' davvero nella Plancia. Sono i due fatti che mancavano a chi guarda una
+   * plancia che esce con «Errore di configurazione». */
+  const b = banco();
+  try {
+    const esito = await b.in_casa.sistema();
+    assert.equal(esito.fatto, true);
+    assert.equal(esito.risorsa_in_elenco, true);
+    assert.equal(esito.tessera_nella_vista, "custom:gdahome-plancia");
+  } finally {
+    b.via();
+  }
+});
+
+test("se Lovelace non tiene le risorse, l'esito lo dice invece di tacere", async () => {
+  const b = banco();
+  try {
+    const vera = b.casa.chiedi;
+    b.casa.chiedi = async (comando) => {
+      if (String(comando.type).startsWith("lovelace/resources")) {
+        throw new Error("lovelace in modalita' YAML");
+      }
+      return vera(comando);
+    };
+    const esito = await b.in_casa.sistema();
+
+    /* «Non lo so» e «no» sono due cose diverse: qui non si e' potuto chiedere,
+     * e dirlo come un «no» manderebbe chi legge a cercare dalla parte
+     * sbagliata. */
+    assert.equal(esito.risorsa_in_elenco, null);
+    /* Ma la Plancia c'e' lo stesso, e dentro c'e' la tessera giusta: il pezzo
+     * che manca e' uno solo, e adesso si vede quale. */
+    assert.equal(esito.tessera_nella_vista, "custom:gdahome-plancia");
   } finally {
     b.via();
   }

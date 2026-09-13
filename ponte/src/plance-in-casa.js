@@ -191,11 +191,21 @@ export class PlanceInCasa {
 
     const io = await this._chiSiamo();
 
+    /* Cosa dice **Lovelace** della cartina, e non cosa ne pensiamo noi.
+     *
+     * E' la riga che mancava per smettere di indovinare. Se questa chiamata
+     * non riesce, la tessera `custom:gdahome-plancia` non esiste in nessuna
+     * pagina — e la plancia aperta dalle «Plance» esce con «Errore di
+     * configurazione», che e' quello che si stava guardando senza sapere
+     * perche'. Il motivo tipico e' uno: le dashboard tenute in YAML, dove
+     * Home Assistant le risorse dallo storage non le legge per scelta sua. */
     let risorsa = "";
+    let risorsaGuaio = "";
     try {
       risorsa = await this.laRisorsa();
     } catch (errore) {
-      guai.push(`la cartina non si e' dichiarata a Lovelace (${errore?.message || errore})`);
+      risorsaGuaio = String(errore?.message || errore);
+      guai.push(`la cartina non si e' dichiarata a Lovelace (${risorsaGuaio})`);
     }
 
     const quali = this.plance.elenco();
@@ -219,9 +229,17 @@ export class PlanceInCasa {
     /* Due cose da dire anche quando e' andato tutto bene, e non sono dettagli:
      * senza la prima la plancia non si apre, e senza la seconda non si apre
      * finche' non si ricarica la pagina. */
+    /* E quello che ne dice Home Assistant, riletto da lui. */
+    const come = await this.controlla();
+
     const consigli = {
+      ...come,
       riavvia: this.riavvia,
       ricarica: risorsa === "aggiunta",
+      /* Com'e' andata a dichiararla: `aggiunta`, `c'era`, `aggiornata`, o
+       * niente e allora `risorsa_guaio` dice cosa ha risposto Lovelace. */
+      risorsa,
+      risorsa_guaio: risorsaGuaio,
       /* Dov'e' la cartina, per chi la puo' provare davvero.
        *
        * Da qui dentro non si sa se Home Assistant la serve: il file e' sul
@@ -437,6 +455,44 @@ export class PlanceInCasa {
         },
       ],
     };
+  }
+
+  /* Cosa ne pensa Home Assistant, riletto da lui.
+   *
+   * Tre passaggi riusciti non vogliono dire che l'abbia preso: le risposte le
+   * abbiamo viste noi, e quello che conta e' cosa c'e' scritto **da lui**
+   * adesso. Quindi si rilegge l'elenco delle risorse e la vista della prima
+   * Plancia, e si dice cosa si e' trovato.
+   *
+   * Non aggiusta niente ed e' apposta: e' l'unica riga che, da qui, dice a chi
+   * guarda «Errore di configurazione» dove sta il pezzo che manca. */
+  async controlla() {
+    const come = { risorsa_in_elenco: null, tessera_nella_vista: "" };
+    try {
+      const dentro = await this.casa.chiedi({ type: "lovelace/resources" });
+      const elenco = Array.isArray(dentro) ? dentro : [];
+      come.risorsa_in_elenco = elenco.some((una) =>
+        String(una?.url || "").startsWith(`/local/${CARTELLA}/`),
+      );
+    } catch (_errore) {
+      /* Se non si puo' chiedere resta `null`, che vuol dire «non lo so» ed e'
+       * diverso da «no». */
+    }
+    const prima = this.plance?.prima;
+    if (prima) {
+      try {
+        const vista = await this.casa.chiedi({
+          type: "lovelace/config",
+          url_path: indirizzoDi(prima),
+        });
+        const tessera = vista?.views?.[0]?.cards?.[0]?.type;
+        come.tessera_nella_vista = typeof tessera === "string" ? tessera : "";
+      } catch (_errore) {
+        /* Una Plancia senza configurazione risponde con un errore, ed e' il
+         * caso normale di chi non l'ha mai aperta. */
+      }
+    }
+    return come;
   }
 
   /* Via le Plance di plance che non ci sono piu'. Solo le nostre: le altre le

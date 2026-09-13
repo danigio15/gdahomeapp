@@ -381,7 +381,9 @@
      *
      * La prima e' provata, non indovinata: `laCartinaSiScarica` la chiede a
      * Home Assistant da questa pagina, che sta sul suo stesso indirizzo. */
-    if (cartinaChe === "no") {
+    if (esito.risorsa_guaio) {
+      riga += " ⚠️ Lovelace non prende la cartina: " + esito.risorsa_guaio;
+    } else if (cartinaChe === "no") {
       riga += " ⚠️ Home Assistant non serve la cartina della plancia.";
     } else if (cartinaChe === "rotta") {
       riga += " ⚠️ La cartina si scarica ma non registra la tessera.";
@@ -398,6 +400,14 @@
         " Ricarica la pagina di Home Assistant: la cartina è stata dichiarata adesso," +
         " e il browser la va a prendere al giro dopo.";
     }
+    /* E cosa ne dice Home Assistant, riletto da lui: due fatti, non due
+     * opinioni. Stanno sempre a schermo — anche quando va tutto bene — perche'
+     * sono quelli che si guardano quando la plancia non si apre, e una riga
+     * che compare solo nei guai e' una riga che nessuno sa dove cercare. */
+    if (esito.risorsa_in_elenco === true) riga += " Lovelace ha la cartina in elenco.";
+    if (esito.risorsa_in_elenco === false) riga += " ⚠️ Lovelace non ha la cartina in elenco.";
+    if (esito.tessera_nella_vista)
+      riga += " Nella Plancia c'e' «" + esito.tessera_nella_vista + "».";
     return riga;
   }
 
@@ -454,11 +464,22 @@
 
   /* Il foglietto sotto la riga: si vede solo quando c'e' qualcosa da fare, e
    * dice **cosa** fare — non com'e' fatto il mondo. */
-  function avvisaSullaCartina() {
+  function avvisaSullaCartina(ilGuaioDellaRisorsa) {
     var dove = trova("avviso-cartina");
     if (!dove) return;
     var testo = "";
-    if (cartinaChe === "no") {
+    if (ilGuaioDellaRisorsa) {
+      testo =
+        "La cartina sta sul disco ma Lovelace non la vuole dichiarare, e senza quella " +
+        "la tessera della plancia non esiste in nessuna pagina: aprendola dalle " +
+        "«Plance» esce «Errore di configurazione». Quasi sempre vuol dire che questa " +
+        "casa tiene le dashboard in YAML (lovelace: mode: yaml in configuration.yaml): " +
+        "li' Home Assistant le risorse dallo storage non le legge, e va dichiarata a " +
+        "mano. Nel configuration.yaml: lovelace: mode: yaml, poi resources: con - url: " +
+        "/local/gdahome/plancia.js  e  type: module. Poi riavvia Home Assistant. " +
+        "Lovelace ha risposto: " +
+        ilGuaioDellaRisorsa;
+    } else if (cartinaChe === "no") {
       testo =
         "Home Assistant non serve la cartina della plancia, e senza quella la plancia " +
         "aperta dalle «Plance» esce con «Errore di configurazione». Riavvialo una volta " +
@@ -638,7 +659,7 @@
         trova("stato-plance-in-casa").textContent = comeVannoLePlanceInCasa(stato.plance_in_casa);
         laCartinaSiScarica(stato.plance_in_casa && stato.plance_in_casa.cartina).then(function () {
           trova("stato-plance-in-casa").textContent = comeVannoLePlanceInCasa(stato.plance_in_casa);
-          avvisaSullaCartina();
+          avvisaSullaCartina(stato.plance_in_casa && stato.plance_in_casa.risorsa_guaio);
         });
         trova("fabbrica").disabled = stato.dispositivi.length >= stato.massimi;
         if (!stato.abbinamento.attivo) nascondiIlCodice();
