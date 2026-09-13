@@ -20,6 +20,8 @@ import { accetta } from "../src/presa.js";
 import { Casa } from "../src/casa.js";
 import { Dispositivi } from "../src/dispositivi.js";
 import { Ponte, SEGNO_DEL_MUCCHIO } from "../src/ponte.js";
+import { Plance } from "../src/plance.js";
+import { Commissioni, NIENTE_PER_TE } from "../src/commissioni.js";
 
 const SEGNO_DEL_SUPERVISOR = "questo-e-il-segno-che-non-deve-uscire";
 
@@ -69,13 +71,26 @@ async function casaFinta({ rifiutaIlSegno = false, muta = false } = {}) {
 
 /* ─── Il banco: casa finta + ponte + cartella temporanea ─────────────────── */
 
-async function banco(opzioniDellaCasa = {}, { da = "prova", mucchio = false } = {}) {
+async function banco(
+  opzioniDellaCasa = {},
+  { da = "prova", mucchio = false, conLePlance = false } = {},
+) {
   const cartella = mkdtempSync(join(tmpdir(), "ponte-prova-"));
   const ha = await casaFinta(opzioniDellaCasa);
   const casa = new Casa({ indirizzo: ha.indirizzo, segno: SEGNO_DEL_SUPERVISOR });
   const dispositivi = new Dispositivi({ cartella });
   const registro = { info: () => {}, attenzione: () => {}, errore: () => {} };
-  const ponte = new Ponte({ casa, dispositivi, registro });
+  /* Le plance servono solo a chi le prova: gli altri banchi restano come
+   * erano, senza commissioni, e per loro non cambia niente. */
+  const plance = conLePlance ? new Plance({ cartella, registro }) : null;
+  const commissioni = plance
+    ? new Commissioni({
+        plance,
+        plancia: { cE: true, descrizione: () => ({ base: "/dashboardmodern_static/x" }) },
+        registro,
+      })
+    : undefined;
+  const ponte = new Ponte({ casa, dispositivi, registro, commissioni });
 
   const server = createServer((_r, risposta) => risposta.end());
   server.on("upgrade", (richiesta, socket) => {
@@ -88,6 +103,7 @@ async function banco(opzioniDellaCasa = {}, { da = "prova", mucchio = false } = 
     ha,
     ponte,
     dispositivi,
+    plance,
     indirizzo: `ws://127.0.0.1:${server.address().port}`,
     spegni: async () => {
       ponte.chiudiTutto();
@@ -514,6 +530,71 @@ test("quello che era nel mucchio parte prima che il filo si chiuda", async () =>
     const nuove = t.grezzi.slice(prima);
     assert.ok(nuove[0].startsWith(SEGNO_DEL_MUCCHIO), `arrivato: ${nuove[0]}`);
     assert.equal(nuove[0].slice(SEGNO_DEL_MUCCHIO.length).split("\n").length, 2);
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("un telefono intestato a uno non vede la plancia riservata a un altro", async () => {
+  /* La prova che mancava, e che e' mancata dove si sente: in casa.
+   *
+   * Le altre passavano `chiChiede` a mano alle commissioni. Provavano la
+   * **regola**, che era giusta, e non il **collegamento**, che era rotto: il
+   * ponte l'utente lo chiede a quello che torna da `riconosci`, e la' veniva
+   * buttato via. La risposta era sempre «non si sa», e «non si sa» vuol dire
+   * «vede tutto». Qui si passa dal filo vero, con un telefono che si
+   * autentica col suo segno, percio' se quel passo si rompe di nuovo questa
+   * prova diventa rossa. */
+  const LEI = "a".repeat(32);
+  const LUI = "b".repeat(32);
+  const b = await banco({}, { conLePlance: true });
+  try {
+    b.plance.chiLaVede("primary", [LEI]);
+    const { segno } = b.dispositivi.abbina({
+      nome: "il telefono di lui",
+      sistema: "android",
+      utente: LUI,
+    });
+    const t = telefono(b.indirizzo);
+    await t.aperta;
+    await t.aspetta("auth_required");
+    t.manda({ type: "auth", access_token: segno });
+    await t.aspetta("auth_ok");
+
+    t.manda({ id: 3, type: "ponte/plancia" });
+    await attendi(() => t.detti.find((uno) => uno.id === 3));
+    const risposta = t.detti.find((uno) => uno.id === 3);
+    assert.equal(risposta.success, false, "la plancia di lei non si apre a lui");
+    assert.equal(risposta.error.code, NIENTE_PER_TE);
+    t.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("e un telefono intestato a chi la vede la apre", async () => {
+  /* L'altra meta': un cancello che non si apre mai e' rotto anche lui. */
+  const LEI = "a".repeat(32);
+  const b = await banco({}, { conLePlance: true });
+  try {
+    b.plance.chiLaVede("primary", [LEI]);
+    const { segno } = b.dispositivi.abbina({
+      nome: "il telefono di lei",
+      sistema: "ios",
+      utente: LEI,
+    });
+    const t = telefono(b.indirizzo);
+    await t.aperta;
+    await t.aspetta("auth_required");
+    t.manda({ type: "auth", access_token: segno });
+    await t.aspetta("auth_ok");
+
+    t.manda({ id: 4, type: "ponte/plancia" });
+    await attendi(() => t.detti.find((uno) => uno.id === 4));
+    const risposta = t.detti.find((uno) => uno.id === 4);
+    assert.equal(risposta.success, true);
+    assert.equal(risposta.result.plance.length, 1);
+    t.chiudi();
   } finally {
     await b.spegni();
   }

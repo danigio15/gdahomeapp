@@ -196,8 +196,19 @@ export class Dispositivi {
     return andati;
   }
 
-  _pulito({ id, nome, sistema, natoIl, vistoIl }) {
-    return { id, nome, sistema, natoIl, vistoIl };
+  /* Il dispositivo come lo vede chi sta fuori da qui.
+   *
+   * `utente` c'e' dentro, e non e' un dettaglio: da questa funzione passa
+   * anche `riconosci`, e quello che `riconosci` non dice il filo non lo sa.
+   * Senza questo campo il ponte chiedeva «di chi e' questo telefono?» a un
+   * oggetto che non ce l'aveva — e la risposta era sempre «non si sa» —
+   * mentre «non si sa» vuol dire «vede tutto». Cosi' il cancello delle plance
+   * riservate non si chiudeva per nessuno: il dato era giusto nell'archivio,
+   * la regola era giusta, e il valore si perdeva nel passo in mezzo. Nella
+   * console si vedeva «di Giovanni», perche' l'elenco legge l'archivio; sul
+   * filo no. */
+  _pulito({ id, nome, sistema, natoIl, vistoIl, utente }) {
+    return { id, nome, sistema, natoIl, vistoIl, utente: utentePulito(utente) };
   }
 
   _forseSalva() {

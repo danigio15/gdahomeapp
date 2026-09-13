@@ -399,13 +399,26 @@ test("il telefono nasce intestato, e l'elenco lo dice", () => {
   const { cartella, via } = unPosto();
   try {
     const suoi = new Dispositivi({ cartella, adesso: () => 1000 });
-    const { dispositivo } = suoi.abbina({
+    const { dispositivo, segno } = suoi.abbina({
       nome: "Pixel di Marta",
       sistema: "Android",
       utente: LEI,
     });
     assert.equal(suoi.utenteDi(dispositivo.id), LEI);
     assert.equal(suoi.elenco()[0].utente, LEI, "l'elenco non dice di chi e'");
+    /* E lo dice anche quando il telefono bussa.
+     *
+     * Questa riga e' il difetto che si e' visto in casa: `utenteDi` e
+     * `elenco` leggono l'archivio e dicevano la cosa giusta, ma il ponte non
+     * chiede a loro — chiede a chi bussa, cioe' a quello che torna da
+     * `riconosci`, e la' l'utente veniva buttato via. Il valore era giusto
+     * due passi prima e uno dopo, e in mezzo si perdeva: il cancello delle
+     * plance riservate non si e' mai chiuso per nessuno. */
+    assert.equal(
+      suoi.riconosci(segno).utente,
+      LEI,
+      "chi bussa deve dire di chi e', se no il filo non lo sa",
+    );
 
     /* Un telefono abbinato prima di oggi non ha nessun utente addosso, e
      * quello **vede tutto**: e' la riga che non spegne le case di chi c'e'
