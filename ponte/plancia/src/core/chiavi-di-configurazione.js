@@ -174,16 +174,10 @@
  * nome, icona, entita' da chiamare. E' roba della casa, non dello schermo:
  * l'antifurto configurato sul tablet deve funzionare anche dal telefono.
  *
- * La revisione 38 aggiunge il flusso dell'energia in Home (`cd_flusso_home`,
- * #415): «sulla home, accanto magari alle card delle persone, un'immagine con
- * il flusso dal fotovoltaico alla casa, dalla casa alle batterie, dalla casa
- * all'auto». Vederlo o no e' una scelta sulla casa, come l'ordine dei blocchi
- * che gli sta accanto.
- *
- * E gli animali di casa (`cd_animali`, #358): i loro nomi, le loro foto e le
- * entita' della ciotola, della lettiera, dell'acqua, della porta col microchip
- * e del collare. Anche questa e' roba della casa: il gatto configurato sul
- * tablet deve esistere anche sul telefono.
+ * La revisione 38 aggiunge gli animali di casa (`cd_animali`, #358): i loro
+ * nomi, le loro foto e le entita' della ciotola, della lettiera, dell'acqua,
+ * della porta col microchip e del collare. Anche questa e' roba della casa: il
+ * gatto configurato sul tablet deve esistere anche sul telefono.
  *
  * La revisione 39 aggiunge chi resta fuori dal grafico delle Temperature
  * (`cd_grafico_stanze`, #433): «poter togliere dal grafico alcune
@@ -221,7 +215,28 @@
  * inoltre volevo chiedere una sezione per la cassetta della posta». Chi apre,
  * chi suona, e i due sensori della cassetta: sono cose del cancello di casa,
  * uguali su ogni dispositivo che le guarda. */
-export const CONFIG_KEYS_REVISION = 45;
+/* La revisione 46 aggiunge i rilevamenti delle telecamere (`cd_rilevamenti`,
+ * #394): «una volta che io imposto persona, animale, veicolo e movimento —
+ * perche' reolink ti sgancia questi sensori — che la Dashboard metta l'avviso
+ * con il fotogramma». Quali sensori guarda ogni telecamera e' una proprieta'
+ * della casa, non del telefono da cui la si guarda: viaggia con le altre. */
+/* La revisione 48 aggiunge le stanze in plancia (`cd_home_stanze`, #493):
+ * «have the option to display a block on the home screen showing the rooms or
+ * areas of the house», e «it should also be possible to choose which rooms or
+ * areas appear». Quali stanze uno vuole davanti e' una scelta della casa: chi
+ * sceglie il giardino e il garage dal computer li ritrova sul telefono. */
+/* La revisione 49 aggiunge la soglia di potenza (`cd_energia_soglia`, #508):
+ * «un campo dove inserire un valore massimo di potenza che fa colorare di
+ * color ambra o rosso la card per capire un sovraccarico». Quanto puo' tirare
+ * la casa — o quanto puo' passare dal contatore — e' un fatto dell'impianto,
+ * non del vetro da cui lo si e' scritto: senza stare qui, chi imposta la
+ * soglia dal computer troverebbe la tessera muta sul telefono. */
+/* La revisione 50 aggiunge la capacita' della batteria di chi non ha profili
+ * auto (`cd_ev_kwh`): la casella si vedeva anche senza vettura, ma non aveva
+ * dove salvarsi e si ripuliva da sola. Va con `cd_ev_motore`, che e' l'altra
+ * cosa che si sa dell'auto di casa e non delle sue entita': quanti kilowattora
+ * tiene la batteria non cambia col vetro da cui lo si scrive. */
+export const CONFIG_KEYS_REVISION = 50;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -239,6 +254,7 @@ export const CONFIG_KEYS = Object.freeze([
   "cd_floors",
   "cd_floor_icons",
   "cd_cameras",
+  "cd_rilevamenti",
   "cd_appliances",
   "cd_loads",
   "cd_devices",
@@ -253,8 +269,14 @@ export const CONFIG_KEYS = Object.freeze([
   "cd_widgets",
   // In che ordine stanno i blocchi della Home: persone, widget, azioni, dispositivi.
   "cd_home_blocchi",
-  // Se il flusso dell'energia si vede in Home (#415).
-  "cd_flusso_home",
+  // Le pastiglie di stato in cima alla Home si possono spegnere (#491): e'
+  // una preferenza della casa, non del dispositivo — chi le spegne le vuole
+  // spente sul telefono come sul tablet appeso al muro.
+  "cd_home_pastiglie",
+  // Quali stanze si vedono in plancia (#493): «it should also be possible to
+  // choose which rooms or areas appear on the home screen». Quali stanze uno
+  // vuole davanti e' una scelta della casa, non del dispositivo.
+  "cd_home_stanze",
   // La riga sotto il meteo (#356): quali pastiglie si vedono, e da quale
   // contatto arriva la posta (#357).
   "cd_barra_casa",
@@ -303,6 +325,11 @@ export const CONFIG_KEYS = Object.freeze([
   "cd_centrale_scelta",
   // Come si vede l'energia in Home con più impianti: somma o una per impianto (#286).
   "cd_energia_tessere",
+  /* Oltre quanti watt la tessera Energia si colora, e su quale dei due carichi
+   * — casa o rete — si misura (#508). E' il limite del contratto o il consumo
+   * che si vuole tenere d'occhio: vale per la casa, non per il tablet da cui
+   * lo si e' scritto. */
+  "cd_energia_soglia",
   // Se il tocco su un'apertura chiede conferma (#275).
   "cd_porte_conferma",
   "cd_ups",
@@ -334,6 +361,10 @@ export const CONFIG_KEYS = Object.freeze([
    * fa sul telefono deve ritrovarla sul computer, o la pagina Auto racconta
    * due macchine diverse a seconda di dove la si guarda. */
   "cd_ev_motore",
+  /* E la capacita' della batteria della stessa auto, per la stessa ragione: il
+   * tempo di fine carica si conta da lei, e un numero scritto sul computer che
+   * sul telefono non c'e' fa uscire due tempi diversi per la stessa carica. */
+  "cd_ev_kwh",
   /* `cd_ev_image` e `cd_ev_image_plugged` non stanno piu' qui.
    *
    * Sono le due caselle da cui il disegno legge la foto dell'auto attiva: non

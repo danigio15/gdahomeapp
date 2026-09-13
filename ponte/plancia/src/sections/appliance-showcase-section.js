@@ -1283,7 +1283,7 @@ function showcaseCss() {
 .dm-appl-chips button.active .dm-chip-dot{box-shadow:0 0 0 3px rgba(255,255,255,.25)}
 .dm-appl-sort select{appearance:none;-webkit-appearance:none;padding:10px 34px 10px 15px;border:1px solid var(--dm-border);border-radius:13px;background:var(--dm-card) url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' d='m1.5 1.8 4.5 4.4 4.5-4.4'/%3E%3C/svg%3E") no-repeat right 13px center;color:var(--dm-shell-text);font-size:12.5px;font-weight:750;cursor:pointer}
 /* grid — the id selector outranks the legacy ".appl-main-view.active{display:block}" */
-#appl-grid-overview.dm-appl-grid,.dm-appl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:16px}
+#appl-grid-overview.dm-appl-grid,.dm-appl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(285px,100%),1fr));gap:16px}
 .dm-appl-empty{grid-column:1/-1;padding:44px 20px;border:1px dashed var(--dm-border);border-radius:22px;text-align:center;color:var(--dm-dim);font-weight:750;background:var(--dm-soft)}
 /* card */
 .dm-appl-shell .appl-wide-card.dm-ap-card{display:flex;flex-direction:column;gap:0;margin:0;padding:0;border:1px solid var(--dm-border);border-radius:22px;background:var(--dm-card);box-shadow:0 12px 30px rgba(15,23,42,.06);overflow:hidden;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
@@ -1300,8 +1300,18 @@ function showcaseCss() {
  * della vecchia scheda alta imponeva 20 pixel col peso massimo, e per
  * ultimo un foglio di rifiniture ne imponeva 15: usciva 15, con il corpo
  * di uno e la spaziatura di un altro. Nessuno aveva scelto quel nome li'.
- * Adesso sono i valori che si vedevano, scritti dove nasce la scheda. */
-.dm-ap-name{min-width:0;font-size:15px;font-weight:950;letter-spacing:-.15px;line-height:1.12;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ * Adesso sono i valori che si vedevano, scritti dove nasce la scheda.
+ *
+ * E il nome non si taglia: va a capo.
+ *
+ * Dal campo, sulla finestra degli elettrodomestici: «non entrano i nomi» —
+ * «Condizionato...». La riga era sua per intero (vedi qui sotto), ma restava
+ * una riga sola: un nome piu' lungo della scheda perdeva la coda, ed e'
+ * proprio la coda che distingue il condizionatore della camera da quello del
+ * soggiorno. Puntini che nascondono l'unica parola utile non sono una
+ * soluzione: qui il nome prende la seconda riga, e la scheda cresce di
+ * quel tanto. */
+.dm-ap-name{min-width:0;font-size:15px;font-weight:950;letter-spacing:-.15px;line-height:1.12;overflow-wrap:anywhere}
 .dm-ap-room{font-size:10px;font-weight:750;color:var(--dm-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 /* Il nome ha la riga per se'.
  *

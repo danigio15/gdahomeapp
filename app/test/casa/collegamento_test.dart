@@ -189,6 +189,47 @@ void main() {
     },
   );
 
+  test('a riposo il filo si chiude, e al risveglio torna', () async {
+    /* Con l'app non davanti — il telefono in tasca, la scheda del browser
+     * dietro le altre — la casa continuava a mandare i suoi eventi, e da
+     * fuori ognuno e' una richiesta che il centralino fa pagare. Ore di
+     * eventi che nessuno guardava. Adesso il filo si chiude, e torna appena
+     * si torna a guardare. */
+    final ponte = await PonteFinto.alza();
+    await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+    );
+    await collegamento.apri();
+    expect(collegamento.dentro, isTrue);
+    expect(ponte.prese, hasLength(1));
+
+    await collegamento.riposa();
+    expect(collegamento.aRiposo, isTrue);
+    expect(collegamento.dentro, isFalse);
+    /* Il ponte se ne accorge: la presa non c'e' piu', e con lei il filo che
+     * teneva aperto con Home Assistant. */
+    await _finoA(() => ponte.prese.isEmpty);
+
+    /* E non riprova da solo: aspetta che qualcuno torni a guardare. Se
+     * riprovasse, il risparmio sarebbe finto. */
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    expect(ponte.prese, isEmpty);
+
+    collegamento.sveglia();
+    await _finoA(() => collegamento.dentro, entro: const Duration(seconds: 5));
+    expect(collegamento.aRiposo, isFalse);
+    expect(ponte.prese, hasLength(1));
+    await ponte.spegni();
+  });
+
   test('quando il filo torna su da solo, l\'app se ne accorge', () async {
     /* Il difetto si vedeva solo dalla seconda volta in poi: la prima ci
      * pensa l'apertura, e dalla seconda nessuno rimetteva lo stato a posto.
@@ -419,6 +460,96 @@ void main() {
       isEmpty,
       reason: 'non si bussa con una chiave che non c\'e\'',
     );
+    await ponte.spegni();
+  });
+
+  test('la plancia scelta si ricorda, e si ricorda per casa', () async {
+    final ponte = await PonteFinto.alza();
+    ponte.unaPlanciaInPiu('Casa al mare');
+    await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+    );
+    await collegamento.apri();
+    await _finoA(() => collegamento.pannelloLetto);
+
+    /* Chi non ha mai scelto niente apre la prima: e' la risposta di sempre,
+     * e chi ha aggiornato l'app non si accorge di niente. */
+    expect(collegamento.plance, hasLength(2));
+    expect(collegamento.planciaScelta, 'primary');
+    expect(collegamento.pannello!.piuDiUna, isTrue);
+
+    await collegamento.cambiaPlancia('casa-al-mare');
+    expect(collegamento.planciaScelta, 'casa-al-mare');
+    expect(collegamento.pannello!.titolo, 'Casa al mare');
+    /* Ricordata **nella casa**, non fra le impostazioni dell'app: chi ha una
+     * plancia al mare e una in citta' non vuole che cambiando casa gli resti
+     * quella di prima. */
+    final id = collegamento.casa!.id;
+    expect(archivio.quella(id)!.plancia, 'casa-al-mare');
+
+    /* E si riapre su quella. */
+    await collegamento.chiudi();
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+    );
+    await collegamento.apri();
+    await _finoA(() => collegamento.pannelloLetto);
+    expect(collegamento.planciaScelta, 'casa-al-mare');
+
+    /* Tornare alla prima non lascia niente scritto: se no, il giorno che
+     * quella plancia non c'e' piu' si chiederebbe per sempre una cosa che
+     * non esiste. */
+    await collegamento.cambiaPlancia('primary');
+    expect(collegamento.planciaScelta, 'primary');
+    expect(archivio.quella(id)!.plancia, isNull);
+
+    await ponte.spegni();
+  });
+
+  test('una plancia tolta da un altro telefono non blocca l\'app', () async {
+    final ponte = await PonteFinto.alza();
+    ponte.unaPlanciaInPiu('Casa al mare');
+    await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: ponte.indirizzo,
+    );
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+    );
+    await collegamento.apri();
+    await _finoA(() => collegamento.pannelloLetto);
+    await collegamento.cambiaPlancia('casa-al-mare');
+    final id = collegamento.casa!.id;
+    expect(archivio.quella(id)!.plancia, 'casa-al-mare');
+
+    /* Adesso quella plancia non c'e' piu'. Si riapre l'app. */
+    ponte.plance.removeWhere((una) => una['profilo'] == 'casa-al-mare');
+    await collegamento.chiudi();
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+    );
+    await collegamento.apri();
+    await _finoA(() => collegamento.pannelloLetto);
+
+    /* Si apre la prima, e non una schermata vuota. */
+    expect(collegamento.pannello, isNotNull);
+    expect(collegamento.planciaScelta, 'primary');
+    expect(collegamento.plance, hasLength(1));
+
     await ponte.spegni();
   });
 }

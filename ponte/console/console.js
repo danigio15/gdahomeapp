@@ -12,6 +12,11 @@
   var vediPagina = document;
   var quandoScade = null;
 
+  /* Quante plance si tengono: lo stesso numero che ha il ponte
+   * (`plance.js`). Qui serve solo a spegnere il tasto quando si e' arrivati
+   * al tetto, invece di farlo premere per sentirsi dire di no. */
+  var PLANCE_AL_MASSIMO = 8;
+
   function trova(id) {
     return vediPagina.getElementById(id);
   }
@@ -93,11 +98,21 @@
    * quello che vedrebbe sarebbe soltanto un'app che «non trova la casa». */
   function comeVaIlCentralino(centralino) {
     if (!centralino || !centralino.configurato) {
-      return "Nessun centralino: da fuori casa l'app non entra. Si mette nelle opzioni di questo add-on.";
+      return (
+        "Nessun centralino: da fuori casa l'app non entra. Si riaccende con " +
+        "«da fuori casa» nelle opzioni di questo add-on."
+      );
     }
+    /* E **dove** chiama, non solo se ci arriva.
+     *
+     * Da quando nelle opzioni non c'e' piu' la casella dell'indirizzo, questa
+     * riga e' l'unico posto dove si legge: chi vuole sapere se la sua casa sta
+     * sul centralino nuovo o su quello di prima lo guarda qui, invece di
+     * andarselo a cercare nel programma. */
+    var dove = centralino.dove || "";
     if (centralino.rifiutata) return "Il centralino ci rifiuta: " + centralino.rifiutata;
-    if (!centralino.dentro) return "Sto chiamando il centralino…";
-    return "Collegato al centralino: da fuori casa si entra.";
+    if (!centralino.dentro) return "Sto chiamando " + (dove || "il centralino") + "…";
+    return "Collegato a " + (dove || "il centralino") + ": da fuori casa si entra.";
   }
 
   /* Da dove viene la plancia, in tre righe.
@@ -207,6 +222,381 @@
     });
   }
 
+  /* Le plance di questa casa.
+   *
+   * Una riga per plancia: come si chiama, e — per quelle che non sono la prima
+   * — il tasto per toglierla. Il nome si cambia premendoci sopra: e' la stessa
+   * cosa che si fa in Home Assistant col nome di un'integrazione, e non vale
+   * una finestra tutta sua.
+   *
+   * La prima non si toglie, e il tasto non c'e': un tasto che c'e' e che
+   * risponde «questa no» e' peggio di un tasto che non c'e'. */
+  function disegnaLePlance(plance) {
+    var elenco = trova("elenco-plance");
+    if (!elenco) return;
+    elenco.textContent = "";
+    var quante = plance ? plance.length : 0;
+    trova("aggiungi-plancia").disabled = quante >= PLANCE_AL_MASSIMO;
+
+    (plance || []).forEach(function (una) {
+      var riga = vediPagina.createElement("li");
+
+      var nome = vediPagina.createElement("div");
+      nome.className = "nome";
+      var forte = vediPagina.createElement("strong");
+      /* `textContent`, mai `innerHTML`: il titolo l'ha scritto una persona. */
+      forte.textContent = una.titolo;
+      var sotto = vediPagina.createElement("span");
+      sotto.textContent = una.primaria ? "la prima, quella di sempre" : "aggiunta da te";
+      nome.appendChild(forte);
+      nome.appendChild(sotto);
+      riga.appendChild(nome);
+
+      var tasti = vediPagina.createElement("div");
+      tasti.className = "tasti";
+
+      /* «Apri»: la plancia, servita dal ponte, qui dentro.
+       *
+       * E' lo stesso indirizzo che apre la sua voce fra le «Plance» di Home
+       * Assistant, e sta qui perche' e' il posto dove si guarda quando si e'
+       * appena aggiunta una plancia — prima di andare a cercarla nella barra
+       * laterale. Relativo, non assoluto: davanti c'e' il prefisso
+       * dell'ingress, che cambia a ogni riavvio di Home Assistant e che da
+       * qui non si conosce. */
+      var apri = vediPagina.createElement("a");
+      apri.className = "tenue";
+      apri.textContent = "Apri";
+      apri.target = "_blank";
+      apri.rel = "noopener";
+      apri.href = una.primaria ? "plancia/" : "plancia/" + encodeURIComponent(una.profilo) + "/";
+      tasti.appendChild(apri);
+
+      var rinomina = vediPagina.createElement("button");
+      rinomina.className = "tenue";
+      rinomina.type = "button";
+      rinomina.textContent = "Rinomina";
+      rinomina.addEventListener("click", function () {
+        var come = window.prompt("Come si chiama questa plancia?", una.titolo);
+        if (come === null) return;
+        rinomina.disabled = true;
+        chiedi("api/plance", {
+          method: "PATCH",
+          body: JSON.stringify({ profilo: una.profilo, titolo: come }),
+        })
+          .then(aggiornaTutto)
+          .catch(function (errore) {
+            rinomina.disabled = false;
+            avvisaLePlance(errore.message);
+          });
+      });
+      tasti.appendChild(rinomina);
+
+      if (!una.primaria) {
+        var togli = vediPagina.createElement("button");
+        togli.className = "tenue";
+        togli.type = "button";
+        togli.textContent = "Togli";
+        togli.addEventListener("click", function () {
+          if (
+            !window.confirm(
+              "Togliere «" +
+                una.titolo +
+                "»? Va via anche come l'hai configurata: sezioni, tessere, stanze. Non si rimette a posto.",
+            )
+          )
+            return;
+          togli.disabled = true;
+          chiedi("api/plance", {
+            method: "DELETE",
+            body: JSON.stringify({ profilo: una.profilo }),
+          })
+            .then(aggiornaTutto)
+            .catch(function (errore) {
+              togli.disabled = false;
+              avvisaLePlance(errore.message);
+            });
+        });
+        tasti.appendChild(togli);
+      }
+
+      riga.appendChild(tasti);
+      elenco.appendChild(riga);
+    });
+  }
+
+  /* Chi parla di piu' in casa, e quanto. */
+  function disegnaIChiacchieroni(come) {
+    var riga = trova("stato-chiacchieroni");
+    var elenco = trova("elenco-chiacchieroni");
+    if (!riga || !elenco) return;
+    elenco.textContent = "";
+    if (!come) {
+      riga.textContent = "Non lo so ancora: nessun telefono collegato.";
+      return;
+    }
+    var quanti = Number(come.eventi) || 0;
+    var quando = come.intero ? "nell'ultimo minuto" : "negli ultimi " + come.secondi + " s";
+    riga.textContent =
+      quanti === 0
+        ? "Nessun evento " + quando + ": la casa sta zitta."
+        : quanti + (quanti === 1 ? " evento " : " eventi ") + quando + ".";
+    (come.quali || []).forEach(function (una) {
+      var voce = vediPagina.createElement("li");
+      var nome = vediPagina.createElement("div");
+      nome.className = "nome";
+      var forte = vediPagina.createElement("strong");
+      /* `textContent`: il nome di un'entita' lo ha scritto chi ci abita. */
+      forte.textContent = una.entita;
+      var sotto = vediPagina.createElement("span");
+      var suoi = Number(una.eventi) || 0;
+      sotto.textContent =
+        suoi +
+        (suoi === 1 ? " evento" : " eventi") +
+        (quanti ? " · " + Math.round((suoi / quanti) * 100) + "% del traffico" : "");
+      nome.appendChild(forte);
+      nome.appendChild(sotto);
+      voce.appendChild(nome);
+      elenco.appendChild(voce);
+    });
+  }
+
+  /* Se le plance sono davvero comparse fra le «Plance» di Home Assistant.
+   *
+   * E' la riga che mancava. Le plance le tiene il ponte, ma la voce nella
+   * barra laterale la fa Home Assistant, e fra le due cose ci sono tre
+   * passaggi che possono non riuscire — la cartina da scrivere, la risorsa da
+   * dichiarare, la Plancia da creare. Quando non riescono, il ponte lo scrive
+   * nel registro: cioe' in un posto dove nessuno guarda. Qui invece sta dove
+   * si guarda, che e' accanto all'elenco. */
+  function comeVannoLePlanceInCasa(esito) {
+    if (!esito) return "Sto guardando se le plance sono fra le «Plance» di Home Assistant…";
+    var riga = esito.fatto
+      ? "Nella barra laterale di Home Assistant ci sono " +
+        ((Number(esito.quante) || 0) === 1 ? "1 voce" : (Number(esito.quante) || 0) + " voci") +
+        (esito.tolte ? ", e " + esito.tolte + " sono state levate" : "") +
+        "."
+      : "Le plance non sono nella barra laterale di Home Assistant: " + (esito.perche || "");
+    /* Le cose che fanno uscire «Errore di configurazione» al posto della
+     * plancia, e che da quella pagina non si capiscono: qui si dicono.
+     *
+     * La prima e' provata, non indovinata: `laCartinaSiScarica` la chiede a
+     * Home Assistant da questa pagina, che sta sul suo stesso indirizzo. */
+    if (esito.risorsa_guaio) {
+      riga += " ⚠️ Lovelace non prende la cartina: " + esito.risorsa_guaio;
+    } else if (cartinaChe === "no") {
+      riga += " ⚠️ Home Assistant non serve la cartina della plancia.";
+    } else if (cartinaChe === "rotta") {
+      riga += " ⚠️ La cartina si scarica ma non registra la tessera.";
+    } else if (cartinaChe === "si") {
+      riga += " La cartina si scarica, e la tessera si registra.";
+    } else if (esito.riavvia) {
+      riga +=
+        " ⚠️ Riavvia Home Assistant una volta (Impostazioni → Sistema → Riavvia):" +
+        " la cartella «www» non c'era e l'ho fatta io, e Home Assistant i file che" +
+        " stanno dentro li serve solo se quella cartella c'era quando è partito." +
+        " Finché non riparte, aprendo la plancia esce «Errore di configurazione».";
+    } else if (esito.ricarica) {
+      riga +=
+        " Ricarica la pagina di Home Assistant: la cartina è stata dichiarata adesso," +
+        " e il browser la va a prendere al giro dopo.";
+    }
+    /* E cosa ne dice Home Assistant, riletto da lui: due fatti, non due
+     * opinioni. Stanno sempre a schermo — anche quando va tutto bene — perche'
+     * sono quelli che si guardano quando la plancia non si apre, e una riga
+     * che compare solo nei guai e' una riga che nessuno sa dove cercare. */
+    if (esito.risorsa_in_elenco === true) riga += " Lovelace ha la cartina in elenco.";
+    if (esito.risorsa_in_elenco === false) riga += " ⚠️ Lovelace non ha la cartina in elenco.";
+    if (esito.tessera_nella_vista)
+      riga += " Nella Plancia c'e' «" + esito.tessera_nella_vista + "».";
+    return riga;
+  }
+
+  /* La cartina si scarica? Lo si chiede a Home Assistant.
+   *
+   * Questa pagina sta dentro l'ingress, cioe' **sullo stesso indirizzo** di
+   * Home Assistant: un indirizzo che comincia per `/local/` da qui arriva a
+   * lui, non a noi. E' l'unico posto da cui si possa provare quello che poi
+   * prova il browser di chi apre la plancia.
+   *
+   * `""` vuol dire «non si e' ancora provato», e si dice diversamente da «no»:
+   * un avviso grosso mostrato mentre ancora non si sa sarebbe un avviso
+   * sbagliato meta' delle volte. */
+  var cartinaChe = "";
+
+  /* Dove sta la cartina, come l'ha detta il ponte: serve al bottone qui
+   * sotto, che la carica nella pagina di Home Assistant. */
+  var laCartina = "";
+
+  /* Come si chiama la tessera: lo stesso nome sta in `carta/plancia.js`, ed e'
+   * quello con cui Lovelace la cerca. Se nessuno l'ha registrata,
+   * `custom:gdahome-plancia` non esiste e Home Assistant disegna «Errore di
+   * configurazione» — senza dire questo, e senza dire niente altro. */
+  var LA_TESSERA = "gdahome-plancia";
+
+  function laCartinaSiScarica(dove) {
+    if (dove) laCartina = dove;
+    if (!dove || cartinaChe === "si") return Promise.resolve(cartinaChe);
+    return fetch(dove, { cache: "no-store" })
+      .then(function (risposta) {
+        if (!risposta.ok) {
+          cartinaChe = "no";
+          return cartinaChe;
+        }
+        /* Si scarica. Allora si prova anche a **eseguirla**, perche' «il file
+         * c'e'» e «la tessera esiste» sono due cose diverse e portano a due
+         * rimedi diversi: un file che si scarica e non registra la tessera e'
+         * un file rotto, e una tessera che si registra qui ma in una Plancia
+         * non esiste vuol dire che Lovelace quella risorsa non la carica — il
+         * browser che non l'ha ancora vista, o le dashboard tenute in YAML,
+         * dove le risorse dallo storage non si leggono. */
+        return import(dove).then(
+          function () {
+            cartinaChe = window.customElements.get(LA_TESSERA) ? "si" : "rotta";
+            return cartinaChe;
+          },
+          function () {
+            cartinaChe = "rotta";
+            return cartinaChe;
+          },
+        );
+      })
+      .catch(function () {
+        /* Senza rete non si sa, e non si dice niente: la riga resta quella. */
+        cartinaChe = "";
+        return cartinaChe;
+      });
+  }
+
+  /* Il foglietto sotto la riga: si vede solo quando c'e' qualcosa da fare, e
+   * dice **cosa** fare — non com'e' fatto il mondo. */
+  /* La tessera **nella pagina di Home Assistant**, non in questa.
+   *
+   * Questa pagina gira dentro un riquadro, sullo stesso indirizzo di Home
+   * Assistant: puo' guardare la sua. Ed e' li' che la tessera deve esistere —
+   * qui non serve a niente.
+   *
+   * E' la differenza che mancava. Home Assistant l'elenco delle risorse lo
+   * legge **quando la pagina si carica**: una pagina aperta prima che la
+   * cartina esistesse non la conosce, e continua a non conoscerla finche' non
+   * si ricarica per davvero — che nell'app di Home Assistant vuol dire
+   * svuotarle la cache, non riaprirla. Da fuori sembra che l'add-on non
+   * funzioni, e invece e' a posto da un pezzo. */
+  function laTesseraNellaPagina() {
+    try {
+      var fuori = window.parent;
+      if (!fuori || fuori === window || !fuori.customElements) return "non-lo-so";
+      return fuori.customElements.get(LA_TESSERA) ? "si" : "no";
+    } catch (_errore) {
+      /* Se il riquadro non ci lascia guardare fuori, non si sa: e non si dice
+       * niente, invece di dire una cosa a caso. */
+      return "non-lo-so";
+    }
+  }
+
+  /* E caricarcela, adesso.
+   *
+   * E' la stessa cosa che fa Home Assistant con le risorse di Lovelace — un
+   * `<script type="module">` nella sua pagina — fatta a mano una volta sola.
+   * Da li' in poi la tessera esiste in quella pagina e la Plancia si apre,
+   * senza aspettare una ricarica che nell'app non si sa come si fa. */
+  function caricaLaCartinaDiLa(dove) {
+    try {
+      var fuori = window.parent;
+      if (!fuori || fuori === window) return Promise.resolve(false);
+      var documento = fuori.document;
+      var segno = documento.createElement("script");
+      segno.type = "module";
+      segno.src = new URL(dove, fuori.location.origin).href;
+      return new Promise(function (finito) {
+        segno.onload = function () {
+          finito(laTesseraNellaPagina() === "si");
+        };
+        segno.onerror = function () {
+          finito(false);
+        };
+        documento.head.appendChild(segno);
+      });
+    } catch (_errore) {
+      return Promise.resolve(false);
+    }
+  }
+
+  function avvisaSullaCartina(ilGuaioDellaRisorsa) {
+    var dove = trova("avviso-cartina");
+    if (!dove) return;
+    var testo = "";
+    if (ilGuaioDellaRisorsa) {
+      testo =
+        "La cartina sta sul disco ma Lovelace non la vuole dichiarare, e senza quella " +
+        "la tessera della plancia non esiste in nessuna pagina: aprendola dalle " +
+        "«Plance» esce «Errore di configurazione». Quasi sempre vuol dire che questa " +
+        "casa tiene le dashboard in YAML (lovelace: mode: yaml in configuration.yaml): " +
+        "li' Home Assistant le risorse dallo storage non le legge, e va dichiarata a " +
+        "mano. Nel configuration.yaml: lovelace: mode: yaml, poi resources: con - url: " +
+        "/local/gdahome/plancia.js  e  type: module. Poi riavvia Home Assistant. " +
+        "Lovelace ha risposto: " +
+        ilGuaioDellaRisorsa;
+    } else if (cartinaChe === "no") {
+      testo =
+        "Home Assistant non serve la cartina della plancia, e senza quella la plancia " +
+        "aperta dalle «Plance» esce con «Errore di configurazione». Riavvialo una volta " +
+        "(Impostazioni → Sistema → Riavvia): la cartella «www» la apre quando parte, e i " +
+        "file arrivati dopo li serve solo dal riavvio dopo.";
+    } else if (cartinaChe === "rotta") {
+      testo =
+        "La cartina si scarica ma non registra la tessera: il file e' arrivato rotto. " +
+        "Riavvia l'add-on, che la riscrive da se' a ogni avvio; se succede ancora, " +
+        "scrivilo dalle segnalazioni.";
+    } else if (cartinaChe === "si" && laTesseraNellaPagina() === "no") {
+      testo =
+        "La cartina c'e' e si scarica, ma **questa pagina di Home Assistant non ce l'ha**: " +
+        "l'elenco delle risorse lo legge quando si carica, e questa si e' caricata prima che " +
+        "la cartina esistesse. Finche' resta cosi', la plancia esce con «Errore di " +
+        "configurazione» qualunque cosa faccia l'add-on. Il bottone qui sotto gliela mette " +
+        "adesso: poi apri la plancia dalla barra laterale e si apre. Una volta sola — dalla " +
+        "prossima ricarica vera se la prende da se'. Nell'app di Home Assistant la ricarica " +
+        "vera e' Impostazioni → App companion → Svuota la cache, e riaprire.";
+    } else if (cartinaChe === "si") {
+      testo =
+        "Se aprendo la plancia dalle «Plance» esce «Errore di configurazione»: da qui la " +
+        "cartina si scarica e la tessera si registra, quindi il file e' a posto ed e' " +
+        "Lovelace che non la carica. Due cose, in quest'ordine. 1) Ricarica a fondo la " +
+        "pagina di Home Assistant — nell'app: Impostazioni → App companion → Svuota la " +
+        "cache, e riapri: una risorsa aggiunta adesso il browser la vede al giro dopo. " +
+        "2) Se succede anche da un browser che non l'ha mai aperta, Home Assistant tiene " +
+        "le dashboard in YAML (lovelace: mode: yaml) e le risorse dallo storage non le " +
+        "legge: allora va dichiarata a mano in configuration.yaml — lovelace: resources: " +
+        "- url: /local/gdahome/plancia.js  type: module.";
+    }
+    dove.textContent = testo;
+    dove.hidden = !testo;
+    /* Il bottone si vede solo quando c'e' davvero da premerlo. */
+    var tasti = trova("ripara-cartina");
+    if (tasti) tasti.hidden = !(cartinaChe === "si" && laTesseraNellaPagina() === "no");
+  }
+
+  trova("carica-la-cartina").addEventListener("click", function () {
+    var tasto = trova("carica-la-cartina");
+    tasto.disabled = true;
+    caricaLaCartinaDiLa(laCartina).then(function (andata) {
+      tasto.disabled = false;
+      trova("avviso-cartina").textContent = andata
+        ? "Fatto: adesso apri la plancia dalla barra laterale, si apre. Se la chiudi e " +
+          "riapri l'app di Home Assistant senza svuotarle la cache, questa pagina torna " +
+          "com'era e il bottone ricompare."
+        : "Non ci sono riuscito da qui. Allora: Impostazioni → App companion → Svuota la " +
+          "cache, e riapri Home Assistant.";
+      if (andata) trova("ripara-cartina").hidden = true;
+    });
+  });
+
+  function avvisaLePlance(testo) {
+    var avviso = trova("avviso-plance");
+    if (!avviso) return;
+    avviso.textContent = testo || "";
+    avviso.hidden = !testo;
+  }
+
   /* Il link a gdahome da browser.
    *
    * Si vede solo se l'app c'e' davvero dentro questo add-on: un link che porta
@@ -256,7 +646,7 @@
   /* ─── L'aggiornamento del ponte ──────────────────────────────────────────
    *
    * Un add-on locale non ha nessun negozio dietro: Home Assistant guarda il
-   * manifesto che trova in `/addons/ponte`, e quella e' l'unica versione che
+   * manifesto che trova in `/addons/gdahome`, e quella e' l'unica versione che
    * conosce. Finche' quei file non cambiano, «Aggiorna» non compare mai —
    * e a cambiarli serviva un terminale e un gettone da incollare ogni volta.
    * Da qui lo fa il ponte.
@@ -273,13 +663,14 @@
     var riga = "Questo ponte è la versione " + (stato.mia || "—") + ".";
     var spiega = "";
     var siPuo = false;
-    if (!stato.gettone) {
-      riga += " Non so se ce n'è una più nuova.";
-      spiega =
-        "Per guardare da sé serve un gettone di GitHub, una volta sola: " +
-        "Impostazioni → Add-on → Il ponte → Configurazione, casella «gettone». " +
-        "Un gettone a grana fine sulla sola repository dell'app, con Contents: Read-only.";
-    } else if (stato.cE === true) {
+    /* Il gettone non c'entra più niente.
+     *
+     * Finché la repository era privata, senza un gettone di GitHub non si
+     * poteva nemmeno sapere che versione c'è: la richiesta tornava «non
+     * esiste». Adesso è pubblica, il manifesto lo legge chiunque, e questa
+     * scheda dice quello che sa — non se qualcuno ha incollato un gettone in
+     * una casella. Quella casella è rimasta e si lascia vuota. */
+    if (stato.cE === true) {
       riga += " C'è la " + stato.nuova + ".";
       spiega =
         "Il ponte se la scarica, la mette al posto di questa e si ricostruisce. " +
@@ -296,7 +687,6 @@
     trova("aggiornamento-riga").textContent = riga;
     trova("aggiornamento-spiega").textContent = spiega;
     trova("aggiorna-il-ponte").hidden = !siPuo;
-    trova("riguarda").hidden = !stato.gettone;
   }
 
   function guardaLAggiornamento() {
@@ -341,10 +731,32 @@
           : "Home Assistant non risponde: " + stato.casa.perche;
         trova("porta").textContent = stato.porta;
         trova("stato-centralino").textContent = comeVaIlCentralino(stato.centralino);
+        /* L'assistenza: la scheda compare solo dove la chiave c'e'.
+         *
+         * E' l'unico posto dove si legge che quella chiave e' arrivata: Home
+         * Assistant un campo `password` lo nasconde e non lo rimostra, quindi
+         * chi l'ha appena incollata riapre la scheda, trova la casella vuota e
+         * non ha modo di sapere se sia stata presa. */
+        var risponde = Boolean(stato.assistenza && stato.assistenza.console);
+        trova("assistenza").hidden = !risponde;
+        if (risponde) {
+          trova("stato-assistenza").textContent =
+            "Questa casa risponde alle chat di assistenza: la console e' accesa.";
+        }
+        disegnaIChiacchieroni(stato.chiacchieroni);
         disegnaLaProvenienza(stato.plancia);
         disegnaIlLink(stato.app);
         disegnaIlLinkDiFuori(stato.app ? stato.centralino.dove : "");
         disegnaIDispositivi(stato.dispositivi, stato.massimi);
+        disegnaLePlance(stato.plance);
+        /* La riga si scrive subito con quello che si sa, e si riscrive quando
+         * la prova della cartina torna: chi guarda vede una frase giusta
+         * adesso e una piu' precisa mezzo secondo dopo, invece di un vuoto. */
+        trova("stato-plance-in-casa").textContent = comeVannoLePlanceInCasa(stato.plance_in_casa);
+        laCartinaSiScarica(stato.plance_in_casa && stato.plance_in_casa.cartina).then(function () {
+          trova("stato-plance-in-casa").textContent = comeVannoLePlanceInCasa(stato.plance_in_casa);
+          avvisaSullaCartina(stato.plance_in_casa && stato.plance_in_casa.risorsa_guaio);
+        });
         trova("fabbrica").disabled = stato.dispositivi.length >= stato.massimi;
         if (!stato.abbinamento.attivo) nascondiIlCodice();
         avvisa("");
@@ -383,6 +795,35 @@
       .catch(function (errore) {
         avvisa(errore.message);
       });
+  });
+
+  /* Aggiungere una plancia: un nome, e il tasto.
+   *
+   * Il nome non e' obbligatorio — chi lascia la casella vuota si prende
+   * «Plancia», che si rinomina dopo — e con Invio si aggiunge, che e' quello
+   * che fa un dito su una casella di testo. */
+  function aggiungiUnaPlancia() {
+    var casella = trova("titolo-plancia");
+    var tasto = trova("aggiungi-plancia");
+    avvisaLePlance("");
+    tasto.disabled = true;
+    chiedi("api/plance", {
+      method: "POST",
+      body: JSON.stringify({ titolo: casella.value }),
+    })
+      .then(function () {
+        casella.value = "";
+        return aggiornaTutto();
+      })
+      .catch(function (errore) {
+        tasto.disabled = false;
+        avvisaLePlance(errore.message);
+      });
+  }
+
+  trova("aggiungi-plancia").addEventListener("click", aggiungiUnaPlancia);
+  trova("titolo-plancia").addEventListener("keydown", function (evento) {
+    if (evento.key === "Enter") aggiungiUnaPlancia();
   });
 
   trova("annulla").addEventListener("click", function () {

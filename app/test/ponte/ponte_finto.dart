@@ -18,6 +18,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:gdahome/ponte/cifra.dart';
+import 'package:gdahome/ponte/filo.dart' show segnoDelMucchio;
 import 'package:gdahome/ponte/indirizzo.dart';
 
 const String segnoBuono = 'un-segno-che-va-bene';
@@ -88,7 +89,7 @@ class PonteFinto {
       _manda(
         presa,
         buono
-            ? {'type': 'auth_ok', 'ha_version': 'ponte'}
+            ? {'type': 'auth_ok', 'ha_version': 'gdahome'}
             : {'type': 'auth_invalid', 'message': 'segno non valido'},
       );
       if (!buono) unawaited(presa.chiudi());
@@ -123,7 +124,8 @@ class PonteFinto {
     final tipo = detto['type'];
     if (tipo is String &&
         (tipo.startsWith('ponte/segnalazioni/') ||
-            tipo.startsWith('ponte/chat/'))) {
+            tipo.startsWith('ponte/chat/') ||
+            tipo.startsWith('ponte/console/'))) {
       _manda(presa, {'id': id, ..._segnalazione(detto)});
       return;
     }
@@ -136,20 +138,54 @@ class PonteFinto {
     }
     if (detto['type'] == 'ponte/plancia') {
       final sua = planciaDelPonte;
-      _manda(
-        presa,
-        sua == null
-            ? {
-                'id': id,
-                'type': 'result',
-                'success': false,
-                'error': {
-                  'code': 'not_found',
-                  'message': 'questo ponte non ha la plancia',
-                },
-              }
-            : {'id': id, 'type': 'result', 'success': true, 'result': sua},
-      );
+      if (sua == null) {
+        _manda(presa, {
+          'id': id,
+          'type': 'result',
+          'success': false,
+          'error': {
+            'code': 'not_found',
+            'message': 'questo ponte non ha la plancia',
+          },
+        });
+        return;
+      }
+      /* Quale plancia, per chi ne ha piu' d'una. Senza, la prima — che e' la
+       * risposta di sempre. Una che non c'e' e' un `not_found`, come nel ponte
+       * vero: e' il caso che fa tornare l'app alla prima invece di restare su
+       * una schermata vuota. */
+      final voluto = detto['profilo'] as String? ?? '';
+      final scelte = plance.where((una) => una['profilo'] == voluto);
+      if (voluto.isNotEmpty && scelte.isEmpty) {
+        _manda(presa, {
+          'id': id,
+          'type': 'result',
+          'success': false,
+          'error': {
+            'code': 'not_found',
+            'message': 'quella plancia non c\'e\'',
+          },
+        });
+        return;
+      }
+      final quale = voluto.isEmpty
+          ? (plance.isEmpty ? null : plance.first)
+          : scelte.first;
+      _manda(presa, {
+        'id': id,
+        'type': 'result',
+        'success': true,
+        'result': {
+          ...sua,
+          if (quale != null) ...{
+            'titolo': quale['titolo'],
+            'istanza': quale['istanza'],
+            'profilo': quale['profilo'],
+            'primario': quale['primaria'],
+          },
+          'plance': plance,
+        },
+      });
       return;
     }
     _manda(presa, {
@@ -170,6 +206,34 @@ class PonteFinto {
   /// e' un ponte che non ce l'ha, e dice di no.
   Map<String, dynamic>? planciaDelPonte = planciaNelPonte();
 
+  /// Le plance di questa casa. Una c'e' sempre — quella di sempre — e chi ne
+  /// prova piu' d'una ne aggiunge a questa lista.
+  final List<Map<String, dynamic>> plance = [
+    {
+      'profilo': 'primary',
+      'titolo': 'gdahome',
+      'istanza': 'gdahome',
+      'primaria': true,
+      'creata_il': 0,
+    },
+  ];
+
+  /// Una plancia in piu', come la aggiunge il ponte vero: il cassetto ricavato
+  /// dal titolo, e l'istanza col suo nome dietro.
+  Map<String, dynamic> unaPlanciaInPiu(String titolo, {String? profilo}) {
+    final quale =
+        profilo ?? titolo.toLowerCase().replaceAll(RegExp('[^a-z0-9]+'), '-');
+    final nuova = {
+      'profilo': quale,
+      'titolo': titolo,
+      'istanza': 'gdahome-$quale',
+      'primaria': false,
+      'creata_il': 1,
+    };
+    plance.add(nuova);
+    return nuova;
+  }
+
   /// Se questa casa passa da un centralino: senza, le segnalazioni non si
   /// spediscono, e il ponte lo dice.
   bool conIlCentralino = true;
@@ -178,6 +242,48 @@ class PonteFinto {
   final List<Map<String, dynamic>> segnalazioni = [];
   Map<String, dynamic>? chat;
   int _prossimaSegnalazione = 7;
+
+  /// Se da questa casa si risponde alle chat delle altre.
+  ///
+  /// Nel ponte vero e' la chiave della console scritta nelle opzioni
+  /// dell'add-on; qui e' un interruttore, perche' quello che cambia per l'app
+  /// e' solo il si' o il no.
+  bool laConsole = false;
+
+  /// La coda di chi risponde: le linee, e per ognuna il suo filo.
+  final List<Map<String, dynamic>> conversazioni = [];
+  final Map<String, List<Map<String, dynamic>>> fili = {};
+  int _prossimoDellaConsole = 1;
+
+  /// Una casa chiede aiuto: nasce una linea, o si aggiunge al suo filo.
+  void unaCasaChiedeAiuto(String linea, String testo, {String nome = ''}) {
+    final riga = {
+      'id': _prossimoDellaConsole++,
+      'da': 'casa',
+      'testo': testo,
+      'scritto_il': 1757328000,
+    };
+    (fili[linea] ??= []).add(riga);
+    final quale = conversazioni.cast<Map<String, dynamic>?>().firstWhere(
+      (una) => una!['id'] == linea,
+      orElse: () => null,
+    );
+    if (quale == null) {
+      conversazioni.add({
+        'id': linea,
+        'nome': nome,
+        'versione': 'plancia 1.4.19 ponte 0.19.0',
+        'ha': '',
+        'lingua': 'it',
+        'non_letti': 1,
+        'ultimo': testo,
+        'ultimo_il': 1757328000,
+      });
+    } else {
+      quale['non_letti'] = (quale['non_letti'] as int) + 1;
+      quale['ultimo'] = testo;
+    }
+  }
 
   /// Il manutentore risponde a una segnalazione, o alla chat.
   void rispondeIlManutentore(int numero, String testo) {
@@ -288,36 +394,78 @@ class PonteFinto {
           return no('troppo_grande', 'troppo grande');
         }
         allegati.add(allegato);
+        /* Il disegno lo sceglie il tipo, come fa il centralino: una foto o un
+         * video non si distinguono dal nome. */
+        final disegno = (allegato['tipo']! as String).startsWith('image/')
+            ? '📷'
+            : '🎬';
         (una['messaggi'] as List).add({
           'da': 'casa',
-          'testo': '📷 ${allegato['nome']} (${allegato['byte']} B)',
+          'testo': '$disegno ${allegato['nome']} (${allegato['byte']} B)',
           'il': '2026-09-08T12:30:00Z',
         });
         return si(filo(una));
+      /* Alla chat non si allega niente: quella passa parole, e il ponte lo
+       * dice con una frase invece di «non conosco». */
       case 'ponte/chat/allega':
-        final allegato = _unAllegato(detto);
-        if (allegato == null) return no('invalid_format', 'manca il file');
-        allegati.add(allegato);
-        chat ??= {
-          'numero': _prossimaSegnalazione++,
-          'tipo': 'chat',
-          'titolo': 'Chat di assistenza',
-          'stato': 'aperta',
-          'aperta_il': '2026-09-08T10:00:00Z',
-          'url': 'https://github.com/x/y/issues/9',
-          'messaggi': <Map<String, dynamic>>[],
-        };
-        (chat!['messaggi'] as List).add({
-          'da': 'casa',
-          'testo': '🎬 ${allegato['nome']} (${allegato['byte']} B)',
-          'il': '2026-09-08T12:30:00Z',
+        return no(
+          'not_supported',
+          'La chat di assistenza passa parole. Una foto si allega a una '
+              'segnalazione.',
+        );
+      case 'ponte/chat/stato':
+        return si({
+          'enabled': true,
+          'console': laConsole,
+          'opened': chat != null,
+          'name': '',
+          'unread': 0,
+          'preview': '',
+          'written_at': 0,
+          'messages': chat == null ? 0 : (chat!['messaggi'] as List).length,
         });
-        return si(filo(chat!));
+      /* I quattro sportelli di chi risponde. Senza la chiave della console il
+       * ponte vero risponde «forbidden» — non «non conosco»: la porta esiste,
+       * e in questa casa non si apre. */
+      case 'ponte/console/coda':
+      case 'ponte/console/apri':
+      case 'ponte/console/rispondi':
+      case 'ponte/console/butta':
+        if (!laConsole) {
+          return no('forbidden', 'Questa casa non risponde alle chat.');
+        }
+        final linea = detto['linea']?.toString() ?? '';
+        switch (detto['type']) {
+          case 'ponte/console/coda':
+            return si({'conversations': List.of(conversazioni)});
+          case 'ponte/console/apri':
+            /* Aperta vuol dire letta, come nel centralino vero. */
+            for (final una in conversazioni) {
+              if (una['id'] == linea) una['non_letti'] = 0;
+            }
+            return si({'messages': List.of(fili[linea] ?? const [])});
+          case 'ponte/console/rispondi':
+            final riga = {
+              'id': _prossimoDellaConsole++,
+              'da': 'console',
+              'testo': detto['testo'],
+              'scritto_il': 1757328600,
+            };
+            (fili[linea] ??= []).add(riga);
+            return si({'message': riga});
+          default:
+            conversazioni.removeWhere((una) => una['id'] == linea);
+            fili.remove(linea);
+            return si({'dropped': true});
+        }
       case 'ponte/chat/leggi':
         return si({'chat': chat == null ? null : filo(chat!)});
       case 'ponte/chat/scrivi':
+        /* Come la disegna `comeLaVuoleLApp()` nel ponte: numero zero e
+         * nessun indirizzo, perche' questa conversazione non e' una pagina
+         * di GitHub — sta nel centralino della chat e in casa. */
         chat ??= {
-          'numero': _prossimaSegnalazione++,
+          'numero': 0,
           'tipo': 'chat',
           'titolo': 'Chat di assistenza',
           'stato': 'aperta',
@@ -347,8 +495,8 @@ class PonteFinto {
     'base': base,
     'impronta': base.split('/').last,
     'varianti': ['dashboard-en.html', 'dashboard.html'],
-    'titolo': 'DashboardModern',
-    'istanza': 'ponte',
+    'titolo': 'gdahome',
+    'istanza': 'gdahome',
     'profilo': 'primary',
     'primario': true,
     'file': 294,
@@ -512,6 +660,18 @@ class PonteFinto {
     }
   }
 
+  /// Piu' eventi in **una busta sola**, com'e' fatto il mucchio che il ponte
+  /// manda quando il filo passa dal centralino: il suo segno, e poi un
+  /// messaggio per riga.
+  void mucchio(int id, List<Map<String, dynamic>> eventi) {
+    final righe = eventi.map(
+      (cosa) => jsonEncode({'id': id, 'type': 'event', 'event': cosa}),
+    );
+    for (final presa in List.of(prese)) {
+      presa.manda('$segnoDelMucchio${righe.join('\n')}');
+    }
+  }
+
   /// Butta giu' il filo senza avvisare: e' l'ascensore, la galleria, il
   /// passaggio dal Wi-Fi al 4G.
   Future<void> buttaGiu() async {
@@ -605,7 +765,7 @@ class TelefonoCollegato {
       io: DaChi.casa,
       comprime: _ponte.conosceIlGzip && detto['gzip'] == true,
     );
-    _ponte._manda(this, {'type': 'auth_required', 'ha_version': 'ponte'});
+    _ponte._manda(this, {'type': 'auth_required', 'ha_version': 'gdahome'});
   }
 
   /// Scrive solo se dall'altra parte c'e' ancora qualcuno.

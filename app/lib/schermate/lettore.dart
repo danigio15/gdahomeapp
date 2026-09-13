@@ -176,7 +176,7 @@ class _Mirino extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                'Il quadretto sta nella scheda «Il ponte», dentro Home '
+                'Il quadretto sta nella scheda «gdahome», dentro Home '
                 'Assistant.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white, fontSize: 15),

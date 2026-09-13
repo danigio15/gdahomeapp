@@ -236,12 +236,20 @@ class Segnalazioni {
     }),
   );
 
-  /// La chat: `null` finche' nessuno ha scritto.
-  Future<Segnalazione?> chat() async {
+  /// La chat, e il guasto se c'e': il filo e' `null` finche' nessuno ha
+  /// scritto, e `guaio` non e' vuoto quando il centralino dell'assistenza non
+  /// ha risposto. Sono due cose insieme perche' capitano insieme: le parole
+  /// vecchie si vedono, e accanto si dice che le nuove non sono arrivate.
+  Future<LaChat> chat() async {
     final letto = await _filo.risultato({'type': 'ponte/chat/leggi'});
     final chat = letto is Map ? letto['chat'] : null;
-    if (chat is! Map) return null;
-    return Segnalazione.leggi(Map<String, dynamic>.from(chat));
+    final guaio = letto is Map ? letto['guaio'] : null;
+    return LaChat(
+      filo: chat is Map
+          ? Segnalazione.leggi(Map<String, dynamic>.from(chat))
+          : null,
+      guaio: guaio is String ? guaio : '',
+    );
   }
 
   Future<Segnalazione> chatta(
@@ -265,19 +273,24 @@ class Segnalazioni {
     }, entro: attesaPerUnAllegato),
   );
 
-  Future<Segnalazione> allegaAllaChat(Allegato allegato) async => _una(
-    await _filo.risultato({
-      'type': 'ponte/chat/allega',
-      ...allegato._corpo,
-    }, entro: attesaPerUnAllegato),
-  );
-
   static Segnalazione _una(Object? letto) {
     if (letto is! Map) {
       throw const ComandoRifiutato('il ponte ha risposto una cosa strana');
     }
     return Segnalazione.leggi(Map<String, dynamic>.from(letto));
   }
+}
+
+/// Quello che si sa della chat in un momento: la conversazione, e il guasto.
+///
+/// Il guasto non prende il posto delle parole — la copia in casa esiste per
+/// questo — e non si alza come errore: si dice accanto, e chi guarda vede
+/// tutte e due le cose.
+class LaChat {
+  const LaChat({this.filo, this.guaio = ''});
+
+  final Segnalazione? filo;
+  final String guaio;
 }
 
 /// Cosa dire a schermo quando una segnalazione non parte: il codice del
@@ -297,12 +310,19 @@ String spiegaLErrore(Object errore) => switch (errore) {
         'collegarsi da fuori una volta.',
   ComandoRifiutato(codice: 'unknown_command') =>
     'Il ponte in casa e\' piu\' vecchio dell\'app e questa cosa non la sa '
-        'ancora fare: aggiorna l\'add-on «Il ponte».',
+        'ancora fare: aggiorna l\'add-on «gdahome».',
   ComandoRifiutato(codice: 'troppo_grande') =>
     'L\'allegato e\' troppo grande: al massimo 10 MB. Un video va tenuto '
         'corto.',
   ComandoRifiutato(codice: 'tipo_non_ammesso') =>
     'Si possono allegare solo foto e video.',
+  ComandoRifiutato(codice: 'unreachable') =>
+    'Non si riesce a parlare col centralino dell\'assistenza: riprova fra '
+        'un momento.',
+  ComandoRifiutato(codice: 'disabled') ||
+  ComandoRifiutato(
+    codice: 'not_configured',
+  ) => 'La chat di assistenza non e\' disponibile su questa casa.',
   ComandoRifiutato(codice: 'github', :final spiegazione) =>
     'GitHub non ha accettato: $spiegazione. Se era un allegato, il gettone '
         'delle segnalazioni deve poter scrivere i file (Contents: Read and '

@@ -19,7 +19,7 @@ import { join } from "node:path";
 import { accetta } from "../src/presa.js";
 import { Casa } from "../src/casa.js";
 import { Dispositivi } from "../src/dispositivi.js";
-import { Ponte } from "../src/ponte.js";
+import { Ponte, SEGNO_DEL_MUCCHIO } from "../src/ponte.js";
 
 const SEGNO_DEL_SUPERVISOR = "questo-e-il-segno-che-non-deve-uscire";
 
@@ -69,7 +69,7 @@ async function casaFinta({ rifiutaIlSegno = false, muta = false } = {}) {
 
 /* ─── Il banco: casa finta + ponte + cartella temporanea ─────────────────── */
 
-async function banco(opzioniDellaCasa = {}) {
+async function banco(opzioniDellaCasa = {}, { da = "prova", mucchio = false } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "ponte-prova-"));
   const ha = await casaFinta(opzioniDellaCasa);
   const casa = new Casa({ indirizzo: ha.indirizzo, segno: SEGNO_DEL_SUPERVISOR });
@@ -80,7 +80,7 @@ async function banco(opzioniDellaCasa = {}) {
   const server = createServer((_r, risposta) => risposta.end());
   server.on("upgrade", (richiesta, socket) => {
     const presa = accetta(richiesta, socket, {});
-    if (presa) ponte.accogli(presa, { da: "prova" });
+    if (presa) ponte.accogli(presa, { da, mucchio });
   });
   await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
 
@@ -102,7 +102,25 @@ async function banco(opzioniDellaCasa = {}) {
 function telefono(indirizzo) {
   const presa = new WebSocket(indirizzo);
   const detti = [];
-  presa.addEventListener("message", (evento) => detti.push(JSON.parse(evento.data)));
+  /* Anche il testo com'e' arrivato: un mucchio di eventi non e' JSON — e'
+   * il suo segno e poi un messaggio per riga — e contarli e' l'unico modo di
+   * sapere quante richieste sono passate dal centralino. */
+  const grezzi = [];
+  presa.addEventListener("message", (evento) => {
+    const testo = String(evento.data);
+    grezzi.push(testo);
+    /* Un mucchio si spacchetta, come fa l'app: `detti` sono i messaggi,
+     * `grezzi` le buste. La differenza fra i due conti e' esattamente quello
+     * che il centralino non fa piu' pagare. */
+    if (testo.startsWith(SEGNO_DEL_MUCCHIO)) {
+      for (const pezzo of testo.slice(SEGNO_DEL_MUCCHIO.length).split("\n")) {
+        if (pezzo) detti.push(JSON.parse(pezzo));
+      }
+      return;
+    }
+    if (!testo.startsWith("{")) return;
+    detti.push(JSON.parse(testo));
+  });
   const aperta = new Promise((ok, no) => {
     presa.addEventListener("open", ok);
     presa.addEventListener("error", () => no(new Error("il telefono non e' entrato")));
@@ -111,6 +129,7 @@ function telefono(indirizzo) {
   return {
     presa,
     detti,
+    grezzi,
     aperta,
     chiusa,
     manda: (oggetto) => presa.send(JSON.stringify(oggetto)),
@@ -346,3 +365,156 @@ async function attendi(condizione, entro = 5000) {
   }
   throw new Error("l'attesa e' scaduta");
 }
+
+/* ─── Il mucchio: gli eventi da fuori casa ───────────────────────────────── */
+
+/* Perche' questa prova esiste, e cos'era il difetto.
+ *
+ * Dentro casa un evento verso il telefono e' un messaggio su un socket della
+ * rete locale, e non costa niente. Da fuori si passa dal centralino, dove
+ * **ogni messaggio e' una richiesta contata**: il piano gratuito ne da'
+ * centomila al giorno, e una casa vera manda cinque eventi al secondo. Fanno
+ * quarantamila all'ora — due ore e mezza di plancia aperta, e il centralino si
+ * spegne per tutti fino a mezzanotte. E' arrivato l'avviso di Cloudflare al
+ * novanta per cento.
+ *
+ * Quindi da fuori gli eventi partono **insieme**, e quello che si prova qui e'
+ * che il raggruppamento non cambi niente di quello che conta: l'ordine in cui
+ * Home Assistant ha parlato, e il fatto che una risposta non aspetti. */
+
+/* Un evento come lo manda Home Assistant, con dentro il numero della
+ * sottoscrizione. */
+const unEvento = (numero, entita) =>
+  JSON.stringify({
+    id: numero,
+    type: "event",
+    event: {
+      event_type: "state_changed",
+      data: { entity_id: entita, new_state: { state: "on" } },
+    },
+  });
+
+async function dalCentralino(b) {
+  const { segno } = b.dispositivi.abbina({ nome: "telefono di fuori" });
+  const t = telefono(b.indirizzo);
+  await t.aperta;
+  await t.aspetta("auth_required");
+  t.manda({ type: "auth", access_token: segno });
+  await t.aspetta("auth_ok");
+  /* Il filo con Home Assistant: e' quello che la casa finta ha appena
+   * accettato, e da li' si spingono gli eventi. */
+  await attendi(() => b.ha.prese.length >= 1);
+  return { t, ha: b.ha.prese[b.ha.prese.length - 1] };
+}
+
+test("da fuori casa gli eventi arrivano in un mucchio, non uno per uno", async () => {
+  const b = await banco({}, { da: "centralino 1.2.3.4", mucchio: true });
+  try {
+    const { t, ha } = await dalCentralino(b);
+    const prima = t.grezzi.length;
+
+    ha.manda(unEvento(1, "light.cucina"));
+    ha.manda(unEvento(1, "light.salotto"));
+    ha.manda(unEvento(1, "sensor.frigo"));
+
+    /* Una busta sola, dopo la finestra. Tre messaggi, una richiesta. */
+    await attendi(() => t.grezzi.length > prima, 4000);
+    await attendi(() => t.detti.filter((uno) => uno.type === "event").length === 3, 4000);
+    const nuove = t.grezzi.slice(prima);
+    assert.equal(nuove.length, 1, `buste: ${nuove.length}`);
+    assert.ok(nuove[0].startsWith(SEGNO_DEL_MUCCHIO));
+    /* E dentro, nell'ordine in cui la casa ha parlato. */
+    const dentro = nuove[0]
+      .slice(SEGNO_DEL_MUCCHIO.length)
+      .split("\n")
+      .map((uno) => JSON.parse(uno));
+    assert.deepEqual(
+      dentro.map((uno) => uno.event.data.entity_id),
+      ["light.cucina", "light.salotto", "sensor.frigo"],
+    );
+    t.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("una risposta non aspetta il mucchio, e non scavalca gli eventi di prima", async () => {
+  const b = await banco({}, { da: "centralino 1.2.3.4", mucchio: true });
+  try {
+    const { t, ha } = await dalCentralino(b);
+    const prima = t.grezzi.length;
+
+    /* Un evento entra nel mucchio; la risposta che arriva subito dopo lo fa
+     * partire e parte anche lei. Chi accende una luce non aspetta un secondo,
+     * e la tessera non si disegna col valore di prima. */
+    ha.manda(unEvento(1, "light.cucina"));
+    ha.manda(JSON.stringify({ id: 9, type: "result", success: true, result: null }));
+
+    await attendi(() => t.detti.some((uno) => uno.id === 9), 2000);
+    const nuove = t.grezzi.slice(prima);
+    /* Due buste: l'evento da solo — uno non e' un mucchio — e la risposta. */
+    assert.equal(nuove.length, 2, `buste: ${JSON.stringify(nuove)}`);
+    assert.equal(JSON.parse(nuove[0]).type, "event");
+    assert.equal(JSON.parse(nuove[1]).id, 9);
+    t.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("in casa non si raggruppa niente: la finestra sarebbe un ritardo per niente", async () => {
+  const b = await banco({}, { da: "192.168.1.9", mucchio: true });
+  try {
+    const { t, ha } = await dalCentralino(b);
+    const prima = t.grezzi.length;
+    ha.manda(unEvento(1, "light.cucina"));
+    ha.manda(unEvento(1, "light.salotto"));
+    await attendi(() => t.grezzi.length - prima === 2, 2000);
+    for (const una of t.grezzi.slice(prima)) {
+      assert.equal(una.startsWith(SEGNO_DEL_MUCCHIO), false);
+    }
+    t.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("un telefono che non sa spacchettare riceve un messaggio per evento", async () => {
+  const b = await banco({}, { da: "centralino 1.2.3.4", mucchio: false });
+  try {
+    const { t, ha } = await dalCentralino(b);
+    const prima = t.grezzi.length;
+    ha.manda(unEvento(1, "light.cucina"));
+    ha.manda(unEvento(1, "light.salotto"));
+    await attendi(() => t.grezzi.length - prima === 2, 2000);
+    for (const una of t.grezzi.slice(prima)) {
+      assert.equal(una.startsWith(SEGNO_DEL_MUCCHIO), false);
+    }
+    t.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("quello che era nel mucchio parte prima che il filo si chiuda", async () => {
+  const b = await banco({}, { da: "centralino 1.2.3.4", mucchio: true });
+  try {
+    const { t, ha } = await dalCentralino(b);
+    const prima = t.grezzi.length;
+    const collegamento = [...b.ponte.collegamenti][0];
+    ha.manda(unEvento(1, "light.cucina"));
+    ha.manda(unEvento(1, "light.salotto"));
+    /* Si aspetta che siano **nel mucchio** — mandarli e' un giro di socket, e
+     * chiudere prima proverebbe un'altra cosa — e poi si chiude dentro la
+     * finestra: due eventi raccolti e mai mandati sarebbero due tessere col
+     * valore di prima. */
+    await attendi(() => collegamento._mucchio.length === 2);
+    collegamento.chiudi(1000, "");
+    await attendi(() => t.grezzi.length > prima, 2000);
+    const nuove = t.grezzi.slice(prima);
+    assert.ok(nuove[0].startsWith(SEGNO_DEL_MUCCHIO), `arrivato: ${nuove[0]}`);
+    assert.equal(nuove[0].slice(SEGNO_DEL_MUCCHIO.length).split("\n").length, 2);
+  } finally {
+    await b.spegni();
+  }
+});

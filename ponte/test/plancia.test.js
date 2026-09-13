@@ -46,7 +46,7 @@ test("la plancia vera portata dentro c'e', e ha la pagina in due lingue", () => 
   const descritta = plancia.descrizione();
   assert.equal(descritta.base, `${BASE}/${plancia.impronta}`);
   assert.equal(descritta.profilo, "primary");
-  assert.equal(descritta.istanza, "ponte");
+  assert.equal(descritta.istanza, "gdahome");
   assert.ok(descritta.file > 200, "sono centinaia di file: la pagina e i moduli");
   assert.match(descritta.commit, /^[0-9a-f]{40}$/);
 

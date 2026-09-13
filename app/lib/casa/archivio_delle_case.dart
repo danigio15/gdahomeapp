@@ -155,6 +155,25 @@ class ArchivioDelleCase {
     await _cambia(id, (vecchia) => vecchia.con(ultimoApprodo: da));
   }
 
+  /// Quale plancia si guarda in questa casa.
+  ///
+  /// Si scrive solo quando cambia davvero, come per l'approdo: la scelta la si
+  /// fa una volta e poi si apre l'app cento, e cento scritture identiche sul
+  /// disco di un telefono non servono a nessuno. Vuoto vuol dire tornare alla
+  /// prima.
+  Future<void> segnaLaPlancia(String id, String profilo) async {
+    final casa = quella(id);
+    if (casa == null) return;
+    final voluta = profilo.isEmpty ? null : profilo;
+    if (casa.plancia == voluta) return;
+    await _cambia(
+      id,
+      (vecchia) => voluta == null
+          ? vecchia.con(togliLaPlancia: true)
+          : vecchia.con(plancia: voluta),
+    );
+  }
+
   Future<void> _cambia(
     String id,
     CasaConosciuta Function(CasaConosciuta) come,

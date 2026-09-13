@@ -182,9 +182,16 @@ class _ServitoreSulWeb implements ServitoreDiQuestoSistema {
      * Home Assistant la radice non e' dove sta l'app. Il service worker
      * guarda dove il percorso **contiene** la cartella, non dove comincia, ed
      * e' per questo che regge tutti e due i casi. */
-    return Uri.base.resolve(
+    final dove = Uri.base.resolve(
       quale.percorsoDellaPagina(premesse.lingua).replaceFirst('/', ''),
     );
+    /* Quale plancia, nell'indirizzo: non per la pagina — le premesse le mette
+     * il lavoratore — ma perche' due plance dello stesso ponte hanno gli
+     * stessi file, e chi guarda il riquadro lo rifa' solo quando l'indirizzo
+     * cambia. Solo per quelle in piu': la prima tiene l'indirizzo di
+     * sempre. */
+    if (quale.primario || quale.profilo.isEmpty) return dove;
+    return dove.replace(queryParameters: {'plancia': quale.profilo});
   }
 
   @override
@@ -224,9 +231,36 @@ class _ServitoreSulWeb implements ServitoreDiQuestoSistema {
     }
   }
 
+  /* Una pagina nuova si annuncia, e la cucitura e' **sua**.
+   *
+   * Qui c'era il difetto che teneva il pallino della plancia rosso con il filo
+   * vivo, e si vedeva solo nel browser.
+   *
+   * Nel browser la pagina della plancia si ricarica per un sacco di ragioni
+   * normali: si preme «Salva» nella Configurazione, si tocca «Plancia» nella
+   * barra essendoci gia', si cambia «Plancia leggera», la casa arriva dopo che
+   * la pagina si era aperta. Ogni ricarica e' un documento nuovo, con un
+   * WebSocket nuovo che si annuncia — e trovava una cucitura ancora viva,
+   * quella del documento di prima, che parlava con una pagina che non
+   * esisteva piu'. La cucitura non si apriva, `auth_ok` non arrivava, e la
+   * plancia restava in «Riconnessione...»: pallino rosso, nessuno stato,
+   * nessuna configurazione — cioe' «non hai ancora collegato le tue entita'»
+   * su una casa configurata.
+   *
+   * Sul telefono non capitava, e per un motivo che qui non c'era: li' ogni
+   * pagina apre un WebSocket vero al servitore, e ognuno si prende **la sua**
+   * cucitura (`servitore.dart`, `_cuciture`). Adesso fa lo stesso anche qui:
+   * chi arriva prende il posto di chi c'era. */
   void _apriLaCucitura() {
-    if (_cucitura != null) return;
-    final cucitura = Cucitura(_VersoIlRiquadro(), () async => _filo());
+    final vecchia = _cucitura;
+    _cucitura = null;
+    /* Si abbandona senza dire niente: un «chiudi» andrebbe a tutti i riquadri
+     * della pagina, cioe' anche a quello nuovo che si e' appena annunciato. */
+    if (vecchia != null) unawaited(vecchia.abbandona());
+    /* Il filo **quando e' dentro**, non quello che c'e': `auth_ok` vuol dire
+     * «da qui si passa», e con un filo che sta ancora bussando sarebbe una
+     * bugia che la plancia paga con cinque secondi di rosso a ogni giro. */
+    final cucitura = Cucitura(_VersoIlRiquadro(), () => filoPronto(_filo));
     _cucitura = cucitura;
     unawaited(
       cucitura.avvia().whenComplete(() {

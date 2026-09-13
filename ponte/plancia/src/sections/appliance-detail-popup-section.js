@@ -24,6 +24,11 @@ import {
   elencoComandi,
 } from "../core/comandi-accanto.js";
 import {
+  elencoLetture,
+  lettureDelDispositivo as lettureScelte,
+} from "../core/letture-accanto.js";
+import { soloQuelleViste } from "../core/le-voci-nascoste.js";
+import {
   applianceModelForIndex,
   buildCardMarkup,
   cardLabels,
@@ -221,7 +226,16 @@ function famiglie(appliance) {
     const acceso = /^(on|open|aperto|running|cleaning|heat|cool)$/i.test(grezzo);
     pillole.push({ entity, nome: nomeInParole(nome, token), acceso, valore: grezzo });
   }
-  return { misure: misure.slice(0, 12), pillole: pillole.slice(0, 12), comandi };
+  /* E si toglie quello che chi possiede l'apparecchio ha detto di non voler
+   * vedere (#512). Si filtra qui, in fondo, e non entrata per entrata: cosi'
+   * la stessa entita' sparisce da tutte e tre le file — la misura, la pillola
+   * e il tasto — invece che da quella in cui e' capitato di ricordarsene. */
+  const viste = (elenco) => soloQuelleViste(elenco, appliance);
+  return {
+    misure: viste(misure).slice(0, 12),
+    pillole: viste(pillole).slice(0, 12),
+    comandi: viste(comandi),
+  };
 }
 
 /* I tasti della card, dentro la finestra.
@@ -360,6 +374,7 @@ function riveste(indice) {
       lista.append(riga);
     }
   }
+  aggiungiAltreLetture(lista, appliance, titoletto);
   /* Gli altri comandi stanno accanto a quelli di sempre (#338): sono comandi
    * anche loro, e chi apre la finestra per far partire l'asciugatrice li cerca
    * dove ci sono i tasti. */
@@ -481,8 +496,50 @@ function tastoDelComandoExtra(voce) {
   return tasto;
 }
 
+/* Le altre letture dell'apparecchio (#471).
+ *
+ * «Se su ogni elettrodomestico si potesse aggiungere un'entità dandole un nome:
+ * io nell'asciugatrice monitoro temperatura aria e umidità residua.» Le sceglie
+ * la scheda dell'apparecchio, le disegna questa riga, e a dire come si chiamano
+ * e con che unità si scrivono è lo stesso vocabolario del robot e dei lettori
+ * (`core/letture-accanto.js`): un secondo modo di scrivere «34 °C» sarebbe
+ * un secondo modo di sbagliarlo.
+ *
+ * Stanno sopra i comandi: si guardano, non si toccano, e chi apre la finestra
+ * legge prima di premere. */
+function aggiungiAltreLetture(lista, appliance, titoletto) {
+  /* Anche una lettura scelta a mano si puo' non voler vedere (#512): l'elenco
+   * di cio' che si nasconde vale per tutta la finestra, non per le sole voci
+   * che ci sono arrivate dall'integrazione. */
+  const voci = soloQuelleViste(
+    lettureScelte(
+      { ...apparecchioDeiComandi(appliance), letture: appliance?.letture },
+      allStates(),
+    ),
+    appliance,
+  );
+  if (!voci.length) return false;
+  lista.append(titoletto(t("Altre letture", "Other readings")));
+  const griglia = doc.createElement("div");
+  griglia.className = "dm-apde-caselle";
+  for (const voce of voci) {
+    const casella = doc.createElement("button");
+    casella.type = "button";
+    casella.className = "dm-apde-casella hist-clickable";
+    casella.dataset.dmApdeEntity = voce.entity;
+    casella.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce.testo)}</b><span>${esc(voce.name)}</span>`;
+    casella.addEventListener("click", (event) => apriStorico(event, voce.entity, voce.name));
+    griglia.append(casella);
+  }
+  lista.append(griglia);
+  return true;
+}
+
 function aggiungiAltriComandi(lista, appliance, titoletto) {
-  const voci = comandiScelti(apparecchioDeiComandi(appliance), allStates());
+  const voci = soloQuelleViste(
+    comandiScelti(apparecchioDeiComandi(appliance), allStates()),
+    appliance,
+  );
   if (!voci.length) return false;
   lista.append(titoletto(t("Altri comandi", "Other commands")));
   for (const voce of voci) {
@@ -588,18 +645,37 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
     readOnly: false,
   });
   const nuove = (voci) => voci.filter((voce) => !voce.mapped);
-  const stato = nuove(gruppi.state);
-  const letture = nuove(gruppi.readings);
+  const stato = soloQuelleViste(nuove(gruppi.state), appliance);
   /* Un'entita' scelta come «altro comando» (#338) esce di li' e basta: e' la
    * stessa entita', e disegnarla due volte — una fra i comandi del dispositivo
    * e una fra quelli scelti — sarebbe la stessa cosa detta due volte, con due
    * tasti che si contraddicono a vicenda mentre lo stato cambia. */
   const scelti = new Set(elencoComandi(appliance?.comandi));
-  const comandi = gruppi.controls.filter(
+  /* E quello vale uguale per una lettura scelta a mano (#471): «Altre letture»
+   * qui sotto la disegna gia', ed e' li' che chi l'ha scelta se l'aspetta.
+   * Lasciandola anche fra le letture del dispositivo, la stessa misura usciva
+   * due volte nella stessa finestra, a due caselle di distanza — e chi legge
+   * due caselle uguali pensa che siano due sonde. */
+  const scelteDaLeggere = new Set(elencoLetture(appliance?.letture));
+  /* E si toglie quello che si e' scelto di non vedere (#512): un dispositivo
+   * moderno pubblica anche il numero di serie e tre diagnostiche, e chi le
+   * nasconde le vuole nascoste in ogni fila di questa finestra. */
+  const viste = (elenco) => soloQuelleViste(elenco, appliance);
+  const letture = viste(nuove(gruppi.readings)).filter(
+    (voce) => !scelteDaLeggere.has(voce.entity),
+  );
+  const comandi = viste(gruppi.controls).filter(
     (voce) => !scelti.has(voce.entity) && (!voce.mapped || voce.control?.kind !== "toggle"),
   );
-  const diagnostica = gruppi.diagnostics.filter((voce) => !scelti.has(voce.entity));
-  if (!stato.length && !letture.length && !comandi.length && !diagnostica.length && !scelti.size)
+  const diagnostica = viste(gruppi.diagnostics).filter((voce) => !scelti.has(voce.entity));
+  if (
+    !stato.length &&
+    !letture.length &&
+    !comandi.length &&
+    !diagnostica.length &&
+    !scelti.size &&
+    !scelteDaLeggere.size
+  )
     return;
 
   const testa = doc.createElement("section");
@@ -660,6 +736,7 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
     lista.append(titoletto(t("I comandi del dispositivo", "The device controls")));
     for (const voce of comandi) lista.append(rigaDiComando(voce));
   }
+  aggiungiAltreLetture(lista, appliance, titoletto);
   /* Quelli scelti a mano stanno subito sotto (#338), prima della diagnostica:
    * sono i tasti per cui la finestra si apre, non un dettaglio. */
   aggiungiAltriComandi(lista, appliance, titoletto);

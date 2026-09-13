@@ -56,6 +56,10 @@ function catalogoTessere() {
      * aiuto. Chi non lo vuole in Home deve poterlo spegnere da qui. */
     ["assistenza", "💬", t("Assistenza", "Support")],
     ["evidenza", "⭐", t("In evidenza", "Highlights")],
+    /* Le sezioni che si fa l'utente (#262): una voce sola per tutte, come gli
+     * avvisi personalizzati. Sono tante quante uno se ne fa, e una riga a testa
+     * riempirebbe il catalogo di voci diverse da una casa all'altra. */
+    ["mie", "🧰", t("Sezioni mie", "My sections")],
     /* Le segnalazioni: la riga sta qui per tutti, ma la tessera in Home la
      * vede solo chi tiene la repository — il suo modello torna `null` per
      * chiunque altro. Chi non ha la console trova quindi un interruttore che
@@ -64,6 +68,11 @@ function catalogoTessere() {
      * altre, e una tessera senza la sua riga qui non si puo' ne' ordinare ne'
      * nascondere. */
     ["segnalazioni", "🎫", t("Segnalazioni", "Reports")],
+    /* Cosa c'e' da aggiornare in casa (#498). Come le segnalazioni, la riga
+     * sta qui per tutti e la tessera compare solo quando c'e' qualcosa da
+     * fare: senza aggiornamenti in attesa il suo modello torna `null`. Chi
+     * non vuole vederli nemmeno quando ci sono lo spegne da qui. */
+    ["aggiornamenti", "⬆️", t("Aggiornamenti", "Updates")],
     /* Impegni e cose da fare stanno in una tessera sola (#259): erano due
      * mattonelle con la stessa faccia, e chi guardava doveva ricordarsi quale
      * era quale. Dentro restano due blocchi, perche' un appuntamento succede a
@@ -77,7 +86,7 @@ function catalogoTessere() {
     /* Le porte e i cancelli (#457): erano dentro la Sicurezza, e adesso hanno
      * tessera loro perche' rispondono a un'altra domanda — non «come sta la
      * casa» ma «aprimi il portone». Si ordinano e si spengono ognuna per se'. */
-    ["porte", "🚪", t("Porte", "Doors")],
+    ["porte", "🚪", t("Apri porte", "Openers")],
     ["telecamere", "📹", t("Telecamere", "Cameras")],
     ["energia", "⚡", t("Energia", "Energy")],
     ["elettrodomestici", "🫧", t("Elettrodomestici", "Appliances")],

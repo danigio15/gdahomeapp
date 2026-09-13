@@ -1,7 +1,19 @@
 name: gdahome
 description: "L'app di casa: la plancia, e i comandi che in Home Assistant stanno nascosti."
 publish_to: "none"
-version: 0.1.0+1
+# La versione, la stessa della plancia e dell'add-on.
+#
+# Un numero solo per tutto il prodotto: chi manda una segnalazione scrive
+# «1.4.24» e non tre numeri da mettere insieme, e chi risponde sa cosa sta
+# guardando senza chiedere. La plancia dentro l'add-on la sua versione la porta
+# da se' (`ORIGINE.json`), e resta visibile a parte: quella la decide la
+# dashboard, questa la decidiamo noi.
+#
+# Il numero dopo il `+` e' quello che chiedono i negozi, e deve **crescere
+# sempre**. Si ricava dalla versione invece di batterlo a mano:
+# 1.4.24 → 1 × 10000 + 4 × 100 + 24 = 10424. Finche' il minore e la patch
+# stanno sotto cento, cresce insieme alla versione e non si sbaglia.
+version: 1.4.25+10425
 
 environment:
   sdk: ^3.13.0

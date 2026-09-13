@@ -113,7 +113,39 @@ class Collegamento {
 
   /// L'app e' tornata in primo piano: il filo si controlla subito, invece di
   /// aspettare il battito.
-  void sveglia() => _filo?.sveglia();
+  /// L'app e' tornata davanti: si controlla il filo, o lo si riapre se era a
+  /// riposo.
+  void sveglia() {
+    if (_aRiposo) {
+      _aRiposo = false;
+      unawaited(apri(forza: true));
+      return;
+    }
+    _filo?.sveglia();
+  }
+
+  /// L'app e' andata via da un pezzo: **si chiude il filo**.
+  ///
+  /// Non e' un risparmio di batteria: e' un risparmio di **richieste**. Da
+  /// fuori casa il filo passa dal centralino, e li' ogni messaggio e' una
+  /// richiesta contata — centomila al giorno, sul piano gratuito. Una casa
+  /// vera manda cinque eventi al secondo, e li mandava anche con l'app in
+  /// tasca o con la scheda del browser nascosta dietro le altre: ore di
+  /// eventi che nessuno stava guardando, pagati come quelli guardati.
+  ///
+  /// Chi lo chiama aspetta un po' prima (`main.dart`): un'app che si guarda
+  /// per due secondi e torna non deve rifare la strada da capo.
+  Future<void> riposa() async {
+    if (!_avviato || _filo == null || _aRiposo) return;
+    _aRiposo = true;
+    await _chiudiIlFilo();
+    _vai(ComeVa.inCammino);
+  }
+
+  /// Se il filo e' chiuso perche' l'app non e' davanti. Diverso da «caduto»:
+  /// qui non si riprova, si aspetta che qualcuno torni a guardare.
+  bool get aRiposo => _aRiposo;
+  bool _aRiposo = false;
 
   ComeVa get comeVa => _comeVa;
   String? get perche => _perche;
@@ -126,6 +158,16 @@ class Collegamento {
   /// DashboardModern non c'e': [pannelloLetto] distingue i due casi.
   PannelloDellaPlancia? get pannello => _pannello;
   bool get pannelloLetto => _pannelloLetto;
+
+  /// Le plance di questa casa: piu' d'una per chi se n'e' aggiunta.
+  ///
+  /// Arrivano insieme a dove sta la plancia, e vuota vuol dire un ponte che
+  /// non le sa tenere: allora di plancia ce n'e' una, com'e' sempre stato.
+  List<UnaPlancia> get plance => _pannello?.plance ?? const [];
+
+  /// Quale si sta guardando, per chi ne ha piu' d'una. Vuoto vuol dire la
+  /// prima, che e' la risposta di sempre.
+  String get planciaScelta => _pannello?.profilo ?? '';
 
   /// Da dove si sta passando adesso: serve a scrivere «in casa» o «da fuori».
   DaDove? get daDove => _daDove;
@@ -148,6 +190,7 @@ class Collegamento {
   /// vuole il gesto di tirare giu' per aggiornare.
   Future<void> apri({bool forza = false}) async {
     _avviato = true;
+    _aRiposo = false;
     if (!forza &&
         _comeVa == ComeVa.aperta &&
         dentro &&
@@ -289,9 +332,13 @@ class Collegamento {
   ///
   /// Un errore qui non e' un errore della casa: la casa e' aperta e le entita'
   /// ci sono. Si segna che si e' chiesto, e la schermata dice quello che sa.
-  Future<void> _leggiLaPlancia(Filo filo) async {
+  Future<void> _leggiLaPlancia(Filo filo, {String? profilo}) async {
+    /* Quella scelta l'ultima volta in **questa** casa. Chi ne ha una sola non
+     * ha mai scelto niente, e qui non c'e' scritto niente: si chiede la
+     * prima, ed e' la domanda di sempre. */
+    final voluto = profilo ?? _casa?.plancia ?? '';
     try {
-      _pannello = await trovaLaPlancia(filo);
+      _pannello = await trovaLaPlancia(filo, profilo: voluto);
     } on ErroreDelPonte {
       _pannello = null;
     }
@@ -306,6 +353,32 @@ class Collegamento {
     final filo = _filo;
     if (filo == null || !filo.dentro) return;
     await _leggiLaPlancia(filo);
+  }
+
+  /// Apre un'altra plancia di questa casa.
+  ///
+  /// La scelta si **ricorda**, e si ricorda per casa: chi ha una plancia al
+  /// mare e una in citta' non vuole che cambiando casa gli resti quella di
+  /// prima. Si scrive dopo aver letto, e solo se la plancia c'era davvero:
+  /// ricordare una scelta che non ha funzionato vorrebbe dire riaprire ogni
+  /// volta su un errore.
+  Future<void> cambiaPlancia(String profilo) async {
+    final filo = _filo;
+    if (filo == null || !filo.dentro) return;
+    if (profilo == planciaScelta) return;
+    await _leggiLaPlancia(filo, profilo: profilo);
+    final casa = _casa;
+    if (casa == null) return;
+    /* Quella che si e' aperta davvero, che non e' detto sia quella chiesta:
+     * una plancia tolta da un altro telefono fa tornare alla prima. */
+    final aperta = _pannello?.profilo ?? '';
+    await archivio.segnaLaPlancia(
+      casa.id,
+      _pannello?.primario ?? true ? '' : aperta,
+    );
+    _casa = archivio.quella(casa.id) ?? casa;
+    _planciaCambiata.add(null);
+    _avvisa();
   }
 
   /// Quando il filo si rialza per conto suo, si riprende da dove si era

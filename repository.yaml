@@ -1,9 +1,15 @@
-# L'archivio degli add-on di DashboardModern.
+# L'archivio degli add-on di gdahome.
 #
-# Lo stesso indirizzo GitHub serve due cose diverse: HACS ci trova
-# l'integrazione (`hacs.json`, `custom_components/`), il Supervisor ci trova gli
-# add-on (questo file, e le cartelle di primo livello che hanno un
-# `config.yaml`). Non si danno fastidio: guardano posti diversi.
-name: DashboardModern
-url: https://github.com/danigio15/dashboardmodern-v2
+# E' questo file che rende questa repository un **archivio di add-on**: chi
+# incolla il suo indirizzo in Home Assistant — Impostazioni → Add-on →
+# Negozio → i tre puntini → Archivi — si trova «gdahome» fra gli add-on da
+# installare, e da li' in poi gli aggiornamenti gli arrivano come per ogni
+# altro add-on.
+#
+# Il Supervisor guarda questo file e le cartelle di primo livello che hanno un
+# `config.yaml`: oggi una sola, `ponte/` — la cartella si chiama come il pezzo,
+# e l'add-on che ci sta dentro si chiama `gdahome` come il prodotto. Non serve
+# nessun gettone, perche' questa repository e' pubblica.
+name: gdahome
+url: https://github.com/danigio15/gdahomeapp
 maintainer: danigio15 <https://github.com/danigio15>

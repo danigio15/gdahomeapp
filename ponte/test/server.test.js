@@ -359,7 +359,7 @@ test("la console serve la sua pagina e non esce dalla sua cartella", async () =>
   try {
     const pagina = await prendi(`${b.consolle}/`);
     assert.equal(pagina.status, 200);
-    assert.match(await pagina.text(), /Il ponte/);
+    assert.match(await pagina.text(), /<h1>gdahome<\/h1>/);
 
     const fuori = mkdtempSync(join(tmpdir(), "fuori-"));
     writeFileSync(join(fuori, "segreto.txt"), "questo non si deve leggere", "utf8");
@@ -512,3 +512,67 @@ async function attendi(condizione, entro = 5000) {
   }
   throw new Error("l'attesa e' scaduta");
 }
+
+test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-on", async () => {
+  const b = await banco();
+  try {
+    /* Una casa ne ha una, e si chiama come si e' sempre chiamata. */
+    const prima = await (await prendi(`${b.consolle}/api/plance`)).json();
+    assert.deepEqual(prima.plance, [
+      {
+        profilo: "primary",
+        titolo: "gdahome",
+        istanza: "gdahome",
+        primaria: true,
+        creata_il: 0,
+      },
+    ]);
+
+    /* Una in piu': cassetto suo, istanza sua. Come aggiungere una seconda
+     * istanza dell'integrazione in Home Assistant. */
+    const aggiunta = await prendi(`${b.consolle}/api/plance`, {
+      method: "POST",
+      body: JSON.stringify({ titolo: "Casa al mare" }),
+    });
+    assert.equal(aggiunta.status, 201);
+    const { quale } = await aggiunta.json();
+    assert.equal(quale.profilo, "casa-al-mare");
+    assert.equal(quale.istanza, "gdahome-casa-al-mare");
+    assert.equal(quale.primaria, false);
+
+    /* Rinominare cambia il titolo e non il cassetto: se no rinominare una
+     * plancia le cancellerebbe la configurazione. */
+    const rinominata = await (
+      await prendi(`${b.consolle}/api/plance`, {
+        method: "PATCH",
+        body: JSON.stringify({ profilo: "casa-al-mare", titolo: "Al mare" }),
+      })
+    ).json();
+    assert.equal(rinominata.quale.titolo, "Al mare");
+    assert.equal(rinominata.quale.profilo, "casa-al-mare");
+
+    /* La prima non si toglie: una casa senza nessuna plancia e' un'app che si
+     * apre su niente. */
+    const negata = await prendi(`${b.consolle}/api/plance`, {
+      method: "DELETE",
+      body: JSON.stringify({ profilo: "primary" }),
+    });
+    assert.equal(negata.status, 400);
+    assert.equal((await negata.json()).errore, "non_la_prima");
+
+    const tolta = await (
+      await prendi(`${b.consolle}/api/plance`, {
+        method: "DELETE",
+        body: JSON.stringify({ profilo: "casa-al-mare" }),
+      })
+    ).json();
+    assert.equal(tolta.plance.length, 1);
+
+    /* E sulla porta dell'app quelle vie non esistono: la scheda dell'add-on
+     * sta dietro l'autenticazione di Home Assistant, quella porta no. */
+    const fuori = await prendi(`${b.app}/api/plance`);
+    assert.equal(fuori.status, 404);
+  } finally {
+    await b.spegni();
+  }
+});

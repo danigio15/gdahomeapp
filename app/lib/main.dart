@@ -115,6 +115,14 @@ class Portone extends StatefulWidget {
   State<Portone> createState() => _PortoneState();
 }
 
+/// Quanto si aspetta, con l'app non davanti, prima di chiudere il filo.
+///
+/// Mezzo minuto: chi guarda un messaggio e torna, o chi cambia finestra sul
+/// computer, non rifa' la strada da capo; chi mette il telefono in tasca o
+/// lascia una scheda aperta dietro le altre smette di far pagare richieste a
+/// nessuno.
+const quantoSiAspettaPrimaDiRiposare = Duration(seconds: 30);
+
 class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   late final Collegamento _collegamento;
   late final FabbricaDellaPlancia _plancia =
@@ -127,6 +135,8 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       );
   bool _pronto = false;
   StreamSubscription<void>? _ascolto;
+  /* Se l'app non torna davanti entro questo tempo, il filo si chiude. */
+  Timer? _seNonTorna;
 
   @override
   void initState() {
@@ -147,10 +157,29 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   /* Quando l'app torna in primo piano il filo si controlla subito: un
    * telefono messo in tasca ha quasi sempre un socket morto in mano, e
    * aspettare che se ne accorga il battito voleva dire una plancia ferma per
-   * un paio di minuti. */
+   * un paio di minuti.
+   *
+   * E quando l'app se ne va, dopo un po' il filo si chiude. Non per la
+   * batteria: per le **richieste**. Da fuori casa ogni messaggio passa dal
+   * centralino, dove e' una richiesta contata — centomila al giorno sul piano
+   * gratuito — e la casa continuava a mandare i suoi cinque eventi al secondo
+   * anche con l'app in tasca e con la scheda del browser nascosta dietro le
+   * altre. Una scheda dimenticata aperta si mangiava la giornata di tutti.
+   *
+   * Non subito, pero': chi guarda un messaggio e torna dopo due secondi non
+   * deve rifare la strada da capo. */
   @override
   void didChangeAppLifecycleState(AppLifecycleState stato) {
-    if (stato == AppLifecycleState.resumed) _collegamento.sveglia();
+    if (stato == AppLifecycleState.resumed) {
+      _seNonTorna?.cancel();
+      _seNonTorna = null;
+      _collegamento.sveglia();
+      return;
+    }
+    _seNonTorna ??= Timer(quantoSiAspettaPrimaDiRiposare, () {
+      _seNonTorna = null;
+      unawaited(_collegamento.riposa());
+    });
   }
 
   Future<void> _accendi() async {
@@ -173,6 +202,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _seNonTorna?.cancel();
     _ascolto?.cancel();
     Misure.io.spegni();
     _impostazioni.chiudi();

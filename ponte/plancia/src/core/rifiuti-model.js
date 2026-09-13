@@ -195,14 +195,29 @@ export function caselleDelTurno(turno, quando) {
   return ((distanza % GIORNI_DEL_TURNO) + GIORNI_DEL_TURNO) % GIORNI_DEL_TURNO;
 }
 
+/* Quanti giorni valgono come «questa settimana». Dentro questa finestra ogni
+ * ritiro si vede, anche quando lo stesso materiale passa piu' volte. */
+const GIORNI_VICINI = 7;
+
 /**
  * I ritiri che il turno annuncia da oggi in avanti.
  *
  * Si guardano quattordici giorni e non di piu': il turno si ripete, quindi
- * oltre non c'e' niente di nuovo da dire — solo le stesse righe una seconda
- * volta. Ogni materiale esce UNA volta, alla sua prima occasione: un elenco
- * che ripete la plastica fra due giorni e fra nove non risponde alla domanda
- * della sera, la annacqua.
+ * oltre non c'e' niente di nuovo da dire.
+ *
+ * Dentro la settimana esce OGNI ritiro, anche quando lo stesso materiale passa
+ * piu' d'una volta. Prima ne usciva uno solo per materiale, alla prima
+ * occasione, e la regola sembrava giusta finche' non si e' vista addosso a un
+ * calendario vero: «giovedi' e sabato non compaiono» (#514). Chi ha l'organico
+ * il martedi', il giovedi' e il sabato vedeva il solo martedi', e i due giorni
+ * dopo sparivano dalla plancia — non «piu' in basso»: proprio non c'erano. Per
+ * un calendario dei rifiuti quello non e' un elenco sintetico, e' un elenco che
+ * sbaglia: la domanda e' «stasera cosa metto fuori», e si fa un giorno per
+ * volta.
+ *
+ * Nella settimana dopo, invece, il materiale gia' annunciato non si ripete: li'
+ * il turno sta solo ricominciando, e «organico fra nove giorni» sotto
+ * «organico fra due» e' la stessa notizia detta due volte.
  */
 export function ritiriDalTurno(turno, adesso = Date.now()) {
   const dato = normalizzaTurno(turno);
@@ -214,12 +229,18 @@ export function ritiriDalTurno(turno, adesso = Date.now()) {
     const quando = new Date(oggi.getTime() + avanti * 86400000 + 12 * 3600000);
     const casella = caselleDelTurno(dato, quando);
     if (casella < 0) break;
+    const vicino = avanti < GIORNI_VICINI;
     for (const materiale of dato.giorni[casella]) {
-      if (visti.has(materiale)) continue;
+      /* Lontano si salta cio' che e' gia' stato detto; vicino no, perche' due
+       * ritiri dello stesso materiale in settimana sono due sere diverse. */
+      if (!vicino && visti.has(materiale)) continue;
       visti.add(materiale);
       const voce = materialeDiSerie(materiale);
       fuori.push({
-        id: `turno-${materiale}`,
+        /* L'id porta anche il giorno: con due ritiri dello stesso materiale in
+         * settimana, `turno-organico` sarebbe stata la stessa chiave per due
+         * righe diverse — e chi disegna per chiave ne avrebbe persa una. */
+        id: `turno-${materiale}-${avanti}`,
         materiale: voce.chiave,
         nome: "",
         icona: voce.icona,
@@ -781,8 +802,37 @@ export function letturaRifiuti(
     return dalSensore ? materialeDiSerie(dalSensore) : null;
   };
   const materialeDellaRiga = (riga) => vestitoDellaRiga(riga)?.chiave || riga.materiale;
+  const conEntita = dato.righe.filter((riga) => riga.entity.includes("."));
+  /* Una riga il cui sensore, invece di una data, porta un ELENCO (#443).
+   *
+   * «Purtroppo anche dopo l'aggiornamento ancora non legge il sensore», con
+   * `sensor.savno_conegliano_prossimi_ritiri` nella foto. L'elenco la plancia
+   * lo sapeva gia' leggere, ma solo dalla casella in fondo — quella del
+   * calendario. Chi ha un sensore solo per tutta la raccolta lo scrive dove
+   * c'e' scritto «Sensore o calendario del ritiro», cioe' in una riga, che e'
+   * la casella che si incontra per prima e che dice proprio il suo nome.
+   *
+   * Li' quel sensore veniva letto come una riga qualunque: si cercava una data
+   * nel suo stato, non c'era, e restava un trattino muto. Il suo elenco — con
+   * dentro tutti i ritiri — nessuno lo guardava.
+   *
+   * Adesso lo si guarda, e solo quando serve: una riga da cui una data esce
+   * resta la riga che e', perche' li' il materiale l'ha scelto chi configura e
+   * la data c'e'. Una riga da cui non esce niente, prima di rassegnarsi al
+   * trattino, chiede al sensore se per caso porta un elenco. */
+  const elenchiDelleRighe = new Map();
+  for (const riga of conEntita) {
+    const stato = leggi(riga.entity);
+    if (!risponde(stato) || dataDelRitiro(stato, adesso)) continue;
+    const voci = ritiriDaUnElenco(stato, adesso);
+    if (voci.length) elenchiDelleRighe.set(riga.entity, voci);
+  }
+  const dalleRighe = [...elenchiDelleRighe.values()].flat();
   const daiSensori = new Set(
-    dato.righe.filter((riga) => riga.entity.includes(".")).map(materialeDellaRiga),
+    conEntita
+      .filter((riga) => !elenchiDelleRighe.has(riga.entity))
+      .map(materialeDellaRiga)
+      .concat(dalleRighe.map((riga) => riga.materiale)),
   );
   /* Un sensore solo che porta tutto l'elenco (#443): le sue voci diventano
    * righe come le altre. Un materiale che ha gia' il suo sensore per materiale
@@ -792,12 +842,17 @@ export function letturaRifiuti(
     dato.calendario.includes(".") ? leggi(dato.calendario) : null,
     adesso,
   ).filter((riga) => !daiSensori.has(riga.materiale));
-  const dallElencoMateriali = new Set(dallElenco.map((riga) => riga.materiale));
+  /* Due elenchi che portano lo stesso materiale non fanno due bidoni: quello
+   * scritto in una riga l'ha scelto chi configura, e comanda. */
+  const vistiDalleRighe = new Set(dalleRighe.map((riga) => riga.materiale));
+  const dallElencoMateriali = new Set(
+    dallElenco.map((riga) => riga.materiale).concat(dalleRighe.map((riga) => riga.materiale)),
+  );
   const dalTurno = ritiriDalTurno(dato.turno, adesso).filter(
     (riga) => !daiSensori.has(riga.materiale) && !dallElencoMateriali.has(riga.materiale),
   );
-  const righe = dato.righe
-    .filter((riga) => riga.entity.includes("."))
+  const righe = conEntita
+    .filter((riga) => !elenchiDelleRighe.has(riga.entity))
     .map((riga) => {
       const stato = leggi(riga.entity);
       const data = dataDelRitiro(stato, adesso);
@@ -825,7 +880,11 @@ export function letturaRifiuti(
         quando: quandoCodice(giorni),
       };
     })
-    .concat(dallElenco, dalTurno)
+    .concat(
+      dalleRighe,
+      dallElenco.filter((riga) => !vistiDalleRighe.has(riga.materiale)),
+      dalTurno,
+    )
     .sort((a, b) => {
       if (a.giorni === null && b.giorni === null) return 0;
       if (a.giorni === null) return 1;

@@ -12,9 +12,12 @@
  *     apposta nella scheda Telecamere, ed e' QUELLO ad accendere WebRTC: il
  *     nome della telecamera non c'entra, e indovinarlo dall'entita' era il
  *     motivo per cui tre secondi li pagavano tutti;
- *   · `frontend_stream_type`, che Home Assistant scrive da se': vale `web_rtc`
+ *   · che flussi sa fare la telecamera, che lo dice Home Assistant: `web_rtc`
  *     quando l'entita' negozia via `camera/webrtc/offer`, `hls` quando
- *     l'integrazione dei flussi e' pronta;
+ *     l'integrazione dei flussi e' pronta. Da dove lo si legge e' cambiato
+ *     nel tempo, e sta scritto in `tipiDiFlusso` qui sotto — leggerlo dal
+ *     posto vecchio, dopo che Home Assistant l'ha tolto, voleva dire concludere
+ *     che nessuna telecamera sa trasmettere (#502);
  *   · se la telecamera dorme. Ring, Arlo, Blink, Nest non hanno un flusso
  *     sempre acceso: quando le chiami devono svegliare l'apparecchio;
  *   · cosa sa fare il browser di chi guarda.
@@ -65,6 +68,52 @@ export const ATTESE = Object.freeze({
   MJPEG_SVEGLIA: 8_000,
 });
 
+/* `CameraEntityFeature.STREAM`, il bit con cui Home Assistant dice che questa
+ * telecamera un flusso lo sa fare. E' il numero che sta dentro
+ * `supported_features`, e non e' mai cambiato. */
+export const SA_TRASMETTERE = 2;
+
+/**
+ * Che flussi sa fare questa telecamera, secondo Home Assistant.
+ *
+ * Tre fonti, e si guardano in quest'ordine perche' e' l'ordine in cui sono
+ * vere.
+ *
+ * 1. LE CAPACITA' CHIESTE A LUI. `camera/capabilities` torna
+ *    `frontend_stream_types`, ed e' esattamente quello che guarda la finestra
+ *    di Home Assistant per decidere che lettore montare. E' la risposta buona,
+ *    e arriva sul socket.
+ *
+ * 2. L'ATTRIBUTO VECCHIO. `frontend_stream_type` stava negli attributi dello
+ *    stato, e la plancia leggeva quello. Home Assistant l'ha dichiarato
+ *    superato nel dicembre 2024 e l'ha TOLTO nella 2025.6: dalla 2025.6 in poi
+ *    negli attributi non c'e' piu' niente, e chi lo leggeva concludeva che
+ *    nessuna telecamera sa trasmettere. E' la ragione per cui su Home
+ *    Assistant recente le live non partivano piu' da nessuna parte, e restava
+ *    solo l'istantanea — la #502, che e' la #418 che continuava. Si legge
+ *    ancora perche' chi ha una versione vecchia ce l'ha ancora.
+ *
+ * 3. `supported_features`. E' il bit da cui Home Assistant stesso ricava le
+ *    capacita': se c'e', la telecamera un flusso lo sa fare. Non dice QUALE —
+ *    per quello serve il punto 1 — e in mancanza d'altro si dice HLS, che e'
+ *    la strada che Home Assistant sceglie per tutte tranne quelle che parlano
+ *    WebRTC nativo. Vale zero richieste: sta gia' negli stati che la plancia
+ *    ha in mano, quindi la prima apertura non aspetta niente.
+ *
+ * Torna un insieme, perche' una telecamera puo' saperne fare due: con go2rtc
+ * integrato Home Assistant dichiara HLS e WebRTC per la stessa entita'.
+ */
+export function tipiDiFlusso(stato = {}, capacita = null) {
+  const dette = capacita?.frontend_stream_types;
+  const elenco = dette instanceof Set ? [...dette] : Array.isArray(dette) ? dette : null;
+  if (elenco) return new Set(elenco.map((tipo) => pulito(tipo).toLowerCase()).filter(Boolean));
+  const attributi = stato?.attributes || {};
+  const vecchio = pulito(attributi.frontend_stream_type).toLowerCase();
+  if (vecchio) return new Set([vecchio]);
+  const sa = Number(attributi.supported_features);
+  return new Set(Number.isFinite(sa) && (sa & SA_TRASMETTERE) === SA_TRASMETTERE ? ["hls"] : []);
+}
+
 /* Le integrazioni le cui telecamere si accendono su richiesta.
  *
  * Non decidono la strada — quella la dichiara Home Assistant — ma decidono
@@ -104,6 +153,26 @@ export function siSveglia(stato = {}) {
 }
 
 /**
+ * Quanto tempo ha la strada del flusso per questa telecamera.
+ *
+ * Vale per l'HLS e per il WebRTC che negozia Home Assistant: sono le due
+ * strade che devono prima SVEGLIARE l'apparecchio, e chi sta in cloud ci mette
+ * secondi mentre chi sta in casa risponde subito.
+ *
+ * Sta qui, e non dentro `strategieDellaTelecamera`, perche' quel numero non lo
+ * guarda soltanto chi mette in fila le strade: lo deve rispettare anche chi la
+ * strada la percorre. Il negoziato del popup se n'era scritto uno suo —
+ * quindici secondi fissi — e i due numeri non erano lo stesso: a una
+ * telecamera di casa toglieva cinque secondi buttati prima di passare alla
+ * strada dopo, e a una in cloud, che di secondi ne ha venticinque, la
+ * interrompeva dieci secondi prima della fine. «E ancora telecamere non
+ * funzionanti.» Un tempo solo, scritto una volta.
+ */
+export function attesaDelFlusso(stato = {}) {
+  return siSveglia(stato) ? ATTESE.HLS_SVEGLIA : ATTESE.HLS_LOCALE;
+}
+
+/**
  * Le strade da provare, in ordine, con quanto aspettare ciascuna.
  *
  * Ogni voce che si salta porta il suo `salta`: un codice, non una frase, cosi'
@@ -117,6 +186,7 @@ export function siSveglia(stato = {}) {
 export function strategieDellaTelecamera(cam = {}, stato = {}, opzioni = {}) {
   const nomeDelFlusso = pulito(cam.stream);
   const dorme = siSveglia(stato);
+  const attesaDelSuoFlusso = attesaDelFlusso(stato);
   const webrtcNelBrowser = opzioni.webrtcNelBrowser !== false;
   const hlsNelBrowser = opzioni.hlsNelBrowser !== false;
   /* Home Assistant moderno parla WebRTC da solo: `frontend_stream_type` vale
@@ -124,7 +194,8 @@ export function strategieDellaTelecamera(cam = {}, stato = {}, opzioni = {}) {
    * integrato dal 2024.12, e Ring/Nest passano di li'). E' un'altra strada
    * rispetto all'estensione go2rtc col nome del flusso: quella resta per chi
    * l'ha configurata, questa non chiede niente — lo dichiara Home Assistant. */
-  const nativa = pulito(stato?.attributes?.frontend_stream_type).toLowerCase() === "web_rtc";
+  const tipi = tipiDiFlusso(stato, opzioni.capacita);
+  const nativa = tipi.has("web_rtc");
 
   /* Una strada si SCEGLIE, non si prova.
    *
@@ -163,7 +234,7 @@ export function strategieDellaTelecamera(cam = {}, stato = {}, opzioni = {}) {
       /* Una telecamera in cloud che negozia in nativo deve prima svegliarsi:
        * il tempo e' quello della sveglia, non quello della rete di casa. E qui
        * l'attesa non e' buttata — e' la strada scelta, non una prova. */
-      attesa: dorme ? ATTESE.HLS_SVEGLIA : ATTESE.HLS_LOCALE,
+      attesa: attesaDelSuoFlusso,
       nativa: true,
     });
   else strade.push({ nome: "WebRTC", salta: "senza-nome-di-flusso" });
@@ -185,7 +256,7 @@ export function strategieDellaTelecamera(cam = {}, stato = {}, opzioni = {}) {
    * Il tempo, quello si': una telecamera in cloud ci mette a svegliarsi, e
    * l'attesa e' la sua. Intanto l'istantanea e' gia' a schermo (#476), quindi
    * aspettare non vuol dire guardare il nero. */
-  const flussoHls = pulito(stato?.attributes?.frontend_stream_type).toLowerCase() === "hls";
+  const flussoHls = tipi.has("hls");
 
   if (webrtcInCorsa) strade.push({ nome: "HLS", salta: GIA_SCELTA });
   else if (!hlsNelBrowser) strade.push({ nome: "HLS", salta: "browser-senza-hls" });
@@ -193,7 +264,7 @@ export function strategieDellaTelecamera(cam = {}, stato = {}, opzioni = {}) {
   else
     strade.push({
       nome: "HLS",
-      attesa: dorme ? ATTESE.HLS_SVEGLIA : ATTESE.HLS_LOCALE,
+      attesa: attesaDelSuoFlusso,
       sveglia: dorme,
     });
 

@@ -233,7 +233,21 @@ class Servitore {
     pannello = quale;
     return radice.replace(
       path: quale.percorsoDellaPagina(lingua),
-      queryParameters: {_ingresso: chiave},
+      queryParameters: {
+        _ingresso: chiave,
+        /* Quale plancia, scritto nell'indirizzo.
+         *
+         * La pagina non lo legge — le premesse le arrivano dal servitore — e
+         * serve a una cosa sola: **essere un indirizzo diverso**. Chi guarda
+         * il riquadro lo rifa' quando l'indirizzo cambia, e due plance dello
+         * stesso ponte hanno gli stessi file e la stessa pagina: senza questa
+         * riga, scegliere l'altra plancia non cambierebbe niente a schermo.
+         *
+         * Solo per quelle in piu': l'indirizzo della prima e' quello di
+         * sempre, e chi ne ha una sola non vede comparire niente. */
+        if (!quale.primario && quale.profilo.isNotEmpty)
+          'plancia': quale.profilo,
+      },
     );
   }
 
@@ -610,30 +624,11 @@ class Servitore {
 
   /* ─── Il filo ──────────────────────────────────────────────────────────── */
 
-  /// Il filo, quando e' dentro. Aspetta una riconnessione in corso, ma non
-  /// per sempre: `null` quando non c'e' verso.
-  Future<Filo?> _filoPronto({Duration entro = _attesaDelFilo}) async {
-    final fine = DateTime.now().add(entro);
-    while (true) {
-      final filo = _trovaIlFilo();
-      if (filo != null && filo.dentro) return filo;
-      if (DateTime.now().isAfter(fine)) return null;
-      if (filo == null) {
-        await Future<void>.delayed(const Duration(milliseconds: 250));
-        continue;
-      }
-      /* C'e' ma non e' dentro: si aspetta che lo dica lui, invece di
-       * guardare l'orologio. */
-      final resta = fine.difference(DateTime.now());
-      try {
-        await filo.stato
-            .firstWhere((stato) => stato == StatoDelFilo.dentro)
-            .timeout(resta < Duration.zero ? Duration.zero : resta);
-      } catch (_) {
-        /* Scaduto, o il filo e' stato chiuso: si riguarda dall'inizio. */
-      }
-    }
-  }
+  /// Il filo, quando e' dentro. Sta in `cucitura.dart` perche' la stessa
+  /// attesa serve identica al servitore del browser, e due copie di
+  /// quest'attesa vogliono dire due plance che si collegano in modo diverso.
+  Future<Filo?> _filoPronto({Duration entro = _attesaDelFilo}) =>
+      filoPronto(_trovaIlFilo, entro: entro);
 
   void _rispondi(
     HttpRequest richiesta,

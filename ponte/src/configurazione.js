@@ -300,6 +300,21 @@ export class Configurazione {
     );
   }
 
+  /* Via il cassetto di una plancia che non c'e' piu'.
+   *
+   * Si chiama quando si toglie una plancia (`plance.js`), e non prima:
+   * qui dentro c'e' il lavoro di chi si e' disegnato la casa, e l'unico
+   * momento in cui si butta e' quello in cui si butta la plancia. Torna
+   * `false` se non c'era niente da buttare — che non e' un errore: e' una
+   * plancia aggiunta e mai configurata. */
+  dimentica(profilo) {
+    const quale = String(profilo || "");
+    if (!Object.hasOwn(this._profili, quale)) return false;
+    delete this._profili[quale];
+    this.archivio.salva();
+    return true;
+  }
+
   _risposta(stato, profilo, scatto) {
     return {
       status: stato,

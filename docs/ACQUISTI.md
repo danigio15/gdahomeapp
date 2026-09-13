@@ -1,13 +1,22 @@
 # Gli acquisti, e come si autorizzano
 
-Bozza. Niente di quello che c'è qui dentro è ancora scritto in codice: quello
-che c'è è il **listino**, il giro dei soldi e — la parte che interessa a chi
-vende — i tre modi in cui si autorizza uno sblocco.
+> **Messo da parte, 12 settembre 2026.** La sezione «Acquisti» è stata
+> **togliata dall'app e dalla console** dell'add-on: non c'è più nessuna
+> schermata, nessun listino a schermo e nessun catalogo nel codice. Questo
+> documento resta perché è il ragionamento — il listino, il giro dei soldi, i
+> tre modi di autorizzare uno sblocco — e quel ragionamento non si butta per
+> aver tolto una schermata. Ma da oggi è un **piano**, non la descrizione di
+> qualcosa che c'è: quando e se si riprende, si riparte da qui.
 
-I numeri stanno in un posto solo, `app/lib/schermate/acquisti/catalogo.dart`.
-Li leggono la schermata dell'app, la scheda «Acquisti» della console
-dell'add-on e questo documento. Tre posti che dicono tre prezzi diversi è il
-modo più rapido di perdere la fiducia di chi paga.
+Il resto di questo documento è com'era. Quello che c'è è il **listino**, il
+giro dei soldi e — la parte che interessa a chi vende — i tre modi in cui si
+autorizza uno sblocco.
+
+I numeri stavano in un posto solo, `app/lib/schermate/acquisti/catalogo.dart`,
+e li leggevano la schermata dell'app, la scheda «Acquisti» della console e
+questo documento: tre posti che dicono tre prezzi diversi è il modo più rapido
+di perdere la fiducia di chi paga. Quel file non c'è più — i numeri qui sotto
+sono gli ultimi che ci fossero scritti.
 
 ## Le tre regole che hanno deciso la forma
 
@@ -293,9 +302,9 @@ licenza, e serve accorgersene.
 
 | pezzo | dove | stato |
 |---|---|---|
-| Il listino, in un posto solo | `app/lib/schermate/acquisti/catalogo.dart` | ✅ bozza |
-| La schermata dell'app | `app/lib/schermate/acquisti.dart` | ✅ bozza, non compra |
-| La scheda nella console dell'add-on | `ponte/console/index.html` | ✅ bozza, bottoni spenti |
+| Il listino, in un posto solo | *era* `app/lib/schermate/acquisti/catalogo.dart` | ⬛ togliato |
+| La schermata dell'app | *era* `app/lib/schermate/acquisti.dart` | ⬛ togliata |
+| La scheda nella console dell'add-on | *era* `ponte/console/index.html` | ⬛ togliata |
 | Il registro degli acquisti e la firma dei diritti | `nuvola/` | ⬜ |
 | La verifica delle ricevute presso Google e Apple | `nuvola/` | ⬜ |
 | La console del centralino: vedere, regalare, prorogare, revocare | `nuvola/` | ⬜ |

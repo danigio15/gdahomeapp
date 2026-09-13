@@ -17,6 +17,7 @@ import { gunzipSync } from "node:zlib";
 
 import { accetta } from "../src/presa.js";
 import { Casa, RispostaNegativa } from "../src/casa.js";
+import { Chat } from "../src/chat.js";
 import {
   Commissioni,
   eUnaCommissione,
@@ -28,6 +29,7 @@ import { Configurazione } from "../src/configurazione.js";
 import { BASE_DELLE_FOTO, BASE_DI_CASA, Foto } from "../src/foto.js";
 import { Dispositivi } from "../src/dispositivi.js";
 import { Plancia } from "../src/plancia.js";
+import { Plance } from "../src/plance.js";
 import { Ponte } from "../src/ponte.js";
 
 const SEGNO_DEL_SUPERVISOR = "il-segno-del-supervisor";
@@ -510,8 +512,8 @@ test("si riconosce cosa fa il ponte e cosa va in Home Assistant", () => {
     false,
   );
   assert.equal(con.riconosce({ id: 12, type: "frontend/set_user_data", key: "altro" }), false);
-  /* Senza il catalogo e le foto, quelli vanno in casa; le segnalazioni e la
-   * chat invece si fermano sempre qui, per dire dove stanno. */
+  /* Senza il catalogo e le foto, quelli vanno in casa; le segnalazioni invece
+   * si fermano sempre qui, per dire dove stanno. */
   for (const tipo of ["get_states", "dashboardmodern/www/list", "call_service"]) {
     assert.equal(con.riconosce({ type: tipo }), false, tipo);
   }
@@ -810,7 +812,13 @@ test("si riconoscono il catalogo, le foto e le cose che stanno nell'app", () => 
   assert.equal(con.riconosce({ type: "dashboardmodern/www/list" }), true);
   assert.equal(con.riconosce({ type: "dashboardmodern/www/upload" }), true);
   assert.equal(con.riconosce({ type: "dashboardmodern/tickets/list" }), true);
-  assert.equal(con.riconosce({ type: "dashboardmodern/chat/send" }), true);
+  /* La chat di chi chiede la fa il ponte, e solo se ce l'ha: senza, e' un
+   * comando che non sa fare, non una cosa da rifiutare con una frase. */
+  assert.equal(con.riconosce({ type: "dashboardmodern/chat/send" }), false);
+  /* E la coda di chi risponde e' la stessa cosa: la fa il ponte, e solo se
+   * ce l'ha. Prima si fermava qui con una frase — «si apre dalla dashboard di
+   * chi mantiene» — che era vera finche' chi mantiene non aveva l'app. */
+  assert.equal(con.riconosce({ type: "dashboardmodern/chat/queue" }), false);
   assert.equal(con.riconosce({ type: "dashboardmodern/altro" }), false);
 
   const senza = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
@@ -820,7 +828,7 @@ test("si riconoscono il catalogo, le foto e le cose che stanno nell'app", () => 
   rmSync(cartella, { recursive: true, force: true });
 });
 
-test("le segnalazioni e la chat rispondono con una frase, non con un comando sconosciuto", async () => {
+test("le segnalazioni rispondono con una frase, non con un comando sconosciuto", async () => {
   const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
   const risposta = await con.rispondi({
     id: 4,
@@ -830,6 +838,212 @@ test("le segnalazioni e la chat rispondono con una frase, non con un comando sco
   assert.equal(risposta.success, false);
   assert.equal(risposta.error.code, "not_supported");
   assert.match(risposta.error.message, /nell'app/);
+
+  /* La coda dell'assistenza, su un ponte senza chat, e' un comando che non sa
+   * fare — come lo e' scrivere. */
+  const coda = await con.rispondi({ id: 5, type: "dashboardmodern/chat/queue" });
+  assert.equal(coda.success, false);
+  assert.equal(coda.error.code, "unknown_command");
+});
+
+/* ─── La chat dell'assistenza ─────────────────────────────────────────────── */
+
+/* Un centralino della chat finto, quel tanto che basta per vedere dove
+ * finiscono le parole: tiene le righe e le da' «dopo il numero N». Le regole
+ * della chat stanno in `chat.test.js`; qui si guarda l'instradamento. */
+function chatDiProva(cartella, { chiave = "" } = {}) {
+  const righe = [];
+  const intestazioni = [];
+  const prendi = async (indirizzo, opzioni = {}) => {
+    const via = new URL(indirizzo);
+    intestazioni.push(opzioni.headers || {});
+    /* L'altro sportello: quello di chi risponde, che non porta nessuna casa e
+     * apre tutte le linee con una chiave sola. */
+    if (via.pathname.startsWith("/console/conversazioni")) {
+      if (via.pathname === "/console/conversazioni") {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ conversazioni: [{ id: "casa_1", nome: "Giovanni", non_letti: 1 }] }),
+        };
+      }
+      if (opzioni.method === "DELETE") {
+        return { ok: true, status: 200, json: async () => ({ cancellata: true }) };
+      }
+      if (opzioni.method === "POST") {
+        return {
+          ok: true,
+          status: 201,
+          json: async () => ({
+            messaggio: { id: 9, da: "console", testo: JSON.parse(opzioni.body).testo },
+          }),
+        };
+      }
+      const daDove = Number(via.searchParams.get("dopo") || 0);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          messaggi: daDove ? [] : [{ id: 1, da: "casa", testo: "non parte" }],
+        }),
+      };
+    }
+    if (opzioni.method === "POST") {
+      const riga = {
+        id: righe.length + 1,
+        da: "casa",
+        testo: JSON.parse(opzioni.body).testo,
+        scritto_il: 1000,
+      };
+      righe.push(riga);
+      return { ok: true, status: 201, json: async () => ({ messaggio: riga, nuova: true }) };
+    }
+    if (opzioni.method === "DELETE") {
+      righe.length = 0;
+      return { ok: true, status: 200, json: async () => ({ cancellata: true }) };
+    }
+    const dopo = Number(via.searchParams.get("dopo") || 0);
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ aperta: true, messaggi: righe.filter((una) => una.id > dopo) }),
+    };
+  };
+  const chat = new Chat({
+    cartella,
+    centralino: "https://centralino.esempio",
+    versione: "0.16.0",
+    plancia: "1.4.19",
+    fetch: prendi,
+    chiaveDellaConsole: chiave,
+    registro: ZITTO,
+  });
+  return { chat, righe, intestazioni };
+}
+
+test("la finestra dell'assistenza della plancia arriva alla chat, non a un rifiuto", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-chat-"));
+  try {
+    const finto = chatDiProva(cartella);
+    const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO, chat: finto.chat });
+    /* Prima di tutto: i quattro comandi di chi chiede si riconoscono, e la
+     * porta si disegna perche' un posto dove scrivere c'e'. */
+    assert.equal(con.riconosce({ type: "dashboardmodern/chat/state" }), true);
+    const stato = await con.rispondi({ id: 1, type: "dashboardmodern/chat/state" });
+    assert.equal(stato.success, true);
+    assert.deepEqual(stato.result, {
+      enabled: true,
+      console: false,
+      opened: false,
+      name: "",
+      unread: 0,
+      preview: "",
+      written_at: 0,
+      messages: 0,
+    });
+
+    /* Si scrive, e si legge quello che si e' scritto. Le chiavi sono quelle
+     * dell'integrazione: la finestra e' la sua e non sa che dietro c'e' il
+     * ponte. */
+    const mandato = await con.rispondi({
+      id: 2,
+      type: "dashboardmodern/chat/send",
+      message: "Buongiorno, una domanda.",
+      name: "Giovanni",
+      locale: "it",
+    });
+    assert.equal(mandato.result.message.testo, "Buongiorno, una domanda.");
+    const filo = await con.rispondi({ id: 3, type: "dashboardmodern/chat/thread" });
+    assert.equal(filo.result.enabled, true);
+    assert.equal(filo.result.name, "Giovanni");
+    assert.deepEqual(
+      filo.result.messages.map((una) => una.testo),
+      ["Buongiorno, una domanda."],
+    );
+
+    /* Una frase vuota non parte, e il no e' quello della chat: la finestra
+     * sa cosa farne. */
+    const vuoto = await con.rispondi({ id: 4, type: "dashboardmodern/chat/send", message: "  " });
+    assert.equal(vuoto.success, false);
+    assert.equal(vuoto.error.code, "empty");
+
+    /* Dimenticare cancella anche dal centralino. */
+    const via = await con.rispondi({ id: 5, type: "dashboardmodern/chat/forget" });
+    assert.deepEqual(via.result, { forgotten: true });
+    assert.equal(finto.righe.length, 0);
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("dall'app la chat e' la stessa, e un allegato non ci sta", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-chat-"));
+  try {
+    const finto = chatDiProva(cartella);
+    const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO, chat: finto.chat });
+    /* Niente di scritto: l'app non disegna nessun filo, e non e' un errore. */
+    assert.deepEqual((await con.rispondi({ id: 1, type: "ponte/chat/leggi" })).result, {
+      chat: null,
+      guaio: "",
+    });
+
+    const scritto = await con.rispondi({
+      id: 2,
+      type: "ponte/chat/scrivi",
+      testo: "Buongiorno, una domanda.",
+      diagnostica: { app: "1.0.2", schermo: "400x800" },
+    });
+    /* La forma e' quella di una conversazione, come la legge la schermata
+     * dell'app: la stessa di prima, quando sotto c'era una issue. */
+    assert.equal(scritto.result.tipo, "chat");
+    assert.equal(scritto.result.numero, 0);
+    assert.deepEqual(
+      scritto.result.messaggi.map((uno) => [uno.da, uno.testo]),
+      [["casa", "Buongiorno, una domanda."]],
+    );
+
+    /* Le versioni partono con le parole, e ci sta solo quello: l'etichetta
+     * del centralino tiene quaranta caratteri, e la diagnostica per bene sta
+     * nell'app. */
+    const posta = finto.intestazioni.find((une) => une["x-casa"]);
+    assert.equal(posta["x-versione"], "plancia 1.4.19 ponte 0.16.0 app 1.0.2");
+    assert.ok(posta["x-versione"].length <= 40);
+
+    /* E la stessa conversazione si rilegge, senza niente da dire accanto. */
+    const letto = await con.rispondi({ id: 3, type: "ponte/chat/leggi" });
+    assert.equal(letto.result.chat.messaggi.length, 1);
+    assert.equal(letto.result.guaio, "");
+
+    /* Da qui in poi il centralino della chat non risponde. Le parole che
+     * c'erano si vedono ancora — la copia in casa esiste per questo — e il
+     * guasto arriva **accanto**, non al posto loro: un errore qui darebbe
+     * all'app una schermata vuota al posto di una conversazione che c'e'. */
+    finto.chat.prendi = async () => {
+      throw new Error("ECONNREFUSED");
+    };
+    finto.chat._lettoIl = 0;
+    const giu = await con.rispondi({ id: 6, type: "ponte/chat/leggi" });
+    assert.equal(giu.success, true);
+    assert.equal(giu.result.chat.messaggi.length, 1);
+    assert.match(giu.result.guaio, /raggiungibile/);
+
+    /* Un allegato no: questa chat passa parole, e si dice dove metterlo. */
+    const foto = await con.rispondi({ id: 4, type: "ponte/chat/allega", nome: "x.jpg" });
+    assert.equal(foto.success, false);
+    assert.equal(foto.error.code, "not_supported");
+    assert.match(foto.error.message, /segnalazione/);
+
+    /* Senza la chat — un ponte senza indirizzo del centralino non la
+     * costruisce — quelle porte non ci sono: «non conosco» e' la risposta
+     * giusta, e l'app ne fa una frase che dice di aggiornare l'add-on. */
+    const senza = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
+    assert.equal(
+      (await senza.rispondi({ id: 5, type: "ponte/chat/leggi" })).error.code,
+      "unknown_command",
+    );
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
 });
 
 test("il catalogo passa dal ponte, coi dispositivi chiesti", async () => {
@@ -1150,4 +1364,191 @@ test("senza la cartella di Home Assistant non succede niente di male", async () 
   });
   assert.equal(detto.result.available, false);
   assert.deepEqual(detto.result.roots, { ponte: false, casa: false });
+});
+
+test("la coda di chi risponde passa dal ponte, e solo con la chiave", async () => {
+  /* Due cartelle: due chat sullo stesso file si pesterebbero i piedi. */
+  const senzaChiave = mkdtempSync(join(tmpdir(), "commissioni-coda-"));
+  const conChiave = mkdtempSync(join(tmpdir(), "commissioni-coda-"));
+  try {
+    /* In una casa qualunque — cioe' in tutte tranne una — la coda non c'e'.
+     * Non e' un comando sconosciuto: e' una porta che esiste e che in questa
+     * casa non si apre, e si dice cosi'. */
+    const normale = chatDiProva(senzaChiave);
+    const casaQualunque = new Commissioni({
+      casa: casaDiProva(),
+      registro: ZITTO,
+      chat: normale.chat,
+    });
+    const spenta = await casaQualunque.rispondi({ id: 1, type: "dashboardmodern/chat/state" });
+    assert.equal(spenta.result.console, false);
+    const negata = await casaQualunque.rispondi({ id: 2, type: "dashboardmodern/chat/queue" });
+    assert.equal(negata.success, false);
+    assert.equal(negata.error.code, "forbidden");
+
+    /* E nella casa che la chiave ce l'ha, il Cruscotto si accende da solo: e'
+     * lo stesso `console: true` che l'integrazione manda alla finestra. */
+    const dove = chatDiProva(conChiave, { chiave: "una-chiave-lunga-abbastanza-davvero" });
+    const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO, chat: dove.chat });
+    const acceso = await con.rispondi({ id: 3, type: "dashboardmodern/chat/state" });
+    assert.equal(acceso.result.console, true);
+
+    /* Le quattro risposte hanno i nomi di `websocket_api.py`, perche' a
+     * leggerle c'e' il Cruscotto della plancia, che e' scritto per quelli. */
+    const coda = await con.rispondi({ id: 4, type: "dashboardmodern/chat/queue" });
+    assert.deepEqual(coda.result, {
+      conversations: [{ id: "casa_1", nome: "Giovanni", non_letti: 1 }],
+    });
+    const filo = await con.rispondi({
+      id: 5,
+      type: "dashboardmodern/chat/open",
+      line: "casa_1",
+    });
+    assert.deepEqual(filo.result, { messages: [{ id: 1, da: "casa", testo: "non parte" }] });
+    const risposto = await con.rispondi({
+      id: 6,
+      type: "dashboardmodern/chat/answer",
+      line: "casa_1",
+      message: "Ci guardo subito.",
+    });
+    assert.equal(risposto.result.message.testo, "Ci guardo subito.");
+    const buttata = await con.rispondi({
+      id: 7,
+      type: "dashboardmodern/chat/drop",
+      line: "casa_1",
+    });
+    assert.deepEqual(buttata.result, { dropped: true });
+
+    /* Gli stessi quattro sportelli, coi nomi che usa l'app: sotto c'e' lo
+     * stesso metodo, e una linea si chiama `linea` invece che `line`. */
+    const codaDellApp = await con.rispondi({ id: 8, type: "ponte/console/coda" });
+    assert.deepEqual(codaDellApp.result, coda.result);
+    const filoDellApp = await con.rispondi({
+      id: 9,
+      type: "ponte/console/apri",
+      linea: "casa_1",
+    });
+    assert.deepEqual(filoDellApp.result, filo.result);
+    const rispostaDellApp = await con.rispondi({
+      id: 10,
+      type: "ponte/console/rispondi",
+      linea: "casa_1",
+      testo: "Ci guardo subito.",
+    });
+    assert.equal(rispostaDellApp.result.message.testo, "Ci guardo subito.");
+
+    /* E il segreto della propria chat non e' mai finito in una di quelle
+     * chiamate: quello sportello si apre con la chiave, e con nient'altro. */
+    const dellaConsole = dove.intestazioni.filter((una) =>
+      String(una.authorization || "").includes("una-chiave-lunga-abbastanza-davvero"),
+    );
+    assert.ok(dellaConsole.length >= 4);
+    for (const una of dellaConsole) assert.equal(una["x-casa"], undefined);
+  } finally {
+    rmSync(senzaChiave, { recursive: true, force: true });
+    rmSync(conChiave, { recursive: true, force: true });
+  }
+});
+
+test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-plance-"));
+  try {
+    const plance = new Plance({ cartella, registro: ZITTO, adesso: () => 5000 });
+    const cassetta = new Configurazione({ cartella, adesso: () => 5000 });
+    const con = new Commissioni({
+      casa: casaDiProva(),
+      registro: ZITTO,
+      plancia: new Plancia(),
+      plance,
+      configurazione: cassetta,
+    });
+
+    /* Senza chiedere niente si ha la **prima**: e' la risposta di sempre, e
+     * un'app di ieri non si accorge che da oggi ce ne possono essere altre. */
+    const sola = await con.rispondi({ id: 1, type: "ponte/plancia" });
+    assert.equal(sola.result.titolo, "gdahome");
+    assert.equal(sola.result.istanza, "gdahome");
+    assert.equal(sola.result.profilo, "primary");
+    assert.equal(sola.result.primario, true);
+    /* E l'elenco viaggia insieme: il selettore lo disegna chi ha appena
+     * chiesto la plancia, e un secondo giro sul filo per sapere quante sono
+     * sarebbe un giro per niente. */
+    assert.deepEqual(
+      sola.result.plance.map((una) => una.profilo),
+      ["primary"],
+    );
+
+    const aggiunta = await con.rispondi({
+      id: 2,
+      type: "ponte/plance/aggiungi",
+      titolo: "Casa al mare",
+    });
+    assert.equal(aggiunta.result.quale.profilo, "casa-al-mare");
+    assert.deepEqual(
+      aggiunta.result.plance.map((una) => una.titolo),
+      ["gdahome", "Casa al mare"],
+    );
+
+    /* Chiedendo quella, si apre quella: stessi file, altro cassetto, altra
+     * istanza. */
+    const altra = await con.rispondi({
+      id: 3,
+      type: "ponte/plancia",
+      profilo: "casa-al-mare",
+    });
+    assert.equal(altra.result.titolo, "Casa al mare");
+    assert.equal(altra.result.istanza, "gdahome-casa-al-mare");
+    assert.equal(altra.result.profilo, "casa-al-mare");
+    assert.equal(altra.result.primario, false);
+    /* I file sono gli stessi per tutte: una plancia sul disco, una impronta. */
+    assert.equal(altra.result.base, sola.result.base);
+    assert.equal(altra.result.impronta, sola.result.impronta);
+
+    /* Una plancia che non c'e' non si apre, e si dice quale. */
+    const mai = await con.rispondi({ id: 4, type: "ponte/plancia", profilo: "mai-esistita" });
+    assert.equal(mai.success, false);
+    assert.equal(mai.error.code, "not_found");
+
+    /* Rinominare tocca il titolo e nient'altro. */
+    const rinominata = await con.rispondi({
+      id: 5,
+      type: "ponte/plance/rinomina",
+      profilo: "casa-al-mare",
+      titolo: "Al mare",
+    });
+    assert.equal(rinominata.result.quale.titolo, "Al mare");
+    assert.equal(rinominata.result.quale.istanza, "gdahome-casa-al-mare");
+
+    /* Togliendola va via anche il suo cassetto nella configurazione. */
+    cassetta.scrivi("casa-al-mare", { "dm-home": '{"x":1}' }, { updated_at: 5000 });
+    assert.ok(cassetta.leggi("casa-al-mare").snapshot);
+    const tolta = await con.rispondi({
+      id: 6,
+      type: "ponte/plance/togli",
+      profilo: "casa-al-mare",
+    });
+    assert.deepEqual(
+      tolta.result.plance.map((una) => una.profilo),
+      ["primary"],
+    );
+    assert.equal(cassetta.leggi("casa-al-mare").snapshot, null);
+
+    /* La prima non si toglie, e il no e' quello delle plance: la schermata sa
+     * cosa farne. */
+    const negata = await con.rispondi({ id: 7, type: "ponte/plance/togli", profilo: "primary" });
+    assert.equal(negata.success, false);
+    assert.equal(negata.error.code, "non_la_prima");
+
+    /* Un ponte senza plance quei comandi li riconosce comunque — tutto
+     * quello che comincia per «ponte/» e' roba sua, e mandarlo a Home
+     * Assistant vorrebbe dire chiedere a lui una cosa che non sa — e risponde
+     * che non lo sa fare. */
+    const senza = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
+    assert.equal(senza.riconosce({ type: "ponte/plance/elenco" }), true);
+    const detta = await senza.rispondi({ id: 8, type: "ponte/plance/elenco" });
+    assert.equal(detta.success, false);
+    assert.equal(detta.error.code, "unknown_command");
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
 });

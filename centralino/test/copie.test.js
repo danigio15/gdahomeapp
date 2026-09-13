@@ -19,8 +19,9 @@ import { fileURLToPath } from "node:url";
 const QUI = dirname(fileURLToPath(import.meta.url));
 const CENTRALINO = join(QUI, "..", "src");
 const PONTE = join(QUI, "..", "..", "ponte", "src");
+const NUVOLA = join(QUI, "..", "..", "nuvola", "src");
 
-const COPIATI = ["presa.js", "segreti.js", "archivio.js", "registro.js"];
+const COPIATI = ["presa.js", "segreti.js", "archivio.js", "registro.js", "testo.js"];
 
 test("le copie prese dal ponte sono ancora identiche", () => {
   for (const nome of COPIATI) {
@@ -29,6 +30,25 @@ test("le copie prese dal ponte sono ancora identiche", () => {
       readFileSync(join(PONTE, nome), "utf8"),
       `«${nome}» e' diverso da quello del ponte. Si riallineano cosi':\n` +
         `  cp ponte/src/{${COPIATI.map((uno) => uno.replace(".js", "")).join(",")}}.js centralino/src/`,
+    );
+  }
+});
+
+/* `segnalazioni.js` invece viene dalla nuvola, ed e' una copia per un motivo
+ * diverso: la stessa cosa gira in due posti — il Worker e la macchina — finche'
+ * le case non saranno passate tutte di qua. Due copie che divergono vorrebbero
+ * dire due comportamenti diversi a seconda di dove una casa e' finita, che e'
+ * il genere di differenza che non si trova mai guardando il codice di una
+ * parte sola. */
+const PRESI_DALLA_NUVOLA = ["segnalazioni.js"];
+
+test("le copie prese dalla nuvola sono ancora identiche", () => {
+  for (const nome of PRESI_DALLA_NUVOLA) {
+    assert.equal(
+      readFileSync(join(CENTRALINO, nome), "utf8"),
+      readFileSync(join(NUVOLA, nome), "utf8"),
+      `\u00ab${nome}\u00bb e' diverso da quello della nuvola. Si riallinea cosi':\n` +
+        `  cp nuvola/src/${nome} centralino/src/`,
     );
   }
 });

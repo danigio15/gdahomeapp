@@ -11,11 +11,42 @@
 # `ports` invece e' la porta su cui bussa l'app, ed e' l'unica che puo'
 # finire esposta. Su quella non c'e' nessuna console: si puo' solo presentare
 # un codice di abbinamento valido, o un segno di riconoscimento gia' avuto.
-name: Il ponte di DashboardModern
-version: "0.16.0"
-slug: ponte
-description: Fa parlare l'app di DashboardModern con questa casa, da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.
-url: https://github.com/danigio15/dashboardmodern-v2/tree/main/ponte
+# Come si chiama nella barra laterale di Home Assistant: **gdahome**.
+#
+# Lo `slug` e' `gdahome`, come il resto. Lo slug e' l'identita' dell'add-on per
+# il Supervisor, e cambiarlo vuol dire che per Home Assistant questo e' un
+# add-on **nuovo**: installato da zero, senza le opzioni, senza i telefoni
+# abbinati e senza la configurazione delle plance, con quello di prima rimasto
+# li' accanto da disinstallare a mano.
+#
+# Quel prezzo si paga una volta sola, e si e' scelto di pagarlo **adesso**:
+# l'add-on ce l'ha una persona, su una macchina di prova. Il giorno che ce
+# l'avesse qualcuno, a pagarlo sarebbe lui — e allora lo slug non si toccherebbe
+# piu', per nessun motivo.
+#
+# Dentro il codice e nei documenti il pezzo continua a chiamarsi «il ponte»,
+# perche' e' quello che fa e perche' e' uno dei tre pezzi (il ponte, il
+# centralino, l'app). «gdahome» e' il nome del prodotto, e va dove il prodotto
+# si vede.
+name: gdahome
+# Il numero: quello della plancia che sta dentro, piu' un quarto numero per le
+# correzioni dell'add-on.
+#
+# 1.4.24 e' la versione di DashboardModern che sta in `plancia/`, e tenerli
+# uguali vuol dire che chi apre la scheda sa quale plancia ha senza andarla a
+# cercare. Ma l'add-on ha i suoi difetti da correggere anche quando la plancia
+# non cambia, e nel negozio «Aggiorna» compare **solo** se questo numero si
+# alza: da qui il quarto. `1.4.24.1` si legge «la plancia 1.4.24, la prima
+# correzione nostra».
+version: "1.4.25.2"
+slug: gdahome
+# Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
+# spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
+# Senza virgolette il manifesto non si legge — e un manifesto che non si legge
+# vuol dire un add-on che nel negozio non compare, senza nessun errore da
+# nessuna parte. E' andata cosi' per un giorno intero.
+description: "La plancia e l'app di gdahome, per questa casa: da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono."
+url: https://github.com/danigio15/gdahomeapp/tree/main/ponte
 arch:
   - aarch64
   - amd64
@@ -30,36 +61,47 @@ boot: auto
 ingress: true
 ingress_port: 8099
 panel_icon: mdi:bridge
-panel_title: Il ponte
+panel_title: gdahome
 
 # La porta dell'app.
 ports:
   8098/tcp: 8098
 ports_description:
-  8098/tcp: L'app di DashboardModern bussa qui. In casa basta cosi'; da fuori serve farla arrivare fin qui.
+  8098/tcp: L'app di gdahome bussa qui. In casa basta cosi'; da fuori serve farla arrivare fin qui.
 
 # Il ponte parla con Home Assistant per conto dell'app, e per farlo gli serve
 # il segno del Supervisor. Quel segno non esce mai da questo add-on: e'
 # esattamente il motivo per cui il ponte esiste.
 homeassistant_api: true
 
-# La cartella `www` di Home Assistant, in **sola lettura**.
+# La cartella di Home Assistant. Si legge tutta, e si scrive **una cartella
+# sola**: `www/gdahome/`.
 #
-# Serve a una cosa sola: far scegliere, dalla Config dell'app, le immagini che
-# ci sono gia' — le foto delle auto, i loghi, gli sfondi che chi ha una casa da
-# qualche anno tiene li' e che la plancia ha sempre usato con `/local/…`. Senza
-# questa riga la maschera delle foto dice «nessuna foto» a chi ne ha duecento.
+# Si legge per far scegliere, dalla Config dell'app, le immagini che ci sono
+# gia' — le foto delle auto, i loghi, gli sfondi che chi ha una casa da qualche
+# anno tiene li' e che la plancia ha sempre usato con `/local/…`. Senza questa
+# riga la maschera delle foto dice «nessuna foto» a chi ne ha duecento.
 #
-# In sola lettura, e non e' prudenza generica: li' dentro ci sono le
-# automazioni, i temi e i segreti di chi ci abita. Il ponte guarda e non tocca;
-# quello che si carica dall'app finisce nella sua cartella, non nella loro.
+# Si scrive per un file solo: la cartina che apre la plancia fra le «Plance»
+# di Home Assistant (`src/plance-in-casa.js`). Deve stare li' e non dentro
+# l'add-on perche' quel file lo carica il browser **dentro** la pagina di Home
+# Assistant, e da un add-on non lo saprebbe prendere: all'ingress serve una
+# sessione, e per chiederla serve del programma che gira in quella pagina.
+#
+# Era in sola lettura, e il cambio va detto chiaro invece che nascosto: li'
+# dentro ci sono le automazioni, i temi e i segreti di chi ci abita, e Home
+# Assistant non sa mappare una sottocartella — o tutta in lettura, o tutta in
+# scrittura. Quello che il ponte ci scrive sta in un metodo solo,
+# `doveVaLaCarta`, e una prova tiene fermo che l'unico percorso scritto
+# cominci per `www/gdahome/`. Il resto lo guarda e non lo tocca; quello che si
+# carica dall'app finisce nella cartella dell'add-on, non nella loro.
 map:
-  - homeassistant_config:ro
+  - homeassistant_config:rw
   # La cartella degli add-on locali, in **scrittura**.
   #
   # Serve a una cosa sola, e non se ne puo' fare a meno: aggiornare questo
   # add-on. Un add-on locale non ha nessun negozio dietro — Home Assistant
-  # guarda il manifesto che trova in `/addons/ponte`, e quella e' l'unica
+  # guarda il manifesto che trova in `/addons/gdahome`, e quella e' l'unica
   # versione che conosce — quindi finche' qualcuno non porta i file nuovi in
   # quella cartella, «Aggiorna» non compare mai. Portarli a mano vuol dire un
   # terminale e un gettone di GitHub a ogni giro: esattamente la cosa che chi
@@ -85,7 +127,7 @@ hassio_api: true
 # stesso — e stanno tutte in `src/aggiornamento.js`, in chiaro.
 #
 # Senza, l'aggiornamento funziona a meta': i file nuovi arrivano in
-# `/addons/ponte`, ma poi tocca aprire Home Assistant e premere
+# `/addons/gdahome`, ma poi tocca aprire Home Assistant e premere
 # «Ricostruisci» a mano — di nuovo una cosa da spiegare a chi non deve
 # imparare niente.
 hassio_role: manager
@@ -96,12 +138,22 @@ options:
   # porta da aprire sul router, nessun indirizzo pubblico da avere, e nessuna
   # VPN da installare.
   #
-  # Lasciando questo acceso non c'e' niente da fare: si usa quello dell'app.
-  # Spegnendolo, la casa si raggiunge solo dalla propria rete.
+  # Acceso, si usa il centralino di gdahome, e non c'e' niente da scrivere da
+  # nessuna parte. Spento, la casa si raggiunge solo dalla propria rete.
+  #
+  # **Qui non c'e' nessuna casella per l'indirizzo, e non e' una dimenticanza.**
+  # Prima c'era, e stava sempre vuota: l'indirizzo giusto e' quello scritto nel
+  # programma (`src/opzioni.js`, e identico dentro l'app), e una casella che non
+  # va toccata e' una casella che prima o poi qualcuno tocca — scrivendoci
+  # qualcosa di storto, o congelando per quella casa un indirizzo che il giorno
+  # che cambia non cambia piu'. Dove chiama questa casa lo dice la console,
+  # nella scheda «Da fuori casa».
+  #
+  # Chi vuole un centralino suo se ne accende uno (`nuvola/README.md`) e si
+  # tiene una copia locale di questo add-on, dove quella riga si cambia una
+  # volta: e' una cosa da chi sa cos'e' un centralino, e chi lo sa sa anche
+  # cambiare una riga.
   da_fuori_casa: true
-  # Il proprio centralino, per chi se l'e' acceso. Vuoto vuol dire: quello
-  # dell'app. La maggior parte delle persone non tocca questa riga.
-  centralino: ""
   porta_app: 8098
   # Quanti telefoni possono restare abbinati insieme.
   dispositivi_massimi: 10
@@ -110,27 +162,28 @@ options:
   # Quanto vive il segno di un telefono senza farsi vedere, in giorni.
   # Zero vuol dire per sempre.
   giorni_di_silenzio: 90
-  # Il gettone di GitHub con cui il ponte si scarica le versioni nuove.
+  # La chiave con cui si **risponde** alle chat di assistenza.
   #
-  # Serve solo se la repository dell'app e' privata — e la nostra lo e'. Si
-  # scrive **una volta**: Home Assistant lo tiene nascosto e non lo rimostra
-  # piu'. Un gettone a grana fine sulla sola repository dell'app, con
-  # **Contents: Read-only** e nient'altro: con quello non si scrive niente da
-  # nessuna parte, si legge e basta.
+  # Lasciala vuota. Serve a UNA installazione al mondo — quella di chi l'app la
+  # mantiene — per leggere le conversazioni di tutti e rispondere. In tutte le
+  # altre case non cambia niente e non si vede niente: la chat resta quella di
+  # chi chiede aiuto, che e' quello che serve.
   #
-  # Vuoto vuol dire: non ti aggiorni da te'. Tutto il resto funziona uguale.
-  gettone: ""
+  # E' la stessa chiave messa fra i segreti del centralino, e non si inventa
+  # qui: si copia da li'.
+  chiave_console: ""
   registro: info
 
 schema:
   da_fuori_casa: bool
-  centralino: str?
   porta_app: int(1024,65535)
   dispositivi_massimi: int(1,100)
   minuti_del_codice: int(1,60)
   giorni_di_silenzio: int(0,3650)
-  # `password` perche' Home Assistant lo nasconda mentre si scrive e non lo
-  # rimostri dopo; il `?` perche' chi non ne ha bisogno non deve trovarsi un
-  # campo obbligatorio da riempire.
-  gettone: password?
+  # `password` perche' Home Assistant la nasconda mentre si scrive e non la
+  # rimostri dopo; il `?` perche' chi non ne ha bisogno — cioe' chiunque tranne
+  # una installazione al mondo — non deve trovarsi un campo obbligatorio da
+  # riempire. Si puo' sempre rileggere da dove sta di casa: sulla macchina,
+  # con `tramite-chiave`.
+  chiave_console: password?
   registro: list(debug|info|attenzione|errore)

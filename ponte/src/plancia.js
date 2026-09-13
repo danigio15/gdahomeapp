@@ -23,6 +23,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { NOME, vestiDiGdahome } from "./marchio.js";
 import { guardaLaPlancia, inDueParole } from "./provenienza.js";
 
 export const BASE = "/dashboardmodern_static";
@@ -129,17 +130,23 @@ export class Plancia {
   /* Quello che il telefono chiede con `ponte/plancia`: dove stanno i file, e
    * come la pagina deve presentarsi. E' la stessa forma che l'integrazione
    * scrive nel suo pannello, cosi' l'app le legge tutte e due allo stesso
-   * modo. */
-  descrizione() {
+   * modo.
+   *
+   * I file sono **gli stessi per tutte le plance** — una sola plancia sul
+   * disco, una sola impronta — e quello che cambia da una all'altra sono tre
+   * nomi: il titolo, il cassetto della configurazione e l'istanza. Chi non ne
+   * passa nessuno ha la prima, che e' il caso di chiunque non abbia mai
+   * aggiunto niente. */
+  descrizione(quale = null) {
     const origine = this.origine();
     return {
       base: this.base,
       impronta: this.impronta,
       varianti: this.varianti(),
-      titolo: "DashboardModern",
-      istanza: "ponte",
-      profilo: "primary",
-      primario: true,
+      titolo: quale?.titolo || NOME,
+      istanza: quale?.istanza || NOME,
+      profilo: quale?.profilo || "primary",
+      primario: quale ? quale.primaria !== false : true,
       file: this._quanti,
       commit: typeof origine.commit === "string" ? origine.commit : "",
       portata_il: typeof origine.portata_il === "string" ? origine.portata_il : "",
@@ -173,7 +180,16 @@ export class Plancia {
     if (!dove.startsWith(this.cartella + sep)) return questoNo();
     try {
       if (!statSync(dove).isFile()) return questoNo();
-      return { stato: 200, tipo, corpo: readFileSync(dove) };
+      /* E qui la plancia prende la faccia di gdahome: il logo, il velo
+       * d'avvio, il titolo della pagina.
+       *
+       * Al momento di servire, e non nella cartella: quella e' una copia
+       * verbatim della dashboard, sigillata, e al prossimo
+       * `porta-la-plancia.mjs` si rifa' da zero. Vestirla qui vuol dire che
+       * la versione dopo, e quella dell'anno prossimo, arrivano vestite senza
+       * che nessuno rifaccia niente. Vedi `marchio.js`. */
+      const vestito = vestiDiGdahome(relativi.join("/"), readFileSync(dove), tipo);
+      return { stato: 200, tipo: vestito.tipo, corpo: vestito.corpo };
     } catch (_errore) {
       return questoNo();
     }

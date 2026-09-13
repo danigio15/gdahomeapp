@@ -41,6 +41,15 @@ import 'indirizzo.dart';
 import 'presa.dart';
 import 'stretta.dart';
 
+/// Il segno con cui comincia un **mucchio**: piu' messaggi in una busta sola,
+/// uno per riga.
+///
+/// Il ponte li raggruppa quando il filo passa dal centralino, dove ogni
+/// messaggio e' una richiesta contata e una casa vera ne manda cinque al
+/// secondo. Deve restare identico a `SEGNO_DEL_MUCCHIO` in
+/// `ponte/src/ponte.js`.
+const segnoDelMucchio = 'mucchio\n';
+
 enum StatoDelFilo {
   /// Mai aperto, o chiuso apposta.
   spento,
@@ -233,6 +242,17 @@ class Filo {
   StatoDelFilo get statoAdesso => _adesso;
 
   /* Quanto passa sul filo. Per la diagnostica, non per la logica. */
+  /* Le **buste**: i messaggi veri sul WebSocket, prima di spacchettare i
+   * mucchi. Passando dal centralino e' il numero che si paga — ogni busta e'
+   * una richiesta contata — e senza questo conto non si vedrebbe mai se il
+   * raggruppamento serve a qualcosa. */
+  int _busteArrivate = 0;
+  /* Da quando questo filo esiste. Le cadute si contano da qui, e senza questo
+   * numero non si leggono: «caduto 320 volte» in dieci minuti e' un guasto,
+   * in otto ore di scheda aperta su un computer che ogni tanto si addormenta
+   * e' la vita normale di un browser. Sono due conclusioni opposte tirate
+   * dallo stesso numero, ed e' il numero che era incompleto. */
+  final DateTime _natoIl = DateTime.now();
   int _messaggiArrivati = 0;
   int _byteArrivati = 0;
   int _eventiArrivati = 0;
@@ -251,17 +271,30 @@ class Filo {
     final cadutoIl = _cadutoIl;
     final cadute = _cadute == 0
         ? 'mai caduto'
-        : 'caduto $_cadute volte, l\'ultima ${_daQuanto(cadutoIl)} fa: '
-              '$_ultimaCaduta';
+        : 'caduto $_cadute volte in ${_quanto(DateTime.now().difference(_natoIl))}, '
+              'l\'ultima ${_daQuanto(cadutoIl)} fa: $_ultimaCaduta';
     final presa = _presa;
     final sulFilo = presa is PresaCifrata
         ? ' (${_megabyte(presa.caratteriArrivati)} sul filo'
               '${presa.comprime ? ', gzip' : ', senza gzip'})'
         : '';
-    return '$_messaggiArrivati msg, $_eventiArrivati eventi, '
+    /* Le buste si dicono solo quando sono meno dei messaggi, cioe' quando il
+     * ponte ha raggruppato: e' il numero che si paga passando dal centralino,
+     * e vederlo accanto ai messaggi dice in un colpo quanto e' servito. */
+    final buste = _busteArrivate < _messaggiArrivati
+        ? ' in $_busteArrivate buste'
+        : '';
+    return '$_messaggiArrivati msg$buste, $_eventiArrivati eventi, '
         '${_megabyte(_byteArrivati)} giu\'$sulFilo, $_messaggiMandati su, '
         'in ${minuti < 1 ? '${(minuti * 60).round()} s' : '${minuti.round()} min'}; '
         '$cadute';
+  }
+
+  /// Una durata come si dice a voce: «40 s», «12 min», «8 h».
+  static String _quanto(Duration quanta) {
+    if (quanta.inMinutes < 1) return '${quanta.inSeconds} s';
+    if (quanta.inHours < 1) return '${quanta.inMinutes} min';
+    return '${quanta.inHours} h';
   }
 
   static String _megabyte(int quanti) =>
@@ -426,6 +459,27 @@ class Filo {
   /* ─── Quello che arriva ────────────────────────────────────────────────── */
 
   void _arrivato(String grezzo) {
+    _busteArrivate += 1;
+    /* Un mucchio: dentro ci sono piu' messaggi, uno per riga.
+     *
+     * Non e' JSON, ed e' apposta: un JSON non contiene mai un ritorno a capo
+     * vero — dentro una stringa e' `\n`, due caratteri — quindi spezzare su
+     * quello e' esatto e non costa ne' una lettura ne' una riscrittura dei
+     * messaggi che stanno dentro. Ognuno riprende la strada che avrebbe
+     * fatto da solo: chi lo riceve non sa di essere arrivato in compagnia. */
+    if (grezzo.startsWith(segnoDelMucchio)) {
+      _byteArrivati += segnoDelMucchio.length;
+      for (final pezzo
+          in grezzo.substring(segnoDelMucchio.length).split('\n')) {
+        if (pezzo.isEmpty) continue;
+        _unMessaggio(pezzo);
+      }
+      return;
+    }
+    _unMessaggio(grezzo);
+  }
+
+  void _unMessaggio(String grezzo) {
     _messaggiArrivati += 1;
     _byteArrivati += grezzo.length;
     /* Qualunque cosa arrivi dice che il filo e' vivo: un fiume di eventi
@@ -519,6 +573,7 @@ class Filo {
      * righe della diagnostica parlano dello stesso pezzo di tempo. */
     Lavori.io.azzera();
     _messaggiArrivati = 0;
+    _busteArrivate = 0;
     _byteArrivati = 0;
     _eventiArrivati = 0;
     _messaggiMandati = 0;
@@ -861,11 +916,25 @@ class Filo {
   }
 
   void _caduto(String perche) {
-    _cadute += 1;
-    _ultimaCaduta = perche;
-    _cadutoIl = DateTime.now();
-    _ultimeCadute.add(perche);
-    if (_ultimeCadute.length > quanteCaduteSiTengono) _ultimeCadute.removeAt(0);
+    /* Un filo chiuso **apposta** non e' una caduta, e non va fra le cadute.
+     *
+     * Quando l'app non e' davanti il filo si chiude da se' — e' voluto, ed e'
+     * quello che non tiene una casa aperta in tasca per niente. Solo che
+     * chiudere una presa fa scattare il suo `onDone`, che arriva qui, e finiva
+     * contato insieme alle cadute vere: nella diagnostica si leggeva «caduto 1
+     * volte: il filo si e' chiuso» sotto «app messa da parte 1 volte», cioe' la
+     * stessa cosa scritta due volte, una delle quali come guasto. Chi guarda
+     * quel pannello per capire se qualcosa non va si mette a inseguire un
+     * fantasma. */
+    if (!_spentoApposta) {
+      _cadute += 1;
+      _ultimaCaduta = perche;
+      _cadutoIl = DateTime.now();
+      _ultimeCadute.add(perche);
+      if (_ultimeCadute.length > quanteCaduteSiTengono) {
+        _ultimeCadute.removeAt(0);
+      }
+    }
     _smettiDiBattere();
     _stacca();
     /* Le richieste in volo muoiono: la loro risposta non arrivera' mai. Ma chi
@@ -1020,9 +1089,25 @@ class Instradato {
 
   /// Lo stesso messaggio, col numero di chi l'aveva chiesto al posto di
   /// quello del filo. Il numero sta in testa, e si cambia solo quello.
+  ///
+  /// **Una copia sola, non due.** Prima erano
+  /// `'{"id": \$altro' + testo.substring(dopo)`, e su un `get_states` da un
+  /// megabyte e mezzo sono due stringhe da un megabyte e mezzo invece di una:
+  /// la sottostringa, e poi il risultato della somma. Non e' tempo speso in
+  /// un lavoro — un megabyte si copia in pochi millesimi — e' **roba da
+  /// buttare** che si accumula, e i decimi di secondo si pagano dopo, quando
+  /// il raccoglitore passa. E si pagano sul filo che disegna.
+  ///
+  /// `replaceRange` fa lo stesso mestiere allocando una volta.
   String conNumero(int altro) {
     final dopo = _dopoIlNumero;
-    if (dopo != null) return '{"id": $altro${testo.substring(dopo)}';
+    if (dopo != null) {
+      if (altro == id) return testo;
+      return Lavori.io.subito(
+        'rinumerati per la plancia',
+        () => testo.replaceRange(0, dopo, '{"id": $altro'),
+      );
+    }
     return jsonEncode({...detto, 'id': altro});
   }
 }

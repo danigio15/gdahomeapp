@@ -12,7 +12,7 @@
 # dell'add-on e salva. Le Prove girano su quello che si e' appena salvato.
 #
 # Attenzione a cosa **non** fa: non arriva a casa di nessuno. Un add-on
-# installato in `/addons/ponte` non ha nessun negozio dietro — Home Assistant
+# installato in `/addons/gdahome` non ha nessun negozio dietro — Home Assistant
 # guarda il manifesto che trova in quella cartella, e quella e' l'unica
 # versione che conosce — quindi finche' quei file non cambiano **sul disco di
 # casa**, «Aggiorna» non compare. L'ultimo miglio lo fa il ponte da se', col
@@ -141,26 +141,35 @@ jobs:
           # niente, e da dove viene la plancia deve restare scritto lo stesso.
           node strumenti/porta-la-plancia.mjs "$dove" --commit="$SHA"
 
-      # La versione dell'add-on e' il numero che Home Assistant guarda per
-      # dire «Aggiorna»: se non cambia, chi ha l'add-on in casa non se ne
-      # accorge, e la plancia nuova resta qui dentro senza arrivare a lui.
-      - name: Alza la versione dell'add-on
+      # La versione: **quella della plancia**, nei due posti che la devono dire
+      # uguale — il manifesto dell'add-on e il pubspec dell'app.
+      #
+      # E' il numero che Home Assistant guarda per dire «Aggiorna»: se non
+      # cambia, chi ha l'add-on in casa non se ne accorge e la plancia nuova
+      # resta qui dentro senza arrivare a lui. Prima si alzava di uno il numero
+      # di mezzo — da «1.4.24» veniva fuori «1.5.0», che non vuol dire niente —
+      # e l'app non si toccava, cioe' i due numeri si separavano al primo giro.
+      # La regola adesso sta in `strumenti/versione.mjs`, che una prova tiene
+      # ferma, e non in una riga di shell che non prova nessuno.
+      - name: Alza la versione
         if: steps.la.outputs.nuova == 'si'
+        env:
+          VERSIONE: ${{ steps.la.outputs.versione }}
         run: |
           set -eu
-          vecchia=$(sed -n 's/^version: "\(.*\)"/\1/p' ponte/config.yaml)
-          nuova=$(node -e '
-            const [a, b] = process.argv[1].split(".");
-            process.stdout.write(`${a}.${Number(b) + 1}.0`);
-          ' "$vecchia")
-          sed -i "s/^version: \".*\"/version: \"$nuova\"/" ponte/config.yaml
-          echo "add-on dalla $vecchia alla $nuova"
-          echo "PONTE=$nuova" >> "$GITHUB_ENV"
+          node strumenti/versione.mjs "$VERSIONE"
+          echo "PONTE=$VERSIONE" >> "$GITHUB_ENV"
 
-      - name: Le prove del ponte
+      # Le prove, tutte e tre le suite, sulla plancia appena portata dentro.
+      #
+      # Con una scadenza: una corsa di queste si e' impiantata per sei ore e
+      # l'ha fermata qualcuno a mano. Un lavoro che non finisce non e' un
+      # lavoro che sta lavorando — a dieci minuti e' rotto, e va detto subito
+      # invece di restare li' acceso a spendere.
+      - name: Le prove
         if: steps.la.outputs.nuova == 'si'
+        timeout-minutes: 10
         run: npm test
-        working-directory: ponte
 
       - name: Salvala nella repository
         if: steps.la.outputs.nuova == 'si'
@@ -168,13 +177,13 @@ jobs:
           VERSIONE: ${{ steps.la.outputs.versione }}
         run: |
           set -eu
-          if git diff --quiet -- ponte/plancia ponte/config.yaml; then
+          if git diff --quiet -- ponte/plancia ponte/config.yaml app/pubspec.yaml; then
             echo "### Niente da cambiare" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add ponte/plancia ponte/config.yaml
+          git add ponte/plancia ponte/config.yaml app/pubspec.yaml
           git commit -m "La plancia $VERSIONE, e l'add-on $PONTE"
           # Come sopra: se il ramo si e' mosso ci si rimette sopra e si riprova,
           # invece di perdere la plancia gia' portata dentro.
@@ -182,7 +191,7 @@ jobs:
           {
             echo "### La plancia e' la $VERSIONE"
             echo ""
-            echo "L'add-on e' passato alla **$PONTE**: in Home Assistant compare"
-            echo "«Aggiorna» sulla pagina de «Il ponte», e da li' la plancia nuova"
-            echo "arriva a tutti i telefoni abbinati."
+            echo "L'add-on e l'app sono passati alla **$PONTE**: in Home Assistant"
+            echo "compare «Aggiorna» sulla pagina di gdahome, e da li' la plancia"
+            echo "nuova arriva a tutti i telefoni abbinati."
           } >> "$GITHUB_STEP_SUMMARY"

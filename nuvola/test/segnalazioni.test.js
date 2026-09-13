@@ -242,43 +242,14 @@ test("un tipo strano diventa un problema, e senza titolo o testo non si apre nie
     casa: "c",
   });
   assert.equal((await mie.crea({ tipo: "boh", titolo: "t", corpo: "c" })).tipo, "problema");
+  /* «chat» era un tipo, e non lo e' piu': una parola che non e' un tipo
+   * diventa un problema, come tutte le altre. */
   assert.equal((await mie.crea({ tipo: "chat", titolo: "t", corpo: "c" })).tipo, "problema");
   await assert.rejects(() => mie.crea({ tipo: "idea", titolo: "", corpo: "c" }), /Manca il titolo/);
   await assert.rejects(
     () => mie.crea({ tipo: "idea", titolo: "t", corpo: "   " }),
     /Manca il testo/,
   );
-});
-
-test("la chat e' una issue sola per casa, che nasce alla prima parola", async () => {
-  const storage = archivioFinto();
-  const { github, issues } = gitHubFinto();
-  const mie = new Segnalazioni({ storage, github, casa: "casa_" + "b".repeat(32) });
-
-  assert.equal(await mie.chat(), null);
-  const prima = await mie.chatta("Buongiorno, ho una domanda.", { app: "10" });
-  assert.equal(prima.tipo, "chat");
-  assert.equal(prima.titolo, "Chat di assistenza");
-  assert.equal(issues.get(41).title, "[chat] Casa casa_bbbbbbb");
-  assert.deepEqual(
-    prima.messaggi.map((uno) => uno.testo),
-    ["Buongiorno, ho una domanda."],
-  );
-
-  issues.get(41).commenti.push({ body: "Dimmi pure.", created_at: "t2" });
-  const seconda = await mie.chatta("Come si fa a…");
-  assert.equal(issues.size, 1, "sempre la stessa issue");
-  assert.deepEqual(
-    seconda.messaggi.map((uno) => [uno.da, uno.testo]),
-    [
-      ["casa", "Buongiorno, ho una domanda."],
-      ["manutentore", "Dimmi pure."],
-      ["casa", "Come si fa a…"],
-    ],
-  );
-  assert.equal((await mie.chat()).messaggi.length, 3);
-  /* La chat non sta fra le segnalazioni. */
-  assert.deepEqual(await mie.elenco(), []);
 });
 
 test("senza gettone il centralino lo dice, e non prova nemmeno", async () => {
@@ -292,7 +263,7 @@ test("senza gettone il centralino lo dice, e non prova nemmeno", async () => {
     (errore) => errore.codice === "non_configurate" && errore.stato === 503,
   );
   await assert.rejects(
-    () => mie.chat(),
+    () => mie.leggi(7),
     (errore) => errore.codice === "non_configurate",
   );
   /* L'elenco invece si legge sempre: e' roba di casa. */
@@ -383,23 +354,6 @@ test("un allegato finisce nella repository, e sotto la issue c'e' il commento ch
     mie.allega(aperta.numero, { nome: "x.exe", tipo: "application/octet-stream", byte }),
     (errore) => errore instanceof RichiestaSbagliata && errore.codice === "tipo_non_ammesso",
   );
-});
-
-test("un allegato alla chat la fa nascere, se non c'era", async () => {
-  const { github, chiamate } = gitHubFinto();
-  const storage = archivioFinto();
-  const mie = new Segnalazioni({
-    storage,
-    github,
-    casa: "casa_1",
-    adesso: () => 1_700_000_000_000,
-  });
-  const byte = new Uint8Array([1, 2, 3, 4]);
-  const chat = await mie.allegaAllaChat({ nome: "clip.mp4", tipo: "video/mp4", byte }, {});
-  assert.ok(chat.numero);
-  assert.equal(chat.tipo, "chat");
-  assert.match(chat.messaggi.at(-1).testo, /^🎬 clip\.mp4 \(4 B\)/);
-  assert.ok(chiamate.some((una) => una.metodo === "PUT"));
 });
 
 test("i nomi dei file si puliscono, e il peso si legge", () => {

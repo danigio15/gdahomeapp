@@ -225,6 +225,30 @@ void main() {
     expect(archivio.quella(senzaNome.id)!.nome, 'Al mare');
   });
 
+  test(
+    'quale plancia si guarda in questa casa si scrive, e si rilegge',
+    () async {
+      final una = await archivio.aggiungi(nome: 'Casa', segno: 'x');
+      expect(archivio.quella(una.id)!.plancia, isNull);
+
+      await archivio.segnaLaPlancia(una.id, 'casa-al-mare');
+      expect(archivio.quella(una.id)!.plancia, 'casa-al-mare');
+
+      /* Vuoto vuol dire tornare alla prima, e allora non resta scritto niente:
+     * se no il giorno che quella plancia non c'e' piu' si continuerebbe a
+     * chiederla. */
+      await archivio.segnaLaPlancia(una.id, '');
+      expect(archivio.quella(una.id)!.plancia, isNull);
+
+      /* E sopravvive a una riapertura: e' la meta' che serve, perche' la scelta
+     * la si fa una volta e l'app si riapre cento. */
+      await archivio.segnaLaPlancia(una.id, 'casa-al-mare');
+      final dinuovo = ArchivioDelleCase(cassaforte);
+      await dinuovo.apri();
+      expect(dinuovo.quella(una.id)!.plancia, 'casa-al-mare');
+    },
+  );
+
   test('il segno non compare quando si scrive una casa nel registro', () {
     const casa = CasaConosciuta(
       id: 'x',

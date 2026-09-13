@@ -1,8 +1,29 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// La chiave vera, se c'e'.
+//
+// Sta in `android/chiave.properties`, che non entra nella repository (lo dice
+// `android/.gitignore`), e la scrive chi costruisce: sulla macchina di GitHub
+// la scrive il workflow dai segreti, su un computer la scrive chi ce l'ha. Le
+// quattro righe sono quelle di sempre — `storeFile`, `storePassword`,
+// `keyAlias`, `keyPassword`.
+//
+// **Se non c'e' si firma con la chiave di prova e si va avanti.** Un pacchetto
+// firmato di prova si installa e funziona; un lavoro che si ferma perche'
+// manca un segreto ferma anche chi vuole solo provare l'app. Quale delle due
+// ha firmato lo dice il riepilogo della corsa, che e' il posto dove si guarda.
+val chiaveVera =
+    Properties().apply {
+        val dove = rootProject.file("chiave.properties")
+        if (dove.exists()) dove.inputStream().use { load(it) }
+    }
+val cELaChiaveVera = chiaveVera.getProperty("storeFile") != null
 
 android {
     // La chiave con cui si firmano i pacchetti di prova.
@@ -27,6 +48,16 @@ android {
             storePassword = "gdahome"
             keyAlias = "gdahome"
             keyPassword = "gdahome"
+        }
+        if (cELaChiaveVera) {
+            create("vera") {
+                storeFile = file(chiaveVera.getProperty("storeFile"))
+                storePassword = chiaveVera.getProperty("storePassword")
+                keyAlias = chiaveVera.getProperty("keyAlias") ?: "gdahome"
+                keyPassword =
+                    chiaveVera.getProperty("keyPassword")
+                        ?: chiaveVera.getProperty("storePassword")
+            }
         }
     }
 
@@ -56,9 +87,8 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // La vera quando c'e', quella di prova quando no.
+            signingConfig = signingConfigs.getByName(if (cELaChiaveVera) "vera" else "debug")
         }
     }
 }

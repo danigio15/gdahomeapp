@@ -941,6 +941,7 @@ class Conversazione extends StatefulWidget {
     this.perche,
     this.vuota,
     this.suggerimento = 'Scrivi…',
+    this.laltro = 'chi fa l\'app',
     this.allega,
     this.scegli = scegliDalTelefono,
   });
@@ -954,6 +955,15 @@ class Conversazione extends StatefulWidget {
   final ScegliUnAllegato scegli;
   final Widget? intestazione;
   final String? perche;
+
+  /// Come si chiama, sotto il fumetto, chi non sono io.
+  ///
+  /// Di solito e' «chi fa l'app»: questa conversazione la si guarda da una
+  /// casa, e dall'altra parte c'e' chi risponde. Nella Console si guarda la
+  /// stessa conversazione dall'altro capo, e l'altro e' la casa che ha chiesto
+  /// aiuto — chiamarla «chi fa l'app» vorrebbe dire leggere la propria domanda
+  /// come una risposta.
+  final String laltro;
 
   /// Cosa si vede quando non c'e' ancora niente.
   final Widget? vuota;
@@ -1050,7 +1060,8 @@ class _ConversazioneState extends State<Conversazione> {
                 ],
                 if (widget.messaggi.isEmpty && widget.vuota != null)
                   widget.vuota!,
-                for (final uno in widget.messaggi) _Fumetto(uno),
+                for (final uno in widget.messaggi)
+                  _Fumetto(uno, laltro: widget.laltro),
                 if (perche != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -1108,8 +1119,9 @@ class _ConversazioneState extends State<Conversazione> {
 }
 
 class _Fumetto extends StatelessWidget {
-  const _Fumetto(this.messaggio);
+  const _Fumetto(this.messaggio, {this.laltro = 'chi fa l\'app'});
   final Messaggio messaggio;
+  final String laltro;
 
   @override
   Widget build(BuildContext context) {
@@ -1143,7 +1155,7 @@ class _Fumetto extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               [
-                mio ? 'tu' : 'chi fa l\'app',
+                mio ? 'tu' : laltro,
                 if (messaggio.il != null) _giorno(messaggio.il!),
               ].join(' · '),
               style: testi.labelSmall?.copyWith(

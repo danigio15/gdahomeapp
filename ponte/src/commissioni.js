@@ -48,10 +48,26 @@ import { gzipSync } from "node:zlib";
 import { Configurazione, PROFILO_PRINCIPALE, ScattoTroppoGrande } from "./configurazione.js";
 import { DISPOSITIVI_MASSIMI, ENTITA_MASSIME } from "./catalogo.js";
 import { BASE_DELLE_FOTO, BASE_DI_CASA, FOTO_MASSIMA } from "./foto.js";
+import { ChatHaDettoNo } from "./chat.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
+import { QuellaPlanciaNo, TroppePlance } from "./plance.js";
 
 export const TIPO = "ponte/http";
 export const TIPO_PLANCIA = "ponte/plancia";
+
+/* Le plance di questa casa: piu' d'una, come nella dashboard.
+ *
+ * Aggiungerne una e togliere una sono atti di configurazione, come abbinare un
+ * telefono: si fanno dalla scheda dell'add-on, dietro l'autenticazione di Home
+ * Assistant, e si fanno anche dall'app. Non e' una svista: un telefono
+ * abbinato riscrive gia' la configurazione di una plancia intera con
+ * `config/set`, e tenerlo fuori da qui non proteggerebbe niente. */
+const PLANCE = new Map([
+  ["ponte/plance/elenco", "elenco"],
+  ["ponte/plance/aggiungi", "aggiungi"],
+  ["ponte/plance/rinomina", "rinomina"],
+  ["ponte/plance/togli", "togli"],
+]);
 const CONFIG_GET = "dashboardmodern/config/get";
 const CONFIG_SET = "dashboardmodern/config/set";
 const CONFIG_RESTORE = "dashboardmodern/config/restore";
@@ -64,11 +80,44 @@ const TIMER_ELENCO = "dashboardmodern/clima/timer/list";
 const TIMER_METTI = "dashboardmodern/clima/timer/set";
 const TIMER_TOGLI = "dashboardmodern/clima/timer/clear";
 
-/* Le segnalazioni e la chat di assistenza escono dalla plancia: diventano
- * dell'app, che le fa da se'. Alla pagina, che ha ancora i suoi bottoni, si
- * risponde con una frase e non con un «comando sconosciuto». */
-const NELLAPP = /^dashboardmodern\/(tickets|chat)\//;
-const DETTO_NELLAPP = "Le segnalazioni e la chat stanno nell'app, non nella plancia.";
+/* Le segnalazioni escono dalla plancia: diventano dell'app, che le fa da se'.
+ * Alla pagina, che ha ancora i suoi bottoni, si risponde con una frase e non
+ * con un «comando sconosciuto».
+ *
+ * La chat no, e qui c'e' stato un errore mio: era in questo elenco, e la
+ * finestra dell'assistenza della plancia — che e' la sua, e che non passa da
+ * GitHub — si apriva su un rifiuto. Adesso il ponte fa il mestiere che
+ * nell'integrazione fa `chat.py`, e quei comandi passano (`chat.js`). */
+const NELLAPP = /^dashboardmodern\/tickets\//;
+const DETTO_NELLAPP = "Le segnalazioni stanno nell'app, non nella plancia.";
+
+/* La chat di assistenza della dashboard: quattro comandi sono di chi chiede, e
+ * li fa il ponte per ogni casa. */
+const CHAT_STATO = "dashboardmodern/chat/state";
+const CHAT_FILO = "dashboardmodern/chat/thread";
+const CHAT_MANDA = "dashboardmodern/chat/send";
+const CHAT_DIMENTICA = "dashboardmodern/chat/forget";
+
+/* E quattro sono di chi risponde: la coda di tutte le case, aprirne una,
+ * rispondere, buttarla via. Li fa lo stesso ponte, ma solo dove c'e' la chiave
+ * della console — cioe' in una casa sola al mondo.
+ *
+ * Due nomi per la stessa porta, e non e' una svista. Quelli col prefisso della
+ * dashboard sono i comandi che la finestra dell'assistenza **gia' manda**: e'
+ * il Cruscotto della plancia, mille e duecento righe scritte e tradotte, e
+ * riscriverlo per cambiargli il nome ai comandi sarebbe stato l'unico lavoro
+ * di tutta la giornata. Quelli col prefisso del ponte sono per l'app, che la
+ * dashboard non la nomina da nessuna parte. Sotto c'e' lo stesso metodo. */
+const DI_CHI_RISPONDE = new Map([
+  ["dashboardmodern/chat/queue", "coda"],
+  ["dashboardmodern/chat/open", "apri"],
+  ["dashboardmodern/chat/answer", "rispondi"],
+  ["dashboardmodern/chat/drop", "butta"],
+  ["ponte/console/coda", "coda"],
+  ["ponte/console/apri", "apri"],
+  ["ponte/console/rispondi", "rispondi"],
+  ["ponte/console/butta", "butta"],
+]);
 
 /* La pagina, per abitudine vecchia, tiene anche una copia per utente della
  * configurazione in Home Assistant (`frontend/*_user_data`), con questa
@@ -162,11 +211,13 @@ export class Commissioni {
     casa,
     registro,
     plancia = null,
+    plance = null,
     configurazione = null,
     catalogo = null,
     foto = null,
     fotoDiCasa = null,
     segnalazioni = null,
+    chat = null,
     spegnimento = null,
     scarica = scaricaDavvero,
     insieme = INSIEME,
@@ -177,6 +228,10 @@ export class Commissioni {
      * sul banco, senza la cartella — i file si chiedono a Home Assistant,
      * dove ci sarebbero solo con l'integrazione. */
     this.plancia = plancia;
+    /* Quali plance ci sono: i file sono gli stessi per tutte, e questo dice
+     * quante sono, come si chiamano e in quale cassetto tiene la sua
+     * configurazione ognuna (`plance.js`). */
+    this.plance = plance;
     this.configurazione = configurazione;
     /* Il catalogo delle integrazioni e le foto: le altre due cose che la
      * plancia chiedeva all'integrazione. */
@@ -185,8 +240,12 @@ export class Commissioni {
     /* Quelle che stanno gia' in Home Assistant, in sola lettura: chi ha una
      * casa da qualche anno le ha li', e le sceglieva da li'. */
     this.fotoDiCasa = fotoDiCasa;
-    /* Le segnalazioni e la chat dell'app, che passano dal centralino. */
+    /* Le segnalazioni dell'app, che passano dal centralino di gdahome. */
     this.segnalazioni = segnalazioni;
+    /* La chat di assistenza della plancia, che passa dal centralino della
+     * dashboard: e' la sua, e nell'app il mestiere dell'integrazione lo fa il
+     * ponte. */
+    this.chat = chat;
     /* Il conto alla rovescia del clima, che nell'integrazione sta in Home
      * Assistant e qui sta nel ponte. */
     this.spegnimento = spegnimento;
@@ -205,6 +264,12 @@ export class Commissioni {
       return Boolean(this.configurazione);
     if (tipo === CATALOGO) return Boolean(this.catalogo);
     if (tipo === FOTO_ELENCO || tipo === FOTO_CARICA) return Boolean(this.foto);
+    if (tipo === CHAT_STATO || tipo === CHAT_FILO || tipo === CHAT_MANDA || tipo === CHAT_DIMENTICA)
+      return Boolean(this.chat);
+    /* E la coda di chi risponde: la fa lo stesso ponte, e se la chat non c'e'
+     * non e' roba sua. Che poi la chiave ci sia o no lo dice la chat, con una
+     * frase — qui si decide solo chi risponde a questo comando. */
+    if (DI_CHI_RISPONDE.has(tipo)) return Boolean(this.chat);
     if (tipo === TIMER_ELENCO || tipo === TIMER_METTI || tipo === TIMER_TOGLI)
       return Boolean(this.spegnimento);
     if (NELLAPP.test(tipo)) return true;
@@ -218,17 +283,19 @@ export class Commissioni {
     const id = detto?.id ?? null;
     const tipo = detto?.type;
     if (tipo === TIPO) return this._http(detto);
-    if (tipo === TIPO_PLANCIA) return this._laPlancia(id);
-    if (
-      typeof tipo === "string" &&
-      (tipo.startsWith("ponte/segnalazioni/") || tipo.startsWith("ponte/chat/"))
-    )
+    if (tipo === TIPO_PLANCIA) return this._laPlancia(detto);
+    if (PLANCE.has(tipo)) return this._lePlance(detto);
+    if (typeof tipo === "string" && tipo.startsWith("ponte/chat/")) return this._chatDellApp(detto);
+    if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
       return this._segnalazioni(detto);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
       return this._configurazione(detto);
     if (tipo === CATALOGO) return this._catalogo(detto);
     if (tipo === FOTO_ELENCO) return this._elencoDelleFoto(detto);
     if (tipo === FOTO_CARICA) return this._caricaUnaFoto(detto);
+    if (tipo === CHAT_STATO || tipo === CHAT_FILO || tipo === CHAT_MANDA || tipo === CHAT_DIMENTICA)
+      return this._chat(detto);
+    if (DI_CHI_RISPONDE.has(tipo)) return this._laConsoleDellaChat(detto);
     if (tipo === TIMER_ELENCO || tipo === TIMER_METTI || tipo === TIMER_TOGLI)
       return this._timerDelClima(detto);
     if (typeof tipo === "string" && NELLAPP.test(tipo))
@@ -267,9 +334,66 @@ export class Commissioni {
     }
   }
 
-  _laPlancia(id) {
+  /* Dove stanno i file della plancia, e quale plancia aprire.
+   *
+   * Senza `profilo` si risponde con la **prima**, che e' la risposta di
+   * sempre: chi ha un'app di ieri non si accorge di niente. Chi lo passa ha
+   * scelto una delle altre. E l'elenco viaggia insieme, perche' il selettore
+   * lo disegna chi ha appena chiesto la plancia: una seconda domanda per
+   * sapere quante sono sarebbe un secondo giro sul filo per niente. */
+  _laPlancia(detto) {
+    const id = detto?.id ?? null;
     if (!this.plancia?.cE) return no(id, "not_found", "questo ponte non ha la plancia");
-    return si(id, this.plancia.descrizione());
+    const voluto = typeof detto?.profilo === "string" ? detto.profilo.trim() : "";
+    const quale = this.plance ? (voluto ? this.plance.quale(voluto) : this.plance.prima) : null;
+    if (voluto && !quale) return no(id, "not_found", "quella plancia non c'e'");
+    return si(id, {
+      ...this.plancia.descrizione(quale),
+      plance: this.plance ? this.plance.elenco() : [],
+    });
+  }
+
+  /* Aggiungere, rinominare e togliere una plancia.
+   *
+   * Togliendone una va via anche il suo cassetto nella configurazione: se
+   * restasse, chi rifacesse una plancia con lo stesso nome si ritroverebbe
+   * dentro il lavoro di quella di prima. Quel cassetto lo tiene la cassetta
+   * della configurazione, e a lei si chiede. */
+  _lePlance(detto) {
+    const id = detto?.id ?? null;
+    const plance = this.plance;
+    if (!plance) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    const titolo = typeof detto.titolo === "string" ? detto.titolo : "";
+    const profilo = typeof detto.profilo === "string" ? detto.profilo : "";
+    try {
+      switch (PLANCE.get(detto.type)) {
+        case "elenco":
+          return si(id, { plance: plance.elenco() });
+        case "aggiungi": {
+          const nuova = plance.aggiungi(titolo);
+          return si(id, { plance: plance.elenco(), quale: nuova });
+        }
+        case "rinomina":
+          return si(id, {
+            quale: plance.rinomina(profilo, titolo),
+            plance: plance.elenco(),
+          });
+        case "togli":
+          return si(id, {
+            plance: plance.togli(profilo, {
+              dimentica: (quello) => this.configurazione?.dimentica(quello),
+            }),
+          });
+        default:
+          return no(id, "unknown_command", `non conosco ${detto.type}`);
+      }
+    } catch (errore) {
+      if (errore instanceof TroppePlance || errore instanceof QuellaPlanciaNo) {
+        return no(id, errore.codice, errore.message);
+      }
+      this.registro.errore(`le plance sono andate storte: ${errore?.message || errore}`);
+      return no(id, "ponte_plance", "non ha funzionato");
+    }
   }
 
   _configurazione(detto) {
@@ -311,6 +435,158 @@ export class Commissioni {
     }
   }
 
+  /* La chat di assistenza della plancia, quella che non passa da GitHub.
+   *
+   * Le quattro risposte hanno la forma che la finestra dell'assistenza si
+   * aspetta — sono quelle di `websocket_api.py` dell'integrazione, una per
+   * una — perche' la finestra e' la sua e non si tocca. */
+  async _chat(detto) {
+    const id = detto.id ?? null;
+    const chat = this.chat;
+    if (!chat) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    try {
+      switch (detto.type) {
+        case CHAT_STATO:
+          return si(id, chat.stato());
+        case CHAT_FILO:
+          return si(id, await chat.conversazione());
+        case CHAT_MANDA:
+          return si(
+            id,
+            await chat.scrivi(typeof detto.message === "string" ? detto.message : "", {
+              nome: typeof detto.name === "string" ? detto.name : "",
+              lingua: typeof detto.locale === "string" ? detto.locale : "",
+            }),
+          );
+        case CHAT_DIMENTICA:
+          return si(id, { forgotten: await chat.dimentica() });
+        default:
+          return no(id, "unknown_command", `non conosco ${detto.type}`);
+      }
+    } catch (errore) {
+      if (errore instanceof ChatHaDettoNo) return no(id, errore.codice, errore.message);
+      this.registro.errore(`la chat e' andata storta: ${errore?.message || errore}`);
+      return no(id, "ponte_chat", "non ha funzionato");
+    }
+  }
+
+  /* L'altra meta': la coda di tutte le case, per chi risponde.
+   *
+   * Le risposte hanno i nomi di `websocket_api.py` — `conversations`,
+   * `messages`, `message`, `dropped` — perche' a leggerle c'e' il Cruscotto
+   * della plancia, che e' scritto per quelli.
+   *
+   * **Chi puo' chiedere.** Chiunque sia gia' entrato: un telefono abbinato o
+   * una finestra della plancia dentro Home Assistant. Nel ponte non c'e'
+   * nessun grado di amministratore da controllare — chi e' passato
+   * dall'abbinamento e' gia' dentro casa — e il confine vero e' un altro: la
+   * chiave della console. Sta nelle opzioni dell'add-on, che si aprono solo da
+   * Home Assistant e solo da chi lo amministra, e senza quella qui non si
+   * apre niente in nessuna casa del mondo. */
+  async _laConsoleDellaChat(detto) {
+    const id = detto.id ?? null;
+    const chat = this.chat;
+    if (!chat) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    /* Una linea la si nomina in due modi, perche' due finestre la nominano in
+     * due modi: `line` e' come la chiama la plancia, `linea` come la chiama
+     * l'app. Il primo che c'e' vale. */
+    const linea =
+      typeof detto.line === "string"
+        ? detto.line
+        : typeof detto.linea === "string"
+          ? detto.linea
+          : "";
+    const testo =
+      typeof detto.message === "string"
+        ? detto.message
+        : typeof detto.testo === "string"
+          ? detto.testo
+          : "";
+    try {
+      switch (DI_CHI_RISPONDE.get(detto.type)) {
+        case "coda":
+          return si(id, { conversations: await chat.coda() });
+        case "apri":
+          return si(id, { messages: await chat.apri(linea) });
+        case "rispondi":
+          return si(id, { message: await chat.replica(linea, testo) });
+        case "butta":
+          return si(id, { dropped: await chat.butta(linea) });
+        default:
+          return no(id, "unknown_command", `non conosco ${detto.type}`);
+      }
+    } catch (errore) {
+      if (errore instanceof ChatHaDettoNo) return no(id, errore.codice, errore.message);
+      this.registro.errore(`la console della chat e' andata storta: ${errore?.message || errore}`);
+      return no(id, "ponte_chat", "non ha funzionato");
+    }
+  }
+
+  /* La chat dell'app: **la stessa** di quella della plancia, e non passa da
+   * GitHub — «la chat non deve passare per github, puoi utilizzare la stessa
+   * chat della dashboardmodern v2».
+   *
+   * Prima apriva una issue come una segnalazione, e non andava: una
+   * segnalazione e' un difetto che deve restare scritto e ritrovabile,
+   * chiedere aiuto e' un'altra cosa — si incolla un pezzo di configurazione,
+   * il nome delle proprie entita', a volte una foto di casa — e non si chiede
+   * a nessuno di farlo su una pagina pubblica.
+   *
+   * La schermata dell'app resta la sua: legge una conversazione con dentro
+   * dei fumetti, come faceva prima. Sotto, adesso, c'e' `chat.js`. */
+  async _chatDellApp(detto) {
+    const id = detto.id ?? null;
+    const chat = this.chat;
+    if (!chat) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    try {
+      switch (detto.type) {
+        /* Come sta la chat, senza uscire di casa: serve all'app per sapere
+         * se questa e' la casa di chi risponde — e quindi se disegnare la
+         * voce «Console» — senza chiedere la coda per scoprirlo. E' lo stesso
+         * `chat/state` che riceve la finestra della plancia. */
+        case "ponte/chat/stato":
+          return si(id, chat.stato());
+        case "ponte/chat/leggi": {
+          /* Un centralino giu' non e' una schermata vuota: le parole che
+           * c'erano si vedono ancora, e il guasto si dice **accanto** — nella
+           * finestra della plancia e nell'app allo stesso modo. Senza questo
+           * l'app mostrerebbe una conversazione vecchia con la faccia di una
+           * aggiornata. */
+          const filo = await chat.conversazione();
+          return si(id, { chat: chat.comeLaVuoleLApp(), guaio: filo.error || "" });
+        }
+        case "ponte/chat/scrivi": {
+          const testo = typeof detto.testo === "string" ? detto.testo.slice(0, 5000) : "";
+          /* Delle molte misure che l'app manda insieme a una segnalazione, al
+           * centralino della chat ne entra una: la sua versione, in fondo
+           * all'etichetta. Il resto sta nell'app, sotto «Come va l'app», e si
+           * incolla quando chi risponde lo chiede. */
+          const app =
+            detto.diagnostica && typeof detto.diagnostica === "object"
+              ? String(detto.diagnostica.app ?? "")
+              : "";
+          await chat.scrivi(testo, { app });
+          return si(id, chat.comeLaVuoleLApp());
+        }
+        /* Un allegato questa chat non lo prende: la sua porta passa parole. Si
+         * dice, e si dice dove metterlo — una foto dentro una segnalazione ci
+         * sta, ed e' il posto giusto per una prova. */
+        case "ponte/chat/allega":
+          return no(
+            id,
+            "not_supported",
+            "La chat di assistenza passa parole. Una foto si allega a una segnalazione.",
+          );
+        default:
+          return no(id, "unknown_command", `non conosco ${detto.type}`);
+      }
+    } catch (errore) {
+      if (errore instanceof ChatHaDettoNo) return no(id, errore.codice, errore.message);
+      this.registro.errore(`la chat dell'app e' andata storta: ${errore?.message || errore}`);
+      return no(id, "ponte_chat", "non ha funzionato");
+    }
+  }
+
   async _segnalazioni(detto) {
     const id = detto.id ?? null;
     const mie = this.segnalazioni;
@@ -347,21 +623,6 @@ export class Commissioni {
           if (!allegato) return no(id, "invalid_format", "manca il file, o non e' base64");
           return si(id, await mie.allega(Number(detto.numero), allegato));
         }
-        case "ponte/chat/allega": {
-          const allegato = unAllegato(detto);
-          if (!allegato) return no(id, "invalid_format", "manca il file, o non e' base64");
-          return si(id, await mie.allegaAllaChat(allegato));
-        }
-        case "ponte/chat/leggi":
-          return si(id, { chat: await mie.chat() });
-        case "ponte/chat/scrivi":
-          return si(
-            id,
-            await mie.chatta(
-              parola(detto.testo, 5000),
-              detto.diagnostica && typeof detto.diagnostica === "object" ? detto.diagnostica : {},
-            ),
-          );
         default:
           return no(id, "unknown_command", `non conosco ${detto.type}`);
       }

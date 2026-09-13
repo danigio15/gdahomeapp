@@ -38,7 +38,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
 import { alzaLaCasaFinta, SCATTO_DEMO, SEGNO_DEL_SUPERVISOR } from "./casa-finta.js";
-import { alzaIlCentralinoFinto } from "./centralino-finto.js";
+import { alzaIlCentralinoFinto, CHIAVE_DELLA_CONSOLE } from "./centralino-finto.js";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 const RADICE = dirname(QUI);
@@ -328,6 +328,16 @@ async function main() {
       /* Il ponte chiama il centralino finto: la chiamata riesce, e le
        * segnalazioni hanno una strada per uscire. */
       PONTE_CENTRALINO: centralino.indirizzo,
+      /* E la chat dell'assistenza bussa allo stesso posto, sull'altro suo
+       * sportello: nella vita e' un centralino diverso — quello della
+       * dashboard — e da qui non si esce sulla rete vera. */
+      PONTE_CHAT: centralino.dellaChat,
+      /* E questa casa finta e' anche quella di **chi risponde**: con la
+       * chiave della console compaiono la voce «Console» nel menu dell'app e
+       * il Cruscotto nella finestra dell'assistenza della plancia. Nella vita
+       * ce l'ha una casa sola al mondo; qui ce l'ha perche' le due meta' della
+       * chat si vedano nella stessa fotografia. */
+      PONTE_CHIAVE_CONSOLE: CHIAVE_DELLA_CONSOLE,
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -352,6 +362,29 @@ async function main() {
     await attendi(100);
   }
   racconta(`il ponte vero sulla ${portaDelPonte}, console sulla ${portaDellaConsole}`);
+
+  /* Una seconda plancia, come se l'avesse aggiunta chi ci abita dalla scheda
+   * dell'add-on.
+   *
+   * Si aggiunge **prima** che l'app si abbini: il selettore lo disegna chi ha
+   * chiesto la plancia, e l'elenco arriva insieme a quella risposta. Aggiunta
+   * dopo, comparirebbe alla prossima lettura e non in questa fotografia.
+   *
+   * Nella dashboard questa e' una seconda istanza dell'integrazione; qui e'
+   * una riga in `/data/plance.json`, e in Home Assistant e' una voce in piu'
+   * fra le «Plance». */
+  {
+    const risposta = await fetch(`http://127.0.0.1:${portaDellaConsole}/api/plance`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ titolo: "Casa al mare" }),
+    });
+    const detto = await risposta.json();
+    if (!risposta.ok) throw new Error(`la seconda plancia non si e' aggiunta: ${detto?.errore}`);
+    racconta(
+      `le plance sono ${detto.plance.length}: ${detto.plance.map((una) => una.titolo).join(", ")}`,
+    );
+  }
 
   /* 3. Il servitore della plancia. E' il pezzo dell'app che sul web non puo'
    * girare — un server dentro una pagina non si apre — quindi lo si accende
@@ -980,6 +1013,46 @@ try {
   await apriIlMenu();
   await scatta(pagina, "5-barra");
 
+  /* Il selettore delle plance, in cima alla barra.
+   *
+   * C'e' perche' questa casa ne ha due: chi ne ha una sola non lo vede, ed e'
+   * la ragione per cui questo controllo sta **dopo** aver aggiunto la
+   * seconda. Si guarda che ci sia, che dica il nome di quella aperta, e che
+   * aprendolo si vedano tutte e due. */
+  racconta("guardo il selettore delle plance");
+  {
+    if (!(await ilBottone(pagina, "Quale plancia", { aspetta: false }))) {
+      const cEra = await cosaCeDaPremere(pagina);
+      throw new Error(
+        `il selettore delle plance non e' comparso in cima alla barra. A schermo c'e': ${cEra.join(" · ")}`,
+      );
+    }
+    await premi(pagina, "Quale plancia");
+    await attendi(700);
+    await scatta(pagina, "5b-quale-plancia");
+    /* Si guardano le voci con le stesse regole con cui poi si premono — non
+     * col testo della pagina: una plancia e' disegnata su una tela, e a
+     * schermo, come testo, non c'e' niente. */
+    for (const nome of ["gdahome", "Casa al mare"]) {
+      if (!(await ilBottone(pagina, nome, { aspetta: false }))) {
+        const cEra = await cosaCeDaPremere(pagina);
+        throw new Error(`nel selettore non c'e' «${nome}». A schermo c'e': ${cEra.join(" · ")}`);
+      }
+    }
+    /* Si sceglie l'altra, e la si guarda aprire: il riquadro si rifa' — due
+     * plance dello stesso ponte hanno gli stessi file, ed e' il pezzo
+     * `?plancia=` nell'indirizzo a farlo ripartire. */
+    await premi(pagina, "Casa al mare");
+    await attendi(2500);
+    await scatta(pagina, "5c-la-seconda-plancia");
+    /* E si torna su quella di sempre, che il resto del collaudo guarda lei. */
+    await apriIlMenu();
+    await premi(pagina, "Quale plancia");
+    await attendi(700);
+    await premi(pagina, "gdahome");
+    await attendi(2500);
+  }
+
   racconta("apro i dispositivi");
   await vaiA("Dispositivi", "Cerca fra");
   await attendi(1200);
@@ -996,6 +1069,118 @@ try {
    * cosi' si perdevano il Tema, la Tavolozza, la Barra e le donazioni, che
    * stanno nella pagina e non nell'editor. Adesso si apre la pagina: di
    * rifatto non c'e' niente, e si guarda che sia la sua. */
+  /* La plancia si ricarica, e si deve **ricollegare**.
+   *
+   * Nel browser la pagina della plancia si ricarica per un sacco di ragioni
+   * normali: si preme «Salva» nella Configurazione, si tocca «Plancia»
+   * essendoci gia', si cambia «Plancia leggera», la casa arriva dopo che la
+   * pagina si era aperta. Ogni ricarica e' un documento nuovo, con un
+   * WebSocket nuovo — e quello nuovo trovava la cucitura del documento di
+   * prima, ancora viva, e non ne apriva un'altra: niente `auth_ok`, pallino
+   * rosso, nessuno stato e nessuna configurazione. Cioe' «non hai ancora
+   * collegato le tue entita'» su una casa configurata, con il filo vivo.
+   *
+   * Il collaudo non lo vedeva perche' **non ricaricava mai**: apriva la
+   * plancia una volta e da li' in poi cambiava solo pagina, che e' un'altra
+   * cosa. Adesso ricarica, e guarda il pallino. */
+  racconta("ricarico la plancia, e guardo che si ricolleghi");
+  /* Si ricarica **dal di dentro**, e non dal menu dell'app.
+   *
+   * Quello che rompe la cucitura e' «un documento nuovo in quel riquadro», e
+   * `location.reload()` e' quello nella sua forma piu' pulita: la stessa cosa
+   * che fa `ricarica()` dell'app quando si salva nella Configurazione, senza
+   * dover passare da una voce del menu — che in un collaudo si preme quando
+   * la barra si lascia premere, e non e' quello che si sta provando.
+   *
+   * Il segno sul documento di prima serve a sapere quale riquadro si sta
+   * guardando: quello vecchio resta li' per qualche decimo, e senza il segno
+   * si finirebbe a fare le domande alla pagina sbagliata e a dirsi che va
+   * tutto bene. */
+  await plancia.evaluate(() => {
+    window.__collaudoVecchia = true;
+    location.reload();
+  });
+  const fineDellaRicarica = Date.now() + 60_000;
+  let ricaricata = null;
+  while (Date.now() < fineDellaRicarica) {
+    const quale = pagina.frames().find((f) => f.url().includes("/dashboardmodern_static/"));
+    if (quale) {
+      const vecchia = await quale
+        .evaluate(() => Boolean(window.__collaudoVecchia))
+        .catch(() => true);
+      if (!vecchia) {
+        ricaricata = quale;
+        break;
+      }
+    }
+    await attendi(250);
+  }
+  if (!ricaricata) throw new Error("la plancia non si e' ricaricata");
+  /* Il pallino diventa verde su `auth_ok`, e la scritta accanto lo dice: sono
+   * la prima cosa che si guarda, e quella che si vedeva rossa. */
+  const fineDelPallino = Date.now() + 45_000;
+  let come = null;
+  while (Date.now() < fineDelPallino) {
+    come = await ricaricata
+      .evaluate(() => ({
+        collegato: Boolean(document.getElementById("live-dot")?.classList.contains("connected")),
+        scritta: (document.getElementById("conn-text")?.textContent || "").trim(),
+        senzaEntita: Boolean(document.getElementById("cd-empty-banner")),
+      }))
+      .catch(() => null);
+    if (come?.collegato) break;
+    await attendi(300);
+  }
+  if (!come?.collegato) {
+    throw new Error(
+      `ricaricata la plancia, il pallino non e' verde: «${come?.scritta || "niente"}»` +
+        `${come?.senzaEntita ? ", e dice che le entita' non sono collegate" : ""}`,
+    );
+  }
+  /* E la configurazione e' tornata con lei: l'avviso «non hai ancora
+   * collegato le tue entita'» compare proprio quando la configurazione non e'
+   * arrivata, ed e' il secondo segno di quel difetto. */
+  if (come.senzaEntita) {
+    throw new Error("ricaricata la plancia, dice che le entita' non sono collegate");
+  }
+  racconta(`la plancia si e' ricollegata: ${come.scritta || "pallino verde"}`);
+  await attendi(700);
+  await scatta(pagina, "3d-plancia-ricaricata");
+
+  /* E la tenda sulla barra si alza, **senza tornare sulla plancia**.
+   *
+   * La plancia copre la barra in fondo finche' non sa quali voci mostrare, e
+   * la scopre mettendo `data-dm-barra="pronta"` sul documento. Quel segno lo
+   * mette dentro un `requestAnimationFrame` — e qui, adesso, siamo su
+   * «Dispositivi»: il riquadro della plancia non si sta disegnando, e quel
+   * fotogramma non arriva mai. Nemmeno la scadenza di riserva della plancia
+   * rimedia: chiama la stessa funzione, che trova il fotogramma gia' in coda
+   * e torna indietro. La barra resta a opacita' zero, e una plancia senza la
+   * sua barra e' una plancia da cui non si esce.
+   *
+   * E' il difetto vero di questo pezzo di collaudo: si e' visto perche' il
+   * passo dopo aspetta quel segno, e aspettava per sempre. La toppa sta nelle
+   * premesse della pagina servita (`Premesse.laTendaSiAlzaComunque`), che dopo
+   * cinque secondi mette il segno se non c'e' — non nella plancia, che e' un
+   * file della dashboard e non si tocca. */
+  racconta("guardo che la barra si scopra anche a riquadro nascosto");
+  const fineDellaTenda = Date.now() + 20_000;
+  let laTenda = null;
+  while (Date.now() < fineDellaTenda) {
+    laTenda = await ricaricata
+      .evaluate(() => document.documentElement.getAttribute("data-dm-barra"))
+      .catch(() => null);
+    if (laTenda === "pronta") break;
+    await attendi(250);
+  }
+  if (laTenda !== "pronta") {
+    throw new Error(
+      "ricaricata la plancia mentre il suo riquadro non si vede, la tenda sulla barra non si e'" +
+        ` alzata: la barra resta invisibile (data-dm-barra=${laTenda})`,
+    );
+  }
+  racconta("la barra si e' scoperta da se'");
+
   racconta("apro la Configurazione della plancia dal menu");
   const laConfig = await laPlancia(pagina);
   await apriIlMenu();
@@ -1035,17 +1220,34 @@ try {
     throw new Error(`la barra della plancia sulla Config: ${laBarraDellaPlancia}`);
   }
 
-  /* «Sostieni il progetto» nell'app non c'e': la tessera della dashboard e'
-   * nascosta, perche' qui gli acquisti ci sono e una donazione accanto a un
-   * listino e' la stessa domanda fatta due volte. Si guarda che non ci sia. */
-  racconta("controllo che le donazioni non compaiano");
-  const laTesseraDelleDonazioni = await laConfig.evaluate(() => {
-    const tessera = document.querySelector("#page-config .dm-sostieni-tessera");
-    if (!tessera) return false;
-    return tessera.getBoundingClientRect().height > 0;
-  });
-  if (laTesseraDelleDonazioni) {
-    throw new Error("la tessera delle donazioni si vede, e nell'app non deve");
+  /* Le tessere che nell'app non ci vanno.
+   *
+   * «Sostieni il progetto», perche' questa pagina si presenta come gdahome e
+   * una donazione che porta a un altro progetto, dentro una pagina che ne
+   * porta il nome, e' una cosa che chi la legge non capisce. Le
+   * **Segnalazioni** e l'**Assistenza**, perche' quella porta c'e' gia' ed e'
+   * una voce del menu — e l'Assistenza ne ha due, «Assistenza» per chi chiede
+   * aiuto e «Console» per chi risponde.
+   *
+   * Si guarda l'altezza e non lo stile: una tessera si puo' nascondere in tre
+   * modi, e quello che conta e' che non occupi posto. */
+  racconta("controllo che le tessere doppie non compaiano nella Config");
+  const siVedono = await laConfig.evaluate(() =>
+    [
+      ["donazioni", "#page-config .dm-sostieni-tessera"],
+      ["segnalazioni", "#page-config #dm-tkt-card"],
+      ["assistenza", "#page-config #dm-chat-card"],
+    ]
+      .filter(([, quale]) => {
+        const tessera = document.querySelector(quale);
+        return tessera ? tessera.getBoundingClientRect().height > 0 : false;
+      })
+      .map(([nome]) => nome),
+  );
+  if (siVedono.length) {
+    throw new Error(
+      `nella Config si vedono tessere che nell'app hanno gia' la loro voce nel menu: ${siVedono.join(", ")}`,
+    );
   }
 
   /* L'editor si apre da dentro la pagina, dalla sua tessera: e' il giro che
@@ -1132,9 +1334,7 @@ try {
     () => !document.getElementById("page-config")?.classList.contains("active"),
   );
   if (!laConfigSiEChiusa) {
-    throw new Error(
-      "la plancia non e' tornata dalla Configurazione (con la barra «a scomparsa»)",
-    );
+    throw new Error("la plancia non e' tornata dalla Configurazione (con la barra «a scomparsa»)");
   }
   /* E l'ordine nell'indirizzo se n'e' andato con l'uscita: se restasse, la
    * prima ricarica della pagina riaprirebbe la Configurazione. */
@@ -1171,14 +1371,6 @@ try {
   await vaiA("Come va l'app", "L'ultimo minuto");
   await attendi(900);
   await scatta(pagina, "6l2-come-va-l-app");
-
-  racconta("apro gli acquisti");
-  await vaiA("Acquisti", "Prova aperta su");
-  await attendi(900);
-  await scatta(pagina, "6l-acquisti");
-  await scorri(pagina, 1100);
-  await attendi(700);
-  await scatta(pagina, "6m-acquisti-listino");
 
   racconta("apro le segnalazioni");
   await vaiA("Segnalazioni", "Nessuna segnalazione");
@@ -1261,6 +1453,25 @@ try {
   await premi(pagina, "Back");
   await aspettaCheCompaia(pagina, "Scrivi a chi fa l'app");
   await attendi(400);
+
+  /* La Console: la stessa conversazione, vista dall'altra parte.
+   *
+   * La voce c'e' perche' questa casa ha la chiave; in una casa qualunque non
+   * comparirebbe. Quello che si vede qui e' la domanda appena scritta
+   * dall'Assistenza, arrivata nella coda di chi risponde. */
+  racconta("apro la console dell'assistenza");
+  await vaiA("Console", "CONVERSAZIONI");
+  await attendi(800);
+  await scatta(pagina, "6e2-console-coda");
+
+  await premi(pagina, "casa_");
+  await aspettaCheCompaia(pagina, "Tutte le conversazioni");
+  await attendi(800);
+  await scriviIn(pagina, "Rispondi a", "Dalla home, in alto a sinistra.");
+  await premi(pagina, "Manda");
+  await aspettaCheCompaia(pagina, "Dalla home, in alto a sinistra");
+  await attendi(700);
+  await scatta(pagina, "6e3-console-filo");
 
   racconta("torno alla plancia");
   await apriIlMenu();

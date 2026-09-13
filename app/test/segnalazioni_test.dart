@@ -253,7 +253,8 @@ void main() {
     await tester.tap(find.text('Un video dalla galleria'));
     await _lasciaFare(tester);
     expect(ponte.allegati, hasLength(2));
-    expect(find.text('📷 clip.mp4 (300 B)'), findsOneWidget);
+    /* Un video ha il suo disegno: lo sceglie il tipo, non il nome. */
+    expect(find.text('🎬 clip.mp4 (300 B)'), findsOneWidget);
 
     await tester.runAsync(() async {
       await collegamento.chiudi();

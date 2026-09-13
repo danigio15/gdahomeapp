@@ -17,14 +17,15 @@ import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
+import '../casa/console.dart';
 import '../casa/impostazioni.dart';
 import '../misure/lavori.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
-import 'acquisti.dart';
 import 'assistenza.dart';
 import '../vestito/quanto_e_largo.dart';
 import 'barra.dart';
+import 'console.dart';
 import 'diagnostica.dart';
 import 'dispositivi.dart';
 import 'firma.dart';
@@ -58,6 +59,45 @@ class _HomeState extends State<Home> {
   final _barra = GlobalKey<BarraDelleSezioniState>();
   final _plancia = GlobalKey<PlanciaVeraState>();
   Sezione _sezione = Sezione.plancia;
+
+  /* Se da questa casa si risponde alle chat delle altre.
+   *
+   * Lo dice il ponte, e lo dice una volta sola per collegamento: la chiave
+   * della console sta nelle sue opzioni, e l'app non ha modo di saperlo — ne'
+   * deve — prima di chiederglielo. Falso finche' non risponde, cosi' una casa
+   * qualunque non vede mai comparire e sparire una voce di menu. */
+  bool _console = false;
+  String? _chiestoPer;
+
+  @override
+  void initState() {
+    super.initState();
+    _seRisponde();
+  }
+
+  @override
+  void didUpdateWidget(Home vecchia) {
+    super.didUpdateWidget(vecchia);
+    _seRisponde();
+  }
+
+  Future<void> _seRisponde() async {
+    final filo = widget.collegamento.filo;
+    if (filo == null || !filo.dentro) {
+      /* Il filo e' giu': quando torna su si richiede. */
+      _chiestoPer = null;
+      return;
+    }
+    /* Una volta per casa, e non una volta sola: cambiando casa cambia anche
+     * la risposta, e una voce di menu rimasta da prima sarebbe una porta che
+     * non si apre. */
+    final quale = widget.collegamento.casa?.id ?? '';
+    if (_chiestoPer == quale) return;
+    _chiestoPer = quale;
+    final risponde = await LaConsole(filo).cE();
+    if (!mounted) return;
+    if (risponde != _console) setState(() => _console = risponde);
+  }
 
   /// Quello che una segnalazione porta con se' senza che nessuno lo scriva:
   /// e' la meta' delle domande che chi legge farebbe per prime.
@@ -255,9 +295,6 @@ class _HomeState extends State<Home> {
                           impostazioni: widget.impostazioni,
                           nuda: true,
                         ),
-                        Sezione.acquisti => SchermataDegliAcquisti(
-                          collegamento: collegamento,
-                        ),
                         Sezione.segnalazioni => SchermataDelleSegnalazioni(
                           collegamento: collegamento,
                           diagnostica: _diagnostica,
@@ -266,6 +303,11 @@ class _HomeState extends State<Home> {
                           collegamento: collegamento,
                           diagnostica: _diagnostica,
                           impostazioni: widget.impostazioni,
+                        ),
+                        /* La coda di chi risponde: c'e' in una casa sola al
+                         * mondo, e in quella la voce del menu compare. */
+                        Sezione.console => SchermataDellaConsole(
+                          collegamento: collegamento,
                         ),
                         _ => _InArrivo(sezione),
                       },
@@ -276,7 +318,7 @@ class _HomeState extends State<Home> {
           ),
           BarraDelleSezioni(
             key: _barra,
-            sezioni: vociDellaBarra(),
+            sezioni: vociDellaBarra(conLaConsole: _console),
             aperta: _sezione,
             vai: _vai,
             vaiAlleCase: widget.vaiAlleCase,

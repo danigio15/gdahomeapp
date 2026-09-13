@@ -26,7 +26,6 @@ async function centralinoFinto() {
   const arrivate = [];
   const issue = new Map();
   let prossimo = 7;
-  let chat = null;
   const filo = (numero) => {
     const una = issue.get(numero);
     return {
@@ -64,14 +63,12 @@ async function centralinoFinto() {
     const via = richiesta.url.replace(`/casa/${IDENTITA.casa}`, "");
     if (via === "/segnalazioni" && richiesta.method === "GET") {
       return json({
-        segnalazioni: [...issue.entries()]
-          .filter(([, una]) => una.tipo !== "chat")
-          .map(([numero, una]) => ({
-            numero,
-            tipo: una.tipo,
-            titolo: una.titolo,
-            stato: una.stato,
-          })),
+        segnalazioni: [...issue.entries()].map(([numero, una]) => ({
+          numero,
+          tipo: una.tipo,
+          titolo: una.titolo,
+          stato: una.stato,
+        })),
       });
     }
     if (via === "/segnalazioni" && richiesta.method === "POST") {
@@ -104,21 +101,6 @@ async function centralinoFinto() {
         il: "t4",
       });
       return json(filo(Number(m[1])), 201);
-    }
-    if (via === "/chat" && richiesta.method === "GET")
-      return json({ chat: chat ? filo(chat) : null });
-    if (via === "/chat/messaggi" && richiesta.method === "POST") {
-      if (!chat) {
-        chat = prossimo++;
-        issue.set(chat, {
-          tipo: "chat",
-          titolo: "Chat di assistenza",
-          stato: "aperta",
-          messaggi: [],
-        });
-      }
-      issue.get(chat).messaggi.push({ da: "casa", testo: detto.testo, il: "t2" });
-      return json(filo(chat), 201);
     }
     json({ errore: "non_trovato", spiegazione: "qui non c'e' niente" }, 404);
   });
@@ -213,39 +195,13 @@ test("una segnalazione va al centralino col segreto della casa, e resta anche qu
   rmSync(cartella, { recursive: true, force: true });
 });
 
-test("la chat: niente finche' nessuno scrive, poi un filo solo", async () => {
-  const cartella = mkdtempSync(join(tmpdir(), "segnalazioni-"));
-  const centralino = await centralinoFinto();
-  const mie = new Segnalazioni({
-    identita: IDENTITA,
-    centralino: centralino.indirizzo,
-    cartella,
-    registro: ZITTO,
-  });
-  assert.equal(await mie.chat(), null);
-  const prima = await mie.chatta("Buongiorno", { app: "10" });
-  assert.equal(prima.tipo, "chat");
-  assert.deepEqual(
-    prima.messaggi.map((uno) => uno.testo),
-    ["Buongiorno"],
-  );
-  const seconda = await mie.chatta("Ho una domanda");
-  assert.equal(seconda.numero, prima.numero);
-  assert.equal(seconda.messaggi.length, 2);
-  assert.equal((await mie.chat()).messaggi.length, 2);
-  /* La chat non sta fra le segnalazioni. */
-  assert.deepEqual((await mie.elenco({ aggiorna: true })).segnalazioni, []);
-  await centralino.spegni();
-  rmSync(cartella, { recursive: true, force: true });
-});
-
 test("senza centralino si dice, e non si prova nemmeno", async () => {
   const cartella = mkdtempSync(join(tmpdir(), "segnalazioni-"));
   const mie = new Segnalazioni({ identita: IDENTITA, centralino: "", cartella, registro: ZITTO });
   assert.equal(mie.spedibili, false);
   assert.deepEqual((await mie.elenco()).spedibili, false);
   await assert.rejects(() => mie.crea({ tipo: "idea", titolo: "t", corpo: "c" }), SenzaCentralino);
-  await assert.rejects(() => mie.chat(), SenzaCentralino);
+  await assert.rejects(() => mie.leggi(7), SenzaCentralino);
   rmSync(cartella, { recursive: true, force: true });
 });
 
@@ -287,7 +243,7 @@ test("un centralino che non risponde e' un no parlante, e l'elenco vecchio resta
   rmSync(cartella, { recursive: true, force: true });
 });
 
-test("dall'app: i comandi ponte/segnalazioni e ponte/chat, e i loro no", async () => {
+test("dall'app: i comandi ponte/segnalazioni, e i loro no", async () => {
   const cartella = mkdtempSync(join(tmpdir(), "segnalazioni-"));
   const centralino = await centralinoFinto();
   const con = new Commissioni({
@@ -301,7 +257,6 @@ test("dall'app: i comandi ponte/segnalazioni e ponte/chat, e i loro no", async (
     }),
   });
   assert.equal(con.riconosce({ type: "ponte/segnalazioni/elenco" }), true);
-  assert.equal(con.riconosce({ type: "ponte/chat/scrivi" }), true);
 
   const vuoto = await con.rispondi({ id: 1, type: "ponte/segnalazioni/elenco" });
   assert.equal(vuoto.success, true);
@@ -336,19 +291,17 @@ test("dall'app: i comandi ponte/segnalazioni e ponte/chat, e i loro no", async (
     "non_trovata",
   );
 
-  assert.deepEqual((await con.rispondi({ id: 7, type: "ponte/chat/leggi" })).result, {
-    chat: null,
-  });
-  const chat = await con.rispondi({
-    id: 8,
-    type: "ponte/chat/scrivi",
-    testo: "Ciao",
-    diagnostica: { app: "10" },
-  });
-  assert.equal(chat.result.tipo, "chat");
+  /* La chat non passa da qui, e non e' una segnalazione: chiedere aiuto e'
+   * un'altra cosa dal segnalare un difetto, e le sue parole non vanno su una
+   * pagina pubblica. Senza la chat del ponte queste porte non si aprono —
+   * `chat.test.js` e `commissioni.test.js` guardano quelle che si aprono. */
   assert.equal(
-    (await con.rispondi({ id: 9, type: "ponte/chat/leggi" })).result.chat.messaggi.length,
-    1,
+    (await con.rispondi({ id: 7, type: "ponte/chat/leggi" })).error.code,
+    "unknown_command",
+  );
+  assert.equal(
+    (await con.rispondi({ id: 8, type: "ponte/chat/scrivi", testo: "Ciao" })).error.code,
+    "unknown_command",
   );
   assert.equal(
     (await con.rispondi({ id: 10, type: "ponte/segnalazioni/boh" })).error.code,
@@ -371,7 +324,8 @@ test("dall'app: i comandi ponte/segnalazioni e ponte/chat, e i loro no", async (
     }),
   });
   assert.equal(
-    (await senzaCentralino.rispondi({ id: 12, type: "ponte/chat/leggi" })).error.code,
+    (await senzaCentralino.rispondi({ id: 12, type: "ponte/segnalazioni/crea", titolo: "t" })).error
+      .code,
     "senza_centralino",
   );
 

@@ -110,18 +110,29 @@ class Premesse {
   /// loro il tasto «← HOME» che la pagina si disegna in cima: dal menu si
   /// torna col menu.
   ///
-  /// Restano nascoste due tessere. «**Sostieni il progetto**», perche' qui
-  /// gli acquisti ci sono: una donazione accanto a un listino e' la stessa
-  /// domanda fatta due volte. E le **Segnalazioni**, `#dm-tkt-card`. Non
-  /// per grafica — quella e' buona — ma perche' la sua strada non c'e'. La
-  /// tessera della plancia parla all'integrazione di Home Assistant, che
-  /// nell'app non esiste, e vuole un conto GitHub di chi scrive; le
-  /// segnalazioni dell'app passano dal ponte e dal centralino, col gettone
-  /// che sta nel Worker, e chi manda non ha bisogno di nessun conto. Due
-  /// porte per la stessa cosa, e una delle due si scuserebbe: si lascia
-  /// quella che funziona, nel menu. La tessera dell'Assistenza si toglie da
-  /// se' quando la chat non risponde (`assistenza-section.js`), e non c'e'
-  /// niente da nascondere.
+  /// Restano nascoste tre tessere, e per la stessa ragione: nell'app quella
+  /// porta c'e' gia', ed e' una voce del menu.
+  ///
+  /// «**Sostieni il progetto**». Nella plancia e' il grazie di un progetto che
+  /// vive di tempo libero, e li' ci sta. Qui no, e adesso per una ragione
+  /// diversa da prima: questa pagina si presenta come gdahome — nome e
+  /// marchio — e una donazione che porta a un altro progetto, dentro una
+  /// pagina che ne porta il nome, e' una cosa che chi la legge non capisce.
+  ///
+  /// Le **Segnalazioni**, `#dm-tkt-card`. Non per grafica — quella e' buona —
+  /// ma perche' la sua strada non c'e': la tessera della plancia parla
+  /// all'integrazione di Home Assistant, che nell'app non esiste, e vuole un
+  /// conto GitHub di chi scrive; le segnalazioni dell'app passano dal ponte e
+  /// dal centralino, e chi manda non ha bisogno di nessun conto.
+  ///
+  /// E l'**Assistenza**, `#dm-chat-card`. Qui era scritto che non c'era
+  /// niente da nascondere, perche' quella tessera si togliesse da se' quando
+  /// la chat non risponde (`assistenza-section.js`) — e nell'app la chat non
+  /// rispondeva, perche' il ponte quei comandi li rifiutava. Adesso li fa
+  /// (`ponte/src/chat.js`), quindi la tessera compare, ed e' la seconda porta
+  /// per una stanza che nel menu ha gia' la sua: «Assistenza» per chi chiede
+  /// aiuto, «Console» per chi risponde. Restano quelle, che sono schermate
+  /// dell'app e non una finestra dentro una pagina dentro un riquadro.
   ///
   /// `gdahomeApriLaConfig` e' la maniglia che l'app tira, e riprova per
   /// qualche secondo: una pagina appena aperta i suoi script li sta ancora
@@ -134,6 +145,7 @@ class Premesse {
       '<style id="gdahome-config-fuori">'
       '#tab-config,.tab[data-tab="config"]{display:none!important}'
       '#page-config #dm-tkt-card{display:none!important}'
+      '#page-config #dm-chat-card{display:none!important}'
       /* Il tasto «← HOME» in cima alla Configurazione: nella plancia porta
          alla sua Home, e chi ci arriva dal menu dell'app si ritrova sulla
          plancia senza aver chiesto niente. Dal menu si torna col menu. Sulle
@@ -149,10 +161,11 @@ class Premesse {
       'html body header .dm-editor-entry,'
       'html body header .ha-menu-btn{display:none!important}'
       /* «Sostieni il progetto»: nella plancia e' il grazie di un progetto
-         che vive di tempo libero, e li' ci sta. Nell'app no: qui gli
-         acquisti ci sono, e chiedere una donazione accanto a un listino e'
-         chiedere due volte la stessa cosa in due modi diversi. La tessera,
-         la pastiglia dell'editor e la card di Impostazioni: tutte e tre. */
+         che vive di tempo libero, e li' ci sta. Qui no: questa pagina si
+         presenta come gdahome, e una donazione che porta a un altro
+         progetto, dentro una pagina che ne porta il nome, e' una cosa che
+         chi la legge non capisce. La tessera, la pastiglia dell'editor e la
+         card di Impostazioni: tutte e tre. */
       'html body #page-config .dm-sostieni-tessera,'
       'html body #editor-modal .dm-sostieni-pastiglia,'
       'html body #ed-body .dm-sostieni-card{display:none!important}'
@@ -225,6 +238,28 @@ class Premesse {
       'setTimeout(guarda,0);'
       '};'
       'window.gdahomeTornaDallaConfig=function(){torna(0);};'
+      /* Le stesse due maniglie, bussando da fuori con un messaggio.
+       *
+       * Nel browser l'app le tira **chiamando** la funzione dentro il
+       * riquadro, e una funzione dentro un riquadro si chiama solo se la
+       * pagina e l'app stanno sulla stessa origine. In casa e' cosi' — la
+       * plancia la serve il service worker dell'app, stesso posto — ma non
+       * sempre: il collaudo la serve da una porta sua, perche' nel browser un
+       * server dentro la pagina non si apre. Li' il browser blocca la
+       * chiamata, il tentativo muore dentro un `catch`, e il tasto
+       * «Configurazione» sembra rotto senza dire niente a nessuno.
+       *
+       * Un messaggio invece le origini le attraversa. Si accetta solo da chi
+       * ospita questo riquadro — non da un'altra pagina qualunque — e porta
+       * un ordine solo: aprire o chiudere una pagina che in questa plancia
+       * c'e' gia'. */
+      'window.addEventListener("message",function(evento){'
+      'var detto=evento.data;'
+      'if(!detto||typeof detto!=="object")return;'
+      'if(evento.source!==window.parent)return;'
+      'if(detto.gdahome==="apri-la-config")apri(0);'
+      'else if(detto.gdahome==="torna-dalla-config")torna(0);'
+      '});'
       /* Quando la plancia cambia pagina, l'app lo viene a sapere.
        *
        * La barra della plancia resta li' anche sulla Configurazione — e' una
@@ -277,6 +312,52 @@ class Premesse {
       'dallIndirizzo();'
       '})();</script>';
 
+  /// La tenda sulla barra si alza comunque, anche in un riquadro che non si
+  /// sta disegnando.
+  ///
+  /// La plancia copre la barra in fondo finche' non sa quali voci mostrare —
+  /// senza la tenda «resta sempre la barra totale, per poi diventare come
+  /// l'ho configurata: dura quattro o cinque secondi» — e la scopre mettendo
+  /// un segno sul documento: `data-dm-barra="pronta"`, che il suo foglio di
+  /// stile aspetta (`bridge-prelude.js`, `navigation-section.js`).
+  ///
+  /// Quel segno lo mette dentro un `requestAnimationFrame`: aspetta la fine di
+  /// un fotogramma per leggere le larghezze delle voci e capire se la barra ha
+  /// finito di prendere forma. E' la cosa giusta in una pagina che si disegna.
+  ///
+  /// **In un riquadro che non si disegna quel fotogramma non arriva mai.** E
+  /// succede tutte le volte che la pagina della plancia si carica mentre si
+  /// sta guardando un'altra sezione dell'app: si salva nella Config, si cambia
+  /// «Plancia leggera», la casa arriva dopo che la pagina si era aperta — ogni
+  /// volta e' una pagina nuova in un riquadro che in quel momento nessuno
+  /// guarda. Nemmeno la scadenza di riserva della plancia rimedia: chiama la
+  /// stessa funzione, che trova un fotogramma gia' in coda e torna indietro
+  /// senza fare niente. Il segno non arriva, la barra resta a opacita' zero, e
+  /// una plancia senza la sua barra e' una plancia da cui non si esce.
+  ///
+  /// Qui si mette **solo quel segno**, e solo se dopo cinque secondi non c'e'
+  /// ancora. La plancia da sola ce ne mette al massimo quattro — 2500
+  /// millisecondi di attesa piu' 1500 se la forma cambia sotto le mani —
+  /// quindi in una pagina che si disegna questo non vince mai, e non toglie
+  /// niente alla tenda. In una che non si disegna e' l'unica cosa che si
+  /// muove: un `setTimeout` e nient'altro, perche' i timer girano anche dove i
+  /// fotogrammi non arrivano.
+  ///
+  /// Non si tocca `navigation-section.js`, che e' un file della dashboard: i
+  /// file restano quelli pubblicati, e il ponte li ricontrolla uno per uno.
+  static const String laTendaSiAlzaComunque =
+      '<script>(function(){'
+      'var alza=function(){'
+      'try{'
+      'var radice=document.documentElement;'
+      /* C'e' gia': l'ha messo la plancia, e va lasciato come sta. */
+      'if(!radice||radice.getAttribute("data-dm-barra"))return;'
+      'radice.setAttribute("data-dm-barra","pronta");'
+      '}catch(male){}'
+      '};'
+      'setTimeout(alza,5000);'
+      '})();</script>';
+
   /* Il tema, la tavolozza e la barra qui non si scrivono, e non e' una
    * dimenticanza. Sono tre comandi della pagina Config della plancia — «su
    * questo dispositivo», lo dice lei — e la pagina se li tiene nel deposito
@@ -315,7 +396,8 @@ class Premesse {
     /* Le misure e la porta della Config vanno in fondo: vedi
      * [stileDelleMisure], che spiega perche' in testa perdevano contro lo
      * stile della plancia. */
-    final inFondo = '$stileDelleMisure$laConfigFuoriDallaPlancia';
+    final inFondo =
+        '$stileDelleMisure$laConfigFuoriDallaPlancia$laTendaSiAlzaComunque';
     final fine = RegExp(
       r'</body\s*>',
       caseSensitive: false,

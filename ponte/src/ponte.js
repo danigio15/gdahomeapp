@@ -20,7 +20,9 @@
  */
 
 import { CasaIrraggiungibile } from "./casa.js";
+import { Chiacchieroni } from "./chiacchieroni.js";
 import { eUnaCommissione, no } from "./commissioni.js";
+import { NOME } from "./marchio.js";
 
 /* Quanti messaggi al secondo puo' mandare un telefono.
  *
@@ -44,6 +46,50 @@ const RAFFICA = 600;
 const BATTITO = 30_000;
 const SILENZIO_MASSIMO = 90_000;
 
+/* ─── Il mucchio: perche' esiste ──────────────────────────────────────────
+ *
+ * Un evento di Home Assistant, verso il telefono, era un messaggio. Dentro
+ * casa non costa niente — e' un socket sulla rete locale — ma **da fuori** si
+ * passa dal centralino, e li' ogni messaggio e' una richiesta contata: il
+ * piano gratuito di Cloudflare ne da' centomila al giorno, e una casa vera ne
+ * manda cinque al secondo. Fanno quarantamila all'ora: due ore e mezza di
+ * plancia aperta e il centralino si spegne per tutti fino a mezzanotte.
+ *
+ * Il rimedio non e' mandare meno cose: e' **mandarle insieme**. Gli eventi si
+ * raccolgono per una finestra breve e partono in un messaggio solo. Cinque al
+ * secondo diventano uno al secondo, e la casa a schermo e' la stessa: nessuno
+ * legge cinque cambiamenti al secondo, e la plancia li disegna quando li
+ * riceve.
+ *
+ * Cosa **non** si raggruppa: le risposte. Chi accende una luce aspetta, e un
+ * secondo di attesa su un tocco si sente. Va nel mucchio solo quello che
+ * arriva da se'.
+ *
+ * E si raggruppa **solo** passando dal centralino: in casa la finestra
+ * sarebbe un ritardo pagato per risparmiare niente. */
+const FINESTRA_DEL_MUCCHIO = 1000;
+/* Piu' di cosi' non si aspetta: una raffica — la casa che si riavvia, cento
+ * entita' che cambiano insieme — parte subito invece di gonfiare un messaggio
+ * che poi va spezzato in pezzi da mezzo megabyte. */
+const MUCCHIO_MASSIMO = 60;
+/* Il segno del mucchio. Non e' JSON apposta: un JSON non contiene mai un
+ * ritorno a capo vero — dentro una stringa e' `\n`, due caratteri — quindi
+ * spezzare su quello e' esatto, e non costa ne' una lettura ne' una
+ * riscrittura dei messaggi che stanno dentro. Un messaggio di Home Assistant
+ * comincia per `{`, quindi questo segno non si confonde con niente. */
+export const SEGNO_DEL_MUCCHIO = "mucchio\n";
+
+/* E' un evento, cioe' roba che arriva da se' e che si puo' far aspettare?
+ *
+ * Si guarda in testa e non si apre il resto: un `get_states` da un megabyte
+ * letto per sapere che tipo e' costa piu' di quanto valga. Sbagliare non rompe
+ * niente — il telefono spacchetta il mucchio e tratta ogni pezzo come se
+ * fosse arrivato da solo — ma sbagliare dalla parte di «non e' un evento»
+ * costa una richiesta, e dall'altra parte costa un secondo di attesa a una
+ * risposta. Quindi si e' prudenti: nel mucchio ci va solo chi lo dice in
+ * chiaro nei primi caratteri. */
+const eUnEvento = (testo) => /"type"\s*:\s*"event"/.test(testo.slice(0, 200));
+
 export class Ponte {
   constructor({ casa, dispositivi, registro, commissioni = null }) {
     this.casa = casa;
@@ -54,11 +100,16 @@ export class Ponte {
      * invece di finire in Home Assistant, che non saprebbe cosa farsene. */
     this.commissioni = commissioni;
     this.collegamenti = new Set();
+    /* Chi parla di piu' in questa casa. Serve a una domanda sola, e non c'e'
+     * altro posto da cui rispondere: un telefono che riceve seicento eventi
+     * al minuto vede il numero e non i nomi, e i nomi sono tutto il rimedio.
+     * Vedi `chiacchieroni.js`. */
+    this.chiacchieroni = new Chiacchieroni();
   }
 
   /* Un telefono ha appena aperto una presa. */
-  accogli(presa, { da = "?" } = {}) {
-    const collegamento = new Collegamento(this, presa, da);
+  accogli(presa, { da = "?", mucchio = false } = {}) {
+    const collegamento = new Collegamento(this, presa, da, { mucchio });
     this.collegamenti.add(collegamento);
     collegamento.avvia();
     return collegamento;
@@ -104,7 +155,7 @@ function leggi(testo) {
 }
 
 class Collegamento {
-  constructor(ponte, presa, da) {
+  constructor(ponte, presa, da, { mucchio = false } = {}) {
     this.ponte = ponte;
     this.presa = presa;
     this.da = da;
@@ -115,6 +166,14 @@ class Collegamento {
     this.ultimoGettone = Date.now();
     this.vistoIl = Date.now();
     this.battito = null;
+    /* Gli eventi si raggruppano solo se tutte e due le cose sono vere: il
+     * telefono sa spacchettare un mucchio (l'ha detto nella stretta di mano)
+     * e questo filo passa dal centralino, dove ogni messaggio e' una
+     * richiesta contata. In casa non c'e' niente da risparmiare, e un ritardo
+     * pagato per niente e' solo un ritardo. */
+    this.faIlMucchio = mucchio === true && String(da).startsWith("centralino");
+    this._mucchio = [];
+    this._svuota = null;
   }
 
   avvia() {
@@ -127,7 +186,7 @@ class Collegamento {
       this.vistoIl = Date.now();
     };
     /* Come Home Assistant: la prima parola la dice il server. */
-    this.presa.manda(JSON.stringify({ type: "auth_required", ha_version: "ponte" }));
+    this.presa.manda(JSON.stringify({ type: "auth_required", ha_version: NOME }));
     this.battito = setInterval(() => this._controlla(), BATTITO);
   }
 
@@ -213,7 +272,7 @@ class Collegamento {
 
     try {
       this.filo = await this.ponte.casa.apriIlFilo({
-        onMessaggio: (dallaCasa) => this.presa.manda(dallaCasa),
+        onMessaggio: (dallaCasa) => this._alTelefono(dallaCasa),
         onChiusa: (perche = "") => {
           this.ponte.registro?.attenzione?.(`il filo con Home Assistant si e' chiuso${perche}`);
           this.chiudi(1011, "Home Assistant ha chiuso");
@@ -235,7 +294,53 @@ class Collegamento {
 
     this.dispositivo = dispositivo;
     this.ponte.registro?.info?.(`${dispositivo.nome} e' entrato da ${this.da}`);
-    this.presa.manda(JSON.stringify({ type: "auth_ok", ha_version: "ponte" }));
+    this.presa.manda(JSON.stringify({ type: "auth_ok", ha_version: NOME }));
+  }
+
+  /* Quello che va al telefono. Da qui passa **solo** cio' che arriva da Home
+   * Assistant: le risposte del ponte se ne vanno per conto loro, e sono poche.
+   */
+  _alTelefono(testo) {
+    if (this.chiuso) return;
+    /* Prima di tutto il resto, e costa un'espressione regolare sui primi
+     * quattrocento caratteri: il ponte gli eventi non li apre, e questo non
+     * comincia adesso. */
+    this.ponte.chiacchieroni.segna(testo);
+    if (!this.faIlMucchio || !eUnEvento(testo)) {
+      /* Prima quello che aspetta, poi questo: l'ordine con cui Home Assistant
+       * ha parlato non si cambia. Una risposta che scavalca l'evento che l'ha
+       * preceduta e' una tessera che si disegna col valore di prima. */
+      this._svuotaIlMucchio();
+      this.presa.manda(testo);
+      return;
+    }
+    this._mucchio.push(testo);
+    if (this._mucchio.length >= MUCCHIO_MASSIMO) {
+      this._svuotaIlMucchio();
+      return;
+    }
+    if (this._svuota) return;
+    this._svuota = setTimeout(() => this._svuotaIlMucchio(), FINESTRA_DEL_MUCCHIO);
+    this._svuota.unref?.();
+  }
+
+  _svuotaIlMucchio() {
+    if (this._svuota) {
+      clearTimeout(this._svuota);
+      this._svuota = null;
+    }
+    if (!this._mucchio.length) return;
+    const insieme = this._mucchio;
+    this._mucchio = [];
+    if (this.chiuso) return;
+    /* Uno solo non e' un mucchio: si manda com'e', cosi' un telefono vecchio
+     * — o un pezzo di codice che non conosce il segno — non ci si trova
+     * davanti senza motivo. */
+    if (insieme.length === 1) {
+      this.presa.manda(insieme[0]);
+      return;
+    }
+    this.presa.manda(SEGNO_DEL_MUCCHIO + insieme.join("\n"));
   }
 
   _rifiuta(perche) {
@@ -259,6 +364,10 @@ class Collegamento {
 
   chiudi(codice = 1000, motivo = "") {
     if (this.chiuso) return;
+    /* Quello che era nel mucchio parte adesso: un evento raccolto e mai
+     * mandato e' una tessera che resta col valore di prima. Prima di alzare
+     * `chiuso`, che ferma la scrittura. */
+    this._svuotaIlMucchio();
     this.chiuso = true;
     if (this.battito) clearInterval(this.battito);
     this.filo?.chiudi();
@@ -270,6 +379,12 @@ class Collegamento {
     if (this.chiuso) return;
     this.chiuso = true;
     if (this.battito) clearInterval(this.battito);
+    /* La presa non c'e' piu': il mucchio si butta, e il suo timer con lui. */
+    this._mucchio = [];
+    if (this._svuota) {
+      clearTimeout(this._svuota);
+      this._svuota = null;
+    }
     /* Perche' se n'e' andato. Un telefono che chiude l'app se ne va senza dire
      * niente, e quello e' il caso normale; quando invece un motivo c'e' —
      * l'abbiamo chiuso noi, o e' arrivato qualcosa di storto — va scritto, se

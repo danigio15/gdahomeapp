@@ -27,7 +27,7 @@ plancia**, `#page-config`, e dentro ci sta tutto:
 | 🧩 Configura Entità | apre `apriConfigEntita()`, l'editor col cercatore, le sette famiglie, le pastiglie |
 | 🎨 Tema | chiaro, scuro, auto — «su questo dispositivo», lo scrive lei — con le sei tavolozze innestate sotto (`tavolozze-section.js`) |
 | 📌 Barra di navigazione | a scomparsa o fissa, anche questa del dispositivo |
-| 💙 Sostieni il progetto | il collegamento delle donazioni; **nascosta nell'app**, dove gli acquisti ci sono |
+| 💙 Sostieni il progetto | il collegamento delle donazioni; **nascosta nell'app**, che si presenta come gdahome: una donazione verso un altro progetto, dentro una pagina che ne porta il nome, non si capisce |
 | 🎫 Segnalazioni | la sua strada passa dall'integrazione: nell'app resta nascosta, vedi sotto |
 | 💬 Assistenza | si toglie da sé quando la chat non risponde |
 
@@ -84,7 +84,7 @@ schermata è stata cancellata: restavano due interruttori, e stanno meglio
 accanto ai fotogrammi.
 
 E il resto dell'app, che con la Config non c'entra: i dispositivi, gli
-acquisti, le segnalazioni, l'assistenza, «Come va l'app», l'elenco delle case.
+le segnalazioni, l'assistenza, «Come va l'app», l'elenco delle case.
 
 ## Cosa se n'è andato
 

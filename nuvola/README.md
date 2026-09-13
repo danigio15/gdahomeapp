@@ -37,13 +37,23 @@ Alla fine stampa l'indirizzo, che è fatto così:
 
     https://gdahome-centralino.<il-tuo-nome>.workers.dev
 
-Quello si mette nella scheda dell'add-on, alla voce `centralino`, con `wss://`
-davanti:
+Quello si scrive **dentro l'add-on**, non nella sua scheda: nella scheda una
+casella per l'indirizzo non c'è più, e il perché sta in
+[`../ponte/README.md`](../ponte/README.md#da-fuori-casa) — una casella che non
+va toccata è una casella che prima o poi qualcuno tocca.
 
-    centralino: wss://gdahome-centralino.<il-tuo-nome>.workers.dev
+Quindi: si tiene una copia locale dell'add-on (la cartella `ponte` dentro
+`addons` di Home Assistant), e una volta sola —
+
+    node strumenti/centralino.mjs wss://gdahome-centralino.<il-tuo-nome>.workers.dev
+
+che scrive i tre posti dove quell'indirizzo sta: il difetto dell'add-on, quello
+dell'app e quello della chat. Poi **Negozio degli add-on → Ricarica**, e si
+installa (o si ricostruisce) da lì.
 
 Il ponte da quel momento **chiama fuori da solo**. Nella sua console, in Home
-Assistant, si vede se è arrivato.
+Assistant, sotto «Da fuori casa» c'è scritto a quale indirizzo — ed è lì che si
+controlla che sia il proprio e non quello di gdahome.
 
 ## Come è fatto
 
@@ -108,10 +118,10 @@ stringa da un filo all'altro.
 Se un giorno le case diventassero tante da uscire dal piano gratuito, sarebbe
 un bel problema da avere.
 
-## Le segnalazioni e la chat
+## Le segnalazioni
 
-Il centralino riceve dal ponte le segnalazioni e i messaggi della chat di
-assistenza e li apre come **issue di GitHub**, in `GITHUB_REPO`
+Il centralino riceve dal ponte le segnalazioni e le apre come **issue di
+GitHub**, in `GITHUB_REPO`
 (`wrangler.toml`), col gettone `GITHUB_SEGNALAZIONI`, che e' un segreto del
 worker: lo porta li' il bottone **Il centralino** su Actions, prendendolo dal
 segreto `GETTONE_SEGNALAZIONI` di questa repository; o, da un terminale,
@@ -127,9 +137,16 @@ commenti della casa portano un segno invisibile in testa, cosi' si sa chi ha
 scritto cosa anche se il gettone e' uno solo. Sta in `src/segnalazioni.js`,
 con le sue prove in `test/`.
 
+La **chat di assistenza** da qui non passa, e prima passava: era una issue
+sola per casa, con l'etichetta «chat». Chiedere aiuto non e' segnalare un
+difetto — si incolla un pezzo di configurazione, il nome delle proprie
+entita' — e non si chiede a nessuno di farlo su una pagina che chiunque puo'
+leggere. Quella e' la chat della dashboard, ha un centralino suo, e la fa il
+ponte (`ponte/src/chat.js`).
+
 Gli **allegati** — foto e video — arrivano dal ponte in binario, con
-`POST /casa/<id>/segnalazioni/<n>/allegati` (o `/chat/allegati`), il tipo nel
-`content-type` e il nome in `x-gdahome-nome`. Il centralino li mette nella
+`POST /casa/<id>/segnalazioni/<n>/allegati`, il tipo nel `content-type` e il
+nome in `x-gdahome-nome`. Il centralino li mette nella
 repository con l'API dei contenuti, sotto `allegati/<n>/`, e scrive sotto la
 issue un commento col nome, il peso e il link. Dieci megabyte al massimo, e
 solo foto e video: e' un tetto che vale uguale nell'app, nel ponte e qui.

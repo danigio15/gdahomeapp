@@ -17,8 +17,50 @@ library;
 import 'dart:async';
 import 'dart:convert';
 
+import '../misure/lavori.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
+
+/// Quanto si aspetta che il filo torni su prima di dire alla pagina che non
+/// c'e' verso. Venti secondi sono il tempo di una riconnessione dopo un
+/// cambio di rete; oltre, meglio un no che una pagina che aspetta.
+const attesaDelFilo = Duration(seconds: 20);
+
+/// Il filo, **quando e' dentro**. Aspetta una riconnessione in corso, ma non
+/// per sempre: `null` quando non c'e' verso.
+///
+/// Questa funzione e' la differenza fra una plancia che si collega e una che
+/// lampeggia. Il filo puo' esserci senza essere su — la pagina si apre mentre
+/// l'app sta ancora bussando — e chi prende quel filo e dice `auth_ok` manda
+/// la plancia a chiedere gli stati su un filo che non c'e': la pagina si
+/// trova la porta chiusa al primo messaggio, diventa rossa, e riprova fra
+/// cinque secondi. Per sempre, se il filo e' ballerino.
+Future<Filo?> filoPronto(
+  Filo? Function() trova, {
+  Duration entro = attesaDelFilo,
+}) async {
+  final fine = DateTime.now().add(entro);
+  while (true) {
+    final filo = trova();
+    if (filo != null && filo.dentro) return filo;
+    if (DateTime.now().isAfter(fine)) return null;
+    if (filo == null) {
+      /* Non c'e' ancora nessun filo da guardare: si riguarda fra un attimo. */
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+      continue;
+    }
+    /* C'e' ma non e' dentro: si aspetta che lo dica lui, invece di guardare
+     * l'orologio. */
+    final resta = fine.difference(DateTime.now());
+    try {
+      await filo.stato
+          .firstWhere((stato) => stato == StatoDelFilo.dentro)
+          .timeout(resta < Duration.zero ? Duration.zero : resta);
+    } catch (_) {
+      /* Scaduto, o il filo e' stato chiuso: si riguarda dall'inizio. */
+    }
+  }
+}
 
 /// I comandi di Home Assistant che dopo la risposta continuano a mandare
 /// eventi con lo stesso numero. Per questi l'instradamento resta; per tutti
@@ -140,10 +182,18 @@ class Cucitura {
 
   void _manda(Map<String, dynamic> cosa) => _mandaTesto(jsonEncode(cosa));
 
+  /* Il passaggio alla pagina, contato.
+   *
+   * E' l'ultimo pezzo di strada di un messaggio, ed era l'unico senza un
+   * contatore: un `get_states` da un megabyte e mezzo si decifra altrove — e
+   * quello si vede — poi si rinumera e si **scrive nella presa verso la
+   * pagina**, e quel pezzo non lo misurava nessuno. Chi guardava la
+   * diagnostica vedeva lavori tutti piccoli e blocchi da mezzo secondo, senza
+   * niente in mezzo a cui darne la colpa. Adesso c'e'. */
   void _mandaTesto(String testo) {
     if (!_verso.aperta) return;
     try {
-      _verso.manda(testo);
+      Lavori.io.subito('passati alla plancia', () => _verso.manda(testo));
     } catch (_) {
       /* Chiusa fra il controllo e la scrittura. */
     }
@@ -163,6 +213,19 @@ class Cucitura {
     } catch (_) {
       /* Gia' chiusa. */
     }
+    if (!_finita.isCompleted) _finita.complete();
+  }
+
+  /// Si smette, **senza dire niente alla pagina**.
+  ///
+  /// Serve quando la pagina di prima non c'e' piu' — si e' ricaricata, o si e'
+  /// aperta un'altra — e al suo posto c'e' una pagina nuova che sta per avere
+  /// la sua cucitura. Dirle di chiudere vorrebbe dire chiudere il WebSocket
+  /// **della nuova**, che nel browser vive nello stesso posto: cinque secondi
+  /// di pallino rosso per una pagina che era gia' pronta.
+  Future<void> abbandona() async {
+    dimenticaTutto();
+    _dentro = false;
     if (!_finita.isCompleted) _finita.complete();
   }
 

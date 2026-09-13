@@ -1,10 +1,15 @@
-/* Un centralino finto per le segnalazioni.
+/* Un centralino finto: le segnalazioni, e la chat.
  *
  * Il ponte del collaudo chiama qui invece che sulla nuvola: accetta la
  * chiamata della casa (cosi' il ponte si crede collegato da fuori), e tiene
- * le segnalazioni e la chat in memoria, rispondendo come risponde il
- * centralino vero. Il manutentore finto risponde da solo dopo un attimo,
- * cosi' nelle fotografie si vede un filo con due voci.
+ * le segnalazioni in memoria rispondendo come risponde il centralino vero. Il
+ * manutentore finto risponde da solo dopo un attimo, cosi' nelle fotografie
+ * si vede un filo con due voci.
+ *
+ * Dentro ce n'e' anche un secondo, che nella vita e' un altro programma su un
+ * altro indirizzo: il centralino della **chat** della dashboard, con il suo
+ * sportello `/casa/messaggi`. Sono due cose separate e stanno qui insieme per
+ * una ragione sola: il collaudo accende un processo, non due nuvole.
  *
  * Non instrada telefoni: nel collaudo il telefono entra dalla porta di casa.
  */
@@ -13,13 +18,33 @@ import { createServer } from "node:http";
 
 import { accetta, eUnaSalita } from "../ponte/src/presa.js";
 
+/* La chiave con cui si risponde: la stessa che il collaudo scrive nelle
+ * opzioni del ponte, cosi' la casa finta e' anche quella di chi risponde e
+ * nelle fotografie si vede tutta e due le parti della chat. */
+export const CHIAVE_DELLA_CONSOLE = "una-chiave-della-console-per-il-collaudo";
+
 export async function alzaIlCentralinoFinto({
   risposta = "Grazie, guardo subito e ti dico.",
 } = {}) {
   const issue = new Map();
   let prossimo = 12;
-  let chat = null;
   const arrivate = [];
+
+  /* La chat: righe numerate dal centralino, come quelle vere. La linea nasce
+   * alla prima parola e non prima. */
+  const righe = [];
+  let linea = "";
+  let prossimaRiga = 1;
+  const laConsoleRisponde = () =>
+    setTimeout(() => {
+      if (!linea) return;
+      righe.push({
+        id: prossimaRiga++,
+        da: "console",
+        testo: risposta,
+        scritto_il: Math.floor(Date.now() / 1000),
+      });
+    }, 1500);
 
   const filo = (numero) => {
     const una = issue.get(numero);
@@ -54,6 +79,90 @@ export async function alzaIlCentralinoFinto({
       risposta.writeHead(stato, { "content-type": "application/json" });
       risposta.end(JSON.stringify(cosa));
     };
+    /* Lo sportello della chat, per primo: il segno e' un altro — `Bearer` col
+     * segreto che la casa si e' fabbricata — e il suo indirizzo somiglia
+     * troppo a quello delle segnalazioni, `/casa/<chi>/…`, per lasciarlo
+     * sbrogliare piu' in basso. */
+    const dove = new URL(richiesta.url, "http://centralino").pathname;
+    if (dove === "/casa/messaggi") {
+      const segno = /^Bearer ([0-9a-f]{64})$/.exec(richiesta.headers.authorization || "");
+      const chi = String(richiesta.headers["x-casa"] || "");
+      if (!segno || !/^casa_[0-9a-f]{32}$/.test(chi)) {
+        return json({ errore: "senza_segreto" }, 401);
+      }
+      if (linea && linea !== chi) return json({ errore: "non_ti_riconosco" }, 403);
+      if (richiesta.method === "POST") {
+        const nuova = !linea;
+        linea = chi;
+        const riga = {
+          id: prossimaRiga++,
+          da: "casa",
+          testo: String(detto.testo || "").slice(0, 4000),
+          scritto_il: Math.floor(Date.now() / 1000),
+        };
+        righe.push(riga);
+        laConsoleRisponde();
+        return json({ messaggio: riga, nuova }, 201);
+      }
+      /* Prima della prima parola non c'e' nessuna linea: non si legge e non
+       * si cancella una conversazione che nessuno ha aperto. */
+      if (!linea) return json({ messaggi: [], aperta: false });
+      if (richiesta.method === "DELETE") {
+        righe.length = 0;
+        linea = "";
+        return json({ cancellata: true });
+      }
+      const dopo = Number(
+        new URL(richiesta.url, "http://centralino").searchParams.get("dopo") || 0,
+      );
+      return json({ aperta: true, messaggi: righe.filter((una) => una.id > dopo) });
+    }
+    /* E lo sportello di chi risponde: la coda di tutte le case — qui una — con
+     * la chiave al posto del segreto della casa. */
+    if (dove.startsWith("/console/conversazioni")) {
+      if (richiesta.headers.authorization !== `Bearer ${CHIAVE_DELLA_CONSOLE}`) {
+        return json({ errore: "chiave_sbagliata" }, 403);
+      }
+      const quale = dove.slice("/console/conversazioni".length).replace(/^\//, "");
+      if (!quale) {
+        return json({
+          conversazioni: linea
+            ? [
+                {
+                  id: linea,
+                  nome: "",
+                  versione: "plancia 1.4.19 ponte 0.19.0",
+                  ha: "",
+                  lingua: "it",
+                  non_letti: righe.filter((una) => una.da === "casa").length,
+                  ultimo: righe.length ? righe[righe.length - 1].testo : "",
+                  ultimo_il: righe.length ? righe[righe.length - 1].scritto_il : 0,
+                },
+              ]
+            : [],
+        });
+      }
+      if (quale !== linea) return json({ errore: "non_trovata" }, 404);
+      if (richiesta.method === "DELETE") {
+        righe.length = 0;
+        linea = "";
+        return json({ cancellata: true });
+      }
+      if (richiesta.method === "POST") {
+        const riga = {
+          id: prossimaRiga++,
+          da: "console",
+          testo: String(detto.testo || "").slice(0, 4000),
+          scritto_il: Math.floor(Date.now() / 1000),
+        };
+        righe.push(riga);
+        return json({ messaggio: riga }, 201);
+      }
+      const daDove = Number(
+        new URL(richiesta.url, "http://centralino").searchParams.get("dopo") || 0,
+      );
+      return json({ messaggi: righe.filter((una) => una.id > daDove) });
+    }
     if (!/^Casa .+/.test(richiesta.headers.authorization || "")) {
       return json({ errore: "senza_segreto", spiegazione: "serve il segreto della casa" }, 401);
     }
@@ -61,15 +170,13 @@ export async function alzaIlCentralinoFinto({
     let m;
     if (via === "/segnalazioni" && richiesta.method === "GET") {
       return json({
-        segnalazioni: [...issue.entries()]
-          .filter(([, una]) => una.tipo !== "chat")
-          .map(([numero, una]) => ({
-            numero,
-            tipo: una.tipo,
-            titolo: una.titolo,
-            stato: "aperta",
-            aperta_il: una.apertaIl,
-          })),
+        segnalazioni: [...issue.entries()].map(([numero, una]) => ({
+          numero,
+          tipo: una.tipo,
+          titolo: una.titolo,
+          stato: "aperta",
+          aperta_il: una.apertaIl,
+        })),
       });
     }
     if (via === "/segnalazioni" && richiesta.method === "POST") {
@@ -93,24 +200,6 @@ export async function alzaIlCentralinoFinto({
       if (!una) return json({ errore: "non_trovata", spiegazione: "non e' tua" }, 404);
       una.messaggi.push({ da: "casa", testo: detto.testo || "", il: new Date().toISOString() });
       return json(filo(Number(m[1])));
-    }
-    if (via === "/chat" && richiesta.method === "GET")
-      return json({ chat: chat ? filo(chat) : null });
-    if (via === "/chat/messaggi" && richiesta.method === "POST") {
-      if (!chat) {
-        chat = prossimo++;
-        issue.set(chat, {
-          tipo: "chat",
-          titolo: "Chat di assistenza",
-          apertaIl: new Date().toISOString(),
-          messaggi: [],
-        });
-      }
-      issue
-        .get(chat)
-        .messaggi.push({ da: "casa", testo: detto.testo || "", il: new Date().toISOString() });
-      ilManutentoreRisponde(chat);
-      return json(filo(chat), 201);
     }
     json({ errore: "non_trovato", spiegazione: "qui non c'e' niente" }, 404);
   });
@@ -142,6 +231,8 @@ export async function alzaIlCentralinoFinto({
   return {
     porta: server.address().port,
     indirizzo: `ws://127.0.0.1:${server.address().port}`,
+    /* La chat non apre nessun filo: bussa in HTTP, e le serve quest'altro. */
+    dellaChat: `http://127.0.0.1:${server.address().port}`,
     arrivate,
     spegni: () =>
       new Promise((ok) => {

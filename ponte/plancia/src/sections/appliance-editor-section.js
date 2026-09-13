@@ -31,8 +31,10 @@ import { APPLIANCE_BINDING_FIELDS } from "../core/device-model.js";
  * stanno in un modulo loro, che le tre sezioni che le usano — robot,
  * elettrodomestici, lettori — vedono senza sapere niente l'una dell'altra. */
 import { comandiVicini, elencoComandi, genereDelComando } from "../core/comandi-accanto.js";
+import { elencoLetture, eUnaLettura, lettureVicine } from "../core/letture-accanto.js";
+import { elencoNascoste } from "../core/le-voci-nascoste.js";
 import { nomeAccantoAlDispositivo } from "../core/nome-accanto-al-dispositivo.js";
-import { apriMenuIntegrazioni } from "./appliance-integration-section.js";
+import { apriMenuIntegrazioni, entitaDelDispositivo } from "./appliance-integration-section.js";
 import { CAMPI_SCELTI } from "../core/energy-loads-config.js";
 import {
   eDiUnAltroApparecchio,
@@ -261,12 +263,36 @@ function textField(name, label, value, help = "", placeholder = "") {
   return `<label class="ed-slot"><span class="ed-slot-lbl">${label}</span><input class="ed-input" name="${name}" value="${esc(value ?? "")}" placeholder="${esc(placeholder)}" autocomplete="off">${help ? `<small>${help}</small>` : ""}</label>`;
 }
 
+/* Le tre misure che decidono se l'apparecchio sta lavorando.
+ *
+ * «Scusami ma non riesco a trovare questa sezione, c'e' scritto solo quella
+ * della soglia attiva» — e un secondo: «anch'io ho lo stesso problema, e non
+ * vedo questa sezione "ritardo fine ciclo"». Il campo c'era: stava nella
+ * fisarmonica «Card avanzata — immagine, ciclo, temperatura, costi», chiusa,
+ * insieme alle foto e ai costi.
+ *
+ * Chi cerca «quanto deve stare sotto soglia prima che il ciclo sia finito» lo
+ * cerca accanto alla soglia, perche' e' la stessa domanda: sopra questa potenza
+ * sta lavorando, sotto quest'altra e' in standby, e dopo questi minuti ha
+ * finito. Tre numeri di una regola sola, spezzati in due posti, di cui uno
+ * chiuso e intitolato a un'altra cosa. Adesso stanno insieme.
+ */
+function soglieMarkup(device = {}) {
+  const standby =
+    device.threshold_standby == null || device.threshold_standby === ""
+      ? (device.metadata?.threshold_standby ?? "")
+      : device.threshold_standby;
+  return `
+        <label class="ed-slot"><span class="ed-slot-lbl">${t("Soglia in funzione", "Running threshold")}</span><input class="ed-input" type="number" step="0.1" min="0" name="threshold_run" value="${esc(device.threshold_run ?? device.metadata?.threshold_run ?? 5)}"><small>${t("Potenza in watt oltre la quale la card risulta accesa.", "Power in watts above which the card is shown as running.")}</small></label>
+        ${numberField("threshold_standby", t("Soglia standby (W)", "Standby threshold (W)"), standby, t("Sotto la soglia In funzione e sopra questa = Standby.", "Below the running threshold and above this = Standby."), { step: "0.1", placeholder: "1" })}
+        ${numberField("off_delay_minutes", t("Ritardo fine ciclo (minuti)", "End-of-cycle delay (minutes)"), device.off_delay_minutes ?? "", t("La card resta In funzione per questi minuti dopo l'ultima potenza sopra soglia: copre l'asciugatura a 0 W della lavastoviglie e le pause del ciclo.", "The card stays Running for these minutes after the last power reading above the threshold: it covers the dishwasher's 0 W drying phase and mid-cycle pauses."), { step: "1", placeholder: "es. 30" })}`;
+}
+
 const CARD_FIELD_KEYS = [
   "state_entity",
   "remaining_entity",
   "cycle_duration_entity",
   "cycle_minutes",
-  "off_delay_minutes",
   "temperature_entity",
   "temperature_entity_2",
   "temp_min",
@@ -287,7 +313,7 @@ function cardFieldsMarkup(device = {}) {
     clean(device.image || device.image_url) ||
     CARD_FIELD_KEYS.some((key) => clean(device[key]) !== "");
   return `<details class="dm-appliance-card-fields"${configured ? " open" : ""}>
-    <summary>🧩 ${t("Card avanzata — immagine, ciclo, temperatura, costi", "Advanced card — image, cycle, temperature, costs")}</summary>
+    <summary>🧩 ${t("Card avanzata — immagine, durata, temperatura, porta, costi", "Advanced card — image, duration, temperature, door, costs")}</summary>
     <div class="dm-appliance-card-fields-intro">${t(
       "Tutti i campi sono facoltativi: la card mostra automaticamente ciò che è disponibile. Avvio, durata, consumo e costo dell'ultimo ciclo vengono calcolati da soli dalle transizioni di potenza se non indichi entità dedicate.",
       "Every field is optional: the card automatically shows what is available. Start, duration, energy and cost of the last cycle are computed automatically from power transitions unless you provide dedicated entities.",
@@ -304,8 +330,6 @@ function cardFieldsMarkup(device = {}) {
       ${numberField("temp_max", t("Temperatura max (barra)", "Max temperature (bar)"), value("temp_max"), "", { step: "0.5", placeholder: "10" })}
       ${numberField("max_power", t("Potenza massima (W)", "Maximum power (W)"), value("max_power"), t("Scala della barra Potenza attuale. Vuoto = valore tipico per il tipo.", "Scale of the current power bar. Empty = typical value for the type."), { step: "50", placeholder: "es. 2200" })}
       ${numberField("price_kwh", t("Costo energia (€/kWh)", "Energy cost (€/kWh)"), value("price_kwh"), t("Vuoto = tariffa della sezione Energia.", "Empty = tariff from the Energy section."), { step: "0.001", placeholder: "es. 0.25" })}
-      ${numberField("threshold_standby", t("Soglia standby (W)", "Standby threshold (W)"), value("threshold_standby") === "" ? (device.metadata?.threshold_standby ?? "") : value("threshold_standby"), t("Sotto la soglia In funzione e sopra questa = Standby.", "Below the running threshold and above this = Standby."), { step: "0.1", placeholder: "1" })}
-      ${numberField("off_delay_minutes", t("Ritardo fine ciclo (minuti)", "End-of-cycle delay (minutes)"), value("off_delay_minutes"), t("La card resta In funzione per questi minuti dopo l'ultima potenza sopra soglia: copre l'asciugatura a 0 W della lavastoviglie e le pause del ciclo.", "The card stays Running for these minutes after the last power reading above the threshold: it covers the dishwasher's 0 W drying phase and mid-cycle pauses."), { step: "1", placeholder: "es. 30" })}
       ${entityField("door_entity", t("Entità porta", "Door entity"), device.door_entity, t("Il classico sensore porta: la card dice «Porta aperta» quando resta aperta. Su un frigorifero è l'unica cosa che vale la pena sapere di sfuggita.", "The usual door contact: the card says “Door open” while it stays open. On a fridge that is the one thing worth knowing at a glance."))}
       ${entityField("alert_entity", t("Entità allarme/anomalia", "Alarm/problem entity"), device.alert_entity, t("binary_sensor di problema: accende il contatore Allarme.", "Problem binary_sensor: feeds the Alarm counter."))}
       ${entityField("last_start_entity", t("Ultimo ciclo · avvio", "Last cycle · start"), device.last_start_entity, t("Timestamp di avvio fornito dall'integrazione (es. Home Connect).", "Start timestamp provided by the integration (e.g. Home Connect)."))}
@@ -451,6 +475,148 @@ function wireComandi(modal, form) {
   disegnaComandi(modal, form);
 }
 
+/* ── le altre letture dell'apparecchio (#471) ──────────────────────
+ *
+ * «Se su ogni elettrodomestico si potesse aggiungere un'entità dandole un nome:
+ * io nell'asciugatrice monitoro temperatura aria e umidità residua per evitare
+ * che me li stropicci troppo. E sul frigorifero ho un sensore zigbee per
+ * porta.»
+ *
+ * Un apparecchio aveva le sue caselle a nome fisso — potenza, energia, gradi,
+ * porta — e chi ha un sensore che quelle caselle non prevedono non aveva dove
+ * metterlo. Il robot (#468) e i lettori (#451) questa fila ce l'hanno già, e le
+ * regole stanno in un posto solo: `core/letture-accanto.js` sa cos'è una
+ * lettura, come si chiama senza il nome dell'apparecchio davanti e con che
+ * unità si scrive. Qui si scelgono, nella finestra si guardano.
+ *
+ * Due porte sullo stesso frigorifero si risolvono da sé: la prima sta nella sua
+ * casella «Entità porta», la seconda è una lettura come le altre.
+ *
+ * Come per i comandi, non si salva niente finché non si preme il tasto in
+ * fondo: l'elenco vive in un campo nascosto del modulo.
+ */
+function chipLetturaMarkup(entity, azione, segno, apparecchio, states) {
+  return `<button type="button" class="dm-appl-cmd-chip" data-${azione}="${esc(entity)}" data-genere="lettura" title="${esc(entity)}"><span>${esc(nomeAccantoAlDispositivo(entity, apparecchio, states))}</span><i aria-hidden="true">${segno}</i></button>`;
+}
+
+/* L'apparecchio come lo vede il vocabolario delle letture. Porta anche i
+ * comandi gia' scelti e le caselle a nome fisso, cosi' quello che la finestra
+ * mostra gia' da un'altra parte non viene riproposto qui: sarebbe la stessa
+ * cosa scritta due volte. */
+function apparecchioDelleLetture(values, scelte) {
+  return {
+    entity: clean(values.control_entity || values.state_entity || values.power_entity),
+    name: clean(values.name),
+    letture: scelte,
+    comandi: [
+      ...elencoComandi(values.comandi),
+      ...[
+        "power_entity",
+        "state_entity",
+        "remaining_entity",
+        "cycle_duration_entity",
+        "temperature_entity",
+        "temperature_entity_2",
+        "door_entity",
+        "alert_entity",
+        "daily_energy_entity",
+        "monthly_energy_entity",
+        "total_energy_entity",
+      ]
+        .map((chiave) => clean(values[chiave]))
+        .filter(Boolean),
+    ],
+  };
+}
+
+function lettureProposte(values, snapshot, scelte) {
+  const states = allStates();
+  const candidate = Array.isArray(snapshot) && snapshot.length ? snapshot : null;
+  return lettureVicine(apparecchioDelleLetture(values, scelte), states, candidate).slice(0, 18);
+}
+
+function lettureExtraMarkup(device) {
+  const scelte = elencoLetture(device.letture);
+  return `<section class="ed-slot dm-appl-letture" data-appl-letture>
+    <span class="ed-slot-lbl">${t("Altre letture", "Other readings")}</span>
+    <input type="hidden" name="letture" value="${esc(scelte.join(","))}">
+    <div class="dm-appl-cmd-chips" data-appl-letture-scelte></div>
+    <span class="ed-form-row">
+      <input id="dm-appl-lettura" class="ed-input mono" data-appl-lettura-nuova placeholder="sensor.asciugatrice_umidita_residua" autocomplete="off" spellcheck="false">
+      <button type="button" class="dm-appl-cmd-add" data-appl-let-add aria-label="${t("Aggiungi lettura", "Add reading")}" title="${t("Aggiungi lettura", "Add reading")}">＋</button>
+    </span>
+    <output class="dm-appl-cmd-error" data-appl-let-error></output>
+    <small class="dm-appl-cmd-proposte-lbl" data-appl-letture-proposte-lbl hidden>${t("Trovate accanto all'apparecchio — un tocco le aggiunge:", "Found next to the appliance — one tap adds them:")}</small>
+    <div class="dm-appl-cmd-chips dm-appl-cmd-proposte" data-appl-letture-proposte></div>
+    <small>${t(
+      "I sensori che l'apparecchio pubblica e che le caselle qui sopra non prevedono — temperatura dell'aria e umidità residua di un'asciugatrice, una seconda porta di un frigorifero: entità sensor.*, binary_sensor.*, number.*. Compaiono nella finestra dell'apparecchio, col loro nome e la loro unità, nell'ordine in cui le aggiungi.",
+      "The sensors the appliance publishes that the fields above do not cover — air temperature and residual humidity of a dryer, a second door on a fridge: sensor.*, binary_sensor.*, number.* entities. They show up in the appliance window, with their own name and unit, in the order you add them.",
+    )}</small>
+  </section>`;
+}
+
+function disegnaLetture(modal, form) {
+  const blocco = modal.querySelector("[data-appl-letture]");
+  if (!blocco) return;
+  const states = allStates();
+  const values = Object.fromEntries(new FormData(form).entries());
+  const scelte = elencoLetture(values.letture);
+  const apparecchio = apparecchioDelleLetture(values, scelte);
+  const cassetto = blocco.querySelector("[data-appl-letture-scelte]");
+  if (cassetto)
+    cassetto.innerHTML = scelte.length
+      ? scelte
+          .map((entity) => chipLetturaMarkup(entity, "appl-let-del", "✕", apparecchio, states))
+          .join("")
+      : `<small class="dm-appl-cmd-vuoto">${esc(t("Nessuna lettura in più: la finestra mostra quello che l'apparecchio ha nelle sue caselle.", "No extra reading: the window shows what the appliance has in its own fields."))}</small>`;
+  const proposte = lettureProposte(values, bindingSnapshot(values), scelte);
+  const cassettoProposte = blocco.querySelector("[data-appl-letture-proposte]");
+  const etichettaProposte = blocco.querySelector("[data-appl-letture-proposte-lbl]");
+  if (cassettoProposte)
+    cassettoProposte.innerHTML = proposte
+      .map((entity) => chipLetturaMarkup(entity, "appl-let-sug", "＋", apparecchio, states))
+      .join("");
+  if (etichettaProposte) etichettaProposte.hidden = proposte.length === 0;
+}
+
+function wireLetture(modal, form) {
+  const blocco = modal.querySelector("[data-appl-letture]");
+  if (!blocco) return;
+  const nascosto = form.elements.letture;
+  const errore = blocco.querySelector("[data-appl-let-error]");
+  const scrivi = (elenco) => {
+    nascosto.value = elencoLetture(elenco).join(",");
+    disegnaLetture(modal, form);
+  };
+  blocco.addEventListener("click", (event) => {
+    const togli = event.target.closest("[data-appl-let-del]");
+    const proposta = event.target.closest("[data-appl-let-sug]");
+    const aggiungi = event.target.closest("[data-appl-let-add]");
+    if (!togli && !proposta && !aggiungi) return;
+    event.preventDefault();
+    const casella = blocco.querySelector("[data-appl-lettura-nuova]");
+    const scelte = elencoLetture(nascosto.value);
+    if (togli) {
+      if (errore) errore.textContent = "";
+      scrivi(scelte.filter((entity) => entity !== clean(togli.dataset.applLetDel)));
+      return;
+    }
+    const nuova = proposta ? clean(proposta.dataset.applLetSug) : clean(casella?.value);
+    if (!eUnaLettura(nuova)) {
+      if (errore)
+        errore.textContent = t(
+          "Serve un'entità che si legge: sensor.*, binary_sensor.*, number.*, input_number o input_text.",
+          "A readable entity is required: sensor.*, binary_sensor.*, number.*, input_number or input_text.",
+        );
+      return;
+    }
+    if (errore) errore.textContent = "";
+    if (casella && !proposta) casella.value = "";
+    scrivi([...scelte, nuova]);
+  });
+  disegnaLetture(modal, form);
+}
+
 /* Le entita' dell'apparecchio dopo un salvataggio: le caselle della maschera,
  * piu' quelle che aveva gia' e che non sono di un altro apparecchio (#417).
  *
@@ -565,6 +731,132 @@ function bindingMarkup(device = {}) {
   </section>`;
 }
 
+/* ── cosa mostrare e cosa no (#512) ────────────────────────────────────────
+ *
+ * «Negli elettrodomestici poter gestire, esempio negli stati o nei comandi,
+ * cosa visualizzare o meno: ci sono cose che magari vengono rilevate ma alla
+ * fine graficamente uno puo' non interessare.»
+ *
+ * Collegare un'integrazione porta dentro tutto quello che il dispositivo
+ * pubblica, e un dispositivo moderno pubblica molto: la lavatrice dichiara il
+ * programma e i giri, ma anche il numero di serie e tre diagnostiche. Qui si
+ * spengono, una per una.
+ *
+ * Si scrive cio' che si NASCONDE e non cio' che si mostra: un apparecchio
+ * senza questo campo mostra tutto — com'era prima — e un'entita' nuova che
+ * l'integrazione pubblica domani compare da sola, invece di restare invisibile
+ * perche' non era in un elenco scritto ieri. La regola sta in
+ * `core/le-voci-nascoste.js`; qui c'e' solo il modo di premerla. */
+
+/* Tutto quello che questa finestra potrebbe mostrare, senza ripetizioni: le
+ * caselle a nome fisso, le letture e i comandi scelti a mano, e le entita' del
+ * dispositivo collegato. E' lo stesso insieme che la finestra percorre — se ne
+ * elencasse uno piu' corto, ci sarebbe roba che non si puo' spegnere. */
+function vociDellApparecchio(values) {
+  const viste = new Set();
+  const elenco = [];
+  const aggiungi = (voce) => {
+    const id = clean(voce);
+    if (!id || !id.includes(".") || viste.has(id)) return;
+    viste.add(id);
+    elenco.push(id);
+  };
+  for (const casella of CASELLE_DELLA_FINESTRA) aggiungi(values[casella]);
+  for (const entity of elencoLetture(values.letture)) aggiungi(entity);
+  for (const entity of elencoComandi(values.comandi)) aggiungi(entity);
+  /* Il catalogo di ADESSO, non solo quello di quando si e' collegato.
+   *
+   * `device_entities` e' uno scatto: fotografa il dispositivo il giorno che lo
+   * si e' scelto. La finestra dell'apparecchio invece chiede il catalogo vivo,
+   * quindi una diagnostica o un comando pubblicati dall'integrazione un mese
+   * dopo li' compaiono da soli — ed e' proprio il comportamento che si voleva
+   * — ma in questo elenco non c'erano: l'unica voce che non si poteva
+   * nascondere era quella appena arrivata, e per farla comparire qui bisognava
+   * scollegare e ricollegare il dispositivo. Le due liste si uniscono, e lo
+   * scatto resta perche' il catalogo vivo puo' non essere ancora arrivato. */
+  for (const voce of entitaDelDispositivo(clean(values.device_id)) || [])
+    aggiungi(voce?.entity_id);
+  for (const entity of bindingSnapshot(values)) aggiungi(entity);
+  return elenco;
+}
+
+/* Le caselle a nome fisso che la finestra dell'apparecchio disegna. Non e'
+ * l'elenco di tutti i campi della scheda: la soglia di standby e il prezzo del
+ * kWh sono numeri, non entita', e non c'e' niente da nascondere. */
+const CASELLE_DELLA_FINESTRA = Object.freeze([
+  "control_entity",
+  "power_entity",
+  "state_entity",
+  "remaining_entity",
+  "temperature_entity",
+  "temperature_entity_2",
+  "door_entity",
+  /* `alert_entity`, col nome che porta nel modello e nella scheda. Qui c'era
+   * scritto `alarm_entity`, che non esiste da nessun'altra parte: il sensore
+   * di anomalia configurato a mano non compariva fra le voci da nascondere, e
+   * l'unica cosa che non si poteva spegnere era proprio quella. */
+  "alert_entity",
+  "daily_energy_entity",
+  "monthly_energy_entity",
+]);
+
+function nascosteMarkup(device) {
+  return `<section class="ed-slot dm-appl-nascoste" data-appl-nascoste>
+    <span class="ed-slot-lbl">${t("Cosa mostrare nella finestra", "What to show in the window")}</span>
+    <input type="hidden" name="nascoste" value="${esc(elencoNascoste(device[NASCOSTE_CAMPO]).join(","))}">
+    <div class="dm-appl-cmd-chips" data-appl-nascoste-voci></div>
+    <small>${t(
+      "Un tocco spegne una voce: resta configurata e smette di comparire nella finestra dell'apparecchio — fra le misure, fra gli stati e fra i comandi insieme, perché è la stessa entità. Di serie si vede tutto, e quello che l'integrazione pubblica domani compare da solo.",
+      "One tap turns an item off: it stays configured and stops showing in the appliance window — among the readings, the states and the controls at once, because it is the same entity. Everything shows by default, and whatever the integration publishes tomorrow shows up on its own.",
+    )}</small>
+  </section>`;
+}
+
+const NASCOSTE_CAMPO = "nascoste";
+
+function disegnaNascoste(modal, form) {
+  const blocco = modal.querySelector("[data-appl-nascoste]");
+  if (!blocco) return;
+  const states = allStates();
+  const values = Object.fromEntries(new FormData(form).entries());
+  const nascoste = new Set(elencoNascoste(values.nascoste));
+  const voci = vociDellApparecchio(values);
+  const apparecchio = apparecchioDelleLetture(values, elencoLetture(values.letture));
+  const cassetto = blocco.querySelector("[data-appl-nascoste-voci]");
+  if (!cassetto) return;
+  cassetto.innerHTML = voci.length
+    ? voci
+        .map((entity) => {
+          const spenta = nascoste.has(entity);
+          return `<button type="button" class="dm-appl-cmd-chip dm-appl-nascosta" data-appl-nascosta="${esc(entity)}"
+            data-on="${spenta ? "false" : "true"}" aria-pressed="${spenta ? "false" : "true"}"
+            title="${esc(entity)}"><span>${esc(nomeAccantoAlDispositivo(entity, apparecchio, states))}</span><i aria-hidden="true">${spenta ? "🚫" : "👁"}</i></button>`;
+        })
+        .join("")
+    : `<small class="dm-appl-cmd-vuoto">${esc(t("Niente da scegliere: l'apparecchio non ha ancora entità.", "Nothing to choose: the appliance has no entities yet."))}</small>`;
+}
+
+function wireNascoste(modal, form) {
+  const blocco = modal.querySelector("[data-appl-nascoste]");
+  if (!blocco) return;
+  const nascosto = form.elements.nascoste;
+  blocco.addEventListener("click", (event) => {
+    const chip = event.target.closest("[data-appl-nascosta]");
+    if (!chip) return;
+    event.preventDefault();
+    const entity = clean(chip.dataset.applNascosta);
+    const nascoste = new Set(elencoNascoste(nascosto.value));
+    /* Il tocco ribalta: si vede → si nasconde, si nasconde → si vede. Niente
+     * si salva finche' non si preme il tasto della scheda, come per gli altri
+     * comandi e le altre letture. */
+    if (nascoste.has(entity)) nascoste.delete(entity);
+    else nascoste.add(entity);
+    nascosto.value = [...nascoste].join(",");
+    disegnaNascoste(modal, form);
+  });
+  disegnaNascoste(modal, form);
+}
+
 function bindingSnapshot(values) {
   try {
     const parsed = JSON.parse(values.device_entities || "[]");
@@ -606,9 +898,14 @@ function paintBinding(modal, form, note = "") {
       );
     link.textContent = `🔗 ${t("Scegli il dispositivo", "Pick the device")}`;
   }
-  /* Collegare o scollegare un dispositivo cambia quali comandi gli stanno
-   * accanto (#338): le proposte si rifanno insieme alla fascia. */
+  /* Collegare o scollegare un dispositivo cambia quali comandi e quali letture
+   * gli stanno accanto (#338, #471): le proposte si rifanno insieme alla
+   * fascia. */
   disegnaComandi(modal, form);
+  disegnaLetture(modal, form);
+  /* E cambia anche cosa si puo' spegnere (#512): le entita' del dispositivo
+   * sono fra le voci, e collegarne uno nuovo ne porta altre. */
+  disegnaNascoste(modal, form);
 }
 
 function wireBinding(modal, form, device) {
@@ -703,7 +1000,7 @@ export function openApplianceEditor(index) {
         <label class="ed-slot dm-appliance-icon-field"><span class="ed-slot-lbl">${t("Tipo / immagine", "Type / artwork")}</span><input type="hidden" name="icon" value="${esc(visual)}"><span class="dm-appliance-icon-row"><span class="dm-appliance-icon-preview" data-icon-preview data-dm-preview-source="canonical-picker" aria-hidden="false"></span><button type="button" class="ed-input dm-appliance-type-trigger" data-type-trigger aria-haspopup="listbox"></button></span><small>${t("Usa lo stesso catalogo e la stessa icona azzurra della prima configurazione.", "Uses the same catalog and blue icon as the first configuration.")}</small></label>
         <label class="ed-slot"><span class="ed-slot-lbl">${t("Stanza", "Room")}</span><select class="ed-input" name="room_id">${roomOptions(device.room_id || device.room)}</select></label>
         <label class="ed-slot"><span class="ed-slot-lbl">${t("Carico energia", "Energy load")}</span><select class="ed-input" name="flow_group" data-dm-appliance-flow-group>${flowLoadOptions(device.metadata?.beta27_subload_group)}</select><small class="dm-appliance-flow-suggestion" data-dm-flow-suggestion${flowGroupSuggested(device) ? "" : " hidden"}>✨ ${t("Suggerito: ha una potenza mappata", "Suggested: it has a mapped power sensor")}</small><small>${t("Il cerchio del flusso in cui rientra. Il suo valore diventa la somma dei dispositivi assegnati, e il popup del cerchio lo elenca: non serve riconfigurarlo nei Carichi.", "The flow circle it belongs to. That circle becomes the total of the appliances assigned to it and its popup lists them, with nothing to configure again under Loads.")}</small></label>
-        <label class="ed-slot"><span class="ed-slot-lbl">${t("Soglia in funzione", "Running threshold")}</span><input class="ed-input" type="number" step="0.1" min="0" name="threshold_run" value="${esc(device.threshold_run ?? device.metadata?.threshold_run ?? 5)}"><small>${t("Potenza in watt oltre la quale la card risulta accesa.", "Power in watts above which the card is shown as running.")}</small></label>
+        ${soglieMarkup(device)}
       </div>
       <section class="dm-appliance-entity-grid">
         ${entityField("control_entity", t("Entità comando", "Control entity"), controlInitial, t("Switch, light, fan o input_boolean usato dal pulsante Accendi/Spegni.", "Switch, light, fan or input_boolean used by the On/Off button."))}
@@ -714,6 +1011,8 @@ export function openApplianceEditor(index) {
         ${entityField("total_energy_entity", t("Energia totale per storico e Report", "Total energy for history and Report"), totalInitial, t("Deve essere un contatore cumulativo kWh con state_class total o total_increasing. Non usare qui il sensore mensile: questo campo serve per ricostruire anche i mesi precedenti.", "This must be a cumulative kWh meter with state_class total or total_increasing. Do not use the monthly sensor here: this field is required to reconstruct previous months."))}
       </section>
       ${comandiExtraMarkup(device)}
+      ${lettureExtraMarkup(device)}
+      ${nascosteMarkup(device)}
       ${cardFieldsMarkup(device)}
       <output data-error></output>
       <footer><button type="button" class="ed-btn-add" data-cancel>${t("Annulla", "Cancel")}</button><button type="submit" class="ed-save-btn">💾 ${t("Salva modifiche", "Save changes")}</button></footer>
@@ -725,6 +1024,8 @@ export function openApplianceEditor(index) {
   updateEditType(modal, visual);
   wireBinding(modal, form, device);
   wireComandi(modal, form);
+  wireLetture(modal, form);
+  wireNascoste(modal, form);
   modal.querySelector("[data-type-trigger]")?.addEventListener("click", () => {
     openTypePicker({
       selected: form.elements.icon.value,
@@ -835,6 +1136,17 @@ export function openApplianceEditor(index) {
     const comandi = elencoComandi(values.comandi);
     if (comandi.length) next.comandi = comandi;
     else delete next.comandi;
+    /* Le altre letture (#471), con la stessa regola: un elenco vuoto non e'
+     * una configurazione, e il campo se ne va. */
+    const letture = elencoLetture(values.letture);
+    if (letture.length) next.letture = letture;
+    else delete next.letture;
+    /* Cosa non si vuole vedere (#512), con la stessa regola: un elenco vuoto
+     * non e' una configurazione, e il campo se ne va — cosi' un apparecchio a
+     * cui non si e' spento niente resta esattamente com'era. */
+    const nascoste = elencoNascoste(values.nascoste);
+    if (nascoste.length) next[NASCOSTE_CAMPO] = nascoste;
+    else delete next[NASCOSTE_CAMPO];
     if (next.threshold_standby === "") delete next.threshold_standby;
     for (const key of [
       "cycle_minutes",
@@ -898,11 +1210,22 @@ function installStyles() {
     /* Gli altri comandi (#338): pastiglie, quelle scelte con la croce e quelle
        proposte col piu'. Stesso disegno della scheda del robot, che e' la
        stessa cosa: un elenco di entita' che l'apparecchio sa premere. */
-    .dm-appl-comandi{display:grid!important;gap:6px!important;margin-top:14px!important}
-    .dm-appl-comandi .ed-form-row{display:flex!important;gap:8px!important;min-width:0!important}
-    .dm-appl-comandi .ed-form-row>input{flex:1 1 auto!important;min-width:0!important}
-    .dm-appl-comandi .dm-appl-cmd-add{flex:0 0 38px!important;height:38px!important;border:none!important;border-radius:10px!important;background:linear-gradient(135deg,#10b981,#047857)!important;color:#fff!important;font-size:14px!important;cursor:pointer!important}
-    .dm-appl-comandi small{font-size:11px!important;line-height:1.45!important;color:var(--secondary-text-color,#64748b)!important;font-weight:600!important}
+    .dm-appl-comandi,
+    .dm-appl-letture{display:grid!important;gap:6px!important;margin-top:14px!important}
+    /* Cosa mostrare e cosa no (#512): le stesse pastiglie delle letture, con
+       due stati invece di un tasto per toglierle. Spenta resta leggibile —
+       serve poterla riaccendere — ma si vede da lontano che e' spenta. */
+    .dm-appl-nascoste{display:grid!important;gap:6px!important;margin-top:14px!important}
+    .dm-appl-nascosta[data-on="false"]{opacity:.5;text-decoration:line-through}
+    .dm-appl-nascosta[data-on="false"] i{text-decoration:none;display:inline-block}
+    .dm-appl-comandi .ed-form-row,
+    .dm-appl-letture .ed-form-row{display:flex!important;gap:8px!important;min-width:0!important}
+    .dm-appl-comandi .ed-form-row>input,
+    .dm-appl-letture .ed-form-row>input{flex:1 1 auto!important;min-width:0!important}
+    .dm-appl-comandi .dm-appl-cmd-add,
+    .dm-appl-letture .dm-appl-cmd-add{flex:0 0 38px!important;height:38px!important;border:none!important;border-radius:10px!important;background:linear-gradient(135deg,#10b981,#047857)!important;color:#fff!important;font-size:14px!important;cursor:pointer!important}
+    .dm-appl-comandi small,
+    .dm-appl-letture small{font-size:11px!important;line-height:1.45!important;color:var(--secondary-text-color,#64748b)!important;font-weight:600!important}
     .dm-appl-cmd-chips{display:flex!important;flex-wrap:wrap!important;gap:6px!important}
     .dm-appl-cmd-chip{display:inline-flex!important;align-items:center!important;gap:6px!important;max-width:100%!important;padding:5px 10px!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:999px!important;background:var(--card-background-color,#fff)!important;font:inherit!important;font-size:12px!important;font-weight:800!important;color:var(--text,#0f172a)!important;cursor:pointer!important}
     .dm-appl-cmd-chip>span{overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}

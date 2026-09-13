@@ -19,6 +19,9 @@ import { CodiceSbagliato, TroppiTentativi } from "./abbinamento.js";
 import { TroppiDispositivi } from "./dispositivi.js";
 import { invito } from "./invito.js";
 import { accetta, eUnaSalita } from "./presa.js";
+import { BASE } from "./plancia.js";
+import { Cucitura } from "./cucitura.js";
+import { conLePremesse, linguaPulita, paginaDellaLingua } from "./premesse.js";
 import { qrInSvg } from "./qr.js";
 import { impronta } from "./segreti.js";
 
@@ -249,6 +252,20 @@ export function costruisciLaConsole({
   identita,
   ritorno,
   plancia,
+  plance,
+  /* Com'e' andata a mettere le plance fra le «Plance» di Home Assistant: la
+   * scheda dell'add-on lo dice, perche' e' li' che si guarda quando una voce
+   * nella barra laterale non c'e'. */
+  planceInCasa,
+  configurazione,
+  /* Le commissioni: i comandi che il ponte fa da se' invece di girarli a Home
+   * Assistant. Servono alla plancia servita qui — l'integrazione che li faceva
+   * non c'e' piu' — e sono le stesse che riceve l'app. Una lista sola, se no
+   * la plancia si comporterebbe in due modi a seconda di dove e' aperta. */
+  commissioni,
+  /* La chat di assistenza. Alla console serve per una riga sola, e non e' una
+   * riga da poco: dire se questa casa **risponde** alle chat. */
+  chat,
   aggiornamento,
   cartellaDellaConsole,
   cartellaDellApp,
@@ -261,7 +278,7 @@ export function costruisciLaConsole({
    * risposta non viene mai chiusa, e chi ha chiamato aspetta per sempre. Un
    * pezzo che manca deve dare un 500, non una rotella che gira. */
   const registro = scritto ?? { info() {}, attenzione() {}, errore() {} };
-  return createServer(async (richiesta, risposta) => {
+  const server = createServer(async (richiesta, risposta) => {
     const via = rotta(richiesta);
     const metodo = String(richiesta.method || "").toUpperCase();
 
@@ -282,6 +299,10 @@ export function costruisciLaConsole({
           identita,
           ritorno,
           plancia,
+          plance,
+          planceInCasa,
+          configurazione,
+          chat,
           aggiornamento,
         });
       } catch (errore) {
@@ -322,8 +343,139 @@ export function costruisciLaConsole({
       return;
     }
 
+    /* La plancia, dentro Home Assistant.
+     *
+     * Nella dashboard la plancia e' un pannello dell'integrazione: la serve
+     * lei, e la barra laterale ha la sua voce. L'integrazione va dismessa, e
+     * allora quel mestiere lo fa il ponte: la pagina la serve lui, con le sue
+     * premesse (`premesse.js`), e il WebSocket che quella pagina apre torna
+     * qui (`cucitura.js`).
+     *
+     * Sta sulla porta dell'**ingress** e non su quella dell'app: cosi' ci
+     * arriva solo chi e' entrato in Home Assistant, e non serve nessun altro
+     * segno da chiedere a nessuno. */
+    if (via === "/plancia" || via.startsWith("/plancia/")) {
+      laPlanciaServita({ via, richiesta, risposta, plancia, plance });
+      return;
+    }
+
+    /* E i suoi file, gli stessi che la porta dell'app serve al telefono. Senza
+     * questi la pagina arriverebbe nuda: il foglio di stile, i moduli e i
+     * caratteri li chiede lei, per nome relativo, e da qui. */
+    if (via.startsWith(`${BASE}/`)) {
+      if (!plancia?.cE) {
+        male(risposta, 404, "questo add-on non si porta dietro la plancia");
+        return;
+      }
+      const letto = plancia.leggi(via);
+      if (letto.stato !== 200) {
+        male(risposta, letto.stato, "questo file non c'e'");
+        return;
+      }
+      risposta.writeHead(200, {
+        "content-type": letto.tipo,
+        /* Nell'indirizzo c'e' l'impronta: quello che c'e' non cambia mai, e il
+         * browser se lo puo' tenere. */
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-length": letto.corpo.length,
+      });
+      risposta.end(letto.corpo);
+      return;
+    }
+
     servi(risposta, cartellaDellaConsole, via);
   });
+
+  /* Il WebSocket della plancia servita qui.
+   *
+   * La pagina crede di parlare con Home Assistant: parla con la cucitura, che
+   * risponde ai comandi del ponte e gira il resto alla casa. Ogni pagina si
+   * prende un filo suo, come ogni telefono: i numeri dei messaggi sono i suoi
+   * e non c'e' niente da rinumerare. */
+  server.on("upgrade", (richiesta, socket) => {
+    if (rotta(richiesta) !== "/plancia/api/websocket" || !eUnaSalita(richiesta)) {
+      socket.end("HTTP/1.1 404 Not Found\r\n\r\n");
+      return;
+    }
+    if (!casa) {
+      socket.end("HTTP/1.1 503 Service Unavailable\r\n\r\n");
+      return;
+    }
+    const presa = accetta(richiesta, socket, {});
+    if (!presa) return;
+    const cucitura = new Cucitura({
+      presa,
+      casa,
+      commissioni,
+      registro,
+      da: socket.remoteAddress || "?",
+    });
+    cucitura.avvia().catch((errore) => {
+      registro.errore(`la cucitura della plancia e' andata storta: ${errore?.message || errore}`);
+      cucitura.chiudi(1011, "non ha funzionato");
+    });
+  });
+
+  return server;
+}
+
+/* La pagina della plancia, servita dentro Home Assistant.
+ *
+ * `/plancia/` e' la prima; `/plancia/<profilo>/` una delle altre. La barra in
+ * fondo non e' un dettaglio: senza, il browser crede che la pagina stia nella
+ * cartella sopra. Il rimando si scrive **relativo** — `<profilo>/` e non
+ * `/plancia/<profilo>/` — perche' sotto l'ingress davanti c'e' un prefisso che
+ * qui non si conosce e non si deve conoscere.
+ */
+function laPlanciaServita({ via, richiesta, risposta, plancia, plance }) {
+  if (!plancia?.cE) {
+    male(risposta, 404, "questo add-on non si porta dietro la plancia");
+    return;
+  }
+  if (via === "/plancia") {
+    risposta.writeHead(302, { location: "plancia/", "cache-control": "no-store" });
+    risposta.end();
+    return;
+  }
+  const profilo = via.slice("/plancia/".length).replace(/\/+$/, "");
+  const quale = profilo ? (plance?.quale(profilo) ?? null) : (plance?.prima ?? null);
+  if (profilo && !quale) {
+    male(risposta, 404, "quella plancia non c'e'");
+    return;
+  }
+  if (profilo && !via.endsWith("/")) {
+    risposta.writeHead(302, { location: `${profilo}/`, "cache-control": "no-store" });
+    risposta.end();
+    return;
+  }
+  const lingua = linguaPulita(
+    new URL(richiesta.url || "/", "http://ponte").searchParams.get("lingua"),
+  );
+  const nome = paginaDellaLingua(plancia.varianti(), lingua);
+  const letto = plancia.leggi(`${plancia.base}/legacy/${nome}`);
+  if (letto.stato !== 200) {
+    male(risposta, 500, "la pagina della plancia non si legge");
+    return;
+  }
+  /* Il prefisso dell'ingress: Home Assistant lo dice, e va scritto dentro la
+   * pagina — nel `<base>` e nell'indirizzo del WebSocket — perche' la pagina
+   * da sola non lo puo' indovinare. */
+  const davanti = String(richiesta.headers["x-ingress-path"] || "");
+  const pagina = conLePremesse(letto.corpo.toString("utf8"), {
+    base: `${davanti}${plancia.base}/legacy`,
+    quale,
+    lingua,
+    doveIlWebSocket: `${davanti}/plancia/api/websocket`,
+  });
+  const byte = Buffer.from(pagina, "utf8");
+  risposta.writeHead(200, {
+    "content-type": "text/html; charset=utf-8",
+    /* La pagina no: dentro ci sono le premesse, e cambiano con la plancia
+     * scelta e col prefisso dell'ingress. */
+    "cache-control": "no-store",
+    "content-length": byte.length,
+  });
+  risposta.end(byte);
 }
 
 async function api({
@@ -341,6 +493,10 @@ async function api({
   identita,
   ritorno,
   plancia,
+  plance,
+  planceInCasa,
+  configurazione,
+  chat,
   aggiornamento,
 }) {
   /* C'e' una versione nuova del ponte?
@@ -393,6 +549,64 @@ async function api({
     return;
   }
 
+  /* Le plance di questa casa.
+   *
+   * E' il posto dove se ne aggiunge una: la scheda dell'add-on sta dietro
+   * l'autenticazione di Home Assistant, ed e' li' che in Home Assistant si
+   * aggiunge una seconda istanza dell'integrazione. Le stesse cose si fanno
+   * anche dall'app, coi comandi `ponte/plance/*`.
+   *
+   * Chi non ha le plance — un ponte sul banco — risponde 404: meglio che una
+   * pagina che mostra un elenco vuoto e un tasto che non fa niente. */
+  if (via === "/api/plance") {
+    if (!plance) {
+      json(risposta, { errore: "senza_plance" }, 404);
+      return;
+    }
+    if (metodo === "GET") {
+      json(risposta, { plance: plance.elenco() });
+      return;
+    }
+    let detto = {};
+    if (metodo === "POST" || metodo === "PATCH" || metodo === "DELETE") {
+      try {
+        detto = await corpoDiJson(richiesta);
+      } catch (errore) {
+        male(risposta, 400, errore.message);
+        return;
+      }
+    }
+    try {
+      if (metodo === "POST") {
+        const quale = plance.aggiungi(detto?.titolo);
+        json(risposta, { plance: plance.elenco(), quale }, 201);
+        return;
+      }
+      if (metodo === "PATCH") {
+        const quale = plance.rinomina(detto?.profilo, detto?.titolo);
+        json(risposta, { plance: plance.elenco(), quale });
+        return;
+      }
+      if (metodo === "DELETE") {
+        json(risposta, {
+          plance: plance.togli(detto?.profilo, {
+            dimentica: (quello) => configurazione?.dimentica(quello),
+          }),
+        });
+        return;
+      }
+    } catch (errore) {
+      json(
+        risposta,
+        { errore: errore?.codice || "plance", spiegazione: errore?.message || "" },
+        400,
+      );
+      return;
+    }
+    male(risposta, 405, "metodo non previsto");
+    return;
+  }
+
   if (via === "/api/stato" && metodo === "GET") {
     const saluto = await casa.saluta();
     const collegati = ponte.collegatiPerDispositivo();
@@ -424,6 +638,37 @@ async function api({
        * risposta a «questa e' quella vera?», e chi se lo chiede se lo chiede
        * guardando qui. */
       plancia: plancia?.cE ? plancia.provenienza : null,
+      /* Chi parla di piu' in questa casa, nell'ultimo minuto.
+       *
+       * E' la riga che risponde a «l'app va a scatti»: seicento eventi al
+       * minuto non sono mille entita' che cambiano una volta, sono due o tre
+       * che cambiano di continuo, e finche' non si sa quali non c'e' niente
+       * da fare. Vedi `chiacchieroni.js`. */
+      chiacchieroni: ponte?.chiacchieroni?.elenco() ?? null,
+      /* E come e' andata a metterle fra le «Plance» di Home Assistant.
+       *
+       * Sta qui perche' e' il posto dove si guarda: chi ha aggiunto una
+       * plancia e non la trova nella barra laterale deve leggere **in questa
+       * pagina** perche', non andare a cercare una riga nel registro. `null`
+       * vuol dire che non si e' ancora provato. */
+      plance_in_casa: planceInCasa?.esito ?? null,
+      /* Quante plance ha questa casa, e come si chiamano.
+       *
+       * Viaggiano insieme allo stato e non in una chiamata loro: questa pagina
+       * lo stato lo chiede ogni dieci secondi, e un secondo giro per tre
+       * righe sarebbe un giro per niente. */
+      plance: plance ? plance.elenco() : [],
+      /* Se questa casa risponde alle chat di assistenza.
+       *
+       * E' l'unico segno che la chiave della console e' arrivata dov'e' andata
+       * a finire. Home Assistant un campo `password` lo nasconde e non lo
+       * rimostra: chi l'ha appena incollata riapre la scheda, trova la casella
+       * vuota e non ha modo di sapere se sia stata presa o buttata via. Questa
+       * riga glielo dice.
+       *
+       * La chiave non esce di qui — ne' intera ne' a pezzi: esce **un si' o un
+       * no**. */
+      assistenza: { console: Boolean(chat?.eLaConsole) },
       abbinamento: abbinamento.stato(),
       dispositivi: dispositivi
         .elenco()

@@ -368,6 +368,16 @@ void main() {
      * solo quello: il resto e' lo stesso, byte per byte. */
     final riscritto = jsonDecode(tornati.single.conNumero(99));
     expect(riscritto, {...tornati.single.detto, 'id': 99});
+    /* E per lo **stesso** numero non si riscrive niente: si riconsegna quella
+     * stessa stringa. Su un `get_states` da un megabyte e mezzo una copia
+     * risparmiata non e' tempo — un megabyte si copia in pochi millesimi — e'
+     * roba da buttare in meno, e i decimi di secondo di quella si pagano dopo,
+     * sul filo che disegna, quando il raccoglitore passa. */
+    expect(
+      tornati.single.conNumero(numero),
+      same(tornati.single.testo),
+      reason: 'col suo numero non si alloca una stringa nuova',
+    );
     expect(
       ponte.arrivati.where((uno) => uno['type'] == 'get_states').single['id'],
       numero,
@@ -409,6 +419,65 @@ void main() {
       await filo.chiudi();
     },
   );
+
+  test('un mucchio di eventi si spacchetta, e le buste si contano', () async {
+    /* Da fuori casa il ponte manda gli eventi insieme, in una busta sola:
+     * passando dal centralino ogni messaggio e' una richiesta contata, e una
+     * casa vera ne manda cinque al secondo — quarantamila all'ora, contro le
+     * centomila al giorno che il piano gratuito regala. Qui si prova che chi
+     * li riceve non se ne accorge: ogni pezzo rifa' la strada che avrebbe
+     * fatto da solo. */
+    final filo = filoCon();
+    await filo.apri();
+    final tornati = <Instradato>[];
+    final numero = filo.instrada({'type': 'subscribe_events'}, tornati.add);
+    await _finoA(() => tornati.isNotEmpty, entro: const Duration(seconds: 3));
+    final prima = tornati.length;
+
+    ponte.mucchio(numero, [
+      {
+        'event_type': 'state_changed',
+        'data': {
+          'entity_id': 'light.cucina',
+          'new_state': {'state': 'on'},
+        },
+      },
+      {
+        'event_type': 'state_changed',
+        'data': {
+          'entity_id': 'light.salotto',
+          'new_state': {'state': 'off'},
+        },
+      },
+      {
+        'event_type': 'state_changed',
+        'data': {
+          'entity_id': 'sensor.frigo',
+          'new_state': {'state': '4'},
+        },
+      },
+    ]);
+
+    await _finoA(
+      () => tornati.length - prima == 3,
+      entro: const Duration(seconds: 3),
+    );
+    /* Nell'ordine in cui la casa ha parlato, e interi. */
+    final entita = tornati
+        .skip(prima)
+        .map(
+          (uno) =>
+              (((uno.detto['event'] as Map)['data'] as Map)['entity_id']
+                  as String),
+        )
+        .toList();
+    expect(entita, ['light.cucina', 'light.salotto', 'sensor.frigo']);
+
+    /* E in diagnostica le due cose si vedono separate: i messaggi, e le
+     * buste — che sono quello che il centralino fa pagare. */
+    expect(filo.traffico, contains(' buste'));
+    await filo.chiudi();
+  });
 
   test('al risveglio un filo morto in silenzio si chiude e ribussa', () async {
     final filo = Filo.fisso(
@@ -576,6 +645,28 @@ void main() {
     expect(filo.dentro, isTrue);
     expect(filo.traffico, contains('mai caduto'));
     await filo.chiudi();
+  });
+
+  test('un filo chiuso apposta non e\' una caduta', () async {
+    /* Quando l'app non e' davanti il filo si chiude da se': e' voluto, ed e'
+     * quello che non tiene una casa aperta in tasca per niente. Solo che
+     * chiudere una presa fa scattare il suo `onDone`, e quello finiva contato
+     * fra le cadute: nella diagnostica si leggeva «caduto 1 volte: il filo si
+     * e' chiuso» sotto «app messa da parte 1 volte» — la stessa cosa scritta
+     * due volte, una delle quali come guasto. Chi guarda quel pannello per
+     * capire se qualcosa non va si mette a inseguire un fantasma. */
+    final filo = Filo.fisso(
+      indirizzo: ponte.indirizzo,
+      segno: segnoBuono,
+      chi: chiBuono,
+      chiave: chiaveBuona,
+    );
+    await filo.apri();
+    expect(filo.dentro, isTrue);
+
+    await filo.chiudi();
+    expect(filo.ultimeCadute, isEmpty);
+    expect(filo.traffico, contains('mai caduto'));
   });
 
   test('senza filo non si instrada niente', () async {

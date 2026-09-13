@@ -71,6 +71,21 @@ export class Case {
     return true;
   }
 
+  /* Riconosce una casa **senza aprirla**.
+   *
+   * Serve allo sportello, la porta HTTP di fianco al filo: li' una casa nuova
+   * non deve poter nascere. Se potesse, chi conoscesse l'identificativo di una
+   * casa spenta se lo prenderebbe senza nemmeno provare ad aprirci un filo, e
+   * da quel momento le segnalazioni di quella casa sarebbero sue. Dal filo la
+   * prima che si presenta se lo prende, ed e' giusto; da qui no. */
+  verifica(id, segreto) {
+    if (!CASA_VALIDA.test(String(id ?? ""))) return false;
+    if (typeof segreto !== "string" || segreto.length < 32) return false;
+    const esistente = this.quella(id);
+    if (!esistente) return false;
+    return stessoSegreto(esistente.impronta, impronta(segreto));
+  }
+
   /* Via le case sparite da troppo tempo: un'installazione spenta per sempre
    * non deve restare a occupare il suo identificativo in eterno. */
   potatura() {

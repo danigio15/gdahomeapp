@@ -129,7 +129,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       setState(
         () => _male =
             '${errore.spiegazione} Inquadra quello che sta '
-            'nella scheda «Il ponte», dentro Home Assistant.',
+            'nella scheda «gdahome», dentro Home Assistant.',
       );
       return;
     } on InvitoTroppoNuovo catch (errore) {
@@ -299,7 +299,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                     const SizedBox(height: 10),
                   ],
                   Text(
-                    'In Home Assistant apri «Il ponte» dalla barra laterale e '
+                    'In Home Assistant apri «gdahome» dalla barra laterale e '
                     'premi «Fabbrica un codice». Poi inquadra il quadretto.',
                     textAlign: TextAlign.center,
                     style: testi.bodyLarge?.copyWith(

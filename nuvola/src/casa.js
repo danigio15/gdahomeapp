@@ -73,7 +73,7 @@ export class Casa {
   /* ─── Chi arriva ──────────────────────────────────────────────────────── */
 
   async fetch(richiesta) {
-    /* Le segnalazioni e la chat arrivano in HTTP, dal ponte: non aprono
+    /* Le segnalazioni arrivano in HTTP, dal ponte: non aprono
      * nessun filo, chiedono e ricevono una risposta. */
     if (richiesta.headers.get("Upgrade") !== "websocket") return this._http(richiesta);
 
@@ -297,7 +297,7 @@ export class Casa {
     await this._chiudiGliAbbinamenti();
   }
 
-  /* ─── Le segnalazioni e la chat ───────────────────────────────────────── */
+  /* ─── Le segnalazioni ─────────────────────────────────────────────────── */
 
   /* La casa si presenta col suo segreto — lo stesso della chiamata — e
    * ottiene le sue issue, e solo le sue. Chi non si e' mai presentato dal
@@ -306,12 +306,10 @@ export class Casa {
   async _http(richiesta) {
     const via = new URL(richiesta.url).pathname;
     const pezzi =
-      /^\/casa\/([A-Za-z0-9_]+)\/(segnalazioni|chat)(?:\/(\d+))?(?:\/(risposte|messaggi|allegati))?$/.exec(
-        via,
-      );
+      /^\/casa\/([A-Za-z0-9_]+)\/segnalazioni(?:\/(\d+))?(?:\/(risposte|allegati))?$/.exec(via);
     if (!pezzi)
       return rispostaJson({ errore: "non_trovato", spiegazione: "qui non c'e' niente" }, 404);
-    const [, casa, cosa, numero, coda] = pezzi;
+    const [, casa, numero, coda] = pezzi;
 
     const segreto = /^Casa (.+)$/.exec(richiesta.headers.get("authorization") || "")?.[1];
     if (!segreto) {
@@ -329,36 +327,24 @@ export class Casa {
     const segnalazioni = new Segnalazioni({ storage: this.state.storage, github, casa });
     const metodo = richiesta.method;
     try {
-      if (cosa === "segnalazioni") {
-        if (!numero && !coda && metodo === "GET") {
-          return rispostaJson({ segnalazioni: await segnalazioni.elenco() });
-        }
-        if (!numero && !coda && metodo === "POST") {
-          return rispostaJson(await segnalazioni.crea(await corpoDi(richiesta)), 201);
-        }
-        if (numero && !coda && metodo === "GET") {
-          return rispostaJson(await segnalazioni.leggi(Number(numero)));
-        }
-        if (numero && coda === "risposte" && metodo === "POST") {
-          const { testo } = await corpoDi(richiesta);
-          return rispostaJson(await segnalazioni.rispondi(Number(numero), testo));
-        }
-        if (numero && coda === "allegati" && metodo === "POST") {
-          return rispostaJson(
-            await segnalazioni.allega(Number(numero), await allegatoDi(richiesta)),
-            201,
-          );
-        }
-      } else if (!numero) {
-        if (!coda && metodo === "GET") return rispostaJson({ chat: await segnalazioni.chat() });
-        if (coda === "messaggi" && metodo === "POST") {
-          const { testo, diagnostica } = await corpoDi(richiesta);
-          return rispostaJson(await segnalazioni.chatta(testo, diagnostica), 201);
-        }
-        if (coda === "allegati" && metodo === "POST") {
-          const allegato = await allegatoDi(richiesta);
-          return rispostaJson(await segnalazioni.allegaAllaChat(allegato, {}), 201);
-        }
+      if (!numero && !coda && metodo === "GET") {
+        return rispostaJson({ segnalazioni: await segnalazioni.elenco() });
+      }
+      if (!numero && !coda && metodo === "POST") {
+        return rispostaJson(await segnalazioni.crea(await corpoDi(richiesta)), 201);
+      }
+      if (numero && !coda && metodo === "GET") {
+        return rispostaJson(await segnalazioni.leggi(Number(numero)));
+      }
+      if (numero && coda === "risposte" && metodo === "POST") {
+        const { testo } = await corpoDi(richiesta);
+        return rispostaJson(await segnalazioni.rispondi(Number(numero), testo));
+      }
+      if (numero && coda === "allegati" && metodo === "POST") {
+        return rispostaJson(
+          await segnalazioni.allega(Number(numero), await allegatoDi(richiesta)),
+          201,
+        );
       }
       return rispostaJson({ errore: "non_trovato", spiegazione: "qui non c'e' niente" }, 404);
     } catch (errore) {

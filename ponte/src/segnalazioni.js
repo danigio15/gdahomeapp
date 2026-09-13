@@ -1,10 +1,14 @@
-/* Le segnalazioni e la chat, dalla parte del ponte.
+/* Le segnalazioni, dalla parte del ponte.
  *
- * L'app le scrive e le legge dal ponte, con i comandi `ponte/segnalazioni/…`
- * e `ponte/chat/…`; il ponte le porta al centralino, che e' l'unico che puo'
- * parlare fuori casa per conto di questa casa, e il centralino le porta a
- * GitHub. Qui non c'e' nessun gettone di nessuno: il ponte si presenta al
- * centralino col segreto della casa, lo stesso della chiamata.
+ * L'app le scrive e le legge dal ponte, con i comandi `ponte/segnalazioni/…`;
+ * il ponte le porta al centralino, che e' l'unico che puo' parlare fuori casa
+ * per conto di questa casa, e il centralino le porta a GitHub. Qui non c'e'
+ * nessun gettone di nessuno: il ponte si presenta al centralino col segreto
+ * della casa, lo stesso della chiamata.
+ *
+ * La chat di assistenza da qui non passa: chiedere aiuto non e' segnalare un
+ * difetto, e le sue parole non vanno su una pagina pubblica. Quella e' la
+ * chat della dashboard, e la fa `chat.js`.
  *
  * Il ponte tiene una copia di quello che sa in `/data/segnalazioni.json`:
  * l'elenco, e l'ultimo filo letto di ognuna. Cosi' l'app vede subito
@@ -151,30 +155,6 @@ export class Segnalazioni {
     });
     this._tieni(intero);
     return intero;
-  }
-
-  async allegaAllaChat({ nome, tipo, byte }) {
-    const chat = await this._chiamaConUnFile("/chat/allegati", { nome, tipo, byte });
-    this.archivio.dati.chat = chat;
-    this.archivio.salva();
-    return chat;
-  }
-
-  async chat() {
-    const { chat } = await this._chiama("GET", "/chat");
-    this.archivio.dati.chat = chat ?? null;
-    this.archivio.salva();
-    return chat ?? null;
-  }
-
-  async chatta(testo, diagnostica) {
-    const chat = await this._chiama("POST", "/chat/messaggi", {
-      testo,
-      diagnostica: this._diagnostica(diagnostica),
-    });
-    this.archivio.dati.chat = chat;
-    this.archivio.salva();
-    return chat;
   }
 
   /* Quello che il ponte sa di se' e che vale la pena far arrivare a chi

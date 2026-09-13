@@ -104,21 +104,6 @@ h2 {
 }
 
 /* Le sedici lettere, per chi non puo' inquadrare: chiuse, ma a un tocco. */
-.a-mano {
-  border-top: 1px solid var(--bordo);
-  padding-top: 10px;
-  margin-bottom: 12px;
-}
-
-.a-mano summary {
-  cursor: pointer;
-  color: var(--tenue);
-  font-size: 0.9rem;
-}
-
-.a-mano .spiegazione {
-  margin-top: 8px;
-}
 
 .codice {
   font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -135,6 +120,29 @@ h2 {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* La riga per aggiungere una plancia: una casella e un tasto, in fila e a
+   capo quando lo schermo e' stretto. E' l'unica casella di testo di questa
+   pagina, e si veste come i tasti che le stanno accanto: un campo di serie,
+   fra due tasti arrotondati, si vede che non era previsto. */
+.riga-di-tasti {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.riga-di-tasti input[type="text"] {
+  font: inherit;
+  flex: 1 1 14em;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--bordo);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
 }
 
 button {
@@ -171,6 +179,22 @@ button.tenue {
   border: 1px solid var(--bordo);
 }
 
+/* Un link tenue, vestito come i tasti che gli stanno accanto.
+   E' un link e non un bottone perche' porta davvero da un'altra parte: si
+   deve poter aprire in una scheda nuova, tenere premuto, copiare. */
+a.tenue {
+  font: inherit;
+  border: 1px solid var(--bordo);
+  border-radius: 10px;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--tenue);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
 button:disabled {
   opacity: 0.5;
   cursor: default;
@@ -188,6 +212,11 @@ button:disabled {
   gap: 12px;
   padding: 12px 0;
   border-top: 1px solid var(--bordo);
+  /* Su uno schermo stretto i tasti vanno a capo invece di mangiarsi il nome:
+     una riga con due tasti lasciava al titolo una colonna da dieci lettere, e
+     «Quella dei bambini» diventava «Quella dei bam…». Il nome e' la cosa per
+     cui si guarda l'elenco. */
+  flex-wrap: wrap;
 }
 
 .elenco li:first-child {
@@ -195,8 +224,21 @@ button:disabled {
 }
 
 .elenco .nome {
-  flex: 1;
+  /* Quindici caratteri di base, non «quello che resta»: con due tasti di
+     fianco la riga non ci sta piu' e i tasti vanno a capo — che e' quello che
+     si vuole, perche' il nome e' la cosa per cui si guarda l'elenco. Con un
+     tasto solo, come nei telefoni abbinati, ci sta e la riga resta una. */
+  flex: 1 1 15em;
   min-width: 0;
+}
+
+/* I tasti di una riga stanno insieme: o ci stanno in riga col nome, o vanno a
+   capo tutti e due. Uno sopra e uno sotto era una riga alta il doppio per
+   niente. */
+.elenco .tasti {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .elenco .nome strong {
@@ -237,48 +279,4 @@ button:disabled {
   color: var(--tenue);
   font-size: 0.9rem;
   padding: 8px 0;
-}
-
-/* Il listino.
- *
- * Le stesse righe dell'elenco dei telefoni — nome sopra, spiegazione sotto —
- * con il prezzo in fondo a destra. Il prezzo sta a destra e non accanto al
- * nome perche' chi legge un listino scorre la colonna dei prezzi, non le
- * righe: incolonnarli e' la differenza fra un listino e un elenco. */
-.listino .prezzo {
-  flex: 0 0 auto;
-  font-weight: 700;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.listino .prezzo span {
-  color: var(--tenue);
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 400;
-}
-
-/* «consigliato»: una pastiglia, non un colore diverso al titolo. Un titolo di
-   colore diverso sembra un collegamento. */
-.bollino {
-  background: var(--bene);
-  border-radius: 99px;
-  color: #fff;
-  font-size: 0.66rem;
-  font-style: normal;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  margin-left: 6px;
-  padding: 2px 7px;
-  text-transform: uppercase;
-  vertical-align: 2px;
-}
-
-/* La riga che dice dove si compra: si stacca, perche' e' quella che risponde
-   alla domanda che uno si fa guardando un listino senza bottoni. */
-.compra-nell-app {
-  border-top: 1px solid var(--bordo);
-  margin-top: 16px;
-  padding-top: 14px;
 }
