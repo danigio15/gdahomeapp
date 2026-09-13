@@ -82,13 +82,27 @@ main {
 .testata {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--bordo);
+  border-radius: 18px;
+  /* Una punta di colore del tema, che si spegne subito: da' un peso alla
+     testata senza dipingerla. */
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--acceso) 9%, var(--carta)),
+    var(--carta) 70%
+  );
+  box-shadow: var(--ombra);
 }
 
 .marchio {
-  border-radius: 11px;
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
   display: block;
   flex: 0 0 auto;
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.18);
 }
 
 .chi {
@@ -97,8 +111,9 @@ main {
 }
 
 h1 {
-  font-size: 1.4rem;
-  letter-spacing: -0.01em;
+  font-size: 1.55rem;
+  font-weight: 780;
+  letter-spacing: -0.02em;
   margin: 0;
 }
 
@@ -172,13 +187,45 @@ h1 {
 
 /* Un guaio non si distingue solo per un pallino di otto punti: la pastiglia
    intera si tinge, cosi' si vede senza cercarla. */
+.pastiglia[data-come="bene"] {
+  border-color: color-mix(in srgb, var(--bene) 30%, var(--bordo));
+  background: color-mix(in srgb, var(--bene) 7%, var(--carta));
+}
+
 .pastiglia[data-come="male"] {
   border-color: color-mix(in srgb, var(--male) 45%, var(--bordo));
-  background: color-mix(in srgb, var(--male) 8%, var(--carta));
+  background: color-mix(in srgb, var(--male) 9%, var(--carta));
 }
 
 .pastiglia[data-come="attesa"] {
   border-color: color-mix(in srgb, var(--giallo) 40%, var(--bordo));
+  background: color-mix(in srgb, var(--giallo) 8%, var(--carta));
+}
+
+/* L'alone: il pallino si vede da lontano senza diventare grosso. */
+.pastiglia[data-come="bene"] .pallino {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--bene) 22%, transparent);
+}
+
+.pastiglia[data-come="male"] .pallino {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--male) 22%, transparent);
+}
+
+.pastiglia[data-come="attesa"] .pallino {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--giallo) 25%, transparent);
+  animation: respira 1.8s ease-in-out infinite;
+}
+
+@keyframes respira {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pastiglia[data-come="attesa"] .pallino {
+    animation: none;
+  }
 }
 
 /* ─── Le schede ──────────────────────────────────────────────────────────── */
@@ -192,7 +239,26 @@ h1 {
 }
 
 .grossa {
-  padding: 20px;
+  padding: 22px;
+  /* Una luce che cade dall'angolo, non una fascia: un gradiente lineare su una
+     scheda larga lascia una riga visibile dove finisce, e si vede. */
+  background:
+    radial-gradient(
+      120% 90% at 0% 0%,
+      color-mix(in srgb, var(--acceso) 9%, transparent),
+      transparent 62%
+    ),
+    var(--carta);
+}
+
+.grossa h2 {
+  font-size: 1.14rem;
+}
+
+#fabbrica {
+  padding: 12px 22px;
+  font-size: 0.96rem;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--acceso) 28%, transparent);
 }
 
 .testa-di-scheda {
@@ -256,10 +322,34 @@ h2 {
 }
 
 @media (min-width: 620px) {
-  .abbinamento:has(#codice-vivo:not([hidden])) {
+  .abbinamento {
     grid-template-columns: 240px minmax(0, 1fr);
     align-items: start;
   }
+}
+
+/* Senza un codice vivo, al posto del quadretto c'e' la sua sagoma: la scheda
+   non resta mezza vuota, e si capisce dove comparira'. */
+.sagoma {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  min-height: 200px;
+  padding: 16px;
+  border: 1.5px dashed var(--bordo);
+  border-radius: 14px;
+  color: var(--tenue);
+  text-align: center;
+}
+
+.sagoma-segno {
+  width: 42px;
+  height: 42px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.2;
+  opacity: 0.5;
 }
 
 /* Il quadretto.
@@ -410,6 +500,19 @@ summary:focus-visible {
   padding-top: 0;
 }
 
+@media (hover: hover) {
+  .elenco li {
+    margin-inline: -10px;
+    padding-inline: 10px;
+    border-radius: 12px;
+    transition: background 0.15s ease;
+  }
+
+  .elenco li:hover {
+    background: color-mix(in srgb, var(--acceso) 5%, transparent);
+  }
+}
+
 .elenco .nome {
   flex: 1 1 13em;
   min-width: 0;
@@ -488,9 +591,14 @@ code {
 /* Le sedici lettere, per chi non puo' inquadrare. */
 .codice {
   font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  font-size: 1.35rem;
+  font-size: 1.3rem;
   letter-spacing: 0.1em;
-  margin: 8px 0 0;
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  border: 1.5px dashed var(--bordo);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--acceso) 4%, transparent);
+  text-align: center;
   overflow-wrap: anywhere;
 }
 
@@ -545,6 +653,14 @@ code {
 .cassetto > summary {
   cursor: pointer;
   list-style: none;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+@media (hover: hover) {
+  .cassetto > summary:hover {
+    background: color-mix(in srgb, var(--acceso) 5%, transparent);
+  }
 }
 
 .cassetto > summary::-webkit-details-marker {
@@ -593,4 +709,39 @@ code {
 
 .di-chi-risponde .etichetta {
   color: var(--acceso);
+}
+
+/* ─── Le icone ───────────────────────────────────────────────────────────────
+ *
+ * Sette disegni, fatti con un tratto solo e definiti nella pagina: questa
+ * console non si porta dentro niente da fuori — nessun carattere, nessuna
+ * libreria di icone — ed e' la stessa promessa del sito. Prendono il colore
+ * del testo che gli sta accanto, quindi non ce n'e' una copia per tema. */
+
+.simboli {
+  display: none;
+}
+
+.ic {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: var(--acceso);
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  letter-spacing: -0.01em;
+}
+
+.di-chi-risponde .ic,
+.cassetto .ic {
+  color: var(--tenue);
 }

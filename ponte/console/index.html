@@ -8,6 +8,45 @@
     <link rel="stylesheet" href="stile.css" />
   </head>
   <body>
+    <svg class="simboli" aria-hidden="true" focusable="false">
+      <!-- Disegnati con un tratto solo, 24x24, e prendono il colore del testo
+         che gli sta accanto: cosi' funzionano col tema chiaro e con lo scuro
+         senza due copie. -->
+      <symbol id="ic-quadretto" viewBox="0 0 24 24">
+        <path
+          d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"
+        />
+        <rect x="8" y="8" width="8" height="8" rx="1.2" />
+      </symbol>
+      <symbol id="ic-telefono" viewBox="0 0 24 24">
+        <rect x="6.5" y="2.5" width="11" height="19" rx="2.5" />
+        <path d="M10.5 18.5h3" />
+      </symbol>
+      <symbol id="ic-plance" viewBox="0 0 24 24">
+        <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+        <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+        <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+        <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
+      </symbol>
+      <symbol id="ic-browser" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3.2 9.5h17.6M3.2 14.5h17.6M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" />
+      </symbol>
+      <symbol id="ic-chiave" viewBox="0 0 24 24">
+        <path d="M14.7 6.3a4 4 0 1 0 3 6.9l5.2 5.2-2.8 2.8-5.2-5.2a4 4 0 0 1-6.9-3" />
+        <path d="M9.8 7 4 12.8" />
+      </symbol>
+      <symbol id="ic-assistenza" viewBox="0 0 24 24">
+        <path d="M4.5 14v-2a7.5 7.5 0 0 1 15 0v2" />
+        <rect x="2.5" y="13.5" width="4" height="6" rx="2" />
+        <rect x="17.5" y="13.5" width="4" height="6" rx="2" />
+        <path d="M19.5 19.5v.5a2.5 2.5 0 0 1-2.5 2.5h-2" />
+      </symbol>
+      <symbol id="ic-onde" viewBox="0 0 24 24">
+        <path d="M3 12h3l2.5-7 3.5 14 3-9 2 4h4" />
+      </symbol>
+    </svg>
+
     <!-- La pagina di gdahome dentro Home Assistant.
          È fatta per tre domande, in quest'ordine: **come sta la casa** (la
          striscia in cima, tre pastiglie, si legge in un secondo), **cosa devo
@@ -51,7 +90,9 @@
       <!-- ① Abbinare un telefono: il motivo per cui questa pagina esiste. -->
       <section class="scheda grossa">
         <div class="testa-di-scheda">
-          <h2>Abbina un telefono</h2>
+          <h2>
+            <svg class="ic" aria-hidden="true"><use href="#ic-quadretto" /></svg>Abbina un telefono
+          </h2>
           <span class="conta" id="conteggio"></span>
         </div>
         <div class="abbinamento">
@@ -60,6 +101,10 @@
                  nessuna parte, e il codice non passa mai per un indirizzo. -->
             <img id="quadretto" class="quadretto" alt="Codice di abbinamento" />
             <p class="scadenza" id="scadenza"></p>
+          </div>
+          <div class="quadretto-suo sagoma" id="senza-codice">
+            <svg class="sagoma-segno" aria-hidden="true"><use href="#ic-quadretto" /></svg>
+            <p class="minuta">Il quadretto compare qui.</p>
           </div>
           <div class="parole">
             <!-- Il contenuto di ogni passo sta dentro **un** elemento: la riga e'
@@ -94,7 +139,9 @@
              guarda: chi entra in casa mia. -->
         <section class="scheda">
           <div class="testa-di-scheda">
-            <h2>Telefoni abbinati</h2>
+            <h2>
+              <svg class="ic" aria-hidden="true"><use href="#ic-telefono" /></svg>Telefoni abbinati
+            </h2>
           </div>
           <ul id="elenco" class="elenco"></ul>
         </section>
@@ -104,7 +151,9 @@
              l'integrazione non c'è, e il posto è questo. -->
         <section class="scheda" id="plance">
           <div class="testa-di-scheda">
-            <h2>Le plance</h2>
+            <h2>
+              <svg class="ic" aria-hidden="true"><use href="#ic-plance" /></svg>Le plance
+            </h2>
           </div>
           <ul id="elenco-plance" class="elenco"></ul>
           <div class="riga-di-tasti">
@@ -130,7 +179,9 @@
            add-on — un link che porta a un 404 è peggio di nessun link. -->
       <section class="scheda" id="scheda-app" hidden>
         <div class="testa-di-scheda">
-          <h2>Aprila in un browser</h2>
+          <h2>
+            <svg class="ic" aria-hidden="true"><use href="#ic-browser" /></svg>Aprila in un browser
+          </h2>
         </div>
         <ul class="righe">
           <li>
@@ -181,7 +232,10 @@
       <details class="scheda cassetto" id="non-torna">
         <summary>
           <span class="testa-di-scheda">
-            <h2>Se qualcosa non torna</h2>
+            <h2>
+              <svg class="ic" aria-hidden="true"><use href="#ic-chiave" /></svg>Se qualcosa non
+              torna
+            </h2>
             <span class="minuta">Lo stato per bene, e i rimedi</span>
           </span>
         </summary>
@@ -253,7 +307,9 @@
       <section class="scheda di-chi-risponde" id="assistenza" hidden>
         <p class="etichetta">Solo per chi risponde</p>
         <div class="testa-di-scheda">
-          <h2>L'assistenza</h2>
+          <h2>
+            <svg class="ic" aria-hidden="true"><use href="#ic-assistenza" /></svg>L'assistenza
+          </h2>
         </div>
         <p class="spiegazione" id="stato-assistenza">…</p>
         <p class="minuta">
@@ -268,7 +324,9 @@
       <section class="scheda di-chi-risponde" id="chiacchieroni" hidden>
         <p class="etichetta">Solo per chi risponde</p>
         <div class="testa-di-scheda">
-          <h2>Chi parla di più</h2>
+          <h2>
+            <svg class="ic" aria-hidden="true"><use href="#ic-onde" /></svg>Chi parla di più
+          </h2>
           <span class="conta" id="stato-chiacchieroni">…</span>
         </div>
         <ul id="elenco-chiacchieroni" class="elenco"></ul>

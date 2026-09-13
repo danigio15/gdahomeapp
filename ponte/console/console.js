@@ -60,10 +60,21 @@
     return "vale ancora " + (minuti ? minuti + " min " : "") + secondi + " s";
   }
 
+  /* Quando si e' visto un telefono, come lo direbbe una persona.
+   *
+   * `toLocaleString()` scrive «13/09/2026, 14:40:49»: una riga di numeri che
+   * va a capo dove lo spazio e' stretto, e non risponde alla domanda vera —
+   * che e' «adesso, poco fa, o l'altro giorno?». */
   function dataLeggibile(quando) {
     if (!quando) return "mai";
     try {
-      return new Date(quando).toLocaleString();
+      var q = new Date(quando);
+      var ora = q.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      var oggi = new Date();
+      var ieri = new Date(oggi.getTime() - 24 * 60 * 60 * 1000);
+      if (q.toDateString() === oggi.toDateString()) return "oggi alle " + ora;
+      if (q.toDateString() === ieri.toDateString()) return "ieri alle " + ora;
+      return q.toLocaleDateString([], { day: "numeric", month: "long" }) + " alle " + ora;
     } catch (_errore) {
       return "—";
     }
@@ -82,6 +93,7 @@
      * e chi inquadra si abbina con un codice gia' speso. */
     trova("quadretto").src = "api/qr.svg?" + Date.now();
     trova("codice-vivo").hidden = false;
+    trova("senza-codice").hidden = true;
     trova("a-mano").hidden = false;
     trova("annulla").hidden = false;
     if (quandoScade) clearInterval(quandoScade);
@@ -99,6 +111,7 @@
 
   function nascondiIlCodice() {
     trova("codice-vivo").hidden = true;
+    trova("senza-codice").hidden = false;
     trova("a-mano").hidden = true;
     trova("annulla").hidden = true;
     if (quandoScade) clearInterval(quandoScade);
