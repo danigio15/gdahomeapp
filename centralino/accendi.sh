@@ -526,7 +526,28 @@ cat >/etc/caddy/Caddyfile <<FINE
 
 $NOME_DEL_TRAMITE {
 	encode zstd gzip
-	reverse_proxy 127.0.0.1:$PORTA
+
+	# L'app anche da qui, sotto \`/app/\`.
+	#
+	# Non e' un doppione per comodita': e' l'indirizzo che la console
+	# dell'add-on fabbrica da se'. Lei sa una cosa sola del centralino — quello
+	# che ha in configurazione, \`wss://<nome>\` — e il link per il browser lo
+	# ricava da quello: stesso nome, \`/app/\` in fondo. Sulla nuvola e' cosi'
+	# da sempre; qui l'app stava solo sul nome corto, e quel link finiva su
+	# «qui non c'e' niente». Sono gli stessi file, serviti due volte.
+	handle /app {
+		redir https://$NOME_DEL_TRAMITE/app/ permanent
+	}
+	handle /app/* {
+		root * $DOVE
+		try_files {path} /app/index.html
+		file_server
+	}
+
+	# Tutto il resto e' del tramite: i fili, le segnalazioni, la console.
+	handle {
+		reverse_proxy 127.0.0.1:$PORTA
+	}
 }
 
 # I file dell'app, quelli compilati per il browser. Li serve Caddy e non il

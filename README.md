@@ -149,7 +149,7 @@ l'abbinamento, cosa finisce sul disco — sta in
 | ✅ | **La plancia si configura dal telefono**: la sua pagina Config, intatta, dentro l'app |
 | ✅ | **Segnalazioni** con foto e video, e una **chat di assistenza** — quella della dashboard, che il ponte fa da sé |
 | ✅ | **Dal browser**, senza installare niente: la stessa app, che si adatta allo schermo |
-| ✅ | **681 prove** — 348 sul ponte, 80 sul centralino, 13 sulla nuvola, 240 sull'app — senza rete, senza Home Assistant, senza telefono |
+| ✅ | **682 prove** — 348 sul ponte, 81 sul centralino, 13 sulla nuvola, 240 sull'app — senza rete, senza Home Assistant, senza telefono |
 | ⬜ | Gli aiutanti di Home Assistant, nativi nell'app |
 | ⬜ | Zigbee: abbinare un dispositivo da qui (ZHA e Zigbee2MQTT) |
 | ⬜ | Le automazioni, scritte dall'app |
@@ -163,7 +163,7 @@ finto che fa lo stesso. È l'unico modo di avere prove che girino davvero a ogni
 commit.
 
 ```bash
-npm test                        # ponte, centralino e nuvola: 441 prove
+npm test                        # ponte, centralino e nuvola: 442 prove
 npm run test:ponte              # il ponte: 348 prove, due secondi
 cd app && flutter test          # l'app: 240 prove, mezzo minuto
 

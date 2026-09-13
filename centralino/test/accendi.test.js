@@ -290,3 +290,29 @@ test("la macchina dice al tramite come si chiamano il sito e l'app", () => {
     );
   }
 });
+
+test("l'app si apre anche dall'indirizzo del tramite, sotto /app/", () => {
+  /* Il link per il browser lo fabbrica la console dell'add-on, e lo ricava
+   * dall'unica cosa che sa del centralino: il nome che ha in configurazione,
+   * con «/app/» in fondo. Sulla nuvola quel posto c'e'; qui l'app stava solo
+   * sul nome corto, e quel bottone portava a «qui non c'e' niente». */
+  const blocco = /^\$NOME_DEL_TRAMITE \{$([\s\S]*?)^\}$/m.exec(ACCENDI);
+  assert.ok(blocco, "non trovo il blocco del tramite");
+  assert.match(blocco[1], /handle \/app\/\* \{/, "il tramite non serve l'app");
+  assert.match(blocco[1], /^\t\troot \* \$DOVE$/m, "l'app non viene dalla cartella giusta");
+  assert.match(
+    blocco[1],
+    /try_files \{path\} \/app\/index\.html/,
+    "chi ricarica una schermata interna trova un 404",
+  );
+  /* `/app` scritto a mano, senza la barra, e' lo stesso posto. */
+  assert.match(blocco[1], /handle \/app \{/, "«/app» senza barra non porta da nessuna parte");
+  /* E tutto il resto resta del tramite, dentro un «handle» suo: i fili, le
+   * segnalazioni e la console non devono finire davanti o dietro ai file a
+   * seconda dell'ordine in cui Caddy mette le cose. */
+  assert.match(
+    blocco[1],
+    /handle \{\n\t\treverse_proxy 127\.0\.0\.1:\$PORTA\n\t\}/,
+    "il tramite non e' dentro un handle suo",
+  );
+});
