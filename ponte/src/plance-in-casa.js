@@ -79,6 +79,22 @@ export class PlanceInCasa {
     this.prendi = prendi;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this._io = null;
+    /* Se la cartella `www` di Home Assistant l'abbiamo fatta noi.
+     *
+     * Home Assistant apre `/local/` **all'avvio**: guarda se esiste la cartella
+     * `www` nella configurazione, e se c'e' la mette a disposizione del
+     * browser. Se non c'era e la fa qualcun altro dopo — noi, al primo avvio
+     * dell'add-on in una casa che non l'aveva mai usata — quei file restano sul
+     * disco e da fuori non si scaricano: `/local/gdahome/plancia.js` risponde
+     * «non c'e'» finche' Home Assistant non riparte.
+     *
+     * E' il difetto peggiore di tutti, perche' non somiglia a un difetto: la
+     * voce nella barra laterale c'e', la Plancia c'e', la cartina e' dichiarata
+     * — e la pagina esce con «Errore di configurazione» e niente altro, perche'
+     * quel messaggio Home Assistant lo mostra senza il motivo (il motivo lo
+     * scrive solo dentro l'editor delle tessere). Quindi qui ce lo ricordiamo, e
+     * la console lo dice. */
+    this.riavvia = false;
     /* Com'e' andata l'ultima volta. `null` vuol dire che non si e' ancora
      * provato: e' diverso da «e' andata male», e la console lo dice
      * diversamente. */
@@ -175,8 +191,9 @@ export class PlanceInCasa {
 
     const io = await this._chiSiamo();
 
+    let risorsa = "";
     try {
-      await this.laRisorsa();
+      risorsa = await this.laRisorsa();
     } catch (errore) {
       guai.push(`la cartina non si e' dichiarata a Lovelace (${errore?.message || errore})`);
     }
@@ -199,16 +216,37 @@ export class PlanceInCasa {
       guai.push(`le Plance di plance tolte non si sono levate (${errore?.message || errore})`);
     }
 
+    /* Due cose da dire anche quando e' andato tutto bene, e non sono dettagli:
+     * senza la prima la plancia non si apre, e senza la seconda non si apre
+     * finche' non si ricarica la pagina. */
+    const consigli = {
+      riavvia: this.riavvia,
+      ricarica: risorsa === "aggiunta",
+      /* Dov'e' la cartina, per chi la puo' provare davvero.
+       *
+       * Da qui dentro non si sa se Home Assistant la serve: il file e' sul
+       * disco, e `/local/` lo apre lui all'avvio. Ma la console gira **dentro
+       * una pagina di Home Assistant**, sullo stesso indirizzo: da li' una
+       * riga di programma la chiede e lo sa. Quindi glielo si dice dove sta. */
+      cartina: this.indirizzoDellaCarta,
+    };
+    if (this.riavvia) {
+      this.registro.attenzione(
+        "la cartella www di Home Assistant non c'era e l'ho fatta io: " +
+          "Home Assistant va riavviato una volta, se no i file dentro /local/ non li serve",
+      );
+    }
+
     if (guai.length) {
       const perche = guai.join("; ");
       this.registro.attenzione(`le plance in Home Assistant, a meta': ${perche}`);
-      return this._esito({ fatto: false, quante: fatte, tolte: via, perche });
+      return this._esito({ fatto: false, quante: fatte, tolte: via, perche, ...consigli });
     }
     this.registro.info(
       `le plance in Home Assistant sono a posto: ${fatte} ${fatte === 1 ? "voce" : "voci"}` +
         `${via ? `, ${via} tolte` : ""}${copiata ? ", cartina aggiornata" : ""}`,
     );
-    return this._esito({ fatto: true, quante: fatte, tolte: via });
+    return this._esito({ fatto: true, quante: fatte, tolte: via, ...consigli });
   }
 
   /* L'ultimo esito, tenuto da parte perche' la console lo mostri.
@@ -260,6 +298,9 @@ export class PlanceInCasa {
       uguale = false;
     }
     if (uguale) return false;
+    /* Prima di farla: c'era? Si guarda `www` e non `www/gdahome`, perche'
+     * quella che Home Assistant si guarda all'avvio e' la prima. */
+    if (!existsSync(this.www)) this.riavvia = true;
     mkdirSync(dirname(dove), { recursive: true });
     copyFileSync(this.carta, dove);
     /* Una riga di spiegazione accanto: chi apre quella cartella e trova un

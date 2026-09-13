@@ -110,8 +110,20 @@ test("il manifesto dice gdahome tre volte: il nome, lo slug e la voce nella barr
   assert.match(manifesto, new RegExp(`^slug: ${NOME}$`, "m"));
   assert.match(manifesto, new RegExp(`^panel_title: ${NOME}$`, "m"));
 
-  /* E il nome di prima non ci sta piu' da nessuna parte. */
-  assert.equal(manifesto.includes(NOME_DI_PRIMA), false);
+  /* E il nome di prima non sta in nessuna delle righe che Home Assistant
+   * mostra. Nei commenti si', ed e' giusto: quella e' la provenienza della
+   * plancia — «1.4.24 e' la versione di DashboardModern che sta in plancia/» —
+   * e chi legge il manifesto ha il diritto di sapere cosa c'e' dentro. Quello
+   * che non deve piu' comparire e' il nome di un altro prodotto **a schermo**. */
+  for (const riga of ["name", "panel_title", "description"]) {
+    const scritto = new RegExp(`^${riga}: (.*)$`, "m").exec(manifesto);
+    assert.ok(scritto, `nel manifesto non c'e' nessun «${riga}:»`);
+    assert.equal(
+      scritto[1].includes(NOME_DI_PRIMA),
+      false,
+      `«${riga}:» nel manifesto dice ancora ${NOME_DI_PRIMA}`,
+    );
+  }
 });
 
 test("l'app e l'add-on portano lo stesso numero", () => {
@@ -127,9 +139,19 @@ test("l'app e l'add-on portano lo stesso numero", () => {
   assert.ok(dellApp, "il pubspec non dice che versione e'");
 
   /* Lo stesso numero, perche' sono la stessa cosa: chi apre l'app e apre la
-   * console si aspetta di leggere due volte quello che ha installato. */
+   * console si aspetta di leggere due volte quello che ha installato.
+   *
+   * Con una differenza ammessa, e una sola: l'add-on puo' portarsi un **quarto
+   * numero** — le sue correzioni fra due versioni della plancia, che nel
+   * negozio sono l'unico modo di far comparire «Aggiorna» — e l'app no, perche'
+   * un numero fatto cosi' i negozi dei telefoni non lo prendono. */
   const [, grande, medio, piccolo, costruzione] = dellApp;
-  assert.equal(`${grande}.${medio}.${piccolo}`, dellAddon[1]);
+  const suoi = dellAddon[1].split(".");
+  assert.deepEqual(suoi.slice(0, 3), [grande, medio, piccolo]);
+  assert.ok(
+    suoi.length === 3 || suoi.length === 4,
+    `la versione dell'add-on ha ${suoi.length} numeri: tre, o quattro col nostro`,
+  );
 
   /* E il numero di costruzione — quello che vogliono i negozi, che deve solo
    * crescere — si deriva dal nome: 1.4.24 diventa 10424. Cosi' non c'e' un

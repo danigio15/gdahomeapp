@@ -458,3 +458,74 @@ function tuttoQuelloCheCE(radice, dentro = "") {
   }
   return trovati;
 }
+
+test("se la www non c'era, lo dice: Home Assistant va riavviato una volta", async () => {
+  /* Il difetto che non somiglia a un difetto.
+   *
+   * Home Assistant apre `/local/` **all'avvio**, guardando se la cartella `www`
+   * c'e'. In una casa che non l'ha mai usata non c'e', e la fa il ponte al
+   * primo avvio: da quel momento il file sta sul disco, e' dichiarato a
+   * Lovelace, la Plancia c'e' nella barra laterale — e aprendola esce «Errore
+   * di configurazione» e niente altro, perche' `/local/gdahome/plancia.js`
+   * risponde «non c'e'» e Home Assistant il motivo non lo scrive (lo mostra
+   * solo dentro l'editor delle tessere).
+   *
+   * Chi lo vede non ha nessun modo di arrivare a «riavvia Home Assistant».
+   * Quindi lo dice l'add-on, nella sua scheda. */
+  const b = banco();
+  try {
+    assert.equal(existsSync(b.www), false);
+    const esito = await b.in_casa.sistema();
+    assert.equal(esito.fatto, true);
+    assert.equal(esito.riavvia, true);
+
+    /* E si dice **dove** sta la cartina, perche' da qui dentro «Home Assistant
+     * la serve?» non si sa: lo sa la console, che gira dentro una sua pagina e
+     * da li' la puo' chiedere. */
+    assert.equal(esito.cartina, b.in_casa.indirizzoDellaCarta);
+    assert.match(esito.cartina, /^\/local\/gdahome\/plancia\.js\?v=/);
+  } finally {
+    b.via();
+  }
+});
+
+test("se la www c'era gia', non si chiede nessun riavvio", async () => {
+  const b = banco();
+  try {
+    /* Come sta una casa dove qualcuno ha gia' messo una foto in `www`: li'
+     * Home Assistant `/local/` l'ha aperto al suo avvio, e i file nuovi li
+     * serve subito. */
+    mkdirSync(b.www, { recursive: true });
+    const esito = await b.in_casa.sistema();
+    assert.equal(esito.fatto, true);
+    assert.equal(esito.riavvia, false);
+    /* La cartina e' comunque stata dichiarata adesso, e quello si dice: il
+     * browser una risorsa nuova la va a prendere al giro dopo. */
+    assert.equal(esito.ricarica, true);
+  } finally {
+    b.via();
+  }
+});
+
+test("al secondo avvio non si chiede ne' riavvio ne' ricarica", async () => {
+  const b = banco();
+  try {
+    mkdirSync(b.www, { recursive: true });
+    await b.in_casa.sistema();
+    /* Lo stesso ponte, un'altra volta: la cartina c'e', la risorsa c'e', e non
+     * c'e' niente da chiedere a nessuno. Un avviso che resta a schermo quando
+     * non serve piu' e' un avviso che nessuno legge la volta che serve. */
+    const dinuovo = new PlanceInCasa({
+      casa: b.casa,
+      plance: b.plance,
+      www: b.www,
+      versione: "0.21.0",
+    });
+    const esito = await dinuovo.sistema();
+    assert.equal(esito.fatto, true);
+    assert.equal(esito.riavvia, false);
+    assert.equal(esito.ricarica, false);
+  } finally {
+    b.via();
+  }
+});

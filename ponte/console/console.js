@@ -370,16 +370,61 @@
    * si guarda, che e' accanto all'elenco. */
   function comeVannoLePlanceInCasa(esito) {
     if (!esito) return "Sto guardando se le plance sono fra le «Plance» di Home Assistant…";
-    if (esito.fatto) {
-      var quante = Number(esito.quante) || 0;
-      return (
-        "Nella barra laterale di Home Assistant ci sono " +
-        (quante === 1 ? "1 voce" : quante + " voci") +
+    var riga = esito.fatto
+      ? "Nella barra laterale di Home Assistant ci sono " +
+        ((Number(esito.quante) || 0) === 1 ? "1 voce" : (Number(esito.quante) || 0) + " voci") +
         (esito.tolte ? ", e " + esito.tolte + " sono state levate" : "") +
         "."
-      );
+      : "Le plance non sono nella barra laterale di Home Assistant: " + (esito.perche || "");
+    /* Le cose che fanno uscire «Errore di configurazione» al posto della
+     * plancia, e che da quella pagina non si capiscono: qui si dicono.
+     *
+     * La prima e' provata, non indovinata: `laCartinaSiScarica` la chiede a
+     * Home Assistant da questa pagina, che sta sul suo stesso indirizzo. */
+    if (cartinaChe === "no") {
+      riga +=
+        " ⚠️ Home Assistant non serve la cartina della plancia, e senza quella" +
+        " aprendola esce «Errore di configurazione». Riavvialo una volta" +
+        " (Impostazioni → Sistema → Riavvia): apre la cartella «www» quando parte," +
+        " e i file che ci sono finiti dopo li serve solo dal riavvio dopo.";
+    } else if (esito.riavvia && cartinaChe !== "si") {
+      riga +=
+        " ⚠️ Riavvia Home Assistant una volta (Impostazioni → Sistema → Riavvia):" +
+        " la cartella «www» non c'era e l'ho fatta io, e Home Assistant i file che" +
+        " stanno dentro li serve solo se quella cartella c'era quando è partito." +
+        " Finché non riparte, aprendo la plancia esce «Errore di configurazione».";
+    } else if (esito.ricarica) {
+      riga +=
+        " Ricarica la pagina di Home Assistant: la cartina è stata dichiarata adesso," +
+        " e il browser la va a prendere al giro dopo.";
     }
-    return "Le plance non sono nella barra laterale di Home Assistant: " + (esito.perche || "");
+    return riga;
+  }
+
+  /* La cartina si scarica? Lo si chiede a Home Assistant.
+   *
+   * Questa pagina sta dentro l'ingress, cioe' **sullo stesso indirizzo** di
+   * Home Assistant: un indirizzo che comincia per `/local/` da qui arriva a
+   * lui, non a noi. E' l'unico posto da cui si possa provare quello che poi
+   * prova il browser di chi apre la plancia.
+   *
+   * `""` vuol dire «non si e' ancora provato», e si dice diversamente da «no»:
+   * un avviso grosso mostrato mentre ancora non si sa sarebbe un avviso
+   * sbagliato meta' delle volte. */
+  var cartinaChe = "";
+
+  function laCartinaSiScarica(dove) {
+    if (!dove || cartinaChe === "si") return Promise.resolve(cartinaChe);
+    return fetch(dove, { cache: "no-store" })
+      .then(function (risposta) {
+        cartinaChe = risposta.ok ? "si" : "no";
+        return cartinaChe;
+      })
+      .catch(function () {
+        /* Senza rete non si sa, e non si dice niente: la riga resta quella. */
+        cartinaChe = "";
+        return cartinaChe;
+      });
   }
 
   function avvisaLePlance(testo) {
@@ -529,7 +574,13 @@
         disegnaIlLinkDiFuori(stato.app ? stato.centralino.dove : "");
         disegnaIDispositivi(stato.dispositivi, stato.massimi);
         disegnaLePlance(stato.plance);
+        /* La riga si scrive subito con quello che si sa, e si riscrive quando
+         * la prova della cartina torna: chi guarda vede una frase giusta
+         * adesso e una piu' precisa mezzo secondo dopo, invece di un vuoto. */
         trova("stato-plance-in-casa").textContent = comeVannoLePlanceInCasa(stato.plance_in_casa);
+        laCartinaSiScarica(stato.plance_in_casa && stato.plance_in_casa.cartina).then(function () {
+          trova("stato-plance-in-casa").textContent = comeVannoLePlanceInCasa(stato.plance_in_casa);
+        });
         trova("fabbrica").disabled = stato.dispositivi.length >= stato.massimi;
         if (!stato.abbinamento.attivo) nascondiIlCodice();
         avvisa("");
