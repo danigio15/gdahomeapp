@@ -29,6 +29,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { Plance, laVede, utentiPuliti, vedeQualcosa } from "../src/plance.js";
+import { NIENTE_PER_TE } from "../src/commissioni.js";
 import { UtentiDiCasa } from "../src/utenti.js";
 import { Abbinamento } from "../src/abbinamento.js";
 import { Dispositivi } from "../src/dispositivi.js";
@@ -477,10 +478,16 @@ test("l'app riceve solo le plance sue, e non sa che le altre esistono", async ()
   }
 });
 
-test("chi non vede nessuna plancia non si apre sul vuoto", async () => {
-  /* Chi riserva **tutte** le plance a qualcun altro non ha chiesto un'app che
-   * si apre su niente: la prima gli si apre comunque. E' l'unico posto dove la
-   * regola si piega, e si piega per non lasciare uno schermo bianco. */
+test("chi non vede nessuna plancia non ne vede nessuna, e gli si dice", async () => {
+  /* Qui, prima, la regola si piegava: «se nessuna e' sua, la prima si apre
+   * comunque, se no il telefono si apre sul vuoto». Quel ripiego spegneva la
+   * restrizione **proprio per chi doveva fermare** — bastava farsi un codice
+   * per se' per aprire la plancia riservata a un altro — ed e' venuto fuori
+   * alla prima prova in casa: plancia riservata a lei, codice fatto per lui,
+   * e lui la vedeva.
+   *
+   * Il vuoto era un problema vero, e la risposta giusta non e' aprire la
+   * plancia di un altro: e' dirlo. */
   const { cartella, via } = unPosto();
   try {
     const plance = new Plance({ cartella, registro: ZITTO });
@@ -490,11 +497,83 @@ test("chi non vede nessuna plancia non si apre sul vuoto", async () => {
       plancia: { cE: true, descrizione: () => ({ base: "/x" }) },
       registro: ZITTO,
     });
-    const detto = await commissioni.rispondi(
+
+    const elenco = await commissioni.rispondi(
       { id: 1, type: "ponte/plance/elenco" },
       { chiChiede: IO },
     );
-    assert.equal(detto.result.plance.length, 1);
+    assert.equal(elenco.result.plance.length, 0, "nessuna, e non quella di lei");
+
+    const aprire = await commissioni.rispondi({ id: 2, type: "ponte/plancia" }, { chiChiede: IO });
+    assert.equal(aprire.success, false, "non si apre niente");
+    assert.equal(aprire.error.code, NIENTE_PER_TE);
+
+    /* E i file nemmeno: senza questo la porta si riapriva da un'altra parte,
+     * perche' l'app che si sente dire no va a cercare la plancia fra i
+     * pannelli di Home Assistant. */
+    const file = await commissioni.rispondi(
+      { id: 3, type: "ponte/http", percorso: "/dashboardmodern_static/app.js" },
+      { chiChiede: IO },
+    );
+    assert.equal(file.success, false, "niente file della plancia");
+    assert.equal(file.error.code, NIENTE_PER_TE);
+  } finally {
+    via();
+  }
+});
+
+test("e non si puo' nemmeno rinominare o togliere quella di un altro", async () => {
+  /* Vederla e' meno grave che cancellarla: se il cancello ferma solo lo
+   * sguardo, chi conosce il nome del profilo puo' ancora entrare dalla
+   * finestra. */
+  const { cartella, via } = unPosto();
+  try {
+    const plance = new Plance({ cartella, registro: ZITTO });
+    plance.chiLaVede("primary", [LEI]);
+    const commissioni = new Commissioni({
+      plance,
+      plancia: { cE: true, descrizione: () => ({ base: "/x" }) },
+      registro: ZITTO,
+    });
+
+    const rinomina = await commissioni.rispondi(
+      { id: 1, type: "ponte/plance/rinomina", profilo: "primary", titolo: "mia adesso" },
+      { chiChiede: IO },
+    );
+    assert.equal(rinomina.success, false);
+    assert.equal(rinomina.error.code, NIENTE_PER_TE);
+
+    const togli = await commissioni.rispondi(
+      { id: 2, type: "ponte/plance/togli", profilo: "primary" },
+      { chiChiede: IO },
+    );
+    assert.equal(togli.success, false);
+    assert.equal(togli.error.code, NIENTE_PER_TE);
+
+    /* E la plancia e' ancora la', col nome di prima. */
+    assert.equal(plance.elenco().length, 1);
+    assert.notEqual(plance.quale("primary").titolo, "mia adesso");
+  } finally {
+    via();
+  }
+});
+
+test("ma un telefono di prima, che non dice di chi e', vede tutto", async () => {
+  /* La regola del passaggio, sempre la stessa: chi non si sa chi e' vede
+   * tutto. Un aggiornamento non spegne la casa a nessuno. */
+  const { cartella, via } = unPosto();
+  try {
+    const plance = new Plance({ cartella, registro: ZITTO });
+    plance.chiLaVede("primary", [LEI]);
+    const commissioni = new Commissioni({
+      plance,
+      plancia: { cE: true, descrizione: () => ({ base: "/x" }) },
+      registro: ZITTO,
+    });
+    const elenco = await commissioni.rispondi({ id: 1, type: "ponte/plance/elenco" }, {});
+    assert.equal(elenco.result.plance.length, 1);
+    const aprire = await commissioni.rispondi({ id: 2, type: "ponte/plancia" }, {});
+    assert.equal(aprire.success, true);
   } finally {
     via();
   }

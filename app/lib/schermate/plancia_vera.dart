@@ -296,6 +296,26 @@ class PlanciaVeraState extends State<PlanciaVera> {
     }
     final pannello = collegamento.pannello;
     if (pannello == null) {
+      /* Le plance ci sono, e nessuna e' di chi guarda.
+       *
+       * E' una cosa diversa da «qui non c'e' la plancia», e si risolve in un
+       * altro modo: non aggiornando l'add-on, ma chiedendo a chi amministra la
+       * casa di abilitare la propria utenza. Dirlo e' anche l'unico modo
+       * onesto di non aprire niente: prima, chi non aveva nessuna plancia si
+       * vedeva aprire quella di un altro. */
+      if (collegamento.nessunaPlanciaPerMe) {
+        return _Stato(
+          collegamento: collegamento,
+          vaiAlleCase: widget.vaiAlleCase,
+          icona: Icons.lock_person_rounded,
+          titolo: 'Non hai plance associate alla tua utenza',
+          sotto:
+              'In questa casa le plance sono riservate ad altri utenti. '
+              'Chiedi a chi amministra la casa di abilitare la tua utenza: '
+              'in Home Assistant, nella pagina di gdahome, ogni plancia ha '
+              '«Chi la vede».',
+        );
+      }
       return _Stato(
         collegamento: collegamento,
         vaiAlleCase: widget.vaiAlleCase,

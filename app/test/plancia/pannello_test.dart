@@ -278,4 +278,33 @@ void main() {
       await ponte.spegni();
     },
   );
+  test('se in questa casa non ci sono plance per questa utenza, non si cerca altrove', () async {
+    /* Il buco che si e' visto in casa: la plancia era riservata a una
+       * persona, il codice era stato fatto per un'altra, e quell'altra la
+       * vedeva. Il ponte adesso dice di no — e l'app non deve girare intorno
+       * al no andando a cercare la plancia fra i pannelli di Home Assistant,
+       * dove la troverebbe: la dashboard sta anche la'. */
+    final ponte = await PonteFinto.alza();
+    final filo = Filo.fisso(
+      indirizzo: ponte.indirizzo,
+      segno: segnoBuono,
+      chi: chiBuono,
+      chiave: chiaveBuona,
+    );
+    await filo.apri();
+    ponte.nientePerTe = true;
+
+    await expectLater(
+      trovaLaPlancia(filo),
+      throwsA(isA<NessunaPlanciaPerTe>()),
+    );
+    expect(
+      ponte.arrivati.where((uno) => uno['type'] == 'get_panels'),
+      isEmpty,
+      reason: 'il no non si aggira dall\'altra porta',
+    );
+
+    await filo.chiudi();
+    await ponte.spegni();
+  });
 }

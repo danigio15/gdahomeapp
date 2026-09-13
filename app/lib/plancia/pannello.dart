@@ -150,6 +150,23 @@ class PannelloDellaPlancia {
   String toString() => 'PannelloDellaPlancia($percorso → $base)';
 }
 
+/// Come dice il ponte che in questa casa non c'e' nessuna plancia per chi
+/// chiede. Non e' un guasto: e' una risposta.
+const codiceNientePerTe = 'niente_per_te';
+
+/// In questa casa le plance ci sono, ma nessuna e' per questa utenza.
+///
+/// E' una cosa diversa da «qui non c'e' la plancia», e va detta in un altro
+/// modo: la prima si risolve aggiornando l'add-on, questa chiedendo a chi
+/// amministra la casa di abilitare la propria utenza.
+class NessunaPlanciaPerTe implements Exception {
+  const NessunaPlanciaPerTe([this.spiegazione = '']);
+  final String spiegazione;
+
+  @override
+  String toString() => 'NessunaPlanciaPerTe($spiegazione)';
+}
+
 /// Trova la plancia: prima nel ponte, poi in Home Assistant.
 ///
 /// Il posto giusto e' il ponte, `ponte/plancia`: la plancia sta dentro
@@ -177,6 +194,14 @@ Future<PannelloDellaPlancia?> trovaLaPlancia(
       );
       if (dalPonte != null) return dalPonte;
     } on ComandoRifiutato catch (rifiuto) {
+      /* «Nessuna plancia per la tua utenza» e' una risposta, non un ponte che
+       * non ce l'ha: si ferma qui, e non si va a cercarla fra i pannelli di
+       * Home Assistant. Cercarla la' la troverebbe — la plancia sta anche
+       * fra le dashboard — e il cancello del ponte si riaprirebbe da
+       * un'altra porta. */
+      if (rifiuto.codice == codiceNientePerTe) {
+        throw NessunaPlanciaPerTe(rifiuto.spiegazione);
+      }
       /* «Quella plancia non c'e'» con un profilo chiesto: si riprova senza.
        * Qualunque altro no vuol dire che questo ponte non ha la plancia, e
        * allora si guarda in Home Assistant. */

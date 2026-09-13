@@ -80,6 +80,42 @@
    * `toLocaleString()` scrive «13/09/2026, 14:40:49»: una riga di numeri che
    * va a capo dove lo spazio e' stretto, e non risponde alla domanda vera —
    * che e' «adesso, poco fa, o l'altro giorno?». */
+  /* I nomi che un dispositivo si da' da se' e che non vogliono dire niente.
+   *
+   * Android, a chi gli chiede come si chiama, risponde **`localhost`**: non e'
+   * un difetto nostro, e' quello che risponde. Chiamare «localhost» il
+   * telefono di qualcuno e' peggio che non dargli un nome, perche' sembra un
+   * nome. Adesso l'app manda qualcosa di sensato — vedi
+   * `casa/questo_dispositivo.dart` — ma chi si e' abbinato prima ce l'ha
+   * ancora scritto, e l'archivio non si va a riscrivere di nascosto: si
+   * scrive bene qui, dove si legge. */
+  var NOMI_CHE_NON_DICONO = ["localhost", "localhost.localdomain", "android", "unknown"];
+
+  function comeSiChiama(uno) {
+    var detto = String((uno && uno.nome) || "").trim();
+    if (detto && NOMI_CHE_NON_DICONO.indexOf(detto.toLowerCase()) < 0) return detto;
+    var quale = String((uno && uno.sistema) || "").toLowerCase();
+    if (quale === "android") return "Telefono Android";
+    if (quale === "ios") return "iPhone";
+    if (quale === "web") return "Browser";
+    return "Dispositivo";
+  }
+
+  /* Cos'e' questo, detto a parole.
+   *
+   * In un elenco «android» e «sconosciuto» non dicono niente: chi guarda vuole
+   * sapere se quella riga e' l'app o il browser, perche' la stessa persona si
+   * abbina da tutti e due e le righe si somigliano tutte. «sconosciuto» resta
+   * sui dispositivi di prima, e allora si dice com'e': non lo ha detto. */
+  function comEFatto(sistema) {
+    var quale = String(sistema || "").toLowerCase();
+    if (quale === "web") return "browser";
+    if (quale === "android") return "app su Android";
+    if (quale === "ios") return "app su iPhone";
+    if (!quale || quale === "sconosciuto") return "non dice cos'e'";
+    return quale;
+  }
+
   function dataLeggibile(quando) {
     if (!quando) return "mai";
     try {
@@ -290,14 +326,14 @@
       var forte = vediPagina.createElement("strong");
       /* `textContent`, mai `innerHTML`: il nome lo scrive chi si abbina, e
        * arriva dalla porta esposta. */
-      forte.textContent = uno.nome;
+      forte.textContent = comeSiChiama(uno);
       var sotto = vediPagina.createElement("span");
       /* Di chi e' questo telefono. Va detto: un telefono senza padrone vede
        * **tutte** le plance, comprese quelle riservate a qualcuno, ed e'
        * esattamente quello di cui bisogna accorgersi guardando l'elenco. */
       var diChi = nomeDellUtente(uno.utente);
       sotto.textContent =
-        uno.sistema +
+        comEFatto(uno.sistema) +
         " · " +
         (uno.collegati ? "collegato adesso" : "visto " + dataLeggibile(uno.vistoIl)) +
         (diChi ? " · " + diChi : "");
@@ -312,7 +348,7 @@
       stacca.addEventListener("click", function () {
         if (
           !window.confirm(
-            "Togliere l'associazione di «" + uno.nome + "»? Dovra' riabbinarsi da capo.",
+            "Togliere l'associazione di «" + comeSiChiama(uno) + "»? Dovra' riabbinarsi da capo.",
           )
         )
           return;

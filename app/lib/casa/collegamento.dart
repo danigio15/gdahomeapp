@@ -74,6 +74,14 @@ class Collegamento {
   StatoDellaCasa? _stato;
   PannelloDellaPlancia? _pannello;
   bool _pannelloLetto = false;
+
+  /* Se in questa casa le plance ci sono ma nessuna e' per questa utenza.
+   *
+   * Va tenuto separato da «non c'e' la plancia»: sono due cose diverse e si
+   * risolvono in due modi diversi, e una schermata che le confonde manda chi
+   * legge ad aggiornare l'add-on quando invece deve chiedere a chi amministra
+   * la casa. */
+  bool _nessunaPerMe = false;
   CasaConosciuta? _casa;
   DaDove? _daDove;
   ComeVa _comeVa = ComeVa.nessunaCasa;
@@ -158,6 +166,9 @@ class Collegamento {
   /// DashboardModern non c'e': [pannelloLetto] distingue i due casi.
   PannelloDellaPlancia? get pannello => _pannello;
   bool get pannelloLetto => _pannelloLetto;
+
+  /// `true` quando la casa ha delle plance e nessuna e' di chi guarda.
+  bool get nessunaPlanciaPerMe => _nessunaPerMe;
 
   /// Le plance di questa casa: piu' d'una per chi se n'e' aggiunta.
   ///
@@ -339,8 +350,15 @@ class Collegamento {
     final voluto = profilo ?? _casa?.plancia ?? '';
     try {
       _pannello = await trovaLaPlancia(filo, profilo: voluto);
+      _nessunaPerMe = false;
+    } on NessunaPlanciaPerTe {
+      /* Le plance ci sono, ma non per questa utenza. Non si cerca altrove e
+       * non si apre niente: la schermata lo scrive. */
+      _pannello = null;
+      _nessunaPerMe = true;
     } on ErroreDelPonte {
       _pannello = null;
+      _nessunaPerMe = false;
     }
     if (_filo != filo) return;
     _pannelloLetto = true;
@@ -426,6 +444,7 @@ class Collegamento {
     _stato = null;
     _pannello = null;
     _pannelloLetto = false;
+    _nessunaPerMe = false;
     await _filo?.chiudi();
     _filo = null;
     _daDove = null;

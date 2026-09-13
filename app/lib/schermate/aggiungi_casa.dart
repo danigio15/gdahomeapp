@@ -17,13 +17,12 @@
 /// l'altro.
 library;
 
-import 'dart:io' show Platform;
-
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../casa/archivio_delle_case.dart';
 import '../casa/casa_conosciuta.dart';
+import '../casa/questo_qui/qui.dart';
 import '../ponte/abbinamento.dart';
 import '../ponte/errori.dart';
 import '../ponte/indirizzo.dart';
@@ -84,23 +83,13 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
     super.dispose();
   }
 
-  String get _sistema {
-    try {
-      if (Platform.isIOS) return 'ios';
-      if (Platform.isAndroid) return 'android';
-    } catch (_) {
-      /* Fuori da un telefono. */
-    }
-    return 'sconosciuto';
-  }
-
-  String get _comeSiChiama {
-    try {
-      return Platform.localHostname;
-    } catch (_) {
-      return 'Telefono';
-    }
-  }
+  /* Come si chiama questo dispositivo e cos'e'.
+   *
+   * Si chiede una volta e si tiene: e' la riga che comparira' fra i «Telefoni
+   * abbinati», ed e' l'unica cosa che distingue l'app dal browser quando la
+   * stessa persona si abbina da tutti e due (vedi
+   * `casa/questo_dispositivo.dart`). */
+  late final QuestoDispositivo _questo = comEFatto();
 
   /* ─── Inquadrare ───────────────────────────────────────────────────────── */
 
@@ -143,8 +132,8 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
     await _prova(
       () => Abbinamento.conLInvito(
         invito,
-        nome: _comeSiChiama,
-        sistema: _sistema,
+        nome: _questo.nome,
+        sistema: _questo.sistema,
         centralinoDiRipiego: _centralino,
       ),
     );
@@ -183,14 +172,14 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
           ? await Abbinamento.chiedi(
               dove: inCasa,
               codice: _codice.text,
-              nome: _comeSiChiama,
-              sistema: _sistema,
+              nome: _questo.nome,
+              sistema: _questo.sistema,
             )
           : await Abbinamento.colCodice(
               centralino: _centralino!,
               codice: _codice.text,
-              nome: _comeSiChiama,
-              sistema: _sistema,
+              nome: _questo.nome,
+              sistema: _questo.sistema,
             );
       return Entrata(abbinato, daDentro: inCasa);
     }, inCasa: inCasa);

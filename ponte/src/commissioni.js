@@ -52,6 +52,10 @@ import { ChatHaDettoNo } from "./chat.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 import { laVede, QuellaPlanciaNo, TroppePlance } from "./plance.js";
 
+/* Quando chi chiede non ha nessuna plancia. Non e' un guasto ed e' l'app a
+ * scriverlo, percio' il codice e' uno suo e non uno di Home Assistant. */
+export const NIENTE_PER_TE = "niente_per_te";
+
 export const TIPO = "ponte/http";
 export const TIPO_PLANCIA = "ponte/plancia";
 
@@ -294,7 +298,7 @@ export class Commissioni {
   async rispondi(detto, { chiChiede = "", amministra = null } = {}) {
     const id = detto?.id ?? null;
     const tipo = detto?.type;
-    if (tipo === TIPO) return this._http(detto);
+    if (tipo === TIPO) return this._http(detto, chiChiede, amministra);
     if (tipo === TIPO_PLANCIA) return this._laPlancia(detto, chiChiede, amministra);
     if (PLANCE.has(tipo)) return this._lePlance(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("ponte/chat/")) return this._chatDellApp(detto);
@@ -360,25 +364,47 @@ export class Commissioni {
     const sue = this._lePlanceSue(chiChiede, amministra);
     let quale = this.plance ? (voluto ? this.plance.quale(voluto) : this.plance.prima) : null;
     if (voluto && !quale) return no(id, "not_found", "quella plancia non c'e'");
-    /* Chiedere una plancia che non e' sua non e' un errore da spiegare: e'
-     * come chiedere la prima. Dirgli «quella esiste ma non e' tua» sarebbe
-     * dirgli una cosa che non deve sapere, e per lui non cambia niente.
+    /* Nessuna plancia per chi chiede: si dice, e non si apre niente.
      *
-     * E se **nessuna** e' sua, la prima si apre comunque: una casa dove un
-     * telefono non vede niente e' un telefono che si apre sul vuoto, e chi ha
-     * riservato tutte le plance a qualcun altro non ha chiesto quello. */
+     * Qui prima c'era un ripiego — «se nessuna e' sua, la prima si apre
+     * comunque, se no il telefono si apre sul vuoto» — e quel ripiego
+     * **spegneva la restrizione proprio per chi doveva fermare**: bastava
+     * farsi un codice per se' per aprire la plancia riservata a un altro,
+     * perche' chi non ne ha nessuna ricadeva sulla prima. Una restrizione che
+     * si spegne da sola quando uno non ha niente non e' una restrizione.
+     *
+     * Il vuoto era un problema vero, e la risposta giusta non era aprire
+     * un'altra plancia: e' dirlo. L'app scrive che in questa casa non ci sono
+     * plance per la sua utenza, e chi legge sa cosa chiedere a chi amministra
+     * la casa. */
+    if (chiChiede && sue.length === 0) {
+      return no(id, NIENTE_PER_TE, "in questa casa non ci sono plance per la tua utenza");
+    }
+    /* Chiedere una plancia che non e' sua non e' un errore da spiegare: e'
+     * come chiedere la prima **delle sue**. Dirgli «quella esiste ma non e'
+     * tua» sarebbe dirgli una cosa che non deve sapere, e per lui non cambia
+     * niente. */
     if (quale && !sue.some((una) => una.profilo === quale.profilo)) {
-      quale = sue[0] ?? this.plance?.prima ?? null;
+      quale = sue[0] ?? null;
     }
     return si(id, {
       ...this.plancia.descrizione(quale),
-      plance: sue.length ? sue : this.plance ? this.plance.elenco() : [],
+      plance: sue,
     });
   }
 
   /* Le plance che questo si vede. La regola sta in un posto solo —
    * `laVede` in `plance.js` — ed e' la stessa che vale dentro Home
    * Assistant. */
+  /* Se questo telefono vede almeno una plancia.
+   *
+   * Chi non si sa chi e' vede tutto: e' come sono i telefoni abbinati prima
+   * di oggi, e un aggiornamento non deve spegnere niente a nessuno. */
+  _vedeQualchePlancia(chiChiede = "", amministra = null) {
+    if (!chiChiede) return true;
+    return this._lePlanceSue(chiChiede, amministra).length > 0;
+  }
+
   _lePlanceSue(chiChiede = "", amministra = null) {
     const tutte = this.plance ? this.plance.elenco() : [];
     if (!chiChiede) return tutte;
@@ -395,9 +421,17 @@ export class Commissioni {
     const id = detto?.id ?? null;
     const plance = this.plance;
     if (!plance) return no(id, "unknown_command", `non conosco ${detto.type}`);
-    const sue = () => {
+    /* Le sue, e solo le sue. Anche quando sono zero: un elenco che si
+     * riempie di quelle degli altri appena il tuo e' vuoto e' lo stesso buco
+     * di `_laPlancia`, un piano piu' sotto. */
+    const sue = () => this._lePlanceSue(chiChiede, amministra);
+    /* E quello che non si vede non si tocca: senza questo, chi non vede una
+     * plancia poteva comunque rinominarla o toglierla passandone il profilo,
+     * che e' peggio che vederla. */
+    const nonESua = (quello) => {
+      if (!chiChiede || !quello) return false;
       const mie = this._lePlanceSue(chiChiede, amministra);
-      return mie.length ? mie : plance.elenco();
+      return !mie.some((una) => una.profilo === quello);
     };
     const titolo = typeof detto.titolo === "string" ? detto.titolo : "";
     const profilo = typeof detto.profilo === "string" ? detto.profilo : "";
@@ -410,11 +444,13 @@ export class Commissioni {
           return si(id, { plance: sue(), quale: nuova });
         }
         case "rinomina":
+          if (nonESua(profilo)) return no(id, NIENTE_PER_TE, "quella plancia non e' tua");
           return si(id, {
             quale: plance.rinomina(profilo, titolo),
             plance: sue(),
           });
         case "togli":
+          if (nonESua(profilo)) return no(id, NIENTE_PER_TE, "quella plancia non e' tua");
           plance.togli(profilo, {
             dimentica: (quello) => this.configurazione?.dimentica(quello),
           });
@@ -770,7 +806,7 @@ export class Commissioni {
     return si(id, messa);
   }
 
-  async _http(detto) {
+  async _http(detto, chiChiede = "", amministra = null) {
     const id = detto?.id ?? null;
     const metodo = String(detto.metodo ?? "GET").toUpperCase();
     if (!METODI.has(metodo)) return no(id, "not_allowed", `il metodo ${metodo} non passa di qui`);
@@ -806,6 +842,20 @@ export class Commissioni {
     if (percorso.startsWith(`${BASE_DI_CASA}/`) && this.fotoDiCasa) {
       const { stato, tipo, corpo: letto } = this.fotoDiCasa.leggi(percorso);
       return si(id, impacchetta(stato, tipo, letto, { senzaGzip }));
+    }
+
+    /* I file della plancia non si servono a chi non vede nessuna plancia.
+     *
+     * Il rifiuto di `ponte/plancia` da solo non basterebbe: l'app, quando il
+     * ponte dice di no, va a cercare la plancia fra i pannelli di Home
+     * Assistant — ed e' giusto che lo faccia, perche' e' cosi' che trova
+     * quella servita dall'integrazione — ma allora la porta si riapriva da
+     * un'altra parte. Senza i file, non c'e' plancia da nessuna strada. */
+    if (
+      percorso.startsWith("/dashboardmodern_static/") &&
+      !this._vedeQualchePlancia(chiChiede, amministra)
+    ) {
+      return no(id, NIENTE_PER_TE, "in questa casa non ci sono plance per la tua utenza");
     }
 
     /* I file della plancia stanno qui, nell'add-on: non si va da nessuna

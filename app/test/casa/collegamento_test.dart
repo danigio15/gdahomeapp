@@ -552,6 +552,36 @@ void main() {
 
     await ponte.spegni();
   });
+  test(
+    'se non ci sono plance per questa utenza, il collegamento lo dice',
+    () async {
+      /* La casa e' aperta, le entita' ci sono, e la plancia no: non perche'
+       * manchi, ma perche' e' di un altro. Sono due cose diverse e la
+       * schermata le dice in due modi diversi, percio' il collegamento le
+       * tiene separate. */
+      final ponte = await PonteFinto.alza();
+      await archivio.aggiungi(
+        nome: 'Casa',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        inCasa: ponte.indirizzo,
+      );
+      ponte.nientePerTe = true;
+
+      collegamento = Collegamento(
+        archivio: archivio,
+        sonda: sondaChe({ponte.indirizzo}),
+      );
+      await collegamento.apri();
+      await collegamento.rileggiLaPlancia();
+
+      expect(collegamento.comeVa, ComeVa.aperta, reason: 'la casa e\' aperta');
+      expect(collegamento.pannello, isNull);
+      expect(collegamento.nessunaPlanciaPerMe, isTrue);
+      await ponte.spegni();
+    },
+  );
 }
 
 Future<void> _finoA(

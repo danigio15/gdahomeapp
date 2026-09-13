@@ -54,6 +54,10 @@ e a chi ha un tablet in cucina che deve aprire una plancia sola.
   plancia la vedono quei due, e solo se amministrano.
 - Tutto si salva appena lo tocchi. Per riaprirla a tutti, spegni l'interruttore
   e togli le spunte.
+- Chi non ha **nessuna** plancia, nell'app legge «Non hai plance associate alla
+  tua utenza» e non si apre niente. Non gli si apre quella di un altro: se
+  bastasse non avere niente per vedere tutto, questa impostazione non
+  servirebbe a nulla.
 - Vale anche per la prima plancia, quella di sempre.
 - Gli utenti li chiede Home Assistant al momento: se togli una persona da casa,
   sparisce anche da qui.

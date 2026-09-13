@@ -137,6 +137,21 @@ class PonteFinto {
       return;
     }
     if (detto['type'] == 'ponte/plancia') {
+      /* «Le plance ci sono, ma nessuna e' della tua utenza»: e' una risposta,
+       * non un ponte senza plancia, e l'app non deve andare a cercarla fra i
+       * pannelli di Home Assistant. */
+      if (nientePerTe) {
+        _manda(presa, {
+          'id': id,
+          'type': 'result',
+          'success': false,
+          'error': {
+            'code': 'niente_per_te',
+            'message': 'in questa casa non ci sono plance per la tua utenza',
+          },
+        });
+        return;
+      }
       final sua = planciaDelPonte;
       if (sua == null) {
         _manda(presa, {
@@ -205,6 +220,10 @@ class PonteFinto {
   /// Quello che risponde `ponte/plancia`: la plancia dentro l'add-on. `null`
   /// e' un ponte che non ce l'ha, e dice di no.
   Map<String, dynamic>? planciaDelPonte = planciaNelPonte();
+
+  /// Quando e' `true`, il ponte risponde che in questa casa non ci sono
+  /// plance per chi chiede.
+  bool nientePerTe = false;
 
   /// Le plance di questa casa. Una c'e' sempre — quella di sempre — e chi ne
   /// prova piu' d'una ne aggiunge a questa lista.
