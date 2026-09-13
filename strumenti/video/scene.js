@@ -457,6 +457,11 @@ scena("il-negozio", 11, () => {
 /* ── Gli archivi, e l'indirizzo da incollare ──────────────────────────── */
 
 const INDIRIZZO = "https://github.com/danigio15/gdahomeapp";
+/* Quanto e' lungo, in caratteri: e' la larghezza della casella mentre si
+ * scrive, ed e' anche il numero di passi dell'animazione. Si conta, non si
+ * scrive: contato a mano faceva 38 invece di 39, e l'ultima lettera restava
+ * fuori dalla casella — l'indirizzo nel video finiva «gdahomeap». */
+const QUANTO_E_LUNGO = INDIRIZZO.length;
 
 scena("gli-archivi", 10.6, () => {
   const tendina = `
@@ -476,7 +481,7 @@ scena("gli-archivi", 10.6, () => {
       </div>
       <div style="display:flex;gap:10px;align-items:center">
         <div class="casella" style="flex:1">
-          <span class="testo-scritto" style="width:38ch;animation:scrivi 2.2s 4.1s steps(38,end) both">${INDIRIZZO}</span><span class="cursore-testo ap via" style="--t:3.85s;--t2:6.5s"></span>
+          <span class="testo-scritto" style="width:${QUANTO_E_LUNGO}ch;animation:scrivi 2.2s 4.1s steps(${QUANTO_E_LUNGO},end) both">${INDIRIZZO}</span><span class="cursore-testo ap via" style="--t:3.85s;--t2:6.5s"></span>
         </div>
         <div class="bottone-ha" style="padding:11px 22px">Aggiungi</div>
       </div>

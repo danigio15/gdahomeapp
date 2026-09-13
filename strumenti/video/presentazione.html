@@ -604,13 +604,16 @@
         white-space: nowrap;
         overflow: hidden;
       }
+      /* Il testo che si scrive da solo.
+         Quanto e' largo e quanti passi fa non stanno qui: sono la lunghezza
+         dell'indirizzo, e quella la sa `scene.js` che lo scrive. Un numero
+         copiato qui e' un numero che il giorno che l'indirizzo cambia taglia
+         l'ultima lettera — ed e' successo: `gdahomeapp` usciva `gdahomeap`. */
       .casella .testo-scritto {
         display: inline-block;
         overflow: hidden;
         white-space: nowrap;
         vertical-align: bottom;
-        width: 42ch;
-        animation: scrivi 2.1s var(--t, 0s) steps(42, end) both;
       }
       .cursore-testo {
         display: inline-block;
