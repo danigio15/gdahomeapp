@@ -103,6 +103,25 @@ Se invece l'account serve **adesso** per pubblicare gratis e vedere come va, il
 personale va bene: sappi che i 12 tester per 14 giorni li devi fare, e che
 spostarsi dopo costa un account nuovo piu' un trasferimento dell'app.
 
+### «Un'organizzazione» non vuol dire «no profit»
+
+Nella pagina dove si sceglie il tipo di account, sotto «An organization» c'e' un
+elenco: azienda, **no profit**, ente pubblico, istituto scolastico. Non sono
+scorciatoie: sono quello che dicono di essere, e Google li **verifica** —
+documenti dell'ente, D-U-N-S, sito e indirizzo email ufficiali. Dichiararsi un
+ente che non si e' non e' una furbizia, e' una dichiarazione falsa, e la pena e'
+l'account chiuso.
+
+Senza un ente registrato si sceglie **«Yourself»**, ed e' la pagina stessa a
+dirlo: «se stai creando un account per te, e non hai un'organizzazione o
+un'attivita'». Sotto, nella stessa riquadro, c'e' la riga che conta:
+
+> **You'll still be able to earn money on Google Play.**
+
+Cioe': anche da account personale si puo' incassare. Quello che cambia non e' il
+poter vendere — e' il resto (i 12 tester, l'indirizzo nella scheda) e il modo in
+cui quei soldi vanno dichiarati, che e' una domanda da commercialista.
+
 ### E se una societa' non c'e'
 
 E' il caso normale, e non chiude niente — cambia solo l'ordine delle cose.
