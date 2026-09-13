@@ -731,6 +731,18 @@
           : "Home Assistant non risponde: " + stato.casa.perche;
         trova("porta").textContent = stato.porta;
         trova("stato-centralino").textContent = comeVaIlCentralino(stato.centralino);
+        /* L'assistenza: la scheda compare solo dove la chiave c'e'.
+         *
+         * E' l'unico posto dove si legge che quella chiave e' arrivata: Home
+         * Assistant un campo `password` lo nasconde e non lo rimostra, quindi
+         * chi l'ha appena incollata riapre la scheda, trova la casella vuota e
+         * non ha modo di sapere se sia stata presa. */
+        var risponde = Boolean(stato.assistenza && stato.assistenza.console);
+        trova("assistenza").hidden = !risponde;
+        if (risponde) {
+          trova("stato-assistenza").textContent =
+            "Questa casa risponde alle chat di assistenza: la console e' accesa.";
+        }
         disegnaIChiacchieroni(stato.chiacchieroni);
         disegnaLaProvenienza(stato.plancia);
         disegnaIlLink(stato.app);

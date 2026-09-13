@@ -28,13 +28,14 @@ const APP_VERA = join(dirname(QUI), "app");
 
 /* Una console con dentro il minimo che le serve: qui non si prova ne' la casa
  * ne' l'abbinamento, si prova una cartella servita. */
-async function unaConsole({ cartellaDellApp } = {}) {
+async function unaConsole({ cartellaDellApp, chat } = {}) {
   const server = costruisciLaConsole({
     ponte: { collegatiPerDispositivo: () => new Map() },
     casa: { saluta: async () => ({ viva: true }) },
     dispositivi: { elenco: () => [], quanti: () => 0 },
     abbinamento: { stato: () => ({ attivo: false }) },
     opzioni: { portaDellApp: 8098, dispositiviMassimi: 10, app: cartellaDellApp },
+    chat,
     cartellaDellaConsole: CONSOLE,
     cartellaDellApp,
   });
@@ -165,6 +166,39 @@ test("con l'app dentro, la console lo sa", async () => {
   } finally {
     await c.spegni();
     rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+/* ─── La chiave della console, l'unico segno che e' arrivata ─────────────── */
+
+test("senza la chiave della console, la scheda dell'assistenza non si accende", async () => {
+  const c = await unaConsole();
+  try {
+    const stato = await (await c.chiedi("/api/stato")).json();
+    assert.equal(stato.assistenza.console, false);
+  } finally {
+    await c.spegni();
+  }
+});
+
+test("con la chiave, lo stato lo dice — e la chiave non esce", async () => {
+  /* Il difetto che questa prova chiude: Home Assistant un campo `password` lo
+   * nasconde e non lo rimostra, quindi chi ha appena incollato la chiave della
+   * console riapre la scheda dell'add-on, trova la casella vuota e non ha
+   * **nessun** modo di sapere se sia stata presa o buttata via. Adesso c'e' un
+   * posto dove leggerlo. */
+  const c = await unaConsole({
+    chat: { eLaConsole: true, chiaveDellaConsole: "unaChiaveSegreta" },
+  });
+  try {
+    const risposta = await c.chiedi("/api/stato");
+    const testo = await risposta.text();
+    assert.equal(JSON.parse(testo).assistenza.console, true);
+    /* E di quella chiave non esce niente: ne' intera, ne' a pezzi. Esce un
+     * si'. */
+    assert.equal(testo.includes("unaChiaveSegreta"), false);
+  } finally {
+    await c.spegni();
   }
 });
 

@@ -263,6 +263,9 @@ export function costruisciLaConsole({
    * non c'e' piu' — e sono le stesse che riceve l'app. Una lista sola, se no
    * la plancia si comporterebbe in due modi a seconda di dove e' aperta. */
   commissioni,
+  /* La chat di assistenza. Alla console serve per una riga sola, e non e' una
+   * riga da poco: dire se questa casa **risponde** alle chat. */
+  chat,
   aggiornamento,
   cartellaDellaConsole,
   cartellaDellApp,
@@ -299,6 +302,7 @@ export function costruisciLaConsole({
           plance,
           planceInCasa,
           configurazione,
+          chat,
           aggiornamento,
         });
       } catch (errore) {
@@ -492,6 +496,7 @@ async function api({
   plance,
   planceInCasa,
   configurazione,
+  chat,
   aggiornamento,
 }) {
   /* C'e' una versione nuova del ponte?
@@ -653,6 +658,17 @@ async function api({
        * lo stato lo chiede ogni dieci secondi, e un secondo giro per tre
        * righe sarebbe un giro per niente. */
       plance: plance ? plance.elenco() : [],
+      /* Se questa casa risponde alle chat di assistenza.
+       *
+       * E' l'unico segno che la chiave della console e' arrivata dov'e' andata
+       * a finire. Home Assistant un campo `password` lo nasconde e non lo
+       * rimostra: chi l'ha appena incollata riapre la scheda, trova la casella
+       * vuota e non ha modo di sapere se sia stata presa o buttata via. Questa
+       * riga glielo dice.
+       *
+       * La chiave non esce di qui — ne' intera ne' a pezzi: esce **un si' o un
+       * no**. */
+      assistenza: { console: Boolean(chat?.eLaConsole) },
       abbinamento: abbinamento.stato(),
       dispositivi: dispositivi
         .elenco()

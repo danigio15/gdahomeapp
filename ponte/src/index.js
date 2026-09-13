@@ -220,6 +220,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * se ne aggiunge una, come in Home Assistant si aggiunge una seconda
      * istanza dell'integrazione. */
     plance,
+    /* La chat di assistenza: alla console serve per dire se questa casa
+     * risponde, che e' l'unico modo di sapere che la chiave e' arrivata. */
+    chat,
     /* E com'e' andata a metterle fra le «Plance» di Home Assistant: la scheda
      * dell'add-on e' il posto dove si guarda quando una voce nella barra
      * laterale non c'e'. */
@@ -248,6 +251,11 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   ritorno.porta = app.address().port;
 
   registro.info(`la porta dell'app e' la ${opzioni.portaDellApp}`);
+  /* Una riga sola, e solo dove serve: la chiave della console ce l'ha una
+   * installazione al mondo, e chi l'ha appena messa deve poter leggere da
+   * qualche parte che e' arrivata. Della chiave non si dice niente — si dice
+   * che c'e'. */
+  if (chat.eLaConsole) registro.info("la console dell'assistenza e' accesa");
   registro.info(`${dispositivi.quanti()} dispositivi abbinati`);
 
   chiamata.avvia();
