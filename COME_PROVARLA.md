@@ -18,7 +18,7 @@ L'add-on si chiama **gdahome**, e la repository è pubblica: si installa **dal
 negozio**, come qualunque altro add-on. Cinque minuti la prima volta, e poi si
 aggiorna da sé.
 
-### A. Dal negozio *(questa)*
+### A. Dal negozio _(questa)_
 
 1. **Impostazioni → Add-on → Negozio degli add-on**, menu in alto a destra →
    **Archivi**: incolla `https://github.com/danigio15/gdahomeapp`, premi
@@ -139,7 +139,6 @@ arrivato: rifà il blocco qui sopra, e stavolta le righe dicono perché.
 > **L'app invece non c'entra niente con tutto questo.** L'APK si scarica da
 > Actions, e quello vale per chiunque abbia accesso alla repository.
 
-
 ---
 
 ## 2. Il centralino — solo per entrare da fuori casa
@@ -228,8 +227,8 @@ Non serve installare niente sul computer: lo costruisce GitHub.
    l'installazione da questa origine: è la richiesta normale per un'app che non
    arriva dal Play Store.
 
-Il pacchetto è di *release*, firmato con la chiave di sviluppo: non è quello
-che andrebbe su un negozio, ma è compilato per davvero — quello di *debug*
+Il pacchetto è di _release_, firmato con la chiave di sviluppo: non è quello
+che andrebbe su un negozio, ma è compilato per davvero — quello di _debug_
 girava interpretato, con tutti i controlli accesi, ed era lento e scaldava.
 
 > **Il ponte va tenuto al passo.** Il ponte e l'app comprimono quello che si
@@ -299,7 +298,7 @@ grana fine su quella repository sola, con **Contents: Read-only**, messo fra i
 segreti di questa repository come **`GETTONE_PLANCIA`** (Settings → Secrets and
 variables → Actions). Senza, la corsa finisce verde e scrive che manca quello.
 
-### Dal browser, senza installare niente *(la più rapida in assoluto)*
+### Dal browser, senza installare niente _(la più rapida in assoluto)_
 
 Il link ce l'hai già: lo dà l'add-on.
 
@@ -307,7 +306,9 @@ Il link ce l'hai già: lo dà l'add-on.
 2. Scheda «gdahome in un browser» → **Apri gdahome**.
 
 È la stessa app del telefono, e si adatta da sola allo schermo: su un computer
-la barra resta aperta di fianco, su tablet e telefono si apre a scomparsa.
+la barra resta aperta di fianco, su tablet e telefono si apre a scomparsa —
+anche sopra la plancia, premendo la pillola sul bordo sinistro o tirandola
+dentro col dito, come sul telefono.
 L'indirizzo sta **dietro l'ingress** di Home Assistant — ci arriva solo chi è
 già entrato, e non c'è nessuna porta nuova aperta sul router.
 
@@ -317,7 +318,7 @@ Se la scheda non c'è, l'add-on non si porta ancora dietro l'app: **Actions →
 Una cosa da sapere, e conviene saperla prima: se apri Home Assistant su un
 indirizzo **`http`**, dal browser **la plancia non si disegna**. Tutto il resto
 sì — l'abbinamento, il filo, la Configurazione, i dispositivi, le case. Non è un
-pezzo che manca: la plancia nel browser la serve un *service worker*, e i
+pezzo che manca: la plancia nel browser la serve un _service worker_, e i
 service worker i browser li fanno girare solo su `https` o `localhost`. È una
 regola loro. Con Nabu Casa acceso, o con un proxy che mette il certificato,
 `https` c'è e la plancia si vede. Sul telefono la plancia si vede sempre, perché
@@ -355,7 +356,7 @@ l'abbinamento.
 E lì `https` c'è sempre, quindi **la plancia si disegna** — a differenza di un
 Home Assistant aperto su `http`.
 
-### Dal codice, con Flutter *(per lavorarci)*
+### Dal codice, con Flutter _(per lavorarci)_
 
 ```bash
 cd gdahomeapp/app
@@ -463,7 +464,7 @@ E poi tutto il resto:
   si rialza da solo, e i valori devono essere quelli veri, non quelli di prima.
 - **Dalla console del ponte, premi «Stacca»** sul telefono mentre l'app è
   aperta: deve accorgersene e dire che va riabbinato, senza restare a girare.
-- **Chiudi e riapri l'app**: la plancia deve tornare com'era *subito*, anche
+- **Chiudi e riapri l'app**: la plancia deve tornare com'era _subito_, anche
   prima che la casa risponda. Se dice «la dashboard è quasi pronta», vuol dire
   che la pagina non si è ritrovata quello che si era salvata: guarda in «Come
   va l'app» se il filo è aperto.
@@ -479,12 +480,12 @@ E poi tutto il resto:
 
 ## Se qualcosa non va
 
-| cosa vedi | cosa vuol dire |
-|---|---|
-| L'app dice che la casa si raggiunge solo dalla sua rete | nel ponte non c'è nessun centralino: vedi il punto 2 |
-| La console dice «Sto chiamando il centralino…» e non cambia | l'indirizzo nelle opzioni è sbagliato, o manca `wss://` |
-| La console dice «Il centralino ci rifiuta» | c'è già un'altra casa registrata con quell'identificativo su quel centralino |
-| Il codice viene rifiutato | dura cinque minuti e vale una volta sola: fanne un altro |
-| L'app dice che la casa va riabbinata | il telefono è stato staccato dalla console, o è stato abbinato con una versione vecchia |
-| L'app dice «Il ponte non ha la plancia» | la cartella `plancia` non è finita dentro l'add-on: ricopia la cartella `ponte` intera e ricostruiscilo |
+| cosa vedi                                                        | cosa vuol dire                                                                                                                                        |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L'app dice che la casa si raggiunge solo dalla sua rete          | nel ponte non c'è nessun centralino: vedi il punto 2                                                                                                  |
+| La console dice «Sto chiamando il centralino…» e non cambia      | l'indirizzo nelle opzioni è sbagliato, o manca `wss://`                                                                                               |
+| La console dice «Il centralino ci rifiuta»                       | c'è già un'altra casa registrata con quell'identificativo su quel centralino                                                                          |
+| Il codice viene rifiutato                                        | dura cinque minuti e vale una volta sola: fanne un altro                                                                                              |
+| L'app dice che la casa va riabbinata                             | il telefono è stato staccato dalla console, o è stato abbinato con una versione vecchia                                                               |
+| L'app dice «Il ponte non ha la plancia»                          | la cartella `plancia` non è finita dentro l'add-on: ricopia la cartella `ponte` intera e ricostruiscilo                                               |
 | La plancia resta su «Apro la plancia…» o dice che non è arrivata | il telefono è fuori casa e i file stanno ancora arrivando: la prima volta ci mette qualche secondo. Se non arriva mai, guarda il registro dell'add-on |

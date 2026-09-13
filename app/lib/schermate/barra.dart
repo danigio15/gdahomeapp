@@ -37,6 +37,7 @@ import '../casa/collegamento.dart';
 import '../vestito/oggetti.dart';
 import '../vestito/quanto_e_largo.dart';
 import 'da_dove.dart';
+import 'maniglia.dart';
 import 'menu.dart';
 
 /// Quanto resta aperta se non si tocca niente.
@@ -45,8 +46,19 @@ const _daSola = Duration(seconds: 4);
 /// Quanto resta dopo che si e' scelto: il tempo di vedere che si e' premuto.
 const _dopoLaScelta = Duration(milliseconds: 700);
 
-/// Quanto e' larga la fascia sul bordo dove il dito la puo' tirare dentro.
+/// Quanto e' larga la fascia sul bordo dove il dito la puo' tirare dentro, e
+/// quanto e' alta. La pillola che si vede e' piccola, la fascia che raccoglie
+/// il dito e' molto piu' grande.
+///
+/// Sono anche le misure che nel browser si danno alla fascia vera della pagina
+/// (`maniglia.dart`), ed e' per questo che stanno qui e non dentro la maniglia:
+/// il gesto e il disegno devono stare nello stesso posto, se no il dito trova
+/// l'uno e non l'altro.
 const double _fasciaDelGesto = 44;
+const double _altaLaFascia = 160;
+
+/// Quanto sta dal bordo sinistro, a barra chiusa.
+const double _dalBordo = 2;
 
 /// Quanto e' larga la barra, e quanto sta indietro quando e' fuori.
 const double _larghezzaDellaBarra = 192;
@@ -60,6 +72,8 @@ class BarraDelleSezioni extends StatefulWidget {
     required this.vai,
     required this.vaiAlleCase,
     this.collegamento,
+    this.sopraLaPlancia = false,
+    this.fascia = const LaFasciaDelGesto(),
   });
 
   /// Le sezioni da mostrare, nell'ordine in cui vanno.
@@ -75,6 +89,19 @@ class BarraDelleSezioni extends StatefulWidget {
 
   final void Function(Sezione dove) vai;
   final VoidCallback vaiAlleCase;
+
+  /// Se sotto la barra c'e' la plancia.
+  ///
+  /// Nel browser cambia tutto. La plancia e' un `iframe`, e un `iframe` si
+  /// mangia i tocchi di quello che gli sta sopra: la maniglia si vede e non si
+  /// apre. Dove sotto la barra c'e' una pagina dell'app invece i tocchi
+  /// arrivano da se', e una fascia messa li' ruberebbe un tocco alla pagina —
+  /// vedi `maniglia.dart`.
+  final bool sopraLaPlancia;
+
+  /// Chi fa arrivare alla barra i tocchi che la pagina si mangia. Sostituibile
+  /// nelle prove.
+  final LaFasciaDelGesto fascia;
 
   @override
   State<BarraDelleSezioni> createState() => BarraDelleSezioniState();
@@ -97,11 +124,28 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
   /// Se qui la barra resta invece di nascondersi.
   bool _resta = false;
 
+  /// Se in questo momento la barra copre quello che c'e' sotto.
+  bool _copre = false;
+
+  /// Se la fascia dei gesti e' messa nella pagina.
+  bool _fasciaMessa = false;
+
   bool get aperta => _resta || _molla.value > 0.02;
+
+  @override
+  void initState() {
+    super.initState();
+    _molla.addListener(_seLaBarraCopre);
+  }
 
   @override
   void dispose() {
     _daChiudere?.cancel();
+    /* La barra se ne va, e quello che aveva spostato si rimette a posto: se no
+     * la plancia resta a non prendere tocchi e la fascia resta nella pagina a
+     * rubarne uno. */
+    if (_copre) widget.fascia.laPlanciaSiFaDaParte(false);
+    if (_fasciaMessa) widget.fascia.togli();
     _molla.dispose();
     _scorrimento.dispose();
     super.dispose();
@@ -166,6 +210,28 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
     if (aperta && !_resta) _rimanda(_daSola);
   }
 
+  /* Mentre la barra copre la plancia, il riquadro si fa da parte.
+   *
+   * Serve nel browser, dove la plancia e' un `iframe` e si mangia i tocchi di
+   * tutto quello che gli sta sopra: senza questo le voci della barra si
+   * vedrebbero e non si premerebbero, e toccare fuori non la chiuderebbe
+   * (`maniglia.dart`). Sul telefono non fa niente.
+   *
+   * Dove la barra **resta** non copre niente — il posto glielo si lascia per
+   * davvero, e la plancia comincia dopo — e allora non si sposta nessuno. E
+   * dove sotto non c'e' la plancia non c'e' niente da spostare: le pagine
+   * dell'app le disegna l'app, e i tocchi le arrivano da se'.
+   *
+   * Si guarda a ogni scatto dell'animazione e a ogni ridisegno: il primo e' la
+   * barra che si apre e si chiude, il secondo la finestra che si rimpicciolisce
+   * mentre la barra e' aperta. */
+  void _seLaBarraCopre() {
+    final copre = !_resta && widget.sopraLaPlancia && _molla.value > 0.02;
+    if (copre == _copre) return;
+    _copre = copre;
+    widget.fascia.laPlanciaSiFaDaParte(copre);
+  }
+
   @override
   Widget build(BuildContext context) {
     final alto = MediaQuery.paddingOf(context).top;
@@ -178,6 +244,23 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
       _daChiudere?.cancel();
       _molla.value = 1;
     }
+    /* La fascia dei gesti serve dove la maniglia galleggia sopra la plancia, e
+     * solo li': dove la barra resta non c'e' nessuna maniglia, e sulle altre
+     * sezioni sotto non c'e' nessun riquadro da rivelare. */
+    final vuoleLaFascia = !_resta && widget.sopraLaPlancia;
+    if (vuoleLaFascia != _fasciaMessa) {
+      _fasciaMessa = vuoleLaFascia;
+      if (vuoleLaFascia) {
+        widget.fascia.metti(
+          larga: _fasciaDelGesto,
+          alta: _altaLaFascia,
+          dalBordo: _dalBordo,
+        );
+      } else {
+        widget.fascia.togli();
+      }
+    }
+    _seLaBarraCopre();
     return AnimatedBuilder(
       animation: _molla,
       builder: (context, _) {
@@ -673,7 +756,7 @@ class _LaManiglia extends StatelessWidget {
     final colori = Theme.of(context).colorScheme;
     return Positioned(
       /* Sta sul bordo, e quando la barra e' dentro si sposta accanto a lei. */
-      left: 2 + (_larghezzaDellaBarra + 12) * quanto.clamp(0, 1),
+      left: _dalBordo + (_larghezzaDellaBarra + 12) * quanto.clamp(0, 1),
       top: 0,
       bottom: 0,
       child: Center(
@@ -702,7 +785,7 @@ class _LaManiglia extends StatelessWidget {
             },
             child: SizedBox(
               width: _fasciaDelGesto,
-              height: 160,
+              height: _altaLaFascia,
               child: Center(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),

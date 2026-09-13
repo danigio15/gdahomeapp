@@ -323,6 +323,11 @@ class _HomeState extends State<Home> {
             vai: _vai,
             vaiAlleCase: widget.vaiAlleCase,
             collegamento: collegamento,
+            /* Sotto la barra c'e' la plancia: e' l'unica sezione che nel
+             * browser sta in un riquadro, e un riquadro si mangia i tocchi di
+             * quello che gli sta sopra — maniglia compresa. La barra lo sa e se
+             * ne occupa (vedi `maniglia.dart`). */
+            sopraLaPlancia: sullaPlancia,
           ),
         ],
       ),
