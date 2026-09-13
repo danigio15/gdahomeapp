@@ -31,7 +31,12 @@
 name: gdahome
 version: "1.4.24"
 slug: gdahome
-description: La plancia e l'app di gdahome, per questa casa: da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.
+# Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
+# spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
+# Senza virgolette il manifesto non si legge — e un manifesto che non si legge
+# vuol dire un add-on che nel negozio non compare, senza nessun errore da
+# nessuna parte. E' andata cosi' per un giorno intero.
+description: "La plancia e l'app di gdahome, per questa casa: da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono."
 url: https://github.com/danigio15/gdahomeapp/tree/main/ponte
 arch:
   - aarch64
