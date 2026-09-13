@@ -97,6 +97,36 @@ Se invece l'account serve **adesso** per pubblicare gratis e vedere come va, il
 personale va bene: sappi che i 12 tester per 14 giorni li devi fare, e che
 spostarsi dopo costa un account nuovo piu' un trasferimento dell'app.
 
+### E se una societa' non c'e'
+
+E' il caso normale, e non chiude niente — cambia solo l'ordine delle cose.
+
+L'account organizzazione vuole **un'entita' legale**, e in Italia la piu'
+piccola e' la **ditta individuale** con partita IVA: basta, e puo' avere un
+D-U-N-S. Ma aprirla per pubblicare un'app gratis e' mettere il carro davanti ai
+buoi — una partita IVA ha dei costi che tornano ogni anno, e la si apre quando
+c'e' qualcosa da fatturare, non prima. Quella domanda e' da commercialista, non
+da qui.
+
+Quindi, senza societa', le strade sono due:
+
+1. **Non passare dal negozio, per adesso.** Il pacchetto firmato in una release
+   si installa, si aggiorna e si manda a chiunque: nessun account, nessun
+   documento, nessun indirizzo pubblicato, e nessuno che debba approvare
+   niente. Per provare con delle persone vere e' anche piu' comodo del negozio.
+2. **Account personale adesso, e organizzazione quando servira'.** Le app **si
+   trasferiscono** da un account Play a un altro: e' una procedura di Google,
+   la scheda si porta dietro recensioni e installazioni, e chi ce l'ha
+   installata non si accorge di niente. Non e' quindi una porta che si chiude —
+   e' un giro in piu' da fare piu' avanti, con qualche condizione da
+   verificare quando ci si arriva (soprattutto se nel frattempo si sono vendute
+   cose dentro l'app).
+
+Quello che l'account personale ti chiede subito resta: **12 tester per 14
+giorni** prima della produzione, e il **tuo indirizzo** nella scheda. Se le 12
+persone non ce le hai, la strada 1 non e' un ripiego: e' l'unica che funziona
+davvero oggi.
+
 ### Aprire l'account, passo per passo
 
 Serve un account Google — va bene quello che hai gia', e **e' per sempre**:
