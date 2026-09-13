@@ -82,6 +82,16 @@ export class Chiamata {
     this.dentro = false;
     this.canali = new Map();
     this.rifiutata = null;
+    /* Perche' l'ultimo tentativo non e' andato, **a parole**.
+     *
+     * Non e' un lusso da programmatori: e' la riga che dice se il nome non si
+     * risolve, se la porta e' chiusa, se il certificato non va o se dall'altra
+     * parte ha risposto qualcosa che non e' un WebSocket. Sono quattro guasti
+     * con quattro rimedi diversi, e per un pomeriggio sono arrivati tutti con
+     * la stessa parola — «filo chiuso» — che non ne distingue nessuno.
+     *
+     * La legge la console, e la scrive in cima. */
+    this.perche = "";
 
     this._spentaApposta = false;
     this._tentativi = 0;
@@ -172,14 +182,18 @@ export class Chiamata {
       this._dalCentralino(detto);
     });
 
-    presa.addEventListener("close", () => {
+    presa.addEventListener("close", (evento) => {
       clearTimeout(scadenza);
       if (this.dentro) this.registro.attenzione("il filo col centralino e' caduto");
-      this._caduta("filo chiuso");
+      /* Il motivo vero viaggia con la chiusura — `Chiamante` lo mette li' — e
+       * per un pomeriggio l'abbiamo buttato: nel registro finiva «filo
+       * chiuso», che di quattro guasti diversi non ne distingue nessuno. */
+      this._caduta(evento?.motivo || presa.motivo || "filo chiuso");
     });
 
     presa.addEventListener("error", () => {
-      /* `error` arriva sempre insieme a `close`, che e' dove si decide. */
+      /* `error` arriva sempre insieme a `close`, che e' dove si decide: il
+       * motivo se lo tiene la presa, e la chiusura lo porta. */
     });
   }
 
@@ -187,6 +201,7 @@ export class Chiamata {
     if (detto.t === "bene") {
       this.dentro = true;
       this.rifiutata = null;
+      this.perche = "";
       this._tentativi = 0;
       this.registro.info(`il centralino ci conosce: ${this.identita.casa}`);
       this._cominciaABattere();
@@ -321,6 +336,7 @@ export class Chiamata {
 
   _caduta(perche) {
     this.dentro = false;
+    this.perche = String(perche || "");
     this._smettiDiBattere();
     this._chiudiLaPresa();
     this._buttaGiuITelefoni();

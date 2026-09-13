@@ -625,6 +625,11 @@ async function api({
          * pubblico, e la console lo usa per comporre il link di gdahome da
          * aprire in un browser — lo stesso posto, con `https` davanti. */
         dove: chiamata?.dove || null,
+        /* E perche' l'ultimo tentativo non e' andato, a parole. Senza questa
+         * riga la console dice «sto chiamando…» per ore, e chi guarda non ha
+         * modo di sapere se il nome non si risolve, se la porta e' chiusa o
+         * se dall'altra parte c'e' qualcosa che non e' un centralino. */
+        perche: chiamata?.perche || "",
       },
       porta: opzioni.portaDellApp,
       massimi: opzioni.dispositiviMassimi,

@@ -111,7 +111,20 @@
      * andarselo a cercare nel programma. */
     var dove = centralino.dove || "";
     if (centralino.rifiutata) return "Il centralino ci rifiuta: " + centralino.rifiutata;
-    if (!centralino.dentro) return "Sto chiamando " + (dove || "il centralino") + "…";
+    /* E **perche'** non ci arriva, se non ci arriva.
+     *
+     * «Sto chiamando…» per un'ora non e' un'informazione: e' un'attesa. Il
+     * motivo vero lo sa il filo — il nome che non si risolve, la porta chiusa,
+     * una risposta che non e' un WebSocket — e va scritto qui, che e' il posto
+     * dove si guarda. */
+    if (!centralino.dentro) {
+      return (
+        "Sto chiamando " +
+        (dove || "il centralino") +
+        "…" +
+        (centralino.perche ? " L'ultimo tentativo: " + centralino.perche + "." : "")
+      );
+    }
     return "Collegato a " + (dove || "il centralino") + ": da fuori casa si entra.";
   }
 
