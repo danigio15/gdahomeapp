@@ -67,6 +67,26 @@ test("l'alt del logo, dentro il runtime, dice gdahome", (t) => {
   assert.match(testo, /DashboardModernModules/);
 });
 
+test("e la scritta accanto al logo dice gda home", (t) => {
+  if (!plancia.cE) return t.skip("senza plancia non c'e' niente da vestire");
+  /* Questa mancava, e si vedeva sulla testata: il segno era il nostro e le
+   * parole di fianco dicevano ancora «Dashboard MODERN», cioe' il marchio di
+   * un altro appoggiato al nostro. */
+  const servito = plancia.leggi(dove("legacy/dashboard-runtime-it.js"));
+  const testo = servito.corpo.toString("utf8");
+
+  assert.match(testo, />gda<\/span>/);
+  assert.match(testo, />home<\/span>/);
+  assert.equal(testo.includes(">MODERN</span>"), false, "la parola di prima non c'e' piu'");
+
+  /* E anche in inglese: e' lo stesso marchio, e una testata vestita a meta'
+   * si vedrebbe solo a chi cambia lingua. */
+  const inglese = plancia.leggi(dove("legacy/dashboard-runtime-en.js"));
+  const suo = inglese.corpo.toString("utf8");
+  assert.match(suo, />gda<\/span>/);
+  assert.equal(suo.includes(">MODERN</span>"), false);
+});
+
 test("la cartella della plancia non si e' toccata: il sigillo torna", () => {
   /* La prova che conta. Se un giorno il nome si cambiasse dentro i file
    * invece che al momento di servire, il ponte direbbe «modificata» a tutti
