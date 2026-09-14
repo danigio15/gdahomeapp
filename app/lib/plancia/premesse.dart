@@ -24,6 +24,18 @@ import 'dart:convert';
 
 import 'pannello.dart';
 
+/// Come la pagina chiede il menu dell'app, sul telefono.
+///
+/// Sul telefono la pagina e l'app si parlano su un canale solo, e su quel
+/// canale passano anche i nomi delle pagine della plancia (`home`, `clima`,
+/// `config`). Questa parola non puo' essere una di quelle: i due punti in
+/// mezzo non stanno in nessun nome di linguetta, ne' ci finiranno.
+const String ilMenuDalTelefono = 'gdahome:menu';
+
+/// Come lo chiede nel browser, dove il riquadro parla a chi lo ospita con un
+/// messaggio fatto a oggetto: `{gdahome: "menu"}`.
+const String ilMenuDalRiquadro = 'menu';
+
 /// Le premesse di una pagina della plancia.
 class Premesse {
   Premesse({
@@ -106,9 +118,11 @@ class Premesse {
   /// Dentro la plancia le porte della Config erano tre: la linguetta nella
   /// barra, l'ingranaggio in cima e il menu del tasto ☰. Nella dashboard ci
   /// vogliono tutte — li' la Config e' una pagina come le altre — e nell'app
-  /// no: la porta e' la voce del menu. Restano nascoste tutte e tre, e con
-  /// loro il tasto «← HOME» che la pagina si disegna in cima: dal menu si
-  /// torna col menu.
+  /// no: la porta e' la voce del menu. La linguetta e l'ingranaggio restano
+  /// nascosti, e con loro il tasto «← HOME» che la pagina si disegna in
+  /// cima: dal menu si torna col menu. Il tasto ☰ no: quello si vede, ma il
+  /// suo menu non si apre piu' — lo apre l'app, il suo (vedi
+  /// [iTreTrattiniApronoIlMenuDellApp]).
   ///
   /// Restano nascoste tre tessere, e per la stessa ragione: nell'app quella
   /// porta c'e' gia', ed e' una voce del menu.
@@ -151,15 +165,15 @@ class Premesse {
          plancia senza aver chiesto niente. Dal menu si torna col menu. Sulle
          altre pagine resta: li' e' l'unico modo di uscire. */
       'html body #page-config .back-home-btn{display:none!important}'
-      /* Le altre due porte della Config, dentro la plancia: l'ingranaggio in
-         cima e il menu che apre il tasto ☰. Nella dashboard ci vogliono —
-         li' la Config e' una pagina come le altre — nell'app no: la porta e'
-         la voce del menu, e tre porte sulla stessa stanza sono due di
-         troppo. Col ☰ se ne va anche il «Reset totale», che cancella tutta
-         la configurazione: nell'app non si perde niente che non si possa
-         rifare dalla Config, e non si tocca per sbaglio. */
-      'html body header .dm-editor-entry,'
-      'html body header .ha-menu-btn{display:none!important}'
+      /* L'altra porta della Config dentro la plancia: l'ingranaggio in cima.
+         Nella dashboard ci vuole — li' la Config e' una pagina come le altre
+         — nell'app no: la porta e' la voce del menu, e due porte sulla stessa
+         stanza sono una di troppo.
+         Il tasto ☰ accanto, invece, resta a schermo: nell'app e' la porta
+         del menu dell'app (vedi [iTreTrattiniApronoIlMenuDellApp]). Il suo
+         menu — quello della plancia, col «Reset totale» che cancella tutta
+         la configurazione — non si apre piu': l'evento si ferma prima. */
+      'html body header .dm-editor-entry{display:none!important}'
       /* «Sostieni il progetto»: nella plancia e' il grazie di un progetto
          che vive di tempo libero, e li' ci sta. Qui no: questa pagina si
          presenta come gdahome, e una donazione che porta a un altro
@@ -348,6 +362,68 @@ class Premesse {
       'dallIndirizzo();'
       '})();</script>';
 
+  /// I tre trattini della plancia aprono il menu dell'app.
+  ///
+  /// La plancia ha il suo tasto ☰ in alto a sinistra, e dentro Home Assistant
+  /// apre la barra laterale di HA — quella di chi la ospita, non una sua. Da
+  /// noi chi la ospita e' l'app, e la barra laterale dell'app c'era ma si
+  /// chiamava da un'altra parte: una fascia invisibile sul bordo sinistro
+  /// dello schermo. Quella fascia stava sopra la plancia, e sulla
+  /// Configurazione la plancia sul bordo sinistro ha le sue sezioni: si
+  /// toccava una sezione e si apriva il menu. Il tasto c'era, stava dove
+  /// tutti cercano un menu, e nell'app non faceva niente.
+  ///
+  /// Adesso lo fa, e la fascia non c'e' piu': niente di nostro sta piu' sopra
+  /// la plancia.
+  ///
+  /// Il tasto porta un `onclick` scritto nella pagina, e un ascolto **in
+  /// cattura** sul documento e' l'unico posto che arriva prima di lui — lo
+  /// dice anche la plancia, che per il suo kiosk fa esattamente la stessa
+  /// cosa (`beta12-room-color-lock-section.js`). Fermando li' l'evento quel
+  /// comando non parte mai: ne' il menu della plancia ne' il suo «Reset
+  /// totale», che cancella tutta la configurazione con un tocco solo.
+  ///
+  /// Tenuto premuto e' un altro gesto, e non e' nostro: la plancia dopo
+  /// [_tenutoPremuto] accende il suo kiosk. Quel tocco si ferma comunque —
+  /// il menu della plancia non deve aprirsi nemmeno li' — ma il menu
+  /// dell'app non si chiama: chi tiene premuto non ha chiesto il menu.
+  static const String iTreTrattiniApronoIlMenuDellApp =
+      '<script>(function(){'
+      /* Le due strade per dirlo all'app sono le stesse della pagina che
+         cambia: sul telefono un canale del WebView, nel browser il riquadro
+         che parla a chi lo ospita. Chi non c'e' non risponde. */
+      'var ilMenu=function(){'
+      'try{if(window.gdahomeDice&&window.gdahomeDice.postMessage)'
+      'window.gdahomeDice.postMessage("$ilMenuDalTelefono");}catch(male){}'
+      'try{if(window.parent&&window.parent!==window)'
+      'window.parent.postMessage({gdahome:"$ilMenuDalRiquadro"},"*");}'
+      'catch(male){}'
+      '};'
+      'var ilTasto=function(evento){'
+      'var chi=evento?evento.target:null;'
+      'return !!(chi&&chi.closest&&chi.closest(".ha-menu-btn"));'
+      '};'
+      /* Da quando si tiene premuto. Si rimette a zero a ogni tocco che non
+         e' sul tasto: un invio dalla tastiera non ha nessun tocco prima, e
+         con un numero vecchio qui sembrerebbe una pressione lunga. */
+      'var premutoIl=0;'
+      'document.addEventListener("pointerdown",function(evento){'
+      'premutoIl=ilTasto(evento)?Date.now():0;'
+      '},true);'
+      'document.addEventListener("click",function(evento){'
+      'if(!ilTasto(evento))return;'
+      'evento.preventDefault();'
+      'evento.stopPropagation();'
+      'if(premutoIl&&Date.now()-premutoIl>=$_tenutoPremuto){premutoIl=0;return;}'
+      'ilMenu();'
+      '},true);'
+      '})();</script>';
+
+  /// Quanto vuol dire «tenuto premuto»: e' il tempo della plancia, non uno
+  /// nostro — dopo tanto lei accende il suo kiosk (`LONG_PRESS_MS`), e il
+  /// tocco che arriva dopo non e' una chiamata al menu.
+  static const int _tenutoPremuto = 650;
+
   /// La tenda sulla barra si alza comunque, anche in un riquadro che non si
   /// sta disegnando.
   ///
@@ -433,7 +509,8 @@ class Premesse {
      * [stileDelleMisure], che spiega perche' in testa perdevano contro lo
      * stile della plancia. */
     final inFondo =
-        '$stileDelleMisure$laConfigFuoriDallaPlancia$laTendaSiAlzaComunque';
+        '$stileDelleMisure$laConfigFuoriDallaPlancia'
+        '$iTreTrattiniApronoIlMenuDellApp$laTendaSiAlzaComunque';
     final fine = RegExp(
       r'</body\s*>',
       caseSensitive: false,

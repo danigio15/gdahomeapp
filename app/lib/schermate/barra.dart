@@ -1,11 +1,26 @@
 /// La barra delle sezioni: laterale, a scomparsa.
 ///
-/// Sta fuori dallo schermo, oltre il bordo sinistro, e si chiama con la
-/// **maniglia** — la pillola sempre visibile a meta' altezza — o tirandola
-/// dentro col dito. Non e' un vezzo: una barra sempre presente si mangia una
+/// Sta fuori dallo schermo, oltre il bordo sinistro, e non si vede finche' non
+/// la si chiama. Non e' un vezzo: una barra sempre presente si mangia una
 /// fascia di schermo su ogni pagina, e su un telefono quella fascia e' l'unica
 /// cosa che non si puo' comprare. Cosi' invece la si vede quando serve e
 /// sparisce da sola quando non serve piu'.
+///
+/// **Da dove si chiama.** Da nessun gesto e da nessuna pillola disegnata
+/// sopra la pagina: quelli li aveva, ed erano sul bordo sinistro dello
+/// schermo, dove la Configurazione della plancia ha le sue sezioni — si
+/// toccava una sezione e si apriva il menu. Adesso le porte sono due, e sono
+/// due porte che c'erano gia':
+///
+///  - sulla **plancia**, i suoi tre trattini in alto a sinistra. Dentro Home
+///    Assistant quel tasto apre la barra di chi la ospita; qui chi la ospita
+///    e' l'app, e apre questa (`plancia/premesse.dart`);
+///  - sulle **altre sezioni**, il ☰ nella barra del titolo, che e' dove lo
+///    cerca chiunque abbia un telefono in mano.
+///
+/// E il **tasto indietro**, dappertutto: apre la barra, e con la barra aperta
+/// esce dall'app — le sezioni sono la pagina sotto, la sezione aperta e' la
+/// pagina sopra, e indietro va sempre verso fuori (`home.dart`).
 ///
 /// Sta di lato e non in fondo perche' le sezioni sono venti: in orizzontale se
 /// ne vedono cinque per volta e per arrivare all'ultima si scorre al buio, in
@@ -24,7 +39,7 @@
 /// scelta giusta dove la fascia di schermo e' l'unica cosa che non si puo'
 /// comprare; su un computer, o su un tablet di lato, e' un gesto in piu' per
 /// ogni cambio di pagina e non serve a niente. Sopra i novecento punti la
-/// barra resta, la maniglia sparisce, e toccare fuori non la chiude piu'
+/// barra resta, il ☰ sparisce, e toccare fuori non la chiude piu'
 /// — vedi `vestito/quanto_e_largo.dart`.
 library;
 
@@ -37,7 +52,7 @@ import '../casa/collegamento.dart';
 import '../vestito/oggetti.dart';
 import '../vestito/quanto_e_largo.dart';
 import 'da_dove.dart';
-import 'maniglia.dart';
+import 'da_parte.dart';
 import 'menu.dart';
 
 /// Quanto resta aperta se non si tocca niente.
@@ -45,20 +60,6 @@ const _daSola = Duration(seconds: 4);
 
 /// Quanto resta dopo che si e' scelto: il tempo di vedere che si e' premuto.
 const _dopoLaScelta = Duration(milliseconds: 700);
-
-/// Quanto e' larga la fascia sul bordo dove il dito la puo' tirare dentro, e
-/// quanto e' alta. La pillola che si vede e' piccola, la fascia che raccoglie
-/// il dito e' molto piu' grande.
-///
-/// Sono anche le misure che nel browser si danno alla fascia vera della pagina
-/// (`maniglia.dart`), ed e' per questo che stanno qui e non dentro la maniglia:
-/// il gesto e il disegno devono stare nello stesso posto, se no il dito trova
-/// l'uno e non l'altro.
-const double _fasciaDelGesto = 44;
-const double _altaLaFascia = 160;
-
-/// Quanto sta dal bordo sinistro, a barra chiusa.
-const double _dalBordo = 2;
 
 /// Quanto e' larga la barra, e quanto sta indietro quando e' fuori.
 const double _larghezzaDellaBarra = 192;
@@ -73,7 +74,7 @@ class BarraDelleSezioni extends StatefulWidget {
     required this.vaiAlleCase,
     this.collegamento,
     this.sopraLaPlancia = false,
-    this.fascia = const LaFasciaDelGesto(),
+    this.daParte = const LaPlanciaDaParte(),
   });
 
   /// Le sezioni da mostrare, nell'ordine in cui vanno.
@@ -93,15 +94,15 @@ class BarraDelleSezioni extends StatefulWidget {
   /// Se sotto la barra c'e' la plancia.
   ///
   /// Nel browser cambia tutto. La plancia e' un `iframe`, e un `iframe` si
-  /// mangia i tocchi di quello che gli sta sopra: la maniglia si vede e non si
-  /// apre. Dove sotto la barra c'e' una pagina dell'app invece i tocchi
-  /// arrivano da se', e una fascia messa li' ruberebbe un tocco alla pagina —
-  /// vedi `maniglia.dart`.
+  /// mangia i tocchi di quello che gli sta sopra: a barra aperta le sue voci
+  /// si vedono e non si premono. Allora, mentre la barra lo copre, il riquadro
+  /// si fa da parte. Dove sotto la barra c'e' una pagina dell'app non c'e'
+  /// niente da spostare: i tocchi le arrivano da se' — vedi `da_parte.dart`.
   final bool sopraLaPlancia;
 
-  /// Chi fa arrivare alla barra i tocchi che la pagina si mangia. Sostituibile
-  /// nelle prove.
-  final LaFasciaDelGesto fascia;
+  /// Chi sposta il riquadro perche' i tocchi arrivino alla barra.
+  /// Sostituibile nelle prove.
+  final LaPlanciaDaParte daParte;
 
   @override
   State<BarraDelleSezioni> createState() => BarraDelleSezioniState();
@@ -127,9 +128,6 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
   /// Se in questo momento la barra copre quello che c'e' sotto.
   bool _copre = false;
 
-  /// Se la fascia dei gesti e' messa nella pagina.
-  bool _fasciaMessa = false;
-
   bool get aperta => _resta || _molla.value > 0.02;
 
   @override
@@ -142,10 +140,8 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
   void dispose() {
     _daChiudere?.cancel();
     /* La barra se ne va, e quello che aveva spostato si rimette a posto: se no
-     * la plancia resta a non prendere tocchi e la fascia resta nella pagina a
-     * rubarne uno. */
-    if (_copre) widget.fascia.laPlanciaSiFaDaParte(false);
-    if (_fasciaMessa) widget.fascia.togli();
+     * la plancia resta a non prendere tocchi. */
+    if (_copre) widget.daParte.siFaDaParte(false);
     _molla.dispose();
     _scorrimento.dispose();
     super.dispose();
@@ -215,7 +211,7 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
    * Serve nel browser, dove la plancia e' un `iframe` e si mangia i tocchi di
    * tutto quello che gli sta sopra: senza questo le voci della barra si
    * vedrebbero e non si premerebbero, e toccare fuori non la chiuderebbe
-   * (`maniglia.dart`). Sul telefono non fa niente.
+   * (`da_parte.dart`). Sul telefono non fa niente.
    *
    * Dove la barra **resta** non copre niente — il posto glielo si lascia per
    * davvero, e la plancia comincia dopo — e allora non si sposta nessuno. E
@@ -229,7 +225,7 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
     final copre = !_resta && widget.sopraLaPlancia && _molla.value > 0.02;
     if (copre == _copre) return;
     _copre = copre;
-    widget.fascia.laPlanciaSiFaDaParte(copre);
+    widget.daParte.siFaDaParte(copre);
   }
 
   @override
@@ -243,22 +239,6 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
     if (_resta && _molla.value != 1) {
       _daChiudere?.cancel();
       _molla.value = 1;
-    }
-    /* La fascia dei gesti serve dove la maniglia galleggia sopra la plancia, e
-     * solo li': dove la barra resta non c'e' nessuna maniglia, e sulle altre
-     * sezioni sotto non c'e' nessun riquadro da rivelare. */
-    final vuoleLaFascia = !_resta && widget.sopraLaPlancia;
-    if (vuoleLaFascia != _fasciaMessa) {
-      _fasciaMessa = vuoleLaFascia;
-      if (vuoleLaFascia) {
-        widget.fascia.metti(
-          larga: _fasciaDelGesto,
-          alta: _altaLaFascia,
-          dalBordo: _dalBordo,
-        );
-      } else {
-        widget.fascia.togli();
-      }
     }
     _seLaBarraCopre();
     return AnimatedBuilder(
@@ -286,9 +266,9 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                * Un riquadro messo con la sola coordinata sinistra non ha un
                * limite a destra: e' largo quanto vuole. Centrare dentro un
                * limite che non c'e' non e' una domanda con risposta, e quel
-               * pezzo di schermo restava non impaginato — la barra c'era
-               * nell'albero e non si vedeva, e la maniglia accanto continuava
-               * a funzionare, che e' il modo peggiore di rompersi. */
+               * pezzo di schermo restava non impaginato: la barra c'era
+               * nell'albero e non si vedeva. Niente errori, niente segni —
+               * che e' il modo peggiore di rompersi. */
               child: SizedBox(
                 width: _larghezzaDellaBarra,
                 child: Center(
@@ -361,16 +341,6 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                 ),
               ),
             ),
-            /* La maniglia serve a chiamare una barra che non c'e'. Dove la
-             * barra c'e' sempre, e' una pillola che non fa niente accanto a
-             * una cosa gia' aperta. */
-            if (!_resta)
-              _LaManiglia(
-                quanto: quanto,
-                alzata: aperta,
-                quandoPremuta: () => aperta ? chiudi() : apri(),
-                quandoTirata: (dentro) => dentro ? apri() : chiudi(),
-              ),
           ],
         );
       },
@@ -731,82 +701,6 @@ class _NomeDellaVoce extends StatelessWidget {
   }
 }
 
-/// La maniglia: la pillola sempre visibile che chiama la barra.
-///
-/// E' l'unica cosa che resta a schermo, ed e' anche l'unica indicazione che
-/// una barra ci sia: percio' non si nasconde mai, e la fascia che raccoglie il
-/// dito e' molto piu' larga della pillola che si vede.
-class _LaManiglia extends StatelessWidget {
-  const _LaManiglia({
-    required this.quanto,
-    required this.alzata,
-    required this.quandoPremuta,
-    required this.quandoTirata,
-  });
-
-  final double quanto;
-  final bool alzata;
-  final VoidCallback quandoPremuta;
-
-  /// `true` quando il dito la tira dentro, `false` quando la butta fuori.
-  final void Function(bool dentro) quandoTirata;
-
-  @override
-  Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
-    return Positioned(
-      /* Sta sul bordo, e quando la barra e' dentro si sposta accanto a lei. */
-      left: _dalBordo + (_larghezzaDellaBarra + 12) * quanto.clamp(0, 1),
-      top: 0,
-      bottom: 0,
-      child: Center(
-        child: Semantics(
-          button: true,
-          label: nomeDellaManiglia,
-          /* L'azione va dichiarata qui, non solo sul riconoscitore di gesti
-           * sotto: chi non vede preme il **nome**, e sul web il browser stende
-           * sopra la tela un riquadro invisibile per ogni cosa che ha un nome.
-           * Se quel riquadro non sa cosa fare, il tocco muore li' e sotto non
-           * arriva niente. */
-          onTap: quandoPremuta,
-          child: GestureDetector(
-            excludeFromSemantics: true,
-            behavior: HitTestBehavior.opaque,
-            onTap: quandoPremuta,
-            /* Tirare dentro la chiama, buttare fuori la manda via: e' il gesto
-             * che si fa senza pensarci, e non c'e' niente da imparare. */
-            onHorizontalDragEnd: (gesto) {
-              final velocita = gesto.velocity.pixelsPerSecond.dx;
-              if (velocita > 60) {
-                quandoTirata(true);
-              } else if (velocita < -60) {
-                quandoTirata(false);
-              }
-            },
-            child: SizedBox(
-              width: _fasciaDelGesto,
-              height: _altaLaFascia,
-              child: Center(
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 6,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: colori.onSurface.withValues(
-                      alpha: alzata ? 0.45 : 0.3,
-                    ),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Le voci della barra: la plancia, i dispositivi, e quello che verra'.
 ///
 /// Tutte tranne una. La **Console** — la coda delle richieste di aiuto di
@@ -820,28 +714,26 @@ List<Sezione> vociDellaBarra({bool conLaConsole = false}) => conLaConsole
           if (una != Sezione.console) una,
       ];
 
-/// Come si chiama la maniglia per chi non la vede: il lettore di schermo la
-/// legge cosi', e le prove la cercano con questo nome.
+/// Come si chiama il tasto che apre la barra: il ☰ nella barra del titolo.
+/// Il lettore di schermo lo legge cosi', e le prove lo cercano con questo
+/// nome.
 ///
 /// Non «Sezioni» e basta: quella parola sta anche nell'intestazione dei widget
 /// — «22 sezioni · 2 chiedono attenzione» — e chi cerca per testo finirebbe a
 /// premere quella riga. Un nome deve essere di una cosa sola.
-const nomeDellaManiglia = 'Barra delle sezioni';
+const nomeDelTastoDellaBarra = 'Barra delle sezioni';
 
 /// Come si chiama, per chi non la vede, la riga in cima alla barra che porta
 /// all'elenco delle case.
 const nomeDelleCase = 'Le tue case';
-
-/// Quanta aria lasciare sul fianco sinistro della pagina, per non finire
-/// sotto la maniglia.
-const double spazioPerLaBarra = 10;
 
 /// Quanto posto vuole la barra quando resta aperta: la sua larghezza piu'
 /// l'aria che si tiene ai due lati.
 const double spazioPerLaBarraFerma = _larghezzaDellaBarra + 22;
 
 /// Quanto lasciare a sinistra al contenuto, su questo schermo.
+///
+/// Dove la barra si nasconde, niente: non c'e' piu' niente di suo sul bordo
+/// sinistro — nessuna pillola, nessuna fascia — e la pagina arriva al bordo.
 double quantoPerLaBarra(BuildContext contesto) =>
-    QuantoELargo.di(contesto).laBarraResta
-    ? spazioPerLaBarraFerma
-    : spazioPerLaBarra;
+    QuantoELargo.di(contesto).laBarraResta ? spazioPerLaBarraFerma : 0;

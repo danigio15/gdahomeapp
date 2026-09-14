@@ -13,6 +13,8 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
+import '../../plancia/premesse.dart' show ilMenuDalTelefono;
+
 /// Un controllore pronto a caricare la plancia.
 ///
 /// Tre cose, e tutt'e tre per la plancia: il JavaScript, senza il quale non
@@ -36,6 +38,7 @@ WebViewController costruisciIlControllore({
   Future<bool> Function(String domanda)? chiede,
   Future<String> Function(String domanda, String diSerie)? faScrivere,
   void Function(String pagina)? quandoCambiaPagina,
+  void Function()? quandoChiedeIlMenu,
 }) {
   final PlatformWebViewControllerCreationParams parametri;
   if (WebViewPlatform.instance is WebKitWebViewPlatform) {
@@ -63,15 +66,26 @@ WebViewController costruisciIlControllore({
         },
       ),
     );
-  /* Il canale da cui la pagina parla all'app: dice quale sua pagina si e'
-   * accesa, e serve al menu dell'app per non restare segnato su una voce
-   * mentre sotto c'e' un'altra pagina. Il nome e' quello che la pagina
-   * cerca (`premesse.dart`). */
-  if (quandoCambiaPagina != null) {
+  /* Il canale da cui la pagina parla all'app. Ci passano due cose, e il
+   * canale e' uno solo perche' uno solo ne serve: quale pagina della plancia
+   * si e' accesa — al menu dell'app serve per non restare segnato su una
+   * voce mentre sotto c'e' un'altra pagina — e la richiesta del menu, che
+   * arriva quando si premono i tre trattini della plancia. Si distinguono
+   * dalla parola: quella del menu non e' il nome di nessuna pagina, e non
+   * potra' esserlo (`premesse.dart`). Il nome del canale e' quello che la
+   * pagina cerca. */
+  if (quandoCambiaPagina != null || quandoChiedeIlMenu != null) {
     unawaited(
       controllore.addJavaScriptChannel(
         'gdahomeDice',
-        onMessageReceived: (messaggio) => quandoCambiaPagina(messaggio.message),
+        onMessageReceived: (messaggio) {
+          final detto = messaggio.message;
+          if (detto == ilMenuDalTelefono) {
+            quandoChiedeIlMenu?.call();
+            return;
+          }
+          quandoCambiaPagina?.call(detto);
+        },
       ),
     );
   }

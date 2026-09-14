@@ -66,6 +66,7 @@ class FabbricaDellaPlancia {
     bool ibrido = false,
     ({double alto, double basso}) margini = (alto: 0, basso: 0),
     void Function(String pagina)? quandoCambiaPagina,
+    void Function()? quandoChiedeIlMenu,
   }) => RiquadroDellaPlancia(
     key: chiave,
     pagina: pagina,
@@ -74,6 +75,7 @@ class FabbricaDellaPlancia {
     quandoCaricata: quandoCaricata,
     quandoFallisce: quandoFallisce,
     quandoCambiaPagina: quandoCambiaPagina,
+    quandoChiedeIlMenu: quandoChiedeIlMenu,
   );
 }
 
@@ -85,6 +87,7 @@ class PlanciaVera extends StatefulWidget {
     required this.impostazioni,
     this.vaiAlleCase,
     this.quandoCambiaPagina,
+    this.quandoChiedeIlMenu,
   });
 
   final Collegamento collegamento;
@@ -97,6 +100,11 @@ class PlanciaVera extends StatefulWidget {
   /// li' si va dove si vuole — il menu non puo' restare segnato su una voce
   /// mentre sotto c'e' un'altra pagina.
   final void Function(String pagina)? quandoCambiaPagina;
+
+  /// La plancia chiede il menu dell'app: si sono premuti i suoi tre trattini,
+  /// che dentro Home Assistant aprono la barra di chi la ospita e qui aprono
+  /// la nostra (`plancia/premesse.dart`).
+  final void Function()? quandoChiedeIlMenu;
 
   @override
   State<PlanciaVera> createState() => PlanciaVeraState();
@@ -416,6 +424,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
                 if (mounted) setState(() => _perche = perche);
               },
               quandoCambiaPagina: widget.quandoCambiaPagina,
+              quandoChiedeIlMenu: widget.quandoChiedeIlMenu,
             ),
           ),
         ),
@@ -461,6 +470,7 @@ class RiquadroDellaPlancia extends StatefulWidget {
     required this.quandoCaricata,
     required this.quandoFallisce,
     this.quandoCambiaPagina,
+    this.quandoChiedeIlMenu,
     this.ibrido = false,
     this.margini = (alto: 0, basso: 0),
   });
@@ -479,6 +489,9 @@ class RiquadroDellaPlancia extends StatefulWidget {
   /// Quale pagina della plancia si e' accesa: lo dice la pagina servita, e
   /// arriva da un canale del WebView o da un messaggio del riquadro.
   final void Function(String pagina)? quandoCambiaPagina;
+
+  /// La pagina chiede il menu dell'app, dalla stessa strada.
+  final void Function()? quandoChiedeIlMenu;
 
   @override
   State<RiquadroDellaPlancia> createState() => RiquadroDellaPlanciaState();
@@ -606,6 +619,7 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
       chiede: _laPaginaChiede,
       faScrivere: _laPaginaFaScrivere,
       quandoCambiaPagina: widget.quandoCambiaPagina,
+      quandoChiedeIlMenu: widget.quandoChiedeIlMenu,
       /* Lo stesso fondo dell'app: sotto la pagina, finche' non arriva, non
        * si vede un lampo di un altro colore. */
       sfondo: Theme.of(context).colorScheme.surface,

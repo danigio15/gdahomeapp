@@ -14,6 +14,7 @@ library;
 import 'dart:ui' show AccessibilityFeatures;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemChannels;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
@@ -64,6 +65,9 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
   /// qui non c'e' nessuna pagina, e lo dice la prova al posto suo.
   void Function(String pagina)? cambioPagina;
 
+  /// E quello che direbbe premendo i suoi tre trattini.
+  void Function()? chiedeIlMenu;
+
   @override
   Widget riquadro(
     Uri pagina, {
@@ -73,8 +77,10 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
     bool ibrido = false,
     ({double alto, double basso}) margini = (alto: 0, basso: 0),
     void Function(String pagina)? quandoCambiaPagina,
+    void Function()? quandoChiedeIlMenu,
   }) {
     cambioPagina = quandoCambiaPagina;
+    chiedeIlMenu = quandoChiedeIlMenu;
     return _RiquadroFinto(
       key: chiave,
       pagina: pagina,
@@ -161,18 +167,22 @@ class _SenzaMovimento implements AccessibilityFeatures {
   bool get supportsAnnounce => false;
 }
 
-/// Tira su la barra delle sezioni, come si fa col dito sulla maniglia.
+/// Tira su la barra delle sezioni.
 ///
 /// La barra non c'e' finche' non la si chiama: e' una dock, e sta sotto il
 /// bordo. Le prove che vogliono andare da qualche parte passano di qui.
+///
+/// La chiama per nome, e non premendo la porta da cui la chiamerebbe una
+/// persona: le porte sono tre — i tre trattini della plancia, il ☰ della
+/// barra del titolo, il tasto indietro — cambiano da schermata a schermata, e
+/// ognuna ha la sua prova (`barra_nel_browser_test.dart`, `home_test.dart`).
+/// Qui serve solo che la barra sia aperta.
 Future<void> apriLaBarra(WidgetTester tester) async {
-  /* La barra si richiude da sola poco dopo che si e' scelto. Se si premesse
-   * la maniglia mentre e' ancora aperta la si chiuderebbe, e il tocco dopo
-   * cadrebbe nel vuoto: si lascia passare il tempo che ci mette a togliersi
-   * di mezzo, e poi la si chiama. */
+  /* La barra si richiude da sola poco dopo che si e' scelto: si lascia
+   * passare il tempo che ci mette a togliersi di mezzo, e poi la si chiama. */
   await tester.pump(const Duration(seconds: 5));
   await tester.pumpAndSettle();
-  await tester.tap(find.bySemanticsLabel(nomeDellaManiglia));
+  tester.state<BarraDelleSezioniState>(find.byType(BarraDelleSezioni)).apri();
   await tester.pumpAndSettle();
 }
 
@@ -528,9 +538,9 @@ void main() {
       expect(find.textContaining('Spegni'), findsNothing);
       expect(find.text('Dispositivi'), findsNothing);
 
-      /* La barra: si chiama dalla maniglia in fondo, come la dock della
-       * plancia. In cima c'e' la casa in cui si e', e da dove ci si passa;
-       * sotto, i nomi in maiuscolo e per intero. */
+      /* La barra. In cima c'e' la casa in cui si e', e da dove ci si passa;
+       * sotto, i nomi in maiuscolo e per intero. Da dove si chiama e' una
+       * prova a parte, qui sotto. */
       await apriLaBarra(tester);
       expect(nellaBarra('Casa mia'), findsOneWidget);
       expect(nellaBarra('in casa'), findsOneWidget);
@@ -611,6 +621,129 @@ void main() {
       expect(find.text('Luci'), findsOneWidget);
       expect(find.text('Cucina'), findsOneWidget);
       expect(find.text('Salotto'), findsOneWidget);
+
+      await tester.runAsync(() async {
+        await collegamento.chiudi();
+        await ponte.spegni();
+      });
+    },
+  );
+
+  testWidgets(
+    'il menu si apre dai tre trattini della plancia, dal ☰ e da indietro',
+    (tester) async {
+      late PonteFinto ponte;
+      late Collegamento collegamento;
+
+      await tester.runAsync(() async {
+        ponte = await PonteFinto.alza();
+        ponte.entita = [
+          PonteFinto.unaEntita('light.cucina', 'on', nome: 'Cucina'),
+        ];
+        final archivio = ArchivioDelleCase(CassaforteInMemoria());
+        await archivio.apri();
+        await archivio.aggiungi(
+          nome: 'Casa mia',
+          segno: segnoBuono,
+          identificativo: chiBuono,
+          chiave: chiaveBuona,
+          inCasa: ponte.indirizzo,
+        );
+        collegamento = Collegamento(
+          archivio: archivio,
+          sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
+        );
+        await collegamento.apri();
+        await _finoAllaPlancia(collegamento);
+      });
+
+      /* Quando l'app chiede al sistema di uscire. */
+      var uscita = 0;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (chiamata) async {
+          if (chiamata.method == 'SystemNavigator.pop') uscita += 1;
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+
+      final plancia = _PlanciaFinta();
+      await tester.pumpWidget(
+        AppDiCasa(collegamento: collegamento, plancia: plancia),
+      );
+      await tester.pump();
+      await tester.pump();
+      /* Si aspetta che tutto stia fermo prima di provare un gesto: mentre
+       * l'app si sta collegando c'e' una riga che gira, e finche' gira
+       * `pumpAndSettle` continua a far scorrere il tempo — abbastanza da far
+       * scadere i quattro secondi dopo i quali la barra si richiude da se'. */
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+
+      /* Si guarda ogni volta quella che c'e' adesso, e non una tenuta da
+       * parte: la home si rifa' quando il collegamento cambia stato, e una
+       * barra tenuta in mano da prima risponderebbe per una che non c'e'
+       * piu'. */
+      bool laBarraEAperta() => tester
+          .state<BarraDelleSezioniState>(find.byType(BarraDelleSezioni))
+          .aperta;
+      expect(
+        laBarraEAperta(),
+        isFalse,
+        reason: 'la home e\' la plancia, e basta',
+      );
+
+      /* I tre trattini della plancia. La pagina qui e' una scritta, e la
+       * richiesta la fa la prova al posto suo: quello che si prova e' che la
+       * strada ci sia e porti al menu. */
+      expect(
+        plancia.chiedeIlMenu,
+        isNotNull,
+        reason: 'la pagina ha una strada per chiederlo',
+      );
+      plancia.chiedeIlMenu!();
+      await tester.pumpAndSettle();
+      expect(laBarraEAperta(), isTrue);
+
+      /* Col menu aperto, indietro esce: le sezioni sono la pagina di sotto, e
+       * sotto non c'e' piu' niente. */
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(uscita, 1);
+
+      /* Chiusa la barra — da sola, dopo qualche secondo — indietro la riapre
+       * invece di uscire: uscire vuole due indietro di fila. */
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(laBarraEAperta(), isFalse);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(laBarraEAperta(), isTrue);
+      expect(uscita, 1, reason: 'al primo indietro non si esce');
+
+      /* E il ☰, sulle sezioni che una barra del titolo ce l'hanno. */
+      await tester.tap(nellaBarra('DISPOSITIVI'));
+      await tester.pump();
+      /* Le entita' si chiedono adesso, alla casa finta, con prese vere: il
+       * tempo finto non le fa arrivare, si aspetta quello vero. Finche' non
+       * arrivano c'e' una rotella che gira, e una rotella che gira non lascia
+       * fermare niente. */
+      await tester.runAsync(
+        () => _finoA(() => (collegamento.stato?.quante ?? 0) > 0),
+      );
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(laBarraEAperta(), isFalse);
+      await tester.tap(find.byTooltip(nomeDelTastoDellaBarra));
+      await tester.pumpAndSettle();
+      expect(laBarraEAperta(), isTrue);
 
       await tester.runAsync(() async {
         await collegamento.chiudi();

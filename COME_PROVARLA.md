@@ -307,8 +307,8 @@ Il link ce l'hai già: lo dà l'add-on.
 
 È la stessa app del telefono, e si adatta da sola allo schermo: su un computer
 la barra resta aperta di fianco, su tablet e telefono si apre a scomparsa —
-anche sopra la plancia, premendo la pillola sul bordo sinistro o tirandola
-dentro col dito, come sul telefono.
+anche sopra la plancia, premendo i **tre trattini della plancia** in alto a
+sinistra, come sul telefono.
 L'indirizzo sta **dietro l'ingress** di Home Assistant — ci arriva solo chi è
 già entrato, e non c'è nessuna porta nuova aperta sul router.
 
@@ -448,10 +448,14 @@ E poi tutto il resto:
   le stesse finestre quando le tocchi, la stessa barra in fondo con le sue
   pagine, la stessa Config. Se cambi qualcosa nell'editor di là, qui si vede
   senza fare niente.
-- **La barra dell'app** si tira dentro dal bordo sinistro (la pillola a metà
-  altezza). In cima c'è il nome della casa e da dove stai passando: «in
-  casa» o «da fuori». È la cosa più utile da controllare per prima, e la
-  plancia da sola non la può sapere.
+- **La barra dell'app** si apre da due posti, e nessuno dei due è un gesto
+  nuovo da imparare: sulla plancia i suoi **tre trattini** in alto a sinistra
+  — dentro Home Assistant quel tasto apre la barra di HA, qui apre la nostra —
+  e sulle altre schermate il **☰** nella barra del titolo. Su Android anche il
+  **tasto indietro**: lo apre, e col menu aperto esce dall'app. In cima alla
+  barra c'è il nome della casa e da dove stai passando: «in casa» o «da
+  fuori». È la cosa più utile da controllare per prima, e la plancia da sola
+  non la può sapere.
 - **Spegni il Wi-Fi del telefono** e passa alla rete del cellulare. Dopo
   qualche secondo l'app deve tornare su da sola e la scritta deve diventare
   «da fuori». Se il centralino non c'è, deve dire che la casa si raggiunge solo

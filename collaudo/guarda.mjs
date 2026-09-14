@@ -863,20 +863,58 @@ try {
   await premiLaScheda("home");
   await attendi(700);
 
-  /* Il menu laterale. Sta dietro il bottone in alto a sinistra, e li' l'albero
-   * dell'accessibilita' di Flutter mette i riquadri dove gli pare: quando il
-   * tocco sul nodo non arriva al bottone disegnato, si tocca dove il bottone
-   * **sta**. Col dito sul telefono non serve. */
-  /* La barra delle sezioni non e' un menu a tendina: e' una dock che sta
-   * sotto il bordo e si chiama dalla maniglia, la pillola in fondo allo
-   * schermo. Si preme li'. */
-  async function apriIlMenu() {
-    /* Si richiude da sola poco dopo che si e' scelto: premere la maniglia
-     * mentre e' ancora aperta la chiuderebbe. */
-    await attendi(1400);
-    /* Premere la maniglia quando la barra e' gia' su la manda giu'. */
-    if (!(await laBarraECaperta())) {
+  /* La barra delle sezioni non e' un menu a tendina: e' una dock che sta sotto
+   * il bordo sinistro. Le porte per chiamarla sono due, e cambiano con la
+   * schermata:
+   *
+   *  - sulle sezioni dell'app, il ☰ nella barra del titolo;
+   *  - sulla plancia, che una barra del titolo non ce l'ha, i tre trattini
+   *    **della plancia** — un tasto della pagina, dentro il riquadro. Si preme
+   *    dal di dentro, come le sue linguette.
+   *
+   * Sopra la plancia l'app non disegna piu' niente: e' per questo che la
+   * pillola sul bordo non c'e' piu'. */
+  const daiTreTrattini = async () => {
+    /* Il riquadro si cerca adesso, fra i riquadri che la pagina ha in questo
+       momento: la plancia si ricarica, e un riquadro tenuto da parte da prima
+       e' un riquadro che non c'e' piu'. */
+    for (const dentro of pagina.frames()) {
+      const fatto = await dentro
+        .evaluate(() => {
+          const tasto = document.querySelector(".ha-menu-btn");
+          if (!tasto) return false;
+          tasto.click();
+          return true;
+        })
+        .catch(() => false);
+      if (fatto) return true;
+    }
+    return false;
+  };
+
+  async function chiamaLaBarra() {
+    const tasto = await ilBottone(pagina, "Barra delle sezioni", {
+      aspetta: false,
+    });
+    if (tasto) {
       await premi(pagina, "Barra delle sezioni");
+      return;
+    }
+    if (await daiTreTrattini()) return;
+    /* Ne' l'uno ne' gli altri: lo si dice invece di andare avanti e accusare
+     * la pagina dopo di non essere comparsa. */
+    const cEra = await cosaCeDaPremere(pagina);
+    throw new Error(
+      `nessuna porta per la barra: ne' il ☰ ne' i tre trattini della plancia. A schermo c'e': ${cEra.join(" · ")}`,
+    );
+  }
+
+  async function apriIlMenu() {
+    /* Si richiude da sola poco dopo che si e' scelto: chiamarla mentre e'
+     * ancora aperta, col ☰, la chiuderebbe. */
+    await attendi(1400);
+    if (!(await laBarraECaperta())) {
+      await chiamaLaBarra();
       await attendi(900);
     }
     /* Non si aspetta una voce in particolare: la barra si apre gia' scorsa
@@ -912,7 +950,7 @@ try {
      * scorrere da dove si era e' proprio la cosa che non si puo' fare. */
     for (let tentativo = 0; tentativo < 4; tentativo += 1) {
       if (!(await laBarraECaperta())) {
-        await premi(pagina, "Barra delle sezioni");
+        await chiamaLaBarra();
         await attendi(900);
       }
       /* La barra e' piu' alta dello schermo: le voci in fondo stanno sotto il
@@ -967,26 +1005,32 @@ try {
     );
   }
 
-  /* Se la barra e' dentro. Lo dice la **maniglia**.
+  /* Se la barra e' dentro. Lo dice la **riga della casa**, quella in cima alla
+   * barra.
    *
-   * Non una voce: le voci scorrono, e la prima — «HOME» — esce di vista appena
-   * la barra si apre su una sezione in fondo all'elenco. Chiedere di lei
-   * voleva dire sentirsi rispondere «chiusa» a barra apertissima, premere la
-   * maniglia per aprirla e cosi' chiuderla davvero.
+   * Non una voce delle sezioni: quelle scorrono, e la prima — «HOME» — esce di
+   * vista appena la barra si apre su una sezione in fondo all'elenco. Chiedere
+   * di lei voleva dire sentirsi rispondere «chiusa» a barra apertissima, e
+   * chiamarla di nuovo per aprirla e cosi' chiuderla davvero.
    *
-   * La maniglia invece c'e' sempre, e quando la barra e' dentro si sposta di
-   * fianco a lei: se sta sul bordo la barra e' fuori, se sta a duecento punti
-   * la barra e' aperta. Una cosa sola da guardare, e sempre la stessa. */
+   * La riga della casa invece sta sempre in cima alla barra, e con la barra si
+   * sposta: fuori dallo schermo quando e' chiusa, sul fianco sinistro quando
+   * e' aperta. Si guardano tutti i nodi che portano quel nome perche' ce n'e'
+   * un altro — il tasto delle case nella barra del titolo — e quello sta a
+   * destra: la barra e' dentro solo se quel nome si trova a **sinistra**. */
   async function laBarraECaperta() {
-    const maniglia = await ilBottone(pagina, "Barra delle sezioni", {
-      aspetta: false,
-    });
-    const dove = await (maniglia?.boundingBox().catch(() => null) ?? null);
-    /* Ben dentro, non a meta' strada: la maniglia ci mette quattro decimi di
-     * secondo ad arrivare, e sorprenderla per via voleva dire leggere «e'
-     * aperta» su una barra che si stava ancora aprendo — e premere la
-     * maniglia per aprirla, cioe' richiuderla. */
-    return Boolean(dove && dove.x > 150);
+    const tutti = await pagina
+      .locator('[aria-label^="Le tue case"]')
+      .elementHandles()
+      .catch(() => []);
+    for (const uno of tutti) {
+      const dove = await uno.boundingBox().catch(() => null);
+      /* Ben dentro, non a meta' strada: la barra ci mette quattro decimi di
+       * secondo ad arrivare, e sorprenderla per via voleva dire leggere «e'
+       * aperta» su una barra che si stava ancora aprendo. */
+      if (dove && dove.x > 4 && dove.x < 120 && dove.y > 20) return true;
+    }
+    return false;
   }
 
   /* Andare in una sezione dell'app, e assicurarsi di esserci arrivati.
@@ -1186,7 +1230,7 @@ try {
   await apriIlMenu();
   /* La prova che la voce ha preso e' **la pagina**, non la barra.
    *
-   * `premiNelMenu` guarda la maniglia: una voce premuta manda giu' la barra,
+   * `premiNelMenu` guarda la barra: una voce premuta la manda giu',
    * e se dopo un secondo e' ancora su quel tocco non e' finito su una voce.
    * Vale per le schermate dell'app, e non per le due voci che aprono il
    * riquadro: qui il collaudo gira nel browser, dove la plancia sta in un

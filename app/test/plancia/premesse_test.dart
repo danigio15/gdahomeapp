@@ -133,6 +133,60 @@ void main() {
     );
   });
 
+  test('i tre trattini della plancia aprono il menu dell\'app', () {
+    final servita = _premesse().conLePremesse(
+      _pagina,
+      ilWebSocket: 'WebSocket',
+    );
+    /* Il tasto resta a schermo: e' la porta del menu, e nell'app era l'unica
+     * cosa nascosta che serviva. */
+    expect(
+      servita,
+      isNot(contains('.ha-menu-btn{display:none')),
+      reason: 'il tasto si vede: e\' la porta del menu',
+    );
+    /* L'ingranaggio della Config accanto, invece, resta nascosto: quella
+     * porta nell'app e' la voce del menu. */
+    expect(servita, contains('header .dm-editor-entry{display:none'));
+    /* Il suo menu non si apre: l'evento si ferma prima dell'`onclick` scritto
+     * nella pagina, ed e' il solo modo di arrivare prima. */
+    expect(servita, contains('closest(".ha-menu-btn")'));
+    expect(
+      servita,
+      contains('evento.preventDefault();evento.stopPropagation();'),
+    );
+    /* E lo dice all'app dalle due strade che ci sono: il canale del WebView
+     * sul telefono, il messaggio a chi ospita il riquadro nel browser. */
+    expect(
+      servita,
+      contains('window.gdahomeDice.postMessage("$ilMenuDalTelefono")'),
+    );
+    expect(
+      servita,
+      contains('window.parent.postMessage({gdahome:"$ilMenuDalRiquadro"}'),
+    );
+    /* Tenuto premuto e' un altro gesto, e non e' nostro: la plancia accende
+     * il suo kiosk, e il menu dell'app non si apre. */
+    expect(servita, contains('Date.now()-premutoIl>=650'));
+  });
+
+  test('la parola del menu non e\' il nome di una pagina della plancia', () {
+    /* Sul telefono la pagina e l'app si parlano su un canale solo: se questa
+     * parola fosse anche il nome di una linguetta, andare su quella pagina
+     * aprirebbe il menu. */
+    expect(ilMenuDalTelefono, contains(':'));
+    for (final quale in const [
+      'home',
+      'clima',
+      'energy',
+      'config',
+      'security',
+      'appliances-main',
+    ]) {
+      expect(ilMenuDalTelefono, isNot(quale));
+    }
+  });
+
   test('quello che va in fondo sta in fondo, e nell\'ordine giusto', () {
     /* Le misure e la porta della Config perdono se stanno in testa: la plancia
      * scrive con `!important`, e fra due della stessa forza vince l'ultimo che
@@ -144,10 +198,12 @@ void main() {
     final corpo = servita.indexOf('la plancia');
     final misure = servita.indexOf('gdahome-misure');
     final config = servita.indexOf('gdahome-config-fuori');
+    final trattini = servita.indexOf('closest(".ha-menu-btn")');
     final tenda = servita.indexOf('setTimeout(alza,5000)');
     expect(corpo, lessThan(misure));
     expect(misure, lessThan(config));
-    expect(config, lessThan(tenda));
+    expect(config, lessThan(trattini));
+    expect(trattini, lessThan(tenda));
     expect(servita.indexOf('</body>'), greaterThan(tenda));
   });
 }

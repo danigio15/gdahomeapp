@@ -1,64 +1,41 @@
-/// Che nel browser la barra si apra davvero.
+/// Che nel browser la barra si apra davvero, e che sulla plancia non ci sia
+/// piu' niente di nostro.
 ///
 /// Nel browser la plancia e' un `iframe`, e un `iframe` si mangia i tocchi di
-/// tutto quello che gli sta sopra: la maniglia si vedeva e non si apriva, e a
-/// barra aperta le sue voci non si premevano. Il perche' — e il come — sta in
-/// `schermate/maniglia_qui/qui.dart`.
+/// tutto quello che gli sta sopra: a barra aperta le sue voci si vedevano e non
+/// si premevano. Il perche' — e il come — sta in
+/// `schermate/da_parte_qui/qui.dart`.
 ///
 /// Qui non si prova la pagina: le prove girano su una macchina virtuale, e li'
-/// nessuna pagina c'e'. Si prova **quando** la barra chiede di rivelare la
-/// maniglia e quando chiede alla plancia di farsi da parte — che e' l'unica
-/// cosa che si puo' sbagliare, perche' il pezzo che tocca la pagina sono tre
-/// righe di stile.
+/// nessuna pagina c'e'. Si prova **quando** la barra chiede alla plancia di
+/// farsi da parte — che e' l'unica cosa che si puo' sbagliare, perche' il pezzo
+/// che tocca la pagina sono due righe di stile.
+///
+/// E si prova che sul bordo sinistro non ci sia piu' nessun gesto nostro: e'
+/// per quello che la fascia invisibile che c'era se n'e' andata. Stava sopra la
+/// plancia, e sulla Configurazione la plancia sul bordo sinistro ha le sue
+/// sezioni: si toccava una sezione e si apriva il menu.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/schermate/barra.dart';
-import 'package:gdahome/schermate/maniglia.dart';
+import 'package:gdahome/schermate/da_parte.dart';
 import 'package:gdahome/schermate/menu.dart';
 
-/// Una fascia che non tocca nessuna pagina e tiene il conto di quello che le
+/// Una plancia che non tocca nessuna pagina e tiene il conto di quello che le
 /// si chiede.
-class _FasciaFinta extends LaFasciaDelGesto {
-  int messa = 0;
-  int tolta = 0;
-
+class _DaParteFinta extends LaPlanciaDaParte {
   /// Ogni volta che la plancia si sposta o torna, in ordine.
   final List<bool> spostata = [];
 
-  double? larga;
-  double? alta;
-  double? dalBordo;
-
   @override
-  void metti({
-    required double larga,
-    required double alta,
-    required double dalBordo,
-  }) {
-    messa += 1;
-    this.larga = larga;
-    this.alta = alta;
-    this.dalBordo = dalBordo;
-  }
-
-  @override
-  void togli() => tolta += 1;
-
-  @override
-  void laPlanciaSiFaDaParte(bool si) => spostata.add(si);
+  void siFaDaParte(bool si) => spostata.add(si);
 }
-
-/// La maniglia disegnata: si cerca dal nome che ha per chi non vede, che e'
-/// l'unica cosa che la distingue.
-final laManiglia = find.byWidgetPredicate(
-  (quale) => quale is Semantics && quale.properties.label == nomeDellaManiglia,
-);
 
 Widget _conLaBarra({
   required GlobalKey<BarraDelleSezioniState> chiave,
-  required _FasciaFinta fascia,
+  required _DaParteFinta daParte,
   required bool sopraLaPlancia,
 }) => MaterialApp(
   home: Scaffold(
@@ -71,7 +48,7 @@ Widget _conLaBarra({
           vai: (_) {},
           vaiAlleCase: () {},
           sopraLaPlancia: sopraLaPlancia,
-          fascia: fascia,
+          daParte: daParte,
         ),
       ],
     ),
@@ -79,102 +56,50 @@ Widget _conLaBarra({
 );
 
 void main() {
-  group('la fascia dei gesti', () {
-    testWidgets('sopra la plancia si mette, e sta dov\'e\' la maniglia', (
-      prova,
-    ) async {
+  group('sul bordo della plancia non c\'e\' piu\' niente di nostro', () {
+    testWidgets('toccare il bordo sinistro non apre la barra', (prova) async {
       prova.view.physicalSize = const Size(400, 800);
       prova.view.devicePixelRatio = 1;
       addTearDown(prova.view.reset);
-      final fascia = _FasciaFinta();
+      final chiave = GlobalKey<BarraDelleSezioniState>();
       await prova.pumpWidget(
         _conLaBarra(
-          chiave: GlobalKey<BarraDelleSezioniState>(),
-          fascia: fascia,
+          chiave: chiave,
+          daParte: _DaParteFinta(),
           sopraLaPlancia: true,
         ),
       );
 
-      expect(fascia.messa, 1);
-      /* Le misure non si scrivono a mano: si confrontano con la maniglia
-       * disegnata. E' tutto il punto — il dito deve trovare il gesto dove
-       * vede la pillola, e due numeri tenuti a mano prima o poi divergono. */
-      final dovE = prova.getRect(laManiglia);
-      expect(fascia.larga, dovE.width);
-      expect(fascia.alta, dovE.height);
-      expect(fascia.dalBordo, dovE.left);
+      /* Dove stava la fascia: due punti dal bordo, a meta' altezza. E' la
+       * stessa striscia dove la Configurazione della plancia tiene le sue
+       * sezioni, larga quarantasei punti. */
+      await prova.tapAt(const Offset(2, 400));
+      await prova.pumpAndSettle();
+
+      expect(chiave.currentState!.aperta, isFalse);
     });
 
-    testWidgets('non si mette una seconda volta a ogni ridisegno', (
-      prova,
-    ) async {
+    testWidgets('e non c\'e\' nessuna pillola disegnata', (prova) async {
       prova.view.physicalSize = const Size(400, 800);
       prova.view.devicePixelRatio = 1;
       addTearDown(prova.view.reset);
-      final fascia = _FasciaFinta();
-      final chiave = GlobalKey<BarraDelleSezioniState>();
-      await prova.pumpWidget(
-        _conLaBarra(chiave: chiave, fascia: fascia, sopraLaPlancia: true),
-      );
-      await prova.pumpWidget(
-        _conLaBarra(chiave: chiave, fascia: fascia, sopraLaPlancia: true),
-      );
-
-      expect(fascia.messa, 1);
-      expect(fascia.tolta, 0);
-    });
-
-    testWidgets('sulle altre sezioni non si mette: li\' i tocchi arrivano', (
-      prova,
-    ) async {
-      prova.view.physicalSize = const Size(400, 800);
-      prova.view.devicePixelRatio = 1;
-      addTearDown(prova.view.reset);
-      final fascia = _FasciaFinta();
       await prova.pumpWidget(
         _conLaBarra(
           chiave: GlobalKey<BarraDelleSezioniState>(),
-          fascia: fascia,
-          sopraLaPlancia: false,
-        ),
-      );
-
-      expect(fascia.messa, 0);
-    });
-
-    testWidgets('passando a un\'altra sezione si toglie', (prova) async {
-      prova.view.physicalSize = const Size(400, 800);
-      prova.view.devicePixelRatio = 1;
-      addTearDown(prova.view.reset);
-      final fascia = _FasciaFinta();
-      final chiave = GlobalKey<BarraDelleSezioniState>();
-      await prova.pumpWidget(
-        _conLaBarra(chiave: chiave, fascia: fascia, sopraLaPlancia: true),
-      );
-      await prova.pumpWidget(
-        _conLaBarra(chiave: chiave, fascia: fascia, sopraLaPlancia: false),
-      );
-
-      expect(fascia.tolta, 1);
-    });
-
-    testWidgets('dove la barra resta non c\'e\' maniglia, e non si mette', (
-      prova,
-    ) async {
-      prova.view.physicalSize = const Size(1200, 900);
-      prova.view.devicePixelRatio = 1;
-      addTearDown(prova.view.reset);
-      final fascia = _FasciaFinta();
-      await prova.pumpWidget(
-        _conLaBarra(
-          chiave: GlobalKey<BarraDelleSezioniState>(),
-          fascia: fascia,
+          daParte: _DaParteFinta(),
           sopraLaPlancia: true,
         ),
       );
 
-      expect(laManiglia, findsNothing);
-      expect(fascia.messa, 0);
+      expect(
+        find.byWidgetPredicate(
+          (quale) =>
+              quale is Semantics &&
+              quale.properties.label == nomeDelTastoDellaBarra,
+        ),
+        findsNothing,
+        reason: 'il ☰ sta nella barra del titolo, non sopra la plancia',
+      );
     });
   });
 
@@ -185,23 +110,23 @@ void main() {
       prova.view.physicalSize = const Size(400, 800);
       prova.view.devicePixelRatio = 1;
       addTearDown(prova.view.reset);
-      final fascia = _FasciaFinta();
+      final daParte = _DaParteFinta();
       final chiave = GlobalKey<BarraDelleSezioniState>();
       await prova.pumpWidget(
-        _conLaBarra(chiave: chiave, fascia: fascia, sopraLaPlancia: true),
+        _conLaBarra(chiave: chiave, daParte: daParte, sopraLaPlancia: true),
       );
-      expect(fascia.spostata, isEmpty, reason: 'a barra chiusa non si tocca');
+      expect(daParte.spostata, isEmpty, reason: 'a barra chiusa non si tocca');
 
       chiave.currentState!.apri();
       /* Due colpi: il primo mette in moto l'animazione, il secondo la fa
        * correre. Con uno solo la barra e' ancora a zero e non copre niente. */
       await prova.pump();
       await prova.pump(const Duration(milliseconds: 100));
-      expect(fascia.spostata, [true]);
+      expect(daParte.spostata, [true]);
 
       chiave.currentState!.chiudi();
       await prova.pumpAndSettle();
-      expect(fascia.spostata, [true, false]);
+      expect(daParte.spostata, [true, false]);
     });
 
     testWidgets('e non si sposta due volte mentre la barra scorre', (
@@ -210,16 +135,16 @@ void main() {
       prova.view.physicalSize = const Size(400, 800);
       prova.view.devicePixelRatio = 1;
       addTearDown(prova.view.reset);
-      final fascia = _FasciaFinta();
+      final daParte = _DaParteFinta();
       final chiave = GlobalKey<BarraDelleSezioniState>();
       await prova.pumpWidget(
-        _conLaBarra(chiave: chiave, fascia: fascia, sopraLaPlancia: true),
+        _conLaBarra(chiave: chiave, daParte: daParte, sopraLaPlancia: true),
       );
 
       chiave.currentState!.apri();
       await prova.pumpAndSettle();
 
-      expect(fascia.spostata, [true]);
+      expect(daParte.spostata, [true]);
     });
 
     testWidgets('dove la barra resta non copre niente, e non si sposta', (
@@ -228,16 +153,16 @@ void main() {
       prova.view.physicalSize = const Size(1200, 900);
       prova.view.devicePixelRatio = 1;
       addTearDown(prova.view.reset);
-      final fascia = _FasciaFinta();
+      final daParte = _DaParteFinta();
       final chiave = GlobalKey<BarraDelleSezioniState>();
       await prova.pumpWidget(
-        _conLaBarra(chiave: chiave, fascia: fascia, sopraLaPlancia: true),
+        _conLaBarra(chiave: chiave, daParte: daParte, sopraLaPlancia: true),
       );
 
       chiave.currentState!.apri();
       await prova.pumpAndSettle();
 
-      expect(fascia.spostata, isEmpty);
+      expect(daParte.spostata, isEmpty);
     });
 
     testWidgets('quando la barra se ne va, rimette tutto a posto', (
@@ -246,10 +171,10 @@ void main() {
       prova.view.physicalSize = const Size(400, 800);
       prova.view.devicePixelRatio = 1;
       addTearDown(prova.view.reset);
-      final fascia = _FasciaFinta();
+      final daParte = _DaParteFinta();
       final chiave = GlobalKey<BarraDelleSezioniState>();
       await prova.pumpWidget(
-        _conLaBarra(chiave: chiave, fascia: fascia, sopraLaPlancia: true),
+        _conLaBarra(chiave: chiave, daParte: daParte, sopraLaPlancia: true),
       );
       chiave.currentState!.apri();
       /* Due colpi: il primo mette in moto l'animazione, il secondo la fa
@@ -260,11 +185,10 @@ void main() {
       await prova.pumpWidget(const MaterialApp(home: SizedBox()));
 
       expect(
-        fascia.spostata.last,
+        daParte.spostata.last,
         isFalse,
         reason: 'la plancia riprende i tocchi',
       );
-      expect(fascia.tolta, 1, reason: 'e la fascia non resta nella pagina');
     });
   });
 }

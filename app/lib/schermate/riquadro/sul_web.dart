@@ -10,6 +10,8 @@ import 'package:flutter/widgets.dart' show Widget;
 import 'package:web/web.dart' as web;
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../plancia/premesse.dart' show ilMenuDalRiquadro;
+
 /// Un controllore pronto a caricare una pagina. Sul web sa fare solo quello:
 /// non dice quando la pagina e' arrivata ne' se e' arrivata, quindi la si da'
 /// per arrivata subito — il velo si toglie, e sotto il riquadro fa da se'.
@@ -27,6 +29,7 @@ WebViewController costruisciIlControllore({
   Future<bool> Function(String domanda)? chiede,
   Future<String> Function(String domanda, String diSerie)? faScrivere,
   void Function(String pagina)? quandoCambiaPagina,
+  void Function()? quandoChiedeIlMenu,
 }) {
   final controllore = WebViewController();
   /* Chi va avvisato quando la pagina «arriva». Si tiene da parte perche'
@@ -35,7 +38,9 @@ WebViewController costruisciIlControllore({
    * velo finche' qualcuno non gli dice che puo' togliersi. */
   _laFine[controllore] = quandoCaricata;
   scheduleMicrotask(quandoCaricata);
-  if (quandoCambiaPagina != null) _ascoltaIlRiquadro(quandoCambiaPagina);
+  if (quandoCambiaPagina != null || quandoChiedeIlMenu != null) {
+    _ascoltaIlRiquadro(quandoCambiaPagina, quandoChiedeIlMenu);
+  }
   return controllore;
 }
 
@@ -54,7 +59,8 @@ Future<void> apriLaPagina(WebViewController controllore, Uri pagina) async {
   if (fine != null) scheduleMicrotask(fine);
 }
 
-/// Quale pagina della plancia si e' accesa, detta dal riquadro.
+/// Quello che il riquadro dice a chi lo ospita: quale pagina della plancia si
+/// e' accesa, e che si vuole il menu dell'app.
 ///
 /// Nel browser il riquadro e' un `iframe` e parla a chi lo ospita con un
 /// messaggio; sul telefono c'e' un canale del WebView. La pagina prova tutte
@@ -65,7 +71,10 @@ Future<void> apriLaPagina(WebViewController controllore, Uri pagina) async {
 /// dieci ascolti che dicono la stessa cosa dieci volte.
 bool _ascolto = false;
 
-void _ascoltaIlRiquadro(void Function(String pagina) quandoCambiaPagina) {
+void _ascoltaIlRiquadro(
+  void Function(String pagina)? quandoCambiaPagina,
+  void Function()? quandoChiedeIlMenu,
+) {
   if (_ascolto) return;
   _ascolto = true;
   web.window.addEventListener(
@@ -75,9 +84,17 @@ void _ascoltaIlRiquadro(void Function(String pagina) quandoCambiaPagina) {
       if (detto == null || !detto.isA<JSObject>()) return;
       final oggetto = detto as JSObject;
       try {
-        if (oggetto.getProperty('gdahome'.toJS)?.dartify() != 'pagina') return;
+        final cosa = oggetto.getProperty('gdahome'.toJS)?.dartify();
+        /* I tre trattini della plancia: aprono il menu dell'app, e sono la
+         * porta del menu su questa schermata — sopra la plancia l'app non
+         * disegna niente, perche' un `iframe` i tocchi se li mangia. */
+        if (cosa == ilMenuDalRiquadro) {
+          quandoChiedeIlMenu?.call();
+          return;
+        }
+        if (cosa != 'pagina') return;
         final dove = oggetto.getProperty('dove'.toJS)?.dartify();
-        if (dove is String && dove.isNotEmpty) quandoCambiaPagina(dove);
+        if (dove is String && dove.isNotEmpty) quandoCambiaPagina?.call(dove);
       } catch (_) {
         /* Un messaggio di qualcun altro, fatto in un altro modo: non e'
          * nostro e non ci riguarda. */
