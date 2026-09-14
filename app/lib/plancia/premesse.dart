@@ -278,12 +278,18 @@ class Premesse {
       '}catch(male){}'
       '};'
       'var torna=function(prove){'
-      'if(!ciSiamo()){scordaLIndirizzo();setTimeout(guarda,0);return;}'
+      /* L'ordine nell'indirizzo se ne va **subito**, non solo quando si e'
+         usciti: finche' resta scritto, ogni ricarica della pagina riapre la
+         Configurazione — e toccare «Plancia» quando l'app crede di esserci
+         gia' ricarica. Da fuori si vedeva un tasto che riportava dove si era
+         appena chiesto di non stare piu'. */
+      'scordaLIndirizzo();'
+      'if(!ciSiamo()){setTimeout(guarda,0);return;}'
       'chiudiQuelloChEAperto();'
       'try{document.body.classList.remove("gdahome-in-config");}catch(male){}'
       'var voce=laVoce(dove)||laVoce("home");'
       'if(voce)try{voce.click();}catch(male){}'
-      'if(!ciSiamo()){scordaLIndirizzo();setTimeout(guarda,0);return;}'
+      'if(!ciSiamo()){setTimeout(guarda,0);return;}'
       'if(prove<60){setTimeout(function(){torna(prove+1);},60);return;}'
       'setTimeout(guarda,0);'
       '};'

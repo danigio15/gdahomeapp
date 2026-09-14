@@ -141,23 +141,38 @@ class _HomeState extends State<Home> {
      * riquadro: e' li' che si e', e il menu deve dirlo. */
     if (dove == Sezione.configurazione) {
       if (_sezione != dove) setState(() => _sezione = dove);
+      /* La Config l'abbiamo chiesta noi: la pagina lo confermera' appena si
+       * apre, e fino a quel momento vale quello che le abbiamo chiesto. */
+      _laPaginaENellaConfig = true;
       _plancia.currentState?.apriLaConfig();
       return;
     }
-    /* Dalla Configurazione alla Plancia: la plancia torna dov'era prima.
-     * Nella dashboard si tocca un'altra linguetta della sua barra; qui la
-     * barra e' il menu dell'app, e fa la stessa cosa. */
-    if (dove == Sezione.plancia && _sezione == Sezione.configurazione) {
-      setState(() => _sezione = dove);
-      _plancia.currentState?.tornaDallaConfig();
+    /* «Plancia» riporta alla plancia. **Sempre**, senza chiedere al menu dove
+     * crede di essere.
+     *
+     * Con lo stesso tocco si chiedono due cose diverse: uscire dalla
+     * Configurazione, se la si sta guardando, e ricaricare, se la plancia c'e'
+     * gia' — che e' il gesto piu' vicino a tirare giu' per aggiornare, che
+     * dentro un riquadro non c'e'. A dire quale delle due e' **la pagina**:
+     * quello che il menu ha segnato e' quello che si e' scelto, e le due cose
+     * si scollano. Basta una ricarica in mezzo: la plancia riparte dalla sua
+     * Home e lo dice — il menu si segna sulla Plancia — e un momento dopo
+     * l'ordine nell'indirizzo riapre la Config. Il menu dice una cosa, lo
+     * schermo un'altra.
+     *
+     * Chiedere al menu, allora, voleva dire ricaricare la plancia per
+     * ritrovarsi la Configurazione. Chiedere alla pagina vuol dire uscirne. */
+    if (dove == Sezione.plancia) {
+      if (_laPaginaENellaConfig) {
+        _laPaginaENellaConfig = false;
+        _plancia.currentState?.tornaDallaConfig();
+      } else if (_sezione == dove) {
+        _plancia.currentState?.ricarica();
+      }
+      if (_sezione != dove) setState(() => _sezione = dove);
       return;
     }
-    /* Toccare «Plancia» quando ci si e' gia' la ricarica: e' il gesto piu'
-     * vicino a tirare giu' per aggiornare, che dentro un riquadro non c'e'. */
-    if (dove == _sezione) {
-      if (dove == Sezione.plancia) _plancia.currentState?.ricarica();
-      return;
-    }
+    if (dove == _sezione) return;
     setState(() => _sezione = dove);
   }
 
@@ -195,8 +210,20 @@ class _HomeState extends State<Home> {
    * menu dell'app restava segnato su «Configurazione» con sotto un'altra
    * pagina. Adesso la pagina lo dice (`plancia/premesse.dart`) e il menu si
    * sposta da se': sulla Configurazione ci si resta finche' ci si e'. */
+  /// Se la pagina dice di stare mostrando la sua Configurazione.
+  ///
+  /// Non e' `_sezione`: quella e' la voce segnata nel menu, cioe' quello che
+  /// si e' **scelto**. Questo e' dove la pagina dice di essere, e le due cose
+  /// si scollano — l'ordine nell'indirizzo puo' riaprire la Config sotto un
+  /// menu segnato sulla Plancia. Serve a sapere cosa vuole chi tocca
+  /// «Plancia»: uscire dalla Config, o ricaricare.
+  bool _laPaginaENellaConfig = false;
+
   void _laPlanciaEAltrove(String pagina) {
     if (!mounted) return;
+    /* Non ridisegna niente: non e' una cosa che si vede, e' una cosa che si
+     * sa. */
+    _laPaginaENellaConfig = pagina == 'config';
     if (_sezione != Sezione.configurazione || pagina == 'config') return;
     setState(() => _sezione = Sezione.plancia);
   }

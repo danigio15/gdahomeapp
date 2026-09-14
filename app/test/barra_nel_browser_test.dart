@@ -37,6 +37,7 @@ Widget _conLaBarra({
   required GlobalKey<BarraDelleSezioniState> chiave,
   required _DaParteFinta daParte,
   required bool sopraLaPlancia,
+  void Function(Sezione dove)? vai,
 }) => MaterialApp(
   home: Scaffold(
     body: Stack(
@@ -45,7 +46,7 @@ Widget _conLaBarra({
           key: chiave,
           sezioni: vociDellaBarra(),
           aperta: Sezione.plancia,
-          vai: (_) {},
+          vai: vai ?? (_) {},
           vaiAlleCase: () {},
           sopraLaPlancia: sopraLaPlancia,
           daParte: daParte,
@@ -189,6 +190,48 @@ void main() {
         isFalse,
         reason: 'la plancia riprende i tocchi',
       );
+    });
+  });
+
+  group('la barra non decide se un tocco serve', () {
+    testWidgets('anche la voce già segnata arriva a chi la ascolta', (
+      prova,
+    ) async {
+      prova.view.physicalSize = const Size(400, 800);
+      prova.view.devicePixelRatio = 1;
+      addTearDown(prova.view.reset);
+
+      /* «Plancia» premuta stando — per quel che ne sa il menu — sulla
+       * plancia. La barra si teneva quel tocco: `dove != aperta`, e allora
+       * chi ascolta non sapeva niente.
+       *
+       * Due gesti ci passavano. Uscire dalla Configurazione quando il menu
+       * s'era scollato dalla pagina — la plancia riparte, dice «sono sulla
+       * mia Home», e un momento dopo la Config si riapre: il menu segnato
+       * sulla Plancia, lo schermo sulla Config, e «Plancia» che non faceva
+       * niente. E la ricarica, che sta scritta nella home dell'app e non era
+       * mai partita: dentro un riquadro non c'e' da tirare giu' per
+       * aggiornare, e quel tocco e' il gesto piu' vicino.
+       *
+       * Se un tocco serve o no lo decide chi sa dov'e' la pagina, non la
+       * barra. */
+      final premute = <Sezione>[];
+      final chiave = GlobalKey<BarraDelleSezioniState>();
+      await prova.pumpWidget(
+        _conLaBarra(
+          chiave: chiave,
+          daParte: _DaParteFinta(),
+          sopraLaPlancia: true,
+          vai: premute.add,
+        ),
+      );
+      chiave.currentState!.apri();
+      await prova.pumpAndSettle();
+
+      await prova.tap(find.text(vociDellaBarra().first.titolo.toUpperCase()));
+      await prova.pump();
+
+      expect(premute, [Sezione.plancia]);
     });
   });
 }

@@ -133,6 +133,34 @@ void main() {
     );
   });
 
+  test("l'ordine nell'indirizzo se ne va appena si chiede di tornare", () {
+    /* Sul telefono, se la chiamata diretta non riesce al primo colpo, la
+     * Config si apre col ripiego: `…#gdahome-config` scritto nell'indirizzo.
+     * Quell'ordine serve **una volta**. Restando scritto, ogni ricarica della
+     * pagina riapre la Configurazione.
+     *
+     * L'ordine si cancellava solo nelle uscite di `torna`, cioe' soltanto
+     * stando dentro la Config. Ma dov'e' la pagina lo dice la pagina, e quel
+     * «dice» si puo' perdere: con l'app che crede di stare sulla plancia, il
+     * tocco su «Plancia» diventa una ricarica — e la ricarica rileggeva
+     * l'ordine e riapriva la Config. Da fuori: un tasto che riportava dove si
+     * era appena chiesto di non stare piu'.
+     *
+     * Adesso e' la prima cosa che si fa, prima ancora di guardare dove si e'. */
+    final dentro = Premesse.laConfigFuoriDallaPlancia;
+    final torna = dentro.indexOf('var torna=function(prove){');
+    expect(torna, isNot(-1), reason: 'la funzione che riporta alla plancia');
+    final scorda = dentro.indexOf('scordaLIndirizzo();', torna);
+    final guardaDoveSiE = dentro.indexOf('ciSiamo()', torna);
+    expect(scorda, isNot(-1));
+    expect(guardaDoveSiE, isNot(-1));
+    expect(
+      scorda,
+      lessThan(guardaDoveSiE),
+      reason: "l'ordine se ne va prima di guardare dove si è",
+    );
+  });
+
   test('i tre trattini della plancia aprono il menu dell\'app', () {
     final servita = _premesse().conLePremesse(
       _pagina,

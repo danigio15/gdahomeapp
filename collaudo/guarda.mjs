@@ -1252,7 +1252,7 @@ try {
   racconta("la barra si e' scoperta da se'");
 
   racconta("apro la Configurazione della plancia dal menu");
-  const laConfig = await laPlancia(pagina);
+  let laConfig = await laPlancia(pagina);
   await apriIlMenu();
   /* La prova che la voce ha preso e' **la pagina**, non la barra.
    *
@@ -1414,6 +1414,55 @@ try {
       "l'indirizzo tiene ancora «apri la Config»: alla prima ricarica tornerebbe la Config",
     );
   }
+
+  /* E lo stesso tocco quando l'app **crede** di stare gia' sulla plancia.
+   *
+   * Dov'e' la pagina lo dice la pagina, e quel «dice» si puo' perdere. Una
+   * ricarica in mezzo e' il caso vero: la plancia si riaccende sulla sua Home
+   * e lo dice — il menu si segna sulla Plancia — e un momento dopo l'ordine
+   * nell'indirizzo riapre la Configurazione. Il menu dice una cosa, lo schermo
+   * un'altra, e il tocco su «Plancia» prima si limitava a ricaricare: «vanno
+   * in configurazione dal menu, poi se clicco su plancia resta aperto
+   * configurazione».
+   *
+   * Adesso «Plancia» riporta alla plancia senza chiedere all'app dove crede
+   * di essere. Qui si prova quel tocco, che fa due cose in una volta — uscire
+   * dalla Config e ricaricare — e sono due cose che possono pestarsi i piedi.
+   */
+  racconta("torno alla plancia quando l'app crede di starci già");
+  await apriIlMenu();
+  try {
+    await premiNelMenu(due("Configurazione", "Config"));
+  } catch (male) {
+    racconta(`la barra non si e' letta chiusa: guardo la pagina (${male.message})`);
+  }
+  await laConfig.waitForSelector("#page-config.active", { timeout: 30_000 });
+  await laConfig.evaluate(() => {
+    location.hash = "gdahome-config";
+    /* Quello che la pagina dice all'app quando si riaccende: «sono sulla mia
+     * Home». Qui non si ricarica niente — si dice soltanto, che e' quello che
+     * l'app sente — e la Config resta aperta dov'e'. */
+    window.parent.postMessage({ gdahome: "pagina", dove: "home" }, "*");
+  });
+  await attendi(900);
+  await apriIlMenu();
+  try {
+    await premiNelMenu(due("Plancia", "Dashboard"));
+  } catch (male) {
+    racconta(`la barra non si e' letta chiusa: guardo la pagina (${male.message})`);
+  }
+  /* Toccare «Plancia» standoci — per quel che ne sa l'app — ricarica: il
+   * riquadro riapre la pagina, e il contesto di prima non c'e' piu'. */
+  laConfig = await laPlancia(pagina);
+  const restaLaConfig = await laConfig.evaluate(
+    () => !!document.getElementById("page-config")?.classList.contains("active"),
+  );
+  if (restaLaConfig) {
+    throw new Error(
+      "«Plancia» non riporta alla plancia quando l'app crede di starci già: resta la Configurazione",
+    );
+  }
+  await scatta(pagina, "6l-tornati-dalla-config");
 
   /* La barra torna fissa, com'era: quello che viene dopo la guarda, e una
    * barra a scomparsa si nasconde da se' dopo quattro secondi. */

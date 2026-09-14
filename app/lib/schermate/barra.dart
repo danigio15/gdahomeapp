@@ -177,7 +177,20 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
 
   void _scelta(Sezione dove) {
     if (!_resta) _rimanda(_dopoLaScelta);
-    if (dove != widget.aperta) widget.vai(dove);
+    /* Anche la voce **gia' segnata**: se un tocco serve o no non lo decide la
+     * barra.
+     *
+     * Segnata vuol dire «l'app crede di essere li'», e quel «crede» si puo'
+     * perdere: dov'e' la plancia lo dice la plancia, e basta una ricarica in
+     * mezzo perche' il menu resti segnato sulla Plancia mentre sotto c'e'
+     * ancora la Configurazione. Toccare «Plancia» allora non faceva
+     * **niente** — il tocco si fermava qui — e da fuori era un tasto rotto:
+     * «se vanno in configurazione dal menu poi non mi torna in plancia».
+     *
+     * E si mangiava anche il tocco su «Plancia» stando sulla plancia, che e'
+     * il gesto piu' vicino a tirare giu' per aggiornare: la ricarica c'era
+     * scritta (`home.dart`) e non era mai partita. */
+    widget.vai(dove);
   }
 
   /* Finche' la si sta usando non se ne va. Scorrere quindici voci per trovare
