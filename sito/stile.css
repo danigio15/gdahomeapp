@@ -420,8 +420,73 @@ section {
 .interruttore-tema:hover {
   border-color: var(--azzurro);
 }
+
+/* ── La lingua ───────────────────────────────────────────────────────────
+ *
+ * Due tasti attaccati, dentro una cornice sola: si legge come un
+ * interruttore a due posizioni, e quella accesa dice in che lingua si sta
+ * leggendo. Non e' un menu: le lingue sono due, e per due voci un menu e'
+ * un clic in piu' per niente.
+ *
+ * Il tasto acceso lo dice `aria-pressed`, che e' la stessa cosa che legge
+ * chi usa un lettore di schermo: lo stato sta in un posto solo, e il colore
+ * lo segue. */
+.lingue {
+  display: flex;
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid var(--bordo);
+  border-radius: 11px;
+  background: var(--carta);
+  flex-shrink: 0;
+}
+.lingua {
+  min-width: 34px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--testo-lieve);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.lingua:hover {
+  color: var(--testo);
+}
+.lingua[aria-pressed="true"] {
+  background: var(--azzurro);
+  color: #fff;
+}
+.lingua:focus-visible {
+  outline: 2px solid var(--azzurro);
+  outline-offset: 2px;
+}
+
+/* Nell'informativa la barra non c'e': il marchio a sinistra e la lingua a
+   destra, sulla stessa riga. */
+.riga-di-testa {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
 @media (max-width: 940px) {
   .navigazione {
+    display: none;
+  }
+}
+
+/* Sul telefono in cima restano il marchio e la lingua.
+ *
+ * «Installa l'add-on» in quattrocento pixel si spezza in due righe e fa
+ * crescere la barra, che sta fissa e ruba schermo a tutto il resto. Non e' un
+ * tasto perduto: lo stesso sta due centimetri sotto, nella copertina, dove
+ * chiunque arrivi guarda per primo. */
+@media (max-width: 560px) {
+  .cappello .attrezzi .bottone {
     display: none;
   }
 }

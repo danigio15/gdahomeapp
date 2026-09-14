@@ -2,11 +2,11 @@
 
 Ultimo aggiornamento: 13 settembre 2026.
 
-gdahome è l'app di casa che apre la plancia di Home Assistant sul telefono.
-Questa pagina dice, in italiano e senza giri, **quali dati ci sono di mezzo,
-dove stanno e chi li può leggere**. È la stessa cosa che il Play Store chiede
-di dichiarare, e vale la pena leggerla anche se non si ha intenzione di
-dichiarare niente a nessuno.
+gdahome è l'app che apre la plancia di Home Assistant sul telefono. Questa
+pagina dice, in modo chiaro e senza giri di parole, **quali dati ci sono di
+mezzo, dove stanno e chi li può leggere**. È la stessa cosa che il Play Store
+chiede di dichiarare, e vale la pena leggerla anche senza avere niente da
+dichiarare a nessuno.
 
 ## La regola che viene prima di tutte
 
@@ -20,10 +20,9 @@ volontà: non c'è proprio il posto dove guardarla.
 
 ## Cosa c'è sul telefono
 
-- **Il segno di riconoscimento della casa**, uno per casa abbinata. Serve a
-  entrare, sta nel portachiavi del telefono e non esce da lì. Si disinstalla
-  l'app, se ne va con lei; si stacca il telefono dalla console dell'add-on e
-  smette di valere.
+- **La credenziale della casa**, una per casa abbinata. Serve a entrare, sta
+  nel portachiavi del telefono e non esce da lì. Disinstallando l'app se ne va
+  con lei; togliendo l'associazione dalla pagina dell'add-on smette di valere.
 - **L'indirizzo della casa** e il nome che le hai dato.
 - **Quello che la plancia si tiene per sé** — il tema, la tavolozza, la barra
   — nel deposito del browser interno all'app.
@@ -33,10 +32,10 @@ Niente di tutto questo viene mandato da nessuna parte.
 ## Cosa passa dal centralino, e solo quando serve
 
 Da fuori casa l'app non può bussare direttamente a Home Assistant, quindi
-passa da un **centralino**: un punto d'incontro dove il ponte è già in attesa.
+passa da un **centralino**: un punto d'incontro dove l'add-on è già in attesa.
 Due cose vanno dette con precisione:
 
-- quello che passa è **cifrato fra il telefono e il ponte**: il centralino
+- quello che passa è **cifrato fra il telefono e l'add-on**: il centralino
   instrada e non può leggere niente di quello che gira;
 - il centralino tiene in piedi il collegamento e non conserva il contenuto.
 
@@ -77,9 +76,9 @@ nemmeno da loro.
 
 ## Cancellare tutto
 
-Si disinstalla l'app: quello che c'era sul telefono se ne va con lei. Dalla
-console dell'add-on, «Telefoni abbinati → Togli associazione», il segno di quel
-telefono smette di valere all'istante. Le segnalazioni già mandate si
+Disinstallando l'app, quello che stava sul telefono se ne va con lei. Dalla
+pagina dell'add-on, «Telefoni abbinati → Togli associazione», la credenziale di
+quel telefono smette di valere all'istante. Le segnalazioni già mandate si
 cancellano chiedendolo dalla chat di assistenza.
 
 ## Chi risponde

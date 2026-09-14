@@ -30,9 +30,23 @@
   <body>
     <div class="dentro">
       <header class="stretta">
-        <a class="indietro" href="/"
-          ><img src="gdahome.png" alt="" width="40" height="40" />gdahome</a
-        >
+        <div class="riga-di-testa">
+          <a class="indietro" href="/"
+            ><img src="gdahome.png" alt="" width="40" height="40" />gdahome</a
+          >
+          <!-- Gli stessi due tasti dell'indice: chi arriva qui da un link del
+               Play Store deve poterla leggere nella sua lingua senza tornare
+               indietro. -->
+          <div
+            class="lingue"
+            role="group"
+            aria-label="Lingua della pagina"
+            data-en-aria-label="Page language"
+          >
+            <button type="button" class="lingua" data-lingua="it" aria-pressed="true">IT</button>
+            <button type="button" class="lingua" data-lingua="en" aria-pressed="false">EN</button>
+          </div>
+        </div>
         <h1 data-en="Privacy">Privacy</h1>
         <p class="sottotitolo" data-en="Last updated: 13 September 2026.">
           Ultimo aggiornamento: 13 settembre 2026.
@@ -41,13 +55,13 @@
 
       <section>
         <p
-          data-en="gdahome is the home app that opens the Home Assistant dashboard on your phone. This page says, plainly and without going round in circles, &lt;strong&gt;which data is involved, where it sits and who can read it&lt;/strong&gt;. It is the same thing the Play Store asks you to declare, and it is worth reading even if you have no intention of declaring anything to anyone."
+          data-en="gdahome is the app that opens the Home Assistant dashboard on your phone. This page says, plainly and without going round in circles, &lt;strong&gt;which data is involved, where it sits and who can read it&lt;/strong&gt;. It is the same thing the Play Store asks you to declare, and it is worth reading even with nothing to declare to anyone."
         >
-          gdahome è l'app di casa che apre la plancia di Home Assistant sul telefono. Questa pagina
-          dice, in italiano e senza giri,
+          gdahome è l’app che apre la plancia di Home Assistant sul telefono. Questa pagina dice, in
+          modo chiaro e senza giri di parole,
           <strong>quali dati ci sono di mezzo, dove stanno e chi li può leggere</strong>. È la
-          stessa cosa che il Play Store chiede di dichiarare, e vale la pena leggerla anche se non
-          si ha intenzione di dichiarare niente a nessuno.
+          stessa cosa che il Play Store chiede di dichiarare, e vale la pena leggerla anche senza
+          avere niente da dichiarare a nessuno.
         </p>
       </section>
 
@@ -75,11 +89,11 @@
         <h2 data-en="What is on the phone">Cosa c'è sul telefono</h2>
         <ul>
           <li
-            data-en="&lt;strong&gt;The home's token&lt;/strong&gt;, one per paired home. It is what gets you in, it sits in the phone's keychain and it does not leave. Uninstall the app and it goes with it; unpair the phone from the add-on's page and it stops being valid."
+            data-en="&lt;strong&gt;The home’s credential&lt;/strong&gt;, one per paired home. It is what gets you in, it sits in the phone’s keychain and it does not leave. Uninstall the app and it goes with it; unpair the phone from the add-on’s page and it stops being valid."
           >
-            <strong>Il segno di riconoscimento della casa</strong>, uno per casa abbinata. Serve a
-            entrare, sta nel portachiavi del telefono e non esce da lì. Si disinstalla l'app, se ne
-            va con lei; si stacca il telefono dalla console dell'add-on e smette di valere.
+            <strong>La credenziale della casa</strong>, una per casa abbinata. Serve a entrare, sta
+            nel portachiavi del telefono e non esce da lì. Disinstallando l’app se ne va con lei;
+            togliendo l’associazione dalla pagina dell’add-on smette di valere.
           </li>
           <li data-en="&lt;strong&gt;The home's address&lt;/strong&gt; and the name you gave it.">
             <strong>L'indirizzo della casa</strong> e il nome che le hai dato.
@@ -101,28 +115,28 @@
           Cosa passa dal centralino, e solo quando serve
         </h2>
         <p
-          data-en="From away the app cannot knock on Home Assistant directly, so it goes through a &lt;strong&gt;relay&lt;/strong&gt;: a meeting point where the add-on is already waiting. Two things have to be said precisely:"
+          data-en="Away from home the app cannot reach Home Assistant directly, so it goes through a &lt;strong&gt;relay&lt;/strong&gt;: a meeting point where the add-on is already waiting. Two things have to be said precisely:"
         >
-          Da fuori casa l'app non può bussare direttamente a Home Assistant, quindi passa da un
-          <strong>centralino</strong>: un punto d'incontro dove il ponte è già in attesa. Due cose
+          Fuori casa l’app non può raggiungere Home Assistant direttamente, quindi passa da un
+          <strong>centralino</strong>: un punto d’incontro dove l’add-on è già in attesa. Due cose
           vanno dette con precisione:
         </p>
         <ul>
           <li
             data-en="what goes through is &lt;strong&gt;encrypted between the phone and the add-on&lt;/strong&gt;: the relay routes and can read nothing of what passes;"
           >
-            quello che passa è <strong>cifrato fra il telefono e il ponte</strong>: il centralino
-            instrada e non può leggere niente di quello che gira;
+            quello che passa è <strong>cifrato fra il telefono e l’add-on</strong>: il centralino
+            instrada e non può leggere niente di quello che transita;
           </li>
           <li data-en="the relay keeps the connection up and keeps none of the content.">
             il centralino tiene in piedi il collegamento e non conserva il contenuto.
           </li>
         </ul>
         <p
-          data-en="gdahome's relay is &lt;code&gt;tramite.gdahome.org&lt;/code&gt;. Whoever wants to turns one of their own on — it is in the code, and it is free."
+          data-en="gdahome’s relay is &lt;code&gt;tramite.gdahome.org&lt;/code&gt;. Whoever prefers can turn on one of their own: it is in the code, and it is free."
         >
-          Il centralino di gdahome è <code>tramite.gdahome.org</code>. Chi vuole, se ne accende uno
-          suo — è nel codice, ed è gratis.
+          Il centralino di gdahome è <code>tramite.gdahome.org</code>. Chi preferisce può accenderne
+          uno proprio: è nel codice, ed è gratis.
         </p>
       </section>
 
@@ -139,10 +153,10 @@
             il testo della segnalazione, e le foto o i video che ci alleghi;
           </li>
           <li
-            data-en="a few lines on how the app is doing at that moment (version, whether the connection with your home is holding), which is what makes the problem understandable;"
+            data-en="a few lines on how the app is doing at that moment — the version, and whether the connection with your home is holding — which is what makes the problem understandable;"
           >
-            qualche riga su come sta l'app in quel momento (versione, se il filo con la casa regge),
-            che serve a capire il problema;
+            qualche riga su come sta l’app in quel momento — la versione, e se il collegamento con
+            la casa regge — che serve a capire il problema;
           </li>
           <li data-en="what you write in the support chat.">
             quello che scrivi nella chat di assistenza.
@@ -164,7 +178,7 @@
         >
           Serve a una cosa sola: <strong>inquadrare il QR code</strong> che abbina il telefono alla
           casa. L'immagine non viene salvata né mandata da nessuna parte — si legge il codice e
-          basta. Se preferisci, il codice si batte a mano e la fotocamera non serve.
+          basta. Se preferisci, il codice si digita a mano e la fotocamera non serve.
         </p>
       </section>
 
@@ -191,12 +205,12 @@
       <section>
         <h2 data-en="Deleting everything">Cancellare tutto</h2>
         <p
-          data-en="You uninstall the app: what was on the phone goes with it. From the add-on's page, “Paired phones → Unpair”, that phone's token stops being valid instantly. Reports already sent are deleted by asking from the support chat."
+          data-en="Uninstalling the app, what was on the phone goes with it. From the add-on’s page, “Paired phones → Unpair”, that phone’s credential stops being valid instantly. Reports already sent are deleted by asking from the support chat."
         >
-          Si disinstalla l'app: quello che c'era sul telefono se ne va con lei. Dalla console
-          dell'add-on, «Telefoni abbinati → Togli associazione», il segno di quel telefono smette di
-          valere all'istante. Le segnalazioni già mandate si cancellano chiedendolo dalla chat di
-          assistenza.
+          Disinstallando l’app, quello che stava sul telefono se ne va con lei. Dalla pagina
+          dell’add-on, «Telefoni abbinati → Togli associazione», la credenziale di quel telefono
+          smette di valere all’istante. Le segnalazioni già mandate si cancellano chiedendolo dalla
+          chat di assistenza.
         </p>
       </section>
 

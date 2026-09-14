@@ -101,3 +101,79 @@ test("dall'indice ci si arriva, e senza passare da GitHub", () => {
   const indice = leggi("sito/index.html");
   assert.match(indice, /href="privacy\.html"/, "l'indice non manda all'informativa di casa");
 });
+
+/* ─── La lingua ──────────────────────────────────────────────────────────── */
+
+test("le due pagine hanno i tasti della lingua, e le sigle non si traducono", () => {
+  /* Il selettore sta in cima a tutte e due le pagine: chi arriva
+     sull'informativa da un link del Play Store deve poterla leggere nella sua
+     lingua senza tornare all'indice.
+
+     «IT» e «EN» non hanno un `data-en` e non devono averlo: si leggono uguali
+     in tutte le lingue, ed e' il motivo per cui su un selettore si usano le
+     sigle invece dei nomi. Un `data-en` la' sopra vorrebbe dire un tasto che
+     cambia nome quando lo si preme. */
+  for (const quale of PAGINE) {
+    const pagina = leggi(quale);
+    for (const lingua of ["it", "en"]) {
+      const tasto = new RegExp(`<button[^>]*data-lingua="${lingua}"[^>]*>`);
+      assert.match(pagina, tasto, `in «${quale}» manca il tasto «${lingua}»`);
+      const scritto = tasto.exec(pagina)[0];
+      assert.ok(
+        !scritto.includes("data-en"),
+        `in «${quale}» il tasto «${lingua}» porta una traduzione: le sigle non si traducono`,
+      );
+    }
+  }
+});
+
+test("ogni frase inglese della pagina dice qualcosa", () => {
+  /* Un `data-en` vuoto e' peggio di un `data-en` che non c'e': quando la
+     pagina passa all'inglese, quel pezzo si cancella invece di restare in
+     italiano. */
+  for (const quale of PAGINE) {
+    for (const trovata of leggi(quale).matchAll(/data-en(?:-[a-z-]+)?=("|')(.*?)\1/gs)) {
+      assert.ok(
+        trovata[2].trim().length > 0,
+        `in «${quale}» c'e' un «data-en» vuoto: in inglese quel pezzo sparirebbe`,
+      );
+    }
+  }
+});
+
+/* ─── Quello che la pagina promette, e che il codice deve confermare ─────── */
+
+test("il sito non racconta un codice di abbinamento diverso da quello vero", async () => {
+  /* La pagina diceva «otto lettere», e il codice ne fa **sedici**: era vero
+     quando il codice era di otto, ed e' rimasto scritto li' dopo. Nessuna prova
+     lo guardava, perche' una pagina non si compila — e una promessa sbagliata
+     su come si abbina un telefono e' la prima cosa che legge chi arriva.
+     Adesso la lunghezza vera la dice `segreti.js`, e la pagina deve dire
+     quella. */
+  const { codiceNuovo } = await import("../../ponte/src/segreti.js");
+  const quanti = codiceNuovo().length;
+  const aParole = {
+    8: ["otto", "eight"],
+    12: ["dodici", "twelve"],
+    16: ["sedici", "sixteen"],
+    20: ["venti", "twenty"],
+  }[quanti];
+  assert.ok(aParole, `il codice e' di ${quanti} caratteri e qui non so come si scrive`);
+  const indice = leggi("sito/index.html");
+  for (const [lingua, parola] of [
+    ["italiano", aParole[0]],
+    ["inglese", aParole[1]],
+  ])
+    assert.ok(
+      indice.includes(parola),
+      `il sito non dice in ${lingua} quanti caratteri ha il codice (${parola})`,
+    );
+  /* E non deve dire nessun altro numero: una pagina che dice due lunghezze
+     diverse e' peggio di una che ne dice una sbagliata. */
+  for (const [quante, come] of Object.entries({ 8: "otto", 12: "dodici", 20: "venti" }))
+    if (Number(quante) !== quanti)
+      assert.ok(
+        !new RegExp(`${come} (lettere|caratteri)`, "i").test(indice),
+        `il sito parla di «${come} lettere», ma il codice e' di ${quanti} caratteri`,
+      );
+});

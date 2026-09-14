@@ -16,46 +16,120 @@
    * Le parole inglesi stanno **nella pagina**, in `data-en` accanto alle
    * italiane: si rileggono una accanto all'altra, e non c'è una seconda copia
    * di `index.html` da tenere allineata. È lo stesso modo della console di
-   * gdahome in Home Assistant (`ponte/console/console.js`), e la stessa
-   * regola dell'app (`app/lib/parole.dart`): si prende la prima lingua del
-   * browser che sappiamo dire, e chi non ha nessuna delle due legge in
-   * inglese.
+   * gdahome in Home Assistant (`ponte/console/console.js`) e la stessa regola
+   * dell'app (`app/lib/parole.dart`).
    *
    * L'italiano sta nella pagina e l'inglese si mette sopra, non il contrario:
    * senza JavaScript — o prima che questo arrivi — la pagina è già scritta in
    * una lingua intera, e chi la legge non vede mai un buco.
    *
-   * `data-en` porta il contenuto, col suo `<b>` dentro se in quella frase
-   * c'è; `data-en-<attributo>` porta un attributo — `data-en-alt` riempie
-   * `alt`, `data-en-content` riempie `content` di una `<meta>`. */
-  var INGLESE = (function () {
+   * `data-en` porta il contenuto, col suo `<b>` dentro se in quella frase c'è;
+   * `data-en-<attributo>` porta un attributo — `data-en-alt` riempie `alt`,
+   * `data-en-content` il `content` di una `<meta>`, `data-en-src` l'indirizzo
+   * della plancia nel riquadro.
+   *
+   * Si cambia lingua **senza ricaricare**, e quindi l'italiano non si può
+   * buttare via: alla prima passata si mette da parte, e da lì in poi le due
+   * lingue si scambiano quante volte si vuole. */
+  var LINGUE = ["it", "en"];
+  var DOVE_SI_RICORDA = "gdahome.lingua";
+
+  /* Quello che la pagina diceva in italiano, messo da parte prima di toccarla.
+   * Una `Map` e non un attributo in più: questa roba non serve a nessun altro,
+   * e nel documento non ci deve finire. */
+  var italiano = new Map();
+  var attributiItaliani = new Map();
+
+  function raccogliLItaliano() {
+    var conTesto = document.querySelectorAll("[data-en]");
+    for (var i = 0; i < conTesto.length; i += 1) {
+      italiano.set(conTesto[i], conTesto[i].innerHTML);
+    }
+    var tutti = document.querySelectorAll("*");
+    for (var q = 0; q < tutti.length; q += 1) {
+      var nodo = tutti[q];
+      for (var a = 0; a < nodo.attributes.length; a += 1) {
+        var nome = nodo.attributes[a].name;
+        if (nome.indexOf("data-en-") !== 0) continue;
+        var quale = nome.slice("data-en-".length);
+        if (!attributiItaliani.has(nodo)) attributiItaliani.set(nodo, {});
+        attributiItaliani.get(nodo)[quale] = nodo.getAttribute(quale) || "";
+      }
+    }
+  }
+
+  /* La lingua del browser, con la regola dell'app: la prima che sappiamo
+   * dire, e in mancanza l'inglese — che è la lingua di chi non ha la nostra. */
+  function quellaDelBrowser() {
     var quali =
       navigator.languages && navigator.languages.length
         ? navigator.languages
         : [navigator.language || ""];
     for (var q = 0; q < quali.length; q += 1) {
       var codice = String(quali[q]).slice(0, 2).toLowerCase();
-      if (codice === "it") return false;
-      if (codice === "en") return true;
+      if (LINGUE.indexOf(codice) !== -1) return codice;
     }
-    return true;
-  })();
+    return "en";
+  }
 
-  if (INGLESE) {
-    document.documentElement.lang = "en";
-    var tutti = document.querySelectorAll("[data-en]");
-    for (var n = 0; n < tutti.length; n += 1) {
-      tutti[n].innerHTML = tutti[n].getAttribute("data-en");
+  /* Quella scelta coi due tasti, se è stata scelta. Vince su quella del
+   * browser: chi ha il telefono in inglese e vuole leggere in italiano lo
+   * dice una volta sola. In una finestra anonima il deposito può non esserci,
+   * o rispondere con un errore: allora non si ricorda niente e si va con
+   * quella del browser, che è meglio di una pagina che non si apre. */
+  function quellaScelta() {
+    try {
+      var detta = window.localStorage.getItem(DOVE_SI_RICORDA);
+      return LINGUE.indexOf(detta) !== -1 ? detta : null;
+    } catch (_male) {
+      return null;
     }
-    var ovunque = document.querySelectorAll("*");
-    for (var o = 0; o < ovunque.length; o += 1) {
-      var nodo = ovunque[o];
-      for (var a = nodo.attributes.length - 1; a >= 0; a -= 1) {
-        var nome = nodo.attributes[a].name;
+  }
+
+  function ricorda(lingua) {
+    try {
+      window.localStorage.setItem(DOVE_SI_RICORDA, lingua);
+    } catch (_male) {
+      /* Non si ricorda: pazienza, la pagina è già cambiata. */
+    }
+  }
+
+  function scrivi(lingua) {
+    document.documentElement.lang = lingua;
+    var conTesto = document.querySelectorAll("[data-en]");
+    for (var i = 0; i < conTesto.length; i += 1) {
+      var nodo = conTesto[i];
+      var suo = lingua === "en" ? nodo.getAttribute("data-en") : italiano.get(nodo);
+      if (suo !== undefined && suo !== null && nodo.innerHTML !== suo) nodo.innerHTML = suo;
+    }
+    var tutti = document.querySelectorAll("*");
+    for (var q = 0; q < tutti.length; q += 1) {
+      var chi = tutti[q];
+      for (var a = 0; a < chi.attributes.length; a += 1) {
+        var nome = chi.attributes[a].name;
         if (nome.indexOf("data-en-") !== 0) continue;
-        nodo.setAttribute(nome.slice("data-en-".length), nodo.attributes[a].value);
+        var quale = nome.slice("data-en-".length);
+        var prima = attributiItaliani.get(chi) || {};
+        var valore = lingua === "en" ? chi.attributes[a].value : prima[quale];
+        if (valore !== undefined) chi.setAttribute(quale, valore);
       }
     }
+    var tasti = document.querySelectorAll(".lingua");
+    for (var b = 0; b < tasti.length; b += 1) {
+      tasti[b].setAttribute("aria-pressed", String(tasti[b].dataset.lingua === lingua));
+    }
+  }
+
+  raccogliLItaliano();
+  scrivi(quellaScelta() || quellaDelBrowser());
+
+  var tasti = document.querySelectorAll(".lingua");
+  for (var n = 0; n < tasti.length; n += 1) {
+    tasti[n].addEventListener("click", function (evento) {
+      var lingua = evento.currentTarget.dataset.lingua;
+      ricorda(lingua);
+      scrivi(lingua);
+    });
   }
 
   /* ── Se la plancia non c'è ────────────────────────────────────────────
