@@ -219,7 +219,7 @@ Non serve installare niente sul computer: lo costruisce GitHub.
 
 1. Sulla repository: **Actions → «L'app da provare» → Run workflow**.
 2. C'è una casella **centralino**: incollaci `wss://centralino.<nome>.workers.dev`.
-   Puoi anche lasciarla vuota: inquadrando il quadretto, il centralino glielo
+   Puoi anche lasciarla vuota: inquadrando il QR code, il centralino glielo
    dice la casa. Serve solo a chi vuole digitare le lettere a mano da fuori.
 3. Quando finisce (cinque minuti circa), in fondo alla pagina della corsa c'è
    **gdahome-android**: scaricalo. Dentro c'è `app-release.apk`.
@@ -238,16 +238,16 @@ girava interpretato, con tutti i controlli accesi, ed era lento e scaldava.
 
 ### La prima accensione
 
-Apri l'app. C'è **un bottone**: «Inquadra il codice».
+Apri l'app. C'è **un bottone**: «Inquadra il QR code».
 
-- **Inquadra il quadretto**, e basta. Da qualunque posto, anche dalla stazione:
-  dentro al quadretto c'è anche a quale centralino chiama quella casa e su
+- **Inquadra il QR code**, e basta. Da qualunque posto, anche dalla stazione:
+  dentro al QR code c'è anche a quale centralino chiama quella casa e su
   quali indirizzi la si trova sul Wi-Fi, quindi l'app non ha bisogno di sapere
   niente da prima. Funziona anche se nella casella del workflow non hai messo
   nessun centralino.
 - Se non puoi inquadrare — un tablet senza fotocamera, il permesso negato —
-  tocca **«Non puoi inquadrarlo? Scrivilo a mano»**: lì si battono le sedici
-  lettere, e c'è anche la casella dell'indirizzo di casa per chi ne ha
+  tocca **«Non puoi inquadrarlo? Inserisci il codice»**: lì si digitano le
+  sedici lettere, e c'è anche la casella dell'indirizzo di casa per chi ne ha
   bisogno.
 
 **Non ti verrà mai chiesta la password di Home Assistant, né un gettone.** Se

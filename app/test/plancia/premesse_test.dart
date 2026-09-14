@@ -78,7 +78,7 @@ void main() {
   });
 
   test(
-    'dalla Config escono le tessere che nel menu hanno gia\' la loro voce',
+    'dalla Config escono le tessere che nel menu hanno già la loro voce',
     () {
       /* Tre porte per tre stanze che nell'app hanno gia' la loro voce:
      * «Sostieni il progetto» (qui ci sono gli acquisti), le Segnalazioni
@@ -143,7 +143,7 @@ void main() {
     expect(
       servita,
       isNot(contains('.ha-menu-btn{display:none')),
-      reason: 'il tasto si vede: e\' la porta del menu',
+      reason: 'il tasto si vede: è la porta del menu',
     );
     /* L'ingranaggio della Config accanto, invece, resta nascosto: quella
      * porta nell'app e' la voce del menu. */
@@ -170,7 +170,7 @@ void main() {
     expect(servita, contains('Date.now()-premutoIl>=650'));
   });
 
-  test('la parola del menu non e\' il nome di una pagina della plancia', () {
+  test('la parola del menu non è il nome di una pagina della plancia', () {
     /* Sul telefono la pagina e l'app si parlano su un canale solo: se questa
      * parola fosse anche il nome di una linguetta, andare su quella pagina
      * aprirebbe il menu. */

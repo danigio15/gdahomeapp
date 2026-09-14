@@ -112,7 +112,7 @@
     if (quale === "web") return "browser";
     if (quale === "android") return "app su Android";
     if (quale === "ios") return "app su iPhone";
-    if (!quale || quale === "sconosciuto") return "non dice cos'e'";
+    if (!quale || quale === "sconosciuto") return "non dice cos'è";
     return quale;
   }
 
@@ -140,9 +140,9 @@
   function disegnaIlCodice(codice, scadeIl) {
     trova("codice").textContent = aGruppi(codice);
     /* La marca del tempo non e' scaramanzia: senza, il browser rimette il
-     * quadretto di prima quando se ne fabbrica un altro nello stesso minuto,
+     * QR code di prima quando se ne fabbrica un altro nello stesso minuto,
      * e chi inquadra si abbina con un codice gia' speso. */
-    trova("quadretto").src = "api/qr.svg?" + Date.now();
+    trova("qr").src = "api/qr.svg?" + Date.now();
     trova("codice-vivo").hidden = false;
     trova("senza-codice").hidden = true;
     trova("a-mano").hidden = false;
@@ -176,13 +176,13 @@
       return {
         come: "bene",
         corto: "risponde",
-        lungo: "Home Assistant risponde, e gdahome e' in piedi.",
+        lungo: "Home Assistant risponde, e gdahome è in piedi.",
       };
     }
     return {
       come: "male",
       corto: "non risponde",
-      lungo: "Home Assistant non risponde: " + ((casa && casa.perche) || "non dice perche'"),
+      lungo: "Home Assistant non risponde: " + ((casa && casa.perche) || "non dice perché"),
     };
   }
 
@@ -276,12 +276,12 @@
     );
     spiega.textContent =
       plancia.stato === "originale"
-        ? quale + ": ogni file e' quello pubblicato, e la firma lo conferma."
+        ? quale + ": ogni file è quello pubblicato, e la firma lo conferma."
         : plancia.stato === "non-firmata"
           ? quale +
             ": ogni file torna con le impronte scritte dentro. Manca solo la firma di chi l'ha pubblicata."
           : plancia.stato === "modificata"
-            ? "Qualcosa qui dentro non e' come e' stato pubblicato: " +
+            ? "Qualcosa qui dentro non è come è stato pubblicato: " +
               plancia.perche +
               ". Se non l'hai toccata tu, reinstalla l'add-on."
             : plancia.perche || "";
@@ -348,7 +348,7 @@
       stacca.addEventListener("click", function () {
         if (
           !window.confirm(
-            "Togliere l'associazione di «" + comeSiChiama(uno) + "»? Dovra' riabbinarsi da capo.",
+            "Togliere l'associazione di «" + comeSiChiama(uno) + "»? Dovrà riabbinarsi da capo.",
           )
         )
           return;
@@ -562,7 +562,7 @@
       dove.textContent = "";
       var attesa = vediPagina.createElement("p");
       attesa.className = "minuta";
-      attesa.textContent = "Sto chiedendo a Home Assistant chi c'e' in casa…";
+      attesa.textContent = "Sto chiedendo a Home Assistant chi c'è in casa…";
       dove.appendChild(attesa);
     }
 
@@ -636,7 +636,7 @@
         if (utenti.length === 0) {
           var vuoto = vediPagina.createElement("p");
           vuoto.className = "minuta";
-          vuoto.textContent = "In questa casa c'e' un utente solo: non c'e' niente da scegliere.";
+          vuoto.textContent = "In questa casa c'è un utente solo: non c'è niente da scegliere.";
           dove.appendChild(vuoto);
           return;
         }
@@ -682,7 +682,7 @@
         var male = vediPagina.createElement("p");
         male.className = "avviso";
         male.textContent =
-          "Non riesco a chiedere a Home Assistant chi c'e' in casa: " + errore.message;
+          "Non riesco a chiedere a Home Assistant chi c'è in casa: " + errore.message;
         dove.appendChild(male);
       });
   }
@@ -783,7 +783,7 @@
     if (esito.risorsa_in_elenco === true) riga += " Lovelace ha la cartina in elenco.";
     if (esito.risorsa_in_elenco === false) riga += " ⚠️ Lovelace non ha la cartina in elenco.";
     if (esito.tessera_nella_vista)
-      riga += " Nella Plancia c'e' «" + esito.tessera_nella_vista + "».";
+      riga += " Nella Plancia c'è «" + esito.tessera_nella_vista + "».";
     return riga;
   }
 
@@ -907,7 +907,7 @@
         "la tessera della plancia non esiste in nessuna pagina: aprendola dalle " +
         "«Plance» esce «Errore di configurazione». Quasi sempre vuol dire che questa " +
         "casa tiene le dashboard in YAML (lovelace: mode: yaml in configuration.yaml): " +
-        "li' Home Assistant le risorse dallo storage non le legge, e va dichiarata a " +
+        "lì Home Assistant le risorse dallo storage non le legge, e va dichiarata a " +
         "mano. Nel configuration.yaml: lovelace: mode: yaml, poi resources: con - url: " +
         "/local/gdahome/plancia.js  e  type: module. Poi riavvia Home Assistant. " +
         "Lovelace ha risposto: " +
@@ -920,22 +920,22 @@
         "file arrivati dopo li serve solo dal riavvio dopo.";
     } else if (cartinaChe === "rotta") {
       testo =
-        "La cartina si scarica ma non registra la tessera: il file e' arrivato rotto. " +
-        "Riavvia l'add-on, che la riscrive da se' a ogni avvio; se succede ancora, " +
+        "La cartina si scarica ma non registra la tessera: il file è arrivato rotto. " +
+        "Riavvia l'add-on, che la riscrive da sé a ogni avvio; se succede ancora, " +
         "scrivilo dalle segnalazioni.";
     } else if (cartinaChe === "si" && laTesseraNellaPagina() === "no") {
       testo =
-        "La cartina c'e' e si scarica, ma **questa pagina di Home Assistant non ce l'ha**: " +
-        "l'elenco delle risorse lo legge quando si carica, e questa si e' caricata prima che " +
-        "la cartina esistesse. Finche' resta cosi', la plancia esce con «Errore di " +
+        "La cartina c'è e si scarica, ma **questa pagina di Home Assistant non ce l'ha**: " +
+        "l'elenco delle risorse lo legge quando si carica, e questa si è caricata prima che " +
+        "la cartina esistesse. Finché resta così, la plancia esce con «Errore di " +
         "configurazione» qualunque cosa faccia l'add-on. Il bottone qui sotto gliela mette " +
         "adesso: poi apri la plancia dalla barra laterale e si apre. Una volta sola — dalla " +
-        "prossima ricarica vera se la prende da se'. Nell'app di Home Assistant la ricarica " +
-        "vera e' Impostazioni → App companion → Svuota la cache, e riaprire.";
+        "prossima ricarica vera se la prende da sé. Nell'app di Home Assistant la ricarica " +
+        "vera è Impostazioni → App companion → Svuota la cache, e riaprire.";
     } else if (cartinaChe === "si") {
       testo =
         "Se aprendo la plancia dalle «Plance» esce «Errore di configurazione»: da qui la " +
-        "cartina si scarica e la tessera si registra, quindi il file e' a posto ed e' " +
+        "cartina si scarica e la tessera si registra, quindi il file è a posto ed è " +
         "Lovelace che non la carica. Due cose, in quest'ordine. 1) Ricarica a fondo la " +
         "pagina di Home Assistant — nell'app: Impostazioni → App companion → Svuota la " +
         "cache, e riapri: una risorsa aggiunta adesso il browser la vede al giro dopo. " +
@@ -1126,7 +1126,7 @@
         trova("assistenza").hidden = !risponde;
         if (risponde) {
           trova("stato-assistenza").textContent =
-            "Questa casa risponde alle chat di assistenza: la console e' accesa.";
+            "Questa casa risponde alle chat di assistenza: la console è accesa.";
         }
         /* La diagnostica del traffico si vede **solo dove si risponde**.
          *

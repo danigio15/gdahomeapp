@@ -26,7 +26,7 @@ void main() {
     await archivio.apri();
   });
 
-  test('un archivio nuovo e\' vuoto e non ha una casa attiva', () {
+  test('un archivio nuovo è vuoto e non ha una casa attiva', () {
     expect(archivio.vuoto, isTrue);
     expect(archivio.attiva, isNull);
     expect(archivio.tutte, isEmpty);
@@ -45,7 +45,7 @@ void main() {
     expect(archivio.attiva!.daFuoriCasa, daFuori);
   });
 
-  test('piu\' case convivono, ognuna col suo segno', () async {
+  test('più case convivono, ognuna col suo segno', () async {
     final mia = await archivio.aggiungi(
       nome: 'Casa mia',
       segno: 'segno-uno',
@@ -123,7 +123,7 @@ void main() {
     expect(archivio.attiva!.daFuoriCasa, isNull);
   });
 
-  test('l\'approdo si ricorda, ma non si riscrive se non e\' cambiato', () async {
+  test('l\'approdo si ricorda, ma non si riscrive se non è cambiato', () async {
     final casa = await archivio.aggiungi(
       nome: 'Casa',
       segno: 'uno',
@@ -151,11 +151,11 @@ void main() {
     expect(
       conDue.con(ultimoApprodo: DaDove.daFuori).approdi().map((uno) => uno.da),
       [DaDove.daFuori, DaDove.daDentro],
-      reason: 'provare per primo un indirizzo locale mentre si e\' fuori costa un\'attesa a vuoto',
+      reason: 'provare per primo un indirizzo locale mentre si è fuori costa un\'attesa a vuoto',
     );
   });
 
-  test('una casa senza indirizzi non e\' raggiungibile', () {
+  test('una casa senza indirizzi non è raggiungibile', () {
     const orfana = CasaConosciuta(id: 'x', nome: 'Casa', segno: 's');
     expect(orfana.raggiungibile, isFalse);
     expect(orfana.approdi(), isEmpty);
@@ -203,7 +203,7 @@ void main() {
   });
 
   test('un archivio illeggibile non impedisce all\'app di aprirsi', () async {
-    await cassaforte.scrivi('le_case', 'questo non e\' json');
+    await cassaforte.scrivi('le_case', 'questo non è json');
     final riletto = ArchivioDelleCase(cassaforte);
     await riletto.apri();
 
@@ -289,7 +289,7 @@ class _CassaforteCheNonScrive implements Cassaforte {
 
   @override
   Future<void> scrivi(String chiave, String valore) async =>
-      throw Exception('la cifratura del browser non c\'e\'');
+      throw Exception('la cifratura del browser non c\'è');
 
   @override
   Future<void> cancella(String chiave) async {}

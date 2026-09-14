@@ -1,12 +1,12 @@
 /// Aggiungere una casa.
 ///
-/// **Un bottone.** Si inquadra il quadretto che sta nella scheda del ponte,
+/// **Un bottone.** Si inquadra il QR code che sta nella scheda del ponte,
 /// dentro Home Assistant, e non si batte niente: ne' un indirizzo, ne' una
 /// porta, ne' un gettone, e soprattutto non le credenziali di Home Assistant —
 /// chi installa un'app di terzi e si sente chiedere le chiavi di casa fa
 /// benissimo a chiuderla.
 ///
-/// Dentro al quadretto c'e' anche **dove sta quella casa**: a quale centralino
+/// Dentro al QR code c'e' anche **dove sta quella casa**: a quale centralino
 /// chiama, e su quali indirizzi la si trova sul Wi-Fi. E' il motivo per cui
 /// inquadrando funziona sempre — sul divano e alla stazione — senza che
 /// nessuno debba sapere niente di reti.
@@ -44,7 +44,7 @@ class AggiungiCasa extends StatefulWidget {
   final ArchivioDelleCase archivio;
   final void Function(CasaConosciuta casa) quandoFatto;
 
-  /// Il centralino a cui chiedere quando il quadretto non ne dice uno suo.
+  /// Il centralino a cui chiedere quando il QR code non ne dice uno suo.
   ///
   /// Arriva da fuori e non si va a prenderlo qui: `null` vuol dire davvero
   /// **nessuno**. Una schermata che si cerca da sola una costante globale non
@@ -72,7 +72,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
   IndirizzoDelCentralino? get _centralino => widget.centralino;
 
   /// `true` quando, scrivendo a mano, l'indirizzo non e' un di piu' ma l'unica
-  /// strada: nessun centralino a cui chiedere, e nessun quadretto che lo dica.
+  /// strada: nessun centralino a cui chiedere, e nessun QR code che lo dica.
   bool get _serveLIndirizzo => _centralino == null;
 
   @override
@@ -100,7 +100,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
 
     final String riga;
     switch (letto) {
-      case UnQuadretto(riga: final quella):
+      case UnQrCode(riga: final quella):
         riga = quella;
       case NienteDaLeggere():
         /* Si e' tornati indietro: non e' un errore, e non si dice niente. */
@@ -150,9 +150,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       return;
     }
     if (codicePulito(_codice.text).isEmpty) {
-      setState(
-        () => _male = 'Manca il codice: sono le lettere sotto al quadretto.',
-      );
+      setState(() => _male = 'Manca il codice: è scritto sotto il QR code.');
       return;
     }
     if (inCasa == null && _centralino == null) {
@@ -350,7 +348,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                             ),
                           )
                         : const Icon(Icons.qr_code_scanner_rounded),
-                    label: const Text('Inquadra il codice'),
+                    label: const Text('Inquadra il QR code'),
                   ),
                   const SizedBox(height: 14),
                   /* Il lucchetto **dentro** la frase, e non di fianco.
@@ -376,7 +374,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                         ),
                         const TextSpan(
                           text:
-                              'Non ti verra\' mai chiesta la password di Home '
+                              'Non ti verrà mai chiesta la password di Home '
                               'Assistant.',
                         ),
                       ],
@@ -424,7 +422,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
     const SizedBox(height: 10),
     TextButton(
       onPressed: _sto ? null : () => setState(() => _aMano = true),
-      child: const Text('Non puoi inquadrarlo? Scrivilo a mano'),
+      child: const Text('Non puoi inquadrarlo? Inserisci il codice'),
     ),
   ];
 
@@ -447,7 +445,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
               fontFamily: 'monospace',
             ),
             decoration: const InputDecoration(
-              labelText: 'Le lettere sotto al quadretto',
+              labelText: 'Inserisci il codice mostrato',
               hintText: 'ABCD-2345-EFGH-6789',
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 16,

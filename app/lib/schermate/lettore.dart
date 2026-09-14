@@ -1,13 +1,13 @@
-/// Il lettore del codice a quadretti.
+/// Il lettore del QR code.
 ///
-/// Il quadretto lo **disegna** il ponte, senza dipendenze, in
+/// Il QR code lo **disegna** il ponte, senza dipendenze, in
 /// `ponte/src/qr.js`. Leggerlo e' un altro mestiere: vuole la fotocamera, la
 /// messa a fuoco, la luce che cambia in mano a chi inquadra. Sotto ci stanno
 /// MLKit e Vision, che sono del sistema, e scriverne uno a mano vorrebbe dire
 /// un lettore peggiore di quello che ogni telefono ha gia' dentro.
 ///
 /// Quello che si vede: la fotocamera a tutto schermo, un riquadro in mezzo, e
-/// una riga sotto. Niente bottone «conferma»: quando il quadretto entra nel
+/// una riga sotto. Niente bottone «conferma»: quando il QR code entra nel
 /// riquadro, si e' finito. Chi inquadra non deve fare altro.
 library;
 
@@ -25,9 +25,9 @@ sealed class Letto {
   const Letto();
 }
 
-/// Un quadretto, con dentro la sua riga.
-final class UnQuadretto extends Letto {
-  const UnQuadretto(this.riga);
+/// Un QR code, con dentro la sua riga.
+final class UnQrCode extends Letto {
+  const UnQrCode(this.riga);
   final String riga;
 }
 
@@ -43,7 +43,7 @@ final class SiScriveAMano extends Letto {
   const SiScriveAMano();
 }
 
-/// Cosa succede quando qualcuno tocca «Inquadra il codice».
+/// Cosa succede quando qualcuno tocca «Inquadra il QR code».
 ///
 /// E' una funzione, e non una chiamata dritta a questa schermata, per un
 /// motivo solo: dall'altra parte c'e' la fotocamera, che nelle prove non
@@ -56,7 +56,7 @@ typedef Inquadra = Future<Letto> Function(BuildContext dove);
 Future<Letto> colLaFotocamera(BuildContext dove) async {
   final letto = await Navigator.of(dove).push<Letto>(
     MaterialPageRoute(
-      builder: (_) => const LettoreDiQuadretti(),
+      builder: (_) => const LettoreDiQrCode(),
       fullscreenDialog: true,
     ),
   );
@@ -65,19 +65,19 @@ Future<Letto> colLaFotocamera(BuildContext dove) async {
   return letto ?? const NienteDaLeggere();
 }
 
-class LettoreDiQuadretti extends StatefulWidget {
-  const LettoreDiQuadretti({super.key});
+class LettoreDiQrCode extends StatefulWidget {
+  const LettoreDiQrCode({super.key});
 
   @override
-  State<LettoreDiQuadretti> createState() => _LettoreDiQuadrettiState();
+  State<LettoreDiQrCode> createState() => _LettoreDiQrCodeState();
 }
 
-class _LettoreDiQuadrettiState extends State<LettoreDiQuadretti> {
-  /// Solo i quadretti, e solo il primo di ognuno.
+class _LettoreDiQrCodeState extends State<LettoreDiQrCode> {
+  /// Solo i QR code, e solo il primo di ognuno.
   ///
   /// `formats` stretto non e' pignoleria: un lettore che cerca anche i codici
   /// a barre del supermercato guarda ogni fotogramma piu' volte, e in mano si
-  /// sente. `noDuplicates` evita di leggere lo stesso quadretto trenta volte
+  /// sente. `noDuplicates` evita di leggere lo stesso QR code trenta volte
   /// al secondo mentre si toglie la mano.
   final _fotocamera = MobileScannerController(
     formats: const [BarcodeFormat.qrCode],
@@ -97,11 +97,11 @@ class _LettoreDiQuadrettiState extends State<LettoreDiQuadretti> {
 
   void _letto(BarcodeCapture presi) {
     if (_fatto) return;
-    for (final quadretto in presi.barcodes) {
-      final dentro = quadretto.rawValue;
+    for (final letto in presi.barcodes) {
+      final dentro = letto.rawValue;
       if (dentro == null || dentro.isEmpty) continue;
       _fatto = true;
-      Navigator.of(context).pop(UnQuadretto(dentro));
+      Navigator.of(context).pop(UnQrCode(dentro));
       return;
     }
   }
@@ -115,7 +115,7 @@ class _LettoreDiQuadrettiState extends State<LettoreDiQuadretti> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Inquadra il codice'),
+        title: const Text('Inquadra il QR code'),
         actions: [
           ValueListenableBuilder(
             valueListenable: _fotocamera,
@@ -151,7 +151,7 @@ class _LettoreDiQuadrettiState extends State<LettoreDiQuadretti> {
 /// Il riquadro in mezzo, e la riga che dice cosa fare.
 ///
 /// Il riquadro non serve al lettore — legge tutto quello che vede — serve a chi
-/// inquadra: senza un posto dove mettere il quadretto, si tiene il telefono
+/// inquadra: senza un posto dove mettere il QR code, si tiene il telefono
 /// troppo lontano e non succede niente.
 class _Mirino extends StatelessWidget {
   const _Mirino();
@@ -176,8 +176,8 @@ class _Mirino extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                'Il quadretto sta nella scheda «gdahome», dentro Home '
-                'Assistant.',
+                'Il QR code è presente nella scheda «gdahome», dentro '
+                'Home Assistant.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white, fontSize: 15),
               ),
@@ -223,9 +223,10 @@ class _Guaio extends StatelessWidget {
                 negato
                     ? 'gdahome non ha il permesso di usare la fotocamera. '
                           'Puoi darglielo dalle impostazioni del telefono, '
-                          'oppure tornare indietro e scrivere le lettere a mano.'
-                    : 'La fotocamera non si apre. Torna indietro e scrivi le '
-                          'lettere a mano: sono sotto al quadretto.',
+                          'oppure tornare indietro e inserire il codice a mano.'
+                    : 'La fotocamera non si apre. Torna indietro e '
+                          'inserisci il codice a mano: è scritto sotto il QR '
+                          'code.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white, fontSize: 15),
               ),
@@ -237,7 +238,7 @@ class _Guaio extends StatelessWidget {
                  * davanti lo stesso bottone che ha appena fallito. */
                 onPressed: () =>
                     Navigator.of(context).pop(const SiScriveAMano()),
-                child: const Text('Scrivilo a mano'),
+                child: const Text('Inserisci il codice'),
               ),
             ],
           ),

@@ -199,7 +199,7 @@ class _DispositiviState extends State<Dispositivi> {
       return const StatoVuoto(
         icona: Icons.inbox_rounded,
         titolo: 'Casa vuota',
-        sotto: 'Home Assistant non ha nessuna entita\' da mostrare.',
+        sotto: 'Home Assistant non ha nessuna entità da mostrare.',
       );
     }
 
@@ -244,7 +244,7 @@ class _DispositiviState extends State<Dispositivi> {
       child: TextField(
         controller: _cerca,
         decoration: InputDecoration(
-          hintText: 'Cerca fra ${casa.quante} entita\'',
+          hintText: 'Cerca fra ${casa.quante} entità',
           prefixIcon: const Icon(Icons.search_rounded),
           suffixIcon: cercato.isEmpty
               ? null
@@ -265,7 +265,7 @@ class _DispositiviState extends State<Dispositivi> {
             dentroUnaLista: true,
             icona: Icons.search_off_rounded,
             titolo: 'Niente con questo nome',
-            sotto: 'Prova con una parola piu\' corta.',
+            sotto: 'Prova con una parola più corta.',
           ),
         ],
       );

@@ -326,7 +326,7 @@ extension on _ServitoreSulWeb {
     String percorso,
   ) async {
     final filo = _filo();
-    if (filo == null) throw const FiloCaduto('il filo non c\'e\'');
+    if (filo == null) throw const FiloCaduto('il filo non c\'è');
     final testo = await filo.testoDi({
       'type': 'ponte/http',
       'metodo': 'GET',

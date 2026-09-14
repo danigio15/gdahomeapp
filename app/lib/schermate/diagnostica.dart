@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import '../casa/collegamento.dart';
 import '../casa/impostazioni.dart';
 import '../misure/lavori.dart';
+import '../parole.dart';
 import '../vestito/pezzi.dart';
 import 'misure.dart';
 
@@ -141,21 +142,21 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
                 'Filo principale bloccato',
                 minuto.blocchi == 0
                     ? 'mai'
-                    : '${minuto.blocchi} volte, '
+                    : '${volte(minuto.blocchi)}, '
                           'fino a ${minuto.bloccoMaxMs} ms',
               ),
               if (minuto.pause > 0)
                 riga(
                   'App messa da parte',
-                  '${minuto.pause} volte: quel tempo non conta',
+                  '${volte(minuto.pause)}: quel tempo non conta',
                 ),
               const SizedBox(height: 6),
               Text(
-                'UI alta: e\' l\'app che costruisce troppo. GPU alta: e\' '
-                'quello che c\'e\' da disegnare, di solito la plancia. '
+                'UI alta: è l\'app che costruisce troppo. GPU alta: è '
+                'quello che c\'è da disegnare, di solito la plancia. '
                 'Blocchi: il filo principale stava facendo altro. Quando '
                 'l\'app sta da parte il telefono la congela, e quel tempo '
-                'non e\' un blocco: si conta a parte.',
+                'non è un blocco: si conta a parte.',
                 style: testi.bodySmall?.copyWith(
                   color: colori.onSurfaceVariant,
                 ),
@@ -223,13 +224,13 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
                 for (final uno in fatti.take(8))
                   riga(
                     uno.cosa,
-                    '${uno.quante} volte, ${uno.totaleMs} ms in tutto, '
+                    '${volte(uno.quante)}, ${uno.totaleMs} ms in tutto, '
                     '${uno.maxMs} ms il peggiore',
                   ),
               const SizedBox(height: 6),
               Text(
                 'Se un lavoro da solo dura quanto un blocco, il colpevole '
-                'e\' quello. Se sono tutti piccoli e i blocchi restano, e\' '
+                'è quello. Se sono tutti piccoli e i blocchi restano, è '
                 'la roba da buttare che si accumula.',
                 style: testi.bodySmall?.copyWith(
                   color: colori.onSurfaceVariant,
@@ -334,7 +335,7 @@ class _IlRitardo extends StatelessWidget {
           if (quanti == 0)
             Text(
               casa == null
-                  ? 'La casa non e\' ancora collegata.'
+                  ? 'La casa non è ancora collegata.'
                   : 'Nessun cambiamento misurato, ancora. Apri i dispositivi '
                         'e aspetta che qualcosa in casa cambi.',
               style: testi.bodySmall?.copyWith(
@@ -372,17 +373,17 @@ class _IlRitardo extends StatelessWidget {
   static String _cosaVuolDire(Duration? solito) {
     if (solito == null) return '';
     if (solito.inMilliseconds < 2000) {
-      return 'La strada e\' immediata: quello che cambia in casa arriva qui '
+      return 'La strada è immediata: quello che cambia in casa arriva qui '
           'in meno di due secondi. Se un valore a schermo sembra vecchio di '
-          'un minuto, quel minuto non e\' della strada — e\' Home Assistant '
-          'che scopre quel dato una volta al minuto, perche\' e\' cosi\' che '
+          'un minuto, quel minuto non è della strada — è Home Assistant '
+          'che scopre quel dato una volta al minuto, perché è così che '
           'l\'integrazione che lo porta interroga il dispositivo.';
     }
     if (solito.inSeconds < 15) {
-      return 'Qualche secondo: e\' la strada, e di solito vuol dire che si '
+      return 'Qualche secondo: è la strada, e di solito vuol dire che si '
           'sta passando dal centralino invece che dalla rete di casa.';
     }
-    return 'Tanto. Questo e\' un ritardo della strada, non di Home Assistant: '
+    return 'Tanto. Questo è un ritardo della strada, non di Home Assistant: '
         'vale la pena mandarlo in una segnalazione, con questa schermata '
         'allegata.';
   }

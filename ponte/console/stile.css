@@ -347,7 +347,7 @@ h2 {
   }
 }
 
-/* Senza un codice vivo, al posto del quadretto c'e' la sua sagoma: la scheda
+/* Senza un codice vivo, al posto del QR code c'e' la sua sagoma: la scheda
    non resta mezza vuota, e si capisce dove comparira'. */
 .sagoma {
   display: grid;
@@ -371,13 +371,13 @@ h2 {
   opacity: 0.5;
 }
 
-/* Il quadretto.
+/* Il QR code.
  *
  * Sfondo bianco sempre, anche col tema scuro: un QR chiaro su fondo scuro
  * molti lettori non lo prendono, e chi guarda non ha modo di capire perche'.
  * La cornice bianca intorno non e' estetica — e' la «zona tranquilla», e senza
  * quella il codice non si legge nemmeno se e' perfetto. */
-.quadretto {
+.qr {
   display: block;
   width: 100%;
   max-width: 240px;

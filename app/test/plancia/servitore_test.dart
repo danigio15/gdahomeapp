@@ -67,7 +67,7 @@ void main() {
     await servitore.alza();
   });
 
-  test('sul telefono la porta e\' sempre quella, e se e\' occupata si prende la vicina', () async {
+  test('sul telefono la porta è sempre quella, e se è occupata si prende la vicina', () async {
     /* Un browser tiene quello che una pagina si salva per **origine**, e
        * l'origine e' fatta anche dalla porta: con una porta a caso a ogni
        * avvio la plancia ripartiva ogni volta senza la sua configurazione. */
@@ -256,37 +256,40 @@ void main() {
     expect(testo, contains('la plancia'));
   });
 
-  test('senza la chiave non si ottiene niente: ne\' file, ne\' chiamate, ne\' filo', () async {
-    final (pagina, _, _) = await prendi(
-      '$_base/legacy/dashboard.html',
-      senzaChiave: true,
-    );
-    expect(pagina, 403);
-    final (sbagliata, _, _) = await prendi(
-      '$_base/legacy/dashboard.html',
-      senzaChiave: true,
-      query: 'ingresso=nonlaso',
-    );
-    expect(sbagliata, 403);
-    final (modulo, _, _) = await prendi(
-      '$_base/src/core/uno.js',
-      senzaChiave: true,
-    );
-    expect(modulo, 403);
-    final (api, _, _) = await prendi('/api/states', senzaChiave: true);
-    expect(api, 403);
-    expect(ponte.commissioni, isEmpty);
+  test(
+    'senza la chiave non si ottiene niente: né file, né chiamate, né filo',
+    () async {
+      final (pagina, _, _) = await prendi(
+        '$_base/legacy/dashboard.html',
+        senzaChiave: true,
+      );
+      expect(pagina, 403);
+      final (sbagliata, _, _) = await prendi(
+        '$_base/legacy/dashboard.html',
+        senzaChiave: true,
+        query: 'ingresso=nonlaso',
+      );
+      expect(sbagliata, 403);
+      final (modulo, _, _) = await prendi(
+        '$_base/src/core/uno.js',
+        senzaChiave: true,
+      );
+      expect(modulo, 403);
+      final (api, _, _) = await prendi('/api/states', senzaChiave: true);
+      expect(api, 403);
+      expect(ponte.commissioni, isEmpty);
 
-    await expectLater(
-      WebSocket.connect('ws://127.0.0.1:${servitore.porta}/api/websocket'),
-      throwsA(isA<WebSocketException>()),
-    );
+      await expectLater(
+        WebSocket.connect('ws://127.0.0.1:${servitore.porta}/api/websocket'),
+        throwsA(isA<WebSocketException>()),
+      );
 
-    /* Sul telefono la radice non porta da nessuna parte: la chiave non si
+      /* Sul telefono la radice non porta da nessuna parte: la chiave non si
        * chiede a nessuno. */
-    final (radice, _, _) = await prendi('/', senzaChiave: true);
-    expect(radice, 403);
-  });
+      final (radice, _, _) = await prendi('/', senzaChiave: true);
+      expect(radice, 403);
+    },
+  );
 
   test(
     'un file si chiede al ponte una volta sola, poi sta sul disco',
@@ -312,7 +315,7 @@ void main() {
   );
 
   test(
-    'lo stesso file chiesto da piu\' parti insieme si chiede una volta',
+    'lo stesso file chiesto da più parti insieme si chiede una volta',
     () async {
       final tutte = await Future.wait([
         for (var i = 0; i < 6; i += 1) prendi('$_base/src/core/uno.js'),
@@ -322,25 +325,22 @@ void main() {
     },
   );
 
-  test(
-    'un\'immagine arriva com\'e\', e un file che non c\'e\' e\' un 404',
-    () async {
-      final (stato, tipo, byte) = await prendi(
-        '/dashboardmodern_static/avatars/1.png',
-      );
-      expect(stato, 200);
-      expect(tipo, 'image/png');
-      expect(byte, [137, 80, 78, 71, 0, 1, 2, 3]);
+  test('un\'immagine arriva com\'è, e un file che non c\'è è un 404', () async {
+    final (stato, tipo, byte) = await prendi(
+      '/dashboardmodern_static/avatars/1.png',
+    );
+    expect(stato, 200);
+    expect(tipo, 'image/png');
+    expect(byte, [137, 80, 78, 71, 0, 1, 2, 3]);
 
-      final (mancante, _, _) = await prendi('$_base/src/core/due.js');
-      expect(mancante, 404);
-      /* Un 404 non si tiene sul disco: domani potrebbe esserci. */
-      expect(
-        File('${cartella.path}$_base/src/core/due.js').existsSync(),
-        isFalse,
-      );
-    },
-  );
+    final (mancante, _, _) = await prendi('$_base/src/core/due.js');
+    expect(mancante, 404);
+    /* Un 404 non si tiene sul disco: domani potrebbe esserci. */
+    expect(
+      File('${cartella.path}$_base/src/core/due.js').existsSync(),
+      isFalse,
+    );
+  });
 
   test('la pagina del ritratto la fa il servitore, non il ponte', () async {
     /* E' una pagina **nostra**, messa di fianco ai file della plancia perche'
@@ -421,7 +421,7 @@ void main() {
   });
 
   test(
-    'un nome con lo spazio dentro e\' un nome, non un percorso strano',
+    'un nome con lo spazio dentro è un nome, non un percorso strano',
     () async {
       /* Sotto `/local/` stanno le foto di casa, e i nomi li sceglie chi le ha
      * scattate: «mia auto.png» arriva come `mia%20auto.png`. Prima era
@@ -587,31 +587,28 @@ void main() {
       },
     );
   });
-  test(
-    'la plancia che non e\' tua lo dice in una pagina che si legge',
-    () async {
-      /* Quello che si vedeva prima era una riga di testo a monospazio
+  test('la plancia che non è tua lo dice in una pagina che si legge', () async {
+    /* Quello che si vedeva prima era una riga di testo a monospazio
        * incollata in cima, sotto l'orologio del telefono, che diceva anche
        * una bugia: «il ponte non ha risposto», proprio mentre il ponte aveva
        * risposto benissimo — aveva detto no.
        *
        * Questa pagina la vede chi ha un add-on di oggi e un'app di ieri:
        * l'app nuova ha la sua schermata e viene prima. */
-      ponte.nientePerTe = true;
-      final (stato, tipo, byte) = await prendi('$_base/legacy/dashboard.html');
-      final pagina = utf8.decode(byte);
+    ponte.nientePerTe = true;
+    final (stato, tipo, byte) = await prendi('$_base/legacy/dashboard.html');
+    final pagina = utf8.decode(byte);
 
-      expect(stato, 403, reason: 'e\' un rifiuto, non un intoppo');
-      expect(tipo, contains('text/html'));
-      expect(pagina, contains('Non hai plance associate alla tua utenza'));
-      expect(pagina, contains('Chi la vede'));
-      expect(
-        pagina,
-        isNot(contains('il ponte non ha risposto')),
-        reason: 'il ponte ha risposto: ha detto no',
-      );
-    },
-  );
+    expect(stato, 403, reason: 'è un rifiuto, non un intoppo');
+    expect(tipo, contains('text/html'));
+    expect(pagina, contains('Non hai plance associate alla tua utenza'));
+    expect(pagina, contains('Chi la vede'));
+    expect(
+      pagina,
+      isNot(contains('il ponte non ha risposto')),
+      reason: 'il ponte ha risposto: ha detto no',
+    );
+  });
 }
 
 Future<void> _finoA(
@@ -623,5 +620,5 @@ Future<void> _finoA(
     if (condizione()) return;
     await Future<void>.delayed(const Duration(milliseconds: 10));
   }
-  throw StateError('l\'attesa e\' scaduta');
+  throw StateError('l\'attesa è scaduta');
 }

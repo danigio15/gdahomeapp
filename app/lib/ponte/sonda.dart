@@ -136,8 +136,8 @@ class Sonda {
   /// chi non ha nessuna strada di fuori non serve a niente.
   static String _perche(CasaConosciuta casa) {
     if (casa.daRiabbinare) {
-      return 'Questa casa e\' stata abbinata con una versione vecchia dell\'app: '
-          'va riabbinata: e\' un quadretto da inquadrare.';
+      return 'Questa casa è stata abbinata con una versione vecchia '
+          'dell\'app: va riabbinata inquadrando un QR code nuovo.';
     }
     /* Questo prima degli altri: e' l'errore che fa perdere piu' tempo, perche'
      * l'indirizzo *sembra* giusto — e' quello che Home Assistant stessa da'
@@ -146,18 +146,18 @@ class Sonda {
     if (casa.daFuoriCasa?.eLAccessoRemotoDiHomeAssistant ?? false) {
       return 'L\'accesso remoto di Home Assistant non arriva agli add-on: il suo '
           'tunnel finisce dentro Home Assistant, e gdahome sta su una porta '
-          'sua. Non e\' una cosa che si possa configurare — e non serve: '
-          'gdahome chiama fuori da solo, e il centralino ce l\'ha gia\' '
+          'sua. Non è una cosa che si possa configurare — e non serve: '
+          'gdahome chiama fuori da solo, e il centralino ce l\'ha già '
           'scritto dentro.';
     }
     if (casa.approdi().isEmpty) {
-      return 'Non so piu\' dove sia «${casa.nome}»: riabbinala.';
+      return 'Non so più dove sia «${casa.nome}»: riabbinala.';
     }
     if (casa.soloInCasa) {
       return 'Non trovo «${casa.nome}». Questa casa si raggiunge solo dalla sua '
           'rete: nella scheda di gdahome, in Home Assistant, «da fuori casa» '
-          'e\' spento, e senza un centralino da fuori non si entra.';
+          'è spento, e senza un centralino da fuori non si entra.';
     }
-    return 'Non trovo «${casa.nome}», ne\' in casa ne\' da fuori.';
+    return 'Non trovo «${casa.nome}», né in casa né da fuori.';
   }
 }

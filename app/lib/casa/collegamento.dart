@@ -225,9 +225,9 @@ class Collegamento {
      * nessun ponte: si dice, invece di far girare una rotella per sempre. */
     if (casa.daRiabbinare || !casa.raggiungibile) {
       _perche = casa.daRiabbinare
-          ? 'Questa casa e\' stata abbinata con una versione vecchia dell\'app: '
-                'riabbinala: e\' un quadretto da inquadrare.'
-          : 'Non so piu\' dove sia «${casa.nome}»: riabbinala.';
+          ? 'Questa casa è stata abbinata con una versione vecchia '
+                'dell\'app: va riabbinata inquadrando un QR code nuovo.'
+          : 'Non so più dove sia «${casa.nome}»: riabbinala.';
       _vai(ComeVa.segnoScaduto);
       return;
     }

@@ -56,7 +56,7 @@ Widget _conLaBarra({
 );
 
 void main() {
-  group('sul bordo della plancia non c\'e\' piu\' niente di nostro', () {
+  group('sul bordo della plancia non c\'è più niente di nostro', () {
     testWidgets('toccare il bordo sinistro non apre la barra', (prova) async {
       prova.view.physicalSize = const Size(400, 800);
       prova.view.devicePixelRatio = 1;
@@ -79,7 +79,7 @@ void main() {
       expect(chiave.currentState!.aperta, isFalse);
     });
 
-    testWidgets('e non c\'e\' nessuna pillola disegnata', (prova) async {
+    testWidgets('e non c\'è nessuna pillola disegnata', (prova) async {
       prova.view.physicalSize = const Size(400, 800);
       prova.view.devicePixelRatio = 1;
       addTearDown(prova.view.reset);

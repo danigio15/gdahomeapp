@@ -64,7 +64,7 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
   Future<void> _carica() async {
     final filo = _filo;
     if (filo == null) {
-      setState(() => _perche = 'La casa non e\' collegata.');
+      setState(() => _perche = 'La casa non è collegata.');
       return;
     }
     setState(() {
@@ -136,8 +136,8 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
         sotto:
             'Qui si parla con chi fa l\'app. Scrivi quello che vuoi: la '
             'risposta arriva qui sotto, e con le parole partono anche le '
-            'versioni della plancia, dell\'add-on e dell\'app, cosi\' non te '
-            'le chiediamo. Per una foto apri una segnalazione: li\' resta '
+            'versioni della plancia, dell\'add-on e dell\'app, così non te '
+            'le chiediamo. Per una foto apri una segnalazione: lì resta '
             'scritta accanto a quello che mostra.',
       ),
       manda: _scrivi,
@@ -151,5 +151,5 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
 class FiloCadutoQui implements Exception {
   const FiloCadutoQui();
   @override
-  String toString() => 'La casa non e\' collegata: riprova fra un momento.';
+  String toString() => 'La casa non è collegata: riprova fra un momento.';
 }

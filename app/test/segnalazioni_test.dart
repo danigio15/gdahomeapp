@@ -262,7 +262,7 @@ void main() {
     });
   });
 
-  testWidgets('senza centralino si dice, e non si puo\' scrivere', (
+  testWidgets('senza centralino si dice, e non si può scrivere', (
     tester,
   ) async {
     late PonteFinto ponte;

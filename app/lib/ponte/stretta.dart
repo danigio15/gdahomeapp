@@ -224,7 +224,7 @@ class PresaCifrata implements Presa {
       },
       onDone: () {
         _codaInEntrata = _codaInEntrata.then(
-          (_) => _finita(const FiloCaduto('il filo si e\' chiuso')),
+          (_) => _finita(const FiloCaduto('il filo si è chiuso')),
         );
       },
       cancelOnError: false,
@@ -241,7 +241,7 @@ class PresaCifrata implements Presa {
         final letto = jsonDecode(testo);
         if (letto is! Map<String, dynamic>) {
           throw const StrettaRifiutata(
-            'la casa ha risposto qualcosa che non e\' una risposta',
+            'la casa ha risposto qualcosa che non è una risposta',
           );
         }
         _busta = Busta(
@@ -253,7 +253,7 @@ class PresaCifrata implements Presa {
       } on FormatException {
         _fallisci(
           const StrettaRifiutata(
-            'la casa ha risposto qualcosa che non e\' una risposta',
+            'la casa ha risposto qualcosa che non è una risposta',
           ),
         );
       } catch (errore) {
@@ -297,7 +297,7 @@ class PresaCifrata implements Presa {
       /* Su un canale che passa da un terzo, un messaggio che non si apre o e'
        * rotto o e' stato toccato: in tutti e due i casi andare avanti sarebbe
        * peggio che fermarsi. */
-      _finita(FiloCaduto('il filo e\' stato toccato: ${errore.spiegazione}'));
+      _finita(FiloCaduto('il filo è stato toccato: ${errore.spiegazione}'));
     } catch (errore) {
       /* Qualunque altra cosa: si chiude, e si dice cosa.
        *

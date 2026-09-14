@@ -37,7 +37,7 @@ void main() {
     },
   );
 
-  test('senza case non c\'e\' niente da aprire', () async {
+  test('senza case non c\'è niente da aprire', () async {
     collegamento = Collegamento(archivio: archivio, sonda: sondaChe({}));
     await collegamento.apri();
     expect(collegamento.comeVa, ComeVa.nessunaCasa);
@@ -73,7 +73,7 @@ void main() {
   });
 
   test(
-    'fuori casa si entra dall\'altro indirizzo, e la casa e\' la stessa',
+    'fuori casa si entra dall\'altro indirizzo, e la casa è la stessa',
     () async {
       /* Il ponte finto sta su un indirizzo solo; qui si finge che quello sia
      * l'indirizzo pubblico e che quello di rete locale non risponda — cioe'
@@ -103,7 +103,7 @@ void main() {
   );
 
   test(
-    'dove si e\' entrati si ricorda, per provarlo per primo la volta dopo',
+    'dove si è entrati si ricorda, per provarlo per primo la volta dopo',
     () async {
       final ponte = await PonteFinto.alza();
       final finto = IndirizzoDelPonte.leggi('192.168.99.99')!;
@@ -175,7 +175,7 @@ void main() {
       expect(
         collegamento.stato!['light.cucina'],
         isNull,
-        reason: 'la casa di prima e\' sparita',
+        reason: 'la casa di prima è sparita',
       );
 
       /* Il filo della prima casa deve essere caduto: due fili aperti insieme
@@ -353,7 +353,7 @@ void main() {
      * schermo senza spiegazioni. E non e' nemmeno «non raggiungibile», che
      * vorrebbe dire «riprova fra un po'»: qui non c'e' niente da riprovare,
      * non si sa piu' dove sia. L'unica cosa vera da dire e' che va riabbinata,
-     * ed e' un quadretto da inquadrare. */
+     * ed e' un QR code da inquadrare. */
       await archivio.aggiungi(
         nome: 'Orfana',
         segno: segnoBuono,
@@ -454,11 +454,11 @@ void main() {
     await collegamento.apri();
 
     expect(collegamento.comeVa, ComeVa.segnoScaduto);
-    expect(collegamento.perche, contains('riabbinala'));
+    expect(collegamento.perche, contains('va riabbinata'));
     expect(
       bussate,
       isEmpty,
-      reason: 'non si bussa con una chiave che non c\'e\'',
+      reason: 'non si bussa con una chiave che non c\'è',
     );
     await ponte.spegni();
   });
@@ -580,7 +580,7 @@ void main() {
     await ponte.buttaGiu();
     await _finoA(() => collegamento.nessunaPlanciaPerMe);
 
-    expect(collegamento.pannello, isNull, reason: 'e non la vede piu\'');
+    expect(collegamento.pannello, isNull, reason: 'e non la vede più');
     await ponte.spegni();
   });
 
@@ -608,7 +608,7 @@ void main() {
       await collegamento.apri();
       await collegamento.rileggiLaPlancia();
 
-      expect(collegamento.comeVa, ComeVa.aperta, reason: 'la casa e\' aperta');
+      expect(collegamento.comeVa, ComeVa.aperta, reason: 'la casa è aperta');
       expect(collegamento.pannello, isNull);
       expect(collegamento.nessunaPlanciaPerMe, isTrue);
       await ponte.spegni();
@@ -625,5 +625,5 @@ Future<void> _finoA(
     if (condizione()) return;
     await Future<void>.delayed(const Duration(milliseconds: 10));
   }
-  throw StateError('l\'attesa e\' scaduta');
+  throw StateError('l\'attesa è scaduta');
 }

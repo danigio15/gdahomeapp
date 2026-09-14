@@ -2,7 +2,7 @@
 ///
 /// Sotto c'e' il selettore del sistema — quello di Android e di iOS — che
 /// non vuole permessi per la galleria e usa quello della fotocamera che
-/// l'app ha gia' per il codice a quadretti. Una foto si chiede gia' ridotta:
+/// l'app ha gia' per il QR code. Una foto si chiede gia' ridotta:
 /// 1600 punti sul lato lungo bastano per capire cosa si vede, e pesano
 /// qualche centinaio di chilobyte invece di dieci megabyte.
 ///
@@ -59,7 +59,7 @@ Future<Allegato?> scegliDalTelefono(DaDoveLAllegato daDove) async {
   };
   if (file == null) return null;
   final byte = await file.readAsBytes();
-  if (byte.isEmpty) throw const AllegatoNonBuono('Il file e\' vuoto.');
+  if (byte.isEmpty) throw const AllegatoNonBuono('Il file è vuoto.');
   if (byte.length > Allegato.massimo) {
     throw AllegatoNonBuono(
       'Questo file pesa ${pesoLeggibile(byte.length)}: al massimo '

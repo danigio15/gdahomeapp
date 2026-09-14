@@ -234,7 +234,7 @@ export class Portiere {
     const { dispositivo, segno, chiave } = abbinato;
     this.chiamata?.chiudiLAbbinamento();
     this.registro.info(`abbinato «${dispositivo.nome}» dal centralino`);
-    /* Dove tornare. Chi si e' abbinato inquadrando un quadretto non ha
+    /* Dove tornare. Chi si e' abbinato inquadrando un QR code non ha
      * battuto nessun indirizzo, e senza questo non saprebbe dove ribussare
      * domani. Se il
      * Supervisor non risponde si va avanti lo stesso, con quello che c'e': un

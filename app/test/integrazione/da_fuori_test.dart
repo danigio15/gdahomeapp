@@ -6,7 +6,7 @@
 ///     app (Dart)  ──►  centralino (node)  ◄──  ponte (node)  ──►  HA finta
 ///
 /// Il telefono qui **non ha nessun indirizzo della casa**. Non ce l'ha e non
-/// glielo si da': ha la riga letta da un quadretto, e basta quella. E' la
+/// glielo si da': ha la riga letta da un QR code, e basta quella. E' la
 /// differenza fra «funziona se apri una porta sul router» e «funziona», ed e'
 /// l'unica prova che la dimostra per intero — tutte le altre hanno un finto in
 /// mezzo proprio nel punto che conta.
@@ -32,8 +32,8 @@ import 'ponte_vero.dart';
 
 void main() {
   if (!PonteVero.cENode) {
-    test('il collaudo da fuori vuole node, che qui non c\'e\'', () {
-      markTestSkipped('node non e\' installato');
+    test('il collaudo da fuori vuole node, che qui non c\'è', () {
+      markTestSkipped('node non è installato');
     }, skip: true);
     return;
   }
@@ -77,7 +77,7 @@ void main() {
               as Map<String, dynamic>?)?['dentro'] ==
           true,
       perche:
-          'il ponte non e\' arrivato al centralino:\n'
+          'il ponte non è arrivato al centralino:\n'
           '${ponte.registro.join('\n')}',
     );
   });
@@ -141,12 +141,12 @@ void main() {
     expect((telefoni.first as Map)['nome'], 'Telefono in stazione');
   });
 
-  test('inquadrando il quadretto ci si abbina senza sapere niente', () async {
+  test('inquadrando il QR code ci si abbina senza sapere niente', () async {
     /* La prova di quello che succede davvero al primo avvio.
      *
      * Qui l'app **non riceve nessun centralino**: non gliene passa nessuno la
      * prova, e non ne ha uno di ripiego. Tutto quello che ha e' la riga che ha
-     * letto dal quadretto, scritta dal ponte vero, e dentro quella riga c'e'
+     * letto dal QR code, scritta dal ponte vero, e dentro quella riga c'e'
      * anche a quale centralino chiama questa casa. E' il caso che prima non
      * poteva funzionare: una casa con un centralino suo, e un'app costruita
      * senza — o con un altro. */
@@ -155,7 +155,7 @@ void main() {
     expect(
       invito.centralino,
       dove,
-      reason: 'il quadretto dice dove chiama questa casa',
+      reason: 'il QR code dice dove chiama questa casa',
     );
     expect(invito.codice, matches(RegExp(r'^[0-9A-Z]{16}$')));
 
@@ -182,7 +182,7 @@ void main() {
     expect((telefoni.first as Map)['nome'], 'Telefono in stazione');
   });
 
-  test('un codice inventato non abbina niente, e non dice di piu\'', () async {
+  test('un codice inventato non abbina niente, e non dice di più', () async {
     await ponte.codiceDiAbbinamento();
     await expectLater(
       Abbinamento.colCodice(
@@ -308,7 +308,7 @@ void main() {
 Future<void> _finoA(
   Future<bool> Function() condizione, {
   Duration entro = const Duration(seconds: 20),
-  String perche = 'l\'attesa e\' scaduta',
+  String perche = 'l\'attesa è scaduta',
 }) async {
   final fine = DateTime.now().add(entro);
   while (DateTime.now().isBefore(fine)) {

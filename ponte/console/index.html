@@ -12,7 +12,7 @@
       <!-- Disegnati con un tratto solo, 24x24, e prendono il colore del testo
          che gli sta accanto: cosi' funzionano col tema chiaro e con lo scuro
          senza due copie. -->
-      <symbol id="ic-quadretto" viewBox="0 0 24 24">
+      <symbol id="ic-qr" viewBox="0 0 24 24">
         <path
           d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"
         />
@@ -91,19 +91,19 @@
       <section class="scheda grossa">
         <div class="testa-di-scheda">
           <h2>
-            <svg class="ic" aria-hidden="true"><use href="#ic-quadretto" /></svg>Abbina un telefono
+            <svg class="ic" aria-hidden="true"><use href="#ic-qr" /></svg>Abbina un telefono
           </h2>
           <span class="conta" id="conteggio"></span>
         </div>
         <div class="abbinamento">
-          <div class="quadretto-suo" id="codice-vivo" hidden>
+          <div class="qr-suo" id="codice-vivo" hidden>
             <!-- Il disegno lo fa gdahome: la console non scarica niente da
                  nessuna parte, e il codice non passa mai per un indirizzo. -->
-            <img id="quadretto" class="quadretto" alt="Codice di abbinamento" />
+            <img id="qr" class="qr" alt="Codice di abbinamento" />
             <p class="scadenza" id="scadenza"></p>
           </div>
-          <div class="quadretto-suo sagoma" id="senza-codice">
-            <svg class="sagoma-segno" aria-hidden="true"><use href="#ic-quadretto" /></svg>
+          <div class="qr-suo sagoma" id="senza-codice">
+            <svg class="sagoma-segno" aria-hidden="true"><use href="#ic-qr" /></svg>
             <p class="minuta">Il QR code compare qui.</p>
           </div>
           <div class="parole">
@@ -136,7 +136,7 @@
             <details class="apribile" id="a-mano" hidden>
               <summary>Non riesci a inquadrarlo?</summary>
               <p class="spiegazione">
-                Nell'app tocca «Scrivilo a mano» e digita queste lettere. Sono sedici: si copiano un
+                Nell'app tocca «Inserisci il codice» e digita queste lettere. Sono sedici: si copiano un
                 gruppo per volta.
               </p>
               <p class="codice" id="codice"></p>

@@ -298,12 +298,10 @@ class Servitore {
           portaDiCasa + i,
         );
       } on SocketException {
-        _racconta(
-          'la porta ${portaDiCasa + i} e\' occupata, provo la prossima',
-        );
+        _racconta('la porta ${portaDiCasa + i} è occupata, provo la prossima');
       }
     }
-    _racconta('nessuna porta di casa libera: la plancia ripartira\' vuota');
+    _racconta('nessuna porta di casa libera: la plancia ripartirà vuota');
     return HttpServer.bind(InternetAddress.loopbackIPv4, 0);
   }
 
@@ -407,12 +405,7 @@ class Servitore {
       return;
     }
 
-    _rispondi(
-      richiesta,
-      404,
-      'text/plain',
-      utf8.encode('qui non c\'e\' niente'),
-    );
+    _rispondi(richiesta, 404, 'text/plain', utf8.encode('qui non c\'è niente'));
   }
 
   /* ─── I file ───────────────────────────────────────────────────────────── */
@@ -519,7 +512,7 @@ class Servitore {
     String? tipoDelCorpo,
   }) async {
     final filo = await _filoPronto();
-    if (filo == null) throw const FiloCaduto('il filo non c\'e\'');
+    if (filo == null) throw const FiloCaduto('il filo non c\'è');
     /* Il **testo** della risposta, non la risposta aperta: quello che c'e'
      * dentro si apre altrove, tutto in una volta. Vedi [_spacchetta]. */
     final testo = await Lavori.io.conto(
@@ -792,5 +785,5 @@ class _LaPresa implements VersoLaPagina {
 
   @override
   Future<void> chiudi() =>
-      _presa.close(WebSocketStatus.goingAway, 'il filo e\' caduto');
+      _presa.close(WebSocketStatus.goingAway, 'il filo è caduto');
 }

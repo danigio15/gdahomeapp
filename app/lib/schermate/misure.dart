@@ -11,6 +11,8 @@ import 'dart:async';
 
 import 'package:flutter/scheduler.dart';
 
+import '../parole.dart';
+
 class Misure {
   Misure._();
 
@@ -164,7 +166,7 @@ class UltimoMinuto {
       fotogrammi == 0 ? 0 : (lenti * 100 / fotogrammi).round();
 
   String get riga {
-    final inPausa = pause == 0 ? '' : '; in pausa $pause volte';
+    final inPausa = pause == 0 ? '' : '; in pausa ${volte(pause)}';
     return fotogrammi == 0
         ? 'nessun fotogramma nell\'ultimo minuto; blocchi: $blocchi'
               '${blocchi == 0 ? '' : ' (max $bloccoMaxMs ms)'}$inPausa'

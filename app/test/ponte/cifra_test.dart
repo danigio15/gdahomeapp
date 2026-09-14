@@ -71,20 +71,17 @@ void main() {
     });
 
     test(
-      'la chiave di un collegamento e\' quella che ha calcolato il Node',
+      'la chiave di un collegamento è quella che ha calcolato il Node',
       () async {
         final chiave = await _chiaveDelVettore(chiaveDelFilo: _chiaveDelFilo);
         expect(_inEsadecimale(await chiave.extractBytes()), _chiaveConFilo);
       },
     );
 
-    test(
-      'e quella dell\'abbinamento, dove il filo non c\'e\' ancora',
-      () async {
-        final chiave = await _chiaveDelVettore();
-        expect(_inEsadecimale(await chiave.extractBytes()), _chiaveSenzaFilo);
-      },
-    );
+    test('e quella dell\'abbinamento, dove il filo non c\'è ancora', () async {
+      final chiave = await _chiaveDelVettore();
+      expect(_inEsadecimale(await chiave.extractBytes()), _chiaveSenzaFilo);
+    });
 
     test('le due punte arrivano alla stessa chiave partendo da capi opposti', () async {
       /* Il senso di tutto: nessuna delle due ha mandato la chiave all'altra. */
@@ -152,7 +149,7 @@ void main() {
       final casa = Busta(chiave, io: DaChi.casa);
       final grande = List.generate(
         Busta.sogliaAltrove ~/ 8,
-        (i) => 'entita\' $i, ',
+        (i) => 'entità $i, ',
       ).join();
       expect(grande.length, greaterThan(Busta.sogliaAltrove));
 
@@ -244,7 +241,7 @@ void main() {
       );
     });
 
-    test('rifiutano qualcosa che non e\' nemmeno una busta', () async {
+    test('rifiutano qualcosa che non è nemmeno una busta', () async {
       final casa = Busta(SecretKey(List.filled(32, 7)), io: DaChi.casa);
       for (final spazzatura in ['', 'ciao', 'AAAA', 'non-e-base64!!!']) {
         await expectLater(
@@ -259,33 +256,30 @@ void main() {
   group('la compressione', () {
     final chiave = SecretKey(List.filled(32, 7));
 
-    test(
-      'una busta compressa e\' molto piu\' piccola, e torna uguale',
-      () async {
-        final casa = Busta(chiave, io: DaChi.casa, comprime: true);
-        final telefono = Busta(chiave, io: DaChi.telefono);
-        final testo = _unaCasaGrande();
-        expect(testo.length, greaterThan(sogliaDiCompressione));
+    test('una busta compressa è molto più piccola, e torna uguale', () async {
+      final casa = Busta(chiave, io: DaChi.casa, comprime: true);
+      final telefono = Busta(chiave, io: DaChi.telefono);
+      final testo = _unaCasaGrande();
+      expect(testo.length, greaterThan(sogliaDiCompressione));
 
-        final chiusa = await casa.chiudi(testo);
-        if (gzipDisponibile) {
-          expect(
-            chiusa.length,
-            lessThan(testo.length ~/ 4),
-            reason: '${chiusa.length} caratteri per ${testo.length} di testo',
-          );
-        } else {
-          /* Nel browser non si comprime, nemmeno a chiederlo: la busta e'
+      final chiusa = await casa.chiudi(testo);
+      if (gzipDisponibile) {
+        expect(
+          chiusa.length,
+          lessThan(testo.length ~/ 4),
+          reason: '${chiusa.length} caratteri per ${testo.length} di testo',
+        );
+      } else {
+        /* Nel browser non si comprime, nemmeno a chiederlo: la busta e'
            * grande quanto il testo, e si apre lo stesso. */
-          expect(
-            base64.decode(chiusa).length,
-            12 + utf8.encode(testo).length + 16,
-          );
-        }
-        expect(await telefono.apri(chiusa), testo);
-        expect(telefono.ricevo, 1);
-      },
-    );
+        expect(
+          base64.decode(chiusa).length,
+          12 + utf8.encode(testo).length + 16,
+        );
+      }
+      expect(await telefono.apri(chiusa), testo);
+      expect(telefono.ricevo, 1);
+    });
 
     test(
       'sotto la soglia non si comprime: una busta piccola resta com\'era',
@@ -392,7 +386,7 @@ void main() {
       expect(telefono.ricevo, testi.length);
     });
 
-    test('un lavoro andato storto non porta giu\' l\'aiutante', () async {
+    test('un lavoro andato storto non porta giù l\'aiutante', () async {
       final casa = Busta(chiave, io: DaChi.casa, comprime: true);
       final telefono = Busta(chiave, io: DaChi.telefono);
 
@@ -412,7 +406,7 @@ void main() {
   });
 
   group('l\'apertura', () {
-    test('e\' sedici byte, e non e\' mai la stessa', () {
+    test('è sedici byte, e non è mai la stessa', () {
       final viste = <String>{};
       for (var giro = 0; giro < 50; giro += 1) {
         final apertura = aperturaNuova();

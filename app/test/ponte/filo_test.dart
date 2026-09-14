@@ -64,20 +64,17 @@ void main() {
     },
   );
 
-  test(
-    'un telefono staccato mentre e\' collegato viene buttato fuori',
-    () async {
-      final filo = filoCon();
-      await filo.apri();
+  test('un telefono staccato mentre è collegato viene buttato fuori', () async {
+    final filo = filoCon();
+    await filo.apri();
 
-      ponte.accettaIlSegno = false;
-      await ponte.buttaGiu();
+    ponte.accettaIlSegno = false;
+    await ponte.buttaGiu();
 
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-      expect(filo.dentro, isFalse);
-      await filo.chiudi();
-    },
-  );
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    expect(filo.dentro, isFalse);
+    await filo.chiudi();
+  });
 
   test('un comando va e torna, con il suo numero', () async {
     final filo = filoCon();
@@ -328,7 +325,7 @@ void main() {
     expect(
       ponte.collegamenti,
       0,
-      reason: 'non si e\' collegato dopo la chiusura',
+      reason: 'non si è collegato dopo la chiusura',
     );
     expect(filo.dentro, isFalse);
   });
@@ -393,7 +390,7 @@ void main() {
     filo.dimentica(numero);
     ponte.cambia(numero, 'light.sala', {'state': 'off'});
     await Future<void>.delayed(const Duration(milliseconds: 100));
-    expect(tornati.length, 2, reason: 'dimenticato: non deve piu\' arrivare');
+    expect(tornati.length, 2, reason: 'dimenticato: non deve più arrivare');
 
     /* E i numeri restano un contatore solo: quello dopo e' piu' grande. */
     final risposta = await filo.chiedi({'type': 'get_states'});
@@ -402,7 +399,7 @@ void main() {
   });
 
   test(
-    'dopo una caduta chi mandava per conto suo non riceve piu\' niente',
+    'dopo una caduta chi mandava per conto suo non riceve più niente',
     () async {
       final filo = filoCon();
       await filo.apri();
@@ -505,11 +502,11 @@ void main() {
 
     ponte.muto = false;
     await _finoA(() => filo.dentro, entro: const Duration(seconds: 5));
-    expect(filo.traffico, contains('caduto 1 volte'));
+    expect(filo.traffico, contains('caduto 1 volta'));
     await filo.chiudi();
   });
 
-  test('il traffico dice se il gzip c\'e\': con un ponte nuovo si\', con uno vecchio no', () async {
+  test('il traffico dice se il gzip c\'è: con un ponte nuovo sì, con uno vecchio no', () async {
     final filo = Filo.fisso(
       indirizzo: ponte.indirizzo,
       segno: segnoBuono,
@@ -536,7 +533,7 @@ void main() {
     ponte.conosceIlGzip = true;
   });
 
-  test('quando chi chiude dice perche\', la caduta lo ripete', () async {
+  test('quando chi chiude dice perché, la caduta lo ripete', () async {
     /* «Il filo si e' chiuso» non dice niente a nessuno. «Questa casa adesso
      * non e' collegata» — che e' quello che dice il centralino quando
      * l'add-on non e' attaccato — dice tutto, ed e' l'unica frase che viene
@@ -587,7 +584,7 @@ void main() {
 
       await filo.apri(entro: const Duration(seconds: 5));
       expect(filo.dentro, isTrue);
-      expect(quante, 2, reason: 'la prima si e\' lasciata perdere');
+      expect(quante, 2, reason: 'la prima si è lasciata perdere');
       await filo.chiudi();
     },
   );
@@ -647,12 +644,12 @@ void main() {
     await filo.chiudi();
   });
 
-  test('un filo chiuso apposta non e\' una caduta', () async {
+  test('un filo chiuso apposta non è una caduta', () async {
     /* Quando l'app non e' davanti il filo si chiude da se': e' voluto, ed e'
      * quello che non tiene una casa aperta in tasca per niente. Solo che
      * chiudere una presa fa scattare il suo `onDone`, e quello finiva contato
-     * fra le cadute: nella diagnostica si leggeva «caduto 1 volte: il filo si
-     * e' chiuso» sotto «app messa da parte 1 volte» — la stessa cosa scritta
+     * fra le cadute: nella diagnostica si leggeva «caduto 1 volta: il filo si
+     * e' chiuso» sotto «app messa da parte 1 volta» — la stessa cosa scritta
      * due volte, una delle quali come guasto. Chi guarda quel pannello per
      * capire se qualcosa non va si mette a inseguire un fantasma. */
     final filo = Filo.fisso(
@@ -707,7 +704,7 @@ void main() {
       );
     });
 
-    test('non e\' una caduta, e si riprova in fretta', () async {
+    test('non è una caduta, e si riprova in fretta', () async {
       var quante = 0;
       final filo = Filo.fisso(
         indirizzo: ponte.indirizzo,
@@ -739,7 +736,7 @@ void main() {
       await filo.chiudi();
     });
 
-    test('se la rete non torna proprio, alla fine e\' una caduta', () async {
+    test('se la rete non torna proprio, alla fine è una caduta', () async {
       final filo = Filo.fisso(
         indirizzo: ponte.indirizzo,
         segno: segnoBuono,
@@ -777,7 +774,7 @@ Future<void> _finoA(
     if (condizione()) return;
     await Future<void>.delayed(const Duration(milliseconds: 10));
   }
-  throw StateError('l\'attesa e\' scaduta');
+  throw StateError('l\'attesa è scaduta');
 }
 
 /// Le prove dell'approdo mobile: quello che succede uscendo di casa.

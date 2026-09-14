@@ -19,7 +19,7 @@ import '../ponte/filo.dart';
 /// Di che cosa si tratta. La chat non sta qui: e' un filo suo.
 enum TipoDiSegnalazione {
   problema('Problema', 'Qualcosa non funziona come dovrebbe.'),
-  idea('Idea', 'Una cosa che vorresti, e che non c\'e\'.'),
+  idea('Idea', 'Una cosa che vorresti, e che non c\'è.'),
   domanda('Domanda', 'Non sai come si fa una cosa.');
 
   const TipoDiSegnalazione(this.nome, this.spiegazione);
@@ -301,7 +301,7 @@ String spiegaLErrore(Object errore) => switch (errore) {
     'Questa casa non passa da nessun centralino: le segnalazioni non si '
         'possono spedire. Accendi «da fuori casa» nelle opzioni di gdahome.',
   ComandoRifiutato(codice: 'non_configurate') =>
-    'Il centralino non ha ancora le segnalazioni accese. Riprova piu\' '
+    'Il centralino non ha ancora le segnalazioni accese. Riprova più '
         'tardi.',
   ComandoRifiutato(codice: 'troppe') =>
     'Troppe segnalazioni in poco tempo: riprova fra un po\'.',
@@ -309,10 +309,10 @@ String spiegaLErrore(Object errore) => switch (errore) {
     'Il centralino non riconosce questa casa: gdahome in casa deve prima '
         'collegarsi da fuori una volta.',
   ComandoRifiutato(codice: 'unknown_command') =>
-    'gdahome in casa e\' piu\' vecchio dell\'app e questa cosa non la sa '
+    'gdahome in casa è più vecchio dell\'app e questa cosa non la sa '
         'ancora fare: aggiorna l\'add-on in Home Assistant.',
   ComandoRifiutato(codice: 'troppo_grande') =>
-    'L\'allegato e\' troppo grande: al massimo 10 MB. Un video va tenuto '
+    'L\'allegato è troppo grande: al massimo 10 MB. Un video va tenuto '
         'corto.',
   ComandoRifiutato(codice: 'tipo_non_ammesso') =>
     'Si possono allegare solo foto e video.',
@@ -322,7 +322,7 @@ String spiegaLErrore(Object errore) => switch (errore) {
   ComandoRifiutato(codice: 'disabled') ||
   ComandoRifiutato(
     codice: 'not_configured',
-  ) => 'La chat di assistenza non e\' disponibile su questa casa.',
+  ) => 'La chat di assistenza non è disponibile su questa casa.',
   ComandoRifiutato(codice: 'github', :final spiegazione) =>
     'GitHub non ha accettato: $spiegazione. Se era un allegato, il gettone '
         'delle segnalazioni deve poter scrivere i file (Contents: Read and '

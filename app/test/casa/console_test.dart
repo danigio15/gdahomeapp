@@ -36,7 +36,7 @@ void main() {
     await ponte.spegni();
   });
 
-  test('in una casa qualunque la console non c\'e\'', () async {
+  test('in una casa qualunque la console non c\'è', () async {
     final console = LaConsole(filo);
     expect(await console.cE(), isFalse);
     /* E chiederla lo stesso non finisce in una schermata vuota: il ponte dice
@@ -85,7 +85,7 @@ void main() {
     final dopo = await console.apri(linea);
     expect(dopo, hasLength(2));
     expect(dopo.last.testo, 'Che modello sono?');
-    expect(dopo.last.dallaCasa, isTrue, reason: 'la risposta e\' mia');
+    expect(dopo.last.dallaCasa, isTrue, reason: 'la risposta è mia');
 
     /* Aperta vuol dire letta: il conto torna a zero. */
     expect((await console.coda()).single.nonLetti, 0);

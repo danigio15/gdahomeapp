@@ -59,9 +59,9 @@ non scrivi una segnalazione, non parte niente.
 
 ## La fotocamera
 
-Serve a una cosa sola: **inquadrare il codice a quadretti** che abbina il
+Serve a una cosa sola: **inquadrare il QR code** che abbina il
 telefono alla casa. L'immagine non viene salvata né mandata da nessuna parte —
-si legge il codice e basta. Se preferisci, il codice si batte a mano e la
+si legge il codice e basta. Se preferisci, il codice si digita a mano e la
 fotocamera non serve.
 
 ## Quello che non c'è

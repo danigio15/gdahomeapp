@@ -67,7 +67,7 @@ void main() {
     await ponte.spegni();
   });
 
-  test('una casa che non risponde ai colpetti non si butta giu\'', () async {
+  test('una casa che non risponde ai colpetti non si butta giù', () async {
     /* Home Assistant a `ping` risponde da sempre, ma una casa che non lo
      * facesse non e' una casa morta: buttare giu' un filo che funziona
      * sarebbe peggio del guasto che si sta cercando di prevenire. */

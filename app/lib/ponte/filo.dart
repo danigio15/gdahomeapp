@@ -34,6 +34,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import '../misure/lavori.dart';
+import '../parole.dart';
 import 'altrove/altrove.dart';
 import 'cifra.dart';
 import 'errori.dart';
@@ -271,7 +272,7 @@ class Filo {
     final cadutoIl = _cadutoIl;
     final cadute = _cadute == 0
         ? 'mai caduto'
-        : 'caduto $_cadute volte in ${_quanto(DateTime.now().difference(_natoIl))}, '
+        : 'caduto ${volte(_cadute)} in ${_quanto(DateTime.now().difference(_natoIl))}, '
               'l\'ultima ${_daQuanto(cadutoIl)} fa: $_ultimaCaduta';
     final presa = _presa;
     final sulFilo = presa is PresaCifrata
@@ -285,7 +286,7 @@ class Filo {
         ? ' in $_busteArrivate buste'
         : '';
     return '$_messaggiArrivati msg$buste, $_eventiArrivati eventi, '
-        '${_megabyte(_byteArrivati)} giu\'$sulFilo, $_messaggiMandati su, '
+        '${_megabyte(_byteArrivati)} giù$sulFilo, $_messaggiMandati su, '
         'in ${minuti < 1 ? '${(minuti * 60).round()} s' : '${minuti.round()} min'}; '
         '$cadute';
   }
@@ -449,9 +450,9 @@ class Filo {
       onError: (Object errore) => _caduto(
         errore is ErroreDelPonte
             ? errore.spiegazione
-            : 'il filo si e\' interrotto',
+            : 'il filo si è interrotto',
       ),
-      onDone: () => _caduto('il filo si e\' chiuso'),
+      onDone: () => _caduto('il filo si è chiuso'),
       cancelOnError: false,
     );
   }
@@ -551,7 +552,7 @@ class Filo {
         _entrato();
       case 'auth_invalid':
         _segnoNonVale(
-          detto['message'] as String? ?? 'il segno non e\' piu\' valido',
+          detto['message'] as String? ?? 'il segno non è più valido',
         );
       case 'result':
         _risposta(detto);
@@ -628,7 +629,7 @@ class Filo {
     Duration? entro,
   }) {
     if (!dentro) {
-      return Future.error(const FiloCaduto('il filo non e\' aperto'));
+      return Future.error(const FiloCaduto('il filo non è aperto'));
     }
     final id = _prossimoId++;
     final chiAspetta = Completer<Map<String, dynamic>>();
@@ -663,7 +664,7 @@ class Filo {
   /// di schermo fermo.
   Future<String> testoDi(Map<String, dynamic> comando, {Duration? entro}) {
     if (!dentro) {
-      return Future.error(const FiloCaduto('il filo non e\' aperto'));
+      return Future.error(const FiloCaduto('il filo non è aperto'));
     }
     final aspetta = Completer<String>();
     late final int id;
@@ -756,7 +757,7 @@ class Filo {
     Map<String, dynamic> messaggio,
     void Function(Instradato risposta) ricevi,
   ) {
-    if (!dentro) throw const FiloCaduto('il filo non e\' aperto');
+    if (!dentro) throw const FiloCaduto('il filo non è aperto');
     final id = _prossimoId++;
     _instradati[id] = ricevi;
     _manda({...messaggio, 'id': id});
@@ -1028,7 +1029,7 @@ class Filo {
     _riprova?.cancel();
     _riprova = null;
     _stacca();
-    _faFallireLeRichieste(const FiloCaduto('il filo e\' stato chiuso'));
+    _faFallireLeRichieste(const FiloCaduto('il filo è stato chiuso'));
     /* Prima si prende la lista e si svuota la mappa, poi si chiude.
      * Chiudere una sottoscrizione fa scattare il suo `onCancel`, che si toglie
      * dalla mappa: farlo mentre la si sta scorrendo la rompe a meta'. */

@@ -72,7 +72,7 @@ class _SchermataDelleSegnalazioniState
   Future<void> _carica({bool aggiorna = false}) async {
     final filo = _filo;
     if (filo == null) {
-      setState(() => _perche = 'La casa non e\' collegata.');
+      setState(() => _perche = 'La casa non è collegata.');
       return;
     }
     setState(() {
@@ -177,7 +177,7 @@ class _SchermataDelleSegnalazioniState
             dentroUnaLista: true,
             icona: Icons.cloud_off_rounded,
             titolo: 'Le segnalazioni non arrivano',
-            sotto: _perche ?? 'Non si sa perche\'.',
+            sotto: _perche ?? 'Non si sa perché.',
             azione: FilledButton.tonalIcon(
               onPressed: _carica,
               icon: const Icon(Icons.refresh_rounded),
@@ -217,7 +217,7 @@ class _SchermataDelleSegnalazioniState
             titolo: 'Nessuna segnalazione',
             sotto:
                 'Se qualcosa non va, o hai un\'idea, scrivila qui: arriva a '
-                'chi fa l\'app con dentro gia\' le informazioni che servono, e '
+                'chi fa l\'app con dentro già le informazioni che servono, e '
                 'la risposta torna qui sotto.',
           )
         else ...[
@@ -588,7 +588,7 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
           _mandando = false;
           _passo = null;
           _perche =
-              'La segnalazione #$numero e\' partita, ma «${uno.nome}» no: '
+              'La segnalazione #$numero è partita, ma «${uno.nome}» no: '
               '${spiegaLErrore(errore)} Premi «Manda» per riprovare gli '
               'allegati, o vai avanti senza.';
         });
@@ -646,7 +646,7 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
             decoration: const InputDecoration(
               labelText: 'Racconta',
               hintText:
-                  'Cosa stavi facendo, cosa ti aspettavi, cosa e\' successo.',
+                  'Cosa stavi facendo, cosa ti aspettavi, cosa è successo.',
               alignLabelWithHint: true,
             ),
           ),
@@ -725,7 +725,7 @@ class GliAllegati extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Una foto di quello che vedi vale piu\' di una descrizione. Le '
+          'Una foto di quello che vedi vale più di una descrizione. Le '
           'foto partono ridotte; un video va tenuto corto.',
           style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
         ),
@@ -823,7 +823,7 @@ class _CosaSiAllega extends StatelessWidget {
             ),
           const SizedBox(height: 6),
           Text(
-            'Niente credenziali, niente nomi delle entita\', niente indirizzi.',
+            'Niente credenziali, niente nomi delle entità, niente indirizzi.',
             style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
           ),
         ],

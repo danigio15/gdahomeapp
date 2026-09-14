@@ -106,7 +106,7 @@ class PonteVero {
       }
       await Future<void>.delayed(const Duration(milliseconds: 100));
     }
-    throw StateError('il ponte non si e\' alzato:\n${registro.join('\n')}');
+    throw StateError('il ponte non si è alzato:\n${registro.join('\n')}');
   }
 
   /// Fabbrica un codice di abbinamento **dalla console**, che e' l'unico posto
@@ -120,7 +120,7 @@ class PonteVero {
     return codice;
   }
 
-  /// Il codice a quadretti, come riga: quello che l'app leggerebbe
+  /// Il QR code, come riga: quello che l'app leggerebbe
   /// inquadrando.
   ///
   /// Lo scrive il ponte vero, non la prova: qui dentro ci finisce dentro anche

@@ -89,7 +89,7 @@ class _SchermataDellaConsoleState extends State<SchermataDellaConsole> {
   Future<void> _carica() async {
     final filo = _presa;
     if (filo == null) {
-      setState(() => _perche = 'La casa non e\' collegata.');
+      setState(() => _perche = 'La casa non è collegata.');
       return;
     }
     setState(() {
@@ -306,8 +306,8 @@ class _SchermataDellaConsoleState extends State<SchermataDellaConsole> {
         icona: Icons.forum_outlined,
         titolo: aperta.comeSiChiama,
         sotto: aperta.note.isEmpty
-            ? 'Questa conversazione e\' vuota.'
-            : 'Questa conversazione e\' vuota. ${aperta.note}',
+            ? 'Questa conversazione è vuota.'
+            : 'Questa conversazione è vuota. ${aperta.note}',
       ),
       manda: _rispondi,
       rileggi: _rileggiIlFilo,

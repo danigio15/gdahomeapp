@@ -210,7 +210,7 @@ export function costruisciLaPortaDellApp({
          * e poi non capirebbe una parola.
          *
          * E il ritorno: dove ribussare domani. Chi si e' abbinato battendo
-         * un quadretto non ha mai visto un indirizzo. */
+         * un QR code non ha mai visto un indirizzo. */
         json(
           risposta,
           { segno, chiave, dispositivo, ritorno: (await ritorno?.cosaDire()) ?? null },
@@ -954,7 +954,7 @@ async function api({
     return;
   }
 
-  /* Il codice a quadretti, disegnato qui.
+  /* Il QR code, disegnato qui.
    *
    * Il disegno lo fa il ponte e non la pagina: cosi' la console resta tre
    * file senza niente da scaricare, e il codice non passa mai per un
@@ -1010,7 +1010,7 @@ async function api({
   male(risposta, 404, "qui non c'e' niente");
 }
 
-/* Quello che va dentro il codice a quadretti: il codice, e come si arriva a
+/* Quello che va dentro il QR code: il codice, e come si arriva a
  * questa casa. Se il Supervisor non risponde si va avanti con quello che c'e':
  * un invito senza indirizzi funziona lo stesso dal centralino, e uno senza
  * centralino funziona lo stesso in casa. */

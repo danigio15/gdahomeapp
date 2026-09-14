@@ -283,8 +283,11 @@ class PlanciaVeraState extends State<PlanciaVera> {
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
           icona: Icons.link_off_rounded,
-          titolo: 'Questo telefono e\' stato staccato',
-          sotto: collegamento.perche ?? 'Riabbina la casa con un quadretto nuovo dalla pagina di gdahome in Home Assistant.',
+          titolo: 'Questo telefono è stato staccato',
+          sotto:
+              collegamento.perche ??
+              'Riabbina la casa con un QR code nuovo, dalla scheda gdahome in '
+                  'Home Assistant.',
         );
       case ComeVa.irraggiungibile:
         return _Stato(
@@ -331,7 +334,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
         titolo: 'L\'add-on non ha la plancia',
         sotto:
             'La plancia arriva con l\'add-on: aggiorna gdahome in Home '
-            'Assistant e comparira\' qui. Intanto, dalla barra, ci sono i '
+            'Assistant e comparirà qui. Intanto, dalla barra, ci sono i '
             'dispositivi.',
       );
     }
@@ -432,7 +435,7 @@ class PlanciaVeraState extends State<PlanciaVera> {
           _Velo(
             child: StatoVuoto(
               icona: Icons.wifi_tethering_error_rounded,
-              titolo: 'La plancia non e\' arrivata',
+              titolo: 'La plancia non è arrivata',
               sotto: _perche!,
               azione: FilledButton.tonalIcon(
                 onPressed: ricarica,

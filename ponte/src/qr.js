@@ -1,12 +1,16 @@
-/* Il codice a quadretti, scritto qui.
+/* Il QR code, disegnato qui.
+ *
+ * Da qui in giu' «quadretti» sono i suoi **moduli**: i quadratini bianchi e
+ * neri di cui e' fatto il disegno, che e' l'unico posto dove quella parola
+ * dice ancora qualcosa.
  *
  * ─── Perche' un QR ────────────────────────────────────────────────────────
  *
  * Otto lettere si battono in venti secondi, e in quei venti secondi si
- * sbagliano. Un quadretto si inquadra in tre — e questa e' solo la meta'
+ * sbagliano. Un QR code si inquadra in tre — e questa e' solo la meta'
  * comoda.
  *
- * L'altra e' che dentro un quadretto ci sta molto di piu' di quello che si
+ * L'altra e' che dentro un QR code ci sta molto di piu' di quello che si
  * batte a mano. Ci sta un codice di **sedici** lettere invece di otto —
  * ottanta bit invece di quaranta, e quaranta bit li prova a raffica in casa
  * propria chiunque veda passare l'impronta del codice. E ci sta anche

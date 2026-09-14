@@ -192,10 +192,7 @@ class PonteFinto {
           'id': id,
           'type': 'result',
           'success': false,
-          'error': {
-            'code': 'not_found',
-            'message': 'quella plancia non c\'e\'',
-          },
+          'error': {'code': 'not_found', 'message': 'quella plancia non c\'è'},
         });
         return;
       }
@@ -409,11 +406,11 @@ class PonteFinto {
         return si(filo(una));
       case 'ponte/segnalazioni/leggi':
         final una = trova(detto['numero']);
-        if (una == null) return no('non_trovata', 'non e\' tua');
+        if (una == null) return no('non_trovata', 'non è tua');
         return si(filo(una));
       case 'ponte/segnalazioni/rispondi':
         final una = trova(detto['numero']);
-        if (una == null) return no('non_trovata', 'non e\' tua');
+        if (una == null) return no('non_trovata', 'non è tua');
         (una['messaggi'] as List).add({
           'da': 'casa',
           'testo': detto['testo'],
@@ -422,7 +419,7 @@ class PonteFinto {
         return si(filo(una));
       case 'ponte/segnalazioni/allega':
         final una = trova(detto['numero']);
-        if (una == null) return no('non_trovata', 'non e\' tua');
+        if (una == null) return no('non_trovata', 'non è tua');
         final allegato = _unAllegato(detto);
         if (allegato == null) return no('invalid_format', 'manca il file');
         if (allegato['byte'] as int > 10 * 1024 * 1024) {
@@ -567,11 +564,7 @@ class PonteFinto {
     }
     final trovato = file[soloIlPercorso];
     if (trovato == null) {
-      return _pacchetto(
-        404,
-        'text/plain',
-        utf8.encode('qui non c\'e\' niente'),
-      );
+      return _pacchetto(404, 'text/plain', utf8.encode('qui non c\'è niente'));
     }
     return _pacchetto(200, trovato.$1, trovato.$2);
   }

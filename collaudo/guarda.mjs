@@ -681,7 +681,7 @@ async function ilBottone(pagina, etichetta, { inAlto = false, aspetta = true } =
    *
    * Poi l'etichetta che comincia cosi' e va a capo: una casella di testo che
    * ha il fuoco si porta dietro, dopo un a capo, anche il suggerimento che
-   * mostra — «Le lettere sotto al quadretto⏎ABCD-2345-EFGH-6789» — e finche'
+   * mostra — «Inserisci il codice mostrato⏎ABCD-2345-EFGH-6789» — e finche'
    * ha il fuoco quell'etichetta in due righe e' la sua.
    *
    * Poi chi la contiene, con le maiuscole giuste. E solo alla fine tutti.
@@ -750,7 +750,7 @@ async function ilBottone(pagina, etichetta, { inAlto = false, aspetta = true } =
    * prende anche i **contenitori** che quella scritta se la trovano dentro,
    * quindi il primo puo' essere una scatola grande quanto mezza schermata, e
    * premerne il centro vuol dire premere tutt'altro — e' successo: il tocco su
-   * «Scrivilo a mano» e' finito sul bottone di sopra, e si e' aperto il
+   * «Inserisci il codice» e' finito sul bottone di sopra, e si e' aperto il
    * lettore.
    *
    * Quindi si prende il **piu' piccolo**: fra una scatola e quello che ci sta
@@ -799,9 +799,9 @@ try {
    * inquadrare. Quello che si sta collaudando e' il resto — il ponte vero, il
    * segno, il filo, la casa — e a quello ci si arriva battendo, come ci arriva
    * chi la fotocamera non ce l'ha. */
-  await premi(pagina, "Non puoi inquadrarlo? Scrivilo a mano");
+  await premi(pagina, "Non puoi inquadrarlo? Inserisci il codice");
   await attendi(300);
-  await scriviIn(pagina, "Le lettere sotto al quadretto", codice);
+  await scriviIn(pagina, "Inserisci il codice mostrato", codice);
   await scriviIn(pagina, "Indirizzo di casa (facoltativo)", `127.0.0.1:${portaDelPonte}`);
   await scatta(pagina, "2-modulo-compilato");
 

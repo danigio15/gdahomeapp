@@ -22,7 +22,7 @@ void main() {
       );
     });
 
-    test('«localhost» non e\' un nome: Android risponde cosi\' a tutti', () {
+    test('«localhost» non è un nome: Android risponde così a tutti', () {
       /* Non e' un difetto nostro, e' quello che Android risponde a chi gli
        * chiede come si chiama. Ed e' peggio di nessun nome, perche' sembra
        * un nome. */

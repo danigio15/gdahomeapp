@@ -119,7 +119,7 @@ Uint8List _vestiSpki(Uint8List nuda) =>
 Uint8List _spogliaSpki(List<int> vestita) {
   if (vestita.length == 32) return Uint8List.fromList(vestita);
   if (vestita.length != 44) {
-    throw const ChiaveStorta('una chiave pubblica non e\' fatta cosi\'');
+    throw const ChiaveStorta('una chiave pubblica non è fatta così');
   }
   for (var i = 0; i < _involucroSpki.length; i += 1) {
     if (vestita[i] != _involucroSpki[i]) {
@@ -324,7 +324,7 @@ class Busta {
     try {
       dodici = base64.decode(inBase64.substring(0, 16));
     } catch (_) {
-      throw const BustaGuasta('non e\' nemmeno base64');
+      throw const BustaGuasta('non è nemmeno base64');
     }
     if (dodici[0] != suo.numero) {
       throw const BustaGuasta('busta dalla direzione sbagliata');
@@ -363,7 +363,7 @@ class Busta {
     try {
       tutto = base64.decode(inBase64);
     } catch (_) {
-      throw const BustaGuasta('non e\' nemmeno base64');
+      throw const BustaGuasta('non è nemmeno base64');
     }
     if (tutto.length < 12 + 16) throw const BustaGuasta('busta troppo corta');
     final dodici = tutto.sublist(0, 12);

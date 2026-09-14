@@ -32,9 +32,9 @@ cerchi. Sono due pezzi, e lavorano insieme:
 
 - **un add-on** che si installa in Home Assistant, serve la plancia al telefono
   e tiene il segreto della casa — quello non esce mai da lì;
-- **un'app** per Android, iPhone e browser, che si abbina inquadrando un codice
-  a quadretti: nessuna password da inserire, nessun token da copiare, nessuna
-  porta da aprire sul router.
+- **un'app** per Android, iPhone e browser, che si abbina inquadrando un QR
+  code: nessuna password da inserire, nessun token da copiare, nessuna porta da
+  aprire sul router.
 
 ## Metterla in casa
 
@@ -141,7 +141,7 @@ l'abbinamento, cosa finisce sul disco — sta in
 
 | | |
 |---|---|
-| ✅ | **Un codice a quadretti e basta**: nessun indirizzo, nessuna credenziale di Home Assistant |
+| ✅ | **Un QR code e basta**: nessun indirizzo, nessuna credenziale di Home Assistant |
 | ✅ | **Dentro e fuori casa**: tre strade per la stessa casa, scelte da sole e ricalcolate a ogni riconnessione |
 | ✅ | **Cifrato punta a punta**: il centralino instrada e non può leggere |
 | ✅ | **Più case**: ognuna col suo segno, si passa dall'una all'altra senza riabbinare |
@@ -217,7 +217,7 @@ vero** dell'app. L'altro, `da_fuori_test.dart`, accende la catena intera:
 ```
 
 e lì il telefono **non ha nessun indirizzo della casa**: ha la riga che ha
-letto da un quadretto, e basta quella. È la differenza fra «funziona se apri
+letto da un QR code, e basta quella. È la differenza fra «funziona se apri
 una porta sul router» e «funziona», ed è l'unica prova che la dimostra per
 intero — tutte le altre hanno un finto proprio nel punto che conta. La stessa
 prova gira anche contro il centralino su Cloudflare:

@@ -423,6 +423,6 @@ class _InArrivo extends StatelessWidget {
   Widget build(BuildContext context) => StatoVuoto(
     icona: Icons.construction_rounded,
     titolo: '${sezione.titolo}: in arrivo',
-    sotto: 'Questa parte dell\'app non e\' ancora scritta.',
+    sotto: 'Questa parte dell\'app non è ancora scritta.',
   );
 }

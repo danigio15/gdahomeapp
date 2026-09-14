@@ -166,7 +166,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * casa e per chi arriva dal centralino, allo stesso modo. */
   /* Quello che si dice a un telefono che si abbina: chi e' questa casa, dove
    * si chiama per entrare da fuori, e dove sta sulla rete di casa. Senza,
-   * chi ha inquadrato un quadretto non saprebbe dove ribussare. */
+   * chi ha inquadrato un QR code non saprebbe dove ribussare. */
   const ritorno = new Ritorno({
     identita,
     centralino: opzioni.centralino,
@@ -220,7 +220,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     chiamata,
     identita,
     /* Anche la console ha bisogno di sapere dove si trova questa casa: nel
-     * codice a quadretti ci va scritto dentro, cosi' chi lo inquadra non deve
+     * QR code ci va scritto dentro, cosi' chi lo inquadra non deve
      * cercare niente. */
     ritorno,
     /* Da dove viene la plancia che questo ponte serve: la console lo dice,

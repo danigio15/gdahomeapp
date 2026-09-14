@@ -61,7 +61,7 @@ void main() {
     await ponte.spegni();
   });
 
-  test('il filo pronto e\' quello dentro, e senza filo si smette', () async {
+  test('il filo pronto è quello dentro, e senza filo si smette', () async {
     /* Nessun filo: si aspetta quel poco e si dice che non c'e' verso. */
     expect(
       await filoPronto(() => null, entro: const Duration(milliseconds: 120)),
@@ -135,5 +135,5 @@ Future<void> _finoA(
     if (condizione()) return;
     await Future<void>.delayed(const Duration(milliseconds: 10));
   }
-  throw StateError('l\'attesa e\' scaduta');
+  throw StateError('l\'attesa è scaduta');
 }

@@ -82,7 +82,7 @@ class ArchivioDelleCase {
     DaDove? approdoIniziale,
   }) async {
     if (piena) {
-      throw TroppeCase('non si possono tenere piu\' di $caseMassime case');
+      throw TroppeCase('non si possono tenere più di $caseMassime case');
     }
     final casa = CasaConosciuta(
       id: identificativoNuovo(),

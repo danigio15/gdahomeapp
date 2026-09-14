@@ -144,7 +144,7 @@ ancora niente di condiviso da cui riconoscersi. I telefoni gia' abbinati
 restano al sicuro comunque: la loro chiave non e' mai passata di qui, e senza
 quella non si fabbrica un filo che regga.
 
-Il codice a quadretti ne ha tolta meta'. Il codice adesso e' di **sedici**
+Il QR code ne ha tolta meta'. Il codice adesso e' di **sedici**
 lettere — ottanta bit — e la sua impronta, che e' l'unica cosa che arriva fin
 qui, non si prova piu' a raffica in casa propria: otto lettere erano quaranta
 bit, e quaranta bit su una scheda grafica cadono in qualche minuto, cioe'

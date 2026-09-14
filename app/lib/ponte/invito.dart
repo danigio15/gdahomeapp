@@ -1,4 +1,4 @@
-/// L'invito: quello che c'e' scritto dentro il codice a quadretti.
+/// L'invito: quello che c'e' scritto dentro il QR code.
 ///
 /// ## Perche' non solo il codice
 ///
@@ -9,7 +9,7 @@
 /// si incontrano, e quello che si vede e' un'app che dice «non trovo la casa»
 /// senza nessun modo di capire perche'.
 ///
-/// Nel quadretto invece c'e' tutto: il codice, **quale** centralino chiama
+/// Nel QR code invece c'e' tutto: il codice, **quale** centralino chiama
 /// questa casa, e su quali indirizzi la si trova stando sul Wi-Fi. Chi
 /// inquadra non sa niente di tutto questo e non deve saperlo.
 ///
@@ -19,7 +19,7 @@
 /// compilatore che tenga insieme le due. Le tiene insieme una cosa sola: gli
 /// **stessi vettori** scritti a mano nelle prove di tutte e due. Se un giorno
 /// divergono, una delle due prove diventa rossa prima che qualcuno inquadri un
-/// quadretto che non si apre.
+/// QR code che non si apre.
 library;
 
 import 'indirizzo.dart';
@@ -70,32 +70,32 @@ class Invito {
   /// Dove si trova questa casa sulla rete di casa.
   final List<IndirizzoDelPonte> indirizzi;
 
-  /// Legge quello che ha trovato il lettore di quadretti.
+  /// Legge quello che ha trovato il lettore di QR code.
   ///
   /// Solleva invece di tornare `null`: qui non si sta guardando qualcuno che
-  /// scrive in una casella: si sta guardando un quadretto gia' letto, e se non
+  /// scrive in una casella: si sta guardando un QR code gia' letto, e se non
   /// e' quello che ci si aspetta chi inquadra deve sentirselo dire — e
   /// sentirsi dire **quale** delle due cose e' andata storta.
   static Invito leggi(String scritto) {
     final pezzi = scritto.trim().split(_separatore);
 
     if (pezzi.isEmpty || pezzi[0].trim().toLowerCase() != _nome) {
-      throw const InvitoIllegibile('Questo non e\' un codice di gdahome.');
+      throw const InvitoIllegibile('Questo non è un codice di gdahome.');
     }
 
     final quale = pezzi.length > 1 ? int.tryParse(pezzi[1].trim()) : null;
     if (quale == null || quale < 1) {
-      throw const InvitoIllegibile('Questo non e\' un codice di gdahome.');
+      throw const InvitoIllegibile('Questo non è un codice di gdahome.');
     }
     if (quale > _versione) {
       throw const InvitoTroppoNuovo(
-        'Questo codice viene da un ponte piu\' nuovo di questa app: aggiorna l\'app.',
+        'Questo codice viene da un ponte più nuovo di questa app: aggiorna l\'app.',
       );
     }
 
     final codice = pezzi.length > 2 ? pezzi[2].trim() : '';
     if (codice.isEmpty) {
-      throw const InvitoIllegibile('Questo codice e\' incompleto.');
+      throw const InvitoIllegibile('Questo codice è incompleto.');
     }
 
     return Invito(
