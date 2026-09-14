@@ -11,6 +11,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../parole.dart';
 import '../ponte/centralino.dart';
 
 /// La passa il workflow che costruisce il pacchetto. Fuori da li' non c'e' —
@@ -21,7 +22,8 @@ const String _detta = String.fromEnvironment('VERSIONE');
 /// nelle segnalazioni, raccolto da solo.
 const String versioneDellApp = _detta;
 
-String get versioneDelPacchetto => _detta.isEmpty ? 'dal codice' : _detta;
+String get versioneDelPacchetto =>
+    _detta.isEmpty ? inLingua(it: 'dal codice', en: 'from source') : _detta;
 
 class Firma extends StatelessWidget {
   const Firma({super.key, this.spazioSopra = 24});
@@ -33,7 +35,9 @@ class Firma extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
-    final dove = centralinoDiDifetto?.casa ?? 'nessun centralino';
+    final dove =
+        centralinoDiDifetto?.casa ??
+        inLingua(it: 'nessun centralino', en: 'no relay');
 
     return Padding(
       padding: EdgeInsets.only(top: spazioSopra),

@@ -14,6 +14,8 @@ library;
 
 import 'dart:async';
 
+import '../parole.dart';
+
 class Lavori {
   Lavori._();
 
@@ -76,7 +78,9 @@ class Lavori {
   /// Una riga sola, per la diagnostica che parte con una segnalazione.
   String get riassunto {
     final fatti = tutti;
-    if (fatti.isEmpty) return 'niente da segnare';
+    if (fatti.isEmpty) {
+      return inLingua(it: 'niente da segnare', en: 'nothing to note');
+    }
     return fatti.take(4).map((uno) => uno.riga).join('; ');
   }
 }

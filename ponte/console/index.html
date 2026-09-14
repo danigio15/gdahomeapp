@@ -64,7 +64,7 @@
         <img class="marchio" src="marchio.png" alt="" width="44" height="44" />
         <div class="chi">
           <h1>gdahome</h1>
-          <p class="sottotitolo">La tua casa sul telefono</p>
+          <p class="sottotitolo" data-en="Your home on your phone">La tua casa sul telefono</p>
         </div>
         <span class="targhetta" id="targhetta" hidden></span>
       </header>
@@ -79,11 +79,17 @@
         </span>
         <span class="pastiglia" id="pas-fuori" data-come="attesa">
           <i class="pallino"></i>
-          <span><b>Da fuori casa</b> <span id="stato-centralino" data-corto>…</span></span>
+          <span
+            ><b data-en="From away">Da fuori casa</b>
+            <span id="stato-centralino" data-corto>…</span></span
+          >
         </span>
         <span class="pastiglia" id="pas-plancia" data-come="attesa" hidden>
           <i class="pallino"></i>
-          <span><b>La plancia</b> <span id="provenienza-riga" data-corto>…</span></span>
+          <span
+            ><b data-en="The dashboard">La plancia</b>
+            <span id="provenienza-riga" data-corto>…</span></span
+          >
         </span>
       </div>
 
@@ -91,7 +97,8 @@
       <section class="scheda grossa">
         <div class="testa-di-scheda">
           <h2>
-            <svg class="ic" aria-hidden="true"><use href="#ic-qr" /></svg>Abbina un telefono
+            <svg class="ic" aria-hidden="true"><use href="#ic-qr" /></svg
+            ><span data-en="Pair a phone">Abbina un telefono</span>
           </h2>
           <span class="conta" id="conteggio"></span>
         </div>
@@ -99,21 +106,23 @@
           <div class="qr-suo" id="codice-vivo" hidden>
             <!-- Il disegno lo fa gdahome: la console non scarica niente da
                  nessuna parte, e il codice non passa mai per un indirizzo. -->
-            <img id="qr" class="qr" alt="Codice di abbinamento" />
+            <img id="qr" class="qr" alt="Codice di abbinamento" data-en-alt="Pairing code" />
             <p class="scadenza" id="scadenza"></p>
           </div>
           <div class="qr-suo sagoma" id="senza-codice">
             <svg class="sagoma-segno" aria-hidden="true"><use href="#ic-qr" /></svg>
-            <p class="minuta">Il QR code compare qui.</p>
+            <p class="minuta" data-en="The QR code appears here.">Il QR code compare qui.</p>
           </div>
           <div class="parole">
             <!-- Il contenuto di ogni passo sta dentro **un** elemento: la riga e'
                  una griglia di due colonne — il numero e il testo — e due pezzi
                  sciolti diventerebbero due caselle, una sopra l'altra. -->
             <ol class="passi">
-              <li><span>Apri gdahome sul telefono.</span></li>
+              <li><span data-en="Open gdahome on your phone.">Apri gdahome sul telefono.</span></li>
               <li>
-                <span>Premi <b>Genera QR code</b>, e inquadralo.</span>
+                <span data-en="Press &lt;b&gt;Generate the QR code&lt;/b&gt;, and scan it."
+                  >Premi <b>Genera QR code</b>, e inquadralo.</span
+                >
               </li>
             </ol>
             <!-- Per chi e' il codice.
@@ -125,19 +134,28 @@
                  e vede tutto. Si vede solo dove c'e' piu' di un utente: in
                  una casa con un utente solo non c'e' niente da scegliere. -->
             <div class="riga-di-tasti" id="per-chi-riga" hidden>
-              <label class="etichetta" for="per-chi">Per chi è</label>
+              <label class="etichetta" for="per-chi" data-en="Who it's for">Per chi è</label>
               <select id="per-chi"></select>
             </div>
             <div class="bottoni">
-              <button id="fabbrica" type="button">Genera QR code</button>
-              <button id="annulla" type="button" class="tenue" hidden>Annulla</button>
+              <button id="fabbrica" type="button" data-en="Generate the QR code">
+                Genera QR code
+              </button>
+              <button id="annulla" type="button" class="tenue" data-en="Cancel" hidden>
+                Annulla
+              </button>
             </div>
-            <p class="minuta">Vale una volta sola, e per pochi minuti.</p>
+            <p class="minuta" data-en="Good once only, and for a few minutes.">
+              Vale una volta sola, e per pochi minuti.
+            </p>
             <details class="apribile" id="a-mano" hidden>
-              <summary>Non riesci a inquadrarlo?</summary>
-              <p class="spiegazione">
-                Nell'app tocca «Inserisci il codice» e digita queste lettere. Sono sedici: si copiano un
-                gruppo per volta.
+              <summary data-en="Can't scan it?">Non riesci a inquadrarlo?</summary>
+              <p
+                class="spiegazione"
+                data-en="In the app tap &#8220;Enter the code&#8221; and type these letters. There are sixteen: copy them one group at a time."
+              >
+                Nell'app tocca «Inserisci il codice» e digita queste lettere. Sono sedici: si
+                copiano un gruppo per volta.
               </p>
               <p class="codice" id="codice"></p>
             </details>
@@ -154,8 +172,8 @@
           <section class="scheda">
             <div class="testa-di-scheda">
               <h2>
-                <svg class="ic" aria-hidden="true"><use href="#ic-telefono" /></svg>Telefoni
-                abbinati
+                <svg class="ic" aria-hidden="true"><use href="#ic-telefono" /></svg
+                ><span data-en="Paired phones">Telefoni abbinati</span>
               </h2>
             </div>
             <ul id="elenco" class="elenco"></ul>
@@ -167,46 +185,69 @@
           <section class="scheda" id="scheda-app" hidden>
             <div class="testa-di-scheda">
               <h2>
-                <svg class="ic" aria-hidden="true"><use href="#ic-browser" /></svg>Aprila in un
-                browser
+                <svg class="ic" aria-hidden="true"><use href="#ic-browser" /></svg
+                ><span data-en="Open it in a browser">Aprila in un browser</span>
               </h2>
             </div>
             <ul class="righe">
               <li>
                 <span class="che-cosa">
-                  <b>Qui dentro</b>
-                  <span class="minuta">Nella pagina di Home Assistant, come una plancia.</span>
+                  <b data-en="In here">Qui dentro</b>
+                  <span class="minuta" data-en="On the Home Assistant page, like a dashboard."
+                    >Nella pagina di Home Assistant, come una plancia.</span
+                  >
                 </span>
                 <!-- Si apre **in questa scheda** e non in una nuova: la sessione di
                      questo indirizzo la tiene viva la pagina di Home Assistant, e
                      una scheda a parte dopo un po' si sente rispondere «401». -->
-                <a class="bottone" id="apri-app" href="app/">Apri gdahome</a>
+                <a class="bottone" id="apri-app" href="app/" data-en="Open gdahome">Apri gdahome</a>
               </li>
               <li id="link-di-fuori" hidden>
                 <span class="che-cosa">
-                  <b>Da fuori casa</b>
-                  <span class="minuta"
+                  <b data-en="From away">Da fuori casa</b>
+                  <span
+                    class="minuta"
+                    data-en="An address of its own: bookmark it, send it to someone."
                     >Un indirizzo vero: si salva fra i preferiti, si può mandare.</span
                   >
                   <code id="link-di-fuori-indirizzo"></code>
                 </span>
-                <a class="tenue" id="apri-di-fuori" href="#" target="_blank" rel="noopener">Apri</a>
+                <a
+                  class="tenue"
+                  id="apri-di-fuori"
+                  href="#"
+                  target="_blank"
+                  rel="noopener"
+                  data-en="Open"
+                  >Apri</a
+                >
               </li>
             </ul>
             <details class="apribile">
-              <summary>Due cose da sapere</summary>
-              <p class="spiegazione">
+              <summary data-en="Two things to know">Due cose da sapere</summary>
+              <p
+                class="spiegazione"
+                data-en="&lt;b&gt;In here&lt;/b&gt; opens in this very tab: to come back, &#8220;gdahome&#8221; in the Home Assistant sidebar. Open it in a tab of its own and after a few minutes that address answers &lt;b&gt;401&lt;/b&gt; — the session is kept alive by Home Assistant, not by the tab."
+              >
                 <b>Qui dentro</b> si apre in questa stessa scheda: per tornare, «gdahome» nella
                 barra di Home Assistant. Aprendolo in una scheda a parte, dopo qualche minuto
                 quell'indirizzo risponde <b>401</b> — la sessione la tiene viva Home Assistant, non
                 la scheda.
               </p>
-              <p class="spiegazione">
+              <p
+                class="spiegazione"
+                data-en="&lt;b&gt;From away&lt;/b&gt; is the app&#39;s address, not your home&#39;s: it is the same for everyone, and whoever opens it without a pairing code gets into nobody&#39;s home."
+              >
                 <b>Da fuori casa</b> è l'indirizzo dell'app, non della casa: è uguale per tutti, e
                 chi lo apre senza un codice di abbinamento non entra in casa di nessuno.
               </p>
             </details>
-            <p class="avviso giallo" id="avviso-sicuro" hidden>
+            <p
+              class="avviso giallo"
+              id="avviso-sicuro"
+              data-en="This page is open on an &lt;b&gt;http&lt;/b&gt; address. Everything works except the dashboard: drawing it in a browser needs &lt;b&gt;https&lt;/b&gt; — that is a browser rule, not ours. On the phone the dashboard shows up all the same."
+              hidden
+            >
               Questa pagina è aperta su un indirizzo <b>http</b>. Tutto funziona tranne la plancia:
               per disegnarla nel browser serve <b>https</b> — è una regola dei browser, non nostra.
               Sul telefono la plancia si vede comunque.
@@ -222,7 +263,8 @@
           <section class="scheda" id="plance">
             <div class="testa-di-scheda">
               <h2>
-                <svg class="ic" aria-hidden="true"><use href="#ic-plance" /></svg>Le plance
+                <svg class="ic" aria-hidden="true"><use href="#ic-plance" /></svg
+                ><span data-en="The dashboards">Le plance</span>
               </h2>
             </div>
             <ul id="elenco-plance" class="elenco"></ul>
@@ -232,11 +274,16 @@
                 type="text"
                 maxlength="40"
                 placeholder="Per esempio «Casa al mare»"
+                data-en-placeholder="For example &#8220;Beach house&#8221;"
                 aria-label="Come si chiama la plancia nuova"
+                data-en-aria-label="What the new dashboard is called"
               />
-              <button id="aggiungi-plancia" type="button">Aggiungi</button>
+              <button id="aggiungi-plancia" type="button" data-en="Add">Aggiungi</button>
             </div>
-            <p class="minuta">
+            <p
+              class="minuta"
+              data-en="Each one has its own sections, its own cards, its own rooms — the files are the same. In the app you pick one from the menu; in Home Assistant they sit among the &#8220;Dashboards&#8221;."
+            >
               Ognuna ha le sue sezioni, le sue tessere, le sue stanze — i file sono gli stessi.
               Nell'app si scelgono dal menu; in Home Assistant stanno fra le «Plance».
             </p>
@@ -254,10 +301,12 @@
         <summary>
           <span class="testa-di-scheda">
             <h2>
-              <svg class="ic" aria-hidden="true"><use href="#ic-chiave" /></svg>Se qualcosa non
-              torna
+              <svg class="ic" aria-hidden="true"><use href="#ic-chiave" /></svg
+              ><span data-en="If something isn&#39;t right">Se qualcosa non torna</span>
             </h2>
-            <span class="minuta">Lo stato per bene, e i rimedi</span>
+            <span class="minuta" data-en="The state in full, and the remedies"
+              >Lo stato per bene, e i rimedi</span
+            >
           </span>
         </summary>
 
@@ -267,9 +316,12 @@
         </div>
 
         <div class="blocco">
-          <p class="etichetta">Da fuori casa</p>
+          <p class="etichetta" data-en="From away">Da fuori casa</p>
           <p class="spiegazione" id="spiega-centralino">…</p>
-          <p class="spiegazione">
+          <p
+            class="spiegazione"
+            data-en='At home the app finds gdahome by itself on port &lt;b id="porta"&gt;…&lt;/b&gt;. From away it is your home that calls a relay and waits there: no port to open on the router, no public address, nothing to install. The relay routes and can read nothing of what goes through. Whoever would rather not go through it turns &lt;b&gt;from away&lt;/b&gt; off in this add-on&#39;s options.'
+          >
             In casa l'app trova gdahome da sola sulla porta <b id="porta">…</b>. Da fuori è la casa
             che chiama un centralino e ci resta in attesa: nessuna porta da aprire sul router,
             nessun indirizzo pubblico, niente da installare. Il centralino instrada e non può
@@ -284,21 +336,25 @@
              pagina — che sta sul suo stesso indirizzo — e si dice quale dei due
              casi è. -->
         <div class="blocco">
-          <p class="etichetta">Le plance in Home Assistant</p>
+          <p class="etichetta" data-en="The dashboards in Home Assistant">
+            Le plance in Home Assistant
+          </p>
           <p class="spiegazione" id="stato-plance-in-casa">…</p>
           <p class="avviso" id="avviso-cartina" hidden></p>
           <div class="bottoni" id="ripara-cartina" hidden>
-            <button id="carica-la-cartina" type="button">Carica la cartina adesso</button>
+            <button id="carica-la-cartina" type="button" data-en="Load the panel now">
+              Carica la cartina adesso
+            </button>
           </div>
         </div>
 
         <!-- Da dove viene la plancia. È la risposta a «questa è quella
              originale?». Una copia modificata non viene bloccata: viene detta. -->
         <div class="blocco" id="provenienza" hidden>
-          <p class="etichetta">La plancia</p>
+          <p class="etichetta" data-en="The dashboard">La plancia</p>
           <p class="spiegazione" id="provenienza-spiega"></p>
           <details class="apribile" id="provenienza-quali" hidden>
-            <summary>Quali file non tornano</summary>
+            <summary data-en="Which files don&#39;t match">Quali file non tornano</summary>
             <p class="codice piccolo" id="provenienza-elenco"></p>
           </details>
         </div>
@@ -308,12 +364,14 @@
              trova in `/addons/gdahome`, quindi finché quei file non cambiano
              «Aggiorna» non compare mai. Da questo bottone se li porta da sé. -->
         <div class="blocco" id="aggiornamento" hidden>
-          <p class="etichetta">La versione</p>
+          <p class="etichetta" data-en="The version">La versione</p>
           <p class="spiegazione" id="aggiornamento-riga">…</p>
           <p class="spiegazione" id="aggiornamento-spiega"></p>
           <div class="bottoni">
-            <button id="aggiorna-il-ponte" type="button" hidden>Aggiorna gdahome</button>
-            <button id="riguarda" type="button" class="tenue">
+            <button id="aggiorna-il-ponte" type="button" data-en="Update gdahome" hidden>
+              Aggiorna gdahome
+            </button>
+            <button id="riguarda" type="button" class="tenue" data-en="Check for a new version">
               Guarda se c'è una versione nuova
             </button>
           </div>
@@ -326,14 +384,18 @@
            dappertutto altrove non compaiono, e non c'è niente da spiegare a chi
            non le può usare. -->
       <section class="scheda di-chi-risponde" id="assistenza" hidden>
-        <p class="etichetta">Solo per chi risponde</p>
+        <p class="etichetta" data-en="Only for whoever answers">Solo per chi risponde</p>
         <div class="testa-di-scheda">
           <h2>
-            <svg class="ic" aria-hidden="true"><use href="#ic-assistenza" /></svg>L'assistenza
+            <svg class="ic" aria-hidden="true"><use href="#ic-assistenza" /></svg
+            ><span data-en="Support">L'assistenza</span>
           </h2>
         </div>
         <p class="spiegazione" id="stato-assistenza">…</p>
-        <p class="minuta">
+        <p
+          class="minuta"
+          data-en="From this home you read the reports and the chats of every other one, and you answer. The queue is in the app, under &lt;b&gt;Console&lt;/b&gt;."
+        >
           Da questa casa si leggono le segnalazioni e le chat di tutte le altre, e si risponde. La
           coda sta nell'app, alla voce <b>Console</b>.
         </p>
@@ -343,17 +405,21 @@
            condizione dell'assistenza. A chi ha gdahome in casa non serve, ed è
            una scheda che spaventa più di quanto spieghi. -->
       <section class="scheda di-chi-risponde" id="chiacchieroni" hidden>
-        <p class="etichetta">Solo per chi risponde</p>
+        <p class="etichetta" data-en="Only for whoever answers">Solo per chi risponde</p>
         <div class="testa-di-scheda">
           <h2>
-            <svg class="ic" aria-hidden="true"><use href="#ic-onde" /></svg>Chi parla di più
+            <svg class="ic" aria-hidden="true"><use href="#ic-onde" /></svg
+            ><span data-en="Who talks the most">Chi parla di più</span>
           </h2>
           <span class="conta" id="stato-chiacchieroni">…</span>
         </div>
         <ul id="elenco-chiacchieroni" class="elenco"></ul>
         <details class="apribile">
-          <summary>A cosa serve</summary>
-          <p class="spiegazione">
+          <summary data-en="What it&#39;s for">A cosa serve</summary>
+          <p
+            class="spiegazione"
+            data-en="Every change at home is an event, and every event reaches every connected phone. A home making hundreds a minute does not have hundreds of things changing: it has &lt;b&gt;two or three&lt;/b&gt; changing non-stop — a power meter, a consumption sensor — and the rest sit still. If the app stutters this is where you start: put a filter on those two or three in Home Assistant, and the traffic drops tenfold without touching anything else."
+          >
             Ogni cambiamento in casa è un evento, e ogni evento arriva a tutti i telefoni collegati.
             Una casa che ne fa centinaia al minuto non ha centinaia di cose che cambiano: ne ha
             <b>due o tre</b> che cambiano di continuo — un contatore di potenza, un sensore di

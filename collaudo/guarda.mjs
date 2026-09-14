@@ -49,6 +49,15 @@ const RESTA = process.argv.includes("--resta");
  * Le fotografie finiscono in una cartella a parte, per non coprire quelle
  * chiare. */
 const SCURO = process.argv.includes("--scuro");
+
+/* In che lingua gira l'app, e come si chiamano le cose in quella lingua.
+ *
+ * Il collaudo preme quello che leggerebbe una persona: se l'app parla inglese,
+ * le scritte da cercare sono quelle inglesi. Non e' un doppione delle frasi
+ * dell'app — e' l'altra meta' della prova: se una frase cambia da una parte e
+ * non dall'altra, il collaudo non trova il bottone e lo dice. */
+const INGLESE = process.env.COLLAUDO_LINGUA === "en";
+const due = (it, en) => (INGLESE ? en : it);
 /* `--filma`: invece delle sole fotografie, registra tutto il giro in un video.
  *
  * Serve a far vedere l'app a chi non ce l'ha installata: una fotografia dice
@@ -188,6 +197,10 @@ async function accendiIlServitore({ portaDelPonte, codice, cartella }) {
       String(PORTA_DEL_SERVITORE),
       "--cartella",
       cartella,
+      /* La plancia nella lingua dell'app: qui il servitore e' un processo a
+         parte — nel telefono sta dentro l'app — e la lingua gliela si dice. */
+      "--lingua",
+      process.env.COLLAUDO_LINGUA === "en" ? "en" : "it",
     ],
     { cwd: APP, env: { ...process.env }, stdio: ["ignore", "pipe", "pipe"] },
   );
@@ -443,6 +456,12 @@ async function main() {
     viewport: { width: 430, height: 932 },
     deviceScaleFactor: 2,
     colorScheme: SCURO ? "dark" : "light",
+    /* In che lingua gira l'app: quella del telefono, e qui il telefono e'
+       questo browser. L'app parla italiano e inglese e sceglie da se' (vedi
+       `app/lib/parole.dart`), quindi senza dire niente Chromium chiederebbe
+       inglese e le prove cercherebbero parole italiane in un'app inglese.
+       `COLLAUDO_LINGUA=en` guarda l'altra. */
+    locale: process.env.COLLAUDO_LINGUA === "en" ? "en-GB" : "it-IT",
     /* Il video lo scrive Playwright da se', un fotogramma alla volta: si
      * chiude il contesto e il file c'e'. Niente da installare, niente
      * ffmpeg. */
@@ -793,16 +812,23 @@ try {
   const { pagina, codice, portaDelPonte } = banco;
 
   racconta("compilo il modulo, come lo compilerebbe una persona");
-  await scriviIn(pagina, "Come si chiama", "Casa del collaudo");
+  await scriviIn(pagina, due("Come si chiama", "What it's called"), "Casa del collaudo");
   /* Qui si va per la strada delle lettere, e non e' pigrizia: in un browser
    * dentro una macchina non c'e' nessuna fotocamera, e non c'e' niente da
    * inquadrare. Quello che si sta collaudando e' il resto — il ponte vero, il
    * segno, il filo, la casa — e a quello ci si arriva battendo, come ci arriva
    * chi la fotocamera non ce l'ha. */
-  await premi(pagina, "Non puoi inquadrarlo? Inserisci il codice");
+  await premi(
+    pagina,
+    due("Non puoi inquadrarlo? Inserisci il codice", "Can't scan it? Enter the code"),
+  );
   await attendi(300);
-  await scriviIn(pagina, "Inserisci il codice mostrato", codice);
-  await scriviIn(pagina, "Indirizzo di casa (facoltativo)", `127.0.0.1:${portaDelPonte}`);
+  await scriviIn(pagina, due("Inserisci il codice mostrato", "Enter the code shown"), codice);
+  await scriviIn(
+    pagina,
+    due("Indirizzo di casa (facoltativo)", "Home address (optional)"),
+    `127.0.0.1:${portaDelPonte}`,
+  );
   await scatta(pagina, "2-modulo-compilato");
 
   racconta("abbino");
@@ -893,11 +919,11 @@ try {
   };
 
   async function chiamaLaBarra() {
-    const tasto = await ilBottone(pagina, "Barra delle sezioni", {
+    const tasto = await ilBottone(pagina, due("Barra delle sezioni", "Sections bar"), {
       aspetta: false,
     });
     if (tasto) {
-      await premi(pagina, "Barra delle sezioni");
+      await premi(pagina, due("Barra delle sezioni", "Sections bar"));
       return;
     }
     if (await daiTreTrattini()) return;
@@ -1020,7 +1046,7 @@ try {
    * destra: la barra e' dentro solo se quel nome si trova a **sinistra**. */
   async function laBarraECaperta() {
     const tutti = await pagina
-      .locator('[aria-label^="Le tue case"]')
+      .locator(`[aria-label^="${due("Le tue case", "Your homes")}"]`)
       .elementHandles()
       .catch(() => []);
     for (const uno of tutti) {
@@ -1065,13 +1091,13 @@ try {
    * aprendolo si vedano tutte e due. */
   racconta("guardo il selettore delle plance");
   {
-    if (!(await ilBottone(pagina, "Quale plancia", { aspetta: false }))) {
+    if (!(await ilBottone(pagina, due("Quale plancia", "Which dashboard"), { aspetta: false }))) {
       const cEra = await cosaCeDaPremere(pagina);
       throw new Error(
         `il selettore delle plance non e' comparso in cima alla barra. A schermo c'e': ${cEra.join(" · ")}`,
       );
     }
-    await premi(pagina, "Quale plancia");
+    await premi(pagina, due("Quale plancia", "Which dashboard"));
     await attendi(700);
     await scatta(pagina, "5b-quale-plancia");
     /* Si guardano le voci con le stesse regole con cui poi si premono — non
@@ -1091,14 +1117,14 @@ try {
     await scatta(pagina, "5c-la-seconda-plancia");
     /* E si torna su quella di sempre, che il resto del collaudo guarda lei. */
     await apriIlMenu();
-    await premi(pagina, "Quale plancia");
+    await premi(pagina, due("Quale plancia", "Which dashboard"));
     await attendi(700);
     await premi(pagina, "gdahome");
     await attendi(2500);
   }
 
   racconta("apro i dispositivi");
-  await vaiA("Dispositivi", "Cerca fra");
+  await vaiA(due("Dispositivi", "Devices"), due("Cerca fra", "Search"));
   await attendi(1200);
   await scatta(pagina, "6-dispositivi");
 
@@ -1240,7 +1266,7 @@ try {
    * pagina che si e' aperta al primo tocco. Si preme, e poi si chiede alla
    * plancia se ci siamo. */
   try {
-    await premiNelMenu("Configurazione");
+    await premiNelMenu(due("Configurazione", "Config"));
   } catch (male) {
     racconta(`la barra non si e' letta chiusa: guardo la pagina (${male.message})`);
   }
@@ -1369,7 +1395,7 @@ try {
   racconta("torno alla plancia");
   await apriIlMenu();
   try {
-    await premiNelMenu("Plancia");
+    await premiNelMenu(due("Plancia", "Dashboard"));
   } catch (male) {
     racconta(`la barra non si e' letta chiusa: guardo la pagina (${male.message})`);
   }
@@ -1412,37 +1438,37 @@ try {
   racconta("apro «Come va l'app» dal menu");
   /* Si aspetta la riga d'apertura, non un'insegna: le insegne dentro una
    * scheda l'albero dei significati non le dichiara sempre. */
-  await vaiA("Come va l'app", "L'ultimo minuto");
+  await vaiA(due("Come va l'app", "App health"), due("L'ultimo minuto", "The last minute"));
   await attendi(900);
   await scatta(pagina, "6l2-come-va-l-app");
 
   racconta("apro le segnalazioni");
-  await vaiA("Segnalazioni", "Nessuna segnalazione");
+  await vaiA(due("Segnalazioni", "Reports"), due("Nessuna segnalazione", "No reports"));
   await attendi(900);
   await scatta(pagina, "6b-segnalazioni");
 
   racconta("ne scrivo una");
-  await premi(pagina, "Nuova segnalazione");
-  await aspettaCheCompaia(pagina, "Parte anche questo");
+  await premi(pagina, due("Nuova segnalazione", "New report"));
+  await aspettaCheCompaia(pagina, due("Parte anche questo", "This goes too"));
   await attendi(500);
-  await premi(pagina, "Idea");
-  await scriviIn(pagina, "In due parole", "Una tessera per la piscina");
+  await premi(pagina, due("Idea", "Idea"));
+  await scriviIn(pagina, due("In due parole", "In a few words"), "Una tessera per la piscina");
   await scriviIn(
     pagina,
-    "Racconta",
+    due("Racconta", "Tell me"),
     "Sarebbe bello vederla in home, con la temperatura dell'acqua e la pompa.",
   );
   await attendi(400);
   await scatta(pagina, "6c-nuova-segnalazione");
-  await premi(pagina, "Manda");
+  await premi(pagina, due("Manda", "Send"));
   await aspettaCheCompaia(pagina, "#12");
   /* Il manutentore finto risponde dopo un attimo: si rilegge, e c'e'. */
   await attendi(2200);
-  await premi(pagina, "Rileggi", { inAlto: true });
+  await premi(pagina, due("Rileggi", "Reload"), { inAlto: true });
   await aspettaCheCompaia(pagina, "Grazie, guardo subito");
   await attendi(600);
   await scatta(pagina, "6d-segnalazione");
-  await premi(pagina, "Back", { inAlto: true });
+  await premi(pagina, due("Indietro", "Back"), { inAlto: true });
   await attendi(800);
 
   /* I filtri dell'elenco, quelli della dashboard: quattro tasti coi conti.
@@ -1451,36 +1477,51 @@ try {
    * piu' d'uno: un comando che appare e sparisce non e' un comando. Si
    * guarda che ci siano tutti e quattro e che premerne uno filtri davvero. */
   racconta("i filtri delle segnalazioni");
-  for (const nome of ["Da lavorare", "In lavorazione", "Chiuse", "Tutte"]) {
+  for (const nome of [
+    due("Da lavorare", "To do"),
+    due("In lavorazione", "In progress"),
+    due("Chiuse", "Closed"),
+    due("Tutte", "All"),
+  ]) {
     await aspettaCheCompaia(pagina, nome);
   }
   await attendi(500);
   await scatta(pagina, "6d2-segnalazioni-filtri");
   /* «Chiuse» non ne ha nessuna: lo dice, invece di mostrare una lista
    * vuota senza spiegazione. */
-  await premi(pagina, "Chiuse");
-  await aspettaCheCompaia(pagina, "Nessuna segnalazione in questo stato");
+  await premi(pagina, due("Chiuse", "Closed"));
+  await aspettaCheCompaia(
+    pagina,
+    due("Nessuna segnalazione in questo stato", "No reports in this state"),
+  );
   await attendi(400);
   await scatta(pagina, "6d3-segnalazioni-filtro-vuoto");
-  await premi(pagina, "Tutte");
+  await premi(pagina, due("Tutte", "All"));
   await aspettaCheCompaia(pagina, "Una tessera per la piscina");
   await attendi(400);
 
   racconta("apro l'assistenza");
-  await vaiA("Assistenza", "Qui si parla con chi fa");
+  await vaiA(
+    due("Assistenza", "Support"),
+    due("Qui si parla con chi fa", "This is where you talk to whoever"),
+  );
   await attendi(600);
   await scriviIn(
     pagina,
-    "Scrivi a chi fa l'app…",
+    due("Scrivi a chi fa l'app…", "Write to whoever makes the app…"),
     "Buongiorno! Come si aggiunge una seconda casa?",
   );
-  await premi(pagina, "Manda");
+  await premi(pagina, due("Manda", "Send"));
   await aspettaCheCompaia(pagina, "Come si aggiunge una seconda casa");
   /* La risposta arriva dopo un attimo, e la si vede mandando la parola dopo:
    * il filo che torna e' quello intero. */
   await attendi(2200);
-  await scriviIn(pagina, "Scrivi a chi fa l'app…", "Grazie!");
-  await premi(pagina, "Manda");
+  await scriviIn(
+    pagina,
+    due("Scrivi a chi fa l'app…", "Write to whoever makes the app…"),
+    "Grazie!",
+  );
+  await premi(pagina, due("Manda", "Send"));
   await aspettaCheCompaia(pagina, "Grazie, guardo subito");
   await attendi(700);
   await scatta(pagina, "6e-assistenza");
@@ -1489,13 +1530,13 @@ try {
    * la pagina che si chiede di fotografare quando l'app va a scatti, quindi
    * la si fotografa anche qui. */
   racconta("apro «Come va l'app»");
-  await premi(pagina, "Come va l'app");
-  await aspettaCheCompaia(pagina, "Fotogrammi");
+  await premi(pagina, due("Come va l'app", "App health"));
+  await aspettaCheCompaia(pagina, due("Fotogrammi", "Frames"));
   await attendi(1500);
   await scatta(pagina, "6f-come-va-l-app");
   /* Il bottone per tornare: in inglese, che e' la lingua del browser del collaudo. */
-  await premi(pagina, "Back");
-  await aspettaCheCompaia(pagina, "Scrivi a chi fa l'app");
+  await premi(pagina, due("Indietro", "Back"));
+  await aspettaCheCompaia(pagina, due("Scrivi a chi fa l'app", "Write to whoever makes the app"));
   await attendi(400);
 
   /* La Console: la stessa conversazione, vista dall'altra parte.
@@ -1504,22 +1545,22 @@ try {
    * comparirebbe. Quello che si vede qui e' la domanda appena scritta
    * dall'Assistenza, arrivata nella coda di chi risponde. */
   racconta("apro la console dell'assistenza");
-  await vaiA("Console", "CONVERSAZIONI");
+  await vaiA("Console", due("CONVERSAZIONI", "CONVERSATIONS"));
   await attendi(800);
   await scatta(pagina, "6e2-console-coda");
 
   await premi(pagina, "casa_");
-  await aspettaCheCompaia(pagina, "Tutte le conversazioni");
+  await aspettaCheCompaia(pagina, due("Tutte le conversazioni", "All conversations"));
   await attendi(800);
-  await scriviIn(pagina, "Rispondi a", "Dalla home, in alto a sinistra.");
-  await premi(pagina, "Manda");
+  await scriviIn(pagina, due("Rispondi a", "Reply to"), "Dalla home, in alto a sinistra.");
+  await premi(pagina, due("Manda", "Send"));
   await aspettaCheCompaia(pagina, "Dalla home, in alto a sinistra");
   await attendi(700);
   await scatta(pagina, "6e3-console-filo");
 
   racconta("torno alla plancia");
   await apriIlMenu();
-  await premiNelMenu("Plancia");
+  await premiNelMenu(due("Plancia", "Dashboard"));
   await laPlancia(pagina);
   await attendi(600);
 
@@ -1529,14 +1570,14 @@ try {
   await apriIlMenu();
   await premi(pagina, "Casa del collaudo");
   /* Si aspetta «Aggiungi», che sta **solo** nell'elenco delle case. */
-  await aspettaCheCompaia(pagina, "Aggiungi");
+  await aspettaCheCompaia(pagina, due("Aggiungi", "Add"));
   await attendi(600);
   await scatta(pagina, "7-le-case");
 
   /* Chi guarda il video deve tornare a casa: e' li' che si comincia, ed e' li'
    * che si finisce. */
   if (FILMA) {
-    await premi(pagina, "Back", { inAlto: true });
+    await premi(pagina, due("Indietro", "Back"), { inAlto: true });
     await laPlancia(pagina);
     await attendi(1200);
   }

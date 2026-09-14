@@ -25,9 +25,11 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../casa/collegamento.dart';
 import '../casa/impostazioni.dart';
+import '../parole.dart';
 import '../plancia/servitore_qui/qui.dart';
 import '../ponte/filo.dart';
 import '../vestito/pezzi.dart';
+import 'barra.dart' show nomeDelleCase;
 import 'da_dove.dart';
 import 'riquadro/qui.dart' as riquadro;
 
@@ -161,8 +163,19 @@ class PlanciaVeraState extends State<PlanciaVera> {
 
   Future<void> _accendi() async {
     _servitoreChiesto = true;
+    /* In che lingua servire la plancia: la stessa dell'app.
+     *
+     * La plancia ce le ha tutte e due dentro — `dashboard.html` e
+     * `dashboard-en.html` — e senza dirle niente uscirebbe in italiano anche
+     * su un telefono inglese, con l'app intorno che parla inglese. Cosi'
+     * invece parlano la stessa lingua.
+     *
+     * Si decide quando il servitore si accende, cioe' una volta: cambiando la
+     * lingua del telefono l'app si rifa' subito e la plancia alla prima
+     * ricarica (vedi `main.dart`). */
     final servitore = await widget.fabbrica.servitore(
       () => widget.collegamento.filo,
+      lingua: laLingua.codice,
     );
     if (!mounted) return;
     servitore?.leggera = widget.impostazioni.planciaLeggera;
@@ -275,27 +288,44 @@ class PlanciaVeraState extends State<PlanciaVera> {
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
           icona: Icons.home_outlined,
-          titolo: 'Nessuna casa',
-          sotto: 'Aggiungine una per cominciare.',
+          titolo: inLingua(it: 'Nessuna casa', en: 'No homes yet'),
+          sotto: inLingua(
+            it: 'Aggiungine una per cominciare.',
+            en: 'Add one to get started.',
+          ),
         );
       case ComeVa.segnoScaduto:
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
           icona: Icons.link_off_rounded,
-          titolo: 'Questo telefono è stato staccato',
+          titolo: inLingua(
+            it: 'Questo telefono è stato staccato',
+            en: 'This phone has been unpaired',
+          ),
           sotto:
               collegamento.perche ??
-              'Riabbina la casa con un QR code nuovo, dalla scheda gdahome in '
-                  'Home Assistant.',
+              inLingua(
+                it:
+                    'Riabbina la casa con un QR code nuovo, dalla scheda '
+                    'gdahome in Home Assistant.',
+                en:
+                    'Pair your home again with a new QR code, from the '
+                    'gdahome page in Home Assistant.',
+              ),
         );
       case ComeVa.irraggiungibile:
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
           icona: Icons.cloud_off_rounded,
-          titolo: 'Non trovo la casa',
-          sotto: collegamento.perche ?? 'Sto continuando a provare.',
+          titolo: inLingua(
+            it: 'Non trovo la casa',
+            en: 'I can\'t find your home',
+          ),
+          sotto:
+              collegamento.perche ??
+              inLingua(it: 'Sto continuando a provare.', en: 'Still trying.'),
         );
       case ComeVa.inCammino:
       case ComeVa.aperta:
@@ -303,7 +333,13 @@ class PlanciaVeraState extends State<PlanciaVera> {
     }
 
     if (!collegamento.pannelloLetto) {
-      return _Attesa(collegamento: collegamento, cosa: 'Cerco la plancia…');
+      return _Attesa(
+        collegamento: collegamento,
+        cosa: inLingua(
+          it: 'Cerco la plancia…',
+          en: 'Looking for the dashboard…',
+        ),
+      );
     }
     final pannello = collegamento.pannello;
     if (pannello == null) {
@@ -319,23 +355,42 @@ class PlanciaVeraState extends State<PlanciaVera> {
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
           icona: Icons.lock_person_rounded,
-          titolo: 'Non hai plance associate alla tua utenza',
-          sotto:
-              'In questa casa le plance sono riservate ad altri utenti. '
-              'Chiedi a chi amministra la casa di abilitare la tua utenza: '
-              'in Home Assistant, nella pagina di gdahome, ogni plancia ha '
-              '«Chi la vede».',
+          titolo: inLingua(
+            it: 'Non hai plance associate alla tua utenza',
+            en: 'No dashboards are assigned to your account',
+          ),
+          sotto: inLingua(
+            it:
+                'In questa casa le plance sono riservate ad altri utenti. '
+                'Chiedi a chi amministra la casa di abilitare la tua utenza: '
+                'in Home Assistant, nella pagina di gdahome, ogni plancia ha '
+                '«Chi la vede».',
+            en:
+                'In this home the dashboards are reserved for other users. '
+                'Ask whoever administers the home to enable your account: in '
+                'Home Assistant, on the gdahome page, every dashboard has a '
+                '“Who sees it” list.',
+          ),
         );
       }
       return _Stato(
         collegamento: collegamento,
         vaiAlleCase: widget.vaiAlleCase,
         icona: Icons.dashboard_customize_rounded,
-        titolo: 'L\'add-on non ha la plancia',
-        sotto:
-            'La plancia arriva con l\'add-on: aggiorna gdahome in Home '
-            'Assistant e comparirà qui. Intanto, dalla barra, ci sono i '
-            'dispositivi.',
+        titolo: inLingua(
+          it: 'L\'add-on non ha la plancia',
+          en: 'The add-on has no dashboard',
+        ),
+        sotto: inLingua(
+          it:
+              'La plancia arriva con l\'add-on: aggiorna gdahome in Home '
+              'Assistant e comparirà qui. Intanto, dalla barra, ci sono i '
+              'dispositivi.',
+          en:
+              'The dashboard comes with the add-on: update gdahome in Home '
+              'Assistant and it will show up here. In the meantime, the bar '
+              'has your devices.',
+        ),
       );
     }
 
@@ -343,7 +398,13 @@ class PlanciaVeraState extends State<PlanciaVera> {
     if (servitore == null) {
       if (!_servitoreChiesto) {
         unawaited(_accendi());
-        return _Attesa(collegamento: collegamento, cosa: 'Accendo la plancia…');
+        return _Attesa(
+          collegamento: collegamento,
+          cosa: inLingua(
+            it: 'Accendo la plancia…',
+            en: 'Starting the dashboard…',
+          ),
+        );
       }
       /* Chiesto e non arrivato. Sul telefono non succede; nel browser si', e
        * per una ragione sola: la plancia la serve un service worker, e un
@@ -358,15 +419,34 @@ class PlanciaVeraState extends State<PlanciaVera> {
         vaiAlleCase: widget.vaiAlleCase,
         icona: Icons.lock_outline_rounded,
         titolo: kIsWeb
-            ? 'La plancia vuole un indirizzo sicuro'
-            : 'Non riesco ad accendere la plancia',
+            ? inLingua(
+                it: 'La plancia vuole un indirizzo sicuro',
+                en: 'The dashboard needs a secure address',
+              )
+            : inLingua(
+                it: 'Non riesco ad accendere la plancia',
+                en: 'I can\'t start the dashboard',
+              ),
         sotto: kIsWeb
-            ? 'Il browser fa girare quello che serve alla plancia solo su un '
-                  'indirizzo che comincia per https, o su localhost. Da un '
-                  'indirizzo http la casa si comanda lo stesso — dispositivi, '
-                  'configurazione, tutto — ma la plancia resta fuori. Apri '
-                  'gdahome dall\'indirizzo sicuro della tua Home Assistant.'
-            : 'Riprova, o riapri l\'app.',
+            ? inLingua(
+                it:
+                    'Il browser fa girare quello che serve alla plancia solo '
+                    'su un indirizzo che comincia per https, o su localhost. '
+                    'Da un indirizzo http la casa si comanda lo stesso — '
+                    'dispositivi, configurazione, tutto — ma la plancia resta '
+                    'fuori. Apri gdahome dall\'indirizzo sicuro della tua '
+                    'Home Assistant.',
+                en:
+                    'Browsers only run what the dashboard needs on an address '
+                    'that starts with https, or on localhost. From an http '
+                    'address you can still control your home — devices, '
+                    'config, everything — but the dashboard stays out. Open '
+                    'gdahome from your Home Assistant secure address.',
+              )
+            : inLingua(
+                it: 'Riprova, o riapri l\'app.',
+                en: 'Try again, or reopen the app.',
+              ),
       );
     }
     /* Prima di chiedere la pagina, cosi' le misure ci sono gia' dentro e non
@@ -435,12 +515,15 @@ class PlanciaVeraState extends State<PlanciaVera> {
           _Velo(
             child: StatoVuoto(
               icona: Icons.wifi_tethering_error_rounded,
-              titolo: 'La plancia non è arrivata',
+              titolo: inLingua(
+                it: 'La plancia non è arrivata',
+                en: 'The dashboard didn\'t load',
+              ),
               sotto: _perche!,
               azione: FilledButton.tonalIcon(
                 onPressed: ricarica,
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Riprova'),
+                label: Text(inLingua(it: 'Riprova', en: 'Try again')),
               ),
             ),
           )
@@ -448,7 +531,10 @@ class PlanciaVeraState extends State<PlanciaVera> {
           _Velo(
             child: _Attesa(
               collegamento: collegamento,
-              cosa: 'Apro la plancia…',
+              cosa: inLingua(
+                it: 'Apro la plancia…',
+                en: 'Opening the dashboard…',
+              ),
             ),
           ),
         /* Una riga sottile che dice «sto ricollegando»: la plancia resta a
@@ -549,7 +635,7 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dove).pop(),
-            child: const Text('Va bene'),
+            child: Text(inLingua(it: 'Va bene', en: 'OK')),
           ),
         ],
       ),
@@ -565,11 +651,11 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dove).pop(false),
-            child: const Text('Lascia stare'),
+            child: Text(inLingua(it: 'Lascia stare', en: 'Cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dove).pop(true),
-            child: const Text('Vai avanti'),
+            child: Text(inLingua(it: 'Vai avanti', en: 'Continue')),
           ),
         ],
       ),
@@ -592,11 +678,11 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dove).pop(),
-            child: const Text('Lascia stare'),
+            child: Text(inLingua(it: 'Lascia stare', en: 'Cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dove).pop(penna.text),
-            child: const Text('Va bene'),
+            child: Text(inLingua(it: 'Va bene', en: 'OK')),
           ),
         ],
       ),
@@ -712,7 +798,10 @@ class _Attesa extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(collegamento.casa?.nome ?? 'Casa', style: testi.titleLarge),
+          Text(
+            collegamento.casa?.nome ?? inLingua(it: 'Casa', en: 'Home'),
+            style: testi.titleLarge,
+          ),
           const SizedBox(height: 6),
           DaDoveSiPassa(collegamento),
           const SizedBox(height: 22),
@@ -766,7 +855,8 @@ class _Stato extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      collegamento.casa?.nome ?? 'Casa',
+                      collegamento.casa?.nome ??
+                          inLingua(it: 'Casa', en: 'Home'),
                       style: testi.titleLarge,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -779,7 +869,7 @@ class _Stato extends StatelessWidget {
               if (vaiAlleCase != null)
                 IconButton(
                   icon: const Icon(Icons.home_work_rounded),
-                  tooltip: 'Le tue case',
+                  tooltip: nomeDelleCase,
                   onPressed: vaiAlleCase,
                 ),
             ],

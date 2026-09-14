@@ -31,10 +31,11 @@ import '../casa/collegamento.dart';
 import '../casa/console.dart';
 import '../casa/impostazioni.dart';
 import '../misure/lavori.dart';
+import '../parole.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
-import 'assistenza.dart';
 import '../vestito/quanto_e_largo.dart';
+import 'assistenza.dart';
 import 'barra.dart';
 import 'console.dart';
 import 'diagnostica.dart';
@@ -266,7 +267,7 @@ class _HomeState extends State<Home> {
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.home_work_rounded),
-                    tooltip: 'Le tue case',
+                    tooltip: nomeDelleCase,
                     onPressed: widget.vaiAlleCase,
                   ),
                 ],
@@ -422,7 +423,13 @@ class _InArrivo extends StatelessWidget {
   @override
   Widget build(BuildContext context) => StatoVuoto(
     icona: Icons.construction_rounded,
-    titolo: '${sezione.titolo}: in arrivo',
-    sotto: 'Questa parte dell\'app non è ancora scritta.',
+    titolo: inLingua(
+      it: '${sezione.titolo}: in arrivo',
+      en: '${sezione.titolo}: coming soon',
+    ),
+    sotto: inLingua(
+      it: 'Questa parte dell\'app non è ancora scritta.',
+      en: 'This part of the app isn\'t written yet.',
+    ),
   );
 }

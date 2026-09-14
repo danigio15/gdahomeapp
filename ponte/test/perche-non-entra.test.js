@@ -140,11 +140,21 @@ test("il motivo arriva fino alla pagina: nello stato, e nella riga che si legge"
     "lo stato non porta il motivo alla console",
   );
   const console_ = readFileSync(join(QUI, "..", "console", "console.js"), "utf8");
-  assert.match(
-    console_,
-    /centralino\.perche \? " L'ultimo tentativo: " \+ centralino\.perche/,
-    "la console non scrive il motivo dell'ultimo tentativo",
-  );
+  /* La riga si dice in due lingue — `due(italiano, inglese)` — e il motivo
+     dev'essere attaccato a tutte e due: una traduzione che dimentica di
+     aggiungerlo scriverebbe «The last attempt:» e poi il punto. */
+  for (const [quale, come] of [
+    ["italiano", /" L'ultimo tentativo: ", " The last attempt: "\) \+\s*\n?\s*centralino\.perche/],
+    [
+      "inglese",
+      /due\(\s*\n?\s*" L'ultimo tentativo: ",\s*\n?\s*" The last attempt: ",?\s*\n?\s*\)/,
+    ],
+  ])
+    assert.match(
+      console_,
+      come,
+      `la console non scrive il motivo dell'ultimo tentativo in ${quale}`,
+    );
 });
 
 test("un guasto di chi legge non si traveste da caduta di rete", async () => {

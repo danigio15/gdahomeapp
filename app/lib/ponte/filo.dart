@@ -271,24 +271,48 @@ class Filo {
     final minuti = DateTime.now().difference(dal).inSeconds / 60;
     final cadutoIl = _cadutoIl;
     final cadute = _cadute == 0
-        ? 'mai caduto'
-        : 'caduto ${volte(_cadute)} in ${_quanto(DateTime.now().difference(_natoIl))}, '
-              'l\'ultima ${_daQuanto(cadutoIl)} fa: $_ultimaCaduta';
+        ? inLingua(it: 'mai caduto', en: 'never dropped')
+        : inLingua(
+            it:
+                'caduto ${volte(_cadute)} in ${_quanto(DateTime.now().difference(_natoIl))}, '
+                'l\'ultima ${_daQuanto(cadutoIl)} fa: $_ultimaCaduta',
+            en:
+                'dropped ${volte(_cadute)} in ${_quanto(DateTime.now().difference(_natoIl))}, '
+                'the last one ${_daQuanto(cadutoIl)} ago: $_ultimaCaduta',
+          );
     final presa = _presa;
     final sulFilo = presa is PresaCifrata
-        ? ' (${_megabyte(presa.caratteriArrivati)} sul filo'
-              '${presa.comprime ? ', gzip' : ', senza gzip'})'
+        ? inLingua(
+            it:
+                ' (${_megabyte(presa.caratteriArrivati)} sul filo'
+                '${presa.comprime ? ', gzip' : ', senza gzip'})',
+            en:
+                ' (${_megabyte(presa.caratteriArrivati)} on the wire'
+                '${presa.comprime ? ', gzip' : ', no gzip'})',
+          )
         : '';
     /* Le buste si dicono solo quando sono meno dei messaggi, cioe' quando il
      * ponte ha raggruppato: e' il numero che si paga passando dal centralino,
      * e vederlo accanto ai messaggi dice in un colpo quanto e' servito. */
     final buste = _busteArrivate < _messaggiArrivati
-        ? ' in $_busteArrivate buste'
+        ? inLingua(
+            it: ' in $_busteArrivate buste',
+            en: ' in $_busteArrivate envelopes',
+          )
         : '';
-    return '$_messaggiArrivati msg$buste, $_eventiArrivati eventi, '
-        '${_megabyte(_byteArrivati)} giù$sulFilo, $_messaggiMandati su, '
-        'in ${minuti < 1 ? '${(minuti * 60).round()} s' : '${minuti.round()} min'}; '
-        '$cadute';
+    final quandoDa = minuti < 1
+        ? '${(minuti * 60).round()} s'
+        : '${minuti.round()} min';
+    return inLingua(
+      it:
+          '$_messaggiArrivati msg$buste, $_eventiArrivati eventi, '
+          '${_megabyte(_byteArrivati)} giù$sulFilo, $_messaggiMandati su, '
+          'in $quandoDa; $cadute',
+      en:
+          '$_messaggiArrivati msg$buste, $_eventiArrivati events, '
+          '${_megabyte(_byteArrivati)} down$sulFilo, $_messaggiMandati up, '
+          'in $quandoDa; $cadute',
+    );
   }
 
   /// Una durata come si dice a voce: «40 s», «12 min», «8 h».
@@ -337,8 +361,12 @@ class Filo {
     unawaited(_bussa());
     return stretta.future.timeout(
       entro,
-      onTimeout: () =>
-          throw const PonteIrraggiungibile('gdahome in casa non risponde'),
+      onTimeout: () => throw PonteIrraggiungibile(
+        inLingua(
+          it: 'gdahome in casa non risponde',
+          en: 'gdahome at home is not answering',
+        ),
+      ),
     );
   }
 
@@ -367,14 +395,24 @@ class Filo {
         return;
       }
       final primaVolta = _tentativi == 0;
-      _caduto('non trovo la casa da nessuna parte');
+      _caduto(
+        inLingua(
+          it: 'non trovo la casa da nessuna parte',
+          en: 'I can\'t find your home anywhere',
+        ),
+      );
       if (primaVolta) {
         final stretta = _stretta;
         if (stretta != null && !stretta.isCompleted) {
           stretta.completeError(
             errore is ErroreDelPonte
                 ? errore
-                : PonteIrraggiungibile('non trovo la casa da nessuna parte'),
+                : PonteIrraggiungibile(
+                    inLingua(
+                      it: 'non trovo la casa da nessuna parte',
+                      en: 'I can\'t find your home anywhere',
+                    ),
+                  ),
           );
         }
       }
@@ -407,7 +445,12 @@ class Filo {
       _segnoNonVale(errore.spiegazione);
       return;
     } on TimeoutException {
-      _caduto('la casa non ha aperto il filo in tempo');
+      _caduto(
+        inLingua(
+          it: 'la casa non ha aperto il filo in tempo',
+          en: 'your home did not open the connection in time',
+        ),
+      );
       return;
     } catch (errore) {
       /* Prima di tutto: e' la casa che non risponde, o e' il telefono che non
@@ -427,7 +470,10 @@ class Filo {
       _caduto(
         errore is ErroreDelPonte
             ? errore.spiegazione
-            : 'non riesco ad aprire il filo: $errore',
+            : inLingua(
+                it: 'non riesco ad aprire il filo: $errore',
+                en: 'I can\'t open the connection: $errore',
+              ),
       );
       return;
     }
@@ -450,9 +496,14 @@ class Filo {
       onError: (Object errore) => _caduto(
         errore is ErroreDelPonte
             ? errore.spiegazione
-            : 'il filo si è interrotto',
+            : inLingua(
+                it: 'il filo si è interrotto',
+                en: 'the connection broke off',
+              ),
       ),
-      onDone: () => _caduto('il filo si è chiuso'),
+      onDone: () => _caduto(
+        inLingua(it: 'il filo si è chiuso', en: 'the connection closed'),
+      ),
       cancelOnError: false,
     );
   }
@@ -552,7 +603,11 @@ class Filo {
         _entrato();
       case 'auth_invalid':
         _segnoNonVale(
-          detto['message'] as String? ?? 'il segno non è più valido',
+          detto['message'] as String? ??
+              inLingua(
+                it: 'il segno non è più valido',
+                en: 'the token is no longer valid',
+              ),
         );
       case 'result':
         _risposta(detto);
@@ -629,7 +684,14 @@ class Filo {
     Duration? entro,
   }) {
     if (!dentro) {
-      return Future.error(const FiloCaduto('il filo non è aperto'));
+      return Future.error(
+        FiloCaduto(
+          inLingua(
+            it: 'il filo non è aperto',
+            en: 'the connection is not open',
+          ),
+        ),
+      );
     }
     final id = _prossimoId++;
     final chiAspetta = Completer<Map<String, dynamic>>();
@@ -664,7 +726,14 @@ class Filo {
   /// di schermo fermo.
   Future<String> testoDi(Map<String, dynamic> comando, {Duration? entro}) {
     if (!dentro) {
-      return Future.error(const FiloCaduto('il filo non è aperto'));
+      return Future.error(
+        FiloCaduto(
+          inLingua(
+            it: 'il filo non è aperto',
+            en: 'the connection is not open',
+          ),
+        ),
+      );
     }
     final aspetta = Completer<String>();
     late final int id;
@@ -757,7 +826,11 @@ class Filo {
     Map<String, dynamic> messaggio,
     void Function(Instradato risposta) ricevi,
   ) {
-    if (!dentro) throw const FiloCaduto('il filo non è aperto');
+    if (!dentro) {
+      throw FiloCaduto(
+        inLingua(it: 'il filo non è aperto', en: 'the connection is not open'),
+      );
+    }
     final id = _prossimoId++;
     _instradati[id] = ricevi;
     _manda({...messaggio, 'id': id});
@@ -1029,7 +1102,11 @@ class Filo {
     _riprova?.cancel();
     _riprova = null;
     _stacca();
-    _faFallireLeRichieste(const FiloCaduto('il filo è stato chiuso'));
+    _faFallireLeRichieste(
+      FiloCaduto(
+        inLingua(it: 'il filo è stato chiuso', en: 'the connection was closed'),
+      ),
+    );
     /* Prima si prende la lista e si svuota la mappa, poi si chiude.
      * Chiudere una sottoscrizione fa scattare il suo `onCancel`, che si toglie
      * dalla mappa: farlo mentre la si sta scorrendo la rompe a meta'. */

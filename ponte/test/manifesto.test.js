@@ -95,3 +95,36 @@ test("ogni opzione dell'add-on ha la sua riga nello schema", () => {
   const manifesto = readFileSync(qui("../config.yaml"), "utf8");
   assert.deepEqual(leChiaviDi(manifesto, "options").sort(), leChiaviDi(manifesto, "schema").sort());
 });
+
+/* Le opzioni si leggono nelle due lingue.
+ *
+ * `translations/it.yaml` e `translations/en.yaml` sono quelli che danno un nome
+ * a ogni casella nella scheda dell'add-on: senza, Home Assistant scrive il nome
+ * della chiave cosi' com'e' — «da_fuori_casa». E chi aggiunge un'opzione la
+ * dimentica in uno dei due file, non in tutti e due: allora quella casella
+ * torna a chiamarsi come la variabile, ma **in una lingua sola**, che e' il
+ * genere di cosa che nessuno prova perche' nessuno tiene Home Assistant in due
+ * lingue insieme. Qui invece si vede. */
+const LE_LINGUE = ["it", "en"];
+
+test("ogni opzione dell'add-on ha il suo nome in tutte le lingue", () => {
+  const manifesto = readFileSync(qui("../config.yaml"), "utf8");
+  const opzioni = leChiaviDi(manifesto, "options").sort();
+  for (const lingua of LE_LINGUE) {
+    const parole = readFileSync(qui(`../translations/${lingua}.yaml`), "utf8");
+    assert.deepEqual(
+      leChiaviDi(parole, "configuration").sort(),
+      opzioni,
+      `«translations/${lingua}.yaml» non dice le stesse opzioni del manifesto`,
+    );
+    /* Il nome non basta che ci sia: deve dire qualcosa. Una voce con il solo
+     * `description` lascia la casella chiamata come la variabile. */
+    for (const quale of opzioni) {
+      assert.match(
+        parole,
+        new RegExp(`^ {2}${quale}:\\n(?: {4}.*\\n)* {4}name: \\S`, "m"),
+        `in «translations/${lingua}.yaml» l'opzione «${quale}» non ha un nome`,
+      );
+    }
+  }
+});

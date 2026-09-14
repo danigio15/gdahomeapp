@@ -7,10 +7,10 @@ library;
 
 import 'dart:convert';
 
+import '../ponte/indirizzo.dart';
 import 'ausili.dart';
 import 'casa_conosciuta.dart';
 import 'cassaforte.dart';
-import '../ponte/indirizzo.dart';
 
 /// Piu' di cosi' non e' un elenco di case, e' un elenco di prove.
 const int caseMassime = 10;

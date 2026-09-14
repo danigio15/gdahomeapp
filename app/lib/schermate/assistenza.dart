@@ -14,9 +14,11 @@ import 'package:flutter/material.dart';
 import '../casa/collegamento.dart';
 import '../casa/impostazioni.dart';
 import '../casa/segnalazioni.dart';
+import '../parole.dart';
 import '../ponte/filo.dart';
 import '../vestito/pezzi.dart';
 import 'diagnostica.dart';
+import 'menu.dart' show Sezione;
 import 'segnalazioni.dart';
 
 class SchermataDellAssistenza extends StatefulWidget {
@@ -64,7 +66,12 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
   Future<void> _carica() async {
     final filo = _filo;
     if (filo == null) {
-      setState(() => _perche = 'La casa non è collegata.');
+      setState(
+        () => _perche = inLingua(
+          it: 'La casa non è collegata.',
+          en: 'Your home isn\'t connected.',
+        ),
+      );
       return;
     }
     setState(() {
@@ -111,7 +118,10 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
     return Conversazione(
       messaggi: _chat?.messaggi ?? const [],
       perche: _perche,
-      suggerimento: 'Scrivi a chi fa l\'app…',
+      suggerimento: inLingua(
+        it: 'Scrivi a chi fa l\'app…',
+        en: 'Write to whoever makes the app…',
+      ),
       intestazione: impostazioni == null
           ? null
           : Align(
@@ -126,19 +136,27 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
                   ),
                 ),
                 icon: const Icon(Icons.monitor_heart_outlined),
-                label: const Text('Come va l\'app'),
+                label: Text(Sezione.comeVaLApp.titolo),
               ),
             ),
-      vuota: const StatoVuoto(
+      vuota: StatoVuoto(
         dentroUnaLista: true,
         icona: Icons.support_agent_rounded,
-        titolo: 'Ciao',
-        sotto:
-            'Qui si parla con chi fa l\'app. Scrivi quello che vuoi: la '
-            'risposta arriva qui sotto, e con le parole partono anche le '
-            'versioni della plancia, dell\'add-on e dell\'app, così non te '
-            'le chiediamo. Per una foto apri una segnalazione: lì resta '
-            'scritta accanto a quello che mostra.',
+        titolo: inLingua(it: 'Ciao', en: 'Hello'),
+        sotto: inLingua(
+          it:
+              'Qui si parla con chi fa l\'app. Scrivi quello che vuoi: la '
+              'risposta arriva qui sotto, e con le parole partono anche le '
+              'versioni della plancia, dell\'add-on e dell\'app, così non te '
+              'le chiediamo. Per una foto apri una segnalazione: lì resta '
+              'scritta accanto a quello che mostra.',
+          en:
+              'This is where you talk to whoever makes the app. Write '
+              'whatever you like: the answer comes back below, and along with '
+              'your words go the dashboard, add-on and app versions, so we '
+              'don\'t have to ask. For a photo open a report: there it stays '
+              'written next to what it shows.',
+        ),
       ),
       manda: _scrivi,
       rileggi: _carica,
@@ -151,5 +169,8 @@ class _SchermataDellAssistenzaState extends State<SchermataDellAssistenza> {
 class FiloCadutoQui implements Exception {
   const FiloCadutoQui();
   @override
-  String toString() => 'La casa non è collegata: riprova fra un momento.';
+  String toString() => inLingua(
+    it: 'La casa non è collegata: riprova fra un momento.',
+    en: 'Your home isn\'t connected: try again in a moment.',
+  );
 }

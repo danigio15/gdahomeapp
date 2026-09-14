@@ -18,6 +18,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import '../misure/lavori.dart';
+import '../parole.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 
@@ -166,7 +167,13 @@ class Cucitura {
     final filo = await _trovaIlFilo();
     if (_finita.isCompleted) return;
     if (filo == null) {
-      _manda({'type': 'auth_invalid', 'message': 'la casa non risponde'});
+      _manda({
+        'type': 'auth_invalid',
+        'message': inLingua(
+          it: 'la casa non risponde',
+          en: 'your home is not answering',
+        ),
+      });
       await chiudi();
       return;
     }

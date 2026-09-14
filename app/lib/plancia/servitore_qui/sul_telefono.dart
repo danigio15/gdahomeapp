@@ -5,9 +5,9 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import '../../ponte/filo.dart';
 import '../pannello.dart';
 import '../servitore.dart';
-import '../../ponte/filo.dart';
 
 /// Quello che alla schermata serve sapere di un servitore.
 abstract interface class ServitoreDiQuestoSistema {

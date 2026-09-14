@@ -14,6 +14,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../parole.dart';
+
 /// Cosa torna dal lettore.
 ///
 /// Sono **tre** cose, non due, e la terza e' quella che si dimentica: chi apre
@@ -115,12 +117,14 @@ class _LettoreDiQrCodeState extends State<LettoreDiQrCode> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Inquadra il QR code'),
+        title: Text(
+          inLingua(it: 'Inquadra il QR code', en: 'Scan the QR code'),
+        ),
         actions: [
           ValueListenableBuilder(
             valueListenable: _fotocamera,
             builder: (_, stato, _) => IconButton(
-              tooltip: 'Torcia',
+              tooltip: inLingua(it: 'Torcia', en: 'Torch'),
               onPressed: stato.torchState == TorchState.unavailable
                   ? null
                   : _fotocamera.toggleTorch,
@@ -176,8 +180,14 @@ class _Mirino extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                'Il QR code è presente nella scheda «gdahome», dentro '
-                'Home Assistant.',
+                inLingua(
+                  it:
+                      'Il QR code è presente nella scheda «gdahome», dentro '
+                      'Home Assistant.',
+                  en:
+                      'The QR code is on the “gdahome” page, inside Home '
+                      'Assistant.',
+                ),
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white, fontSize: 15),
               ),
@@ -221,12 +231,26 @@ class _Guaio extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 negato
-                    ? 'gdahome non ha il permesso di usare la fotocamera. '
-                          'Puoi darglielo dalle impostazioni del telefono, '
-                          'oppure tornare indietro e inserire il codice a mano.'
-                    : 'La fotocamera non si apre. Torna indietro e '
-                          'inserisci il codice a mano: è scritto sotto il QR '
-                          'code.',
+                    ? inLingua(
+                        it:
+                            'gdahome non ha il permesso di usare la '
+                            'fotocamera. Puoi darglielo dalle impostazioni '
+                            'del telefono, oppure tornare indietro e inserire '
+                            'il codice a mano.',
+                        en:
+                            'gdahome doesn\'t have permission to use the '
+                            'camera. You can grant it in the phone settings, '
+                            'or go back and enter the code by hand.',
+                      )
+                    : inLingua(
+                        it:
+                            'La fotocamera non si apre. Torna indietro e '
+                            'inserisci il codice a mano: è scritto sotto il QR '
+                            'code.',
+                        en:
+                            'The camera won\'t open. Go back and enter the '
+                            'code by hand: it\'s written under the QR code.',
+                      ),
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white, fontSize: 15),
               ),
@@ -238,7 +262,9 @@ class _Guaio extends StatelessWidget {
                  * davanti lo stesso bottone che ha appena fallito. */
                 onPressed: () =>
                     Navigator.of(context).pop(const SiScriveAMano()),
-                child: const Text('Inserisci il codice'),
+                child: Text(
+                  inLingua(it: 'Inserisci il codice', en: 'Enter the code'),
+                ),
               ),
             ],
           ),

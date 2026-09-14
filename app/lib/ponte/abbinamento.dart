@@ -26,6 +26,7 @@ import 'dart:convert';
 import 'package:cryptography/cryptography.dart';
 import 'package:http/http.dart' as http;
 
+import '../parole.dart';
 import 'errori.dart';
 import 'indirizzo.dart';
 import 'invito.dart';
@@ -136,9 +137,15 @@ class Abbinamento {
      * come ripiego per i QR code che non lo dicono. */
     final centralino = invito.centralino ?? centralinoDiRipiego;
     if (centralino == null) {
-      throw const PonteIrraggiungibile(
-        'questo codice non dice da dove si entra, e questa app non ha un '
-        'centralino a cui chiedere',
+      throw PonteIrraggiungibile(
+        inLingua(
+          it:
+              'questo codice non dice da dove si entra, e questa app non ha '
+              'un centralino a cui chiedere',
+          en:
+              'this code doesn\'t say where to get in, and this app has no '
+              'relay to ask',
+        ),
       );
     }
     return Entrata(
@@ -167,7 +174,12 @@ class Abbinamento {
   }) async {
     final pulito = codicePulito(codice);
     if (pulito.length < 4) {
-      throw const CodiceRifiutato('questo codice è troppo corto');
+      throw CodiceRifiutato(
+        inLingua(
+          it: 'questo codice è troppo corto',
+          en: 'this code is too short',
+        ),
+      );
     }
 
     final Presa sotto;

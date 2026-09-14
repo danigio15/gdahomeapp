@@ -20,6 +20,7 @@ import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/main.dart';
+import 'package:gdahome/parole.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/aggiungi_casa.dart';
@@ -230,6 +231,36 @@ void main() {
     expect(find.text('Indirizzo di casa (facoltativo)'), findsNothing);
     expect(
       find.textContaining('Non ti verrà mai chiesta la password'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('su un telefono inglese l\'app parla inglese', (tester) async {
+    /* La lingua la decide il telefono (vedi `parole.dart`), e qui il telefono
+     * e' la prova: si mette l'inglese e si guarda la prima schermata, che e'
+     * quella che vede per prima chiunque scarichi l'app. */
+    laLingua = Lingua.inglese;
+    addTearDown(() => laLingua = Lingua.italiano);
+
+    await tester.pumpWidget(AppDiCasa(cassaforte: CassaforteInMemoria()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Let\'s connect your home'), findsOneWidget);
+    expect(find.text('Scan the QR code'), findsOneWidget);
+    expect(find.text('Can\'t scan it? Enter the code'), findsOneWidget);
+    expect(
+      find.textContaining('You will never be asked for your Home Assistant'),
+      findsOneWidget,
+    );
+    /* E niente italiano rimasto in mezzo. */
+    expect(find.text('Colleghiamo la casa'), findsNothing);
+    expect(find.text('Inquadra il QR code'), findsNothing);
+
+    /* Le lettere a mano: la casella si chiama col suo nome inglese. */
+    await tester.tap(find.text('Can\'t scan it? Enter the code'));
+    await tester.pumpAndSettle();
+    expect(
+      find.widgetWithText(TextField, 'Enter the code shown'),
       findsOneWidget,
     );
   });

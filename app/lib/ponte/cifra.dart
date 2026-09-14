@@ -23,6 +23,7 @@ import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 
 import '../misure/lavori.dart';
+import '../parole.dart';
 import 'altrove/altrove.dart';
 import 'compressione/compressione.dart' as compressione;
 
@@ -119,7 +120,12 @@ Uint8List _vestiSpki(Uint8List nuda) =>
 Uint8List _spogliaSpki(List<int> vestita) {
   if (vestita.length == 32) return Uint8List.fromList(vestita);
   if (vestita.length != 44) {
-    throw const ChiaveStorta('una chiave pubblica non è fatta così');
+    throw ChiaveStorta(
+      inLingua(
+        it: 'una chiave pubblica non è fatta così',
+        en: 'that is not the shape of a public key',
+      ),
+    );
   }
   for (var i = 0; i < _involucroSpki.length; i += 1) {
     if (vestita[i] != _involucroSpki[i]) {
@@ -324,7 +330,9 @@ class Busta {
     try {
       dodici = base64.decode(inBase64.substring(0, 16));
     } catch (_) {
-      throw const BustaGuasta('non è nemmeno base64');
+      throw BustaGuasta(
+        inLingua(it: 'non è nemmeno base64', en: 'it isn\'t even base64'),
+      );
     }
     if (dodici[0] != suo.numero) {
       throw const BustaGuasta('busta dalla direzione sbagliata');
@@ -352,7 +360,9 @@ class Busta {
     } on BustaGuasta {
       rethrow;
     } catch (_) {
-      throw const BustaGuasta('la busta non si apre');
+      throw BustaGuasta(
+        inLingua(it: 'la busta non si apre', en: 'the envelope won\'t open'),
+      );
     }
     ricevo += 1;
     return dentro;
@@ -363,7 +373,9 @@ class Busta {
     try {
       tutto = base64.decode(inBase64);
     } catch (_) {
-      throw const BustaGuasta('non è nemmeno base64');
+      throw BustaGuasta(
+        inLingua(it: 'non è nemmeno base64', en: 'it isn\'t even base64'),
+      );
     }
     if (tutto.length < 12 + 16) throw const BustaGuasta('busta troppo corta');
     final dodici = tutto.sublist(0, 12);
@@ -383,7 +395,12 @@ class Busta {
       try {
         dentro = compressione.scompatta(dentro, massimo: apertaMassima);
       } catch (_) {
-        throw const BustaGuasta('la busta compressa non si apre');
+        throw BustaGuasta(
+          inLingua(
+            it: 'la busta compressa non si apre',
+            en: 'the compressed envelope won\'t open',
+          ),
+        );
       }
     }
     return utf8.decode(dentro);

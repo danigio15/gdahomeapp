@@ -6,6 +6,7 @@ library;
 import 'dart:async';
 import 'dart:convert';
 
+import '../parole.dart';
 import 'dispensa/dispensa.dart';
 
 class Impostazioni {
@@ -108,7 +109,10 @@ class Impostazioni {
   /// In due parole, per la diagnostica.
   String get riassunto => [
     if (_sulTelefono) 'telefono' else 'browser',
-    if (planciaLeggera) 'plancia leggera' else 'plancia piena',
+    if (planciaLeggera)
+      inLingua(it: 'plancia leggera', en: 'light dashboard')
+    else
+      inLingua(it: 'plancia piena', en: 'full dashboard'),
     if (_android) composizioneIbrida ? 'ibrida' : 'tessitura',
   ].join(', ');
 

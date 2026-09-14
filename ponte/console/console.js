@@ -12,6 +12,66 @@
   var vediPagina = document;
   var quandoScade = null;
 
+  /* ─── Le due lingue ──────────────────────────────────────────────────────── */
+
+  /* In che lingua si legge questa pagina.
+   *
+   * La regola e' quella dell'app (`app/lib/parole.dart`): fra le lingue del
+   * browser si prende la prima che sappiamo dire; se non ne sappiamo nessuna
+   * si dice in inglese, che e' la lingua di chi non ha la nostra.
+   *
+   * Non si guarda la lingua di Home Assistant: questa pagina sta dentro un
+   * telaio, e da dentro quel telaio la lingua di HA non si vede senza aprirgli
+   * un filo. Quella del browser e' la stessa cosa in quasi tutti i casi — chi
+   * tiene HA in inglese ha il browser in inglese — e non costa niente. */
+  var INGLESE = (function () {
+    var quali =
+      navigator.languages && navigator.languages.length
+        ? navigator.languages
+        : [navigator.language || ""];
+    for (var i = 0; i < quali.length; i += 1) {
+      var codice = String(quali[i]).slice(0, 2).toLowerCase();
+      if (codice === "it") return false;
+      if (codice === "en") return true;
+    }
+    return true;
+  })();
+
+  /* La stessa frase nelle due lingue, una accanto all'altra.
+   *
+   * Come `inLingua` nell'app, e per lo stesso motivo: una traduzione che sta
+   * lontana dal suo originale invecchia da sola, e nessuno se ne accorge
+   * finche' non la legge un inglese. */
+  function due(it, en) {
+    return INGLESE ? en : it;
+  }
+
+  /* Le parole inglesi della pagina stanno **nella pagina**, in `data-en`
+   * accanto alle italiane: si rileggono una accanto all'altra, e non c'e' una
+   * seconda copia di `index.html` da tenere allineata.
+   *
+   * `data-en` porta il contenuto — anche col suo `<b>` dentro, che in una
+   * frase serve — e si scrive prima che qualunque cosa si agganci a quei nodi.
+   * `data-en-<attributo>` invece porta un attributo: `data-en-placeholder`
+   * riempie `placeholder`, `data-en-aria-label` riempie `aria-label`. */
+  function laPaginaNellaSuaLingua() {
+    if (!INGLESE) return;
+    vediPagina.documentElement.lang = "en";
+    var tutti = vediPagina.querySelectorAll("[data-en]");
+    for (var i = 0; i < tutti.length; i += 1) {
+      tutti[i].innerHTML = tutti[i].getAttribute("data-en");
+    }
+    var conAttributi = vediPagina.querySelectorAll("*");
+    for (var q = 0; q < conAttributi.length; q += 1) {
+      var nodo = conAttributi[q];
+      for (var a = nodo.attributes.length - 1; a >= 0; a -= 1) {
+        var nome = nodo.attributes[a].name;
+        if (nome.indexOf("data-en-") !== 0) continue;
+        nodo.setAttribute(nome.slice("data-en-".length), nodo.attributes[a].value);
+      }
+    }
+  }
+
   /* Quante plance si tengono: lo stesso numero che ha il ponte
    * (`plance.js`). Qui serve solo a spegnere il tasto quando si e' arrivati
    * al tetto, invece di farlo premere per sentirsi dire di no. */
@@ -28,7 +88,9 @@
     ).then(function (risposta) {
       return risposta.json().then(function (corpo) {
         if (!risposta.ok)
-          throw new Error(corpo && corpo.errore ? corpo.errore : "non ha funzionato");
+          throw new Error(
+            corpo && corpo.errore ? corpo.errore : due("non ha funzionato", "it didn't work"),
+          );
         return corpo;
       });
     });
@@ -69,10 +131,11 @@
 
   function quandoIlTempoDice(scadeIl) {
     var mancano = Math.max(0, Math.round((scadeIl - Date.now()) / 1000));
-    if (!mancano) return "scaduto";
+    if (!mancano) return due("scaduto", "expired");
     var minuti = Math.floor(mancano / 60);
     var secondi = mancano % 60;
-    return "vale ancora " + (minuti ? minuti + " min " : "") + secondi + " s";
+    var quanto = (minuti ? minuti + " min " : "") + secondi + " s";
+    return due("vale ancora " + quanto, "good for another " + quanto);
   }
 
   /* Quando si e' visto un telefono, come lo direbbe una persona.
@@ -95,10 +158,10 @@
     var detto = String((uno && uno.nome) || "").trim();
     if (detto && NOMI_CHE_NON_DICONO.indexOf(detto.toLowerCase()) < 0) return detto;
     var quale = String((uno && uno.sistema) || "").toLowerCase();
-    if (quale === "android") return "Telefono Android";
+    if (quale === "android") return due("Telefono Android", "Android phone");
     if (quale === "ios") return "iPhone";
-    if (quale === "web") return "Browser";
-    return "Dispositivo";
+    if (quale === "web") return due("Browser", "Browser");
+    return due("Dispositivo", "Device");
   }
 
   /* Cos'e' questo, detto a parole.
@@ -109,23 +172,26 @@
    * sui dispositivi di prima, e allora si dice com'e': non lo ha detto. */
   function comEFatto(sistema) {
     var quale = String(sistema || "").toLowerCase();
-    if (quale === "web") return "browser";
-    if (quale === "android") return "app su Android";
-    if (quale === "ios") return "app su iPhone";
-    if (!quale || quale === "sconosciuto") return "non dice cos'è";
+    if (quale === "web") return due("browser", "browser");
+    if (quale === "android") return due("app su Android", "app on Android");
+    if (quale === "ios") return due("app su iPhone", "app on iPhone");
+    if (!quale || quale === "sconosciuto") return due("non dice cos'è", "doesn't say what it is");
     return quale;
   }
 
   function dataLeggibile(quando) {
-    if (!quando) return "mai";
+    if (!quando) return due("mai", "never");
     try {
       var q = new Date(quando);
       var ora = q.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       var oggi = new Date();
       var ieri = new Date(oggi.getTime() - 24 * 60 * 60 * 1000);
-      if (q.toDateString() === oggi.toDateString()) return "oggi alle " + ora;
-      if (q.toDateString() === ieri.toDateString()) return "ieri alle " + ora;
-      return q.toLocaleDateString([], { day: "numeric", month: "long" }) + " alle " + ora;
+      if (q.toDateString() === oggi.toDateString())
+        return due("oggi alle " + ora, "today at " + ora);
+      if (q.toDateString() === ieri.toDateString())
+        return due("ieri alle " + ora, "yesterday at " + ora);
+      var giorno = q.toLocaleDateString([], { day: "numeric", month: "long" });
+      return due(giorno + " alle " + ora, giorno + " at " + ora);
     } catch (_errore) {
       return "—";
     }
@@ -175,14 +241,19 @@
     if (casa && casa.viva) {
       return {
         come: "bene",
-        corto: "risponde",
-        lungo: "Home Assistant risponde, e gdahome è in piedi.",
+        corto: due("risponde", "answering"),
+        lungo: due(
+          "Home Assistant risponde, e gdahome è in piedi.",
+          "Home Assistant answers, and gdahome is up.",
+        ),
       };
     }
     return {
       come: "male",
-      corto: "non risponde",
-      lungo: "Home Assistant non risponde: " + ((casa && casa.perche) || "non dice perché"),
+      corto: due("non risponde", "not answering"),
+      lungo:
+        due("Home Assistant non risponde: ", "Home Assistant isn't answering: ") +
+        ((casa && casa.perche) || due("non dice perché", "it doesn't say why")),
     };
   }
 
@@ -195,10 +266,13 @@
     if (!centralino || !centralino.configurato) {
       return {
         come: "spento",
-        corto: "spento",
-        lungo:
+        corto: due("spento", "off"),
+        lungo: due(
           "Nessun centralino: da fuori casa l'app non entra. Si riaccende con " +
-          "«da fuori casa» nelle opzioni di questo add-on.",
+            "«da fuori casa» nelle opzioni di questo add-on.",
+          "No relay: from away the app cannot get in. You turn it back on with " +
+            "\u201Cfrom away\u201D in this add-on's options.",
+        ),
       };
     }
     /* E **dove** chiama, non solo se ci arriva.
@@ -211,8 +285,9 @@
     if (centralino.rifiutata) {
       return {
         come: "male",
-        corto: "rifiutati",
-        lungo: "Il centralino ci rifiuta: " + centralino.rifiutata,
+        corto: due("rifiutati", "turned away"),
+        lungo:
+          due("Il centralino ci rifiuta: ", "The relay turns us away: ") + centralino.rifiutata,
       };
     }
     /* E **perche'** non ci arriva, se non ci arriva.
@@ -226,18 +301,25 @@
         come: "male",
         /* Nella pastiglia il motivo vero, corto: «non entra» da solo manderebbe
          * a cercarlo altrove, ed e' quello che e' costato un pomeriggio. */
-        corto: centralino.perche ? "non entra — " + centralino.perche : "sto chiamando…",
+        corto: centralino.perche
+          ? due("non entra — ", "can't get in — ") + centralino.perche
+          : due("sto chiamando…", "calling…"),
         lungo:
-          "Sto chiamando " +
-          (dove || "il centralino") +
+          due("Sto chiamando ", "Calling ") +
+          (dove || due("il centralino", "the relay")) +
           "…" +
-          (centralino.perche ? " L'ultimo tentativo: " + centralino.perche + "." : ""),
+          (centralino.perche
+            ? due(" L'ultimo tentativo: ", " The last attempt: ") + centralino.perche + "."
+            : ""),
       };
     }
     return {
       come: "bene",
-      corto: "si entra",
-      lungo: "Collegato a " + (dove || "il centralino") + ": da fuori casa si entra.",
+      corto: due("si entra", "reachable"),
+      lungo: due(
+        "Collegato a " + (dove || "il centralino") + ": da fuori casa si entra.",
+        "Connected to " + (dove || "the relay") + ": from away you get in.",
+      ),
     };
   }
 
@@ -268,45 +350,64 @@
       (plancia.versione || "") +
         " " +
         {
-          originale: "originale",
-          "non-firmata": "intatta",
-          modificata: "modificata",
-          "senza-origine": "provenienza sconosciuta",
+          originale: due("originale", "original"),
+          "non-firmata": due("intatta", "untouched"),
+          modificata: due("modificata", "changed"),
+          "senza-origine": due("provenienza sconosciuta", "origin unknown"),
         }[plancia.stato],
     );
     spiega.textContent =
       plancia.stato === "originale"
-        ? quale + ": ogni file è quello pubblicato, e la firma lo conferma."
+        ? due(
+            quale + ": ogni file è quello pubblicato, e la firma lo conferma.",
+            quale + ": every file is the published one, and the signature says so.",
+          )
         : plancia.stato === "non-firmata"
-          ? quale +
-            ": ogni file torna con le impronte scritte dentro. Manca solo la firma di chi l'ha pubblicata."
+          ? due(
+              quale +
+                ": ogni file torna con le impronte scritte dentro. Manca solo la firma di chi l'ha pubblicata.",
+              quale +
+                ": every file matches the fingerprints written inside. Only the publisher's signature is missing.",
+            )
           : plancia.stato === "modificata"
-            ? "Qualcosa qui dentro non è come è stato pubblicato: " +
-              plancia.perche +
-              ". Se non l'hai toccata tu, reinstalla l'add-on."
+            ? due(
+                "Qualcosa qui dentro non è come è stato pubblicato: " +
+                  plancia.perche +
+                  ". Se non l'hai toccata tu, reinstalla l'add-on.",
+                "Something in here is not as it was published: " +
+                  plancia.perche +
+                  ". If you didn't touch it yourself, reinstall the add-on.",
+              )
             : plancia.perche || "";
     var elenco = plancia.quali || [];
     quali.hidden = elenco.length === 0;
     if (elenco.length) {
       trova("provenienza-elenco").textContent =
         elenco.join("\n") +
-        (plancia.quanti > elenco.length ? "\n… e altri " + (plancia.quanti - elenco.length) : "");
+        (plancia.quanti > elenco.length
+          ? due(
+              "\n… e altri " + (plancia.quanti - elenco.length),
+              "\n… and " + (plancia.quanti - elenco.length) + " more",
+            )
+          : "");
     }
   }
 
   function disegnaIDispositivi(dispositivi, massimi) {
     var elenco = trova("elenco");
     elenco.textContent = "";
-    trova("conteggio").textContent =
+    trova("conteggio").textContent = due(
       dispositivi.length +
-      " di " +
-      massimi +
-      (dispositivi.length === 1 ? " telefono" : " telefoni");
+        " di " +
+        massimi +
+        (dispositivi.length === 1 ? " telefono" : " telefoni"),
+      dispositivi.length + " of " + massimi + (dispositivi.length === 1 ? " phone" : " phones"),
+    );
 
     if (!dispositivi.length) {
       var vuoto = vediPagina.createElement("li");
       vuoto.className = "vuoto";
-      vuoto.textContent = "Nessun telefono abbinato.";
+      vuoto.textContent = due("Nessun telefono abbinato.", "No phone paired.");
       elenco.appendChild(vuoto);
       return;
     }
@@ -335,7 +436,9 @@
       sotto.textContent =
         comEFatto(uno.sistema) +
         " · " +
-        (uno.collegati ? "collegato adesso" : "visto " + dataLeggibile(uno.vistoIl)) +
+        (uno.collegati
+          ? due("collegato adesso", "connected right now")
+          : due("visto ", "seen ") + dataLeggibile(uno.vistoIl)) +
         (diChi ? " · " + diChi : "");
       nome.appendChild(forte);
       nome.appendChild(sotto);
@@ -344,11 +447,16 @@
       var stacca = vediPagina.createElement("button");
       stacca.className = "tenue";
       stacca.type = "button";
-      stacca.textContent = "Togli associazione";
+      stacca.textContent = due("Togli associazione", "Unpair");
       stacca.addEventListener("click", function () {
         if (
           !window.confirm(
-            "Togliere l'associazione di «" + comeSiChiama(uno) + "»? Dovrà riabbinarsi da capo.",
+            due(
+              "Togliere l'associazione di «" + comeSiChiama(uno) + "»? Dovrà riabbinarsi da capo.",
+              "Unpair \u201C" +
+                comeSiChiama(uno) +
+                "\u201D? It will have to pair again from scratch.",
+            ),
           )
         )
           return;
@@ -397,12 +505,17 @@
        * legge «la vede 1 utente» e non sa che chiede anche di amministrare
        * cerca il guaio dove non c'e'. */
       var chi = [];
-      if (suoi.length === 1) chi.push("la vede 1 utente");
-      else if (suoi.length > 1) chi.push("la vedono " + suoi.length + " utenti");
-      if (una.solo_admin) chi.push("solo amministratori");
-      if (chi.length === 0) chi.push("la vedono tutti");
+      if (suoi.length === 1) chi.push(due("la vede 1 utente", "1 user sees it"));
+      else if (suoi.length > 1)
+        chi.push(due("la vedono " + suoi.length + " utenti", suoi.length + " users see it"));
+      if (una.solo_admin) chi.push(due("solo amministratori", "admins only"));
+      if (chi.length === 0) chi.push(due("la vedono tutti", "everyone sees it"));
       sotto.textContent =
-        (una.primaria ? "la prima, quella di sempre" : "aggiunta da te") + " · " + chi.join(" · ");
+        (una.primaria
+          ? due("la prima, quella di sempre", "the first one, the one always here")
+          : due("aggiunta da te", "added by you")) +
+        " · " +
+        chi.join(" · ");
       nome.appendChild(forte);
       nome.appendChild(sotto);
       riga.appendChild(nome);
@@ -420,7 +533,7 @@
        * qui non si conosce. */
       var apri = vediPagina.createElement("a");
       apri.className = "tenue";
-      apri.textContent = "Apri";
+      apri.textContent = due("Apri", "Open");
       apri.target = "_blank";
       apri.rel = "noopener";
       apri.href = una.primaria ? "plancia/" : "plancia/" + encodeURIComponent(una.profilo) + "/";
@@ -429,9 +542,12 @@
       var rinomina = vediPagina.createElement("button");
       rinomina.className = "tenue";
       rinomina.type = "button";
-      rinomina.textContent = "Rinomina";
+      rinomina.textContent = due("Rinomina", "Rename");
       rinomina.addEventListener("click", function () {
-        var come = window.prompt("Come si chiama questa plancia?", una.titolo);
+        var come = window.prompt(
+          due("Come si chiama questa plancia?", "What is this dashboard called?"),
+          una.titolo,
+        );
         if (come === null) return;
         rinomina.disabled = true;
         chiedi("api/plance", {
@@ -450,13 +566,18 @@
         var togli = vediPagina.createElement("button");
         togli.className = "tenue";
         togli.type = "button";
-        togli.textContent = "Togli";
+        togli.textContent = due("Togli", "Remove");
         togli.addEventListener("click", function () {
           if (
             !window.confirm(
-              "Togliere «" +
-                una.titolo +
-                "»? Va via anche come l'hai configurata: sezioni, tessere, stanze. Non si rimette a posto.",
+              due(
+                "Togliere «" +
+                  una.titolo +
+                  "»? Va via anche come l'hai configurata: sezioni, tessere, stanze. Non si rimette a posto.",
+                "Remove \u201C" +
+                  una.titolo +
+                  "\u201D? The way you configured it goes too: sections, cards, rooms. There is no putting it back.",
+              ),
             )
           )
             return;
@@ -483,7 +604,7 @@
       var chiLaVede = vediPagina.createElement("button");
       chiLaVede.className = "tenue";
       chiLaVede.type = "button";
-      chiLaVede.textContent = "Chi la vede";
+      chiLaVede.textContent = due("Chi la vede", "Who sees it");
       chiLaVede.setAttribute("aria-expanded", "false");
       tasti.appendChild(chiLaVede);
 
@@ -531,13 +652,13 @@
    * plance» — perche' e' la cosa vera e la si deve poter leggere. */
   function nomeDellUtente(chi) {
     var cercato = String(chi || "").trim();
-    if (!cercato) return "vede tutte le plance";
+    if (!cercato) return due("vede tutte le plance", "sees every dashboard");
     if (!gliUtenti) return "";
     var uno = null;
     for (var quale = 0; quale < gliUtenti.length; quale += 1) {
       if (gliUtenti[quale].id === cercato) uno = gliUtenti[quale];
     }
-    return uno ? "di " + uno.nome : "";
+    return uno ? due("di " + uno.nome, uno.nome + "'s") : "";
   }
 
   function chiediGliUtenti() {
@@ -562,7 +683,10 @@
       dove.textContent = "";
       var attesa = vediPagina.createElement("p");
       attesa.className = "minuta";
-      attesa.textContent = "Sto chiedendo a Home Assistant chi c'è in casa…";
+      attesa.textContent = due(
+        "Sto chiedendo a Home Assistant chi c'è in casa…",
+        "Asking Home Assistant who lives here…",
+      );
       dove.appendChild(attesa);
     }
 
@@ -581,18 +705,27 @@
         spiega.className = "minuta";
         var admin = quale.solo_admin === true;
         if (suoi.length === 0 && !admin) {
-          spiega.textContent =
-            "La vedono tutti quelli che entrano in questa casa. Riservala qui sotto.";
+          spiega.textContent = due(
+            "La vedono tutti quelli che entrano in questa casa. Riservala qui sotto.",
+            "Everyone who gets into this home sees it. Reserve it below.",
+          );
         } else if (suoi.length === 0) {
-          spiega.textContent =
-            "La vedono solo gli amministratori della casa. Spegni tutto per riaprirla a tutti.";
+          spiega.textContent = due(
+            "La vedono solo gli amministratori della casa. Spegni tutto per riaprirla a tutti.",
+            "Only the home's admins see it. Turn everything off to reopen it to everyone.",
+          );
         } else if (!admin) {
-          spiega.textContent =
-            "La vedono solo gli utenti spuntati. Spegni tutto per riaprirla a tutti.";
+          spiega.textContent = due(
+            "La vedono solo gli utenti spuntati. Spegni tutto per riaprirla a tutti.",
+            "Only the ticked users see it. Turn everything off to reopen it to everyone.",
+          );
         } else {
-          spiega.textContent =
+          spiega.textContent = due(
             "La vedono solo gli utenti spuntati, e solo se amministrano la casa. " +
-            "Spegni tutto per riaprirla a tutti.";
+              "Spegni tutto per riaprirla a tutti.",
+            "Only the ticked users see it, and only if they administer the home. " +
+              "Turn everything off to reopen it to everyone.",
+          );
         }
         dove.appendChild(spiega);
 
@@ -606,7 +739,10 @@
         interruttore.type = "checkbox";
         interruttore.checked = quale.solo_admin === true;
         var comeSiChiama = vediPagina.createElement("span");
-        comeSiChiama.textContent = "Solo gli amministratori della casa";
+        comeSiChiama.textContent = due(
+          "Solo gli amministratori della casa",
+          "Only the home's admins",
+        );
         soloAdmin.appendChild(interruttore);
         soloAdmin.appendChild(comeSiChiama);
         dove.appendChild(soloAdmin);
@@ -630,13 +766,16 @@
          * l'altra. */
         var quali = vediPagina.createElement("p");
         quali.className = "etichetta";
-        quali.textContent = "e anche, solo questi utenti";
+        quali.textContent = due("e anche, solo questi utenti", "and also, only these users");
         dove.appendChild(quali);
 
         if (utenti.length === 0) {
           var vuoto = vediPagina.createElement("p");
           vuoto.className = "minuta";
-          vuoto.textContent = "In questa casa c'è un utente solo: non c'è niente da scegliere.";
+          vuoto.textContent = due(
+            "In questa casa c'è un utente solo: non c'è niente da scegliere.",
+            "This home has a single user: there is nothing to choose.",
+          );
           dove.appendChild(vuoto);
           return;
         }
@@ -649,7 +788,8 @@
           casella.checked = suoi.indexOf(uno.id) !== -1;
           var nome = vediPagina.createElement("span");
           /* `textContent`: il nome di un utente l'ha scritto una persona. */
-          nome.textContent = uno.nome + (uno.amministratore ? " · amministratore" : "");
+          nome.textContent =
+            uno.nome + (uno.amministratore ? due(" · amministratore", " · admin") : "");
           riga.appendChild(casella);
           riga.appendChild(nome);
           dove.appendChild(riga);
@@ -682,7 +822,10 @@
         var male = vediPagina.createElement("p");
         male.className = "avviso";
         male.textContent =
-          "Non riesco a chiedere a Home Assistant chi c'è in casa: " + errore.message;
+          due(
+            "Non riesco a chiedere a Home Assistant chi c'è in casa: ",
+            "I can't ask Home Assistant who lives here: ",
+          ) + errore.message;
         dove.appendChild(male);
       });
   }
@@ -694,15 +837,26 @@
     if (!riga || !elenco) return;
     elenco.textContent = "";
     if (!come) {
-      riga.textContent = "Non lo so ancora: nessun telefono collegato.";
+      riga.textContent = due(
+        "Non lo so ancora: nessun telefono collegato.",
+        "I don't know yet: no phone connected.",
+      );
       return;
     }
     var quanti = Number(come.eventi) || 0;
-    var quando = come.intero ? "nell'ultimo minuto" : "negli ultimi " + come.secondi + " s";
+    var quando = come.intero
+      ? due("nell'ultimo minuto", "in the last minute")
+      : due("negli ultimi " + come.secondi + " s", "in the last " + come.secondi + " s");
     riga.textContent =
       quanti === 0
-        ? "Nessun evento " + quando + ": la casa sta zitta."
-        : quanti + (quanti === 1 ? " evento " : " eventi ") + quando + ".";
+        ? due(
+            "Nessun evento " + quando + ": la casa sta zitta.",
+            "No events " + quando + ": the home is quiet.",
+          )
+        : due(
+            quanti + (quanti === 1 ? " evento " : " eventi ") + quando + ".",
+            quanti + (quanti === 1 ? " event " : " events ") + quando + ".",
+          );
     (come.quali || []).forEach(function (una) {
       var voce = vediPagina.createElement("li");
       var nome = vediPagina.createElement("div");
@@ -713,10 +867,14 @@
       var sotto = vediPagina.createElement("span");
       var suoi = Number(una.eventi) || 0;
       var fetta = quanti ? Math.round((suoi / quanti) * 100) : 0;
-      sotto.textContent =
+      sotto.textContent = due(
         suoi +
-        (suoi === 1 ? " evento" : " eventi") +
-        (quanti ? " · " + fetta + "% del traffico" : "");
+          (suoi === 1 ? " evento" : " eventi") +
+          (quanti ? " · " + fetta + "% del traffico" : ""),
+        suoi +
+          (suoi === 1 ? " event" : " events") +
+          (quanti ? " · " + fetta + "% of the traffic" : ""),
+      );
       nome.appendChild(forte);
       nome.appendChild(sotto);
       /* La stessa percentuale, disegnata: tre numeri in colonna si confrontano
@@ -745,45 +903,86 @@
    * nel registro: cioe' in un posto dove nessuno guarda. Qui invece sta dove
    * si guarda, che e' accanto all'elenco. */
   function comeVannoLePlanceInCasa(esito) {
-    if (!esito) return "Sto guardando se le plance sono fra le «Plance» di Home Assistant…";
+    if (!esito)
+      return due(
+        "Sto guardando se le plance sono fra le «Plance» di Home Assistant…",
+        "Checking whether the dashboards are among Home Assistant's \u201CDashboards\u201D…",
+      );
+    var quante = Number(esito.quante) || 0;
     var riga = esito.fatto
-      ? "Nella barra laterale di Home Assistant ci sono " +
-        ((Number(esito.quante) || 0) === 1 ? "1 voce" : (Number(esito.quante) || 0) + " voci") +
-        (esito.tolte ? ", e " + esito.tolte + " sono state levate" : "") +
-        "."
-      : "Le plance non sono nella barra laterale di Home Assistant: " + (esito.perche || "");
+      ? due(
+          "Nella barra laterale di Home Assistant ci sono " +
+            (quante === 1 ? "1 voce" : quante + " voci") +
+            (esito.tolte ? ", e " + esito.tolte + " sono state levate" : "") +
+            ".",
+          "The Home Assistant sidebar has " +
+            (quante === 1 ? "1 entry" : quante + " entries") +
+            (esito.tolte ? ", and " + esito.tolte + " were taken away" : "") +
+            ".",
+        )
+      : due(
+          "Le plance non sono nella barra laterale di Home Assistant: ",
+          "The dashboards are not in the Home Assistant sidebar: ",
+        ) + (esito.perche || "");
     /* Le cose che fanno uscire «Errore di configurazione» al posto della
      * plancia, e che da quella pagina non si capiscono: qui si dicono.
      *
      * La prima e' provata, non indovinata: `laCartinaSiScarica` la chiede a
      * Home Assistant da questa pagina, che sta sul suo stesso indirizzo. */
     if (esito.risorsa_guaio) {
-      riga += " ⚠️ Lovelace non prende la cartina: " + esito.risorsa_guaio;
+      riga +=
+        due(" ⚠️ Lovelace non prende la cartina: ", " ⚠️ Lovelace won't take the panel file: ") +
+        esito.risorsa_guaio;
     } else if (cartinaChe === "no") {
-      riga += " ⚠️ Home Assistant non serve la cartina della plancia.";
+      riga += due(
+        " ⚠️ Home Assistant non serve la cartina della plancia.",
+        " ⚠️ Home Assistant isn't serving the dashboard's panel file.",
+      );
     } else if (cartinaChe === "rotta") {
-      riga += " ⚠️ La cartina si scarica ma non registra la tessera.";
+      riga += due(
+        " ⚠️ La cartina si scarica ma non registra la tessera.",
+        " ⚠️ The panel file downloads but registers no card.",
+      );
     } else if (cartinaChe === "si") {
-      riga += " La cartina si scarica, e la tessera si registra.";
+      riga += due(
+        " La cartina si scarica, e la tessera si registra.",
+        " The panel file downloads, and the card registers.",
+      );
     } else if (esito.riavvia) {
-      riga +=
+      riga += due(
         " ⚠️ Riavvia Home Assistant una volta (Impostazioni → Sistema → Riavvia):" +
-        " la cartella «www» non c'era e l'ho fatta io, e Home Assistant i file che" +
-        " stanno dentro li serve solo se quella cartella c'era quando è partito." +
-        " Finché non riparte, aprendo la plancia esce «Errore di configurazione».";
+          " la cartella «www» non c'era e l'ho fatta io, e Home Assistant i file che" +
+          " stanno dentro li serve solo se quella cartella c'era quando è partito." +
+          " Finché non riparte, aprendo la plancia esce «Errore di configurazione».",
+        " ⚠️ Restart Home Assistant once (Settings → System → Restart):" +
+          " the \u201Cwww\u201D folder wasn't there and I made it, and Home Assistant" +
+          " serves the files inside it only if that folder existed when it started." +
+          " Until it restarts, opening the dashboard gives \u201CConfiguration error\u201D.",
+      );
     } else if (esito.ricarica) {
-      riga +=
+      riga += due(
         " Ricarica la pagina di Home Assistant: la cartina è stata dichiarata adesso," +
-        " e il browser la va a prendere al giro dopo.";
+          " e il browser la va a prendere al giro dopo.",
+        " Reload the Home Assistant page: the panel file has just been declared," +
+          " and the browser picks it up on the next round.",
+      );
     }
     /* E cosa ne dice Home Assistant, riletto da lui: due fatti, non due
      * opinioni. Stanno sempre a schermo — anche quando va tutto bene — perche'
      * sono quelli che si guardano quando la plancia non si apre, e una riga
      * che compare solo nei guai e' una riga che nessuno sa dove cercare. */
-    if (esito.risorsa_in_elenco === true) riga += " Lovelace ha la cartina in elenco.";
-    if (esito.risorsa_in_elenco === false) riga += " ⚠️ Lovelace non ha la cartina in elenco.";
+    if (esito.risorsa_in_elenco === true)
+      riga += due(" Lovelace ha la cartina in elenco.", " Lovelace lists the panel file.");
+    if (esito.risorsa_in_elenco === false)
+      riga += due(
+        " ⚠️ Lovelace non ha la cartina in elenco.",
+        " ⚠️ Lovelace doesn't list the panel file.",
+      );
     if (esito.tessera_nella_vista)
-      riga += " Nella Plancia c'è «" + esito.tessera_nella_vista + "».";
+      riga += due(
+        " Nella Plancia c'è «" + esito.tessera_nella_vista + "».",
+        " The dashboard holds \u201C" + esito.tessera_nella_vista + "\u201D.",
+      );
     return riga;
   }
 
@@ -903,46 +1102,84 @@
     var testo = "";
     if (ilGuaioDellaRisorsa) {
       testo =
-        "La cartina sta sul disco ma Lovelace non la vuole dichiarare, e senza quella " +
-        "la tessera della plancia non esiste in nessuna pagina: aprendola dalle " +
-        "«Plance» esce «Errore di configurazione». Quasi sempre vuol dire che questa " +
-        "casa tiene le dashboard in YAML (lovelace: mode: yaml in configuration.yaml): " +
-        "lì Home Assistant le risorse dallo storage non le legge, e va dichiarata a " +
-        "mano. Nel configuration.yaml: lovelace: mode: yaml, poi resources: con - url: " +
-        "/local/gdahome/plancia.js  e  type: module. Poi riavvia Home Assistant. " +
-        "Lovelace ha risposto: " +
-        ilGuaioDellaRisorsa;
+        due(
+          "La cartina sta sul disco ma Lovelace non la vuole dichiarare, e senza quella " +
+            "la tessera della plancia non esiste in nessuna pagina: aprendola dalle " +
+            "«Plance» esce «Errore di configurazione». Quasi sempre vuol dire che questa " +
+            "casa tiene le dashboard in YAML (lovelace: mode: yaml in configuration.yaml): " +
+            "lì Home Assistant le risorse dallo storage non le legge, e va dichiarata a " +
+            "mano. Nel configuration.yaml: lovelace: mode: yaml, poi resources: con - url: " +
+            "/local/gdahome/plancia.js  e  type: module. Poi riavvia Home Assistant. " +
+            "Lovelace ha risposto: ",
+          "The panel file is on disk but Lovelace won't declare it, and without that " +
+            "the dashboard's card exists on no page: opening it from " +
+            "\u201CDashboards\u201D gives \u201CConfiguration error\u201D. Nearly always " +
+            "this means this home keeps its dashboards in YAML (lovelace: mode: yaml in " +
+            "configuration.yaml): there Home Assistant does not read resources from " +
+            "storage, and it has to be declared by hand. In configuration.yaml: lovelace: " +
+            "mode: yaml, then resources: with - url: /local/gdahome/plancia.js  and  " +
+            "type: module. Then restart Home Assistant. Lovelace answered: ",
+        ) + ilGuaioDellaRisorsa;
     } else if (cartinaChe === "no") {
-      testo =
+      testo = due(
         "Home Assistant non serve la cartina della plancia, e senza quella la plancia " +
-        "aperta dalle «Plance» esce con «Errore di configurazione». Riavvialo una volta " +
-        "(Impostazioni → Sistema → Riavvia): la cartella «www» la apre quando parte, e i " +
-        "file arrivati dopo li serve solo dal riavvio dopo.";
+          "aperta dalle «Plance» esce con «Errore di configurazione». Riavvialo una volta " +
+          "(Impostazioni → Sistema → Riavvia): la cartella «www» la apre quando parte, e i " +
+          "file arrivati dopo li serve solo dal riavvio dopo.",
+        "Home Assistant isn't serving the dashboard's panel file, and without it the " +
+          "dashboard opened from \u201CDashboards\u201D gives \u201CConfiguration " +
+          "error\u201D. Restart it once (Settings → System → Restart): it opens the " +
+          "\u201Cwww\u201D folder when it starts, and files that arrive later it serves " +
+          "only from the next restart on.",
+      );
     } else if (cartinaChe === "rotta") {
-      testo =
+      testo = due(
         "La cartina si scarica ma non registra la tessera: il file è arrivato rotto. " +
-        "Riavvia l'add-on, che la riscrive da sé a ogni avvio; se succede ancora, " +
-        "scrivilo dalle segnalazioni.";
+          "Riavvia l'add-on, che la riscrive da sé a ogni avvio; se succede ancora, " +
+          "scrivilo dalle segnalazioni.",
+        "The panel file downloads but registers no card: the file arrived broken. " +
+          "Restart the add-on, which rewrites it by itself at every start; if it happens " +
+          "again, say so from the reports.",
+      );
     } else if (cartinaChe === "si" && laTesseraNellaPagina() === "no") {
-      testo =
+      testo = due(
         "La cartina c'è e si scarica, ma **questa pagina di Home Assistant non ce l'ha**: " +
-        "l'elenco delle risorse lo legge quando si carica, e questa si è caricata prima che " +
-        "la cartina esistesse. Finché resta così, la plancia esce con «Errore di " +
-        "configurazione» qualunque cosa faccia l'add-on. Il bottone qui sotto gliela mette " +
-        "adesso: poi apri la plancia dalla barra laterale e si apre. Una volta sola — dalla " +
-        "prossima ricarica vera se la prende da sé. Nell'app di Home Assistant la ricarica " +
-        "vera è Impostazioni → App companion → Svuota la cache, e riaprire.";
+          "l'elenco delle risorse lo legge quando si carica, e questa si è caricata prima che " +
+          "la cartina esistesse. Finché resta così, la plancia esce con «Errore di " +
+          "configurazione» qualunque cosa faccia l'add-on. Il bottone qui sotto gliela mette " +
+          "adesso: poi apri la plancia dalla barra laterale e si apre. Una volta sola — dalla " +
+          "prossima ricarica vera se la prende da sé. Nell'app di Home Assistant la ricarica " +
+          "vera è Impostazioni → App companion → Svuota la cache, e riaprire.",
+        "The panel file is there and it downloads, but **this Home Assistant page does " +
+          "not have it**: it reads the resource list when it loads, and this one loaded " +
+          "before the panel file existed. While it stays that way, the dashboard gives " +
+          "\u201CConfiguration error\u201D whatever the add-on does. The button below " +
+          "puts it there now: then open the dashboard from the sidebar and it opens. Once " +
+          "only — from the next real reload it takes it by itself. In the Home Assistant " +
+          "app a real reload is Settings → Companion app → Clear the cache, and reopen.",
+      );
     } else if (cartinaChe === "si") {
-      testo =
+      testo = due(
         "Se aprendo la plancia dalle «Plance» esce «Errore di configurazione»: da qui la " +
-        "cartina si scarica e la tessera si registra, quindi il file è a posto ed è " +
-        "Lovelace che non la carica. Due cose, in quest'ordine. 1) Ricarica a fondo la " +
-        "pagina di Home Assistant — nell'app: Impostazioni → App companion → Svuota la " +
-        "cache, e riapri: una risorsa aggiunta adesso il browser la vede al giro dopo. " +
-        "2) Se succede anche da un browser che non l'ha mai aperta, Home Assistant tiene " +
-        "le dashboard in YAML (lovelace: mode: yaml) e le risorse dallo storage non le " +
-        "legge: allora va dichiarata a mano in configuration.yaml — lovelace: resources: " +
-        "- url: /local/gdahome/plancia.js  type: module.";
+          "cartina si scarica e la tessera si registra, quindi il file è a posto ed è " +
+          "Lovelace che non la carica. Due cose, in quest'ordine. 1) Ricarica a fondo la " +
+          "pagina di Home Assistant — nell'app: Impostazioni → App companion → Svuota la " +
+          "cache, e riapri: una risorsa aggiunta adesso il browser la vede al giro dopo. " +
+          "2) Se succede anche da un browser che non l'ha mai aperta, Home Assistant tiene " +
+          "le dashboard in YAML (lovelace: mode: yaml) e le risorse dallo storage non le " +
+          "legge: allora va dichiarata a mano in configuration.yaml — lovelace: resources: " +
+          "- url: /local/gdahome/plancia.js  type: module.",
+        "If opening the dashboard from \u201CDashboards\u201D gives \u201CConfiguration " +
+          "error\u201D: from here the panel file downloads and the card registers, so the " +
+          "file is fine and it is Lovelace that isn't loading it. Two things, in this " +
+          "order. 1) Reload the Home Assistant page from scratch — in the app: Settings → " +
+          "Companion app → Clear the cache, and reopen: a resource added now, the browser " +
+          "sees on the next round. 2) If it happens from a browser that never opened it " +
+          "either, Home Assistant keeps its dashboards in YAML (lovelace: mode: yaml) and " +
+          "does not read resources from storage: then it has to be declared by hand in " +
+          "configuration.yaml — lovelace: resources: - url: /local/gdahome/plancia.js  " +
+          "type: module.",
+      );
     }
     dove.textContent = testo;
     dove.hidden = !testo;
@@ -957,11 +1194,20 @@
     caricaLaCartinaDiLa(laCartina).then(function (andata) {
       tasto.disabled = false;
       trova("avviso-cartina").textContent = andata
-        ? "Fatto: adesso apri la plancia dalla barra laterale, si apre. Se la chiudi e " +
-          "riapri l'app di Home Assistant senza svuotarle la cache, questa pagina torna " +
-          "com'era e il bottone ricompare."
-        : "Non ci sono riuscito da qui. Allora: Impostazioni → App companion → Svuota la " +
-          "cache, e riapri Home Assistant.";
+        ? due(
+            "Fatto: adesso apri la plancia dalla barra laterale, si apre. Se la chiudi e " +
+              "riapri l'app di Home Assistant senza svuotarle la cache, questa pagina torna " +
+              "com'era e il bottone ricompare.",
+            "Done: now open the dashboard from the sidebar and it opens. If you close and " +
+              "reopen the Home Assistant app without clearing its cache, this page goes " +
+              "back as it was and the button comes back too.",
+          )
+        : due(
+            "Non ci sono riuscito da qui. Allora: Impostazioni → App companion → Svuota la " +
+              "cache, e riapri Home Assistant.",
+            "I couldn't do it from here. So: Settings → Companion app → Clear the cache, " +
+              "and reopen Home Assistant.",
+          );
       if (andata) trova("ripara-cartina").hidden = true;
     });
   });
@@ -1036,7 +1282,10 @@
   function disegnaLAggiornamento(stato) {
     trova("aggiornamento").hidden = !stato.locale;
     if (!stato.locale) return;
-    var riga = "Questo add-on è la versione " + (stato.mia || "—") + ".";
+    var riga = due(
+      "Questo add-on è la versione " + (stato.mia || "—") + ".",
+      "This add-on is version " + (stato.mia || "—") + ".",
+    );
     var spiega = "";
     var siPuo = false;
     /* Il gettone non c'entra più niente.
@@ -1047,17 +1296,24 @@
      * scheda dice quello che sa — non se qualcuno ha incollato un gettone in
      * una casella. Quella casella è rimasta e si lascia vuota. */
     if (stato.cE === true) {
-      riga += " C'è la " + stato.nuova + ".";
-      spiega =
+      riga += due(" C'è la " + stato.nuova + ".", " There is " + stato.nuova + ".");
+      spiega = due(
         "gdahome se la scarica, la mette al posto di questa e si ricostruisce. " +
-        "Ci mette qualche minuto, e mentre lo fa questa pagina non risponde: è normale, " +
-        "torna da sé.";
+          "Ci mette qualche minuto, e mentre lo fa questa pagina non risponde: è normale, " +
+          "torna da sé.",
+        "gdahome downloads it, puts it in place of this one and rebuilds itself. " +
+          "It takes a few minutes, and while it does this page doesn't answer: that's " +
+          "normal, it comes back by itself.",
+      );
       siPuo = true;
     } else if (stato.cE === false) {
-      riga += " È l'ultima.";
+      riga += due(" È l'ultima.", " It is the latest.");
       spiega = "";
     } else {
-      riga += " Non riesco a sapere se ce n'è una più nuova.";
+      riga += due(
+        " Non riesco a sapere se ce n'è una più nuova.",
+        " I can't tell whether there is a newer one.",
+      );
       spiega = stato.guaio || "";
     }
     trova("aggiornamento-riga").textContent = riga;
@@ -1083,14 +1339,19 @@
   });
 
   trova("aggiorna-il-ponte").addEventListener("click", function () {
-    avvisaSullAggiornamento("Sto scaricando la versione nuova…");
+    avvisaSullAggiornamento(
+      due("Sto scaricando la versione nuova…", "Downloading the new version…"),
+    );
     trova("aggiorna-il-ponte").disabled = true;
     chiedi("api/aggiornamento", { method: "POST" })
       .then(function (fatto) {
         avvisaSullAggiornamento(
-          "La " +
-            fatto.versione +
-            " è dentro. Mi sto ricostruendo: fra un minuto o due ricarica questa pagina.",
+          due(
+            "La " +
+              fatto.versione +
+              " è dentro. Mi sto ricostruendo: fra un minuto o due ricarica questa pagina.",
+            fatto.versione + " is in. I'm rebuilding myself: in a minute or two, reload this page.",
+          ),
         );
       })
       .catch(function (errore) {
@@ -1125,8 +1386,10 @@
         var risponde = Boolean(stato.assistenza && stato.assistenza.console);
         trova("assistenza").hidden = !risponde;
         if (risponde) {
-          trova("stato-assistenza").textContent =
-            "Questa casa risponde alle chat di assistenza: la console è accesa.";
+          trova("stato-assistenza").textContent = due(
+            "Questa casa risponde alle chat di assistenza: la console è accesa.",
+            "This home answers the support chats: the console is on.",
+          );
         }
         /* La diagnostica del traffico si vede **solo dove si risponde**.
          *
@@ -1167,8 +1430,11 @@
         return undefined;
       })
       .catch(function (errore) {
-        pastiglia("pas-casa", "male", "non si legge");
-        trova("spiega-casa").textContent = "La console non riesce a leggere lo stato di gdahome.";
+        pastiglia("pas-casa", "male", due("non si legge", "can't be read"));
+        trova("spiega-casa").textContent = due(
+          "La console non riesce a leggere lo stato di gdahome.",
+          "The console can't read gdahome's state.",
+        );
         avvisa(errore.message);
       });
   }
@@ -1203,7 +1469,7 @@
         scelta.textContent = "";
         var chiPreme = vediPagina.createElement("option");
         chiPreme.value = "";
-        chiPreme.textContent = "chi sta usando questa pagina";
+        chiPreme.textContent = due("chi sta usando questa pagina", "whoever is using this page");
         scelta.appendChild(chiPreme);
         utenti.forEach(function (uno) {
           var voce = vediPagina.createElement("option");
@@ -1276,6 +1542,11 @@
       aggiornaTutto();
     });
   });
+
+  /* Prima di tutto il resto: le parole della pagina, nella lingua di chi
+   * guarda. Va fatto prima che qualcosa le riscriva, e prima che si legga il
+   * testo di un tasto per rimetterlo dov'era. */
+  laPaginaNellaSuaLingua();
 
   aggiornaTutto();
   setInterval(aggiornaTutto, 10000);

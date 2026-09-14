@@ -20,6 +20,7 @@ library;
 
 import 'dart:async';
 
+import '../parole.dart';
 import '../plancia/pannello.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
@@ -44,7 +45,26 @@ enum ComeVa {
   segnoScaduto,
 
   /// Non si raggiunge, ma si continua a provare.
-  irraggiungibile,
+  irraggiungibile;
+
+  /// Come si dice a schermo, in «Come va l'app».
+  ///
+  /// Il nome della voce dell'enumerazione non si mostra: «segnoScaduto» e'
+  /// buono per chi scrive il codice, non per chi legge lo schermo — e in
+  /// inglese non sarebbe nemmeno inglese.
+  String get nome => switch (this) {
+    ComeVa.nessunaCasa => inLingua(it: 'nessuna casa', en: 'no home'),
+    ComeVa.inCammino => inLingua(it: 'in cammino', en: 'on its way'),
+    ComeVa.aperta => inLingua(it: 'aperto', en: 'open'),
+    ComeVa.segnoScaduto => inLingua(
+      it: 'da riabbinare',
+      en: 'needs pairing again',
+    ),
+    ComeVa.irraggiungibile => inLingua(
+      it: 'non si raggiunge',
+      en: 'unreachable',
+    ),
+  };
 }
 
 class Collegamento {
@@ -225,9 +245,18 @@ class Collegamento {
      * nessun ponte: si dice, invece di far girare una rotella per sempre. */
     if (casa.daRiabbinare || !casa.raggiungibile) {
       _perche = casa.daRiabbinare
-          ? 'Questa casa è stata abbinata con una versione vecchia '
-                'dell\'app: va riabbinata inquadrando un QR code nuovo.'
-          : 'Non so più dove sia «${casa.nome}»: riabbinala.';
+          ? inLingua(
+              it:
+                  'Questa casa è stata abbinata con una versione vecchia '
+                  'dell\'app: va riabbinata inquadrando un QR code nuovo.',
+              en:
+                  'This home was paired with an old version of the app: it '
+                  'needs pairing again with a new QR code.',
+            )
+          : inLingua(
+              it: 'Non so più dove sia «${casa.nome}»: riabbinala.',
+              en: 'I no longer know where “${casa.nome}” is: pair it again.',
+            );
       _vai(ComeVa.segnoScaduto);
       return;
     }

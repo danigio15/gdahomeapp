@@ -49,6 +49,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../casa/collegamento.dart';
+import '../parole.dart';
 import '../vestito/oggetti.dart';
 import '../vestito/quanto_e_largo.dart';
 import 'da_dove.dart';
@@ -433,7 +434,8 @@ class _LaCasa extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        collegamento.casa?.nome ?? 'Casa',
+                        collegamento.casa?.nome ??
+                            inLingua(it: 'Casa', en: 'Home'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: testi.titleMedium?.copyWith(
@@ -497,7 +499,7 @@ class _LePlance extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: PopupMenuButton<String>(
-        tooltip: 'Quale plancia',
+        tooltip: inLingua(it: 'Quale plancia', en: 'Which dashboard'),
         position: PopupMenuPosition.under,
         onOpened: trattieni,
         onCanceled: lascia,
@@ -721,11 +723,12 @@ List<Sezione> vociDellaBarra({bool conLaConsole = false}) => conLaConsole
 /// Non «Sezioni» e basta: quella parola sta anche nell'intestazione dei widget
 /// — «22 sezioni · 2 chiedono attenzione» — e chi cerca per testo finirebbe a
 /// premere quella riga. Un nome deve essere di una cosa sola.
-const nomeDelTastoDellaBarra = 'Barra delle sezioni';
+String get nomeDelTastoDellaBarra =>
+    inLingua(it: 'Barra delle sezioni', en: 'Sections bar');
 
 /// Come si chiama, per chi non la vede, la riga in cima alla barra che porta
 /// all'elenco delle case.
-const nomeDelleCase = 'Le tue case';
+String get nomeDelleCase => inLingua(it: 'Le tue case', en: 'Your homes');
 
 /// Quanto posto vuole la barra quando resta aperta: la sua larghezza piu'
 /// l'aria che si tiene ai due lati.

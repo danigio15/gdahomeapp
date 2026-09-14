@@ -13,18 +13,38 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../parole.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 
 /// Di che cosa si tratta. La chat non sta qui: e' un filo suo.
 enum TipoDiSegnalazione {
-  problema('Problema', 'Qualcosa non funziona come dovrebbe.'),
-  idea('Idea', 'Una cosa che vorresti, e che non c\'è.'),
-  domanda('Domanda', 'Non sai come si fa una cosa.');
+  problema,
+  idea,
+  domanda;
 
-  const TipoDiSegnalazione(this.nome, this.spiegazione);
-  final String nome;
-  final String spiegazione;
+  /// Come si chiama, nella lingua di chi scrive.
+  String get nome => switch (this) {
+    TipoDiSegnalazione.problema => inLingua(it: 'Problema', en: 'Problem'),
+    TipoDiSegnalazione.idea => inLingua(it: 'Idea', en: 'Idea'),
+    TipoDiSegnalazione.domanda => inLingua(it: 'Domanda', en: 'Question'),
+  };
+
+  /// La riga sotto il nome, che dice quando si sceglie questo.
+  String get spiegazione => switch (this) {
+    TipoDiSegnalazione.problema => inLingua(
+      it: 'Qualcosa non funziona come dovrebbe.',
+      en: 'Something doesn\'t work the way it should.',
+    ),
+    TipoDiSegnalazione.idea => inLingua(
+      it: 'Una cosa che vorresti, e che non c\'è.',
+      en: 'Something you\'d like, and that isn\'t there.',
+    ),
+    TipoDiSegnalazione.domanda => inLingua(
+      it: 'Non sai come si fa una cosa.',
+      en: 'You don\'t know how to do something.',
+    ),
+  };
 
   static TipoDiSegnalazione leggi(Object? chiave) => switch (chiave) {
     'idea' => TipoDiSegnalazione.idea,
@@ -98,16 +118,20 @@ class Messaggio {
 /// (`statoDellaIssue`): chiusa vince su tutto, poi «presa in carico» —
 /// assegnata a qualcuno, o con la sua etichetta — poi aperta.
 enum Gruppo {
-  aperte('aperte', 'Da lavorare'),
-  inCarico('in-carico', 'In lavorazione'),
-  chiuse('chiuse', 'Chiuse');
+  aperte('aperte'),
+  inCarico('in-carico'),
+  chiuse('chiuse');
 
-  const Gruppo(this.chiave, this.nome);
+  const Gruppo(this.chiave);
 
   final String chiave;
 
   /// Come si chiama sul tasto del filtro: le parole della dashboard.
-  final String nome;
+  String get nome => switch (this) {
+    Gruppo.aperte => inLingua(it: 'Da lavorare', en: 'To do'),
+    Gruppo.inCarico => inLingua(it: 'In lavorazione', en: 'In progress'),
+    Gruppo.chiuse => inLingua(it: 'Chiuse', en: 'Closed'),
+  };
 
   static Gruppo diUnoStato(Object? stato) {
     final detto = stato?.toString().trim().toLowerCase() ?? '';
@@ -297,38 +321,75 @@ class LaChat {
 /// ponte tradotto in una frase, e la frase del ponte quando il codice non
 /// si conosce.
 String spiegaLErrore(Object errore) => switch (errore) {
-  ComandoRifiutato(codice: 'senza_centralino') =>
-    'Questa casa non passa da nessun centralino: le segnalazioni non si '
+  ComandoRifiutato(codice: 'senza_centralino') => inLingua(
+    it:
+        'Questa casa non passa da nessun centralino: le segnalazioni non si '
         'possono spedire. Accendi «da fuori casa» nelle opzioni di gdahome.',
-  ComandoRifiutato(codice: 'non_configurate') =>
-    'Il centralino non ha ancora le segnalazioni accese. Riprova più '
+    en:
+        'This home goes through no relay: reports have no way out. Turn on '
+        '“from away” in the gdahome options.',
+  ),
+  ComandoRifiutato(codice: 'non_configurate') => inLingua(
+    it:
+        'Il centralino non ha ancora le segnalazioni accese. Riprova più '
         'tardi.',
-  ComandoRifiutato(codice: 'troppe') =>
-    'Troppe segnalazioni in poco tempo: riprova fra un po\'.',
-  ComandoRifiutato(codice: 'non_ti_riconosco') =>
-    'Il centralino non riconosce questa casa: gdahome in casa deve prima '
+    en: 'The relay doesn\'t have reports turned on yet. Try again later.',
+  ),
+  ComandoRifiutato(codice: 'troppe') => inLingua(
+    it: 'Troppe segnalazioni in poco tempo: riprova fra un po\'.',
+    en: 'Too many reports in a short time: try again in a bit.',
+  ),
+  ComandoRifiutato(codice: 'non_ti_riconosco') => inLingua(
+    it:
+        'Il centralino non riconosce questa casa: gdahome in casa deve prima '
         'collegarsi da fuori una volta.',
-  ComandoRifiutato(codice: 'unknown_command') =>
-    'gdahome in casa è più vecchio dell\'app e questa cosa non la sa '
+    en:
+        'The relay doesn\'t recognise this home: gdahome at home has to '
+        'connect from away once first.',
+  ),
+  ComandoRifiutato(codice: 'unknown_command') => inLingua(
+    it:
+        'gdahome in casa è più vecchio dell\'app e questa cosa non la sa '
         'ancora fare: aggiorna l\'add-on in Home Assistant.',
-  ComandoRifiutato(codice: 'troppo_grande') =>
-    'L\'allegato è troppo grande: al massimo 10 MB. Un video va tenuto '
+    en:
+        'gdahome at home is older than the app and can\'t do this yet: '
+        'update the add-on in Home Assistant.',
+  ),
+  ComandoRifiutato(codice: 'troppo_grande') => inLingua(
+    it:
+        'L\'allegato è troppo grande: al massimo 10 MB. Un video va tenuto '
         'corto.',
-  ComandoRifiutato(codice: 'tipo_non_ammesso') =>
-    'Si possono allegare solo foto e video.',
-  ComandoRifiutato(codice: 'unreachable') =>
-    'Non si riesce a parlare col centralino dell\'assistenza: riprova fra '
-        'un momento.',
+    en: 'The attachment is too big: 10 MB at most. Keep a video short.',
+  ),
+  ComandoRifiutato(codice: 'tipo_non_ammesso') => inLingua(
+    it: 'Si possono allegare solo foto e video.',
+    en: 'Only photos and videos can be attached.',
+  ),
+  ComandoRifiutato(codice: 'unreachable') => inLingua(
+    it:
+        'Non si riesce a parlare col centralino dell\'assistenza: riprova '
+        'fra un momento.',
+    en: 'I can\'t reach the support relay: try again in a moment.',
+  ),
   ComandoRifiutato(codice: 'disabled') ||
-  ComandoRifiutato(
-    codice: 'not_configured',
-  ) => 'La chat di assistenza non è disponibile su questa casa.',
-  ComandoRifiutato(codice: 'github', :final spiegazione) =>
-    'GitHub non ha accettato: $spiegazione. Se era un allegato, il gettone '
-        'delle segnalazioni deve poter scrivere i file (Contents: Read and '
-        'write).',
+  ComandoRifiutato(codice: 'not_configured') => inLingua(
+    it: 'La chat di assistenza non è disponibile su questa casa.',
+    en: 'Support chat isn\'t available on this home.',
+  ),
+  ComandoRifiutato(codice: 'github', :final spiegazione) => inLingua(
+    it:
+        'GitHub non ha accettato: $spiegazione. Se era un allegato, il '
+        'gettone delle segnalazioni deve poter scrivere i file (Contents: '
+        'Read and write).',
+    en:
+        'GitHub refused: $spiegazione. If it was an attachment, the reports '
+        'token needs to be able to write files (Contents: Read and write).',
+  ),
   final ErroreDelPonte e => e.spiegazione,
-  _ => 'Non ha funzionato: $errore',
+  _ => inLingua(
+    it: 'Non ha funzionato: $errore',
+    en: 'It didn\'t work: $errore',
+  ),
 };
 
 DateTime? _quando(Object? valore) {

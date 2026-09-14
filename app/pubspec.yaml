@@ -22,6 +22,14 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Le parole che disegna Flutter e non noi: il menu «Incolla» che compare
+  # tenendo premuto su una casella, i selettori dell'ora e della data, i nomi
+  # che legge un lettore di schermo. Senza questo pacchetto quei pezzi escono
+  # **in inglese** anche su un telefono italiano — e sono le prime cose che si
+  # notano. Le nostre frasi invece stanno in `parole.dart`.
+  flutter_localizations:
+    sdk: flutter
+
   # Il filo con il ponte. `web_socket_channel` invece del WebSocket di
   # `dart:io` perche' si fa sostituire nelle prove senza toccare il codice che
   # lo usa.

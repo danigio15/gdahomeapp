@@ -22,6 +22,7 @@
 /// QR code che non si apre.
 library;
 
+import '../parole.dart';
 import 'indirizzo.dart';
 
 const String _nome = 'gdahome';
@@ -80,22 +81,44 @@ class Invito {
     final pezzi = scritto.trim().split(_separatore);
 
     if (pezzi.isEmpty || pezzi[0].trim().toLowerCase() != _nome) {
-      throw const InvitoIllegibile('Questo non è un codice di gdahome.');
+      throw InvitoIllegibile(
+        inLingua(
+          it: 'Questo non è un codice di gdahome.',
+          en: 'This isn\'t a gdahome code.',
+        ),
+      );
     }
 
     final quale = pezzi.length > 1 ? int.tryParse(pezzi[1].trim()) : null;
     if (quale == null || quale < 1) {
-      throw const InvitoIllegibile('Questo non è un codice di gdahome.');
+      throw InvitoIllegibile(
+        inLingua(
+          it: 'Questo non è un codice di gdahome.',
+          en: 'This isn\'t a gdahome code.',
+        ),
+      );
     }
     if (quale > _versione) {
-      throw const InvitoTroppoNuovo(
-        'Questo codice viene da un ponte più nuovo di questa app: aggiorna l\'app.',
+      throw InvitoTroppoNuovo(
+        inLingua(
+          it:
+              'Questo codice viene da un ponte più nuovo di questa app: '
+              'aggiorna l\'app.',
+          en:
+              'This code comes from an add-on newer than this app: update the '
+              'app.',
+        ),
       );
     }
 
     final codice = pezzi.length > 2 ? pezzi[2].trim() : '';
     if (codice.isEmpty) {
-      throw const InvitoIllegibile('Questo codice è incompleto.');
+      throw InvitoIllegibile(
+        inLingua(
+          it: 'Questo codice è incompleto.',
+          en: 'This code is incomplete.',
+        ),
+      );
     }
 
     return Invito(

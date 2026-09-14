@@ -7,6 +7,8 @@
 /// una porta e' un modo per farlo sbagliare.
 library;
 
+import '../parole.dart';
+
 class IndirizzoDelPonte {
   const IndirizzoDelPonte({
     required this.casa,
@@ -230,7 +232,23 @@ enum DaDove {
 
   /// Dal centralino: la casa ha chiamato fuori e ci si incontra li'. E' la
   /// strada di chi non ha configurato niente, cioe' di quasi tutti.
-  dalCentralino,
+  dalCentralino;
+
+  /// Come si dice a schermo, in «Come va l'app».
+  String get nome => switch (this) {
+    DaDove.daDentro => inLingua(
+      it: 'da dentro casa',
+      en: 'from inside the home',
+    ),
+    DaDove.daFuori => inLingua(
+      it: 'da fuori, su un indirizzo tuo',
+      en: 'from away, on your own address',
+    ),
+    DaDove.dalCentralino => inLingua(
+      it: 'dal centralino',
+      en: 'through the relay',
+    ),
+  };
 }
 
 /// Un posto dove bussare, adesso.
@@ -260,9 +278,9 @@ class Approdo {
 
   /// Come si dice a schermo.
   String get comeSiChiama => switch (da) {
-    DaDove.daDentro => 'in casa',
-    DaDove.daFuori => 'da fuori',
-    DaDove.dalCentralino => 'da fuori',
+    DaDove.daDentro => inLingua(it: 'in casa', en: 'at home'),
+    DaDove.daFuori => inLingua(it: 'da fuori', en: 'away'),
+    DaDove.dalCentralino => inLingua(it: 'da fuori', en: 'away'),
   };
 
   @override

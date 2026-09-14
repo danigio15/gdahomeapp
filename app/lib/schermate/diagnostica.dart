@@ -15,6 +15,7 @@ import '../casa/impostazioni.dart';
 import '../misure/lavori.dart';
 import '../parole.dart';
 import '../vestito/pezzi.dart';
+import 'menu.dart' show Sezione;
 import 'misure.dart';
 
 class SchermataDellaDiagnostica extends StatefulWidget {
@@ -113,8 +114,14 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
         Text(
-          'L\'ultimo minuto. Se l\'app va a scatti, manda una segnalazione '
-          'con la foto di questa pagina.',
+          inLingua(
+            it:
+                'L\'ultimo minuto. Se l\'app va a scatti, manda una '
+                'segnalazione con la foto di questa pagina.',
+            en:
+                'The last minute. If the app stutters, send a report with a '
+                'screenshot of this page.',
+          ),
           style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
         ),
         const SizedBox(height: 14),
@@ -122,41 +129,88 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Fotogrammi', style: testi.titleMedium),
+              Text(
+                inLingua(it: 'Fotogrammi', en: 'Frames'),
+                style: testi.titleMedium,
+              ),
               const SizedBox(height: 6),
-              riga('Disegnati', '${minuto.fotogrammi} in 60 s'),
               riga(
-                'Lenti',
-                '${minuto.lenti} (${minuto.percentoLenti}%), '
-                    'oltre ${Misure.lentoOltreMs} ms',
+                inLingua(it: 'Disegnati', en: 'Drawn'),
+                '${minuto.fotogrammi} in 60 s',
+              ),
+              riga(
+                inLingua(it: 'Lenti', en: 'Slow'),
+                inLingua(
+                  it:
+                      '${minuto.lenti} (${minuto.percentoLenti}%), oltre '
+                      '${Misure.lentoOltreMs} ms',
+                  en:
+                      '${minuto.lenti} (${minuto.percentoLenti}%), over '
+                      '${Misure.lentoOltreMs} ms',
+                ),
               ),
               riga(
                 'UI (Flutter)',
-                '${minuto.uiMedioMs} ms medi, ${minuto.uiMaxMs} ms il peggiore',
+                inLingua(
+                  it:
+                      '${minuto.uiMedioMs} ms medi, ${minuto.uiMaxMs} ms il '
+                      'peggiore',
+                  en:
+                      '${minuto.uiMedioMs} ms average, ${minuto.uiMaxMs} ms '
+                      'worst',
+                ),
               ),
               riga(
-                'GPU (disegno)',
-                '${minuto.gpuMedioMs} ms medi, ${minuto.gpuMaxMs} ms il peggiore',
+                inLingua(it: 'GPU (disegno)', en: 'GPU (drawing)'),
+                inLingua(
+                  it:
+                      '${minuto.gpuMedioMs} ms medi, ${minuto.gpuMaxMs} ms il '
+                      'peggiore',
+                  en:
+                      '${minuto.gpuMedioMs} ms average, ${minuto.gpuMaxMs} ms '
+                      'worst',
+                ),
               ),
               riga(
-                'Filo principale bloccato',
+                inLingua(
+                  it: 'Filo principale bloccato',
+                  en: 'Main thread stalled',
+                ),
                 minuto.blocchi == 0
-                    ? 'mai'
-                    : '${volte(minuto.blocchi)}, '
-                          'fino a ${minuto.bloccoMaxMs} ms',
+                    ? inLingua(it: 'mai', en: 'never')
+                    : inLingua(
+                        it:
+                            '${volte(minuto.blocchi)}, fino a '
+                            '${minuto.bloccoMaxMs} ms',
+                        en:
+                            '${volte(minuto.blocchi)}, up to '
+                            '${minuto.bloccoMaxMs} ms',
+                      ),
               ),
               if (minuto.pause > 0)
                 riga(
-                  'App messa da parte',
-                  '${volte(minuto.pause)}: quel tempo non conta',
+                  inLingua(it: 'App messa da parte', en: 'App put aside'),
+                  inLingua(
+                    it: '${volte(minuto.pause)}: quel tempo non conta',
+                    en: '${volte(minuto.pause)}: that time doesn\'t count',
+                  ),
                 ),
               const SizedBox(height: 6),
               Text(
-                'UI alta: è l\'app che costruisce troppo. GPU alta: è '
-                'quello che c\'è da disegnare, di solito la plancia. '
-                'Blocchi: il filo principale stava facendo altro. Quando '
-                'l\'app sta da parte il telefono la congela, e quel tempo '
-                'non è un blocco: si conta a parte.',
+                inLingua(
+                  it:
+                      'UI alta: è l\'app che costruisce troppo. GPU alta: è '
+                      'quello che c\'è da disegnare, di solito la plancia. '
+                      'Blocchi: il filo principale stava facendo altro. '
+                      'Quando l\'app sta da parte il telefono la congela, e '
+                      'quel tempo non è un blocco: si conta a parte.',
+                  en:
+                      'High UI: the app is building too much. High GPU: it\'s '
+                      'what there is to draw, usually the dashboard. Stalls: '
+                      'the main thread was doing something else. When the app '
+                      'is put aside the phone freezes it, and that time is '
+                      'not a stall: it\'s counted separately.',
+                ),
                 style: testi.bodySmall?.copyWith(
                   color: colori.onSurfaceVariant,
                 ),
@@ -169,11 +223,27 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Il filo con la casa', style: testi.titleMedium),
+              Text(
+                inLingua(
+                  it: 'Il filo con la casa',
+                  en: 'The connection with your home',
+                ),
+                style: testi.titleMedium,
+              ),
               const SizedBox(height: 6),
-              riga('Stato', collegamento.comeVa.name),
-              riga('Da dove', collegamento.daDove?.name ?? '-'),
-              riga('Traffico', collegamento.traffico ?? 'non collegato'),
+              riga(
+                inLingua(it: 'Stato', en: 'State'),
+                collegamento.comeVa.nome,
+              ),
+              riga(
+                inLingua(it: 'Da dove', en: 'From where'),
+                collegamento.daDove?.nome ?? '-',
+              ),
+              riga(
+                inLingua(it: 'Traffico', en: 'Traffic'),
+                collegamento.traffico ??
+                    inLingua(it: 'non collegato', en: 'not connected'),
+              ),
               /* Perche' e' caduto, non solo quante volte.
                  *
                  * «Caduto otto volte» non dice se sia la rete del telefono,
@@ -183,7 +253,7 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
               if (collegamento.ultimeCadute.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text(
-                  'Le ultime cadute',
+                  inLingua(it: 'Le ultime cadute', en: 'The last drops'),
                   style: testi.labelLarge?.copyWith(
                     color: colori.onSurfaceVariant,
                   ),
@@ -211,11 +281,17 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Cosa costa', style: testi.titleMedium),
+              Text(
+                inLingua(it: 'Cosa costa', en: 'What it costs'),
+                style: testi.titleMedium,
+              ),
               const SizedBox(height: 6),
               if (fatti.isEmpty)
                 Text(
-                  'Ancora niente da segnare.',
+                  inLingua(
+                    it: 'Ancora niente da segnare.',
+                    en: 'Nothing to note yet.',
+                  ),
                   style: testi.bodyMedium?.copyWith(
                     color: colori.onSurfaceVariant,
                   ),
@@ -224,14 +300,27 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
                 for (final uno in fatti.take(8))
                   riga(
                     uno.cosa,
-                    '${volte(uno.quante)}, ${uno.totaleMs} ms in tutto, '
-                    '${uno.maxMs} ms il peggiore',
+                    inLingua(
+                      it:
+                          '${volte(uno.quante)}, ${uno.totaleMs} ms in tutto, '
+                          '${uno.maxMs} ms il peggiore',
+                      en:
+                          '${volte(uno.quante)}, ${uno.totaleMs} ms in total, '
+                          '${uno.maxMs} ms worst',
+                    ),
                   ),
               const SizedBox(height: 6),
               Text(
-                'Se un lavoro da solo dura quanto un blocco, il colpevole '
-                'è quello. Se sono tutti piccoli e i blocchi restano, è '
-                'la roba da buttare che si accumula.',
+                inLingua(
+                  it:
+                      'Se un lavoro da solo dura quanto un blocco, il '
+                      'colpevole è quello. Se sono tutti piccoli e i blocchi '
+                      'restano, è la roba da buttare che si accumula.',
+                  en:
+                      'If one job alone lasts as long as a stall, that\'s the '
+                      'culprit. If they are all small and the stalls remain, '
+                      'it\'s garbage piling up.',
+                ),
                 style: testi.bodySmall?.copyWith(
                   color: colori.onSurfaceVariant,
                 ),
@@ -244,24 +333,44 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('La plancia', style: testi.titleMedium),
+              Text(
+                inLingua(it: 'La plancia', en: 'The dashboard'),
+                style: testi.titleMedium,
+              ),
               const SizedBox(height: 6),
               /* I numeri veri delle barre del telefono: sono quelli che
                  * l'app passa alla pagina, e quando la barra della plancia
                  * finisce sotto i tasti la risposta e' qui. */
               riga(
-                'Barre del telefono',
-                'in cima ${_quanto(context, sopra: true)}, '
-                    'in fondo ${_quanto(context, sopra: false)}',
+                inLingua(it: 'Barre del telefono', en: 'Phone bars'),
+                inLingua(
+                  it:
+                      'in cima ${_quanto(context, sopra: true)}, in fondo '
+                      '${_quanto(context, sopra: false)}',
+                  en:
+                      'top ${_quanto(context, sopra: true)}, bottom '
+                      '${_quanto(context, sopra: false)}',
+                ),
               ),
               const SizedBox(height: 6),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Plancia leggera'),
-                subtitle: const Text(
-                  'Spenta di serie. Ferma le animazioni che non finiscono '
-                  'mai e toglie le sfocature dietro le tessere: la plancia '
-                  'cambia aspetto. Solo se il telefono proprio non ce la fa.',
+                title: Text(
+                  inLingua(it: 'Plancia leggera', en: 'Light dashboard'),
+                ),
+                subtitle: Text(
+                  inLingua(
+                    it:
+                        'Spenta di serie. Ferma le animazioni che non '
+                        'finiscono mai e toglie le sfocature dietro le '
+                        'tessere: la plancia cambia aspetto. Solo se il '
+                        'telefono proprio non ce la fa.',
+                    en:
+                        'Off by default. It stops the never-ending animations '
+                        'and removes the blur behind the cards: the dashboard '
+                        'looks different. Only if the phone really can\'t '
+                        'keep up.',
+                  ),
                 ),
                 value: impostazioni.planciaLeggera,
                 onChanged: (valore) =>
@@ -270,11 +379,25 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
               if (impostazioni.android)
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Composizione ibrida'),
-                  subtitle: const Text(
-                    'Il riquadro della plancia lo disegna Android per conto '
-                    'suo, invece di passare da Flutter a ogni fotogramma. '
-                    'Prova a spegnerla solo se con lei va peggio.',
+                  title: Text(
+                    inLingua(
+                      it: 'Composizione ibrida',
+                      en: 'Hybrid composition',
+                    ),
+                  ),
+                  subtitle: Text(
+                    inLingua(
+                      it:
+                          'Il riquadro della plancia lo disegna Android per '
+                          'conto suo, invece di passare da Flutter a ogni '
+                          'fotogramma. Prova a spegnerla solo se con lei va '
+                          'peggio.',
+                      en:
+                          'Android draws the dashboard frame on its own, '
+                          'instead of going through Flutter on every frame. '
+                          'Only try turning it off if things are worse with '
+                          'it on.',
+                    ),
                   ),
                   value: impostazioni.composizioneIbrida,
                   onChanged: (valore) =>
@@ -282,7 +405,10 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
                 ),
               const SizedBox(height: 4),
               Text(
-                'Cambiare un interruttore ricarica la plancia.',
+                inLingua(
+                  it: 'Cambiare un interruttore ricarica la plancia.',
+                  en: 'Flipping either switch reloads the dashboard.',
+                ),
                 style: testi.bodySmall?.copyWith(
                   color: colori.onSurfaceVariant,
                 ),
@@ -294,7 +420,7 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
     );
     if (widget.nuda) return corpo;
     return Scaffold(
-      appBar: AppBar(title: const Text('Come va l\'app')),
+      appBar: AppBar(title: Text(Sezione.comeVaLApp.titolo)),
       body: corpo,
     );
   }
@@ -330,23 +456,41 @@ class _IlRitardo extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Quanto ci mettono i dati', style: testi.titleMedium),
+          Text(
+            inLingua(
+              it: 'Quanto ci mettono i dati',
+              en: 'How long the data takes',
+            ),
+            style: testi.titleMedium,
+          ),
           const SizedBox(height: 6),
           if (quanti == 0)
             Text(
               casa == null
-                  ? 'La casa non è ancora collegata.'
-                  : 'Nessun cambiamento misurato, ancora. Apri i dispositivi '
-                        'e aspetta che qualcosa in casa cambi.',
+                  ? inLingua(
+                      it: 'La casa non è ancora collegata.',
+                      en: 'Your home isn\'t connected yet.',
+                    )
+                  : inLingua(
+                      it:
+                          'Nessun cambiamento misurato, ancora. Apri i '
+                          'dispositivi e aspetta che qualcosa in casa cambi.',
+                      en:
+                          'No change measured yet. Open the devices and wait '
+                          'for something at home to change.',
+                    ),
               style: testi.bodySmall?.copyWith(
                 color: colori.onSurfaceVariant,
                 height: 1.4,
               ),
             )
           else ...[
-            riga('Di solito', _quanto(solito)),
-            riga('Il peggiore', _quanto(peggiore)),
-            riga('Su quanti', '$quanti cambiamenti'),
+            riga(inLingua(it: 'Di solito', en: 'Usually'), _quanto(solito)),
+            riga(inLingua(it: 'Il peggiore', en: 'Worst'), _quanto(peggiore)),
+            riga(
+              inLingua(it: 'Su quanti', en: 'Out of'),
+              inLingua(it: '$quanti cambiamenti', en: '$quanti changes'),
+            ),
             const SizedBox(height: 8),
             Text(
               _cosaVuolDire(solito),
@@ -373,18 +517,39 @@ class _IlRitardo extends StatelessWidget {
   static String _cosaVuolDire(Duration? solito) {
     if (solito == null) return '';
     if (solito.inMilliseconds < 2000) {
-      return 'La strada è immediata: quello che cambia in casa arriva qui '
-          'in meno di due secondi. Se un valore a schermo sembra vecchio di '
-          'un minuto, quel minuto non è della strada — è Home Assistant '
-          'che scopre quel dato una volta al minuto, perché è così che '
-          'l\'integrazione che lo porta interroga il dispositivo.';
+      return inLingua(
+        it:
+            'La strada è immediata: quello che cambia in casa arriva qui in '
+            'meno di due secondi. Se un valore a schermo sembra vecchio di un '
+            'minuto, quel minuto non è della strada — è Home Assistant che '
+            'scopre quel dato una volta al minuto, perché è così che '
+            'l\'integrazione che lo porta interroga il dispositivo.',
+        en:
+            'The route is immediate: what changes at home gets here in less '
+            'than two seconds. If a value on screen looks a minute old, that '
+            'minute isn\'t the route\'s — it\'s Home Assistant finding out '
+            'once a minute, because that\'s how the integration behind it '
+            'polls the device.',
+      );
     }
     if (solito.inSeconds < 15) {
-      return 'Qualche secondo: è la strada, e di solito vuol dire che si '
-          'sta passando dal centralino invece che dalla rete di casa.';
+      return inLingua(
+        it:
+            'Qualche secondo: è la strada, e di solito vuol dire che si sta '
+            'passando dal centralino invece che dalla rete di casa.',
+        en:
+            'A few seconds: that\'s the route, and it usually means you\'re '
+            'going through the relay instead of your home network.',
+      );
     }
-    return 'Tanto. Questo è un ritardo della strada, non di Home Assistant: '
-        'vale la pena mandarlo in una segnalazione, con questa schermata '
-        'allegata.';
+    return inLingua(
+      it:
+          'Tanto. Questo è un ritardo della strada, non di Home Assistant: '
+          'vale la pena mandarlo in una segnalazione, con questa schermata '
+          'allegata.',
+      en:
+          'A lot. This delay is the route\'s, not Home Assistant\'s: worth '
+          'sending in a report, with this screen attached.',
+    );
   }
 }

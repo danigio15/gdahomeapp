@@ -12,16 +12,30 @@ library;
 
 import 'package:image_picker/image_picker.dart';
 
+import '../parole.dart';
 import 'segnalazioni.dart';
 
 /// Da dove viene.
 enum DaDoveLAllegato {
-  galleria('Una foto dalla galleria'),
-  fotocamera('Scatta una foto'),
-  video('Un video dalla galleria');
+  galleria,
+  fotocamera,
+  video;
 
-  const DaDoveLAllegato(this.nome);
-  final String nome;
+  /// Come si chiama la voce, nella lingua di chi sceglie.
+  String get nome => switch (this) {
+    DaDoveLAllegato.galleria => inLingua(
+      it: 'Una foto dalla galleria',
+      en: 'A photo from the gallery',
+    ),
+    DaDoveLAllegato.fotocamera => inLingua(
+      it: 'Scatta una foto',
+      en: 'Take a photo',
+    ),
+    DaDoveLAllegato.video => inLingua(
+      it: 'Un video dalla galleria',
+      en: 'A video from the gallery',
+    ),
+  };
 }
 
 /// Come si sceglie: torna `null` se la persona ci ha ripensato.
@@ -59,12 +73,23 @@ Future<Allegato?> scegliDalTelefono(DaDoveLAllegato daDove) async {
   };
   if (file == null) return null;
   final byte = await file.readAsBytes();
-  if (byte.isEmpty) throw const AllegatoNonBuono('Il file è vuoto.');
+  if (byte.isEmpty) {
+    throw AllegatoNonBuono(
+      inLingua(it: 'Il file è vuoto.', en: 'The file is empty.'),
+    );
+  }
   if (byte.length > Allegato.massimo) {
     throw AllegatoNonBuono(
-      'Questo file pesa ${pesoLeggibile(byte.length)}: al massimo '
-      '${pesoLeggibile(Allegato.massimo)}. Un video va tenuto corto, '
-      'venti o trenta secondi.',
+      inLingua(
+        it:
+            'Questo file pesa ${pesoLeggibile(byte.length)}: al massimo '
+            '${pesoLeggibile(Allegato.massimo)}. Un video va tenuto corto, '
+            'venti o trenta secondi.',
+        en:
+            'This file weighs ${pesoLeggibile(byte.length)}: '
+            '${pesoLeggibile(Allegato.massimo)} at most. Keep a video short, '
+            'twenty or thirty seconds.',
+      ),
     );
   }
   return Allegato(

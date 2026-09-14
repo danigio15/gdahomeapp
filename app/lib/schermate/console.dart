@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import '../casa/collegamento.dart';
 import '../casa/console.dart';
 import '../casa/segnalazioni.dart' show Messaggio, spiegaLErrore;
+import '../parole.dart';
 import '../ponte/filo.dart';
 import '../vestito/pezzi.dart';
 import 'assistenza.dart' show FiloCadutoQui;
@@ -89,7 +90,12 @@ class _SchermataDellaConsoleState extends State<SchermataDellaConsole> {
   Future<void> _carica() async {
     final filo = _presa;
     if (filo == null) {
-      setState(() => _perche = 'La casa non è collegata.');
+      setState(
+        () => _perche = inLingua(
+          it: 'La casa non è collegata.',
+          en: 'Your home isn\'t connected.',
+        ),
+      );
       return;
     }
     setState(() {
@@ -158,20 +164,32 @@ class _SchermataDellaConsoleState extends State<SchermataDellaConsole> {
     final sicuro = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Buttare questa conversazione?'),
+        title: Text(
+          inLingua(
+            it: 'Buttare questa conversazione?',
+            en: 'Throw this conversation away?',
+          ),
+        ),
         content: Text(
-          'Sparisce dal centralino e con lei quello che vi siete detti — '
-          'anche dalla plancia di ${quale.comeSiChiama}. Non si rimette a '
-          'posto.',
+          inLingua(
+            it:
+                'Sparisce dal centralino e con lei quello che vi siete detti '
+                '— anche dalla plancia di ${quale.comeSiChiama}. Non si '
+                'rimette a posto.',
+            en:
+                'It disappears from the relay, and with it everything you '
+                'said to each other — from ${quale.comeSiChiama}\'s '
+                'dashboard as well. There is no putting it back.',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Lascia stare'),
+            child: Text(inLingua(it: 'Lascia stare', en: 'Cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Butta via'),
+            child: Text(inLingua(it: 'Butta via', en: 'Throw away')),
           ),
         ],
       ),
@@ -216,17 +234,27 @@ class _SchermataDellaConsoleState extends State<SchermataDellaConsole> {
                   ? Icons.mark_email_read_outlined
                   : Icons.cloud_off_rounded,
               titolo: _perche == null
-                  ? 'Nessuno ha scritto'
-                  : 'La coda non arriva',
+                  ? inLingua(it: 'Nessuno ha scritto', en: 'Nobody has written')
+                  : inLingua(
+                      it: 'La coda non arriva',
+                      en: 'The queue isn\'t arriving',
+                    ),
               sotto:
                   _perche ??
-                  'Qui arrivano le richieste di aiuto di tutte le case. '
-                      'Quando qualcuno scrive dalla sua Assistenza, la '
-                      'conversazione compare in questo elenco.',
+                  inLingua(
+                    it:
+                        'Qui arrivano le richieste di aiuto di tutte le case. '
+                        'Quando qualcuno scrive dalla sua Assistenza, la '
+                        'conversazione compare in questo elenco.',
+                    en:
+                        'This is where help requests from every home arrive. '
+                        'When someone writes from their Support, the '
+                        'conversation shows up in this list.',
+                  ),
               azione: FilledButton.tonalIcon(
                 onPressed: _carica,
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Riguarda'),
+                label: Text(inLingua(it: 'Riguarda', en: 'Refresh')),
               ),
             ),
           ],
@@ -245,10 +273,13 @@ class _SchermataDellaConsoleState extends State<SchermataDellaConsole> {
           ],
           Insegna(
             daLeggere > 0
-                ? 'Conversazioni · $daLeggere da leggere'
-                : 'Conversazioni',
+                ? inLingua(
+                    it: 'Conversazioni · $daLeggere da leggere',
+                    en: 'Conversations · $daLeggere unread',
+                  )
+                : inLingua(it: 'Conversazioni', en: 'Conversations'),
             azione: IconButton(
-              tooltip: 'Riguarda',
+              tooltip: inLingua(it: 'Riguarda', en: 'Refresh'),
               onPressed: _carica,
               icon: const Icon(Icons.refresh_rounded),
             ),
@@ -274,7 +305,10 @@ class _SchermataDellaConsoleState extends State<SchermataDellaConsole> {
       perche: _perche,
       /* Senza puntini: il nome di una linea senza nome finisce gia' con i
        * suoi, e «casa_22813813……» non e' un suggerimento, e' un inciampo. */
-      suggerimento: 'Rispondi a ${aperta.comeSiChiama}',
+      suggerimento: inLingua(
+        it: 'Rispondi a ${aperta.comeSiChiama}',
+        en: 'Reply to ${aperta.comeSiChiama}',
+      ),
       /* Da questa parte l'altro non e' chi fa l'app: e' la casa che ha
        * chiesto aiuto. */
       laltro: aperta.comeSiChiama,
@@ -290,12 +324,17 @@ class _SchermataDellaConsoleState extends State<SchermataDellaConsole> {
                   _perche = null;
                 }),
                 icon: const Icon(Icons.arrow_back_rounded),
-                label: const Text('Tutte le conversazioni'),
+                label: Text(
+                  inLingua(
+                    it: 'Tutte le conversazioni',
+                    en: 'All conversations',
+                  ),
+                ),
               ),
             ),
           ),
           IconButton(
-            tooltip: 'Butta via',
+            tooltip: inLingua(it: 'Butta via', en: 'Throw away'),
             onPressed: () => _butta(aperta),
             icon: const Icon(Icons.delete_outline_rounded),
           ),
@@ -306,8 +345,14 @@ class _SchermataDellaConsoleState extends State<SchermataDellaConsole> {
         icona: Icons.forum_outlined,
         titolo: aperta.comeSiChiama,
         sotto: aperta.note.isEmpty
-            ? 'Questa conversazione è vuota.'
-            : 'Questa conversazione è vuota. ${aperta.note}',
+            ? inLingua(
+                it: 'Questa conversazione è vuota.',
+                en: 'This conversation is empty.',
+              )
+            : inLingua(
+                it: 'Questa conversazione è vuota. ${aperta.note}',
+                en: 'This conversation is empty. ${aperta.note}',
+              ),
       ),
       manda: _rispondi,
       rileggi: _rileggiIlFilo,
@@ -377,7 +422,7 @@ class _UnaLinea extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Butta via',
+            tooltip: inLingua(it: 'Butta via', en: 'Throw away'),
             onPressed: butta,
             icon: const Icon(Icons.delete_outline_rounded),
           ),

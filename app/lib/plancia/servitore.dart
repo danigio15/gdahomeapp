@@ -46,6 +46,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import '../misure/lavori.dart';
+import '../parole.dart';
 import '../ponte/altrove/altrove.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
@@ -405,7 +406,12 @@ class Servitore {
       return;
     }
 
-    _rispondi(richiesta, 404, 'text/plain', utf8.encode('qui non c\'è niente'));
+    _rispondi(
+      richiesta,
+      404,
+      'text/plain',
+      utf8.encode(inLingua(it: 'qui non c\'è niente', en: 'nothing here')),
+    );
   }
 
   /* ─── I file ───────────────────────────────────────────────────────────── */
@@ -641,13 +647,27 @@ class Servitore {
       utf8.encode(
         paginaDelNo(
           titolo: perTe
-              ? 'Non hai plance associate alla tua utenza'
-              : 'La casa non ha risposto',
+              ? inLingua(
+                  it: 'Non hai plance associate alla tua utenza',
+                  en: 'No dashboards are assigned to your account',
+                )
+              : inLingua(
+                  it: 'La casa non ha risposto',
+                  en: 'Your home did not answer',
+                ),
           sotto: perTe
-              ? 'In questa casa le plance sono riservate ad altri utenti. '
-                    'Chiedi a chi amministra la casa di abilitare la tua '
-                    'utenza: in Home Assistant, nella pagina di gdahome, ogni '
-                    'plancia ha «Chi la vede».'
+              ? inLingua(
+                  it:
+                      'In questa casa le plance sono riservate ad altri '
+                      'utenti. Chiedi a chi amministra la casa di abilitare '
+                      'la tua utenza: in Home Assistant, nella pagina di '
+                      'gdahome, ogni plancia ha «Chi la vede».',
+                  en:
+                      'In this home the dashboards are reserved for other '
+                      'users. Ask whoever administers the home to enable your '
+                      'account: in Home Assistant, on the gdahome page, every '
+                      'dashboard has a “Who sees it” list.',
+                )
               : errore.spiegazione,
           dallAlto: margini.alto,
         ),

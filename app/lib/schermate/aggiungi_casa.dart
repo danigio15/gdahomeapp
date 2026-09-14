@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import '../casa/archivio_delle_case.dart';
 import '../casa/casa_conosciuta.dart';
 import '../casa/questo_qui/qui.dart';
+import '../parole.dart';
 import '../ponte/abbinamento.dart';
 import '../ponte/errori.dart';
 import '../ponte/indirizzo.dart';
@@ -146,18 +147,33 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
     final inCasa = IndirizzoDelPonte.leggi(scritto);
 
     if (scritto.isNotEmpty && inCasa == null) {
-      setState(() => _male = 'L\'indirizzo di casa non si capisce.');
+      setState(
+        () => _male = inLingua(
+          it: 'L\'indirizzo di casa non si capisce.',
+          en: 'I can\'t make sense of that home address.',
+        ),
+      );
       return;
     }
     if (codicePulito(_codice.text).isEmpty) {
-      setState(() => _male = 'Manca il codice: è scritto sotto il QR code.');
+      setState(
+        () => _male = inLingua(
+          it: 'Manca il codice: è scritto sotto il QR code.',
+          en: 'The code is missing: it\'s written under the QR code.',
+        ),
+      );
       return;
     }
     if (inCasa == null && _centralino == null) {
       setState(() {
-        _male =
-            'Serve l\'indirizzo di casa: questa versione dell\'app non ha '
-            'un centralino a cui chiedere.';
+        _male = inLingua(
+          it:
+              'Serve l\'indirizzo di casa: questa versione dell\'app non ha '
+              'un centralino a cui chiedere.',
+          en:
+              'A home address is needed: this build of the app has no relay '
+              'to ask.',
+        );
       });
       return;
     }
@@ -253,20 +269,42 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       setState(() {
         _sto = false;
         _male = kIsWeb
-            ? 'La casa mi ha fatto entrare, ma questo browser non mi lascia '
-                  'ricordarlo: riaprendo la pagina dovresti abbinarti di nuovo.\n\n'
-                  'Succede quando il browser non considera sicura questa '
-                  'pagina — guarda se accanto all\'indirizzo c\'è scritto '
-                  '«Non sicuro». Un antivirus che controlla il traffico, un '
-                  'filtro, o un indirizzo che non comincia per https bastano.\n\n'
-                  'Intanto togli questo abbinamento da «Telefoni abbinati», '
-                  'nella pagina di gdahome in Home Assistant: il posto resta '
-                  'occupato.'
-            : 'La casa mi ha fatto entrare, ma non riesco a ricordarlo su '
-                  'questo telefono: riaprendo l\'app dovresti abbinarti di '
-                  'nuovo.\n\nTogli questo abbinamento da «Telefoni '
-                  'abbinati», nella pagina di gdahome in Home Assistant, e '
-                  'riprova.\n\n($errore)';
+            ? inLingua(
+                it:
+                    'La casa mi ha fatto entrare, ma questo browser non mi '
+                    'lascia ricordarlo: riaprendo la pagina dovresti '
+                    'abbinarti di nuovo.\n\nSuccede quando il browser non '
+                    'considera sicura questa pagina — guarda se accanto '
+                    'all\'indirizzo c\'è scritto «Non sicuro». Un antivirus '
+                    'che controlla il traffico, un filtro, o un indirizzo che '
+                    'non comincia per https bastano.\n\nIntanto togli questo '
+                    'abbinamento da «Telefoni abbinati», nella pagina di '
+                    'gdahome in Home Assistant: il posto resta occupato.',
+                en:
+                    'Your home let me in, but this browser won\'t let me '
+                    'remember it: you\'d have to pair again next time you '
+                    'open the page.\n\nThis happens when the browser doesn\'t '
+                    'consider this page secure — check whether it says “Not '
+                    'secure” next to the address. An antivirus that inspects '
+                    'traffic, a filter, or an address that doesn\'t start '
+                    'with https are enough.\n\nIn the meantime remove this '
+                    'pairing from “Paired phones”, on the gdahome page in '
+                    'Home Assistant: the slot stays taken.',
+              )
+            : inLingua(
+                it:
+                    'La casa mi ha fatto entrare, ma non riesco a ricordarlo '
+                    'su questo telefono: riaprendo l\'app dovresti abbinarti '
+                    'di nuovo.\n\nTogli questo abbinamento da «Telefoni '
+                    'abbinati», nella pagina di gdahome in Home Assistant, e '
+                    'riprova.\n\n($errore)',
+                en:
+                    'Your home let me in, but I can\'t remember it on this '
+                    'phone: you\'d have to pair again next time you open the '
+                    'app.\n\nRemove this pairing from “Paired phones”, on the '
+                    'gdahome page in Home Assistant, and try again.'
+                    '\n\n($errore)',
+              );
       });
     }
   }
@@ -279,19 +317,39 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
      * giusto — e' quello che Home Assistant stessa da' per l'accesso remoto —
      * e chi lo mette va a cercare il guasto dove non c'e'. */
     if (inCasa?.eLAccessoRemotoDiHomeAssistant ?? false) {
-      return 'L\'accesso remoto di Home Assistant non arriva agli add-on: il suo '
-          'tunnel finisce dentro Home Assistant, e gdahome sta su una porta '
-          'sua. Mettiti sul Wi-Fi di casa e scrivi l\'indirizzo che ha il tuo '
-          'Home Assistant su quella rete.';
+      return inLingua(
+        it:
+            'L\'accesso remoto di Home Assistant non arriva agli add-on: il '
+            'suo tunnel finisce dentro Home Assistant, e gdahome sta su una '
+            'porta sua. Mettiti sul Wi-Fi di casa e scrivi l\'indirizzo che '
+            'ha il tuo Home Assistant su quella rete.',
+        en:
+            'Home Assistant remote access doesn\'t reach add-ons: its tunnel '
+            'ends inside Home Assistant, and gdahome sits on a port of its '
+            'own. Get on your home Wi-Fi and type the address your Home '
+            'Assistant has on that network.',
+      );
     }
     if (inCasa != null) {
-      return 'Non trovo gdahome a quell\'indirizzo. Controlla che l\'add-on '
-          'sia acceso e che il telefono sia sulla rete di casa.\n\n'
-          '(${errore.spiegazione})';
+      final detto = inLingua(
+        it:
+            'Non trovo gdahome a quell\'indirizzo. Controlla che l\'add-on sia '
+            'acceso e che il telefono sia sulla rete di casa.',
+        en:
+            'I can\'t find gdahome at that address. Check that the add-on is '
+            'running and that the phone is on your home network.',
+      );
+      return '$detto\n\n(${errore.spiegazione})';
     }
-    return 'Non trovo la casa. Controlla che l\'add-on sia acceso, e che il '
-        'codice non sia scaduto: dura cinque minuti.\n\n'
-        '(${errore.spiegazione})';
+    final detto = inLingua(
+      it:
+          'Non trovo la casa. Controlla che l\'add-on sia acceso, e che il '
+          'codice non sia scaduto: dura cinque minuti.',
+      en:
+          'I can\'t find your home. Check that the add-on is running, and that '
+          'the code hasn\'t expired: it lasts five minutes.',
+    );
+    return '$detto\n\n(${errore.spiegazione})';
   }
 
   /* ─── Quello che si vede ───────────────────────────────────────────────── */
@@ -303,7 +361,11 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
     final primaCasa = widget.archivio.vuoto;
 
     return Scaffold(
-      appBar: primaCasa ? null : AppBar(title: const Text('Aggiungi una casa')),
+      appBar: primaCasa
+          ? null
+          : AppBar(
+              title: Text(inLingua(it: 'Aggiungi una casa', en: 'Add a home')),
+            ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -318,15 +380,24 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                     const Center(child: Marchio(lato: 84)),
                     const SizedBox(height: 22),
                     Text(
-                      'Colleghiamo la casa',
+                      inLingua(
+                        it: 'Colleghiamo la casa',
+                        en: 'Let\'s connect your home',
+                      ),
                       textAlign: TextAlign.center,
                       style: testi.headlineMedium,
                     ),
                     const SizedBox(height: 10),
                   ],
                   Text(
-                    'In Home Assistant apri «gdahome» dalla barra laterale e '
-                    'premi «Genera QR code». Poi inquadralo.',
+                    inLingua(
+                      it:
+                          'In Home Assistant apri «gdahome» dalla barra '
+                          'laterale e premi «Genera QR code». Poi inquadralo.',
+                      en:
+                          'In Home Assistant open “gdahome” from the sidebar '
+                          'and press “Generate the QR code”. Then scan it.',
+                    ),
                     textAlign: TextAlign.center,
                     style: testi.bodyLarge?.copyWith(
                       color: colori.onSurfaceVariant,
@@ -348,7 +419,12 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                             ),
                           )
                         : const Icon(Icons.qr_code_scanner_rounded),
-                    label: const Text('Inquadra il QR code'),
+                    label: Text(
+                      inLingua(
+                        it: 'Inquadra il QR code',
+                        en: 'Scan the QR code',
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 14),
                   /* Il lucchetto **dentro** la frase, e non di fianco.
@@ -372,10 +448,15 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                             ),
                           ),
                         ),
-                        const TextSpan(
-                          text:
-                              'Non ti verrà mai chiesta la password di Home '
-                              'Assistant.',
+                        TextSpan(
+                          text: inLingua(
+                            it:
+                                'Non ti verrà mai chiesta la password di Home '
+                                'Assistant.',
+                            en:
+                                'You will never be asked for your Home '
+                                'Assistant password.',
+                          ),
                         ),
                       ],
                     ),
@@ -389,9 +470,15 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                     controller: _nome,
                     enabled: !_sto,
                     textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Come si chiama',
-                      hintText: 'Casa, Dai miei, Al mare',
+                    decoration: InputDecoration(
+                      labelText: inLingua(
+                        it: 'Come si chiama',
+                        en: 'What it\'s called',
+                      ),
+                      hintText: inLingua(
+                        it: 'Casa, Dai miei, Al mare',
+                        en: 'Home, Mum\'s, Beach house',
+                      ),
                     ),
                   ),
                   if (_aMano) ..._leLettere(testi) else ..._ilRipiego(),
@@ -422,7 +509,12 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
     const SizedBox(height: 10),
     TextButton(
       onPressed: _sto ? null : () => setState(() => _aMano = true),
-      child: const Text('Non puoi inquadrarlo? Inserisci il codice'),
+      child: Text(
+        inLingua(
+          it: 'Non puoi inquadrarlo? Inserisci il codice',
+          en: 'Can\'t scan it? Enter the code',
+        ),
+      ),
     ),
   ];
 
@@ -444,8 +536,11 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
               letterSpacing: 3,
               fontFamily: 'monospace',
             ),
-            decoration: const InputDecoration(
-              labelText: 'Inserisci il codice mostrato',
+            decoration: InputDecoration(
+              labelText: inLingua(
+                it: 'Inserisci il codice mostrato',
+                en: 'Enter the code shown',
+              ),
               hintText: 'ABCD-2345-EFGH-6789',
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 16,
@@ -470,11 +565,23 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
             onSubmitted: (_) => _sto ? null : _abbinaAMano(),
             decoration: InputDecoration(
               labelText: _serveLIndirizzo
-                  ? 'Indirizzo di Home Assistant in casa'
-                  : 'Indirizzo di casa (facoltativo)',
+                  ? inLingua(
+                      it: 'Indirizzo di Home Assistant in casa',
+                      en: 'Home Assistant address at home',
+                    )
+                  : inLingua(
+                      it: 'Indirizzo di casa (facoltativo)',
+                      en: 'Home address (optional)',
+                    ),
               hintText: '192.168.1.50',
-              helperText:
-                  'Stando sul Wi-Fi di casa. Il resto lo dice la casa da sola.',
+              helperText: inLingua(
+                it:
+                    'Stando sul Wi-Fi di casa. Il resto lo dice la casa da '
+                    'sola.',
+                en:
+                    'While on your home Wi-Fi. Your home tells the app the '
+                    'rest by itself.',
+              ),
               helperMaxLines: 2,
             ),
           ),
@@ -487,7 +594,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Abbina'),
+                : Text(inLingua(it: 'Abbina', en: 'Pair')),
           ),
         ],
       ),
