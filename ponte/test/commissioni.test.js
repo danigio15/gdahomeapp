@@ -1552,3 +1552,48 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
     rmSync(cartella, { recursive: true, force: true });
   }
 });
+
+test("il telefono può chiedere sul filo dove sta questa casa", async () => {
+  /* L'indirizzo di casa il telefono lo sentiva dire **una volta**, dentro il
+   * QR code, e non lo rinfrescava mai piu'. Chi abbina la casa stando fuori
+   * non ne sente nessuno, e chi l'ha abbinata in casa se lo tiene anche dopo
+   * che il router gliene ha dato un altro: in tutti e due i casi si passa dal
+   * centralino stando sul divano. Adesso lo si puo' richiedere sul filo. */
+  const ritorno = {
+    async cosaDire() {
+      return {
+        casa: "questa-casa",
+        centralino: "https://tramite.gdahome.org",
+        indirizzi: ["http://192.168.1.8:8098", "http://10.0.0.4:8098"],
+      };
+    },
+  };
+  const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO, ritorno });
+
+  assert.equal(con.riconosce({ type: "ponte/casa/dove" }), true);
+  const detta = await con.rispondi({ id: 1, type: "ponte/casa/dove" });
+  assert.equal(detta.success, true);
+  assert.deepEqual(detta.result.indirizzi, ["http://192.168.1.8:8098", "http://10.0.0.4:8098"]);
+  assert.equal(detta.result.centralino, "https://tramite.gdahome.org");
+
+  /* Un ponte che non sa dirlo — il Supervisor che non risponde, o un ponte
+   * sul banco — risponde di no, e il telefono resta dov'e'. */
+  const senza = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
+  const negata = await senza.rispondi({ id: 2, type: "ponte/casa/dove" });
+  assert.equal(negata.success, false);
+  assert.equal(negata.error.code, "unknown_command");
+
+  /* E se il Supervisor inciampa non si porta giu' il filo: un no, e basta. */
+  const rotto = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    ritorno: {
+      async cosaDire() {
+        throw new Error("il Supervisor non risponde");
+      },
+    },
+  });
+  const inciampata = await rotto.rispondi({ id: 3, type: "ponte/casa/dove" });
+  assert.equal(inciampata.success, false);
+  assert.equal(inciampata.error.code, "unknown_error");
+});

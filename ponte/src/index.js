@@ -192,6 +192,13 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     );
   }
 
+  /* E lo stesso Ritorno risponde al telefono che lo chiede sul filo, invece
+   * che solo a chi si sta abbinando: un indirizzo di casa detto una volta
+   * sola invecchia, e chi ha abbinato stando fuori non ne ha mai sentito
+   * nessuno. Si mette qui e non nel costruttore delle commissioni perche' il
+   * Ritorno nasce dopo: gli serve la porta vera, che la sa solo il server. */
+  commissioni.ritorno = ritorno;
+
   const portiere = new Portiere({ ponte, dispositivi, abbinamento, registro, ritorno });
   const chiamata = new Chiamata({
     dove: opzioni.centralino,

@@ -72,6 +72,22 @@ const PLANCE = new Map([
   ["ponte/plance/rinomina", "rinomina"],
   ["ponte/plance/togli", "togli"],
 ]);
+/* Dove sta questa casa sulla rete di casa, adesso.
+ *
+ * Le stesse tre cose che si dicono a un telefono che si abbina
+ * (`ritorno.js`), chieste sul filo invece che dentro il QR code. Serve
+ * perche' quelle tre cose si dicevano **una volta sola**, e un indirizzo
+ * detto una volta sola invecchia: chi abbina la casa stando fuori non ne ha
+ * mai sentito nessuno, e chi l'ha abbinata in casa se lo tiene anche quando
+ * il router, a un riavvio, ne da' un altro. In tutti e due i casi il telefono
+ * passa dal centralino stando sul divano — funziona, e si sente.
+ *
+ * Il telefono lo chiede sul filo che ha gia' aperto, cioe' dopo la stretta di
+ * mano e dentro la cifratura: chi risponde e' questa casa e nessun altro. E
+ * l'indirizzo non gli si fa credere sulla parola — ci bussa, e lo tiene solo
+ * se risponde. */
+const DOVE_TORNARE = "ponte/casa/dove";
+
 const CONFIG_GET = "dashboardmodern/config/get";
 const CONFIG_SET = "dashboardmodern/config/set";
 const CONFIG_RESTORE = "dashboardmodern/config/restore";
@@ -223,6 +239,7 @@ export class Commissioni {
     segnalazioni = null,
     chat = null,
     spegnimento = null,
+    ritorno = null,
     scarica = scaricaDavvero,
     insieme = INSIEME,
   } = {}) {
@@ -253,6 +270,12 @@ export class Commissioni {
     /* Il conto alla rovescia del clima, che nell'integrazione sta in Home
      * Assistant e qui sta nel ponte. */
     this.spegnimento = spegnimento;
+    /* Dove sta questa casa sulla rete di casa: lo sa il Ritorno, che lo
+     * chiede al Supervisor. Si mette dopo la costruzione — il Ritorno nasce
+     * piu' tardi, che gli serve la porta vera — e dove non c'e' la domanda si
+     * sente rispondere «non conosco», come ogni comando che questo ponte non
+     * sa fare. */
+    this.ritorno = ritorno;
     this.scarica = scarica;
     this.insieme = insieme;
     this._inCorso = 0;
@@ -306,6 +329,7 @@ export class Commissioni {
       return this._segnalazioni(detto);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
       return this._configurazione(detto);
+    if (tipo === DOVE_TORNARE) return this._doveTornare(detto);
     if (tipo === CATALOGO) return this._catalogo(detto);
     if (tipo === FOTO_ELENCO) return this._elencoDelleFoto(detto);
     if (tipo === FOTO_CARICA) return this._caricaUnaFoto(detto);
@@ -322,6 +346,25 @@ export class Commissioni {
       return si(id, tipo === "frontend/get_user_data" ? { value: null } : null);
     }
     return no(id, "unknown_command", `non conosco ${tipo}`);
+  }
+
+  /* Dove ribussare: le stesse tre cose del QR code, dette sul filo.
+   *
+   * Non e' un segreto e non apre niente: chi chiede ha gia' fatto la stretta
+   * di mano, cioe' ha gia' la chiave di questa casa, e con quella chiede a
+   * Home Assistant qualunque cosa. Qui si dice soltanto da dove lo si puo'
+   * fare piu' in fretta. */
+  async _doveTornare(detto) {
+    const id = detto?.id ?? null;
+    if (!this.ritorno) return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    try {
+      return si(id, await this.ritorno.cosaDire());
+    } catch (errore) {
+      /* Il Supervisor che non risponde non e' un guasto di questa casa: il
+       * telefono resta dov'e', cioe' sul centralino. */
+      this.registro.attenzione(`non so dire dove sta questa casa: ${errore?.message || errore}`);
+      return no(id, "unknown_error", "non so dire dove sta questa casa");
+    }
   }
 
   /* Lo spegnimento programmato: le stesse tre risposte dell'integrazione.

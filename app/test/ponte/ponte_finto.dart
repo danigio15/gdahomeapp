@@ -221,6 +221,16 @@ class PonteFinto {
       'type': 'result',
       'success': true,
       'result': switch (detto['type']) {
+        'ponte/casa/dove' =>
+          indirizziDiCasa == null
+              ? null
+              : {
+                  'casa': 'la-casa-finta',
+                  'centralino': null,
+                  'indirizzi': [
+                    for (final uno in indirizziDiCasa!) uno.toString(),
+                  ],
+                },
         'get_states' => entita,
         'get_panels' => pannelli ?? const <String, dynamic>{},
         'dashboardmodern/config/get' =>
@@ -237,6 +247,11 @@ class PonteFinto {
   /// Quando e' `true`, il ponte risponde che in questa casa non ci sono
   /// plance per chi chiede.
   bool nientePerTe = false;
+
+  /// Quello che risponde `ponte/casa/dove`: dove sta questa casa sulla rete
+  /// di casa. `null` e' un ponte di prima, che quel comando non lo conosce e
+  /// risponde vuoto.
+  List<IndirizzoDelPonte>? indirizziDiCasa;
 
   /// Le plance di questa casa. Una c'e' sempre — quella di sempre — e chi ne
   /// prova piu' d'una ne aggiunge a questa lista.

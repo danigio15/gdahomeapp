@@ -57,6 +57,12 @@ class Sonda {
   final Duration attesa;
   final Duration vantaggio;
 
+  /// Come si bussa. La stessa di questa sonda, per chi deve bussare altrove:
+  /// il collegamento la usa per provare un indirizzo di casa **imparato
+  /// dopo** l'abbinamento, e dev'essere la stessa o nelle prove si andrebbe a
+  /// bussare sul serio.
+  Bussata get bussa => _bussa;
+
   /// Trova da dove si entra in questa casa.
   ///
   /// Solleva [PonteIrraggiungibile] quando non risponde nessuna: e' una cosa

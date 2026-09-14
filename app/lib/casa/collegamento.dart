@@ -22,6 +22,7 @@ import 'dart:async';
 
 import '../parole.dart';
 import '../plancia/pannello.dart';
+import '../ponte/abbinamento.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 import '../ponte/indirizzo.dart';
@@ -304,6 +305,9 @@ class Collegamento {
            * piccola. Se la risposta e' la stessa, la pagina non si ricarica:
            * l'indirizzo non cambia, e chi disegna guarda l'indirizzo. */
           unawaited(_leggiLaPlancia(filo));
+          /* E si ricontrolla la strada: si torna dentro anche rientrando in
+           * casa, e li' la strada corta c'e' e prima non c'era. */
+          unawaited(_imparaLaStradaDiCasa(filo));
         }
         return;
       }
@@ -344,6 +348,84 @@ class Collegamento {
      * domanda sola. Le entita' — tutte, con i loro eventi — si leggono solo
      * quando qualcuno le vuole, vedi [serveLaCasa]. */
     await _leggiLaPlancia(filo);
+    /* E se si e' entrati dalla strada lunga, si chiede alla casa dov'e'. Non
+     * si aspetta: la casa e' gia' aperta, e questo e' solo per andarci piu'
+     * dritti. */
+    unawaited(_imparaLaStradaDiCasa(filo));
+  }
+
+  /* ─── La strada di casa, imparata dopo ──────────────────────────────── */
+
+  /* Quando si e' chiesto l'ultima volta, e a quale casa.
+   *
+   * Non piu' di una volta ogni [_ogniTanto]: e' lo stesso tempo per cui il
+   * ponte tiene buona la risposta del Supervisor (`ritorno.js`), e chiederla
+   * piu' spesso vorrebbe dire farsi ridire la stessa cosa. */
+  static const _ogniTanto = Duration(minutes: 5);
+  String? _stradaChiestaPer;
+  DateTime? _stradaChiestaIl;
+
+  /// Chiede alla casa dove sta sulla rete di casa, e se c'e' una strada piu'
+  /// corta la prende.
+  ///
+  /// L'indirizzo di casa il telefono lo sentiva dire **una volta**, dentro il
+  /// QR code dell'abbinamento, e non lo rinfrescava mai piu'. Chi abbina la
+  /// casa stando fuori non ne sente nessuno; chi l'ha abbinata in casa se lo
+  /// tiene anche dopo che il router, a un riavvio, ne ha dato un altro. In
+  /// tutti e due i casi il telefono passa dal centralino stando sul divano:
+  /// «Compare fuori casa quando in realtà sono in wifi e sono in casa», e
+  /// ogni tocco fa il giro del mondo e torna.
+  ///
+  /// Adesso la casa lo sa dire sul filo (`ponte/casa/dove`). Non ci si fida
+  /// sulla parola: si bussa, e l'indirizzo si tiene solo se risponde —
+  /// bussare e' anche il modo di sapere se si e' in casa davvero.
+  Future<void> _imparaLaStradaDiCasa(Filo filo) async {
+    final casa = _casa;
+    if (casa == null) return;
+    /* Gia' dentro: la strada corta si sta gia' facendo. */
+    if (_daDove == DaDove.daDentro) return;
+    final adesso = DateTime.now();
+    if (_stradaChiestaPer == casa.id &&
+        _stradaChiestaIl != null &&
+        adesso.difference(_stradaChiestaIl!) < _ogniTanto) {
+      return;
+    }
+    _stradaChiestaPer = casa.id;
+    _stradaChiestaIl = adesso;
+
+    final List<IndirizzoDelPonte> indirizzi;
+    try {
+      /* La risposta arriva com'e': un ponte che quel comando non lo conosce
+       * puo' rispondere «va bene» senza niente dentro, e li' non c'e' nessun
+       * indirizzo da leggere. */
+      final detto = await filo.risultato({'type': 'ponte/casa/dove'});
+      final detti = detto is Map ? detto['indirizzi'] : null;
+      indirizzi = [
+        for (final uno in detti is List ? detti : const [])
+          if (uno is String) IndirizzoDelPonte.leggi(uno),
+      ].nonNulls.toList();
+    } on ErroreDelPonte {
+      /* Un ponte di prima non sa rispondere, e va benissimo: si resta dove si
+       * e', che e' dove si era anche prima di questa domanda. */
+      return;
+    }
+    if (indirizzi.isEmpty) return;
+
+    final quale = await Abbinamento.qualeRisponde(
+      indirizzi,
+      bussa: _sonda.bussa,
+    );
+    /* Nessuno risponde: non si e' in casa, ed e' giusto stare sul centralino.
+     * Non si scrive niente — l'indirizzo che c'e' puo' essere ancora buono
+     * per quando si torna. */
+    if (quale == null) return;
+    if (quale.toString() == casa.inCasa?.toString()) return;
+
+    await archivio.cambiaGliIndirizzi(casa.id, inCasa: quale);
+    /* E si riparte da li'. La casa e' la stessa e il filo si riapre subito:
+     * costa un lampo adesso, e toglie il giro dal mondo a tutto il resto
+     * della giornata. */
+    await apri(forza: true);
   }
 
   bool _casaChiesta = false;

@@ -102,6 +102,98 @@ void main() {
     },
   );
 
+  test('in casa non si passa più dalla strada lunga: se la fa dire', () async {
+    /* «Compare fuori casa quando in realtà sono in wifi e sono in casa.»
+     *
+     * L'indirizzo di casa il telefono lo sentiva dire una volta sola, dentro
+     * il QR code, e non lo rinfrescava mai piu': chi abbina stando fuori non
+     * ne sente nessuno, e chi l'ha abbinata in casa se lo tiene anche dopo
+     * che il router, a un riavvio, gliene ha dato un altro. Poi si torna a
+     * casa e si continua a fare il giro lungo — funziona, e si sente.
+     *
+     * Qui: due ponti, che sono la stessa casa vista da due strade. Quello di
+     * casa sta su un indirizzo che l'app non conosce — quello che ha in
+     * archivio non risponde piu', com'e' dopo un riavvio del router — e la
+     * strada lunga risponde, come risponde sempre. */
+    final inCasa = await PonteFinto.alza();
+    final laStradaLunga = await PonteFinto.alza();
+    laStradaLunga.indirizziDiCasa = [inCasa.indirizzo];
+    final vecchio = IndirizzoDelPonte.leggi('192.168.99.99')!;
+    final casa = await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: vecchio,
+      daFuoriCasa: laStradaLunga.indirizzo,
+    );
+
+    /* La strada lunga risponde, ma con calma: e' la differenza vera fra un
+     * giro per il mondo e due metri di Wi-Fi, ed e' quello che fa vincere la
+     * strada corta appena si sa che c'e'. */
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: Sonda(
+        attesa: const Duration(milliseconds: 400),
+        vantaggio: const Duration(milliseconds: 40),
+        bussa: (dove) async {
+          if (dove == laStradaLunga.indirizzo.salute) {
+            await Future<void>.delayed(const Duration(milliseconds: 150));
+            return true;
+          }
+          return dove == inCasa.indirizzo.salute;
+        },
+      ),
+    );
+    await collegamento.apri();
+    expect(
+      collegamento.daDove,
+      DaDove.daFuori,
+      reason: 'l\'indirizzo che aveva non risponde più',
+    );
+
+    /* Adesso: la domanda sul filo, la bussata all'indirizzo che la casa ha
+     * detto, e il filo riaperto da dentro. */
+    await _finoA(
+      () =>
+          collegamento.daDove == DaDove.daDentro &&
+          collegamento.comeVa == ComeVa.aperta,
+    );
+    expect(
+      archivio.quella(casa.id)!.inCasa?.toString(),
+      inCasa.indirizzo.toString(),
+      reason: 'l\'indirizzo nuovo se lo tiene',
+    );
+    expect(collegamento.dentro, isTrue);
+    await inCasa.spegni();
+    await laStradaLunga.spegni();
+  });
+
+  test('un ponte che non sa dire dove sta non cambia niente', () async {
+    /* Un add-on di prima quel comando non lo conosce: si resta dove si e', e
+     * quello che si sapeva non si cancella. */
+    final ponte = await PonteFinto.alza();
+    ponte.indirizziDiCasa = null;
+    final casa = await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      daFuoriCasa: ponte.indirizzo,
+    );
+
+    collegamento = Collegamento(
+      archivio: archivio,
+      sonda: sondaChe({ponte.indirizzo}),
+    );
+    await collegamento.apri();
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+
+    expect(collegamento.daDove, DaDove.daFuori);
+    expect(archivio.quella(casa.id)!.inCasa, isNull);
+    await ponte.spegni();
+  });
+
   test(
     'dove si è entrati si ricorda, per provarlo per primo la volta dopo',
     () async {
