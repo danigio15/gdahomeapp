@@ -3,23 +3,31 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>gdahome — la tua casa in una plancia</title>
+    <title data-en="gdahome — your home in one dashboard">
+      gdahome — la tua casa in una plancia
+    </title>
     <meta
       name="description"
       content="L'app per Android e iPhone che mostra la plancia vera di Home Assistant e ci si abbina inquadrando un QR code. Da dentro e da fuori casa, senza aprire niente sul router, cifrata punta a punta."
+      data-en-content="The app for Android and iPhone that shows the real Home Assistant dashboard and pairs by scanning a QR code. At home and away, without opening anything on the router, encrypted end to end."
     />
     <meta name="theme-color" content="#0f172a" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="gdahome — la tua casa in una plancia" />
+    <meta
+      property="og:title"
+      content="gdahome — la tua casa in una plancia"
+      data-en-content="gdahome — your home in one dashboard"
+    />
     <meta
       property="og:description"
       content="La plancia vera di Home Assistant sul telefono. Ci si abbina con otto lettere, si entra da dentro e da fuori casa senza aprire niente sul router, e il centralino che fa da tramite non può leggere niente."
+      data-en-content="The real Home Assistant dashboard on your phone. You pair with eight letters, you get in at home and away without opening anything on the router, and the relay in between can read nothing."
     />
     <meta property="og:image" content="https://gdahome.org/statico/marchio.png" />
     <meta property="og:url" content="https://gdahome.org/" />
     <meta property="og:site_name" content="gdahome" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta property="og:locale" content="it_IT" />
+    <meta property="og:locale" content="it_IT" data-en-content="en_GB" />
     <link rel="icon" href="statico/marchio.png" />
     <link rel="apple-touch-icon" href="statico/marchio.png" />
     <link rel="preload" as="image" href="statico/marchio.png" />
@@ -30,17 +38,29 @@
     <header class="cappello" id="cappello">
       <div class="limite">
         <a class="marchio" href="#inizio">
-          <img src="statico/marchio.png" alt="Il marchio di gdahome" width="30" height="30" />
+          <img
+            src="statico/marchio.png"
+            alt="Il marchio di gdahome"
+            width="30"
+            height="30"
+            data-en-alt="The gdahome logo"
+          />
           <span>gdahome</span>
         </a>
-        <nav class="navigazione" aria-label="Le sezioni del sito">
-          <a href="#come">Come funziona</a>
-          <a href="#plancia">La plancia</a>
-          <a href="#funzioni">Cosa fa</a>
-          <a href="#scarica">Dove sta</a>
+        <nav
+          class="navigazione"
+          aria-label="Le sezioni del sito"
+          data-en-aria-label="The sections of this site"
+        >
+          <a href="#come" data-en="How it works">Come funziona</a>
+          <a href="#plancia" data-en="The dashboard">La plancia</a>
+          <a href="#funzioni" data-en="What it does">Cosa fa</a>
+          <a href="#scarica" data-en="Where it is">Dove sta</a>
         </nav>
         <div class="attrezzi">
-          <a class="bottone bottone-pieno" href="#scarica">Installa l'add-on</a>
+          <a class="bottone bottone-pieno" href="#scarica" data-en="Install the add-on"
+            >Installa l'add-on</a
+          >
         </div>
       </div>
     </header>
@@ -50,22 +70,34 @@
       <section class="apertura" id="inizio">
         <div class="limite apertura-dentro">
           <div class="apertura-detto">
-            <p class="occhiello">Per Home Assistant</p>
-            <h1>
+            <p class="occhiello" data-en="For Home Assistant">Per Home Assistant</p>
+            <h1
+              data-en='Your home in one dashboard. From away too, &lt;span class="filo"&gt;without opening anything&lt;/span&gt;.'
+            >
               La tua casa in una plancia. Anche da fuori,
               <span class="filo">senza aprire niente</span>.
             </h1>
-            <p class="guida">
+            <p
+              class="guida"
+              data-en="gdahome is the app for Android and iPhone that shows your home as a dashboard — the real one, with its thirty sections — and that does the three things Home Assistant keeps hidden at the bottom of a menu: pairing a Zigbee device, writing an automation, creating a helper."
+            >
               gdahome è l'app per Android e iPhone che fa vedere la casa come una plancia — quella
               vera, con le sue trenta sezioni — e che sa fare le tre cose che in Home Assistant
               stanno nascoste in fondo a un menu: abbinare un dispositivo Zigbee, scrivere
               un'automazione, creare un aiutante.
             </p>
             <div class="bottoni">
-              <a class="bottone bottone-ambra" href="#plancia">Guarda la plancia</a>
-              <a class="bottone bottone-vuoto" href="#scarica">Installa l'add-on</a>
+              <a class="bottone bottone-ambra" href="#plancia" data-en="Look at the dashboard"
+                >Guarda la plancia</a
+              >
+              <a class="bottone bottone-vuoto" href="#scarica" data-en="Install the add-on"
+                >Installa l'add-on</a
+              >
             </div>
-            <p class="sottobottoni">
+            <p
+              class="sottobottoni"
+              data-en="You pair by scanning a QR code: no address to type, no Home Assistant credentials."
+            >
               Ci si abbina inquadrando un QR code: nessun indirizzo da digitare, nessuna credenziale
               di Home Assistant.
             </p>
@@ -83,6 +115,7 @@
                 width="380"
                 height="760"
                 fetchpriority="high"
+                data-en-alt="The lights of the home in gdahome, room by room: each with its colour, its brightness and its switch."
               />
             </div>
           </div>
@@ -90,9 +123,21 @@
 
         <div class="limite">
           <div class="numeroni">
-            <div class="numerone"><b>30</b><span>sezioni della plancia, già funzionanti</span></div>
-            <div class="numerone"><b>0</b><span>porte da aprire sul router</span></div>
-            <div class="numerone"><b>8</b><span>lettere, e il telefono è abbinato</span></div>
+            <div class="numerone">
+              <b>30</b
+              ><span data-en="dashboard sections, already working"
+                >sezioni della plancia, già funzionanti</span
+              >
+            </div>
+            <div class="numerone">
+              <b>0</b><span data-en="ports to open on the router">porte da aprire sul router</span>
+            </div>
+            <div class="numerone">
+              <b>8</b
+              ><span data-en="letters, and the phone is paired"
+                >lettere, e il telefono è abbinato</span
+              >
+            </div>
           </div>
         </div>
       </section>
@@ -103,9 +148,14 @@
            copertina vuole vedere, non leggere che è bello. -->
       <section id="schermate">
         <div class="limite">
-          <p class="occhiello">Com'è</p>
-          <h2>Una plancia, non un elenco di interruttori.</h2>
-          <p class="guida">
+          <p class="occhiello" data-en="What it looks like">Com'è</p>
+          <h2 data-en="A dashboard, not a list of switches.">
+            Una plancia, non un elenco di interruttori.
+          </h2>
+          <p
+            class="guida"
+            data-en="The rooms, the lights with their colour, the climate with its curves, the reports. These are photographs of the real app: what you see here is what you get when you install it."
+          >
             Le stanze, le luci col colore, il clima con le sue curve, le segnalazioni. Sono
             fotografie dell'app vera: quello che si vede qui è quello che si trova installandola.
           </p>
@@ -119,9 +169,10 @@
                   width="380"
                   height="760"
                   loading="lazy"
+                  data-en-alt="The list of the home's dashboards, with the chosen one standing out."
                 />
               </div>
-              <figcaption>Le plance di casa</figcaption>
+              <figcaption data-en="The home's dashboards">Le plance di casa</figcaption>
             </figure>
             <figure>
               <div class="telefono telefono-piccolo">
@@ -131,9 +182,10 @@
                   width="380"
                   height="760"
                   loading="lazy"
+                  data-en-alt="The home dashboard: the temperature, the alarm, the people and the sections."
                 />
               </div>
-              <figcaption>La plancia di casa</figcaption>
+              <figcaption data-en="The home dashboard">La plancia di casa</figcaption>
             </figure>
             <figure>
               <div class="telefono telefono-piccolo">
@@ -143,9 +195,10 @@
                   width="380"
                   height="760"
                   loading="lazy"
+                  data-en-alt="Climate: the home's thermostats with the temperature you want and the real one."
                 />
               </div>
-              <figcaption>Il clima</figcaption>
+              <figcaption data-en="Climate">Il clima</figcaption>
             </figure>
             <figure>
               <div class="telefono telefono-piccolo">
@@ -155,9 +208,10 @@
                   width="380"
                   height="760"
                   loading="lazy"
+                  data-en-alt="Reports: you write what is wrong and send it, from the app."
                 />
               </div>
-              <figcaption>Le segnalazioni</figcaption>
+              <figcaption data-en="Reports">Le segnalazioni</figcaption>
             </figure>
           </div>
         </div>
@@ -166,9 +220,14 @@
       <!-- ── Come funziona ──────────────────────────────────────────────── -->
       <section id="come">
         <div class="limite">
-          <p class="occhiello">Come ci si arriva</p>
-          <h2>La casa chiama fuori. È tutto il punto.</h2>
-          <p class="guida">
+          <p class="occhiello" data-en="How you get there">Come ci si arriva</p>
+          <h2 data-en="Your home calls out. That is the whole point.">
+            La casa chiama fuori. È tutto il punto.
+          </h2>
+          <p
+            class="guida"
+            data-en="There is no port to open on the router, no public address to have, no VPN to install. The add-on opens a connection to the relay itself and keeps it open, and the phones arrive from that side."
+          >
             Non c'è nessuna porta da aprire sul router, nessun indirizzo pubblico da avere, nessuna
             VPN da installare. Il ponte apre lui un filo verso il centralino e lo tiene aperto, e i
             telefoni arrivano da quella parte.
@@ -176,7 +235,10 @@
 
           <figure class="strada appare">
             <svg viewBox="0 0 960 320" role="img" aria-labelledby="titolo-strada">
-              <title id="titolo-strada">
+              <title
+                id="titolo-strada"
+                data-en="The phone reaches the add-on by two routes: at home directly, from away through the relay. The add-on talks to Home Assistant, and it is the add-on that opens the connection to the relay: both arrows towards the relay start from outside it."
+              >
                 Il telefono raggiunge il ponte per due strade: in casa direttamente, da fuori
                 passando dal centralino. Il ponte parla con Home Assistant, ed è lui ad aprire il
                 filo verso il centralino: le frecce verso il centralino partono tutte e due da fuori
@@ -248,10 +310,18 @@
                 font-size="17"
                 font-weight="700"
                 fill="var(--testo)"
+                data-en="the relay"
               >
                 il centralino
               </text>
-              <text x="480" y="81" text-anchor="middle" font-size="13" fill="var(--testo-lieve)">
+              <text
+                x="480"
+                y="81"
+                text-anchor="middle"
+                font-size="13"
+                fill="var(--testo-lieve)"
+                data-en="it routes, and can read nothing"
+              >
                 instrada, e non può leggere niente
               </text>
 
@@ -272,13 +342,28 @@
                 font-size="17"
                 font-weight="700"
                 fill="var(--testo)"
+                data-en="the app"
               >
                 l'app
               </text>
-              <text x="121" y="209" text-anchor="middle" font-size="13" fill="var(--testo-lieve)">
+              <text
+                x="121"
+                y="209"
+                text-anchor="middle"
+                font-size="13"
+                fill="var(--testo-lieve)"
+                data-en="Android and iPhone"
+              >
                 Android e iPhone
               </text>
-              <text x="121" y="229" text-anchor="middle" font-size="12" fill="var(--testo-lieve)">
+              <text
+                x="121"
+                y="229"
+                text-anchor="middle"
+                font-size="12"
+                fill="var(--testo-lieve)"
+                data-en="token + key, revocable"
+              >
                 segno + chiave, revocabili
               </text>
 
@@ -300,13 +385,28 @@
                 font-size="17"
                 font-weight="700"
                 fill="var(--testo)"
+                data-en="the add-on"
               >
                 il ponte
               </text>
-              <text x="645" y="209" text-anchor="middle" font-size="13" fill="var(--testo-lieve)">
+              <text
+                x="645"
+                y="209"
+                text-anchor="middle"
+                font-size="13"
+                fill="var(--testo-lieve)"
+                data-en="an add-on, at home"
+              >
                 un add-on, in casa
               </text>
-              <text x="645" y="229" text-anchor="middle" font-size="12" fill="var(--testo-lieve)">
+              <text
+                x="645"
+                y="229"
+                text-anchor="middle"
+                font-size="12"
+                fill="var(--testo-lieve)"
+                data-en="the secret stays here"
+              >
                 il segreto non esce da qui
               </text>
 
@@ -349,13 +449,28 @@
                 font-size="12.5"
                 font-weight="700"
                 fill="var(--azzurro)"
+                data-en="at home: straight there, 192.168.1.50:8098"
               >
                 in casa: dritto, 192.168.1.50:8098
               </text>
-              <text x="202" y="116" text-anchor="end" font-size="12.5" fill="var(--testo-lieve)">
+              <text
+                x="202"
+                y="116"
+                text-anchor="end"
+                font-size="12.5"
+                fill="var(--testo-lieve)"
+                data-en="from away"
+              >
                 da fuori
               </text>
-              <text x="662" y="134" font-size="12.5" font-weight="700" fill="var(--ambra-scura)">
+              <text
+                x="662"
+                y="134"
+                font-size="12.5"
+                font-weight="700"
+                fill="var(--ambra-scura)"
+                data-en="the home calls out"
+              >
                 la casa chiama fuori
               </text>
 
@@ -367,11 +482,20 @@
                 stroke-width="1.5"
                 stroke-dasharray="4 6"
               />
-              <text x="383" y="308" text-anchor="middle" font-size="12.5" fill="var(--testo-lieve)">
+              <text
+                x="383"
+                y="308"
+                text-anchor="middle"
+                font-size="12.5"
+                fill="var(--testo-lieve)"
+                data-en="between the phone and the home: encrypted end to end"
+              >
                 fra il telefono e la casa: cifrato punta a punta
               </text>
             </svg>
-            <figcaption>
+            <figcaption
+              data-en="Between the phone and the home there is a key exchange that goes through the relay without the relay getting anything out of it, and from then on every message is encrypted end to end. It is not a promise: it is a test that records everything crossing the relay and checks there is nothing readable inside."
+            >
               Fra il telefono e la casa c'è uno scambio di chiavi che passa dal centralino senza che
               lui ne ricavi niente, e da lì in poi ogni messaggio è cifrato punta a punta. Non è una
               promessa: è una prova che registra tutto quello che lo attraversa e controlla che non
@@ -380,7 +504,9 @@
           </figure>
 
           <ul class="tre-strade">
-            <li>
+            <li
+              data-en="&lt;b&gt;Three routes, one home&lt;/b&gt; &lt;span&gt;Which one works depends on where the phone is right now, and it changes while the app is open. The app asks them all at once and keeps the first that answers — at every reconnection, not once at startup.&lt;/span&gt;"
+            >
               <b>Tre strade, una casa sola</b>
               <span
                 >Quale funziona dipende da dove sta il telefono adesso, e cambia mentre l'app è
@@ -388,11 +514,15 @@
                 riconnessione, non una volta all'avvio.</span
               >
             </li>
-            <li>
+            <li
+              data-en="&lt;b&gt;At home the direct route always wins&lt;/b&gt; &lt;span&gt;Otherwise every command would go round the world to travel three metres.&lt;/span&gt;"
+            >
               <b>In casa vince sempre la strada diretta</b>
               <span>Se no ogni comando farebbe il giro del mondo per arrivare a tre metri.</span>
             </li>
-            <li>
+            <li
+              data-en="&lt;b&gt;The relay is gdahome's&lt;/b&gt; &lt;span&gt;It runs on a machine of ours, and there is nothing to set up and nothing to pay. Whoever prefers their own turns one on: it is the same code, and the live test passes identically against both.&lt;/span&gt;"
+            >
               <b>Il centralino è di gdahome</b>
               <span
                 >Gira su una macchina nostra, e non c'è niente da mettere in piedi né da pagare. Chi
@@ -407,8 +537,10 @@
               <div class="segno">
                 <img src="statico/oggetti/mie.svg" alt="" width="26" height="26" loading="lazy" />
               </div>
-              <h3>Otto lettere e basta</h3>
-              <p>
+              <h3 data-en="Eight letters, that is all">Otto lettere e basta</h3>
+              <p
+                data-en="No address, no Home Assistant credentials. You scan a QR code — or type eight letters — and the phone gets &lt;b&gt;a token of its own&lt;/b&gt;, good only for that add-on and that home, and revoked with one button."
+              >
                 Niente indirizzo, niente credenziali di Home Assistant. Si inquadra un QR code — o
                 si battono otto lettere — e il telefono riceve <b>un segno suo</b>, che vale solo
                 per quel ponte e per quella casa, e si stacca con un bottone.
@@ -424,8 +556,10 @@
                   loading="lazy"
                 />
               </div>
-              <h3>Il segreto resta nell'add-on</h3>
-              <p>
+              <h3 data-en="The secret stays in the add-on">Il segreto resta nell'add-on</h3>
+              <p
+                data-en="The Supervisor token never leaves the add-on: neither the page nor the phone ever sees it. A long-lived token pasted by hand lives for years and is worth everything; this one is worth one home, and it can be revoked."
+              >
                 Il token del Supervisor non esce mai dal ponte: né la pagina né il telefono lo
                 vedono mai. Un segno lungo incollato a mano vive anni e vale tutto; questo vale una
                 casa, e si revoca.
@@ -441,8 +575,10 @@
                   loading="lazy"
                 />
               </div>
-              <h3>Più case, senza riabbinare</h3>
-              <p>
+              <h3 data-en="More homes, without pairing again">Più case, senza riabbinare</h3>
+              <p
+                data-en="Every home with its own token, and you move from one to the other from the menu. Your parents' home, the one by the sea, the one belonging to whoever asked you for a hand: same app, same phone."
+              >
                 Ogni casa col suo segno, e si passa dall'una all'altra dal menu. La casa dei
                 genitori, quella al mare, quella di chi ti ha chiesto una mano: stesse app, stesso
                 telefono.
@@ -455,15 +591,23 @@
       <!-- ── La plancia, da toccare ─────────────────────────────────────── -->
       <section id="plancia">
         <div class="limite">
-          <p class="invito">Toccala: è viva</p>
-          <h2>Questa non è una riproduzione della plancia. È la plancia.</h2>
-          <p class="guida">
+          <p class="invito" data-en="Touch it: it is alive">Toccala: è viva</p>
+          <h2 data-en="This is not a mock-up of the dashboard. It is the dashboard.">
+            Questa non è una riproduzione della plancia. È la plancia.
+          </h2>
+          <p
+            class="guida"
+            data-en="Running below is &lt;b&gt;the gdahome dashboard&lt;/b&gt;: the very files that sit inside the add-on, not a drawing that looks like them. The thirty entries in the bar are its own, the cards are its own, the portraits of the people are its own. Turn a light on and you see it come on; open a page and you find what you would find at home."
+          >
             Qui sotto gira <b>la plancia di gdahome</b>: gli stessi file che stanno dentro l'add-on,
             non un disegno che gli somiglia. Le trenta voci della barra sono le sue, le tessere sono
             le sue, i ritratti delle persone sono i suoi. Accendi una luce e la vedi accendersi;
             apri una pagina e ci trovi quello che ci troveresti in casa.
           </p>
-          <p class="guida">
+          <p
+            class="guida"
+            data-en="What fills it is the demo home of the test suite — two hundred and thirty-five entities, seven rooms, a solar array with its battery, a car, a swimming pool: the same ones the project's tests run against."
+          >
             Riempirla è la casa demo del collaudo — duecentotrentacinque entità, sette stanze, un
             fotovoltaico con la batteria, un'auto, una piscina: le stesse contro cui girano le prove
             del progetto.
@@ -472,11 +616,11 @@
           <figure class="telaio appare">
             <div class="telaio-cima">
               <span class="telaio-pallini" aria-hidden="true"></span>
-              <span class="telaio-nome">
+              <span class="telaio-nome" data-en="gdahome — Demo home">
                 <img src="statico/marchio.png" alt="" width="20" height="20" />
                 gdahome — Casa demo
               </span>
-              <span class="telaio-spia">dentro casa · cifrato</span>
+              <span class="telaio-spia" data-en="at home · encrypted">dentro casa · cifrato</span>
             </div>
             <!-- La cartella si chiama cosi' e non si puo' cambiare, anche se il
                  nome non si usa piu' da nessuna parte: la plancia ricava da se'
@@ -489,6 +633,8 @@
               src="dashboardmodern_static/legacy/dashboard.html"
               title="La plancia di gdahome, con dentro la casa demo"
               loading="lazy"
+              data-en-src="dashboardmodern_static/legacy/dashboard-en.html"
+              data-en-title="The gdahome dashboard, with the demo home inside it"
             ></iframe>
             <!-- Se la plancia non fosse arrivata sul server, qui resterebbe un
                  riquadro vuoto alto seicento pixel in mezzo alla pagina, e
@@ -498,15 +644,23 @@
                  leggersi lo stesso — e nasconderlo e' compito di chi lo
                  mostra, non il contrario. -->
             <div class="telaio-senza" hidden>
-              <p><b>La plancia non è arrivata su questo server.</b></p>
-              <p>
+              <p data-en="&lt;b&gt;The dashboard did not make it onto this server.&lt;/b&gt;">
+                <b>La plancia non è arrivata su questo server.</b>
+              </p>
+              <p
+                data-en="The real dashboard runs in here, and in this copy of the files it is missing. You can see it anyway: it is the same one in the photographs above, and it is the one the app opens on the phone."
+              >
                 Qui dentro gira la plancia per davvero, e in questa copia dei file manca. La si vede
                 comunque: è la stessa che sta nelle fotografie qui sopra, ed è quella che l'app apre
                 sul telefono.
               </p>
-              <a class="bottone bottone-vuoto" href="#scarica">Vai a come si prende</a>
+              <a class="bottone bottone-vuoto" href="#scarica" data-en="Go to how to get it"
+                >Vai a come si prende</a
+              >
             </div>
-            <figcaption>
+            <figcaption
+              data-en="In the app it sits exactly like this: in a frame, served by the add-on. Here the frame is a page instead of a phone, and behind it there is a pretend home instead of a real one."
+            >
               Nell'app sta esattamente così: in un riquadro, servita dall'add-on. Qui il riquadro è
               una pagina invece che un telefono, e dietro invece della casa c'è una casa finta.
             </figcaption>
@@ -514,8 +668,10 @@
 
           <div class="carte carte-strette">
             <article class="carta">
-              <h3>Come fa a girare senza una casa</h3>
-              <p>
+              <h3 data-en="How it runs without a home">Come fa a girare senza una casa</h3>
+              <p
+                data-en="A dashboard wants a Home Assistant behind it, and a website has none. But the dashboard has &lt;b&gt;a hook made for this&lt;/b&gt;: if it finds a WebSocket already put in the page, it uses that instead of opening one. It is the same hook the app on the phone uses to sew its own connection onto it. On this side of the hook, here, there is a pretend Home Assistant written in three hundred lines."
+              >
                 Una plancia vuole un Home Assistant dietro, e un sito non ce l'ha. Ma la plancia ha
                 <b>un gancio fatto apposta</b>: se trova un WebSocket già messo nella pagina, usa
                 quello invece di aprirne uno. È lo stesso gancio con cui l'app sul telefono le cuce
@@ -524,8 +680,10 @@
               </p>
             </article>
             <article class="carta">
-              <h3>Cosa è finto, e va detto</h3>
-              <p>
+              <h3 data-en="What is pretend, and has to be said">Cosa è finto, e va detto</h3>
+              <p
+                data-en="On the other side there is no home: the states sit in a map in the page. Pressing a switch changes it, and the change comes back the way it would come back from Home Assistant — so the dashboard really does move — but nothing turns on anywhere, and reloading the page puts everything back as it was."
+              >
                 Dall'altra parte non c'è nessuna casa: gli stati stanno in una mappa nella pagina.
                 Premere un interruttore la cambia, e il cambiamento torna indietro come tornerebbe
                 da Home Assistant — quindi la plancia si muove per davvero — ma non si accende
@@ -539,9 +697,14 @@
       <!-- ── Cosa fa ────────────────────────────────────────────────────── -->
       <section id="funzioni">
         <div class="limite">
-          <p class="occhiello">Cosa c'è, e cosa no</p>
-          <h2>La plancia non la rifacciamo: la mostriamo.</h2>
-          <p class="guida">
+          <p class="occhiello" data-en="What is there, and what is not">Cosa c'è, e cosa no</p>
+          <h2 data-en="We are not rebuilding the dashboard: we are showing it.">
+            La plancia non la rifacciamo: la mostriamo.
+          </h2>
+          <p
+            class="guida"
+            data-en="The app does not rewrite the dashboard. It shows the real one, with its cards, its dialogs and its configuration, in a frame inside the app. The add-on has the files: in Home Assistant there is no integration to install."
+          >
             L'app non riscrive la dashboard. Mostra quella vera, con le sue tessere, le sue finestre
             e la sua configurazione, in un riquadro dentro l'app. I file li ha l'add-on: in Home
             Assistant non serve installare nessuna integrazione.
@@ -549,37 +712,84 @@
 
           <div class="carte">
             <article class="carta appare">
-              <h3>C'è già, e funziona</h3>
+              <h3 data-en="Already here, and working">C'è già, e funziona</h3>
               <ul class="elenco-segni">
-                <li>Il ponte: abbinamento, revoca, filo verso Home Assistant</li>
-                <li>Otto lettere e basta: nessun indirizzo, nessuna password</li>
-                <li>Il centralino: da fuori casa senza configurare niente</li>
-                <li>Cifrato punta a punta, e una prova che lo dimostra</li>
-                <li>Più case, ognuna col suo segno</li>
-                <li>Tre strade per la stessa casa, scelte da sole</li>
-                <li>Il filo si rialza da solo e rifà le sottoscrizioni cadute</li>
-                <li>La plancia dentro l'app, quella vera</li>
-                <li>I dispositivi: tutte le entità per dominio, con i comandi</li>
-                <li>Segnalazioni: arrivano a chi fa l'app come issue di GitHub</li>
-                <li>La chat di assistenza, che non passa da GitHub: la fa il ponte</li>
-                <li>
+                <li data-en="The add-on: pairing, revoking, the connection to Home Assistant">
+                  Il ponte: abbinamento, revoca, filo verso Home Assistant
+                </li>
+                <li data-en="Eight letters, that is all: no address, no password">
+                  Otto lettere e basta: nessun indirizzo, nessuna password
+                </li>
+                <li data-en="The relay: from away without configuring anything">
+                  Il centralino: da fuori casa senza configurare niente
+                </li>
+                <li data-en="Encrypted end to end, and a test that proves it">
+                  Cifrato punta a punta, e una prova che lo dimostra
+                </li>
+                <li data-en="More homes, each with its own token">
+                  Più case, ognuna col suo segno
+                </li>
+                <li data-en="Three routes to the same home, picked by themselves">
+                  Tre strade per la stessa casa, scelte da sole
+                </li>
+                <li
+                  data-en="The connection gets back up by itself and redoes the subscriptions it lost"
+                >
+                  Il filo si rialza da solo e rifà le sottoscrizioni cadute
+                </li>
+                <li data-en="The dashboard inside the app, the real one">
+                  La plancia dentro l'app, quella vera
+                </li>
+                <li data-en="The devices: every entity by domain, with its controls">
+                  I dispositivi: tutte le entità per dominio, con i comandi
+                </li>
+                <li data-en="Reports: they reach whoever makes the app as GitHub issues">
+                  Segnalazioni: arrivano a chi fa l'app come issue di GitHub
+                </li>
+                <li
+                  data-en="The support chat, which does not go through GitHub: the add-on runs it"
+                >
+                  La chat di assistenza, che non passa da GitHub: la fa il ponte
+                </li>
+                <li
+                  data-en="&lt;b&gt;More than one dashboard&lt;/b&gt;: each with its own sections and its own rooms, and you pick them from the bar"
+                >
                   <b>Più di una plancia</b>: ognuna con le sue sezioni e le sue stanze, e si
                   scelgono dalla barra
                 </li>
-                <li>Una voce per plancia fra le «Plance» di Home Assistant</li>
-                <li>gdahome anche in un browser, dal link dell'add-on</li>
+                <li data-en="One entry per dashboard among Home Assistant’s “Dashboards”">
+                  Una voce per plancia fra le «Plance» di Home Assistant
+                </li>
+                <li data-en="gdahome in a browser too, from the add-on's link">
+                  gdahome anche in un browser, dal link dell'add-on
+                </li>
               </ul>
             </article>
             <article class="carta appare">
-              <h3>Sta arrivando</h3>
+              <h3 data-en="On the way">Sta arrivando</h3>
               <ul class="elenco-segni in-arrivo">
-                <li>Gli aiutanti: i sette classici, nativi <b>(fase 2)</b></li>
-                <li>Zigbee: ZHA <b>e</b> Zigbee2MQTT <b>(fase 3)</b></li>
-                <li>Il mago delle automazioni <b>(fase 4)</b></li>
-                <li>Notifiche e impronta digitale <b>(fase 5)</b></li>
-                <li>La pubblicazione sui negozi <b>(fase 6)</b></li>
+                <li data-en="The helpers: the classic seven, native &lt;b&gt;(stage 2)&lt;/b&gt;">
+                  Gli aiutanti: i sette classici, nativi <b>(fase 2)</b>
+                </li>
+                <li
+                  data-en="Zigbee: ZHA &lt;b&gt;and&lt;/b&gt; Zigbee2MQTT &lt;b&gt;(stage 3)&lt;/b&gt;"
+                >
+                  Zigbee: ZHA <b>e</b> Zigbee2MQTT <b>(fase 3)</b>
+                </li>
+                <li data-en="The automation wizard &lt;b&gt;(stage 4)&lt;/b&gt;">
+                  Il mago delle automazioni <b>(fase 4)</b>
+                </li>
+                <li data-en="Notifications and fingerprint unlock &lt;b&gt;(stage 5)&lt;/b&gt;">
+                  Notifiche e impronta digitale <b>(fase 5)</b>
+                </li>
+                <li data-en="Publishing on the stores &lt;b&gt;(stage 6)&lt;/b&gt;">
+                  La pubblicazione sui negozi <b>(fase 6)</b>
+                </li>
               </ul>
-              <p style="margin-top: 18px">
+              <p
+                style="margin-top: 18px"
+                data-en="The three new features exist nowhere, so writing them natively costs not a minute more. The sections that do exist are shown in a frame; the new ones are written from scratch."
+              >
                 Le tre funzioni nuove non esistono da nessuna parte, quindi scriverle native non
                 costa un minuto in più. Le sezioni che esistono si mostrano in un riquadro; quelle
                 nuove si scrivono da capo.
@@ -592,9 +802,14 @@
       <!-- ── Scarica ────────────────────────────────────────────────────── -->
       <section id="scarica">
         <div class="limite">
-          <p class="occhiello">Dove sta</p>
-          <h2>L'add-on c'è. L'app sta arrivando.</h2>
-          <p class="guida">
+          <p class="occhiello" data-en="Where it is">Dove sta</p>
+          <h2 data-en="The add-on is here. The app is on its way.">
+            L'add-on c'è. L'app sta arrivando.
+          </h2>
+          <p
+            class="guida"
+            data-en="Inside Home Assistant gdahome installs today, from the add-on store. The app is &lt;b&gt;in closed testing&lt;/b&gt;, and goes to whoever is testing it: on the Play Store for everyone in two weeks, and on iPhone after that. What it will do you can see above — the dashboard on this page is its own, and you can move around inside it."
+          >
             Dentro Home Assistant gdahome si installa oggi, dal negozio degli add-on. L'app invece è
             <b>in prova chiusa</b>, e va a chi la sta provando: sul Play Store per tutti fra due
             settimane, e su iPhone a seguire. Quello che farà lo si vede qui sopra — la plancia in
@@ -610,13 +825,15 @@
               <div class="segno">
                 <img src="statico/oggetti/home.svg" alt="" width="28" height="28" loading="lazy" />
               </div>
-              <h3>1 · L'add-on</h3>
-              <p>
+              <h3 data-en="1 · The add-on">1 · L'add-on</h3>
+              <p
+                data-en="It is called &lt;b&gt;gdahome&lt;/b&gt;, and it installs &lt;b&gt;from the store&lt;/b&gt; like any other add-on: Settings → Add-ons → Store → Repositories, you paste the address of this repository, and it appears in the list. From then on it updates itself."
+              >
                 Si chiama <b>gdahome</b>, e si installa <b>dal negozio</b> come qualunque altro
                 add-on: Impostazioni → Add-on → Negozio → Archivi, si incolla l'indirizzo di questa
                 repository, e nell'elenco compare. Da lì in poi si aggiorna da sé.
               </p>
-              <span class="come">Come si installa →</span>
+              <span class="come" data-en="How to install it →">Come si installa →</span>
             </a>
 
             <a
@@ -633,18 +850,20 @@
                   loading="lazy"
                 />
               </div>
-              <h3>Il centralino</h3>
-              <p>
+              <h3 data-en="The relay">Il centralino</h3>
+              <p
+                data-en="It is only for getting in from away, and it goes through nobody: it runs on a gdahome machine, the same one as this site. It lets a phone and its home meet without understanding a thing they say to each other — what goes through is already encrypted when it arrives, and the relay has no keys."
+              >
                 Serve solo per entrare da fuori casa, e non passa da nessuno: gira su una macchina
                 di gdahome, la stessa di questo sito. Fa incontrare un telefono e la sua casa senza
                 capire niente di quello che si dicono — quello che passa è già cifrato quando
                 arriva, e lui non ha le chiavi.
               </p>
-              <span class="come">Com'è fatto →</span>
+              <span class="come" data-en="How it is built →">Com'è fatto →</span>
             </a>
 
             <div class="scarico spento appare">
-              <span class="fra-poco">in prova</span>
+              <span class="fra-poco" data-en="in testing">in prova</span>
               <div class="segno">
                 <img
                   src="statico/oggetti/widget.svg"
@@ -654,15 +873,17 @@
                   loading="lazy"
                 />
               </div>
-              <h3>2 · L'app, per Android</h3>
-              <p>
+              <h3 data-en="2 · The app, for Android">2 · L'app, per Android</h3>
+              <p
+                data-en="&lt;b&gt;In closed testing&lt;/b&gt;, and it goes to whoever is testing it. On the &lt;b&gt;Play Store for everyone in two weeks&lt;/b&gt;."
+              >
                 <b>In prova chiusa</b>, e va a chi la sta provando. Sul
                 <b>Play Store per tutti fra due settimane</b>.
               </p>
             </div>
 
             <div class="scarico spento appare">
-              <span class="fra-poco">prossimamente</span>
+              <span class="fra-poco" data-en="coming soon">prossimamente</span>
               <div class="segno">
                 <img
                   src="statico/oggetti/macchine.svg"
@@ -672,8 +893,10 @@
                   loading="lazy"
                 />
               </div>
-              <h3>3 · L'app, per iPhone</h3>
-              <p>
+              <h3 data-en="3 · The app, for iPhone">3 · L'app, per iPhone</h3>
+              <p
+                data-en="&lt;b&gt;Coming soon.&lt;/b&gt; The code is the same — it is Flutter, one app for both phones: what is missing is the signing and the distribution, not the app."
+              >
                 <b>Prossimamente.</b> Il codice è lo stesso — è Flutter, una app sola per tutti e
                 due i telefoni: quello che manca è la firma e la distribuzione, non l'app.
               </p>
@@ -693,13 +916,15 @@
                   />
                 </svg>
               </div>
-              <h3>La repository</h3>
-              <p>
+              <h3 data-en="The repository">La repository</h3>
+              <p
+                data-en="The whole code, and it is &lt;b&gt;public&lt;/b&gt;: the add-on, the relay, the app, the tools, and the tests that run over them at every change. &lt;b&gt;Code → Download ZIP&lt;/b&gt;, or a &lt;code&gt;git clone&lt;/code&gt;."
+              >
                 Il codice per intero, ed è <b>pubblica</b>: il ponte, il centralino, l'app, gli
                 strumenti, e le prove che ci girano sopra a ogni modifica.
                 <b>Code → Download ZIP</b>, o un <code>git clone</code>.
               </p>
-              <span class="come">Vai alla repository →</span>
+              <span class="come" data-en="Go to the repository →">Vai alla repository →</span>
             </a>
           </div>
         </div>
@@ -708,15 +933,17 @@
 
     <footer class="fondo-pagina">
       <div class="limite">
-        <p>
+        <p
+          data-en="gdahome — the app for your home: the dashboard, the add-on, and the controls Home Assistant keeps hidden. The tests run with no network, no Home Assistant and no phone."
+        >
           gdahome — l'app di casa: la plancia, il ponte, e i comandi che in Home Assistant stanno
           nascosti. Le prove girano senza rete, senza Home Assistant e senza telefono.
         </p>
-        <nav aria-label="Link utili">
-          <a href="#come">Come funziona</a>
-          <a href="#plancia">La plancia</a>
-          <a href="#scarica">Dove sta</a>
-          <a href="privacy.html">Privacy</a>
+        <nav aria-label="Link utili" data-en-aria-label="Useful links">
+          <a href="#come" data-en="How it works">Come funziona</a>
+          <a href="#plancia" data-en="The dashboard">La plancia</a>
+          <a href="#scarica" data-en="Where it is">Dove sta</a>
+          <a href="privacy.html" data-en="Privacy">Privacy</a>
           <a href="https://github.com/danigio15/gdahomeapp" rel="noopener">GitHub</a>
         </nav>
       </div>

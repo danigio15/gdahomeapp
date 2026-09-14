@@ -1,8 +1,8 @@
 /* Le poche cose che il sito fa da sé.
  *
- * Sono due, e nessuna è indispensabile: la pagina si legge tutta anche senza
- * JavaScript. L'ombra sotto la barra quando si scende, e le schede che
- * compaiono salendo.
+ * Sono tre, e due non sono indispensabili: la pagina si legge tutta anche
+ * senza JavaScript. La lingua, l'ombra sotto la barra quando si scende, e le
+ * schede che compaiono salendo.
  *
  * Quello che conta — la plancia — non sta qui: sta nel riquadro, ed è un
  * documento suo con la sua vita.
@@ -10,6 +10,53 @@
 
 (function () {
   "use strict";
+
+  /* ── Le due lingue ────────────────────────────────────────────────────
+   *
+   * Le parole inglesi stanno **nella pagina**, in `data-en` accanto alle
+   * italiane: si rileggono una accanto all'altra, e non c'è una seconda copia
+   * di `index.html` da tenere allineata. È lo stesso modo della console di
+   * gdahome in Home Assistant (`ponte/console/console.js`), e la stessa
+   * regola dell'app (`app/lib/parole.dart`): si prende la prima lingua del
+   * browser che sappiamo dire, e chi non ha nessuna delle due legge in
+   * inglese.
+   *
+   * L'italiano sta nella pagina e l'inglese si mette sopra, non il contrario:
+   * senza JavaScript — o prima che questo arrivi — la pagina è già scritta in
+   * una lingua intera, e chi la legge non vede mai un buco.
+   *
+   * `data-en` porta il contenuto, col suo `<b>` dentro se in quella frase
+   * c'è; `data-en-<attributo>` porta un attributo — `data-en-alt` riempie
+   * `alt`, `data-en-content` riempie `content` di una `<meta>`. */
+  var INGLESE = (function () {
+    var quali =
+      navigator.languages && navigator.languages.length
+        ? navigator.languages
+        : [navigator.language || ""];
+    for (var q = 0; q < quali.length; q += 1) {
+      var codice = String(quali[q]).slice(0, 2).toLowerCase();
+      if (codice === "it") return false;
+      if (codice === "en") return true;
+    }
+    return true;
+  })();
+
+  if (INGLESE) {
+    document.documentElement.lang = "en";
+    var tutti = document.querySelectorAll("[data-en]");
+    for (var n = 0; n < tutti.length; n += 1) {
+      tutti[n].innerHTML = tutti[n].getAttribute("data-en");
+    }
+    var ovunque = document.querySelectorAll("*");
+    for (var o = 0; o < ovunque.length; o += 1) {
+      var nodo = ovunque[o];
+      for (var a = nodo.attributes.length - 1; a >= 0; a -= 1) {
+        var nome = nodo.attributes[a].name;
+        if (nome.indexOf("data-en-") !== 0) continue;
+        nodo.setAttribute(nome.slice("data-en-".length), nodo.attributes[a].value);
+      }
+    }
+  }
 
   /* ── Se la plancia non c'è ────────────────────────────────────────────
    *

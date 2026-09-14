@@ -3,16 +3,18 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Privacy di gdahome</title>
+    <title data-en="gdahome privacy">Privacy di gdahome</title>
     <meta
       name="description"
       content="Quali dati ci sono di mezzo in gdahome, dove stanno e chi li può leggere. In italiano e senza giri."
+      data-en-content="Which data gdahome involves, where it sits and who can read it. Plainly, and without going round in circles."
     />
     <link rel="icon" href="gdahome.png" />
-    <meta property="og:title" content="Privacy di gdahome" />
+    <meta property="og:title" content="Privacy di gdahome" data-en-content="gdahome privacy" />
     <meta
       property="og:description"
       content="I dati della tua casa restano in casa tua: non c'è nessun server che li raccolga."
+      data-en-content="Your home's data stays in your home: there is no server collecting it."
     />
     <meta property="og:image" content="gdahome.png" />
     <!-- La gemella di docs/PRIVACY.md: stesso testo, stesse sezioni, stessa
@@ -31,12 +33,16 @@
         <a class="indietro" href="/"
           ><img src="gdahome.png" alt="" width="40" height="40" />gdahome</a
         >
-        <h1>Privacy</h1>
-        <p class="sottotitolo">Ultimo aggiornamento: 13 settembre 2026.</p>
+        <h1 data-en="Privacy">Privacy</h1>
+        <p class="sottotitolo" data-en="Last updated: 13 September 2026.">
+          Ultimo aggiornamento: 13 settembre 2026.
+        </p>
       </header>
 
       <section>
-        <p>
+        <p
+          data-en="gdahome is the home app that opens the Home Assistant dashboard on your phone. This page says, plainly and without going round in circles, &lt;strong&gt;which data is involved, where it sits and who can read it&lt;/strong&gt;. It is the same thing the Play Store asks you to declare, and it is worth reading even if you have no intention of declaring anything to anyone."
+        >
           gdahome è l'app di casa che apre la plancia di Home Assistant sul telefono. Questa pagina
           dice, in italiano e senza giri,
           <strong>quali dati ci sono di mezzo, dove stanno e chi li può leggere</strong>. È la
@@ -46,71 +52,105 @@
       </section>
 
       <section>
-        <h2>La regola che viene prima di tutte</h2>
-        <p>
+        <h2 data-en="The rule that comes before all the others">
+          La regola che viene prima di tutte
+        </h2>
+        <p
+          data-en="&lt;strong&gt;Your home's data stays in your home.&lt;/strong&gt; gdahome has no server collecting it, no account to create, and there is nowhere for it to end up to be looked at. The lights, the temperatures, the cameras, the people: those sit in your Home Assistant, and the app asks it for them."
+        >
           <strong>I dati della tua casa restano in casa tua.</strong> gdahome non ha nessun server
           che li raccolga, non ha un account da fare, e non c'è nessun posto dove finiscano per
           essere guardati. Le luci, le temperature, le telecamere, le persone: quelle stanno nel tuo
           Home Assistant, e l'app le chiede a lui.
         </p>
-        <p>
+        <p
+          data-en="Whoever develops gdahome does not see your home. It is not a promise of good will: there simply is no place to look at it from."
+        >
           Chi sviluppa gdahome non vede la tua casa. Non è una promessa di buona volontà: non c'è
           proprio il posto dove guardarla.
         </p>
       </section>
 
       <section>
-        <h2>Cosa c'è sul telefono</h2>
+        <h2 data-en="What is on the phone">Cosa c'è sul telefono</h2>
         <ul>
-          <li>
+          <li
+            data-en="&lt;strong&gt;The home's token&lt;/strong&gt;, one per paired home. It is what gets you in, it sits in the phone's keychain and it does not leave. Uninstall the app and it goes with it; unpair the phone from the add-on's page and it stops being valid."
+          >
             <strong>Il segno di riconoscimento della casa</strong>, uno per casa abbinata. Serve a
             entrare, sta nel portachiavi del telefono e non esce da lì. Si disinstalla l'app, se ne
             va con lei; si stacca il telefono dalla console dell'add-on e smette di valere.
           </li>
-          <li><strong>L'indirizzo della casa</strong> e il nome che le hai dato.</li>
-          <li>
+          <li data-en="&lt;strong&gt;The home's address&lt;/strong&gt; and the name you gave it.">
+            <strong>L'indirizzo della casa</strong> e il nome che le hai dato.
+          </li>
+          <li
+            data-en="&lt;strong&gt;What the dashboard keeps to itself&lt;/strong&gt; — the theme, the palette, the bar — in the storage of the browser inside the app."
+          >
             <strong>Quello che la plancia si tiene per sé</strong> — il tema, la tavolozza, la barra
             — nel deposito del browser interno all'app.
           </li>
         </ul>
-        <p>Niente di tutto questo viene mandato da nessuna parte.</p>
+        <p data-en="None of this is sent anywhere.">
+          Niente di tutto questo viene mandato da nessuna parte.
+        </p>
       </section>
 
       <section>
-        <h2>Cosa passa dal centralino, e solo quando serve</h2>
-        <p>
+        <h2 data-en="What goes through the relay, and only when it has to">
+          Cosa passa dal centralino, e solo quando serve
+        </h2>
+        <p
+          data-en="From away the app cannot knock on Home Assistant directly, so it goes through a &lt;strong&gt;relay&lt;/strong&gt;: a meeting point where the add-on is already waiting. Two things have to be said precisely:"
+        >
           Da fuori casa l'app non può bussare direttamente a Home Assistant, quindi passa da un
           <strong>centralino</strong>: un punto d'incontro dove il ponte è già in attesa. Due cose
           vanno dette con precisione:
         </p>
         <ul>
-          <li>
+          <li
+            data-en="what goes through is &lt;strong&gt;encrypted between the phone and the add-on&lt;/strong&gt;: the relay routes and can read nothing of what passes;"
+          >
             quello che passa è <strong>cifrato fra il telefono e il ponte</strong>: il centralino
             instrada e non può leggere niente di quello che gira;
           </li>
-          <li>il centralino tiene in piedi il collegamento e non conserva il contenuto.</li>
+          <li data-en="the relay keeps the connection up and keeps none of the content.">
+            il centralino tiene in piedi il collegamento e non conserva il contenuto.
+          </li>
         </ul>
-        <p>
+        <p
+          data-en="gdahome's relay is &lt;code&gt;tramite.gdahome.org&lt;/code&gt;. Whoever wants to turns one of their own on — it is in the code, and it is free."
+        >
           Il centralino di gdahome è <code>tramite.gdahome.org</code>. Chi vuole, se ne accende uno
           suo — è nel codice, ed è gratis.
         </p>
       </section>
 
       <section>
-        <h2>Le segnalazioni e la chat di assistenza</h2>
-        <p>
+        <h2 data-en="Reports and the support chat">Le segnalazioni e la chat di assistenza</h2>
+        <p
+          data-en="They are the only thing &lt;strong&gt;you&lt;/strong&gt; can decide to send out, and it happens only when you write it:"
+        >
           Sono l'unica cosa che <strong>tu</strong> puoi decidere di mandare fuori, e succede solo
           quando la scrivi:
         </p>
         <ul>
-          <li>il testo della segnalazione, e le foto o i video che ci alleghi;</li>
-          <li>
+          <li data-en="the text of the report, and the photos or videos you attach to it;">
+            il testo della segnalazione, e le foto o i video che ci alleghi;
+          </li>
+          <li
+            data-en="a few lines on how the app is doing at that moment (version, whether the connection with your home is holding), which is what makes the problem understandable;"
+          >
             qualche riga su come sta l'app in quel momento (versione, se il filo con la casa regge),
             che serve a capire il problema;
           </li>
-          <li>quello che scrivi nella chat di assistenza.</li>
+          <li data-en="what you write in the support chat.">
+            quello che scrivi nella chat di assistenza.
+          </li>
         </ul>
-        <p>
+        <p
+          data-en="They go to whoever maintains gdahome, to answer. They go to nobody else, they are not used to profile anything and they end up in no advertising. If you do not write a report, nothing leaves."
+        >
           Vanno a chi mantiene gdahome, per rispondere. Non vanno a nessun altro, non vengono usate
           per profilare niente e non finiscono in nessuna pubblicità. Se non scrivi una
           segnalazione, non parte niente.
@@ -118,8 +158,10 @@
       </section>
 
       <section>
-        <h2>La fotocamera</h2>
-        <p>
+        <h2 data-en="The camera">La fotocamera</h2>
+        <p
+          data-en="It is for one thing only: &lt;strong&gt;scanning the QR code&lt;/strong&gt; that pairs the phone with the home. The image is neither saved nor sent anywhere — the code is read and that is that. If you prefer, the code can be typed by hand and the camera is not needed."
+        >
           Serve a una cosa sola: <strong>inquadrare il QR code</strong> che abbina il telefono alla
           casa. L'immagine non viene salvata né mandata da nessuna parte — si legge il codice e
           basta. Se preferisci, il codice si batte a mano e la fotocamera non serve.
@@ -127,8 +169,10 @@
       </section>
 
       <section>
-        <h2>Quello che non c'è</h2>
-        <p>
+        <h2 data-en="What is not there">Quello che non c'è</h2>
+        <p
+          data-en="No advertising. No tracking. No account. No collection of data for statistics or profiling. No sale or sharing of data with third parties. No analytics inside the app."
+        >
           Nessuna pubblicità. Nessun tracciamento. Nessun account. Nessuna raccolta di dati per
           statistiche o profilazione. Nessuna vendita o condivisione di dati con terzi. Nessun
           servizio di analisi dentro l'app.
@@ -136,15 +180,19 @@
       </section>
 
       <section>
-        <h2>I bambini</h2>
-        <p>
+        <h2 data-en="Children">I bambini</h2>
+        <p
+          data-en="The app is not aimed at children and collects nothing from anyone, so nothing from them either."
+        >
           L'app non è rivolta ai bambini e non raccoglie niente da nessuno, quindi nemmeno da loro.
         </p>
       </section>
 
       <section>
-        <h2>Cancellare tutto</h2>
-        <p>
+        <h2 data-en="Deleting everything">Cancellare tutto</h2>
+        <p
+          data-en="You uninstall the app: what was on the phone goes with it. From the add-on's page, “Paired phones → Unpair”, that phone's token stops being valid instantly. Reports already sent are deleted by asking from the support chat."
+        >
           Si disinstalla l'app: quello che c'era sul telefono se ne va con lei. Dalla console
           dell'add-on, «Telefoni abbinati → Togli associazione», il segno di quel telefono smette di
           valere all'istante. Le segnalazioni già mandate si cancellano chiedendolo dalla chat di
@@ -153,8 +201,10 @@
       </section>
 
       <section>
-        <h2>Chi risponde</h2>
-        <p>
+        <h2 data-en="Who answers">Chi risponde</h2>
+        <p
+          data-en='gdahome is maintained by danigio15 — &lt;a href="https://github.com/danigio15/gdahomeapp"&gt;github.com/danigio15/gdahomeapp&lt;/a&gt;. For anything about this page, open a report from the app or an issue on the repository.'
+        >
           gdahome è mantenuta da danigio15 —
           <a href="https://github.com/danigio15/gdahomeapp">github.com/danigio15/gdahomeapp</a>. Per
           qualunque cosa su questa pagina, si apre una segnalazione dall'app o una issue sulla
@@ -164,8 +214,10 @@
 
       <footer>
         <div class="dentro" style="padding: 0">
-          <p><a href="/">Torna a gdahome</a></p>
-          <p>
+          <p><a href="/" data-en="Back to gdahome">Torna a gdahome</a></p>
+          <p
+            data-en='The same notice, in the code: &lt;a href="https://github.com/danigio15/gdahomeapp/blob/main/docs/PRIVACY.md"&gt;docs/PRIVACY.md&lt;/a&gt;.'
+          >
             La stessa informativa, nel codice:
             <a href="https://github.com/danigio15/gdahomeapp/blob/main/docs/PRIVACY.md"
               >docs/PRIVACY.md</a

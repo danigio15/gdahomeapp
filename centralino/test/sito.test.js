@@ -32,7 +32,10 @@ test("le pagine ci sono, e hanno un nome", () => {
   for (const quale of PAGINE) {
     const pagina = leggi(quale);
     assert.ok(pagina.length > 500, `«${quale}» e' troppo corta per essere una pagina`);
-    assert.match(pagina, /<title>[^<]+<\/title>/, `«${quale}» non ha un titolo`);
+    /* `<title ...>`: il titolo porta la sua traduzione inglese in un
+       attributo (`data-en`), quindi fra il nome del tag e la parentesi ci puo'
+       stare altro. */
+    assert.match(pagina, /<title[^>]*>[^<]+<\/title>/, `«${quale}» non ha un titolo`);
   }
 });
 
@@ -51,7 +54,16 @@ test("niente viene da fuori: nessun carattere, nessuna libreria, nessun contator
    * prettier lo apre su piu' righe — e l'`href` finisce su una riga dove di
    * `<a` non c'e' traccia. La prova lo leggeva come un font scaricato da
    * Google, e falliva su un link su cui si clicca. */
-  const senzaCollegamenti = (pagina) => pagina.replace(/<a\s[^>]*>/g, "");
+  /* Le parole inglesi della pagina stanno in un attributo `data-en`, e in
+     qualche frase dentro c'e' un collegamento: li' il `<a ...>` sta scritto
+     con le entita' — `&lt;a href="..."&gt;` — perche' quello e' il contenuto
+     di un attributo. Va tolto di mezzo come l'altro: e' un collegamento su cui
+     si clicca, non una cosa che il browser va a prendere. Quello che invece
+     resta guardato e' tutto il resto di quegli attributi, e deve restare: un
+     `src` forestiero dentro un `data-en` diventerebbe vero appena la pagina si
+     legge in inglese. */
+  const senzaCollegamenti = (pagina) =>
+    pagina.replace(/<a\s[^>]*>/g, "").replace(/&lt;a\s[^&]*&gt;/g, "");
 
   for (const quale of PAGINE) {
     const preso = senzaCollegamenti(leggi(quale)).match(fuori);
