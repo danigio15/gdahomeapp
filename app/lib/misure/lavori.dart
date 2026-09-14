@@ -93,10 +93,68 @@ class UnLavoro {
     required this.maxMs,
   });
 
+  /// Il nome con cui il lavoro si e' contato. E' una chiave: sta in italiano,
+  /// la scrive chi misura, e non cambia con la lingua di chi guarda — se no
+  /// due telefoni conterebbero la stessa cosa sotto due nomi.
   final String cosa;
   final int quante;
   final int totaleMs;
   final int maxMs;
+
+  /// Come si legge a schermo.
+  ///
+  /// La chiave si traduce **qui**, dove si mostra, e non dove si misura: cosi'
+  /// `Lavori.io.conto(...)` — che gira a ogni busta — non si porta dietro una
+  /// scelta di lingua, e i nomi delle due lingue stanno uno accanto all'altro
+  /// invece che sparsi in tre file. Un lavoro nuovo che qui non c'e' si legge
+  /// col suo nome, che e' meglio di niente.
+  String get nome => switch (cosa) {
+    'buste chiuse qui' => inLingua(
+      it: 'buste chiuse qui',
+      en: 'envelopes sealed here',
+    ),
+    'buste chiuse altrove' => inLingua(
+      it: 'buste chiuse altrove',
+      en: 'envelopes sealed aside',
+    ),
+    'buste aperte qui' => inLingua(
+      it: 'buste aperte qui',
+      en: 'envelopes opened here',
+    ),
+    'buste aperte altrove' => inLingua(
+      it: 'buste aperte altrove',
+      en: 'envelopes opened aside',
+    ),
+    'messaggi letti qui' => inLingua(
+      it: 'messaggi letti qui',
+      en: 'messages read here',
+    ),
+    'messaggi letti altrove' => inLingua(
+      it: 'messaggi letti altrove',
+      en: 'messages read aside',
+    ),
+    'risposte aperte qui' => inLingua(
+      it: 'risposte aperte qui',
+      en: 'answers opened here',
+    ),
+    'risposte aperte altrove' => inLingua(
+      it: 'risposte aperte altrove',
+      en: 'answers opened aside',
+    ),
+    'risposte del ponte, aspettate' => inLingua(
+      it: 'risposte del ponte, aspettate',
+      en: 'answers from the add-on, waited for',
+    ),
+    'passati alla plancia' => inLingua(
+      it: 'passati alla plancia',
+      en: 'passed to the dashboard',
+    ),
+    'rinumerati per la plancia' => inLingua(
+      it: 'rinumerati per la plancia',
+      en: 'renumbered for the dashboard',
+    ),
+    _ => cosa,
+  };
 
   String get riga => '$cosa ${quante}x, $totaleMs ms (max $maxMs)';
 }

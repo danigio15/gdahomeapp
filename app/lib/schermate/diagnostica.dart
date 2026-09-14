@@ -299,7 +299,7 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
               else
                 for (final uno in fatti.take(8))
                   riga(
-                    uno.cosa,
+                    uno.nome,
                     inLingua(
                       it:
                           '${volte(uno.quante)}, ${uno.totaleMs} ms in tutto, '
