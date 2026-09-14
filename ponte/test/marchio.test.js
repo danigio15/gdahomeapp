@@ -163,8 +163,10 @@ test("l'app e l'add-on portano lo stesso numero", () => {
    *
    * Con una differenza ammessa, e una sola: l'add-on puo' portarsi un **quarto
    * numero** — le sue correzioni fra due versioni della plancia, che nel
-   * negozio sono l'unico modo di far comparire «Aggiorna» — e l'app no, perche'
-   * un numero fatto cosi' i negozi dei telefoni non lo prendono. */
+   * negozio sono l'unico modo di far comparire «Aggiorna» — e il **nome**
+   * dell'app no, perche' un numero fatto cosi' i negozi dei telefoni non lo
+   * prendono. Quel quarto numero l'app se lo porta nel numero di costruzione,
+   * qui sotto. */
   const [, grande, medio, piccolo, costruzione] = dellApp;
   const suoi = dellAddon[1].split(".");
   assert.deepEqual(suoi.slice(0, 3), [grande, medio, piccolo]);
@@ -174,7 +176,14 @@ test("l'app e l'add-on portano lo stesso numero", () => {
   );
 
   /* E il numero di costruzione — quello che vogliono i negozi, che deve solo
-   * crescere — si deriva dal nome: 1.4.24 diventa 10424. Cosi' non c'e' un
-   * secondo numero da ricordarsi. */
-  assert.equal(Number(costruzione), Number(grande) * 10000 + Number(medio) * 100 + Number(piccolo));
+   * crescere — si deriva dal nome: 1.4.24 diventa 104240, e la correzione
+   * dell'add-on e' l'ultima cifra: 1.4.24.1 diventa 104241. Cosi' non c'e' un
+   * secondo numero da ricordarsi, e ogni versione della plancia ha dieci
+   * correzioni a disposizione per andare anche nel negozio. */
+  const correzione = suoi.length === 4 ? Number(suoi[3]) : 0;
+  assert.ok(correzione >= 0 && correzione <= 9, "di correzioni ce ne stanno dieci, da 0 a 9");
+  assert.equal(
+    Number(costruzione),
+    (Number(grande) * 10000 + Number(medio) * 100 + Number(piccolo)) * 10 + correzione,
+  );
 });

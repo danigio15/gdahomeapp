@@ -9,15 +9,24 @@
  *
  * Qui invece sta in un programma, e una prova la tiene ferma
  * (`ponte/test/marchio.test.js`): il numero di costruzione si deriva dal nome
- * — 1.4.25 diventa 10425 — cosi' non c'e' un secondo numero da ricordarsi, e
+ * — 1.4.25 diventa 104250 — cosi' non c'e' un secondo numero da ricordarsi, e
  * cresce sempre, che e' l'unica cosa che i negozi dei telefoni chiedono.
  *
  * L'add-on puo' portarsi un **quarto numero** per le sue correzioni fra due
- * versioni della plancia (`1.4.25.1`): li' l'app non si tocca, perche' un
- * numero fatto cosi' i negozi non lo prendono.
+ * versioni della plancia (`1.4.25.1`): un numero fatto cosi' i negozi dei
+ * telefoni non lo prendono, e il **nome** dell'app infatti non cambia — resta
+ * 1.4.25, che e' la plancia che ha dentro. Cambia il numero di costruzione:
+ * 1.4.25.1 diventa 104251, che e' il posto dove quel quarto numero ci sta.
  *
- *     node strumenti/versione.mjs 1.4.25     scrive tutti e due
- *     node strumenti/versione.mjs 1.4.25.1   solo l'add-on, l'app resta 1.4.25
+ * E' per questo che il numero di costruzione ha uno zero in fondo: senza,
+ * fra 10425 e 10426 non c'era spazio per le correzioni, e una correzione
+ * dell'add-on che va anche nell'app — succede: quella di oggi e' un comando
+ * nuovo nel ponte e la domanda che glielo fa nell'app — non si poteva
+ * portare nel negozio senza inventare una versione della plancia che non
+ * esiste.
+ *
+ *     node strumenti/versione.mjs 1.4.25     app 1.4.25+104250, add-on 1.4.25
+ *     node strumenti/versione.mjs 1.4.25.1   app 1.4.25+104251, add-on 1.4.25.1
  *     node strumenti/versione.mjs --dimmi    dice cosa c'e' scritto adesso
  */
 
@@ -37,10 +46,14 @@ export function laVersioneDellApp(pubspec) {
   return /^version: (\S+)$/m.exec(pubspec)?.[1] || "";
 }
 
-/* Il numero di costruzione: 1.4.25 → 10425. */
+/* Il numero di costruzione: 1.4.25 → 104250, e 1.4.25.1 → 104251.
+ *
+ * L'ultima cifra e' la correzione dell'add-on, e senza correzione e' zero:
+ * cosi' ogni versione della plancia ne ha dieci a disposizione, e il numero
+ * cresce sempre — che e' l'unica cosa che i negozi chiedono. */
 export function laCostruzione(versione) {
-  const [grande, medio, piccolo] = versione.split(".").map(Number);
-  return grande * 10000 + medio * 100 + piccolo;
+  const [grande, medio, piccolo, correzione = 0] = versione.split(".").map(Number);
+  return (grande * 10000 + medio * 100 + piccolo) * 10 + correzione;
 }
 
 function scrivi(quale) {
@@ -58,11 +71,14 @@ function scrivi(quale) {
   writeFileSync(MANIFESTO, manifesto.replace(/^version: "[^"]+"$/m, `version: "${quale}"`), "utf8");
   process.stdout.write(`l'add-on: ${prima || "?"} → ${quale}\n`);
 
-  /* L'app segue solo i primi tre numeri: il quarto e' una correzione
-   * dell'add-on, e l'app in quel giro non cambia. */
+  /* Il **nome** dell'app segue solo i primi tre numeri — il quarto e' una
+   * correzione dell'add-on, e un numero fatto cosi' i negozi non lo prendono —
+   * ma il numero di costruzione se lo porta dentro: una correzione che tocca
+   * anche l'app deve poter entrare nel negozio senza inventare una versione
+   * della plancia che non esiste. */
   const tre = pezzi.slice(0, 3).join(".");
   const pubspec = readFileSync(PUBSPEC, "utf8");
-  const suo = `${tre}+${laCostruzione(tre)}`;
+  const suo = `${tre}+${laCostruzione(quale)}`;
   const era = laVersioneDellApp(pubspec);
   if (era === suo) {
     process.stdout.write(`l'app: ${era}, gia' quella giusta\n`);
