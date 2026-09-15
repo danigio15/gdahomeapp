@@ -1144,3 +1144,14 @@ a.scarico:hover {
     transition: none;
   }
 }
+
+/* ── Sostieni ───────────────────────────────────────────────────────────── */
+
+.bottoni-mezzo {
+  justify-content: center;
+  margin-top: clamp(26px, 4vw, 40px);
+}
+.sottobottoni-mezzo {
+  text-align: center;
+  margin-inline: auto;
+}
