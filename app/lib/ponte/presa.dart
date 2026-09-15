@@ -12,6 +12,7 @@
 library;
 
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -20,6 +21,27 @@ import 'errori.dart';
 abstract interface class Presa {
   /// Quello che arriva. Uno stream solo, con un ascoltatore solo.
   Stream<String> get messaggi;
+
+  void manda(String testo);
+
+  Future<void> chiudi();
+}
+
+/// La presa **sopra le buste**: quella su cui parla il filo.
+///
+/// Sotto ce n'e' sempre una nuda — [Presa] — dove passano le buste, che sono
+/// testo (base64). Qui passa quello che c'era dentro, e passa in **byte**:
+/// dentro una busta c'e' JSON, e chi lo legge lo legge dai byte senza mai
+/// farne una stringa. Sono le stringhe grosse che costano: si allocano
+/// nell'isolato che decifra, si copiano in questo, e poi si buttano — mentre
+/// i byte, fra isolati, si trasferiscono e non si copiano.
+///
+/// E' un'interfaccia a parte e non la stessa di sotto perche' le due non sono
+/// la stessa cosa: chiamarle allo stesso modo faceva sembrare intercambiabili
+/// il filo nudo e quello aperto, che parlano due lingue diverse.
+abstract interface class PresaAperta {
+  /// Quello che arriva, aperto. Uno stream solo, con un ascoltatore solo.
+  Stream<Uint8List> get messaggi;
 
   void manda(String testo);
 

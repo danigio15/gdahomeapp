@@ -16,6 +16,7 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import '../misure/lavori.dart';
 import '../parole.dart';
@@ -82,7 +83,15 @@ abstract interface class VersoLaPagina {
   /// `false` quando la pagina non c'e' piu': si smette di scriverle.
   bool get aperta;
 
-  void manda(String testo);
+  /// Il messaggio, in **byte** di UTF-8.
+  ///
+  /// Byte e non testo perche' byte e' quello che c'e': arrivano dalla busta
+  /// decifrata, si rinumerano da byte, e un WebSocket scrive un frame di
+  /// testo dai byte senza bisogno di una stringa (`addUtf8Text`). Mettere una
+  /// stringa in mezzo voleva dire costruirla, copiarla da un isolato
+  /// all'altro e ricodificarla scrivendola: per un'istantanea di telecamera,
+  /// tre volte l'istantanea di roba da buttare.
+  void manda(Uint8List byte);
 
   Future<void> chiudi();
 }
@@ -149,7 +158,7 @@ class Cucitura {
     try {
       late final int mio;
       mio = filo.instrada(messaggio, (risposta) {
-        _mandaTesto(risposta.conNumero(suo));
+        _mandaByte(risposta.conNumero(suo));
         if (continua('$tipo')) return;
         filo.dimentica(mio);
         _numeri.remove(suo);
@@ -187,7 +196,8 @@ class Cucitura {
     _manda({'type': 'auth_ok', 'ha_version': 'gdahome'});
   }
 
-  void _manda(Map<String, dynamic> cosa) => _mandaTesto(jsonEncode(cosa));
+  void _manda(Map<String, dynamic> cosa) =>
+      _mandaByte(inByte(jsonEncode(cosa)));
 
   /* Il passaggio alla pagina, contato.
    *
@@ -197,10 +207,10 @@ class Cucitura {
    * pagina**, e quel pezzo non lo misurava nessuno. Chi guardava la
    * diagnostica vedeva lavori tutti piccoli e blocchi da mezzo secondo, senza
    * niente in mezzo a cui darne la colpa. Adesso c'e'. */
-  void _mandaTesto(String testo) {
+  void _mandaByte(Uint8List byte) {
     if (!_verso.aperta) return;
     try {
-      Lavori.io.subito('passati alla plancia', () => _verso.manda(testo));
+      Lavori.io.subito('passati alla plancia', () => _verso.manda(byte));
     } catch (_) {
       /* Chiusa fra il controllo e la scrittura. */
     }

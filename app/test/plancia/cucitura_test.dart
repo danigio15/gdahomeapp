@@ -17,6 +17,7 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/plancia/cucitura.dart';
@@ -34,8 +35,8 @@ class _PaginaFinta implements VersoLaPagina {
   bool get aperta => !chiusa;
 
   @override
-  void manda(String testo) =>
-      arrivati.add(jsonDecode(testo) as Map<String, dynamic>);
+  void manda(Uint8List byte) =>
+      arrivati.add(jsonDecode(utf8.decode(byte)) as Map<String, dynamic>);
 
   @override
   Future<void> chiudi() async => chiusa = true;

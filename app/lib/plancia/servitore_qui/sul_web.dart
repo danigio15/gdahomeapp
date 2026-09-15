@@ -371,9 +371,13 @@ class _VersoIlRiquadro implements VersoLaPagina {
   @override
   bool get aperta => true;
 
+  /* Qui la stringa serve davvero: fra due pagine passano messaggi di
+   * JavaScript, e la plancia dall'altra parte aspetta testo. Nel browser non
+   * c'e' nemmeno un altro isolato da cui copiare, quindi questa e' l'unica
+   * copia della strada — la stessa di prima. */
   @override
-  void manda(String testo) =>
-      _aTutti({'che': 'gdahome/ws-giu', 'testo': testo});
+  void manda(Uint8List byte) =>
+      _aTutti({'che': 'gdahome/ws-giu', 'testo': utf8.decode(byte)});
 
   @override
   Future<void> chiudi() async => _aTutti({'che': 'gdahome/ws-chiudi'});

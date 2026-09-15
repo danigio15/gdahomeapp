@@ -317,11 +317,26 @@ class Busta {
     return base64.encode(tutto);
   }
 
-  /// Torna il testo, o solleva. Non torna mai `null` per un messaggio guasto:
-  /// un messaggio che non si apre su un canale cifrato non e' un inciampo da
-  /// ignorare — o e' rotto o e' stato toccato, e in tutti e due i casi si
-  /// chiude.
-  Future<String> apri(String inBase64) async {
+  /// Il testo dentro la busta. Per chi ne ha davvero bisogno di una stringa:
+  /// la stretta di mano, che legge una riga di JSON e la butta.
+  ///
+  /// Chi riceve **messaggi** usa [apriByte] e non questa: una stringa grossa
+  /// su questo filo e' roba da buttare che si paga dopo, quando il
+  /// raccoglitore passa, e si paga sul filo che disegna lo schermo.
+  Future<String> apri(String inBase64) async =>
+      utf8.decode(await apriByte(inBase64));
+
+  /// Torna i byte dentro la busta, o solleva. Non torna mai `null` per un
+  /// messaggio guasto: un messaggio che non si apre su un canale cifrato non
+  /// e' un inciampo da ignorare — o e' rotto o e' stato toccato, e in tutti e
+  /// due i casi si chiude.
+  ///
+  /// **Byte, e non testo.** Quello che c'e' dentro una busta e' JSON, e chi lo
+  /// legge lo sa leggere dai byte: farne una stringa qui vorrebbe dire
+  /// allocarla nell'isolato che decifra, copiarla in questo — fra isolati le
+  /// stringhe si copiano, i byte si trasferiscono — e poi buttarla. Per una
+  /// istantanea di telecamera sono mezzo megabyte di niente, per messaggio.
+  Future<Uint8List> apriByte(String inBase64) async {
     /* La testa — i dodici byte del nonce — sono i primi sedici caratteri, e
      * si leggono da soli: la direzione e il contatore si controllano qui,
      * prima di spedire il grosso altrove. */
@@ -343,7 +358,7 @@ class Busta {
     );
     if (contatore != ricevo) throw const BustaGuasta('busta fuori ordine');
 
-    final String dentro;
+    final Uint8List dentro;
     try {
       if (inBase64.length < sogliaAltrove) {
         dentro = await Lavori.io.conto(
@@ -354,7 +369,7 @@ class Busta {
         final byte = await _byteDellaChiave();
         dentro = await Lavori.io.conto(
           'buste aperte altrove',
-          () => altrove(() => _apriDavvero(SecretKey(byte), inBase64)),
+          () => byteDaAltrove(() => _apriDavvero(SecretKey(byte), inBase64)),
         );
       }
     } on BustaGuasta {
@@ -368,7 +383,10 @@ class Busta {
     return dentro;
   }
 
-  static Future<String> _apriDavvero(SecretKey chiave, String inBase64) async {
+  static Future<Uint8List> _apriDavvero(
+    SecretKey chiave,
+    String inBase64,
+  ) async {
     final Uint8List tutto;
     try {
       tutto = base64.decode(inBase64);
@@ -379,7 +397,7 @@ class Busta {
     }
     if (tutto.length < 12 + 16) throw const BustaGuasta('busta troppo corta');
     final dodici = tutto.sublist(0, 12);
-    var dentro = await AesGcm.with256bits().decrypt(
+    List<int> dentro = await AesGcm.with256bits().decrypt(
       SecretBox(
         tutto.sublist(12, tutto.length - 16),
         nonce: dodici,
@@ -403,7 +421,7 @@ class Busta {
         );
       }
     }
-    return utf8.decode(dentro);
+    return dentro is Uint8List ? dentro : Uint8List.fromList(dentro);
   }
 }
 

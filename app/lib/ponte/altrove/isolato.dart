@@ -13,6 +13,7 @@ library;
 
 import 'dart:async';
 import 'dart:isolate';
+import 'dart:typed_data';
 
 /// Dopo quanto silenzio l'aiutante se ne va a dormire. Tenerlo acceso per
 /// sempre vorrebbe dire un filo del sistema fermo li' a non fare niente;
@@ -26,6 +27,42 @@ const Duration _sonnellino = Duration(seconds: 30);
 /// i byte della chiave e non la chiave, e ricostruisce dentro quello che gli
 /// serve.
 Future<R> altrove<R>(FutureOr<R> Function() lavoro) => _Aiutante.io.fai(lavoro);
+
+/// Byte che tornano da un lavoro fatto altrove, **trasferiti**.
+///
+/// Un risultato normale torna copiato: un'istantanea di telecamera da
+/// duecento kilobyte e' duecento kilobyte allocati qui, sul filo che disegna
+/// lo schermo, e poi da buttare. I byte no: chi li ha fatti li perde, questo
+/// isolato li trova, e in mezzo non si copia niente.
+Future<Uint8List> byteDaAltrove(FutureOr<Uint8List> Function() lavoro) async {
+  final venuti = await altrove<TransferableTypedData>(
+    () async => TransferableTypedData.fromList([_interi(await lavoro())]),
+  );
+  return venuti.materialize().asUint8List();
+}
+
+/// Byte dati a un lavoro fatto altrove, **trasferiti**.
+///
+/// Stessa cosa nell'altro verso, e per lo stesso motivo. In cambio, [byte]
+/// **non si usa piu'** dopo questa chiamata: sono andati.
+Future<R> altroveCoiByte<R>(
+  Uint8List byte,
+  FutureOr<R> Function(Uint8List) lavoro,
+) {
+  final andati = TransferableTypedData.fromList([_interi(byte)]);
+  return altrove<R>(() => lavoro(andati.materialize().asUint8List()));
+}
+
+/// Byte da spedire per intero, e non affacciati su un pezzo di qualcos'altro.
+///
+/// Una vista — quello che torna spezzando un mucchio — guarda dentro un
+/// blocco piu' grande, e spedirla vorrebbe dire portarsi via il blocco sotto
+/// insieme ai fratelli che ci guardano ancora. Quando e' una vista si copia,
+/// e quando non lo e' — quasi sempre — non si copia niente.
+Uint8List _interi(Uint8List byte) =>
+    byte.offsetInBytes == 0 && byte.lengthInBytes == byte.buffer.lengthInBytes
+    ? byte
+    : Uint8List.fromList(byte);
 
 class _Aiutante {
   _Aiutante._();

@@ -191,7 +191,7 @@ class Abbinamento {
       throw PonteIrraggiungibile(_leggibile(errore));
     }
 
-    Presa? cifrata;
+    PresaAperta? cifrata;
     try {
       cifrata = await stringiLaMano(sotto);
       /* Il codice viaggia **dentro** il cifrato. Al centralino arriva una
@@ -215,7 +215,7 @@ class Abbinamento {
     } finally {
       /* Un filo di abbinamento serve a una cosa sola e poi si chiude: il
        * telefono torna dalla porta normale, col segno appena avuto. */
-      await (cifrata ?? sotto).chiudi();
+      await (cifrata?.chiudi() ?? sotto.chiudi());
     }
   }
 
@@ -361,12 +361,15 @@ class Abbinamento {
 
   /* ─── Leggere quello che dice la casa ────────────────────────────────── */
 
-  static Future<Map<String, dynamic>> _laPrimaRisposta(Presa cifrata) {
+  /* Dai byte al JSON in un colpo, senza la stringa in mezzo. */
+  static final _daByte = const Utf8Decoder().fuse(const JsonDecoder());
+
+  static Future<Map<String, dynamic>> _laPrimaRisposta(PresaAperta cifrata) {
     final detta = Completer<Map<String, dynamic>>();
     cifrata.messaggi.listen(
-      (testo) {
+      (byte) {
         if (detta.isCompleted) return;
-        final letto = jsonDecode(testo);
+        final letto = _daByte.convert(byte);
         detta.complete(letto is Map<String, dynamic> ? letto : const {});
       },
       onError: (Object errore) {

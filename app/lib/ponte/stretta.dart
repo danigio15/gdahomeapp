@@ -37,6 +37,7 @@ library;
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 
@@ -74,7 +75,7 @@ const int interoMassimo = 16 * 1024 * 1024;
 /// difende da chi *guarda* ma non da chi si mette in mezzo per davvero. E'
 /// scritto in `ponte/src/cifra.js`, e vale la pena saperlo invece di
 /// scoprirlo.
-Future<Presa> stringiLaMano(
+Future<PresaAperta> stringiLaMano(
   Presa sotto, {
   String? chi,
   String? chiaveDelFilo,
@@ -144,11 +145,11 @@ Future<Presa> stringiLaMano(
 
 /// Una presa qualunque, per chi ci parla sopra. Sotto, ogni messaggio e' una
 /// busta.
-class PresaCifrata implements Presa {
+class PresaCifrata implements PresaAperta {
   PresaCifrata._(this._sotto);
 
   final Presa _sotto;
-  final _uscita = StreamController<String>();
+  final _uscita = StreamController<Uint8List>();
   final _pronta = Completer<void>();
 
   Busta? _busta;
@@ -196,7 +197,7 @@ class PresaCifrata implements Presa {
   bool get comprime => _busta?.comprime ?? false;
 
   @override
-  Stream<String> get messaggi => _uscita.stream;
+  Stream<Uint8List> get messaggi => _uscita.stream;
 
   void _ascolta({
     required Future<SecretKey> Function(Map<String, dynamic>) laPrima,
@@ -291,7 +292,12 @@ class PresaCifrata implements Presa {
     }
 
     try {
-      final dentro = await _busta!.apri(intero);
+      /* `apriByte` e non `apri`: quello che c'e' dentro resta byte, e lo
+       * legge dai byte chi sta sopra. Farne una stringa qui vorrebbe dire
+       * allocarla nell'isolato che decifra e copiarla in questo — fra isolati
+       * le stringhe si copiano, i byte si trasferiscono — per poi buttarla
+       * subito dopo. */
+      final dentro = await _busta!.apriByte(intero);
       if (!_uscita.isClosed) _uscita.add(dentro);
     } on BustaGuasta catch (errore) {
       /* Su un canale che passa da un terzo, un messaggio che non si apre o e'

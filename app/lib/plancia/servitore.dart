@@ -800,8 +800,12 @@ class _LaPresa implements VersoLaPagina {
   @override
   bool get aperta => _presa.readyState == WebSocket.open;
 
+  /* `addUtf8Text` e non `add`: un frame di testo si scrive dai byte, e i byte
+   * ci sono gia'. Con `add(String)` il socket li avrebbe ricodificati lui —
+   * un'altra copia dell'istantanea, per ogni istantanea — dopo che noi
+   * avremmo costruito la stringa per dargliela. */
   @override
-  void manda(String testo) => _presa.add(testo);
+  void manda(Uint8List byte) => _presa.addUtf8Text(byte);
 
   @override
   Future<void> chiudi() =>

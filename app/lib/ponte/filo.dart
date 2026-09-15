@@ -32,6 +32,7 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import '../misure/lavori.dart';
 import '../parole.dart';
@@ -50,6 +51,16 @@ import 'stretta.dart';
 /// secondo. Deve restare identico a `SEGNO_DEL_MUCCHIO` in
 /// `ponte/src/ponte.js`.
 const segnoDelMucchio = 'mucchio\n';
+
+/// Lo stesso segno in byte: quello che arriva sono byte, e riconoscerlo li'
+/// non costa ne' una stringa ne' una copia.
+final _segnoInByte = Uint8List.fromList(utf8.encode(segnoDelMucchio));
+
+/// Il ritorno a capo che divide i messaggi dentro un mucchio.
+const int _aCapo = 0x0a;
+
+/// Dai byte al JSON in un colpo, senza la stringa in mezzo.
+final _daByteAlJson = const Utf8Decoder().fuse(const JsonDecoder());
 
 enum StatoDelFilo {
   /// Mai aperto, o chiuso apposta.
@@ -185,9 +196,9 @@ class Filo {
   /// parla Home Assistant da dentro il WebView — e chi ne aspetta le risposte.
   final _instradati = <int, void Function(Instradato)>{};
 
-  Presa? _presa;
+  PresaAperta? _presa;
   Approdo? _approdo;
-  StreamSubscription<String>? _ascolto;
+  StreamSubscription<Uint8List>? _ascolto;
 
   /* Quello che arriva si legge **in fila**: aprire un messaggio grosso e'
    * asincrono — va altrove, e torna — e senza la fila la risposta a una
@@ -423,7 +434,7 @@ class Filo {
      * bussata nuova: questa allora si toglie di mezzo. */
     if (_spentoApposta || mia != _bussate) return;
 
-    final Presa presa;
+    final PresaAperta presa;
     try {
       /* Due passi, e il secondo e' quello che conta: si apre il filo nudo, e
        * poi ci si stringe la mano. Da li' in poi tutto quello che passa e'
@@ -510,7 +521,7 @@ class Filo {
 
   /* ─── Quello che arriva ────────────────────────────────────────────────── */
 
-  void _arrivato(String grezzo) {
+  void _arrivato(Uint8List grezzo) {
     _busteArrivate += 1;
     /* Un mucchio: dentro ci sono piu' messaggi, uno per riga.
      *
@@ -518,20 +529,38 @@ class Filo {
      * vero — dentro una stringa e' `\n`, due caratteri — quindi spezzare su
      * quello e' esatto e non costa ne' una lettura ne' una riscrittura dei
      * messaggi che stanno dentro. Ognuno riprende la strada che avrebbe
-     * fatto da solo: chi lo riceve non sa di essere arrivato in compagnia. */
-    if (grezzo.startsWith(segnoDelMucchio)) {
-      _byteArrivati += segnoDelMucchio.length;
-      for (final pezzo
-          in grezzo.substring(segnoDelMucchio.length).split('\n')) {
-        if (pezzo.isEmpty) continue;
-        _unMessaggio(pezzo);
+     * fatto da solo: chi lo riceve non sa di essere arrivato in compagnia.
+     *
+     * E adesso i pezzi sono **viste**, non copie: guardano dentro gli stessi
+     * byte arrivati, uno per messaggio, e spezzare un mucchio da mezzo
+     * megabyte non alloca niente. */
+    if (_cominciaColSegno(grezzo)) {
+      _byteArrivati += _segnoInByte.length;
+      var da = _segnoInByte.length;
+      while (da < grezzo.length) {
+        var fino = da;
+        while (fino < grezzo.length && grezzo[fino] != _aCapo) {
+          fino += 1;
+        }
+        if (fino > da) {
+          _unMessaggio(Uint8List.sublistView(grezzo, da, fino));
+        }
+        da = fino + 1;
       }
       return;
     }
     _unMessaggio(grezzo);
   }
 
-  void _unMessaggio(String grezzo) {
+  static bool _cominciaColSegno(Uint8List grezzo) {
+    if (grezzo.length < _segnoInByte.length) return false;
+    for (var quale = 0; quale < _segnoInByte.length; quale += 1) {
+      if (grezzo[quale] != _segnoInByte[quale]) return false;
+    }
+    return true;
+  }
+
+  void _unMessaggio(Uint8List grezzo) {
     _messaggiArrivati += 1;
     _byteArrivati += grezzo.length;
     /* Qualunque cosa arrivi dice che il filo e' vivo: un fiume di eventi
@@ -545,7 +574,7 @@ class Filo {
         });
   }
 
-  Future<void> _leggi(String grezzo, int generazione) async {
+  Future<void> _leggi(Uint8List grezzo, int generazione) async {
     if (generazione != _generazione) return;
 
     /* Quello che si e' mandato per conto di qualcun altro torna a lui,
@@ -568,13 +597,23 @@ class Filo {
       }
     }
 
+    /* Dai byte al JSON in un colpo: `utf8.decode` e poi `jsonDecode` sono due
+     * passaggi e una stringa in mezzo — su un `get_states` da un megabyte e
+     * mezzo, un megabyte e mezzo allocato solo per riscriverlo subito in
+     * mappe. Il convertitore fuso legge i byte e costruisce le mappe, e la
+     * stringa in mezzo non esiste. */
     final Map<String, dynamic> detto;
     try {
       final letto = grezzo.length < Busta.sogliaAltrove
-          ? Lavori.io.subito('messaggi letti qui', () => jsonDecode(grezzo))
+          ? Lavori.io.subito(
+              'messaggi letti qui',
+              () => _daByteAlJson.convert(grezzo),
+            )
           : await Lavori.io.conto(
               'messaggi letti altrove',
-              () => altrove(() => jsonDecode(grezzo)),
+              /* E i byte ci vanno **trasferiti**: spedirli copiati vorrebbe
+               * dire pagare qui la copia che si sta cercando di non fare. */
+              () => altroveCoiByte(grezzo, _daByteAlJson.convert),
             );
       if (letto is! Map<String, dynamic>) return;
       detto = letto;
@@ -1126,11 +1165,19 @@ class _Sottoscrizione {
   final StreamController<Map<String, dynamic>> uscita;
 }
 
-/// Quello che torna a chi aveva instradato un messaggio: il testo cosi'
-/// com'e' arrivato — col numero del filo — e quel poco che si legge dalla
-/// testa senza aprirlo tutto.
+/// Quello che torna a chi aveva instradato un messaggio: i byte cosi' come
+/// sono arrivati — col numero del filo — e quel poco che si legge dalla testa
+/// senza aprirli tutti.
+///
+/// **Byte e non testo.** Un messaggio instradato e' roba della plancia: passa
+/// da qui, si rinumera, e si scrive nel WebSocket verso la pagina, che byte
+/// vuole. Farne una stringa in mezzo vorrebbe dire allocarla, rinumerarla —
+/// un'altra stringa — e poi codificarla in UTF-8 scrivendola: tre copie di
+/// un'istantanea di telecamera per ogni istantanea, e con sette telecamere
+/// che si fanno fotografare sono megabyte da buttare al minuto. Chi il testo
+/// lo vuole davvero ha [testo], e paga lui.
 class Instradato {
-  Instradato._(this.testo, _Testa testa)
+  Instradato._(this.byte, _Testa testa)
     : id = testa.id,
       tipo = testa.tipo,
       successo = testa.successo,
@@ -1138,15 +1185,15 @@ class Instradato {
       _detto = null;
 
   Instradato._daMappa(Map<String, dynamic> detto)
-    : testo = jsonEncode(detto),
+    : byte = inByte(jsonEncode(detto)),
       id = detto['id'] as int,
       tipo = detto['type'] as String?,
       successo = detto['success'] as bool?,
       _dopoIlNumero = null,
       _detto = detto;
 
-  /// Il messaggio, testo, col numero del filo.
-  final String testo;
+  /// Il messaggio, byte, col numero del filo.
+  final Uint8List byte;
 
   /// Il numero del filo.
   final int id;
@@ -1160,35 +1207,50 @@ class Instradato {
   final int? _dopoIlNumero;
   final Map<String, dynamic>? _detto;
 
-  /// Il messaggio aperto. Costa quanto aprirlo: chi puo' fare col testo lo
+  /// Il messaggio come testo. Costa una copia: chi puo' fare coi byte la
+  /// lasci stare.
+  String get testo => utf8.decode(byte);
+
+  /// Il messaggio aperto. Costa quanto aprirlo: chi puo' fare coi byte lo
   /// lasci stare.
   Map<String, dynamic> get detto =>
-      _detto ?? jsonDecode(testo) as Map<String, dynamic>;
+      _detto ?? _daByteAlJson.convert(byte) as Map<String, dynamic>;
 
   /// Lo stesso messaggio, col numero di chi l'aveva chiesto al posto di
   /// quello del filo. Il numero sta in testa, e si cambia solo quello.
   ///
-  /// **Una copia sola, non due.** Prima erano
-  /// `'{"id": \$altro' + testo.substring(dopo)`, e su un `get_states` da un
-  /// megabyte e mezzo sono due stringhe da un megabyte e mezzo invece di una:
-  /// la sottostringa, e poi il risultato della somma. Non e' tempo speso in
-  /// un lavoro — un megabyte si copia in pochi millesimi — e' **roba da
-  /// buttare** che si accumula, e i decimi di secondo si pagano dopo, quando
-  /// il raccoglitore passa. E si pagano sul filo che disegna.
+  /// **Una copia sola, non tre.** Prima era una `replaceRange` su una
+  /// stringa: e quella stringa, per esserci, era stata costruita dai byte
+  /// decifrati e copiata da un isolato all'altro, e dopo di qui sarebbe stata
+  /// ricodificata in UTF-8 per entrare nel socket. Su un `get_states` da un
+  /// megabyte e mezzo sono quattro megabyte e mezzo di roba da buttare per un
+  /// messaggio. Non e' tempo speso in un lavoro — un megabyte si copia in
+  /// pochi millesimi — e' **roba da buttare** che si accumula, e i decimi di
+  /// secondo si pagano dopo, quando il raccoglitore passa. E si pagano sul
+  /// filo che disegna.
   ///
-  /// `replaceRange` fa lo stesso mestiere allocando una volta.
-  String conNumero(int altro) {
+  /// Qui ne resta una: un blocco di byte nuovo, la testa nuova davanti e il
+  /// resto dietro. Ed e' l'ultima — quello che esce da qui si scrive nel
+  /// socket com'e'.
+  Uint8List conNumero(int altro) {
     final dopo = _dopoIlNumero;
     if (dopo != null) {
-      if (altro == id) return testo;
-      return Lavori.io.subito(
-        'rinumerati per la plancia',
-        () => testo.replaceRange(0, dopo, '{"id": $altro'),
-      );
+      if (altro == id) return byte;
+      return Lavori.io.subito('rinumerati per la plancia', () {
+        final testa = inByte('{"id": $altro');
+        final quanti = byte.length - dopo;
+        return Uint8List(testa.length + quanti)
+          ..setRange(0, testa.length, testa)
+          ..setRange(testa.length, testa.length + quanti, byte, dopo);
+      });
     }
-    return jsonEncode({...detto, 'id': altro});
+    return inByte(jsonEncode({...detto, 'id': altro}));
   }
 }
+
+/// Byte da una stringa. Un nome per una cosa che si scrive in mezza riga, ma
+/// che si fa in cinque posti e in tutti e cinque vuol dire la stessa cosa.
+Uint8List inByte(String testo) => utf8.encode(testo);
 
 /* La testa di un messaggio di Home Assistant: `{"id": 5, "type": "result",
  * "success": true, …}`. Home Assistant e il ponte scrivono cosi' — il numero
@@ -1206,9 +1268,34 @@ class _Testa {
     r'^\{\s*"id"\s*:\s*(\d+)(\s*,\s*"type"\s*:\s*"([a-z_]+)"(?:\s*,\s*"success"\s*:\s*(true|false))?)',
   );
 
-  static _Testa? leggi(String grezzo) {
-    final trovato = _forma.matchAsPrefix(grezzo);
+  /// Quanti byte si guardano in testa. La parte che serve —
+  /// `{"id": 12345, "type": "result", "success": true` — sta dentro sessanta;
+  /// il doppio lascia spazio a un numero lungo e a un po' di spazi, e resta
+  /// una stringa da niente anche se il messaggio e' un megabyte. Quello che
+  /// non ci sta dentro si legge per intero, come qualunque altra testa fatta
+  /// diversamente.
+  static const int quantoSiGuarda = 128;
+
+  /// La testa, letta dai **byte**.
+  ///
+  /// Si fa una stringa del solo prefisso, e `String.fromCharCodes` la fa un
+  /// byte per carattere: e' esatto perche' la parte che si guarda e' ASCII —
+  /// graffa, virgolette, cifre, lettere minuscole — e un byte fuori dall'ASCII
+  /// li' dentro fa solo fallire il confronto, che e' quello che deve fare.
+  static _Testa? leggi(Uint8List grezzo) {
+    final finestra = grezzo.length <= quantoSiGuarda
+        ? grezzo
+        : Uint8List.sublistView(grezzo, 0, quantoSiGuarda);
+    final trovato = _forma.matchAsPrefix(String.fromCharCodes(finestra));
     if (trovato == null) return null;
+    /* La finestra e' finita mentre la testa continuava: quello che si e'
+     * letto puo' essere una testa **tagliata** — un `"success": tru` che
+     * finisce sul bordo si legge come un messaggio senza `success` — e una
+     * testa tagliata e' peggio di nessuna testa. Si legge tutto, come
+     * qualunque messaggio fatto diversamente. */
+    if (trovato.end >= finestra.length && grezzo.length > finestra.length) {
+      return null;
+    }
     final id = int.tryParse(trovato.group(1)!);
     if (id == null) return null;
     final successo = trovato.group(4);
