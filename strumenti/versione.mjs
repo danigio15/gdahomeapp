@@ -37,6 +37,15 @@ import { fileURLToPath } from "node:url";
 const RADICE = dirname(dirname(fileURLToPath(import.meta.url)));
 const MANIFESTO = join(RADICE, "ponte", "config.yaml");
 const PUBSPEC = join(RADICE, "app", "pubspec.yaml");
+/* E il terzo posto: il numero che l'app **fa vedere**.
+ *
+ * Il `pubspec` lo legge chi costruisce, non l'app che gira: per rileggerlo da
+ * dentro servirebbe un pacchetto in piu' che chiede al sistema che pacchetto
+ * e'. Invece di aggiungerlo, il numero si scrive anche in un file Dart, qui, e
+ * lo scrive lo stesso programma che scrive gli altri due — cosi' non c'e' un
+ * terzo numero da ricordarsi, e una prova tiene ferma la regola che siano lo
+ * stesso (`ponte/test/marchio.test.js`). */
+const VERSIONE_DART = join(RADICE, "app", "lib", "versione.dart");
 
 export function laVersioneDellAddon(manifesto) {
   return /^version: "([^"]+)"$/m.exec(manifesto)?.[1] || "";
@@ -80,12 +89,45 @@ function scrivi(quale) {
   const pubspec = readFileSync(PUBSPEC, "utf8");
   const suo = `${tre}+${laCostruzione(quale)}`;
   const era = laVersioneDellApp(pubspec);
+  /* Il numero dentro l'app si riscrive comunque: il `pubspec` puo' essere
+   * gia' quello giusto e quel file no — e' nato dopo. */
+  scriviIlDart(tre, laCostruzione(quale));
   if (era === suo) {
     process.stdout.write(`l'app: ${era}, gia' quella giusta\n`);
     return;
   }
   writeFileSync(PUBSPEC, pubspec.replace(/^version: \S+$/m, `version: ${suo}`), "utf8");
   process.stdout.write(`l'app: ${era || "?"} → ${suo}\n`);
+}
+
+/* Il numero dentro l'app, per farlo vedere. */
+function scriviIlDart(nome, costruzione) {
+  writeFileSync(
+    VERSIONE_DART,
+    `/// Il numero di questa app, quello che si legge nel negozio.
+///
+/// **Lo scrive \`strumenti/versione.mjs\`**, insieme al manifesto dell'add-on e
+/// al \`pubspec\`: a mano non si tocca, e una prova tiene ferma la regola che
+/// siano lo stesso numero (\`ponte/test/marchio.test.js\`).
+///
+/// Il \`pubspec\` lo legge chi costruisce, non l'app che gira. Per rileggerlo
+/// da dentro servirebbe un pacchetto in piu' — uno che chieda al sistema che
+/// pacchetto e' — e per un numero non vale la pena: qui c'e', e si vede in
+/// «Come va l'app» e nella riga in fondo alle schermate.
+library;
+
+/// Come si chiama: e' la versione della plancia che l'app ha dentro.
+const String versioneDiQuestApp = "${nome}";
+
+/// Il numero di costruzione, quello che vogliono i negozi.
+const int costruzioneDiQuestApp = ${costruzione};
+
+/// Come si scrive per chi legge: \`1.4.30 (104301)\`.
+const String numeroDiQuestApp = "${nome} (${costruzione})";
+`,
+    "utf8",
+  );
+  process.stdout.write(`e nell'app si legge: ${nome} (${costruzione})\n`);
 }
 
 function dimmi() {

@@ -160,11 +160,36 @@ void main() {
        * finiva sotto l'orologio. */
       expect(testo, contains('html body{padding-top:var(--gdahome-alto)'));
       expect(testo, isNot(contains('.app{padding-top')));
+      /* In fondo non si scrive niente di nostro: il numero si mette **nella
+       * variabile della plancia**, e i suoi numeri li fa lei — la barra a
+       * `18 + fondo`, la riserva a `112 + fondo`, la maniglia a `6 + fondo`,
+       * e lo `scroll-padding-bottom`, che e' quello che fa fermare sopra la
+       * barra anche chi arriva con un salto.
+       *
+       * Qui prima stavano ricopiati i suoi numeri — 112, 40, 8 — e ricopiati
+       * male: la barra la mettevamo dieci punti piu' in basso di dove la mette
+       * lei, dentro la sua riserva, e quei dieci punti diventavano una
+       * striscia di niente sotto l'ultima riga di ogni pagina. */
+      expect(testo, contains('--dm-fondo-di-sistema'));
       expect(
         testo,
-        contains('padding-bottom:calc(var(--gdahome-basso) + 40px)'),
+        contains('var mio=24;'),
+        reason: 'il numero è quello che ha misurato Flutter',
       );
-      expect(testo, contains('bottom:calc(var(--gdahome-basso) + 8px)'));
+      expect(
+        testo,
+        isNot(contains('padding-bottom')),
+        reason: 'la riserva in fondo la decide la plancia',
+      );
+      expect(
+        testo,
+        isNot(contains('bottom:calc(var(--gdahome-basso)')),
+        reason: 'dove sta la barra lo decide la plancia',
+      );
+      /* Mai al ribasso, e riscritto quando lei rifà il suo conto. */
+      expect(testo, contains('if(suo()>=mio)return'));
+      expect(testo, contains('MutationObserver'));
+      expect(testo, contains('"resize"'));
       /* Lo stile sta **in fondo**, dopo il foglio della plancia: fra due
        * `!important` della stessa forza vince l'ultimo che si legge, e
        * messo in testa perdeva — la barra della plancia finiva sotto i

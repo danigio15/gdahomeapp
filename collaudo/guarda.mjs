@@ -1282,6 +1282,68 @@ try {
   }
   racconta("la barra si e' scoperta da se'");
 
+  /* Le barre del telefono: la plancia le scansa **con i suoi numeri**.
+   *
+   * Lo spazio sotto l'ultima riga, dove sta la sua barra e dove si ferma chi
+   * arriva con un salto li decide lei, in `navigation-section.js`, e li deriva
+   * tutti da una variabile sola: `--dm-fondo-di-sistema`. Dentro una cornice
+   * `env(safe-area-inset-bottom)` risponde zero comunque, quindi quel numero
+   * glielo scrive il servitore, col valore che Flutter ha misurato su
+   * quell'apparecchio (`Premesse.leMisureNellaSuaVariabile`).
+   *
+   * Qui il browser di barre non ne ha e il numero e' zero: quello che si prova
+   * e' che **la leva sia attaccata alle ruote**. Si scrive la variabile come la
+   * scriverebbe il telefono, e i suoi tre numeri devono spostarsi di tanto. Il
+   * giorno che la plancia le cambia nome questo passo lo dice, invece di
+   * lasciarlo scoprire a chi ha i tasti del telefono sotto le dita. */
+  racconta("le barre del telefono: la plancia le scansa coi suoi numeri");
+  {
+    const dentro = await laPlancia(pagina);
+    const come = await dentro.evaluate(() => {
+      const radice = document.documentElement;
+      const body = document.body;
+      const barra = document.querySelector("nav.tabs.bottom-nav-bar");
+      const leggi = () => {
+        const suo = getComputedStyle(body);
+        return {
+          riserva: parseFloat(suo.paddingBottom) || 0,
+          salto: parseFloat(suo.scrollPaddingBottom) || 0,
+          barra: barra ? parseFloat(getComputedStyle(barra).bottom) || 0 : null,
+        };
+      };
+      const eraFissa = body.classList.contains("cd-nav-fixed");
+      body.classList.add("cd-nav-fixed");
+      const prima = leggi();
+      radice.style.setProperty("--dm-fondo-di-sistema", "48px");
+      const dopo = leggi();
+      radice.style.removeProperty("--dm-fondo-di-sistema");
+      if (!eraFissa) body.classList.remove("cd-nav-fixed");
+      return { prima, dopo, barra: Boolean(barra) };
+    });
+    /* Dove **sta** la barra non si guarda: quella la muove il suo programma
+     * con uno stile in linea — nascosta sta a -120, e da fermo si legge solo
+     * quello. Si guardano le due cose che vengono dal foglio, e sono quelle
+     * che si vedevano sbagliate: lo spazio sotto l'ultima riga, e dove si
+     * ferma chi arriva con un salto. */
+    for (const [quale, prima, dopo] of [
+      ["la riserva sotto l'ultima riga", come.prima.riserva, come.dopo.riserva],
+      ["dove si ferma un salto", come.prima.salto, come.dopo.salto],
+    ]) {
+      if (prima === null) continue;
+      if (Math.round(dopo - prima) !== 48) {
+        throw new Error(
+          `${quale} non segue «--dm-fondo-di-sistema»: da ${prima} a ${dopo},` +
+            " e dovevano essere quarantotto in piu'",
+        );
+      }
+    }
+    racconta(
+      `riserva ${come.prima.riserva}→${come.dopo.riserva}, ` +
+        `salto ${come.prima.salto}→${come.dopo.salto}` +
+        `${come.barra ? "" : " (e la barra non c'era)"}`,
+    );
+  }
+
   racconta("apro la Configurazione della plancia dal menu");
   let laConfig = await laPlancia(pagina);
   await apriIlMenu();

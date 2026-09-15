@@ -14,7 +14,10 @@ import '../casa/collegamento.dart';
 import '../casa/impostazioni.dart';
 import '../misure/lavori.dart';
 import '../parole.dart';
+import '../ponte/centralino.dart';
+import '../versione.dart';
 import '../vestito/pezzi.dart';
+import 'firma.dart' show versioneDelPacchetto;
 import 'menu.dart' show Sezione;
 import 'misure.dart';
 
@@ -123,6 +126,41 @@ class _SchermataDellaDiagnosticaState extends State<SchermataDellaDiagnostica> {
                 'screenshot of this page.',
           ),
           style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
+        ),
+        const SizedBox(height: 14),
+        /* Che app e' questa.
+         *
+         * E' la prima cosa della pagina perche' e' la prima domanda che ci si
+         * fa: «quello che ho installato e' quello nuovo?». Prima la risposta
+         * stava in una riga in grigio in fondo a due schermate sole — «Le tue
+         * case» e l'abbinamento — e da qui, a casa abbinata, non si vedeva
+         * piu' da nessuna parte.
+         *
+         * Il numero e' quello del negozio: nome e numero di costruzione, come
+         * li scrive Play. Sotto, quale pacchetto e' — l'etichetta o la corsa
+         * che l'ha costruito — che serve a chi prova una build prima che sia
+         * pubblicata, e a chi risponde a una segnalazione. */
+        Scheda(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                inLingua(it: 'Questa app', en: 'This app'),
+                style: testi.titleMedium,
+              ),
+              const SizedBox(height: 6),
+              riga(inLingua(it: 'Versione', en: 'Version'), numeroDiQuestApp),
+              riga(
+                inLingua(it: 'Pacchetto', en: 'Package'),
+                versioneDelPacchetto,
+              ),
+              riga(
+                inLingua(it: 'Centralino', en: 'Relay'),
+                centralinoDiDifetto?.casa ??
+                    inLingua(it: 'nessuno', en: 'none'),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 14),
         Scheda(

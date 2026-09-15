@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 
 import '../parole.dart';
 import '../ponte/centralino.dart';
+import '../versione.dart';
 
 /// La passa il workflow che costruisce il pacchetto. Fuori da li' non c'e' —
 /// e allora lo si dice, invece di far finta di essere una versione.
@@ -42,7 +43,7 @@ class Firma extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(top: spazioSopra),
       child: Text(
-        'gdahome $versioneDelPacchetto · $dove',
+        'gdahome $numeroDiQuestApp · $dove',
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: colori.onSurfaceVariant.withValues(alpha: 0.7),

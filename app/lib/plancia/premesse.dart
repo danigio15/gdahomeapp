@@ -70,6 +70,43 @@ class Premesse {
   /// due `!important` della stessa forza vince l'ultimo che si legge: messo in
   /// testa, il mio perdeva e la barra della plancia finiva sotto i tasti del
   /// telefono.
+  /// Le barre del telefono, dette alla pagina.
+  ///
+  /// Il riquadro arriva ai bordi dello schermo — la plancia si vede tutta — e
+  /// allora sopra c'e' l'orologio del telefono e sotto la sua barra dei tasti.
+  /// Quanto tengono lo sa Flutter, che lo chiede al sistema su
+  /// **quell'apparecchio**: due numeri, e sono gli unici numeri qui dentro.
+  ///
+  /// In cima si scrive un margine: la testata della plancia comincia dal bordo
+  /// e sotto l'orologio ci finirebbe.
+  ///
+  /// In fondo **non si scrive niente**, e qui prima si sbagliava. La plancia il
+  /// problema ce l'ha gia' risolto, e per apparecchio: in
+  /// `navigation-section.js` tiene una variabile — `--dm-fondo-di-sistema` — e
+  /// da quella deriva tutti i suoi numeri, la barra a `18 + fondo`, la riserva
+  /// sotto l'ultima riga a `112 + fondo`, la maniglia a `6 + fondo`, e lo
+  /// `scroll-padding-bottom`, che e' quello che fa fermare sopra la barra
+  /// anche chi arriva con un salto. Lo scrive nel suo commento: «non alzare la
+  /// barra di un tanto fisso — su un telefono a gesti o su un tablet
+  /// resterebbe sospesa per niente — ma alzarla di quello che il sistema si e'
+  /// preso». Il valore lo chiede a `env(safe-area-inset-bottom)`, che dentro
+  /// una cornice risponde zero comunque, e per questo la regola c'era e non si
+  /// accendeva.
+  ///
+  /// Qui invece quel numero si sa. Allora si scrive **il suo**, e il resto lo
+  /// fa lei: [leMisureNellaSuaVariabile].
+  ///
+  /// Prima al suo posto c'era un foglio nostro che ricopiava i suoi numeri —
+  /// 112 di riserva, 40 di riserva normale, la barra staccata di 8 — e li
+  /// ricopiava male: la barra la mettevamo dieci punti piu' in basso di dove
+  /// la mette lei, dentro una riserva che restava quella sua. Quei dieci punti
+  /// diventavano una striscia di niente sotto l'ultima riga, in fondo a ogni
+  /// pagina, e lo `scroll-padding-bottom` restava indietro comunque. E il
+  /// giorno che lei cambia uno di quei numeri, un foglio che li ricopia resta
+  /// indietro senza che nessuno se ne accorga.
+  ///
+  /// Sta in **fondo** alla pagina, non in testa: gli stili della plancia
+  /// arrivano dopo i suoi `<link>`, e in testa questo perdeva contro i suoi.
   String get stileDelleMisure =>
       '<style id="gdahome-misure">'
       ':root{--gdahome-alto:${margini.alto.round()}px;'
@@ -84,19 +121,53 @@ class Premesse {
        * testata «Smart Home» finiva sotto l'orologio del telefono: il
        * riquadro arriva ai bordi e nessuno lasciava spazio. Il corpo c'e'
        * sempre. */
-      'html body{padding-top:var(--gdahome-alto)!important;'
-      'padding-bottom:calc(var(--gdahome-basso) + 40px)!important}'
-      'html body.cd-nav-fixed nav.tabs.bottom-nav-bar,'
-      'html body nav.tabs.bottom-nav-bar.visible{'
-      'bottom:calc(var(--gdahome-basso) + 8px)!important}'
-      'html body.cd-nav-fixed{'
-      'padding-bottom:calc(var(--gdahome-basso) + 112px)!important}'
-      'html body .bottom-nav-handle{'
-      'bottom:calc(var(--gdahome-basso) + 6px)!important}'
-      '@media (hover:hover) and (pointer:fine){'
-      'html body nav.tabs.bottom-nav-bar:hover{'
-      'bottom:calc(var(--gdahome-basso) + 20px)!important}}'
+      'html body{padding-top:var(--gdahome-alto)!important}'
       '</style>';
+
+  /// La barra del telefono, scritta dove la plancia la va a cercare.
+  ///
+  /// `--dm-fondo-di-sistema` e' la sua variabile, e la scrive lei sul
+  /// documento — `style.setProperty`, quindi in linea, e una regola di un
+  /// foglio non la batte. Si scrive nello stesso posto, e solo quando il
+  /// numero di Flutter e' **piu' grande** del suo: mai al ribasso. Dove lei ci
+  /// arriva da se' — la plancia che e' la pagina, in un browser che le
+  /// risponde davvero — il suo numero e' quello buono e non si tocca; e' la
+  /// stessa aritmetica che fa lei, che prende il massimo fra quello che vede e
+  /// quello che le dice chi la ospita (`core/fondo-di-sistema.js`).
+  ///
+  /// Si riscrive a ogni occasione in cui lei rifa' il conto — si gira lo
+  /// schermo, si apre la tastiera — e quando riscrive quella riga: la si
+  /// guarda con un osservatore, che costa niente perche' scatta solo quando
+  /// qualcuno tocca lo stile del documento. Senza, bastava un giro del suo
+  /// conto per rimettere zero e la barra tornava sotto i tasti.
+  String get leMisureNellaSuaVariabile =>
+      '<script>(function(){'
+      'var NOME="--dm-fondo-di-sistema";'
+      'var mio=${margini.basso.round()};'
+      'var radice=document.documentElement;'
+      'var suo=function(){'
+      'try{return parseFloat('
+      'getComputedStyle(radice).getPropertyValue(NOME))||0;}'
+      'catch(male){return 0;}'
+      '};'
+      'var scrivi=function(){'
+      'if(!radice||!(mio>0))return;'
+      'try{if(suo()>=mio)return;'
+      'radice.style.setProperty(NOME,mio+"px");}catch(male){}'
+      '};'
+      'scrivi();'
+      'if(document.body)scrivi();'
+      'else document.addEventListener("DOMContentLoaded",scrivi);'
+      'window.addEventListener("load",scrivi);'
+      'window.addEventListener("resize",scrivi);'
+      'window.addEventListener("orientationchange",scrivi);'
+      'window.addEventListener("dashboardmodern:persistence-restored",scrivi);'
+      /* E quando e' lei a riscrivere quella riga. L'osservatore guarda solo
+         l'attributo dello stile del documento: scatta quando qualcuno lo
+         cambia, e non c'e' nessun giro a vuoto. */
+      'try{new MutationObserver(scrivi).observe(radice,'
+      '{attributes:true,attributeFilter:["style"]});}catch(male){}'
+      '})();</script>';
 
   /// La Config esce da dentro la plancia e diventa una voce del menu.
   ///
@@ -596,7 +667,7 @@ class Premesse {
      * [stileDelleMisure], che spiega perche' in testa perdevano contro lo
      * stile della plancia. */
     final inFondo =
-        '$stileDelleMisure$laConfigFuoriDallaPlancia'
+        '$stileDelleMisure$leMisureNellaSuaVariabile$laConfigFuoriDallaPlancia'
         '$iTreTrattiniApronoIlMenuDellApp$laTendaSiAlzaComunque'
         '$lAvvisoAspettaLaConfigurazione';
     final fine = RegExp(

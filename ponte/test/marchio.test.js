@@ -180,6 +180,24 @@ test("l'app e l'add-on portano lo stesso numero", () => {
    * dell'add-on e' l'ultima cifra: 1.4.24.1 diventa 104241. Cosi' non c'e' un
    * secondo numero da ricordarsi, e ogni versione della plancia ha dieci
    * correzioni a disposizione per andare anche nel negozio. */
+  /* E il terzo posto: il numero che l'app **fa vedere**.
+   *
+   * Il `pubspec` lo legge chi costruisce, non l'app che gira, e per rileggerlo
+   * da dentro servirebbe un pacchetto in piu': quindi lo stesso programma che
+   * scrive questi due scrive anche un file Dart, e l'app legge quello. Tre
+   * posti sono tre occasioni di dire tre numeri diversi — meno questa prova. */
+  const dart = readFileSync(
+    fileURLToPath(new URL("../../app/lib/versione.dart", import.meta.url)),
+    "utf8",
+  );
+  const nome = /^const String versioneDiQuestApp = "([^"]+)";$/m.exec(dart);
+  const costruito = /^const int costruzioneDiQuestApp = (\d+);$/m.exec(dart);
+  const scritto = /^const String numeroDiQuestApp = "([^"]+)";$/m.exec(dart);
+  assert.ok(nome && costruito && scritto, "l'app non dice che numero e'");
+  assert.equal(nome[1], `${grande}.${medio}.${piccolo}`);
+  assert.equal(costruito[1], costruzione);
+  assert.equal(scritto[1], `${nome[1]} (${costruzione})`);
+
   const correzione = suoi.length === 4 ? Number(suoi[3]) : 0;
   assert.ok(correzione >= 0 && correzione <= 9, "di correzioni ce ne stanno dieci, da 0 a 9");
   assert.equal(
