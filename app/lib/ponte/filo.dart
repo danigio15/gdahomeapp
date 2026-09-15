@@ -268,6 +268,17 @@ class Filo {
   int _messaggiArrivati = 0;
   int _byteArrivati = 0;
   int _eventiArrivati = 0;
+
+  /* Quanti dei messaggi arrivati erano per qualcun altro — cioe' per la
+   * plancia.
+   *
+   * Prima non si contavano, e nemmeno i loro eventi: un messaggio instradato
+   * torna a chi l'aveva chiesto **prima** di essere aperto, e la conta degli
+   * eventi stava in fondo, dove quel messaggio non arriva mai. Cosi' una casa
+   * che parla — cinquecento messaggi in mezzo minuto, tutti `state_changed`
+   * per la plancia — in diagnostica si leggeva «500 msg, 0 eventi», che non
+   * vuol dire niente e manda a cercare un colpevole che non c'e'. */
+  int _perLaPlancia = 0;
   int _messaggiMandati = 0;
   DateTime? _contoDal;
 
@@ -314,13 +325,23 @@ class Filo {
     final quandoDa = minuti < 1
         ? '${(minuti * 60).round()} s'
         : '${minuti.round()} min';
+    /* Quanti erano della plancia: e' la risposta alla domanda che uno si fa
+     * guardando un numero grosso — «ma chi parla tanto?». Quando sono quasi
+     * tutti, la casa sta raccontando alla plancia ogni cosa che cambia, e
+     * quello non e' un guasto dell'app. */
+    final dellaPlancia = _perLaPlancia > 0
+        ? inLingua(
+            it: ' ($_perLaPlancia alla plancia)',
+            en: ' ($_perLaPlancia to the dashboard)',
+          )
+        : '';
     return inLingua(
       it:
-          '$_messaggiArrivati msg$buste, $_eventiArrivati eventi, '
+          '$_messaggiArrivati msg$buste$dellaPlancia, $_eventiArrivati eventi, '
           '${_megabyte(_byteArrivati)} giù$sulFilo, $_messaggiMandati su, '
           'in $quandoDa; $cadute',
       en:
-          '$_messaggiArrivati msg$buste, $_eventiArrivati events, '
+          '$_messaggiArrivati msg$buste$dellaPlancia, $_eventiArrivati events, '
           '${_megabyte(_byteArrivati)} down$sulFilo, $_messaggiMandati up, '
           'in $quandoDa; $cadute',
     );
@@ -592,6 +613,7 @@ class Filo {
     if (testa != null) {
       final aChi = _instradati[testa.id];
       if (aChi != null) {
+        _perQualcunAltro(testa.tipo);
         aChi(Instradato._(grezzo, testa));
         return;
       }
@@ -629,6 +651,7 @@ class Filo {
       if (numero is int) {
         final aChi = _instradati[numero];
         if (aChi != null) {
+          _perQualcunAltro(detto['type'] as String?);
           aChi(Instradato._daMappa(detto));
           return;
         }
@@ -661,6 +684,13 @@ class Filo {
     }
   }
 
+  /* Un messaggio che torna a chi l'aveva instradato: si conta qui, perche' da
+   * qui in poi non passa piu' dalla parte che conta. */
+  void _perQualcunAltro(String? tipo) {
+    _perLaPlancia += 1;
+    if (tipo == 'event') _eventiArrivati += 1;
+  }
+
   void _entrato() {
     _tentativi = 0;
     _contoDal = DateTime.now();
@@ -668,6 +698,7 @@ class Filo {
      * righe della diagnostica parlano dello stesso pezzo di tempo. */
     Lavori.io.azzera();
     _messaggiArrivati = 0;
+    _perLaPlancia = 0;
     _busteArrivate = 0;
     _byteArrivati = 0;
     _eventiArrivati = 0;

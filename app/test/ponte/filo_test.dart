@@ -599,6 +599,29 @@ void main() {
     },
   );
 
+  test('gli eventi della plancia si contano, e si dice quanti sono', () async {
+    /* La diagnostica diceva «500 msg, 0 eventi» a chi aveva una casa che
+     * parla: un messaggio instradato torna a chi l'aveva chiesto **prima** di
+     * essere aperto, e la conta degli eventi stava dopo, dove quel messaggio
+     * non arriva mai. Cosi' il numero piu' utile — quanto la casa racconta
+     * alla plancia — era l'unico che non si vedeva, e chi guardava andava a
+     * cercare un colpevole che non c'era. */
+    final filo = filoCon();
+    await filo.apri();
+    final tornati = <Instradato>[];
+    final numero = filo.instrada({'type': 'subscribe_events'}, tornati.add);
+    await _finoA(() => tornati.isNotEmpty, entro: const Duration(seconds: 3));
+
+    for (var quale = 0; quale < 5; quale += 1) {
+      ponte.cambia(numero, 'light.sala_$quale', {'state': 'on'});
+    }
+    await _finoA(() => tornati.length >= 6, entro: const Duration(seconds: 3));
+
+    expect(filo.traffico, contains('5 eventi'));
+    expect(filo.traffico, contains('alla plancia'));
+    await filo.chiudi();
+  });
+
   test('una risposta grossa si legge altrove, e arriva intera', () async {
     /* Sopra la soglia il JSON non si legge su questo filo: i byte partono per
      * l'aiutante — **trasferiti**, non copiati — e tornano mappe. E' la strada
