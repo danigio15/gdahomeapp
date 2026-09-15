@@ -476,6 +476,87 @@ class Premesse {
       'setTimeout(alza,5000);'
       '})();</script>';
 
+  /// L'avviso «non hai ancora collegato le tue entita'» non parla prima che la
+  /// configurazione sia arrivata.
+  ///
+  /// La plancia, mezzo secondo dopo che la pagina e' pronta, guarda quattro
+  /// cose — la mappa delle entita', le stanze, le unita' clima, le luci — e se
+  /// sono tutte vuote scrive in cima alla Home «non hai ancora collegato le
+  /// tue entita', quindi le card sono nascoste» (`cdEmptyStateCheck`, in
+  /// `dashboard-runtime-it.js`). Quella domanda se la fa **una volta sola**, e
+  /// l'avviso poi non se ne va piu' da solo.
+  ///
+  /// Dentro Home Assistant quella regola e' giusta: la configurazione sta
+  /// nella pagina e mezzo secondo dopo c'e'. Qui no: la configurazione la
+  /// tiene il ponte e arriva **sul filo**, dopo che la pagina si e' caricata.
+  /// In casa arriva in fretta e non si vede niente; su un filo lento — il
+  /// centralino, una casa che risponde piano — la domanda parte prima della
+  /// risposta, e si vede l'avviso sopra una Home piena di tessere con i dati
+  /// dentro. Cioe' la plancia dice «configurala» a chi l'ha configurata.
+  ///
+  /// Allora il posto di quell'avviso lo si tiene occupato: un elemento col
+  /// suo nome, nascosto, e la loro domanda — che si ferma se quel nome c'e'
+  /// gia' — non fa niente. Quando la configurazione arriva (la plancia lo
+  /// dice: `dashboardmodern:persistence-restored`) si rifa' **la loro**
+  /// domanda, con le loro quattro risposte: se c'e' qualcosa l'avviso non
+  /// compare; se e' davvero vuota si toglie il posto e si chiama la loro
+  /// funzione, che lo scrive. Vuoto vuol dire vuoto, e allora l'avviso e'
+  /// giusto.
+  ///
+  /// Se la configurazione non arriva mai, il posto resta occupato e l'avviso
+  /// non compare: a filo caduto la plancia lo dice gia' col suo pallino, e
+  /// «non hai collegato le entita'» sarebbe una bugia.
+  static const String lAvvisoAspettaLaConfigurazione =
+      '<script>(function(){'
+      'var NOME="cd-empty-banner";'
+      'var NOSTRO="data-gdahome-posto";'
+      'var FINO_A=12000;'
+      'var OGNI=250;'
+      'var pieno=function(){'
+      'try{if(typeof ENTITY_OVERRIDES!=="undefined"&&Object.keys(ENTITY_OVERRIDES||{}).length)return true;}catch(male){}'
+      'try{if(typeof cdCfgList==="function"){'
+      'if((cdCfgList("cd_stanze")||[]).length)return true;'
+      'if((cdCfgList("cd_clima_units")||[]).length)return true;}'
+      'if(typeof cdCfg==="function"&&Object.keys(cdCfg("cd_luci")||{}).length)return true;}catch(male){}'
+      'return false;'
+      '};'
+      'var quello=function(){return document.getElementById(NOME);};'
+      'var ilPosto=function(){var chi=quello();return chi&&chi.hasAttribute(NOSTRO)?chi:null;};'
+      'var togli=function(chi){if(chi&&chi.parentNode)chi.parentNode.removeChild(chi);};'
+      'var occupa=function(){'
+      'if(quello())return;'
+      'try{'
+      'var posto=document.createElement("div");'
+      'posto.id=NOME;'
+      'posto.setAttribute(NOSTRO,"1");'
+      'posto.style.display="none";'
+      'document.body.appendChild(posto);'
+      '}catch(male){}'
+      '};'
+      'var finito=false;'
+      'var guarda=function(scaduto){'
+      'if(finito)return;'
+      'if(pieno()){finito=true;togli(quello());return;}'
+      'if(!scaduto)return;'
+      'finito=true;'
+      'togli(ilPosto());'
+      'try{if(typeof cdEmptyStateCheck==="function")cdEmptyStateCheck();}catch(male){}'
+      '};'
+      'var parti=function(){'
+      'occupa();'
+      'var fine=Date.now()+FINO_A;'
+      'var battito=setInterval(function(){'
+      'guarda(Date.now()>=fine);'
+      'if(finito)clearInterval(battito);'
+      '},OGNI);'
+      'window.addEventListener("dashboardmodern:persistence-restored",function(){'
+      'setTimeout(function(){guarda(true);},0);'
+      '});'
+      '};'
+      'if(document.body)parti();'
+      'else document.addEventListener("DOMContentLoaded",parti);'
+      '})();</script>';
+
   /* Il tema, la tavolozza e la barra qui non si scrivono, e non e' una
    * dimenticanza. Sono tre comandi della pagina Config della plancia — «su
    * questo dispositivo», lo dice lei — e la pagina se li tiene nel deposito
@@ -516,7 +597,8 @@ class Premesse {
      * stile della plancia. */
     final inFondo =
         '$stileDelleMisure$laConfigFuoriDallaPlancia'
-        '$iTreTrattiniApronoIlMenuDellApp$laTendaSiAlzaComunque';
+        '$iTreTrattiniApronoIlMenuDellApp$laTendaSiAlzaComunque'
+        '$lAvvisoAspettaLaConfigurazione';
     final fine = RegExp(
       r'</body\s*>',
       caseSensitive: false,

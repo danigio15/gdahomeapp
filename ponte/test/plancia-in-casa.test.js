@@ -232,6 +232,16 @@ test("la pagina della plancia arriva con le sue premesse e col suo «base»", as
     assert.match(pagina, /window\.__DASHBOARDMODERN_LOCALE__="it";/);
     assert.match(pagina, /window\.__GDAHOME__=true;/);
     assert.match(pagina, /window\.__DASHBOARDMODERN_BRIDGE_WS__=\(function\(Vera\)/);
+    /* E il posto dell'avviso «non hai ancora collegato le tue entita'».
+     *
+     * Quella domanda la plancia se la fa mezzo secondo dopo che la pagina e'
+     * pronta, e se la fa una volta sola: qui la configurazione arriva sul
+     * filo, dopo, e su un filo lento l'avviso resta sopra una Home piena di
+     * tessere coi dati dentro. Il posto si tiene occupato, e quando la
+     * configurazione arriva si rifa' la loro domanda. */
+    assert.match(pagina, /id="cd-empty-banner"|posto\.id=NOME/);
+    assert.match(pagina, /dashboardmodern:persistence-restored/);
+    assert.match(pagina, /cdEmptyStateCheck\(\)/);
     /* E l'indirizzo del filo: qualunque cosa la pagina gli passi, va al
      * ponte. */
     assert.match(pagina, /location\.host\+"\/plancia\/api\/websocket"/);

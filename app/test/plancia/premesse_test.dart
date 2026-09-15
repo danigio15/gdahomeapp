@@ -161,6 +161,40 @@ void main() {
     );
   });
 
+  test("l'avviso delle entità aspetta che la configurazione arrivi", () {
+    /* La plancia, mezzo secondo dopo che la pagina è pronta, guarda quattro
+     * cose — entità, stanze, clima, luci — e se sono tutte vuote scrive «non
+     * hai ancora collegato le tue entità». Se la fa una volta sola.
+     *
+     * Qui la configurazione arriva sul filo, **dopo** la pagina: su un filo
+     * lento quella domanda parte prima della risposta, e l'avviso resta
+     * sopra una Home piena di tessere coi dati dentro. Allora il posto lo si
+     * tiene occupato, e quando la configurazione arriva si rifà la loro
+     * domanda. */
+    final servita = _premesse().conLePremesse(
+      _pagina,
+      ilWebSocket: 'WebSocket',
+    );
+    /* Il nome è il loro, se no la loro domanda non si ferma. */
+    expect(servita, contains('"cd-empty-banner"'));
+    /* E si riconosce che il posto è nostro, per non togliere il loro avviso
+     * vero se un giorno arrivasse prima. */
+    expect(servita, contains('"data-gdahome-posto"'));
+    expect(servita, contains('posto.style.display="none"'));
+    /* Si rifà **la loro** domanda, con le loro quattro risposte. */
+    for (final quale in [
+      'ENTITY_OVERRIDES',
+      'cd_stanze',
+      'cd_clima_units',
+      'cd_luci',
+    ]) {
+      expect(servita, contains(quale), reason: '«$quale» è una delle quattro');
+    }
+    /* E si rifà quando la configurazione arriva, non prima. */
+    expect(servita, contains('"dashboardmodern:persistence-restored"'));
+    expect(servita, contains('cdEmptyStateCheck()'));
+  });
+
   test('i tre trattini della plancia aprono il menu dell\'app', () {
     final servita = _premesse().conLePremesse(
       _pagina,

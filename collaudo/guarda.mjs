@@ -1195,7 +1195,15 @@ try {
       .evaluate(() => ({
         collegato: Boolean(document.getElementById("live-dot")?.classList.contains("connected")),
         scritta: (document.getElementById("conn-text")?.textContent || "").trim(),
-        senzaEntita: Boolean(document.getElementById("cd-empty-banner")),
+        /* L'avviso **loro**, non il posto che gli tiene il servitore.
+         *
+         * Hanno lo stesso nome apposta: la loro domanda si ferma se quel nome
+         * c'e' gia', ed e' cosi' che l'avviso non parla prima che la
+         * configurazione sia arrivata (`Premesse`). Il posto porta un segno
+         * nostro, e finche' c'e' vuol dire «la configurazione e' per
+         * strada» — che qui, un istante dopo che il pallino e' verde, e'
+         * esattamente dove siamo. */
+        senzaEntita: Boolean(document.querySelector("#cd-empty-banner:not([data-gdahome-posto])")),
       }))
       .catch(() => null);
     if (come?.collegato) break;
@@ -1214,6 +1222,29 @@ try {
     throw new Error("ricaricata la plancia, dice che le entita' non sono collegate");
   }
   racconta(`la plancia si e' ricollegata: ${come.scritta || "pallino verde"}`);
+
+  /* E quando tutto si e' posato non resta niente con quel nome: ne' il loro
+   * avviso, che sarebbe una bugia su una casa configurata, ne' il posto del
+   * servitore, che se restasse vorrebbe dire che in una casa **davvero** vuota
+   * l'avviso non comparirebbe mai. Quindici secondi: la scadenza del posto e'
+   * dodici. */
+  const fineDellAvviso = Date.now() + 15_000;
+  let avviso = "c'e' ancora";
+  while (Date.now() < fineDellAvviso) {
+    avviso = await ricaricata
+      .evaluate(() => {
+        const chi = document.getElementById("cd-empty-banner");
+        if (!chi) return "";
+        return chi.hasAttribute("data-gdahome-posto") ? "il posto" : "l'avviso";
+      })
+      .catch(() => "il riquadro non risponde");
+    if (!avviso) break;
+    await attendi(400);
+  }
+  if (avviso) {
+    throw new Error(`a configurazione arrivata resta ${avviso} dove sta l'avviso delle entita'`);
+  }
+  racconta("l'avviso delle entita' non c'e', e nemmeno il posto che gli si tiene");
   await attendi(700);
   await scatta(pagina, "3d-plancia-ricaricata");
 
