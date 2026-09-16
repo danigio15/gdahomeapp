@@ -45,7 +45,12 @@ import { request as richiestaHttp } from "node:http";
 import { request as richiestaHttps } from "node:https";
 import { gzipSync } from "node:zlib";
 
-import { Configurazione, PROFILO_PRINCIPALE, ScattoTroppoGrande } from "./configurazione.js";
+import {
+  Configurazione,
+  eConfigurata,
+  PROFILO_PRINCIPALE,
+  ScattoTroppoGrande,
+} from "./configurazione.js";
 import { DISPOSITIVI_MASSIMI, ENTITA_MASSIME } from "./catalogo.js";
 import { BASE_DELLE_FOTO, BASE_DI_CASA, FOTO_MASSIMA } from "./foto.js";
 import { ChatHaDettoNo } from "./chat.js";
@@ -510,7 +515,7 @@ export class Commissioni {
     }
   }
 
-  _configurazione(detto) {
+  async _configurazione(detto) {
     const id = detto.id ?? null;
     const cassetta = this.configurazione;
     if (!cassetta) return no(id, "unknown_command", `non conosco ${detto.type}`);
@@ -518,7 +523,10 @@ export class Commissioni {
     if (!Configurazione.profiloBuono(profilo))
       return no(id, "invalid_format", "profilo non valido");
     try {
-      if (detto.type === CONFIG_GET) return si(id, cassetta.leggi(profilo));
+      if (detto.type === CONFIG_GET) {
+        await this._laPrendeDallIntegrazione(profilo);
+        return si(id, cassetta.leggi(profilo));
+      }
       if (detto.type === CONFIG_RESTORE) {
         const revisione = Number(detto.revision);
         if (!Number.isFinite(revisione)) return no(id, "invalid_format", "manca la revisione");
@@ -546,6 +554,97 @@ export class Commissioni {
       if (errore instanceof ScattoTroppoGrande) return no(id, "snapshot_too_large", errore.message);
       this.registro.errore(`configurazione andata storta: ${errore?.message || errore}`);
       return no(id, "ponte_config", "non ha funzionato");
+    }
+  }
+
+  /* Chi aveva la dashboard prima di gdahome non ricomincia da zero.
+   *
+   * L'integrazione di DashboardModern — quella che si installa da HACS — la
+   * configurazione la tiene in Home Assistant, in `.storage`, e risponde lei
+   * a `dashboardmodern/config/*`. Il ponte risponde a quegli **stessi**
+   * comandi con la propria cassetta, che per una casa nuova e' vuota: e cosi'
+   * chi la plancia l'aveva gia' configurata in Home Assistant apriva l'app e
+   * la trovava bianca, e doveva rifare tutto — importare le entita', rimettere
+   * le sezioni. L'ha segnalato un provatore, e non e' un caso raro: e' quello
+   * che succede a chiunque installi gdahome su una casa che la dashboard ce
+   * l'ha gia'.
+   *
+   * Allora la prima volta che si chiede la configurazione di un profilo, e
+   * qui non c'e' niente, la si chiede a Home Assistant: se l'integrazione c'e'
+   * risponde lei, e quello che risponde si adotta. La forma e' la stessa —
+   * `config_store.py` e `configurazione.js` sono gemelli, e lo scatto
+   * pubblico ha gli stessi sei campi — quindi non c'e' niente da tradurre.
+   *
+   * Tre regole, e sono quelle che rendono questa cosa sicura:
+   *
+   *  - si guarda **solo** quando qui e' vuoto. Una configurazione fatta
+   *    dall'app non viene mai coperta da quella vecchia dell'integrazione;
+   *  - si chiede **una volta per profilo**, e se Home Assistant risponde che
+   *    quel comando non lo conosce — cioe' l'integrazione non c'e', ed e' il
+   *    caso della maggior parte delle case — non si chiede piu' per nessuno;
+   *  - non solleva mai. Una casa senza integrazione, un filo caduto, una
+   *    risposta strana: si va avanti con la cassetta vuota, che e' esattamente
+   *    quello che si faceva prima.
+   */
+  async _laPrendeDallIntegrazione(profilo) {
+    const cassetta = this.configurazione;
+    if (!cassetta || !this.casa || this._nienteIntegrazione) return;
+    this._giaChiesti ??= new Set();
+    if (this._giaChiesti.has(profilo)) return;
+    this._giaChiesti.add(profilo);
+
+    /* Se qui c'e' gia' qualcosa, la buona e' questa. */
+    try {
+      if (eConfigurata(cassetta.leggi(profilo)?.snapshot?.values)) return;
+    } catch (_errore) {
+      return;
+    }
+
+    let suo;
+    try {
+      /* Quattro secondi e non venti.
+       *
+       * Di questa domanda sta aspettando la **prima lettura della plancia**:
+       * la pagina ha appena aperto il filo e non disegna niente finche' non
+       * sa com'e' configurata. Una casa che non risponde non deve tenere una
+       * plancia bianca per venti secondi — dopo quattro si va avanti con
+       * quello che c'e', che prima di oggi era tutto quello che si faceva. */
+      suo = await this.casa.chiedi({ type: CONFIG_GET, profile: profilo }, { entro: 4000 });
+    } catch (errore) {
+      if (errore?.code === "unknown_command") {
+        /* In questa casa l'integrazione non c'e', e non ci sara' nemmeno fra
+         * un minuto: non si chiede piu' per nessun profilo. */
+        this._nienteIntegrazione = true;
+        return;
+      }
+      /* Il filo caduto, o una casa lenta: non e' una risposta, e non si tiene
+       * per una risposta. La prossima volta che si apre la plancia si
+       * richiede — una casa che non risponde ha problemi piu' grossi di
+       * questo, e non e' un motivo per perdersi la configurazione di chi
+       * aveva l'integrazione. */
+      this._giaChiesti.delete(profilo);
+      this.registro.info(
+        `la configurazione dell'integrazione non si e' letta: ${errore?.message || errore}`,
+      );
+      return;
+    }
+
+    const scatto = suo?.snapshot;
+    if (!scatto || !eConfigurata(scatto.values)) return;
+
+    try {
+      const esito = cassetta.scrivi(profilo, scatto.values, {
+        keys_revision: scatto.keys_revision ?? 0,
+        writer_generation: scatto.writer_generation ?? 0,
+        updated_at: scatto.updated_at ?? 0,
+      });
+      this.registro.info(
+        `la plancia «${profilo}» prende la configurazione dall'integrazione di Home Assistant (${esito?.status || "?"})`,
+      );
+    } catch (errore) {
+      this.registro.attenzione(
+        `la configurazione dell'integrazione non si e' adottata: ${errore?.message || errore}`,
+      );
     }
   }
 

@@ -512,14 +512,25 @@ test("il filo della pagina: «auth_ok» senza chiedere, e chi risponde a cosa", 
     assert.equal(dentro.ha_version, "gdahome");
 
     /* La configurazione la fa il ponte: nella dashboard la faceva
-     * l'integrazione, e a Home Assistant non deve arrivare. */
+     * l'integrazione, e la domanda della pagina a Home Assistant non arriva.
+     *
+     * Una domanda a Home Assistant pero' c'e', e non e' questa: la prima
+     * volta che una plancia vuota si legge, il ponte guarda se
+     * l'integrazione ce l'ha (`_laPrendeDallIntegrazione`). Quella parte dal
+     * filo suo, coi numeri suoi — quindi mai col 7 della pagina — ed e' una
+     * sola. */
     pagina.manda({ id: 7, type: "dashboardmodern/config/get", profile: "primary" });
     const configurazione = await pagina.aspetta((detto) => detto.id === 7);
     assert.equal(configurazione.success, true);
     assert.equal(configurazione.result.profile, "primary");
+    const suLaCasa = b.ha.arrivati.filter((detto) => detto.type === "dashboardmodern/config/get");
     assert.ok(
-      !b.ha.arrivati.some((detto) => detto.type === "dashboardmodern/config/get"),
-      "la configurazione e' arrivata a Home Assistant, e la' non la sa nessuno",
+      suLaCasa.every((detto) => detto.id !== 7),
+      "la domanda della pagina e' arrivata a Home Assistant, e la' non la sa nessuno",
+    );
+    assert.ok(
+      suLaCasa.length <= 1,
+      "il ponte ne chiede una sola, e solo per adottare quella dell'integrazione",
     );
 
     /* Tutto il resto no: quello e' roba della casa, e passa com'e'. */
