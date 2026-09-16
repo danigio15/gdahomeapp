@@ -51,11 +51,26 @@ export const segno = (quale, lato = 20, colore = "currentColor") =>
  * didascalie: chi lo chiama lo rimpicciolisce da fuori, con un involucro che
  * scala. Da fuori e non da dentro perche' l'animazione d'ingresso lavora
  * anche lei sul `transform`, e uno dei due cancellerebbe l'altro. */
-export function telefono({ x, y, dentro, classe = "", stile = "", scala = 1 }) {
-  const apparecchio = `<div class="telefono ${classe}" style="position:relative;left:0;top:0;${stile}">
-    <div class="schermo">
+export function telefono({
+  x,
+  y,
+  dentro,
+  classe = "",
+  stile = "",
+  scala = 1,
+  /* Quanto e' alto: di serie quello del foglio di stile. Si cambia quando
+     dentro ci va una fotografia vera, che ha le proporzioni che ha e non si
+     puo' ne' stirare ne' tagliare. */
+  alto = 636,
+  /* La finta barra di stato («9:41»). Va tolta quando dentro c'e' una
+     fotografia: la sua ora e la sua rete sono gia' nella fotografia, e due
+     barre di stato una sopra l'altra si vedono. */
+  barra = true,
+}) {
+  const apparecchio = `<div class="telefono ${classe}" style="position:relative;left:0;top:0;height:${alto}px;${stile}">
+    <div class="schermo" style="height:${alto - 22}px">
       <div class="tacca"></div>
-      <div class="stato-telefono"><span>9:41</span><span>▮▮▮ ⏶</span></div>
+      ${barra ? '<div class="stato-telefono"><span>9:41</span><span>▮▮▮ ⏶</span></div>' : ""}
       ${dentro}
     </div>
   </div>`;
@@ -64,7 +79,7 @@ export function telefono({ x, y, dentro, classe = "", stile = "", scala = 1 }) {
      se no la fila gli lascia il posto per un telefono intero. */
   const posa =
     x === undefined
-      ? `display:block;width:${Math.round(314 * scala)}px;height:${Math.round(636 * scala)}px`
+      ? `display:block;width:${Math.round(314 * scala)}px;height:${Math.round(alto * scala)}px`
       : `position:absolute;left:${x}px;top:${y}px`;
   return `<div style="${posa};transform:scale(${scala});transform-origin:top left">${apparecchio}</div>`;
 }
@@ -187,90 +202,16 @@ export function mettiInScena(SCENE) {
 /* ── Gli altri due schermi ────────────────────────────────────────────────
  *
  * gdahome non e' un'app da telefono: e' la stessa pagina che si apre sul
- * tablet in cucina e sul computer, e chi la vede per la prima volta questo
- * non lo sa. Quindi quando si fa vedere la casa si fanno vedere **tutti e
- * tre** gli schermi, e su ognuno la plancia com'e' davvero li' sopra: due
- * colonne sul telefono, tre sul tablet, quattro sul computer con il menu
- * aperto di fianco — che sul computer resta aperto per davvero.
+ * tablet in cucina e sul computer, e chi la vede per la prima volta questo non
+ * lo sa. Quindi quando si fa vedere la casa si fanno vedere **tutti e tre** gli
+ * schermi.
+ *
+ * Qui ci sono solo le **cornici**. Quello che ci va dentro, nelle copertine, e'
+ * una fotografia della plancia vera (`plancia-vera.mjs`): c'era anche una
+ * plancia larga disegnata a mano, per tre colonne e per quattro, ed e' andata
+ * via il giorno che la vera si e' potuta fotografare. Una somiglianza in meno
+ * da tenere al passo.
  */
-
-/* Le tessere, per uno schermo qualunque. */
-const TESSERE = [
-  ["luci", "Luci", "3 accese"],
-  ["clima", "Clima", "21,4°"],
-  ["energia", "Energia", "1,24 kW"],
-  ["sicurezza", "Sicurezza", "Inserita"],
-  ["telecamere", "Telecamere", "4"],
-  ["tapparelle", "Finestre", "Aperte 2"],
-  ["media", "Media", "In pausa"],
-  /* «Tutti a casa» in una tessera del tablet andava a capo: li' la colonna e'
-     un terzo di quella del telefono, e una riga che va a capo in una tessera
-     alta come le altre esce dal bordo di sotto. */
-  ["persone", "Persone", "A casa"],
-  ["irrigazione", "Irrigazione", "Spenta"],
-  ["macchine", "Auto", "82 %"],
-  ["aria", "Aria", "Buona"],
-  ["agenda", "Agenda", "2 oggi"],
-];
-
-/* Le voci del menu: quelle vere dell'app, `app/lib/schermate/menu.dart`. */
-const MENU = [
-  "Plancia",
-  "Dispositivi",
-  "Configurazione",
-  "Come va l'app",
-  "Segnalazioni",
-  "Assistenza",
-];
-
-/* La plancia su uno schermo largo: quante colonne, quante tessere, e se il
-   menu sta aperto di fianco come succede sul computer. */
-export function planciaLarga({ colonne = 3, quante = 9, menu = false, lato = 170 } = {}) {
-  const tessere = TESSERE.slice(0, quante)
-    .map(([disegno, nome, valore], i) => tessera(disegno, nome, valore, i === 0, "", "height:82px"))
-    .join("");
-  return `
-  <div style="position:absolute;inset:0;background:#f0f4f8;display:flex">
-    ${
-      menu
-        ? `<div style="width:${lato}px;flex:0 0 auto;background:#fff;border-right:1px solid rgba(15,23,42,.08);padding:14px 0">
-             <div style="display:flex;align-items:center;gap:10px;padding:4px 16px 14px">
-               <img src="${MARCHIO}" width="30" height="30" style="border-radius:9px" alt="" />
-               <span style="font-size:16px;font-weight:800;letter-spacing:-.02em">gdahome</span>
-             </div>
-             ${MENU.map(
-               (
-                 voce,
-                 i,
-               ) => `<div style="display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;font-weight:${i === 0 ? 700 : 500};
-                    color:${i === 0 ? "#0284c7" : "#64748b"};${i === 0 ? "background:rgba(14,165,233,.1);border-right:3px solid #0ea5e9" : ""}">
-                    <span style="width:7px;height:7px;border-radius:50%;background:${i === 0 ? "#0ea5e9" : "#cbd5e1"}"></span>${voce}</div>`,
-             ).join("")}
-           </div>`
-        : ""
-    }
-    <div style="flex:1;min-width:0;display:flex;flex-direction:column">
-      <div style="padding:14px 18px 12px;display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-size:22px;font-weight:800;letter-spacing:-.02em">Casa</div>
-          <div style="font-size:12px;color:#64748b">Sereno · 21,4° · tutti a casa</div>
-        </div>
-        ${menu ? "" : `<img src="${MARCHIO}" width="28" height="28" style="border-radius:8px" alt="" />`}
-      </div>
-      <div style="flex:1;padding:0 18px;display:grid;grid-template-columns:repeat(${colonne},1fr);gap:12px;align-content:start">
-        ${tessere}
-      </div>
-      <div style="height:48px;background:#fff;border-top:1px solid rgba(15,23,42,.07);display:flex;align-items:center;justify-content:center;gap:${colonne > 3 ? 34 : 12}px">
-        ${["home", "luci", "clima", "energia", "sicurezza", "impostazioni"]
-          .map(
-            (nome, i) =>
-              `<div style="display:grid;place-items:center;${i === 0 ? "background:rgba(15,23,42,.06);border-radius:11px;padding:5px 13px" : "padding:5px 13px"}">${oggetto(nome, 20)}</div>`,
-          )
-          .join("")}
-      </div>
-    </div>
-  </div>`;
-}
 
 /* Il tablet: una cornice e basta, senza tacca. */
 export function tavoletta({ largo = 340, alto = 460, dentro = "", stile = "", scala = 1 }) {

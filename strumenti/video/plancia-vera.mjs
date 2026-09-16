@@ -1,0 +1,318 @@
+#!/usr/bin/env node
+/* Fotografare la plancia **vera**.
+ *
+ * Non una ricostruzione: la pagina di DashboardModern che sta in
+ * `ponte/plancia/`, quella che l'add-on serve davvero, aperta in un Chromium e
+ * fotografata. Dietro non c'e' una casa: c'e' `casa-finta.js`, che le risponde
+ * come le risponderebbe Home Assistant.
+ *
+ * La pagina si serve come la serve il ponte — `conLePremesse()`, lo stesso
+ * codice — cambiando una cosa sola: al posto del WebSocket verso la casa ci va
+ * la casa finta. Cosi' quello che si fotografa e' la plancia come la vede chi
+ * ce l'ha installata, e non una pagina preparata per la fotografia.
+ *
+ *   node strumenti/video/plancia-vera.mjs
+ *
+ * Le fotografie finiscono in `provini/plancia-vera-*.png`, una per schermo.
+ */
+
+import { createServer } from "node:http";
+import { execFileSync } from "node:child_process";
+import { readFile, mkdir } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+import { vestiDiGdahome } from "../../ponte/src/marchio.js";
+import { conLePremesse, ilWebSocket } from "../../ponte/src/premesse.js";
+
+const QUI = path.dirname(fileURLToPath(import.meta.url));
+const RADICE = path.resolve(QUI, "..", "..");
+const PLANCIA = path.join(RADICE, "ponte", "plancia");
+
+/* I tre schermi, alle misure **vere**: un telefono, un tablet e un computer.
+ *
+ * Non le misure che avranno nella copertina — li' sono francobolli. La plancia
+ * e' responsiva: disegnata in 292 pixel di larghezza si dispone come si
+ * disporrebbe su un orologio, con l'intestazione che si mangia mezzo schermo.
+ * Si fotografa grande e la si guarda da lontano, come si fa con gli schermi
+ * nelle copertine. */
+const SCHERMI = {
+  telefono: { largo: 390, alto: 844 },
+  tablet: { largo: 820, alto: 1180 },
+  computer: { largo: 1440, alto: 900 },
+};
+
+async function apriPlaywright() {
+  const dentro = (roba) => roba?.chromium ?? roba?.default?.chromium;
+  try {
+    const vicino = await import("playwright");
+    if (dentro(vicino)) return dentro(vicino);
+  } catch {
+    /* si guarda fra i globali */
+  }
+  const globale = execFileSync("npm", ["root", "-g"], { encoding: "utf8" }).trim();
+  return dentro(await import(pathToFileURL(path.join(globale, "playwright", "index.js")).href));
+}
+
+const TIPI = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".webp": "image/webp",
+  ".ttf": "font/ttf",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+};
+
+/* La pagina, servita come la serve il ponte ma con la casa finta al posto
+   della casa. La riga che cambia e' una: il WebSocket. */
+async function laPagina() {
+  const crudo = await readFile(path.join(PLANCIA, "legacy", "dashboard.html"));
+  /* Vestita di gdahome, come la serve l'add-on: il logo, il velo d'avvio, il
+     titolo. Senza, in cima alla plancia si legge il nome di prima — ed e' la
+     prima cosa che si vede in una copertina. */
+  const pagina = vestiDiGdahome("legacy/dashboard.html", crudo, "text/html").corpo.toString("utf8");
+  const dove = "ws://127.0.0.1/non-ci-va-nessuno";
+  const conLeSue = conLePremesse(pagina, {
+    base: "/ponte/plancia/legacy/",
+    lingua: "it",
+    doveIlWebSocket: dove,
+  });
+  /* Si sostituisce **tutta** la funzione che il ponte scrive, chiedendogliela
+     con lo stesso argomento: tagliarla con un'espressione regolare fino al
+     primo punto e virgola la spezzava a meta' — dentro ce ne sono — e quello
+     che restava era codice rotto con un `return` fuori da ogni funzione. */
+  const suo = `window.__DASHBOARDMODERN_BRIDGE_WS__=${ilWebSocket(dove)};`;
+  if (!conLeSue.includes(suo))
+    throw new Error("le premesse del ponte sono cambiate: guarda ilWebSocket()");
+  /* La casa finta si carica **prima** del preludio, che e' il primo codice
+     della plancia a girare: quando lui guarda se c'e' un ponte, deve trovarlo
+     gia' li'. */
+  return conLeSue
+    .replace(suo, "window.__DASHBOARDMODERN_BRIDGE_WS__=window.CasaFinta;")
+    .replace("<base ", '<script src="/strumenti/video/casa-finta.js"></script><base ');
+}
+
+function servitore(pagina) {
+  const server = createServer(async (domanda, risposta) => {
+    const dove = new URL(domanda.url, "http://x").pathname;
+    if (dove === "/plancia-vera") {
+      risposta.writeHead(200, { "content-type": TIPI[".html"] });
+      risposta.end(pagina);
+      return;
+    }
+    const file = path.join(RADICE, decodeURIComponent(dove));
+    if (!file.startsWith(RADICE)) {
+      risposta.writeHead(403).end();
+      return;
+    }
+    try {
+      const crudo = await readFile(file);
+      const tipo = TIPI[path.extname(file)] || "application/octet-stream";
+      /* I file della plancia si servono vestiti, come li serve il ponte. */
+      const dentro = file.startsWith(PLANCIA + path.sep)
+        ? vestiDiGdahome(path.relative(PLANCIA, file).split(path.sep).join("/"), crudo, tipo)
+        : { corpo: crudo, tipo };
+      risposta.writeHead(200, { "content-type": dentro.tipo });
+      risposta.end(dentro.corpo);
+    } catch {
+      risposta.writeHead(404).end();
+    }
+  });
+  return new Promise((pronto) => server.listen(0, "127.0.0.1", () => pronto(server)));
+}
+
+/* Il velo d'avvio se ne va quando la plancia e' pronta: e' lei a dire quando
+   si puo' fotografare. */
+function aspettaCheSiaPronta(pagina) {
+  return pagina
+    .waitForFunction(
+      () => {
+        const velo = document.getElementById("cd-boot-overlay");
+        return !velo || velo.style.opacity === "0" || !velo.isConnected;
+      },
+      null,
+      { timeout: 45000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+}
+
+/* La plancia si configura da sola, col suo tasto.
+ *
+ * E' il 🪄 che sta nella Config — `edAutoRileva` — quello che chi installa la
+ * plancia preme il primo giorno: guarda le entita' della casa e le mette nei
+ * posti giusti. Qui lo si preme per conto suo, cosi' quello che si fotografa
+ * e' una plancia configurata **come la configurerebbe lei**, non una
+ * configurazione scritta da noi per far bella figura nella fotografia.
+ *
+ * Alla fine la plancia si ricarica da sola: la configurazione se la ritrova
+ * perche' la casa finta la tiene in `localStorage`. */
+async function siConfiguraDaSola(pagina) {
+  /* Se c'e' bisogno di configurarla lo dice **lei**: quando non e' configurata
+     mette in mezzo alla pagina «La dashboard è quasi pronta» con il suo tasto.
+     Guardare invece la busta non funzionava — la plancia ne salva una sua
+     appena parte, e a quel punto sembrava gia' configurata quando non lo era:
+     su uno schermo da computer e' andata cosi', e nella copertina c'e' finita
+     una plancia vuota. */
+  /* Il tasto compare un attimo dopo il velo, e su uno schermo grande un attimo
+     piu' tardi che su uno piccolo: guardare una volta sola faceva passare per
+     configurate due plance su tre. Si guarda per otto secondi. */
+  const daFare = await pagina
+    .waitForFunction(
+      () =>
+        [...document.querySelectorAll("button,a")].some((nodo) =>
+          /configura la dashboard/i.test(nodo.textContent || ""),
+        ),
+      null,
+      { timeout: 8000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+  if (!daFare) return true;
+
+  /* Il 🪄 scrive dentro l'editor — `#ed-rileva-out` — e quell'elemento esiste
+     solo a editor aperto. L'editor si apre dal tasto che la plancia stessa
+     mette in mezzo alla pagina quando non e' ancora configurata: «Configura la
+     dashboard». E' la strada di chi ha appena installato, ed e' la ragione per
+     cui il primo tentativo non concludeva niente: si apriva la scheda Config,
+     che e' un'altra cosa. */
+  const passi = [];
+  const apre = await pagina
+    .evaluate(() => {
+      const chi = [...document.querySelectorAll("button,a")].find((nodo) =>
+        /configura la dashboard/i.test(nodo.textContent || ""),
+      );
+      if (!chi) return false;
+      chi.click();
+      return true;
+    })
+    .catch(() => false);
+  passi.push(`editor:${apre}`);
+
+  const acceso = await pagina
+    .waitForFunction(
+      () => typeof window.edAutoRileva === "function" && document.getElementById("ed-rileva-out"),
+      null,
+      { timeout: 25000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+  passi.push(`rileva:${acceso}`);
+  if (!acceso) {
+    console.log(`   la plancia non si e' configurata (${passi.join(" ")})`);
+    return false;
+  }
+
+  await pagina.evaluate(() => window.edAutoRileva());
+  const tasto = await pagina.waitForSelector(".dm-ad-apply", { timeout: 40000 }).catch(() => null);
+  passi.push(`applica:${Boolean(tasto)}`);
+  if (!tasto) {
+    console.log(`   la plancia non si e' configurata (${passi.join(" ")})`);
+    return false;
+  }
+  await tasto.click();
+  /* Applicare ricarica la pagina: si aspetta che torni su. */
+  await pagina.waitForTimeout(4000);
+  await aspettaCheSiaPronta(pagina);
+  await pagina.waitForTimeout(1500);
+  console.log(`   si e' configurata da sola (${passi.join(" ")})`);
+  return true;
+}
+
+async function main() {
+  if (!existsSync(path.join(PLANCIA, "legacy", "dashboard.html"))) {
+    throw new Error("la plancia non c'e' in ponte/plancia/: `strumenti/porta-la-plancia.mjs`");
+  }
+  await mkdir(path.join(QUI, "provini"), { recursive: true });
+  const chromium = await apriPlaywright();
+  const server = await servitore(await laPagina());
+  const porta = server.address().port;
+  const browser = await chromium.launch({ args: ["--force-color-profile=srgb"] });
+
+  for (const [nome, misura] of Object.entries(SCHERMI)) {
+    const pagina = await browser.newPage({
+      viewport: { width: misura.largo, height: misura.alto },
+      deviceScaleFactor: 2,
+    });
+    /* Il nome in cima alla plancia.
+     *
+     * DashboardModern di suo si chiama «Smart Home», e chi la installa se la
+     * rinomina dalla Config (`cd_branding`). In una copertina di gdahome il
+     * nome di un altro sarebbe la prima cosa che si legge, quindi la casa
+     * finta parte con quello gia' messo — come la casa di chiunque dopo il
+     * primo giorno. */
+    await pagina.addInitScript(() => {
+      window.__CASA_FINTA_BUSTA__ = {
+        revision: 1,
+        updated_at: Date.now(),
+        keys_revision: 1,
+        writer_generation: 1,
+        reset: false,
+        values: {
+          cd_branding: JSON.stringify({ title: "gdahome", subtitle: "La casa in una plancia" }),
+        },
+      };
+    });
+
+    const lamenti = [];
+    pagina.on("pageerror", (guaio) => lamenti.push(String(guaio).slice(0, 160)));
+    pagina.on("console", (riga) => {
+      if (riga.type() === "error") lamenti.push(riga.text().slice(0, 160));
+    });
+
+    await pagina.goto(`http://127.0.0.1:${porta}/plancia-vera`, { waitUntil: "load" });
+    await aspettaCheSiaPronta(pagina);
+    await siConfiguraDaSola(pagina);
+    const pronta = await aspettaCheSiaPronta(pagina);
+    await pagina.waitForTimeout(2500);
+    /* Prima di scattare si ferma quello che si muove.
+     *
+     * La plancia ha in cima una striscia che scorre da sola — «1 varco aperto
+     * · 3 luci accese · …» — e in una fotografia una striscia ferma a meta'
+     * corsa sembra un pezzo tagliato via, non una cosa che scorre. Quelle
+     * animazioni si annullano, e l'elemento torna dov'e' disegnato; le altre,
+     * che hanno una fine, si portano alla fine — che e' lo stato in cui la
+     * pagina vuole farsi vedere. */
+    await pagina.evaluate(() => {
+      for (const animazione of document.getAnimations()) {
+        try {
+          const tempi = animazione.effect?.getComputedTiming?.() || {};
+          if (Number.isFinite(tempi.activeDuration)) animazione.finish();
+          else animazione.cancel();
+        } catch (_errore) {
+          /* un'animazione che non si lascia fermare si lascia dov'e' */
+        }
+      }
+      for (const nodo of document.querySelectorAll("*")) {
+        if (nodo.scrollLeft) nodo.scrollLeft = 0;
+      }
+    });
+    await pagina.waitForTimeout(600);
+
+    const dove = path.join(QUI, `plancia-${nome}.png`);
+    await pagina.screenshot({ path: dove });
+    const chiesto = await pagina.evaluate(() => window.__CASA_FINTA_CHIESTO__ || []);
+    console.log(
+      `📷 ${nome.padEnd(9)} ${misura.largo}×${misura.alto}  ${pronta ? "pronta" : "NON pronta"}  ${dove}`,
+    );
+    if (chiesto.length) console.log(`   ha chiesto: ${[...new Set(chiesto)].join(", ")}`);
+    if (lamenti.length)
+      console.log(`   si lamenta: ${[...new Set(lamenti)].slice(0, 4).join(" | ")}`);
+    await pagina.close();
+  }
+
+  await browser.close();
+  server.close();
+}
+
+main().catch((guaio) => {
+  console.error("✖", guaio.message);
+  process.exit(1);
+});

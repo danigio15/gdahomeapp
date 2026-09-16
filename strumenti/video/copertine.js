@@ -20,16 +20,7 @@
  *   cominciano piu' a destra di dove arriva quella foto.
  */
 
-import {
-  computer,
-  MARCHIO,
-  mettiInScena,
-  plancia,
-  planciaLarga,
-  segno,
-  tavoletta,
-  telefono,
-} from "./pezzi.js";
+import { computer, MARCHIO, mettiInScena, segno, tavoletta, telefono } from "./pezzi.js";
 
 const misure = new URLSearchParams(location.search);
 const quale = misure.get("tipo") || "gruppo";
@@ -56,28 +47,34 @@ const LE_PASTIGLIE = `
   ${pastiglia("Tutto gratis", segno("spunta", 24, "#86efac"), "#86efac")}
   ${pastiglia("Su Google Play dal 30 settembre", segno("calendario", 22, "#fcd34d"), "#fcd34d")}`;
 
-/* I tre schermi, con sopra la plancia che gli tocca. */
+/* I tre schermi, e dentro **la plancia vera**.
+ *
+ * Non una ricostruzione: le tre fotografie le fa `plancia-vera.mjs`, aprendo
+ * in un Chromium la pagina di DashboardModern che sta in `ponte/plancia/` —
+ * quella che l'add-on serve davvero — con dietro una casa finta che le
+ * risponde come le risponderebbe Home Assistant. La plancia si configura da
+ * sola col suo 🪄, e quello che si vede e' quello che vede chi ce l'ha.
+ *
+ * Le cornici hanno le proporzioni delle fotografie, non le loro: una
+ * fotografia dentro una cornice con un'altra forma o si stira o si taglia, e
+ * tagliare vuol dire perdere la barra in fondo, che e' meta' di quello che
+ * fa vedere che e' un'app.
+ *
+ *   telefono  390×844   → schermo 292×632
+ *   tablet    820×1180  → schermo 400×576
+ *   computer 1440×900   → schermo 700×438
+ */
+const dentroLoSchermo = (quale) =>
+  `<img src="plancia-${quale}.png" alt="" style="display:block;width:100%;height:100%;object-fit:fill" />`;
+
 const IL_COMPUTER = (scala) =>
-  computer({
-    largo: 700,
-    alto: 438,
-    scala,
-    dentro: planciaLarga({ colonne: 4, quante: 12, menu: true }),
-  });
+  computer({ largo: 700, alto: 438, scala, dentro: dentroLoSchermo("computer") });
 
-/* Il tablet si disegna grande — quattrocentoventi per cinquecentosessanta, le
- * proporzioni vere — e poi lo si guarda da lontano. Disegnarlo piccolo voleva
- * dire tessere strette un terzo, e «3 accese» che andava a capo dentro una
- * tessera alta come le altre: usciva dal bordo di sotto. */
 const IL_TABLET = (scala) =>
-  tavoletta({
-    largo: 420,
-    alto: 560,
-    scala,
-    dentro: planciaLarga({ colonne: 3, quante: 12 }),
-  });
+  tavoletta({ largo: 428, alto: 604, scala, dentro: dentroLoSchermo("tablet") });
 
-const IL_TELEFONO = (scala) => telefono({ scala, dentro: plancia() });
+const IL_TELEFONO = (scala) =>
+  telefono({ scala, alto: 654, barra: false, dentro: dentroLoSchermo("telefono") });
 
 /* ══ La copertina del gruppo: 1640×856 ═════════════════════════════════ */
 

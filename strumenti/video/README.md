@@ -53,6 +53,8 @@ mentre va.
 | `presentazione.html` + `scene.js` | il film lungo: quindici scene, disposte a coordinate |
 | `social.html` + `social.js` | il film corto: sette scene, disposte **a colonna** |
 | `copertine.html` + `copertine.js` | le due copertine di Facebook, ferme |
+| `plancia-vera.mjs` + `casa-finta.js` | fotografano **la plancia vera**, quella di `ponte/plancia/` |
+| `plancia-telefono.png`, `-tablet`, `-computer` | le tre fotografie, che finiscono negli schermi delle copertine |
 | `rendi.mjs` | chi filma: apre la pagina, sposta l'orologio, scatta, e passa gli scatti a ffmpeg |
 | `quadretto.svg` | il QR code che si vede nel film lungo — lo rifà `rendi.mjs` a ogni ripresa |
 | `provini/` | le fotografie di `--foto` e i filmati di `--scena`; non sta nella repository |
@@ -88,25 +90,19 @@ le scene del film corto non sono disposte a coordinate come quelle del film
 lungo, ma **a colonna**: si mettono in fila e si dispongono da sole con lo
 spazio che trovano, che in un quadrato e in un palco in piedi è diverso.
 
-### Le copertine: i tre schermi
+### Le copertine: i tre schermi, con la plancia vera
 
 Le due copertine sono ferme — nessuna animazione — e dicono una cosa sola: **la
 stessa casa su tutti e tre gli schermi**. Chi vede gdahome per la prima volta
 pensa a un'app da telefono, e il computer non se lo immagina; scriverglielo non
-basta, e allora ci sono i tre dispositivi con sopra la plancia **com'è davvero
-su ognuno**:
+basta.
 
-| schermo | com'è disegnato |
-|---|---|
-| computer | `planciaLarga({ colonne: 4, quante: 12, menu: true })` — quattro colonne e il menu aperto di fianco, che dal browser resta aperto per davvero |
-| tablet | `planciaLarga({ colonne: 3, quante: 12 })` in una cornice 420×560 |
-| telefono | la stessa `plancia()` dei film, due colonne |
-
-Gli schermi si disegnano **grandi e poi si guardano da lontano**
-(`rimpicciolito`): una plancia disegnata in quattrocento pixel invece che in
-settecento non è la stessa plancia più piccola, è un'altra plancia — le tessere
-si stringono, le scritte vanno a capo, il menu non ci sta. È il difetto che si
-era visto nel tablet, con «3 accese» che andava a capo e usciva dal bordo.
+Dentro ai tre schermi non c'è un disegno somigliante: c'è **la plancia vera**,
+fotografata da `plancia-vera.mjs` (qui sotto) alle misure vere di un telefono,
+di un tablet e di un computer, e poi guardata da lontano. Le cornici hanno le
+proporzioni delle fotografie e non le proprie: una fotografia dentro una
+cornice di un'altra forma o si stira o si taglia, e tagliare vuol dire perdere
+la barra in fondo — che è metà di quello che fa vedere che è un'app.
 
 E sono **due** copertine perché Facebook le taglia in due modi diversi:
 
@@ -128,6 +124,48 @@ ffmpeg -i gdahome-copertina-pagina.png -vf "crop=1082:624:279:0" prova.png
 Sono **png** e non jpg apposta: sono quasi tutte testo e linee nette, e il jpg
 lì sporca i bordi delle lettere.
 
+## La plancia vera, fotografata
+
+```
+node strumenti/video/plancia-vera.mjs
+```
+
+Tre minuti, e ne escono `plancia-telefono.png`, `plancia-tablet.png`,
+`plancia-computer.png`. Non sono ricostruzioni: è la pagina di DashboardModern
+che sta in `ponte/plancia/` — quella che l'add-on serve davvero — aperta in un
+Chromium e fotografata.
+
+**Come fa a girare senza una casa.** La plancia ospitata non apre un WebSocket
+verso Home Assistant: apre quello che le dà chi la ospita
+(`window.__DASHBOARDMODERN_BRIDGE_WS__`). È così che le fa da casa l'app
+(`app/lib/plancia/`) e che le fa da casa il ponte dentro Home Assistant
+(`ponte/src/cucitura.js`). `casa-finta.js` è la terza: una casa che sta tutta
+dentro il browser, con una trentina di entità inventate, e che risponde come
+risponderebbe Home Assistant.
+
+La pagina si serve **come la serve il ponte** — `conLePremesse()` e
+`vestiDiGdahome()`, il suo codice, non una copia — cambiando una cosa sola: al
+posto del WebSocket verso la casa ci va la casa finta. Per questo quello che si
+fotografa è la plancia come la vede chi ce l'ha installata: stesso logo, stesso
+velo d'avvio, stesso nome.
+
+**E si configura da sola.** Appena installata la plancia è vuota e lo dice: «La
+dashboard è quasi pronta». Chi la installa preme il 🪄 nella Config, che guarda
+le entità della casa e le mette nei posti giusti. Qui lo si preme per conto suo
+— si apre l'editor dal tasto che la plancia stessa mette in mezzo alla pagina,
+si chiama `edAutoRileva`, si applica — e quello che si fotografa è una plancia
+configurata **come la configurerebbe lei**, non una configurazione scritta da
+noi per far bella figura nella fotografia. L'unica cosa messa a mano è il nome
+in cima (`cd_branding`): di suo DashboardModern si chiama «Smart Home», e in
+una copertina di gdahome il nome di un altro è la prima cosa che si legge.
+
+Prima di scattare si ferma quello che si muove: la striscia in cima alla
+plancia scorre da sola, e una striscia ferma a metà corsa in una fotografia
+sembra un pezzo tagliato via.
+
+Le entità sono **inventate** e si vedono solo nelle immagini. `casa-finta.js`
+non è un pezzo del prodotto e non deve diventarlo.
+
 ## Quello che si vede è roba di qui dentro
 
 Il marchio è `app/assets/marchio/gda.png`, quello dell'icona dell'app. I
@@ -137,13 +175,17 @@ plancia. I colori sono quelli di `app/lib/vestito/tema.dart`. E la plancia che
 si vede nel telefono è **una sola**, in `pezzi.js`: tre film che disegnano tre
 plance leggermente diverse sarebbero tre prodotti.
 
-**Il QR code è vero**: lo disegna `ponte/src/qr.js`, l'encoder dell'add-on, e
-non un quadrato finto messo lì per somiglianza. Quello che ci sta scritto invece
+**La plancia è vera** — vedi qui sopra — e **il QR code è vero**: lo disegna
+`ponte/src/qr.js`, l'encoder dell'add-on, e non un quadrato finto messo lì per
+somiglianza. Quello che ci sta scritto invece
 è finto e lo dice: chi lo inquadra si trova in mano
 `gdahome://codice-finto-del-video/non-abbina-niente`, non un abbinamento.
 
-Le finestre di Home Assistant e la pagina di Google Play sono
+Le finestre di Home Assistant e la pagina di Google Play sono invece
 **ricostruite**, non catturate: servivano una casa vera e un'app pubblicata.
+Nei tre filmati anche la plancia è ricostruita (`pezzi.js`), perché lì si
+muove: una luce che si accende al tocco. Nelle copertine, dove nessuno si
+muove, c'è quella vera.
 
 ## Le date, e dove stanno scritte
 
