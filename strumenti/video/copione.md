@@ -142,8 +142,8 @@ il tasto **«Sostieni il progetto su GitHub Sponsors»**.
 > (1,8s) L'add-on, la plancia, l'app, la casa da fuori: **tutto gratis**, senza
 > abbonamenti.
 >
-> (6,2s) Per restare gratis serve una mano: chi può, lo sostiene su **GitHub
-> Sponsors**.
+> (6,2s) Due conti, e il tempo: chi può dà una mano su **GitHub Sponsors**,
+> chi non può la usa lo stesso.
 
 ### **2:40** — Chiusura *(9,5s)*
 
@@ -207,8 +207,8 @@ accende da sola.
 
 > **E deve restare gratis**
 >
-> Ma gratis non vuol dire che si mantenga da solo: dietro c'è tempo, prove e
-> assistenza.
+> E ha due conti veri: **25 $** per Google Play e **99 $ l'anno** per Apple —
+> l'unico pezzo che manca all'app per iPhone.
 >
 > ♥ **Sostieni il progetto su GitHub Sponsors**
 >

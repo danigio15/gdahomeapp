@@ -118,7 +118,7 @@ scena(
   () => `
   <div class="colonna">
     <h1 class="titolo en" style="--t:.15s">E deve restare<br />gratis</h1>
-    <p class="sotto ap" style="--t:.8s">Ma gratis non vuol dire che si mantenga da solo:<br />dietro c'è tempo, prove e assistenza.</p>
+    <p class="sotto ap" style="--t:.8s">E ha due conti veri: <b>25 $</b> per Google Play<br />e <b>99 $ l'anno</b> per Apple — l'unico pezzo<br />che manca all'app per iPhone.</p>
     <div class="vetro pastiglia cr" style="--t:1.5s;border-color:rgba(245,158,11,.45);color:#fcd34d">
       ${segno("cuore", 30, "#fb7185")} Sostieni il progetto su GitHub Sponsors
     </div>

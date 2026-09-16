@@ -947,8 +947,9 @@ scena(
   <div class="vetro en" style="--t:.6s;position:absolute;left:662px;top:176px;width:520px;padding:30px 32px;border-color:rgba(245,158,11,.35)">
     <h3 style="margin:0 0 10px;font-size:26px;font-weight:700;color:#fcd34d">E deve restare gratis</h3>
     <p style="margin:0;font-size:17px;line-height:1.55;color:var(--tenue)">
-      Ma gratis non vuol dire che si mantenga da solo: dietro ci sono il tempo per scriverlo, le
-      prove che lo tengono in piedi e le risposte a chi chiede aiuto.
+      E ha due conti veri: <b style="color:#cfe0f5">25 $</b> per Google Play, una volta, e
+      <b style="color:#cfe0f5">99 $ l'anno</b> per l'account Apple — che è l'unico pezzo che manca
+      all'app per iPhone: è scritta, e compila già.
     </p>
     <div class="vetro ap" style="--t:1.9s;margin-top:20px;display:flex;align-items:center;gap:12px;
          padding:14px 20px;border-color:rgba(245,158,11,.45);border-radius:999px">
@@ -970,7 +971,8 @@ scena(
     },
     {
       t: 6.2,
-      testo: "Per restare gratis serve una mano: chi può, lo sostiene su <b>GitHub Sponsors</b>.",
+      testo:
+        "Due conti, e il tempo: chi può dà una mano su <b>GitHub Sponsors</b>, chi non può la usa lo stesso.",
     },
   ])}`,
 );
