@@ -323,7 +323,11 @@ export class Casa {
       return rispostaJson({ errore: "non_ti_riconosco", spiegazione: "non ti riconosco" }, 403);
     }
 
-    const github = new GitHub({ token: this.env.GITHUB_SEGNALAZIONI, repo: this.env.GITHUB_REPO });
+    const github = new GitHub({
+      token: this.env.GITHUB_SEGNALAZIONI,
+      repo: this.env.GITHUB_REPO,
+      repoAllegati: this.env.GITHUB_REPO_ALLEGATI,
+    });
     const segnalazioni = new Segnalazioni({ storage: this.state.storage, github, casa });
     const metodo = richiesta.method;
     try {

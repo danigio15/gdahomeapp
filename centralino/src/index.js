@@ -22,6 +22,14 @@ export async function alzaIlCentralino({
    * risponde lo stesso e dice che non e' configurato. */
   gettoneDiGitHub = process.env.GITHUB_SEGNALAZIONI || "",
   repoDiGitHub = process.env.GITHUB_REPO || "",
+  /* E dove vanno le foto e i video, che puo' essere un'altra repository.
+   *
+   * Gli allegati non sono allegati di GitHub: si **committano**, sotto
+   * `allegati/<numero>/`, e restano nella storia di git per sempre. La
+   * repository del progetto e' quella che Home Assistant clona per installare
+   * l'add-on: le foto delle case degli altri non ci vanno. Vuota vuol dire
+   * «la stessa delle issue», che e' come stava prima. */
+  repoDegliAllegati = process.env.GITHUB_REPO_ALLEGATI || "",
   /* La chiave con cui si apre la console della chat. Una sola, e vede tutte le
    * linee: senza, le case possono scrivere ma nessuno puo' leggere, ed e' una
    * cosa che `/salute` dice invece di farla scoprire il giorno in cui qualcuno
@@ -42,6 +50,7 @@ export async function alzaIlCentralino({
     cartella,
     gettone: gettoneDiGitHub,
     repo: repoDiGitHub,
+    repoAllegati: repoDegliAllegati,
   });
   const chat = new Chat({
     archivio: new ArchivioDellaChat(join(cartella, "chat.sqlite")),

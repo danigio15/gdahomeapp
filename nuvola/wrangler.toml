@@ -56,7 +56,22 @@ enabled = true
 # GITHUB_SEGNALAZIONI` da un terminale. Senza gettone il centralino risponde
 # «segnalazioni non configurate», e l'app lo dice.
 [vars]
-GITHUB_REPO = "danigio15/gdahome-segnalazioni"
+# Dove finiscono le segnalazioni: le **issue** nella repository del progetto,
+# perche' e' li' che la gente le cerca — e chi apre gdahomeapp le trova, senza
+# sapere che esiste un'altra repository.
+GITHUB_REPO = "danigio15/gdahomeapp"
+
+# Le **foto e i video** no, e non e' un dettaglio: gli allegati non sono
+# allegati di GitHub, si committano dentro una repository — sotto
+# `allegati/<numero>/` — e restano nella storia di git per sempre. E
+# `gdahomeapp` e' la repository che Home Assistant **clona** per installare
+# l'add-on: le foto delle case degli altri le farebbero scaricare a tutti, a
+# ogni installazione, per sempre. Quindi restano dove stavano.
+#
+# Il gettone deve poter scrivere in tutt'e due: «Issues» su questa,
+# «Contents» su quella. Il bottone «Il centralino» su Actions lo prova su
+# entrambe prima di accendere niente.
+GITHUB_REPO_ALLEGATI = "danigio15/gdahome-segnalazioni"
 
 # gdahome da aprire in un browser, servita da qui.
 #

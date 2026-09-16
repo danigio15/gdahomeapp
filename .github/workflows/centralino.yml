@@ -130,6 +130,11 @@ jobs:
           # pure.
           gettone=$(printf '%s' "$GETTONE" | tr -d '[:space:]"'"'"'')
           repository=$(sed -n 's/^GITHUB_REPO *= *"\(.*\)"/\1/p' wrangler.toml)
+          # E dove vanno le foto: puo' essere un'altra repository, e il
+          # permesso sui file va provato **su quella**. Vuota vuol dire «la
+          # stessa delle issue».
+          allegati=$(sed -n 's/^GITHUB_REPO_ALLEGATI *= *"\(.*\)"/\1/p' wrangler.toml)
+          [ -n "$allegati" ] || allegati="$repository"
 
           # Il gettone si prova **davvero**, presso GitHub, sulla repository
           # delle segnalazioni: e' l'unico controllo che conta, e dice anche se
@@ -158,17 +163,20 @@ jobs:
             200)
               echo "GitHub riconosce il gettone, e gli lascia leggere le issue di ${repository}."
               # E i file? Gli allegati — foto e video — vogliono «Contents:
-              # Read and write». Non e' un motivo per fermarsi: le
+              # Read and write», e adesso su **un'altra** repository: le issue
+              # stanno nel progetto, i file no, perche' li' si committano e
+              # resterebbero per sempre dentro quello che Home Assistant clona
+              # per installare l'add-on. Non e' un motivo per fermarsi: le
               # segnalazioni vanno lo stesso, e l'app dice che l'allegato no.
               permessi=$(curl -sS \
                 -H "Authorization: Bearer $gettone" \
                 -H "Accept: application/vnd.github+json" \
                 -H "X-GitHub-Api-Version: 2022-11-28" \
-                "https://api.github.com/repos/${repository}" || true)
+                "https://api.github.com/repos/${allegati}" || true)
               if printf '%s' "$permessi" | grep -qE '"push": *true'; then
-                echo "E puo' anche scrivere i file: gli allegati funzioneranno."
+                echo "E puo' scrivere i file di ${allegati}: gli allegati funzioneranno."
               else
-                echo "::warning::Il gettone non puo' scrivere i file di ${repository}: le segnalazioni funzionano, ma le foto e i video allegati no. Nel token aggiungi «Contents: Read and write», rimetti il segreto e rilancia questo bottone."
+                echo "::warning::Il gettone non puo' scrivere i file di ${allegati}: le segnalazioni funzionano, ma le foto e i video allegati no. Nel token, «Repository access» deve includere anche ${allegati} con «Contents: Read and write»; poi rimetti il segreto e rilancia questo bottone."
               fi ;;
             401)
               echo "::error::GitHub non riconosce il gettone (401): non e' un token valido, o e' scaduto, o e' stato revocato."
@@ -191,9 +199,9 @@ jobs:
           esac
 
           printf '%s\n' "$gettone" | npx wrangler secret put GITHUB_SEGNALAZIONI
-          echo "Il gettone delle segnalazioni è al centralino: le issue si aprono in ${repository}."
+          echo "Il gettone delle segnalazioni è al centralino: le issue si aprono in ${repository}, gli allegati in ${allegati}."
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Le **segnalazioni** sono accese: le issue si aprono in \`${repository}\`." >> "$GITHUB_STEP_SUMMARY"
+          echo "Le **segnalazioni** sono accese: le issue si aprono in \`${repository}\`, le foto e i video in \`${allegati}\`." >> "$GITHUB_STEP_SUMMARY"
         working-directory: nuvola
         env:
           GETTONE: ${{ secrets.GETTONE_SEGNALAZIONI }}

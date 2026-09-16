@@ -98,6 +98,59 @@ function gitHubFinto({ rotto = false } = {}) {
   return { github, chiamate, issues, file };
 }
 
+test("le issue nella repository del progetto, le foto in un'altra", async () => {
+  /* Gli allegati non sono allegati di GitHub: si **committano** dentro una
+   * repository, e restano nella storia di git per sempre. La repository del
+   * progetto e' quella che Home Assistant clona per installare l'add-on: le
+   * foto delle case degli altri non ci vanno, o le scaricherebbero tutti, a
+   * ogni installazione, per sempre. Quindi le issue in una e i file in
+   * un'altra — e qui si guarda che ognuna vada dove deve. */
+  const chieste = [];
+  const prendi = async (url, opzioni = {}) => {
+    chieste.push({ url, metodo: opzioni.method || "GET" });
+    return {
+      ok: true,
+      status: 201,
+      json: async () => ({ number: 7, content: { html_url: "https://github.com/a/b/blob/x" } }),
+    };
+  };
+  const github = new GitHub({
+    token: "gettone",
+    repo: "chi/progetto",
+    repoAllegati: "chi/allegati",
+    fetch: prendi,
+  });
+
+  await github.apriIssue({ titolo: "t", corpo: "c", etichette: [] });
+  await github.mettiFile({
+    via: "allegati/7/foto.jpg",
+    byte: new Uint8Array([1, 2, 3]),
+    messaggio: "m",
+  });
+  await github.commenta(7, "ciao");
+
+  assert.deepEqual(
+    chieste.map((una) => una.url.replace("https://api.github.com/repos/", "")),
+    [
+      "chi/progetto/issues",
+      "chi/allegati/contents/allegati/7/foto.jpg",
+      "chi/progetto/issues/7/comments",
+    ],
+  );
+});
+
+test("senza la seconda repository tutto resta dov'era: nella stessa", async () => {
+  const chieste = [];
+  const prendi = async (url) => {
+    chieste.push(url);
+    return { ok: true, status: 201, json: async () => ({ content: {} }) };
+  };
+  const github = new GitHub({ token: "gettone", repo: "chi/una-sola", fetch: prendi });
+  assert.equal(github.repoAllegati, "chi/una-sola");
+  await github.mettiFile({ via: "allegati/1/x.jpg", byte: new Uint8Array([1]), messaggio: "m" });
+  assert.match(chieste[0], /repos\/chi\/una-sola\/contents\//);
+});
+
 test("il corpo della issue porta le parole e la diagnostica, e le parole tornano da sole", () => {
   const corpo = corpoDellaIssue({
     corpo: "La luce del salotto non risponde.",

@@ -193,9 +193,30 @@ export class GitHubNonRisponde extends Error {
 }
 
 export class GitHub {
-  constructor({ token, repo, fetch: prendi = globalThis.fetch, base = "https://api.github.com" }) {
+  constructor({
+    token,
+    repo,
+    repoAllegati = "",
+    fetch: prendi = globalThis.fetch,
+    base = "https://api.github.com",
+  }) {
     this.token = token;
     this.repo = repo;
+    /* Dove vanno le **foto e i video**, che possono essere un'altra
+     * repository.
+     *
+     * Le issue devono stare dove la gente le cerca — quella del progetto — e
+     * gli allegati no: non si aprono come allegati di GitHub, si **committano**
+     * dentro la repository, sotto `allegati/<numero>/`, e restano nella storia
+     * di git per sempre. La repository del progetto e' quella che Home
+     * Assistant clona per installare l'add-on: metterci dentro le foto delle
+     * case degli altri vorrebbe dire farle scaricare, a tutti, a ogni
+     * installazione, per sempre.
+     *
+     * Quindi: le issue in una, gli allegati in un'altra. Chi non la dice
+     * torna al comportamento di prima — tutto nella stessa — che e' quello
+     * che vuole chi ne ha una sola. */
+    this.repoAllegati = repoAllegati || repo;
     /* Non `this.prendi = prendi`: `fetch` chiamata come metodo di
      * quest'oggetto — `this.prendi(...)` — arriva col `this` sbagliato, e il
      * worker la rifiuta con «Illegal invocation». Si chiama e basta. */
@@ -207,8 +228,9 @@ export class GitHub {
     return Boolean(this.token && /^[\w.-]+\/[\w.-]+$/.test(String(this.repo || "")));
   }
 
-  async _chiama(metodo, via, corpo) {
-    const risposta = await this.prendi(`${this.base}/repos/${this.repo}${via}`, {
+  async _chiama(metodo, via, corpo, { dove = "" } = {}) {
+    const quale = dove || this.repo;
+    const risposta = await this.prendi(`${this.base}/repos/${quale}${via}`, {
       method: metodo,
       headers: {
         authorization: `Bearer ${this.token}`,
@@ -247,14 +269,20 @@ export class GitHub {
     return this._chiama("POST", `/issues/${numero}/comments`, { body: testo });
   }
 
-  /* Mette un file nella repository, in `via`, con un commit. Vuole il
-   * permesso «Contents: Read and write» sul gettone: senza, GitHub risponde
-   * 403 o 404, e l'app lo dice. Torna l'indirizzo con cui aprirlo. */
+  /* Mette un file nella repository degli allegati, in `via`, con un commit.
+   * Vuole il permesso «Contents: Read and write» sul gettone — su **quella**
+   * repository: senza, GitHub risponde 403 o 404, e l'app lo dice. Torna
+   * l'indirizzo con cui aprirlo. */
   async mettiFile({ via, byte, messaggio }) {
-    const risposta = await this._chiama("PUT", `/contents/${via}`, {
-      message: messaggio,
-      content: inBase64(byte),
-    });
+    const risposta = await this._chiama(
+      "PUT",
+      `/contents/${via}`,
+      {
+        message: messaggio,
+        content: inBase64(byte),
+      },
+      { dove: this.repoAllegati },
+    );
     const contenuto = risposta?.content ?? {};
     return {
       via,
@@ -262,7 +290,6 @@ export class GitHub {
     };
   }
 }
-
 /* Base64 di byte, a pezzi: `btoa` vuole una stringa di caratteri a un
  * byte, e farla in un colpo solo su dieci megabyte sfonda la pila. */
 export function inBase64(byte) {

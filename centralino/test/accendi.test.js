@@ -232,6 +232,7 @@ test("e non chiede di nuovo i gettoni che sono gia' sulla macchina", () => {
     ["GETTONE_LETTURA", "GETTONE_LETTURA", "lettura"],
     ["GETTONE_SEGNALAZIONI", "GITHUB_SEGNALAZIONI", "ambiente"],
     ["REPO_SEGNALAZIONI", "GITHUB_REPO", "ambiente"],
+    ["REPO_ALLEGATI", "GITHUB_REPO_ALLEGATI", "ambiente"],
   ]) {
     const atteso = `${quale}="\${${quale}:-$(gia_scritto "$CONFIGURAZIONE/${dove}" ${chiave})}"`;
     assert.ok(

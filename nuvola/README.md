@@ -128,8 +128,19 @@ segreto `GETTONE_SEGNALAZIONI` di questa repository; o, da un terminale,
 
     npx wrangler secret put GITHUB_SEGNALAZIONI
 
-Un token a grana fine, sulla sola repository delle segnalazioni, con
-**Issues: Read and write** e, per gli allegati, **Contents: Read and write**.
+**Le issue in una repository, le foto in un'altra.** Le issue vanno dove la
+gente le cerca — `gdahomeapp`, quella del progetto — e le foto e i video no:
+gli allegati non sono allegati di GitHub, si **committano** sotto
+`allegati/<numero>/` e restano nella storia di git per sempre. E `gdahomeapp`
+e' la repository che Home Assistant **clona** per installare l'add-on: le foto
+delle case degli altri le farebbero scaricare a tutti, a ogni installazione,
+per sempre. Quindi `GITHUB_REPO_ALLEGATI` punta altrove; lasciandola vuota si
+torna a una sola, come prima.
+
+Un token a grana fine con **Issues: Read and write** su quella delle issue e
+**Contents: Read and write** su quella degli allegati. Il bottone **Il
+centralino** le prova tutte e due prima di accendere niente, e se il permesso
+sui file manca lo dice — le segnalazioni vanno lo stesso, gli allegati no.
 La casa si presenta col suo segreto — lo stesso
 della chiamata — e legge e scrive solo nelle issue che ha aperto lei; chi
 risponde da GitHub scrive un commento, e il commento torna nell'app. I

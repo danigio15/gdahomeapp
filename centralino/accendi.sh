@@ -234,6 +234,12 @@ fi
 
 GETTONE_SEGNALAZIONI="${GETTONE_SEGNALAZIONI:-$(gia_scritto "$CONFIGURAZIONE/ambiente" GITHUB_SEGNALAZIONI)}"
 REPO_SEGNALAZIONI="${REPO_SEGNALAZIONI:-$(gia_scritto "$CONFIGURAZIONE/ambiente" GITHUB_REPO)}"
+# Dove vanno le foto e i video. Gli allegati non sono allegati di GitHub: si
+# committano dentro una repository, e restano nella storia di git per sempre.
+# Quella delle issue e' la repository del progetto — quella che Home Assistant
+# clona per installare l'add-on — e le foto delle case degli altri non ci
+# vanno. Vuota vuol dire «la stessa delle issue», che e' come stava prima.
+REPO_ALLEGATI="${REPO_ALLEGATI:-$(gia_scritto "$CONFIGURAZIONE/ambiente" GITHUB_REPO_ALLEGATI)}"
 if [[ -n "$GETTONE_SEGNALAZIONI" ]]; then
   bene "le segnalazioni sono gia' accese, su ${REPO_SEGNALAZIONI:-?}"
 fi
@@ -467,6 +473,7 @@ passo "Accendo il servizio"
   printf 'CHIAVE_CONSOLE=%s\n' "$CHIAVE_CONSOLE"
   printf 'GITHUB_SEGNALAZIONI=%s\n' "$GETTONE_SEGNALAZIONI"
   printf 'GITHUB_REPO=%s\n' "$REPO_SEGNALAZIONI"
+  printf 'GITHUB_REPO_ALLEGATI=%s\n' "$REPO_ALLEGATI"
   # I due nomi per la soglia: chi apre l'indirizzo nudo del tramite va mandato
   # da qualche parte, e questa macchina da sola non sa come si chiama il sito.
   printf 'NOME_DEL_SITO=%s\n' "$NOME_DEL_SITO"
