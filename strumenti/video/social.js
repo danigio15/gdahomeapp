@@ -89,7 +89,7 @@ scena(
   <div class="colonna">
     <h1 class="titolo piccolo en" style="--t:.15s">Si mette in due mosse</h1>
     ${voce(0.6, "#38bdf8", "1", 'Un <b>add-on</b> nel negozio di Home&nbsp;Assistant<span class="quando">Si incolla un indirizzo, e compare</span>')}
-    ${voce(1.0, "#38bdf8", "2", 'Un <b>quadretto</b> da inquadrare col telefono<span class="quando">E la casa è nell\'app, anche da fuori</span>')}
+    ${voce(1.0, "#38bdf8", "2", 'Un <b>QR code</b> da inquadrare col telefono<span class="quando">E la casa è nell\'app, anche da fuori</span>')}
     <p class="sotto ap" style="--t:1.9s">Nessuna password di Home Assistant.<br />Nessuna porta aperta sul router. <b>Nessuna VPN.</b></p>
   </div>`,
 );

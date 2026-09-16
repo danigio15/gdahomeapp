@@ -46,7 +46,7 @@ mentre va.
 | `presentazione.html` + `scene.js` | il film lungo: quindici scene, disposte a coordinate |
 | `social.html` + `social.js` | il film corto: sette scene, disposte **a colonna** |
 | `rendi.mjs` | chi filma: apre la pagina, sposta l'orologio, scatta, e passa gli scatti a ffmpeg |
-| `quadretto.svg` | il QR che si vede nel film lungo — lo rifà `rendi.mjs` a ogni ripresa |
+| `quadretto.svg` | il QR code che si vede nel film lungo — lo rifà `rendi.mjs` a ogni ripresa |
 | `provini/` | le fotografie di `--foto` e i filmati di `--scena`; non sta nella repository |
 
 **Il tempo non passa: glielo si dice.** Le animazioni della pagina stanno ferme
@@ -89,7 +89,7 @@ plancia. I colori sono quelli di `app/lib/vestito/tema.dart`. E la plancia che
 si vede nel telefono è **una sola**, in `pezzi.js`: tre film che disegnano tre
 plance leggermente diverse sarebbero tre prodotti.
 
-**Il quadretto è vero**: lo disegna `ponte/src/qr.js`, l'encoder dell'add-on, e
+**Il QR code è vero**: lo disegna `ponte/src/qr.js`, l'encoder dell'add-on, e
 non un quadrato finto messo lì per somiglianza. Quello che ci sta scritto invece
 è finto e lo dice: chi lo inquadra si trova in mano
 `gdahome://codice-finto-del-video/non-abbina-niente`, non un abbinamento.

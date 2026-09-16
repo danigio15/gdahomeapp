@@ -175,7 +175,7 @@ scena(
     "ambra",
     segno("telefono", 30, "#fbbf24"),
     "L'app",
-    "Android e iPhone. Si abbina <b style='color:#cfe0f5'>inquadrando un quadretto</b>: nessun indirizzo, nessuna password di Home Assistant.",
+    "Android e iPhone. Si abbina <b style='color:#cfe0f5'>inquadrando un QR code</b>: nessun indirizzo, nessuna password di Home Assistant.",
     "Un bottone solo, alla prima accensione",
   )}
   ${pezzo(
@@ -593,7 +593,7 @@ const CONSOLE = ({ conCodice = false } = {}) => `
     </div>
     <div class="carta" style="margin-top:14px;padding:16px 18px">
       <h4>Abbinare un telefono</h4>
-      <p style="margin-bottom:12px">Apri gdahome sul telefono e inquadra il quadretto. Vale una volta sola e per pochi minuti.</p>
+      <p style="margin-bottom:12px">Apri gdahome sul telefono e inquadra il QR code. Vale una volta sola e per pochi minuti.</p>
       ${
         conCodice
           ? `<div class="cr" style="--t:2.6s;text-align:center">
@@ -611,7 +611,7 @@ scena(
   "il-codice",
   11,
   () => `
-  ${cartello(4, "Il codice", "un quadretto, e cinque minuti")}
+  ${cartello(4, "Il codice", "un QR code, e cinque minuti")}
   <div class="via" style="--t2:2.5s">
     ${finestraHa({ titolo: "gdahome", corpo: CONSOLE(), lato: { gdahome: "scelta" } })}
   </div>
@@ -628,7 +628,7 @@ scena(
   ${tocco(480, 292, 1.95)}
   ${didascalia([
     { t: 0.6, t2: 3.0, testo: "Dalla console: <b>Fabbrica un codice</b>." },
-    { t: 3.2, t2: 6.8, testo: "Esce un quadretto, e vale cinque minuti." },
+    { t: 3.2, t2: 6.8, testo: "Esce un QR code, e vale cinque minuti." },
     { t: 7.0, testo: "Sotto ci sono le stesse cose in lettere, per chi non può inquadrare." },
   ])}`,
 );
@@ -666,7 +666,7 @@ const SCHERMATA_FOTOCAMERA = `
         .map((dove) => `<div style="position:absolute;width:38px;height:38px;${dove}"></div>`)
         .join("")}
     </div>
-    <p style="position:absolute;left:0;right:0;top:390px;text-align:center;color:#cbd5e1;font-size:15px">Inquadra il quadretto</p>
+    <p style="position:absolute;left:0;right:0;top:390px;text-align:center;color:#cbd5e1;font-size:15px">Inquadra il QR code</p>
   </div>`;
 
 const SCHERMATA_COLLEGATA = `
@@ -718,7 +718,7 @@ scena(
     {
       t: 3.2,
       t2: 7.3,
-      testo: "Dentro il quadretto c'è anche <b>dove sta la casa</b>: non serve saperlo.",
+      testo: "Dentro il QR code c'è anche <b>dove sta la casa</b>: non serve saperlo.",
     },
     { t: 7.5, testo: "Fatto. Da qui in poi il telefono entra da solo, in casa e fuori." },
   ])}`,
@@ -1003,7 +1003,7 @@ scena(
   </div>
 
   ${didascalia([
-    { t: 2.4, t2: 6.2, testo: "Un indirizzo da incollare, e un quadretto da inquadrare." },
+    { t: 2.4, t2: 6.2, testo: "Un indirizzo da incollare, e un QR code da inquadrare." },
     { t: 6.4, testo: "<b>github.com/danigio15/gdahomeapp</b>" },
   ])}`,
 );

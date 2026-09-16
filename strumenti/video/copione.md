@@ -92,7 +92,7 @@ Si incolla `https://github.com/danigio15/gdahomeapp`.
 
 > (0,6s) Dalla console: **Fabbrica un codice**.
 >
-> (3,2s) Esce un quadretto, e vale cinque minuti.
+> (3,2s) Esce un QR code, e vale cinque minuti.
 >
 > (7,0s) Sotto ci sono le stesse cose in lettere, per chi non può inquadrare.
 
@@ -100,7 +100,7 @@ Si incolla `https://github.com/danigio15/gdahomeapp`.
 
 > (1,0s) Sul telefono c'è un bottone solo: **Inquadra il codice**.
 >
-> (3,2s) Dentro il quadretto c'è anche **dove sta la casa**: non serve saperlo.
+> (3,2s) Dentro il QR code c'è anche **dove sta la casa**: non serve saperlo.
 >
 > (7,5s) Fatto. Da qui in poi il telefono entra da solo, in casa e fuori.
 
@@ -147,7 +147,7 @@ il tasto **«Sostieni il progetto su GitHub Sponsors»**.
 
 ### **2:40** — Chiusura *(9,5s)*
 
-> (2,4s) Un indirizzo da incollare, e un quadretto da inquadrare.
+> (2,4s) Un indirizzo da incollare, e un QR code da inquadrare.
 >
 > (6,4s) **github.com/danigio15/gdahomeapp**
 
@@ -186,7 +186,7 @@ accende da sola.
 > **Si mette in due mosse**
 >
 > 1. Un **add-on** nel negozio di Home Assistant — si incolla un indirizzo, e compare
-> 2. Un **quadretto** da inquadrare col telefono — e la casa è nell'app, anche da fuori
+> 2. Un **QR code** da inquadrare col telefono — e la casa è nell'app, anche da fuori
 >
 > Nessuna password di Home Assistant. Nessuna porta aperta sul router.
 > **Nessuna VPN.**
