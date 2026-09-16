@@ -110,6 +110,23 @@ copia tutto intero, così com'è, e ci si ritrova con tutti e due.
 > helpers, Zigbee and the automation wizard are written down in the plan, and
 > every sponsorship is one of those lines coming true.
 
+#### Dove si incolla
+
+Sta in **Profile details**, e i campi non sono uno solo:
+
+- il **campo corto** (poche righe, ha un limite: è quello che compare sotto il
+  nome) non regge tutto il riquadro. Lì ci va solo la prima riga, con le due
+  lingue divise dal punto:
+
+  > gdahome — la tua casa in una plancia, sul telefono · your home as one
+  > screen, on your phone
+
+- il **campo lungo**, l'introduzione, prende il riquadro intero così com'è —
+  accetta il markdown, quindi il grassetto resta grassetto.
+- se fra i campi c'è **featured work** o simili, ci si mette
+  `danigio15/gdahomeapp`: è la repository di cui si parla, e chi arriva vuole
+  vederla.
+
 ### L'obiettivo
 
 Un obiettivo vero si capisce e si raggiunge; «sostienimi» no. Su GitHub
@@ -124,6 +141,16 @@ di soldi in pubblico:
 > **Goal: twenty sponsors.**
 > Not to pay a bill: to know this project stands on its own, and to be able to
 > say yes to the next line of the plan — helpers, Zigbee, automations.
+
+#### Dove si incolla
+
+In **Your goals** la prima domanda è di che tipo è l'obiettivo: **numero di
+sostenitori** oppure cifra al mese. Si sceglie il numero di sostenitori — è la
+scelta di cui sopra, quella che non mette i soldi in vetrina — si scrive **20**,
+e nella descrizione ci va il riquadro qui sopra, intero.
+
+Raggiunto l'obiettivo si cambia: se ne mette uno più in là. Un obiettivo pieno
+al 100% e fermo lì da mesi dice che il progetto non ha più bisogno di nessuno.
 
 ### I livelli
 
