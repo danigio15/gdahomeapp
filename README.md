@@ -38,6 +38,27 @@ negozio, l'archivio da incollare, Installa, Avvia, il quadretto da inquadrare e
 la plancia sul telefono — piu' due corti da mettere sui social, uno quadrato e
 uno in piedi: [`strumenti/video/`](strumenti/video/README.md).
 
+## Quanto costa: niente
+
+L'add-on, la plancia, l'app, l'accesso da fuori casa, le segnalazioni e la
+chat di assistenza: **tutto gratis**. Nessun abbonamento, nessun limite a
+pagamento, nessun account da fare. Nell'app non c'e' nessun tasto che chiede
+soldi, ed e' una scelta scritta: quello che serve a vedere e comandare la
+propria casa non si paga mai — l'accesso da fuori compreso, che tenerlo in
+piedi costa zero ([`nuvola/`](nuvola/README.md)).
+
+Restare gratis pero' non e' automatico. I conti che il progetto ha davvero
+sono due — **25 $** per Google Play, una volta, e **99 $ l'anno** per
+l'account sviluppatore Apple, che e' l'unico pezzo che manca all'app per
+iPhone ([`docs/IPHONE.md`](docs/IPHONE.md)) — piu' il tempo di scriverla e di
+rispondere a chi chiede aiuto.
+
+Chi vuole dare una mano ha il tasto **Sponsor** qui in cima alla pagina. Chi
+non vuole o non puo', la usa lo stesso — tutta, per sempre. Un sostegno non
+sblocca niente, e non deve: se sbloccasse qualcosa, «tutto gratis» sarebbe una
+frase da togliere. Come e' fatto, e cosa si e' scelto di non vendere, sta in
+[`docs/SOSTEGNO.md`](docs/SOSTEGNO.md).
+
 ## Come ci si arriva
 
 ```
