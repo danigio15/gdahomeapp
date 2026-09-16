@@ -14,6 +14,13 @@ Se vuoi solo provarla sul divano, il 2 puoi saltarlo.
 
 ## 1. Il ponte
 
+**Cosa serve, prima di cominciare:** un Home Assistant che abbia il
+**Supervisor**, cioè **Home Assistant OS** oppure **Home Assistant
+Supervised**. Su **Container** — Home Assistant in Docker — il negozio degli
+add-on non esiste, e non si installa nessun add-on di nessuno: non è una
+mancanza di gdahome. Chi ha Container e vuole gdahome passa a Supervised sulla
+stessa macchina, Docker ce l'ha già.
+
 L'add-on si chiama **gdahome**, e la repository è pubblica: si installa **dal
 negozio**, come qualunque altro add-on. Cinque minuti la prima volta, e poi si
 aggiorna da sé.
