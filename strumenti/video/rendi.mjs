@@ -11,10 +11,17 @@
  * Qui il tempo non passa, si dice: venticinque fotogrammi al secondo esatti,
  * sempre gli stessi.
  *
- *   node strumenti/video/rendi.mjs                 tutti e tre i film
+ *   node strumenti/video/rendi.mjs                 i tre film, in due lingue
  *   node strumenti/video/rendi.mjs --film tiktok   uno solo
+ *   node strumenti/video/rendi.mjs --lingua en     solo l'inglese
  *   node strumenti/video/rendi.mjs --scena il-codice          una scena sola
  *   node strumenti/video/rendi.mjs --foto il-codice@3.2       una fotografia
+ *   node strumenti/video/rendi.mjs --copertine                le immagini ferme
+ *
+ * **Le lingue sono due**, e non sono due film: e' lo stesso, con le parole che
+ * cambiano (`pezzi.js`, `t()`). Quello inglese si chiama come l'altro con
+ * `-en` in fondo — `gdahome-tiktok-en.mp4` — cosi' i due stanno vicini nella
+ * cartella e non si confondono.
  *
  * Il suono non c'e' in nessuno dei tre: le parole stanno scritte sopra. Nei
  * due film per i social c'e' pero' una traccia **muta**, perche' un negozio
@@ -32,6 +39,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const QUI = path.dirname(fileURLToPath(import.meta.url));
 const RADICE = path.resolve(QUI, "..", "..");
 const AL_SECONDO = 25;
+const LINGUE = ["it", "en"];
+
+/* Il nome di un file, nella lingua in cui e' girato: l'italiano si chiama come
+   si e' sempre chiamato, cosi' chi aveva un collegamento ce l'ha ancora. */
+const conLaLingua = (nome, lingua) => (lingua === "it" ? nome : `${nome}-${lingua}`);
 
 /* I film.
  *
@@ -85,14 +97,25 @@ const COPERTINE = {
     largo: 1640,
     alto: 856,
     posa: { tipo: "gruppo" },
-    uscita: "gdahome-copertina-gruppo.png",
+    uscita: "gdahome-copertina-gruppo",
   },
   pagina: {
     pagina: "copertine.html",
     largo: 1640,
     alto: 624,
     posa: { tipo: "pagina" },
-    uscita: "gdahome-copertina-pagina.png",
+    uscita: "gdahome-copertina-pagina",
+  },
+  /* L'immagine del profilo della pagina: quadrata, che Facebook ritaglia
+     tonda. Dentro c'e' solo il marchio, quindi la lingua non la riguarda e se
+     ne fa una sola. */
+  profilo: {
+    pagina: "copertine.html",
+    largo: 1080,
+    alto: 1080,
+    posa: { tipo: "profilo" },
+    uscita: "gdahome-profilo",
+    senzaParole: true,
   },
 };
 
@@ -283,9 +306,15 @@ function servitore() {
   return new Promise((pronto) => server.listen(0, "127.0.0.1", () => pronto(server)));
 }
 
-/* L'indirizzo di un film: la sua pagina, piu' come sta in piedi il palco. */
-const indirizzo = (porta, film) => {
-  const roba = new URLSearchParams({ alto: film.alto, ...(film.posa ?? {}) });
+/* L'indirizzo di un film: la sua pagina, come sta in piedi il palco, e in che
+   lingua si gira. */
+const indirizzo = (porta, film, lingua) => {
+  const roba = new URLSearchParams({
+    largo: film.largo,
+    alto: film.alto,
+    lingua,
+    ...(film.posa ?? {}),
+  });
   return `http://127.0.0.1:${porta}/strumenti/video/${film.pagina}?${roba}`;
 };
 
@@ -294,7 +323,7 @@ const indirizzo = (porta, film) => {
 const detto = (...cose) => console.log(...cose);
 
 /* Apre la pagina di un film e aspetta che sia pronta a farsi fotografare. */
-async function apriIlFilm(browser, porta, film) {
+async function apriIlFilm(browser, porta, film, lingua = "it") {
   const pagina = await browser.newPage({
     viewport: { width: film.largo, height: film.alto },
     deviceScaleFactor: 1,
@@ -304,7 +333,7 @@ async function apriIlFilm(browser, porta, film) {
   pagina.on("console", (riga) => {
     if (riga.type() === "error") guai.push(riga.text());
   });
-  await pagina.goto(indirizzo(porta, film), { waitUntil: "networkidle" });
+  await pagina.goto(indirizzo(porta, film, lingua), { waitUntil: "networkidle" });
   await pagina.waitForFunction(() => window.video !== undefined, null, { timeout: 15000 });
   await pagina.evaluate(() => window.video.pronta());
   if (guai.length) detto("⚠ la pagina si lamenta:", guai.slice(0, 3).join(" / "));
@@ -312,9 +341,9 @@ async function apriIlFilm(browser, porta, film) {
 }
 
 /* Gira un film intero, o una scena sola. */
-async function gira(browser, porta, ffmpeg, nomeDelFilm, soloQuesta, dove) {
+async function gira(browser, porta, ffmpeg, nomeDelFilm, soloQuesta, dove, lingua = "it") {
   const film = FILM[nomeDelFilm];
-  const { pagina, elenco } = await apriIlFilm(browser, porta, film);
+  const { pagina, elenco } = await apriIlFilm(browser, porta, film, lingua);
 
   const daFare = elenco
     .map((scena, i) => ({ ...scena, i }))
@@ -325,7 +354,10 @@ async function gira(browser, porta, ffmpeg, nomeDelFilm, soloQuesta, dove) {
   /* Una scena sola finisce fra i provini, non sopra il filmato buono: chi
      prova una scena non si aspetta di perdere gli altri due minuti. */
   const uscita =
-    dove || (soloQuesta ? path.join(QUI, "provini", soloQuesta) : path.join(QUI, film.uscita));
+    dove ||
+    (soloQuesta
+      ? path.join(QUI, "provini", conLaLingua(soloQuesta, lingua))
+      : path.join(QUI, conLaLingua(film.uscita, lingua)));
   const ricetta = comeSiImpacchetta(ffmpeg, film, uscita);
   const cuoco = spawn(ffmpeg.dove, ["-y", ...ricetta], { stdio: ["pipe", "ignore", "pipe"] });
   let lamento = "";
@@ -334,7 +366,7 @@ async function gira(browser, porta, ffmpeg, nomeDelFilm, soloQuesta, dove) {
     if (!cuoco.stdin.write(roba)) await once(cuoco.stdin, "drain");
   };
 
-  detto(`🎬 ${nomeDelFilm} · ${film.largo}×${film.alto} · ${daFare.length} scene`);
+  detto(`🎬 ${nomeDelFilm} · ${lingua} · ${film.largo}×${film.alto} · ${daFare.length} scene`);
   let fotogrammi = 0;
   for (const scena of daFare) {
     await pagina.evaluate((i) => window.video.vaiA(i), scena.i);
@@ -373,7 +405,9 @@ async function gira(browser, porta, ffmpeg, nomeDelFilm, soloQuesta, dove) {
     const quale = elenco.findIndex((s) => s.nome === film.copertina.scena);
     await pagina.evaluate((i) => window.video.vaiA(i), quale);
     await pagina.evaluate((ms) => window.video.vaiAlMomento(ms), film.copertina.quando * 1000);
-    await pagina.screenshot({ path: path.join(QUI, `${film.uscita}-copertina.png`) });
+    await pagina.screenshot({
+      path: path.join(QUI, `${conLaLingua(film.uscita, lingua)}-copertina.png`),
+    });
   }
 
   await pagina.close();
@@ -395,6 +429,11 @@ async function main() {
   const soloQuesta = valore("--scena");
   const fotografie = valore("--foto");
   const soloCopertine = argomenti.includes("--copertine");
+  const lingue = valore("--lingua") ? [valore("--lingua")] : LINGUE;
+  for (const lingua of lingue) {
+    if (!LINGUE.includes(lingua))
+      throw new Error(`lingua sconosciuta: ${lingua} (ci sono: ${LINGUE})`);
+  }
 
   await mkdir(path.join(QUI, "provini"), { recursive: true });
   await fabbricaIlQrCode();
@@ -409,16 +448,20 @@ async function main() {
     /* Le copertine di Facebook: due immagini ferme. */
     if (soloCopertine) {
       for (const [nome, copertina] of Object.entries(COPERTINE)) {
-        const { pagina } = await apriIlFilm(browser, porta, copertina);
-        await pagina.evaluate(() => window.video.vaiA(0));
-        /* Ferme vuol dire ferme: si porta l'orologio oltre la fine di tutto,
-           cosi' quello che si vede e' lo stato finale e non un mezzo
-           ingresso. */
-        await pagina.evaluate(() => window.video.vaiAlMomento(20000));
-        const dove = path.join(QUI, copertina.uscita);
-        await pagina.screenshot({ path: dove });
-        await pagina.close();
-        detto(`🖼  ${nome.padEnd(8)} ${copertina.largo}×${copertina.alto}  ${dove}`);
+        /* Quella senza parole si fa una volta sola: girarla due volte darebbe
+           due file identici con due nomi. */
+        for (const lingua of copertina.senzaParole ? ["it"] : lingue) {
+          const { pagina } = await apriIlFilm(browser, porta, copertina, lingua);
+          await pagina.evaluate(() => window.video.vaiA(0));
+          /* Ferme vuol dire ferme: si porta l'orologio oltre la fine di tutto,
+             cosi' quello che si vede e' lo stato finale e non un mezzo
+             ingresso. */
+          await pagina.evaluate(() => window.video.vaiAlMomento(20000));
+          const dove = path.join(QUI, `${conLaLingua(copertina.uscita, lingua)}.png`);
+          await pagina.screenshot({ path: dove });
+          await pagina.close();
+          detto(`🖼  ${nome.padEnd(8)} ${lingua}  ${copertina.largo}×${copertina.alto}  ${dove}`);
+        }
       }
       return;
     }
@@ -427,22 +470,27 @@ async function main() {
     if (fotografie) {
       for (const nomeDelFilm of quali) {
         const film = FILM[nomeDelFilm];
-        const { pagina, elenco } = await apriIlFilm(browser, porta, film);
-        for (const pezzo of fotografie.split(",")) {
-          const [nome, quando] = pezzo.split("@");
-          const quale = elenco.findIndex((s) => s.nome === nome.trim());
-          if (quale === -1) continue;
-          await pagina.evaluate((i) => window.video.vaiA(i), quale);
-          await pagina.evaluate((ms) => window.video.vaiAlMomento(ms), Number(quando || 0) * 1000);
-          const dove = path.join(
-            QUI,
-            "provini",
-            `${nomeDelFilm}-${nome.trim()}-${quando || 0}.png`,
-          );
-          await pagina.screenshot({ path: dove });
-          detto("📷", dove);
+        for (const lingua of lingue) {
+          const { pagina, elenco } = await apriIlFilm(browser, porta, film, lingua);
+          for (const pezzo of fotografie.split(",")) {
+            const [nome, quando] = pezzo.split("@");
+            const quale = elenco.findIndex((s) => s.nome === nome.trim());
+            if (quale === -1) continue;
+            await pagina.evaluate((i) => window.video.vaiA(i), quale);
+            await pagina.evaluate(
+              (ms) => window.video.vaiAlMomento(ms),
+              Number(quando || 0) * 1000,
+            );
+            const dove = path.join(
+              QUI,
+              "provini",
+              `${nomeDelFilm}-${lingua}-${nome.trim()}-${quando || 0}.png`,
+            );
+            await pagina.screenshot({ path: dove });
+            detto("📷", dove);
+          }
+          await pagina.close();
         }
-        await pagina.close();
       }
       return;
     }
@@ -451,7 +499,9 @@ async function main() {
     detto(`   ffmpeg: ${ffmpeg.dove}${ffmpeg.mp4 ? "" : " — senza h264: esce webm invece di mp4"}`);
     const cominciato = Date.now();
     for (const nomeDelFilm of quali) {
-      await gira(browser, porta, ffmpeg, nomeDelFilm, soloQuesta, valore("--dove"));
+      for (const lingua of lingue) {
+        await gira(browser, porta, ffmpeg, nomeDelFilm, soloQuesta, valore("--dove"), lingua);
+      }
     }
     detto(`   ripresi in ${((Date.now() - cominciato) / 1000).toFixed(0)}s`);
   } finally {

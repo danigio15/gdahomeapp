@@ -22,8 +22,10 @@
     -->
     <link rel="stylesheet" href="comune.css" />
     <style>
+      /* Le due copertine sono larghe 1640; l'immagine del profilo è quadrata.
+         Larghezza e altezza le dice l'indirizzo, come per i film. */
       #palco {
-        width: 1640px;
+        width: var(--largo, 1640px);
         height: var(--alto, 856px);
       }
 

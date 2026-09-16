@@ -14,6 +14,21 @@
    in pagina **dopo** aver disegnato le scene: prima non esistono ancora. */
 export const STILI = [];
 
+/* ── La lingua ────────────────────────────────────────────────────────────
+ *
+ * Gli stessi film escono in italiano e in inglese, e a dire quale si gira e'
+ * l'indirizzo: `presentazione.html?lingua=en`. Non sono due film diversi —
+ * sarebbero due film da tenere al passo — e' lo stesso, con le parole che
+ * cambiano.
+ *
+ * `t(italiano, inglese)` e' scritta come nella plancia (`t("Energia",
+ * "Energy")`): chi conosce quella conosce anche questa, e la traduzione sta
+ * **accanto** alla frase invece che in un dizionario da un'altra parte, dove
+ * si dimentica.
+ */
+export const LINGUA = new URLSearchParams(location.search).get("lingua") === "en" ? "en" : "it";
+export const t = (italiano, inglese) => (LINGUA === "en" ? inglese : italiano);
+
 export const MARCHIO = "../../app/assets/marchio/gda.png";
 export const oggetto = (nome, lato) =>
   `<img src="../../app/assets/oggetti/${nome}.svg" width="${lato}" height="${lato}" alt="" />`;
@@ -97,8 +112,8 @@ export const plancia = ({ accende = null } = {}) => `
   <div style="position:absolute;inset:34px 0 0;background:#f0f4f8;display:flex;flex-direction:column">
     <div style="padding:8px 16px 10px;display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-size:21px;font-weight:800;letter-spacing:-.02em">Casa</div>
-        <div style="font-size:12px;color:#64748b">Sereno · 21,4° · tutti a casa</div>
+        <div style="font-size:21px;font-weight:800;letter-spacing:-.02em">${t("Casa", "Home")}</div>
+        <div style="font-size:12px;color:#64748b">${t("Sereno · 21,4° · tutti a casa", "Clear · 21.4° · everyone home")}</div>
       </div>
       <img src="${MARCHIO}" width="30" height="30" style="border-radius:8px" alt="" />
     </div>
@@ -106,18 +121,18 @@ export const plancia = ({ accende = null } = {}) => `
       <div style="position:relative">
         ${
           accende === null
-            ? tessera("luci", "Luci", "3 accese")
-            : `${tessera("luci", "Luci", "3 accese", false, "via", `--t2:${accende - 0.05}s`)}
-        <div class="ap" style="--t:${accende}s;position:absolute;inset:0">${tessera("luci", "Luci", "4 accese", true)}</div>`
+            ? tessera("luci", t("Luci", "Lights"), t("3 accese", "3 on"))
+            : `${tessera("luci", t("Luci", "Lights"), t("3 accese", "3 on"), false, "via", `--t2:${accende - 0.05}s`)}
+        <div class="ap" style="--t:${accende}s;position:absolute;inset:0">${tessera("luci", t("Luci", "Lights"), t("4 accese", "4 on"), true)}</div>`
         }
       </div>
-      ${tessera("clima", "Clima", "21,4°")}
-      ${tessera("energia", "Energia", "1,24 kW")}
-      ${tessera("sicurezza", "Sicurezza", "Inserita")}
-      ${tessera("tapparelle", "Finestre", "Aperte 2")}
-      ${tessera("telecamere", "Telecamere", "4")}
-      ${tessera("media", "Media", "In pausa")}
-      ${tessera("persone", "Persone", "Tutti a casa")}
+      ${tessera("clima", t("Clima", "Climate"), t("21,4°", "21.4°"))}
+      ${tessera("energia", t("Energia", "Energy"), t("1,24 kW", "1.24 kW"))}
+      ${tessera("sicurezza", t("Sicurezza", "Security"), t("Inserita", "Armed"))}
+      ${tessera("tapparelle", t("Finestre", "Windows"), t("Aperte 2", "2 open"))}
+      ${tessera("telecamere", t("Telecamere", "Cameras"), "4")}
+      ${tessera("media", "Media", t("In pausa", "Paused"))}
+      ${tessera("persone", t("Persone", "People"), t("Tutti a casa", "Everyone home"))}
     </div>
     <div style="height:58px;background:#fff;border-top:1px solid rgba(15,23,42,.07);display:flex;align-items:center;justify-content:space-around;padding:0 8px">
       ${["home", "luci", "clima", "energia", "impostazioni"]
@@ -137,6 +152,10 @@ export const plancia = ({ accende = null } = {}) => `
  * contrario, il puntatore non si muove.
  */
 export function mettiInScena(SCENE) {
+  /* La pagina dice in che lingua e': serve a chi la apre a mano e alla
+     sillabazione del browser, che in inglese taglia le parole in altri punti. */
+  document.documentElement.lang = LINGUA;
+
   const disegnate = SCENE.map(
     (s) => `<section class="scena" data-nome="${s.nome}">${s.contenuto()}</section>`,
   ).join("");

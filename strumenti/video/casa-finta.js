@@ -18,12 +18,69 @@
 
   const ADESSO = "2026-09-16T09:41:00.000+02:00";
 
+  /* In che lingua si fotografa. Lo dice chi apre la pagina
+     (`plancia-vera.mjs`), prima di ogni altro codice. */
+  const LINGUA = window.__CASA_FINTA_LINGUA__ === "en" ? "en" : "it";
+
+  /* I nomi delle cose di casa, in inglese.
+   *
+   * Non e' un vezzo: in una copertina inglese una tessera che dice «CLIMATE»
+   * con sotto «Termostato» si vede, ed e' l'unica cosa che tradisce che la
+   * fotografia e' stata presa da un'altra parte. Chi ha Home Assistant in
+   * inglese le sue entita' le ha chiamate cosi'. */
+  const IN_INGLESE = {
+    Sole: "Sun",
+    Casa: "Home",
+    Soggiorno: "Living room",
+    Cucina: "Kitchen",
+    Camera: "Bedroom",
+    Bagno: "Bathroom",
+    Studio: "Study",
+    "Presa TV": "TV socket",
+    Termostato: "Thermostat",
+    "Temperatura soggiorno": "Living room temperature",
+    "Umidità soggiorno": "Living room humidity",
+    "Temperatura camera": "Bedroom temperature",
+    "Potenza casa": "Home power",
+    "Energia oggi": "Energy today",
+    "Produzione solare": "Solar production",
+    "Porta d'ingresso": "Front door",
+    "Finestra cucina": "Kitchen window",
+    "Tapparella soggiorno": "Living room blind",
+    "Tapparella camera": "Bedroom blind",
+    Ingresso: "Entrance",
+    Giardino: "Garden",
+    Garage: "Garage",
+    Cortile: "Yard",
+    "TV soggiorno": "Living room TV",
+    "Batteria di Daniele": "Daniele's battery",
+    "Batteria di Giulia": "Giulia's battery",
+    "Batteria di Marco": "Marco's battery",
+    Antifurto: "Alarm",
+    Portone: "Front gate",
+    Robot: "Robot",
+    Auto: "Car",
+    "Temperatura esterna": "Outdoor temperature",
+    "Umidità esterna": "Outdoor humidity",
+    Vento: "Wind",
+    "Qualità dell'aria": "Air quality",
+    Irrigazione: "Irrigation",
+    Agenda: "Calendar",
+    "Manutenzione caldaia": "Boiler service",
+  };
+
+  const inLingua = (parola) => (LINGUA === "en" && IN_INGLESE[parola]) || parola;
+
   /* Una casa verosimile: quello che ha chiunque abbia Home Assistant da un
-     anno. I nomi sono italiani perche' la plancia si fotografa in italiano. */
+     anno. I nomi sono scritti in italiano e tradotti qui sopra: la plancia si
+     fotografa in tutte e due le lingue. */
   const stato = (entity_id, state, attributes = {}) => ({
     entity_id,
     state: String(state),
-    attributes,
+    attributes: Object.assign({}, attributes, {
+      ...(attributes.friendly_name ? { friendly_name: inLingua(attributes.friendly_name) } : {}),
+      ...(attributes.message ? { message: inLingua(attributes.message) } : {}),
+    }),
     last_changed: ADESSO,
     last_updated: ADESSO,
     context: { id: entity_id, parent_id: null, user_id: null },
@@ -253,13 +310,13 @@
       wind_speed: "km/h",
       accumulated_precipitation: "mm",
     },
-    location_name: "Casa",
+    location_name: inLingua("Casa"),
     time_zone: "Europe/Rome",
     components: ["light", "climate", "sensor", "camera", "cover", "person", "weather"],
     config_dir: "/config",
     version: "2026.9.1",
     country: "IT",
-    language: "it",
+    language: LINGUA,
     currency: "EUR",
     state: "RUNNING",
     safe_mode: false,
@@ -272,7 +329,7 @@
 
   const UTENTE = {
     id: "gdahome",
-    name: "Casa",
+    name: inLingua("Casa"),
     is_owner: true,
     is_admin: true,
     credentials: [],
@@ -357,10 +414,10 @@
         return UTENTE;
       case "config/area_registry/list":
         return [
-          { area_id: "soggiorno", name: "Soggiorno", picture: null },
-          { area_id: "cucina", name: "Cucina", picture: null },
-          { area_id: "camera", name: "Camera", picture: null },
-          { area_id: "bagno", name: "Bagno", picture: null },
+          { area_id: "soggiorno", name: inLingua("Soggiorno"), picture: null },
+          { area_id: "cucina", name: inLingua("Cucina"), picture: null },
+          { area_id: "camera", name: inLingua("Camera"), picture: null },
+          { area_id: "bagno", name: inLingua("Bagno"), picture: null },
         ];
       case "config/device_registry/list":
         return [];

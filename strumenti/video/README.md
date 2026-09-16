@@ -1,7 +1,7 @@
 # I video e le copertine di gdahome
 
-Tre filmati e due copertine, fatti dalla stessa pagina web e dalla stessa
-cartella:
+Tre filmati e tre immagini ferme, **ognuno in italiano e in inglese**, fatti
+dalla stessa pagina web e dalla stessa cartella:
 
 | film | misura | dura | a cosa serve |
 |---|---|---|---|
@@ -9,10 +9,24 @@ cartella:
 | `gdahome-facebook` | 1080×1080 | 0:47 | il quadrato per il feed di Facebook |
 | `gdahome-tiktok` | 1080×1920 | 0:47 | lo stesso, in piedi, per TikTok — e per Reels e Storie |
 
-| copertina | misura | dove va |
+| immagine | misura | dove va |
 |---|---|---|
 | `gdahome-copertina-gruppo.png` | 1640×856 | la copertina di un **gruppo** di Facebook |
 | `gdahome-copertina-pagina.png` | 1640×624 | la copertina di una **pagina** di Facebook |
+| `gdahome-profilo.png` | 1080×1080 | l'immagine del profilo della pagina, che Facebook ritaglia tonda |
+
+**Le due lingue.** Ogni file esiste due volte: l'italiano si chiama come è
+sempre stato — `gdahome-tiktok.mp4` — e l'inglese ha `-en` in fondo,
+`gdahome-tiktok-en.mp4`. Non sono due film diversi: è lo stesso, con le parole
+che cambiano. La traduzione sta accanto alla frase, in `t("…", "…")`, come nella
+plancia. L'immagine del profilo è una sola: dentro c'è il marchio e basta.
+
+Anche **la plancia dentro gli schermi** segue la lingua: le copertine inglesi
+montano le fotografie di `plancia-*-en.png`, che escono dalla pagina inglese
+della plancia vera con una casa finta che ha le entità in inglese. Due cose
+restano in italiano anche lì, e non dipendono da qui: la parola del meteo
+(«SOLEGGIATO») e la pastiglia «ANTIFURTO · CASA» sono scritte così dentro
+DashboardModern, che in inglese non le traduce.
 
 I filmati escono in **mp4** (H.264, con una traccia audio muta nei due corti) se
 sulla macchina c'è un ffmpeg vero; se c'è solo quello di Playwright escono in
@@ -24,12 +38,21 @@ non lo prende.
 ## Rifarli
 
 ```
-node strumenti/video/rendi.mjs                 tutti e tre i filmati
-node strumenti/video/rendi.mjs --film tiktok   uno solo
-node strumenti/video/rendi.mjs --copertine     le due copertine di Facebook
+node strumenti/video/rendi.mjs                 i tre filmati, nelle due lingue
+node strumenti/video/rendi.mjs --film tiktok   uno solo (due lingue)
+node strumenti/video/rendi.mjs --lingua en     solo l'inglese
+node strumenti/video/rendi.mjs --copertine     le immagini ferme di Facebook
 ```
 
-Sette minuti circa per tutti e tre. Serve **Playwright** (`npm i -g playwright`,
+Le fotografie della plancia vera si rifanno a parte, una lingua per volta —
+aprono la plancia e aspettano che si configuri da sola:
+
+```
+node strumenti/video/plancia-vera.mjs
+node strumenti/video/plancia-vera.mjs --lingua en
+```
+
+Un quarto d'ora circa per tutti e sei i filmati. Serve **Playwright** (`npm i -g playwright`,
 oppure installato di fianco al progetto) e, per l'mp4, **ffmpeg**
 (`apt install ffmpeg`). Nient'altro.
 
@@ -52,9 +75,9 @@ mentre va.
 | `pezzi.js` | i pezzi condivisi: il marchio, i disegnini, il telefono, **la plancia**, e il palco che chi filma va a cercare |
 | `presentazione.html` + `scene.js` | il film lungo: quindici scene, disposte a coordinate |
 | `social.html` + `social.js` | il film corto: sette scene, disposte **a colonna** |
-| `copertine.html` + `copertine.js` | le due copertine di Facebook, ferme |
+| `copertine.html` + `copertine.js` | le copertine di Facebook e l'immagine del profilo, ferme |
 | `plancia-vera.mjs` + `casa-finta.js` | fotografano **la plancia vera**, quella di `ponte/plancia/` |
-| `plancia-telefono.png`, `-tablet`, `-computer` | le tre fotografie, che finiscono negli schermi delle copertine |
+| `plancia-telefono.png`, `-tablet`, `-computer` (e `-en`) | le fotografie, che finiscono negli schermi delle copertine |
 | `rendi.mjs` | chi filma: apre la pagina, sposta l'orologio, scatta, e passa gli scatti a ffmpeg |
 | `qrcode.svg` | il QR code che si vede nel film lungo — lo rifà `rendi.mjs` a ogni ripresa |
 | `provini/` | le fotografie di `--foto` e i filmati di `--scena`; non sta nella repository |

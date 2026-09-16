@@ -12,19 +12,26 @@
  * ce l'ha installata, e non una pagina preparata per la fotografia.
  *
  *   node strumenti/video/plancia-vera.mjs
+ *   node strumenti/video/plancia-vera.mjs --lingua en
  *
- * Le fotografie finiscono in `provini/plancia-vera-*.png`, una per schermo.
+ * Le fotografie finiscono in `plancia-<schermo>.png`, una per schermo, e in
+ * inglese con `-en` in fondo: le copertine in inglese vogliono una plancia in
+ * inglese, se no si legge «SICUREZZA» sotto un titolo che dice «All free».
+ *
+ * La lingua non la si finge: la plancia ha **una pagina per lingua**
+ * (`dashboard.html`, `dashboard-en.html`) e a sceglierla e' la stessa funzione
+ * del ponte, `paginaDellaLingua()`.
  */
 
 import { createServer } from "node:http";
 import { execFileSync } from "node:child_process";
-import { readFile, mkdir } from "node:fs/promises";
+import { readFile, mkdir, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { vestiDiGdahome } from "../../ponte/src/marchio.js";
-import { conLePremesse, ilWebSocket } from "../../ponte/src/premesse.js";
+import { conLePremesse, ilWebSocket, paginaDellaLingua } from "../../ponte/src/premesse.js";
 
 /* Dove il ponte monta la plancia per il browser. */
 const BASE = "/dashboardmodern_static";
@@ -46,6 +53,16 @@ const SCHERMI = {
   tablet: { largo: 820, alto: 1180 },
   computer: { largo: 1440, alto: 900 },
 };
+
+/* In che lingua si fotografa, e come si chiama quello che ne esce. */
+const LINGUA = process.argv.includes("--lingua")
+  ? process.argv[process.argv.indexOf("--lingua") + 1]
+  : "it";
+const conLaLingua = (nome) => (LINGUA === "it" ? nome : `${nome}-${LINGUA}`);
+
+/* Il sottotitolo sotto il nome di casa: e' quello che si legge in cima alla
+   plancia, quindi segue la lingua della plancia. */
+const SOTTOTITOLO = LINGUA === "en" ? "Your home as one screen" : "La casa in una plancia";
 
 async function apriPlaywright() {
   const dentro = (roba) => roba?.chromium ?? roba?.default?.chromium;
@@ -77,15 +94,17 @@ const TIPI = {
 /* La pagina, servita come la serve il ponte ma con la casa finta al posto
    della casa. La riga che cambia e' una: il WebSocket. */
 async function laPagina() {
-  const crudo = await readFile(path.join(PLANCIA, "legacy", "dashboard.html"));
+  /* Quale delle pagine della plancia: la sceglie il ponte, con la sua regola. */
+  const quale = paginaDellaLingua(await readdir(path.join(PLANCIA, "legacy")), LINGUA);
+  const crudo = await readFile(path.join(PLANCIA, "legacy", quale));
   /* Vestita di gdahome, come la serve l'add-on: il logo, il velo d'avvio, il
      titolo. Senza, in cima alla plancia si legge il nome di prima — ed e' la
      prima cosa che si vede in una copertina. */
-  const pagina = vestiDiGdahome("legacy/dashboard.html", crudo, "text/html").corpo.toString("utf8");
+  const pagina = vestiDiGdahome(`legacy/${quale}`, crudo, "text/html").corpo.toString("utf8");
   const dove = "ws://127.0.0.1/non-ci-va-nessuno";
   const conLeSue = conLePremesse(pagina, {
     base: `${BASE}/finta/legacy/`,
-    lingua: "it",
+    lingua: LINGUA,
     doveIlWebSocket: dove,
   });
   /* Si sostituisce **tutta** la funzione che il ponte scrive, chiedendogliela
@@ -186,7 +205,7 @@ async function siConfiguraDaSola(pagina) {
     .waitForFunction(
       () =>
         [...document.querySelectorAll("button,a")].some((nodo) =>
-          /configura la dashboard/i.test(nodo.textContent || ""),
+          /configura la dashboard|set up the dashboard/i.test(nodo.textContent || ""),
         ),
       null,
       { timeout: 8000 },
@@ -205,7 +224,7 @@ async function siConfiguraDaSola(pagina) {
   const apre = await pagina
     .evaluate(() => {
       const chi = [...document.querySelectorAll("button,a")].find((nodo) =>
-        /configura la dashboard/i.test(nodo.textContent || ""),
+        /configura la dashboard|set up the dashboard/i.test(nodo.textContent || ""),
       );
       if (!chi) return false;
       chi.click();
@@ -315,85 +334,89 @@ async function main() {
      * nome di un altro sarebbe la prima cosa che si legge, quindi la casa
      * finta parte con quello gia' messo — come la casa di chiunque dopo il
      * primo giorno. */
-    await pagina.addInitScript(() => {
-      window.__CASA_FINTA_BUSTA__ = {
-        revision: 1,
-        updated_at: Date.now(),
-        keys_revision: 1,
-        writer_generation: 1,
-        reset: false,
-        values: {
-          cd_branding: JSON.stringify({ title: "gdahome", subtitle: "La casa in una plancia" }),
-          /* Le persone, con la faccia composta.
-           *
-           * Il 🪄 le entita' le trova, ma un **ritratto** non si rileva: e'
-           * una fila di scelte che nella plancia vera fa chi la configura, una
-           * persona per volta. Qui se ne mettono tre,
-           * perche' una casa senza facce in copertina sembra una casa vuota.
-           * Le facce le disegna il compositore della plancia, quello vero. */
-          cd_people: JSON.stringify([
-            {
-              name: "Daniele",
-              entity: "person.daniele",
-              battery: "sensor.batteria_daniele",
-              avatar: {
-                face: {
-                  persona: "uomo",
-                  capelli: "lisci",
-                  coloreCapelli: "castano",
-                  barba: "corta",
-                  coloreBarba: "naturale",
-                  occhi: "marrone",
-                  carnagione: "chiara2",
-                  vestito: "casual",
-                  coloreVestito: "blu",
-                  occhiali: "nessuno",
-                  collana: "nessuna",
+    await pagina.addInitScript(
+      ({ sottotitolo, lingua }) => {
+        window.__CASA_FINTA_LINGUA__ = lingua;
+        window.__CASA_FINTA_BUSTA__ = {
+          revision: 1,
+          updated_at: Date.now(),
+          keys_revision: 1,
+          writer_generation: 1,
+          reset: false,
+          values: {
+            cd_branding: JSON.stringify({ title: "gdahome", subtitle: sottotitolo }),
+            /* Le persone, con la faccia composta.
+             *
+             * Il 🪄 le entita' le trova, ma un **ritratto** non si rileva: e'
+             * una fila di scelte che nella plancia vera fa chi la configura, una
+             * persona per volta. Qui se ne mettono tre,
+             * perche' una casa senza facce in copertina sembra una casa vuota.
+             * Le facce le disegna il compositore della plancia, quello vero. */
+            cd_people: JSON.stringify([
+              {
+                name: "Daniele",
+                entity: "person.daniele",
+                battery: "sensor.batteria_daniele",
+                avatar: {
+                  face: {
+                    persona: "uomo",
+                    capelli: "lisci",
+                    coloreCapelli: "castano",
+                    barba: "corta",
+                    coloreBarba: "naturale",
+                    occhi: "marrone",
+                    carnagione: "chiara2",
+                    vestito: "casual",
+                    coloreVestito: "blu",
+                    occhiali: "nessuno",
+                    collana: "nessuna",
+                  },
                 },
               },
-            },
-            {
-              name: "Giulia",
-              entity: "person.giulia",
-              battery: "sensor.batteria_giulia",
-              avatar: {
-                face: {
-                  persona: "donna",
-                  capelli: "lisci",
-                  coloreCapelli: "castano",
-                  barba: "nessuna",
-                  occhi: "verde",
-                  carnagione: "chiara",
-                  vestito: "camicia",
-                  coloreVestito: "verde",
-                  occhiali: "nessuno",
-                  collana: "catenina",
+              {
+                name: "Giulia",
+                entity: "person.giulia",
+                battery: "sensor.batteria_giulia",
+                avatar: {
+                  face: {
+                    persona: "donna",
+                    capelli: "lisci",
+                    coloreCapelli: "castano",
+                    barba: "nessuna",
+                    occhi: "verde",
+                    carnagione: "chiara",
+                    vestito: "camicia",
+                    coloreVestito: "verde",
+                    occhiali: "nessuno",
+                    collana: "catenina",
+                  },
                 },
               },
-            },
-            {
-              name: "Marco",
-              entity: "person.marco",
-              battery: "sensor.batteria_marco",
-              avatar: {
-                face: {
-                  persona: "ragazzo",
-                  capelli: "ricci",
-                  coloreCapelli: "castano",
-                  barba: "nessuna",
-                  occhi: "azzurro",
-                  carnagione: "media",
-                  vestito: "polo",
-                  coloreVestito: "rosso",
-                  occhiali: "tondi",
-                  collana: "nessuna",
+              {
+                name: "Marco",
+                entity: "person.marco",
+                battery: "sensor.batteria_marco",
+                avatar: {
+                  face: {
+                    persona: "ragazzo",
+                    capelli: "ricci",
+                    coloreCapelli: "castano",
+                    barba: "nessuna",
+                    occhi: "azzurro",
+                    carnagione: "media",
+                    vestito: "polo",
+                    coloreVestito: "rosso",
+                    occhiali: "tondi",
+                    collana: "nessuna",
+                  },
                 },
               },
-            },
-          ]),
-        },
-      };
-    });
+            ]),
+          },
+        };
+      },
+      { sottotitolo: SOTTOTITOLO, lingua: LINGUA },
+    );
 
     const lamenti = [];
     pagina.on("pageerror", (guaio) => lamenti.push(String(guaio).slice(0, 160)));
@@ -431,7 +454,7 @@ async function main() {
     });
     await pagina.waitForTimeout(600);
 
-    const dove = path.join(QUI, `plancia-${nome}.png`);
+    const dove = path.join(QUI, `${conLaLingua(`plancia-${nome}`)}.png`);
     await pagina.screenshot({ path: dove });
     const chiesto = await pagina.evaluate(() => window.__CASA_FINTA_CHIESTO__ || []);
     if (process.env.SBIRCIA) {

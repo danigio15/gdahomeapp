@@ -20,10 +20,11 @@
  *   cominciano piu' a destra di dove arriva quella foto.
  */
 
-import { computer, MARCHIO, mettiInScena, segno, tavoletta, telefono } from "./pezzi.js";
+import { computer, MARCHIO, mettiInScena, segno, t, tavoletta, telefono } from "./pezzi.js";
 
 const misure = new URLSearchParams(location.search);
 const quale = misure.get("tipo") || "gruppo";
+document.documentElement.style.setProperty("--largo", `${misure.get("largo") || 1640}px`);
 document.documentElement.style.setProperty("--alto", `${misure.get("alto") || 856}px`);
 
 const SCENE = [];
@@ -44,8 +45,8 @@ const pastiglia = (testo, disegno, tinta) => `
   <span class="vetro" style="border-color:${tinta}66;color:${tinta}">${disegno} ${testo}</span>`;
 
 const LE_PASTIGLIE = `
-  ${pastiglia("Tutto gratis", segno("spunta", 24, "#86efac"), "#86efac")}
-  ${pastiglia("Su Google Play dal 30 settembre", segno("calendario", 22, "#fcd34d"), "#fcd34d")}`;
+  ${pastiglia(t("Tutto gratis", "All free"), segno("spunta", 24, "#86efac"), "#86efac")}
+  ${pastiglia(t("Su Google Play dal 30 settembre", "On Google Play from 30 September"), segno("calendario", 22, "#fcd34d"), "#fcd34d")}`;
 
 /* I tre schermi, e dentro **la plancia vera**.
  *
@@ -65,7 +66,7 @@ const LE_PASTIGLIE = `
  *   computer 1440×900   → schermo 700×438
  */
 const dentroLoSchermo = (quale) =>
-  `<img src="plancia-${quale}.png" alt="" style="display:block;width:100%;height:100%;object-fit:fill" />`;
+  `<img src="${t(`plancia-${quale}`, `plancia-${quale}-en`)}.png" alt="" style="display:block;width:100%;height:100%;object-fit:fill" />`;
 
 const IL_COMPUTER = (scala) =>
   computer({ largo: 700, alto: 438, scala, dentro: dentroLoSchermo("computer") });
@@ -89,10 +90,13 @@ if (quale === "gruppo") {
           <h1 class="nome" style="font-size:66px">gdahome</h1>
         </div>
         <p class="motto" style="font-size:46px;margin-top:20px;font-weight:800;letter-spacing:-.025em">
-          La tua casa, <b>su ogni schermo</b>
+          ${t("La tua casa, <b>su ogni schermo</b>", "Your home, <b>on every screen</b>")}
         </p>
         <p class="motto" style="font-size:26px;margin-top:12px;font-weight:500;color:#9db0cc">
-          Telefono, tablet e computer: la stessa plancia, per tutta la casa.
+          ${t(
+            "Telefono, tablet e computer: la stessa plancia, per tutta la casa.",
+            "Phone, tablet and computer: the same dashboard, for the whole house.",
+          )}
         </p>
         <div class="pastiglie" style="justify-content:center;margin-top:20px">${LE_PASTIGLIE}</div>
       </div>
@@ -118,14 +122,14 @@ if (quale === "pagina") {
           <h1 class="nome" style="font-size:52px">gdahome</h1>
         </div>
         <p class="motto" style="font-size:34px;margin-top:14px;font-weight:800;letter-spacing:-.02em">
-          La tua casa, <b>su ogni schermo</b>
+          ${t("La tua casa, <b>su ogni schermo</b>", "Your home, <b>on every screen</b>")}
         </p>
         <div class="pastiglie" style="justify-content:center;margin-top:14px;gap:12px">
           <span class="vetro" style="font-size:22px;padding:12px 20px;border-color:#86efac66;color:#86efac">
-            ${segno("spunta", 21, "#86efac")} Tutto gratis
+            ${segno("spunta", 21, "#86efac")} ${t("Tutto gratis", "All free")}
           </span>
           <span class="vetro" style="font-size:22px;padding:12px 20px;border-color:#fcd34d66;color:#fcd34d">
-            ${segno("calendario", 19, "#fcd34d")} Su Google Play dal 30 settembre
+            ${segno("calendario", 19, "#fcd34d")} ${t("Su Google Play dal 30 settembre", "On Google Play from 30 September")}
           </span>
         </div>
       </div>
@@ -135,6 +139,30 @@ if (quale === "pagina") {
       <div style="position:absolute;left:666px;top:269px">${IL_COMPUTER(0.72)}</div>
       <div style="position:absolute;left:410px;top:273px;z-index:2">${IL_TABLET(0.62)}</div>
       <div style="position:absolute;left:1180px;top:289px;z-index:2">${IL_TELEFONO(0.52)}</div>`,
+  });
+}
+
+/* ══ L'immagine del profilo: 1080×1080, e dentro un cerchio ════════════
+ *
+ * Facebook la mostra **tonda**, e piccola: sulla pagina e' un francobollo
+ * accanto al nome. Percio' qui non c'e' scritto niente — un motto in un
+ * cerchio da centosettanta pixel non lo legge nessuno — c'e' il marchio e
+ * basta, tenuto dentro il cerchio inscritto con aria intorno, cosi' il
+ * ritaglio non morde mai un angolo.
+ *
+ * E' l'unica immagine senza parole: non ha una versione inglese perche' non
+ * ne ha bisogno.
+ */
+if (quale === "profilo") {
+  SCENE.push({
+    nome: "profilo",
+    durata: 1,
+    contenuto: () => `
+      ${alone(140, 130, 800, 800)}
+      <div style="position:absolute;inset:0;display:grid;place-items:center">
+        <img src="${MARCHIO}" width="700" height="700" alt=""
+             style="border-radius:174px;box-shadow:0 42px 90px rgba(0,0,0,.6),0 0 0 2px rgba(255,255,255,.1)" />
+      </div>`,
   });
 }
 

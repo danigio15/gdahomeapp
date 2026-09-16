@@ -10,7 +10,7 @@
  * mostrare, e poi gli sposta l'orologio avanti di un fotogramma per volta.
  */
 
-import { MARCHIO, mettiInScena, oggetto, plancia, segno, STILI, telefono } from "./pezzi.js";
+import { MARCHIO, mettiInScena, oggetto, plancia, segno, STILI, t, telefono } from "./pezzi.js";
 
 const SCENE = [];
 
@@ -81,19 +81,19 @@ function didascalia(righe) {
 /* ── La finestra di Home Assistant ────────────────────────────────────── */
 
 const VOCI = [
-  ["casa", "Panoramica"],
-  ["fulmine", "Energia"],
-  ["registro", "Registro"],
-  ["orologio", "Cronologia"],
-  ["media", "Media"],
+  ["casa", "Panoramica", "Overview"],
+  ["fulmine", "Energia", "Energy"],
+  ["registro", "Registro", "Logbook"],
+  ["orologio", "Cronologia", "History"],
+  ["media", "Media", "Media"],
 ];
 
 /* La barra laterale. `scelta` e' la voce accesa; `gdahome` la aggiunge in
    fondo, come succede quando l'add-on parte. */
 function barraLato({ scelta = "", gdahome = null, extra = "" } = {}) {
   const voci = VOCI.map(
-    ([disegno, nome]) =>
-      `<div class="voce${scelta === nome ? " scelta" : ""}">${segno(disegno)}<span>${nome}</span></div>`,
+    ([disegno, nome, inglese]) =>
+      `<div class="voce${scelta === nome ? " scelta" : ""}">${segno(disegno)}<span>${t(nome, inglese)}</span></div>`,
   ).join("");
   /* `null` vuol dire «non c'e' ancora»; la stringa vuota vuol dire «c'e', e
      senza animazione»: sono due cose diverse, e distinguerle costa questa
@@ -107,8 +107,8 @@ function barraLato({ scelta = "", gdahome = null, extra = "" } = {}) {
       ${voci}
       ${nostra}
       <div style="height:14px"></div>
-      <div class="voce">${segno("attrezzi")}<span>Strumenti</span></div>
-      <div class="voce${scelta === "Impostazioni" ? " scelta" : ""}">${segno("ingranaggio")}<span>Impostazioni</span></div>
+      <div class="voce">${segno("attrezzi")}<span>${t("Strumenti", "Developer tools")}</span></div>
+      <div class="voce${scelta === "Impostazioni" ? " scelta" : ""}">${segno("ingranaggio")}<span>${t("Impostazioni", "Settings")}</span></div>
       ${extra}
     </div>`;
 }
@@ -133,14 +133,27 @@ scena(
   <img class="cr-c" src="${MARCHIO}" width="148" height="148" alt=""
        style="--t:.1s;position:absolute;left:50%;top:118px;border-radius:33px;box-shadow:0 24px 60px rgba(0,0,0,.55)" />
   <div class="en" style="--t:.55s;position:absolute;left:0;right:0;top:294px;text-align:center;font-size:76px;font-weight:800;letter-spacing:-.03em">gdahome</div>
-  <div class="en" style="--t:.85s;position:absolute;left:0;right:0;top:392px;text-align:center;font-size:27px;color:var(--tenue);font-weight:500">La casa in una plancia, sul telefono</div>
+  <div class="en" style="--t:.85s;position:absolute;left:0;right:0;top:392px;text-align:center;font-size:27px;color:var(--tenue);font-weight:500">${t("La casa in una plancia, sul telefono", "Your home as one screen, on your phone")}</div>
   <div class="en" style="--t:1.15s;position:absolute;left:0;right:0;top:452px;display:flex;justify-content:center;gap:10px">
-    <span class="vetro" style="padding:9px 18px;font-size:16px;color:#cfe0f5">un add-on di Home Assistant</span>
-    <span class="vetro" style="padding:9px 18px;font-size:16px;color:#cfe0f5">+ un'app per Android e iPhone</span>
+    <span class="vetro" style="padding:9px 18px;font-size:16px;color:#cfe0f5">${t("un add-on di Home Assistant", "a Home Assistant add-on")}</span>
+    <span class="vetro" style="padding:9px 18px;font-size:16px;color:#cfe0f5">${t("+ un'app per Android e iPhone", "+ an app for Android and iPhone")}</span>
   </div>
   ${didascalia([
-    { t: 1.9, t2: 4.4, testo: "Una casa in Home Assistant, e un telefono." },
-    { t: 4.6, testo: "Nel mezzo due cose da installare: <b>un add-on</b> e <b>l'app</b>." },
+    {
+      t: 1.9,
+      t2: 4.4,
+      testo: t(
+        "Una casa in Home Assistant, e un telefono.",
+        "A home in Home Assistant, and a phone.",
+      ),
+    },
+    {
+      t: 4.6,
+      testo: t(
+        "Nel mezzo due cose da installare: <b>un add-on</b> e <b>l'app</b>.",
+        "In between, two things to install: <b>an add-on</b> and <b>the app</b>.",
+      ),
+    },
   ])}`,
 );
 
@@ -159,41 +172,66 @@ scena(
   "i-tre-pezzi",
   11,
   () => `
-  ${cartello(1, "Cos'è", "tre pezzi, e uno solo si installa")}
+  ${cartello(1, t("Cos'è", "What it is"), t("tre pezzi, e uno solo si installa", "three pieces, and only one gets installed"))}
   ${pezzo(
     98,
     0.5,
     "",
     segno("ponte", 30, "#38bdf8"),
-    "L'add-on",
-    "Si chiama <b style='color:#cfe0f5'>gdahome</b> e sta dentro Home Assistant. È lui che fa entrare il telefono: da dentro e da fuori casa.",
-    "Si installa dal negozio degli add-on",
+    t("L'add-on", "The add-on"),
+    t(
+      "Si chiama <b style='color:#cfe0f5'>gdahome</b> e sta dentro Home Assistant. È lui che fa entrare il telefono: da dentro e da fuori casa.",
+      "It's called <b style='color:#cfe0f5'>gdahome</b> and lives inside Home Assistant. It's what lets the phone in: at home and away.",
+    ),
+    t("Si installa dal negozio degli add-on", "Installed from the add-on store"),
   )}
   ${pezzo(
     470,
     0.8,
     "ambra",
     segno("telefono", 30, "#fbbf24"),
-    "L'app",
-    "Android e iPhone. Si abbina <b style='color:#cfe0f5'>inquadrando un QR code</b>: nessun indirizzo, nessuna password di Home Assistant.",
-    "Un bottone solo, alla prima accensione",
+    t("L'app", "The app"),
+    t(
+      "Android e iPhone. Si abbina <b style='color:#cfe0f5'>inquadrando un QR code</b>: nessun indirizzo, nessuna password di Home Assistant.",
+      "Android and iPhone. It pairs by <b style='color:#cfe0f5'>scanning a QR code</b>: no address, no Home Assistant password.",
+    ),
+    t("Un bottone solo, alla prima accensione", "One button, the first time you open it"),
   )}
   ${pezzo(
     842,
     1.1,
     "verde",
     segno("casa", 30, "#4ade80"),
-    "La plancia",
-    "La home dell'app: ventitré sezioni, quelle vere della dashboard. <b style='color:#cfe0f5'>La porta l'add-on</b>, e si configura dal telefono.",
-    "È DashboardModern, con la sua licenza",
+    t("La plancia", "The dashboard"),
+    t(
+      "La home dell'app: ventitré sezioni, quelle vere della dashboard. <b style='color:#cfe0f5'>La porta l'add-on</b>, e si configura dal telefono.",
+      "The app's home: twenty-three sections, the real dashboard ones. <b style='color:#cfe0f5'>The add-on brings it</b>, and you set it up from the phone.",
+    ),
+    t("È DashboardModern, con la sua licenza", "It's DashboardModern, with its own licence"),
   )}
   <div class="ap" style="--t:1.9s;position:absolute;left:98px;top:534px;right:98px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent)"></div>
   <div class="ap" style="--t:2.1s;position:absolute;left:0;right:0;top:556px;text-align:center;font-size:19px;color:#7f93b0">
-    L'add-on si installa una volta sola, e da lì arrivano sia l'app che la plancia.
+    ${t(
+      "L'add-on si installa una volta sola, e da lì arrivano sia l'app che la plancia.",
+      "The add-on is installed once, and both the app and the dashboard come from it.",
+    )}
   </div>
   ${didascalia([
-    { t: 2.0, t2: 6.2, testo: "Tre pezzi, e in Home Assistant se ne installa <b>uno solo</b>." },
-    { t: 6.4, testo: "La plancia arriva insieme all'add-on: nient'altro da mettere." },
+    {
+      t: 2.0,
+      t2: 6.2,
+      testo: t(
+        "Tre pezzi, e in Home Assistant se ne installa <b>uno solo</b>.",
+        "Three pieces, and in Home Assistant you install <b>only one</b>.",
+      ),
+    },
+    {
+      t: 6.4,
+      testo: t(
+        "La plancia arriva insieme all'add-on: nient'altro da mettere.",
+        "The dashboard comes with the add-on: nothing else to put in.",
+      ),
+    },
   ])}`,
 );
 
@@ -216,7 +254,7 @@ scena(
   "come-ci-si-arriva",
   14,
   () => `
-  ${cartello(2, "Come ci si arriva", "in casa, e da fuori")}
+  ${cartello(2, t("Come ci si arriva", "How you get in"), t("in casa, e da fuori", "at home, and away"))}
 
   <svg style="position:absolute;inset:0" width="1280" height="720" fill="none">
     <path d="${STRADA_LONTANA}" stroke="rgba(245,158,11,.42)" stroke-width="2.5" stroke-dasharray="7 7"/>
@@ -230,40 +268,56 @@ scena(
   <!-- il telefono -->
   <div class="vetro cr" style="--t:.4s;position:absolute;left:112px;top:272px;width:150px;height:118px;display:grid;place-items:center;gap:6px;align-content:center">
     ${segno("telefono", 32, "#fbbf24")}
-    <div style="font-size:16px;font-weight:600">L'app</div>
+    <div style="font-size:16px;font-weight:600">${t("L'app", "The app")}</div>
   </div>
 
   <!-- il centralino -->
   <div class="vetro cr" style="--t:5.4s;position:absolute;left:748px;top:120px;width:196px;height:112px;display:grid;place-items:center;gap:4px;align-content:center">
     ${segno("nuvola", 30, "#fbbf24")}
-    <div style="font-size:16px;font-weight:600">Il centralino</div>
-    <div style="font-size:13px;color:var(--tenue)">instrada, e non legge</div>
+    <div style="font-size:16px;font-weight:600">${t("Il centralino", "The relay")}</div>
+    <div style="font-size:13px;color:var(--tenue)">${t("instrada, e non legge", "it routes, it can't read")}</div>
   </div>
 
   <!-- la casa -->
   <div class="vetro cr" style="--t:.7s;position:absolute;left:964px;top:250px;width:204px;height:162px;display:grid;place-items:center;gap:5px;align-content:center">
     ${segno("casa", 32, "#38bdf8")}
     <div style="font-size:17px;font-weight:700">Home Assistant</div>
-    <div style="font-size:14px;color:var(--tenue);text-align:center;line-height:1.35">con dentro<br/>l'add-on gdahome</div>
+    <div style="font-size:14px;color:var(--tenue);text-align:center;line-height:1.35">${t("con dentro<br/>l'add-on gdahome", "with the gdahome<br/>add-on inside")}</div>
   </div>
 
-  <div class="ap" style="--t:1.5s;position:absolute;left:452px;top:338px;font-size:15px;color:#7dd3fc;font-weight:600">in casa: dritto, sul Wi-Fi</div>
-  <div class="ap" style="--t:5.8s;position:absolute;left:392px;top:140px;font-size:15px;color:#fcd34d;font-weight:600">da fuori: è la casa che chiama</div>
+  <div class="ap" style="--t:1.5s;position:absolute;left:452px;top:338px;font-size:15px;color:#7dd3fc;font-weight:600">${t("in casa: dritto, sul Wi-Fi", "at home: straight over Wi-Fi")}</div>
+  <div class="ap" style="--t:5.8s;position:absolute;left:392px;top:140px;font-size:15px;color:#fcd34d;font-weight:600">${t("da fuori: è la casa che chiama", "away: the home calls out")}</div>
 
   <div style="position:absolute;left:112px;top:514px;right:112px;display:flex;gap:14px">
-    <div class="vetro ap" style="--t:9.9s;flex:1;padding:15px 18px;display:flex;gap:11px;align-items:center;font-size:17px;color:#dbe7f7">${segno("lucchetto", 22, "#4ade80")} Nessuna porta aperta sul router</div>
-    <div class="vetro ap" style="--t:10.1s;flex:1;padding:15px 18px;display:flex;gap:11px;align-items:center;font-size:17px;color:#dbe7f7">${segno("mondo", 22, "#4ade80")} Nessuna VPN da installare</div>
-    <div class="vetro ap" style="--t:10.3s;flex:1;padding:15px 18px;display:flex;gap:11px;align-items:center;font-size:17px;color:#dbe7f7">${segno("spunta", 22, "#4ade80")} Cifrato punta a punta</div>
+    <div class="vetro ap" style="--t:9.9s;flex:1;padding:15px 18px;display:flex;gap:11px;align-items:center;font-size:17px;color:#dbe7f7">${segno("lucchetto", 22, "#4ade80")} ${t("Nessuna porta aperta sul router", "No ports opened on your router")}</div>
+    <div class="vetro ap" style="--t:10.1s;flex:1;padding:15px 18px;display:flex;gap:11px;align-items:center;font-size:17px;color:#dbe7f7">${segno("mondo", 22, "#4ade80")} ${t("Nessuna VPN da installare", "No VPN to install")}</div>
+    <div class="vetro ap" style="--t:10.3s;flex:1;padding:15px 18px;display:flex;gap:11px;align-items:center;font-size:17px;color:#dbe7f7">${segno("spunta", 22, "#4ade80")} ${t("Cifrato punta a punta", "End-to-end encrypted")}</div>
   </div>
 
   ${didascalia([
     {
       t: 1.4,
       t2: 5.3,
-      testo: "In casa il telefono va dritto: la casa la trova da solo sul Wi-Fi.",
+      testo: t(
+        "In casa il telefono va dritto: la casa la trova da solo sul Wi-Fi.",
+        "At home the phone goes straight there: it finds the house by itself over Wi-Fi.",
+      ),
     },
-    { t: 5.6, t2: 9.7, testo: "Da fuori <b>è la casa che chiama</b>, e il telefono arriva da lì." },
-    { t: 10.6, testo: "Sul router non si tocca niente. Il centralino instrada e non può leggere." },
+    {
+      t: 5.6,
+      t2: 9.7,
+      testo: t(
+        "Da fuori <b>è la casa che chiama</b>, e il telefono arriva da lì.",
+        "From away <b>it's the home that calls out</b>, and the phone comes in that way.",
+      ),
+    },
+    {
+      t: 10.6,
+      testo: t(
+        "Sul router non si tocca niente. Il centralino instrada e non può leggere.",
+        "Nothing changes on your router. The relay routes, and it cannot read.",
+      ),
+    },
   ])}`,
 );
 
@@ -285,10 +339,17 @@ const rigaImpostazioni = (y, disegno, titolo, sotto, evidente = false) => `
 
 const PANORAMICA = `
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
-    ${["Soggiorno", "Cucina", "Camera", "Clima", "Energia", "Sicurezza"]
+    ${[
+      ["Soggiorno", "Living room"],
+      ["Cucina", "Kitchen"],
+      ["Camera", "Bedroom"],
+      ["Clima", "Climate"],
+      ["Energia", "Energy"],
+      ["Sicurezza", "Security"],
+    ]
       .map(
-        (nome) => `<div class="carta" style="height:118px">
-          <h4>${nome}</h4>
+        ([nome, inglese]) => `<div class="carta" style="height:118px">
+          <h4>${t(nome, inglese)}</h4>
           <p style="margin-top:8px">—</p>
           <div style="margin-top:14px;height:8px;border-radius:4px;background:#eceff3"></div>
           <div style="margin-top:8px;height:8px;width:60%;border-radius:4px;background:#eceff3"></div>
@@ -298,21 +359,21 @@ const PANORAMICA = `
   </div>`;
 
 const IMPOSTAZIONI = `
-  ${rigaImpostazioni(0, segno("scatola", 22), "Dispositivi e servizi", "Integrazioni, dispositivi, entità")}
-  ${rigaImpostazioni(74, segno("attrezzi", 22), "Automazioni e scene", "Automazioni, scene, script, aiutanti")}
-  ${rigaImpostazioni(148, segno("scatola", 22), "Add-on", "Il negozio, e quelli installati", true)}
-  ${rigaImpostazioni(222, segno("casa", 22), "Aree, etichette e zone", "Come è fatta la casa")}
-  ${rigaImpostazioni(296, segno("ingranaggio", 22), "Sistema", "Rete, archivi di sicurezza, aggiornamenti")}`;
+  ${rigaImpostazioni(0, segno("scatola", 22), t("Dispositivi e servizi", "Devices & services"), t("Integrazioni, dispositivi, entità", "Integrations, devices, entities"))}
+  ${rigaImpostazioni(74, segno("attrezzi", 22), t("Automazioni e scene", "Automations & scenes"), t("Automazioni, scene, script, aiutanti", "Automations, scenes, scripts, helpers"))}
+  ${rigaImpostazioni(148, segno("scatola", 22), t("Add-on", "Add-ons"), t("Il negozio, e quelli installati", "The store, and the ones installed"), true)}
+  ${rigaImpostazioni(222, segno("casa", 22), t("Aree, etichette e zone", "Areas, labels & zones"), t("Come è fatta la casa", "How the home is laid out"))}
+  ${rigaImpostazioni(296, segno("ingranaggio", 22), t("Sistema", "System"), t("Rete, archivi di sicurezza, aggiornamenti", "Network, backups, updates"))}`;
 
 scena("verso-le-impostazioni", 9, () => {
-  const prima = finestraHa({ titolo: "Panoramica", corpo: PANORAMICA, lato: {} });
+  const prima = finestraHa({ titolo: t("Panoramica", "Overview"), corpo: PANORAMICA, lato: {} });
   const dopo = finestraHa({
-    titolo: "Impostazioni",
+    titolo: t("Impostazioni", "Settings"),
     corpo: IMPOSTAZIONI,
     lato: { scelta: "Impostazioni" },
   });
   return `
-  ${cartello(3, "L'add-on, dal negozio", "Impostazioni → Add-on")}
+  ${cartello(3, t("L'add-on, dal negozio", "The add-on, from the store"), t("Impostazioni → Add-on", "Settings → Add-ons"))}
   <div class="via" style="--t2:2.75s">${prima}</div>
   <div class="ap" style="--t:2.8s">${dopo}</div>
   ${puntatore("p4a", [
@@ -327,9 +388,16 @@ scena("verso-le-impostazioni", 9, () => {
   ${tocco(196, 412, 2.45)}
   ${tocco(700, 348, 5.05)}
   ${didascalia([
-    { t: 0.9, t2: 3.1, testo: "In Home Assistant: <b>Impostazioni</b>." },
-    { t: 3.3, t2: 6.6, testo: "Poi <b>Add-on</b>." },
-    { t: 6.8, testo: "Da qui si apre il negozio degli add-on." },
+    {
+      t: 0.9,
+      t2: 3.1,
+      testo: t("In Home Assistant: <b>Impostazioni</b>.", "In Home Assistant: <b>Settings</b>."),
+    },
+    { t: 3.3, t2: 6.6, testo: t("Poi <b>Add-on</b>.", "Then <b>Add-ons</b>.") },
+    {
+      t: 6.8,
+      testo: t("Da qui si apre il negozio degli add-on.", "From here you open the add-on store."),
+    },
   ])}`;
 });
 
@@ -342,22 +410,25 @@ const cartaNegozio = (nome, testo, tinta = "#03a9f4", classi = "", stile = "") =
   </div>`;
 
 const UFFICIALI = `
-    ${cartaNegozio("File editor", "Un editor per i file di configurazione")}
-    ${cartaNegozio("Terminal &amp; SSH", "Un terminale, dentro Home Assistant")}
-    ${cartaNegozio("Samba share", "Le cartelle di casa, sulla rete")}
-    ${cartaNegozio("Mosquitto broker", "Il broker MQTT")}
-    ${cartaNegozio("Studio Code Server", "Visual Studio Code, nel browser")}
-    ${cartaNegozio("ESPHome", "I dispositivi fatti in casa")}`;
+    ${cartaNegozio("File editor", t("Un editor per i file di configurazione", "An editor for the configuration files"))}
+    ${cartaNegozio("Terminal &amp; SSH", t("Un terminale, dentro Home Assistant", "A terminal, inside Home Assistant"))}
+    ${cartaNegozio("Samba share", t("Le cartelle di casa, sulla rete", "The home folders, on the network"))}
+    ${cartaNegozio("Mosquitto broker", t("Il broker MQTT", "The MQTT broker"))}
+    ${cartaNegozio("Studio Code Server", t("Visual Studio Code, nel browser", "Visual Studio Code, in the browser"))}
+    ${cartaNegozio("ESPHome", t("I dispositivi fatti in casa", "The devices you build yourself"))}`;
 
 const negozio = ({ conGdahome = false, evidenzia = false } = {}) => `
   ${
     conGdahome
       ? `<div class="cr" style="--t:.35s">
-          <p class="titolo-negozio">gdahome ${evidenzia ? '<span style="font-size:11px;font-weight:700;color:#0288d1;background:rgba(3,169,244,.12);padding:3px 8px;border-radius:20px">NUOVO</span>' : ""}</p>
+          <p class="titolo-negozio">gdahome ${evidenzia ? '<span style="font-size:11px;font-weight:700;color:#0288d1;background:rgba(3,169,244,.12);padding:3px 8px;border-radius:20px">${t("NUOVO", "NEW")}</span>' : ""}</p>
           <div class="griglia-negozio" style="margin-bottom:16px">
             ${cartaNegozio(
               "gdahome",
-              "La plancia e l'app di gdahome, per questa casa: da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.",
+              t(
+                "La plancia e l'app di gdahome, per questa casa: da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.",
+                "The gdahome dashboard and app, for this home: from inside and from away, without a single Home Assistant secret ending up on the phone.",
+              ),
               "#0ea5e9",
               "",
               evidenzia ? "box-shadow:0 0 0 2px #0ea5e9,0 8px 22px rgba(14,165,233,.3)" : "",
@@ -366,28 +437,28 @@ const negozio = ({ conGdahome = false, evidenzia = false } = {}) => `
         </div>`
       : ""
   }
-  <p class="titolo-negozio">Add-on ufficiali di Home Assistant</p>
+  <p class="titolo-negozio">${t("Add-on ufficiali di Home Assistant", "Official Home Assistant add-ons")}</p>
   <div class="griglia-negozio">${UFFICIALI}</div>`;
 
 scena("il-negozio", 11, () => {
   const pagina = finestraHa({
-    titolo: "Add-on",
+    titolo: t("Add-on", "Add-ons"),
     corpo: `
       <div class="carta" style="height:78px;display:flex;align-items:center;gap:14px">
         <div style="width:40px;height:40px;border-radius:10px;background:rgba(3,169,244,.12);display:grid;place-items:center">${segno("scatola", 22, "#0288d1")}</div>
-        <div><h4>Nessun add-on installato</h4><p>Gli add-on si prendono dal negozio.</p></div>
+        <div><h4>${t("Nessun add-on installato", "No add-ons installed")}</h4><p>${t("Gli add-on si prendono dal negozio.", "Add-ons come from the store.")}</p></div>
       </div>
-      <div style="position:absolute;right:26px;bottom:24px" class="bottone-ha">${segno("scarica", 18, "#fff")} Negozio degli add-on</div>`,
+      <div style="position:absolute;right:26px;bottom:24px" class="bottone-ha">${segno("scarica", 18, "#fff")} ${t("Negozio degli add-on", "Add-on store")}</div>`,
     lato: { scelta: "Impostazioni" },
   });
   const store = finestraHa({
-    titolo: "Negozio degli add-on",
+    titolo: t("Negozio degli add-on", "Add-on store"),
     corpo: negozio(),
     lato: { scelta: "Impostazioni" },
     testataDestra: `<div class="tre-punti">${segno("puntini", 20)}</div>`,
   });
   return `
-  ${cartello(3, "L'add-on, dal negozio", "il negozio, e i tre puntini")}
+  ${cartello(3, t("L'add-on, dal negozio", "The add-on, from the store"), t("il negozio, e i tre puntini", "the store, and the three dots"))}
   <div class="via" style="--t2:2.7s">${pagina}</div>
   <div class="ap" style="--t:2.75s">${store}</div>
   ${puntatore("p4b", [
@@ -400,11 +471,28 @@ scena("il-negozio", 11, () => {
   ${tocco(1020, 552, 2.35)}
   ${tocco(1136, 121, 5.4)}
   ${didascalia([
-    { t: 0.7, t2: 3.0, testo: "In fondo alla pagina: <b>Negozio degli add-on</b>." },
-    { t: 3.2, t2: 6.2, testo: "Qui dentro ci sono gli add-on che Home Assistant conosce già." },
+    {
+      t: 0.7,
+      t2: 3.0,
+      testo: t(
+        "In fondo alla pagina: <b>Negozio degli add-on</b>.",
+        "At the bottom of the page: <b>Add-on store</b>.",
+      ),
+    },
+    {
+      t: 3.2,
+      t2: 6.2,
+      testo: t(
+        "Qui dentro ci sono gli add-on che Home Assistant conosce già.",
+        "In here are the add-ons Home Assistant already knows about.",
+      ),
+    },
     {
       t: 6.4,
-      testo: "gdahome non è tra quelli: si aggiunge il suo archivio, dai <b>tre puntini</b>.",
+      testo: t(
+        "gdahome non è tra quelli: si aggiunge il suo archivio, dai <b>tre puntini</b>.",
+        "gdahome isn't one of them: you add its repository, from the <b>three dots</b>.",
+      ),
     },
   ])}`;
 });
@@ -421,15 +509,15 @@ const QUANTO_E_LUNGO = INDIRIZZO.length;
 scena("gli-archivi", 10.6, () => {
   const tendina = `
     <div class="tendina cr via" style="--t:.05s;--t2:1.85s">
-      <div>Controlla gli aggiornamenti</div>
-      <div class="acceso">Archivi</div>
-      <div>Ricarica</div>
+      <div>${t("Controlla gli aggiornamenti", "Check for updates")}</div>
+      <div class="acceso">${t("Archivi", "Repositories")}</div>
+      <div>${t("Ricarica", "Reload")}</div>
     </div>`;
   const finestrella = `
     <div class="ap via" style="--t:1.95s;--t2:8.65s;position:absolute;left:108px;top:92px;width:1064px;height:500px;border-radius:16px;background:rgba(6,12,22,.42)"></div>
     <div class="finestrella cr-cc" style="--t:2.0s;left:640px;top:342px">
-      <h3>Gestisci gli archivi degli add-on</h3>
-      <p>Un archivio è un indirizzo di GitHub: da lì Home Assistant prende gli add-on e i loro aggiornamenti.</p>
+      <h3>${t("Gestisci gli archivi degli add-on", "Manage add-on repositories")}</h3>
+      <p>${t("Un archivio è un indirizzo di GitHub: da lì Home Assistant prende gli add-on e i loro aggiornamenti.", "A repository is a GitHub address: that's where Home Assistant takes add-ons and their updates from.")}</p>
       <div style="display:flex;align-items:center;gap:12px;padding:10px 0 14px;border-top:1px solid #eceff3">
         <div style="width:34px;height:34px;border-radius:9px;background:#f1f4f8;display:grid;place-items:center;color:#5a6b7d">${segno("scatola", 18)}</div>
         <div style="flex:1"><h4 style="font-size:14px;margin:0">Home Assistant Community Add-ons</h4><p style="font-size:12px;color:#8e99a6;margin:0">github.com/hassio-addons/repository</p></div>
@@ -438,17 +526,17 @@ scena("gli-archivi", 10.6, () => {
         <div class="casella" style="flex:1">
           <span class="testo-scritto" style="width:${QUANTO_E_LUNGO}ch;animation:scrivi 2.2s 4.1s steps(${QUANTO_E_LUNGO},end) both">${INDIRIZZO}</span><span class="cursore-testo ap via" style="--t:3.85s;--t2:6.5s"></span>
         </div>
-        <div class="bottone-ha" style="padding:11px 22px">Aggiungi</div>
+        <div class="bottone-ha" style="padding:11px 22px">${t("Aggiungi", "Add")}</div>
       </div>
     </div>`;
   const store = finestraHa({
-    titolo: "Negozio degli add-on",
+    titolo: t("Negozio degli add-on", "Add-on store"),
     corpo: `${negozio()}${tendina}`,
     lato: { scelta: "Impostazioni" },
     testataDestra: `<div class="tre-punti">${segno("puntini", 20)}</div>`,
   });
   return `
-  ${cartello(3, "L'add-on, dal negozio", "Archivi → l'indirizzo → Aggiungi")}
+  ${cartello(3, t("L'add-on, dal negozio", "The add-on, from the store"), t("Archivi → l'indirizzo → Aggiungi", "Repositories → the address → Add"))}
   <div class="via" style="--t2:8.7s">${store}${finestrella}</div>
   ${puntatore("p4c", [
     { t: 0, x: 1136, y: 121, o: 1 },
@@ -466,9 +554,20 @@ scena("gli-archivi", 10.6, () => {
   ${tocco(584, 406, 3.55)}
   ${tocco(845, 412, 8.2)}
   ${didascalia([
-    { t: 0.5, t2: 2.6, testo: "Dai tre puntini: <b>Archivi</b>." },
-    { t: 2.8, t2: 6.9, testo: "Si incolla l'indirizzo della repository, e basta questo." },
-    { t: 7.4, testo: "<b>Aggiungi</b>, e si chiude." },
+    {
+      t: 0.5,
+      t2: 2.6,
+      testo: t("Dai tre puntini: <b>Archivi</b>.", "From the three dots: <b>Repositories</b>."),
+    },
+    {
+      t: 2.8,
+      t2: 6.9,
+      testo: t(
+        "Si incolla l'indirizzo della repository, e basta questo.",
+        "You paste the repository address, and that's all it takes.",
+      ),
+    },
+    { t: 7.4, testo: t("<b>Aggiungi</b>, e si chiude.", "<b>Add</b>, and close it.") },
   ])}`;
 });
 
@@ -476,13 +575,13 @@ scena("gli-archivi", 10.6, () => {
 
 scena("gdahome-nel-negozio", 8.5, () => {
   const store = finestraHa({
-    titolo: "Negozio degli add-on",
+    titolo: t("Negozio degli add-on", "Add-on store"),
     corpo: negozio({ conGdahome: true, evidenzia: true }),
     lato: { scelta: "Impostazioni" },
     testataDestra: `<div class="tre-punti">${segno("puntini", 20)}</div>`,
   });
   return `
-  ${cartello(3, "L'add-on, dal negozio", "compare gdahome")}
+  ${cartello(3, t("L'add-on, dal negozio", "The add-on, from the store"), t("compare gdahome", "gdahome shows up"))}
   ${store}
   ${puntatore("p4d", [
     { t: 0, x: 962, y: 434, o: 1 },
@@ -495,9 +594,18 @@ scena("gdahome-nel-negozio", 8.5, () => {
     {
       t: 0.7,
       t2: 4.0,
-      testo: "Nel negozio compare una sezione <b>gdahome</b>, con dentro l'add-on.",
+      testo: t(
+        "Nel negozio compare una sezione <b>gdahome</b>, con dentro l'add-on.",
+        "A <b>gdahome</b> section appears in the store, with the add-on inside.",
+      ),
     },
-    { t: 4.2, testo: "Si apre, e si installa come tutti gli altri." },
+    {
+      t: 4.2,
+      testo: t(
+        "Si apre, e si installa come tutti gli altri.",
+        "Open it, and install it like any other.",
+      ),
+    },
   ])}`;
 });
 
@@ -515,42 +623,42 @@ scena("installa-e-avvia", 14, () => {
         <img src="${MARCHIO}" width="52" height="52" style="border-radius:13px" alt="" />
         <div style="flex:1">
           <h4 style="font-size:21px">gdahome</h4>
-          <p>La plancia e l'app di gdahome, per questa casa: da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.</p>
+          <p>${t("La plancia e l'app di gdahome, per questa casa: da dentro e da fuori, senza che nessun segreto di Home Assistant finisca sul telefono.", "The gdahome dashboard and app, for this home: from inside and from away, without a single Home Assistant secret ending up on the phone.")}</p>
         </div>
         <div style="text-align:right">
-          <p style="font-size:12px">versione</p>
+          <p style="font-size:12px">${t("versione", "version")}</p>
           <h4 style="font-size:16px">1.4.25</h4>
         </div>
       </div>
       <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
-        <div class="bottone-ha via" style="--t2:2.35s;animation:premuto .3s 2.1s ease both,sparisci .2s 2.35s ease forwards">${segno("scarica", 18, "#fff")} Installa</div>
-        <div class="bottone-ha verde ap via" style="--t:6.7s;--t2:8.75s">Avvia</div>
-        <div class="ap via" style="--t:6.7s;--t2:8.85s;font-size:13px;color:#6b7785">Installato · nella barra laterale dopo l'avvio</div>
+        <div class="bottone-ha via" style="--t2:2.35s;animation:premuto .3s 2.1s ease both,sparisci .2s 2.35s ease forwards">${segno("scarica", 18, "#fff")} ${t("Installa", "Install")}</div>
+        <div class="bottone-ha verde ap via" style="--t:6.7s;--t2:8.75s">${t("Avvia", "Start")}</div>
+        <div class="ap via" style="--t:6.7s;--t2:8.85s;font-size:13px;color:#6b7785">${t("Installato · nella barra laterale dopo l'avvio", "Installed · in the sidebar once started")}</div>
         <div class="ap" style="--t:8.9s;display:flex;align-items:center;gap:8px;font-size:14px;color:#16a34a;font-weight:600">
-          <span style="width:9px;height:9px;border-radius:50%;background:#16a34a;display:inline-block"></span> In esecuzione
+          <span style="width:9px;height:9px;border-radius:50%;background:#16a34a;display:inline-block"></span> ${t("In esecuzione", "Running")}
         </div>
       </div>
     </div>
 
     <!-- l'installazione in corso -->
     <div class="carta ap via" style="--t:2.5s;--t2:6.6s;position:absolute;left:18px;right:18px;top:172px;padding:16px 20px">
-      <h4>Installazione in corso…</h4>
+      <h4>${t("Installazione in corso…", "Installing…")}</h4>
       <div style="margin-top:12px;height:8px;border-radius:5px;background:#e8ecf1;overflow:hidden">
         <div style="height:100%;width:0;border-radius:5px;background:#03a9f4;animation:riempi 3.7s 2.7s linear forwards"></div>
       </div>
-      <p style="margin-top:12px">La prima volta ci mette qualche minuto: Home Assistant non se lo scarica già pronto, <b>se lo costruisce sul posto</b>. Le volte dopo è immediato.</p>
+      <p style="margin-top:12px">${t("La prima volta ci mette qualche minuto: Home Assistant non se lo scarica già pronto, <b>se lo costruisce sul posto</b>. Le volte dopo è immediato.", "The first time takes a few minutes: Home Assistant doesn't download it ready-made, <b>it builds it on the spot</b>. After that it's instant.")}</p>
     </div>
 
     <!-- installato -->
     <div class="carta ap" style="--t:6.7s;position:absolute;left:18px;right:18px;top:172px;padding:16px 20px">
-      <h4>Configurazione</h4>
-      <p style="margin-top:8px">Da fuori casa · acceso — la casa chiama il centralino, e sul router non si apre niente.</p>
-      <p style="margin-top:6px">Codice di abbinamento · 5 minuti · fino a 10 telefoni</p>
-      <p class="ap" style="--t:9.3s;margin-top:12px;color:#0288d1;font-weight:600">Nella barra laterale è comparsa la console: <b>gdahome</b>.</p>
+      <h4>${t("Configurazione", "Configuration")}</h4>
+      <p style="margin-top:8px">${t("Da fuori casa · acceso — la casa chiama il centralino, e sul router non si apre niente.", "Access from away · on — the home calls the relay, and nothing is opened on the router.")}</p>
+      <p style="margin-top:6px">${t("Codice di abbinamento · 5 minuti · fino a 10 telefoni", "Pairing code · 5 minutes · up to 10 phones")}</p>
+      <p class="ap" style="--t:9.3s;margin-top:12px;color:#0288d1;font-weight:600">${t("Nella barra laterale è comparsa la console: <b>gdahome</b>.", "The console has appeared in the sidebar: <b>gdahome</b>.")}</p>
     </div>`;
   return `
   <div style="--t-gdahome:8.95s">
-    ${cartello(3, "L'add-on, dal negozio", "Installa, poi Avvia")}
+    ${cartello(3, t("L'add-on, dal negozio", "The add-on, from the store"), t("Installa, poi Avvia", "Install, then Start"))}
     ${finestraHa({
       titolo: "gdahome",
       corpo: scheda,
@@ -569,14 +677,23 @@ scena("installa-e-avvia", 14, () => {
   ${tocco(424, 300, 2.05)}
   ${tocco(416, 300, 8.5)}
   ${didascalia([
-    { t: 0.6, t2: 2.7, testo: "<b>Installa</b>." },
+    { t: 0.6, t2: 2.7, testo: t("<b>Installa</b>.", "<b>Install</b>.") },
     {
       t: 2.9,
       t2: 6.5,
-      testo: "La prima volta ci mette qualche minuto: se lo costruisce sul posto.",
+      testo: t(
+        "La prima volta ci mette qualche minuto: se lo costruisce sul posto.",
+        "The first time takes a few minutes: it builds it on the spot.",
+      ),
     },
-    { t: 6.9, t2: 9.0, testo: "Poi <b>Avvia</b>." },
-    { t: 9.2, testo: "E nella barra laterale compare <b>gdahome</b>: è la sua console." },
+    { t: 6.9, t2: 9.0, testo: t("Poi <b>Avvia</b>.", "Then <b>Start</b>.") },
+    {
+      t: 9.2,
+      testo: t(
+        "E nella barra laterale compare <b>gdahome</b>: è la sua console.",
+        "And <b>gdahome</b> appears in the sidebar: that's its console.",
+      ),
+    },
   ])}`;
 });
 
@@ -588,21 +705,21 @@ const CONSOLE = ({ conCodice = false } = {}) => `
       <img src="${MARCHIO}" width="40" height="40" style="border-radius:10px" alt="" />
       <div>
         <h4 style="font-size:20px;margin:0">gdahome</h4>
-        <p style="font-size:12px;margin:0">La casa risponde · nessun telefono abbinato</p>
+        <p style="font-size:12px;margin:0">${t("La casa risponde · nessun telefono abbinato", "The home is answering · no phone paired")}</p>
       </div>
     </div>
     <div class="carta" style="margin-top:14px;padding:16px 18px">
-      <h4>Abbinare un telefono</h4>
-      <p style="margin-bottom:12px">Apri gdahome sul telefono e inquadra il QR code. Vale una volta sola e per pochi minuti.</p>
+      <h4>${t("Abbinare un telefono", "Pair a phone")}</h4>
+      <p style="margin-bottom:12px">${t("Apri gdahome sul telefono e inquadra il QR code. Vale una volta sola e per pochi minuti.", "Open gdahome on your phone and scan the QR code. It works once, and only for a few minutes.")}</p>
       ${
         conCodice
           ? `<div class="cr" style="--t:2.6s;text-align:center">
                <img src="qrcode.svg" width="176" height="176" style="border-radius:10px;border:1px solid #e3e6ea;background:#fff" alt="" />
-               <p style="margin:8px 0 4px">Scade fra 4:58</p>
+               <p style="margin:8px 0 4px">${t("Scade fra 4:58", "Expires in 4:58")}</p>
                <p style="font-family:'DejaVu Sans Mono',monospace;font-size:17px;letter-spacing:.1em;color:#212121;margin:0 0 12px">K7QM-3PDX-9WTB-46HZ</p>
              </div>
-             <div class="bottone-ha vuoto ap" style="--t:2.6s;padding:9px 16px">Annulla</div>`
-          : `<div class="bottone-ha" style="animation:premuto .3s 2.0s ease both">Fabbrica un codice</div>`
+             <div class="bottone-ha vuoto ap" style="--t:2.6s;padding:9px 16px">${t("Annulla", "Cancel")}</div>`
+          : `<div class="bottone-ha" style="animation:premuto .3s 2.0s ease both">${t("Fabbrica un codice", "Make a code")}</div>`
       }
     </div>
   </div>`;
@@ -611,7 +728,7 @@ scena(
   "il-codice",
   11,
   () => `
-  ${cartello(4, "Il codice", "un QR code, e cinque minuti")}
+  ${cartello(4, t("Il codice", "The code"), t("un QR code, e cinque minuti", "a QR code, and five minutes"))}
   <div class="via" style="--t2:2.5s">
     ${finestraHa({ titolo: "gdahome", corpo: CONSOLE(), lato: { gdahome: "scelta" } })}
   </div>
@@ -627,9 +744,29 @@ scena(
   ])}
   ${tocco(480, 292, 1.95)}
   ${didascalia([
-    { t: 0.6, t2: 3.0, testo: "Dalla console: <b>Fabbrica un codice</b>." },
-    { t: 3.2, t2: 6.8, testo: "Esce un QR code, e vale cinque minuti." },
-    { t: 7.0, testo: "Sotto ci sono le stesse cose in lettere, per chi non può inquadrare." },
+    {
+      t: 0.6,
+      t2: 3.0,
+      testo: t(
+        "Dalla console: <b>Fabbrica un codice</b>.",
+        "From the console: <b>Make a code</b>.",
+      ),
+    },
+    {
+      t: 3.2,
+      t2: 6.8,
+      testo: t(
+        "Esce un QR code, e vale cinque minuti.",
+        "Out comes a QR code, good for five minutes.",
+      ),
+    },
+    {
+      t: 7.0,
+      testo: t(
+        "Sotto ci sono le stesse cose in lettere, per chi non può inquadrare.",
+        "Underneath, the same thing in letters, for anyone who can't scan.",
+      ),
+    },
   ])}`,
 );
 
@@ -638,16 +775,22 @@ scena(
 const SCHERMATA_ABBINA = `
   <div style="padding:22px 20px 0;text-align:center">
     <img src="${MARCHIO}" width="58" height="58" style="border-radius:14px;margin-top:16px" alt="" />
-    <h3 style="font-size:23px;margin:16px 0 8px;font-weight:700">Colleghiamo la casa</h3>
+    <h3 style="font-size:23px;margin:16px 0 8px;font-weight:700">${t("Colleghiamo la casa", "Let's connect your home")}</h3>
     <p style="font-size:14px;line-height:1.5;color:#475569;margin:0 24px">
-      In Home Assistant apri <b>gdahome</b> dalla barra laterale e fabbrica un codice.
+      ${t(
+        "In Home Assistant apri <b>gdahome</b> dalla barra laterale e fabbrica un codice.",
+        "In Home Assistant open <b>gdahome</b> from the sidebar and make a code.",
+      )}
     </p>
     <div style="margin-top:26px;background:#0ea5e9;color:#fff;border-radius:14px;padding:15px;font-size:16px;font-weight:600">
-      Inquadra il codice
+      ${t("Inquadra il codice", "Scan the code")}
     </div>
-    <p style="margin-top:16px;font-size:13px;color:#0284c7;font-weight:600">Non puoi inquadrarlo? Scrivilo a mano</p>
+    <p style="margin-top:16px;font-size:13px;color:#0284c7;font-weight:600">${t("Non puoi inquadrarlo? Scrivilo a mano", "Can't scan it? Type it instead")}</p>
     <p style="margin-top:64px;font-size:12px;color:#64748b;line-height:1.45">
-      Non ti verrà mai chiesta la password<br />di Home Assistant, né un gettone.
+      ${t(
+        "Non ti verrà mai chiesta la password<br />di Home Assistant, né un gettone.",
+        "You will never be asked for your Home<br />Assistant password, or for a token.",
+      )}
     </p>
   </div>`;
 
@@ -666,7 +809,7 @@ const SCHERMATA_FOTOCAMERA = `
         .map((dove) => `<div style="position:absolute;width:38px;height:38px;${dove}"></div>`)
         .join("")}
     </div>
-    <p style="position:absolute;left:0;right:0;top:390px;text-align:center;color:#cbd5e1;font-size:15px">Inquadra il QR code</p>
+    <p style="position:absolute;left:0;right:0;top:390px;text-align:center;color:#cbd5e1;font-size:15px">${t("Inquadra il QR code", "Scan the QR code")}</p>
   </div>`;
 
 const SCHERMATA_COLLEGATA = `
@@ -674,18 +817,18 @@ const SCHERMATA_COLLEGATA = `
     <div style="width:86px;height:86px;border-radius:50%;background:rgba(22,163,74,.14);border:2px solid rgba(22,163,74,.5);display:grid;place-items:center">
       ${segno("spunta", 44, "#16a34a")}
     </div>
-    <h3 style="font-size:22px;margin:12px 0 0;font-weight:700">Casa collegata</h3>
-    <p style="font-size:14px;color:#475569;margin:0;text-align:center;line-height:1.5">Il telefono ha un segno suo,<br />solo per questa casa.</p>
+    <h3 style="font-size:22px;margin:12px 0 0;font-weight:700">${t("Casa collegata", "Home connected")}</h3>
+    <p style="font-size:14px;color:#475569;margin:0;text-align:center;line-height:1.5">${t("Il telefono ha un segno suo,<br />solo per questa casa.", "The phone has a mark of its own,<br />just for this home.")}</p>
   </div>`;
 
 scena(
   "inquadra",
   11.5,
   () => `
-  ${cartello(4, "Il codice", "si inquadra, e la casa è collegata")}
+  ${cartello(4, t("Il codice", "The code"), t("si inquadra, e la casa è collegata", "scan it, and the home is connected"))}
 
   <div class="carta cr" style="--t:.3s;position:absolute;left:206px;top:152px;width:296px;text-align:center;padding:20px">
-    <h4 style="font-size:15px">La console, dentro Home Assistant</h4>
+    <h4 style="font-size:15px">${t("La console, dentro Home Assistant", "The console, inside Home Assistant")}</h4>
     <img src="qrcode.svg" width="196" height="196" style="margin-top:14px;border:1px solid #e3e6ea;border-radius:10px" alt="" />
     <p style="font-family:'DejaVu Sans Mono',monospace;font-size:15px;letter-spacing:.08em;color:#212121;margin-top:12px">K7QM-3PDX-9WTB-46HZ</p>
   </div>
@@ -708,19 +851,35 @@ scena(
   })}
 
   <div style="position:absolute;left:206px;top:486px;width:340px">
-    <div class="spunta ap" style="--t:8.4s;font-size:16px"><span class="segno">${segno("spunta", 14, "#4ade80")}</span> Nessun indirizzo da sapere</div>
-    <div class="spunta ap" style="--t:8.7s;font-size:16px;margin-top:10px"><span class="segno">${segno("spunta", 14, "#4ade80")}</span> Nessuna password di Home Assistant</div>
-    <div class="spunta ap" style="--t:9.0s;font-size:16px;margin-top:10px"><span class="segno">${segno("spunta", 14, "#4ade80")}</span> Si stacca con un bottone, dalla console</div>
+    <div class="spunta ap" style="--t:8.4s;font-size:16px"><span class="segno">${segno("spunta", 14, "#4ade80")}</span> ${t("Nessun indirizzo da sapere", "No address to know")}</div>
+    <div class="spunta ap" style="--t:8.7s;font-size:16px;margin-top:10px"><span class="segno">${segno("spunta", 14, "#4ade80")}</span> ${t("Nessuna password di Home Assistant", "No Home Assistant password")}</div>
+    <div class="spunta ap" style="--t:9.0s;font-size:16px;margin-top:10px"><span class="segno">${segno("spunta", 14, "#4ade80")}</span> ${t("Si stacca con un bottone, dalla console", "Unpaired with one button, from the console")}</div>
   </div>
 
   ${didascalia([
-    { t: 1.0, t2: 3.0, testo: "Sul telefono c'è un bottone solo: <b>Inquadra il codice</b>." },
+    {
+      t: 1.0,
+      t2: 3.0,
+      testo: t(
+        "Sul telefono c'è un bottone solo: <b>Inquadra il codice</b>.",
+        "On the phone there's one button: <b>Scan the code</b>.",
+      ),
+    },
     {
       t: 3.2,
       t2: 7.3,
-      testo: "Dentro il QR code c'è anche <b>dove sta la casa</b>: non serve saperlo.",
+      testo: t(
+        "Dentro il QR code c'è anche <b>dove sta la casa</b>: non serve saperlo.",
+        "The QR code also carries <b>where the home is</b>: no need to know it.",
+      ),
     },
-    { t: 7.5, testo: "Fatto. Da qui in poi il telefono entra da solo, in casa e fuori." },
+    {
+      t: 7.5,
+      testo: t(
+        "Fatto. Da qui in poi il telefono entra da solo, in casa e fuori.",
+        "Done. From now on the phone gets in by itself, at home and away.",
+      ),
+    },
   ])}`,
 );
 
@@ -730,29 +889,46 @@ scena(
   "la-plancia",
   13,
   () => `
-  ${cartello(5, "La plancia", "la home dell'app")}
+  ${cartello(5, t("La plancia", "The dashboard"), t("la home dell'app", "the app's home"))}
   ${telefono({ x: 150, y: 106, scala: 0.76, classe: "cr", stile: "--t:.3s", dentro: plancia({ accende: 5.1 }) })}
   ${tocco(206, 258, 4.7)}
 
   <div style="position:absolute;left:490px;top:150px;right:84px">
     <div class="vetro en" style="--t:1.0s;padding:20px 22px">
-      <h3 style="margin:0 0 6px;font-size:21px;font-weight:700">È quella vera</h3>
-      <p style="margin:0;font-size:17px;line-height:1.5;color:var(--tenue)">Non una copia somigliante: è la plancia di DashboardModern, dentro l'app, con le sue tessere e le sue ventitré sezioni.</p>
+      <h3 style="margin:0 0 6px;font-size:21px;font-weight:700">${t("È quella vera", "It's the real one")}</h3>
+      <p style="margin:0;font-size:17px;line-height:1.5;color:var(--tenue)">${t("Non una copia somigliante: è la plancia di DashboardModern, dentro l'app, con le sue tessere e le sue ventitré sezioni.", "Not a lookalike: it's the DashboardModern dashboard, inside the app, with its own tiles and its twenty-three sections.")}</p>
     </div>
     <div class="vetro en" style="--t:1.35s;padding:20px 22px;margin-top:14px">
-      <h3 style="margin:0 0 6px;font-size:21px;font-weight:700">I file li ha l'add-on</h3>
-      <p style="margin:0;font-size:17px;line-height:1.5;color:var(--tenue)">In Home Assistant non si installa nessuna integrazione: la plancia la porta il ponte, e si aggiorna con lui.</p>
+      <h3 style="margin:0 0 6px;font-size:21px;font-weight:700">${t("I file li ha l'add-on", "The add-on holds the files")}</h3>
+      <p style="margin:0;font-size:17px;line-height:1.5;color:var(--tenue)">${t("In Home Assistant non si installa nessuna integrazione: la plancia la porta il ponte, e si aggiorna con lui.", "No integration to install in Home Assistant: the bridge carries the dashboard, and updates it along with itself.")}</p>
     </div>
     <div class="vetro en" style="--t:1.7s;padding:20px 22px;margin-top:14px">
-      <h3 style="margin:0 0 6px;font-size:21px;font-weight:700">Si configura dal telefono</h3>
-      <p style="margin:0;font-size:17px;line-height:1.5;color:var(--tenue)">E quello che configuri lo vedono uguale tutti i telefoni di casa, perché sta nel ponte e non sul telefono.</p>
+      <h3 style="margin:0 0 6px;font-size:21px;font-weight:700">${t("Si configura dal telefono", "You set it up from the phone")}</h3>
+      <p style="margin:0;font-size:17px;line-height:1.5;color:var(--tenue)">${t("E quello che configuri lo vedono uguale tutti i telefoni di casa, perché sta nel ponte e non sul telefono.", "And what you set up looks the same on every phone in the house, because it lives in the bridge, not on the phone.")}</p>
     </div>
   </div>
 
   ${didascalia([
-    { t: 2.4, t2: 5.0, testo: "La home dell'app è la plancia." },
-    { t: 5.2, t2: 8.6, testo: "Le luci, il clima, l'energia: si toccano da qui." },
-    { t: 8.8, testo: "In Home Assistant non c'è niente da installare: la porta l'add-on." },
+    {
+      t: 2.4,
+      t2: 5.0,
+      testo: t("La home dell'app è la plancia.", "The app's home is the dashboard."),
+    },
+    {
+      t: 5.2,
+      t2: 8.6,
+      testo: t(
+        "Le luci, il clima, l'energia: si toccano da qui.",
+        "Lights, climate, energy: you touch them from here.",
+      ),
+    },
+    {
+      t: 8.8,
+      testo: t(
+        "In Home Assistant non c'è niente da installare: la porta l'add-on.",
+        "Nothing to install in Home Assistant: the add-on brings it.",
+      ),
+    },
   ])}`,
 );
 
@@ -781,14 +957,14 @@ const NEGOZIO_TELEFONO = `
       <div style="padding-top:2px">
         <div style="font-size:19px;font-weight:700;line-height:1.15">gdahome</div>
         <div style="font-size:13px;color:#01875f;font-weight:600;margin-top:3px">danigio15</div>
-        <div style="font-size:11px;color:#5f6368;margin-top:2px">Nessun acquisto in-app</div>
+        <div style="font-size:11px;color:#5f6368;margin-top:2px">${t("Nessun acquisto in-app", "No in-app purchases")}</div>
       </div>
     </div>
     <div style="display:flex;margin:14px 16px 0;text-align:center">
       ${[
-        ["Casa", "Categoria"],
-        ["3+", "Età"],
-        ["Open", "Licenza"],
+        [t("Casa", "Home"), t("Categoria", "Category")],
+        ["3+", t("Età", "Rated")],
+        ["Open", t("Licenza", "Licence")],
       ]
         .map(
           ([grande, piccolo], i) =>
@@ -802,14 +978,14 @@ const NEGOZIO_TELEFONO = `
 
     <!-- Installa → in corso → Apri -->
     <div style="position:relative;height:44px;margin:16px 16px 0">
-      <div class="via" style="--t2:3.05s;position:absolute;inset:0;background:#01875f;color:#fff;border-radius:22px;display:grid;place-items:center;font-size:15px;font-weight:600;animation:premuto .3s 2.8s ease both,sparisci .2s 3.05s ease forwards">Installa</div>
+      <div class="via" style="--t2:3.05s;position:absolute;inset:0;background:#01875f;color:#fff;border-radius:22px;display:grid;place-items:center;font-size:15px;font-weight:600;animation:premuto .3s 2.8s ease both,sparisci .2s 3.05s ease forwards">${t("Installa", "Install")}</div>
       <div class="ap via" style="--t:3.1s;--t2:8.0s;position:absolute;inset:0;display:grid;place-items:center;gap:6px;align-content:center">
-        <div style="font-size:12px;color:#5f6368">Download in corso…</div>
+        <div style="font-size:12px;color:#5f6368">${t("Download in corso…", "Downloading…")}</div>
         <div style="width:190px;height:4px;border-radius:3px;background:#e8eaed;overflow:hidden">
           <div style="height:100%;width:0;background:#01875f;animation:riempi 4.4s 3.3s linear forwards"></div>
         </div>
       </div>
-      <div class="ap" style="--t:8.05s;position:absolute;inset:0;background:#01875f;color:#fff;border-radius:22px;display:grid;place-items:center;font-size:15px;font-weight:600">Apri</div>
+      <div class="ap" style="--t:8.05s;position:absolute;inset:0;background:#01875f;color:#fff;border-radius:22px;display:grid;place-items:center;font-size:15px;font-weight:600">${t("Apri", "Open")}</div>
     </div>
 
     <div style="display:flex;gap:10px;padding:18px 16px 0">
@@ -819,10 +995,12 @@ const NEGOZIO_TELEFONO = `
       </div>
     </div>
     <div style="padding:18px 16px 0">
-      <div style="font-size:14px;font-weight:700">Informazioni sull'app</div>
+      <div style="font-size:14px;font-weight:700">${t("Informazioni sull'app", "About this app")}</div>
       <p style="margin:6px 0 0;font-size:11.5px;line-height:1.5;color:#5f6368">
-        La casa come una plancia: luci, clima, energia, sicurezza, telecamere. Serve una casa
-        con Home Assistant e l'add-on gdahome — l'app da sola non sa dove andare.
+        ${t(
+          "La casa come una plancia: luci, clima, energia, sicurezza, telecamere. Serve una casa con Home Assistant e l'add-on gdahome — l'app da sola non sa dove andare.",
+          "Your home as one dashboard: lights, climate, energy, security, cameras. It needs a home running Home Assistant and the gdahome add-on — on its own the app has nowhere to go.",
+        )}
       </p>
     </div>
   </div>`;
@@ -831,11 +1009,11 @@ scena(
   "dal-negozio-del-telefono",
   15,
   () => `
-  ${cartello(6, "L'app", "dal Play Store")}
+  ${cartello(6, t("L'app", "The app"), t("dal Play Store", "from the Play Store"))}
   <div class="ap" style="--t:.2s;position:absolute;right:64px;top:38px;display:flex;align-items:center;gap:10px;
        background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.45);border-radius:12px;padding:10px 16px">
     ${segno("calendario", 18, "#fbbf24")}
-    <span style="font-size:15px;color:#fcd34d;font-weight:600">Su Google Play dal 30 settembre</span>
+    <span style="font-size:15px;color:#fcd34d;font-weight:600">${t("Su Google Play dal 30 settembre", "On Google Play from 30 September")}</span>
   </div>
 
   ${telefono({ x: 150, y: 106, scala: 0.76, classe: "cr", stile: "--t:.35s", dentro: NEGOZIO_TELEFONO })}
@@ -843,12 +1021,12 @@ scena(
 
   <div style="position:absolute;left:490px;top:180px;right:84px">
     <div class="vetro en" style="--t:1.1s;padding:22px 24px">
-      <h3 style="margin:0 0 8px;font-size:22px;font-weight:700">Come sarà</h3>
-      <p style="margin:0;font-size:17px;line-height:1.55;color:var(--tenue)">Si cerca <b style="color:#cfe0f5">gdahome</b> su Google Play, si preme <b style="color:#cfe0f5">Installa</b>, e si apre. Da lì c'è un bottone solo: inquadra il codice.</p>
+      <h3 style="margin:0 0 8px;font-size:22px;font-weight:700">${t("Come sarà", "How it will be")}</h3>
+      <p style="margin:0;font-size:17px;line-height:1.55;color:var(--tenue)">${t('Si cerca <b style="color:#cfe0f5">gdahome</b> su Google Play, si preme <b style="color:#cfe0f5">Installa</b>, e si apre. Da lì c\'è un bottone solo: inquadra il codice.', 'You search for <b style="color:#cfe0f5">gdahome</b> on Google Play, press <b style="color:#cfe0f5">Install</b>, and open it. From there one button: scan the code.')}</p>
     </div>
     <div class="vetro en" style="--t:1.45s;padding:22px 24px;margin-top:16px;border-color:rgba(245,158,11,.35)">
-      <h3 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#fcd34d">Come è adesso</h3>
-      <p style="margin:0;font-size:17px;line-height:1.55;color:var(--tenue)">Sul Play Store l'app arriva il <b style="color:#fcd34d">30 settembre</b>, e per ora è l'unico negozio. Fino a quel giorno si apre dal browser, ed è qui sotto. <b style="color:#fcd34d">Per iOS: in fase di sviluppo.</b></p>
+      <h3 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#fcd34d">${t("Come è adesso", "How it is today")}</h3>
+      <p style="margin:0;font-size:17px;line-height:1.55;color:var(--tenue)">${t('Sul Play Store l\'app arriva il <b style="color:#fcd34d">30 settembre</b>, e per ora è l\'unico negozio. Fino a quel giorno si apre dal browser, ed è qui sotto. <b style="color:#fcd34d">Per iOS: in fase di sviluppo.</b>', 'The app lands on the Play Store on <b style="color:#fcd34d">30 September</b>, and for now that\'s the only store. Until then it opens in the browser, right below. <b style="color:#fcd34d">For iOS: in development.</b>')}</p>
     </div>
   </div>
 
@@ -856,10 +1034,26 @@ scena(
     {
       t: 2.2,
       t2: 4.6,
-      testo: "Quando sarà pubblicata sarà questa la strada: cercarla e premere <b>Installa</b>.",
+      testo: t(
+        "Quando sarà pubblicata sarà questa la strada: cercarla e premere <b>Installa</b>.",
+        "Once it's published this is the way: search for it and press <b>Install</b>.",
+      ),
     },
-    { t: 4.8, t2: 9.4, testo: "Nessun file da passare, nessun permesso strano da concedere." },
-    { t: 9.6, testo: "Fino a quel giorno si apre dal browser, e non si installa niente." },
+    {
+      t: 4.8,
+      t2: 9.4,
+      testo: t(
+        "Nessun file da passare, nessun permesso strano da concedere.",
+        "No file to sideload, no odd permission to grant.",
+      ),
+    },
+    {
+      t: 9.6,
+      testo: t(
+        "Fino a quel giorno si apre dal browser, e non si installa niente.",
+        "Until that day it opens in the browser, and nothing gets installed.",
+      ),
+    },
   ])}`,
 );
 
@@ -882,26 +1076,31 @@ scena(
   "come-si-prova-oggi",
   11.5,
   () => `
-  ${cartello(7, "Intanto, oggi", "senza installare niente")}
+  ${cartello(7, t("Intanto, oggi", "Meanwhile, today"), t("senza installare niente", "with nothing to install"))}
 
   <div class="vetro en" style="--t:.4s;position:absolute;left:240px;top:160px;width:800px;padding:26px 30px 30px">
-    <h3 style="margin:0;font-size:24px;font-weight:700">Dal browser</h3>
+    <h3 style="margin:0;font-size:24px;font-weight:700">${t("Dal browser", "From the browser")}</h3>
     <p style="margin:6px 0 0;font-size:17px;color:var(--tenue)">
-      L'indirizzo lo dà l'add-on, e non c'è niente da scaricare.
+      ${t(
+        "L'indirizzo lo dà l'add-on, e non c'è niente da scaricare.",
+        "The add-on gives you the address, and there's nothing to download.",
+      )}
     </p>
-    ${passo(1, "In Home Assistant, barra laterale → <b style='color:#fff'>gdahome</b>")}
-    ${passo(2, "Scheda «gdahome in un browser» → <b style='color:#fff'>Apri gdahome</b>")}
+    ${passo(1, t("In Home Assistant, barra laterale → <b style='color:#fff'>gdahome</b>", "In Home Assistant, sidebar → <b style='color:#fff'>gdahome</b>"))}
+    ${passo(2, t("Scheda «gdahome in un browser» → <b style='color:#fff'>Apri gdahome</b>", "The «gdahome in a browser» card → <b style='color:#fff'>Open gdahome</b>"))}
     <div style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.1);
                 font-size:16px;line-height:1.5;color:#7f93b0">
-      È la stessa app del telefono, e si adatta da sola allo schermo: computer, tablet o telefono.
-      Ci arriva solo chi è già entrato in Home Assistant.
+      ${t(
+        "È la stessa app del telefono, e si adatta da sola allo schermo: computer, tablet o telefono. Ci arriva solo chi è già entrato in Home Assistant.",
+        "It's the same app as on the phone, and it fits the screen by itself: computer, tablet or phone. Only someone already signed in to Home Assistant can reach it.",
+      )}
     </div>
   </div>
 
   <div class="ap" style="--t:1.6s;position:absolute;left:0;right:0;top:494px;display:flex;justify-content:center">
     <div class="vetro" style="display:flex;align-items:center;gap:12px;padding:14px 24px;border-color:rgba(245,158,11,.4)">
       ${segno("telefono", 22, "#fbbf24")}
-      <span style="font-size:20px;color:#fcd34d;font-weight:600">Per iOS: in fase di sviluppo</span>
+      <span style="font-size:20px;color:#fcd34d;font-weight:600">${t("Per iOS: in fase di sviluppo", "For iOS: in development")}</span>
     </div>
   </div>
 
@@ -909,12 +1108,17 @@ scena(
     {
       t: 1.4,
       t2: 6.0,
-      testo:
+      testo: t(
         "Intanto l'app si apre <b>dal browser</b>, e non si installa niente: l'indirizzo lo dà l'add-on.",
+        "Meanwhile the app opens <b>in the browser</b>, with nothing to install: the add-on gives you the address.",
+      ),
     },
     {
       t: 6.2,
-      testo: "È la stessa app, su qualunque schermo. <b>Per iOS: in fase di sviluppo.</b>",
+      testo: t(
+        "È la stessa app, su qualunque schermo. <b>Per iOS: in fase di sviluppo.</b>",
+        "Same app, on any screen. <b>For iOS: in development.</b>",
+      ),
     },
   ])}`,
 );
@@ -929,36 +1133,39 @@ scena(
   "quanto-costa",
   11.5,
   () => `
-  ${cartello(8, "Quanto costa", "niente — e deve restare così")}
+  ${cartello(8, t("Quanto costa", "What it costs"), t("niente — e deve restare così", "nothing — and it has to stay that way"))}
 
   <div style="position:absolute;left:98px;top:176px;width:520px">
     <div class="en" style="--t:.3s;font-size:62px;font-weight:900;letter-spacing:-.03em;
          background:linear-gradient(120deg,#7dd3fc 10%,#fcd34d 90%);-webkit-background-clip:text;
-         background-clip:text;color:transparent">Tutto gratis</div>
-    <div class="spunta ap" style="--t:.9s;margin-top:24px"><span class="segno">${segno("spunta", 14, "#4ade80")}</span> L'add-on, la plancia e l'app</div>
-    <div class="spunta ap" style="--t:1.1s;margin-top:14px"><span class="segno">${segno("spunta", 14, "#4ade80")}</span> La casa da fuori, senza abbonamenti</div>
-    <div class="spunta ap" style="--t:1.3s;margin-top:14px"><span class="segno">${segno("spunta", 14, "#4ade80")}</span> Tutte le case e tutti i telefoni che vuoi</div>
-    <div class="spunta ap" style="--t:1.5s;margin-top:14px"><span class="segno">${segno("spunta", 14, "#4ade80")}</span> Le segnalazioni e la chat di assistenza</div>
+         background-clip:text;color:transparent">${t("Tutto gratis", "All free")}</div>
+    <div class="spunta ap" style="--t:.9s;margin-top:24px"><span class="segno">${segno("spunta", 14, "#4ade80")}</span> ${t("L'add-on, la plancia e l'app", "The add-on, the dashboard and the app")}</div>
+    <div class="spunta ap" style="--t:1.1s;margin-top:14px"><span class="segno">${segno("spunta", 14, "#4ade80")}</span> ${t("La casa da fuori, senza abbonamenti", "Your home from away, with no subscription")}</div>
+    <div class="spunta ap" style="--t:1.3s;margin-top:14px"><span class="segno">${segno("spunta", 14, "#4ade80")}</span> ${t("Tutte le case e tutti i telefoni che vuoi", "As many homes and phones as you like")}</div>
+    <div class="spunta ap" style="--t:1.5s;margin-top:14px"><span class="segno">${segno("spunta", 14, "#4ade80")}</span> ${t("Le segnalazioni e la chat di assistenza", "Reports and the support chat")}</div>
     <p class="ap" style="--t:1.8s;margin-top:22px;font-size:17px;color:#7f93b0">
-      Nessun account da fare, nessun limite a pagamento.
+      ${t("Nessun account da fare, nessun limite a pagamento.", "No account to create, no paywalled limits.")}
     </p>
   </div>
 
   <div class="vetro en" style="--t:.6s;position:absolute;left:662px;top:176px;width:520px;padding:30px 32px;border-color:rgba(245,158,11,.35)">
-    <h3 style="margin:0 0 10px;font-size:26px;font-weight:700;color:#fcd34d">Gratis non vuol dire finito</h3>
+    <h3 style="margin:0 0 10px;font-size:26px;font-weight:700;color:#fcd34d">${t("Gratis non vuol dire finito", "Free doesn't mean finished")}</h3>
     <p style="margin:0;font-size:17px;line-height:1.55;color:var(--tenue)">
-      Gli aiutanti, lo Zigbee, il mago delle automazioni: il piano è scritto e va avanti finché c'è
-      chi lo tiene in piedi. <b style="color:#cfe0f5">Ogni sostegno è una riga di quel piano che
-      diventa vera</b> — e quello che c'è oggi resta gratis comunque.
+      ${t(
+        "Gli aiutanti, lo Zigbee, il mago delle automazioni: il piano è scritto e va avanti finché c'è chi lo tiene in piedi. <b style=\"color:#cfe0f5\">Ogni sostegno è una riga di quel piano che diventa vera</b> — e quello che c'è oggi resta gratis comunque.",
+        'Helpers, Zigbee, the automation wizard: the plan is written down, and it moves as long as someone keeps it alive. <b style="color:#cfe0f5">Every sponsorship is one line of that plan coming true</b> — and what\'s here today stays free either way.',
+      )}
     </p>
     <div class="vetro ap" style="--t:1.9s;margin-top:20px;display:flex;align-items:center;gap:12px;
          padding:14px 20px;border-color:rgba(245,158,11,.45);border-radius:999px">
       ${segno("cuore", 22, "#fb7185")}
-      <span style="font-size:18px;font-weight:700;color:#fcd34d">Sostieni il progetto su GitHub Sponsors</span>
+      <span style="font-size:18px;font-weight:700;color:#fcd34d">${t("Sostieni il progetto su GitHub Sponsors", "Support the project on GitHub Sponsors")}</span>
     </div>
     <p class="ap" style="--t:2.2s;margin:18px 0 0;font-size:17px;line-height:1.5;color:#dbe7f7">
-      <b>Chi può, sostiene. Chi non può, lo usa lo stesso</b> — ed è sostenendolo che resta gratis
-      per tutti e due.
+      ${t(
+        "<b>Chi può, sostiene. Chi non può, lo usa lo stesso</b> — ed è sostenendolo che resta gratis per tutti e due.",
+        "<b>Those who can, chip in. Those who can't, use it all the same</b> — and it's the chipping in that keeps it free for both.",
+      )}
     </p>
   </div>
 
@@ -966,13 +1173,17 @@ scena(
     {
       t: 1.8,
       t2: 6.0,
-      testo:
+      testo: t(
         "L'add-on, la plancia, l'app, la casa da fuori: <b>tutto gratis</b>, senza abbonamenti.",
+        "The add-on, the dashboard, the app, your home from away: <b>all free</b>, no subscription.",
+      ),
     },
     {
       t: 6.2,
-      testo:
+      testo: t(
         "E <b>gratis non vuol dire finito</b>: chi dà una mano su <b>GitHub Sponsors</b> decide quanto in là si arriva.",
+        "And <b>free doesn't mean finished</b>: whoever chips in on <b>GitHub Sponsors</b> decides how far this goes.",
+      ),
     },
   ])}`,
 );
@@ -988,24 +1199,34 @@ scena(
   <div class="en" style="--t:.4s;position:absolute;left:0;right:0;top:228px;text-align:center;font-size:44px;font-weight:800;letter-spacing:-.02em">gdahome</div>
 
   <div class="en-c" style="--t:.8s;position:absolute;left:50%;top:306px;text-align:center">
-    <div style="font-size:17px;color:var(--tenue);margin-bottom:10px">L'archivio da incollare in Home Assistant</div>
+    <div style="font-size:17px;color:var(--tenue);margin-bottom:10px">${t("L'archivio da incollare in Home Assistant", "The repository to paste into Home Assistant")}</div>
     <div class="vetro" style="padding:16px 30px;font-family:'DejaVu Sans Mono',monospace;font-size:24px;color:#e6f2ff;border-color:rgba(14,165,233,.4)">
       https://github.com/danigio15/gdahomeapp
     </div>
   </div>
 
   <div class="en" style="--t:1.15s;position:absolute;left:0;right:0;top:432px;text-align:center;font-size:18px;color:var(--tenue)">
-    Impostazioni → Add-on → Negozio degli add-on → i tre puntini → <b style="color:#cfe0f5">Archivi</b>
+    ${t(
+      'Impostazioni → Add-on → Negozio degli add-on → i tre puntini → <b style="color:#cfe0f5">Archivi</b>',
+      'Settings → Add-ons → Add-on store → the three dots → <b style="color:#cfe0f5">Repositories</b>',
+    )}
   </div>
 
   <div class="ap" style="--t:1.5s;position:absolute;left:50%;top:492px;transform:translateX(-50%);display:flex;gap:12px">
-    <span class="vetro" style="padding:9px 18px;font-size:15px;color:#cfe0f5">tutto gratis</span>
-    <span class="vetro" style="padding:9px 18px;font-size:15px;color:#cfe0f5">codice aperto</span>
-    <span class="vetro" style="padding:9px 18px;font-size:15px;color:#fcd34d;border-color:rgba(245,158,11,.4)">sostienilo su GitHub Sponsors</span>
+    <span class="vetro" style="padding:9px 18px;font-size:15px;color:#cfe0f5">${t("tutto gratis", "all free")}</span>
+    <span class="vetro" style="padding:9px 18px;font-size:15px;color:#cfe0f5">${t("codice aperto", "open source")}</span>
+    <span class="vetro" style="padding:9px 18px;font-size:15px;color:#fcd34d;border-color:rgba(245,158,11,.4)">${t("sostienilo su GitHub Sponsors", "support it on GitHub Sponsors")}</span>
   </div>
 
   ${didascalia([
-    { t: 2.4, t2: 6.2, testo: "Un indirizzo da incollare, e un QR code da inquadrare." },
+    {
+      t: 2.4,
+      t2: 6.2,
+      testo: t(
+        "Un indirizzo da incollare, e un QR code da inquadrare.",
+        "One address to paste, and one QR code to scan.",
+      ),
+    },
     { t: 6.4, testo: "<b>github.com/danigio15/gdahomeapp</b>" },
   ])}`,
 );

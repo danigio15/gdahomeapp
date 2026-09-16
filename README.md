@@ -78,7 +78,8 @@ Tutto passo per passo, e cosa guardare una volta dentro, sta in
 **C'è un video** di tre minuti scarsi che fa vedere tutta questa strada — il
 negozio, l'archivio da incollare, Installa, Avvia, il QR code da inquadrare e
 la plancia sul telefono — più due corti da mettere sui social, uno quadrato e
-uno in piedi: [`strumenti/video/`](strumenti/video/README.md).
+uno in piedi. Tutti e tre **in italiano e in inglese**:
+[`strumenti/video/`](strumenti/video/README.md).
 
 ## Quanto costa: niente
 

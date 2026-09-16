@@ -41,8 +41,8 @@ quella che riconosce. Se trova PayPal usa PayPal — e lì si lascia per strada 
 tre e mezzo per cento. Messo in fila così, chi vuole dare una mano trova per
 prima la strada dove arriva tutto.
 
-I tre video e le due copertine nominano **solo GitHub Sponsors**, ed è voluto:
-in quarantasette secondi un invito solo si ricorda, tre si perdono.
+I video e le copertine nominano **solo GitHub Sponsors**, ed è voluto: in
+quarantasette secondi un invito solo si ricorda, tre si perdono.
 
 ## Attivare GitHub Sponsors
 

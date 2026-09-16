@@ -9,6 +9,11 @@ I tempi fra parentesi sono **dall'inizio della scena**; quelli in grassetto
 sono dall'inizio del filmato. Le durate le dichiara `scene.js`, ed è da lì che
 vanno riletti se una scena cambia.
 
+Qui c'è **l'italiano**. I filmati escono anche in inglese — `-en` in fondo al
+nome — e sono gli stessi, con gli stessi tempi: cambiano solo le parole, che
+stanno accanto alle italiane in `scene.js` e `social.js`, dentro `t("…", "…")`.
+Chi deve leggere l'inglese a voce le trova lì, nell'ordine in cui compaiono.
+
 ---
 
 ### **0:00** — Apertura *(8s)*
