@@ -56,10 +56,22 @@ function unCentralinoChe(_ignorato, registro = muto) {
     portiere: { accogli() {} },
     registro,
     Presa: PresaFinta,
-    /* Tempi da prova: si aspetta millesimi, non minuti. */
-    battito: 10,
-    silenzioMassimo: 30,
-    attesaMassima: 20,
+    /* Tempi da prova: si aspetta millesimi, non minuti. Il rapporto e' quello
+     * vero — il silenzio e' il triplo del battito, «due colpetti persi
+     * capitano, tre di fila no» — perche' e' il rapporto che la prova sta
+     * provando; cambia solo la scala.
+     *
+     * Trenta millesimi di silenzio pero' erano **dentro** il tremolio di una
+     * macchina delle corse, e la prova cadeva da sola: basta un inceppamento
+     * di quaranta millesimi subito dopo l'ingresso e il primo colpetto trova
+     * gia' passato il silenzio massimo, cioe' scambia un centralino nuovo per
+     * uno vecchio e smette di battere. Non e' un difetto del ponte — nella
+     * vita vera quel silenzio e' un minuto e mezzo — e' la scala della prova
+     * che era piu' piccola del rumore. Trecento lasciano dieci volte il
+     * margine di prima e costano un secondo. */
+    battito: 100,
+    silenzioMassimo: 300,
+    attesaMassima: 100,
   });
   chiamata.avvia();
   return chiamata;
@@ -75,25 +87,47 @@ async function entra(chiamata, risponde) {
     if (detto.t === "battito" && risponde()) return testo;
     return null;
   };
-  await respira(5);
-  assert.equal(chiamata.dentro, true, "doveva essere entrata");
+  await aspettaChe(() => chiamata.dentro, "doveva essere entrata");
   return presa;
 }
 
 const respira = (quanto) => new Promise((r) => setTimeout(r, quanto));
 
+/** Quanti colpetti sono partiti da questa presa. */
+const iColpetti = (presa) => presa.mandati.filter((m) => m.includes("battito")).length;
+
+/* Aspettare **che una cosa succeda**, invece di aspettare un tempo e sperare
+ * che sia bastato.
+ *
+ * «Aspetta ottanta millesimi, poi controlla che siano partiti tre colpetti»
+ * chiede due cose insieme: che il ponte faccia il suo lavoro, e che la
+ * macchina sia svelta. La seconda non c'entra niente con quello che si sta
+ * provando, e su una macchina delle corse — dove di prove ne girano tante
+ * insieme — non e' vera sempre.
+ *
+ * Aspettando la cosa, sotto carico la prova ci mette di piu' e basta. E non
+ * diventa piu' indulgente: il tetto e' dieci volte il tempo che serve, quindi
+ * se scade non e' la macchina lenta, e' il ponte che non l'ha fatto.
+ */
+const TETTO = 3_000;
+
+async function aspettaChe(succede, cosa) {
+  const scade = Date.now() + TETTO;
+  while (Date.now() < scade) {
+    if (succede()) return;
+    await respira(2);
+  }
+  assert.fail(cosa);
+}
+
 test("un centralino che risponde ai colpetti tiene il filo su", async () => {
   const chiamata = unCentralinoChe();
   const presa = await entra(chiamata, () => true);
 
-  await respira(80);
+  await aspettaChe(() => iColpetti(presa) >= 3, "i colpetti dovevano continuare a partire");
 
   assert.equal(chiamata.dentro, true, "il filo doveva restare su");
   assert.equal(presa.chiusa, false, "non c'era niente da chiudere");
-  assert.ok(
-    presa.mandati.filter((m) => m.includes("battito")).length >= 3,
-    "i colpetti dovevano continuare a partire",
-  );
   chiamata.spegni();
 });
 
@@ -104,13 +138,11 @@ test("un filo che smette di rispondere si chiude, e si richiama", async () => {
    * niente: e' tutto il punto. */
   let risponde = true;
   const primaPresa = await entra(chiamata, () => risponde);
-  await respira(30);
+  await aspettaChe(() => iColpetti(primaPresa) >= 1, "un colpetto doveva arrivare a destinazione");
   risponde = false;
 
-  await respira(150);
-
-  assert.equal(primaPresa.chiusa, true, "il filo morto doveva essere chiuso");
-  assert.ok(PresaFinta.aperte.length > 1, "il ponte doveva ribussare al centralino");
+  await aspettaChe(() => primaPresa.chiusa, "il filo morto doveva essere chiuso");
+  await aspettaChe(() => PresaFinta.aperte.length > 1, "il ponte doveva ribussare al centralino");
   chiamata.spegni();
 });
 
@@ -128,6 +160,13 @@ test("un centralino vecchio, che ai colpetti non risponde mai, non si butta giu'
   });
   const presa = await entra(chiamata, () => false);
 
+  await aspettaChe(
+    () => detto.some((riga) => riga.includes("versione vecchia")),
+    "doveva accorgersi che quel centralino non sa rispondere",
+  );
+  /* E poi lo si lascia andare avanti, per vedere che **continui** a non
+   * buttarlo giu': la prova non e' che ci pensi su una volta, e' che dopo
+   * qualche giro di battito il filo sia ancora quello di prima. */
   await respira(150);
 
   assert.equal(chiamata.dentro, true, "il filo doveva restare su");
