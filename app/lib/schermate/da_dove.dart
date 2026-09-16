@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 
 import '../casa/casa_conosciuta.dart';
 import '../casa/collegamento.dart';
+import '../parole.dart';
 import '../vestito/pezzi.dart';
 import '../vestito/tema.dart';
 
@@ -30,17 +31,38 @@ class DaDoveSiPassa extends StatelessWidget {
       collegamento.comeVa,
       collegamento.daDove,
     )) {
-      (ComeVa.aperta, DaDove.daDentro) => ('in casa', Colori.bene),
-      (ComeVa.aperta, DaDove.daFuori) => ('da fuori', Colori.ambraScura),
-      (ComeVa.aperta, DaDove.dalCentralino) => ('da fuori', Colori.ambraScura),
-      (ComeVa.aperta, null) => ('collegata', Colori.bene),
+      (ComeVa.aperta, DaDove.daDentro) => (
+        inLingua(it: 'in casa', en: 'at home'),
+        Colori.bene,
+      ),
+      (ComeVa.aperta, DaDove.daFuori) => (
+        inLingua(it: 'da fuori', en: 'away'),
+        Colori.ambraScura,
+      ),
+      (ComeVa.aperta, DaDove.dalCentralino) => (
+        inLingua(it: 'da fuori', en: 'away'),
+        Colori.ambraScura,
+      ),
+      (ComeVa.aperta, null) => (
+        inLingua(it: 'collegata', en: 'connected'),
+        Colori.bene,
+      ),
       (ComeVa.inCammino, _) => (
-        'sto cercando la casa…',
+        inLingua(it: 'sto cercando la casa…', en: 'looking for your home…'),
         colori.onSurfaceVariant,
       ),
-      (ComeVa.irraggiungibile, _) => ('non raggiungibile', colori.error),
-      (ComeVa.segnoScaduto, _) => ('da riabbinare', colori.error),
-      (ComeVa.nessunaCasa, _) => ('nessuna casa', colori.onSurfaceVariant),
+      (ComeVa.irraggiungibile, _) => (
+        inLingua(it: 'non raggiungibile', en: 'unreachable'),
+        colori.error,
+      ),
+      (ComeVa.segnoScaduto, _) => (
+        inLingua(it: 'da riabbinare', en: 'needs pairing again'),
+        colori.error,
+      ),
+      (ComeVa.nessunaCasa, _) => (
+        inLingua(it: 'nessuna casa', en: 'no home'),
+        colori.onSurfaceVariant,
+      ),
     };
     return Row(
       mainAxisSize: MainAxisSize.min,

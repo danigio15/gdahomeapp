@@ -1,6 +1,6 @@
-/// L'abbinamento: un quadretto inquadrato, e basta.
+/// L'abbinamento: un QR code inquadrato, e basta.
 ///
-/// E' la sola volta in cui l'utente fa qualcosa. Il quadretto sta nella scheda
+/// E' la sola volta in cui l'utente fa qualcosa. Il QR code sta nella scheda
 /// del ponte dentro Home Assistant, dove lo vede solo chi in Home Assistant e'
 /// gia' entrato; chi non puo' inquadrarlo trova sotto le stesse cose in
 /// lettere, e le batte.
@@ -26,6 +26,7 @@ import 'dart:convert';
 import 'package:cryptography/cryptography.dart';
 import 'package:http/http.dart' as http;
 
+import '../parole.dart';
 import 'errori.dart';
 import 'indirizzo.dart';
 import 'invito.dart';
@@ -98,9 +99,9 @@ class Entrata {
 class Abbinamento {
   const Abbinamento._();
 
-  /// Abbina con quello che c'era scritto nel quadretto.
+  /// Abbina con quello che c'era scritto nel QR code.
   ///
-  /// Il quadretto dice **due** strade per la stessa casa, e quale delle due sia
+  /// Il QR code dice **due** strade per la stessa casa, e quale delle due sia
   /// quella buona dipende da dove si sta in questo momento: sul divano si va
   /// dritti, dalla stazione si passa dal centralino. Non lo si chiede a chi
   /// guarda lo schermo — non lo saprebbe dire, e non dovrebbe: si bussa agli
@@ -131,14 +132,20 @@ class Abbinamento {
       );
     }
 
-    /* Il centralino del quadretto vince su quello con cui l'app e' stata
+    /* Il centralino del QR code vince su quello con cui l'app e' stata
      * costruita: e' quello che quella casa chiama davvero. Il nostro resta
-     * come ripiego per i quadretti che non lo dicono. */
+     * come ripiego per i QR code che non lo dicono. */
     final centralino = invito.centralino ?? centralinoDiRipiego;
     if (centralino == null) {
-      throw const PonteIrraggiungibile(
-        'questo codice non dice da dove si entra, e questa app non ha un '
-        'centralino a cui chiedere',
+      throw PonteIrraggiungibile(
+        inLingua(
+          it:
+              'questo codice non dice da dove si entra, e questa app non ha '
+              'un centralino a cui chiedere',
+          en:
+              'this code doesn\'t say where to get in, and this app has no '
+              'relay to ask',
+        ),
       );
     }
     return Entrata(
@@ -167,7 +174,12 @@ class Abbinamento {
   }) async {
     final pulito = codicePulito(codice);
     if (pulito.length < 4) {
-      throw const CodiceRifiutato('questo codice e\' troppo corto');
+      throw CodiceRifiutato(
+        inLingua(
+          it: 'questo codice è troppo corto',
+          en: 'this code is too short',
+        ),
+      );
     }
 
     final Presa sotto;
@@ -179,7 +191,7 @@ class Abbinamento {
       throw PonteIrraggiungibile(_leggibile(errore));
     }
 
-    Presa? cifrata;
+    PresaAperta? cifrata;
     try {
       cifrata = await stringiLaMano(sotto);
       /* Il codice viaggia **dentro** il cifrato. Al centralino arriva una
@@ -203,7 +215,7 @@ class Abbinamento {
     } finally {
       /* Un filo di abbinamento serve a una cosa sola e poi si chiude: il
        * telefono torna dalla porta normale, col segno appena avuto. */
-      await (cifrata ?? sotto).chiudi();
+      await (cifrata?.chiudi() ?? sotto.chiudi());
     }
   }
 
@@ -249,14 +261,11 @@ class Abbinamento {
           );
         case 409:
           throw TroppiDispositivi(
-            _perche(
-              corpo,
-              'questa casa ha gia\' tutti i telefoni che puo\' avere',
-            ),
+            _perche(corpo, 'questa casa ha già tutti i telefoni che può avere'),
           );
         default:
           throw PonteIrraggiungibile(
-            _perche(corpo, 'il ponte ha risposto ${risposta.statusCode}'),
+            _perche(corpo, 'gdahome ha risposto ${risposta.statusCode}'),
           );
       }
     } on ErroreDelPonte {
@@ -352,12 +361,15 @@ class Abbinamento {
 
   /* ─── Leggere quello che dice la casa ────────────────────────────────── */
 
-  static Future<Map<String, dynamic>> _laPrimaRisposta(Presa cifrata) {
+  /* Dai byte al JSON in un colpo, senza la stringa in mezzo. */
+  static final _daByte = const Utf8Decoder().fuse(const JsonDecoder());
+
+  static Future<Map<String, dynamic>> _laPrimaRisposta(PresaAperta cifrata) {
     final detta = Completer<Map<String, dynamic>>();
     cifrata.messaggi.listen(
-      (testo) {
+      (byte) {
         if (detta.isCompleted) return;
-        final letto = jsonDecode(testo);
+        final letto = _daByte.convert(byte);
         detta.complete(letto is Map<String, dynamic> ? letto : const {});
       },
       onError: (Object errore) {
@@ -398,17 +410,17 @@ class Abbinamento {
     final chiave = corpo['chiave'];
     final dispositivo = corpo['dispositivo'];
     if (segno is! String || segno.isEmpty) {
-      throw const PonteIrraggiungibile('il ponte ha risposto senza segno');
+      throw const PonteIrraggiungibile('gdahome ha risposto senza segno');
     }
     if (chiave is! String || chiave.isEmpty) {
       throw const PonteIrraggiungibile(
-        'questo ponte e\' di una versione vecchia: aggiornalo in Home Assistant',
+        'questo ponte è di una versione vecchia: aggiornalo in Home Assistant',
       );
     }
     final identificativo = dispositivo is Map ? dispositivo['id'] : null;
     if (identificativo is! String || identificativo.isEmpty) {
       throw const PonteIrraggiungibile(
-        'il ponte ha risposto senza dire chi siamo',
+        'gdahome ha risposto senza dire chi siamo',
       );
     }
 

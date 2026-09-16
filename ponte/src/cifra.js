@@ -26,7 +26,7 @@
  * gia' abbinati restano al sicuro comunque, perche' il loro segno non e' mai
  * passato di li'.
  *
- * Il codice a quadretti ha tolto meta' del problema. Il codice adesso e' di
+ * Il QR code ha tolto meta' del problema. Il codice adesso e' di
  * sedici lettere — ottanta bit — e la sua impronta, che e' l'unica cosa che
  * arriva al centralino, non si prova piu' a raffica in casa propria: otto
  * lettere erano quaranta bit, e quaranta bit cadono in qualche minuto.

@@ -1,0 +1,5 @@
+# Si puo' guardare tutto: qui non c'e' niente di privato.
+User-agent: *
+Allow: /
+
+Sitemap: https://gdahome.org/sitemap.xml

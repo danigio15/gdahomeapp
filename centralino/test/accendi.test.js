@@ -201,3 +201,146 @@ test("nei pezzi scritti col cuore aperto non ci sono controaccenti", () => {
   }
   assert.ok(quanti >= 2, "mi aspettavo almeno due heredoc col cuore aperto");
 });
+
+test("rilanciarlo non cambia la chiave della console", () => {
+  /* Prima la chiave si rigenerava a ogni giro, in una riga senza `if`. Chi
+   * reincollava la riga per aggiungere un pezzo — ed e' quello che lo script
+   * promette di poter fare, due righe sopra — si ritrovava la chat chiusa con
+   * una chiave che non aveva mai visto, e nessun messaggio che lo dicesse.
+   *
+   * Quindi: la si genera solo se non c'e'. */
+  const genera = ACCENDI.indexOf("head -c 48 /dev/urandom");
+  assert.ok(genera >= 0, "non genera nessuna chiave");
+  const prima = ACCENDI.slice(0, genera);
+  assert.match(
+    prima,
+    /CHIAVE_CONSOLE="\$\(gia_scritto [^)]*\)"/,
+    "non guarda se la chiave c'e' gia': la rifa' e la porta via",
+  );
+  assert.match(
+    ACCENDI,
+    /if \[\[ -z "\$CHIAVE_CONSOLE" \]\]; then\n\s+CHIAVE_CONSOLE="\$\(head -c 48/,
+    "genera la chiave senza prima chiedersi se ce n'e' una",
+  );
+});
+
+test("e non chiede di nuovo i gettoni che sono gia' sulla macchina", () => {
+  /* Richiedere un segreto che c'e' gia' vuol dire, nella pratica, cambiarlo:
+   * chi non ce l'ha sotto mano tira avanti, e quello di prima smette di
+   * valere. */
+  for (const [quale, chiave, dove] of [
+    ["GETTONE_LETTURA", "GETTONE_LETTURA", "lettura"],
+    ["GETTONE_SEGNALAZIONI", "GITHUB_SEGNALAZIONI", "ambiente"],
+    ["REPO_SEGNALAZIONI", "GITHUB_REPO", "ambiente"],
+    ["REPO_ALLEGATI", "GITHUB_REPO_ALLEGATI", "ambiente"],
+  ]) {
+    const atteso = `${quale}="\${${quale}:-$(gia_scritto "$CONFIGURAZIONE/${dove}" ${chiave})}"`;
+    assert.ok(
+      ACCENDI.includes(atteso),
+      `«${quale}» non si rilegge da «${dove}»: lo richiede, e cosi' lo cambia`,
+    );
+  }
+});
+
+test("il sito viaggia con tutto il resto, e ha il suo nome davanti", () => {
+  const scarica = pezziScritti().find((uno) => uno.dove.endsWith("scarica.sh"));
+  assert.match(
+    scarica.testo,
+    /cp -a "\$radice\/sito" "\$DOVE\/sito\.nuovo"/,
+    "non porta dentro il sito",
+  );
+  assert.match(scarica.testo, /mv "\$DOVE\/sito\.nuovo" "\$DOVE\/sito"/, "non scambia il sito");
+
+  /* Una versione che non ha la cartella del sito non deve svuotare un nome
+   * pubblico: se non c'e', resta quello di prima. */
+  assert.match(scarica.testo, /if \[ -d "\$radice\/sito" \]; then/);
+  assert.doesNotMatch(scarica.testo, /mkdir -p "\$DOVE\/sito\.nuovo"/);
+
+  /* E davanti ci sta Caddy, col nome nudo e col `www` che manda la'. */
+  assert.match(ACCENDI, /^\$NOME_DEL_SITO \{$/m);
+  assert.match(ACCENDI, /root \* \$DOVE\/sito/);
+  assert.match(ACCENDI, /^www\.\$NOME_DEL_SITO \{$/m);
+  assert.match(ACCENDI, /redir https:\/\/\$NOME_DEL_SITO\{uri\} permanent/);
+});
+
+test("i nomi che Caddy serve sono quelli che si controllano prima", () => {
+  /* Un nome servito ma non controllato e' un certificato che non arriva, e
+   * venti minuti persi a capire perche'. */
+  const controllati = /^for nome in (.+); do$/m.exec(ACCENDI);
+  assert.ok(controllati, "non trovo il giro che controlla i nomi");
+  for (const quale of [
+    "$NOME_DEL_TRAMITE",
+    "$NOME_DELL_APP",
+    "$NOME_DEL_SITO",
+    "www.$NOME_DEL_SITO",
+  ]) {
+    assert.ok(controllati[1].includes(`"${quale}"`), `«${quale}» non si controlla prima`);
+  }
+});
+
+test("la macchina dice al tramite come si chiamano il sito e l'app", () => {
+  /* La soglia — quello che trova chi apre l'indirizzo nudo — manda al sito e
+   * all'app, e quei due nomi il centralino da solo non li sa: glieli dice la
+   * macchina. Se non arrivano, la pagina c'e' comunque ma non manda da nessuna
+   * parte, ed e' proprio il buco che doveva chiudere. */
+  for (const chiave of ["NOME_DEL_SITO", "NOME_DELL_APP"]) {
+    assert.match(
+      ACCENDI,
+      new RegExp(`printf '${chiave}=%s\\\\n' "\\$${chiave}"`),
+      `«${chiave}» non arriva al servizio`,
+    );
+  }
+});
+
+test("l'app si serve da un indirizzo solo, e il nome corto ci rimanda", () => {
+  /* E' la prova di una cosa che non si vede guardando Caddy: **il browser
+   * tiene l'abbinamento per indirizzo**. Il segno che apre casa lo tiene il
+   * deposito del browser, e quel deposito e' di quel nome li'.
+   *
+   * Finche' due nomi servivano gli stessi file, chi arrivava dal bottone della
+   * console e chi arrivava dal preferito erano due app diverse per il browser:
+   * ognuna chiedeva di abbinarsi, e ogni abbinamento bruciava uno degli otto
+   * posti dei telefoni. Sembrava un problema dell'app, ed era una riga di
+   * Caddy.
+   *
+   * Quindi: un posto solo che serve i file — quello sotto il tramite, l'unico
+   * che la console sa fabbricare — e il nome corto che ci rimanda, senza
+   * perdere il pezzo di strada che segue. */
+  const corto = new RegExp("^\\$NOME_DELL_APP \\{$([\\s\\S]*?)^\\}$", "m").exec(ACCENDI);
+  assert.ok(corto, "non trovo il blocco del nome corto");
+  assert.match(
+    corto[1],
+    /redir https:\/\/\$NOME_DEL_TRAMITE\/app\{uri\} permanent/,
+    "il nome corto non rimanda all'indirizzo che conta",
+  );
+  /* E non serve niente per conto suo: se servisse ancora i file, sarebbe
+   * un secondo deposito e il guaio tornerebbe identico. */
+  assert.doesNotMatch(corto[1], /file_server/, "il nome corto serve ancora una copia dell'app");
+  assert.doesNotMatch(corto[1], /root \*/, "il nome corto ha ancora una cartella sua");
+});
+
+test("l'app si apre anche dall'indirizzo del tramite, sotto /app/", () => {
+  /* Il link per il browser lo fabbrica la console dell'add-on, e lo ricava
+   * dall'unica cosa che sa del centralino: il nome che ha in configurazione,
+   * con «/app/» in fondo. Sulla nuvola quel posto c'e'; qui l'app stava solo
+   * sul nome corto, e quel bottone portava a «qui non c'e' niente». */
+  const blocco = /^\$NOME_DEL_TRAMITE \{$([\s\S]*?)^\}$/m.exec(ACCENDI);
+  assert.ok(blocco, "non trovo il blocco del tramite");
+  assert.match(blocco[1], /handle \/app\/\* \{/, "il tramite non serve l'app");
+  assert.match(blocco[1], /^\t\troot \* \$DOVE$/m, "l'app non viene dalla cartella giusta");
+  assert.match(
+    blocco[1],
+    /try_files \{path\} \/app\/index\.html/,
+    "chi ricarica una schermata interna trova un 404",
+  );
+  /* `/app` scritto a mano, senza la barra, e' lo stesso posto. */
+  assert.match(blocco[1], /handle \/app \{/, "«/app» senza barra non porta da nessuna parte");
+  /* E tutto il resto resta del tramite, dentro un «handle» suo: i fili, le
+   * segnalazioni e la console non devono finire davanti o dietro ai file a
+   * seconda dell'ordine in cui Caddy mette le cose. */
+  assert.match(
+    blocco[1],
+    /handle \{\n\t\treverse_proxy 127\.0\.0\.1:\$PORTA\n\t\}/,
+    "il tramite non e' dentro un handle suo",
+  );
+});

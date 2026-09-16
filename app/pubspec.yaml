@@ -13,13 +13,21 @@ publish_to: "none"
 # sempre**. Si ricava dalla versione invece di batterlo a mano:
 # 1.4.24 → 1 × 10000 + 4 × 100 + 24 = 10424. Finche' il minore e la patch
 # stanno sotto cento, cresce insieme alla versione e non si sbaglia.
-version: 1.4.25+10425
+version: 1.4.31+104310
 
 environment:
   sdk: ^3.13.0
 
 dependencies:
   flutter:
+    sdk: flutter
+
+  # Le parole che disegna Flutter e non noi: il menu «Incolla» che compare
+  # tenendo premuto su una casella, i selettori dell'ora e della data, i nomi
+  # che legge un lettore di schermo. Senza questo pacchetto quei pezzi escono
+  # **in inglese** anche su un telefono italiano — e sono le prime cose che si
+  # notano. Le nostre frasi invece stanno in `parole.dart`.
+  flutter_localizations:
     sdk: flutter
 
   # Il filo con il ponte. `web_socket_channel` invece del WebSocket di
@@ -64,9 +72,9 @@ dependencies:
   # per questo ci sono vettori di prova generati dal Node e ricontrollati qui.
   cryptography: ^2.7.0
 
-  # Il lettore del codice a quadretti.
+  # Il lettore del QR code.
   #
-  # Il quadretto **si disegna** senza dipendenze — quello lo fa il ponte, in
+  # Il QR code **si disegna** senza dipendenze — quello lo fa il ponte, in
   # `ponte/src/qr.js` — ma leggerlo e' un altro mestiere: vuole la fotocamera,
   # la messa a fuoco, la luce che cambia, e sotto ci stanno MLKit e Vision, che
   # sono del sistema. Scriverne uno a mano vorrebbe dire un lettore peggiore di

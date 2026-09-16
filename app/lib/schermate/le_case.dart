@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 
 import '../casa/casa_conosciuta.dart';
 import '../casa/collegamento.dart';
+import '../parole.dart';
 import '../vestito/pezzi.dart';
 import '../vestito/tema.dart';
+import 'barra.dart' show nomeDelleCase;
 import 'firma.dart';
 
 class LeCase extends StatelessWidget {
@@ -25,13 +27,13 @@ class LeCase extends StatelessWidget {
     final aperta = collegamento.casa;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Le tue case')),
+      appBar: AppBar(title: Text(nomeDelleCase)),
       floatingActionButton: archivio.piena
           ? null
           : FloatingActionButton.extended(
               onPressed: aggiungiUnaCasa,
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Aggiungi'),
+              label: Text(inLingua(it: 'Aggiungi', en: 'Add')),
             ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
@@ -50,11 +52,14 @@ class LeCase extends StatelessWidget {
             const SizedBox(height: 10),
           ],
           if (archivio.vuoto)
-            const StatoVuoto(
+            StatoVuoto(
               dentroUnaLista: true,
               icona: Icons.home_outlined,
-              titolo: 'Nessuna casa',
-              sotto: 'Aggiungine una col bottone qui sotto.',
+              titolo: inLingua(it: 'Nessuna casa', en: 'No homes yet'),
+              sotto: inLingua(
+                it: 'Aggiungine una col bottone qui sotto.',
+                en: 'Add one with the button below.',
+              ),
             ),
           const Firma(),
         ],
@@ -69,20 +74,33 @@ class LeCase extends StatelessWidget {
     final sicuro = await showDialog<bool>(
       context: context,
       builder: (contesto) => AlertDialog(
-        title: Text('Dimenticare «${casa.nome}»?'),
-        content: const Text(
-          'Il telefono resta abbinato dalla parte del ponte: per staccarlo '
-          'davvero, toglilo anche dalla console dell\'add-on.',
+        title: Text(
+          inLingua(
+            it: 'Dimenticare «${casa.nome}»?',
+            en: 'Forget “${casa.nome}”?',
+          ),
+        ),
+        content: Text(
+          inLingua(
+            it:
+                'Il telefono resta abbinato dalla parte della casa: per '
+                'staccarlo davvero, toglilo anche dalla pagina di gdahome in '
+                'Home Assistant.',
+            en:
+                'The phone stays paired on your home\'s side: to unpair it '
+                'for real, remove it from the gdahome page in Home Assistant '
+                'as well.',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(contesto).pop(false),
-            child: const Text('No'),
+            child: Text(inLingua(it: 'No', en: 'No')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(contesto).pop(true),
             style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
-            child: const Text('Dimentica'),
+            child: Text(inLingua(it: 'Dimentica', en: 'Forget')),
           ),
         ],
       ),
@@ -177,7 +195,7 @@ class _Casa extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline_rounded),
-            tooltip: 'Dimentica',
+            tooltip: inLingua(it: 'Dimentica', en: 'Forget'),
             onPressed: quandoTolta,
           ),
         ],
@@ -188,10 +206,22 @@ class _Casa extends StatelessWidget {
   /// Cosa sa fare questa casa, detto in una riga.
   String _comEFatta() {
     if (aperta && daDove != null) {
-      return daDove == DaDove.daDentro ? 'in casa adesso' : 'da fuori adesso';
+      return daDove == DaDove.daDentro
+          ? inLingua(it: 'in casa adesso', en: 'at home now')
+          : inLingua(it: 'da fuori adesso', en: 'away now');
     }
-    if (casa.soloInCasa) return 'solo sotto il Wi-Fi di casa';
-    if (casa.inCasa == null) return 'solo da fuori · ${casa.daFuoriCasa}';
-    return 'in casa e da fuori';
+    if (casa.soloInCasa) {
+      return inLingua(
+        it: 'solo sotto il Wi-Fi di casa',
+        en: 'only on your home Wi-Fi',
+      );
+    }
+    if (casa.inCasa == null) {
+      return inLingua(
+        it: 'solo da fuori · ${casa.daFuoriCasa}',
+        en: 'only from away · ${casa.daFuoriCasa}',
+      );
+    }
+    return inLingua(it: 'in casa e da fuori', en: 'at home and away');
   }
 }

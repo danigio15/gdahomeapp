@@ -12,16 +12,18 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'casa/archivio_delle_case.dart';
 import 'casa/cassaforte.dart';
 import 'casa/collegamento.dart';
 import 'casa/impostazioni.dart';
+import 'parole.dart';
 import 'ponte/centralino.dart';
 import 'schermate/aggiungi_casa.dart';
 import 'schermate/home.dart';
-import 'schermate/misure.dart';
 import 'schermate/le_case.dart';
+import 'schermate/misure.dart';
 import 'schermate/plancia_vera.dart';
 import 'vestito/sfondo.dart';
 import 'vestito/tema.dart';
@@ -59,10 +61,20 @@ void main() {
   if (_perIlCollaudo) {
     SemanticsBinding.instance.ensureSemantics();
   }
+  /* In che lingua parla l'app: la decide il telefono.
+   *
+   * Si decide **prima** di disegnare, e non dentro una schermata, perche' le
+   * frasi non stanno tutte dentro una schermata: ci sono quelle del filo e
+   * quelle della pagina che il servitore compone da se' (vedi
+   * `parole.dart`). */
+  laLingua = linguaPer([
+    for (final quale in WidgetsBinding.instance.platformDispatcher.locales)
+      quale.languageCode,
+  ]);
   runApp(const AppDiCasa());
 }
 
-class AppDiCasa extends StatelessWidget {
+class AppDiCasa extends StatefulWidget {
   const AppDiCasa({
     super.key,
     this.cassaforte,
@@ -77,21 +89,69 @@ class AppDiCasa extends StatelessWidget {
   final FabbricaDellaPlancia? plancia;
 
   @override
+  State<AppDiCasa> createState() => _AppDiCasaState();
+}
+
+class _AppDiCasaState extends State<AppDiCasa> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /* La lingua del telefono cambiata mentre l'app e' aperta.
+   *
+   * Succede: si va nelle impostazioni, si cambia lingua, si torna. L'app si
+   * ridisegna nella lingua nuova senza riaprirla.
+   *
+   * La plancia no: quella e' una pagina, e la sua lingua l'ha decisa il
+   * servitore quando l'ha aperta. Si rimette in pari alla prima ricarica —
+   * toccare «Plancia» quando ci si e' gia' — e non si ricarica da qui: una
+   * pagina che si ricarica da sola mentre uno guarda la casa e' peggio di una
+   * scritta in due lingue per un minuto. */
+  @override
+  void didChangeLocales(List<Locale>? quelle) {
+    final adesso = linguaPer([
+      for (final quale in quelle ?? const <Locale>[]) quale.languageCode,
+    ]);
+    if (adesso == laLingua) return;
+    setState(() => laLingua = adesso);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'gdahome',
       debugShowCheckedModeBanner: false,
       theme: temaChiaro(),
       darkTheme: temaScuro(),
+      /* La lingua: la stessa che hanno scelto le nostre frasi, e non una che
+       * Flutter si ricava da se'. Se le due divergessero si vedrebbe un'app
+       * italiana col menu «Paste» dentro le sue caselle. */
+      locale: Locale(laLingua.codice),
+      supportedLocales: [
+        for (final quale in Lingua.values) Locale(quale.codice),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       /* Il fondo vivo sta qui, sotto tutte le schermate e una volta sola: se
        * lo mettesse ogni pagina, gli aloni ripartirebbero da capo a ogni
        * cambio di pagina, e sarebbe un lampo invece di un cielo. */
       builder: (context, schermata) =>
           SfondoVivo(child: schermata ?? const SizedBox.shrink()),
       home: Portone(
-        cassaforte: cassaforte,
-        collegamento: collegamento,
-        plancia: plancia,
+        cassaforte: widget.cassaforte,
+        collegamento: widget.collegamento,
+        plancia: widget.plancia,
       ),
     );
   }

@@ -133,10 +133,41 @@ class PonteFinto {
     /* Le commissioni: quello che il ponte vero fa da se', senza passare da
      * Home Assistant. Qui si serve da una cartella in memoria. */
     if (detto['type'] == 'ponte/http') {
+      /* I file della plancia non si servono a chi non vede nessuna plancia:
+       * fa cosi' il ponte vero, e serve che lo faccia anche questo, se no
+       * l'unica strada rifiutata sarebbe quella principale. */
+      final dove = detto['percorso'] as String? ?? '';
+      if (nientePerTe && dove.startsWith('/dashboardmodern_static/')) {
+        _manda(presa, {
+          'id': id,
+          'type': 'result',
+          'success': false,
+          'error': {
+            'code': 'niente_per_te',
+            'message': 'in questa casa non ci sono plance per la tua utenza',
+          },
+        });
+        return;
+      }
       _manda(presa, {'id': id, ..._commissione(detto)});
       return;
     }
     if (detto['type'] == 'ponte/plancia') {
+      /* «Le plance ci sono, ma nessuna e' della tua utenza»: e' una risposta,
+       * non un ponte senza plancia, e l'app non deve andare a cercarla fra i
+       * pannelli di Home Assistant. */
+      if (nientePerTe) {
+        _manda(presa, {
+          'id': id,
+          'type': 'result',
+          'success': false,
+          'error': {
+            'code': 'niente_per_te',
+            'message': 'in questa casa non ci sono plance per la tua utenza',
+          },
+        });
+        return;
+      }
       final sua = planciaDelPonte;
       if (sua == null) {
         _manda(presa, {
@@ -161,10 +192,7 @@ class PonteFinto {
           'id': id,
           'type': 'result',
           'success': false,
-          'error': {
-            'code': 'not_found',
-            'message': 'quella plancia non c\'e\'',
-          },
+          'error': {'code': 'not_found', 'message': 'quella plancia non c\'è'},
         });
         return;
       }
@@ -193,6 +221,16 @@ class PonteFinto {
       'type': 'result',
       'success': true,
       'result': switch (detto['type']) {
+        'ponte/casa/dove' =>
+          indirizziDiCasa == null
+              ? null
+              : {
+                  'casa': 'la-casa-finta',
+                  'centralino': null,
+                  'indirizzi': [
+                    for (final uno in indirizziDiCasa!) uno.toString(),
+                  ],
+                },
         'get_states' => entita,
         'get_panels' => pannelli ?? const <String, dynamic>{},
         'dashboardmodern/config/get' =>
@@ -205,6 +243,15 @@ class PonteFinto {
   /// Quello che risponde `ponte/plancia`: la plancia dentro l'add-on. `null`
   /// e' un ponte che non ce l'ha, e dice di no.
   Map<String, dynamic>? planciaDelPonte = planciaNelPonte();
+
+  /// Quando e' `true`, il ponte risponde che in questa casa non ci sono
+  /// plance per chi chiede.
+  bool nientePerTe = false;
+
+  /// Quello che risponde `ponte/casa/dove`: dove sta questa casa sulla rete
+  /// di casa. `null` e' un ponte di prima, che quel comando non lo conosce e
+  /// risponde vuoto.
+  List<IndirizzoDelPonte>? indirizziDiCasa;
 
   /// Le plance di questa casa. Una c'e' sempre — quella di sempre — e chi ne
   /// prova piu' d'una ne aggiunge a questa lista.
@@ -374,11 +421,11 @@ class PonteFinto {
         return si(filo(una));
       case 'ponte/segnalazioni/leggi':
         final una = trova(detto['numero']);
-        if (una == null) return no('non_trovata', 'non e\' tua');
+        if (una == null) return no('non_trovata', 'non è tua');
         return si(filo(una));
       case 'ponte/segnalazioni/rispondi':
         final una = trova(detto['numero']);
-        if (una == null) return no('non_trovata', 'non e\' tua');
+        if (una == null) return no('non_trovata', 'non è tua');
         (una['messaggi'] as List).add({
           'da': 'casa',
           'testo': detto['testo'],
@@ -387,7 +434,7 @@ class PonteFinto {
         return si(filo(una));
       case 'ponte/segnalazioni/allega':
         final una = trova(detto['numero']);
-        if (una == null) return no('non_trovata', 'non e\' tua');
+        if (una == null) return no('non_trovata', 'non è tua');
         final allegato = _unAllegato(detto);
         if (allegato == null) return no('invalid_format', 'manca il file');
         if (allegato['byte'] as int > 10 * 1024 * 1024) {
@@ -532,11 +579,7 @@ class PonteFinto {
     }
     final trovato = file[soloIlPercorso];
     if (trovato == null) {
-      return _pacchetto(
-        404,
-        'text/plain',
-        utf8.encode('qui non c\'e\' niente'),
-      );
+      return _pacchetto(404, 'text/plain', utf8.encode('qui non c\'è niente'));
     }
     return _pacchetto(200, trovato.$1, trovato.$2);
   }

@@ -46,10 +46,12 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import '../misure/lavori.dart';
+import '../parole.dart';
 import '../ponte/altrove/altrove.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 import 'cucitura.dart';
+import 'il_no.dart';
 import 'pannello.dart';
 import 'premesse.dart';
 import 'ritratto.dart';
@@ -297,12 +299,10 @@ class Servitore {
           portaDiCasa + i,
         );
       } on SocketException {
-        _racconta(
-          'la porta ${portaDiCasa + i} e\' occupata, provo la prossima',
-        );
+        _racconta('la porta ${portaDiCasa + i} è occupata, provo la prossima');
       }
     }
-    _racconta('nessuna porta di casa libera: la plancia ripartira\' vuota');
+    _racconta('nessuna porta di casa libera: la plancia ripartirà vuota');
     return HttpServer.bind(InternetAddress.loopbackIPv4, 0);
   }
 
@@ -410,7 +410,7 @@ class Servitore {
       richiesta,
       404,
       'text/plain',
-      utf8.encode('qui non c\'e\' niente'),
+      utf8.encode(inLingua(it: 'qui non c\'è niente', en: 'nothing here')),
     );
   }
 
@@ -454,12 +454,7 @@ class Servitore {
       try {
         preso = await (inArrivo ?? _scarica(percorso, sulDisco));
       } on ErroreDelPonte catch (errore) {
-        _rispondi(
-          richiesta,
-          502,
-          'text/plain',
-          utf8.encode('il ponte non ha risposto: ${errore.spiegazione}'),
-        );
+        _ilNo(richiesta, errore);
         return;
       }
       if (preso.stato != 200) {
@@ -523,7 +518,7 @@ class Servitore {
     String? tipoDelCorpo,
   }) async {
     final filo = await _filoPronto();
-    if (filo == null) throw const FiloCaduto('il filo non c\'e\'');
+    if (filo == null) throw const FiloCaduto('il filo non c\'è');
     /* Il **testo** della risposta, non la risposta aperta: quello che c'e'
      * dentro si apre altrove, tutto in una volta. Vedi [_spacchetta]. */
     final testo = await Lavori.io.conto(
@@ -605,12 +600,7 @@ class Servitore {
         tipoDelCorpo: richiesta.headers.contentType?.toString(),
       );
     } on ErroreDelPonte catch (errore) {
-      _rispondi(
-        richiesta,
-        502,
-        'text/plain',
-        utf8.encode('il ponte non ha risposto: ${errore.spiegazione}'),
-      );
+      _ilNo(richiesta, errore);
       return;
     }
     _rispondi(
@@ -629,6 +619,62 @@ class Servitore {
   /// quest'attesa vogliono dire due plance che si collegano in modo diverso.
   Future<Filo?> _filoPronto({Duration entro = _attesaDelFilo}) =>
       filoPronto(_trovaIlFilo, entro: entro);
+
+  /* Il no, in una pagina che si legge.
+   *
+   * Sono due no diversi e vanno detti in due modi diversi: «questa plancia
+   * non e' per la tua utenza» e' una **risposta** della casa, e chi la legge
+   * deve sapere cosa chiedere e a chi; tutto il resto e' la casa che non
+   * risponde, e non c'e' niente da chiedere a nessuno.
+   *
+   * Anche lo stato lo dice: 403 per un rifiuto, 502 per un intoppo in mezzo.
+   * Prima erano tutti e due 502, con una riga di testo semplice che dentro un
+   * riquadro a tutto schermo finiva sotto l'orologio del telefono e non si
+   * leggeva — e diceva «il ponte non ha risposto» proprio mentre il ponte
+   * aveva risposto benissimo: aveva detto no.
+   *
+   * Questa pagina e' la rete sotto, non la strada principale: l'app ha la sua
+   * schermata e viene prima (`schermate/plancia_vera.dart`). Si vede con un
+   * add-on di oggi e un'app di ieri, che e' il caso in cui nessuno puo' fare
+   * niente per renderla piu' bella di cosi'. */
+  void _ilNo(HttpRequest richiesta, ErroreDelPonte errore) {
+    final perTe =
+        errore is ComandoRifiutato && errore.codice == codiceNientePerTe;
+    _rispondi(
+      richiesta,
+      perTe ? 403 : 502,
+      'text/html; charset=utf-8',
+      utf8.encode(
+        paginaDelNo(
+          titolo: perTe
+              ? inLingua(
+                  it: 'Non hai plance associate alla tua utenza',
+                  en: 'No dashboards are assigned to your account',
+                )
+              : inLingua(
+                  it: 'La casa non ha risposto',
+                  en: 'Your home did not answer',
+                ),
+          sotto: perTe
+              ? inLingua(
+                  it:
+                      'In questa casa le plance sono riservate ad altri '
+                      'utenti. Chiedi a chi amministra la casa di abilitare '
+                      'la tua utenza: in Home Assistant, nella pagina di '
+                      'gdahome, ogni plancia ha «Chi la vede».',
+                  en:
+                      'In this home the dashboards are reserved for other '
+                      'users. Ask whoever administers the home to enable your '
+                      'account: in Home Assistant, on the gdahome page, every '
+                      'dashboard has a “Who sees it” list.',
+                )
+              : errore.spiegazione,
+          dallAlto: margini.alto,
+        ),
+      ),
+      cache: 'no-store',
+    );
+  }
 
   void _rispondi(
     HttpRequest richiesta,
@@ -754,10 +800,14 @@ class _LaPresa implements VersoLaPagina {
   @override
   bool get aperta => _presa.readyState == WebSocket.open;
 
+  /* `addUtf8Text` e non `add`: un frame di testo si scrive dai byte, e i byte
+   * ci sono gia'. Con `add(String)` il socket li avrebbe ricodificati lui —
+   * un'altra copia dell'istantanea, per ogni istantanea — dopo che noi
+   * avremmo costruito la stringa per dargliela. */
   @override
-  void manda(String testo) => _presa.add(testo);
+  void manda(Uint8List byte) => _presa.addUtf8Text(byte);
 
   @override
   Future<void> chiudi() =>
-      _presa.close(WebSocketStatus.goingAway, 'il filo e\' caduto');
+      _presa.close(WebSocketStatus.goingAway, 'il filo è caduto');
 }

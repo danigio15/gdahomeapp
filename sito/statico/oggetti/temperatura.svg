@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs>
+      <linearGradient id="dmoMerc" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#fecaca"/><stop offset=".45" stop-color="#ef4444"/>
+        <stop offset="1" stop-color="#b91c1c"/></linearGradient>
+      <linearGradient id="dmoVetro" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#e2e8f0"/>
+        <stop offset="1" stop-color="#b6c2d2"/></linearGradient></defs>
+    <ellipse cx="16" cy="29.2" rx="6" ry="1.8" fill="#0b1220" opacity=".14"/>
+    <path d="M19.4 18.2V6.6a3.4 3.4 0 1 0-6.8 0v11.6a6 6 0 1 0 6.8 0Z" fill="url(#dmoVetro)"/>
+    <circle cx="16" cy="22.6" r="4.1" fill="url(#dmoMerc)"/>
+    <rect x="14.6" y="9.4" width="2.8" height="11.4" rx="1.4" fill="url(#dmoMerc)"/>
+    <path d="M14.2 7.6v9.4" stroke="#fff" stroke-opacity=".75" stroke-width="1.1" stroke-linecap="round"/>
+    <g stroke="#94a3b8" stroke-width="1.1" stroke-linecap="round">
+      <path d="M20.8 10.6h2.2M20.8 13.8h1.4M20.8 17h2.2"/></g></svg>

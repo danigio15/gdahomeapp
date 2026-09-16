@@ -149,10 +149,17 @@ test("apre una segnalazione, e la ritrova nell'elenco anche dopo", async () => {
     assert.equal(detta.numero, 7);
     assert.equal(detta.stato, "aperta");
 
-    /* E' arrivata a GitHub come una issue, col titolo e l'etichetta. */
+    /* E' arrivata a GitHub come una issue, col titolo e le etichette.
+     *
+     * Fra le etichette c'e' **da dove viene**: chi legge l'elenco delle issue
+     * deve poter dividere quelle scritte col telefono in mano da quelle
+     * scritte davanti a Home Assistant, e nell'elenco si vedono solo le
+     * etichette. Senza `da`, «app»: e' da dove arrivavano tutte prima. */
     const scrittura = b.github.chiamate.find((una) => una.metodo === "POST");
     assert.match(scrittura.corpo.title, /^\[problema\] La luce non si spegne$/);
-    assert.deepEqual(scrittura.corpo.labels, ["gdahome", "problema"]);
+    assert.deepEqual(scrittura.corpo.labels, ["gdahome", "problema", "da-app"]);
+    /* E lo dice anche dentro, dove chi apre la issue legge. */
+    assert.match(scrittura.corpo.body, /\| da \| da-app \|/);
 
     /* E resta scritta: l'elenco la ritrova senza richiamare GitHub. */
     const elenco = await (await b.bussa(`/casa/${CASA}/segnalazioni`)).json();

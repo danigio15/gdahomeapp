@@ -67,7 +67,7 @@ void main() {
     await servitore.alza();
   });
 
-  test('sul telefono la porta e\' sempre quella, e se e\' occupata si prende la vicina', () async {
+  test('sul telefono la porta è sempre quella, e se è occupata si prende la vicina', () async {
     /* Un browser tiene quello che una pagina si salva per **origine**, e
        * l'origine e' fatta anche dalla porta: con una porta a caso a ogni
        * avvio la plancia ripartiva ogni volta senza la sua configurazione. */
@@ -160,11 +160,36 @@ void main() {
        * finiva sotto l'orologio. */
       expect(testo, contains('html body{padding-top:var(--gdahome-alto)'));
       expect(testo, isNot(contains('.app{padding-top')));
+      /* In fondo non si scrive niente di nostro: il numero si mette **nella
+       * variabile della plancia**, e i suoi numeri li fa lei — la barra a
+       * `18 + fondo`, la riserva a `112 + fondo`, la maniglia a `6 + fondo`,
+       * e lo `scroll-padding-bottom`, che e' quello che fa fermare sopra la
+       * barra anche chi arriva con un salto.
+       *
+       * Qui prima stavano ricopiati i suoi numeri — 112, 40, 8 — e ricopiati
+       * male: la barra la mettevamo dieci punti piu' in basso di dove la mette
+       * lei, dentro la sua riserva, e quei dieci punti diventavano una
+       * striscia di niente sotto l'ultima riga di ogni pagina. */
+      expect(testo, contains('--dm-fondo-di-sistema'));
       expect(
         testo,
-        contains('padding-bottom:calc(var(--gdahome-basso) + 40px)'),
+        contains('var mio=24;'),
+        reason: 'il numero è quello che ha misurato Flutter',
       );
-      expect(testo, contains('bottom:calc(var(--gdahome-basso) + 8px)'));
+      expect(
+        testo,
+        isNot(contains('padding-bottom')),
+        reason: 'la riserva in fondo la decide la plancia',
+      );
+      expect(
+        testo,
+        isNot(contains('bottom:calc(var(--gdahome-basso)')),
+        reason: 'dove sta la barra lo decide la plancia',
+      );
+      /* Mai al ribasso, e riscritto quando lei rifà il suo conto. */
+      expect(testo, contains('if(suo()>=mio)return'));
+      expect(testo, contains('MutationObserver'));
+      expect(testo, contains('"resize"'));
       /* Lo stile sta **in fondo**, dopo il foglio della plancia: fra due
        * `!important` della stessa forza vince l'ultimo che si legge, e
        * messo in testa perdeva — la barra della plancia finiva sotto i
@@ -256,37 +281,40 @@ void main() {
     expect(testo, contains('la plancia'));
   });
 
-  test('senza la chiave non si ottiene niente: ne\' file, ne\' chiamate, ne\' filo', () async {
-    final (pagina, _, _) = await prendi(
-      '$_base/legacy/dashboard.html',
-      senzaChiave: true,
-    );
-    expect(pagina, 403);
-    final (sbagliata, _, _) = await prendi(
-      '$_base/legacy/dashboard.html',
-      senzaChiave: true,
-      query: 'ingresso=nonlaso',
-    );
-    expect(sbagliata, 403);
-    final (modulo, _, _) = await prendi(
-      '$_base/src/core/uno.js',
-      senzaChiave: true,
-    );
-    expect(modulo, 403);
-    final (api, _, _) = await prendi('/api/states', senzaChiave: true);
-    expect(api, 403);
-    expect(ponte.commissioni, isEmpty);
+  test(
+    'senza la chiave non si ottiene niente: né file, né chiamate, né filo',
+    () async {
+      final (pagina, _, _) = await prendi(
+        '$_base/legacy/dashboard.html',
+        senzaChiave: true,
+      );
+      expect(pagina, 403);
+      final (sbagliata, _, _) = await prendi(
+        '$_base/legacy/dashboard.html',
+        senzaChiave: true,
+        query: 'ingresso=nonlaso',
+      );
+      expect(sbagliata, 403);
+      final (modulo, _, _) = await prendi(
+        '$_base/src/core/uno.js',
+        senzaChiave: true,
+      );
+      expect(modulo, 403);
+      final (api, _, _) = await prendi('/api/states', senzaChiave: true);
+      expect(api, 403);
+      expect(ponte.commissioni, isEmpty);
 
-    await expectLater(
-      WebSocket.connect('ws://127.0.0.1:${servitore.porta}/api/websocket'),
-      throwsA(isA<WebSocketException>()),
-    );
+      await expectLater(
+        WebSocket.connect('ws://127.0.0.1:${servitore.porta}/api/websocket'),
+        throwsA(isA<WebSocketException>()),
+      );
 
-    /* Sul telefono la radice non porta da nessuna parte: la chiave non si
+      /* Sul telefono la radice non porta da nessuna parte: la chiave non si
        * chiede a nessuno. */
-    final (radice, _, _) = await prendi('/', senzaChiave: true);
-    expect(radice, 403);
-  });
+      final (radice, _, _) = await prendi('/', senzaChiave: true);
+      expect(radice, 403);
+    },
+  );
 
   test(
     'un file si chiede al ponte una volta sola, poi sta sul disco',
@@ -312,7 +340,7 @@ void main() {
   );
 
   test(
-    'lo stesso file chiesto da piu\' parti insieme si chiede una volta',
+    'lo stesso file chiesto da più parti insieme si chiede una volta',
     () async {
       final tutte = await Future.wait([
         for (var i = 0; i < 6; i += 1) prendi('$_base/src/core/uno.js'),
@@ -322,25 +350,22 @@ void main() {
     },
   );
 
-  test(
-    'un\'immagine arriva com\'e\', e un file che non c\'e\' e\' un 404',
-    () async {
-      final (stato, tipo, byte) = await prendi(
-        '/dashboardmodern_static/avatars/1.png',
-      );
-      expect(stato, 200);
-      expect(tipo, 'image/png');
-      expect(byte, [137, 80, 78, 71, 0, 1, 2, 3]);
+  test('un\'immagine arriva com\'è, e un file che non c\'è è un 404', () async {
+    final (stato, tipo, byte) = await prendi(
+      '/dashboardmodern_static/avatars/1.png',
+    );
+    expect(stato, 200);
+    expect(tipo, 'image/png');
+    expect(byte, [137, 80, 78, 71, 0, 1, 2, 3]);
 
-      final (mancante, _, _) = await prendi('$_base/src/core/due.js');
-      expect(mancante, 404);
-      /* Un 404 non si tiene sul disco: domani potrebbe esserci. */
-      expect(
-        File('${cartella.path}$_base/src/core/due.js').existsSync(),
-        isFalse,
-      );
-    },
-  );
+    final (mancante, _, _) = await prendi('$_base/src/core/due.js');
+    expect(mancante, 404);
+    /* Un 404 non si tiene sul disco: domani potrebbe esserci. */
+    expect(
+      File('${cartella.path}$_base/src/core/due.js').existsSync(),
+      isFalse,
+    );
+  });
 
   test('la pagina del ritratto la fa il servitore, non il ponte', () async {
     /* E' una pagina **nostra**, messa di fianco ai file della plancia perche'
@@ -387,6 +412,35 @@ void main() {
     expect(testo, contains('window.gdahomeApriLaConfig=function()'));
     expect(testo, contains('window.gdahomeTornaDallaConfig=function()'));
     expect(testo, contains('getElementById("page-config")'));
+    /* Chi lascia aperto l'editor di una tessera e tocca «Plancia» vuole la
+       * plancia, non aspettare. Una finestra aperta sopra la pagina si mangia
+       * il tocco sulla linguetta della barra, e il ritorno riprovava per tre
+       * secondi e mezzo prima di arrendersi: sembrava un tasto rotto. Adesso
+       * si chiude prima quello che sta sopra, e **prima** di toccare la
+       * linguetta. */
+    expect(testo, contains('var chiudiQuelloChEAperto=function()'));
+    /* E si cerca la classe **giusta**. Qui c'era `#editor-modal.show`, che
+       * prendeva l'Editor e nient'altro, e `.modal.show`, che in quella pagina
+       * non esiste: le finestre della plancia sono `.modal-wrapper`. Con la
+       * classe sbagliata non si chiudeva niente, e uscire dall'Editor dal menu
+       * lasciava la plancia sotto un velo che si prendeva tutti i tocchi. */
+    expect(testo, contains('.modal-wrapper.show'));
+    expect(testo, contains('dialog[open]'));
+    /* Le due che la pagina crea si buttano via, come fa il loro ✕. */
+    expect(testo, contains('finestra.id==="editor-modal"'));
+    expect(testo, contains('finestra.id==="edit-plancia-modal"'));
+    /* E lo stile scritto nell'elemento si cancella: vince su qualunque
+       * classe, e senza questo il velo restava su. */
+    expect(testo, contains('finestra.style.pointerEvents=""'));
+    expect(testo, contains('finestra.style.visibility=""'));
+    final chiude = testo.indexOf('chiudiQuelloChEAperto();');
+    final tocca = testo.indexOf('var voce=laVoce(dove)||laVoce("home");');
+    expect(chiude, greaterThan(0), reason: 'il ritorno non chiude niente');
+    expect(
+      chiude,
+      lessThan(tocca),
+      reason: 'chiude dopo aver toccato la linguetta: troppo tardi',
+    );
     /* Il tema, la tavolozza e la barra non si scrivono piu' nel deposito
        * della pagina: quelle scelte sono delle sue tessere, e riscriverle a
        * ogni caricamento le cancellava. */
@@ -404,7 +458,7 @@ void main() {
   });
 
   test(
-    'un nome con lo spazio dentro e\' un nome, non un percorso strano',
+    'un nome con lo spazio dentro è un nome, non un percorso strano',
     () async {
       /* Sotto `/local/` stanno le foto di casa, e i nomi li sceglie chi le ha
      * scattate: «mia auto.png» arriva come `mia%20auto.png`. Prima era
@@ -570,6 +624,28 @@ void main() {
       },
     );
   });
+  test('la plancia che non è tua lo dice in una pagina che si legge', () async {
+    /* Quello che si vedeva prima era una riga di testo a monospazio
+       * incollata in cima, sotto l'orologio del telefono, che diceva anche
+       * una bugia: «il ponte non ha risposto», proprio mentre il ponte aveva
+       * risposto benissimo — aveva detto no.
+       *
+       * Questa pagina la vede chi ha un add-on di oggi e un'app di ieri:
+       * l'app nuova ha la sua schermata e viene prima. */
+    ponte.nientePerTe = true;
+    final (stato, tipo, byte) = await prendi('$_base/legacy/dashboard.html');
+    final pagina = utf8.decode(byte);
+
+    expect(stato, 403, reason: 'è un rifiuto, non un intoppo');
+    expect(tipo, contains('text/html'));
+    expect(pagina, contains('Non hai plance associate alla tua utenza'));
+    expect(pagina, contains('Chi la vede'));
+    expect(
+      pagina,
+      isNot(contains('il ponte non ha risposto')),
+      reason: 'il ponte ha risposto: ha detto no',
+    );
+  });
 }
 
 Future<void> _finoA(
@@ -581,5 +657,5 @@ Future<void> _finoA(
     if (condizione()) return;
     await Future<void>.delayed(const Duration(milliseconds: 10));
   }
-  throw StateError('l\'attesa e\' scaduta');
+  throw StateError('l\'attesa è scaduta');
 }

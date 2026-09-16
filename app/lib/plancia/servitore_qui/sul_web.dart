@@ -326,7 +326,7 @@ extension on _ServitoreSulWeb {
     String percorso,
   ) async {
     final filo = _filo();
-    if (filo == null) throw const FiloCaduto('il filo non c\'e\'');
+    if (filo == null) throw const FiloCaduto('il filo non c\'è');
     final testo = await filo.testoDi({
       'type': 'ponte/http',
       'metodo': 'GET',
@@ -341,11 +341,11 @@ extension on _ServitoreSulWeb {
     final letto = jsonDecode(testo);
     final risposta = letto is Map ? letto['result'] : null;
     if (risposta is! Map) {
-      throw const ComandoRifiutato('il ponte ha risposto una cosa strana');
+      throw const ComandoRifiutato('la casa ha risposto una cosa strana');
     }
     if (risposta['compresso'] == 'gzip') {
       throw const ComandoRifiutato(
-        'il ponte ha compresso, e qui non si apre: aggiorna l\'add-on',
+        'la casa ha compresso, e qui non si apre: aggiorna l\'add-on',
       );
     }
     final corpo = risposta['corpo'];
@@ -371,9 +371,13 @@ class _VersoIlRiquadro implements VersoLaPagina {
   @override
   bool get aperta => true;
 
+  /* Qui la stringa serve davvero: fra due pagine passano messaggi di
+   * JavaScript, e la plancia dall'altra parte aspetta testo. Nel browser non
+   * c'e' nemmeno un altro isolato da cui copiare, quindi questa e' l'unica
+   * copia della strada — la stessa di prima. */
   @override
-  void manda(String testo) =>
-      _aTutti({'che': 'gdahome/ws-giu', 'testo': testo});
+  void manda(Uint8List byte) =>
+      _aTutti({'che': 'gdahome/ws-giu', 'testo': utf8.decode(byte)});
 
   @override
   Future<void> chiudi() async => _aTutti({'che': 'gdahome/ws-chiudi'});

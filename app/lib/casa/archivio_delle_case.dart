@@ -7,10 +7,10 @@ library;
 
 import 'dart:convert';
 
+import '../ponte/indirizzo.dart';
 import 'ausili.dart';
 import 'casa_conosciuta.dart';
 import 'cassaforte.dart';
-import '../ponte/indirizzo.dart';
 
 /// Piu' di cosi' non e' un elenco di case, e' un elenco di prove.
 const int caseMassime = 10;
@@ -82,7 +82,7 @@ class ArchivioDelleCase {
     DaDove? approdoIniziale,
   }) async {
     if (piena) {
-      throw TroppeCase('non si possono tenere piu\' di $caseMassime case');
+      throw TroppeCase('non si possono tenere più di $caseMassime case');
     }
     final casa = CasaConosciuta(
       id: identificativoNuovo(),

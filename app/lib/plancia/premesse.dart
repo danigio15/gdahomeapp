@@ -24,6 +24,18 @@ import 'dart:convert';
 
 import 'pannello.dart';
 
+/// Come la pagina chiede il menu dell'app, sul telefono.
+///
+/// Sul telefono la pagina e l'app si parlano su un canale solo, e su quel
+/// canale passano anche i nomi delle pagine della plancia (`home`, `clima`,
+/// `config`). Questa parola non puo' essere una di quelle: i due punti in
+/// mezzo non stanno in nessun nome di linguetta, ne' ci finiranno.
+const String ilMenuDalTelefono = 'gdahome:menu';
+
+/// Come lo chiede nel browser, dove il riquadro parla a chi lo ospita con un
+/// messaggio fatto a oggetto: `{gdahome: "menu"}`.
+const String ilMenuDalRiquadro = 'menu';
+
 /// Le premesse di una pagina della plancia.
 class Premesse {
   Premesse({
@@ -58,6 +70,43 @@ class Premesse {
   /// due `!important` della stessa forza vince l'ultimo che si legge: messo in
   /// testa, il mio perdeva e la barra della plancia finiva sotto i tasti del
   /// telefono.
+  /// Le barre del telefono, dette alla pagina.
+  ///
+  /// Il riquadro arriva ai bordi dello schermo — la plancia si vede tutta — e
+  /// allora sopra c'e' l'orologio del telefono e sotto la sua barra dei tasti.
+  /// Quanto tengono lo sa Flutter, che lo chiede al sistema su
+  /// **quell'apparecchio**: due numeri, e sono gli unici numeri qui dentro.
+  ///
+  /// In cima si scrive un margine: la testata della plancia comincia dal bordo
+  /// e sotto l'orologio ci finirebbe.
+  ///
+  /// In fondo **non si scrive niente**, e qui prima si sbagliava. La plancia il
+  /// problema ce l'ha gia' risolto, e per apparecchio: in
+  /// `navigation-section.js` tiene una variabile — `--dm-fondo-di-sistema` — e
+  /// da quella deriva tutti i suoi numeri, la barra a `18 + fondo`, la riserva
+  /// sotto l'ultima riga a `112 + fondo`, la maniglia a `6 + fondo`, e lo
+  /// `scroll-padding-bottom`, che e' quello che fa fermare sopra la barra
+  /// anche chi arriva con un salto. Lo scrive nel suo commento: «non alzare la
+  /// barra di un tanto fisso — su un telefono a gesti o su un tablet
+  /// resterebbe sospesa per niente — ma alzarla di quello che il sistema si e'
+  /// preso». Il valore lo chiede a `env(safe-area-inset-bottom)`, che dentro
+  /// una cornice risponde zero comunque, e per questo la regola c'era e non si
+  /// accendeva.
+  ///
+  /// Qui invece quel numero si sa. Allora si scrive **il suo**, e il resto lo
+  /// fa lei: [leMisureNellaSuaVariabile].
+  ///
+  /// Prima al suo posto c'era un foglio nostro che ricopiava i suoi numeri —
+  /// 112 di riserva, 40 di riserva normale, la barra staccata di 8 — e li
+  /// ricopiava male: la barra la mettevamo dieci punti piu' in basso di dove
+  /// la mette lei, dentro una riserva che restava quella sua. Quei dieci punti
+  /// diventavano una striscia di niente sotto l'ultima riga, in fondo a ogni
+  /// pagina, e lo `scroll-padding-bottom` restava indietro comunque. E il
+  /// giorno che lei cambia uno di quei numeri, un foglio che li ricopia resta
+  /// indietro senza che nessuno se ne accorga.
+  ///
+  /// Sta in **fondo** alla pagina, non in testa: gli stili della plancia
+  /// arrivano dopo i suoi `<link>`, e in testa questo perdeva contro i suoi.
   String get stileDelleMisure =>
       '<style id="gdahome-misure">'
       ':root{--gdahome-alto:${margini.alto.round()}px;'
@@ -72,19 +121,53 @@ class Premesse {
        * testata «Smart Home» finiva sotto l'orologio del telefono: il
        * riquadro arriva ai bordi e nessuno lasciava spazio. Il corpo c'e'
        * sempre. */
-      'html body{padding-top:var(--gdahome-alto)!important;'
-      'padding-bottom:calc(var(--gdahome-basso) + 40px)!important}'
-      'html body.cd-nav-fixed nav.tabs.bottom-nav-bar,'
-      'html body nav.tabs.bottom-nav-bar.visible{'
-      'bottom:calc(var(--gdahome-basso) + 8px)!important}'
-      'html body.cd-nav-fixed{'
-      'padding-bottom:calc(var(--gdahome-basso) + 112px)!important}'
-      'html body .bottom-nav-handle{'
-      'bottom:calc(var(--gdahome-basso) + 6px)!important}'
-      '@media (hover:hover) and (pointer:fine){'
-      'html body nav.tabs.bottom-nav-bar:hover{'
-      'bottom:calc(var(--gdahome-basso) + 20px)!important}}'
+      'html body{padding-top:var(--gdahome-alto)!important}'
       '</style>';
+
+  /// La barra del telefono, scritta dove la plancia la va a cercare.
+  ///
+  /// `--dm-fondo-di-sistema` e' la sua variabile, e la scrive lei sul
+  /// documento — `style.setProperty`, quindi in linea, e una regola di un
+  /// foglio non la batte. Si scrive nello stesso posto, e solo quando il
+  /// numero di Flutter e' **piu' grande** del suo: mai al ribasso. Dove lei ci
+  /// arriva da se' — la plancia che e' la pagina, in un browser che le
+  /// risponde davvero — il suo numero e' quello buono e non si tocca; e' la
+  /// stessa aritmetica che fa lei, che prende il massimo fra quello che vede e
+  /// quello che le dice chi la ospita (`core/fondo-di-sistema.js`).
+  ///
+  /// Si riscrive a ogni occasione in cui lei rifa' il conto — si gira lo
+  /// schermo, si apre la tastiera — e quando riscrive quella riga: la si
+  /// guarda con un osservatore, che costa niente perche' scatta solo quando
+  /// qualcuno tocca lo stile del documento. Senza, bastava un giro del suo
+  /// conto per rimettere zero e la barra tornava sotto i tasti.
+  String get leMisureNellaSuaVariabile =>
+      '<script>(function(){'
+      'var NOME="--dm-fondo-di-sistema";'
+      'var mio=${margini.basso.round()};'
+      'var radice=document.documentElement;'
+      'var suo=function(){'
+      'try{return parseFloat('
+      'getComputedStyle(radice).getPropertyValue(NOME))||0;}'
+      'catch(male){return 0;}'
+      '};'
+      'var scrivi=function(){'
+      'if(!radice||!(mio>0))return;'
+      'try{if(suo()>=mio)return;'
+      'radice.style.setProperty(NOME,mio+"px");}catch(male){}'
+      '};'
+      'scrivi();'
+      'if(document.body)scrivi();'
+      'else document.addEventListener("DOMContentLoaded",scrivi);'
+      'window.addEventListener("load",scrivi);'
+      'window.addEventListener("resize",scrivi);'
+      'window.addEventListener("orientationchange",scrivi);'
+      'window.addEventListener("dashboardmodern:persistence-restored",scrivi);'
+      /* E quando e' lei a riscrivere quella riga. L'osservatore guarda solo
+         l'attributo dello stile del documento: scatta quando qualcuno lo
+         cambia, e non c'e' nessun giro a vuoto. */
+      'try{new MutationObserver(scrivi).observe(radice,'
+      '{attributes:true,attributeFilter:["style"]});}catch(male){}'
+      '})();</script>';
 
   /// La Config esce da dentro la plancia e diventa una voce del menu.
   ///
@@ -106,9 +189,11 @@ class Premesse {
   /// Dentro la plancia le porte della Config erano tre: la linguetta nella
   /// barra, l'ingranaggio in cima e il menu del tasto ☰. Nella dashboard ci
   /// vogliono tutte — li' la Config e' una pagina come le altre — e nell'app
-  /// no: la porta e' la voce del menu. Restano nascoste tutte e tre, e con
-  /// loro il tasto «← HOME» che la pagina si disegna in cima: dal menu si
-  /// torna col menu.
+  /// no: la porta e' la voce del menu. La linguetta e l'ingranaggio restano
+  /// nascosti, e con loro il tasto «← HOME» che la pagina si disegna in
+  /// cima: dal menu si torna col menu. Il tasto ☰ no: quello si vede, ma il
+  /// suo menu non si apre piu' — lo apre l'app, il suo (vedi
+  /// [iTreTrattiniApronoIlMenuDellApp]).
   ///
   /// Restano nascoste tre tessere, e per la stessa ragione: nell'app quella
   /// porta c'e' gia', ed e' una voce del menu.
@@ -151,15 +236,15 @@ class Premesse {
          plancia senza aver chiesto niente. Dal menu si torna col menu. Sulle
          altre pagine resta: li' e' l'unico modo di uscire. */
       'html body #page-config .back-home-btn{display:none!important}'
-      /* Le altre due porte della Config, dentro la plancia: l'ingranaggio in
-         cima e il menu che apre il tasto ☰. Nella dashboard ci vogliono —
-         li' la Config e' una pagina come le altre — nell'app no: la porta e'
-         la voce del menu, e tre porte sulla stessa stanza sono due di
-         troppo. Col ☰ se ne va anche il «Reset totale», che cancella tutta
-         la configurazione: nell'app non si perde niente che non si possa
-         rifare dalla Config, e non si tocca per sbaglio. */
-      'html body header .dm-editor-entry,'
-      'html body header .ha-menu-btn{display:none!important}'
+      /* L'altra porta della Config dentro la plancia: l'ingranaggio in cima.
+         Nella dashboard ci vuole — li' la Config e' una pagina come le altre
+         — nell'app no: la porta e' la voce del menu, e due porte sulla stessa
+         stanza sono una di troppo.
+         Il tasto ☰ accanto, invece, resta a schermo: nell'app e' la porta
+         del menu dell'app (vedi [iTreTrattiniApronoIlMenuDellApp]). Il suo
+         menu — quello della plancia, col «Reset totale» che cancella tutta
+         la configurazione — non si apre piu': l'evento si ferma prima. */
+      'html body header .dm-editor-entry{display:none!important}'
       /* «Sostieni il progetto»: nella plancia e' il grazie di un progetto
          che vive di tempo libero, e li' ci sta. Qui no: questa pagina si
          presenta come gdahome, e una donazione che porta a un altro
@@ -228,12 +313,86 @@ class Premesse {
          classe se ne va **prima**; poi si guarda se ci si e' riusciti, e se
          no si riprova, perche' la pagina puo' essere ancora a meta' del suo
          lavoro. */
+      /* Prima di tornare, si chiude quello che sta **sopra**.
+       *
+       * Chi apre l'editor di una tessera e poi tocca «Plancia» nel menu non
+       * ha chiesto di chiudere l'editor: ha chiesto la plancia. Ma l'editor
+       * e' una finestra aperta sopra la pagina, e finche' c'e' un tocco su
+       * una linguetta della barra in fondo non fa quello che farebbe un dito
+       * — la finestra lo copre, o la pagina lo rifiuta. Il risultato era che
+       * «Plancia» non faceva niente per tre secondi e mezzo (sessanta prove
+       * ogni sessanta millesimi) e poi si arrendeva: sembrava un tasto rotto,
+       * ed era un tasto che aspettava.
+       *
+       * Quindi si chiude da noi, e si chiude **come lo chiuderebbe lui**: il
+       * suo tasto di chiusura, se c'e', perche' quel tasto sa anche cosa
+       * scrivere e cosa buttare via. Se non c'e', gli si toglie la classe che
+       * lo mostra, che e' il ripiego. Nessun salvataggio a sorpresa: chi
+       * lascia a meta' un editor e se ne va, se ne va — come toccando fuori.
+       *
+       * Non si sa quale finestra sia aperta e non si tira a indovinare: si
+       * guarda quali ci sono e si chiudono tutte quelle che si vedono. */
+      'var chiudiQuelloChEAperto=function(){'
+      'try{'
+      /* Le finestre della plancia sono `.modal-wrapper` con la classe
+         `show`. Qui si cercava `.modal.show`, e una classe che si chiama
+         `modal` in quella pagina non esiste: non si chiudeva **niente**.
+         `#editor-modal.show` prendeva l'Editor e nient'altro. */
+      'var aperte=document.querySelectorAll('
+      '".modal-wrapper.show,.modal.show,.dm-modal.show,dialog[open]");'
+      'for(var quale=0;quale<aperte.length;quale+=1){'
+      'var finestra=aperte[quale];'
+      /* Le due che la pagina **crea** quando servono — l'Editor e «Modifica
+         plancia» — la pagina le butta via: il loro tasto ✕ fa `remove()`, e
+         si fa quello. */
+      'if(finestra.id==="editor-modal"||finestra.id==="edit-plancia-modal"){'
+      'try{finestra.remove();}catch(male){}'
+      'continue;'
+      '}'
+      /* Le altre stanno nella pagina da sempre e si spengono. Se la pagina ha
+         il suo modo di spegnerle si usa quello: `forceClose` stacca anche la
+         telecamera aperta e il suo flusso, e chiuderla a mano lascerebbe un
+         video che scarica per sempre dentro una finestra che non si vede. */
+      'if(finestra.id&&typeof window.forceClose==="function")'
+      'try{window.forceClose(finestra.id);}catch(male){}'
+      'var chiudi=finestra.querySelector('
+      '"[data-dm-close],.modal-close,.dm-modal-close,.close-btn");'
+      'if(chiudi){try{chiudi.click();}catch(male){}}'
+      'if(!finestra.isConnected)continue;'
+      'finestra.classList.remove("show");'
+      /* E lo stile scritto **nell'elemento**, che vince su qualunque classe.
+         Era tutto il guasto, e si vedeva cosi': uscito dall'Editor dal menu,
+         la plancia restava offuscata e non si poteva toccare niente.
+         `.modal-wrapper` e' fissa, a tutto schermo, con un vetro sfocato e un
+         velo scuro, e si accende con la classe; ma quelle due finestre
+         nascono con `opacity:1;visibility:visible;pointer-events:auto`
+         scritti nello stile proprio. Togliere la classe faceva sparire la
+         scheda — quella si', perche' la sua regola dipende da `.show` — e
+         lasciava su il velo, che si prendeva tutti i tocchi. Mezzo minuto di
+         app inservibile, e l'unica uscita era chiuderla. */
+      'try{'
+      'finestra.style.opacity="";'
+      'finestra.style.visibility="";'
+      'finestra.style.pointerEvents="";'
+      '}catch(male){}'
+      'if(finestra.tagName==="DIALOG"&&finestra.open)'
+      'try{finestra.close();}catch(male){}'
+      '}'
+      '}catch(male){}'
+      '};'
       'var torna=function(prove){'
-      'if(!ciSiamo()){scordaLIndirizzo();setTimeout(guarda,0);return;}'
+      /* L'ordine nell'indirizzo se ne va **subito**, non solo quando si e'
+         usciti: finche' resta scritto, ogni ricarica della pagina riapre la
+         Configurazione — e toccare «Plancia» quando l'app crede di esserci
+         gia' ricarica. Da fuori si vedeva un tasto che riportava dove si era
+         appena chiesto di non stare piu'. */
+      'scordaLIndirizzo();'
+      'if(!ciSiamo()){setTimeout(guarda,0);return;}'
+      'chiudiQuelloChEAperto();'
       'try{document.body.classList.remove("gdahome-in-config");}catch(male){}'
       'var voce=laVoce(dove)||laVoce("home");'
       'if(voce)try{voce.click();}catch(male){}'
-      'if(!ciSiamo()){scordaLIndirizzo();setTimeout(guarda,0);return;}'
+      'if(!ciSiamo()){setTimeout(guarda,0);return;}'
       'if(prove<60){setTimeout(function(){torna(prove+1);},60);return;}'
       'setTimeout(guarda,0);'
       '};'
@@ -312,6 +471,68 @@ class Premesse {
       'dallIndirizzo();'
       '})();</script>';
 
+  /// I tre trattini della plancia aprono il menu dell'app.
+  ///
+  /// La plancia ha il suo tasto ☰ in alto a sinistra, e dentro Home Assistant
+  /// apre la barra laterale di HA — quella di chi la ospita, non una sua. Da
+  /// noi chi la ospita e' l'app, e la barra laterale dell'app c'era ma si
+  /// chiamava da un'altra parte: una fascia invisibile sul bordo sinistro
+  /// dello schermo. Quella fascia stava sopra la plancia, e sulla
+  /// Configurazione la plancia sul bordo sinistro ha le sue sezioni: si
+  /// toccava una sezione e si apriva il menu. Il tasto c'era, stava dove
+  /// tutti cercano un menu, e nell'app non faceva niente.
+  ///
+  /// Adesso lo fa, e la fascia non c'e' piu': niente di nostro sta piu' sopra
+  /// la plancia.
+  ///
+  /// Il tasto porta un `onclick` scritto nella pagina, e un ascolto **in
+  /// cattura** sul documento e' l'unico posto che arriva prima di lui — lo
+  /// dice anche la plancia, che per il suo kiosk fa esattamente la stessa
+  /// cosa (`beta12-room-color-lock-section.js`). Fermando li' l'evento quel
+  /// comando non parte mai: ne' il menu della plancia ne' il suo «Reset
+  /// totale», che cancella tutta la configurazione con un tocco solo.
+  ///
+  /// Tenuto premuto e' un altro gesto, e non e' nostro: la plancia dopo
+  /// [_tenutoPremuto] accende il suo kiosk. Quel tocco si ferma comunque —
+  /// il menu della plancia non deve aprirsi nemmeno li' — ma il menu
+  /// dell'app non si chiama: chi tiene premuto non ha chiesto il menu.
+  static const String iTreTrattiniApronoIlMenuDellApp =
+      '<script>(function(){'
+      /* Le due strade per dirlo all'app sono le stesse della pagina che
+         cambia: sul telefono un canale del WebView, nel browser il riquadro
+         che parla a chi lo ospita. Chi non c'e' non risponde. */
+      'var ilMenu=function(){'
+      'try{if(window.gdahomeDice&&window.gdahomeDice.postMessage)'
+      'window.gdahomeDice.postMessage("$ilMenuDalTelefono");}catch(male){}'
+      'try{if(window.parent&&window.parent!==window)'
+      'window.parent.postMessage({gdahome:"$ilMenuDalRiquadro"},"*");}'
+      'catch(male){}'
+      '};'
+      'var ilTasto=function(evento){'
+      'var chi=evento?evento.target:null;'
+      'return !!(chi&&chi.closest&&chi.closest(".ha-menu-btn"));'
+      '};'
+      /* Da quando si tiene premuto. Si rimette a zero a ogni tocco che non
+         e' sul tasto: un invio dalla tastiera non ha nessun tocco prima, e
+         con un numero vecchio qui sembrerebbe una pressione lunga. */
+      'var premutoIl=0;'
+      'document.addEventListener("pointerdown",function(evento){'
+      'premutoIl=ilTasto(evento)?Date.now():0;'
+      '},true);'
+      'document.addEventListener("click",function(evento){'
+      'if(!ilTasto(evento))return;'
+      'evento.preventDefault();'
+      'evento.stopPropagation();'
+      'if(premutoIl&&Date.now()-premutoIl>=$_tenutoPremuto){premutoIl=0;return;}'
+      'ilMenu();'
+      '},true);'
+      '})();</script>';
+
+  /// Quanto vuol dire «tenuto premuto»: e' il tempo della plancia, non uno
+  /// nostro — dopo tanto lei accende il suo kiosk (`LONG_PRESS_MS`), e il
+  /// tocco che arriva dopo non e' una chiamata al menu.
+  static const int _tenutoPremuto = 650;
+
   /// La tenda sulla barra si alza comunque, anche in un riquadro che non si
   /// sta disegnando.
   ///
@@ -358,6 +579,87 @@ class Premesse {
       'setTimeout(alza,5000);'
       '})();</script>';
 
+  /// L'avviso «non hai ancora collegato le tue entita'» non parla prima che la
+  /// configurazione sia arrivata.
+  ///
+  /// La plancia, mezzo secondo dopo che la pagina e' pronta, guarda quattro
+  /// cose — la mappa delle entita', le stanze, le unita' clima, le luci — e se
+  /// sono tutte vuote scrive in cima alla Home «non hai ancora collegato le
+  /// tue entita', quindi le card sono nascoste» (`cdEmptyStateCheck`, in
+  /// `dashboard-runtime-it.js`). Quella domanda se la fa **una volta sola**, e
+  /// l'avviso poi non se ne va piu' da solo.
+  ///
+  /// Dentro Home Assistant quella regola e' giusta: la configurazione sta
+  /// nella pagina e mezzo secondo dopo c'e'. Qui no: la configurazione la
+  /// tiene il ponte e arriva **sul filo**, dopo che la pagina si e' caricata.
+  /// In casa arriva in fretta e non si vede niente; su un filo lento — il
+  /// centralino, una casa che risponde piano — la domanda parte prima della
+  /// risposta, e si vede l'avviso sopra una Home piena di tessere con i dati
+  /// dentro. Cioe' la plancia dice «configurala» a chi l'ha configurata.
+  ///
+  /// Allora il posto di quell'avviso lo si tiene occupato: un elemento col
+  /// suo nome, nascosto, e la loro domanda — che si ferma se quel nome c'e'
+  /// gia' — non fa niente. Quando la configurazione arriva (la plancia lo
+  /// dice: `dashboardmodern:persistence-restored`) si rifa' **la loro**
+  /// domanda, con le loro quattro risposte: se c'e' qualcosa l'avviso non
+  /// compare; se e' davvero vuota si toglie il posto e si chiama la loro
+  /// funzione, che lo scrive. Vuoto vuol dire vuoto, e allora l'avviso e'
+  /// giusto.
+  ///
+  /// Se la configurazione non arriva mai, il posto resta occupato e l'avviso
+  /// non compare: a filo caduto la plancia lo dice gia' col suo pallino, e
+  /// «non hai collegato le entita'» sarebbe una bugia.
+  static const String lAvvisoAspettaLaConfigurazione =
+      '<script>(function(){'
+      'var NOME="cd-empty-banner";'
+      'var NOSTRO="data-gdahome-posto";'
+      'var FINO_A=12000;'
+      'var OGNI=250;'
+      'var pieno=function(){'
+      'try{if(typeof ENTITY_OVERRIDES!=="undefined"&&Object.keys(ENTITY_OVERRIDES||{}).length)return true;}catch(male){}'
+      'try{if(typeof cdCfgList==="function"){'
+      'if((cdCfgList("cd_stanze")||[]).length)return true;'
+      'if((cdCfgList("cd_clima_units")||[]).length)return true;}'
+      'if(typeof cdCfg==="function"&&Object.keys(cdCfg("cd_luci")||{}).length)return true;}catch(male){}'
+      'return false;'
+      '};'
+      'var quello=function(){return document.getElementById(NOME);};'
+      'var ilPosto=function(){var chi=quello();return chi&&chi.hasAttribute(NOSTRO)?chi:null;};'
+      'var togli=function(chi){if(chi&&chi.parentNode)chi.parentNode.removeChild(chi);};'
+      'var occupa=function(){'
+      'if(quello())return;'
+      'try{'
+      'var posto=document.createElement("div");'
+      'posto.id=NOME;'
+      'posto.setAttribute(NOSTRO,"1");'
+      'posto.style.display="none";'
+      'document.body.appendChild(posto);'
+      '}catch(male){}'
+      '};'
+      'var finito=false;'
+      'var guarda=function(scaduto){'
+      'if(finito)return;'
+      'if(pieno()){finito=true;togli(quello());return;}'
+      'if(!scaduto)return;'
+      'finito=true;'
+      'togli(ilPosto());'
+      'try{if(typeof cdEmptyStateCheck==="function")cdEmptyStateCheck();}catch(male){}'
+      '};'
+      'var parti=function(){'
+      'occupa();'
+      'var fine=Date.now()+FINO_A;'
+      'var battito=setInterval(function(){'
+      'guarda(Date.now()>=fine);'
+      'if(finito)clearInterval(battito);'
+      '},OGNI);'
+      'window.addEventListener("dashboardmodern:persistence-restored",function(){'
+      'setTimeout(function(){guarda(true);},0);'
+      '});'
+      '};'
+      'if(document.body)parti();'
+      'else document.addEventListener("DOMContentLoaded",parti);'
+      '})();</script>';
+
   /* Il tema, la tavolozza e la barra qui non si scrivono, e non e' una
    * dimenticanza. Sono tre comandi della pagina Config della plancia — «su
    * questo dispositivo», lo dice lei — e la pagina se li tiene nel deposito
@@ -397,7 +699,9 @@ class Premesse {
      * [stileDelleMisure], che spiega perche' in testa perdevano contro lo
      * stile della plancia. */
     final inFondo =
-        '$stileDelleMisure$laConfigFuoriDallaPlancia$laTendaSiAlzaComunque';
+        '$stileDelleMisure$leMisureNellaSuaVariabile$laConfigFuoriDallaPlancia'
+        '$iTreTrattiniApronoIlMenuDellApp$laTendaSiAlzaComunque'
+        '$lAvvisoAspettaLaConfigurazione';
     final fine = RegExp(
       r'</body\s*>',
       caseSensitive: false,

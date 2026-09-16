@@ -388,14 +388,22 @@ export class PlanceInCasa {
   }
 
   /* La Plancia di una plancia: la si crea se non c'e', le si rimette il titolo
-   * se e' cambiato, e le si riscrive la vista.
+   * e il «solo amministratori» se sono cambiati, e le si riscrive la vista.
    *
-   * `require_admin` a no: la plancia la guarda anche chi abita la casa, non
-   * solo chi la amministra. Quello che serve alla cartina — la sessione
-   * dell'ingress — Home Assistant lo da' anche a loro; se un giorno non fosse
-   * piu' vero, la cartina lo dice a schermo invece di restare bianca. */
+   * `require_admin` di serie e' **no**: la plancia la guarda anche chi abita
+   * la casa, non solo chi la amministra. Quello che serve alla cartina — la
+   * sessione dell'ingress — Home Assistant lo da' anche a loro. Chi vuole il
+   * contrario lo dice dalla pagina di gdahome, e allora questa riga diventa
+   * `true` e Home Assistant fa il resto: quella voce non compare nella barra
+   * laterale di chi non amministra, e la sua configurazione non gliela da'.
+   *
+   * `update` si manda solo se qualcosa e' cambiato davvero. Non e' per
+   * risparmiare una chiamata: aggiornare una Plancia manda un avviso a tutte
+   * le pagine aperte di Home Assistant, e riscrivere la stessa cosa a ogni
+   * accensione dell'add-on le farebbe lampeggiare per niente. */
   async unaPlancia(quale, io = null) {
     const dove = indirizzoDi(quale);
+    const soloAdmin = quale.solo_admin === true;
     const dentro = await this.casa.chiedi({ type: "lovelace/dashboards/list" });
     const elenco = Array.isArray(dentro) ? dentro : [];
     let sua = elenco.find((una) => String(una?.url_path) === dove);
@@ -406,13 +414,17 @@ export class PlanceInCasa {
         title: quale.titolo,
         icon: "mdi:view-dashboard-edit",
         show_in_sidebar: true,
-        require_admin: false,
+        require_admin: soloAdmin,
       });
-    } else if (String(sua.title || "") !== quale.titolo) {
+    } else if (
+      String(sua.title || "") !== quale.titolo ||
+      Boolean(sua.require_admin) !== soloAdmin
+    ) {
       await this.casa.chiedi({
         type: "lovelace/dashboards/update",
         dashboard_id: sua.id,
         title: quale.titolo,
+        require_admin: soloAdmin,
       });
     }
     await this.laVista(dove, this.vista(quale, io));
@@ -465,6 +477,24 @@ export class PlanceInCasa {
                * da se'; questo e' il ripiego. */
               addon: io?.slug || "",
               ingresso: io?.ingresso || "",
+              /* Chi la vede: gli utenti di Home Assistant abilitati, vuoto se
+               * tutti. Sta qui perche' la cartina possa dirlo **subito** a chi
+               * non e' abilitato, senza chiedere niente a nessuno e senza
+               * mettersi a caricare una pagina che l'add-on non gli serve.
+               *
+               * Non e' questo il cancello — quello sta nell'add-on, che guarda
+               * chi bussa e non gli manda la pagina — e' la frase che si legge
+               * invece di un riquadro che resta bianco. */
+              utenti: Array.isArray(quale?.utenti) ? quale.utenti : [],
+              /* E se chiede di amministrare. Anche questa serve alla cartina
+               * per dirlo invece di restare bianca: a questa voce Home
+               * Assistant non ci fa arrivare chi non amministra, ma
+               * l'indirizzo dell'ingress si apre anche per altre strade. */
+              solo_admin: quale?.solo_admin === true,
+              /* Come si chiama, per una frase sola: quella che legge chi non e'
+               * abilitato. La vista ha gia' il titolo, ma la cartina vede solo
+               * la propria configurazione. */
+              titolo: quale?.titolo || "",
             },
           ],
         },

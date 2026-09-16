@@ -17,29 +17,18 @@ Gli stessi passi, visti muoversi: il video in
 
 ## 1. Il ponte
 
+**Cosa serve, prima di cominciare:** un Home Assistant che abbia il
+**Supervisor**, cioè **Home Assistant OS** oppure **Home Assistant
+Supervised**. Su **Container** — Home Assistant in Docker — il negozio degli
+add-on non esiste, e non si installa nessun add-on di nessuno: non è una
+mancanza di gdahome. Chi ha Container e vuole gdahome passa a Supervised sulla
+stessa macchina, Docker ce l'ha già.
+
 L'add-on si chiama **gdahome**, e la repository è pubblica: si installa **dal
 negozio**, come qualunque altro add-on. Cinque minuti la prima volta, e poi si
 aggiorna da sé.
 
-> **Da questa versione l'add-on ha un'identità nuova.** Quello con cui il
-> Supervisor lo riconosce — lo `slug` — era `ponte`, e adesso è `gdahome`. Per
-> Home Assistant è quindi un add-on **nuovo**, e vuol dire tre cose, una volta
-> sola:
->
-> - **il vecchio si disinstalla**, e non basta fermarlo: i due chiedono la
->   stessa porta (8098) e la stessa cartella in `www`, e chi parte per secondo
->   non parte;
-> - **i telefoni si riabbinano**: quello che un add-on si tiene sta in una
->   cartella che il Supervisor gli dà per identità, e quella nuova comincia
->   vuota;
-> - **le plance si rifanno**: la prima ricompare da sé al primo avvio, quelle
->   aggiunte a mano si riaggiungono dalla console.
->
-> Si è fatto adesso perché l'add-on ce l'ha una persona sola, su una macchina
-> di prova. Più avanti quel prezzo lo pagherebbe chi ce l'ha installato, e
-> allora lo slug non si toccherebbe più.
-
-### A. Dal negozio *(questa)*
+### A. Dal negozio _(questa)_
 
 1. **Impostazioni → Add-on → Negozio degli add-on**, menu in alto a destra →
    **Archivi**: incolla `https://github.com/danigio15/gdahomeapp`, premi
@@ -92,9 +81,9 @@ nuova. Il bottone **«Aggiorna gdahome»** se la scarica, la mette al posto di
 questa e si ricostruisce. Ci mette qualche minuto, e mentre lo fa quella pagina non
 risponde: è normale, torna da sé.
 
-La casella **`gettone`** nella configurazione dell'add-on serviva a quando la
-repository era privata: senza un gettone GitHub non dava né il manifesto né il
-pacchetto. Adesso è pubblica, e quella casella si lascia vuota.
+Non serve nessun gettone di GitHub, e infatti nella configurazione
+dell'add-on quella casella non c'è più: serviva a quando la repository era
+privata, e adesso è pubblica — il manifesto e il pacchetto li legge chiunque.
 
 A mano si può ancora: riscarichi lo ZIP, risostituisci la cartella, e nel
 negozio premi **Ricarica**; poi nella pagina dell'add-on premi **Aggiorna**
@@ -160,7 +149,6 @@ arrivato: rifà il blocco qui sopra, e stavolta le righe dicono perché.
 > **L'app invece non c'entra niente con tutto questo.** L'APK si scarica da
 > Actions, e quello vale per chiunque abbia accesso alla repository.
 
-
 ---
 
 ## 2. Il centralino — solo per entrare da fuori casa
@@ -170,10 +158,14 @@ Il ponte, da solo, si raggiunge solo dalla rete di casa. Per entrare da fuori
 chiama fuori e resta in attesa in un posto dove il telefono lo va a trovare.
 Quel posto è il centralino.
 
-Gira su Cloudflare, sul piano gratuito, e l'indirizzo arriva insieme: non c'è
-niente da pagare e nessun dominio da comprare.
+Il centralino di gdahome è `tramite.gdahome.org`, ed è quello che l'app usa
+senza che nessuno configuri niente: sta scritto nel codice, e il ponte lo
+chiama da sé. **Questo punto serve solo a chi vuole il proprio**, e ci sono due
+modi.
 
-Dal computer, una volta sola:
+**Su Cloudflare**, piano gratuito, indirizzo compreso: non c'è niente da pagare
+e nessun dominio da comprare. È in [`nuvola/`](nuvola/README.md), e dal
+computer si fa una volta sola:
 
 ```bash
 git clone https://github.com/danigio15/gdahomeapp
@@ -202,6 +194,11 @@ Scrive i tre posti dove quell'indirizzo sta — il difetto dell'add-on, quello
 dell'app, quello della chat — e una prova tiene fermo che i primi due restino
 identici. Poi **Negozio degli add-on → Ricarica**, e si installa da lì.
 
+**Su una macchina propria**, se si preferisce non dipendere da Cloudflare:
+la stessa cosa scritta in Node sta in [`centralino/`](centralino/README.md),
+con uno script che la mette in piedi da zero. I due sono intercambiabili, e la
+prova dal vivo passa identica contro tutti e due.
+
 Apri **gdahome** nella barra laterale: sotto «Da fuori casa» deve dire
 **«Collegato a wss://…: da fuori casa si entra.»**, con dentro il tuo
 indirizzo. Se invece c'è quello di gdahome, l'add-on che gira non è la tua
@@ -221,8 +218,8 @@ Se dice altro, lì c'è scritto cosa non va.
 
 ### Il codice
 
-Nella barra laterale di Home Assistant apri **gdahome** e premi **Fabbrica un
-codice**. Compare un **quadretto**, e vale cinque minuti. (Sotto, per chi non
+Nella barra laterale di Home Assistant apri **gdahome** e premi **Genera QR
+code**. Compare il **QR code**, e vale cinque minuti. (Sotto, per chi non
 può inquadrarlo, ci sono le stesse cose in lettere: sedici, in quattro gruppi
 da quattro.)
 
@@ -232,36 +229,35 @@ Non serve installare niente sul computer: lo costruisce GitHub.
 
 1. Sulla repository: **Actions → «L'app da provare» → Run workflow**.
 2. C'è una casella **centralino**: incollaci `wss://centralino.<nome>.workers.dev`.
-   Puoi anche lasciarla vuota: inquadrando il quadretto, il centralino glielo
-   dice la casa. Serve solo a chi vuole battere le lettere a mano da fuori.
+   Puoi anche lasciarla vuota: inquadrando il QR code, il centralino glielo
+   dice la casa. Serve solo a chi vuole digitare le lettere a mano da fuori.
 3. Quando finisce (cinque minuti circa), in fondo alla pagina della corsa c'è
    **gdahome-android**: scaricalo. Dentro c'è `app-release.apk`.
 4. Passa il file sul telefono e aprilo. Android chiederà di consentire
    l'installazione da questa origine: è la richiesta normale per un'app che non
    arriva dal Play Store.
 
-Il pacchetto è di *release*, firmato con la chiave di sviluppo: non è quello
-che andrebbe su un negozio, ma è compilato per davvero — quello di *debug*
+Il pacchetto è di _release_, firmato con la chiave di sviluppo: non è quello
+che andrebbe su un negozio, ma è compilato per davvero — quello di _debug_
 girava interpretato, con tutti i controlli accesi, ed era lento e scaldava.
 
-> **Il ponte va tenuto al passo.** Dalla 0.11.0 il ponte e l'app comprimono
-> quello che si mandano (cinque, otto volte meno byte, e meno lavoro per
-> decifrarli): un'app nuova con un ponte vecchio funziona lo stesso, ma senza.
-> Da «Come va l'app» si vede: nella riga del traffico c'è «gzip» oppure
-> «senza gzip».
+> **Il ponte va tenuto al passo.** Il ponte e l'app comprimono quello che si
+> mandano (cinque, otto volte meno byte, e meno lavoro per decifrarli): un'app
+> nuova con un ponte vecchio funziona lo stesso, ma senza. Da «Come va l'app»
+> si vede: nella riga del traffico c'è «gzip» oppure «senza gzip».
 
 ### La prima accensione
 
-Apri l'app. C'è **un bottone**: «Inquadra il codice».
+Apri l'app. C'è **un bottone**: «Inquadra il QR code».
 
-- **Inquadra il quadretto**, e basta. Da qualunque posto, anche dalla stazione:
-  dentro al quadretto c'è anche a quale centralino chiama quella casa e su
+- **Inquadra il QR code**, e basta. Da qualunque posto, anche dalla stazione:
+  dentro al QR code c'è anche a quale centralino chiama quella casa e su
   quali indirizzi la si trova sul Wi-Fi, quindi l'app non ha bisogno di sapere
   niente da prima. Funziona anche se nella casella del workflow non hai messo
   nessun centralino.
 - Se non puoi inquadrare — un tablet senza fotocamera, il permesso negato —
-  tocca **«Non puoi inquadrarlo? Scrivilo a mano»**: lì si battono le sedici
-  lettere, e c'è anche la casella dell'indirizzo di casa per chi ne ha
+  tocca **«Non puoi inquadrarlo? Inserisci il codice»**: lì si digitano le
+  sedici lettere, e c'è anche la casella dell'indirizzo di casa per chi ne ha
   bisogno.
 
 **Non ti verrà mai chiesta la password di Home Assistant, né un gettone.** Se
@@ -312,7 +308,7 @@ grana fine su quella repository sola, con **Contents: Read-only**, messo fra i
 segreti di questa repository come **`GETTONE_PLANCIA`** (Settings → Secrets and
 variables → Actions). Senza, la corsa finisce verde e scrive che manca quello.
 
-### Dal browser, senza installare niente *(la più rapida in assoluto)*
+### Dal browser, senza installare niente _(la più rapida in assoluto)_
 
 Il link ce l'hai già: lo dà l'add-on.
 
@@ -320,7 +316,9 @@ Il link ce l'hai già: lo dà l'add-on.
 2. Scheda «gdahome in un browser» → **Apri gdahome**.
 
 È la stessa app del telefono, e si adatta da sola allo schermo: su un computer
-la barra resta aperta di fianco, su tablet e telefono si apre a scomparsa.
+la barra resta aperta di fianco, su tablet e telefono si apre a scomparsa —
+anche sopra la plancia, premendo i **tre trattini della plancia** in alto a
+sinistra, come sul telefono.
 L'indirizzo sta **dietro l'ingress** di Home Assistant — ci arriva solo chi è
 già entrato, e non c'è nessuna porta nuova aperta sul router.
 
@@ -330,7 +328,7 @@ Se la scheda non c'è, l'add-on non si porta ancora dietro l'app: **Actions →
 Una cosa da sapere, e conviene saperla prima: se apri Home Assistant su un
 indirizzo **`http`**, dal browser **la plancia non si disegna**. Tutto il resto
 sì — l'abbinamento, il filo, la Configurazione, i dispositivi, le case. Non è un
-pezzo che manca: la plancia nel browser la serve un *service worker*, e i
+pezzo che manca: la plancia nel browser la serve un _service worker_, e i
 service worker i browser li fanno girare solo su `https` o `localhost`. È una
 regola loro. Con Nabu Casa acceso, o con un proxy che mette il certificato,
 `https` c'è e la plancia si vede. Sul telefono la plancia si vede sempre, perché
@@ -368,7 +366,7 @@ l'abbinamento.
 E lì `https` c'è sempre, quindi **la plancia si disegna** — a differenza di un
 Home Assistant aperto su `http`.
 
-### Dal codice, con Flutter *(per lavorarci)*
+### Dal codice, con Flutter _(per lavorarci)_
 
 ```bash
 cd gdahomeapp/app
@@ -446,8 +444,9 @@ se non funzionano:
   la stessa chat. La graffetta 📎 qui non c'è più, e non è una dimenticanza:
   questa chat passa parole, e una foto si allega a una segnalazione.
 - **Menu → Configurazione.** Deve comparire la pagina **CONFIGURAZIONE** della
-  dashboard, con la sua insegna e la versione della plancia — **v1.4.23**, e se
-  ne dice una più vecchia il ponte non è aggiornato — e sotto le sue
+  dashboard, con la sua insegna e la versione della plancia — deve essere
+  quella scritta nella scheda dell'add-on, e se ne dice una più vecchia il
+  ponte non è aggiornato — e sotto le sue
   tessere: 🧩 Configura Entità, 🎨 Tema con le sei tavolozze, 📌 Barra di
   navigazione. «Sostieni il progetto» qui **non c'è**: questa pagina si presenta come
   gdahome, e una donazione che porta a un altro progetto, dentro una pagina
@@ -459,10 +458,14 @@ E poi tutto il resto:
   le stesse finestre quando le tocchi, la stessa barra in fondo con le sue
   pagine, la stessa Config. Se cambi qualcosa nell'editor di là, qui si vede
   senza fare niente.
-- **La barra dell'app** si tira dentro dal bordo sinistro (la pillola a metà
-  altezza). In cima c'è il nome della casa e da dove stai passando: «in
-  casa» o «da fuori». È la cosa più utile da controllare per prima, e la
-  plancia da sola non la può sapere.
+- **La barra dell'app** si apre da due posti, e nessuno dei due è un gesto
+  nuovo da imparare: sulla plancia i suoi **tre trattini** in alto a sinistra
+  — dentro Home Assistant quel tasto apre la barra di HA, qui apre la nostra —
+  e sulle altre schermate il **☰** nella barra del titolo. Su Android anche il
+  **tasto indietro**: lo apre, e col menu aperto esce dall'app. In cima alla
+  barra c'è il nome della casa e da dove stai passando: «in casa» o «da
+  fuori». È la cosa più utile da controllare per prima, e la plancia da sola
+  non la può sapere.
 - **Spegni il Wi-Fi del telefono** e passa alla rete del cellulare. Dopo
   qualche secondo l'app deve tornare su da sola e la scritta deve diventare
   «da fuori». Se il centralino non c'è, deve dire che la casa si raggiunge solo
@@ -475,7 +478,7 @@ E poi tutto il resto:
   si rialza da solo, e i valori devono essere quelli veri, non quelli di prima.
 - **Dalla console del ponte, premi «Stacca»** sul telefono mentre l'app è
   aperta: deve accorgersene e dire che va riabbinato, senza restare a girare.
-- **Chiudi e riapri l'app**: la plancia deve tornare com'era *subito*, anche
+- **Chiudi e riapri l'app**: la plancia deve tornare com'era _subito_, anche
   prima che la casa risponda. Se dice «la dashboard è quasi pronta», vuol dire
   che la pagina non si è ritrovata quello che si era salvata: guarda in «Come
   va l'app» se il filo è aperto.
@@ -491,12 +494,12 @@ E poi tutto il resto:
 
 ## Se qualcosa non va
 
-| cosa vedi | cosa vuol dire |
-|---|---|
-| L'app dice che la casa si raggiunge solo dalla sua rete | nel ponte non c'è nessun centralino: vedi il punto 2 |
-| La console dice «Sto chiamando il centralino…» e non cambia | l'indirizzo nelle opzioni è sbagliato, o manca `wss://` |
-| La console dice «Il centralino ci rifiuta» | c'è già un'altra casa registrata con quell'identificativo su quel centralino |
-| Il codice viene rifiutato | dura cinque minuti e vale una volta sola: fanne un altro |
-| L'app dice che la casa va riabbinata | il telefono è stato staccato dalla console, o è stato abbinato con una versione vecchia |
-| L'app dice «Il ponte non ha la plancia» | il ponte è più vecchio della 0.7.0, o la cartella `plancia` non è finita dentro l'add-on: ricopia la cartella `ponte` intera e ricostruiscilo |
+| cosa vedi                                                        | cosa vuol dire                                                                                                                                        |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L'app dice che la casa si raggiunge solo dalla sua rete          | nel ponte non c'è nessun centralino: vedi il punto 2                                                                                                  |
+| La console dice «Sto chiamando il centralino…» e non cambia      | l'indirizzo nelle opzioni è sbagliato, o manca `wss://`                                                                                               |
+| La console dice «Il centralino ci rifiuta»                       | c'è già un'altra casa registrata con quell'identificativo su quel centralino                                                                          |
+| Il codice viene rifiutato                                        | dura cinque minuti e vale una volta sola: fanne un altro                                                                                              |
+| L'app dice che la casa va riabbinata                             | il telefono è stato staccato dalla console, o è stato abbinato con una versione vecchia                                                               |
+| L'app dice «Il ponte non ha la plancia»                          | la cartella `plancia` non è finita dentro l'add-on: ricopia la cartella `ponte` intera e ricostruiscilo                                               |
 | La plancia resta su «Apro la plancia…» o dice che non è arrivata | il telefono è fuori casa e i file stanno ancora arrivando: la prima volta ci mette qualche secondo. Se non arriva mai, guarda il registro dell'add-on |

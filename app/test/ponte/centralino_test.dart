@@ -26,7 +26,7 @@ void main() {
      * centralino suo — `--dart-define=CENTRALINO=…` — sta provando un'altra
      * cosa, e questa prova non ha niente da dirgli. */
     if (_detto.isNotEmpty) {
-      markTestSkipped('qui e\' stato detto «$_detto»');
+      markTestSkipped('qui è stato detto «$_detto»');
       return;
     }
     expect(
@@ -36,12 +36,12 @@ void main() {
     );
   });
 
-  test('l\'app si abbina col solo codice quando un centralino c\'e\'', () {
+  test('l\'app si abbina col solo codice quando un centralino c\'è', () {
     expect(siAbbinaColSoloCodice, centralinoDiDifetto != null);
     expect(
       siAbbinaColSoloCodice,
       centralinoDiDifettoScritto.isNotEmpty || _detto.isNotEmpty,
-      reason: 'o e\' scritto nel codice, o e\' stato detto alla compilazione',
+      reason: 'o è scritto nel codice, o è stato detto alla compilazione',
     );
   });
 

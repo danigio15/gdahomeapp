@@ -10,7 +10,13 @@ function deepFreeze(value) {
   for (const entry of Object.values(value)) deepFreeze(entry);
   return value;
 }
-import { migrateState, normalizeSection, readLegacyState, SECTION_KEYS } from "./migrations.js";
+import {
+  applicaIlVersoDellaBatteria,
+  migrateState,
+  normalizeSection,
+  readLegacyState,
+  SECTION_KEYS,
+} from "./migrations.js";
 import { sectionForEditorSlot } from "./editor-slots.js";
 import { projectEnergySlots } from "./energy-projection.js";
 import { IMPIANTO_SCELTO_KEY, plantModel } from "./energy-plants.js";
@@ -168,6 +174,7 @@ export class DashboardStore {
       subloads: parse("cd_subloads_extra", {}),
       reportDevices: parse("cd_report_devices", []),
       washerImage: parse("cd_lavatrice_visual", ""),
+      batteryDirection: parse("cd_batteria_verso", null),
     });
     this.state = result.state;
     /* All'avvio le chiavi legacy dettano, la copia canonica segue.
@@ -187,6 +194,15 @@ export class DashboardStore {
      * presente e' una scelta, non un'assenza: le auto cancellate restano
      * cancellate per la stessa strada.
      *
+     * E dev'essere l'ULTIMA parola, dopo le migrazioni del modello e non
+     * prima. Farla parlare prima sembrava piu' pulito — cosi' le migrazioni
+     * avrebbero lavorato su quello che l'utente ha davvero — ma le migrazioni
+     * del modello si risvegliano quando non trovano il loro segno, e su una
+     * lista vuota RISEMINANO: chi si era tolto i carichi dal flusso se li
+     * ritrovava tutti al primo avvio dopo l'aggiornamento, e uguale per le
+     * entita' del raffreddamento e per gli alias annuali svuotati apposta.
+     * Una lista vuota e' una scelta anche nei confronti delle migrazioni.
+     *
      * Le luci restano fuori: la loro forma legacy — `{entita': nome}` — perde
      * per costruzione stanza e ordinamento, e ricostruirle da li' a ogni avvio
      * butterebbe via quello che la copia custodisce apposta. */
@@ -202,6 +218,11 @@ export class DashboardStore {
         /* Una chiave illeggibile non insegna niente: resta la copia. */
       }
     }
+    /* Il verso del vecchio interruttore si posa QUI, sul modello riconciliato:
+     * e' questo che va sul disco un attimo dopo. Scritto prima, la riga qui
+     * sopra se lo portava via — segno compreso — e il travaso si rifaceva a
+     * ogni avvio senza mai arrivare a chi lo aspettava. */
+    applicaIlVersoDellaBatteria(this.state.sections.energy, parse("cd_batteria_verso", null));
     if (result.changes.length) console.info("[DashboardStore] migration", result.changes);
     this.persist();
     return result;

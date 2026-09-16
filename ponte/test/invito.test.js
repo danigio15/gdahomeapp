@@ -4,7 +4,7 @@
  * il ponte, in `app/lib/ponte/invito.dart` lo legge il telefono. Non c'e'
  * nessun compilatore che le tenga insieme — l'unica cosa che le tiene insieme
  * sono **queste righe**, ricopiate identiche di la'. Se un giorno divergono,
- * una delle due prove diventa rossa prima che qualcuno inquadri un quadretto
+ * una delle due prove diventa rossa prima che qualcuno inquadri un QR code
  * che non si apre.
  */
 
@@ -59,7 +59,7 @@ test("e rilegge quello che ha scritto", () => {
   }
 });
 
-test("perdona quello che ci mette in mezzo chi legge i quadretti", () => {
+test("perdona quello che ci mette in mezzo chi legge i QR code", () => {
   /* Un lettore di QR restituisce quello che trova, e ogni tanto ci lascia
    * attaccato un a capo. Non e' un motivo per dire di no a un codice buono. */
   const letto = leggiLInvito("  gdahome|1|ABCD2345EFGH6789||192.168.1.50:8098 \n");

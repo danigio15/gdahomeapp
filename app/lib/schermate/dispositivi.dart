@@ -17,66 +17,122 @@ import 'package:flutter/material.dart';
 import '../casa/collegamento.dart';
 import '../casa/entita.dart';
 import '../casa/stato_della_casa.dart';
+import '../parole.dart';
 import '../ponte/errori.dart';
 import '../vestito/pezzi.dart';
 
 /// I domini che si comandano con un interruttore.
 const _accendibili = {'light', 'switch', 'fan', 'input_boolean', 'siren'};
 
-/// Come si chiamano i domini per una persona, e con quale icona.
-const _tipi = <String, (String, IconData)>{
-  'light': ('Luci', Icons.lightbulb_rounded),
-  'switch': ('Interruttori', Icons.power_rounded),
-  'sensor': ('Sensori', Icons.speed_rounded),
-  'binary_sensor': ('Rilevatori', Icons.sensors_rounded),
-  'climate': ('Clima', Icons.thermostat_rounded),
-  'cover': ('Tapparelle e porte', Icons.blinds_rounded),
-  'media_player': ('Lettori', Icons.speaker_rounded),
-  'camera': ('Telecamere', Icons.videocam_rounded),
-  'lock': ('Serrature', Icons.lock_rounded),
-  'fan': ('Ventole', Icons.mode_fan_off_rounded),
-  'alarm_control_panel': ('Antifurto', Icons.shield_rounded),
-  'automation': ('Automazioni', Icons.auto_awesome_rounded),
-  'script': ('Script', Icons.play_circle_rounded),
-  'scene': ('Scene', Icons.movie_rounded),
-  'person': ('Persone', Icons.person_rounded),
-  'device_tracker': ('Presenze', Icons.location_on_rounded),
-  'input_boolean': ('Interruttori virtuali', Icons.toggle_on_rounded),
-  'input_number': ('Numeri', Icons.pin_rounded),
-  'number': ('Numeri', Icons.pin_rounded),
-  'input_select': ('Selettori', Icons.list_rounded),
-  'select': ('Selettori', Icons.list_rounded),
-  'input_text': ('Testi', Icons.short_text_rounded),
-  'input_datetime': ('Orari', Icons.schedule_rounded),
-  'counter': ('Contatori', Icons.exposure_plus_1_rounded),
-  'timer': ('Timer', Icons.timer_rounded),
-  'button': ('Pulsanti', Icons.radio_button_checked_rounded),
-  'sun': ('Sole', Icons.wb_sunny_rounded),
-  'weather': ('Meteo', Icons.cloud_rounded),
-  'zone': ('Zone', Icons.map_rounded),
-  'update': ('Aggiornamenti', Icons.system_update_rounded),
-  'siren': ('Sirene', Icons.campaign_rounded),
-  'vacuum': ('Aspirapolvere', Icons.cleaning_services_rounded),
-  'humidifier': ('Umidificatori', Icons.water_drop_rounded),
-  'water_heater': ('Scaldabagni', Icons.hot_tub_rounded),
-  'remote': ('Telecomandi', Icons.settings_remote_rounded),
-  'calendar': ('Calendari', Icons.calendar_month_rounded),
-  'todo': ('Liste', Icons.checklist_rounded),
-  'event': ('Eventi', Icons.bolt_rounded),
-  'image': ('Immagini', Icons.image_rounded),
-  'notify': ('Notifiche', Icons.notifications_rounded),
-  'tts': ('Voce', Icons.record_voice_over_rounded),
+/// Il disegno di ogni dominio.
+const _icone = <String, IconData>{
+  'light': Icons.lightbulb_rounded,
+  'switch': Icons.power_rounded,
+  'sensor': Icons.speed_rounded,
+  'binary_sensor': Icons.sensors_rounded,
+  'climate': Icons.thermostat_rounded,
+  'cover': Icons.blinds_rounded,
+  'media_player': Icons.speaker_rounded,
+  'camera': Icons.videocam_rounded,
+  'lock': Icons.lock_rounded,
+  'fan': Icons.mode_fan_off_rounded,
+  'alarm_control_panel': Icons.shield_rounded,
+  'automation': Icons.auto_awesome_rounded,
+  'script': Icons.play_circle_rounded,
+  'scene': Icons.movie_rounded,
+  'person': Icons.person_rounded,
+  'device_tracker': Icons.location_on_rounded,
+  'input_boolean': Icons.toggle_on_rounded,
+  'input_number': Icons.pin_rounded,
+  'number': Icons.pin_rounded,
+  'input_select': Icons.list_rounded,
+  'select': Icons.list_rounded,
+  'input_text': Icons.short_text_rounded,
+  'input_datetime': Icons.schedule_rounded,
+  'counter': Icons.exposure_plus_1_rounded,
+  'timer': Icons.timer_rounded,
+  'button': Icons.radio_button_checked_rounded,
+  'sun': Icons.wb_sunny_rounded,
+  'weather': Icons.cloud_rounded,
+  'zone': Icons.map_rounded,
+  'update': Icons.system_update_rounded,
+  'siren': Icons.campaign_rounded,
+  'vacuum': Icons.cleaning_services_rounded,
+  'humidifier': Icons.water_drop_rounded,
+  'water_heater': Icons.hot_tub_rounded,
+  'remote': Icons.settings_remote_rounded,
+  'calendar': Icons.calendar_month_rounded,
+  'todo': Icons.checklist_rounded,
+  'event': Icons.bolt_rounded,
+  'image': Icons.image_rounded,
+  'notify': Icons.notifications_rounded,
+  'tts': Icons.record_voice_over_rounded,
 };
 
-(String, IconData) _tipo(String dominio) =>
-    _tipi[dominio] ??
-    (
-      dominio.isEmpty
-          ? dominio
-          : dominio[0].toUpperCase() +
-                dominio.substring(1).replaceAll('_', ' '),
-      Icons.category_rounded,
-    );
+/// Come si chiama un dominio per una persona.
+///
+/// In inglese sono i nomi che usa Home Assistant — Covers, Toggles, Helpers —
+/// e non la traduzione dei nostri: chi legge «Covers» nell'app e «Covers» in
+/// Home Assistant sta guardando la stessa cosa, e non deve chiederselo.
+String? _nomeDelDominio(String dominio) => switch (dominio) {
+  'light' => inLingua(it: 'Luci', en: 'Lights'),
+  'switch' => inLingua(it: 'Interruttori', en: 'Switches'),
+  'sensor' => inLingua(it: 'Sensori', en: 'Sensors'),
+  'binary_sensor' => inLingua(it: 'Rilevatori', en: 'Binary sensors'),
+  'climate' => inLingua(it: 'Clima', en: 'Climate'),
+  'cover' => inLingua(it: 'Tapparelle e porte', en: 'Covers'),
+  'media_player' => inLingua(it: 'Lettori', en: 'Media players'),
+  'camera' => inLingua(it: 'Telecamere', en: 'Cameras'),
+  'lock' => inLingua(it: 'Serrature', en: 'Locks'),
+  'fan' => inLingua(it: 'Ventole', en: 'Fans'),
+  'alarm_control_panel' => inLingua(it: 'Antifurto', en: 'Alarm'),
+  'automation' => inLingua(it: 'Automazioni', en: 'Automations'),
+  'script' => inLingua(it: 'Script', en: 'Scripts'),
+  'scene' => inLingua(it: 'Scene', en: 'Scenes'),
+  'person' => inLingua(it: 'Persone', en: 'People'),
+  'device_tracker' => inLingua(it: 'Presenze', en: 'Device trackers'),
+  'input_boolean' => inLingua(it: 'Interruttori virtuali', en: 'Toggles'),
+  'input_number' => inLingua(it: 'Numeri', en: 'Numbers'),
+  'number' => inLingua(it: 'Numeri', en: 'Numbers'),
+  'input_select' => inLingua(it: 'Selettori', en: 'Selects'),
+  'select' => inLingua(it: 'Selettori', en: 'Selects'),
+  'input_text' => inLingua(it: 'Testi', en: 'Texts'),
+  'input_datetime' => inLingua(it: 'Orari', en: 'Date and time'),
+  'counter' => inLingua(it: 'Contatori', en: 'Counters'),
+  'timer' => inLingua(it: 'Timer', en: 'Timers'),
+  'button' => inLingua(it: 'Pulsanti', en: 'Buttons'),
+  'sun' => inLingua(it: 'Sole', en: 'Sun'),
+  'weather' => inLingua(it: 'Meteo', en: 'Weather'),
+  'zone' => inLingua(it: 'Zone', en: 'Zones'),
+  'update' => inLingua(it: 'Aggiornamenti', en: 'Updates'),
+  'siren' => inLingua(it: 'Sirene', en: 'Sirens'),
+  'vacuum' => inLingua(it: 'Aspirapolvere', en: 'Vacuums'),
+  'humidifier' => inLingua(it: 'Umidificatori', en: 'Humidifiers'),
+  'water_heater' => inLingua(it: 'Scaldabagni', en: 'Water heaters'),
+  'remote' => inLingua(it: 'Telecomandi', en: 'Remotes'),
+  'calendar' => inLingua(it: 'Calendari', en: 'Calendars'),
+  'todo' => inLingua(it: 'Liste', en: 'To-do lists'),
+  'event' => inLingua(it: 'Eventi', en: 'Events'),
+  'image' => inLingua(it: 'Immagini', en: 'Images'),
+  'notify' => inLingua(it: 'Notifiche', en: 'Notifications'),
+  'tts' => inLingua(it: 'Voce', en: 'Text-to-speech'),
+  _ => null,
+};
+
+(String, IconData) _tipo(String dominio) {
+  final nome = _nomeDelDominio(dominio);
+  final icona = _icone[dominio];
+  if (nome != null && icona != null) return (nome, icona);
+  /* Un dominio che non conosciamo — Home Assistant ne aggiunge — si mostra col
+   * suo nome tecnico ripulito: meglio «Lawn mower» di niente. Quello non si
+   * traduce, che tradurlo vorrebbe dire inventarselo. */
+  return (
+    dominio.isEmpty
+        ? dominio
+        : dominio[0].toUpperCase() + dominio.substring(1).replaceAll('_', ' '),
+    Icons.category_rounded,
+  );
+}
 
 class Dispositivi extends StatefulWidget {
   const Dispositivi({
@@ -196,10 +252,13 @@ class _DispositiviState extends State<Dispositivi> {
       return const Center(child: CircularProgressIndicator());
     }
     if (casa.quante == 0) {
-      return const StatoVuoto(
+      return StatoVuoto(
         icona: Icons.inbox_rounded,
-        titolo: 'Casa vuota',
-        sotto: 'Home Assistant non ha nessuna entita\' da mostrare.',
+        titolo: inLingua(it: 'Casa vuota', en: 'Empty home'),
+        sotto: inLingua(
+          it: 'Home Assistant non ha nessuna entità da mostrare.',
+          en: 'Home Assistant has no entities to show.',
+        ),
       );
     }
 
@@ -244,7 +303,10 @@ class _DispositiviState extends State<Dispositivi> {
       child: TextField(
         controller: _cerca,
         decoration: InputDecoration(
-          hintText: 'Cerca fra ${casa.quante} entita\'',
+          hintText: inLingua(
+            it: 'Cerca fra ${casa.quante} entità',
+            en: 'Search ${casa.quante} entities',
+          ),
           prefixIcon: const Icon(Icons.search_rounded),
           suffixIcon: cercato.isEmpty
               ? null
@@ -261,11 +323,17 @@ class _DispositiviState extends State<Dispositivi> {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
           cerca,
-          const StatoVuoto(
+          StatoVuoto(
             dentroUnaLista: true,
             icona: Icons.search_off_rounded,
-            titolo: 'Niente con questo nome',
-            sotto: 'Prova con una parola piu\' corta.',
+            titolo: inLingua(
+              it: 'Niente con questo nome',
+              en: 'Nothing by that name',
+            ),
+            sotto: inLingua(
+              it: 'Prova con una parola più corta.',
+              en: 'Try a shorter word.',
+            ),
           ),
         ],
       );

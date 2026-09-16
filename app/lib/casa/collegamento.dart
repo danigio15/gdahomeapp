@@ -20,7 +20,9 @@ library;
 
 import 'dart:async';
 
+import '../parole.dart';
 import '../plancia/pannello.dart';
+import '../ponte/abbinamento.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 import '../ponte/indirizzo.dart';
@@ -44,7 +46,26 @@ enum ComeVa {
   segnoScaduto,
 
   /// Non si raggiunge, ma si continua a provare.
-  irraggiungibile,
+  irraggiungibile;
+
+  /// Come si dice a schermo, in «Come va l'app».
+  ///
+  /// Il nome della voce dell'enumerazione non si mostra: «segnoScaduto» e'
+  /// buono per chi scrive il codice, non per chi legge lo schermo — e in
+  /// inglese non sarebbe nemmeno inglese.
+  String get nome => switch (this) {
+    ComeVa.nessunaCasa => inLingua(it: 'nessuna casa', en: 'no home'),
+    ComeVa.inCammino => inLingua(it: 'in cammino', en: 'on its way'),
+    ComeVa.aperta => inLingua(it: 'aperto', en: 'open'),
+    ComeVa.segnoScaduto => inLingua(
+      it: 'da riabbinare',
+      en: 'needs pairing again',
+    ),
+    ComeVa.irraggiungibile => inLingua(
+      it: 'non si raggiunge',
+      en: 'unreachable',
+    ),
+  };
 }
 
 class Collegamento {
@@ -74,6 +95,14 @@ class Collegamento {
   StatoDellaCasa? _stato;
   PannelloDellaPlancia? _pannello;
   bool _pannelloLetto = false;
+
+  /* Se in questa casa le plance ci sono ma nessuna e' per questa utenza.
+   *
+   * Va tenuto separato da «non c'e' la plancia»: sono due cose diverse e si
+   * risolvono in due modi diversi, e una schermata che le confonde manda chi
+   * legge ad aggiornare l'add-on quando invece deve chiedere a chi amministra
+   * la casa. */
+  bool _nessunaPerMe = false;
   CasaConosciuta? _casa;
   DaDove? _daDove;
   ComeVa _comeVa = ComeVa.nessunaCasa;
@@ -159,6 +188,9 @@ class Collegamento {
   PannelloDellaPlancia? get pannello => _pannello;
   bool get pannelloLetto => _pannelloLetto;
 
+  /// `true` quando la casa ha delle plance e nessuna e' di chi guarda.
+  bool get nessunaPlanciaPerMe => _nessunaPerMe;
+
   /// Le plance di questa casa: piu' d'una per chi se n'e' aggiunta.
   ///
   /// Arrivano insieme a dove sta la plancia, e vuota vuol dire un ponte che
@@ -214,9 +246,18 @@ class Collegamento {
      * nessun ponte: si dice, invece di far girare una rotella per sempre. */
     if (casa.daRiabbinare || !casa.raggiungibile) {
       _perche = casa.daRiabbinare
-          ? 'Questa casa e\' stata abbinata con una versione vecchia dell\'app: '
-                'riabbinala: e\' un quadretto da inquadrare.'
-          : 'Non so piu\' dove sia «${casa.nome}»: riabbinala.';
+          ? inLingua(
+              it:
+                  'Questa casa è stata abbinata con una versione vecchia '
+                  'dell\'app: va riabbinata inquadrando un QR code nuovo.',
+              en:
+                  'This home was paired with an old version of the app: it '
+                  'needs pairing again with a new QR code.',
+            )
+          : inLingua(
+              it: 'Non so più dove sia «${casa.nome}»: riabbinala.',
+              en: 'I no longer know where “${casa.nome}” is: pair it again.',
+            );
       _vai(ComeVa.segnoScaduto);
       return;
     }
@@ -249,8 +290,24 @@ class Collegamento {
           _perche = null;
           _vai(ComeVa.aperta);
           /* Mentre si era via la plancia puo' essere cambiata, o non essere
-           * mai stata letta. */
-          if (!_pannelloLetto) unawaited(_leggiLaPlancia(filo));
+           * mai stata letta: si richiede **ogni volta**.
+           *
+           * Qui c'era `if (!_pannelloLetto)`, e con quella guardia la plancia
+           * si chiedeva una volta e poi mai piu': il commento diceva «puo'
+           * essere cambiata» e la riga sotto non la ricontrollava. Si e' visto
+           * quando serviva: togliere a qualcuno il permesso di vedere una
+           * plancia non gli toglieva niente, perche' l'app teneva quella che
+           * aveva gia' — e il filo che cade e torna, che e' quello che fa un
+           * add-on quando si aggiorna, non bastava. Un cancello che vale solo
+           * alla prossima apertura da zero non e' un cancello.
+           *
+           * Costa una domanda sul filo per ogni ritorno, e la domanda e'
+           * piccola. Se la risposta e' la stessa, la pagina non si ricarica:
+           * l'indirizzo non cambia, e chi disegna guarda l'indirizzo. */
+          unawaited(_leggiLaPlancia(filo));
+          /* E si ricontrolla la strada: si torna dentro anche rientrando in
+           * casa, e li' la strada corta c'e' e prima non c'era. */
+          unawaited(_imparaLaStradaDiCasa(filo));
         }
         return;
       }
@@ -291,6 +348,84 @@ class Collegamento {
      * domanda sola. Le entita' — tutte, con i loro eventi — si leggono solo
      * quando qualcuno le vuole, vedi [serveLaCasa]. */
     await _leggiLaPlancia(filo);
+    /* E se si e' entrati dalla strada lunga, si chiede alla casa dov'e'. Non
+     * si aspetta: la casa e' gia' aperta, e questo e' solo per andarci piu'
+     * dritti. */
+    unawaited(_imparaLaStradaDiCasa(filo));
+  }
+
+  /* ─── La strada di casa, imparata dopo ──────────────────────────────── */
+
+  /* Quando si e' chiesto l'ultima volta, e a quale casa.
+   *
+   * Non piu' di una volta ogni [_ogniTanto]: e' lo stesso tempo per cui il
+   * ponte tiene buona la risposta del Supervisor (`ritorno.js`), e chiederla
+   * piu' spesso vorrebbe dire farsi ridire la stessa cosa. */
+  static const _ogniTanto = Duration(minutes: 5);
+  String? _stradaChiestaPer;
+  DateTime? _stradaChiestaIl;
+
+  /// Chiede alla casa dove sta sulla rete di casa, e se c'e' una strada piu'
+  /// corta la prende.
+  ///
+  /// L'indirizzo di casa il telefono lo sentiva dire **una volta**, dentro il
+  /// QR code dell'abbinamento, e non lo rinfrescava mai piu'. Chi abbina la
+  /// casa stando fuori non ne sente nessuno; chi l'ha abbinata in casa se lo
+  /// tiene anche dopo che il router, a un riavvio, ne ha dato un altro. In
+  /// tutti e due i casi il telefono passa dal centralino stando sul divano:
+  /// «Compare fuori casa quando in realtà sono in wifi e sono in casa», e
+  /// ogni tocco fa il giro del mondo e torna.
+  ///
+  /// Adesso la casa lo sa dire sul filo (`ponte/casa/dove`). Non ci si fida
+  /// sulla parola: si bussa, e l'indirizzo si tiene solo se risponde —
+  /// bussare e' anche il modo di sapere se si e' in casa davvero.
+  Future<void> _imparaLaStradaDiCasa(Filo filo) async {
+    final casa = _casa;
+    if (casa == null) return;
+    /* Gia' dentro: la strada corta si sta gia' facendo. */
+    if (_daDove == DaDove.daDentro) return;
+    final adesso = DateTime.now();
+    if (_stradaChiestaPer == casa.id &&
+        _stradaChiestaIl != null &&
+        adesso.difference(_stradaChiestaIl!) < _ogniTanto) {
+      return;
+    }
+    _stradaChiestaPer = casa.id;
+    _stradaChiestaIl = adesso;
+
+    final List<IndirizzoDelPonte> indirizzi;
+    try {
+      /* La risposta arriva com'e': un ponte che quel comando non lo conosce
+       * puo' rispondere «va bene» senza niente dentro, e li' non c'e' nessun
+       * indirizzo da leggere. */
+      final detto = await filo.risultato({'type': 'ponte/casa/dove'});
+      final detti = detto is Map ? detto['indirizzi'] : null;
+      indirizzi = [
+        for (final uno in detti is List ? detti : const [])
+          if (uno is String) IndirizzoDelPonte.leggi(uno),
+      ].nonNulls.toList();
+    } on ErroreDelPonte {
+      /* Un ponte di prima non sa rispondere, e va benissimo: si resta dove si
+       * e', che e' dove si era anche prima di questa domanda. */
+      return;
+    }
+    if (indirizzi.isEmpty) return;
+
+    final quale = await Abbinamento.qualeRisponde(
+      indirizzi,
+      bussa: _sonda.bussa,
+    );
+    /* Nessuno risponde: non si e' in casa, ed e' giusto stare sul centralino.
+     * Non si scrive niente — l'indirizzo che c'e' puo' essere ancora buono
+     * per quando si torna. */
+    if (quale == null) return;
+    if (quale.toString() == casa.inCasa?.toString()) return;
+
+    await archivio.cambiaGliIndirizzi(casa.id, inCasa: quale);
+    /* E si riparte da li'. La casa e' la stessa e il filo si riapre subito:
+     * costa un lampo adesso, e toglie il giro dal mondo a tutto il resto
+     * della giornata. */
+    await apri(forza: true);
   }
 
   bool _casaChiesta = false;
@@ -339,8 +474,15 @@ class Collegamento {
     final voluto = profilo ?? _casa?.plancia ?? '';
     try {
       _pannello = await trovaLaPlancia(filo, profilo: voluto);
+      _nessunaPerMe = false;
+    } on NessunaPlanciaPerTe {
+      /* Le plance ci sono, ma non per questa utenza. Non si cerca altrove e
+       * non si apre niente: la schermata lo scrive. */
+      _pannello = null;
+      _nessunaPerMe = true;
     } on ErroreDelPonte {
       _pannello = null;
+      _nessunaPerMe = false;
     }
     if (_filo != filo) return;
     _pannelloLetto = true;
@@ -426,6 +568,7 @@ class Collegamento {
     _stato = null;
     _pannello = null;
     _pannelloLetto = false;
+    _nessunaPerMe = false;
     await _filo?.chiudi();
     _filo = null;
     _daDove = null;

@@ -11,7 +11,9 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../parole.dart';
 import '../ponte/centralino.dart';
+import '../versione.dart';
 
 /// La passa il workflow che costruisce il pacchetto. Fuori da li' non c'e' —
 /// e allora lo si dice, invece di far finta di essere una versione.
@@ -21,24 +23,38 @@ const String _detta = String.fromEnvironment('VERSIONE');
 /// nelle segnalazioni, raccolto da solo.
 const String versioneDellApp = _detta;
 
-String get versioneDelPacchetto => _detta.isEmpty ? 'dal codice' : _detta;
+String get versioneDelPacchetto =>
+    _detta.isEmpty ? inLingua(it: 'dal codice', en: 'from source') : _detta;
 
 class Firma extends StatelessWidget {
-  const Firma({super.key, this.spazioSopra = 24});
+  const Firma({super.key, this.spazioSopra = 24, this.conIlCentralino = true});
 
   /// Quanto stare sotto quello che c'e' prima: in fondo a una lista lunga
   /// serve aria, in fondo a un menu no.
   final double spazioSopra;
 
+  /// Se dire anche a quale centralino punta questo pacchetto.
+  ///
+  /// In fondo al menu no: la barra e' larga centonovantadue punti, e
+  /// «gdahome 1.4.31 (104310) · tramite.gdahome.org» ci va a capo. La
+  /// versione da sola ci sta su una riga, ed e' quella la domanda —
+  /// **che versione ho?**. Il centralino lo dicono le pagine larghe, dove
+  /// c'e' posto.
+  final bool conIlCentralino;
+
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
-    final dove = centralinoDiDifetto?.casa ?? 'nessun centralino';
+    final dove =
+        centralinoDiDifetto?.casa ??
+        inLingua(it: 'nessun centralino', en: 'no relay');
 
     return Padding(
       padding: EdgeInsets.only(top: spazioSopra),
       child: Text(
-        'gdahome $versioneDelPacchetto · $dove',
+        conIlCentralino
+            ? 'gdahome $numeroDiQuestApp · $dove'
+            : 'gdahome $numeroDiQuestApp',
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: colori.onSurfaceVariant.withValues(alpha: 0.7),

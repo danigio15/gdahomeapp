@@ -23,6 +23,7 @@ library;
 import 'dart:async';
 
 import '../casa/casa_conosciuta.dart';
+import '../parole.dart';
 import 'abbinamento.dart';
 import 'errori.dart';
 import 'indirizzo.dart';
@@ -55,6 +56,12 @@ class Sonda {
   final Bussata _bussa;
   final Duration attesa;
   final Duration vantaggio;
+
+  /// Come si bussa. La stessa di questa sonda, per chi deve bussare altrove:
+  /// il collegamento la usa per provare un indirizzo di casa **imparato
+  /// dopo** l'abbinamento, e dev'essere la stessa o nelle prove si andrebbe a
+  /// bussare sul serio.
+  Bussata get bussa => _bussa;
 
   /// Trova da dove si entra in questa casa.
   ///
@@ -136,28 +143,57 @@ class Sonda {
   /// chi non ha nessuna strada di fuori non serve a niente.
   static String _perche(CasaConosciuta casa) {
     if (casa.daRiabbinare) {
-      return 'Questa casa e\' stata abbinata con una versione vecchia dell\'app: '
-          'va riabbinata: e\' un quadretto da inquadrare.';
+      return inLingua(
+        it:
+            'Questa casa è stata abbinata con una versione vecchia '
+            'dell\'app: va riabbinata inquadrando un QR code nuovo.',
+        en:
+            'This home was paired with an old version of the app: it needs '
+            'pairing again with a new QR code.',
+      );
     }
     /* Questo prima degli altri: e' l'errore che fa perdere piu' tempo, perche'
      * l'indirizzo *sembra* giusto — e' quello che Home Assistant stessa da'
      * per l'accesso remoto — e chi lo mette va a cercare il guasto dove non
      * c'e'. */
     if (casa.daFuoriCasa?.eLAccessoRemotoDiHomeAssistant ?? false) {
-      return 'L\'accesso remoto di Home Assistant non arriva agli add-on: il suo '
-          'tunnel finisce dentro Home Assistant, e il ponte sta su una porta '
-          'sua. Non e\' una cosa che si possa configurare — e non serve: il '
-          'ponte chiama fuori da solo, basta dirgli un centralino nella sua '
-          'scheda in Home Assistant.';
+      return inLingua(
+        it:
+            'L\'accesso remoto di Home Assistant non arriva agli add-on: il '
+            'suo tunnel finisce dentro Home Assistant, e gdahome sta su una '
+            'porta sua. Non è una cosa che si possa configurare — e non '
+            'serve: gdahome chiama fuori da solo, e il centralino ce l\'ha '
+            'già scritto dentro.',
+        en:
+            'Home Assistant remote access doesn\'t reach add-ons: its tunnel '
+            'ends inside Home Assistant, and gdahome sits on a port of its '
+            'own. This isn\'t something you can configure — and there\'s no '
+            'need: gdahome calls out by itself, and the relay is already '
+            'written inside it.',
+      );
     }
     if (casa.approdi().isEmpty) {
-      return 'Non so piu\' dove sia «${casa.nome}»: riabbinala.';
+      return inLingua(
+        it: 'Non so più dove sia «${casa.nome}»: riabbinala.',
+        en: 'I no longer know where “${casa.nome}” is: pair it again.',
+      );
     }
     if (casa.soloInCasa) {
-      return 'Non trovo «${casa.nome}». Questa casa si raggiunge solo dalla sua '
-          'rete: nella scheda del ponte, in Home Assistant, non e\' stato '
-          'messo nessun centralino.';
+      return inLingua(
+        it:
+            'Non trovo «${casa.nome}». Questa casa si raggiunge solo dalla '
+            'sua rete: nella scheda di gdahome, in Home Assistant, «da fuori '
+            'casa» è spento, e senza un centralino da fuori non si entra.',
+        en:
+            'I can\'t find “${casa.nome}”. This home can only be reached on '
+            'its own network: on the gdahome page, in Home Assistant, “da '
+            'fuori casa” is off, and without a relay there is no way in from '
+            'away.',
+      );
     }
-    return 'Non trovo «${casa.nome}», ne\' in casa ne\' da fuori.';
+    return inLingua(
+      it: 'Non trovo «${casa.nome}», né in casa né da fuori.',
+      en: 'I can\'t find “${casa.nome}”, neither at home nor from away.',
+    );
   }
 }

@@ -49,6 +49,15 @@ const RESTA = process.argv.includes("--resta");
  * Le fotografie finiscono in una cartella a parte, per non coprire quelle
  * chiare. */
 const SCURO = process.argv.includes("--scuro");
+
+/* In che lingua gira l'app, e come si chiamano le cose in quella lingua.
+ *
+ * Il collaudo preme quello che leggerebbe una persona: se l'app parla inglese,
+ * le scritte da cercare sono quelle inglesi. Non e' un doppione delle frasi
+ * dell'app — e' l'altra meta' della prova: se una frase cambia da una parte e
+ * non dall'altra, il collaudo non trova il bottone e lo dice. */
+const INGLESE = process.env.COLLAUDO_LINGUA === "en";
+const due = (it, en) => (INGLESE ? en : it);
 /* `--filma`: invece delle sole fotografie, registra tutto il giro in un video.
  *
  * Serve a far vedere l'app a chi non ce l'ha installata: una fotografia dice
@@ -188,6 +197,10 @@ async function accendiIlServitore({ portaDelPonte, codice, cartella }) {
       String(PORTA_DEL_SERVITORE),
       "--cartella",
       cartella,
+      /* La plancia nella lingua dell'app: qui il servitore e' un processo a
+         parte — nel telefono sta dentro l'app — e la lingua gliela si dice. */
+      "--lingua",
+      process.env.COLLAUDO_LINGUA === "en" ? "en" : "it",
     ],
     { cwd: APP, env: { ...process.env }, stdio: ["ignore", "pipe", "pipe"] },
   );
@@ -443,6 +456,12 @@ async function main() {
     viewport: { width: 430, height: 932 },
     deviceScaleFactor: 2,
     colorScheme: SCURO ? "dark" : "light",
+    /* In che lingua gira l'app: quella del telefono, e qui il telefono e'
+       questo browser. L'app parla italiano e inglese e sceglie da se' (vedi
+       `app/lib/parole.dart`), quindi senza dire niente Chromium chiederebbe
+       inglese e le prove cercherebbero parole italiane in un'app inglese.
+       `COLLAUDO_LINGUA=en` guarda l'altra. */
+    locale: process.env.COLLAUDO_LINGUA === "en" ? "en-GB" : "it-IT",
     /* Il video lo scrive Playwright da se', un fotogramma alla volta: si
      * chiude il contesto e il file c'e'. Niente da installare, niente
      * ffmpeg. */
@@ -681,7 +700,7 @@ async function ilBottone(pagina, etichetta, { inAlto = false, aspetta = true } =
    *
    * Poi l'etichetta che comincia cosi' e va a capo: una casella di testo che
    * ha il fuoco si porta dietro, dopo un a capo, anche il suggerimento che
-   * mostra — «Le lettere sotto al quadretto⏎ABCD-2345-EFGH-6789» — e finche'
+   * mostra — «Inserisci il codice mostrato⏎ABCD-2345-EFGH-6789» — e finche'
    * ha il fuoco quell'etichetta in due righe e' la sua.
    *
    * Poi chi la contiene, con le maiuscole giuste. E solo alla fine tutti.
@@ -750,7 +769,7 @@ async function ilBottone(pagina, etichetta, { inAlto = false, aspetta = true } =
    * prende anche i **contenitori** che quella scritta se la trovano dentro,
    * quindi il primo puo' essere una scatola grande quanto mezza schermata, e
    * premerne il centro vuol dire premere tutt'altro — e' successo: il tocco su
-   * «Scrivilo a mano» e' finito sul bottone di sopra, e si e' aperto il
+   * «Inserisci il codice» e' finito sul bottone di sopra, e si e' aperto il
    * lettore.
    *
    * Quindi si prende il **piu' piccolo**: fra una scatola e quello che ci sta
@@ -793,16 +812,23 @@ try {
   const { pagina, codice, portaDelPonte } = banco;
 
   racconta("compilo il modulo, come lo compilerebbe una persona");
-  await scriviIn(pagina, "Come si chiama", "Casa del collaudo");
+  await scriviIn(pagina, due("Come si chiama", "What it's called"), "Casa del collaudo");
   /* Qui si va per la strada delle lettere, e non e' pigrizia: in un browser
    * dentro una macchina non c'e' nessuna fotocamera, e non c'e' niente da
    * inquadrare. Quello che si sta collaudando e' il resto — il ponte vero, il
    * segno, il filo, la casa — e a quello ci si arriva battendo, come ci arriva
    * chi la fotocamera non ce l'ha. */
-  await premi(pagina, "Non puoi inquadrarlo? Scrivilo a mano");
+  await premi(
+    pagina,
+    due("Non puoi inquadrarlo? Inserisci il codice", "Can't scan it? Enter the code"),
+  );
   await attendi(300);
-  await scriviIn(pagina, "Le lettere sotto al quadretto", codice);
-  await scriviIn(pagina, "Indirizzo di casa (facoltativo)", `127.0.0.1:${portaDelPonte}`);
+  await scriviIn(pagina, due("Inserisci il codice mostrato", "Enter the code shown"), codice);
+  await scriviIn(
+    pagina,
+    due("Indirizzo di casa (facoltativo)", "Home address (optional)"),
+    `127.0.0.1:${portaDelPonte}`,
+  );
   await scatta(pagina, "2-modulo-compilato");
 
   racconta("abbino");
@@ -863,20 +889,58 @@ try {
   await premiLaScheda("home");
   await attendi(700);
 
-  /* Il menu laterale. Sta dietro il bottone in alto a sinistra, e li' l'albero
-   * dell'accessibilita' di Flutter mette i riquadri dove gli pare: quando il
-   * tocco sul nodo non arriva al bottone disegnato, si tocca dove il bottone
-   * **sta**. Col dito sul telefono non serve. */
-  /* La barra delle sezioni non e' un menu a tendina: e' una dock che sta
-   * sotto il bordo e si chiama dalla maniglia, la pillola in fondo allo
-   * schermo. Si preme li'. */
+  /* La barra delle sezioni non e' un menu a tendina: e' una dock che sta sotto
+   * il bordo sinistro. Le porte per chiamarla sono due, e cambiano con la
+   * schermata:
+   *
+   *  - sulle sezioni dell'app, il ☰ nella barra del titolo;
+   *  - sulla plancia, che una barra del titolo non ce l'ha, i tre trattini
+   *    **della plancia** — un tasto della pagina, dentro il riquadro. Si preme
+   *    dal di dentro, come le sue linguette.
+   *
+   * Sopra la plancia l'app non disegna piu' niente: e' per questo che la
+   * pillola sul bordo non c'e' piu'. */
+  const daiTreTrattini = async () => {
+    /* Il riquadro si cerca adesso, fra i riquadri che la pagina ha in questo
+       momento: la plancia si ricarica, e un riquadro tenuto da parte da prima
+       e' un riquadro che non c'e' piu'. */
+    for (const dentro of pagina.frames()) {
+      const fatto = await dentro
+        .evaluate(() => {
+          const tasto = document.querySelector(".ha-menu-btn");
+          if (!tasto) return false;
+          tasto.click();
+          return true;
+        })
+        .catch(() => false);
+      if (fatto) return true;
+    }
+    return false;
+  };
+
+  async function chiamaLaBarra() {
+    const tasto = await ilBottone(pagina, due("Barra delle sezioni", "Sections bar"), {
+      aspetta: false,
+    });
+    if (tasto) {
+      await premi(pagina, due("Barra delle sezioni", "Sections bar"));
+      return;
+    }
+    if (await daiTreTrattini()) return;
+    /* Ne' l'uno ne' gli altri: lo si dice invece di andare avanti e accusare
+     * la pagina dopo di non essere comparsa. */
+    const cEra = await cosaCeDaPremere(pagina);
+    throw new Error(
+      `nessuna porta per la barra: ne' il ☰ ne' i tre trattini della plancia. A schermo c'e': ${cEra.join(" · ")}`,
+    );
+  }
+
   async function apriIlMenu() {
-    /* Si richiude da sola poco dopo che si e' scelto: premere la maniglia
-     * mentre e' ancora aperta la chiuderebbe. */
+    /* Si richiude da sola poco dopo che si e' scelto: chiamarla mentre e'
+     * ancora aperta, col ☰, la chiuderebbe. */
     await attendi(1400);
-    /* Premere la maniglia quando la barra e' gia' su la manda giu'. */
     if (!(await laBarraECaperta())) {
-      await premi(pagina, "Barra delle sezioni");
+      await chiamaLaBarra();
       await attendi(900);
     }
     /* Non si aspetta una voce in particolare: la barra si apre gia' scorsa
@@ -912,7 +976,7 @@ try {
      * scorrere da dove si era e' proprio la cosa che non si puo' fare. */
     for (let tentativo = 0; tentativo < 4; tentativo += 1) {
       if (!(await laBarraECaperta())) {
-        await premi(pagina, "Barra delle sezioni");
+        await chiamaLaBarra();
         await attendi(900);
       }
       /* La barra e' piu' alta dello schermo: le voci in fondo stanno sotto il
@@ -967,26 +1031,32 @@ try {
     );
   }
 
-  /* Se la barra e' dentro. Lo dice la **maniglia**.
+  /* Se la barra e' dentro. Lo dice la **riga della casa**, quella in cima alla
+   * barra.
    *
-   * Non una voce: le voci scorrono, e la prima — «HOME» — esce di vista appena
-   * la barra si apre su una sezione in fondo all'elenco. Chiedere di lei
-   * voleva dire sentirsi rispondere «chiusa» a barra apertissima, premere la
-   * maniglia per aprirla e cosi' chiuderla davvero.
+   * Non una voce delle sezioni: quelle scorrono, e la prima — «HOME» — esce di
+   * vista appena la barra si apre su una sezione in fondo all'elenco. Chiedere
+   * di lei voleva dire sentirsi rispondere «chiusa» a barra apertissima, e
+   * chiamarla di nuovo per aprirla e cosi' chiuderla davvero.
    *
-   * La maniglia invece c'e' sempre, e quando la barra e' dentro si sposta di
-   * fianco a lei: se sta sul bordo la barra e' fuori, se sta a duecento punti
-   * la barra e' aperta. Una cosa sola da guardare, e sempre la stessa. */
+   * La riga della casa invece sta sempre in cima alla barra, e con la barra si
+   * sposta: fuori dallo schermo quando e' chiusa, sul fianco sinistro quando
+   * e' aperta. Si guardano tutti i nodi che portano quel nome perche' ce n'e'
+   * un altro — il tasto delle case nella barra del titolo — e quello sta a
+   * destra: la barra e' dentro solo se quel nome si trova a **sinistra**. */
   async function laBarraECaperta() {
-    const maniglia = await ilBottone(pagina, "Barra delle sezioni", {
-      aspetta: false,
-    });
-    const dove = await (maniglia?.boundingBox().catch(() => null) ?? null);
-    /* Ben dentro, non a meta' strada: la maniglia ci mette quattro decimi di
-     * secondo ad arrivare, e sorprenderla per via voleva dire leggere «e'
-     * aperta» su una barra che si stava ancora aprendo — e premere la
-     * maniglia per aprirla, cioe' richiuderla. */
-    return Boolean(dove && dove.x > 150);
+    const tutti = await pagina
+      .locator(`[aria-label^="${due("Le tue case", "Your homes")}"]`)
+      .elementHandles()
+      .catch(() => []);
+    for (const uno of tutti) {
+      const dove = await uno.boundingBox().catch(() => null);
+      /* Ben dentro, non a meta' strada: la barra ci mette quattro decimi di
+       * secondo ad arrivare, e sorprenderla per via voleva dire leggere «e'
+       * aperta» su una barra che si stava ancora aprendo. */
+      if (dove && dove.x > 4 && dove.x < 120 && dove.y > 20) return true;
+    }
+    return false;
   }
 
   /* Andare in una sezione dell'app, e assicurarsi di esserci arrivati.
@@ -1021,13 +1091,13 @@ try {
    * aprendolo si vedano tutte e due. */
   racconta("guardo il selettore delle plance");
   {
-    if (!(await ilBottone(pagina, "Quale plancia", { aspetta: false }))) {
+    if (!(await ilBottone(pagina, due("Quale plancia", "Which dashboard"), { aspetta: false }))) {
       const cEra = await cosaCeDaPremere(pagina);
       throw new Error(
         `il selettore delle plance non e' comparso in cima alla barra. A schermo c'e': ${cEra.join(" · ")}`,
       );
     }
-    await premi(pagina, "Quale plancia");
+    await premi(pagina, due("Quale plancia", "Which dashboard"));
     await attendi(700);
     await scatta(pagina, "5b-quale-plancia");
     /* Si guardano le voci con le stesse regole con cui poi si premono — non
@@ -1047,14 +1117,14 @@ try {
     await scatta(pagina, "5c-la-seconda-plancia");
     /* E si torna su quella di sempre, che il resto del collaudo guarda lei. */
     await apriIlMenu();
-    await premi(pagina, "Quale plancia");
+    await premi(pagina, due("Quale plancia", "Which dashboard"));
     await attendi(700);
     await premi(pagina, "gdahome");
     await attendi(2500);
   }
 
   racconta("apro i dispositivi");
-  await vaiA("Dispositivi", "Cerca fra");
+  await vaiA(due("Dispositivi", "Devices"), due("Cerca fra", "Search"));
   await attendi(1200);
   await scatta(pagina, "6-dispositivi");
 
@@ -1125,7 +1195,15 @@ try {
       .evaluate(() => ({
         collegato: Boolean(document.getElementById("live-dot")?.classList.contains("connected")),
         scritta: (document.getElementById("conn-text")?.textContent || "").trim(),
-        senzaEntita: Boolean(document.getElementById("cd-empty-banner")),
+        /* L'avviso **loro**, non il posto che gli tiene il servitore.
+         *
+         * Hanno lo stesso nome apposta: la loro domanda si ferma se quel nome
+         * c'e' gia', ed e' cosi' che l'avviso non parla prima che la
+         * configurazione sia arrivata (`Premesse`). Il posto porta un segno
+         * nostro, e finche' c'e' vuol dire «la configurazione e' per
+         * strada» — che qui, un istante dopo che il pallino e' verde, e'
+         * esattamente dove siamo. */
+        senzaEntita: Boolean(document.querySelector("#cd-empty-banner:not([data-gdahome-posto])")),
       }))
       .catch(() => null);
     if (come?.collegato) break;
@@ -1144,6 +1222,29 @@ try {
     throw new Error("ricaricata la plancia, dice che le entita' non sono collegate");
   }
   racconta(`la plancia si e' ricollegata: ${come.scritta || "pallino verde"}`);
+
+  /* E quando tutto si e' posato non resta niente con quel nome: ne' il loro
+   * avviso, che sarebbe una bugia su una casa configurata, ne' il posto del
+   * servitore, che se restasse vorrebbe dire che in una casa **davvero** vuota
+   * l'avviso non comparirebbe mai. Quindici secondi: la scadenza del posto e'
+   * dodici. */
+  const fineDellAvviso = Date.now() + 15_000;
+  let avviso = "c'e' ancora";
+  while (Date.now() < fineDellAvviso) {
+    avviso = await ricaricata
+      .evaluate(() => {
+        const chi = document.getElementById("cd-empty-banner");
+        if (!chi) return "";
+        return chi.hasAttribute("data-gdahome-posto") ? "il posto" : "l'avviso";
+      })
+      .catch(() => "il riquadro non risponde");
+    if (!avviso) break;
+    await attendi(400);
+  }
+  if (avviso) {
+    throw new Error(`a configurazione arrivata resta ${avviso} dove sta l'avviso delle entita'`);
+  }
+  racconta("l'avviso delle entita' non c'e', e nemmeno il posto che gli si tiene");
   await attendi(700);
   await scatta(pagina, "3d-plancia-ricaricata");
 
@@ -1181,12 +1282,74 @@ try {
   }
   racconta("la barra si e' scoperta da se'");
 
+  /* Le barre del telefono: la plancia le scansa **con i suoi numeri**.
+   *
+   * Lo spazio sotto l'ultima riga, dove sta la sua barra e dove si ferma chi
+   * arriva con un salto li decide lei, in `navigation-section.js`, e li deriva
+   * tutti da una variabile sola: `--dm-fondo-di-sistema`. Dentro una cornice
+   * `env(safe-area-inset-bottom)` risponde zero comunque, quindi quel numero
+   * glielo scrive il servitore, col valore che Flutter ha misurato su
+   * quell'apparecchio (`Premesse.leMisureNellaSuaVariabile`).
+   *
+   * Qui il browser di barre non ne ha e il numero e' zero: quello che si prova
+   * e' che **la leva sia attaccata alle ruote**. Si scrive la variabile come la
+   * scriverebbe il telefono, e i suoi tre numeri devono spostarsi di tanto. Il
+   * giorno che la plancia le cambia nome questo passo lo dice, invece di
+   * lasciarlo scoprire a chi ha i tasti del telefono sotto le dita. */
+  racconta("le barre del telefono: la plancia le scansa coi suoi numeri");
+  {
+    const dentro = await laPlancia(pagina);
+    const come = await dentro.evaluate(() => {
+      const radice = document.documentElement;
+      const body = document.body;
+      const barra = document.querySelector("nav.tabs.bottom-nav-bar");
+      const leggi = () => {
+        const suo = getComputedStyle(body);
+        return {
+          riserva: parseFloat(suo.paddingBottom) || 0,
+          salto: parseFloat(suo.scrollPaddingBottom) || 0,
+          barra: barra ? parseFloat(getComputedStyle(barra).bottom) || 0 : null,
+        };
+      };
+      const eraFissa = body.classList.contains("cd-nav-fixed");
+      body.classList.add("cd-nav-fixed");
+      const prima = leggi();
+      radice.style.setProperty("--dm-fondo-di-sistema", "48px");
+      const dopo = leggi();
+      radice.style.removeProperty("--dm-fondo-di-sistema");
+      if (!eraFissa) body.classList.remove("cd-nav-fixed");
+      return { prima, dopo, barra: Boolean(barra) };
+    });
+    /* Dove **sta** la barra non si guarda: quella la muove il suo programma
+     * con uno stile in linea — nascosta sta a -120, e da fermo si legge solo
+     * quello. Si guardano le due cose che vengono dal foglio, e sono quelle
+     * che si vedevano sbagliate: lo spazio sotto l'ultima riga, e dove si
+     * ferma chi arriva con un salto. */
+    for (const [quale, prima, dopo] of [
+      ["la riserva sotto l'ultima riga", come.prima.riserva, come.dopo.riserva],
+      ["dove si ferma un salto", come.prima.salto, come.dopo.salto],
+    ]) {
+      if (prima === null) continue;
+      if (Math.round(dopo - prima) !== 48) {
+        throw new Error(
+          `${quale} non segue «--dm-fondo-di-sistema»: da ${prima} a ${dopo},` +
+            " e dovevano essere quarantotto in piu'",
+        );
+      }
+    }
+    racconta(
+      `riserva ${come.prima.riserva}→${come.dopo.riserva}, ` +
+        `salto ${come.prima.salto}→${come.dopo.salto}` +
+        `${come.barra ? "" : " (e la barra non c'era)"}`,
+    );
+  }
+
   racconta("apro la Configurazione della plancia dal menu");
-  const laConfig = await laPlancia(pagina);
+  let laConfig = await laPlancia(pagina);
   await apriIlMenu();
   /* La prova che la voce ha preso e' **la pagina**, non la barra.
    *
-   * `premiNelMenu` guarda la maniglia: una voce premuta manda giu' la barra,
+   * `premiNelMenu` guarda la barra: una voce premuta la manda giu',
    * e se dopo un secondo e' ancora su quel tocco non e' finito su una voce.
    * Vale per le schermate dell'app, e non per le due voci che aprono il
    * riquadro: qui il collaudo gira nel browser, dove la plancia sta in un
@@ -1196,7 +1359,7 @@ try {
    * pagina che si e' aperta al primo tocco. Si preme, e poi si chiede alla
    * plancia se ci siamo. */
   try {
-    await premiNelMenu("Configurazione");
+    await premiNelMenu(due("Configurazione", "Config"));
   } catch (male) {
     racconta(`la barra non si e' letta chiusa: guardo la pagina (${male.message})`);
   }
@@ -1322,10 +1485,32 @@ try {
   /* Dalla Configurazione alla Plancia: la plancia torna dov'era, e la pagina
    * Config si chiude come si chiuderebbe toccando un'altra linguetta della
    * sua barra. */
+  /* E adesso si rifa' il giro **lasciando l'editor aperto**, che e' come ci
+   * si esce davvero: «ero in configurazione e in editor, poi dal menu sono
+   * passato in plancia ma resta offuscato e non posso cliccare nulla».
+   *
+   * L'editor e' un `.modal-wrapper` — fisso, a tutto schermo, vetro sfocato e
+   * velo scuro — e nasce con l'opacita' e i tocchi scritti **nello stile
+   * dell'elemento**. Quando l'app usciva dalla Config gli toglieva solo la
+   * classe `show`: la scheda spariva, perche' la sua regola dipende da quella
+   * classe, e il velo restava su a prendersi tutti i tocchi. Plancia
+   * inservibile, e l'unica uscita era chiudere l'app.
+   *
+   * Questo passo prima non c'era: il collaudo chiudeva l'editor da se' e
+   * usciva da una Config pulita. Era verde, e il telefono no. */
+  racconta("riapro l'editor e lo lascio aperto, come chi esce di li'");
+  await laConfig.evaluate(() => {
+    const tessera = document.getElementById("srv-config-card");
+    if (tessera) tessera.click();
+    else window.apriConfigEntita?.();
+  });
+  await laConfig.waitForSelector("#editor-modal", { timeout: 30_000 });
+  await attendi(900);
+
   racconta("torno alla plancia");
   await apriIlMenu();
   try {
-    await premiNelMenu("Plancia");
+    await premiNelMenu(due("Plancia", "Dashboard"));
   } catch (male) {
     racconta(`la barra non si e' letta chiusa: guardo la pagina (${male.message})`);
   }
@@ -1344,6 +1529,92 @@ try {
       "l'indirizzo tiene ancora «apri la Config»: alla prima ricarica tornerebbe la Config",
     );
   }
+
+  /* E la plancia si puo' toccare.
+   *
+   * Non basta guardare che la Config si sia chiusa: quello si vedeva anche
+   * prima, e la plancia era comunque morta sotto un velo. Si chiede alla
+   * pagina **chi c'e' davvero** nel punto in cui un dito toccherebbe: se
+   * risponde una finestra a tutto schermo, quel dito non arriva alla plancia.
+   * E' la misura di «non posso cliccare nulla». */
+  const chiCopre = await laConfig.evaluate(() => {
+    const largo = window.innerWidth;
+    const alto = window.innerHeight;
+    const punti = [
+      [largo / 2, alto / 2],
+      [largo / 2, alto * 0.3],
+      [largo / 2, alto * 0.7],
+    ];
+    const rimaste = document.querySelectorAll(".modal-wrapper.show").length;
+    const sopra = [];
+    for (const [x, y] of punti) {
+      const chi = document.elementFromPoint(x, y);
+      const finestra = chi && chi.closest && chi.closest(".modal-wrapper");
+      if (finestra) sopra.push(finestra.id || finestra.className);
+    }
+    return { rimaste, sopra };
+  });
+  if (chiCopre.rimaste > 0) {
+    throw new Error(
+      `dalla Config e' rimasta ${chiCopre.rimaste} finestra accesa: la plancia resta offuscata`,
+    );
+  }
+  if (chiCopre.sopra.length > 0) {
+    throw new Error(
+      `sulla plancia c'e' sopra una finestra e i tocchi non passano: ${chiCopre.sopra.join(", ")}`,
+    );
+  }
+  racconta("la plancia si tocca: non e' rimasta nessuna finestra sopra");
+  await scatta(pagina, "6l3-plancia-toccabile");
+
+  /* E lo stesso tocco quando l'app **crede** di stare gia' sulla plancia.
+   *
+   * Dov'e' la pagina lo dice la pagina, e quel «dice» si puo' perdere. Una
+   * ricarica in mezzo e' il caso vero: la plancia si riaccende sulla sua Home
+   * e lo dice — il menu si segna sulla Plancia — e un momento dopo l'ordine
+   * nell'indirizzo riapre la Configurazione. Il menu dice una cosa, lo schermo
+   * un'altra, e il tocco su «Plancia» prima si limitava a ricaricare: «vanno
+   * in configurazione dal menu, poi se clicco su plancia resta aperto
+   * configurazione».
+   *
+   * Adesso «Plancia» riporta alla plancia senza chiedere all'app dove crede
+   * di essere. Qui si prova quel tocco, che fa due cose in una volta — uscire
+   * dalla Config e ricaricare — e sono due cose che possono pestarsi i piedi.
+   */
+  racconta("torno alla plancia quando l'app crede di starci già");
+  await apriIlMenu();
+  try {
+    await premiNelMenu(due("Configurazione", "Config"));
+  } catch (male) {
+    racconta(`la barra non si e' letta chiusa: guardo la pagina (${male.message})`);
+  }
+  await laConfig.waitForSelector("#page-config.active", { timeout: 30_000 });
+  await laConfig.evaluate(() => {
+    location.hash = "gdahome-config";
+    /* Quello che la pagina dice all'app quando si riaccende: «sono sulla mia
+     * Home». Qui non si ricarica niente — si dice soltanto, che e' quello che
+     * l'app sente — e la Config resta aperta dov'e'. */
+    window.parent.postMessage({ gdahome: "pagina", dove: "home" }, "*");
+  });
+  await attendi(900);
+  await apriIlMenu();
+  try {
+    await premiNelMenu(due("Plancia", "Dashboard"));
+  } catch (male) {
+    racconta(`la barra non si e' letta chiusa: guardo la pagina (${male.message})`);
+  }
+  /* Toccare «Plancia» standoci — per quel che ne sa l'app — ricarica: il
+   * riquadro riapre la pagina, e il contesto di prima non c'e' piu'. */
+  laConfig = await laPlancia(pagina);
+  const restaLaConfig = await laConfig.evaluate(
+    () => !!document.getElementById("page-config")?.classList.contains("active"),
+  );
+  if (restaLaConfig) {
+    throw new Error(
+      "«Plancia» non riporta alla plancia quando l'app crede di starci già: resta la Configurazione",
+    );
+  }
+  await scatta(pagina, "6l-tornati-dalla-config");
 
   /* La barra torna fissa, com'era: quello che viene dopo la guarda, e una
    * barra a scomparsa si nasconde da se' dopo quattro secondi. */
@@ -1368,37 +1639,37 @@ try {
   racconta("apro «Come va l'app» dal menu");
   /* Si aspetta la riga d'apertura, non un'insegna: le insegne dentro una
    * scheda l'albero dei significati non le dichiara sempre. */
-  await vaiA("Come va l'app", "L'ultimo minuto");
+  await vaiA(due("Come va l'app", "App health"), due("L'ultimo minuto", "The last minute"));
   await attendi(900);
   await scatta(pagina, "6l2-come-va-l-app");
 
   racconta("apro le segnalazioni");
-  await vaiA("Segnalazioni", "Nessuna segnalazione");
+  await vaiA(due("Segnalazioni", "Reports"), due("Nessuna segnalazione", "No reports"));
   await attendi(900);
   await scatta(pagina, "6b-segnalazioni");
 
   racconta("ne scrivo una");
-  await premi(pagina, "Nuova segnalazione");
-  await aspettaCheCompaia(pagina, "Parte anche questo");
+  await premi(pagina, due("Nuova segnalazione", "New report"));
+  await aspettaCheCompaia(pagina, due("Parte anche questo", "This goes too"));
   await attendi(500);
-  await premi(pagina, "Idea");
-  await scriviIn(pagina, "In due parole", "Una tessera per la piscina");
+  await premi(pagina, due("Idea", "Idea"));
+  await scriviIn(pagina, due("In due parole", "In a few words"), "Una tessera per la piscina");
   await scriviIn(
     pagina,
-    "Racconta",
+    due("Racconta", "Tell me"),
     "Sarebbe bello vederla in home, con la temperatura dell'acqua e la pompa.",
   );
   await attendi(400);
   await scatta(pagina, "6c-nuova-segnalazione");
-  await premi(pagina, "Manda");
+  await premi(pagina, due("Manda", "Send"));
   await aspettaCheCompaia(pagina, "#12");
   /* Il manutentore finto risponde dopo un attimo: si rilegge, e c'e'. */
   await attendi(2200);
-  await premi(pagina, "Rileggi", { inAlto: true });
+  await premi(pagina, due("Rileggi", "Reload"), { inAlto: true });
   await aspettaCheCompaia(pagina, "Grazie, guardo subito");
   await attendi(600);
   await scatta(pagina, "6d-segnalazione");
-  await premi(pagina, "Back", { inAlto: true });
+  await premi(pagina, due("Indietro", "Back"), { inAlto: true });
   await attendi(800);
 
   /* I filtri dell'elenco, quelli della dashboard: quattro tasti coi conti.
@@ -1407,36 +1678,51 @@ try {
    * piu' d'uno: un comando che appare e sparisce non e' un comando. Si
    * guarda che ci siano tutti e quattro e che premerne uno filtri davvero. */
   racconta("i filtri delle segnalazioni");
-  for (const nome of ["Da lavorare", "In lavorazione", "Chiuse", "Tutte"]) {
+  for (const nome of [
+    due("Da lavorare", "To do"),
+    due("In lavorazione", "In progress"),
+    due("Chiuse", "Closed"),
+    due("Tutte", "All"),
+  ]) {
     await aspettaCheCompaia(pagina, nome);
   }
   await attendi(500);
   await scatta(pagina, "6d2-segnalazioni-filtri");
   /* «Chiuse» non ne ha nessuna: lo dice, invece di mostrare una lista
    * vuota senza spiegazione. */
-  await premi(pagina, "Chiuse");
-  await aspettaCheCompaia(pagina, "Nessuna segnalazione in questo stato");
+  await premi(pagina, due("Chiuse", "Closed"));
+  await aspettaCheCompaia(
+    pagina,
+    due("Nessuna segnalazione in questo stato", "No reports in this state"),
+  );
   await attendi(400);
   await scatta(pagina, "6d3-segnalazioni-filtro-vuoto");
-  await premi(pagina, "Tutte");
+  await premi(pagina, due("Tutte", "All"));
   await aspettaCheCompaia(pagina, "Una tessera per la piscina");
   await attendi(400);
 
   racconta("apro l'assistenza");
-  await vaiA("Assistenza", "Qui si parla con chi fa");
+  await vaiA(
+    due("Assistenza", "Support"),
+    due("Qui si parla con chi fa", "This is where you talk to whoever"),
+  );
   await attendi(600);
   await scriviIn(
     pagina,
-    "Scrivi a chi fa l'app…",
+    due("Scrivi a chi fa l'app…", "Write to whoever makes the app…"),
     "Buongiorno! Come si aggiunge una seconda casa?",
   );
-  await premi(pagina, "Manda");
+  await premi(pagina, due("Manda", "Send"));
   await aspettaCheCompaia(pagina, "Come si aggiunge una seconda casa");
   /* La risposta arriva dopo un attimo, e la si vede mandando la parola dopo:
    * il filo che torna e' quello intero. */
   await attendi(2200);
-  await scriviIn(pagina, "Scrivi a chi fa l'app…", "Grazie!");
-  await premi(pagina, "Manda");
+  await scriviIn(
+    pagina,
+    due("Scrivi a chi fa l'app…", "Write to whoever makes the app…"),
+    "Grazie!",
+  );
+  await premi(pagina, due("Manda", "Send"));
   await aspettaCheCompaia(pagina, "Grazie, guardo subito");
   await attendi(700);
   await scatta(pagina, "6e-assistenza");
@@ -1445,13 +1731,13 @@ try {
    * la pagina che si chiede di fotografare quando l'app va a scatti, quindi
    * la si fotografa anche qui. */
   racconta("apro «Come va l'app»");
-  await premi(pagina, "Come va l'app");
-  await aspettaCheCompaia(pagina, "Fotogrammi");
+  await premi(pagina, due("Come va l'app", "App health"));
+  await aspettaCheCompaia(pagina, due("Fotogrammi", "Frames"));
   await attendi(1500);
   await scatta(pagina, "6f-come-va-l-app");
   /* Il bottone per tornare: in inglese, che e' la lingua del browser del collaudo. */
-  await premi(pagina, "Back");
-  await aspettaCheCompaia(pagina, "Scrivi a chi fa l'app");
+  await premi(pagina, due("Indietro", "Back"));
+  await aspettaCheCompaia(pagina, due("Scrivi a chi fa l'app", "Write to whoever makes the app"));
   await attendi(400);
 
   /* La Console: la stessa conversazione, vista dall'altra parte.
@@ -1460,22 +1746,22 @@ try {
    * comparirebbe. Quello che si vede qui e' la domanda appena scritta
    * dall'Assistenza, arrivata nella coda di chi risponde. */
   racconta("apro la console dell'assistenza");
-  await vaiA("Console", "CONVERSAZIONI");
+  await vaiA("Console", due("CONVERSAZIONI", "CONVERSATIONS"));
   await attendi(800);
   await scatta(pagina, "6e2-console-coda");
 
   await premi(pagina, "casa_");
-  await aspettaCheCompaia(pagina, "Tutte le conversazioni");
+  await aspettaCheCompaia(pagina, due("Tutte le conversazioni", "All conversations"));
   await attendi(800);
-  await scriviIn(pagina, "Rispondi a", "Dalla home, in alto a sinistra.");
-  await premi(pagina, "Manda");
+  await scriviIn(pagina, due("Rispondi a", "Reply to"), "Dalla home, in alto a sinistra.");
+  await premi(pagina, due("Manda", "Send"));
   await aspettaCheCompaia(pagina, "Dalla home, in alto a sinistra");
   await attendi(700);
   await scatta(pagina, "6e3-console-filo");
 
   racconta("torno alla plancia");
   await apriIlMenu();
-  await premiNelMenu("Plancia");
+  await premiNelMenu(due("Plancia", "Dashboard"));
   await laPlancia(pagina);
   await attendi(600);
 
@@ -1485,14 +1771,14 @@ try {
   await apriIlMenu();
   await premi(pagina, "Casa del collaudo");
   /* Si aspetta «Aggiungi», che sta **solo** nell'elenco delle case. */
-  await aspettaCheCompaia(pagina, "Aggiungi");
+  await aspettaCheCompaia(pagina, due("Aggiungi", "Add"));
   await attendi(600);
   await scatta(pagina, "7-le-case");
 
   /* Chi guarda il video deve tornare a casa: e' li' che si comincia, ed e' li'
    * che si finisce. */
   if (FILMA) {
-    await premi(pagina, "Back", { inAlto: true });
+    await premi(pagina, due("Indietro", "Back"), { inAlto: true });
     await laPlancia(pagina);
     await attendi(1200);
   }

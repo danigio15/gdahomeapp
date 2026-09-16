@@ -25,21 +25,27 @@
 #
 # Cosa fa, nell'ordine:
 #
-#   1. controlla di stare su un Debian/Ubuntu, da root, e che i due nomi
-#      puntino a questa macchina;
+#   1. controlla di stare su un Debian/Ubuntu, da root, e che i nomi puntino
+#      a questa macchina;
 #   2. chiede le due cose che non puo' sapere — il gettone delle segnalazioni e
 #      la repository dove finiscono — e genera da sola la chiave della console;
 #   3. installa Node, Caddy, il blocco di chi prova le password e gli
 #      aggiornamenti di sicurezza automatici;
-#   4. scarica il tramite dalla repository privata, in sola lettura;
+#   4. scarica il tramite dalla repository, in sola lettura;
 #   5. lo accende come servizio, e lo segna perche' riparta da solo;
-#   6. mette Caddy davanti, che si prende i certificati per i due nomi;
+#   6. mette Caddy davanti, che si prende i certificati per tutti i nomi;
 #   7. accende il giro che tiene il tramite aggiornato da solo;
-#   8. prova che `/salute` risponda da fuori, e stampa la chiave della console.
+#   8. prova che `/salute` risponda da fuori, e dice la chiave della console.
 #
 # Se qualcosa va storto si fermerà dicendo cosa, e non a metà: ogni passo e'
 # scritto per poter essere rifatto — si può reincollare la riga senza pulire
 # niente.
+#
+# **E rilanciarlo non porta via niente.** I segreti che stanno gia' sulla
+# macchina — la chiave della console, il gettone delle segnalazioni, quello di
+# lettura — se li rilegge da dove sono scritti, invece di rifarli. Prima non lo
+# faceva: chi reincollava la riga per aggiungere un pezzo si ritrovava la
+# chiave della console cambiata sotto i piedi, e la chat non si apriva piu'.
 
 set -euo pipefail
 
@@ -57,6 +63,12 @@ SEGNO="${SEGNO_DEL_TRAMITE:-tramite}"
 
 NOME_DEL_TRAMITE="${NOME_DEL_TRAMITE:-tramite.gdahome.org}"
 NOME_DELL_APP="${NOME_DELL_APP:-webapp.gdahome.org}"
+
+# Il nome nudo, quello che si dice a voce e si scrive su un negozio: una pagina
+# sola che racconta cos'e' gdahome e da dove si comincia. Sta sulla stessa
+# macchina perche' il certificato ce l'ha gia', e perche' un file fermo non
+# costa niente a nessuno.
+NOME_DEL_SITO="${NOME_DEL_SITO:-gdahome.org}"
 
 PORTA="${CENTRALINO_PORTA:-8099}"
 
@@ -120,6 +132,19 @@ dove_punta() {
   getent ahostsv4 "$1" 2>/dev/null | awk '{print $1; exit}'
 }
 
+# Come si chiama, nella tabella del DNS, la casella di questo nome. Su
+# Namecheap la colonna si chiama «Host», e il nome nudo — `gdahome.org` — non
+# si scrive: si scrive `@`. Detto sbagliato, il record finisce su
+# `gdahome.org.gdahome.org`, e nessuno capisce perche' non risponde.
+la_casella() {
+  local nome="$1"
+  if [[ "$(printf '%s' "$nome" | tr -cd . | wc -c)" -le 1 ]]; then
+    printf '@'
+  else
+    printf '%s' "${nome%.*.*}"
+  fi
+}
+
 if [[ "$SOLO_CONTROLLO" == si ]]; then
   nota "(solo controllo: non installo niente)"
 fi
@@ -134,12 +159,14 @@ else
   bene "il mio indirizzo e' $IO"
 fi
 
-for nome in "$NOME_DEL_TRAMITE" "$NOME_DELL_APP"; do
+for nome in "$NOME_DEL_TRAMITE" "$NOME_DELL_APP" "$NOME_DEL_SITO" "www.$NOME_DEL_SITO"; do
   punta="$(dove_punta "$nome" || true)"
   if [[ -z "$punta" ]]; then
     male "«$nome» non punta a niente." \
       "Il record non c'e' ancora, o non si e' ancora propagato." \
-      "Mettilo cosi': tipo A, nome «${nome%%.*}», valore ${IO:-quello di questa macchina}, senza proxy."
+      "Mettilo cosi': tipo A, Host «$(la_casella "$nome")», valore ${IO:-quello di questa macchina}, senza proxy." \
+      "Se al suo posto c'e' una riga del parcheggio del registrar — un CNAME o" \
+      "un «URL Redirect» — va cancellata: quelle due cose non stanno insieme."
   fi
   if [[ -n "$IO" && "$punta" != "$IO" ]]; then
     male "«$nome» punta a $punta, non a me ($IO)." \
@@ -159,9 +186,9 @@ done
 if [[ "$SOLO_CONTROLLO" == si ]]; then
   printf '\n'
   if [[ "$CONFRONTATI" == si ]]; then
-    printf '%s✓ i due nomi arrivano su questa macchina.%s\n' "$verde" "$spento"
+    printf '%s✓ i nomi arrivano tutti su questa macchina.%s\n' "$verde" "$spento"
   else
-    printf '%s! i due nomi esistono, ma non ho potuto confrontarli con questa macchina.%s\n' \
+    printf '%s! i nomi esistono, ma non ho potuto confrontarli con questa macchina.%s\n' \
       "$giallo" "$spento"
     printf '  Lanciato sulla macchina vera, e con la rete aperta, il confronto lo fa.\n'
   fi
@@ -171,6 +198,21 @@ fi
 # ─── 2. Le cose che non posso sapere ─────────────────────────────────────────
 
 passo "Le tre cose che servono"
+
+# Quello che e' gia' scritto su questa macchina si rilegge, non si richiede.
+#
+# Alla prima accensione non c'e' niente e si chiede tutto. Ma una seconda volta
+# ci sara' — si reincolla la riga per aggiungere un pezzo, o per riportare
+# dentro una configurazione — e in quel giro chiedere di nuovo un segreto
+# significa, nella pratica, cambiarlo: chi non ce l'ha sotto mano tira avanti,
+# e quello di prima smette di valere.
+gia_scritto() {
+  local file="$1" chiave="$2"
+  [[ -r "$file" ]] || return 0
+  # `sed` col valore come dato e non come programma: la riga che cerca la
+  # scrive lei, non arriva da fuori.
+  sed -n "s/^$chiave=//p" "$file" | head -1
+}
 
 chiedi_zitto() {
   local domanda="$1" dove="$2" risposta=""
@@ -182,13 +224,25 @@ chiedi_zitto() {
   printf -v "$dove" '%s' "$risposta"
 }
 
-GETTONE_LETTURA="${GETTONE_LETTURA:-}"
+GETTONE_LETTURA="${GETTONE_LETTURA:-$(gia_scritto "$CONFIGURAZIONE/lettura" GETTONE_LETTURA)}"
 if [[ -z "$GETTONE_LETTURA" ]]; then
   nota "Il gettone che legge la repository del tramite (sola lettura)."
   chiedi_zitto "gettone di lettura: " GETTONE_LETTURA
+else
+  bene "il gettone di lettura c'e' gia'"
 fi
 
-GETTONE_SEGNALAZIONI="${GETTONE_SEGNALAZIONI:-}"
+GETTONE_SEGNALAZIONI="${GETTONE_SEGNALAZIONI:-$(gia_scritto "$CONFIGURAZIONE/ambiente" GITHUB_SEGNALAZIONI)}"
+REPO_SEGNALAZIONI="${REPO_SEGNALAZIONI:-$(gia_scritto "$CONFIGURAZIONE/ambiente" GITHUB_REPO)}"
+# Dove vanno le foto e i video. Vuota vuol dire «la stessa delle issue», ed e'
+# come sta oggi: si vedono dentro la segnalazione senza andarle a cercare
+# altrove. Si riempie il giorno che convenisse spostarle — gli allegati si
+# committano, e restano nella storia di git — senza toccare il programma.
+REPO_ALLEGATI="${REPO_ALLEGATI:-$(gia_scritto "$CONFIGURAZIONE/ambiente" GITHUB_REPO_ALLEGATI)}"
+if [[ -n "$GETTONE_SEGNALAZIONI" ]]; then
+  bene "le segnalazioni sono gia' accese, su ${REPO_SEGNALAZIONI:-?}"
+fi
+
 if [[ -z "$GETTONE_SEGNALAZIONI" ]]; then
   nota "Il gettone con cui il tramite apre le segnalazioni su GitHub."
   nota "Se lo lasci vuoto le segnalazioni restano spente: si accendono dopo."
@@ -197,7 +251,6 @@ if [[ -z "$GETTONE_SEGNALAZIONI" ]]; then
   printf '\n' >&2
 fi
 
-REPO_SEGNALAZIONI="${REPO_SEGNALAZIONI:-}"
 if [[ -n "$GETTONE_SEGNALAZIONI" && -z "$REPO_SEGNALAZIONI" ]]; then
   printf '  repository delle segnalazioni [danigio15/gdahome-segnalazioni]: ' >&2
   IFS= read -r REPO_SEGNALAZIONI </dev/tty || true
@@ -207,8 +260,21 @@ fi
 # La chiave della console non la scegliamo noi e non la scegli tu: quarantotto
 # byte di caso. Una chiave scelta a mano e' una chiave indovinabile, e questa
 # apre tutte le conversazioni.
-CHIAVE_CONSOLE="$(head -c 48 /dev/urandom | base64 | tr -d '=+/' | cut -c1-48)"
-bene "chiave della console generata (la stampo alla fine)"
+#
+# Ma si genera **una volta sola**. Se su questa macchina c'e' gia', resta
+# quella: e' nel gestore di password di chi risponde alla chat, e cambiarla a
+# sua insaputa vuol dire chiudergli la porta. Per cambiarla c'e' un comando
+# fatto per quello — `tramite-chiave --nuova` — e li' e' una scelta, non un
+# effetto collaterale.
+CHIAVE_CONSOLE="$(gia_scritto "$CONFIGURAZIONE/ambiente" CHIAVE_CONSOLE)"
+CHIAVE_APPENA_FATTA=no
+if [[ -z "$CHIAVE_CONSOLE" ]]; then
+  CHIAVE_CONSOLE="$(head -c 48 /dev/urandom | base64 | tr -d '=+/' | cut -c1-48)"
+  CHIAVE_APPENA_FATTA=si
+  bene "chiave della console generata (la dico alla fine)"
+else
+  bene "la chiave della console e' quella che c'era: non la tocco"
+fi
 
 # ─── 3. Quello che serve sulla macchina ──────────────────────────────────────
 
@@ -304,9 +370,9 @@ FINE
 # scambia e poi prova — una versione rotta avrebbe gia' preso il posto di una
 # che funzionava, e per tornare indietro servirebbe un'altra rete.
 #
-# E si scambiano solo le tre cose che cambiano: `centralino`, `app`, `versione`.
-# Gli script stanno di fianco e non si toccano, se no un aggiornamento si
-# porterebbe via anche chi lo sta eseguendo.
+# E si scambiano solo le cose che cambiano: `centralino`, `app`, `sito`,
+# `versione`. Gli script stanno di fianco e non si toccano, se no un
+# aggiornamento si porterebbe via anche chi lo sta eseguendo.
 cat >"$DOVE/scarica.sh" <<'FINE'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -334,21 +400,49 @@ radice="$(find "$tmp" -maxdepth 1 -mindepth 1 -type d | head -1)"
   exit 2
 }
 
-rm -rf "$DOVE/centralino.nuovo" "$DOVE/app.nuovo"
+rm -rf "$DOVE/centralino.nuovo" "$DOVE/app.nuovo" "$DOVE/sito.nuovo"
 cp -a "$radice/centralino" "$DOVE/centralino.nuovo"
 if [ -d "$radice/ponte/app" ]; then
   cp -a "$radice/ponte/app" "$DOVE/app.nuovo"
 else
   mkdir -p "$DOVE/app.nuovo"
 fi
+# Il sito che racconta cos'e' gdahome. Se in questa versione non c'e', resta
+# quello di prima: una cartella vuota davanti a un nome pubblico vuol dire un
+# sito che smette di esistere perche' qualcuno ha spostato un file.
+#
+# Prima di copiarlo bisogna finirlo. Nel pacchetto il sito arriva senza la sua
+# parte piu' grossa — la plancia vera, che nella pagina gira dentro un riquadro
+# — perche' nella repository non c'e': sarebbe una seconda copia, identica,
+# di quella che sta in `ponte/plancia/`. Ce la mette questo comando, pescandola
+# proprio da li'. E' la stessa cosa che si fa in locale prima di guardare il
+# sito, e serve che ci sia Node — qui c'e' gia', e' quello che ha appena girato
+# le prove.
+#
+# Se non riesce, il sito **non si scambia**: resta quello di prima, intero,
+# invece di diventare una pagina col buco al posto della plancia. Il resto
+# dell'aggiornamento va avanti lo stesso: il tramite e' un servizio, il sito e'
+# una pagina, e non si tiene fermo il primo per la seconda.
+if [ -d "$radice/sito" ]; then
+  if node "$radice/strumenti/porta-nel-sito.mjs" >/dev/null 2>&1 &&
+    [ -s "$radice/sito/dashboardmodern_static/legacy/dashboard.html" ]; then
+    cp -a "$radice/sito" "$DOVE/sito.nuovo"
+  else
+    echo "la plancia non e' entrata nel sito: lascio quello di prima" >&2
+  fi
+fi
 
-rm -rf "$DOVE/centralino.via" "$DOVE/app.via"
+rm -rf "$DOVE/centralino.via" "$DOVE/app.via" "$DOVE/sito.via"
 [ -d "$DOVE/centralino" ] && mv "$DOVE/centralino" "$DOVE/centralino.via"
 [ -d "$DOVE/app" ] && mv "$DOVE/app" "$DOVE/app.via"
 mv "$DOVE/centralino.nuovo" "$DOVE/centralino"
 mv "$DOVE/app.nuovo" "$DOVE/app"
+if [ -d "$DOVE/sito.nuovo" ]; then
+  [ -d "$DOVE/sito" ] && mv "$DOVE/sito" "$DOVE/sito.via"
+  mv "$DOVE/sito.nuovo" "$DOVE/sito"
+fi
 printf '%s' "$SHA" >"$DOVE/versione"
-rm -rf "$DOVE/centralino.via" "$DOVE/app.via"
+rm -rf "$DOVE/centralino.via" "$DOVE/app.via" "$DOVE/sito.via"
 FINE
 
 chmod 700 "$DOVE/sha.sh" "$DOVE/scarica.sh"
@@ -378,6 +472,11 @@ passo "Accendo il servizio"
   printf 'CHIAVE_CONSOLE=%s\n' "$CHIAVE_CONSOLE"
   printf 'GITHUB_SEGNALAZIONI=%s\n' "$GETTONE_SEGNALAZIONI"
   printf 'GITHUB_REPO=%s\n' "$REPO_SEGNALAZIONI"
+  printf 'GITHUB_REPO_ALLEGATI=%s\n' "$REPO_ALLEGATI"
+  # I due nomi per la soglia: chi apre l'indirizzo nudo del tramite va mandato
+  # da qualche parte, e questa macchina da sola non sa come si chiama il sito.
+  printf 'NOME_DEL_SITO=%s\n' "$NOME_DEL_SITO"
+  printf 'NOME_DELL_APP=%s\n' "$NOME_DELL_APP"
   printf 'NODE_OPTIONS=--disable-warning=ExperimentalWarning\n'
 } >"$CONFIGURAZIONE/ambiente"
 chmod 600 "$CONFIGURAZIONE/ambiente"
@@ -445,25 +544,92 @@ passo "Metto Caddy davanti, e prendo i certificati"
 cat >/etc/caddy/Caddyfile <<FINE
 # Davanti al tramite.
 #
-# Caddy fa una cosa sola e la fa bene: si prende i certificati per questi due
+# Caddy fa una cosa sola e la fa bene: si prende i certificati per questi
 # nomi, li rinnova da solo, e passa quello che arriva a chi di dovere. I fili
 # WebSocket li passa senza toccarli.
 
 $NOME_DEL_TRAMITE {
 	encode zstd gzip
-	reverse_proxy 127.0.0.1:$PORTA
+
+	# L'app anche da qui, sotto \`/app/\`.
+	#
+	# Non e' un doppione per comodita': e' l'indirizzo che la console
+	# dell'add-on fabbrica da se'. Lei sa una cosa sola del centralino — quello
+	# che ha in configurazione, \`wss://<nome>\` — e il link per il browser lo
+	# ricava da quello: stesso nome, \`/app/\` in fondo. Sulla nuvola e' cosi'
+	# da sempre; qui l'app stava solo sul nome corto, e quel link finiva su
+	# «qui non c'e' niente».
+	#
+	# **Ed e' l'unico posto da cui l'app si serve.** Il nome corto rimanda qui
+	# invece di servire una seconda copia: il browser tiene l'abbinamento per
+	# indirizzo, e due indirizzi vorrebbero dire due abbinamenti da fare.
+	handle /app {
+		redir https://$NOME_DEL_TRAMITE/app/ permanent
+	}
+	handle /app/* {
+		root * $DOVE
+		try_files {path} /app/index.html
+		file_server
+	}
+
+	# Tutto il resto e' del tramite: i fili, le segnalazioni, la console.
+	handle {
+		reverse_proxy 127.0.0.1:$PORTA
+	}
 }
 
-# I file dell'app, quelli compilati per il browser. Li serve Caddy e non il
-# tramite: sono file fermi, e il tramite ha altro da fare.
+# Il nome corto dell'app **rimanda**, e non serve una seconda copia.
 #
-# \`try_files\` manda all'indice quello che non e' un file: l'app decide le sue
-# schermate da sola, e chi ricarica una pagina interna non deve trovare un 404.
+# Prima serviva gli stessi file, e sembrava comodo: due indirizzi per la stessa
+# app. Non lo era, e il motivo e' il browser. L'abbinamento di un telefono — il
+# segno che apre casa — il browser lo tiene **per indirizzo**: quello che si
+# abbina su un nome non esiste sull'altro. Con due nomi che servono la stessa
+# app, chi ci arriva dal bottone della console (\`<tramite>/app/\`) e chi ci
+# arriva dal preferito sono due app diverse per il browser, e a ognuna tocca
+# abbinarsi di nuovo — bruciando ogni volta uno degli otto posti dei telefoni.
+#
+# Quindi uno solo conta, e l'altro ci porta. Quello che conta e' quello **sotto
+# il tramite**: e' l'unico che la console sa fabbricare da se', sapendo del
+# centralino solo il nome che ha in configurazione. Il nome corto resta valido
+# per sempre — chi l'ha scritto su un biglietto non ha sbagliato — ma ci
+# rimanda, portandosi dietro il pezzo di strada che segue.
 $NOME_DELL_APP {
+	redir https://$NOME_DEL_TRAMITE/app{uri} permanent
+}
+
+# Il nome nudo: una pagina sola, ferma, che dice cos'e' gdahome e da dove si
+# comincia. E' l'indirizzo che si scrive su un negozio o su un biglietto, e
+# quindi non deve dipendere da niente che possa essere spento: qui non c'e'
+# \`try_files\`, perche' una pagina che non esiste deve dire che non esiste.
+$NOME_DEL_SITO {
 	encode zstd gzip
-	root * $DOVE/app
-	try_files {path} /index.html
+	root * $DOVE/sito
+
+	# Dentro il sito ci sono due cose diverse, e vanno tenute in cache in due
+	# modi diversi. La plancia e' novecento file e diciassette megabyte, e non
+	# cambiano finche' non cambia la versione: tenerli un giorno vuol dire che
+	# chi torna sul sito, o chi apre la seconda pagina, non se li riscarica.
+	# La pagina invece si rivede ogni volta: un testo corretto che resta in
+	# cache e' un testo corretto che nessuno legge.
+	header /dashboardmodern_static/* Cache-Control "public, max-age=86400"
+	header /statico/* Cache-Control "public, max-age=86400"
+	header /*.html Cache-Control "no-cache"
+	header / Cache-Control "no-cache"
+
+	# Due righe che non cambiano niente di quello che si vede, e tolgono di
+	# mezzo due modi vecchi di fare danno: un file servito per quello che e' e
+	# non per quello che il browser indovina, e l'indirizzo di questa pagina
+	# che non viene raccontato ai siti dove si va cliccando via.
+	header X-Content-Type-Options nosniff
+	header Referrer-Policy strict-origin-when-cross-origin
+
 	file_server
+}
+
+# E \`www\` non e' un secondo sito: e' lo stesso, detto come lo dice chi ha
+# imparato a scrivere gli indirizzi vent'anni fa.
+www.$NOME_DEL_SITO {
+	redir https://$NOME_DEL_SITO{uri} permanent
 }
 FINE
 
@@ -565,6 +731,26 @@ for _ in $(seq 1 60); do
   sleep 2
 done
 
+# Il sito e' una cartella di file fermi: non c'e' niente da interrogare, c'e'
+# da guardare che ci siano. Sono quasi mille, perche' la parte grossa e' la
+# plancia vera che gira dentro la pagina.
+if [[ -s "$DOVE/sito/index.html" ]]; then
+  quanti="$(find "$DOVE/sito" -type f | wc -l)"
+  bene "il sito c'e': $quanti file"
+  # Senza la plancia la pagina si apre lo stesso, e il riquadro in mezzo resta
+  # vuoto: e' il guasto peggiore, perche' non si vede da nessun'altra parte.
+  if [[ ! -s "$DOVE/sito/dashboardmodern_static/legacy/dashboard.html" ]]; then
+    printf '  %s!%s %s\n' "$giallo" "$spento" "il sito c'e' ma la plancia dentro no: il riquadro restera' vuoto."
+    nota "La rimette «node strumenti/porta-nel-sito.mjs», che gira da se' al"
+    nota "prossimo giro. Se non ci riesce, il motivo lo dice:  journalctl -u tramite-aggiorna -n 40 --no-pager"
+  fi
+else
+  printf '  %s!%s %s\n' "$giallo" "$spento" "la cartella del sito e' vuota: https://$NOME_DEL_SITO dara' 404."
+  nota "O in questa versione «$SEGNO» il sito non c'era, o la plancia non e'"
+  nota "entrata e il sito non si e' scambiato apposta. Si sposta il segno"
+  nota "(Actions → «Il tramite»), e al giro dopo arriva da solo."
+fi
+
 printf '\n'
 if [[ -n "$fuori" ]]; then
   printf '%s✓ Il tramite e'"'"' acceso.%s\n' "$verde" "$spento"
@@ -577,13 +763,24 @@ else
   printf '  Se non arriva, il motivo lo dice:  journalctl -u caddy -n 40 --no-pager\n'
 fi
 
+# La chiave si dice in due modi diversi, e la differenza conta: la prima volta
+# e' una cosa da mettere via, le altre e' solo un promemoria di quella che c'e'
+# gia'. Detto sempre allo stesso modo, chi rilancia lo script crede di doverla
+# ricambiare da qualche parte.
+if [[ "$CHIAVE_APPENA_FATTA" == si ]]; then
+  DETTO_DELLA_CHIAVE="La chiave della console, appena fatta — mettila nel gestore di password:"
+else
+  DETTO_DELLA_CHIAVE="La chiave della console e' quella di prima, non l'ho toccata:"
+fi
+
 cat <<FINE
 
-  L'app da browser:   https://$NOME_DELL_APP
+  Il sito:                  https://$NOME_DEL_SITO
+  L'app da browser:         https://$NOME_DEL_TRAMITE/app/
+  (e https://$NOME_DELL_APP ci rimanda)
   La chat, per rispondere:  https://$NOME_DEL_TRAMITE/console/
 
-  ${giallo}La chiave della console — mettila nel gestore di password, questa e' la
-  sola volta che la vedi:${spento}
+  ${giallo}$DETTO_DELLA_CHIAVE${spento}
 
       $CHIAVE_CONSOLE
 

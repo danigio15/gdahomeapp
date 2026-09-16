@@ -4,7 +4,8 @@
   "type": "module",
   "description": "Accende tutta la catena e guarda l'app girare.",
   "scripts": {
-    "guarda": "node guarda.mjs"
+    "guarda": "node guarda.mjs",
+    "guarda:sito": "node guarda-il-sito.mjs"
   },
   "devDependencies": {
     "playwright": "^1.49.0"

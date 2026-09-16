@@ -30,26 +30,49 @@
 /// sa dove sta andando l'app, e non ci si chiede se manchi un pezzo.
 library;
 
+import '../parole.dart';
+
 /// Le sezioni dell'app: le voci del menu.
 enum Sezione {
-  plancia('Plancia', 'home', pronta: true),
-  dispositivi('Dispositivi', 'widget', pronta: true),
-  configurazione('Configurazione', 'impostazioni', pronta: true),
-  comeVaLApp('Come va l\'app', 'minipc', pronta: true),
-  segnalazioni('Segnalazioni', 'segnalazioni', pronta: true),
-  assistenza('Assistenza', 'assistenza', pronta: true),
+  plancia('home', pronta: true),
+  dispositivi('widget', pronta: true),
+  configurazione('impostazioni', pronta: true),
+  comeVaLApp('minipc', pronta: true),
+  segnalazioni('segnalazioni', pronta: true),
+  assistenza('assistenza', pronta: true),
   /* La coda di chi risponde. Non e' una voce come le altre: compare **in una
    * casa sola al mondo**, quella che nelle opzioni del ponte ha la chiave
    * della console. Chi la voce ce l'ha lo decide il ponte, non l'app — vedi
    * `vociDellaBarra`. */
-  console('Console', 'avvisi', pronta: true),
-  aiutanti('Aiutanti', 'mie'),
-  zigbee('Zigbee', 'runtime'),
-  automazioni('Automazioni', 'azioni');
+  console('avvisi', pronta: true),
+  aiutanti('mie'),
+  zigbee('runtime'),
+  automazioni('azioni');
 
-  const Sezione(this.titolo, this.disegno, {this.pronta = false});
+  const Sezione(this.disegno, {this.pronta = false});
 
-  final String titolo;
+  /// Come si chiama, nella lingua di chi guarda.
+  ///
+  /// E' una domanda e non un campo perche' un campo di un `enum` si decide
+  /// quando si compila, e la lingua si sa quando si apre l'app.
+  ///
+  /// «Configurazione» in inglese e' **Config**, e non «Settings»: quella voce
+  /// apre la pagina Config della plancia, e la plancia inglese la chiama
+  /// cosi' (`dashboard-en.html`). Due nomi per la stessa stanza sono un nome
+  /// di troppo. Per lo stesso motivo «Aiutanti» e «Automazioni» prendono i
+  /// nomi che hanno in Home Assistant: Helpers e Automations.
+  String get titolo => switch (this) {
+    Sezione.plancia => inLingua(it: 'Plancia', en: 'Dashboard'),
+    Sezione.dispositivi => inLingua(it: 'Dispositivi', en: 'Devices'),
+    Sezione.configurazione => inLingua(it: 'Configurazione', en: 'Config'),
+    Sezione.comeVaLApp => inLingua(it: 'Come va l\'app', en: 'App health'),
+    Sezione.segnalazioni => inLingua(it: 'Segnalazioni', en: 'Reports'),
+    Sezione.assistenza => inLingua(it: 'Assistenza', en: 'Support'),
+    Sezione.console => inLingua(it: 'Console', en: 'Console'),
+    Sezione.aiutanti => inLingua(it: 'Aiutanti', en: 'Helpers'),
+    Sezione.zigbee => inLingua(it: 'Zigbee', en: 'Zigbee'),
+    Sezione.automazioni => inLingua(it: 'Automazioni', en: 'Automations'),
+  };
 
   /// Il disegno della sezione: lo stesso della plancia, per nome. Vedi
   /// `vestito/oggetti.dart`.

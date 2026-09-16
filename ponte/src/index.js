@@ -21,6 +21,7 @@ import { BASE_DI_CASA, Foto } from "./foto.js";
 import { Plancia } from "./plancia.js";
 import { Plance } from "./plance.js";
 import { PlanceInCasa } from "./plance-in-casa.js";
+import { UtentiDiCasa } from "./utenti.js";
 import { Identita } from "./identita.js";
 import { Dispositivi } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
@@ -129,7 +130,16 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     chat,
     spegnimento,
   });
-  const ponte = new Ponte({ casa, dispositivi, registro, commissioni });
+  /* Chi c'e' in questa casa, e chi la amministra.
+   *
+   * Non si tiene niente sul disco: si chiede a Home Assistant e la risposta
+   * vale un minuto. Serve a tre cose: disegnare le spunte di «chi la vede»,
+   * rispondere alla sola domanda che l'ingress non sa — «questo utente
+   * amministra?» — e dire al ponte se il telefono che chiede una plancia
+   * riservata a chi amministra ne ha il diritto. */
+  const utenti = new UtentiDiCasa({ casa, registro });
+
+  const ponte = new Ponte({ casa, dispositivi, registro, commissioni, utenti });
 
   /* Le plance fra le «Plance» di Home Assistant, una voce per ognuna.
    *
@@ -156,7 +166,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * casa e per chi arriva dal centralino, allo stesso modo. */
   /* Quello che si dice a un telefono che si abbina: chi e' questa casa, dove
    * si chiama per entrare da fuori, e dove sta sulla rete di casa. Senza,
-   * chi ha inquadrato un quadretto non saprebbe dove ribussare. */
+   * chi ha inquadrato un QR code non saprebbe dove ribussare. */
   const ritorno = new Ritorno({
     identita,
     centralino: opzioni.centralino,
@@ -181,6 +191,13 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
         : "questo ponte si aggiornerebbe da se', ma nella scheda dell'add-on non c'e' nessun gettone",
     );
   }
+
+  /* E lo stesso Ritorno risponde al telefono che lo chiede sul filo, invece
+   * che solo a chi si sta abbinando: un indirizzo di casa detto una volta
+   * sola invecchia, e chi ha abbinato stando fuori non ne ha mai sentito
+   * nessuno. Si mette qui e non nel costruttore delle commissioni perche' il
+   * Ritorno nasce dopo: gli serve la porta vera, che la sa solo il server. */
+  commissioni.ritorno = ritorno;
 
   const portiere = new Portiere({ ponte, dispositivi, abbinamento, registro, ritorno });
   const chiamata = new Chiamata({
@@ -210,7 +227,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     chiamata,
     identita,
     /* Anche la console ha bisogno di sapere dove si trova questa casa: nel
-     * codice a quadretti ci va scritto dentro, cosi' chi lo inquadra non deve
+     * QR code ci va scritto dentro, cosi' chi lo inquadra non deve
      * cercare niente. */
     ritorno,
     /* Da dove viene la plancia che questo ponte serve: la console lo dice,
@@ -220,6 +237,12 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * se ne aggiunge una, come in Home Assistant si aggiunge una seconda
      * istanza dell'integrazione. */
     plance,
+    /* E chi c'e' in casa: le spunte di «chi la vede», e la risposta a
+     * «amministra?» per le plance riservate a chi amministra. */
+    utenti,
+    /* La chat di assistenza: alla console serve per dire se questa casa
+     * risponde, che e' l'unico modo di sapere che la chiave e' arrivata. */
+    chat,
     /* E com'e' andata a metterle fra le «Plance» di Home Assistant: la scheda
      * dell'add-on e' il posto dove si guarda quando una voce nella barra
      * laterale non c'e'. */
@@ -248,6 +271,11 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   ritorno.porta = app.address().port;
 
   registro.info(`la porta dell'app e' la ${opzioni.portaDellApp}`);
+  /* Una riga sola, e solo dove serve: la chiave della console ce l'ha una
+   * installazione al mondo, e chi l'ha appena messa deve poter leggere da
+   * qualche parte che e' arrivata. Della chiave non si dice niente — si dice
+   * che c'e'. */
+  if (chat.eLaConsole) registro.info("la console dell'assistenza e' accesa");
   registro.info(`${dispositivi.quanti()} dispositivi abbinati`);
 
   chiamata.avvia();

@@ -45,10 +45,27 @@ function leggi(testo) {
 }
 
 export class Cucitura {
-  constructor({ presa, casa, commissioni = null, registro, da = "?", quale = null } = {}) {
+  constructor({
+    presa,
+    casa,
+    commissioni = null,
+    registro,
+    da = "?",
+    quale = null,
+    /* Chi sta guardando, e chi lo sa dire. L'ingress di Home Assistant scrive
+     * l'utente in testa alla richiesta che ha aperto questo filo; `utenti`
+     * (`utenti.js`) sa dire se quell'utente amministra. Servono alle plance
+     * riservate: senza, il selettore dentro la pagina mostrerebbe anche
+     * quelle degli altri. Vuoto vuol dire «non si sa», e chi non si sa vede
+     * tutto. */
+    chiGuarda = "",
+    utenti = null,
+  } = {}) {
     this.presa = presa;
     this.casa = casa;
     this.commissioni = commissioni;
+    this.chiGuarda = chiGuarda;
+    this.utenti = utenti;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.da = da;
     /* Quale plancia sta guardando: serve solo a dirlo nel registro, cosi' chi
@@ -119,8 +136,16 @@ export class Cucitura {
   }
 
   _commissione(detto) {
+    /* Chi chiede: qui non c'e' un telefono, c'e' una persona dentro Home
+     * Assistant — e chi sia lo dice l'ingress a chi ha aperto questo filo
+     * (`server.js`), che lo passa qui. Serve al selettore delle plance dentro
+     * la pagina: senza, chi apre una plancia che gli e' permessa vedrebbe
+     * comunque in elenco quelle degli altri. */
     const risposta = this.commissioni
-      ? this.commissioni.rispondi(detto)
+      ? this.commissioni.rispondi(detto, {
+          chiChiede: this.chiGuarda || "",
+          amministra: this.utenti?.amministratoreSubito?.(this.chiGuarda || "") ?? null,
+        })
       : Promise.resolve(no(detto.id ?? null, "unknown_command", "questo ponte non lo sa fare"));
     risposta
       .catch((errore) => {

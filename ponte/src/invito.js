@@ -1,4 +1,4 @@
-/* L'invito: quello che ci sta scritto dentro il codice a quadretti.
+/* L'invito: quello che ci sta scritto dentro il QR code.
  *
  * ─── Perche' non solo il codice ───────────────────────────────────────────
  *
@@ -9,7 +9,7 @@
  * si incontrano, e quello che si vede e' un'app che dice «non trovo la casa»
  * senza nessun modo di capire perche'.
  *
- * Nel quadretto invece ci sta tutto: il codice, **quale** centralino chiama
+ * Nel QR code invece ci sta tutto: il codice, **quale** centralino chiama
  * questa casa, e su quali indirizzi la si trova stando sul divano. Chi
  * inquadra non sa niente di tutto questo e non deve: mette a fuoco, e ci
  * entra.
@@ -43,7 +43,7 @@ export class InvitoIllegibile extends Error {}
 
 export class InvitoTroppoNuovo extends Error {}
 
-/* Quello che si disegna nel quadretto. */
+/* Quello che si disegna nel QR code. */
 export function invito({ codice, centralino = "", indirizzi = [] }) {
   const pulito = String(codice ?? "").trim();
   if (!pulito) throw new InvitoIllegibile("un invito senza codice non serve a niente");

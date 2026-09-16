@@ -431,6 +431,50 @@ export function lexicalGlobal(name) {
   return root[name] ?? null;
 }
 
+/* In che stanza di Home Assistant sta un'entita'.
+ *
+ * Home Assistant la stanza la sa gia': un'entita' porta la sua area, o la
+ * eredita dal dispositivo su cui sta. Servono tre registri — le aree, le aree
+ * dei dispositivi, le aree delle entita' — e il guscio li chiede dentro
+ * `wzLoadAllEntities()`: la procedura iniziale e il rilevamento automatico.
+ * Qui ci si appoggia a quelli e basta.
+ *
+ * Chiederli da soli si e' provato, ed e' costata la #553. La domanda partiva da
+ * dentro il disegno, una volta per entita', e `config/entity_registry/list` e'
+ * la risposta piu' pesante che Home Assistant sappia dare; quando falliva — e
+ * dentro il pannello fallisce, perche' li' la presa e' il ponte e non quella
+ * del guscio — la domanda si rifaceva al giro dopo, e il giro dopo e' ogni
+ * cambio di stato della casa. La linea cadeva, con lei le sottoscrizioni, e i
+ * dati sparivano dopo essere comparsi. Da un disegno non si chiede niente a
+ * nessuno: si legge quello che c'e'.
+ *
+ * E va detto fino in fondo dove siamo. Dentro il pannello questi registri oggi
+ * non ci sono MAI: `WIZ` nasce nuovo a ogni caricamento della pagina, e il
+ * rilevamento automatico ospitato esce subito da `loadEntities()` perche' gli
+ * stati vivi gli bastano, senza passare da `wzLoadAllEntities()`. Quindi li'
+ * qui si risponde sempre vuoto e il conto della presenza ripiega sul nome: il
+ * conto per stanza della #549, in pannello, non e' in funzione. Fuori dal
+ * pannello, dopo la procedura iniziale, i registri ci sono e funziona.
+ *
+ * E' una rinuncia, non una svista, e sta scritta qui perche' non sembri una
+ * svista. Rimetterla in piedi vuol dire tenere i registri in un posto che
+ * sopravvive al caricamento, riempito da chi gia' li carica per conto suo —
+ * non chiederli da qui.
+ *
+ * Torna il NOME della stanza, non il suo codice: e' quello che si legge, ed e'
+ * quello con cui la plancia chiama le sue stanze. Vuoto quando non si sa, e
+ * «non lo so» deve restare vuoto: chi legge deve poter ripiegare su altro
+ * invece di ricevere un nome inventato. */
+export function stanzaDiHomeAssistant(entity) {
+  const id = clean(entity);
+  if (!id) return "";
+  const wiz = lexicalGlobal("WIZ");
+  const riga = wiz?.entReg?.[id];
+  if (!riga) return "";
+  const area = riga.a || (riga.d ? wiz?.devArea?.[riga.d] : "");
+  return area ? clean(wiz?.areaNames?.[area]) : "";
+}
+
 /* Una variabile del runtime vendorizzato, riscritta.
  *
  * Il documento storico dichiara le sue variabili con `let` in cima allo
@@ -501,7 +545,24 @@ export function allStates() {
   const values = hosted.length ? Object.assign({}, ...hosted) : {};
   for (const name of ["_RAW_STATES", "STATES"]) {
     const lexical = lexicalGlobal(name);
-    if (lexical && typeof lexical === "object") Object.assign(values, lexical);
+    if (!lexical || typeof lexical !== "object") continue;
+    /* Si copiano i DESCRITTORI, non i valori.
+     *
+     * Le letture ricavate dalla sorgente unica con segno — la potenza della
+     * batteria gia' girata, e i due versi dei periodi — stanno qui come
+     * proprieta' con un accessore, e non enumerabili apposta: cosi' non si
+     * affacciano nel selettore delle entita' e non falsano i conteggi di chi
+     * cicla sugli stati. `Object.assign` copia solo le enumerabili, e quindi
+     * questa fusione le buttava via: il guscio storico, che legge il registro
+     * vero, le vedeva; i moduli, che leggono di qui, no. Succedeva soltanto a
+     * plancia OSPITATA dentro Home Assistant — senza `__HASS__` si torna il
+     * registro com'e', senza copiare niente — cioe' nel modo in cui la plancia
+     * gira quasi sempre, ed e' l'altra meta' del «ho provato anche a cambiare
+     * il senso ma non cambia» (#435).
+     *
+     * Col descrittore la lettura resta pigra: risponde col numero di adesso a
+     * ogni accesso, che e' il motivo per cui era stata scritta cosi'. */
+    Object.defineProperties(values, Object.getOwnPropertyDescriptors(lexical));
   }
   return values;
 }
@@ -701,7 +762,13 @@ export function righeDelDocumento(body, attributo, lista, leggi, tieni) {
  * una domanda sola: sparpagliata in due file, la risposta la si ricava
  * aprendoli tutti e due. Un numero nuovo si infila in mezzo senza toccare gli
  * altri — sono distanziati apposta. */
-export const ORDINE_IMPOSTAZIONI = Object.freeze({ lingua: 10, chiosco: 15, assist: 20, sezioni: 30 });
+export const ORDINE_IMPOSTAZIONI = Object.freeze({
+  lingua: 10,
+  chiosco: 15,
+  testaFissa: 17,
+  assist: 20,
+  sezioni: 30,
+});
 
 /* Da dove parte il blocco delle righe aggiunte: subito sotto il tasto «salva»
  * del blocco «Generali» del guscio, che si riconosce dal gestore e non dalla

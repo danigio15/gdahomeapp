@@ -58,7 +58,7 @@ test("due segni non si somigliano mai", () => {
 test("il codice buono entra una volta sola", () => {
   const a = new Abbinamento({ adesso: orologio().adesso });
   const { codice } = a.nuovo();
-  assert.equal(a.consuma(codice), true);
+  assert.ok(a.consuma(codice), "il codice buono non e' entrato");
   assert.throws(() => a.consuma(codice), CodiceSbagliato);
 });
 
@@ -66,7 +66,7 @@ test("il codice si puo' battere minuscolo e con gli spazi", () => {
   const a = new Abbinamento({ adesso: orologio().adesso });
   const { codice } = a.nuovo();
   const battuto = `${codice.slice(0, 4).toLowerCase()} - ${codice.slice(4).toLowerCase()}`;
-  assert.equal(a.consuma(battuto), true);
+  assert.ok(a.consuma(battuto), "il codice buono non e' entrato");
 });
 
 test("dopo cinque minuti il codice non vale piu'", () => {
@@ -83,7 +83,7 @@ test("un codice nuovo spegne quello di prima", () => {
   const primo = a.nuovo().codice;
   const secondo = a.nuovo().codice;
   assert.throws(() => a.consuma(primo), CodiceSbagliato);
-  assert.equal(a.consuma(secondo), true);
+  assert.ok(a.consuma(secondo), "il codice buono non e' entrato");
 });
 
 test("dieci tentativi sbagliati chiudono la porta, e il tempo la riapre", () => {
@@ -96,7 +96,7 @@ test("dieci tentativi sbagliati chiudono la porta, e il tempo la riapre", () => 
 
   tempo.avanti(15 * MINUTO + 1);
   const { codice } = a.nuovo();
-  assert.equal(a.consuma(codice), true);
+  assert.ok(a.consuma(codice), "il codice buono non e' entrato");
 });
 
 test("chi fabbrica un codice non paga per chi ha bussato prima", () => {
@@ -105,7 +105,7 @@ test("chi fabbrica un codice non paga per chi ha bussato prima", () => {
   for (let i = 0; i < 9; i += 1) assert.throws(() => a.consuma("SBAGLIATO"), CodiceSbagliato);
   const { codice } = a.nuovo();
   assert.equal(a.stato().tentativiSbagliati, 0);
-  assert.equal(a.consuma(codice), true);
+  assert.ok(a.consuma(codice), "il codice buono non e' entrato");
 });
 
 test("senza nessun codice attivo non si entra", () => {

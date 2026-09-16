@@ -30,8 +30,8 @@ import 'ponte_vero.dart';
 
 void main() {
   if (!PonteVero.cENode) {
-    test('il collaudo dal vivo vuole node, che qui non c\'e\'', () {
-      markTestSkipped('node non e\' installato');
+    test('il collaudo dal vivo vuole node, che qui non c\'è', () {
+      markTestSkipped('node non è installato');
     }, skip: true);
     return;
   }
@@ -211,7 +211,7 @@ void main() {
     }
   });
 
-  test('staccato dalla console, il telefono non rientra piu\'', () async {
+  test('staccato dalla console, il telefono non rientra più', () async {
     final collegamento = await _abbinaEApri(ponte);
     try {
       final stato = await ponte.statoDellaConsole();
@@ -281,5 +281,5 @@ Future<void> _finoA(
     if (condizione()) return;
     await Future<void>.delayed(const Duration(milliseconds: 20));
   }
-  throw StateError('l\'attesa e\' scaduta');
+  throw StateError('l\'attesa è scaduta');
 }

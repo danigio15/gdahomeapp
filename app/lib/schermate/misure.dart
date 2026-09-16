@@ -11,6 +11,8 @@ import 'dart:async';
 
 import 'package:flutter/scheduler.dart';
 
+import '../parole.dart';
+
 class Misure {
   Misure._();
 
@@ -164,14 +166,31 @@ class UltimoMinuto {
       fotogrammi == 0 ? 0 : (lenti * 100 / fotogrammi).round();
 
   String get riga {
-    final inPausa = pause == 0 ? '' : '; in pausa $pause volte';
-    return fotogrammi == 0
-        ? 'nessun fotogramma nell\'ultimo minuto; blocchi: $blocchi'
-              '${blocchi == 0 ? '' : ' (max $bloccoMaxMs ms)'}$inPausa'
-        : '$fotogrammi fotogrammi in 60 s, $percentoLenti% lenti; '
-              'UI $uiMedioMs ms (max $uiMaxMs), GPU $gpuMedioMs ms (max $gpuMaxMs); '
-              'blocchi: $blocchi${blocchi == 0 ? '' : ' (max $bloccoMaxMs ms)'}'
-              '$inPausa';
+    final inPausa = pause == 0
+        ? ''
+        : inLingua(
+            it: '; in pausa ${volte(pause)}',
+            en: '; paused ${volte(pause)}',
+          );
+    final ilMax = blocchi == 0 ? '' : ' (max $bloccoMaxMs ms)';
+    if (fotogrammi == 0) {
+      return inLingua(
+        it:
+            'nessun fotogramma nell\'ultimo minuto; blocchi: $blocchi$ilMax'
+            '$inPausa',
+        en: 'no frames in the last minute; stalls: $blocchi$ilMax$inPausa',
+      );
+    }
+    return inLingua(
+      it:
+          '$fotogrammi fotogrammi in 60 s, $percentoLenti% lenti; '
+          'UI $uiMedioMs ms (max $uiMaxMs), GPU $gpuMedioMs ms '
+          '(max $gpuMaxMs); blocchi: $blocchi$ilMax$inPausa',
+      en:
+          '$fotogrammi frames in 60 s, $percentoLenti% slow; '
+          'UI $uiMedioMs ms (max $uiMaxMs), GPU $gpuMedioMs ms '
+          '(max $gpuMaxMs); stalls: $blocchi$ilMax$inPausa',
+    );
   }
 }
 

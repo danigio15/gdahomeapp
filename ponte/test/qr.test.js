@@ -1,4 +1,4 @@
-/* Le prove del codice a quadretti.
+/* Le prove del QR code.
  *
  * Un encoder QR sbagliato non si vede: fa un quadrato che sembra un QR e che
  * nessun telefono legge. Non c'e' modo di guardarlo e dire «e' giusto» —

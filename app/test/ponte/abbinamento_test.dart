@@ -130,7 +130,7 @@ void main() {
     );
   });
 
-  test('una risposta che non e\' JSON non fa esplodere niente', () async {
+  test('una risposta che non è JSON non fa esplodere niente', () async {
     await expectLater(
       Abbinamento.chiedi(
         dove: dove,
@@ -143,7 +143,7 @@ void main() {
     );
   });
 
-  test('una rete che non c\'e\' diventa «non ti raggiungo»', () async {
+  test('una rete che non c\'è diventa «non ti raggiungo»', () async {
     await expectLater(
       Abbinamento.chiedi(
         dove: dove,
@@ -158,7 +158,7 @@ void main() {
 
   /* ─── Quello che si e' inquadrato ──────────────────────────────────────
    *
-   * Il quadretto dice **due** strade per la stessa casa, e quale sia quella
+   * Il QR code dice **due** strade per la stessa casa, e quale sia quella
    * buona dipende da dove si sta in quel momento. Non lo si chiede a chi
    * guarda lo schermo — non lo saprebbe dire — quindi lo si prova qui: le due
    * strade, e le due volte in cui non c'e' niente da scegliere. */
@@ -205,7 +205,7 @@ void main() {
     },
   );
 
-  test('il centralino del quadretto vince su quello dell\'app', () async {
+  test('il centralino del QR code vince su quello dell\'app', () async {
     /* E' il caso che prima non funzionava affatto: una casa che chiama un
      * centralino suo, e un'app costruita con un altro. Le due meta' non si
      * incontravano mai, e quello che si vedeva era «non trovo la casa». */
@@ -216,38 +216,32 @@ void main() {
     expect(quale, 'wss://quello.della.casa');
   });
 
-  test(
-    'un quadretto che non dice il centralino usa quello dell\'app',
-    () async {
-      final quale = await _dovePorta(
+  test('un QR code che non dice il centralino usa quello dell\'app', () async {
+    final quale = await _dovePorta(
+      Invito.leggi('gdahome|1|ABCD||'),
+      ripiego: IndirizzoDelCentralino.leggi('wss://quello.dell.app'),
+    );
+    expect(quale, 'wss://quello.dell.app');
+  });
+
+  test('un QR code senza nessuna strada lo dice, invece di provarci', () async {
+    await expectLater(
+      Abbinamento.conLInvito(
         Invito.leggi('gdahome|1|ABCD||'),
-        ripiego: IndirizzoDelCentralino.leggi('wss://quello.dell.app'),
-      );
-      expect(quale, 'wss://quello.dell.app');
-    },
-  );
-
-  test(
-    'un quadretto senza nessuna strada lo dice, invece di provarci',
-    () async {
-      await expectLater(
-        Abbinamento.conLInvito(
-          Invito.leggi('gdahome|1|ABCD||'),
-          nome: 'x',
-          sistema: 'ios',
+        nome: 'x',
+        sistema: 'ios',
+      ),
+      throwsA(
+        isA<PonteIrraggiungibile>().having(
+          (e) => e.spiegazione,
+          'spiegazione',
+          contains('non dice da dove si entra'),
         ),
-        throwsA(
-          isA<PonteIrraggiungibile>().having(
-            (e) => e.spiegazione,
-            'spiegazione',
-            contains('non dice da dove si entra'),
-          ),
-        ),
-      );
-    },
-  );
+      ),
+    );
+  });
 
-  test('il silenzio di tutti gli indirizzi e\' una risposta', () async {
+  test('il silenzio di tutti gli indirizzi è una risposta', () async {
     /* La differenza fra le due: `qualeRisponde` dice «nessuno», ed e' quello
      * che fa scegliere la strada; `qualeIndirizzo` deve tenerne uno comunque,
      * perche' domani, tornati a casa, quello e' meglio di niente. */
@@ -269,7 +263,7 @@ void main() {
     );
   });
 
-  test('il saluto dice se il ponte c\'e\'', () async {
+  test('il saluto dice se il ponte c\'è', () async {
     expect(
       await Abbinamento.cePonte(
         dove.salute,

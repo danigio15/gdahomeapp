@@ -35,13 +35,19 @@ import { applianceVisualKey, canonicalClimateType } from "../core/device-model.j
 import { applianceArtwork } from "../core/appliance-artwork.js";
 import { applianceModelById, buildCardMarkup, cardLabels } from "./appliance-showcase-section.js";
 import { RIF_CENTRALE } from "../core/alarm-panel.js";
-import { alarmActiveButton, alarmModeButtons } from "./security-showcase-section.js";
+import {
+  alarmActiveButton,
+  alarmModeButtons,
+  disegnoDelTastoAntifurto,
+} from "./security-showcase-section.js";
+import { parolaDellaPorta, parolaDiStato } from "./le-parole-di-home-assistant.js";
 import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
 import {
   bricioleDellaSezione,
   fraseDellaTessera,
   parolaDelVerdetto,
+  tonoPiuSerio,
   verdettoDellaTessera,
 } from "../core/racconto-tessera.js";
 import { analisiDellaSezione } from "../core/analisi-sezione.js";
@@ -61,6 +67,7 @@ import {
   letturaDellAria,
   normalizzaAria,
   parolaDelGrado,
+  valoreScritto,
 } from "../core/aria-model.js";
 import { nomeDellaLettura } from "../core/nome-della-lettura.js";
 import { cavoDalloStato, codiceDellaRicarica } from "../core/stato-della-ricarica.js";
@@ -199,11 +206,6 @@ import {
   rilevamentiAccesi,
 } from "../core/rilevamenti-telecamera.js";
 import {
-  CHIAVE_VERSO_BATTERIA,
-  batteriaGirata,
-  potenzaDellaBatteria,
-} from "../core/energy-flow-truth.js";
-import {
   CHIAVE_PRESENZA,
   contoDellaPresenza,
   presenzaDiCasa,
@@ -267,22 +269,23 @@ import { hasConfiguredData } from "../core/dashboard-store.js";
 import {
   activeLocale,
   allStates,
+  chiediAHomeAssistant,
   clean,
   doc,
   esc,
   formatNumber,
-  installStyle,
-  nomeDellEntita,
-  chiediAHomeAssistant,
   gettoneDiAccesso,
+  installStyle,
   lexicalGlobal,
   locale,
+  nomeDellEntita,
   planciaVisibile,
   readClimateUnits,
   readJson,
   root,
   section,
   siComanda,
+  stanzaDiHomeAssistant,
   t,
 } from "./shared.js";
 import { disegnaComeStaLaCasa } from "./come-sta-la-casa-section.js";
@@ -1393,6 +1396,11 @@ function aggiornamentiModel(states) {
     key: "aggiornamenti",
     accent: "#d97706",
     icon: "⬆️",
+    /* Questa tessera esiste solo quando c'e' qualcosa da fare — e allora c'e'
+     * sempre qualcosa da fare. Non dicendolo nasceva calma come una tessera
+     * senza niente sotto: «ci sono aggiornamenti ma la card resta spenta»
+     * (#540). Il colore ambra ce l'aveva gia', non lo accendeva nessuno. */
+    attiva: true,
     label: t("Aggiornamenti", "Updates"),
     value: String(fila.length),
     /* Si nomina il primo — la plancia quando c'e', che e' quella per cui
@@ -1583,7 +1591,15 @@ function lettureDellImpianto(states, impianto, primo) {
    * pubblica per il PRIMO impianto — il primo livello del documento Energia E'
    * il primo impianto. Per gli altri si legge quello che c'e' scritto, come
    * prima: prendere gli id ricavati vorrebbe dire mostrare la batteria di casa
-   * dentro la casa dell'altro. */
+   * dentro la casa dell'altro.
+   *
+   * Di qui passa anche il verso della batteria e della rete: chi ha dichiarato
+   * che il suo sensore scrive positivo in carica legge da qui il numero gia'
+   * girato, nella convenzione di casa — positivo = scarica. Il numero grezzo
+   * arrivava invece fino a tre letture diverse (la frase della tessera, il
+   * soggetto del racconto, la casella del popup), e girarlo in tre posti
+   * sarebbe stato lo stesso errore tre volte: si gira una volta sola, dove
+   * l'entita' si risolve, e da li' in poi la convenzione e' una. */
   const risolto = primo ? applySignedSources(impianto || {}) : impianto;
   const readings = ENERGY_SLOTS.map(([group, field, slot]) => ({
     group,
@@ -1593,31 +1609,6 @@ function lettureDellImpianto(states, impianto, primo) {
     states,
     clean(risolto?.battery?.soc) || (primo ? "dm.energy_stato_carica_batteria" : ""),
   );
-  /* La batteria entra qui gia' nella convenzione di casa: positivo = scarica.
-   *
-   * Meta' dei sensori scrive positivo quando la batteria si CARICA, e il verso
-   * lo dichiara chi abita la casa una volta sola (#434). Quel verso lo girava
-   * solo la mappa dei flussi; queste righe portavano il numero grezzo, e ci
-   * leggevano sopra tre cose diverse:
-   *
-   *   · la frase della tessera, che con un sensore girato scriveva «La
-   *     batteria copre 3,12 kW» mentre la mappa, accanto, disegnava la stessa
-   *     batteria che si caricava. Dal campo: «segna che la batteria copre la
-   *     casa a 3.12 kW» con il sole a 3,94 kW, la casa a 727 W e la rete a
-   *     zero — cioe' un bilancio in cui quei 3,12 kW non possono che ENTRARE
-   *     nella batteria;
-   *   · il soggetto del racconto, che diventa «quando sara' piena» solo sotto
-   *     i -10 W e quindi non ci arrivava mai;
-   *   · la casella del popup, che stampava il numero grezzo.
-   *
-   * Girarlo in tre posti sarebbe stato lo stesso errore tre volte. Si gira
-   * qui, dove la riga nasce, e da qui in poi c'e' una convenzione sola. */
-  const battuta = readings.find((row) => row.group === "battery");
-  if (battuta)
-    battuta.watts = potenzaDellaBatteria(
-      battuta.watts,
-      batteriaGirata(readJson(CHIAVE_VERSO_BATTERIA, {})),
-    );
   const rows = readings.filter((row) => row.watts != null);
   if (soc != null) {
     const batteria = rows.find((row) => row.group === "battery");
@@ -1721,6 +1712,32 @@ function didascaliaDiOggi(oggi) {
   return altre.length ? `${testa} · ${altre.join(" · ")}` : testa;
 }
 
+/* Quanto e' piena la batteria di casa, sulla tessera chiusa (#544).
+ *
+ * «Vorrei che fosse piu' facile vedere la % della batteria del fotovoltaico
+ * senza dover cliccare sulla card energia.» Il numero c'era gia', ma solo
+ * dentro: la finestra del dettaglio lo scrive accanto ai watt della batteria,
+ * e per leggerlo bisognava aprire — che e' esattamente quello che la
+ * segnalazione chiede di non dover fare.
+ *
+ * Va in testa alla didascalia, subito dopo l'avviso del sovraccarico, e per la
+ * stessa ragione per cui l'avviso sta li': la didascalia scorre, e cio' che si
+ * legge senza aspettare e' l'inizio. Sta prima dei numeri del giorno perche'
+ * non e' un numero del giorno — e' come sta la casa adesso, come i watt scritti
+ * in grande.
+ *
+ * Con la parola e non col disegno, per la ragione gia' scritta in
+ * `didascaliaDiOggi`: un simbolo a undici pixel e' una macchia scura.
+ *
+ * Chi la batteria non ce l'ha non se ne accorge: senza la sua riga, o senza il
+ * suo stato di carica, non c'e' niente da scrivere e la didascalia resta quella
+ * di sempre. */
+export function paroleDellaBatteria(rows) {
+  const soc = (Array.isArray(rows) ? rows : []).find((riga) => riga?.group === "battery")?.soc;
+  if (!Number.isFinite(soc)) return "";
+  return `${t("Batteria", "Battery")} ${Math.max(0, Math.min(100, Math.round(soc)))}%`;
+}
+
 /* Il verdetto della soglia su queste letture (#508).
  *
  * La regola sta in `core/la-soglia-della-potenza.js` e i numeri sono quelli
@@ -1775,7 +1792,11 @@ function tesseraEnergia(
     value: formatWatts(house),
     /* Il sovraccarico va in testa, prima dei numeri del giorno: la didascalia
      * scorre, e cio' che si legge senza aspettare e' l'inizio. */
-    caption: [avviso, didascaliaDiOggi(oggi || (today == null ? {} : { house: today }))]
+    caption: [
+      avviso,
+      paroleDellaBatteria(rows),
+      didascaliaDiOggi(oggi || (today == null ? {} : { house: today })),
+    ]
       .filter(Boolean)
       .join(" · "),
     ring: null,
@@ -2197,7 +2218,13 @@ function rigaDaEntita(states, entity, glifo = "•") {
       daQuando: quando,
       value: t("Spento", "Off"),
     };
-  return { glyph: glifo, name: nome, value: grezzo };
+  /* Quello che non e' un numero ne' un acceso/spento si scrive com'e' — ma
+   * «com'e'» vuol dire nella lingua della plancia, non nel gergo di Home
+   * Assistant: sotto «RAV4 luogo di parcheggio» compariva `not_home`, che non
+   * e' una parola ne' in italiano ne' in inglese. Il nome di una zona —
+   * «Lavoro», «Palestra» — non sta in tabella e passa intatto, che e'
+   * esattamente quello che deve succedere: quella parola l'ha scritta qualcuno. */
+  return { glyph: glifo, name: nome, value: parolaDiStato(grezzo) };
 }
 
 /* Il disegno di una casella dell'auto, indovinato dal nome del riferimento:
@@ -3772,7 +3799,7 @@ function ariaModel(states) {
     label: t("Aria", "Air"),
     /* Il numero e la sua unita' nella stessa casella: la tessera le separa da
      * se', come fa coi gradi della temperatura. */
-    value: `${formatNumber(copertina.valore, copertina.valore >= 100 ? 0 : 1)}${copertina.unita ? ` ${copertina.unita}` : ""}`,
+    value: `${valoreScritto(copertina, locale())}${copertina.unita ? ` ${copertina.unita}` : ""}`,
     caption: `${parola} · ${copertina.misura}`,
     ring: copertina.quanto,
     grado: giudizio.grado,
@@ -3783,7 +3810,7 @@ function ariaModel(states) {
       entity: lettura.entity,
       name: lettura.name,
       glyph: lettura.glifo,
-      value: `${formatNumber(lettura.valore, lettura.valore >= 100 ? 0 : 1)}${lettura.unita ? ` ${lettura.unita}` : ""}`,
+      value: `${valoreScritto(lettura, locale())}${lettura.unita ? ` ${lettura.unita}` : ""}`,
       grado: lettura.grado,
     })),
   };
@@ -3900,8 +3927,11 @@ function varchiModel(states) {
  */
 function presenzaModel(states) {
   const fuori = widgetExcludedEntities("presenza");
-  const righe = presenzaDiCasa(states, readJson(CHIAVE_PRESENZA, {}), (entity) =>
-    friendlyName(states, entity),
+  const righe = presenzaDiCasa(
+    states,
+    readJson(CHIAVE_PRESENZA, {}),
+    (entity) => friendlyName(states, entity),
+    stanzaDiHomeAssistant,
   ).filter((riga) => widgetIncludes(riga.entity, fuori));
   if (!righe.length) return null;
   const conto = contoDellaPresenza(righe);
@@ -4663,9 +4693,7 @@ export function applyWidgetPreferences(models, preferences = widgetPreferences()
            * cambiano da una casa all'altra. */
           eUnaSezioneMia(widget.key)
           ? "mie"
-          : eUnaTesseraEnergia(widget.key)
-            ? "energia"
-            : widget.key;
+          : famigliaDellaTessera(widget.key);
   const rank = (widget) => {
     const nome = chiave(widget);
     const index = preferences.order.indexOf(nome);
@@ -5376,7 +5404,7 @@ function unitaSimbolo(unita) {
  *
  * Chi sa disegnare un nome mdi e' il motore delle icone, che e' anche quello
  * che ha riempito il catalogo da cui la scelta viene. */
-function facciaDellaTessera(widget) {
+export function facciaDellaTessera(widget) {
   /* Una tessera puo' portarsi la faccia da sola (#460).
    *
    * «Remove the speaker icon and its name from the media player»: sulla musica
@@ -5386,7 +5414,8 @@ function facciaDellaTessera(widget) {
    * risposta invece dell'etichetta. La pastiglia resta dov'e' e com'e': cambia
    * cosa ci sta sopra, non la forma della tessera. */
   if (widget?.faccia) return widget.faccia;
-  if (haOggettoWidget(widget?.key)) return oggettoWidget(widget.key);
+  const famiglia = famigliaDellaTessera(widget?.key);
+  if (haOggettoWidget(famiglia)) return oggettoWidget(famiglia);
   return iconGlyphMarkup("action", widget?.icon, { size: 22 });
 }
 
@@ -6072,8 +6101,13 @@ function securityDetail(widget, states) {
      * La fila la disegna adesso chi la disegna anche li'. */
     const centrale = stateOf(states, RIF_CENTRALE);
     const acceso = alarmActiveButton(centrale);
+    /* Il disegno lo fa chi lo fa sulla pagina, e alla misura di questa
+     * casella: scrivere `voce.icon` voleva dire l'emoji di ripiego del
+     * catalogo al posto dell'icona scelta in configurazione (#547). */
     const tasti = alarmModeButtons(centrale)
-      .map((voce) => comando(voce.service, voce.mode === acceso, voce.icon, voce.label))
+      .map((voce) =>
+        comando(voce.service, voce.mode === acceso, disegnoDelTastoAntifurto(voce, 16), voce.label),
+      )
       .join("");
     parts.push(
       rowShell(
@@ -6096,14 +6130,7 @@ function porteDetail(widget, states) {
   const parts = [];
   for (const door of widget.doors) {
     const raw = clean(stateOf(states, door.entity)?.state).toLowerCase();
-    const label =
-      raw === "locked"
-        ? t("Chiusa a chiave", "Locked")
-        : raw === "unlocked"
-          ? t("Sbloccata", "Unlocked")
-          : raw === "open"
-            ? t("Aperta", "Open")
-            : "";
+    const label = parolaDellaPorta(raw);
     /* La porta si apre anche da qui.
      *
      * La riga la disegnava e basta: nome, stato, e un lucchetto che diceva
@@ -6254,19 +6281,48 @@ function fumoDetail(widget) {
  * questa funzione la finestra rispondeva «niente da mostrare», che con la
  * tessera accesa su sei aggiornamenti e' la risposta sbagliata.
  *
- * Il tasto per installare non c'e' e non ci va: si installa da Home Assistant,
- * dove accanto al tasto ci sono le note di rilascio — e un aggiornamento
- * lanciato da qui, senza averle lette, e' un aggiornamento fatto al buio. */
+ * Il tasto per installare qui non c'era: si installava da Home Assistant, dove
+ * accanto al tasto ci sono le note di rilascio — e un aggiornamento lanciato
+ * al buio e' un aggiornamento fatto al buio. Il ragionamento reggeva, la
+ * conclusione no: «gli aggiornamenti vengono segnalati ma non e' possibile
+ * avviarli, e' necessario andarli a fare dall'interfaccia di HA» (#540). Un
+ * avviso che sa tutto e non fa niente fa rifare la stessa strada a mano.
+ *
+ * Le note non si perdono per questo: viaggiano con la riga e stanno ACCANTO al
+ * tasto, che e' il posto dove si leggono — prima di premerlo, non dopo. E il
+ * tasto c'e' solo dove Home Assistant dice che quell'aggiornamento si installa
+ * chiamando un servizio: dove si fa col cacciavite, un tasto sarebbe una
+ * promessa che non si mantiene. */
 function aggiornamentiDetail(widget) {
   return (widget.aggiornamenti || [])
     .map((voce) => {
       const da = clean(voce?.da);
       const a = clean(voce?.a);
       const versioni = da && a ? `${da} \u2192 ${a}` : a || da;
+      const note = clean(voce?.note);
+      const entity = clean(voce?.entity);
+      const coda = voce?.inCorso
+        ? `<b class="dm-w-agg-corso">${esc(t("In corso", "Installing"))}</b>`
+        : voce?.installabile
+          ? `<button type="button" class="dm-w-agg-via" data-dm-w-update="${esc(entity)}"
+               title="${esc(t("Installa questo aggiornamento", "Install this update"))}">${esc(
+                 t("Installa", "Install"),
+               )}</button>`
+          : "";
       return rowShell(
         `<span class="dm-w-glyph" data-on="true" aria-hidden="true">\u2B06\uFE0F</span>
-         <span class="dm-w-name">${esc(clean(voce?.nome) || clean(voce?.entity))}</span>
-         <span class="dm-w-val">${esc(versioni || t("Disponibile", "Available"))}</span>`,
+         <span class="dm-w-name">${esc(clean(voce?.nome) || entity)}</span>
+         <span class="dm-w-val">${esc(versioni || t("Disponibile", "Available"))}</span>
+         ${
+           note
+             ? `<a class="dm-w-agg-note" href="${esc(note)}" target="_blank" rel="noopener noreferrer"
+                  title="${esc(t("Le note di questa versione", "This version's notes"))}">${esc(
+                    t("Note", "Notes"),
+                  )}</a>`
+             : ""
+         }
+         ${coda}`,
+        'data-dm-w-agg=""',
       );
     })
     .join("");
@@ -6434,13 +6490,29 @@ const CHIAVI_A_CARTE = new Set([
 const eUnaTesseraEnergia = (chiave) =>
   clean(chiave) === "energia" || clean(chiave).startsWith("energia_");
 
+/**
+ * La famiglia di una tessera: la chiave sotto cui vive la sua sezione.
+ *
+ * Per quasi tutte e' la chiave stessa. Per gli impianti oltre il primo no —
+ * `energia_zona_notte` e' pur sempre l'Energia — e quella riduzione era scritta
+ * in tre posti: chi ordina le tessere, chi ne disegna le caselle, chi apre la
+ * pagina. Un quarto le serviva — chi sceglie il disegno della pastiglia — e
+ * non ce l'aveva: la seconda zona chiedeva il disegno di «energia_zona_notte»,
+ * che non esiste, e si ritrovava il ripiego del motore delle icone. Dal campo:
+ * «la seconda zona di energia ha perso l'icona».
+ */
+const famigliaDellaTessera = (chiave) =>
+  eUnaTesseraEnergia(chiave) ? "energia" : clean(chiave);
+
 function carteDalleRighe(widget) {
   /* Una tessera «a se'» delle evidenze si disegna come la tessera madre, e
    * cosi' anche quella di una sezione propria: sono entrambe un pugno di
    * entita' scelte a mano, col loro nome e il loro valore. */
   const grezza = clean(widget.key);
   const chiave =
-    grezza.startsWith("evidenza-") || eUnaSezioneMia(grezza) ? "evidenza" : grezza;
+    grezza.startsWith("evidenza-") || eUnaSezioneMia(grezza)
+      ? "evidenza"
+      : famigliaDellaTessera(grezza);
   if (!(CHIAVI_A_CARTE.has(chiave) || eUnaTesseraEnergia(chiave) || chiave.startsWith("custom-")))
     return [];
   const righe = Array.isArray(widget.rows) ? widget.rows : [];
@@ -6836,7 +6908,9 @@ function verdettoEFrase(widget) {
     locale?.(),
   );
   const verdetto = verdettoDellaTessera(widget, t);
-  const tono = lettura?.tono || verdetto.tono;
+  /* Il piu' serio dei due, non l'ultimo che parla: il motore puo' alzare il
+   * verdetto, mai abbassarlo. Vedi `tonoPiuSerio`. */
+  const tono = tonoPiuSerio(verdetto.tono, lettura?.tono || verdetto.tono);
   const parola = tono === verdetto.tono ? verdetto.testo : parolaDelVerdetto(tono, t);
   const misura = clean(widget.value);
   const nota = clean(widget.caption);
@@ -7167,7 +7241,7 @@ function voceDellaSezione(chiave) {
   const tab = eUnaSezioneMia(grezza)
     ? grezza
     : /* Ogni tessera energia porta alla sezione, non solo la prima (#286). */
-      SEZIONE_DEL_WIDGET[eUnaTesseraEnergia(grezza) ? "energia" : grezza];
+      SEZIONE_DEL_WIDGET[famigliaDellaTessera(grezza)];
   if (!tab) return null;
   const voce = doc?.querySelector?.(`.tab[data-tab="${tab}"]`);
   if (!voce || voce.style?.display === "none") return null;
@@ -7402,17 +7476,30 @@ function apriGliAvvisiAppenaAccesi(models) {
 export function renderHomeWidgets() {
   const states = allStates();
   const tutti = modelliDelleTessere(states);
+  const models = applyWidgetPreferences(tutti);
   /* La riga sotto il meteo (#356) si disegna qui, coi modelli appena fatti e
-   * prima di ogni scorciatoia: le tessere possono non esserci — plancia
-   * appena installata, tutte nascoste — e la pastiglia della posta deve
-   * comparire lo stesso. Un secondo giro sugli stati per contare le stesse
-   * cose sarebbe il doppio del lavoro per la stessa risposta. */
+   * prima di ogni scorciatoia: la griglia puo' non esserci — una plancia
+   * appena installata, o chi l'ha spenta tutta — e la riga deve comparire lo
+   * stesso. Un secondo giro sugli stati per contare le stesse cose sarebbe il
+   * doppio del lavoro per la stessa risposta.
+   *
+   * Entrano TUTTI i modelli, non quelli scelti nella scheda Widget.
+   *
+   * Per un giro si era provato il contrario, perche' chi aveva spento i Varchi
+   * fra i widget se li ritrovava nella riga (#538). Ma cosi' chi tiene la riga
+   * PROPRIO PERCHE' ha nascosto la tessera grossa perdeva anche la pastiglia:
+   * «non esce piu' il tipo di rifiuto, non ho cambiato niente, dopo l'ultimo
+   * aggiornamento non mi appare piu'». Sono due persone che fanno lo stesso
+   * gesto e vogliono il contrario, quindi un interruttore solo non puo'
+   * accontentarle: la riga ha i suoi, una spunta per voce, nel pannello
+   * «Barra sotto il meteo». Quelli decidono le pastiglie, la scheda Widget
+   * decide le tessere. Tenendole legate la spunta della riga diceva una
+   * bugia — accesa, e non compariva niente. */
   try {
     disegnaComeStaLaCasa(tutti, states);
   } catch (error) {
     root.console?.warn?.("[DashboardModern] barra di casa", error);
   }
-  const models = applyWidgetPreferences(tutti);
   apriGliAvvisiAppenaAccesi(models);
   const host = doc?.getElementById?.("dm-widgets");
   if (!models.length) {
@@ -8351,6 +8438,32 @@ function onClick(event) {
     // Stessa strada della pagina Sicurezza: il tastierino PIN dell'antifurto
     // chiede il codice e poi chiama lui il servizio scelto.
     root.promptPinAndSet?.(clean(alarm.dataset.dmWAlarm));
+    return;
+  }
+  const aggiornamento = event.target?.closest?.("[data-dm-w-update]");
+  if (aggiornamento) {
+    event.preventDefault();
+    const quale = clean(aggiornamento.dataset.dmWUpdate);
+    if (!quale) return;
+    /* Si spegne subito e dice che sta andando: il servizio ci mette un attimo
+     * a farsi sentire, e due tocchi sulla stessa riga sono due installazioni
+     * della stessa cosa. Quando gli stati tornano, la riga si riscrive da
+     * sola con quello che dice Home Assistant.
+     *
+     * Ma se il servizio rifiuta — Home Assistant scollegato, entita' non
+     * raggiungibile, permesso negato — `callHa` inghiotte l'errore e torna
+     * `undefined`: senza rimettere il tasto com'era, la riga resterebbe
+     * spenta su «In corso» per sempre, e l'unico modo di riprovare sarebbe
+     * chiudere e riaprire la finestra. Il tasto torna come prima. E' la
+     * stessa regola che segue `completeItem` qui sopra. */
+    const parola = aggiornamento.textContent;
+    aggiornamento.disabled = true;
+    aggiornamento.textContent = t("In corso", "Installing");
+    callHa("update", "install", { entity_id: quale }).then((esito) => {
+      if (esito !== undefined) return;
+      aggiornamento.disabled = false;
+      aggiornamento.textContent = parola;
+    });
     return;
   }
   if (event.target?.closest?.("[data-dm-widget-close]")) {
@@ -9536,6 +9649,30 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg rect,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg circle,
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg line{stroke:currentColor}
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg [fill="currentColor"]{fill:currentColor}
+/* L'aggiornamento: le note prima, il tasto dopo. Si leggono in quest'ordine
+   perche' in quest'ordine si fanno.
+   La riga puo' andare a capo: nome, versioni, note e tasto su un telefono in
+   fila non ci stanno, e quello che esce dal bordo non si preme. E le versioni
+   non sono un numero da incolonnare — sono un'etichetta, e come etichetta
+   lasciano il posto al tasto. */
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-row[data-dm-w-agg]{flex-wrap:wrap}
+:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row[data-dm-w-agg] .dm-w-val{
+  font-family:inherit;font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-agg-note{
+  flex:0 0 auto;font-size:10.5px;font-weight:800;letter-spacing:.02em;text-decoration:none;
+  padding:4px 8px;border-radius:9px;border:1px solid var(--card-border,#e2e8f0);
+  background:var(--surface-2,#f8fafc);color:var(--text-dim,#64748b)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-agg-note:hover{color:var(--text,#0f172a)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-agg-via{
+  flex:0 0 auto;padding:5px 11px;border-radius:9px;border:0;cursor:pointer;
+  font-size:10.5px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
+  background:var(--dm-widget-accent,#d97706);color:#fff;
+  transition:filter .2s ease,opacity .2s ease}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-agg-via:hover{filter:brightness(1.06)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-agg-via[disabled]{opacity:.55;cursor:default}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-agg-corso{
+  flex:0 0 auto;font-size:10.5px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--dm-widget-accent,#d97706)}
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-alarm{display:inline-flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin-left:auto}
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-alarm button{
   width:32px;height:28px;border-radius:9px;border:1px solid var(--card-border,#e2e8f0);
@@ -9705,14 +9842,27 @@ ${regoleCompatte()}
   );
 }
 
-/* La modalita' compatta «C4» (#224): il design approvato, riprodotto pari.
+/* La modalita' compatta «C4» (#224).
  *
- * La tessera diventa una pillola coricata: due colonne, quarantotto pixel
- * d'altezza, raggio quattordici. Dentro, tre cose sole — il chip neutro con
- * l'oggetto, il nome in maiuscoletto pieno, il valore ancorato a destra — e
- * sul fianco sinistro la tacca a semipillola col colore della sezione, fusa
- * nel bordo. Le didascalie e le misure spariscono: la pillola e' il colpo
+ * La tessera diventa una pillola coricata: due colonne nella griglia,
+ * cinquantadue pixel d'altezza, raggio quattordici. Dentro, tre cose sole — il
+ * chip neutro con l'oggetto, il nome in maiuscoletto pieno, il valore — e sul
+ * fianco sinistro la tacca a semipillola col colore della sezione, fusa nel
+ * bordo. Le didascalie e le misure spariscono: la pillola e' il colpo
  * d'occhio, il resto vive nel popup, che non cambia.
+ *
+ * Il nome e il valore stanno in colonna, non in fila.
+ *
+ * In fila ci stavano, e si contendevano la stessa riga: il valore si prendeva
+ * quello che gli serviva e al nome restava il resto, cosi' «AGENDA» accanto a
+ * «8 in arrivo» diventava «AGEI» e «SICUREZZA» accanto a «Disinserito»
+ * diventava «SICU». Non erano puntini — era il taglio secco, a meta' parola,
+ * dentro una pillola dove la seconda riga non ci sta.
+ *
+ * In colonna il nome ha sempre la stessa larghezza — quella che resta dopo il
+ * chip — qualunque cosa dica il valore, e il valore non ne toglie piu' a
+ * nessuno. Costa quattro pixel d'altezza, che e' il prezzo di leggere due
+ * parole intere invece di due mozzate.
  *
  * Le stesse regole valgono due volte — sempre, e in «auto» solo sotto i 520
  * pixel — quindi si scrivono una volta sola qui e si stampano con la radice
@@ -9729,8 +9879,9 @@ ${radice} .dm-widgets-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px
 ${radice} .dm-tile,
 ${radice} .dm-tile[data-acceso],
 ${radice} .dm-tile[data-open]{
-  flex-direction:row;align-items:center;gap:9px;
-  min-height:48px;padding:0 12px 0 13px;border-radius:14px;
+  display:grid;grid-template-columns:30px minmax(0,1fr);grid-template-rows:auto auto;
+  align-items:center;column-gap:9px;row-gap:1px;
+  min-height:52px;padding:7px 12px 7px 13px;border-radius:14px;
   background:var(--card-bg,#fff);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb,var(--text,#0f172a) 8%,transparent),
@@ -9759,6 +9910,7 @@ ${radice} .dm-tile-cima{display:contents}
    nella pillola ce lo mette la tacca, non il chip. */
 ${radice} .dm-tile[data-acceso] .dm-tile-chip,
 ${radice} .dm-tile[data-open] .dm-tile-chip{
+  grid-column:1;grid-row:1 / span 2;align-self:center;
   flex:0 0 30px;width:30px;height:30px;border-radius:10px;font-size:15px;
   background:var(--surface-2,#f8fafc);
   box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text,#0f172a) 9%,transparent)}
@@ -9766,14 +9918,19 @@ ${radice} .dm-tile-chip .dm-oggetto{width:19px;height:19px;filter:none}
 /* Il nome: maiuscoletto minuto in inchiostro pieno, non smorzato — a questa
    misura il grigio non si leggerebbe. */
 ${radice} .dm-tile-label{
+  grid-column:2;grid-row:1;
+  /* Una riga sola: la seconda e' del valore, e un nome che ci scendesse dentro
+     lo coprirebbe. Chi non ci entra lo stringe il rimpicciolitore del nome,
+     che e' anche l'unica ragione per cui qui non servono i puntini. */
+  -webkit-line-clamp:1;white-space:nowrap;
   font-size:8.8px;line-height:1.2;letter-spacing:.09em;
   color:var(--text,#0f172a)}
-/* Il valore, ancorato a destra col suo margine ottico di 12px (il cuscino
-   destro della pillola). Il margine a zero annulla il -13.6px pensato per
-   Oswald a corpo 40: qui il valore e' Inter, e quel margine lo decapitava. */
+/* Il valore, sotto il nome e nella stessa colonna. Il margine a zero annulla
+   il -13.6px pensato per Oswald a corpo 40: qui il valore e' Inter, e quel
+   margine lo decapitava. */
 ${radice} .dm-tile-val{
-  display:flex;align-items:baseline;flex:0 0 auto;min-width:0;max-width:55%;
-  margin-left:auto}
+  grid-column:2;grid-row:2;
+  display:flex;align-items:baseline;min-width:0;max-width:100%;margin-left:0}
 ${radice} .dm-tile-value,
 ${radice} .dm-tile-value[data-dm-len="medio"],
 ${radice} .dm-tile-value[data-dm-len="lungo"]{
@@ -9793,7 +9950,7 @@ ${radice} .dm-tile-unit[data-simbolo="true"]{
 ${radice} .dm-tile-fondo{display:none}
 /* I tre puntini seguono la didascalia: nella pillola non c'e' il posto dove
    stavano — qui la riga di cima e' display:contents, quindi non fa piu' da
-   riferimento a niente — e una pillola alta quarantotto pixel e' gia' piena. */
+   riferimento a niente — e una pillola alta cinquantadue pixel e' gia' piena. */
 ${radice} .dm-tile-menu{display:none}
 /* La pillola d'avviso: il velo piatto del colore d'avviso al 10%, l'hairline
    in tinta, la tacca piu' spessa e il valore in tinta scura. Niente gradienti

@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gdahome/misure/lavori.dart';
 import 'package:gdahome/ponte/errori.dart';
 import 'package:gdahome/ponte/filo.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
@@ -64,20 +65,17 @@ void main() {
     },
   );
 
-  test(
-    'un telefono staccato mentre e\' collegato viene buttato fuori',
-    () async {
-      final filo = filoCon();
-      await filo.apri();
+  test('un telefono staccato mentre è collegato viene buttato fuori', () async {
+    final filo = filoCon();
+    await filo.apri();
 
-      ponte.accettaIlSegno = false;
-      await ponte.buttaGiu();
+    ponte.accettaIlSegno = false;
+    await ponte.buttaGiu();
 
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-      expect(filo.dentro, isFalse);
-      await filo.chiudi();
-    },
-  );
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    expect(filo.dentro, isFalse);
+    await filo.chiudi();
+  });
 
   test('un comando va e torna, con il suo numero', () async {
     final filo = filoCon();
@@ -328,7 +326,7 @@ void main() {
     expect(
       ponte.collegamenti,
       0,
-      reason: 'non si e\' collegato dopo la chiusura',
+      reason: 'non si è collegato dopo la chiusura',
     );
     expect(filo.dentro, isFalse);
   });
@@ -364,19 +362,19 @@ void main() {
     expect(tornati.single.tipo, 'result');
     expect(tornati.single.successo, isTrue);
     expect(tornati.single.detto['id'], numero);
-    /* Il testo si riconsegna col numero di chi aveva chiesto, cambiando
-     * solo quello: il resto e' lo stesso, byte per byte. */
-    final riscritto = jsonDecode(tornati.single.conNumero(99));
+    /* I byte si riconsegnano col numero di chi aveva chiesto, cambiando solo
+     * quello: il resto e' lo stesso, byte per byte. */
+    final riscritto = jsonDecode(utf8.decode(tornati.single.conNumero(99)));
     expect(riscritto, {...tornati.single.detto, 'id': 99});
-    /* E per lo **stesso** numero non si riscrive niente: si riconsegna quella
-     * stessa stringa. Su un `get_states` da un megabyte e mezzo una copia
-     * risparmiata non e' tempo — un megabyte si copia in pochi millesimi — e'
-     * roba da buttare in meno, e i decimi di secondo di quella si pagano dopo,
-     * sul filo che disegna, quando il raccoglitore passa. */
+    /* E per lo **stesso** numero non si riscrive niente: si riconsegnano quei
+     * byte. Su un `get_states` da un megabyte e mezzo una copia risparmiata
+     * non e' tempo — un megabyte si copia in pochi millesimi — e' roba da
+     * buttare in meno, e i decimi di secondo di quella si pagano dopo, sul
+     * filo che disegna, quando il raccoglitore passa. */
     expect(
       tornati.single.conNumero(numero),
-      same(tornati.single.testo),
-      reason: 'col suo numero non si alloca una stringa nuova',
+      same(tornati.single.byte),
+      reason: 'col suo numero non si alloca niente di nuovo',
     );
     expect(
       ponte.arrivati.where((uno) => uno['type'] == 'get_states').single['id'],
@@ -393,7 +391,7 @@ void main() {
     filo.dimentica(numero);
     ponte.cambia(numero, 'light.sala', {'state': 'off'});
     await Future<void>.delayed(const Duration(milliseconds: 100));
-    expect(tornati.length, 2, reason: 'dimenticato: non deve piu\' arrivare');
+    expect(tornati.length, 2, reason: 'dimenticato: non deve più arrivare');
 
     /* E i numeri restano un contatore solo: quello dopo e' piu' grande. */
     final risposta = await filo.chiedi({'type': 'get_states'});
@@ -402,7 +400,7 @@ void main() {
   });
 
   test(
-    'dopo una caduta chi mandava per conto suo non riceve piu\' niente',
+    'dopo una caduta chi mandava per conto suo non riceve più niente',
     () async {
       final filo = filoCon();
       await filo.apri();
@@ -479,6 +477,189 @@ void main() {
     await filo.chiudi();
   });
 
+  test(
+    'quello che si instrada arriva in byte, interi e rinumerabili',
+    () async {
+      /* La strada di un messaggio della plancia non passa mai per una stringa:
+     * dalla busta decifrata escono byte, la testa si legge dai byte, il
+     * numero si cambia nei byte, e i byte si scrivono nel WebSocket verso la
+     * pagina. Qui si prova che in tutto quel giro non si perde niente —
+     * comprese le lettere accentate, che in UTF-8 sono due byte e sono il
+     * modo piu' facile di accorgersi che qualcuno ha contato caratteri dove
+     * c'erano byte. */
+      final filo = filoCon();
+      await filo.apri();
+      final tornati = <Instradato>[];
+      final numero = filo.instrada({'type': 'subscribe_events'}, tornati.add);
+      await _finoA(() => tornati.isNotEmpty, entro: const Duration(seconds: 3));
+      final prima = tornati.length;
+
+      ponte.cambia(numero, 'sensor.temperatura_camera_da_letto', {
+        'state': '21.5',
+        'attributes': {'friendly_name': 'Temperatura in camera — più giù'},
+      });
+      await _finoA(
+        () => tornati.length > prima,
+        entro: const Duration(seconds: 3),
+      );
+
+      final venuto = tornati.last;
+      expect(venuto.tipo, 'event');
+      expect(venuto.id, numero);
+
+      /* Byte per byte quello che la casa ha detto. */
+      expect(
+        utf8.decode(venuto.byte),
+        jsonEncode({
+          'id': numero,
+          'type': 'event',
+          'event': {
+            'event_type': 'state_changed',
+            'data': {
+              'entity_id': 'sensor.temperatura_camera_da_letto',
+              'new_state': {
+                'state': '21.5',
+                'attributes': {
+                  'friendly_name': 'Temperatura in camera — più giù',
+                },
+              },
+            },
+          },
+        }),
+      );
+
+      /* Rinumerato: cambia il numero in testa e **solo** quello. Gli accenti
+     * sono dopo, e devono uscire di qui come sono entrati. */
+      final rinumerato =
+          jsonDecode(utf8.decode(venuto.conNumero(7))) as Map<String, dynamic>;
+      expect(rinumerato['id'], 7);
+      expect(rinumerato, {...venuto.detto, 'id': 7});
+      expect(
+        (((((rinumerato['event'] as Map)['data'] as Map)['new_state']
+                    as Map)['attributes']
+                as Map)['friendly_name']
+            as String),
+        'Temperatura in camera — più giù',
+      );
+
+      await filo.chiudi();
+    },
+  );
+
+  test(
+    'un mucchio si spezza senza copiare, e i pezzi restano interi',
+    () async {
+      /* I pezzi di un mucchio sono viste sugli stessi byte arrivati, una per
+     * messaggio: spezzarlo non alloca niente. Una vista sbagliata di un byte
+     * non si vedrebbe nel JSON aperto — lo si vedrebbe qui, guardando i byte
+     * che poi finiscono nel WebSocket della pagina. */
+      final filo = filoCon();
+      await filo.apri();
+      final tornati = <Instradato>[];
+      final numero = filo.instrada({'type': 'subscribe_events'}, tornati.add);
+      await _finoA(() => tornati.isNotEmpty, entro: const Duration(seconds: 3));
+      final prima = tornati.length;
+
+      final dette = [
+        {
+          'event_type': 'state_changed',
+          'data': {
+            'entity_id': 'light.cucina',
+            'new_state': {
+              'state': 'on',
+              'attributes': {'amici': 'à è ì ò ù'},
+            },
+          },
+        },
+        {
+          'event_type': 'state_changed',
+          'data': {
+            'entity_id': 'light.salotto',
+            'new_state': {'state': 'off'},
+          },
+        },
+      ];
+      ponte.mucchio(numero, dette);
+
+      await _finoA(
+        () => tornati.length - prima == dette.length,
+        entro: const Duration(seconds: 3),
+      );
+      expect(
+        tornati.skip(prima).map((uno) => utf8.decode(uno.byte)).toList(),
+        dette
+            .map(
+              (cosa) =>
+                  jsonEncode({'id': numero, 'type': 'event', 'event': cosa}),
+            )
+            .toList(),
+      );
+
+      await filo.chiudi();
+    },
+  );
+
+  test('gli eventi della plancia si contano, e si dice quanti sono', () async {
+    /* La diagnostica diceva «500 msg, 0 eventi» a chi aveva una casa che
+     * parla: un messaggio instradato torna a chi l'aveva chiesto **prima** di
+     * essere aperto, e la conta degli eventi stava dopo, dove quel messaggio
+     * non arriva mai. Cosi' il numero piu' utile — quanto la casa racconta
+     * alla plancia — era l'unico che non si vedeva, e chi guardava andava a
+     * cercare un colpevole che non c'era. */
+    final filo = filoCon();
+    await filo.apri();
+    final tornati = <Instradato>[];
+    final numero = filo.instrada({'type': 'subscribe_events'}, tornati.add);
+    await _finoA(() => tornati.isNotEmpty, entro: const Duration(seconds: 3));
+
+    for (var quale = 0; quale < 5; quale += 1) {
+      ponte.cambia(numero, 'light.sala_$quale', {'state': 'on'});
+    }
+    await _finoA(() => tornati.length >= 6, entro: const Duration(seconds: 3));
+
+    expect(filo.traffico, contains('5 eventi'));
+    expect(filo.traffico, contains('alla plancia'));
+    await filo.chiudi();
+  });
+
+  test('una risposta grossa si legge altrove, e arriva intera', () async {
+    /* Sopra la soglia il JSON non si legge su questo filo: i byte partono per
+     * l'aiutante — **trasferiti**, non copiati — e tornano mappe. E' la strada
+     * che sul telefono fa un `get_states` di una casa vera, e nel browser non
+     * esiste: la si prova qui, dove l'aiutante c'e' davvero. */
+    ponte.entita = [
+      for (var quale = 0; quale < 400; quale += 1)
+        PonteFinto.unaEntita(
+          'sensor.roba_$quale',
+          '$quale',
+          nome: 'Roba numero $quale, con un nome lungo e un accento: più giù',
+          unita: '°C',
+        ),
+    ];
+    final filo = filoCon();
+    await filo.apri();
+
+    final risposta = await filo.chiedi({'type': 'get_states'});
+    final venute = risposta['result'] as List;
+    expect(venute, hasLength(400));
+    expect(
+      (venute.last as Map)['attributes'],
+      containsPair(
+        'friendly_name',
+        'Roba numero 399, con un nome lungo e un accento: più giù',
+      ),
+    );
+    /* E che sia passata davvero dall'aiutante — e non letta qui, che sarebbe
+     * la prova buona per il motivo sbagliato — lo dice la diagnostica: e' il
+     * lavoro contato con quel nome. */
+    expect(
+      Lavori.io.tutti.map((uno) => uno.cosa),
+      contains('messaggi letti altrove'),
+    );
+
+    await filo.chiudi();
+  });
+
   test('al risveglio un filo morto in silenzio si chiude e ribussa', () async {
     final filo = Filo.fisso(
       indirizzo: ponte.indirizzo,
@@ -505,11 +686,11 @@ void main() {
 
     ponte.muto = false;
     await _finoA(() => filo.dentro, entro: const Duration(seconds: 5));
-    expect(filo.traffico, contains('caduto 1 volte'));
+    expect(filo.traffico, contains('caduto 1 volta'));
     await filo.chiudi();
   });
 
-  test('il traffico dice se il gzip c\'e\': con un ponte nuovo si\', con uno vecchio no', () async {
+  test('il traffico dice se il gzip c\'è: con un ponte nuovo sì, con uno vecchio no', () async {
     final filo = Filo.fisso(
       indirizzo: ponte.indirizzo,
       segno: segnoBuono,
@@ -536,7 +717,7 @@ void main() {
     ponte.conosceIlGzip = true;
   });
 
-  test('quando chi chiude dice perche\', la caduta lo ripete', () async {
+  test('quando chi chiude dice perché, la caduta lo ripete', () async {
     /* «Il filo si e' chiuso» non dice niente a nessuno. «Questa casa adesso
      * non e' collegata» — che e' quello che dice il centralino quando
      * l'add-on non e' attaccato — dice tutto, ed e' l'unica frase che viene
@@ -587,7 +768,7 @@ void main() {
 
       await filo.apri(entro: const Duration(seconds: 5));
       expect(filo.dentro, isTrue);
-      expect(quante, 2, reason: 'la prima si e\' lasciata perdere');
+      expect(quante, 2, reason: 'la prima si è lasciata perdere');
       await filo.chiudi();
     },
   );
@@ -647,12 +828,12 @@ void main() {
     await filo.chiudi();
   });
 
-  test('un filo chiuso apposta non e\' una caduta', () async {
+  test('un filo chiuso apposta non è una caduta', () async {
     /* Quando l'app non e' davanti il filo si chiude da se': e' voluto, ed e'
      * quello che non tiene una casa aperta in tasca per niente. Solo che
      * chiudere una presa fa scattare il suo `onDone`, e quello finiva contato
-     * fra le cadute: nella diagnostica si leggeva «caduto 1 volte: il filo si
-     * e' chiuso» sotto «app messa da parte 1 volte» — la stessa cosa scritta
+     * fra le cadute: nella diagnostica si leggeva «caduto 1 volta: il filo si
+     * e' chiuso» sotto «app messa da parte 1 volta» — la stessa cosa scritta
      * due volte, una delle quali come guasto. Chi guarda quel pannello per
      * capire se qualcosa non va si mette a inseguire un fantasma. */
     final filo = Filo.fisso(
@@ -707,7 +888,7 @@ void main() {
       );
     });
 
-    test('non e\' una caduta, e si riprova in fretta', () async {
+    test('non è una caduta, e si riprova in fretta', () async {
       var quante = 0;
       final filo = Filo.fisso(
         indirizzo: ponte.indirizzo,
@@ -739,7 +920,7 @@ void main() {
       await filo.chiudi();
     });
 
-    test('se la rete non torna proprio, alla fine e\' una caduta', () async {
+    test('se la rete non torna proprio, alla fine è una caduta', () async {
       final filo = Filo.fisso(
         indirizzo: ponte.indirizzo,
         segno: segnoBuono,
@@ -777,7 +958,7 @@ Future<void> _finoA(
     if (condizione()) return;
     await Future<void>.delayed(const Duration(milliseconds: 10));
   }
-  throw StateError('l\'attesa e\' scaduta');
+  throw StateError('l\'attesa è scaduta');
 }
 
 /// Le prove dell'approdo mobile: quello che succede uscendo di casa.

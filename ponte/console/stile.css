@@ -1,29 +1,46 @@
-/* La console del ponte.
+/* La pagina di gdahome dentro Home Assistant.
  *
- * Sta dentro Home Assistant, dietro l'ingress, e prende i colori dal tema di
- * chi guarda: le variabili `--primary-text-color` e compagne le mette Home
- * Assistant sul documento che ci sta intorno. Quando non ci sono — perche' la
- * pagina e' aperta da sola — valgono i difetti scritti qui di fianco. */
+ * Sta dietro l'ingress e prende i colori dal tema di chi guarda: le variabili
+ * `--primary-text-color` e compagne le mette Home Assistant sul documento che
+ * ci sta intorno. Quando non ci sono — perche' la pagina e' aperta da sola —
+ * valgono i ripieghi scritti qui di fianco.
+ *
+ * Com'e' fatta, e perche'. Prima erano nove schede identiche in colonna, tutte
+ * con lo stesso peso e ognuna col suo paragrafo: per sapere se la casa stava
+ * bene bisognava leggere novecento parole, e l'indirizzo del centralino — la
+ * cosa da guardare il giorno che qualcosa non va — stava in fondo, in grigio.
+ * Adesso c'e' una gerarchia sola e si legge dall'alto:
+ *
+ *   1. la STRISCIA: tre pastiglie con un pallino, «come sta» in un secondo;
+ *   2. la scheda GROSSA: abbinare un telefono, che e' il motivo per cui si apre
+ *      questa pagina;
+ *   3. DUE colonne: i telefoni e il link a sinistra, le plance a destra;
+ *   4. il CASSETTO «se qualcosa non torna», chiuso: tutta la prosa e i rimedi
+ *      stanno li', ci sono quando servono e non si mettono in mezzo quando no.
+ */
 
 :root {
   color-scheme: light dark;
-  --testo: var(--primary-text-color, #1f2937);
-  --tenue: var(--secondary-text-color, #6b7280);
-  --fondo: var(--card-background-color, #ffffff);
-  --fondo-pagina: var(--primary-background-color, #f4f5f7);
-  --bordo: var(--divider-color, #e5e7eb);
-  --acceso: var(--primary-color, #0ea5e9);
-  --male: var(--error-color, #dc2626);
-  --bene: var(--success-color, #16a34a);
+  --testo: var(--primary-text-color, #101317);
+  --tenue: var(--secondary-text-color, #5b6471);
+  --carta: var(--card-background-color, #ffffff);
+  --fondo: var(--primary-background-color, #f2f4f7);
+  --bordo: var(--divider-color, #e4e7ec);
+  --acceso: var(--primary-color, #0b8ee0);
+  --male: var(--error-color, #d5232c);
+  --bene: var(--success-color, #1a9c53);
+  --giallo: var(--warning-color, #cf8000);
+  --ombra: 0 1px 2px rgba(16, 24, 40, 0.05);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --testo: var(--primary-text-color, #e5e7eb);
-    --tenue: var(--secondary-text-color, #9ca3af);
-    --fondo: var(--card-background-color, #1f2937);
-    --fondo-pagina: var(--primary-background-color, #111827);
-    --bordo: var(--divider-color, #374151);
+    --testo: var(--primary-text-color, #e8ebf0);
+    --tenue: var(--secondary-text-color, #9aa4b2);
+    --carta: var(--card-background-color, #1a1f27);
+    --fondo: var(--primary-background-color, #10141a);
+    --bordo: var(--divider-color, #2a3139);
+    --ombra: 0 1px 2px rgba(0, 0, 0, 0.35);
   }
 }
 
@@ -31,90 +48,386 @@
   box-sizing: border-box;
 }
 
+/* `hidden` deve vincere su tutto.
+ *
+ * Vale `display: none`, ma arriva dal foglio del browser: una riga qualunque di
+ * qui sotto che dica `display` a un tasto o a una riga lo scavalca, e la cosa
+ * nascosta si vede. E' capitato subito, col tasto «Annulla». */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
-  padding: 16px;
-  background: var(--fondo-pagina);
+  padding: 20px 16px 40px;
+  background: var(--fondo);
   color: var(--testo);
-  font-family:
-    system-ui,
+  font:
+    14px/1.5 system-ui,
     -apple-system,
     "Segoe UI",
     Roboto,
     sans-serif;
-  line-height: 1.5;
 }
 
 main {
-  max-width: 680px;
+  max-width: 1040px;
   margin: 0 auto;
+  display: grid;
+  gap: 14px;
+}
+
+/* ─── La testata ─────────────────────────────────────────────────────────── */
+
+.testata {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--bordo);
+  border-radius: 18px;
+  /* Una punta di colore del tema, che si spegne subito: da' un peso alla
+     testata senza dipingerla. */
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--acceso) 9%, var(--carta)),
+    var(--carta) 70%
+  );
+  box-shadow: var(--ombra);
+}
+
+.marchio {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  display: block;
+  flex: 0 0 auto;
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.18);
+}
+
+.chi {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 h1 {
-  font-size: 1.5rem;
-  margin: 0 0 4px;
+  font-size: 1.55rem;
+  font-weight: 780;
+  letter-spacing: -0.02em;
+  margin: 0;
 }
 
-/* Il marchio accanto al titolo: la stessa immagine che sta sull'icona
-   dell'app, e con gli stessi angoli tondi. */
-.marchio {
-  border-radius: 10px;
-  display: block;
-  margin-bottom: 8px;
+.sottotitolo {
+  margin: 1px 0 0;
+  color: var(--tenue);
+  font-size: 0.82rem;
+}
+
+.targhetta {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  border: 1px solid var(--bordo);
+  border-radius: 999px;
+  background: var(--carta);
+  color: var(--tenue);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── La striscia: come sta, in un secondo ───────────────────────────────── */
+
+.striscia {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pastiglia {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 14px;
+  border: 1px solid var(--bordo);
+  border-radius: 999px;
+  background: var(--carta);
+  box-shadow: var(--ombra);
+  font-size: 0.82rem;
+  color: var(--tenue);
+}
+
+.pastiglia b {
+  color: var(--testo);
+  font-weight: 700;
+}
+
+/* Il pallino e' la parte che si legge davvero: il colore dice tutto prima
+   delle parole. */
+.pallino {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--bordo);
+  display: inline-block;
+}
+
+.pastiglia[data-come="bene"] .pallino,
+.pallino.acceso {
+  background: var(--bene);
+}
+
+.pastiglia[data-come="attesa"] .pallino {
+  background: var(--giallo);
+}
+
+.pastiglia[data-come="male"] .pallino {
+  background: var(--male);
+}
+
+/* Un guaio non si distingue solo per un pallino di otto punti: la pastiglia
+   intera si tinge, cosi' si vede senza cercarla. */
+.pastiglia[data-come="bene"] {
+  border-color: color-mix(in srgb, var(--bene) 30%, var(--bordo));
+  background: color-mix(in srgb, var(--bene) 7%, var(--carta));
+}
+
+.pastiglia[data-come="male"] {
+  border-color: color-mix(in srgb, var(--male) 45%, var(--bordo));
+  background: color-mix(in srgb, var(--male) 9%, var(--carta));
+}
+
+.pastiglia[data-come="attesa"] {
+  border-color: color-mix(in srgb, var(--giallo) 40%, var(--bordo));
+  background: color-mix(in srgb, var(--giallo) 8%, var(--carta));
+}
+
+/* L'alone: il pallino si vede da lontano senza diventare grosso. */
+.pastiglia[data-come="bene"] .pallino {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--bene) 22%, transparent);
+}
+
+.pastiglia[data-come="male"] .pallino {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--male) 22%, transparent);
+}
+
+.pastiglia[data-come="attesa"] .pallino {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--giallo) 25%, transparent);
+  animation: respira 1.8s ease-in-out infinite;
+}
+
+@keyframes respira {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pastiglia[data-come="attesa"] .pallino {
+    animation: none;
+  }
+}
+
+/* ─── Le schede ──────────────────────────────────────────────────────────── */
+
+.scheda {
+  background: var(--carta);
+  border: 1px solid var(--bordo);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: var(--ombra);
+}
+
+.grossa {
+  padding: 22px;
+  /* Una luce che cade dall'angolo, non una fascia: un gradiente lineare su una
+     scheda larga lascia una riga visibile dove finisce, e si vede. */
+  background:
+    radial-gradient(
+      120% 90% at 0% 0%,
+      color-mix(in srgb, var(--acceso) 9%, transparent),
+      transparent 62%
+    ),
+    var(--carta);
+}
+
+.grossa h2 {
+  font-size: 1.14rem;
+}
+
+#fabbrica {
+  padding: 12px 22px;
+  font-size: 0.96rem;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--acceso) 28%, transparent);
+}
+
+.testa-di-scheda {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  /* A capo, non stretti: su un telefono il titolo e il conteggio non ci stanno
+     in riga, e schiacciati diventano due colonne di parole spezzate. */
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin-bottom: 14px;
 }
 
 h2 {
-  font-size: 1.05rem;
-  margin: 0 0 8px;
+  font-size: 1.02rem;
+  font-weight: 750;
+  margin: 0;
 }
 
-.scheda {
-  background: var(--fondo);
-  border: 1px solid var(--bordo);
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 16px;
-}
-
-.tenue-sfondo {
-  background: transparent;
-}
-
-.riga-di-stato,
-.spiegazione {
+.conta {
   color: var(--tenue);
-  font-size: 0.9rem;
-  margin: 0 0 12px;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-/* Il quadretto.
+.spiegazione,
+.minuta {
+  color: var(--tenue);
+  margin: 0 0 10px;
+}
+
+.minuta {
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.spiegazione:last-child,
+.minuta:last-child {
+  margin-bottom: 0;
+}
+
+/* Due colonne quando c'e' spazio, una quando no.
+ *
+ * Dentro ci stanno tre schede: i telefoni, il link, le plance. Le plance sono
+ * la scheda alta — un elenco, una casella e una spiegazione — e da sole
+ * lasciavano mezza pagina bianca di fianco ai telefoni.
+ *
+ * Sono due colonne vere, non sei schede buttate in una griglia: in una
+ * griglia la riga e' alta quanto la scheda piu' alta, e la scheda che viene
+ * dopo parte da sotto quell'altezza — il buco si sposta, non si chiude. Due
+ * colonne, ognuna con le sue schede in fila, si riempiono per conto loro.
+ *
+ * `align-content: start` tiene le schede appoggiate in cima: se si allungano
+ * per pareggiare le colonne, si vede che sono mezze vuote. */
+.due {
+  display: grid;
+  gap: 14px;
+}
+
+.colonna {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-width: 0;
+}
+
+@media (min-width: 880px) {
+  .due {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+/* ─── Abbinare un telefono ───────────────────────────────────────────────── */
+
+.abbinamento {
+  display: grid;
+  gap: 18px;
+}
+
+@media (min-width: 620px) {
+  .abbinamento {
+    grid-template-columns: 240px minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+/* Senza un codice vivo, al posto del QR code c'e' la sua sagoma: la scheda
+   non resta mezza vuota, e si capisce dove comparira'. */
+.sagoma {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  min-height: 200px;
+  padding: 16px;
+  border: 1.5px dashed var(--bordo);
+  border-radius: 14px;
+  color: var(--tenue);
+  text-align: center;
+}
+
+.sagoma-segno {
+  width: 42px;
+  height: 42px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.2;
+  opacity: 0.5;
+}
+
+/* Il QR code.
  *
  * Sfondo bianco sempre, anche col tema scuro: un QR chiaro su fondo scuro
  * molti lettori non lo prendono, e chi guarda non ha modo di capire perche'.
  * La cornice bianca intorno non e' estetica — e' la «zona tranquilla», e senza
  * quella il codice non si legge nemmeno se e' perfetto. */
-.quadretto {
+.qr {
   display: block;
   width: 100%;
-  max-width: 260px;
-  margin: 4px auto 12px;
+  max-width: 240px;
+  margin: 0 auto;
   background: #fff;
-  border-radius: 12px;
   border: 1px solid var(--bordo);
+  border-radius: 14px;
 }
 
-/* Le sedici lettere, per chi non puo' inquadrare: chiuse, ma a un tocco. */
-
-.codice {
-  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  font-size: 1.5rem;
-  letter-spacing: 0.12em;
-  margin: 8px 0 4px;
-  /* La spaziatura larga spinge l'ultima lettera fuori dalla scatola: questo la
-   * rimette dentro. */
-  text-indent: 0.12em;
-  word-break: break-all;
+.scadenza {
+  margin: 8px 0 0;
+  color: var(--tenue);
+  font-size: 0.8rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
+
+/* I due passi, numerati: sono una sequenza vera, non un elenco che si legge
+   in qualunque ordine. */
+.passi {
+  counter-reset: passo;
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.passi li {
+  counter-increment: passo;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+}
+
+.passi li::before {
+  content: counter(passo);
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--acceso) 14%, transparent);
+  color: var(--acceso);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+/* ─── Tasti, caselle, elenchi ────────────────────────────────────────────── */
 
 .bottoni {
   display: flex;
@@ -122,82 +435,76 @@ h2 {
   flex-wrap: wrap;
 }
 
-/* La riga per aggiungere una plancia: una casella e un tasto, in fila e a
-   capo quando lo schermo e' stretto. E' l'unica casella di testo di questa
-   pagina, e si veste come i tasti che le stanno accanto: un campo di serie,
-   fra due tasti arrotondati, si vede che non era previsto. */
+button,
+a.bottone,
+a.tenue {
+  font: inherit;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--acceso);
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 650;
+}
+
+/* I tasti che non sono «il» tasto della scheda. Erano trasparenti col solo
+   filo intorno: su un tema dove il filo e' quasi del colore della carta non si
+   capiva che fossero tasti. Un ripieno appena accennato basta. */
+button.tenue,
+a.tenue {
+  background: color-mix(in srgb, var(--testo) 4%, transparent);
+  color: var(--testo);
+  border: 1px solid color-mix(in srgb, var(--testo) 9%, transparent);
+  font-weight: 550;
+}
+
+@media (hover: hover) {
+  button.tenue:hover:not(:disabled),
+  a.tenue:hover {
+    background: color-mix(in srgb, var(--testo) 8%, transparent);
+  }
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--acceso) 40%, transparent);
+  outline-offset: 2px;
+}
+
+/* La riga per aggiungere una plancia: una casella e un tasto, in fila e a capo
+   quando lo schermo e' stretto. E' l'unica casella di testo di questa pagina,
+   e si veste come i tasti che le stanno accanto. */
 .riga-di-tasti {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   align-items: center;
+  margin-top: 12px;
 }
 
 .riga-di-tasti input[type="text"] {
   font: inherit;
-  flex: 1 1 14em;
+  flex: 1 1 13em;
   min-width: 0;
   min-height: 44px;
   padding: 10px 14px;
   border: 1px solid var(--bordo);
-  border-radius: 10px;
+  border-radius: 12px;
   background: transparent;
   color: inherit;
-}
-
-button {
-  font: inherit;
-  border: 0;
-  border-radius: 10px;
-  padding: 10px 16px;
-  background: var(--acceso);
-  color: #fff;
-  cursor: pointer;
-  min-height: 44px;
-}
-
-/* Un link vestito da bottone. E' un link e non un bottone perche' porta
-   davvero da un'altra parte: si deve poter aprire in una scheda nuova, tenere
-   premuto, copiare. Un bottone con dentro un `location.href` toglie tutte e
-   tre le cose e non ne restituisce nessuna. */
-a.bottone {
-  font: inherit;
-  border: 0;
-  border-radius: 10px;
-  padding: 10px 16px;
-  background: var(--acceso);
-  color: #fff;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-}
-
-button.tenue {
-  background: transparent;
-  color: var(--tenue);
-  border: 1px solid var(--bordo);
-}
-
-/* Un link tenue, vestito come i tasti che gli stanno accanto.
-   E' un link e non un bottone perche' porta davvero da un'altra parte: si
-   deve poter aprire in una scheda nuova, tenere premuto, copiare. */
-a.tenue {
-  font: inherit;
-  border: 1px solid var(--bordo);
-  border-radius: 10px;
-  padding: 10px 16px;
-  background: transparent;
-  color: var(--tenue);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: default;
 }
 
 .elenco {
@@ -210,35 +517,66 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 0;
+  padding: 11px 0;
   border-top: 1px solid var(--bordo);
   /* Su uno schermo stretto i tasti vanno a capo invece di mangiarsi il nome:
-     una riga con due tasti lasciava al titolo una colonna da dieci lettere, e
-     «Quella dei bambini» diventava «Quella dei bam…». Il nome e' la cosa per
-     cui si guarda l'elenco. */
+     il nome e' la cosa per cui si guarda l'elenco. */
   flex-wrap: wrap;
 }
 
 .elenco li:first-child {
   border-top: 0;
+  padding-top: 0;
+}
+
+@media (hover: hover) {
+  .elenco li {
+    margin-inline: -10px;
+    padding-inline: 10px;
+    border-radius: 12px;
+    transition: background 0.15s ease;
+  }
+
+  .elenco li:hover {
+    background: color-mix(in srgb, var(--acceso) 5%, transparent);
+  }
+}
+
+/* La faccia: il riquadro col disegno in testa alla riga. Prima c'era un
+   pallino di otto punti, che diceva una cosa sola (acceso o no) e la diceva
+   piano; il riquadro dice due cose — che roba e' (un telefono, una plancia) e
+   se e' viva — e si vede scorrendo l'elenco col pollice. */
+.faccia {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--testo) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--testo) 7%, transparent);
+}
+
+.faccia .ic {
+  width: 19px;
+  height: 19px;
+  color: var(--tenue);
+}
+
+/* Viva adesso: la faccia si accende del verde che la striscia usa la' sopra,
+   cosi' «collegato» vuol dire lo stesso colore in tutta la pagina. */
+.faccia.acceso {
+  background: color-mix(in srgb, var(--bene) 13%, transparent);
+  border-color: color-mix(in srgb, var(--bene) 26%, transparent);
+}
+
+.faccia.acceso .ic {
+  color: var(--bene);
 }
 
 .elenco .nome {
-  /* Quindici caratteri di base, non «quello che resta»: con due tasti di
-     fianco la riga non ci sta piu' e i tasti vanno a capo — che e' quello che
-     si vuole, perche' il nome e' la cosa per cui si guarda l'elenco. Con un
-     tasto solo, come nei telefoni abbinati, ci sta e la riga resta una. */
-  flex: 1 1 15em;
+  flex: 1 1 13em;
   min-width: 0;
-}
-
-/* I tasti di una riga stanno insieme: o ci stanno in riga col nome, o vanno a
-   capo tutti e due. Uno sopra e uno sotto era una riga alta il doppio per
-   niente. */
-.elenco .tasti {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .elenco .nome strong {
@@ -246,37 +584,370 @@ button:disabled {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 650;
 }
 
 .elenco .nome span {
   color: var(--tenue);
-  font-size: 0.82rem;
+  font-size: 0.79rem;
 }
 
-.pallino {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--bordo);
+.elenco .tasti {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.elenco .tasti button,
+.elenco .tasti a {
+  min-height: 38px;
+  padding: 7px 14px;
+  font-size: 0.88rem;
+}
+
+/* La barra della quota, sotto il nome di un'entita' chiacchierona. Sottile:
+   deve far confrontare tre righe di sfuggita, non diventare un grafico. */
+.quota {
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--testo) 8%, transparent);
+  overflow: hidden;
+  max-width: 320px;
+}
+
+.quota i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--acceso);
+}
+
+/* «Chi la vede»: il cassetto delle spunte, sotto la riga di una plancia.
+ *
+ * Prende la riga intera (`flex-basis: 100%`) perche' la riga e' una flex che
+ * va a capo: senza, il cassetto si metterebbe di fianco ai tasti e verrebbe
+ * schiacciato in una colonna di tre centimetri. */
+.chi-la-vede {
+  flex: 1 1 100%;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--testo) 4%, transparent);
+  border: 1px solid color-mix(in srgb, var(--testo) 8%, transparent);
+}
+
+.chi-la-vede .minuta:first-child {
+  margin-top: 0;
+}
+
+/* Un utente per riga: la casella e il nome, e tutta la riga si tocca. Su un
+   tablet in cucina una casella di tredici punti non si prende col pollice. */
+.spunta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.spunta input {
+  width: 19px;
+  height: 19px;
   flex: 0 0 auto;
-  /* Anche dentro una riga di testo, non solo dentro l'elenco: su un elemento
-     in linea larghezza e altezza non contano niente, e il pallino spariva. */
-  display: inline-block;
-  vertical-align: 1px;
+  accent-color: var(--acceso);
+  cursor: pointer;
 }
 
-.pallino.acceso {
-  background: var(--bene);
+.spunta input:disabled {
+  cursor: default;
 }
 
-.avviso {
-  color: var(--male);
-  font-size: 0.9rem;
-  margin: 12px 0 0;
+/* L'interruttore degli amministratori: sta in cima al cassetto e pesa piu'
+   delle spunte, perche' e' una scelta che vale per chiunque — anche per chi
+   arrivera' domani — e non per tre nomi. */
+.spunta.capo {
+  font-weight: 600;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid color-mix(in srgb, var(--testo) 8%, transparent);
+}
+
+.chi-la-vede .etichetta {
+  margin: 10px 0 2px;
+}
+
+/* «Per chi e'» il codice: l'etichetta e la casella, in fila. La casella si
+   veste come i tasti che le stanno accanto, come fa l'altra di questa pagina. */
+#per-chi-riga .etichetta {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+#per-chi {
+  font: inherit;
+  /* Si ferma dove finisce un nome, non dove finisce la scheda: allargata a
+     tutta la riga sembrava la casella grossa di un modulo, ed e' una scelta
+     fra tre nomi. */
+  flex: 0 1 20em;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--bordo);
+  border-radius: 12px;
+  background: var(--carta);
+  color: inherit;
 }
 
 .vuoto {
   color: var(--tenue);
-  font-size: 0.9rem;
-  padding: 8px 0;
+  padding: 6px 0;
+}
+
+/* Le righe di «Aprila in un browser»: una cosa a sinistra, il tasto a destra. */
+.righe {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.righe li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  border-top: 1px solid var(--bordo);
+}
+
+.righe li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.che-cosa {
+  flex: 1 1 15em;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.che-cosa b {
+  font-weight: 650;
+}
+
+code {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 0.82rem;
+  color: var(--tenue);
+  overflow-wrap: anywhere;
+}
+
+/* Le sedici lettere, per chi non puo' inquadrare. */
+.codice {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 1.3rem;
+  letter-spacing: 0.1em;
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  border: 1.5px dashed var(--bordo);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--acceso) 4%, transparent);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.codice.piccolo {
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  white-space: pre-wrap;
+  color: var(--tenue);
+}
+
+.avviso {
+  color: var(--male);
+  margin: 12px 0 0;
+  font-size: 0.88rem;
+}
+
+.avviso.giallo {
+  color: var(--giallo);
+}
+
+/* ─── Le cose che si aprono ──────────────────────────────────────────────── */
+
+.apribile {
+  margin-top: 12px;
+}
+
+.apribile > summary {
+  cursor: pointer;
+  color: var(--acceso);
+  font-size: 0.85rem;
+  font-weight: 600;
+  list-style: none;
+}
+
+.apribile > summary::-webkit-details-marker {
+  display: none;
+}
+
+.apribile > summary::before {
+  content: "▸ ";
+}
+
+.apribile[open] > summary::before {
+  content: "▾ ";
+}
+
+.apribile[open] > summary {
+  margin-bottom: 8px;
+}
+
+/* Il cassetto: la scheda intera si apre e si chiude, e chiusa e' una riga. */
+.cassetto > summary {
+  cursor: pointer;
+  list-style: none;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+@media (hover: hover) {
+  .cassetto > summary:hover {
+    background: color-mix(in srgb, var(--acceso) 5%, transparent);
+  }
+}
+
+.cassetto > summary::-webkit-details-marker {
+  display: none;
+}
+
+.cassetto > summary .testa-di-scheda {
+  margin-bottom: 0;
+  align-items: center;
+}
+
+.cassetto > summary .testa-di-scheda::after {
+  content: "▸";
+  color: var(--tenue);
+}
+
+.cassetto[open] > summary .testa-di-scheda::after {
+  content: "▾";
+}
+
+.cassetto[open] > summary {
+  margin-bottom: 4px;
+}
+
+.blocco {
+  padding: 14px 0 0;
+  margin-top: 14px;
+  border-top: 1px solid var(--bordo);
+}
+
+/* Su uno schermo largo l'etichetta del blocco si sposta nel margine e le
+   spiegazioni si incolonnano tutte allo stesso punto: il cassetto si legge
+   come una scheda — «cosa» a sinistra, «come sta» a destra — invece che come
+   sei paragrafi uno sotto l'altro. Stretto, torna in colonna da sola. */
+@media (min-width: 760px) {
+  .blocco {
+    display: grid;
+    /* La seconda colonna e' larga quanto una riga che si legge — una
+       settantina di lettere — e non quanto lo schermo: su un monitor largo
+       una spiegazione di centoventi lettere per riga si perde da una riga
+       all'altra. */
+    grid-template-columns: 148px minmax(0, 72ch);
+    gap: 0 22px;
+    align-items: start;
+  }
+
+  .blocco > .etichetta {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    margin: 2px 0 0;
+  }
+
+  .blocco > *:not(.etichetta) {
+    grid-column: 2;
+  }
+}
+
+.etichetta {
+  margin: 0 0 6px;
+  color: var(--tenue);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Le due schede di chi risponde alle segnalazioni: si vedono solo dove c'e' la
+   chiave della console, e si distinguono da tutto il resto. */
+.di-chi-risponde {
+  background: color-mix(in srgb, var(--acceso) 5%, var(--carta));
+  border-color: color-mix(in srgb, var(--acceso) 22%, var(--bordo));
+}
+
+.di-chi-risponde .etichetta {
+  color: var(--acceso);
+}
+
+/* Anche qui la riga si ferma dove si legge, non dove finisce la scheda. */
+.di-chi-risponde p {
+  max-width: 72ch;
+}
+
+/* ─── Le icone ───────────────────────────────────────────────────────────────
+ *
+ * Sette disegni, fatti con un tratto solo e definiti nella pagina: questa
+ * console non si porta dentro niente da fuori — nessun carattere, nessuna
+ * libreria di icone — ed e' la stessa promessa del sito. Prendono il colore
+ * del testo che gli sta accanto, quindi non ce n'e' una copia per tema. */
+
+.simboli {
+  display: none;
+}
+
+.ic {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: var(--acceso);
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  letter-spacing: -0.01em;
+}
+
+/* Il disegno in testa a un titolo sta in una piastrella. Da solo, appoggiato
+   al testo, sembrava il punto elenco di una lista; nella piastrella e' la
+   targhetta della sezione, e si vede da lontano a quale sezione appartiene una
+   cosa che si sta leggendo. */
+h2 > .ic {
+  box-sizing: border-box;
+  width: 29px;
+  height: 29px;
+  padding: 5.5px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--acceso) 11%, transparent);
+}
+
+.di-chi-risponde .ic,
+.cassetto .ic {
+  color: var(--tenue);
+}
+
+.cassetto h2 > .ic,
+.di-chi-risponde h2 > .ic {
+  background: color-mix(in srgb, var(--testo) 6%, transparent);
 }

@@ -16,9 +16,11 @@
  * Allora lo fa il ponte: guarda la versione pubblicata, la scarica, la mette
  * dentro `/addons/gdahome` e chiede al Supervisor di ricostruirsi. E' un bottone
  * nella console, e non serve altro: da quando la repository e' pubblica, il
- * manifesto e il pacchetto li legge chiunque senza presentarsi. La casella
- * `gettone` nella scheda dell'add-on e' rimasta per chi si tiene una copia sua
- * e privata di questo add-on; chi usa questa la lascia vuota.
+ * manifesto e il pacchetto li legge chiunque senza presentarsi — e la casella
+ * del gettone nella scheda dell'add-on non c'e' piu', perche' una casella che
+ * tutti devono lasciare vuota prima o poi qualcuno la riempie. Chi si tiene una
+ * copia privata di questo add-on il gettone glielo passa dall'ambiente,
+ * `PONTE_GETTONE`.
  *
  * Le tre cose che rendono questo sicuro:
  *

@@ -1,0 +1,36 @@
+# The gdahome options, in English. See `it.yaml`: same options, same order.
+configuration:
+  da_fuori_casa:
+    name: From away
+    description: >-
+      The app gets in when you are not at home too, through the gdahome relay:
+      no port to open on the router, no public address, nothing to install.
+      Off, your home is reachable only on its own network.
+  porta_app:
+    name: The app's port
+    description: >-
+      The port the app knocks on while you are at home. Change it only if
+      another program already uses this one.
+  dispositivi_massimi:
+    name: How many phones
+    description: How many phones can stay paired at the same time.
+  minuti_del_codice:
+    name: How long a code lives
+    description: For how many minutes a pairing QR code is good.
+  giorni_di_silenzio:
+    name: Days of silence
+    description: >-
+      After how many days without showing up a phone has to pair again. Zero
+      means never.
+  chiave_console:
+    name: The console key
+    description: >-
+      Leave it empty. It is only for whoever answers the support chats: in
+      every other home it changes nothing.
+  registro:
+    name: The log
+    description: How much it writes in the add-on's log.
+network:
+  8098/tcp: >-
+    The gdahome app knocks here. At home that is all it takes; from away it
+    has to be able to reach this port.

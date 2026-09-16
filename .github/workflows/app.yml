@@ -100,6 +100,13 @@ jobs:
         env:
           CHIAVE: ${{ secrets.CHIAVE_ANDROID }}
           PAROLA: ${{ secrets.CHIAVE_ANDROID_PASSWORD }}
+          # Un portachiavi ha **due** parole: una apre il portachiavi, l'altra
+          # apre la chiave che c'e' dentro. `keytool` propone di farle uguali e
+          # quasi sempre si fa cosi', ma chi ne batte una diversa al prompt
+          # «(INVIO se corrisponde...)» si ritrova con due parole, ed e' un
+          # caso normale. Se questo segreto non c'e', vale quella del
+          # portachiavi.
+          PAROLA_DELLA_CHIAVE: ${{ secrets.CHIAVE_ANDROID_KEY_PASSWORD }}
           COME_SI_CHIAMA: ${{ secrets.CHIAVE_ANDROID_ALIAS }}
         run: |
           if [ -z "$CHIAVE" ] || [ -z "$PAROLA" ]; then
@@ -111,18 +118,43 @@ jobs:
               echo "chiave si aggiorna senza perdere l'abbinamento. Per i negozi, e per"
               echo "una release pubblica, serve la chiave vera: due segreti,"
               echo '`CHIAVE_ANDROID` (il portachiavi in base64) e'
-              echo '`CHIAVE_ANDROID_PASSWORD`. Come si fa, in cinque minuti:'
-              echo '`docs/LA_CHIAVE_ANDROID.md`.'
+              echo '`CHIAVE_ANDROID_PASSWORD` — il portachiavi si fa con'
+              echo '`keytool -genkeypair`, e la stessa parola apre portachiavi e chiave.'
             } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           dove="$RUNNER_TEMP/chiave.jks"
           printf '%s' "$CHIAVE" | tr -d '[:space:]' | base64 -d > "$dove"
-          # Che sia davvero un portachiavi e che la parola lo apra si guarda
-          # **qui**: se no il guasto salta fuori mille righe dopo, dentro
-          # Gradle, con un messaggio che parla d'altro.
+          come_si_chiama="${COME_SI_CHIAMA:-gdahome}"
+          parola_della_chiave="${PAROLA_DELLA_CHIAVE:-$PAROLA}"
+
+          # Qui si guarda **tutto quello che Gradle chiedera'**, e si guarda
+          # adesso: il portachiavi, la chiave dentro, e le due parole che le
+          # aprono. Se no il guasto salta fuori sei minuti dopo, dentro Gradle,
+          # con un messaggio che parla d'altro.
+          #
+          # Tre controlli e non uno, perche' falliscono per tre ragioni
+          # diverse e chi legge deve sapere quale:
           if ! keytool -list -keystore "$dove" -storepass "$PAROLA" > /dev/null 2>&1; then
             echo "::error::CHIAVE_ANDROID non e' un portachiavi, o CHIAVE_ANDROID_PASSWORD non lo apre."
+            exit 1
+          fi
+          if ! keytool -list -keystore "$dove" -storepass "$PAROLA" -alias "$come_si_chiama" > /dev/null 2>&1; then
+            echo "::error::nel portachiavi non c'e' nessuna chiave che si chiama «$come_si_chiama»."
+            echo "::error::I nomi che ci sono si vedono cosi': keytool -list -keystore <il tuo .jks>"
+            echo "::error::Se il tuo si chiama in un altro modo, mettilo nel segreto CHIAVE_ANDROID_ALIAS."
+            exit 1
+          fi
+          # `-list` apre il portachiavi ma **non tocca la chiave**, e per
+          # questo non si accorgeva del caso piu' comune: le due parole
+          # diverse. `-certreq` la chiave la deve tirare fuori davvero, quindi
+          # fallisce qui, in due secondi, invece che dentro Gradle.
+          if ! keytool -certreq -keystore "$dove" -storepass "$PAROLA" \
+            -alias "$come_si_chiama" -keypass "$parola_della_chiave" > /dev/null 2>&1; then
+            echo "::error::la parola apre il portachiavi ma non apre la chiave «$come_si_chiama» (Cannot recover key)."
+            echo "::error::Un portachiavi ha due parole. Se sono diverse, quella della chiave va"
+            echo "::error::nel segreto CHIAVE_ANDROID_KEY_PASSWORD; per farle uguali:"
+            echo "::error::  keytool -keypasswd -keystore <il tuo .jks> -alias $come_si_chiama"
             exit 1
           fi
           # Le quattro righe che legge Gradle. Il file sta fuori dalla
@@ -131,8 +163,8 @@ jobs:
           {
             echo "storeFile=$dove"
             echo "storePassword=$PAROLA"
-            echo "keyAlias=${COME_SI_CHIAMA:-gdahome}"
-            echo "keyPassword=$PAROLA"
+            echo "keyAlias=$come_si_chiama"
+            echo "keyPassword=$parola_della_chiave"
           } > android/chiave.properties
           echo "vera=si" >> "$GITHUB_OUTPUT"
           {
@@ -181,6 +213,45 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      # Il pacchetto per il Play Store, che gli APK non li prende.
+      #
+      # Si costruisce **solo con la chiave vera**: un bundle firmato di prova
+      # non si puo' caricare da nessuna parte, e costruirlo per niente sarebbe
+      # tre minuti di corsa buttati a ogni giro. Non va nella release — quello
+      # che si manda a una persona e' l'APK — ma resta fra gli artefatti, che
+      # e' da dove lo si prende per caricarlo nel Play Console.
+      - name: Il pacchetto per il negozio
+        if: steps.chiave.outputs.vera == 'si'
+        working-directory: app
+        env:
+          CENTRALINO: ${{ inputs.centralino }}
+          CORSA: ${{ github.run_number }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            VERSIONE="${GITHUB_REF_NAME#v}"
+          else
+            VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
+          fi
+          if [ -n "$CENTRALINO" ]; then
+            flutter build appbundle --release --dart-define=VERSIONE="$VERSIONE" --dart-define=CENTRALINO="$CENTRALINO"
+          else
+            flutter build appbundle --release --dart-define=VERSIONE="$VERSIONE"
+          fi
+          {
+            echo "### Il pacchetto per il Play Store"
+            echo ""
+            echo "L'\`.aab\` e' fra gli artefatti di questa corsa: si carica dal"
+            echo "Play Console, in Test and release."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.chiave.outputs.vera == 'si'
+        with:
+          name: gdahome-android-negozio
+          path: app/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
       # Il pacchetto dove chi lo deve installare lo trova.
       #
       # Da «Actions» lo scarica solo chi e' entrato in GitHub, e dopo trenta
@@ -211,6 +282,16 @@ jobs:
             echo "Serve l'add-on **gdahome** dentro Home Assistant, e un codice di"
             echo "abbinamento fatto dalla sua scheda. Come si mette in piedi tutto:"
             echo "COME_PROVARLA.md."
+            echo ""
+            echo "---"
+            echo ""
+            echo "**Una cosa da sapere prima di installarlo.** Questo pacchetto e'"
+            echo "firmato con la chiave di gdahome; quello del Play Store lo firma"
+            echo "Google. Android non installa un pacchetto sopra uno con firma"
+            echo "diversa: chi parte da qui, il giorno che gdahome sara' sul negozio,"
+            echo "per passare di la' dovra' disinstallare e riabbinare il telefono."
+            echo "Fra pacchetti di **questa** serie invece si aggiorna sopra, senza"
+            echo "perdere niente."
           } > note.md
           gh release create "$GITHUB_REF_NAME" \
             --title "gdahome $quale" --notes-file note.md "gdahome-$quale.apk" ||
@@ -294,8 +375,7 @@ jobs:
               echo ""
               echo "Compila: i plugin nativi stanno in piedi e i permessi sono a posto."
               echo "Per installarla su un iPhone serve l'account sviluppatore Apple"
-              echo "(99 €/anno) e quattro segreti su GitHub — come si prendono sta"
-              echo "scritto in \`docs/IPHONE.md\`."
+              echo "(99 €/anno) e quattro segreti su GitHub."
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 

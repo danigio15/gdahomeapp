@@ -198,8 +198,11 @@ export class Portiere {
       return;
     }
 
+    let perChi = "";
     try {
-      this.abbinamento.consuma(detto?.codice);
+      /* `consuma` dice **per chi** era il codice: il telefono si intesta a
+       * quello li', e da quel momento vede le plance che vede lui. */
+      perChi = this.abbinamento.consuma(detto?.codice)?.utente || "";
     } catch (errore) {
       if (errore instanceof TroppiTentativi) {
         this.registro.attenzione(`troppi tentativi di abbinamento da ${da}`);
@@ -216,7 +219,11 @@ export class Portiere {
 
     let abbinato;
     try {
-      abbinato = this.dispositivi.abbina({ nome: detto?.nome, sistema: detto?.sistema });
+      abbinato = this.dispositivi.abbina({
+        nome: detto?.nome,
+        sistema: detto?.sistema,
+        utente: perChi,
+      });
     } catch (errore) {
       const perche = errore instanceof TroppiDispositivi ? errore.message : "non ha funzionato";
       cifrata.manda(JSON.stringify({ t: "no", perche }));
@@ -227,7 +234,7 @@ export class Portiere {
     const { dispositivo, segno, chiave } = abbinato;
     this.chiamata?.chiudiLAbbinamento();
     this.registro.info(`abbinato «${dispositivo.nome}» dal centralino`);
-    /* Dove tornare. Chi si e' abbinato inquadrando un quadretto non ha
+    /* Dove tornare. Chi si e' abbinato inquadrando un QR code non ha
      * battuto nessun indirizzo, e senza questo non saprebbe dove ribussare
      * domani. Se il
      * Supervisor non risponde si va avanti lo stesso, con quello che c'e': un

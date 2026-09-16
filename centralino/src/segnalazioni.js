@@ -24,6 +24,27 @@
  */
 
 export const TIPI = Object.freeze(["problema", "idea", "domanda"]);
+
+/* Da dove arriva una segnalazione, e come si chiama la sua etichetta.
+ *
+ * Serve a chi legge l'elenco delle issue: «questa l'ha scritta qualcuno col
+ * telefono in mano, quella qualcuno davanti a Home Assistant». Sono due
+ * strade diverse — due programmi diversi, due modi diversi di rompersi — e
+ * tenerle distinte vuol dire poterle filtrare.
+ *
+ * Un'etichetta e non una riga nella tabella: nella tabella c'era gia' il
+ * `sistema` (web, android, ios), ma sta in fondo alla issue, aperta, e
+ * nell'elenco non si vede. Filtrare si filtra per etichetta.
+ *
+ * La stampa il **ponte**, non chi scrive: le due strade sono due comandi
+ * diversi, e quale dei due sia arrivato lo sa solo lui. Cosi' non c'e' niente
+ * da indovinare e niente da falsificare. Quello che arriva qui si controlla
+ * lo stesso — da fuori arriva sempre qualcosa che non ci si aspetta. */
+export const DA_DOVE = Object.freeze({
+  app: "da-app",
+  plancia: "da-home-assistant",
+});
+export const DA_DI_DIFETTO = "app";
 export const TITOLO_MASSIMO = 120;
 export const CORPO_MASSIMO = 8000;
 export const MESSAGGIO_MASSIMO = 4000;
@@ -102,7 +123,7 @@ const testo = (valore, massimo) => {
 /* Il corpo della issue: quello che la persona ha scritto, poi la diagnostica
  * raccolta da sola, separate da un segno che al ritorno permette di ridare
  * alla persona solo le sue parole. */
-export function corpoDellaIssue({ corpo, diagnostica, casa }) {
+export function corpoDellaIssue({ corpo, diagnostica, casa, da = "" }) {
   const righe = [testo(corpo, CORPO_MASSIMO)];
   const voci = Object.entries(diagnostica || {}).filter(
     ([chiave, valore]) => chiave && valore !== undefined && valore !== null && valore !== "",
@@ -112,6 +133,10 @@ export function corpoDellaIssue({ corpo, diagnostica, casa }) {
     for (const [chiave, valore] of voci.slice(0, 40)) {
       righe.push(`| ${pulisci(chiave)} | ${pulisci(String(valore))} |`);
     }
+    /* Da dove viene, in testa alle righe di servizio: e' la prima domanda di
+       chi apre la issue, e l'etichetta la risponde nell'elenco ma qui dentro
+       no. */
+    if (da) righe.push(`| da | ${pulisci(da)} |`);
     if (casa) righe.push(`| casa | \`${pulisci(String(casa)).slice(0, 12)}\` |`);
   }
   return righe.join("\n");
@@ -193,9 +218,29 @@ export class GitHubNonRisponde extends Error {
 }
 
 export class GitHub {
-  constructor({ token, repo, fetch: prendi = globalThis.fetch, base = "https://api.github.com" }) {
+  constructor({
+    token,
+    repo,
+    repoAllegati = "",
+    fetch: prendi = globalThis.fetch,
+    base = "https://api.github.com",
+  }) {
     this.token = token;
     this.repo = repo;
+    /* Dove vanno le **foto e i video**, che possono essere un'altra
+     * repository.
+     *
+     * Di solito e' la stessa delle issue, e cosi' sta in gdahome: chi guarda
+     * una segnalazione ci trova dentro l'allegato, senza andarlo a cercare
+     * altrove.
+     *
+     * L'interruttore c'e' perche' gli allegati non sono allegati di GitHub —
+     * l'API non ha un modo di attaccare un file a una issue — quindi si
+     * **committano**, sotto `allegati/<numero>/`, e restano nella storia di
+     * git. Il giorno che quella repository diventasse pesante, i file si
+     * spostano da qui: un ramo a parte, un'altra repository, e non cambia una
+     * riga di programma. Vuota vale quella delle issue. */
+    this.repoAllegati = repoAllegati || repo;
     /* Non `this.prendi = prendi`: `fetch` chiamata come metodo di
      * quest'oggetto — `this.prendi(...)` — arriva col `this` sbagliato, e il
      * worker la rifiuta con «Illegal invocation». Si chiama e basta. */
@@ -207,8 +252,9 @@ export class GitHub {
     return Boolean(this.token && /^[\w.-]+\/[\w.-]+$/.test(String(this.repo || "")));
   }
 
-  async _chiama(metodo, via, corpo) {
-    const risposta = await this.prendi(`${this.base}/repos/${this.repo}${via}`, {
+  async _chiama(metodo, via, corpo, { dove = "" } = {}) {
+    const quale = dove || this.repo;
+    const risposta = await this.prendi(`${this.base}/repos/${quale}${via}`, {
       method: metodo,
       headers: {
         authorization: `Bearer ${this.token}`,
@@ -247,14 +293,20 @@ export class GitHub {
     return this._chiama("POST", `/issues/${numero}/comments`, { body: testo });
   }
 
-  /* Mette un file nella repository, in `via`, con un commit. Vuole il
-   * permesso «Contents: Read and write» sul gettone: senza, GitHub risponde
-   * 403 o 404, e l'app lo dice. Torna l'indirizzo con cui aprirlo. */
+  /* Mette un file nella repository degli allegati, in `via`, con un commit.
+   * Vuole il permesso «Contents: Read and write» sul gettone — su **quella**
+   * repository: senza, GitHub risponde 403 o 404, e l'app lo dice. Torna
+   * l'indirizzo con cui aprirlo. */
   async mettiFile({ via, byte, messaggio }) {
-    const risposta = await this._chiama("PUT", `/contents/${via}`, {
-      message: messaggio,
-      content: inBase64(byte),
-    });
+    const risposta = await this._chiama(
+      "PUT",
+      `/contents/${via}`,
+      {
+        message: messaggio,
+        content: inBase64(byte),
+      },
+      { dove: this.repoAllegati },
+    );
     const contenuto = risposta?.content ?? {};
     return {
       via,
@@ -262,7 +314,6 @@ export class GitHub {
     };
   }
 }
-
 /* Base64 di byte, a pezzi: `btoa` vuole una stringa di caratteri a un
  * byte, e farla in un colpo solo su dieci megabyte sfonda la pila. */
 export function inBase64(byte) {
@@ -298,9 +349,15 @@ export class Segnalazioni {
     return (await this.storage.get("segnalazioni")) ?? [];
   }
 
-  async crea({ tipo, titolo, corpo, diagnostica }) {
+  async crea({ tipo, titolo, corpo, diagnostica, da }) {
     this._pronto();
     const quale = TIPI.includes(tipo) ? tipo : "problema";
+    /* Da dove arriva. Quello che non si conosce diventa «app», che e' da dove
+       arrivavano tutte prima di oggi: una segnalazione non si butta via per
+       un'etichetta. */
+    const daDove = Object.prototype.hasOwnProperty.call(DA_DOVE, String(da || ""))
+      ? String(da)
+      : DA_DI_DIFETTO;
     const titoloPulito = testo(titolo, TITOLO_MASSIMO);
     const corpoPulito = testo(corpo, CORPO_MASSIMO);
     if (!titoloPulito) throw new RichiestaSbagliata("manca_il_titolo", "Manca il titolo.");
@@ -316,8 +373,13 @@ export class Segnalazioni {
     await this._contaUnaScrittura();
     const issue = await this.github.apriIssue({
       titolo: `[${quale}] ${titoloPulito}`,
-      corpo: corpoDellaIssue({ corpo: corpoPulito, diagnostica, casa: this.casa }),
-      etichette: ["gdahome", quale],
+      corpo: corpoDellaIssue({
+        corpo: corpoPulito,
+        diagnostica,
+        casa: this.casa,
+        da: DA_DOVE[daDove],
+      }),
+      etichette: ["gdahome", quale, DA_DOVE[daDove]],
     });
     const voce = {
       numero: issue.number,

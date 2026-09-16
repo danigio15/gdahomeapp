@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import '../casa/allegati.dart';
 import '../casa/collegamento.dart';
 import '../casa/segnalazioni.dart';
+import '../parole.dart';
 import '../ponte/filo.dart';
 import '../vestito/pezzi.dart';
 import '../vestito/tema.dart';
@@ -72,7 +73,12 @@ class _SchermataDelleSegnalazioniState
   Future<void> _carica({bool aggiorna = false}) async {
     final filo = _filo;
     if (filo == null) {
-      setState(() => _perche = 'La casa non e\' collegata.');
+      setState(
+        () => _perche = inLingua(
+          it: 'La casa non è collegata.',
+          en: 'Your home isn\'t connected.',
+        ),
+      );
       return;
     }
     setState(() {
@@ -147,7 +153,7 @@ class _SchermataDelleSegnalazioniState
           : FloatingActionButton.extended(
               onPressed: _nuova,
               icon: const Icon(Icons.edit_note_rounded),
-              label: const Text('Nuova segnalazione'),
+              label: Text(inLingua(it: 'Nuova segnalazione', en: 'New report')),
             ),
       body: RefreshIndicator(
         onRefresh: () => _carica(aggiorna: true),
@@ -176,12 +182,17 @@ class _SchermataDelleSegnalazioniState
           StatoVuoto(
             dentroUnaLista: true,
             icona: Icons.cloud_off_rounded,
-            titolo: 'Le segnalazioni non arrivano',
-            sotto: _perche ?? 'Non si sa perche\'.',
+            titolo: inLingua(
+              it: 'Le segnalazioni non arrivano',
+              en: 'Reports aren\'t getting through',
+            ),
+            sotto:
+                _perche ??
+                inLingua(it: 'Non si sa perché.', en: 'No idea why.'),
             azione: FilledButton.tonalIcon(
               onPressed: _carica,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Riprova'),
+              label: Text(inLingua(it: 'Riprova', en: 'Try again')),
             ),
           ),
         ],
@@ -199,11 +210,18 @@ class _SchermataDelleSegnalazioniState
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Questa casa non passa da nessun centralino, e le '
-                    'segnalazioni non hanno una strada per uscire. Si accende '
-                    '«da fuori casa» nelle opzioni del ponte.',
+                    inLingua(
+                      it:
+                          'Questa casa non passa da nessun centralino, e le '
+                          'segnalazioni non hanno una strada per uscire. Si '
+                          'accende «da fuori casa» nelle opzioni di gdahome.',
+                      en:
+                          'This home goes through no relay, so reports have '
+                          'no way out. You turn it on with “from away” in '
+                          'the gdahome options.',
+                    ),
                   ),
                 ),
               ],
@@ -211,17 +229,23 @@ class _SchermataDelleSegnalazioniState
           ),
         if (!elenco.spedibili) const SizedBox(height: 12),
         if (elenco.segnalazioni.isEmpty)
-          const StatoVuoto(
+          StatoVuoto(
             dentroUnaLista: true,
             icona: Icons.forum_outlined,
-            titolo: 'Nessuna segnalazione',
-            sotto:
-                'Se qualcosa non va, o hai un\'idea, scrivila qui: arriva a '
-                'chi fa l\'app con dentro gia\' le informazioni che servono, e '
-                'la risposta torna qui sotto.',
+            titolo: inLingua(it: 'Nessuna segnalazione', en: 'No reports'),
+            sotto: inLingua(
+              it:
+                  'Se qualcosa non va, o hai un\'idea, scrivila qui: arriva '
+                  'a chi fa l\'app con dentro già le informazioni che '
+                  'servono, e la risposta torna qui sotto.',
+              en:
+                  'If something is wrong, or you have an idea, write it here: '
+                  'it reaches whoever makes the app with the information they '
+                  'need already inside, and the answer comes back below.',
+            ),
           )
         else ...[
-          const Insegna('Le tue segnalazioni'),
+          Insegna(inLingua(it: 'Le tue segnalazioni', en: 'Your reports')),
           /* I filtri, gli stessi della dashboard: «Da lavorare», «In
            * lavorazione», «Chiuse», «Tutte», e sotto ognuno il conto.
            *
@@ -239,11 +263,17 @@ class _SchermataDelleSegnalazioniState
           ),
           const SizedBox(height: 12),
           if (_leMie(elenco.segnalazioni).isEmpty)
-            const StatoVuoto(
+            StatoVuoto(
               dentroUnaLista: true,
               icona: Icons.filter_list_off_rounded,
-              titolo: 'Nessuna segnalazione in questo stato',
-              sotto: 'Prova «Tutte»: le altre sono negli altri gruppi.',
+              titolo: inLingua(
+                it: 'Nessuna segnalazione in questo stato',
+                en: 'No reports in this state',
+              ),
+              sotto: inLingua(
+                it: 'Prova «Tutte»: le altre sono negli altri gruppi.',
+                en: 'Try “All”: the others are in the other groups.',
+              ),
             )
           else
             for (final una in _leMie(elenco.segnalazioni)) ...[
@@ -287,7 +317,7 @@ class _FilaDeiFiltri extends StatelessWidget {
       children: [
         for (final quale in <Gruppo?>[...Gruppo.values, null])
           _Pastiglia(
-            nome: quale?.nome ?? 'Tutte',
+            nome: quale?.nome ?? inLingua(it: 'Tutte', en: 'All'),
             quante: quante(quale),
             attiva: scelto == quale,
             quandoPremuta: () => quandoScelto(quale),
@@ -398,7 +428,10 @@ class _RigaDellaSegnalazione extends StatelessWidget {
                     Bollino(
                       switch (segnalazione.gruppo) {
                         Gruppo.aperte => 'aperta',
-                        Gruppo.inCarico => 'in lavorazione',
+                        Gruppo.inCarico => inLingua(
+                          it: 'in lavorazione',
+                          en: 'in progress',
+                        ),
                         Gruppo.chiuse => 'chiusa',
                       },
                       colore: switch (segnalazione.gruppo) {
@@ -451,7 +484,9 @@ String _giorno(DateTime quando) {
       quando.day == adesso.day;
   final ore = quando.hour.toString().padLeft(2, '0');
   final minuti = quando.minute.toString().padLeft(2, '0');
-  if (stesso) return 'oggi alle $ore:$minuti';
+  if (stesso) {
+    return inLingua(it: 'oggi alle $ore:$minuti', en: 'today at $ore:$minuti');
+  }
   return '${quando.day}/${quando.month}/${quando.year} $ore:$minuti';
 }
 
@@ -518,7 +553,10 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
     } catch (errore) {
       if (mounted) {
         setState(
-          () => _perche = 'Non sono riuscito a prendere il file: $errore',
+          () => _perche = inLingua(
+            it: 'Non sono riuscito a prendere il file: $errore',
+            en: 'I couldn\'t take the file: $errore',
+          ),
         );
       }
     } finally {
@@ -532,13 +570,21 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
       final titolo = _titolo.text.trim();
       final corpo = _corpo.text.trim();
       if (titolo.isEmpty || corpo.isEmpty) {
-        setState(() => _perche = 'Servono un titolo e due righe di testo.');
+        setState(
+          () => _perche = inLingua(
+            it: 'Servono un titolo e due righe di testo.',
+            en: 'A title and a couple of lines are needed.',
+          ),
+        );
         return;
       }
       setState(() {
         _mandando = true;
         _perche = null;
-        _passo = 'Mando la segnalazione…';
+        _passo = inLingua(
+          it: 'Mando la segnalazione…',
+          en: 'Sending the report…',
+        );
       });
       try {
         aperta = await widget.segnalazioni.crea(
@@ -588,7 +634,7 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
           _mandando = false;
           _passo = null;
           _perche =
-              'La segnalazione #$numero e\' partita, ma «${uno.nome}» no: '
+              'La segnalazione #$numero è partita, ma «${uno.nome}» no: '
               '${spiegaLErrore(errore)} Premi «Manda» per riprovare gli '
               'allegati, o vai avanti senza.';
         });
@@ -605,7 +651,9 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
     final testi = Theme.of(context).textTheme;
     final aperta = _aperta;
     return Scaffold(
-      appBar: AppBar(title: const Text('Nuova segnalazione')),
+      appBar: AppBar(
+        title: Text(inLingua(it: 'Nuova segnalazione', en: 'New report')),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
@@ -630,9 +678,12 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
             enabled: aperta == null,
             maxLength: 120,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              labelText: 'In due parole',
-              hintText: 'La luce del salotto non risponde',
+            decoration: InputDecoration(
+              labelText: inLingua(it: 'In due parole', en: 'In a few words'),
+              hintText: inLingua(
+                it: 'La luce del salotto non risponde',
+                en: 'The living room light doesn\'t respond',
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -643,10 +694,16 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
             maxLines: 12,
             maxLength: 4000,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              labelText: 'Racconta',
-              hintText:
-                  'Cosa stavi facendo, cosa ti aspettavi, cosa e\' successo.',
+            decoration: InputDecoration(
+              labelText: inLingua(it: 'Racconta', en: 'Tell me'),
+              hintText: inLingua(
+                it:
+                    'Cosa stavi facendo, cosa ti aspettavi, cosa è '
+                    'successo.',
+                en:
+                    'What you were doing, what you expected, what '
+                    'happened.',
+              ),
               alignLabelWithHint: true,
             ),
           ),
@@ -677,16 +734,24 @@ class _NuovaSegnalazioneState extends State<NuovaSegnalazione> {
                 : const Icon(Icons.send_rounded),
             label: Text(
               _mandando
-                  ? (_passo ?? 'Sto mandando…')
+                  ? (_passo ?? inLingua(it: 'Sto mandando…', en: 'Sending…'))
                   : aperta != null
-                  ? 'Riprova gli allegati'
-                  : 'Manda',
+                  ? inLingua(
+                      it: 'Riprova gli allegati',
+                      en: 'Retry the attachments',
+                    )
+                  : inLingua(it: 'Manda', en: 'Send'),
             ),
           ),
           if (aperta != null && !_mandando)
             TextButton(
               onPressed: () => widget.quandoMandata(aperta),
-              child: const Text('Vai alla segnalazione senza gli allegati'),
+              child: Text(
+                inLingua(
+                  it: 'Vai alla segnalazione senza gli allegati',
+                  en: 'Go to the report without the attachments',
+                ),
+              ),
             ),
         ],
       ),
@@ -725,8 +790,14 @@ class GliAllegati extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Una foto di quello che vedi vale piu\' di una descrizione. Le '
-          'foto partono ridotte; un video va tenuto corto.',
+          inLingua(
+            it:
+                'Una foto di quello che vedi vale più di una descrizione. Le '
+                'foto partono ridotte; un video va tenuto corto.',
+            en:
+                'A photo of what you see is worth more than a description. '
+                'Photos are sent scaled down; keep a video short.',
+          ),
           style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
         ),
         if (allegati.isNotEmpty) ...[
@@ -743,7 +814,10 @@ class GliAllegati extends StatelessWidget {
                   ),
                   label: Text('${uno.nome} · ${uno.peso}'),
                   onDeleted: togli == null ? null : () => togli!(uno),
-                  deleteButtonTooltipMessage: 'Togli',
+                  deleteButtonTooltipMessage: inLingua(
+                    it: 'Togli',
+                    en: 'Remove',
+                  ),
                 ),
             ],
           ),
@@ -758,21 +832,21 @@ class GliAllegati extends StatelessWidget {
                   ? null
                   : () => scegli!(DaDoveLAllegato.galleria),
               icon: const Icon(Icons.photo_library_rounded),
-              label: const Text('Foto'),
+              label: Text(inLingua(it: 'Foto', en: 'Photo')),
             ),
             OutlinedButton.icon(
               onPressed: scegli == null || scegliendo
                   ? null
                   : () => scegli!(DaDoveLAllegato.fotocamera),
               icon: const Icon(Icons.photo_camera_rounded),
-              label: const Text('Scatta'),
+              label: Text(inLingua(it: 'Scatta', en: 'Camera')),
             ),
             OutlinedButton.icon(
               onPressed: scegli == null || scegliendo
                   ? null
                   : () => scegli!(DaDoveLAllegato.video),
               icon: const Icon(Icons.videocam_rounded),
-              label: const Text('Video'),
+              label: Text(inLingua(it: 'Video', en: 'Video')),
             ),
             if (scegliendo)
               const Padding(
@@ -806,7 +880,10 @@ class _CosaSiAllega extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Parte anche questo, da solo',
+            inLingua(
+              it: 'Parte anche questo, da solo',
+              en: 'This goes too, on its own',
+            ),
             style: testi.labelLarge?.copyWith(color: colori.onSurfaceVariant),
           ),
           const SizedBox(height: 6),
@@ -823,7 +900,12 @@ class _CosaSiAllega extends StatelessWidget {
             ),
           const SizedBox(height: 6),
           Text(
-            'Niente credenziali, niente nomi delle entita\', niente indirizzi.',
+            inLingua(
+              it:
+                  'Niente credenziali, niente nomi delle entità, niente '
+                  'indirizzi.',
+              en: 'No credentials, no entity names, no addresses.',
+            ),
             style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
           ),
         ],
@@ -885,7 +967,7 @@ class _FiloDellaSegnalazioneState extends State<FiloDellaSegnalazione> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Rileggi',
+            tooltip: inLingua(it: 'Rileggi', en: 'Reload'),
             onPressed: _rileggi,
           ),
         ],
@@ -909,7 +991,7 @@ class _FiloDellaSegnalazioneState extends State<FiloDellaSegnalazione> {
             ],
           ],
         ),
-        suggerimento: 'Aggiungi qualcosa…',
+        suggerimento: inLingua(it: 'Aggiungi qualcosa…', en: 'Add something…'),
         manda: (testo) async {
           final aggiornato = await _rispondi(testo);
           if (mounted) setState(() => _filo = aggiornato);
@@ -1080,7 +1162,7 @@ class _ConversazioneState extends State<Conversazione> {
               children: [
                 if (widget.allega != null)
                   IconButton(
-                    tooltip: 'Allega',
+                    tooltip: inLingua(it: 'Allega', en: 'Attach'),
                     onPressed: _mandando ? null : _allega,
                     icon: const Icon(Icons.attach_file_rounded),
                   ),
@@ -1099,7 +1181,7 @@ class _ConversazioneState extends State<Conversazione> {
                 ),
                 const SizedBox(width: 6),
                 IconButton.filled(
-                  tooltip: 'Manda',
+                  tooltip: inLingua(it: 'Manda', en: 'Send'),
                   onPressed: _mandando ? null : _manda,
                   icon: _mandando
                       ? const SizedBox(

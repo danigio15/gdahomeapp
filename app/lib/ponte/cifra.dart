@@ -23,6 +23,7 @@ import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 
 import '../misure/lavori.dart';
+import '../parole.dart';
 import 'altrove/altrove.dart';
 import 'compressione/compressione.dart' as compressione;
 
@@ -119,7 +120,12 @@ Uint8List _vestiSpki(Uint8List nuda) =>
 Uint8List _spogliaSpki(List<int> vestita) {
   if (vestita.length == 32) return Uint8List.fromList(vestita);
   if (vestita.length != 44) {
-    throw const ChiaveStorta('una chiave pubblica non e\' fatta cosi\'');
+    throw ChiaveStorta(
+      inLingua(
+        it: 'una chiave pubblica non è fatta così',
+        en: 'that is not the shape of a public key',
+      ),
+    );
   }
   for (var i = 0; i < _involucroSpki.length; i += 1) {
     if (vestita[i] != _involucroSpki[i]) {
@@ -311,11 +317,26 @@ class Busta {
     return base64.encode(tutto);
   }
 
-  /// Torna il testo, o solleva. Non torna mai `null` per un messaggio guasto:
-  /// un messaggio che non si apre su un canale cifrato non e' un inciampo da
-  /// ignorare — o e' rotto o e' stato toccato, e in tutti e due i casi si
-  /// chiude.
-  Future<String> apri(String inBase64) async {
+  /// Il testo dentro la busta. Per chi ne ha davvero bisogno di una stringa:
+  /// la stretta di mano, che legge una riga di JSON e la butta.
+  ///
+  /// Chi riceve **messaggi** usa [apriByte] e non questa: una stringa grossa
+  /// su questo filo e' roba da buttare che si paga dopo, quando il
+  /// raccoglitore passa, e si paga sul filo che disegna lo schermo.
+  Future<String> apri(String inBase64) async =>
+      utf8.decode(await apriByte(inBase64));
+
+  /// Torna i byte dentro la busta, o solleva. Non torna mai `null` per un
+  /// messaggio guasto: un messaggio che non si apre su un canale cifrato non
+  /// e' un inciampo da ignorare — o e' rotto o e' stato toccato, e in tutti e
+  /// due i casi si chiude.
+  ///
+  /// **Byte, e non testo.** Quello che c'e' dentro una busta e' JSON, e chi lo
+  /// legge lo sa leggere dai byte: farne una stringa qui vorrebbe dire
+  /// allocarla nell'isolato che decifra, copiarla in questo — fra isolati le
+  /// stringhe si copiano, i byte si trasferiscono — e poi buttarla. Per una
+  /// istantanea di telecamera sono mezzo megabyte di niente, per messaggio.
+  Future<Uint8List> apriByte(String inBase64) async {
     /* La testa — i dodici byte del nonce — sono i primi sedici caratteri, e
      * si leggono da soli: la direzione e il contatore si controllano qui,
      * prima di spedire il grosso altrove. */
@@ -324,7 +345,9 @@ class Busta {
     try {
       dodici = base64.decode(inBase64.substring(0, 16));
     } catch (_) {
-      throw const BustaGuasta('non e\' nemmeno base64');
+      throw BustaGuasta(
+        inLingua(it: 'non è nemmeno base64', en: 'it isn\'t even base64'),
+      );
     }
     if (dodici[0] != suo.numero) {
       throw const BustaGuasta('busta dalla direzione sbagliata');
@@ -335,7 +358,7 @@ class Busta {
     );
     if (contatore != ricevo) throw const BustaGuasta('busta fuori ordine');
 
-    final String dentro;
+    final Uint8List dentro;
     try {
       if (inBase64.length < sogliaAltrove) {
         dentro = await Lavori.io.conto(
@@ -346,28 +369,35 @@ class Busta {
         final byte = await _byteDellaChiave();
         dentro = await Lavori.io.conto(
           'buste aperte altrove',
-          () => altrove(() => _apriDavvero(SecretKey(byte), inBase64)),
+          () => byteDaAltrove(() => _apriDavvero(SecretKey(byte), inBase64)),
         );
       }
     } on BustaGuasta {
       rethrow;
     } catch (_) {
-      throw const BustaGuasta('la busta non si apre');
+      throw BustaGuasta(
+        inLingua(it: 'la busta non si apre', en: 'the envelope won\'t open'),
+      );
     }
     ricevo += 1;
     return dentro;
   }
 
-  static Future<String> _apriDavvero(SecretKey chiave, String inBase64) async {
+  static Future<Uint8List> _apriDavvero(
+    SecretKey chiave,
+    String inBase64,
+  ) async {
     final Uint8List tutto;
     try {
       tutto = base64.decode(inBase64);
     } catch (_) {
-      throw const BustaGuasta('non e\' nemmeno base64');
+      throw BustaGuasta(
+        inLingua(it: 'non è nemmeno base64', en: 'it isn\'t even base64'),
+      );
     }
     if (tutto.length < 12 + 16) throw const BustaGuasta('busta troppo corta');
     final dodici = tutto.sublist(0, 12);
-    var dentro = await AesGcm.with256bits().decrypt(
+    List<int> dentro = await AesGcm.with256bits().decrypt(
       SecretBox(
         tutto.sublist(12, tutto.length - 16),
         nonce: dodici,
@@ -383,10 +413,15 @@ class Busta {
       try {
         dentro = compressione.scompatta(dentro, massimo: apertaMassima);
       } catch (_) {
-        throw const BustaGuasta('la busta compressa non si apre');
+        throw BustaGuasta(
+          inLingua(
+            it: 'la busta compressa non si apre',
+            en: 'the compressed envelope won\'t open',
+          ),
+        );
       }
     }
-    return utf8.decode(dentro);
+    return dentro is Uint8List ? dentro : Uint8List.fromList(dentro);
   }
 }
 

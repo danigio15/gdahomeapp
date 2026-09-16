@@ -49,7 +49,7 @@ Sonda sondaChe(
   Uri salute(Object dove) => switch (dove) {
     IndirizzoDelPonte ponte => ponte.salute,
     IndirizzoDelCentralino centralino => centralino.salute,
-    _ => throw ArgumentError('non e\' un posto'),
+    _ => throw ArgumentError('non è un posto'),
   };
   final risposte = {
     for (final voce in chi.entries) salute(voce.key): voce.value,
@@ -127,7 +127,7 @@ void main() {
     expect(
       bussate.first,
       daFuori.salute,
-      reason: 'il primo a cui si bussa e\' l\'ultimo che funzionava',
+      reason: 'il primo a cui si bussa è l\'ultimo che funzionava',
     );
   });
 
@@ -148,7 +148,7 @@ void main() {
 
   group('il centralino', () {
     test(
-      'da fuori si entra di li\', senza che nessuno abbia configurato niente',
+      'da fuori si entra di lì, senza che nessuno abbia configurato niente',
       () async {
         final sonda = sondaChe({inRete: false, ilCentralino: true});
         final approdo = await sonda.dove(
@@ -186,7 +186,7 @@ void main() {
       expect(approdo.da, DaDove.dalCentralino);
     });
 
-    test('quando e\' l\'unica strada non aspetta nessun vantaggio', () async {
+    test('quando è l\'unica strada non aspetta nessun vantaggio', () async {
       final bussate = <Uri>[];
       final sonda = sondaChe(
         {ilCentralino: true},
@@ -218,7 +218,7 @@ void main() {
 
   /* ─── Quando non si trova ───────────────────────────────────────────────── */
 
-  test('se non risponde nessuno lo dice, e dice anche perche\'', () async {
+  test('se non risponde nessuno lo dice, e dice anche perché', () async {
     final sonda = sondaChe({inRete: false, daFuori: false});
     await expectLater(
       sonda.dove(casaCon(dentro: inRete, fuori: daFuori)),
@@ -226,7 +226,7 @@ void main() {
         isA<PonteIrraggiungibile>().having(
           (e) => e.spiegazione,
           'spiegazione',
-          contains('ne\' in casa ne\' da fuori'),
+          contains('né in casa né da fuori'),
         ),
       ),
     );
@@ -272,7 +272,7 @@ void main() {
     );
   });
 
-  test('a chi ha messo l\'accesso remoto di Home Assistant si dice la verita\'', () async {
+  test('a chi ha messo l\'accesso remoto di Home Assistant si dice la verità', () async {
     /* E' l'errore che fa perdere piu' tempo di tutti: quell'indirizzo *sembra*
      * giusto — e' quello che Home Assistant stessa da' — e chi lo mette va a
      * cercare il guasto nella rete, nel router, nel telefono. Il guasto non
@@ -302,7 +302,7 @@ void main() {
         attesa: const Duration(milliseconds: 200),
         vantaggio: const Duration(milliseconds: 20),
         bussa: (dove) async {
-          if (dove == inRete.salute) throw StateError('la rete non c\'e\'');
+          if (dove == inRete.salute) throw StateError('la rete non c\'è');
           return true;
         },
       );

@@ -49,8 +49,8 @@ export function segnoNuovo() {
  * codice vale. Sedici no, e non cadranno.
  *
  * Sedici lettere non si battono volentieri, ed e' il motivo per cui c'e' il
- * codice a quadretti: si inquadra, e non si batte niente. Chi proprio deve
- * scriverle a mano le trova sotto al quadretto, in quattro gruppi da
+ * QR code: si inquadra, e non si batte niente. Chi proprio deve
+ * scriverle a mano le trova sotto al QR code, in quattro gruppi da
  * quattro. */
 const ALFABETO = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 

@@ -180,6 +180,13 @@ export class Presa {
       onMessaggio,
       onChiusa,
       onPong,
+      /* Quando chi legge il messaggio inciampa.
+       *
+       * Prima non c'era, e l'errore finiva in un `catch` vuoto: la presa si
+       * chiudeva **senza motivo**, e dall'altra parte del filo si vedeva una
+       * caduta qualunque. Un pomeriggio intero a cercare fuori un guasto che
+       * stava dentro, e in nessuno dei due registri una riga. */
+      onGuasto,
       messaggioMassimo = MESSAGGIO_MASSIMO,
       /* `true` quando questa presa e' quella di chi **ha chiamato**: allora
        * maschera quello che manda e si aspetta senza maschera quello che
@@ -191,6 +198,7 @@ export class Presa {
     this.onMessaggio = onMessaggio || (() => {});
     this.onChiusa = onChiusa || (() => {});
     this.onPong = onPong || (() => {});
+    this.onGuasto = onGuasto || (() => {});
     this.massimo = messaggioMassimo;
     this.daCliente = daCliente;
     this.viva = true;
@@ -362,8 +370,19 @@ export class Presa {
     this._lunghezzaInCorso = 0;
     try {
       this.onMessaggio(eraTesto ? intero.toString("utf8") : intero, eraTesto);
-    } catch (_errore) {
-      this.chiudi(CHIUSURA.guasto, "");
+    } catch (errore) {
+      /* Un guasto di chi legge, non della rete. Si dice in due direzioni:
+       * **a chi ospita**, che lo scrive nel suo registro, e **a chi sta
+       * dall'altra parte del filo**, dentro il motivo della chiusura. Se no
+       * quello vede una caduta come tutte le altre e ribussa per sempre. */
+      const detto = String(errore?.message || errore || "guasto").slice(0, 100);
+      try {
+        this.onGuasto(errore);
+      } catch (_ancora) {
+        /* Chi ascolta ha sbagliato anche lui: non e' un motivo per non
+         * chiudere il filo. */
+      }
+      this.chiudi(CHIUSURA.guasto, detto);
       return false;
     }
     return this.viva;

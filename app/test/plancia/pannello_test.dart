@@ -21,7 +21,7 @@ void main() {
     expect(pannello.varianti, ['dashboard-en.html', 'dashboard.html']);
   });
 
-  test('la pagina si sceglie per lingua, e l\'italiano c\'e\' sempre', () {
+  test('la pagina si sceglie per lingua, e l\'italiano c\'è sempre', () {
     final pannello = leggiIPannelli(PonteFinto.pannelliConLaPlancia())!;
     expect(pannello.pagina('it'), 'dashboard.html');
     expect(pannello.pagina('en'), 'dashboard-en.html');
@@ -67,7 +67,7 @@ void main() {
     );
   });
 
-  test('con piu\' plance si prende la principale', () {
+  test('con più plance si prende la principale', () {
     final due = {
       'dashboardmodern-mare': {
         'url_path': 'dashboardmodern-mare',
@@ -118,7 +118,7 @@ void main() {
     expect(pannello.pagina('it'), 'dashboard.html');
   });
 
-  test('la plancia del ponte si legge com\'e\', con i difetti giusti', () {
+  test('la plancia del ponte si legge com\'è, con i difetti giusti', () {
     final dalPonte = leggiLaPlanciaDelPonte(PonteFinto.planciaNelPonte())!;
     expect(dalPonte.base, '/dashboardmodern_static/ponte1234');
     expect(dalPonte.istanza, 'gdahome');
@@ -230,7 +230,7 @@ void main() {
   });
 
   test(
-    'si chiede una plancia in particolare, e se non c\'e\' si torna alla prima',
+    'si chiede una plancia in particolare, e se non c\'è si torna alla prima',
     () async {
       final ponte = await PonteFinto.alza();
       ponte.unaPlanciaInPiu('Casa al mare');
@@ -278,4 +278,33 @@ void main() {
       await ponte.spegni();
     },
   );
+  test('se in questa casa non ci sono plance per questa utenza, non si cerca altrove', () async {
+    /* Il buco che si e' visto in casa: la plancia era riservata a una
+       * persona, il codice era stato fatto per un'altra, e quell'altra la
+       * vedeva. Il ponte adesso dice di no — e l'app non deve girare intorno
+       * al no andando a cercare la plancia fra i pannelli di Home Assistant,
+       * dove la troverebbe: la dashboard sta anche la'. */
+    final ponte = await PonteFinto.alza();
+    final filo = Filo.fisso(
+      indirizzo: ponte.indirizzo,
+      segno: segnoBuono,
+      chi: chiBuono,
+      chiave: chiaveBuona,
+    );
+    await filo.apri();
+    ponte.nientePerTe = true;
+
+    await expectLater(
+      trovaLaPlancia(filo),
+      throwsA(isA<NessunaPlanciaPerTe>()),
+    );
+    expect(
+      ponte.arrivati.where((uno) => uno['type'] == 'get_panels'),
+      isEmpty,
+      reason: 'il no non si aggira dall\'altra porta',
+    );
+
+    await filo.chiudi();
+    await ponte.spegni();
+  });
 }

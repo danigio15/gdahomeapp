@@ -584,6 +584,139 @@ test("senza la plancia nell'add-on, ponte/plancia dice di no e i file si chiedon
   rmSync(cartella, { recursive: true, force: true });
 });
 
+/* Una casa che risponde quello che le si dice, e si ricorda cosa le e' stato
+ * chiesto: serve a guardare **quante volte** il ponte chiede una cosa, che qui
+ * e' metà della prova. */
+function casaCheDice(risposta) {
+  const chieste = [];
+  return {
+    chieste,
+    async chiedi(comando) {
+      chieste.push(comando);
+      if (risposta instanceof Error) throw risposta;
+      return typeof risposta === "function" ? risposta(comando) : risposta;
+    },
+  };
+}
+
+const CONFIGURATA = {
+  profile: "primary",
+  requested_profile: null,
+  snapshot: {
+    revision: 12,
+    updated_at: 1700,
+    keys_revision: 3,
+    writer_generation: 2,
+    reset: false,
+    values: { cd_stanze: '[{"name":"Cucina"}]' },
+  },
+  recoverable: [],
+  profiles: ["primary"],
+};
+
+test("chi aveva la dashboard in Home Assistant non ricomincia da zero: la configurazione dell'integrazione si adotta", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-adozione-"));
+  const casa = casaCheDice(CONFIGURATA);
+  const con = new Commissioni({
+    casa,
+    registro: ZITTO,
+    configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
+  });
+
+  /* La prima lettura: qui non c'e' niente, e quello che c'e' in Home Assistant
+   * arriva alla pagina senza che nessuno riconfiguri niente. */
+  const prima = await con.rispondi({ id: 1, type: "dashboardmodern/config/get" });
+  assert.equal(prima.success, true);
+  assert.equal(prima.result.snapshot.values.cd_stanze, '[{"name":"Cucina"}]');
+  assert.deepEqual(casa.chieste, [{ type: "dashboardmodern/config/get", profile: "primary" }]);
+
+  /* E adesso e' **nostra**: la seconda lettura non chiede piu' niente a
+   * nessuno, e la revisione e' quella del ponte — la sua cresce e basta, e non
+   * si eredita quella di un altro deposito. */
+  const dopo = await con.rispondi({ id: 2, type: "dashboardmodern/config/get" });
+  assert.equal(dopo.result.snapshot.values.cd_stanze, '[{"name":"Cucina"}]');
+  assert.equal(dopo.result.snapshot.revision, 1);
+  assert.equal(casa.chieste.length, 1);
+
+  rmSync(cartella, { recursive: true, force: true });
+});
+
+test("una plancia gia' configurata dall'app non viene coperta da quella dell'integrazione", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-adozione-nostra-"));
+  const casa = casaCheDice(CONFIGURATA);
+  const con = new Commissioni({
+    casa,
+    registro: ZITTO,
+    configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
+  });
+
+  const scritta = await con.rispondi({
+    id: 1,
+    type: "dashboardmodern/config/set",
+    snapshot: { values: { cd_stanze: '[{"name":"Sala"}]' }, keys_revision: 1 },
+    expected_revision: 0,
+  });
+  assert.equal(scritta.result.status, "saved");
+
+  const letta = await con.rispondi({ id: 2, type: "dashboardmodern/config/get" });
+  assert.equal(letta.result.snapshot.values.cd_stanze, '[{"name":"Sala"}]');
+  assert.deepEqual(casa.chieste, [], "a Home Assistant non si chiede niente");
+
+  rmSync(cartella, { recursive: true, force: true });
+});
+
+test("in una casa senza l'integrazione si chiede una volta sola, e la plancia si apre vuota come prima", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-adozione-senza-"));
+  const casa = casaCheDice(
+    new RispostaNegativa("unknown_command", "unknown command dashboardmodern/config/get"),
+  );
+  const con = new Commissioni({
+    casa,
+    registro: ZITTO,
+    configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
+  });
+
+  const prima = await con.rispondi({ id: 1, type: "dashboardmodern/config/get" });
+  assert.equal(prima.success, true);
+  assert.equal(prima.result.snapshot, null);
+  assert.equal(casa.chieste.length, 1);
+
+  /* Un'altra plancia, un altro profilo: l'integrazione non c'e' e non ci sara'
+   * nemmeno fra un minuto, quindi non si chiede piu' per nessuno. */
+  const altra = await con.rispondi({
+    id: 2,
+    type: "dashboardmodern/config/get",
+    profile: "seconda",
+  });
+  assert.equal(altra.result.snapshot, null);
+  assert.equal(casa.chieste.length, 1, "una volta sola, per tutta la vita del ponte");
+
+  rmSync(cartella, { recursive: true, force: true });
+});
+
+test("se l'integrazione risponde una plancia vuota non si adotta niente, e il filo caduto non fa danni", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "commissioni-adozione-vuota-"));
+  const vuota = new Commissioni({
+    casa: casaCheDice({ profile: "primary", snapshot: null, recoverable: [], profiles: [] }),
+    registro: ZITTO,
+    configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
+  });
+  const niente = await vuota.rispondi({ id: 1, type: "dashboardmodern/config/get" });
+  assert.equal(niente.success, true);
+  assert.equal(niente.result.snapshot, null);
+
+  const caduto = new Commissioni({
+    casa: casaCheDice(new Error("il filo del ponte e' caduto")),
+    registro: ZITTO,
+    configurazione: new Configurazione({ cartella, adesso: () => 5000 }),
+  });
+  const comunque = await caduto.rispondi({ id: 2, type: "dashboardmodern/config/get" });
+  assert.equal(comunque.success, true, "una risposta, non un errore");
+  assert.equal(comunque.result.snapshot, null);
+
+  rmSync(cartella, { recursive: true, force: true });
+});
+
 test("la configurazione della plancia la tiene il ponte, con le stesse risposte dell'integrazione", async () => {
   const cartella = mkdtempSync(join(tmpdir(), "commissioni-config-"));
   const con = new Commissioni({
@@ -1551,4 +1684,49 @@ test("piu' di una plancia: l'app le chiede, le aggiunge e le toglie", async () =
   } finally {
     rmSync(cartella, { recursive: true, force: true });
   }
+});
+
+test("il telefono può chiedere sul filo dove sta questa casa", async () => {
+  /* L'indirizzo di casa il telefono lo sentiva dire **una volta**, dentro il
+   * QR code, e non lo rinfrescava mai piu'. Chi abbina la casa stando fuori
+   * non ne sente nessuno, e chi l'ha abbinata in casa se lo tiene anche dopo
+   * che il router gliene ha dato un altro: in tutti e due i casi si passa dal
+   * centralino stando sul divano. Adesso lo si puo' richiedere sul filo. */
+  const ritorno = {
+    async cosaDire() {
+      return {
+        casa: "questa-casa",
+        centralino: "https://tramite.gdahome.org",
+        indirizzi: ["http://192.168.1.8:8098", "http://10.0.0.4:8098"],
+      };
+    },
+  };
+  const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO, ritorno });
+
+  assert.equal(con.riconosce({ type: "ponte/casa/dove" }), true);
+  const detta = await con.rispondi({ id: 1, type: "ponte/casa/dove" });
+  assert.equal(detta.success, true);
+  assert.deepEqual(detta.result.indirizzi, ["http://192.168.1.8:8098", "http://10.0.0.4:8098"]);
+  assert.equal(detta.result.centralino, "https://tramite.gdahome.org");
+
+  /* Un ponte che non sa dirlo — il Supervisor che non risponde, o un ponte
+   * sul banco — risponde di no, e il telefono resta dov'e'. */
+  const senza = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
+  const negata = await senza.rispondi({ id: 2, type: "ponte/casa/dove" });
+  assert.equal(negata.success, false);
+  assert.equal(negata.error.code, "unknown_command");
+
+  /* E se il Supervisor inciampa non si porta giu' il filo: un no, e basta. */
+  const rotto = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    ritorno: {
+      async cosaDire() {
+        throw new Error("il Supervisor non risponde");
+      },
+    },
+  });
+  const inciampata = await rotto.rispondi({ id: 3, type: "ponte/casa/dove" });
+  assert.equal(inciampata.success, false);
+  assert.equal(inciampata.error.code, "unknown_error");
 });

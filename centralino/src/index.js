@@ -22,11 +22,25 @@ export async function alzaIlCentralino({
    * risponde lo stesso e dice che non e' configurato. */
   gettoneDiGitHub = process.env.GITHUB_SEGNALAZIONI || "",
   repoDiGitHub = process.env.GITHUB_REPO || "",
+  /* E dove vanno le foto e i video, che puo' essere un'altra repository.
+   *
+   * Gli allegati non sono allegati di GitHub: si **committano**, sotto
+   * `allegati/<numero>/`, e restano nella storia di git per sempre. La
+   * repository del progetto e' quella che Home Assistant clona per installare
+   * l'add-on: le foto delle case degli altri non ci vanno. Vuota vuol dire
+   * «la stessa delle issue», che e' come stava prima. */
+  repoDegliAllegati = process.env.GITHUB_REPO_ALLEGATI || "",
   /* La chiave con cui si apre la console della chat. Una sola, e vede tutte le
    * linee: senza, le case possono scrivere ma nessuno puo' leggere, ed e' una
    * cosa che `/salute` dice invece di farla scoprire il giorno in cui qualcuno
    * chiede aiuto. */
   chiaveDellaConsole = process.env.CHIAVE_CONSOLE || "",
+  /* Come si chiamano il sito e l'app di questo centralino. Non servono a
+   * lavorare — servono alla soglia, cioe' a chi apre l'indirizzo nudo e va
+   * mandato dove si va davvero. Senza, la soglia c'e' comunque e dice una
+   * riga in meno: un centralino proprio non e' detto che abbia un sito. */
+  ilSito = process.env.NOME_DEL_SITO || "",
+  lApp = process.env.NOME_DELL_APP || "",
 } = {}) {
   const registro = apriIlRegistro(livello);
   const case_ = new Case({ cartella, giorniDiSilenzio });
@@ -36,12 +50,19 @@ export async function alzaIlCentralino({
     cartella,
     gettone: gettoneDiGitHub,
     repo: repoDiGitHub,
+    repoAllegati: repoDegliAllegati,
   });
   const chat = new Chat({
     archivio: new ArchivioDellaChat(join(cartella, "chat.sqlite")),
     chiaveDellaConsole,
   });
-  const server = costruisciIlServer({ centralino, sportello, chat, registro });
+  const server = costruisciIlServer({
+    centralino,
+    sportello,
+    chat,
+    registro,
+    dove: { sito: ilSito, app: lApp },
+  });
 
   await new Promise((riuscito, fallito) => {
     server.once("error", fallito);

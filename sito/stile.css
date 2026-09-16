@@ -1,0 +1,1157 @@
+/* Il vestito del sito.
+ *
+ * I colori non sono scelti qui: sono quelli dell'app, presi da
+ * `app/lib/vestito/tema.dart` — blu notte come colore primo, ambra come
+ * accento perché è il colore di una luce accesa, l'azzurro della plancia per
+ * dire «premi qui». I caratteri sono quelli della plancia, Inter e Oswald,
+ * serviti da qui dentro: un sito che racconta che la casa non parla con
+ * nessuno e poi va a prendersi i caratteri da Google si smentisce da solo.
+ *
+ * Il fondo è lo stesso dell'app: non un grigio piatto — che è l'assenza di
+ * una scelta — ma un azzurrino con due aloni sfocati che si muovono
+ * pianissimo, verde da una parte e celeste dall'altra, e le schede bianche
+ * che ci galleggiano sopra.
+ *
+ * ## Una luce sola, e chiara
+ *
+ * C'era un tema scuro, e seguiva quello del sistema. Non c'è più, ed è una
+ * scelta: questa è la copertina di gdahome — l'indirizzo che si scrive su un
+ * negozio o su un biglietto — e una copertina si presenta sempre allo stesso
+ * modo. Chi apriva il sito con un telefono in tema scuro se lo trovava quasi
+ * nero, cioè una pagina diversa da quella che gli era stata mostrata, e le
+ * schermate dell'app che ci stanno dentro sono chiare comunque: sopra un
+ * fondo nero galleggiavano come ritagli.
+ *
+ * Dentro l'app il chiaro e scuro c'è, e lì ha senso: quella si guarda di
+ * notte, in corridoio, con una mano sola.
+ */
+
+/* ── I caratteri ────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("statico/font/inter-latin-300-normal.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("statico/font/inter-latin-400-normal.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("statico/font/inter-latin-700-normal.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("statico/font/inter-latin-ext-300-normal.woff2") format("woff2");
+  unicode-range: U+0100-02AF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("statico/font/inter-latin-ext-400-normal.woff2") format("woff2");
+  unicode-range: U+0100-02AF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("statico/font/inter-latin-ext-700-normal.woff2") format("woff2");
+  unicode-range: U+0100-02AF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF;
+}
+@font-face {
+  font-family: "Oswald";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("statico/font/oswald-latin-500-normal.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215;
+}
+@font-face {
+  font-family: "Oswald";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("statico/font/oswald-latin-ext-500-normal.woff2") format("woff2");
+  unicode-range: U+0100-02AF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF;
+}
+
+/* ── I colori ───────────────────────────────────────────────────────────── */
+
+:root {
+  --notte: #0f172a;
+  --notte-chiara: #1e293b;
+  --azzurro: #0ea5e9;
+  --azzurro-cupo: #075985;
+  --ambra: #f59e0b;
+  --ambra-scura: #b45309;
+  --bene: #16a34a;
+  --male: #e11d48;
+
+  --fondo: #f0f4f8;
+  --alone-1: #dcfce7;
+  --alone-2: #e0f2fe;
+  --carta: #ffffff;
+  --carta-alta: #f8fafc;
+  --bordo: #e2e8f0;
+  --bordo-tenue: #eef2f7;
+  --testo: #0f172a;
+  --testo-lieve: #64748b;
+  --ombra: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --ombra-alta: 0 2px 6px rgba(15, 23, 42, 0.06), 0 24px 60px rgba(15, 23, 42, 0.12);
+
+  --largo: 1180px;
+  --raggio: 20px;
+  --raggio-piccolo: 14px;
+}
+
+/* ── Le basi ────────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--testo);
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  font-size: 17px;
+  line-height: 1.62;
+  font-weight: 400;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Il fondo vivo: due aloni sfocati che si muovono pianissimo, come nell'app.
+ * Stanno dietro tutto e non prendono clic. */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.85;
+  pointer-events: none;
+}
+body::before {
+  width: 46vw;
+  height: 46vw;
+  min-width: 320px;
+  min-height: 320px;
+  background: var(--alone-1);
+  top: -12vw;
+  left: -10vw;
+  animation: vaga1 34s ease-in-out infinite alternate;
+}
+body::after {
+  width: 52vw;
+  height: 52vw;
+  min-width: 340px;
+  min-height: 340px;
+  background: var(--alone-2);
+  top: 24vh;
+  right: -16vw;
+  animation: vaga2 41s ease-in-out infinite alternate;
+}
+@keyframes vaga1 {
+  to {
+    transform: translate3d(8vw, 12vh, 0) scale(1.15);
+  }
+}
+@keyframes vaga2 {
+  to {
+    transform: translate3d(-10vw, -8vh, 0) scale(1.1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+img {
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  line-height: 1.15;
+  letter-spacing: -0.022em;
+  font-weight: 700;
+  margin: 0 0 0.5em;
+  text-wrap: balance;
+}
+h1 {
+  font-size: clamp(2.1rem, 5.4vw, 3.6rem);
+  letter-spacing: -0.032em;
+}
+h2 {
+  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+  letter-spacing: -0.028em;
+}
+h3 {
+  font-size: 1.16rem;
+}
+p {
+  margin: 0 0 1em;
+  text-wrap: pretty;
+}
+a {
+  color: inherit;
+}
+
+.limite {
+  width: 100%;
+  max-width: var(--largo);
+  margin-inline: auto;
+  padding-inline: 22px;
+}
+
+section {
+  padding-block: clamp(56px, 8vw, 104px);
+}
+
+.occhiello {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ambra-scura);
+  margin-bottom: 14px;
+}
+.occhiello {
+  color: var(--ambra-scura);
+}
+.occhiello::before {
+  content: "";
+  width: 22px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+}
+
+.guida {
+  font-size: 1.08rem;
+  color: var(--testo-lieve);
+  max-width: 62ch;
+}
+
+/* ── I bottoni ──────────────────────────────────────────────────────────── */
+
+.bottone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 13px 22px;
+  border-radius: var(--raggio-piccolo);
+  border: 1px solid transparent;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.97rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+.bottone:hover {
+  transform: translateY(-1px);
+}
+.bottone:active {
+  transform: translateY(0);
+}
+.bottone-pieno {
+  background: var(--notte);
+  color: #fff;
+  box-shadow: var(--ombra);
+}
+.bottone-pieno:hover {
+  background: var(--notte-chiara);
+  box-shadow: var(--ombra-alta);
+}
+.bottone-vuoto {
+  background: var(--carta);
+  color: var(--testo);
+  border-color: var(--bordo);
+}
+.bottone-vuoto:hover {
+  border-color: var(--azzurro);
+}
+.bottone-ambra {
+  background: var(--ambra);
+  color: #3b2800;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+}
+.bottone-ambra:hover {
+  background: #fbbf24;
+}
+
+:where(a, button, input, summary):focus-visible {
+  outline: 2.5px solid var(--azzurro);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ── La barra in cima ───────────────────────────────────────────────────── */
+
+.cappello {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: color-mix(in srgb, var(--fondo) 82%, transparent);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+.cappello.giu {
+  border-bottom-color: var(--bordo);
+}
+.cappello .limite {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: 68px;
+}
+.marchio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+.marchio img {
+  border-radius: 9px;
+  display: block;
+}
+.navigazione {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.navigazione a {
+  padding: 8px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 0.93rem;
+  font-weight: 400;
+  color: var(--testo-lieve);
+  white-space: nowrap;
+}
+.navigazione a:hover {
+  color: var(--testo);
+  background: var(--carta);
+}
+.attrezzi {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.navigazione + .attrezzi {
+  margin-left: 0;
+}
+.interruttore-tema {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  border: 1px solid var(--bordo);
+  background: var(--carta);
+  color: var(--testo);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.interruttore-tema:hover {
+  border-color: var(--azzurro);
+}
+
+/* ── La lingua ───────────────────────────────────────────────────────────
+ *
+ * Due tasti attaccati, dentro una cornice sola: si legge come un
+ * interruttore a due posizioni, e quella accesa dice in che lingua si sta
+ * leggendo. Non e' un menu: le lingue sono due, e per due voci un menu e'
+ * un clic in piu' per niente.
+ *
+ * Il tasto acceso lo dice `aria-pressed`, che e' la stessa cosa che legge
+ * chi usa un lettore di schermo: lo stato sta in un posto solo, e il colore
+ * lo segue. */
+.lingue {
+  display: flex;
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid var(--bordo);
+  border-radius: 11px;
+  background: var(--carta);
+  flex-shrink: 0;
+}
+.lingua {
+  min-width: 34px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--testo-lieve);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.lingua:hover {
+  color: var(--testo);
+}
+.lingua[aria-pressed="true"] {
+  background: var(--azzurro);
+  color: #fff;
+}
+.lingua:focus-visible {
+  outline: 2px solid var(--azzurro);
+  outline-offset: 2px;
+}
+
+/* Nell'informativa la barra non c'e': il marchio a sinistra e la lingua a
+   destra, sulla stessa riga. */
+.riga-di-testa {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+@media (max-width: 940px) {
+  .navigazione {
+    display: none;
+  }
+}
+
+/* Sul telefono in cima restano il marchio e la lingua.
+ *
+ * «Installa l'add-on» in quattrocento pixel si spezza in due righe e fa
+ * crescere la barra, che sta fissa e ruba schermo a tutto il resto. Non e' un
+ * tasto perduto: lo stesso sta due centimetri sotto, nella copertina, dove
+ * chiunque arrivi guarda per primo. */
+@media (max-width: 560px) {
+  .cappello .attrezzi .bottone {
+    display: none;
+  }
+}
+
+/* ── Il colpo d'occhio ──────────────────────────────────────────────────── */
+
+/* ── La copertina ───────────────────────────────────────────────────────
+ *
+ * Due colonne: a sinistra quello che si dice, a destra quello che si vede.
+ * Prima era una colonna sola, centrata, e la prima schermata finiva con un
+ * mucchio di vuoto sotto: chi arrivava leggeva quattro righe su un'app senza
+ * averla mai vista in faccia. */
+.apertura {
+  padding-top: clamp(36px, 5.5vw, 68px);
+  padding-bottom: clamp(28px, 4vw, 52px);
+}
+.apertura-dentro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: center;
+}
+/* Il titolo della copertina sta in una colonna, non in tutta la pagina: un
+ * po' piu' piccolo di quello generico, se no si spezza in quattro righe
+ * corte e non si legge come una frase. */
+.apertura h1 {
+  font-size: clamp(2rem, 3.5vw, 3.1rem);
+  margin-bottom: 0.42em;
+}
+/* Le parole in risalto: un colore solo, e del marchio.
+ *
+ * C'era una sfumatura da azzurro ad ambra. Anche interpolata in oklch, in
+ * mezzo passava per un giallo-verde spento — su un titolo grande sembrava un
+ * errore di stampa, ed era la prima cosa che si vedeva della pagina. Un blu
+ * fondo non fa nessun effetto speciale, e per questo funziona. */
+.apertura h1 .filo {
+  color: var(--azzurro-cupo);
+}
+.apertura .guida {
+  font-size: clamp(1.02rem, 1.5vw, 1.16rem);
+  max-width: 34em;
+  margin-bottom: 1.7em;
+}
+.bottoni {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sottobottoni {
+  margin-top: 16px;
+  font-size: 0.88rem;
+  color: var(--testo-lieve);
+  max-width: 36em;
+}
+
+/* ── Il telefono ────────────────────────────────────────────────────────
+ *
+ * Una cornice sobria intorno alla fotografia: il bordo scuro del telefono e
+ * un'ombra. Non un mockup disegnato con riflessi e mani — quelli invecchiano
+ * male e si vede che sono finti. */
+.telefono {
+  position: relative;
+  margin-inline: auto;
+  width: min(300px, 100%);
+  padding: 9px;
+  background: linear-gradient(160deg, #2b3a55, #0f172a 60%);
+  border-radius: 38px;
+  box-shadow: var(--ombra-alta);
+}
+.telefono img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 30px;
+  background: var(--carta);
+}
+.apertura-telefono {
+  display: flex;
+  justify-content: center;
+}
+
+/* ── La fila delle schermate ────────────────────────────────────────────── */
+.fila-schermate {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(14px, 2.4vw, 28px);
+  margin-top: clamp(30px, 4vw, 46px);
+}
+.fila-schermate figure {
+  margin: 0;
+}
+.telefono-piccolo {
+  width: 100%;
+  padding: 6px;
+  border-radius: 26px;
+}
+.telefono-piccolo img {
+  border-radius: 21px;
+}
+.fila-schermate figcaption {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--testo-lieve);
+}
+
+@media (max-width: 900px) {
+  .apertura-dentro {
+    grid-template-columns: minmax(0, 1fr);
+    text-align: center;
+  }
+  .apertura .guida,
+  .sottobottoni {
+    margin-inline: auto;
+  }
+  .bottoni {
+    justify-content: center;
+  }
+  /* Su una colonna sola il telefono va **sotto**, non sopra. Sopra si mangia
+   * tutta la prima schermata, e chi arriva vede una fotografia senza ancora
+   * sapere di cosa: prima si dice cos'e' e come si prende, poi si fa vedere. */
+  .apertura-telefono {
+    margin-top: 30px;
+  }
+  .telefono {
+    width: min(238px, 66%);
+  }
+  .fila-schermate {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 460px) {
+  .fila-schermate {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 300px;
+    margin-inline: auto;
+  }
+}
+
+.numeroni {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 10px;
+  margin-top: clamp(30px, 4.5vw, 52px);
+  text-align: center;
+}
+.numerone {
+  background: var(--carta);
+  border: 1px solid var(--bordo-tenue);
+  border-radius: var(--raggio-piccolo);
+  padding: 18px 14px;
+  box-shadow: var(--ombra);
+}
+.numerone b {
+  display: block;
+  font-family: "Oswald", "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 2.1rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-feature-settings: "tnum";
+}
+.numerone span {
+  display: block;
+  font-size: 0.84rem;
+  color: var(--testo-lieve);
+  margin-top: 6px;
+  line-height: 1.35;
+}
+
+/* ── Le schede ──────────────────────────────────────────────────────────── */
+
+.carte {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  margin-top: 34px;
+}
+.carta {
+  background: var(--carta);
+  border: 1px solid var(--bordo-tenue);
+  border-radius: var(--raggio);
+  padding: 26px;
+  box-shadow: var(--ombra);
+}
+.carta h3 {
+  margin-bottom: 0.4em;
+}
+.carta p:last-child {
+  margin-bottom: 0;
+}
+.carta p {
+  color: var(--testo-lieve);
+  font-size: 0.97rem;
+  margin-bottom: 0.6em;
+}
+.carta .segno {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--carta-alta);
+  margin-bottom: 16px;
+}
+.carta .segno img {
+  display: block;
+}
+
+/* ── Come ci si arriva: il disegno ──────────────────────────────────────── */
+
+.strada {
+  margin-top: 34px;
+  background: var(--carta);
+  border: 1px solid var(--bordo-tenue);
+  border-radius: var(--raggio);
+  padding: clamp(20px, 3.4vw, 34px);
+  box-shadow: var(--ombra);
+  overflow-x: auto;
+}
+.strada svg {
+  display: block;
+  width: 100%;
+  min-width: 560px;
+  height: auto;
+}
+.strada figcaption {
+  margin-top: 18px;
+  font-size: 0.92rem;
+  color: var(--testo-lieve);
+  min-width: 0;
+}
+
+.tre-strade {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-top: 20px;
+  list-style: none;
+  padding: 0;
+}
+.tre-strade li {
+  background: var(--carta-alta);
+  border: 1px solid var(--bordo-tenue);
+  border-radius: var(--raggio-piccolo);
+  padding: 16px 18px;
+  font-size: 0.93rem;
+}
+.tre-strade b {
+  display: block;
+  margin-bottom: 4px;
+}
+.tre-strade span {
+  color: var(--testo-lieve);
+}
+
+/* ── La plancia ─────────────────────────────────────────────────────────── */
+
+.invito {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 15px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ambra) 16%, var(--carta));
+  border: 1px solid color-mix(in srgb, var(--ambra) 34%, transparent);
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin-bottom: 22px;
+}
+.invito::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ambra);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--ambra) 70%, transparent);
+  animation: battito 2.4s ease-out infinite;
+}
+@keyframes battito {
+  70%,
+  100% {
+    box-shadow: 0 0 0 9px transparent;
+  }
+}
+
+/* ── Il riquadro con dentro la plancia ──────────────────────────────────
+ *
+ * Il telaio è una cornice, non un'interfaccia: tre pallini, il nome della casa
+ * e la spia del filo. Dentro non c'è niente di disegnato da noi — c'è la
+ * plancia vera, in un `iframe`, servita da `dashboardmodern_static/` come la
+ * serve il ponte.
+ *
+ * Si carica quando si arriva (`loading="lazy"`): sono diciassette megabyte e
+ * ottocento file, e chi si ferma a leggere i piani non ha ragione di
+ * scaricarli. */
+.telaio {
+  margin: 30px 0 0;
+  background: var(--carta);
+  border: 1px solid var(--bordo);
+  border-radius: var(--raggio);
+  box-shadow: var(--ombra-alta);
+  overflow: hidden;
+}
+.telaio-cima {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--bordo-tenue);
+  background: var(--carta-alta);
+}
+.telaio-pallini {
+  flex-shrink: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--bordo);
+  box-shadow:
+    17px 0 0 var(--bordo),
+    34px 0 0 var(--bordo);
+  margin-right: 34px;
+}
+.telaio-nome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.telaio-nome img {
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.telaio-spia {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--bene);
+  background: color-mix(in srgb, var(--bene) 13%, transparent);
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.telaio-spia::before {
+  content: "● ";
+  font-size: 0.7em;
+  vertical-align: 1px;
+}
+.telaio-dentro {
+  display: block;
+  width: 100%;
+  height: min(78vh, 860px);
+  min-height: 520px;
+  border: 0;
+  background: #f0f4f8;
+}
+/* `hidden` da solo qui non basta: la riga sopra mette un `display`, e una
+ * classe batte l'attributo. Senza questa, nascondere il riquadro lo lascia
+ * dov'e' — alto cinquecento pixel e vuoto, che e' proprio la cosa da cui si
+ * scappa. */
+.telaio-dentro[hidden] {
+  display: none;
+}
+
+/* Il pezzo che prende il posto della plancia quando la plancia non c'e'.
+ * Stessa altezza del riquadro, cosi' la pagina non salta, e l'aria di una
+ * cosa voluta invece che di una cosa rotta. */
+.telaio-senza {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  min-height: clamp(280px, 42vw, 420px);
+  padding: clamp(28px, 5vw, 52px);
+  background: var(--carta-alta);
+}
+.telaio-senza p {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--testo-lieve);
+}
+.telaio-senza b {
+  color: var(--testo);
+}
+.telaio-senza .bottone {
+  margin-top: 8px;
+}
+.telaio figcaption {
+  padding: 14px 18px;
+  border-top: 1px solid var(--bordo-tenue);
+  font-size: 0.88rem;
+  color: var(--testo-lieve);
+  background: var(--carta-alta);
+}
+
+.carte-strette {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+@media (max-width: 620px) {
+  .telaio-pallini {
+    display: none;
+  }
+  .telaio-spia {
+    display: none;
+  }
+  .telaio-dentro {
+    height: min(76vh, 680px);
+    min-height: 460px;
+  }
+}
+
+/* ── Le funzioni ────────────────────────────────────────────────────────── */
+
+.elenco-segni {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.elenco-segni li {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  font-size: 0.97rem;
+}
+.elenco-segni li::before {
+  content: "";
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--bene) 16%, transparent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2316a34a' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+  background-size: 13px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.elenco-segni.in-arrivo li::before {
+  background: color-mix(in srgb, var(--ambra) 18%, transparent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b45309' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M12 7v5.5l3.5 2'/%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3C/svg%3E");
+  background-size: 14px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.fasi {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  margin-top: 30px;
+  counter-reset: fase;
+}
+.fase {
+  background: var(--carta);
+  border: 1px solid var(--bordo-tenue);
+  border-radius: var(--raggio-piccolo);
+  padding: 18px;
+  position: relative;
+}
+.fase.fatta {
+  border-color: color-mix(in srgb, var(--bene) 40%, transparent);
+  background: color-mix(in srgb, var(--bene) 7%, var(--carta));
+}
+.fase b {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--testo-lieve);
+  margin-bottom: 6px;
+}
+.fase p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.fase .stato {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--carta-alta);
+  color: var(--testo-lieve);
+}
+.fase.fatta .stato {
+  background: color-mix(in srgb, var(--bene) 18%, transparent);
+  color: var(--bene);
+}
+
+/* ── I download ─────────────────────────────────────────────────────────── */
+
+.scarichi {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  margin-top: 34px;
+}
+.scarico {
+  display: flex;
+  flex-direction: column;
+  background: var(--carta);
+  border: 1px solid var(--bordo-tenue);
+  border-radius: var(--raggio);
+  padding: 24px;
+  box-shadow: var(--ombra);
+  text-decoration: none;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+a.scarico:hover {
+  transform: translateY(-2px);
+  border-color: var(--azzurro);
+  box-shadow: var(--ombra-alta);
+}
+.scarico .segno {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--carta-alta);
+  margin-bottom: 16px;
+  color: var(--testo);
+}
+.scarico h3 {
+  margin-bottom: 0.25em;
+}
+.scarico p {
+  color: var(--testo-lieve);
+  font-size: 0.93rem;
+  margin-bottom: 0.7em;
+}
+.scarico .come {
+  margin-top: auto;
+  font-size: 0.87rem;
+  font-weight: 700;
+  color: var(--azzurro-cupo);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.scarico.spento {
+  opacity: 0.62;
+}
+.scarico .fra-poco {
+  align-self: flex-start;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--carta-alta);
+  color: var(--testo-lieve);
+  margin-bottom: 12px;
+}
+
+/* ── I documenti ────────────────────────────────────────────────────────── */
+
+.documenti {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  margin-top: 30px;
+}
+.documento {
+  display: block;
+  padding: 16px 18px;
+  background: var(--carta);
+  border: 1px solid var(--bordo-tenue);
+  border-radius: var(--raggio-piccolo);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+.documento:hover {
+  border-color: var(--azzurro);
+}
+.documento b {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.97rem;
+}
+.documento span {
+  font-size: 0.87rem;
+  color: var(--testo-lieve);
+}
+
+/* ── Il fondo ───────────────────────────────────────────────────────────── */
+
+.fondo-pagina {
+  border-top: 1px solid var(--bordo);
+  padding-block: 40px 52px;
+  margin-top: 40px;
+  font-size: 0.9rem;
+  color: var(--testo-lieve);
+}
+.fondo-pagina .limite {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px 32px;
+  align-items: flex-start;
+}
+.fondo-pagina p {
+  margin: 0;
+  max-width: 46ch;
+}
+.fondo-pagina nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin-left: auto;
+}
+.fondo-pagina a {
+  color: var(--testo-lieve);
+  text-decoration: none;
+}
+.fondo-pagina a:hover {
+  color: var(--testo);
+  text-decoration: underline;
+}
+
+/* ── Comparire salendo ─────────────────────────────────────────────────── */
+
+.appare {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.55s ease,
+    transform 0.55s ease;
+}
+.appare.qui {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .appare {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ── Sostieni ───────────────────────────────────────────────────────────── */
+
+.bottoni-mezzo {
+  justify-content: center;
+  margin-top: clamp(26px, 4vw, 40px);
+}
+.sottobottoni-mezzo {
+  text-align: center;
+  margin-inline: auto;
+}

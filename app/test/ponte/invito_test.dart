@@ -13,7 +13,7 @@ import 'package:gdahome/ponte/invito.dart';
 
 void main() {
   group('quello che scrive il ponte, l\'app lo rilegge', () {
-    test('tutto quello che c\'e\' da dire', () {
+    test('tutto quello che c\'è da dire', () {
       final letto = Invito.leggi(
         'gdahome|1|ABCD2345EFGH6789|wss://centralino.esempio.dev|'
         '192.168.1.50:8098,10.0.0.4:8098',
@@ -55,7 +55,7 @@ void main() {
     });
   });
 
-  test('perdona quello che ci mette in mezzo chi legge i quadretti', () {
+  test('perdona quello che ci mette in mezzo chi legge i QR code', () {
     /* Un lettore di QR restituisce quello che trova, e ogni tanto ci lascia
      * attaccato un a capo. Non e' un motivo per dire di no a un codice buono. */
     final letto = Invito.leggi(
@@ -67,11 +67,11 @@ void main() {
     expect(Invito.leggi('GDAHOME|1|ABCD||').codice, 'ABCD');
   });
 
-  test('un campo in piu\' non rompe l\'app di oggi', () {
+  test('un campo in più non rompe l\'app di oggi', () {
     /* E' il motivo per cui i campi stanno in coda e non in mezzo: quello che
      * arrivera' domani, un'app di oggi lo salta e va avanti. */
     final letto = Invito.leggi(
-      'gdahome|1|ABCD||192.168.1.50:8098|qualcosa|che|verra\'|dopo',
+      'gdahome|1|ABCD||192.168.1.50:8098|qualcosa|che|verrà|dopo',
     );
     expect(letto.codice, 'ABCD');
     expect(letto.indirizzi, hasLength(1));
@@ -86,7 +86,7 @@ void main() {
     );
   });
 
-  test('quello che non e\' un invito lo dice, invece di leggerlo a meta\'', () {
+  test('quello che non è un invito lo dice, invece di leggerlo a metà', () {
     for (final roba in [
       '',
       '   ',
@@ -102,7 +102,7 @@ void main() {
       expect(
         () => Invito.leggi(roba),
         throwsA(isA<InvitoIllegibile>()),
-        reason: '«$roba» non e\' un invito',
+        reason: '«$roba» non è un invito',
       );
     }
   });
@@ -111,7 +111,7 @@ void main() {
     /* Una casa che dice una sciocchezza non deve far fallire l'abbinamento di
      * chi ha appena inquadrato: si tiene quello che c'e'. */
     final letto = Invito.leggi(
-      'gdahome|1|ABCD|non un indirizzo|192.168.1.50:8098,,cosi\' no!,10.0.0.4:8098',
+      'gdahome|1|ABCD|non un indirizzo|192.168.1.50:8098,,così no!,10.0.0.4:8098',
     );
     expect(letto.centralino, isNull);
     expect(letto.indirizzi, [

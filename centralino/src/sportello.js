@@ -79,6 +79,9 @@ export class Sportello {
     cartella = "./dati",
     gettone = "",
     repo = "",
+    /* Dove vanno foto e video: un'altra repository, se si vuole. Vuota vuol
+     * dire «la stessa delle issue», che e' come stava prima. */
+    repoAllegati = "",
     fetch: prendi = globalThis.fetch,
     adesso = () => Date.now(),
   }) {
@@ -86,12 +89,18 @@ export class Sportello {
     this.cartella = cartella;
     this.gettone = gettone;
     this.repo = repo;
+    this.repoAllegati = repoAllegati;
     this.prendi = prendi;
     this.adesso = adesso;
   }
 
   _github() {
-    return new GitHub({ token: this.gettone, repo: this.repo, fetch: this.prendi });
+    return new GitHub({
+      token: this.gettone,
+      repo: this.repo,
+      repoAllegati: this.repoAllegati,
+      fetch: this.prendi,
+    });
   }
 
   /* Se le segnalazioni sono accese. La console lo dice in `/salute`: senza

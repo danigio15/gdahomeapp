@@ -91,10 +91,16 @@ export const SEGNO_DEL_MUCCHIO = "mucchio\n";
 const eUnEvento = (testo) => /"type"\s*:\s*"event"/.test(testo.slice(0, 200));
 
 export class Ponte {
-  constructor({ casa, dispositivi, registro, commissioni = null }) {
+  constructor({ casa, dispositivi, registro, commissioni = null, utenti = null }) {
     this.casa = casa;
     this.dispositivi = dispositivi;
     this.registro = registro;
+    /* Chi amministra questa casa (`utenti.js`). Serve a una riga sola: una
+     * plancia riservata a chi amministra non si apre a un telefono intestato a
+     * chi non amministra. Si guarda solo quello che c'e' gia' in mano — un
+     * messaggio sul filo si risponde subito, non si tiene un telefono appeso
+     * mentre si chiede a Home Assistant. */
+    this.utenti = utenti;
     /* Quello che il ponte fa da se' per il telefono, senza passare da Home
      * Assistant: vedi `commissioni.js`. Senza, un `ponte/…` riceve un rifiuto
      * invece di finire in Home Assistant, che non saprebbe cosa farsene. */
@@ -249,8 +255,17 @@ class Collegamento {
 
   _commissione(detto) {
     const commissioni = this.ponte.commissioni;
+    /* Chi chiede: il telefono che ha aperto questo filo, cioe' l'utente di
+     * Home Assistant a cui e' intestato. Serve alle plance riservate — senza,
+     * un telefono chiederebbe l'elenco e se lo prenderebbe tutto. Un telefono
+     * abbinato prima di oggi non ha nessun utente addosso, e quello vede
+     * tutto: com'era ieri. */
+    const chiChiede = this.dispositivo?.utente || "";
     const risposta = commissioni
-      ? commissioni.rispondi(detto)
+      ? commissioni.rispondi(detto, {
+          chiChiede,
+          amministra: this.ponte.utenti?.amministratoreSubito?.(chiChiede) ?? null,
+        })
       : Promise.resolve(no(detto.id ?? null, "unknown_command", "questo ponte non lo sa fare"));
     risposta
       .catch((errore) => {

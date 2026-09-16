@@ -67,6 +67,26 @@ test("l'alt del logo, dentro il runtime, dice gdahome", (t) => {
   assert.match(testo, /DashboardModernModules/);
 });
 
+test("e la scritta accanto al logo dice gda home", (t) => {
+  if (!plancia.cE) return t.skip("senza plancia non c'e' niente da vestire");
+  /* Questa mancava, e si vedeva sulla testata: il segno era il nostro e le
+   * parole di fianco dicevano ancora «Dashboard MODERN», cioe' il marchio di
+   * un altro appoggiato al nostro. */
+  const servito = plancia.leggi(dove("legacy/dashboard-runtime-it.js"));
+  const testo = servito.corpo.toString("utf8");
+
+  assert.match(testo, />gda<\/span>/);
+  assert.match(testo, />home<\/span>/);
+  assert.equal(testo.includes(">MODERN</span>"), false, "la parola di prima non c'e' piu'");
+
+  /* E anche in inglese: e' lo stesso marchio, e una testata vestita a meta'
+   * si vedrebbe solo a chi cambia lingua. */
+  const inglese = plancia.leggi(dove("legacy/dashboard-runtime-en.js"));
+  const suo = inglese.corpo.toString("utf8");
+  assert.match(suo, />gda<\/span>/);
+  assert.equal(suo.includes(">MODERN</span>"), false);
+});
+
 test("la cartella della plancia non si e' toccata: il sigillo torna", () => {
   /* La prova che conta. Se un giorno il nome si cambiasse dentro i file
    * invece che al momento di servire, il ponte direbbe «modificata» a tutti
@@ -143,8 +163,10 @@ test("l'app e l'add-on portano lo stesso numero", () => {
    *
    * Con una differenza ammessa, e una sola: l'add-on puo' portarsi un **quarto
    * numero** — le sue correzioni fra due versioni della plancia, che nel
-   * negozio sono l'unico modo di far comparire «Aggiorna» — e l'app no, perche'
-   * un numero fatto cosi' i negozi dei telefoni non lo prendono. */
+   * negozio sono l'unico modo di far comparire «Aggiorna» — e il **nome**
+   * dell'app no, perche' un numero fatto cosi' i negozi dei telefoni non lo
+   * prendono. Quel quarto numero l'app se lo porta nel numero di costruzione,
+   * qui sotto. */
   const [, grande, medio, piccolo, costruzione] = dellApp;
   const suoi = dellAddon[1].split(".");
   assert.deepEqual(suoi.slice(0, 3), [grande, medio, piccolo]);
@@ -154,7 +176,32 @@ test("l'app e l'add-on portano lo stesso numero", () => {
   );
 
   /* E il numero di costruzione — quello che vogliono i negozi, che deve solo
-   * crescere — si deriva dal nome: 1.4.24 diventa 10424. Cosi' non c'e' un
-   * secondo numero da ricordarsi. */
-  assert.equal(Number(costruzione), Number(grande) * 10000 + Number(medio) * 100 + Number(piccolo));
+   * crescere — si deriva dal nome: 1.4.24 diventa 104240, e la correzione
+   * dell'add-on e' l'ultima cifra: 1.4.24.1 diventa 104241. Cosi' non c'e' un
+   * secondo numero da ricordarsi, e ogni versione della plancia ha dieci
+   * correzioni a disposizione per andare anche nel negozio. */
+  /* E il terzo posto: il numero che l'app **fa vedere**.
+   *
+   * Il `pubspec` lo legge chi costruisce, non l'app che gira, e per rileggerlo
+   * da dentro servirebbe un pacchetto in piu': quindi lo stesso programma che
+   * scrive questi due scrive anche un file Dart, e l'app legge quello. Tre
+   * posti sono tre occasioni di dire tre numeri diversi — meno questa prova. */
+  const dart = readFileSync(
+    fileURLToPath(new URL("../../app/lib/versione.dart", import.meta.url)),
+    "utf8",
+  );
+  const nome = /^const String versioneDiQuestApp = "([^"]+)";$/m.exec(dart);
+  const costruito = /^const int costruzioneDiQuestApp = (\d+);$/m.exec(dart);
+  const scritto = /^const String numeroDiQuestApp = "([^"]+)";$/m.exec(dart);
+  assert.ok(nome && costruito && scritto, "l'app non dice che numero e'");
+  assert.equal(nome[1], `${grande}.${medio}.${piccolo}`);
+  assert.equal(costruito[1], costruzione);
+  assert.equal(scritto[1], `${nome[1]} (${costruzione})`);
+
+  const correzione = suoi.length === 4 ? Number(suoi[3]) : 0;
+  assert.ok(correzione >= 0 && correzione <= 9, "di correzioni ce ne stanno dieci, da 0 a 9");
+  assert.equal(
+    Number(costruzione),
+    (Number(grande) * 10000 + Number(medio) * 100 + Number(piccolo)) * 10 + correzione,
+  );
 });

@@ -1,6 +1,6 @@
 /* Come si torna a questa casa.
  *
- * Un telefono che si abbina inquadrando un quadretto non sa niente di dove sia
+ * Un telefono che si abbina inquadrando un QR code non sa niente di dove sia
  * finito: non ha battuto nessun indirizzo, ed e' apposta — chiedere a
  * qualcuno l'indirizzo della propria casa vuol dire chiedergli di andarlo a
  * cercare nel router. Quindi glielo diciamo noi, una volta sola, mentre si
@@ -13,7 +13,7 @@
  *     quale filo tornare.
  *   - **centralino**: dove chiamare per entrare da fuori. E' lo stesso a cui
  *     chiama questa casa: se un giorno cambia, i telefoni gia' abbinati lo
- *     scoprono da soli — vedi `PIANO.md`.
+ *     scoprono da soli.
  *   - **indirizzi**: dove sta questa casa sulla rete di casa.
  *
  * L'ultimo e' quello che fa la differenza tutti i giorni. Senza, un telefono

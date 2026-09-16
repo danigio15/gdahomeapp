@@ -1,0 +1,46 @@
+# Come si leggono le opzioni di gdahome, in italiano.
+#
+# Home Assistant, senza questo file, scrive il nome della chiave cosi' com'e':
+# «da_fuori_casa». Funziona, ma si vede che e' il nome di una variabile. Qui
+# ogni opzione ha il suo nome e una riga che dice a cosa serve, e Home
+# Assistant le mette nella scheda dell'add-on.
+#
+# Accanto c'e' `en.yaml`, le stesse opzioni in inglese: Home Assistant sceglie
+# in base alla lingua di chi guarda, e ricade sull'inglese per tutte le altre.
+# Chi aggiunge un'opzione la scrive in tutti e due i file — uno solo vuol dire
+# una scheda mezza tradotta.
+configuration:
+  da_fuori_casa:
+    name: Da fuori casa
+    description: >-
+      L'app entra anche quando non sei in casa, passando dal centralino di
+      gdahome: nessuna porta da aprire sul router, nessun indirizzo pubblico,
+      niente da installare. Spento, la casa si raggiunge solo dalla sua rete.
+  porta_app:
+    name: La porta dell'app
+    description: >-
+      La porta su cui l'app bussa quando sei in casa. Si cambia solo se un
+      altro programma usa gia' questa.
+  dispositivi_massimi:
+    name: Quanti telefoni
+    description: Quanti telefoni possono restare abbinati insieme.
+  minuti_del_codice:
+    name: Quanto vive un codice
+    description: Per quanti minuti vale un QR code di abbinamento.
+  giorni_di_silenzio:
+    name: Giorni di silenzio
+    description: >-
+      Dopo quanti giorni senza farsi vedere un telefono va riabbinato. Zero
+      vuol dire mai.
+  chiave_console:
+    name: La chiave della console
+    description: >-
+      Lasciala vuota. Serve solo a chi risponde alle chat di assistenza: in
+      tutte le altre case non cambia niente.
+  registro:
+    name: Il registro
+    description: Quanto scrive nel registro dell'add-on.
+network:
+  8098/tcp: >-
+    L'app di gdahome bussa qui. In casa basta cosi'; da fuori serve farla
+    arrivare fin qui.

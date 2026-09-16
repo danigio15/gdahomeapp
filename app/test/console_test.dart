@@ -50,7 +50,7 @@ Future<void> _lasciaFare(WidgetTester tester) async {
 }
 
 void main() {
-  test('la voce Console c\'e\' in una casa sola, e nelle altre no', () {
+  test('la voce Console c\'è in una casa sola, e nelle altre no', () {
     expect(vociDellaBarra(), isNot(contains(Sezione.console)));
     expect(vociDellaBarra(conLaConsole: true), contains(Sezione.console));
     /* E il resto del menu non cambia: e' una voce in piu', non un menu
@@ -121,7 +121,7 @@ void main() {
     });
   });
 
-  testWidgets('senza coda si dice cosa ci arrivera\'', (tester) async {
+  testWidgets('senza coda si dice cosa ci arriverà', (tester) async {
     late PonteFinto ponte;
     late Collegamento collegamento;
     await tester.runAsync(() async {

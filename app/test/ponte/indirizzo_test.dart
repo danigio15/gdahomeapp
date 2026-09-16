@@ -53,7 +53,7 @@ void main() {
     expect(IndirizzoDelPonte.leggi('192.168.1.50:9000')!.porta, 9000);
   });
 
-  test('quello che non e\' un indirizzo torna null invece di sollevare', () {
+  test('quello che non è un indirizzo torna null invece di sollevare', () {
     for (final scritto in [
       '',
       '   ',

@@ -1,4 +1,4 @@
-/* I vettori del codice a quadretti, presi da un'implementazione vera.
+/* I vettori del QR code, presi da un'implementazione vera.
  *
  * **Questo file non si scrive a mano.** Lo rifa'
  * `strumenti/qr-riferimento.py`, che chiede a `qrcode` — la libreria Python

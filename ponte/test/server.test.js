@@ -177,7 +177,7 @@ test("il codice della console abbina il telefono, e vale una volta sola", async 
       await prendi(`${b.consolle}/api/codice`, { method: "POST" })
     ).json();
     assert.match(codice, /^[0-9A-Z]{16}$/);
-    /* Nel quadretto ci va il codice **e come si arriva qui**: un'app che
+    /* Nel QR code ci va il codice **e come si arriva qui**: un'app che
      * inquadra non deve sapere niente da prima. Questo banco non ha
      * centralino, e quel campo resta vuoto. */
     assert.equal(invito, `gdahome|1|${codice}||${INDIRIZZO_DI_CASA}:${b.app.split(":").pop()}`);
@@ -192,7 +192,7 @@ test("il codice della console abbina il telefono, e vale una volta sola", async 
     assert.equal(fatto.dispositivo.nome, "iPhone di Anna");
 
     /* Dove tornare. Senza questo, un telefono che si e' abbinato inquadrando
-     * un quadretto non saprebbe dove ribussare: non ha mai visto un
+     * un QR code non saprebbe dove ribussare: non ha mai visto un
      * indirizzo, ed e' apposta. */
     assert.equal(fatto.ritorno.casa, b.identita.casa);
     assert.deepEqual(fatto.ritorno.indirizzi, [`${INDIRIZZO_DI_CASA}:${b.app.split(":").pop()}`]);
@@ -453,7 +453,7 @@ test("una via che non esiste sulla console risponde 404, non 500", async () => {
   }
 });
 
-test("il codice a quadretti si ridisegna, e chi ricarica la pagina lo ritrova", async () => {
+test("il QR code si ridisegna, e chi ricarica la pagina lo ritrova", async () => {
   /* Il caso che si vede subito usandolo: la console si ricarica — un tocco
    * per sbaglio, un riavvio dell'add-on, il telefono che torna sulla scheda —
    * mentre il codice e' ancora buono. Se la pagina non sa piu' qual e', chi
@@ -484,7 +484,7 @@ test("il codice a quadretti si ridisegna, e chi ricarica la pagina lo ritrova", 
   }
 });
 
-test("il codice a quadretti non esiste sulla porta dell'app", async () => {
+test("il QR code non esiste sulla porta dell'app", async () => {
   /* La porta esposta non deve avere **nessuna** via che faccia vedere un
    * codice di abbinamento: quella e' la differenza fra un ponte e una porta
    * aperta. */
@@ -525,6 +525,9 @@ test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-
         istanza: "gdahome",
         primaria: true,
         creata_il: 0,
+        /* Vuoto: la vedono tutti quelli che entrano in casa. */
+        utenti: [],
+        solo_admin: false,
       },
     ]);
 

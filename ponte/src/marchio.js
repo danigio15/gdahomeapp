@@ -26,7 +26,12 @@
  *     prima che qualunque richiesta sia tornata;
  *  3. il **titolo della pagina**, che si legge nella linguetta del browser;
  *  4. l'**`alt` del logo**, che si sente con un lettore di schermo e si legge
- *     quando un'immagine non arriva.
+ *     quando un'immagine non arriva;
+ *  5. la **scritta accanto al logo** nella testata. Questa mancava, e si
+ *     vedeva: il segno era il nostro e le parole di fianco no, cioe' il
+ *     marchio di un altro appoggiato al nostro. Sono due `span` attaccati —
+ *     «Dashboard» in chiaro e «MODERN» in azzurro — e diventano «gda» e
+ *     «home», che e' lo stesso disegno col nostro nome.
  *
  * Il velo resta leggero: il marchio di gdahome e' un disegno con sfumature, e
  * in PNG a 152 punti pesa quaranta kilobyte — dieci volte quello che c'era, e
@@ -91,6 +96,18 @@ const IL_TITOLO = /<title>[^<]*<\/title>/;
  * «Dashboard Modern», in due parole. */
 const L_ALT_DEL_LOGO = /alt="Dashboard Modern"/g;
 
+/* La scritta accanto al logo: due `span` attaccati, «Dashboard» e «MODERN».
+ *
+ * Si riconosce la **coppia**, non le due parole da sole: in un runtime di
+ * quattromila righe la parola «Dashboard» puo' capitare in venti posti — e
+ * cambiarla dove non e' un marchio vorrebbe dire rompere qualcosa per niente —
+ * mentre «Dashboard» attaccato a «MODERN» e' quel marchio e nient'altro.
+ *
+ * Il secondo pezzo ha un colore e le lettere spaziate: lasciandogli il suo
+ * stile, «gda» e «home» si leggono come il nostro nome con la seconda meta'
+ * in evidenza, che e' esattamente il disegno che c'era. */
+const LA_SCRITTA_DEL_LOGO = /(>)Dashboard(<\/span><span[^>]*>)MODERN(<\/span>)/g;
+
 /* Se un file va vestito, e come.
  *
  * Torna `{corpo, tipo}` — gli stessi che si servirebbero, o quelli nuovi. Non
@@ -109,11 +126,15 @@ export function vestiDiGdahome(relativo, corpo, tipo) {
     }
     if (/^legacy\/dashboard-runtime-[a-z]{2}\.js$/.test(quale)) {
       const testo = corpo.toString("utf8");
-      if (!L_ALT_DEL_LOGO.test(testo)) return { corpo, tipo };
-      return {
-        corpo: Buffer.from(testo.replace(L_ALT_DEL_LOGO, `alt="${NOME}"`), "utf8"),
-        tipo,
-      };
+      /* Si sostituisce e poi si guarda se e' cambiato qualcosa, invece di
+       * chiedere prima «c'e'?»: su un'espressione con la `g`, `test` si
+       * ricorda dove era arrivata, e la seconda domanda risponde dal punto
+       * sbagliato. Sostituire e confrontare non ha memoria. */
+      const fatto = testo
+        .replace(L_ALT_DEL_LOGO, `alt="${NOME}"`)
+        .replace(LA_SCRITTA_DEL_LOGO, "$1gda$2home$3");
+      if (fatto === testo) return { corpo, tipo };
+      return { corpo: Buffer.from(fatto, "utf8"), tipo };
     }
     return { corpo, tipo };
   } catch (_errore) {

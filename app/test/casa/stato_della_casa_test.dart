@@ -60,17 +60,14 @@ void main() {
     expect(casa['sensor.fuori']!.unita, '°C');
   });
 
-  test(
-    'le entita\' tornano in ordine di nome, non di identificativo',
-    () async {
-      await casa.attacca();
-      expect(casa.tutte().map((una) => una.id), [
-        'light.cucina',
-        'light.salotto',
-        'sensor.fuori',
-      ]);
-    },
-  );
+  test('le entità tornano in ordine di nome, non di identificativo', () async {
+    await casa.attacca();
+    expect(casa.tutte().map((una) => una.id), [
+      'light.cucina',
+      'light.salotto',
+      'sensor.fuori',
+    ]);
+  });
 
   test('si contano per dominio, e si chiedono per dominio', () async {
     await casa.attacca();
@@ -100,7 +97,7 @@ void main() {
     expect(avvisi, greaterThan(0));
   });
 
-  test('un\'entita\' tolta da Home Assistant sparisce anche di qui', () async {
+  test('un\'entità tolta da Home Assistant sparisce anche di qui', () async {
     await casa.attacca();
     final id =
         ponte.arrivati.lastWhere(
@@ -156,7 +153,7 @@ void main() {
     expect(casa['sensor.fuori']!.stato, '21.9');
   });
 
-  test('un\'entita\' storta non fa cadere niente', () {
+  test('un\'entità storta non fa cadere niente', () {
     expect(Entita.leggi(null), isNull);
     expect(Entita.leggi('una stringa'), isNull);
     expect(Entita.leggi({'entity_id': 'light.x'}), isNull);
@@ -184,7 +181,7 @@ void main() {
     );
   });
 
-  test('col respiro, una raffica di cambiamenti e\' un avviso solo', () async {
+  test('col respiro, una raffica di cambiamenti è un avviso solo', () async {
     /* Una casa vera cambia decine di volte al secondo. Chi disegna deve
      * vedere l'ultimo stato, non ridisegnare a ogni sensore. */
     final calma = StatoDellaCasa(
@@ -227,7 +224,7 @@ void main() {
      * Assistant, che quel dato lo scopre una volta al minuto. La risposta sta
      * dentro l'evento, e questa e' la misura che la legge. */
 
-    test('finche\' non arriva niente non c\'e\' niente da dire', () async {
+    test('finché non arriva niente non c\'è niente da dire', () async {
       await casa.attacca();
       expect(casa.quantiRitardi, 0);
       expect(casa.ritardoSolito, isNull);
@@ -311,7 +308,7 @@ Future<void> _finoA(
     if (condizione()) return;
     await Future<void>.delayed(const Duration(milliseconds: 10));
   }
-  throw StateError('l\'attesa e\' scaduta');
+  throw StateError('l\'attesa è scaduta');
 }
 
 /// Con quale numero si e' sottoscritto agli eventi: e' quello con cui il ponte

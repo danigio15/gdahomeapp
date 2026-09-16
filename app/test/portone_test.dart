@@ -14,11 +14,14 @@ library;
 import 'dart:ui' show AccessibilityFeatures;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemChannels;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/main.dart';
+import 'package:gdahome/parole.dart';
+import 'package:gdahome/versione.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/aggiungi_casa.dart';
@@ -64,6 +67,9 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
   /// qui non c'e' nessuna pagina, e lo dice la prova al posto suo.
   void Function(String pagina)? cambioPagina;
 
+  /// E quello che direbbe premendo i suoi tre trattini.
+  void Function()? chiedeIlMenu;
+
   @override
   Widget riquadro(
     Uri pagina, {
@@ -73,8 +79,10 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
     bool ibrido = false,
     ({double alto, double basso}) margini = (alto: 0, basso: 0),
     void Function(String pagina)? quandoCambiaPagina,
+    void Function()? quandoChiedeIlMenu,
   }) {
     cambioPagina = quandoCambiaPagina;
+    chiedeIlMenu = quandoChiedeIlMenu;
     return _RiquadroFinto(
       key: chiave,
       pagina: pagina,
@@ -161,18 +169,22 @@ class _SenzaMovimento implements AccessibilityFeatures {
   bool get supportsAnnounce => false;
 }
 
-/// Tira su la barra delle sezioni, come si fa col dito sulla maniglia.
+/// Tira su la barra delle sezioni.
 ///
 /// La barra non c'e' finche' non la si chiama: e' una dock, e sta sotto il
 /// bordo. Le prove che vogliono andare da qualche parte passano di qui.
+///
+/// La chiama per nome, e non premendo la porta da cui la chiamerebbe una
+/// persona: le porte sono tre — i tre trattini della plancia, il ☰ della
+/// barra del titolo, il tasto indietro — cambiano da schermata a schermata, e
+/// ognuna ha la sua prova (`barra_nel_browser_test.dart`, `home_test.dart`).
+/// Qui serve solo che la barra sia aperta.
 Future<void> apriLaBarra(WidgetTester tester) async {
-  /* La barra si richiude da sola poco dopo che si e' scelto. Se si premesse
-   * la maniglia mentre e' ancora aperta la si chiuderebbe, e il tocco dopo
-   * cadrebbe nel vuoto: si lascia passare il tempo che ci mette a togliersi
-   * di mezzo, e poi la si chiama. */
+  /* La barra si richiude da sola poco dopo che si e' scelto: si lascia
+   * passare il tempo che ci mette a togliersi di mezzo, e poi la si chiama. */
   await tester.pump(const Duration(seconds: 5));
   await tester.pumpAndSettle();
-  await tester.tap(find.bySemanticsLabel(nomeDellaManiglia));
+  tester.state<BarraDelleSezioniState>(find.byType(BarraDelleSezioni)).apri();
   await tester.pumpAndSettle();
 }
 
@@ -206,7 +218,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Colleghiamo la casa'), findsOneWidget);
-    expect(find.text('Inquadra il codice'), findsOneWidget);
+    expect(find.text('Inquadra il QR code'), findsOneWidget);
 
     /* La cosa che si sta provando e' quello che **non** c'e'.
      *
@@ -219,7 +231,37 @@ void main() {
     expect(find.text('Indirizzo di Home Assistant in casa'), findsNothing);
     expect(find.text('Indirizzo di casa (facoltativo)'), findsNothing);
     expect(
-      find.textContaining('Non ti verra\' mai chiesta la password'),
+      find.textContaining('Non ti verrà mai chiesta la password'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('su un telefono inglese l\'app parla inglese', (tester) async {
+    /* La lingua la decide il telefono (vedi `parole.dart`), e qui il telefono
+     * e' la prova: si mette l'inglese e si guarda la prima schermata, che e'
+     * quella che vede per prima chiunque scarichi l'app. */
+    laLingua = Lingua.inglese;
+    addTearDown(() => laLingua = Lingua.italiano);
+
+    await tester.pumpWidget(AppDiCasa(cassaforte: CassaforteInMemoria()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Let\'s connect your home'), findsOneWidget);
+    expect(find.text('Scan the QR code'), findsOneWidget);
+    expect(find.text('Can\'t scan it? Enter the code'), findsOneWidget);
+    expect(
+      find.textContaining('You will never be asked for your Home Assistant'),
+      findsOneWidget,
+    );
+    /* E niente italiano rimasto in mezzo. */
+    expect(find.text('Colleghiamo la casa'), findsNothing);
+    expect(find.text('Inquadra il QR code'), findsNothing);
+
+    /* Le lettere a mano: la casella si chiama col suo nome inglese. */
+    await tester.tap(find.text('Can\'t scan it? Enter the code'));
+    await tester.pumpAndSettle();
+    expect(
+      find.widgetWithText(TextField, 'Enter the code shown'),
       findsOneWidget,
     );
   });
@@ -230,7 +272,7 @@ void main() {
     /* La prova di quello che fa questa schermata di quello che ha letto.
      *
      * La fotocamera qui non c'e' — nelle prove non c'e' mai — e non e' lei che
-     * si sta provando: e' la decisione che viene dopo. Quel quadretto li' dice
+     * si sta provando: e' la decisione che viene dopo. Quel QR code li' dice
      * un indirizzo di casa che non risponde e nessun centralino, quindi si
      * arriva fin dove si puo' arrivare senza rete, e quello che si vede e' che
      * l'invito e' stato letto per intero. */
@@ -243,25 +285,23 @@ void main() {
           archivio: archivio,
           centralino: null,
           quandoFatto: (_) {},
-          inquadra: (_) async =>
-              const UnQuadretto('gdahome|1|ABCD2345EFGH6789||'),
+          inquadra: (_) async => const UnQrCode('gdahome|1|ABCD2345EFGH6789||'),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Inquadra il codice'));
+    await tester.tap(find.text('Inquadra il QR code'));
     await tester.pumpAndSettle();
 
     expect(
       find.textContaining('non dice da dove si entra'),
       findsOneWidget,
-      reason:
-          'l\'invito e\' stato letto, e si e\' arrivati a scegliere la strada',
+      reason: 'l\'invito è stato letto, e si è arrivati a scegliere la strada',
     );
   });
 
-  testWidgets('un quadretto che non e\' nostro lo dice, e non «riprova»', (
+  testWidgets('un QR code che non è nostro lo dice, e non «riprova»', (
     tester,
   ) async {
     final archivio = ArchivioDelleCase(CassaforteInMemoria());
@@ -273,18 +313,18 @@ void main() {
           archivio: archivio,
           quandoFatto: (_) {},
           inquadra: (_) async =>
-              const UnQuadretto('https://www.esempio.it/qualcosa'),
+              const UnQrCode('https://www.esempio.it/qualcosa'),
         ),
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Inquadra il codice'));
+    await tester.tap(find.text('Inquadra il QR code'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('non e\' un codice di gdahome'), findsOneWidget);
+    expect(find.textContaining('non è un codice di gdahome'), findsOneWidget);
   });
 
-  testWidgets('un quadretto di un ponte piu\' nuovo manda ad aggiornare', (
+  testWidgets('un QR code di un ponte più nuovo manda ad aggiornare', (
     tester,
   ) async {
     /* La differenza che conta: «non ti capisco» manda a controllare il codice,
@@ -298,18 +338,18 @@ void main() {
         home: AggiungiCasa(
           archivio: archivio,
           quandoFatto: (_) {},
-          inquadra: (_) async => const UnQuadretto('gdahome|9|ABCD||'),
+          inquadra: (_) async => const UnQrCode('gdahome|9|ABCD||'),
         ),
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Inquadra il codice'));
+    await tester.tap(find.text('Inquadra il QR code'));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('aggiorna l\'app'), findsOneWidget);
   });
 
-  testWidgets('se la fotocamera non c\'e\', le lettere si aprono da sole', (
+  testWidgets('se la fotocamera non c\'è, le lettere si aprono da sole', (
     tester,
   ) async {
     /* Il caso che si dimentica: chi apre il lettore e trova una fotocamera che
@@ -329,16 +369,16 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Inquadra il codice'));
+    await tester.tap(find.text('Inquadra il QR code'));
     await tester.pumpAndSettle();
 
     expect(
-      find.widgetWithText(TextField, 'Le lettere sotto al quadretto'),
+      find.widgetWithText(TextField, 'Inserisci il codice mostrato'),
       findsOneWidget,
     );
   });
 
-  testWidgets('tornare indietro dal lettore non e\' un errore', (tester) async {
+  testWidgets('tornare indietro dal lettore non è un errore', (tester) async {
     /* Chi apre il lettore e poi cambia idea non ha sbagliato niente, e non
      * deve trovarsi un messaggio rosso addosso. */
     final archivio = ArchivioDelleCase(CassaforteInMemoria());
@@ -354,12 +394,12 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Inquadra il codice'));
+    await tester.tap(find.text('Inquadra il QR code'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Inquadra il codice'), findsOneWidget);
+    expect(find.text('Inquadra il QR code'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
-    /* Le due cose che si direbbero di un quadretto letto male: nessuna delle
+    /* Le due cose che si direbbero di un QR code letto male: nessuna delle
      * due, perche' non si e' letto niente. */
     expect(find.textContaining('Inquadra quello che sta'), findsNothing);
     expect(find.textContaining('aggiorna l\'app'), findsNothing);
@@ -369,8 +409,8 @@ void main() {
     await tester.pumpWidget(AppDiCasa(cassaforte: CassaforteInMemoria()));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.textContaining('Scrivilo a mano'));
-    await tester.tap(find.textContaining('Scrivilo a mano'));
+    await tester.ensureVisible(find.textContaining('Inserisci il codice'));
+    await tester.tap(find.textContaining('Inserisci il codice'));
     await tester.pumpAndSettle();
 
     /* Il modulo e' piu' alto della finestra di prova: senza questo, il tocco
@@ -383,40 +423,39 @@ void main() {
     expect(find.textContaining('Manca il codice'), findsOneWidget);
   });
 
-  testWidgets(
-    'l\'indirizzo si puo\' scrivere lo stesso, per chi ne ha bisogno',
-    (tester) async {
-      /* La casella c'e' ancora, ma sta di la': serve a chi il centralino non
+  testWidgets('l\'indirizzo si può scrivere lo stesso, per chi ne ha bisogno', (
+    tester,
+  ) async {
+    /* La casella c'e' ancora, ma sta di la': serve a chi il centralino non
        * ce l'ha, o a chi vuole abbinare senza far passare niente da fuori. Ci
        * si arriva dallo stesso bottone delle lettere, e quello che si scrive
        * dentro viene controllato come prima. */
-      await tester.pumpWidget(AppDiCasa(cassaforte: CassaforteInMemoria()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(AppDiCasa(cassaforte: CassaforteInMemoria()));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Indirizzo di casa (facoltativo)'), findsNothing);
-      await tester.ensureVisible(find.textContaining('Scrivilo a mano'));
-      await tester.tap(find.textContaining('Scrivilo a mano'));
-      await tester.pumpAndSettle();
+    expect(find.text('Indirizzo di casa (facoltativo)'), findsNothing);
+    await tester.ensureVisible(find.textContaining('Inserisci il codice'));
+    await tester.tap(find.textContaining('Inserisci il codice'));
+    await tester.pumpAndSettle();
 
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Indirizzo di casa (facoltativo)'),
-        'non un indirizzo',
-      );
-      await tester.ensureVisible(find.text('Abbina'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Abbina'));
-      await tester.pump();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Indirizzo di casa (facoltativo)'),
+      'non un indirizzo',
+    );
+    await tester.ensureVisible(find.text('Abbina'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abbina'));
+    await tester.pump();
 
-      expect(find.text('L\'indirizzo di casa non si capisce.'), findsOneWidget);
-    },
-  );
+    expect(find.text('L\'indirizzo di casa non si capisce.'), findsOneWidget);
+  });
 
   testWidgets(
     'un\'app senza centralino dice cosa manca, non «non ha funzionato»',
     (tester) async {
       /* Il caso di chi si compila l'app per conto suo senza accendere nessun
        * centralino. Li' l'indirizzo di casa serve davvero — a meno che non lo
-       * dica il quadretto — e se manca si dice **perche'**, non «riprova». */
+       * dica il QR code — e se manca si dice **perche'**, non «riprova». */
       final archivio = ArchivioDelleCase(CassaforteInMemoria());
       await archivio.apri();
 
@@ -431,19 +470,19 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.ensureVisible(find.textContaining('Scrivilo a mano'));
-      await tester.tap(find.textContaining('Scrivilo a mano'));
+      await tester.ensureVisible(find.textContaining('Inserisci il codice'));
+      await tester.tap(find.textContaining('Inserisci il codice'));
       await tester.pumpAndSettle();
 
       expect(
         find.text('Indirizzo di Home Assistant in casa'),
         findsOneWidget,
         reason:
-            'senza centralino l\'indirizzo e\' l\'unica strada battuta a mano',
+            'senza centralino l\'indirizzo è l\'unica strada battuta a mano',
       );
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Le lettere sotto al quadretto'),
+        find.widgetWithText(TextField, 'Inserisci il codice mostrato'),
         'ABCD2345EFGH6789',
       );
       await tester.ensureVisible(find.text('Abbina'));
@@ -464,7 +503,7 @@ void main() {
    * rotella che gira. */
 
   testWidgets(
-    'con una casa aperta la home e\' la plancia, e il menu porta al resto',
+    'con una casa aperta la home è la plancia, e il menu porta al resto',
     (tester) async {
       late PonteFinto ponte;
       late Collegamento collegamento;
@@ -528,9 +567,9 @@ void main() {
       expect(find.textContaining('Spegni'), findsNothing);
       expect(find.text('Dispositivi'), findsNothing);
 
-      /* La barra: si chiama dalla maniglia in fondo, come la dock della
-       * plancia. In cima c'e' la casa in cui si e', e da dove ci si passa;
-       * sotto, i nomi in maiuscolo e per intero. */
+      /* La barra. In cima c'e' la casa in cui si e', e da dove ci si passa;
+       * sotto, i nomi in maiuscolo e per intero. Da dove si chiama e' una
+       * prova a parte, qui sotto. */
       await apriLaBarra(tester);
       expect(nellaBarra('Casa mia'), findsOneWidget);
       expect(nellaBarra('in casa'), findsOneWidget);
@@ -583,7 +622,7 @@ void main() {
       expect(
         tester.widget<BarraDelleSezioni>(find.byType(BarraDelleSezioni)).aperta,
         Sezione.plancia,
-        reason: 'la plancia e\' andata altrove, e il menu la segue',
+        reason: 'la plancia è andata altrove, e il menu la segue',
       );
       /* Tornando sulla Config, invece, ci si resta. */
       await apriLaBarra(tester);
@@ -619,7 +658,142 @@ void main() {
     },
   );
 
-  testWidgets('da fuori casa la home lo scrive, ed e\' la stessa casa', (
+  testWidgets(
+    'il menu si apre dai tre trattini della plancia, dal ☰ e da indietro',
+    (tester) async {
+      late PonteFinto ponte;
+      late Collegamento collegamento;
+
+      await tester.runAsync(() async {
+        ponte = await PonteFinto.alza();
+        ponte.entita = [
+          PonteFinto.unaEntita('light.cucina', 'on', nome: 'Cucina'),
+        ];
+        final archivio = ArchivioDelleCase(CassaforteInMemoria());
+        await archivio.apri();
+        await archivio.aggiungi(
+          nome: 'Casa mia',
+          segno: segnoBuono,
+          identificativo: chiBuono,
+          chiave: chiaveBuona,
+          inCasa: ponte.indirizzo,
+        );
+        collegamento = Collegamento(
+          archivio: archivio,
+          sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
+        );
+        await collegamento.apri();
+        await _finoAllaPlancia(collegamento);
+      });
+
+      /* Quando l'app chiede al sistema di uscire. */
+      var uscita = 0;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (chiamata) async {
+          if (chiamata.method == 'SystemNavigator.pop') uscita += 1;
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+
+      final plancia = _PlanciaFinta();
+      await tester.pumpWidget(
+        AppDiCasa(collegamento: collegamento, plancia: plancia),
+      );
+      await tester.pump();
+      await tester.pump();
+      /* Si aspetta che tutto stia fermo prima di provare un gesto: mentre
+       * l'app si sta collegando c'e' una riga che gira, e finche' gira
+       * `pumpAndSettle` continua a far scorrere il tempo — abbastanza da far
+       * scadere i quattro secondi dopo i quali la barra si richiude da se'. */
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+
+      /* Si guarda ogni volta quella che c'e' adesso, e non una tenuta da
+       * parte: la home si rifa' quando il collegamento cambia stato, e una
+       * barra tenuta in mano da prima risponderebbe per una che non c'e'
+       * piu'. */
+      bool laBarraEAperta() => tester
+          .state<BarraDelleSezioniState>(find.byType(BarraDelleSezioni))
+          .aperta;
+      expect(
+        laBarraEAperta(),
+        isFalse,
+        reason: 'la home è la plancia, e basta',
+      );
+
+      /* I tre trattini della plancia. La pagina qui e' una scritta, e la
+       * richiesta la fa la prova al posto suo: quello che si prova e' che la
+       * strada ci sia e porti al menu. */
+      expect(
+        plancia.chiedeIlMenu,
+        isNotNull,
+        reason: 'la pagina ha una strada per chiederlo',
+      );
+      plancia.chiedeIlMenu!();
+      await tester.pumpAndSettle();
+      expect(laBarraEAperta(), isTrue);
+
+      /* E col menu aperto si legge che versione e'.
+       *
+       * «Io non so che versione app ho» e' arrivato da chi le pubblica, con
+       * la versione gia' scritta in fondo a «Le case» e nella diagnostica:
+       * un'informazione che c'e' e non si trova vale come una che non c'e'.
+       * Il menu e' la schermata che si apre ogni giorno. */
+      expect(
+        find.textContaining(numeroDiQuestApp),
+        findsOneWidget,
+        reason: 'in fondo al menu c\'e\' che versione e\'',
+      );
+
+      /* Col menu aperto, indietro esce: le sezioni sono la pagina di sotto, e
+       * sotto non c'e' piu' niente. */
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(uscita, 1);
+
+      /* Chiusa la barra — da sola, dopo qualche secondo — indietro la riapre
+       * invece di uscire: uscire vuole due indietro di fila. */
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(laBarraEAperta(), isFalse);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(laBarraEAperta(), isTrue);
+      expect(uscita, 1, reason: 'al primo indietro non si esce');
+
+      /* E il ☰, sulle sezioni che una barra del titolo ce l'hanno. */
+      await tester.tap(nellaBarra('DISPOSITIVI'));
+      await tester.pump();
+      /* Le entita' si chiedono adesso, alla casa finta, con prese vere: il
+       * tempo finto non le fa arrivare, si aspetta quello vero. Finche' non
+       * arrivano c'e' una rotella che gira, e una rotella che gira non lascia
+       * fermare niente. */
+      await tester.runAsync(
+        () => _finoA(() => (collegamento.stato?.quante ?? 0) > 0),
+      );
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(laBarraEAperta(), isFalse);
+      await tester.tap(find.byTooltip(nomeDelTastoDellaBarra));
+      await tester.pumpAndSettle();
+      expect(laBarraEAperta(), isTrue);
+
+      await tester.runAsync(() async {
+        await collegamento.chiudi();
+        await ponte.spegni();
+      });
+    },
+  );
+
+  testWidgets('da fuori casa la home lo scrive, ed è la stessa casa', (
     tester,
   ) async {
     late PonteFinto ponte;

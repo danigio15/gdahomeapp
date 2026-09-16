@@ -17,6 +17,7 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/plancia/cucitura.dart';
@@ -34,8 +35,8 @@ class _PaginaFinta implements VersoLaPagina {
   bool get aperta => !chiusa;
 
   @override
-  void manda(String testo) =>
-      arrivati.add(jsonDecode(testo) as Map<String, dynamic>);
+  void manda(Uint8List byte) =>
+      arrivati.add(jsonDecode(utf8.decode(byte)) as Map<String, dynamic>);
 
   @override
   Future<void> chiudi() async => chiusa = true;
@@ -61,7 +62,7 @@ void main() {
     await ponte.spegni();
   });
 
-  test('il filo pronto e\' quello dentro, e senza filo si smette', () async {
+  test('il filo pronto è quello dentro, e senza filo si smette', () async {
     /* Nessun filo: si aspetta quel poco e si dice che non c'e' verso. */
     expect(
       await filoPronto(() => null, entro: const Duration(milliseconds: 120)),
@@ -135,5 +136,5 @@ Future<void> _finoA(
     if (condizione()) return;
     await Future<void>.delayed(const Duration(milliseconds: 10));
   }
-  throw StateError('l\'attesa e\' scaduta');
+  throw StateError('l\'attesa è scaduta');
 }

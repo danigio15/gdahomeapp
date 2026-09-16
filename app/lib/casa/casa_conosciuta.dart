@@ -15,7 +15,7 @@
 ///
 /// Quello che c'e' scritto qui dentro l'utente non l'ha battuto: gli
 /// indirizzi, l'identificativo e il centralino arrivano tutti dalla casa
-/// stessa, nella risposta all'abbinamento. Lui ha inquadrato un quadretto.
+/// stessa, nella risposta all'abbinamento. Lui ha inquadrato un QR code.
 library;
 
 import '../ponte/indirizzo.dart';

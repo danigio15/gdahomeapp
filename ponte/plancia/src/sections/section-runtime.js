@@ -91,6 +91,7 @@ import { installAlberatura } from "./alberatura-del-config-section.js";
 import { installIlDitoScorreOTocca } from "./il-dito-scorre-o-tocca-section.js";
 import { installElencoDelleSezioni } from "./lelenco-delle-sezioni-section.js";
 import { installModoChiosco } from "./modo-chiosco-section.js";
+import { installTestaFissa } from "./testa-fissa-section.js";
 import { installBatterie } from "./batterie-section.js";
 import { installBatterieEditor } from "./batterie-editor-section.js";
 import { installVideoSiMuove } from "./telecamera-il-video-si-muove-section.js";
@@ -146,7 +147,6 @@ import { installCitofono } from "./citofono-section.js";
 import { installCitofonoEditor } from "./citofono-editor-section.js";
 import { installStampanti } from "./stampanti-section.js";
 import { installStampantiEditor } from "./stampanti-editor-section.js";
-import { installVersoBatteriaEditorSection } from "./verso-batteria-editor-section.js";
 import { installMacchine } from "./macchine-e-rete-section.js";
 import { installMacchineEditor } from "./macchine-editor-section.js";
 import { installNodiSection } from "./nodi-section.js";
@@ -991,6 +991,10 @@ export function installSectionRuntime() {
      * ma si accendeva solo tenendo premuto l'hamburger o scrivendo ?kiosk=1
      * nell'indirizzo, cioe' per chi lo cercava non c'era. */
     installModoChiosco();
+    /* E accanto, l'intestazione fissa (#521): «un'opzione che tiene ferma tutta
+     * la parte iniziale, e se uno scorre verso il basso vede il resto». Sono
+     * la stessa famiglia di scelte — come si vede la plancia su questo vetro. */
+    installTestaFissa();
     /* Le batterie hanno la loro pagina e la loro scheda (#398): «le batterie
      * quelle cariche non le fa vedere? sarebbe carino che stessero nel config
      * come le altre cose». */
@@ -1098,7 +1102,6 @@ export function installSectionRuntime() {
     installCitofonoEditor();
     installStampanti();
     installStampantiEditor();
-    installVersoBatteriaEditorSection();
     installMacchine();
     installMacchineEditor();
     installNodiSection();
@@ -1219,7 +1222,6 @@ export function installSectionRuntime() {
         "presenza-editor",
         "stampanti",
         "stampanti-editor",
-        "verso-batteria-editor",
         "macchine-e-rete",
         "macchine-editor",
       ]),

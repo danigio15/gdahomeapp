@@ -11,7 +11,7 @@
  * filo con un segno gia' avuto. Nient'altro esiste su quella porta.
  */
 
-import { createReadStream, existsSync } from "node:fs";
+import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
 
@@ -20,6 +20,7 @@ import { TroppiDispositivi } from "./dispositivi.js";
 import { invito } from "./invito.js";
 import { accetta, eUnaSalita } from "./presa.js";
 import { BASE } from "./plancia.js";
+import { laVede, vedeQualcosa } from "./plance.js";
 import { Cucitura } from "./cucitura.js";
 import { conLePremesse, linguaPulita, paginaDellaLingua } from "./premesse.js";
 import { qrInSvg } from "./qr.js";
@@ -175,8 +176,11 @@ export function costruisciLaPortaDellApp({
         male(risposta, 400, errore.message);
         return;
       }
+      let perChi = "";
       try {
-        abbinamento.consuma(corpo.codice);
+        /* `consuma` dice **per chi** era il codice: il telefono si intesta a
+         * quello li', e da quel momento vede le plance che vede lui. */
+        perChi = abbinamento.consuma(corpo.codice)?.utente || "";
       } catch (errore) {
         if (errore instanceof TroppiTentativi) {
           registro.attenzione(`troppi tentativi di abbinamento da ${da}`);
@@ -194,6 +198,7 @@ export function costruisciLaPortaDellApp({
         const { dispositivo, segno, chiave } = dispositivi.abbina({
           nome: corpo.nome,
           sistema: corpo.sistema,
+          utente: perChi,
         });
         /* Il codice e' stato speso: l'attesa al centralino non serve piu', e
          * lasciarla aperta vorrebbe dire tenere una via buona per qualcosa che
@@ -205,7 +210,7 @@ export function costruisciLaPortaDellApp({
          * e poi non capirebbe una parola.
          *
          * E il ritorno: dove ribussare domani. Chi si e' abbinato battendo
-         * un quadretto non ha mai visto un indirizzo. */
+         * un QR code non ha mai visto un indirizzo. */
         json(
           risposta,
           { segno, chiave, dispositivo, ritorno: (await ritorno?.cosaDire()) ?? null },
@@ -229,7 +234,11 @@ export function costruisciLaPortaDellApp({
       socket.end("HTTP/1.1 404 Not Found\r\n\r\n");
       return;
     }
-    const presa = accetta(richiesta, socket, {});
+    const presa = accetta(richiesta, socket, {
+      /* Se chi legge inciampa, il filo cade: il motivo va nel registro, se no
+       * si vede un telefono che si scollega e non si sa perche'. */
+      onGuasto: (errore) => registro.errore(`un telefono: ${errore?.stack || errore}`),
+    });
     /* Anche in casa si passa dal portiere: la rete di casa non e' cifrata, e
      * chi ci sta sopra non deve poter leggere piu' di chi sta sul centralino.
      * E soprattutto: cosi' l'app ha **una strada sola** invece di due. */
@@ -253,6 +262,11 @@ export function costruisciLaConsole({
   ritorno,
   plancia,
   plance,
+  /* Chi c'e' in questa casa e chi la amministra (`utenti.js`). Serve a due
+   * cose: disegnare le spunte di «chi la vede», e rispondere alla domanda che
+   * l'ingress non sa — «questo utente amministra?» — quando una plancia e'
+   * riservata a chi amministra. */
+  utenti,
   /* Com'e' andata a mettere le plance fra le «Plance» di Home Assistant: la
    * scheda dell'add-on lo dice, perche' e' li' che si guarda quando una voce
    * nella barra laterale non c'e'. */
@@ -263,6 +277,9 @@ export function costruisciLaConsole({
    * non c'e' piu' — e sono le stesse che riceve l'app. Una lista sola, se no
    * la plancia si comporterebbe in due modi a seconda di dove e' aperta. */
   commissioni,
+  /* La chat di assistenza. Alla console serve per una riga sola, e non e' una
+   * riga da poco: dire se questa casa **risponde** alle chat. */
+  chat,
   aggiornamento,
   cartellaDellaConsole,
   cartellaDellApp,
@@ -297,8 +314,10 @@ export function costruisciLaConsole({
           ritorno,
           plancia,
           plance,
+          utenti,
           planceInCasa,
           configurazione,
+          chat,
           aggiornamento,
         });
       } catch (errore) {
@@ -335,7 +354,10 @@ export function costruisciLaConsole({
         risposta.end();
         return;
       }
-      servi(risposta, cartellaDellApp, via.slice("/app".length), { deposito: true });
+      servi(risposta, cartellaDellApp, via.slice("/app".length), {
+        deposito: true,
+        richiesta,
+      });
       return;
     }
 
@@ -351,7 +373,7 @@ export function costruisciLaConsole({
      * arriva solo chi e' entrato in Home Assistant, e non serve nessun altro
      * segno da chiedere a nessuno. */
     if (via === "/plancia" || via.startsWith("/plancia/")) {
-      laPlanciaServita({ via, richiesta, risposta, plancia, plance });
+      await laPlanciaServita({ via, richiesta, risposta, plancia, plance, utenti });
       return;
     }
 
@@ -397,7 +419,25 @@ export function costruisciLaConsole({
       socket.end("HTTP/1.1 503 Service Unavailable\r\n\r\n");
       return;
     }
-    const presa = accetta(richiesta, socket, {});
+    /* Questo filo e' uno per tutte le plance e non sa quale pagina l'ha
+     * aperto: non puo' dire «questa plancia no». Ma puo' dire l'unica cosa che
+     * sa, e che basta: chi non e' abilitato a **nessuna** plancia di questa
+     * casa non ha niente da chiedere qui. Le pagine a cui non e' abilitato non
+     * gliele serviamo (`laPlanciaServita`), quindi il filo che resta e' quello
+     * di una plancia che gli si apre. */
+    const chi = chiGuarda(richiesta);
+    /* «Amministra?» qui si prende solo da quello che c'e' **gia' in mano**: una
+     * salita va accettata o rifiutata subito, e non si tiene un browser
+     * appeso mentre si chiede a Home Assistant. Se non lo sappiamo, questo
+     * filo non lo si chiude per quello: per aprirlo bisogna aver ricevuto la
+     * pagina della plancia, e quella l'ha chiesto per davvero. */
+    if (!vedeQualcosa(plance?.elenco?.() ?? [], chi, utenti?.amministratoreSubito?.(chi) ?? null)) {
+      socket.end("HTTP/1.1 403 Forbidden\r\n\r\n");
+      return;
+    }
+    const presa = accetta(richiesta, socket, {
+      onGuasto: (errore) => registro.errore(`la plancia: ${errore?.stack || errore}`),
+    });
     if (!presa) return;
     const cucitura = new Cucitura({
       presa,
@@ -405,6 +445,11 @@ export function costruisciLaConsole({
       commissioni,
       registro,
       da: socket.remoteAddress || "?",
+      /* Chi sta guardando, secondo l'ingress. Serve al selettore delle plance
+       * dentro la pagina: senza, chi apre la plancia che gli e' permessa
+       * vedrebbe comunque in elenco quelle riservate ad altri. */
+      chiGuarda: chi,
+      utenti,
     });
     cucitura.avvia().catch((errore) => {
       registro.errore(`la cucitura della plancia e' andata storta: ${errore?.message || errore}`);
@@ -415,6 +460,79 @@ export function costruisciLaConsole({
   return server;
 }
 
+/* La porta chiusa: cosa vede chi apre una plancia che non e' sua.
+ *
+ * Non e' un errore e non si scrive come tale: non c'e' niente di rotto e non
+ * c'e' niente da riparare. E' una plancia che in questa casa e' stata
+ * riservata a qualcun altro, e la riga dice **dove** si cambia — la pagina di
+ * gdahome — perche' chi legge questo messaggio e non se l'aspettava vuole
+ * sapere chi glielo puo' aprire, non un codice di stato.
+ *
+ * 403 e non 404: la plancia esiste, e dirlo non svela niente che chi abita in
+ * questa casa non veda gia' nella barra laterale. */
+function laPortaChiusa(risposta, quale, perche = "utenti") {
+  /* Il titolo l'ha scritto chi ci abita, e finisce dentro del markup: si
+   * riscrive prima. Non e' un pericolo vero — chi lo scrive e' chi amministra
+   * la casa, e lo rileggerebbe lui — ma una funzione che costruisce una pagina
+   * si difende da sola, cosi' resta vera anche domani. */
+  const titolo = String(quale?.titolo || "Questa plancia")
+    .slice(0, 40)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  const pagina = `<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${titolo}</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: #f2f4f7; color: #101317;
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 26rem; margin: 24px; padding: 26px 28px; border-radius: 20px;
+    background: #fff; box-shadow: 0 1px 3px rgba(16,24,40,.09); text-align: center; }
+  h1 { margin: 0 0 10px; font-size: 1.2rem; letter-spacing: -.01em; }
+  p { margin: 0; color: #5b6471; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #10141a; color: #e8ebf0; }
+    main { background: #1a1f27; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+    p { color: #9aa4b2; }
+  }
+</style></head>
+<body><main>
+  <h1>${titolo} non e' abilitata per te</h1>
+  <p>${
+    perche === "admin"
+      ? "In questa casa questa plancia la vedono solo gli amministratori."
+      : "In questa casa questa plancia la vedono solo alcuni utenti."
+  } Chi amministra la casa puo' cambiarlo dalla pagina di <b>gdahome</b>, alla
+  voce &laquo;Le plance&raquo;.</p>
+</main></body></html>`;
+  const byte = Buffer.from(pagina, "utf8");
+  risposta.writeHead(403, {
+    "content-type": "text/html; charset=utf-8",
+    "cache-control": "no-store",
+    "content-length": byte.length,
+  });
+  risposta.end(byte);
+}
+
+/* Chi sta guardando, secondo l'ingress di Home Assistant.
+ *
+ * Il Supervisor, su ogni richiesta che passa dall'ingress, scrive in testa
+ * `X-Remote-User-Id` con l'identificativo dell'utente che ha la sessione, e
+ * `X-Remote-User-Display-Name` col suo nome. Non e' una cosa che ci arriva
+ * dalla pagina — quindi non e' una cosa che la pagina possa cambiare — ed e'
+ * il motivo per cui «chi la vede» qui e' un cancello vero e non un velo
+ * disegnato: la pagina della plancia non parte nemmeno, e non c'e' niente da
+ * aggirare togliendo un pezzo di HTML col browser.
+ *
+ * Fuori dall'ingress quella riga non c'e' e questa funzione risponde stringa
+ * vuota; `laVede` sa cosa farne. */
+function chiGuarda(richiesta) {
+  return String(richiesta.headers?.["x-remote-user-id"] || "").trim();
+}
+
 /* La pagina della plancia, servita dentro Home Assistant.
  *
  * `/plancia/` e' la prima; `/plancia/<profilo>/` una delle altre. La barra in
@@ -423,7 +541,7 @@ export function costruisciLaConsole({
  * `/plancia/<profilo>/` — perche' sotto l'ingress davanti c'e' un prefisso che
  * qui non si conosce e non si deve conoscere.
  */
-function laPlanciaServita({ via, richiesta, risposta, plancia, plance }) {
+async function laPlanciaServita({ via, richiesta, risposta, plancia, plance, utenti }) {
   if (!plancia?.cE) {
     male(risposta, 404, "questo add-on non si porta dietro la plancia");
     return;
@@ -442,6 +560,38 @@ function laPlanciaServita({ via, richiesta, risposta, plancia, plance }) {
   if (profilo && !via.endsWith("/")) {
     risposta.writeHead(302, { location: `${profilo}/`, "cache-control": "no-store" });
     risposta.end();
+    return;
+  }
+  /* Chi la vede.
+   *
+   * Si guarda **prima** di leggere la pagina dal disco: a chi non e' abilitato
+   * non si serve la plancia, non gliela si serve nascosta. La risposta e' una
+   * pagina e non un JSON perche' qui dall'altra parte c'e' una persona dentro
+   * un riquadro della sua Home Assistant, non un programma.
+   *
+   * «Amministra?» si chiede a Home Assistant, e **solo se serve**: e' l'unico
+   * pezzo che l'ingress non dice, e una plancia che non lo chiede non deve
+   * pagare una domanda a Home Assistant per ogni apertura. Se Home Assistant
+   * non risponde e non c'e' nemmeno una risposta vecchia da riusare, la
+   * plancia non si apre: e' la stessa regola dell'elenco — una restrizione
+   * che cade quando non si sa niente non e' una restrizione. */
+  const chi = chiGuarda(richiesta);
+  let amministra = null;
+  if (quale?.solo_admin === true && utenti) {
+    try {
+      amministra = await utenti.amministratore(chi);
+    } catch (_errore) {
+      amministra = null;
+    }
+  }
+  if (!laVede(quale, chi, amministra)) {
+    /* Quale delle due l'ha fermato, per dirgli quella giusta: sapere che una
+     * plancia «e' solo degli amministratori» e' un'informazione che puo'
+     * usare — va a chiedere a chi amministra — mentre «e' solo di alcuni
+     * utenti» quando in realta' gli manca il gruppo lo manderebbe a chiedere
+     * la cosa sbagliata. */
+    const soloAdmin = quale?.solo_admin === true && amministra !== true;
+    laPortaChiusa(risposta, quale, soloAdmin ? "admin" : "utenti");
     return;
   }
   const lingua = linguaPulita(
@@ -490,8 +640,10 @@ async function api({
   ritorno,
   plancia,
   plance,
+  utenti,
   planceInCasa,
   configurazione,
+  chat,
   aggiornamento,
 }) {
   /* C'e' una versione nuova del ponte?
@@ -578,7 +730,17 @@ async function api({
         return;
       }
       if (metodo === "PATCH") {
-        const quale = plance.rinomina(detto?.profilo, detto?.titolo);
+        /* Tre cose si cambiano di una plancia, e da qui si cambia quella che
+         * e' stata detta: `utenti` vuol dire «chi la vede», `solo_admin` vuol
+         * dire «solo gli amministratori», e senza nessuna delle due vuol dire
+         * «rinomina». Un solo comando e non tre perche' e' la stessa cosa — la
+         * scheda di una plancia — e perche' cosi' l'elenco che torna e' sempre
+         * quello aggiornato di tutto. */
+        let quale;
+        if (Array.isArray(detto?.utenti)) quale = plance.chiLaVede(detto?.profilo, detto.utenti);
+        else if (typeof detto?.solo_admin === "boolean")
+          quale = plance.soloChiAmministra(detto?.profilo, detto.solo_admin);
+        else quale = plance.rinomina(detto?.profilo, detto?.titolo);
         json(risposta, { plance: plance.elenco(), quale });
         return;
       }
@@ -602,6 +764,40 @@ async function api({
     return;
   }
 
+  /* Gli utenti di Home Assistant, per la sola cosa a cui servono qui:
+   * scegliere chi vede una plancia.
+   *
+   * Li chiede Home Assistant, non li teniamo noi — e' importante: un elenco di
+   * utenti copiato da qualche parte invecchia, e chi ha tolto una persona da
+   * casa se la ritroverebbe ancora spuntata. Di ognuno passa il minimo:
+   * l'identificativo, il nome, e se amministra. Non la password, non le
+   * credenziali, non i gruppi.
+   *
+   * Gli utenti **di sistema** non passano: sono quelli che Home Assistant fa
+   * da se' per gli add-on e per le integrazioni — questo add-on ne ha uno — e
+   * in una lista di «chi vede la plancia» sarebbero righe che non sono persone
+   * e non aprono niente. */
+  if (via === "/api/utenti" && metodo === "GET") {
+    if (!utenti) {
+      json(risposta, { errore: "senza_utenti" }, 404);
+      return;
+    }
+    try {
+      json(risposta, { utenti: await utenti.elenco() });
+    } catch (errore) {
+      /* Se la casa non risponde, la console lo dice e lascia stare: «chi la
+       * vede» e' una scelta che si fa un giorno ogni tanto, e rifarla domani
+       * non costa niente. Quello che non deve succedere e' che la pagina resti
+       * con una rotella che gira. */
+      json(
+        risposta,
+        { errore: "senza_utenti", spiegazione: String(errore?.message || errore).slice(0, 120) },
+        502,
+      );
+    }
+    return;
+  }
+
   if (via === "/api/stato" && metodo === "GET") {
     const saluto = await casa.saluta();
     const collegati = ponte.collegatiPerDispositivo();
@@ -620,7 +816,16 @@ async function api({
          * pubblico, e la console lo usa per comporre il link di gdahome da
          * aprire in un browser — lo stesso posto, con `https` davanti. */
         dove: chiamata?.dove || null,
+        /* E perche' l'ultimo tentativo non e' andato, a parole. Senza questa
+         * riga la console dice «sto chiamando…» per ore, e chi guarda non ha
+         * modo di sapere se il nome non si risolve, se la porta e' chiusa o
+         * se dall'altra parte c'e' qualcosa che non e' un centralino. */
+        perche: chiamata?.perche || "",
       },
+      /* Che versione e' questo gdahome. La console la scrive accanto al nome,
+       * sempre: la scheda «La versione» c'e' solo sugli add-on locali, e a chi
+       * l'ha installato dal negozio non la diceva nessuno. */
+      versione: opzioni.versione || "",
       porta: opzioni.portaDellApp,
       massimi: opzioni.dispositiviMassimi,
       /* Se questo add-on si porta dietro gdahome da aprire in un browser.
@@ -653,6 +858,17 @@ async function api({
        * lo stato lo chiede ogni dieci secondi, e un secondo giro per tre
        * righe sarebbe un giro per niente. */
       plance: plance ? plance.elenco() : [],
+      /* Se questa casa risponde alle chat di assistenza.
+       *
+       * E' l'unico segno che la chiave della console e' arrivata dov'e' andata
+       * a finire. Home Assistant un campo `password` lo nasconde e non lo
+       * rimostra: chi l'ha appena incollata riapre la scheda, trova la casella
+       * vuota e non ha modo di sapere se sia stata presa o buttata via. Questa
+       * riga glielo dice.
+       *
+       * La chiave non esce di qui — ne' intera ne' a pezzi: esce **un si' o un
+       * no**. */
+      assistenza: { console: Boolean(chat?.eLaConsole) },
       abbinamento: abbinamento.stato(),
       dispositivi: dispositivi
         .elenco()
@@ -666,12 +882,50 @@ async function api({
       male(risposta, 409, `sono gia' abbinati ${opzioni.dispositiviMassimi} dispositivi`);
       return;
     }
-    const { codice, scadeIl } = abbinamento.nuovo();
+    /* **Per chi** e' questo codice.
+     *
+     * E' la riga che fa valere «chi vede quale plancia» anche nell'app: il
+     * telefono che usera' questo codice sara' intestato a quest'utente, e
+     * vedra' le plance che vede lui. Senza, il QR abbinerebbe un telefono che
+     * poi chiede l'elenco e se lo prende tutto.
+     *
+     * Di serie e' **chi sta premendo il tasto**, che l'ingress ci dice. Ma chi
+     * genera un codice spesso lo genera **per un altro** — lo fa
+     * l'amministratore, e passa il telefono a chi ci abita — e allora lo puo'
+     * dire (`utente` nel corpo). Si accetta solo un utente che in questa casa
+     * esiste davvero: un identificativo inventato diventerebbe un telefono
+     * intestato a un fantasma, che non vede nessuna plancia riservata e nessuno
+     * capisce perche'. */
+    let perChi = chiGuarda(richiesta);
+    if (metodo === "POST") {
+      let detto = {};
+      try {
+        detto = await corpoDiJson(richiesta);
+      } catch (_errore) {
+        detto = {};
+      }
+      const voluto = String(detto?.utente || "").trim();
+      if (voluto && utenti) {
+        try {
+          const casa = await utenti.elenco();
+          if (casa.some((uno) => uno.id === voluto)) perChi = voluto;
+        } catch (_errore) {
+          /* Home Assistant non risponde: si tiene chi sta premendo. Meglio un
+           * codice intestato a chi lo fabbrica che uno intestato a nessuno. */
+        }
+      }
+    }
+    const { codice, scadeIl, utente } = abbinamento.nuovo(perChi);
     /* Al centralino ne va detta l'**impronta**, perche' possa instradare chi
      * si presenta con questo codice. Il codice li' non arriva mai. */
     chiamata?.apriLAbbinamento(impronta(codice));
     registro.info("codice di abbinamento fabbricato dalla console");
-    json(risposta, { codice, scadeIl, invito: await unInvito(codice, ritorno, chiamata) });
+    json(risposta, {
+      codice,
+      scadeIl,
+      utente,
+      invito: await unInvito(codice, ritorno, chiamata),
+    });
     return;
   }
 
@@ -700,7 +954,7 @@ async function api({
     return;
   }
 
-  /* Il codice a quadretti, disegnato qui.
+  /* Il QR code, disegnato qui.
    *
    * Il disegno lo fa il ponte e non la pagina: cosi' la console resta tre
    * file senza niente da scaricare, e il codice non passa mai per un
@@ -756,7 +1010,7 @@ async function api({
   male(risposta, 404, "qui non c'e' niente");
 }
 
-/* Quello che va dentro il codice a quadretti: il codice, e come si arriva a
+/* Quello che va dentro il QR code: il codice, e come si arriva a
  * questa casa. Se il Supervisor non risponde si va avanti con quello che c'e':
  * un invito senza indirizzi funziona lo stesso dal centralino, e uno senza
  * centralino funziona lo stesso in casa. */
@@ -777,17 +1031,88 @@ async function unInvito(codice, ritorno, chiamata) {
  * ogni apertura su una rete di casa e' tempo perso a guardare una pagina
  * bianca. La pagina d'ingresso no — quella dice qual e' la versione, e va
  * chiesta ogni volta. */
-function servi(risposta, cartella, via, { deposito = false } = {}) {
+/* Quanto vale un file, per chi ce l'ha gia' in tasca.
+ *
+ * Grandezza piu' ora dell'ultima scrittura: se il file cambia, cambia questo.
+ * Il contenuto non si legge — sarebbe leggere tre megabyte per dire «e'
+ * identico a prima» — e non serve: i file dell'app li riscrive l'add-on
+ * quando si aggiorna, e riscriverli cambia l'ora.
+ *
+ * Torna `null` se il file non si lascia guardare. Allora si serve senza
+ * contrassegno, che vuol dire «richiedimelo sempre»: si perde un pezzo di
+ * traffico, non si perde un aggiornamento. */
+function laSchedaDi(dentro) {
+  try {
+    const { size, mtimeMs } = statSync(dentro);
+    return {
+      contrassegno: `"${size.toString(36)}-${Math.trunc(mtimeMs).toString(36)}"`,
+      quanto: size,
+    };
+  } catch (_errore) {
+    return { contrassegno: null, quanto: null };
+  }
+}
+
+/* Se chi chiede ha gia' questa versione del file.
+ *
+ * Il browser rimanda indietro il contrassegno che gli abbiamo dato. Puo'
+ * rimandarne piu' d'uno, e puo' metterci davanti `W/`: si guardano tutti,
+ * perche' un confronto troppo stretto qui non da' errore — da' un file
+ * riscaricato per niente ogni volta, che e' il tipo di guaio che non si
+ * vede. */
+function loHaGia(richiesta, contrassegno) {
+  const detto = richiesta?.headers?.["if-none-match"];
+  if (!detto || !contrassegno) return false;
+  return String(detto)
+    .split(",")
+    .some((uno) => uno.trim() === contrassegno || uno.trim() === `W/${contrassegno}`);
+}
+
+/* I file di una cartella, serviti.
+ *
+ * `deposito` vuol dire «il browser puo' tenerseli», e non e' un lusso:
+ * `main.dart.js` sono piu' di tre megabyte, e riscaricarli a ogni apertura,
+ * da fuori casa, si sente tutto.
+ *
+ * Ma tenerseli **senza chiedere** no. In Flutter quel file non ha l'impronta
+ * nel nome — si chiama `main.dart.js` e basta — e la pagina lo chiama sempre
+ * cosi'. Un browser che se lo teneva un'ora si teneva **l'app di prima** per
+ * un'ora, con l'add-on gia' aggiornato: e dall'altra parte l'unica cosa
+ * visibile era «ho aggiornato e non e' cambiato niente». Non bastava tenere
+ * fresca la pagina: la pagina diceva la versione nuova e caricava il
+ * programma vecchio. E non e' solo il programma: il carattere delle icone
+ * viene sfoltito a ogni costruzione, quindi uno vecchio vuol dire icone
+ * sbagliate.
+ *
+ * Allora si tengono, ma si richiedono sempre. `no-cache` non vuol dire «non
+ * tenerlo»: vuol dire «prima di usarlo chiedimi se va ancora bene». Se va
+ * bene si risponde 304 senza corpo — duecento byte — e il browser usa il suo;
+ * se e' cambiato arriva quello nuovo. Nessuno resta indietro, e non si
+ * riscarica niente per niente. */
+function servi(risposta, cartella, via, { deposito = false, richiesta = null } = {}) {
   const chiesto = via === "/" || via === "" ? "/index.html" : via;
   const dentro = normalize(join(cartella, chiesto));
   if (!dentro.startsWith(normalize(cartella)) || !existsSync(dentro)) {
     male(risposta, 404, "qui non c'e' niente");
     return;
   }
-  const laPagina = chiesto === "/index.html";
+  const { contrassegno, quanto } = deposito
+    ? laSchedaDi(dentro)
+    : { contrassegno: null, quanto: null };
+  if (loHaGia(richiesta, contrassegno)) {
+    risposta.writeHead(304, { etag: contrassegno, "cache-control": "no-cache" });
+    risposta.end();
+    return;
+  }
   risposta.writeHead(200, {
     "content-type": TIPI[extname(dentro)] || "application/octet-stream",
-    "cache-control": deposito && !laPagina ? "public, max-age=3600" : "no-store",
+    "cache-control": deposito ? "no-cache" : "no-store",
+    ...(contrassegno ? { etag: contrassegno } : {}),
+    /* Quanto pesa, quando lo sappiamo. Senza, la risposta esce a pezzi e chi
+     * la riceve non sa quanti ne mancano: il browser non puo' mostrare quanto
+     * resta, e chi mette da parte le risposte ci pensa due volte prima di
+     * tenersela. */
+    ...(quanto === null ? {} : { "content-length": quanto }),
   });
   createReadStream(dentro).pipe(risposta);
 }
