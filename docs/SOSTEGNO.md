@@ -131,7 +131,10 @@ Tre al mese e due una tantum bastano. I nomi dicono cosa pagano, non quanto
 vali tu che dai; il nome sta su una riga sola, quindi le due lingue ci stanno
 insieme separate da un punto.
 
-**3 €/mese** — nome: `Una mano · A hand`
+Gli importi su GitHub si scrivono **in dollari**: non c'è modo di metterli in
+euro. I numeri restano questi, il cambio lo fa GitHub e sull'IBAN arrivano euro.
+
+**3 $/mese** — nome: `Una mano · A hand`
 
 > Il caffè del mese. Non sblocca niente, e non deve: tiene aperta la porta a
 > chi scrive per chiedere aiuto.
@@ -139,7 +142,7 @@ insieme separate da un punto.
 > The coffee of the month. It unlocks nothing, and it shouldn't: it keeps the
 > door open for anyone who writes in for help.
 
-**8 €/mese** — nome: `Il piano che va avanti · The plan moving on`
+**8 $/mese** — nome: `Il piano che va avanti · The plan moving on`
 
 > Gli aiutanti, lo Zigbee, le automazioni: è il tempo che le fa passare dal
 > piano alla plancia.
@@ -147,7 +150,7 @@ insieme separate da un punto.
 > Helpers, Zigbee, automations: this is the time that walks them from the plan
 > to the dashboard.
 
-**20 €/mese** — nome: `Chi la tiene in piedi · Keeping it standing`
+**20 $/mese** — nome: `Chi la tiene in piedi · Keeping it standing`
 
 > Il tempo: scrivere il codice, tenere in piedi le prove, rispondere. È quello
 > che fa la differenza fra un progetto vivo e uno fermo.
@@ -155,17 +158,46 @@ insieme separate da un punto.
 > Time: writing the code, keeping the tests alive, answering. That's the
 > difference between a project that's alive and one that's stopped.
 
-**5 € una volta** — nome: `Un grazie · A thank you`
+**5 $ una volta** — nome: `Un grazie · A thank you`
 
 > Una volta sola, se ti è stata utile.
 >
 > Just once, if it has been useful to you.
 
-**25 € una volta** — nome: `Una spinta · A push`
+**25 $ una volta** — nome: `Una spinta · A push`
 
 > Una volta sola, per far correre un pezzo del piano.
 >
 > Just once, to make one piece of the plan go faster.
+
+#### Come si mettono, in quella schermata
+
+La prima volta **Sponsor tiers** non apre l'editor: apre «Get started with
+rewards», una lista di ricompense già pronte con due caselle **già spuntate** —
+*Get a Sponsor badge on your profile* (5 $ al mese) e *Get a shoutout on
+Twitter* (10 $ una volta). Sono quelle che riempiono il riquadro **Tiers** sulla
+destra: non sono livelli tuoi, sono la proposta di GitHub.
+
+1. **Skip this step**, il collegamento sotto il tasto verde. Porta all'editor
+   vero senza crearti niente. (Se invece premi *Continue to tier editor* con le
+   caselle spuntate, quei due livelli te li crea davvero: si cancellano, ma è
+   lavoro in più. In alternativa togli le due spunte e poi premi il tasto
+   verde: è la stessa cosa.)
+2. Nell'editor, **Add a tier** cinque volte. Per ognuno: *Monthly* o *One-time*,
+   l'importo, il nome e la descrizione — sono i riquadri qui sopra, da copiare
+   interi.
+3. Ogni livello va **pubblicato**: finché resta bozza non lo vede nessuno.
+
+**Perché quelle due spunte vanno via.** Il badge sul profilo GitHub lo dà da sé
+a chiunque sponsorizzi, non è una cosa che prometti tu; lo *shoutout on Twitter*
+invece è una promessa da mantenere una per una, e un account Twitter da tenere.
+Ma soprattutto: nei video c'è scritto che il sostegno **non sblocca niente**, e
+una lista di ricompense dice l'opposto. I livelli qui si distinguono per quanto,
+mai per cosa danno.
+
+**Cosa si può correggere dopo.** Nome e descrizione, quando vuoi. Il prezzo di
+un livello già pubblicato no: quello si ritira e se ne fa un altro. Quindi gli
+importi conviene guardarli due volte adesso.
 
 ### Il messaggio a chi si iscrive
 
