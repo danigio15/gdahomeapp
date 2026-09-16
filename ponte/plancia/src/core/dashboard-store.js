@@ -40,6 +40,46 @@ export const VISIBILITY_SECTION = Object.freeze({
   sockets: "prese",
 });
 
+/* Cosa una migrazione ha seminato, e il segno che dice se e' gia' passata.
+ *
+ * All'avvio la riconciliazione rimpiazza la sezione INTERA con la copia
+ * legacy, e per il modello Energia questo buttava via anche quello che la
+ * migrazione aveva appena seminato. Nel caso concreto: chi aveva mappato a
+ * mano le temperature dell'inverter dal tab Sostituzioni se le vedeva entrare
+ * nel modello e uscirne un istante dopo — e a quel punto `persist()`
+ * proiettava il modello vuoto e CANCELLAVA l'alias dal disco, cioe' l'unica
+ * copia rimasta. La migrazione si rifaceva a ogni avvio senza mai attecchire.
+ *
+ * Il segno e' quello che distingue le due cose che si somigliano — e sono la
+ * buccia su cui la 1.4.28 e' scivolata:
+ *
+ *   - una copia legacy SENZA il segno e' stata scritta prima della
+ *     migrazione, quindi su quei campi non ha un'opinione: quando e' stata
+ *     salvata, nel modello non esistevano. Si conserva la semina.
+ *   - una copia legacy COL segno e' stata scritta dopo: quello che dice vale,
+ *     campo vuoto compreso. Un campo svuotato e' una scelta, non un'assenza.
+ *
+ * Il verso della batteria non sta qui: ce l'ha gia' la sua riga sotto, che
+ * riapplica la migrazione sul modello riconciliato. E i carichi del flusso
+ * nemmeno: vivono in una sezione loro, con la sua chiave legacy, che si
+ * riconcilia per conto suo. */
+const SEMINE_DA_CONSERVARE = Object.freeze({
+  cooling_migrated: ["cooling"],
+});
+
+function conservaLeSemineDellaMigrazione(riconciliata, migrata) {
+  if (!migrata || typeof migrata !== "object") return riconciliata;
+  let fuori = riconciliata && typeof riconciliata === "object" ? riconciliata : {};
+  for (const [segno, campi] of Object.entries(SEMINE_DA_CONSERVARE)) {
+    if (!migrata.metadata?.[segno]) continue;
+    if (fuori.metadata?.[segno]) continue;
+    for (const campo of campi)
+      if (migrata[campo] !== undefined) fuori = { ...fuori, [campo]: migrata[campo] };
+    fuori = { ...fuori, metadata: { ...(fuori.metadata || {}), [segno]: migrata.metadata[segno] } };
+  }
+  return fuori;
+}
+
 const configured = (value) =>
   typeof value === "string" ? value.trim().includes(".") : Boolean(value);
 const sameValue = (left, right) => JSON.stringify(left) === JSON.stringify(right);
@@ -206,6 +246,10 @@ export class DashboardStore {
      * Le luci restano fuori: la loro forma legacy — `{entita': nome}` — perde
      * per costruzione stanza e ordinamento, e ricostruirle da li' a ogni avvio
      * butterebbe via quello che la copia custodisce apposta. */
+    /* Il modello com'e' uscito dalle migrazioni: la riga qui sotto sta per
+     * coprirlo con la copia legacy, e quello che la migrazione ha seminato
+     * adesso va ripescato di la'. */
+    const energiaMigrata = this.state.sections.energy;
     for (const [section, key] of Object.entries(SECTION_KEYS)) {
       if (section === "lights") continue;
       try {
@@ -218,6 +262,10 @@ export class DashboardStore {
         /* Una chiave illeggibile non insegna niente: resta la copia. */
       }
     }
+    this.state.sections.energy = conservaLeSemineDellaMigrazione(
+      this.state.sections.energy,
+      energiaMigrata,
+    );
     /* Il verso del vecchio interruttore si posa QUI, sul modello riconciliato:
      * e' questo che va sul disco un attimo dopo. Scritto prima, la riga qui
      * sopra se lo portava via — segno compreso — e il travaso si rifaceva a

@@ -1,0 +1,591 @@
+"""The shared configuration store and its data-loss protections."""
+
+from __future__ import annotations
+
+import json
+from datetime import timedelta
+from typing import Any
+
+import pytest
+
+pytest.importorskip(
+    "homeassistant", reason="Home Assistant test dependency is not installed"
+)
+
+from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
+
+from custom_components.dashboardmodern.config_store import (
+    PRIMARY_PROFILE,
+    SAVE_DELAY,
+    STATUS_CONFLICT,
+    STATUS_REFUSED_EMPTY,
+    STATUS_SAVED,
+    STATUS_UNCHANGED,
+    STORAGE_KEY,
+    DashboardConfigStore,
+    SnapshotTooLargeError,
+    async_get_config_store,
+    content_key_count,
+    is_configured,
+    profile_for_entry,
+    validate_values,
+)
+from custom_components.dashboardmodern.const import DOMAIN
+
+
+def _configured(name: str = "Cucina") -> dict[str, str]:
+    """A snapshot that describes a configured plancia."""
+    return {
+        "dm_dashboard_state": json.dumps(
+            {"schema_version": 4, "sections": {"rooms": [{"id": "r1", "name": name}]}}
+        ),
+        "dm_schema_version": "4",
+        "cd_stanze": json.dumps([{"id": "r1", "name": name, "temp": "sensor.t"}]),
+    }
+
+
+def _empty() -> dict[str, str]:
+    """The snapshot a device with nothing configured produces."""
+    return {
+        "dm_dashboard_state": json.dumps(
+            {"schema_version": 4, "sections": {"rooms": []}, "visibility": {}}
+        ),
+        "dm_schema_version": "4",
+        "cd_sections": json.dumps({"temp": True}),
+        "cd_stanze": "[]",
+    }
+
+
+def test_only_real_content_counts_as_configured() -> None:
+    """Visibility flags and schema bookkeeping are not a configured plancia."""
+    assert is_configured(_configured()) is True
+    assert is_configured(_empty()) is False
+    assert is_configured({}) is False
+    assert content_key_count(_configured()) == 2
+    # An envelope whose sections are all empty must not read as configured.
+    assert (
+        content_key_count(
+            {
+                "dm_dashboard_state": json.dumps(
+                    {"sections": {"energy": {"metadata": {"x": 1}}}}
+                )
+            }
+        )
+        == 0
+    )
+
+
+def test_profile_is_independent_of_the_entry_id() -> None:
+    """The storage profile survives removing and re-adding the integration."""
+    assert (
+        profile_for_entry(primary=True, title="Casa", entry_id="abc123")
+        == PRIMARY_PROFILE
+    )
+    # A different entry_id, same plancia name: same profile.
+    first = profile_for_entry(primary=False, title="Casa al mare", entry_id="aaa")
+    second = profile_for_entry(primary=False, title="Casa al mare", entry_id="bbb")
+    assert first == second == "plancia-casa_al_mare"
+    assert (
+        profile_for_entry(primary=False, title="", entry_id="DEADBEEF")
+        == "plancia-deadbeef"
+    )
+
+
+async def test_configuration_survives_a_new_entry_id(hass: HomeAssistant) -> None:
+    """Re-adding the integration finds the configuration of the same plancia."""
+    store = DashboardConfigStore(hass)
+    saved = await store.async_set(
+        PRIMARY_PROFILE, _configured(), entry_id="entry-old", keys_revision=2
+    )
+    assert saved["status"] == STATUS_SAVED
+
+    # A fresh integration install: new entry_id, same profile.
+    reread = await store.async_get(PRIMARY_PROFILE, entry_id="entry-new")
+    assert reread["snapshot"]["values"] == _configured()
+    assert reread["snapshot"]["revision"] == 1
+
+
+async def test_a_renamed_plancia_keeps_its_configuration(hass: HomeAssistant) -> None:
+    """Renaming a secondary plancia moves its data to the new profile."""
+    store = DashboardConfigStore(hass)
+    await store.async_set("plancia-mare", _configured(), entry_id="entry-b")
+
+    renamed = await store.async_get("plancia-lago", entry_id="entry-b")
+
+    assert renamed["requested_profile"] == "plancia-lago"
+    assert renamed["profile"] == "plancia-mare"
+    assert renamed["snapshot"]["values"] == _configured()
+    # One bucket, never two: the data is not copied to the new name.
+    assert renamed["profiles"] == ["plancia-mare"]
+
+    # A writer that still uses the pre-rename name reaches the same bucket, so
+    # the panel and the companion card cannot end up on different copies.
+    written = await store.async_set(
+        "plancia-lago", _configured("Salotto"), entry_id="entry-b", keys_revision=2
+    )
+    assert written["profile"] == "plancia-mare"
+    stale = await store.async_get("plancia-mare", entry_id="entry-b")
+    assert stale["snapshot"]["values"] == _configured("Salotto")
+
+
+async def test_an_empty_snapshot_cannot_overwrite_a_configured_plancia(
+    hass: HomeAssistant,
+) -> None:
+    """The write that used to wipe every device is refused."""
+    store = DashboardConfigStore(hass)
+    await store.async_set(PRIMARY_PROFILE, _configured(), keys_revision=2)
+
+    refused = await store.async_set(PRIMARY_PROFILE, _empty(), keys_revision=2)
+
+    assert refused["status"] == STATUS_REFUSED_EMPTY
+    # The caller gets the protected copy back so it can adopt it.
+    assert refused["snapshot"]["values"] == _configured()
+    assert refused["snapshot"]["revision"] == 1
+    stored = await store.async_get(PRIMARY_PROFILE)
+    assert stored["snapshot"]["values"] == _configured()
+
+
+async def test_an_explicit_reset_may_empty_the_plancia(hass: HomeAssistant) -> None:
+    """A reset is the one write allowed to empty a configured plancia."""
+    store = DashboardConfigStore(hass)
+    await store.async_set(PRIMARY_PROFILE, _configured(), keys_revision=2)
+
+    reset = await store.async_set(
+        PRIMARY_PROFILE, _empty(), keys_revision=2, reset=True
+    )
+
+    assert reset["status"] == STATUS_SAVED
+    assert reset["snapshot"]["reset"] is True
+    assert is_configured(reset["snapshot"]["values"]) is False
+    # The previous revision is kept, so a mistaken reset is not unrecoverable.
+    assert [item["revision"] for item in reset["recoverable"]] == [1]
+
+
+async def test_a_kept_revision_can_be_restored(hass: HomeAssistant) -> None:
+    """Restoring promotes a kept revision back to current."""
+    store = DashboardConfigStore(hass)
+    await store.async_set(PRIMARY_PROFILE, _configured("Cucina"), keys_revision=2)
+    await store.async_set(PRIMARY_PROFILE, _configured("Salotto"), keys_revision=2)
+
+    restored = await store.async_restore(PRIMARY_PROFILE, 1)
+
+    assert restored["status"] == STATUS_SAVED
+    assert restored["snapshot"]["values"] == _configured("Cucina")
+    assert restored["snapshot"]["revision"] == 3
+
+    missing = await store.async_restore(PRIMARY_PROFILE, 99)
+    assert missing["status"] == STATUS_CONFLICT
+
+
+async def test_history_is_bounded_and_keeps_the_newest_revisions(
+    hass: HomeAssistant,
+) -> None:
+    """Kept revisions never grow without bound."""
+    store = DashboardConfigStore(hass)
+    for index in range(9):
+        await store.async_set(
+            PRIMARY_PROFILE, _configured(f"Stanza {index}"), keys_revision=2
+        )
+
+    current = await store.async_get(PRIMARY_PROFILE)
+    # Per una plancia configurata l'elenco delle recuperabili non serve a
+    # nessuno — il frontend lo guarda solo se il corrente e' vuoto — e non si
+    # compone. Si vede dopo un azzeramento, quando conta.
+    assert current["recoverable"] == []
+    reset = await store.async_set(
+        PRIMARY_PROFILE, _empty(), keys_revision=2, reset=True
+    )
+    revisions = [item["revision"] for item in reset["recoverable"]]
+    assert revisions == [9, 8, 7, 6, 5]
+
+
+async def test_a_stale_revision_is_reported_as_a_conflict(hass: HomeAssistant) -> None:
+    """Another device's write is never silently overwritten."""
+    store = DashboardConfigStore(hass)
+    await store.async_set(PRIMARY_PROFILE, _configured("Cucina"), keys_revision=2)
+    await store.async_set(PRIMARY_PROFILE, _configured("Salotto"), keys_revision=2)
+
+    conflict = await store.async_set(
+        PRIMARY_PROFILE, _configured("Terrazzo"), keys_revision=2, expected_revision=1
+    )
+
+    assert conflict["status"] == STATUS_CONFLICT
+    assert conflict["snapshot"]["values"] == _configured("Salotto")
+
+
+async def test_an_identical_write_does_not_create_a_revision(
+    hass: HomeAssistant,
+) -> None:
+    """Re-pushing the same values is a no-op instead of churning revisions."""
+    store = DashboardConfigStore(hass)
+    await store.async_set(PRIMARY_PROFILE, _configured(), keys_revision=2)
+
+    again = await store.async_set(PRIMARY_PROFILE, _configured(), keys_revision=2)
+
+    assert again["status"] == STATUS_UNCHANGED
+    assert again["snapshot"]["revision"] == 1
+
+
+async def test_the_store_is_shared_by_every_user_and_device(
+    hass: HomeAssistant,
+) -> None:
+    """One installation, one configuration.
+
+    The store has no user dimension at all, which is the whole point: the
+    frontend/*_user_data API it replaces stored one copy per Home Assistant
+    user, so a second user opened an unconfigured plancia.
+    """
+    writer = await async_get_config_store(hass)
+    await writer.async_set(PRIMARY_PROFILE, _configured(), keys_revision=2)
+
+    # A second connection, whichever user it belongs to, reads the same store.
+    reader = await async_get_config_store(hass)
+    assert reader is writer
+    assert (await reader.async_get(PRIMARY_PROFILE))["snapshot"][
+        "values"
+    ] == _configured()
+
+    # And it is reloaded from disk, not from process memory only. Il file si
+    # scrive con un ritardo, per compattare le raffiche: qui lo si scrive
+    # subito, che e' quello che fa anche lo scarico di una plancia.
+    await writer.async_flush()
+    reloaded = DashboardConfigStore(hass)
+    assert (await reloaded.async_get(PRIMARY_PROFILE))["snapshot"][
+        "values"
+    ] == _configured()
+
+
+async def test_setup_exposes_the_store_and_the_commands(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Setting up an entry makes the shared configuration reachable.
+
+    L'avvio lo chiede a Home Assistant, non si chiama la funzione a mano: il
+    setup monta la piattaforma dell'avviso di aggiornamento, e una piattaforma
+    si monta solo su una voce che Home Assistant sta davvero avviando.
+    L'integrazione poi deve anche potersi trovare — nelle prove le
+    personalizzate si vedono solo a richiesta — e l'avviso si spegne dalle
+    opzioni, perche' guarda in rete e qui si parla dello schedario.
+    """
+    from homeassistant.components import websocket_api
+
+    from custom_components.dashboardmodern import frontend as frontend_module
+    from custom_components.dashboardmodern.const import OPTION_CHECK_UPDATES
+    from custom_components.dashboardmodern.websocket_api import TYPE_GET, TYPE_SET
+
+    async def fake_register(_hass: HomeAssistant, _entry_id: str) -> None:
+        return None
+
+    monkeypatch.setattr(frontend_module, "async_register_frontend", fake_register)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="entry-1",
+        title="Casa",
+        options={OPTION_CHECK_UPDATES: False},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id) is True
+    await hass.async_block_till_done()
+
+    assert isinstance(hass.data[DOMAIN]["config_store"], DashboardConfigStore)
+    handlers = hass.data[websocket_api.const.DOMAIN]
+    assert TYPE_GET in handlers
+    assert TYPE_SET in handlers
+
+
+def test_oversized_snapshots_are_rejected() -> None:
+    """A snapshot arriving from the frontend is validated, not trusted."""
+    assert validate_values({"cd_stanze": "[]", "ignored": 5}) == {"cd_stanze": "[]"}
+    with pytest.raises(SnapshotTooLargeError):
+        validate_values({f"cd_{index}": "x" for index in range(400)})
+    with pytest.raises(SnapshotTooLargeError):
+        validate_values({"cd_stanze": "x" * (3 * 1024 * 1024)})
+    with pytest.raises(SnapshotTooLargeError):
+        validate_values("not an object")  # type: ignore[arg-type]
+
+
+def test_the_panel_publishes_the_profile(hass: HomeAssistant) -> None:
+    """The panel hands the frontend the profile to read and write."""
+    from custom_components.dashboardmodern import frontend as frontend_module
+
+    primary = MockConfigEntry(
+        domain=DOMAIN, entry_id="entry-a", title="Casa", data={"primary": True}
+    )
+    primary.add_to_hass(hass)
+    second = MockConfigEntry(
+        domain=DOMAIN, entry_id="entry-b", title="Mare", data={"primary": False}
+    )
+    second.add_to_hass(hass)
+
+    config: dict[str, Any] = frontend_module._panel_config(
+        hass, primary, asset_version="v", static_url_path="/s"
+    )
+    assert config["config_profile"] == PRIMARY_PROFILE
+    other = frontend_module._panel_config(
+        hass, second, asset_version="v", static_url_path="/s"
+    )
+    assert other["config_profile"] == "plancia-mare"
+
+
+async def test_writer_generation_travels_with_the_snapshot(
+    hass: HomeAssistant,
+) -> None:
+    """La generazione dello scrittore si conserva e si rilegge tale e quale.
+
+    Il frontend nuovo la usa per riconoscere gli scatti spinti dai runtime
+    vecchi — quelli che marcavano «in sospeso» anche le riscritture di
+    macchina — e non farsi sovrascrivere da loro. Il negozio deve solo
+    custodirla: senza questo giro il campo spariva nella risposta e il
+    recinto non poteva mai chiudersi.
+    """
+    store = DashboardConfigStore(hass)
+    saved = await store.async_set(
+        PRIMARY_PROFILE, _configured(), keys_revision=5, writer_generation=1
+    )
+    assert saved["snapshot"]["writer_generation"] == 1
+
+    reread = await store.async_get(PRIMARY_PROFILE)
+    assert reread["snapshot"]["writer_generation"] == 1
+
+    # Uno scrittore vecchio non manda il campo: lo scatto lo dice, con lo zero.
+    old = await store.async_set(
+        PRIMARY_PROFILE, _configured("Salotto"), keys_revision=4
+    )
+    assert old["snapshot"]["writer_generation"] == 0
+
+    # E il ripristino di una revisione custodita riporta la sua generazione.
+    restored = await store.async_restore(PRIMARY_PROFILE, revision=1)
+    assert restored["snapshot"]["writer_generation"] == 1
+
+
+async def test_a_generation_upgrade_stamps_the_unchanged_envelope(
+    hass: HomeAssistant,
+) -> None:
+    """Valori identici, generazione piu' alta: la busta si timbra lo stesso.
+
+    L'aggiornamento in-sync del frontend rispinge lo stesso contenuto solo
+    per alzare la generazione di una busta scritta da un runtime vecchio.
+    Il ramo «unchanged» usciva prima del timbro: la busta restava della
+    generazione 0 e un altro dispositivo aggiornato con dati stantii poteva
+    ancora scavalcarla come «scatto di un runtime vecchio». Il timbro e' un
+    aggiornamento di metadati: niente revisione nuova, niente storia.
+    """
+    store = DashboardConfigStore(hass)
+    first = await store.async_set(PRIMARY_PROFILE, _configured(), keys_revision=4)
+    assert first["snapshot"]["writer_generation"] == 0
+    revision = first["snapshot"]["revision"]
+
+    stamped = await store.async_set(
+        PRIMARY_PROFILE, _configured(), keys_revision=5, writer_generation=1
+    )
+    assert stamped["status"] == "unchanged"
+    assert stamped["snapshot"]["writer_generation"] == 1
+    assert stamped["snapshot"]["keys_revision"] == 5
+    assert stamped["snapshot"]["revision"] == revision
+
+    # Il timbro non torna indietro: uno scrittore vecchio non lo abbassa.
+    kept = await store.async_set(PRIMARY_PROFILE, _configured(), keys_revision=4)
+    assert kept["status"] == "unchanged"
+    assert kept["snapshot"]["writer_generation"] == 1
+    assert kept["snapshot"]["keys_revision"] == 5
+
+
+# ─── Il conto delle chiavi, e la scrittura del file ─────────────────────────
+#
+# Contare le chiavi di contenuto vuol dire decodificare ogni valore dello
+# scatto. Lo si faceva a ogni lettura e a ogni scrittura, sul corrente e su
+# ogni revisione custodita — una decina di volte per chiamata, nel loop. Il
+# conto adesso viaggia col record, e il file si scrive una volta per raffica.
+
+
+async def test_il_conto_delle_chiavi_viaggia_con_lo_scatto(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Contate quando entrano, nel corrente e nella storia, e scritte nel file."""
+    store = DashboardConfigStore(hass)
+    await store.async_set(PRIMARY_PROFILE, _configured("Cucina"), keys_revision=2)
+    await store.async_set(PRIMARY_PROFILE, _configured("Salotto"), keys_revision=2)
+    await store.async_flush()
+
+    record = hass_storage[STORAGE_KEY]["data"]["profiles"][PRIMARY_PROFILE]
+    assert record["content_keys"] == 2
+    assert record["configured"] is True
+    assert record["history"][0]["content_keys"] == 2
+    assert record["history"][0]["configured"] is True
+
+
+async def test_una_plancia_configurata_si_legge_senza_ricontare(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Una lettura non decodifica niente; una scrittura conta solo l'arrivato."""
+    from custom_components.dashboardmodern import config_store as modulo
+
+    store = DashboardConfigStore(hass)
+    await store.async_set(PRIMARY_PROFILE, _configured("Cucina"), keys_revision=2)
+
+    conti: list[Any] = []
+    originale = modulo.content_key_count
+
+    def spia(values: Any) -> int:
+        conti.append(values)
+        return originale(values)
+
+    monkeypatch.setattr(modulo, "content_key_count", spia)
+
+    letto = await store.async_get(PRIMARY_PROFILE)
+    assert letto["snapshot"]["values"] == _configured("Cucina")
+    assert conti == []
+
+    await store.async_set(PRIMARY_PROFILE, _configured("Salotto"), keys_revision=2)
+    assert conti == [_configured("Salotto")]
+
+    # Ne' una scrittura identica ne' una rifiutata rileggono il corrente.
+    conti.clear()
+    same = await store.async_set(PRIMARY_PROFILE, _configured("Salotto"))
+    assert same["status"] == STATUS_UNCHANGED
+    refused = await store.async_set(PRIMARY_PROFILE, _empty())
+    assert refused["status"] == STATUS_REFUSED_EMPTY
+    assert conti == [_configured("Salotto"), _empty()]
+
+
+async def test_i_record_vecchi_si_contano_una_volta_sola(
+    hass: HomeAssistant, hass_storage: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Un file scritto prima del conto si conta la prima volta, e poi basta."""
+    from custom_components.dashboardmodern import config_store as modulo
+
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": STORAGE_KEY,
+        "data": {
+            "profiles": {
+                PRIMARY_PROFILE: {
+                    "revision": 3,
+                    "values": _empty(),
+                    "history": [
+                        {"revision": 2, "values": _configured("Salotto")},
+                        {"revision": 1, "values": _empty()},
+                    ],
+                }
+            },
+            "entry_profiles": {},
+        },
+    }
+    conti: list[Any] = []
+    originale = modulo.content_key_count
+
+    def spia(values: Any) -> int:
+        conti.append(values)
+        return originale(values)
+
+    monkeypatch.setattr(modulo, "content_key_count", spia)
+
+    store = DashboardConfigStore(hass)
+    letto = await store.async_get(PRIMARY_PROFILE)
+    assert [item["revision"] for item in letto["recoverable"]] == [2]
+    assert letto["recoverable"][0]["content_keys"] == 2
+    # Il corrente e le due revisioni: tre conti, non tre per ogni lettura.
+    assert len(conti) == 3
+    await store.async_get(PRIMARY_PROFILE)
+    assert len(conti) == 3
+
+    # E alla prima scrittura il conto finisce nel file, storia compresa.
+    await store.async_set(PRIMARY_PROFILE, _configured("Cucina"), keys_revision=2)
+    await store.async_flush()
+    salvato = hass_storage[STORAGE_KEY]["data"]["profiles"][PRIMARY_PROFILE]
+    assert salvato["configured"] is True
+    assert salvato["content_keys"] == 2
+    assert [(item["revision"], item["configured"]) for item in salvato["history"]] == [
+        (2, True),
+        (1, False),
+    ]
+
+
+async def test_una_raffica_di_salvataggi_e_una_scrittura_sola(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Cinque scatti di fila, un file scritto una volta."""
+    from unittest.mock import patch
+
+    from homeassistant.helpers.storage import Store
+
+    originale = Store._async_write_data
+    scritture: list[str] = []
+
+    async def conta(self: Store, path: str, data: dict[str, Any]) -> None:
+        scritture.append(path)
+        await originale(self, path, data)
+
+    # Si toglie prima che le fixture smontino il loro finto disco: la finestra
+    # del conteggio e' questa prova, non quello che viene dopo.
+    with patch.object(Store, "_async_write_data", conta):
+        store = DashboardConfigStore(hass)
+        for index in range(5):
+            saved = await store.async_set(
+                PRIMARY_PROFILE, _configured(f"Stanza {index}"), keys_revision=2
+            )
+            assert saved["status"] == STATUS_SAVED
+        await hass.async_block_till_done()
+        assert scritture == []
+        assert STORAGE_KEY not in hass_storage
+
+        await store.async_flush()
+        assert len(scritture) == 1
+        assert (
+            hass_storage[STORAGE_KEY]["data"]["profiles"][PRIMARY_PROFILE]["revision"]
+            == 5
+        )
+        # Niente in attesa: un secondo flush non scrive.
+        await store.async_flush()
+        assert len(scritture) == 1
+
+
+async def test_la_scrittura_in_attesa_parte_da_sola(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Senza nessuno che la spinga, la scrittura arriva allo scadere del ritardo."""
+    store = DashboardConfigStore(hass)
+    await store.async_set(PRIMARY_PROFILE, _configured(), keys_revision=2)
+    assert STORAGE_KEY not in hass_storage
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=SAVE_DELAY + 1))
+    await hass.async_block_till_done()
+
+    assert (
+        hass_storage[STORAGE_KEY]["data"]["profiles"][PRIMARY_PROFILE]["revision"] == 1
+    )
+    reloaded = DashboardConfigStore(hass)
+    assert (await reloaded.async_get(PRIMARY_PROFILE))["snapshot"][
+        "values"
+    ] == _configured()
+
+
+async def test_una_scrittura_identica_non_rimanda_i_valori(
+    hass: HomeAssistant,
+) -> None:
+    """«Unchanged» non riporta indietro quello che e' appena arrivato.
+
+    I valori custoditi sono per definizione quelli mandati, e rispedirli —
+    fino a otto megabyte da serializzare nel loop — non dice niente. Le
+    risposte che il frontend deve adottare, invece, li portano ancora.
+    """
+    store = DashboardConfigStore(hass)
+    await store.async_set(PRIMARY_PROFILE, _configured(), keys_revision=2)
+
+    again = await store.async_set(PRIMARY_PROFILE, _configured(), keys_revision=2)
+    assert again["status"] == STATUS_UNCHANGED
+    assert "values" not in again["snapshot"]
+    assert again["snapshot"]["revision"] == 1
+
+    refused = await store.async_set(PRIMARY_PROFILE, _empty(), keys_revision=2)
+    assert refused["status"] == STATUS_REFUSED_EMPTY
+    assert refused["snapshot"]["values"] == _configured()

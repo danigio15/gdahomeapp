@@ -38,6 +38,7 @@ import { ENERGY_SLOT_MAP } from "../core/energy-projection.js";
 import { keptSemanticsVersion, scriviNellImpianto } from "../core/energy-writer.js";
 import { impiantoScelto } from "./energy-section.js";
 import { buildEntityIndex } from "../core/entity-search-index.js";
+import { ricordaLeStanze } from "../core/le-stanze-di-home-assistant.js";
 import { buildPostings, detectCategories, detectSlots, parseSlotPlan } from "../core/entity-autodetect.js";
 import { allStates, clean, dashboardStore, doc, installStyle, lexicalGlobal, readJson, reloadDashboard, root, t } from "./shared.js";
 import { accendiLeSezioniCheLeggonoLaCasa } from "./beta26-real-device-stability-section.js";
@@ -235,6 +236,12 @@ export function areaLookup(registries) {
       if (name) entityArea.set(id, name);
     }
   }
+  /* Chi ha i registri in mano li lascia da parte, e chi disegna li ritrova al
+   * caricamento dopo: dentro il pannello `WIZ` nasce vuoto ogni volta, e senza
+   * questa mappa il conto della presenza per stanza (#549) li' non entrava mai
+   * in funzione. Nessuna domanda in piu': sono gli stessi registri gia' letti
+   * per il rilevamento. */
+  ricordaLeStanze(Object.fromEntries(entityArea));
   return entityArea;
 }
 

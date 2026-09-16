@@ -1,0 +1,169 @@
+"""Generate verifiable frontend build provenance from the checked-out HEAD."""
+
+from __future__ import annotations
+
+import argparse
+import datetime
+import hashlib
+import json
+import re
+from collections.abc import Iterator
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+# L'officina non e' piu' la radice di una repository sua: da settembre 2026 il
+# progetto vive dentro gdahomeapp, e il `.git` sta un piano piu' su. I file
+# della plancia invece si trovano dove si sono sempre trovati, perche'
+# `custom_components/dashboardmodern/frontend` qui e' un collegamento a
+# `ponte/plancia` — quella servita davvero dall'add-on.
+REPOSITORY = ROOT.parent
+FRONTEND = ROOT / "custom_components/dashboardmodern/frontend"
+DEFAULT_OUT = FRONTEND / "legacy/build-info.js"
+ASSET_SUFFIXES = frozenset(
+    {".js", ".css", ".html", ".json", ".png", ".svg", ".gif", ".webp"}
+)
+RUNTIME_ROOT_FILES = frozenset({"panel.js", "dashboard-card.js"})
+RUNTIME_DIRECTORIES = ("legacy", "src")
+IGNORED_RUNTIME_PARTS = frozenset({"e2e", "tests", "__pycache__"})
+
+
+def _git_dir() -> Path:
+    marker = REPOSITORY / ".git"
+    if marker.is_dir():
+        return marker
+    text = marker.read_text().strip()
+    if not text.startswith("gitdir:"):
+        raise RuntimeError("unable to resolve .git directory")
+    return (REPOSITORY / text.split(":", 1)[1].strip()).resolve()
+
+
+def _ref_dirs(git_dir: Path) -> list[Path]:
+    """Dove cercare un riferimento: qui, e nel deposito condiviso.
+
+    In un worktree ``HEAD`` sta nella cartella del worktree, ma i rami stanno
+    nel deposito principale, che ``commondir`` indica. Cercando solo qui, un
+    ramo esisteva senza che questo lo trovasse, e la costruzione si fermava su
+    «unable to resolve git ref» pur essendo su un ramo perfettamente valido.
+    """
+    dirs = [git_dir]
+    common = git_dir / "commondir"
+    if common.is_file():
+        dirs.append((git_dir / common.read_text().strip()).resolve())
+    return dirs
+
+
+def git_head() -> str:
+    git_dir = _git_dir()
+    head = (git_dir / "HEAD").read_text().strip()
+    if not head.startswith("ref:"):
+        return head
+    ref = head.split(":", 1)[1].strip()
+    for base in _ref_dirs(git_dir):
+        loose = base / ref
+        if loose.is_file():
+            return loose.read_text().strip()
+        packed = base / "packed-refs"
+        if not packed.is_file():
+            continue
+        for line in packed.read_text().splitlines():
+            if line and not line.startswith(("#", "^")):
+                sha, name = line.split(" ", 1)
+                if name == ref:
+                    return sha
+    raise RuntimeError(f"unable to resolve git ref {ref}")
+
+
+def runtime_assets() -> Iterator[Path]:
+    for name in sorted(RUNTIME_ROOT_FILES):
+        path = FRONTEND / name
+        if path.is_file():
+            yield path
+    for directory_name in RUNTIME_DIRECTORIES:
+        directory = FRONTEND / directory_name
+        if not directory.is_dir():
+            continue
+        for path in sorted(directory.rglob("*")):
+            if (
+                path.is_file()
+                and path != DEFAULT_OUT
+                and path.suffix in ASSET_SUFFIXES
+                and not IGNORED_RUNTIME_PARTS.intersection(path.parts)
+            ):
+                yield path
+
+
+def asset_hash() -> str:
+    digest = hashlib.blake2b(digest_size=8)
+    for path in runtime_assets():
+        digest.update(path.relative_to(FRONTEND).as_posix().encode())
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
+def source_constant(path: Path, name: str) -> str:
+    match = re.search(
+        rf"(?:const|export const)\s+{name}\s*=\s*['\"]?([^;'\"\s]+)",
+        path.read_text(),
+    )
+    if not match:
+        raise RuntimeError(f"{name} not found in {path}")
+    return match.group(1)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--expected-commit")
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUT)
+    args = parser.parse_args()
+
+    commit = git_head()
+    if args.expected_commit and args.expected_commit != commit:
+        raise SystemExit(
+            f"build commit mismatch: expected {args.expected_commit}, checked out {commit}"
+        )
+
+    manifest = json.loads(
+        (ROOT / "custom_components/dashboardmodern/manifest.json").read_text()
+    )
+    release_version = str(manifest["version"])
+    payload = {
+        "generated": True,
+        "integrationVersion": release_version,
+        "dashboardVersion": release_version,
+        "moduleVersion": int(
+            source_constant(FRONTEND / "legacy/modules-entry.js", "MODULES_VERSION")
+        ),
+        "schemaVersion": int(
+            source_constant(FRONTEND / "src/core/device-model.js", "SCHEMA_VERSION")
+        ),
+        "date": datetime.datetime.now(datetime.UTC).replace(microsecond=0).isoformat(),
+        "commit": commit,
+        "assetHash": asset_hash(),
+    }
+    header = (
+        "// Generated by scripts/generate_build_info.py from the checked-out HEAD.\n"
+        'import "../src/sections/beta17-final-icon-polish-section.js";\n'
+        'import "../src/sections/beta-entry-section.js";\n'
+        'import "../src/sections/save-engine-section.js";\n'
+        'import "../src/sections/beta11-real-device-polish-section.js";\n'
+        'import "../src/sections/beta12-room-color-lock-section.js";\n'
+        'import "../src/sections/beta14-real-device-hotfix-section.js";\n'
+        'import "../src/sections/beta16-real-device-layout-section.js";\n'
+        'import "../src/sections/beta22-load-slots-hotfix-section.js";\n'
+        'import "../src/sections/beta24-energy-recovery-section.js";\n'
+        'import "../src/sections/beta25-real-device-fixes-section.js";\n'
+        'import "../src/sections/beta25-compatibility-section.js";\n'
+        'import "../src/sections/beta26-real-device-stability-section.js";\n'
+        'import "../src/sections/segnalazioni-section.js";\n'
+    )
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(
+        header
+        + "export const BUILD_INFO = Object.freeze("
+        + json.dumps(payload, separators=(",", ":"))
+        + ");\n"
+    )
+
+
+if __name__ == "__main__":
+    main()

@@ -920,6 +920,9 @@ const OGGETTI = Object.freeze({
       fill="none" stroke-linecap="round"/>`,
 });
 
+/** Come si riconosce un disegno di casa, dovunque sia finito. */
+export const CLASSE_DELL_OGGETTO = "dm-oggetto";
+
 /* Due nomi per lo stesso disegno.
  *
  * La scheda della configurazione si chiama «aperture» dal giorno in cui e'
@@ -941,7 +944,27 @@ const nomeDelDisegno = (chiave) => {
 export function oggettoWidget(chiave, ripiego = "") {
   const disegno = OGGETTI[nomeDelDisegno(chiave)];
   if (!disegno) return String(ripiego || "");
-  return `<svg class="dm-oggetto" viewBox="0 0 32 32" aria-hidden="true" focusable="false">${conRipiegoDiColore(disegno)}</svg>`;
+  return `<svg class="${CLASSE_DELL_OGGETTO}" viewBox="0 0 32 32" aria-hidden="true" focusable="false">${conRipiegoDiColore(disegno)}</svg>`;
+}
+
+/* Il disegno c'e' davvero, o se lo ricorda soltanto chi l'ha messo.
+ *
+ * Chi dipinge una casella si segna sulla casella quale disegno ci ha messo, e
+ * al giro dopo salta il lavoro se il segno e' gia' quello giusto — e' la cosa
+ * che tiene a zero il costo di ripassare la barra ogni tre secondi. Solo che
+ * il segno sta sulla CASELLA e il disegno sta DENTRO: chi svuota il dentro
+ * lascia in piedi il fuori, e da quel momento chi dipinge legge il proprio
+ * segno, si dichiara a posto, e non rimette piu' niente. L'icona sparisce e
+ * non torna — «in alcune voci non ci sono piu' o vanno e vengono» (#561): torna
+ * solo quando la voce intera viene rifatta, e quella e' la parte che «va e
+ * viene».
+ *
+ * La domanda giusta non e' «me lo ricordo?» ma «c'e'?». Si guarda il primo
+ * figlio della casella: e' un confronto per riferimento, costa quanto il
+ * segno, e non si puo' sbagliare perche' guarda la cosa invece del ricordo. */
+export function disegnoGiaNellaCasella(casella, chiave) {
+  if (!casella || casella.dataset?.dmOggetto !== String(chiave ?? "")) return false;
+  return Boolean(casella.firstElementChild?.classList?.contains(CLASSE_DELL_OGGETTO));
 }
 
 /* Il colore di ripiego accanto alla sfumatura (#304).

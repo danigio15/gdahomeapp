@@ -1,0 +1,69 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Novo painel DashboardModern",
+        "data": {
+          "name": "Nome do painel"
+        },
+        "data_description": {
+          "name": "Aparece na barra lateral. Podes adicionar vários painéis, cada um com a sua própria configuração."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Acesso e integração com os painéis",
+        "description": "Escolhe que utilizadores já autenticados devem ver este painel na interface do DashboardModern. É um filtro de visibilidade do frontend, não substitui as permissões do Home Assistant. O registo no Lovelace faz o DashboardModern aparecer em Definições → Painéis.",
+        "data": {
+          "allowed_users": "Utilizadores autorizados",
+          "register_lovelace_dashboard": "Registar também como painel do Home Assistant",
+          "admin_only": "Visível apenas para administradores",
+          "check_updates": "Procurar novas versões",
+          "tickets_enabled": "Relatos a partir do painel",
+          "chat_enabled": "Chat de apoio",
+          "chat_console_key": "Chave da consola de apoio"
+        },
+        "data_description": {
+          "allowed_users": "Apenas um filtro de visibilidade da interface. Os dados e os serviços continuam sujeitos às permissões do Home Assistant.",
+          "register_lovelace_dashboard": "O painel de apoio é criado ao arrancar o Home Assistant, e é o que permite escolher esta plancia como predefinida. Desligado, a plancia fica na barra lateral mas não aparece entre os painéis predefinidos.",
+          "admin_only": "Filtro nativo do Home Assistant; prevalece nas contas que não são de administrador.",
+          "check_updates": "Pergunta ao GitHub a cada meia hora se saiu uma versão mais recente e mostra-a em Definições → Atualizações. Desligue para que o painel não vá à internet; o painel de controlo nunca precisa disso.",
+          "tickets_enabled": "Permite a quem usa o painel relatar um erro, propor uma ideia ou pedir ajuda sem sair dele. O relato torna-se um issue público no GitHub, aberto em nome próprio — a mesma conta que o HACS já lhe pediu. Desligado, não sai nada de casa.",
+          "chat_enabled": "Uma conversa privada com quem mantém o painel, para pedir ajuda sem abrir um problema público e sem qualquer conta. Passa por um serviço próprio, não pelo GitHub. Desligada, não sai nada de casa.",
+          "chat_console_key": "Deixa-a vazia. Serve a UMA instalação no mundo — a de quem mantém o painel — para ler as conversas de todos e responder. É a mesma chave colocada entre os segredos do relé."
+        }
+      }
+    }
+  },
+  "issues": {
+    "riavvio_richiesto": {
+      "title": "Reinicie para concluir a atualização do DashboardModern",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Reiniciar o Home Assistant",
+            "description": "A versão {version} está instalada no disco. Reinicie o Home Assistant para a carregar."
+          }
+        }
+      }
+    },
+    "plancia_non_registrabile": {
+      "title": "«{plancia}» não pode ser escolhido como painel predefinido",
+      "description": "O Home Assistant não mantém uma lista de painéis onde escrever: acontece quando o Lovelace está em modo YAML (lovelace: mode: yaml no teu configuration.yaml). Nesse modo os painéis escreve-los tu, e este tem de ser acrescentado ali à mão. «{plancia}» continua acessível pela barra lateral como sempre: não está avariado, apenas não se consegue registar sozinho. Se não usas o modo YAML, reinicia o Home Assistant e reabre esta página."
+    },
+    "plancia_senza_elenco_plance": {
+      "title": "«{plancia}» não pode ser escolhido como painel predefinido",
+      "description": "O Home Assistant não está a expor a lista de painéis onde esta integração a procura. Não é o modo YAML: a tua Lovelace está em modo normal, por isso um painel poderia perfeitamente ser criado — a lista simplesmente não está onde a procuramos. O problema é nosso, não da tua configuração: não há nada para procurar no teu configuration.yaml. «{plancia}» continua acessível pela barra lateral como sempre: não está avariado, apenas não consegue registar-se sozinho como predefinido. No registo do Home Assistant há uma linha do DashboardModern a dizer o que encontrou em vez da lista: cita-a num relato e corrigimos. Se entretanto o painel predefinido funcionar, este aviso é antigo e pode ser ignorado."
+    }
+  },
+  "entity": {
+    "switch": {
+      "presenza_simulata": {
+        "name": "Presença simulada"
+      }
+    }
+  }
+}

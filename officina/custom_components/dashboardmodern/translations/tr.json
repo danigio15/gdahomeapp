@@ -1,0 +1,69 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Yeni DashboardModern panosu",
+        "data": {
+          "name": "Pano adı"
+        },
+        "data_description": {
+          "name": "Kenar çubuğunda görünür. Her biri kendi yapılandırmasına sahip birden çok pano ekleyebilirsin."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Erişim ve panolarla tümleştirme",
+        "description": "Bu panoyu DashboardModern arayüzünde hangi oturum açmış kullanıcıların göreceğini seç. Bu, ön yüzde bir görünürlük süzgecidir; Home Assistant izinlerinin yerini almaz. Lovelace kaydı, DashboardModern'i Ayarlar → Panolar altında gösterir.",
+        "data": {
+          "allowed_users": "İzin verilen kullanıcılar",
+          "register_lovelace_dashboard": "Home Assistant panosu olarak da kaydet",
+          "admin_only": "Yalnızca yöneticilere görünür",
+          "check_updates": "Yeni sürümleri denetle",
+          "tickets_enabled": "Panodan bildirimler",
+          "chat_enabled": "Destek sohbeti",
+          "chat_console_key": "Destek konsolu anahtarı"
+        },
+        "data_description": {
+          "allowed_users": "Yalnızca arayüz görünürlüğü süzgeci. Veriler ve servisler Home Assistant izinlerine bağlı kalır.",
+          "register_lovelace_dashboard": "Eşlik eden pano, Home Assistant başlarken oluşturulur; bu panoyu varsayılan olarak seçmenizi sağlayan odur. Kapalıyken pano kenar çubuğunda kalır ama varsayılan panolar arasında görünmez.",
+          "admin_only": "Home Assistant'ın kendi süzgeci; yönetici olmayan hesaplarda o üstün gelir.",
+          "check_updates": "Her yarım saatte bir GitHub'a daha yeni bir sürüm çıkıp çıkmadığını sorar ve Ayarlar → Güncellemeler altında gösterir. Panelin internete hiç çıkmaması için kapatın; panonun buna ihtiyacı yoktur.",
+          "tickets_enabled": "Panoyu kullanan herkesin panodan çıkmadan hata bildirmesini, fikir önermesini ya da yardım istemesini sağlar. Bildirim GitHub'da herkese açık bir issue olur, kendi adına açılır — HACS'ın zaten istediği hesapla. Kapalıyken evden hiçbir şey çıkmaz.",
+          "chat_enabled": "Panoyu sürdüren kişiyle özel bir konuşma: herkese açık bir kayıt açmadan ve hiçbir hesap olmadan yardım istemek için. GitHub'dan değil, kendi servisinden geçer. Kapalıyken evden hiçbir şey çıkmaz.",
+          "chat_console_key": "Boş bırak. Dünyada TEK bir kurulum için — panoyu sürdüren kişininki — herkesin sohbetlerini okuyup yanıtlamaya yarar. Aktarıcının gizli değerlerine konan anahtarın aynısıdır."
+        }
+      }
+    }
+  },
+  "issues": {
+    "riavvio_richiesto": {
+      "title": "DashboardModern güncellemesini tamamlamak için yeniden başlatın",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Home Assistant'ı yeniden başlat",
+            "description": "{version} sürümü diske kuruldu. Yüklemek için Home Assistant'ı yeniden başlatın."
+          }
+        }
+      }
+    },
+    "plancia_non_registrabile": {
+      "title": "“{plancia}” varsayılan pano olarak seçilemiyor",
+      "description": "Home Assistant yazılabilir bir pano listesi tutmuyor: bu, Lovelace YAML kipinde çalışırken olur (configuration.yaml içinde lovelace: mode: yaml). O kipte panoları siz yazarsınız ve bunun oraya elle eklenmesi gerekir. “{plancia}” her zamanki gibi kenar çubuğundan erişilebilir durumda: bozuk değil, yalnızca kendini kaydedemiyor. YAML kipini kullanmıyorsanız Home Assistant'ı yeniden başlatıp bu sayfayı yeniden açın."
+    },
+    "plancia_senza_elenco_plance": {
+      "title": "“{plancia}” varsayılan panel olarak seçilemiyor",
+      "description": "Home Assistant, panel listesini bu entegrasyonun baktığı yerde sunmuyor. Sorun YAML kipi değil: Lovelace'in normal kipte çalışıyor, yani bir panel pekâlâ oluşturulabilirdi — liste yalnızca baktığımız yerde değil. Bu bizim sorunumuz, senin yapılandırmanın değil: configuration.yaml dosyanda aranacak bir şey yok. “{plancia}” her zamanki gibi kenar çubuğundan erişilebilir durumda: bozuk değil, yalnızca kendini varsayılan olarak kaydedemiyor. Home Assistant günlüğünde, listenin yerine ne bulunduğunu söyleyen bir DashboardModern satırı var: bir hata bildiriminde bu satırı aktar, düzeltelim. Bu arada varsayılan panel çalışıyorsa bu uyarı eskimiştir, yok sayabilirsin."
+    }
+  },
+  "entity": {
+    "switch": {
+      "presenza_simulata": {
+        "name": "Varlık simülasyonu"
+      }
+    }
+  }
+}

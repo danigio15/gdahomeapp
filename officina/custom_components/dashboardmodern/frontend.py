@@ -1,0 +1,1721 @@
+"""Frontend registration for the DashboardModern integration."""
+
+from __future__ import annotations
+
+import hashlib
+import logging
+import re
+from collections.abc import Iterator
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+
+DATA_STATIC_REGISTERED = "static_registered"
+DATA_STATIC_BASE_REGISTERED = "static_base_registered"
+DATA_DASHBOARD_CARD_REGISTERED = "dashboard_card_registered"
+DATA_VIA_STABILE_DELLA_CARD = "via_stabile_della_card"
+DATA_PANEL_PATHS = "panel_paths"
+PANEL_URL_PATH = DOMAIN
+PANEL_COMPONENT_NAME = "dashboardmodern-panel"
+_LOGGER = logging.getLogger(__name__)
+
+STATIC_URL_PATH = "/dashboardmodern_static"
+FRONTEND_DIR = Path(__file__).parent / "frontend"
+LEGACY_DIR = FRONTEND_DIR / "legacy"
+
+ASSET_SUFFIXES = frozenset(
+    {
+        ".js",
+        ".css",
+        ".json",
+        ".html",
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".webp",
+        ".svg",
+        ".gif",
+        ".ico",
+        # I caratteri arrivano con la plancia: senza questi due suffissi il
+        # foglio in legacy/vendor/caratteri.css chiederebbe file che
+        # l'integrazione non serve, e la plancia tornerebbe al carattere di
+        # sistema — che e' esattamente cio' che si voleva smettere di fare.
+        ".woff2",
+        ".woff",
+    }
+)
+RUNTIME_ROOT_FILES = frozenset({"panel.js", "dashboard-card.js"})
+RUNTIME_DIRECTORIES = ("legacy", "src")
+# Cosa resta fuori dalla firma degli asset. Le cartelle si servono intere —
+# vedi `_ensure_static_registered` — ma la firma guarda solo i file che il
+# runtime puo' chiedere davvero: un appunto di manutenzione che cambia non
+# deve far riscaricare la plancia a tutti.
+IGNORED_RUNTIME_PARTS = frozenset({"e2e", "tests", "__pycache__"})
+IGNORED_RUNTIME_FILES = frozenset({"legacy/VENDOR.json"})
+# Cosa si monta sotto i due prefissi: i due moduli d'ingresso come file, le
+# due cartelle intere. Prima ogni file aveva la sua rotta — trecentotrenta
+# file, e due volte — e aiohttp le scorreva una per una a ogni richiesta.
+RUNTIME_MOUNTS = (*sorted(RUNTIME_ROOT_FILES), *RUNTIME_DIRECTORIES)
+# Le cartelle che non cambiano da un rilascio all'altro: i ritratti delle
+# persone e i loghi dei marchi auto — questi ultimi prima venivano da un CDN,
+# e su una plancia che non esce su internet non arrivavano mai. Si montano
+# una volta, fuori dalla versione (nel percorso versionato vorrebbero dire
+# riscaricarle a ogni aggiornamento) e fuori dalla firma.
+SHARED_DIRECTORIES = ("avatars", "brands")
+
+
+def _runtime_assets() -> Iterator[Path]:
+    """Yield the files that count for the asset version."""
+    for name in sorted(RUNTIME_ROOT_FILES):
+        path = FRONTEND_DIR / name
+        if path.is_file():
+            yield path
+    for directory_name in RUNTIME_DIRECTORIES:
+        directory = FRONTEND_DIR / directory_name
+        if not directory.is_dir():
+            continue
+        for path in sorted(directory.rglob("*")):
+            relative = path.relative_to(FRONTEND_DIR).as_posix()
+            if (
+                path.is_file()
+                and path.suffix in ASSET_SUFFIXES
+                and relative not in IGNORED_RUNTIME_FILES
+                and not IGNORED_RUNTIME_PARTS.intersection(path.parts)
+            ):
+                yield path
+
+
+def _frontend_asset_version() -> str:
+    """Return the live digest of the runtime assets currently on disk.
+
+    Do not cache this value across integration reloads. HACS replaces frontend
+    files in place while the Home Assistant Python process may stay alive; a
+    process-lifetime cache would keep publishing the previous versioned URL and
+    let browsers reuse stale immutable assets after a successful update.
+
+    La firma viene da nome, dimensione e istante di modifica di ogni file, non
+    dal contenuto: leggere tredici megabyte in trecentotrenta file — a ogni
+    avvio e a ogni ricarica, per ogni plancia — su una macchina piccola si
+    sentiva. Un aggiornamento di HACS riscrive i file, e un file riscritto ha
+    un istante nuovo: la firma cambia lo stesso, ed e' l'unica cosa che le si
+    chiede.
+    """
+    digest = hashlib.blake2b(digest_size=8)
+    for path in _runtime_assets():
+        info = path.stat()
+        digest.update(
+            f"{path.relative_to(FRONTEND_DIR).as_posix()}\0"
+            f"{info.st_size}\0{info.st_mtime_ns}\0".encode()
+        )
+    return digest.hexdigest()
+
+
+def _versioned_static_url_path() -> str:
+    """Return a unique static mount for the complete ES module graph."""
+    return f"{STATIC_URL_PATH}/{_frontend_asset_version()}"
+
+
+def legacy_variants() -> list[str]:
+    """Return the vendored legacy dashboards that are actually shipped."""
+    if not LEGACY_DIR.is_dir():
+        return []
+    return sorted(path.name for path in LEGACY_DIR.glob("dashboard*.html"))
+
+
+def _entry_is_primary(hass: HomeAssistant, entry: Any) -> bool:
+    """Whether this entry is the primary plancia."""
+    if entry.data.get("primary"):
+        return True
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if any(e.data.get("primary") for e in entries):
+        return False
+    return bool(entries) and entries[0].entry_id == entry.entry_id
+
+
+def _panel_url_path(hass: HomeAssistant, entry: Any, taken: set[str]) -> str:
+    """Stable sidebar URL: the primary keeps the historic path."""
+    if _entry_is_primary(hass, entry):
+        return PANEL_URL_PATH
+    from homeassistant.util import slugify
+
+    slug = slugify(entry.title or "") or entry.entry_id[:6]
+    path = f"{PANEL_URL_PATH}-{slug}"
+    if path in taken:
+        path = f"{PANEL_URL_PATH}-{slug}-{entry.entry_id[:6]}"
+    return path
+
+
+def _config_profile(hass: HomeAssistant, entry: Any) -> str:
+    """Return the shared configuration profile of this plancia.
+
+    Deliberately independent of the entry_id: removing and re-adding the
+    integration used to change the storage key of the configuration and left the
+    plancia empty. The primary plancia keeps a fixed profile, the others follow
+    their title, and a rename is followed by the store itself.
+
+    Il titolo pero' non basta a distinguerle: chi aggiunge una plancia lascia il
+    nome proposto, e due plance chiamate allo stesso modo finivano nello stesso
+    profilo — la nuova nasceva gia' piena della configurazione dell'altra.
+    Adesso i profili si assegnano guardando tutte le plance insieme, e chi
+    arriva su un nome gia' occupato ne riceve uno suo.
+    """
+    from .config_store import profile_for_entry, unique_profiles
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if not entries:
+        return profile_for_entry(
+            primary=_entry_is_primary(hass, entry),
+            title=entry.title or "",
+            entry_id=entry.entry_id,
+        )
+    profili = unique_profiles(
+        [
+            (item.entry_id, item.title or "", _entry_is_primary(hass, item))
+            for item in entries
+        ]
+    )
+    return profili.get(entry.entry_id) or profile_for_entry(
+        primary=_entry_is_primary(hass, entry),
+        title=entry.title or "",
+        entry_id=entry.entry_id,
+    )
+
+
+def _lovelace_url_path(entry: Any) -> str:
+    """Return the stable URL of the companion Lovelace dashboard."""
+    return f"dashboardmodern-{entry.entry_id[:8].lower()}"
+
+
+def _allowed_user_ids(entry: Any) -> list[str]:
+    """Return the exact user allow-list stored in the entry options."""
+    from .config_flow import OPTION_ALLOWED_USERS
+
+    value = entry.options.get(OPTION_ALLOWED_USERS, [])
+    if not isinstance(value, list):
+        return []
+    return [str(user_id) for user_id in value if user_id]
+
+
+def _panel_config(
+    hass: HomeAssistant,
+    entry: Any,
+    *,
+    asset_version: str | None = None,
+    static_url_path: str | None = None,
+    variants: list[str] | None = None,
+) -> dict[str, Any]:
+    """Build the panel config snapshot for one plancia.
+
+    `variants` e' l'elenco delle plance legacy sul disco: chi lo ha gia' letto
+    nell'executor lo passa, cosi' questa funzione — che gira nel loop — non
+    tocca il disco. Senza, lo legge da se', ed e' il caso delle prove.
+    """
+    from .config_flow import OPTION_ADMIN_ONLY, OPTION_REGISTER_LOVELACE
+
+    if asset_version is None:
+        asset_version = _frontend_asset_version()
+    if static_url_path is None:
+        static_url_path = f"{STATIC_URL_PATH}/{asset_version}"
+    if variants is None:
+        variants = legacy_variants()
+    return {
+        "entry_ids": [entry.entry_id],
+        "instance_id": entry.entry_id,
+        "config_profile": _config_profile(hass, entry),
+        "title": entry.title or "DashboardModern",
+        "primary": _entry_is_primary(hass, entry),
+        "static_base": static_url_path,
+        "legacy_variants": list(variants),
+        "allowed_user_ids": _allowed_user_ids(entry),
+        "register_lovelace_dashboard": bool(
+            entry.options.get(OPTION_REGISTER_LOVELACE, True)
+        ),
+        "admin_only": bool(entry.options.get(OPTION_ADMIN_ONLY, False)),
+        "lovelace_url_path": _lovelace_url_path(entry),
+        "dashboard_card_module": _dashboard_card_module_url(asset_version),
+        "_panel_custom": {
+            "name": f"{PANEL_COMPONENT_NAME}-{asset_version[:8]}",
+            "embed_iframe": False,
+            "trust_external": False,
+            "module_url": f"{static_url_path}/panel.js",
+        },
+    }
+
+
+def _register_or_update_panel(
+    hass: HomeAssistant,
+    entry: Any,
+    url_path: str,
+    *,
+    update: bool,
+    asset_version: str,
+    static_url_path: str,
+    variants: list[str] | None = None,
+) -> None:
+    """Registra o aggiorna il pannello di una plancia.
+
+    Gli argomenti sono quelli che `async_register_built_in_panel` accetta
+    davvero, e non uno di piu'.
+
+    Qui c'era anche `show_in_sidebar=True`, e quel parametro Home Assistant lo
+    ha aggiunto solo nella 2026.3. Dalla 2026.2 in giu' la firma e' `(hass,
+    component_name, sidebar_title, sidebar_icon, frontend_url_path, config,
+    require_admin, *, update, config_panel_domain)` e basta: passarglielo
+    solleva `TypeError: unexpected keyword argument`, il setup della voce
+    fallisce e l'integrazione non compare.
+
+    E' l'installazione che «non parte» segnalata sul gruppo, e chi l'ha risolta
+    cancellando quella riga aveva ragione. Non si vedeva perche' su una Home
+    Assistant recente non succede niente — la riga passa — e chi sviluppa ce
+    l'ha recente; a restare fuori sono le case ferme a una versione piu'
+    vecchia, cioe' proprio quelle che l'integrazione non l'hanno mai vista
+    partire.
+
+    Non serviva nemmeno: nella 2026.3 quel parametro vale `True` di suo, quindi
+    scriverlo diceva quello che sarebbe successo comunque. Toglierlo non cambia
+    niente dove funzionava e rimette in piedi l'installazione dalla 2025.1 in
+    poi, che e' la versione minima che `hacs.json` promette.
+    """
+    from homeassistant.components import frontend
+
+    from .config_flow import OPTION_ADMIN_ONLY
+
+    frontend.async_register_built_in_panel(
+        hass,
+        component_name="custom",
+        sidebar_title=entry.title or "DashboardModern",
+        sidebar_icon="mdi:view-dashboard-edit",
+        frontend_url_path=url_path,
+        config=_panel_config(
+            hass,
+            entry,
+            asset_version=asset_version,
+            static_url_path=static_url_path,
+            variants=variants,
+        ),
+        require_admin=bool(entry.options.get(OPTION_ADMIN_ONLY, False)),
+        update=update,
+    )
+
+
+def _remove_panel(hass: HomeAssistant, url_path: str) -> None:
+    """Remove one plancia panel from Home Assistant."""
+    from homeassistant.components import frontend
+
+    frontend.async_remove_panel(hass, url_path, warn_if_unknown=False)
+
+
+def _mounts_on_disk() -> tuple[list[str], list[str]]:
+    """Which of the mounts exist on disk. E' disco: gira nell'executor."""
+
+    def existing(names: tuple[str, ...]) -> list[str]:
+        return [name for name in names if (FRONTEND_DIR / name).exists()]
+
+    return existing(RUNTIME_MOUNTS), existing(SHARED_DIRECTORIES)
+
+
+# Il file della card sul prefisso stabile non si monta come statico: al suo
+# posto c'e' una nostra vista. Vedi `_pubblica_la_via_stabile_della_card`.
+NOME_DELLA_CARD = "dashboard-card.js"
+
+
+def senza_la_card(nomi: list[str]) -> list[str]:
+    """Gli stessi montaggi, meno la card."""
+    return [nome for nome in nomi if nome != NOME_DELLA_CARD]
+
+
+def _pubblica_la_via_stabile_della_card(
+    hass: HomeAssistant, domain_data: dict[str, Any]
+) -> None:
+    """Il percorso stabile della card rimanda alla firma di adesso.
+
+    «L'integrazione portava versione 1.4.24 ma nella plancia 1.4.23»: la
+    plancia aperta dalla barra laterale era nuova, la stessa plancia aperta
+    come dashboard predefinita era vecchia. Due strade, due destini.
+
+    Il pannello si carica da un indirizzo che porta dentro la firma degli
+    asset: cambia a ogni aggiornamento, quindi quello che il browser aveva in
+    cache non c'entra piu' niente e si riscarica tutto. La card, invece, sta
+    sul percorso STABILE — e deve starci, perche' una pagina vecchia in cache
+    che chiede una firma che non esiste piu' non troverebbe l'elemento e
+    scriverebbe «Custom element doesn't exist» (#372).
+
+    Il difetto non era la card: era quello che la card si porta dietro. Un
+    modulo risolve i suoi `import` relativi rispetto a se stesso, quindi da
+    `/dashboardmodern_static/dashboard-card.js` tutto `src/` e tutto `legacy/`
+    venivano chiesti sul prefisso stabile — che Home Assistant serve, quando
+    glielo si chiede senza cache, SENZA NEMMENO UN `Cache-Control`. Un file
+    senza istruzioni il browser se lo tiene per conto suo, a spanne, per una
+    frazione della sua eta': dopo un aggiornamento continuava a usare quello
+    di prima, per ore. Aggiornata l'integrazione, la plancia restava indietro.
+
+    Adesso quel percorso non serve piu' il file: rimanda — con «non fidarti
+    della cache, richiedimelo» — all'indirizzo versionato di adesso. Da li' in
+    poi ogni `import` e' versionato, quindi sempre nuovo dopo un
+    aggiornamento e tenuto in cache un mese quando non cambia niente. E la
+    pagina vecchia che chiede la firma dell'altro ieri riceve lo stesso la
+    card di oggi, che e' esattamente quello per cui il percorso stabile
+    esiste.
+    """
+    if domain_data.get(DATA_VIA_STABILE_DELLA_CARD):
+        return
+
+    from aiohttp import web
+    from homeassistant.components.http import HomeAssistantView
+
+    class _ViaStabileDellaCard(HomeAssistantView):
+        """Il percorso stabile della card, che rimanda a quello versionato."""
+
+        url = PERCORSO_DELLA_CARD
+        name = "dashboardmodern:card"
+        # Gli asset della plancia si sono sempre serviti senza autenticazione,
+        # come ogni altro file del frontend: qui si tiene la stessa porta.
+        requires_auth = False
+        cors_allowed = True
+
+        async def get(self, request: Any) -> Any:
+            versionato = hass.data.get(DOMAIN, {}).get(DATA_STATIC_REGISTERED)
+            if not versionato:
+                # Non si sa ancora qual e' la firma di adesso: si serve il file
+                # com'era prima, ma dicendo di richiederlo ogni volta.
+                return web.FileResponse(
+                    FRONTEND_DIR / NOME_DELLA_CARD,
+                    headers={"Cache-Control": "no-cache"},
+                )
+            return web.Response(
+                status=302,
+                headers={
+                    "Location": f"{versionato}/{NOME_DELLA_CARD}",
+                    # «no-cache» non vuol dire «non tenerlo»: vuol dire
+                    # «chiedimi ogni volta se e' ancora buono». Senza, il
+                    # browser si terrebbe il rimando vecchio e questo giro non
+                    # servirebbe a niente.
+                    "Cache-Control": "no-cache",
+                },
+            )
+
+    hass.http.register_view(_ViaStabileDellaCard())
+    domain_data[DATA_VIA_STABILE_DELLA_CARD] = True
+
+
+async def _ensure_static_registered(
+    hass: HomeAssistant, domain_data: dict[str, Any], static_url_path: str
+) -> None:
+    """Monta gli asset del runtime sui due prefissi, stabile e versionato.
+
+    Le cartelle si montano intere: una rotta per `legacy/`, una per `src/`,
+    piu' i due moduli d'ingresso. Prima si registrava una rotta per ogni
+    file, e due volte — sotto il prefisso versionato con la cache e sotto
+    quello stabile senza — cioe' seicentosessanta rotte che aiohttp scorreva
+    a ogni richiesta e che ogni ricarica dell'integrazione ricostruiva.
+
+    Il prefisso stabile resta: e' la strada di recupero del guscio
+    (`host.js`, `loadHostedDocument`) quando l'indirizzo versionato che un
+    browser ha in mano non esiste piu' dopo un aggiornamento. Senza cache,
+    perche' li' i file cambiano sotto lo stesso indirizzo.
+
+    Una sola cosa non si monta li': la card. Quella e' la porta da cui si
+    entra nella plancia come dashboard predefinita, e i suoi `import` si
+    risolvono rispetto a dove la si e' presa — cioe' tutto il resto verrebbe
+    dal prefisso stabile, dove un aggiornamento fatica ore ad arrivare. Al suo
+    posto c'e' una vista che rimanda alla firma di adesso: il perche' per
+    disteso sta in `_pubblica_la_via_stabile_della_card`.
+    """
+    if domain_data.get(DATA_STATIC_REGISTERED) == static_url_path:
+        return
+
+    from homeassistant.components.http import StaticPathConfig
+    from homeassistant.setup import async_setup_component
+
+    if hass.http is None:
+        await async_setup_component(hass, "http", {})
+
+    # Guardare il disco e' lavoro da executor: questa funzione gira nel loop
+    # di Home Assistant, e dalla 2026.8 lo dice ad alta voce — «Detected
+    # blocking call ... inside the event loop».
+    runtime, shared = await hass.async_add_executor_job(_mounts_on_disk)
+
+    def configs(
+        prefix: str, names: list[str], cache_headers: bool
+    ) -> list[StaticPathConfig]:
+        return [
+            StaticPathConfig(
+                url_path=f"{prefix}/{name}",
+                path=str(FRONTEND_DIR / name),
+                cache_headers=cache_headers,
+            )
+            for name in names
+        ]
+
+    paths = configs(static_url_path, runtime, True)
+    if not domain_data.get(DATA_STATIC_BASE_REGISTERED):
+        # Sul prefisso stabile va tutto TRANNE la card: quella la serve una
+        # nostra vista, e la serve rimandando alla firma di adesso. Il perche'
+        # sta in `_pubblica_la_via_stabile_della_card`.
+        paths = configs(STATIC_URL_PATH, senza_la_card(runtime), False) + paths
+        paths += configs(STATIC_URL_PATH, shared, True)
+        _pubblica_la_via_stabile_della_card(hass, domain_data)
+
+    await hass.http.async_register_static_paths(paths)
+    domain_data[DATA_STATIC_BASE_REGISTERED] = True
+    domain_data[DATA_STATIC_REGISTERED] = static_url_path
+
+
+# Il percorso della card, senza la firma: e' quello che resta uguale fra un
+# aggiornamento e l'altro, ed e' con quello che la si riconosce fra le risorse
+# di Lovelace — dove la firma della riga scritta ieri non e' quella di oggi.
+PERCORSO_DELLA_CARD = f"{STATIC_URL_PATH}/{NOME_DELLA_CARD}"
+
+
+def _dashboard_card_module_url(asset_version: str) -> str:
+    """L'indirizzo con cui il frontend carica la card, e perche' non e' versionato.
+
+    Era `{prefisso}/{firma}/dashboard-card.js`, cioe' un indirizzo che cambia a
+    ogni aggiornamento. Quell'indirizzo il frontend se lo porta dentro l'avvio
+    della pagina, e l'app companion di Android l'avvio se lo tiene in cache a
+    lungo: dopo un aggiornamento la pagina in cache chiede ancora la firma
+    vecchia, quel percorso non esiste piu', e l'elemento non viene mai definito.
+    Il risultato e' «Custom element doesn't exist: dashboardmodern-card» sulla
+    dashboard predefinita — e infatti succedeva sui telefoni con l'app
+    installata da tempo e non su uno appena installato (#372).
+
+    Adesso il PERCORSO e' quello stabile, che c'e' sempre, e la firma sta nella
+    domanda: una pagina vecchia chiede una firma vecchia allo stesso percorso e
+    riceve la card di adesso invece di un 404, e una pagina nuova chiede una
+    firma nuova e non riusa quella in cache.
+
+    Quel percorso, pero', non serve il file: rimanda all'indirizzo versionato
+    di adesso, cosi' che tutto quello che la card importa arrivi da li' e non
+    dal prefisso stabile — vedi `_pubblica_la_via_stabile_della_card`.
+    """
+    return f"{PERCORSO_DELLA_CARD}?v={asset_version}"
+
+
+def _ensure_dashboard_card_registered(
+    hass: HomeAssistant, domain_data: dict[str, Any], static_url_path: str
+) -> None:
+    """Pubblica la card della dashboard di appoggio, anche se è presto.
+
+    «Plancia predefinita: Errore di configurazione» — la decima volta che
+    viene segnalata la stessa cosa, e ogni volta la plancia aperta dalla barra
+    laterale funziona.
+
+    Le due strade non usano lo stesso pezzo di codice. La barra laterale apre
+    il PANNELLO, che si carica da sé; la dashboard predefinita apre una
+    dashboard Lovelace che dentro ha una card nostra, e quella card esiste solo
+    se il suo modulo è stato pubblicato con `add_extra_js_url`. Senza quel
+    modulo Home Assistant non trova l'elemento, e quello che disegna al suo
+    posto è esattamente la schermata rossa che chi segnala vede: «Errore di
+    configurazione».
+
+    E `add_extra_js_url` non è gentile: scrive dentro `hass.data` in una
+    casella che apre `frontend` quando si alza, e se quella casella non c'è
+    ancora solleva `KeyError`. Qui dentro veniva chiamata a secco, in mezzo
+    all'avvio della voce e prima della registrazione del pannello: un avvio in
+    cui `frontend` non fosse ancora salito non pubblicava la card E non
+    registrava il pannello, cioè rompeva tutto in una volta.
+
+    Adesso: se `frontend` c'è, si pubblica subito; se non c'è, si aspetta che
+    si alzi e si pubblica allora — lo stesso modo con cui già si aspetta
+    Lovelace per la dashboard di appoggio. E il manifest dichiara `frontend`
+    fra le dipendenze, così Home Assistant lo alza prima di noi: la strada
+    d'attesa è la rete sotto, non il caso normale.
+    """
+    from homeassistant.components import frontend
+
+    module_url = _dashboard_card_module_url(static_url_path.rsplit("/", 1)[-1])
+    if domain_data.get(DATA_DASHBOARD_CARD_REGISTERED) == module_url:
+        return
+
+    def _pubblica() -> None:
+        previous = domain_data.get(DATA_DASHBOARD_CARD_REGISTERED)
+        if previous and previous != module_url:
+            try:
+                frontend.remove_extra_js_url(hass, previous)
+            except Exception:  # noqa: BLE001 - un indirizzo vecchio di troppo non fa danni
+                _LOGGER.debug("Non ho potuto togliere %s dai moduli extra", previous)
+        try:
+            frontend.add_extra_js_url(hass, module_url)
+        except Exception:  # noqa: BLE001 - si riprova al prossimo avvio della voce
+            _LOGGER.error(
+                "Non sono riuscito a pubblicare la card %s: chi mette questa "
+                "plancia come predefinita vedrà «Errore di configurazione», "
+                "perché Home Assistant non troverà l'elemento "
+                "dashboardmodern-card. Dalla barra laterale funziona lo stesso.",
+                module_url,
+                exc_info=True,
+            )
+            return
+        domain_data[DATA_DASHBOARD_CARD_REGISTERED] = module_url
+
+    if "frontend" in hass.config.components:
+        _pubblica()
+        return
+
+    from homeassistant.setup import async_when_setup
+
+    async def _quando_frontend(_hass: HomeAssistant, _componente: str) -> None:
+        _pubblica()
+
+    _LOGGER.debug(
+        "Frontend non ancora avviato: la card %s si pubblica appena lo è",
+        module_url,
+    )
+    async_when_setup(hass, "frontend", _quando_frontend)
+
+
+def _risorse_di_lovelace(hass: HomeAssistant) -> Any:
+    """La collezione delle risorse di Lovelace, comunque Home Assistant la tenga."""
+    dati = hass.data.get("lovelace")
+    risorse = getattr(dati, "resources", None)
+    if risorse is None and isinstance(dati, dict):
+        risorse = dati.get("resources")
+    return risorse
+
+
+def _la_nostra_risorsa(voci: Any) -> dict[str, Any] | None:
+    """La riga della card fra le risorse di Lovelace, qualunque firma porti."""
+    return next(
+        (
+            voce
+            for voce in (voci or [])
+            if isinstance(voce, dict)
+            and str(voce.get("url") or "").split("?", 1)[0] == PERCORSO_DELLA_CARD
+        ),
+        None,
+    )
+
+
+async def _ensure_card_resource_registered(
+    hass: HomeAssistant, module_url: str
+) -> bool:
+    """Pubblica la card ANCHE come risorsa di Lovelace, e non e' un doppione.
+
+    «Se imposto plancia predefinita da utente, da smartphone continua a dare
+    errore; da pc no.» E' la stessa segnalazione di sempre — «Errore di
+    configurazione» sulla plancia predefinita — con dentro la cosa che finora
+    mancava: da quale apparecchio.
+
+    Le due strade con cui un modulo del frontend arriva al browser non sono la
+    stessa cosa.
+
+    `add_extra_js_url` lo scrive nell'AVVIO della pagina: Home Assistant lo
+    stampa dentro l'index che serve al primo caricamento. L'app companion
+    quell'index se lo tiene in cache a lungo — e' il pezzo che le fa aprire la
+    plancia senza rete — quindi un index messo in cache PRIMA che questa
+    integrazione ci fosse non nomina il nostro modulo, e continuera' a non
+    nominarlo finche' la cache dura. Il browser del computer l'index lo richiede
+    e basta: li' il modulo c'e' sempre. E' esattamente la differenza fra «da
+    smartphone da' errore» e «da pc funziona», ed e' la ragione per cui la
+    stessa segnalazione torna da un anno pur essendo stata «corretta» piu'
+    volte: le correzioni di prima riguardavano la vista, il filtro e
+    l'indirizzo del modulo, cioe' tre cose vere che pero' non toccavano la
+    cache di quell'indice.
+    (#372, #154, #499)
+
+    Le RISORSE di Lovelace invece non stanno nell'index: il frontend se le fa
+    dire dal socket a ogni apertura della dashboard, e le importa allora. Una
+    pagina in cache le chiede lo stesso, perche' chiederle fa parte
+    dell'apertura della dashboard, non del caricamento della pagina.
+
+    Quindi si pubblica in tutt'e due i modi. Il modulo si definisce una volta
+    sola comunque — `dashboard-card.js` non ridichiara l'elemento se c'e'
+    gia' — percio' due strade non fanno due card: fanno due occasioni perche'
+    la card ci sia.
+
+    In modo YAML le risorse le scrive chi ha la casa, e la collezione non sa
+    creare: li' non si insiste, come per la dashboard di appoggio.
+    """
+    risorse = _risorse_di_lovelace(hass)
+    elenca = getattr(risorse, "async_items", None)
+    crea = getattr(risorse, "async_create_item", None)
+    if risorse is None or elenca is None or crea is None:
+        _LOGGER.debug(
+            "Le risorse di Lovelace non si possono scrivere (modo YAML?): la card "
+            "resta pubblicata solo nell'avvio della pagina"
+        )
+        return False
+    try:
+        # La collezione legge dal disco alla prima domanda, non alla nascita:
+        # guardare prima vorrebbe dire non trovare mai la nostra e riscriverla
+        # a ogni avvio.
+        if not getattr(risorse, "loaded", False):
+            await risorse.async_load()
+            risorse.loaded = True
+        nostra = _la_nostra_risorsa(elenca())
+        if nostra is None:
+            await crea({"res_type": "module", "url": module_url})
+            _LOGGER.info(
+                "Ho pubblicato la card %s fra le risorse di Lovelace", module_url
+            )
+            return True
+        if str(nostra.get("url") or "") == module_url:
+            return True
+        aggiorna = getattr(risorse, "async_update_item", None)
+        if aggiorna is None:
+            return False
+        # La firma cambia a ogni aggiornamento: si rimette in pari quella che
+        # c'e', invece di aggiungerne una seconda allo stesso percorso.
+        await aggiorna(nostra["id"], {"res_type": "module", "url": module_url})
+        return True
+    except Exception:  # noqa: BLE001 - una risorsa in meno non ferma la plancia
+        _LOGGER.warning(
+            "Non sono riuscito a pubblicare la card %s fra le risorse di Lovelace: "
+            "chi apre la plancia predefinita dall'app potrebbe vedere «Errore di "
+            "configurazione»",
+            module_url,
+            exc_info=True,
+        )
+        return False
+
+
+def _companion_view(entry: Any, config_profile: str, primary: bool) -> dict[str, Any]:
+    """La vista della dashboard di appoggio: una sola card, la plancia intera.
+
+    Scritta qui e in nessun altro posto. Prima la scriveva `panel.js`, cioe' il
+    pannello: e il pannello gira solo quando qualcuno apre la plancia dalla barra
+    laterale. Chi la mette come dashboard predefinita e riavvia apre quella
+    dashboard senza passare dal pannello, e se il contenuto non era mai stato
+    scritto Home Assistant risponde «Errore di configurazione» — mentre aprirla
+    dalla barra la riparava. Era esattamente la segnalazione: «quando si imposta
+    la plancia come predefinita ed apro app HA va in errore, se invece la
+    seleziono dal menu laterale funziona».
+
+    Adesso la scrive l'integrazione all'avvio, che e' l'unico momento che
+    succede comunque, qualunque cosa si apra per prima.
+    """
+    allowed = _allowed_user_ids(entry)
+    return {
+        "title": entry.title or "DashboardModern",
+        "path": "home",
+        "type": "panel",
+        # Niente filtro `visible` su questa vista, ed e' una scelta.
+        #
+        # E' l'UNICA vista della dashboard. Un filtro su una vista sola non puo'
+        # fare la cosa per cui i filtri esistono — mostrare a questo utente meno
+        # schede che a quell'altro — perche' sotto non resta niente. Puo' fare
+        # solo due cose: niente, se chi guarda e' nell'elenco; oppure lasciare
+        # la dashboard senza nemmeno una vista, e allora Home Assistant, quando
+        # la si apre, risponde «Errore di configurazione».
+        #
+        # Chi la tiene come dashboard predefinita apre quella schermata rossa
+        # ogni volta che apre l'app, e non ha modo di indovinare da dove venga:
+        # la stessa plancia, aperta dalla barra laterale, funziona.
+        #
+        # Il permesso non si perde: sta dove funziona davvero. La dashboard
+        # porta `require_admin`, e la card porta il suo `allowed_user_ids` —
+        # che e' lo stesso elenco con cui il pannello decide chi entra, e che
+        # sotto una vista vuota non ci finisce mai.
+        "cards": [
+            {
+                "type": "custom:dashboardmodern-card",
+                "entry_id": entry.entry_id,
+                "title": entry.title or "DashboardModern",
+                "primary": primary,
+                # La card ospita la stessa plancia, quindi deve leggere e
+                # scrivere lo stesso profilo di configurazione del pannello.
+                "config_profile": config_profile,
+                # Niente `static_base` qui dentro: contiene la firma degli asset
+                # di adesso e diventa vecchia al primo aggiornamento. La card la
+                # ricava dal proprio `import.meta.url`.
+                "allowed_user_ids": allowed,
+            }
+        ],
+    }
+
+
+async def _aggiorna_scheda_compagna(
+    collezione: Any, url_path: str, titolo: str, solo_admin: bool
+) -> None:
+    """Rimetti in pari nome, «solo amministratori» e il fuori dalla barra.
+
+    Creare la dashboard di appoggio scriveva il titolo una volta sola. Chi poi
+    rinominava la plancia — o la chiudeva agli amministratori — si ritrovava il
+    nome vecchio nel menu delle dashboard di Home Assistant a ogni riavvio: le
+    viste si riscrivevano, la scheda della collezione no. Il pannello, prima che
+    questo lo sostituisse, l'aggiornava con `lovelace/dashboards/update`; qui si
+    fa la stessa cosa dal di dentro.
+
+    E il fuori dalla barra e' la terza cosa, che qui mancava.
+
+    «Perche' nel mio ha ci sono 2 plance Dashboard modern v2?», con la
+    schermata di una barra laterale che porta due volte «iPhone Dash», stesso
+    nome e stessa icona. Sono il pannello e la dashboard di appoggio: portano
+    il titolo della plancia tutt'e due — e devono, perche' l'appoggio si sceglie
+    per nome nel selettore delle dashboard — e l'unica cosa che li teneva
+    distinti era che l'appoggio sta fuori dalla barra.
+
+    Quel «fuori» si scriveva alla nascita e mai piu'. Basta che una volta sola
+    diventi «dentro» — un tocco su «Mostra nella barra laterale» nelle
+    impostazioni delle dashboard, una versione di Lovelace che al momento della
+    nascita non ha letto il campo, un'importazione da un backup — e resta dentro
+    per sempre: nessuno lo rimetteva a posto, e chi guardava la barra vedeva due
+    plance identiche di cui una sola funziona come plancia.
+
+    Adesso si rimette a posto a ogni avvio, come il nome. Si scrive solo se
+    qualcosa e' davvero cambiato: la collezione salva su disco a ogni
+    aggiornamento, e un avvio non e' una modifica.
+    """
+    elenca = getattr(collezione, "async_items", None)
+    aggiorna = getattr(collezione, "async_update_item", None)
+    if elenca is None or aggiorna is None:
+        return
+    voce = next(
+        (v for v in elenca() if isinstance(v, dict) and v.get("url_path") == url_path),
+        None,
+    )
+    if voce is None:
+        return
+    cambi = {}
+    if voce.get("title") != titolo:
+        cambi["title"] = titolo
+    if bool(voce.get("require_admin", False)) != solo_admin:
+        cambi["require_admin"] = solo_admin
+    if bool(voce.get("show_in_sidebar", True)):
+        # Nella barra c'e' gia' il pannello: due voci con lo stesso nome e la
+        # stessa icona sono due plance per chi guarda, e una delle due non e'
+        # la plancia.
+        cambi["show_in_sidebar"] = False
+        _LOGGER.warning(
+            "La scheda della dashboard di appoggio %s diceva «nella barra "
+            "laterale»: la rimetto fuori. Nella barra c'e' gia' il pannello "
+            "della plancia, e due voci con lo stesso nome e la stessa icona "
+            "sono due plance per chi guarda",
+            url_path,
+        )
+    if not cambi:
+        return
+    await aggiorna(voce["id"], cambi)
+
+
+# Come si chiama la dashboard di appoggio di una plancia: il nostro prefisso e
+# le prime otto cifre dell'identificativo della voce, minuscole. E' lo schema di
+# `_lovelace_url_path`, scritto come espressione per pescare le CANDIDATE fra
+# tutte le dashboard di casa — comprese quelle di voci che non ci sono piu'.
+#
+# L'alfabeto e' largo apposta. L'identificativo di una voce e' un ULID —
+# `01M2CCTJ3ATSJCFJZ869AW6HMD` — e le sue lettere arrivano fino alla z: un
+# `[0-9a-f]` qui dentro non riconoscerebbe nemmeno una casa di oggi. Le voci
+# vecchie, nate quando l'identificativo era esadecimale, ci stanno dentro lo
+# stesso.
+#
+# Largo com'e', pero', questo nome non basta a dire «e' nostra»: lo dice la
+# card che c'e' scritta dentro — vedi `_di_chi_e_la_compagna`.
+_NOME_DELLA_COMPAGNA = re.compile(r"^dashboardmodern-[0-9a-z]{8}$")
+
+TIPO_DELLA_CARD = "custom:dashboardmodern-card"
+
+
+async def _togli_la_compagna(collezione: Any, url_path: str) -> bool:
+    """Cancella la scheda della dashboard di appoggio a questo indirizzo.
+
+    Togliere la scheda dalla collezione e' tutto: Home Assistant, quando una
+    plancia se ne va dall'elenco, toglie da se' il pannello dalla barra e
+    cancella il magazzino dal disco.
+    """
+    elenca = getattr(collezione, "async_items", None)
+    cancella = getattr(collezione, "async_delete_item", None)
+    if elenca is None or cancella is None:
+        return False
+    voce = next(
+        (v for v in elenca() if isinstance(v, dict) and v.get("url_path") == url_path),
+        None,
+    )
+    if voce is None:
+        return False
+    await cancella(voce["id"])
+    return True
+
+
+async def _di_chi_e_la_compagna(plance: Any, url_path: str) -> str | None:
+    """Di quale plancia e' questa dashboard di appoggio.
+
+    Il nome non basta per decidere di cancellare una dashboard di casa: e' una
+    forma, e quella forma la puo' avere per caso anche una dashboard fatta a
+    mano. Dentro, invece, c'e' la prova: la nostra non ha altro che card
+    nostre, e ogni card si porta scritto l'identificativo della plancia a cui
+    appartiene.
+
+    Le risposte sono tre:
+
+    - `None` — non e' nostra, oppure non si e' potuto leggere. Nel dubbio non
+      si tocca niente.
+    - la stringa vuota — l'indirizzo c'e', ma dentro non c'e' scritto NIENTE.
+      Non e' roba di nessuno: e' una dashboard nata e mai riempita, il caso
+      che altrove si chiama «esiste ma resterebbe vuota». Chi sa di averla
+      fatta lui puo' toglierla; chi spazza alla cieca no.
+    - l'identificativo della plancia a cui appartiene.
+    """
+    magazzino = plance.get(url_path) if hasattr(plance, "get") else None
+    leggi = getattr(magazzino, "async_load", None)
+    if leggi is None:
+        return None
+    from homeassistant.components.lovelace.const import ConfigNotFound
+
+    try:
+        letta = await leggi(False)
+    except ConfigNotFound:
+        # L'indirizzo c'e' e il magazzino pure, ma nessuno ci ha mai scritto.
+        return ""
+    except Exception:  # noqa: BLE001 - non si riesce a leggere, quindi non si sa
+        return None
+    viste = letta.get("views") if isinstance(letta, dict) else None
+    if not isinstance(viste, list):
+        return None
+    if not viste:
+        return ""
+    suoi: set[str] = set()
+    for vista in viste:
+        schede = vista.get("cards") if isinstance(vista, dict) else None
+        if not isinstance(schede, list) or not schede:
+            return None
+        for card in schede:
+            if not isinstance(card, dict) or card.get("type") != TIPO_DELLA_CARD:
+                return None
+            suoi.add(str(card.get("entry_id") or ""))
+    if len(suoi) != 1:
+        return None
+    (sua,) = suoi
+    return sua or None
+
+
+async def _spazza_le_compagne_orfane(
+    hass: HomeAssistant, collezione: Any, plance: Any, tranne: str = ""
+) -> int:
+    """Togli le dashboard di appoggio delle plance che non ci sono piu'.
+
+    «Ho sempre due volte nella barra laterale», con in elenco quattro plance —
+    due «Casa 3.0», una «DashboardModern», una «DashboardModern v2» — dove di
+    plance ce n'e' una sola.
+
+    Ogni voce si porta la sua dashboard di appoggio, ed e' giusto: e' quella
+    che permette di sceglierla come predefinita. Quando la voce se ne andava,
+    pero', toglievamo il pannello e basta, e la dashboard restava sul disco per
+    sempre, col nome che la voce aveva quel giorno. Chi reinstalla — o
+    rinomina, e con l'integrazione si e' fatto tutt'e due — se ne accumula una
+    per volta.
+
+    E un'orfana e' anche il doppione nella barra: chi rimette fuori dalla barra
+    una compagna lo fa passando dalla voce viva, e un'orfana non ce l'ha piu'.
+    Nessuno la visita, nessuno la rimette a posto.
+
+    Si cancellano solo quelle che sono nostre DUE VOLTE: il nome che scriviamo
+    noi, e dentro soltanto card nostre. E solo quando la plancia di cui portano
+    l'identificativo non esiste piu'.
+
+    `tranne` e' l'indirizzo da non toccare: quello della compagna che si sta
+    preparando in questo momento. Dentro ci puo' stare la card di una plancia
+    che non c'e' piu' — succede a chi rimette in piedi Lovelace da un backup
+    mentre le voci sono nuove — e allora la spazzata la scambierebbe per
+    un'orfana e la cancellerebbe UN ISTANTE PRIMA che venga rimessa a posto:
+    la si vedrebbe sparire invece che riparata.
+
+    Una dashboard vuota non si tocca: qui non si sa di chi era, e cancellare
+    per un nome che somiglia e' esattamente quello che non si vuole fare.
+    """
+    elenca = getattr(collezione, "async_items", None)
+    if elenca is None:
+        return 0
+    vive = {voce.entry_id for voce in hass.config_entries.async_entries(DOMAIN)}
+    quante = 0
+    for voce in list(elenca()):
+        if not isinstance(voce, dict):
+            continue
+        url_path = str(voce.get("url_path") or "")
+        if not _NOME_DELLA_COMPAGNA.match(url_path) or url_path == tranne:
+            continue
+        try:
+            sua = await _di_chi_e_la_compagna(plance, url_path)
+            if not sua or sua in vive:
+                continue
+            if not await _togli_la_compagna(collezione, url_path):
+                continue
+        except Exception:  # noqa: BLE001 - una in piu' nell'elenco non ferma la plancia
+            _LOGGER.debug("Non ho potuto togliere l'orfana %s", url_path, exc_info=True)
+            continue
+        quante += 1
+        _LOGGER.warning(
+            "Ho tolto la dashboard di appoggio %s: la plancia %s a cui "
+            "apparteneva non c'e' piu'. Restava nell'elenco delle plance, e "
+            "nella barra laterale accanto a quella vera",
+            url_path,
+            sua,
+        )
+    return quante
+
+
+def _fuori_dalla_barra(hass: HomeAssistant, url_path: str) -> bool:
+    """Togli dalla barra laterale il pannello della dashboard di appoggio.
+
+    «Ancora problema, e' comparsa due volte»: la plancia nella barra laterale
+    una volta fra le dashboard e una volta fra i pannelli, stesso nome e
+    stessa icona.
+
+    Che l'appoggio stia fuori dalla barra glielo diciamo scrivendo
+    `show_in_sidebar: False` nella sua scheda, ed e' la cosa giusta da
+    scrivere. Ma non e' una cosa che si possa CONTROLLARE: chi mette il
+    pannello nella barra e' Lovelace, leggendo quel campo al suo avvio, e
+    fra la sua lettura e la nostra scrittura ci sono passati che non
+    governiamo — l'ordine di avvio delle integrazioni, un rifiuto della
+    scrittura, un campo che una versione non ha letto, un ripristino da
+    backup. Basta che una volta vada storto e nella barra restano due
+    plance identiche di cui una sola e' la plancia, finche' qualcuno non
+    riavvia. E chi riavvia le rivede.
+
+    Quindi qui si guarda il posto che decide davvero: l'elenco dei pannelli
+    di Home Assistant. Se quello dell'appoggio ha un titolo nella barra, lo
+    si riscrive senza — stesso indirizzo, stesso componente, stessa
+    configurazione, `update=True`. Il pannello continua ad aprirsi, la
+    dashboard resta scegliibile come predefinita, e dalla barra sparisce
+    subito, senza aspettare un riavvio.
+
+    Torna `True` se c'era da togliere qualcosa.
+    """
+    from homeassistant.components import frontend
+
+    pannelli = hass.data.get("frontend_panels")
+    pannello = pannelli.get(url_path) if isinstance(pannelli, dict) else None
+    if pannello is None or not getattr(pannello, "sidebar_title", None):
+        return False
+    frontend.async_register_built_in_panel(
+        hass,
+        component_name=getattr(pannello, "component_name", "lovelace"),
+        frontend_url_path=url_path,
+        config=getattr(pannello, "config", None),
+        require_admin=bool(getattr(pannello, "require_admin", False)),
+        update=True,
+        config_panel_domain=getattr(pannello, "config_panel_domain", None),
+    )
+    _LOGGER.warning(
+        "La dashboard di appoggio %s era nella barra laterale accanto al "
+        "pannello della plancia: l'ho tolta dalla barra. La plancia resta "
+        "quella del pannello, e l'appoggio resta scegliibile come plancia "
+        "predefinita",
+        url_path,
+    )
+    return True
+
+
+def _la_compagna_e_gia_registrata(collezione: Any, plance: Any, url_path: str) -> bool:
+    """Se la scheda della dashboard di appoggio c'e' gia', ovunque risulti.
+
+    La mappa `dashboards` da sola non basta: quella la riempie un ascoltatore
+    della collezione, e all'avvio puo' essere ancora vuota mentre la scheda sul
+    disco c'e' da un pezzo — e' la stessa corsa che `_magazzino_della_compagna`
+    aspetta piu' sotto. Chi guarda solo li' crede che manchi e la crea daccapo,
+    e la guardia di Lovelace contro i doppioni guarda quella stessa mappa,
+    quindi nemmeno lei se ne accorge: sul disco restano due schede con lo stesso
+    indirizzo, e nel menu delle dashboard due voci con lo stesso nome — proprio
+    quelle che poi non si sa quale scegliere come predefinita.
+
+    La collezione le sue schede le sa sempre, anche prima che l'ascoltatore
+    abbia girato. Si guardano tutt'e due: basta una a dire che c'e'.
+    """
+    if url_path in plance:
+        return True
+    elenca = getattr(collezione, "async_items", None)
+    if elenca is None:
+        return False
+    return any(
+        isinstance(voce, dict) and voce.get("url_path") == url_path for voce in elenca()
+    )
+
+
+async def _magazzino_della_compagna(plance: Any, url_path: str) -> Any:
+    """Il magazzino della dashboard appena creata, dandogli il tempo di nascere.
+
+    Chi crea una dashboard nella collezione di Lovelace non riceve indietro il
+    suo magazzino: lo costruisce un ascoltatore della collezione, e la mappa
+    `dashboards` si popola quando quell'ascoltatore ha girato. Su una macchina
+    carica — o su una versione di Home Assistant che lo fa in coda invece che
+    subito — chiedere il magazzino nella riga dopo la creazione lo trova vuoto.
+
+    E li' finiva: si tornava indietro senza scrivere niente, lasciando una
+    dashboard REGISTRATA E VUOTA. Home Assistant, aprendola, risponde «Errore
+    di configurazione» — e la risposta resta uguale a ogni riavvio, perche' al
+    giro dopo la dashboard c'e' gia' e si prende la stessa strada.
+
+    Qui le si lascia il tempo di comparire: un paio di giri del ciclo di
+    eventi, che e' quello che serve a un ascoltatore messo in coda.
+    """
+    import asyncio
+
+    for attesa in (0, 0, 0.05):
+        magazzino = plance.get(url_path)
+        if magazzino is not None and hasattr(magazzino, "async_save"):
+            return magazzino
+        await asyncio.sleep(attesa)
+    return None
+
+
+async def _la_compagna_e_gia_cosi(magazzino: Any, vista: dict[str, Any]) -> bool:
+    """Se quello che c'e' scritto e' gia' quello che ci si vuole scrivere.
+
+    Serve a due cose. La prima e' non riscrivere Lovelace per niente: questo
+    controllo si fa a ogni avvio e, da quando c'e' la riparazione, anche ogni
+    volta che qualcuno apre la plancia. La seconda e' saperlo: quando la vista
+    salvata NON e' quella giusta, la riga di registro che si scrive qui sopra
+    dice che una riparazione e' servita davvero, ed e' l'unico modo di
+    distinguere «la dashboard era a posto» da «l'abbiamo appena rimessa a
+    posto» senza chiederlo a chi guarda.
+
+    Non si riesce a rileggere? Allora non si sa, e nel dubbio si riscrive: una
+    scrittura di troppo non fa male a nessuno, una vista rotta lasciata li' si'.
+    """
+    leggi = getattr(magazzino, "async_load", None)
+    if leggi is None:
+        return False
+    try:
+        letta = await leggi(False)
+    except Exception:  # noqa: BLE001 - non si sa, quindi si riscrive
+        return False
+    if not isinstance(letta, dict):
+        return False
+    return letta.get("views") == [vista]
+
+
+async def _la_compagna_e_piena(magazzino: Any) -> bool:
+    """Se quello che si e' appena scritto si rilegge davvero.
+
+    Scrivere e non ricontrollare vuol dire scoprire dall'utente che non era
+    stato scritto. Qui si rilegge: se manca la configurazione, o non ha viste,
+    chi apre quella dashboard vedra' «Errore di configurazione», e conviene che
+    stia scritto nel registro adesso invece che in una segnalazione domani.
+    """
+    leggi = getattr(magazzino, "async_load", None)
+    if leggi is None:
+        # Una Lovelace che non sa rileggere non e' una prova che sia vuota.
+        return True
+    try:
+        letta = await leggi(False)
+    except Exception:  # noqa: BLE001 - il perche' lo dice chi chiama
+        return False
+    viste = letta.get("views") if isinstance(letta, dict) else None
+    return bool(viste)
+
+
+async def _nasce_la_compagna(
+    collezione: Any, plance: Any, url_path: str, titolo: str, solo_admin: bool
+) -> bool:
+    """Scrivi la scheda della dashboard di appoggio. `False` se non ce l'ha fatta.
+
+    Lovelace rifiuta una creazione per due motivi che qui non sono guasti ma
+    corse: l'indirizzo e' gia' quello di un pannello registrato, oppure la
+    scheda c'e' gia'. In tutti e due i casi la dashboard ESISTE — che e'
+    esattamente quello che si voleva — e la strada giusta e' rimetterla in pari
+    e riempirla, non arrendersi.
+
+    Arrendersi voleva dire, per chi ci capitava, «il flag c'e' ma tra le plance
+    non la vedo»: la dashboard non compariva nel menu delle plance, e non ci
+    compariva mai piu', perche' al riavvio si ripercorreva la stessa strada e
+    si prendeva lo stesso rifiuto.
+
+    Se invece dopo il rifiuto la scheda continua a non esserci, il rifiuto e'
+    un guasto vero: si scrive nel registro cosa non funzionera', perche' chi
+    apre il menu delle dashboard non ha modo di indovinarlo.
+    """
+    try:
+        await collezione.async_create_item(
+            {
+                "allow_single_word": True,
+                "icon": "mdi:view-dashboard-edit",
+                "title": titolo,
+                "url_path": url_path,
+                "show_in_sidebar": False,
+                "require_admin": solo_admin,
+            }
+        )
+    except Exception:  # noqa: BLE001 - il perche' lo dicono le due strade qui sotto
+        if not _la_compagna_e_gia_registrata(collezione, plance, url_path):
+            _LOGGER.error(
+                "Lovelace ha rifiutato la dashboard di appoggio %s: la plancia "
+                "non comparira' fra le dashboard e non si potra' scegliere come "
+                "predefinita",
+                url_path,
+                exc_info=True,
+            )
+            return False
+        _LOGGER.info(
+            "La dashboard di appoggio %s c'era gia' quando ho provato a "
+            "crearla: la rimetto in pari e la riempio",
+            url_path,
+        )
+        await _aggiorna_scheda_compagna(collezione, url_path, titolo, solo_admin)
+    return True
+
+
+def _avviso_della_compagna(entry_id: str) -> str:
+    """Il nome dell'avviso di questa plancia: uno per voce, non uno per tutte."""
+    return f"plancia_non_registrabile_{entry_id}"
+
+
+def _campo(dati: Any, nome: str) -> Any:
+    """Un campo di `hass.data["lovelace"]`, che è un dizionario o un oggetto."""
+    if isinstance(dati, dict):
+        return dati.get(nome)
+    return getattr(dati, nome, None)
+
+
+def _pare_una_collezione(valore: Any, risorse: Any) -> bool:
+    """Se questo oggetto sa fare quello che sa fare una collezione di plance.
+
+    Si chiede il minimo che serve — elencare e creare — e non tutto quello che
+    una collezione di oggi sa fare: una Lovelace vecchia la stessa collezione
+    ce l'ha senza `async_update_item`, e pretenderlo qui vorrebbe dire non
+    riconoscerla. Le risorse sanno fare le stesse cose e si escludono per
+    identita', non per nome.
+    """
+    if valore is None or valore is risorse:
+        return False
+    return all(
+        callable(getattr(valore, nome, None))
+        for nome in ("async_items", "async_create_item")
+    )
+
+
+def _dentro_a_lovelace(dati: Any) -> list[str]:
+    """I nomi di quello che Lovelace tiene in mano. Serve a chi legge i registri."""
+    if isinstance(dati, dict):
+        return sorted(str(chiave) for chiave in dati)
+    try:
+        return sorted(vars(dati))
+    except TypeError:
+        return sorted(nome for nome in dir(dati) if not nome.startswith("_"))
+
+
+def _manici_del_websocket(hass: HomeAssistant) -> dict[str, Any]:
+    """I comandi websocket registrati, per nome.
+
+    La chiave sotto cui stanno la dichiara il componente stesso: si legge da
+    lui se e' gia' caricato — e quando un'integrazione gira, lo e' — invece di
+    riscriverla a mano. L'import non si fa: chiederlo a `sys.modules` non porta
+    dentro niente, e dentro al loop un import che tocca il disco e' un blocco.
+    """
+    import sys
+
+    modulo = sys.modules.get("homeassistant.components.websocket_api")
+    chiave = getattr(modulo, "DOMAIN", "websocket_api")
+    manici = hass.data.get(chiave)
+    return manici if isinstance(manici, dict) else {}
+
+
+def _collezione_dal_websocket(hass: HomeAssistant, risorse: Any) -> Any:
+    """La collezione delle plance, presa da chi la espone sul websocket.
+
+    Il posto da cui la prendevamo non c'e' piu'.
+    `hass.data["lovelace"]` era un dizionario, e dentro ci stava anche
+    `dashboards_collection`; da quando e' un oggetto tipizzato porta quattro
+    campi — le risorse, il loro modo, le plance e quelle scritte in YAML — e la
+    collezione NON e' fra quelli: nel codice di Lovelace e' una variabile
+    locale dell'avvio, che nessuno mette piu' da parte.
+
+    Da fuori si vedeva cosi': la plancia compariva nella barra laterale — quel
+    pannello lo registriamo noi — e fra le plance no, perche' la dashboard di
+    appoggio non nasceva. «Esce nella sidebar ma fra le plance non c'e'»
+    (#507), su Home Assistant 2026.8, e reinstallare non cambiava niente
+    perche' non era un residuo: era quel campo, che non esiste.
+
+    La collezione, pero', resta raggiungibile: Lovelace la consegna a chi
+    pubblica i comandi `lovelace/dashboards/*`, e quell'oggetto la tiene in
+    `storage_collection`. Il comando che elenca e' registrato cosi' com'e' —
+    un metodo legato, non una funzione avvolta — quindi da li' si risale al
+    suo padrone, e dal padrone alla collezione vera: la stessa che usa Home
+    Assistant, non una seconda copia che scriverebbe sullo stesso magazzino
+    all'insaputa della prima.
+    """
+    manici = _manici_del_websocket(hass)
+    for comando in ("lovelace/dashboards/list", "lovelace/dashboards/subscribe"):
+        voce = manici.get(comando)
+        manico = voce[0] if isinstance(voce, tuple) and voce else voce
+        padrone = getattr(manico, "__self__", None)
+        candidato = getattr(padrone, "storage_collection", None)
+        if _pare_una_collezione(candidato, risorse):
+            return candidato
+    return None
+
+
+def _modo_di_lovelace(dati: Any, plance: Any) -> str:
+    """Il modo con cui Lovelace tiene le plance: «storage» oppure «yaml».
+
+    Anche `mode` era un campo del dizionario, e non c'e' piu'. Chiederlo dove
+    non c'e' vuol dire non saperlo mai, e un modo sconosciuto finisce in un
+    avviso che non dice niente. Ma il modo ogni plancia lo dichiara da se': la
+    plancia senza indirizzo (`None`) e' quella di serie, e il suo `mode` dice
+    se le viste vengono dal magazzino o da un file scritto a mano.
+    """
+    modo = _campo(dati, "mode")
+    if modo:
+        return str(modo)
+    if isinstance(plance, dict):
+        return str(getattr(plance.get(None), "mode", "") or "")
+    return ""
+
+
+def _plance_di_lovelace(hass: HomeAssistant) -> tuple[Any, Any, str, list[str]]:
+    """La collezione delle plance, le plance, il modo, e cosa c'era da guardare.
+
+    La collezione si cercava per nome — `dashboards_collection` — e quando non
+    si trovava si concludeva «Lovelace e' in modo YAML». Sono due cose diverse,
+    e la seconda non discende dalla prima: quel nome, nel codice di Home
+    Assistant, portava scritto accanto «This can be removed when the map
+    integration is removed». Era un avanzo dichiarato tale, ed e' andata proprio
+    cosi': il giorno che e' sparito la plancia ha accusato di modo YAML una casa
+    che il modo YAML non ce l'ha, e chi leggeva andava a cercare in
+    `configuration.yaml` una riga che non c'era (#507).
+
+    Quindi la si cerca in tre posti, dal piu' diretto al piu' sospettoso:
+    il nome, dove la Lovelace vecchia la teneva; il padrone dei comandi
+    `lovelace/dashboards/*`, dove la Lovelace di oggi la consegna; e infine
+    quello che gli oggetti SANNO FARE — una collezione di plance sa elencarle e
+    crearne una, e non e' quella delle risorse. Il modo, lui, non si indovina:
+    lo dichiara la plancia di serie.
+    """
+    dati = hass.data.get("lovelace")
+    if dati is None:
+        return None, None, "", []
+    plance = _campo(dati, "dashboards")
+    risorse = _campo(dati, "resources")
+    modo = _modo_di_lovelace(dati, plance)
+    collezione = _campo(dati, "dashboards_collection")
+    if collezione is None:
+        # Il nome non c'e' piu': la si chiede a chi la usa sul websocket.
+        collezione = _collezione_dal_websocket(hass, risorse)
+    if collezione is None:
+        # E se nemmeno li': si guarda chi, li' dentro, sa fare il mestiere.
+        try:
+            valori = list(
+                dati.values() if isinstance(dati, dict) else vars(dati).values()
+            )
+        except TypeError:
+            valori = []
+        candidati = [
+            valore for valore in valori if _pare_una_collezione(valore, risorse)
+        ]
+        if len(candidati) == 1:
+            collezione = candidati[0]
+        else:
+            # Piu' di uno vuol dire che c'e' una terza collezione che non
+            # conosciamo: si sceglie per nome invece di tirare a indovinare, e
+            # se nessuno lo porta non si sceglie nessuno — meglio l'avviso che
+            # scrivere una plancia dentro la cosa sbagliata.
+            collezione = next(
+                (
+                    valore
+                    for valore in candidati
+                    if "dashboard" in type(valore).__name__.lower()
+                ),
+                None,
+            )
+    return collezione, plance, modo, _dentro_a_lovelace(dati)
+
+
+def _avvisa_che_manca(hass: HomeAssistant, entry: ConfigEntry, in_yaml: bool) -> None:
+    """Dillo dove si guarda, non solo nel registro.
+
+    Il registro lo apre chi sa che esiste. Chi ha la casa apre Impostazioni,
+    e li' Home Assistant ha un posto apposta per le cose che non vanno:
+    Riparazioni. Una riga sola, con scritto perche' la plancia non e' fra le
+    predefinite e cosa si puo' fare — che in questo caso e' «niente dalla
+    plancia, la si aggiunge a mano nel proprio YAML».
+
+    Non e' riparabile con un tasto (`is_fixable=False`): non c'e' niente che
+    possiamo fare noi al posto suo, e un tasto che non aggiusta e' peggio di
+    nessun tasto.
+    """
+    from homeassistant.helpers import issue_registry as ir
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        _avviso_della_compagna(entry.entry_id),
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        # Due avvisi, perche' sono due fatti diversi. Il modo YAML e' una scelta
+        # di chi ha la casa, e la risposta e' «aggiungila a mano nel file». Un
+        # elenco che non si trova pur non essendo in modo YAML e' un guaio
+        # nostro, e dirgli di cercare una riga che non ha mai scritto vuol dire
+        # mandarlo a caccia al posto di chi ha sbagliato.
+        translation_key=(
+            "plancia_non_registrabile" if in_yaml else "plancia_senza_elenco_plance"
+        ),
+        translation_placeholders={"plancia": entry.title or "DashboardModern"},
+    )
+
+
+def _togli_lavviso(hass: HomeAssistant, entry_id: str) -> None:
+    """Quando torna a funzionare, l'avviso se ne va da solo.
+
+    Un avviso che resta acceso dopo che il problema e' passato insegna a
+    ignorare gli avvisi.
+    """
+    from homeassistant.helpers import issue_registry as ir
+
+    ir.async_delete_issue(hass, DOMAIN, _avviso_della_compagna(entry_id))
+
+
+async def _ensure_companion_dashboard(hass: HomeAssistant, entry_id: str) -> bool:
+    """Crea e riempie la dashboard di appoggio di questa plancia.
+
+    E' quella che permette di scegliere la plancia come dashboard predefinita:
+    Home Assistant lascia scegliere una dashboard Lovelace, non un pannello
+    personalizzato. Sta fuori dalla barra laterale — nella barra c'e' gia' il
+    pannello — e porta dentro una card sola.
+
+    Se Lovelace non e' ancora in piedi non si insiste: si riprova quando lo e'.
+    """
+    from .config_flow import OPTION_ADMIN_ONLY, OPTION_REGISTER_LOVELACE
+
+    entry = hass.config_entries.async_get_entry(entry_id)
+    if entry is None:
+        return False
+    if not entry.options.get(OPTION_REGISTER_LOVELACE, True):
+        # Spento apposta: e' una scelta, non un guasto. Si dice piano, perche'
+        # chi lo ha spento sa perche' — ma si dice, perche' e' la prima cosa
+        # da guardare quando la plancia non compare fra le predefinite.
+        _LOGGER.debug(
+            "La dashboard di appoggio di %s non si crea: l'opzione «Registra "
+            "come plancia di Home Assistant» e' spenta nelle opzioni della voce",
+            entry.title or entry_id,
+        )
+        _togli_lavviso(hass, entry_id)
+        return False
+
+    collezione, plance, modo, dentro = _plance_di_lovelace(hass)
+    if collezione is None or plance is None:
+        # Qui si rinunciava in silenzio, e il silenzio e' il difetto.
+        #
+        # «Dopo installazione, fatta due volte, non riesco a visualizzare la
+        # dashboard nel menu plance, flag registra come plancia HA attivo»
+        # (#499). Da fuori non c'e' niente da guardare: nessuna riga nel
+        # registro, nessun avviso, e la plancia semplicemente non c'e'. Chi
+        # segnala reinstalla — due volte — perche' e' l'unica cosa che gli
+        # resta da provare, e reinstallare non cambia niente.
+        #
+        # Detto, pero', va detto quello che si SA. Prima qui c'era scritto
+        # «succede quando Lovelace e' in modo YAML», e quella frase veniva
+        # stampata anche quando il modo YAML non c'entrava niente: chi la
+        # leggeva andava a cercare in `configuration.yaml` una riga che non
+        # aveva mai scritto. Il modo Lovelace lo dichiara — sta nello stesso
+        # posto da cui si legge il resto — quindi lo si guarda e si dice quello.
+        in_yaml = modo.lower() == "yaml"
+        _LOGGER.warning(
+            "La dashboard di appoggio di %s non si puo' creare: Lovelace "
+            "dichiara modo «%s» e non espone la collezione delle plance. "
+            "Quello che tiene in mano e': %s. %s La plancia resta raggiungibile "
+            "dalla barra laterale.",
+            entry.title or entry_id,
+            modo or "sconosciuto",
+            ", ".join(dentro) or "niente",
+            (
+                "In modo YAML le plance le scrive a mano chi ha la casa, e "
+                "questa va aggiunta li'."
+                if in_yaml
+                else "Il modo non e' YAML, quindi una plancia si potrebbe "
+                "creare: l'elenco non e' dove lo cerchiamo. Questa riga dice "
+                "cosa c'era al suo posto — riportala nella segnalazione."
+            ),
+        )
+        _avvisa_che_manca(hass, entry, in_yaml)
+        return False
+    _togli_lavviso(hass, entry_id)
+
+    url_path = _lovelace_url_path(entry)
+    titolo = entry.title or "DashboardModern"
+    solo_admin = bool(entry.options.get(OPTION_ADMIN_ONLY, False))
+    try:
+        if _la_compagna_e_gia_registrata(collezione, plance, url_path):
+            await _aggiorna_scheda_compagna(collezione, url_path, titolo, solo_admin)
+        elif not await _nasce_la_compagna(
+            collezione, plance, url_path, titolo, solo_admin
+        ):
+            return False
+        # La scheda dice «fuori dalla barra»; qui si guarda se la barra e'
+        # d'accordo. Sono due posti diversi, e il secondo e' quello che si vede.
+        _fuori_dalla_barra(hass, url_path)
+        magazzino = await _magazzino_della_compagna(plance, url_path)
+        if magazzino is None:
+            # Una dashboard che c'e' ma non si riesce a riempire e' peggio di
+            # una che non c'e': Home Assistant la apre e risponde «Errore di
+            # configurazione». Lo si dice forte, invece di lasciarla muta.
+            _LOGGER.error(
+                "La dashboard di appoggio %s esiste ma Lovelace non ne espone "
+                "il magazzino: resterebbe vuota, e chi la mette come "
+                "predefinita vedrebbe «Errore di configurazione»",
+                url_path,
+            )
+            return False
+        vista = _companion_view(
+            entry, _config_profile(hass, entry), _entry_is_primary(hass, entry)
+        )
+        if await _la_compagna_e_gia_cosi(magazzino, vista):
+            return True
+        _LOGGER.info(
+            "Rimetto a posto la vista della dashboard di appoggio %s", url_path
+        )
+        await magazzino.async_save({"views": [vista]})
+        if not await _la_compagna_e_piena(magazzino):
+            _LOGGER.error(
+                "La dashboard di appoggio %s risulta vuota subito dopo averla "
+                "scritta: chi la apre vedrebbe «Errore di configurazione»",
+                url_path,
+            )
+            return False
+    except Exception:  # noqa: BLE001 - una dashboard in meno non ferma la plancia
+        _LOGGER.warning(
+            "Non sono riuscito a preparare la dashboard di appoggio %s",
+            url_path,
+            exc_info=True,
+        )
+        return False
+    return True
+
+
+async def _spazza_le_orfane_se_lovelace_c_e(hass: HomeAssistant, entry_id: str) -> int:
+    """Manda via le compagne orfane, se Lovelace e' in piedi e le espone.
+
+    Si chiama quando Lovelace ha finito di alzarsi, quindi l'ascoltatore della
+    collezione ha gia' girato e i magazzini ci sono: e' quello che serve per
+    poter guardare DENTRO una dashboard prima di cancellarla.
+
+    La compagna di questa voce si risparmia sempre: e' quella che si e' appena
+    preparata.
+    """
+    collezione, plance, _modo, _dentro = _plance_di_lovelace(hass)
+    if collezione is None or plance is None:
+        return 0
+    entry = hass.config_entries.async_get_entry(entry_id)
+    try:
+        return await _spazza_le_compagne_orfane(
+            hass,
+            collezione,
+            plance,
+            tranne=_lovelace_url_path(entry) if entry is not None else "",
+        )
+    except Exception:  # noqa: BLE001 - una pulizia mancata non ferma la plancia
+        _LOGGER.debug(
+            "La spazzata delle compagne orfane non e' riuscita", exc_info=True
+        )
+        return 0
+
+
+async def async_register_frontend(hass: HomeAssistant, entry_id: str) -> None:
+    """Register static assets, custom card and this plancia's sidebar panel."""
+    domain_data: dict[str, Any] = hass.data.setdefault(DOMAIN, {})
+    entry = hass.config_entries.async_get_entry(entry_id)
+    if entry is None:
+        return
+
+    asset_version = await hass.async_add_executor_job(_frontend_asset_version)
+    static_url_path = f"{STATIC_URL_PATH}/{asset_version}"
+    # Anche l'elenco delle plance legacy e' una lettura del disco (`is_dir`,
+    # `glob`): si fa qui, fuori dal loop, e si passa giu' gia' letto.
+    variants = await hass.async_add_executor_job(legacy_variants)
+
+    await _ensure_static_registered(hass, domain_data, static_url_path)
+    _ensure_dashboard_card_registered(hass, domain_data, static_url_path)
+
+    paths: dict[str, str] = domain_data.setdefault(DATA_PANEL_PATHS, {})
+    taken = {p for eid, p in paths.items() if eid != entry_id}
+    new_path = _panel_url_path(hass, entry, taken)
+    old_path = paths.get(entry_id)
+    if old_path and old_path != new_path:
+        _remove_panel(hass, old_path)
+    _register_or_update_panel(
+        hass,
+        entry,
+        new_path,
+        update=old_path == new_path,
+        asset_version=asset_version,
+        static_url_path=static_url_path,
+        variants=variants,
+    )
+    paths[entry_id] = new_path
+
+    # La dashboard di appoggio si prepara quando Lovelace ha finito di alzarsi,
+    # sempre — non solo quando il primo tentativo e' andato male.
+    #
+    # Lovelace, mentre parte, mette in `hass.data` la collezione delle dashboard
+    # PRIMA di leggere dal disco le schede che ci sono. Chi guarda in quel
+    # momento — e un'integrazione che parte insieme a lui ci guarda davvero —
+    # trova una collezione vuota, crede che la dashboard di appoggio non ci sia
+    # e la crea: sullo stesso indirizzo dove c'e' gia', e l'esito dipende da chi
+    # arriva primo. Il tentativo subito non serviva a niente che l'attesa non
+    # faccia meglio: `async_when_setup` chiama indietro appena Lovelace ha
+    # finito, e subito se aveva gia' finito.
+    from homeassistant.setup import async_when_setup
+
+    module_url = _dashboard_card_module_url(asset_version)
+
+    async def _quando_lovelace(hass: HomeAssistant, _componente: str) -> None:
+        # Prima la card fra le risorse, poi la dashboard che la contiene: chi
+        # apre subito dopo trova tutt'e due, e in quest'ordine non c'e' un
+        # istante in cui la dashboard esiste e il suo elemento no.
+        await _ensure_card_resource_registered(hass, module_url)
+        await _ensure_companion_dashboard(hass, entry_id)
+        # E poi si spazza, QUI e non dentro la preparazione della compagna.
+        #
+        # Li' dentro non ci si arriva quando «Registra come plancia di Home
+        # Assistant» e' spento: si torna indietro al controllo dell'opzione. Ma
+        # chi ha spento quell'opzione l'ha spenta magari proprio per via dei
+        # doppioni, e le orfane gia' accumulate resterebbero in elenco per
+        # sempre — cioe' la spazzata non arriverebbe a chi ne ha piu' bisogno.
+        # Togliere quello che abbiamo lasciato in giro non dipende dal fatto
+        # che adesso se ne debba creare una.
+        await _spazza_le_orfane_se_lovelace_c_e(hass, entry_id)
+
+    async_when_setup(hass, "lovelace", _quando_lovelace)
+
+
+async def async_ripara_dashboard_compagna(hass: HomeAssistant, entry_id: str) -> bool:
+    """Rimetti a posto la dashboard di appoggio adesso, senza aspettare un riavvio.
+
+    «Plancia preferita da sempre errore quando si apre app.»
+
+    La vista della dashboard di appoggio la scrive l'integrazione, e finora la
+    scriveva in un momento solo: quando Home Assistant si avvia. Va bene finche'
+    quello che c'e' scritto e' giusto — ma quando non lo e' (una versione vecchia
+    che ci aveva messo un filtro, una scrittura andata male, una dashboard nata
+    vuota), chi la tiene come predefinita resta davanti alla schermata rossa fino
+    al riavvio successivo. E un aggiornamento della plancia che non riavvia Home
+    Assistant — il caso normale, se si dice di no alla richiesta di riavvio —
+    lascia in piedi la vista sbagliata insieme al codice nuovo che la
+    correggerebbe.
+
+    C'e' pero' un momento in cui si sa di sicuro che qualcuno sta guardando
+    questa plancia, e per giunta e' la strada che ha sempre funzionato: quando
+    la si apre dalla barra laterale e chiede la sua configurazione. Da li' si
+    ripara. Chi ha la dashboard rotta la aggiusta facendo la cosa che gia'
+    faceva per aggirarla — aprirla dal menu — e non deve sapere niente di
+    niente.
+
+    Costa una rilettura di un magazzino piccolo, che Home Assistant si tiene in
+    memoria: se quello che c'e' scritto e' gia' giusto non si tocca niente.
+    """
+    try:
+        return await _ensure_companion_dashboard(hass, entry_id)
+    except Exception:  # noqa: BLE001 - una riparazione mancata non ferma la plancia
+        _LOGGER.debug(
+            "Riparazione della dashboard di appoggio non riuscita per %s",
+            entry_id,
+            exc_info=True,
+        )
+        return False
+
+
+async def async_dimentica_la_compagna(hass: HomeAssistant, entry: Any) -> bool:
+    """Togli la dashboard di appoggio di una plancia che se ne va davvero.
+
+    Toglievamo il pannello e basta, e la dashboard restava sul disco per
+    sempre: chi reinstalla o rinomina se ne accumulava una per volta, col nome
+    che la plancia aveva quel giorno. In elenco se ne vedono quattro dove di
+    plance ce n'e' una, e una di loro finisce anche nella barra laterale
+    accanto a quella vera.
+
+    Si chiama quando la voce viene TOLTA, non quando si scarica: un riavvio di
+    Home Assistant scarica tutto, e cancellare li' vorrebbe dire buttare la
+    dashboard di una plancia che sta per ritornare.
+
+    E si guarda DENTRO prima di cancellare, come fa la spazzata: l'indirizzo
+    e' prevedibile, quindi qualcuno puo' averci messo una dashboard sua — per
+    esempio chi ha spento «Registra come plancia di Home Assistant» e se l'e'
+    scritta a mano. Il nome non e' una prova di proprieta'. Si toglie solo cio'
+    che dentro porta la card di QUESTA plancia, o cio' che dentro non porta
+    niente: una dashboard mai riempita all'indirizzo che scriviamo noi e' la
+    nostra nata male, e lasciarla vorrebbe dire lasciare in elenco proprio il
+    doppione che si e' venuti a togliere.
+    """
+    collezione, plance, _modo, _dentro = _plance_di_lovelace(hass)
+    if collezione is None or plance is None:
+        return False
+    url_path = _lovelace_url_path(entry)
+    try:
+        sua = await _di_chi_e_la_compagna(plance, url_path)
+        if sua is None or (sua and sua != entry.entry_id):
+            _LOGGER.info(
+                "La dashboard %s non risulta la compagna di questa plancia: la "
+                "lascio dov'e'",
+                url_path,
+            )
+            return False
+        if not await _togli_la_compagna(collezione, url_path):
+            return False
+    except Exception:  # noqa: BLE001 - una dashboard di troppo non ferma la rimozione
+        _LOGGER.warning(
+            "Non sono riuscito a togliere la dashboard di appoggio %s",
+            url_path,
+            exc_info=True,
+        )
+        return False
+    _LOGGER.info("Tolta la dashboard di appoggio %s con la sua plancia", url_path)
+    return True
+
+
+async def async_dimentica_la_card(hass: HomeAssistant) -> bool:
+    """Toglie la card da Lovelace quando l'ultima plancia se ne va.
+
+    La risorsa di Lovelace sta sul DISCO, e non se ne va spegnendo
+    l'integrazione: chi toglie DashboardModern si ritroverebbe OGNI dashboard
+    di casa a chiedere, a ogni apertura, un modulo che non c'e' piu' — un 404
+    per volta — e una riga di troppo nell'elenco delle risorse, da cancellare a
+    mano sapendo che esiste. Il modulo scritto nell'avvio della pagina invece
+    vive in memoria e sparisce al riavvio; si toglie lo stesso, cosi' non resta
+    nemmeno fino a li'.
+
+    Si chiama quando la voce viene tolta DAVVERO e non ne resta nessun'altra.
+    Scaricare una plancia non e' toglierla: un riavvio di Home Assistant scarica
+    tutto, e una pulizia allo scarico vorrebbe dire ripubblicare la card a ogni
+    avvio come se fosse nuova.
+    """
+    tolta = False
+    domain_data: dict[str, Any] = hass.data.setdefault(DOMAIN, {})
+    module_url = domain_data.pop(DATA_DASHBOARD_CARD_REGISTERED, None)
+    if module_url:
+        try:
+            from homeassistant.components import frontend
+
+            frontend.remove_extra_js_url(hass, module_url)
+            tolta = True
+        except Exception:  # noqa: BLE001 - un modulo di troppo se ne va al riavvio
+            _LOGGER.debug("Non ho potuto togliere %s dai moduli extra", module_url)
+
+    risorse = _risorse_di_lovelace(hass)
+    elenca = getattr(risorse, "async_items", None)
+    cancella = getattr(risorse, "async_delete_item", None)
+    if risorse is None or elenca is None or cancella is None:
+        return tolta
+    try:
+        if not getattr(risorse, "loaded", False):
+            await risorse.async_load()
+            risorse.loaded = True
+        nostra = _la_nostra_risorsa(elenca())
+        if nostra is None:
+            return tolta
+        await cancella(nostra["id"])
+        _LOGGER.info(
+            "Ho tolto la card %s dalle risorse di Lovelace: non resta nessuna plancia",
+            nostra.get("url"),
+        )
+        return True
+    except Exception:  # noqa: BLE001 - una riga di troppo non rompe niente
+        _LOGGER.warning(
+            "Non sono riuscito a togliere la card dalle risorse di Lovelace: "
+            "la riga resta nell'elenco e va cancellata a mano",
+            exc_info=True,
+        )
+        return tolta
+
+
+async def async_unregister_frontend_entry(hass: HomeAssistant, entry_id: str) -> None:
+    """Remove this plancia's panel after its entry unloads."""
+    domain_data: dict[str, Any] | None = hass.data.get(DOMAIN)
+    if domain_data is None:
+        return
+    paths: dict[str, str] = domain_data.get(DATA_PANEL_PATHS, {})
+    path = paths.pop(entry_id, None)
+    if path:
+        _remove_panel(hass, path)

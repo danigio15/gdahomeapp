@@ -59,6 +59,21 @@ export function percorsoDelFlusso(entity) {
 }
 
 /**
+ * Il percorso dell'istantanea di un'entità, da far firmare quando manca la foto.
+ *
+ * `entity_picture` non è la telecamera: è una comodità che Home Assistant
+ * pubblica quando un'immagine ce l'ha già in mano. Una telecamera in cloud —
+ * Arlo, Ring — quel campo lo riempie soltanto dopo il primo scatto: appena
+ * riavviato Home Assistant, o con la telecamera che dorme da un po', è vuoto.
+ * La porta però è aperta lo stesso, ed è la stessa: si chiama per nome invece
+ * che per foto, e il gettone lo mette la firma del socket.
+ */
+export function percorsoDellIstantanea(entity) {
+  const nome = pulito(entity);
+  return nome ? `${PORTA_ISTANTANEA}${encodeURIComponent(nome)}` : "";
+}
+
+/**
  * Se un'immagine sta già mostrando questo flusso.
  *
  * Un MJPEG è una risposta che non finisce mai: riassegnare `src` allo stesso

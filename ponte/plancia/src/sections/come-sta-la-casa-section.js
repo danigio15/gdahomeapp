@@ -286,11 +286,18 @@ function facciaDellaPastiglia(pastiglia) {
 }
 
 /* Una pastiglia nuova, ancora senza parole: le mette `vestiLaPastiglia`. */
-function nuovaPastiglia(chiave) {
+function nuovaPastiglia(pastiglia) {
   const nodo = doc.createElement("button");
   nodo.type = "button";
   nodo.className = "dm-casa-pastiglia";
-  nodo.dataset.dmCasa = chiave;
+  /* Due nomi, e servono tutti e due. `data-dm-casa` dice DI COSA parla la
+   * pastiglia — lo leggono il tocco, che apre la cosa giusta, e lo stile, che
+   * su «posta» accende l'animazione dello sportello. `data-dm-voce` dice QUALE
+   * pastiglia e': con due bidoni fuori stasera ci sono due pastiglie che
+   * parlano di rifiuti, e riconoscerle dalla sola chiave vorrebbe dire
+   * scambiarle a ogni giro (#567). */
+  nodo.dataset.dmCasa = pastiglia.chiave;
+  nodo.dataset.dmVoce = pastiglia.id || pastiglia.chiave;
   nodo.innerHTML = `<span class="dm-casa-chip" aria-hidden="true"></span>
     <span class="dm-casa-testo"><b class="dm-casa-testa"></b><small class="dm-casa-coda"></small></span>`;
   return nodo;
@@ -338,13 +345,14 @@ function vestiLaPastiglia(nodo, pastiglia) {
  */
 function aggiornaLePastiglie(riga, pastiglie) {
   const vive = new Map();
-  for (const nodo of riga.querySelectorAll(":scope > [data-dm-casa]"))
-    vive.set(nodo.dataset.dmCasa, nodo);
+  for (const nodo of riga.querySelectorAll(":scope > [data-dm-voce]"))
+    vive.set(nodo.dataset.dmVoce, nodo);
   let posto = riga.firstElementChild;
   for (const pastiglia of pastiglie) {
-    const gia = vive.get(pastiglia.chiave);
-    vive.delete(pastiglia.chiave);
-    const nodo = gia || nuovaPastiglia(pastiglia.chiave);
+    const voce = pastiglia.id || pastiglia.chiave;
+    const gia = vive.get(voce);
+    vive.delete(voce);
+    const nodo = gia || nuovaPastiglia(pastiglia);
     vestiLaPastiglia(nodo, pastiglia);
     if (nodo === posto) posto = posto.nextElementSibling;
     else riga.insertBefore(nodo, posto);
@@ -358,7 +366,7 @@ function firmaDellaRiga(pastiglie) {
   return pastiglie
     .map((pastiglia) => {
       const { testa, coda } = paroleDellaPastiglia(pastiglia);
-      return `${pastiglia.chiave}~${pastiglia.icona}~${pastiglia.tinta}~${testa}~${coda}~${Boolean(pastiglia.avviso)}`;
+      return `${pastiglia.id || pastiglia.chiave}~${pastiglia.icona}~${pastiglia.tinta}~${testa}~${coda}~${Boolean(pastiglia.avviso)}`;
     })
     .join("|");
 }
@@ -481,6 +489,11 @@ export function disegnaComeStaLaCasa(modelli, states) {
     barra: config,
     posta,
     misure: leMisureAdesso(config, states || {}),
+    /* L'ora di adesso: serve a chi ha chiesto che dopo una certa ora la
+     * pastiglia dei rifiuti passi al ritiro di domani (#565). L'orologio lo
+     * legge la sezione, come tutto quello che viene da fuori: il nucleo fa i
+     * conti su quello che gli si porta. */
+    adesso: new Date(),
   });
   /* Quello che la barra sa adesso lo sa anche l'elenco aperto: e' lo stesso
    * conto, e rifarlo per conto suo vorrebbe dire due conti sulla stessa casa. */
@@ -815,6 +828,35 @@ function campoDellaMisura(chiave, valore, etichetta, esempio) {
       )}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>`;
 }
 
+/* L'ora dopo la quale la pastiglia dei rifiuti guarda a domani (#565).
+ *
+ * Un menu di ore e non una casella libera: la domanda ha ventiquattro risposte
+ * possibili e nessuna da scrivere a mano, e una casella libera qui vorrebbe
+ * dire accettare «alle 8 di sera» e poi doverlo interpretare. La prima voce e'
+ * quella di sempre, ed e' quella di serie. */
+function campoDellOraDelRitiro(scelta) {
+  const ore = Array.from({ length: 24 }, (_, ora) => {
+    const valore = String(ora);
+    return `<option value="${valore}"${scelta === valore ? " selected" : ""}>${esc(
+      `${String(ora).padStart(2, "0")}:00`,
+    )}</option>`;
+  }).join("");
+  return `<label class="ed-slot dm-casa-ed-campo"><span class="ed-slot-lbl">${esc(
+    t("Dopo quest'ora, il ritiro di domani", "After this hour, tomorrow's collection"),
+  )}</span>
+      <select class="ed-input" data-dm-casa-ritiro>
+        <option value=""${scelta ? "" : " selected"}>${esc(
+          t("Mai: resta il ritiro più vicino", "Never: keep the nearest collection"),
+        )}</option>${ore}
+      </select>
+      <small>${esc(
+        t(
+          "Il bidone si mette fuori la sera prima. Scegli l'ora dopo la quale la pastiglia smette di annunciare il ritiro di oggi — ormai passato — e annuncia quello di domani. Se domani non passa nessuno, la pastiglia non compare.",
+          "The bin goes out the evening before. Pick the hour after which the pill stops announcing today's collection — by then already done — and announces tomorrow's instead. If nobody comes tomorrow, the pill does not show up.",
+        ),
+      )}</small></label>`;
+}
+
 function pannelloMarkup() {
   const config = configurazione();
   const nomi = NOMI_DELLE_VOCI();
@@ -836,6 +878,7 @@ function pannelloMarkup() {
       ),
     )}</div>
     <div class="dm-casa-ed-list">${righe}</div>
+    ${campoDellOraDelRitiro(config.rifiutiDalleOre)}
     <label class="ed-slot dm-casa-ed-campo"><span class="ed-slot-lbl">${esc(
       t("Sensore della cassetta della posta", "Mailbox contact sensor"),
     )}</span>
@@ -944,8 +987,12 @@ function onClickPannello(event) {
   const misure = {};
   for (const casella of pannello.querySelectorAll("[data-dm-casa-misura]"))
     misure[clean(casella.dataset.dmCasaMisura)] = clean(casella.value);
+  const rifiutiDalleOre = clean(pannello.querySelector("[data-dm-casa-ritiro]")?.value);
   const prima = configurazione();
-  writeJsonIfChanged(CHIAVE_BARRA, normalizzaBarra({ voci, posta, ...misure }));
+  writeJsonIfChanged(
+    CHIAVE_BARRA,
+    normalizzaBarra({ voci, posta, rifiutiDalleOre, ...misure }),
+  );
   /* Cassetta cambiata: la memoria di quella di prima non vuol dire piu'
    * niente, e tenerla vorrebbe dire annunciare come «posta arrivata» il primo
    * scatto del contatto nuovo. Si riparte dal primo sguardo. */

@@ -173,6 +173,7 @@ import {
   normalizzaRifiuti,
   rifiutiConfigurati,
 } from "../core/rifiuti-model.js";
+import { ingressoInPlancia } from "./citofono-section.js";
 import { nomeDellaRiga, parolaDelQuando } from "./rifiuti-section.js";
 import { disegnoDelBidone } from "../core/disegni-rifiuti.js";
 import { CHIAVE_VMC, entitaDellaVmc, letturaVmc, vmcDisegnabili, vmcParla } from "../core/vmc-model.js";
@@ -210,11 +211,7 @@ import {
   contoDellaPresenza,
   presenzaDiCasa,
 } from "../core/presenza-in-casa.js";
-import {
-  CHIAVE_CITOFONO,
-  lettureDellIngresso,
-  riassuntoDellIngresso,
-} from "../core/citofono-e-posta.js";
+import { riassuntoDellIngresso } from "../core/citofono-e-posta.js";
 import {
   CHIAVE_STAMPANTI,
   lettureDelleStampanti,
@@ -3428,6 +3425,46 @@ const CASELLE_MINIPC = Object.freeze([
   },
 ]);
 
+/* Il numero con la sua unita', e l'unita' la dichiara il sensore.
+ *
+ * Le caselle qui sopra si portano dietro l'unita' che si ASPETTANO — «%» per la
+ * RAM, « Mb/s» per la banda — e la scrivevano addosso al numero senza guardare
+ * cosa fosse quel numero. Chi la RAM la misura in megabyte si vedeva «5928%»
+ * nella tessera mentre la sua sezione, che l'unita' la legge, diceva 5,8 GB:
+ * lo stesso sensore raccontato in due modi a mezzo schermo di distanza, e uno
+ * dei due era una percentuale di niente.
+ *
+ * Dice il sensore, quindi. L'unita' della casella resta il ripiego per chi non
+ * ne dichiara nessuna — la RAM in percentuale senza `unit_of_measurement` e' il
+ * caso normale — e le cifre restano quelle della casella finche' l'unita' e'
+ * quella prevista: sono tarate su quella. Quando invece il sensore parla
+ * d'altro, la tabella non sa piu' di cosa, e il numero si scrive com'e': intero
+ * se e' intero, col decimo se ce l'ha.
+ *
+ * La percentuale sta appiccicata al numero, tutto il resto vuole il suo spazio:
+ * «43%» e «5,8 GB». */
+function misuraDelMiniPC(casella, dato, states) {
+  const attesa = clean(casella.unita);
+  const sua = clean(states?.[dato.entity]?.attributes?.unit_of_measurement);
+  const unita = sua || attesa;
+  const numero = Number(dato.value);
+  const cifre = !sua || sua === attesa ? casella.cifre : Number.isInteger(numero) ? 0 : 1;
+  const scritto = formatNumber(dato.value, cifre);
+  if (!unita) return scritto;
+  return unita === "%" ? `${scritto}%` : `${scritto} ${unita}`;
+}
+
+/* Se una casella sta davvero misurando una percentuale.
+ *
+ * La ghiera della tessera e il numero grande sono un tanto per cento: darglieli
+ * da una lettura in megabyte vorrebbe dire una ghiera piena al 5928%. Un
+ * sensore che non dichiara l'unita' resta una percentuale, che e' quello che
+ * queste caselle hanno sempre significato. */
+function eUnaPercentuale(dato, states) {
+  const sua = clean(states?.[dato.entity]?.attributes?.unit_of_measurement);
+  return !sua || sua === "%";
+}
+
 /* La tessera del MiniPC.
  *
  * «Nella sezione widget manca completamente minipc»: la scheda aveva la sua
@@ -3459,7 +3496,13 @@ export function minipcModel(states) {
     }
     if (dato.value == null) continue;
     visti.add(dato.entity);
-    if (casella.quota && carico === null && casella.ref === "dm.server_cpu") carico = dato.value;
+    if (
+      casella.quota &&
+      carico === null &&
+      casella.ref === "dm.server_cpu" &&
+      eUnaPercentuale(dato, states)
+    )
+      carico = dato.value;
     rows.push({
       glyph: casella.glyph,
       name: t(casella.it, casella.en),
@@ -3471,7 +3514,7 @@ export function minipcModel(states) {
       chiave: casella.chiave || "",
       entity: dato.entity,
       raw: dato.value,
-      value: `${formatNumber(dato.value, casella.cifre)}${casella.unita}`,
+      value: misuraDelMiniPC(casella, dato, states),
     });
   }
   if (!rows.length) return null;
@@ -3978,9 +4021,22 @@ function presenzaModel(states) {
  * suona è adesso, la posta può aspettare — ed è l'unico caso in cui questa
  * tessera si accende.
  */
-function citofonoModel(states) {
+export function citofonoModel(states) {
   const fuori = widgetExcludedEntities("citofono");
-  const letture = lettureDellIngresso(readJson(CHIAVE_CITOFONO, {}), states);
+  /* Le letture le chiede alla sezione, non se le rifa'.
+   *
+   * Qui c'era `lettureDellIngresso(configurazione, states)` — due parti su
+   * quattro. Le altre due sono le memorie: quando si e' detto «l'ho presa», e
+   * quando la posta e' stata vista arrivare. Senza quelle la tessera non sapeva
+   * niente del tasto «L'ho presa»: la sezione passava a «vuota» e la tessera
+   * continuava a dire «1 · C'e' posta in cassetta», sulla stessa casa e nello
+   * stesso momento. Segnalato con le due fotografie una accanto all'altra, che
+   * e' il modo piu' chiaro in cui una cosa del genere si vede.
+   *
+   * Due letture dello stesso fatto, e una sola sapeva la verita': lo stesso
+   * errore della Sicurezza (#547) e dei carichi. Quindi non due letture: una
+   * sola, e a farla e' chi ha quelle memorie in mano. */
+  const letture = ingressoInPlancia(states);
   const citofoni = letture.citofoni.filter((voce) =>
     widgetIncludes(voce.campanello || voce.apri, fuori),
   );

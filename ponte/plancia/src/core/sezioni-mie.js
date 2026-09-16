@@ -18,6 +18,7 @@
  * raccoglitore delle traduzioni guarda.
  */
 
+import { siPuoAbilitare } from "./comandi-accanto.js";
 import { STATI_ACCESI } from "./stato-acceso.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
@@ -176,6 +177,11 @@ export function letturaDellaVoce(voce, states = {}, resolve = (valore) => valore
     unita: pulito(stato?.attributes?.unit_of_measurement),
     stato: muto ? "" : pulito(stato?.state),
     comandabile: COMANDABILI.has(dominio),
+    /* Un'automazione ha due gesti: si abilita e si fa partire (#552). Chi
+     * disegna le da' una levetta E un tasto; per tutte le altre la levetta
+     * basta, ed e' la levetta di sempre. Quali siano lo sa
+     * `core/comandi-accanto.js`, che dei verbi e' il padrone. */
+    avviabile: siPuoAbilitare(entity),
   };
 }
 

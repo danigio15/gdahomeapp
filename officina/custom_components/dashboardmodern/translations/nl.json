@@ -1,0 +1,69 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nieuw DashboardModern-paneel",
+        "data": {
+          "name": "Naam van het paneel"
+        },
+        "data_description": {
+          "name": "Verschijnt in de zijbalk. Je kunt meerdere panelen toevoegen, elk met een eigen configuratie."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Toegang en koppeling met dashboards",
+        "description": "Kies welke aangemelde gebruikers dit paneel in de DashboardModern-interface te zien krijgen. Het is een zichtbaarheidsfilter in de frontend en vervangt de rechten van Home Assistant niet. Door het als Lovelace-dashboard te registreren verschijnt DashboardModern bij Instellingen → Dashboards.",
+        "data": {
+          "allowed_users": "Toegestane gebruikers",
+          "register_lovelace_dashboard": "Ook registreren als Home Assistant-dashboard",
+          "admin_only": "Alleen zichtbaar voor beheerders",
+          "check_updates": "Controleren op nieuwe versies",
+          "tickets_enabled": "Meldingen vanuit het dashboard",
+          "chat_enabled": "Ondersteuningschat",
+          "chat_console_key": "Sleutel van de ondersteuningsconsole"
+        },
+        "data_description": {
+          "allowed_users": "Alleen een zichtbaarheidsfilter van de interface. Voor gegevens en services gelden nog steeds de rechten van Home Assistant.",
+          "register_lovelace_dashboard": "Het bijbehorende dashboard wordt aangemaakt wanneer Home Assistant start; daarmee kun je deze plancia als standaard kiezen. Uitgeschakeld blijft de plancia in de zijbalk, maar verschijnt hij niet bij de standaarddashboards.",
+          "admin_only": "Ingebouwd filter van Home Assistant; het wint voor accounts zonder beheerdersrechten.",
+          "check_updates": "Vraagt GitHub elk half uur of er een nieuwere release is en toont die bij Instellingen → Updates. Zet het uit zodat het paneel helemaal niet het internet op gaat; het dashboard heeft het nooit nodig.",
+          "tickets_enabled": "Laat iedereen die het dashboard gebruikt een fout melden, een idee opperen of hulp vragen zonder het te verlaten. De melding wordt een openbaar issue op GitHub, op eigen naam — hetzelfde account dat HACS al vroeg. Uitgeschakeld verlaat er niets het huis.",
+          "chat_enabled": "Een privégesprek met degene die het dashboard onderhoudt, om hulp te vragen zonder een openbaar issue te openen en zonder enig account. Het loopt via een eigen dienst, niet via GitHub. Uitgeschakeld verlaat er niets het huis.",
+          "chat_console_key": "Laat hem leeg. Hij is voor ÉÉN installatie ter wereld — die van degene die het dashboard onderhoudt — om ieders gesprekken te lezen en te beantwoorden. Het is dezelfde sleutel die bij de secrets van de relay is gezet."
+        }
+      }
+    }
+  },
+  "issues": {
+    "riavvio_richiesto": {
+      "title": "Herstart om de DashboardModern-update te voltooien",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Home Assistant herstarten",
+            "description": "Versie {version} staat op de schijf. Herstart Home Assistant om deze te laden."
+          }
+        }
+      }
+    },
+    "plancia_non_registrabile": {
+      "title": "“{plancia}” kan niet als standaarddashboard worden gekozen",
+      "description": "Home Assistant houdt geen beschrijfbare lijst met dashboards bij: dat gebeurt als Lovelace in YAML-modus draait (lovelace: mode: yaml in je configuration.yaml). In die modus schrijf je de dashboards zelf, en dit moet daar met de hand worden toegevoegd. “{plancia}” blijft zoals altijd bereikbaar via de zijbalk: het is niet stuk, het kan zichzelf alleen niet registreren. Gebruik je geen YAML-modus, start Home Assistant opnieuw op en open deze pagina nogmaals."
+    },
+    "plancia_senza_elenco_plance": {
+      "title": "“{plancia}” kan niet als standaarddashboard worden gekozen",
+      "description": "Home Assistant stelt de dashboardlijst niet beschikbaar op de plek waar deze integratie hem zoekt. Het ligt niet aan de YAML-modus: jouw Lovelace draait in de normale modus, dus een dashboard zou prima aangemaakt kunnen worden — de lijst staat alleen niet waar wij kijken. Dit ligt aan ons, niet aan jouw configuratie: er valt niets te zoeken in je configuration.yaml. “{plancia}” blijft gewoon bereikbaar via de zijbalk: het is niet kapot, het kan zichzelf alleen niet als standaard registreren. In het logboek van Home Assistant staat een DashboardModern-regel met wat er in plaats van de lijst gevonden is: vermeld die in een melding, dan lossen we het op. Werkt het standaarddashboard intussen wel, dan is deze melding oud en kun je hem negeren."
+    }
+  },
+  "entity": {
+    "switch": {
+      "presenza_simulata": {
+        "name": "Aanwezigheidssimulatie"
+      }
+    }
+  }
+}

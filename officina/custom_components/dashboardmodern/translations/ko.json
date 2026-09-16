@@ -1,0 +1,69 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "새 DashboardModern 패널",
+        "data": {
+          "name": "패널 이름"
+        },
+        "data_description": {
+          "name": "사이드바에 나타납니다. 패널은 여러 개 추가할 수 있고, 각각 자체 설정을 가집니다."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "접근 권한과 대시보드 연동",
+        "description": "DashboardModern 화면에서 이 패널을 볼 로그인 사용자를 고르세요. 프런트엔드의 표시 필터이며 Home Assistant 권한을 대신하지 않습니다. Lovelace에 등록하면 DashboardModern이 설정 → 대시보드에 나타납니다.",
+        "data": {
+          "allowed_users": "허용할 사용자",
+          "register_lovelace_dashboard": "Home Assistant 대시보드로도 등록",
+          "admin_only": "관리자에게만 표시",
+          "check_updates": "새 버전 확인",
+          "tickets_enabled": "대시보드에서 보내는 제보",
+          "chat_enabled": "지원 채팅",
+          "chat_console_key": "지원 콘솔 키"
+        },
+        "data_description": {
+          "allowed_users": "화면 표시 필터일 뿐입니다. 데이터와 서비스 접근은 여전히 Home Assistant 권한을 따릅니다.",
+          "register_lovelace_dashboard": "동반 대시보드는 Home Assistant가 시작할 때 만들어지며, 이 플란차를 기본으로 고를 수 있게 해 줍니다. 꺼 두면 플란차는 사이드바에 남지만 기본 대시보드 목록에는 나오지 않습니다.",
+          "admin_only": "Home Assistant 자체 필터입니다. 관리자가 아닌 계정에서는 이쪽이 우선합니다.",
+          "check_updates": "30분마다 GitHub에 새 릴리스가 있는지 물어보고 설정 → 업데이트에 표시합니다. 패널이 인터넷에 전혀 나가지 않게 하려면 끄세요. 대시보드 자체에는 필요하지 않습니다.",
+          "tickets_enabled": "대시보드를 쓰는 누구나 대시보드를 벗어나지 않고 결함을 알리거나, 제안하거나, 도움을 요청할 수 있게 합니다. 제보는 GitHub의 공개 이슈가 되며 본인 이름으로 열립니다 — HACS가 이미 요구한 바로 그 계정입니다. 끄면 집 밖으로 아무것도 나가지 않습니다.",
+          "chat_enabled": "대시보드를 관리하는 사람과의 비공개 대화입니다. 공개 이슈를 열지 않고, 계정도 없이 도움을 요청할 수 있습니다. GitHub이 아니라 전용 서비스를 거칩니다. 꺼두면 집 밖으로 아무것도 나가지 않습니다.",
+          "chat_console_key": "비워 두세요. 세상에 단 하나의 설치 — 대시보드를 관리하는 사람의 것 — 가 모두의 채팅을 읽고 답하기 위한 것입니다. 중계 서비스의 시크릿에 넣은 것과 같은 키입니다."
+        }
+      }
+    }
+  },
+  "issues": {
+    "riavvio_richiesto": {
+      "title": "DashboardModern 업데이트를 완료하려면 다시 시작하세요",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Home Assistant 다시 시작",
+            "description": "버전 {version}이(가) 디스크에 설치되었습니다. 불러오려면 Home Assistant를 다시 시작하세요."
+          }
+        }
+      }
+    },
+    "plancia_non_registrabile": {
+      "title": "“{plancia}”을(를) 기본 대시보드로 선택할 수 없습니다",
+      "description": "Home Assistant가 쓸 수 있는 대시보드 목록을 두고 있지 않습니다. Lovelace가 YAML 모드(configuration.yaml의 lovelace: mode: yaml)로 동작할 때 생기는 일입니다. 그 모드에서는 대시보드를 직접 작성하므로, 이것도 그곳에 손으로 추가해야 합니다. “{plancia}”은(는) 예전처럼 사이드바에서 열 수 있습니다. 고장난 것이 아니라 스스로 등록하지 못할 뿐입니다. YAML 모드를 쓰지 않는다면 Home Assistant를 다시 시작한 뒤 이 페이지를 다시 열어 보세요."
+    },
+    "plancia_senza_elenco_plance": {
+      "title": "「{plancia}」을(를) 기본 대시보드로 선택할 수 없습니다",
+      "description": "Home Assistant가 이 통합이 찾는 위치에 대시보드 목록을 제공하지 않고 있습니다. YAML 모드 때문이 아닙니다. 사용 중인 Lovelace는 일반 모드이므로 원래는 대시보드를 만들 수 있습니다 — 목록이 저희가 찾는 위치에 없을 뿐입니다. 설정이 아니라 저희 쪽 문제이므로 configuration.yaml에서 찾을 것은 없습니다. 「{plancia}」은(는) 예전처럼 사이드바에서 열 수 있습니다. 고장난 것이 아니라 스스로 기본으로 등록하지 못할 뿐입니다. Home Assistant 로그에 목록 대신 무엇을 찾았는지 알려 주는 DashboardModern 줄이 있습니다. 버그 신고에 그 줄을 함께 적어 주시면 고치겠습니다. 그사이 기본 대시보드가 잘 동작한다면 이 알림은 오래된 것이므로 무시해도 됩니다."
+    }
+  },
+  "entity": {
+    "switch": {
+      "presenza_simulata": {
+        "name": "재실 시뮬레이션"
+      }
+    }
+  }
+}

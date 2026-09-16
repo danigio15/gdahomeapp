@@ -1,5 +1,9 @@
 import { catalogLabel, ROOM_CATALOG, roomVisual } from "../core/personalization-catalog.js";
-import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
+import {
+  disegnoGiaNellaCasella,
+  haOggettoWidget,
+  oggettoWidget,
+} from "../core/oggetti-widget.js";
 import { clean, doc, esc, formatNumber, installStyle, root, t, wrapFunction } from "./shared.js";
 
 // Kept in the beta4 entry filename for release compatibility, but this module is
@@ -245,7 +249,9 @@ function syncConfigTabIcons() {
      * Energia e Azioni avevano lo stesso fulmine. */
     const marchio = disegno ? oggettoWidget(disegno) : "";
     if (marchio) {
-      if (iconNode.dataset.dmOggetto !== disegno) {
+      /* Come nella barra: conta cosa c'e' nella casella, non il ricordo di
+       * avercelo messo (#561). */
+      if (!disegnoGiaNellaCasella(iconNode, disegno)) {
         iconNode.innerHTML = marchio;
         iconNode.dataset.dmOggetto = disegno;
       }

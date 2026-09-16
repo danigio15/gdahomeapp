@@ -1,0 +1,190 @@
+#!/usr/bin/env node
+/* La passata alle «cose vecchie che fanno a cazzotti».
+ *
+ * Il difetto che torna piu' spesso in questa plancia ha sempre la stessa
+ * forma: DUE PROPRIETARI DELLA STESSA DECISIONE. Una regola scritta in due
+ * posti che non si parlano, e quello che vince dipende dall'ordine con cui
+ * capita di caricare i fogli o i moduli. Il margine laterale, il titolo delle
+ * Azioni rapide, le entita' dei widget, il disegno degli elettrodomestici: la
+ * stessa forma ogni volta.
+ *
+ * Questo giro cerca quella forma da solo, in tre modi. NON e' un cancello:
+ * stampa e basta, perche' non tutto quello che trova e' un difetto — un
+ * modulo che rifinisce quello prima di lui e' una scelta legittima, e
+ * distinguere le due cose vuole un paio d'occhi. Serve a non doverla rifare a
+ * mano la prossima volta.
+ *
+ *   node scripts/cerca-cose-vecchie.mjs
+ */
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
+
+const RADICE = "custom_components/dashboardmodern/frontend";
+
+function tuttiIFile(cartella, filtro, raccolti = []) {
+  for (const voce of readdirSync(cartella)) {
+    const percorso = join(cartella, voce);
+    if (statSync(percorso).isDirectory()) tuttiIFile(percorso, filtro, raccolti);
+    else if (filtro.test(voce)) raccolti.push(percorso);
+  }
+  return raccolti;
+}
+
+const moduli = tuttiIFile(join(RADICE, "src"), /\.js$/);
+const guscio = tuttiIFile(join(RADICE, "legacy"), /\.(js|css|html)$/);
+const prove = [
+  ...tuttiIFile(join(RADICE, "tests"), /\.js$/),
+  ...tuttiIFile(join(RADICE, "e2e"), /\.js$/),
+];
+const testo = new Map([...moduli, ...guscio, ...prove].map((p) => [p, readFileSync(p, "utf8")]));
+const corpo = [...testo.values()].join("\n");
+const nome = (p) => relative(RADICE, p);
+
+let quanti = 0;
+const titolo = (parola) => {
+  const riga = "-".repeat(72);
+  console.log(`\n${riga}\n${parola}\n${riga}`);
+};
+
+/* 1. Attributi cercati che nessuno scrive.
+ *
+ * Un selettore che non trova mai niente e' un giro che cammina sul documento
+ * per nulla — ed e' cosi' che si e' scoperto il rastrello dei carichi, che
+ * cercava e cancellava elementi che nessuno disegnava piu'. */
+titolo("1 - attributi cercati nei selettori e mai scritti da nessuno");
+const camel = (attributo) => {
+  const parti = attributo.slice(5).split("-");
+  return (
+    parti[0] +
+    parti
+      .slice(1)
+      .map((x) => x[0].toUpperCase() + x.slice(1))
+      .join("")
+  );
+};
+const scritti = new Set([...corpo.matchAll(/(?<!\[)\b(data-[a-z0-9-]+)/g)].map((m) => m[1]));
+const dataset = new Set(
+  [...corpo.matchAll(/dataset\[?\.?["'`]?([A-Za-z0-9_]+)/g)].map((m) => m[1]),
+);
+const cercati = new Map();
+for (const percorso of moduli)
+  for (const m of testo.get(percorso).matchAll(/\[(data-[a-z0-9-]+)[\]=^$*~|]/g))
+    cercati.set(m[1], (cercati.get(m[1]) || new Set()).add(nome(percorso)));
+for (const [attributo, dove] of [...cercati].sort()) {
+  if (scritti.has(attributo) || dataset.has(camel(attributo))) continue;
+  quanti += 1;
+  console.log(`  ${attributo.padEnd(34)} cercato in ${[...dove].join(", ")}`);
+}
+
+/* 2. Elenchi di casa d'altri nel guscio vendorizzato.
+ *
+ * Il guscio nasce dalla plancia di una casa sola, e qua e la' ne porta ancora
+ * i nomi: sei stanze scritte a mano, dieci entita' tradotte in «Condizionatore
+ * Salone». In una casa qualunque sono tasti che non comandano niente. */
+titolo("2 - nomi di stanze scritti a mano nel guscio, accanto a una casella");
+const STANZE = /(matrimoniale|cameretta|cucina|salone|bagno|studio|taverna|mansarda)/i;
+for (const percorso of guscio) {
+  if (!/\.js$/.test(percorso)) continue;
+  testo
+    .get(percorso)
+    .split("\n")
+    .forEach((riga, indice) => {
+      if (!/dm\.core_\d+|switch\.[a-z_]+/.test(riga) || !STANZE.test(riga)) return;
+      quanti += 1;
+      console.log(`  ${nome(percorso)}:${indice + 1}  ${riga.trim().slice(0, 88)}`);
+    });
+}
+
+/* 3. La stessa regola scritta col peso massimo da due moduli.
+ *
+ * Il peso massimo da due parti sulla stessa cosa vuol dire che vince chi
+ * carica per ultimo. Finche' i valori coincidono e' solo peso morto; quando
+ * sono diversi, il disegno dipende dall'ordine dei moduli invece che da una
+ * decisione.
+ *
+ * Qui si guarda il testo, e il testo da solo non sa chi carica per ultimo: per
+ * quello c'e' la prova nel browser (e2e/una-regola-un-padrone.spec.js), che
+ * apre la plancia e legge i fogli veri nell'ordine vero. Questa passata serve
+ * a vederlo prima, mentre si scrive. Due cose pero' le deve sapere anche lei,
+ * o grida al lupo: che una regola dentro @media non litiga con una fuori — e'
+ * un ramo che vale altrove — e che un elenco di selettori separati da virgola
+ * sono selettori diversi, non uno lungo. */
+titolo("3 - stessa regola, stesso ramo, peso massimo, valori diversi da due moduli");
+
+/* Un lettore che sa dove finisce un blocco: i fogli di questa plancia mettono
+ * decine di regole su una riga sola, e le @media a volte si aprono e si
+ * chiudono nella stessa. */
+function regoleDi(css) {
+  const fuori = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  const raccolte = [];
+  const rami = [];
+  let i = 0;
+  let testa = "";
+  while (i < fuori.length) {
+    const carattere = fuori[i];
+    if (carattere === "{") {
+      const nome = testa.trim();
+      testa = "";
+      if (nome.startsWith("@")) {
+        rami.push(nome.replace(/\s+/g, " "));
+      } else {
+        let profondita = 1;
+        let j = i + 1;
+        let corpo = "";
+        while (j < fuori.length && profondita > 0) {
+          if (fuori[j] === "{") profondita += 1;
+          else if (fuori[j] === "}") {
+            profondita -= 1;
+            if (profondita === 0) break;
+          }
+          corpo += fuori[j];
+          j += 1;
+        }
+        if (nome && /^[#.:[a-zA-Z]/.test(nome) && nome.length <= 400)
+          raccolte.push({ ramo: rami.join(" >> "), selettori: nome, corpo });
+        i = j;
+      }
+    } else if (carattere === "}") {
+      rami.pop();
+      testa = "";
+    } else testa += carattere;
+    i += 1;
+  }
+  return raccolte;
+}
+
+const valori = new Map();
+for (const percorso of moduli) {
+  /* Il foglio nasce dentro una stringa: si guarda solo quello che sta fra
+   * apici inversi, cosi' il codice attorno non finisce nel conto. */
+  for (const pezzo of testo.get(percorso).match(/`[^`]*`/g) || []) {
+    if (!pezzo.includes("!important")) continue;
+    for (const regola of regoleDi(pezzo.slice(1, -1))) {
+      for (const d of regola.corpo.matchAll(/([a-z-]+)\s*:\s*([^;]*?)\s*!important/g)) {
+        for (const selettore of regola.selettori
+          .split(",")
+          .map((x) => x.trim().replace(/\s+/g, " "))
+          .filter(Boolean)) {
+          const chiave = `${regola.ramo}\u0000${selettore}\u0000${d[1]}`;
+          if (!valori.has(chiave)) valori.set(chiave, new Map());
+          valori.get(chiave).set(nome(percorso), d[2].replace(/\s+/g, " "));
+        }
+      }
+    }
+  }
+}
+let litigi = 0;
+for (const [chiave, perFile] of [...valori].sort()) {
+  if (perFile.size < 2 || new Set(perFile.values()).size < 2) continue;
+  litigi += 1;
+  quanti += 1;
+  const [ramo, selettore, proprieta] = chiave.split("\u0000");
+  console.log(`  ${ramo ? `${ramo} ` : ""}${selettore.slice(0, 88)}`);
+  console.log(`    ${proprieta}:`);
+  for (const [file, valore] of [...perFile].sort())
+    console.log(`      ${valore.slice(0, 44).padEnd(46)} <- ${file}`);
+}
+console.log(`\n  (${litigi} regole in disaccordo)`);
+
+console.log(`\n${"=".repeat(72)}\ntrovate ${quanti} cose da guardare.`);
+console.log("Nessuna di queste e' per forza un difetto: e' la lista da leggere.");

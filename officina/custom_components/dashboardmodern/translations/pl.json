@@ -1,0 +1,69 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nowy panel DashboardModern",
+        "data": {
+          "name": "Nazwa panelu"
+        },
+        "data_description": {
+          "name": "Pojawia się na pasku bocznym. Możesz dodać kilka paneli, każdy z własną konfiguracją."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Dostęp i integracja z panelami",
+        "description": "Wybierz, którzy zalogowani użytkownicy mają widzieć ten panel w interfejsie DashboardModern. To filtr widoczności we frontendzie, nie zastępuje uprawnień Home Assistant. Rejestracja w Lovelace sprawia, że DashboardModern pojawia się w Ustawieniach → Panele.",
+        "data": {
+          "allowed_users": "Uprawnieni użytkownicy",
+          "register_lovelace_dashboard": "Zarejestruj także jako panel Home Assistant",
+          "admin_only": "Widoczny tylko dla administratorów",
+          "check_updates": "Sprawdzaj nowe wersje",
+          "tickets_enabled": "Zgłoszenia z panelu",
+          "chat_enabled": "Czat pomocy",
+          "chat_console_key": "Klucz konsoli pomocy"
+        },
+        "data_description": {
+          "allowed_users": "Tylko filtr widoczności interfejsu. Dane i usługi nadal podlegają uprawnieniom Home Assistant.",
+          "register_lovelace_dashboard": "Panel towarzyszący powstaje przy starcie Home Assistant i to on pozwala wybrać tę planszę jako domyślną. Wyłączony — plansza zostaje na pasku bocznym, ale nie pojawia się wśród domyślnych paneli.",
+          "admin_only": "Natywny filtr Home Assistant; dla kont bez uprawnień administratora ma pierwszeństwo.",
+          "check_updates": "Co pół godziny pyta GitHuba, czy jest nowsze wydanie, i pokazuje je w Ustawienia → Aktualizacje. Wyłącz, aby panel w ogóle nie łączył się z internetem; sam pulpit tego nie potrzebuje.",
+          "tickets_enabled": "Pozwala każdemu, kto korzysta z panelu, zgłosić błąd, zaproponować pomysł lub poprosić o pomoc bez wychodzenia z niego. Zgłoszenie staje się publicznym issue na GitHubie, otwartym w jego imieniu — na tym samym koncie, o które poprosił już HACS. Wyłączone — nic nie opuszcza domu.",
+          "chat_enabled": "Prywatna rozmowa z osobą, która utrzymuje pulpit, aby poprosić o pomoc bez zakładania publicznego zgłoszenia i bez żadnego konta. Przechodzi przez własną usługę, nie przez GitHub. Wyłączona — nic nie opuszcza domu.",
+          "chat_console_key": "Zostaw puste. Służy JEDNEJ instalacji na świecie — tej należącej do osoby utrzymującej pulpit — do czytania rozmów wszystkich i odpowiadania. To ten sam klucz umieszczony wśród sekretów przekaźnika."
+        }
+      }
+    }
+  },
+  "issues": {
+    "riavvio_richiesto": {
+      "title": "Uruchom ponownie, aby dokończyć aktualizację DashboardModern",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Uruchom ponownie Home Assistant",
+            "description": "Wersja {version} jest zainstalowana na dysku. Uruchom ponownie Home Assistant, aby ją załadować."
+          }
+        }
+      }
+    },
+    "plancia_non_registrabile": {
+      "title": "„{plancia}” nie może zostać wybrany jako domyślny panel",
+      "description": "Home Assistant nie prowadzi zapisywalnej listy paneli: dzieje się tak, gdy Lovelace działa w trybie YAML (lovelace: mode: yaml w configuration.yaml). W tym trybie panele piszesz sam, a ten trzeba tam dodać ręcznie. „{plancia}” nadal jest dostępny z paska bocznego jak zawsze: nie jest zepsuty, po prostu nie może zarejestrować się sam. Jeśli nie używasz trybu YAML, uruchom ponownie Home Assistant i otwórz tę stronę jeszcze raz."
+    },
+    "plancia_senza_elenco_plance": {
+      "title": "„{plancia}” nie może zostać wybrany jako domyślny pulpit",
+      "description": "Home Assistant nie udostępnia listy pulpitów w miejscu, w którym ta integracja jej szuka. Nie chodzi o tryb YAML: twój Lovelace działa w trybie zwykłym, więc pulpit dałoby się spokojnie utworzyć — lista po prostu nie jest tam, gdzie jej szukamy. To nasza sprawa, nie twojej konfiguracji: w configuration.yaml nie ma czego szukać. „{plancia}” nadal jest dostępny z paska bocznego jak zawsze: nie jest zepsuty, po prostu nie potrafi sam zarejestrować się jako domyślny. W dzienniku Home Assistant jest wiersz DashboardModern mówiący, co znaleziono zamiast listy: zacytuj go w zgłoszeniu, a naprawimy. Jeśli tymczasem domyślny pulpit działa, to powiadomienie jest stare i można je zignorować."
+    }
+  },
+  "entity": {
+    "switch": {
+      "presenza_simulata": {
+        "name": "Symulacja obecności"
+      }
+    }
+  }
+}

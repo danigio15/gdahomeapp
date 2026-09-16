@@ -365,6 +365,43 @@ function sposta() {
  * ripara. Qui la ripara chiunque passi: se la pagina attiva e' la Home e la
  * testata ha il display inline spento, lo si toglie. Sulle altre sezioni non
  * si tocca niente: li' nascosta e' giusta. */
+/* E il blocco a sinistra non resta nascosto ne' fuori posto (#542).
+ *
+ * «Tornando alla Home da un'altra plancia sparisce tutto tranne il meteo e il
+ * pallino verde»: l'intestazione c'e' — il pallino sta dentro — ma manca il
+ * blocco con il tasto del menu e il nome della casa. Succede solo su WebKit e
+ * da qui non si riproduce, quindi la CAUSA non la so ancora; quello che si sa
+ * e' che stati sbagliati possibili sono tre — nascosto da uno stile in linea,
+ * finito fuori dall'intestazione, sparito dal documento — e due dei tre si
+ * riparano guardandoli, senza indovinare niente.
+ *
+ * Il terzo non si ripara: rifabbricare markup che e' del guscio vorrebbe dire
+ * coprire una causa invece di trovarla. Per quello la segnalazione adesso
+ * porta la forma dell'intestazione nella diagnostica, che e' la misura che
+ * chiedevo e che da un telefono non si poteva dare.
+ *
+ * Quando lo stato e' giusto — cioe' sempre, tranne nel caso segnalato — qui
+ * non si scrive niente: due letture e via. */
+function riparaIlBloccoASinistra(header) {
+  const sinistra = doc?.querySelector?.(".header-left-wrap");
+  if (!sinistra) return false;
+  let riparato = false;
+  /* Nascosto da uno stile in linea: nessuno dei nostri fogli lo spegne, e uno
+   * stile in linea puo' solo averlo messo qualcun altro. */
+  for (const veste of ["display", "visibility"]) {
+    if (!sinistra.style?.[veste]) continue;
+    sinistra.style[veste] = "";
+    riparato = true;
+  }
+  /* Finito fuori dall'intestazione: torna primo figlio, che e' il suo posto
+   * nel documento del guscio. */
+  if (sinistra.parentElement !== header) {
+    header.prepend(sinistra);
+    riparato = true;
+  }
+  return riparato;
+}
+
 function ripara() {
   const header = testata();
   if (!header) return;
@@ -372,6 +409,7 @@ function ripara() {
   if (attiva?.id === "page-home" && header.style.display === "none") {
     header.style.display = "";
   }
+  riparaIlBloccoASinistra(header);
   sposta();
 }
 

@@ -20,7 +20,7 @@
  * spegnerle: legge `cd_sections` con la stessa chiave che scrive la fascia
  * verde della configurazione, come fanno l'Agenda e la Continuita'.
  */
-import { comandoDelDispositivo } from "../core/comandi-accanto.js";
+import { comandoCheAbilita, comandoDelDispositivo } from "../core/comandi-accanto.js";
 import {
   CHIAVE_SEZIONI_MIE,
   chiaveDellaSezione,
@@ -180,6 +180,34 @@ function valoreMarkup(riga) {
   return `<b>${esc(parolaDiStato(riga.stato))}</b>`;
 }
 
+/* Quello che la riga ha da dare: la levetta, e per le automazioni anche il tasto.
+ *
+ * «I tasti on/off in automazioni non funzionano» (#552). Erano una levetta sola
+ * che faceva PARTIRE l'automazione: scattava e tornava indietro, perche' far
+ * partire non cambia lo stato che la levetta mostra. Chi ha segnalato voleva
+ * l'altra cosa — «abilitarla o disabilitarla, perche' a volte le attivo io e a
+ * volte si attivano da sole quando inserisco l'allarme» — e prima ancora, nella
+ * #504, qualcun altro voleva proprio farle partire.
+ *
+ * Hanno ragione tutti e due: un'automazione ha due gesti, e adesso ha due
+ * comandi. La levetta dice se e' abilitata, che e' lo stato che Home Assistant
+ * le vede addosso; il tasto ▶ la fa partire adesso, e non tocca quello stato.
+ *
+ * Stanno nella stessa casella perche' i figli della riga devono restare
+ * quattro: la griglia ha quattro colonne, e un quinto figlio andrebbe a capo
+ * portandosi dietro l'altezza della tessera. */
+function codaMarkup(riga) {
+  if (!riga.comandabile || riga.muto) return `<span class="dm-mia-vuoto" aria-hidden="true"></span>`;
+  const parti = riga.avviabile
+    ? `<button type="button" class="dm-mia-parti" data-dm-mia-parti="${esc(riga.entity)}"
+         title="${esc(t("Fai partire adesso", "Run it now"))}"
+         aria-label="${esc(t("Fai partire adesso", "Run it now"))} — ${esc(riga.nome)}">▶</button>`
+    : "";
+  return `${parti}<button type="button" class="dm-mia-lev" data-dm-mia-tocca="${esc(riga.entity)}"
+       role="switch" aria-checked="${riga.acceso}"
+       aria-label="${esc(riga.nome)}"><i></i></button>`;
+}
+
 function rigaMarkup(riga) {
   const icona = riga.icona || (riga.comandabile ? "💡" : "📈");
   return `<article class="dm-mia-riga" data-on="${riga.acceso}" data-muta="${riga.muto}">
@@ -188,14 +216,7 @@ function rigaMarkup(riga) {
       <strong>${esc(riga.nome)}</strong>
       <small class="mono">${esc(riga.entity)}</small>
     </span>
-    <span class="dm-mia-val">${valoreMarkup(riga)}</span>
-    ${
-      riga.comandabile && !riga.muto
-        ? `<button type="button" class="dm-mia-lev" data-dm-mia-tocca="${esc(riga.entity)}"
-             role="switch" aria-checked="${riga.acceso}"
-             aria-label="${esc(riga.nome)}"><i></i></button>`
-        : `<span class="dm-mia-vuoto" aria-hidden="true"></span>`
-    }
+    <span class="dm-mia-coda">${codaMarkup(riga)}</span>
   </article>`;
 }
 
@@ -279,6 +300,18 @@ async function chiamaHa(dominio, servizio, payload) {
 }
 
 function onClick(event) {
+  /* Il tasto ▶ prima della levetta: sta dentro la stessa casella, e chiedere
+   * prima la levetta lo farebbe passare per un tocco sulla levetta. */
+  const parti = event.target?.closest?.("[data-dm-mia-parti]");
+  if (parti) {
+    event.preventDefault();
+    const suo = clean(parti.dataset.dmMiaParti);
+    const comando = comandoDelDispositivo({ entity: suo });
+    if (!comando) return;
+    if (root.navigator?.vibrate) root.navigator.vibrate(8);
+    chiamaHa(comando.domain, comando.service, comando.data);
+    return;
+  }
   const leva = event.target?.closest?.("[data-dm-mia-tocca]");
   if (!leva) return;
   event.preventDefault();
@@ -300,11 +333,15 @@ function onClick(event) {
    * scena si accendono, un'automazione si fa partire. Qui si chiedono a lui.
    * Quello che lui non conosce — una luce, un ventilatore, una sirena — e' per
    * definizione roba che si accende e si spegne, e resta l'inversione. */
-  const comando = comandoDelDispositivo({ entity }) || {
-    domain: dominio,
-    service: "toggle",
-    data: { entity_id: entity },
-  };
+  /* La levetta ha un verbo suo dove il gesto e' «abilita», non «accendi»: e'
+   * il caso delle automazioni, che si fanno partire col tasto accanto. Dove
+   * quel verbo non c'e', la levetta resta il comando di sempre. */
+  const comando = comandoCheAbilita({ entity }) ||
+    comandoDelDispositivo({ entity }) || {
+      domain: dominio,
+      service: "toggle",
+      data: { entity_id: entity },
+    };
   chiamaHa(comando.domain, comando.service, comando.data);
 }
 
@@ -335,7 +372,7 @@ function installStyles() {
       .page[id^="page-mia-"] .dm-mia-wrap{display:grid;gap:16px;padding:0 0 24px}
       .dm-mia-lista{display:grid;gap:10px}
       .dm-mia-riga{
-        display:grid;grid-template-columns:44px minmax(0,1fr) auto 52px;align-items:center;gap:12px;
+        display:grid;grid-template-columns:44px minmax(0,1fr) auto auto;align-items:center;gap:12px;
         padding:12px 14px;border-radius:18px;
         background:var(--card-background-color,#fff);border:1px solid var(--card-border,#e2e8f0);
         box-shadow:0 10px 24px -20px rgba(15,23,42,.5)}
@@ -356,6 +393,21 @@ function installStyles() {
       .dm-mia-val b small{font-size:11px;font-weight:800;color:var(--text-dim,#64748b)}
       .dm-mia-val .dm-mia-muta{font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
       .dm-mia-riga[data-on="true"] .dm-mia-val b{color:#ea580c}
+      /* La coda della riga: quello che la voce ha da dare, tutto in una casella.
+       *
+       * Un'automazione ne ha due — il tasto che la fa partire e la levetta che
+       * la abilita (#552) — e i figli della riga devono restare quattro, o la
+       * griglia manda a capo il quinto. */
+      .dm-mia-coda{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+      /* Il tasto «fai partire»: si legge come un tasto, non come una levetta.
+       * Tondo e pieno contro la levetta allungata, cosi' i due gesti non si
+       * scambiano sotto il pollice. */
+      .dm-mia-parti{
+        width:30px;height:30px;flex:0 0 auto;border:0;border-radius:50%;cursor:pointer;
+        font-size:11px;line-height:1;color:#fff;
+        background:linear-gradient(135deg,#38bdf8,#0284c7);
+        box-shadow:0 2px 6px rgba(2,132,199,.35)}
+      .dm-mia-parti:active{transform:scale(.92)}
       .dm-mia-lev{
         position:relative;width:46px;height:26px;border:0;border-radius:999px;cursor:pointer;
         background:var(--bg-sculpted,#cbd5e1);transition:background .25s ease}
@@ -365,7 +417,9 @@ function installStyles() {
       .dm-mia-riga[data-on="true"] .dm-mia-lev{background:linear-gradient(135deg,#fb923c,#ea580c)}
       .dm-mia-riga[data-on="true"] .dm-mia-lev i{transform:translateX(20px)}
       @media(max-width:560px){
-        .dm-mia-riga{grid-template-columns:38px minmax(0,1fr) auto 46px;gap:9px;padding:10px 11px}
+        /* La coda si misura su quello che contiene: da quando un'automazione
+         * porta anche il tasto «fai partire», 46 px fissi le stavano stretti. */
+        .dm-mia-riga{grid-template-columns:38px minmax(0,1fr) auto auto;gap:9px;padding:10px 11px}
         .dm-mia-ic{width:38px;height:38px;font-size:17px}
       }
 
@@ -407,6 +461,8 @@ function installStyles() {
         transform:translateX(16px)}
       /* Il posto vuoto di chi non ha leva non allarga la tessera. */
       .dm-mia-lista[data-formato="piccole"] .dm-mia-vuoto{width:0}
+      .dm-mia-lista[data-formato="piccole"] .dm-mia-coda{gap:6px}
+      .dm-mia-lista[data-formato="piccole"] .dm-mia-parti{width:26px;height:26px;font-size:10px}
       @media(max-width:560px){
         .dm-mia-lista[data-formato="piccole"]{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
         .dm-mia-lista[data-formato="piccole"] .dm-mia-riga{

@@ -1,0 +1,69 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "新しい DashboardModern パネル",
+        "data": {
+          "name": "パネルの名前"
+        },
+        "data_description": {
+          "name": "サイドバーに表示されます。パネルは複数追加でき、それぞれ別の設定を持てます。"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "アクセスとダッシュボードとの連携",
+        "description": "DashboardModern の画面でこのパネルを見られるログイン済みユーザーを選びます。これはフロントエンド側の表示フィルターで、Home Assistant の権限に代わるものではありません。Lovelace に登録すると、DashboardModern が「設定 → ダッシュボード」に表示されます。",
+        "data": {
+          "allowed_users": "許可するユーザー",
+          "register_lovelace_dashboard": "Home Assistant のダッシュボードとしても登録する",
+          "admin_only": "管理者にだけ表示する",
+          "check_updates": "新しいバージョンを確認する",
+          "tickets_enabled": "ダッシュボードからの報告",
+          "chat_enabled": "サポートチャット",
+          "chat_console_key": "サポートコンソールのキー"
+        },
+        "data_description": {
+          "allowed_users": "画面上の表示フィルターだけです。データとサービスへのアクセスは引き続き Home Assistant の権限に従います。",
+          "register_lovelace_dashboard": "付属のダッシュボードは Home Assistant の起動時に作られ、このプランチャを既定に選べるようにするものです。オフにすると、プランチャはサイドバーに残りますが、既定のダッシュボードには現れません。",
+          "admin_only": "Home Assistant 本来のフィルターです。管理者以外のアカウントではこちらが優先されます。",
+          "check_updates": "30分ごとに GitHub へ新しいリリースの有無を尋ね、「設定 → アップデート」に表示します。パネルを一切インターネットに出さないようにするにはオフにしてください。ダッシュボード自体には不要です。",
+          "tickets_enabled": "ダッシュボードを使う人が、そこから離れずに不具合の報告・要望・サポートの依頼をできるようにします。報告は GitHub の公開 issue になり、本人の名前で開かれます——HACS がすでに求めたのと同じアカウントです。オフにすると、家から何も出ていきません。",
+          "chat_enabled": "ダッシュボードを管理している人との個人的な会話です。公開のイシューを立てず、アカウントも要らずに助けを求められます。GitHub ではなく専用のサービスを通ります。オフにすると、家から何も出ていきません。",
+          "chat_console_key": "空のままにしてください。これは世界でひとつの導入 — ダッシュボードを管理している人のもの — が全員のチャットを読んで返信するためのものです。中継サービスのシークレットに設定したものと同じ鍵です。"
+        }
+      }
+    }
+  },
+  "issues": {
+    "riavvio_richiesto": {
+      "title": "DashboardModern の更新を完了するには再起動してください",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Home Assistant を再起動",
+            "description": "バージョン {version} はディスクにインストール済みです。読み込むには Home Assistant を再起動してください。"
+          }
+        }
+      }
+    },
+    "plancia_non_registrabile": {
+      "title": "「{plancia}」を既定のダッシュボードに選べません",
+      "description": "Home Assistant が書き込み可能なダッシュボード一覧を持っていません。Lovelace が YAML モード（configuration.yaml の lovelace: mode: yaml）で動いているときに起こります。そのモードではダッシュボードはご自身で書くため、これも手で追加する必要があります。「{plancia}」はこれまでどおりサイドバーから開けます。壊れているのではなく、自分で登録できないだけです。YAML モードを使っていない場合は、Home Assistant を再起動してこのページを開き直してください。"
+    },
+    "plancia_senza_elenco_plance": {
+      "title": "「{plancia}」を既定のダッシュボードに選べません",
+      "description": "Home Assistant が、この統合の探している場所にダッシュボードの一覧を出していません。YAML モードが原因ではありません。お使いの Lovelace は通常モードなので、本来ならダッシュボードを作成できます——一覧が、こちらの探している場所にないだけです。設定ではなくこちら側の問題なので、configuration.yaml を調べる必要はありません。「{plancia}」はこれまでどおりサイドバーから開けます。壊れているのではなく、自分を既定として登録できないだけです。Home Assistant のログに、一覧の代わりに何が見つかったかを示す DashboardModern の行があります。不具合報告にその行を添えてください、修正します。その間に既定のダッシュボードが動いているなら、この通知は古いので無視して構いません。"
+    }
+  },
+  "entity": {
+    "switch": {
+      "presenza_simulata": {
+        "name": "在宅シミュレーション"
+      }
+    }
+  }
+}

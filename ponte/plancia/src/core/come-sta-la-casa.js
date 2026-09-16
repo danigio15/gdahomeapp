@@ -152,17 +152,75 @@ export function normalizzaBarra(salvato) {
      * possono discordare sulla stessa stazione meteo. */
     pioggia: pulito(dato.pioggia),
     pioggiaOggi: pulito(dato.pioggiaOggi),
+    /* L'ora da cui la pastiglia dei rifiuti guarda a domani (#565). Vuota di
+     * serie: la fascia resta quella di prima per chi non ha chiesto niente. */
+    rifiutiDalleOre: normalizzaOraDelRitiro(dato.rifiutiDalleOre),
   };
 }
 
-/* Il ritiro che riguarda adesso: oggi o domani, non fra sei giorni.
+/* I ritiri che riguardano adesso: oggi o domani, non fra sei giorni.
  *
  * Sono i due momenti in cui la risposta serve — stasera metto fuori qualcosa,
  * o domattina — ed e' la stessa soglia con cui si accende la tessera dei
- * rifiuti. Le righe della tessera arrivano gia' in ordine di urgenza. */
-function ritiroVicino(modello) {
+ * rifiuti.
+ *
+ * TUTTI quelli del giorno piu' vicino, non il primo che capita: «sotto il meteo
+ * esce sempre solo il primo rifiuto, quindi se c'e' vetro e organico esce solo
+ * vetro» (#567). Chi stasera deve mettere fuori due bidoni deve vederli tutti e
+ * due — sapere di uno solo e' peggio che non sapere niente, perche' si esce con
+ * la sensazione di aver fatto.
+ *
+ * Il giorno piu' vicino e basta, pero': se oggi c'e' qualcosa, domani non e'
+ * ancora una notizia. Cosi' la fascia porta i bidoni di UNA uscita, che e' il
+ * numero che sta in mano a chi scende le scale. */
+const QUANDO_VICINO = Object.freeze(["oggi", "domani"]);
+
+/* Dopo l'ora scelta la giornata, per la fascia, e' finita (#565).
+ *
+ * «Preferirei che la pillola sotto la barra del meteo mostrasse i rifiuti che
+ * devo uscire la sera, non quelli che passano a ritirare il giorno stesso» —
+ * e poi, da un'altra persona: «magari si potrebbe far vedere l'odierno fino a
+ * una certa ora, dopo di che si passa alla visualizzazione del giorno dopo».
+ *
+ * Il bidone si mette fuori la sera prima. Un ritiro delle sette di mattina,
+ * alle otto di sera non e' piu' una notizia: e' una cosa gia' successa, e la
+ * pastiglia che la ripete fa credere che ci sia ancora qualcosa da fare. Ma la
+ * stessa pastiglia, alle sei di mattina, e' l'ultimo avviso utile a chi il
+ * bidone non l'ha messo fuori: percio' non si sostituisce un giorno con
+ * l'altro, si dichiara a che ora quella giornata e' finita.
+ *
+ * E dopo quell'ora si guarda SOLO a domani: se domani non passa nessuno, non
+ * c'e' nessuna pastiglia. Tornare a quella di oggi sarebbe rimettere in mano a
+ * chi legge la cosa gia' fatta, che e' esattamente quello che si voleva
+ * togliere.
+ *
+ * Vuoto vuol dire «come e' sempre stato»: chi la configurazione non l'apre non
+ * si trova la fascia cambiata sotto il naso. */
+const QUANDO_DOPO = Object.freeze(["domani"]);
+
+export function normalizzaOraDelRitiro(valore) {
+  const testo = pulito(valore);
+  if (!testo) return "";
+  const numero = Number(testo);
+  if (!Number.isInteger(numero) || numero < 0 || numero > 23) return "";
+  return String(numero);
+}
+
+/** I giorni a cui guardare adesso, data l'ora del passaggio. */
+export function giorniDelRitiro(oraDelPassaggio, adesso = new Date()) {
+  const ora = normalizzaOraDelRitiro(oraDelPassaggio);
+  if (!ora) return QUANDO_VICINO;
+  const istante = adesso instanceof Date && !Number.isNaN(adesso.getTime()) ? adesso : new Date();
+  return istante.getHours() >= Number(ora) ? QUANDO_DOPO : QUANDO_VICINO;
+}
+
+function ritiriVicini(modello, giorni = QUANDO_VICINO) {
   const righe = Array.isArray(modello?.rows) ? modello.rows : [];
-  return righe.find((riga) => riga?.quando === "oggi" || riga?.quando === "domani") || null;
+  for (const quando of giorni) {
+    const dellaGiornata = righe.filter((riga) => riga?.quando === quando);
+    if (dellaGiornata.length) return dellaGiornata;
+  }
+  return [];
 }
 
 /**
@@ -176,8 +234,9 @@ function ritiroVicino(modello) {
  * pastiglia. Una barra che dice «0 luci accese» occupa spazio per non dire
  * niente.
  */
-export function pastiglieDellaCasa(modelli, { barra, posta, misure } = {}) {
+export function pastiglieDellaCasa(modelli, { barra, posta, misure, adesso } = {}) {
   const config = normalizzaBarra(barra);
+  const giorni = giorniDelRitiro(config.rifiutiDalleOre, adesso);
   const perChiave = new Map(
     (Array.isArray(modelli) ? modelli : [])
       .filter((modello) => modello && NOTE.has(pulito(modello.key)))
@@ -218,16 +277,19 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure } = {}) {
     const modello = perChiave.get(voce.chiave);
     if (!modello) continue;
     if (voce.chiave === "rifiuti") {
-      const riga = ritiroVicino(modello);
-      if (!riga) continue;
-      fuori.push({
-        chiave: "rifiuti",
-        tessera: voce.tessera,
-        icona: pulito(riga.glyph) || pulito(modello.icon) || "♻️",
-        tinta: pulito(modello.accent),
-        quando: riga.quando,
-        nome: pulito(riga.name),
-      });
+      for (const riga of ritiriVicini(modello, giorni))
+        fuori.push({
+          chiave: "rifiuti",
+          /* Una pastiglia per bidone, quindi la chiave non basta piu' a dire
+           * quale: chi disegna riconosce le pastiglie da `id`, e due «rifiuti»
+           * con lo stesso id sarebbero la stessa pastiglia disegnata due volte. */
+          id: `rifiuti:${pulito(riga.entity) || pulito(riga.name) || pulito(riga.glyph)}`,
+          tessera: voce.tessera,
+          icona: pulito(riga.glyph) || pulito(modello.icon) || "♻️",
+          tinta: pulito(modello.accent),
+          quando: riga.quando,
+          nome: pulito(riga.name),
+        });
       continue;
     }
     if (voce.chiave === "sicurezza") {
@@ -267,7 +329,14 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure } = {}) {
         .filter((voce) => voce.name || voce.entity),
     });
   }
-  return fuori;
+  /* Ogni pastiglia ha un'identita', e per quasi tutte e' la propria chiave: di
+   * luci accese ce n'e' una sola. I rifiuti sono l'eccezione — un bidone per
+   * pastiglia — e se la scrivono da se'. Chi disegna riconosce le pastiglie da
+   * qui: due che si chiamassero uguale sarebbero la stessa, e una delle due
+   * rinascerebbe a ogni giro. */
+  return fuori.map((pastiglia) =>
+    pastiglia.id ? pastiglia : { ...pastiglia, id: pastiglia.chiave },
+  );
 }
 
 /* ── la cassetta della posta (#357) ──────────────────────────────────────── */

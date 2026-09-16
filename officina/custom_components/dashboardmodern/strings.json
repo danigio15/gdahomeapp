@@ -1,0 +1,69 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "New DashboardModern panel",
+        "data": {
+          "name": "Panel name"
+        },
+        "data_description": {
+          "name": "Shown in the sidebar. You can add multiple panels, each with its own configuration."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Access and dashboard integration",
+        "description": "Choose which signed-in users should see this dashboard in the DashboardModern UI. This is a frontend visibility filter, not a replacement for Home Assistant permissions. Lovelace registration makes DashboardModern appear in Settings → Dashboards.",
+        "data": {
+          "allowed_users": "Allowed users",
+          "register_lovelace_dashboard": "Also register as a Home Assistant dashboard",
+          "admin_only": "Visible to administrators only",
+          "check_updates": "Check for new versions",
+          "tickets_enabled": "Reports from the dashboard",
+          "chat_enabled": "Support chat",
+          "chat_console_key": "Support console key"
+        },
+        "data_description": {
+          "allowed_users": "UI visibility filter only. Home Assistant permissions still govern data and service access.",
+          "register_lovelace_dashboard": "The companion dashboard is created when Home Assistant starts, and it is what lets you pick this plancia as the default. Turned off, the plancia stays in the sidebar but is not offered among the default dashboards.",
+          "admin_only": "Native Home Assistant filter; it takes precedence for non-administrator accounts.",
+          "check_updates": "Asks GitHub every half hour whether a newer release is out, and shows it under Settings → Updates. Turn it off to keep the panel from reaching the internet at all; the dashboard itself never needs it.",
+          "tickets_enabled": "Lets anyone using the dashboard report a bug, suggest a feature or ask for help without leaving it. The report becomes a public issue on GitHub, opened under their own account — the same one HACS already asked them for. Turn it off and nothing leaves the house.",
+          "chat_enabled": "A private conversation with whoever maintains the dashboard, to ask for help without opening a public issue and without any account. It goes through a service of its own, not GitHub. Turned off, nothing leaves the house.",
+          "chat_console_key": "Leave it empty. It is for ONE installation in the world — the one belonging to whoever maintains the dashboard — to read everyone's chats and answer. It is the same key set among the relay's secrets."
+        }
+      }
+    }
+  },
+  "issues": {
+    "riavvio_richiesto": {
+      "title": "Restart to finish the DashboardModern update",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Restart Home Assistant",
+            "description": "Version {version} is installed on disk. Restart Home Assistant to load it."
+          }
+        }
+      }
+    },
+    "plancia_non_registrabile": {
+      "title": "“{plancia}” cannot be picked as the default dashboard",
+      "description": "Home Assistant is not keeping a writable list of dashboards: this happens when Lovelace runs in YAML mode (lovelace: mode: yaml in your configuration.yaml). In that mode you write the dashboards yourself, and this one has to be added there by hand. “{plancia}” is still reachable from the sidebar as always: it is not broken, it simply cannot register itself. If you are not using YAML mode, restart Home Assistant and open this page again."
+    },
+    "plancia_senza_elenco_plance": {
+      "title": "“{plancia}” cannot be picked as the default dashboard",
+      "description": "Home Assistant is not exposing the dashboard list where this integration looks for it. It is not YAML mode: your Lovelace is in normal mode, so a dashboard could perfectly well be created — the list simply is not where we look. This is on us, not on your configuration: there is nothing to look for in your configuration.yaml. “{plancia}” is still reachable from the sidebar as always: it is not broken, it simply cannot register itself as the default. The Home Assistant log has a DashboardModern line saying what it found instead of the list: quote it in a bug report and we will fix it. If the default dashboard works in the meantime, this notice is stale and can be ignored."
+    }
+  },
+  "entity": {
+    "switch": {
+      "presenza_simulata": {
+        "name": "Simulated presence"
+      }
+    }
+  }
+}
