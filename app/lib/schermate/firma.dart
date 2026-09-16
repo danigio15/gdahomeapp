@@ -27,11 +27,20 @@ String get versioneDelPacchetto =>
     _detta.isEmpty ? inLingua(it: 'dal codice', en: 'from source') : _detta;
 
 class Firma extends StatelessWidget {
-  const Firma({super.key, this.spazioSopra = 24});
+  const Firma({super.key, this.spazioSopra = 24, this.conIlCentralino = true});
 
   /// Quanto stare sotto quello che c'e' prima: in fondo a una lista lunga
   /// serve aria, in fondo a un menu no.
   final double spazioSopra;
+
+  /// Se dire anche a quale centralino punta questo pacchetto.
+  ///
+  /// In fondo al menu no: la barra e' larga centonovantadue punti, e
+  /// «gdahome 1.4.31 (104310) · tramite.gdahome.org» ci va a capo. La
+  /// versione da sola ci sta su una riga, ed e' quella la domanda —
+  /// **che versione ho?**. Il centralino lo dicono le pagine larghe, dove
+  /// c'e' posto.
+  final bool conIlCentralino;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +52,9 @@ class Firma extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(top: spazioSopra),
       child: Text(
-        'gdahome $numeroDiQuestApp · $dove',
+        conIlCentralino
+            ? 'gdahome $numeroDiQuestApp · $dove'
+            : 'gdahome $numeroDiQuestApp',
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: colori.onSurfaceVariant.withValues(alpha: 0.7),

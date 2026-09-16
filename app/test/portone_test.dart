@@ -21,6 +21,7 @@ import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/main.dart';
 import 'package:gdahome/parole.dart';
+import 'package:gdahome/versione.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/aggiungi_casa.dart';
@@ -738,6 +739,18 @@ void main() {
       plancia.chiedeIlMenu!();
       await tester.pumpAndSettle();
       expect(laBarraEAperta(), isTrue);
+
+      /* E col menu aperto si legge che versione e'.
+       *
+       * «Io non so che versione app ho» e' arrivato da chi le pubblica, con
+       * la versione gia' scritta in fondo a «Le case» e nella diagnostica:
+       * un'informazione che c'e' e non si trova vale come una che non c'e'.
+       * Il menu e' la schermata che si apre ogni giorno. */
+      expect(
+        find.textContaining(numeroDiQuestApp),
+        findsOneWidget,
+        reason: 'in fondo al menu c\'e\' che versione e\'',
+      );
 
       /* Col menu aperto, indietro esce: le sezioni sono la pagina di sotto, e
        * sotto non c'e' piu' niente. */

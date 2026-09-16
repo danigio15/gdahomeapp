@@ -334,15 +334,47 @@ class Premesse {
        * guarda quali ci sono e si chiudono tutte quelle che si vedono. */
       'var chiudiQuelloChEAperto=function(){'
       'try{'
+      /* Le finestre della plancia sono `.modal-wrapper` con la classe
+         `show`. Qui si cercava `.modal.show`, e una classe che si chiama
+         `modal` in quella pagina non esiste: non si chiudeva **niente**.
+         `#editor-modal.show` prendeva l'Editor e nient'altro. */
       'var aperte=document.querySelectorAll('
-      '".modal.show,.dm-modal.show,#editor-modal.show,dialog[open]");'
+      '".modal-wrapper.show,.modal.show,.dm-modal.show,dialog[open]");'
       'for(var quale=0;quale<aperte.length;quale+=1){'
       'var finestra=aperte[quale];'
+      /* Le due che la pagina **crea** quando servono — l'Editor e «Modifica
+         plancia» — la pagina le butta via: il loro tasto ✕ fa `remove()`, e
+         si fa quello. */
+      'if(finestra.id==="editor-modal"||finestra.id==="edit-plancia-modal"){'
+      'try{finestra.remove();}catch(male){}'
+      'continue;'
+      '}'
+      /* Le altre stanno nella pagina da sempre e si spengono. Se la pagina ha
+         il suo modo di spegnerle si usa quello: `forceClose` stacca anche la
+         telecamera aperta e il suo flusso, e chiuderla a mano lascerebbe un
+         video che scarica per sempre dentro una finestra che non si vede. */
+      'if(finestra.id&&typeof window.forceClose==="function")'
+      'try{window.forceClose(finestra.id);}catch(male){}'
       'var chiudi=finestra.querySelector('
       '"[data-dm-close],.modal-close,.dm-modal-close,.close-btn");'
       'if(chiudi){try{chiudi.click();}catch(male){}}'
-      'if(finestra.classList.contains("show"))'
+      'if(!finestra.isConnected)continue;'
       'finestra.classList.remove("show");'
+      /* E lo stile scritto **nell'elemento**, che vince su qualunque classe.
+         Era tutto il guasto, e si vedeva cosi': uscito dall'Editor dal menu,
+         la plancia restava offuscata e non si poteva toccare niente.
+         `.modal-wrapper` e' fissa, a tutto schermo, con un vetro sfocato e un
+         velo scuro, e si accende con la classe; ma quelle due finestre
+         nascono con `opacity:1;visibility:visible;pointer-events:auto`
+         scritti nello stile proprio. Togliere la classe faceva sparire la
+         scheda — quella si', perche' la sua regola dipende da `.show` — e
+         lasciava su il velo, che si prendeva tutti i tocchi. Mezzo minuto di
+         app inservibile, e l'unica uscita era chiuderla. */
+      'try{'
+      'finestra.style.opacity="";'
+      'finestra.style.visibility="";'
+      'finestra.style.pointerEvents="";'
+      '}catch(male){}'
       'if(finestra.tagName==="DIALOG"&&finestra.open)'
       'try{finestra.close();}catch(male){}'
       '}'

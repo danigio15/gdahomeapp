@@ -419,8 +419,20 @@ void main() {
        * si chiude prima quello che sta sopra, e **prima** di toccare la
        * linguetta. */
     expect(testo, contains('var chiudiQuelloChEAperto=function()'));
-    expect(testo, contains('#editor-modal.show'));
+    /* E si cerca la classe **giusta**. Qui c'era `#editor-modal.show`, che
+       * prendeva l'Editor e nient'altro, e `.modal.show`, che in quella pagina
+       * non esiste: le finestre della plancia sono `.modal-wrapper`. Con la
+       * classe sbagliata non si chiudeva niente, e uscire dall'Editor dal menu
+       * lasciava la plancia sotto un velo che si prendeva tutti i tocchi. */
+    expect(testo, contains('.modal-wrapper.show'));
     expect(testo, contains('dialog[open]'));
+    /* Le due che la pagina crea si buttano via, come fa il loro ✕. */
+    expect(testo, contains('finestra.id==="editor-modal"'));
+    expect(testo, contains('finestra.id==="edit-plancia-modal"'));
+    /* E lo stile scritto nell'elemento si cancella: vince su qualunque
+       * classe, e senza questo il velo restava su. */
+    expect(testo, contains('finestra.style.pointerEvents=""'));
+    expect(testo, contains('finestra.style.visibility=""'));
     final chiude = testo.indexOf('chiudiQuelloChEAperto();');
     final tocca = testo.indexOf('var voce=laVoce(dove)||laVoce("home");');
     expect(chiude, greaterThan(0), reason: 'il ritorno non chiude niente');

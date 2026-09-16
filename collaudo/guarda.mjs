@@ -1485,6 +1485,28 @@ try {
   /* Dalla Configurazione alla Plancia: la plancia torna dov'era, e la pagina
    * Config si chiude come si chiuderebbe toccando un'altra linguetta della
    * sua barra. */
+  /* E adesso si rifa' il giro **lasciando l'editor aperto**, che e' come ci
+   * si esce davvero: «ero in configurazione e in editor, poi dal menu sono
+   * passato in plancia ma resta offuscato e non posso cliccare nulla».
+   *
+   * L'editor e' un `.modal-wrapper` — fisso, a tutto schermo, vetro sfocato e
+   * velo scuro — e nasce con l'opacita' e i tocchi scritti **nello stile
+   * dell'elemento**. Quando l'app usciva dalla Config gli toglieva solo la
+   * classe `show`: la scheda spariva, perche' la sua regola dipende da quella
+   * classe, e il velo restava su a prendersi tutti i tocchi. Plancia
+   * inservibile, e l'unica uscita era chiudere l'app.
+   *
+   * Questo passo prima non c'era: il collaudo chiudeva l'editor da se' e
+   * usciva da una Config pulita. Era verde, e il telefono no. */
+  racconta("riapro l'editor e lo lascio aperto, come chi esce di li'");
+  await laConfig.evaluate(() => {
+    const tessera = document.getElementById("srv-config-card");
+    if (tessera) tessera.click();
+    else window.apriConfigEntita?.();
+  });
+  await laConfig.waitForSelector("#editor-modal", { timeout: 30_000 });
+  await attendi(900);
+
   racconta("torno alla plancia");
   await apriIlMenu();
   try {
@@ -1507,6 +1529,43 @@ try {
       "l'indirizzo tiene ancora «apri la Config»: alla prima ricarica tornerebbe la Config",
     );
   }
+
+  /* E la plancia si puo' toccare.
+   *
+   * Non basta guardare che la Config si sia chiusa: quello si vedeva anche
+   * prima, e la plancia era comunque morta sotto un velo. Si chiede alla
+   * pagina **chi c'e' davvero** nel punto in cui un dito toccherebbe: se
+   * risponde una finestra a tutto schermo, quel dito non arriva alla plancia.
+   * E' la misura di «non posso cliccare nulla». */
+  const chiCopre = await laConfig.evaluate(() => {
+    const largo = window.innerWidth;
+    const alto = window.innerHeight;
+    const punti = [
+      [largo / 2, alto / 2],
+      [largo / 2, alto * 0.3],
+      [largo / 2, alto * 0.7],
+    ];
+    const rimaste = document.querySelectorAll(".modal-wrapper.show").length;
+    const sopra = [];
+    for (const [x, y] of punti) {
+      const chi = document.elementFromPoint(x, y);
+      const finestra = chi && chi.closest && chi.closest(".modal-wrapper");
+      if (finestra) sopra.push(finestra.id || finestra.className);
+    }
+    return { rimaste, sopra };
+  });
+  if (chiCopre.rimaste > 0) {
+    throw new Error(
+      `dalla Config e' rimasta ${chiCopre.rimaste} finestra accesa: la plancia resta offuscata`,
+    );
+  }
+  if (chiCopre.sopra.length > 0) {
+    throw new Error(
+      `sulla plancia c'e' sopra una finestra e i tocchi non passano: ${chiCopre.sopra.join(", ")}`,
+    );
+  }
+  racconta("la plancia si tocca: non e' rimasta nessuna finestra sopra");
+  await scatta(pagina, "6l3-plancia-toccabile");
 
   /* E lo stesso tocco quando l'app **crede** di stare gia' sulla plancia.
    *

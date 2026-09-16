@@ -54,6 +54,7 @@ import '../vestito/oggetti.dart';
 import '../vestito/quanto_e_largo.dart';
 import 'da_dove.dart';
 import 'da_parte.dart';
+import 'firma.dart';
 import 'menu.dart';
 
 /// Quanto resta aperta se non si tocca niente.
@@ -343,6 +344,23 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                                         quandoPremuta: () => _scelta(sezione),
                                       );
                                     },
+                                  ),
+                                ),
+                                /* Che versione e' questa.
+                                 *
+                                 * Era in fondo a «Le case» e nella
+                                 * diagnostica, e non bastava: «io non so che
+                                 * versione app ho» e' arrivato da chi le
+                                 * pubblica. Il menu e' la schermata che si
+                                 * apre ogni giorno, e una riga grigia in
+                                 * fondo alle voci si legge senza cercarla —
+                                 * che e' la differenza fra un'informazione
+                                 * che c'e' e una che si trova. */
+                                const Padding(
+                                  padding: EdgeInsets.only(bottom: 10),
+                                  child: Firma(
+                                    spazioSopra: 2,
+                                    conIlCentralino: false,
                                   ),
                                 ),
                               ],
