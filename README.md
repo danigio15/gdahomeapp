@@ -130,10 +130,16 @@ tessere, le sue finestre, la sua barra, la sua configurazione — dentro un
 WebView. Prima si era provato a rifarla in Flutter: non era lei.
 
 E arriva **dall'add-on**. In Home Assistant non serve nessuna integrazione: i
-file della plancia stanno nel ponte, portati da
-`strumenti/porta-la-plancia.mjs`, e tutto quello che la plancia chiedeva
-all'integrazione lo fa il ponte rispondendo esattamente come risponderebbe lei
-— la configurazione, il catalogo dei dispositivi, le foto, la chat.
+file della plancia stanno nel ponte, in [`ponte/plancia/`](ponte/plancia/), e
+tutto quello che la plancia chiedeva all'integrazione lo fa il ponte
+rispondendo esattamente come risponderebbe lei — la configurazione, il catalogo
+dei dispositivi, le foto, la chat.
+
+La plancia **si sviluppa qui**: fino a settembre 2026 arrivava da una seconda
+repository e questa ne teneva una copia sigillata; adesso è una cartella come
+le altre, e i suoi difetti si correggono da qui. Dopo averla toccata il sigillo
+si rifà con `node strumenti/sigilla-la-plancia.mjs` — e se ci si dimentica lo
+dicono le prove, non le case.
 
 Ogni file porta dentro la propria impronta, e la console dice se la plancia che
 hai è **quella originale** o se qualcuno l'ha toccata. Una copia modificata non
@@ -168,7 +174,7 @@ l'abbinamento, cosa finisce sul disco — sta in
 | ✅ | **Segnalazioni** con foto e video, e una **chat di assistenza** — quella della dashboard, che il ponte fa da sé |
 | ✅ | **Gli aggiornamenti di casa nel menu**, col numero addosso alla voce: Home Assistant, gli add-on, gdahome, i firmware. Si installano da lì, e da lì si riavvia la casa |
 | ✅ | **Dal browser**, senza installare niente: la stessa app, che si adatta allo schermo |
-| ✅ | **821 prove** — 420 sul ponte, 85 sul centralino, 16 sulla nuvola, 300 sull'app — senza rete, senza Home Assistant, senza telefono |
+| ✅ | **822 prove** — 421 sul ponte, 85 sul centralino, 16 sulla nuvola, 300 sull'app — senza rete, senza Home Assistant, senza telefono |
 | ⬜ | Gli aiutanti di Home Assistant, nativi nell'app |
 | ⬜ | Zigbee: abbinare un dispositivo da qui (ZHA e Zigbee2MQTT) |
 | ⬜ | Le automazioni, scritte dall'app |
@@ -288,8 +294,8 @@ finto che fa lo stesso. È l'unico modo di avere prove che girino davvero a ogni
 commit.
 
 ```bash
-npm test                        # ponte, centralino e nuvola: 521 prove
-npm run test:ponte              # il ponte: 420 prove, due secondi
+npm test                        # ponte, centralino e nuvola: 522 prove
+npm run test:ponte              # il ponte: 421 prove, due secondi
 cd app && flutter test          # l'app: 300 prove, mezzo minuto
 
 npm run format:check            # prettier, sui file nostri

@@ -288,22 +288,23 @@ La prima volta ci mette qualche secondo, di più se sei fuori casa: i file
 passano dal ponte e restano sul telefono, e dalla seconda volta in poi si apre
 subito. Toccare **«Plancia»** nella barra quando ci sei già la ricarica.
 
-### La plancia si aggiorna da sola
+### La plancia si aggiorna con l'add-on
 
-Quando DashboardModern pubblica una versione nuova, l'add-on se la porta dietro
-senza che nessuno faccia niente: una volta al giorno la corsa **«La plancia
-nuova»** guarda l'ultima release di `dashboardmodern-v2`, e se è più nuova di
-quella che l'add-on ha dentro la scarica, la mette in `ponte/plancia/`, alza di
-un numero la versione dell'add-on e salva. In Home Assistant compare
-**Aggiorna** sulla pagina di «gdahome», e da lì la plancia nuova arriva a tutti
-i telefoni abbinati.
+La plancia sta dentro l'add-on, in `ponte/plancia/`, e si sviluppa qui: fino a
+settembre 2026 arrivava da una seconda repository e una corsa notturna se la
+portava dietro, ora è una cartella come le altre e i suoi difetti si correggono
+in questa.
 
-Si può anche accendere a mano: **Actions → «La plancia nuova» → Run workflow**.
+Per chi la usa non cambia niente, ed è il punto: una versione nuova della
+plancia è una versione nuova di **gdahome**. In Home Assistant compare
+**Aggiorna** sulla pagina dell'add-on, e da lì la plancia nuova arriva a tutti i
+telefoni abbinati senza che nessuno debba fare altro.
 
-Se `dashboardmodern-v2` è privata serve un gettone, una volta sola: un token a
-grana fine su quella repository sola, con **Contents: Read-only**, messo fra i
-segreti di questa repository come **`GETTONE_PLANCIA`** (Settings → Secrets and
-variables → Actions). Senza, la corsa finisce verde e scrive che manca quello.
+Per chi ci mette le mani, una regola sola: **dopo aver toccato un file della
+plancia si rifà il sigillo**, con `node strumenti/sigilla-la-plancia.mjs`. È
+quello che permette al ponte, dentro ogni casa, di dire se la plancia che ha è
+quella pubblicata o una che qualcuno ha rimaneggiato. Se ci si dimentica lo
+dicono le prove, non le case.
 
 ### Dal browser, senza installare niente _(la più rapida in assoluto)_
 

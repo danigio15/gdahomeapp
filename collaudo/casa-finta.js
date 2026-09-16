@@ -56,7 +56,7 @@ const DA_AGGIORNARE = [
       installed_version: "1.4.30",
       latest_version: "1.4.31",
       release_summary: "Le finestre della Config non restano più offuscate uscendo dall'editor.",
-      release_url: "https://github.com/danigio15/dashboardmodern-v2/releases",
+      release_url: "https://github.com/danigio15/gdahomeapp/releases",
       supported_features: 1,
     },
   },

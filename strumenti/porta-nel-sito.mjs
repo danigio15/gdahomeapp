@@ -141,8 +141,8 @@ function portaLaPlancia() {
   if (!existsSync(join(da, "legacy", "dashboard.html")))
     fermati(
       `In ${da} non c'e' la plancia.\n` +
-        "La porta dentro l'add-on `node strumenti/porta-la-plancia.mjs`, o la\n" +
-        "pagina «La plancia nuova» di GitHub.",
+        "La plancia sta in `ponte/plancia/`, dentro l'add-on: se li' non c'e',\n" +
+        "questo checkout e' incompleto.",
     );
 
   rmSync(PLANCIA_NEL_SITO, { recursive: true, force: true });

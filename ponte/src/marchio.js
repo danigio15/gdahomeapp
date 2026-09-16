@@ -1,11 +1,12 @@
 /* La faccia di gdahome sulla plancia.
  *
- * La plancia e' DashboardModern, ed e' **la stessa**: la cartella
- * `ponte/plancia/` e' una copia verbatim, sigillata e ricontrollata a ogni
- * avvio (`provenienza.js`). Dentro quella cartella non si tocca niente, e non
- * per scrupolo: al prossimo `porta-la-plancia.mjs` si rifa' da zero, e ogni
- * modifica fatta li' sarebbe da rifare a ogni versione nuova della dashboard —
- * cioe' ogni pochi giorni.
+ * La plancia si chiama DashboardModern dentro di se', e continua a
+ * chiamarsi cosi': quel nome, in `ponte/plancia/`, non e' solo una scritta.
+ * E' dentro le chiavi con cui la pagina si ricorda le cose, nei percorsi con
+ * cui chiede i suoi file, nei nomi delle sue classi. Cambiarlo in novecento
+ * file vorrebbe dire rincorrere per giorni delle rotture che non si vedono
+ * subito, per guadagnare niente: quello che deve cambiare e' **quello che si
+ * legge**.
  *
  * Quindi il nome e il marchio si mettono **al momento di servire**. E' lo
  * stesso posto dove stanno gia' tutte le altre aggiunte di gdahome alla pagina

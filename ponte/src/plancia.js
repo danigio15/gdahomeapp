@@ -2,8 +2,7 @@
  *
  * In Home Assistant non c'e' e non deve esserci nessuna integrazione: la
  * plancia — la pagina, i moduli, i caratteri, i ritratti — sta qui, in
- * `ponte/plancia/`, portata dentro da `strumenti/porta-la-plancia.mjs`, e il
- * ponte la serve al telefono sul filo. Il telefono la tiene sul disco e la
+ * `ponte/plancia/`, e il ponte la serve al telefono sul filo. Il telefono la tiene sul disco e la
  * ricarica solo quando cambia.
  *
  * Come fa a sapere che e' cambiata: dal percorso. I file si servono sotto
@@ -183,11 +182,11 @@ export class Plancia {
       /* E qui la plancia prende la faccia di gdahome: il logo, il velo
        * d'avvio, il titolo della pagina.
        *
-       * Al momento di servire, e non nella cartella: quella e' una copia
-       * verbatim della dashboard, sigillata, e al prossimo
-       * `porta-la-plancia.mjs` si rifa' da zero. Vestirla qui vuol dire che
-       * la versione dopo, e quella dell'anno prossimo, arrivano vestite senza
-       * che nessuno rifaccia niente. Vedi `marchio.js`. */
+       * Al momento di servire, e non nella cartella: li' dentro il nome
+       * regge chiavi e percorsi, e cambiarlo vorrebbe dire rompere cose che
+       * non si vedono subito. Vestirla qui vuol dire che la versione dopo, e
+       * quella dell'anno prossimo, arrivano vestite senza che nessuno
+       * rifaccia niente. Vedi `marchio.js`. */
       const vestito = vestiDiGdahome(relativi.join("/"), readFileSync(dove), tipo);
       return { stato: 200, tipo: vestito.tipo, corpo: vestito.corpo };
     } catch (_errore) {
