@@ -1,0 +1,13 @@
+# Le librerie e i caratteri che la plancia serviva dalla rete stanno in casa:
+# sono byte di terzi, non codice di questo progetto. Marcarli tiene oneste le
+# statistiche della repository e evita che un diff provi a stamparli. La regola
+# arriva da dashboardmodern-v2 insieme alla plancia: e' la stessa cartella, e'
+# solo cambiato il piano dove sta.
+ponte/plancia/legacy/vendor/** linguist-vendored
+ponte/plancia/legacy/vendor/*.js -diff
+ponte/plancia/legacy/vendor/fonts/*.woff2 binary
+
+# Le toppe del guscio originale: duecentoventi kilobyte di diff a testa, rifatti
+# da una macchina (officina/scripts/vendor_legacy.py). Un `git diff` che prova a
+# mostrarle riempie lo schermo e non dice niente.
+ponte/plancia/legacy/patches/*.diff -diff

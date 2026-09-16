@@ -46,6 +46,21 @@ export const CHIAVE_DI_CHI_PUBBLICA = "";
 /* Quali cartelle fanno la plancia, e quali file dentro. Chi sigilla non ha un
  * elenco suo: chiama `leImpronte` qui sotto, e guarda esattamente questi. */
 export const CARTELLE = ["legacy", "src", "avatars", "brands"];
+
+/* I suffissi sono un elenco di **quello che c'e' nella plancia**, non di
+ * quello che il ponte serve: un file non servito che nessuno controlla e' un
+ * file che si puo' cambiare senza che il sigillo se ne accorga. Quando la
+ * plancia arrivava da fuori questo elenco era quello dell'importazione — cioe'
+ * la domanda «cosa si serve?» — e teneva fuori la provenienza del guscio
+ * originale (`legacy/SOURCE.md`, `legacy/VENDOR.json`, `legacy/patches/`) e le
+ * licenze dei ritratti e dei loghi. Adesso la plancia vive qui, e quei file
+ * stanno dentro il sigillo come tutti gli altri.
+ *
+ * Resta un elenco, e non «tutto», per una ragione sola: quello che si
+ * costruisce accanto alla plancia e non si pubblica — le copie compresse
+ * (`.gz`, `.br`), il pacco, i `.DS_Store` — non deve far dire «modificata» a
+ * una plancia intatta. Un allarme che suona per niente si impara a non
+ * sentirlo. */
 const SUFFISSI = new Set([
   ".js",
   ".css",
@@ -60,6 +75,9 @@ const SUFFISSI = new Set([
   ".ico",
   ".woff2",
   ".woff",
+  ".md",
+  ".txt",
+  ".diff",
 ]);
 const CARTELLE_ESCLUSE = new Set(["e2e", "tests", "__pycache__"]);
 

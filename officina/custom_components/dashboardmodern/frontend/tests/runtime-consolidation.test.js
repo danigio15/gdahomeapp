@@ -1,0 +1,287 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
+
+import {
+  isCumulativeEnergyEntity,
+  periodConsumption,
+  periodRange,
+  sourcePlans,
+} from "../src/core/period-service.js";
+
+const totalState = (id) => ({
+  entity_id: id,
+  state: "9000",
+  attributes: {
+    unit_of_measurement: "kWh",
+    device_class: "energy",
+    state_class: "total_increasing",
+  },
+});
+
+const measurementState = (id) => ({
+  entity_id: id,
+  state: "42.6",
+  attributes: {
+    unit_of_measurement: "kWh",
+    device_class: "energy",
+    state_class: "measurement",
+  },
+});
+
+test("closed month uses the exact exclusive next-month boundary", () => {
+  const selected = new Date(2026, 4, 1);
+  const range = periodRange("month", selected, new Date(2026, 7, 3));
+  assert.equal(range.start.getFullYear(), 2026);
+  assert.equal(range.start.getMonth(), 4);
+  assert.equal(range.start.getDate(), 1);
+  assert.equal(range.end.getFullYear(), 2026);
+  assert.equal(range.end.getDate(), 1);
+  assert.equal(range.end.getMonth(), 5);
+  assert.equal(range.end.getHours(), 0);
+});
+
+test("year range is independent from selected month", () => {
+  const range = periodRange("year", new Date(2025, 9, 1), new Date(2026, 7, 3));
+  assert.equal(range.start.getFullYear(), 2025);
+  assert.equal(range.start.getMonth(), 0);
+  assert.equal(range.start.getDate(), 1);
+  assert.equal(range.end.getFullYear(), 2026);
+  assert.equal(range.end.getMonth(), 0);
+  assert.equal(range.end.getDate(), 1);
+  /* A giorni, non a mesi: su un contatore che si azzera ogni mese i secchielli
+   * mensili portano il totale di quel mese, e da dodici numeri che non stanno
+   * su una scala comune il consumo dell'anno non si ricava piu'. Vedi
+   * `lanno-della-wallbox-passa-dai-giorni`. */
+  assert.equal(range.period, "day");
+});
+
+test("current year range ends at now instead of reusing the selected month", () => {
+  const now = new Date(2026, 7, 3, 14, 30, 0, 0);
+  const range = periodRange("year", new Date(2026, 4, 1), now);
+  assert.equal(range.start.getTime(), new Date(2026, 0, 1).getTime());
+  assert.equal(range.end.getTime(), now.getTime());
+});
+
+test("appliance cumulative total is converted to selected-period delta", () => {
+  assert.equal(periodConsumption([{ sum: 9100 }], { sum: 9000 }), 100);
+  assert.equal(periodConsumption([{ sum: 9100 }]), null);
+});
+
+test("Recorder sum growth matches Home Assistant across physical meter resets", () => {
+  const baseline = { start: "2026-07-31T23:00:00Z", state: 98, sum: 11839.4 };
+  const rows = [
+    { start: "2026-08-01T00:00:00Z", state: 1.2, sum: 11840.6 },
+    { start: "2026-08-01T01:00:00Z", state: 3.6, sum: 11843.0 },
+    { start: "2026-08-01T02:00:00Z", state: 0.5, sum: 11843.5 },
+  ];
+  assert.ok(Math.abs(periodConsumption(rows, baseline) - 4.1) < 1e-9);
+  assert.equal(
+    periodConsumption(
+      rows.map(({ sum: _sum, ...row }) => row),
+      baseline,
+    ),
+    null,
+  );
+});
+
+test("canonical total sensor derives every Energy period", () => {
+  const states = { "sensor.house_total": totalState("sensor.house_total") };
+  for (const kind of ["day", "month", "year"]) {
+    const plans = sourcePlans({ house: { total_energy: "sensor.house_total" } }, kind, states);
+    assert.equal(plans.length, 1);
+    assert.equal(plans[0].key, "house");
+    assert.equal(plans[0].entity, "sensor.house_total");
+    assert.equal(plans[0].direct, false);
+    assert.equal(plans[0].reason, "canonical-total");
+  }
+});
+
+test("configured monthly fields remain direct even when Home Assistant marks them total_increasing", () => {
+  const cumulativePlans = sourcePlans(
+    { solar: { monthly_energy: "sensor.solar_month" } },
+    "month",
+    { "sensor.solar_month": totalState("sensor.solar_month") },
+  );
+  assert.equal(cumulativePlans[0].direct, true);
+  assert.equal(cumulativePlans[0].reason, "explicit-period");
+  assert.equal(cumulativePlans[1].fallback, true);
+  assert.equal(cumulativePlans[1].reason, "explicit-cumulative-fallback");
+
+  const direct = sourcePlans({ solar: { monthly_energy: "sensor.solar_month" } }, "month", {
+    "sensor.solar_month": measurementState("sensor.solar_month"),
+  })[0];
+  assert.equal(direct.direct, true);
+  assert.equal(direct.reason, "explicit-period");
+});
+
+test("legacy overrides still classify total increasing meters safely", () => {
+  const plans = sourcePlans(
+    {},
+    "month",
+    { "sensor.grid_total_import": totalState("sensor.grid_total_import") },
+    { "dm.energy_rete_acquistata_mese": "sensor.grid_total_import" },
+  );
+  assert.equal(plans.length, 1);
+  assert.equal(plans[0].slot, "dm.energy_rete_acquistata_mese");
+  assert.equal(plans[0].reason, "legacy-cumulative");
+  assert.equal(isCumulativeEnergyEntity("sensor.solarman_total_grid_energy"), true);
+  assert.equal(
+    isCumulativeEnergyEntity("sensor.energy_month", {
+      "sensor.energy_month": measurementState("sensor.energy_month"),
+    }),
+    false,
+  );
+});
+
+test("one hosted bootstrap delegates to the section runtime, which owns the guard", async () => {
+  const loader = await readFile(new URL("../legacy/config.js", import.meta.url), "utf8");
+  const prelude = await readFile(new URL("../legacy/bridge-prelude.js", import.meta.url), "utf8");
+  const sections = await readFile(
+    new URL("../src/sections/section-runtime.js", import.meta.url),
+    "utf8",
+  );
+  const energy = await readFile(
+    new URL("../src/sections/energy-section.js", import.meta.url),
+    "utf8",
+  );
+  const stability = await readFile(
+    new URL("../src/sections/energy-stability-section.js", import.meta.url),
+    "utf8",
+  );
+  const guidance = await readFile(
+    new URL("../src/sections/energy-guidance-section.js", import.meta.url),
+    "utf8",
+  );
+  const report = await readFile(
+    new URL("../src/sections/report-editor-section.js", import.meta.url),
+    "utf8",
+  );
+  const editors = await readFile(
+    new URL("../src/sections/unified-editors-section.js", import.meta.url),
+    "utf8",
+  );
+  const applianceLayout = await readFile(
+    new URL("../src/sections/appliance-layout-section.js", import.meta.url),
+    "utf8",
+  );
+  const applianceShowcase = await readFile(
+    new URL("../src/sections/appliance-showcase-section.js", import.meta.url),
+    "utf8",
+  );
+  const ev = await readFile(new URL("../src/sections/ev-section.js", import.meta.url), "utf8");
+  const guard = await readFile(
+    new URL("../src/transport/hosted-bridge-guard.js", import.meta.url),
+    "utf8",
+  );
+
+  assert.doesNotMatch(loader, /transport\/hosted-bridge-guard\.js/);
+  assert.match(loader, /\.\.\/src\/sections\/section-runtime\.js/);
+  assert.match(loader, /__DASHBOARDMODERN_LEGACY_READY__/);
+  assert.match(loader, /DashboardModernModules/);
+  assert.doesNotMatch(loader, /report-mobile-fixes/);
+  assert.match(sections, /transport\/hosted-bridge-guard\.js/);
+  assert.doesNotMatch(
+    loader,
+    /runtime-consolidated|mobile-ui-fixes|alerts-runtime|vehicle-image-runtime|release-\d+/,
+  );
+
+  for (const name of [
+    "data-contracts",
+    "energy",
+    "energy-stability",
+    "energy-guidance",
+    "temperature",
+    "temperature-layout",
+    "appliances",
+    "appliance-layout",
+    "appliance-editor",
+    "lights-alerts",
+    "alerts",
+    "unified-editors",
+    "editor-crud",
+    "editor-contracts",
+    "report-editor",
+    "shutter",
+    "ev",
+  ]) {
+    assert.match(sections, new RegExp(`${name}-section\\.js`));
+  }
+  assert.match(sections, /legacy-sections-registry\.js/);
+  assert.doesNotMatch(sections, /shutter-alert-layout-section\.js/);
+
+  assert.equal((energy.match(/new\s+SafeHomeAssistantBroker\s*\(/g) || []).length, 1);
+  /* Un aggiornamento non e' piu' una domanda per periodo: i piani di giorno,
+   * mese e anno — fonti, dispositivi e carichi — si mettono insieme per ARCO
+   * di tempo, e chi condivide l'arco condivide la domanda (vedi
+   * `loadAtomicEnergyBundle` e `valoriPerArchi`). Erano sette letture delle
+   * statistiche, due delle quali coprivano tredici mesi. */
+  assert.match(energy, /pianiDelleFonti\("day"\)/);
+  assert.match(energy, /pianiDelleFonti\("month"\)/);
+  assert.match(energy, /pianiDelleFonti\("year"\)/);
+  /* Una chiamata sola, e gli archi restano condivisi. Il quarto argomento
+   * raccoglie i GIORNI del mese dei dispositivi: la risposta del Recorder e'
+   * a giorni comunque, e il picco del mese e' il massimo di quella serie —
+   * tenerla non aggiunge una domanda, buttarla ne avrebbe chiesta un'altra. */
+  assert.match(
+    energy,
+    /broker\.valoriPerArchi\(\s*richieste,\s*new Map\(\),\s*alPasso,\s*giorniDeiDispositivi,\s*ammanchiDeiDispositivi,\s*\)/,
+  );
+  assert.equal((energy.match(/broker\.valoriPerArchi\(/g) || []).length, 1);
+  assert.match(energy, /Incomplete Home Assistant statistics/);
+  assert.doesNotMatch(stability, /waitForHostedBridge/);
+  assert.doesNotMatch(stability, /refreshEnergy/);
+  assert.match(stability, /energy-section\.js is the sole owner of Recorder requests/);
+  assert.match(stability, /dm-energy-awaiting/);
+  assert.match(guidance, /consumo Casa usa lo stesso bilancio dei flussi di Home Assistant/);
+  assert.match(guidance, /energyEditorActive/);
+  assert.match(guidance, /removeEnergyGuidance/);
+  assert.match(guidance, /storico e mesi precedenti si ricavano da qui con Recorder/);
+  assert.match(guidance, /dm-energy-source-clash/);
+  assert.match(report, /dm-report-row-editor/);
+  assert.match(report, /grid-template-areas/);
+  for (const kind of ["action", "climate", "shutter", "room"])
+    assert.match(editors, new RegExp(`kind === "${kind}"`));
+  // La scheda dell'elettrodomestico ha gli angoli arrotondati, non e' una
+  // pastiglia — e a deciderlo e' la sezione che la disegna. Il foglio accanto
+  // ne teneva una seconda copia, per una scheda che nessuno disegnava piu'.
+  const scheda = /\.appl-wide-card\.dm-ap-card\{([^}]*)\}/.exec(applianceShowcase);
+  assert.ok(scheda, "manca la regola della scheda");
+  assert.match(scheda[1], /border-radius:22px/);
+  assert.doesNotMatch(scheda[1], /border-radius:999px/);
+  assert.doesNotMatch(applianceLayout, /appl-wide-card:not\(\.dm-ap-card\)/);
+  assert.match(ev, /dm-vehicle-profile-card/);
+  assert.match(ev, /dm-vehicle-native-select/);
+  assert.doesNotMatch(ev, /shutter|alert/i);
+
+  assert.match(guard, /isStructurallyHostedDashboard/);
+  assert.match(guard, /adoptHostedBridge/);
+  assert.match(guard, /sanitizeHostedCredentials/);
+  assert.match(guard, /BridgeCtor\.__dmInjectedHostedAdapter !== true/);
+  assert.match(guard, /access_token: HOSTED_PLACEHOLDER/);
+  assert.doesNotMatch(guard, /access_token:\s*(?:token|nativeCredential\(\)|root\.)/);
+  assert.doesNotMatch(prelude, /__DASHBOARDMODERN_REAL_TOKEN__/);
+  assert.doesNotMatch(prelude, /access_token/);
+
+  for (const deleted of [
+    "../legacy/report-mobile-fixes.js",
+    "../legacy/mobile-ui-fixes.js",
+    "../legacy/runtime-consolidated.js",
+    "../src/core/alerts-runtime.js",
+    "../src/core/vehicle-image-runtime.js",
+    "../src/core/runtime-startup-coordinator.js",
+    "../src/sections/shutter-alert-layout-section.js",
+    "../src/sections/home-section.js",
+    "../src/sections/climate-section.js",
+    "../src/sections/security-section.js",
+    "../src/sections/solar-thermal-section.js",
+    "../src/sections/pool-section.js",
+    "../src/sections/irrigation-section.js",
+    "../src/sections/minipc-section.js",
+    "../src/sections/legacy-section-adapter.js",
+  ]) {
+    await assert.rejects(readFile(new URL(deleted, import.meta.url), "utf8"), {
+      code: "ENOENT",
+    });
+  }
+});

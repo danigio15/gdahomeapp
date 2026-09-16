@@ -1,0 +1,1477 @@
+// DM-FIX-20260813A
+import assert from "node:assert/strict";
+import { access, readdir, readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import test from "node:test";
+
+const frontendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const staticImportPattern = /(?:import|export)\s+(?:[^"']*?\s+from\s+)?["']([^"']+)["']/g;
+const dynamicImportPattern = /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g;
+const productionEntries = Object.freeze([
+  "legacy/config.js",
+  "legacy/modules-entry.js",
+  "panel.js",
+  "dashboard-card.js",
+]);
+const obsoleteFacades = Object.freeze([
+  "src/sections/home-section.js",
+  "src/sections/climate-section.js",
+  "src/sections/security-section.js",
+  "src/sections/solar-thermal-section.js",
+  "src/sections/pool-section.js",
+  "src/sections/irrigation-section.js",
+  "src/sections/minipc-section.js",
+  "src/sections/legacy-section-adapter.js",
+  "legacy/report-mobile-fixes.js",
+]);
+
+async function filesBelow(directory) {
+  const output = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const absolute = path.join(directory, entry.name);
+    if (entry.isDirectory()) output.push(...(await filesBelow(absolute)));
+    else output.push(absolute);
+  }
+  return output;
+}
+
+function importSpecifiers(source) {
+  return [
+    ...[...source.matchAll(staticImportPattern)].map((match) => match[1]),
+    ...[...source.matchAll(dynamicImportPattern)].map((match) => match[1]),
+  ];
+}
+
+async function productionGraph(entries = productionEntries) {
+  const seen = new Map();
+  const edges = new Map();
+
+  async function visit(file) {
+    const normalized = path.normalize(file);
+    if (seen.has(normalized)) return;
+    const source = await readFile(normalized, "utf8");
+    seen.set(normalized, source);
+    const dependencies = [];
+    edges.set(normalized, dependencies);
+    for (const specifier of importSpecifiers(source)) {
+      if (!specifier.startsWith(".")) continue;
+      let next = path.resolve(path.dirname(normalized), specifier);
+      if (!path.extname(next)) next += ".js";
+      next = path.normalize(next);
+      dependencies.push(next);
+      await visit(next);
+    }
+  }
+
+  for (const entry of entries) await visit(path.resolve(frontendRoot, entry));
+  return { seen, edges };
+}
+
+function assertAcyclic(edges) {
+  const active = new Set();
+  const complete = new Set();
+  function visit(file, chain = []) {
+    if (complete.has(file)) return;
+    if (active.has(file)) {
+      const cycle = [...chain, file]
+        .map((item) => path.relative(frontendRoot, item).replaceAll("\\", "/"))
+        .join(" -> ");
+      assert.fail(`production import cycle: ${cycle}`);
+    }
+    active.add(file);
+    for (const dependency of edges.get(file) || []) visit(dependency, [...chain, file]);
+    active.delete(file);
+    complete.add(file);
+  }
+  for (const file of edges.keys()) visit(file);
+}
+
+test("production graph is single-owner, acyclic and contains no facade pass-throughs", async () => {
+  const { seen: graph, edges } = await productionGraph();
+  const relative = [...graph.keys()].map((file) =>
+    path.relative(frontendRoot, file).replaceAll("\\", "/"),
+  );
+  const combined = [...graph.values()].join("\n");
+
+  assert.equal(relative.filter((file) => file.endsWith("section-runtime.js")).length, 1);
+  assert.equal(relative.filter((file) => file.endsWith("legacy-sections-registry.js")).length, 1);
+  assert.deepEqual(
+    relative.filter((file) => /legacy\/release-\d+/.test(file)),
+    [],
+  );
+  assert.deepEqual(
+    relative.filter((file) =>
+      /runtime-real-ha|runtime-residual|runtime-release-owner|runtime-regression-guard|runtime-consolidated/.test(
+        file,
+      ),
+    ),
+    [],
+  );
+  assert.deepEqual(
+    relative.filter((file) =>
+      /mobile-ui-fixes|alerts-runtime|vehicle-image-runtime|runtime-startup-coordinator|report-mobile-fixes/.test(
+        file,
+      ),
+    ),
+    [],
+  );
+  // v1 beta adds the persistence owner plus substantive UI owners. Beta4/Beta5
+  // keep one scoped mobile-polish owner; Beta6 adds one event-driven feedback
+  // owner. Beta7 adds exactly two scoped, event-driven guards for real WebView
+  // failures: brand-image fallback and the final mobile regression polish.
+  // Beta9 adds one final scoped event-driven real-device reconciler for the
+  // screenshot-proven EV/editor/shutter conflicts, with no polling or observer.
+  // Beta11 intentionally adds one final, scoped and event-driven owner for the
+  // screenshot-proven EV logo, alert picker and room-label regressions.
+  // Beta12 keeps its final action/room first-paint contract inside the existing
+  // room-color lock; reset, temperature, shutters and energy flows were
+  // consolidated into their existing production owners rather than new modules.
+  // Beta16 intentionally adds one scoped owner for the screenshot-proven room
+  // label, Temperature tab, compact Climate and Pool responsive contracts.
+  // Beta17 keeps the scoped Temperature progress-copy guard. Beta18 adds one
+  // canonical icon-engine owner while historical beta modules delegate instead
+  // of repainting the same icon DOM. Beta20.2 adds exactly one canonical save
+  // owner to close the legacy editor -> store -> visibility -> HA persistence
+  // transaction. Beta22 adds one final scoped, event-driven corrective owner
+  // that binds canonical Loads to the existing Energy flow slots, restores SOC,
+  // Temperature room labels and Energy cost fields, without polling or a global
+  // observer. Beta24 adds one boot-time recovery module for schema-v4 snapshots
+  // that crossed the persistence rewrite; its only observer is scoped to the
+  // single Battery SOC text node so competing legacy writes cannot visibly win.
+  // Beta25 adds one event-driven owner for the three screenshot-proven real-device
+  // regressions plus one compatibility owner that restores stable DOM/runtime
+  // contracts after those targeted renders. Neither adds polling or observers.
+  // Beta26 adds exactly one real-device stability owner; its only observer is
+  // scoped to #temp-grid so saved primary labels win over delayed legacy repaints.
+  // Beta27 adds one final event-driven real-device owner for compact appliance
+  // geometry/theme/media contracts and single-owner Temperature room tabs. It
+  // adds no polling or document-wide observer.
+  // The appliance showcase redesign adds exactly four owners: the pure card
+  // view-model, the cycle tracker, the photorealistic hero artwork and the
+  // showcase section renderer. All four are event-driven (state-changed +
+  // legacy render loop), with no polling and no observers.
+  // The dynamic energy-flow stage adds exactly one owner: the pure topology and
+  // view-model. The renderer itself lives in the existing energy-flow section,
+  // which stays the single owner of the Flows stage; the Beta 22 corrective
+  // stands down instead of a second module arriving to arbitrate between them.
+  // The rebuilt Loads config adds two: the pure config model and the panel that
+  // edits it. The Beta 26/27 hierarchy editor stands down in the same way, so
+  // the Loads panel keeps exactly one renderer. The circle popup adds two more,
+  // the same split: a pure model and the owner that renders it over the legacy
+  // list, which is what makes the circle total and the popup total one number.
+  // The Pool/Irrigation redesign adds exactly one owner: the scene section that
+  // replaces both legacy paint functions. Beta11's stylesheet block and the
+  // Beta12/14/16 pool correctives stood down into it, so the two pages have one
+  // renderer and one stylesheet instead of five competing layers.
+  // The Tapparelle redesign adds exactly one owner: the scene section that
+  // replaces the legacy paint function so the page can carry a summary header,
+  // per-room headings and a position track. It renders per structural
+  // signature rather than per tick, keeps commands on the legacy cdTappCmd
+  // handler, and adds no polling and no observer. The window skin stays in the
+  // existing shutter section, which is still the single owner of the
+  // first-paint geometry, so the two modules split structure from paint rather
+  // than competing over the same declarations.
+  // All facade/cycle/orphan/polling/global-observer checks stay active.
+  // The Solar Thermal redesign adds exactly one owner: a style-and-labels module
+  // for #page-boiler. It installs one stylesheet, fills the decorative labels the
+  // legacy markup left empty and reads no Home Assistant state, so the page keeps
+  // the legacy runtime as its single behavioural owner. It adds no polling, and
+  // its only listener is a media query that swaps the portrait scene in.
+  // The Security redesign adds exactly one owner: the section renderer that
+  // repaints the alarm console and the camera grid. It is event-driven
+  // (state-changed + legacy render loop), adds no polling and no observer, and
+  // keeps the camera engine — apriCamera, the streaming strategies and
+  // toggleFullScreenCam — in the legacy runtime instead of forking it.
+  // The EV redesign adds exactly one owner: the skin for #page-ev. It moves the
+  // battery block into a charge ring, mirrors the active EVCC mode onto the page
+  // as an attribute and restyles the picker that ev-section.js keeps building.
+  // It reads no Home Assistant state — the ring reads #ev-mod-batt-fill, the
+  // rows carry legacy value classes — and adds no polling and no observer.
+  // The fast entity search adds exactly two: the pure search index (folding,
+  // ranking and field auto-detection) and the section that installs it over the
+  // vendored `cdEpFilter`. No new picker is introduced — the canonical dialog
+  // stays the only one — and the section is event-driven, with no polling and
+  // no observer.
+  // The Climate redesign adds exactly one owner: the section renderer for
+  // #page-clima. It replaces buildClimaCards/updateClimaCards instead of adding
+  // a layer on top, so the Beta 4 / Beta 7 / Beta 16 / personalization
+  // corrections for the old .cp-card markup stop matching and the page keeps one
+  // renderer and one stylesheet. It is event-driven (state-changed + the legacy
+  // render loop) and leaves every service call — setTemp, toggleClima and the
+  // HVAC/fan popup — in the legacy runtime.
+  // The editor slot rows add exactly one owner: it decorates the rows the legacy
+  // editor prints, hides the raw entity field behind "Modifica manuale" and
+  // routes the tap to the legacy wzPickEntity(), which the fast search above
+  // owns. No polling, no observer.
+  // The Temperature trend panel adds exactly one owner: it draws the history
+  // chart under the cards from the same history/history_during_period the card
+  // popup already uses, follows the room tabs by reading the active tab, and
+  // watches #temp-grid so any renderer rebuild redraws it. No polling.
+  // The Luci redesign adds exactly two: the pure light model — capabilities,
+  // colour maths and the service call for one requested change — and the scene
+  // that owns the Gestione Luci popup and the control sheet of a single light.
+  // The scene decorates `apriGestioneLuci` rather than replacing it, because
+  // that function is the only writer of the runtime's lexical
+  // `currentPopupType` and no module can reach a lexical binding; it repaints
+  // the list in the same task, so the legacy markup is never shown. It renders
+  // per structural signature rather than per tick, writes values into the
+  // existing cards while the tick runs, and adds no polling and no observer.
+  // The Luci editor keeps its own owner and now reads the same model, so the
+  // capability badges in the tab and the controls in the popup cannot disagree.
+  // The Config auto-detection adds two more of the same shape: the pure matcher
+  // and the section that installs it over the vendored `edAutoRileva`, reusing
+  // that index instead of building a second one.
+  // The MiniPC redesign adds exactly one owner: the skin for #page-server. It
+  // turns the three load bars into ring gauges that read those same bars, moves
+  // the value nodes into the rings instead of copying them, mirrors the status
+  // wording the legacy loop writes and follows #waw-net-badge for connectivity.
+  // It reads no Home Assistant state, adds no polling and no observer, and never
+  // forces a display the auto-hide writes inline on an unmapped card.
+  // Beta 31 adds exactly one owner: the Configuration answers the same three
+  // questions the same way on every tab — one section per tab, one visibility
+  // switch, one save at the end — by reconciling what the tab renderers leave
+  // behind. It renders no section content and saves nothing itself.
+  // All facade/cycle/orphan/polling/global-observer checks stay active.
+  // Beta 31.1 adds one more owner: every section of the dashboard opens with
+  // the same heading — icon, name, and the line that says what the page is for
+  // — instead of six different ideas of a title. It renders no data.
+  // E uno ancora: il rientro nell'app. Il runtime apre la presa verso Home
+  // Assistant una volta sola e, se quel tentativo salta, non ne prova altri —
+  // su iPhone, dove il sistema butta via la pagina quando passi ad altra app,
+  // la plancia restava ferma a "CONNECTING…". Quel modulo non apre nessuna
+  // presa e non legge nessuno stato: richiama connect(), quello del runtime.
+  // E due, insieme: la finestra dietro la tapparella. La card mostrava una
+  // tapparella senza infisso; adesso in primo piano c'e' il telaio con le sue
+  // ante, e un contatto sull'anta dice se sono aperte. La lettura del contatto
+  // sta in un modulo puro perche' si possa provare senza browser, il disegno in
+  // un modulo di sezione che non scrive dati: la posizione della tapparella
+  // resta di chi la disegnava.
+  // 110 con il cielo della sezione Tapparelle: la fascia del giorno sta in un
+  // modulo puro — si prova senza browser — e chi la usa scrive solo un attributo
+  // sulla pagina, perche' il disegno del cielo era gia' tutto in variabili.
+  // 128 con le sezioni della 1.1.0.
+  // 132 con la lingua. La plancia parlava due lingue perche' ne esistevano due
+  // copie: il ternario `t(it, en)` in ogni sezione e due build separate del
+  // runtime. I quattro moduli qui sono quello che rende la lingua un dato
+  // invece di una biforcazione: il motore che risolve locale e cataloghi, la
+  // passata che traduce il testo che il runtime vendorizzato stampa da solo,
+  // l'indice che porta quel testo italiano alla sua chiave inglese, e la
+  // sezione che accende il tutto prima che qualcuno disegni. I cataloghi delle
+  // singole lingue non sono qui: si caricano su richiesta, uno solo per utente.
+  // 134 con l'allagamento e col promemoria del chiosco. Il primo e' una lista
+  // sorvegliata come le altre — la sua card nel Quadro Avvisi, il suo popup, la
+  // sua voce in configurazione — e sta in un modulo perche' non e' una variante
+  // di nessuna delle altre cinque. Il secondo e' il piccolo modulo puro che
+  // dice come si disfa quello che il chiosco scrive nel documento di Home
+  // Assistant: lo leggono in due, la plancia dentro la cornice e chi la ospita,
+  // e sono due programmi diversi — un posto solo dove sta scritto e' l'unico
+  // modo perche' chi smonta possa pulire anche quando la cornice non c'e' piu'.
+  // 135 con l'identita' delle auto. Un profilo si e' sempre indicato con la sua
+  // posizione nell'elenco, e una posizione cambia sotto i piedi: cancellata la
+  // prima auto la seconda diventa la prima, e il numero salvato — anche quello
+  // arrivato dalla configurazione condivisa di un altro dispositivo — indica
+  // un'altra vettura. Il modulo dice chi e' un'auto, e lo dicono in quattro
+  // posti diversi: la sezione Auto, la Personalizzazione, e le due passate che
+  // riempiono la scheda. Una sola definizione, o tornano a divergere.
+  // 136 con le fondamenta del tema scuro. «Scuro» scuriva le card una per una
+  // ma le variabili di base — il fondo della pagina, il colore del testo —
+  // non avevano mai avuto una versione notturna: card scure su pagina bianca.
+  // Le ridefinizioni stanno in un modulo loro perche' sono la base che ogni
+  // altra regola eredita, non il ritocco di una sezione.
+  // 139 con le persone. Il modello puro dice chi abita la casa e cosa se ne
+  // mostra — zona, batteria, ritratto — e lo leggono in due: la sezione che
+  // disegna le card in cima alla Home e l'editor che scrive `cd_people`. Sono
+  // due moduli perche' uno vive a ogni cambio di stato e l'altro solo dentro
+  // la scheda di configurazione, come per il robot.
+  // 140 con la verita' dei flussi. La mappa accendeva le linee un numero alla
+  // volta — qualunque solare accendeva «solare → casa» anche quando finiva
+  // tutto in batteria, e «rete → batteria» non esisteva. L'aritmetica della
+  // spartizione sta in un modulo puro, provabile a tavolino; la legge la
+  // sezione dei flussi che gia' possiede la scena.
+  // 141 con la faccia costruita. Il disegno dell'avatar — cataloghi chiusi e
+  // SVG deterministico — sta in un modulo puro perche' lo leggono in due, la
+  // card e il costruttore dell'editor, e devono disegnare la stessa persona.
+  // 142 con la pagina Luci. Il popup sopra la Home resta com'e'; la pagina
+  // intera nella barra — conto delle accese, comandi per tutta la casa,
+  // gruppi per stanza — e' un modulo suo perche' possiede un'altra superficie
+  // dello stesso modello: le capacita' stanno in core/light-model.js e la
+  // scheda controlli resta quella del popup, qui non si duplica niente.
+  // 148 con le aperture della Sicurezza (#195) e le liste ToDo della Home
+  // (#201): ognuna segue lo schema delle persone — un modello puro che si
+  // prova da solo, la sezione che disegna, l'editor che scrive la sua chiave.
+  // 149 col backup della configurazione: la scheda che raccoglie le chiavi
+  // condivise in un file e le rimette al loro posto — funzioni pure per il
+  // giro dei dati, provate a tavolino, e nessuna chiave sua.
+  // 150 con la scelta delle entità nei widget: le tessere leggono la
+  // configurazione della sezione che raccontano, tutta, e questo modulo mette
+  // accanto a ogni entità già scritta negli editor l'interruttore che dice se
+  // va in Home. Non disegna una scheda sua — decora quelle che ci sono — e la
+  // scelta la scrive dove abitano già le preferenze del ponte.
+  // 152 col ritratto delle persone rifatto: i render 3D di Fluent Emoji al
+  // posto del disegno a mano. Il catalogo generato dallo script di build
+  // (core/avatar-catalog.js) porta i nomi dei file e le misure prese una
+  // volta sola; il modello (core/avatar-3d.js) dice quali due immagini
+  // servono e come incastrarle, e non sa cos'e' una pagina; la sezione
+  // (sections/person-avatar-section.js) le incastra su una tela e ci disegna
+  // sopra le palpebre. Il motore che disegnava le facce a mano se n'e'
+  // andato con tutti i suoi pezzi.
+  // 154 con le Stanze: la casa letta per stanza invece che per tipo. Il
+  // modello (core/room-overview.js) raccoglie le assegnazioni che le
+  // sezioni gia' scrivono e le gira dall'altro lato — senza spostare
+  // niente e senza sapere cos'e' una pagina; la sezione
+  // (sections/rooms-page-section.js) le disegna, e per le luci non fa una
+  // card sua: usa quella della pagina Luci, che e' esportata apposta.
+  // 155 con gli impianti dell'energia: sotto lo stesso tetto puo' esserci
+  // piu' di un misuratore, e core/energy-plants.js e' il livello che
+  // mancava. Tiene la forma — il primo impianto resta al primo livello
+  // dell'oggetto salvato, gli altri in un elenco accanto — e le regole
+  // dell'id, che nasce una volta, non si ricava dal nome e non torna buono
+  // una seconda volta. Non sa cos'e' una pagina.
+  // 156 con le linguette degli impianti: la pagina Energia non cambia di una
+  // virgola, si aggiunge una riga sopra per scegliere quale casa si sta
+  // guardando — e con una casa sola quella riga non compare affatto.
+  // 155: se ne sono andati tutti e due gli argini della EV.
+  // `vehicle-identity.js` rimetteva a un'auto quello che `edEvCarAdd` del
+  // runtime le toglieva; `vehicle-photos.js` decideva di chi fosse una foto
+  // quando la stessa foto viveva in due posti. Adesso il salvataggio e' nostro
+  // e non toglie niente, e la foto sta nel profilo: non c'e' piu' niente da
+  // rimettere ne' da contendersi. `ev-console.js` resta perche' argine non e'
+  // mai stato: dice se la console di ricarica evcc e' configurata.
+  // 156 con la centrale antifurto che dichiara cosa sa fare: `alarm-panel.js`
+  // legge `supported_features` e dice quali inserimenti esistono davvero, quale
+  // tasto corrisponde allo stato, e se un codice c'e'. La plancia mostrava
+  // sempre gli stessi tre tasti: con Ring il tasto Notte non faceva niente
+  // perche' Ring la notte non ce l'ha, e `armed_home` accendeva Fuori. Non sa
+  // cos'e' una pagina: risponde su un oggetto di stato e basta.
+  // 157 con la stanza che si puo' dire ovunque: `room-assign-section.js` mette
+  // una tendina sulla riga in cui l'entita' e' gia' scritta, in qualunque
+  // scheda, e su quelle che una stanza ce l'hanno gia' per mestiere non mette
+  // niente. Aggiungere il campo a dieci editor voleva dire dieci punti in cui
+  // scriverlo e dieci modi di sbagliarlo.
+  // 158 con la scelta di quali tasti dell'antifurto vedere:
+  // `alarm-modes-editor-section.js` spunta la fila in configurazione. La
+  // centrale dice cosa ACCETTA — ed e' gia' la 156 a dirlo — ma quello che uno
+  // vuole vedere e' un'altra domanda: una Ring accetta cinque inserimenti, e
+  // chi in vacanza non ci va mai si ritrovava due tasti che non premera' mai
+  // davanti a quello che usa ogni sera. La regola di cosa si vede resta nel
+  // modello puro; qui c'e' solo il modo di dirla.
+  // 160 con i parametri del tasto Clima rapido: `core/quick-climate.js` dice
+  // cosa vuol dire un'impostazione e in quali chiamate si traduce, e
+  // `quick-climate-editor-section.js` la fa scegliere. Il popup della Home
+  // accendeva sempre in raffrescamento a ventisei gradi con la ventola
+  // automatica, scritti nel codice: chi voleva altro non aveva nessun posto
+  // dove dirlo. Il modello e' puro perche' la traduzione in tre chiamate si
+  // prova a tavolino — e' l'unico modo di essere sicuri che il tasto faccia
+  // quello che la scheda dice.
+  // 161 con il meteo nell'intestazione: `weather-in-masthead-section.js`
+  // sposta la striscia del meteo accanto al nome della casa e le da' la
+  // taglia di una fascia invece che di una card. Non e' un modulo di dati —
+  // non legge nessuno stato e non disegna niente: prende il blocco che c'e'
+  // gia', lo mette da un'altra parte e lo rimpicciolisce. Sta da solo perche'
+  // il posto e la taglia sono una scelta che si cambia in un punto, e perche'
+  // chi disegna le tessere della Home non deve sapere dove sta il meteo.
+  // 162 con l'ordine delle stanze: `rooms-order-editor-section.js` attacca due
+  // frecce a ogni riga della scheda Stanze. L'elenco delle stanze e' l'ordine
+  // in cui sono state aggiunte, e quello stesso ordine si ritrova in ogni
+  // tendina che chiede «in che stanza sta questa cosa» e nelle linguette della
+  // pagina Stanze: chi ha aggiunto il bagnetto per ultimo se lo ritrovava per
+  // ultimo dappertutto, e l'unico modo di spostarlo era cancellarlo e
+  // riscriverlo, perdendo tutto quello che gli era stato attribuito. La scheda
+  // la disegna il documento vendorizzato e non si tocca: sta da solo perche' e'
+  // un pezzo appoggiato a una scheda di cui non e' il padrone.
+  // 163 con gli oggetti delle tessere: `core/oggetti-widget.js` tiene i disegni
+  // che vanno dentro la pastiglia di ogni tessera — la lampadina col bulbo
+  // caldo, il termometro col mercurio, l'auto col parabrezza. Prima li' c'era
+  // un'emoji, e ogni sistema la disegna a modo suo: sei tessere vicine avevano
+  // sei stili diversi. Sta da solo, e senza dipendenze, perche' e' un
+  // vocabolario di disegni: lo leggono le tessere della Home e le intestazioni
+  // dei popup, e nessuno dei due deve sapere come e' fatto l'altro.
+  // 164 con il vassoio delle azioni rapide: `azioni-rapide-vassoio-section.js`
+  // mette i tasti dentro un ripiano incavato e ne possiede la geometria. Prima
+  // quella misura la scrivevano in due col peso massimo — la guardia del
+  // marchio e la sezione delle regressioni — e vinceva l'ordine di
+  // caricamento: cambiarla in un punto non bastava mai. Sta da solo perche' il
+  // ripiano e' una scelta di forma della Home, e chi disegna le tessere non
+  // deve sapere che esiste.
+  // 165 con il servizio giusto per le azioni rapide:
+  // `azioni-servizio-giusto-section.js` sa quale servizio ogni dominio sa
+  // davvero eseguire. Il guscio ne conosce due — `turn_on` per script e scene,
+  // `toggle` per tutto il resto — e `toggle` non e' universale: un `button` ha
+  // solo `press`, e chiedergli `toggle` non muove niente e non dice niente.
+  // Sta da solo perche' e' una sola domanda, e la risposta non serve a chi
+  // disegna i tasti: quello e' mestiere del vassoio, che infatti non lo sa.
+  // 166 col foglio del guscio: `foglio-del-guscio-section.js` si accorge se il
+  // foglio di stile grosso non e' arrivato e lo richiede. Quando si perde, la
+  // plancia sembra quasi normale — i moduli portano il proprio stile — ma i
+  // cerchi del flusso, che hanno lo stile solo li', restano invisibili: da
+  // fuori «i flussi sono scomparsi». Sta da solo perche' guarda il documento,
+  // non una sezione, e nessuna sezione deve sapere che esiste.
+  // 167 con le strisce di linguette: i periodi, gli impianti e le stanze sono
+  // lo stesso nastro che scorre di lato disegnato in tre posti, e ne veniva lo
+  // stesso difetto tre volte — la pillola accesa tagliata contro la testata,
+  // e le ultime linguette irraggiungibili col mouse. Adesso quella regola ha
+  // un padrone solo: `le-strisce-di-linguette-section.js`.
+  // 168 col segno progressivo: «un identificativo non si riusa mai, perche'
+  // altrimenti chi nasce eredita in silenzio quello che apparteneva a chi e'
+  // stato cancellato — i carichi di un impianto, le foto di un'auto». Quella
+  // regola era scritta due volte, con lo stesso nome, negli impianti e nelle
+  // auto: e' proprio il genere di regola che non deve poter divergere, perche'
+  // quando diverge si perdono dati di qualcuno e non si capisce perche'. Sta da
+  // sola perche' non appartiene ne' all'energia ne' alle auto: e' una regola
+  // sugli identificativi, e domani vale anche per le piscine.
+  // 170 col catalogo dei disegni e la sua tavolozza: le stanze, le azioni e i
+  // carichi uscivano a emoji — quelle del sistema, che cambiano faccia da un
+  // telefono a un altro — accanto alla scocca blu notte degli elettrodomestici.
+  // Tre stili nella stessa schermata. I cinquantasei disegni che mancavano
+  // stanno in `catalogo-disegni.js`, e i colori e i tratti con cui sono fatti
+  // in `tavolozza-disegni.js`, scritti una volta sola: sono due perche' la
+  // tavolozza la usa anche chi disegnera' la cinquantasettesima, e senza un
+  // posto dove chiederla si ricomincia a occhio.
+  // 171 col racconto della tessera: la finestra di una sezione ha smesso di
+  // essere un elenco e dice cosa sta succedendo — «2 zone su 5 accese, manca
+  // 1,2 gradi all'obiettivo» invece di undici righe da mettere insieme a
+  // mente. Il verdetto e la frase si ragionano, quindi stanno in un modulo
+  // puro, `racconto-tessera.js`, e si provano senza browser: una frase che
+  // dice «da 40 minuti» o «finisce alle 19:20» e' esattamente il genere di
+  // cosa che si sbaglia in silenzio, e a occhio non si vede.
+  // 172 col motore di analisi delle finestre: la frase sotto il verdetto
+  // veniva da un ripiego che sa contare solo cose accese e spente, e dieci
+  // sezioni su diciassette non sono fatte cosi'. L'Energia scriveva «4 cose,
+  // nessuna in funzione» col fotovoltaico a 2,16 kW; la Sicurezza «Qui non
+  // c'e' ancora niente» con l'antifurto elencato sotto. Le letture stanno in
+  // un modulo puro, `analisi-sezione.js`, separato da `racconto-tessera.js`
+  // perche' fanno due mestieri diversi: quello dice se una tessera e' in moto
+  // e come si chiama il suo verdetto, questo legge i numeri di una sezione e
+  // ne ricava una frase e i punti che la reggono. Tenerli insieme voleva dire
+  // un file dove il conteggio delle righe e il bilancio energetico si
+  // guardano, ed e' il genere di vicinanza da cui nascono i due padroni.
+  // 173 col modello di una grandezza nel tempo: la finestra sapeva dire «574 W»
+  // e nient'altro, e un numero da solo non si sa se e' tanto o poco — 574 watt
+  // sono normali per una casa e tantissimi per un frigorifero. Il modulo
+  // prende una serie di letture e ne ricava le quattro cose che servono per
+  // dire qualcosa di sensato: da che parte sta andando, quando ci arrivera',
+  // quale sia il suo valore abituale, e se quello di adesso sia normale. Sta
+  // per conto suo perche' non sa niente di sezioni: conta e basta, e va bene
+  // anche per una soglia di avviso o per decidere se una scheda si colora.
+  //
+  // 174 col padrone unico dello storico. Il modello vuole le letture di prima,
+  // che il grafico delle temperature gia' chiedeva a Recorder con la sua cache.
+  // La strada breve era copiarne il codice nelle finestre: sarebbero stati due
+  // padroni dello stesso traffico, due cache che non si parlano, due domande
+  // per la stessa entita' e la certezza che prima o poi una scada con una
+  // regola diversa dall'altra. E' il difetto che si sta togliendo dappertutto
+  // in questi giorni: qui si evitava di crearne uno nuovo.
+  // 175 col nome della lettura. Nella finestra del Solare termico si leggeva
+  // «Temperatura Pannello solare Temperature»: la parola due volte, una per
+  // lingua. Non e' un difetto della plancia — Home Assistant costruisce il nome
+  // amichevole incastrando il nome del dispositivo, che scrive chi abita la
+  // casa, con quello dell'entita', che scrive l'integrazione — ma stampato
+  // com'e' sembra un difetto della plancia. Il modulo toglie dalla coda la
+  // parola gia' detta dall'unita' del valore, e non tocca i nomi che senza
+  // quella parola direbbero di meno: meta' delle sue prove pretende che il nome
+  // resti intero, perche' accorciare troppo e' il difetto peggiore dei due.
+  // 176 con le strade per aprire una telecamera. Su Ring e Arlo il video non
+  // partiva, e i due motivi erano l'uno il contrario dell'altro: si provava una
+  // strada che non poteva funzionare, e si smetteva di provare quella che stava
+  // per riuscire. WebRTC si tentava sempre — la condizione era «il browser sa
+  // farlo», che oggi e' vero dappertutto — ma quel WebRTC li' e' go2rtc, e vuole
+  // il nome del flusso che le si e' dato dentro go2rtc: chi non ce l'ha
+  // installata pagava tre secondi a ogni apertura per un flusso inesistente. E
+  // l'HLS aveva dieci secondi di tempo, tarati su una telecamera di casa sempre
+  // accesa: una in cloud deve prima svegliare l'apparecchio e ci mette di piu',
+  // quindi si mollava sul piu' bello e si finiva sulle istantanee a due
+  // fotogrammi al secondo — «si vede, ma a scatti», che e' il modo in cui si
+  // vive un difetto senza saperlo nominare. La scelta sta in un modulo puro
+  // perche' e' l'unico modo di provarla senza avere una Ring in casa: entrano la
+  // telecamera e quello che Home Assistant dichiara di lei, esce l'ordine delle
+  // strade con le attese e il perche' di quelle saltate.
+  // 178 con le prese. «Cosa ne pensi di inserire una sezione dedicata a prese
+  // generiche, tipo TV Salotto, TV letto, Presa Firestick?» — si potevano gia'
+  // configurare, perche' la scheda Luci accetta anche `switch.`, e una presa
+  // messa li' si accende benissimo. Solo che si chiama luce: finisce
+  // nell'elenco delle luci, si conta nel «3 accese» del salone, e «spegni tutte
+  // le luci» la spegne — cosa che per la TV puo' anche andare e per il modem
+  // no. I moduli sono due perche' fanno due mestieri: `prese-model.js` e' puro
+  // e sa solo che forma ha una presa e come si raggruppano per stanza;
+  // `prese-section.js` mette la pagina, la voce nella barra e la scheda di
+  // configurazione. Quello che NON c'e' e' la ragione per cui sono due e non
+  // cinque: niente motore per accendere — a comandare una presa e' lo stesso
+  // `lightCommand` di tutto il resto, quindi il blocco «si vede ma non si
+  // comanda» vale qui senza una riga in piu' — e niente scheda nuova da
+  // disegnare, perche' e' la stessa `pageCardMarkup` delle luci.
+  // 179 col popup dell'elettrodomestico rivestito da progetto
+  // (`appliance-detail-popup-section.js`): «quando clicco su un
+  // elettrodomestico si apre questo popup orrendo, crealo piu' bello stile
+  // widget che ti fa anche analisi» — il guscio elencava ogni entita' con lo
+  // slug, il modulo riveste la stessa finestra con verdetto, frase, caselle,
+  // pillole e comandi.
+  // 181 con le parole inglesi del guscio: il runtime EN portava ancora
+  // etichette italiane cablate, e il modulo che le traduce e' il padrone
+  // provvisorio finche' la correzione non arriva a monte.
+  // 180 coi rilevatori di fumo (#238): la lista sorvegliata `fumo` che si
+  // riempie da sola — e continua a farlo, col registro dei gia' visti — piu'
+  // il blocco nella pagina Sicurezza e le aperture nuove che entrano da sole
+  // nel gruppo `win`. Un modulo solo, sul calco di flood-alerts.
+  // 182 con le voci termiche del popup Caldo: le tre righe cablate nel
+  // guscio (una addirittura su switch.caldaia) diventano `cd_termico_caldo`,
+  // configurabili dalla scheda Clima — e senza voci il pannello sparisce.
+  // 183 col popup «Clima attivi» che distingue chi scalda da chi raffresca
+  // e dice da quanto tempo (`il-popup-del-clima-distingue-section.js`): il
+  // guscio mescolava heat e cool in una lista sola, senza orologio.
+  // 184 col popup dell'Auto che racconta
+  // (`il-popup-dell-auto-racconta-section.js`): l'ora di fine carica accanto
+  // al tempo che manca, la frase d'analisi, i codici IEC del cavo in parole.
+  // 185 col popup della lavatrice rifatto
+  // (`il-popup-della-lavatrice-section.js`): i quattro programmi cablati nel
+  // guscio diventano `cd_lavatrice_programmi`, l'immagine e' quella della
+  // sezione Elettrodomestici, la veste quella delle altre finestre.
+  // 186 col verso delle aperture (#244, `core/verso-aperture.js`): il conto
+  // puro dei sensori girati (ON = chiuso) e delle tapparelle girate
+  // (100 = chiusa), condiviso da widget, pagine e runtime.
+  // 187 con la scala del clima (#252, `core/scala-clima.js`): fin dove arriva
+  // la barra lo dice il termostato con `min_temp`/`max_temp`, non piu' una
+  // coppia di numeri scritta a mano — e la regola sta in un posto solo,
+  // perche' la pagina Clima e il popup della Home ne tenevano due copie.
+  // 188 con le icone che si leggono (`icone-leggibili-section.js`): il foglio
+  // unico delle sfumature, messo in cima al documento, perche' a un
+  // identificatore ripetuto risponde il primo che lo porta — e per meta' dei
+  // disegni quel primo stava dentro una voce di barra a `display:none`, cioe'
+  // non disegnava niente.
+  // 189 con lo scaldabagno elettrico (#253, `core/scaldabagno-model.js`): la
+  // lettura delle sue caselle e il conto di quanto manca all'acqua calda, che
+  // e' la misura per cui si guarda uno scaldabagno e non esisteva da nessuna
+  // parte — il solare termico guarda il salto fra le sonde, che e' altro.
+  // 192 con le tre macchine del locale caldaia (#253): il nucleo della scelta
+  // (`core/impianti-termici.js`), la pagina che disegna le due scene nuove e
+  // le linguette (`sections/impianti-termici-section.js`) e la scheda che le
+  // configura (`sections/impianti-termici-editor-section.js`). La pagina si
+  // chiamava «Solare termico» e disegnava un impianto solo: chi ha il
+  // fotovoltaico e lo scaldabagno ci trovava un pannello che non ha.
+  // 194 col gruppo di continuita' (#256): il nucleo che legge le sigle di NUT
+  // (`core/ups-model.js`) e la scheda che lo configura dentro «Energia»
+  // (`sections/ups-editor-section.js`). Un UPS non e' la tessera delle
+  // batterie — quella conta le pile dei sensori, questa dice se la casa ha
+  // corrente — e non e' un impianto termico: e' la corrente di casa, e si
+  // configura dove la corrente si configura.
+  // 195 con la pagina del gruppo di continuita' (#256,
+  // `sections/ups-section.js`): la scatola merita una pagina come le altre
+  // macchine della casa — «crea sempre una sezione a se', non solo il widget
+  // col popup» — e li' il verso in cui la corrente sta andando si vede
+  // disegnato invece che letto.
+  // 197 col calendario (#259): il nucleo che legge la risposta di
+  // `calendar.get_events` e raggruppa per giorno (`core/calendario-model.js`)
+  // e la pagina che disegna la settimana e l'agenda
+  // (`sections/calendario-section.js`). Lo stato di un `calendar.*` e'
+  // `on`/`off` e negli attributi porta un evento solo: l'elenco lo si chiede
+  // al servizio, come le voci delle liste ToDo.
+  // 198 col calendario che si tocca (#259,
+  // `sections/calendario-modifica-section.js`): «il popup del widget deve dare
+  // la possibilita' di modificare e di interagire con il calendario». Il
+  // modulo, i tasti e i tre comandi che scrivono stanno in un posto solo
+  // perche' i posti da cui si scrive sono due — la finestra della tessera e la
+  // pagina — e due copie sarebbero due modi di segnare un impegno.
+  // 199 con le segnalazioni (`segnalazioni-section.js`): la tessera in
+  // Configurazione da cui si apre un difetto, un'idea o una richiesta di
+  // aiuto senza uscire dalla plancia, l'elenco di quelle gia' aperte con lo
+  // stato che torna indietro, e il cruscotto di chi risponde. Un modulo solo:
+  // il canale verso Home Assistant e' il ponte che c'e' gia', e la chiamata
+  // verso GitHub la fa il backend.
+  // 200 con la scheda dell'Agenda (`sections/agenda-editor-section.js`):
+  // «calendario, per configurarlo devi toglierlo dalla parte widget, crea una
+  // sezione a se' nel menu e metti calendario e cose da fare». I calendari e le
+  // liste ToDo si configuravano nella scheda dei widget, che risponde a
+  // un'altra domanda — quali tessere vedere in Home — e la sezione Agenda
+  // restava l'unica voce della barra senza il suo interruttore.
+  // 201 con la scelta della lingua (`sections/lingua-section.js`): «vorrei
+  // poter modificare la lingua dalle impostazioni senza ereditare
+  // necessariamente quella di HA» (#263). Il motore c'era gia' tutto in
+  // `core/i18n.js` — questa e' la riga da cui dirlo, e vive fuori da li'
+  // perche' il raccoglitore delle traduzioni guarda le sezioni.
+  // 203 con l'indirizzo RTSP delle telecamere (`core/telecamera-rtsp.js` e
+  // `sections/telecamera-rtsp-section.js`): «ho una telecamera con flusso
+  // video su rtsp://…, non c'e' possibilita' di configurazione» (#284). Il
+  // modulo puro legge l'indirizzo — host, percorso, il nome che go2rtc dà a
+  // quel flusso — e la sezione e' la casella dove scriverlo, accanto a quella
+  // del flusso che il guscio disegna gia'.
+  // 206 con le sezioni che si fa l'utente (`core/sezioni-mie.js`,
+  // `sections/sezioni-mie-section.js`, `sections/sezioni-mie-editor-section.js`):
+  // «dare la possibilita' di creare sezioni custom, dove poter inserire le
+  // proprie entita' a piacimento — avrei potuto inserire quelle dell'UPS senza
+  // attendere la sezione apposita» (#262). Tre moduli come le altre pagine
+  // nate a runtime: il modello puro, la pagina, la scheda che la configura.
+  // 207 col radar meteo (`sections/radar-meteo-section.js`): «visualizzare il
+  // radar meteo… assieme al meteo, affianco al meteo dei 7 giorni» (#266). Un
+  // modulo solo, e nessun modello puro nuovo: l'immagine la porta il
+  // caricatore delle telecamere, che c'era gia'.
+  // 208 col motore del radar (`core/radar-mappa.js`): «veniva chiesto di
+  // inserire coordinate oppure il comune, pensa a un motore per poter
+  // scegliere il posto» (#266). Web Mercator, e null'altro: da un punto e da
+  // un raggio escono lo zoom e i quadratini. Sta nel nucleo perche' e'
+  // aritmetica, e l'aritmetica si prova senza rete.
+  // 210 col video dal vivo delle telecamere (`core/telecamera-dal-vivo.js`,
+  // `sections/telecamera-vivo-section.js`): «le telecamere Arlo dalla sezione
+  // Sicurezza si vedono solo come istantanea, il video non si muove — con una
+  // card YAML e `camera_view: live` si vede sempre in trasmissione». Il nucleo
+  // ricava l'indirizzo del flusso da quello dell'istantanea, che e' aritmetica
+  // di stringhe e si prova senza rete; la sezione e' la casella che accende il
+  // flusso su una telecamera, accanto a quella dell'RTSP.
+  // 213 con le aree d'allarme (#285) e la regola che le governa
+  // (`core/piu-di-uno.js`, `core/alarm-panel.js` che già c'era,
+  // `sections/centrali-allarme-editor-section.js`): «si può inserire soltanto
+  // un alarm_control_panel, ma se si hanno 2 aree la pagina ne gestisce una
+  // sola». La regola è una sola perché è la terza volta che serve — impianti
+  // dell'energia, impianti solari, aree d'allarme — e tre copie sono tre
+  // occasioni di rispondere diverso.
+  // 215 con l'adattamento allo schermo (`core/fondo-di-sistema.js`, #249: le
+  // zone sicure non esistono dentro una cornice, e il numero si va a prendere
+  // dove esiste) e con l'orologio (`sections/orologio-section.js`, #272:
+  // «sarebbe carino avere l'orologio, magari vicino al meteo»).
+  // 218 con le entita' che uno si aggiunge dove vuole (`core/entita-mie.js`,
+  // `sections/entita-mie-section.js`, `sections/entita-mie-editor-section.js`,
+  // #271): «in alcune schede non e' possibile inserire entita' o sensori
+  // personalizzati... modificando il nome, icona, stanza di destinazione». La
+  // stessa forma delle sezioni proprie — modello puro, disegno, scheda — ma la
+  // scheda e' una sola per tutte le pagine: quale pagina e' un campo della
+  // voce, non una scheda in piu' per ognuna.
+  // 222 con la musica (`core/media-player.js`, `sections/media-player-section.js`,
+  // `sections/media-player-editor-section.js`, `sections/media-in-azioni-section.js`,
+  // #269): «sarebbe carino una sezione dedicata ai dispositivi Media Player…
+  // la possibilita' di aggiungerli anche nelle Azioni rapide, sarebbe figo se
+  // lo sfondo fosse l'anteprima di cio' che viene riprodotto». Il quarto
+  // modulo e' quello che veste il tasto delle Azioni rapide: e' un'altra
+  // superficie, con un altro padrone — il guscio disegna quella griglia — e
+  // metterlo dentro la pagina avrebbe voluto dire una pagina che tocca la Home.
+  // 223 con la stanza detta col suo nome (`sections/stanze-per-nome-section.js`):
+  // «verifica inoltre perche' esce sotto room etc». La tendina delle stanze
+  // salva l'id — e' l'unica cosa che regge un rinominamento — ma gli elenchi
+  // del guscio vendorizzato stampano quello che trovano, e quel guscio non si
+  // tocca: la riparazione e' di superficie per forza, e sta in un modulo solo
+  // invece che in tre punti diversi.
+  // 224 con le due sezioni della beta.12. Il tetto di prima portava uno di
+  // scarto, e queste due lo riempiono esatto:
+  // — il giudizio sul contenuto delle sezioni
+  //   (`core/contenuto-delle-sezioni.js`): «tutte le sezioni devono nascere
+  //   come nascoste, solo se si inserisce entita' in una sezione diventa
+  //   visibile». Cosa riempie una sezione lo dicono in due — chi la accende e
+  //   chi la spegne — e due elenchi che rispondono alla stessa domanda prima o
+  //   poi rispondono in modo diverso: allora una sezione configurata sparisce.
+  //   Sta nel nucleo perche' e' una lettura del magazzino e null'altro, e si
+  //   prova su un magazzino finto.
+  // — la chat di assistenza (`sections/assistenza-section.js`): «io avevo
+  //   chiesto una chat di assistenza che non deve passare per github, e' come
+  //   se fosse una chat teams». Un modulo solo, e l'import sta in
+  //   `modules-entry` perche' il grafo parte di li': un modulo che nessuno
+  //   importa non viene mai caricato, ed e' esattamente il difetto del
+  //   cruscotto della beta.10 — nelle fotografie c'era, in una casa vera non
+  //   e' mai comparso.
+  // 226 con l'indirizzo di casa (`core/indirizzo-di-casa.js`,
+  // `sections/indirizzo-di-casa-section.js`): «storico internet da' errore».
+  // «Failed to fetch» non e' una risposta, e' una richiesta che non e' mai
+  // arrivata da nessuna parte: la plancia ospitata vive in una cornice
+  // `srcdoc`, il cui `location.host` e' vuoto, e il guscio — non sapendo dove
+  // sta — costruisce l'indirizzo indovinando `LOCAL_IP`. Misurato dentro la
+  // cornice con la plancia vera: `http://homeassistant.local:8123`, che e' un
+  // host che quasi nessuno ha e che comunque parla in chiaro a una pagina in
+  // https. Il nucleo e' l'aritmetica della riparazione — dato un indirizzo, la
+  // base del documento e l'host che il documento ha o non ha, qual e'
+  // l'indirizzo giusto — e si prova senza rete; la sezione e' il gradino su
+  // `fetch` dove quella riparazione si applica, perche' la riga sbagliata sta
+  // dentro una funzione del guscio e avvolgerla per nome arriverebbe troppo
+  // tardi.
+  // 227 con il flusso che si ferma (`core/flusso-fermo.js`, #294): «si blocca
+  // la visione». Un MJPEG che smette di spingere fotogrammi non da' nessun
+  // evento, e l'unico modo di accorgersene e' guardare i pixel: l'impronta e'
+  // aritmetica sui byte e la sorveglianza una memoria di impronte con la loro
+  // ora, e tutte e due si provano senza una telecamera in casa. La tela su cui
+  // si misura sta nel caricatore delle telecamere, che c'era gia'.
+  // 230 con le allerte (`core/allerte-model.js`, `sections/allerte-section.js`,
+  // `sections/allerte-editor-section.js`, #296): «terremoti INGV, comfort
+  // termico, pollini, fulmini, avvisi di protezione civile, Flightradar24 di
+  // zona». Sei fonti che parlano sei lingue — una magnitudo, un colore, un
+  // conteggio, una parola — e il modello le riduce a un livello solo, che e'
+  // l'unica cosa che una tessera deve sapere. Stessa forma delle altre pagine
+  // nate a runtime: il modello puro, la pagina, la scheda.
+  // 233 con la raccolta differenziata (`core/rifiuti-model.js`,
+  // `sections/rifiuti-section.js`, `sections/rifiuti-editor-section.js`, #293):
+  // «un sistema per la raccolta differenziata rifiuti». Il modello sa leggere
+  // una data da un sensore o da un calendario — nei dialetti in cui le
+  // integrazioni la scrivono — e dire «domani», che e' la parola che si cerca
+  // la sera; la pagina e la scheda sono le solite due.
+  // 235 con l'auto che va a benzina (`core/auto-termica.js`,
+  // `sections/auto-termica-section.js`, #208): «e' possibile scegliere a monte
+  // se visualizzare un'auto elettrica o classica con i sensori disponibili?».
+  // Il modello legge carburante, portiere, motore e il resto nei dialetti
+  // delle integrazioni; la sezione mette la scelta nella scheda dell'auto e
+  // il quadro termico nella pagina, al posto della ricarica.
+  // 237 con il video vero delle telecamere (`core/telecamera-webrtc.js`,
+  // `sections/telecamera-webrtc-section.js`, #294): il WebRTC come lo parla
+  // Home Assistant, negoziato con i server ICE di casa, nelle tessere e nel
+  // popup; e l'HLS per chi lo dichiara. Il MJPEG resta come rete sotto.
+  // 239 con il periodo dello storico (`core/periodo-storico.js`,
+  // `sections/storico-connettivita-section.js`, #302): i periodi di serie e
+  // l'intervallo da quando a quando in ogni finestra dove si vede uno storico.
+  // 241 con la valvola TRV (`core/valvola-trv.js`, `sections/trv-editor-section.js`,
+  // #300): quanto e' aperta e quanto chiusa, dalla sua entita' o dagli
+  // attributi dell'unita', con la casella nella scheda del clima.
+  // 242 con «Sostieni il progetto» (`sections/sostieni-il-progetto-section.js`):
+  // la pastiglia PayPal nella colonna delle schede e la card in Impostazioni.
+  // 247 con l'elettrodomestico che arriva da un'integrazione
+  // (`core/appliance-device-binding.js`,
+  // `sections/appliance-integration-section.js`): «far in modo che le persone
+  // possano integrare i loro elettrodomestici sfruttando le integrazioni, sia
+  // ufficiali che presenti su HACS, creando un menu». Il nucleo e' il
+  // ragionamento — dato un dispositivo e le sue entita', che apparecchio e',
+  // quale entita' fa da potenza e quale da tempo rimanente, come si dividono
+  // le altre nel dettaglio — e si prova su una lavatrice di hOn finta; la
+  // sezione e' il menu integrazione → dispositivo, il tasto in cima alla
+  // scheda e il catalogo letto dal backend, che la finestra di modifica e il
+  // dettaglio dell'apparecchio leggono da lei.
+  // 248 con quello che l'elettrodomestico sa di se' (`core/appliance-program.js`):
+  // «le card si devono riadattare in base alle informazioni presenti
+  // nell'integrazione importata: la lavatrice deve fornire lo stato in corso,
+  // esempio lavaggio, con temperatura lavaggio eccetera». Una card che dice
+  // IN FUNZIONE e 1180 W dice la verita' e non dice niente. Il vocabolario
+  // delle fasi — washing, spin, weighting — e la ricerca dei quattro numeri
+  // che uno legge sull'oblo' stanno nel nucleo, perche' sono una tabella e un
+  // po' di aritmetica e si provano senza accendere niente; la card e la
+  // finestra li disegnano e basta.
+  // 249 con com'e' l'aria di casa (`core/aria-model.js`, #321): «un widget come
+  // quello luci che segni la qualita' dell'aria relativa a un sensore». Il
+  // nucleo e' il giudizio — quali `device_class` sono misure dell'aria, dove
+  // cadono i quattro gradini per ognuna, e che le stesse sostanze in unita'
+  // diverse hanno scale diverse di mille volte — e si prova con una tabella di
+  // numeri, senza accendere niente. La tessera in Home la disegna il modulo
+  // dei widget, che ne mette in copertina la misura messa peggio: l'aria di
+  // una casa e' buona quando lo sono tutte le sue misure, non in media.
+  // 250 con quando conviene aprire la finestra (`core/arieggiare.js`, #330):
+  // «una soglia per l'umidita' oltre la quale suggerisce di aprire la finestra
+  // per arieggiare, ma solo se l'umidita' esterna e' piu' bassa di quella
+  // della stanza». Il nucleo e' quel «ma»: e' la condizione che tiene onesto
+  // il consiglio, perche' con novanta dentro e novantacinque fuori aprire non
+  // asciuga — bagna. Sono tre numeri e un verdetto, e si provano senza
+  // accendere niente; la soglia la scrive la scheda Temperature, accanto ai
+  // sensori di umidita' che confronta, e il consiglio compare sulla finestra
+  // della stanza, che e' la cosa che uno deve andare ad aprire.
+  // 251 con l'auto che arriva da un'integrazione (`core/auto-device-binding.js`):
+  // «vogliamo cercare di fare la stessa cosa integrazione anche su auto, cosi'
+  // viene piu' pulita». Il nucleo e' l'assegnazione: quale entita' del
+  // dispositivo va in quale casella `dm.ev_*`, guidata dal `device_class` che
+  // Home Assistant dichiara e, solo dove non basta, dalle parole — nelle
+  // lingue che le integrazioni delle auto usano davvero, perche' il
+  // costruttore coreano scrive «Fuel level» e quello tedesco «Reichweite». E'
+  // una funzione pura su un elenco di entita', quindi si prova a tavolino con
+  // le entita' di un'auto vera; e da li' esce anche che auto e', perche' un
+  // serbatoio senza batteria e' benzina.
+  // 252 con l'invito nella scheda (`sections/auto-integrazione-section.js`):
+  // la scheda dell'auto la disegna il documento vendorizzato, quindi il tasto
+  // non puo' stare dentro un corpo che qualcun altro riscrive — si appende in
+  // cima, come la tendina del motore si appende sotto il nome. La finestra e'
+  // quella degli elettrodomestici, senza una seconda copia: cambia solo cosa
+  // si legge del dispositivo, che e' l'unico pezzo diverso fra le sezioni.
+  // 253 con i cerchi grandi che aprono il loro storico
+  // (`sections/energia-cerchi-storico-section.js`): «nella sezione energia
+  // giornaliera e mensile non si apre, sui cerchi che non sono i carichi, i
+  // dati storici». Nella vista Istantanea Solare, Rete, Batteria e Casa hanno
+  // il loro «apriStorico»; nelle altre due il documento vendorizzato li
+  // disegna senza, mentre i carichi sotto ce l'hanno — si tocca la Casa e non
+  // succede niente, senza modo di capire perche' quel cerchio no e il suo
+  // vicino si'. Il modulo aggiunge quello che manca senza toccare il
+  // documento, e ogni cerchio apre l'entita' che sta gia' mostrando in quella
+  // vista: il totale del giorno o del mese, non la potenza istantanea, che
+  // sarebbe lo storico di un'altra cosa.
+  // 254 con la colonnina e evcc (`core/wallbox-device-binding.js`):
+  // «aggiungere anche evcc e la wallbox». Le otto caselle della ricarica si
+  // scrivevano a mano sapendo gli entity_id a memoria; adesso arrivano da un
+  // dispositivo come l'auto. Il modulo e' puro e sta nel nucleo perche' due
+  // moduli lo chiedono per ragioni diverse: la scheda Auto per riempirle, e la
+  // sezione dell'auto per NON portarle via quando si cambia vettura — la
+  // colonnina e' della casa, non di una macchina.
+  // 255 con il gesto di riordinare a mano (`core/ordine-a-mano.js`):
+  // «riordinare a piacere la Home». La freccia che scambia una riga con la sua
+  // vicina serve alle persone, alle azioni rapide e alle tessere — tre elenchi
+  // diversi, un gesto solo. Scriverlo tre volte vorrebbe dire tre occasioni di
+  // sbagliare l'ultimo elemento, che e' esattamente il posto dove si sbaglia.
+  // 256 con il travaso già scritto (`core/carichi-travasati.js`): «le entità
+  // configurate diverse sui due impianti si mescolano». Fermato il difetto
+  // dove nasceva, quello che era già finito nella configurazione resta lì. Il
+  // modulo dice quali carichi portano il sensore di un'altra casa e — questa è
+  // la parte che conta — quando lo si può DIMOSTRARE: due carichi con lo
+  // stesso sensore non dicono da soli quale dei due è la copia, e cancellare
+  // dalla parte sbagliata butterebbe via la metà buona.
+  // 258 con l'ordine dei blocchi della Home (`core/ordine-dei-blocchi.js` e
+  // `sections/home-blocchi-section.js`): «riordinare a piacere la Home»
+  // voleva dire anche i blocchi fra loro, non solo dentro ognuno. La lista e
+  // come si mette in fila stanno nel nucleo, dove si provano senza un
+  // documento; chi sposta i nodi nella pagina sta nella sezione, e non
+  // disegna niente — i blocchi li fanno gli altri, lui li mette in ordine.
+  // 260 con lo stato della ricarica (`core/stato-della-ricarica.js` e
+  // `sections/ev-stato-e-target-section.js`): la pastiglia sulla foto
+  // dell'auto stampava «on» e «off» da quando la colonnina entra da
+  // un'integrazione, e la tendina del target mandava ordini a un sensore. La
+  // lettera la decide il nucleo; la sezione la scrive e tiene la tendina
+  // onesta, cosi' la vetrina resta sola presentazione.
+  // 262 con gli orari dell'irrigazione (`core/irrigazione-orari.js`): «piu'
+  // momenti di irrigazione, e alle 20:30 solo se il terreno e' asciutto»
+  // (#325). Il conto di quale momento tocca, quanto dura e quanto si puo'
+  // dormire prima del prossimo sta nel nucleo, senza orologio ne' pagina; la
+  // scena dell'irrigazione lo usa e resta l'unico padrone dello schermo.
+  // 261 con «il guscio disegna quando serve»
+  // (`sections/il-guscio-disegna-quando-serve-section.js`): il padrone di
+  // `cdRenderSoon`, della firma della finestra dei dettagli e dei timer del
+  // guscio che un modulo fa gia' — il lavoro fatto senza che nessuno guardi.
+  // 262 con la riga sotto il meteo (`core/come-sta-la-casa.js` e
+  // `sections/come-sta-la-casa-section.js`): «una barra sotto la parte meteo
+  // che mostra le indicazioni principali» (#356) e «animazione quando arriva
+  // Posta attivato da un sensore contact» (#357). Il nucleo dice quali
+  // pastiglie escono dai modelli delle tessere gia' fatti — non rilegge una
+  // sola entita' — e tiene la memoria della cassetta, che e' la parte che si
+  // prova a secco: un'apertura avvenuta mentre nessuno guardava si riconosce
+  // dopo, confrontando due scatti. La sezione scrive le parole, disegna la
+  // riga e la fa configurare dalla scheda Home; il disegno lo chiama il ponte
+  // dei widget, che i modelli li ha appena prodotti, cosi' il giro sugli stati
+  // della casa resta uno solo.
+  // 264 con la riga sotto il meteo e la memoria della cassetta della posta
+  // (`core/come-sta-la-casa.js` + `sections/come-sta-la-casa-section.js`),
+  // che sono due moduli oltre a quello degli orari dell'irrigazione.
+  // 267 con gli animali di casa (#358): `core/animali-model.js` legge le
+  // entita' di ciotola, lettiera, fontanella, porta col microchip e collare e
+  // dice cosa c'e' da sapere adesso — cibo in esaurimento, lettiera da pulire,
+  // filtro a fine corsa — senza toccare il documento ne' l'orologio;
+  // `sections/animali-section.js` disegna la pagina e la sua voce nella barra,
+  // e `sections/animali-editor-section.js` la scheda della configurazione, che
+  // pesca i dispositivi dal menu delle integrazioni gia' in casa.
+  // 269 con la ricerca in tutta la configurazione e le pastiglie dei varchi.
+  // `core/cerca-nel-config.js` cammina il magazzino e trova dove una parola e'
+  // scritta — nel valore e nel NOME del campo, perche' `cd_luci` tiene
+  // l'entita' nella chiave — e `sections/cerca-nel-config-section.js` disegna
+  // la riga in cima all'editor: cercare aprendo venti schede vorrebbe dire
+  // ridisegnarle tutte, e un modulo aperto a meta' perde quello che si sta
+  // scrivendo. `core/varchi-in-configurazione.js` dice se un contatto e'
+  // aperto o chiuso col verso giusto (#367), e la sezione lo colora su ogni
+  // riga che lo nomina, in qualunque scheda si trovi.
+  // 270 con la foto che puo' essere un'entita' (#369): «alcune integrazioni
+  // come UConnect mettono a disposizione questa entita'». `core/foto-da-entita.js`
+  // riconosce un `image.` o una `camera.` e ne legge l'indirizzo con il gettone
+  // che Home Assistant gli mette dentro — quello che fa aggiornare la foto da
+  // se' invece di restare in cache. Sta nel nucleo e non in una sezione perche'
+  // non e' dell'auto: e' la risposta a «questa cosa ha una foto?», e la stessa
+  // domanda torna ovunque una scheda mostri un'immagine.
+  // 274 con i tre pezzi del Clima chiesti insieme (#362, #364, #365).
+  // `core/modo-del-clima.js` legge l'entita' che dice la modalita' del
+  // riscaldamento — TADO ne ha due, altri aggiungono vacanza e boost — e sa
+  // dire, senza toccare niente, quale chiamata la cambierebbe: chi la esegue e'
+  // chi ha la connessione, quindi «cosa succede se tocco questa pastiglia» si
+  // prova a tavolino. `core/spegnimento-programmato.js` tiene i fermi dello
+  // slider e il conto alla rovescia, e `sections/spegnimento-programmato-
+  // section.js` e' l'unico che parla col backend: il timer vero vive in Home
+  // Assistant, perche' un timer nel browser muore chiudendo la pagina e chi
+  // accende il condizionatore per due ore prima di dormire la pagina la chiude
+  // sempre. `core/stagione-del-clima.js` dice se un'unita' e' di stagione, con
+  // gli intervalli che scavallano l'anno — ottobre-aprile e' il primo che
+  // qualcuno scrivera' — e senza orologio dentro.
+  // 277 con la ventilazione meccanica (#371): «sarebbe bellissimo avere nei
+  // climate la possibilita' di inserire i dati delle 4 temperature delle
+  // macchine VMC… compresi i bypass, modalita' estate/inverno». Le quattro
+  // temperature non sono quattro numeri da mettere in colonna: sono due flussi
+  // che si incrociano, e messi cosi' si leggono da soli. `core/vmc-model.js`
+  // dice cosa vogliono dire — compreso il RECUPERO, l'unico numero che dice se
+  // la macchina vale quello che costa, e che nessuna card mostra;
+  // `sections/vmc-section.js` porta il disegno e `sections/vmc-editor-section.js`
+  // la scheda. La pagina del Clima resta di un padrone solo: il markup lo
+  // scrive il modulo della VMC, ma a chiamarlo e' il giro che possiede la
+  // pagina.
+  // 280 con Assist (#360): «vorrei avere la possibilita di aprire assist per
+  // chiedere delle cose sia scrivendo che parlando». La plancia non rifa' un
+  // assistente — sarebbe un secondo assistente da tenere allineato al primo —
+  // ma gli parla: `core/assist-model.js` dice cosa si manda a
+  // `conversation/process`, cosa torna e quando il filo della conversazione e'
+  // scaduto; `sections/assist-section.js` porta la finestra e il microfono, e
+  // `sections/assist-editor-section.js` la riga fra le Impostazioni. La voce la
+  // ascolta il BROWSER, che ha il microfono e sa trascrivere; la frase la
+  // capisce Home Assistant, che conosce la casa. Mandare l'audio a Home
+  // Assistant vorrebbe dire una pipeline, un formato e un pezzo di protocollo
+  // binario per arrivare alla stessa frase che il browser ha gia'.
+  // 283 con i varchi (#367, #377), che sono una richiesta sola fatta da due
+  // persone: «in verde dovrebbe segnare i sensori contact chiusi e in rosso
+  // quelli aperti… almeno a colpo d'occhio so quante finestre sono aperte in
+  // questo momento» e «una sezione porte… magari che la card principale come
+  // per le luci mostri solo il numero di porte aperte». Non e' la sezione
+  // Finestre, che governa le tapparelle e ha un motore per comandarle, e non e'
+  // «Apri porte/cancelli», che manda comandi a serrature e rele': qui non si
+  // comanda niente, si guarda — ed e' proprio quello che mancava.
+  // `core/varchi-di-casa.js` dice quali contatti contano e come stanno,
+  // appoggiandosi al giudizio aperto/chiuso che `core/varchi-in-configurazione.js`
+  // gia' dava alle righe della configurazione: due regole per la stessa
+  // domanda avrebbero finito col contraddirsi. `sections/varchi-section.js`
+  // porta la pagina e `sections/varchi-editor-section.js` la scheda, che serve
+  // solo a correggere il rilevamento — il sensore del frigo etichettato
+  // «door», quello che nessuno ha etichettato, e il nome per chi si chiama
+  // «Contact 4B».
+  // 286 con il server e la rete (#382): «i controlli del server proxmox dove
+  // gira HA con tutti i suoi container, e controllare lo stato del fritbox e i
+  // suoi ripeter». Non e' una pagina nuova: e' la pagina Server che c'e' gia',
+  // con due fasce sotto le caselle del MiniPC — la macchina e quello che ci
+  // gira dentro sono la stessa cosa guardata da due distanze.
+  // `core/macchine-e-rete.js` sa che le VM e i container di Proxmox sono i
+  // `binary_sensor` con `device_class: running` e che il router coi suoi
+  // ripetitori sono quelli `connectivity`: due classi, due elenchi, e nessuna
+  // casella da compilare per cominciare. Sa anche dire QUANDO si puo'
+  // comandare — un interruttore o la coppia di pulsanti che si chiamano come
+  // il sensore — perche' un tasto che non fa niente e' peggio di nessun tasto.
+  // `sections/macchine-e-rete-section.js` porta le due fasce e
+  // `sections/macchine-editor-section.js` la scheda, che si attacca a «MiniPC»
+  // invece di aprirne una tutta sua.
+  // 287 con l'elenco delle chiavi di configurazione
+  // (`core/chiavi-di-configurazione.js`), che pero' non e' roba nuova: e'
+  // `CONFIG_KEYS` spostato dov'e' leggibile da tutti. Stava dentro la
+  // persistenza, e il cancello degli stati — che deve sapere quali entita' la
+  // casa ha configurato — se n'era tenuto una copia scritta a mano. Una copia a
+  // mano di un elenco che cresce e' un elenco che resta indietro: era rimasta a
+  // ventun chiavi mentre le vere erano ottanta, e le entita' che stavano solo
+  // nelle mancanti non passavano piu' il cancello. Le loro tessere restavano
+  // ferme sull'ultimo valore. Adesso l'elenco e' uno: la persistenza lo
+  // ri-esporta com'era e al cancello lo passa chi lo installa.
+  // 288 con il video che deve muoversi davvero
+  // (`sections/telecamera-il-video-si-muove-section.js`, #385): «problema
+  // telecamere Arlo», coi registri allegati. Il guscio considera riuscita la
+  // strada HLS al primo fra `loadedmetadata`, `canplay`, `loadeddata` e
+  // `playing`; gli ultimi tre vogliono dire che c'e' un fotogramma, il primo
+  // no — scatta appena letta l'intestazione del flusso. Su una telecamera che
+  // dorme in cloud l'intestazione arriva e le immagini no, e la plancia
+  // toglieva la rotella dichiarando fatto: un rettangolo fermo, e nessuna
+  // delle strade sotto — il flusso del proxy, le istantanee — piu' tentata,
+  // proprio quelle fatte per chi trasmette su richiesta. Il modulo guarda se
+  // il tempo del video va avanti e, quando non va, solleva l'errore che il
+  // guscio si aspetta: la catena scende, come sarebbe scesa se l'HLS avesse
+  // fallito subito. Il guscio storico non si tocca: gli si avvolge la
+  // funzione.
+  // 289 con «di chi e' questa entita'»
+  // (`sections/di-chi-e-unentita-section.js`): l'integrazione che ha creato
+  // un'entita', chiesta al registro e tenuta da parte. «La sezione mini pc
+  // porta in automatico tutte queste entita' sotto che non si eliminano e che
+  // non c'entrano nulla con quella sezione»: la classe che le macchine
+  // guardavano — `running`, `connectivity` — ce l'hanno i container di Proxmox
+  // ma anche la lavatrice, la stampante, ogni telefono e ogni presa Wi-Fi, e
+  // toglierle una per una e' un lavoro che ricomincia a ogni dispositivo
+  // nuovo. Quello che distingue un container dal ferro da stiro non e' nello
+  // stato: e' in chi ha creato l'entita', e quello lo sa solo il registro.
+  // Il modulo e' anche il posto dove vive il trasporto verso
+  // `integrations/catalog` — la presa vera, il ponte, il broker dell'energia —
+  // che il menu delle integrazioni degli elettrodomestici aveva scritto per
+  // conto suo: adesso e' scritto una volta e lo usano tutti e due.
+  // 291 con l'alberatura del Config: «per cortesia mi organizzi le sezioni del
+  // config con criterio, vedo cose mischiate in sezioni che non c'entrano
+  // nulla». L'ordine delle trentadue linguette non lo decideva nessuno —
+  // diciotto le scrive il guscio in fila, le altre quattordici se le infilano i
+  // moduli prima di «Runtime» quando gli capita di installarsi — quindi Rifiuti
+  // finiva fra Backup e Varchi senza nessuna ragione.
+  // `core/alberatura-del-config.js` e' l'elenco: a quale famiglia appartiene
+  // ogni scheda e in che posizione, in un posto solo invece che sparpagliato in
+  // quattordici moduli. `sections/alberatura-del-config-section.js` lo applica
+  // — rimette le linguette in fila e mette l'insegna della famiglia davanti a
+  // ogni gruppo — e sopra disegna la fila delle sette famiglie, che porta dove
+  // si vuole andare. Nessuna linguetta si nasconde: una nascosta non si
+  // clicca, e le prove che ne aprono una cliccandola sono una quarantina.
+  // 293 con la guardia che distingue il dito che scorre dal dito che tocca:
+  // «quando sei in un menu' pieno di entita', tipo le luci, quando scorri con
+  // il dito oltre allo scorrere prende anche il comando — sulle luci mentre
+  // passi con il dito per scorrere le accende pure» (#397). Il difetto non e'
+  // di una sezione: e' di ogni elenco lungo che si scorre col dito, e le
+  // sezioni che comandano al click sono decine. Scriverne la guardia in ognuna
+  // vorrebbe dire scriverla male in qualcuna, e soprattutto riscriverla in
+  // quella nuova. `core/il-dito-scorre-o-tocca.js` e' il criterio — quanto si
+  // e' spostato il dito fra il tocco e il rilascio, misurato in diagonale —
+  // e `sections/il-dito-scorre-o-tocca-section.js` lo applica una volta sola,
+  // sul documento e in cattura, da dove si arriva prima di ogni sezione.
+  // 295 con l'elenco unico delle sezioni: «dove posso inserire i binary sensor
+  // di porte e finestre? Non trovo piu' la sezione dove inserirli» (#399).
+  // L'interruttore di ogni sezione stava DENTRO la scheda di quella sezione, e
+  // quindi per sapere quali sezioni esistono bisognava aprirle tutte — e per
+  // sapere quali erano accese anche. `core/lelenco-delle-sezioni.js` e' la
+  // mappa: scheda del Config, chiave di `cd_sections`, nome. Non e' un elenco
+  // nuovo, e' quello che stava dentro `config-uniformity-section.js` e che
+  // adesso leggono in due invece che uno.
+  // `sections/lelenco-delle-sezioni-section.js` lo disegna in Impostazioni,
+  // raggruppato nelle stesse sette famiglie delle linguette, e non salva niente
+  // per conto suo: gira l'interruttore chiamando la `edSecTog` del guscio.
+  // 299 con le batterie che diventano una sezione come le altre (#398): «le
+  // batterie quelle cariche non le fa vedere? sarebbe carino che le batterie
+  // stessero nel config come le altre cose configurazioni». Erano un elenco
+  // che compariva in Home solo quando una scendeva sotto il venti per cento —
+  // venti scritto nel codice, uguale per tutti — e sparita quella spariva
+  // l'argomento. Adesso sono quattro moduli, che e' la forma di una sezione:
+  // `core/batterie-di-casa.js` (cosa conta come batteria, quando e' scarica, e
+  // il riepilogo), `sections/batterie-section.js` (la pagina, con la voce
+  // nella barra), `sections/batterie-editor-section.js` (la scheda: la soglia,
+  // quali non contare, come si chiamano) e `sections/batterie-elenco-section.js`
+  // — venti righe il cui unico mestiere e' che la tessera, la pagina e la
+  // scheda guardino lo STESSO elenco. Se la scheda ne toglie una e la tessera
+  // continua a contarla, chi l'ha tolta pensa che la plancia non l'abbia
+  // sentito.
+  // 301 con i tasti d'inserimento scritti a mano (#413): «possibilita' di
+  // configurare i comandi di inserimento e modalita' sia nel comando da
+  // lanciare che nel nome icona — utilizzando un dispositivo tramite esphome
+  // non ho il classico control_panel_alarm». La fila della Sicurezza la
+  // disegna la centrale, e chi una centrale non ce l'ha si ritrovava due tasti
+  // di ripiego che chiamavano servizi inesistenti. Sono due moduli, che e' la
+  // forma di sempre: `core/antifurto-su-misura.js` (cosa premere, quale
+  // servizio per quale dominio, e chi e' inserito adesso) e
+  // `sections/antifurto-su-misura-editor-section.js` (la scheda, sotto la
+  // casella della centrale, accanto alle modalita' da mostrare). La fila non
+  // si riscrive: `core/alarm-panel.js` li aggiunge ai tasti della centrale, e
+  // la pagina, la tessera della Home e la finestra rapida del banner li
+  // disegnano senza sapere da dove arrivano.
+  // La 303 aveva portato il flusso dell'energia in Home (#415, #416): una card
+  // accanto alle persone, col suo conto puro e il suo disegno. E' stata tolta
+  // — «non mi piace e non c'entra nulla con il resto» — e con lei i suoi due
+  // moduli, la sua chiave e il suo interruttore: la mappa dei flussi resta una
+  // sola, quella della sezione Energia.
+  // 305 con le telecamere che si vedono subito: «vanno riviste completamente
+  // le connessioni che avvengono con le telecamere, sono lentissime e non
+  // carica immediatamente immagine». Il guscio prova le strade in fila —
+  // WebRTC, HLS, MJPEG, istantanee — e nessuna disegna finche' non vince:
+  // prima di allora il riquadro e' vuoto, su una telecamera che dorme anche
+  // per venticinque secondi. E la fila si rifa' identica a ogni apertura.
+  // `core/apertura-telecamera.js` tiene i due conti (quale strada ha
+  // funzionato per quella telecamera, e quanto vale la pena aspettarla) e
+  // `sections/telecamera-subito-section.js` disegna l'istantanea prima di
+  // negoziare e prova per prima la strada ricordata. La cascata del guscio non
+  // si tocca: resta la rete di sicurezza, intera.
+  // 314 con il verso della batteria (#434): «sembra scaricarsi perche' il flow
+  // tratteggiato va dalla batteria verso casa ma non e' esatto». La mappa ha
+  // una convenzione sola — positivo = scarica — e meta' dei sensori scrive
+  // positivo quando la batteria si CARICA: da un valore solo non si indovina,
+  // e chi guarda vede le frecce all'incontrario. La regola sta nel nucleo che
+  // gia' possiede quelle convenzioni (`core/energy-flow-truth.js`, che non
+  // cresce di un file); `sections/verso-batteria-editor-section.js` e' solo
+  // l'interruttore, sotto la casella della potenza — il posto dove ci si trova
+  // quando ci si accorge che il disegno mente.
+  // 313 con la presenza in casa (#432): «ci vorrebbe una sezione con i sensori
+  // presenza o movimento». Quattro moduli, e nessuno di piu': `core/da-quanto.js`
+  // e' la sveglia e le parole del «da quanto» — stavano dentro
+  // `core/varchi-di-casa.js`, dove sono servite per primo, e non sono dei
+  // varchi: le scrive anche la presenza, e chiedere l'ora al modulo delle porte
+  // sarebbe la dipendenza che fra un anno fa domandare «ma perche' la presenza
+  // dipende dai varchi?». `core/presenza-in-casa.js` legge i rilevatori — quali
+  // sono di casa, come stanno, da quanto — e `sections/presenza-section.js` e
+  // `sections/presenza-editor-section.js` sono la pagina e la sua scheda, nella
+  // stessa forma dei Varchi perche' e' la stessa domanda su un'altra famiglia
+  // di sensori.
+  // 309 con cosa disegna il grafico delle Temperature (#427, #433): «avere
+  // anche quello relativo all'umidità» e «poter togliere dal grafico alcune
+  // entità/stanze cliccandoci sopra … nel mio caso il vano tecnico». Due
+  // richieste sullo stesso disegno, ed e' per questo che stanno in un modulo
+  // solo: `core/il-grafico-delle-stanze.js` dice da quale casella della stanza
+  // si legge, con che unita' si scrive, dov'e' la fascia in cui si sta bene, e
+  // chi resta fuori — con la regola che l'ultima accesa non si spegne.
+  // 308 con la tessera di cui parla una scelta: «se la finestra e configurata
+  // nella sezione finestre e no nei varchi la segnalazione resta in finestre
+  // non deve scomparire». Lo stesso contatto sta scritto in due sezioni e
+  // finisce in due tessere; l'interruttore «nel widget» spegneva l'entita' e
+  // non la riga, e toccarlo nei Varchi la faceva sparire anche dalle Finestre.
+  // `core/fuori-dai-widget.js` e' la regola: una voce nuda vale ovunque — cosi'
+  // chi ha gia' scelto non perde niente — e una voce «tessera|entita'» vale in
+  // quella tessera sola.
+  // 307 con cosa c'e' dentro un'allerta quando la si apre (#422): «non si puo'
+  // interagire con le schede allerte per espandere le informazioni». Il testo
+  // di un avviso della protezione civile lo si tagliava a centottanta caratteri
+  // per farlo stare nella tessera, e gli attributi dell'integrazione non
+  // uscivano da nessuna parte: adesso la tessera si apre, e questo modulo
+  // decide cosa vale la pena mostrarci dentro.
+  // 306 con chi decide di CHI e' un'entita' (#417): «il frigorifero 1 mi
+  // mostra il valore di un sensore che ho messo dentro il frigorifero 2 …
+  // anche se cancello l'associazione me la ritrovo sempre». La passata che
+  // indovina le entita' dai nomi cercava anche col TIPO dell'apparecchio —
+  // «frigo» — che ce l'hanno tutti i frigoriferi, e bastava che UNA parola
+  // combaciasse. `core/entita-di-questo-apparecchio.js` e' il giudizio, puro e
+  // provabile a tavolino: le parole vengono dal nome, tutte devono combaciare,
+  // e i numeri contano perche' sono il modo in cui una casa distingue due cose
+  // uguali.
+  // 315 con la deriva della fascia sotto il meteo: «deve essere su una riga,
+  // quindi da smartphone se non entra la devi rendere scorrevole o che scorre
+  // lei automaticamente». Torna su una riga sola — era andata a capo per la
+  // #400 — e l'obiezione di allora, che uno scorrimento orizzontale non lo
+  // trova nessuno, cade perche' non c'e' piu' niente da trovare: la fascia si
+  // muove da sola. `core/la-fascia-deriva.js` e' l'aritmetica di quel
+  // movimento, che e' la parte che si tiene ferma con una prova; il timer e il
+  // dito che lo ferma stanno nella sezione, che e' l'unica a poterli conoscere.
+  // 317 con le tavolozze (#436): «quando è possibile avere qualche tema in
+  // più». Sono due moduli — `core/tavolozze.js`, che porta i valori e non sa
+  // che lingua si parla, e la sezione, che porta le parole e veste il
+  // documento. La divisione è la stessa di sempre, e serve a poter misurare il
+  // contrasto di ogni tavolozza senza un browser: è aritmetica sui numeri, e
+  // sta dove non ci sono effetti al caricamento.
+  // 318 con l'avviso personalizzato che si apre da solo (#445): «ho un boolean
+  // che se attivo mi indica con un popup l'intervento del distacco carichi».
+  // `core/avvisi-che-si-aprono.js` risponde a una domanda sola — quali si sono
+  // ACCESI ADESSO, non quali sono accesi — ed è puro apposta: aprire una
+  // finestra addosso a chi guarda è il gesto più facile da sbagliare della
+  // plancia, e i tre modi di sbagliarlo si evitano tutti rispondendo bene a
+  // quella domanda.
+  // 319 con le soglie di ricarica (#408): «una scheda che mostri la percentuale
+  // del tablet che usiamo a muro, e magari schiacciando le impostazioni per
+  // attivare la ricarica, tipo soglia bassa 20% soglia alta 80%».
+  // `core/ricarica-a-soglie.js` è puro: dice come si legge una soglia — coi
+  // limiti che DICHIARA l'entità, non con quelli che ci inventiamo — e quale
+  // servizio la sposta, che fra `number` e `input_number` non è lo stesso.
+  // Chiamare quello sbagliato non dà errore: non fa niente, e da fuori è un
+  // cursore rotto.
+  // 320 con i bidoni disegnati: «icone rifiuti non secondo lo stile del nostro
+  // catalogo, rendile omogenee e creale visto che non ci sono». I materiali
+  // erano le ultime emoji di sistema che si vedevano davvero.
+  // `core/disegni-rifiuti.js` sta accanto agli altri disegni e non tocca
+  // niente: un bidone solo, il coperchio del colore che la sezione usa gia' e
+  // un emblema per materiale. Sta qui, e non dentro la sezione, perche' un
+  // disegno lo chiedono in tre posti — la pagina, la scheda e il menu dei
+  // turni — e tre copie dello stesso bidone sono tre bidoni diversi fra sei
+  // mesi.
+  // 323 con le stampanti (#469): «volevo chiedere se c'era la possibilita' del
+  // controllo delle tv e stampanti». Tre moduli in un colpo — il modello puro,
+  // la pagina e la scheda — perche' una sezione nuova e' fatta cosi': le
+  // regole stanno in `core/stampanti-model.js` (che stato ha detto la
+  // stampante, e quali entita' sono le sue cartucce), e le due sezioni le
+  // vestono. Il modello e' puro apposta: le cartucce si cercano da sole, e un
+  // indovinello si prova solo se lo si puo' chiamare senza un documento.
+  // 324 con l'azione accesa (#477): «color the active Quick Action cards when
+  // they are active». `core/azione-accesa.js` risponde a una domanda sola —
+  // questa azione e' accesa? — e la risposta ha tre esiti, non due: acceso,
+  // spento, e «uno stato non ce l'ha». Una scena non e' mai accesa, e una luce
+  // che non risponde non e' spenta: sono i due modi di dire una cosa falsa
+  // colorando un tasto, e stanno scritti dove si possono provare senza un
+  // documento.
+  // 326 con le altre letture del robot (#468): «sarebbe possibile aggiungere
+  // piu' valori tra quelli che mostra?». Due moduli, e il secondo e' il piu'
+  // interessante. `core/robot-letture.js` sa quali entita' di un robot sono
+  // cose che si leggono, quali si riconoscono da sole — filtro, spazzole,
+  // area, durata — e come si scrive il numero che portano.
+  // `core/nome-accanto-al-dispositivo.js` invece non e' nuovo: e' la regola
+  // «togli il nome del dispositivo dal nome dell'entita'» che stava dentro il
+  // modello del robot e serviva gia' anche agli elettrodomestici. Le letture
+  // ne avevano bisogno pure loro, e tenerla di la' avrebbe voluto dire due
+  // moduli che si importano a vicenda oppure la stessa regola scritta due
+  // volte: e' scesa dove tutt'e tre la vedono.
+  // 327 con i comandi accanto (#451): «le TV dove vanno messe?». Non un modulo
+  // nuovo di sostanza, ma uno spostamento: le regole dei comandi in piu' —
+  // quali entita' possono esserlo, cosa fa toccarne una, quali stanno accanto
+  // — stavano nel modello del robot perche' li' e' arrivata la domanda per
+  // prima (#306), e gli elettrodomestici se le prendevano da li' con un
+  // commento che lo ammetteva. Alla terza sezione che le chiede — i lettori,
+  // per le TV — tenerle di la' voleva dire un lettore che importa dal robot.
+  // 328 con la pioggia caduta (#478): «per chi ha una stazione meteo sarebbe
+  // utile vedere il rain rate e la pioggia caduta nella giornata. Questo
+  // potrebbe integrarsi anche su gestione irrigazione». Il modulo risponde a
+  // una domanda sola — l'irrigazione ha ancora senso, guardando il cielo di
+  // oggi? — e la risposta ha tre esiti, non due: «sta piovendo» e «ha piovuto
+  // abbastanza» sono due ragioni diverse per saltare il giro, e chi legge la
+  // pagina vuole sapere quale delle due e'.
+  // 331 con gli altri nodi del cluster (#470): «sarebbe utile poter configurare
+  // piu' di un mini pc in modo da monitorare piu' nodi, comodo per chi ha un
+  // cluster proxmox». Tre moduli, che e' come si aggiunge una cosa a una
+  // sezione che c'e' gia': le regole in `core/nodi-del-cluster.js` — cos'e' un
+  // nodo, quando un carico smette di essere normale, quali entita' di un
+  // dispositivo sono le sue — e le due sezioni che le vestono, la fascia sulla
+  // pagina Server e la scheda dentro quella del MiniPC.
+  // 334 col citofono e la cassetta della posta (#449): «avendo un intercom ho
+  // un button.cancello per aprire, inoltre volevo chiedere una sezione per la
+  // cassetta della posta». Tre moduli, come sempre quando nasce una sezione:
+  // le regole in `core/citofono-e-posta.js` — quale verbo apre quale dominio,
+  // e come si legge una cassetta da due sensori — e le due sezioni che le
+  // vestono, la pagina e la scheda della configurazione.
+  // 335 con la quota di sole di un apparecchio: «wallbox sempre sbagliato»,
+  // 49,4 kWh dal fotovoltaico contro i 22,8 veri. Un modulo solo, e puro: la
+  // quota di sole di un consumo si sa solo sapendo QUANDO e' avvenuto, e il
+  // conto ora per ora non e' roba da mettere dentro chi disegna la card. La
+  // sezione gli passa tre serie di secchielli — l'apparecchio, la casa, la
+  // rete — e lui torna la spartizione e da dove l'ha presa.
+  // 336 con l'interruttore del modo chiosco in ⚙️ Impostazioni (#480): «non
+  // vorrei disattivarla per tutte le plance, sarebbe possibile avere una
+  // funzione tipo kiosk mode?». Il chiosco c'era gia'; qui c'e' solo la sua
+  // riga nella configurazione, che non sa niente di suo e chiede tutto a lui.
+  // 337 con il codice del tastierino tirato fuori in un posto solo (#336): la
+  // regola del PIN — quattro-otto cifre — stava scritta due volte, nelle
+  // aperture e nei tasti d'inserimento su misura, e tre porte sullo stesso
+  // gesto che accettano codici diversi sono tre porte che un giorno non si
+  // somigliano piu'.
+  // 339 con i rilevamenti delle telecamere (#394): il motore — che tipo di
+  // sensore e', cosa si vede adesso, e l'automazione del telefono gia' scritta
+  // — e la sua scheda sotto le telecamere. Il push lo manda Home Assistant,
+  // quindi qui non c'e' nessun secondo motore di automazioni: c'e' il
+  // documento da incollare.
+  // 340 con lo scrivere solo quello che cambia (#494): riscrivere un attributo
+  // col valore che ha gia' sveglia chi guarda il documento, che rimette a
+  // posto gli stessi attributi, che svegliano di nuovo. Da fermi non si
+  // fermava piu', e un campo che trema dodici volte al secondo non si lascia
+  // scrivere. La regola la usano due piani — le sezioni e i moduli comuni —
+  // quindi sta in mezzo.
+  // 341 con l'interruttore delle pastiglie di stato (#491): spegnerle non e'
+  // riordinarle, e la differenza sta tutta in una riga di regola.
+  // 342 con gli aggiornamenti che aspettano (#498): Home Assistant li dichiara
+  // gia' con le sue entita' `update.`, e qui si leggono e si mettono in fila.
+  // Niente da configurare: un elenco scritto a mano invecchierebbe al primo
+  // add-on installato.
+  // 346 con il modo in cui si spegne quello che e' rimasto acceso: l'elenco
+  // che si apre dalla barra sotto il meteo deve saperlo, e non e' sempre
+  // «spegni» — una tapparella si chiude, una cassa si mette in pausa, un
+  // contatto sull'anta non si comanda affatto.
+  // 348 con la card del meteo: il riquadro sceso in pagina e' un blocco come
+  // gli altri, e una striscia alta trenta pixel in mezzo a delle card e' un
+  // avanzo. Due file — le previsioni che si provano senza socket, e il
+  // vestito.
+  // 350 con le due file dell'Auto: le voci che la tendina del limite accetta
+  // — quelle dell'entita', non sei numeri di serie — e il tempo che manca
+  // alla fine della carica, che il guscio non contava mai perche' chiedeva la
+  // lettera esatta della norma a colonnine che parlano altri dialetti.
+  // 352 con la soglia di potenza (#508): la regola di quando la casa sta
+  // tirando troppo — e su quale dei due carichi si misura, casa o rete — e il
+  // posto dove la si scrive, dentro le impostazioni dell'Energia. Due file,
+  // perche' la regola dev'essere provabile senza aprire una scheda: la tessera
+  // in Home la legge da sola, e non passa di qui.
+  // 353 con l'elenco di cio' che un apparecchio non vuole mostrare (#512): un
+  // file solo, perche' e' una domanda sola — «questa entita' si vede?» — e la
+  // fanno la finestra e la scheda, che esistono gia' tutte e due.
+  // 354 con le zone e gli ingressi della centrale (#511): un file solo, perche'
+  // le righe non sono nuove — sono quelle della Presenza e dei Varchi — e qui
+  // si decide soltanto quali appartengono a quest'area.
+  // 355 con le vesti della carta: un file solo, e NON e' un file in piu' di
+  // codice — e' un file in meno di ricetta. Il rilievo di una card (i due fili,
+  // l'ombra corta, quella lunga, la grana) stava scritto in un posto solo, le
+  // tessere; il meteo sceso in pagina se n'era vestito un altro, ed e' uscito
+  // «piatto» dove le altre erano «in rilievo». Due ricette per la stessa cosa
+  // danno due aspetti diversi, sempre. Adesso e' una, e la leggono tutti.
+  // 356 con la base viva della plancia: un file solo, e risponde a una domanda
+  // che prima nessuno faceva — «da dove mi carico ADESSO?». La card la ricavava
+  // dal proprio indirizzo, che dalla #372 sta sul prefisso stabile: quello
+  // servito senza `Cache-Control`, che un browser si tiene per giorni. Da li'
+  // l'integrazione nuova e la plancia vecchia nella stessa casa.
+  // 357 con chi accende la card: un file solo, e toglie una decisione al
+  // codice invece di aggiungergliene una. A colorare la card di un
+  // elettrodomestico c'era una casella sola — l'allarme — e la porta del frigo
+  // di proposito non ci passava, perche' un frigo aperto per prendere il latte
+  // non e' un guasto. Vero, ma «non e' un guasto» non vuol dire «non me ne
+  // importa»: a chi ha il congelatore in garage quella porta importa eccome.
+  // Adesso l'elenco lo scrive chi abita la casa, e questo file e' l'unico
+  // posto in cui si dice cosa vuol dire «accesa» — la stessa parola per
+  // l'allarme di sempre e per le entita' scelte, perche' due elenchi di
+  // dialetti si scollano e allora la stessa entita' colora la card e non conta
+  // fra gli allarmi.
+  // 358 col velo delle finestre: un file solo, e di nuovo e' un file in meno
+  // di ricetta. Il velo dietro una finestra aperta era scritto ogni volta da
+  // capo, e ogni volta con numeri diversi: il guscio copre all'82% sullo scuro
+  // e quella della persona al 55%, e si vedeva — «sullo sfondo resta la dash
+  // sfocata, con le altre invece e' nero». Due ricette per la stessa cosa
+  // danno due aspetti diversi, sempre; adesso e' una.
+  // 359 con l'intestazione fissa (#521): «un'opzione che tiene ferma tutta la
+  // parte iniziale, e se uno scorre verso il basso vede il resto». E' un file
+  // in piu' perche' e' una cosa in piu' — un interruttore per apparecchio, come
+  // il modo chiosco, con la sua casella e la sua regola. Metterla dentro un
+  // modulo che c'e' gia' vorrebbe dire metterla dentro qualcosa che parla
+  // d'altro: il chiosco manda la plancia a tutto schermo, questa la tiene
+  // ferma, e sono due domande diverse che si accendono separate.
+  // 360 con le stanze di Home Assistant messe da parte. E' un file in piu'
+  // perche' toglie una domanda: il conto della presenza per stanza (#549) si
+  // appoggia ai tre registri, dentro il pannello non ci sono mai, e chiederli
+  // da chi disegna e' quello che e' costato la #553. Adesso chi i registri li
+  // ha gia' in mano — il pannello, il rilevamento automatico — ne lascia una
+  // mappa piatta «entita' → stanza», e chi disegna la legge. Il posto dove
+  // quella mappa vive e' questo, ed e' uno solo: scriverla in tre punti
+  // vorrebbe dire tre idee diverse di cosa sia una stanza.
+  assert.ok(
+    relative.length <= 360,
+    `production graph unexpectedly grew to ${relative.length} modules`,
+  );
+  assertAcyclic(edges);
+
+  /* No polling, with two declared exceptions.
+   *
+   * A camera thumbnail is a still picture: nothing in Home Assistant pushes a
+   * new one and the entity state does not change when the view does, so the
+   * only way to keep the wall live is to ask again. That timer is armed by the
+   * Sicurezza page being on screen and disarmed the moment it is not.
+   *
+   * The second counts the filtration seconds of the pools beyond the first —
+   * the ones the vendored runtime does not know exist, and whose pump would
+   * otherwise start and never stop. It follows the same discipline: armed when
+   * one of those pumps starts running, disarmed the moment none is.
+   *
+   * The third ages the "16 h ago" of the person cards: nothing in Home
+   * Assistant pushes an event when time merely passes, and on a wall-mounted
+   * dashboard nobody touches the page. Same discipline again: armed only while
+   * the Home page is on a visible screen with people configured, disarmed the
+   * moment it is not.
+   *
+   * The fourth refreshes the camera thumbnails of the Home widget deck, for
+   * the same reason as the Sicurezza wall: a camera frame is a still picture
+   * nothing pushes. Ten seconds, and only while the camera tile is expanded
+   * on a visible Home; collapsed, the timer dies and the object URLs are
+   * returned.
+   *
+   * The fifth transcribes the alarm stage into English: the vendored EN
+   * runtime redraws it every tick with its own Italian words, so no event can
+   * win that race. Same discipline: English shell only, alarm nodes only,
+   * silent while the page is hidden.
+   *
+   * The sixth keeps the Segnalazioni tile of the Home deck honest. Its counts
+   * come from GitHub, and GitHub pushes nothing: without a beat the numbers
+   * freeze at whatever they were when the page was opened, wearing the face of
+   * the numbers of right now — which is worse than showing nothing. Ten
+   * minutes, and the same discipline as the rest: only for the account that
+   * holds the repository (nobody else has that tile), silent while the page is
+   * hidden, and stopped when the section is uninstalled.
+   *
+   * The seventh is the weather radar (#266). A radar is a picture that changes
+   * on its own — the national ones refresh every five or ten minutes — and
+   * nothing pushes a new frame at the page. Same discipline as the camera
+   * tile, and for the same reason: one minute, only while the forecast window
+   * is open, and the timer stops itself the moment it finds that window shut.
+   *
+   * The eighth is the progress bar of a media player (#269). Home Assistant
+   * says at which second the track was when it measured it, and then says
+   * nothing more until something else changes: nobody pushes the mere passing
+   * of time, so without a beat the bar sits still on a track that is moving.
+   * One second, and the same discipline as the rest: only while the Musica
+   * page is the one on screen AND something is actually playing — either of
+   * those stops being true and the timer dies.
+   *
+   * The ninth is the chat di assistenza. The centralino is a letterbox, not a
+   * push channel: nothing in Home Assistant fires when the person at the other
+   * end writes back, and the backend's five-minute round only rings the bell —
+   * it redraws nothing. Without a beat the open window shows whatever was
+   * there when it opened, and the answer arrives only by closing and reopening
+   * it, which is what happened. Fifteen seconds, and the same discipline as
+   * the rest: only while the chat window is open, it redraws only when
+   * something actually changed, and the timer stops itself the moment it finds
+   * that window shut.
+   *
+   * The tenth is «il guscio disegna quando serve», and it is the reverse of
+   * an interval added: it switches OFF eleven of the vendored runtime's own
+   * forever-timers (the shutters every two seconds, the navbar every three,
+   * the camera clocks every second from any page, the auto-hide every
+   * minute…) and keeps only the two that carried real logic, with the same
+   * discipline as the rest — the camera clock beats only while the Security
+   * page is on screen and the tab is visible, the irrigation step only while
+   * a watering sequence is running, and each timer stops itself the moment
+   * that stops being true.
+   *
+   * L'undicesimo e' il conto alla rovescia dello spegnimento programmato del
+   * clima (#364). Il timer VERO sta in Home Assistant — un timer nel browser
+   * muore chiudendo la pagina, e chi accende il condizionatore per due ore
+   * prima di dormire la pagina la chiude sempre — quindi questo battito non
+   * spegne niente: fa solo scendere i minuti scritti sulle card aperte, che
+   * cambiano una volta al minuto e non a ogni disegno. Stessa disciplina di
+   * tutti gli altri: parte solo se c'e' almeno uno spegnimento appeso, e si
+   * ferma da solo quando l'ultimo se ne va. Una plancia senza timer
+   * programmati non si sveglia mai.
+   *
+   * These are the intervals production is allowed, and they are named here so
+   * another one cannot arrive unnoticed. */
+  const intervals = [...graph.entries()].filter(([, source]) =>
+    /setInterval\s*(?:\?\.)?\s*\(/.test(source),
+  );
+  assert.deepEqual(
+    intervals.map(([file]) => path.relative(frontendRoot, file).replaceAll("\\", "/")).sort(),
+    [
+      "src/sections/assistenza-section.js",
+      "src/sections/english-runtime-strings-section.js",
+      "src/sections/home-widgets-section.js",
+      "src/sections/il-guscio-disegna-quando-serve-section.js",
+      "src/sections/live-ui-section.js",
+      "src/sections/media-player-section.js",
+      "src/sections/people-section.js",
+      "src/sections/pool-extra-section.js",
+      "src/sections/radar-meteo-section.js",
+      "src/sections/segnalazioni-section.js",
+      "src/sections/spegnimento-programmato-section.js",
+    ],
+  );
+
+  const observers = [...graph.entries()].filter(([, source]) =>
+    /new\s+(?:root\.)?MutationObserver\s*\(/.test(source),
+  );
+  // Beta17 contributes one page-scoped observer so delayed legacy writes on
+  // #page-temp cannot resurrect the progress placeholder. Beta24 may add one
+  // node-scoped SOC observer. Beta26 adds one #temp-grid-scoped observer. The
+  // configuration uniformity owns one more, scoped to the children of #ed-body,
+  // so the section switch and the save stay in place when a tab's own panels
+  // arrive late. The MiniPC page owns one scoped to #page-server, so a heading
+  // follows the block the auto-hide empties — the auto-hide is called from
+  // inside the runtime, so there is no name to wrap. The alarm-mode chooser owns
+  // one more, scoped to the children of #ed-body: it has to appear under the
+  // panel field the moment the Security tab is drawn, and the only honest signal
+  // that the card has been redrawn is the card itself — the tab class is set
+  // before the body is mounted, and the legacy `editorSwitch` may not exist yet
+  // when modules install, so wrapping it is a hook that can silently fail.
+  // The quick-climate settings own the ninth, for the same reason and scoped the
+  // same way: the block has to appear under the climate units the moment the
+  // Clima tab is drawn, and the card itself is the only honest signal that it
+  // has been redrawn.
+  // The loop below still rejects observers rooted at document/body/documentElement.
+  // Il decimo e' del meteo nell'intestazione, e guarda solo i figli di
+  // #page-home: la striscia si sposta una volta sola, ma se qualcuno la
+  // rimette dentro la pagina — un ridisegno che riscrive #page-home per
+  // intero — va ripresa, e non c'e' nessun nome da avvolgere per saperlo.
+  // L'undicesimo e' del popup dell'Auto, e guarda solo il testo del tempo
+  // rimanente (#v-ev-remain-popup): il guscio lo riscrive a ogni giro del suo
+  // disegno — non su un evento nostro — e l'ora di fine carica va rimessa
+  // appena lui la cancella; non c'e' nessun nome da avvolgere per saperlo.
+  // Il dodicesimo e' della pagina Clima, e guarda solo la classe di
+  // #page-clima: la pagina si dipinge quando si apre — non piu' a ogni giro
+  // del guscio mentre si guarda la Home — e la classe cambia da tre strade
+  // (la barra, un modulo, una prova), che un nome da avvolgere non hanno.
+  // Il tredicesimo e' del «guscio disegna quando serve», e guarda la classe
+  // di tre pagine (Sicurezza, EV, Irrigazione): sono i suoi orologi e le
+  // particelle della ricarica a dover partire e fermarsi quando quelle pagine
+  // entrano ed escono dallo schermo.
+  assert.ok(observers.length <= 13, `too many production observers: ${observers.length}`);
+  for (const [file, source] of observers) {
+    assert.doesNotMatch(
+      source,
+      /\.observe\s*\(\s*(?:document|doc|document\.body|doc\.body|document\.documentElement|doc\.documentElement)\b/,
+      `${path.relative(frontendRoot, file)} must not observe the whole document`,
+    );
+  }
+
+  const srcRoot = path.join(frontendRoot, "src");
+  const srcFiles = (await filesBelow(srcRoot)).filter((file) => file.endsWith(".js"));
+  const srcOrphans = srcFiles
+    .filter((file) => !graph.has(path.normalize(file)))
+    .map((file) => path.relative(frontendRoot, file).replaceAll("\\", "/"))
+    .sort();
+
+  /* The language catalogs are the one thing production reaches that a static
+   * walk cannot see: `loadCatalog` imports `../i18n/<locale>.js` by computed
+   * name, so exactly one of them is ever fetched and none of them appears as
+   * an edge. Exempting them is only honest if the loader really does read that
+   * directory, so that is asserted here rather than assumed — and the exemption
+   * is narrow: a catalog must be named after a locale the registry declares,
+   * which the i18n-catalogs contract checks in turn. */
+  const engine = await readFile(path.join(srcRoot, "core/i18n.js"), "utf8");
+  /* La cartella dei cataloghi e' dichiarabile.
+   *
+   * Da quando la plancia si impacchetta, il codice cambia casa: dai sorgenti
+   * gira da `src/core/`, impacchettato da `legacy/`, e un percorso relativo
+   * scritto qui varrebbe solo in uno dei due posti. Chi prepara il pacchetto
+   * dichiara dove sono; senza dichiarazione vale `../i18n/`, la strada di
+   * sempre — ed e' quella che tiene in piedi l'esenzione qui sotto. */
+  assert.match(
+    engine,
+    /import\(`\$\{cartellaDeiCataloghi\(\)\}\$\{[^}]+\}\.js`\)/,
+    "src/core/i18n.js no longer loads catalogs by computed name; the exemption below is stale",
+  );
+  assert.match(
+    engine,
+    /return dichiarata \|\| "\.\.\/i18n\/";/,
+    "src/core/i18n.js no longer falls back to src/i18n; the exemption below is stale",
+  );
+  const catalogs = srcOrphans.filter((file) => /^src\/i18n\/[A-Za-z-]+\.js$/.test(file));
+  assert.ok(catalogs.length > 0, "no language catalogs found under src/i18n");
+
+  const unreachable = srcOrphans.filter((file) => !catalogs.includes(file));
+  assert.deepEqual(unreachable, [], `orphan src modules:\n${unreachable.join("\n")}`);
+});
+
+for (const relative of obsoleteFacades) {
+  test(`${relative} is physically absent`, async () => {
+    await assert.rejects(access(path.join(frontendRoot, relative)));
+  });
+}

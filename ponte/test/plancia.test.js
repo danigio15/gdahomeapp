@@ -57,9 +57,18 @@ test("la plancia vera portata dentro c'e', e ha la pagina in due lingue", () => 
   const modulo = plancia.leggi(`${descritta.base}/src/core/i18n.js`);
   assert.equal(modulo.stato, 200);
   assert.match(modulo.tipo, /^text\/javascript/);
-  const ritratti = readdirSync(join(plancia.cartella, "avatars"));
+  const ritratti = readdirSync(join(plancia.cartella, "avatars")).filter((nome) =>
+    nome.endsWith(".webp"),
+  );
   assert.ok(ritratti.length > 100, "i ritratti ci sono");
   assert.equal(plancia.leggi(`${BASE}/avatars/${ritratti[0]}`).stato, 200);
+
+  /* E accanto ai ritratti la loro licenza, che si apre: distribuire delle
+   * immagini di qualcun altro tenendo chiusa la carta che dice a che patto si
+   * possono usare sarebbe il contrario di quello che quella carta e'. */
+  const licenza = plancia.leggi(`${BASE}/avatars/LICENSE.txt`);
+  assert.equal(licenza.stato, 200);
+  assert.match(licenza.tipo, /^text\/plain/);
 });
 
 test("l'impronta dipende dal contenuto, e cambia quando cambia un file", () => {

@@ -41,6 +41,13 @@ const TIPI = Object.freeze({
   ".ico": "image/x-icon",
   ".woff2": "font/woff2",
   ".woff": "font/woff",
+  /* Le licenze dei ritratti e dei loghi delle auto, che stanno nella cartella
+   * delle immagini che coprono. Una licenza che si distribuisce ma non si puo'
+   * aprire non serve a niente. Gli altri file della plancia che non sono roba
+   * da browser — `legacy/SOURCE.md`, le toppe in `legacy/patches/` — restano
+   * fuori: nessuno li chiede a un indirizzo, e il sigillo li guarda lo stesso
+   * (`provenienza.js`), che e' un'altra domanda. */
+  ".txt": "text/plain; charset=utf-8",
 });
 
 /* Quello che concorre all'impronta: la pagina e i moduli. */

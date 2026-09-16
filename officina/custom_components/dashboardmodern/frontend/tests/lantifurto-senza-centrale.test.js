@@ -1,0 +1,331 @@
+/* I tasti d'inserimento per chi una centrale non ce l'ha (#413).
+ *
+ * «Possibilita' di configurare i comandi di inserimento e modalita' sia nel
+ * comando da lanciare che nel nome icona. Utilizzando un dispositivo tramite
+ * esphome non ho il classico control_panel_alarm.»
+ *
+ * La fila della Sicurezza la disegna la centrale: `supported_features` dice
+ * cosa accetta, e i tasti chiamano i servizi di `alarm_control_panel`. Senza
+ * quell'entita' restavano i due tasti di ripiego — Fuori e Notte — che
+ * chiamavano servizi che non esistono: premerli non dava errore a schermo e non
+ * faceva niente. Da fuori, due tasti rotti.
+ *
+ * Le prove tengono ferme tre cose: il servizio si ricava dal dominio (chiamare
+ * `turn_on` su un `button` e' il tasto rotto di prima), senza centrale valgono
+ * solo i propri (i tasti di ripiego non chiamano niente), e con la centrale i
+ * propri si aggiungono ai suoi invece di scalzarli.
+ */
+
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
+import { readFileSync } from "node:fs";
+import {
+  CHIAVE_ANTIFURTO_SU_MISURA,
+  PREFISSO_SU_MISURA,
+  chiamataDelModo,
+  modoDalServizio,
+  modoSuMisuraAcceso,
+  normalizzaModiSuMisura,
+  tastiSuMisura,
+  vuoleUnOpzione,
+} from "../src/core/antifurto-su-misura.js";
+import {
+  ALARM_DISARM,
+  alarmActiveModeWithCustom,
+  alarmVisibleModes,
+} from "../src/core/alarm-panel.js";
+import { CONFIG_KEYS } from "../src/core/chiavi-di-configurazione.js";
+
+const ESPHOME = [
+  {
+    id: "fuori",
+    nome: "Fuori casa",
+    icona: "mdi:shield-home",
+    entita: "script.antifurto_totale",
+    stato: "sensor.antifurto",
+    valore: "armed_away",
+  },
+  {
+    id: "notte",
+    nome: "Notte",
+    icona: "mdi:weather-night",
+    entita: "input_select.antifurto",
+    opzione: "Notte",
+  },
+  { id: "spegni", nome: "Spegni", entita: "button.antifurto_off" },
+];
+
+test("la casella viaggia con la configurazione della casa", () => {
+  assert.ok(
+    CONFIG_KEYS.includes(CHIAVE_ANTIFURTO_SU_MISURA),
+    "l'antifurto configurato sul tablet deve funzionare anche dal telefono",
+  );
+});
+
+test("una riga senza entità non diventa un tasto", () => {
+  const modi = normalizzaModiSuMisura([
+    { nome: "Vuoto" },
+    { nome: "Sbagliato", entita: "pippo" },
+    { nome: "Fuori dominio", entita: "sensor.qualcosa" },
+    { nome: "Buono", entita: "script.antifurto" },
+  ]);
+  assert.deepEqual(
+    modi.map((modo) => modo.nome),
+    ["Buono"],
+  );
+});
+
+test("il servizio lo dice il dominio, non si indovina", () => {
+  const [fuori, notte, spegni] = normalizzaModiSuMisura(ESPHOME);
+  assert.deepEqual(chiamataDelModo(fuori), {
+    domain: "script",
+    service: "turn_on",
+    entity: "script.antifurto_totale",
+    data: { entity_id: "script.antifurto_totale" },
+  });
+  assert.deepEqual(chiamataDelModo(notte), {
+    domain: "input_select",
+    service: "select_option",
+    entity: "input_select.antifurto",
+    data: { entity_id: "input_select.antifurto", option: "Notte" },
+  });
+  assert.equal(
+    chiamataDelModo(spegni).service,
+    "press",
+    "un pulsante ha solo press: turn_on su un button e' il tasto che non fa niente",
+  );
+});
+
+/* Un menu senza la voce scelta non diventa un tasto.
+ *
+ * Prima diventava, e poi taceva: la riga passava il filtro, il tasto compariva
+ * nella fila dell'antifurto, e premendolo non partiva niente perche'
+ * `select_option` senza l'opzione non e' una chiamata. Capita alla prima riga
+ * appena scritta — il campo dell'opzione compare solo dopo che c'e'
+ * l'entita' — ed e' proprio il momento in cui uno prova se funziona. Meglio un
+ * tasto che non c'e' ancora di uno che c'e' e non fa niente: e' la stessa
+ * regola con cui una riga senza entita' non diventa un tasto. */
+test("un elenco senza la voce scelta non diventa un tasto", () => {
+  assert.ok(vuoleUnOpzione("input_select.antifurto"));
+  assert.deepEqual(
+    normalizzaModiSuMisura([{ entita: "input_select.antifurto" }]),
+    [],
+    "senza la voce da scegliere non c'e' niente da premere",
+  );
+  /* Con la voce, invece, c'e' e chiama. */
+  const [modo] = normalizzaModiSuMisura([
+    { entita: "input_select.antifurto", opzione: "Fuori casa" },
+  ]);
+  assert.deepEqual(chiamataDelModo(modo), {
+    domain: "input_select",
+    service: "select_option",
+    entity: "input_select.antifurto",
+    data: { entity_id: "input_select.antifurto", option: "Fuori casa" },
+  });
+  /* E la guardia tardiva resta: chi si costruisce un modo a mano, saltando la
+   * normalizzazione, non chiama comunque a vuoto. */
+  assert.equal(chiamataDelModo({ entita: "input_select.antifurto", opzione: "" }), null);
+});
+
+test("senza centrale valgono solo i tasti scritti a mano", () => {
+  const tasti = alarmVisibleModes(null, [], ESPHOME);
+  assert.deepEqual(
+    tasti.map((voce) => voce.mode),
+    ["fuori", "notte", "spegni"],
+  );
+  assert.ok(
+    !tasti.some((voce) => voce.mode === ALARM_DISARM.mode),
+    "i tasti di ripiego chiamerebbero servizi che non esistono",
+  );
+  assert.deepEqual(
+    tasti.map((voce) => voce.label),
+    ["Fuori casa", "Notte", "Spegni"],
+  );
+  assert.equal(tasti[0].service, `${PREFISSO_SU_MISURA}fuori`);
+  assert.equal(tasti[0].icon, "🛡️", "l'icona la dà il catalogo di casa, dal nome mdi");
+});
+
+test("con la centrale i propri si aggiungono ai suoi", () => {
+  const centrale = { state: "disarmed", attributes: { supported_features: 3 } };
+  const tasti = alarmVisibleModes(centrale, [], ESPHOME);
+  assert.deepEqual(
+    tasti.map((voce) => voce.mode),
+    ["home", "away", "disarm", "fuori", "notte", "spegni"],
+  );
+});
+
+test("senza tasti scritti a mano non cambia niente", () => {
+  const centrale = { state: "disarmed", attributes: { supported_features: 3 } };
+  assert.deepEqual(alarmVisibleModes(centrale, []), alarmVisibleModes(centrale, [], []));
+  assert.deepEqual(
+    alarmVisibleModes(null, []).map((voce) => voce.mode),
+    ["away", "night", "disarm"],
+  );
+});
+
+test("il tasto acceso lo dice lo stato che gli si è indicato", () => {
+  const modi = normalizzaModiSuMisura(ESPHOME);
+  assert.equal(modoSuMisuraAcceso(modi, { "sensor.antifurto": { state: "armed_away" } }), "fuori");
+  assert.equal(modoSuMisuraAcceso(modi, { "input_select.antifurto": { state: "Notte" } }), "notte");
+  assert.equal(modoSuMisuraAcceso(modi, { "sensor.antifurto": { state: "disarmed" } }), "");
+  assert.equal(
+    modoSuMisuraAcceso(modi, { "sensor.antifurto": { state: "unavailable" } }),
+    "",
+    "chi non risponde non è inserito",
+  );
+});
+
+test("uno script non resta acceso: non è uno stato, ed è meglio di uno acceso a caso", () => {
+  const [fuori] = normalizzaModiSuMisura([{ id: "fuori", entita: "script.antifurto" }]);
+  assert.equal(fuori.stato, "script.antifurto");
+  assert.equal(modoSuMisuraAcceso([fuori], { "script.antifurto": { state: "off" } }), "");
+});
+
+test("se la centrale c'è, la sua parola vince", () => {
+  const centrale = { state: "armed_home", attributes: { supported_features: 3 } };
+  assert.equal(
+    alarmActiveModeWithCustom(centrale, ["home", "away", "disarm"], ESPHOME, {
+      "sensor.antifurto": { state: "armed_away" },
+    }),
+    "home",
+  );
+  assert.equal(
+    alarmActiveModeWithCustom(null, null, ESPHOME, { "sensor.antifurto": { state: "armed_away" } }),
+    "fuori",
+  );
+});
+
+test("il servizio marcato si riconosce, e solo lui", () => {
+  assert.equal(modoDalServizio(`${PREFISSO_SU_MISURA}fuori`), "fuori");
+  assert.equal(modoDalServizio("alarm_arm_away"), "");
+  assert.equal(modoDalServizio(""), "");
+});
+
+test("due righe con lo stesso identificativo diventano una", () => {
+  const modi = tastiSuMisura([
+    { id: "uno", nome: "Primo", entita: "script.uno" },
+    { id: "uno", nome: "Secondo", entita: "script.due" },
+  ]);
+  assert.deepEqual(
+    modi.map((voce) => voce.label),
+    ["Primo"],
+  );
+});
+
+/* La tessera della Home conosce i tasti scritti a mano.
+ *
+ * La fila dei tasti su misura la si raggiunge da due porte: la sezione
+ * Sicurezza e la tessera in Home. La tessera però nasceva solo se c'era una
+ * centrale o almeno una porta configurata, e leggeva l'inserimento solo dalla
+ * centrale: chi ha soltanto i propri tasti — cioè esattamente chi #413 serve —
+ * non aveva nessuna tessera da cui inserire, e chi aveva anche una porta
+ * leggeva «—» con l'antifurto inserito. Due porte per la stessa cosa devono
+ * dire la stessa cosa.
+ */
+test("la tessera in Home nasce e si accende anche con i soli tasti su misura", () => {
+  const sorgente = readFileSync(
+    new URL("../src/sections/home-widgets-section.js", import.meta.url),
+    "utf8",
+  );
+  /* Li legge dalla stessa chiave e con lo stesso modulo della sezione: due
+   * elenchi di modi sarebbero due antifurti. */
+  assert.match(sorgente, /CHIAVE_ANTIFURTO_SU_MISURA/);
+  assert.match(sorgente, /modoSuMisuraAcceso/);
+  /* La tessera nasce: non più solo con la centrale.
+   *
+   * Le porte contavano anche loro, finché stavano qui dentro; adesso hanno
+   * tessera loro (#457) e questa nasce per l'antifurto e basta — la centrale
+   * o i tasti scritti a mano. Chi ha soltanto le aperture non si ritrova una
+   * Sicurezza vuota: si ritrova le Porte. */
+  assert.match(sorgente, /if \(!alarm && !miei\.length\) return null;/);
+  assert.doesNotMatch(
+    sorgente,
+    /!doors\.length && !miei\.length/,
+    "le aperture non decidono più se la Sicurezza esiste",
+  );
+  /* E si accende: «inserito» lo dice anche un tasto su misura acceso. */
+  assert.match(sorgente, /raw\.startsWith\("armed"\) \|\| Boolean\(mioAcceso\)/);
+  /* E la fila dei tasti si apre: `alarm` è «c'è un antifurto da comandare». */
+  assert.match(sorgente, /alarm: Boolean\(alarm\) \|\| miei\.length > 0/);
+});
+
+test("il cartello della sezione dice inserito anche senza centrale (#547)", async () => {
+  /* «Ho testato la configurazione dell'allarme senza integrazione ma attivandola
+   *  tramite script e funziona tutto, il widget indica correttamente "Inserito"
+   *  ma se si entra dentro la sezione Sicurezza dà comunque la dicitura
+   *  DISARMATO.»
+   *
+   * Il cartello grande lo scrive il guscio, e lo scriveva guardando la sola
+   * centrale: senza centrale nessun ramo diceva «armato» e restava quello di
+   * partenza. Il TASTO invece era giusto, perché quello il guscio lo chiede già
+   * al modulo — due letture dello stesso fatto, e una sola sapeva la verità. */
+  const sezione = await readFile(
+    new URL("../src/sections/security-showcase-section.js", import.meta.url),
+    "utf8",
+  );
+  /* La risposta che mancava, pubblicata accanto a quella del tasto. */
+  assert.match(sezione, /root\.dmAlarmSuMisuraAcceso = \(\) => \{/);
+  assert.match(sezione, /return voce \? \{ mode: voce\.mode, label: voce\.label, icon: voce\.icon \} : null;/);
+  /* Non si filtra per «tasti che si vedono»: una casa inserita è inserita anche
+   * se chi guarda ha tolto quel tasto dalla fila. */
+  const corpo = sezione.slice(
+    sezione.indexOf("root.dmAlarmSuMisuraAcceso"),
+    sezione.indexOf("export function installSecurityShowcaseSection"),
+  );
+  assert.doesNotMatch(corpo, /modiVisibili/);
+
+  for (const guscio of ["../legacy/dashboard-runtime-it.js", "../legacy/dashboard-runtime-en.js"]) {
+    const testo = await readFile(new URL(guscio, import.meta.url), "utf8");
+    /* Il guscio chiede, e chiede SOLO quando la centrale non ha risposto
+     * niente di riconoscibile.
+     *
+     * Qui si pretendeva `if (!alarmTriggered && !isArmed)`, che non bastava:
+     * una centrale vera che dice `disarmed` lascia `isArmed` falso, e il
+     * cartello sarebbe passato ad ARMATO con il tasto Disinserisci acceso
+     * sotto — due letture dello stesso fatto che si contraddicono, che è
+     * esattamente il guasto della #547 rifatto al contrario. Dove una centrale
+     * risponde comanda lei, anche quando la risposta è «disarmato». */
+    assert.match(
+      testo,
+      /const centraleHaRisposto = \['triggered','armed_away','armed_night','armed_home','armed_custom_bypass','armed_vacation','pending','arming','disarmed'\]\.includes\(alarmState\);/,
+      guscio,
+    );
+    assert.match(
+      testo,
+      /if \(!alarmTriggered && !isArmed && !centraleHaRisposto\) \{/,
+      guscio,
+    );
+    assert.match(testo, /dmAlarmSuMisuraAcceso\(\)/, guscio);
+    assert.match(testo, /activeBtn = suMisura\.mode; isArmed = true;/, guscio);
+  }
+});
+
+test("un'entità non mappata non è una centrale che tace: è una centrale che non c'è", async () => {
+  /* «Non c'è modo di togliere le voci tasto Notte e Sblocca, che nel caso di
+   * configurazione con script non hanno modo di esistere» (#547).
+   *
+   * Il guscio non risponde mai «non lo so»: per uno slot che nessuno ha mappato
+   * restituisce un fantasma — `{ entity_id: "dm.unmapped", state: "unavailable" }`
+   * — perché chi disegna non inciampi su un `undefined`. Ma un fantasma è un
+   * oggetto, e un oggetto è vero: chi chiedeva «c'è una centrale?» si sentiva
+   * rispondere di sì, e la fila di serie compariva accanto ai tasti scritti a
+   * mano. Tasti che chiamano i servizi di `alarm_control_panel`, cioè che non
+   * fanno niente — e che non si potevano nemmeno nascondere, perché le caselle
+   * per toglierli elencano solo i modi che una centrale dichiara.
+   *
+   * Un `unavailable` VERO invece resta una centrale: sta solo dormendo, e chi
+   * l'ha configurata vuole ritrovare i suoi tasti al risveglio. */
+  const sorgente = await readFile(
+    new URL("../src/sections/security-showcase-section.js", import.meta.url),
+    "utf8",
+  );
+  const dentro = sorgente.slice(
+    sorgente.indexOf("function alarmStateObject("),
+    sorgente.indexOf("function", sorgente.indexOf("function alarmStateObject(") + 40),
+  );
+  assert.match(dentro, /dm\.unmapped/, "il fantasma va riconosciuto qui");
+  assert.match(dentro, /\?\s*null\s*:/, "e va tradotto in «nessuna centrale»");
+  /* E NON si butta via ogni entità che dice «non disponibile». */
+  assert.doesNotMatch(dentro, /"unavailable"/, "un unavailable vero resta una centrale");
+});

@@ -1,0 +1,307 @@
+// DM-FIX-20260818B
+/* The Configuration, tab by tab, answering the same questions the same way.
+ *
+ * The audit that motivated this counted, on every tab: how many ways there were
+ * to save, whether the section switch was there, and how much of *other*
+ * sections the tab was carrying. These are those three counts, asserted.
+ */
+import { expect, test } from "@playwright/test";
+import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
+
+const states = [
+  {
+    entity_id: "sensor.temp",
+    state: "21",
+    attributes: { friendly_name: "Temp", unit_of_measurement: "°C", device_class: "temperature" },
+  },
+  { entity_id: "light.salone", state: "on", attributes: { friendly_name: "Salone" } },
+  { entity_id: "switch.pompa", state: "off", attributes: { friendly_name: "Pompa" } },
+  {
+    entity_id: "sensor.casa_totale",
+    state: "100",
+    attributes: {
+      friendly_name: "Casa totale",
+      unit_of_measurement: "kWh",
+      device_class: "energy",
+      state_class: "total_increasing",
+    },
+  },
+  { entity_id: "weather.casa", state: "sunny", attributes: { friendly_name: "Meteo casa" } },
+];
+
+const seed = {
+  schema_version: 4,
+  sections: {
+    rooms: [{ id: "room-salone", name: "Salone", icon: "mdi:sofa", temp: "sensor.temp" }],
+    cameras: [],
+    appliances: [],
+    loads: [],
+    lights: [{ id: "light-salone", name: "Salone", entities: ["light.salone"] }],
+    climate: [],
+    ev: [{ id: "ev-b10", name: "B10", brand: "Leapmotor", model: "B10" }],
+    covers: [],
+    pool: {},
+    irrigation: { zones: [] },
+    energy: {},
+    entityOverrides: {},
+  },
+  visibility: {
+    home: true,
+    energy: true,
+    ev: true,
+    temp: true,
+    tapparelle: true,
+    piscina: true,
+    irrigazione: true,
+    appliances: true,
+  },
+};
+
+/* Every tab of the configuration, and what it is: a section of the dashboard
+ * with a visibility switch, or one of the two that are neither. */
+const SECTION_TABS = [
+  "sez0",
+  "sez1",
+  "sez2",
+  "sez3",
+  "sez4",
+  "sez6",
+  "sez7",
+  "sez9",
+  "tapp",
+  "pool",
+  "irr",
+  "appliances",
+  // Da quando la sezione Luci sta nella barra, la sua scheda ha la fascia
+  // visibile/nascondi come tutte le altre.
+  "luci",
+  // E da quando le Stanze sono una pagina della barra vale anche per loro:
+  // era l'unica voce che non si poteva nascondere, chiesto esplicitamente.
+  "stanze",
+];
+// «avvisi» non è più una linguetta: gli avvisi stanno in fondo alla scheda
+// «🧩 Widget», che è anche lei una scheda senza sezione da accendere.
+const PLAIN_TABS = ["sez8", "todo"];
+const NO_SAVE_TABS = ["runtime"];
+
+async function boot(page, testInfo) {
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, seed);
+  await page.evaluate((haStates) => {
+    const registry = eval("_RAW_STATES");
+    for (const entry of haStates) registry[entry.entity_id] = entry;
+  }, states);
+  await page.waitForFunction(() => Boolean(window.__DASHBOARDMODERN_CONFIG_UNIFORMITY__));
+}
+
+async function openTab(page, tab) {
+  await page.evaluate((name) => {
+    if (!document.getElementById("editor-modal")?.classList.contains("show")) {
+      window.apriConfigEntita();
+    }
+    window.editorSwitch(name);
+  }, tab);
+  // The tab settles over several frames, and how many depends on the machine:
+  // panels of their own arrive after the switch, and the runtime narrows the
+  // tab to its own section later still. Waiting a fixed number of milliseconds
+  // passes on a fast runner and fails on a slow one, so each assertion below
+  // polls instead — a build that never settles still fails, at the timeout.
+  await page.waitForFunction(
+    (name) => document.getElementById("ed-body")?.dataset.dmConfigUniform === name,
+    tab,
+    { timeout: 10_000 },
+  );
+}
+
+/* The state of the tab, once it stops changing. */
+function settledTabState(page, pick, message) {
+  return expect.poll(async () => pick(await tabState(page)), { message, timeout: 10_000 });
+}
+
+function tabState(page) {
+  return page.evaluate(() => {
+    const body = document.getElementById("ed-body");
+    const seen = (node) => node.getClientRects().length > 0;
+    const saves = [...body.querySelectorAll("button,.ed-btn-add,.ed-save-btn")].filter(
+      (node) =>
+        /salva|save/i.test(node.textContent || "") &&
+        seen(node) &&
+        /* Il salvataggio della SCHEDA di un'auto non e' il salvataggio della
+           sezione: e' un gesto del profilo, e si riconosce dal suo segno —
+           non dalle parole, che ormai cambiano per dire cosa sta salvando. */
+        node.dataset.evSaveCar !== "true",
+    );
+    // The switch of a section: the runtime's own banner, or the one a tab builds
+    // for itself with the same handler behind it (Energia does).
+    const banners = [
+      ...body.querySelectorAll(
+        "[data-key][onclick*='edSecTog'],[data-dm-energy-visibility='true']",
+      ),
+    ].filter(seen);
+    const footer = body.querySelector(":scope > [data-dm-save-footer]");
+    return {
+      saveLabels: saves.map((node) => node.textContent.replace(/\s+/g, " ").trim()),
+      banners: banners.length,
+      /* La fascia chiude il corpo della scheda: dopo di lei c'e' solo il piede
+       * del salvataggio, quando la scheda ne ha uno. */
+      bannerClosesBody: banners.length
+        ? (() => {
+            let blocco = banners[0];
+            while (blocco.parentElement && blocco.parentElement !== body)
+              blocco = blocco.parentElement;
+            const dopo = blocco.nextElementSibling;
+            return !dopo || dopo === footer;
+          })()
+        : null,
+      footerIsLast: footer ? body.lastElementChild === footer : null,
+      accordions: body.querySelectorAll("details.ed-acc").length,
+      entityFields: body.querySelectorAll('input[data-entity-input="true"]').length,
+    };
+  });
+}
+
+/* Il tetto di tempo si conta sulle linguette, non a memoria.
+ *
+ * Queste prove camminano su TUTTE le schede della Configurazione, e ogni
+ * scheda si ricostruisce da capo. I trenta secondi di serie di Playwright
+ * bastavano quando le linguette erano poche: adesso sono sedici, e su WebKit
+ * dentro un runner carico il giro non ci sta — la prova diventava rossa
+ * perche' il giro e' lungo, non perche' la Configurazione fosse rotta.
+ *
+ * Alzare il tetto NON allenta niente: ogni singola verifica qui sotto ha il
+ * suo timeout di dieci secondi, quindi una scheda che non si costruisce
+ * fallisce li', subito, come prima. Questo e' solo il conto totale del giro,
+ * e cresce insieme all'elenco delle schede invece di restare indietro.
+ */
+const TETTO_PER_SCHEDA = 5_000;
+const TETTO_DELL_AVVIO = 20_000;
+
+test.describe("the configuration behaves the same on every tab", () => {
+  test.describe.configure({
+    timeout:
+      TETTO_DELL_AVVIO +
+      (SECTION_TABS.length + PLAIN_TABS.length + NO_SAVE_TABS.length) * TETTO_PER_SCHEDA,
+  });
+
+  test("one save, in one place, wherever you are", async ({ page }, testInfo) => {
+    await boot(page, testInfo);
+    for (const tab of [...SECTION_TABS, ...PLAIN_TABS]) {
+      await openTab(page, tab);
+      /* Un salvataggio solo, e dice cosa salva.
+       *
+       * «＋ Aggiungi auto» apre una scheda nuova: e' un gesto del profilo, non
+       * un salvataggio, e resta fuori dal conto.
+       *
+       * Sulla scheda Auto il bottone in fondo NON dice «Salva sezione»:
+       * dice se sta creando una vettura o modificando quella aperta, e lo
+       * dice con le stesse parole del salvataggio qui sopra. E' una scelta,
+       * ed e' la risposta a «tasto ＋, tasto salva auto e giu' salva sezione:
+       * non si capisce quale aggiunge davvero un'auto». Il patto resta —
+       * UN salvataggio, in fondo — e cambiano solo le parole. */
+      const salvataggioAtteso =
+        tab === "sez2"
+          ? [expect.stringMatching(/^💾 Salva (la nuova auto|le modifiche a .+|auto)$/)]
+          : ["💾 Salva sezione"];
+      await settledTabState(
+        page,
+        (view) => view.saveLabels.filter((label) => !label.startsWith("＋")),
+        `${tab}: one way to save`,
+      ).toEqual(salvataggioAtteso);
+      await settledTabState(
+        page,
+        (view) => view.footerIsLast,
+        `${tab}: the save is the last thing on the tab`,
+      ).toBe(true);
+    }
+  });
+
+  test("read-only tabs offer no save at all", async ({ page }, testInfo) => {
+    await boot(page, testInfo);
+    for (const tab of NO_SAVE_TABS) {
+      await openTab(page, tab);
+      await settledTabState(page, (view) => view.saveLabels, `${tab}`).toEqual([]);
+    }
+  });
+
+  /* Sotto il nome della sezione ci vanno i DATI, non un interruttore.
+   *
+   * La fascia stava in cima, e in cima ci sta anche il nome della sezione: due
+   * moduli che si dichiaravano primi tutti e due, e l'ordine lo decideva chi
+   * passava per ultimo. Sopra «PLANCIA / HOME» finiva una fascia verde che col
+   * nome della scheda non c'entra. Adesso la fascia chiude il corpo, e chiude
+   * ogni scheda allo stesso modo — che e' l'unica cosa che la rende trovabile
+   * senza cercarla. */
+  test("the section switch is on every section, and always closes it", async ({
+    page,
+  }, testInfo) => {
+    await boot(page, testInfo);
+    for (const tab of SECTION_TABS) {
+      await openTab(page, tab);
+      await settledTabState(page, (view) => view.banners, `${tab}: exactly one switch`).toBe(1);
+      await settledTabState(
+        page,
+        (view) => view.bannerClosesBody,
+        `${tab}: the switch closes the tab`,
+      ).toBe(true);
+    }
+    for (const tab of PLAIN_TABS) {
+      await openTab(page, tab);
+      // These are not sections of the dashboard, so they have no switch.
+      await settledTabState(page, (view) => view.banners, `${tab}: no switch`).toBe(0);
+    }
+  });
+
+  test("a tab carries its own section and nothing else", async ({ page }, testInfo) => {
+    await boot(page, testInfo);
+    for (const tab of ["sez0", "sez3", "sez9"]) {
+      await openTab(page, tab);
+      // It used to be thirteen accordions and 104 entity fields on every one of
+      // these tabs, twelve sections of it hidden.
+      await settledTabState(
+        page,
+        (view) => view.accordions,
+        `${tab}: one section`,
+      ).toBeLessThanOrEqual(2);
+      await settledTabState(
+        page,
+        (view) => view.entityFields,
+        `${tab}: only its own fields`,
+      ).toBeLessThan(40);
+    }
+  });
+
+  test("the one save really saves — a section slot", async ({ page }, testInfo) => {
+    await boot(page, testInfo);
+    await openTab(page, "sez0");
+    await page.evaluate(() => {
+      const input = document.querySelector('#ed-body .ed-slot-in[data-ref="dm.home_meteo"]');
+      input.value = "weather.casa";
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await page.locator("#ed-body [data-dm-save-all]").click();
+    await expect
+      .poll(() =>
+        page.evaluate(() => JSON.parse(localStorage.getItem("cd_entity_overrides") || "{}")),
+      )
+      .toMatchObject({ "dm.home_meteo": "weather.casa" });
+  });
+
+  test("the one save really saves — a tab that had none", async ({ page }, testInfo) => {
+    await boot(page, testInfo);
+    await openTab(page, "luci");
+    await page.evaluate(() => {
+      window.__DM_SAVE_ACK__ = 0;
+      const previous = window.edSecSave;
+      window.edSecSave = function patched(...args) {
+        window.__DM_SAVE_ACK__ += 1;
+        return previous?.apply(this, args);
+      };
+    });
+    await page.locator("#ed-body [data-dm-save-all]").click();
+    // Rows here are written as they are edited; the gesture still answers, with
+    // the runtime's own acknowledgement.
+    await expect.poll(() => page.evaluate(() => window.__DM_SAVE_ACK__)).toBe(1);
+    // The acknowledgement is the runtime's own toast, the same one every other
+    // save in the editor raises.
+    await expect(page.locator("#ed-toast")).toHaveClass(/show/);
+  });
+});

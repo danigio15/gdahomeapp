@@ -24,6 +24,19 @@ abbiamo cambiato noi apposta, e un allarme che suona per niente si impara a non
 sentirlo. Non ci si deve pensare troppo: se ci si dimentica, le Prove si
 fermano e lo dicono (ponte/test/provenienza.test.js).
 
+Non tutto quello che sta qui si apre da un indirizzo, ed e' voluto. Dentro
+legacy/ ci sono SOURCE.md, VENDOR.json e la cartella patches/: dicono da quale
+commit del guscio originale viene la pagina e quali toppe ci sono sopra, e li
+rifanno gli attrezzi in officina/ (vendor_legacy.py, split_legacy.py), che li
+cercano esattamente li'. Il ponte non li serve — nessun browser li chiede — ma
+il sigillo li guarda, perche' un file che nessuno controlla e' un file che si
+puo' cambiare senza che si veda.
+
+Si aprono invece avatars/LICENSE.txt e brands/LICENSE.txt, accanto ai ritratti
+e ai loghi delle auto che coprono: distribuire delle immagini tenendo chiusa la
+carta che dice a che patto si usano sarebbe il contrario di quello che quella
+carta e'.
+
 Quello che invece resta fuori di qui sono le **aggiunte di gdahome alla
 pagina** — il nome, il marchio, le tessere che nell'app non ci vanno. Stanno in
 ponte/src/premesse.js per Home Assistant e in app/lib/plancia/premesse.dart per

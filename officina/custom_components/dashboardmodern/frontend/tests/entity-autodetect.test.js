@@ -1,0 +1,395 @@
+/* What the 🪄 button decides, held to the cases that made the old detector
+ * wrong: a slot in kWh taking a sensor in W, "oggi" taking a monthly meter, an
+ * early slot stealing the entity a later one matched exactly, and rooms falling
+ * back to name guessing while the Home Assistant areas sat unused. */
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
+import { buildEntityIndex } from "../src/core/entity-search-index.js";
+import { areaLookup } from "../src/sections/entity-autodetect-section.js";
+import {
+  CHIAVE_DELLE_STANZE,
+  dimenticaLeStanze,
+} from "../src/core/le-stanze-di-home-assistant.js";
+import {
+  buildPostings,
+  detectCategories,
+  detectSlots,
+  parseSlotPlan,
+  periodOf,
+  scoreSlotCandidate,
+} from "../src/core/entity-autodetect.js";
+
+const sensor = (id, name, extra = {}) => ({ id, name, state: "1", ...extra });
+
+const HOUSE = [
+  sensor("sensor.solaredge_produzione_oggi", "Produzione solare oggi", {
+    dc: "energy",
+    unit: "kWh",
+    sc: "total_increasing",
+    area: "Tetto",
+  }),
+  sensor("sensor.solaredge_produzione_mese", "Produzione solare mese", {
+    dc: "energy",
+    unit: "kWh",
+    sc: "total_increasing",
+  }),
+  sensor("sensor.solaredge_potenza_pv", "Potenza fotovoltaico", { dc: "power", unit: "W" }),
+  sensor("sensor.casa_consumo_oggi", "Consumo casa oggi", {
+    dc: "energy",
+    unit: "kWh",
+    sc: "total_increasing",
+  }),
+  sensor("sensor.casa_potenza", "Potenza consumo casa", { dc: "power", unit: "W" }),
+  sensor("sensor.batteria_soc", "Stato carica batteria", { dc: "battery", unit: "%" }),
+  sensor("sensor.speedtest_download", "Speedtest download", { unit: "Mbit/s" }),
+  sensor("sensor.speedtest_upload", "Speedtest upload", { unit: "Mbit/s" }),
+  sensor("sensor.cucina_temperatura", "Temperatura cucina", {
+    dc: "temperature",
+    unit: "°C",
+    area: "Cucina",
+  }),
+  sensor("sensor.cucina_umidita", "Umidità cucina", { dc: "humidity", unit: "%", area: "Cucina" }),
+  sensor("sensor.salotto_temperatura", "Temperatura salotto", {
+    dc: "temperature",
+    unit: "°C",
+    area: "Salotto",
+  }),
+  sensor("sensor.mansarda_temperatura", "Temperatura mansarda", { dc: "temperature", unit: "°C" }),
+  sensor("sensor.mansarda_umidita", "Umidità mansarda", { dc: "humidity", unit: "%" }),
+  sensor("light.cucina", "Luce cucina", { area: "Cucina", state: "on" }),
+  sensor("light.salotto", "Luce salotto", { area: "Salotto", state: "off" }),
+  sensor("climate.salotto", "Clima salotto", { area: "Salotto", state: "cool" }),
+  sensor("climate.termosifone_bagno", "Termosifone bagno", { area: "Bagno", state: "heat" }),
+  sensor("camera.ingresso", "Camera ingresso", { area: "Ingresso", state: "idle" }),
+  sensor("binary_sensor.porta_ingresso", "Porta ingresso", { dc: "door", state: "off" }),
+  sensor("binary_sensor.finestra_bypass", "Finestra bypass", { dc: "window", state: "off" }),
+  sensor("sensor.telecomando_batteria", "Batteria telecomando", { dc: "battery", unit: "%" }),
+  sensor("script.apri_cancello", "Apri cancello", { state: "off" }),
+  sensor("weather.casa", "Meteo casa", { state: "sunny" }),
+  sensor("alarm_control_panel.antifurto", "Antifurto", { state: "disarmed" }),
+];
+
+const index = () => buildEntityIndex(HOUSE, { version: `t${Math.random()}` });
+
+const plan = (ref, lbl, section = "energy") => parseSlotPlan({ ref, lbl }, section);
+
+function assign(slots, options = {}) {
+  const built = index();
+  const result = detectSlots(built.records, slots, {
+    postings: buildPostings(built.records),
+    ...options,
+  });
+  return Object.fromEntries(result.assignments.map((item) => [item.ref, item.id]));
+}
+
+test("a slot label states its own constraints", () => {
+  const energy = plan("dm.energy_produzione_solare_oggi", "Produzione solare oggi (kWh)");
+  assert.deepEqual(energy.units, ["kWh", "Wh", "MWh"]);
+  assert.deepEqual(energy.deviceClasses, ["energy"]);
+  assert.equal(energy.period, "d");
+
+  const mode = plan("dm.ev_modalita_ricarica_evcc", "Modalità ricarica EVCC (select)", "ev");
+  assert.deepEqual(mode.domains, ["select", "input_select"]);
+
+  const script = plan("dm.home_script_apertura_cancello", "Script apertura cancello", "home");
+  assert.deepEqual(script.domains, ["script", "scene", "automation"]);
+
+  // Prose after an em dash describes the field to the person, not to the matcher.
+  const washer = plan(
+    "dm.lavatrice_potenza",
+    "Potenza presa lavatrice (W) — per lavatrici non smart: >5W = in funzione",
+    "lavatrice",
+  );
+  assert.deepEqual(washer.units, ["W", "kW"]);
+  assert.ok(!washer.keys.some((keys) => keys.includes("funzione")));
+});
+
+test("the unit in the label is a constraint, not a preference", () => {
+  const built = index();
+  const power = built.records.find((record) => record.id === "sensor.solaredge_potenza_pv");
+  const energyPlan = plan("dm.energy_produzione_solare_oggi", "Produzione solare oggi (kWh)");
+  // A sensor in W can never answer a slot in kWh, however well its words match.
+  assert.equal(scoreSlotCandidate(power, energyPlan), -Infinity);
+});
+
+test("a daily slot never takes a monthly meter", () => {
+  assert.equal(periodOf("Produzione solare mese"), "m");
+  const result = assign([
+    plan("dm.energy_produzione_solare_oggi", "Produzione solare oggi (kWh)"),
+    plan("dm.energy_produzione_solare_mese", "Produzione solare mese (kWh)"),
+  ]);
+  assert.equal(result["dm.energy_produzione_solare_oggi"], "sensor.solaredge_produzione_oggi");
+  assert.equal(result["dm.energy_produzione_solare_mese"], "sensor.solaredge_produzione_mese");
+});
+
+test("the strongest claim on an entity wins, whatever the slot order", () => {
+  /* Declared in the order that used to lose: the generic power slot comes
+   * first and would have taken the photovoltaic sensor on a word match. */
+  const result = assign([
+    plan("dm.energy_potenza_consumo_casa", "Potenza consumo casa (W)"),
+    plan("dm.energy_potenza_fotovoltaico", "Potenza fotovoltaico (W)"),
+  ]);
+  assert.equal(result["dm.energy_potenza_fotovoltaico"], "sensor.solaredge_potenza_pv");
+  assert.equal(result["dm.energy_potenza_consumo_casa"], "sensor.casa_potenza");
+});
+
+test("one entity is never proposed for two slots, nor re-proposed when already configured", () => {
+  const first = assign([
+    plan("dm.server_speedtest_download", "Speedtest Download (Mbit/s)", "server"),
+    plan("dm.server_speedtest_upload", "Speedtest Upload (Mbit/s)", "server"),
+  ]);
+  assert.equal(first["dm.server_speedtest_download"], "sensor.speedtest_download");
+  assert.equal(first["dm.server_speedtest_upload"], "sensor.speedtest_upload");
+
+  const taken = assign(
+    [plan("dm.server_speedtest_download", "Speedtest Download (Mbit/s)", "server")],
+    {
+      taken: new Set(["sensor.speedtest_download"]),
+    },
+  );
+  assert.equal(taken["dm.server_speedtest_download"], undefined);
+});
+
+test("domains stated by the label are honoured", () => {
+  const result = assign([
+    plan("dm.home_meteo", "Meteo (entità weather)", "home"),
+    plan("dm.security_centrale_allarme", "Centrale allarme (alarm_control_panel)", "security"),
+    plan("dm.home_script_apertura_cancello", "Script apertura cancello", "home"),
+  ]);
+  assert.equal(result["dm.home_meteo"], "weather.casa");
+  assert.equal(result["dm.security_centrale_allarme"], "alarm_control_panel.antifurto");
+  assert.equal(result["dm.home_script_apertura_cancello"], "script.apri_cancello");
+});
+
+test("two equally plausible candidates are reported instead of guessed", () => {
+  const records = buildEntityIndex(
+    [
+      sensor("sensor.pannello_sonda", "Sonda temperatura", { dc: "temperature", unit: "°C" }),
+      sensor("sensor.serbatoio_sonda", "Sonda temperatura", { dc: "temperature", unit: "°C" }),
+    ],
+    { version: "ambiguous" },
+  );
+  const result = detectSlots(records.records, [
+    plan("dm.boiler_sonda_temperatura_1", "Sonda temperatura 1 (°C)", "boiler"),
+  ]);
+  assert.deepEqual(result.assignments, []);
+  assert.equal(result.undecided.length, 1);
+  assert.equal(result.undecided[0].reason, "ambiguous");
+});
+
+test("the small words a label uses to tell two slots apart are kept", () => {
+  /* "Temperatura AC inverter" and "Temperatura DC inverter" are the same label
+   * once two-letter words are dropped, and so are "Sonda temperatura 1" and its
+   * neighbours once digits are. Both pairs used to end up undecided. */
+  const built = buildEntityIndex(
+    [
+      sensor("sensor.inverter_temperatura_ac", "Temperatura AC", { dc: "temperature", unit: "°C" }),
+      sensor("sensor.inverter_temperatura_dc", "Temperatura DC", { dc: "temperature", unit: "°C" }),
+      sensor("sensor.sonda_1", "Sonda 1", { dc: "temperature", unit: "°C" }),
+      sensor("sensor.sonda_2", "Sonda 2", { dc: "temperature", unit: "°C" }),
+    ],
+    { version: "short-words" },
+  );
+  const result = detectSlots(built.records, [
+    plan("dm.energy_temperatura_ac_inverter", "Temperatura AC inverter (°C)"),
+    plan("dm.energy_temperatura_dc_inverter", "Temperatura DC inverter (°C)"),
+    plan("dm.boiler_sonda_temperatura_2", "Sonda temperatura 2 (°C)", "boiler"),
+  ]);
+  const byRef = Object.fromEntries(result.assignments.map((item) => [item.ref, item.id]));
+  assert.equal(byRef["dm.energy_temperatura_ac_inverter"], "sensor.inverter_temperatura_ac");
+  assert.equal(byRef["dm.energy_temperatura_dc_inverter"], "sensor.inverter_temperatura_dc");
+  assert.equal(byRef["dm.boiler_sonda_temperatura_2"], "sensor.sonda_2");
+});
+
+test("rooms come from the Home Assistant areas, with the humidity twin of each", () => {
+  const { rooms } = detectCategories(index().records);
+  assert.deepEqual(rooms.slice(0, 2), [
+    { name: "Cucina", icon: "🌡️", temp: "sensor.cucina_temperatura", hum: "sensor.cucina_umidita" },
+    { name: "Salotto", icon: "🌡️", temp: "sensor.salotto_temperatura" },
+  ]);
+  // A sensor with no area still lands, through its name and its id twin.
+  const mansarda = rooms.find((room) => room.temp === "sensor.mansarda_temperatura");
+  assert.equal(mansarda.hum, "sensor.mansarda_umidita");
+});
+
+test("lights, climate units and cameras carry their area in the name", () => {
+  const { lights, climate, cameras } = detectCategories(index().records);
+  assert.equal(lights["light.cucina"], "Luce cucina");
+  assert.equal(cameras[0].entity, "camera.ingresso");
+  const heating = climate.find((unit) => unit.entity === "climate.termosifone_bagno");
+  assert.equal(heating.type, "termo");
+  assert.equal(heating.name, "Bagno");
+  assert.equal(climate.find((unit) => unit.entity === "climate.salotto").type, "clima");
+});
+
+test("alert groups keep the openings and the batteries apart, and drop the bypass", () => {
+  const { groups } = detectCategories(index().records);
+  assert.deepEqual(groups.win, ["binary_sensor.porta_ingresso"]);
+  assert.deepEqual(groups.batt, ["sensor.batteria_soc", "sensor.telecomando_batteria"]);
+  assert.deepEqual(groups.luci, ["light.cucina", "light.salotto"]);
+  assert.deepEqual(groups.risc, ["climate.termosifone_bagno"]);
+  assert.deepEqual(groups.clima, ["climate.salotto"]);
+});
+
+test("a slot only looks at the entities that share a word with it", () => {
+  const many = [];
+  for (let position = 0; position < 4000; position += 1) {
+    many.push(sensor(`sensor.filler_${position}`, `Filler ${position}`, { unit: "W" }));
+  }
+  const built = buildEntityIndex([...HOUSE, ...many], { version: "scale" });
+  const postings = buildPostings(built.records);
+  const plans = [plan("dm.energy_produzione_solare_oggi", "Produzione solare oggi (kWh)")];
+  const result = detectSlots(built.records, plans, { postings });
+  assert.equal(result.assignments[0].id, "sensor.solaredge_produzione_oggi");
+  // Four thousand unrelated entities never enter the scoring at all.
+  assert.ok(result.scanned <= 8, `scored ${result.scanned} pairs`);
+});
+
+/* «La scheda friggitrice ad aria prende i valori di temperatura, umidità e
+ * qualità dell'aria da un Air quality monitor di Amazon che ho integrato, senza
+ * però che nessuno abbia detto di farlo da nessuna parte.» (#374)
+ *
+ * Nessuno l'aveva detto: l'aveva dedotto la stanza. Un'entita' nella stessa
+ * area prendeva 1.4 e contava come coperta esattamente come se il suo nome
+ * avesse parlato dell'apparecchio — e il monitor della qualita' dell'aria sta
+ * nella stessa cucina della friggitrice.
+ *
+ * La stanza resta un indizio, e un buon indizio: il sensore della lavatrice sta
+ * in lavanderia. Ma da sola non basta a dire di chi e' una cosa.
+ */
+test("la stanza da sola non basta ad attaccare un'entita' a un apparecchio", () => {
+  const built = index();
+  const monitor = built.records.find((record) => record.id === "sensor.cucina_umidita");
+  /* Il monitor sta in cucina, e la friggitrice pure. Ma «umidita' cucina» non
+   * dice niente di una friggitrice. */
+  const friggitrice = plan("dm.friggitrice_umidita", "Umidità friggitrice (%)", "friggitrice");
+  assert.equal(scoreSlotCandidate(monitor, friggitrice), -Infinity);
+});
+
+test("la stanza rinforza ancora un nome che gia' parla", () => {
+  const built = index();
+  const temperatura = built.records.find((record) => record.id === "sensor.cucina_temperatura");
+  /* Qui il nome dice «cucina» e l'area pure: e' la stessa cosa detta due
+   * volte, e resta una buona risposta per la temperatura della cucina. */
+  const stanza = plan("dm.stanza_cucina_temperatura", "Temperatura cucina (°C)", "cucina");
+  assert.ok(scoreSlotCandidate(temperatura, stanza) > 0);
+});
+
+test("l'autorilevamento rifatto a configurazione già fatta non sovrascrive niente", async () => {
+  /* «Verifica se l'autorilevamento funziona anche dopo aver effettuato la
+   *  configurazione.»
+   *
+   * Funziona, e la ragione per cui è sicuro sta in tre punti del modulo. Sono
+   * quelli che, se saltassero, cancellerebbero la configurazione di chi preme
+   * quel tasto una seconda volta — cioè il danno peggiore che questa plancia
+   * possa fare. Qui restano scritti. */
+  const sorgente = await readFile(
+    new URL("../src/sections/entity-autodetect-section.js", import.meta.url),
+    "utf8",
+  );
+
+  /* 1. Le caselle già piene non si toccano: si propongono solo quelle vuote. */
+  assert.match(
+    sorgente,
+    /const plans = slotPlans\(\)\.filter\(\(plan\) => !clean\(overrides\[plan\.ref\]\)\);/,
+    "solo le caselle vuote entrano nella proposta",
+  );
+
+  /* 2. Luci, stanze, unità clima e telecamere: se ce n'è già anche una sola,
+   *    quella categoria non si propone affatto — e la proposta esce vuota. */
+  for (const categoria of ["lights", "rooms", "climate", "cameras"]) {
+    assert.match(
+      sorgente,
+      new RegExp(`skipped\\.${categoria} \\? (\\{\\}|\\[\\]) :`),
+      `${categoria}: già configurata vuol dire proposta vuota`,
+    );
+  }
+
+  /* 3. E si scrive solo quando c'è qualcosa da scrivere: un elenco vuoto non
+   *    deve poter arrivare a `writeJson` e azzerare quello che c'era. */
+  const applica = sorgente.slice(
+    sorgente.indexOf("export async function applyProposal"),
+    sorgente.indexOf("/* ── Entry point"),
+  );
+  for (const [campo, chiave] of [
+    ["Object.keys\\(proposal\\.lights\\)\\.length", "cd_luci"],
+    ["proposal\\.rooms\\.length", "cd_stanze"],
+    ["proposal\\.climate\\.length", "cd_clima_units"],
+    ["proposal\\.cameras\\.length", "cd_cameras"],
+  ]) {
+    assert.match(
+      applica,
+      new RegExp(`if \\(${campo}\\) writeJson\\("${chiave}"`),
+      `${chiave} si scrive solo con qualcosa dentro`,
+    );
+  }
+
+  /* I collegamenti e i gruppi non si riscrivono da capo: si LEGGE quello che
+   * c'è e ci si aggiunge sopra. Un `writeJson` diretto qui vorrebbe dire
+   * buttare via ogni collegamento fatto a mano. */
+  assert.match(
+    applica,
+    /const overrides = readJson\("cd_entity_overrides", \{\}\) \|\| \{\};\s*for \(const item of rest\) overrides\[item\.ref\] = item\.id;/,
+    "i collegamenti si aggiungono, non si sostituiscono",
+  );
+  assert.match(
+    applica,
+    /const groups = readJson\("cd_gruppi_extra", \{\}\) \|\| \{\};\s*for \(const \[name, ids\] of Object\.entries\(proposal\.groups\)\) groups\[name\] = ids;/,
+    "i gruppi si aggiungono, non si sostituiscono",
+  );
+
+  /* E prima di scrivere si mostra cosa si è trovato, dicendo quali categorie
+   * sono state saltate: chi preme il tasto deve sapere che le sue luci non
+   * verranno ripassate, invece di leggere «0» e credere che non le abbia. */
+  assert.match(sorgente, /Niente è stato ancora salvato/);
+  assert.match(sorgente, /const kept = t\("già configurato", "already configured"\)/);
+});
+
+test("i registri caricati per il rilevamento restano scritti per chi disegna", () => {
+  /* Il rilevamento i tre registri se li carica già — è l'unico posto della
+   * plancia che lo fa apposta. Chi disegna invece non li ha: dentro il pannello
+   * `WIZ` nasce vuoto a ogni caricamento e nessuno lo riempie, e per questo il
+   * conto della presenza per stanza (#549) lì non entrava mai in funzione.
+   *
+   * Chiederli dal disegno è quello che è costato la #553. Quindi chi li ha già
+   * in mano ne lascia una mappa piatta, e non costa una domanda in più: sono
+   * gli stessi registri, già letti, già qui. */
+  const scritte = new Map();
+  const storage = {
+    getItem: (chiave) => scritte.get(chiave) ?? null,
+    setItem: (chiave, valore) => scritte.set(chiave, String(valore)),
+  };
+  const prima = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  Object.defineProperty(globalThis, "localStorage", { value: storage, configurable: true });
+  try {
+    dimenticaLeStanze();
+    const mappa = areaLookup({
+      areas: [{ area_id: "salotto", name: "Salotto" }],
+      devs: [{ id: "dev1", area_id: "salotto" }],
+      ents: [
+        { entity_id: "binary_sensor.prox", area_id: "salotto" },
+        { entity_id: "binary_sensor.pres", device_id: "dev1" },
+        { entity_id: "binary_sensor.orfana" },
+      ],
+    });
+    assert.equal(mappa.get("binary_sensor.pres"), "Salotto");
+    assert.deepEqual(JSON.parse(scritte.get(CHIAVE_DELLE_STANZE)), {
+      "binary_sensor.prox": "Salotto",
+      "binary_sensor.pres": "Salotto",
+    });
+
+    /* E un giro a vuoto — registri assenti, `WIZ` vuoto — non cancella quella
+     * buona: sarebbe il conto per stanza spento fino al prossimo giro. */
+    dimenticaLeStanze();
+    assert.equal(areaLookup(null).size, 0);
+    assert.deepEqual(JSON.parse(scritte.get(CHIAVE_DELLE_STANZE)), {
+      "binary_sensor.prox": "Salotto",
+      "binary_sensor.pres": "Salotto",
+    });
+  } finally {
+    if (prima) Object.defineProperty(globalThis, "localStorage", prima);
+    else delete globalThis.localStorage;
+    dimenticaLeStanze();
+  }
+});

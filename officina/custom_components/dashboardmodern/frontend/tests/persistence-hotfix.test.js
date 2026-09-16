@@ -1,0 +1,413 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { DashboardStore } from "../src/core/dashboard-store.js";
+
+globalThis.addEventListener = () => {};
+const {
+  applyRestoredValues,
+  CONFIG_KEYS,
+  CONFIG_KEYS_REVISION,
+  integrationUserDataKey,
+  laPrincipale,
+  mergeLegacyMissingConfig,
+  migrateLegacyUserData,
+  normalizeRemoteSnapshot,
+  normalizeRestoredValues,
+  persistenceReconcileAction,
+  sameConfigValues,
+} = await import("../src/sections/config-persistence-section.js");
+
+// DM-FIX-20260815H
+
+class MemoryStorage {
+  values = new Map();
+  getItem(key) {
+    return this.values.get(key) ?? null;
+  }
+  setItem(key, value) {
+    this.values.set(key, String(value));
+  }
+  removeItem(key) {
+    this.values.delete(key);
+  }
+}
+
+function setup(seed = {}) {
+  const storage = new MemoryStorage();
+  for (const [key, value] of Object.entries(seed)) storage.setItem(key, JSON.stringify(value));
+  const store = new DashboardStore({ storage, sync: async () => {} });
+  store.migrate();
+  return { store, storage };
+}
+
+test("primary persistence uses the integration runtime key", () => {
+  assert.equal(integrationUserDataKey(), "dashboardmodern_integration_config");
+});
+
+test("secondary persistence uses the sanitized runtime instance suffix", () => {
+  assert.equal(
+    integrationUserDataKey({ primary: false, instance: "Casa / mare! 123456789" }),
+    "dashboardmodern_integration_config__Casamare12345678",
+  );
+});
+
+test("legacy remote payload migrates once to the unified key", async () => {
+  globalThis.__DASHBOARDMODERN_PRIMARY__ = true;
+  globalThis.__DASHBOARDMODERN_INSTANCE__ = "integration";
+  const legacy = { version: 1, values: { cd_sections: '{"home":true}' } };
+  const values = new Map([["dashboardmodern_v2_config:integration", legacy]]);
+  const pushes = [];
+  const fetchValue = async (key) => values.get(key) || null;
+  const pushValue = async (key, value) => {
+    pushes.push([key, value]);
+    values.set(key, value);
+  };
+  assert.equal(await migrateLegacyUserData(fetchValue, pushValue), legacy);
+  assert.equal(await migrateLegacyUserData(fetchValue, pushValue), legacy);
+  assert.deepEqual(pushes, [["dashboardmodern_integration_config", legacy]]);
+});
+
+test("modern persistence covers every shared legacy editor key that used to stay device-local", () => {
+  for (const key of [
+    "cd_branding",
+    "cd_devices",
+    "cd_floor_icons",
+    "cd_flow_nodes",
+    "cd_subload_groups",
+    "cd_avvisi_custom",
+    "cd_text_overrides",
+    "cd_hidden_elements",
+  ])
+    assert.ok(CONFIG_KEYS.includes(key), `${key} must be synchronized`);
+  /* La barra a scomparsa o ferma era fra le preferenze del dispositivo. Non lo
+   * e' piu': chi la mette ferma sul telefono se la ritrova ferma anche sul
+   * computer, che e' come e' stato chiesto che si comporti. Il gettone e la
+   * connessione restano del dispositivo, quelli si. */
+  assert.ok(CONFIG_KEYS.includes("cd_navbar_mode"), "cd_navbar_mode must be synchronized");
+  for (const key of ["cd_connection", "cd_theme", "cd_nav_mode"])
+    assert.equal(CONFIG_KEYS.includes(key), false, `${key} must remain device-local`);
+});
+
+test("flat legacy cloud payload is accepted and upgraded to the modern envelope", () => {
+  const remote = normalizeRemoteSnapshot({
+    __ts: 12345,
+    _savedAt: 12000,
+    cd_sections: '{"energy":true}',
+    cd_devices: '[{"name":"Pompa"}]',
+  });
+  assert.deepEqual(remote, {
+    version: 1,
+    keys_revision: 0,
+    updated_at: 12345,
+    migrated_from: "legacy-flat",
+    values: {
+      cd_sections: '{"energy":true}',
+      cd_devices: '[{"name":"Pompa"}]',
+    },
+  });
+});
+
+test("old incomplete cloud snapshot keeps local fields that were never synchronized", () => {
+  const local = {
+    cd_sections: '{"energy":true}',
+    cd_devices: '[{"name":"Pompa smartphone"}]',
+    cd_avvisi_custom: '[{"name":"Allarme"}]',
+  };
+  const oldRemote = normalizeRemoteSnapshot({
+    version: 1,
+    updated_at: 5000,
+    values: { cd_sections: '{"energy":false}' },
+  });
+  const merged = mergeLegacyMissingConfig(oldRemote, local);
+  assert.equal(merged.values.cd_sections, '{"energy":false}');
+  assert.equal(merged.values.cd_devices, local.cd_devices);
+  assert.equal(merged.values.cd_avvisi_custom, local.cd_avvisi_custom);
+});
+
+test("current-revision cloud absence is authoritative and is not filled from stale local data", () => {
+  const remote = normalizeRemoteSnapshot({
+    version: 1,
+    keys_revision: CONFIG_KEYS_REVISION,
+    updated_at: 5000,
+    values: { cd_sections: '{"energy":false}' },
+  });
+  const merged = mergeLegacyMissingConfig(remote, {
+    cd_devices: '[{"name":"Stale"}]',
+  });
+  assert.equal(Object.hasOwn(merged.values, "cd_devices"), false);
+});
+
+/* Le foto dell'auto non viaggiano piu' come caselle sciolte.
+ *
+ * Viaggiavano, e per questo un salvataggio piu' vecchio doveva lasciar stare
+ * quella che stava su questo dispositivo. Ma spedirle era il difetto: la
+ * configurazione condivisa si portava dietro la foto dell'auto attiva altrove e
+ * al ritorno la riscriveva qui. Adesso ogni auto si porta le sue dentro
+ * `cd_ev_cars`, e queste due chiavi restano di chi le guarda.
+ */
+test("le foto dell'auto non stanno piu' fra le chiavi condivise", () => {
+  for (const key of ["cd_ev_image", "cd_ev_image_plugged"]) {
+    assert.equal(CONFIG_KEYS.includes(key), false, `${key} non deve viaggiare da sola`);
+  }
+  /* Un salvataggio vecchio le contiene ancora: non devono tornare indietro solo
+   * perche' sono scritte li' dentro. */
+  const remote = normalizeRemoteSnapshot({
+    version: 1,
+    keys_revision: 2,
+    updated_at: 5000,
+    values: { cd_ev_image: '"/local/auto.png"', cd_ev_cars: "[]" },
+  });
+  assert.equal("cd_ev_image" in remote.values, false, "e' rientrata dalla finestra");
+  const merged = mergeLegacyMissingConfig(remote, {
+    cd_ev_image: '"/local/vecchia.png"',
+  });
+  assert.equal("cd_ev_image" in (merged.values || {}), false);
+});
+
+test("store preserves a fresh legacy visibility write instead of overwriting it", () => {
+  const { store, storage } = setup({ cd_sections: { home: false } });
+  const external = { home: true, energy: false };
+  storage.setItem("cd_sections", JSON.stringify(external));
+  store.persist();
+  assert.deepEqual(JSON.parse(storage.getItem("cd_sections")), external);
+  assert.deepEqual(store.getState().visibility, external);
+});
+
+test("store preserves fresh room edits including Temperature display names", () => {
+  const { store, storage } = setup();
+  const rooms = [
+    {
+      id: "room-kitchen",
+      name: "Kitchen",
+      temp: "sensor.kitchen",
+      temp_name: "Sonda cucina",
+      hum: "sensor.kitchen_humidity",
+      hum_name: "Umidità cucina",
+    },
+  ];
+  storage.setItem("cd_stanze", JSON.stringify(rooms));
+  store.persist();
+  const saved = JSON.parse(storage.getItem("cd_stanze"))[0];
+  assert.equal(saved.temp_name, "Sonda cucina");
+  assert.equal(saved.hum_name, "Umidità cucina");
+  assert.equal(store.getSection("rooms")[0].temp_name, "Sonda cucina");
+});
+
+/* Il prezzo di acquisto puo' venire da un'entita' (#217): la scelta sta nel
+ * modello energia canonico e deve sopravvivere al giro completo dello store —
+ * normalizzazione compresa — altrimenti il primo salvataggio qualunque
+ * riporta la tariffa al numero fisso. */
+test("il prezzo da entita' del modello energia sopravvive al giro dello store", async () => {
+  const { store, storage } = setup();
+  await store.replaceSection("energy", {
+    grid: { total_import_energy: "sensor.import" },
+    rates: { import_entity: "sensor.pun_prezzo" },
+  });
+  assert.equal(store.getSection("energy").rates.import_entity, "sensor.pun_prezzo");
+  store.persist();
+  assert.equal(store.getSection("energy").rates.import_entity, "sensor.pun_prezzo");
+  assert.equal(
+    JSON.parse(storage.getItem("cd_energy_model")).rates.import_entity,
+    "sensor.pun_prezzo",
+  );
+});
+
+test("restore normalizes room names in canonical and legacy snapshots", () => {
+  const restored = normalizeRestoredValues({
+    cd_stanze: JSON.stringify([{ id: "room_x", name: "", temp: "sensor.t" }]),
+    dm_dashboard_state: JSON.stringify({
+      schema_version: 4,
+      sections: { rooms: [{ id: "room_y", name: "", temp: "sensor.y" }] },
+    }),
+  });
+  assert.equal(JSON.parse(restored.cd_stanze)[0].name, "Room 1");
+  assert.equal(JSON.parse(restored.dm_dashboard_state).sections.rooms[0].name, "Room 1");
+});
+
+test("configured desktop restores the newer remote phone snapshot", () => {
+  const local = {
+    cd_stanze: JSON.stringify([{ id: "room-old", name: "Vecchia" }]),
+    cd_sections: JSON.stringify({ temp: true }),
+  };
+  const remote = {
+    version: 1,
+    keys_revision: 2,
+    updated_at: 5000,
+    values: {
+      cd_stanze: JSON.stringify([{ id: "room-new", name: "Nuova" }]),
+      cd_sections: JSON.stringify({ temp: true, energy: true }),
+    },
+  };
+  assert.equal(
+    persistenceReconcileAction({ remote, localConfigured: true, pendingAt: 0, local }),
+    "restore-remote",
+  );
+});
+
+test("configured desktop also restores a newer flat legacy phone snapshot", () => {
+  const local = { cd_devices: '[{"name":"Vecchio"}]' };
+  const remote = { __ts: 5000, cd_devices: '[{"name":"Nuovo"}]' };
+  assert.equal(
+    persistenceReconcileAction({ remote, localConfigured: true, pendingAt: 0, local }),
+    "restore-remote",
+  );
+});
+
+test("newer unsynced local edit wins over an older remote snapshot", () => {
+  const local = { cd_sections: JSON.stringify({ energy: true }) };
+  const remote = {
+    version: 1,
+    keys_revision: 2,
+    updated_at: 4000,
+    values: { cd_sections: JSON.stringify({ energy: false }) },
+  };
+  assert.equal(
+    persistenceReconcileAction({ remote, localConfigured: true, pendingAt: 5000, local }),
+    "push-local",
+  );
+});
+
+test("first configured device seeds remote storage when no remote exists", () => {
+  assert.equal(
+    persistenceReconcileAction({
+      remote: null,
+      localConfigured: true,
+      local: { cd_stanze: "[]" },
+    }),
+    "push-local",
+  );
+});
+
+test("identical local and remote snapshots do not rewrite either side", () => {
+  const values = {
+    cd_sections: JSON.stringify({ energy: true }),
+    cd_costo_kwh: "0.28",
+  };
+  assert.equal(sameConfigValues(values, { ...values }), true);
+  assert.equal(
+    persistenceReconcileAction({
+      remote: { version: 1, keys_revision: 2, updated_at: 100, values: { ...values } },
+      localConfigured: true,
+      pendingAt: 200,
+      local: values,
+    }),
+    "in-sync",
+  );
+});
+
+test("remote restore propagates deletions instead of leaving stale desktop keys", () => {
+  const storage = new MemoryStorage();
+  storage.setItem("cd_sections", JSON.stringify({ energy: true }));
+  storage.setItem("cd_stanze", JSON.stringify([{ id: "stale", name: "Stale" }]));
+  storage.setItem("cd_devices", JSON.stringify([{ name: "Stale device" }]));
+  storage.setItem("cd_costo_kwh", "0.31");
+
+  assert.equal(
+    applyRestoredValues(storage, {
+      cd_sections: JSON.stringify({ energy: false }),
+      cd_costo_kwh: "0.27",
+    }),
+    true,
+  );
+  assert.equal(storage.getItem("cd_stanze"), null);
+  assert.equal(storage.getItem("cd_devices"), null);
+  assert.equal(storage.getItem("cd_costo_kwh"), "0.27");
+  assert.deepEqual(JSON.parse(storage.getItem("cd_sections")), { energy: false });
+});
+
+/* Due plance non si guardano nemmeno quando il pannello e' vecchio.
+ *
+ * «Se aggiungo una nuova dashboard da integrazioni mi duplica quella attuale,
+ * invece doveva crearne una ex novo sciolta dall'altra.» La chiave del
+ * trasporto per-utente si sdoppia solo per chi NON e' la principale, e prima
+ * chi non lo dichiarava passava per principale: bastava un pannello rimasto in
+ * cache perche' due plance scrivessero nello stesso posto.
+ *
+ * A dirlo, quando la dichiarazione manca, e' il profilo — non l'istanza: ne ha
+ * una anche la principale, e leggerla come «sono secondaria» mandava la
+ * principale a scrivere altrove. Questa prova tiene ferme tutt'e due le
+ * direzioni. */
+test("chi non sa di essere secondaria lo chiede al profilo, non all'istanza", () => {
+  const primaPrima = globalThis.__DASHBOARDMODERN_PRIMARY__;
+  const istanzaPrima = globalThis.__DASHBOARDMODERN_INSTANCE__;
+  const profiloPrima = globalThis.__DASHBOARDMODERN_PROFILE__;
+  try {
+    delete globalThis.__DASHBOARDMODERN_PRIMARY__;
+    globalThis.__DASHBOARDMODERN_INSTANCE__ = "01ff77aa22bb33cc";
+
+    // Il profilo di un'altra cassetta: questa non e' la principale.
+    globalThis.__DASHBOARDMODERN_PROFILE__ = "plancia-mare";
+    assert.equal(laPrincipale(), false);
+
+    // Il profilo della principale, o nessun profilo: lo e'. L'istanza da sola
+    // non basta a farla passare per secondaria — ce l'hanno tutte.
+    globalThis.__DASHBOARDMODERN_PROFILE__ = "primary";
+    assert.equal(laPrincipale(), true);
+    delete globalThis.__DASHBOARDMODERN_PROFILE__;
+    assert.equal(laPrincipale(), true);
+
+    // Una plancia da sola, senza istanza, resta quella di sempre.
+    delete globalThis.__DASHBOARDMODERN_INSTANCE__;
+    assert.equal(laPrincipale(), true);
+
+    // E quando l'integrazione lo dice, comanda lei: anche contro il profilo.
+    globalThis.__DASHBOARDMODERN_INSTANCE__ = "01ff77aa22bb33cc";
+    globalThis.__DASHBOARDMODERN_PROFILE__ = "plancia-mare";
+    globalThis.__DASHBOARDMODERN_PRIMARY__ = true;
+    assert.equal(laPrincipale(), true);
+    globalThis.__DASHBOARDMODERN_PRIMARY__ = false;
+    assert.equal(laPrincipale(), false);
+  } finally {
+    if (primaPrima === undefined) delete globalThis.__DASHBOARDMODERN_PRIMARY__;
+    else globalThis.__DASHBOARDMODERN_PRIMARY__ = primaPrima;
+    if (istanzaPrima === undefined) delete globalThis.__DASHBOARDMODERN_INSTANCE__;
+    else globalThis.__DASHBOARDMODERN_INSTANCE__ = istanzaPrima;
+    if (profiloPrima === undefined) delete globalThis.__DASHBOARDMODERN_PROFILE__;
+    else globalThis.__DASHBOARDMODERN_PROFILE__ = profiloPrima;
+  }
+});
+
+/* Una lista vuota e' una scelta, anche nei confronti delle migrazioni.
+ *
+ * Le migrazioni del modello si risvegliano quando non trovano il loro segno, e
+ * su una lista vuota RISEMINANO da quello che trovano nelle sostituzioni. Fin
+ * qui non si vedeva, perche' le chiavi legacy parlavano dopo e rimettevano la
+ * lista vuota al suo posto. Spostandole PRIMA \u2014 sembrava piu' pulito, cosi' le
+ * migrazioni lavoravano su quello che l'utente ha davvero \u2014 chi si era tolto i
+ * carichi dal flusso se li ritrovava tutti al primo avvio dopo
+ * l'aggiornamento, e la lista riseminata finiva pure sul disco. Uguale per le
+ * entita' del raffreddamento e per gli alias annuali svuotati apposta.
+ *
+ * Qui si tiene ferma la regola: se la chiave legacy c'e' ed e' vuota, resta
+ * vuota. La riconciliazione e' l'ultima parola. */
+test("i carichi tolti dal flusso non tornano per una migrazione", () => {
+  const { store, storage } = setup({
+    /* Le vecchie sostituzioni da cui la migrazione sa ricavare un carico. */
+    cd_entity_overrides: {
+      "dm.boiler_potenza_resistenza_boiler": "sensor.boiler_w",
+      "dm.energy_boiler_oggi": "sensor.boiler_kwh",
+    },
+    /* E la scelta di chi quel carico dal flusso se l'e' tolto. */
+    cd_energy_loads: [],
+    cd_energy_model: { house: { power: "sensor.casa_w" } },
+  });
+
+  assert.deepEqual(store.getState().sections.energyLoads, []);
+  assert.deepEqual(JSON.parse(storage.getItem("cd_energy_loads")), []);
+});
+
+test("una chiave legacy assente invece lascia lavorare la migrazione", () => {
+  /* Il rovescio della regola: senza la chiave non c'e' nessuna scelta da
+   * rispettare, e il travaso dei carichi storici deve ancora funzionare. */
+  const { store } = setup({
+    cd_entity_overrides: {
+      "dm.boiler_potenza_resistenza_boiler": "sensor.boiler_w",
+      "dm.energy_boiler_oggi": "sensor.boiler_kwh",
+    },
+    cd_energy_model: { house: { power: "sensor.casa_w" } },
+  });
+
+  const carichi = store.getState().sections.energyLoads;
+  assert.equal(carichi.length, 1);
+  assert.equal(carichi[0].power_entity, "sensor.boiler_w");
+});

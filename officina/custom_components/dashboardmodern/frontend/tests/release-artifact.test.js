@@ -1,0 +1,93 @@
+// DM-FIX-20260812B
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test from "node:test";
+
+test("HACS release artifact has root integration layout, complete brand assets and exact provenance", () => {
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+  const archive = join(mkdtempSync(join(tmpdir(), "dm-release-")), "dashboardmodern.zip");
+  execFileSync("python", [
+    "scripts/build_release.py",
+    "--expected-commit",
+    head,
+    "--output",
+    archive,
+  ]);
+  const names = JSON.parse(
+    execFileSync(
+      "python",
+      [
+        "-c",
+        "import json,sys,zipfile;print(json.dumps(zipfile.ZipFile(sys.argv[1]).namelist()))",
+        archive,
+      ],
+      { encoding: "utf8" },
+    ),
+  );
+  const readArchive = (path) =>
+    execFileSync(
+      "python",
+      [
+        "-c",
+        "import sys,zipfile;print(zipfile.ZipFile(sys.argv[1]).read(sys.argv[2]).decode())",
+        archive,
+        path,
+      ],
+      { encoding: "utf8" },
+    );
+
+  assert.ok(names.includes("__init__.py"));
+  assert.ok(names.includes("manifest.json"));
+  for (const asset of [
+    "brand/icon.png",
+    "brand/dark_icon.png",
+    "brand/icon@2x.png",
+    "brand/dark_icon@2x.png",
+    "brand/logo.png",
+    "brand/logo@2x.png",
+  ]) {
+    assert.ok(names.includes(asset), `release is missing ${asset}`);
+  }
+  assert.ok(names.includes("frontend/legacy/build-info.js"));
+  assert.equal(
+    names.some((name) => name.startsWith("custom_components/")),
+    false,
+  );
+  assert.equal(
+    names.some((name) => name.includes("/e2e/")),
+    false,
+  );
+  assert.equal(
+    names.some((name) => name.includes("/tests/")),
+    false,
+  );
+  assert.equal(names.includes("frontend/index.html"), false);
+  assert.equal(names.includes("frontend/styles.css"), false);
+  /* I resti di chi ha appena eseguito la suite non partono per il mondo.
+   *
+   * `test-results` e `playwright-report` sono schermate, tracce e report. In CI
+   * il rilascio parte da un checkout pulito e non li ha mai avuti, quindi il
+   * pacchetto pubblicato e' sempre stato a posto; ma chi costruisce il pacchetto
+   * sulla propria macchina, dopo aver eseguito le prove, ci spediva dentro tre
+   * megabyte e mezzo di PNG senza accorgersene. Trovato misurando lo zip mentre
+   * si cercava un'altra cosa. */
+  const resti = names.filter(
+    (name) => name.includes("test-results") || name.includes("playwright-report"),
+  );
+  assert.deepEqual(resti, [], `resti delle prove nel pacchetto: ${resti.slice(0, 3).join(", ")}`);
+
+  const buildInfo = readArchive("frontend/legacy/build-info.js");
+  const manifest = JSON.parse(readArchive("manifest.json"));
+  const sourceManifest = JSON.parse(
+    readFileSync("custom_components/dashboardmodern/manifest.json", "utf8"),
+  );
+
+  assert.match(buildInfo, /"generated":true/);
+  assert.match(buildInfo, new RegExp(`"commit":"${head}"`));
+  assert.doesNotMatch(buildInfo, /UNBUILT/);
+  assert.match(buildInfo, /"assetHash":"[a-f0-9]{16}"/);
+  assert.equal(manifest.version, sourceManifest.version);
+});

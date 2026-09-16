@@ -1,0 +1,426 @@
+/* «Veniva chiesto di inserire coordinate oppure il comune: pensa a un motore
+ * per poter scegliere il posto e il radar funziona» (#266).
+ *
+ * Il motore è aritmetica — Web Mercator, la proiezione di tutte le mappe a
+ * tessere — e per questo si prova qui, senza rete: da un punto e da quanti
+ * chilometri si vogliono vedere escono lo zoom e i quadratini, e dove vanno
+ * messi. L'unica cosa che questa prova non può toccare è l'indirizzo del
+ * servizio, che infatti non è cablato da nessuna parte: è un modello di
+ * stringa, e nella scheda c'è un tasto che lo prova per davvero.
+ */
+
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import {
+  LATO_TESSERA,
+  ZOOM_MASSIMO,
+  ZOOM_MINIMO,
+  finestraDellaPioggia,
+  finestraDiTessere,
+  indirizzoRitirato,
+  latitudine,
+  longitudine,
+  luogoDelRadar,
+  metriPerPixel,
+  modelloDelFondo,
+  problemaDellIndirizzo,
+  zoomDellaPioggia,
+  puntoDellaTessera,
+  tesseraDelPunto,
+  urlDellaTessera,
+  zoneDisponibili,
+  zoomPerRaggio,
+} from "../src/core/radar-mappa.js";
+
+/* Roma, che è il punto di riferimento di una segnalazione italiana. */
+const ROMA = { lat: 41.9028, lon: 12.4964 };
+
+test("un punto va nel suo quadratino, e dal quadratino si torna al punto", () => {
+  /* Il quadratino di Roma a zoom 9, contato a mano con la formula di Web
+   * Mercator: x = (lon+180)/360 · 2⁹ = 273,77 e y = 190,25. Se questa
+   * aritmetica cambia, cambia dove guarda il radar — ed è il genere di
+   * cambiamento che non si vede finché qualcuno non si accorge che la pioggia
+   * è sulla città sbagliata. */
+  const t = tesseraDelPunto(ROMA.lat, ROMA.lon, 9);
+  assert.equal(Math.floor(t.x), 273);
+  assert.equal(Math.floor(t.y), 190);
+  assert.ok(Math.abs(t.x - 273.7727) < 0.001 && Math.abs(t.y - 190.249) < 0.001);
+  /* E l'angolo di quel quadratino sta appena sopra e a sinistra del punto. */
+  const angolo = puntoDellaTessera(Math.floor(t.x), Math.floor(t.y), 9);
+  assert.ok(angolo.lon <= ROMA.lon && angolo.lat >= ROMA.lat);
+  assert.ok(ROMA.lon - angolo.lon < 1 && angolo.lat - ROMA.lat < 1);
+});
+
+test("il cerchio chiesto ci sta dentro, e non ci sta il doppio", () => {
+  /* La regola: a quello zoom il riquadro deve coprire almeno il diametro
+   * voluto — se ne coprisse meno, la pioggia che arriva resterebbe fuori — e
+   * a uno zoom più stretto non ci starebbe più. */
+  for (const raggio of [10, 30, 60]) {
+    const zoom = zoomPerRaggio(ROMA.lat, raggio, 320);
+    const coperto = metriPerPixel(ROMA.lat, zoom) * 320;
+    assert.ok(coperto >= raggio * 2000, `${raggio} km non ci sta a zoom ${zoom}`);
+    const piuStretto = metriPerPixel(ROMA.lat, zoom + 1) * 320;
+    assert.ok(piuStretto < raggio * 2000, `a zoom ${zoom + 1} ci starebbe ancora`);
+  }
+});
+
+test("lo zoom resta fra i suoi estremi, anche con richieste assurde", () => {
+  assert.equal(zoomPerRaggio(ROMA.lat, 100000, 320), ZOOM_MINIMO);
+  assert.equal(zoomPerRaggio(ROMA.lat, 0.001, 320), ZOOM_MASSIMO);
+  /* E senza dati non si inventa niente. */
+  assert.equal(zoomPerRaggio(null, 30, 320), ZOOM_MINIMO);
+  assert.equal(zoomPerRaggio(ROMA.lat, 0, 320), ZOOM_MINIMO);
+});
+
+test("i quadratini coprono tutto il riquadro, e il punto finisce al centro", () => {
+  const f = finestraDiTessere(ROMA.lat, ROMA.lon, { latoPx: 400, altoPx: 260, raggioKm: 30 });
+  assert.ok(f.tessere.length > 0);
+  /* Nessun buco: dal primo all'ultimo pixel del riquadro c'è sempre un
+   * quadratino sotto. */
+  const sinistra = Math.min(...f.tessere.map((t) => t.sx));
+  const alto = Math.min(...f.tessere.map((t) => t.sy));
+  const destra = Math.max(...f.tessere.map((t) => t.sx + t.lato));
+  const basso = Math.max(...f.tessere.map((t) => t.sy + t.lato));
+  assert.ok(sinistra <= 0 && alto <= 0, "il riquadro comincia scoperto");
+  assert.ok(destra >= 400 && basso >= 260, "il riquadro finisce scoperto");
+  /* Il centro del riquadro è il punto chiesto: si ricava all'indietro da dove
+   * è stato messo il quadratino che lo contiene. */
+  const centro = tesseraDelPunto(ROMA.lat, ROMA.lon, f.zoom);
+  const suo = f.tessere.find((t) => t.x === Math.floor(centro.x) && t.y === Math.floor(centro.y));
+  assert.ok(suo, "il quadratino del punto non è fra quelli chiesti");
+  const puntoX = suo.sx + (centro.x - Math.floor(centro.x)) * LATO_TESSERA;
+  const puntoY = suo.sy + (centro.y - Math.floor(centro.y)) * LATO_TESSERA;
+  assert.ok(Math.abs(puntoX - 200) < 1.5, `il punto è a ${puntoX}px invece che a 200`);
+  assert.ok(Math.abs(puntoY - 130) < 1.5, `il punto è a ${puntoY}px invece che a 130`);
+});
+
+test("il mondo gira in longitudine e si ferma ai poli", () => {
+  /* Vicino all'antimeridiano il quadratino a est dell'ultimo è il primo: senza
+   * questo, mezza mappa sarebbe vuota per chi vive alle Figi. */
+  const f = finestraDiTessere(0, 179.9, { latoPx: 600, altoPx: 300, zoom: 4 });
+  const scala = 2 ** 4;
+  assert.ok(f.tessere.every((t) => t.x >= 0 && t.x < scala));
+  assert.ok(f.tessere.some((t) => t.x === 0) && f.tessere.some((t) => t.x === scala - 1));
+  /* Sopra il polo invece non c'è niente da chiedere. */
+  const polo = finestraDiTessere(84, 0, { latoPx: 600, altoPx: 600, zoom: 3 });
+  assert.ok(polo.tessere.every((t) => t.y >= 0 && t.y < 2 ** 3));
+});
+
+test("una coordinata storta non diventa un punto", () => {
+  assert.equal(latitudine(""), null, "vuoto non è l'equatore");
+  assert.equal(longitudine(""), null);
+  assert.equal(latitudine("  "), null);
+  assert.equal(latitudine(91), null);
+  assert.equal(longitudine(181), null);
+  assert.equal(latitudine("ciao"), null);
+  assert.equal(latitudine("41.9028"), 41.9028, "un numero scritto resta un numero");
+  assert.equal(finestraDiTessere("", "", { raggioKm: 30 }), null);
+});
+
+test("l'indirizzo si compone dal modello, e senza segnaposto non è un modello", () => {
+  const tessera = { x: 274, y: 187, lato: 256 };
+  assert.equal(
+    urlDellaTessera("https://esempio/{z}/{x}/{y}.png", tessera, 9),
+    "https://esempio/9/274/187.png",
+  );
+  /* Le due convenzioni degli altri: le righe contate dal basso e i
+   * sottodomini. */
+  assert.equal(
+    urlDellaTessera("https://e/{z}/{x}/{-y}.png", { x: 3, y: 5 }, 4),
+    "https://e/4/3/10.png",
+  );
+  assert.match(
+    urlDellaTessera("https://{s}.e/{z}/{x}/{y}.png", tessera, 9),
+    /^https:\/\/[abc]\.e\//,
+  );
+  /* Un indirizzo fisso chiederebbe sempre lo stesso quadratino: meglio dire
+   * che non è un modello. */
+  assert.equal(urlDellaTessera("https://esempio/fisso.png", tessera, 9), "");
+  assert.equal(urlDellaTessera("", tessera, 9), "");
+});
+
+/* ── il posto ─────────────────────────────────────────────────────────── */
+
+const STATI = {
+  "zone.home": { attributes: { latitude: 45.07, longitude: 7.69, friendly_name: "Casa" } },
+  "zone.nonna": { attributes: { latitude: 44.41, longitude: 8.93, friendly_name: "Da nonna" } },
+  "zone.rotta": { attributes: { friendly_name: "Senza coordinate" } },
+};
+
+test("le coordinate scritte vincono, poi la zona, poi casa", () => {
+  assert.deepEqual(luogoDelRadar({ lat: "41.9", lon: "12.5" }, STATI), {
+    lat: 41.9,
+    lon: 12.5,
+    da: "scritte",
+    nome: "",
+  });
+  assert.equal(luogoDelRadar({ zona: "zone.nonna" }, STATI).nome, "Da nonna");
+  assert.equal(luogoDelRadar({}, STATI).da, "casa");
+  /* Una zona senza coordinate non è una scelta: si ripiega su casa invece di
+   * non mostrare niente. */
+  assert.equal(luogoDelRadar({ zona: "zone.rotta" }, STATI).da, "casa");
+  /* E le caselle vuote non sono l'equatore. */
+  assert.equal(luogoDelRadar({ lat: "", lon: "" }, STATI).da, "casa");
+});
+
+test("senza casa e senza zone non si inventa un posto", () => {
+  assert.equal(luogoDelRadar({}, {}), null);
+  /* Ma la configurazione di Home Assistant vale come casa, quando le zone non
+   * sono ancora arrivate. */
+  assert.equal(luogoDelRadar({}, {}, { latitude: 45.07, longitude: 7.69 }).da, "casa");
+});
+
+test("nella tendina ci sono le zone, e Casa non compare due volte", () => {
+  const zone = zoneDisponibili(STATI);
+  assert.deepEqual(
+    zone.map((z) => z.entity),
+    ["zone.nonna"],
+  );
+  assert.equal(zone[0].nome, "Da nonna");
+});
+
+/* ── i servizi ────────────────────────────────────────────────────────── */
+
+test("dall'elenco di RainViewer si prende l'ultimo fotogramma misurato, non una previsione", async () => {
+  const { fotogrammaRainViewer, modelloDelServizio, SERVIZI_RADAR } =
+    await import("../src/core/radar-mappa.js");
+  const elenco = {
+    host: "https://tilecache.rainviewer.com/",
+    radar: {
+      past: [
+        { time: 1700000000, path: "/v2/radar/1700000000" },
+        { time: 1700000600, path: "/v2/radar/1700000600" },
+      ],
+      nowcast: [{ time: 1700001200, path: "/v2/radar/nowcast_x" }],
+    },
+  };
+  const fotogramma = fotogrammaRainViewer(elenco);
+  assert.deepEqual(fotogramma, {
+    host: "https://tilecache.rainviewer.com",
+    path: "/v2/radar/1700000600",
+    time: 1700000600,
+  });
+  /* Il modello del servizio porta host e percorso del fotogramma, e resta un
+   * modello: i segnaposto dei quadratini sono ancora li'. */
+  assert.equal(
+    modelloDelServizio("rainviewer", fotogramma),
+    "https://tilecache.rainviewer.com/v2/radar/1700000600/256/{z}/{x}/{y}/2/1_1.png",
+  );
+  assert.match(
+    urlDellaTessera(modelloDelServizio("rainviewer", fotogramma), { x: 274, y: 187 }, 9),
+    /\/9\/274\/187\/2\/1_1\.png$/,
+  );
+  /* Senza fotogramma non c'e' indirizzo, e un servizio ignoto nemmeno. */
+  assert.equal(modelloDelServizio("rainviewer", null), "");
+  assert.equal(modelloDelServizio("boh", fotogramma), "");
+  assert.equal(fotogrammaRainViewer({}), null);
+  assert.equal(fotogrammaRainViewer({ host: "x", radar: { past: [] } }), null);
+  assert.equal(fotogrammaRainViewer(null), null);
+  /* E i servizi si conoscono per nome: e' quello che la tendina mostra. */
+  assert.equal(SERVIZI_RADAR.rainviewer.nome, "RainViewer");
+});
+
+test("la mappa di fondo: una voce della tendina, o un indirizzo proprio", async () => {
+  const { modelloDelFondo, FONDI_MAPPA, FONDI_RITIRATI, FONDO_DI_SERIE } =
+    await import("../src/core/radar-mappa.js");
+  assert.equal(modelloDelFondo({ fondo: "osm" }), FONDI_MAPPA.osm.modello);
+  /* CARTO e' ritirato: i suoi quadratini gratuiti tornano stampati «API Key
+   * Required». Chi l'aveva scelto passa alla mappa di serie da solo. */
+  assert.equal(FONDI_MAPPA.carto, undefined);
+  assert.deepEqual(FONDI_RITIRATI, { carto: "esri" });
+  assert.equal(modelloDelFondo({ fondo: "carto" }), FONDI_MAPPA.esri.modello);
+  /* Quella di serie non e' piu' OpenStreetMap (#529): il loro server e' del
+   * sito di OpenStreetMap, le regole d'uso escludono un uso come il nostro, e
+   * chi non si adegua viene bloccato guardando `Referer` e `User-Agent` — da
+   * cui il 403 dal computer e la mappa che invece si vede dal telefono. */
+  assert.equal(FONDO_DI_SERIE, "esri");
+  /* Ma OpenStreetMap resta in elenco: a chi funziona non si toglie niente. */
+  assert.ok(FONDI_MAPPA.osm);
+  /* E ogni fondo si porta il nome di chi lo disegna: Esri lo chiede, e senza
+   * un posto dove scriverlo non si potrebbe usarlo. */
+  for (const [chiave, voce] of Object.entries(FONDI_MAPPA))
+    assert.ok(voce.attribuzione, `${chiave} senza attribuzione`);
+  assert.equal(
+    modelloDelFondo({ fondo: "modello", fondoModello: "https://mio/{z}/{x}/{y}.png" }),
+    "https://mio/{z}/{x}/{y}.png",
+  );
+  /* Chi aveva scritto l'indirizzo dentro `fondo` prima della tendina lo vede
+   * ancora; un indirizzo senza segnaposto non e' un modello. */
+  assert.equal(
+    modelloDelFondo({ fondo: "https://mio/{z}/{x}/{y}.png" }),
+    "https://mio/{z}/{x}/{y}.png",
+  );
+  assert.equal(modelloDelFondo({ fondo: "modello", fondoModello: "https://fisso.png" }), "");
+  /* Senza scelta la mappa sotto e' quella di serie; «nessuna» e' una scelta. */
+  assert.equal(modelloDelFondo({ fondo: "" }), FONDI_MAPPA.esri.modello);
+  assert.equal(modelloDelFondo({}), FONDI_MAPPA.esri.modello);
+  assert.equal(modelloDelFondo({ fondo: "nessuna" }), "");
+  assert.equal(modelloDelFondo({ fondo: "boh" }), "");
+});
+
+test("casa arrivata da get_config porta il suo nome", () => {
+  /* `get_config` non e' una zona: non ha `friendly_name` ma `location_name`,
+   * ed e' la stessa parola scritta in cima alla plancia. */
+  const luogo = luogoDelRadar(
+    {},
+    {},
+    { latitude: 45.07, longitude: 7.69, location_name: "Casa mia" },
+  );
+  assert.equal(luogo.da, "casa");
+  assert.equal(luogo.nome, "Casa mia");
+  /* La zona, quando c'e', vince col suo nome. */
+  assert.equal(
+    luogoDelRadar({}, STATI, { latitude: 1, longitude: 1, location_name: "X" }).nome,
+    "Casa",
+  );
+});
+
+/* «Da un errore sullo zoom e non si vede il meteo» (#323), e la mappa di chi
+ * l'ha segnalato mostra le scritte «Zoom Level Not Supported» stampate sopra
+ * le strade.
+ *
+ * Quelle scritte le manda CARTO, che i suoi quadratini gratuiti non li serve
+ * piu'. Dalla tendina CARTO e' sparito e chi l'aveva scelto passa a
+ * OpenStreetMap — ma la tendina e' arrivata dopo l'indirizzo scritto a mano,
+ * e chi aveva incollato quello di CARTO se l'e' tenuto: dentro la
+ * configurazione c'e' un indirizzo, non la chiave, e il cambio non lo
+ * riguardava. Adesso si guarda l'ospite: se e' un servizio ritirato,
+ * l'indirizzo non vale piu', per la mappa sotto come per la pioggia sopra.
+ */
+test("un indirizzo di un servizio ritirato non si usa piu'", () => {
+  assert.equal(
+    indirizzoRitirato("https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"),
+    true,
+  );
+  assert.equal(
+    indirizzoRitirato("https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"),
+    true,
+  );
+  assert.equal(indirizzoRitirato("https://carto.com/{z}/{x}/{y}.png"), true);
+  /* Gli altri restano quelli di chi li ha scritti. */
+  assert.equal(indirizzoRitirato("https://tile.openstreetmap.org/{z}/{x}/{y}.png"), false);
+  assert.equal(indirizzoRitirato("https://tiles.casamia.lan/{z}/{x}/{y}.png"), false);
+  assert.equal(indirizzoRitirato(""), false);
+  /* E un ospite che finisce per caso con quelle lettere non e' quel servizio. */
+  assert.equal(indirizzoRitirato("https://noncartocdn.com/{z}/{x}/{y}.png"), false);
+});
+
+test("la mappa sotto torna a quella di serie se l'indirizzo era di CARTO", () => {
+  const serie =
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}";
+  /* La chiave della tendina, che era gia' coperta. */
+  assert.equal(modelloDelFondo({ fondo: "carto" }), serie);
+  /* E l'indirizzo scritto a mano, che non lo era. */
+  assert.equal(
+    modelloDelFondo({ fondo: "https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png" }),
+    serie,
+  );
+  assert.equal(
+    modelloDelFondo({
+      fondo: "modello",
+      fondoModello: "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+    }),
+    serie,
+  );
+  /* Un indirizzo che funziona resta quello scelto: non si tocca la casa di chi
+   * non ha nessun problema. */
+  assert.equal(
+    modelloDelFondo({
+      fondo: "modello",
+      fondoModello: "https://tiles.casamia.lan/{z}/{x}/{y}.png",
+    }),
+    "https://tiles.casamia.lan/{z}/{x}/{y}.png",
+  );
+});
+
+/* ── la pioggia si chiede dove il servizio ce l'ha (#323) ──────────────── */
+
+test("sotto il tetto la pioggia si chiede piu' larga, e copre lo stesso riquadro", () => {
+  /* La scena della segnalazione: raggio trenta chilometri su un riquadro da
+   * telefono, che fa `z9` — e a `z9` i quadratini tornavano con la scritta
+   * «Zoom Level Not Supported» stampata dentro invece che con la pioggia. */
+  const mappa = finestraDiTessere(41.9, 12.5, { latoPx: 483, altoPx: 302, raggioKm: 30 });
+  assert.equal(mappa.zoom, 9);
+
+  const pioggia = finestraDellaPioggia(41.9, 12.5, mappa, 7);
+  assert.equal(pioggia.zoom, 7);
+  /* Il riquadro e' lo stesso: la mappa non cambia inquadratura. */
+  assert.equal(pioggia.lato, mappa.lato);
+  assert.equal(pioggia.alto, mappa.alto);
+  /* E i quadratini sono grossi quattro volte, uno ogni sedici. */
+  for (const tessera of pioggia.tessere) assert.equal(tessera.lato, LATO_TESSERA * 4);
+  /* Coprono tutto il riquadro, bordi compresi: se restasse scoperta una
+   * striscia si vedrebbe una banda senza pioggia lungo un lato. */
+  const sinistra = Math.min(...pioggia.tessere.map((t) => t.sx));
+  const alto = Math.min(...pioggia.tessere.map((t) => t.sy));
+  const destra = Math.max(...pioggia.tessere.map((t) => t.sx + t.lato));
+  const basso = Math.max(...pioggia.tessere.map((t) => t.sy + t.lato));
+  assert.ok(sinistra <= 0 && alto <= 0, `copre l'angolo in alto: ${sinistra},${alto}`);
+  assert.ok(destra >= mappa.lato && basso >= mappa.alto, `copre in basso: ${destra},${basso}`);
+});
+
+test("la pioggia cade dove cade la mappa, a qualunque tetto", () => {
+  /* Il difetto che questa prova ferma: rimpicciolire il riquadro e
+   * moltiplicare dopo faceva battere il minimo di sessantaquattro pixel, e
+   * quell'aggiunta si moltiplicava con tutto il resto — la pioggia usciva
+   * trentacinque pixel piu' su della mappa sotto. Una pioggia disegnata da
+   * un'altra parte e' peggio di una pioggia che manca. */
+  const dovePunto = (finestra) => {
+    const centro = tesseraDelPunto(41.9, 12.5, finestra.zoom);
+    const tessera = finestra.tessere.find(
+      (voce) => voce.x === Math.floor(centro.x) && voce.y === Math.floor(centro.y),
+    );
+    return [
+      tessera.sx + (centro.x - tessera.x) * finestra.tessera,
+      tessera.sy + (centro.y - tessera.y) * finestra.tessera,
+    ];
+  };
+  for (const [largo, alto, zoom, tetto] of [
+    [320, 198, 9, 7],
+    [483, 302, 9, 8],
+    [483, 302, 9, 7],
+    [320, 198, 12, 3],
+  ]) {
+    const mappa = finestraDiTessere(41.9, 12.5, { latoPx: largo, altoPx: alto, zoom });
+    const pioggia = finestraDellaPioggia(41.9, 12.5, mappa, tetto);
+    const [fx, fy] = dovePunto(mappa);
+    const [px, py] = dovePunto(pioggia);
+    assert.ok(
+      Math.abs(fx - px) < 0.01 && Math.abs(fy - py) < 0.01,
+      `${largo}x${alto} z${zoom}→z${pioggia.zoom}: la pioggia cade in ${px},${py} e la mappa in ${fx},${fy}`,
+    );
+  }
+});
+
+test("senza tetto, o con un tetto che non morde, la finestra resta quella", () => {
+  const mappa = finestraDiTessere(41.9, 12.5, { latoPx: 483, altoPx: 302, raggioKm: 30 });
+  assert.equal(finestraDellaPioggia(41.9, 12.5, mappa, null), mappa);
+  assert.equal(finestraDellaPioggia(41.9, 12.5, mappa, 12), mappa);
+  assert.equal(finestraDellaPioggia(41.9, 12.5, mappa, 9), mappa);
+});
+
+test("il tetto lo dice la casella, e uno zero vuol dire «nessun tetto»", () => {
+  assert.equal(zoomDellaPioggia({}, "rainviewer"), 7);
+  assert.equal(zoomDellaPioggia({ zoomPioggia: "6" }, "rainviewer"), 6);
+  /* Zero non e' vuoto: e' la scelta di chi ha un servizio che a quel livello
+   * risponde eccome, e non deve pagare un numero misurato a casa d'altri. */
+  assert.equal(zoomDellaPioggia({ zoomPioggia: "0" }, "rainviewer"), null);
+  /* Un servizio scritto a mano non ha un tetto che si sappia. */
+  assert.equal(zoomDellaPioggia({}, "modello"), null);
+});
+
+/* ── «ho inserito il link con l'indirizzo e non lo legge nemmeno» ───────── */
+
+test("l'indirizzo di un sito non e' un modello di quadratini, e lo si dice", () => {
+  /* Quello incollato davvero: la pagina di Windy, che si apre nel browser. */
+  assert.equal(problemaDellIndirizzo("https://www.windy.com/?40.964,14.215,9"), "sito");
+  assert.equal(problemaDellIndirizzo("https://www.google.com/maps/@41.9,12.5,10z"), "sito");
+  /* Un modello vero passa. */
+  assert.equal(problemaDellIndirizzo("https://tile.openstreetmap.org/{z}/{x}/{y}.png"), "");
+  assert.equal(problemaDellIndirizzo("https://a.tiles.lan/{s}/{z}/{x}/{-y}.png"), "");
+  /* Un modello a meta' e' un errore suo, che si sistema aggiungendo il pezzo
+   * che manca — non lo stesso errore di chi ha incollato un sito. */
+  assert.equal(problemaDellIndirizzo("https://x.lan/{z}/tile.png"), "segnaposto-a-meta");
+  assert.equal(problemaDellIndirizzo(""), "vuoto");
+});

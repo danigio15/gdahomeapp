@@ -1,0 +1,263 @@
+// DM-FIX-20260812B
+import { expect, test } from "@playwright/test";
+import { attendiIlGlifo } from "./helpers/glifo-di-casa.js";
+import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
+import { PRIMARY } from "./helpers/variants.js";
+
+const seed = {
+  schema_version: 4,
+  sections: {
+    rooms: [
+      { id: "room-cameretta", name: "Cameretta", icon: "mdi:sofa", floor: "Primo piano" },
+      { id: "room-bagno", name: "Bagno", icon: "mdi:shower" },
+    ],
+    cameras: [],
+    appliances: [],
+    loads: [],
+    lights: [],
+    climate: [],
+    ev: [
+      {
+        id: "ev-b10",
+        name: "B10",
+        brand: "Leapmotor",
+        model: "B10",
+        icon: "mdi:car-electric",
+        ov: {},
+      },
+      {
+        id: "ev-mini",
+        name: "Cooper Electric",
+        brand: "MINI",
+        model: "Cooper Electric",
+        icon: "mdi:car-electric",
+        ov: {},
+      },
+    ],
+    covers: [],
+    pool: {},
+    irrigation: { zones: [] },
+    energy: {},
+    entityOverrides: {},
+  },
+  visibility: { home: true, ev: true, temp: true, temperature: true },
+};
+
+async function boot(page, variant, testInfo) {
+  await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  await page.addInitScript(() => {
+    class MockBridgeSocket extends EventTarget {
+      static OPEN = 1;
+      readyState = 1;
+      onopen = null;
+      onmessage = null;
+      onclose = null;
+      constructor() {
+        super();
+        queueMicrotask(() => {
+          this.onopen?.({});
+          this.onmessage?.({ data: JSON.stringify({ type: "auth_ok" }) });
+        });
+      }
+      send(raw) {
+        const message = JSON.parse(raw);
+        if (message.type === "auth") return;
+        const result =
+          message.type === "get_states"
+            ? []
+            : message.type === "frontend/get_user_data"
+              ? { value: null }
+              : null;
+        queueMicrotask(() =>
+          this.onmessage?.({
+            data: JSON.stringify({ id: message.id, type: "result", success: true, result }),
+          }),
+        );
+      }
+      close() {
+        this.readyState = 3;
+        this.onclose?.({});
+      }
+    }
+    window.__DASHBOARDMODERN_HOSTED__ = true;
+    window.__DASHBOARDMODERN_BRIDGE_WS__ = MockBridgeSocket;
+    window.WebSocket = MockBridgeSocket;
+  });
+
+  await bootNamespacedDashboard(page, variant, testInfo, seed);
+  await page
+    .locator("#setup-wizard")
+    .evaluateAll((nodes) => nodes.forEach((node) => node.remove()));
+  await expect
+    .poll(() => page.evaluate(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true))
+    .toBe(true);
+  await page.evaluate((cars) => {
+    localStorage.setItem("cd_ev_cars", JSON.stringify(cars));
+    localStorage.setItem("cd_ev_car_active", "0");
+    window.dispatchEvent(new CustomEvent("dashboardmodern:legacy-ready"));
+  }, seed.sections.ev);
+}
+
+/* Prima si apre, poi si cambia scheda: due gesti, come li fa una persona.
+ *
+ * Chiedere la scheda nello stesso respiro in cui si apre la finestra vuol dire
+ * chiederla a una finestra che si sta ancora costruendo, e il corpo della
+ * scheda puo' arrivare dopo — o non arrivare. */
+async function openEditor(page, tab) {
+  await page.evaluate(() => {
+    if (!document.getElementById("editor-modal")?.classList.contains("show")) apriConfigEntita();
+  });
+  await expect(page.locator("#editor-modal")).toBeVisible();
+  await page.evaluate((target) => editorSwitch(target), tab);
+  await expect(page.locator(`.ed-tab[data-tab="${tab}"]`)).toHaveClass(/active/);
+}
+
+for (const variant of PRIMARY) {
+  test(`${variant}: beta11 keeps EV logo proportional and follows the active vehicle`, async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(testInfo.project.name === "webkit-ipad" ? 120_000 : 75_000);
+    await boot(page, variant, testInfo);
+    await openEditor(page, "sez2");
+
+    const panel = page.locator("#ed-body [data-ev-appearance]");
+    const brand = panel.locator("select[data-brand]");
+    const model = panel.locator("select[data-model]");
+    await expect(panel).toBeVisible();
+    await expect(brand).toHaveValue("Leapmotor");
+    await expect(model).toHaveValue("B10");
+    await expect(panel.locator("[data-brand-preview]")).toContainText("Leapmotor");
+    await expect(panel.locator("[data-brand-preview]")).toContainText("B10");
+
+    const leapGeometry = await panel.locator("[data-brand-preview]").evaluate((preview) => {
+      const logo = preview.querySelector(".dm-leapmotor-mark,.dm-car-brand");
+      const art = logo?.querySelector("svg,img");
+      const logoBox = logo?.getBoundingClientRect();
+      const artBox = art?.getBoundingClientRect();
+      const copyBox = preview.querySelector(".dm-ev-brand-copy")?.getBoundingClientRect();
+      const logoBeforeCopy =
+        logoBox &&
+        copyBox &&
+        (logoBox.right <= copyBox.left + 1 || logoBox.bottom <= copyBox.top + 1);
+      return {
+        logoWidth: logoBox?.width || 0,
+        logoHeight: logoBox?.height || 0,
+        artWidth: artBox?.width || 0,
+        artHeight: artBox?.height || 0,
+        separated: Boolean(logoBeforeCopy),
+        overflow: getComputedStyle(preview).overflow,
+      };
+    });
+    expect(leapGeometry.logoWidth).toBeGreaterThan(50);
+    expect(leapGeometry.logoWidth).toBeLessThanOrEqual(112);
+    expect(leapGeometry.logoHeight).toBeLessThanOrEqual(50);
+    expect(leapGeometry.artWidth).toBeLessThanOrEqual(112);
+    expect(leapGeometry.artHeight).toBeLessThanOrEqual(50);
+    expect(leapGeometry.separated).toBe(true);
+    expect(leapGeometry.overflow).toBe("hidden");
+
+    await page.evaluate(() => {
+      localStorage.setItem("cd_ev_car_active", "1");
+      window.dispatchEvent(new CustomEvent("dashboardmodern:legacy-ready"));
+    });
+    /* La card segue l'auto in uso, e continua a farlo — ma perche' e' chi la
+       costruisce a rifarla quando cambia il bersaglio, non perche' un secondo
+       modulo le rimetta i valori a forza. Il contrassegno che quel secondo
+       modulo lasciava sul pannello se n'e' andato con lui: quello che conta e'
+       cosa dicono le tendine, ed e' quello che si guarda qui sotto. */
+    await expect(brand).toHaveValue("MINI");
+    await expect(model).toHaveValue("Cooper Electric");
+    await expect(panel.locator("[data-brand-preview]")).toContainText("MINI");
+    await expect(panel.locator("[data-brand-preview]")).toContainText("Cooper Electric");
+  });
+
+  test(`${variant}: beta11 restores configured room name/icon and expands alert icons`, async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(testInfo.project.name === "webkit-ipad" ? 120_000 : 75_000);
+    await boot(page, variant, testInfo);
+
+    await openEditor(page, "stanze");
+    /* Si aspetta la riga vestita, e se non arriva si dice cosa c'era davvero
+     * nella scheda: righe nessuna, righe non riconosciute come stanze, o
+     * stanze che il modulo non ha vestito. Un rosso che non dice quale dei tre
+     * fa perdere un giro intero a chi lo legge. */
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const corpo = document.getElementById("ed-body");
+            const conta = (selettore) => corpo?.querySelectorAll(selettore).length ?? -1;
+            return [
+              `righe:${conta(".ed-row")}`,
+              `stanze:${conta('[data-dm-edit-kind="room"][data-dm-edit-index]')}`,
+              `vestite:${conta(".dm-beta11-room-row")}`,
+            ].join(" ");
+          }),
+        { timeout: 20_000, message: "la scheda Stanze dell'editor" },
+      )
+      .toMatch(/vestite:[1-9]/);
+    const row = page.locator('#ed-body .dm-beta11-room-row:has([data-dm-edit-index="0"])').first();
+    await expect(row).toBeVisible();
+    const name = row.locator('.ed-row-new[data-dm-room-name="true"]');
+    await expect(name).toBeVisible();
+    await expect(name).toHaveText("Cameretta");
+    await expect(name).toHaveCSS("opacity", "1");
+    const roomIcon = row.locator('.dm-room-list-icon[data-room-icon="mdi:sofa"]');
+    await expect(roomIcon).toBeVisible();
+    await attendiIlGlifo(roomIcon, "dm-beta12-room-glyph", "disegno:room-living");
+    const roomGeometry = await row.evaluate((node) => {
+      const label = node.querySelector(".ed-row-new");
+      const icon = node.querySelector(".dm-room-list-icon");
+      const labelBox = label?.getBoundingClientRect();
+      const iconBox = icon?.getBoundingClientRect();
+      return {
+        labelWidth: labelBox?.width || 0,
+        iconWidth: iconBox?.width || 0,
+        separated: Boolean(labelBox && iconBox && iconBox.right <= labelBox.left + 1),
+        color: label ? getComputedStyle(label).color : "",
+      };
+    });
+    expect(roomGeometry.labelWidth).toBeGreaterThan(80);
+    expect(roomGeometry.iconWidth).toBeGreaterThanOrEqual(50);
+    expect(roomGeometry.separated).toBe(true);
+    expect(roomGeometry.color).not.toBe("rgba(0, 0, 0, 0)");
+
+    // Gli avvisi non hanno più una linguetta loro: vivono in fondo alla
+    // scheda dei widget, con gli stessi campi.
+    await openEditor(page, "todo");
+    const group = page.locator("#ed-avv-grp");
+    await group.selectOption("custom");
+    await expect(page.locator("#ed-avv-custom")).toBeVisible();
+    const alertInput = page.locator("#ed-avv-icon");
+    const alertPreview = page.locator(".dm-beta11-alert-preview");
+    const legacyTrigger = page.locator(".dm-beta5-alert-icon-trigger").last();
+    await expect(alertPreview).toBeVisible();
+    /* Un menu solo: il tasto legacy — la lente che apriva dmIconPicker, poi
+       ridipinta — apriva un secondo selettore accanto all'anteprima («due
+       volte menu per inserire icona»). Adesso si ritira: esiste ancora, ma
+       nascosto e marcato, cosi' un click arrivato prima della vestizione
+       finisce comunque sul catalogo. L'unico ingresso visibile e'
+       l'anteprima. */
+    await expect(legacyTrigger).toBeHidden();
+    await expect(legacyTrigger).toHaveAttribute("data-dm-beta11-alert-picker", "true");
+    await expect(page.locator("#dm-icon-picker")).toHaveCount(0);
+
+    /* Dal #48 l'anteprima apre il catalogo del motore di casa
+       (#dm-visual-picker) — porte, cancelli e serrature disegnati coi tratti
+       del progetto — e la griglia emoji nata a parte resta solo come ripiego
+       per chi il motore non ce l'ha. */
+    const primaDellaScelta = await alertInput.inputValue();
+    await alertPreview.click();
+    const picker = page.locator("#dm-visual-picker");
+    await expect(picker).toBeVisible();
+    await expect(page.locator("#dm-beta11-alert-picker")).toHaveCount(0);
+    expect(await picker.locator(".dm-picker-option").count()).toBeGreaterThanOrEqual(10);
+    await picker.locator(".dm-picker-option").first().click();
+    /* La scelta arriva nel campo: un valore nuovo, non quello di prima. */
+    await expect
+      .poll(async () => alertInput.inputValue(), { timeout: 10000 })
+      .not.toBe(primaDellaScelta);
+    expect(await alertInput.inputValue()).not.toBe("");
+  });
+}

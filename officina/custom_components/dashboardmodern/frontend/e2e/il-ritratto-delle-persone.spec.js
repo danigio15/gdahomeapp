@@ -1,0 +1,215 @@
+/* Il ritratto delle persone, dalla scelta allo schermo.
+ *
+ * Il modello si prova a tavolino — dice quali immagini servono e quali
+ * ritocchi restano — ma la catena intera no: i file che arrivano davvero, la
+ * testa incollata sul busto, le tinte e gli accessori dipinti sulla tela, la
+ * card in Home, e il costruttore in configurazione con le sue file nuove —
+ * barba, colori, occhi, occhiali, collana, colore del vestito. Qui si prova
+ * quella, sul documento vero.
+ */
+import { expect, test } from "@playwright/test";
+import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
+
+const seme = {
+  schema_version: 4,
+  sections: {
+    rooms: [],
+    cameras: [],
+    appliances: [],
+    loads: [],
+    lights: [],
+    climate: [],
+    ev: [],
+    covers: [],
+    pool: {},
+    irrigation: { zones: [] },
+    energy: {},
+    entityOverrides: {},
+  },
+  visibility: { home: true },
+};
+
+const persone = [
+  /* La faccia salvata prima della v7: `capelli: "barba"` deve tradursi in
+   * lisci + barba corta, senza che Giovanni cambi faccia. */
+  {
+    id: "p1",
+    name: "Giovanni",
+    entity: "person.giovanni",
+    avatar: {
+      color: "#3a6fb0",
+      face: { persona: "uomo", capelli: "barba", carnagione: "media", vestito: "ufficio" },
+    },
+  },
+  /* Una faccia v7 piena: ricci tinti, occhiali, collana, busto ricolorato. */
+  {
+    id: "p2",
+    name: "Giulia",
+    entity: "person.giulia",
+    avatar: {
+      color: "#c94a3e",
+      face: {
+        persona: "donna",
+        capelli: "ricci",
+        coloreCapelli: "biondo",
+        occhi: "verde",
+        carnagione: "chiara",
+        vestito: "casual",
+        coloreVestito: "verde",
+        occhiali: "tondi",
+        collana: "catenina",
+      },
+    },
+  },
+  /* La faccia disegnata a mano della 1.2: non deve sparire, deve tradursi. */
+  {
+    id: "p3",
+    name: "Nonno",
+    entity: "person.nonno",
+    avatar: {
+      color: "#c9ab86",
+      face: {
+        skin: "f3",
+        hair: "calvo",
+        hairColor: "bianco",
+        beard: "piena",
+        outfit: "camicia",
+        build: "normale",
+      },
+    },
+  },
+];
+
+test("i ritratti arrivano in Home, e il costruttore ha le file della v7", async ({
+  page,
+}, testInfo) => {
+  /* Ottanta pastiglie composte piu' i ridisegni di sei gesti: sul webkit
+   * della CI ogni composizione costa secondi di lavoro sincrono, e la spec
+   * viveva sul filo dei 30s di default — l'attesa delle pastiglie qui sotto
+   * dichiara gia' 120s, ma il tetto del test non glieli dava mai. Il tempo
+   * dice quanto e' lento il ferro, non se il codice e' giusto: la verita'
+   * la dicono le asserzioni. */
+  test.setTimeout(120_000);
+  await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, seme);
+  await page.evaluate((elenco) => {
+    window.localStorage.setItem("cd_people", JSON.stringify(elenco));
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  }, persone);
+
+  /* Tre tele: anche le facce vecchie ne hanno una, tradotte. */
+  await expect(page.locator("#dm-people canvas.dm-avatar-3d")).toHaveCount(3, { timeout: 20000 });
+
+  /* La testa incollata sul busto e' composta davvero: la tela non e' vuota. */
+  const dipinta = await page.evaluate(() => {
+    const tela = document.querySelector("#dm-people canvas.dm-avatar-3d");
+    const px = tela.getContext("2d").getImageData(0, 0, tela.width, tela.height).data;
+    let opachi = 0;
+    for (let i = 3; i < px.length; i += 4) if (px[i] > 30) opachi += 1;
+    return opachi / (tela.width * tela.height);
+  });
+  expect(dipinta).toBeGreaterThan(0.15);
+
+  /* Il costruttore: le file della v7, nell'ordine del design. Giovanni ha la
+   * barba (tradotta in corta) e l'ufficio (ricolorabile), quindi si vedono
+   * anche «Colore barba» e «Colore vestito». */
+  await page.evaluate(() => window.apriConfigEntita());
+  await page.locator('.ed-tab[data-tab="people"]').click();
+  await page.locator("#ed-body [data-person-edit]").first().click();
+  const riga = page.locator('#ed-body .dm-people-row[data-open="true"]');
+  await expect(
+    riga.locator(".dm-face-row .dm-face-row-lbl"),
+    "le undici file del ritratto, nell'ordine approvato",
+  ).toHaveText(
+    [
+      /Persona7/,
+      /Capelli3/,
+      /Barba4/,
+      /Colore capelli8/,
+      /Colore barba5/,
+      /Colore occhi5/,
+      /Occhiali4/,
+      /Collana3/,
+      /Carnagione5/,
+      /Vestito35/,
+      /Colore vestito6/,
+    ],
+    { timeout: 20000 },
+  );
+
+  /* Il colore degli occhi e' una fila di cerchi, non di ritratti. */
+  await expect(riga.locator(".dm-face-dot")).toHaveCount(5);
+
+  /* Ottanta pastiglie composte — 7+3+4+8+5+4+3+5+35+6 — e ognuna e' un
+   * ritratto vero, quindi si aspettano. */
+  const pastiglie = riga.locator(".dm-face-opt-img img");
+  await expect(pastiglie).toHaveCount(80, { timeout: 120000 });
+
+  /* Il gesto si fa in UN turno di thread, dentro la pagina.
+   *
+   * Sul webkit della CI ogni composizione di pastiglia costa secondi di
+   * lavoro sincrono: qualunque coreografia di Playwright che chieda piu'
+   * turni — l'attesa di stabilita' (a frame), lo scrolling into view,
+   * perfino un campionatore con la rete del setTimeout (misurato: su
+   * Chromium il banco e' di marmo, zero variazioni di rect; su webkit il
+   * campionatore stesso moriva di fame) — si accoda dietro decine di quei
+   * task e sfora il timeout. `scrollIntoView` piu' `click()` in un solo
+   * evaluate si accodano UNA volta e poi corrono; la verita' del gesto la
+   * dicono le asserzioni dopo, che auto-attendono. */
+  const premi = async (selettore) => {
+    await riga.locator(selettore).evaluate((nodo) => {
+      nodo.scrollIntoView({ block: "center" });
+      nodo.click();
+    });
+  };
+
+  /* Le file si seguono: senza barba il suo colore sparisce... */
+  await premi('[data-face-k="barba"][data-face-v="nessuna"]');
+  await expect(riga.locator(".dm-face-row", { hasText: "Colore barba" })).toHaveCount(0, {
+    timeout: 20000,
+  });
+  await expect(riga.locator(".dm-face-row")).toHaveCount(10);
+
+  /* ...e il colore del vestito vale solo per i busti ricolorabili: il cuoco
+   * lo toglie, il casual lo riporta. */
+  await premi('[data-face-k="vestito"][data-face-v="cuoco"]');
+  await expect(riga.locator('[data-face-k="vestito"][data-face-v="cuoco"]')).toHaveClass(/on/);
+  await expect(riga.locator(".dm-face-row")).toHaveCount(9);
+  await premi('[data-face-k="vestito"][data-face-v="casual"]');
+  await expect(riga.locator('[data-face-k="coloreVestito"][data-face-v="verde"]')).toBeVisible();
+  await premi('[data-face-k="coloreVestito"][data-face-v="verde"]');
+  await expect(riga.locator('[data-face-k="coloreVestito"][data-face-v="verde"]')).toHaveClass(
+    /on/,
+  );
+
+  /* E un accessorio si sceglie come tutto il resto. */
+  await premi('[data-face-k="occhiali"][data-face-v="tondi"]');
+  await expect(riga.locator('[data-face-k="occhiali"][data-face-v="tondi"]')).toHaveClass(/on/);
+
+  /* Il banco si aggiorna IN LOCO: un tocco non ricostruisce le file.
+   * Rifare tutto a ogni scelta buttava ottanta pastiglie composte e le
+   * ricomponeva da capo — su webkit lento il banco restava in subbuglio e i
+   * click non trovavano mai un bottone fermo. Qui si misura la quiete: dopo
+   * un tocco il bottone di un'altra fila e' LO STESSO nodo di prima, e
+   * nessuna casella gia' composta si e' svuotata. */
+  const primaDelTocco = await riga.evaluate((nodo) => {
+    window.__DM_NODO_FERMO__ = nodo.querySelector('[data-face-k="persona"][data-face-v="uomo"]');
+    return {
+      piene: nodo.querySelectorAll(".dm-face-opt-img img").length,
+    };
+  });
+  await premi('[data-face-k="capelli"][data-face-v="ricci"]');
+  await expect(riga.locator('[data-face-k="capelli"][data-face-v="ricci"]')).toHaveClass(/on/);
+  const dopoIlTocco = await riga.evaluate((nodo) => ({
+    stessoNodo:
+      window.__DM_NODO_FERMO__ ===
+        nodo.querySelector('[data-face-k="persona"][data-face-v="uomo"]') &&
+      window.__DM_NODO_FERMO__?.isConnected === true,
+    piene: nodo.querySelectorAll(".dm-face-opt-img img").length,
+  }));
+  expect(dopoIlTocco.stessoNodo, "il bottone e' lo stesso nodo: niente ricostruzione").toBe(true);
+  expect(
+    dopoIlTocco.piene,
+    "le pastiglie composte non si svuotano mentre si ricompongono",
+  ).toBeGreaterThanOrEqual(primaDelTocco.piene);
+});

@@ -1,0 +1,216 @@
+# DM-FIX-20260812B
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "custom_components/dashboardmodern/manifest.json"
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Two gates, each in the environment that suits it. They used to be one job on a
+# bare runner that installed browsers itself, which hung for hours on
+# `playwright install --with-deps` and never published. Putting that single job
+# in the Playwright image fixed the hang but broke the Python side: the image is
+# a browser image, so the C extensions in the test requirements (ciso8601,
+# lru-dict) have nothing to build against. Neither environment suits both, so
+# neither job does both.
+jobs:
+  verify:
+    name: Verify before releasing
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      release_tag: ${{ steps.version.outputs.release_tag }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements_test.txt ruff
+          npm ci
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Test
+        run: |
+          python scripts/generate_build_info.py --expected-commit "$GITHUB_SHA"
+          python -m pytest -q
+          npm run check:inline-syntax
+          npm run format:check
+          npm run test:frontend
+      - name: Resolve and verify release version
+        id: version
+        run: |
+          manifest=$(python -c "import json;print(json.load(open('custom_components/dashboardmodern/manifest.json'))['version'])")
+          release_tag="v$manifest"
+          if [ "$GITHUB_EVENT_NAME" = "push" ] && [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag="v${GITHUB_REF_NAME#v}"
+            if [ "$release_tag" != "$tag" ]; then
+              echo "Tag ${tag#v} does not match manifest version $manifest" >&2
+              exit 1
+            fi
+          elif git ls-remote --exit-code --tags origin "refs/tags/$release_tag" >/dev/null 2>&1; then
+            echo "Release tag $release_tag already exists. Bump manifest.json instead of overwriting an existing release." >&2
+            exit 1
+          fi
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+
+  # Same shape as the Browser E2E workflow, which is green on every commit that
+  # reaches main: the browsers come with the image, so there is nothing to
+  # install, and the three projects run in parallel instead of end to end.
+  # WebKit e' diviso in quattro e non in tre perche' e' il piu' lento dei tre
+  # browser: a tre pezzi ogni shard sfiorava il tetto, e la suite cresce a ogni
+  # rilascio. Sono le stesse prove, spartite piu' larghe — non una in meno.
+  # Stessa divisione del giro normale: l'attesa e' quella del pezzo piu' lento,
+  # non la somma. WebKit da solo teneva fermo il rilascio dodici minuti.
+  #
+  # Il tetto di tempo e' lo STESSO del giro normale (e2e.yml), e non per
+  # simmetria: qui era 25 minuti dove la' sono 30, e gli shard di WebKit ci
+  # stavano dentro per un pelo. Cresciuta la suite, la PR restava verde a
+  # ventisei minuti e qui i tre shard venivano troncati a venticinque — quindi
+  # «Publish release» si saltava e la 1.4.16 non usciva, senza che niente
+  # risultasse rosso. Un cancello piu' severo del controllo che autorizza il
+  # merge non protegge: rende solo impossibile rilasciare quello che e' stato
+  # approvato. Se uno dei due cambia, cambia l'altro.
+  gate:
+    name: Browser E2E release gate / ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.shards }}
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.54.1-noble
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      # Otto come nel giro normale: l'ottavo pezzo non aspetta il suo turno.
+      # Qui pesa il doppio — un rilascio che ci mette quindici minuti in piu'
+      # per una coda e' un rilascio fermo — e vale la stessa regola dei tetti:
+      # se cambia uno, cambia l'altro.
+      max-parallel: 8
+      matrix:
+        include:
+          - { project: desktop, shard: 1, shards: 2 }
+          - { project: desktop, shard: 2, shards: 2 }
+          - { project: mobile, shard: 1, shards: 2 }
+          - { project: mobile, shard: 2, shards: 2 }
+          - { project: webkit-ipad, shard: 1, shards: 4 }
+          - { project: webkit-ipad, shard: 2, shards: 4 }
+          - { project: webkit-ipad, shard: 3, shards: 4 }
+          - { project: webkit-ipad, shard: 4, shards: 4 }
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: npm ci
+      - name: Generate build metadata
+        run: |
+          # The workspace belongs to another user inside the container, so git
+          # refuses to read it until it is marked safe.
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          python scripts/generate_build_info.py --expected-commit "$GITHUB_SHA"
+      - name: Run ${{ matrix.project }} E2E (${{ matrix.shard }}/${{ matrix.shards }})
+        run: |
+          npx playwright test --project="${{ matrix.project }}" \
+            --shard="${{ matrix.shard }}/${{ matrix.shards }}"
+      - uses: actions/upload-artifact@v6
+        if: failure()
+        with:
+          name: release-gate-report-${{ matrix.project }}-${{ matrix.shard }}
+          path: |
+            playwright-report
+            test-results
+
+  release:
+    name: Publish release
+    needs: [verify, gate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      # La plancia va nel pacchetto impacchettata: nei sorgenti sono
+      # centosettantanove file JavaScript, e al primo avvio sono
+      # centosettantanove richieste. Il guscio riscritto qui finisce solo
+      # dentro lo zip; nel deposito restano i sorgenti, che si sviluppano cosi'.
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      # Prima la provenienza, POI il pacchetto: `modules-entry.js` importa
+      # `build-info.js`, quindi impacchettare per primo ci murerebbe dentro la
+      # versione e il commit del file tracciato — quelli della release
+      # PRECEDENTE — e il build-info generato dopo non lo leggerebbe piu'
+      # nessuno. La plancia direbbe di essere la versione di ieri.
+      - name: Impacchetta la plancia
+        run: |
+          npm ci
+          python scripts/generate_build_info.py --expected-commit "$GITHUB_SHA" \
+            --output custom_components/dashboardmodern/frontend/legacy/build-info.js
+          node scripts/impacchetta-la-plancia.mjs
+      - name: Generate build provenance from the selected HEAD
+        run: python scripts/build_release.py --expected-commit "$GITHUB_SHA" --output dashboardmodern.zip
+      # Le note automatiche di GitHub elencano cosa è cambiato; il blocco di
+      # sostegno si unisce a quell'elenco, così ogni nuovo aggiornamento lo mostra
+      # senza doverlo riscrivere a mano. La sorgente è una sola, condivisa con il
+      # README: .github/SUPPORT_BADGES.md. `append_body` mette questo corpo prima
+      # delle note generate, quindi il blocco apre la release invece di chiuderla.
+      # Le note automatiche di GitHub elencano i pull request, che dicono da dove
+      # arriva una modifica ma non cosa cambia per chi aggiorna. Quello sta nel
+      # CHANGELOG, scritto per essere letto: la sezione di questa versione entra
+      # nelle note, sopra l'elenco automatico.
+      - name: Prepare release notes
+        run: |
+          python - <<'PYEOF'
+          import os, re, pathlib
+
+          tag = os.environ["RELEASE_TAG"]
+          version = tag[1:] if tag.startswith("v") else tag
+          changelog = pathlib.Path("CHANGELOG.md").read_text(encoding="utf-8")
+          pattern = re.compile(
+              r"^## %s(?:\s+—[^\n]*)?\n(.*?)(?=^## |\Z)" % re.escape(version),
+              re.S | re.M,
+          )
+          found = pattern.search(changelog)
+          parts = [pathlib.Path(".github/SUPPORT_BADGES.md").read_text(encoding="utf-8")]
+          if found:
+              parts.append("## Novita' di questa versione\n\n" + found.group(1).strip() + "\n")
+          else:
+              print(f"::warning::nessuna sezione {version} nel CHANGELOG")
+          pathlib.Path("release-body.md").write_text("\n\n".join(parts), encoding="utf-8")
+          PYEOF
+        env:
+          RELEASE_TAG: ${{ needs.verify.outputs.release_tag }}
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.verify.outputs.release_tag }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          body_path: release-body.md
+          append_body: true
+          prerelease: ${{ contains(needs.verify.outputs.release_tag, '-') }}
+          files: dashboardmodern.zip

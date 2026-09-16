@@ -1,0 +1,70 @@
+name: Segnalazione bug
+description: Segnala un comportamento inatteso di DashboardModern.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Grazie per averci aiutato a migliorare DashboardModern.
+  - type: input
+    id: integration-version
+    attributes:
+      label: Versione integrazione
+      placeholder: es. 1.0.0-beta.20.2
+    validations:
+      required: true
+  - type: input
+    id: ha-version
+    attributes:
+      label: Versione Home Assistant
+      placeholder: es. 2026.8.0
+    validations:
+      required: true
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Metodo di installazione
+      options:
+        - HACS
+        - Manuale
+    validations:
+      required: true
+  # Scegliendo «Lovelace» invece di «Integrazione», HACS non da' errore: trova
+  # dashboardmodern.zip fra gli allegati della release e lo tratta come una
+  # risorsa Lovelace. L'integrazione non viene mai installata, e la
+  # segnalazione che arriva e' sempre la stessa — «scaricata, riavviato, non
+  # compare». Chiederlo qui la risolve in un colpo invece che in tre scambi.
+  - type: dropdown
+    id: hacs-category
+    attributes:
+      label: Se hai usato HACS, quale tipo hai scelto aggiungendo il repository?
+      description: >-
+        Deve essere «Integrazione». Con «Lovelace» HACS accetta lo stesso il
+        repository, ma l'integrazione non viene installata e non comparira' mai
+        in Impostazioni → Dispositivi e servizi.
+      options:
+        - Integrazione
+        - Lovelace
+        - Tema
+        - Non ricordo
+        - Non ho usato HACS
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passi per riprodurre il problema
+      placeholder: Elenca i passaggi, il risultato atteso e quello osservato.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log e console
+      description: Incolla i log di Home Assistant e gli errori della console browser, rimuovendo token e dati sensibili.
+      render: text
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshot
+      description: Trascina qui eventuali immagini utili a mostrare il problema.

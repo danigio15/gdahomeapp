@@ -1,0 +1,153 @@
+/* Full-screen Lovelace wrapper used by the generated DashboardModern dashboard. */
+import { legacyVariantForLocale, mountLegacyHost } from "./src/legacy/host.js";
+import { baseDellaPlancia } from "./src/core/la-base-della-plancia.js";
+import { ricordaLeStanzeDiHomeAssistant } from "./src/core/le-stanze-di-home-assistant.js";
+
+export function canAccess(config = {}, user = {}) {
+  const allowed = Array.isArray(config.allowed_user_ids)
+    ? config.allowed_user_ids.filter(Boolean)
+    : [];
+  return allowed.length === 0 || allowed.includes(user?.id);
+}
+
+export function runtimeStaticBase(moduleUrl = import.meta.url) {
+  try {
+    return new URL(".", moduleUrl).href.replace(/\/$/, "");
+  } catch (_error) {
+    return "";
+  }
+}
+
+export class DashboardModernCard extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this.host = null;
+    this.mountedKey = "";
+  }
+
+  setConfig(config) {
+    if (!config?.entry_id) {
+      throw new Error("DashboardModern requires entry_id.");
+    }
+    const previous = JSON.stringify(this._config || {});
+    this._config = { ...config };
+    if (previous !== JSON.stringify(this._config)) this.resetHost();
+    this.render();
+  }
+
+  set hass(value) {
+    this._hass = value;
+    /* Le stanze di Home Assistant, lasciate dove chi disegna le trova.
+     *
+     * `hass` porta con se' i registri delle aree, dei dispositivi e delle
+     * entita': qui non costano una domanda, ci sono e basta. Dentro la cornice
+     * non ci sono MAI — il guscio li tiene in `WIZ`, che nasce vuoto a ogni
+     * caricamento, e nel pannello non lo riempie nessuno — e per questo il
+     * conto della presenza per stanza (#549) li' non era mai entrato in
+     * funzione. Chiederli dal disegno e' quello che e' costato la #553.
+     *
+     * Si fa di qui e non dal montaggio perche' di qui si passa a ogni `hass`:
+     * al primo giro i registri possono non essere ancora arrivati, e chi monta
+     * monta una volta sola. Costa tre confronti quando non c'e' niente di
+     * nuovo. */
+    ricordaLeStanzeDiHomeAssistant(value);
+    this.render();
+  }
+
+  resetHost() {
+    this.host?.destroy();
+    this.host = null;
+    this.mountedKey = "";
+  }
+
+  renderDenied() {
+    this.resetHost();
+    const style = document.createElement("style");
+    style.textContent = `:host{display:grid;min-height:calc(100dvh - var(--header-height,56px));place-items:center;background:var(--primary-background-color)}section{display:grid;gap:12px;max-width:420px;margin:24px;padding:28px;border-radius:22px;background:var(--card-background-color);box-shadow:var(--ha-card-box-shadow);color:var(--primary-text-color);text-align:center}strong{font-size:1.4rem}span{color:var(--secondary-text-color)}`;
+    const section = document.createElement("section");
+    section.setAttribute("role", "alert");
+    section.innerHTML = `<strong>DashboardModern</strong><span>${
+      this._hass?.locale?.language?.startsWith("it")
+        ? "Questa plancia non è abilitata per il tuo utente."
+        : "This dashboard is not enabled for your user."
+    }</span>`;
+    this.shadowRoot.replaceChildren(style, section);
+  }
+
+  render() {
+    if (!this._config || !this._hass?.connection?.sendMessagePromise) return;
+    if (!canAccess(this._config, this._hass.user)) {
+      this.renderDenied();
+      return;
+    }
+    const variant = legacyVariantForLocale(this._hass?.locale?.language);
+    // Da dove si monta: la base VIVA, quella che i pannelli pubblicano adesso.
+    //
+    // Qui c'era `runtimeStaticBase()`, con scritto accanto che il modulo di
+    // questa card arriva dal prefisso versionato. Non è più vero: il modulo è
+    // stato spostato sul prefisso STABILE per la #372, e quel prefisso è
+    // servito senza `Cache-Control` — cioè il browser se lo tiene per giorni
+    // senza chiedere se è cambiato. Da lì «l'integrazione portava 1.4.24 ma la
+    // plancia 1.4.23»: il pannello si caricava nuovo, questa card vecchia.
+    //
+    // L'elenco dei pannelli arriva dal websocket a ogni pagina, e porta la
+    // base di adesso. L'indirizzo del modulo resta solo come ripiego, per
+    // quando un pannello non si vede. E il `static_base` scritto dentro la
+    // dashboard non si guarda: è di quando la dashboard è stata scritta.
+    const staticBase = baseDellaPlancia(
+      this._hass?.panels,
+      this._config.entry_id,
+      runtimeStaticBase(),
+    );
+    if (!staticBase) return;
+    const key = `${this._config.entry_id}|${staticBase}|${variant}`;
+    if (this.host && this.mountedKey === key) return;
+    this.resetHost();
+
+    const style = document.createElement("style");
+    style.textContent = `:host{display:block;width:100%;height:calc(100dvh - var(--header-height,56px));min-height:420px;overflow:hidden;background:var(--primary-background-color)}.surface{width:100%;height:100%;min-width:0;min-height:0}@media(max-width:600px){:host{height:calc(100dvh - var(--header-height,56px));min-height:320px}}`;
+    const surface = document.createElement("div");
+    surface.className = "surface";
+    this.shadowRoot.replaceChildren(style, surface);
+    this.host = mountLegacyHost(surface, {
+      hass: this._hass,
+      connection: this._hass.connection,
+      staticBase,
+      variant,
+      instanceId: this._config.entry_id,
+      // Same plancia as the panel, therefore the same shared configuration
+      // profile. The store keeps answering from one bucket even if this
+      // persisted value predates a rename.
+      configProfile: this._config.config_profile || "",
+      primary: this._config.primary !== false,
+    });
+    this.mountedKey = key;
+  }
+
+  getCardSize() {
+    return 1;
+  }
+
+  getGridOptions() {
+    return { columns: "full", rows: "full" };
+  }
+
+  disconnectedCallback() {
+    this.resetHost();
+  }
+}
+
+if (!customElements.get("dashboardmodern-card")) {
+  customElements.define("dashboardmodern-card", DashboardModernCard);
+}
+
+window.customCards = window.customCards || [];
+if (!window.customCards.some((card) => card.type === "dashboardmodern-card")) {
+  window.customCards.push({
+    type: "dashboardmodern-card",
+    name: "DashboardModern",
+    description: "Full-screen DashboardModern integration view",
+    preview: false,
+  });
+}

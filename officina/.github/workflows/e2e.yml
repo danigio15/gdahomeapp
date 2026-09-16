@@ -1,0 +1,99 @@
+name: Browser E2E
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browser-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Il tempo di attesa e' quello del giro piu' lento, non la somma.
+  #
+  # I tre progetti giravano gia' insieme, ma dentro ognuno le 176 prove si
+  # dividevano fra i lavoratori che Playwright si prende da solo: meta' dei core
+  # del runner, cioe' due. Desktop e mobile ci mettevano sei minuti e mezzo,
+  # WebKit quindici — ed erano quei quindici l'attesa vera, ogni volta.
+  #
+  # Le prove non dipendono dall'ordine (nessun `describe.serial`), quindi si
+  # possono spezzare: ogni pezzo va su un runner suo. WebKit, che e' il piu'
+  # lento, si divide in tre; gli altri due in due. L'attesa scende da quindici
+  # minuti a circa cinque, e il lavoro totale resta lo stesso.
+  playwright-project:
+    name: playwright / ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.shards }}
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.54.1-noble
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      # Otto, quanti sono i pezzi.
+      #
+      # Era sette da quando WebKit stava in tre: allora i lavori erano sette e
+      # partivano tutti insieme. Diviso WebKit in quattro sono otto, e l'ottavo
+      # restava in coda ad aspettare che se ne liberasse uno — quindici minuti
+      # buoni di attesa per un pezzo che ne dura sedici. L'attesa di un giro e'
+      # quella del pezzo piu' lento, non la somma: un pezzo che parte in ritardo
+      # la allunga di tutto il suo ritardo, e per niente.
+      max-parallel: 8
+      matrix:
+        include:
+          - { project: desktop, shard: 1, shards: 2 }
+          - { project: desktop, shard: 2, shards: 2 }
+          - { project: mobile, shard: 1, shards: 2 }
+          - { project: mobile, shard: 2, shards: 2 }
+          # Quattro pezzi e non tre: WebKit e' il piu' lento, a tre sfiorava il
+          # tetto dei trenta minuti, e la suite cresce a ogni rilascio. Il tetto
+          # e' lo stesso del gate del rilascio (release.yml): se cambia uno,
+          # cambia l'altro, sennò una PR verde non basta a far uscire nulla.
+          - { project: webkit-ipad, shard: 1, shards: 4 }
+          - { project: webkit-ipad, shard: 2, shards: 4 }
+          - { project: webkit-ipad, shard: 3, shards: 4 }
+          - { project: webkit-ipad, shard: 4, shards: 4 }
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: npm ci
+      - name: Generate build metadata
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          python scripts/generate_build_info.py --expected-commit "$GITHUB_SHA"
+      - name: Run ${{ matrix.project }} E2E (${{ matrix.shard }}/${{ matrix.shards }})
+        run: |
+          npx playwright test --project="${{ matrix.project }}" \
+            --shard="${{ matrix.shard }}/${{ matrix.shards }}"
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.project }}-${{ matrix.shard }}
+          path: |
+            playwright-report
+            test-results
+
+  # Keep the historical required check name `playwright`, but make the three
+  # browser projects run in parallel. This job is only the final gate/aggregator.
+  playwright:
+    name: playwright
+    runs-on: ubuntu-latest
+    needs: playwright-project
+    if: always()
+    steps:
+      - name: Verify all browser projects
+        env:
+          RESULT: ${{ needs.playwright-project.result }}
+        run: |
+          echo "Browser matrix result: $RESULT"
+          test "$RESULT" = "success"
