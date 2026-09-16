@@ -20,6 +20,18 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/danigio15/gdahomeapp/releases"><img src="https://img.shields.io/github/v/release/danigio15/gdahomeapp?label=versione&color=0ea5e9" alt="Ultima versione"></a>
+  <a href="https://github.com/danigio15/gdahomeapp/actions/workflows/prove.yml"><img src="https://github.com/danigio15/gdahomeapp/actions/workflows/prove.yml/badge.svg" alt="Le prove"></a>
+  <a href="https://github.com/danigio15/gdahomeapp/releases"><img src="https://img.shields.io/github/downloads/danigio15/gdahomeapp/total?label=download&color=8b5cf6&cacheSeconds=1800" alt="Download"></a>
+  <a href="https://www.paypal.com/paypalme/giovannidaniello15"><img src="https://img.shields.io/badge/PayPal-sostieni-003087?logo=paypal&logoColor=white" alt="Sostieni il progetto con PayPal"></a>
+  <img src="https://img.shields.io/badge/Home%20Assistant-OS%20%7C%20Supervised-18BCF2" alt="Home Assistant OS o Supervised">
+  <img src="https://img.shields.io/badge/Android%20%C2%B7%20iPhone%20%C2%B7%20browser-16a34a" alt="Android, iPhone, browser">
+  <img src="https://img.shields.io/badge/UI-Italiano%20%7C%20English-16a34a" alt="Italiano e inglese">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licenza-proprietaria-64748b" alt="Licenza proprietaria"></a>
+</p>
+
+
+<p align="center">
   <img src="docs/immagini/3-le-luci.png" alt="Le luci" width="31%">
   <img src="docs/immagini/4-il-clima.png" alt="Il clima" width="31%">
   <img src="docs/immagini/1-la-plancia.png" alt="La plancia" width="31%">
@@ -37,6 +49,11 @@ cerchi. Sono due pezzi, e lavorano insieme:
   aprire sul router.
 
 ## Metterla in casa
+
+Serve un Home Assistant che abbia il **Supervisor**: **Home Assistant OS** o
+**Home Assistant Supervised**. Su **Container** — Home Assistant in Docker — il
+negozio degli add-on non esiste, e non si installa nessun add-on di nessuno:
+[il perché, e cosa si può fare](#domande-che-arrivano-davvero).
 
 **Impostazioni → Add-on → Negozio degli add-on**, i tre puntini in alto a
 destra → **Archivi**, e si incolla:
@@ -149,11 +166,72 @@ l'abbinamento, cosa finisce sul disco — sta in
 | ✅ | **La plancia si configura dal telefono**: la sua pagina Config, intatta, dentro l'app |
 | ✅ | **Segnalazioni** con foto e video, e una **chat di assistenza** — quella della dashboard, che il ponte fa da sé |
 | ✅ | **Dal browser**, senza installare niente: la stessa app, che si adatta allo schermo |
-| ✅ | **768 prove** — 392 sul ponte, 85 sul centralino, 13 sulla nuvola, 278 sull'app — senza rete, senza Home Assistant, senza telefono |
+| ✅ | **781 prove** — 396 sul ponte, 85 sul centralino, 13 sulla nuvola, 287 sull'app — senza rete, senza Home Assistant, senza telefono |
 | ⬜ | Gli aiutanti di Home Assistant, nativi nell'app |
 | ⬜ | Zigbee: abbinare un dispositivo da qui (ZHA e Zigbee2MQTT) |
 | ⬜ | Le automazioni, scritte dall'app |
 | ⬜ | Notifiche, impronta digitale, l'app sul Play Store per tutti |
+
+## Domande che arrivano davvero
+
+**Si installa su Home Assistant in Docker?**
+No, e non e' una scelta nostra: su **Home Assistant Container** — l'immagine
+Docker, quella che si tira su con `docker run` o un `compose` — il negozio
+degli add-on **non esiste**. Non manca gdahome: manca il Supervisor, che e' il
+pezzo che installa e fa girare gli add-on, e senza di lui nessun add-on si
+installa. gdahome ha bisogno di lui anche per lavorare: si presenta a Home
+Assistant col segno che il Supervisor gli da' (`SUPERVISOR_TOKEN`), e la sua
+scheda — quella dei QR code — sta dietro l'**ingress**, cioe' dietro
+l'autenticazione di Home Assistant.
+
+Le installazioni che hanno il Supervisor sono due, e su tutt'e due gdahome va:
+
+| | add-on |
+|---|---|
+| **Home Assistant OS** — il sistema completo, su Raspberry, su un mini PC, in una macchina virtuale | ✅ |
+| **Home Assistant Supervised** — Debian piu' l'installatore ufficiale: e' la strada di chi vuole restare padrone della sua macchina | ✅ |
+| **Home Assistant Container** — l'immagine Docker da sola | ❌ nessun add-on, di nessuno |
+| **Home Assistant Core** — in un ambiente Python | ❌ idem |
+
+Chi oggi ha Container e vuole gdahome ha due strade: passare a **Supervised**
+sulla stessa macchina — Docker ce l'ha gia' — oppure tenere Home Assistant
+dov'e'. Un gdahome che gira come container a se' stante oggi non c'e'; il
+lavoro che ci vorrebbe e' scritto, e non e' un'opzione da accendere: un segno
+a lunga vita al posto di quello del Supervisor, la scheda su una porta vera
+**con un'autenticazione propria** — oggi la protegge l'ingress, e senza
+ingress i codici di abbinamento resterebbero esposti — e l'aggiornamento
+automatico da rifare. Se la domanda arriva da abbastanza persone, si fa.
+
+**L'add-on serve solo per usare l'app?**
+No: serve anche **senza l'app**. gdahome porta dentro la plancia di
+DashboardModern, e in Home Assistant compare come voce nella barra laterale —
+una per plancia. Da li' si guarda e si configura da qualunque browser, senza
+installare nessuna integrazione. L'app e' l'altra metà: la stessa plancia sul
+telefono, e da fuori casa senza aprire niente sul router.
+
+Quindi: **con l'app** e' una casa in tasca; **senza**, e' DashboardModern che
+si installa come add-on invece che da HACS.
+
+**Serve avere l'integrazione DashboardModern installata?**
+No, e non e' nemmeno consigliato averle tutte e due: la plancia sta dentro
+l'add-on, e tutto quello che chiedeva all'integrazione lo fa il ponte. Chi
+l'integrazione ce l'ha già, e ci ha configurato la plancia, **non ricomincia da
+zero**: alla prima apertura gdahome si va a prendere quella configurazione e la
+adotta.
+
+**E' gratis?**
+Sì. L'add-on, la plancia e l'app si usano senza pagare niente e senza conti da
+aprire. Se ti è utile e puoi permettertelo, [dai una mano](#sostieni-il-progetto):
+non cambia niente di quello che funziona, ma cambia quanto tempo ci si può
+mettere.
+
+**Dove finiscono le cose che segnalo?**
+Nelle [issue di questa repository](https://github.com/danigio15/gdahomeapp/issues).
+Si scrivono dall'app — **Segnalazioni** nel menu, con foto e video — e passano
+dal ponte al centralino, che apre la issue: **nessun conto GitHub da avere**,
+nessun token da incollare. Per chiedere aiuto invece che segnalare un difetto
+c'è **Assistenza**, che è una conversazione privata e non finisce su una pagina
+pubblica.
 
 ## Il sito
 
@@ -196,9 +274,9 @@ finto che fa lo stesso. È l'unico modo di avere prove che girino davvero a ogni
 commit.
 
 ```bash
-npm test                        # ponte, centralino e nuvola: 490 prove
-npm run test:ponte              # il ponte: 348 prove, due secondi
-cd app && flutter test          # l'app: 240 prove, mezzo minuto
+npm test                        # ponte, centralino e nuvola: 494 prove
+npm run test:ponte              # il ponte: 396 prove, due secondi
+cd app && flutter test          # l'app: 287 prove, mezzo minuto
 
 npm run format:check            # prettier, sui file nostri
 cd app && flutter analyze       # l'analisi di Dart
@@ -229,6 +307,26 @@ cd app && CENTRALINO_ESTERNO=ws://127.0.0.1:8787 flutter test test/integrazione/
 
 E per **guardarla** girare, con le fotografie delle schermate, c'è
 [`collaudo/`](collaudo/README.md).
+
+## Sostieni il progetto
+
+gdahome lo faccio nel tempo libero, e resta gratuito. Chi vuole dare una mano
+può farlo da qui:
+
+<p align="center">
+  <a href="https://www.paypal.com/paypalme/giovannidaniello15"><img src="https://img.shields.io/badge/PAYPAL-ME-1f8fdd?style=for-the-badge&logo=paypal&logoColor=white&labelColor=555555" alt="Sostieni il progetto con PayPal"></a>
+  &nbsp;
+  <a href="https://github.com/sponsors/danigio15"><img src="https://img.shields.io/badge/GITHUB-SPONSORS-ea4aaa?style=for-the-badge&logo=githubsponsors&logoColor=white&labelColor=555555" alt="Sostieni il progetto su GitHub Sponsors"></a>
+</p>
+
+Più sostegno vuol dire una cosa sola, e concreta: **più tempo su questo** —
+assistenza più rapida, correzioni più rapide, e prove su dispositivi veri
+invece che su un emulatore.
+
+E ci sono due modi di aiutare che non costano niente: una ⭐ qui sopra, e una
+[segnalazione scritta bene](https://github.com/danigio15/gdahomeapp/issues) —
+cosa stavi facendo, cosa ti aspettavi, cosa è successo. Le migliori correzioni
+di questo progetto sono nate così.
 
 ## La licenza, e le due repository
 
