@@ -125,7 +125,8 @@ class PonteFinto {
     if (tipo is String &&
         (tipo.startsWith('ponte/segnalazioni/') ||
             tipo.startsWith('ponte/chat/') ||
-            tipo.startsWith('ponte/console/'))) {
+            tipo.startsWith('ponte/console/') ||
+            tipo.startsWith('ponte/aggiornamenti/'))) {
       _manda(presa, {'id': id, ..._segnalazione(detto)});
       return;
     }
@@ -289,6 +290,22 @@ class PonteFinto {
   final List<Map<String, dynamic>> segnalazioni = [];
   Map<String, dynamic>? chat;
   int _prossimaSegnalazione = 7;
+
+  /// Cosa c'e' da aggiornare in casa, nella forma in cui risponde il ponte
+  /// vero. Vuoto vuol dire «tutto aggiornato», che e' la risposta di quasi
+  /// tutte le case quasi sempre.
+  final List<Map<String, dynamic>> aggiornamenti = [];
+
+  /// Se questo ponte sa rispondere sugli aggiornamenti.
+  ///
+  /// `false` e' un add-on piu' vecchio dell'app: non e' un guasto, e l'app
+  /// deve dirlo com'e' invece di girare a vuoto.
+  bool sagliAggiornamenti = true;
+
+  /// Cosa gli e' stato chiesto di installare, e se gli e' stato chiesto di
+  /// riavviare.
+  final List<String> installati = [];
+  bool riavviata = false;
 
   /// Se da questa casa si risponde alle chat delle altre.
   ///
@@ -504,6 +521,37 @@ class PonteFinto {
             conversazioni.removeWhere((una) => una['id'] == linea);
             fili.remove(linea);
             return si({'dropped': true});
+        }
+      case 'ponte/aggiornamenti/elenco':
+      case 'ponte/aggiornamenti/installa':
+      case 'ponte/aggiornamenti/riavvia':
+        if (!sagliAggiornamenti) {
+          return no('unknown_command', 'non conosco ${detto['type']}');
+        }
+        switch (detto['type']) {
+          case 'ponte/aggiornamenti/elenco':
+            return si({'aggiornamenti': aggiornamenti});
+          case 'ponte/aggiornamenti/riavvia':
+            riavviata = true;
+            return si({'avviato': true});
+          default:
+            final quale = detto['entity_id']?.toString() ?? '';
+            final voce = aggiornamenti.cast<Map<String, dynamic>?>().firstWhere(
+              (uno) => uno!['entita'] == quale,
+              orElse: () => null,
+            );
+            if (voce == null) {
+              return no('not_found', 'quell\'aggiornamento non c\'è più');
+            }
+            installati.add(quale);
+            /* Come il ponte vero: da qui in poi quella riga risulta in corso,
+             * e l'app se lo fa dire dall'elenco invece di ricordarselo. */
+            voce['inCorso'] = true;
+            return si({
+              'avviato': true,
+              'gia': false,
+              'stacca': voce['stacca'] == true,
+            });
         }
       case 'ponte/chat/leggi':
         return si({'chat': chat == null ? null : filo(chat!)});

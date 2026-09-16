@@ -38,6 +38,14 @@ enum Sezione {
   dispositivi('widget', pronta: true),
   configurazione('impostazioni', pronta: true),
   comeVaLApp('minipc', pronta: true),
+  /* Cosa c'e' da aggiornare in casa.
+   *
+   * «Quando ci saranno gli aggiornamenti, e quindi compaiono in Home
+   * Assistant, chi utilizzera' app non vedra' mai aggiornamenti se non accede
+   * su HA.» E' il prezzo di un'app che prende il posto di Home Assistant: in
+   * Home Assistant quel pallino rosso sta in una pagina che non si apre piu'.
+   * Qui e' una voce del menu, col numero addosso. */
+  aggiornamenti('aggiornamenti', pronta: true),
   segnalazioni('segnalazioni', pronta: true),
   assistenza('assistenza', pronta: true),
   /* La coda di chi risponde. Non e' una voce come le altre: compare **in una
@@ -66,6 +74,7 @@ enum Sezione {
     Sezione.dispositivi => inLingua(it: 'Dispositivi', en: 'Devices'),
     Sezione.configurazione => inLingua(it: 'Configurazione', en: 'Config'),
     Sezione.comeVaLApp => inLingua(it: 'Come va l\'app', en: 'App health'),
+    Sezione.aggiornamenti => inLingua(it: 'Aggiornamenti', en: 'Updates'),
     Sezione.segnalazioni => inLingua(it: 'Segnalazioni', en: 'Reports'),
     Sezione.assistenza => inLingua(it: 'Assistenza', en: 'Support'),
     Sezione.console => inLingua(it: 'Console', en: 'Console'),

@@ -1128,6 +1128,43 @@ try {
   await attendi(1200);
   await scatta(pagina, "6-dispositivi");
 
+  /* Gli aggiornamenti di casa.
+   *
+   * «Quando ci saranno gli aggiornamenti, e quindi compaiono in Home
+   * Assistant, chi utilizzera' app non vedra' mai aggiornamenti se non accede
+   * su HA.» Questa sezione e' la risposta, e qui si guarda che la risposta si
+   * veda davvero: l'elenco con le versioni, l'avviso su quelli che riavviano
+   * la casa, e il riavvio in fondo.
+   *
+   * Non si preme «Installa» e non si preme «Riavvia»: in questa casa finta
+   * l'aggiornamento partirebbe per finta, e il riavvio spegnerebbe la casa a
+   * meta' collaudo. Quello che si guarda e' che ci siano, e che dicano quello
+   * che devono dire prima che uno prema. */
+  racconta("guardo gli aggiornamenti di casa");
+  await vaiA(
+    due("Aggiornamenti", "Updates"),
+    due("Riavvia Home Assistant", "Restart Home Assistant"),
+  );
+  await attendi(1200);
+  await scatta(pagina, "6b-aggiornamenti");
+  {
+    const cE = (await cosaCeDaPremere(pagina)).join(" · ");
+    for (const cosa of [
+      due("4 aggiornamenti da fare", "4 updates to do"),
+      "DashboardModern",
+      "1.4.30",
+      /* Quelli che portano giu' il filo lo dicono **prima**: detto prima e'
+       * un'attesa, non detto e' un guasto. */
+      due("riavvia la casa", "restarts the home"),
+      /* E dove non si installa chiamando un servizio, al posto del tasto c'e'
+       * scritto dove si fa. */
+      due("Questo si aggiorna dal suo apparecchio.", "This one updates on the device itself."),
+    ]) {
+      if (!cE.includes(cosa))
+        throw new Error(`negli aggiornamenti non c'e' «${cosa}». A schermo c'e': ${cE}`);
+    }
+  }
+
   /* La Configurazione.
    *
    * Non e' una schermata dell'app: e' la pagina **Configurazione della

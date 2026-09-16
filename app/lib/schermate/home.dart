@@ -23,10 +23,13 @@
 /// dashboard.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemNavigator;
 
+import '../casa/aggiornamenti.dart';
 import '../casa/collegamento.dart';
 import '../casa/console.dart';
 import '../casa/impostazioni.dart';
@@ -35,6 +38,7 @@ import '../parole.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
 import '../vestito/quanto_e_largo.dart';
+import 'aggiornamenti.dart';
 import 'assistenza.dart';
 import 'barra.dart';
 import 'console.dart';
@@ -81,16 +85,72 @@ class _HomeState extends State<Home> {
   bool _console = false;
   String? _chiestoPer;
 
+  /* Quanti aggiornamenti aspettano in casa.
+   *
+   * E' il numero che compare sulla voce del menu, e ci compare perche' senza
+   * di lui la sezione la scoprirebbe solo chi ci entra apposta — cioe'
+   * esattamente il problema di Home Assistant, spostato di una schermata.
+   *
+   * Si chiede al ponte, che risponde con tre righe invece che con tutta la
+   * casa: una volta quando il filo si alza, e poi ogni tanto. «Ogni tanto» e'
+   * mezz'ora, non un minuto: un aggiornamento non compare al secondo, e un
+   * giro piu' fitto sarebbe una domanda a Home Assistant per niente. Chi apre
+   * la sezione il numero se lo porta a casa fresco — e' lei a dirlo qui,
+   * appena ha letto l'elenco. */
+  static const _ogniTanto = Duration(minutes: 30);
+  int _daAggiornare = 0;
+  Timer? _giroDegliAggiornamenti;
+  bool _aggiornamentiChiesti = false;
+
   @override
   void initState() {
     super.initState();
     _seRisponde();
+    _quantiAggiornamenti();
+    _giroDegliAggiornamenti = Timer.periodic(
+      _ogniTanto,
+      (_) => _quantiAggiornamenti(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _giroDegliAggiornamenti?.cancel();
+    super.dispose();
   }
 
   @override
   void didUpdateWidget(Home vecchia) {
     super.didUpdateWidget(vecchia);
     _seRisponde();
+    _quantiAggiornamenti();
+  }
+
+  /* Il conto, chiesto al ponte.
+   *
+   * Un ponte piu' vecchio dell'app questo comando non lo conosce e risponde
+   * «non conosco»: il conto resta a zero, la voce non porta nessun numero, e
+   * la sezione lo spiega a chi la apre. Non e' un errore da mostrare in cima
+   * al menu. */
+  Future<void> _quantiAggiornamenti() async {
+    final filo = widget.collegamento.filo;
+    if (filo == null || !filo.dentro) return;
+    if (_aggiornamentiChiesti) return;
+    _aggiornamentiChiesti = true;
+    try {
+      final fila = await GliAggiornamenti(filo).elenco();
+      if (mounted) _contati(fila.length);
+    } catch (_) {
+      /* Il filo caduto, un ponte vecchio, Home Assistant che non risponde:
+       * niente di tutto questo e' una cosa da dire qui. Si riprova al giro
+       * dopo. */
+    } finally {
+      _aggiornamentiChiesti = false;
+    }
+  }
+
+  void _contati(int quanti) {
+    if (quanti != _daAggiornare) setState(() => _daAggiornare = quanti);
   }
 
   Future<void> _seRisponde() async {
@@ -401,6 +461,14 @@ class _HomeState extends State<Home> {
                             impostazioni: widget.impostazioni,
                             nuda: true,
                           ),
+                          /* Cosa c'e' da aggiornare in casa: l'unica
+                           * sezione che porta un numero addosso alla voce,
+                           * ed e' lei a dirlo qui appena l'ha letto. */
+                          Sezione.aggiornamenti => SchermataDegliAggiornamenti(
+                            collegamento: collegamento,
+                            visibile: _sezione == Sezione.aggiornamenti,
+                            quandoContati: _contati,
+                          ),
                           Sezione.segnalazioni => SchermataDelleSegnalazioni(
                             collegamento: collegamento,
                             diagnostica: _diagnostica,
@@ -426,6 +494,7 @@ class _HomeState extends State<Home> {
               key: _barra,
               sezioni: vociDellaBarra(conLaConsole: _console),
               aperta: _sezione,
+              daAggiornare: _daAggiornare,
               vai: _vai,
               vaiAlleCase: widget.vaiAlleCase,
               collegamento: collegamento,

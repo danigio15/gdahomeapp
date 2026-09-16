@@ -54,6 +54,7 @@ import {
 import { DISPOSITIVI_MASSIMI, ENTITA_MASSIME } from "./catalogo.js";
 import { BASE_DELLE_FOTO, BASE_DI_CASA, FOTO_MASSIMA } from "./foto.js";
 import { ChatHaDettoNo } from "./chat.js";
+import { QuestoNoNo } from "./aggiornamenti.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 import { laVede, QuellaPlanciaNo, TroppePlance } from "./plance.js";
 
@@ -101,6 +102,18 @@ const FOTO_ELENCO = "dashboardmodern/www/list";
 const FOTO_CARICA = "dashboardmodern/www/upload";
 /* Lo spegnimento programmato del clima (#364): nell'integrazione lo tiene
  * Home Assistant, qui lo tiene il ponte (`spegnimento.js`). */
+/* Cosa c'e' da aggiornare in casa, e i due tasti per farlo.
+ *
+ * Non hanno il nome della dashboard — `dashboardmodern/…` — e non e' una
+ * distrazione: questi tre comandi non esistono nella plancia. Li' la tessera
+ * degli aggiornamenti legge gli stati che il browser ha gia' in mano e chiama
+ * `update.install` da se'; qui il telefono gli stati non ce li ha, e chiederli
+ * per contare tre righe vorrebbe dire tirarsi giu' tutta la casa. Sono roba
+ * del ponte, e si chiamano come quello che fanno. */
+const AGGIORNAMENTI_ELENCO = "ponte/aggiornamenti/elenco";
+const AGGIORNAMENTI_INSTALLA = "ponte/aggiornamenti/installa";
+const AGGIORNAMENTI_RIAVVIA = "ponte/aggiornamenti/riavvia";
+
 const TIMER_ELENCO = "dashboardmodern/clima/timer/list";
 const TIMER_METTI = "dashboardmodern/clima/timer/set";
 const TIMER_TOGLI = "dashboardmodern/clima/timer/clear";
@@ -244,6 +257,7 @@ export class Commissioni {
     segnalazioni = null,
     chat = null,
     spegnimento = null,
+    aggiornamenti = null,
     ritorno = null,
     scarica = scaricaDavvero,
     insieme = INSIEME,
@@ -275,6 +289,9 @@ export class Commissioni {
     /* Il conto alla rovescia del clima, che nell'integrazione sta in Home
      * Assistant e qui sta nel ponte. */
     this.spegnimento = spegnimento;
+    /* Cosa c'e' da aggiornare, e i due tasti per farlo. In Home Assistant si
+     * vede da una pagina che chi usa l'app non apre piu'. */
+    this.aggiornamenti = aggiornamenti;
     /* Dove sta questa casa sulla rete di casa: lo sa il Ritorno, che lo
      * chiede al Supervisor. Si mette dopo la costruzione — il Ritorno nasce
      * piu' tardi, che gli serve la porta vera — e dove non c'e' la domanda si
@@ -343,6 +360,12 @@ export class Commissioni {
     if (DI_CHI_RISPONDE.has(tipo)) return this._laConsoleDellaChat(detto);
     if (tipo === TIMER_ELENCO || tipo === TIMER_METTI || tipo === TIMER_TOGLI)
       return this._timerDelClima(detto);
+    if (
+      tipo === AGGIORNAMENTI_ELENCO ||
+      tipo === AGGIORNAMENTI_INSTALLA ||
+      tipo === AGGIORNAMENTI_RIAVVIA
+    )
+      return this._aggiornamenti(detto);
     if (typeof tipo === "string" && NELLAPP.test(tipo))
       return no(id, "not_supported", DETTO_NELLAPP);
     if (eLaCopiaVecchia(detto)) {
@@ -395,6 +418,45 @@ export class Commissioni {
     } catch (errore) {
       this.registro.errore(`timer del clima andato storto: ${errore?.message || errore}`);
       return no(id, "ponte_timer", "non ha funzionato");
+    }
+  }
+
+  /* Cosa c'e' da aggiornare in casa, e i due tasti per farlo.
+   *
+   * Tre comandi e una regola sola: quello che non si sa, non si inventa. Un
+   * ponte vecchio non li conosce e risponde «non conosco», che e' la risposta
+   * che l'app sa gia' leggere — la sezione resta, e dice che questa casa non
+   * sa ancora rispondere invece di girare a vuoto.
+   *
+   * L'elenco e' una lettura e non cambia niente. Gli altri due fanno partire
+   * qualcosa che ci mette minuti e che, meta' delle volte, porta giu' il filo
+   * mentre lo fa: `aggiornamenti.js` aspetta poco e risponde «avviato», e a
+   * dire com'e' andata ci pensa l'elenco al giro dopo.
+   */
+  async _aggiornamenti(detto) {
+    const id = detto?.id ?? null;
+    const quali = this.aggiornamenti;
+    if (!quali) return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    try {
+      if (detto.type === AGGIORNAMENTI_ELENCO)
+        return si(id, { aggiornamenti: await quali.elenco({ forza: detto?.forza === true }) });
+      if (detto.type === AGGIORNAMENTI_RIAVVIA) {
+        this.registro.info("riavvio di Home Assistant chiesto dall'app");
+        return si(id, await quali.riavvia());
+      }
+      const entita = typeof detto.entity_id === "string" ? detto.entity_id.trim() : "";
+      this.registro.info(`installazione di ${entita} chiesta dall'app`);
+      return si(id, await quali.installa(entita));
+    } catch (errore) {
+      /* Quello che si puo' spiegare si spiega: «quell'aggiornamento non c'e'
+       * piu'» dopo che qualcun altro l'ha gia' fatto e' una frase buona da
+       * leggere, e non e' un guasto di niente. */
+      if (errore instanceof QuestoNoNo) return no(id, errore.code, errore.message);
+      /* E un no di Home Assistant e' suo: il permesso negato di un riavvio si
+       * dice com'e', che rifarlo non serve a niente. */
+      if (errore?.code) return no(id, errore.code, errore.message || "Home Assistant ha detto no");
+      this.registro.errore(`aggiornamenti: ${errore?.message || errore}`);
+      return no(id, "ponte_aggiornamenti", "non ha funzionato");
     }
   }
 
