@@ -75,29 +75,28 @@ Dal telefono si inquadra, e la casa è abbinata.
 Tutto passo per passo, e cosa guardare una volta dentro, sta in
 **[`COME_PROVARLA.md`](COME_PROVARLA.md)**.
 
-**C'e' un video** di tre minuti scarsi che fa vedere tutta questa strada — il
-negozio, l'archivio da incollare, Installa, Avvia, il quadretto da inquadrare e
-la plancia sul telefono — piu' due corti da mettere sui social, uno quadrato e
+**C'è un video** di tre minuti scarsi che fa vedere tutta questa strada — il
+negozio, l'archivio da incollare, Installa, Avvia, il QR code da inquadrare e
+la plancia sul telefono — più due corti da mettere sui social, uno quadrato e
 uno in piedi: [`strumenti/video/`](strumenti/video/README.md).
 
 ## Quanto costa: niente
 
 L'add-on, la plancia, l'app, l'accesso da fuori casa, le segnalazioni e la
 chat di assistenza: **tutto gratis**. Nessun abbonamento, nessun limite a
-pagamento, nessun account da fare. Nell'app non c'e' nessun tasto che chiede
-soldi, ed e' una scelta scritta: quello che serve a vedere e comandare la
+pagamento, nessun account da fare. Nell'app non c'è nessun tasto che chiede
+soldi, ed è una scelta scritta: quello che serve a vedere e comandare la
 propria casa non si paga mai — l'accesso da fuori compreso, che tenerlo in
 piedi costa zero ([`nuvola/`](nuvola/README.md)).
 
-**Gratis pero' non vuol dire finito.** Gli aiutanti, lo Zigbee, il mago delle
-automazioni: il piano e' scritto ([`docs/PIANO.md`](docs/PIANO.md)) e va avanti
-finche' c'e' chi lo tiene in piedi. Chi vuole dare una mano ha il tasto
-**Sponsor** qui in cima alla pagina: ogni sostegno e' una riga di quel piano
-che diventa vera. Chi non vuole o non puo', la usa lo stesso — tutta, per
-sempre.
+**Gratis però non vuol dire finito.** Gli aiutanti, lo Zigbee, il mago delle
+automazioni non ci sono ancora: sono in fila, e il lavoro va avanti finché c'è
+chi lo tiene in piedi. Chi vuole dare una mano ha il tasto **Sponsor** qui in
+cima alla pagina: ogni sostegno è una di quelle cose che arriva prima. Chi non
+vuole o non può, la usa lo stesso — tutta, per sempre.
 
 Un sostegno non sblocca niente, e non deve: se sbloccasse qualcosa, «tutto
-gratis» sarebbe una frase da togliere. Come e' fatto, e cosa si e' scelto di
+gratis» sarebbe una frase da togliere. Come è fatto, e cosa si è scelto di
 non vendere, sta in [`docs/SOSTEGNO.md`](docs/SOSTEGNO.md).
 
 ## Come ci si arriva

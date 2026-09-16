@@ -15,9 +15,9 @@
  * preludio (`legacy/bridge-prelude.js`) guarda se qualcuno ha già messo un
  * `__DASHBOARDMODERN_BRIDGE_WS__` nella finestra, e se c'è lo usa al posto del
  * WebSocket vero. È lo stesso gancio con cui l'app sul telefono le cuce
- * addosso il proprio filo — sta scritto in `docs/WEB.md`: «non è un WebSocket:
- * è un oggetto finto, messo nella pagina insieme alle altre premesse». Qui
- * dall'altra parte del gancio, invece del filo verso casa, c'è questo file.
+ * addosso il proprio filo: non è un WebSocket, è un oggetto finto messo nella
+ * pagina insieme alle altre premesse. Qui dall'altra parte del gancio, invece
+ * del filo verso casa, c'è questo file.
  *
  * Perciò basta che questo script giri **prima** del preludio: ci pensa
  * `strumenti/porta-nel-sito.mjs`, che infila i due `<script>` nella copia di

@@ -16,7 +16,8 @@ delle persone sono i suoi.
 
 C'era una versione precedente di questa pagina in cui la plancia era
 ridisegnata a mano in duemila righe di HTML. Somigliava, e si vedeva che non
-era lei — che è esattamente quello che `docs/PIANO.md` dice di non fare:
+era lei — che è esattamente il motivo per cui un renderer parallelo era già
+stato scartato:
 
 > un renderer parallelo […] o viene identico, e allora riscriverlo non è
 > servito a niente, o viene diverso, e l'utente lo riconosce come peggiore.
@@ -31,9 +32,8 @@ Ma la plancia ha **un gancio fatto apposta**. Il suo preludio
 (`legacy/bridge-prelude.js`) guarda se qualcuno ha già messo un
 `__DASHBOARDMODERN_BRIDGE_WS__` nella finestra, e se c'è usa quello invece del
 WebSocket vero. È lo stesso gancio con cui l'app sul telefono le cuce addosso
-il proprio filo, ed è scritto in [`docs/WEB.md`](../docs/WEB.md): «non è un
-WebSocket: è un oggetto finto, messo nella pagina insieme alle altre
-premesse».
+il proprio filo: non è un WebSocket, è un oggetto finto messo nella pagina
+insieme alle altre premesse.
 
 Di qua dal gancio c'è `casa-in-pagina.js`: una Home Assistant finta che parla
 il protocollo vero, con le stesse risposte di `collaudo/casa-finta.js` — la

@@ -9,8 +9,8 @@ testi già scritti da incollare.
 
 Perché **gratis non vuol dire finito**. Quello che c'è oggi — l'add-on, la
 plancia, l'app, l'accesso da fuori — resta gratis e non ha limiti a pagamento.
-Quello che non c'è ancora è scritto nel piano ([`PIANO.md`](PIANO.md)): gli
-aiutanti, lo Zigbee, il mago delle automazioni. Quelle righe diventano vere
+Quello che non c'è ancora sono gli aiutanti, lo Zigbee, il mago delle
+automazioni: cose pensate e messe in fila, non idee buttate lì. Diventano vere
 solo se c'è il tempo per scriverle, per provarle e per rispondere a chi chiede
 aiuto.
 
@@ -246,9 +246,9 @@ nel testo inglese: chi legge deve ritrovare la voce che vede davvero nel menu.
 
 ## Quello che un sostegno non compra
 
-Niente, ed è una scelta scritta anche altrove ([`ACQUISTI.md`](ACQUISTI.md),
-regola numero uno): **quello che serve a vedere e comandare la propria casa non
-si paga**, mai, accesso da fuori compreso. Un livello che sbloccasse una
+Niente, ed è la prima delle regole con cui è stato deciso tutto il resto:
+**quello che serve a vedere e comandare la propria casa non si paga**, mai,
+accesso da fuori compreso. Un livello che sbloccasse una
 funzione trasformerebbe il sostegno in un prezzo, e a quel punto «tutto gratis»
 nei video sarebbe una frase da togliere.
 

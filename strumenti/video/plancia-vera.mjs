@@ -326,9 +326,9 @@ async function main() {
           cd_branding: JSON.stringify({ title: "gdahome", subtitle: "La casa in una plancia" }),
           /* Le persone, con la faccia composta.
            *
-           * Il 🪄 le entita' le trova, ma un **ritratto** non si rileva: sono
-           * undici scelte che nella plancia vera fa chi la configura, una
-           * persona per volta (`docs/RITRATTO.md`). Qui se ne mettono tre,
+           * Il 🪄 le entita' le trova, ma un **ritratto** non si rileva: e'
+           * una fila di scelte che nella plancia vera fa chi la configura, una
+           * persona per volta. Qui se ne mettono tre,
            * perche' una casa senza facce in copertina sembra una casa vuota.
            * Le facce le disegna il compositore della plancia, quello vero. */
           cd_people: JSON.stringify([
