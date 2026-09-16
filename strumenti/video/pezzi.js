@@ -183,3 +183,142 @@ export function mettiInScena(SCENE) {
     },
   };
 }
+
+/* ── Gli altri due schermi ────────────────────────────────────────────────
+ *
+ * gdahome non e' un'app da telefono: e' la stessa pagina che si apre sul
+ * tablet in cucina e sul computer, e chi la vede per la prima volta questo
+ * non lo sa. Quindi quando si fa vedere la casa si fanno vedere **tutti e
+ * tre** gli schermi, e su ognuno la plancia com'e' davvero li' sopra: due
+ * colonne sul telefono, tre sul tablet, quattro sul computer con il menu
+ * aperto di fianco — che sul computer resta aperto per davvero.
+ */
+
+/* Le tessere, per uno schermo qualunque. */
+const TESSERE = [
+  ["luci", "Luci", "3 accese"],
+  ["clima", "Clima", "21,4°"],
+  ["energia", "Energia", "1,24 kW"],
+  ["sicurezza", "Sicurezza", "Inserita"],
+  ["telecamere", "Telecamere", "4"],
+  ["tapparelle", "Finestre", "Aperte 2"],
+  ["media", "Media", "In pausa"],
+  /* «Tutti a casa» in una tessera del tablet andava a capo: li' la colonna e'
+     un terzo di quella del telefono, e una riga che va a capo in una tessera
+     alta come le altre esce dal bordo di sotto. */
+  ["persone", "Persone", "A casa"],
+  ["irrigazione", "Irrigazione", "Spenta"],
+  ["macchine", "Auto", "82 %"],
+  ["aria", "Aria", "Buona"],
+  ["agenda", "Agenda", "2 oggi"],
+];
+
+/* Le voci del menu: quelle vere dell'app, `app/lib/schermate/menu.dart`. */
+const MENU = [
+  "Plancia",
+  "Dispositivi",
+  "Configurazione",
+  "Come va l'app",
+  "Segnalazioni",
+  "Assistenza",
+];
+
+/* La plancia su uno schermo largo: quante colonne, quante tessere, e se il
+   menu sta aperto di fianco come succede sul computer. */
+export function planciaLarga({ colonne = 3, quante = 9, menu = false, lato = 170 } = {}) {
+  const tessere = TESSERE.slice(0, quante)
+    .map(([disegno, nome, valore], i) => tessera(disegno, nome, valore, i === 0, "", "height:82px"))
+    .join("");
+  return `
+  <div style="position:absolute;inset:0;background:#f0f4f8;display:flex">
+    ${
+      menu
+        ? `<div style="width:${lato}px;flex:0 0 auto;background:#fff;border-right:1px solid rgba(15,23,42,.08);padding:14px 0">
+             <div style="display:flex;align-items:center;gap:10px;padding:4px 16px 14px">
+               <img src="${MARCHIO}" width="30" height="30" style="border-radius:9px" alt="" />
+               <span style="font-size:16px;font-weight:800;letter-spacing:-.02em">gdahome</span>
+             </div>
+             ${MENU.map(
+               (
+                 voce,
+                 i,
+               ) => `<div style="display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;font-weight:${i === 0 ? 700 : 500};
+                    color:${i === 0 ? "#0284c7" : "#64748b"};${i === 0 ? "background:rgba(14,165,233,.1);border-right:3px solid #0ea5e9" : ""}">
+                    <span style="width:7px;height:7px;border-radius:50%;background:${i === 0 ? "#0ea5e9" : "#cbd5e1"}"></span>${voce}</div>`,
+             ).join("")}
+           </div>`
+        : ""
+    }
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <div style="padding:14px 18px 12px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.02em">Casa</div>
+          <div style="font-size:12px;color:#64748b">Sereno · 21,4° · tutti a casa</div>
+        </div>
+        ${menu ? "" : `<img src="${MARCHIO}" width="28" height="28" style="border-radius:8px" alt="" />`}
+      </div>
+      <div style="flex:1;padding:0 18px;display:grid;grid-template-columns:repeat(${colonne},1fr);gap:12px;align-content:start">
+        ${tessere}
+      </div>
+      <div style="height:48px;background:#fff;border-top:1px solid rgba(15,23,42,.07);display:flex;align-items:center;justify-content:center;gap:${colonne > 3 ? 34 : 12}px">
+        ${["home", "luci", "clima", "energia", "sicurezza", "impostazioni"]
+          .map(
+            (nome, i) =>
+              `<div style="display:grid;place-items:center;${i === 0 ? "background:rgba(15,23,42,.06);border-radius:11px;padding:5px 13px" : "padding:5px 13px"}">${oggetto(nome, 20)}</div>`,
+          )
+          .join("")}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* Il tablet: una cornice e basta, senza tacca. */
+export function tavoletta({ largo = 340, alto = 460, dentro = "", stile = "", scala = 1 }) {
+  const apparecchio = `
+  <div style="width:${largo}px;height:${alto}px;border-radius:28px;padding:14px;${stile}
+              background:linear-gradient(155deg,#2b3648,#141d2c);
+              box-shadow:0 34px 70px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08)">
+    <div style="position:relative;width:100%;height:100%;border-radius:16px;overflow:hidden;background:#f0f4f8;color:#0f172a">
+      ${dentro}
+    </div>
+  </div>`;
+  return rimpicciolito(apparecchio, largo, alto, scala);
+}
+
+/* Il computer: lo schermo, e sotto la base che lo fa stare in piedi.
+ *
+ * La base e' un trapezio — un filo piu' larga dello schermo e rastremata —
+ * perche' un rettangolo sotto uno schermo sembra un rettangolo sotto uno
+ * schermo, non un portatile. */
+export function computer({ largo = 700, alto = 438, dentro = "", stile = "", scala = 1 }) {
+  const apparecchio = `
+  <div style="width:${largo + 28}px;${stile}">
+    <div style="border-radius:16px;padding:14px 14px 16px;background:linear-gradient(155deg,#2b3648,#141d2c);
+                box-shadow:0 40px 80px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08)">
+      <div style="position:relative;width:${largo}px;height:${alto}px;border-radius:7px;overflow:hidden;background:#f0f4f8;color:#0f172a">
+        ${dentro}
+      </div>
+    </div>
+    <div style="width:${Math.round(largo * 1.14)}px;height:15px;margin:0 auto;
+                background:linear-gradient(180deg,#38445a,#1b2434);
+                clip-path:polygon(0 0,100% 0,97.5% 100%,2.5% 100%);
+                border-radius:0 0 7px 7px"></div>
+    <div style="width:${Math.round(largo * 0.17)}px;height:5px;margin:-15px auto 0;position:relative;
+                background:#0e1725;border-radius:0 0 6px 6px"></div>
+  </div>`;
+  return rimpicciolito(apparecchio, largo + 28, alto + 50, scala);
+}
+
+/* Rimpicciolire uno schermo **da fuori**, con l'involucro che prende la misura
+ * scalata.
+ *
+ * Non si rifa' piu' piccolo quello che c'e' dentro: una plancia disegnata in
+ * quattrocento pixel invece che in settecento non e' la stessa plancia piu'
+ * piccola, e' un'altra plancia — le tessere si stringono, le scritte vanno a
+ * capo, il menu non ci sta. Cosi' invece lo schermo e' sempre lo stesso e
+ * cambia solo quanto lo si guarda da lontano. */
+function rimpicciolito(roba, largo, alto, scala) {
+  if (scala === 1) return roba;
+  return `<div style="width:${Math.round(largo * scala)}px;height:${Math.round(alto * scala)}px;
+    transform:scale(${scala});transform-origin:top left">${roba}</div>`;
+}

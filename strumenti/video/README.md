@@ -88,20 +88,35 @@ le scene del film corto non sono disposte a coordinate come quelle del film
 lungo, ma **a colonna**: si mettono in fila e si dispongono da sole con lo
 spazio che trovano, che in un quadrato e in un palco in piedi è diverso.
 
-### Le copertine, e dove Facebook taglia
+### Le copertine: i tre schermi
 
-Le due copertine sono ferme — nessuna animazione — ma sono disegnate con gli
-stessi pezzi dei film, e sono **due** perché Facebook le taglia in due modi
-diversi:
+Le due copertine sono ferme — nessuna animazione — e dicono una cosa sola: **la
+stessa casa su tutti e tre gli schermi**. Chi vede gdahome per la prima volta
+pensa a un'app da telefono, e il computer non se lo immagina; scriverglielo non
+basta, e allora ci sono i tre dispositivi con sopra la plancia **com'è davvero
+su ognuno**:
 
-- **il gruppo** (1640×856): sul telefono la striscia si accorcia, e il nome del
-  gruppo finisce sopra la fascia di sotto. Per questo il testo sta nella metà
-  alta e la parte bassa è vuota.
+| schermo | com'è disegnato |
+|---|---|
+| computer | `planciaLarga({ colonne: 4, quante: 12, menu: true })` — quattro colonne e il menu aperto di fianco, che dal browser resta aperto per davvero |
+| tablet | `planciaLarga({ colonne: 3, quante: 12 })` in una cornice 420×560 |
+| telefono | la stessa `plancia()` dei film, due colonne |
+
+Gli schermi si disegnano **grandi e poi si guardano da lontano**
+(`rimpicciolito`): una plancia disegnata in quattrocento pixel invece che in
+settecento non è la stessa plancia più piccola, è un'altra plancia — le tessere
+si stringono, le scritte vanno a capo, il menu non ci sta. È il difetto che si
+era visto nel tablet, con «3 accese» che andava a capo e usciva dal bordo.
+
+E sono **due** copertine perché Facebook le taglia in due modi diversi:
+
+- **il gruppo** (1640×856): sul telefono la striscia si accorcia, e in fondo ci
+  finisce sopra il nome del gruppo. Per questo le parole stanno in alto e gli
+  schermi sotto, dove al massimo si perde un pezzo di cornice.
 - **la pagina** (1640×624): sul telefono se ne vede solo la **parte in mezzo**,
-  due terzi scarsi della larghezza — da 279 a 1361 —, e in basso a sinistra, sul
-  computer, ci finisce sopra la foto del profilo. Per questo tutto quello che
-  conta sta in mezzo, e ai lati ci sono solo i disegni della plancia: roba che
-  si può perdere.
+  due terzi scarsi della larghezza — da 279 a 1361 — e in basso a sinistra, sul
+  computer, ci finisce sopra la foto del profilo. Per questo è tutto in mezzo, e
+  gli schermi cominciano più a destra di dove arriva quella foto.
 
 Come si controlla, invece di sperarci — si ritaglia quello che vedrebbe il
 telefono e si guarda se manca qualcosa:
