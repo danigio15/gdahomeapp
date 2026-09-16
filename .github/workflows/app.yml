@@ -29,8 +29,8 @@ jobs:
   android:
     name: Android (APK)
     runs-on: ubuntu-latest
-    # Per attaccare il pacchetto a una release, e solo per quello: gli altri
-    # lavori restano in sola lettura.
+    # Per pubblicare la release a ogni etichetta, e solo per quello: gli
+    # altri lavori restano in sola lettura.
     permissions:
       contents: write
     steps:
@@ -244,73 +244,71 @@ jobs:
             echo "Play Console, in Test and release."
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # Novanta giorni, e non trenta come gli altri: e' il massimo che GitHub
+      # da', e questo e' l'unico pacchetto che serve **dopo**. Gli altri sono
+      # roba da provare subito; questo si carica nel Play Console, e fra il
+      # giorno in cui si costruisce una versione e il giorno in cui la si
+      # pubblica sul negozio puo' passare un mese buono.
       - uses: actions/upload-artifact@v4
         if: steps.chiave.outputs.vera == 'si'
         with:
           name: gdahome-android-negozio
           path: app/build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 90
 
-      # Il pacchetto dove chi lo deve installare lo trova.
+      # La release: il segno che questa versione esiste, e cosa cambia.
       #
-      # Da «Actions» lo scarica solo chi e' entrato in GitHub, e dopo trenta
-      # giorni non c'e' piu'. Una **release** invece e' un indirizzo che si apre
-      # dal telefono: si tocca il file e Android lo installa. E' quello che si
-      # manda a qualcuno.
+      # **L'APK non ci va.** Quel pacchetto lo firma la chiave di gdahome;
+      # quello del Play Store lo firma Google. Android non installa un
+      # pacchetto sopra uno con firma diversa: chi fosse partito da qui, il
+      # giorno che passa al negozio, dovrebbe disinstallare e riabbinare il
+      # telefono — e perdere tutto. Finche' il file stava sulla pagina delle
+      # release, quella trappola andava spiegata in un paragrafo di avvertenze
+      # dentro le note. Tolto il file, non c'e' piu' niente da spiegare.
       #
-      # **Solo firmato con la chiave vera.** Un pacchetto pubblico firmato con
-      # la chiave di prova sarebbe un invito: quella chiave e la sua parola
-      # stanno scritte nella repository, chiunque ne firmerebbe un altro, e il
-      # telefono se lo prenderebbe come un aggiornamento di questo. Finche' la
-      # chiave vera non c'e', il pacchetto resta fra gli artefatti — dove lo
-      # prende chi sa cos'e'.
+      # Non e' una perdita: di quei pacchetti, in due release, non ne ha
+      # scaricato **nessuno** — chi prova l'app la prende dalla prova chiusa
+      # del Play Store, e chi la costruisce la prende dagli artefatti.
+      #
+      # Li' restano tutt'e due, l'APK e l'`.aab` del negozio. La release resta
+      # per quello per cui serve davvero: un indirizzo che dice «c'e' la
+      # 1.4.32, ed ecco cosa e' cambiato». Senza allegati non ha piu' bisogno
+      # della chiave vera, e si fa a ogni etichetta.
       - name: La release
-        if: github.ref_type == 'tag' && steps.chiave.outputs.vera == 'si'
+        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           quale="${GITHUB_REF_NAME#v}"
-          cp app/build/app/outputs/flutter-apk/app-release.apk "gdahome-$quale.apk"
+          corsa="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           {
-            echo "L'app di gdahome per Android, versione $quale."
+            echo "gdahome $quale: l'add-on per Home Assistant, e l'app."
             echo ""
-            echo "Si scarica il file .apk dal telefono e si tocca. Android chiede il"
-            echo "permesso di installare da qui: e' la stessa domanda che fa per"
-            echo "qualunque app che non venga dal suo negozio."
+            echo "**L'add-on si aggiorna da se'**: Impostazioni → Add-on → gdahome, e"
+            echo "c'e' il tasto. Chi non ce l'ha ancora lo trova nel negozio degli"
+            echo "add-on aggiungendo questa repository fra gli Archivi; COME_PROVARLA.md"
+            echo "lo spiega per intero."
             echo ""
-            echo "Serve l'add-on **gdahome** dentro Home Assistant, e un codice di"
-            echo "abbinamento fatto dalla sua scheda. Come si mette in piedi tutto:"
-            echo "COME_PROVARLA.md."
+            echo "**L'app arriva dal Play Store.** Qui il pacchetto non c'e', ed e'"
+            echo "voluto: quello firmato da noi e quello firmato da Google non si"
+            echo "installano uno sopra l'altro, e partire da qui vorrebbe dire"
+            echo "disinstallare e riabbinare il telefono il giorno che si passa al"
+            echo "negozio."
             echo ""
-            echo "---"
-            echo ""
-            echo "**Una cosa da sapere prima di installarlo.** Questo pacchetto e'"
-            echo "firmato con la chiave di gdahome; quello del Play Store lo firma"
-            echo "Google. Android non installa un pacchetto sopra uno con firma"
-            echo "diversa: chi parte da qui, il giorno che gdahome sara' sul negozio,"
-            echo "per passare di la' dovra' disinstallare e riabbinare il telefono."
-            echo "Fra pacchetti di **questa** serie invece si aggiorna sopra, senza"
-            echo "perdere niente."
+            echo "Chi la sta provando trova i pacchetti di questa versione — Android,"
+            echo "iPhone, browser, e l'\`.aab\` per il Play Console — fra gli artefatti"
+            echo "della corsa che l'ha costruita: $corsa"
           } > note.md
-          gh release create "$GITHUB_REF_NAME" \
-            --title "gdahome $quale" --notes-file note.md "gdahome-$quale.apk" ||
-            gh release upload "$GITHUB_REF_NAME" "gdahome-$quale.apk" --clobber
+          # Una release puo' esserci gia': l'etichetta si puo' spingere da
+          # GitHub, e li' la release nasce insieme a lei. In quel caso non si
+          # ricomincia da capo, si riscrivono le note.
+          gh release create "$GITHUB_REF_NAME" --title "gdahome $quale" --notes-file note.md ||
+            gh release edit "$GITHUB_REF_NAME" --title "gdahome $quale" --notes-file note.md
           {
             echo "### Pubblicato"
             echo ""
             gh release view "$GITHUB_REF_NAME" --json url --jq .url
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Niente release senza la chiave vera
-        if: github.ref_type == 'tag' && steps.chiave.outputs.vera != 'si'
-        run: |
-          {
-            echo "### Nessuna release"
-            echo ""
-            echo "Questo pacchetto e' firmato con la chiave di prova, e una release"
-            echo "pubblica firmata cosi' non si fa: quella chiave sta nella repository."
-            echo "Il pacchetto e' qui sopra, fra gli artefatti."
           } >> "$GITHUB_STEP_SUMMARY"
 
   iphone:
