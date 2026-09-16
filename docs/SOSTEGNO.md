@@ -75,12 +75,10 @@ accettano sponsorizzazioni; PayPal, sotto, funziona da subito.
 
 ## I testi, pronti da incollare
 
-Ogni testo sta qui in italiano e in inglese, perché la pagina degli sponsor la
-legge anche chi arriva da fuori. Su GitHub però il campo è uno solo: per la
-presentazione, per l'obiettivo e per il messaggio si incollano tutti e due,
-l'inglese sotto, separati da una riga vuota; per i livelli il nome sta su una
-riga sola, quindi si scrive `Una mano · A hand` e l'inglese va in fondo alla
-descrizione.
+Su GitHub il campo è **uno solo**: non c'è un interruttore per la lingua, e chi
+apre la pagina degli sponsor arriva anche da fuori dall'Italia. Quindi ogni
+riquadro qui sotto è già nelle due lingue, italiano sopra e inglese sotto: si
+copia tutto intero, così com'è, e ci si ritrova con tutti e due.
 
 ### La presentazione
 
@@ -96,9 +94,9 @@ descrizione.
 > Sostenerlo non sblocca niente — e non deve. **Gratis non vuol dire finito**:
 > gli aiutanti, lo Zigbee, il mago delle automazioni sono scritti nel piano, e
 > ogni sostegno è una di quelle righe che diventa vera.
-
-In inglese:
-
+>
+> · · ·
+>
 > **gdahome — your home as one screen, on your phone.**
 >
 > A Home Assistant add-on and an Android/iPhone app: install the add-on, scan a
@@ -122,9 +120,7 @@ di soldi in pubblico:
 > Non per pagare una fattura: per sapere che questo progetto sta in piedi da
 > solo, e poter dire di sì alla prossima riga del piano — gli aiutanti, lo
 > Zigbee, le automazioni.
-
-In inglese:
-
+>
 > **Goal: twenty sponsors.**
 > Not to pay a bill: to know this project stands on its own, and to be able to
 > say yes to the next line of the plan — helpers, Zigbee, automations.
@@ -132,25 +128,44 @@ In inglese:
 ### I livelli
 
 Tre al mese e due una tantum bastano. I nomi dicono cosa pagano, non quanto
-vali tu che dai.
+vali tu che dai; il nome sta su una riga sola, quindi le due lingue ci stanno
+insieme separate da un punto.
 
-| quanto | nome | cosa dire |
-|---|---|---|
-| **3 €/mese** | Una mano | «Il caffè del mese. Non sblocca niente, e non deve: tiene aperta la porta a chi scrive per chiedere aiuto.» |
-| **8 €/mese** | Il piano che va avanti | «Gli aiutanti, lo Zigbee, le automazioni: è il tempo che le fa passare dal piano alla plancia.» |
-| **20 €/mese** | Chi la tiene in piedi | «Il tempo: scrivere il codice, tenere in piedi le prove, rispondere. È quello che fa la differenza fra un progetto vivo e uno fermo.» |
-| **5 €** una volta | Un grazie | «Una volta sola, se ti è stata utile.» |
-| **25 €** una volta | Una spinta | «Una volta sola, per far correre un pezzo del piano.» |
+**3 €/mese** — nome: `Una mano · A hand`
 
-In inglese, da mettere in fondo alla stessa descrizione:
+> Il caffè del mese. Non sblocca niente, e non deve: tiene aperta la porta a
+> chi scrive per chiedere aiuto.
+>
+> The coffee of the month. It unlocks nothing, and it shouldn't: it keeps the
+> door open for anyone who writes in for help.
 
-| how much | name | what to say |
-|---|---|---|
-| **€3/month** | A hand | "The coffee of the month. It unlocks nothing, and it shouldn't: it keeps the door open for anyone who writes in for help." |
-| **€8/month** | The plan moving on | "Helpers, Zigbee, automations: this is the time that walks them from the plan to the dashboard." |
-| **€20/month** | Keeping it standing | "Time: writing the code, keeping the tests alive, answering. That's the difference between a project that's alive and one that's stopped." |
-| **€5** once | A thank you | "Just once, if it has been useful to you." |
-| **€25** once | A push | "Just once, to make one piece of the plan go faster." |
+**8 €/mese** — nome: `Il piano che va avanti · The plan moving on`
+
+> Gli aiutanti, lo Zigbee, le automazioni: è il tempo che le fa passare dal
+> piano alla plancia.
+>
+> Helpers, Zigbee, automations: this is the time that walks them from the plan
+> to the dashboard.
+
+**20 €/mese** — nome: `Chi la tiene in piedi · Keeping it standing`
+
+> Il tempo: scrivere il codice, tenere in piedi le prove, rispondere. È quello
+> che fa la differenza fra un progetto vivo e uno fermo.
+>
+> Time: writing the code, keeping the tests alive, answering. That's the
+> difference between a project that's alive and one that's stopped.
+
+**5 € una volta** — nome: `Un grazie · A thank you`
+
+> Una volta sola, se ti è stata utile.
+>
+> Just once, if it has been useful to you.
+
+**25 € una volta** — nome: `Una spinta · A push`
+
+> Una volta sola, per far correre un pezzo del piano.
+>
+> Just once, to make one piece of the plan go faster.
 
 ### Il messaggio a chi si iscrive
 
@@ -158,9 +173,9 @@ In inglese, da mettere in fondo alla stessa descrizione:
 > è gratis per tutti e resta così — è proprio questo che stai tenendo in piedi.
 > Se trovi un difetto o ti manca qualcosa, scrivilo dalle Segnalazioni dentro
 > l'app: quelle le leggo tutte.
-
-In inglese:
-
+>
+> · · ·
+>
 > Thank you. I haven't unlocked anything for you, because there is nothing to
 > unlock: gdahome is free for everyone and stays that way — and that is exactly
 > what you are keeping alive. If something is broken or missing, write it from
@@ -168,6 +183,7 @@ In inglese:
 
 L'app parla italiano, quindi il nome della schermata resta in italiano anche
 nel testo inglese: chi legge deve ritrovare la voce che vede davvero nel menu.
+
 
 ## Quello che un sostegno non compra
 
