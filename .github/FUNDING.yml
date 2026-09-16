@@ -1,18 +1,25 @@
 # Chi tiene in piedi gdahome.
 #
-# Questo file fa una cosa sola: mette il tasto **Sponsor** in cima alla pagina
-# della repository, e nella colonna di destra. Non iscrive nessuno a niente —
-# l'iscrizione a GitHub Sponsors si fa a mano su github.com/sponsors, con la
-# verifica dell'identita', il conto e il modulo fiscale, e da quel giorno in poi
-# questo tasto porta dove deve.
+# Questo file mette il tasto **Sponsor** in cima alla pagina della repository.
+# Le voci qui sotto diventano le voci del suo menu, nell'ordine in cui stanno
+# scritte: la prima e' quella che la gente preme.
 #
-# E' l'unico canale di gdahome. Il tasto «Sostieni il progetto» che si vede
-# nella plancia **non e' questo**: quello e' di DashboardModern, che e' un altro
-# lavoro dello stesso autore, e dentro l'app sta nascosto apposta
-# (`app/lib/plancia/premesse.dart`) — una donazione verso un altro progetto,
-# dentro una pagina che porta il nome gdahome, non si capisce.
+# L'ordine non e' casuale ed e' l'unica cosa che conta davvero in questo file.
+# Su **GitHub Sponsors** non si perde niente — GitHub non trattiene nulla e
+# paga lui le commissioni d'incasso — mentre su PayPal se ne perde circa il tre
+# e mezzo per cento. Messe in fila cosi', chi vuole dare una mano trova per
+# prima quella dove arriva tutto.
 #
-# Finche' l'account non e' iscritto, chi preme il tasto trova una pagina che
-# dice che non si accettano sponsorizzazioni: e' una riga da togliere, se si
-# decidesse di aspettare.
+# `github` funziona dal giorno in cui l'account e' iscritto a GitHub Sponsors:
+# e' una pratica a mano (documento, IBAN, modulo fiscale) che non si puo' fare
+# da un file. Fino ad allora quella voce porta a una pagina che dice che non si
+# accettano sponsorizzazioni; PayPal invece funziona da adesso.
+#
+# **Il PayPal e' lo stesso conto del tasto «Sostieni il progetto» della
+# plancia**, che e' di DashboardModern. Il conto e' della stessa persona, e va
+# bene; quello che resta vero e' il motivo per cui dentro l'app quel tasto sta
+# nascosto (`app/lib/plancia/premesse.dart`): li' si presenta come la donazione
+# di un altro progetto dentro una pagina che porta il nome gdahome, e non si
+# capisce. Qui invece e' dichiarato per quello che e'.
 github: [danigio15]
+custom: ["https://www.paypal.com/paypalme/giovannidaniello15"]
