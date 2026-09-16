@@ -22,6 +22,8 @@
 <p align="center">
   <a href="https://github.com/danigio15/gdahomeapp/releases"><img src="https://img.shields.io/github/v/release/danigio15/gdahomeapp?label=versione&color=0ea5e9" alt="Ultima versione"></a>
   <a href="https://github.com/danigio15/gdahomeapp/actions/workflows/prove.yml"><img src="https://github.com/danigio15/gdahomeapp/actions/workflows/prove.yml/badge.svg" alt="Le prove"></a>
+  <a href="https://github.com/danigio15/gdahomeapp/blob/contatori/traffico.json"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdanigio15%2Fgdahomeapp%2Fcontatori%2Fbollino-case.json&cacheSeconds=3600" alt="Case con gdahome"></a>
+  <a href="https://github.com/danigio15/gdahomeapp/blob/contatori/traffico.json"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdanigio15%2Fgdahomeapp%2Fcontatori%2Fbollino-scaricamenti.json&cacheSeconds=3600" alt="Scaricamenti"></a>
   <a href="https://www.paypal.com/paypalme/giovannidaniello15"><img src="https://img.shields.io/badge/PayPal-sostieni-003087?logo=paypal&logoColor=white" alt="Sostieni il progetto con PayPal"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-OS%20%7C%20Supervised-18BCF2" alt="Home Assistant OS o Supervised">
   <img src="https://img.shields.io/badge/Android%20%C2%B7%20iPhone%20%C2%B7%20browser-16a34a" alt="Android, iPhone, browser">
@@ -166,7 +168,7 @@ l'abbinamento, cosa finisce sul disco — sta in
 | ✅ | **Segnalazioni** con foto e video, e una **chat di assistenza** — quella della dashboard, che il ponte fa da sé |
 | ✅ | **Gli aggiornamenti di casa nel menu**, col numero addosso alla voce: Home Assistant, gli add-on, gdahome, i firmware. Si installano da lì, e da lì si riavvia la casa |
 | ✅ | **Dal browser**, senza installare niente: la stessa app, che si adatta allo schermo |
-| ✅ | **810 prove** — 409 sul ponte, 85 sul centralino, 16 sulla nuvola, 300 sull'app — senza rete, senza Home Assistant, senza telefono |
+| ✅ | **821 prove** — 420 sul ponte, 85 sul centralino, 16 sulla nuvola, 300 sull'app — senza rete, senza Home Assistant, senza telefono |
 | ⬜ | Gli aiutanti di Home Assistant, nativi nell'app |
 | ⬜ | Zigbee: abbinare un dispositivo da qui (ZHA e Zigbee2MQTT) |
 | ⬜ | Le automazioni, scritte dall'app |
@@ -225,6 +227,18 @@ aprire. Se ti è utile e puoi permettertelo, [dai una mano](#sostieni-il-progett
 non cambia niente di quello che funziona, ma cambia quanto tempo ci si può
 mettere.
 
+**Quelle due targhette in cima contano cosa?**
+Le **case**: quante, in quattordici giorni, hanno scaricato gdahome da qui.
+Non è un sondaggio e non è telemetria — dall'add-on non esce niente. È che un
+add-on non si scarica come un'integrazione: si aggiunge questa repository fra
+gli Archivi, e da lì in poi è **Home Assistant a clonarla** ogni volta che
+rinfresca il negozio. Quei cloni GitHub li conta, e sono le case accese e
+aggiornate: chi spegne tutto sparisce dal conto in un paio di giorni. Gli
+**scaricamenti** invece sono tutti i passaggi da quando si conta, e crescono e
+basta. I numeri li rifà [una corsa al
+giorno](.github/workflows/quante-case.yml), e la loro storia sta [sul ramo
+`contatori`](https://github.com/danigio15/gdahomeapp/blob/contatori/traffico.json).
+
 **Dove finiscono le cose che segnalo?**
 Nelle [issue di questa repository](https://github.com/danigio15/gdahomeapp/issues).
 Si scrivono dall'app — **Segnalazioni** nel menu, con foto e video — e passano
@@ -274,8 +288,8 @@ finto che fa lo stesso. È l'unico modo di avere prove che girino davvero a ogni
 commit.
 
 ```bash
-npm test                        # ponte, centralino e nuvola: 510 prove
-npm run test:ponte              # il ponte: 409 prove, due secondi
+npm test                        # ponte, centralino e nuvola: 521 prove
+npm run test:ponte              # il ponte: 420 prove, due secondi
 cd app && flutter test          # l'app: 300 prove, mezzo minuto
 
 npm run format:check            # prettier, sui file nostri
