@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* Chi filma.
  *
- * Apre `presentazione.html` in un Chromium, e per ogni scena fa una cosa
+ * Apre la pagina di un film in un Chromium, e per ogni scena fa una cosa
  * sola, tante volte: sposta l'orologio delle animazioni al fotogramma che
  * tocca, scatta, e passa lo scatto a ffmpeg. Il filmato esce da li'.
  *
@@ -11,22 +11,20 @@
  * Qui il tempo non passa, si dice: venticinque fotogrammi al secondo esatti,
  * sempre gli stessi.
  *
- *   node strumenti/video/rendi.mjs
- *   node strumenti/video/rendi.mjs --scena il-codice      una scena sola
- *   node strumenti/video/rendi.mjs --foto il-codice@3.2   una fotografia
+ *   node strumenti/video/rendi.mjs                 tutti e tre i film
+ *   node strumenti/video/rendi.mjs --film tiktok   uno solo
+ *   node strumenti/video/rendi.mjs --scena il-codice          una scena sola
+ *   node strumenti/video/rendi.mjs --foto il-codice@3.2       una fotografia
  *
- * Il suono non c'e', e non e' una dimenticanza: il ffmpeg che si trova qui
- * dentro e' quello di Playwright, che sa fare il video e basta. Le parole
- * stanno scritte sul filmato, e il copione per chi le volesse leggere sta in
- * `copione.md`.
+ * Il suono non c'e' in nessuno dei tre: le parole stanno scritte sopra. Nei
+ * due film per i social c'e' pero' una traccia **muta**, perche' un negozio
+ * che riceve un video senza nessuna traccia audio ogni tanto lo rifiuta.
  */
 
 import { createServer } from "node:http";
-import { createRequire } from "node:module";
-import { execFileSync } from "node:child_process";
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { once } from "node:events";
-import { readFile, writeFile, readdir } from "node:fs/promises";
+import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -34,22 +32,54 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const QUI = path.dirname(fileURLToPath(import.meta.url));
 const RADICE = path.resolve(QUI, "..", "..");
 const AL_SECONDO = 25;
-const LARGO = 1280;
-const ALTO = 720;
 
-/* La copertina: il fotogramma che si mette come anteprima dove il filmato non
-   si vede ancora — la pagina della cartella, un messaggio, il negozio dei
-   video. Si rifà a ogni ripresa intera, cosi' non resta indietro. */
-const COPERTINA = { scena: "apertura", quando: 3.2 };
+/* I film.
+ *
+ * Il lungo e' quello che spiega; i due per i social dicono le stesse cose in
+ * quarantasei secondi, e sono **lo stesso film** con due palchi diversi: un
+ * quadrato per Facebook, uno in piedi per TikTok.
+ *
+ * `su` e `giu` sono l'aria da lasciare sopra e sotto. Su TikTok quella sotto
+ * non e' scelta da noi: li' ci stanno il testo, i tasti e il nome di chi
+ * pubblica, e un video che ci scrive sotto e' un video scritto per meta'.
+ */
+const FILM = {
+  presentazione: {
+    pagina: "presentazione.html",
+    largo: 1280,
+    alto: 720,
+    uscita: "gdahome-presentazione",
+    ritmo: "2600k",
+    copertina: { scena: "apertura", quando: 3.2 },
+  },
+  facebook: {
+    pagina: "social.html",
+    largo: 1080,
+    alto: 1080,
+    posa: { su: 72, giu: 72, aria: 30, zoom: 1 },
+    uscita: "gdahome-facebook",
+    ritmo: "3400k",
+    muto: true,
+    copertina: { scena: "il-gancio", quando: 3.2 },
+  },
+  tiktok: {
+    pagina: "social.html",
+    largo: 1080,
+    alto: 1920,
+    posa: { su: 210, giu: 390, aria: 40, zoom: 1.15 },
+    uscita: "gdahome-tiktok",
+    ritmo: "4200k",
+    muto: true,
+    copertina: { scena: "il-gancio", quando: 3.2 },
+  },
+};
 
 /* ── Gli attrezzi, dove stanno ────────────────────────────────────────── */
 
-/* Playwright sta installato di fianco al progetto o fra i pacchetti globali:
-   si prova il primo posto, e se non c'e' si chiede a npm dov'e' il secondo. */
+/* Playwright sta installato di fianco al progetto o fra i pacchetti globali,
+   e in un caso arriva impacchettato in `default`: e' scritto alla vecchia
+   maniera, e chi lo importa cosi' se lo trova li' dentro. */
 async function apriPlaywright() {
-  /* Preso di fianco al progetto o fra i pacchetti globali, e in un caso
-     arriva impacchettato in `default`: Playwright e' scritto alla vecchia
-     maniera, e chi lo importa cosi' se lo trova li' dentro. */
   const dentro = (roba) => roba?.chromium ?? roba?.default?.chromium;
   try {
     const vicino = await import("playwright");
@@ -67,11 +97,30 @@ async function apriPlaywright() {
   return lontano;
 }
 
-/* ffmpeg: quello di sistema se c'e', se no quello che Playwright si porta
-   dietro — sa fare webm/VP8 e gli va bene una fila di JPEG in pasto. */
+/* ffmpeg, e cosa sa fare.
+ *
+ * Quello di sistema, se c'e', sa fare **mp4**, ed e' quello che vogliono i
+ * negozi dei video: TikTok un webm non lo prende, e Facebook lo prende male.
+ * Quello che Playwright si porta dietro sa fare solo webm/VP8 — va benissimo
+ * per guardare il filmato in un browser, e per i social e' un ripiego che va
+ * detto invece che scoperto dopo. */
 async function trovaFfmpeg() {
+  const prova = (dove) => {
+    try {
+      const encoder = execFileSync(dove, ["-hide_banner", "-encoders"], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      });
+      return { dove, mp4: encoder.includes("libx264") };
+    } catch {
+      return null;
+    }
+  };
+
   try {
-    return execFileSync("sh", ["-c", "command -v ffmpeg"], { encoding: "utf8" }).trim();
+    const inCammino = execFileSync("sh", ["-c", "command -v ffmpeg"], { encoding: "utf8" }).trim();
+    const buono = inCammino && prova(inCammino);
+    if (buono) return buono;
   } catch {
     /* niente in PATH: si guarda nella cartella dei browser di Playwright */
   }
@@ -80,10 +129,89 @@ async function trovaFfmpeg() {
     for (const nome of await readdir(cartella)) {
       if (!nome.startsWith("ffmpeg")) continue;
       const dove = path.join(cartella, nome, "ffmpeg-linux");
-      if (existsSync(dove)) return dove;
+      if (existsSync(dove)) return { dove, mp4: false };
     }
   }
   throw new Error("ffmpeg non trovato: installalo, oppure lascia fare a Playwright.");
+}
+
+/* Come si impacchetta: mp4 se si puo', se no webm. */
+function comeSiImpacchetta(ffmpeg, film, uscita) {
+  const dentro = [
+    "-f",
+    "image2pipe",
+    "-c:v",
+    "mjpeg",
+    "-framerate",
+    String(AL_SECONDO),
+    "-i",
+    "pipe:0",
+  ];
+  if (!ffmpeg.mp4) {
+    return [
+      ...dentro,
+      "-an",
+      "-c:v",
+      "libvpx",
+      "-b:v",
+      film.ritmo,
+      "-crf",
+      "12",
+      "-qmin",
+      "3",
+      "-qmax",
+      "40",
+      "-deadline",
+      "good",
+      "-cpu-used",
+      "3",
+      "-auto-alt-ref",
+      "0",
+      "-pix_fmt",
+      "yuv420p",
+      "-threads",
+      "4",
+      `${uscita}.webm`,
+    ];
+  }
+  /* La traccia muta: un video senza nessun audio ogni tanto un negozio lo
+     rifiuta, e accorgersene mentre si pubblica e' la cosa peggiore. */
+  const suono = film.muto
+    ? [
+        "-f",
+        "lavfi",
+        "-i",
+        "anullsrc=channel_layout=stereo:sample_rate=44100",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "96k",
+        "-shortest",
+      ]
+    : ["-an"];
+  return [
+    ...dentro,
+    ...suono,
+    "-c:v",
+    "libx264",
+    "-preset",
+    "medium",
+    "-crf",
+    "20",
+    "-maxrate",
+    film.ritmo,
+    "-bufsize",
+    "8M",
+    "-profile:v",
+    "high",
+    "-level",
+    "4.0",
+    "-pix_fmt",
+    "yuv420p",
+    "-movflags",
+    "+faststart",
+    `${uscita}.mp4`,
+  ];
 }
 
 /* ── Il quadretto ─────────────────────────────────────────────────────── */
@@ -93,11 +221,12 @@ async function trovaFfmpeg() {
    qui dentro. Quello che ci sta scritto e' un codice **finto**, e lo dice:
    chi lo inquadra si trova in mano una frase, non un abbinamento. */
 async function fabbricaIlQuadretto() {
-  const dove = path.join(QUI, "quadretto.svg");
   const { qrInSvg } = await import(pathToFileURL(path.join(RADICE, "ponte/src/qr.js")).href);
   const finto = "gdahome://codice-finto-del-video/non-abbina-niente";
-  await writeFile(dove, qrInSvg(finto, { titolo: "Codice di abbinamento (finto)" }));
-  return dove;
+  await writeFile(
+    path.join(QUI, "quadretto.svg"),
+    qrInSvg(finto, { titolo: "Codice di abbinamento (finto)" }),
+  );
 }
 
 /* ── Un servitore, per i file che stanno qui ──────────────────────────── */
@@ -132,36 +261,20 @@ function servitore() {
   return new Promise((pronto) => server.listen(0, "127.0.0.1", () => pronto(server)));
 }
 
+/* L'indirizzo di un film: la sua pagina, piu' come sta in piedi il palco. */
+const indirizzo = (porta, film) => {
+  const roba = new URLSearchParams({ alto: film.alto, ...(film.posa ?? {}) });
+  return `http://127.0.0.1:${porta}/strumenti/video/${film.pagina}?${roba}`;
+};
+
 /* ── La ripresa ───────────────────────────────────────────────────────── */
 
 const detto = (...cose) => console.log(...cose);
 
-async function main() {
-  const argomenti = process.argv.slice(2);
-  const valore = (nome) => {
-    const dove = argomenti.indexOf(nome);
-    return dove === -1 ? null : argomenti[dove + 1];
-  };
-  const soloQuesta = valore("--scena");
-  const fotografie = valore("--foto");
-  /* Una scena sola finisce fra i provini, non sopra il filmato buono: chi
-     prova una scena non si aspetta di perdere gli altri due minuti. */
-  const uscita =
-    valore("--dove") ||
-    (soloQuesta
-      ? path.join(QUI, "provini", `${soloQuesta}.webm`)
-      : path.join(QUI, "gdahome-presentazione.webm"));
-
-  await fabbricaIlQuadretto();
-  const chromium = await apriPlaywright();
-  const server = await servitore();
-  const porta = server.address().port;
-
-  const browser = await chromium.launch({
-    args: ["--force-color-profile=srgb", "--font-render-hinting=none", "--disable-lcd-text"],
-  });
+/* Apre la pagina di un film e aspetta che sia pronta a farsi fotografare. */
+async function apriIlFilm(browser, porta, film) {
   const pagina = await browser.newPage({
-    viewport: { width: LARGO, height: ALTO },
+    viewport: { width: film.largo, height: film.alto },
     deviceScaleFactor: 1,
   });
   const guai = [];
@@ -169,91 +282,38 @@ async function main() {
   pagina.on("console", (riga) => {
     if (riga.type() === "error") guai.push(riga.text());
   });
-
-  await pagina.goto(`http://127.0.0.1:${porta}/strumenti/video/presentazione.html`, {
-    waitUntil: "networkidle",
-  });
+  await pagina.goto(indirizzo(porta, film), { waitUntil: "networkidle" });
   await pagina.waitForFunction(() => window.video !== undefined, null, { timeout: 15000 });
   await pagina.evaluate(() => window.video.pronta());
+  if (guai.length) detto("⚠ la pagina si lamenta:", guai.slice(0, 3).join(" / "));
+  return { pagina, elenco: await pagina.evaluate(() => window.video.elenco) };
+}
 
-  const elenco = await pagina.evaluate(() => window.video.elenco);
-  if (guai.length) {
-    detto("⚠ la pagina si lamenta:", guai.slice(0, 5).join(" / "));
-  }
-
-  /* Una fotografia sola, per guardare com'e' venuta una scena. */
-  if (fotografie) {
-    for (const pezzo of fotografie.split(",")) {
-      const [nome, quando] = pezzo.split("@");
-      const quale = elenco.findIndex((s) => s.nome === nome.trim());
-      if (quale === -1) throw new Error(`scena sconosciuta: ${nome}`);
-      await pagina.evaluate((i) => window.video.vaiA(i), quale);
-      await pagina.evaluate((ms) => window.video.vaiAlMomento(ms), Number(quando || 0) * 1000);
-      const dove = path.join(QUI, "provini", `${nome.trim()}-${quando || 0}.png`);
-      await pagina.screenshot({ path: dove });
-      detto("📷", dove);
-    }
-    await browser.close();
-    server.close();
-    return;
-  }
+/* Gira un film intero, o una scena sola. */
+async function gira(browser, porta, ffmpeg, nomeDelFilm, soloQuesta, dove) {
+  const film = FILM[nomeDelFilm];
+  const { pagina, elenco } = await apriIlFilm(browser, porta, film);
 
   const daFare = elenco
     .map((scena, i) => ({ ...scena, i }))
     .filter((scena) => !soloQuesta || scena.nome === soloQuesta);
-  if (!daFare.length) throw new Error(`nessuna scena si chiama «${soloQuesta}»`);
+  if (!daFare.length)
+    throw new Error(`in «${nomeDelFilm}» nessuna scena si chiama «${soloQuesta}»`);
 
-  const ffmpeg = await trovaFfmpeg();
-  detto(`🎬 ${daFare.length} scene · ${AL_SECONDO} fotogrammi al secondo · ${LARGO}×${ALTO}`);
-  detto(`   ffmpeg: ${ffmpeg}`);
-
-  const cuoco = spawn(
-    ffmpeg,
-    [
-      "-y",
-      "-f",
-      "image2pipe",
-      "-c:v",
-      "mjpeg",
-      "-framerate",
-      String(AL_SECONDO),
-      "-i",
-      "pipe:0",
-      "-an",
-      "-c:v",
-      "libvpx",
-      "-b:v",
-      "2600k",
-      "-crf",
-      "12",
-      "-qmin",
-      "3",
-      "-qmax",
-      "40",
-      "-deadline",
-      "good",
-      "-cpu-used",
-      "3",
-      "-auto-alt-ref",
-      "0",
-      "-pix_fmt",
-      "yuv420p",
-      "-threads",
-      "4",
-      uscita,
-    ],
-    { stdio: ["pipe", "ignore", "pipe"] },
-  );
+  /* Una scena sola finisce fra i provini, non sopra il filmato buono: chi
+     prova una scena non si aspetta di perdere gli altri due minuti. */
+  const uscita =
+    dove || (soloQuesta ? path.join(QUI, "provini", soloQuesta) : path.join(QUI, film.uscita));
+  const ricetta = comeSiImpacchetta(ffmpeg, film, uscita);
+  const cuoco = spawn(ffmpeg.dove, ["-y", ...ricetta], { stdio: ["pipe", "ignore", "pipe"] });
   let lamento = "";
   cuoco.stderr.on("data", (pezzo) => (lamento = String(pezzo)));
-
   const manda = async (roba) => {
     if (!cuoco.stdin.write(roba)) await once(cuoco.stdin, "drain");
   };
 
+  detto(`🎬 ${nomeDelFilm} · ${film.largo}×${film.alto} · ${daFare.length} scene`);
   let fotogrammi = 0;
-  const cominciato = Date.now();
-
   for (const scena of daFare) {
     await pagina.evaluate((i) => window.video.vaiA(i), scena.i);
     /* Un giro di disegno prima di chiedere le animazioni: quelle di una scena
@@ -277,31 +337,87 @@ async function main() {
       fotogrammi += 1;
     }
     detto(
-      `   · ${scena.nome.padEnd(26)} ${String(scena.durata).padStart(5)}s  ${String(quanti).padStart(4)} fotogrammi, ${scattati} scattati`,
+      `   · ${scena.nome.padEnd(24)} ${String(scena.durata).padStart(5)}s  ${String(quanti).padStart(4)} fotogrammi, ${scattati} scattati`,
     );
   }
 
   cuoco.stdin.end();
   const [codice] = await once(cuoco, "close");
-
-  /* La copertina, alla fine e solo dalla ripresa intera. */
-  if (!soloQuesta) {
-    const quale = elenco.findIndex((s) => s.nome === COPERTINA.scena);
-    await pagina.evaluate((i) => window.video.vaiA(i), quale);
-    await pagina.evaluate((ms) => window.video.vaiAlMomento(ms), COPERTINA.quando * 1000);
-    await pagina.screenshot({ path: path.join(QUI, "copertina.png") });
-  }
-
-  await browser.close();
-  server.close();
-
   if (codice !== 0) throw new Error(`ffmpeg si e' fermato (${codice}): ${lamento}`);
 
-  const durata = (fotogrammi / AL_SECONDO).toFixed(1);
-  const quanto = ((Date.now() - cominciato) / 1000).toFixed(0);
-  detto(`✅ ${uscita}`);
-  detto(`   ${durata}s di filmato, ${fotogrammi} fotogrammi, ripresi in ${quanto}s`);
-  if (guai.length) detto(`⚠ ${guai.length} lamentele dalla pagina:`, guai.slice(0, 3));
+  /* La copertina: il fotogramma da mettere dove il filmato non si vede
+     ancora. Si rifa' a ogni ripresa intera, cosi' non resta indietro. */
+  if (!soloQuesta) {
+    const quale = elenco.findIndex((s) => s.nome === film.copertina.scena);
+    await pagina.evaluate((i) => window.video.vaiA(i), quale);
+    await pagina.evaluate((ms) => window.video.vaiAlMomento(ms), film.copertina.quando * 1000);
+    await pagina.screenshot({ path: path.join(QUI, `${film.uscita}-copertina.png`) });
+  }
+
+  await pagina.close();
+  const nome = `${uscita}.${ffmpeg.mp4 ? "mp4" : "webm"}`;
+  detto(`✅ ${nome} — ${(fotogrammi / AL_SECONDO).toFixed(1)}s, ${fotogrammi} fotogrammi`);
+  return nome;
+}
+
+async function main() {
+  const argomenti = process.argv.slice(2);
+  const valore = (nome) => {
+    const dove = argomenti.indexOf(nome);
+    return dove === -1 ? null : argomenti[dove + 1];
+  };
+  const quali = valore("--film") ? [valore("--film")] : Object.keys(FILM);
+  for (const nome of quali) {
+    if (!FILM[nome]) throw new Error(`film sconosciuto: ${nome} (ci sono: ${Object.keys(FILM)})`);
+  }
+  const soloQuesta = valore("--scena");
+  const fotografie = valore("--foto");
+
+  await mkdir(path.join(QUI, "provini"), { recursive: true });
+  await fabbricaIlQuadretto();
+  const chromium = await apriPlaywright();
+  const server = await servitore();
+  const porta = server.address().port;
+  const browser = await chromium.launch({
+    args: ["--force-color-profile=srgb", "--font-render-hinting=none", "--disable-lcd-text"],
+  });
+
+  try {
+    /* Una fotografia sola, per guardare com'e' venuta una scena. */
+    if (fotografie) {
+      for (const nomeDelFilm of quali) {
+        const film = FILM[nomeDelFilm];
+        const { pagina, elenco } = await apriIlFilm(browser, porta, film);
+        for (const pezzo of fotografie.split(",")) {
+          const [nome, quando] = pezzo.split("@");
+          const quale = elenco.findIndex((s) => s.nome === nome.trim());
+          if (quale === -1) continue;
+          await pagina.evaluate((i) => window.video.vaiA(i), quale);
+          await pagina.evaluate((ms) => window.video.vaiAlMomento(ms), Number(quando || 0) * 1000);
+          const dove = path.join(
+            QUI,
+            "provini",
+            `${nomeDelFilm}-${nome.trim()}-${quando || 0}.png`,
+          );
+          await pagina.screenshot({ path: dove });
+          detto("📷", dove);
+        }
+        await pagina.close();
+      }
+      return;
+    }
+
+    const ffmpeg = await trovaFfmpeg();
+    detto(`   ffmpeg: ${ffmpeg.dove}${ffmpeg.mp4 ? "" : " — senza h264: esce webm invece di mp4"}`);
+    const cominciato = Date.now();
+    for (const nomeDelFilm of quali) {
+      await gira(browser, porta, ffmpeg, nomeDelFilm, soloQuesta, valore("--dove"));
+    }
+    detto(`   ripresi in ${((Date.now() - cominciato) / 1000).toFixed(0)}s`);
+  } finally {
+    await browser.close();
+    server.close();
+  }
 }
 
 main().catch((guaio) => {

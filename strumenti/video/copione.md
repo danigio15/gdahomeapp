@@ -1,7 +1,8 @@
 # Il copione
 
-Quello che si vede scritto sul filmato, scena per scena, con il momento in cui
-comincia ciascuna. Serve a due cose: leggerlo a voce sopra il video (in fondo
+Quello che si vede scritto sui filmati, scena per scena, con il momento in cui
+comincia ciascuna. Prima il film lungo, poi quello corto per i social — che è
+uno solo, girato in due misure. Serve a due cose: leggerlo a voce sopra il video (in fondo
 c'è come si attacca), e rileggere le parole senza rifare la ripresa.
 
 I tempi fra parentesi sono **dall'inizio della scena**; quelli in grassetto
@@ -113,43 +114,137 @@ Si incolla `https://github.com/danigio15/gdahomeapp`.
 
 ### **2:02** — L'app, dal negozio del telefono *(15s)*
 
-In alto, per tutta la scena: **«Anteprima: sui negozi non c'è ancora»**.
+In alto, per tutta la scena: **«Su Android negli store dal 30 settembre»**.
 
-> (2,2s) Quando sarà pubblicata sarà questa la strada: cercarla e premere
+> (2,2s) Dal **30 settembre** la strada è questa: cercarla e premere
 > **Installa**.
 >
 > (4,8s) Nessun file da passare, nessun permesso strano da concedere.
 >
-> (9,6s) Oggi però sui negozi non c'è: intanto si apre dal browser.
+> (9,6s) Fino a quel giorno si apre dal browser, e non si installa niente.
 
 ### **2:17** — Intanto, oggi *(11,5s)*
 
 Una strada sola — dal browser — in due passi, e sotto la pastiglia **«Per iOS:
-prossimamente»**.
+in fase di sviluppo»**.
 
 > (1,4s) Intanto l'app si apre **dal browser**, e non si installa niente:
 > l'indirizzo lo dà l'add-on.
 >
-> (6,2s) È la stessa app, su qualunque schermo. **Per iOS: prossimamente.**
+> (6,2s) È la stessa app, su qualunque schermo. **Per iOS: in fase di
+> sviluppo.**
 
-### **2:28** — Chiusura *(9,5s)*
+### **2:28** — Quanto costa *(11,5s)*
+
+A sinistra **«Tutto gratis»** e cosa comprende; a destra la scheda gialla, con
+il tasto **«Sostieni il progetto su GitHub Sponsors»**.
+
+> (1,8s) L'add-on, la plancia, l'app, la casa da fuori: **tutto gratis**, senza
+> abbonamenti.
+>
+> (6,2s) Per restare gratis serve una mano: chi può, lo sostiene su **GitHub
+> Sponsors**.
+
+### **2:40** — Chiusura *(9,5s)*
 
 > (2,4s) Un indirizzo da incollare, e un quadretto da inquadrare.
 >
 > (6,4s) **github.com/danigio15/gdahomeapp**
 
-**Fine: 2:37.**
+**Fine: 2:49.**
+
+---
+
+# Il film corto — Facebook e TikTok
+
+Quarantasette secondi, le stesse parole nei due formati: quadrato per Facebook,
+in piedi per TikTok. Qui non ci sono didascalie che vanno e vengono — **le
+parole sono la scena**, e restano finché la scena dura.
+
+### **0:00** — Il gancio *(7s)*
+
+Il marchio, il titolo, e il telefono con la plancia: a metà scena una luce si
+accende da sola.
+
+> gdahome
+>
+> **La tua casa, in una schermata**
+>
+> Luci, clima, energia, tapparelle, telecamere.
+> **Si tocca, e in casa succede.**
+
+### **0:07** — Cosa c'è dentro *(6s)*
+
+> **Tutto quello che hai in casa, già pronto**
+>
+> Luci · Clima · Energia · Sicurezza · Telecamere · Finestre · Irrigazione · Auto
+>
+> **Ventitré sezioni**, e le stanze di casa tua.
+
+### **0:13** — Come si mette *(7s)*
+
+> **Si mette in due mosse**
+>
+> 1. Un **add-on** nel negozio di Home Assistant — si incolla un indirizzo, e compare
+> 2. Un **quadretto** da inquadrare col telefono — e la casa è nell'app, anche da fuori
+>
+> Nessuna password di Home Assistant. Nessuna porta aperta sul router.
+> **Nessuna VPN.**
+
+### **0:20** — Tutto gratis *(7s)*
+
+> E la parte che di solito non c'è:
+>
+> **TUTTO GRATIS**
+>
+> ✓ L'add-on, la plancia e l'app
+> ✓ La casa da fuori, senza abbonamenti
+> ✓ Tutte le case e tutti i telefoni che vuoi
+>
+> Nessun account da fare. **Nessun limite a pagamento.**
+
+### **0:27** — Il sostegno *(7,5s)*
+
+> **E deve restare gratis**
+>
+> Ma gratis non vuol dire che si mantenga da solo: dietro c'è tempo, prove e
+> assistenza.
+>
+> ♥ **Sostieni il progetto su GitHub Sponsors**
+>
+> **Chi può, sostiene. Chi non può, lo usa lo stesso** — e resta gratis per
+> tutti e due.
+
+### **0:34** — Da quando *(7,5s)*
+
+> **Da quando si usa**
+>
+> ✓ **Da subito** — l'add-on, la plancia, e l'app dal browser
+> 📅 **Dal 30 settembre** — l'app per Android, negli store
+> 🔧 **In fase di sviluppo** — la versione per iOS
+>
+> Serve una casa con **Home Assistant**.
+
+### **0:42** — Chiusura *(5,5s)*
+
+> **gdahome**
+>
+> github.com/danigio15/gdahomeapp
+>
+> Gratis, e con il codice aperto. **Sostienilo su GitHub Sponsors.**
+
+**Fine: 0:47.**
 
 ---
 
 ## Se lo si legge a voce
 
-Il filmato è muto (il ffmpeg di Playwright sa fare il video e basta), quindi la
-voce si attacca dopo, senza rifare la ripresa e con un ffmpeg vero:
+I filmati sono muti — le parole stanno scritte sopra — quindi la voce si
+attacca dopo, senza rifare la ripresa:
 
 ```
-ffmpeg -i gdahome-presentazione.webm -i voce.m4a \
-       -c:v copy -c:a libopus -shortest gdahome-con-voce.webm
+ffmpeg -i gdahome-presentazione.mp4 -i voce.m4a -map 0:v -map 1:a \
+       -c:v copy -c:a aac -shortest gdahome-con-voce.mp4
 ```
 
 Due cose da sapere prima di registrare:

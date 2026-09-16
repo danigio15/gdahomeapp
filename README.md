@@ -33,9 +33,10 @@ di Home Assistant.
 I dettagli, i permessi che l'add-on chiede e perche', stanno in
 [`ponte/README.md`](ponte/README.md).
 
-**C'e' un video** di due minuti e mezzo che fa vedere tutta questa strada — il
+**C'e' un video** di tre minuti scarsi che fa vedere tutta questa strada — il
 negozio, l'archivio da incollare, Installa, Avvia, il quadretto da inquadrare e
-la plancia sul telefono: [`strumenti/video/`](strumenti/video/README.md).
+la plancia sul telefono — piu' due corti da mettere sui social, uno quadrato e
+uno in piedi: [`strumenti/video/`](strumenti/video/README.md).
 
 ## Come ci si arriva
 

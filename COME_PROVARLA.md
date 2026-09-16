@@ -11,7 +11,7 @@ Tre pezzi, in quest'ordine:
 Se vuoi solo provarla sul divano, il 2 puoi saltarlo.
 
 Gli stessi passi, visti muoversi: il video in
-[`strumenti/video/`](strumenti/video/README.md), due minuti e mezzo.
+[`strumenti/video/`](strumenti/video/README.md), tre minuti scarsi.
 
 ---
 

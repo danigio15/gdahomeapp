@@ -1,45 +1,53 @@
-# Il video: cos'è gdahome, e come si installa
+# I video di gdahome
 
-Un filmato di due minuti e mezzo che fa vedere le due installazioni — **l'add-on
-dentro Home Assistant** e **l'app sul telefono** — più quello che c'è intorno:
-cos'è gdahome, come ci si arriva da casa e da fuori, il codice da inquadrare, la
-plancia.
+Tre filmati, fatti dalla stessa pagina web e dalla stessa cartella:
 
-Il file è **`gdahome-presentazione.webm`**, 1280×720, senza suono. Si apre in
-qualunque browser, si carica su YouTube e su GitHub, e si manda in un messaggio.
+| film | misura | dura | a cosa serve |
+|---|---|---|---|
+| `gdahome-presentazione` | 1280×720 | 2:49 | quello che spiega: cos'è, come si installa l'add-on, come si abbina il telefono, quanto costa (niente) |
+| `gdahome-facebook` | 1080×1080 | 0:47 | il quadrato per il feed di Facebook |
+| `gdahome-tiktok` | 1080×1920 | 0:47 | lo stesso, in piedi, per TikTok — e per Reels e Storie |
 
-![L'apertura del video: il marchio, il nome, e «La casa in una plancia, sul telefono»](copertina.png)
+Escono in **mp4** (H.264, con una traccia audio muta nei due corti) se sulla
+macchina c'è un ffmpeg vero; se c'è solo quello di Playwright escono in webm,
+e la ripresa lo dice. Per i negozi dei video serve l'mp4: TikTok un webm non lo
+prende.
 
-## Rifarlo
+![L'apertura del video lungo](gdahome-presentazione-copertina.png)
+
+## Rifarli
 
 ```
-node strumenti/video/rendi.mjs
+node strumenti/video/rendi.mjs                 tutti e tre
+node strumenti/video/rendi.mjs --film tiktok   uno solo
 ```
 
-Cinque minuti circa. Serve **Playwright** (`npm i -g playwright`, oppure
-installato di fianco al progetto) e nient'altro: il ffmpeg che serve se lo porta
-dietro Playwright, e se sulla macchina ce n'è uno vero si usa quello.
+Sette minuti circa per tutti e tre. Serve **Playwright** (`npm i -g playwright`,
+oppure installato di fianco al progetto) e, per l'mp4, **ffmpeg**
+(`apt install ffmpeg`). Nient'altro.
 
 Mentre si lavora a una scena conviene non rifare tutto:
 
 ```
-node strumenti/video/rendi.mjs --scena il-codice       una scena sola
-node strumenti/video/rendi.mjs --foto il-codice@3.2    una fotografia, in provini/
-node strumenti/video/rendi.mjs --foto "a@1,b@2.5"      più d'una
+node strumenti/video/rendi.mjs --film tiktok --scena il-gancio   una scena, in provini/
+node strumenti/video/rendi.mjs --foto il-gancio@3.2              una fotografia
+node strumenti/video/rendi.mjs --foto "a@1,b@2.5"                più d'una
 ```
 
-I nomi delle scene sono quelli che passa `scena(...)` in `scene.js`, e la ripresa
-li stampa mentre va.
+I nomi delle scene sono quelli che passa `scena(...)`, e la ripresa li stampa
+mentre va.
 
 ## Com'è fatto
 
 | file | cosa fa |
 |---|---|
-| `presentazione.html` | il palco: le misure, i colori, i caratteri, le animazioni |
-| `scene.js` | le quattordici scene, una funzione ciascuna, e quello che chi filma può chiedere alla pagina |
+| `comune.css` | quello che i tre film hanno in comune: caratteri, colori, il fondo del palco, le animazioni, il telefono, le schede |
+| `pezzi.js` | i pezzi condivisi: il marchio, i disegnini, il telefono, **la plancia**, e il palco che chi filma va a cercare |
+| `presentazione.html` + `scene.js` | il film lungo: quindici scene, disposte a coordinate |
+| `social.html` + `social.js` | il film corto: sette scene, disposte **a colonna** |
 | `rendi.mjs` | chi filma: apre la pagina, sposta l'orologio, scatta, e passa gli scatti a ffmpeg |
-| `quadretto.svg` | il QR che si vede nel filmato — lo rifà `rendi.mjs` a ogni ripresa |
-| `provini/` | le fotografie di `--foto`, per guardare com'è venuta una scena |
+| `quadretto.svg` | il QR che si vede nel film lungo — lo rifà `rendi.mjs` a ogni ripresa |
+| `provini/` | le fotografie di `--foto` e i filmati di `--scena`; non sta nella repository |
 
 **Il tempo non passa: glielo si dice.** Le animazioni della pagina stanno ferme
 (`animation-play-state: paused`), e per ogni fotogramma chi filma porta
@@ -50,7 +58,7 @@ stessi. Finita l'ultima animazione di una scena, chi filma se ne accorge e
 rimanda l'ultimo scatto invece di rifarlo — è il motivo per cui una scena ferma
 per sei secondi non costa sei secondi di ripresa.
 
-Due regole per chi ci mette mano, e sono scritte anche in cima al documento:
+Due regole per chi ci mette mano, e sono scritte anche in cima ai documenti:
 
 * **niente animazioni infinite** — un puntino che pulsa per sempre toglie quella
   scorciatoia e triplica il tempo di ripresa;
@@ -59,12 +67,27 @@ Due regole per chi ci mette mano, e sono scritte anche in cima al documento:
   stessa proprietà — una che mostra, una che nasconde più tardi — non si pestino
   i piedi.
 
+### Un film solo per due negozi
+
+Facebook e TikTok ricevono **lo stesso film**: cambia quanto è alto il palco e
+quanta aria si lascia sopra e sotto, e a dirlo è l'indirizzo della pagina —
+`social.html?alto=1920&su=210&giu=390&zoom=1.15`. Le misure stanno in `rendi.mjs`,
+in cima, una riga per film.
+
+L'aria sotto non è un gusto: su TikTok lì ci stanno il testo, i tasti e il nome
+di chi pubblica, e quello che ci finisce sotto non lo legge nessuno. Per questo
+le scene del film corto non sono disposte a coordinate come quelle del film
+lungo, ma **a colonna**: si mettono in fila e si dispongono da sole con lo
+spazio che trovano, che in un quadrato e in un palco in piedi è diverso.
+
 ## Quello che si vede è roba di qui dentro
 
 Il marchio è `app/assets/marchio/gda.png`, quello dell'icona dell'app. I
 caratteri sono gli Inter di `app/assets/carattere/`, gli stessi dell'app. I
 disegni delle tessere sono gli SVG di `app/assets/oggetti/`, gli stessi della
-plancia. I colori sono quelli di `app/lib/vestito/tema.dart`.
+plancia. I colori sono quelli di `app/lib/vestito/tema.dart`. E la plancia che
+si vede nel telefono è **una sola**, in `pezzi.js`: tre film che disegnano tre
+plance leggermente diverse sarebbero tre prodotti.
 
 **Il quadretto è vero**: lo disegna `ponte/src/qr.js`, l'encoder dell'add-on, e
 non un quadrato finto messo lì per somiglianza. Quello che ci sta scritto invece
@@ -72,50 +95,46 @@ non un quadrato finto messo lì per somiglianza. Quello che ci sta scritto invec
 `gdahome://codice-finto-del-video/non-abbina-niente`, non un abbinamento.
 
 Le finestre di Home Assistant e la pagina del negozio del telefono sono
-**ricostruite**, non catturate: servivano una casa vera e un'app pubblicata, e
-la seconda non c'è ancora.
+**ricostruite**, non catturate: servivano una casa vera e un'app pubblicata.
 
-## La scena del Play Store dice che è un'anteprima
+## Le date, e dove stanno scritte
 
-L'app **sui negozi non c'è ancora** — nel README sta fra le cose da fare. La
-scena che fa vedere «Installa» sul telefono porta scritto in alto **«Anteprima:
-sui negozi non c'è ancora»**, e subito dopo viene quella con la strada che
-funziona oggi: **dal browser**, in due passi, con sotto la pastiglia **«Per iOS:
-prossimamente»**.
+I tre film dicono le stesse tre cose, e quando cambiano vanno cambiate in tutti
+e tre:
 
-Nel video non c'è come si scarica l'apk a mano, e non c'è la spiegazione di
-TestFlight: stanno in [`COME_PROVARLA.md`](../../COME_PROVARLA.md) e in
-[`docs/IPHONE.md`](../../docs/IPHONE.md), che è il posto di chi prova l'app —
-non di chi guarda un video per capire cos'è.
+- **da subito**: l'add-on, la plancia, e l'app dal browser;
+- **dal 30 settembre**: l'app per Android, negli store;
+- **in fase di sviluppo**: la versione per iOS.
 
-Il giorno che l'app va sui negozi, quella scena si toglie l'etichetta e la
-pastiglia dell'iOS cambia parola: sono due righe in `scene.js`.
+Nel film lungo stanno nella scena `dal-negozio-del-telefono` (la targhetta in
+alto) e in `come-si-prova-oggi` (la pastiglia); nel film corto, nella scena
+`da-quando`.
 
 ## Il suono
 
-Non c'è, e non per dimenticanza: il ffmpeg di Playwright sa fare il video e
-basta. Le parole stanno scritte sul filmato, ed è anche il modo in cui lo
-guardano quasi tutti — un video di installazione si guarda col telefono in
-silenzio.
+Non c'è, e non per dimenticanza: le parole stanno scritte sul filmato, ed è
+anche il modo in cui lo guardano quasi tutti — un video di installazione si
+guarda col telefono in silenzio, e uno sui social pure.
+
+Nei due corti c'è però una traccia audio **muta**: un negozio che riceve un
+video senza nessuna traccia ogni tanto lo rifiuta, e accorgersene mentre si
+pubblica è la cosa peggiore.
 
 Chi vuole leggere il parlato ha il copione in [`copione.md`](copione.md), scena
-per scena, con i tempi. Registrata una traccia, con un ffmpeg vero si attacca
-senza rifare il video:
+per scena, con i tempi. Registrata una traccia, si attacca senza rifare il
+video:
 
 ```
-ffmpeg -i gdahome-presentazione.webm -i voce.m4a \
-       -c:v copy -c:a libopus -shortest gdahome-con-voce.webm
+ffmpeg -i gdahome-tiktok.mp4 -i voce.m4a -map 0:v -map 1:a \
+       -c:v copy -c:a aac -shortest gdahome-tiktok-con-voce.mp4
 ```
 
 ## Cambiare le parole
 
-Le didascalie stanno dentro le scene, in `didascalia([...])`: ogni riga ha
-quando entra (`t`) e quando esce (`t2`), in secondi dall'inizio della scena. Se
-si allunga una riga bisogna guardare che ci stia: il palco è largo 1280 e le
-didascalie hanno 120 pixel di margine per parte.
+Nel film lungo le didascalie stanno in `didascalia([...])`: ogni riga ha quando
+entra (`t`) e quando esce (`t2`), in secondi dall'inizio della scena. Nel film
+corto le parole sono la scena: si cambiano dove sono scritte.
 
-## Le fotografie di prova
-
-`provini/` non sta nella repository: ci finiscono le fotografie di `--foto` e i
-filmati di `--scena`, che si rifanno con un comando. La copertina invece sì —
-`copertina.png`, il fotogramma dell'apertura, rifatto a ogni ripresa intera.
+Se si allunga una riga bisogna guardare che ci stia — e guardarlo **in tutti e
+due i palchi**, perché quello che sta in una riga sul quadrato in piedi può
+andare a capo.
