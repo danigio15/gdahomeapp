@@ -5,20 +5,22 @@ piedi quella frase: cosa costa davvero il progetto, dove si può dare una mano,
 e — la parte pratica — **come si attiva GitHub Sponsors**, passo per passo, coi
 testi già scritti da incollare.
 
-## Cosa costa, davvero
+## Perché si chiede, se è gratis
 
-Poco, ed è il motivo per cui la promessa si può fare:
+Perché **gratis non vuol dire finito**. Quello che c'è oggi — l'add-on, la
+plancia, l'app, l'accesso da fuori — resta gratis e non ha limiti a pagamento.
+Quello che non c'è ancora è scritto nel piano ([`PIANO.md`](PIANO.md)): gli
+aiutanti, lo Zigbee, il mago delle automazioni. Quelle righe diventano vere
+solo se c'è il tempo per scriverle, per provarle e per rispondere a chi chiede
+aiuto.
 
-| cosa | quanto |
-|---|---|
-| Il centralino | **zero**: gira sul piano gratuito di Cloudflare, e una casa ferma di notte non consuma niente ([`nuvola/`](../nuvola/README.md)) |
-| L'add-on e la plancia | **zero**: girano sulla macchina di chi li installa |
-| **Google Play** | **25 $**, una volta sola |
-| **L'account sviluppatore Apple** | **99 $ l'anno** — ed è l'unico pezzo che manca all'app per iPhone: l'app è scritta e compila, quello che manca è la firma ([`IPHONE.md`](IPHONE.md)) |
-| Il tempo | quello che non si conta: scriverlo, provarlo, e rispondere a chi chiede aiuto |
+Ecco cosa si chiede, e cosa no: non si chiede di comprare una funzione — non ce
+ne sono da comprare — si chiede di far andare avanti il piano.
 
-Quindi un sostegno non serve a «finanziare un'azienda»: serve a pagare due
-conti e a comprare il tempo di chi risponde.
+**I conti del progetto non si mettono in piazza.** Qualcuno c'è (i negozi hanno
+i loro), ma un invito fatto di ricevute sposta l'attenzione sulla cifra, e la
+cifra la si giudica: «tanto sono pochi soldi», «tanto ci arriva lo stesso».
+Quello che si dice invece è dove va a finire: nel piano.
 
 ## Dove si può dare, oggi
 
@@ -84,9 +86,9 @@ accettano sponsorizzazioni; PayPal, sotto, funziona da subito.
 > È tutto gratis e resta gratis: l'add-on, la plancia, l'app, l'accesso da
 > fuori. Nessun abbonamento, nessun limite a pagamento, nessun account da fare.
 >
-> Sostenerlo non sblocca niente — e non deve. Paga i due conti che il progetto
-> ha davvero (25 $ per Google Play, 99 $ l'anno per l'account Apple) e il tempo
-> di chi lo scrive e risponde a chi chiede aiuto.
+> Sostenerlo non sblocca niente — e non deve. **Gratis non vuol dire finito**:
+> gli aiutanti, lo Zigbee, il mago delle automazioni sono scritti nel piano, e
+> ogni sostegno è una di quelle righe che diventa vera.
 
 In inglese, per chi arriva da fuori:
 
@@ -99,17 +101,20 @@ In inglese, per chi arriva da fuori:
 > Everything is free and stays free: the add-on, the dashboard, the app, remote
 > access. No subscription, no paywalled limits, no account to create.
 >
-> Sponsoring unlocks nothing — and it shouldn't. It pays the project's two real
-> bills (25 $ for Google Play, 99 $/year for the Apple developer account) and
-> the time of whoever writes it and answers for it.
+> Sponsoring unlocks nothing — and it shouldn't. **Free doesn't mean finished**:
+> helpers, Zigbee and the automation wizard are written down in the plan, and
+> every sponsorship is one of those lines coming true.
 
 ### L'obiettivo
 
-Un obiettivo vero si capisce e si raggiunge; «sostienimi» no.
+Un obiettivo vero si capisce e si raggiunge; «sostienimi» no. Su GitHub
+l'obiettivo si puo' mettere in **numero di sostenitori**, e cosi' non si parla
+di soldi in pubblico:
 
-> **99 $ l'anno: l'account sviluppatore Apple.**
-> È l'ultimo pezzo che manca all'app per iPhone. L'app è scritta e compila a
-> ogni giro: quello che manca è la firma di Apple.
+> **Obiettivo: venti sostenitori.**
+> Non per pagare una fattura: per sapere che questo progetto sta in piedi da
+> solo, e poter dire di sì alla prossima riga del piano — gli aiutanti, lo
+> Zigbee, le automazioni.
 
 ### I livelli
 
@@ -119,10 +124,10 @@ vali tu che dai.
 | quanto | nome | cosa dire |
 |---|---|---|
 | **3 €/mese** | Una mano | «Il caffè del mese. Non sblocca niente, e non deve: tiene aperta la porta a chi scrive per chiedere aiuto.» |
-| **8 €/mese** | L'iPhone | «Dodici mesi di questo livello pagano l'account sviluppatore Apple — l'unico pezzo che manca all'app per iPhone.» |
+| **8 €/mese** | Il piano che va avanti | «Gli aiutanti, lo Zigbee, le automazioni: è il tempo che le fa passare dal piano alla plancia.» |
 | **20 €/mese** | Chi la tiene in piedi | «Il tempo: scrivere il codice, tenere in piedi le prove, rispondere. È quello che fa la differenza fra un progetto vivo e uno fermo.» |
 | **5 €** una volta | Un grazie | «Una volta sola, se ti è stata utile.» |
-| **25 €** una volta | Google Play | «I 25 $ di Google Play, una volta sola: è il conto che porta l'app negli store.» |
+| **25 €** una volta | Una spinta | «Una volta sola, per far correre un pezzo del piano.» |
 
 ### Il messaggio a chi si iscrive
 

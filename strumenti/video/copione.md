@@ -142,8 +142,8 @@ il tasto **«Sostieni il progetto su GitHub Sponsors»**.
 > (1,8s) L'add-on, la plancia, l'app, la casa da fuori: **tutto gratis**, senza
 > abbonamenti.
 >
-> (6,2s) Due conti, e il tempo: chi può dà una mano su **GitHub Sponsors**,
-> chi non può la usa lo stesso.
+> (6,2s) E **gratis non vuol dire finito**: chi dà una mano su **GitHub
+> Sponsors** decide quanto in là si arriva.
 
 ### **2:40** — Chiusura *(9,5s)*
 
@@ -205,10 +205,10 @@ accende da sola.
 
 ### **0:27** — Il sostegno *(7,5s)*
 
-> **E deve restare gratis**
+> **Gratis non vuol dire finito**
 >
-> E ha due conti veri: **25 $** per Google Play e **99 $ l'anno** per Apple —
-> l'unico pezzo che manca all'app per iPhone.
+> Aiutanti, Zigbee, automazioni: **il piano c'è**. E ogni sostegno è una sua
+> riga che diventa vera.
 >
 > ♥ **Sostieni il progetto su GitHub Sponsors**
 >

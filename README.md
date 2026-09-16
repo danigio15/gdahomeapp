@@ -47,17 +47,16 @@ soldi, ed e' una scelta scritta: quello che serve a vedere e comandare la
 propria casa non si paga mai — l'accesso da fuori compreso, che tenerlo in
 piedi costa zero ([`nuvola/`](nuvola/README.md)).
 
-Restare gratis pero' non e' automatico. I conti che il progetto ha davvero
-sono due — **25 $** per Google Play, una volta, e **99 $ l'anno** per
-l'account sviluppatore Apple, che e' l'unico pezzo che manca all'app per
-iPhone ([`docs/IPHONE.md`](docs/IPHONE.md)) — piu' il tempo di scriverla e di
-rispondere a chi chiede aiuto.
+**Gratis pero' non vuol dire finito.** Gli aiutanti, lo Zigbee, il mago delle
+automazioni: il piano e' scritto ([`docs/PIANO.md`](docs/PIANO.md)) e va avanti
+finche' c'e' chi lo tiene in piedi. Chi vuole dare una mano ha il tasto
+**Sponsor** qui in cima alla pagina: ogni sostegno e' una riga di quel piano
+che diventa vera. Chi non vuole o non puo', la usa lo stesso — tutta, per
+sempre.
 
-Chi vuole dare una mano ha il tasto **Sponsor** qui in cima alla pagina. Chi
-non vuole o non puo', la usa lo stesso — tutta, per sempre. Un sostegno non
-sblocca niente, e non deve: se sbloccasse qualcosa, «tutto gratis» sarebbe una
-frase da togliere. Come e' fatto, e cosa si e' scelto di non vendere, sta in
-[`docs/SOSTEGNO.md`](docs/SOSTEGNO.md).
+Un sostegno non sblocca niente, e non deve: se sbloccasse qualcosa, «tutto
+gratis» sarebbe una frase da togliere. Come e' fatto, e cosa si e' scelto di
+non vendere, sta in [`docs/SOSTEGNO.md`](docs/SOSTEGNO.md).
 
 ## Come ci si arriva
 
