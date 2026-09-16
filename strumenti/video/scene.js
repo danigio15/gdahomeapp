@@ -597,7 +597,7 @@ const CONSOLE = ({ conCodice = false } = {}) => `
       ${
         conCodice
           ? `<div class="cr" style="--t:2.6s;text-align:center">
-               <img src="quadretto.svg" width="176" height="176" style="border-radius:10px;border:1px solid #e3e6ea;background:#fff" alt="" />
+               <img src="qrcode.svg" width="176" height="176" style="border-radius:10px;border:1px solid #e3e6ea;background:#fff" alt="" />
                <p style="margin:8px 0 4px">Scade fra 4:58</p>
                <p style="font-family:'DejaVu Sans Mono',monospace;font-size:17px;letter-spacing:.1em;color:#212121;margin:0 0 12px">K7QM-3PDX-9WTB-46HZ</p>
              </div>
@@ -654,7 +654,7 @@ const SCHERMATA_ABBINA = `
 const SCHERMATA_FOTOCAMERA = `
   <div style="position:absolute;inset:0;background:#0b1220">
     <div style="position:absolute;left:50%;top:236px;transform:translate(-50%,-50%);width:186px;height:186px;border-radius:16px;background:#fff;display:grid;place-items:center">
-      <img src="quadretto.svg" width="168" height="168" alt="" />
+      <img src="qrcode.svg" width="168" height="168" alt="" />
     </div>
     <div style="position:absolute;left:46px;top:132px;width:200px;height:208px">
       ${[
@@ -686,7 +686,7 @@ scena(
 
   <div class="carta cr" style="--t:.3s;position:absolute;left:206px;top:152px;width:296px;text-align:center;padding:20px">
     <h4 style="font-size:15px">La console, dentro Home Assistant</h4>
-    <img src="quadretto.svg" width="196" height="196" style="margin-top:14px;border:1px solid #e3e6ea;border-radius:10px" alt="" />
+    <img src="qrcode.svg" width="196" height="196" style="margin-top:14px;border:1px solid #e3e6ea;border-radius:10px" alt="" />
     <p style="font-family:'DejaVu Sans Mono',monospace;font-size:15px;letter-spacing:.08em;color:#212121;margin-top:12px">K7QM-3PDX-9WTB-46HZ</p>
   </div>
 

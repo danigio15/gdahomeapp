@@ -236,17 +236,17 @@ function comeSiImpacchetta(ffmpeg, film, uscita) {
   ];
 }
 
-/* ── Il quadretto ─────────────────────────────────────────────────────── */
+/* ── Il QR code ───────────────────────────────────────────────────────── */
 
 /* Il QR del video lo disegna **l'add-on**, con il suo encoder: un quadrato
    finto disegnato a mano sarebbe l'unica cosa del filmato che non viene da
    qui dentro. Quello che ci sta scritto e' un codice **finto**, e lo dice:
    chi lo inquadra si trova in mano una frase, non un abbinamento. */
-async function fabbricaIlQuadretto() {
+async function fabbricaIlQrCode() {
   const { qrInSvg } = await import(pathToFileURL(path.join(RADICE, "ponte/src/qr.js")).href);
   const finto = "gdahome://codice-finto-del-video/non-abbina-niente";
   await writeFile(
-    path.join(QUI, "quadretto.svg"),
+    path.join(QUI, "qrcode.svg"),
     qrInSvg(finto, { titolo: "Codice di abbinamento (finto)" }),
   );
 }
@@ -397,7 +397,7 @@ async function main() {
   const soloCopertine = argomenti.includes("--copertine");
 
   await mkdir(path.join(QUI, "provini"), { recursive: true });
-  await fabbricaIlQuadretto();
+  await fabbricaIlQrCode();
   const chromium = await apriPlaywright();
   const server = await servitore();
   const porta = server.address().port;

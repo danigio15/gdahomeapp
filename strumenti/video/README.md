@@ -56,7 +56,7 @@ mentre va.
 | `plancia-vera.mjs` + `casa-finta.js` | fotografano **la plancia vera**, quella di `ponte/plancia/` |
 | `plancia-telefono.png`, `-tablet`, `-computer` | le tre fotografie, che finiscono negli schermi delle copertine |
 | `rendi.mjs` | chi filma: apre la pagina, sposta l'orologio, scatta, e passa gli scatti a ffmpeg |
-| `quadretto.svg` | il QR code che si vede nel film lungo — lo rifà `rendi.mjs` a ogni ripresa |
+| `qrcode.svg` | il QR code che si vede nel film lungo — lo rifà `rendi.mjs` a ogni ripresa |
 | `provini/` | le fotografie di `--foto` e i filmati di `--scena`; non sta nella repository |
 
 **Il tempo non passa: glielo si dice.** Le animazioni della pagina stanno ferme
@@ -168,10 +168,10 @@ si vede un buco:
   minuto; qui si scrivono nella busta della casa finta, che è lo stesso posto.
   Senza, accanto al nome della casa resta una striscia vuota — ed è metà
   dell'intestazione.
-- **i ritratti delle persone**. Un ritratto non si rileva: sono undici scelte
-  (`docs/RITRATTO.md`) che fa chi configura, una persona per volta. Qui ce ne
-  sono tre in `cd_people`; a disegnarle è il compositore della plancia, quello
-  vero.
+- **i ritratti delle persone**. Un ritratto non si rileva: è una fila di
+  scelte — taglio, colori, occhi, barba — che fa chi configura, una persona per
+  volta. Qui ce ne sono tre in `cd_people`; a disegnarle è il compositore della
+  plancia, quello vero.
 
 E si parte da quello che la plancia ha **adesso**, non dalla busta: i posti che
 il 🪄 ha appena riempito stanno lì. Partendo dalla busta si riscriveva sopra al
