@@ -74,6 +74,28 @@ const FILM = {
   },
 };
 
+/* Le copertine: due immagini ferme, fatte con la stessa macchina dei film.
+ *
+ * Facebook le taglia in due modi diversi — il gruppo si accorcia in basso, la
+ * pagina sul telefono perde i lati — e il disegno ne tiene conto: sta in
+ * `copertine.js`. */
+const COPERTINE = {
+  gruppo: {
+    pagina: "copertine.html",
+    largo: 1640,
+    alto: 856,
+    posa: { tipo: "gruppo" },
+    uscita: "gdahome-copertina-gruppo.png",
+  },
+  pagina: {
+    pagina: "copertine.html",
+    largo: 1640,
+    alto: 624,
+    posa: { tipo: "pagina" },
+    uscita: "gdahome-copertina-pagina.png",
+  },
+};
+
 /* ── Gli attrezzi, dove stanno ────────────────────────────────────────── */
 
 /* Playwright sta installato di fianco al progetto o fra i pacchetti globali,
@@ -372,6 +394,7 @@ async function main() {
   }
   const soloQuesta = valore("--scena");
   const fotografie = valore("--foto");
+  const soloCopertine = argomenti.includes("--copertine");
 
   await mkdir(path.join(QUI, "provini"), { recursive: true });
   await fabbricaIlQuadretto();
@@ -383,6 +406,23 @@ async function main() {
   });
 
   try {
+    /* Le copertine di Facebook: due immagini ferme. */
+    if (soloCopertine) {
+      for (const [nome, copertina] of Object.entries(COPERTINE)) {
+        const { pagina } = await apriIlFilm(browser, porta, copertina);
+        await pagina.evaluate(() => window.video.vaiA(0));
+        /* Ferme vuol dire ferme: si porta l'orologio oltre la fine di tutto,
+           cosi' quello che si vede e' lo stato finale e non un mezzo
+           ingresso. */
+        await pagina.evaluate(() => window.video.vaiAlMomento(20000));
+        const dove = path.join(QUI, copertina.uscita);
+        await pagina.screenshot({ path: dove });
+        await pagina.close();
+        detto(`🖼  ${nome.padEnd(8)} ${copertina.largo}×${copertina.alto}  ${dove}`);
+      }
+      return;
+    }
+
     /* Una fotografia sola, per guardare com'e' venuta una scena. */
     if (fotografie) {
       for (const nomeDelFilm of quali) {

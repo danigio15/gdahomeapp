@@ -1,6 +1,7 @@
-# I video di gdahome
+# I video e le copertine di gdahome
 
-Tre filmati, fatti dalla stessa pagina web e dalla stessa cartella:
+Tre filmati e due copertine, fatti dalla stessa pagina web e dalla stessa
+cartella:
 
 | film | misura | dura | a cosa serve |
 |---|---|---|---|
@@ -8,18 +9,24 @@ Tre filmati, fatti dalla stessa pagina web e dalla stessa cartella:
 | `gdahome-facebook` | 1080×1080 | 0:47 | il quadrato per il feed di Facebook |
 | `gdahome-tiktok` | 1080×1920 | 0:47 | lo stesso, in piedi, per TikTok — e per Reels e Storie |
 
-Escono in **mp4** (H.264, con una traccia audio muta nei due corti) se sulla
-macchina c'è un ffmpeg vero; se c'è solo quello di Playwright escono in webm,
-e la ripresa lo dice. Per i negozi dei video serve l'mp4: TikTok un webm non lo
-prende.
+| copertina | misura | dove va |
+|---|---|---|
+| `gdahome-copertina-gruppo.png` | 1640×856 | la copertina di un **gruppo** di Facebook |
+| `gdahome-copertina-pagina.png` | 1640×624 | la copertina di una **pagina** di Facebook |
+
+I filmati escono in **mp4** (H.264, con una traccia audio muta nei due corti) se
+sulla macchina c'è un ffmpeg vero; se c'è solo quello di Playwright escono in
+webm, e la ripresa lo dice. Per i negozi dei video serve l'mp4: TikTok un webm
+non lo prende.
 
 ![L'apertura del video lungo](gdahome-presentazione-copertina.png)
 
 ## Rifarli
 
 ```
-node strumenti/video/rendi.mjs                 tutti e tre
+node strumenti/video/rendi.mjs                 tutti e tre i filmati
 node strumenti/video/rendi.mjs --film tiktok   uno solo
+node strumenti/video/rendi.mjs --copertine     le due copertine di Facebook
 ```
 
 Sette minuti circa per tutti e tre. Serve **Playwright** (`npm i -g playwright`,
@@ -45,6 +52,7 @@ mentre va.
 | `pezzi.js` | i pezzi condivisi: il marchio, i disegnini, il telefono, **la plancia**, e il palco che chi filma va a cercare |
 | `presentazione.html` + `scene.js` | il film lungo: quindici scene, disposte a coordinate |
 | `social.html` + `social.js` | il film corto: sette scene, disposte **a colonna** |
+| `copertine.html` + `copertine.js` | le due copertine di Facebook, ferme |
 | `rendi.mjs` | chi filma: apre la pagina, sposta l'orologio, scatta, e passa gli scatti a ffmpeg |
 | `quadretto.svg` | il QR code che si vede nel film lungo — lo rifà `rendi.mjs` a ogni ripresa |
 | `provini/` | le fotografie di `--foto` e i filmati di `--scena`; non sta nella repository |
@@ -80,6 +88,31 @@ le scene del film corto non sono disposte a coordinate come quelle del film
 lungo, ma **a colonna**: si mettono in fila e si dispongono da sole con lo
 spazio che trovano, che in un quadrato e in un palco in piedi è diverso.
 
+### Le copertine, e dove Facebook taglia
+
+Le due copertine sono ferme — nessuna animazione — ma sono disegnate con gli
+stessi pezzi dei film, e sono **due** perché Facebook le taglia in due modi
+diversi:
+
+- **il gruppo** (1640×856): sul telefono la striscia si accorcia, e il nome del
+  gruppo finisce sopra la fascia di sotto. Per questo il testo sta nella metà
+  alta e la parte bassa è vuota.
+- **la pagina** (1640×624): sul telefono se ne vede solo la **parte in mezzo**,
+  due terzi scarsi della larghezza — da 279 a 1361 —, e in basso a sinistra, sul
+  computer, ci finisce sopra la foto del profilo. Per questo tutto quello che
+  conta sta in mezzo, e ai lati ci sono solo i disegni della plancia: roba che
+  si può perdere.
+
+Come si controlla, invece di sperarci — si ritaglia quello che vedrebbe il
+telefono e si guarda se manca qualcosa:
+
+```
+ffmpeg -i gdahome-copertina-pagina.png -vf "crop=1082:624:279:0" prova.png
+```
+
+Sono **png** e non jpg apposta: sono quasi tutte testo e linee nette, e il jpg
+lì sporca i bordi delle lettere.
+
 ## Quello che si vede è roba di qui dentro
 
 Il marchio è `app/assets/marchio/gda.png`, quello dell'icona dell'app. I
@@ -108,7 +141,7 @@ e tre:
 
 Nel film lungo stanno nella scena `dal-negozio-del-telefono` (la targhetta in
 alto) e in `come-si-prova-oggi` (la pastiglia); nel film corto, nella scena
-`da-quando`.
+`da-quando`; nelle copertine, nella pastiglia gialla.
 
 ## Il suono
 
