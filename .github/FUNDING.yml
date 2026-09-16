@@ -1,0 +1,18 @@
+# Chi tiene in piedi gdahome.
+#
+# Questo file fa una cosa sola: mette il tasto **Sponsor** in cima alla pagina
+# della repository, e nella colonna di destra. Non iscrive nessuno a niente —
+# l'iscrizione a GitHub Sponsors si fa a mano su github.com/sponsors, con la
+# verifica dell'identita', il conto e il modulo fiscale, e da quel giorno in poi
+# questo tasto porta dove deve.
+#
+# E' l'unico canale di gdahome. Il tasto «Sostieni il progetto» che si vede
+# nella plancia **non e' questo**: quello e' di DashboardModern, che e' un altro
+# lavoro dello stesso autore, e dentro l'app sta nascosto apposta
+# (`app/lib/plancia/premesse.dart`) — una donazione verso un altro progetto,
+# dentro una pagina che porta il nome gdahome, non si capisce.
+#
+# Finche' l'account non e' iscritto, chi preme il tasto trova una pagina che
+# dice che non si accettano sponsorizzazioni: e' una riga da togliere, se si
+# decidesse di aspettare.
+github: [danigio15]
