@@ -151,6 +151,53 @@ test("senza la seconda repository tutto resta dov'era: nella stessa", async () =
   assert.match(chieste[0], /repos\/chi\/una-sola\/contents\//);
 });
 
+test("da dove viene una segnalazione si vede dall'etichetta, e non si puo' fingere", async () => {
+  /* Due strade, e chi legge l'elenco delle issue deve poterle dividere: una
+   * segnalazione scritta col telefono in mano non e' la stessa cosa di una
+   * scritta davanti a Home Assistant — due programmi diversi, due modi
+   * diversi di rompersi. Nell'elenco si vedono solo le etichette, quindi
+   * l'origine e' un'etichetta. */
+  const fatte = [];
+  const finto = {
+    pronto: true,
+    async apriIssue(cosa) {
+      fatte.push(cosa);
+      return { number: fatte.length, html_url: "https://x/y/issues/1", created_at: "t" };
+    },
+  };
+  const deposito = () => {
+    const dentro = new Map();
+    return {
+      async get(chiave) {
+        return dentro.get(chiave);
+      },
+      async put(chiave, valore) {
+        dentro.set(chiave, valore);
+      },
+    };
+  };
+
+  const dallApp = new Segnalazioni({ storage: deposito(), github: finto, casa: "casa_1" });
+  await dallApp.crea({ tipo: "problema", titolo: "t", corpo: "c", da: "app" });
+  assert.deepEqual(fatte[0].etichette, ["gdahome", "problema", "da-app"]);
+
+  const dallaPlancia = new Segnalazioni({ storage: deposito(), github: finto, casa: "casa_2" });
+  await dallaPlancia.crea({ tipo: "idea", titolo: "t", corpo: "c", da: "plancia" });
+  assert.deepEqual(fatte[1].etichette, ["gdahome", "idea", "da-home-assistant"]);
+  assert.match(fatte[1].corpo, /\| da \| da-home-assistant \|/);
+
+  /* Quello che arriva da fuori non si crede sulla parola: un'origine che non
+   * si conosce diventa «app» — da dove arrivavano tutte prima di oggi — e la
+   * segnalazione passa lo stesso. Buttarne via una per un'etichetta sarebbe
+   * il modo peggiore di essere severi. */
+  const strana = new Segnalazioni({ storage: deposito(), github: finto, casa: "casa_3" });
+  await strana.crea({ tipo: "domanda", titolo: "t", corpo: "c", da: "da-home-assistant" });
+  assert.deepEqual(fatte[2].etichette, ["gdahome", "domanda", "da-app"]);
+  const senza = new Segnalazioni({ storage: deposito(), github: finto, casa: "casa_4" });
+  await senza.crea({ tipo: "problema", titolo: "t", corpo: "c" });
+  assert.deepEqual(fatte[3].etichette, ["gdahome", "problema", "da-app"]);
+});
+
 test("il corpo della issue porta le parole e la diagnostica, e le parole tornano da sole", () => {
   const corpo = corpoDellaIssue({
     corpo: "La luce del salotto non risponde.",

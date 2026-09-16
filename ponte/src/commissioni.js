@@ -817,6 +817,9 @@ export class Commissioni {
               tipo: parola(detto.tipo, 20),
               titolo: parola(detto.titolo, 200),
               corpo: parola(detto.corpo, 10000),
+              /* Questo comando lo manda l'app, e nient'altro: la plancia ha
+                 il suo. Da dove viene lo dice il ponte, non il telefono. */
+              da: "app",
               diagnostica:
                 detto.diagnostica && typeof detto.diagnostica === "object" ? detto.diagnostica : {},
             }),

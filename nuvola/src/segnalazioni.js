@@ -24,6 +24,27 @@
  */
 
 export const TIPI = Object.freeze(["problema", "idea", "domanda"]);
+
+/* Da dove arriva una segnalazione, e come si chiama la sua etichetta.
+ *
+ * Serve a chi legge l'elenco delle issue: «questa l'ha scritta qualcuno col
+ * telefono in mano, quella qualcuno davanti a Home Assistant». Sono due
+ * strade diverse — due programmi diversi, due modi diversi di rompersi — e
+ * tenerle distinte vuol dire poterle filtrare.
+ *
+ * Un'etichetta e non una riga nella tabella: nella tabella c'era gia' il
+ * `sistema` (web, android, ios), ma sta in fondo alla issue, aperta, e
+ * nell'elenco non si vede. Filtrare si filtra per etichetta.
+ *
+ * La stampa il **ponte**, non chi scrive: le due strade sono due comandi
+ * diversi, e quale dei due sia arrivato lo sa solo lui. Cosi' non c'e' niente
+ * da indovinare e niente da falsificare. Quello che arriva qui si controlla
+ * lo stesso — da fuori arriva sempre qualcosa che non ci si aspetta. */
+export const DA_DOVE = Object.freeze({
+  app: "da-app",
+  plancia: "da-home-assistant",
+});
+export const DA_DI_DIFETTO = "app";
 export const TITOLO_MASSIMO = 120;
 export const CORPO_MASSIMO = 8000;
 export const MESSAGGIO_MASSIMO = 4000;
@@ -102,7 +123,7 @@ const testo = (valore, massimo) => {
 /* Il corpo della issue: quello che la persona ha scritto, poi la diagnostica
  * raccolta da sola, separate da un segno che al ritorno permette di ridare
  * alla persona solo le sue parole. */
-export function corpoDellaIssue({ corpo, diagnostica, casa }) {
+export function corpoDellaIssue({ corpo, diagnostica, casa, da = "" }) {
   const righe = [testo(corpo, CORPO_MASSIMO)];
   const voci = Object.entries(diagnostica || {}).filter(
     ([chiave, valore]) => chiave && valore !== undefined && valore !== null && valore !== "",
@@ -112,6 +133,10 @@ export function corpoDellaIssue({ corpo, diagnostica, casa }) {
     for (const [chiave, valore] of voci.slice(0, 40)) {
       righe.push(`| ${pulisci(chiave)} | ${pulisci(String(valore))} |`);
     }
+    /* Da dove viene, in testa alle righe di servizio: e' la prima domanda di
+       chi apre la issue, e l'etichetta la risponde nell'elenco ma qui dentro
+       no. */
+    if (da) righe.push(`| da | ${pulisci(da)} |`);
     if (casa) righe.push(`| casa | \`${pulisci(String(casa)).slice(0, 12)}\` |`);
   }
   return righe.join("\n");
@@ -324,9 +349,15 @@ export class Segnalazioni {
     return (await this.storage.get("segnalazioni")) ?? [];
   }
 
-  async crea({ tipo, titolo, corpo, diagnostica }) {
+  async crea({ tipo, titolo, corpo, diagnostica, da }) {
     this._pronto();
     const quale = TIPI.includes(tipo) ? tipo : "problema";
+    /* Da dove arriva. Quello che non si conosce diventa «app», che e' da dove
+       arrivavano tutte prima di oggi: una segnalazione non si butta via per
+       un'etichetta. */
+    const daDove = Object.prototype.hasOwnProperty.call(DA_DOVE, String(da || ""))
+      ? String(da)
+      : DA_DI_DIFETTO;
     const titoloPulito = testo(titolo, TITOLO_MASSIMO);
     const corpoPulito = testo(corpo, CORPO_MASSIMO);
     if (!titoloPulito) throw new RichiestaSbagliata("manca_il_titolo", "Manca il titolo.");
@@ -342,8 +373,13 @@ export class Segnalazioni {
     await this._contaUnaScrittura();
     const issue = await this.github.apriIssue({
       titolo: `[${quale}] ${titoloPulito}`,
-      corpo: corpoDellaIssue({ corpo: corpoPulito, diagnostica, casa: this.casa }),
-      etichette: ["gdahome", quale],
+      corpo: corpoDellaIssue({
+        corpo: corpoPulito,
+        diagnostica,
+        casa: this.casa,
+        da: DA_DOVE[daDove],
+      }),
+      etichette: ["gdahome", quale, DA_DOVE[daDove]],
     });
     const voce = {
       numero: issue.number,

@@ -120,11 +120,18 @@ export class Segnalazioni {
     };
   }
 
-  async crea({ tipo, titolo, corpo, diagnostica }) {
+  /* [da] e' da dove arriva: `app` dal telefono, `plancia` da Home Assistant.
+   *
+   * Lo stampa **il ponte** e non chi scrive, perche' le due strade sono due
+   * comandi diversi e quale sia arrivato lo sa solo lui: dal telefono e'
+   * `ponte/segnalazioni/crea`, dalla plancia sarebbe il suo. Cosi' un
+   * telefono non puo' sbagliarla, e nemmeno fingerla. */
+  async crea({ tipo, titolo, corpo, diagnostica, da = "app" }) {
     const intero = await this._chiama("POST", "/segnalazioni", {
       tipo: TIPI.includes(tipo) ? tipo : "problema",
       titolo,
       corpo,
+      da,
       diagnostica: this._diagnostica(diagnostica),
     });
     this._tieni(intero);
