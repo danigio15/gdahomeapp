@@ -159,6 +159,30 @@ noi per far bella figura nella fotografia. L'unica cosa messa a mano è il nome
 in cima (`cd_branding`): di suo DashboardModern si chiama «Smart Home», e in
 una copertina di gdahome il nome di un altro è la prima cosa che si legge.
 
+**Due cose il 🪄 non le trova**, e si mettono a mano perché senza in copertina
+si vede un buco:
+
+- **il meteo**. I suoi posti — `dm.home_meteo` e i tre numeri accanto —
+  vogliono un'entità `weather.` e i sensori di fuori, e il rilevatore su quelli
+  non si sbilancia. Nella plancia vera li collega chi la configura, in un
+  minuto; qui si scrivono nella busta della casa finta, che è lo stesso posto.
+  Senza, accanto al nome della casa resta una striscia vuota — ed è metà
+  dell'intestazione.
+- **i ritratti delle persone**. Un ritratto non si rileva: sono undici scelte
+  (`docs/RITRATTO.md`) che fa chi configura, una persona per volta. Qui ce ne
+  sono tre in `cd_people`; a disegnarle è il compositore della plancia, quello
+  vero.
+
+E si parte da quello che la plancia ha **adesso**, non dalla busta: i posti che
+il 🪄 ha appena riempito stanno lì. Partendo dalla busta si riscriveva sopra al
+suo lavoro, e nella fotografia sparivano la sicurezza e l'antifurto.
+
+**La plancia si monta dove la monta il ponte** — `/dashboardmodern_static/`, con
+i file sotto un'impronta e `avatars/` e `brands/` fuori (`ponte/src/plancia.js`).
+Non è un dettaglio di gusto: il compositore chiede le figure due cartelle più su
+della pagina, e servita da un'altra profondità le chiedeva a un indirizzo che non
+esiste — gli avatar uscivano come cerchi vuoti.
+
 Prima di scattare si ferma quello che si muove: la striscia in cima alla
 plancia scorre da sola, e una striscia ferma a metà corsa in una fotografia
 sembra un pezzo tagliato via.

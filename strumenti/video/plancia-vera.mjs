@@ -26,6 +26,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { vestiDiGdahome } from "../../ponte/src/marchio.js";
 import { conLePremesse, ilWebSocket } from "../../ponte/src/premesse.js";
 
+/* Dove il ponte monta la plancia per il browser. */
+const BASE = "/dashboardmodern_static";
+const FUORI_DALL_IMPRONTA = new Set(["avatars", "brands"]);
+
 const QUI = path.dirname(fileURLToPath(import.meta.url));
 const RADICE = path.resolve(QUI, "..", "..");
 const PLANCIA = path.join(RADICE, "ponte", "plancia");
@@ -80,7 +84,7 @@ async function laPagina() {
   const pagina = vestiDiGdahome("legacy/dashboard.html", crudo, "text/html").corpo.toString("utf8");
   const dove = "ws://127.0.0.1/non-ci-va-nessuno";
   const conLeSue = conLePremesse(pagina, {
-    base: "/ponte/plancia/legacy/",
+    base: `${BASE}/finta/legacy/`,
     lingua: "it",
     doveIlWebSocket: dove,
   });
@@ -107,7 +111,18 @@ function servitore(pagina) {
       risposta.end(pagina);
       return;
     }
-    const file = path.join(RADICE, decodeURIComponent(dove));
+    /* `/dashboardmodern_static/<impronta>/<resto>` sono i file della plancia;
+       `avatars/` e `brands/` stanno fuori dall'impronta, come nel ponte. */
+    let file;
+    if (dove.startsWith(`${BASE}/`)) {
+      const pezzi = decodeURIComponent(dove)
+        .slice(BASE.length + 1)
+        .split("/");
+      const resto = FUORI_DALL_IMPRONTA.has(pezzi[0]) ? pezzi : pezzi.slice(1);
+      file = path.join(PLANCIA, ...resto);
+    } else {
+      file = path.join(RADICE, decodeURIComponent(dove));
+    }
     if (!file.startsWith(RADICE)) {
       risposta.writeHead(403).end();
       return;
@@ -122,6 +137,9 @@ function servitore(pagina) {
       risposta.writeHead(200, { "content-type": dentro.tipo });
       risposta.end(dentro.corpo);
     } catch {
+      /* Un file che manca si dice: in una pagina fatta di mille moduli, un
+         404 zitto e' una cosa che non si vede e non si spiega. */
+      if (!dove.endsWith("/favicon.ico")) console.log(`   404 ${dove}`);
       risposta.writeHead(404).end();
     }
   });
@@ -226,6 +244,55 @@ async function siConfiguraDaSola(pagina) {
   return true;
 }
 
+/* Il meteo, collegato a mano.
+ *
+ * Il 🪄 non lo rileva: i suoi posti — `dm.home_meteo`, e i tre numeri accanto —
+ * vogliono un'entita' `weather.` e i sensori di fuori, e il rilevatore su
+ * quelli non si sbilancia. Nella plancia vera li collega chi la configura, in
+ * un minuto; qui si scrivono nella busta della casa finta, che e' lo stesso
+ * posto dove li scriverebbe lei, e si ricarica.
+ *
+ * Senza, accanto al nome della casa resta una striscia vuota — ed e' meta'
+ * dell'intestazione. */
+async function collegaIlMeteo(pagina) {
+  const POSTI = {
+    "dm.home_meteo": "weather.casa",
+    "dm.home_meteo_temperatura": "sensor.temperatura_esterna",
+    "dm.home_meteo_percepita": "sensor.temperatura_esterna",
+    "dm.home_meteo_umidita": "sensor.umidita_esterna",
+    "dm.home_meteo_vento": "sensor.vento",
+  };
+  const fatto = await pagina.evaluate((posti) => {
+    try {
+      const chiave = "casa-finta-busta";
+      const busta = JSON.parse(window.localStorage.getItem(chiave) || "null") || { values: {} };
+      /* Si parte da quello che la plancia ha **adesso**, non da quello che c'e'
+         nella busta: i posti che il 🪄 ha appena riempito stanno li'. Partendo
+         dalla busta si riscriveva sopra al suo lavoro, e nella fotografia
+         sparivano la sicurezza e l'antifurto. */
+      const vivi = JSON.parse(window.localStorage.getItem("cd_entity_overrides") || "{}");
+      const slot = Object.assign({}, vivi, JSON.parse(busta.values.cd_entity_overrides || "{}"));
+      if (Object.keys(posti).every((quale) => slot[quale])) return false;
+      Object.assign(slot, posti);
+      window.localStorage.setItem("cd_entity_overrides", JSON.stringify(slot));
+      busta.values.cd_entity_overrides = JSON.stringify(slot);
+      busta.revision = (busta.revision || 0) + 1;
+      busta.keys_revision = (busta.keys_revision || 0) + 1;
+      busta.updated_at = Date.now();
+      window.localStorage.setItem(chiave, JSON.stringify(busta));
+      return true;
+    } catch (_errore) {
+      return false;
+    }
+  }, POSTI);
+  if (!fatto) return false;
+  await pagina.reload({ waitUntil: "load" });
+  await aspettaCheSiaPronta(pagina);
+  await pagina.waitForTimeout(2000);
+  console.log("   il meteo e' collegato");
+  return true;
+}
+
 async function main() {
   if (!existsSync(path.join(PLANCIA, "legacy", "dashboard.html"))) {
     throw new Error("la plancia non c'e' in ponte/plancia/: `strumenti/porta-la-plancia.mjs`");
@@ -257,6 +324,73 @@ async function main() {
         reset: false,
         values: {
           cd_branding: JSON.stringify({ title: "gdahome", subtitle: "La casa in una plancia" }),
+          /* Le persone, con la faccia composta.
+           *
+           * Il 🪄 le entita' le trova, ma un **ritratto** non si rileva: sono
+           * undici scelte che nella plancia vera fa chi la configura, una
+           * persona per volta (`docs/RITRATTO.md`). Qui se ne mettono tre,
+           * perche' una casa senza facce in copertina sembra una casa vuota.
+           * Le facce le disegna il compositore della plancia, quello vero. */
+          cd_people: JSON.stringify([
+            {
+              name: "Daniele",
+              entity: "person.daniele",
+              battery: "sensor.batteria_daniele",
+              avatar: {
+                face: {
+                  persona: "uomo",
+                  capelli: "lisci",
+                  coloreCapelli: "castano",
+                  barba: "corta",
+                  coloreBarba: "naturale",
+                  occhi: "marrone",
+                  carnagione: "chiara2",
+                  vestito: "casual",
+                  coloreVestito: "blu",
+                  occhiali: "nessuno",
+                  collana: "nessuna",
+                },
+              },
+            },
+            {
+              name: "Giulia",
+              entity: "person.giulia",
+              battery: "sensor.batteria_giulia",
+              avatar: {
+                face: {
+                  persona: "donna",
+                  capelli: "lisci",
+                  coloreCapelli: "castano",
+                  barba: "nessuna",
+                  occhi: "verde",
+                  carnagione: "chiara",
+                  vestito: "camicia",
+                  coloreVestito: "verde",
+                  occhiali: "nessuno",
+                  collana: "catenina",
+                },
+              },
+            },
+            {
+              name: "Marco",
+              entity: "person.marco",
+              battery: "sensor.batteria_marco",
+              avatar: {
+                face: {
+                  persona: "ragazzo",
+                  capelli: "ricci",
+                  coloreCapelli: "castano",
+                  barba: "nessuna",
+                  occhi: "azzurro",
+                  carnagione: "media",
+                  vestito: "polo",
+                  coloreVestito: "rosso",
+                  occhiali: "tondi",
+                  collana: "nessuna",
+                },
+              },
+            },
+          ]),
         },
       };
     });
@@ -270,6 +404,7 @@ async function main() {
     await pagina.goto(`http://127.0.0.1:${porta}/plancia-vera`, { waitUntil: "load" });
     await aspettaCheSiaPronta(pagina);
     await siConfiguraDaSola(pagina);
+    await collegaIlMeteo(pagina);
     const pronta = await aspettaCheSiaPronta(pagina);
     await pagina.waitForTimeout(2500);
     /* Prima di scattare si ferma quello che si muove.
@@ -299,6 +434,29 @@ async function main() {
     const dove = path.join(QUI, `plancia-${nome}.png`);
     await pagina.screenshot({ path: dove });
     const chiesto = await pagina.evaluate(() => window.__CASA_FINTA_CHIESTO__ || []);
+    if (process.env.SBIRCIA) {
+      console.log(
+        "   ",
+        await pagina.evaluate(() => {
+          const leggi = (chiave) => {
+            try {
+              return JSON.parse(window.localStorage.getItem(chiave) || "null");
+            } catch (_errore) {
+              return null;
+            }
+          };
+          const slot = leggi("cd_entity_overrides") || {};
+          return JSON.stringify({
+            meteo: Object.keys(slot).filter((quale) => /meteo|weather/i.test(quale)),
+            conMeteo: Object.entries(slot)
+              .filter(([, valore]) => String(valore).startsWith("weather."))
+              .map(([quale]) => quale),
+            persone: (leggi("cd_people") || []).length,
+            faccia: Boolean((leggi("cd_people") || [])[0]?.avatar?.face),
+          });
+        }),
+      );
+    }
     console.log(
       `📷 ${nome.padEnd(9)} ${misura.largo}×${misura.alto}  ${pronta ? "pronta" : "NON pronta"}  ${dove}`,
     );

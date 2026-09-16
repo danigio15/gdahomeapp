@@ -31,14 +31,76 @@
 
   const LE_COSE = [
     stato("sun.sun", "above_horizon", { friendly_name: "Sole" }),
+    /* Il meteo con le sue previsioni **negli attributi**: la plancia le legge
+       da li'. Senza, in cima resta la striscia vuota che si era vista. */
     stato("weather.casa", "sunny", {
       friendly_name: "Casa",
       temperature: 21.4,
+      apparent_temperature: 21,
       temperature_unit: "°C",
       humidity: 48,
       pressure: 1014,
+      pressure_unit: "hPa",
       wind_speed: 6,
-      forecast: [],
+      wind_speed_unit: "km/h",
+      wind_bearing: 210,
+      visibility: 20,
+      visibility_unit: "km",
+      precipitation_unit: "mm",
+      attribution: "Casa finta",
+      supported_features: 3,
+      forecast: [
+        {
+          datetime: "2026-09-16T12:00:00+02:00",
+          condition: "sunny",
+          temperature: 24,
+          templow: 15,
+          precipitation: 0,
+          precipitation_probability: 0,
+          wind_speed: 7,
+          humidity: 45,
+        },
+        {
+          datetime: "2026-09-17T12:00:00+02:00",
+          condition: "partlycloudy",
+          temperature: 23,
+          templow: 14,
+          precipitation: 0,
+          precipitation_probability: 10,
+          wind_speed: 9,
+          humidity: 52,
+        },
+        {
+          datetime: "2026-09-18T12:00:00+02:00",
+          condition: "rainy",
+          temperature: 19,
+          templow: 13,
+          precipitation: 6.2,
+          precipitation_probability: 80,
+          wind_speed: 14,
+          humidity: 76,
+        },
+        {
+          datetime: "2026-09-19T12:00:00+02:00",
+          condition: "cloudy",
+          temperature: 20,
+          templow: 12,
+          precipitation: 0.4,
+          precipitation_probability: 30,
+          wind_speed: 11,
+          humidity: 63,
+        },
+        {
+          datetime: "2026-09-20T12:00:00+02:00",
+          condition: "sunny",
+          temperature: 22,
+          templow: 12,
+          precipitation: 0,
+          precipitation_probability: 0,
+          wind_speed: 6,
+          humidity: 48,
+        },
+      ],
     }),
     stato("light.soggiorno", "on", {
       friendly_name: "Soggiorno",
@@ -124,6 +186,22 @@
     }),
     stato("person.daniele", "home", { friendly_name: "Daniele" }),
     stato("person.giulia", "home", { friendly_name: "Giulia" }),
+    stato("person.marco", "not_home", { friendly_name: "Marco" }),
+    stato("sensor.batteria_daniele", "78", {
+      friendly_name: "Batteria di Daniele",
+      unit_of_measurement: "%",
+      device_class: "battery",
+    }),
+    stato("sensor.batteria_giulia", "54", {
+      friendly_name: "Batteria di Giulia",
+      unit_of_measurement: "%",
+      device_class: "battery",
+    }),
+    stato("sensor.batteria_marco", "31", {
+      friendly_name: "Batteria di Marco",
+      unit_of_measurement: "%",
+      device_class: "battery",
+    }),
     stato("alarm_control_panel.casa", "armed_home", {
       friendly_name: "Antifurto",
       supported_features: 15,
@@ -134,6 +212,24 @@
       friendly_name: "Auto",
       unit_of_measurement: "%",
       device_class: "battery",
+    }),
+    /* Il meteo di fuori: i numeri che la plancia mette accanto al nome della
+       casa, ognuno nel suo posto (`dm.home_meteo_*`). */
+    stato("sensor.temperatura_esterna", "18.6", {
+      friendly_name: "Temperatura esterna",
+      unit_of_measurement: "°C",
+      device_class: "temperature",
+      state_class: "measurement",
+    }),
+    stato("sensor.umidita_esterna", "61", {
+      friendly_name: "Umidità esterna",
+      unit_of_measurement: "%",
+      device_class: "humidity",
+    }),
+    stato("sensor.vento", "8", {
+      friendly_name: "Vento",
+      unit_of_measurement: "km/h",
+      device_class: "wind_speed",
     }),
     stato("sensor.qualita_aria", "18", {
       friendly_name: "Qualità dell'aria",
@@ -244,7 +340,9 @@
      e' cosi' che si scopre cosa chiede davvero la plancia. */
   const CHIESTO = (window.__CASA_FINTA_CHIESTO__ = []);
 
-  function risposta(detto) {
+  /* `manda` arriva da fuori perche' un paio di comandi non si esauriscono in
+     una risposta: le previsioni del meteo arrivano come **evento**, dopo. */
+  function risposta(detto, manda) {
     const tipo = detto.type;
     switch (tipo) {
       case "get_states":
@@ -309,6 +407,20 @@
         return { timers: [] };
       case "dashboardmodern/tickets/list":
         return { tickets: [] };
+      /* Le previsioni, come le chiede Home Assistant di oggi: chi le chiede
+         cosi' le riceve una volta e basta, e alla plancia basta. */
+      case "weather/subscribe_forecast": {
+        const meteo = LE_COSE.find((cosa) => cosa.entity_id === detto.entity_id);
+        const previsioni = meteo?.attributes?.forecast || [];
+        setTimeout(() => {
+          manda({
+            id: detto.id,
+            type: "event",
+            event: { type: detto.forecast_type || "daily", forecast: previsioni },
+          });
+        }, 0);
+        return null;
+      }
       case "dashboardmodern/integrations/catalog":
         return { integrazioni: [] };
       case "dashboardmodern/www/list":
@@ -362,7 +474,7 @@
         manda({ id: detto.id, type: "pong" });
         return;
       }
-      const roba = risposta(detto);
+      const roba = risposta(detto, manda);
       manda({ id: detto.id, type: "result", success: true, result: roba });
     };
 
