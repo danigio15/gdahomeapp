@@ -128,19 +128,21 @@ segreto `GETTONE_SEGNALAZIONI` di questa repository; o, da un terminale,
 
     npx wrangler secret put GITHUB_SEGNALAZIONI
 
-**Le issue in una repository, le foto in un'altra.** Le issue vanno dove la
-gente le cerca — `gdahomeapp`, quella del progetto — e le foto e i video no:
-gli allegati non sono allegati di GitHub, si **committano** sotto
-`allegati/<numero>/` e restano nella storia di git per sempre. E `gdahomeapp`
-e' la repository che Home Assistant **clona** per installare l'add-on: le foto
-delle case degli altri le farebbero scaricare a tutti, a ogni installazione,
-per sempre. Quindi `GITHUB_REPO_ALLEGATI` punta altrove; lasciandola vuota si
-torna a una sola, come prima.
+**Issue e allegati in `gdahomeapp`**, la repository del progetto: e' dove la
+gente le cerca, e chi apre una segnalazione ci trova dentro la foto senza
+andarla a prendere altrove.
 
-Un token a grana fine con **Issues: Read and write** su quella delle issue e
-**Contents: Read and write** su quella degli allegati. Il bottone **Il
-centralino** le prova tutte e due prima di accendere niente, e se il permesso
-sui file manca lo dice — le segnalazioni vanno lo stesso, gli allegati no.
+Gli allegati non sono allegati di GitHub — l'API non ha un modo di attaccare un
+file a una issue — quindi si **committano** sotto `allegati/<numero>/`, e
+restano nella storia di git. `GITHUB_REPO_ALLEGATI` esiste per questo: il
+giorno che la repository diventasse pesante, i file si spostano da li' — un
+ramo a parte, un'altra repository — senza toccare una riga di programma.
+Lasciandola vuota vale quella delle issue.
+
+Un token a grana fine con **Issues: Read and write** e **Contents: Read and
+write**. Il bottone **Il centralino** prova tutte e due le cose prima di
+accendere niente, e se il permesso sui file manca lo dice — le segnalazioni
+vanno lo stesso, gli allegati no.
 La casa si presenta col suo segreto — lo stesso
 della chiamata — e legge e scrive solo nelle issue che ha aperto lei; chi
 risponde da GitHub scrive un commento, e il commento torna nell'app. I

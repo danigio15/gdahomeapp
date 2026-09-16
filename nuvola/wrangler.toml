@@ -61,17 +61,21 @@ enabled = true
 # sapere che esiste un'altra repository.
 GITHUB_REPO = "danigio15/gdahomeapp"
 
-# Le **foto e i video** no, e non e' un dettaglio: gli allegati non sono
-# allegati di GitHub, si committano dentro una repository — sotto
-# `allegati/<numero>/` — e restano nella storia di git per sempre. E
-# `gdahomeapp` e' la repository che Home Assistant **clona** per installare
-# l'add-on: le foto delle case degli altri le farebbero scaricare a tutti, a
-# ogni installazione, per sempre. Quindi restano dove stavano.
+# E le **foto e i video** nella stessa: chi guarda una segnalazione vuole
+# vedere l'allegato senza andarlo a cercare da un'altra parte.
 #
-# Il gettone deve poter scrivere in tutt'e due: «Issues» su questa,
-# «Contents» su quella. Il bottone «Il centralino» su Actions lo prova su
-# entrambe prima di accendere niente.
-GITHUB_REPO_ALLEGATI = "danigio15/gdahome-segnalazioni"
+# Una cosa da sapere, perche' non si vede da qui: gli allegati non sono
+# allegati di GitHub — l'API non ha un modo di attaccare un file a una issue —
+# quindi si **committano** dentro la repository, sotto `allegati/<numero>/`, e
+# restano nella storia di git. E questa e' la repository che Home Assistant
+# clona per installare l'add-on: se un giorno diventa pesante, questa riga e'
+# il posto dove si sposta — un ramo a parte, o un'altra repository — senza
+# toccare una riga di programma.
+#
+# Il gettone vuole «Issues: Read and write» **e** «Contents: Read and write»
+# su questa. Il bottone «Il centralino» su Actions le prova tutte e due prima
+# di accendere niente.
+GITHUB_REPO_ALLEGATI = "danigio15/gdahomeapp"
 
 # gdahome da aprire in un browser, servita da qui.
 #

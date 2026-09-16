@@ -205,17 +205,16 @@ export class GitHub {
     /* Dove vanno le **foto e i video**, che possono essere un'altra
      * repository.
      *
-     * Le issue devono stare dove la gente le cerca — quella del progetto — e
-     * gli allegati no: non si aprono come allegati di GitHub, si **committano**
-     * dentro la repository, sotto `allegati/<numero>/`, e restano nella storia
-     * di git per sempre. La repository del progetto e' quella che Home
-     * Assistant clona per installare l'add-on: metterci dentro le foto delle
-     * case degli altri vorrebbe dire farle scaricare, a tutti, a ogni
-     * installazione, per sempre.
+     * Di solito e' la stessa delle issue, e cosi' sta in gdahome: chi guarda
+     * una segnalazione ci trova dentro l'allegato, senza andarlo a cercare
+     * altrove.
      *
-     * Quindi: le issue in una, gli allegati in un'altra. Chi non la dice
-     * torna al comportamento di prima — tutto nella stessa — che e' quello
-     * che vuole chi ne ha una sola. */
+     * L'interruttore c'e' perche' gli allegati non sono allegati di GitHub —
+     * l'API non ha un modo di attaccare un file a una issue — quindi si
+     * **committano**, sotto `allegati/<numero>/`, e restano nella storia di
+     * git. Il giorno che quella repository diventasse pesante, i file si
+     * spostano da qui: un ramo a parte, un'altra repository, e non cambia una
+     * riga di programma. Vuota vale quella delle issue. */
     this.repoAllegati = repoAllegati || repo;
     /* Non `this.prendi = prendi`: `fetch` chiamata come metodo di
      * quest'oggetto — `this.prendi(...)` — arriva col `this` sbagliato, e il

@@ -234,11 +234,10 @@ fi
 
 GETTONE_SEGNALAZIONI="${GETTONE_SEGNALAZIONI:-$(gia_scritto "$CONFIGURAZIONE/ambiente" GITHUB_SEGNALAZIONI)}"
 REPO_SEGNALAZIONI="${REPO_SEGNALAZIONI:-$(gia_scritto "$CONFIGURAZIONE/ambiente" GITHUB_REPO)}"
-# Dove vanno le foto e i video. Gli allegati non sono allegati di GitHub: si
-# committano dentro una repository, e restano nella storia di git per sempre.
-# Quella delle issue e' la repository del progetto — quella che Home Assistant
-# clona per installare l'add-on — e le foto delle case degli altri non ci
-# vanno. Vuota vuol dire «la stessa delle issue», che e' come stava prima.
+# Dove vanno le foto e i video. Vuota vuol dire «la stessa delle issue», ed e'
+# come sta oggi: si vedono dentro la segnalazione senza andarle a cercare
+# altrove. Si riempie il giorno che convenisse spostarle — gli allegati si
+# committano, e restano nella storia di git — senza toccare il programma.
 REPO_ALLEGATI="${REPO_ALLEGATI:-$(gia_scritto "$CONFIGURAZIONE/ambiente" GITHUB_REPO_ALLEGATI)}"
 if [[ -n "$GETTONE_SEGNALAZIONI" ]]; then
   bene "le segnalazioni sono gia' accese, su ${REPO_SEGNALAZIONI:-?}"
