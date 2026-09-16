@@ -8,12 +8,15 @@
 
 import assert from "node:assert/strict";
 import { generateKeyPairSync, sign } from "node:crypto";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { after, describe, it } from "node:test";
 
 import { STATO, firmaBuona, guardaLaPlancia, improntaDi, sigilloDi } from "../src/provenienza.js";
+
+const LA_PLANCIA = join(dirname(dirname(fileURLToPath(import.meta.url))), "plancia");
 
 const daButtare = [];
 after(() => daButtare.forEach((dove) => rmSync(dove, { recursive: true, force: true })));
@@ -38,7 +41,7 @@ function unaPlancia({ firma = "", rompi = null, sigilloStorto = false } = {}) {
   writeFileSync(
     join(dove, "ORIGINE.json"),
     JSON.stringify({
-      repository: "danigio15/dashboardmodern-v2",
+      repository: "danigio15/gdahomeapp",
       commit: "0".repeat(40),
       versione: "1.4.11",
       portata_il: new Date().toISOString(),
@@ -143,5 +146,36 @@ describe("la provenienza della plancia", () => {
   it("una firma storta non fa cadere niente", () => {
     assert.equal(firmaBuona("abc", "non-e-base64-vera!!", "nemmeno-una-chiave"), false);
     assert.equal(firmaBuona("abc", "", ""), false);
+  });
+
+  /* E quella vera, che sta in questa repository.
+   *
+   * E' la prova che serve da quando la plancia e' **nostra**. Prima arrivava
+   * sigillata da fuori e nessuno la toccava: il sigillo non poteva sfasarsi.
+   * Adesso i suoi difetti si correggono qui, e chi corregge un file e si
+   * dimentica di risigillare (`strumenti/sigilla-la-plancia.mjs`) manda a
+   * tutte le case una plancia che il loro ponte dichiara «modificata» — un
+   * allarme che suona quando non e' successo niente, e che si impara a non
+   * sentire proprio in tempo per il giorno che suona per davvero.
+   *
+   * Qui si guarda solo che le impronte tornino: se sia **firmata** o no
+   * dipende da una chiave privata che in una prova non c'e', e non e' quello
+   * che questa prova difende. */
+  it("la plancia di questa repository torna col suo sigillo", (t) => {
+    if (!existsSync(join(LA_PLANCIA, "ORIGINE.json"))) {
+      return t.skip("qui la plancia non c'e'");
+    }
+    const detto = guardaLaPlancia(LA_PLANCIA, { chiave: "" });
+    assert.notEqual(
+      detto.stato,
+      STATO.senzaOrigine,
+      "la plancia non dice da dove viene: manca ORIGINE.json, o e' illeggibile",
+    );
+    assert.notEqual(
+      detto.stato,
+      STATO.modificata,
+      `${detto.perche || "le impronte non tornano"} — ` +
+        "rifai il sigillo con «node strumenti/sigilla-la-plancia.mjs»",
+    );
   });
 });

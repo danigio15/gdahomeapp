@@ -1,24 +1,42 @@
-Questa cartella non e' di gdahome: e' una copia di DashboardModern.
+Questa cartella e' la plancia: la pagina che l'app e Home Assistant mostrano,
+coi suoi moduli, i suoi caratteri e i suoi ritratti.
 
-Che versione, da quale commit e con quali impronte sta scritto in
-ORIGINE.json, accanto. La porta dentro strumenti/porta-la-plancia.mjs, e il
-ponte la ricontrolla a ogni avvio (ponte/src/provenienza.js): se un file e'
-cambiato, lo dice invece di servirlo come se fosse l'originale.
+Fino a settembre 2026 arrivava da fuori. Era la copia verbatim di una release
+di dashboardmodern-v2, la portava dentro strumenti/porta-la-plancia.mjs, e qui
+non si toccava niente perche' al prossimo import si sarebbe rifatta da zero.
+Quella repository non c'e' piu': **la plancia vive qui**, e qui si correggono i
+suoi difetti, come ogni altra parte di gdahome.
 
-**La sua licenza e' la sua, e sta qui accanto: LICENSE.** Non e' quella di
-gdahome, che sta alla radice della repository. Sono due licenze diverse
-perche' sono due lavori diversi dello stesso autore, e quella di
-DashboardModern vieta a chiunque altro di ridistribuirla, di farne versioni
+Cambia una cosa sola nel modo di lavorarci, ed e' importante.
+
+ORIGINE.json, accanto, porta l'impronta di ogni file e il sigillo che le tiene
+insieme. Il ponte le ricontrolla a ogni avvio (ponte/src/provenienza.js): se un
+file non torna, lo dice nella console invece di servirlo come se fosse
+l'originale. Serve a rendere riconoscibile una copia che qualcun altro ha
+rimaneggiato — non a impedire niente a nessuno.
+
+Quindi: **dopo aver toccato un file qui dentro, il sigillo va rifatto.**
+
+    node strumenti/sigilla-la-plancia.mjs
+
+Senza, il ponte di tutte le case direbbe «modificata» su una plancia che
+abbiamo cambiato noi apposta, e un allarme che suona per niente si impara a non
+sentirlo. Non ci si deve pensare troppo: se ci si dimentica, le Prove si
+fermano e lo dicono (ponte/test/provenienza.test.js).
+
+Quello che invece resta fuori di qui sono le **aggiunte di gdahome alla
+pagina** — il nome, il marchio, le tessere che nell'app non ci vanno. Stanno in
+ponte/src/premesse.js per Home Assistant e in app/lib/plancia/premesse.dart per
+l'app, e ci restano: cambiare il nome dentro novecento file vorrebbe dire
+toccare chiavi, percorsi e classi che si chiamano cosi' per funzionare, e
+guadagnarci niente. Quello che deve cambiare e' quello che si legge.
+
+**La licenza di questa cartella e' la sua, e sta qui accanto: LICENSE.** Non e'
+quella di gdahome, che sta alla radice della repository. Sono due licenze
+diverse perche' sono due lavori dello stesso autore nati in due momenti
+diversi, e questa vieta a chiunque altro di ridistribuirla, di farne versioni
 derivate e di metterla in un prodotto a pagamento.
 
 Detto per chi passa di qui: il fatto che questo codice si legga non vuol dire
-che si possa prendere. Si legge perche' un add-on di Home Assistant e' fatto
-di file che stanno sul disco di chi lo installa, e nasconderli sarebbe
-teatro.
-
-Non si modifica niente qui dentro, e non servirebbe: al prossimo import
-questa cartella si rifa' da zero. Le aggiunte di gdahome alla plancia — il
-nome, il marchio, le tessere che nell'app non ci vanno — stanno nella pagina
-servita: ponte/src/premesse.js per Home Assistant,
-app/lib/plancia/premesse.dart per l'app. E' per quello che questa cartella
-resta quella che e'.
+che si possa prendere. Si legge perche' un add-on di Home Assistant e' fatto di
+file che stanno sul disco di chi lo installa, e nasconderli sarebbe teatro.

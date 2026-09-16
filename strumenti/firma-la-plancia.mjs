@@ -1,8 +1,8 @@
 /* Firma la plancia portata dentro l'add-on.
  *
- * `porta-la-plancia.mjs` scrive in `ORIGINE.json` l'impronta di ogni file e un
- * **sigillo**, che e' l'impronta della lista. Questo script firma il sigillo
- * con una chiave Ed25519 e scrive la firma accanto.
+ * `sigilla-la-plancia.mjs` scrive in `ORIGINE.json` l'impronta di ogni file e
+ * un **sigillo**, che e' l'impronta della lista. Questo script firma il
+ * sigillo con una chiave Ed25519 e scrive la firma accanto.
  *
  * A cosa serve, in una riga: chiunque puo' modificare la sua copia della
  * plancia e rifare le impronte, ma **non puo' rifare la firma**. Una copia
@@ -73,7 +73,7 @@ const origine = JSON.parse(readFileSync(ORIGINE, "utf8"));
 if (!origine.impronte || typeof origine.impronte !== "object") {
   process.stderr.write(
     "Questa plancia non porta le impronte dei suoi file: rilancia prima\n" +
-      "  node strumenti/porta-la-plancia.mjs /dove/sta/dashboardmodern-v2\n",
+      "  node strumenti/sigilla-la-plancia.mjs\n",
   );
   process.exit(65);
 }
@@ -86,7 +86,7 @@ const sigillo = sigilloDi(origine.impronte);
 if (sigillo !== String(origine.sigillo || "")) {
   process.stderr.write(
     `Il sigillo scritto non torna con le impronte (atteso ${sigillo.slice(0, 16)}…).\n` +
-      "Rilancia porta-la-plancia.mjs.\n",
+      "Rilancia sigilla-la-plancia.mjs.\n",
   );
   process.exit(65);
 }

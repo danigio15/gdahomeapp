@@ -89,8 +89,8 @@ test("e la scritta accanto al logo dice gda home", (t) => {
 
 test("la cartella della plancia non si e' toccata: il sigillo torna", () => {
   /* La prova che conta. Se un giorno il nome si cambiasse dentro i file
-   * invece che al momento di servire, il ponte direbbe «modificata» a tutti
-   * — e al primo `porta-la-plancia.mjs` quel lavoro sarebbe da rifare. */
+   * invece che al momento di servire, e nessuno risigillasse, il ponte di
+   * tutte le case direbbe «modificata» su una plancia a posto. */
   assert.equal(plancia.provenienza.quanti ?? 0, 0);
   assert.notEqual(plancia.provenienza.stato, "modificata");
 });

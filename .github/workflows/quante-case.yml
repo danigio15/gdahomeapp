@@ -1,0 +1,132 @@
+# Quante case hanno gdahome, e quante continuano ad aggiornarlo.
+#
+# Il contatore dei download delle release qui non misura niente, e non e' un
+# difetto del badge: sono due strade diverse. Un'integrazione la installa HACS,
+# che **scarica lo zip** della release, e GitHub conta ogni download. Un add-on
+# no: si aggiunge la repository fra gli Archivi, e da li' in poi e' il
+# **Supervisor a clonarla con git** ogni volta che rinfresca il negozio. Per
+# GitHub un clone non e' un download.
+#
+# I cloni pero' li conta, e li tiene nella pagina del traffico — che non e'
+# pubblica: la vede chi ha i permessi sulla repository. Questa corsa la legge
+# una volta al giorno, tiene i conti (GitHub butta tutto dopo quattordici
+# giorni) e li scrive su un ramo suo, da dove shields.io li disegna.
+#
+# **Serve un gettone**, e serve per una cosa sola: leggere un numero che GitHub
+# ha gia'. Non scrive niente, non tocca il codice. Il permesso e'
+# «Administration: Read-only» su questa repository — si puo' aggiungere a
+# `GETTONE_SEGNALAZIONI`, che c'e' gia', oppure se ne fa uno suo e si chiama
+# `GETTONE_CONTI`: questa corsa prende il primo che trova.
+#
+# Quello che i due numeri dicono davvero:
+#
+#  - **case**: quante case distinte hanno clonato negli ultimi quattordici
+#    giorni. Una casa accesa rinfresca il negozio da se', quindi sono le case
+#    **vive** — chi ha spento tutto sparisce in un paio di giorni, ed e' giusto
+#    cosi': la domanda era «quanti continuano ad aggiornare»;
+#  - **scaricamenti**: tutti i cloni di tutti i giorni da quando si conta.
+#    Cresce e non torna indietro, e come il contatore della dashboard conta i
+#    passaggi, non le persone.
+name: Quante case
+
+on:
+  schedule:
+    # Le sette e mezza del mattino, ora nostra: il giorno prima e' chiuso e il
+    # numero e' pieno. Il minuto non e' tondo apposta — a quelli tondi GitHub
+    # ha la fila.
+    - cron: "37 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Due corse insieme scriverebbero lo stesso ramo, e la seconda si troverebbe
+# la prima davanti. Si aspetta: un conto che arriva un minuto dopo va bene.
+concurrency:
+  group: quante-case
+  cancel-in-progress: false
+
+jobs:
+  conta:
+    name: I conti di oggi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Il ramo dei conti sta a parte apposta: la storia del programma non
+      # deve riempirsi di un commit al giorno che dice un numero.
+      - name: I conti di ieri
+        run: |
+          if git clone --depth 1 --branch contatori \
+            "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" conti 2>/dev/null; then
+            echo "il ramo dei conti c'e' gia'"
+          else
+            echo "il ramo dei conti non c'e' ancora: si comincia oggi"
+            mkdir -p conti
+            git -C conti init -b contatori -q
+          fi
+
+      - name: Conta
+        id: conta
+        env:
+          # Il primo che c'e'. Uno solo dei due basta, e nessuno dei due deve
+          # poter scrivere niente.
+          GETTONE: ${{ secrets.GETTONE_CONTI || secrets.GETTONE_SEGNALAZIONI }}
+        run: |
+          if [ -z "$GETTONE" ]; then
+            {
+              echo "### Manca il gettone"
+              echo ""
+              echo "Per leggere il traffico serve un gettone con il permesso"
+              echo '**Administration: Read-only** su questa repository, come segreto'
+              echo '`GETTONE_CONTI` — oppure lo stesso permesso aggiunto a'
+              echo '`GETTONE_SEGNALAZIONI`, che c'"'"'e'"'"' gia'"'"'.'
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::manca il gettone per leggere il traffico"
+            exit 1
+          fi
+          detto=$(node strumenti/conta-le-case.mjs conti)
+          echo "$detto"
+          {
+            echo "### I conti di oggi"
+            echo ""
+            echo "$detto"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Chi arriva su questo ramo per caso deve capire dov'e' finito.
+      - name: Cos'e' questo ramo
+        run: |
+          [ -f conti/LEGGIMI.md ] || cat > conti/LEGGIMI.md <<'FINE'
+          # I conti
+
+          Qui non c'e' programma: ci sono due numeri e la loro storia, scritti
+          una volta al giorno dal lavoro **Quante case**
+          (`.github/workflows/quante-case.yml`).
+
+          - `traffico.json` — un giorno per riga: quanti cloni, e quante case
+            distinte. GitHub tiene quattordici giorni e poi butta; qui restano.
+          - `bollino-case.json`, `bollino-scaricamenti.json` — gli stessi numeri
+            nella forma che shields.io sa disegnare, per i bollini del README.
+
+          Cosa contano, e perche' non e' il contatore dei download: sta scritto
+          in `strumenti/conta-le-case.mjs`, sul ramo principale.
+          FINE
+
+      - name: Segna i conti
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd conti
+          git config user.name "gdahome"
+          git config user.email "noreply@gdahome.org"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "niente di nuovo da segnare"
+            exit 0
+          fi
+          git commit -q -m "i conti del $(date -u +%F)"
+          git push -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            HEAD:contatori

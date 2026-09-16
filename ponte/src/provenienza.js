@@ -1,9 +1,8 @@
 /* La provenienza della plancia: da dove viene, e se qualcuno l'ha toccata.
  *
- * L'add-on porta dentro una copia di DashboardModern. Quella copia sta sul
- * disco di chi ha installato l'add-on, e chi ha installato l'add-on e'
- * amministratore della sua macchina: puo' aprirla e cambiarla. Non c'e' modo
- * di impedirglielo, e non e' quello che si sta cercando di fare.
+ * La plancia sta sul disco di chi ha installato l'add-on, e chi ha installato
+ * l'add-on e' amministratore della sua macchina: puo' aprirla e cambiarla. Non
+ * c'e' modo di impedirglielo, e non e' quello che si sta cercando di fare.
  *
  * Quello che si cerca di fare e' un'altra cosa, ed e' possibile: **far si'
  * che una copia toccata lo dica**. Se qualcuno cambia la plancia e poi la
@@ -13,8 +12,8 @@
  *
  * Come funziona, in due pezzi:
  *
- *  - **le impronte.** `porta-la-plancia.mjs` scrive in `ORIGINE.json`
- *    l'impronta SHA-256 di ogni file portato dentro, piu' un **sigillo**, che
+ *  - **le impronte.** `sigilla-la-plancia.mjs` scrive in `ORIGINE.json`
+ *    l'impronta SHA-256 di ogni file della plancia, piu' un **sigillo**, che
  *    e' l'impronta della lista delle impronte. Il ponte le ricontrolla e dice
  *    quali file non tornano. Da sole bastano contro chi modifica; non contro
  *    chi rigenera anche `ORIGINE.json`.
@@ -44,9 +43,8 @@ import { extname, join, relative } from "node:path";
  * qui con `strumenti/firma-la-plancia.mjs --chiave-pubblica`. */
 export const CHIAVE_DI_CHI_PUBBLICA = "";
 
-/* Le stesse cartelle e gli stessi suffissi di `porta-la-plancia.mjs`: se qui
- * si guardasse un insieme diverso, «tutto a posto» vorrebbe dire un'altra
- * cosa da «tutto portato». */
+/* Quali cartelle fanno la plancia, e quali file dentro. Chi sigilla non ha un
+ * elenco suo: chiama `leImpronte` qui sotto, e guarda esattamente questi. */
 export const CARTELLE = ["legacy", "src", "avatars", "brands"];
 const SUFFISSI = new Set([
   ".js",
@@ -108,6 +106,32 @@ function* iFile(cartella, radice) {
   }
 }
 
+/**
+ * Le impronte dei file che stanno **adesso** in quella cartella.
+ *
+ * La camminata e' una sola perche' la fanno in due: chi sigilla, quando si e'
+ * cambiato qualcosa nella plancia, e chi verifica, dentro ogni casa. Se
+ * guardassero due insiemi diversi di file, il giorno che uno dei due cambiasse
+ * idea su una cartella o su un suffisso la verifica direbbe «modificata» su
+ * una plancia intatta — e a quel punto non vorrebbe piu' dire niente.
+ */
+export function leImpronte(cartella) {
+  const trovate = {};
+  for (const dentro of CARTELLE) {
+    const da = join(cartella, dentro);
+    if (!existsSync(da)) continue;
+    for (const relativo of iFile(da, cartella)) {
+      try {
+        trovate[relativo] = improntaDi(readFileSync(join(cartella, relativo)));
+      } catch (_errore) {
+        /* Illeggibile: conta come mancante, che e' quello che e' per chi
+         * deve servirlo. */
+      }
+    }
+  }
+  return trovate;
+}
+
 /* La firma regge? Senza chiave pubblica, o senza firma, la risposta e' no —
  * e chi chiama la distingue da «regge e non torna». */
 export function firmaBuona(sigillo, firma, chiave = CHIAVE_DI_CHI_PUBBLICA) {
@@ -150,19 +174,7 @@ export function guardaLaPlancia(cartella, { chiave = CHIAVE_DI_CHI_PUBBLICA } = 
     };
   }
 
-  const trovate = {};
-  for (const dentro of CARTELLE) {
-    const da = join(cartella, dentro);
-    if (!existsSync(da)) continue;
-    for (const relativo of iFile(da, cartella)) {
-      try {
-        trovate[relativo] = improntaDi(readFileSync(join(cartella, relativo)));
-      } catch (_errore) {
-        /* Illeggibile: conta come mancante, che e' quello che e' per chi
-         * deve servirlo. */
-      }
-    }
-  }
+  const trovate = leImpronte(cartella);
 
   const cambiati = [];
   const mancanti = [];
