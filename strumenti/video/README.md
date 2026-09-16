@@ -94,7 +94,7 @@ non un quadrato finto messo lì per somiglianza. Quello che ci sta scritto invec
 è finto e lo dice: chi lo inquadra si trova in mano
 `gdahome://codice-finto-del-video/non-abbina-niente`, non un abbinamento.
 
-Le finestre di Home Assistant e la pagina del negozio del telefono sono
+Le finestre di Home Assistant e la pagina di Google Play sono
 **ricostruite**, non catturate: servivano una casa vera e un'app pubblicata.
 
 ## Le date, e dove stanno scritte
@@ -103,7 +103,7 @@ I tre film dicono le stesse tre cose, e quando cambiano vanno cambiate in tutti
 e tre:
 
 - **da subito**: l'add-on, la plancia, e l'app dal browser;
-- **dal 30 settembre**: l'app per Android, negli store;
+- **dal 30 settembre**: l'app per Android, **su Google Play** — per ora l'unico negozio;
 - **in fase di sviluppo**: la versione per iOS.
 
 Nel film lungo stanno nella scena `dal-negozio-del-telefono` (la targhetta in

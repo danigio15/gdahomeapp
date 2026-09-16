@@ -135,7 +135,7 @@ scena(
   <div class="colonna">
     <h1 class="titolo piccolo en" style="--t:.15s">Da quando si usa</h1>
     ${voce(0.55, "#4ade80", segno("spunta", 30, "#4ade80"), "<b>Da subito</b><span class=\"quando\">L'add-on, la plancia, e l'app dal browser</span>")}
-    ${voce(0.95, "#fbbf24", segno("calendario", 28, "#fbbf24"), '<b>Dal 30 settembre</b><span class="quando">L\'app per Android, negli store</span>')}
+    ${voce(0.95, "#fbbf24", segno("calendario", 28, "#fbbf24"), '<b>Dal 30 settembre</b><span class="quando">L\'app per Android, su Google Play</span>')}
     ${voce(1.35, "#38bdf8", segno("attrezzi", 28, "#38bdf8"), '<b>In fase di sviluppo</b><span class="quando">La versione per iOS</span>')}
     <p class="sotto ap" style="--t:2.2s">Serve una casa con <b>Home Assistant</b>.</p>
   </div>`,

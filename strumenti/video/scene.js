@@ -758,7 +758,7 @@ scena(
 
 /* ══ 6. L'app ══════════════════════════════════════════════════════════
  *
- * La pagina del negozio e' **finta, e lo dice**: l'app sui negozi non c'e'
+ * La pagina del negozio e' **finta, e lo dice**: l'app su Google Play non c'e'
  * ancora — nel README sta fra le cose da fare. Il modo che funziona oggi e'
  * la scena dopo, e le due stanno una di fila all'altra apposta. */
 
@@ -831,11 +831,11 @@ scena(
   "dal-negozio-del-telefono",
   15,
   () => `
-  ${cartello(6, "L'app", "dal negozio del telefono")}
+  ${cartello(6, "L'app", "dal Play Store")}
   <div class="ap" style="--t:.2s;position:absolute;right:64px;top:38px;display:flex;align-items:center;gap:10px;
        background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.45);border-radius:12px;padding:10px 16px">
     ${segno("calendario", 18, "#fbbf24")}
-    <span style="font-size:15px;color:#fcd34d;font-weight:600">Su Android negli store dal 30 settembre</span>
+    <span style="font-size:15px;color:#fcd34d;font-weight:600">Su Google Play dal 30 settembre</span>
   </div>
 
   ${telefono({ x: 150, y: 106, scala: 0.76, classe: "cr", stile: "--t:.35s", dentro: NEGOZIO_TELEFONO })}
@@ -844,11 +844,11 @@ scena(
   <div style="position:absolute;left:490px;top:180px;right:84px">
     <div class="vetro en" style="--t:1.1s;padding:22px 24px">
       <h3 style="margin:0 0 8px;font-size:22px;font-weight:700">Come sarà</h3>
-      <p style="margin:0;font-size:17px;line-height:1.55;color:var(--tenue)">Si cerca <b style="color:#cfe0f5">gdahome</b> nel negozio del telefono, si preme <b style="color:#cfe0f5">Installa</b>, e si apre. Da lì c'è un bottone solo: inquadra il codice.</p>
+      <p style="margin:0;font-size:17px;line-height:1.55;color:var(--tenue)">Si cerca <b style="color:#cfe0f5">gdahome</b> su Google Play, si preme <b style="color:#cfe0f5">Installa</b>, e si apre. Da lì c'è un bottone solo: inquadra il codice.</p>
     </div>
     <div class="vetro en" style="--t:1.45s;padding:22px 24px;margin-top:16px;border-color:rgba(245,158,11,.35)">
       <h3 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#fcd34d">Come è adesso</h3>
-      <p style="margin:0;font-size:17px;line-height:1.55;color:var(--tenue)">Sul Play Store l'app arriva il <b style="color:#fcd34d">30 settembre</b>. Fino a quel giorno si apre dal browser, ed è qui sotto. <b style="color:#fcd34d">Per iOS: in fase di sviluppo.</b></p>
+      <p style="margin:0;font-size:17px;line-height:1.55;color:var(--tenue)">Sul Play Store l'app arriva il <b style="color:#fcd34d">30 settembre</b>, e per ora è l'unico negozio. Fino a quel giorno si apre dal browser, ed è qui sotto. <b style="color:#fcd34d">Per iOS: in fase di sviluppo.</b></p>
     </div>
   </div>
 

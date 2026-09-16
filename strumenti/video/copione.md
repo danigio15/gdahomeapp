@@ -112,9 +112,9 @@ Si incolla `https://github.com/danigio15/gdahomeapp`.
 >
 > (8,8s) In Home Assistant non c'è niente da installare: la porta l'add-on.
 
-### **2:02** — L'app, dal negozio del telefono *(15s)*
+### **2:02** — L'app, dal Play Store *(15s)*
 
-In alto, per tutta la scena: **«Su Android negli store dal 30 settembre»**.
+In alto, per tutta la scena: **«Su Google Play dal 30 settembre»**.
 
 > (2,2s) Dal **30 settembre** la strada è questa: cercarla e premere
 > **Installa**.
@@ -220,7 +220,7 @@ accende da sola.
 > **Da quando si usa**
 >
 > ✓ **Da subito** — l'add-on, la plancia, e l'app dal browser
-> 📅 **Dal 30 settembre** — l'app per Android, negli store
+> 📅 **Dal 30 settembre** — l'app per Android, su Google Play
 > 🔧 **In fase di sviluppo** — la versione per iOS
 >
 > Serve una casa con **Home Assistant**.
