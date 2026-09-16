@@ -81,6 +81,7 @@ List<double> _menoColore(double quanto) {
 /// Quali disegni ci sono. Serve a chi deve sapere se una chiave ne ha uno.
 const disegniDegliOggetti = <String>{
   'agenda',
+  'aggiornamenti',
   'allagamenti',
   'allerte',
   'animali',

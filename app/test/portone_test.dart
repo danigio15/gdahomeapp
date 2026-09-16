@@ -659,6 +659,98 @@ void main() {
   );
 
   testWidgets(
+    'gli aggiornamenti di casa si contano sulla voce del menu, e si fanno da lì',
+    (tester) async {
+      /* La sezione nasce da una frase: «chi utilizzerà app non vedrà mai
+       * aggiornamenti se non accede su HA». Una sezione che si scopre solo
+       * entrandoci sposterebbe il problema di una schermata e basta: quello
+       * che lo risolve e' il numero addosso alla voce, che si vede aprendo il
+       * menu — cioe' col gesto che si fa comunque venti volte al giorno. */
+      late PonteFinto ponte;
+      late Collegamento collegamento;
+
+      await tester.runAsync(() async {
+        ponte = await PonteFinto.alza();
+        ponte.aggiornamenti.addAll([
+          {
+            'entita': 'update.dashboardmodern_update',
+            'nome': 'DashboardModern',
+            'da': '1.4.30',
+            'a': '1.4.31',
+            'installabile': true,
+          },
+          {
+            'entita': 'update.gdahome_update',
+            'nome': 'gdahome',
+            'a': '0.21.0',
+            'installabile': true,
+            'stacca': true,
+          },
+        ]);
+        final archivio = ArchivioDelleCase(CassaforteInMemoria());
+        await archivio.apri();
+        await archivio.aggiungi(
+          nome: 'Casa mia',
+          segno: segnoBuono,
+          identificativo: chiBuono,
+          chiave: chiaveBuona,
+          inCasa: ponte.indirizzo,
+        );
+        collegamento = Collegamento(
+          archivio: archivio,
+          sonda: Sonda(bussa: (dove) async => dove == ponte.indirizzo.salute),
+        );
+        await collegamento.apri();
+        await _finoAllaPlancia(collegamento);
+      });
+
+      await tester.pumpWidget(
+        AppDiCasa(collegamento: collegamento, plancia: _PlanciaFinta()),
+      );
+      await tester.pump();
+      /* Il conto lo chiede la home appena il filo e' su, e la domanda passa
+       * dalla rete vera. */
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 300)),
+      );
+      await tester.pumpAndSettle();
+
+      await apriLaBarra(tester);
+      expect(nellaBarra('AGGIORNAMENTI'), findsOneWidget);
+      /* Due, scritto sulla voce. Senza questo la sezione sarebbe una porta
+       * che nessuno apre. */
+      expect(nellaBarra('2'), findsOneWidget);
+
+      await tester.tap(nellaBarra('AGGIORNAMENTI'));
+      await tester.pump();
+      /* Qui non si puo' «aspettare che tutto si fermi»: mentre l'elenco
+       * arriva c'e' una rotella che gira, e una rotella non si ferma mai —
+       * `pumpAndSettle` continuerebbe a far scorrere l'orologio finto finche'
+       * la domanda sul filo non scade da sola. Si lascia passare un momento
+       * di tempo **vero**, che e' quello in cui la risposta arriva davvero, e
+       * poi si disegna. */
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 300)),
+      );
+      for (var giro = 0; giro < 8; giro += 1) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(find.text('2 aggiornamenti da fare'), findsOneWidget);
+      expect(find.text('DashboardModern'), findsOneWidget);
+      expect(find.text('1.4.30 → 1.4.31'), findsOneWidget);
+      /* E il riavvio della casa, che e' l'altra meta' di quello che qui si
+       * era chiesto. */
+      expect(find.text('Riavvia Home Assistant'), findsOneWidget);
+
+      await tester.runAsync(() async {
+        await collegamento.chiudi();
+        await ponte.spegni();
+      });
+    },
+  );
+
+  testWidgets(
     'il menu si apre dai tre trattini della plancia, dal ☰ e da indietro',
     (tester) async {
       late PonteFinto ponte;

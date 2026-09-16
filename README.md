@@ -191,8 +191,9 @@ l'abbinamento, cosa finisce sul disco — sta in
 | ✅ | **Più di una plancia** per casa, ognuna con la sua configurazione, le sue sezioni, le sue stanze — e ognuna compare fra le «Plance» di Home Assistant |
 | ✅ | **La plancia si configura dal telefono**: la sua pagina Config, intatta, dentro l'app |
 | ✅ | **Segnalazioni** con foto e video, e una **chat di assistenza** — quella della dashboard, che il ponte fa da sé |
+| ✅ | **Gli aggiornamenti di casa nel menu**, col numero addosso alla voce: Home Assistant, gli add-on, gdahome, i firmware. Si installano da lì, e da lì si riavvia la casa |
 | ✅ | **Dal browser**, senza installare niente: la stessa app, che si adatta allo schermo |
-| ✅ | **781 prove** — 396 sul ponte, 85 sul centralino, 13 sulla nuvola, 287 sull'app — senza rete, senza Home Assistant, senza telefono |
+| ✅ | **810 prove** — 409 sul ponte, 85 sul centralino, 16 sulla nuvola, 300 sull'app — senza rete, senza Home Assistant, senza telefono |
 | ⬜ | Gli aiutanti di Home Assistant, nativi nell'app |
 | ⬜ | Zigbee: abbinare un dispositivo da qui (ZHA e Zigbee2MQTT) |
 | ⬜ | Le automazioni, scritte dall'app |
@@ -300,9 +301,9 @@ finto che fa lo stesso. È l'unico modo di avere prove che girino davvero a ogni
 commit.
 
 ```bash
-npm test                        # ponte, centralino e nuvola: 494 prove
-npm run test:ponte              # il ponte: 396 prove, due secondi
-cd app && flutter test          # l'app: 287 prove, mezzo minuto
+npm test                        # ponte, centralino e nuvola: 510 prove
+npm run test:ponte              # il ponte: 409 prove, due secondi
+cd app && flutter test          # l'app: 300 prove, mezzo minuto
 
 npm run format:check            # prettier, sui file nostri
 cd app && flutter analyze       # l'analisi di Dart

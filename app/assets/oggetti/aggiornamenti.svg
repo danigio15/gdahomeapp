@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs>
+      <linearGradient id="dmoAggGhiera" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#e2e8f0"/><stop offset="1" stop-color="#7c8ba1"/></linearGradient>
+      <radialGradient id="dmoAggVetro" cx=".38" cy=".3" r=".78">
+        <stop offset="0" stop-color="#fde68a"/><stop offset=".5" stop-color="#f59e0b"/>
+        <stop offset="1" stop-color="#b45309"/></radialGradient></defs>
+    <ellipse cx="16" cy="28" rx="8.8" ry="1.8" fill="#0b1220" opacity=".14"/>
+    <circle cx="16" cy="15.4" r="11.2" fill="url(#dmoAggGhiera)"/>
+    <circle cx="16" cy="15.4" r="9.2" fill="url(#dmoAggVetro)"/>
+    <path d="M16 8.2l5.8 6.4h-3.2v6.6h-5.2v-6.6h-3.2Z" fill="#fff" fill-opacity=".95"/>
+    <path d="M9.2 10.2a8.8 8.8 0 0 1 4.6-3.6" stroke="#fff" stroke-opacity=".7" stroke-width="1.6"
+      fill="none" stroke-linecap="round"/></svg>

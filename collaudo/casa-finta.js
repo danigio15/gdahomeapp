@@ -34,7 +34,73 @@ const DEMO = JSON.parse(
   readFileSync(join(dirname(fileURLToPath(import.meta.url)), "casa-demo.json"), "utf8"),
 );
 const ADESSO = new Date(Date.now() - 90_000).toISOString();
-const CASA = DEMO.entita.map((una) => ({ ...una, last_changed: ADESSO, last_updated: ADESSO }));
+
+/* Quello che aspetta di essere aggiornato.
+ *
+ * Nella casa demo della plancia non c'e': quella e' una casa di **tessere**, e
+ * un'entita' `update.` non ne disegna nessuna. Qui servono, perche' la sezione
+ * Aggiornamenti dell'app legge quelle e basta — e una sezione che nel collaudo
+ * si fotografa sempre vuota non si e' mai guardata davvero.
+ *
+ * Sono le quattro che si trovano in tutte le case, e sono diverse apposta: il
+ * sistema e l'add-on **portano giu' il filo** quando si installano — e
+ * l'app deve dirlo prima; la plancia no; e il firmware di una presa non si
+ * installa chiamando un servizio, quindi il tasto non ci va. */
+const DA_AGGIORNARE = [
+  {
+    entity_id: "update.dashboardmodern_update",
+    state: "on",
+    attributes: {
+      friendly_name: "DashboardModern Update",
+      title: "DashboardModern",
+      installed_version: "1.4.30",
+      latest_version: "1.4.31",
+      release_summary: "Le finestre della Config non restano più offuscate uscendo dall'editor.",
+      release_url: "https://github.com/danigio15/dashboardmodern-v2/releases",
+      supported_features: 1,
+    },
+  },
+  {
+    entity_id: "update.gdahome_update",
+    state: "on",
+    attributes: {
+      friendly_name: "gdahome Update",
+      title: "gdahome",
+      installed_version: "0.20.0",
+      latest_version: "0.21.0",
+      supported_features: 1,
+    },
+  },
+  {
+    entity_id: "update.home_assistant_core_update",
+    state: "on",
+    attributes: {
+      friendly_name: "Home Assistant Core Update",
+      title: "Home Assistant Core",
+      installed_version: "2026.8.4",
+      latest_version: "2026.9.1",
+      release_url: "https://www.home-assistant.io/latest-release-notes/",
+      supported_features: 1,
+    },
+  },
+  {
+    entity_id: "update.presa_lavatrice_firmware",
+    state: "on",
+    attributes: {
+      friendly_name: "Presa lavatrice",
+      installed_version: "1.0.9",
+      latest_version: "1.1.0",
+      device_class: "firmware",
+      supported_features: 0,
+    },
+  },
+];
+
+const CASA = [...DEMO.entita, ...DA_AGGIORNARE].map((una) => ({
+  ...una,
+  last_changed: ADESSO,
+  last_updated: ADESSO,
+}));
 /* La configurazione della plancia, nella forma dell'integrazione. Non la
  * risponde questa casa: la tiene il ponte, e il collaudo gliela mette
  * nell'archivio prima di accenderlo. */

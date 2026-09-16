@@ -52,6 +52,7 @@ import '../casa/collegamento.dart';
 import '../parole.dart';
 import '../vestito/oggetti.dart';
 import '../vestito/quanto_e_largo.dart';
+import '../vestito/tema.dart';
 import 'da_dove.dart';
 import 'da_parte.dart';
 import 'firma.dart';
@@ -77,7 +78,22 @@ class BarraDelleSezioni extends StatefulWidget {
     this.collegamento,
     this.sopraLaPlancia = false,
     this.daParte = const LaPlanciaDaParte(),
+    this.daAggiornare = 0,
   });
+
+  /* Quanti aggiornamenti aspettano di essere fatti.
+   *
+   * E' l'unico numero che compare sulle voci, e c'e' per il motivo per cui
+   * esiste quella sezione: in Home Assistant il pallino rosso degli
+   * aggiornamenti sta in una pagina che chi usa l'app non apre piu', e una
+   * sezione che si scopre solo entrandoci non risolve granche'. Il numero
+   * addosso alla voce si vede aprendo il menu, che e' il gesto che si fa
+   * comunque venti volte al giorno.
+   *
+   * Zero vuol dire niente da fare, e niente da fare vuol dire **niente
+   * disegnato**: un bollino «0» e' un allarme che dice «tutto bene», e si
+   * impara a non guardarlo. */
+  final int daAggiornare;
 
   /// Le sezioni da mostrare, nell'ordine in cui vanno.
   final List<Sezione> sezioni;
@@ -342,6 +358,9 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                                         sezione: sezione,
                                         scelta: sezione == widget.aperta,
                                         quandoPremuta: () => _scelta(sezione),
+                                        quanti: sezione == Sezione.aggiornamenti
+                                            ? widget.daAggiornare
+                                            : 0,
                                       );
                                     },
                                   ),
@@ -616,6 +635,7 @@ class _Voce extends StatelessWidget {
     required this.sezione,
     required this.scelta,
     required this.quandoPremuta,
+    this.quanti = 0,
   });
 
   static const double altezza = 40;
@@ -624,6 +644,9 @@ class _Voce extends StatelessWidget {
   final Sezione sezione;
   final bool scelta;
   final VoidCallback quandoPremuta;
+
+  /// Quante cose aspettano dentro questa voce. Zero non si disegna.
+  final int quanti;
 
   @override
   Widget build(BuildContext context) {
@@ -690,9 +713,48 @@ class _Voce extends StatelessWidget {
                         : fondo.withValues(alpha: sezione.pronta ? 0.78 : 0.3),
                   ),
                 ),
+                if (quanti > 0) ...[const SizedBox(width: 6), _Quanti(quanti)],
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Il numero addosso a una voce: quante cose ci aspettano dentro.
+///
+/// Ambra e non rosso, come la tessera della plancia: un aggiornamento non e'
+/// un guasto, e' una cosa da fare con calma. Il rosso, in questa casa, vuol
+/// dire «vai a vedere adesso», e speso qui non vorrebbe piu' dire niente
+/// quando servira' davvero.
+///
+/// Oltre il nove diventa «9+»: tre cifre dentro una pastiglia da venti punti
+/// non si leggono, e la differenza fra dodici e quattordici aggiornamenti non
+/// cambia quello che si fa.
+class _Quanti extends StatelessWidget {
+  const _Quanti(this.quanti);
+
+  final int quanti;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colori.ambraScura,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        quanti > 9 ? '9+' : '$quanti',
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 10,
+          height: 1.2,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
         ),
       ),
     );

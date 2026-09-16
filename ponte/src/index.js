@@ -30,6 +30,7 @@ import { Portiere } from "./portiere.js";
 import { Ritorno } from "./ritorno.js";
 import { Segnalazioni } from "./segnalazioni.js";
 import { Spegnimento } from "./spegnimento.js";
+import { Aggiornamenti } from "./aggiornamenti.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciLaConsole, costruisciLaPortaDellApp } from "./server.js";
 
@@ -117,6 +118,11 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     chiaveDellaConsole: opzioni.chiaveDellaConsole,
     registro,
   });
+  /* Cosa c'e' da aggiornare in casa. In Home Assistant si vede da una pagina
+   * che chi usa l'app non apre piu': qui l'elenco si legge dalle entita'
+   * `update.` e si manda al telefono, che con tre righe sa quello che nella
+   * dashboard si vede col pallino rosso. */
+  const aggiornamenti = new Aggiornamenti({ casa, registro });
   const commissioni = new Commissioni({
     casa,
     registro,
@@ -129,6 +135,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     segnalazioni,
     chat,
     spegnimento,
+    aggiornamenti,
   });
   /* Chi c'e' in questa casa, e chi la amministra.
    *
