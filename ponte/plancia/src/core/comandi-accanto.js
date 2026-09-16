@@ -125,6 +125,43 @@ export function comandoDelDispositivo(voce = {}, valore = "") {
   return { domain: dominio, service: "turn_on", data: { entity_id: entity } };
 }
 
+/* I domini con DUE gesti, non uno.
+ *
+ * «I tasti on/off in automazioni non funzionano» (#552). Il comando era
+ * disegnato come una levetta — con tanto di stato acceso e spento — e al tocco
+ * faceva PARTIRE l'automazione: la levetta scattava e tornava indietro, e
+ * sembrava che non succedesse niente.
+ *
+ * Chiesto a chi ha segnalato quale dei due volesse, la risposta e' stata
+ * «abilitarla o disabilitarla, perche' a volte le attivo io e a volte si
+ * attivano da sole quando inserisco l'allarme». Sono due gesti diversi e
+ * legittimi tutti e due, e un'automazione e' l'unica entita' che li ha
+ * entrambi: si fa partire adesso, e si abilita o si disabilita — che e' quello
+ * che Home Assistant mostra come suo stato.
+ *
+ * Quindi non si sceglie: si danno tutti e due. Il tasto la fa partire, e il
+ * verbo e' quello di `comandoDelDispositivo`; la levetta la abilita, ed e'
+ * questo. Fuori dalle automazioni una levetta non ha un secondo verbo, e qui
+ * non risponde niente: chi disegna ne disegna una sola. */
+const SI_ABILITANO = Object.freeze(new Set(["automation"]));
+
+/** Se quell'entita', oltre a farsi partire, si puo' anche abilitare. */
+export function siPuoAbilitare(entity) {
+  return SI_ABILITANO.has(clean(entity).split(".")[0]);
+}
+
+/**
+ * Il servizio dietro la LEVETTA di un'entita': abilitare e disabilitare.
+ *
+ * `null` per tutte quelle che una levetta propria non ce l'hanno — la loro
+ * levetta e' il comando di sempre, e il verbo lo dice `comandoDelDispositivo`.
+ */
+export function comandoCheAbilita(voce = {}) {
+  const entity = clean(voce?.entity);
+  if (!siPuoAbilitare(entity)) return null;
+  return { domain: entity.split(".")[0], service: "toggle", data: { entity_id: entity } };
+}
+
 /* I comandi che stanno accanto a quel dispositivo, da proporre a chi configura.
  *
  * Le entita' di uno stesso dispositivo si riconoscono da come Home Assistant

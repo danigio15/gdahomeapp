@@ -360,7 +360,7 @@ function rigaEvidenzaMarkup(voce, index) {
     </div>
     <div class="dm-todo-ed-body"${aperto ? "" : " hidden"}>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Nome", "Name")}</span><span class="ed-form-row"><input id="dm-evid-${index}-name" class="ed-input" data-evid-field="name" value="${esc(clean(voce?.name))}" placeholder="${t("Quadro elettrico", "Main panel")}"></span></label>
-      <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Icona (facoltativa)", "Icon (optional)")}</span><span class="ed-form-row"><input id="dm-evid-${index}-icon" class="ed-input" data-evid-field="icon" value="${esc(clean(voce?.icon))}" placeholder="⭐" maxlength="8"></span></label>
+      <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Icona (facoltativa)", "Icon (optional)")}</span><span class="ed-form-row"><input id="dm-evid-${index}-icon" class="ed-input" data-evid-field="icon" value="${esc(clean(voce?.icon))}" placeholder="⭐" maxlength="4" data-icon-category="load" data-icon-glifo="true" readonly></span></label>
       <label class="ed-slot dm-todo-ed-field"><span class="ed-slot-lbl">${t("Entità", "Entity")}</span>
         <span class="ed-form-row"><input id="dm-evid-${index}-entity" class="ed-input mono" data-evid-field="entity" value="${esc(clean(voce?.entity))}" placeholder="sensor.quadro_temperatura" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-evid-pick="dm-evid-${index}-entity" aria-label="${t("Scegli entità", "Choose entity")}">🔍</button></span>
         <small>${t("Qualunque entità di Home Assistant: la tessera ne mostra lo stato, con l'unità quando c'è.", "Any Home Assistant entity: the tile shows its state, with the unit when there is one.")}</small></label>
@@ -381,10 +381,12 @@ function rigaEvidenzaMarkup(voce, index) {
 /* Il blocco «In evidenza» della scheda: le righe, e il tasto per aggiungerne. */
 function evidenzaMarkup() {
   const voci = evidenze();
-  return `<div class="ed-sec-title dm-widget-ed-sep">⭐ ${esc(t("In evidenza", "Highlights"))}</div>
+  return `<div class="ed-sec-title dm-widget-ed-sep">⭐ ${esc(
+    t("In evidenza · le tue tessere", "Highlights · your own tiles"),
+  )}</div>
   <div class="ed-intro">${t(
-    "Le entità da tenere d'occhio dalla Home: la tessera «In evidenza» le riassume in una riga e, aperta, le mostra a caselle.",
-    "Entities to keep an eye on from Home: the “Highlights” tile sums them up in one line and, opened, shows them as cards.",
+    "Una tessera in Home per un'entità qualsiasi, anche di una sezione che non c'è: il livello del sale dell'addolcitore, la sonda del rack, la pompa del pozzo. Messe insieme, la tessera «In evidenza» le riassume in una riga e, aperta, le mostra a caselle; con «Tessera a sé» ognuna ha la sua, col nome e il disegno che le dai tu.",
+    "A tile on Home for any entity at all, even from a section that does not exist: the softener's salt level, the rack probe, the well pump. Together, the “Highlights” tile sums them up in one line and, opened, shows them as cards; with “Its own tile” each one gets its own, with the name and the icon you give it.",
   )}</div>
   <div class="ed-list dm-todo-ed-list dm-evid-list">${
     voci.length

@@ -9,6 +9,7 @@ import {
   flussoInPausa,
   mettiInPausaIlFlusso,
   percorsoDelFlusso,
+  percorsoDellIstantanea,
   stessoFlusso,
   vuoleIlVivo,
 } from "../core/telecamera-dal-vivo.js";
@@ -223,11 +224,10 @@ function chiaveImmagine(image, entity) {
  * sarebbe un messaggio sul socket ogni quattro secondi per telecamera. */
 const FIRMA_DURA_MS = 3 * 60 * 60 * 1000;
 
-async function flussoFirmato(entity) {
-  const percorso = percorsoDelFlusso(entity);
+async function percorsoFirmato(chiave, percorso) {
   if (!percorso) return "";
   state.firme ||= new Map();
-  const avuta = state.firme.get(entity);
+  const avuta = state.firme.get(chiave);
   if (avuta && avuta.quando > Date.now() - FIRMA_DURA_MS) return avuta.url;
   try {
     const risposta = await chiediAHomeAssistant({
@@ -236,11 +236,37 @@ async function flussoFirmato(entity) {
       expires: 4 * 60 * 60,
     });
     const url = clean(risposta?.path);
-    if (url) state.firme.set(entity, { url, quando: Date.now() });
+    if (url) state.firme.set(chiave, { url, quando: Date.now() });
     return url;
   } catch (_error) {
+    /* Presa chiusa o comando rifiutato: non si tiene niente, cosi' il prossimo
+     * giro del cronometro riprova invece di ricordarsi un fallimento. */
     return "";
   }
+}
+
+function flussoFirmato(entity) {
+  return percorsoFirmato(`flusso:${entity}`, percorsoDelFlusso(entity));
+}
+
+/* Il fotogramma di chi non pubblica `entity_picture` (#516).
+ *
+ * «Entrando nella sezione sicurezza e aprendo il popup della telecamera la live
+ * funziona, mentre nella visuale a 4 camere non mi visualizza la live ma solo
+ * un'immagine ferma» — e poi, piu' avanti, «nessun segnale».
+ *
+ * Il popup funziona perche' passa dal video, che l'entita' la chiama per nome.
+ * Il muro no: leggeva soltanto `entity_picture`, e per una telecamera in cloud
+ * quel campo e' vuoto finche' l'integrazione un'immagine non ce l'ha in mano.
+ * Senza quel campo il muro non chiedeva NIENTE: nessun fotogramma, e la
+ * tessera restava il suo fondo scuro.
+ *
+ * La porta pero' e' la stessa che si usa con la foto — `camera_proxy` — e
+ * accetta il nome dell'entita'. Manca solo il gettone, e nel pannello dentro
+ * Home Assistant un gettone da mettere in un'intestazione non ce l'abbiamo:
+ * lo mette Home Assistant firmando il percorso, come gia' si fa per il flusso. */
+function istantaneaFirmata(entity) {
+  return percorsoFirmato(`istantanea:${entity}`, percorsoDellIstantanea(entity));
 }
 
 /* Una telecamera «dal vivo»: il flusso continuo, appeso all'immagine una volta
@@ -279,11 +305,26 @@ async function avviaIlFlusso(camera, image, picture, registry = state.cameraUrls
   return true;
 }
 
+/* L'indirizzo da cui prendere un fotogramma di questa telecamera.
+ *
+ * La foto pubblicata da Home Assistant quando c'e'; altrimenti la stessa porta
+ * chiamata per nome e firmata dal socket (#516). Chi non ha ne' l'una ne'
+ * l'altra — la presa e' chiusa, o l'entita' non esiste — torna vuoto, e chi
+ * chiama lo dichiara. */
+async function indirizzoDelFotogramma(camera, picture) {
+  return picture || (await istantaneaFirmata(camera.entity));
+}
+
 /* L'istantanea al posto del flusso, quando il flusso non c'e' piu'. */
 function ripiegaSullIstantanea(camera, image, registry = state.cameraUrls) {
   const picture = clean(allStates()?.[camera.entity]?.attributes?.entity_picture);
-  if (!picture) return false;
-  caricaIstantanea(camera, image, registry, picture).catch(() => {});
+  if (picture) {
+    caricaIstantanea(camera, image, registry, picture).catch(() => {});
+    return true;
+  }
+  indirizzoDelFotogramma(camera, "")
+    .then((indirizzo) => indirizzo && caricaIstantanea(camera, image, registry, indirizzo))
+    .catch(() => {});
   return true;
 }
 
@@ -291,6 +332,7 @@ export async function loadCameraFrame(camera, image, registry = state.cameraUrls
   if (!image) return false;
   const current = allStates()?.[camera.entity];
   const picture = clean(current?.attributes?.entity_picture);
+  const istantanea = await indirizzoDelFotogramma(camera, picture);
   /* Chi e' stato messo dal vivo prende il flusso, e da li' in poi si muove da
    * solo: il resto di questa funzione e' il mestiere dei fotogrammi. Un flusso
    * appena caduto pero' resta in pausa (#294): per un minuto la tessera vive
@@ -300,19 +342,22 @@ export async function loadCameraFrame(camera, image, registry = state.cameraUrls
      * dorme arriva dopo dieci secondi, e fino ad allora la tessera resterebbe
      * un rettangolo nero. Il browser tiene a schermo la foto finche' il
      * primo fotogramma del flusso non e' arrivato davvero. */
-    if (picture && image.dataset.dmCameraState !== "ready" && !image.dataset.dmCameraStream)
-      await caricaIstantanea(camera, image, registry, picture);
+    if (istantanea && image.dataset.dmCameraState !== "ready" && !image.dataset.dmCameraStream)
+      await caricaIstantanea(camera, image, registry, istantanea);
     /* Il video vero, quando Home Assistant dichiara una strada — WebRTC o
      * HLS: per una telecamera in cloud il MJPEG e' una foto ferma. */
     if (await provaIlVideo(camera, image)) return true;
+    /* Al flusso si passa la foto VERA, non quella che ci siamo firmati: una
+     * firma vale per il percorso che e' stato firmato, e il percorso del
+     * flusso e' un altro. Senza foto ci pensa `flussoFirmato`. */
     if (!flussoInPausa(image) && (await avviaIlFlusso(camera, image, picture, registry))) return true;
   }
   if (image.dataset.dmCameraStream) delete image.dataset.dmCameraStream;
-  if (!picture) {
+  if (!istantanea) {
     image.dataset.dmCameraState = "unavailable";
     return false;
   }
-  return caricaIstantanea(camera, image, registry, picture);
+  return caricaIstantanea(camera, image, registry, istantanea);
 }
 
 /* Un fotogramma, preso dal proxy di Home Assistant e messo nell'immagine. */

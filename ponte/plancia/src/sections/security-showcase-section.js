@@ -241,7 +241,30 @@ export function cameraSlug(camera, index) {
   return `cam-${entity.includes(".") ? entity.split(".")[1] : `x${index}`}`;
 }
 
+/* «Non c'e' segnale» e «non lo so ancora» non sono la stessa cosa (#516).
+ *
+ * Il cartello NESSUN SEGNALE lo decide lo stato della telecamera, e un'entita'
+ * che nella mappa non c'e' valeva «spenta». Ma la mappa degli stati arriva
+ * DOPO il primo disegno — nel pannello dentro Home Assistant arriva dalla
+ * presa, e al telefono ci mette un attimo in piu' — e in quell'attimo non
+ * manca il segnale alle telecamere: mancano gli stati a noi. Il muro scriveva
+ * su tutte una cosa falsa, e ce la lasciava fino al disegno dopo.
+ *
+ * Quando di stati non ce n'e' nemmeno uno non si giudica nessuno: la tessera
+ * aspetta il suo fotogramma, che e' quello che sta davvero succedendo. Quando
+ * invece la mappa c'e' ed e' piena, un'entita' che non e' dentro non c'e'
+ * davvero, e quella resta spenta.
+ *
+ * La domanda «la mappa sa qualcosa?» si ferma alla prima chiave: contarle
+ * tutte sarebbe migliaia di nomi per ogni tessera, quattro volte al minuto. */
+function mappaConosciuta(states) {
+  if (!states || typeof states !== "object") return false;
+  for (const chiave in states) if (chiave) return true;
+  return false;
+}
+
 export function cameraOffline(entity, states = allStates()) {
+  if (!mappaConosciuta(states)) return false;
   const value = clean(states?.[clean(entity)]?.state).toLowerCase();
   return OFFLINE_STATES.has(value);
 }

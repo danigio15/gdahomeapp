@@ -999,6 +999,14 @@ const LOAD_APPLIANCE_DEFINITIONS = [
   ["pump", "Pompa", "Pump", "mdi:pump", "💧", "pompa autoclave rilancio"],
   ["water", "Acqua", "Water", "mdi:water", "🚰", "acqua idrico"],
   [
+    "softener",
+    "Addolcitore",
+    "Water softener",
+    "mdi:water-opacity",
+    "🧂",
+    "addolcitore sale durezza calcare acqua",
+  ],
+  [
     "irrigation",
     "Irrigazione",
     "Irrigation",

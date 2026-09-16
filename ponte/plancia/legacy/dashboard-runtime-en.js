@@ -4049,25 +4049,44 @@ setTimeout(updateEditButtonVisibility, 1000);
 setTimeout(updateEditButtonVisibility, 3000);
 setTimeout(updateEditButtonVisibility, 6000);
 
+/* v1.4.32 (#535): dov'e' Home Assistant, se c'e'.
+   «Da Google Chrome ho il problema dei 3 trattini per tornare indietro che non
+   vanno» — da iPhone invece sì.
+   Qui si guardava `window.parent === window` e si concludeva «non siamo dentro
+   Home Assistant, apri il nostro menu». Era vero quando la plancia stava in un
+   iframe. Da quando il pannello è un ELEMENTO di questo stesso documento non lo
+   è più: dentro Home Assistant quel confronto è vero uguale, e l'hamburger
+   apriva il menu della plancia invece del cassetto — sempre, su ogni browser.
+   Da telefono non si vedeva perché lì comanda il chiosco, che l'hamburger se lo
+   prende prima; da PC il chiosco è spento e restava il menu sbagliato.
+   Adesso `home-assistant` si cerca dove può stare: in questo documento, e in
+   quello del padre quando un padre c'è davvero. Se non c'è in nessuno dei due
+   la plancia è un file aperto da solo, e il menu è il nostro. */
+function documentoDiHomeAssistant() {
+    if (document.querySelector('home-assistant')) return document;
+    if (window.parent === window) return null;
+    try {
+        const pDoc = window.parent.document;
+        return pDoc.querySelector('home-assistant') ? pDoc : null;
+    } catch(err) {
+        return null;   // un altro dominio: l'iframe padre non si tocca
+    }
+}
+
 function apriMenuLaterale() {
     if(navigator.vibrate) navigator.vibrate(10);
-    // Standalone (file aperto direttamente, non dentro un pannello HA): apri il menu Dashboard Modern
-    if (window.parent === window) { cdOpenAppMenu(); return; }
-    // Dentro Home Assistant come pannello/iframe: toggola la sidebar nativa di HA
+    const pDoc = documentoDiHomeAssistant();
+    // Nessun Home Assistant attorno: la plancia è aperta da sola, e il menu è il suo
+    if (!pDoc) { cdOpenAppMenu(); return; }
     try {
-        const ParentCustomEvent = window.parent.CustomEvent || CustomEvent;
-        const toggleEvent = new ParentCustomEvent('hass-toggle-menu', { bubbles: true, composed: true });
-        const pDoc = window.parent.document;
+        const vista = pDoc.defaultView || window;
+        const HaCustomEvent = vista.CustomEvent || CustomEvent;
+        const toggleEvent = new HaCustomEvent('hass-toggle-menu', { bubbles: true, composed: true });
         const haElement = pDoc.querySelector('home-assistant');
-        if (haElement) {
-            haElement.dispatchEvent(toggleEvent);
-            if (haElement.shadowRoot) { const main = haElement.shadowRoot.querySelector('home-assistant-main'); if (main) main.dispatchEvent(toggleEvent); }
-        } else {
-            pDoc.body.dispatchEvent(toggleEvent);
-            cdOpenAppMenu();   // fallback: nessuna sidebar HA trovata -> menu DM
-        }
+        haElement.dispatchEvent(toggleEvent);
+        if (haElement.shadowRoot) { const main = haElement.shadowRoot.querySelector('home-assistant-main'); if (main) main.dispatchEvent(toggleEvent); }
     } catch(err) {
-        cdOpenAppMenu();       // cross-origin: non possiamo toccare l'iframe padre -> menu DM
+        cdOpenAppMenu();       // qualcosa non si lascia toccare -> menu DM
     }
 }
 /* v0.10.7 (issue #11): menu accessibile dall'hamburger con accesso SEMPRE garantito a config/wizard/reset */

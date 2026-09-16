@@ -124,6 +124,22 @@ export const DIAGNOSTIC_KEYS = Object.freeze([
   "sezione",
   "funzione",
   "user_agent",
+  /* La forma dell'intestazione (#542).
+   *
+   * «Da iPhone, tornando alla Home da un'altra plancia, sparisce tutto tranne
+   * il meteo e il pallino verde»: manca il blocco a sinistra — il tasto del
+   * menu e il nome della casa. Da qui non si riproduce, e chi l'ha segnalato
+   * non puo' dare la lettura dal vivo: su iPhone senza un Mac la console non
+   * si apre, i bookmarklet non partono e le scorciatoie non si agganciano a
+   * Safari. La misura che gli avevo chiesto se la porta la segnalazione
+   * stessa, che si scrive con un dito.
+   *
+   * Sono tre parole sulla struttura della pagina: quanti figli ha
+   * l'intestazione, quanti blocchi a sinistra ci sono e dove stanno, e che
+   * `display` hanno. Distinguono in un colpo i tre casi possibili — sparito,
+   * nascosto, finito altrove — e non nominano nessuna entita', nessun utente,
+   * nessun indirizzo: e' la stessa regola di tutte le altre voci. */
+  "intestazione",
 ]);
 
 /* Gli stessi tetti del backend. Ripetuti apposta: qui servono a fermare la
@@ -285,6 +301,40 @@ function paginaAttiva() {
   return clean(attiva?.id || "").replace(/^page-/, "");
 }
 
+/* Com'e' fatta l'intestazione adesso (#542).
+ *
+ * Tre fatti e basta, scritti corti perche' la diagnostica ha un tetto di
+ * centonovanta caratteri: quanti figli ha la testata, quanti blocchi a
+ * sinistra ci sono nel documento e di chi sono figli, e che `display` ha il
+ * primo. «sinistra:0» vuol dire sparito, «display:none» nascosto, un padre
+ * che non e' HEADER vuol dire finito altrove.
+ *
+ * Simboli, non parole: non si traducono, e chi li legge e' chi ha scritto il
+ * codice. */
+function formaDellaTestata() {
+  const testata = doc?.querySelector?.("header");
+  if (!testata) return "testata:0";
+  const sinistre = doc?.querySelectorAll?.(".header-left-wrap") || [];
+  const prima = sinistre[0] || null;
+  const parti = [
+    `figli:${testata.children?.length ?? 0}`,
+    `padre:${clean(testata.parentElement?.tagName) || "?"}`,
+    `sinistra:${sinistre.length}`,
+  ];
+  if (prima) {
+    parti.push(`in:${clean(prima.parentElement?.tagName) || "?"}`);
+    try {
+      const vestito = root.getComputedStyle?.(prima);
+      parti.push(`display:${clean(vestito?.display) || "?"}`);
+      parti.push(`vis:${clean(vestito?.visibility) || "?"}`);
+      parti.push(`largo:${Math.round(prima.getBoundingClientRect?.().width || 0)}`);
+    } catch (_errore) {
+      parti.push("display:?");
+    }
+  }
+  return parti.join(" ").slice(0, 190);
+}
+
 async function diagnostica() {
   /* La lista e' chiusa anche qui, e coincide con quella del backend. Se una
    * delle due cambia, quella che conta e' l'altra: il backend butta via
@@ -300,6 +350,7 @@ async function diagnostica() {
     sezione: nomeDellaSezione(sezione),
     funzione: state.bozza.funzione ? nomeDellaParte(state.bozza.funzione) : "",
     user_agent: clean(root.navigator?.userAgent).slice(0, 190),
+    intestazione: formaDellaTestata(),
   };
   return Object.fromEntries(
     Object.entries(raccolta).filter(
@@ -2131,6 +2182,7 @@ async function mostraDiagnostica(corpo) {
     locale: t("Lingua", "Language"),
     panel_section: t("Pagina", "Page"),
     user_agent: t("Browser", "Browser"),
+    intestazione: t("Intestazione", "Header"),
   };
   lista.innerHTML = Object.entries(voci)
     .map(([chiave, valore]) => `<dt>${esc(nomi[chiave] || chiave)}</dt><dd>${esc(valore)}</dd>`)

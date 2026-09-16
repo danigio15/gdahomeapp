@@ -1,5 +1,9 @@
 import { fondoDiSistema, inPixel } from "../core/fondo-di-sistema.js";
-import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
+import {
+  disegnoGiaNellaCasella,
+  haOggettoWidget,
+  oggettoWidget,
+} from "../core/oggetti-widget.js";
 import { clean, doc, installStyle, root, t } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_NAVIGATION_SECTION__";
@@ -14,6 +18,9 @@ const state = (root[KEY] ||= {
   scopertaInCoda: false,
   scadutaLAttesa: false,
   riprove: 0,
+  barraSorvegliata: null,
+  sorvegliante: null,
+  disegnoInCoda: false,
 });
 
 /* The dock is sized on its content (`width:max-content`), so with every section
@@ -764,7 +771,10 @@ export function disegniNellaBarra(scope = doc) {
     const disegno = disegnoDellaPagina(pagina);
     if (!disegno) continue;
     const casella = scheda.querySelector(":scope > .icon");
-    if (!casella || casella.dataset.dmOggetto === disegno) continue;
+    /* Si guarda cosa c'e' nella casella, non se ce l'abbiamo messo noi: una
+     * casella svuotata da qualcun altro tiene il segno e senza questo non si
+     * ridipingeva mai piu' (#561). */
+    if (!casella || disegnoGiaNellaCasella(casella, disegno)) continue;
     const marchio = oggettoWidget(disegno);
     if (!marchio) continue;
     casella.innerHTML = marchio;
@@ -772,6 +782,58 @@ export function disegniNellaBarra(scope = doc) {
     messi += 1;
   }
   return messi;
+}
+
+/* I disegni seguono la barra, perche' gli agganci al guscio non bastano.
+ *
+ * La barra si ridipinge agganciandosi alle funzioni del guscio — `render`,
+ * `cdApplyNavVis`, `cdApplyNavOrder` — e per un pezzo e' sembrato abbastanza.
+ * Misurato sulla plancia vera, non lo e': in dieci secondi il giro di
+ * visibilita' passa di qui UNA volta e `render` nessuna. Il guscio dichiara
+ * quelle funzioni nel proprio ambiente e le richiama per nome da dentro:
+ * riscrivere la voce su `window` cambia quello che vede chi sta fuori, non
+ * quello che chiama lui. Quindi dopo l'avvio, di fatto, i disegni non si
+ * rimettevano piu'.
+ *
+ * Finche' niente li toglie non si vede. Ma qualunque cosa svuoti la casella di
+ * una voce — una voce riscritta a meta', un giro di disegno del guscio, una
+ * stranezza del motore di un telefono — la lasciava vuota per sempre, ed e'
+ * la segnalazione: «in alcune voci non ci sono piu' o vanno e vengono» (#561).
+ * Quelle che «vanno e vengono» sono le voci che una sezione rifa' da capo:
+ * rifacendole rinasce anche la casella, e al primo aggancio utile il disegno
+ * torna.
+ *
+ * Un timer che ripassa la barra sarebbe il rimedio sbagliato: costerebbe
+ * sempre, e questa plancia ha gia' pagato per un giro che gira a vuoto. Il
+ * sorvegliante invece parla solo quando la barra cambia davvero, e guarda un
+ * elemento solo. Non e' una deroga alla regola di questo modulo — niente
+ * domande a nessuno, niente giri a tempo — e' il modo di sapere che la barra si
+ * e' mossa senza chiederlo a nessuno.
+ *
+ * Non si rincorre da solo: `disegniNellaBarra` non tocca niente quando e' tutto
+ * a posto, quindi la passata che nasce dalle NOSTRE scritture non ne genera una
+ * terza. */
+function sorvegliaLaBarra() {
+  const barra = doc?.querySelector?.("nav.tabs");
+  const Sorvegliante = root.MutationObserver;
+  if (!barra || typeof Sorvegliante !== "function") return false;
+  if (state.barraSorvegliata === barra) return false;
+  state.sorvegliante?.disconnect?.();
+  state.barraSorvegliata = barra;
+  state.sorvegliante = new Sorvegliante(() => {
+    if (state.disegnoInCoda) return;
+    const chiedi = root.requestAnimationFrame || root.setTimeout;
+    if (typeof chiedi !== "function") return;
+    state.disegnoInCoda = true;
+    chiedi.call(root, () => {
+      state.disegnoInCoda = false;
+      disegniNellaBarra();
+    });
+  });
+  /* Solo chi entra e chi esce: gli stili, che il guscio riscrive a ogni giro di
+   * visibilita', non sono una notizia. */
+  state.sorvegliante.observe(barra, { childList: true, subtree: true });
+  return true;
 }
 
 /* ── la barra non mostra una forma che poi si rimangia ──────────────────── */
@@ -1144,12 +1206,16 @@ export function installNavigationSection() {
   /* La barra la riscrive il guscio a ogni giro di visibilita': i disegni si
    * rimettono quando succede, non una volta sola all'avvio. */
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:runtime-ready"])
-    root.addEventListener?.(evento, () => disegniNellaBarra());
-  /* La barra la rifa' il guscio: a ogni giro di visibilita' e di ordine — che
-   * sono le due funzioni avvolte qui sopra — e al primo disegno. Ci si aggancia
-   * a quelle, senza sorveglianti ne' timer: e' la stessa regola con cui questo
-   * modulo tiene il resto della barra. */
+    root.addEventListener?.(evento, () => {
+      sorvegliaLaBarra();
+      disegniNellaBarra();
+    });
+  /* Il primo disegno, e poi il sorvegliante che tiene la barra a posto: gli
+   * agganci al guscio qui sopra da soli non bastano, e il perche' sta scritto
+   * accanto a `sorvegliaLaBarra`. Niente giri a tempo: e' la stessa regola con
+   * cui questo modulo tiene il resto della barra. */
   disegniNellaBarra();
+  sorvegliaLaBarra();
   installBarBehaviour();
   if (!installScroller()) {
     doc.addEventListener("DOMContentLoaded", () => installScroller(), { once: true });

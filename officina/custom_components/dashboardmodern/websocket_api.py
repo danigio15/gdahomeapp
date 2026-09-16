@@ -1,0 +1,1335 @@
+"""WebSocket commands for the shared plancia configuration.
+
+These replace ``frontend/get_user_data`` / ``frontend/set_user_data`` as the
+transport of the dashboard configuration. The user_data API stores one copy per
+Home Assistant user, which is exactly why a second user or a fresh device saw an
+unconfigured plancia; these commands read and write the single shared store, so
+every user and every device of one installation see the same configuration.
+
+Chi puo' chiamarli e' la stessa domanda di chi puo' aprire una plancia, e la
+risposta va data qui.
+
+Prima erano aperti a qualsiasi utente autenticato, e la motivazione scritta era
+che «il pannello decide gia' chi puo' aprire una plancia con la sua
+allow-list». Ma quella lista viaggia dentro la configurazione del pannello e la
+applica il browser: e' un controllo lato client, cioe' un controllo che chi
+vuole aggirarlo non incontra nemmeno. Un utente fuori dalla lista non vede la
+plancia nella barra laterale e non riesce ad aprirla, e intanto puo' chiamare
+questi comandi direttamente e riscrivere la configurazione di tutti — che e'
+una sola per l'installazione, non una per utente.
+
+In una casa con un solo utente non cambia niente. In una casa con piu' utenti —
+un figlio, un coinquilino, un ospite — e' la differenza fra una preferenza e un
+permesso.
+
+La regola adesso e' una sola, e sta dove conta: **chi chiama deve poter usare
+quella plancia**. Amministratore se la plancia e' riservata agli
+amministratori, dentro la lista se una lista c'e'. La lettura resta aperta a
+chi la plancia la puo' usare, perche' senza leggere non la si puo' nemmeno
+disegnare; scrittura, ripristino ed elenco dei file chiedono lo stesso
+permesso, non uno piu' debole.
+"""
+
+from __future__ import annotations
+
+import base64
+from typing import TYPE_CHECKING, Any
+
+import voluptuous as vol
+from homeassistant.components import websocket_api
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import callback
+
+from .config_flow import OPTION_ADMIN_ONLY, OPTION_ALLOWED_USERS
+from .config_store import (
+    PRIMARY_PROFILE,
+    SnapshotTooLargeError,
+    async_get_config_store,
+)
+from .const import CHAT_MAX_TESTO, DOMAIN
+from .device_catalog import MAX_DEVICE_IDS, MAX_ENTITY_IDS, async_build_catalog
+from .github_client import DevicePending, GitHubError
+from .github_tokens import async_get_token_store
+from .ticket_store import (
+    MAX_BODY,
+    MAX_REPLY,
+    MAX_TITLE,
+    TICKET_TYPES,
+    TicketRejected,
+    async_get_ticket_store,
+)
+from .tickets import (
+    async_answer,
+    async_begin_auth,
+    async_deliver_pending,
+    async_finish_auth,
+    async_forget_auth,
+    async_queue,
+    async_reply,
+    async_sync_states,
+    async_take,
+    async_thread,
+    async_unread,
+)
+from .tickets import (
+    enabled as tickets_enabled,
+)
+from .www_files import MAX_UPLOAD_BYTES, list_www_folder, save_www_upload
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+DATA_WEBSOCKET_REGISTERED = "websocket_registered"
+
+TYPE_GET = f"{DOMAIN}/config/get"
+TYPE_SET = f"{DOMAIN}/config/set"
+TYPE_RESTORE = f"{DOMAIN}/config/restore"
+TYPE_WWW_LIST = f"{DOMAIN}/www/list"
+TYPE_WWW_UPLOAD = f"{DOMAIN}/www/upload"
+# Il catalogo di integrazioni e dispositivi: e' con questo che un
+# elettrodomestico si collega a un'integrazione intera invece che a un
+# interruttore.
+TYPE_INTEGRATIONS_CATALOG = f"{DOMAIN}/integrations/catalog"
+
+# Lo spegnimento programmato del clima (#364): il conto alla rovescia lo
+# tiene Home Assistant, non il browser — chi accende per due ore prima di
+# dormire la pagina la chiude sempre.
+TYPE_CLIMA_TIMER_LIST = f"{DOMAIN}/clima/timer/list"
+TYPE_CLIMA_TIMER_SET = f"{DOMAIN}/clima/timer/set"
+TYPE_CLIMA_TIMER_CLEAR = f"{DOMAIN}/clima/timer/clear"
+TYPE_TICKET_LIST = f"{DOMAIN}/tickets/list"
+TYPE_TICKET_CREATE = f"{DOMAIN}/tickets/create"
+TYPE_TICKET_DELETE = f"{DOMAIN}/tickets/delete"
+TYPE_TICKET_SYNC = f"{DOMAIN}/tickets/sync"
+TYPE_TICKET_QUEUE = f"{DOMAIN}/tickets/queue"
+TYPE_TICKET_ANSWER = f"{DOMAIN}/tickets/answer"
+TYPE_TICKET_THREAD = f"{DOMAIN}/tickets/thread"
+TYPE_TICKET_REPLY = f"{DOMAIN}/tickets/reply"
+TYPE_TICKET_TAKE = f"{DOMAIN}/tickets/take"
+TYPE_TICKET_UNREAD = f"{DOMAIN}/tickets/unread"
+# La chat di assistenza. Sono comandi suoi e non delle segnalazioni: le due
+# porte sono diverse — una issue pubblica e una conversazione privata — e chi
+# legge questa lista deve vederlo senza aprire i file.
+TYPE_CHAT_STATE = f"{DOMAIN}/chat/state"
+TYPE_CHAT_THREAD = f"{DOMAIN}/chat/thread"
+TYPE_CHAT_SEND = f"{DOMAIN}/chat/send"
+TYPE_CHAT_FORGET = f"{DOMAIN}/chat/forget"
+TYPE_CHAT_QUEUE = f"{DOMAIN}/chat/queue"
+TYPE_CHAT_OPEN = f"{DOMAIN}/chat/open"
+TYPE_CHAT_ANSWER = f"{DOMAIN}/chat/answer"
+TYPE_CHAT_DROP = f"{DOMAIN}/chat/drop"
+
+TYPE_TICKET_AUTH_START = f"{DOMAIN}/tickets/auth/start"
+TYPE_TICKET_AUTH_POLL = f"{DOMAIN}/tickets/auth/poll"
+TYPE_TICKET_AUTH_FORGET = f"{DOMAIN}/tickets/auth/forget"
+
+_PROFILE = vol.All(str, vol.Length(min=1, max=64))
+_ENTRY_ID = vol.All(str, vol.Length(min=1, max=64))
+
+
+def _entries(hass: HomeAssistant) -> list[Any]:
+    """Le plance installate."""
+    return list(hass.config_entries.async_entries(DOMAIN))
+
+
+def _allowed_users(entry: Any) -> set[str]:
+    value = entry.options.get(OPTION_ALLOWED_USERS, [])
+    if not isinstance(value, list):
+        return set()
+    return {str(user_id) for user_id in value if user_id}
+
+
+def _may_use(entry: Any, user: Any) -> bool:
+    """Se questo utente puo' usare questa plancia.
+
+    E' la stessa domanda che il pannello si fa per mostrarla: amministratore se
+    la plancia e' riservata agli amministratori, dentro la lista se una lista
+    c'e'. Detta qui, pero', vale davvero.
+    """
+    if user is not None and getattr(user, "is_admin", False):
+        return True
+    if entry.options.get(OPTION_ADMIN_ONLY, False):
+        return False
+    consentiti = _allowed_users(entry)
+    if not consentiti:
+        return True
+    return str(getattr(user, "id", "")) in consentiti
+
+
+def _authorized(hass: HomeAssistant, connection: Any, entry_id: str | None) -> bool:
+    """Se chi chiama puo' usare la plancia a cui si riferisce.
+
+    Senza `entry_id` — e' il caso normale, la plancia principale — basta poterne
+    usare almeno una: chi non puo' usarne nessuna non ha niente da fare qui.
+    """
+    user = getattr(connection, "user", None)
+    if user is not None and getattr(user, "is_admin", False):
+        return True
+    entries = _entries(hass)
+    # Nessuna plancia installata, nessuna regola da applicare: qui non c'e'
+    # niente da proteggere, e rifiutare vorrebbe dire rompere il negozio
+    # condiviso per chi lo usa senza pannelli.
+    if not entries:
+        return True
+    if entry_id:
+        scelta = next((entry for entry in entries if entry.entry_id == entry_id), None)
+        return bool(scelta and _may_use(scelta, user))
+    return any(_may_use(entry, user) for entry in entries)
+
+
+def _deny(connection: Any, msg: dict[str, Any]) -> None:
+    connection.send_error(
+        msg["id"],
+        websocket_api.const.ERR_UNAUTHORIZED,
+        "Questa plancia non e' abilitata per il tuo utente.",
+    )
+
+
+async def _entry_for_profile(hass: HomeAssistant, profile: str) -> Any:
+    """La plancia a cui appartiene un profilo di configurazione, se c'e'.
+
+    Il profilo e' la chiave del negozio condiviso e non porta l'entry_id: si
+    risale alla plancia con la stessa mappa che assegna i profili al pannello,
+    piu' la memoria del negozio per chi ha cambiato nome nel frattempo.
+    """
+    from .frontend import _config_profile
+
+    store = await async_get_config_store(hass)
+    ricordi = store.entry_profiles()
+    for entry in _entries(hass):
+        if profile in (_config_profile(hass, entry), ricordi.get(entry.entry_id)):
+            return entry
+    return None
+
+
+async def _config_authorized(
+    hass: HomeAssistant, connection: Any, msg: dict[str, Any]
+) -> bool:
+    """Se chi chiama puo' toccare la configurazione che sta chiedendo.
+
+    Il profilo e' un campo libero, e senza entry_id `_authorized` chiedeva solo
+    «puo' usare una plancia qualsiasi?». Con due plance e due liste di utenti
+    diverse, chi era in lista sulla seconda poteva leggere — e azzerare, con
+    `reset` — la configurazione della prima chiamando questi comandi a mano.
+    Qui la domanda e' sulla plancia che quel profilo porta davvero: chi non
+    puo' usarla non la legge e non la scrive, con o senza entry_id.
+    """
+    entry_id = msg.get("entry_id")
+    if entry_id and not _authorized(hass, connection, entry_id):
+        return False
+    user = getattr(connection, "user", None)
+    if user is not None and getattr(user, "is_admin", False):
+        return True
+    entries = _entries(hass)
+    if not entries:
+        return True
+    padrona = await _entry_for_profile(hass, str(msg.get("profile") or PRIMARY_PROFILE))
+    if padrona is None:
+        # Un profilo che nessuna plancia porta non e' di nessuno: lo tocca
+        # solo l'amministratore, che e' gia' passato qui sopra.
+        return False
+    return _may_use(padrona, user)
+
+
+async def _ripara_la_dashboard_compagna(
+    hass: HomeAssistant, entry_id: str | None
+) -> None:
+    """La dashboard di appoggio di questa plancia, rimessa a posto se serve.
+
+    Senza `entry_id` si prende la plancia principale, che e' quella che il
+    guscio chiede quando non ne nomina una: e' la stessa scelta che fa il resto
+    della configurazione condivisa.
+    """
+    from .frontend import async_ripara_dashboard_compagna
+
+    voci = hass.config_entries.async_entries(DOMAIN)
+    scelta = entry_id or next(
+        (voce.entry_id for voce in voci if voce.state is ConfigEntryState.LOADED),
+        None,
+    )
+    if not scelta:
+        return
+    await async_ripara_dashboard_compagna(hass, scelta)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_GET,
+        vol.Optional("profile", default=PRIMARY_PROFILE): _PROFILE,
+        vol.Optional("entry_id"): _ENTRY_ID,
+    }
+)
+@websocket_api.async_response
+async def async_get_config(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return the shared snapshot of one plancia."""
+    if not await _config_authorized(hass, connection, msg):
+        _deny(connection, msg)
+        return
+    store = await async_get_config_store(hass)
+    result = await store.async_get(msg["profile"], entry_id=msg.get("entry_id"))
+    connection.send_result(msg["id"], result)
+    # Chi apre la plancia rimette a posto la sua dashboard di appoggio.
+    #
+    # «Plancia preferita da sempre errore quando si apre app»: la vista di
+    # quella dashboard la scrive l'integrazione all'avvio, e finora solo li'.
+    # Una vista sbagliata restava sbagliata fino al riavvio successivo — e un
+    # aggiornamento a cui si risponde «riavvio dopo» lascia in piedi proprio
+    # quella. Qui si sa che qualcuno sta guardando questa plancia, ed e' la
+    # strada che ha sempre funzionato: si ripara di la'. La risposta e' gia'
+    # partita, quindi non fa aspettare nessuno, e se non riesce non rompe
+    # niente.
+    await _ripara_la_dashboard_compagna(hass, msg.get("entry_id"))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_SET,
+        vol.Optional("profile", default=PRIMARY_PROFILE): _PROFILE,
+        vol.Optional("entry_id"): _ENTRY_ID,
+        vol.Required("snapshot"): vol.Schema(
+            {
+                vol.Required("values"): {str: str},
+                vol.Optional("keys_revision", default=0): vol.Coerce(int),
+                # La generazione dello scrittore: i runtime vecchi non la
+                # mandano, e il frontend nuovo usa l'assenza per riconoscere
+                # i loro scatti. Il negozio la conserva e basta.
+                vol.Optional("writer_generation", default=0): vol.Coerce(int),
+                vol.Optional("updated_at", default=0): vol.Coerce(int),
+            },
+            extra=vol.REMOVE_EXTRA,
+        ),
+        vol.Optional("expected_revision"): vol.Any(None, vol.Coerce(int)),
+        vol.Optional("reset", default=False): bool,
+    }
+)
+@websocket_api.async_response
+async def async_set_config(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Store a snapshot for one plancia."""
+    if not await _config_authorized(hass, connection, msg):
+        _deny(connection, msg)
+        return
+    store = await async_get_config_store(hass)
+    snapshot = msg["snapshot"]
+    try:
+        result = await store.async_set(
+            msg["profile"],
+            snapshot["values"],
+            entry_id=msg.get("entry_id"),
+            keys_revision=snapshot["keys_revision"],
+            writer_generation=snapshot["writer_generation"],
+            updated_at=snapshot["updated_at"],
+            expected_revision=msg.get("expected_revision"),
+            reset=msg["reset"],
+        )
+    except SnapshotTooLargeError as error:
+        connection.send_error(msg["id"], "snapshot_too_large", str(error))
+        return
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_RESTORE,
+        vol.Optional("profile", default=PRIMARY_PROFILE): _PROFILE,
+        vol.Optional("entry_id"): _ENTRY_ID,
+        vol.Required("revision"): vol.Coerce(int),
+    }
+)
+@websocket_api.async_response
+async def async_restore_config(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Promote a kept revision of one plancia back to current."""
+    if not await _config_authorized(hass, connection, msg):
+        _deny(connection, msg)
+        return
+    store = await async_get_config_store(hass)
+    result = await store.async_restore(
+        msg["profile"], msg["revision"], entry_id=msg.get("entry_id")
+    )
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_WWW_LIST,
+        vol.Optional("path", default=""): vol.All(str, vol.Length(max=512)),
+    }
+)
+@websocket_api.async_response
+async def async_list_www(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Elenca una cartella di ``config/www`` per il selettore delle foto."""
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    result = await hass.async_add_executor_job(
+        list_www_folder, hass.config.path("www"), msg["path"]
+    )
+    if result is None:
+        connection.send_error(
+            msg["id"], "not_found", "La cartella non esiste dentro config/www"
+        )
+        return
+    connection.send_result(msg["id"], result)
+
+
+def _salva_foto(root: str, filename: str, data: str) -> dict[str, Any] | None:
+    """Decodifica la foto e la scrive. Gira nell'executor, non nel loop.
+
+    Il base64 di una foto da dieci megabyte sono tredici megabyte di testo, e
+    decodificarli nel loop fermava tutta la casa per il tempo della
+    decodifica — che non ha niente di asincrono. Sta qui insieme alla
+    scrittura, che nell'executor c'era gia'. Un base64 malformato solleva
+    ``ValueError``, e il chiamante lo traduce in un errore parlante.
+    """
+    payload = base64.b64decode(data, validate=True)
+    return save_www_upload(root, filename, payload)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_WWW_UPLOAD,
+        vol.Required("filename"): vol.All(str, vol.Length(min=1, max=255)),
+        # Base64 della foto: il tetto tiene conto del +33% della codifica.
+        vol.Required("data"): vol.All(str, vol.Length(min=1, max=MAX_UPLOAD_BYTES * 2)),
+    }
+)
+@websocket_api.async_response
+async def async_upload_www(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Salva una foto in ``config/www`` per il selettore.
+
+    La plancia servita dall'integrazione non possiede nessun token — il suo
+    WebSocket si autentica qui, lato server — e ogni chiamata REST del browser
+    rispondeva 401. La foto viaggia percio' su questo stesso canale, e chi puo'
+    scrivere e' chi puo' gia' scrivere la configurazione.
+    """
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    try:
+        result = await hass.async_add_executor_job(
+            _salva_foto, hass.config.path("www"), msg["filename"], msg["data"]
+        )
+    except (ValueError, TypeError):
+        connection.send_error(msg["id"], "invalid_data", "La foto non e' leggibile.")
+        return
+    if result is None:
+        connection.send_error(
+            msg["id"],
+            "invalid_upload",
+            "Il file non e' un'immagine, o e' piu' grande di 10 MB.",
+        )
+        return
+    connection.send_result(msg["id"], result)
+
+
+# ─── Segnalazioni ────────────────────────────────────────────────────────────
+#
+# Chi puo' aprire una segnalazione e' chi puo' usare la plancia: la stessa
+# domanda, e la stessa risposta, del resto del file. La coda del manutentore
+# invece no — quella chiede due cose insieme, ed e' scritto sotto.
+
+_TICKET_ID = vol.All(str, vol.Length(min=1, max=64))
+_REMOTE_ID = vol.All(str, vol.Length(min=1, max=128))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_INTEGRATIONS_CATALOG,
+        vol.Optional("device_ids"): vol.All(
+            [vol.All(str, vol.Length(min=1, max=64))], vol.Length(max=MAX_DEVICE_IDS)
+        ),
+        vol.Optional("entity_ids"): vol.All(
+            [vol.All(str, vol.Length(min=3, max=255))], vol.Length(max=MAX_ENTITY_IDS)
+        ),
+    }
+)
+@websocket_api.async_response
+async def async_integrations_catalog(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Integrazioni, dispositivi ed entita' dai registri di Home Assistant.
+
+    Legge e basta, e chiede lo stesso permesso di chi puo' usare una plancia:
+    e' la stessa cosa che `config/device_registry/list` dice a chiunque sia
+    autenticato, rimessa nella forma di un menu. Con `device_ids` la risposta
+    porta solo le entita' di quei dispositivi — fino a duecento in una
+    chiamata sola, ed e' cosi' che la plancia le chiede per tutti i suoi
+    elettrodomestici insieme. Con `entity_ids` porta le stesse righe per le
+    entita' chieste per nome: serve a sapere di quale integrazione sono, che
+    e' una cosa che lo stato non dice e il registro si'.
+    """
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    catalog = await async_build_catalog(
+        hass, device_ids=msg.get("device_ids"), entity_ids=msg.get("entity_ids")
+    )
+    connection.send_result(msg["id"], catalog)
+
+
+@websocket_api.websocket_command({vol.Required("type"): TYPE_CLIMA_TIMER_LIST})
+@websocket_api.async_response
+async def async_clima_timer_list(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Gli spegnimenti programmati che sono ancora appesi.
+
+    Li chiede ogni plancia che si apre: il conto alla rovescia e' della casa,
+    non della scheda del browser, quindi il telefono che arriva dopo vede lo
+    stesso tempo che manca del tablet in cucina.
+    """
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    from .spegnimento import async_get_spegnimento_store
+
+    store = await async_get_spegnimento_store(hass)
+    connection.send_result(msg["id"], {"scadenze": store.scadenze()})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_CLIMA_TIMER_SET,
+        vol.Required("entity_id"): vol.All(str, vol.Length(min=3, max=255)),
+        vol.Required("minuti"): vol.All(vol.Coerce(int), vol.Range(min=0, max=720)),
+    }
+)
+@websocket_api.async_response
+async def async_clima_timer_set(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Programma lo spegnimento di quell'unita' fra quei minuti.
+
+    Zero minuti vuol dire togliere il timer: e' la stessa richiesta detta al
+    contrario, e non merita un comando a parte.
+    """
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    entita = str(msg["entity_id"]).strip()
+    if "." not in entita or hass.states.get(entita) is None:
+        connection.send_error(msg["id"], "not_found", "entity_id sconosciuto")
+        return
+    if not _puo_comandare(connection, entita):
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_UNAUTHORIZED,
+            "Non hai il controllo di questa entita'.",
+        )
+        return
+    from .spegnimento import async_get_spegnimento_store
+
+    store = await async_get_spegnimento_store(hass)
+    scadenza = await store.async_programma(entita, int(msg["minuti"]))
+    connection.send_result(msg["id"], {"entity_id": entita, "scadenza": scadenza})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_CLIMA_TIMER_CLEAR,
+        vol.Required("entity_id"): vol.All(str, vol.Length(min=3, max=255)),
+    }
+)
+@websocket_api.async_response
+async def async_clima_timer_clear(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Togli il timer, senza toccare l'unita'.
+
+    Annullare lo spegnimento non vuol dire spegnere adesso: l'unita' resta
+    esattamente come sta, e da qui in poi resta accesa finche' qualcuno non
+    decide altro.
+    """
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    entita = str(msg["entity_id"]).strip()
+    if not _puo_comandare(connection, entita):
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_UNAUTHORIZED,
+            "Non hai il controllo di questa entita'.",
+        )
+        return
+    from .spegnimento import async_get_spegnimento_store
+
+    store = await async_get_spegnimento_store(hass)
+    await store.async_annulla(entita)
+    connection.send_result(msg["id"], {"removed": True})
+
+
+def _puo_comandare(connection: Any, entita: str) -> bool:
+    """Se chi chiama potrebbe spegnere quell'entita' da se'.
+
+    Il timer non e' un permesso in piu': e' lo stesso spegnimento, detto due ore
+    prima. Ma a farlo scattare e' l'integrazione, con `hass.services.async_call`
+    e senza il contesto di chi ha chiesto — quindi Home Assistant non ci
+    rimette le sue regole sopra, e senza questa domanda un utente non
+    amministratore poteva programmare lo spegnimento di QUALUNQUE entita'
+    esistente, comprese quelle che la sua utenza non ha il diritto di toccare.
+    Bastava che potesse aprire una plancia.
+
+    La domanda e' quella di Home Assistant, fatta adesso: un amministratore puo'
+    sempre, gli altri solo dove hanno il controllo. Chiederla al momento in cui
+    si programma e non a scadenza e' voluto — a scadenza, un permesso tolto nel
+    frattempo lascerebbe acceso il condizionatore tutta la notte, che e' proprio
+    il guasto che questa funzione esiste per evitare.
+    """
+    user = getattr(connection, "user", None)
+    if user is None:
+        return False
+    if getattr(user, "is_admin", False):
+        return True
+    permessi = getattr(user, "permissions", None)
+    controlla = getattr(permessi, "check_entity", None)
+    if controlla is None:
+        return False
+    try:
+        from homeassistant.auth.permissions.const import POLICY_CONTROL
+    except ImportError:  # pragma: no cover - Home Assistant e' sempre presente
+        return False
+    return bool(controlla(entita, POLICY_CONTROL))
+
+
+def _caller_id(connection: Any) -> str:
+    """L'utente di Home Assistant che sta chiamando, o stringa vuota."""
+    return str(getattr(getattr(connection, "user", None), "id", "") or "")
+
+
+def _is_admin(connection: Any) -> bool:
+    return bool(getattr(getattr(connection, "user", None), "is_admin", False))
+
+
+async def _console_denied(
+    hass: HomeAssistant, connection: Any, msg: dict[str, Any]
+) -> bool:
+    """La console chiede due cose insieme, e servono entrambe.
+
+    Amministratore di questo Home Assistant, **e** un account GitHub che sulla
+    repository della plancia puo' scrivere. La prima da sola non basta:
+    l'amministratore di casa propria non e' chi tiene la coda di tutti.
+
+    La seconda non e' una chiave da incollare da qualche parte: e' GitHub a
+    dirla, quando chi ha autorizzato viene riconosciuto come chi tiene la
+    repository. Cosi' la console si accende da sola sulla plancia giusta, e il
+    giorno in cui la repository cambia mano non resta nessuna chiave scritta a
+    dare un permesso che non c'e' piu'.
+    """
+    if not _is_admin(connection):
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_UNAUTHORIZED,
+            "La console delle segnalazioni e' riservata agli amministratori.",
+        )
+        return True
+    gettoni = await async_get_token_store(hass)
+    if not gettoni.is_maintainer(_caller_id(connection)):
+        connection.send_error(
+            msg["id"], "not_console", "Questa installazione non e' la console."
+        )
+        return True
+    return False
+
+
+@websocket_api.websocket_command({vol.Required("type"): TYPE_TICKET_LIST})
+@websocket_api.async_response
+async def async_list_tickets(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Le segnalazioni di chi chiama — tutte, se chi chiama amministra."""
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    store = await async_get_ticket_store(hass)
+    gettoni = await async_get_token_store(hass)
+    chi = _caller_id(connection)
+    account = gettoni.describe(chi)
+    connection.send_result(
+        msg["id"],
+        {
+            "tickets": store.list(opened_by=chi, every=_is_admin(connection)),
+            # Le tre cose che decidono cosa la finestra puo' offrire: se questa
+            # plancia parla con GitHub, se chi guarda ha collegato il proprio
+            # account, e se quell'account tiene la repository.
+            "delivery": tickets_enabled(hass),
+            "account": account,
+            "console": bool(_is_admin(connection) and account["maintainer"]),
+        },
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_TICKET_CREATE,
+        vol.Required("ticket_type"): vol.In(sorted(TICKET_TYPES)),
+        vol.Required("title"): vol.All(str, vol.Length(min=1, max=MAX_TITLE * 2)),
+        vol.Required("body"): vol.All(str, vol.Length(min=1, max=MAX_BODY * 2)),
+        vol.Optional("diagnostics", default=dict): {
+            str: vol.Any(str, int, float, bool)
+        },
+    }
+)
+@websocket_api.async_response
+async def async_create_ticket(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Scrivi una segnalazione, e prova subito a consegnarla.
+
+    Subito, non al prossimo giro: chi ha appena premuto invia sta guardando, e
+    mezz'ora di attesa per sapere se e' partita non e' un'attesa, e' un dubbio.
+    Se la consegna non riesce il ticket resta scritto e riparte da solo.
+    """
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    store = await async_get_ticket_store(hass)
+    try:
+        ticket = await store.async_create(
+            ticket_type=msg["ticket_type"],
+            title=msg["title"],
+            body=msg["body"],
+            diagnostics=msg["diagnostics"],
+            opened_by=_caller_id(connection),
+        )
+    except TicketRejected as rifiuto:
+        connection.send_error(msg["id"], rifiuto.code, str(rifiuto))
+        return
+    delivered = 0
+    if tickets_enabled(hass):
+        # Solo le proprie: la issue nasce a nome di chi ha scritto, e questo
+        # comando non e' il momento per spedire le bozze di un altro.
+        delivered = await async_deliver_pending(hass, user_id=_caller_id(connection))
+    aggiornato = next(
+        (voce for voce in store.list(every=True) if voce["id"] == ticket["id"]),
+        ticket,
+    )
+    connection.send_result(
+        msg["id"], {"ticket": aggiornato, "delivered": bool(delivered)}
+    )
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): TYPE_TICKET_DELETE, vol.Required("ticket_id"): _TICKET_ID}
+)
+@websocket_api.async_response
+async def async_delete_ticket(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Butta via una delle proprie segnalazioni."""
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    store = await async_get_ticket_store(hass)
+    removed = await store.async_delete(
+        msg["ticket_id"], opened_by=_caller_id(connection), every=_is_admin(connection)
+    )
+    if not removed:
+        connection.send_error(msg["id"], "not_found", "Questa segnalazione non c'e'.")
+        return
+    connection.send_result(msg["id"], {"removed": True})
+
+
+@websocket_api.websocket_command({vol.Required("type"): TYPE_TICKET_SYNC})
+@websocket_api.async_response
+async def async_sync_tickets(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Riprova le consegne rimaste indietro e porta a casa le risposte."""
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    chi = _caller_id(connection)
+    delivered = await async_deliver_pending(hass, user_id=chi)
+    changed = await async_sync_states(hass)
+    store = await async_get_ticket_store(hass)
+    gettoni = await async_get_token_store(hass)
+    connection.send_result(
+        msg["id"],
+        {
+            "tickets": store.list(opened_by=chi, every=_is_admin(connection)),
+            "delivered": delivered,
+            "changed": changed,
+            "delivery": tickets_enabled(hass),
+            "account": gettoni.describe(chi),
+        },
+    )
+
+
+@websocket_api.websocket_command({vol.Required("type"): TYPE_TICKET_QUEUE})
+@websocket_api.async_response
+async def async_ticket_queue(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """La coda del manutentore: le segnalazioni nate dalle plance."""
+    if await _console_denied(hass, connection, msg):
+        return
+    try:
+        coda = await async_queue(hass, _caller_id(connection))
+    except GitHubError as errore:
+        connection.send_error(msg["id"], errore.code, str(errore))
+        return
+    connection.send_result(msg["id"], {"tickets": coda})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_TICKET_ANSWER,
+        vol.Required("number"): vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Optional("reply", default=""): vol.All(str, vol.Length(max=MAX_REPLY * 2)),
+        vol.Optional("close", default=""): vol.In(["", "risolto", "chiuso"]),
+    }
+)
+@websocket_api.async_response
+async def async_answer_ticket_command(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Rispondi sotto una segnalazione, e se serve chiudila.
+
+    La risposta e' un commento su GitHub: la ritrova chi ha segnalato, dentro
+    la sua plancia, e la legge chiunque passi dalla issue. Un posto solo.
+    """
+    if await _console_denied(hass, connection, msg):
+        return
+    try:
+        fatto = await async_answer(
+            hass,
+            user_id=_caller_id(connection),
+            number=msg["number"],
+            reply=msg["reply"],
+            close=msg["close"],
+        )
+    except GitHubError as errore:
+        connection.send_error(msg["id"], errore.code, str(errore))
+        return
+    connection.send_result(msg["id"], fatto)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_TICKET_THREAD,
+        vol.Required("number"): vol.All(vol.Coerce(int), vol.Range(min=1)),
+    }
+)
+@websocket_api.async_response
+async def async_ticket_thread(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Il filo di una segnalazione: testo, commenti e allegati.
+
+    Serve a non dover uscire dalla plancia per capire cosa e' successo: la foto
+    che chi segnala ha allegato vive in un commento, e senza leggere i commenti
+    una segnalazione con dentro tutto sembrerebbe nuda.
+
+    Non e' riservato alla console. Lo apre anche chi ha segnalato, sulla sua,
+    per leggere la risposta restando qui: mandarlo su github.com per leggerla
+    sarebbe farlo uscire proprio dal posto che questa finestra esiste per non
+    fargli lasciare. La issue e' una pagina pubblica, ma questo comando non e'
+    solo una lettura: aprire il filo toglie il segno di non letto a tutta la
+    casa. Quindi la stessa domanda degli altri comandi — chi puo' usare la
+    plancia — vale anche qui, e chi non puo' non spegne i pallini degli altri.
+    """
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    try:
+        filo = await async_thread(hass, _caller_id(connection), msg["number"])
+    except GitHubError as errore:
+        connection.send_error(msg["id"], errore.code, str(errore))
+        return
+    connection.send_result(msg["id"], filo)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_TICKET_REPLY,
+        vol.Required("number"): vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Required("message"): vol.All(str, vol.Length(max=MAX_REPLY * 2)),
+    }
+)
+@websocket_api.async_response
+async def async_reply_ticket_command(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Scrivi sotto una segnalazione tua, restando nella plancia.
+
+    Non passa dalla console. Chi risponde qui e' chi ha segnalato, e scrive
+    sotto la sua: fino a ieri per aggiungere una riga doveva aprire github.com,
+    che e' esattamente il posto che questa finestra esiste per non fargli
+    aprire. Di chi sia la segnalazione lo verifica `async_reply`, che ha in
+    mano il deposito; qui si controlla solo che chi chiama la plancia la possa
+    usare.
+    """
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    try:
+        fatto = await async_reply(
+            hass,
+            user_id=_caller_id(connection),
+            number=msg["number"],
+            message=msg["message"],
+        )
+    except GitHubError as errore:
+        connection.send_error(msg["id"], errore.code, str(errore))
+        return
+    connection.send_result(msg["id"], fatto)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_TICKET_TAKE,
+        vol.Required("number"): vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Optional("take", default=True): bool,
+    }
+)
+@websocket_api.async_response
+async def async_take_ticket_command(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Prendi in carico una segnalazione, o lasciala."""
+    if await _console_denied(hass, connection, msg):
+        return
+    try:
+        fatto = await async_take(
+            hass,
+            user_id=_caller_id(connection),
+            number=msg["number"],
+            take=msg["take"],
+        )
+    except GitHubError as errore:
+        connection.send_error(msg["id"], errore.code, str(errore))
+        return
+    connection.send_result(msg["id"], fatto)
+
+
+@websocket_api.websocket_command({vol.Required("type"): TYPE_TICKET_UNREAD})
+@websocket_api.async_response
+async def async_ticket_unread(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Le conversazioni con messaggi nuovi che nessuno ha ancora aperto.
+
+    Non esce di casa: e' l'elenco che il campanello ha gia' riempito nel suo
+    giro. Chiedere qui a GitHub vorrebbe dire una richiesta ogni volta che
+    qualcuno guarda la Home.
+    """
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    connection.send_result(msg["id"], {"messages": await async_unread(hass)})
+
+
+# ─── La chat di assistenza ───────────────────────────────────────────────────
+#
+# Quello che le segnalazioni non potevano essere: una conversazione privata fra
+# chi chiede aiuto e chi la plancia la mantiene, che non diventa una issue
+# pubblica e non chiede nessun account. Passa dal centralino (`centralino/`),
+# il progetto sta in docs/CHAT.md.
+#
+# Nessuno di questi comandi porta un segreto. Il segreto della casa e la chiave
+# della console stanno nel backend, e di qui passano solo parole scritte da una
+# persona.
+
+
+def _chat_denied(hass: HomeAssistant, connection: Any, msg: dict[str, Any]) -> bool:
+    """Chi puo' usare questa plancia puo' scrivere all'assistenza.
+
+    Non serve essere amministratore: chiedere aiuto e' esattamente la cosa che
+    fa chi non amministra niente, e riservarla a chi ha le chiavi di casa
+    vorrebbe dire toglierla proprio a chi la userebbe.
+    """
+    if _authorized(hass, connection, None):
+        return False
+    _deny(connection, msg)
+    return True
+
+
+def _console_chat_denied(
+    hass: HomeAssistant, connection: Any, msg: dict[str, Any]
+) -> bool:
+    """Per rispondere servono due cose: le chiavi di casa e quelle del centralino.
+
+    La chiave del centralino sta nelle opzioni di un Home Assistant solo al
+    mondo. Amministratore da solo non basta: l'amministratore di casa propria
+    non e' chi risponde alle chat di tutti.
+    """
+    from .chat import e_la_console
+
+    if not _is_admin(connection):
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_UNAUTHORIZED,
+            "Le chat di assistenza sono riservate agli amministratori.",
+        )
+        return True
+    if not e_la_console(hass):
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_UNAUTHORIZED,
+            "Questa plancia non risponde alle chat di assistenza.",
+        )
+        return True
+    return False
+
+
+@websocket_api.websocket_command({vol.Required("type"): TYPE_CHAT_STATE})
+@websocket_api.async_response
+async def async_chat_state(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Se la chat c'e', se c'e' un pallino, e sotto che nome si scrive.
+
+    Non esce di casa: serve a decidere se disegnare la porta, e disegnarla non
+    puo' costare una chiamata al centralino ogni volta che qualcuno apre la
+    Configurazione.
+    """
+    from .chat import async_stato
+
+    if _chat_denied(hass, connection, msg):
+        return
+    connection.send_result(msg["id"], await async_stato(hass))
+
+
+@websocket_api.websocket_command({vol.Required("type"): TYPE_CHAT_THREAD})
+@websocket_api.async_response
+async def async_chat_thread(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """La propria conversazione, riletta dal centralino."""
+    from .chat import ChatError, async_conversazione
+
+    if _chat_denied(hass, connection, msg):
+        return
+    try:
+        connection.send_result(msg["id"], await async_conversazione(hass))
+    except ChatError as errore:
+        connection.send_error(msg["id"], errore.code, str(errore))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_CHAT_SEND,
+        vol.Required("message"): vol.All(str, vol.Length(min=1, max=CHAT_MAX_TESTO)),
+        vol.Optional("name", default=""): vol.All(str, vol.Length(max=60)),
+        # La lingua di chi sta scrivendo, non quella del server. In una casa
+        # dove ognuno ha la sua — o dove la plancia parla una lingua diversa da
+        # Home Assistant — la coda diceva la lingua sbagliata, e chi risponde si
+        # ritrovava a scrivere in una lingua che quella persona non usa.
+        vol.Optional("locale", default=""): vol.All(str, vol.Length(max=12)),
+    }
+)
+@websocket_api.async_response
+async def async_chat_send(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Manda un messaggio all'assistenza. Il primo apre la conversazione."""
+    from .chat import ChatError, async_scrivi
+
+    if _chat_denied(hass, connection, msg):
+        return
+    try:
+        messaggio = await async_scrivi(
+            hass, msg["message"], nome=msg["name"], lingua=msg["locale"]
+        )
+    except ChatError as errore:
+        connection.send_error(msg["id"], errore.code, str(errore))
+        return
+    connection.send_result(msg["id"], {"message": messaggio})
+
+
+@websocket_api.websocket_command({vol.Required("type"): TYPE_CHAT_FORGET})
+@websocket_api.async_response
+async def async_chat_forget(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Cancella la conversazione: di qua e dal centralino."""
+    from .chat import async_dimentica
+
+    if _chat_denied(hass, connection, msg):
+        return
+    connection.send_result(msg["id"], {"forgotten": await async_dimentica(hass)})
+
+
+@websocket_api.websocket_command({vol.Required("type"): TYPE_CHAT_QUEUE})
+@websocket_api.async_response
+async def async_chat_queue(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Le conversazioni aperte, per chi risponde."""
+    from .chat import ChatError, async_coda
+
+    if _console_chat_denied(hass, connection, msg):
+        return
+    try:
+        connection.send_result(msg["id"], {"conversations": await async_coda(hass)})
+    except ChatError as errore:
+        connection.send_error(msg["id"], errore.code, str(errore))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_CHAT_OPEN,
+        vol.Required("line"): vol.All(str, vol.Length(min=1, max=64)),
+    }
+)
+@websocket_api.async_response
+async def async_chat_open(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Una conversazione intera, per chi risponde."""
+    from .chat import ChatError, async_apri
+
+    if _console_chat_denied(hass, connection, msg):
+        return
+    try:
+        filo = await async_apri(hass, msg["line"])
+        connection.send_result(msg["id"], {"messages": filo})
+    except ChatError as errore:
+        connection.send_error(msg["id"], errore.code, str(errore))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_CHAT_ANSWER,
+        vol.Required("line"): vol.All(str, vol.Length(min=1, max=64)),
+        vol.Required("message"): vol.All(str, vol.Length(min=1, max=CHAT_MAX_TESTO)),
+    }
+)
+@websocket_api.async_response
+async def async_chat_answer(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Rispondi a una casa."""
+    from .chat import ChatError, async_replica
+
+    if _console_chat_denied(hass, connection, msg):
+        return
+    try:
+        messaggio = await async_replica(hass, msg["line"], msg["message"])
+    except ChatError as errore:
+        connection.send_error(msg["id"], errore.code, str(errore))
+        return
+    connection.send_result(msg["id"], {"message": messaggio})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_CHAT_DROP,
+        vol.Required("line"): vol.All(str, vol.Length(min=1, max=64)),
+    }
+)
+@websocket_api.async_response
+async def async_chat_drop(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Butta via una conversazione dalla coda di chi risponde.
+
+    Serve la chiave della console come per rispondere, e per la stessa ragione
+    piu' una: la cancellazione e' la cosa che non si rimette a posto.
+    """
+    from .chat import ChatError, async_butta
+
+    if _console_chat_denied(hass, connection, msg):
+        return
+    try:
+        connection.send_result(
+            msg["id"], {"dropped": await async_butta(hass, msg["line"])}
+        )
+    except ChatError as errore:
+        connection.send_error(msg["id"], errore.code, str(errore))
+
+
+# ─── Collegare il proprio account GitHub ─────────────────────────────────────
+#
+# Lo stesso giro che HACS fa gia' fare a chiunque installi la plancia: un
+# codice da digitare su github.com/login/device. Chi e' arrivato fin qui l'ha
+# gia' fatto una volta, e lo riconosce.
+#
+# Il gettone non compare in nessuna di queste risposte. Torna indietro chi ha
+# autorizzato e se e' lui a tenere la repository: quello serve a disegnare la
+# finestra, il gettone no.
+
+
+@websocket_api.websocket_command({vol.Required("type"): TYPE_TICKET_AUTH_START})
+@websocket_api.async_response
+async def async_ticket_auth_start(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Chiedi a GitHub il codice da mostrare."""
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    try:
+        avvio = await async_begin_auth(hass)
+    except GitHubError as errore:
+        connection.send_error(msg["id"], errore.code, str(errore))
+        return
+    connection.send_result(msg["id"], avvio)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_TICKET_AUTH_POLL,
+        vol.Required("device_code"): vol.All(str, vol.Length(min=1, max=256)),
+    }
+)
+@websocket_api.async_response
+async def async_ticket_auth_poll(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Vedi se l'utente ha finito di autorizzare.
+
+    ``pending`` non e' un guasto ed e' la risposta normale delle prime volte:
+    torna col suo codice e con l'attesa che GitHub stesso ha chiesto, cosi' la
+    finestra non insiste piu' in fretta di quanto le sia concesso.
+    """
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    try:
+        account = await async_finish_auth(
+            hass, user_id=_caller_id(connection), device_code=msg["device_code"]
+        )
+    except DevicePending as attesa:
+        connection.send_result(
+            msg["id"], {"pending": True, "interval": attesa.interval}
+        )
+        return
+    except GitHubError as errore:
+        connection.send_error(msg["id"], errore.code, str(errore))
+        return
+    # Collegato: le bozze rimaste indietro partono adesso, senza aspettare il
+    # giro di mezz'ora. Chi ha appena autorizzato sta guardando.
+    delivered = await async_deliver_pending(hass, user_id=_caller_id(connection))
+    connection.send_result(
+        msg["id"], {"pending": False, "account": account, "delivered": delivered}
+    )
+
+
+@websocket_api.websocket_command({vol.Required("type"): TYPE_TICKET_AUTH_FORGET})
+@websocket_api.async_response
+async def async_ticket_auth_forget(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Scollega l'account da questo Home Assistant.
+
+    Toglie il gettone di qui, e non lo revoca su GitHub: quello si fa su
+    GitHub, ed e' la finestra a doverlo dire invece di lasciar credere che una
+    cosa sola ne faccia due.
+    """
+    if not _authorized(hass, connection, None):
+        _deny(connection, msg)
+        return
+    removed = await async_forget_auth(hass, _caller_id(connection))
+    connection.send_result(msg["id"], {"removed": removed})
+
+
+@callback
+def async_register_websocket_api(hass: HomeAssistant) -> None:
+    """Register the shared configuration commands once per installation."""
+    domain_data: dict[str, Any] = hass.data.setdefault(DOMAIN, {})
+    if domain_data.get(DATA_WEBSOCKET_REGISTERED):
+        return
+    for command in (
+        async_get_config,
+        async_set_config,
+        async_restore_config,
+        async_list_www,
+        async_upload_www,
+        async_integrations_catalog,
+        async_clima_timer_list,
+        async_clima_timer_set,
+        async_clima_timer_clear,
+        async_list_tickets,
+        async_create_ticket,
+        async_delete_ticket,
+        async_sync_tickets,
+        async_ticket_queue,
+        async_answer_ticket_command,
+        async_ticket_thread,
+        async_reply_ticket_command,
+        async_take_ticket_command,
+        async_ticket_unread,
+        async_chat_state,
+        async_chat_thread,
+        async_chat_send,
+        async_chat_forget,
+        async_chat_queue,
+        async_chat_open,
+        async_chat_answer,
+        async_chat_drop,
+        async_ticket_auth_start,
+        async_ticket_auth_poll,
+        async_ticket_auth_forget,
+    ):
+        websocket_api.async_register_command(hass, command)
+    domain_data[DATA_WEBSOCKET_REGISTERED] = True

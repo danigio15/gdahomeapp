@@ -19,6 +19,7 @@
  * che disegna e il tocco che porta nella stanza.
  */
 import { eAcceso } from "../core/stato-acceso.js";
+import { oggettoWidget } from "../core/oggetti-widget.js";
 import {
   CHIAVE_STANZE_IN_PLANCIA,
   idDellaStanza,
@@ -73,11 +74,43 @@ const numero = (entity, states) => {
  * stesse voci che la sua pagina elenca — e non su un elenco parallelo: due
  * conti della stessa cosa diventano due conti diversi al primo blocco nuovo.
  */
+/* Che disegno porta ogni genere di cosa, nel conto per tipo (#546).
+ *
+ * «Small icons should appear on the card to indicate the status or count of
+ * lights (on/off), climate control, power outlets, alerts, doors, windows and
+ * temperature.» Il conto unico — «3 accese» — non distingue una luce da un
+ * condizionatore, ed e' proprio la distinzione che serve a decidere se valga
+ * la pena entrare nella stanza.
+ *
+ * I disegni sono quelli di casa, gli stessi delle tessere e della fascia sotto
+ * il meteo: un blocco della stanza e la tessera che lo racconta devono avere
+ * la stessa faccia. Le emoji che la pagina Stanze usa per i titoli dei blocchi
+ * qui non entrano — sarebbero un secondo alfabeto per la stessa cosa. */
+const OGGETTO_DEL_BLOCCO = Object.freeze({
+  luci: "luci",
+  clima: "clima",
+  prese: "prese",
+  coperture: "tapparelle",
+  elettrodomestici: "elettrodomestici",
+  media: "media",
+  telecamere: "telecamere",
+  carichi: "energia",
+  robot: "robot",
+  irrigazione: "irrigazione",
+  altro: "evidenza",
+});
+
 export function riassuntoDellaStanza(pagina, states = allStates()) {
   const gradi = numero(pagina?.temp, states);
   const umidita = numero(pagina?.hum, states);
   let accese = 0;
-  for (const blocco of pagina?.blocchi || [])
+  /* Il conto per genere, nell'ordine in cui i blocchi stanno nella stanza: e'
+   * l'ordine che la pagina della stanza mostra gia', e due ordini diversi per
+   * la stessa casa sono due cose da tenere a mente. */
+  const perTipo = [];
+  for (const blocco of pagina?.blocchi || []) {
+    const chiave = clean(blocco?.key);
+    let quante = 0;
     for (const voce of blocco?.voci || []) {
       /* «Acceso» non vuol dire `on` e basta: una cassa che suona dice
        * `playing`, un condizionatore che scalda dice `heat`, un robot al
@@ -85,13 +118,35 @@ export function riassuntoDellaStanza(pagina, states = allStates()) {
        * interruttori, e una stanza con la musica accesa e il termosifone che
        * va risultava spenta. Le parole stanno in un posto solo. */
       const entity = clean(voce?.entity || voce?.entity_id);
-      if (entity && eAcceso(states?.[entity])) accese += 1;
+      if (entity && eAcceso(states?.[entity])) quante += 1;
     }
-  return { gradi, umidita, accese, quante: Number(pagina?.count) || 0 };
+    if (!quante) continue;
+    accese += quante;
+    perTipo.push({ chiave, oggetto: OGGETTO_DEL_BLOCCO[chiave] || "evidenza", quante });
+  }
+  return { gradi, umidita, accese, perTipo, quante: Number(pagina?.count) || 0 };
+}
+
+/* Le pastiglie di cosa e' acceso, un genere per pastiglia (#546).
+ *
+ * Escono solo i generi che hanno qualcosa acceso: una fila di zeri non e' un
+ * colpo d'occhio, e' un modulo da compilare. Il numero sta accanto al disegno
+ * perche' «due luci» e «una luce» sono due notizie diverse. */
+function accesePerTipoMarkup(perTipo) {
+  if (!perTipo.length) return "";
+  return `<span class="dm-stanza-plancia-generi">${perTipo
+    .map(
+      (voce) =>
+        `<span class="dm-stanza-plancia-genere" data-dm-genere="${esc(voce.chiave)}">` +
+        `<span class="dm-stanza-plancia-genere-ic" aria-hidden="true">${oggettoWidget(
+          voce.oggetto,
+        )}</span><b>${esc(String(voce.quante))}</b></span>`,
+    )
+    .join("")}</span>`;
 }
 
 function cardMarkup(pagina, states) {
-  const { gradi, umidita, accese } = riassuntoDellaStanza(pagina, states);
+  const { gradi, umidita, accese, perTipo } = riassuntoDellaStanza(pagina, states);
   const disegno = disegnoDellaStanza(pagina.icon);
   const misure = [
     gradi === null ? "" : `${Math.round(gradi)}°`,
@@ -100,6 +155,10 @@ function cardMarkup(pagina, states) {
     .filter(Boolean)
     .join(" · ");
   const acceso = accese > 0;
+  /* Il nome, il disegno e le misure stanno in colonna e in mezzo (#546):
+   * «with the room icon and name centered». Di fianco, con le pastiglie dei
+   * generi sotto, il nome finiva schiacciato in un angolo della card e la
+   * fila delle pastiglie restava appesa a destra senza un asse. */
   return `<button type="button" class="dm-stanza-plancia" data-dm-stanza-plancia="${esc(pagina.id)}"
       data-accesa="${acceso}" aria-label="${esc(pagina.name)}">
     <span class="dm-stanza-plancia-ic" aria-hidden="true">${disegno}</span>
@@ -107,13 +166,7 @@ function cardMarkup(pagina, states) {
       <b>${esc(pagina.name)}</b>
       <small>${esc(misure)}</small>
     </span>
-    ${
-      acceso
-        ? `<span class="dm-stanza-plancia-accese">${esc(
-            accese === 1 ? t("1 accesa", "1 on") : `${accese} ${t("accese", "on")}`,
-          )}</span>`
-        : ""
-    }
+    ${accesePerTipoMarkup(perTipo)}
   </button>`;
 }
 
@@ -169,16 +222,29 @@ export function renderStanzeInPlancia() {
   const firma = pagine
     .map((voce) => {
       const riassunto = riassuntoDellaStanza(voce, states);
-      return [voce.id, voce.name, voce.icon, riassunto.gradi, riassunto.umidita, riassunto.accese].join(
-        "|",
-      );
+      return [
+        voce.id,
+        voce.name,
+        voce.icon,
+        riassunto.gradi,
+        riassunto.umidita,
+        /* Il conto per genere, non solo il totale: una luce che si spegne
+         * mentre si accende un condizionatore lascia il totale a due, e la
+         * card sarebbe rimasta a dire «luce» fino al cambio dopo. */
+        riassunto.perTipo.map((tipo) => `${tipo.chiave}:${tipo.quante}`).join(","),
+      ].join("|");
     })
     .join("§");
   const casa = host(pagina);
   if (!casa) return false;
   if (state.firma === firma && casa.querySelector("[data-dm-stanza-plancia]")) return true;
   state.firma = firma;
-  casa.innerHTML = `<div class="section-title">🛋️ ${esc(t("Stanze", "Rooms"))}</div>
+  /* Il titolo porta il disegno di casa, non il divano di sistema: e' l'unico
+   * posto del blocco che era rimasto a un'emoji, e su due telefoni diversi
+   * aveva due facce. */
+  casa.innerHTML = `<div class="section-title"><span class="dm-stanze-plancia-titolo-ic" aria-hidden="true">${oggettoWidget(
+    "stanze",
+  )}</span>${esc(t("Stanze", "Rooms"))}</div>
     <div class="dm-stanze-plancia-griglia">${pagine
       .map((voce) => cardMarkup(voce, states))
       .join("")}</div>`;
@@ -216,12 +282,15 @@ function stile() {
     STYLE_ID,
     `
   #${BLOCCO_ID}{display:block;margin-top:18px}
+  #${BLOCCO_ID} .section-title{display:flex;align-items:center;gap:8px}
+  .dm-stanze-plancia-titolo-ic{display:inline-grid;place-items:center;width:20px;height:20px}
+  .dm-stanze-plancia-titolo-ic svg{width:20px;height:20px}
   #${BLOCCO_ID} .dm-stanze-plancia-griglia{
     display:grid;gap:10px;
     grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr))}
   .dm-stanza-plancia{
-    display:flex;align-items:center;gap:12px;min-width:0;width:100%;
-    padding:13px 14px;border-radius:18px;cursor:pointer;font:inherit;text-align:left;
+    display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;width:100%;
+    padding:14px 12px;border-radius:18px;cursor:pointer;font:inherit;text-align:center;
     color:var(--text,#0f172a);
     background:var(--card-background-color,var(--card-bg,#fff));
     border:1px solid var(--card-border,#e2e8f0);
@@ -239,16 +308,26 @@ function stile() {
     border-radius:14px;font-size:22px;line-height:1;
     background:var(--bg-sculpted,#f0f4f8)}
   .dm-stanza-plancia-ic svg{width:26px;height:26px}
-  .dm-stanza-plancia-testo{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+  .dm-stanza-plancia-testo{
+    display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;width:100%}
   .dm-stanza-plancia-testo b{
     font-size:13.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .dm-stanza-plancia-testo small{
     font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b);
     font-variant-numeric:tabular-nums;white-space:nowrap}
-  .dm-stanza-plancia-accese{
-    flex:0 0 auto;padding:4px 9px;border-radius:999px;
-    font-size:10.5px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
+  /* Le pastiglie dei generi (#546): una per famiglia di cose accese, col
+     disegno di casa e quante ne sono. Vanno a capo da sole — una stanza con
+     luci, clima e prese accesi ne ha tre, e su mezza colonna non stanno in
+     fila. */
+  .dm-stanza-plancia-generi{
+    display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;
+    width:100%;min-width:0}
+  .dm-stanza-plancia-genere{
+    display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;
+    font-size:11px;font-weight:900;font-variant-numeric:tabular-nums;
     color:#b45309;background:color-mix(in srgb,#f59e0b 20%,transparent)}
+  .dm-stanza-plancia-genere-ic{display:inline-grid;place-items:center;width:15px;height:15px}
+  .dm-stanza-plancia-genere-ic svg{width:15px;height:15px}
 
   /* Due colonne sul telefono (#524).
    *
@@ -268,16 +347,16 @@ function stile() {
   @media (max-width:560px){
     #${BLOCCO_ID} .dm-stanze-plancia-griglia{
       grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-    .dm-stanza-plancia{
-      flex-wrap:wrap;align-items:flex-start;gap:9px;padding:11px 11px}
+    .dm-stanza-plancia{gap:7px;padding:11px 9px}
     .dm-stanza-plancia-ic{width:34px;height:34px;border-radius:12px;font-size:18px}
     .dm-stanza-plancia-ic svg{width:21px;height:21px}
     .dm-stanza-plancia-testo b{font-size:12.5px}
     .dm-stanza-plancia-testo small{
       font-size:11px;white-space:normal;overflow-wrap:anywhere}
-    /* La pastiglia va a capo sotto il nome: di fianco mangerebbe meta' della
-       colonna, e il nome della stanza conta piu' del conto. */
-    .dm-stanza-plancia-accese{width:100%;text-align:center;padding:3px 8px}
+    /* Su mezza colonna la pastiglia si stringe attorno al numero: il disegno
+       resta, la cornice no. */
+    .dm-stanza-plancia-generi{gap:5px}
+    .dm-stanza-plancia-genere{padding:2px 6px;font-size:10.5px;gap:3px}
   }
   `,
   );

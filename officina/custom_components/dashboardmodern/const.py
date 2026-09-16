@@ -1,0 +1,165 @@
+"""Constants for the DashboardModern integration."""
+
+from __future__ import annotations
+
+DOMAIN = "dashboardmodern"
+NAME = "Dashboard Modern v2"
+
+# Where the releases are published, and where the update entity goes looking.
+REPOSITORY = "danigio15/dashboardmodern-v2"
+RELEASES_URL = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
+
+# Lo zip che ogni release pubblica: lo stesso identico file che installerebbe
+# HACS (hacs.json: zip_release). Il tasto «Installa» scarica questo.
+RELEASE_ASSET = "dashboardmodern.zip"
+
+# Half an hour. HACS gives a custom repository — one added by URL, which is how
+# this integration is installed — forty-eight hours, and does not even look at
+# startup; six hours is what the default store gets, and this project cannot
+# join it. Thirty minutes means a release published in the morning is announced
+# the same morning, and it costs two requests an hour against a GitHub limit of
+# sixty, minus the ones that come back `304 Not Modified` and do not count.
+UPDATE_SCAN_INTERVAL = 30 * 60
+
+# Chi la plancia la tiene su una rete senza uscita puo' spegnere il controllo.
+OPTION_CHECK_UPDATES = "check_updates"
+
+# ─── Segnalazioni ────────────────────────────────────────────────────────────
+#
+# Le segnalazioni aperte dalla plancia diventano issue di questa stessa
+# repository, aperte a nome di chi le scrive.
+#
+# La strada e' questa e non un servizio di mezzo per una ragione che sta a
+# monte: **la plancia si scarica da HACS, e HACS un account GitHub lo chiede
+# gia'**. Chiede anche la stessa identica autorizzazione — il codice da
+# digitare su github.com/login/device — quindi chi ha la plancia installata
+# quel giro l'ha gia' fatto una volta, e lo riconosce. Un relay in mezzo
+# avrebbe voluto dire un servizio da tenere in piedi, un segreto da custodire
+# e una superficie da difendere dagli abusi, per raggiungere persone che su
+# GitHub ci sono gia' tutte.
+#
+# In cambio c'e' una cosa da dire chiaramente, e la plancia la dice prima di
+# spedire: una issue e' una pagina pubblica. Chi apre una segnalazione la
+# pubblica a suo nome, e chiunque puo' leggerla.
+
+# L'applicazione che chiede l'autorizzazione: la GitHub App «DashboardModern
+# Segnalazioni», di @danigio15, con il solo permesso *Issues: Read and write*.
+#
+# Il `client_id` e' pubblico per progetto — nel device flow non esiste un
+# `client_secret` da spedire, e infatti questo stesso identificativo compare
+# nella pagina pubblica dell'App — quindi sta qui, in chiaro, e non fra i
+# segreti. Non c'e' nessuna chiave privata da nessuna parte: quella servirebbe
+# per autenticarsi *come* l'App, e qui non succede mai. Si parla sempre e solo
+# a nome di chi ha autorizzato.
+#
+# Vuoto vuol dire che l'autorizzazione non e' configurata: le segnalazioni si
+# scrivono e restano in casa, e la plancia lo dice invece di offrire un tasto
+# che non spedisce niente.
+GITHUB_CLIENT_ID = "Iv23libQr1HSkyvzG9SO"
+
+# Il permesso da chiedere, e resta vuoto perche' l'App e' una GitHub App: i
+# permessi li porta lei, e sono i suoi soli. Un'applicazione OAuth avrebbe
+# chiesto `public_repo`, che e' molto piu' largo — scrittura su TUTTE le
+# repository pubbliche di chi autorizza, per aprire una segnalazione. E' la
+# ragione per cui si e' scelta la App.
+GITHUB_SCOPE = ""
+
+# Dove il device flow chiede e ritira l'autorizzazione.
+GITHUB_DEVICE_CODE_URL = "https://github.com/login/device/code"
+GITHUB_DEVICE_TOKEN_URL = "https://github.com/login/oauth/access_token"
+GITHUB_API = "https://api.github.com"
+
+# La riga invisibile che marca una issue come nata dalla plancia. Serve alla
+# console per ritrovarle: le etichette non vanno bene, perche' GitHub le
+# scarta quando a scriverle e' qualcuno che sulla repository non ha i permessi
+# — cioe' esattamente chi apre le segnalazioni.
+TICKET_MARKER = "<!-- plancia:v1 -->"
+
+# Ogni quanto la plancia riprova le consegne rimaste indietro e va a vedere se
+# qualcuno ha risposto. Mezz'ora, la stessa cadenza del controllo
+# aggiornamenti: chi apre una segnalazione la vede partire subito — la
+# consegna viene tentata all'istante — e questo giro serve al resto.
+TICKET_SYNC_INTERVAL = 30 * 60
+
+# Quante issue si vanno a rileggere in un giro. Poche, e non venti com'era:
+# ogni issue costa fino a tre richieste e il giro gira nel loop di una
+# macchina piccola — venti issue erano sessanta chiamate in fila ogni
+# mezz'ora. Le altre aspettano il giro dopo: si riparte da dove ci si era
+# fermati, quindi tutte vengono rilette, cinque alla volta.
+TICKET_SYNC_BATCH = 5
+
+# Chi non vuole che la plancia parli con nessuno fuori di casa lo spegne, e le
+# segnalazioni restano una cosa fra lui e il suo Home Assistant.
+OPTION_TICKETS_ENABLED = "tickets_enabled"
+
+# ─── Il campanello ───────────────────────────────────────────────────────────
+#
+# Il filo di una segnalazione e' gia' una conversazione nei due sensi. Quello
+# che mancava e' sapere che qualcuno ha scritto senza tenere la plancia aperta
+# a guardarla: una domanda arrivata alle nove restava senza risposta fino a
+# quando al manutentore veniva in mente di controllare.
+#
+# Cinque minuti, e costa una richiesta a giro — l'elenco filtrato per `since`,
+# che GitHub restituisce gia' scremato. Dodici richieste all'ora in tutto,
+# contro le cinquemila che un gettone concede: e' il giro piu' leggero di
+# tutta l'integrazione, ed e' anche quello che si sente di piu'.
+TICKET_WATCH_INTERVAL = 5 * 60
+
+# L'evento sul bus quando arriva un messaggio nuovo. Serve a chi vuole
+# decidersi da se' cosa succede — il telefono, un altoparlante, una luce — e
+# convive con la notifica di Home Assistant, che invece c'e' per chi
+# automazioni non ne scrive.
+EVENT_TICKET_MESSAGE = f"{DOMAIN}_messaggio"
+
+# ─── La chat di assistenza ───────────────────────────────────────────────────
+#
+# Le segnalazioni diventano issue pubbliche, ed e' giusto che sia cosi': un
+# difetto deve restare scritto e ritrovabile. Chiedere aiuto e' un'altra cosa.
+# Chi chiede aiuto incolla un pezzo di configurazione, il nome delle proprie
+# entita', a volte una foto di casa sua — e chi guarda la plancia non e' sempre
+# chi l'ha installata e su GitHub un account ce l'ha.
+#
+# Percio' la chat non passa da GitHub. Passa dal centralino: un servizio
+# minuscolo che chi mantiene la plancia tiene su, e che fa da punto d'incontro
+# fra due case che altrimenti non si parlerebbero. Il progetto sta in
+# docs/CHAT.md, il servizio in centralino/.
+
+#: L'indirizzo del centralino: e' l'unica cosa di tutto questo giro che non si
+#: puo' indovinare, e finche' resta vuoto la chat non c'e' e la plancia non la
+#: mostra — meglio nessuna porta che una porta che non si apre.
+#:
+#: Il giorno che il centralino cambia casa — un dominio proprio invece di
+#: `workers.dev` — si cambia questa riga e basta: il Worker risponde su tutti
+#: gli indirizzi che gli si attaccano, quindi le plance che non si aggiornano
+#: continuano a parlare col vecchio.
+CHAT_CENTRALINO = "https://centralino.danigio15.workers.dev"
+
+#: Ogni quanto la casa va a vedere se e' arrivata una risposta. Come il
+#: campanello delle segnalazioni: una richiesta sola, cinque minuti, dodici
+#: all'ora. Il centralino ne regge centomila al giorno.
+CHAT_WATCH_INTERVAL = 5 * 60
+
+#: Quanto puo' essere lungo un messaggio. Lo stesso numero che il centralino
+#: taglia dall'altra parte: dirlo qui serve a non far scrivere un muro per poi
+#: consegnarne meta'.
+CHAT_MAX_TESTO = 4000
+
+#: Quanti messaggi la casa tiene su disco. La conversazione vera sta nel
+#: centralino; questa e' la copia che si legge senza rete e che fa da memoria
+#: fra un riavvio e l'altro.
+CHAT_MAX_STORIA = 200
+
+#: La chiave con cui si leggono e si scrivono TUTTE le conversazioni. Sta nelle
+#: opzioni di un Home Assistant solo al mondo — quello di chi la plancia la
+#: mantiene — e nei segreti del Worker. Non e' un ruolo, e' una chiave: il
+#: giorno che i manutentori sono due, sono due chiavi.
+OPTION_CHAT_CONSOLE_KEY = "chat_console_key"
+
+#: Chi non vuole che la plancia parli con nessuno fuori di casa spegne anche
+#: questa, come le segnalazioni.
+OPTION_CHAT_ENABLED = "chat_enabled"
+
+#: L'evento sul bus quando arriva una risposta. Gemello di quello delle
+#: segnalazioni, e separato apposta: un'automazione puo' voler suonare per una
+#: risposta dell'assistenza e stare zitta per un commento su una issue.
+EVENT_CHAT_MESSAGE = f"{DOMAIN}_chat"

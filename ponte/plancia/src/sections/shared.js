@@ -2,6 +2,11 @@
 import { canonicalClimateType } from "../core/device-model.js";
 import { isCumulativeEnergyEntity } from "../core/period-service.js";
 import {
+  ricordaLeStanze,
+  stanzaRicordata,
+  stanzeDalGuscio,
+} from "../core/le-stanze-di-home-assistant.js";
+import {
   DEFAULT_LOCALE,
   SOURCE_LOCALE,
   getLocale,
@@ -431,6 +436,9 @@ export function lexicalGlobal(name) {
   return root[name] ?? null;
 }
 
+/* Che i registri vivi siano gia' stati messi da parte in questo caricamento. */
+let stanzeGiaRicordate = false;
+
 /* In che stanza di Home Assistant sta un'entita'.
  *
  * Home Assistant la stanza la sa gia': un'entita' porta la sua area, o la
@@ -448,18 +456,19 @@ export function lexicalGlobal(name) {
  * dati sparivano dopo essere comparsi. Da un disegno non si chiede niente a
  * nessuno: si legge quello che c'e'.
  *
- * E va detto fino in fondo dove siamo. Dentro il pannello questi registri oggi
- * non ci sono MAI: `WIZ` nasce nuovo a ogni caricamento della pagina, e il
- * rilevamento automatico ospitato esce subito da `loadEntities()` perche' gli
- * stati vivi gli bastano, senza passare da `wzLoadAllEntities()`. Quindi li'
- * qui si risponde sempre vuoto e il conto della presenza ripiega sul nome: il
- * conto per stanza della #549, in pannello, non e' in funzione. Fuori dal
- * pannello, dopo la procedura iniziale, i registri ci sono e funziona.
+ * `WIZ` pero' nasce nuovo a ogni caricamento della pagina, e dentro il pannello
+ * non lo riempie nessuno: il rilevamento automatico ospitato esce subito da
+ * `loadEntities()` perche' gli stati vivi gli bastano, senza passare da
+ * `wzLoadAllEntities()`. Li' qui si rispondeva sempre vuoto, e il conto della
+ * presenza per stanza della #549 — due rilevatori nello stesso salotto, una
+ * stanza sola — in pannello non era mai entrato in funzione.
  *
- * E' una rinuncia, non una svista, e sta scritta qui perche' non sembri una
- * svista. Rimetterla in piedi vuol dire tenere i registri in un posto che
- * sopravvive al caricamento, riempito da chi gia' li carica per conto suo —
- * non chiederli da qui.
+ * Adesso c'e' il ripiego che quella rinuncia prescriveva: i registri stanno in
+ * un posto che sopravvive al caricamento, riempito da chi gia' li carica per
+ * conto suo — il pannello, che li riceve da Home Assistant senza chiedere
+ * niente, e il rilevamento automatico. Di qui non parte nessuna domanda: si
+ * legge quello che c'e', e quando i registri vivi ci sono si lascia la mappa a
+ * chi verra' dopo.
  *
  * Torna il NOME della stanza, non il suo codice: e' quello che si legge, ed e'
  * quello con cui la plancia chiama le sue stanze. Vuoto quando non si sa, e
@@ -470,9 +479,19 @@ export function stanzaDiHomeAssistant(entity) {
   if (!id) return "";
   const wiz = lexicalGlobal("WIZ");
   const riga = wiz?.entReg?.[id];
-  if (!riga) return "";
-  const area = riga.a || (riga.d ? wiz?.devArea?.[riga.d] : "");
-  return area ? clean(wiz?.areaNames?.[area]) : "";
+  if (riga) {
+    /* I registri vivi ci sono: si risponde da li'. E, una volta sola per
+     * caricamento, si lascia la mappa a chi verra' dopo — e' il caricamento
+     * dopo che non li avra'. */
+    if (!stanzeGiaRicordate) {
+      stanzeGiaRicordate = true;
+      ricordaLeStanze(stanzeDalGuscio(wiz));
+    }
+    const area = riga.a || (riga.d ? wiz?.devArea?.[riga.d] : "");
+    const nome = area ? clean(wiz?.areaNames?.[area]) : "";
+    if (nome) return nome;
+  }
+  return stanzaRicordata(id);
 }
 
 /* Una variabile del runtime vendorizzato, riscritta.

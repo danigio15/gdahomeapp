@@ -90,6 +90,15 @@ const CORPI = Object.freeze({
 
   battery: `${PANNELLO}<rect ${SCOCCA} x="18" y="20" width="60" height="60" rx="11"/><rect ${SCOCCA} x="38" y="12" width="20" height="9" rx="4"/><rect ${VERDE} x="25" y="45" width="46" height="28" rx="6"/><path ${CALDO} d="M52 28l-13 20h9l-3 14 14-20h-9z"/>`,
 
+  /* L'addolcitore (#570): il bidone del sale, con la sua finestrella.
+   *
+   * «Ho un sensore che mi controlla lo stato in % e in cm del livello del sale
+   * addolcitore. Sarebbe possibile integrarlo da qualche parte?» Una tessera
+   * ce l'ha gia' — «In evidenza» — ma un disegno suo no, e senza disegno
+   * l'unica scelta era un'emoji di sistema in mezzo alle scocche. La finestra
+   * con dentro il livello e' esattamente la cosa che quel sensore misura. */
+  softener: `${PANNELLO}<rect ${SCOCCA} x="26" y="20" width="44" height="64" rx="12"/><rect ${SCOCCA} x="32" y="12" width="32" height="12" rx="6"/><rect ${FRONTALE} x="35" y="32" width="26" height="44" rx="7"/><rect ${VETRO} x="35" y="54" width="26" height="22" rx="7"/><circle ${ACCENTO} cx="42" cy="50" r="3"/><circle ${ACCENTO} cx="50" cy="45" r="2.4"/><circle ${ACCENTO} cx="56" cy="51" r="2.6"/><path ${TRATTO_CHIARO} d="M40 66h16"/>`,
+
   pump: `${PANNELLO}<circle ${SCOCCA} cx="44" cy="50" r="27"/><circle ${FRONTALE} cx="44" cy="50" r="16"/><path ${ACCENTO} d="M44 38c7 0 11 5 10 10l-10 2zM56 56c-3 6-9 8-13 5l6-9zM32 56c-4-5-3-11 2-13l4 9z"/><circle ${SCOCCA} cx="44" cy="50" r="4"/><rect ${SCOCCA} x="66" y="34" width="14" height="14" rx="4"/><path ${TRATTO} d="M20 82h56"/>`,
 
   irrigation: `${PANNELLO}<rect ${SCOCCA} x="42" y="44" width="12" height="38" rx="5"/><rect ${SCOCCA} x="28" y="76" width="40" height="8" rx="4"/><path ${TRATTO_ACCENTO} d="M30 42c4-10 12-16 18-16s14 6 18 16"/><path ${VETRO} d="M24 30c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8Z"/><path ${VETRO} d="M72 30c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8Z"/><path ${VETRO} d="M48 14c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8Z"/>`,
