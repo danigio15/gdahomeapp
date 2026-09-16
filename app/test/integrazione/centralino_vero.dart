@@ -10,6 +10,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'porte.dart';
+
 class CentralinoVero {
   CentralinoVero._(this._processo, this._archivio, this.porta);
 
@@ -32,11 +34,28 @@ class CentralinoVero {
     throw StateError('non trovo la cartella del centralino');
   }
 
+  /// Accende il centralino, e se la porta gliel'hanno soffiata riprova.
+  /// Il perche' sta in `porte.dart`.
   static Future<CentralinoVero> accendi() async {
+    for (var tentativo = 1; ; tentativo += 1) {
+      try {
+        return await _unTentativo();
+      } on PortaOccupata catch (guaio) {
+        if (tentativo == quantiTentativi) {
+          throw StateError(
+            'il centralino non si è alzato: la porta era occupata '
+            '$quantiTentativi volte di fila.\n${guaio.registro}',
+          );
+        }
+      }
+    }
+  }
+
+  static Future<CentralinoVero> _unTentativo() async {
     final archivio = await Directory.systemTemp.createTemp(
       'centralino-collaudo-',
     );
-    final porta = await _unaPortaLibera();
+    final porta = (await porteLibere(1)).single;
 
     final processo = await Process.start(
       'node',
@@ -58,17 +77,35 @@ class CentralinoVero {
         .transform(const LineSplitter())
         .listen(centralino.registro.add);
 
-    await centralino._aspettaCheSiaVivo();
+    try {
+      await centralino._aspettaCheSiaVivo();
+    } catch (_) {
+      await centralino.spegni();
+      if (parlaDiPortaOccupata(centralino.registro)) {
+        throw PortaOccupata(centralino.registro.join('\n'));
+      }
+      rethrow;
+    }
     return centralino;
   }
 
   Future<void> _aspettaCheSiaVivo() async {
+    /* Morto durante l'avvio: si smette subito invece di aspettare il resto
+     * dei quindici secondi. */
+    var caduto = false;
+    unawaited(_processo.exitCode.then((_) => caduto = true));
+
     final fine = DateTime.now().add(const Duration(seconds: 15));
     while (DateTime.now().isBefore(fine)) {
       try {
         if ((await salute())['vivo'] == true) return;
       } catch (_) {
         /* Non e' ancora su. */
+      }
+      if (caduto) {
+        /* Un istante perche' le ultime righe di `stderr` arrivino. */
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+        break;
       }
       await Future<void>.delayed(const Duration(milliseconds: 100));
     }
@@ -104,11 +141,4 @@ class CentralinoVero {
     );
     if (_archivio.existsSync()) await _archivio.delete(recursive: true);
   }
-}
-
-Future<int> _unaPortaLibera() async {
-  final presa = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
-  final porta = presa.port;
-  await presa.close();
-  return porta;
 }

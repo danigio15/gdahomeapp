@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'casa_finta.dart';
+import 'porte.dart';
 
 class PonteVero {
   PonteVero._(
@@ -50,10 +51,34 @@ class PonteVero {
     }
   }
 
+  /// Accende il ponte, e se la porta gliel'hanno soffiata riprova.
+  ///
+  /// Perche' possa succedere sta scritto in `porte.dart`. Qui conta che non
+  /// c'e' niente da capire quando succede: si prendono due numeri nuovi e si
+  /// riparte, che e' quello che farebbe una persona guardando il registro.
   static Future<PonteVero> accendi(CasaFinta casa, {String? centralino}) async {
+    for (var tentativo = 1; ; tentativo += 1) {
+      try {
+        return await _unTentativo(casa, centralino: centralino);
+      } on PortaOccupata catch (guaio) {
+        if (tentativo == quantiTentativi) {
+          throw StateError(
+            'il ponte non si è alzato: la porta era occupata '
+            '$quantiTentativi volte di fila.\n${guaio.registro}',
+          );
+        }
+      }
+    }
+  }
+
+  static Future<PonteVero> _unTentativo(
+    CasaFinta casa, {
+    String? centralino,
+  }) async {
     final archivio = await Directory.systemTemp.createTemp('ponte-collaudo-');
-    final app = await _unaPortaLibera();
-    final consolle = await _unaPortaLibera();
+    final porte = await porteLibere(2);
+    final app = porte[0];
+    final consolle = porte[1];
 
     /* Le opzioni le legge il ponte da `/data/options.json`, come dentro
      * l'add-on: qui `/data` e' una cartella temporanea. */
@@ -91,11 +116,25 @@ class PonteVero {
         .transform(const LineSplitter())
         .listen(ponte.registro.add);
 
-    await ponte._aspettaCheSiaVivo();
+    try {
+      await ponte._aspettaCheSiaVivo();
+    } catch (_) {
+      await ponte.spegni();
+      if (parlaDiPortaOccupata(ponte.registro)) {
+        throw PortaOccupata(ponte.registro.join('\n'));
+      }
+      rethrow;
+    }
     return ponte;
   }
 
   Future<void> _aspettaCheSiaVivo() async {
+    /* Se il processo muore durante l'avvio, aspettare gli altri quattordici
+     * secondi non lo fa resuscitare: si smette subito, e chi ha chiamato
+     * riprova o dice cos'e' andato storto. */
+    var caduto = false;
+    unawaited(_processo.exitCode.then((_) => caduto = true));
+
     final fine = DateTime.now().add(const Duration(seconds: 15));
     while (DateTime.now().isBefore(fine)) {
       try {
@@ -103,6 +142,12 @@ class PonteVero {
         if (risposta['vivo'] == true) return;
       } catch (_) {
         /* Non e' ancora su. */
+      }
+      if (caduto) {
+        /* Un istante perche' le ultime righe di `stderr` arrivino nel
+         * registro: e' li' dentro che c'e' scritto perche' e' morto. */
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+        break;
       }
       await Future<void>.delayed(const Duration(milliseconds: 100));
     }
@@ -167,11 +212,4 @@ class PonteVero {
       await _archivio.delete(recursive: true);
     }
   }
-}
-
-Future<int> _unaPortaLibera() async {
-  final presa = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
-  final porta = presa.port;
-  await presa.close();
-  return porta;
 }
