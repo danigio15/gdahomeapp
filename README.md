@@ -22,8 +22,8 @@
 <p align="center">
   <a href="https://github.com/danigio15/gdahomeapp/releases"><img src="https://img.shields.io/github/v/release/danigio15/gdahomeapp?label=versione&color=0ea5e9" alt="Ultima versione"></a>
   <a href="https://github.com/danigio15/gdahomeapp/actions/workflows/prove.yml"><img src="https://github.com/danigio15/gdahomeapp/actions/workflows/prove.yml/badge.svg" alt="Le prove"></a>
-  <a href="https://github.com/danigio15/gdahomeapp/blob/contatori/traffico.json"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdanigio15%2Fgdahomeapp%2Fcontatori%2Fbollino-case.json&cacheSeconds=3600" alt="Case con gdahome"></a>
-  <a href="https://github.com/danigio15/gdahomeapp/blob/contatori/traffico.json"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdanigio15%2Fgdahomeapp%2Fcontatori%2Fbollino-scaricamenti.json&cacheSeconds=3600" alt="Scaricamenti"></a>
+  <a href="https://github.com/danigio15/gdahomeapp/blob/contatori/traffico.json"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdanigio15%2Fgdahomeapp%2Fcontatori%2Fbollino-case.json&cacheSeconds=300" alt="Case con gdahome"></a>
+  <a href="https://github.com/danigio15/gdahomeapp/blob/contatori/traffico.json"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdanigio15%2Fgdahomeapp%2Fcontatori%2Fbollino-scaricamenti.json&cacheSeconds=300" alt="Scaricamenti"></a>
   <a href="https://www.paypal.com/paypalme/giovannidaniello15"><img src="https://img.shields.io/badge/PayPal-sostieni-003087?logo=paypal&logoColor=white" alt="Sostieni il progetto con PayPal"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-OS%20%7C%20Supervised-18BCF2" alt="Home Assistant OS o Supervised">
   <img src="https://img.shields.io/badge/Android%20%C2%B7%20iPhone%20%C2%B7%20browser-16a34a" alt="Android, iPhone, browser">
