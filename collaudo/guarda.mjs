@@ -20,6 +20,8 @@
  *
  *     node guarda.mjs            fotografa e basta
  *     node guarda.mjs --resta    resta acceso, per guardarci dentro col browser
+ *     node guarda.mjs --largo    su uno schermo da computer, com'e' da browser
+ *     node guarda.mjs --scuro    col tema scuro
  */
 
 import { spawn } from "node:child_process";
@@ -50,6 +52,17 @@ const RESTA = process.argv.includes("--resta");
  * chiare. */
 const SCURO = process.argv.includes("--scuro");
 
+/* `--largo`: l'app su uno schermo da computer, che e' come la vede chi la apre
+ * da browser.
+ *
+ * Non e' un dettaglio di gusto: da quando il menu si chiama col ☰ anche li'
+ * (`quanto_e_largo.dart`), l'app ha **una faccia sola** — e una faccia sola
+ * va guardata a tutte e due le larghezze, perche' una schermata che sul
+ * telefono sta giusta su milleduecento punti puo' diventare tre righe in cima
+ * e un metro di vuoto sotto. Le fotografie finiscono in una cartella a parte,
+ * per non coprire quelle del telefono. */
+const LARGO = process.argv.includes("--largo");
+
 /* In che lingua gira l'app, e come si chiamano le cose in quella lingua.
  *
  * Il collaudo preme quello che leggerebbe una persona: se l'app parla inglese,
@@ -66,7 +79,8 @@ const due = (it, en) => (INGLESE ? en : it);
  * stesso del collaudo, solo respirato: le pause si allungano perche' chi
  * guarda deve fare in tempo a leggere. */
 const FILMA = process.argv.includes("--filma");
-const FOTO = join(QUI, "foto", SCURO ? "scuro" : "");
+/* Una cartella per faccia: telefono, telefono scuro, computer. */
+const FOTO = join(QUI, "foto", LARGO ? "largo" : SCURO ? "scuro" : "");
 /* Dove il servitore serve la plancia. Fissa, perche' l'app la deve sapere
  * quando la si costruisce: `--dart-define=PLANCIA_URL=http://127.0.0.1:8765`. */
 const PORTA_DEL_SERVITORE = Number(process.env.PORTA_DEL_SERVITORE || 8765);
@@ -453,7 +467,8 @@ async function main() {
   });
   daSpegnere.push(() => browser.close());
   const contesto = await browser.newContext({
-    viewport: { width: 430, height: 932 },
+    /* Un telefono di quelli di adesso, o un computer. */
+    viewport: LARGO ? { width: 1440, height: 900 } : { width: 430, height: 932 },
     deviceScaleFactor: 2,
     colorScheme: SCURO ? "dark" : "light",
     /* In che lingua gira l'app: quella del telefono, e qui il telefono e'
@@ -1091,7 +1106,16 @@ try {
    * aprendolo si vedano tutte e due. */
   racconta("guardo il selettore delle plance");
   {
-    if (!(await ilBottone(pagina, due("Quale plancia", "Which dashboard"), { aspetta: false }))) {
+    /* Con l'attesa, e non con la finestra corta di `aspetta: false`.
+     *
+     * Qui c'era `aspetta: false`, cioe' seicento millesimi: l'idea era «il
+     * selettore deve **esserci gia'**». Ma l'albero dell'accessibilita' di
+     * Flutter arriva quando arriva, e quanto tardi dipende da quanto c'e' da
+     * impaginare: su uno schermo da computer — la plancia a tutta larghezza,
+     * ventidue sezioni — ci mette piu' che su un telefono, e il controllo
+     * diceva «non c'e'» di una cosa che c'era. Un'attesa non nasconde niente:
+     * se dopo venti secondi non c'e', non c'e'. */
+    if (!(await ilBottone(pagina, due("Quale plancia", "Which dashboard")))) {
       const cEra = await cosaCeDaPremere(pagina);
       throw new Error(
         `il selettore delle plance non e' comparso in cima alla barra. A schermo c'e': ${cEra.join(" · ")}`,
@@ -1845,7 +1869,7 @@ if (RESTA) {
     const dove = await banco.pagina.video()?.path();
     await banco.contesto.close();
     if (dove && existsSync(dove)) {
-      video = join(VIDEO, `giro-completo${SCURO ? "-scuro" : ""}.webm`);
+      video = join(VIDEO, `giro-completo${LARGO ? "-largo" : SCURO ? "-scuro" : ""}.webm`);
       renameSync(dove, video);
     }
   }
