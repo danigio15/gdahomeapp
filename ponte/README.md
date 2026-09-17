@@ -7,6 +7,16 @@ segreto di Home Assistant al posto suo: sul telefono non ci finisce mai.
 Nella barra laterale di Home Assistant compare **gdahome**: è la sua pagina, ed
 è da lì che si fa tutto.
 
+> **È un add-on, non un'integrazione: su HACS non si mette.** HACS lo rifiuta,
+> e non dice perché. Si aggiunge da **Impostazioni → Add-on → Negozio → i tre
+> puntini in alto → Archivi**, incollando l'indirizzo di questa repository.
+>
+> E se in casa c'era l'integrazione **DashboardModern** installata da HACS,
+> adesso non serve più: la plancia la porta questo add-on. Lasciarle entrambe
+> fa comparire due voci simili nella barra laterale, e quella
+> dell'integrazione, se l'integrazione non c'è più, apre con «Errore di
+> configurazione» — e nessun riavvio la aggiusta.
+
 ## Comincia da qui
 
 1. Apri **gdahome** dalla barra laterale.

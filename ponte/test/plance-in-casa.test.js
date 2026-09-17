@@ -22,7 +22,13 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync }
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { CARTELLA, DAVANTI, PlanceInCasa, indirizzoDi } from "../src/plance-in-casa.js";
+import {
+  CARTELLA,
+  DAVANTI,
+  PlanceInCasa,
+  indirizzoDi,
+  lePlanceDiPrima,
+} from "../src/plance-in-casa.js";
 import { Plance } from "../src/plance.js";
 
 /* Una Home Assistant finta al livello dei comandi: tiene le Plance e le
@@ -866,6 +872,98 @@ test("una cartina che si scarica ma non registra la tessera conta come non servi
     const esito = await b.in_casa.sistema();
     assert.equal(esito.servita, false);
     assert.equal(b.casa.viste.get("gdahome-primary").views[0].cards[0].type, "markdown");
+  } finally {
+    b.via();
+  }
+});
+
+/* ─── La Plancia rimasta dall'integrazione ───────────────────────────────────
+ *
+ * E' l'unica delle cose che fanno uscire «Errore di configurazione» che un
+ * riavvio non aggiusta **mai**, ed e' quella su cui qualcuno ha riavviato Home
+ * Assistant tre volte prima di andare a chiederlo su Facebook. Il ponte
+ * quell'elenco ce l'aveva — lo scriveva nel registro — e non lo diceva a
+ * nessuno.
+ *
+ * Qui si tiene fermo il riconoscimento, e la cosa che conta e' il **no**: una
+ * plancia che chi ci abita si e' fatta da se' non si nomina, non si propone di
+ * togliere, e non si tocca.
+ */
+
+test("si riconosce la plancia dell'integrazione, e non quella di chi ci abita", () => {
+  const dette = lePlanceDiPrima([
+    { dove: "gdahome-primary", titolo: "gdahome", nostra: true },
+    { dove: "dashboardmodern", titolo: "DashboardModern v2", nostra: false },
+    { dove: "casa-mia", titolo: "Casa 3.0", nostra: false },
+    { dove: "tablet-cucina", titolo: "Tablet cucina", nostra: false },
+  ]);
+  assert.deepEqual(
+    dette.map((una) => una.titolo),
+    ["DashboardModern v2"],
+    "solo quella dell'integrazione: le altre sono di chi ci abita",
+  );
+
+  /* Il nome si riconosce anche scritto sciolto o solo nell'indirizzo — chi
+   * l'ha rinominata «Dashboard Modern» e' la stessa persona con lo stesso
+   * problema. */
+  assert.equal(
+    lePlanceDiPrima([{ dove: "x", titolo: "Dashboard Modern", nostra: false }]).length,
+    1,
+  );
+  assert.equal(
+    lePlanceDiPrima([{ dove: "dashboardmodern-2", titolo: "Casa", nostra: false }]).length,
+    1,
+  );
+
+  /* E le nostre mai, nemmeno se si chiamassero cosi'. */
+  assert.deepEqual(
+    lePlanceDiPrima([{ dove: "gdahome-x", titolo: "DashboardModern", nostra: true }]),
+    [],
+  );
+  assert.deepEqual(lePlanceDiPrima(null), []);
+});
+
+test("e lo si dice a chi ci abita, una volta, e si leva quando non c'e' piu'", async () => {
+  const b = banco({
+    plance: [{ id: "d9", url_path: "dashboardmodern", title: "DashboardModern v2" }],
+    cartina: "si",
+  });
+  try {
+    const esito = await b.in_casa.sistema();
+    assert.deepEqual(
+      esito.plance_di_prima.map((una) => una.titolo),
+      ["DashboardModern v2"],
+      "l'esito la porta, cosi' la console la puo' nominare",
+    );
+    const avviso = b.casa.avvisi.get("gdahome_plancia_dell_integrazione");
+    assert.ok(avviso, "l'avviso in Home Assistant c'e'");
+    assert.match(avviso.message, /DashboardModern v2/);
+    assert.match(avviso.message, /Impostazioni → Dashboard/);
+    assert.match(avviso.message, /non la tocca/, "e si dice che non la tocchiamo noi");
+
+    /* Due giri non fanno due avvisi: un avviso per accensione sarebbe un
+     * avviso che si impara a chiudere senza leggerlo. */
+    await b.in_casa.sistema();
+    assert.equal(b.casa.avvisi.size, 1);
+
+    /* E quando chi ci abita la leva, l'avviso se ne va da se'. */
+    b.casa.plance.splice(
+      b.casa.plance.findIndex((una) => una.url_path === "dashboardmodern"),
+      1,
+    );
+    await b.in_casa.sistema();
+    assert.equal(b.casa.avvisi.size, 0, "un avviso che resta appeso non lo legge piu' nessuno");
+  } finally {
+    b.via();
+  }
+});
+
+test("una casa senza roba di prima non si sente dire niente", async () => {
+  const b = banco({ cartina: "si" });
+  try {
+    const esito = await b.in_casa.sistema();
+    assert.deepEqual(esito.plance_di_prima, []);
+    assert.equal(b.casa.avvisi.size, 0);
   } finally {
     b.via();
   }

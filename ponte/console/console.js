@@ -983,6 +983,37 @@
         " Nella Plancia c'è «" + esito.tessera_nella_vista + "».",
         " The dashboard holds \u201C" + esito.tessera_nella_vista + "\u201D.",
       );
+    /* La Plancia rimasta dall'integrazione, ed e' la riga che mancava.
+     *
+     * Qualcuno ha riavviato Home Assistant tre volte su una voce che nessun
+     * riavvio puo' aggiustare, e poi e' andato a chiederlo su Facebook. Il
+     * ponte quell'elenco ce l'aveva — lo scriveva nel registro — e qui non
+     * compariva. Sta **prima** delle altre righe perche', quando c'e', e'
+     * quasi sempre la voce che hanno aperto. */
+    var diPrima = Array.isArray(esito.plance_di_prima) ? esito.plance_di_prima : [];
+    if (diPrima.length) {
+      var nomi = diPrima
+        .map(function (una) {
+          return "«" + (una.titolo || una.dove) + "»";
+        })
+        .join(", ");
+      riga +=
+        due(
+          " ⚠️ Nella barra laterale c'è ancora " +
+            nomi +
+            ", dell'integrazione DashboardModern e non di gdahome." +
+            " Se l'integrazione non c'è più, quella voce apre con «Errore di configurazione»" +
+            " e non si aggiusta riavviando: si leva da Impostazioni → Dashboard." +
+            " Questo add-on non la tocca.",
+          " ⚠️ Your sidebar still has " +
+            nomi +
+            ", from the DashboardModern integration and not from gdahome." +
+            " If the integration is gone, that entry opens with a configuration error" +
+            " and restarting won't fix it: remove it from Settings → Dashboards." +
+            " This add-on doesn't touch it.",
+        ) + " ";
+    }
+
     /* E cosa ci trova, adesso, chi apre quella voce. Quando la cartina non si
      * serve il ponte ci scrive un foglietto — quello che dice di riavviare —
      * al posto della plancia: è la cosa da sapere per prima, perché è quella

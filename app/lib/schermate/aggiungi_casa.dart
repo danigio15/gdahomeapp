@@ -18,6 +18,9 @@
 library;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+
+import '../casa/ingresso_qui/qui.dart';
+
 import 'package:flutter/material.dart';
 
 import '../casa/archivio_delle_case.dart';
@@ -389,20 +392,64 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                     ),
                     const SizedBox(height: 10),
                   ],
+                  /* Due frasi, e quale delle due dipende da **dove gira
+                     questa copia dell'app**.
+                     
+                     Chi ha il telefono in mano ha Home Assistant su un altro
+                     schermo, e «apri gdahome dalla barra laterale» e' il
+                     consiglio giusto. Ma questa stessa app la serve anche
+                     l'add-on, dentro Home Assistant, dalla console che ha un
+                     tasto «Apri gdahome» — e li' quella frase chiudeva un
+                     anello: la barra laterale riportava all'app, e il codice
+                     non si generava mai. Qualcuno ha riavviato tre volte e poi
+                     e' andato a chiederlo su Facebook.
+                     
+                     Quindi da dentro l'ingress non si manda nessuno nella
+                     barra laterale: si apre la console, con un tasto che ci
+                     porta. */
                   Text(
-                    inLingua(
-                      it:
-                          'In Home Assistant apri «gdahome» dalla barra '
-                          'laterale e premi «Genera QR code». Poi inquadralo.',
-                      en:
-                          'In Home Assistant open “gdahome” from the sidebar '
-                          'and press “Generate the QR code”. Then scan it.',
-                    ),
+                    dentroHomeAssistant
+                        ? inLingua(
+                            it:
+                                'Il codice lo fabbrica la console di gdahome, '
+                                'qui in Home Assistant. Aprila, premi «Genera '
+                                'QR code», e riporta qui il codice.',
+                            en:
+                                'The code is made by the gdahome console, here '
+                                'in Home Assistant. Open it, press “Generate '
+                                'the QR code”, and bring the code back here.',
+                          )
+                        : inLingua(
+                            it:
+                                'In Home Assistant apri «gdahome» dalla barra '
+                                'laterale e premi «Genera QR code». Poi '
+                                'inquadralo.',
+                            en:
+                                'In Home Assistant open “gdahome” from the '
+                                'sidebar and press “Generate the QR code”. '
+                                'Then scan it.',
+                          ),
                     textAlign: TextAlign.center,
                     style: testi.bodyLarge?.copyWith(
                       color: colori.onSurfaceVariant,
                     ),
                   ),
+                  if (dentroHomeAssistant) ...[
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: apriLaConsole,
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
+                      ),
+                      icon: const Icon(Icons.qr_code_2),
+                      label: Text(
+                        inLingua(
+                          it: 'Apri la console di gdahome',
+                          en: 'Open the gdahome console',
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 28),
                   FilledButton.icon(
                     onPressed: _sto ? null : _inquadra,

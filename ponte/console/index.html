@@ -199,7 +199,15 @@
                 </span>
                 <!-- Si apre **in questa scheda** e non in una nuova: la sessione di
                      questo indirizzo la tiene viva la pagina di Home Assistant, e
-                     una scheda a parte dopo un po' si sente rispondere «401». -->
+                     una scheda a parte dopo un po' si sente rispondere «401».
+                     
+                     La via di ritorno però non è la barra laterale, e per mesi
+                     qui c'era scritto che lo fosse: quella voce riapre lo stesso
+                     indirizzo, cioè l'app, e chi non aveva ancora abbinato
+                     nessuna casa si trovava in un anello — l'app diceva «apri
+                     gdahome dalla barra laterale e premi Genera QR code», e la
+                     barra laterale riportava all'app. Il ritorno adesso è dentro
+                     l'app: un tasto che porta qui. -->
                 <a class="bottone" id="apri-app" href="app/" data-en="Open gdahome">Apri gdahome</a>
               </li>
               <li id="link-di-fuori" hidden>
@@ -227,10 +235,11 @@
               <summary data-en="Two things to know">Due cose da sapere</summary>
               <p
                 class="spiegazione"
-                data-en="&lt;b&gt;In here&lt;/b&gt; opens in this very tab: to come back, &#8220;gdahome&#8221; in the Home Assistant sidebar. Open it in a tab of its own and after a few minutes that address answers &lt;b&gt;401&lt;/b&gt; — the session is kept alive by Home Assistant, not by the tab."
+                data-en="&lt;b&gt;In here&lt;/b&gt; opens in this very tab. To come back, gdahome has a button that brings you here — don't use the sidebar entry, it reopens this same address. Open it in a tab of its own and after a few minutes that address answers &lt;b&gt;401&lt;/b&gt; — the session is kept alive by Home Assistant, not by the tab."
               >
-                <b>Qui dentro</b> si apre in questa stessa scheda: per tornare, «gdahome» nella
-                barra di Home Assistant. Aprendolo in una scheda a parte, dopo qualche minuto
+                <b>Qui dentro</b> si apre in questa stessa scheda. Per tornare, gdahome ha un tasto
+                che riporta qui: <b>non</b> la voce nella barra laterale, che riapre questo stesso
+                indirizzo — cioè l'app. Aprendolo in una scheda a parte, dopo qualche minuto
                 quell'indirizzo risponde <b>401</b> — la sessione la tiene viva Home Assistant, non
                 la scheda.
               </p>

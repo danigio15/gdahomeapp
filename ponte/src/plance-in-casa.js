@@ -54,6 +54,40 @@ export const TESSERA = "gdahome-plancia";
  * avvio, e quando la cosa si sistema si sa quale levare. */
 export const AVVISO = "gdahome_riavvia_home_assistant";
 
+/* E l'avviso dell'altra cosa che fa uscire «Errore di configurazione», e che
+ * un riavvio non aggiusta **mai**: una Plancia rimasta in casa
+ * dall'integrazione di prima. */
+export const AVVISO_DI_PRIMA = "gdahome_plancia_dell_integrazione";
+
+/* Come si chiamava la plancia quando la portava l'integrazione.
+ *
+ * Serve a riconoscere le sue Plance rimaste in casa. Una casa che ha avuto
+ * DashboardModern installato da HACS se le ritrova nella barra laterale, con
+ * dentro una tessera che serviva l'integrazione: se l'integrazione non c'e'
+ * piu', quella voce apre con «Errore di configurazione» **per sempre**, e chi
+ * ci prova riavvia tre volte per niente — e' successo davvero.
+ *
+ * Il riconoscimento e' volutamente **stretto**: solo un nome che dice
+ * DashboardModern. Le altre Plance di quella casa — «Casa 3.0», quella che si
+ * e' fatta chi ci abita — non sono roba nostra e dire «questa non e' mia,
+ * levala» su una plancia che uno si e' costruito sarebbe peggio di tacere. */
+const NOME_DI_PRIMA = /dashboard\s*modern/i;
+
+/**
+ * Le Plance di questa casa che sono dell'integrazione di prima.
+ *
+ * Fuori dalla classe perche' e' una regola e si prova come tale: quali nomi
+ * si riconoscono, e soprattutto quali **no**.
+ */
+export function lePlanceDiPrima(altre) {
+  return (Array.isArray(altre) ? altre : []).filter(
+    (una) =>
+      una &&
+      una.nostra !== true &&
+      (NOME_DI_PRIMA.test(String(una.titolo || "")) || NOME_DI_PRIMA.test(String(una.dove || ""))),
+  );
+}
+
 /* Come cominciano gli indirizzi delle Plance che fa il ponte. Serve a
  * riconoscere le proprie quando si fa pulizia: le altre non si toccano.
  *
@@ -115,6 +149,8 @@ export class PlanceInCasa {
     this._avvisato = false;
     /* La guardia che ricontrolla finche' la cartina non si scarica. */
     this._guardia = null;
+    /* E se l'avviso della Plancia di prima l'abbiamo messo noi. */
+    this._avvisatoDiPrima = false;
   }
 
   /* C'e' una cartella di Home Assistant dove scrivere?
@@ -347,7 +383,7 @@ export class PlanceInCasa {
           "nelle Plance c'e' il foglietto che dice di riavviare, non la plancia",
       );
     }
-    await this.loDiceAChiCiAbita(servita);
+    await this.loDiceAChiCiAbita(servita, come.plance_di_prima);
 
     if (guai.length) {
       const perche = guai.join("; ");
@@ -414,7 +450,8 @@ export class PlanceInCasa {
    * Non solleva: se l'avviso non parte — un permesso, una Home Assistant che
    * sta ripartendo — resta tutto il resto, e questo e' il piu' in piu', non la
    * strada. */
-  async loDiceAChiCiAbita(servita) {
+  async loDiceAChiCiAbita(servita, diPrima = []) {
+    await this._laPlanciaDiPrima(diPrima);
     if (servita === false && !this._avvisato) {
       try {
         await this.casa.chiedi({
@@ -452,6 +489,68 @@ export class PlanceInCasa {
       } catch (_errore) {
         /* Resta appeso: meglio di un avviso che non parte. */
       }
+    }
+  }
+
+  /* La Plancia rimasta dall'integrazione, detta a chi ci abita.
+   *
+   * E' l'avviso che mancava, e si e' visto quanto: qualcuno ha riavviato Home
+   * Assistant **tre volte** su una voce che nessun riavvio puo' aggiustare,
+   * perche' quella voce non e' di questo add-on — e' di un'integrazione che in
+   * quella casa non c'e' piu'. Il ponte lo sapeva (lo scriveva nel registro) e
+   * non lo diceva a nessuno.
+   *
+   * Non la tocca e non la propone di togliere da qui: una dashboard e' di chi
+   * ci abita, e un add-on che cancella voci dalla barra laterale di casa
+   * d'altri non e' un add-on di cui fidarsi. Si dice **cos'e'** e **dove** si
+   * leva, e decide lui. */
+  async _laPlanciaDiPrima(quali) {
+    const elenco = Array.isArray(quali) ? quali : [];
+    if (!elenco.length) {
+      if (!this._avvisatoDiPrima) return;
+      try {
+        await this.casa.chiedi({
+          type: "call_service",
+          domain: "persistent_notification",
+          service: "dismiss",
+          service_data: { notification_id: AVVISO_DI_PRIMA },
+        });
+        this._avvisatoDiPrima = false;
+      } catch (_errore) {
+        /* Resta appeso: meglio di un avviso che non parte. */
+      }
+      return;
+    }
+    if (this._avvisatoDiPrima) return;
+    const nomi = elenco.map((una) => `«${una.titolo || una.dove}»`).join(", ");
+    this.registro.attenzione(
+      `nella barra laterale c'e' ancora ${nomi}, dell'integrazione di prima: ` +
+        "se l'integrazione non c'e' piu', quella voce apre con «Errore di configurazione»",
+    );
+    try {
+      await this.casa.chiedi({
+        type: "call_service",
+        domain: "persistent_notification",
+        service: "create",
+        service_data: {
+          notification_id: AVVISO_DI_PRIMA,
+          title: "gdahome: una plancia di prima e' rimasta nella barra laterale",
+          message:
+            `Nella barra laterale c'e' ancora ${nomi}: e' dell'**integrazione** ` +
+            "DashboardModern, non di questo add-on. Adesso la plancia la porta " +
+            "gdahome, e la sua voce e' un'altra.\n\nSe l'integrazione non c'e' " +
+            "piu', quella voce si apre con **«Errore di configurazione»** e non " +
+            "si aggiusta riavviando: si leva da **Impostazioni → Dashboard**, " +
+            "coi tre puntini accanto al suo nome.\n\nQuesto add-on non la tocca: " +
+            "una dashboard e' di chi ci abita.\n\n_(English: a dashboard left by " +
+            "the old DashboardModern integration is still in your sidebar; it " +
+            "opens with a configuration error and can be removed from Settings " +
+            "→ Dashboards.)_",
+        },
+      });
+      this._avvisatoDiPrima = true;
+    } catch (_errore) {
+      /* Senza l'avviso si vive: la console lo dice comunque. */
     }
   }
 
@@ -745,7 +844,15 @@ export class PlanceInCasa {
    * Non aggiusta niente ed e' apposta: e' l'unica riga che, da qui, dice a chi
    * guarda «Errore di configurazione» dove sta il pezzo che manca. */
   async controlla() {
-    const come = { risorsa_in_elenco: null, tessera_nella_vista: "", altre_plance: [] };
+    const come = {
+      risorsa_in_elenco: null,
+      tessera_nella_vista: "",
+      altre_plance: [],
+      /* Quelle dell'integrazione di prima, separate: e' la sola cosa che la
+       * console non sapeva dire, e l'unica di tutta questa diagnostica che un
+       * riavvio non aggiusta. */
+      plance_di_prima: [],
+    };
 
     /* **Tutte** le Plance di questa casa, non solo le nostre.
      *
@@ -780,6 +887,8 @@ export class PlanceInCasa {
       /* Se non si puo' chiedere resta `null`, che vuol dire «non lo so» ed e'
        * diverso da «no». */
     }
+    come.plance_di_prima = lePlanceDiPrima(come.altre_plance);
+
     const prima = this.plance?.prima;
     if (prima) {
       try {

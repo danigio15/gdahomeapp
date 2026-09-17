@@ -5,6 +5,26 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.4
+
+**«Errore di configurazione»: adesso l'add-on dice quale dei casi è.** Erano
+cinque, e uno solo si aggiusta riavviando. Il più ostinato è una **Plancia
+rimasta dall'integrazione DashboardModern**: quella voce apre con l'errore per
+sempre, e riavviare non serve. L'add-on lo sapeva — lo scriveva nel registro —
+e non lo diceva a nessuno. Adesso lo dice nella sua scheda e con un avviso in
+Home Assistant, col nome della voce e dove si leva (Impostazioni → Dashboard).
+Non la tocca: una dashboard è di chi ci abita.
+
+**E l'anello del pannello si è aperto.** Nella console il tasto «Apri gdahome»
+apre l'app in questa stessa scheda — deve restare così, se no quell'indirizzo
+dopo qualche minuto risponde 401. Ma l'app, senza nessuna casa abbinata,
+diceva «apri gdahome dalla barra laterale e premi Genera QR code», e la barra
+laterale riportava all'app: il codice non si generava **mai**. Adesso l'app sa
+di essere servita dall'add-on, e ha un tasto che riporta alla console.
+
+E nella scheda dell'add-on, in cima: **gdahome è un add-on, non
+un'integrazione, e su HACS non si mette.** HACS lo rifiuta e non dice perché.
+
 ## 1.4.32.3
 
 **Le segnalazioni si aprono anche da Home Assistant.**
