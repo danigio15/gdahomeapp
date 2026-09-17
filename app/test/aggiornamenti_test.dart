@@ -71,6 +71,7 @@ Map<String, dynamic> _voce(
   String dettagli = '',
   String note = '',
   bool logo = false,
+  bool leNote = false,
   bool nostra = false,
 }) => {
   'entita': entita,
@@ -84,6 +85,7 @@ Map<String, dynamic> _voce(
   'dettagli': dettagli,
   'note': note,
   'logo': logo,
+  'leNote': leNote,
   'nostra': nostra,
 };
 
@@ -389,6 +391,134 @@ void main() {
 
     expect(find.widgetWithText(TextButton, 'Cosa cambia'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Installa'), findsNWidgets(2));
+  });
+  testWidgets('il changelog si legge nel foglio, dentro l\'app', (
+    tester,
+  ) async {
+    await unaCasa(tester);
+    ponte.aggiornamenti.add(
+      _voce(
+        'update.gdahome',
+        'gdahome',
+        da: '1.4.32.7',
+        a: '1.4.32.8',
+        leNote: true,
+        note: 'https://gdahome.org/note',
+      ),
+    );
+    ponte.leNote['update.gdahome'] =
+        '# Cosa cambia, giro per giro\n\nIl preambolo del file.\n\n'
+        '## 1.4.32.8\n\n**Il firewall dell\'ufficio.** Con `del codice`.\n\n'
+        '## 1.4.32.7\n\nQuella di prima.';
+    await apri(tester);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Cosa cambia'));
+    await tester.pump();
+    /* Il foglio si apre subito, prima che il testo ci sia: un tasto che per un
+     * secondo non fa niente si preme due volte. */
+    expect(find.text('Cosa cambia'), findsWidgets);
+    await respira(tester);
+
+    /* Si comincia dalla versione che si installa, e il preambolo del file
+     * resta fuori. */
+    expect(find.textContaining('Il firewall dell\'ufficio.'), findsWidgets);
+    expect(find.textContaining('Il preambolo del file'), findsNothing);
+    /* E le versioni di prima restano sotto, che è dove si vanno a cercare. */
+    expect(find.text('1.4.32.7'), findsWidgets);
+
+    /* «Installa» viaggia col foglio. */
+    expect(find.widgetWithText(FilledButton, 'Installa'), findsWidgets);
+  });
+
+  testWidgets('una casa che non sa dare le note lo dice, e offre la pagina', (
+    tester,
+  ) async {
+    await unaCasa(tester);
+    ponte.aggiornamenti.add(
+      _voce(
+        'update.una_presa',
+        'Una presa',
+        da: '1.0',
+        a: '1.1',
+        note: 'https://esempio.invalid/note',
+      ),
+    );
+    await apri(tester);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Cosa cambia'));
+    await tester.pump();
+    await respira(tester);
+
+    expect(
+      find.text('Le note di questa versione non sono arrivate'),
+      findsOneWidget,
+    );
+    /* Da dove veniamo: la pagina di fuori resta, come ultima spiaggia. */
+    expect(
+      find.widgetWithText(OutlinedButton, 'Aprile nel browser'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('una Home Assistant che non conosce il comando non lascia il '
+      'foglio bianco', (tester) async {
+    await unaCasa(tester);
+    ponte.aggiornamenti.add(
+      _voce(
+        'update.gdahome',
+        'gdahome',
+        da: '1.4.32.7',
+        a: '1.4.32.8',
+        leNote: true,
+      ),
+    );
+    /* `null` e' la casa che dice no: e' come si prova una Home Assistant che
+     * `update/release_notes` non lo conosce. */
+    ponte.leNote['update.gdahome'] = null;
+    await apri(tester);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Cosa cambia'));
+    await tester.pump();
+    await respira(tester);
+
+    expect(
+      find.text('Le note di questa versione non sono arrivate'),
+      findsOneWidget,
+    );
+    /* Senza indirizzo non si promette una pagina che non c'e'. */
+    expect(
+      find.widgetWithText(OutlinedButton, 'Aprile nel browser'),
+      findsNothing,
+    );
+  });
+
+  testWidgets('note vuote sono una risposta, non un foglio bianco', (
+    tester,
+  ) async {
+    await unaCasa(tester);
+    ponte.aggiornamenti.add(
+      _voce('update.uno', 'Uno', da: '1.0', a: '1.1', leNote: true),
+    );
+    ponte.leNote['update.uno'] = '';
+    await apri(tester);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Cosa cambia'));
+    await tester.pump();
+    await respira(tester);
+
+    expect(
+      find.text('Per questa versione non c\'è scritto niente.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('senza niente da leggere «Cosa cambia» non c\'e\'', (
+    tester,
+  ) async {
+    await unaCasa(tester);
+    ponte.aggiornamenti.add(_voce('update.zeta', 'Zeta', da: '2.0', a: '2.1'));
+    await apri(tester);
+    expect(find.text('Cosa cambia'), findsNothing);
   });
 }
 

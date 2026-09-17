@@ -38,6 +38,7 @@ import '../casa/collegamento.dart';
 import '../casa/segnalazioni.dart' show spiegaLErrore;
 import '../parole.dart';
 import '../ponte/filo.dart';
+import 'il_changelog.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
 import '../vestito/quanto_e_largo.dart';
@@ -228,6 +229,59 @@ class _SchermataDegliAggiornamentiState
     }
   }
 
+  /* Cosa cambia: il foglio, dentro l'app.
+   *
+   * Il foglio si apre **subito**, e il testo lo aspetta li' dentro: fra il
+   * tocco e le note c'e' un giro sul filo — Home Assistant le calcola quando
+   * gliele si chiede, non stanno negli attributi — e un tasto che per un
+   * secondo non fa niente e' un tasto che si preme due volte.
+   *
+   * Dove Home Assistant non le sa dare (`leNote` falso) non si chiede niente:
+   * il foglio si apre, dice che non ci sono, e offre l'indirizzo. E' l'unico
+   * posto da cui si esce ancora dall'app, ed e' l'ultima spiaggia.
+   */
+  Future<void> _leggi(UnAggiornamento quale) async {
+    Future<String> leNote() async {
+      final filo = _presa;
+      if (!quale.leNote) {
+        throw inLingua(
+          it: 'Questa casa non sa dare le note di questa versione.',
+          en: 'This home can\'t provide notes for this version.',
+        );
+      }
+      if (filo == null) {
+        throw inLingua(
+          it: 'La casa non è collegata.',
+          en: 'Your home isn\'t connected.',
+        );
+      }
+      return GliAggiornamenti(filo).note(quale.entita);
+    }
+
+    await apriIlChangelog(
+      context,
+      nome: quale.nome,
+      versioni: quale.versioni,
+      testo: leNote,
+      laVersioneNuova: quale.a,
+      riassunto: quale.dettagli,
+      fuori: quale.note,
+      /* «Installa» viaggia col foglio, ed e' lo stesso tasto della riga: si
+       * legge cosa cambia e si installa da li', senza tornare indietro a
+       * ritrovare la riga giusta. */
+      quandoInstalla: quale.installabile ? () => _installa(quale) : null,
+      quandoApreUnLink: _apriDiFuori,
+    );
+  }
+
+  /* Un indirizzo che si apre fuori dall'app: i link dentro le note, e la
+   * pagina di scorta quando le note non arrivano. */
+  Future<void> _apriDiFuori(String dove) async {
+    final indirizzo = Uri.tryParse(dove);
+    if (indirizzo == null) return;
+    await launchUrl(indirizzo, mode: LaunchMode.externalApplication);
+  }
+
   Future<void> _installa(UnAggiornamento quale) async {
     /* Quelli che portano giu' il filo si chiedono prima. Gli altri no: una
      * domanda per ogni tocco e' il modo di insegnare a rispondere «si'» senza
@@ -399,6 +453,7 @@ class _SchermataDegliAggiornamentiState
                   segno: _loghi[uno.entita],
                   appenaPartito: _appenaPartiti.contains(uno.entita),
                   quandoInstalla: () => _installa(uno),
+                  quandoLegge: () => _leggi(uno),
                 ),
                 const SizedBox(height: 10),
               ],
@@ -535,6 +590,7 @@ class _Riga extends StatelessWidget {
     required this.quale,
     required this.appenaPartito,
     required this.quandoInstalla,
+    required this.quandoLegge,
     this.segno,
   });
 
@@ -546,6 +602,17 @@ class _Riga extends StatelessWidget {
 
   final bool appenaPartito;
   final VoidCallback quandoInstalla;
+
+  /// Apre il foglio delle note. Lo fa la schermata, che ha il filo.
+  final VoidCallback quandoLegge;
+
+  /// Se c'e' qualcosa da leggere, e quindi se «Cosa cambia» ha senso.
+  ///
+  /// Due modi: Home Assistant sa dare le note lunghe (`leNote`), e allora si
+  /// leggono nel foglio; oppure non le sa ma c'e' un indirizzo, e allora il
+  /// foglio lo dice e offre di aprirlo. Senza ne' l'una ne' l'altro il tasto
+  /// non c'e': un tasto che apre un foglio vuoto e' peggio di nessun tasto.
+  bool get ceDaLeggere => quale.leNote || quale.note.isNotEmpty;
 
   /// «Installa», della sua misura e non largo quanto la riga.
   ///
@@ -582,7 +649,7 @@ class _Riga extends StatelessWidget {
      * impilati sarebbero un avvertimento e un tasto attaccati, che e'
      * l'accostamento peggiore che potessero avere. */
     final ilTastoDiFianco =
-        !vaAvanti && quale.installabile && quale.note.isEmpty && !quale.stacca;
+        !vaAvanti && quale.installabile && !ceDaLeggere && !quale.stacca;
 
     return Scheda(
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
@@ -658,9 +725,9 @@ class _Riga extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  if (quale.note.isNotEmpty)
+                  if (ceDaLeggere)
                     TextButton(
-                      onPressed: () => _leggiLeNote(quale.note),
+                      onPressed: quandoLegge,
                       child: Text(
                         inLingua(it: 'Cosa cambia', en: 'What changes'),
                       ),
@@ -698,12 +765,6 @@ class _Riga extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Future<void> _leggiLeNote(String dove) async {
-    final indirizzo = Uri.tryParse(dove);
-    if (indirizzo == null) return;
-    await launchUrl(indirizzo, mode: LaunchMode.externalApplication);
   }
 }
 

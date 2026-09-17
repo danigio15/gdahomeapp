@@ -496,3 +496,153 @@ test("un ponte senza aggiornamenti non conosce nemmeno i loghi", async () => {
   assert.equal(niente.success, false);
   assert.equal(niente.error.code, "unknown_command");
 });
+
+/* Le note lunghe di una versione.
+ *
+ * Quello che si prova: che si chiedono **solo** a chi ha detto di saperle —
+ * il quinto bit di `supported_features` — perche' un no prevedibile leggendo
+ * un bit non e' un no da far vedere a nessuno; che un'entita' che le sa e non
+ * ha niente da dire risponde vuoto, ed e' una risposta; e che il nome
+ * dell'entita' non lo scrive il telefono.
+ */
+test("le note si chiedono a chi ha detto di saperle", async () => {
+  const chieste = [];
+  const casa = {
+    indirizzo: "http://dentro:8123",
+    segno: "IL-SEGNO",
+    async chiedi(comando) {
+      chieste.push(comando);
+      if (comando.type === "get_states") {
+        return [
+          unAggiornamento("update.gdahome", {
+            title: "gdahome",
+            /* 1 = si installa, 16 = le note le sa. */
+            supported_features: 1 | 16,
+            installed_version: "1.4.32.7",
+            latest_version: "1.4.32.8",
+          }),
+          unAggiornamento("update.una_presa", {
+            title: "Una presa",
+            supported_features: 1,
+          }),
+        ];
+      }
+      return "## 1.4.32.8\n\nIl firewall dell'ufficio.";
+    },
+  };
+  const quali = new Aggiornamenti({ casa, registro: ZITTO });
+
+  /* Nell'elenco si vede chi le sa e chi no. */
+  const fila = await quali.elenco();
+  assert.equal(fila.find((una) => una.entita === "update.gdahome").leNote, true);
+  assert.equal(fila.find((una) => una.entita === "update.una_presa").leNote, false);
+
+  const dette = await quali.note("update.gdahome");
+  assert.match(dette.note, /firewall/);
+  assert.equal(dette.versione, "1.4.32.8");
+  assert.equal(
+    chieste.some(
+      (uno) => uno.type === "update/release_notes" && uno.entity_id === "update.gdahome",
+    ),
+    true,
+  );
+
+  /* A chi non le sa non si chiede niente: si dice, e basta. */
+  chieste.length = 0;
+  await assert.rejects(() => quali.note("update.una_presa"), QuestoNoNo);
+  assert.equal(
+    chieste.some((uno) => uno.type === "update/release_notes"),
+    false,
+  );
+});
+
+test("un'entita' che l'elenco non ha non fa chiedere niente", async () => {
+  const chieste = [];
+  const casa = {
+    async chiedi(comando) {
+      chieste.push(comando);
+      if (comando.type === "get_states") {
+        return [
+          unAggiornamento("update.spenta", { title: "Spenta", supported_features: 1 | 16 }, "off"),
+        ];
+      }
+      return "niente";
+    },
+  };
+  const quali = new Aggiornamenti({ casa, registro: ZITTO });
+  for (const chi of ["update.spenta", "update.mai_vista", "sensor.niente", ""]) {
+    await assert.rejects(() => quali.note(chi), QuestoNoNo, chi);
+  }
+  assert.equal(
+    chieste.some((uno) => uno.type === "update/release_notes"),
+    false,
+  );
+});
+
+test("le note vuote sono una risposta, non un guasto", async () => {
+  const casa = {
+    async chiedi(comando) {
+      if (comando.type === "get_states") {
+        return [
+          unAggiornamento("update.uno", {
+            title: "Uno",
+            supported_features: 1 | 16,
+            latest_version: "2.0",
+          }),
+        ];
+      }
+      /* Home Assistant, per un'entita' che le sa e che per questa versione non
+       * ha niente da dire, risponde `null`. */
+      return null;
+    },
+  };
+  const dette = await new Aggiornamenti({ casa, registro: ZITTO }).note("update.uno");
+  assert.equal(dette.note, "");
+  assert.equal(dette.versione, "2.0");
+});
+
+test("un no di Home Assistant sulle note si dice com'e'", async () => {
+  const casa = {
+    async chiedi(comando) {
+      if (comando.type === "get_states") {
+        return [unAggiornamento("update.uno", { title: "Uno", supported_features: 1 | 16 })];
+      }
+      throw new RispostaNegativa("unknown_command", "non conosco update/release_notes");
+    },
+  };
+  const commissioni = new Commissioni({
+    casa,
+    registro: ZITTO,
+    aggiornamenti: new Aggiornamenti({ casa, registro: ZITTO }),
+  });
+  assert.equal(commissioni.riconosce({ type: "ponte/aggiornamenti/note" }), true);
+
+  /* Una Home Assistant vecchia che quel comando non lo conosce: il no e' il
+   * suo, e ha un codice **suo** — non `unknown_command`, che nell'app vuol
+   * dire «aggiorna l'add-on» e manderebbe a aggiornare la cosa sbagliata. */
+  const niente = await commissioni.rispondi({
+    id: 1,
+    type: "ponte/aggiornamenti/note",
+    entity_id: "update.uno",
+  });
+  assert.equal(niente.success, false);
+  assert.equal(niente.error.code, "note_non_date");
+});
+
+test("le note passano dal ponte con la loro versione", async () => {
+  const casa = casaFinta({ stati: CASA_VERA });
+  const commissioni = new Commissioni({
+    casa,
+    registro: ZITTO,
+    aggiornamenti: new Aggiornamenti({ casa, registro: ZITTO }),
+  });
+  /* `CASA_VERA` non dichiara il bit delle note su nessuno: percio' la
+   * risposta e' un no chiaro, e non una pagina vuota. */
+  const niente = await commissioni.rispondi({
+    id: 1,
+    type: "ponte/aggiornamenti/note",
+    entity_id: "update.dashboardmodern_update",
+  });
+  assert.equal(niente.success, false);
+  assert.equal(niente.error.code, "not_found");
+});

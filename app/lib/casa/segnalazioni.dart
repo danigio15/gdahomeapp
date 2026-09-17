@@ -347,6 +347,18 @@ String spiegaLErrore(Object errore) => switch (errore) {
         'The relay doesn\'t recognise this home: gdahome at home has to '
         'connect from away once first.',
   ),
+  /* Le note di una versione che Home Assistant non ha dato. Ha un caso suo
+   * perche' non e' l'add-on a essere vecchio: e' Home Assistant che quel
+   * comando non lo conosce, o l'entita' che non sa rispondere. Nel mucchio di
+   * `unknown_command` mandava a aggiornare la cosa sbagliata. */
+  ComandoRifiutato(codice: 'note_non_date') => inLingua(
+    it:
+        'Home Assistant non ha dato le note di questa versione: può essere '
+        'una versione più vecchia, o un apparecchio che non le sa dire.',
+    en:
+        'Home Assistant didn\'t provide notes for this version: it may be an '
+        'older version, or a device that can\'t tell them.',
+  ),
   ComandoRifiutato(codice: 'unknown_command') => inLingua(
     it:
         'gdahome in casa è più vecchio dell\'app e questa cosa non la sa '

@@ -353,6 +353,12 @@ class PonteFinto {
   /// tutte le case quasi sempre.
   final List<Map<String, dynamic>> aggiornamenti = [];
 
+  /// Le note lunghe che questa casa sa dare, per entita'.
+  ///
+  /// Una voce che c'e' con dentro `null` e' una casa che **dice no**: e' come
+  /// si prova una Home Assistant che `update/release_notes` non lo conosce.
+  final Map<String, String?> leNote = {};
+
   /// I loghi che questa casa ha, per entita'. Chi non c'e' non ne ha uno.
   final Map<String, Uint8List> loghi = {};
 
@@ -586,12 +592,37 @@ class PonteFinto {
       case 'ponte/aggiornamenti/installa':
       case 'ponte/aggiornamenti/riavvia':
       case 'ponte/aggiornamenti/logo':
+      case 'ponte/aggiornamenti/note':
         if (!sagliAggiornamenti) {
           return no('unknown_command', 'non conosco ${detto['type']}');
         }
         switch (detto['type']) {
           case 'ponte/aggiornamenti/elenco':
             return si({'aggiornamenti': aggiornamenti});
+          /* Le note lunghe, come le manda il ponte vero: solo per chi ha
+           * detto di saperle, e vuote sono una risposta. */
+          case 'ponte/aggiornamenti/note':
+            final chi = detto['entity_id']?.toString() ?? '';
+            final voce = aggiornamenti.cast<Map<String, dynamic>?>().firstWhere(
+              (uno) => uno!['entita'] == chi,
+              orElse: () => null,
+            );
+            if (voce == null) {
+              return no('not_found', 'quell\'aggiornamento non c\'è più');
+            }
+            if (voce['leNote'] != true) {
+              return no(
+                'not_found',
+                'quell\'aggiornamento non ha note da leggere',
+              );
+            }
+            if (leNote.containsKey(chi) && leNote[chi] == null) {
+              return no('note_non_date', 'non conosco update/release_notes');
+            }
+            return si({
+              'note': leNote[chi] ?? '',
+              'versione': voce['a']?.toString() ?? '',
+            });
           /* Il logo di un aggiornamento, come lo manda il ponte vero: la
            * stessa busta dei file di casa, e non compresso. Chi non ne ha uno
            * riceve un no, che non e' un guasto. */

@@ -139,6 +139,9 @@ const AGGIORNAMENTI_RIAVVIA = "ponte/aggiornamenti/riavvia";
  * indirizzo: dove andarlo a prendere lo decide il ponte, guardando quello che
  * Home Assistant ha dichiarato. */
 const AGGIORNAMENTI_LOGO = "ponte/aggiornamenti/logo";
+/* Le note lunghe di una versione: quelle che la finestra di Home Assistant
+ * mostra, e che l'app mostra dentro di se'. */
+const AGGIORNAMENTI_NOTE = "ponte/aggiornamenti/note";
 
 const TIMER_ELENCO = "dashboardmodern/clima/timer/list";
 const TIMER_METTI = "dashboardmodern/clima/timer/set";
@@ -443,7 +446,8 @@ export class Commissioni {
       tipo === AGGIORNAMENTI_ELENCO ||
       tipo === AGGIORNAMENTI_INSTALLA ||
       tipo === AGGIORNAMENTI_RIAVVIA ||
-      tipo === AGGIORNAMENTI_LOGO
+      tipo === AGGIORNAMENTI_LOGO ||
+      tipo === AGGIORNAMENTI_NOTE
     )
       return this._aggiornamenti(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("dashboardmodern/tickets/"))
@@ -525,6 +529,10 @@ export class Commissioni {
         return si(id, await quali.riavvia());
       }
       if (detto.type === AGGIORNAMENTI_LOGO) return this._ilLogo(detto, chiChiede, amministra);
+      if (detto.type === AGGIORNAMENTI_NOTE) {
+        const chi = typeof detto.entity_id === "string" ? detto.entity_id : "";
+        return si(id, await quali.note(chi));
+      }
       const entita = typeof detto.entity_id === "string" ? detto.entity_id.trim() : "";
       this.registro.info(`installazione di ${entita} chiesta dall'app`);
       return si(id, await quali.installa(entita));

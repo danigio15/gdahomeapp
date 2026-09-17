@@ -14,10 +14,26 @@
 /// Su uno schermo da computer non si allarga a tutta pagina: un testo lungo
 /// millequattrocento punti non si legge. Si tiene alla larghezza a cui una riga
 /// si legge, e si mette in mezzo.
+///
+/// ## Il testo arriva dal filo
+///
+/// Le note lunghe non stanno negli attributi dell'entita': Home Assistant le
+/// calcola quando gliele si chiede. Quindi fra il tocco e il testo c'e' un
+/// giro — in casa un niente, da fuori casa il tempo del centralino — e il
+/// foglio si apre **prima** che il testo ci sia: si apre e dice che sta
+/// arrivando. Aprire due secondi dopo il tocco vorrebbe dire un tasto che non
+/// fa niente, e un tasto che non fa niente si preme due volte.
+///
+/// E quando non arriva, il foglio non resta bianco: dice cosa e' andato
+/// storto, e se c'e' un indirizzo offre di aprire quello — che e' da dove
+/// veniamo, ed e' meglio di niente.
 library;
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../casa/segnalazioni.dart' show spiegaLErrore;
 import '../parole.dart';
 import '../vestito/markdown.dart';
 
@@ -40,9 +56,10 @@ Future<void> apriIlChangelog(
   BuildContext context, {
   required String nome,
   required String versioni,
-  required String testo,
+  required Future<String> Function() testo,
   String laVersioneNuova = '',
   String? riassunto,
+  String fuori = '',
   VoidCallback? quandoInstalla,
   void Function(String dove)? quandoApreUnLink,
 }) {
@@ -55,38 +72,88 @@ Future<void> apriIlChangelog(
     builder: (context) => _IlFoglio(
       nome: nome,
       versioni: versioni,
-      testo: daQuellaVersione(testo, laVersioneNuova),
+      testo: testo,
+      laVersioneNuova: laVersioneNuova,
       riassunto: riassunto,
+      fuori: fuori,
       quandoInstalla: quandoInstalla,
       quandoApreUnLink: quandoApreUnLink,
     ),
   );
 }
 
-/// Se c'e' qualcosa da leggere. Un foglio vuoto non si apre.
-bool ceQualcosaDaLeggere(String testo) => testo.trim().isNotEmpty;
-
-class _IlFoglio extends StatelessWidget {
+class _IlFoglio extends StatefulWidget {
   const _IlFoglio({
     required this.nome,
     required this.versioni,
     required this.testo,
+    this.laVersioneNuova = '',
     this.riassunto,
+    this.fuori = '',
     this.quandoInstalla,
     this.quandoApreUnLink,
   });
 
   final String nome;
   final String versioni;
-  final String testo;
+
+  /// Come si chiede il markdown.
+  ///
+  /// Una funzione e non un `Future` gia' avviato, per una ragione precisa: un
+  /// `Future` che fallisce **prima** che qualcuno lo ascolti e' un errore che
+  /// nessuno ha raccolto, e Dart lo urla. Il foglio lo chiama quando e' in
+  /// piedi, e da quel momento c'e' qualcuno che ascolta.
+  final Future<String> Function() testo;
+
+  /// La versione che si installa: da li' si comincia a leggere.
+  final String laVersioneNuova;
+
   final String? riassunto;
+
+  /// L'indirizzo delle note, per l'ultima spiaggia: si offre solo se il testo
+  /// non arriva.
+  final String fuori;
+
   final VoidCallback? quandoInstalla;
   final void Function(String dove)? quandoApreUnLink;
+
+  @override
+  State<_IlFoglio> createState() => _IlFoglioState();
+}
+
+class _IlFoglioState extends State<_IlFoglio> {
+  String? _testo;
+  Object? _perche;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_aspetta());
+  }
+
+  Future<void> _aspetta() async {
+    try {
+      final arrivato = await widget.testo();
+      if (!mounted) return;
+      setState(
+        () => _testo = daQuellaVersione(arrivato, widget.laVersioneNuova),
+      );
+    } catch (errore) {
+      if (!mounted) return;
+      setState(() => _perche = errore);
+    }
+  }
+
+  String get nome => widget.nome;
+  String get versioni => widget.versioni;
+  String? get riassunto => widget.riassunto;
+  VoidCallback? get quandoInstalla => widget.quandoInstalla;
+  void Function(String dove)? get quandoApreUnLink => widget.quandoApreUnLink;
 
   /// Se la riga breve aggiunge qualcosa, o ripete quello che si legge sotto.
   bool get _ilRiassuntoServe {
     final breve = riassunto?.trim() ?? '';
-    return breve.isNotEmpty && !testo.contains(breve);
+    return breve.isNotEmpty && !(_testo ?? '').contains(breve);
   }
 
   @override
@@ -153,6 +220,15 @@ class _IlFoglio extends StatelessWidget {
           Divider(height: 1, color: colori.onSurface.withValues(alpha: 0.08)),
           Flexible(
             child: ListView(
+              /* Alto quanto quello che c'e' dentro, fino al massimo.
+               *
+               * Senza questo il foglio e' sempre alto tre quarti di schermo:
+               * mentre il testo arriva sono seicento punti di bianco sotto
+               * cinque righe finte, e per una versione che non ha niente da
+               * dire sono seicento punti di bianco sotto una frase. Costa
+               * niente: il markdown e' un documento finito, e le sue righe le
+               * disegna comunque tutte. */
+              shrinkWrap: true,
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
               children: [
                 /* La riga breve che Home Assistant si porta dentro
@@ -176,7 +252,12 @@ class _IlFoglio extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                 ],
-                IlMarkdown(testo: testo, quandoApre: quandoApreUnLink),
+                _IlCorpo(
+                  testo: _testo,
+                  perche: _perche,
+                  fuori: widget.fuori,
+                  quandoApre: quandoApreUnLink,
+                ),
               ],
             ),
           ),
@@ -206,6 +287,123 @@ class _IlFoglio extends StatelessWidget {
             const SafeArea(top: false, child: SizedBox(height: 8)),
         ],
       ),
+    );
+  }
+}
+
+/// Il corpo del foglio: che sta arrivando, quello che e' arrivato, o cosa e'
+/// andato storto.
+///
+/// Tre stati e nessun quarto: un foglio che non dice niente e' la cosa peggiore
+/// che possa fare, perche' chi guarda non sa se aspettare o riprovare.
+class _IlCorpo extends StatelessWidget {
+  const _IlCorpo({
+    required this.testo,
+    required this.perche,
+    required this.fuori,
+    this.quandoApre,
+  });
+
+  /// Il markdown, quando e' arrivato. `null` vuol dire «sta arrivando».
+  final String? testo;
+
+  /// Cosa e' andato storto, quando e' andato storto.
+  final Object? perche;
+
+  /// L'indirizzo di fuori, se c'e': l'ultima spiaggia.
+  final String fuori;
+
+  final void Function(String dove)? quandoApre;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+
+    if (perche != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            inLingua(
+              it: 'Le note di questa versione non sono arrivate',
+              en: 'The notes for this version didn\'t arrive',
+            ),
+            style: testi.titleSmall,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            /* Una frase gia' scritta si legge com'e'; un errore che arriva dal
+             * filo lo spiega chi sa spiegarlo. */
+            perche is String ? perche! as String : spiegaLErrore(perche!),
+            style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
+          ),
+          /* Da dove veniamo: la pagina di fuori. Non e' la strada buona — e'
+           * quella che stiamo togliendo — ma con le note che non arrivano e'
+           * meglio di un foglio bianco. */
+          if (fuori.isNotEmpty && quandoApre != null) ...[
+            const SizedBox(height: 14),
+            OutlinedButton.icon(
+              onPressed: () => quandoApre!(fuori),
+              icon: const Icon(Icons.open_in_new_rounded, size: 18),
+              label: Text(
+                inLingua(it: 'Aprile nel browser', en: 'Open in the browser'),
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+
+    final dentro = testo;
+    if (dentro == null) {
+      /* Sta arrivando. Tre righe finte al posto del testo, e non una rotella
+       * in mezzo al foglio: dicono «qui viene del testo», che e' quello che
+       * sta succedendo. */
+      return const _StaArrivando();
+    }
+
+    if (dentro.trim().isEmpty) {
+      return Text(
+        inLingua(
+          it: 'Per questa versione non c\'è scritto niente.',
+          en: 'Nothing was written for this version.',
+        ),
+        style: testi.bodyMedium?.copyWith(color: colori.onSurfaceVariant),
+      );
+    }
+
+    return IlMarkdown(testo: dentro, quandoApre: quandoApre);
+  }
+}
+
+/// Le righe finte dell'attesa: si vede la forma di quello che arriva.
+class _StaArrivando extends StatelessWidget {
+  const _StaArrivando();
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    /* Le larghezze non sono tutte uguali: tre barre identiche sembrano un
+     * disegno, tre righe di lunghezza diversa sembrano un testo. */
+    const quanto = [0.62, 1.0, 1.0, 0.84, 1.0, 0.45];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final (quante, larga) in quanto.indexed)
+          FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: larga,
+            child: Container(
+              height: quante == 0 ? 17 : 11,
+              margin: EdgeInsets.only(bottom: quante == 0 ? 16 : 10),
+              decoration: BoxDecoration(
+                color: colori.onSurface.withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

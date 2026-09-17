@@ -41,7 +41,6 @@ import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/aggiornamenti.dart';
-import 'package:gdahome/schermate/il_changelog.dart';
 import 'package:gdahome/vestito/markdown.dart' show aSpaziaturaFissa;
 import 'package:gdahome/vestito/quanto_e_largo.dart';
 import 'package:gdahome/vestito/tema.dart';
@@ -197,6 +196,7 @@ Map<String, dynamic> _voce(
   String note = '',
   bool nostra = false,
   bool logo = false,
+  bool leNote = false,
   bool installabile = true,
   bool stacca = false,
   bool inCorso = false,
@@ -208,6 +208,7 @@ Map<String, dynamic> _voce(
   'a': a,
   'nostra': nostra,
   'logo': logo,
+  'leNote': leNote,
   'installabile': installabile,
   'stacca': stacca,
   'inCorso': inCorso,
@@ -292,6 +293,7 @@ void main() {
         a: '1.4.32.8',
         nostra: true,
         stacca: true,
+        leNote: true,
         dettagli:
             'Il firewall dell\'ufficio, spiegato dove si legge l\'indirizzo.',
         note: 'https://github.com/danigio15/gdahomeapp/blob/main/ponte/CHANGELOG.md',
@@ -334,6 +336,9 @@ void main() {
         installabile: false,
       ),
     ]);
+    /* Le note lunghe che questa casa sa dare: il `CHANGELOG.md` vero, che e'
+     * quello che Home Assistant manderebbe. */
+    ponte.leNote['update.dashboardmodern_update'] = ilChangelog;
     /* Disegnare un'immagine vuole l'orologio vero: dentro `testWidgets` il
      * tempo e' finto, e `toImage` non tornerebbe mai. */
     await tester.runAsync(() async {
@@ -424,25 +429,61 @@ void main() {
     await respira(tester);
     await respira(tester);
 
-    /* Non si aspetta: quel `Future` finisce quando il foglio si chiude, e
-     * questo foglio resta aperto — e' quello che si vuole fotografare. */
-    apriIlChangelog(
-      tester.element(find.byType(SchermataDegliAggiornamenti)),
-      nome: 'gdahome',
-      versioni: '1.4.32.7 → 1.4.32.8',
-      testo: ilChangelog,
-      laVersioneNuova: '1.4.32.8',
-      riassunto:
-          'Il firewall dell\'ufficio, spiegato dove si legge l\'indirizzo.',
-      quandoInstalla: () {},
-      quandoApreUnLink: (dove) {},
-    ).ignore();
+    /* Si preme «Cosa cambia» davvero, invece di chiamare il foglio a mano:
+     * cosi' la fotografia mostra quello che vede chi lo preme — il foglio che
+     * sale, e il testo che arriva dal filo. */
+    await tester.tap(find.widgetWithText(TextButton, 'Cosa cambia'));
+    await tester.pump();
+    await respira(tester);
     await tester.pumpAndSettle();
 
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('../../../collaudo/foto/aggiornamenti/$dove.png'),
     );
+  }
+
+  /// Il foglio mentre il testo sta arrivando, e il foglio quando non arriva.
+  ///
+  /// Sono i due stati che si vedono solo quando qualcosa va piano o va male, e
+  /// sono quelli che nessuno guarda mai: percio' si fotografano.
+  Future<void> ilFoglioChe(
+    WidgetTester tester, {
+    required String dove,
+    required bool arriva,
+  }) async {
+    quantoGrande(tester, quanto: const Size(430, 932), punti: 2);
+    await unaCasa(tester);
+    await unaCasaDaAggiornare(tester);
+    if (!arriva) {
+      /* `null` e' la casa che dice no: e' come si prova una Home Assistant che
+       * `update/release_notes` non lo conosce. */
+      ponte.leNote['update.dashboardmodern_update'] = null;
+    }
+    await tester.pumpWidget(laSchermata(scuro: false));
+    await tester.pump();
+    await respira(tester);
+    await respira(tester);
+    await respira(tester);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Cosa cambia'));
+    /* Qualche fotogramma e non `respira`: si vuole il foglio **prima** che la
+     * risposta arrivi, che e' l'attimo che si vede premendo. */
+    for (var giro = 0; giro < 8; giro += 1) {
+      await tester.pump(const Duration(milliseconds: 40));
+    }
+    if (!arriva) {
+      await respira(tester);
+      await tester.pumpAndSettle();
+    }
+
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('../../../collaudo/foto/aggiornamenti/$dove.png'),
+    );
+    /* Il foglio resta aperto con una domanda sul filo: qui l'albero si spegne
+     * a comando, e una domanda appesa fa fallire il banco. */
+    if (arriva) await respira(tester);
   }
 
   const telefono = Size(430, 932);
@@ -496,6 +537,14 @@ void main() {
       punti: 2,
       scuro: true,
     );
+  });
+
+  testWidgets('il foglio, mentre il testo sta arrivando', (tester) async {
+    await ilFoglioChe(tester, dove: 'foglio-aspetta', arriva: true);
+  });
+
+  testWidgets('il foglio, quando le note non arrivano', (tester) async {
+    await ilFoglioChe(tester, dove: 'foglio-niente', arriva: false);
   });
 
   testWidgets('il foglio, da computer', (tester) async {

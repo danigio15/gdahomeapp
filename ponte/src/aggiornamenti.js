@@ -44,6 +44,15 @@ const NOSTRA = "dashboardmodern";
  * e mostrarglielo sarebbe una promessa che non si mantiene. */
 const SI_INSTALLA = 1;
 
+/* E il quinto bit e' «le note della versione le so, chiedimele».
+ *
+ * Non tutte le entita' `update.` le sanno: gdahome e Home Assistant si', un
+ * firmware di una presa quasi mai. Chi non ce l'ha, se glielo si chiede, fa
+ * dire no a Home Assistant — e un no che si poteva prevedere leggendo un bit
+ * non e' un no da mostrare a nessuno. Percio' il tasto «Cosa cambia» compare
+ * dove **questo bit** c'e', o dove c'e' almeno un indirizzo da aprire. */
+const LE_NOTE = 16;
+
 /* Quanto si tiene l'elenco prima di richiederlo. La schermata si riguarda da
  * sola mentre si sta li' — un'installazione che va avanti deve muoversi — e
  * senza questo ogni giro sarebbe un `get_states` intero. Gli aggiornamenti
@@ -82,6 +91,11 @@ export function aspettaDiEssereFatto(stato) {
 /** Se questo aggiornamento si puo' far partire da qui. */
 function siInstalla(attributi) {
   return (numero(attributi?.supported_features) & SI_INSTALLA) !== 0;
+}
+
+/** Se le note lunghe di questa versione si possono chiedere a Home Assistant. */
+function saLeNote(attributi) {
+  return (numero(attributi?.supported_features) & LE_NOTE) !== 0;
 }
 
 /* Se sta gia' andando.
@@ -233,6 +247,9 @@ export function aggiornamentiDaFare(stati) {
        * chiede «il logo di questa entita'», e dove andarlo a prendere lo sa
        * il ponte. Cosi' quello che si scarica non lo scegli tu. */
       logo: ilLogoDi(stato) !== "",
+      /* Se le note lunghe si possono chiedere: allora si leggono **dentro
+       * l'app**, e l'indirizzo qui sopra resta l'ultima spiaggia. */
+      leNote: saLeNote(stato.attributes),
     }))
     .sort((una, altra) => {
       if (una.nostra !== altra.nostra) return una.nostra ? -1 : 1;
@@ -245,6 +262,21 @@ export class QuestoNoNo extends Error {
   constructor(message) {
     super(message);
     this.code = "not_found";
+  }
+}
+
+/* Quando **Home Assistant** dice no alle note di una versione.
+ *
+ * Ha un codice suo perche' e' un caso suo, e senza un codice suo finiva nel
+ * mucchio di `unknown_command` — che nell'app vuol dire «gdahome in casa e'
+ * piu' vecchio dell'app: aggiorna l'add-on». Qui l'add-on non c'entra niente:
+ * e' Home Assistant che quel comando non lo conosce, o l'entita' che per
+ * questa versione non sa rispondere. Dire la frase sbagliata manda a
+ * aggiornare la cosa sbagliata. */
+export class NoteNonDate extends Error {
+  constructor(message) {
+    super(message);
+    this.code = "note_non_date";
   }
 }
 
@@ -305,6 +337,50 @@ export class Aggiornamenti {
     if (!quale) return "";
     await this.elenco();
     return this._dovIlLogo.get(quale) ?? "";
+  }
+
+  /**
+   * Le note lunghe di questa versione, in markdown.
+   *
+   * E' la stessa cosa che la finestra di Home Assistant mostra quando si
+   * preme su un aggiornamento: `update/release_notes`, che l'entita' calcola
+   * su richiesta — e per questo non sta negli attributi. Chi la sa lo dice col
+   * quinto bit di `supported_features`, e a chi non lo dice non si chiede
+   * niente: un no prevedibile leggendo un bit non e' un no da far vedere.
+   *
+   * Si passa dall'elenco per la stessa ragione del logo: si chiedono le note
+   * di cio' che **questa casa** ha dichiarato di avere da aggiornare, non di
+   * un'entita' che arriva dal telefono.
+   *
+   * Quello che torna e' testo, e puo' tornare **vuoto**: un'entita' che sa
+   * fare `release_notes` e che per questa versione non ha niente da dire
+   * risponde `null`, ed e' una risposta, non un guasto. Chi chiama se ne
+   * accorge dalla stringa vuota.
+   *
+   * @param {string} entita l'entita' `update.`
+   */
+  async note(entita) {
+    const quale = pulito(entita);
+    const fila = await this.elenco();
+    const voce = fila.find((una) => una.entita === quale);
+    if (!voce) throw new QuestoNoNo("quell'aggiornamento non c'e' piu'");
+    if (!voce.leNote) throw new QuestoNoNo("quell'aggiornamento non ha note da leggere");
+    let dette;
+    try {
+      dette = await this.casa.chiedi({ type: "update/release_notes", entity_id: quale });
+    } catch (errore) {
+      /* Un no di Home Assistant e' un no **suo**, e si dice com'e': una Home
+       * Assistant che quel comando non lo conosce, o un'entita' che dichiara
+       * di saperle e poi non risponde. */
+      if (errore instanceof RispostaNegativa) {
+        throw new NoteNonDate(errore.message || "Home Assistant non ha dato le note");
+      }
+      throw errore;
+    }
+    /* Home Assistant risponde col testo, e certe versioni lo incartano. Si
+     * prende quello che c'e' e non si inventa niente. */
+    const testo = typeof dette === "string" ? dette : pulito(dette?.release_notes ?? dette?.notes);
+    return { note: testo, versione: voce.a };
   }
 
   /**

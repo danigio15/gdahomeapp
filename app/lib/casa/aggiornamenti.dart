@@ -42,6 +42,7 @@ class UnAggiornamento {
     this.note = '',
     this.dettagli = '',
     this.logo = false,
+    this.leNote = false,
   });
 
   /// L'entita' `update.` che lo dichiara.
@@ -91,6 +92,14 @@ class UnAggiornamento {
   /// quello che si va a scaricare non lo sceglie chi chiede.
   final bool logo;
 
+  /// Se le note lunghe di questa versione si possono **chiedere**.
+  ///
+  /// Lo dice Home Assistant col quinto bit di `supported_features`: gdahome e
+  /// Home Assistant le sanno, il firmware di una presa quasi mai. Dove c'e',
+  /// «Cosa cambia» apre il foglio dentro l'app; dove non c'e' resta
+  /// [note] — l'indirizzo — che e' l'ultima spiaggia.
+  final bool leNote;
+
   /// Da che versione a che versione, come si scrive in una riga. Quando manca
   /// un pezzo si dice quello che c'e'.
   String get versioni {
@@ -116,6 +125,7 @@ class UnAggiornamento {
       note: grezzo['note']?.toString().trim() ?? '',
       dettagli: grezzo['dettagli']?.toString().trim() ?? '',
       logo: grezzo['logo'] == true,
+      leNote: grezzo['leNote'] == true,
     );
   }
 }
@@ -169,6 +179,25 @@ class GliAggiornamenti {
       gia: detto is Map && detto['gia'] == true,
       stacca: detto is Map && detto['stacca'] == true,
     );
+  }
+
+  /// Le note lunghe di questa versione, in markdown.
+  ///
+  /// Le calcola Home Assistant quando gliele si chiede — non stanno negli
+  /// attributi — e sono le stesse che la sua finestra fa vedere. Torna una
+  /// stringa **vuota** quando quell'entita' le sa fare e per questa versione
+  /// non ha niente da dire: e' una risposta, non un guasto.
+  ///
+  /// Solleva quando il ponte o Home Assistant dicono no — un ponte piu'
+  /// vecchio dell'app, una Home Assistant che quel comando non lo conosce,
+  /// un'entita' che non le sa. Chi chiama, allora, ha ancora l'indirizzo.
+  Future<String> note(String entita) async {
+    final detto = await _filo.risultato({
+      'type': 'ponte/aggiornamenti/note',
+      'entity_id': entita,
+    });
+    if (detto is! Map) return '';
+    return detto['note']?.toString() ?? '';
   }
 
   /// Il segno di un aggiornamento, in byte. `null` quando non ce n'e' uno.
