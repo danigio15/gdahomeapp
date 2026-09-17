@@ -34,6 +34,7 @@ import '../../ponte/errori.dart';
 import '../../ponte/filo.dart';
 import '../cucitura.dart';
 import '../pannello.dart';
+import '../precarichi.dart';
 import '../premesse.dart';
 import '../ritratto.dart';
 
@@ -180,6 +181,23 @@ class _ServitoreSulWeb implements ServitoreDiQuestoSistema {
    * non arrivano mai — che qui voleva dire una plancia bianca e un 502. */
   StreamSubscription<web.MessageEvent>? _dalLavoratore;
   StreamSubscription<web.MessageEvent>? _dalRiquadro;
+
+  /* I file arrivati in un pacco e non ancora chiesti dal service worker.
+   *
+   * Nel browser un disco non c'e', e il deposito vero lo fa il browser stesso:
+   * i file della plancia hanno l'impronta nel percorso — non cambiano mai — e
+   * si servono con la data lunga, cosi' una ricarica non li richiede
+   * (`plancia-sw.js`). Questo qui e' solo il banco di passaggio fra il pacco e
+   * la domanda che arriva un istante dopo: ogni file si consegna una volta e
+   * si toglie, e quello che nessuno chiede se ne va con la pagina. */
+  final _pronti = <String, ({int stato, String tipo, List<int> byte})>{};
+
+  /* Quello che sta arrivando, per non chiederlo due volte: un file dentro un
+   * pacco che parte e' un file che il service worker chiedera' fra poco, e
+   * chiederlo da solo sarebbe rifare la strada lenta. E' la stessa promessa
+   * del servitore sul telefono (`servitore.dart`, `_inArrivo`). */
+  final _inArrivo =
+      <String, Future<({int stato, String tipo, List<int> byte})>>{};
 
   @override
   set leggera(bool valore) => premesse.leggera = valore;
@@ -331,19 +349,22 @@ extension on _ServitoreSulWeb {
       return;
     }
     try {
-      final preso = await _chiedi(percorso);
+      final preso = await _dalBanco(percorso) ?? await _chiedi(percorso);
       var corpo = preso.byte;
       var tipo = preso.tipo;
       /* La pagina della plancia si serve con le premesse: e' l'unico file che
        * si tocca, e non e' un file della dashboard — e' quello che si aggiunge
        * alla pagina servita. */
       if (tipo.startsWith('text/html')) {
-        final scritta = premesse.conLePremesse(
-          utf8.decode(corpo, allowMalformed: true),
-          ilWebSocket: _ilWebSocketFinto,
+        final letta = utf8.decode(corpo, allowMalformed: true);
+        corpo = utf8.encode(
+          premesse.conLePremesse(letta, ilWebSocket: _ilWebSocketFinto),
         );
-        corpo = utf8.encode(scritta);
         tipo = 'text/html; charset=utf-8';
+        /* E adesso i moduli, prima che il browser li chieda. Vedi
+         * `precarichi.dart`: da fuori casa sono nove giri invece di
+         * trecentosettantanove. Dopo aver risposto, e senza aspettare. */
+        unawaited(_portaAvanti(percorso, letta));
       }
       _rispondi({
         'che': 'gdahome/file',
@@ -407,6 +428,142 @@ extension on _ServitoreSulWeb {
           : 'application/octet-stream',
       byte: byte,
     );
+  }
+
+  /// Un file che e' gia' arrivato in un pacco, o che sta arrivando.
+  ///
+  /// `null` vuol dire «non lo ho»: allora si chiede da solo, come prima.
+  Future<({int stato, String tipo, List<int> byte})?> _dalBanco(
+    String percorso,
+  ) async {
+    final pronto = _pronti.remove(percorso);
+    if (pronto != null) return pronto;
+    final inArrivo = _inArrivo[percorso];
+    if (inArrivo == null) return null;
+    try {
+      return await inArrivo;
+    } catch (_) {
+      /* Il pacco non e' arrivato: si chiede da solo. */
+      return null;
+    }
+  }
+
+  /// I moduli della pagina, chiesti in pacchi prima che li chieda il browser.
+  ///
+  /// E' la stessa cosa che fa il servitore sul telefono, e per la stessa
+  /// ragione: la pagina porta l'elenco dei file che vuole subito, e chiederli
+  /// in pacchi invece che uno per volta e' la differenza fra un minuto e
+  /// qualche secondo da fuori casa. Vedi `precarichi.dart`.
+  ///
+  /// Non solleva mai: un pacco che non arriva e' una plancia che si apre come
+  /// si apriva ieri.
+  Future<void> _portaAvanti(String percorsoDellaPagina, String pagina) async {
+    try {
+      final quali = iPrecarichiDellaPagina(
+        pagina,
+        cartella: laCartellaDi(percorsoDellaPagina.split('?').first),
+      );
+      final daChiedere = quali
+          .where((quale) => !_pronti.containsKey(quale))
+          .where((quale) => !_inArrivo.containsKey(quale))
+          .toList();
+      if (daChiedere.isEmpty) return;
+
+      final pacchi = aPacchi(daChiedere);
+      for (var da = 0; da < pacchi.length; da += pacchiInsieme) {
+        final adesso = pacchi.sublist(
+          da,
+          da + pacchiInsieme > pacchi.length
+              ? pacchi.length
+              : da + pacchiInsieme,
+        );
+        await Future.wait(adesso.map(_unPacco));
+      }
+    } catch (_) {
+      /* Niente da dire a nessuno: i file si chiedono come sempre. */
+    }
+  }
+
+  /// Un pacco: si prenota ogni file, si chiede, si mette sul banco.
+  Future<void> _unPacco(List<String> quali) async {
+    final attese =
+        <String, Completer<({int stato, String tipo, List<int> byte})>>{};
+    for (final quale in quali) {
+      final aspetta = Completer<({int stato, String tipo, List<int> byte})>();
+      attese[quale] = aspetta;
+      aspetta.future.ignore();
+      _inArrivo[quale] = aspetta.future;
+    }
+    var restano = quali;
+    try {
+      while (restano.isNotEmpty) {
+        final dentro = await _ilPacco(restano);
+        if (dentro.isEmpty) {
+          throw const ComandoRifiutato('il pacco è tornato vuoto');
+        }
+        final ancora = <String>[];
+        for (final quale in restano) {
+          final preso = dentro[quale];
+          if (preso == null) {
+            ancora.add(quale);
+            continue;
+          }
+          _pronti[quale] = preso;
+          attese[quale]!.complete(preso);
+        }
+        restano = ancora;
+      }
+    } catch (male) {
+      for (final quale in restano) {
+        if (!attese[quale]!.isCompleted) attese[quale]!.completeError(male);
+      }
+    } finally {
+      for (final quale in quali) {
+        if (identical(_inArrivo[quale], attese[quale]!.future)) {
+          _inArrivo.remove(quale);
+        }
+      }
+    }
+  }
+
+  /// Il pacco, dal ponte. La stessa strada di [_chiedi], con piu' file.
+  Future<Map<String, ({int stato, String tipo, List<int> byte})>> _ilPacco(
+    List<String> quali,
+  ) async {
+    final filo = _filo();
+    if (filo == null) throw const FiloCaduto('il filo non c\'è');
+    final testo = await filo.testoDi({
+      'type': 'ponte/http-molti',
+      'percorsi': quali,
+      'senzaGzip': !siApreIlGzip,
+    }, entro: _attesaDellaCommissione);
+    final letto = jsonDecode(testo);
+    final risposta = letto is Map ? letto['result'] : null;
+    final dentro = risposta is Map ? risposta['file'] : null;
+    if (dentro is! Map) {
+      throw const ComandoRifiutato('la casa ha risposto una cosa strana');
+    }
+    final fuori = <String, ({int stato, String tipo, List<int> byte})>{};
+    for (final uno in dentro.entries) {
+      final quale = uno.key;
+      final dati = uno.value;
+      if (quale is! String || dati is! Map) continue;
+      final corpo = dati['corpo'];
+      var byte = corpo is String ? base64.decode(corpo) : Uint8List(0);
+      if (dati['compresso'] == 'gzip') {
+        if (!siApreIlGzip) continue;
+        byte = await apriIlGzip(byte);
+      }
+      final stato = dati['stato'];
+      fuori[quale] = (
+        stato: stato is int ? stato : 502,
+        tipo: dati['tipo'] is String
+            ? dati['tipo'] as String
+            : 'application/octet-stream',
+        byte: byte,
+      );
+    }
+    return fuori;
   }
 
   /// Al service worker, che aspetta con quel numero.

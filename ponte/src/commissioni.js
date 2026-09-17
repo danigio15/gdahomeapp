@@ -4,7 +4,8 @@
  * fra il telefono e Home Assistant. Con un'eccezione, ed e' questa: tutto
  * quello che riguarda la plancia, che in Home Assistant non c'e'.
  *
- * Sono quattro cose: i file della plancia (`ponte/http`), dove sta e com'e'
+ * Sono quattro cose: i file della plancia (`ponte/http`, e `ponte/http-molti`
+ * quando sono tanti insieme), dove sta e com'e'
  * (`ponte/plancia`), la sua configurazione (`dashboardmodern/config/…`, che
  * la pagina chiede come la chiederebbe all'integrazione e che qui tiene il
  * ponte), e le chiamate REST che la pagina fa a Home Assistant per lo storico
@@ -53,6 +54,7 @@ import {
 } from "./configurazione.js";
 import { DISPOSITIVI_MASSIMI, ENTITA_MASSIME } from "./catalogo.js";
 import { BASE_DELLE_FOTO, BASE_DI_CASA, FOTO_MASSIMA } from "./foto.js";
+import { BASE as BASE_DELLA_PLANCIA } from "./plancia.js";
 import { ChatHaDettoNo } from "./chat.js";
 import { QuestoNoNo } from "./aggiornamenti.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
@@ -64,6 +66,25 @@ import { laVede, QuellaPlanciaNo, TroppePlance } from "./plance.js";
 export const NIENTE_PER_TE = "niente_per_te";
 
 export const TIPO = "ponte/http";
+
+/* Gli stessi file, ma piu' d'uno per volta.
+ *
+ * Un file per commissione va benissimo dentro casa: la rete e' locale, e il
+ * giro non si sente. Fuori casa il giro passa dal centralino, e la plancia a
+ * freddo ne fa **trecentosettantanove**: e' il minuto in cui si vede girare la
+ * rotella, e non sono i byte — sono i giri. Misurato con un browser vero e
+ * ottanta millesimi di giro: sei secondi, di cui cinque di andate e ritorni.
+ *
+ * Il servitore legge dalla pagina che ha appena servito l'elenco dei file che
+ * la pagina dice di volere subito — le righe `modulepreload`, che stanno li'
+ * per questo — e li chiede in nove pacchi mentre il browser sta ancora
+ * leggendo l'intestazione. Trecentosettantanove giri diventano nove.
+ *
+ * Non e' una strada nuova: ogni file del pacco passa dalla stessa porta di
+ * sempre, coi suoi controlli e il suo «chi vede quale plancia». E' la stessa
+ * strada, fatta una volta invece di quaranta. */
+export const TIPO_MOLTI = "ponte/http-molti";
+
 export const TIPO_PLANCIA = "ponte/plancia";
 
 /* Le plance di questa casa: piu' d'una, come nella dashboard.
@@ -206,6 +227,24 @@ const ATTESA = 30_000;
  * e' un modo per farlo pensare ad altro. Otto alla volta bastano a tenere il
  * filo pieno, e le altre aspettano il loro turno. */
 const INSIEME = 8;
+
+/* Quanto grosso puo' essere un pacco.
+ *
+ * Il telaio della presa si ferma a un megabyte — sia qui sia sul centralino —
+ * e quello che ci deve stare non e' il pacco: e' il pacco in base64, dentro
+ * una busta cifrata. Trecentottantaquattro kilobyte di file diventano
+ * cinquecentododici di base64, e la busta ci sta larga.
+ *
+ * I file si contano **dopo** la compressione, che e' quello che viaggia. Un
+ * modulo della plancia compresso sta sotto i dodici kilobyte in media, quindi
+ * in un pacco ce ne stanno una trentina; il piu' grosso di tutti — il runtime,
+ * centosettantasei — ci sta due volte.
+ *
+ * Quando il pacco e' pieno gli altri restano fuori, e non c'e' niente da
+ * dirsi: chi li ha chiesti vede quali non sono tornati e li richiede. Meglio
+ * un pacco in meno che un telaio che nessuno riesce a leggere. */
+const IN_UN_PACCO = 40;
+const UN_PACCO_PESA = 384 * 1024;
 
 /* Quello che vale la pena comprimere: testo. Un modulo JavaScript si riduce a
  * un quarto, e passa dal centralino, che e' la strada lenta. Un'immagine e'
@@ -379,6 +418,7 @@ export class Commissioni {
     const id = detto?.id ?? null;
     const tipo = detto?.type;
     if (tipo === TIPO) return this._http(detto, chiChiede, amministra);
+    if (tipo === TIPO_MOLTI) return this._molti(detto, chiChiede, amministra);
     if (tipo === TIPO_PLANCIA) return this._laPlancia(detto, chiChiede, amministra);
     if (PLANCE.has(tipo)) return this._lePlance(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("ponte/chat/")) return this._chatDellApp(detto);
@@ -1132,6 +1172,53 @@ export class Commissioni {
     if (!messa)
       return no(id, "invalid_upload", "Il file non e' un'immagine, o e' piu' grande di 10 MB.");
     return si(id, messa);
+  }
+
+  /* Un pacco di file, in una commissione sola. Vedi [TIPO_MOLTI].
+   *
+   * Torna `{file: {<percorso>: {stato, tipo, corpo, compresso?}}}`. Un
+   * percorso che non c'e' o che non si puo' avere torna dentro il pacco col
+   * suo stato, come tornerebbe da solo: un file sbagliato non fa cadere gli
+   * altri trentanove. Un percorso che **non c'e' affatto** nella risposta e'
+   * uno che non ci stava, e si richiede.
+   *
+   * Di qui passano solo i file della plancia. Non e' avarizia: il pacco e'
+   * fatto per l'elenco che scrive la pagina, e quell'elenco e' fatto di
+   * moduli. Una chiamata REST dentro un pacco terrebbe fermi gli altri
+   * trentanove ad aspettare Home Assistant, e non e' quello che serve. */
+  async _molti(detto, chiChiede = "", amministra = null) {
+    const id = detto?.id ?? null;
+    const percorsi = detto?.percorsi;
+    if (!Array.isArray(percorsi) || percorsi.length === 0) {
+      return no(id, "not_allowed", "un pacco vuoto non e' un pacco");
+    }
+    if (percorsi.length > IN_UN_PACCO) {
+      return no(id, "not_allowed", `in un pacco ci stanno ${IN_UN_PACCO} file`);
+    }
+
+    const senzaGzip = detto.senzaGzip === true;
+    const file = {};
+    let quanto = 0;
+    for (const quale of percorsi) {
+      if (typeof quale !== "string" || !quale.startsWith(`${BASE_DELLA_PLANCIA}/`)) {
+        return no(id, "not_allowed", "nel pacco vanno solo i file della plancia");
+      }
+      if (quale in file) continue;
+      const risposta = await this._http(
+        { type: TIPO, metodo: "GET", percorso: quale, senzaGzip },
+        chiChiede,
+        amministra,
+      );
+      /* Un no che vale per tutto il pacco — «in questa casa non ci sono
+       * plance per te» — e' un no per tutto il pacco: ripeterlo quaranta
+       * volte non aggiunge niente a chi legge. */
+      if (risposta.success !== true) return { ...risposta, id };
+      const dentro = risposta.result;
+      quanto += typeof dentro?.corpo === "string" ? dentro.corpo.length : 0;
+      file[quale] = dentro;
+      if (quanto >= UN_PACCO_PESA) break;
+    }
+    return si(id, { file });
   }
 
   async _http(detto, chiChiede = "", amministra = null) {

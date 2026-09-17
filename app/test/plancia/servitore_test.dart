@@ -28,6 +28,17 @@ const _modulo =
     'export const uno = 1;\n'
     '// un modulo della plancia, lungo abbastanza da essere compresso\n';
 
+/// I moduli della pagina finta, come li scrive la plancia vera: quattro righe
+/// `modulepreload`, relative alla cartella della pagina.
+const _iSuoiModuli = ['uno', 'due', 'tre', 'quattro'];
+
+String _laPaginaColSuoElenco([List<String> quali = _iSuoiModuli]) => [
+  '<!DOCTYPE html><html lang="it"><head>',
+  ...quali.map((q) => '<link rel="modulepreload" href="../src/core/$q.js">'),
+  '<link rel="stylesheet" href="./dashboard-runtime-it.css">',
+  '</head><body>la plancia</body></html>',
+].join('\n');
+
 void main() {
   late PonteFinto ponte;
   late Filo filo;
@@ -645,6 +656,142 @@ void main() {
       isNot(contains('il ponte non ha risposto')),
       reason: 'il ponte ha risposto: ha detto no',
     );
+  });
+
+  /* ─── Il pacco ─────────────────────────────────────────────────────────── */
+
+  /// Mette nel ponte finto la pagina coi suoi moduli, e i moduli.
+  void laPlanciaColSuoElenco([List<String> quali = _iSuoiModuli]) {
+    ponte.file['$_base/legacy/dashboard.html'] = (
+      'text/html; charset=utf-8',
+      utf8.encode(_laPaginaColSuoElenco(quali)),
+    );
+    for (final quale in quali) {
+      if (quale == 'manca') continue;
+      ponte.file['$_base/src/core/$quale.js'] = (
+        'text/javascript; charset=utf-8',
+        utf8.encode('$_modulo// sono $quale\n'),
+      );
+    }
+  }
+
+  Future<String> laPagina() async {
+    final richiesta = await cliente.getUrl(servitore.paginaDi(pannello()));
+    final risposta = await richiesta.close();
+    final byte = await risposta.fold<List<int>>(
+      [],
+      (tutti, pezzo) => tutti..addAll(pezzo),
+    );
+    return utf8.decode(byte);
+  }
+
+  String sulDisco(String quale) => '${cartella.path}$_base/src/core/$quale.js';
+
+  test('la pagina porta avanti i suoi moduli, e in un pacco solo', () async {
+    /* Il cuore di tutto il lavoro. La pagina dice quali file vuole subito, e
+     * il servitore li va a prendere **prima** che il browser li chieda, tutti
+     * in una commissione. Da fuori casa la plancia a freddo ne chiede
+     * trecentosettantanove, e ogni giro passa dal centralino: in pacchi da
+     * quaranta sono nove giri invece di trecentosettantanove. */
+    laPlanciaColSuoElenco();
+    expect(await laPagina(), contains('la plancia'));
+
+    await _finoA(() => ponte.pacchi.isNotEmpty);
+    await _finoA(
+      () => _iSuoiModuli.every((quale) => File(sulDisco(quale)).existsSync()),
+    );
+
+    expect(ponte.pacchi.length, 1, reason: 'quattro moduli, un giro');
+    expect(
+      ponte.pacchi.single,
+      _iSuoiModuli.map((quale) => '$_base/src/core/$quale.js').toList(),
+      reason: 'nell\'ordine in cui la pagina li scrive',
+    );
+
+    /* E le commissioni singole sono **una**: la pagina. I moduli sono passati
+     * dal pacco, che fra le commissioni non conta. */
+    expect(ponte.commissioni.map((detto) => detto['percorso']).toList(), [
+      '$_base/legacy/dashboard.html',
+    ]);
+  });
+
+  test('e poi il browser li trova sul disco, senza tornare sul filo', () async {
+    laPlanciaColSuoElenco();
+    await laPagina();
+    await _finoA(
+      () => _iSuoiModuli.every((quale) => File(sulDisco(quale)).existsSync()),
+    );
+    final finoAQui = ponte.commissioni.length;
+
+    for (final quale in _iSuoiModuli) {
+      final (stato, tipo, byte) = await prendi('$_base/src/core/$quale.js');
+      expect(stato, 200, reason: quale);
+      expect(tipo, startsWith('text/javascript'));
+      expect(utf8.decode(byte), contains('sono $quale'));
+    }
+    expect(
+      ponte.commissioni.length,
+      finoAQui,
+      reason: 'il filo non lo ha più toccato nessuno',
+    );
+  });
+
+  test('quelli che nel pacco non ci stanno si richiedono, e finisce', () async {
+    /* Il ponte riempie il pacco fino a trecentottantaquattro kilobyte e poi
+     * smette: quello che non ci sta non torna, e chi l'ha chiesto lo
+     * richiede. Qui il pacco sta pieno con un file, cosi' si vedono tutti i
+     * giri — e si vede che finiscono. */
+    ponte.paccoFinoA = 1;
+    laPlanciaColSuoElenco();
+    await laPagina();
+    await _finoA(
+      () => _iSuoiModuli.every((quale) => File(sulDisco(quale)).existsSync()),
+    );
+    expect(ponte.pacchi.length, _iSuoiModuli.length);
+    /* Ogni giro e' piu' corto del precedente: e' la ragione per cui finisce. */
+    expect(ponte.pacchi.map((uno) => uno.length).toList(), [4, 3, 2, 1]);
+  });
+
+  test(
+    'un modulo che non c\'è torna col suo 404, e gli altri arrivano',
+    () async {
+      laPlanciaColSuoElenco(const ['uno', 'manca', 'due']);
+      await laPagina();
+      await _finoA(() => ponte.pacchi.isNotEmpty);
+      await _finoA(
+        () =>
+            File(sulDisco('uno')).existsSync() &&
+            File(sulDisco('due')).existsSync(),
+      );
+
+      final (stato, _, _) = await prendi('$_base/src/core/manca.js');
+      expect(stato, 404);
+      expect(
+        File(sulDisco('manca')).existsSync(),
+        isFalse,
+        reason: 'non si tiene un 404',
+      );
+    },
+  );
+
+  test('la seconda volta non si chiede più niente', () async {
+    /* Il percorso ha dentro l'impronta della plancia: quello che c'e' non
+     * cambia mai, e un file preso una volta vale finche' esiste. Il pacco
+     * serve al primo avvio, e al secondo non deve fare niente. */
+    laPlanciaColSuoElenco();
+    await laPagina();
+    await _finoA(
+      () => _iSuoiModuli.every((quale) => File(sulDisco(quale)).existsSync()),
+    );
+    expect(ponte.pacchi.length, 1);
+
+    await laPagina();
+    /* Un giro dal disco per ognuno: se `_portaAvanti` volesse chiedere
+     * qualcosa, l'avrebbe già fatto prima di questi quattro. */
+    for (final quale in _iSuoiModuli) {
+      expect((await prendi('$_base/src/core/$quale.js')).$1, 200);
+    }
+    expect(ponte.pacchi.length, 1, reason: 'niente di nuovo da prendere');
   });
 }
 

@@ -153,6 +153,63 @@ class PonteFinto {
       _manda(presa, {'id': id, ..._commissione(detto)});
       return;
     }
+    /* Il pacco: gli stessi file, piu' d'uno per volta. Come il ponte vero, si
+     * riempie fino a [paccoFinoA] e poi si smette; quello che non ci sta non
+     * torna, e chi l'ha chiesto lo richiede. */
+    if (detto['type'] == 'ponte/http-molti') {
+      final percorsi = detto['percorsi'];
+      if (percorsi is! List || percorsi.isEmpty || percorsi.length > 40) {
+        _manda(presa, {
+          'id': id,
+          'type': 'result',
+          'success': false,
+          'error': {'code': 'not_allowed', 'message': 'pacco non valido'},
+        });
+        return;
+      }
+      if (nientePerTe) {
+        _manda(presa, {
+          'id': id,
+          'type': 'result',
+          'success': false,
+          'error': {
+            'code': 'niente_per_te',
+            'message': 'in questa casa non ci sono plance per la tua utenza',
+          },
+        });
+        return;
+      }
+      pacchi.add(percorsi.map((quale) => '$quale').toList());
+      final dentro = <String, dynamic>{};
+      var quanto = 0;
+      for (final uno in percorsi) {
+        final quale = '$uno';
+        if (!quale.startsWith('/dashboardmodern_static/')) {
+          _manda(presa, {
+            'id': id,
+            'type': 'result',
+            'success': false,
+            'error': {
+              'code': 'not_allowed',
+              'message': 'nel pacco vanno solo i file della plancia',
+            },
+          });
+          return;
+        }
+        if (dentro.containsKey(quale)) continue;
+        final risposta = _unFile({'percorso': quale, 'metodo': 'GET'});
+        dentro[quale] = risposta['result'];
+        quanto += '${(risposta['result'] as Map)['corpo']}'.length;
+        if (quanto >= paccoFinoA) break;
+      }
+      _manda(presa, {
+        'id': id,
+        'type': 'result',
+        'success': true,
+        'result': {'file': dentro},
+      });
+      return;
+    }
     if (detto['type'] == 'ponte/plancia') {
       /* «Le plance ci sono, ma nessuna e' della tua utenza»: e' una risposta,
        * non un ponte senza plancia, e l'app non deve andare a cercarla fra i
@@ -607,8 +664,22 @@ class PonteFinto {
   /// file e' stato chiesto davvero.
   final List<Map<String, dynamic>> commissioni = [];
 
+  /// I pacchi arrivati, in ordine: ognuno con i percorsi che conteneva.
+  final List<List<String>> pacchi = [];
+
+  /// Quanto ci sta in un pacco, in byte di base64. Nel ponte vero sono
+  /// trecentottantaquattro kilobyte; nelle prove si mette piccolo per vedere
+  /// cosa succede a quelli che non ci stanno.
+  int paccoFinoA = 384 * 1024;
+
   Map<String, dynamic> _commissione(Map<String, dynamic> detto) {
     commissioni.add(detto);
+    return _unFile(detto);
+  }
+
+  /// Un file, senza segnarlo fra le commissioni: e' quello che serve al pacco,
+  /// che di commissioni ne e' una sola per quaranta file.
+  Map<String, dynamic> _unFile(Map<String, dynamic> detto) {
     final percorso = detto['percorso'] as String? ?? '';
     final soloIlPercorso = percorso.split('?').first;
     if (percorso.startsWith('/api/')) {

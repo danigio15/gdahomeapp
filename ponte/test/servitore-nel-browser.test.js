@@ -36,7 +36,10 @@ function accendi(ambito) {
     registration: { scope: `https://casa.esempio${ambito}` },
     location: { origin: "https://casa.esempio" },
   };
-  runInNewContext(readFileSync(SW, "utf8"), {
+  /* La scatola resta in mano: le funzioni dichiarate in cima al file
+   * diventano sue, e una di quelle — `quantoSiTiene` — decide se un file si
+   * tiene, che e' l'altra cosa che questa prova guarda. */
+  const scatola = {
     self: finto,
     URL,
     Response,
@@ -44,22 +47,26 @@ function accendi(ambito) {
     Map,
     Promise,
     Error,
-  });
-  return (indirizzo) => {
-    let risposto = false;
-    ascolti.get("fetch")({
-      request: { url: indirizzo },
-      respondWith: () => {
-        risposto = true;
-      },
-    });
-    return risposto;
+  };
+  runInNewContext(readFileSync(SW, "utf8"), scatola);
+  return {
+    decide: (indirizzo) => {
+      let risposto = false;
+      ascolti.get("fetch")({
+        request: { url: indirizzo },
+        respondWith: () => {
+          risposto = true;
+        },
+      });
+      return risposto;
+    },
+    quantoSiTiene: scatola.quantoSiTiene,
   };
 }
 
 test("dietro l'ingress non si tocca quello che l'app chiede di suo", () => {
   const davanti = "/api/hassio_ingress/un-gettone-qualunque/app/";
-  const decide = accendi(davanti);
+  const { decide } = accendi(davanti);
   const dove = `https://casa.esempio${davanti}`;
 
   /* Le cose dell'app: passano. Sono dentro un indirizzo che contiene `/api/`,
@@ -76,10 +83,40 @@ test("dietro l'ingress non si tocca quello che l'app chiede di suo", () => {
 });
 
 test("senza prefisso vale lo stesso, e da un'altra origine non si tocca niente", () => {
-  const decide = accendi("/");
+  const { decide } = accendi("/");
   assert.equal(decide("https://casa.esempio/main.dart.js"), false);
   assert.equal(decide("https://casa.esempio/dashboardmodern_static/x.js"), true);
   assert.equal(decide("https://casa.esempio/api/history/period/oggi"), true);
   /* Un service worker risponde solo alle pagine della sua origine. */
   assert.equal(decide("https://fonts.gstatic.com/s/roboto/x.woff2"), false);
+});
+
+test("quello che non cambia mai si tiene, e il resto no", () => {
+  /* La seconda apertura della plancia. I file hanno l'impronta nel percorso —
+   * `/dashboardmodern_static/<impronta>/…` — e a quell'indirizzo il contenuto
+   * non cambiera' mai: aggiornare la plancia cambia l'impronta e quindi i
+   * percorsi. Tenerli vuol dire che la seconda volta la plancia si apre senza
+   * chiedere niente, che da fuori casa e' tutto il tempo che ci metteva.
+   *
+   * Sbagliare da questo lato costa una plancia vecchia che non si aggiorna
+   * piu', e allora le tre eccezioni vanno provate una per una. */
+  const { quantoSiTiene } = accendi("/");
+  const impronta = "/dashboardmodern_static/a521678057b7d342";
+  const perSempre = "public, max-age=31536000, immutable";
+
+  assert.equal(quantoSiTiene(`${impronta}/src/core/i18n.js`, "text/javascript"), perSempre);
+  assert.equal(quantoSiTiene(`${impronta}/legacy/dashboard-runtime-it.js`, ""), perSempre);
+  assert.equal(quantoSiTiene("/dashboardmodern_static/brands/tesla.png", "image/png"), perSempre);
+
+  /* La pagina no: porta le premesse, e quelle cambiano con la casa. */
+  assert.equal(
+    quantoSiTiene(`${impronta}/legacy/dashboard.html`, "text/html; charset=utf-8"),
+    "no-store",
+  );
+  /* Le foto caricate dalla plancia no: il nome lo scegli tu, e ricaricarne
+   * una col nome di prima e' una cosa normale. */
+  assert.equal(quantoSiTiene("/dashboardmodern_static/www/casa.jpg", "image/jpeg"), "no-store");
+  /* E lo stato di adesso, meno che mai. */
+  assert.equal(quantoSiTiene("/api/history/period/oggi", "application/json"), "no-store");
+  assert.equal(quantoSiTiene("/local/auto.png", "image/png"), "no-store");
 });

@@ -51,6 +51,7 @@ import '../ponte/altrove/altrove.dart';
 import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 import 'cucitura.dart';
+import 'precarichi.dart';
 import 'il_no.dart';
 import 'pannello.dart';
 import 'premesse.dart';
@@ -473,13 +474,21 @@ class Servitore {
           ..httpOnly = true
           ..sameSite = SameSite.strict,
       );
+      final letta = utf8.decode(byte, allowMalformed: true);
       _rispondi(
         richiesta,
         200,
         tipo,
-        utf8.encode(conLePremesse(utf8.decode(byte, allowMalformed: true))),
+        utf8.encode(conLePremesse(letta)),
         cache: 'no-store',
       );
+      /* E adesso i moduli, prima che il browser li chieda: la pagina dice
+       * quali sono, e chiederli in pacchi e' la differenza fra un minuto e
+       * qualche secondo da fuori casa. Vedi `precarichi.dart`.
+       *
+       * Dopo aver risposto, e senza aspettare: la pagina e' gia' partita, e
+       * se il pacco non riesce i file si chiedono come si e' sempre fatto. */
+      unawaited(_portaAvanti(percorso, letta));
       return;
     }
     /* Il percorso ha dentro l'impronta: quello che c'e' non cambia mai. */
@@ -509,6 +518,119 @@ class Servitore {
         _inArrivo.remove(percorso);
       }
     });
+  }
+
+  /// I moduli della pagina, chiesti in pacchi prima che li chieda il browser.
+  ///
+  /// La pagina porta l'elenco dei file che vuole subito — le righe
+  /// `modulepreload` — e quell'elenco e' una lista della spesa: si va a
+  /// prenderli **in pacchi** invece che uno per volta. Da fuori casa sono nove
+  /// giri sul filo invece di trecentosettantanove.
+  ///
+  /// Quelli che stanno gia' sul disco non si chiedono: dopo il primo avvio
+  /// questo giro non fa niente, ed e' giusto cosi'.
+  ///
+  /// Non solleva mai. Un pacco che non arriva e' una plancia che si apre come
+  /// si apriva ieri, un file per volta.
+  Future<void> _portaAvanti(String percorsoDellaPagina, String pagina) async {
+    try {
+      final quali = iPrecarichiDellaPagina(
+        pagina,
+        cartella: laCartellaDi(percorsoDellaPagina),
+      );
+      final daChiedere = <String>[];
+      for (final quale in quali) {
+        if (_inArrivo.containsKey(quale)) continue;
+        if (await File('${cartella.path}$quale').exists()) continue;
+        daChiedere.add(quale);
+      }
+      if (daChiedere.isEmpty) return;
+      _racconta(
+        'la plancia: ${daChiedere.length} moduli da prendere, in pacchi',
+      );
+
+      final pacchi = aPacchi(daChiedere);
+      for (var da = 0; da < pacchi.length; da += pacchiInsieme) {
+        final adesso = pacchi.sublist(
+          da,
+          da + pacchiInsieme > pacchi.length
+              ? pacchi.length
+              : da + pacchiInsieme,
+        );
+        await Future.wait(adesso.map(_unPacco));
+      }
+    } catch (errore) {
+      _racconta('i pacchi della plancia non sono andati: $errore');
+    }
+  }
+
+  /// Un pacco: si prenota ogni file, si chiede, si tiene sul disco.
+  ///
+  /// La prenotazione e' la parte che conta. Mentre il pacco viaggia, il browser
+  /// chiede gli stessi file uno per volta: mettendo in [_inArrivo] un'attesa
+  /// per ognuno **prima** di chiedere, chi arriva dopo aspetta il pacco invece
+  /// di rifare la strada lenta per conto suo. E' la stessa promessa di
+  /// [_scarica], allargata a quaranta file.
+  ///
+  /// Quelli che nel pacco non ci stavano — il ponte lo riempie fino a
+  /// trecentottantaquattro kilobyte e poi smette — si richiedono nel giro
+  /// dopo, e il giro dopo e' piu' corto: cosi' finisce.
+  Future<void> _unPacco(List<String> quali) async {
+    final attese = <String, Completer<_Scaricato>>{};
+    for (final quale in quali) {
+      final aspetta = Completer<_Scaricato>();
+      attese[quale] = aspetta;
+      /* Perche' un errore che nessuno guarda non diventi un errore di
+       * nessuno: chi aspetta lo riceve comunque. */
+      aspetta.future.ignore();
+      _inArrivo[quale] = aspetta.future;
+    }
+    var restano = quali;
+    try {
+      while (restano.isNotEmpty) {
+        final dentro = await _ilPacco(restano);
+        if (dentro.isEmpty) {
+          throw const ComandoRifiutato('il pacco è tornato vuoto');
+        }
+        final ancora = <String>[];
+        for (final quale in restano) {
+          final preso = dentro[quale];
+          if (preso == null) {
+            ancora.add(quale);
+            continue;
+          }
+          if (preso.stato == 200) {
+            await _metti(File('${cartella.path}$quale'), preso.byte);
+          }
+          attese[quale]!.complete(preso);
+        }
+        restano = ancora;
+      }
+    } catch (errore) {
+      for (final quale in restano) {
+        if (!attese[quale]!.isCompleted) attese[quale]!.completeError(errore);
+      }
+    } finally {
+      for (final quale in quali) {
+        if (identical(_inArrivo[quale], attese[quale]!.future)) {
+          _inArrivo.remove(quale);
+        }
+      }
+    }
+  }
+
+  /// Il pacco, dal ponte. La stessa strada di [_commissione], con piu' file.
+  Future<Map<String, _Scaricato>> _ilPacco(List<String> quali) async {
+    final filo = await _filoPronto();
+    if (filo == null) throw const FiloCaduto('il filo non c\'è');
+    final testo = await Lavori.io.conto(
+      'pacchi del ponte, aspettati',
+      () => filo.testoDi({
+        'type': 'ponte/http-molti',
+        'percorsi': quali,
+      }, entro: _attesaDellaCommissione),
+    );
+    return _spacchettaIlPacco(testo);
   }
 
   Future<_Scaricato> _commissione(
@@ -751,6 +873,70 @@ Future<_Scaricato> _spacchetta(String testo) async {
     tipo,
     corpo == null ? const <int>[] : corpo.materialize().asUint8List(),
   );
+}
+
+/// Un pacco di file, spacchettato tutto in una volta.
+///
+/// E' [_spacchetta] con piu' file dentro, e le ragioni sono le stesse: il
+/// testo si apre altrove quando e' grosso, e un pacco e' grosso per
+/// definizione — mezzo megabyte di base64 che diventa mezzo megabyte di
+/// moduli. Farlo sul filo che disegna vorrebbe dire lo schermo fermo proprio
+/// mentre la plancia sta partendo.
+Future<Map<String, _Scaricato>> _spacchettaIlPacco(String testo) async {
+  final Map<String, (int, String, TransferableTypedData?)> preso;
+  try {
+    preso = testo.length < _grossa
+        ? Lavori.io.subito('pacchi aperti qui', () => _apriIlPacco(testo))
+        : await Lavori.io.conto(
+            'pacchi aperti altrove',
+            () => altrove(() => _apriIlPacco(testo)),
+          );
+  } on ErroreDelPonte {
+    rethrow;
+  } catch (_) {
+    throw const ComandoRifiutato('il ponte ha risposto una cosa strana');
+  }
+  return {
+    for (final uno in preso.entries)
+      uno.key: _Scaricato(
+        uno.value.$1,
+        uno.value.$2,
+        uno.value.$3 == null
+            ? const <int>[]
+            : uno.value.$3!.materialize().asUint8List(),
+      ),
+  };
+}
+
+/// Il pacco aperto, in un posto dove non c'e' niente di qui: prende testo e
+/// torna byte, come [_apri].
+Map<String, (int, String, TransferableTypedData?)> _apriIlPacco(String testo) {
+  final letto = jsonDecode(testo);
+  final risposta = letto is Map ? letto['result'] : null;
+  final dentro = risposta is Map ? risposta['file'] : null;
+  if (dentro is! Map) {
+    throw const ComandoRifiutato('il ponte ha risposto una cosa strana');
+  }
+  final fuori = <String, (int, String, TransferableTypedData?)>{};
+  for (final uno in dentro.entries) {
+    final quale = uno.key;
+    final dati = uno.value;
+    if (quale is! String || dati is! Map) continue;
+    final stato = dati['stato'];
+    final corpo = dati['corpo'];
+    var byte = corpo is String ? base64.decode(corpo) : Uint8List(0);
+    if (dati['compresso'] == 'gzip') {
+      byte = Uint8List.fromList(gzip.decode(byte));
+    }
+    fuori[quale] = (
+      stato is int ? stato : 502,
+      dati['tipo'] is String
+          ? dati['tipo'] as String
+          : 'application/octet-stream',
+      byte.isEmpty ? null : TransferableTypedData.fromList([byte]),
+    );
+  }
+  return fuori;
 }
 
 /// Il lavoro vero, scritto in modo da poter partire per un altro isolato:

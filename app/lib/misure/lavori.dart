@@ -145,6 +145,18 @@ class UnLavoro {
       it: 'risposte del ponte, aspettate',
       en: 'answers from the add-on, waited for',
     ),
+    'pacchi aperti qui' => inLingua(
+      it: 'pacchi aperti qui',
+      en: 'bundles opened here',
+    ),
+    'pacchi aperti altrove' => inLingua(
+      it: 'pacchi aperti altrove',
+      en: 'bundles opened aside',
+    ),
+    'pacchi del ponte, aspettati' => inLingua(
+      it: 'pacchi del ponte, aspettati',
+      en: 'bundles from the add-on, waited for',
+    ),
     'passati alla plancia' => inLingua(
       it: 'passati alla plancia',
       en: 'passed to the dashboard',
