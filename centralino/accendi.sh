@@ -836,7 +836,11 @@ mettila() {
     END { if (!fatto) print "CHIAVE_CONSOLE=" chiave }
   ' "$AMBIENTE" >"$tmp"
   chmod 600 "$tmp"
-  chown root:root "$tmp"
+  # Il file provvisorio e' gia' di chi gira, e chi gira qui e' root: questo e'
+  # un fermo in piu', non il fermo. Se non riesce non si smette — sulla
+  # macchina vera, se non fossimo root, sarebbe il `mv` dentro `/etc` a dire
+  # no, ed e' li' che deve dirlo.
+  chown root:root "$tmp" 2>/dev/null || true
   mv "$tmp" "$AMBIENTE"
   systemctl restart tramite
 }
@@ -990,7 +994,11 @@ mettilo() {
     END { if (!fatto) print "GITHUB_SEGNALAZIONI=" g }
   ' "$AMBIENTE" >"$tmp"
   chmod 600 "$tmp"
-  chown root:root "$tmp"
+  # Il file provvisorio e' gia' di chi gira, e chi gira qui e' root: questo e'
+  # un fermo in piu', non il fermo. Se non riesce non si smette — sulla
+  # macchina vera, se non fossimo root, sarebbe il `mv` dentro `/etc` a dire
+  # no, ed e' li' che deve dirlo.
+  chown root:root "$tmp" 2>/dev/null || true
   mv "$tmp" "$AMBIENTE"
   systemctl restart tramite
 }

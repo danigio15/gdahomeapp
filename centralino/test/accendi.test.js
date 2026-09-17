@@ -404,6 +404,15 @@ function unBanco() {
   writeFileSync(join(cartella, "ambiente"), AMBIENTE_DI_PROVA, { mode: 0o600 });
 
   writeFileSync(join(bin, "systemctl"), '#!/bin/sh\necho "$*" >>"$RACCONTO"\n', { mode: 0o755 });
+  /* Un `chown` che dice no, quando si vuole: e' come sta chi fa girare queste
+   * prove — su un runner di GitHub non si e' root, e `chown root:root`
+   * fallisce. Con `set -e` quello basta a far morire lo script, e infatti l'ha
+   * fatto: quattro prove verdi qui dentro (dove si e' root) e rosse la'. */
+  writeFileSync(
+    join(bin, "chown"),
+    '#!/bin/sh\n[ -n "$CHOWN_DICE_NO" ] && exit 1\nexec /bin/chown "$@"\n',
+    { mode: 0o755 },
+  );
   writeFileSync(
     join(bin, "journalctl"),
     '#!/bin/sh\necho "set 17 tramite[1]: le segnalazioni finiscono su danigio15/gdahomeapp"\n',
@@ -564,6 +573,31 @@ test("`--togli` spegne le segnalazioni, e il resto del tramite lavora", () => {
     assert.equal(banco.gettoneNelFile(), "");
     assert.ok(banco.haRiavviato());
     assert.match(banco.lancia(), /gettone: non c'e'/);
+  } finally {
+    banco.via();
+  }
+});
+
+test("e va avanti anche dove non si e' root, che e' dove girano queste prove", () => {
+  /* La riga che ha fatto rossa la corsa 326. `chown root:root` sul file
+   * provvisorio e' un fermo in piu' — il file e' gia' di chi gira — ma con
+   * `set -e` un fermo in piu' che non riesce e' uno script che muore, e chi lo
+   * lanciava non aveva nemmeno un messaggio: il gettone non si metteva e non
+   * si sapeva perche'.
+   *
+   * Sulla macchina vera si gira da root e quel `chown` non serve. Se un giorno
+   * non fosse cosi', sarebbe il `mv` dentro `/etc` a dire no — ed e' il posto
+   * giusto in cui dirlo. */
+  const banco = unBanco();
+  try {
+    const nuovo = `github_pat_${"I".repeat(22)}_${"L".repeat(59)}`;
+    const detto = banco.lancia(["--metti"], {
+      dentro: `${nuovo}\n`,
+      CHOWN_DICE_NO: "si",
+    });
+    assert.match(detto, /ed e' sulla macchina/);
+    assert.equal(banco.gettoneNelFile(), nuovo);
+    assert.equal(banco.modoDelFile(), "600", "e resta chiuso a chi non e' suo");
   } finally {
     banco.via();
   }
