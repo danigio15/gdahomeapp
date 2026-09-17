@@ -23,7 +23,6 @@ import { extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { NOME, vestiDiGdahome } from "./marchio.js";
-import { senzaIPrecarichiMorti } from "./precarichi.js";
 import { guardaLaPlancia, inDueParole } from "./provenienza.js";
 
 export const BASE = "/dashboardmodern_static";
@@ -68,7 +67,6 @@ export class Plancia {
     this.cartella = resolve(cartella);
     this._impronta = null;
     this._provenienza = null;
-    this._pagine = new Map();
   }
 
   /* C'e' una plancia da servire? Basta che ci sia la pagina. */
@@ -196,46 +194,11 @@ export class Plancia {
        * non si vedono subito. Vestirla qui vuol dire che la versione dopo, e
        * quella dell'anno prossimo, arrivano vestite senza che nessuno
        * rifaccia niente. Vedi `marchio.js`. */
-      const relativo = relativi.join("/");
-      if (relativo.endsWith(".html")) return this._laPagina(relativo, dove, tipo);
-      const vestito = vestiDiGdahome(relativo, readFileSync(dove), tipo);
+      const vestito = vestiDiGdahome(relativi.join("/"), readFileSync(dove), tipo);
       return { stato: 200, tipo: vestito.tipo, corpo: vestito.corpo };
     } catch (_errore) {
       return questoNo();
     }
-  }
-
-  /* La pagina, composta una volta sola.
-   *
-   * Comporla vuol dire due cose: vestirla di gdahome — il logo, il velo, il
-   * titolo — e togliere i precarichi che nessuno importa (`precarichi.js`). La
-   * seconda cammina il grafo dei moduli sul disco, e quel grafo non cambia
-   * mentre il ponte e' acceso: se cambia la plancia, cambia al prossimo
-   * aggiornamento, e l'add-on si riavvia. La pagina invece la chiede ogni
-   * telefono che apre, e da capo dopo ogni aggiornamento. Camminare il grafo a
-   * ogni domanda sarebbe camminarlo per niente.
-   *
-   * Se comporla non riesce, si serve quella che c'e': una plancia lenta e'
-   * sempre meglio di una plancia che non parte. */
-  _laPagina(relativo, dove, tipo) {
-    const pronta = this._pagine.get(relativo);
-    if (pronta) return { stato: 200, tipo: pronta.tipo, corpo: pronta.corpo };
-    const vestito = vestiDiGdahome(relativo, readFileSync(dove), tipo);
-    let corpo = vestito.corpo;
-    try {
-      corpo = Buffer.from(
-        senzaIPrecarichiMorti(vestito.corpo.toString("utf8"), {
-          cartella: this.cartella,
-          relativo,
-        }),
-        "utf8",
-      );
-    } catch (_errore) {
-      corpo = vestito.corpo;
-    }
-    const composta = { tipo: vestito.tipo, corpo };
-    this._pagine.set(relativo, composta);
-    return { stato: 200, tipo: composta.tipo, corpo: composta.corpo };
   }
 
   *_iFile(cartella, relativa) {
