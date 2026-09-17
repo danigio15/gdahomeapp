@@ -25,6 +25,7 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
 import 'package:web/web.dart' as web;
@@ -39,6 +40,46 @@ import '../ritratto.dart';
 /// Quanto si aspetta un file dal ponte. Come sul telefono: puo' passare dal
 /// centralino con la casa dall'altra parte del paese.
 const _attesaDellaCommissione = Duration(seconds: 90);
+
+/// Se il browser sa aprire il gzip da se'.
+///
+/// `dart:io` nel browser non c'e', e per questo la plancia dal browser
+/// arrivava cruda: il ponte comprimeva solo per il telefono. Ma il
+/// decompressore non c'era da portarselo in casa — ce l'ha il browser, e si
+/// chiama `DecompressionStream`.
+///
+/// Dentro casa non si sente: sono file su una rete locale. Fuori casa la
+/// plancia a freddo passa dal centralino, e sono nove megabyte e un quarto
+/// invece di tre. Il gzip su un modulo lo riduce a un terzo, e a freddo la
+/// plancia e' fatta quasi tutta di moduli.
+///
+/// Si guarda una volta. Chi non ce l'ha — un browser di sei anni fa — chiede i
+/// file crudi come prima, e la plancia si apre come si apriva.
+final bool siApreIlGzip = globalContext.has('DecompressionStream');
+
+/// Il gzip, aperto dal browser.
+///
+/// Non c'e' modo di dare dei byte a un `DecompressionStream` senza passare dai
+/// flussi: si fa una risposta finta coi byte compressi, si manda il suo corpo
+/// dentro il decompressore, e si legge quello che esce come si legge una
+/// risposta qualunque. Il lavoro lo fa tutto il browser, e in Dart non passa
+/// un byte in piu' del necessario.
+Future<Uint8List> apriIlGzip(Uint8List byte) async {
+  final compressa = web.Response(byte.toJS);
+  final corpo = compressa.body;
+  if (corpo == null) throw const ComandoRifiutato('il gzip è arrivato vuoto');
+  final decompressore = web.DecompressionStream('gzip');
+  final aperta = web.Response(
+    corpo.pipeThrough(
+      web.ReadableWritablePair(
+        readable: decompressore.readable,
+        writable: decompressore.writable,
+      ),
+    ),
+  );
+  final letto = await aperta.arrayBuffer().toDart;
+  return letto.toDart.asUint8List();
+}
 
 /// Il WebSocket finto, che la plancia usa credendo sia quello vero.
 ///
@@ -331,31 +372,40 @@ extension on _ServitoreSulWeb {
       'type': 'ponte/http',
       'metodo': 'GET',
       'percorso': percorso,
-      /* Nel browser il gzip non si apre: `dart:io` non c'e', e mettersi in
-       * casa un decompressore per una cosa che il ponte sa gia' non fare e'
-       * il modo lungo. Il ponte lo salta, e sul filo passa qualche byte in
-       * piu' — che sulla rete di casa non si sente, e fuori casa e' il prezzo
-       * di poter guardare la casa da un browser. */
-      'senzaGzip': true,
+      /* Compresso, se il browser sa aprirlo — e lo sa (vedi [siApreIlGzip]).
+       *
+       * Qui prima si chiedeva sempre crudo: `dart:io` nel browser non c'e', e
+       * un decompressore in casa per una cosa che il ponte sa gia' non fare
+       * sembrava il modo lungo. Il decompressore pero' non c'era da portare:
+       * ce l'ha il browser. Fuori casa, a freddo, sono i megabyte della
+       * plancia che passano dal centralino, e ce n'e' un terzo. */
+      'senzaGzip': !siApreIlGzip,
     }, entro: _attesaDellaCommissione);
     final letto = jsonDecode(testo);
     final risposta = letto is Map ? letto['result'] : null;
     if (risposta is! Map) {
       throw const ComandoRifiutato('la casa ha risposto una cosa strana');
     }
-    if (risposta['compresso'] == 'gzip') {
-      throw const ComandoRifiutato(
-        'la casa ha compresso, e qui non si apre: aggiorna l\'add-on',
-      );
-    }
     final corpo = risposta['corpo'];
     final stato = risposta['stato'];
+    var byte = corpo is String ? base64.decode(corpo) : Uint8List(0);
+    if (risposta['compresso'] == 'gzip') {
+      /* Un ponte che comprime dopo che gli si e' chiesto di non farlo e' un
+       * ponte di prima di questa riga: non c'e' niente da aprire, e dirlo e'
+       * meglio che mostrare una plancia di byte illeggibili. */
+      if (!siApreIlGzip) {
+        throw const ComandoRifiutato(
+          'la casa ha compresso, e qui non si apre: aggiorna l\'add-on',
+        );
+      }
+      byte = await apriIlGzip(byte);
+    }
     return (
       stato: stato is int ? stato : 502,
       tipo: risposta['tipo'] is String
           ? risposta['tipo'] as String
           : 'application/octet-stream',
-      byte: corpo is String ? base64.decode(corpo) : const <int>[],
+      byte: byte,
     );
   }
 

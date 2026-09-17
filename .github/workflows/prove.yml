@@ -81,3 +81,11 @@ jobs:
       - name: La cifratura, dentro un browser
         run: flutter test --platform chrome test/ponte/cifra_test.dart
         working-directory: app
+      # E il gzip, che nel browser lo apre il browser.
+      #
+      # Sulla macchina virtuale `DecompressionStream` non esiste, e la prova si
+      # salta da se': girarla dall'altra parte e' l'unico modo di sapere che i
+      # byte che manda il ponte qui si aprono davvero.
+      - name: Il gzip, dentro un browser
+        run: flutter test --platform chrome test/plancia/gzip_nel_browser_test.dart
+        working-directory: app
