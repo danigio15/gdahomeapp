@@ -5,6 +5,26 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.8
+
+**Il firewall dell'ufficio, spiegato dove si legge l'indirizzo.**
+
+«FortiGuard Intrusion Prevention — Access Blocked», al posto dell'app, con
+scritto `Category: Newly Registered Domain`. Chi l'ha vista ha pensato che
+fosse rotto qualcosa, o peggio che gdahome fosse su una lista nera, e l'ha
+mandata a chiedere.
+
+Non e' ne' l'una ne' l'altra: quella categoria guarda **la data di
+registrazione** del dominio, non cosa c'e' dentro, e molti firewall aziendali la
+tengono chiusa di serie come euristica contro il phishing. Passa da se' quando
+il dominio esce dalla finestra. E intanto, su quella rete, la strada c'e' gia':
+«Qui dentro» e' la stessa app servita dall'add-on, in locale, e l'app sul
+telefono su quel Wi-Fi va diretta alla casa senza uscire.
+
+Adesso c'e' scritto, nelle due lingue, accanto all'indirizzo «Da fuori casa»:
+e' li' che quell'indirizzo si legge e si copia, quindi e' li' che serve —
+«Due cose da sapere» sono diventate tre.
+
 ## 1.4.32.7
 
 **Le correzioni non arrivavano, e nessuno lo diceva.**
