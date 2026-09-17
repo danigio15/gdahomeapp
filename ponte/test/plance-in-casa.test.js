@@ -148,6 +148,19 @@ function rispondeAllaCartina(come) {
   return { prendi, chiamate };
 }
 
+/* Quello che l'add-on scrive nei suoi log. C'e' roba che si dice **solo**
+ * li' — un avviso per chi apre i log dell'add-on — e senza questo non si
+ * poteva provare. */
+function unRegistro() {
+  const detto = { info: [], avvisi: [], errori: [] };
+  return {
+    detto,
+    info: (una) => detto.info.push(String(una)),
+    attenzione: (una) => detto.avvisi.push(String(una)),
+    errore: (una) => detto.errori.push(String(una)),
+  };
+}
+
 function banco({ plance: dentro, risorse, cartina } = {}) {
   const radice = mkdtempSync(join(tmpdir(), "plance-in-casa-"));
   /* La cartella della configurazione esiste, `www` no: e' come sta una casa
@@ -162,11 +175,13 @@ function banco({ plance: dentro, risorse, cartina } = {}) {
    * vera. Le prove di prima non cambiano di una riga. */
   const rete = cartina === undefined ? null : rispondeAllaCartina(cartina);
   if (rete) casa.doveStaLaPlancia = async () => "http://ha-finta:8123";
+  const registro = unRegistro();
   const in_casa = new PlanceInCasa({
     casa,
     plance,
     www,
     versione: "0.21.0",
+    registro,
     ...(rete ? { fetch: rete.prendi } : {}),
   });
   return {
@@ -176,6 +191,7 @@ function banco({ plance: dentro, risorse, cartina } = {}) {
     plance,
     casa,
     in_casa,
+    registro,
     rete,
     via: () => rmSync(radice, { recursive: true, force: true }),
   };
@@ -1018,6 +1034,80 @@ test("una casa senza roba di prima non si sente dire niente", async () => {
     const esito = await b.in_casa.sistema();
     assert.deepEqual(esito.plance_di_prima, []);
     assert.equal(b.casa.avvisi.size, 0);
+  } finally {
+    b.via();
+  }
+});
+
+test("l'add-on aggiornato lo dice, perche' una pagina gia' aperta gira ancora quella di prima", async () => {
+  /* Il difetto che si e' visto in una fotografia: la barra di Home Assistant
+   * sopra la plancia, dopo un aggiornamento che quella barra la toglie.
+   *
+   * L'indirizzo della cartina porta la versione dell'add-on proprio perche' il
+   * browser non si tenga quella di ieri. Ma l'elenco delle risorse Home
+   * Assistant lo legge **all'avvio della pagina**: su una pagina gia' aperta
+   * continua a girare la cartina di prima, e la correzione non arriva. Di
+   * questo caso non parlava nessuno — la console diceva che andava tutto bene.
+   *
+   * In elenco c'e' la cartina di una versione piu' vecchia di quella del
+   * banco: e' esattamente un add-on appena aggiornato. */
+  const b = banco({
+    risorse: [{ id: "r0", url: "/local/gdahome/plancia.js?v=0.20.0", type: "module" }],
+  });
+  try {
+    const esito = await b.in_casa.sistema();
+    assert.equal(esito.risorsa, "aggiornata");
+    assert.equal(esito.aggiornata, true);
+
+    /* Ma nella vista non si tocca niente: con la cartina di prima ancora in
+     * pagina `custom:gdahome-plancia` si risolve, e la plancia si apre.
+     * Metterci il foglietto vorrebbe dire cancellare una plancia che funziona
+     * a ogni aggiornamento dell'add-on. */
+    assert.equal(esito.manca, "");
+    assert.equal(esito.tessera_nella_vista, "custom:gdahome-plancia");
+
+    /* E la si dice anche nei log, che e' dove guarda chi non apre la console. */
+    assert.ok(
+      b.registro.detto.avvisi.some((una) => /F5/.test(una)),
+      "l'aggiornamento della cartina non e' finito nel registro",
+    );
+  } finally {
+    b.via();
+  }
+});
+
+test("la prima volta invece e' «aggiunta», e quella la vista la deve dire", async () => {
+  /* La differenza fra le due: alla prima dichiarazione la cartina in pagina non
+   * c'e' **per niente**, e la plancia uscirebbe con «Errore di configurazione».
+   * Li' il foglietto serve. Dopo un aggiornamento no. */
+  const b = banco();
+  try {
+    const esito = await b.in_casa.sistema();
+    assert.equal(esito.risorsa, "aggiunta");
+    assert.equal(esito.aggiornata, false);
+    assert.equal(esito.ricarica, true);
+    assert.equal(esito.manca, "ricarica");
+  } finally {
+    b.via();
+  }
+});
+
+test("una cartina gia' giusta non chiede niente a nessuno", async () => {
+  /* Il caso di tutti i giorni: l'add-on riparte, la cartina in elenco e' gia'
+   * la sua. Nessuna ricarica, nessun avviso — se no si chiederebbe un F5 a ogni
+   * riavvio dell'add-on, e un avviso che compare sempre non lo legge nessuno. */
+  const b = banco({ risorse: RISORSA_CE });
+  try {
+    const esito = await b.in_casa.sistema();
+    assert.equal(esito.risorsa, "c'era");
+    assert.equal(esito.aggiornata, false);
+    assert.equal(esito.ricarica, false);
+    assert.equal(esito.manca, "");
+    assert.equal(
+      b.registro.detto.avvisi.filter((una) => /F5/.test(una)).length,
+      0,
+      "ha chiesto un F5 senza motivo",
+    );
   } finally {
     b.via();
   }

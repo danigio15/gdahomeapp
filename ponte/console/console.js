@@ -902,6 +902,21 @@
    * dichiarare, la Plancia da creare. Quando non riescono, il ponte lo scrive
    * nel registro: cioe' in un posto dove nessuno guarda. Qui invece sta dove
    * si guarda, che e' accanto all'elenco. */
+  /* La versione scritta in fondo all'indirizzo della cartina: `?v=1.4.32.6`.
+   *
+   * Vuota se non c'e' — un indirizzo scritto a mano, una cartina registrata da
+   * una versione che non la metteva — e allora non si dice niente invece di
+   * dire una cosa sbagliata. */
+  function laVersioneDellaCartina(indirizzo) {
+    const pezzi = /[?&]v=([^&]+)/.exec(String(indirizzo || ""));
+    if (!pezzi) return "";
+    try {
+      return decodeURIComponent(pezzi[1]);
+    } catch (_errore) {
+      return pezzi[1];
+    }
+  }
+
   function comeVannoLePlanceInCasa(esito) {
     if (!esito)
       return due(
@@ -966,13 +981,43 @@
         " Reload the Home Assistant page: the panel file has just been declared," +
           " and the browser picks it up on the next round.",
       );
+    } else if (esito.aggiornata) {
+      /* La riga che mancava, e si è vista: l'add-on aggiornato, la pagina no.
+       *
+       * L'elenco delle risorse Home Assistant lo legge all'avvio della pagina.
+       * Su una pagina già aperta continua a girare la cartina di prima, e
+       * qualunque correzione ci sia dentro quella nuova non arriva — mentre
+       * qui c'era scritto che andava tutto bene. */
+      riga += due(
+        " ⚠️ Ricarica questa pagina di Home Assistant (F5): la cartina della" +
+          " plancia è passata a questa versione, ma una pagina già aperta" +
+          " continua a far girare quella di prima — e le correzioni non si" +
+          " vedono. Si fa una volta per aggiornamento.",
+        " ⚠️ Reload this Home Assistant page (F5): the dashboard's panel file" +
+          " moved to this version, but an already open page keeps running the" +
+          " previous one — and the fixes don't show. Once per update.",
+      );
     }
     /* E cosa ne dice Home Assistant, riletto da lui: due fatti, non due
      * opinioni. Stanno sempre a schermo — anche quando va tutto bene — perche'
      * sono quelli che si guardano quando la plancia non si apre, e una riga
      * che compare solo nei guai e' una riga che nessuno sa dove cercare. */
-    if (esito.risorsa_in_elenco === true)
-      riga += due(" Lovelace ha la cartina in elenco.", " Lovelace lists the panel file.");
+    if (esito.risorsa_in_elenco === true) {
+      /* **Quale** cartina, non solo «ce l'ha».
+       *
+       * L'indirizzo porta la versione dell'add-on, e cambia a ogni
+       * aggiornamento proprio perche' il browser vada a riprendere il file. Ma
+       * l'elenco delle risorse Home Assistant lo legge all'avvio della pagina:
+       * finche' non si ricarica, la pagina fa girare la cartina di prima anche
+       * se in elenco c'e' gia' quella nuova. Erano due cose diverse che si
+       * leggevano uguali, e chi guardava una correzione che non arrivava non
+       * aveva modo di sapere se mancava l'aggiornamento o solo un F5. */
+      const quale = laVersioneDellaCartina(esito.cartina_in_elenco);
+      riga += due(
+        " Lovelace ha la cartina in elenco" + (quale ? " (" + quale + ")" : "") + ".",
+        " Lovelace lists the panel file" + (quale ? " (" + quale + ")" : "") + ".",
+      );
+    }
     if (esito.risorsa_in_elenco === false)
       riga += due(
         " ⚠️ Lovelace non ha la cartina in elenco.",

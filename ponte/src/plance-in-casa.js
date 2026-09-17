@@ -367,6 +367,24 @@ export class PlanceInCasa {
       manca,
       riavvia: this.riavvia,
       ricarica: risorsa === "aggiunta",
+      /* La cartina e' cambiata: l'add-on si e' aggiornato.
+       *
+       * Questo caso non lo diceva nessuno, e si e' visto. L'indirizzo della
+       * cartina porta la versione (`?v=1.4.32.6`) proprio perche' il browser
+       * non si tenga quella di ieri — ma l'elenco delle risorse Home Assistant
+       * lo legge **all'avvio della pagina**: su una pagina gia' aperta continua
+       * a girare la cartina di prima, e qualunque correzione ci sia dentro
+       * quella nuova non arriva.
+       *
+       * «Continua a uscire la barra» era questo: l'add-on aggiornato, la
+       * pagina no, e la console che diceva che andava tutto bene.
+       *
+       * Nella vista **non** si tocca niente, e non e' una dimenticanza: con la
+       * cartina di prima ancora in pagina `custom:gdahome-plancia` si risolve
+       * eccome, e la plancia si apre. Metterci il foglietto vorrebbe dire
+       * cancellare una plancia che funziona a ogni aggiornamento. Si dice, e
+       * basta. */
+      aggiornata: risorsa === "aggiornata",
       /* Com'e' andata a dichiararla: `aggiunta`, `c'era`, `aggiornata`, o
        * niente e allora `risorsa_guaio` dice cosa ha risposto Lovelace. */
       risorsa,
@@ -383,6 +401,14 @@ export class PlanceInCasa {
       this.registro.attenzione(
         "la cartella www di Home Assistant non c'era e l'ho fatta io: " +
           "Home Assistant va riavviato una volta, se no i file dentro /local/ non li serve",
+      );
+    }
+    if (risorsa === "aggiornata") {
+      this.registro.attenzione(
+        "la cartina della plancia e' passata alla " +
+          (this.versione || "versione nuova") +
+          ": chi ha una pagina di Home Assistant gia' aperta deve ricaricarla " +
+          "(F5), se no continua a girare quella di prima",
       );
     }
     if (servita === false) {
@@ -909,6 +935,19 @@ export class PlanceInCasa {
   async controlla() {
     const come = {
       risorsa_in_elenco: null,
+      /* **Quale** cartina ha in elenco, non solo se ce l'ha.
+       *
+       * L'indirizzo porta la versione dell'add-on (`?v=1.4.32.6`), e serve
+       * proprio a questo: cambia la versione, cambia l'indirizzo, e il browser
+       * va a riprendere il file invece di tenersi quello di ieri. Ma l'elenco
+       * delle risorse Home Assistant lo legge **all'avvio della pagina**:
+       * finche' non si ricarica, la pagina continua a far girare la cartina di
+       * prima anche se in elenco c'e' gia' quella nuova.
+       *
+       * Sapere «ce l'ha» non bastava a distinguere le due cose, e chi guardava
+       * una correzione che non si vedeva non aveva modo di sapere se mancava
+       * l'aggiornamento o solo un F5. Adesso c'e' scritto. */
+      cartina_in_elenco: "",
       tessera_nella_vista: "",
       altre_plance: [],
       /* Quelle dell'integrazione di prima, separate: e' la sola cosa che la
@@ -943,9 +982,9 @@ export class PlanceInCasa {
     try {
       const dentro = await this.casa.chiedi({ type: "lovelace/resources" });
       const elenco = Array.isArray(dentro) ? dentro : [];
-      come.risorsa_in_elenco = elenco.some((una) =>
-        String(una?.url || "").startsWith(`/local/${CARTELLA}/`),
-      );
+      const nostra = elenco.find((una) => String(una?.url || "").startsWith(`/local/${CARTELLA}/`));
+      come.risorsa_in_elenco = Boolean(nostra);
+      come.cartina_in_elenco = nostra ? String(nostra.url || "") : "";
     } catch (_errore) {
       /* Se non si puo' chiedere resta `null`, che vuol dire «non lo so» ed e'
        * diverso da «no». */

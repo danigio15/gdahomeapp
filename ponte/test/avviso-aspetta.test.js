@@ -162,14 +162,26 @@ test("una casa senza niente vede l'avviso subito, non dopo dodici secondi", () =
   assert.equal(pagina.battiti, 0, "ha messo un battito che non serve a niente");
 });
 
-test("configurata ma davvero vuota: a configurazione arrivata l'avviso e' giusto", () => {
-  /* L'unico caso in cui si cede: la configurazione e' arrivata — quindi la
-   * risposta la sappiamo — ed e' vuota. Li' l'avviso dice la verita'. */
+test("una plancia di musica e apriporta non e' una plancia vuota", async () => {
+  /* Il caso che ha fatto uscire l'avviso su una casa configurata, e non c'entra
+   * il filo lento: le quattro domande che la plancia si fa guardano
+   * `ENTITY_OVERRIDES`, le stanze, le unita' clima e le luci. Una plancia con
+   * HOME, AUTO, MUSICA, APRI PORTE e CONFIG non ne riempie **nessuna** — e la
+   * plancia diceva «non hai ancora collegato le tue entita'» a chi le sezioni
+   * se le era fatte una per una.
+   *
+   * Il ponte le chiavi le conta tutte, non quattro. Quindi quando dice
+   * «configurata» l'avviso non compare, nemmeno a configurazione arrivata:
+   * fra le due risposte si tiene quella meglio informata. */
   const pagina = unaPagina({ configurata: true, pieno: false });
   pagina.batti(4);
   pagina.arrivata(false);
-  assert.equal(pagina.chiamato.svuota, 1);
-  assert.equal(pagina.ilPosto, null);
+  assert.equal(pagina.chiamato.svuota, 0, "ha detto «non hai collegato niente» a una casa piena");
+  assert.ok(pagina.ilPosto, "ha lasciato libero il posto dell'avviso");
+
+  /* E non ci ripensa nemmeno dopo, per quanto passi. */
+  pagina.batti(240);
+  assert.equal(pagina.chiamato.svuota, 0);
 });
 
 test("se nessuno lo dice resta l'orologio di prima, e non peggiora niente", () => {

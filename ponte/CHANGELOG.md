@@ -5,6 +5,43 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.7
+
+**Le correzioni non arrivavano, e nessuno lo diceva.**
+
+La 1.4.32.6 toglieva la barra di Home Assistant sopra la plancia. Chi ha
+aggiornato ha visto la barra ancora li', ed era vero: non era la correzione, era
+il modo in cui arriva.
+
+L'indirizzo della cartina porta la versione dell'add-on (`?v=1.4.32.7`) proprio
+perche' il browser non si tenga quella di ieri. Ma l'elenco delle risorse Home
+Assistant lo legge **all'avvio della pagina**: su una pagina di Home Assistant
+gia' aperta continua a girare la cartina di prima, e qualunque cosa ci sia
+dentro quella nuova non si vede. Serve una ricarica, una per aggiornamento — e
+di questo non parlava nessuno: la console diceva che andava tutto bene, e i log
+tacevano. Lo dicevamo solo la primissima volta, quando la cartina non c'era
+ancora.
+
+Adesso lo dicono la console — con la versione della cartina che Lovelace ha in
+elenco, accanto — e i log dell'add-on. Nella Plancia invece non si tocca niente:
+con la cartina di prima ancora in pagina la plancia si apre, e metterci un
+foglietto vorrebbe dire cancellare una plancia che funziona a ogni
+aggiornamento.
+
+**E «non hai ancora collegato le tue entita'» su una plancia configurata.**
+
+Due difetti diversi, e la 1.4.32.6 ne aveva curato uno solo. L'altro non c'entra
+il filo lento: le quattro domande che la plancia si fa per decidere se e' vuota
+guardano le entita', le stanze, le unita' clima e le luci. Una plancia fatta di
+`HOME`, `AUTO`, `MUSICA`, `APRI PORTE` e `CONFIG` non ne riempie **nessuna** — e
+la plancia diceva «non hai ancora collegato le tue entita'» a chi quelle sezioni
+se le era fatte una per una.
+
+Il ponte le chiavi le conta tutte, non quattro. Quindi quando il ponte dice
+«questa plancia e' configurata» l'avviso non compare piu', nemmeno a
+configurazione arrivata: fra le due risposte si tiene quella meglio informata. E
+su una casa che davvero non ha niente l'avviso compare subito, com'e' giusto.
+
 ## 1.4.32.6
 
 **La barra di Home Assistant sopra la plancia, e l'avviso che diceva una bugia.**

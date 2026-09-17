@@ -134,9 +134,12 @@ export function linguaPulita(detta) {
  *
  *  - `false` — questa casa non ha configurazione: il posto non si occupa
  *    nemmeno, e l'avviso compare subito invece che dopo dodici secondi.
- *  - `true` — ce l'ha: l'orologio non decide piu' niente. Si aspetta, e si
- *    cede solo a configurazione arrivata **e** vuota, che e' l'unico caso in
- *    cui l'avviso dice la verita'.
+ *  - `true` — ce l'ha, e allora l'avviso non compare **mai**. Nemmeno a
+ *    configurazione arrivata: le quattro domande che la plancia si fa guardano
+ *    entita', stanze, clima e luci, e una plancia fatta di musica e apriporta
+ *    non ne riempie nessuna — tutte e quattro vuote su una casa configurata
+ *    per bene. Il ponte le chiavi le conta tutte, ed e' la risposta meglio
+ *    informata delle due.
  *  - assente — un'app di ieri, una strada non prevista: resta l'orologio di
  *    prima, cosi' non peggiora niente.
  *
@@ -177,10 +180,10 @@ export const AVVISO_ASPETTA_LA_CONFIGURAZIONE =
   "var finito=false;" +
   "var battito=0;" +
   "var basta=function(){if(battito){clearInterval(battito);battito=0;}};" +
-  "var guarda=function(scaduto,saputo){" +
+  "var guarda=function(scaduto){" +
   "if(finito)return;" +
   "if(pieno()){finito=true;basta();togli(quello());return;}" +
-  "if(!saputo&&(configurata||!scaduto))return;" +
+  "if(configurata||!scaduto)return;" +
   "finito=true;basta();" +
   "togli(ilPosto());" +
   'try{if(typeof cdEmptyStateCheck==="function")cdEmptyStateCheck();}catch(male){}' +
@@ -191,11 +194,11 @@ export const AVVISO_ASPETTA_LA_CONFIGURAZIONE =
   "var fine=Date.now()+FINO_A;" +
   "var smetto=Date.now()+GUARDO_FINO_A;" +
   "battito=setInterval(function(){" +
-  "guarda(Date.now()>=fine,false);" +
+  "guarda(Date.now()>=fine);" +
   "if(!finito&&Date.now()>=smetto)basta();" +
   "},OGNI);" +
   'window.addEventListener("dashboardmodern:persistence-restored",function(){' +
-  "setTimeout(function(){guarda(true,true);},0);" +
+  "setTimeout(function(){guarda(true);},0);" +
   "});" +
   "};" +
   "if(document.body)parti();" +
