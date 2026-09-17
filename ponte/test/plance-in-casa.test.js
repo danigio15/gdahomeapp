@@ -181,6 +181,15 @@ function banco({ plance: dentro, risorse, cartina } = {}) {
   };
 }
 
+/* La risorsa gia' dichiarata, con l'indirizzo che il ponte le da'.
+ *
+ * Serve a mettere il banco nello **stato di regime**: la prima volta che
+ * l'add-on gira in una casa la dichiara lui, e in quel momento la pagina
+ * aperta quel modulo non l'ha caricato — quindi nella Plancia ci va il
+ * foglietto che dice di ricaricare, non la tessera. Le prove che guardano la
+ * vista vera partono da dopo. */
+const RISORSA_CE = [{ id: "r0", url: "/local/gdahome/plancia.js?v=0.21.0", type: "module" }];
+
 test("scrive un file solo, e sta sotto www/gdahome", async () => {
   const b = banco();
   try {
@@ -317,7 +326,7 @@ test("«solo amministratori» finisce sulla voce di Home Assistant, e nella cart
 });
 
 test("una Plancia per plancia, e la vista e' una pagina intera", async () => {
-  const b = banco();
+  const b = banco({ risorse: RISORSA_CE });
   try {
     b.plance.aggiungi("Casa al mare");
     await b.in_casa.sistema();
@@ -451,7 +460,7 @@ test("la prima plancia non si tocca, e non si tocca nemmeno la sua Plancia", asy
 });
 
 test("la vista non si riscrive se non e' cambiata", async () => {
-  const b = banco();
+  const b = banco({ risorse: RISORSA_CE });
   try {
     await b.in_casa.sistema();
     assert.equal(b.casa.dette.filter((una) => una.type === "lovelace/config/save").length, 1);
@@ -676,7 +685,7 @@ test("l'esito dice cosa ne pensa Home Assistant, riletto da lui", async () => {
    * lui** adesso — se la cartina e' nel suo elenco delle risorse, e che tessera
    * c'e' davvero nella Plancia. Sono i due fatti che mancavano a chi guarda una
    * plancia che esce con «Errore di configurazione». */
-  const b = banco();
+  const b = banco({ risorse: RISORSA_CE });
   try {
     const esito = await b.in_casa.sistema();
     assert.equal(esito.fatto, true);
@@ -842,16 +851,19 @@ test("la guardia ci ripensa da se': l'add-on non si riavvia insieme a Home Assis
   }
 });
 
-test("su un «non lo so» non si cambia la pagina di nessuno", async () => {
+test("su un «non lo so» non si manda nessuno a riavviare", async () => {
   /* Fuori da un add-on, o con Home Assistant che non risponde, la risposta e'
-   * `null` — e `null` non e' «no». Cambiare la pagina di chi ci abita per un
-   * dubbio nostro vorrebbe dire togliergli la plancia per farlo riavviare
-   * quando non ce n'era bisogno. */
+   * `null` — e `null` non e' «no». Dire a chi ci abita di riavviare Home
+   * Assistant per un dubbio nostro vorrebbe dire togliergli la plancia per
+   * niente. Quindi: niente foglietto del riavvio, e nessun avviso. */
   for (const come of ["zitto", undefined]) {
-    const b = banco(come === undefined ? {} : { cartina: come });
+    const b = banco(
+      come === undefined ? { risorse: RISORSA_CE } : { cartina: come, risorse: RISORSA_CE },
+    );
     try {
       const esito = await b.in_casa.sistema();
       assert.equal(esito.servita, null, `«${come}» doveva restare un non lo so`);
+      assert.equal(esito.manca, "", "un dubbio non e' un motivo per cambiare la pagina");
       assert.equal(
         b.casa.viste.get("gdahome-primary").views[0].cards[0].type,
         "custom:gdahome-plancia",
@@ -860,6 +872,48 @@ test("su un «non lo so» non si cambia la pagina di nessuno", async () => {
     } finally {
       b.via();
     }
+  }
+});
+
+test("la prima volta, nella Plancia ci va «ricarica la pagina» e non l'errore nudo", async () => {
+  /* E' il caso che mancava, ed e' il piu' frequente: la casa ha la cartella
+   * `www` da sempre — gliel'ha fatta HACS — quindi Home Assistant il file lo
+   * serve e il riavvio non serve a niente. Ma la risorsa Lovelace e' stata
+   * dichiarata **adesso**, e la pagina aperta in questo momento quel modulo non
+   * l'ha caricato: la tessera non esiste, e chi apre quella voce si prendeva
+   * «Errore di configurazione» nudo.
+   *
+   * E' lo stesso difetto che l'integrazione si e' sentita segnalare dieci
+   * volte, dall'altro lato: li' funzionava il pannello e cadeva la dashboard,
+   * qui funziona il tasto della console e cade la voce nella barra. */
+  const b = banco({ cartina: "si" });
+  try {
+    const esito = await b.in_casa.sistema();
+    assert.equal(esito.servita, true, "il file lo serve: non e' il caso del riavvio");
+    assert.equal(esito.manca, "ricarica");
+
+    const dentro = b.casa.viste.get("gdahome-primary");
+    assert.equal(dentro.views[0].cards[0].type, "markdown");
+    const testo = dentro.views[0].cards[0].content;
+    assert.match(testo, /ricarica questa pagina/);
+    assert.match(testo, /F5/);
+    assert.doesNotMatch(testo, /riavviato/, "riavviare qui non serve, e dirlo sarebbe sbagliato");
+    assert.match(testo, /reload this page/, "anche per chi non legge l'italiano");
+
+    /* Nessun avviso in Home Assistant per questo: una ricarica la fa chi
+     * guarda, nella pagina che ha davanti, e la campanella si accende per le
+     * cose che restano. */
+    assert.equal(b.casa.avvisi.size, 0);
+
+    /* Al giro dopo la risorsa c'era gia', e nella Plancia torna la tessera. */
+    const dopo = await b.in_casa.sistema();
+    assert.equal(dopo.manca, "");
+    assert.equal(
+      b.casa.viste.get("gdahome-primary").views[0].cards[0].type,
+      "custom:gdahome-plancia",
+    );
+  } finally {
+    b.via();
   }
 });
 

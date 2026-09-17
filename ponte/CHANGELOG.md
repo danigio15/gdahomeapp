@@ -5,6 +5,26 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.5
+
+**«Errore di configurazione»: il caso più frequente era ancora nudo.**
+
+La 1.4.32.2 metteva il foglietto che spiega **solo** quando Home Assistant non
+serve il file della tessera — cioè quando serve un riavvio. Ma nelle case che
+hanno HACS la cartella `www` c'è da sempre, quindi quel caso non scatta: lì
+manca **una ricarica della pagina**, perché la risorsa Lovelace è stata
+dichiarata adesso e una pagina già aperta i file nuovi non li va a prendere. E
+in quel caso compariva l'errore nudo.
+
+Adesso la Plancia lo dice, con le parole giuste: «ricarica questa pagina, o
+**F5**». E la tessera torna al suo posto da sé.
+
+È lo stesso difetto che l'integrazione DashboardModern si è sentita segnalare
+**dieci volte**, dall'altro lato: là funzionava il pannello e cadeva la
+dashboard, qui funziona il pulsante della console e cadeva la voce nella barra
+laterale. Le due strade non usano lo stesso pezzo di codice — una si carica da
+sé, l'altra ha bisogno che il suo modulo sia arrivato alla pagina.
+
 ## 1.4.32.4
 
 **«Errore di configurazione»: adesso l'add-on dice quale dei casi è.** Erano

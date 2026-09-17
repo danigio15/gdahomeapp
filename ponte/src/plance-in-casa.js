@@ -311,11 +311,16 @@ export class PlanceInCasa {
      * configurazione». */
     const servita = await this.laServe();
 
+    /* E **quale** dei due passaggi manca, se ne manca uno. L'ordine conta: il
+     * riavvio viene prima, perche' se Home Assistant non serve il file una
+     * ricarica non lo fa comparire. */
+    const manca = servita === false ? "riavvio" : risorsa === "aggiunta" ? "ricarica" : "";
+
     const quali = this.plance.elenco();
     let fatte = 0;
     for (const una of quali) {
       try {
-        await this.unaPlancia(una, io, servita);
+        await this.unaPlancia(una, io, manca);
         fatte += 1;
       } catch (errore) {
         guai.push(`«${una.titolo}» non si e' messa fra le Plance (${errore?.message || errore})`);
@@ -357,6 +362,9 @@ export class PlanceInCasa {
        * dettaglio: e' la differenza fra «non so perche' non si apre» e «non si
        * apre per questo». */
       servita,
+      /* Quale foglietto sta nella Plancia adesso, se ce n'e' uno: la console lo
+       * dice, perche' e' quello che stanno guardando gli altri. */
+      manca,
       riavvia: this.riavvia,
       ricarica: risorsa === "aggiunta",
       /* Com'e' andata a dichiararla: `aggiunta`, `c'era`, `aggiornata`, o
@@ -568,11 +576,27 @@ export class PlanceInCasa {
   sorveglia(ogni = 5 * 60_000) {
     if (this._guardia) return this._guardia;
     const giro = async () => {
-      if (this.esito?.servita !== false) return this.smettiDiSorvegliare();
-      if ((await this.laServe()) !== true) return undefined;
-      this.registro.info("Home Assistant serve la cartina: rimetto la plancia nelle Plance");
+      /* Due motivi per stare di guardia, e si spengono in due modi diversi.
+       *
+       * `riavvio`: si aspetta che Home Assistant riparta e serva il file, e lo
+       * si chiede a lui — una richiesta ogni cinque minuti, e appena risponde
+       * si rimette la plancia.
+       *
+       * `ricarica`: la ricarica la fa chi guarda, nel suo browser, e da qui non
+       * si puo' sapere se l'ha fatta. Quindi non si aspetta niente: si rifa la
+       * vista vera al primo giro, e il foglietto resta il tempo che serve a
+       * leggerlo. Se non ha ancora ricaricato, la pagina gli esce vuota per un
+       * momento e la ricarica gliela chiede il browser da se'. */
+      const perche = this.esito?.manca || "";
+      if (!perche) return this.smettiDiSorvegliare();
+      if (perche === "riavvio" && (await this.laServe()) !== true) return undefined;
+      this.registro.info(
+        perche === "riavvio"
+          ? "Home Assistant serve la cartina: rimetto la plancia nelle Plance"
+          : "la cartina e' dichiarata da un po': rimetto la plancia nelle Plance",
+      );
       await this.sistema();
-      if (this.esito?.servita === true) this.smettiDiSorvegliare();
+      if (!this.esito?.manca) this.smettiDiSorvegliare();
       return undefined;
     };
     this._guardia = setInterval(() => void giro(), ogni);
@@ -668,7 +692,7 @@ export class PlanceInCasa {
    * risparmiare una chiamata: aggiornare una Plancia manda un avviso a tutte
    * le pagine aperte di Home Assistant, e riscrivere la stessa cosa a ogni
    * accensione dell'add-on le farebbe lampeggiare per niente. */
-  async unaPlancia(quale, io = null, servita = null) {
+  async unaPlancia(quale, io = null, manca = "") {
     const dove = indirizzoDi(quale);
     const soloAdmin = quale.solo_admin === true;
     const dentro = await this.casa.chiedi({ type: "lovelace/dashboards/list" });
@@ -694,7 +718,7 @@ export class PlanceInCasa {
         require_admin: soloAdmin,
       });
     }
-    await this.laVista(dove, this.vista(quale, io, servita));
+    await this.laVista(dove, this.vista(quale, io, manca));
     return sua;
   }
 
@@ -730,14 +754,26 @@ export class PlanceInCasa {
    * tessera in mezzo ad altre, e dentro una colonna larga quattrocento punti
    * sarebbe illeggibile.
    *
-   * `servita` e' cosa ha risposto Home Assistant quando gli si e' chiesta la
-   * cartina. Se ha detto **no** si scrive un'altra vista — quella che spiega —
-   * perche' quella vera li' non si aprirebbe, e non aprirsi dicendo «Errore di
-   * configurazione» e' la cosa peggiore che questa pagina possa fare. Su un
-   * «non lo so» non si cambia niente: si scrive quella vera, com'e' sempre
-   * stato. */
-  vista(quale, io = null, servita = null) {
-    if (servita === false) return this.vistaDelRiavvio(quale);
+   * `manca` dice **quale** dei due passaggi manca, e sono due perche' i modi di
+   * non vedere la plancia sono due:
+   *
+   *  - `riavvio`: Home Assistant non serve il file della tessera, perche' la
+   *    cartella `www` l'abbiamo fatta noi e lui la apre solo all'avvio;
+   *  - `ricarica`: il file lo serve, ma la risorsa Lovelace e' stata dichiarata
+   *    **adesso** — la pagina aperta in questo momento quel modulo non l'ha
+   *    caricato, e lo caricherebbe al giro dopo.
+   *
+   * Il secondo e' quello che mancava, ed e' il piu' frequente: nelle case che
+   * hanno HACS la cartella `www` c'e' da sempre, quindi il riavvio non serve e
+   * il primo caso non scatta — e chi apriva quella voce si prendeva «Errore di
+   * configurazione» nudo, che di motivi non ne da' nessuno. E' lo stesso
+   * difetto che l'integrazione si e' sentita segnalare dieci volte.
+   *
+   * Vuoto vuol dire «per quanto ne sappiamo si apre»: si scrive quella vera,
+   * com'e' sempre stato. Su un dubbio nostro non si toglie la plancia a chi ce
+   * l'ha davanti. */
+  vista(quale, io = null, manca = "") {
+    if (manca) return this.vistaCheSpiega(quale, manca);
     return {
       views: [
         {
@@ -793,7 +829,8 @@ export class PlanceInCasa {
    * In due lingue perche' questa e' la pagina che vede chi non ci ha mai
    * messo mano, e indovinare la lingua di casa per sbagliarla vorrebbe dire
    * una pagina che non si apre **e** non si capisce. */
-  vistaDelRiavvio(quale) {
+  vistaCheSpiega(quale, manca = "riavvio") {
+    const eIlRiavvio = manca !== "ricarica";
     return {
       views: [
         {
@@ -802,31 +839,57 @@ export class PlanceInCasa {
           cards: [
             {
               type: "markdown",
-              content: [
-                `## ${quale.titolo}`,
-                "",
-                "Manca un passaggio solo, e si fa una volta: **Home Assistant va riavviato.**",
-                "",
-                "Impostazioni → Sistema → in alto a destra → **Riavvia Home Assistant**.",
-                "",
-                "Il file che disegna questa pagina sta nella cartella `www` della",
-                "configurazione, e Home Assistant apre quella cartella soltanto quando",
-                "parte. In questa casa non c\u2019era: l\u2019ha fatta gdahome adesso, e",
-                "finch\u00e9 Home Assistant non riparte quel file non lo serve a nessuno.",
-                "",
-                "Dopo il riavvio questa pagina diventa la plancia da s\u00e9. Se hai gi\u00e0",
-                "riavviato e leggi ancora questo, ricarica la pagina una volta.",
-                "",
-                "---",
-                "",
-                "**One step left, once:** Home Assistant needs a restart.",
-                "Settings → System → top right → **Restart Home Assistant**.",
-                "",
-                "The file that draws this page lives in the `www` folder of your",
-                "configuration, and Home Assistant only opens that folder at startup.",
-                "This home did not have it: gdahome just created it. After the restart",
-                "this page becomes the dashboard by itself.",
-              ].join("\n"),
+              content: (eIlRiavvio
+                ? [
+                    `## ${quale.titolo}`,
+                    "",
+                    "Manca un passaggio solo, e si fa una volta: **Home Assistant va riavviato.**",
+                    "",
+                    "Impostazioni → Sistema → in alto a destra → **Riavvia Home Assistant**.",
+                    "",
+                    "Il file che disegna questa pagina sta nella cartella `www` della",
+                    "configurazione, e Home Assistant apre quella cartella soltanto quando",
+                    "parte. In questa casa non c\u2019era: l\u2019ha fatta gdahome adesso, e",
+                    "finch\u00e9 Home Assistant non riparte quel file non lo serve a nessuno.",
+                    "",
+                    "Dopo il riavvio questa pagina diventa la plancia da s\u00e9. Se hai gi\u00e0",
+                    "riavviato e leggi ancora questo, ricarica la pagina una volta.",
+                    "",
+                    "---",
+                    "",
+                    "**One step left, once:** Home Assistant needs a restart.",
+                    "Settings → System → top right → **Restart Home Assistant**.",
+                    "",
+                    "The file that draws this page lives in the `www` folder of your",
+                    "configuration, and Home Assistant only opens that folder at startup.",
+                    "This home did not have it: gdahome just created it. After the restart",
+                    "this page becomes the dashboard by itself.",
+                  ]
+                : [
+                    `## ${quale.titolo}`,
+                    "",
+                    "Manca un passaggio solo, e si fa una volta: **ricarica questa pagina.**",
+                    "",
+                    "Il tasto di ricarica del browser, o **F5**. Poi riapri questa voce.",
+                    "",
+                    "Il file che disegna questa pagina \u00e8 stato appena dichiarato a Home",
+                    "Assistant, e una pagina gi\u00e0 aperta i file nuovi non li va a prendere:",
+                    "li prende quando riparte. \u00c8 una regola dei browser, non nostra.",
+                    "",
+                    "Dopo la ricarica questa pagina \u00e8 la plancia. Se la riapri e leggi",
+                    "ancora questo, vuol dire che la ricarica non \u00e8 andata a fondo: tieni",
+                    "premuto il tasto di ricarica e scegli di svuotare la cache.",
+                    "",
+                    "---",
+                    "",
+                    "**One step left, once:** reload this page (**F5**), then open this entry",
+                    "again.",
+                    "",
+                    "The file that draws this page has just been declared to Home Assistant,",
+                    "and a page that is already open does not go and fetch new files: it picks",
+                    "them up when it restarts. After the reload this page is the dashboard.",
+                  ]
+              ).join("\n"),
             },
           ],
         },

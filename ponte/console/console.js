@@ -1019,12 +1019,22 @@
      * al posto della plancia: è la cosa da sapere per prima, perché è quella
      * che stanno guardando gli altri. */
     if (esito.tessera_nella_vista === "markdown")
-      riga += due(
-        " Chi la apre adesso legge il foglietto che dice di riavviare, non la plancia:" +
-          " ci torna da sé appena Home Assistant serve la cartina.",
-        " Whoever opens it now reads the note telling them to restart, not the dashboard:" +
-          " it goes back by itself as soon as Home Assistant serves the panel file.",
-      );
+      riga +=
+        esito.manca === "ricarica"
+          ? due(
+              " Chi la apre adesso legge il foglietto che dice di ricaricare la pagina, non la" +
+                " plancia: la cartina è stata dichiarata adesso, e una pagina già aperta i file" +
+                " nuovi li prende quando riparte. Torna la plancia da sé.",
+              " Whoever opens it now reads the note telling them to reload the page, not the" +
+                " dashboard: the panel file has just been declared, and a page that is already" +
+                " open picks up new files when it restarts. It goes back by itself.",
+            )
+          : due(
+              " Chi la apre adesso legge il foglietto che dice di riavviare, non la plancia:" +
+                " ci torna da sé appena Home Assistant serve la cartina.",
+              " Whoever opens it now reads the note telling them to restart, not the dashboard:" +
+                " it goes back by itself as soon as Home Assistant serves the panel file.",
+            );
     return riga;
   }
 
