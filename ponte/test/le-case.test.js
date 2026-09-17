@@ -152,6 +152,27 @@ test("un gettone senza il permesso giusto dice quale permesso manca", async () =
   }
 });
 
+test("un gettone che GitHub non accetta lo dice, e non parla di permessi", async () => {
+  /* 401 non e' 403. La prima volta che questa corsa e' fallita diceva «GitHub
+   * ha risposto 401» e basta, e si e' andati a cercare un permesso che non
+   * c'entrava niente: il gettone non era nemmeno stato accettato. */
+  await assert.rejects(
+    () =>
+      conta({
+        cartella: join(tmpdir(), "non-ci-arriva"),
+        gettone: "scaduto",
+        prendi: async () => ({ ok: false, status: 401, json: async () => ({}) }),
+      }),
+    (errore) => {
+      assert.match(errore.message, /non ha accettato il gettone \(401\)/);
+      assert.match(errore.message, /GETTONE_CONTI/);
+      /* E **non** deve mandare a cercare un permesso. */
+      assert.doesNotMatch(errore.message, /Administration/);
+      return true;
+    },
+  );
+});
+
 test("senza gettone non si finge di aver contato", async () => {
   await assert.rejects(
     () => conta({ cartella: join(tmpdir(), "niente"), gettone: "" }),

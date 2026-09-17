@@ -163,6 +163,23 @@ async function ilTraffico(repository, gettone, prendi = globalThis.fetch) {
       "x-github-api-version": "2022-11-28",
     },
   });
+  /* Il 401 e' un'altra cosa, e confonderlo col permesso costa un pomeriggio.
+   *
+   * 403 e 404 vogliono dire «questa credenziale non puo' leggere il
+   * traffico»: e' un permesso che manca. **401 vuol dire che GitHub la
+   * credenziale non l'ha nemmeno accettata** — scaduta, revocata, o con un
+   * ritorno a capo dentro il segreto, che e' il classico del copia-incolla.
+   * Cercare un permesso quando il gettone non vale e' cercare dalla parte
+   * sbagliata, e la prima volta e' andata proprio cosi': «GitHub ha risposto
+   * 401» e via a guardare i permessi. */
+  if (risposta.status === 401) {
+    throw new Error(
+      "GitHub non ha accettato il gettone (401). Non e' un permesso che manca: " +
+        "quel gettone e' scaduto, revocato, o nel segreto c'e' dentro uno spazio " +
+        "o un ritorno a capo. Se esiste `GETTONE_CONTI` vince lui su " +
+        "`GETTONE_SEGNALAZIONI`, quindi guarda prima quello.",
+    );
+  }
   if (risposta.status === 403 || risposta.status === 404) {
     /* Le due risposte che riceve un gettone che non puo' leggere il traffico.
      * Non e' un guasto: e' un permesso che manca, e va detto con quelle
