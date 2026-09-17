@@ -344,3 +344,242 @@ test("l'app si apre anche dall'indirizzo del tramite, sotto /app/", () => {
     "il tramite non e' dentro un handle suo",
   );
 });
+
+/* ─── `tramite-gettone`, fatto girare per davvero ──────────────────────────
+ *
+ * Gli altri pezzi scritti dallo script si guardano e basta: vogliono root,
+ * systemd, e una macchina. Questo no — questo si puo' **far girare**, e allora
+ * si fa girare, perche' e' quello che tocca l'unico file di segreti della
+ * macchina e riavvia il servizio.
+ *
+ * Il banco gli mette intorno tre bugie e nient'altro: un `curl` che risponde
+ * quello che gli si dice, un `systemctl` che scrive su un foglio invece di
+ * riavviare, un `journalctl` che racconta. E una liberta' sola, questa:
+ * `AMBIENTE=/etc/tramite/ambiente` diventa un file nella cartella della prova
+ * — se un giorno quella riga cambiasse forma, la prova lo dice invece di
+ * provare qualcos'altro.
+ *
+ * Quello che tiene ferme queste prove, in ordine di quanto costa sbagliarlo:
+ *
+ *  1. **il gettone non passa mai dagli argomenti di `curl`**. Il `curl` finto
+ *     muore se lo vede, ed e' la stessa regola che al livello di sopra guarda
+ *     il sorgente: `ps` la legge chiunque sia sulla macchina;
+ *  2. **il gettone non si stampa**, nemmeno un pezzo;
+ *  3. **un gettone che GitHub rifiuta non si scrive**: quello di prima,
+ *     qualunque sia, funziona meglio di uno che non va;
+ *  4. il file resta a 600.
+ */
+
+function ilGettone() {
+  const pezzo = pezziScritti().find((uno) => uno.dove.endsWith("tramite-gettone"));
+  assert.ok(pezzo, "lo script `tramite-gettone` non c'e' piu'");
+  const riga = "AMBIENTE=/etc/tramite/ambiente";
+  assert.ok(
+    pezzo.testo.includes(`\n${riga}\n`),
+    "«tramite-gettone» non tiene piu' il file dei segreti in una riga sua: questa prova va rifatta",
+  );
+  return pezzo.testo.replace(`\n${riga}\n`, '\nAMBIENTE="${AMBIENTE_DI_PROVA:?}"\n');
+}
+
+/* Un gettone a grana fine ha questa forma: `github_pat_` e altri 82. */
+const MEZZO = `${"A".repeat(22)}_${"B".repeat(59)}`;
+const INTERO = `github_pat_${MEZZO}`;
+
+const AMBIENTE_DI_PROVA = [
+  "CENTRALINO_PORTA=8099",
+  "CHIAVE_CONSOLE=unachiavequalunquelunga",
+  `GITHUB_SEGNALAZIONI=${INTERO}`,
+  "GITHUB_REPO=danigio15/gdahomeapp",
+  "GITHUB_REPO_ALLEGATI=danigio15/gdahome-allegati",
+  "",
+].join("\n");
+
+function unBanco() {
+  const cartella = mkdtempSync(join(tmpdir(), "gettone-"));
+  const bin = join(cartella, "bin");
+  execFileSync("mkdir", ["-p", bin]);
+
+  const dove = join(cartella, "tramite-gettone");
+  writeFileSync(dove, ilGettone(), { mode: 0o700 });
+  writeFileSync(join(cartella, "ambiente"), AMBIENTE_DI_PROVA, { mode: 0o600 });
+
+  writeFileSync(join(bin, "systemctl"), '#!/bin/sh\necho "$*" >>"$RACCONTO"\n', { mode: 0o755 });
+  writeFileSync(
+    join(bin, "journalctl"),
+    '#!/bin/sh\necho "set 17 tramite[1]: le segnalazioni finiscono su danigio15/gdahomeapp"\n',
+    { mode: 0o755 },
+  );
+  /* Il `curl` finto. Se il gettone gli arriva fra gli argomenti, muore: e'
+   * quello che non deve succedere mai. */
+  writeFileSync(
+    join(bin, "curl"),
+    [
+      "#!/bin/sh",
+      'for a in "$@"; do',
+      '  case "$a" in *Bearer*) echo "IL GETTONE ERA FRA GLI ARGOMENTI" >&2; exit 9;; esac',
+      "done",
+      'case " $* " in',
+      '  *"/issues?"*) printf "%s" "${RISPOSTA:-200}" ;;',
+      '  *) [ "${PUO_SCRIVERE:-si}" = si ] && echo \'{"push": true}\' || echo \'{"push": false}\' ;;',
+      "esac",
+    ].join("\n"),
+    { mode: 0o755 },
+  );
+
+  const ambiente = join(cartella, "ambiente");
+  const racconto = join(cartella, "racconto");
+  return {
+    cartella,
+    ambiente,
+    gettoneNelFile: () =>
+      (readFileSync(ambiente, "utf8").match(/^GITHUB_SEGNALAZIONI=(.*)$/m) || [])[1],
+    haRiavviato: () => {
+      try {
+        return readFileSync(racconto, "utf8").includes("restart tramite");
+      } catch (_errore) {
+        return false;
+      }
+    },
+    modoDelFile: () => execFileSync("stat", ["-c", "%a", ambiente], { encoding: "utf8" }).trim(),
+    lancia: (detti = [], { dentro = "", ...ambienti } = {}) =>
+      execFileSync(dove, detti, {
+        encoding: "utf8",
+        input: dentro,
+        env: {
+          ...process.env,
+          PATH: `${bin}:${process.env.PATH}`,
+          AMBIENTE_DI_PROVA: ambiente,
+          RACCONTO: racconto,
+          ...ambienti,
+        },
+      }),
+    via: () => rmSync(cartella, { recursive: true, force: true }),
+  };
+}
+
+test("`tramite-gettone` dice come sta, e non dice il gettone", () => {
+  const banco = unBanco();
+  try {
+    const detto = banco.lancia();
+    assert.match(detto, /danigio15\/gdahomeapp/, "non dice dove vanno le segnalazioni");
+    assert.match(detto, /93 caratteri, comincia con github_pat_/);
+    assert.match(detto, /GitHub lo accetta/);
+    /* E la cosa che conta: il gettone non c'e' dentro, nemmeno un pezzo. */
+    assert.ok(!detto.includes(INTERO), "ha stampato il gettone");
+    assert.ok(!detto.includes(MEZZO), "ha stampato un pezzo del gettone");
+    assert.ok(!detto.includes("A".repeat(12)), "ha stampato un pezzo del gettone");
+  } finally {
+    banco.via();
+  }
+});
+
+test("e quando GitHub lo rifiuta dice **perche'**, dove si puo' fare qualcosa", () => {
+  const banco = unBanco();
+  try {
+    for (const [risposta, cosa] of [
+      ["401", /scaduto|revocato/],
+      ["403", /Issues deve essere/],
+      ["404", /Repository access/],
+      ["000", /non ci arriva adesso/],
+    ]) {
+      const detto = banco.lancia([], { RISPOSTA: risposta });
+      assert.match(detto, /GitHub NON lo accetta/, risposta);
+      assert.match(detto, cosa, risposta);
+    }
+  } finally {
+    banco.via();
+  }
+});
+
+test("un gettone nuovo si prova **prima** di metterlo", () => {
+  const banco = unBanco();
+  try {
+    const nuovo = `github_pat_${"C".repeat(22)}_${"D".repeat(59)}`;
+    const detto = banco.lancia(["--metti"], { dentro: `${nuovo}\n` });
+    assert.match(detto, /GitHub lo accetta, ed e' sulla macchina/);
+    assert.equal(banco.gettoneNelFile(), nuovo);
+    assert.ok(banco.haRiavviato(), "non ha riavviato il tramite");
+    assert.equal(banco.modoDelFile(), "600", "il file dei segreti non e' piu' chiuso");
+  } finally {
+    banco.via();
+  }
+});
+
+test("e se GitHub lo rifiuta, quello di prima resta dov'e'", () => {
+  /* La riga che conta di tutto lo script. Un gettone scaduto incollato sopra
+   * uno che funziona sarebbe le segnalazioni spente senza che nessuno lo
+   * sappia — e lo si scoprirebbe il giorno in cui qualcuno chiede aiuto. */
+  const banco = unBanco();
+  try {
+    assert.throws(() =>
+      banco.lancia(["--metti"], { dentro: "github_pat_unoqualunque\n", RISPOSTA: "401" }),
+    );
+    assert.equal(banco.gettoneNelFile(), INTERO, "ha scritto un gettone che non va");
+    assert.ok(!banco.haRiavviato(), "ha riavviato il tramite per niente");
+  } finally {
+    banco.via();
+  }
+});
+
+test("senza rete lo mette comunque: non poter chiedere non e' un no", () => {
+  const banco = unBanco();
+  try {
+    const nuovo = `github_pat_${"E".repeat(22)}_${"F".repeat(59)}`;
+    const detto = banco.lancia(["--metti"], { dentro: `${nuovo}\n`, RISPOSTA: "000" });
+    assert.match(detto, /senza averlo potuto provare/);
+    assert.equal(banco.gettoneNelFile(), nuovo);
+  } finally {
+    banco.via();
+  }
+});
+
+test("un gettone incollato male si raddrizza invece di essere rifiutato", () => {
+  const banco = unBanco();
+  try {
+    /* Spazi, a capo e virgolette intorno: un token incollato da un telefono. */
+    const conSporco = `  "${"G".repeat(22)}_${"H".repeat(59)}"  `;
+    const detto = banco.lancia(["--metti"], { dentro: `${conSporco}\n` });
+    assert.match(detto, /era senza «github_pat_» davanti: rimesso/);
+    assert.equal(banco.gettoneNelFile(), `github_pat_${"G".repeat(22)}_${"H".repeat(59)}`);
+  } finally {
+    banco.via();
+  }
+});
+
+test("e niente incollato non cambia niente", () => {
+  const banco = unBanco();
+  try {
+    assert.throws(() => banco.lancia(["--metti"], { dentro: "\n" }));
+    assert.equal(banco.gettoneNelFile(), INTERO);
+    assert.ok(!banco.haRiavviato());
+  } finally {
+    banco.via();
+  }
+});
+
+test("`--togli` spegne le segnalazioni, e il resto del tramite lavora", () => {
+  const banco = unBanco();
+  try {
+    banco.lancia(["--togli"]);
+    assert.equal(banco.gettoneNelFile(), "");
+    assert.ok(banco.haRiavviato());
+    assert.match(banco.lancia(), /gettone: non c'e'/);
+  } finally {
+    banco.via();
+  }
+});
+
+test("il gettone non si scrive dalla riga di comando, e lo dice", () => {
+  /* `ps` la legge chiunque sia sulla macchina. Un comando che accettasse il
+   * gettone come argomento sarebbe un comando che invita a farlo. */
+  const banco = unBanco();
+  try {
+    assert.throws(
+      () => banco.lancia([INTERO]),
+      (male) => /la riga di comando la legge chiunque/.test(String(male.stderr)),
+    );
+    assert.equal(banco.gettoneNelFile(), INTERO, "l'ha pure scritto");
+  } finally {
+    banco.via();
+  }
+});

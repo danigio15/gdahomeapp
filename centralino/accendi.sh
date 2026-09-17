@@ -790,6 +790,12 @@ cat <<FINE
       tramite-chiave --nuova    ne fa una nuova
       tramite-chiave <la tua>   mette quella che scegli tu
 
+  E il gettone con cui si aprono le segnalazioni su GitHub scade da se', un
+  giorno, senza dirlo a nessuno. Questo lo chiede a GitHub:
+
+      tramite-gettone           dice se lo accetta ancora
+      tramite-gettone --metti   ne mette uno nuovo, provandolo prima
+
 FINE
 
 # Tre cose sole sulla chiave della console: dirla, cambiarla, rifarla.
@@ -877,3 +883,234 @@ cat >/usr/local/bin/tramite-chiave-nuova <<'FINE'
 exec /usr/local/bin/tramite-chiave --nuova
 FINE
 chmod 700 /usr/local/bin/tramite-chiave-nuova
+# Il gettone delle segnalazioni: guardarlo, cambiarlo, spegnerlo.
+#
+# Prima si metteva una volta, quando si accendeva la macchina, e poi si
+# cambiava a mano dentro `ambiente` — con `sed`, che su un token e' un modo di
+# rompere il file. E soprattutto: non c'era modo di sapere se quel gettone
+# funzionava ancora. Un token a grana fine **scade**, e quando scade le
+# segnalazioni smettono di arrivare senza che nessuno dica niente.
+#
+# Questo lo chiede a GitHub, che e' l'unica risposta che conta.
+cat >/usr/local/bin/tramite-gettone <<'FINE'
+#!/usr/bin/env bash
+#
+# Il gettone con cui il tramite apre le segnalazioni su GitHub.
+#
+#   tramite-gettone             dice come sta: dove vanno le segnalazioni, e se
+#                               GitHub accetta ancora il gettone
+#   tramite-gettone --metti     lo chiede senza mostrarlo, lo prova, e lo mette
+#   tramite-gettone --togli     lo toglie: le segnalazioni si spengono
+#
+# Il gettone non si stampa mai, e non si scrive fra gli argomenti: la riga di
+# comando di un processo la legge chiunque sia sulla macchina, e questo gira da
+# root. Di lui si dice com'e' fatto — quanti caratteri, che inizio — e quello
+# che serve sapere davvero, cioe' se GitHub lo accetta.
+set -euo pipefail
+AMBIENTE=/etc/tramite/ambiente
+
+[ -r "$AMBIENTE" ] || {
+  echo "non trovo $AMBIENTE: il tramite e' installato su questa macchina?" >&2
+  exit 1
+}
+
+valore() { sed -n "s/^$1=//p" "$AMBIENTE" | head -1; }
+
+REPO="$(valore GITHUB_REPO)"
+ALLEGATI="$(valore GITHUB_REPO_ALLEGATI)"
+[ -n "$ALLEGATI" ] || ALLEGATI="$REPO"
+
+# Cosa dice GitHub di un gettone.
+#
+# Torna il codice, e «000» quando non si e' riusciti nemmeno a chiedere — che
+# e' una cosa diversa da un gettone che non va, e non va confusa con quella.
+#
+# Il gettone passa a curl in un file, non fra gli argomenti; `printf` e'
+# integrato nella shell, quindi nemmeno lui apre un processo che lo mostri.
+chiedi() {
+  detto="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 \
+    --config <(printf 'header = "Authorization: Bearer %s"\n' "$1") \
+    -H "Accept: application/vnd.github+json" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    "https://api.github.com/repos/$2/issues?per_page=1&state=all" 2>/dev/null || true)"
+  case "$detto" in
+    [1-9][0-9][0-9]) printf '%s' "$detto" ;;
+    *) printf '000' ;;
+  esac
+}
+
+# E se puo' scrivere i file dove vanno le foto e i video.
+#
+# Gli allegati non sono allegati di GitHub: si committano, e vogliono
+# «Contents: Read and write» su quella repository — che puo' essere un'altra.
+puo_scrivere() {
+  curl -sS --max-time 20 \
+    --config <(printf 'header = "Authorization: Bearer %s"\n' "$1") \
+    -H "Accept: application/vnd.github+json" \
+    "https://api.github.com/repos/$2" 2>/dev/null |
+    grep -qE '"push"[[:space:]]*:[[:space:]]*true'
+}
+
+# Com'e' fatto, senza dire com'e'.
+com_e() {
+  quanto=${#1}
+  case "$1" in
+    github_pat_*) printf "%s caratteri, comincia con github_pat_" "$quanto" ;;
+    ghp_*) printf "%s caratteri, comincia con ghp_ (e' un token di stile vecchio)" "$quanto" ;;
+    *) printf "%s caratteri, e NON comincia con github_pat_" "$quanto" ;;
+  esac
+}
+
+# Il perche' di un no, detto dove si puo' fare qualcosa.
+spiega() {
+  case "$1" in
+    401)
+      echo "      GitHub non lo riconosce: non e' un token valido, o e' scaduto, o e' stato revocato."
+      echo "      Uno nuovo si fa su GitHub, in Settings -> Developer settings ->"
+      echo "      Personal access tokens -> Fine-grained tokens. Ne serve uno con, su $REPO,"
+      echo "      «Issues: Read and write»; e su $ALLEGATI anche «Contents: Read and write»." ;;
+    403)
+      echo "      GitHub lo riconosce ma non gli lascia toccare le issue di $REPO."
+      echo "      Nel token, sotto «Repository permissions», Issues deve essere «Read and write»." ;;
+    404)
+      echo "      Il gettone non vede $REPO: in «Repository access» deve esserci proprio quella."
+      echo "      (O il nome nella riga GITHUB_REPO di $AMBIENTE non e' quello giusto.)" ;;
+    000)
+      echo "      Non si e' riusciti a chiedere a GitHub: la macchina non ci arriva adesso." ;;
+    *)
+      echo "      GitHub ha risposto $1, che non e' una risposta che ci si aspetta qui." ;;
+  esac
+}
+
+mettilo() {
+  tmp="$(mktemp)"
+  awk -v g="$1" '
+    /^GITHUB_SEGNALAZIONI=/ { print "GITHUB_SEGNALAZIONI=" g; fatto = 1; next }
+    { print }
+    END { if (!fatto) print "GITHUB_SEGNALAZIONI=" g }
+  ' "$AMBIENTE" >"$tmp"
+  chmod 600 "$tmp"
+  chown root:root "$tmp"
+  mv "$tmp" "$AMBIENTE"
+  systemctl restart tramite
+}
+
+# Quello che il tramite dice di se' appena riacceso: e' la conferma vera.
+cosa_dice() {
+  sleep 1
+  detto="$(journalctl -u tramite -n 40 --no-pager 2>/dev/null |
+    grep -i segnalazioni | tail -1 || true)"
+  if [ -n "$detto" ]; then
+    printf "      %s\n" "${detto#*]: }"
+  else
+    echo "      (il registro non lo dice ancora:  journalctl -u tramite -n 20 --no-pager)"
+  fi
+}
+
+case "${1:-}" in
+  "")
+    gettone="$(valore GITHUB_SEGNALAZIONI)"
+    printf "\n"
+    if [ -z "$REPO" ]; then
+      printf "  le segnalazioni non hanno una repository dove andare: manca la riga\n"
+      printf "  GITHUB_REPO in %s.\n\n" "$AMBIENTE"
+      exit 0
+    fi
+    printf "  le segnalazioni vanno in:   %s\n" "$REPO"
+    printf "  le foto e i video in:       %s\n" "$ALLEGATI"
+    if [ -z "$gettone" ]; then
+      printf "\n  gettone: non c'e'. Le segnalazioni sono spente, e lo sportello\n"
+      printf "  risponde che non sono configurate.\n\n"
+      printf "      tramite-gettone --metti    per metterlo\n\n"
+      exit 0
+    fi
+    printf "  gettone:                    %s\n\n" "$(com_e "$gettone")"
+    esito="$(chiedi "$gettone" "$REPO")"
+    if [ "$esito" = "200" ]; then
+      printf "  GitHub lo accetta, e gli lascia aprire le issue di %s.\n" "$REPO"
+      if puo_scrivere "$gettone" "$ALLEGATI"; then
+        printf "  E puo' scrivere i file di %s: gli allegati funzionano.\n\n" "$ALLEGATI"
+      else
+        printf "  Ma NON puo' scrivere i file di %s: le segnalazioni arrivano,\n" "$ALLEGATI"
+        printf "  le foto e i video allegati no.\n\n"
+      fi
+    else
+      printf "  GitHub NON lo accetta (%s).\n" "$esito"
+      spiega "$esito"
+      printf "\n      tramite-gettone --metti    per cambiarlo\n\n"
+    fi
+    ;;
+
+  --metti)
+    [ -n "$REPO" ] || {
+      echo "manca la riga GITHUB_REPO in $AMBIENTE: non si sa dove mandarle." >&2
+      exit 1
+    }
+    printf "\nSi incolla e si preme invio. Non si vede mentre si scrive, ed e' voluto.\n\n"
+    printf "  gettone: "
+    read -rs nuovo || true
+    printf "\n\n"
+    # Gli spazi e gli a capo intorno — o in mezzo, perche' un token incollato
+    # da un telefono puo' arrivare spezzato su due righe — non fanno parte del
+    # token, che e' una riga sola. Le virgolette nemmeno.
+    nuovo="$(printf '%s' "$nuovo" | tr -d '[:space:]"'"'"'')"
+    [ -n "$nuovo" ] || {
+      echo "non hai incollato niente: non cambio nulla." >&2
+      exit 1
+    }
+    # Un token a grana fine e' «github_pat_» piu' 82 caratteri, e nel copiarlo
+    # da un telefono capita di prendere solo la seconda parte.
+    if printf '%s' "$nuovo" | grep -qE '^[A-Za-z0-9]{22}_[A-Za-z0-9]{59}$'; then
+      echo "  (era senza «github_pat_» davanti: rimesso)"
+      nuovo="github_pat_${nuovo}"
+    fi
+    printf "  lo provo su GitHub, prima di metterlo...\n\n"
+    esito="$(chiedi "$nuovo" "$REPO")"
+    case "$esito" in
+      200)
+        mettilo "$nuovo"
+        printf "  fatto: GitHub lo accetta, ed e' sulla macchina.\n\n"
+        cosa_dice
+        if puo_scrivere "$nuovo" "$ALLEGATI"; then
+          printf "\n  E puo' scrivere i file di %s: anche gli allegati.\n\n" "$ALLEGATI"
+        else
+          printf "\n  Nota: non puo' scrivere i file di %s, quindi le foto e i video\n" "$ALLEGATI"
+          printf "  allegati non partiranno. Le segnalazioni si'.\n\n"
+        fi ;;
+      000)
+        # Non riuscire a chiedere non vuol dire che il gettone sia sbagliato.
+        # Si mette, e si dice di controllare dopo.
+        mettilo "$nuovo"
+        printf "  messo, ma senza averlo potuto provare: da qui GitHub non si raggiunge.\n"
+        printf "  Quando la rete torna:  tramite-gettone\n\n"
+        cosa_dice
+        printf "\n" ;;
+      *)
+        printf "  NON lo metto: quello di prima, qualunque sia, funziona meglio di uno\n"
+        printf "  che GitHub rifiuta.\n\n"
+        spiega "$esito"
+        printf "\n"
+        exit 1 ;;
+    esac
+    ;;
+
+  --togli)
+    mettilo ""
+    printf "\n  gettone togliato: le segnalazioni sono spente, e lo sportello risponde\n"
+    printf "  che non sono configurate. Il resto del tramite lavora come prima.\n\n"
+    cosa_dice
+    printf "\n"
+    ;;
+
+  -h | --aiuto | --help)
+    sed -n '3,8p' "$0" | sed 's/^# \{0,1\}//'
+    ;;
+
+  *)
+    echo "non conosco «$1». C'e' --metti, --togli, o niente per sapere come sta." >&2
+    echo "Il gettone non si scrive qui: la riga di comando la legge chiunque." >&2
+    exit 1
+    ;;
+esac
+FINE
+chmod 700 /usr/local/bin/tramite-gettone
