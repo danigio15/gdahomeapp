@@ -44,6 +44,16 @@ import { fileURLToPath } from "node:url";
 export const CARTELLA = "gdahome";
 export const NOME_DELLA_CARTA = "plancia.js";
 
+/* Come si chiama la tessera che la cartina registra. Sta qui in un posto solo
+ * perche' serve in tre: per scriverla nella vista, per riconoscerla quando si
+ * rilegge, e per sapere se la cartina che Home Assistant serve e' la nostra. */
+export const TESSERA = "gdahome-plancia";
+
+/* Il nome dell'avviso che si mette in Home Assistant quando la plancia non si
+ * puo' aprire. Uno solo, sempre quello: cosi' non se ne accumulano uno per
+ * avvio, e quando la cosa si sistema si sa quale levare. */
+export const AVVISO = "gdahome_riavvia_home_assistant";
+
 /* Come cominciano gli indirizzi delle Plance che fa il ponte. Serve a
  * riconoscere le proprie quando si fa pulizia: le altre non si toccano.
  *
@@ -99,6 +109,12 @@ export class PlanceInCasa {
      * provato: e' diverso da «e' andata male», e la console lo dice
      * diversamente. */
     this.esito = null;
+    /* Se l'avviso in Home Assistant l'abbiamo messo noi. Serve a levarlo:
+     * un avviso che resta appeso dopo che la cosa si e' sistemata e' un
+     * avviso che la prossima volta nessuno legge. */
+    this._avvisato = false;
+    /* La guardia che ricontrolla finche' la cartina non si scarica. */
+    this._guardia = null;
   }
 
   /* C'e' una cartella di Home Assistant dove scrivere?
@@ -130,6 +146,51 @@ export class PlanceInCasa {
   get indirizzoDellaCarta() {
     const quando = this.versione ? `?v=${encodeURIComponent(this.versione)}` : "";
     return `/local/${CARTELLA}/${NOME_DELLA_CARTA}${quando}`;
+  }
+
+  /* Home Assistant la serve davvero, quella cartina?
+   *
+   * Sul disco c'e': ce l'abbiamo scritta noi un momento fa. Ma `/local/` Home
+   * Assistant lo apre **all'avvio**, guardando se la cartella `www` c'e'; e in
+   * una casa che non l'aveva — cioe' quasi tutte — quella cartella l'abbiamo
+   * fatta noi adesso. Finche' Home Assistant non riparte, quell'indirizzo
+   * risponde «non c'e'», la tessera `custom:gdahome-plancia` non esiste in
+   * nessuna pagina, e la Plancia esce con «Errore di configurazione» e niente
+   * altro.
+   *
+   * Questa domanda la faceva **solo la console**, da dentro una pagina di Home
+   * Assistant — cioe' solo a chi andava a cercarla. Da qui si puo' fare uguale,
+   * perche' `/local/` non chiede nessuna chiave a nessuno: e' il motivo per cui
+   * in quella cartella non si mettono segreti. Farla qui vuol dire poterlo
+   * scrivere **nella pagina**, che e' il posto dove il difetto si vede.
+   *
+   * Non basta che risponda: si guarda che sia la cartina, e non la pagina di
+   * Home Assistant che risponde «va tutto bene» a qualunque indirizzo.
+   *
+   * `null` vuol dire «non lo so» — fuori da un add-on, o se non si riesce a
+   * chiedere — ed e' diverso da «no»: chi chiama le tiene separate, perche' su
+   * un «non lo so» non si cambia quello che chi ci abita ha davanti.
+   */
+  async laServe() {
+    if (typeof this.casa?.doveStaLaPlancia !== "function") return null;
+    if (typeof this.prendi !== "function") return null;
+    let dove = "";
+    try {
+      dove = String((await this.casa.doveStaLaPlancia()) || "").replace(/\/+$/, "");
+    } catch (_errore) {
+      return null;
+    }
+    if (!dove) return null;
+    try {
+      const risposta = await this.prendi(`${dove}${this.indirizzoDellaCarta}`, {
+        signal: AbortSignal.timeout(5_000),
+      });
+      if (risposta.status === 404) return false;
+      if (!risposta.ok) return null;
+      return String(await risposta.text()).includes(TESSERA);
+    } catch (_errore) {
+      return null;
+    }
   }
 
   /* Chi siamo, per il Supervisor: lo slug vero dell'add-on e da dove si
@@ -208,11 +269,17 @@ export class PlanceInCasa {
       guai.push(`la cartina non si e' dichiarata a Lovelace (${risorsaGuaio})`);
     }
 
+    /* E adesso la domanda che decide **cosa vede** chi apre quella voce: Home
+     * Assistant quella cartina la serve? Se no, la vista che si scrive e'
+     * un'altra — quella che spiega — invece di una che si apre con «Errore di
+     * configurazione». */
+    const servita = await this.laServe();
+
     const quali = this.plance.elenco();
     let fatte = 0;
     for (const una of quali) {
       try {
-        await this.unaPlancia(una, io);
+        await this.unaPlancia(una, io, servita);
         fatte += 1;
       } catch (errore) {
         guai.push(`«${una.titolo}» non si e' messa fra le Plance (${errore?.message || errore})`);
@@ -249,6 +316,11 @@ export class PlanceInCasa {
 
     const consigli = {
       ...come,
+      /* Cosa ha risposto Home Assistant alla cartina: `true`, `false`, o
+       * `null` se non si e' potuto chiedere. La console lo mostra, e non e' un
+       * dettaglio: e' la differenza fra «non so perche' non si apre» e «non si
+       * apre per questo». */
+      servita,
       riavvia: this.riavvia,
       ricarica: risorsa === "aggiunta",
       /* Com'e' andata a dichiararla: `aggiunta`, `c'era`, `aggiornata`, o
@@ -269,6 +341,13 @@ export class PlanceInCasa {
           "Home Assistant va riavviato una volta, se no i file dentro /local/ non li serve",
       );
     }
+    if (servita === false) {
+      this.registro.attenzione(
+        `Home Assistant non serve ancora ${this.indirizzoDellaCarta}: ` +
+          "nelle Plance c'e' il foglietto che dice di riavviare, non la plancia",
+      );
+    }
+    await this.loDiceAChiCiAbita(servita);
 
     if (guai.length) {
       const perche = guai.join("; ");
@@ -317,6 +396,95 @@ export class PlanceInCasa {
       if (dinuovo.fatto) return dinuovo;
     }
     return this.esito;
+  }
+
+  /* Lo dice a chi ci abita, dove lui guarda.
+   *
+   * Il registro e la scheda dell'add-on non bastano, e si e' visto: due
+   * persone hanno installato l'add-on, hanno aperto la voce nella barra
+   * laterale, hanno letto «Errore di configurazione» e sono andate a
+   * scriverlo su Facebook. Nessuna delle due aveva motivo di aprire il
+   * registro di un add-on — e avevano ragione loro.
+   *
+   * Gli avvisi di Home Assistant sono il posto giusto: la campanella nella
+   * barra laterale, che si accende da sola e che tutti sanno cos'e'. Con un
+   * `notification_id` nostro, cosi' non se ne accumulano e quando la cosa si
+   * sistema quello di prima si puo' levare.
+   *
+   * Non solleva: se l'avviso non parte — un permesso, una Home Assistant che
+   * sta ripartendo — resta tutto il resto, e questo e' il piu' in piu', non la
+   * strada. */
+  async loDiceAChiCiAbita(servita) {
+    if (servita === false && !this._avvisato) {
+      try {
+        await this.casa.chiedi({
+          type: "call_service",
+          domain: "persistent_notification",
+          service: "create",
+          service_data: {
+            notification_id: AVVISO,
+            title: "gdahome: riavvia Home Assistant una volta",
+            message:
+              "La plancia \u00e8 pronta, ma il file che la disegna sta nella cartella " +
+              "`www` della configurazione, e Home Assistant apre quella cartella " +
+              "soltanto quando parte. In questa casa non c\u2019era: l\u2019ha fatta " +
+              "gdahome adesso.\n\n**Impostazioni → Sistema → in alto a destra → " +
+              "Riavvia Home Assistant.** Dopo, la plancia si apre da s\u00e9 e questo " +
+              "avviso sparisce.\n\n_(English: Home Assistant needs one restart before " +
+              "it will serve the file that draws the dashboard.)_",
+          },
+        });
+        this._avvisato = true;
+      } catch (_errore) {
+        /* Senza l'avviso si vive: il foglietto nella Plancia lo dice comunque. */
+      }
+      return;
+    }
+    if (servita === true && this._avvisato) {
+      try {
+        await this.casa.chiedi({
+          type: "call_service",
+          domain: "persistent_notification",
+          service: "dismiss",
+          service_data: { notification_id: AVVISO },
+        });
+        this._avvisato = false;
+      } catch (_errore) {
+        /* Resta appeso: meglio di un avviso che non parte. */
+      }
+    }
+  }
+
+  /* Finche' la cartina non si scarica, si ricontrolla.
+   *
+   * E' la riga che fa la differenza fra «spiegato» e «risolto». Quando chi ci
+   * abita riavvia Home Assistant — fra un minuto, stasera, domani — l'add-on
+   * **non si riavvia con lui**: nessuno riguarda niente, e quel foglietto
+   * resterebbe al posto della plancia per sempre, con la cartina che intanto
+   * si scarica benissimo.
+   *
+   * Costa una richiesta HTTP ogni cinque minuti, e solo mentre la cosa e'
+   * rotta: appena Home Assistant risponde con la cartina si rifa' la vista
+   * vera, si leva l'avviso, e la guardia si spegne e non torna piu'. */
+  sorveglia(ogni = 5 * 60_000) {
+    if (this._guardia) return this._guardia;
+    const giro = async () => {
+      if (this.esito?.servita !== false) return this.smettiDiSorvegliare();
+      if ((await this.laServe()) !== true) return undefined;
+      this.registro.info("Home Assistant serve la cartina: rimetto la plancia nelle Plance");
+      await this.sistema();
+      if (this.esito?.servita === true) this.smettiDiSorvegliare();
+      return undefined;
+    };
+    this._guardia = setInterval(() => void giro(), ogni);
+    this._guardia.unref?.();
+    return this._guardia;
+  }
+
+  smettiDiSorvegliare() {
+    if (!this._guardia) return;
+    clearInterval(this._guardia);
+    this._guardia = null;
   }
 
   /* La cartina nella `www`. Torna `true` se l'ha davvero riscritta: si copia
@@ -401,7 +569,7 @@ export class PlanceInCasa {
    * risparmiare una chiamata: aggiornare una Plancia manda un avviso a tutte
    * le pagine aperte di Home Assistant, e riscrivere la stessa cosa a ogni
    * accensione dell'add-on le farebbe lampeggiare per niente. */
-  async unaPlancia(quale, io = null) {
+  async unaPlancia(quale, io = null, servita = null) {
     const dove = indirizzoDi(quale);
     const soloAdmin = quale.solo_admin === true;
     const dentro = await this.casa.chiedi({ type: "lovelace/dashboards/list" });
@@ -427,7 +595,7 @@ export class PlanceInCasa {
         require_admin: soloAdmin,
       });
     }
-    await this.laVista(dove, this.vista(quale, io));
+    await this.laVista(dove, this.vista(quale, io, servita));
     return sua;
   }
 
@@ -461,8 +629,16 @@ export class PlanceInCasa {
    *
    * `panel: true` e non una griglia: la plancia e' una pagina, non una
    * tessera in mezzo ad altre, e dentro una colonna larga quattrocento punti
-   * sarebbe illeggibile. */
-  vista(quale, io = null) {
+   * sarebbe illeggibile.
+   *
+   * `servita` e' cosa ha risposto Home Assistant quando gli si e' chiesta la
+   * cartina. Se ha detto **no** si scrive un'altra vista — quella che spiega —
+   * perche' quella vera li' non si aprirebbe, e non aprirsi dicendo «Errore di
+   * configurazione» e' la cosa peggiore che questa pagina possa fare. Su un
+   * «non lo so» non si cambia niente: si scrive quella vera, com'e' sempre
+   * stato. */
+  vista(quale, io = null, servita = null) {
+    if (servita === false) return this.vistaDelRiavvio(quale);
     return {
       views: [
         {
@@ -470,7 +646,7 @@ export class PlanceInCasa {
           panel: true,
           cards: [
             {
-              type: "custom:gdahome-plancia",
+              type: `custom:${TESSERA}`,
               /* Quale plancia aprire. La prima non ha bisogno di dirlo. */
               profilo: quale.primaria ? "" : quale.profilo,
               /* Chi chiedere al Supervisor. La cartina prova a chiederglielo
@@ -495,6 +671,63 @@ export class PlanceInCasa {
                * abilitato. La vista ha gia' il titolo, ma la cartina vede solo
                * la propria configurazione. */
               titolo: quale?.titolo || "",
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  /* La vista che si legge invece di «Errore di configurazione».
+   *
+   * Una tessera `markdown`, che e' di Home Assistant: non ha bisogno di
+   * nessuna cartina, di nessuna risorsa dichiarata e di nessuna pagina
+   * ricaricata. Quindi si apre **sempre** — anche nel momento esatto in cui
+   * quella vera non si aprirebbe, che e' tutto il punto.
+   *
+   * Cosa c'e' scritto conta piu' del fatto che ci sia scritto qualcosa: c'e'
+   * il passaggio da fare e dove si fa, non «si e' verificato un errore». Chi
+   * apre quella voce nella barra laterale e' qualcuno che ha appena installato
+   * un add-on e vuole vedere la sua casa; ha diritto a una frase che gli dica
+   * cosa premere, non a un codice da cercare.
+   *
+   * In due lingue perche' questa e' la pagina che vede chi non ci ha mai
+   * messo mano, e indovinare la lingua di casa per sbagliarla vorrebbe dire
+   * una pagina che non si apre **e** non si capisce. */
+  vistaDelRiavvio(quale) {
+    return {
+      views: [
+        {
+          title: quale.titolo,
+          panel: true,
+          cards: [
+            {
+              type: "markdown",
+              content: [
+                `## ${quale.titolo}`,
+                "",
+                "Manca un passaggio solo, e si fa una volta: **Home Assistant va riavviato.**",
+                "",
+                "Impostazioni → Sistema → in alto a destra → **Riavvia Home Assistant**.",
+                "",
+                "Il file che disegna questa pagina sta nella cartella `www` della",
+                "configurazione, e Home Assistant apre quella cartella soltanto quando",
+                "parte. In questa casa non c\u2019era: l\u2019ha fatta gdahome adesso, e",
+                "finch\u00e9 Home Assistant non riparte quel file non lo serve a nessuno.",
+                "",
+                "Dopo il riavvio questa pagina diventa la plancia da s\u00e9. Se hai gi\u00e0",
+                "riavviato e leggi ancora questo, ricarica la pagina una volta.",
+                "",
+                "---",
+                "",
+                "**One step left, once:** Home Assistant needs a restart.",
+                "Settings → System → top right → **Restart Home Assistant**.",
+                "",
+                "The file that draws this page lives in the `www` folder of your",
+                "configuration, and Home Assistant only opens that folder at startup.",
+                "This home did not have it: gdahome just created it. After the restart",
+                "this page becomes the dashboard by itself.",
+              ].join("\n"),
             },
           ],
         },

@@ -31,12 +31,14 @@ import { Plance } from "../src/plance.js";
 function casaFinta({ plance = [], risorse = [] } = {}) {
   const dette = [];
   const viste = new Map();
+  const avvisi = new Map();
   let contatore = 0;
   return {
     dette,
     plance,
     risorse,
     viste,
+    avvisi,
     async chiedi(comando) {
       dette.push(comando);
       switch (comando.type) {
@@ -84,6 +86,16 @@ function casaFinta({ plance = [], risorse = [] } = {}) {
         case "lovelace/config/save":
           viste.set(comando.url_path, JSON.parse(JSON.stringify(comando.config)));
           return null;
+        case "call_service": {
+          if (comando.domain !== "persistent_notification") {
+            throw new Error(`la casa finta non chiama ${comando.domain}`);
+          }
+          const quale = String(comando.service_data?.notification_id || "");
+          if (comando.service === "create") avvisi.set(quale, comando.service_data);
+          else if (comando.service === "dismiss") avvisi.delete(quale);
+          else throw new Error(`la casa finta non sa ${comando.service}`);
+          return null;
+        }
         default:
           throw new Error(`la casa finta non sa fare ${comando.type}`);
       }
@@ -91,7 +103,46 @@ function casaFinta({ plance = [], risorse = [] } = {}) {
   };
 }
 
-function banco({ plance: dentro, risorse } = {}) {
+/* Cosa risponde Home Assistant a chi gli chiede la cartina.
+ *
+ * Tre risposte, e sono le tre che si prendono davvero: `si` la serve, `no` non
+ * l'ha (`/local/` aperto all'avvio, cartella `www` fatta da noi dopo), `zitto`
+ * non risponde — e quella non e' un «no», e' un «non lo so». */
+function rispondeAllaCartina(come) {
+  const chiamate = [];
+  const prendi = async (dove) => {
+    chiamate.push(String(dove));
+    if (come === "no")
+      return {
+        ok: false,
+        status: 404,
+        async text() {
+          return "niente";
+        },
+      };
+    if (come === "rotta")
+      return {
+        ok: true,
+        status: 200,
+        async text() {
+          return "// vuota";
+        },
+      };
+    if (come === "si") {
+      return {
+        ok: true,
+        status: 200,
+        async text() {
+          return 'customElements.define("gdahome-plancia", Plancia);';
+        },
+      };
+    }
+    throw new Error("Home Assistant non risponde");
+  };
+  return { prendi, chiamate };
+}
+
+function banco({ plance: dentro, risorse, cartina } = {}) {
   const radice = mkdtempSync(join(tmpdir(), "plance-in-casa-"));
   /* La cartella della configurazione esiste, `www` no: e' come sta una casa
    * appena installata, e la `www` la fa il ponte. */
@@ -100,7 +151,18 @@ function banco({ plance: dentro, risorse } = {}) {
   const www = join(casaSuDisco, "www");
   const plance = new Plance({ cartella: radice });
   const casa = casaFinta({ plance: dentro, risorse });
-  const in_casa = new PlanceInCasa({ casa, plance, www, versione: "0.21.0" });
+  /* Chi non dice niente di `cartina` resta come prima: una casa che non sa
+   * dove stiano i suoi file statici, cioe' un «non lo so», cioe' la vista
+   * vera. Le prove di prima non cambiano di una riga. */
+  const rete = cartina === undefined ? null : rispondeAllaCartina(cartina);
+  if (rete) casa.doveStaLaPlancia = async () => "http://ha-finta:8123";
+  const in_casa = new PlanceInCasa({
+    casa,
+    plance,
+    www,
+    versione: "0.21.0",
+    ...(rete ? { fetch: rete.prendi } : {}),
+  });
   return {
     radice,
     casaSuDisco,
@@ -108,6 +170,7 @@ function banco({ plance: dentro, risorse } = {}) {
     plance,
     casa,
     in_casa,
+    rete,
     via: () => rmSync(radice, { recursive: true, force: true }),
   };
 }
@@ -661,6 +724,148 @@ test("l'esito elenca tutte le Plance, e dice quali non sono nostre", async () =>
     ]);
     /* E quella di qualcun altro resta dov'e': si guarda, non si tocca. */
     assert.ok(b.casa.plance.some((una) => una.url_path === "dashboardmodern"));
+  } finally {
+    b.via();
+  }
+});
+
+/* ─── Quando la plancia non si puo' aprire, e cosa si legge invece ───────────
+ *
+ * E' il difetto che ha fatto scrivere «errore di configurazione» a due persone
+ * il giorno del rilascio, e la parte peggiore non era che non si aprisse: era
+ * che non si capisse. Home Assistant apre `/local/` **all'avvio**; in una casa
+ * che la cartella `www` non l'aveva — quasi tutte — quella cartella l'ha fatta
+ * l'add-on un momento prima, e finche' Home Assistant non riparte quel file
+ * non lo serve. La voce nella barra laterale c'e', la Plancia c'e', la cartina
+ * e' dichiarata: e la pagina esce con «Errore di configurazione», che di
+ * motivi non ne da' nessuno.
+ *
+ * Quindi quello che si tiene fermo qui non e' «funziona»: e' **cosa c'e'
+ * scritto sullo schermo di chi ha appena installato l'add-on**, nel momento in
+ * cui la cosa e' rotta, e che ci torni la plancia da se' quando non lo e' piu'.
+ */
+
+test("se Home Assistant non serve la cartina, nella Plancia ci va una frase e non un errore", async () => {
+  const b = banco({ cartina: "no" });
+  try {
+    const esito = await b.in_casa.sistema();
+    assert.equal(esito.servita, false, "Home Assistant ha detto che non ce l'ha");
+
+    /* Gliel'ha chiesta, e all'indirizzo giusto — con la versione dentro, che
+     * e' quella che fa riprendere il file al browser invece di tenersi quello
+     * di ieri. */
+    assert.deepEqual(b.rete.chiamate, ["http://ha-finta:8123/local/gdahome/plancia.js?v=0.21.0"]);
+
+    /* E la vista scritta e' quella che si apre **sempre**: una tessera di Home
+     * Assistant, che non ha bisogno di nessuna cartina. */
+    const dentro = b.casa.viste.get("gdahome-primary");
+    assert.equal(dentro.views[0].cards.length, 1);
+    assert.equal(dentro.views[0].cards[0].type, "markdown");
+    assert.equal(dentro.views[0].panel, true);
+
+    /* Cosa c'e' scritto conta piu' del fatto che ci sia scritto qualcosa: il
+     * passaggio da fare, e dove si fa. */
+    const testo = dentro.views[0].cards[0].content;
+    assert.match(testo, /Home Assistant va riavviato/);
+    assert.match(testo, /Impostazioni → Sistema/);
+    assert.match(testo, /Restart Home Assistant/, "anche per chi non legge l'italiano");
+    assert.doesNotMatch(testo, /Errore di configurazione/, "non si ripete l'errore, si spiega");
+
+    /* E lo dice dove chi ci abita guarda: la campanella di Home Assistant. Il
+     * registro dell'add-on non basta — le due persone che l'hanno visto non
+     * avevano nessun motivo di aprirlo. */
+    const avviso = b.casa.avvisi.get("gdahome_riavvia_home_assistant");
+    assert.ok(avviso, "l'avviso in Home Assistant c'e'");
+    assert.match(avviso.message, /Riavvia/);
+  } finally {
+    b.via();
+  }
+});
+
+test("e appena la serve, la plancia torna al suo posto e l'avviso si leva", async () => {
+  const b = banco({ cartina: "no" });
+  try {
+    await b.in_casa.sistema();
+    assert.equal(b.casa.viste.get("gdahome-primary").views[0].cards[0].type, "markdown");
+    assert.equal(b.casa.avvisi.size, 1);
+
+    /* Home Assistant e' ripartito: adesso la cartina la serve. */
+    b.in_casa.prendi = rispondeAllaCartina("si").prendi;
+    const esito = await b.in_casa.sistema();
+
+    assert.equal(esito.servita, true);
+    assert.equal(
+      b.casa.viste.get("gdahome-primary").views[0].cards[0].type,
+      "custom:gdahome-plancia",
+    );
+    assert.equal(b.casa.avvisi.size, 0, "un avviso che resta appeso non lo legge piu' nessuno");
+  } finally {
+    b.via();
+  }
+});
+
+test("la guardia ci ripensa da se': l'add-on non si riavvia insieme a Home Assistant", async () => {
+  /* Senza questa, il foglietto resterebbe al posto della plancia **per
+   * sempre**: chi ci abita riavvia Home Assistant un'ora dopo, e l'add-on non
+   * riparte con lui — nessuno riguarda niente. */
+  const b = banco({ cartina: "no" });
+  try {
+    await b.in_casa.sistema();
+    assert.equal(b.casa.viste.get("gdahome-primary").views[0].cards[0].type, "markdown");
+
+    b.in_casa.sorveglia(10);
+    b.in_casa.prendi = rispondeAllaCartina("si").prendi;
+
+    const scade = Date.now() + 3_000;
+    while (Date.now() < scade) {
+      if (b.casa.viste.get("gdahome-primary").views[0].cards[0].type !== "markdown") break;
+      await new Promise((ok) => setTimeout(ok, 5));
+    }
+    assert.equal(
+      b.casa.viste.get("gdahome-primary").views[0].cards[0].type,
+      "custom:gdahome-plancia",
+      "la guardia doveva rimettere la plancia",
+    );
+    assert.equal(b.casa.avvisi.size, 0);
+    /* E si spegne: una guardia che continua a guardare una cosa sistemata e'
+     * una richiesta ogni cinque minuti per niente, per sempre. */
+    assert.equal(b.in_casa._guardia, null);
+  } finally {
+    b.in_casa.smettiDiSorvegliare();
+    b.via();
+  }
+});
+
+test("su un «non lo so» non si cambia la pagina di nessuno", async () => {
+  /* Fuori da un add-on, o con Home Assistant che non risponde, la risposta e'
+   * `null` — e `null` non e' «no». Cambiare la pagina di chi ci abita per un
+   * dubbio nostro vorrebbe dire togliergli la plancia per farlo riavviare
+   * quando non ce n'era bisogno. */
+  for (const come of ["zitto", undefined]) {
+    const b = banco(come === undefined ? {} : { cartina: come });
+    try {
+      const esito = await b.in_casa.sistema();
+      assert.equal(esito.servita, null, `«${come}» doveva restare un non lo so`);
+      assert.equal(
+        b.casa.viste.get("gdahome-primary").views[0].cards[0].type,
+        "custom:gdahome-plancia",
+      );
+      assert.equal(b.casa.avvisi.size, 0, "e non si avvisa di niente");
+    } finally {
+      b.via();
+    }
+  }
+});
+
+test("una cartina che si scarica ma non registra la tessera conta come non servita", async () => {
+  /* Il caso di chi ha una vecchia `plancia.js` in `www/gdahome/`, o un file
+   * mangiato a meta': Home Assistant risponde «200» e quel duecento non vuol
+   * dire niente. Quello che conta e' se dentro c'e' la tessera. */
+  const b = banco({ cartina: "rotta" });
+  try {
+    const esito = await b.in_casa.sistema();
+    assert.equal(esito.servita, false);
+    assert.equal(b.casa.viste.get("gdahome-primary").views[0].cards[0].type, "markdown");
   } finally {
     b.via();
   }

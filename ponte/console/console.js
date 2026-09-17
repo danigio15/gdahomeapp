@@ -983,6 +983,17 @@
         " Nella Plancia c'è «" + esito.tessera_nella_vista + "».",
         " The dashboard holds \u201C" + esito.tessera_nella_vista + "\u201D.",
       );
+    /* E cosa ci trova, adesso, chi apre quella voce. Quando la cartina non si
+     * serve il ponte ci scrive un foglietto — quello che dice di riavviare —
+     * al posto della plancia: è la cosa da sapere per prima, perché è quella
+     * che stanno guardando gli altri. */
+    if (esito.tessera_nella_vista === "markdown")
+      riga += due(
+        " Chi la apre adesso legge il foglietto che dice di riavviare, non la plancia:" +
+          " ci torna da sé appena Home Assistant serve la cartina.",
+        " Whoever opens it now reads the note telling them to restart, not the dashboard:" +
+          " it goes back by itself as soon as Home Assistant serves the panel file.",
+      );
     return riga;
   }
 

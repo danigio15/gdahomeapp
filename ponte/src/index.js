@@ -298,7 +298,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * Aspettare qui vorrebbe dire tenere giu' il ponte — l'app e la plancia
    * funzionano comunque — e non riprovare vorrebbe dire una voce che compare
    * solo al riavvio dopo. */
-  void planceInCasa.sistemaConCalma();
+  void planceInCasa.sistemaConCalma().then(() => planceInCasa.sorveglia());
 
   const giro = setInterval(() => {
     const andati = dispositivi.potatura();
@@ -308,6 +308,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
 
   const abbassa = async () => {
     registro.info("il ponte si abbassa");
+    planceInCasa.smettiDiSorvegliare();
     clearInterval(giro);
     chiamata.spegni();
     ponte.chiudiTutto();
