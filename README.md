@@ -150,6 +150,7 @@ se no ogni comando farebbe il giro del mondo per arrivare a tre metri.
 | **il centralino** | [`nuvola/`](nuvola/README.md), [`centralino/`](centralino/README.md) | fa incontrare un telefono e la sua casa, senza capire niente di quello che si dicono |
 | **il collaudo** | [`collaudo/`](collaudo/README.md) | guarda l'app davvero, con un ponte vero e le fotografie di ogni schermata |
 | **il sito** | [`sito/`](sito/README.md) | gdahome.org: racconta il progetto, e ne fa toccare **la plancia vera** da un browser |
+| **il negozio** | [`app/negozio/`](app/negozio/LEGGIMI.md) | le «Novità» che il Play Store racconta di ogni versione, una per lingua: le porta su la corsa, e così si rileggono |
 
 ### La plancia è quella vera
 

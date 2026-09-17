@@ -1,0 +1,5 @@
+Your home's updates, in the menu.
+
+gdahome now tells you when Home Assistant has updates waiting — the add-on, integrations, the system itself — and you install them right here, with a restart when one is needed. Until now you had to open Home Assistant to find out, so app-only users never saw them.
+
+A badge on the menu entry says how many are pending.

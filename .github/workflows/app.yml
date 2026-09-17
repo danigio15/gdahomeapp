@@ -18,6 +18,20 @@ on:
           nel codice, che e' quello giusto quasi sempre.
         required: false
         default: ""
+      negozio:
+        description: >-
+          Su quale pista del Play Console caricarlo: internal, alpha, beta,
+          production. Vuoto (di serie) vuol dire che nel negozio non ci va.
+        required: false
+        default: ""
+      prova_del_negozio:
+        description: >-
+          Fa tutto il giro del negozio e poi butta la modifica, senza
+          pubblicare niente. Serve la prima volta, per vedere che il
+          credenziale funzioni.
+        type: boolean
+        required: false
+        default: false
   push:
     tags:
       - "v*"
@@ -256,6 +270,56 @@ jobs:
           path: app/build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 90
+
+      # E il pacchetto sul Play Console, senza passare da nessuno.
+      #
+      # Prima erano cinque passaggi a mano a ogni versione — scaricare
+      # l'artefatto, scompattare lo zip, aprire il Play Console, trascinare il
+      # pacchetto, incollare le novita' in due lingue — e uno di quei cinque,
+      # le novita' battute nella casella, non lasciava traccia da nessuna
+      # parte. Adesso le novita' stanno in `app/negozio/`, si guardano nei diff
+      # come tutto il resto, e le porta su `strumenti/porta-nel-negozio.mjs`.
+      #
+      # **Quando ci va, lo si dice.** Non a ogni etichetta da se': una
+      # correzione dell'add-on — come la 1.4.32.2 — non cambia una riga
+      # dell'app, e mandare al negozio un pacchetto identico a quello di prima
+      # e' un giro di revisione chiesto per niente. Quindi:
+      #
+      #  - lanciando a mano, si scrive la pista nella casella «negozio»;
+      #  - a ogni etichetta, se si vuole, si mette la pista **una volta** nella
+      #    variabile `PISTA_DEL_NEGOZIO` (Settings → Variables), e da li' in
+      #    poi ci va da se'.
+      #
+      # Niente pista, niente caricamento — ed e' il caso di serie. Pista
+      # chiesta e credenziale che manca, invece, si ferma e lo dice: un
+      # caricamento che non succede senza che nessuno se ne accorga e' peggio
+      # di una corsa rossa.
+      - name: Nel negozio
+        if: >-
+          steps.chiave.outputs.vera == 'si' &&
+          (inputs.negozio != '' ||
+           (github.ref_type == 'tag' && vars.PISTA_DEL_NEGOZIO != ''))
+        env:
+          NEGOZIO_GOOGLE: ${{ secrets.NEGOZIO_GOOGLE }}
+          PISTA: ${{ inputs.negozio || vars.PISTA_DEL_NEGOZIO }}
+          PROVA: ${{ inputs.prova_del_negozio }}
+        run: |
+          if [ -z "$NEGOZIO_GOOGLE" ]; then
+            echo "::error::Chiesta la pista «$PISTA» ma manca il segreto NEGOZIO_GOOGLE."
+            exit 1
+          fi
+          solo=""
+          if [ "$PROVA" = "true" ]; then solo="--prova"; fi
+          node strumenti/porta-nel-negozio.mjs \
+            app/build/app/outputs/bundle/release/app-release.aab \
+            --pista="$PISTA" $solo | tee negozio.txt
+          {
+            echo "### Nel negozio: pista \`$PISTA\`"
+            echo ""
+            echo '```'
+            cat negozio.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       # La release: il segno che questa versione esiste, e cosa cambia.
       #

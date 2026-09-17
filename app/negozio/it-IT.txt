@@ -1,0 +1,5 @@
+Gli aggiornamenti di casa, nel menu.
+
+gdahome ti dice quando Home Assistant ha aggiornamenti da fare — l'add-on, le integrazioni, il sistema — e li installi da qui, col riavvio quando serve. Prima bisognava entrare in Home Assistant per scoprirlo: chi usa solo l'app non li vedeva mai.
+
+Un numero sulla voce del menu dice quanti sono.
