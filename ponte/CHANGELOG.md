@@ -5,6 +5,29 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.3
+
+**Le segnalazioni si aprono anche da Home Assistant.**
+
+Nella plancia la finestra «Segnalazioni» c'era già, col suo modulo — ma sopra
+c'era una riga rossa, «Le segnalazioni stanno nell'app, non nella plancia», e
+sotto «l'invio non è configurato su questa plancia». Chi sta davanti a Home
+Assistant e trova un difetto è nel momento esatto in cui vuole dirlo, e gli si
+rispondeva «scaricati l'app».
+
+Adesso passano, e dalla **stessa strada dell'app**: il ponte, il centralino, la
+issue. Niente account GitHub da collegare, niente codice a sei cifre — che è la
+differenza vera con come lo faceva l'integrazione di DashboardModern.
+
+E si distinguono: sulla issue l'etichetta è **`da-home-assistant`** invece di
+`da-app`. La stampa il ponte, non chi scrive: le due strade sono due comandi
+diversi, e quale dei due sia arrivato lo sa solo lui.
+
+Restano nella console dell'app i tre comandi di chi risponde — la coda di tutte
+le case, prendersi una segnalazione, rispondere come manutentore. Da qui si
+scrive, si rilegge e si risponde sotto le proprie: quello che serve a chi ha un
+problema.
+
 ## 1.4.32.2
 
 **La plancia non si apre più dicendo «Errore di configurazione».**

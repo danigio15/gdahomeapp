@@ -56,6 +56,7 @@ import { BASE_DELLE_FOTO, BASE_DI_CASA, FOTO_MASSIMA } from "./foto.js";
 import { ChatHaDettoNo } from "./chat.js";
 import { QuestoNoNo } from "./aggiornamenti.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
+import { SegnalazioniDellaPlancia } from "./segnalazioni-della-plancia.js";
 import { laVede, QuellaPlanciaNo, TroppePlance } from "./plance.js";
 
 /* Quando chi chiede non ha nessuna plancia. Non e' un guasto ed e' l'app a
@@ -118,16 +119,40 @@ const TIMER_ELENCO = "dashboardmodern/clima/timer/list";
 const TIMER_METTI = "dashboardmodern/clima/timer/set";
 const TIMER_TOGLI = "dashboardmodern/clima/timer/clear";
 
-/* Le segnalazioni escono dalla plancia: diventano dell'app, che le fa da se'.
- * Alla pagina, che ha ancora i suoi bottoni, si risponde con una frase e non
- * con un «comando sconosciuto».
+/* Le segnalazioni della plancia: adesso passano.
  *
- * La chat no, e qui c'e' stato un errore mio: era in questo elenco, e la
- * finestra dell'assistenza della plancia — che e' la sua, e che non passa da
- * GitHub — si apriva su un rifiuto. Adesso il ponte fa il mestiere che
- * nell'integrazione fa `chat.py`, e quei comandi passano (`chat.js`). */
-const NELLAPP = /^dashboardmodern\/tickets\//;
-const DETTO_NELLAPP = "Le segnalazioni stanno nell'app, non nella plancia.";
+ * Per mesi qui c'era un rifiuto in blocco, e la frase era «Le segnalazioni
+ * stanno nell'app, non nella plancia». Si vedeva cosi': la finestra si apriva,
+ * il modulo c'era, e sopra una riga rossa. Chi sta davanti a Home Assistant e
+ * trova un difetto e' nel momento esatto in cui vuole dirlo, e gli si
+ * rispondeva «scaricati l'app».
+ *
+ * Adesso vanno dalla stessa strada dell'app — il ponte, il centralino, la
+ * issue — e la traduzione fra i due vocabolari sta in un file suo
+ * (`segnalazioni-della-plancia.js`). Sulla issue l'etichetta diventa
+ * `da-home-assistant`, e la stampa il ponte perche' quale dei due comandi sia
+ * arrivato lo sa solo lui.
+ *
+ * Restano rifiutati i tre di **chi risponde** — la coda di tutte le case,
+ * prendersi una segnalazione, rispondere come manutentore. Quelli stanno nella
+ * console dell'app, e accendere qui dei bottoni che nessuno serve vorrebbe
+ * dire una finestra che promette e non fa. */
+const TICKET_ELENCO = "dashboardmodern/tickets/list";
+const TICKET_CREA = "dashboardmodern/tickets/create";
+const TICKET_SINCRONIZZA = "dashboardmodern/tickets/sync";
+const TICKET_FILO = "dashboardmodern/tickets/thread";
+const TICKET_RISPONDI = "dashboardmodern/tickets/reply";
+const TICKET_NON_LETTI = "dashboardmodern/tickets/unread";
+const TICKET_BUTTA = "dashboardmodern/tickets/delete";
+const TICKET_FIRMA = /^dashboardmodern\/tickets\/auth\//;
+const TICKET_DI_CHI_RISPONDE = new Set([
+  "dashboardmodern/tickets/queue",
+  "dashboardmodern/tickets/answer",
+  "dashboardmodern/tickets/take",
+]);
+const NELLA_CONSOLE = "La coda di chi risponde sta nella console dell'app.";
+const NIENTE_BOZZE =
+  "Da qui una segnalazione o parte o non si scrive: non ci sono bozze da buttare.";
 
 /* La chat di assistenza della dashboard: quattro comandi sono di chi chiede, e
  * li fa il ponte per ogni casa. */
@@ -282,6 +307,12 @@ export class Commissioni {
     this.fotoDiCasa = fotoDiCasa;
     /* Le segnalazioni dell'app, che passano dal centralino di gdahome. */
     this.segnalazioni = segnalazioni;
+    /* E le stesse, scritte dalla finestra della plancia in Home Assistant:
+     * un traduttore fra i due vocabolari, sopra lo stesso archivio. Due
+     * strade, un elenco — se no una segnalazione scritta da Home Assistant
+     * nell'app non si vedrebbe, e sarebbe la stessa casa che racconta due
+     * storie. */
+    this.dallaPlancia = new SegnalazioniDellaPlancia({ segnalazioni, registro: this.registro });
     /* La chat di assistenza della plancia, che passa dal centralino della
      * dashboard: e' la sua, e nell'app il mestiere dell'integrazione lo fa il
      * ponte. */
@@ -321,7 +352,11 @@ export class Commissioni {
     if (DI_CHI_RISPONDE.has(tipo)) return Boolean(this.chat);
     if (tipo === TIMER_ELENCO || tipo === TIMER_METTI || tipo === TIMER_TOGLI)
       return Boolean(this.spegnimento);
-    if (NELLAPP.test(tipo)) return true;
+    /* Le segnalazioni della plancia: sono sempre sue, anche quando non ci sono
+     * segnalazioni accese. Chi le chiama e' la finestra della plancia, e
+     * quello che deve sentirsi dire — «passano», «qui non si fa», «manca il
+     * centralino» — e' questo ponte a saperlo. */
+    if (tipo.startsWith("dashboardmodern/tickets/")) return true;
     return Boolean(this.configurazione) && eLaCopiaVecchia(detto);
   }
 
@@ -366,8 +401,8 @@ export class Commissioni {
       tipo === AGGIORNAMENTI_RIAVVIA
     )
       return this._aggiornamenti(detto);
-    if (typeof tipo === "string" && NELLAPP.test(tipo))
-      return no(id, "not_supported", DETTO_NELLAPP);
+    if (typeof tipo === "string" && tipo.startsWith("dashboardmodern/tickets/"))
+      return this._segnalazioniDellaPlancia(detto);
     if (eLaCopiaVecchia(detto)) {
       /* Una risposta innocua, come fa il ponte del pannello: il codice
        * vecchio non resta appeso, e l'unico scrittore resta quello moderno. */
@@ -908,6 +943,68 @@ export class Commissioni {
       if (errore instanceof SenzaCentralino) return no(id, errore.codice, errore.message);
       if (errore instanceof CentralinoHaDettoNo) return no(id, errore.codice, errore.message);
       this.registro.errore(`segnalazione andata storta: ${errore?.message || errore}`);
+      return no(id, "ponte_segnalazioni", "non ha funzionato");
+    }
+  }
+
+  /* I comandi della finestra della plancia, tradotti.
+   *
+   * Gli errori si dicono come li dice il centralino — «hai troppe
+   * segnalazioni aperte», «il centralino non risponde» — perche' quella
+   * finestra li mostra tali e quali a chi ha appena premuto invia, e
+   * «non_ha_funzionato» non gli dice cosa fare. */
+  async _segnalazioniDellaPlancia(detto) {
+    const id = detto.id ?? null;
+    const mie = this.dallaPlancia;
+    const parola = (valore, massimo) =>
+      typeof valore === "string" ? valore.slice(0, massimo) : "";
+    const ilNumero = () => Number(detto.number);
+
+    /* I tre di chi risponde, e il cestino: si rifiutano con una frase. Non
+     * sono comandi sconosciuti — la finestra ce li ha — sono comandi che da
+     * qui non si fanno, e dirlo con parole e' diverso dal non risponderli. */
+    if (TICKET_DI_CHI_RISPONDE.has(detto.type)) return no(id, "not_supported", NELLA_CONSOLE);
+    if (detto.type === TICKET_BUTTA) return no(id, "not_supported", NIENTE_BOZZE);
+
+    /* E i tre della firma: qui non c'e' niente da collegare, e si risponde
+     * invece di far disegnare un errore rosso per una cosa che non serve. */
+    if (TICKET_FIRMA.test(String(detto.type || ""))) return si(id, mie.laFirmaNonSiCollega());
+
+    if (!this.segnalazioni) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    try {
+      switch (detto.type) {
+        case TICKET_ELENCO:
+          return si(id, await mie.elenco());
+        case TICKET_SINCRONIZZA:
+          return si(id, await mie.sincronizza());
+        case TICKET_NON_LETTI:
+          return si(id, await mie.nonLetti());
+        case TICKET_CREA:
+          return si(
+            id,
+            await mie.crea({
+              ticket_type: parola(detto.ticket_type, 20),
+              title: parola(detto.title, 200),
+              body: parola(detto.body, 10000),
+              diagnostics:
+                detto.diagnostics && typeof detto.diagnostics === "object" ? detto.diagnostics : {},
+            }),
+          );
+        case TICKET_FILO:
+          if (!Number.isFinite(ilNumero())) return no(id, "invalid_format", "manca il numero");
+          return si(id, await mie.filo(ilNumero()));
+        case TICKET_RISPONDI:
+          if (!Number.isFinite(ilNumero())) return no(id, "invalid_format", "manca il numero");
+          return si(id, await mie.rispondi(ilNumero(), parola(detto.message, 5000)));
+        default:
+          return no(id, "unknown_command", `non conosco ${detto.type}`);
+      }
+    } catch (errore) {
+      if (errore instanceof SenzaCentralino) return no(id, errore.codice, errore.message);
+      if (errore instanceof CentralinoHaDettoNo) return no(id, errore.codice, errore.message);
+      this.registro.errore(
+        `una segnalazione dalla plancia e' andata storta: ${errore?.message || errore}`,
+      );
       return no(id, "ponte_segnalazioni", "non ha funzionato");
     }
   }

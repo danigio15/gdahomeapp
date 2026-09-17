@@ -961,7 +961,11 @@ test("si riconoscono il catalogo, le foto e le cose che stanno nell'app", () => 
   rmSync(cartella, { recursive: true, force: true });
 });
 
-test("le segnalazioni rispondono con una frase, non con un comando sconosciuto", async () => {
+test("le segnalazioni della plancia: cosa risponde un ponte senza centralino", async () => {
+  /* Prima qui c'era un rifiuto in blocco — «Le segnalazioni stanno nell'app,
+   * non nella plancia» — e adesso passano. Su un ponte che di segnalazioni non
+   * ne ha accese, scrivere e' un comando che non sa fare: e' diverso da «da
+   * qui non si fa», ed e' la differenza fra un guasto e una regola. */
   const con = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
   const risposta = await con.rispondi({
     id: 4,
@@ -969,8 +973,21 @@ test("le segnalazioni rispondono con una frase, non con un comando sconosciuto",
     title: "x",
   });
   assert.equal(risposta.success, false);
-  assert.equal(risposta.error.code, "not_supported");
-  assert.match(risposta.error.message, /nell'app/);
+  assert.equal(risposta.error.code, "unknown_command");
+
+  /* La coda di chi risponde invece e' una regola, e si dice con una frase:
+   * quei bottoni stanno nella console dell'app. */
+  const coda2 = await con.rispondi({ id: 6, type: "dashboardmodern/tickets/queue" });
+  assert.equal(coda2.success, false);
+  assert.equal(coda2.error.code, "not_supported");
+  assert.match(coda2.error.message, /console dell'app/);
+
+  /* E i tre comandi della firma rispondono sempre, anche cosi': la finestra li
+   * chiama da se', e un rifiuto le farebbe disegnare un errore rosso per una
+   * cosa che in gdahome non serve a nessuno. */
+  const firma = await con.rispondi({ id: 7, type: "dashboardmodern/tickets/auth/start" });
+  assert.equal(firma.success, true);
+  assert.equal(firma.result.niente_da_collegare, true);
 
   /* La coda dell'assistenza, su un ponte senza chat, e' un comando che non sa
    * fare — come lo e' scrivere. */
