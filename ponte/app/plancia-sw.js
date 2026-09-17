@@ -105,6 +105,38 @@ function dentroLApp(pathname) {
   return pathname;
 }
 
+/* Quanto si tiene un file, e perche' quasi tutti si tengono per sempre.
+ *
+ * I file della plancia hanno **l'impronta nel percorso**:
+ * `/dashboardmodern_static/<impronta>/…`, e l'impronta e' del contenuto.
+ * Aggiornare la plancia cambia l'impronta, cambia i percorsi, e il browser si
+ * ritrova dei file nuovi da chiedere senza che nessuno glielo dica. Quindi
+ * quello che c'e' a quell'indirizzo oggi non cambiera' mai: tenerlo non fa
+ * restare indietro nessuno, e vuol dire che la seconda volta la plancia si
+ * apre **senza chiedere niente** — che da fuori casa e' la differenza fra
+ * qualche secondo e zero.
+ *
+ * E' lo stesso che fa il servitore sul telefono, dove i file stanno sul disco
+ * e non si riscaricano mai (`servitore.dart`).
+ *
+ * Tre cose no, e sono tre ragioni diverse:
+ *
+ *  - **la pagina**, che non e' un file della dashboard: porta le premesse, che
+ *    dicono quale casa e' e in che lingua, e cambiano quando cambia la casa;
+ *  - **le foto** caricate dalla plancia (`/dashboardmodern_static/www/`): il
+ *    nome lo scegli tu, e ricaricarne una col nome di prima e' una cosa
+ *    normale;
+ *  - **tutto il resto** — `/api/`, `/local/` — che e' lo stato di adesso e la
+ *    cartella `www` di casa.
+ */
+function quantoSiTiene(percorso, tipo) {
+  const solo = percorso.split("?")[0];
+  if (!solo.startsWith("/dashboardmodern_static/")) return "no-store";
+  if (solo.startsWith("/dashboardmodern_static/www/")) return "no-store";
+  if (`${tipo || ""}`.startsWith("text/html")) return "no-store";
+  return "public, max-age=31536000, immutable";
+}
+
 self.addEventListener("fetch", (evento) => {
   const dove = new URL(evento.request.url);
   if (dove.origin !== self.location.origin) return;
@@ -143,10 +175,7 @@ self.addEventListener("fetch", (evento) => {
           status: 200,
           headers: {
             "content-type": detto.tipo || "application/octet-stream",
-            /* Niente deposito: i file cambiano quando cambia la plancia, e chi
-             * li tiene se ne accorge tardi. Il deposito vero lo fa l'app, che
-             * l'impronta della plancia ce l'ha. */
-            "cache-control": "no-store",
+            "cache-control": quantoSiTiene(percorso, detto.tipo),
           },
         });
       },
