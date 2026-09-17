@@ -130,6 +130,21 @@ jobs:
       # puo' dare solo a un worker che esiste gia'. Wrangler lo legge da qui
       # e non lo scrive da nessuna parte; nei registri di questa pagina GitHub
       # lo copre da se'.
+      #
+      # **Questo passo non fa rossa la corsa**, e prima la faceva. Le
+      # segnalazioni sono un'aggiunta — senza gettone il centralino si accende
+      # lo stesso e risponde «non configurate» — e qui il centralino e' **gia'
+      # acceso**: il passo prima ha finito. Una corsa rossa a questo punto
+      # dice «il centralino non e' andato», che non e' vero; e a un rosso che
+      # non vuol dire quello che sembra, dopo un po', non ci si guarda piu'.
+      # Quello che c'e' da sapere si dice come avviso, e si va avanti.
+      #
+      # E c'e' un caso in cui questo gettone non serve a niente: chi ha il
+      # tramite sulla **propria macchina** — un dominio suo, il servizio
+      # `tramite` — le segnalazioni le fa passare da li', e il gettone sta in
+      # `/etc/tramite/ambiente`, non fra i segreti di questa pagina. Questo e'
+      # il centralino di riserva: quello che non costa niente e non chiede una
+      # macchina.
       - name: Il gettone delle segnalazioni al centralino
         run: |
           if [ -z "${GETTONE}" ]; then
@@ -197,23 +212,31 @@ jobs:
                 echo "::warning::Il gettone non puo' scrivere i file di ${allegati}: le segnalazioni funzionano, ma le foto e i video allegati no. Nel token, «Repository access» deve includere anche ${allegati} con «Contents: Read and write»; poi rimetti il segreto e rilancia questo bottone."
               fi ;;
             401)
-              echo "::error::GitHub non riconosce il gettone (401): non e' un token valido, o e' scaduto, o e' stato revocato."
+              echo "::warning::GitHub non riconosce il gettone (401): non e' un token valido, o e' scaduto, o e' stato revocato."
               echo "Nel segreto c'e' una stringa di ${#gettone} caratteri che $(case "$gettone" in github_pat_*) echo "comincia con github_pat_";; ghp_*) echo "comincia con ghp_";; *) echo "NON comincia con github_pat_";; esac)."
               echo "Un token a grana fine e' lungo 93 caratteri e comincia con github_pat_. Se ne fa uno nuovo su GitHub"
               echo "(Settings → Developer settings → Personal access tokens → Fine-grained tokens), si copia col bottone accanto,"
               echo "e si incolla nel segreto GETTONE_SEGNALAZIONI. Solo quello."
-              exit 1 ;;
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "Le **segnalazioni** non sono accese: il gettone non va. Il motivo e' scritto negli avvisi di questa corsa." >> "$GITHUB_STEP_SUMMARY"
+              exit 0 ;;
             403)
-              echo "::error::GitHub non lascia il gettone toccare le issue di ${repository} (403)."
+              echo "::warning::GitHub non lascia il gettone toccare le issue di ${repository} (403)."
               echo "Di solito vuol dire che nel token, sotto «Repository permissions», la voce Issues non e' «Read and write»."
-              exit 1 ;;
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "Le **segnalazioni** non sono accese: il gettone non va. Il motivo e' scritto negli avvisi di questa corsa." >> "$GITHUB_STEP_SUMMARY"
+              exit 0 ;;
             404)
-              echo "::error::Il gettone non vede la repository ${repository} (404)."
+              echo "::warning::Il gettone non vede la repository ${repository} (404)."
               echo "Nel token, «Repository access» deve includere proprio quella repository; e il nome in nuvola/wrangler.toml deve essere quello giusto."
-              exit 1 ;;
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "Le **segnalazioni** non sono accese: il gettone non va. Il motivo e' scritto negli avvisi di questa corsa." >> "$GITHUB_STEP_SUMMARY"
+              exit 0 ;;
             *)
-              echo "::error::GitHub ha risposto «${esito}» provando il gettone su ${repository}. Si riprova fra un po'; se continua, il token va rifatto."
-              exit 1 ;;
+              echo "::warning::GitHub ha risposto «${esito}» provando il gettone su ${repository}. Si riprova fra un po'; se continua, il token va rifatto."
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "Le **segnalazioni** non sono accese: il gettone non va. Il motivo e' scritto negli avvisi di questa corsa." >> "$GITHUB_STEP_SUMMARY"
+              exit 0 ;;
           esac
 
           printf '%s\n' "$gettone" | npx wrangler secret put GITHUB_SEGNALAZIONI
