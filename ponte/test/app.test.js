@@ -358,3 +358,167 @@ test("la console invece non si tiene affatto: e' piccola e cambia con l'add-on",
     rmSync(cartella, { recursive: true, force: true });
   }
 });
+
+/* ── gdahome in un browser di casa, senza fare il giro del centralino ──────
+ *
+ * Il difetto era questo: un computer a tre metri dalla casa apriva gdahome
+ * passando da internet, perche' in casa i file non li serviva nessuno. La
+ * porta dell'app — l'unica che si raggiunge dalla rete di casa — aveva tre
+ * sportelli e basta.
+ *
+ * Adesso serve anche i **pezzi**: quelli dell'app e quelli della plancia. La
+ * *pagina* della plancia no, e non e' un dettaglio: quella ha le premesse
+ * dentro e il cancello di chi la vede, e resta sulla porta dietro l'ingress.
+ * Qui si tengono ferme entrambe le cose — quello che si serve, e quello che
+ * non si serve.
+ */
+
+import { costruisciLaPortaDellApp } from "../src/server.js";
+
+async function unaPortaDellApp({ cartellaDellApp, plancia } = {}) {
+  const server = costruisciLaPortaDellApp({
+    ponte: { quantiCollegati: () => 0 },
+    portiere: { apri: () => {} },
+    dispositivi: { quanti: () => 0 },
+    abbinamento: {},
+    cartellaDellApp,
+    plancia,
+  });
+  await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
+  const dove = `http://127.0.0.1:${server.address().port}`;
+  return {
+    dove,
+    chiedi: (via, opzioni) => fetch(`${dove}${via}`, { redirect: "manual", ...opzioni }),
+    spegni: () => new Promise((ok) => server.close(ok)),
+  };
+}
+
+/* Una plancia finta, con la stessa forma di quella vera: `cE`, e un `leggi`
+ * che risponde per percorso. */
+function planciaFinta() {
+  return {
+    cE: true,
+    chieste: [],
+    leggi(via) {
+      this.chieste.push(via);
+      if (via.endsWith("/legacy/dashboard.html"))
+        return { stato: 200, tipo: "text/html; charset=utf-8", corpo: Buffer.from("<html>") };
+      if (via.endsWith(".js"))
+        return { stato: 200, tipo: "text/javascript; charset=utf-8", corpo: Buffer.from("//x") };
+      return { stato: 404, tipo: "", corpo: Buffer.alloc(0) };
+    },
+  };
+}
+
+test("in casa l'app si apre da questa porta, senza passare da fuori", async () => {
+  const cartella = appFinta();
+  const porta = await unaPortaDellApp({ cartellaDellApp: cartella, plancia: planciaFinta() });
+  try {
+    /* La barra in fondo, come sull'altra porta: relativa, perche' qui davanti
+     * non c'e' nessun prefisso e la' c'e' quello dell'ingress. */
+    const senzaBarra = await porta.chiedi("/app");
+    assert.equal(senzaBarra.status, 302);
+    assert.equal(senzaBarra.headers.get("location"), "app/");
+
+    const pagina = await porta.chiedi("/app/");
+    assert.equal(pagina.status, 200);
+    assert.match(await pagina.text(), /gdahome/);
+
+    const suo = await porta.chiedi("/app/main.dart.js");
+    assert.equal(suo.status, 200);
+  } finally {
+    await porta.spegni();
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("e i file della plancia, che la pagina chiede per nome relativo", async () => {
+  /* E' questo che rende inutile il service worker: la plancia i suoi file li
+   * chiede relativi al `<base>`, e il `<base>` punta qui. Su `https` il
+   * service worker serve perche' il centralino quei file non li ha; qui ce li
+   * ha il ponte, sulla stessa origine. */
+  const cartella = appFinta();
+  const dm = planciaFinta();
+  const porta = await unaPortaDellApp({ cartellaDellApp: cartella, plancia: dm });
+  try {
+    const uno = await porta.chiedi("/dashboardmodern_static/abc123/legacy/dashboard.html");
+    assert.equal(uno.status, 200);
+    assert.match(uno.headers.get("cache-control") || "", /immutable/);
+
+    const due = await porta.chiedi("/dashboardmodern_static/abc123/src/core/qualcosa.js");
+    assert.equal(due.status, 200);
+
+    const niente = await porta.chiedi("/dashboardmodern_static/abc123/non-ci-sono.png");
+    assert.equal(niente.status, 404);
+  } finally {
+    await porta.spegni();
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("la pagina della plancia, col suo cancello, da qui non si apre", async () => {
+  /* La riga che conta. `/plancia/…` ha dentro le premesse — quale istanza,
+   * quale profilo, dove sta il WebSocket — e il cancello di chi la vede, che
+   * si regge sull'utente che l'ingress mette nell'intestazione. Qui quell'utente
+   * non c'e', quindi la pagina non c'e': ci sono i pezzi, non la pagina.
+   * La pagina se la compone l'app, con le sue premesse. */
+  const cartella = appFinta();
+  const porta = await unaPortaDellApp({ cartellaDellApp: cartella, plancia: planciaFinta() });
+  try {
+    for (const via of ["/plancia", "/plancia/", "/plancia/mare/"]) {
+      const suo = await porta.chiedi(via);
+      assert.equal(suo.status, 404, `«${via}» non deve aprirsi da questa porta`);
+    }
+  } finally {
+    await porta.spegni();
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("da questa porta non si esce dalla cartella, e non si scrive niente", async () => {
+  /* Questa porta puo' finire esposta a internet, quindi le due domande sono:
+   * si puo' uscire dalla radice, e si puo' fare qualcosa oltre a leggere. */
+  const cartella = appFinta();
+  writeFileSync(join(dirname(cartella), "fuori-dalla-radice.txt"), "segreto");
+  const porta = await unaPortaDellApp({ cartellaDellApp: cartella, plancia: planciaFinta() });
+  try {
+    for (const via of [
+      "/app/../fuori-dalla-radice.txt",
+      "/app/%2e%2e/fuori-dalla-radice.txt",
+      "/app/..%2ffuori-dalla-radice.txt",
+      "/dashboardmodern_static/../../etc/passwd",
+    ]) {
+      const suo = await porta.chiedi(via);
+      assert.ok(suo.status >= 300, `«${via}» ha risposto ${suo.status}`);
+      const detto = await suo.text();
+      assert.equal(detto.includes("segreto"), false, `«${via}» ha fatto uscire il file`);
+    }
+    /* E solo GET: un POST su quei percorsi non e' una rotta, e cade dove
+     * cadono tutte le richieste che questa porta non conosce. */
+    for (const metodo of ["POST", "PUT", "DELETE"]) {
+      const suo = await porta.chiedi("/app/index.html", { method: metodo });
+      assert.notEqual(suo.status, 200, `${metodo} su un file non deve rispondere 200`);
+    }
+  } finally {
+    await porta.spegni();
+    rmSync(cartella, { recursive: true, force: true });
+    rmSync(join(dirname(cartella), "fuori-dalla-radice.txt"), { force: true });
+  }
+});
+
+test("senza l'app dentro, la porta lo dice invece di servire il vuoto", async () => {
+  const porta = await unaPortaDellApp({ cartellaDellApp: "", plancia: null });
+  try {
+    assert.equal((await porta.chiedi("/app/")).status, 404);
+    assert.equal(
+      (await porta.chiedi("/dashboardmodern_static/x/legacy/dashboard.html")).status,
+      404,
+    );
+    /* Ma i tre sportelli di sempre rispondono: non si e' rotto niente. */
+    const salute = await porta.chiedi("/salute");
+    assert.equal(salute.status, 200);
+    assert.equal((await salute.json()).vivo, true);
+  } finally {
+    await porta.spegni();
+  }
+});

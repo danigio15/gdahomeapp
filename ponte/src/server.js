@@ -134,6 +134,32 @@ export function costruisciLaPortaDellApp({
   registro,
   chiamata,
   ritorno,
+  /* I file dell'app e quelli della plancia, serviti anche da qui.
+   *
+   * **Perche' da qui, che e' la porta esposta.** In un browser di casa gdahome
+   * si poteva aprire solo passando dal centralino: cioe' un computer a tre
+   * metri dalla casa faceva il giro di internet per disegnare una plancia che
+   * sta di la' dal muro. La strada corta non c'era per un motivo solo — su
+   * questa porta i file non li serviva nessuno.
+   *
+   * **Perche' non e' un buco.** Quello che tiene chiusa questa porta non e'
+   * l'origine: e' che nessuno sportello ha autorita' implicita — niente
+   * cookie, niente sessione del browser, niente che una pagina qualunque possa
+   * sfruttare per conto di chi la guarda (vedi `PER_IL_BROWSER`). Dei file
+   * statici senza cancello quella proprieta' non la toccano: chi li chiede
+   * ottiene esattamente quello che ottiene gia' da `curl`, e sono gli stessi
+   * byte che il centralino pubblica a internet intero per l'app e che stanno
+   * in una repository pubblica per la plancia. Nessun segreto, nessuna
+   * autorita'.
+   *
+   * **Cosa resta fuori, ed e' la riga che conta.** La *pagina* della plancia —
+   * `/plancia/…`, quella con le premesse dentro e il cancello di chi la vede —
+   * su questa porta non c'e'. Qui ci sono i pezzi, non la pagina: la pagina se
+   * la compone l'app, con le sue premesse, e senza un segno valido sul filo
+   * quei pezzi non disegnano niente. La configurazione arriva sul filo, e il
+   * filo un segno lo vuole. */
+  cartellaDellApp = "",
+  plancia = null,
 }) {
   const server = createServer(async (richiesta, risposta) => {
     /* Qui, e **solo** qui.
@@ -157,6 +183,49 @@ export function costruisciLaPortaDellApp({
     if (metodo === "OPTIONS") {
       risposta.writeHead(204, PER_IL_BROWSER);
       risposta.end();
+      return;
+    }
+
+    /* I file dell'app. Solo GET, e solo dentro la sua cartella: `servi`
+     * normalizza e non esce dalla radice. */
+    if (metodo === "GET" && (via === "/app" || via.startsWith("/app/"))) {
+      if (!cartellaDellApp || !existsSync(cartellaDellApp)) {
+        male(risposta, 404, "questo add-on non si porta dietro gdahome da browser");
+        return;
+      }
+      /* La barra in fondo: senza, il browser cerca i file dell'app un piano
+       * piu' su. Relativo apposta, come sull'altra porta. */
+      if (via === "/app") {
+        risposta.writeHead(302, { location: "app/", "cache-control": "no-store" });
+        risposta.end();
+        return;
+      }
+      servi(risposta, cartellaDellApp, via.slice("/app".length), {
+        deposito: true,
+        richiesta,
+      });
+      return;
+    }
+
+    /* E i file della plancia. Li chiede la pagina che l'app si compone da se':
+     * per nome relativo, a partire dal `<base>` che punta qui. */
+    if (metodo === "GET" && via.startsWith(`${BASE}/`)) {
+      if (!plancia?.cE) {
+        male(risposta, 404, "questo add-on non si porta dietro la plancia");
+        return;
+      }
+      const letto = plancia.leggi(via);
+      if (letto.stato !== 200) {
+        male(risposta, letto.stato, "questo file non c'e'");
+        return;
+      }
+      risposta.writeHead(200, {
+        "content-type": letto.tipo,
+        /* Nell'indirizzo c'e' l'impronta: quello che c'e' non cambia mai. */
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-length": letto.corpo.length,
+      });
+      risposta.end(letto.corpo);
       return;
     }
 

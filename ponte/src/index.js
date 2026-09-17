@@ -223,6 +223,12 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
     chiamata,
     ritorno,
+    /* I file — dell'app e della plancia — anche da questa porta: e' l'unica
+     * che si raggiunge dalla rete di casa, ed e' quella che fa aprire gdahome
+     * in un browser senza fare il giro del centralino. La pagina della
+     * plancia, col suo cancello, resta dall'altra parte. */
+    cartellaDellApp: opzioni.app,
+    plancia,
   });
   const console_ = costruisciLaConsole({
     ponte,
