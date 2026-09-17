@@ -14,6 +14,8 @@
 /// quel tasto non se lo fa premere mai piu'.
 library;
 
+import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:ui' show AccessibilityFeatures;
 
 import 'package:flutter/material.dart';
@@ -23,6 +25,7 @@ import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/aggiornamenti.dart';
+import 'package:gdahome/vestito/marchio.dart';
 import 'package:gdahome/vestito/tema.dart';
 
 import 'ponte/ponte_finto.dart';
@@ -66,6 +69,9 @@ Map<String, dynamic> _voce(
   bool inCorso = false,
   int quanto = -1,
   String dettagli = '',
+  String note = '',
+  bool logo = false,
+  bool nostra = false,
 }) => {
   'entita': entita,
   'nome': nome,
@@ -76,6 +82,9 @@ Map<String, dynamic> _voce(
   'inCorso': inCorso,
   'quanto': quanto,
   'dettagli': dettagli,
+  'note': note,
+  'logo': logo,
+  'nostra': nostra,
 };
 
 void main() {
@@ -303,4 +312,92 @@ void main() {
       );
     },
   );
+
+  testWidgets('il logo arriva dal ponte e si mette al posto dell\'iniziale', (
+    tester,
+  ) async {
+    await unaCasa(tester);
+    ponte.aggiornamenti.add(
+      _voce('update.un_addon', 'Un add-on', da: '1.0', a: '1.1', logo: true),
+    );
+    ponte.loghi['update.un_addon'] = _unPng();
+    await apri(tester);
+
+    /* Prima che arrivi c'era l'iniziale; adesso c'e' l'immagine. */
+    expect(find.byType(Image), findsWidgets);
+    expect(find.text('U'), findsNothing);
+  });
+
+  testWidgets('chi non ha un logo tiene la sua iniziale, e non e\' un guasto', (
+    tester,
+  ) async {
+    await unaCasa(tester);
+    ponte.aggiornamenti.addAll([
+      /* Dice di averne uno, ma la casa non lo da\': capita, e la riga resta
+       * una riga fatta bene. */
+      _voce('update.bugiardo', 'Bugiardo', da: '1.0', a: '1.1', logo: true),
+      /* E chi non ne ha nemmeno uno dichiarato non lo chiede affatto. */
+      _voce('update.zeta', 'Zeta', da: '2.0', a: '2.1'),
+    ]);
+    await apri(tester);
+    await respira(tester);
+
+    expect(find.text('B'), findsOneWidget);
+    expect(find.text('Z'), findsOneWidget);
+    /* Nessun errore a schermo: un logo che manca non e\' una cosa rotta. */
+    expect(find.textContaining('Non si riesce'), findsNothing);
+  });
+
+  testWidgets(
+    'il nostro segno e\' quello dell\'app, e non si chiede a nessuno',
+    (tester) async {
+      await unaCasa(tester);
+      ponte.aggiornamenti.add(
+        _voce(
+          'update.dashboardmodern_update',
+          'DashboardModern',
+          da: '1.4.32.7',
+          a: '1.4.32.8',
+          nostra: true,
+        ),
+      );
+      await apri(tester);
+      await respira(tester);
+
+      /* `nostra` lo decide il ponte dal titolo, e il ponte finto fa lo stesso:
+     * la riga disegna il marchio dell'app, che sta gia\' nel telefono. */
+      expect(find.byType(Marchio), findsOneWidget);
+      expect(find.text('D'), findsNothing);
+    },
+  );
+
+  testWidgets('«Cosa cambia» c\'e\' solo dove ci sono note da leggere', (
+    tester,
+  ) async {
+    await unaCasa(tester);
+    ponte.aggiornamenti.addAll([
+      _voce(
+        'update.con_note',
+        'Con note',
+        da: '1.0',
+        a: '1.1',
+        note: 'https://gdahome.org/note',
+      ),
+      _voce('update.senza', 'Senza', da: '2.0', a: '2.1'),
+    ]);
+    await apri(tester);
+
+    expect(find.widgetWithText(TextButton, 'Cosa cambia'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Installa'), findsNWidgets(2));
+  });
 }
+
+/// Un PNG vero, il piu\' piccolo che si possa disegnare: un punto solo.
+///
+/// Serve perche\' `Image.memory` apra qualcosa davvero — con dei byte
+/// qualunque chiamerebbe `errorBuilder`, e la prova direbbe il contrario di
+/// quello che vuole dire.
+Uint8List _unPng() => base64Decode(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/'
+  'q842iQAAAABJRU5ErkJggg==',
+);

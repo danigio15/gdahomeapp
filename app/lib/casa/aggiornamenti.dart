@@ -22,6 +22,9 @@
 /// cosa.
 library;
 
+import 'dart:convert';
+import 'dart:typed_data';
+
 import '../ponte/filo.dart';
 
 /// Un aggiornamento che aspetta di essere fatto.
@@ -38,6 +41,7 @@ class UnAggiornamento {
     this.stacca = false,
     this.note = '',
     this.dettagli = '',
+    this.logo = false,
   });
 
   /// L'entita' `update.` che lo dichiara.
@@ -79,6 +83,14 @@ class UnAggiornamento {
   /// premerlo al buio.
   final String dettagli;
 
+  /// Se c'e' un segno da chiedere: il logo dell'add-on, il marchio
+  /// dell'integrazione, la casa di Home Assistant.
+  ///
+  /// Qui e' un si' o un no e non un indirizzo, di proposito: l'indirizzo lo
+  /// tiene il ponte, e il telefono chiede «il logo di questa entita'». Cosi'
+  /// quello che si va a scaricare non lo sceglie chi chiede.
+  final bool logo;
+
   /// Da che versione a che versione, come si scrive in una riga. Quando manca
   /// un pezzo si dice quello che c'e'.
   String get versioni {
@@ -103,6 +115,7 @@ class UnAggiornamento {
       stacca: grezzo['stacca'] == true,
       note: grezzo['note']?.toString().trim() ?? '',
       dettagli: grezzo['dettagli']?.toString().trim() ?? '',
+      logo: grezzo['logo'] == true,
     );
   }
 }
@@ -156,6 +169,36 @@ class GliAggiornamenti {
       gia: detto is Map && detto['gia'] == true,
       stacca: detto is Map && detto['stacca'] == true,
     );
+  }
+
+  /// Il segno di un aggiornamento, in byte. `null` quando non ce n'e' uno.
+  ///
+  /// Si chiede per **entita'**: l'indirizzo lo sa il ponte, che lo prende da
+  /// quello che Home Assistant ha dichiarato — l'icona di un add-on la apre
+  /// col segno di casa, il marchio di un'integrazione lo prende dai marchi di
+  /// Home Assistant. Il telefono non va a chiedere in giro chi ha in casa, e
+  /// non puo' far scaricare al ponte un indirizzo scelto da lui.
+  ///
+  /// Un no non e' un guasto: un aggiornamento senza logo e' la normalita', e
+  /// al suo posto si disegna l'iniziale. Percio' qui non si solleva.
+  Future<Uint8List?> logo(String entita) async {
+    try {
+      final detto = await _filo.risultato({
+        'type': 'ponte/aggiornamenti/logo',
+        'entity_id': entita,
+      });
+      if (detto is! Map) return null;
+      final stato = int.tryParse('${detto['stato'] ?? 0}') ?? 0;
+      if (stato != 200) return null;
+      final corpo = detto['corpo'];
+      if (corpo is! String || corpo.isEmpty) return null;
+      /* Il ponte le immagini non le comprime — un PNG gzippato pesa quanto
+       * prima — quindi qui non c'e' niente da aprire: sono byte. */
+      final byte = base64Decode(corpo);
+      return byte.isEmpty ? null : byte;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Riavvia Home Assistant. Il filo cade subito dopo, ed e' il segno che sta

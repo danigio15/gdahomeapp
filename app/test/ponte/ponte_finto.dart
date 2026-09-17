@@ -353,6 +353,9 @@ class PonteFinto {
   /// tutte le case quasi sempre.
   final List<Map<String, dynamic>> aggiornamenti = [];
 
+  /// I loghi che questa casa ha, per entita'. Chi non c'e' non ne ha uno.
+  final Map<String, Uint8List> loghi = {};
+
   /// Se questo ponte sa rispondere sugli aggiornamenti.
   ///
   /// `false` e' un add-on piu' vecchio dell'app: non e' un guasto, e l'app
@@ -582,12 +585,27 @@ class PonteFinto {
       case 'ponte/aggiornamenti/elenco':
       case 'ponte/aggiornamenti/installa':
       case 'ponte/aggiornamenti/riavvia':
+      case 'ponte/aggiornamenti/logo':
         if (!sagliAggiornamenti) {
           return no('unknown_command', 'non conosco ${detto['type']}');
         }
         switch (detto['type']) {
           case 'ponte/aggiornamenti/elenco':
             return si({'aggiornamenti': aggiornamenti});
+          /* Il logo di un aggiornamento, come lo manda il ponte vero: la
+           * stessa busta dei file di casa, e non compresso. Chi non ne ha uno
+           * riceve un no, che non e' un guasto. */
+          case 'ponte/aggiornamenti/logo':
+            final chi = detto['entity_id']?.toString() ?? '';
+            final byte = loghi[chi];
+            if (byte == null) {
+              return no('not_found', 'questo aggiornamento non ha un logo');
+            }
+            return si({
+              'stato': 200,
+              'tipo': 'image/png',
+              'corpo': base64Encode(byte),
+            });
           case 'ponte/aggiornamenti/riavvia':
             riavviata = true;
             return si({'avviato': true});

@@ -28,6 +28,7 @@
 library;
 
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -37,7 +38,9 @@ import '../casa/collegamento.dart';
 import '../casa/segnalazioni.dart' show spiegaLErrore;
 import '../parole.dart';
 import '../ponte/filo.dart';
+import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
+import '../vestito/quanto_e_largo.dart';
 import '../vestito/tema.dart';
 
 /// Ogni quanto si riguarda l'elenco mentre si sta qui.
@@ -46,6 +49,20 @@ import '../vestito/tema.dart';
 /// cosa che fa premere due volte. Il ponte l'elenco se lo tiene per dieci
 /// secondi, quindi questo giro non gli costa niente.
 const _ogniQuanto = Duration(seconds: 6);
+
+/// Quanto larga si tiene questa sezione.
+///
+/// La home ferma le pagine dell'app a millecento punti, ed e' la misura
+/// giusta per una configurazione a due colonne di caselle. Qui no: una riga e'
+/// un nome, due versioni e un tasto — duecento punti di roba — e su un
+/// millecento il tasto finisce **un metro** a destra di quello che si e'
+/// appena letto. Si guarda a sinistra, si preme a destra, e in mezzo c'e' il
+/// vuoto.
+///
+/// Settecentosessanta e' dove la riga resta una riga: il nome, la versione e
+/// il tasto si vedono in un colpo d'occhio, e la colonna sta in mezzo alla
+/// pagina come sta il foglio del changelog.
+const double _quantoLarga = 760;
 
 class SchermataDegliAggiornamenti extends StatefulWidget {
   const SchermataDegliAggiornamenti({
@@ -87,6 +104,12 @@ class _SchermataDegliAggiornamentiState
    * svuota da se': appena l'elenco dice `inCorso`, o quando quella riga
    * sparisce perche' l'aggiornamento e' stato fatto. */
   final _appenaPartiti = <String>{};
+
+  /* I segni gia' arrivati, per entita'. Una voce che c'e' con dentro `null`
+   * vuol dire «chiesto, e non ce n'e' uno»: senza distinguere le due cose si
+   * richiederebbe per sempre, sei secondi per volta, il logo di chi non ce
+   * l'ha. */
+  final _loghi = <String, Uint8List?>{};
 
   /* Home Assistant e' stato mandato a riavviare da qui. Da li' in poi il filo
    * cade, e la schermata lo racconta invece di mostrare un errore. */
@@ -175,10 +198,33 @@ class _SchermataDegliAggiornamentiState
         );
       });
       widget.quandoContati?.call(fila.length);
+      unawaited(_iSegni(fila));
     } catch (errore) {
       if (mounted) setState(() => _perche = spiegaLErrore(errore));
     } finally {
       if (mounted) setState(() => _caricando = false);
+    }
+  }
+
+  /* I segni di chi aspetta, uno per uno.
+   *
+   * Non nell'elenco: un elenco con dentro sei immagini in base64 sarebbe un
+   * messaggio da centinaia di kilobyte ogni sei secondi, e da fuori casa
+   * passa dal centralino. Qui si chiedono **una volta sola per apertura** e
+   * si tengono; la riga intanto disegna l'iniziale, e quando il segno arriva
+   * si mette al suo posto.
+   *
+   * Uno per volta e non tutti insieme: sono immagini piccole e non c'e'
+   * niente da aspettare, e sei domande in fila sul filo mentre si guarda
+   * l'elenco non sono un ingorgo. */
+  Future<void> _iSegni(List<UnAggiornamento> fila) async {
+    for (final uno in fila) {
+      if (!mounted || !uno.logo || _loghi.containsKey(uno.entita)) continue;
+      final filo = _presa;
+      if (filo == null) return;
+      final preso = await GliAggiornamenti(filo).logo(uno.entita);
+      if (!mounted) return;
+      setState(() => _loghi[uno.entita] = preso);
     }
   }
 
@@ -325,39 +371,43 @@ class _SchermataDegliAggiornamentiState
 
     return RefreshIndicator(
       onRefresh: () => _carica(forza: true),
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-        children: [
-          _Riassunto(quanti: _fila.length),
-          if (_perche != null) ...[
-            const SizedBox(height: 12),
-            _Avviso(_perche!),
-          ],
-          if (_fila.isNotEmpty) ...[
-            const SizedBox(height: 18),
-            Insegna(
-              inLingua(it: 'Da fare', en: 'To do'),
-              azione: _caricando
-                  ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : null,
-            ),
-            for (final uno in _fila) ...[
-              _Riga(
-                quale: uno,
-                appenaPartito: _appenaPartiti.contains(uno.entita),
-                quandoInstalla: () => _installa(uno),
-              ),
-              const SizedBox(height: 10),
+      child: QuantoCiSta(
+        quanto: _quantoLarga,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+          children: [
+            _Riassunto(quanti: _fila.length),
+            if (_perche != null) ...[
+              const SizedBox(height: 12),
+              _Avviso(_perche!),
             ],
+            if (_fila.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              Insegna(
+                inLingua(it: 'Da fare', en: 'To do'),
+                azione: _caricando
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : null,
+              ),
+              for (final uno in _fila) ...[
+                _Riga(
+                  quale: uno,
+                  segno: _loghi[uno.entita],
+                  appenaPartito: _appenaPartiti.contains(uno.entita),
+                  quandoInstalla: () => _installa(uno),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ],
+            const SizedBox(height: 18),
+            Insegna(inLingua(it: 'La casa', en: 'The home')),
+            _IlRiavvio(quandoPremuto: _presa == null ? null : _riavvia),
           ],
-          const SizedBox(height: 18),
-          Insegna(inLingua(it: 'La casa', en: 'The home')),
-          _IlRiavvio(quandoPremuto: _presa == null ? null : _riavvia),
-        ],
+        ),
       ),
     );
   }
@@ -457,17 +507,60 @@ class _Riassunto extends StatelessWidget {
   }
 }
 
-/// Un aggiornamento: com'e' fatto, cosa cambia, e il tasto per farlo.
+/// Un aggiornamento: chi e', da che versione a che versione, e i suoi tasti.
+///
+/// ## Il segno davanti
+///
+/// Sei righe con sei nomi scritti si leggono una per una. Col segno davanti si
+/// riconosce quello che si cerca **senza leggere** — il quadrato di gdahome,
+/// la casa di Home Assistant, il marchio dell'add-on — ed e' quello che fa
+/// una pagina Aggiornamenti invece di un elenco di stringhe. Il nostro non
+/// arriva da nessuna parte: e' l'icona dell'app, che sta gia' nel telefono.
+/// Gli altri li manda il ponte, e finche' non sono arrivati al loro posto c'e'
+/// l'iniziale — che non e' un buco in attesa, e' una cosa che si legge.
+///
+/// ## I tasti su una riga
+///
+/// In quest'app i tasti sono larghi quanto la riga, ed e' la regola giusta per
+/// il tasto di una pagina. Qui no: sei schede una sotto l'altra, con sei barre
+/// azzurre larghe tutta la pagina, sono un muro — e su uno schermo da computer
+/// quella barra diventa lunga un metro per la parola «Installa». Dentro una
+/// scheda i tasti stanno su una riga, a destra, ognuno della sua misura.
+///
+/// Senza misure scritte a mano comunque: e' un `Wrap`, e dove non ci stanno
+/// affiancati vanno a capo da soli — un telefono piccolo col carattere grande
+/// e' il caso in cui succede.
 class _Riga extends StatelessWidget {
   const _Riga({
     required this.quale,
     required this.appenaPartito,
     required this.quandoInstalla,
+    this.segno,
   });
 
   final UnAggiornamento quale;
+
+  /// Il logo, quando e' arrivato. Il nostro non passa di qui: quello e' un
+  /// pezzo dell'app.
+  final Uint8List? segno;
+
   final bool appenaPartito;
   final VoidCallback quandoInstalla;
+
+  /// «Installa», della sua misura e non largo quanto la riga.
+  ///
+  /// Il vestito dell'app mette `Size.fromHeight` a tutti i tasti pieni, e
+  /// `Size.fromHeight` e' larga **infinito**: e' cosi' che i tasti di una
+  /// pagina si prendono la riga intera. Dentro una scheda quel comportamento
+  /// va spento, o sei schede fanno sei barre azzurre una sotto l'altra.
+  Widget _ilTasto() => FilledButton(
+    style: FilledButton.styleFrom(
+      minimumSize: const Size(0, 44),
+      padding: const EdgeInsets.symmetric(horizontal: 22),
+    ),
+    onPressed: quandoInstalla,
+    child: Text(inLingua(it: 'Installa', en: 'Install')),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -475,14 +568,32 @@ class _Riga extends StatelessWidget {
     final testi = Theme.of(context).textTheme;
     final vaAvanti = quale.inCorso || appenaPartito;
 
+    /* Un tasto solo sta **sulla riga del nome**; due vanno su una riga loro.
+     *
+     * «Installa» da solo, su una riga sua, lascia mezza scheda vuota a
+     * sinistra — e una scheda mezza vuota si legge come una scheda a cui manca
+     * qualcosa. Accanto al nome invece non avanza niente: il nome, la
+     * versione e il tasto si leggono in un colpo d'occhio, e la riga breve
+     * della versione, quando c'e', passa sotto.
+     *
+     * Quando c'e' anche «Cosa cambia» i due tasti scendono insieme: sono due
+     * cose che si fanno, e stanno dove si guarda dopo aver letto. E dove a
+     * destra c'e' gia' il bollino «riavvia la casa» il tasto scende comunque:
+     * impilati sarebbero un avvertimento e un tasto attaccati, che e'
+     * l'accostamento peggiore che potessero avere. */
+    final ilTastoDiFianco =
+        !vaAvanti && quale.installabile && quale.note.isEmpty && !quale.stacca;
+
     return Scheda(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _IlSegno(quale: quale, segno: segno),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -494,72 +605,95 @@ class _Riga extends StatelessWidget {
                       ),
                     ),
                     if (quale.versioni.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        quale.versioni,
-                        style: testi.bodySmall?.copyWith(
-                          color: colori.onSurfaceVariant,
-                        ),
-                      ),
+                      const SizedBox(height: 3),
+                      _LeVersioni(quale),
                     ],
                   ],
                 ),
               ),
-              if (quale.stacca && !vaAvanti) ...[
+              if ((quale.stacca && !vaAvanti) || ilTastoDiFianco) ...[
                 const SizedBox(width: 8),
-                Bollino(
-                  inLingua(it: 'riavvia la casa', en: 'restarts the home'),
-                  colore: Colori.ambraScura,
-                  fondo: Colori.ambra.withValues(alpha: 0.18),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (quale.stacca && !vaAvanti)
+                      Bollino(
+                        inLingua(
+                          it: 'riavvia la casa',
+                          en: 'restarts the home',
+                        ),
+                        colore: Colori.ambraScura,
+                        fondo: Colori.ambra.withValues(alpha: 0.18),
+                      ),
+                    if (quale.stacca && !vaAvanti && ilTastoDiFianco)
+                      const SizedBox(height: 8),
+                    if (ilTastoDiFianco) _ilTasto(),
+                  ],
                 ),
               ],
             ],
           ),
           if (quale.dettagli.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 9),
             Text(
               quale.dettagli,
               style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
             ),
           ],
-          /* Le note stanno **sopra** il tasto, e non di fianco: e' li' che si
-           * leggono — prima di premerlo, non dopo. */
-          if (quale.note.isNotEmpty && !vaAvanti)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => _leggiLeNote(quale.note),
-                icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                label: Text(
-                  inLingua(
-                    it: 'Cosa cambia in questa versione',
-                    en: 'What changes in this version',
-                  ),
-                ),
-              ),
-            ),
-          const SizedBox(height: 8),
+          if (!ilTastoDiFianco) const SizedBox(height: 10),
           if (vaAvanti)
             _InCorso(quanto: quale.quanto)
+          else if (ilTastoDiFianco)
+            /* Il tasto sta di fianco al nome: qui sotto non c'e' niente. */
+            const SizedBox.shrink()
           else if (quale.installabile)
-            /* Largo quanto la riga, come tutti i tasti di quest'app: su un
-             * telefono un tasto si prende la larghezza che c'e', e cosi' non
-             * ci sono misure scritte a mano che su uno schermo stretto
-             * scoppiano. */
-            FilledButton(
-              onPressed: quandoInstalla,
-              child: Text(inLingua(it: 'Installa', en: 'Install')),
+            /* «Cosa cambia» accanto a «Installa», e non sopra: sono le due
+             * cose che si fanno da qui, e stanno dove si guarda dopo aver
+             * letto — in fondo alla scheda, a destra. Leggere viene prima, e
+             * sta a sinistra. */
+            Align(
+              alignment: Alignment.centerRight,
+              child: Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (quale.note.isNotEmpty)
+                    TextButton(
+                      onPressed: () => _leggiLeNote(quale.note),
+                      child: Text(
+                        inLingua(it: 'Cosa cambia', en: 'What changes'),
+                      ),
+                    ),
+                  _ilTasto(),
+                ],
+              ),
             )
           else
             /* Dove Home Assistant dice che non si installa chiamando un
              * servizio, un tasto sarebbe una promessa che non si mantiene: si
              * dice dove si fa. */
-            Text(
-              inLingua(
-                it: 'Questo si aggiorna dal suo apparecchio.',
-                en: 'This one updates on the device itself.',
-              ),
-              style: testi.bodySmall?.copyWith(color: colori.onSurfaceVariant),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.handyman_rounded,
+                  size: 15,
+                  color: colori.onSurfaceVariant,
+                ),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    inLingua(
+                      it: 'Questo si aggiorna dal suo apparecchio.',
+                      en: 'This one updates on the device itself.',
+                    ),
+                    style: testi.bodySmall?.copyWith(
+                      color: colori.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
             ),
         ],
       ),
@@ -570,6 +704,142 @@ class _Riga extends StatelessWidget {
     final indirizzo = Uri.tryParse(dove);
     if (indirizzo == null) return;
     await launchUrl(indirizzo, mode: LaunchMode.externalApplication);
+  }
+}
+
+/// Da che versione a che versione, in modo che si veda **quale** e' quella
+/// nuova.
+///
+/// Prima era una riga sola in grigio, e le due versioni si somigliano per
+/// definizione: `1.4.32.7 → 1.4.32.8` grigio su grigio non si legge, si
+/// indovina. Quella di adesso e' quella che conta, e sta in evidenza; quella
+/// di prima e' il punto di partenza, e sta indietro. Le cifre a larghezza
+/// fissa, che se no il numero balla.
+class _LeVersioni extends StatelessWidget {
+  const _LeVersioni(this.quale);
+
+  final UnAggiornamento quale;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    final base = testi.bodySmall?.copyWith(
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    if (quale.da.isEmpty || quale.a.isEmpty) {
+      return Text(
+        quale.versioni,
+        style: base?.copyWith(
+          color: colori.primary,
+          fontWeight: FontWeight.w700,
+        ),
+      );
+    }
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: quale.da,
+            style: base?.copyWith(color: colori.onSurfaceVariant),
+          ),
+          /* Le stesse spaziature di `versioni`: la riga scritta e la riga
+           * disegnata devono leggersi uguali, che se no sono due modi di
+           * scrivere la stessa cosa. */
+          TextSpan(
+            text: ' → ',
+            style: base?.copyWith(
+              color: colori.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+          TextSpan(
+            text: quale.a,
+            style: base?.copyWith(
+              color: colori.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Il segno di chi si aggiorna: il logo quando c'e', l'iniziale quando no.
+///
+/// Tre casi, in ordine: **il nostro** — l'icona dell'app, che sta nel telefono
+/// e non si chiede a nessuno; **quello che ha mandato il ponte**; e
+/// **l'iniziale**, per chi non ha un logo o mentre il suo sta arrivando.
+///
+/// L'iniziale non e' un ripiego che si vede: e' una lettera dentro un quadrato
+/// come gli altri, e una riga senza logo resta una riga fatta bene. Un buco
+/// grigio in attesa, invece, si legge come una cosa rotta.
+class _IlSegno extends StatelessWidget {
+  const _IlSegno({required this.quale, this.segno});
+
+  final UnAggiornamento quale;
+  final Uint8List? segno;
+
+  static const double _lato = 42;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+
+    if (quale.nostra) {
+      return const Marchio(lato: _lato);
+    }
+
+    final dentro = segno;
+    return Container(
+      width: _lato,
+      height: _lato,
+      decoration: BoxDecoration(
+        color: colori.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(_lato * 0.24),
+      ),
+      alignment: Alignment.center,
+      clipBehavior: Clip.antiAlias,
+      child: dentro == null
+          ? Text(
+              _laLettera(quale.nome),
+              style: testi.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: colori.onSurfaceVariant,
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(5),
+              child: Image.memory(
+                dentro,
+                /* `contain` e non `cover`: un logo e' fatto per stare intero,
+                 * e ritagliarne i bordi vuol dire tagliare la parte che lo fa
+                 * riconoscere. */
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.medium,
+                /* Un'immagine che non si apre — un file storto, un formato che
+                 * questo telefono non conosce — torna all'iniziale invece di
+                 * lasciare il quadratino rotto di sistema. */
+                errorBuilder: (contesto, _, _) => Text(
+                  _laLettera(quale.nome),
+                  style: testi.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: colori.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+    );
+  }
+
+  /// La prima lettera che si legge. Un nome che comincia con un simbolo o con
+  /// uno spazio non da' un quadrato vuoto: si prende la prima lettera vera.
+  static String _laLettera(String nome) {
+    for (final pezzo in nome.trim().split('')) {
+      if (RegExp(r'[A-Za-z0-9]').hasMatch(pezzo)) return pezzo.toUpperCase();
+    }
+    return '?';
   }
 }
 

@@ -147,6 +147,47 @@ const STACCANO = [
   "homeassistantoperatingsystem",
 ];
 
+/* Il segno di chi si aggiorna: dove Home Assistant dice che sta.
+ *
+ * Un elenco di sei righe tutte uguali, con sei nomi scritti, si legge riga per
+ * riga. Con i segni davanti si riconosce quello che si cerca **senza
+ * leggere** — la casa di Home Assistant, il quadrato di gdahome, il marchio
+ * dell'add-on — che e' come funziona la pagina Aggiornamenti di Home
+ * Assistant e come funziona la tessera della plancia.
+ *
+ * `entity_picture` e' il campo dove Home Assistant lo scrive, e ne scrive di
+ * due razze:
+ *
+ *  - un indirizzo **di casa**, che comincia con una barra: `/api/hassio/...`
+ *    per l'icona di un add-on. Quello non si apre senza il segno di Home
+ *    Assistant, e il segno ce l'ha il ponte: passa da `ponte/http`, che e'
+ *    la strada che i file di casa fanno gia';
+ *  - un indirizzo dei **marchi** di Home Assistant
+ *    (`brands.home-assistant.io`), che e' dove stanno i loghi delle
+ *    integrazioni. Quello e' pubblico, e lo prende il ponte per non mandare
+ *    il telefono a chiedere in giro chi ha in casa.
+ *
+ * Tutto il resto **non passa**, e non e' prudenza per il gusto di esserlo: se
+ * qui passasse un indirizzo qualunque, chi puo' scrivere l'attributo di
+ * un'entita' avrebbe il ponte come messaggero per andare dove vuole. Due
+ * razze, e nient'altro.
+ */
+const I_MARCHI = "https://brands.home-assistant.io/";
+
+/**
+ * Dove sta il segno di questo aggiornamento, o stringa vuota se non si sa.
+ *
+ * @param {object} stato lo stato dell'entita'
+ */
+export function ilLogoDi(stato) {
+  const dove = pulito(stato?.attributes?.entity_picture);
+  if (!dove) return "";
+  if (dove.startsWith("//")) return "";
+  if (dove.startsWith("/")) return dove;
+  if (dove.startsWith(I_MARCHI)) return dove;
+  return "";
+}
+
 function staccaIlFilo(stato) {
   const dove = `${pulito(stato?.entity_id)} ${pulito(stato?.attributes?.title)}`
     .toLowerCase()
@@ -188,6 +229,10 @@ export function aggiornamentiDaFare(stati) {
        * Assistant si porta dietro, non uno che indoviniamo noi. */
       note: pulito(stato.attributes?.release_url),
       dettagli: pulito(stato.attributes?.release_summary).slice(0, NOTE_MASSIME),
+      /* Se c'e' un segno da chiedere. L'indirizzo non viaggia: il telefono
+       * chiede «il logo di questa entita'», e dove andarlo a prendere lo sa
+       * il ponte. Cosi' quello che si scarica non lo scegli tu. */
+      logo: ilLogoDi(stato) !== "",
     }))
     .sort((una, altra) => {
       if (una.nostra !== altra.nostra) return una.nostra ? -1 : 1;
@@ -211,6 +256,10 @@ export class Aggiornamenti {
     this.quantoDura = quantoDura;
     this._elenco = null;
     this._lettoIl = 0;
+    /* Dove sta il segno di ognuno. Si riempie insieme all'elenco, e non
+     * viaggia: il telefono chiede il logo di un'entita', e l'indirizzo lo
+     * tiene questa mappa. */
+    this._dovIlLogo = new Map();
   }
 
   /* Cosa aspetta di essere aggiornato. L'elenco si tiene per qualche secondo:
@@ -219,7 +268,14 @@ export class Aggiornamenti {
     const ora = this.adesso();
     if (!forza && this._elenco && ora - this._lettoIl < this.quantoDura) return this._elenco;
     const stati = await this.casa.chiedi({ type: "get_states" });
-    this._elenco = aggiornamentiDaFare(Array.isArray(stati) ? stati : []);
+    const dentro = Array.isArray(stati) ? stati : [];
+    this._elenco = aggiornamentiDaFare(dentro);
+    this._dovIlLogo = new Map(
+      dentro
+        .filter(aspettaDiEssereFatto)
+        .map((stato) => [pulito(stato.entity_id), ilLogoDi(stato)])
+        .filter(([, dove]) => dove !== ""),
+    );
     this._lettoIl = this.adesso();
     return this._elenco;
   }
@@ -231,6 +287,24 @@ export class Aggiornamenti {
   dimentica() {
     this._elenco = null;
     this._lettoIl = 0;
+  }
+
+  /**
+   * Dove sta il segno di questo aggiornamento, o stringa vuota.
+   *
+   * Si passa dall'elenco perche' e' li' che l'indirizzo si sa: chiedere il
+   * logo di un'entita' che l'elenco non ha nemmeno guardato vorrebbe dire
+   * fidarsi del nome che arriva dal telefono, e andare a prendere quello che
+   * dice lui. Cosi' invece si va a prendere solo cio' che **questa casa** ha
+   * dichiarato, per gli aggiornamenti che aspettano davvero.
+   *
+   * @param {string} entita l'entita' `update.`
+   */
+  async doveIlLogo(entita) {
+    const quale = pulito(entita);
+    if (!quale) return "";
+    await this.elenco();
+    return this._dovIlLogo.get(quale) ?? "";
   }
 
   /**

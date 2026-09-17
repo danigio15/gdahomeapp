@@ -135,6 +135,10 @@ const FOTO_CARICA = "dashboardmodern/www/upload";
 const AGGIORNAMENTI_ELENCO = "ponte/aggiornamenti/elenco";
 const AGGIORNAMENTI_INSTALLA = "ponte/aggiornamenti/installa";
 const AGGIORNAMENTI_RIAVVIA = "ponte/aggiornamenti/riavvia";
+/* Il segno di chi si aggiorna. Si chiede per **entita'**, e non per
+ * indirizzo: dove andarlo a prendere lo decide il ponte, guardando quello che
+ * Home Assistant ha dichiarato. */
+const AGGIORNAMENTI_LOGO = "ponte/aggiornamenti/logo";
 
 const TIMER_ELENCO = "dashboardmodern/clima/timer/list";
 const TIMER_METTI = "dashboardmodern/clima/timer/set";
@@ -438,9 +442,10 @@ export class Commissioni {
     if (
       tipo === AGGIORNAMENTI_ELENCO ||
       tipo === AGGIORNAMENTI_INSTALLA ||
-      tipo === AGGIORNAMENTI_RIAVVIA
+      tipo === AGGIORNAMENTI_RIAVVIA ||
+      tipo === AGGIORNAMENTI_LOGO
     )
-      return this._aggiornamenti(detto);
+      return this._aggiornamenti(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("dashboardmodern/tickets/"))
       return this._segnalazioniDellaPlancia(detto);
     if (eLaCopiaVecchia(detto)) {
@@ -508,7 +513,7 @@ export class Commissioni {
    * mentre lo fa: `aggiornamenti.js` aspetta poco e risponde «avviato», e a
    * dire com'e' andata ci pensa l'elenco al giro dopo.
    */
-  async _aggiornamenti(detto) {
+  async _aggiornamenti(detto, chiChiede = "", amministra = null) {
     const id = detto?.id ?? null;
     const quali = this.aggiornamenti;
     if (!quali) return no(id, "unknown_command", `non conosco ${detto?.type}`);
@@ -519,6 +524,7 @@ export class Commissioni {
         this.registro.info("riavvio di Home Assistant chiesto dall'app");
         return si(id, await quali.riavvia());
       }
+      if (detto.type === AGGIORNAMENTI_LOGO) return this._ilLogo(detto, chiChiede, amministra);
       const entita = typeof detto.entity_id === "string" ? detto.entity_id.trim() : "";
       this.registro.info(`installazione di ${entita} chiesta dall'app`);
       return si(id, await quali.installa(entita));
@@ -532,6 +538,52 @@ export class Commissioni {
       if (errore?.code) return no(id, errore.code, errore.message || "Home Assistant ha detto no");
       this.registro.errore(`aggiornamenti: ${errore?.message || errore}`);
       return no(id, "ponte_aggiornamenti", "non ha funzionato");
+    }
+  }
+
+  /* Il segno di un aggiornamento, preso e mandato giu'.
+   *
+   * Due strade, e sono quelle che `ilLogoDi` lascia passare:
+   *
+   *  - un indirizzo **di casa** (`/api/hassio/addons/<add-on>/icon`): passa da
+   *    `_http`, che e' la stessa strada dei file di casa — ha il segno di Home
+   *    Assistant, la coda, e il limite su quanto si scarica. Non si riscrive
+   *    niente;
+   *  - i **marchi** di Home Assistant: un giro fuori, verso un host solo.
+   *
+   * Non si comprime: un PNG compresso pesa quanto prima, e il gzip qui
+   * vorrebbe dire farlo aprire al telefono per niente. E non si tiene da
+   * parte: e' il telefono che se lo tiene, e lo chiede una volta per volta che
+   * apre la sezione.
+   */
+  async _ilLogo(detto, chiChiede = "", amministra = null) {
+    const id = detto?.id ?? null;
+    const entita = typeof detto?.entity_id === "string" ? detto.entity_id : "";
+    const dove = await this.aggiornamenti.doveIlLogo(entita);
+    if (!dove) return no(id, "not_found", "questo aggiornamento non ha un logo");
+    if (dove.startsWith("/")) {
+      return this._http(
+        { id, metodo: "GET", percorso: dove, senzaGzip: true },
+        chiChiede,
+        amministra,
+      );
+    }
+    await this._ilMioTurno();
+    try {
+      const { stato, tipo, corpo } = await this.scarica({
+        url: dove,
+        metodo: "GET",
+        intestazioni: { "accept-encoding": "identity" },
+        insicuro: false,
+        massimo: RISPOSTA_MASSIMA,
+        attesa: ATTESA,
+      });
+      return si(id, impacchetta(stato, tipo, corpo, { senzaGzip: true }));
+    } catch (errore) {
+      this.registro.attenzione(`il logo di ${entita}: ${errore?.message || errore}`);
+      return no(id, "ponte_http", String(errore?.message || "non ha funzionato"));
+    } finally {
+      this._finito();
     }
   }
 

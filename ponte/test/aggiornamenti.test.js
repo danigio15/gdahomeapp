@@ -12,7 +12,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { Aggiornamenti, aggiornamentiDaFare, QuestoNoNo } from "../src/aggiornamenti.js";
+import { Aggiornamenti, aggiornamentiDaFare, ilLogoDi, QuestoNoNo } from "../src/aggiornamenti.js";
 import { aggiornamentiDaFare as quelliDellaPlancia } from "../plancia/src/core/aggiornamenti-da-fare.js";
 import { Commissioni } from "../src/commissioni.js";
 import { RispostaNegativa } from "../src/casa.js";
@@ -314,6 +314,185 @@ test("i tre comandi sul filo, e quello che risponde un ponte che non li sa fare"
    * l'app spiega «gdahome in casa e' piu' vecchio dell'app». */
   const vecchio = new Commissioni({ casa, registro: ZITTO });
   const niente = await vecchio.rispondi({ id: 4, type: "ponte/aggiornamenti/elenco" });
+  assert.equal(niente.success, false);
+  assert.equal(niente.error.code, "unknown_command");
+});
+
+/* Il segno di chi si aggiorna: quali indirizzi passano, e quali no.
+ *
+ * Qui la prova che conta non e' che un logo arrivi: e' che **non passi un
+ * indirizzo qualunque**. `entity_picture` e' un attributo di un'entita', e un
+ * attributo lo scrive chi puo' scrivere in Home Assistant: se il ponte
+ * andasse a prendere quello che c'e' scritto, chiunque possa scriverlo
+ * avrebbe il ponte come messaggero per andare dove vuole — dalla rete di
+ * casa, con il segno di Home Assistant in tasca. Due razze di indirizzo, e
+ * nient'altro. */
+test("il logo: di casa o dei marchi, e niente altro", () => {
+  const dentro = (dove) => ilLogoDi(unAggiornamento("update.uno", { entity_picture: dove }));
+
+  /* Di casa: l'icona di un add-on, che senza il segno non si apre. */
+  assert.equal(dentro("/api/hassio/addons/gdahome/icon"), "/api/hassio/addons/gdahome/icon");
+  /* I marchi di Home Assistant, dove stanno i loghi delle integrazioni. */
+  assert.equal(
+    dentro("https://brands.home-assistant.io/_/shelly/icon.png"),
+    "https://brands.home-assistant.io/_/shelly/icon.png",
+  );
+
+  /* E tutto il resto no. */
+  for (const brutto of [
+    "https://qualcunaltro.example/logo.png",
+    "http://brands.home-assistant.io/_/shelly/icon.png",
+    "https://brands.home-assistant.io.example.com/x.png",
+    "//brands.home-assistant.io/_/shelly/icon.png",
+    "data:image/png;base64,AAAA",
+    "file:///etc/passwd",
+    "",
+    "   ",
+  ]) {
+    assert.equal(dentro(brutto), "", brutto);
+  }
+
+  /* Senza l'attributo non c'e' logo, e non e' un guasto. */
+  assert.equal(ilLogoDi(unAggiornamento("update.uno")), "");
+  assert.equal(ilLogoDi(null), "");
+});
+
+test("la riga dice se un logo c'e', e l'indirizzo non viaggia", () => {
+  const fila = aggiornamentiDaFare([
+    unAggiornamento("update.uno", {
+      title: "Uno",
+      entity_picture: "https://brands.home-assistant.io/_/uno/icon.png",
+    }),
+    unAggiornamento("update.due", { title: "Due" }),
+  ]);
+  const uno = fila.find((quale) => quale.entita === "update.uno");
+  const due = fila.find((quale) => quale.entita === "update.due");
+  assert.equal(uno.logo, true);
+  assert.equal(due.logo, false);
+  /* L'indirizzo resta nel ponte: sul filo passa un si' o un no. */
+  assert.equal(JSON.stringify(fila).includes("brands.home-assistant.io"), false);
+});
+
+test("il logo di casa passa dal segno di Home Assistant", async () => {
+  const casa = casaFinta({
+    stati: [
+      unAggiornamento("update.un_addon", {
+        title: "Un add-on",
+        entity_picture: "/api/hassio/addons/uno/icon",
+      }),
+    ],
+  });
+  casa.indirizzo = "http://dentro:8123";
+  casa.segno = "IL-SEGNO";
+
+  const chieste = [];
+  const commissioni = new Commissioni({
+    casa,
+    registro: ZITTO,
+    aggiornamenti: new Aggiornamenti({ casa, registro: ZITTO }),
+    scarica: async (quale) => {
+      chieste.push(quale);
+      return { stato: 200, tipo: "image/png", corpo: Buffer.from([1, 2, 3]) };
+    },
+  });
+
+  assert.equal(commissioni.riconosce({ type: "ponte/aggiornamenti/logo" }), true);
+  const preso = await commissioni.rispondi({
+    id: 1,
+    type: "ponte/aggiornamenti/logo",
+    entity_id: "update.un_addon",
+  });
+  assert.equal(preso.success, true);
+  assert.equal(preso.result.tipo, "image/png");
+  assert.equal(Buffer.from(preso.result.corpo, "base64").length, 3);
+  /* Non compresso: un PNG gzippato pesa quanto prima, e farlo aprire al
+   * telefono per niente e' lavoro per niente. */
+  assert.equal(preso.result.compresso, undefined);
+
+  assert.equal(chieste.length, 1);
+  assert.equal(chieste[0].url, "http://dentro:8123/api/hassio/addons/uno/icon");
+  assert.equal(chieste[0].intestazioni.authorization, "Bearer IL-SEGNO");
+});
+
+test("il logo dei marchi si prende fuori, senza il segno di casa", async () => {
+  const dove = "https://brands.home-assistant.io/_/shelly/icon.png";
+  const casa = casaFinta({
+    stati: [unAggiornamento("update.una_presa", { title: "Una presa", entity_picture: dove })],
+  });
+  casa.indirizzo = "http://dentro:8123";
+  casa.segno = "IL-SEGNO";
+
+  const chieste = [];
+  const commissioni = new Commissioni({
+    casa,
+    registro: ZITTO,
+    aggiornamenti: new Aggiornamenti({ casa, registro: ZITTO }),
+    scarica: async (quale) => {
+      chieste.push(quale);
+      return { stato: 200, tipo: "image/png", corpo: Buffer.from([9]) };
+    },
+  });
+
+  const preso = await commissioni.rispondi({
+    id: 1,
+    type: "ponte/aggiornamenti/logo",
+    entity_id: "update.una_presa",
+  });
+  assert.equal(preso.success, true);
+  assert.equal(chieste[0].url, dove);
+  /* Il segno di casa non si manda a nessun altro. */
+  assert.equal(chieste[0].intestazioni.authorization, undefined);
+});
+
+test("il logo di un'entita' che l'elenco non ha non si va a prendere", async () => {
+  const casa = casaFinta({
+    stati: [
+      unAggiornamento("update.uno", {
+        title: "Uno",
+        entity_picture: "/api/hassio/addons/uno/icon",
+      }),
+      /* Spento: non aspetta niente, e quindi non ha un logo da chiedere. */
+      unAggiornamento(
+        "update.spento",
+        { title: "Spento", entity_picture: "/api/hassio/addons/spento/icon" },
+        "off",
+      ),
+    ],
+  });
+  casa.indirizzo = "http://dentro:8123";
+  casa.segno = "IL-SEGNO";
+
+  let andata = false;
+  const commissioni = new Commissioni({
+    casa,
+    registro: ZITTO,
+    aggiornamenti: new Aggiornamenti({ casa, registro: ZITTO }),
+    scarica: async () => {
+      andata = true;
+      return { stato: 200, tipo: "image/png", corpo: Buffer.from([1]) };
+    },
+  });
+
+  for (const chi of ["update.spento", "sensor.niente", "update.mai_vista", "", "../etc/passwd"]) {
+    const niente = await commissioni.rispondi({
+      id: 1,
+      type: "ponte/aggiornamenti/logo",
+      entity_id: chi,
+    });
+    assert.equal(niente.success, false, chi);
+    assert.equal(niente.error.code, "not_found", chi);
+  }
+  assert.equal(andata, false);
+});
+
+test("un ponte senza aggiornamenti non conosce nemmeno i loghi", async () => {
+  const casa = casaFinta({ stati: [] });
+  const vecchio = new Commissioni({ casa, registro: ZITTO });
+  const niente = await vecchio.rispondi({
+    id: 1,
+    type: "ponte/aggiornamenti/logo",
+    entity_id: "update.uno",
+  });
   assert.equal(niente.success, false);
   assert.equal(niente.error.code, "unknown_command");
 });
