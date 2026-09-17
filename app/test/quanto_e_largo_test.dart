@@ -23,11 +23,25 @@ void main() {
       expect(QuantoELargo.dallaLarghezza(1920), QuantoELargo.computer);
     });
 
-    test('la barra resta solo dove avanza schermo', () {
-      expect(QuantoELargo.telefono.laBarraResta, isFalse);
-      /* Un tablet in piedi: 192 punti su 700 sono un quarto della pagina. */
-      expect(QuantoELargo.tablet.laBarraResta, isFalse);
-      expect(QuantoELargo.computer.laBarraResta, isTrue);
+    test('la barra non resta da nessuna parte: si chiama col ☰, sempre', () {
+      /* Prima restava aperta su uno schermo da computer, e il ragionamento
+       * stava in piedi da solo: dove lo schermo avanza, una barra che si
+       * nasconde è un gesto in più per ogni cambio di pagina.
+       *
+       * In pratica non reggeva: nel browser gdahome diventava un'app con due
+       * facce — sul telefono il menu si chiama col ☰, su un computer stava
+       * sempre lì a sinistra e il ☰ non c'era — e chi la usa in tutti e due i
+       * posti doveva imparare due abitudini per la stessa cosa. Più duecento
+       * punti di larghezza mangiati proprio dove c'è la plancia.
+       *
+       * Una sola apertura, la stessa dappertutto. */
+      for (final quanto in QuantoELargo.values) {
+        expect(
+          quanto.laBarraResta,
+          isFalse,
+          reason: '«$quanto» tiene la barra aperta: il ☰ dev\'essere uno solo',
+        );
+      }
     });
 
     test('il telefono non ha un limite di larghezza: è già stretto', () {

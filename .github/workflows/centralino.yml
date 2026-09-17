@@ -18,6 +18,24 @@ name: Il centralino
 
 on:
   workflow_dispatch:
+  # E da se', quando cambia quello che serve.
+  #
+  # Questa corsa era **solo a mano**, e per sei giorni nessuno l'ha lanciata:
+  # «gdahome dentro l'add-on» ha portato la build fresca in `ponte/app/` oggi
+  # alle 06:40, e il centralino serviva ancora quella dell'11 settembre. Chi
+  # apriva gdahome da browser si trovava un'app di sei giorni prima — senza la
+  # voce «Aggiornamenti», per dirne una — e non c'era modo di accorgersene:
+  # l'app dentro l'add-on era fresca, quella su internet no.
+  #
+  # Una cosa che va rifatta ogni volta che ne cambia un'altra non si lascia a
+  # mano. `ponte/app/**` la riscrive il bottone che porta l'app dentro
+  # l'add-on, e da li' arriva anche qui; `nuvola/**` e' il centralino stesso.
+  push:
+    branches: [main]
+    paths:
+      - "nuvola/**"
+      - "ponte/app/**"
+      - ".github/workflows/centralino.yml"
 
 permissions:
   contents: read

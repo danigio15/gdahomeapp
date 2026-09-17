@@ -36,10 +36,21 @@ enum QuantoELargo {
 
   /// Se la barra delle sezioni resta aperta invece di nascondersi.
   ///
-  /// Nascondersi e' la scelta giusta dove lo schermo e' l'unica cosa che non
-  /// si puo' comprare. Dove invece avanza, una barra che si nasconde e' un
-  /// gesto in piu' per ogni cambio di pagina, e non serve a niente.
-  bool get laBarraResta => this == QuantoELargo.computer;
+  /// **No, da nessuna parte**, e prima era `true` su uno schermo da computer.
+  ///
+  /// Il ragionamento di prima era questo: nascondersi e' giusto dove lo schermo
+  /// e' l'unica cosa che non si puo' comprare, e dove avanza una barra che si
+  /// nasconde e' un gesto in piu' per ogni cambio di pagina. Sta in piedi da
+  /// solo, e in pratica non regge: nel browser gdahome diventava un'app con
+  /// due facce — sul telefono il menu si chiama col ☰ e copre la pagina, su un
+  /// computer stava sempre li' a sinistra e il ☰ non c'era. Chi la usa in tutti
+  /// e due i posti deve imparare due abitudini per la stessa cosa, e la barra
+  /// ferma si prende duecento punti di larghezza proprio dove c'e' la plancia,
+  /// che e' la cosa che si guarda.
+  ///
+  /// Una sola apertura, la stessa in tutti i posti: il ☰ in alto. Quella che
+  /// si conosce, perche' e' quella del telefono.
+  bool get laBarraResta => false;
 
   /// Quanto puo' essere larga una pagina dell'app prima di diventare
   /// illeggibile.

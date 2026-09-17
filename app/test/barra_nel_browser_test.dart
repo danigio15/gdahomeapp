@@ -148,9 +148,15 @@ void main() {
       expect(daParte.spostata, [true]);
     });
 
-    testWidgets('dove la barra resta non copre niente, e non si sposta', (
+    testWidgets('e su uno schermo largo la plancia si fa da parte uguale', (
       prova,
     ) async {
+      /* Prima, su uno schermo da computer, la barra restava aperta: non
+       * copriva niente, e la plancia non si spostava — `spostata` era vuota.
+       *
+       * Adesso la barra non resta da nessuna parte: si chiama col ☰ e copre,
+       * come sul telefono. Quindi la plancia si fa da parte anche qui, ed è
+       * proprio il punto — un'apertura sola, e lo stesso comportamento sotto. */
       prova.view.physicalSize = const Size(1200, 900);
       prova.view.devicePixelRatio = 1;
       addTearDown(prova.view.reset);
@@ -163,7 +169,7 @@ void main() {
       chiave.currentState!.apri();
       await prova.pumpAndSettle();
 
-      expect(daParte.spostata, isEmpty);
+      expect(daParte.spostata, [true]);
     });
 
     testWidgets('quando la barra se ne va, rimette tutto a posto', (
