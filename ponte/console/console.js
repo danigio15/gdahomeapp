@@ -1500,6 +1500,21 @@
          * condizione sola, un posto solo dove cambiarla. */
         trova("chiacchieroni").hidden = !risponde;
         if (risponde) disegnaIChiacchieroni(stato.chiacchieroni);
+        /* E «Se qualcosa non torna» lo stesso, per la stessa ragione.
+         *
+         * Era a schermo per tutti, ed era la cosa piu' confusionaria della
+         * pagina: quattro etichette in maiuscolo, una colonna di prosa, e nei
+         * guai sei righe rosse con dentro `lovelace: mode: yaml` e un pezzo di
+         * `configuration.yaml`. Chi ha gdahome in casa non deve leggere niente
+         * di tutto questo: se qualcosa non va lo dice, e la risposta gliela da'
+         * chi guarda questa stessa pagina da dove si risponde.
+         *
+         * Cancellarla no: e' l'unica riga che, da qui, dice dove sta il pezzo
+         * che manca — la cartina che Lovelace ha in elenco, la Plancia rimasta
+         * dall'integrazione, la versione della plancia — ed e' quella che ha
+         * trovato i difetti di questa settimana. Le si mette il cancello, non
+         * la si butta. */
+        trova("non-torna").hidden = !risponde;
         disegnaLaProvenienza(stato.plancia);
         disegnaIlLink(stato.app);
         disegnaIlLinkDiFuori(stato.app ? stato.centralino.dove : "");
