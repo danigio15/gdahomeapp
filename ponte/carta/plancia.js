@@ -29,6 +29,91 @@ const NOME = "gdahome-plancia";
  * che fa il frontend di Home Assistant, ed e' abbondante. */
 const OGNI_QUANTO = 30000;
 
+/* La barra di Home Assistant sopra la plancia, e perche' va via.
+ *
+ * Finche' la plancia la portava l'integrazione era un **pannello**: una voce
+ * nella barra laterale che si prende tutta la pagina e non ha niente sopra.
+ * Adesso la porta l'add-on, e una Plancia di Home Assistant e' una dashboard
+ * Lovelace — e una dashboard ha *sempre* la sua barra: il titolo, la lente,
+ * il piu', la matita. Nessuno l'ha aggiunta: e' comparsa perche' la plancia ha
+ * cambiato casa, e sopra la plancia non ci va.
+ *
+ * Il modo chiosco la copre, ma si accende da solo soltanto su uno schermo
+ * stretto comandato da un dito: su un tablet appeso al muro e su un computer
+ * bisognava saperlo — l'interruttore in ⚙️ Impostazioni, il dito tenuto
+ * premuto sull'hamburger, `?kiosk=1` nell'indirizzo. Tre modi per una cosa
+ * che non si doveva chiedere.
+ *
+ * Quindi la toglie chi la ha davanti: questo file gira **dentro** la pagina di
+ * Home Assistant, e la barra e' due porte sopra di lui. Si nasconde con un
+ * foglio di stile messo nella radice ombra di `hui-root`, e si azzera lo
+ * spazio che quella barra si teneva — `--header-height`, che e' la variabile
+ * con cui Home Assistant stesso lo misura.
+ *
+ * **Un foglio, e non gli stili in linea degli elementi.** La barra Home
+ * Assistant la ridisegna quando cambia vista o quando entra in modifica: uno
+ * `style.display` scritto sull'elemento se ne andrebbe con l'elemento, e un
+ * selettore no. E per rimetterla basta buttare il foglio: non c'e' niente da
+ * ricordare di com'era prima.
+ */
+const FOGLIO = "gdahome-senza-barra";
+
+const SENZA_BARRA = `
+  /* La barra. E' un \`div.header\` fissato in cima dentro l'ombra di
+     \`hui-root\`: nasconderlo non tocca niente altro. */
+  .header { display: none !important; }
+  /* E lo spazio che si teneva. Non si azzera il riempimento del contenuto: si
+     azzera la **misura** con cui Home Assistant lo calcola, che e' la stessa
+     da anni — \`padding-top: calc(var(--header-height) +
+     var(--safe-area-inset-top) + ...)\`. Cosi' va via l'altezza della barra e
+     resta lo spazio del notch, che serve ancora. */
+  :host { --header-height: 0px !important; }
+`;
+
+/* Chi sta sopra un nodo, anche quando sopra c'e' il confine di un'ombra.
+ *
+ * `parentNode` dentro una radice ombra torna `null` all'ultimo passo: da li' si
+ * sale con `host`, che e' l'elemento che quell'ombra ce l'ha. Senza questo
+ * passaggio la salita si fermerebbe alla prima ombra — e fra la tessera e la
+ * barra ce ne sono tre. */
+function sopra(nodo) {
+  if (!nodo) return null;
+  return nodo.parentNode || nodo.host || null;
+}
+
+/* Dove sta questa tessera: sotto quale barra, e se e' sola nella sua vista.
+ *
+ * `hui-root` e' chi disegna la barra di una dashboard. `hui-panel-view` e' la
+ * vista che tiene una tessera sola e la manda a tutto schermo — quella che
+ * gdahome si fabbrica.
+ *
+ * La barra si toglie **solo** da una vista cosi'. In una vista a griglia la
+ * stessa barra porta le linguette per cambiare pagina, e togliere quelle a chi
+ * si e' messo la tessera in mezzo alle sue sarebbe un danno, non una cura. */
+function doveSiamo(da, quanti = 60) {
+  let nodo = sopra(da);
+  let pannello = false;
+  for (let passi = 0; nodo && passi < quanti; passi += 1) {
+    const chi = String(nodo.localName || "").toLowerCase();
+    if (chi === "hui-panel-view") pannello = true;
+    if (chi === "hui-root") return { tetto: nodo, pannello };
+    nodo = sopra(nodo);
+  }
+  return { tetto: null, pannello };
+}
+
+/* Se Home Assistant e' in modifica, la barra resta.
+ *
+ * In modifica quella barra e' l'unico modo di uscirne — «Fatto» sta li'. Con la
+ * matita nascosta in modifica non ci si entra piu' per sbaglio; chi ci entra
+ * di proposito, dall'indirizzo, la barra ce la trova.
+ *
+ * Passando da una all'altra Home Assistant rifa' le tessere: questa si stacca e
+ * si riattacca, e la domanda si rifa' da se' senza stare a guardare niente. */
+function inModifica(tetto) {
+  return tetto?.lovelace?.editMode === true;
+}
+
 class PlanciaDiGdahome extends HTMLElement {
   constructor() {
     super();
@@ -39,6 +124,7 @@ class PlanciaDiGdahome extends HTMLElement {
     this._sessione = "";
     this._giro = 0;
     this._montata = false;
+    this._barra = null;
   }
 
   static getConfigElement() {
@@ -68,6 +154,7 @@ class PlanciaDiGdahome extends HTMLElement {
   }
 
   connectedCallback() {
+    this._togliLaBarra();
     this._disegna();
   }
 
@@ -76,6 +163,38 @@ class PlanciaDiGdahome extends HTMLElement {
       clearInterval(this._giro);
       this._giro = 0;
     }
+    this._rimettiLaBarra();
+  }
+
+  /* Via la barra di Home Assistant sopra la plancia.
+   *
+   * Torna `true` solo se l'ha davvero tolta: chiamarla due volte non fa danno
+   * — il foglio ha un nome, e il secondo giro lo ritrova.
+   *
+   * `barra: true` nella tessera la lascia dov'e'. Non e' una voce che serva a
+   * chi apre gdahome — la sua plancia la vista se la fabbrica gdahome — e' per
+   * chi si mette la tessera in una dashboard sua e quella barra la vuole. */
+  _togliLaBarra() {
+    if (this._config.barra === true) return false;
+    const { tetto, pannello } = doveSiamo(this);
+    if (!tetto?.shadowRoot || !pannello || inModifica(tetto)) return false;
+    if (tetto.shadowRoot.getElementById?.(FOGLIO)) return true;
+    const foglio = document.createElement("style");
+    foglio.id = FOGLIO;
+    foglio.textContent = SENZA_BARRA;
+    tetto.shadowRoot.appendChild(foglio);
+    this._barra = foglio;
+    return true;
+  }
+
+  /* E rimessa, appena la plancia se ne va.
+   *
+   * Si guarda il foglio che abbiamo messo noi, non il posto dove stava: quando
+   * questo metodo parte la tessera e' gia' staccata, e risalire ai suoi
+   * antenati da li' non porta piu' da nessuna parte. */
+  _rimettiLaBarra() {
+    this._barra?.remove?.();
+    this._barra = null;
   }
 
   /* Se questa plancia si apre a chi la sta guardando.
@@ -120,6 +239,10 @@ class PlanciaDiGdahome extends HTMLElement {
         });
       }, OGNI_QUANTO);
       this._riquadro(dove);
+      /* E una seconda volta, adesso che la pagina si e' fermata: al primo giro
+         la tessera puo' essere stata attaccata prima della vista che la tiene,
+         e da li' la barra non si trovava. Ha un nome, quindi non si sdoppia. */
+      this._togliLaBarra();
     } catch (errore) {
       this._montata = false;
       this._male(errore);

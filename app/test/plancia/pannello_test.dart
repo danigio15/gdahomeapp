@@ -138,6 +138,26 @@ void main() {
     expect(scarna.varianti, isEmpty);
   });
 
+  test('«questa plancia è configurata» si legge, e «non lo so» resta tale', () {
+    /* Serve a una cosa sola: la pagina che serve la plancia la scrive in
+     * testa, e l'avviso «non hai ancora collegato le tue entità» così sa
+     * distinguere «la configurazione non è ancora arrivata» da «non c'è
+     * niente da aspettare». Prima quella differenza la indovinava un orologio
+     * di dodici secondi, e dal browser scadeva prima che la pagina fosse in
+     * piedi. */
+    Map<String, Object?> come(Object? valore) => {
+      'base': '/dashboardmodern_static/x',
+      if (valore != null) 'configurata': valore,
+    };
+    expect(leggiLaPlanciaDelPonte(come(true))!.configurata, isTrue);
+    expect(leggiLaPlanciaDelPonte(come(false))!.configurata, isFalse);
+    /* Un ponte di ieri non lo dice: «non lo so», che non è «no». */
+    expect(leggiLaPlanciaDelPonte(come(null))!.configurata, isNull);
+    /* E nemmeno una risposta storta diventa un «no». */
+    expect(leggiLaPlanciaDelPonte(come('si'))!.configurata, isNull);
+    expect(leggiLaPlanciaDelPonte(come(1))!.configurata, isNull);
+  });
+
   test(
     'dal filo: prima il ponte, e solo se non ce l\'ha Home Assistant',
     () async {

@@ -534,8 +534,32 @@ export class Commissioni {
     }
     return si(id, {
       ...this.plancia.descrizione(quale),
+      /* Se questa plancia ha una configurazione.
+       *
+       * Non serve alla plancia — quella se la chiede da se' — serve a **chi la
+       * serve**: il servitore dell'app la scrive nella pagina, e la pagina
+       * cosi' sa distinguere «la configurazione non e' ancora arrivata» da
+       * «non c'e' niente da aspettare». Prima quella differenza la indovinava
+       * un orologio di dodici secondi, e dal browser, da fuori, scadeva prima
+       * che la pagina fosse in piedi: la plancia diceva «non hai collegato le
+       * entita'» a una casa configurata. Vedi
+       * `AVVISO_ASPETTA_LA_CONFIGURAZIONE` in `premesse.js`.
+       *
+       * `null` vuol dire «non lo so», e chi legge tiene l'orologio. */
+      configurata: this._laTieneConfigurata(quale),
       plance: sue,
     });
+  }
+
+  /* Se il cassetto di questa plancia ha dentro qualcosa. */
+  _laTieneConfigurata(quale) {
+    const cassetta = this.configurazione;
+    if (!cassetta) return null;
+    try {
+      return eConfigurata(cassetta.leggi(quale?.profilo || PROFILO_PRINCIPALE)?.snapshot?.values);
+    } catch (_errore) {
+      return null;
+    }
   }
 
   /* Le plance che questo si vede. La regola sta in un posto solo —

@@ -86,6 +86,7 @@ class PannelloDellaPlancia {
     required this.primario,
     required this.varianti,
     this.plance = const [],
+    this.configurata,
   });
 
   /// Il percorso del pannello in Home Assistant: `dashboardmodern`, o
@@ -124,6 +125,18 @@ class PannelloDellaPlancia {
   /// per niente. Vuota vuol dire un ponte che non le sa tenere — uno di ieri —
   /// e allora di plancia ce n'e' una, com'e' sempre stato.
   final List<UnaPlancia> plance;
+
+  /// Se questa plancia ha una configurazione, secondo il ponte.
+  ///
+  /// `null` vuol dire «non lo so»: un ponte di ieri che non lo dice, o la
+  /// plancia trovata in Home Assistant invece che nell'add-on.
+  ///
+  /// Serve a una cosa sola, e non e' una cosa da poco: la pagina che serve la
+  /// plancia la scrive in testa, e cosi' l'avviso «non hai ancora collegato le
+  /// tue entita'» sa distinguere «la configurazione non e' ancora arrivata» da
+  /// «non c'e' niente da aspettare». Vedi
+  /// [PremesseDellaPlancia.lAvvisoAspettaLaConfigurazione].
+  final bool? configurata;
 
   /// Ce n'e' piu' d'una? E' la domanda che decide se il selettore si vede:
   /// una riga per scegliere fra una cosa sola e' una riga di troppo.
@@ -234,6 +247,10 @@ PannelloDellaPlancia? leggiLaPlanciaDelPonte(Object? risposta) {
       _ => 'primary',
     },
     primario: risposta['primario'] != false,
+    configurata: switch (risposta['configurata']) {
+      final bool si => si,
+      _ => null,
+    },
     varianti: [
       if (varianti is List)
         for (final una in varianti)

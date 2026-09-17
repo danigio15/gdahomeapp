@@ -118,6 +118,28 @@ export function linguaPulita(detta) {
  * compare: a filo caduto la plancia lo dice gia' col suo pallino, e «non hai
  * collegato le entita'» sarebbe una bugia.
  *
+ * **E per dodici secondi quella promessa era falsa.** Il posto si liberava
+ * allo scadere di un orologio, e allo scadere si chiamava la loro funzione:
+ * cioe' esattamente quello che la riga sopra dice di non fare. In casa non si
+ * vedeva; dal browser, da fuori, con i file della plancia che arrivano sul
+ * filo un pezzo per volta, dodici secondi finiscono prima che la pagina sia in
+ * piedi — e la plancia diceva «non hai collegato le entita'» a una casa con
+ * diciassette sezioni dentro. Poi non se ne andava piu': `finito` restava
+ * alzato anche quando la configurazione arrivava.
+ *
+ * L'orologio non serviva a misurare il filo: serviva a distinguere «non e'
+ * ancora arrivata» da «non c'e' niente da aspettare». E quella e' una domanda
+ * con una risposta esatta, che ce l'ha in mano chi serve la pagina: la
+ * configurazione la tiene il ponte. Quindi la dice, in `__GDAHOME_CONFIGURATA__`:
+ *
+ *  - `false` — questa casa non ha configurazione: il posto non si occupa
+ *    nemmeno, e l'avviso compare subito invece che dopo dodici secondi.
+ *  - `true` — ce l'ha: l'orologio non decide piu' niente. Si aspetta, e si
+ *    cede solo a configurazione arrivata **e** vuota, che e' l'unico caso in
+ *    cui l'avviso dice la verita'.
+ *  - assente — un'app di ieri, una strada non prevista: resta l'orologio di
+ *    prima, cosi' non peggiora niente.
+ *
  * La stessa cosa la mette il servitore dell'app in fondo alla pagina che
  * serve lui (`app/lib/plancia/premesse.dart`): il patto e' lo stesso e si
  * scrive in due posti, come `__DASHBOARDMODERN_HOSTED__`. */
@@ -125,8 +147,12 @@ export const AVVISO_ASPETTA_LA_CONFIGURAZIONE =
   "<script>(function(){" +
   'var NOME="cd-empty-banner";' +
   'var NOSTRO="data-gdahome-posto";' +
-  "var FINO_A=12000;" +
   "var OGNI=250;" +
+  "var FINO_A=12000;" +
+  "var GUARDO_FINO_A=30000;" +
+  "var detto=window.__GDAHOME_CONFIGURATA__;" +
+  "var configurata=detto===true;" +
+  "var vuota=detto===false;" +
   "var pieno=function(){" +
   'try{if(typeof ENTITY_OVERRIDES!=="undefined"&&Object.keys(ENTITY_OVERRIDES||{}).length)return true;}catch(male){}' +
   'try{if(typeof cdCfgList==="function"){' +
@@ -149,30 +175,37 @@ export const AVVISO_ASPETTA_LA_CONFIGURAZIONE =
   "}catch(male){}" +
   "};" +
   "var finito=false;" +
-  "var guarda=function(scaduto){" +
+  "var battito=0;" +
+  "var basta=function(){if(battito){clearInterval(battito);battito=0;}};" +
+  "var guarda=function(scaduto,saputo){" +
   "if(finito)return;" +
-  "if(pieno()){finito=true;togli(quello());return;}" +
-  "if(!scaduto)return;" +
-  "finito=true;" +
+  "if(pieno()){finito=true;basta();togli(quello());return;}" +
+  "if(!saputo&&(configurata||!scaduto))return;" +
+  "finito=true;basta();" +
   "togli(ilPosto());" +
   'try{if(typeof cdEmptyStateCheck==="function")cdEmptyStateCheck();}catch(male){}' +
   "};" +
   "var parti=function(){" +
+  "if(vuota)return;" +
   "occupa();" +
   "var fine=Date.now()+FINO_A;" +
-  "var battito=setInterval(function(){" +
-  "guarda(Date.now()>=fine);" +
-  "if(finito)clearInterval(battito);" +
+  "var smetto=Date.now()+GUARDO_FINO_A;" +
+  "battito=setInterval(function(){" +
+  "guarda(Date.now()>=fine,false);" +
+  "if(!finito&&Date.now()>=smetto)basta();" +
   "},OGNI);" +
   'window.addEventListener("dashboardmodern:persistence-restored",function(){' +
-  "setTimeout(function(){guarda(true);},0);" +
+  "setTimeout(function(){guarda(true,true);},0);" +
   "});" +
   "};" +
   "if(document.body)parti();" +
   'else document.addEventListener("DOMContentLoaded",parti);' +
   "})();</script>";
 
-export function conLePremesse(pagina, { base, quale = null, lingua, doveIlWebSocket }) {
+export function conLePremesse(
+  pagina,
+  { base, quale = null, lingua, doveIlWebSocket, configurata = null },
+) {
   const premessa =
     `<base href="${base.replace(/\/*$/, "/")}" />` +
     "<script>" +
@@ -183,6 +216,11 @@ export function conLePremesse(pagina, { base, quale = null, lingua, doveIlWebSoc
     `window.__DASHBOARDMODERN_PRIMARY__=${quale ? quale.primaria !== false : true};` +
     `window.__DASHBOARDMODERN_LOCALE__=${JSON.stringify(linguaPulita(lingua))};` +
     "window.__GDAHOME__=true;" +
+    /* Se questa plancia ha una configurazione. `null` vuol dire «non lo so»,
+     * e allora la pagina non lo scrive nemmeno: chi legge tiene l'orologio. */
+    (typeof configurata === "boolean"
+      ? `window.__GDAHOME_CONFIGURATA__=${configurata ? "true" : "false"};`
+      : "") +
     "</script>" +
     AVVISO_ASPETTA_LA_CONFIGURAZIONE;
   const testa = /<head[^>]*>/i.exec(pagina);

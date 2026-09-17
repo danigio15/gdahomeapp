@@ -22,6 +22,7 @@ import { accetta, eUnaSalita } from "./presa.js";
 import { BASE } from "./plancia.js";
 import { laVede, vedeQualcosa } from "./plance.js";
 import { Cucitura } from "./cucitura.js";
+import { eConfigurata } from "./configurazione.js";
 import { conLePremesse, linguaPulita, paginaDellaLingua } from "./premesse.js";
 import { qrInSvg } from "./qr.js";
 import { impronta } from "./segreti.js";
@@ -373,7 +374,15 @@ export function costruisciLaConsole({
      * arriva solo chi e' entrato in Home Assistant, e non serve nessun altro
      * segno da chiedere a nessuno. */
     if (via === "/plancia" || via.startsWith("/plancia/")) {
-      await laPlanciaServita({ via, richiesta, risposta, plancia, plance, utenti });
+      await laPlanciaServita({
+        via,
+        richiesta,
+        risposta,
+        plancia,
+        plance,
+        utenti,
+        configurazione,
+      });
       return;
     }
 
@@ -541,7 +550,31 @@ function chiGuarda(richiesta) {
  * `/plancia/<profilo>/` — perche' sotto l'ingress davanti c'e' un prefisso che
  * qui non si conosce e non si deve conoscere.
  */
-async function laPlanciaServita({ via, richiesta, risposta, plancia, plance, utenti }) {
+/* Se il cassetto di questa plancia ha dentro qualcosa.
+ *
+ * `null` vuol dire «non lo so» — nessun cassetto, o una lettura che non
+ * riesce — e chi legge la pagina lo tratta come prima: con l'orologio. Meglio
+ * non saperlo che saperlo sbagliato.
+ */
+function laTieneConfigurata(cassetta, quale) {
+  if (!cassetta) return null;
+  try {
+    const profilo = quale?.profilo || "primary";
+    return eConfigurata(cassetta.leggi(profilo)?.snapshot?.values);
+  } catch (_errore) {
+    return null;
+  }
+}
+
+async function laPlanciaServita({
+  via,
+  richiesta,
+  risposta,
+  plancia,
+  plance,
+  utenti,
+  configurazione = null,
+}) {
   if (!plancia?.cE) {
     male(risposta, 404, "questo add-on non si porta dietro la plancia");
     return;
@@ -612,6 +645,10 @@ async function laPlanciaServita({ via, richiesta, risposta, plancia, plance, ute
     quale,
     lingua,
     doveIlWebSocket: `${davanti}/plancia/api/websocket`,
+    /* Se questa plancia ha una configurazione. La pagina non lo puo' sapere —
+     * la configurazione arriva dopo, sul filo — e senza saperlo l'unico modo di
+     * decidere era un orologio. Qui la risposta ce l'abbiamo in mano. */
+    configurata: laTieneConfigurata(configurazione, quale),
   });
   const byte = Buffer.from(pagina, "utf8");
   risposta.writeHead(200, {

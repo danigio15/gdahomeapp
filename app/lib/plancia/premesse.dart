@@ -609,12 +609,40 @@ class Premesse {
   /// Se la configurazione non arriva mai, il posto resta occupato e l'avviso
   /// non compare: a filo caduto la plancia lo dice gia' col suo pallino, e
   /// «non hai collegato le entita'» sarebbe una bugia.
+  ///
+  /// **E per dodici secondi quella promessa era falsa.** Il posto si liberava
+  /// allo scadere di un orologio, e allo scadere si chiamava la loro funzione:
+  /// cioe' esattamente quello che la riga sopra dice di non fare. Sul telefono
+  /// in casa non si vedeva. Nel browser, da fuori, no: li' i file della plancia
+  /// arrivano **anche loro** sul filo, un pezzo per volta, attraverso il
+  /// service worker — dodici secondi finiscono prima che la pagina sia in
+  /// piedi, e la plancia diceva «non hai collegato le tue entita'» a una casa
+  /// con diciassette sezioni dentro. E poi non se ne andava piu': `finito`
+  /// restava alzato anche quando la configurazione arrivava.
+  ///
+  /// L'orologio non serviva a misurare il filo: serviva a distinguere «non e'
+  /// ancora arrivata» da «non c'e' niente da aspettare». E quella domanda ha
+  /// una risposta esatta, che ce l'ha in mano il ponte — la configurazione la
+  /// tiene lui. Adesso la dice ([PannelloDellaPlancia.configurata]) e qui si
+  /// scrive nella pagina come `__GDAHOME_CONFIGURATA__`:
+  ///
+  ///  - `false` — questa casa non ha configurazione: il posto non si occupa
+  ///    nemmeno, e l'avviso compare subito invece che dopo dodici secondi.
+  ///  - `true` — ce l'ha: l'orologio non decide piu' niente. Si aspetta, e si
+  ///    cede solo a configurazione arrivata **e** vuota, che e' l'unico caso
+  ///    in cui l'avviso dice la verita'.
+  ///  - assente — un ponte di ieri: resta l'orologio di prima, cosi' non
+  ///    peggiora niente.
   static const String lAvvisoAspettaLaConfigurazione =
       '<script>(function(){'
       'var NOME="cd-empty-banner";'
       'var NOSTRO="data-gdahome-posto";'
-      'var FINO_A=12000;'
       'var OGNI=250;'
+      'var FINO_A=12000;'
+      'var GUARDO_FINO_A=30000;'
+      'var detto=window.__GDAHOME_CONFIGURATA__;'
+      'var configurata=detto===true;'
+      'var vuota=detto===false;'
       'var pieno=function(){'
       'try{if(typeof ENTITY_OVERRIDES!=="undefined"&&Object.keys(ENTITY_OVERRIDES||{}).length)return true;}catch(male){}'
       'try{if(typeof cdCfgList==="function"){'
@@ -637,23 +665,27 @@ class Premesse {
       '}catch(male){}'
       '};'
       'var finito=false;'
-      'var guarda=function(scaduto){'
+      'var battito=0;'
+      'var basta=function(){if(battito){clearInterval(battito);battito=0;}};'
+      'var guarda=function(scaduto,saputo){'
       'if(finito)return;'
-      'if(pieno()){finito=true;togli(quello());return;}'
-      'if(!scaduto)return;'
-      'finito=true;'
+      'if(pieno()){finito=true;basta();togli(quello());return;}'
+      'if(!saputo&&(configurata||!scaduto))return;'
+      'finito=true;basta();'
       'togli(ilPosto());'
       'try{if(typeof cdEmptyStateCheck==="function")cdEmptyStateCheck();}catch(male){}'
       '};'
       'var parti=function(){'
+      'if(vuota)return;'
       'occupa();'
       'var fine=Date.now()+FINO_A;'
-      'var battito=setInterval(function(){'
-      'guarda(Date.now()>=fine);'
-      'if(finito)clearInterval(battito);'
+      'var smetto=Date.now()+GUARDO_FINO_A;'
+      'battito=setInterval(function(){'
+      'guarda(Date.now()>=fine,false);'
+      'if(!finito&&Date.now()>=smetto)basta();'
       '},OGNI);'
       'window.addEventListener("dashboardmodern:persistence-restored",function(){'
-      'setTimeout(function(){guarda(true);},0);'
+      'setTimeout(function(){guarda(true,true);},0);'
       '});'
       '};'
       'if(document.body)parti();'
@@ -685,6 +717,13 @@ class Premesse {
         'window.__DASHBOARDMODERN_PRIMARY__=${quale?.primario ?? true};'
         'window.__DASHBOARDMODERN_LOCALE__=${jsonEncode(lingua)};'
         'window.__GDAHOME__=true;'
+        /* Se questa plancia ha una configurazione. Assente vuol dire «non lo
+           so», e chi legge la pagina tiene l'orologio di prima. */
+        '${switch (quale?.configurata) {
+          true => 'window.__GDAHOME_CONFIGURATA__=true;',
+          false => 'window.__GDAHOME_CONFIGURATA__=false;',
+          null => '',
+        }}'
         '</script>'
         '${leggera ? stileLeggero : ''}';
     final testa = RegExp(

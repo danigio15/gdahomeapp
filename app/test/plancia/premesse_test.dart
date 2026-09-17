@@ -14,15 +14,16 @@ const _pagina =
     '<!DOCTYPE html><html lang="it"><head><title>x</title></head>'
     '<body>la plancia</body></html>';
 
-Premesse _premesse() => Premesse(
-  pannello: const PannelloDellaPlancia(
+Premesse _premesse({bool? configurata}) => Premesse(
+  pannello: PannelloDellaPlancia(
     percorso: 'dashboardmodern',
     titolo: 'DashboardModern',
     base: '/dashboardmodern_static/abc123',
     istanza: 'e1',
     profilo: 'primary',
     primario: true,
-    varianti: ['dashboard.html'],
+    varianti: const ['dashboard.html'],
+    configurata: configurata,
   ),
 );
 
@@ -267,5 +268,37 @@ void main() {
     expect(config, lessThan(trattini));
     expect(trattini, lessThan(tenda));
     expect(servita.indexOf('</body>'), greaterThan(tenda));
+  });
+
+  group('«questa casa è configurata», scritto nella pagina', () {
+    /* L'orologio di dodici secondi non serviva a misurare il filo: serviva a
+     * indovinare una cosa che il ponte sa. Adesso la dice, e la pagina non
+     * indovina più. Il guardiano che la legge è lo stesso testo del ponte —
+     * quella prova sta in `ponte/test/avviso-aspetta.test.js`, che lo fa
+     * girare con l'orologio in mano; qui si tiene ferma la premessa. */
+    test('configurata: la pagina lo sa, e non aspetta nessuna scadenza', () {
+      final servita = _premesse(configurata: true)
+          .conLePremesse(_pagina, ilWebSocket: 'WebSocket');
+      expect(servita, contains('window.__GDAHOME_CONFIGURATA__=true;'));
+    });
+
+    test("senza configurazione: lo dice, e l'avviso è giusto subito", () {
+      final servita = _premesse(configurata: false)
+          .conLePremesse(_pagina, ilWebSocket: 'WebSocket');
+      expect(servita, contains('window.__GDAHOME_CONFIGURATA__=false;'));
+    });
+
+    test('un ponte che non lo dice: non si scrive niente', () {
+      /* «Non lo so» non si scrive come `false`: sarebbe dire a una casa
+       * configurata che non lo è, cioè il difetto di prima al contrario. */
+      final servita = _premesse().conLePremesse(
+        _pagina,
+        ilWebSocket: 'WebSocket',
+      );
+      expect(servita, isNot(contains('window.__GDAHOME_CONFIGURATA__=')));
+      /* Ma il guardiano c'è comunque, e la premessa la legge se un giorno
+       * arriva. */
+      expect(servita, contains('window.__GDAHOME_CONFIGURATA__;'));
+    });
   });
 }

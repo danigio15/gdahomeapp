@@ -5,6 +5,39 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.6
+
+**La barra di Home Assistant sopra la plancia, e l'avviso che diceva una bugia.**
+
+Due cose che si vedono, e vengono dalla stessa radice: la plancia ha cambiato
+casa. Prima la portava un'integrazione, come **pannello**; adesso la porta
+l'add-on, come tessera in una Plancia di Home Assistant.
+
+**La barra.** Un pannello non ha niente sopra. Una dashboard Lovelace ha
+_sempre_ la sua barra — il titolo, la lente, il piu', la matita — e quella barra
+sopra la plancia non ci va. Il modo chiosco la copriva, ma da solo si accende
+soltanto su uno schermo stretto comandato da un dito: su un tablet appeso al
+muro e su un computer bisognava saperlo. Adesso la barra va via da se', e con
+lei lo spazio che si teneva; torna se la dashboard entra in modifica, perche' e'
+li' che sta «Fatto», e resta dov'e' in una vista a griglia, dove porta le
+linguette per cambiare pagina. Chi la vuole comunque scrive `barra: true` nella
+tessera.
+
+**«Non hai ancora collegato le tue entita'».** Quell'avviso non deve comparire a
+chi le ha collegate, e un guardiano c'era proprio per questo: tiene occupato il
+posto dell'avviso finche' la configurazione — che arriva sul filo, dopo la
+pagina — non e' arrivata. Solo che si arrendeva allo scadere di un orologio di
+dodici secondi, e allo scadere l'avviso lo scriveva. In casa non si vedeva. Dal
+browser, da fuori, dove i file della plancia arrivano **anche loro** sul filo un
+pezzo per volta, dodici secondi finiscono prima che la pagina sia in piedi: e la
+plancia diceva «configurala» a una casa con diciassette sezioni dentro. Poi non
+se ne andava piu'.
+
+L'orologio non serviva a misurare il filo: serviva a indovinare una cosa che il
+ponte sa, perche' la configurazione la tiene lui. Adesso la dice, e l'orologio
+non decide piu' niente: su una casa configurata si aspetta quanto serve; su una
+casa che non ha niente l'avviso compare subito, invece che dopo dodici secondi.
+
 ## 1.4.32.5
 
 **«Errore di configurazione»: il caso più frequente era ancora nudo.**
