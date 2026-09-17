@@ -35,6 +35,24 @@ const DEMO = JSON.parse(
 );
 const ADESSO = new Date(Date.now() - 90_000).toISOString();
 
+/* L'icona di un add-on, quella che il Supervisor serve su
+ * `/api/hassio/addons/<add-on>/icon`. Qui e' il marchio di gdahome, che e'
+ * proprio quello che servirebbe in casa per l'add-on gdahome. */
+const ICONA_DELL_ADDON = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), "..", "ponte", "marchio", "gdahome.png"),
+);
+
+/* Le note lunghe che questa casa sa dare: il `CHANGELOG.md` vero.
+ *
+ * E' quello che risponderebbe una casa vera per l'aggiornamento della
+ * plancia, ed e' anche l'unico modo di guardare il foglio del changelog con
+ * dentro un testo che somiglia a quello che ci finisce davvero — titoli,
+ * elenchi, grassetto, codice e link, tutti e cinque. */
+const IL_CHANGELOG = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), "..", "ponte", "CHANGELOG.md"),
+  "utf8",
+);
+
 /* Quello che aspetta di essere aggiornato.
  *
  * Nella casa demo della plancia non c'e': quella e' una casa di **tessere**, e
@@ -45,7 +63,24 @@ const ADESSO = new Date(Date.now() - 90_000).toISOString();
  * Sono le quattro che si trovano in tutte le case, e sono diverse apposta: il
  * sistema e l'add-on **portano giu' il filo** quando si installano — e
  * l'app deve dirlo prima; la plancia no; e il firmware di una presa non si
- * installa chiamando un servizio, quindi il tasto non ci va. */
+ * installa chiamando un servizio, quindi il tasto non ci va.
+ *
+ * E sono diverse anche in **quello che sanno dire di se'**, che e' la seconda
+ * meta' della sezione:
+ *
+ *  - `entity_picture` di **casa** (`/api/hassio/addons/…/icon`): il segno lo
+ *    apre il ponte col segno di Home Assistant, e questa casa finta quel
+ *    percorso lo serve per davvero. E' l'unico modo di provare la strada
+ *    intera — attributo, ponte, segno, byte, immagine nel quadrato — in un
+ *    browser vero;
+ *  - `entity_picture` dei **marchi** (`brands.home-assistant.io`): quello e'
+ *    un giro fuori, e da un banco senza internet non arriva. Percio' quella
+ *    riga resta con la sua iniziale, ed e' giusto che si veda: e' quello che
+ *    fa l'app quando un logo non c'e' o non arriva;
+ *  - il **quinto bit** di `supported_features` (16): «le note della versione
+ *    le so, chiedimele». Chi ce l'ha risponde a `update/release_notes`, e nel
+ *    collaudo risponde col `CHANGELOG.md` vero. Chi non ce l'ha non se le fa
+ *    nemmeno chiedere. */
 const DA_AGGIORNARE = [
   {
     entity_id: "update.dashboardmodern_update",
@@ -53,11 +88,12 @@ const DA_AGGIORNARE = [
     attributes: {
       friendly_name: "DashboardModern Update",
       title: "DashboardModern",
-      installed_version: "1.4.30",
-      latest_version: "1.4.31",
-      release_summary: "Le finestre della Config non restano più offuscate uscendo dall'editor.",
+      installed_version: "1.4.32.7",
+      latest_version: "1.4.32.8",
+      release_summary: "Il firewall dell'ufficio, spiegato dove si legge l'indirizzo.",
       release_url: "https://github.com/danigio15/gdahomeapp/releases",
-      supported_features: 1,
+      /* 1 = si installa, 16 = le note lunghe le sa. */
+      supported_features: 1 | 16,
     },
   },
   {
@@ -68,6 +104,9 @@ const DA_AGGIORNARE = [
       title: "gdahome",
       installed_version: "0.20.0",
       latest_version: "0.21.0",
+      /* Il segno di un add-on: sta in casa, e senza il segno di Home
+       * Assistant non si apre. Questa casa lo serve. */
+      entity_picture: "/api/hassio/addons/gdahome/icon",
       supported_features: 1,
     },
   },
@@ -80,6 +119,10 @@ const DA_AGGIORNARE = [
       installed_version: "2026.8.4",
       latest_version: "2026.9.1",
       release_url: "https://www.home-assistant.io/latest-release-notes/",
+      /* I marchi di Home Assistant: e' l'indirizzo vero, e da un banco senza
+       * internet non arriva. La riga resta con la sua iniziale, ed e' quello
+       * che si vuole vedere. */
+      entity_picture: "https://brands.home-assistant.io/homeassistant/icon.png",
       supported_features: 1,
     },
   },
@@ -263,6 +306,24 @@ export function alzaLaCasaFinta() {
       risposta.end("qui non c'e' niente");
       return;
     }
+    /* L'icona di un add-on, come la serve il Supervisor.
+     *
+     * E' il percorso che l'entita' dichiara in `entity_picture`, e in casa
+     * non si apre senza il segno di Home Assistant: percio' qui si guarda che
+     * il segno ci sia. Senza il controllo, il collaudo direbbe che il logo
+     * arriva anche se il ponte si fosse dimenticato di mandarlo — e quel
+     * dimenticarsi si vedrebbe solo in casa di qualcun altro. */
+    if (/^\/api\/hassio\/addons\/[^/]+\/icon$/.test(percorso)) {
+      const chi = String(richiesta.headers.authorization || "");
+      if (chi !== `Bearer ${SEGNO_DEL_SUPERVISOR}`) {
+        risposta.writeHead(401, { "content-type": "text/plain" });
+        risposta.end("senza segno non si apre");
+        return;
+      }
+      risposta.writeHead(200, { "content-type": "image/png" });
+      risposta.end(ICONA_DELL_ADDON);
+      return;
+    }
     /* Lo storico e i calendari via REST: vuoti, ma nella forma giusta. */
     if (percorso.startsWith("/api/history/") || percorso.startsWith("/api/calendars/")) {
       risposta.writeHead(200, { "content-type": "application/json" });
@@ -326,6 +387,12 @@ export function alzaLaCasaFinta() {
       return;
     }
     const ok = (result = null) => manda({ id: detto.id, type: "result", success: true, result });
+    /* E il no, con la sua forma: Home Assistant risponde cosi', e il ponte
+     * legge `code` e `message`. Senza un no vero il collaudo non potrebbe
+     * provare le strade in cui la casa **dice di no**, che sono quelle dove
+     * l'app deve avere una frase pronta. */
+    const no = (code, message) =>
+      manda({ id: detto.id, type: "result", success: false, error: { code, message } });
 
     switch (detto.type) {
       /* Il colpetto, come lo fa Home Assistant. L'app lo manda ogni mezzo
@@ -381,6 +448,24 @@ export function alzaLaCasaFinta() {
       case "auth/sign_path":
         ok({ path: detto.path });
         return;
+      /* Le note lunghe di una versione: le calcola l'entita' quando gliele si
+       * chiede, e per questo non stanno negli attributi.
+       *
+       * Risponde **solo** chi ha dichiarato il quinto bit di
+       * `supported_features`, come fa Home Assistant: a chi non l'ha
+       * dichiarato si risponde no, e il ponte non dovrebbe nemmeno
+       * chiederglielo. Se lo chiede, il collaudo lo scopre qui. */
+      case "update/release_notes": {
+        const chi = String(detto.entity_id || "");
+        const quale = CASA.find((una) => una.entity_id === chi);
+        const bit = Number(quale?.attributes?.supported_features ?? 0);
+        if (!quale || (bit & 16) === 0) {
+          no("not_supported", `${chi} non sa dare le note della versione`);
+          return;
+        }
+        ok(IL_CHANGELOG);
+        return;
+      }
       case "subscribe_events":
         sottoscrizioni.set(socket, detto.id);
         ok();

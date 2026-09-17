@@ -5,6 +5,48 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.9
+
+**Gli aggiornamenti di casa, con i loghi, e queste note lette dentro l'app.**
+
+Se stai leggendo questo **dentro gdahome**, in un foglio che è salito dal
+basso e che porta «Installa» in fondo, allora la cosa principale di questa
+versione funziona: prima quel tasto si chiamava «Cosa cambia in questa
+versione» e apriva una pagina di GitHub nel browser — su un telefono voleva
+dire uscire dall'app, cercare la versione giusta in mezzo a tutte, e tornare
+indietro a memoria a ritrovare la riga da cui si era partiti. Adesso le note
+le chiede a Home Assistant, con lo stesso comando che usa la sua finestra, e
+le mostra qui.
+
+Si comincia da **questa** versione e non dal principio del file: il numero sta
+già scritto in testa al foglio, e chi ha appena premuto su una versione non
+vuole leggere l'introduzione di un changelog. Le versioni di prima restano
+sotto, che è dove si vanno a cercare. E dove Home Assistant le note non le sa
+dare — un firmware, un'integrazione vecchia — il foglio lo dice invece di
+restare bianco, e offre la pagina di fuori come ultima spiaggia.
+
+**E ogni riga ha il suo segno.** Sei righe con sei nomi scritti si leggono una
+per una; col logo davanti si riconosce quello che si cerca senza leggere. Il
+quadrato di gdahome, la casa di Home Assistant, il marchio dell'add-on: li
+dichiara Home Assistant, e li va a prendere l'add-on — l'icona di un add-on
+dalla casa, col suo segno, e il marchio di un'integrazione dai marchi di Home
+Assistant. Chi non ne ha uno tiene la sua iniziale in un quadrato come gli
+altri, che non è un buco in attesa.
+
+Guardando la sezione, tre cose che si vedono e basta:
+
+- **i tasti non sono più barre.** Sei schede una sotto l'altra, con sei barre
+  azzurre larghe tutta la pagina, erano un muro: sei aggiornamenti facevano
+  due schermate e mezzo di telefono. Adesso «Installa» è della sua misura e
+  sta sulla riga del nome, e sei aggiornamenti ci stanno in una schermata;
+- **le versioni si leggono.** Erano una riga grigia, e due versioni si
+  somigliano per definizione: `1.4.32.8 → 1.4.32.9` grigio su grigio non si
+  legge, si indovina. Quella nuova adesso è in evidenza, con le cifre a
+  larghezza fissa perché il numero non balli;
+- **su uno schermo da computer la colonna si ferma.** Prima il tasto finiva un
+  metro a destra di quello che si era appena letto: si guardava a sinistra e
+  si premeva a destra, col vuoto in mezzo.
+
 ## 1.4.32.8
 
 **Il firewall dell'ufficio, spiegato dove si legge l'indirizzo.**

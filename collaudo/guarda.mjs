@@ -1176,7 +1176,7 @@ try {
     for (const cosa of [
       due("4 aggiornamenti da fare", "4 updates to do"),
       "DashboardModern",
-      "1.4.30",
+      "1.4.32.7",
       /* Quelli che portano giu' il filo lo dicono **prima**: detto prima e'
        * un'attesa, non detto e' un guasto. */
       due("riavvia la casa", "restarts the home"),
@@ -1188,6 +1188,47 @@ try {
         throw new Error(`negli aggiornamenti non c'e' «${cosa}». A schermo c'e': ${cE}`);
     }
   }
+
+  /* Il foglio del changelog, premendo «Cosa cambia».
+   *
+   * Qui si guarda la strada **intera**, e non ce n'e' un'altra per guardarla:
+   * il tocco, la domanda al ponte, `update/release_notes` alla casa, il
+   * markdown che torna, e il foglio che lo disegna in un browser vero. Le
+   * prove dell'app hanno un ponte finto in mezzo; qui il ponte e' quello
+   * dell'add-on.
+   *
+   * Si preme su DashboardModern perche' e' l'unico che, in questa casa,
+   * dichiara di sapere le note lunghe — il quinto bit di
+   * `supported_features` — ed e' quello che in casa vera le sa dire. */
+  racconta("leggo il changelog dentro l'app");
+  await premi(pagina, due("Cosa cambia", "What changes"));
+  await attendi(1400);
+  await scatta(pagina, "6c-il-changelog");
+  {
+    const cE = (await cosaCeDaPremere(pagina)).join(" · ");
+    /* Si guarda una parola che sta **soltanto** nelle note lunghe.
+     *
+     * E' la lezione di un errore: la prima volta questo controllo cercava la
+     * riga delle versioni e la parola del riassunto, e le trovava — sulla
+     * **pagina dietro**, perche' la riga dell'aggiornamento le ha entrambe.
+     * Il foglio non si era aperto affatto e il collaudo diceva verde. Un
+     * controllo che passa anche quando la cosa non e' successa non e' un
+     * controllo. */
+    for (const cosa of ["FortiGuard", "Category: Newly Registered Domain"]) {
+      if (!cE.includes(cosa))
+        throw new Error(
+          `il foglio del changelog non si e' aperto: «${cosa}» non c'e'. A schermo c'e': ${cE}`,
+        );
+    }
+    /* E il preambolo del `CHANGELOG.md` non c'e': quello spiega il file, non
+     * la versione che si sta installando. */
+    if (cE.includes("giro per giro")) {
+      throw new Error(`il foglio comincia dal principio del file: ${cE}`);
+    }
+  }
+  /* Si richiude, che se no la Configurazione si aprirebbe sotto un foglio. */
+  await pagina.keyboard.press("Escape");
+  await attendi(900);
 
   /* La Configurazione.
    *
