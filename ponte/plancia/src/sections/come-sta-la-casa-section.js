@@ -623,8 +623,12 @@ const SI_APRONO = new Set(["varchi", "porte", "finestre", "tapparelle"]);
  * «Accesa», «In riproduzione». Le parole sono quelle di
  * `le-parole-di-home-assistant.js`, che e' il posto dove stanno tutte — e per
  * le cose che si aprono quelle al femminile, che e' l'altra meta' della stessa
- * tabella. Una voce che non risponde piu' lo dice. */
-function statoDellaVoce(entity, states, chiave = "") {
+ * tabella. Una voce che non risponde piu' lo dice.
+ *
+ * Esportata perche' la provano: le parole cambiano col tipo di pastiglia, e i
+ * tipi sono sette — leggerle dal disegno di una finestra alla volta vorrebbe
+ * dire provarne uno e fidarsi degli altri sei. */
+export function statoDellaVoce(entity, states, chiave = "") {
   const id = clean(entity);
   if (!id) return { parola: "", muta: true };
   const risolta = clean(root.resolveEntity?.(id) || id);
