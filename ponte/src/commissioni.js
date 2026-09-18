@@ -569,6 +569,24 @@ export class Commissioni {
     const entita = typeof detto?.entity_id === "string" ? detto.entity_id : "";
     const dove = await this.aggiornamenti.doveIlLogo(entita);
     if (!dove) return no(id, "not_found", "questo aggiornamento non ha un logo");
+    /* L'icona di un add-on si chiede **al Supervisor**, non a Home Assistant.
+     *
+     * `entity_picture` dice `/api/hassio/addons/<add-on>/icon`, ed e' un
+     * indirizzo di Home Assistant: la' quella strada e' un proxy verso il
+     * Supervisor, con le **sue** regole di permesso. In una casa vera ha
+     * risposto `403` per l'icona di un add-on di un altro (Studio Code
+     * Server) mentre dava la nostra: il segno che abbiamo e' quello del
+     * Supervisor, non di un utente amministratore di Home Assistant.
+     *
+     * Al Supervisor la stessa cosa si chiede diretta — `http://supervisor/
+     * addons/<add-on>/icon` — e li' il segno e' il suo, ed e' quello giusto:
+     * l'add-on dichiara `hassio_api: true` e `hassio_role: manager` nel
+     * manifesto proprio per poterlo fare. Una strada in meno in mezzo, e le
+     * regole di quella strada non c'entrano piu' niente. */
+    const dellAddon = /^\/api\/hassio\/(addons\/[^/]+\/(?:icon|logo))$/.exec(dove);
+    if (dellAddon && this.casa?.supervisor && this.casa?.segno) {
+      return this._logoDalSupervisor(id, entita, dellAddon[1]);
+    }
     if (dove.startsWith("/")) {
       const risposta = await this._http(
         { id, metodo: "GET", percorso: dove, senzaGzip: true },
@@ -584,6 +602,32 @@ export class Commissioni {
       return risposta;
     }
     return this._logoDiFuori(id, entita, dove);
+  }
+
+  /* L'icona di un add-on, chiesta al Supervisor col suo segno. */
+  async _logoDalSupervisor(id, entita, via) {
+    const url = `${this.casa.supervisor}/${via}`;
+    await this._ilMioTurno();
+    try {
+      const { stato, tipo, corpo } = await this.scarica({
+        url,
+        metodo: "GET",
+        intestazioni: {
+          authorization: `Bearer ${this.casa.segno}`,
+          "accept-encoding": "identity",
+        },
+        insicuro: false,
+        massimo: RISPOSTA_MASSIMA,
+        attesa: ATTESA,
+      });
+      this._diCosaHaDetto(entita, url, stato);
+      return si(id, impacchetta(stato, tipo, corpo, { senzaGzip: true }));
+    } catch (errore) {
+      this.registro.attenzione(`il logo di ${entita} (${url}): ${errore?.message || errore}`);
+      return no(id, "ponte_http", String(errore?.message || "non ha funzionato"));
+    } finally {
+      this._finito();
+    }
   }
 
   /* Il segno preso fuori, dai marchi di Home Assistant.

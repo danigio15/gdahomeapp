@@ -352,6 +352,12 @@ async function main() {
       PONTE_PORTA_CONSOLE: String(portaDellaConsole),
       SUPERVISOR_TOKEN: SEGNO_DEL_SUPERVISOR,
       PONTE_CASA: `http://127.0.0.1:${portaDellaCasa}`,
+      /* E il Supervisor: in casa e' `http://supervisor`, e il ponte ci va
+       * diretto per l'icona di un add-on — il proxy di Home Assistant, per
+       * quella, risponde 403. Qui fa le due parti la stessa casa finta, che
+       * serve tutte e due le forme dell'indirizzo. Senza questo il banco non
+       * percorrerebbe la strada che percorre una casa vera. */
+      PONTE_SUPERVISOR: `http://127.0.0.1:${portaDellaCasa}`,
       /* Il ponte chiama il centralino finto: la chiamata riesce, e le
        * segnalazioni hanno una strada per uscire. */
       PONTE_CENTRALINO: centralino.indirizzo,

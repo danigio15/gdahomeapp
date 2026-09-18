@@ -306,14 +306,13 @@ export function alzaLaCasaFinta() {
       risposta.end("qui non c'e' niente");
       return;
     }
-    /* L'icona di un add-on, come la serve il Supervisor.
-     *
-     * E' il percorso che l'entita' dichiara in `entity_picture`, e in casa
-     * non si apre senza il segno di Home Assistant: percio' qui si guarda che
-     * il segno ci sia. Senza il controllo, il collaudo direbbe che il logo
-     * arriva anche se il ponte si fosse dimenticato di mandarlo — e quel
-     * dimenticarsi si vedrebbe solo in casa di qualcun altro. */
-    if (/^\/api\/hassio\/addons\/[^/]+\/icon$/.test(percorso)) {
+    /* L'icona di un add-on, nelle **due** forme in cui si chiede: quella del
+     * Supervisor (`/addons/<add-on>/icon`), che e' la strada che fa il ponte,
+     * e quella del proxy di Home Assistant (`/api/hassio/addons/…`), che
+     * resta per chi gira fuori dal Supervisor. In tutte e due si vuole il
+     * segno: senza il controllo, il collaudo direbbe che il logo arriva anche
+     * se il ponte si fosse dimenticato di mandarlo. */
+    if (/^(?:\/api\/hassio)?\/addons\/[^/]+\/icon$/.test(percorso)) {
       const chi = String(richiesta.headers.authorization || "");
       if (chi !== `Bearer ${SEGNO_DEL_SUPERVISOR}`) {
         risposta.writeHead(401, { "content-type": "text/plain" });

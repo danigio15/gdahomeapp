@@ -373,12 +373,91 @@ test("la riga dice se un logo c'e', e l'indirizzo non viaggia", () => {
   assert.equal(JSON.stringify(fila).includes("brands.home-assistant.io"), false);
 });
 
-test("il logo di casa passa dal segno di Home Assistant", async () => {
+test("l'icona di un add-on la chiede al Supervisor, non al proxy di casa", async () => {
+  /* In una casa vera il proxy di Home Assistant ha risposto **403** per
+   * l'icona di un add-on di un altro, mentre dava la nostra: il segno che
+   * abbiamo e' quello del Supervisor, non di un amministratore di Home
+   * Assistant. Al Supervisor la stessa cosa si chiede diretta, col suo segno,
+   * ed e' per questo che il manifesto dichiara `hassio_role: manager`. */
+  const casa = casaFinta({
+    stati: [
+      unAggiornamento("update.un_altro_addon", {
+        title: "Un altro add-on",
+        entity_picture: "/api/hassio/addons/a0d7b954_vscode/icon",
+      }),
+    ],
+  });
+  casa.indirizzo = "http://supervisor/core";
+  casa.supervisor = "http://supervisor";
+  casa.segno = "IL-SEGNO-DEL-SUPERVISOR";
+
+  const chieste = [];
+  const commissioni = new Commissioni({
+    casa,
+    registro: ZITTO,
+    aggiornamenti: new Aggiornamenti({ casa, registro: ZITTO }),
+    scarica: async (quale) => {
+      chieste.push(quale);
+      return { stato: 200, tipo: "image/png", corpo: Buffer.from([7, 7]) };
+    },
+  });
+
+  const preso = await commissioni.rispondi({
+    id: 1,
+    type: "ponte/aggiornamenti/logo",
+    entity_id: "update.un_altro_addon",
+  });
+  assert.equal(preso.success, true);
+  assert.equal(chieste.length, 1);
+  /* Diretta al Supervisor: niente `/core/api/hassio/` in mezzo. */
+  assert.equal(chieste[0].url, "http://supervisor/addons/a0d7b954_vscode/icon");
+  assert.equal(chieste[0].intestazioni.authorization, "Bearer IL-SEGNO-DEL-SUPERVISOR");
+});
+
+test("senza Supervisor l'icona di un add-on passa da dove passava", async () => {
+  /* Fuori dal Supervisor — sul banco, su un computer di prova — quella strada
+   * non esiste, e si torna al proxy di Home Assistant invece di non chiedere
+   * niente. */
   const casa = casaFinta({
     stati: [
       unAggiornamento("update.un_addon", {
         title: "Un add-on",
         entity_picture: "/api/hassio/addons/uno/icon",
+      }),
+    ],
+  });
+  casa.indirizzo = "http://dentro:8123";
+  casa.segno = "IL-SEGNO";
+  casa.supervisor = "";
+
+  const chieste = [];
+  const commissioni = new Commissioni({
+    casa,
+    registro: ZITTO,
+    aggiornamenti: new Aggiornamenti({ casa, registro: ZITTO }),
+    scarica: async (quale) => {
+      chieste.push(quale);
+      return { stato: 200, tipo: "image/png", corpo: Buffer.from([1]) };
+    },
+  });
+
+  const preso = await commissioni.rispondi({
+    id: 1,
+    type: "ponte/aggiornamenti/logo",
+    entity_id: "update.un_addon",
+  });
+  assert.equal(preso.success, true);
+  assert.equal(chieste[0].url, "http://dentro:8123/api/hassio/addons/uno/icon");
+});
+
+test("il logo di casa passa dal segno di Home Assistant", async () => {
+  const casa = casaFinta({
+    stati: [
+      unAggiornamento("update.una_cosa", {
+        title: "Una cosa",
+        /* Un indirizzo di casa che non e' l'icona di un add-on: quello passa
+         * dal segno di Home Assistant, come i file della plancia. */
+        entity_picture: "/api/image/serve/abcd/512x512",
       }),
     ],
   });
@@ -400,7 +479,7 @@ test("il logo di casa passa dal segno di Home Assistant", async () => {
   const preso = await commissioni.rispondi({
     id: 1,
     type: "ponte/aggiornamenti/logo",
-    entity_id: "update.un_addon",
+    entity_id: "update.una_cosa",
   });
   assert.equal(preso.success, true);
   assert.equal(preso.result.tipo, "image/png");
@@ -410,7 +489,7 @@ test("il logo di casa passa dal segno di Home Assistant", async () => {
   assert.equal(preso.result.compresso, undefined);
 
   assert.equal(chieste.length, 1);
-  assert.equal(chieste[0].url, "http://dentro:8123/api/hassio/addons/uno/icon");
+  assert.equal(chieste[0].url, "http://dentro:8123/api/image/serve/abcd/512x512");
   assert.equal(chieste[0].intestazioni.authorization, "Bearer IL-SEGNO");
 });
 

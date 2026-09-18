@@ -5,6 +5,33 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.11
+
+**L'icona di un add-on la chiede al Supervisor, e non a Home Assistant.**
+
+La 1.4.32.10 ha fatto scrivere nel registro cosa risponde un logo che non
+arriva, e la prima casa vera lo ha detto subito:
+
+```
+il logo di update.studio_code_server_update:
+/api/hassio/addons/a0d7b954_vscode/icon ha risposto 403
+```
+
+L'indirizzo era giusto — lo dichiara Home Assistant — ed era Home
+Assistant a rifiutarlo. Quella strada, dentro Home Assistant, è un
+passaggio verso il Supervisor con le **sue** regole di permesso: il segno
+che l'add-on ha è quello del Supervisor, non di un utente amministratore,
+e per l'icona di un add-on che non è lui la risposta è no. Per l'icona di
+gdahome no, perché quella è la sua.
+
+Al Supervisor la stessa cosa si chiede diretta, col suo segno — ed è
+proprio per questo che il manifesto dichiara `hassio_role: manager`. Una
+strada in meno in mezzo, e le regole di quella strada non c'entrano più.
+
+Gli interruttori Zigbee restano con la loro iniziale, e quella è la
+risposta giusta: non hanno un logo da nessuna parte, e anche Home
+Assistant, nella sua pagina, per quelli disegna un segno generico.
+
 ## 1.4.32.10
 
 **I loghi che non arrivano lo dicono, invece di sparire in silenzio.**
