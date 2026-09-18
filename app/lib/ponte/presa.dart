@@ -17,6 +17,7 @@ import 'dart:typed_data';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'errori.dart';
+import 'parole_del_centralino.dart';
 
 abstract interface class Presa {
   /// Quello che arriva. Uno stream solo, con un ascoltatore solo.
@@ -82,6 +83,11 @@ class PresaSuWebSocket implements Presa {
   /// quando l'add-on non e' attaccato — vale mille volte «il filo si e'
   /// chiuso», che e' quello che si vedeva prima e che non dice niente a
   /// nessuno.
+  ///
+  /// E la si dice come si dice a una persona, non come la dice il centralino:
+  /// vedi `parole_del_centralino.dart`. Quella frase finisce **a schermo** —
+  /// sotto «Non trovo la casa», e nella diagnostica — e «casa non collegata»,
+  /// cosi' com'e', chi la legge la prende per un difetto del telefono.
   @override
   Stream<String> get messaggi => _canale.stream.transform(
     StreamTransformer<dynamic, String>.fromHandlers(
@@ -91,7 +97,7 @@ class PresaSuWebSocket implements Presa {
       handleDone: (sink) {
         final perche = _canale.closeReason;
         if (perche != null && perche.trim().isNotEmpty) {
-          sink.addError(FiloCaduto(perche.trim()));
+          sink.addError(FiloCaduto(inParoleNostre(perche)));
         }
         sink.close();
       },

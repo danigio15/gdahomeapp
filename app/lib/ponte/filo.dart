@@ -477,6 +477,10 @@ class Filo {
       _segnoNonVale(errore.spiegazione);
       return;
     } on TimeoutException {
+      /* Una presa che non si apre e non fallisce e' un silenzio, non una
+       * risposta: chi aspetta non lo viene a sapere: il giro dopo, quasi
+       * sempre, la presa si apre — e un telefono che si ricollega da solo non
+       * deve risultare fallito a chi aveva chiamato `apri`. */
       _caduto(
         inLingua(
           it: 'la casa non ha aperto il filo in tempo',
@@ -499,6 +503,7 @@ class Filo {
        * che non risponde — tre cose con tre rimedi diversi. Adesso quello che
        * ha detto chi e' caduto arriva fino in fondo, e in «Come va l'app» si
        * legge. */
+      final primaVolta = _tentativi == 0;
       _caduto(
         errore is ErroreDelPonte
             ? errore.spiegazione
@@ -507,6 +512,11 @@ class Filo {
                 en: 'I can\'t open the connection: $errore',
               ),
       );
+      /* E chi aspettava di entrare lo viene a sapere adesso, non fra
+       * venticinque secondi — ma solo se c'e' una risposta vera da dargli. */
+      if (primaVolta && errore is ErroreDelPonte) {
+        _rispondiAChiAspetta(errore);
+      }
       return;
     }
     if (mia != _bussate) {
@@ -1057,6 +1067,32 @@ class Filo {
       if (_spentoApposta) return;
       unawaited(_bussa());
     });
+  }
+
+  /* Lo dice adesso a chi sta aspettando di entrare.
+   *
+   * `apri` non e' una rotella che gira: e' una domanda. Quando l'altra punta
+   * la risposta l'ha gia' data — «questa casa adesso non e' collegata», che
+   * dice il centralino quando l'add-on non gli e' attaccato — tenersela per
+   * venticinque secondi e poi rispondere con la **nostra** scadenza («gdahome
+   * in casa non risponde») e' due volte sbagliato: si fa aspettare per
+   * niente, e poi si dice un'altra cosa. Il centralino ha risposto benissimo;
+   * e' la casa che non c'e'.
+   *
+   * Solo al primo giro, come per gli indirizzi che non rispondono: dal
+   * secondo in poi chi aspettava ha gia' avuto la sua risposta. E i tentativi
+   * vanno avanti da soli — una casa che si riattacca al centralino riapre il
+   * filo, e lo schermo si sistema senza che nessuno tocchi niente.
+   *
+   * Si risponde solo con un [ErroreDelPonte], cioe' con un perche' che viene
+   * da qualcuno che lo sa. Per un errore qualunque — una presa che non si apre
+   * per un motivo che nessuno ha spiegato — si tace e si riprova: quasi sempre
+   * il giro dopo va, e far fallire l'attesa vorrebbe dire mandare a schermo un
+   * errore tecnico al posto di un collegamento che stava per riuscire. */
+  void _rispondiAChiAspetta(ErroreDelPonte errore) {
+    final stretta = _stretta;
+    if (stretta == null || stretta.isCompleted) return;
+    stretta.completeError(errore);
   }
 
   void _caduto(String perche) {

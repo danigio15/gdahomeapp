@@ -1341,9 +1341,14 @@
    * volte a chi installa sarebbe chiederglielo una volta di troppo.
    *
    * Se il centralino e' spento («da fuori casa» a no) non c'e' nessun link da
-   * dare, e la riga non compare. */
-  function disegnaIlLinkDiFuori(dove) {
+   * dare, e la riga non compare.
+   *
+   * Arriva tutto lo stato del centralino e non il solo indirizzo: l'indirizzo
+   * dice se un link **esiste**, `dentro` dice se oggi porta da qualche parte,
+   * e sono due cose diverse che vanno dette tutte e due. Vedi qui sotto. */
+  function disegnaIlLinkDiFuori(centralino) {
     var riquadro = trova("link-di-fuori");
+    var dove = (centralino && centralino.dove) || "";
     var indirizzo = "";
     try {
       if (dove) {
@@ -1357,9 +1362,40 @@
       indirizzo = "";
     }
     riquadro.hidden = !indirizzo;
+    avvisaSeLaCasaNonEAttaccata(centralino, Boolean(indirizzo));
     if (!indirizzo) return;
     trova("link-di-fuori-indirizzo").textContent = indirizzo;
     trova("apri-di-fuori").href = indirizzo;
+  }
+
+  /* Il tasto c'e', ma adesso non porta da nessuna parte.
+   *
+   * L'indirizzo del centralino resta quello giusto anche quando la casa non gli
+   * e' attaccata: si salva fra i preferiti, e domani funziona. Premuto oggi,
+   * pero', apre un'app che gira e poi dice «non trovo la casa» — ed e' la
+   * risposta che manda a cercare il difetto nel telefono, che e' l'ultimo posto
+   * dove sta. Il motivo vero il ponte lo sa gia' («non entra — …», nella
+   * pastiglia in cima), ma sta dentro un dettaglio che nessuno apre **prima**
+   * di premere un tasto.
+   *
+   * Quindi si dice qui, accanto al tasto, e si dice che il link non e'
+   * sbagliato: e' la casa che in questo momento non c'e'. */
+  function avvisaSeLaCasaNonEAttaccata(centralino, ceIlLink) {
+    var avviso = trova("avviso-casa-scollegata");
+    var fuori = Boolean(ceIlLink && centralino && centralino.configurato && !centralino.dentro);
+    avviso.hidden = !fuori;
+    if (!fuori) return;
+    var perche = centralino.rifiutata || centralino.perche || "";
+    avviso.textContent =
+      due(
+        "Adesso questa casa non è collegata al centralino: da quell'indirizzo l'app non entra. ",
+        "Right now this home is not connected to the relay: from that address the app cannot get in. ",
+      ) +
+      (perche ? due("L'ultimo tentativo: ", "The last attempt: ") + perche + ". " : "") +
+      due(
+        "Il link resta buono: appena la casa si riaggancia, si entra.",
+        "The link stays good: as soon as the home hooks back up, you get in.",
+      );
   }
 
   /* ─── L'aggiornamento del ponte ──────────────────────────────────────────
@@ -1517,7 +1553,7 @@
         trova("non-torna").hidden = !risponde;
         disegnaLaProvenienza(stato.plancia);
         disegnaIlLink(stato.app);
-        disegnaIlLinkDiFuori(stato.app ? stato.centralino.dove : "");
+        disegnaIlLinkDiFuori(stato.app ? stato.centralino : null);
         disegnaIDispositivi(stato.dispositivi, stato.massimi);
         disegnaLePlance(stato.plance);
         /* La riga si scrive subito con quello che si sa, e si riscrive quando

@@ -190,3 +190,38 @@ test("un guasto di chi legge non si traveste da caduta di rete", async () => {
     );
   }
 });
+
+test("«Apri nel browser» dice quando non porta da nessuna parte", () => {
+  /* La segnalazione: «in locale se premo apri da browser resta bloccato non si
+   * apre poi esce cosi'» — e la fotografia era l'app, dopo venticinque
+   * secondi di rotella, che diceva «Non trovo la casa».
+   *
+   * Il link era giusto. Il centralino rispondeva. Era la casa a non essergli
+   * attaccata, e quella notizia il ponte ce l'aveva gia' — sta in `dentro` —
+   * ma nella pagina viveva dentro un dettaglio richiuso, che nessuno apre
+   * PRIMA di premere un tasto. Adesso sta accanto al tasto.
+   *
+   * Tre cose la tengono ferma: la riga nasce nascosta (se no si vedrebbe per
+   * un istante a ogni apertura della pagina), la pagina riceve tutto lo stato
+   * del centralino e non il solo indirizzo, e l'avviso si lega a `dentro`. */
+  const pagina = readFileSync(join(QUI, "..", "console", "index.html"), "utf8");
+  const riga = /<p[^>]*\bid="avviso-casa-scollegata"[^>]*>/.exec(pagina);
+  assert.ok(riga, "la riga che avvisa non c'e'");
+  assert.match(riga[0], /\shidden\b/, "la riga che avvisa non nasce nascosta");
+
+  const console_ = readFileSync(join(QUI, "..", "console", "console.js"), "utf8");
+  assert.match(
+    console_,
+    /disegnaIlLinkDiFuori\(stato\.app \? stato\.centralino : null\)/,
+    "alla riga del link arriva ancora il solo indirizzo, e non sa se la casa c'e'",
+  );
+  assert.match(
+    console_,
+    /!centralino\.dentro/,
+    "l'avviso non si lega a «la casa e' attaccata al centralino»",
+  );
+  /* E il motivo vero dentro, in tutte e due le lingue: un avviso che dice solo
+   * «non e' collegata» rimanda a cercare altrove quello che si sa gia'. */
+  assert.match(console_, /centralino\.rifiutata \|\| centralino\.perche/);
+  assert.match(console_, /due\("L'ultimo tentativo: ", "The last attempt: "\)/);
+});
