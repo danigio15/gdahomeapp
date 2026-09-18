@@ -9576,8 +9576,20 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
 }
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-caption{
   flex:1;min-width:0;font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8);
-  white-space:nowrap;overflow:hidden;
-  /* Sfuma sul bordo invece di tagliare: si capisce che il testo continua. */
+  white-space:nowrap;overflow:hidden}
+/* Sfuma sul bordo invece di tagliare: si capisce che il testo continua.
+ *
+ * **Solo dove continua davvero.** La sfumatura stava su tutte le didascalie,
+ * anche su quelle che ci stanno: si mangia l'ultimo sesto della finestra, e una
+ * didascalia che finisce dentro quel sesto perdeva la coda per niente — niente
+ * da scorrere, quindi nessun modo di rivederla. Misurato in una casa: «potenza
+ * di casa · Immissione 8,4» sta in centosettantacinque punti dentro una
+ * finestra da centosettantasei, e si leggeva «Immissione 8,» con il resto in
+ * dissolvenza. Su un numero, la coda e' la parte che conta.
+ *
+ * La regola «:has()» lega la sfumatura al nastro che si muove: c'e' quando c'e'
+ * qualcosa da rivelare, e non c'e' quando il testo e' tutto li'. */
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-caption:has(>[data-dm-scroll="true"]){
   mask-image:linear-gradient(90deg,#000 84%,transparent);
   -webkit-mask-image:linear-gradient(90deg,#000 84%,transparent)}
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-scroll{display:inline-block;white-space:nowrap}
