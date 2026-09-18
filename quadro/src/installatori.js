@@ -11,7 +11,7 @@
  * ce l'aveva vedeva tutte le case dentro. Andava bene finche' il quadro stava
  * sulla macchina dell'installatore, dove le case dentro erano le sue e basta.
  *
- * Qui dentro ci sono le case di ditte diverse, che fra loro non si devono
+ * Qui dentro ci sono le case di installatori diversi, che fra loro non si devono
  * vedere: i clienti di Rossi non sono affari di Bianchi, e due installatori
  * della stessa citta' si fanno concorrenza. Percio' **ogni cosa in questo
  * quadro appartiene a qualcuno** — una casa, un invito — e ogni risposta e'
@@ -19,14 +19,14 @@
  *
  * ─── Il limite, che qui finalmente e' un limite ──────────────────────────
  *
- * Quando il quadro stava su una macchina dell'installatore, un tetto al numero
+ * Quando il quadro stava su una macchina dell'installatore, un limite al numero
  * di case non si poteva imporre: quel programma girava su ferro suo, e si
  * modificava in trenta secondi. Ci si era inventati una firma da verificare nel
  * ponte — un tesserino — che era il meglio che si potesse fare, e restava un
  * dosso.
  *
- * Adesso il tetto sta qui, sulla macchina di chi lo decide. `soglia` e' un
- * numero, e chi e' al tetto non genera l'invito successivo. Niente firme,
+ * Adesso il limite sta qui, sulla macchina di chi lo decide. `soglia` e' un
+ * numero, e chi e' al limite non genera l'invito successivo. Niente firme,
  * niente scadenze da verificare in casa d'altri: **e' il server che dice di
  * no**, ed e' l'unica forma di «no» che valga qualcosa.
  */
@@ -43,7 +43,7 @@ export const CHIAVE_LUNGA = 32;
 /** La matricola di un conto, come se la fabbrica questo file. */
 export const CHI_VALIDO = /^inst_[0-9a-f]{16}$/;
 
-/** Zero vuol dire senza tetto: e' il caso di chi non si conta. */
+/** Zero vuol dire senza limite: e' il caso di chi non si conta. */
 export const SENZA_TETTO = 0;
 
 export class Installatori {
@@ -157,8 +157,8 @@ export class Installatori {
     return true;
   }
 
-  /** Il tetto di case. Zero lo toglie. */
-  tetto(chi, quante) {
+  /** Il limite di case. Zero lo toglie. */
+  limite(chi, quante) {
     const uno = this.quello(chi);
     if (!uno) return false;
     uno.soglia = Math.max(0, Math.floor(Number(quante) || 0));
@@ -189,7 +189,7 @@ export class Installatori {
         da: uno.da,
         vistoIl: uno.vistoIl,
         case: quante(uno.chi),
-        /* Al tetto: la prossima casa non entra, e si vede prima che
+        /* Al limite: la prossima casa non entra, e si vede prima che
          * l'installatore telefoni per chiedere perche'. */
         pieno: uno.soglia > SENZA_TETTO && quante(uno.chi) >= uno.soglia,
       }))

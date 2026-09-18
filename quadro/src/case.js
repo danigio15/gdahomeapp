@@ -136,7 +136,7 @@ export class CaseSeguite {
    * sola, e due schermi direbbero due cose diverse della stessa casa.
    */
   /* `di` non ha un valore di serie **apposta**: chiamarla senza vorrebbe dire
-   * l'elenco di tutti, cioe' le case di ditte diverse mescolate in una pagina
+   * l'elenco di tutti, cioe' le case di installatori diversi mescolate in una pagina
    * sola. Chi ne ha davvero bisogno — chi tiene il quadro, per contarle — passa
    * `TUTTE`, e cosi' quella riga si vede leggendo. */
   elenco(di) {
@@ -178,7 +178,7 @@ export class CaseSeguite {
    * sua. Le loro rapporti continuano ad arrivare.
    *
    * Ma restare invisibili sarebbe un'altra cosa: chi tiene il quadro vedrebbe
-   * un totale che non torna con la somma delle ditte e non saprebbe perche'.
+   * un totale che non torna con la somma degli installatori e non saprebbe perche'.
    * Questo numero e' li' per quello — e per ritrovarli il giorno che lo si
    * riaggiunge.
    */

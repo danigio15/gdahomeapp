@@ -1,28 +1,31 @@
 /* La porta del quadro.
  *
- * Un quadro solo, su una macchina di gdahome, con dentro le case di ditte
+ * Un quadro solo, su una macchina di gdahome, con dentro le case di installatori
  * diverse. Chi installa non accende niente: gli si apre un conto, gli si da'
  * una chiave, e apre una pagina.
  *
- *   GET    /                            la soglia: cos'e' questo indirizzo
- *   GET    /salute                      dice solo che e' vivo
+ *   GET    /                             la soglia: cos'e' questo indirizzo
+ *   GET    /salute                       dice solo che e' vivo
  *
- *   POST   /rapporto                   una casa deposita i suoi numeri
+ *   POST   /rapporto                     una casa deposita i suoi numeri
  *
- *   GET    /console/                    la pagina dell'installatore
- *   GET    /console/io                  chi sono, quante ne ho, qual e' il tetto
- *   GET    /console/case                **le sue** case
- *   GET    /console/inviti              i **suoi** codici in attesa
- *   POST   /console/inviti              fanne uno, se il tetto lo consente
- *   DELETE /console/inviti/<codice>     annulla il suo
- *   PUT    /console/casa/<casa_…>       il nome, se la casa e' sua
- *   DELETE /console/casa/<casa_…>       non seguirla piu', se e' sua
+ *   GET    /console/                     la pagina dell'installatore
+ *   GET    /console/io                   chi sono, quanti ne ho, qual e' il limite
+ *   PUT    /console/io/avvisi            dove mandarmi gli avvisi
+ *   POST   /console/io/avvisi/prova      mandamene uno adesso, per vedere
+ *   GET    /console/case                 **le sue** case
+ *   GET    /console/inviti               i **suoi** codici in attesa
+ *   POST   /console/inviti               fanne uno, se il limite lo consente
+ *   DELETE /console/inviti/<codice>      annulla il suo
+ *   PUT    /console/casa/<casa_…>        il nome, se la casa e' sua
+ *   DELETE /console/casa/<casa_…>        non seguirla piu', se e' sua
  *
- *   GET    /gestore/installatori        chi e' iscritto, e quante case ha
- *   POST   /gestore/installatori        un conto nuovo
- *   PUT    /gestore/installatore/<id>   nome e tetto
+ *   GET    /gestore/                     la pagina di chi tiene il quadro
+ *   GET    /gestore/installatori         chi c'e', e quanti impianti ha ognuno
+ *   POST   /gestore/installatori         aggiungine uno
+ *   PUT    /gestore/installatore/<id>    nome e limite
  *   POST   /gestore/installatore/<id>/chiave   una chiave nuova
- *   DELETE /gestore/installatore/<id>   chiudi il conto
+ *   DELETE /gestore/installatore/<id>    toglilo
  *
  * ─── Tre chiavi, e ognuna apre una porta sola ────────────────────────────
  *
@@ -31,7 +34,7 @@
  * matricola — e non fa vedere niente.
  *
  * Dal **retro** entrano gli installatori, ognuno con la sua: quella fa vedere
- * **le sue** case e nient'altro. E' la riga che tiene separate ditte che fra
+ * **le sue** case e nient'altro. E' la riga che tiene separati installatori che fra
  * loro si fanno concorrenza: i clienti di Rossi non sono affari di Bianchi.
  *
  * Dalla **gestione** entra chi tiene il quadro: aggiunge gli installatori, mette i limiti,
@@ -333,7 +336,7 @@ export function costruisciIlServer({
         const codice = chiavi.fai({
           di: chi,
           per: detto?.per,
-          tetto: io?.soglia || 0,
+          limite: io?.soglia || 0,
           quante: case_.quante(chi),
         });
         registro.info("un codice nuovo, buono per una casa e per un quarto d'ora");
@@ -394,7 +397,7 @@ export function costruisciIlServer({
       installatori: installatori.elenco((chi) => case_.quante(chi)),
       case: case_.lista.length,
       /* Quelle di un conto chiuso: restano, e continuano a depositare. Senza
-       * questo numero il totale non tornerebbe con la somma delle ditte, e non
+       * questo numero il totale non tornerebbe con la somma degli installatori, e non
        * si capirebbe perche'. */
       orfane: case_.orfane(installatori.lista.map((uno) => uno.chi)),
     });
@@ -422,7 +425,7 @@ export function costruisciIlServer({
         return;
       }
       if (detto?.nome !== undefined) installatori.rinomina(uno[1], detto.nome);
-      if (detto?.soglia !== undefined) installatori.tetto(uno[1], detto.soglia);
+      if (detto?.soglia !== undefined) installatori.limite(uno[1], detto.soglia);
       json(risposta, ilQuadro());
       return;
     }

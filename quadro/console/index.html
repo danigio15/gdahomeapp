@@ -2792,7 +2792,7 @@
           <p class="sottotitolo">
             Un codice che vale <b>quindici minuti</b> e <b>una casa sola</b>. Si
             fa qui, si incolla nell'add-on in casa del cliente, e da quel momento
-            quella casa manda al quadro la sua rapporto — e nient'altro.
+            quella casa manda al quadro il suo rapporto — e nient'altro.
           </p>
 
           <div class="abbina">
@@ -2840,13 +2840,13 @@
                 ${
                   quanteRestano() === 0
                     ? `<p class="minuta" style="margin-top: 16px">
-                         <b>Sei arrivato al tuo tetto di ${IO.soglia} impianti.</b> Per aggiungerne
+                         <b>Sei arrivato al tuo limite di ${IO.soglia} impianti.</b> Per aggiungerne
                          serve alzarlo: scrivi a chi tiene il quadro. I codici già fatti restano
                          buoni, e gli impianti che segui continuano a funzionare.
                        </p>`
                     : quanteRestano() !== null && quanteRestano() <= 3
                       ? `<p class="minuta" style="margin-top: 16px">
-                           Ne restano <b>${quanteRestano()}</b> prima del tuo tetto di
+                           Ne restano <b>${quanteRestano()}</b> prima del tuo limite di
                            ${IO.soglia}. Gli inviti aperti contano.
                          </p>`
                       : ""

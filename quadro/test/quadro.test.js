@@ -11,7 +11,7 @@
  *     vedere niente;
  *  3. **che un codice usato non serva a nessun'altra casa**, che e' cosa vuol
  *     dire «si brucia»;
- *  4. **che il tetto sia un tetto.** Qui il limite lo impone il server di chi
+ *  4. **che il limite sia un limite.** Qui il limite lo impone il server di chi
  *     lo decide, non un controllo dentro un programma che gira su una macchina
  *     altrui: quando conta, conta davvero;
  *  5. che quello che un rapporto non dice resti «non si sa» invece di
@@ -359,7 +359,7 @@ test("la casa di un altro non si rinomina e non si toglie, nemmeno sapendone la 
   }
 });
 
-test("il tetto e' un tetto: al limite non esce nessun codice nuovo", async () => {
+test("il limite e' un limite: al limite non esce nessun codice nuovo", async () => {
   /* Qui il limite lo impone il server di chi lo decide, non un controllo dentro
    * un programma che gira su una macchina altrui. E' la differenza fra un no e
    * un dosso. */
@@ -369,9 +369,9 @@ test("il tetto e' un tetto: al limite non esce nessun codice nuovo", async () =>
 
     const ancora = await b.retro("/inviti", { method: "POST", body: JSON.stringify({}) });
     assert.equal(ancora.status, 409);
-    assert.match((await ancora.json()).errore, /arriva a 1 case/);
+    assert.match((await ancora.json()).errore, /il tuo limite e' 1, e ci sei arrivato/);
 
-    /* Chi tiene il quadro alza il tetto, e il codice esce. */
+    /* Chi tiene il quadro alza il limite, e il codice esce. */
     await b.gestore(`/installatore/${b.conti[0].chi}`, {
       method: "PUT",
       body: JSON.stringify({ soglia: 5 }),
@@ -385,8 +385,8 @@ test("il tetto e' un tetto: al limite non esce nessun codice nuovo", async () =>
   }
 });
 
-test("gli inviti aperti contano nel tetto, se no si fa il pieno in un minuto", async () => {
-  /* Senza questa riga si generano venti codici mentre si e' sotto il tetto, e
+test("gli inviti aperti contano nel limite, se no si fa il pieno in un minuto", async () => {
+  /* Senza questa riga si generano venti codici mentre si e' sotto il limite, e
    * il giorno dopo ci sono venti case oltre, tutte legittime. */
   const b = await banco({ ditte: 1, soglia: 2 });
   try {

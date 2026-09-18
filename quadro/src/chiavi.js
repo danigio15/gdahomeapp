@@ -74,21 +74,24 @@ export class Chiavi {
    * Un invito nuovo, per una casa sola e per un quarto d'ora.
    *
    * Lo fa **un installatore**, e la casa che lo usera' sara' sua: e' qui che
-   * nasce l'appartenenza, e da qui che passa il tetto. Un invito senza padrone
+   * nasce l'appartenenza, e da qui che passa il limite. Un invito senza padrone
    * non si fa — sarebbe una casa che entra nel quadro senza essere di nessuno,
    * e nessuno la vedrebbe mai.
    */
-  fai({ di, per = "", tetto = 0, quante = 0 } = {}) {
+  fai({ di, per = "", limite = 0, quante = 0 } = {}) {
     if (!di) throw new TroppiInviti("un invito lo fa qualcuno, non si fa da solo");
     this.potatura();
 
-    /* Il tetto, imposto **qui**: gli inviti aperti contano come case, se no si
+    /* Il limite, imposto **qui**: gli inviti aperti contano come case, se no si
      * fanno venti codici in un minuto e il giorno dopo ci sono venti case oltre
-     * il tetto, tutte legittime. */
+     * il limite, tutte legittime. */
     const suoi = this.inviti.filter((uno) => uno.di === di).length;
-    if (tetto > 0 && quante + suoi >= tetto) {
+    if (limite > 0 && quante + suoi >= limite) {
       throw new TroppiInviti(
-        `questo conto arriva a ${tetto} case, e ci e' arrivato: per aggiungerne serve alzare il tetto`,
+        /* Senza contare: con un limite di uno, «1 impianti» si legge male, e un
+         * numero e un sostantivo che non concordano sono la cosa che si nota
+         * per prima in un messaggio d'errore. */
+        `il tuo limite e' ${limite}, e ci sei arrivato: per aggiungerne serve alzarlo`,
       );
     }
     if (suoi >= INVITI_AL_MASSIMO) {

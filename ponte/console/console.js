@@ -1723,7 +1723,7 @@
                 " minuti, passando da " +
                 quadro.dove +
                 ".",
-              "This home sends a report to " +
+              "This home sends a status report to " +
                 quadro.chi +
                 ", every " +
                 quadro.ogni +
@@ -1737,7 +1737,11 @@
                 ", ogni " +
                 quadro.ogni +
                 " minuti.",
-              "This home sends a report to " + quadro.dove + ", every " + quadro.ogni + " minutes.",
+              "This home sends a status report to " +
+                quadro.dove +
+                ", every " +
+                quadro.ogni +
+                " minutes.",
             );
         trova("quadro-esito").textContent = quandoEArrivato(quadro.esito);
         /* Il testo com'e' partito. `JSON.stringify` con l'indentazione: e' lo

@@ -3,11 +3,14 @@
 Il quadro elettrico e il quadro della situazione sono la stessa parola, e per
 chi installa impianti è la sua.
 
-**Dove siamo.** Le prime due tappe sono fatte. Il ponte sa spedire la sua
-rapporto — spenta di serie, e si legge per intero dalla sua console — e il
-quadro gira: server, console attaccata a dati veri, abbinamento delle case, e
-**più ditte sullo stesso quadro** che fra loro non si vedono. Resta l'avviso
-quando una casa tace. Per accenderlo, [qui sotto](#accenderlo).
+**Dove siamo: fatto tutto.** Il ponte spedisce il suo rapporto — spento di
+serie, e si legge per intero dalla console dell'add-on. Il quadro gira, con più
+installatori sopra che fra loro non si vedono, la pagina di chi lo gestisce, e
+l'avviso quando una casa tace. C'è anche `accendi.sh`, che lo mette in piedi su
+una macchina vera.
+
+Sessantacinque prove qui dentro; il progetto intero ne conta più di settecento.
+Per accenderlo, [qui sotto](#accenderlo). Manca solo il record DNS.
 
 ## A cosa serve
 
@@ -28,8 +31,8 @@ Il quadro risponde a due domande, e sono due domande diverse:
 
 **Uno solo, su una macchina di gdahome.** Chi installa non accende niente, non
 compra nessun dominio e non tiene su nessun server: lo si aggiunge, gli si
-dà una chiave, e apre una pagina. Dentro ci stanno le case di ditte diverse, e
-ogni ditta vede solo le sue.
+dà una chiave, e apre una pagina. Dentro ci stanno le case di installatori diversi, e
+ognuno vede solo le sue.
 
 Il ponte gli parla **diritto**, in HTTPS, all'indirizzo scritto dentro l'add-on
 (`ponte/src/rapporto.js`, `QUADRO_DI_DIFETTO`) — come già fa col centralino, e
@@ -162,12 +165,12 @@ nessun'altra.
 ### Quando un installatore si toglie
 
 **I suoi impianti restano.** Sono impianti che funzionano in casa di qualcuno, e
-spegnerne il monitoraggio perché una ditta ha smesso di pagare punirebbe il
+spegnerne il monitoraggio perché un installatore ha smesso di pagare punirebbe il
 cliente per una faccenda che non è sua: le loro rapporti continuano ad
 arrivare. Quello che smette è la sua chiave, che da quel momento non apre più niente.
 
 Restano però **contate a parte**: `GET /gestore/installatori` porta un `orfane`,
-se no il totale non tornerebbe con la somma delle ditte e non si capirebbe
+se no il totale non tornerebbe con la somma degli installatori e non si capirebbe
 perché. E il giorno che lo si riaggiunge, tornano a lui.
 
 ### Quando una casa tace
@@ -467,6 +470,9 @@ quadro/
                      collaudataIl, e quante rapporti per giorno
   src/collaudo.js    da un rapporto alle spunte, e dalle spunte allo stato
   src/chiavi.js      gli inviti, e le chiavi che ne restano
+  src/archivio.js    ─┐
+  src/registro.js     ├ copie dal ponte, identiche: `src/PRESI_DAL_PONTE.md`
+  src/segreti.js     ─┘
   src/installatori.js  gli installatori, le chiavi, i limiti
   src/avvisi.js      quando una casa tace, e quando vale la pena dirlo
   src/fattorino.js   chi porta fuori gli avvisi
@@ -487,22 +493,40 @@ Le vie, davanti:
 | `GET /salute` | se è vivo, quante case segue, e se la console è aperta |
 | `POST /rapporto` | la casa deposita. `x-casa` + la sua chiave; una matricola mai vista nasce qui, senza nome e in fila «collaudo aperto» |
 
-E dietro, tutte dentro `/console/` e tutte con la chiave della console:
+L'installatore, tutte dentro `/console/` e tutte con la **sua** chiave:
 
 | | |
 |---|---|
 | `GET /console/` | la pagina |
+| `GET /console/io` | chi sono, quanti impianti ho, qual è il mio limite |
+| `PUT /console/io/avvisi` | dove mandarmi gli avvisi. Vuoto li spegne |
+| `POST /console/io/avvisi/prova` | mandamene uno adesso, per vedere se arriva |
 | `GET /console/case` | l'elenco già vestito: stato, spunte e pastiglie **già decisi**, più le tre soglie con cui la pagina colora i metri |
 | `GET` `POST /console/inviti` | i codici in attesa, e uno nuovo |
 | `DELETE /console/inviti/<codice>` | annullalo |
 | `PUT /console/casa/<matricola>` | il nome che le dà l'installatore |
 | `DELETE /console/casa/<matricola>` | non seguirla più: si butta quello che se ne sa **e** la sua chiave, se no il primo rapporto la fa rinascere tre secondi dopo |
 
-Le due chiavi sono due apposta. Dal davanti entrano le case, ognuna con la sua:
-apre una porta sola — depositare per la propria matricola — e non fa vedere
-niente. Dal retro entra l'installatore, e la sua fa vedere tutto e non lascia
-depositare niente. Con una chiave sola, una casa qualunque potrebbe leggersi
-l'elenco degli impianti di chi l'ha installata, cioè i clienti di qualcun altro.
+E chi tiene il quadro, dentro `/gestore/` e con la chiave di gestione:
+
+| | |
+|---|---|
+| `GET /gestore/` | la pagina |
+| `GET /gestore/installatori` | chi c'è, quanti impianti ha ognuno, e quanti sono rimasti senza nessuno |
+| `POST /gestore/installatori` | aggiungine uno. Risponde con la sua chiave, **in chiaro e una volta sola** |
+| `PUT /gestore/installatore/<id>` | nome e limite |
+| `POST /gestore/installatore/<id>/chiave` | una chiave nuova; quella di prima smette subito |
+| `DELETE /gestore/installatore/<id>` | toglilo. I suoi impianti restano |
+
+**Le chiavi sono tre, e ognuna apre una porta sola.** Dal davanti entrano le
+case, ognuna con la sua: apre una porta sola — depositare per la propria
+matricola — e non fa vedere niente. Con quella di un installatore si vedono
+**le sue** case e nient'altro: è la riga che tiene separati installatori che
+fra loro si fanno concorrenza. E la chiave di gestione aggiunge e toglie
+installatori, e conta — ma non apre nessuna casa.
+
+Con una chiave sola, una casa qualunque potrebbe leggersi l'elenco degli
+impianti di chi l'ha installata, cioè i clienti di qualcun altro.
 
 **Una cosa è andata diversamente da come sta scritta qui sopra.** Il documento
 diceva che al primo rapporto il quadro restituisce alla casa una chiave nuova
@@ -635,7 +659,7 @@ guardi.
 
 ## Le tappe
 
-1. **Il rapporto nel ponte**, spenta di serie, con la scheda nella console che
+1. **Il rapporto nel ponte**, spento di serie, con la scheda nella console che
    la fa leggere. Si prova con `curl` e un file, senza nessun quadro acceso — ed
    è già utile da sola: chi ha una casa sola può guardarsi la sua.
 
@@ -670,7 +694,7 @@ guardi.
    `GET case`, e con loro le tre soglie dei metri. Quella pagina ora disegna e
    basta, perché una soglia scritta in due posti prima o poi diventa due soglie.
 
-   Ventisei prove, nove delle quali col quadro intero acceso: che una casa non
+   Ventisei prove allora, nove delle quali col quadro intero acceso: che una casa non
    possa leggere la console, che un codice usato non serva a nessun'altra casa,
    che la matricola in testa vinca su quella nel corpo, e che quello che un
    rapporto non dice resti **«non si sa»** invece di diventare una spunta
@@ -682,7 +706,7 @@ guardi.
    **Fatta.** `src/avvisi.js` decide, `src/fattorino.js` consegna, `src/giro.js`
    passa ogni dieci minuti. Le regole stanno [qui sopra](#quando-una-casa-tace).
 
-   Ventitré prove, e quelle che contano provano che **stia zitto**: che non
+   Ventitré prove allora, e quelle che contano provano che **stia zitto**: che non
    ridica una casa muta da tre giorni, che otto insieme facciano un messaggio
    solo, che un fermo del quadro non svegli nessuno, e che una consegna fallita
    lasci la casa da riavvisare. Perché un avviso si giudica da quando tace:
