@@ -143,18 +143,78 @@ test("il motivo arriva fino alla pagina: nello stato, e nella riga che si legge"
   /* La riga si dice in due lingue — `due(italiano, inglese)` — e il motivo
      dev'essere attaccato a tutte e due: una traduzione che dimentica di
      aggiungerlo scriverebbe «The last attempt:» e poi il punto. */
-  for (const [quale, come] of [
-    ["italiano", /" L'ultimo tentativo: ", " The last attempt: "\) \+\s*\n?\s*centralino\.perche/],
-    [
-      "inglese",
-      /due\(\s*\n?\s*" L'ultimo tentativo: ",\s*\n?\s*" The last attempt: ",?\s*\n?\s*\)/,
-    ],
-  ])
-    assert.match(
-      console_,
-      come,
-      `la console non scrive il motivo dell'ultimo tentativo in ${quale}`,
+  assert.match(
+    console_,
+    /due\(\s*\n?\s*" L'ultimo tentativo: ",\s*\n?\s*" The last attempt: ",?\s*\n?\s*\)/,
+    "la console non scrive il motivo dell'ultimo tentativo in due lingue",
+  );
+  /* E il motivo attaccato e' quello vero, passato per le parole nostre — che
+     la riga grezza se la portano dietro (vedi la prova qui sotto). */
+  assert.match(
+    console_,
+    /" The last attempt: "\) \+ inParole\.lungo/,
+    "la console non attacca piu' il motivo dell'ultimo tentativo",
+  );
+  assert.match(
+    console_,
+    /const inParole = ilPercheInParole\(centralino\.perche\);/,
+    "il motivo non passa piu' dalle parole nostre",
+  );
+});
+
+/* Il motivo grezzo, detto a chi legge. */
+test("«ENOTFOUND» diventa una frase, e la riga grezza resta", () => {
+  /* La prova compila la funzione **vera**, quella che parte nella pagina: si
+     ritaglia dal file e le si da' il `due()` della pagina. Leggere il sorgente
+     col regolo direbbe soltanto che quelle parole ci sono da qualche parte;
+     qui si guarda cosa esce. */
+  const sorgente = readFileSync(join(QUI, "..", "console", "console.js"), "utf8");
+  const inizio = sorgente.indexOf("function ilPercheInParole(");
+  assert.ok(inizio > 0, "la funzione non c'e' piu'");
+  let profondo = 0;
+  let fine = inizio;
+  for (let i = sorgente.indexOf("{", inizio); i < sorgente.length; i += 1) {
+    if (sorgente[i] === "{") profondo += 1;
+    else if (sorgente[i] === "}") {
+      profondo -= 1;
+      if (!profondo) {
+        fine = i + 1;
+        break;
+      }
+    }
+  }
+  const pezzo = sorgente.slice(inizio, fine);
+  const inParole = new Function("due", `${pezzo}; return ilPercheInParole;`)((it) => it);
+
+  /* I guasti che si conoscono: una frase corta per la pastiglia, e una lunga
+     che si porta dietro la riga grezza. */
+  for (const [grezzo, corto] of [
+    ["getaddrinfo ENOTFOUND tramite.gdahome.org", "il nome non si risolve"],
+    ["connect ECONNREFUSED 1.2.3.4:443", "porta chiusa"],
+    ["connect ETIMEDOUT 1.2.3.4:443", "nessuno risponde"],
+    ["read ECONNRESET", "il filo si chiude subito"],
+    ["certificate has expired (CERT_HAS_EXPIRED)", "certificato scaduto"],
+    ["Hostname/IP does not match certificate's altnames", "certificato di un altro nome"],
+    ["unable to verify the first certificate", "certificato non fidato"],
+    ["self signed certificate in certificate chain", "certificato non fidato"],
+    ["certificate has expired", "certificato scaduto"],
+    ["ha risposto 502", "ha risposto 502"],
+  ]) {
+    const detta = inParole(grezzo);
+    assert.equal(detta.corto, corto, `«${grezzo}» non diventa «${corto}»`);
+    assert.ok(
+      detta.lungo.includes(grezzo),
+      `«${grezzo}»: la riga grezza si e' persa, e con quella la diagnosi`,
     );
+    assert.notEqual(detta.lungo, grezzo, `«${grezzo}»: la riga lunga non spiega niente`);
+  }
+
+  /* Quello che non si riconosce passa com'era: un guasto nuovo detto male e'
+     peggio di un guasto nuovo detto com'e'. */
+  const ignoto = inParole("qualcosa che non abbiamo mai visto");
+  assert.equal(ignoto.corto, "qualcosa che non abbiamo mai visto");
+  assert.equal(ignoto.lungo, "qualcosa che non abbiamo mai visto");
+  assert.deepEqual(inParole(""), { corto: "", lungo: "" });
 });
 
 test("un guasto di chi legge non si traveste da caduta di rete", async () => {
@@ -189,4 +249,39 @@ test("un guasto di chi legge non si traveste da caduta di rete", async () => {
       `«${chi}» puo' ancora inciampare in silenzio`,
     );
   }
+});
+
+test("«Apri nel browser» dice quando non porta da nessuna parte", () => {
+  /* La segnalazione: «in locale se premo apri da browser resta bloccato non si
+   * apre poi esce cosi'» — e la fotografia era l'app, dopo venticinque
+   * secondi di rotella, che diceva «Non trovo la casa».
+   *
+   * Il link era giusto. Il centralino rispondeva. Era la casa a non essergli
+   * attaccata, e quella notizia il ponte ce l'aveva gia' — sta in `dentro` —
+   * ma nella pagina viveva dentro un dettaglio richiuso, che nessuno apre
+   * PRIMA di premere un tasto. Adesso sta accanto al tasto.
+   *
+   * Tre cose la tengono ferma: la riga nasce nascosta (se no si vedrebbe per
+   * un istante a ogni apertura della pagina), la pagina riceve tutto lo stato
+   * del centralino e non il solo indirizzo, e l'avviso si lega a `dentro`. */
+  const pagina = readFileSync(join(QUI, "..", "console", "index.html"), "utf8");
+  const riga = /<p[^>]*\bid="avviso-casa-scollegata"[^>]*>/.exec(pagina);
+  assert.ok(riga, "la riga che avvisa non c'e'");
+  assert.match(riga[0], /\shidden\b/, "la riga che avvisa non nasce nascosta");
+
+  const console_ = readFileSync(join(QUI, "..", "console", "console.js"), "utf8");
+  assert.match(
+    console_,
+    /disegnaIlLinkDiFuori\(stato\.app \? stato\.centralino : null\)/,
+    "alla riga del link arriva ancora il solo indirizzo, e non sa se la casa c'e'",
+  );
+  assert.match(
+    console_,
+    /!centralino\.dentro/,
+    "l'avviso non si lega a «la casa e' attaccata al centralino»",
+  );
+  /* E il motivo vero dentro, in tutte e due le lingue: un avviso che dice solo
+   * «non e' collegata» rimanda a cercare altrove quello che si sa gia'. */
+  assert.match(console_, /centralino\.rifiutata \|\| centralino\.perche/);
+  assert.match(console_, /due\("L'ultimo tentativo: ", "The last attempt: "\)/);
 });

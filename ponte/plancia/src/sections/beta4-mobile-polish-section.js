@@ -247,7 +247,10 @@ function syncConfigTabIcons() {
      * ce l'ha ancora. La colonna della configurazione portava le emoji, che
      * cambiano faccia da un telefono all'altro e — peggio — si ripetevano:
      * Energia e Azioni avevano lo stesso fulmine. */
-    const marchio = disegno ? oggettoWidget(disegno) : "";
+    /* Col posto — la linguetta — cosi' il disegno non dipende dal foglio in
+     * cima al corpo: era quel rimando fra elementi diversi a lasciare le
+     * icone trasparenti su WebKit. */
+    const marchio = disegno ? oggettoWidget(disegno, "", `config-${tab}`) : "";
     if (marchio) {
       /* Come nella barra: conta cosa c'e' nella casella, non il ricordo di
        * avercelo messo (#561). */
@@ -718,7 +721,16 @@ function installStyles() {
      * per sempre, senza che nessuno la stesse guardando.
      *
      * Lo sfondo sfocato torna appena la finestra si apre, ed e' l'unico momento
-     * in cui qualcuno lo vede. */
+     * in cui qualcuno lo vede.
+     *
+     * E la barra tenuta ferma non fa eccezione, anche se sta sullo schermo:
+     * il suo fondo e' **pieno** (navigation-section), quindi dietro non ci
+     * passa niente e una sfocatura sarebbe lavoro che il browser rifa a ogni
+     * scorrimento perche' nessuno la veda. Prima era gia' cosi' per sbaglio,
+     * ma il fondo era a nove decimi: il vetro spento e l'otto per cento di
+     * trasparenza insieme facevano leggere i titoli delle tessere
+     * **attraverso** la barra. Adesso e' una scelta, e si tiene in piedi da
+     * sola. */
     .modal-wrapper:not(.show),.modal-wrapper:not(.show) *,.clima-popup-overlay:not(.show),.clima-popup-overlay:not(.show) *,.hist-overlay:not(.show),.hist-overlay:not(.show) *,#srv-hist-overlay:not(.show),#srv-hist-overlay:not(.show) *,nav.tabs.bottom-nav-bar:not(.visible){backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
     .modal-wrapper:not(.show) *,.clima-popup-overlay:not(.show) *,.hist-overlay:not(.show) *,#srv-hist-overlay:not(.show) *{animation-play-state:paused!important}
     /* Lo sfondo sfocato deve crescere insieme alla dissolvenza, non comparire

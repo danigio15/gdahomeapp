@@ -152,8 +152,14 @@ test("il blocco nasce dove nasce l'intestazione della pagina, non appeso alla sc
   assert.match(sorgente, /const fascia = pagina\.querySelector\("\.dm-page-mast"\);/);
   assert.match(sorgente, /casa && casa\.lastElementChild !== nodo/);
   /* E il disegno è di casa: l'emoji la sceglie chi configura, il ripiego no. */
-  assert.match(sorgente, /oggettoWidget\("mie"\)/);
-  assert.match(sorgente, /oggettoWidget\(riga\.comandabile \? "azioni" : "evidenza"\)/);
+  /* Col posto: ogni disegno si porta dietro le sue sfumature invece di
+   * prenderle dal foglio in cima al corpo, che su WebKit lasciava le icone
+   * trasparenti. */
+  assert.match(sorgente, /oggettoWidget\("mie", "", "mie-testa"\)/);
+  assert.match(
+    sorgente,
+    /oggettoWidget\(riga\.comandabile \? "azioni" : "evidenza", "", `mie-\$\{riga\.entity\}`\)/,
+  );
 });
 
 test("la scheda che le compila è una sola, e la pagina è un campo della voce", () => {

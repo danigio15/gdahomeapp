@@ -1,9 +1,193 @@
 # Cosa cambia, giro per giro
 
 Questo è quello che Home Assistant fa vedere quando dice «Aggiornamento
-disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
-plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
-correzioni dell'add-on fra due plance.
+disponibile»: prima di premere si legge cosa arriva.
+
+**Dalla 1.5.0 il numero è di gdahome.** Fino alla 1.4.32.16 era quello della
+plancia che l'add-on ha dentro, e il quarto numero — `1.4.32.2` — erano le
+correzioni dell'add-on fra due plance. Ma gdahome è più della plancia che
+serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
+fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
+stata: nella pastiglia «La plancia» della console. Sono due numeri perché
+sono due cose.
+
+## 1.5.0
+
+**Su iPhone i disegni si vedevano solo una volta.**
+
+Nella barra in fondo, nelle tessere della Home, nel menu della
+configurazione: il primo disegno c'era, gli altri erano sagome vuote o nere.
+Su Android e sul computer si vedevano tutti, e questa differenza è la
+diagnosi.
+
+Un disegno a colori sfumati tiene le sue sfumature in un pezzo a parte, e
+ogni copia le chiama per nome. I nomi erano **tre, fissi**, e il pezzo che li
+definiva stava in un solo posto della pagina: la prima copia se lo prendeva,
+e le altre chiamavano un nome che dal loro punto di vista non esisteva.
+Chrome quel riferimento lo segue lo stesso; Safari no, e ha ragione lui.
+
+Adesso ogni disegno si porta dietro le sue sfumature, con un nome che dice da
+quale posto viene — la tessera, la voce di menu, la riga di quella entità. Le
+pagine, le schede e le finestre sono state guardate una per una, e quello che
+si vede è identico a prima: cambia soltanto che adesso si vede su tutti i
+telefoni. Nell'app le stesse figure sono un file per disegno, dove il difetto
+non può nascere — e una prova tiene ferme le due copie, così non si
+scollano.
+
+**Il nome dell'entità non si vede più dove non serviva.**
+
+Sotto il nome di una porta c'era `binary_sensor.porta_cantina`, sotto una
+batteria `sensor.telecomando_battery`, dentro le finestre dei dispositivi la
+stessa riga. È la risposta a una domanda che si fa chi **configura** — quale
+entità ho messo in questa casella — e chi configura ha le sue schede, dove
+l'identificativo c'è, si legge e serve. Chi apre una pagina vuole sapere se
+la finestra è aperta.
+
+Via da sei pagine (Varchi, Presenza, Batterie, Macchine e rete, Le tue
+sezioni, Le tue entità) e dalle finestre: quella di cosa è acceso, il
+dettaglio di un'allerta, quella di una luce o di una presa. Al suo posto,
+dove prima non c'era, **lo stato scritto in parole**: «Aperta», «In
+riproduzione», «Riscalda», in una pastiglia del colore della sezione. Nelle
+schede della configurazione l'identificativo resta dov'era.
+
+**Sette segnalazioni, chiuse.**
+
+_Il sensore dei rifiuti_ (#28): il SAVNO di Conegliano scrive la frazione in
+attributi che non guardavamo, e sette ritiri diventavano un solo «Altro».
+Adesso Umido e Secco oggi, Verde fra tre giorni, Carta e Vetro fra sei — e un
+ritiro che porta via due frazioni diventa due pastiglie, perché sono due
+bidoni da mettere fuori.
+
+_L'autonomia dell'UPS_ (#9): «il mio CyberPower mostra il tempo residuo in
+secondi invece dei minuti». Erano 1800 secondi letti come 1800 minuti, cioè
+trenta ore di autonomia su una batteria che ne fa mezz'ora — la risposta
+opposta a quella che si cerca, nel momento in cui è andata via la corrente.
+L'unità adesso si legge dall'entità, che la dichiara: a chi configura non si
+chiede niente.
+
+E poi l'auto, il citofono, le stanze, i varchi, il clima: ognuna col suo
+perché, tutte verificate su una casa vera prima di chiuderle.
+
+**Gli elettrodomestici dicono quello che stanno facendo** (#27, #20).
+
+«In funzione, ma la card indica spenta»: una lavastoviglie Bosch con Home
+Connect, e gli elettrodomestici Samsung con SmartThings. Le entità c'erano e
+gli stati arrivavano — «su schermata classica Home Assistant tutto funziona
+correttamente» — ma Home Connect non pubblica la parola, pubblica il suo
+indirizzo dentro il protocollo: `BSH.Common.EnumType.OperationState.Run`.
+Una macchina che dice chiarissimo «Run» cadeva in fondo alla scala e usciva
+SPENTA.
+
+Adesso si guarda anche l'ultimo pezzo, quello dopo l'ultimo punto, e la
+scheda scrive la **fase** invece dell'indirizzo. Una pausa, poi, non è un
+ciclo nuovo: la lavatrice fermata e ripresa resta lo stesso lavaggio.
+
+**Il radar, e la riga rossa del meteo.**
+
+La mappa di OpenStreetMap rispondeva «Access blocked» — tagliano fuori chi
+non è un browser che naviga — e una mappa che non si disegna non è una scelta
+da lasciare in una tendina: è uscita, e chi ce l'aveva scritta a mano viene
+portato su quella che funziona.
+
+E dove il meteo non dà le previsioni c'era una riga rossa che sembrava un
+guasto. Non lo è: quell'entità dice che tempo fa adesso e basta. Adesso lo
+dice così, dicendo anche dove si sceglie l'entità giusta — e che il radar qui
+sopra è un'altra cosa e funziona per conto suo.
+
+**Da fuori casa: il lucchetto, e il tasto che diceva di sì.**
+
+«Il problema è il certificato, anche a me esce non sicuro.» Il certificato
+era sano: erano le nostre chiamate. L'app aperta su un indirizzo `https`
+bussa a tutti gli approdi della casa insieme, e fra quelli c'è l'indirizzo di
+rete locale, che è `http://192.168.…` — il browser non lo lascia passare e
+marca la pagina. Da una pagina cifrata adesso non si bussa in chiaro.
+
+E il tasto «Apri nel browser», premuto quando la casa non è agganciata al
+tramite, apriva un'app che girava venticinque secondi e poi diceva «non trovo
+la casa». La risposta c'era dopo un secondo — «questa casa adesso non è
+collegata» — e restava nell'attesa. Adesso si legge subito, e la console lo
+dice **prima**, accanto al tasto. Il perché di un filo che non si apre, poi,
+non è più `getaddrinfo ENOTFOUND`: è «il nome non si risolve», «porta
+chiusa», «nessuno risponde», «certificato scaduto», col rimedio accanto e la
+riga tecnica in fondo per chi la vuole.
+
+**Le didascalie e la fascia, misurate invece che indovinate.**
+
+«Sistema le didascalie tagliate a metà parola»: non erano tagliate — chi non
+ci sta prende un nastro che scorre avanti e indietro, e il bordo sfuma per
+dire che il testo continua. Solo che sfumava **anche** dove il testo finiva
+lì. Adesso il velo compare solo dal lato in cui c'è davvero altro.
+
+E la fascia sotto il meteo si fermava quindici pixel sotto la propria
+sfumatura, ai due capi della corsa: la prima e l'ultima pastiglia — quelle
+che si sta aspettando — restavano sotto il velo senza più strada per
+uscirne.
+
+**Il ritratto senza buchi, e le tapparelle che non sono finestre.**
+
+Due cose trovate guardando fotogramma per fotogramma il video di una casa
+vera. Accanto a una faccia c'era un cerchio vuoto che sembrava un'icona non
+arrivata: era il pallino di presenza, disegnato sempre, che per chi non ha
+un'attività nota non aveva niente da mettere dentro — adesso, se non ha
+niente da dire, non c'è. E una tapparella contata fra le finestre aperte
+faceva dire «2 finestre aperte» a una casa che ne aveva una.
+
+## 1.4.32.16
+
+**La barra delle sezioni non si legge più attraverso.**
+
+Su un tablet girato, sotto la barra si leggevano i titoli delle tessere che
+le passavano dietro — «TEMPERATURA», «AUTO», «BATTERIE», «ARIA» — in
+filigrana sopra i nomi della barra stessa. Non sembrava una barra di vetro:
+sembrava un disegno doppio.
+
+Misurato nel browser, non indovinato: col tema chiaro il fondo della barra
+stava a `rgba(255,255,255,.92)` e il vetro smerigliato era **spento**.
+Spento per una buona ragione — una sfocatura a schermo intero il browser la
+ricompone a ogni scorrimento, ed è un costo che questa plancia si è levata
+di mezzo — ma senza vetro quell'otto per cento di trasparenza non è una
+macchia: è testo nitido. Sul telefono non si vedeva perché lì la barra sta
+ritirata; su un tablet sta sempre in fondo.
+
+La cura è il fondo **pieno**, non il vetro riacceso: dietro non passa più
+niente da sfocare e il risparmio resta dov'era. Dal fondo della pagina la
+barra la staccano l'ombra e il suo bordo chiaro, che c'erano già. Vale nei
+due temi e solo quando la barra è in vista — tirata fuori, o tenuta ferma da
+chi l'ha scelta così: ritirata resta com'era.
+
+**E lo spazio in fondo alla pagina non c'entrava.** L'ho misurato prima di
+toccarlo: arrivati in fondo, l'ultima tessera si porta sopra la barra. Quello
+che si vede a mezza pagina è una barra che galleggia, ed è quello che fa una
+barra che galleggia: per non averla mai sopra niente va messa di lato, e
+quella è un'altra cosa — tutto il carrello delle sezioni è orizzontale.
+
+## 1.4.32.15
+
+**La barra delle sezioni su un tablet: i disegni alla loro misura vera, e il
+nome che si legge.**
+
+Le misure di serie sono quelle di un telefono tenuto in mano: il disegno di
+una sezione sta in ventiquattro punti e il suo nome è scritto in **nove**.
+Su un tablet in orizzontale, a mezzo metro dagli occhi, quei nove punti sono
+una riga grigia che si indovina.
+
+I disegni delle sezioni sono SVG col riquadro «0 0 32»: portarli a
+trentadue non è ingrandirli, è **smetterli di rimpicciolire** — una figura
+fitta schiacciata a tre quarti perde le linee sottili, e si vede. Il nome
+passa da nove a dodici punti.
+
+E la spaziatura si stringe per fare posto: i fianchi di ogni sezione da
+quattordici a dodici punti, lo spazio fra una e l'altra da dodici a dieci.
+Il conto torna: su un tablet largo milleottanta le sezioni ci stanno tutte
+come prima, senza che la barra cominci a scorrere. Insieme a loro cresce lo
+spazio riservato in fondo alla pagina — sedici punti, quanto è cresciuta la
+barra — se no la barra più alta si mangiava proprio la distanza che serviva
+a non coprire l'ultima tessera.
+
+**Sul telefono non cambia niente, nemmeno girato.** La regola vuole almeno
+settecentosessantotto punti di larghezza **e** seicento di altezza: un
+telefono in orizzontale ha la prima misura e non la seconda, e su uno
+schermo alto trecentonovanta una barra più alta si mangia le tessere.
 
 ## 1.4.32.15
 

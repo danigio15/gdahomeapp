@@ -31,8 +31,14 @@ import {
   postaRitirata,
 } from "../core/come-sta-la-casa.js";
 import { comandoPerSpegnere } from "../core/come-si-spegne.js";
-import { durataDellaDeriva, spazioDaPercorrere } from "../core/la-fascia-deriva.js";
+import {
+  VELO_DELLA_FASCIA,
+  durataDellaDeriva,
+  laCorsaDelNastro,
+  spazioDaPercorrere,
+} from "../core/la-fascia-deriva.js";
 import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
+import { parolaDellaPorta, parolaDiStato } from "./le-parole-di-home-assistant.js";
 import { windowOpenFromState } from "../core/shutter-window.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
 import { CHIAVE_VERSI, apertaSecondoVerso, insiemeInvertiti } from "../core/verso-aperture.js";
@@ -178,11 +184,17 @@ function laPostaAdesso(config, states) {
  * Il numero esce dalla frase e resta un numero. Le parole diventano quattordici
  * chiavi ferme, che si traducono una volta e valgono per ogni conto.
  */
-function parolaDelConto(chiave, conto) {
+function parolaDelConto(chiave, conto, modello = null) {
   const uno = conto === 1;
   if (chiave === "luci") return uno ? t("luce accesa", "light on") : t("luci accese", "lights on");
-  if (chiave === "tapparelle")
+  if (chiave === "tapparelle") {
+    /* Dove non c'e' un solo contatto sull'anta, quel conto sono i motori
+     * alzati e non le finestre aperte (#31): la tessera lo dice giusto da
+     * quando c'e' la #442, qui arrivava solo il numero. */
+    if (modello?.soloMotori)
+      return uno ? t("tapparella alzata", "shutter up") : t("tapparelle alzate", "shutters up");
     return uno ? t("finestra aperta", "window open") : t("finestre aperte", "windows open");
+  }
   if (chiave === "clima") return uno ? t("unità accesa", "unit on") : t("unità accese", "units on");
   if (chiave === "prese")
     return uno ? t("presa accesa", "socket on") : t("prese accese", "sockets on");
@@ -257,7 +269,7 @@ function paroleDellaPastiglia(pastiglia) {
      * QUALE sensore e' l'unica cosa che il numero da solo non dice. */
     return { testa, coda, titolo: pastiglia.nome ? `${pastiglia.nome} · ${testa}` : `${testa} ${coda}` };
   }
-  const parola = parolaDelConto(pastiglia.chiave, pastiglia.conto);
+  const parola = parolaDelConto(pastiglia.chiave, pastiglia.conto, pastiglia);
   const testa = String(pastiglia.conto);
   const nomi = vociDellaPastiglia(pastiglia)
     .map((voce) => voce.name)
@@ -279,7 +291,11 @@ function paroleDellaPastiglia(pastiglia) {
  * delle due. */
 function facciaDellaPastiglia(pastiglia) {
   const chiave = clean(pastiglia?.chiave);
-  if (haOggettoWidget(chiave)) return oggettoWidget(chiave);
+  /* Col posto: la pastiglia si porta dietro le SUE sfumature invece di
+   * prenderle dal foglio in cima al corpo, che e' un rimando fra elementi
+   * diversi e su WebKit lascia il disegno trasparente. Il posto e' la
+   * chiave: una pastiglia per chiave, quindi sempre lo stesso a ogni giro. */
+  if (haOggettoWidget(chiave)) return oggettoWidget(chiave, "", `fascia-${chiave}`);
   const nome = clean(pastiglia?.mdi);
   if (nome) return iconGlyphMarkup("action", nome, { size: 16 });
   return `<span class="dm-casa-emoji">${esc(String(pastiglia?.icona ?? ""))}</span>`;
@@ -456,17 +472,24 @@ function imbottituraDellaFascia(riga) {
 function tieniLaFasciaInMovimento(riga) {
   const nastro = riga?.querySelector(":scope > .dm-casa-nastro");
   if (!nastro) return false;
-  const strada = spazioDaPercorrere({
+  const fuori = spazioDaPercorrere({
     scrollWidth: nastro.scrollWidth,
     clientWidth: riga.clientWidth,
     imbottitura: imbottituraDellaFascia(riga),
   });
+  /* La corsa e' quello che sporge piu' un velo per capo: cosi' la prima e
+   * l'ultima pastiglia, dove il nastro si ferma, escono da sotto la
+   * sfumatura. Il velo lo dice il modulo, e lo scriviamo anche nel foglio —
+   * la sfumatura si disegna con questo numero, non con una sua copia. */
+  const strada = laCorsaDelNastro(fuori);
   if (!strada) {
     delete riga.dataset.dmDeriva;
+    riga.style.removeProperty("--dm-casa-velo");
     riga.style.removeProperty("--dm-casa-strada");
     riga.style.removeProperty("--dm-casa-durata");
     return false;
   }
+  riga.style.setProperty("--dm-casa-velo", `${VELO_DELLA_FASCIA}px`);
   riga.style.setProperty("--dm-casa-strada", `${strada}px`);
   riga.style.setProperty("--dm-casa-durata", `${durataDellaDeriva(strada)}s`);
   riga.dataset.dmDeriva = "true";
@@ -579,20 +602,51 @@ function finestra() {
   return nodo;
 }
 
-/* Com'e' adesso quella voce, in parole: quello che dice Home Assistant, che e'
- * la sola risposta vera. Una voce che non risponde piu' lo dice. */
-function statoDellaVoce(entity, states) {
+/* Le pastiglie che parlano di qualcosa che si apre: li' «acceso» non e' la
+ * parola: una finestra e' aperta, e chi legge «ON» sotto il nome di una
+ * finestra deve tradurselo da solo. */
+const SI_APRONO = new Set(["varchi", "porte", "finestre", "tapparelle"]);
+
+/* Com'e' adesso quella voce, IN PAROLE.
+ *
+ * Prima si scriveva quello che dice Home Assistant e basta — `on`, `off`,
+ * `unavailable` — sotto l'identificatore dell'entita' in maiuscolo:
+ *
+ *     BINARY_SENSOR.FINESTRA_BAGNO_GRANDE_CONTACT · ON
+ *
+ * Due righe per non dire niente. L'identificatore e' il nome che quella cosa
+ * ha dentro Home Assistant, e in una plancia non serve a chi guarda: serve a
+ * chi configura, e in configurazione infatti c'e'. E `ON` non e' una parola
+ * italiana.
+ *
+ * Adesso resta il nome, e accanto c'e' com'e' adesso, detto: «Aperta»,
+ * «Accesa», «In riproduzione». Le parole sono quelle di
+ * `le-parole-di-home-assistant.js`, che e' il posto dove stanno tutte — e per
+ * le cose che si aprono quelle al femminile, che e' l'altra meta' della stessa
+ * tabella. Una voce che non risponde piu' lo dice.
+ *
+ * Esportata perche' la provano: le parole cambiano col tipo di pastiglia, e i
+ * tipi sono sette — leggerle dal disegno di una finestra alla volta vorrebbe
+ * dire provarne uno e fidarsi degli altri sei. */
+export function statoDellaVoce(entity, states, chiave = "") {
   const id = clean(entity);
-  if (!id) return "";
+  if (!id) return { parola: "", muta: true };
   const risolta = clean(root.resolveEntity?.(id) || id);
   const stato = states?.[risolta] || states?.[id];
   const grezzo = clean(stato?.state);
   if (!grezzo || /^(unknown|unavailable)$/i.test(grezzo))
-    return t("non risponde", "not responding");
-  return grezzo;
+    return { parola: t("non risponde", "not responding"), muta: true };
+  if (SI_APRONO.has(clean(chiave))) {
+    /* Un contatto dice `on` quando e' aperto: e' la stessa cosa detta nella
+     * lingua dei sensori. */
+    const comeSiApre = { on: "open", off: "closed" }[grezzo.toLowerCase()] || grezzo;
+    const detta = parolaDellaPorta(comeSiApre);
+    if (detta) return { parola: detta, muta: false };
+  }
+  return { parola: parolaDiStato(grezzo), muta: false };
 }
 
-function rigaDellElenco(voce, states) {
+function rigaDellElenco(voce, states, chiave = "") {
   const entita = clean(voce?.entity);
   const nome = clean(voce?.name) || entita;
   const comando = comandoPerSpegnere(entita, states?.[entita]);
@@ -618,13 +672,16 @@ function rigaDellElenco(voce, states) {
           parole[comando.parola] || parole.spegni,
         )}</button>`
       : "";
+  const adesso = statoDellaVoce(entita, states, chiave);
+  const pastiglia = adesso.parola
+    ? `<span class="dm-casa-stato" data-dm-muta="${adesso.muta}"><i aria-hidden="true"></i>${esc(
+        adesso.parola,
+      )}</span>`
+    : "";
   return `<div class="detail-row dm-casa-voce">
       <div class="d-info">
         <div class="d-name">${esc(nome)}</div>
-        <div class="d-state"><span class="dm-casa-id">${esc(entita)}</span> · <b>${esc(
-          statoDellaVoce(entita, states),
-        )}</b></div>
-      </div>${tasto}</div>`;
+      </div>${pastiglia}${tasto}</div>`;
 }
 
 /** Riempie l'elenco aperto con quello che e' acceso adesso. */
@@ -673,7 +730,7 @@ export function disegnaLElenco() {
         : `${voci.length} ${t("accesi · tocca per spegnere", "on · tap to turn off")}`;
     if (sotto.textContent !== briciola) sotto.textContent = briciola;
   }
-  const disegno = voci.map((voce) => rigaDellElenco(voce, states)).join("");
+  const disegno = voci.map((voce) => rigaDellElenco(voce, states, chiave)).join("");
   if (elenco.innerHTML !== disegno) elenco.innerHTML = disegno;
   return true;
 }
@@ -863,7 +920,11 @@ function pannelloMarkup() {
   const righe = VOCI_DELLA_BARRA.map((voce) => {
     const etichetta = nomi[voce.chiave] || voce.chiave;
     return `<label class="ed-row dm-casa-ed-riga">
-      <span class="dm-casa-ed-ic" aria-hidden="true">${oggettoWidget(voce.chiave)}</span>
+      <span class="dm-casa-ed-ic" aria-hidden="true">${oggettoWidget(
+        voce.chiave,
+        "",
+        `casa-ed-${voce.chiave}`,
+      )}</span>
       <span class="ed-row-main"><strong class="ed-row-new">${esc(etichetta)}</strong></span>
       <input type="checkbox" data-dm-casa-voce="${esc(voce.chiave)}"${
         config.voci[voce.chiave] ? " checked" : ""
@@ -1087,9 +1148,15 @@ function stile() {
        non sa quanto sono larghe le pastiglie. */
     #dm-casa-riga[data-dm-deriva="true"] .dm-casa-nastro{
       animation:dm-casa-deriva var(--dm-casa-durata,12s) ease-in-out infinite alternate}
+    /* La corsa sporge di un velo ai due capi, e il velo e' la sfumatura qui
+       sotto: lo stesso numero, preso dalla stessa variabile. Dove il nastro si
+       ferma, la pastiglia che si stava aspettando resta in chiaro invece che
+       mezza sotto la sfumatura — era quello il «tagliata ai lati».
+       La strada la conta la sezione col velo dentro, perche' la durata si
+       calcola sulla distanza e la velocita' deve restare quella. */
     @keyframes dm-casa-deriva{
-      from{translate:0}
-      to{translate:calc(-1 * var(--dm-casa-strada,0px))}}
+      from{translate:var(--dm-casa-velo,0px)}
+      to{translate:calc(var(--dm-casa-velo,0px) - var(--dm-casa-strada,0px))}}
     /* Chi ci mette il dito o il puntatore sopra comanda lui: la fascia si ferma
        e si legge. Riprende quando lo si toglie. */
     #dm-casa-riga:hover .dm-casa-nastro,
@@ -1098,12 +1165,17 @@ function stile() {
     /* Le sfumature ai due bordi dicono «continua»: si accendono solo quando
        c'e' davvero qualcosa fuori. */
     #dm-casa-riga[data-dm-deriva="true"]{
-      mask-image:linear-gradient(to right,transparent 0,#000 22px,#000 calc(100% - 22px),transparent 100%);
-      -webkit-mask-image:linear-gradient(to right,transparent 0,#000 22px,#000 calc(100% - 22px),transparent 100%)}
+      mask-image:linear-gradient(to right,transparent 0,#000 var(--dm-casa-velo,0px),#000 calc(100% - var(--dm-casa-velo,0px)),transparent 100%);
+      -webkit-mask-image:linear-gradient(to right,transparent 0,#000 var(--dm-casa-velo,0px),#000 calc(100% - var(--dm-casa-velo,0px)),transparent 100%)}
     @media (prefers-reduced-motion:reduce){
       /* Chi ha chiesto meno animazioni si trascina la fascia a mano: e' l'unico
-         caso in cui torna a scorrere invece di derivare. */
-      #dm-casa-riga[data-dm-deriva="true"] .dm-casa-nastro{animation:none}
+         caso in cui torna a scorrere invece di derivare. E fermo il nastro, il
+         velo se lo deve guadagnare lo scorrimento — il nastro si allarga di un
+         velo per parte, e chi trascina porta la prima e l'ultima pastiglia
+         fuori dalla sfumatura come fa la deriva. Senza, qui restavano tagliate
+         davvero: a mano non si sporge. */
+      #dm-casa-riga[data-dm-deriva="true"] .dm-casa-nastro{
+        animation:none;padding-inline:var(--dm-casa-velo,0px)}
       #dm-casa-riga[data-dm-deriva="true"]{overflow-x:auto;scrollbar-width:none}
       #dm-casa-riga[data-dm-deriva="true"]::-webkit-scrollbar{display:none}}
 
@@ -1175,8 +1247,7 @@ function stile() {
     html[data-theme="dark"] .dm-casa-pastiglia[data-dm-casa="posta"] .dm-casa-coda{color:#93c5fd}
     /* L'elenco di cosa e' acceso: la finestra e' vestita con le classi del
        guscio — «modal-wrapper», «modal-card», «detail-row» — e qui si scrive
-       solo quello che e' suo: la riga, il tasto che spegne, l'entita' in
-       piccolo sotto il nome. */
+       solo quello che e' suo: la riga, com'e' adesso, e il tasto che spegne. */
     #dm-casa-popup .dm-casa-elenco{display:grid;gap:8px}
     #dm-casa-popup .dm-casa-voce{display:flex;align-items:center;gap:10px}
     #dm-casa-popup .dm-casa-voce .d-info{min-width:0;flex:1;overflow:hidden}
@@ -1185,11 +1256,30 @@ function stile() {
        dall'altra, e qui il nome e' l'unica cosa che si legge. */
     #dm-casa-popup .dm-casa-voce .d-name{
       overflow-wrap:anywhere;font-size:14px;font-weight:800}
-    #dm-casa-popup .dm-casa-id{
-      font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;
-      color:var(--text-dim,#64748b)}
-    #dm-casa-popup .dm-casa-voce .d-state{font-size:11px;color:var(--text-dim,#64748b)}
-    #dm-casa-popup .dm-casa-voce .d-state b{font-weight:900;color:#f59e0b}
+    /* Com'e' adesso: una pastiglia, non una riga di testo.
+       Prende il colore della cosa che si sta guardando — lo stesso accento
+       della tessera, che la finestra si mette addosso quando si apre — e il
+       puntino davanti si vede prima della parola. Chi non risponde resta
+       grigio: e' l'unico stato che non e' una notizia sulla casa. */
+    #dm-casa-popup .dm-casa-stato{
+      flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;
+      padding:6px 12px;border-radius:999px;
+      font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
+      color:var(--dm-widget-accent,#0ea5e9);
+      background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 13%,transparent);
+      box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 24%,transparent)}
+    #dm-casa-popup .dm-casa-stato i{
+      width:7px;height:7px;border-radius:50%;background:currentColor;
+      box-shadow:0 0 0 3px color-mix(in srgb,currentColor 20%,transparent)}
+    #dm-casa-popup .dm-casa-stato[data-dm-muta="true"]{
+      color:var(--text-dim,#64748b);
+      background:color-mix(in srgb,var(--text-dim,#64748b) 12%,transparent);
+      box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text-dim,#64748b) 20%,transparent)}
+    /* La riga resta una riga anche sul telefono: il nome va a capo dentro il
+       suo posto — puo' farlo, e' scritto qui sopra — e la pastiglia col tasto
+       restano a destra, in mezzo. Mandandoli a capo si otteneva una riga col
+       nome e sotto una fila vuota a sinistra: peggio di quello che si voleva
+       evitare. */
     #dm-casa-popup .dm-casa-spegni{
       flex:0 0 auto;border:0;cursor:pointer;padding:9px 14px;border-radius:11px;
       font:inherit;font-size:11px;font-weight:900;letter-spacing:.06em;

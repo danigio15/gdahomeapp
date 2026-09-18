@@ -71,6 +71,7 @@ Sonda sondaChe(
 }
 
 void main() {
+  leProveDelChiaro();
   test('in casa si entra dall\'indirizzo di rete locale', () async {
     final sonda = sondaChe({inRete: true, daFuori: false});
     final approdo = await sonda.dove(casaCon(dentro: inRete, fuori: daFuori));
@@ -310,4 +311,69 @@ void main() {
       expect(approdo.da, DaDove.daFuori);
     },
   );
+}
+
+/// Da una pagina cifrata non si bussa in chiaro.
+///
+/// «Il problema è il certificato, anche a me esce non sicuro» — e il
+/// certificato era sano: Let's Encrypt, nomi giusti, scadenza lontana. Quello
+/// che il browser diceva, nel suo pannello, era un'altra cosa: «questa pagina
+/// include altre risorse che non sono sicure».
+///
+/// Erano le nostre. L'app aperta su `https://tramite.gdahome.org/app/` bussa a
+/// tutti gli approdi insieme, e fra quelli c'è l'indirizzo di casa —
+/// `http://192.168.…`, che hanno quasi tutti. Quella chiamata il browser non
+/// la lascia passare (contenuto misto) e per tutta risposta marca la pagina
+/// «non sicura» finché resta aperta, col lucchetto sbarrato.
+///
+/// Non era un tentativo andato male: era un tentativo **che non si poteva
+/// fare**, e che si pagava col lucchetto. Sul telefono e sul computer non
+/// cambia niente: quella regola è del browser.
+void leProveDelChiaro() {
+  group('da una pagina https si bussa solo dove si può', () {
+    test('un indirizzo di casa in chiaro non è un approdo sicuro', () {
+      final dentro = Approdo.diretto(DaDove.daDentro, inRete);
+      expect(dentro.sicuro, isFalse);
+      expect(dentro.filo.scheme, 'ws');
+    });
+
+    test('quello da fuori in https, e il centralino, lo sono', () {
+      expect(Approdo.diretto(DaDove.daFuori, daFuori).sicuro, isTrue);
+      expect(
+        Approdo.dalCentralino(ilCentralino, idAlCentralino).sicuro,
+        isTrue,
+      );
+    });
+
+    test('chiedendo solo i sicuri, quello in chiaro resta fuori', () {
+      final casa = casaCon(
+        dentro: inRete,
+        fuori: daFuori,
+        centralino: ilCentralino,
+      );
+      expect(casa.approdi().length, 3, reason: 'sul telefono si provano tutti');
+      final sicuri = casa.approdi(soloSicuri: true);
+      expect(sicuri.length, 2);
+      expect(
+        sicuri.every((uno) => uno.da != DaDove.daDentro),
+        isTrue,
+        reason: 'è quello che il browser blocca, e che marca la pagina',
+      );
+    });
+
+    test('una casa che si raggiunge solo in chiaro non ha strade sicure', () {
+      final casa = casaCon(dentro: inRete);
+      expect(casa.approdi(), hasLength(1));
+      expect(casa.approdi(soloSicuri: true), isEmpty);
+    });
+
+    test('fuori dal browser la domanda non si pone', () {
+      /* `inChiaroNonSiPuo` comincia da `kIsWeb`: nelle prove — che girano
+       * sulla macchina virtuale di Dart, non in un browser — è falso, e gli
+       * approdi si provano tutti. Se un domani qualcuno filtrasse sempre,
+       * l'app sul telefono non troverebbe più la casa sotto il proprio
+       * Wi-Fi. */
+      expect(inChiaroNonSiPuo, isFalse);
+    });
+  });
 }

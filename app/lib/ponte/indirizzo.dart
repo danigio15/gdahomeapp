@@ -276,6 +276,14 @@ class Approdo {
   /// quando la casa non e' collegata — e li' lo scopre il filo.
   final Uri salute;
 
+  /// Se questo approdo viaggia cifrato, tutto quanto.
+  ///
+  /// Serve a una cosa sola, e la fa da sola: un browser che ha caricato la
+  /// pagina su `https` **rifiuta** di bussare in chiaro, e bussarci lo stesso
+  /// non e' un tentativo che va male — e' la pagina che viene marcata «non
+  /// sicura» finche' resta aperta.
+  bool get sicuro => filo.isScheme('wss') && salute.isScheme('https');
+
   /// Come si dice a schermo.
   String get comeSiChiama => switch (da) {
     DaDove.daDentro => inLingua(it: 'in casa', en: 'at home'),

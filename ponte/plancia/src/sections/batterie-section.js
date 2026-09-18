@@ -214,7 +214,6 @@ function rigaMarkup(riga, states = {}) {
     <span class="dm-batt-ic" aria-hidden="true">${esc(glifoDelLivello(riga))}</span>
     <div class="dm-batt-testo">
       <strong>${esc(riga.name)}</strong>
-      <small class="mono">${esc(riga.entity)}</small>
       <span class="dm-batt-barra"><i style="width:${esc(String(quanto))}%"></i></span>
     </div>
     <b class="dm-batt-livello">${esc(riga.muta ? "—" : `${Math.round(riga.level)}%`)}</b>
@@ -354,8 +353,6 @@ function installStyles() {
       font-size:19px;background:color-mix(in srgb,var(--dm-batt) 20%,transparent)}
     ${P} .dm-batt-testo{display:grid;gap:3px;min-width:0}
     ${P} .dm-batt-testo strong{font-size:14px;font-weight:900;color:var(--text,#0f172a);
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P} .dm-batt-testo small{font-size:10.5px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     ${P} .dm-batt-barra{display:block;height:5px;border-radius:999px;margin-top:2px;
       background:color-mix(in srgb,var(--dm-batt) 16%,transparent);overflow:hidden}

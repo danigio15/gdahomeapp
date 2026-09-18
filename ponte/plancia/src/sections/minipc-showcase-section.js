@@ -493,7 +493,7 @@ function mountTrace(page) {
     <div class="dm-srvx-trace-plot">
       <svg class="dm-srvx-trace-svg" viewBox="0 0 ${TRACE_WIDTH} ${TRACE_HEIGHT}" preserveAspectRatio="none" aria-hidden="true">
         <defs>
-          <linearGradient id="dmSrvxTraceFill" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="page-server-trace" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="currentColor" stop-opacity=".38"/>
             <stop offset="1" stop-color="currentColor" stop-opacity="0"/>
           </linearGradient>
@@ -1184,7 +1184,12 @@ function minipcShowcaseCss() {
 #page-server.dm-srvx .dm-srvx-trace-mid{
   stroke:var(--srvx-hero-line);stroke-width:1;stroke-dasharray:3 5;vector-effect:non-scaling-stroke
 }
-#page-server.dm-srvx .dm-srvx-trace-area{fill:url(#dmSrvxTraceFill)}
+/* Il riempimento arriva da qui, non dal markup: il nome porta quello
+   della pagina che lo contiene — «page-server» — perche' un nome fisso,
+   in una pagina con due tracce, farebbe rispondere la prima per tutte, e
+   se la prima stesse in un ramo chiuso non dipingerebbe nessuno. E' il
+   difetto delle icone trasparenti su iPhone, con un altro nome. */
+#page-server.dm-srvx .dm-srvx-trace-area{fill:url(#page-server-trace)}
 #page-server.dm-srvx .dm-srvx-trace-line{
   stroke:var(--srvx-live);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;
   vector-effect:non-scaling-stroke

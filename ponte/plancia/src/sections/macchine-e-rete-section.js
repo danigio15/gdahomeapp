@@ -181,7 +181,6 @@ function rigaMarkup(riga) {
     <span class="dm-macchina-ic" aria-hidden="true">${esc(riga.glifo)}</span>
     <div class="dm-macchina-testo">
       <strong>${esc(riga.name)}</strong>
-      <small class="mono">${esc(riga.entity)}</small>
     </div>
     <b class="dm-macchina-stato">${esc(parolaDelloStato(riga))}</b>
     ${comandiMarkup(riga)}
@@ -324,8 +323,6 @@ function installStyles() {
       font-size:18px;background:color-mix(in srgb,var(--dm-macchina,#94a3b8) 20%,transparent)}
     ${P} .dm-macchina-testo{display:grid;gap:2px;min-width:0}
     ${P} .dm-macchina-testo strong{font-size:13.5px;font-weight:900;color:var(--text,#0f172a);
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    ${P} .dm-macchina-testo small{font-size:10px;font-weight:700;color:var(--text-dim,#64748b);
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     ${P} .dm-macchina-stato{font-size:10.5px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;
       color:color-mix(in srgb,var(--dm-macchina,#94a3b8) 78%,var(--text,#0f172a))}

@@ -120,11 +120,20 @@ test("la tendina dice cosa si sceglie, e la nota sotto il radar da chi arriva", 
 });
 
 test("il nome del fondo si legge, e un servizio ritirato si riconosce", async () => {
+  const { FONDI_MAPPA, FONDO_DI_SERIE } = await import("../src/core/radar-mappa.js");
   const { nomeDelFondo } = await import("../src/sections/radar-meteo-section.js");
   /* Un fondo dell'elenco si chiama col suo nome. */
   assert.equal(
+    nomeDelFondo({ fondo: FONDI_MAPPA[FONDO_DI_SERIE].modello }),
+    FONDI_MAPPA[FONDO_DI_SERIE].nome,
+  );
+  /* I quadratini della fondazione OpenStreetMap non sono piu' in elenco (#29):
+   * rispondevano «403 · Access blocked», e adesso chi li aveva scritti a mano
+   * si ritrova la mappa di serie. Il nome che resta e' il loro ospite — che e'
+   * proprio quello che serve a riconoscere un servizio che non risponde. */
+  assert.equal(
     nomeDelFondo({ fondo: "https://tile.openstreetmap.org/{z}/{x}/{y}.png" }),
-    "OpenStreetMap",
+    "tile.openstreetmap.org",
   );
   /* Uno scritto a mano porta il suo ospite: e' l'unica cosa che, guardando la
    * nota, permette di riconoscere un servizio che non risponde piu'. */

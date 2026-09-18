@@ -718,10 +718,15 @@ void main() {
   });
 
   test('quando chi chiude dice perché, la caduta lo ripete', () async {
-    /* «Il filo si e' chiuso» non dice niente a nessuno. «Questa casa adesso
-     * non e' collegata» — che e' quello che dice il centralino quando
-     * l'add-on non e' attaccato — dice tutto, ed e' l'unica frase che viene
-     * da chi lo sa davvero. */
+    /* «Il filo si e' chiuso» non dice niente a nessuno. «Casa non collegata»
+     * — che e' quello che dice il centralino quando l'add-on non gli e'
+     * attaccato — dice tutto, ed e' l'unica frase che viene da chi lo sa
+     * davvero.
+     *
+     * Arriva detta come si dice a una persona, e non come la dice il
+     * centralino fra due macchine: vedi `parole_del_centralino.dart`. Quella
+     * frase finisce a schermo, e li' deve dire **dove** si e' fermata la
+     * strada — se no chi la legge va a cercare il difetto nel telefono. */
     final filo = Filo.fisso(
       indirizzo: ponte.indirizzo,
       segno: segnoBuono,
@@ -736,10 +741,13 @@ void main() {
       await presa.chiudi(perche: 'casa non collegata');
     }
     await _finoA(
-      () => filo.traffico?.contains('casa non collegata') ?? false,
+      () => filo.traffico?.contains('non è collegata al centralino') ?? false,
       entro: const Duration(seconds: 3),
     );
-    expect(filo.traffico, contains('casa non collegata'));
+    expect(
+      filo.traffico,
+      contains('la tua casa non è collegata al centralino'),
+    );
     await filo.chiudi();
   });
 

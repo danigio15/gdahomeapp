@@ -83,6 +83,33 @@ function installStyles() {
         bottom:calc(90px + var(--dm-fondo-di-sistema))!important
       }
       .bottom-nav-bar{isolation:isolate!important}
+      /* Col tema chiaro la barra in vista e' **piena**.
+       *
+       * Il tema scuro la sfoca — «blur(18px)», qui sotto — e quello che ci
+       * passa dietro diventa una macchia. Il chiaro non l'ha mai sfocata: sta
+       * a rgba(255,255,255,.92), e quell'otto per cento e' testo **nitido**.
+       * Sul telefono la barra e' ritirata e non si vede; su un tablet sta
+       * sempre in fondo, e sotto di lei si leggevano i titoli delle tessere —
+       * «TEMPERATURA», «AUTO», «BATTERIE» — in filigrana sopra i suoi. Non
+       * sembra una barra di vetro: sembra una barra rotta.
+       *
+       * Piena e non sfocata: una sfocatura a schermo intero il browser la
+       * ricompone a ogni scorrimento, ed e' proprio il costo che questa
+       * plancia si e' levata di mezzo. Dal fondo della pagina la barra la
+       * staccano l'ombra e il suo bordo chiaro, che ci sono gia'.
+       *
+       * Solo quando e' in vista: tirata fuori, o tenuta ferma da chi l'ha
+       * scelta cosi' nella Config. Ritirata resta come era. */
+      nav.tabs.bottom-nav-bar.visible,
+      body.cd-nav-fixed nav.tabs.bottom-nav-bar{background:#fff!important}
+      html[data-theme="dark"] nav.tabs.bottom-nav-bar.visible,
+      html.dark nav.tabs.bottom-nav-bar.visible,
+      body[data-theme="dark"] nav.tabs.bottom-nav-bar.visible,
+      body.dark nav.tabs.bottom-nav-bar.visible,
+      html[data-theme="dark"] body.cd-nav-fixed nav.tabs.bottom-nav-bar,
+      html.dark body.cd-nav-fixed nav.tabs.bottom-nav-bar,
+      body[data-theme="dark"].cd-nav-fixed nav.tabs.bottom-nav-bar,
+      body.dark.cd-nav-fixed nav.tabs.bottom-nav-bar{background:#131c30!important}
       /* «Le icone sono poco leggibili, troppo chiare»: la voce a riposo
        * portava questo grigio al 70% di opacita', che sul bianco della barra
        * fa tre a uno — sotto la soglia di leggibilita'. Piu' scuro e quasi
@@ -123,6 +150,52 @@ function installStyles() {
       html[data-theme="dark"] .bottom-nav-bar .tab.active,html.dark .bottom-nav-bar .tab.active,body[data-theme="dark"] .bottom-nav-bar .tab.active,body.dark .bottom-nav-bar .tab.active,.dark .bottom-nav-bar .tab.active{background:#25324b!important;color:#fff!important;border-color:#52627f!important;box-shadow:0 8px 20px rgba(0,0,0,.28)!important}
       html[data-theme="dark"] .bottom-nav-bar .tab.active .text,html.dark .bottom-nav-bar .tab.active .text,body[data-theme="dark"] .bottom-nav-bar .tab.active .text,body.dark .bottom-nav-bar .tab.active .text,.dark .bottom-nav-bar .tab.active .text{color:#fff!important;opacity:1!important}
       @media(max-width:640px){.bottom-nav-bar .tab .text{font-weight:800!important}.bottom-nav-bar .tab{min-width:54px!important}}
+      /* La barra su un tablet: i disegni alla loro misura vera, e il nome che
+       * si legge.
+       *
+       * Le misure di serie sono quelle di un telefono tenuto in mano: il
+       * disegno di una sezione sta in ventiquattro punti e il suo nome e'
+       * scritto in **nove**. Su un tablet in orizzontale, a mezzo metro dagli
+       * occhi, quei nove punti sono una riga grigia che si indovina — e il
+       * disegno e' il pezzo che dice qual e' la sezione.
+       *
+       * I disegni sono SVG col riquadro «0 0 32»: portarli a trentadue non e'
+       * ingrandirli, e' **smetterli di rimpicciolire**. Quello che si vede
+       * cambia piu' di quanto dica il numero, perche' una figura fitta
+       * schiacciata a tre quarti perde le linee sottili.
+       *
+       * E la spaziatura si stringe per fare posto: i fianchi della pastiglia
+       * da quattordici a dodici e lo spazio fra una sezione e l'altra da
+       * dodici a dieci. Il conto non torna in pari — con nomi come
+       * «TEMPERATURA» scritti in dodici punti la barra diventa piu' larga
+       * dello schermo — ma quella e' la sua casa: la barra e' un carrello che
+       * scorre, con le frecce sul computer e il trascinamento sul dito, ed e'
+       * fatta cosi' da quando le sezioni sono tredici.
+       *
+       * Sul telefono non cambia niente, nemmeno girato: ci vuole anche
+       * seicento punti di altezza, che un telefono in orizzontale non ha. Una
+       * barra piu' alta su uno schermo alto trecentonovanta si mangia le
+       * tessere. */
+      @media(min-width:768px) and (min-height:600px){
+        .bottom-nav-bar .tab .icon>.dm-oggetto{width:32px!important;height:32px!important}
+        nav.tabs.bottom-nav-bar .tab .icon{font-size:26px!important}
+        nav.tabs.bottom-nav-bar .tab .text{font-size:12px!important;letter-spacing:.02em!important}
+        nav.tabs.bottom-nav-bar .tab{padding:8px 12px!important;gap:5px!important}
+        /* E lo spazio in fondo alla pagina cresce di quanto e' cresciuta la
+         * barra — sedici punti — se no la barra piu' alta si mangia proprio
+         * la distanza che serviva a non coprire l'ultima tessera. Sono i tre
+         * numeri che vanno insieme: quello della pagina, quello del corpo
+         * quando la barra e' tenuta ferma, e quello della maniglia. */
+        body.nav-visible .page{padding-bottom:calc(92px + var(--dm-fondo-di-sistema))!important}
+        body.cd-nav-fixed{
+          padding-bottom:calc(128px + var(--dm-fondo-di-sistema))!important;
+          scroll-padding-bottom:calc(128px + var(--dm-fondo-di-sistema))!important
+        }
+        nav.tabs.bottom-nav-bar.visible ~ .bottom-nav-handle,
+        body.nav-visible .bottom-nav-handle{
+          bottom:calc(106px + var(--dm-fondo-di-sistema))!important
+        }
+      }
       /* La barra in fondo si veste con la tavolozza scelta (#495).
        *
        * «Nel tema Graphite, non cambia la barra.» Le tavolozze (#436) scrivono
@@ -775,7 +848,10 @@ export function disegniNellaBarra(scope = doc) {
      * casella svuotata da qualcun altro tiene il segno e senza questo non si
      * ridipingeva mai piu' (#561). */
     if (!casella || disegnoGiaNellaCasella(casella, disegno)) continue;
-    const marchio = oggettoWidget(disegno);
+    /* Col posto, cosi' il disegno si porta dietro le SUE sfumature e non
+     * quelle del foglio in cima al corpo: era quel rimando fra elementi
+     * diversi a lasciare le icone trasparenti su iPhone, e solo la'. */
+    const marchio = oggettoWidget(disegno, "", `nav-${pagina}`);
     if (!marchio) continue;
     casella.innerHTML = marchio;
     casella.dataset.dmOggetto = disegno;

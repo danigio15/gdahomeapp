@@ -19,6 +19,7 @@
 
 import { getLocale, pick } from "./i18n.js";
 import { nomeAccantoAlDispositivo } from "./nome-accanto-al-dispositivo.js";
+import { inMinuti } from "./quanto-dura.js";
 import { numero } from "./racconto-tessera.js";
 
 const clean = (value) => String(value ?? "").trim();
@@ -145,21 +146,12 @@ export function disegnoDellaLettura(entity, states = {}) {
  * tradurli in ore renderebbe illeggibile «45 min». La soglia e' quella: due
  * ore.
  */
-/* «m» qui non c'e', ed e' voluto: in Home Assistant «m» sono i metri, e nella
- * plancia lo sono dappertutto. Un sensore di distanza scelto a mano — «50 m» —
- * finiva scritto «50 min». I minuti si dichiarano «min», che e' quello che
- * scrivono le integrazioni quando parlano di tempo. */
-const ORE = ["h", "ore", "hours", "hour", "ora"];
-const MINUTI = ["min", "minuti", "minutes", "minute"];
-const SECONDI = ["s", "sec", "secondi", "seconds", "second"];
-
+/* Le unita' del tempo stanno in `core/quanto-dura.js`, e non qui: le legge
+ * anche l'autonomia di un gruppo di continuita' (#9), e un vocabolario scritto
+ * in due posti il giorno che impara «secs» lo impara da una parte sola. */
 export function durataLeggibile(valore, unita, lingua = getLocale()) {
-  const misura = clean(unita).toLowerCase();
-  let minuti = null;
-  if (MINUTI.includes(misura)) minuti = valore;
-  else if (SECONDI.includes(misura)) minuti = valore / 60;
-  else if (ORE.includes(misura)) minuti = valore * 60;
-  else return null;
+  const minuti = inMinuti(valore, unita);
+  if (minuti === null) return null;
   if (Math.abs(minuti) < 120)
     return `${numero(minuti, Number.isInteger(minuti) ? 0 : 1, lingua)} ${pick("min", "min", lingua)}`;
   const ore = minuti / 60;

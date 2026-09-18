@@ -336,6 +336,19 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, adesso } = {
       icona: pulito(modello.icon),
       tinta: pulito(modello.accent),
       conto,
+      /* Se quel conto sono motori e non contatti (#31).
+       *
+       * «Nella scheda il titolo tapparelle e' corretto, mentre in quei piccoli
+       *  popup che si aprono sopra dice finestre aperte.» Il numero che la
+       * tessera delle Finestre porta e' due cose diverse a seconda della casa —
+       * i motori alzati dove non c'e' un solo contatto sull'anta, le finestre
+       * aperte dove ci sono — e la tessera cambia parola di conseguenza dalla
+       * #442. Qui arrivava solo il numero, e la parola era sempre la seconda.
+       *
+       * Viene dal modello e non si ricalcola: rifare il conto di cosa c'e'
+       * dentro la sezione vorrebbe dire due regole sulla stessa cosa, che e'
+       * esattamente quello che questo modulo non fa. */
+      soloMotori: modello.soloMotori === true,
       /* Cio' che e' acceso, una voce per riga: il nome e l'entita'.
        *
        * Il nome finisce nel titolo della pastiglia — non ci starebbe dentro —

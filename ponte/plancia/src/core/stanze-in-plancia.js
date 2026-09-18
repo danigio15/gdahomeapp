@@ -23,10 +23,21 @@ const pulito = (valore) => String(valore ?? "").trim();
 /** La casella del magazzino: l'elenco degli id delle stanze da mostrare. */
 export const CHIAVE_STANZE_IN_PLANCIA = "cd_home_stanze";
 
-/* Quante ce ne stanno. Non è un limite alla casa: è un limite alla plancia,
- * che di stanze in fila ne regge poche prima di diventare un elenco — e un
- * elenco c'è già, ed è la pagina delle Stanze. */
-export const STANZE_MASSIME = 8;
+/* Quante ce ne stanno: tutte quelle che si spuntano (#12).
+ *
+ * «Remove the limit of 8 room views on the home page, it must be unlimited.»
+ *
+ * Il tetto c'era per non far diventare la Home un elenco — e un elenco c'è
+ * già, ed è la pagina delle Stanze. Ma proteggeva da una cosa che nessuno fa
+ * per sbaglio: le stanze in plancia si scelgono una spunta per volta, quindi
+ * per averne venti bisogna spuntarne venti, sapendo cosa si sta facendo. Un
+ * limite che scatta solo quando qualcuno insiste non protegge nessuno: dice
+ * di no a chi ha appena detto di sì, e — com'era prima — lo diceva in
+ * silenzio, con la spunta che tornava indietro da sola.
+ *
+ * Chi ne mette molte se ne accorge da sé, perché le vede: la fila scorre, e la
+ * plancia ha la sua diagnostica dei fotogrammi per chi vuole guardare il
+ * prezzo. */
 
 /** L'id con cui una stanza si riconosce, uguale a quello della sua pagina. */
 export function idDellaStanza(stanza) {
@@ -50,8 +61,7 @@ export function stanzeInPlancia(scelte, stanze) {
   if (!volute.size) return [];
   return (Array.isArray(stanze) ? stanze : [])
     .filter((stanza) => stanza && typeof stanza === "object")
-    .filter((stanza) => volute.has(idDellaStanza(stanza)))
-    .slice(0, STANZE_MASSIME);
+    .filter((stanza) => volute.has(idDellaStanza(stanza)));
 }
 
 /** Se questa stanza è fra quelle scelte. */
@@ -62,39 +72,24 @@ export function laStanzaSiVede(scelte, stanza) {
 }
 
 /**
- * Quante, fra quelle scritte, una stanza ce l'hanno ancora.
- *
- * Senza l'elenco delle stanze si contano tutte, che è l'unica cosa che si può
- * dire. Con l'elenco davanti si contano solo quelle che esistono: un id
- * rimasto scritto dopo che la stanza è stata cancellata non occupa un posto in
- * plancia — `stanzeInPlancia` non lo trova e lo salta — e non deve occuparne
- * uno nel tetto. Chi ne aveva otto e ne cancellava una si ritrovava sette
- * stanze in plancia e il tetto pieno lo stesso: nessuna spunta nuova entrava
- * più, e la casella tornava indietro da sola senza dire perché.
- */
-function quanteSiVedono(fila, stanze) {
-  if (!Array.isArray(stanze)) return fila.length;
-  const esistono = new Set(stanze.map((stanza) => idDellaStanza(stanza)).filter(Boolean));
-  return fila.filter((voce) => esistono.has(voce)).length;
-}
-
-/**
  * L'elenco con una stanza accesa o spenta.
  *
  * Torna sempre un elenco nuovo: chi chiama lo scrive nel magazzino, e scrivere
  * l'oggetto che si è appena letto vuol dire non accorgersi del cambiamento.
  *
- * Le stanze di casa sono l'ultimo pezzo e si possono non passare: servono solo
- * a contare il tetto su quelle vere. Gli id orfani restano scritti — ripulirli
- * qui vorrebbe dire cancellare una configurazione mentre nessuno guarda, che è
- * la regola di `stanzeInPlancia` e vale anche qui.
+ * Le stanze di casa sono l'ultimo pezzo e si possono non passare: servivano a
+ * contare il tetto su quelle vere, e il tetto non c'è più (#12). Il parametro
+ * resta perché chi chiama lo passa ancora, e toglierlo sarebbe un cambio di
+ * forma per niente.
+ *
+ * Gli id orfani restano scritti — ripulirli qui vorrebbe dire cancellare una
+ * configurazione mentre nessuno guarda, che è la regola di `stanzeInPlancia` e
+ * vale anche qui.
  */
-export function conLaStanza(scelte, stanza, accesa, stanze = null) {
+export function conLaStanza(scelte, stanza, accesa, _stanze = null) {
   const id = idDellaStanza(stanza);
   const fila = (Array.isArray(scelte) ? scelte : []).map((voce) => pulito(voce)).filter(Boolean);
   if (!id) return fila;
   const senza = fila.filter((voce) => voce !== id);
-  if (!accesa) return senza;
-  if (quanteSiVedono(senza, stanze) >= STANZE_MASSIME) return senza;
-  return [...senza, id];
+  return accesa ? [...senza, id] : senza;
 }

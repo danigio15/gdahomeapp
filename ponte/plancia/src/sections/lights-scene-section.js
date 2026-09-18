@@ -634,7 +634,6 @@ export function renderLightControlMarkup(view) {
         <span class="dm-lightctl-orb">${view.domain === "light" ? BULB : PLUG}</span>
         <span class="dm-lightctl-hero-text">
           <b data-dm-light-hero-state>${stateText(view)}</b>
-          <small class="mono">${esc(view.id)}</small>
           ${view.room ? `<small>${esc(view.room)}</small>` : ""}
         </span>
         ${

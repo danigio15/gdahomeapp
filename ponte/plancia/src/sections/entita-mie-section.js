@@ -58,13 +58,15 @@ function valoreMarkup(riga) {
 function disegno(riga) {
   const scelta = clean(riga.icona);
   if (scelta) return esc(scelta);
-  return oggettoWidget(riga.comandabile ? "azioni" : "evidenza");
+  /* Il posto e' l'entita': una riga per entita', e il disegno si porta dietro
+   * le sue sfumature invece di prenderle dal foglio in cima al corpo. */
+  return oggettoWidget(riga.comandabile ? "azioni" : "evidenza", "", `mie-${riga.entity}`);
 }
 
 function rigaMarkup(riga) {
   return `<article class="dm-mie-riga" data-on="${riga.acceso}" data-muta="${riga.muto}">
     <span class="dm-mie-ic" aria-hidden="true">${disegno(riga)}</span>
-    <span class="dm-mie-nome"><strong>${esc(riga.nome)}</strong><small class="mono">${esc(riga.entity)}</small></span>
+    <span class="dm-mie-nome"><strong>${esc(riga.nome)}</strong></span>
     <span class="dm-mie-val">${valoreMarkup(riga)}</span>
     ${
       riga.comandabile && !riga.muto
@@ -95,7 +97,7 @@ function blocco(pagina) {
   nodo = doc.createElement("section");
   nodo.className = "dm-mie-ent";
   nodo.innerHTML = `<div class="dm-mie-testa">
-    <span class="dm-mie-testa-ic" aria-hidden="true">${oggettoWidget("mie")}</span>
+    <span class="dm-mie-testa-ic" aria-hidden="true">${oggettoWidget("mie", "", "mie-testa")}</span>
     <h3>${esc(t("Le tue entità", "Your own entities"))}</h3>
   </div><div class="dm-mie-lista"></div>`;
   casa.append(nodo);
@@ -210,9 +212,6 @@ function installStyles() {
       .dm-mie-riga[data-on="true"] .dm-mie-ic{background:rgba(249,115,22,.14)}
       .dm-mie-nome{display:grid;gap:2px;min-width:0}
       .dm-mie-nome strong{font-size:13.5px;font-weight:800;color:var(--text,#0f172a)}
-      .dm-mie-nome small{
-        font-size:10.5px;color:var(--text-dim,#64748b);
-        white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .dm-mie-val b{font-family:'Oswald',sans-serif;font-size:19px;font-weight:700;color:var(--text,#0f172a)}
       .dm-mie-val small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b)}
       .dm-mie-muta{font-size:11px!important;font-weight:800!important;color:var(--text-dim,#64748b)!important}

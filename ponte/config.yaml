@@ -29,16 +29,21 @@
 # centralino, l'app). «gdahome» e' il nome del prodotto, e va dove il prodotto
 # si vede.
 name: gdahome
-# Il numero: quello della plancia che sta dentro, piu' un quarto numero per le
-# correzioni dell'add-on.
+# Il numero: **suo**, e non piu' quello della plancia con un quarto pezzo
+# attaccato.
 #
-# 1.4.24 e' la versione di DashboardModern che sta in `plancia/`, e tenerli
-# uguali vuol dire che chi apre la scheda sa quale plancia ha senza andarla a
-# cercare. Ma l'add-on ha i suoi difetti da correggere anche quando la plancia
-# non cambia, e nel negozio «Aggiorna» compare **solo** se questo numero si
-# alza: da qui il quarto. `1.4.24.1` si legge «la plancia 1.4.24, la prima
-# correzione nostra».
-version: "1.4.32.15"
+# Per tutta la 1.4 questo numero era quello di DashboardModern piu' una
+# correzione nostra — `1.4.24.1` si leggeva «la plancia 1.4.24, la prima
+# correzione nostra» — e serviva a far sapere quale plancia c'era dentro senza
+# andarla a cercare. Ma legarli voleva anche dire che l'add-on non poteva
+# cambiare di suo senza raccontare una plancia che non era cambiata, e
+# viceversa. Dalla 1.5.0 i due numeri camminano da soli: qui c'e' gdahome, in
+# `officina/custom_components/dashboardmodern/manifest.json` c'e' la plancia, e
+# oggi dicono 1.5.0 e 1.4.32.
+#
+# Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
+# numero si alza.
+version: "1.5.0"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.

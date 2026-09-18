@@ -55,6 +55,11 @@ class PonteFinto {
   /// stretta di mano non dice di saper aprire il gzip, e non comprime.
   bool conosceIlGzip = true;
 
+  /// Quando c'e', chiude appena qualcuno si collega, dicendo questo: e' il
+  /// centralino che accetta il filo e lo chiude subito perche' la casa non gli
+  /// e' attaccata. Da fuori e' identico a un ponte vero che chiude in faccia.
+  String? chiudeSubitoDicendo;
+
   static Future<PonteFinto> alza() async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     final ponte = PonteFinto._(server);
@@ -75,6 +80,11 @@ class PonteFinto {
       }
       final presa = await WebSocketTransformer.upgrade(richiesta);
       collegamenti += 1;
+      final perche = chiudeSubitoDicendo;
+      if (perche != null) {
+        await presa.close(WebSocketStatus.normalClosure, perche);
+        continue;
+      }
       final telefono = TelefonoCollegato(this, presa);
       prese.add(telefono);
       unawaited(telefono.avvia());

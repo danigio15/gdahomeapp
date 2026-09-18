@@ -5772,7 +5772,7 @@ async function apriMeteo() {
                        const dailyFromHourly = hourly.filter((_, i) => i % 24 === 0);
                        renderForecasts(dailyFromHourly);
                   } else {
-                       list.innerHTML = `<div style="text-align:center; padding: 20px; color:#e11d48; font-weight:800;">Nessuna previsione disponibile per ${entityId}</div>`;
+                       var nfRadar = document.querySelector('.dm-radar-blocco') ? ' The radar above is a separate thing and works on its own.' : ''; list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-dim,#64748b); line-height:1.5;"><strong style="display:block; font-size:14px; font-weight:800; color:var(--text,#0f172a); margin-bottom:6px;">This weather entity has no forecast</strong>It reports the weather right now, not the next days. To see the seven days pick another weather entity under Config › Sections › Weather.${nfRadar}<code style="display:block; margin-top:10px; font-size:11px; color:var(--text-dim,#64748b);">${entityId}</code></div>`;
                   }
               };
               ws.send(JSON.stringify({ id: reqId2, type: "call_service", domain: "weather", service: "get_forecasts", service_data: { type: "hourly" }, target: { entity_id: entityId }, return_response: true }));
@@ -5784,7 +5784,7 @@ async function apriMeteo() {
 
 function renderForecasts(forecasts) {
   const list = document.getElementById('weather-forecast-list');
-  if(!forecasts || forecasts.length === 0) { list.innerHTML = '<div style="text-align:center; padding: 20px; font-weight:800; color:#e11d48;">Nessuna previsione disponibile</div>'; return; }
+  if(!forecasts || forecasts.length === 0) { var nfRadar = document.querySelector('.dm-radar-blocco') ? ' The radar above is a separate thing and works on its own.' : ''; list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-dim,#64748b); line-height:1.5;"><strong style="display:block; font-size:14px; font-weight:800; color:var(--text,#0f172a); margin-bottom:6px;">This weather entity has no forecast</strong>It reports the weather right now, not the next days. To see the seven days pick another weather entity under Config › Sections › Weather.${nfRadar}<code style="display:block; margin-top:10px; font-size:11px; color:var(--text-dim,#64748b);">${currentWeatherEntity || ''}</code></div>`; return; }
   const wMap = { 'clear-night': '🌙', 'cloudy': '☁️', 'fog': '<div class=\"w-fog-anim\"><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div></div>', 'hail': '<div class=\"w-fog-anim\"><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div><div class=\"fog-line\"></div></div>', 'lightning': '⛈️', 'lightning-rainy': '⛈️', 'partlycloudy': '⛅', 'pouring': '🌧️', 'rainy': '🌧️', 'snowy': '❄️', 'snowy-rainy': '🌨️', 'sunny': '☀️', 'windy': '💨', 'windy-variant': '💨' };
   let fHtml = '';
   forecasts.slice(0, 7).forEach(f => {

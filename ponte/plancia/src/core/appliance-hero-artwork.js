@@ -25,12 +25,22 @@
  */
 import { canonicalArtworkType } from "./appliance-artwork.js";
 
-const FLOOR = (w = 150) =>
-  `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur)"/>`;
+/* L'ombra sul pavimento, e la sfocatura che la fa ombra.
+ *
+ * Il nome del filtro porta quello del disegno, come tutte le altre definizioni
+ * qui dentro. Prima era fisso — «dmh-blur» — e un nome fisso vuol dire che in
+ * una pagina con due disegni il primo risponde per tutti: finche' il primo si
+ * vede non cambia niente, ma se il primo sta in un ramo che la configurazione
+ * tiene chiuso, quello che risponde non dipinge — ed e' il difetto delle icone
+ * trasparenti su iPhone, con un altro nome. Oggi un disegno grande per volta
+ * c'e' in pagina e non si vedeva; il nome per posto fa in modo che non torni a
+ * dipendere dalla fortuna. */
+const FLOOR = (w = 150, id = "") =>
+  `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
 
 function defs(id, extra = "") {
   return `<defs>
-    <filter id="dmh-blur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5"/></filter>
+    <filter id="dmh-blur-${id}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5"/></filter>
     <linearGradient id="dmh-white-${id}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#ffffff"/><stop offset=".62" stop-color="#f3f6fa"/><stop offset="1" stop-color="#d7dee8"/>
     </linearGradient>
@@ -86,7 +96,7 @@ function frontLoader(id, { dryer = false } = {}) {
         <path d="M100 148c7 12 26 15 37 6" stroke="#e2e8f0" stroke-width="4.5" stroke-linecap="round" fill="none" opacity=".7"/>
       </g>`;
   return `${defs(id)}
-  ${FLOOR(132)}
+  ${FLOOR(132, id)}
   <rect x="52" y="30" width="136" height="180" rx="16" fill="url(#dmh-white-${id})" ${EDGE}/>
   <rect x="52" y="30" width="136" height="180" rx="16" fill="url(#dmh-sheen-${id})"/>
   <rect x="60" y="40" width="120" height="22" rx="8" fill="#eef2f7" ${EDGE}/>
@@ -110,7 +120,7 @@ function frontLoader(id, { dryer = false } = {}) {
 
 function dishwasher(id) {
   return `${defs(id)}
-  ${FLOOR(140)}
+  ${FLOOR(140, id)}
   <rect x="46" y="28" width="148" height="184" rx="14" fill="url(#dmh-steel-${id})" ${EDGE}/>
   <rect x="54" y="36" width="132" height="20" rx="7" fill="#eef2f7" ${EDGE}/>
   ${display(id, 100, 41, 40, 11)}
@@ -147,7 +157,7 @@ function oven(id) {
        <stop offset="0" stop-color="#f87171" stop-opacity="0"/><stop offset=".8" stop-color="#ef4444" stop-opacity=".0"/><stop offset=".92" stop-color="#ef4444" stop-opacity=".8"/><stop offset="1" stop-color="#ef4444" stop-opacity="0"/>
      </radialGradient>`,
   )}
-  ${FLOOR(146)}
+  ${FLOOR(146, id)}
   <g class="dmh-ring">
     <circle cx="120" cy="128" r="86" fill="url(#dmh-ovenheat-${id})"/>
     <circle cx="120" cy="128" r="74" fill="none" stroke="#f87171" stroke-width="2.4" stroke-dasharray="34 26" opacity=".55"/>
@@ -177,7 +187,7 @@ function oven(id) {
 
 function microwave(id) {
   return `${defs(id)}
-  ${FLOOR(150)}
+  ${FLOOR(150, id)}
   <rect x="34" y="62" width="172" height="118" rx="13" fill="url(#dmh-steel-${id})" ${EDGE}/>
   <rect x="44" y="72" width="112" height="98" rx="9" fill="#101d31"/>
   <rect x="49" y="77" width="102" height="88" rx="7" fill="url(#dmh-glass-${id})"/>
@@ -230,7 +240,7 @@ function coldCabinet(id, { freezer = false } = {}) {
         </g>
       </g>`;
   return `${defs(id)}
-  ${FLOOR(140)}
+  ${FLOOR(140, id)}
   <rect x="46" y="24" width="110" height="188" rx="12" fill="url(#dmh-steel-${id})" ${EDGE}/>
   <rect x="52" y="30" width="98" height="176" rx="8" fill="#22344d"/>
   <rect x="55" y="33" width="92" height="170" rx="6" fill="#0e1c30"/>
@@ -251,7 +261,7 @@ function coldCabinet(id, { freezer = false } = {}) {
 
 function cooktop(id) {
   return `${defs(id)}
-  ${FLOOR(150)}
+  ${FLOOR(150, id)}
   <g transform="skewX(-4)">
   <rect x="42" y="86" width="172" height="96" rx="10" fill="#0b1526" ${DARKEDGE}/>
   <rect x="48" y="92" width="160" height="84" rx="7" fill="url(#dmh-glass-${id})"/>
@@ -271,7 +281,7 @@ function cooktop(id) {
 
 function hood(id) {
   return `${defs(id)}
-  ${FLOOR(140)}
+  ${FLOOR(140, id)}
   <rect x="104" y="24" width="32" height="64" fill="url(#dmh-steel-h-${id})" ${EDGE}/>
   <path d="M52 130 74 92h92l22 38z" fill="url(#dmh-steel-${id})" ${EDGE}/>
   <rect x="46" y="130" width="148" height="18" rx="7" fill="#e7ecf3" ${EDGE}/>
@@ -289,7 +299,7 @@ function hood(id) {
 
 function iron(id) {
   return `${defs(id)}
-  ${FLOOR(146)}
+  ${FLOOR(146, id)}
   <g class="dmh-steam" stroke="#b6c3d2" stroke-width="4.5" stroke-linecap="round" fill="none" opacity=".7">
     <path d="M76 200c-5-10 5-14 0-26"/><path d="M106 206c-5-11 5-15 0-28"/><path d="M138 202c-5-10 5-14 0-26"/>
   </g>
@@ -307,7 +317,7 @@ function iron(id) {
 
 function vacuum(id) {
   return `${defs(id)}
-  ${FLOOR(126)}
+  ${FLOOR(126, id)}
   <path d="M130 26h22" stroke="#334155" stroke-width="9" stroke-linecap="round"/>
   <rect x="136" y="30" width="10" height="58" rx="5" fill="#475569"/>
   <rect x="118" y="84" width="46" height="76" rx="15" fill="url(#dmh-white-${id})" ${EDGE}/>
@@ -326,7 +336,7 @@ function vacuum(id) {
 
 function robotVacuum(id) {
   return `${defs(id)}
-  ${FLOOR(148)}
+  ${FLOOR(148, id)}
   <ellipse cx="120" cy="150" rx="72" ry="42" fill="url(#dmh-white-${id})" ${EDGE}/>
   <ellipse cx="120" cy="140" rx="72" ry="40" fill="url(#dmh-steel-${id})" ${EDGE}/>
   <ellipse cx="120" cy="136" rx="56" ry="30" fill="#eef2f7"/>
@@ -344,7 +354,7 @@ function robotVacuum(id) {
 
 function airConditioner(id) {
   return `${defs(id)}
-  ${FLOOR(150)}
+  ${FLOOR(150, id)}
   <rect x="36" y="56" width="168" height="64" rx="22" fill="url(#dmh-white-${id})" ${EDGE}/>
   <rect x="36" y="56" width="168" height="64" rx="22" fill="url(#dmh-sheen-${id})"/>
   <path d="M48 104h124" stroke="#c3ccd7" stroke-width="3"/>
@@ -360,7 +370,7 @@ function airConditioner(id) {
 
 function ventilator(id) {
   return `${defs(id)}
-  ${FLOOR(120)}
+  ${FLOOR(120, id)}
   <circle cx="120" cy="102" r="58" fill="#e7ecf3" ${EDGE}/>
   <circle cx="120" cy="102" r="50" fill="#0b1526" opacity=".08"/>
   <g class="dmh-fan">
@@ -376,7 +386,7 @@ function ventilator(id) {
 
 function boiler(id) {
   return `${defs(id)}
-  ${FLOOR(116)}
+  ${FLOOR(116, id)}
   <rect x="70" y="26" width="100" height="168" rx="46" fill="url(#dmh-white-${id})" ${EDGE}/>
   <rect x="70" y="26" width="100" height="168" rx="46" fill="url(#dmh-sheen-${id})"/>
   <circle cx="120" cy="98" r="34" fill="#eef2f7" ${EDGE}/>
@@ -395,7 +405,7 @@ function boiler(id) {
  * ondeggia in basso, tubi di mandata e ritorno sul fianco. */
 function storageBoiler(id) {
   return `${defs(id)}
-  ${FLOOR(120)}
+  ${FLOOR(120, id)}
   <rect x="62" y="18" width="116" height="184" rx="54" fill="url(#dmh-white-${id})" ${EDGE}/>
   <rect x="62" y="18" width="116" height="184" rx="54" fill="url(#dmh-sheen-${id})"/>
   <circle cx="120" cy="72" r="26" fill="#eef2f7" ${EDGE}/>
@@ -417,7 +427,7 @@ function storageBoiler(id) {
  * maniglia, e l'aria calda che gira quando lavora. */
 function airFryer(id) {
   return `${defs(id)}
-  ${FLOOR(120)}
+  ${FLOOR(120, id)}
   <path d="M84 34h72c22 0 34 18 34 40v58c0 34-28 62-62 62h-16c-34 0-62-28-62-62V74c0-22 12-40 34-40z" fill="url(#dmh-white-${id})" ${EDGE}/>
   <path d="M84 34h72c22 0 34 18 34 40v58c0 34-28 62-62 62h-16c-34 0-62-28-62-62V74c0-22 12-40 34-40z" fill="url(#dmh-sheen-${id})"/>
   <rect x="84" y="48" width="72" height="34" rx="17" fill="#101d31" ${DARKEDGE}/>
@@ -435,7 +445,7 @@ function airFryer(id) {
 
 function television(id) {
   return `${defs(id)}
-  ${FLOOR(150)}
+  ${FLOOR(150, id)}
   <rect x="30" y="44" width="180" height="112" rx="8" fill="#101d31" ${DARKEDGE}/>
   <rect x="36" y="50" width="168" height="100" rx="5" fill="url(#dmh-glass-${id})"/>
   <g class="dmh-screen">
@@ -453,7 +463,7 @@ function television(id) {
 
 function coffee(id) {
   return `${defs(id)}
-  ${FLOOR(120)}
+  ${FLOOR(120, id)}
   <rect x="70" y="30" width="100 " height="34" rx="10" fill="url(#dmh-steel-${id})" ${EDGE}/>
   <rect x="86" y="64" width="68" height="66" rx="8" fill="url(#dmh-white-${id})" ${EDGE}/>
   ${display(id, 100, 72, 40, 11)}
@@ -470,7 +480,7 @@ function coffee(id) {
 
 function toaster(id) {
   return `${defs(id)}
-  ${FLOOR(134)}
+  ${FLOOR(134, id)}
   <path d="M84 58c0-18 14-30 36-30s36 12 36 30v14H84z" fill="#e9b98a"/>
   <path d="M92 58c0-13 11-22 28-22s28 9 28 22v12H92z" fill="#f6dab7"/>
   <rect x="48" y="70" width="144" height="112" rx="26" fill="url(#dmh-steel-h-${id})" ${EDGE}/>
@@ -487,7 +497,7 @@ function toaster(id) {
 
 function kettle(id) {
   return `${defs(id)}
-  ${FLOOR(116)}
+  ${FLOOR(116, id)}
   <g class="dmh-steam" stroke="#b6c3d2" stroke-width="4" stroke-linecap="round" fill="none" opacity=".75">
     <path d="M96 44c-5-10 5-14 0-26"/><path d="M120 40c-5-11 5-15 0-28"/>
   </g>
@@ -508,7 +518,7 @@ function kettle(id) {
 
 function generic(id) {
   return `${defs(id)}
-  ${FLOOR(120)}
+  ${FLOOR(120, id)}
   <rect x="64" y="42" width="112" height="152" rx="20" fill="url(#dmh-white-${id})" ${EDGE}/>
   <rect x="64" y="42" width="112" height="152" rx="20" fill="url(#dmh-sheen-${id})"/>
   <circle cx="120" cy="108" r="34" fill="#eef2f7" ${EDGE}/>

@@ -22,6 +22,8 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import '../casa/casa_conosciuta.dart';
 import '../parole.dart';
 import 'abbinamento.dart';
@@ -34,6 +36,19 @@ import 'indirizzo.dart';
 /// millesimi. Quando non c'e' — perche' si e' fuori — o rifiuta subito, o non
 /// risponde affatto, e in quel caso si aspetta questo e poi si tira via.
 const Duration attesaDellaSonda = Duration(seconds: 4);
+
+/// Se da qui in chiaro non si puo' bussare.
+///
+/// Vero in un caso solo: l'app aperta da browser su una pagina `https`. Li' il
+/// browser rifiuta qualunque chiamata in chiaro — regola del contenuto misto —
+/// e bussare comunque marca la pagina «non sicura» finche' resta aperta, col
+/// lucchetto sbarrato. Chi la guarda pensa al certificato, e il certificato
+/// non c'entra niente: e' l'indirizzo di casa `http://192.168.…` che l'app
+/// stava provando accanto agli altri.
+///
+/// `Uri.base`, nel browser, e' l'indirizzo della pagina. Fuori dal browser e'
+/// la cartella di lavoro, e per questo la domanda comincia da `kIsWeb`.
+bool get inChiaroNonSiPuo => kIsWeb && Uri.base.isScheme('https');
 
 /// Quanto vantaggio si da' alle strade dirette prima di chiamare il centralino.
 ///
@@ -69,7 +84,7 @@ class Sonda {
   /// diversa da «segno rifiutato», e la schermata la racconta in un altro
   /// modo.
   Future<Approdo> dove(CasaConosciuta casa) async {
-    final candidati = casa.approdi();
+    final candidati = casa.approdi(soloSicuri: inChiaroNonSiPuo);
     if (candidati.isEmpty) {
       throw PonteIrraggiungibile(_perche(casa));
     }
@@ -176,6 +191,27 @@ class Sonda {
       return inLingua(
         it: 'Non so più dove sia «${casa.nome}»: riabbinala.',
         en: 'I no longer know where “${casa.nome}” is: pair it again.',
+      );
+    }
+    /* Le strade ci sono, ma da questa pagina non si possono prendere: sono
+     * tutte in chiaro, e il browser da un indirizzo `https` non le lascia
+     * chiamare. Va detto per quello che è, o si va a cercare il guasto nella
+     * rete di casa — o nel certificato, che è dove lo cerca chi vede il
+     * lucchetto sbarrato. */
+    if (inChiaroNonSiPuo && casa.approdi(soloSicuri: true).isEmpty) {
+      return inLingua(
+        it:
+            'Da questa pagina non posso chiamare «${casa.nome}»: il suo '
+            'indirizzo non è cifrato, e un browser aperto su https non lascia '
+            'passare le chiamate in chiaro. Apri gdahome dall\'app sul '
+            'telefono, oppure dall\'indirizzo della tua Home Assistant. Non '
+            'è un problema del certificato di questo sito.',
+        en:
+            'I can\'t call “${casa.nome}” from this page: its address isn\'t '
+            'encrypted, and a browser opened over https won\'t let plain '
+            'requests through. Open gdahome from the phone app, or from your '
+            'Home Assistant address. This is not a problem with this site\'s '
+            'certificate.',
       );
     }
     if (casa.soloInCasa) {

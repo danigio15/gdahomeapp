@@ -22,7 +22,6 @@ import {
   conLaStanza,
   idDellaStanza,
   laStanzaSiVede,
-  STANZE_MASSIME,
   stanzeInPlancia,
 } from "../src/core/stanze-in-plancia.js";
 import { BLOCCHI_DELLA_HOME } from "../src/core/ordine-dei-blocchi.js";
@@ -65,7 +64,7 @@ test("una stanza cancellata sparisce da sé, senza toccare il magazzino", () => 
   ]);
 });
 
-test("spuntare e togliere, senza doppioni e senza sforare il tetto", () => {
+test("spuntare e togliere, senza doppioni e senza un tetto", () => {
   let scelte = conLaStanza([], STANZE[0], true);
   assert.deepEqual(scelte, ["room-giardino"]);
   assert.equal(laStanzaSiVede(scelte, STANZE[0]), true);
@@ -75,55 +74,39 @@ test("spuntare e togliere, senza doppioni e senza sforare il tetto", () => {
   assert.deepEqual(scelte, ["room-giardino"]);
   scelte = conLaStanza(scelte, STANZE[0], false);
   assert.deepEqual(scelte, []);
-  /* Il tetto: la nona non entra, e l'elenco resta quello di prima. */
-  const piene = Array.from({ length: STANZE_MASSIME }, (_, i) => `room-${i}`);
-  assert.deepEqual(conLaStanza(piene, { id: "room-troppa" }, true), piene);
-  assert.equal(STANZE_MASSIME, 8, "le parole della scheda dicono «al massimo otto»");
+  /* E non c'è un tetto: la nona entra come la prima (#12). */
+  const otto = Array.from({ length: 8 }, (_, i) => `room-${i}`);
+  assert.deepEqual(conLaStanza(otto, { id: "room-nona" }, true), [...otto, "room-nona"]);
 });
 
-test("una stanza cancellata non tiene occupato un posto in plancia", () => {
-  /* Il tetto è alla plancia, non alla memoria. Chi ne aveva otto e ne cancella
-   * una in plancia ne vede sette — `stanzeInPlancia` l'id orfano non lo trova
-   * — ma il tetto lo contava lo stesso: nessuna spunta nuova entrava più, e la
-   * casella tornava indietro da sola senza dire perché.
-   *
-   * L'id orfano resta scritto: ripulirlo qui vorrebbe dire cancellare una
-   * configurazione mentre nessuno guarda, ed è la stessa regola per cui una
-   * stanza cancellata «sparisce da sé, senza toccare il magazzino». */
-  const scritte = [
-    ...Array.from({ length: STANZE_MASSIME - 1 }, (_, i) => `room-${i}`),
-    "room-cancellata",
-  ];
+test("una stanza cancellata non si ripulisce da sola dal magazzino", () => {
+  /* Il tetto non c'è più (#12), quindi non c'è più nemmeno il posto che una
+   * stanza cancellata teneva occupato. Quello che resta di quella regola è la
+   * metà che conta: l'id orfano resta scritto. Ripulirlo mentre nessuno guarda
+   * è il modo in cui si perdono le configurazioni, ed è la stessa regola per
+   * cui una stanza cancellata «sparisce da sé, senza toccare il magazzino».
+   */
+  const scritte = [...Array.from({ length: 7 }, (_, i) => `room-${i}`), "room-cancellata"];
   const esistono = scritte
     .filter((id) => id !== "room-cancellata")
     .map((id) => ({ id, name: id }));
 
-  /* Senza l'elenco delle stanze si conta tutto, che è l'unica cosa che si può
-   * dire: è il caso di chi chiama senza saperle. */
-  assert.deepEqual(conLaStanza(scritte, { id: "room-nuova" }, true), scritte);
-
-  /* Con l'elenco davanti, il posto lasciato libero dalla cancellata è libero. */
   const dopo = conLaStanza(scritte, { id: "room-nuova" }, true, esistono);
   assert.deepEqual(dopo, [...scritte, "room-nuova"]);
-  /* E l'id orfano è ancora lì: non si è ripulito niente di nascosto. */
   assert.ok(dopo.includes("room-cancellata"));
 
-  /* Il tetto resta un tetto: con otto stanze vere la nona non entra. */
-  const tutte = Array.from({ length: STANZE_MASSIME }, (_, i) => `room-${i}`);
+  /* E in plancia si vedono solo quelle vere: l'orfana non la trova nessuno. */
   assert.deepEqual(
-    conLaStanza(
-      tutte,
-      { id: "room-troppa" },
-      true,
-      tutte.map((id) => ({ id, name: id })),
-    ),
-    tutte,
+    stanzeInPlancia(dopo, esistono).map((stanza) => stanza.id),
+    esistono.map((stanza) => stanza.id),
   );
 });
 
 test("chi spunta una stanza le stanze di casa le passa", () => {
-  /* Il tetto si conta su quelle vere solo se chi chiama dice quali sono: la
-   * scheda le ha già in mano per disegnare l'elenco. */
+  /* Servivano a contare il tetto su quelle vere, e il tetto non c'è più (#12).
+   * La scheda continua a passarle — le ha già in mano per disegnare l'elenco —
+   * e la forma della chiamata resta quella: cambiarla sarebbe un cambio per
+   * niente. */
   const blocchi = leggi("sections/home-blocchi-section.js");
   assert.match(blocchi, /conLaStanza\(stanzeScelte\(\), \{ id \}, stanza\.checked, stanzeDiCasa\(\)\)/);
 });

@@ -71,6 +71,12 @@ import {
 } from "../core/aria-model.js";
 import { nomeDellaLettura } from "../core/nome-della-lettura.js";
 import { cavoDalloStato, codiceDellaRicarica } from "../core/stato-della-ricarica.js";
+import { inKilowatt, oreEMinuti, tempoDellaRicarica } from "../core/il-tempo-della-ricarica.js";
+import {
+  CAPACITA_DI_CASA_KEY,
+  VEHICLE_CAPACITY_FIELD,
+  capacitaDellaBatteria,
+} from "../core/vehicle-model.js";
 import { eDellaWallbox } from "../core/wallbox-device-binding.js";
 import { statoUmanoEV } from "./il-popup-dell-auto-racconta-section.js";
 import { poolList } from "../core/pool-model.js";
@@ -202,7 +208,12 @@ import {
 } from "../core/arieggiare.js";
 import { azioniDellaPorta } from "../core/security-door-model.js";
 import { humidityEntry } from "../core/room-overview.js";
-import { CHIAVE_VARCHI, contoDeiVarchi, varchiDiCasa } from "../core/varchi-di-casa.js";
+import {
+  CHIAVE_VARCHI,
+  contoDeiVarchi,
+  varchiConLeFinestre,
+  varchiDiCasa,
+} from "../core/varchi-di-casa.js";
 import {
   CHIAVE_RILEVAMENTI,
   rilevamentiAccesi,
@@ -1283,6 +1294,19 @@ function coversModel(states) {
      * suo, e due conti sulla stessa cosa non possono divergere se il conto e'
      * uno. */
     open: contate,
+    /* E con loro esce COSA sono state contate (#31).
+     *
+     * «Nella scheda il titolo tapparelle e' corretto, mentre in quei piccoli
+     *  popup che si aprono sopra dice finestre aperte.»
+     *
+     * Quel conto e' due cose diverse a seconda della casa: dove non c'e'
+     * nemmeno un contatto sull'anta sono i motori ALZATI, dove ci sono sono le
+     * finestre APERTE. La tessera lo sa e cambia parola — e' la #442, «sei
+     * tapparelle tirate su sono una casa normale, sei finestre aperte sono una
+     * casa da chiudere» — ma la fascia sotto il meteo leggeva solo il numero e
+     * ci metteva sempre la seconda. La correzione era arrivata a meta' strada:
+     * il numero era giusto e la parola diceva il falso. */
+    soloMotori,
   };
 }
 
@@ -2148,6 +2172,10 @@ function letturaVettura(states, auto, fuori, indice, visti = new Set()) {
     ricaricaEntita: stato?.entity || "",
     kw: sbircia("dm.ev_potenza_ricarica"),
     target: sbircia("dm.ev_target_soc"),
+    /* La capacita' della batteria di QUESTA vettura: senza, il tempo che manca
+     * si conterebbe su settanta kilowattora per tutte le auto del mondo, e su
+     * una batteria da quaranta uscirebbe quasi doppio. */
+    capacita: capacitaDellaBatteria(auto || {}),
     altre: altreCaselleEv(states, mappa, fuori, visti),
   };
 }
@@ -2303,6 +2331,12 @@ function letturaAttiva(states, fuori) {
     ricaricaEntita: stato?.entity || "",
     kw: refValue(states, "dm.ev_potenza_ricarica", fuori)?.value ?? null,
     target: refValue(states, "dm.ev_target_soc", fuori)?.value ?? null,
+    /* Chi non ha profili la capacita' la dichiara in una casella sua: e' la
+     * stessa che legge la pagina Auto, e senza le due direbbero due tempi
+     * diversi per la stessa carica. */
+    capacita: capacitaDellaBatteria({
+      [VEHICLE_CAPACITY_FIELD]: readJson(CAPACITA_DI_CASA_KEY, ""),
+    }),
     altre: altreCaselleEv(states, mappa, fuori, visti),
   };
 }
@@ -2420,6 +2454,32 @@ function evModel(states) {
   const percentuale = cariche.length ? Math.min(...cariche) : null;
   const kmTotali = letture.map((lettura) => lettura.km).filter((valore) => valore != null);
   const primaKm = kmTotali.length ? Math.min(...kmTotali) : null;
+  /* Sotto carica, la didascalia dice QUANTO MANCA — non i chilometri (#14).
+   *
+   * «La % di fine ricarica viene messa ma non viene calcolato il tempo
+   * rimanente: viene messo i km al posto del tempo.» I chilometri sono la
+   * risposta giusta a un'auto ferma — quanto ci faccio — ma a un'auto
+   * attaccata al cavo si guarda per sapere quando si puo' staccare, e li'
+   * l'autonomia e' un numero che non risponde e per giunta si muove.
+   *
+   * Il conto e' quello della pagina EV e del popup, chiamato dallo stesso
+   * posto: tre punti che dicono ore diverse per la stessa carica sono peggio
+   * di nessun numero. Quando non si puo' contare — carica ferma, potenza che
+   * non arriva, nessun traguardo — restano i chilometri, come prima. */
+  const attaccata = letture.find((lettura) => autoAllaPresa(lettura.ricarica)) || null;
+  const quantoManca = attaccata
+    ? tempoDellaRicarica({
+        codice: codiceDellaRicarica({ stato: attaccata.ricarica, potenza: attaccata.kw }),
+        soc: attaccata.percentuale,
+        target: attaccata.target,
+        kilowatt: inKilowatt(attaccata.kw),
+        capacita: attaccata.capacita,
+      })
+    : null;
+  const mancano =
+    quantoManca?.stato === "carica" && quantoManca.minuti != null
+      ? `${oreEMinuti(quantoManca.minuti)} ${t("alla fine", "to full")}`
+      : "";
   const didascalia = piu
     ? letture
         .map(
@@ -2427,9 +2487,8 @@ function evModel(states) {
             `${lettura.nome}${lettura.percentuale == null ? "" : ` ${Math.round(lettura.percentuale)}%`}`,
         )
         .join(" · ")
-    : percentuale != null && primaKm != null
-      ? `${formatNumber(primaKm, 0)} km`
-      : "";
+    : mancano ||
+      (percentuale != null && primaKm != null ? `${formatNumber(primaKm, 0)} km` : "");
   return {
     key: "ev",
     accent: "#06b6d4",
@@ -3625,7 +3684,7 @@ function mediaDetail(widget) {
         riga.copertina
           ? `<img class="dm-w-media-arte" src="${esc(riga.copertina)}" alt="" aria-hidden="true">`
           : `<span class="dm-w-media-arte dm-w-media-vuota" aria-hidden="true">${
-              riga.icona ? esc(riga.icona) : oggettoWidget("media")
+              riga.icona ? esc(riga.icona) : oggettoWidget("media", "", `w-media-${riga.entity}`)
             }</span>`
       }
       <span class="dm-w-media-testo">
@@ -3892,33 +3951,22 @@ function ariaModel(states) {
  * domande diverse — «come stanno le mie finestre» e «cosa e' aperto in casa» —
  * e chi ne vuole una sola spegne la riga in UNA delle due, che dalla 1.4.15 si
  * puo' fare per tessera e non per entita'. */
-function contattiDelleFinestre() {
-  const righe = root.getTapparelle?.() || readJson("cd_tapparelle", []);
-  const presi = [];
-  for (const item of Array.isArray(righe) ? righe : []) {
-    for (const entity of [contactEntity(item), inferriataEntity(item)]) {
-      const id = clean(entity);
-      if (id) presi.push(id);
-    }
-  }
-  return presi;
-}
-
 function varchiModel(states) {
   const fuori = widgetExcludedEntities("varchi");
-  const config = readJson(CHIAVE_VARCHI, {});
   const girati = insiemeInvertiti(readJson(CHIAVE_VERSI, {}));
   /* I contatti dichiarati nelle Finestre entrano fra gli aggiunti: e' la
    * stessa strada di chi li aggiunge a mano nella scheda dei Varchi, perche' e'
    * la stessa cosa — qualcuno ha detto che quello e' un varco. Chi ne aveva
-   * escluso uno resta escluso: l'esclusione si legge dopo, e vince. */
-  const dichiarati = contattiDelleFinestre();
-  const conLeFinestre = dichiarati.length
-    ? { ...(config && typeof config === "object" ? config : {}) , aggiunte: [
-        ...(Array.isArray(config?.aggiunte) ? config.aggiunte : []),
-        ...dichiarati,
-      ] }
-    : config;
+   * escluso uno resta escluso: l'esclusione si legge dopo, e vince.
+   *
+   * Il conto lo fa `varchiConLeFinestre`, e non piu' questa tessera: la stessa
+   * riunione la fanno adesso anche la pagina Varchi e la sua scheda, che prima
+   * non ne sapevano niente — «in configurazione nessun contatto trovato,
+   * invece nella home me li mette tutti e due» (#19). */
+  const conLeFinestre = varchiConLeFinestre(
+    readJson(CHIAVE_VARCHI, {}),
+    root.getTapparelle?.() || readJson("cd_tapparelle", []),
+  );
   const righe = varchiDiCasa(states, conLeFinestre, girati, (entity) =>
     friendlyName(states, entity),
   ).filter((riga) => widgetIncludes(riga.entity, fuori));
@@ -5482,7 +5530,12 @@ export function facciaDellaTessera(widget) {
    * cosa ci sta sopra, non la forma della tessera. */
   if (widget?.faccia) return widget.faccia;
   const famiglia = famigliaDellaTessera(widget?.key);
-  if (haOggettoWidget(famiglia)) return oggettoWidget(famiglia);
+  /* Il posto e' la tessera, non la famiglia: la chiave e' unica in Home e
+   * non cambia da un giro all'altro, cosi' il disegno dichiara da se' le sue
+   * sfumature e non le chiede al foglio in cima al corpo — che e' il rimando
+   * fra elementi diversi che su WebKit non si risolve. */
+  if (haOggettoWidget(famiglia))
+    return oggettoWidget(famiglia, "", `tessera-${widget?.key || famiglia}`);
   return iconGlyphMarkup("action", widget?.icon, { size: 22 });
 }
 
@@ -9576,8 +9629,20 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
 }
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-caption{
   flex:1;min-width:0;font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8);
-  white-space:nowrap;overflow:hidden;
-  /* Sfuma sul bordo invece di tagliare: si capisce che il testo continua. */
+  white-space:nowrap;overflow:hidden}
+/* Sfuma sul bordo invece di tagliare: si capisce che il testo continua.
+ *
+ * **Solo dove continua davvero.** La sfumatura stava su tutte le didascalie,
+ * anche su quelle che ci stanno: si mangia l'ultimo sesto della finestra, e una
+ * didascalia che finisce dentro quel sesto perdeva la coda per niente — niente
+ * da scorrere, quindi nessun modo di rivederla. Misurato in una casa: «potenza
+ * di casa · Immissione 8,4» sta in centosettantacinque punti dentro una
+ * finestra da centosettantasei, e si leggeva «Immissione 8,» con il resto in
+ * dissolvenza. Su un numero, la coda e' la parte che conta.
+ *
+ * La regola «:has()» lega la sfumatura al nastro che si muove: c'e' quando c'e'
+ * qualcosa da rivelare, e non c'e' quando il testo e' tutto li'. */
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-caption:has(>[data-dm-scroll="true"]){
   mask-image:linear-gradient(90deg,#000 84%,transparent);
   -webkit-mask-image:linear-gradient(90deg,#000 84%,transparent)}
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-scroll{display:inline-block;white-space:nowrap}

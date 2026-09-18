@@ -31,18 +31,46 @@ import {
 
 const leggi = (rel) => readFile(new URL(rel, import.meta.url), "utf8");
 
-test("il fondo di serie non è più il server della fondazione OpenStreetMap", () => {
+test("il server della fondazione OpenStreetMap non è più nemmeno una scelta", () => {
   assert.notEqual(FONDO_DI_SERIE, "osm");
   assert.ok(FONDI_MAPPA[FONDO_DI_SERIE], "quello di serie deve esistere in tendina");
   assert.doesNotMatch(modelloDelFondo({}), /tile\.openstreetmap\.org/);
-  /* Chi l'aveva scelto a mano se lo tiene: non si cambia la casa di chi non ha
-   * nessun problema. */
-  assert.match(modelloDelFondo({ fondo: "osm" }), /tile\.openstreetmap\.org/);
+  /* Prima restava in tendina — «a chi funziona non si toglie niente» — e dal
+   * campo è arrivata la fotografia di cosa vuol dire sceglierlo (#29): i
+   * quadratini arrivano, e dentro c'è stampato «403 · Access blocked · App is
+   * not following the tile usage policy of OpenStreetMap's volunteer-run
+   * servers». Una mappa fatta di scritte rosse, e chi la vede non pensa «ho
+   * scelto un servizio che mi blocca»: pensa che sia rotta la plancia. */
+  assert.equal(FONDI_MAPPA.osm, undefined);
+  assert.equal(FONDI_RITIRATI.osm, FONDO_DI_SERIE);
+  /* E chi l'aveva scelto si ritrova la mappa di serie senza toccare niente. */
+  assert.doesNotMatch(modelloDelFondo({ fondo: "osm" }), /tile\.openstreetmap\.org/);
+  assert.equal(modelloDelFondo({ fondo: "osm" }), modelloDelFondo({}));
 });
 
-test("più di una voce, perché questa è la seconda porta che si chiude", () => {
+test("anche l'indirizzo scritto a mano, che la tendina non lo conosce", () => {
+  /* La tendina è arrivata dopo: chi aveva incollato l'indirizzo dei quadratini
+   * di OpenStreetMap ha un `fondoModello`, non una chiave, e cambiare la
+   * tendina non lo tocca. Quelle plance continuerebbero a chiedere quadratini
+   * a un server che risponde «Access blocked». */
+  for (const scritto of [
+    "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    "https://tile.osm.org/{z}/{x}/{y}.png",
+  ]) {
+    const config = { fondo: "modello", fondoModello: scritto };
+    assert.equal(modelloDelFondo(config), modelloDelFondo({}), scritto);
+  }
+  /* Un indirizzo di qualcun altro resta suo: si ritira un servizio, non la
+   * possibilità di scriversi il proprio. */
+  const mio = { fondo: "modello", fondoModello: "https://mio/{z}/{x}/{y}.png" };
+  assert.equal(modelloDelFondo(mio), "https://mio/{z}/{x}/{y}.png");
+});
+
+test("più di una voce, perché questa è la terza porta che si chiude", () => {
   /* CARTO era la prima: oggi vuole una chiave, e ha lasciato a piedi anche la
-   * mappa di Home Assistant. Con una voce sola ogni chiusura è un rilascio. */
+   * mappa di Home Assistant. OpenStreetMap la seconda, e la terza è la stessa
+   * di nuovo. Con una voce sola ogni chiusura sarebbe un rilascio. */
   assert.ok(Object.keys(FONDI_MAPPA).length >= 2);
   assert.equal(FONDI_MAPPA.carto, undefined);
   assert.equal(FONDI_RITIRATI.carto, FONDO_DI_SERIE);
@@ -74,14 +102,8 @@ test("l'ordine dei segnaposto lo decide il modello, non noi", () => {
    * che sostituisse per posizione invece che per nome pescherebbe il
    * quadratino sbagliato, e la mappa mostrerebbe un pezzo di mondo a caso. */
   const tessera = { x: 66, y: 45 };
-  assert.equal(
-    urlDellaTessera("https://s/{z}/{y}/{x}", tessera, 7),
-    "https://s/7/45/66",
-  );
-  assert.equal(
-    urlDellaTessera("https://s/{z}/{x}/{y}.png", tessera, 7),
-    "https://s/7/66/45.png",
-  );
+  assert.equal(urlDellaTessera("https://s/{z}/{y}/{x}", tessera, 7), "https://s/7/45/66");
+  assert.equal(urlDellaTessera("https://s/{z}/{x}/{y}.png", tessera, 7), "https://s/7/66/45.png");
 });
 
 test("il fondo che non risponde lo dice, invece di lasciare la pioggia sul nulla", async () => {

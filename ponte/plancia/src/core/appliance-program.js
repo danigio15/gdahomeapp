@@ -98,11 +98,41 @@ const MUTI = new Set([
 
 const muto = (value) => MUTI.has(nudo(value));
 
+/* L'ultimo pezzo di un indirizzo, quando il valore e' un indirizzo.
+ *
+ * Alcune integrazioni non pubblicano la parola: pubblicano il suo posto dentro
+ * il loro protocollo. Home Connect scrive
+ *
+ *     BSH.Common.EnumType.OperationState.Run
+ *     Dishcare.Dishwasher.Program.Eco50
+ *
+ * e SmartThings `samsungce.washerOperatingState.wash`. Il vocabolario quelle
+ * parole le ha — «run», «wash» — ma cercava la riga intera, e la riga intera
+ * non e' una parola. Cosi' sulla card di una lavastoviglie Bosch, al posto
+ * della fase, si leggeva l'indirizzo del protocollo: «In funzione» diventava
+ * «BSH.Common.EnumType.OperationState.Run», e il programma «Eco 50» diventava
+ * «Dishcare.Dishwasher.Program.Eco50» (#27, #20).
+ *
+ * Si guarda solo l'ultimo pezzo: cercare una parola conosciuta dentro tutto
+ * l'indirizzo farebbe litigare «OperationState» con «Ready» nella stessa riga.
+ *
+ * E si guarda solo se il valore E' un indirizzo: almeno due punti, nessuno
+ * spazio, e pezzi di sole lettere e cifre. Senza questa condizione «1.5»
+ * diventerebbe «5» e «All in One 59'» — che e' scritto da persone — verrebbe
+ * tagliato. */
+const INDIRIZZO = /^[A-Za-z0-9]+(?:\.[A-Za-z0-9]+){2,}$/;
+
+export function ultimoPezzo(valore) {
+  const detto = String(valore ?? "").trim();
+  if (!INDIRIZZO.test(detto)) return "";
+  return detto.slice(detto.lastIndexOf(".") + 1);
+}
+
 /* Un valore crudo reso leggibile: via i prefissi che le integrazioni
  * appiccicano ai programmi, gli underscore diventano spazi, la prima lettera
  * si alza. «All in One 59'», che e' gia' scritto da persone, resta com'e'. */
 export function inParole(value) {
-  const grezzo = clean(value);
+  const grezzo = ultimoPezzo(value) || clean(value);
   if (!grezzo) return "";
   if (/[A-Z ]/.test(grezzo) && !grezzo.includes("_")) return grezzo;
   const senzaPrefisso = grezzo.replace(/^(iot_wash_|iot_|wash_|program_)/i, "");
@@ -113,11 +143,15 @@ export function inParole(value) {
 /** Una parola di stato in parole, o niente se non dice nulla. */
 export function faseInParole(value, locale = "it") {
   if (muto(value)) return null;
-  const riga = PER_CHIAVE.get(nudo(value));
+  /* L'indirizzo del protocollo si riduce alla sua ultima parola prima di
+   * cercarla in tabella: vedi `ultimoPezzo`. */
+  const detto = ultimoPezzo(value) || value;
+  if (muto(detto)) return null;
+  const riga = PER_CHIAVE.get(nudo(detto));
   if (riga)
     return { chiave: riga.chiave, label: pick(riga.it, riga.en, locale), glifo: riga.glifo };
   /* Sconosciuta: si dice com'e', ripulita. Meglio «Steam ready» che niente. */
-  return { chiave: nudo(value), label: inParole(value), glifo: "•" };
+  return { chiave: nudo(detto), label: inParole(detto), glifo: "•" };
 }
 
 /* Le entita' su cui cercare: quelle del dispositivo collegato piu' le caselle
@@ -157,7 +191,12 @@ const numero = (states, id) => {
  * `select.lavatrice_programma` sa che gira «All in One 59'». */
 const CERCATORI = Object.freeze({
   fase: {
-    serve: (clues) => /\b(fase|phase)\b/.test(clues),
+    /* `job` e' come SmartThings chiama la fase: `sensor.lavatrice_job_state`
+     * dice «rinse» mentre `machine_state` dice soltanto «run». Senza questa
+     * parola la card di un elettrodomestico Samsung ripeteva lo stato macchina
+     * al posto della fase, e la fase — l'unica cosa che uno guarda sull'oblo' —
+     * non si vedeva (#20). */
+    serve: (clues) => /\b(fase|phase|job)\b/.test(clues),
     escludi: (clues) => /\b(rimanente|remaining|durata|duration)\b/.test(clues),
   },
   programma: {

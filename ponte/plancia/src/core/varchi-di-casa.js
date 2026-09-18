@@ -29,6 +29,7 @@
  * contraddicono.
  */
 
+import { contactEntity, inferriataEntity } from "./shutter-window.js";
 import { CLASSI_DEL_VARCO, comeStaIlVarco, eUnVarco } from "./varchi-in-configurazione.js";
 
 const clean = (valore) => String(valore ?? "").trim();
@@ -76,6 +77,49 @@ export function normalizzaVarchi(stored) {
     if (id.includes(".") && scritto) nomi[id] = scritto;
   }
   return { escluse: elenco(dato.escluse), aggiunte: elenco(dato.aggiunte), nomi };
+}
+
+/* I contatti dichiarati dentro le righe delle Finestre.
+ *
+ * Un contatto scritto nella casella dell'anta di una riga delle Finestre e'
+ * una DICHIARAZIONE — l'ha battuta chi abita la casa, e dice «questa e' una
+ * finestra» meglio di qualunque etichetta automatica. Vale quanto uno aggiunto
+ * a mano nella scheda dei Varchi, e infatti entra dalla stessa porta.
+ */
+export function contattiDichiaratiNelleFinestre(righe) {
+  const presi = [];
+  for (const item of Array.isArray(righe) ? righe : [])
+    for (const entity of [contactEntity(item), inferriataEntity(item)]) {
+      const id = clean(entity);
+      if (id.includes(".")) presi.push(id);
+    }
+  return [...new Set(presi)];
+}
+
+/**
+ * La configurazione dei varchi, coi contatti delle Finestre fra gli aggiunti.
+ *
+ * Perche' sta qui e non in chi disegna la Home (la segnalazione #19).
+ *
+ * Quei contatti li aggiungeva la tessera della Home, da sola, al momento di
+ * disegnarsi. La scheda dei Varchi e la pagina Varchi non ne sapevano niente:
+ * nella scheda «nessun contatto trovato», e in Home le finestre li'. E siccome
+ * la scheda non li elencava, non si potevano nemmeno togliere — l'esclusione
+ * vince su tutto, ma vince solo su quello che si vede.
+ *
+ * Adesso la lista e' una sola e la leggono tutti e tre dallo stesso posto: chi
+ * disegna la Home, la pagina, e la scheda dove si mettono le X. Quello che si
+ * vede in Home e' quello che la scheda elenca, e una X lo toglie da tutti e
+ * due.
+ */
+export function varchiConLeFinestre(config, righeDelleFinestre) {
+  const dichiarati = contattiDichiaratiNelleFinestre(righeDelleFinestre);
+  const base = config && typeof config === "object" && !Array.isArray(config) ? config : {};
+  if (!dichiarati.length) return base;
+  return {
+    ...base,
+    aggiunte: [...(Array.isArray(base.aggiunte) ? base.aggiunte : []), ...dichiarati],
+  };
 }
 
 /**

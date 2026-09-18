@@ -18,6 +18,7 @@
  * Qui non c'e' DOM e non si chiama nessun servizio: solo la lettura e il conto.
  */
 
+import { inMinuti } from "./quanto-dura.js";
 import { prossimoIdentificativo, segnoPiuAlto } from "./segno-progressivo.js";
 
 /** La chiave in cui vive la configurazione. */
@@ -47,6 +48,8 @@ export const CASELLE_UPS = Object.freeze([
   { campo: "rete", tipo: "acceso" },
   { campo: "batteria", tipo: "percento" },
   { campo: "carico", tipo: "percento" },
+  /* L'autonomia si mostra in minuti, ma l'entita' puo' dirla in secondi o in
+   * ore: quale delle tre lo dice lei, e lo si legge (#9). */
   { campo: "autonomia", tipo: "minuti" },
   { campo: "tensione", tipo: "volt" },
   { campo: "potenza", tipo: "watt" },
@@ -227,6 +230,29 @@ export function statoUps({ rete, batteria, scarica } = {}) {
 }
 
 /**
+ * L'autonomia di quel sensore, in minuti.
+ *
+ * «Il mio UPS (CyberPower) mostra il tempo residuo in secondi invece dei
+ *  minuti» (#9). La casella si chiama «Autonomia» e la tessera scrive «min»:
+ * un gruppo che dichiara 1800 secondi diceva «1800 min», cioe' trenta ore di
+ * autonomia su una batteria che ne fa mezz'ora — la risposta opposta a quella
+ * che si cercava, letta nel momento in cui e' andata via la corrente.
+ *
+ * L'unita' non c'e' da chiederla: sta nell'entita'. Chi non la dichiara resta
+ * com'era — minuti, che e' come si chiamava quella casella da sempre.
+ */
+export function autonomiaInMinuti(stato) {
+  const grezza = numero(stato?.state);
+  if (grezza === null) return null;
+  const convertita = inMinuti(grezza, stato?.attributes?.unit_of_measurement);
+  if (convertita === null) return grezza;
+  /* Un quarto di minuto sulla tessera non si legge: l'autonomia si scrive
+   * senza decimali, e un mezzo minuto in piu' o in meno non cambia niente a
+   * nessuno. */
+  return Math.round(convertita * 10) / 10;
+}
+
+/**
  * La lettura dell'UPS: cosa dicono adesso le sue caselle.
  *
  * La rete si cerca prima nella casella sua e poi nello stato, perche' chi ha
@@ -265,7 +291,7 @@ export function letturaUps(config, states = {}, resolve = (value) => value) {
     rete,
     batteria,
     carico: numero(leggi(dato.carico)?.state),
-    autonomia: numero(leggi(dato.autonomia)?.state),
+    autonomia: autonomiaInMinuti(leggi(dato.autonomia)),
     tensione: numero(leggi(dato.tensione)?.state),
     potenza: numero(leggi(dato.potenza)?.state),
     temperatura: numero(leggi(dato.temperatura)?.state),

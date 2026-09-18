@@ -7,9 +7,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "npm run test:ponte && npm run test:centralino && npm run test:nuvola && npm run test:quadro",
+    "test": "npm run test:ponte && npm run test:centralino && npm run test:nuvola && npm run test:quadro && npm run test:plancia",
     "test:ponte": "node --test ponte/test/*.test.js",
     "test:centralino": "node --test centralino/test/*.test.js",
+    "test:plancia": "npm --prefix officina run test:frontend",
     "format": "prettier --write \"ponte/src/**/*.js\" \"ponte/test/**/*.js\" \"ponte/carta/*.js\" \"ponte/console/*.js\" \"ponte/console/*.css\" \"ponte/console/*.html\" \"centralino/src/**/*.js\" \"centralino/test/**/*.js\" \"nuvola/src/**/*.js\" \"nuvola/test/**/*.js\" \"strumenti/**/*.mjs\" \"strumenti/video/*.js\" \"strumenti/video/*.html\" \"strumenti/video/*.css\" \"sito/*.js\" \"sito/*.html\" \"sito/*.css\" \"quadro/src/**/*.js\" \"quadro/test/**/*.js\" \"quadro/console/*.html\" \"quadro/gestore/*.html\" \"collaudo/guarda.mjs\" \"ponte/config.yaml\" \"ponte/build.yaml\" \"ponte/translations/*.yaml\" \"repository.yaml\"",
     "format:check": "prettier --check \"ponte/src/**/*.js\" \"ponte/test/**/*.js\" \"ponte/carta/*.js\" \"ponte/console/*.js\" \"ponte/console/*.css\" \"ponte/console/*.html\" \"centralino/src/**/*.js\" \"centralino/test/**/*.js\" \"nuvola/src/**/*.js\" \"nuvola/test/**/*.js\" \"strumenti/**/*.mjs\" \"strumenti/video/*.js\" \"strumenti/video/*.html\" \"strumenti/video/*.css\" \"sito/*.js\" \"sito/*.html\" \"sito/*.css\" \"quadro/src/**/*.js\" \"quadro/test/**/*.js\" \"quadro/console/*.html\" \"quadro/gestore/*.html\" \"collaudo/guarda.mjs\" \"ponte/config.yaml\" \"ponte/build.yaml\" \"ponte/translations/*.yaml\" \"repository.yaml\"",
     "centralino": "node strumenti/centralino.mjs",

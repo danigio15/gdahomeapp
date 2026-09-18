@@ -33,7 +33,6 @@ import {
   conLaStanza,
   idDellaStanza,
   laStanzaSiVede,
-  STANZE_MASSIME,
 } from "../core/stanze-in-plancia.js";
 import {
   BLOCCO_ID as BLOCCO_STANZE,
@@ -317,7 +316,10 @@ const OGGETTO_DEL_BLOCCO = Object.freeze({
   intestazione: "home",
 });
 
-const disegnoDelBlocco = (nome) => oggettoWidget(OGGETTO_DEL_BLOCCO[nome] || nome);
+/* Il posto e' il blocco: uno per nome, quindi il disegno si porta dietro le
+ * sue sfumature senza dipendere dal foglio in cima al corpo. */
+const disegnoDelBlocco = (nome) =>
+  oggettoWidget(OGGETTO_DEL_BLOCCO[nome] || nome, "", `blocco-${nome}`);
 
 function schedaAperta() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
@@ -416,14 +418,15 @@ function stanzeMarkup() {
       </label>`;
     })
     .join("");
-  /* Il tetto si scrive a parole, non interpolato: una chiave di traduzione con
-   * dentro un pezzo di codice non e' una frase che si possa tradurre. Che le
-   * parole dicano il numero vero lo tiene una prova. */
+  /* Il tetto non c'e' piu' (#12): «remove the limit of 8 room views on the
+   * home page, it must be unlimited». Proteggeva da una cosa che nessuno fa
+   * per sbaglio — le stanze si spuntano una per volta — e diceva di no in
+   * silenzio, con la spunta che tornava indietro da sola. */
   return `<div class="ed-sec-title dm-blocco-sep">\u{1F6CB}\uFE0F ${esc(t("Stanze in plancia", "Rooms on Home"))}</div>
     <div class="ed-intro">${esc(
       t(
-        "Quali stanze si vedono in Home, con la temperatura e quante cose sono accese: un tocco porta dentro la stanza. Al massimo otto; nessuna spuntata vuol dire nessun blocco.",
-        "Which rooms show up on Home, with the temperature and how many things are on: one tap takes you into the room. At most eight; none ticked means no block at all.",
+        "Quali stanze si vedono in Home, con la temperatura e quante cose sono accese: un tocco porta dentro la stanza. Quante ne vuoi; nessuna spuntata vuol dire nessun blocco.",
+        "Which rooms show up on Home, with the temperature and how many things are on: one tap takes you into the room. As many as you like; none ticked means no block at all.",
       ),
     )}</div>
     <div class="dm-blocco-list">${righe}</div>`;
