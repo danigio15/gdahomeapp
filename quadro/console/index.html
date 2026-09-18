@@ -966,7 +966,7 @@
         margin: 0;
       }
 
-      details.cartolina summary {
+      details.rapporto summary {
         cursor: pointer;
         list-style: none;
         display: flex;
@@ -974,11 +974,11 @@
         gap: 12px;
       }
 
-      details.cartolina summary::-webkit-details-marker {
+      details.rapporto summary::-webkit-details-marker {
         display: none;
       }
 
-      details.cartolina summary::after {
+      details.rapporto summary::after {
         content: "mostra";
         margin-left: auto;
         font-size: 0.82rem;
@@ -986,11 +986,11 @@
         color: var(--azzurro-scuro);
       }
 
-      details.cartolina[open] summary::after {
+      details.rapporto[open] summary::after {
         content: "nascondi";
       }
 
-      details.cartolina pre {
+      details.rapporto pre {
         margin: 15px 0 0;
         padding: 15px;
         background: var(--carta-alta);
@@ -1372,7 +1372,7 @@
       }
 
       /* I passi: numerati perché sono davvero una sequenza — il codice si fa
-       * qui, si incolla là, e la cartolina arriva dopo. */
+       * qui, si incolla là, e il rapporto arriva dopo. */
       ol.passi {
         list-style: none;
         counter-reset: passo;
@@ -1765,7 +1765,7 @@
             if (uno === "V") return '<i class="vuota" title="muta tutto il giorno"></i>';
             if (uno === "M") return '<i class="mezza" title="muta per qualche ora"></i>';
             if (uno === " ") return '<i class="prima" title="non era ancora accesa"></i>';
-            return '<i title="tutte le cartoline arrivate"></i>';
+            return '<i title="tutte i rapporti arrivati"></i>';
           })
           .join("");
         const vuoti = [...giorni].filter((uno) => uno === "V" || uno === "M").length;
@@ -2157,7 +2157,7 @@
                 <dd>${casa.collaudataIl ? testo(ilGiorno(casa.collaudataIl)) : "mai"}</dd>
               </div>
               <div>
-                <dt>Cartolina</dt>
+                <dt>Rapporto</dt>
                 <dd>${testo(daQuanto(c.quando))}, ogni ${c.ogni} min</dd>
               </div>
               <div>
@@ -2288,8 +2288,8 @@
           </section>
 
           <section class="riquadro">
-            <details class="cartolina">
-              <summary><h3>La cartolina, come è arrivata</h3></summary>
+            <details class="rapporto">
+              <summary><h3>Il rapporto, come è arrivata</h3></summary>
               <pre>${testo(JSON.stringify(c, null, 2))}</pre>
               <p class="nota" style="margin-top: 14px">
                 Questo è <strong>tutto</strong> quello che questa casa manda.
@@ -2348,7 +2348,7 @@
        * dichiara — un NUC con un SSD — non si inventa. */
       function laMacchina(c) {
         const m = c.macchina;
-        /* Una cartolina senza macchina non e' una casa senza macchina: e' una
+        /* Un rapporto senza macchina non e' una casa senza macchina: e' una
          * casa il cui Supervisor non ha risposto. Si dice, e non si disegnano
          * cinque metri a zero. */
         if (!m) return riquadroMuto("La macchina", "Il Supervisor di questa casa non ha risposto.");
@@ -2536,7 +2536,7 @@
                   ? ` e questa casa non è più tornata. Un aggiornamento che stacca il filo se lo riprende in pochi minuti: qui si va di persona.`
                   : l.stacca
                     ? `. Fa cadere il filo, quindi per qualche minuto questa casa non si fa sentire — è normale.`
-                    : `. Come è andata lo dirà la prossima cartolina.`
+                    : `. Come è andata lo dirà la prossima rapporto.`
               }
             </span>
           </div>`;
@@ -2792,7 +2792,7 @@
           <p class="sottotitolo">
             Un codice che vale <b>quindici minuti</b> e <b>una casa sola</b>. Si
             fa qui, si incolla nell'add-on in casa del cliente, e da quel momento
-            quella casa manda al quadro la sua cartolina — e nient'altro.
+            quella casa manda al quadro la sua rapporto — e nient'altro.
           </p>
 
           <div class="abbina">
@@ -3001,14 +3001,14 @@
                     <span class="cosa">
                       <b>Si stacca da due parti.</b> Tu con «non seguirla più», e
                       chi ci abita dalla console dell'add-on, dove legge in chiaro
-                      l'ultima cartolina spedita e ha lì il tasto per smettere.
+                      l'ultima rapporto spedita e ha lì il tasto per smettere.
                     </span>
                   </li>
                   <li class="fatta">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
                       <b>Il quadro non guarda dentro.</b> Non apre la plancia e
-                      non vede entità, stanze né persone: riceve una cartolina
+                      non vede entità, stanze né persone: riceve un rapporto
                       di numeri. Per entrare in una casa serve un abbinamento, e
                       quello lo dà chi ci abita, col suo segno, che toglie con un
                       bottone quando vuole.
@@ -3018,7 +3018,7 @@
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
                       <b>La manutenzione è un secondo interruttore.</b> Mandare
-                      la cartolina e lasciarsi aggiornare sono due permessi, e il
+                      il rapporto e lasciarsi aggiornare sono due permessi, e il
                       secondo è spento di serie: chi lo accende lo accende
                       apposta. Acceso, il quadro può installare un aggiornamento
                       e riavviare un add-on fermo — due verbi, scritti nel
@@ -3029,7 +3029,7 @@
                   <li class="fatta">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
-                      <b>Non passa dal centralino.</b> La cartolina va dalla casa
+                      <b>Non passa dal centralino.</b> Il rapporto va dalla casa
                       a questo quadro e basta: su
                       <span class="strada">tramite.gdahome.org</span> — quello
                       che fa entrare i telefoni da fuori casa — non ci finisce
@@ -3123,7 +3123,7 @@
 
       void apri();
 
-      /* Le cartoline arrivano ogni quindici minuti: si ricarica ogni minuto,
+      /* I rapporti arrivano ogni quindici minuti: si ricarica ogni minuto,
        * che è già quindici volte più spesso di quanto cambi qualcosa. */
       setInterval(() => {
         if (!chiave) return;

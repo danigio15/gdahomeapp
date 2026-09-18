@@ -17,7 +17,7 @@
  * chiedere anche il registro delle entita' — `config/entity_registry/list`,
  * un'altra domanda e un'altra cache — e il numero serve a far suonare una
  * spia, non a riempire un verbale. Percio' si chiamano **entita'** anche qui
- * dentro e nella cartolina: un numero impreciso con il nome giusto si legge
+ * dentro e nel rapporto: un numero impreciso con il nome giusto si legge
  * per quello che e', uno con il nome sbagliato mente.
  *
  * ─── Perche' `unavailable` e non `unknown` ────────────────────────────────
@@ -91,7 +91,7 @@ export function leEntita(stati, { sale = "", quante = IMPRONTE_MASSIME } = {}) {
     totali: dentro.length,
     sparite: sparite.length,
     /* In ordine, e non nell'ordine in cui Home Assistant le ha elencate: due
-     * cartoline di fila con le stesse entita' sparite devono dare le stesse
+     * rapporti di fila con le stesse entita' sparite devono dare le stesse
      * quattro cifre nello stesso posto, se no il quadro vede cambiare
      * qualcosa che non e' cambiato. */
     impronte: sparite
@@ -139,7 +139,7 @@ export function leBatterie(stati, { scarica = BATTERIA_SCARICA } = {}) {
  * `null` vuol dire due cose diverse, e vanno tenute diverse: o l'entita' non
  * c'e' — Home Assistant vecchio, o backup mai configurato — o c'e' e dice che
  * un backup non e' mai riuscito. Il primo caso e' `null`, il secondo e'
- * `null` anche lui, e chi legge la cartolina non li distingue: e' una perdita
+ * `null` anche lui, e chi legge il rapporto non li distingue: e' una perdita
  * accettabile, perche' in tutti e due i casi la risposta all'installatore e'
  * la stessa — in questa casa il backup non gira.
  */

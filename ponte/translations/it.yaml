@@ -51,7 +51,7 @@ configuration:
       parola nella scheda «Il quadro» di gdahome, dove c'e' anche il tasto per
       smettere.
   quadro_ogni:
-    name: Ogni quanto parte una cartolina
+    name: Ogni quanto parte un rapporto
     description: >-
       Ogni quanti minuti questa casa scrive al quadro. Conta solo se la
       casella qui sopra e' piena.

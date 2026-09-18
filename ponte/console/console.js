@@ -1662,7 +1662,7 @@
    * da questa casa, intero e senza riassunti. Un riassunto di quello che esce
    * e' esattamente la cosa di cui ci si dovrebbe fidare.
    *
-   * Si chiede ogni minuto e non ogni dieci secondi come il resto: la cartolina
+   * Si chiede ogni minuto e non ogni dieci secondi come il resto: il rapporto
    * parte ogni quindici minuti, e chiedere sei volte piu' spesso di quanto
    * cambi vuol dire sei richieste per niente. */
   /* Il cruscotto di chi installa: la scheda c'e' solo dove l'add-on ha
@@ -1716,7 +1716,7 @@
          * se il nome non convince. */
         trova("quadro-dove").textContent = quadro.chi
           ? due(
-              "Questa casa manda una cartolina a " +
+              "Questa casa manda un rapporto a " +
                 quadro.chi +
                 ", ogni " +
                 quadro.ogni +
@@ -1732,7 +1732,7 @@
                 ".",
             )
           : due(
-              "Questa casa manda una cartolina a " +
+              "Questa casa manda un rapporto a " +
                 quadro.dove +
                 ", ogni " +
                 quadro.ogni +
@@ -1829,7 +1829,7 @@
    * si chiede ogni dieci secondi come il resto. */
   guardaLAggiornamento();
   setInterval(guardaLAggiornamento, 10 * 60 * 1000);
-  /* E la cartolina al quadro: ogni minuto, che e' gia' quindici volte piu'
+  /* E il rapporto al quadro: ogni minuto, che e' gia' quindici volte piu'
    * spesso di quanto parta. */
   guardaIlQuadro();
   guardaIlCruscotto();

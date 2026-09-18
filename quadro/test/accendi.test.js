@@ -169,7 +169,7 @@ test("il nome si controlla prima di installare qualunque cosa", () => {
 test("l'indirizzo del quadro e' lo stesso che sta dentro l'add-on", () => {
   /* Il ponte non ha nessuna casella per l'indirizzo: ce l'ha scritto dentro.
    * Cambiarlo qui e non li' vuol dire un quadro che nessuna casa trova. */
-  const ponte = readFileSync(join(QUI, "..", "..", "ponte", "src", "cartolina.js"), "utf8");
+  const ponte = readFileSync(join(QUI, "..", "..", "ponte", "src", "rapporto.js"), "utf8");
   const scritto = /QUADRO_DI_DIFETTO = "https:\/\/([^"]+)"/.exec(ponte)?.[1];
   assert.ok(scritto, "non trovo l'indirizzo nel ponte");
   assert.match(

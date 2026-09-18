@@ -46,7 +46,7 @@ test("una casa accesa oggi non ha due settimane di rosso dietro", () => {
     assert.equal(striscia.length, 14);
     /* Tredici giorni in cui questa casa non c'era: non si giudicano. */
     assert.equal(striscia.slice(0, 13), " ".repeat(13));
-    /* E l'unico giudicato e' oggi, che e' pieno: una cartolina e' esattamente
+    /* E l'unico giudicato e' oggi, che e' pieno: un rapporto e' esattamente
      * quello che ci si aspettava nei quindici minuti da quando e' accesa. */
     assert.equal(striscia[13], "P");
   } finally {
@@ -59,17 +59,17 @@ test("il giorno in corso si giudica su quanto e' passato, non su ventiquattro or
   try {
     b.case.deposita(UNA, carta(b));
     b.vai(3 * 60 * MINUTO);
-    /* Tre ore dopo, e nessun'altra cartolina: dodici saltate su dodici. */
+    /* Tre ore dopo, e nessun altro rapporto: dodici saltate su dodici. */
     assert.equal(b.case.vestita(b.case.quella(UNA)).giorni.at(-1), "M");
   } finally {
     b.chiudi();
   }
 });
 
-test("un giorno senza nessuna cartolina e' vuoto, e si vede", () => {
+test("un giorno senza nessun rapporto e' vuoto, e si vede", () => {
   /* Si parte a mezzanotte in punto, e non e' pignoleria: una giornata piena e'
    * un **giorno di calendario** pieno. Partendo da mezzogiorno, le novantasei
-   * cartoline stanno a cavallo di due giorni e non ne riempiono nessuno — sono
+   * rapporti stanno a cavallo di due giorni e non ne riempiono nessuno — sono
    * quarantotto di qua e quarantotto di la', e la striscia dice giustamente
    * «a meta'» due volte. */
   const b = banco(Date.parse("2026-09-15T00:00:00Z"));
@@ -78,7 +78,7 @@ test("un giorno senza nessuna cartolina e' vuoto, e si vede", () => {
       b.case.deposita(UNA, carta(b));
       b.vai(15 * MINUTO);
     }
-    /* Poi due giorni di silenzio, e una cartolina il terzo. */
+    /* Poi due giorni di silenzio, e un rapporto il terzo. */
     b.vai(2 * GIORNO);
     b.case.deposita(UNA, carta(b));
     const striscia = b.case.vestita(b.case.quella(UNA)).giorni;

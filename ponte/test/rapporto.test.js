@@ -1,9 +1,9 @@
-/* Le prove della cartolina: cosa parte da questa casa, e cosa non ne esce.
+/* Le prove del rapporto: cosa parte da questa casa, e cosa non ne esce.
  *
  * Quello che si prova davvero, e in quest'ordine di importanza:
  *
  *  1. **che dentro non ci sia niente di chi ci abita.** Non e' una promessa
- *     scritta in un commento: e' una prova che compila una cartolina da una
+ *     scritta in un commento: e' una prova che compila un rapporto da una
  *     casa piena di nomi che raccontano una famiglia — la camera di Marco, il
  *     Wi-Fi «Casa Rossi» — e controlla che nel testo spedito non ce ne sia
  *     nemmeno uno. E' la stessa forma della prova che il centralino ha su se
@@ -22,12 +22,12 @@ import assert from "node:assert/strict";
 import {
   CodiceIllegibile,
   compila,
-  fabbricaLaCartolina,
+  fabbricaLaRapporto,
   leggiIlCodice,
   ogniQuanto,
   perchePreciso,
   Postino,
-} from "../src/cartolina.js";
+} from "../src/rapporto.js";
 import { gliAddon, laMacchina, laRete } from "../src/ferro.js";
 import { ilBackup, leBatterie, leEntita } from "../src/salute.js";
 
@@ -116,7 +116,7 @@ test("senza rete, gli apparati non si appiccicano a niente", () => {
 
 /* ─── La prova che conta ───────────────────────────────────────────────── */
 
-test("dalla cartolina non esce niente di chi ci abita", () => {
+test("dal rapporto non esce niente di chi ci abita", () => {
   /* Una casa vera: i nomi delle entita' raccontano una famiglia, le stanze e
    * gli orari. Nessuna di queste parole deve comparire nel testo spedito. */
   const stati = [
@@ -187,7 +187,7 @@ test("dalla cartolina non esce niente di chi ci abita", () => {
   for (const parola of maiPiu) {
     assert.ok(
       !spedito.toLowerCase().includes(parola.toLowerCase()),
-      `«${parola}» non deve uscire da questa casa, e sta nella cartolina`,
+      `«${parola}» non deve uscire da questa casa, e sta nel rapporto`,
     );
   }
 
@@ -231,7 +231,7 @@ test("la chiave viaggia in testa e non nel corpo, che la console fa leggere", as
     },
   });
   assert.equal(await postino.manda(), true);
-  assert.equal(vista.dove, "https://quadro.it/cartolina");
+  assert.equal(vista.dove, "https://quadro.it/rapporto");
   assert.equal(vista.come.headers.authorization, "Bearer una-chiave-segretissima");
   assert.ok(!vista.come.body.includes("segretissima"));
   /* E quello che la console fa leggere e' esattamente quello che e' partito. */
@@ -259,7 +259,7 @@ test("un quadro spento si dice una volta, e poi si rallenta invece di insistere"
   assert.equal(postino.ultimoEsito.andata, false);
 });
 
-test("una cartolina che non si compila non e' colpa del quadro, e non lo rallenta", async () => {
+test("un rapporto che non si compila non e' colpa del quadro, e non lo rallenta", async () => {
   let bussato = 0;
   const postino = new Postino({
     dove: "https://quadro.it",
@@ -302,7 +302,7 @@ const ferroFinto = (detto) => ({ chiedi: async () => detto });
 
 test("la fabbrica mette insieme quello che c'e', e chiama ogni volta", async () => {
   let giri = 0;
-  const fabbrica = fabbricaLaCartolina({
+  const fabbrica = fabbricaLaRapporto({
     identita: { casa: "casa_abc", sale: "sale" },
     casa: {
       chiedi: async () => {
@@ -335,13 +335,13 @@ test("la fabbrica mette insieme quello che c'e', e chiama ogni volta", async () 
   assert.equal(foglio.entita.sparite, 1);
   assert.deepEqual(foglio.fuori, { acceso: true, filo: true });
 
-  /* Ogni cartolina e' di adesso, non di quando il ponte si e' acceso. */
+  /* Ogni rapporto e' di adesso, non di quando il ponte si e' acceso. */
   await fabbrica();
   assert.equal(giri, 2);
 });
 
-test("mezza cartolina e' meglio di nessuna, e quel giorno e' la piu' importante", async () => {
-  const fabbrica = fabbricaLaCartolina({
+test("mezza rapporto e' meglio di nessuna, e quel giorno e' la piu' importante", async () => {
+  const fabbrica = fabbricaLaRapporto({
     identita: { casa: "casa_abc", sale: "sale" },
     /* Home Assistant giu': e' esattamente il giorno in cui l'installatore deve
      * ricevere qualcosa. */
@@ -364,7 +364,7 @@ test("mezza cartolina e' meglio di nessuna, e quel giorno e' la piu' importante"
 });
 
 test("gli aggiornamenti si contano per razza, e il firmware si vede a parte", async () => {
-  const fabbrica = fabbricaLaCartolina({
+  const fabbrica = fabbricaLaRapporto({
     identita: { casa: "casa_abc", sale: "s" },
     casa: { chiedi: async () => [] },
     ferro: ferroFinto(null),
@@ -405,7 +405,7 @@ test("gli aggiornamenti si contano per razza, e il firmware si vede a parte", as
 test("i telefoni: conta di piu' quanti si sono visti che quanti sono abbinati", async () => {
   const adesso = Date.parse("2026-09-18T09:00:00Z");
   const giorni = (quanti) => adesso - quanti * 24 * 60 * 60 * 1000;
-  const fabbrica = fabbricaLaCartolina({
+  const fabbrica = fabbricaLaRapporto({
     identita: { casa: "casa_abc", sale: "s" },
     casa: { chiedi: async () => [] },
     ferro: ferroFinto(null),
@@ -457,13 +457,13 @@ test("il nome della ditta arriva nella risposta, e la casa se lo ricorda", async
     fetch: async () => ({ ok: true, json: async () => ({ presa: true, di: "Impianti Rossi" }) }),
   });
 
-  assert.equal(postino.chi, "", "prima della prima cartolina non si inventa niente");
+  assert.equal(postino.chi, "", "prima della prima rapporto non si inventa niente");
   assert.equal(await postino.manda(), true);
   assert.equal(postino.chi, "Impianti Rossi");
 });
 
 test("una risposta senza nome, o che non è JSON, non fa danni", async () => {
-  /* La cartolina è arrivata, ed è quello che conta: il nome resta vuoto e la
+  /* Il rapporto è arrivata, ed è quello che conta: il nome resta vuoto e la
    * scheda mostra l'indirizzo, che è quello che faceva prima. */
   const conRisposta = (risposta) =>
     new Postino({

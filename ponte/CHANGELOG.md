@@ -7,7 +7,7 @@ correzioni dell'add-on fra due plance.
 
 ## 1.4.32.15
 
-**La cartolina: la casa può dire come sta a chi te l'ha montata.**
+**Il rapporto: la casa può dire come sta a chi te l'ha montata.**
 
 Se l'impianto te l'ha fatto un installatore, adesso può darti una riga da
 incollare nella casella **«Il quadro di chi ti ha fatto l'impianto»**: da quel
@@ -19,14 +19,14 @@ telefonargli.
 **Senza quella riga non parte niente**, e non si apre nessuna connessione: in
 una casa qualunque questo pezzo è codice che non gira.
 
-**Nella cartolina non c'è niente di tuo.** Nessun nome di entità, nessuna
+**Nel rapporto non c'è niente di tuo.** Nessun nome di entità, nessuna
 stanza, nessuna persona, nessuno stato di nessun sensore; il nome del tuo
 Wi-Fi no, e il tuo indirizzo pubblico nemmeno. La regola si dice così: cosa
 c'è nella scatola, non chi ci abita — «Mosquitto broker» ed `eth0` sono nomi
 di prodotti e di schede. Le entità che non rispondono partono come quattro
 cifre, con un sale che nasce in questa casa e non esce: servono a dire «è lo
 stesso di ieri», e a niente di più. Non è una promessa scritta in un
-documento: è una prova che compila una cartolina da una casa piena di nomi che
+documento: è una prova che compila un rapporto da una casa piena di nomi che
 raccontano una famiglia e controlla che non ne esca nemmeno uno.
 
 L'indirizzo **sulla rete di casa** invece c'è, ed è voluto: `192.168.1.50` non
@@ -43,7 +43,7 @@ Non passa dal centralino di gdahome: va dalla casa al quadro e basta.
 **E lo puoi leggere e fermare da qui.** In questa pagina, dove quella casella è
 piena, compare la scheda «Il quadro di chi ti ha fatto l'impianto»: c'è scritto
 a chi parla la tua casa e ogni quanto, e sotto «Cosa parte da qui» c'è
-**l'ultima cartolina spedita per intero**, com'è partita. Non un riassunto: il
+**l'ultima rapporto spedita per intero**, com'è partita. Non un riassunto: il
 testo. Un riassunto di quello che esce sarebbe esattamente la cosa di cui
 dovresti fidarti.
 

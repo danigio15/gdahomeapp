@@ -583,7 +583,7 @@ test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-
   }
 });
 
-/* ─── La cartolina al quadro, dalla console ───────────────────────────────
+/* ─── Il rapporto al quadro, dalla console ───────────────────────────────
  *
  * Quello che si prova qui: che la scheda esista **solo** dove qualcuno ha
  * incollato un codice; che quella via dica a chi parla questa casa e **non**
@@ -618,7 +618,7 @@ test("col codice, la console dice a chi parla questa casa — e non dice con che
     assert.equal(detto.acceso, true);
     assert.equal(detto.dove, "https://quadro.impiantirossi.it");
     assert.equal(detto.ogni, 15);
-    /* Il nome della ditta e' vuoto finche' non e' partita la prima cartolina:
+    /* Il nome della ditta e' vuoto finche' non e' partita la prima rapporto:
      * arriva **nella risposta** del quadro, e finche' non c'e' la scheda mostra
      * l'indirizzo e basta invece di inventarsi qualcosa. */
     assert.equal(detto.chi, "");

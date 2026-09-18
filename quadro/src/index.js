@@ -34,7 +34,7 @@ export async function alzaIlQuadro({
    *
    * Non e' la chiave di un installatore — quelle le fa questo quadro, una per
    * conto, e le vede solo chi le riceve. Questa aggiunge gli installatori e mette i limiti, e
-   * senza non si puo' iscrivere nessuno: un quadro cosi' riceve cartoline di
+   * senza non si puo' iscrivere nessuno: un quadro cosi' riceve rapporti di
    * case gia' abbinate e non ne fa entrare di nuove. Va lunga. */
   chiaveDelGestore = process.env.QUADRO_GESTORE || "",
 } = {}) {

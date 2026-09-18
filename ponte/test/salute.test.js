@@ -47,7 +47,7 @@ test("l'impronta non riporta indietro il nome, e cambia da casa a casa", () => {
   assert.notEqual(qui, impronta("un'altra casa", nome));
 });
 
-test("le impronte sono in ordine: due cartoline uguali non devono sembrare diverse", () => {
+test("le impronte sono in ordine: due rapporti uguali non devono sembrare diverse", () => {
   const stati = [
     stato("sensor.zeta", "unavailable"),
     stato("sensor.alfa", "unavailable"),

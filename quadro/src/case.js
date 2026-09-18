@@ -1,7 +1,7 @@
 /* Le case che questo quadro segue.
  *
- * Di ognuna si tiene poco: l'ultima cartolina, il giorno in cui e' arrivata la
- * prima, quello in cui il collaudo si e' chiuso, e **quante cartoline sono
+ * Di ognuna si tiene poco: l'ultima rapporto, il giorno in cui e' arrivata la
+ * prima, quello in cui il collaudo si e' chiuso, e **quante rapporti sono
  * arrivate per ogni giorno** — che e' tutto quello che serve per disegnare la
  * striscia dei quattordici giorni.
  *
@@ -15,7 +15,7 @@
  *
  * ─── Perche' i giorni e non le ore ───────────────────────────────────────
  *
- * Tenere ogni cartolina vorrebbe dire novantasei righe al giorno per casa, e
+ * Tenere ogni rapporto vorrebbe dire novantasei righe al giorno per casa, e
  * su quaranta case quattromila righe al giorno per una striscia di quattordici
  * caselle. Si tiene un numero per giorno — quante ne sono arrivate — e la
  * striscia si ricava da quello: pieno se ne sono arrivate quasi tutte, a meta'
@@ -40,7 +40,7 @@ export const GIORNI_TENUTI = 21;
 /** Quanti ne disegna la striscia. */
 export const GIORNI_NELLA_STRISCIA = 14;
 
-/* Quale frazione delle cartoline attese in un giorno basta a chiamarlo pieno.
+/* Quale frazione dei rapporti attesi in un giorno basta a chiamarlo pieno.
  * Non il cento per cento: un riavvio di Home Assistant, un aggiornamento, un
  * blackout di dieci minuti sono cose normali, e una striscia che si annerisce
  * a ogni riavvio non si guarda piu'. */
@@ -63,7 +63,7 @@ export class CaseSeguite {
   }
 
   /**
-   * Una cartolina e' arrivata.
+   * Un rapporto e' arrivata.
    *
    * Una matricola mai vista **nasce qui**, senza nome e in fila «collaudo
    * aperto»: e' il momento in cui una casa entra nel quadro, e chi l'ha
@@ -175,7 +175,7 @@ export class CaseSeguite {
    * Quando un installatore si toglie, i suoi impianti **restano**: sono impianti che
    * funzionano in casa di qualcuno, e spegnerne il monitoraggio perche' una
    * ditta ha smesso di pagare punirebbe il cliente per una faccenda che non e'
-   * sua. Le loro cartoline continuano ad arrivare.
+   * sua. Le loro rapporti continuano ad arrivare.
    *
    * Ma restare invisibili sarebbe un'altra cosa: chi tiene il quadro vedrebbe
    * un totale che non torna con la somma delle ditte e non saprebbe perche'.

@@ -98,13 +98,13 @@ tesserino gli viene rinnovato.
   cambia. **Il tesserino chiude il quadro, mai la casa.**
 * **Non spegne quello che già funziona.** Il ponte verifica la firma **al
   momento dell'abbinamento**. Una casa già abbinata continua a mandare le sue
-  cartoline anche se il tesserino scade: un installatore che non rinnova smette
+  rapporti anche se il tesserino scade: un installatore che non rinnova smette
   di poter **crescere**, non smette di vedere gli impianti che ha già montato.
   Se fosse il contrario, a restare senza controllo sarebbe l'impianto di un
   cliente che con quel contratto non c'entra niente.
 * **Non riceve elenchi.** Il battito porta **un numero**, mai le matricole e mai
-  i nomi che l'installatore ha dato alle case. È la stessa disciplina della
-  cartolina, girata: *la cartolina non dice all'installatore chi abita la casa,
+  i nomi che l'installatore ha dato alle case. È la stessa disciplina del
+  rapporto, girata: *il rapporto non dice all'installatore chi abita la casa,
   il battito non dice a gdahome quali case ha l'installatore.*
 
 ## Il tesserino
@@ -241,7 +241,7 @@ E due aggiunte piccole altrove:
 | dove | cosa | quanto |
 |---|---|---|
 | `ponte/src/tesserino.js` | verifica la firma, e basta | ~60 righe |
-| `ponte/src/cartolina.js` | il codice versione `2`, e il rifiuto se non torna | ~20 righe |
+| `ponte/src/rapporto.js` | il codice versione `2`, e il rifiuto se non torna | ~20 righe |
 | `quadro/src/tesserino.js` | lo tiene, lo mette nei codici, manda il battito | ~90 righe |
 
 ## Le tappe
@@ -321,7 +321,7 @@ nella storia della shell. Si passa il percorso, con `--chiave` o `ALBO_CHIAVE`.
   batte cinquanta — non a bloccare la quarantunesima. Portarsela dietro senza
   dire questo sarebbe una promessa falsa scritta in un campo.
 - **Cosa succede a chi era iscritto e smette.** Le sue case continuano a mandare
-  cartoline a un quadro che non è più riconosciuto. È giusto — sono impianti che
+  rapporti a un quadro che non è più riconosciuto. È giusto — sono impianti che
   funzionano — ma va deciso se dirlo a chi ci abita, e come.
 - **Un tesserino per quadro o per installatore.** Uno che ha due sedi ha due
   quadri. Oggi il campo `d` lega il tesserino a un indirizzo: o si firmano due

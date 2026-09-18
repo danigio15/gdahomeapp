@@ -7,14 +7,14 @@
  *     fra loro si fanno concorrenza: i clienti di Rossi non sono affari di
  *     Bianchi. E' la riga che regge tutto quanto il resto;
  *  2. **che una casa non possa leggere nessuna console.** La chiave di una
- *     casa apre una porta sola — depositare la propria cartolina — e non fa
+ *     casa apre una porta sola — depositare la propria rapporto — e non fa
  *     vedere niente;
  *  3. **che un codice usato non serva a nessun'altra casa**, che e' cosa vuol
  *     dire «si brucia»;
  *  4. **che il tetto sia un tetto.** Qui il limite lo impone il server di chi
  *     lo decide, non un controllo dentro un programma che gira su una macchina
  *     altrui: quando conta, conta davvero;
- *  5. che quello che una cartolina non dice resti «non si sa» invece di
+ *  5. che quello che un rapporto non dice resti «non si sa» invece di
  *     diventare una spunta rossa;
  *  6. che la matricola che conta sia quella verificata, non quella scritta nel
  *     corpo da chi manda.
@@ -32,7 +32,7 @@ const CHIAVE_DEL_GESTORE = "una-chiave-lunga-abbastanza-per-il-gestore";
 const UNA = "casa_a3f19c74e05b2d8890fa4c1e6b73d052";
 const ALTRA = "casa_71cd3a6e884b09f25de4a1c7b3608e14";
 
-const CARTOLINA = {
+const RAPPORTO = {
   quando: new Date().toISOString(),
   ogni: 15,
   ponte: "1.4.32.15",
@@ -99,8 +99,8 @@ async function banco({ ditte = 1, soglia = 0 } = {}) {
         },
       }),
     /* Il davanti: una casa che deposita. */
-    deposita: (casa, chiave, carta = CARTOLINA) =>
-      fetch(`${dove}/cartolina`, {
+    deposita: (casa, chiave, carta = RAPPORTO) =>
+      fetch(`${dove}/rapporto`, {
         method: "POST",
         headers: {
           authorization: `Bearer ${chiave}`,
@@ -189,7 +189,7 @@ test("una casa nuova nasce depositando, senza nome e in fila «collaudo aperto»
     assert.equal(case_.length, 1);
     assert.equal(case_[0].casa, UNA);
     assert.equal(case_[0].senzaNome, true);
-    /* La prima cartolina di questa casa ha tutte le spunte a posto, quindi il
+    /* La prima rapporto di questa casa ha tutte le spunte a posto, quindi il
      * collaudo si chiude subito: e' giusto, l'impianto e' finito. */
     assert.equal(case_[0].stato.chiave, "posto");
     assert.ok(case_[0].collaudataIl);
@@ -206,10 +206,10 @@ test("una casa nuova nasce depositando, senza nome e in fila «collaudo aperto»
   }
 });
 
-test("quello che una cartolina non dice resta «non si sa», e non diventa rosso", async () => {
+test("quello che un rapporto non dice resta «non si sa», e non diventa rosso", async () => {
   const b = await banco();
   try {
-    /* Una casa senza Supervisor e con Home Assistant giu': mezza cartolina. */
+    /* Una casa senza Supervisor e con Home Assistant giu': mezza rapporto. */
     await b.deposita(UNA, await unCodice(b), {
       quando: new Date().toISOString(),
       ogni: 15,
@@ -231,7 +231,7 @@ test("quello che una cartolina non dice resta «non si sa», e non diventa rosso
 test("la matricola che conta e' quella verificata, non quella scritta nel corpo", async () => {
   const b = await banco();
   try {
-    await b.deposita(UNA, await unCodice(b), { ...CARTOLINA, casa: ALTRA });
+    await b.deposita(UNA, await unCodice(b), { ...RAPPORTO, casa: ALTRA });
     const { case: case_ } = await (await b.retro("/case")).json();
     assert.equal(case_.length, 1);
     assert.equal(case_[0].casa, UNA);
@@ -241,12 +241,12 @@ test("la matricola che conta e' quella verificata, non quella scritta nel corpo"
   }
 });
 
-test("una matricola storta non entra, e una cartolina che non e' JSON nemmeno", async () => {
+test("una matricola storta non entra, e un rapporto che non e' JSON nemmeno", async () => {
   const b = await banco();
   try {
     const codice = await unCodice(b);
     assert.equal((await b.deposita("non-una-matricola", codice)).status, 400);
-    const storta = await fetch(`${b.dove}/cartolina`, {
+    const storta = await fetch(`${b.dove}/rapporto`, {
       method: "POST",
       headers: { authorization: `Bearer ${codice}`, "x-casa": UNA },
       body: "questo non e' JSON",
@@ -265,7 +265,7 @@ test("non seguirla piu' butta quello che se ne sa e anche la sua chiave", async 
     await b.retro(`/casa/${UNA}`, { method: "DELETE" });
     const { case: case_ } = await (await b.retro("/case")).json();
     assert.equal(case_.length, 0);
-    /* E senza buttare anche la chiave, la prima cartolina la farebbe rinascere
+    /* E senza buttare anche la chiave, la prima rapporto la farebbe rinascere
      * tre secondi dopo. */
     assert.equal((await b.deposita(UNA, codice)).status, 403);
   } finally {
@@ -481,7 +481,7 @@ test("chiudere un conto non butta le sue case: restano, e si vedono ancora conta
   /* E' una scelta, non un effetto collaterale, e sta qui perche' non torni
    * indietro da sola: sono impianti che funzionano in casa di qualcuno, e
    * spegnerne il monitoraggio perche' una ditta ha smesso di pagare punirebbe
-   * il cliente per una faccenda che non e' sua. Le cartoline continuano ad
+   * il cliente per una faccenda che non e' sua. I rapporti continuano ad
    * arrivare, e chi tiene il quadro le vede contate a parte. */
   const b = await banco({ ditte: 1 });
   const rossi = b.conti[0];
@@ -550,7 +550,7 @@ test("un installatore non vede né cambia l'indirizzo degli avvisi di un altro",
   }
 });
 
-test("la risposta alla cartolina dice alla casa di chi è il quadro", async () => {
+test("la risposta al rapporto dice alla casa di chi è il quadro", async () => {
   /* La casa non ha altro modo di saperlo: nel codice che le è stato incollato
    * c'è solo un codice. Serve alla scheda nella console dell'add-on, dove chi
    * ci abita legge a chi vanno i suoi numeri — «Impianti Rossi» gli dice

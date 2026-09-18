@@ -42,7 +42,7 @@
  * filo, che dopo l'abbinamento puo' chiedere a Home Assistant qualunque cosa.
  */
 
-import { QUADRO_DI_DIFETTO } from "./cartolina.js";
+import { QUADRO_DI_DIFETTO } from "./rapporto.js";
 import { request as richiestaHttp } from "node:http";
 import { request as richiestaHttps } from "node:https";
 import { gzipSync } from "node:zlib";
@@ -1069,7 +1069,7 @@ export class Commissioni {
          * ponte, non l'app — e chi non e' installatore non vede una porta che
          * non si apre.
          *
-         * `dove` e' l'indirizzo del quadro, lo stesso che sa la cartolina: la
+         * `dove` e' l'indirizzo del quadro, lo stesso che sa il rapporto: la
          * voce apre **il cruscotto che esiste gia'**, non una sua copia rifatta
          * nell'app. Una copia sarebbe un terzo posto dove stanno le stesse
          * regole, e prima o poi i tre direbbero cose diverse. */

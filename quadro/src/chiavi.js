@@ -13,7 +13,7 @@
  *
  * ─── Il codice si brucia, ma non si riscrive ─────────────────────────────
  *
- * Una stesura del documento diceva che alla prima cartolina il quadro
+ * Una stesura del documento diceva che alla prima rapporto il quadro
  * restituisce alla casa **una chiave nuova**, e l'invito muore. Sarebbe un po'
  * piu' stretto, e si e' scelto di no: quella chiave nuova la casa dovrebbe
  * tenersela in `/data`, e da quel momento la riga scritta nella scheda
@@ -22,7 +22,7 @@
  * e' quello che parte** — per guadagnare poco.
  *
  * Quindi il codice resta quello, e a bruciarsi e' il suo essere libero: alla
- * prima cartolina si lega a quella matricola, e da allora nessun'altra casa lo
+ * prima rapporto si lega a quella matricola, e da allora nessun'altra casa lo
  * puo' usare. Chi lo intercettasse prima dell'uso dovrebbe comunque conoscere
  * una matricola, che e' centoventotto bit di caso.
  */
@@ -183,7 +183,7 @@ export class Chiavi {
   }
 
   /* Staccare una casa vuol dire buttare la sua chiave: da quel momento le sue
-   * cartoline non entrano piu'. La casa non lo sa e continua a mandarle finche'
+   * rapporti non entrano piu'. La casa non lo sa e continua a mandarle finche'
    * chi ci abita non svuota la casella — ed e' giusto cosi': da qui si decide
    * cosa si riceve, non cosa fa casa d'altri. */
   stacca(casa) {

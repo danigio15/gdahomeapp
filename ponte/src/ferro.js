@@ -31,7 +31,7 @@
  * sanno cosa sia la rete: la forma di quelle risposte non la decidiamo noi, e
  * va letta senza fidarsi di niente.
  *
- * Qui dentro si **legge**, con una sola eccezione dichiarata: `spegniLaCartolina`
+ * Qui dentro si **legge**, con una sola eccezione dichiarata: `spegniLaRapporto`
  * svuota la casella del quadro nelle opzioni dell'add-on, ed e' quello che sta
  * dietro il tasto «smetti» della console. Sta qui e non altrove perche' e'
  * una chiamata al Supervisor, e le chiamate al Supervisor stanno in un posto
@@ -156,7 +156,7 @@ export function laMacchina({ os = null, host = null, stati = [], adesso = () => 
  * indirizzo scelto da noi, ma la cosa vera che deve funzionare.
  *
  * **L'SSID non esce.** Una rete che si chiama «Casa Rossi» e' una persona, e
- * questa cartolina va a chi ha installato l'impianto, non a chi ci abita. Il
+ * questo rapporto va a chi ha installato l'impianto, non a chi ci abita. Il
  * segnale si', che e' un numero e spiega meta' dei guai.
  */
 export function laRete({ network = null, filoSu = false } = {}) {
@@ -246,7 +246,7 @@ export function gliAddon({ addons = [] } = {}) {
  *
  * Quattro domande in parallelo e una risposta tenuta un minuto. Una che va
  * male non fa fallire le altre: un Supervisor senza il permesso della rete
- * deve dare una cartolina senza la rete, non nessuna cartolina.
+ * deve dare un rapporto senza la rete, non nessun rapporto.
  */
 export class Ferro {
   constructor({
@@ -267,7 +267,7 @@ export class Ferro {
     this._quando = 0;
     this._inVolo = null;
     /* Un Supervisor che non risponde lo si dice una volta, non a ogni giro:
-     * una cartolina ogni quindici minuti farebbe un registro illeggibile. */
+     * un rapporto ogni quindici minuti farebbe un registro illeggibile. */
     this._dettoIlGuaio = false;
   }
 
@@ -300,7 +300,7 @@ export class Ferro {
     const nessuna = !os && !host && !network && !addons && !core && !supervisor;
     if (nessuna && !this._dettoIlGuaio) {
       this.registro.attenzione(
-        "il Supervisor non risponde: la cartolina parte lo stesso, senza la macchina ne' la rete",
+        "il Supervisor non risponde: il rapporto parte lo stesso, senza la macchina ne' la rete",
       );
       this._dettoIlGuaio = true;
     }
@@ -319,7 +319,7 @@ export class Ferro {
    * La via e' quella del Supervisor per le proprie opzioni, la stessa famiglia
    * di `/addons/self/rebuild` che `aggiornamento.js` usa gia'. Si scrive solo
    * questa chiave: quello che c'e' d'altro nella scheda non si tocca. */
-  async spegniLaCartolina() {
+  async spegniLaRapporto() {
     if (!this.segno || typeof this.prendi !== "function") {
       return { spento: false, perche: "qui non c'e' nessun Supervisor a cui dirlo" };
     }
@@ -339,7 +339,7 @@ export class Ferro {
           perche: `il Supervisor ha risposto ${risposta.status}: svuota la casella «Il quadro» nella scheda dell'add-on`,
         };
       }
-      this.registro.info("la cartolina non parte piu': la casella del quadro e' stata svuotata");
+      this.registro.info("il rapporto non parte piu': la casella del quadro e' stata svuotata");
       return { spento: true, perche: "" };
     } catch (errore) {
       return { spento: false, perche: String(errore?.message || errore) };

@@ -1,11 +1,11 @@
-/* La cartolina: quello che questa casa dice di se' al quadro di chi l'ha
+/* Il rapporto: quello che questa casa dice di se' al quadro di chi l'ha
  * installata.
  *
  * Un installatore mette gdahome in quaranta case e poi non ci torna piu'. Il
  * Wi-Fi che cambia, la presa Zigbee che sparisce, Home Assistant fermo a sei
  * mesi fa, il backup che non gira dal giorno dell'installazione: se ne accorge
- * quando squilla il telefono, cioe' quando il cliente e' gia' arrabbiato. La
- * cartolina e' poche righe di numeri che partono da sole, e gli fanno sapere
+ * quando squilla il telefono, cioe' quando il cliente e' gia' arrabbiato. Il
+ * rapporto e' poche righe di numeri che partono da sole, e gli fanno sapere
  * prima.
  *
  * **E' spenta.** Senza un codice nelle opzioni dell'add-on qui non parte
@@ -72,7 +72,7 @@ import { ilBackup, leBatterie, leEntita } from "./salute.js";
  */
 export const QUADRO_DI_DIFETTO = "https://quadro.gdahome.org";
 
-/** Ogni quanto parte una cartolina, in minuti, quando non si dice altro. */
+/** Ogni quanto parte un rapporto, in minuti, quando non si dice altro. */
 export const OGNI_DI_SERIE = 15;
 
 /* Sotto questo non si scende: una casa che parla ogni mezzo minuto e' una
@@ -84,8 +84,8 @@ const OGNI_AL_MASSIMO = 24 * 60;
 /** Quanto si aspetta il quadro prima di lasciar perdere. */
 const ATTESA = 10_000;
 
-/* Quanto si aspetta prima della prima cartolina. Non zero: all'accensione
- * dell'add-on Home Assistant sta spesso ancora partendo, e una cartolina
+/* Quanto si aspetta prima della prima rapporto. Non zero: all'accensione
+ * dell'add-on Home Assistant sta spesso ancora partendo, e un rapporto
  * spedita adesso direbbe che in questa casa non c'e' niente. */
 const PRIMA_ASPETTA = 30_000;
 
@@ -199,7 +199,7 @@ export function compila({
     sistema: String(versioni.sistema ?? ""),
   };
   /* Le parti che possono mancare si aggiungono solo se ci sono. Un Supervisor
-   * che non ha risposto lascia la cartolina senza `macchina`, e il quadro lo
+   * che non ha risposto lascia il rapporto senza `macchina`, e il quadro lo
    * sa leggere: «questa casa non lo dice» e' una risposta, `0` no. */
   const forse = {
     macchina,
@@ -233,15 +233,15 @@ export function compila({
  * sorgente si cambia una riga sola.
  *
  * Torna **una funzione**, non un foglio: il postino la chiama a ogni giro, e
- * cosi' ogni cartolina e' di adesso invece che di quando il ponte si e'
+ * cosi' ogni rapporto e' di adesso invece che di quando il ponte si e'
  * acceso.
  *
  * Quello che non risponde non ferma niente. Una casa senza Supervisor manda
- * una cartolina senza la macchina; una con Home Assistant giu' la manda senza
- * le entita'. **Mezza cartolina e' un'informazione — anzi, quel giorno e' la
+ * un rapporto senza la macchina; una con Home Assistant giu' la manda senza
+ * le entita'. **Mezza rapporto e' un'informazione — anzi, quel giorno e' la
  * piu' importante che ci sia.**
  */
-export function fabbricaLaCartolina({
+export function fabbricaLaRapporto({
   identita,
   casa,
   ferro,
@@ -264,7 +264,7 @@ export function fabbricaLaCartolina({
     try {
       return await cosa();
     } catch (errore) {
-      zitto.debug(`la cartolina resta senza ${che}: ${errore?.message || errore}`);
+      zitto.debug(`il rapporto resta senza ${che}: ${errore?.message || errore}`);
       return null;
     }
   };
@@ -367,7 +367,7 @@ function iTelefoni(dispositivi, adesso) {
 /**
  * Il postino: l'orologio, e un tentativo che se fallisce rallenta.
  *
- * Non sa cosa ci sia in una cartolina: gliela fabbrica `fabbrica`, e lui la
+ * Non sa cosa ci sia in un rapporto: gliela fabbrica `fabbrica`, e lui la
  * porta. Cosi' questa classe si prova con una funzione che torna `{}` e una
  * `fetch` finta, senza montare mezzo ponte.
  */
@@ -429,13 +429,13 @@ export class Postino {
 
     this._orologio = null;
     this._quanteVoltePerNiente = 0;
-    /* L'ultima cartolina spedita, in chiaro, e com'e' andata. Sono le due cose
+    /* L'ultima rapporto spedita, in chiaro, e com'e' andata. Sono le due cose
      * che la console dell'add-on fa leggere a chi ci abita: non «manda dei
      * dati», ma **questi** dati, parola per parola. */
     this._ultima = null;
     this._ultimoEsito = null;
     /* Il nome della ditta, come lo dice il quadro rispondendo. In memoria e
-     * basta: dopo un riavvio si riempie alla prima cartolina. */
+     * basta: dopo un riavvio si riempie alla prima rapporto. */
     this._chi = "";
   }
 
@@ -459,7 +459,7 @@ export class Postino {
 
   parti() {
     if (!this.acceso || this._orologio) return;
-    this.registro.info(`la cartolina va a ${this.dove}, ogni ${this.ogni} minuti`);
+    this.registro.info(`il rapporto va a ${this.dove}, ogni ${this.ogni} minuti`);
     const giro = () => {
       void this.manda();
       this._riarma();
@@ -484,14 +484,14 @@ export class Postino {
     this._orologio.unref?.();
   }
 
-  /** Una cartolina, adesso. Torna `true` se e' arrivata. */
+  /** Un rapporto, adesso. Torna `true` se e' arrivata. */
   async manda() {
     if (!this.acceso) return false;
     let foglio;
     try {
       foglio = await this.fabbrica();
     } catch (errore) {
-      /* Una cartolina che non si riesce a compilare non e' un guasto del
+      /* Un rapporto che non si riesce a compilare non e' un guasto del
        * quadro: si dice e si riprova al giro dopo, senza rallentare. */
       this._ultimoEsito = {
         andata: false,
@@ -499,14 +499,14 @@ export class Postino {
         perche: String(errore?.message || errore),
       };
       this.registro.attenzione(
-        `la cartolina non si e' potuta compilare: ${errore?.message || errore}`,
+        `il rapporto non si e' potuta compilare: ${errore?.message || errore}`,
       );
       return false;
     }
     this._ultima = foglio;
 
     try {
-      const risposta = await this.prendi(`${this.dove}/cartolina`, {
+      const risposta = await this.prendi(`${this.dove}/rapporto`, {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -536,14 +536,14 @@ export class Postino {
        * indirizzo no.
        *
        * Sta in memoria e non su disco: dopo un riavvio la scheda mostra
-       * l'indirizzo finche' non parte la prima cartolina, che e' un quarto
+       * l'indirizzo finche' non parte la prima rapporto, che e' un quarto
        * d'ora. Scriverlo in `/data` per un quarto d'ora di comodo vorrebbe dire
        * un file in piu' da tenere buono per sempre. */
       try {
         const detto = await risposta.json();
         if (typeof detto?.di === "string") this._chi = detto.di.slice(0, 80);
       } catch (_errore) {
-        /* Una risposta che non e' JSON non e' un guasto: la cartolina e'
+        /* Una risposta che non e' JSON non e' un guasto: il rapporto e'
          * arrivata, ed e' quello che conta. Il nome resta quello di prima. */
       }
 
@@ -560,7 +560,7 @@ export class Postino {
     /* Detto una volta, non a ogni giro: un quadro spento per un giorno
      * riempirebbe il registro dell'add-on di novantasei righe uguali, e un
      * registro che si ripete e' un registro che non si legge piu'. */
-    if (!this._quanteVoltePerNiente) this.registro.attenzione(`la cartolina non arriva: ${perche}`);
+    if (!this._quanteVoltePerNiente) this.registro.attenzione(`il rapporto non arriva: ${perche}`);
     this._quanteVoltePerNiente += 1;
   }
 }

@@ -30,7 +30,7 @@ export class Identita {
     }
     /* Il sale delle impronte.
      *
-     * Serve alla cartolina del quadro: le entita' che non rispondono si
+     * Serve al rapporto del quadro: le entita' che non rispondono si
      * mandano come quattro cifre, e senza un sale di questa casa la stessa
      * entita' darebbe le stesse quattro cifre in tutte le case del mondo —
      * cioe' si girerebbero in un pomeriggio con un elenco di nomi plausibili.

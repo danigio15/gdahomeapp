@@ -11,7 +11,7 @@
  * filo con un segno gia' avuto. Nient'altro esiste su quella porta.
  */
 
-import { QUADRO_DI_DIFETTO } from "./cartolina.js";
+import { QUADRO_DI_DIFETTO } from "./rapporto.js";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
@@ -351,7 +351,7 @@ export function costruisciLaConsole({
   /* La chat di assistenza. Alla console serve per una riga sola, e non e' una
    * riga da poco: dire se questa casa **risponde** alle chat. */
   chat,
-  /* Il postino della cartolina al quadro di chi ha fatto l'impianto, e il
+  /* Il postino del rapporto al quadro di chi ha fatto l'impianto, e il
    * ferro che sa svuotarne la casella. La scheda «Il quadro» di questa pagina
    * e' l'unico posto dove chi ci abita legge **cosa** parte da casa sua e ha
    * il tasto per farlo smettere: senza, l'unica cosa che vedrebbe sarebbe una
@@ -770,7 +770,7 @@ async function api({
    * GitHub: `/api/stato` la console lo chiede ogni dieci secondi, e dieci
    * secondi non sono il passo di una cosa che cambia una volta al giorno.
    */
-  /* La cartolina al quadro: cosa parte da questa casa, e a chi.
+  /* Il rapporto al quadro: cosa parte da questa casa, e a chi.
    *
    * La chiave **non** esce da qui, e non e' una dimenticanza: chi guarda
    * questa pagina deve sapere a chi la sua casa parla, non avere in mano di
@@ -796,11 +796,11 @@ async function api({
       acceso: true,
       dove: postino.dove,
       /* Di chi e' il quadro, come l'ha detto lui rispondendo. Vuoto finche' non
-       * e' partita la prima cartolina, e allora la scheda mostra l'indirizzo e
+       * e' partita la prima rapporto, e allora la scheda mostra l'indirizzo e
        * basta — che e' quello che faceva prima. */
       chi: postino.chi,
       ogni: postino.ogni,
-      /* L'ultima cartolina spedita, **in chiaro e per intero**. E' il punto di
+      /* L'ultima rapporto spedita, **in chiaro e per intero**. E' il punto di
        * questa scheda: non «manda dei dati», ma questi dati, parola per
        * parola, con dentro tutto quello che c'e' e niente di piu'. */
       ultima: postino.ultima,
@@ -823,11 +823,11 @@ async function api({
       return;
     }
     postino.ferma();
-    const esito = ferro ? await ferro.spegniLaCartolina() : { spento: false, perche: "" };
+    const esito = ferro ? await ferro.spegniLaRapporto() : { spento: false, perche: "" };
     registro.info(
       esito.spento
-        ? "la cartolina al quadro e' stata fermata da questa pagina"
-        : `la cartolina e' ferma, ma la casella no: ${esito.perche}`,
+        ? "il rapporto al quadro e' stata fermata da questa pagina"
+        : `il rapporto e' ferma, ma la casella no: ${esito.perche}`,
     );
     json(risposta, { acceso: false, ...esito });
     return;

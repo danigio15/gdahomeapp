@@ -1,4 +1,4 @@
-/* Da una cartolina alle spunte, e dalle spunte a una parola.
+/* Da un rapporto alle spunte, e dalle spunte a una parola.
  *
  * Sono le sole regole di questo pezzo, e stanno **qui e basta**: la console e'
  * una pagina che disegna quello che le arriva gia' deciso. Se le regole
@@ -8,7 +8,7 @@
  * ─── Tre risposte, non due ───────────────────────────────────────────────
  *
  * Una spunta puo' essere `true`, `false` o **`null`**, e la terza e' la piu'
- * importante. Il ponte lascia fuori dalla cartolina quello che non e' riuscito
+ * importante. Il ponte lascia fuori dal rapporto quello che non e' riuscito
  * a sapere — una casa senza System Monitor non manda la CPU, un Supervisor che
  * non risponde non manda la macchina — e la differenza fra «non lo so» e «va
  * male» e' tutta la differenza fra un cruscotto utile e un cruscotto che
@@ -19,7 +19,7 @@
  * fila per sempre, per una cosa che non e' sua.
  */
 
-/* Dopo quante cartoline saltate una casa e' muta. Tre: una sola puo' essere un
+/* Dopo quante rapporti saltati una casa e' muta. Tre: una sola puo' essere un
  * riavvio, tre no. */
 export const MUTA_DOPO = 3;
 
@@ -90,7 +90,7 @@ export const addonGiu = (carta) =>
  * Le spunte del collaudo: l'impianto e' finito bene?
  *
  * Sono le cose che un installatore controlla prima di andarsene, e sono tutte
- * gia' dentro la cartolina. `fatta: false` non vuol dire rotto: vuol dire che
+ * gia' dentro il rapporto. `fatta: false` non vuol dire rotto: vuol dire che
  * quella riga non si puo' ancora spuntare.
  */
 export function ilCollaudo(carta) {
@@ -244,7 +244,7 @@ export function loStato(casa, adesso = Date.now()) {
       chiave: "aperto",
       segno: "◇",
       parola: "collaudo aperto",
-      perché: "Non è ancora arrivata nessuna cartolina da questa casa.",
+      perché: "Non è ancora arrivata nessun rapporto da questa casa.",
     };
   }
   if (eMuta(c, adesso)) {
@@ -252,7 +252,7 @@ export function loStato(casa, adesso = Date.now()) {
       chiave: "muta",
       segno: "■",
       parola: "muta",
-      perché: `Non manda una cartolina da ${daQuanto(c.quando, adesso)}. Quello che si vede qui sotto è vecchio di altrettanto.`,
+      perché: `Non manda un rapporto da ${daQuanto(c.quando, adesso)}. Quello che si vede qui sotto è vecchio di altrettanto.`,
     };
   }
   if (!casa.collaudataIl) {

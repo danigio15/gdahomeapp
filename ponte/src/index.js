@@ -11,7 +11,7 @@ import { join } from "node:path";
 
 import { Abbinamento } from "./abbinamento.js";
 import { Aggiornamento } from "./aggiornamento.js";
-import { fabbricaLaCartolina, Postino } from "./cartolina.js";
+import { fabbricaLaRapporto, Postino } from "./rapporto.js";
 import { Casa } from "./casa.js";
 import { Chat } from "./chat.js";
 import { Chiamata } from "./chiamata.js";
@@ -209,7 +209,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * Ritorno nasce dopo: gli serve la porta vera, che la sa solo il server. */
   commissioni.ritorno = ritorno;
 
-  /* La cartolina al quadro di chi ha fatto l'impianto.
+  /* Il rapporto al quadro di chi ha fatto l'impianto.
    *
    * **Spenta, a meno che in quella casella non ci sia un codice.** Senza, qui
    * non parte niente e non si apre nessuna connessione: in una casa qualunque
@@ -237,11 +237,11 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   /* E qui il postino riceve da dove prendere i suoi numeri.
    *
    * Si monta adesso e non insieme a lui perche' gli serve la **chiamata**, che
-   * nasce qui sotto: e' guardando quel filo che la cartolina sa dire se questa
+   * nasce qui sotto: e' guardando quel filo che il rapporto sa dire se questa
    * casa vede fuori — la prova piu' onesta che esista, non un ping a un
    * indirizzo scelto da noi ma la cosa vera che deve funzionare. Stessa strada
    * del Ritorno delle commissioni, e per lo stesso motivo. */
-  postino.fabbrica = fabbricaLaCartolina({
+  postino.fabbrica = fabbricaLaRapporto({
     identita,
     casa,
     ferro,
@@ -308,7 +308,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * Assistant chiede al ponte le stesse cose che gli chiede quella dentro
      * l'app, e le fa lo stesso oggetto. */
     commissioni,
-    /* La cartolina al quadro, e come farla smettere: la scheda «Il quadro»
+    /* Il rapporto al quadro, e come farla smettere: la scheda «Il quadro»
      * fa leggere l'ultima spedita parola per parola, e ha li' il tasto. */
     postino,
     ferro,

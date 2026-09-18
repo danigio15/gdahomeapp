@@ -36,7 +36,7 @@
 /** Quanto si aspetta chi riceve prima di lasciar perdere. */
 export const ATTESA = 10 * 1000;
 
-/* Solo `https`, e per lo stesso motivo della cartolina: nel messaggio c'e' il
+/* Solo `https`, e per lo stesso motivo del rapporto: nel messaggio c'e' il
  * nome che l'installatore ha dato a una casa, cioe' l'unica cosa in tutto
  * questo quadro che nomini una persona. Su `http` la leggerebbe chiunque stia
  * in mezzo. */

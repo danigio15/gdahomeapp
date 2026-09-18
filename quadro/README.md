@@ -4,7 +4,7 @@ Il quadro elettrico e il quadro della situazione sono la stessa parola, e per
 chi installa impianti è la sua.
 
 **Dove siamo.** Le prime due tappe sono fatte. Il ponte sa spedire la sua
-cartolina — spenta di serie, e si legge per intero dalla sua console — e il
+rapporto — spenta di serie, e si legge per intero dalla sua console — e il
 quadro gira: server, console attaccata a dati veri, abbinamento delle case, e
 **più ditte sullo stesso quadro** che fra loro non si vedono. Resta l'avviso
 quando una casa tace. Per accenderlo, [qui sotto](#accenderlo).
@@ -32,7 +32,7 @@ dà una chiave, e apre una pagina. Dentro ci stanno le case di ditte diverse, e
 ogni ditta vede solo le sue.
 
 Il ponte gli parla **diritto**, in HTTPS, all'indirizzo scritto dentro l'add-on
-(`ponte/src/cartolina.js`, `QUADRO_DI_DIFETTO`) — come già fa col centralino, e
+(`ponte/src/rapporto.js`, `QUADRO_DI_DIFETTO`) — come già fa col centralino, e
 per lo stesso motivo: una casella che non va toccata è una casella che prima o
 poi qualcuno tocca.
 
@@ -118,8 +118,8 @@ QUADRO_GESTORE='qualcosa di lungo e a caso' npm run avvia
 | `QUADRO_REGISTRO` | quanto parla: `debug`, `info`, `attenzione`, `errore` |
 
 Davanti va messo un HTTPS vero su **`quadro.gdahome.org`** — che è l'indirizzo
-scritto nell'add-on (`QUADRO_DI_DIFETTO` in `ponte/src/cartolina.js`) — perché
-le case ci mandano la loro chiave a ogni cartolina, e in chiaro la manderebbero
+scritto nell'add-on (`QUADRO_DI_DIFETTO` in `ponte/src/rapporto.js`) — perché
+le case ci mandano la loro chiave a ogni rapporto, e in chiaro la manderebbero
 a chiunque ascolti.
 
 > **Quel nome deve risolvere prima di rilasciare l'add-on.** Una volta uscita
@@ -155,7 +155,7 @@ farne entrare uno: **Abbina** gli dà un codice che vive un quarto d'ora, e quel
 codice si incolla nella casella `quadro` della scheda dell'add-on in casa del
 cliente. Nient'altro: niente indirizzo, niente server, niente dominio.
 
-La prima cartolina lega il codice a quella matricola, e da lì in poi non serve a
+La prima rapporto lega il codice a quella matricola, e da lì in poi non serve a
 nessun'altra casa — e la casa è **sua**, cioè compare nella sua pagina e in
 nessun'altra.
 
@@ -163,7 +163,7 @@ nessun'altra.
 
 **I suoi impianti restano.** Sono impianti che funzionano in casa di qualcuno, e
 spegnerne il monitoraggio perché una ditta ha smesso di pagare punirebbe il
-cliente per una faccenda che non è sua: le loro cartoline continuano ad
+cliente per una faccenda che non è sua: le loro rapporti continuano ad
 arrivare. Quello che smette è la sua chiave, che da quel momento non apre più niente.
 
 Restano però **contate a parte**: `GET /gestore/installatori` porta un `orfane`,
@@ -188,7 +188,7 @@ mandare niente, e una sola che manda:
 
 | | |
 |---|---|
-| **due ore, non tre quarti d'ora** | la pagina colora «muta» dopo tre cartoline saltate, e va bene per un colore su uno schermo che si sta già guardando. Un messaggio che arriva addosso vuole più pazienza: un riavvio, un aggiornamento e un router che si riaccende ci stanno dentro. Il colore è per chi guarda, il messaggio per chi non sta guardando |
+| **due ore, non tre quarti d'ora** | la pagina colora «muta» dopo tre rapporti saltati, e va bene per un colore su uno schermo che si sta già guardando. Un messaggio che arriva addosso vuole più pazienza: un riavvio, un aggiornamento e un router che si riaccende ci stanno dentro. Il colore è per chi guarda, il messaggio per chi non sta guardando |
 | **una volta sola** | una casa muta da tre giorni è una notizia, non una al giorno |
 | **se tacciono in tanti insieme** | otto su dodici non sono otto guasti: è un guasto. Un messaggio solo, che dice di guardare prima più in grande |
 | **se siamo stati via noi** | è la regola che nessuno scrive e che poi si paga. Se il quadro è stato fermo tre ore, al ritorno *tutte* le case sembrano mute perché nessuno era in ascolto. Il giro si ricorda quando è passato: se il buco è più grande del silenzio che cerca, quel giro non dice niente e riparte dal prossimo |
@@ -223,7 +223,7 @@ Aprendo una casa:
 | **I dispositivi spariti** | le impronte, non i nomi (sotto c'è perché) |
 | **Gli aggiornamenti** | cosa c'è da installare, da quale versione a quale, e **il tasto per farlo** dove quella casa ha aperto la manutenzione |
 | **Le versioni** | gdahome, la plancia, Home Assistant Core, Supervisor, il sistema — con «c'è la nuova» dove c'è |
-| **La cartolina** | il testo grezzo, come è arrivato |
+| **Il rapporto** | il testo grezzo, come è arrivato |
 
 ### Le tre domande che la macchina risponde da sola
 
@@ -258,7 +258,7 @@ chi li distingue tutti — sotto la soglia in tutti e due i casi. Su una pagina
 che serve a separare a colpo d'occhio le case ambra dalle rosse, il pallino da
 solo non porta il significato. Le forme e le parole sì.
 
-## La cartolina
+## Il rapporto
 
 Quello che una casa manda, ogni quindici minuti. Ci sono **numeri e versioni**,
 e nient'altro.
@@ -335,13 +335,13 @@ suonare la spia.
 
 ### Nel ponte
 
-Quasi tutto il contenuto della cartolina il ponte ce l'ha già in mano. Le due
+Quasi tutto il contenuto del rapporto il ponte ce l'ha già in mano. Le due
 cose che oggi non si chiede sono i dispositivi spariti e le batterie, e si
 prendono dallo stesso `get_states` che `aggiornamenti.js` fa già ogni dieci
 secondi sulla rete di casa — oggi ne tiene solo le entità `update.` e butta il
 resto.
 
-**`ponte/src/cartolina.js`** — nuovo
+**`ponte/src/rapporto.js`** — nuovo
 
 ```js
 /* Il foglio, da quello che il ponte sa già. Nessuna rete qui dentro e nessun
@@ -352,9 +352,9 @@ export function compila({ casa, ogni, versioni, macchina, rete, apparati,
                           entita, batterie, backup, adesso }) → object
 
 /* Da dove viene ogni numero: l'unico posto che lo sa. Torna una funzione, non
- * un foglio, così ogni cartolina è di adesso invece che di quando il ponte si
+ * un foglio, così ogni rapporto è di adesso invece che di quando il ponte si
  * è acceso. */
-export function fabbricaLaCartolina({ identita, casa, ferro, aggiornamenti,
+export function fabbricaLaRapporto({ identita, casa, ferro, aggiornamenti,
                                       plance, configurazione, dispositivi,
                                       chiamata, versioni, ogni }) → () => object
 
@@ -367,9 +367,9 @@ export class Postino {
   constructor({ dove, chiave, casa, ogni, fabbrica, fetch, registro, adesso })
   parti()            // accende l'orologio
   ferma()
-  async manda()      // una cartolina, adesso
+  async manda()      // un rapporto, adesso
   get acceso()       // se questa casa manda qualcosa a qualcuno
-  get ultima()       // l'ultima cartolina spedita, per la console
+  get ultima()       // l'ultima rapporto spedita, per la console
   get ultimoEsito()  // andata, o perché no
 }
 ```
@@ -450,7 +450,7 @@ permetta a un ponte vecchio di dire «questo codice viene da un quadro più nuov
 di me» invece di leggerne metà.
 
 **`ponte/console/`** — la scheda **«Il quadro»**, dietro l'ingress: a chi va,
-ogni quanto, **l'ultima cartolina spedita in chiaro**, quando è andata l'ultima
+ogni quanto, **l'ultima rapporto spedita in chiaro**, quando è andata l'ultima
 e il tasto **«Smetti di mandarla»**. Più una riga nel registro la prima volta
 che parte.
 
@@ -464,8 +464,8 @@ quadro/
   src/index.js       lo accende: il server, i due archivi, la potatura
   src/server.js      le vie, e due chiavi che non si toccano
   src/case.js        le case seguite: matricola, nome dell'installatore,
-                     collaudataIl, e quante cartoline per giorno
-  src/collaudo.js    da una cartolina alle spunte, e dalle spunte allo stato
+                     collaudataIl, e quante rapporti per giorno
+  src/collaudo.js    da un rapporto alle spunte, e dalle spunte allo stato
   src/chiavi.js      gli inviti, e le chiavi che ne restano
   src/installatori.js  gli installatori, le chiavi, i limiti
   src/avvisi.js      quando una casa tace, e quando vale la pena dirlo
@@ -474,8 +474,8 @@ quadro/
   console/index.html la pagina
 ```
 
-`src/cartoline.js` non c'è, e non è una dimenticanza: si tiene **l'ultima**
-cartolina e un numero per giorno, non tutte. Novantasei righe al giorno per
+`src/rapporti.js` non c'è, e non è una dimenticanza: si tiene **l'ultima**
+rapporto e un numero per giorno, non tutte. Novantasei righe al giorno per
 casa, su quaranta case, sono quattromila righe al giorno per disegnare quattordici
 caselle.
 
@@ -485,7 +485,7 @@ Le vie, davanti:
 |---|---|
 | `GET /` | la soglia: cos'è questo indirizzo, in italiano. Chi lo tiene fra i segnalibri prima o poi lo apre nudo |
 | `GET /salute` | se è vivo, quante case segue, e se la console è aperta |
-| `POST /cartolina` | la casa deposita. `x-casa` + la sua chiave; una matricola mai vista nasce qui, senza nome e in fila «collaudo aperto» |
+| `POST /rapporto` | la casa deposita. `x-casa` + la sua chiave; una matricola mai vista nasce qui, senza nome e in fila «collaudo aperto» |
 
 E dietro, tutte dentro `/console/` e tutte con la chiave della console:
 
@@ -496,7 +496,7 @@ E dietro, tutte dentro `/console/` e tutte con la chiave della console:
 | `GET` `POST /console/inviti` | i codici in attesa, e uno nuovo |
 | `DELETE /console/inviti/<codice>` | annullalo |
 | `PUT /console/casa/<matricola>` | il nome che le dà l'installatore |
-| `DELETE /console/casa/<matricola>` | non seguirla più: si butta quello che se ne sa **e** la sua chiave, se no la prima cartolina la fa rinascere tre secondi dopo |
+| `DELETE /console/casa/<matricola>` | non seguirla più: si butta quello che se ne sa **e** la sua chiave, se no la prima rapporto la fa rinascere tre secondi dopo |
 
 Le due chiavi sono due apposta. Dal davanti entrano le case, ognuna con la sua:
 apre una porta sola — depositare per la propria matricola — e non fa vedere
@@ -505,13 +505,13 @@ depositare niente. Con una chiave sola, una casa qualunque potrebbe leggersi
 l'elenco degli impianti di chi l'ha installata, cioè i clienti di qualcun altro.
 
 **Una cosa è andata diversamente da come sta scritta qui sopra.** Il documento
-diceva che alla prima cartolina il quadro restituisce alla casa una chiave nuova
+diceva che alla prima rapporto il quadro restituisce alla casa una chiave nuova
 e l'invito muore. Sarebbe un po' più stretto, e si è scelto di no: quella chiave
 nuova la casa dovrebbe tenersela in `/data`, e da quel momento la riga scritta
 nella scheda dell'add-on non sarebbe più quella che la casa usa davvero — si
 perderebbe **quello che c'è scritto nella casella è quello che parte**, per
 guadagnare poco. Il codice resta quello, e a bruciarsi è il suo essere libero:
-alla prima cartolina si lega a quella matricola e nessun'altra casa lo può più
+alla prima rapporto si lega a quella matricola e nessun'altra casa lo può più
 usare.
 
 ### Nell'app: niente
@@ -540,14 +540,14 @@ di aggiungerne una dall'esterno.
 
 **Il quadro non bussa mai.** Non potrebbe: una casa di gdahome un indirizzo
 pubblico non ce l'ha, ed è tutto il punto del ponte. L'ordine viaggia **nella
-risposta alla cartolina**: la casa deposita i suoi numeri, e nella risposta si
+risposta al rapporto**: la casa deposita i suoi numeri, e nella risposta si
 trova, se c'è, una cosa da fare. Nessuna porta da aprire, nessun servizio in
 ascolto — la stessa forma che ha già il filo verso il centralino.
 
 **La manutenzione è un secondo interruttore**, e spento di serie:
 
 ```yaml
-quadro: "…"            # manda la cartolina
+quadro: "…"            # manda il rapporto
 quadro_manutenzione: false   # e lasciati anche aggiornare — no, finché non lo dici
 ```
 
@@ -571,7 +571,7 @@ Tre regole che il ponte applica e il quadro non può scavalcare:
    cacciavite mostrato con un tasto è una promessa che non si mantiene.
 
 E una conseguenza che va guardata in faccia: **una casa che sta installando
-qualcosa che stacca il filo smette di mandare cartoline.** Senza saperlo, il
+qualcosa che stacca il filo smette di mandare rapporti.** Senza saperlo, il
 quadro la darebbe per muta ogni volta che si aggiorna qualcosa. Perciò sa cosa
 ha chiesto, e lo dice: entro tre quarti d'ora è «sta aggiornando»; oltre, non è
 più un'attesa ma **«non è tornata»** — che è la cosa peggiore che possa fare un
@@ -635,22 +635,22 @@ guardi.
 
 ## Le tappe
 
-1. **La cartolina nel ponte**, spenta di serie, con la scheda nella console che
+1. **Il rapporto nel ponte**, spenta di serie, con la scheda nella console che
    la fa leggere. Si prova con `curl` e un file, senza nessun quadro acceso — ed
    è già utile da sola: chi ha una casa sola può guardarsi la sua.
 
    **Fatta**, in `1.4.32.15`. Il ponte: `ponte/src/salute.js`,
-   `ponte/src/ferro.js` e `ponte/src/cartolina.js`, le due opzioni nel
+   `ponte/src/ferro.js` e `ponte/src/rapporto.js`, le due opzioni nel
    manifesto tradotte in italiano e in inglese, il postino acceso in
    `index.js`. E la console: la scheda **«Il quadro di chi ti ha fatto
    l'impianto»**, che compare solo dove quella casella è piena — cioè quasi mai
-   — e fa la cosa per cui esiste: mostra **il testo dell'ultima cartolina
+   — e fa la cosa per cui esiste: mostra **il testo dell'ultima rapporto
    spedita, intero e senza riassunti**. Un riassunto di quello che esce è
    esattamente la cosa di cui ci si dovrebbe fidare.
 
    Il tasto **«Smetti di mandarla»** ferma il postino *e* svuota la casella
    nelle opzioni dell'add-on, passando dal Supervisor
-   (`Ferro.spegniLaCartolina`): fermarlo solo in memoria vorrebbe dire che al
+   (`Ferro.spegniLaRapporto`): fermarlo solo in memoria vorrebbe dire che al
    primo riavvio la casa ricomincia a parlare da sola, cioè un tasto che smette
    finché non si riavvia — una bugia con un bottone sopra. Dove il Supervisor
    non lascia scrivere si dice **cosa fare a mano**, invece di dire che è
@@ -663,7 +663,7 @@ guardi.
 2. **Il quadro in Node**, la pagina che c'è già attaccata a dati veri.
 
    **Fatta.** Seicento righe e nessuna dipendenza: `src/server.js` con le vie
-   qui sopra, `src/case.js` che tiene l'ultima cartolina e la storia dei giorni,
+   qui sopra, `src/case.js` che tiene l'ultima rapporto e la storia dei giorni,
    `src/collaudo.js` con le regole, `src/chiavi.js` con gli inviti. La pagina è
    la stessa di prima, meno le novecento righe di dati finti e **meno le regole
    che si era portata dietro**: stato, spunte e pastiglie arrivano decisi da
@@ -672,8 +672,8 @@ guardi.
 
    Ventisei prove, nove delle quali col quadro intero acceso: che una casa non
    possa leggere la console, che un codice usato non serva a nessun'altra casa,
-   che la matricola in testa vinca su quella nel corpo, e che quello che una
-   cartolina non dice resti **«non si sa»** invece di diventare una spunta
+   che la matricola in testa vinca su quella nel corpo, e che quello che un
+   rapporto non dice resti **«non si sa»** invece di diventare una spunta
    rossa — è la differenza fra un impianto che ha un guaio e un impianto che non
    l'ha raccontato.
 3. **L'avviso quando una casa tace.** Il pezzo che trasforma il quadro da
@@ -722,7 +722,7 @@ superficie che il server chiama. E `server.js` e' `node:http`, che diventa un
 handler `fetch` con la pagina incollata dentro.
 
 Nemmeno la scelta dell'archivio sarebbe ovvia: il quadro riscrive tutto a ogni
-cartolina, e quaranta case ogni quindici minuti fanno quasi quattromila
+rapporto, e quaranta case ogni quindici minuti fanno quasi quattromila
 scritture al giorno **sulla stessa chiave** — che su KV e' il caso da non fare.
 Resterebbe D1, e allora `case.js` smette di essere un oggetto JSON che si muta e
 diventa SQL.
@@ -743,13 +743,13 @@ metterlo ce l'ha gia': nessuno.
 
 ## Quello che resta da decidere
 
-- **Ogni quanto.** Quindici minuti fanno 96 cartoline al giorno per casa: su
+- **Ogni quanto.** Quindici minuti fanno 96 rapporti al giorno per casa: su
   quaranta case sono quattromila richieste, che è niente. Ma una casa muta si
   scopre in tre quarti d'ora, e forse per un impianto va bene anche un'ora.
 - **Quanto tiene il quadro.** Qui si propone la striscia a quattordici giorni,
   come la finestra del traffico di GitHub in `strumenti/conta-le-case.mjs`.
 - **Le soglie.** Batteria al 20%, backup fermo dopo 14 giorni, muta dopo tre
-  cartoline saltate, 75 °C, disco al 85%: sono scelte a occhio, non misurate.
+  rapporti saltati, 75 °C, disco al 85%: sono scelte a occhio, non misurate.
   Stanno tutte in cima a `src/collaudo.js` con un nome, che è il minimo perché
   un giorno si possano cambiare sapendo quante sono.
 - **Se un aggiornamento in attesa fa suonare la spia.** Per ora no, a meno

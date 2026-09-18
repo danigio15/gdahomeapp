@@ -50,7 +50,7 @@ SEGNO="${SEGNO_DEL_QUADRO:-tramite}"
 
 # **Questo nome deve stare anche dentro l'add-on.** Il ponte non ha nessuna
 # casella per l'indirizzo del quadro: ce l'ha scritto dentro
-# (`ponte/src/cartolina.js`, `QUADRO_DI_DIFETTO`), come per il centralino e per
+# (`ponte/src/rapporto.js`, `QUADRO_DI_DIFETTO`), come per il centralino e per
 # lo stesso motivo — una casella che non va toccata e' una casella che prima o
 # poi qualcuno tocca. Cambiare qui e non li' vuol dire un quadro che nessuna
 # casa trova.
@@ -354,7 +354,7 @@ passo "Metto Caddy davanti, e prendo il certificato"
 install -d -m 755 /etc/caddy/conf.d
 
 cat >/etc/caddy/conf.d/quadro.caddy <<FINE
-# Il quadro. Le case depositano su /cartolina, gli installatori guardano su
+# Il quadro. Le case depositano su /rapporto, gli installatori guardano su
 # /console/, e chi tiene il quadro apre i conti su /gestore/.
 $NOME_DEL_QUADRO {
 	encode zstd gzip
@@ -479,4 +479,4 @@ else
 fi
 
 printf '  Perche una casa arrivi qui, «%s» deve stare anche\n' "$NOME_DEL_QUADRO"
-printf '  dentro l add-on: ponte/src/cartolina.js, QUADRO_DI_DIFETTO.\n\n'
+printf '  dentro l add-on: ponte/src/rapporto.js, QUADRO_DI_DIFETTO.\n\n'

@@ -3,9 +3,9 @@
  * Quello che si prova davvero: che i tre numeri che il Supervisor **non ha** —
  * CPU, memoria, temperatura — restano `null` invece di diventare zero, perche'
  * scrivere «CPU al 3%» su una scheda in ginocchio e' peggio che non scrivere
- * niente; che **l'SSID non esce**, che e' la sola cosa di questa cartolina che
+ * niente; che **l'SSID non esce**, che e' la sola cosa di questo rapporto che
  * parlerebbe di una persona; che un add-on fermo si conta solo se parte
- * all'avvio; e che un Supervisor mezzo muto da' mezza cartolina invece di
+ * all'avvio; e che un Supervisor mezzo muto da' mezza rapporto invece di
  * nessuna.
  */
 
@@ -103,7 +103,7 @@ test("l'SSID non esce dalla casa", () => {
     },
     filoSu: true,
   });
-  /* Una rete che si chiama «Casa Rossi» e' una persona, e questa cartolina va
+  /* Una rete che si chiama «Casa Rossi» e' una persona, e questo rapporto va
    * a chi ha fatto l'impianto. Il segnale invece e' un numero, e spiega meta'
    * dei guai. */
   assert.ok(!JSON.stringify(rete).includes("Casa Rossi"));
@@ -182,7 +182,7 @@ test("fermo vuol dire fermo **e** con l'avvio automatico", () => {
   assert.equal(conto.quanti, 3);
   assert.equal(conto.accesi, 1);
   assert.equal(conto.spentiCheDovrebbero, 1);
-  /* In ordine alfabetico, cosi' due cartoline di fila non sembrano diverse.
+  /* In ordine alfabetico, cosi' due rapporti di fila non sembrano diverse.
    * Non e' l'ordine di `aggiornamentiDaFare`, che mette le cose nostre in
    * cima: li' serve a far trovare subito gdahome in un elenco di sei righe
    * uguali, qui l'elenco e' di pastiglie e si legge tutto insieme. */
@@ -192,7 +192,7 @@ test("fermo vuol dire fermo **e** con l'avvio automatico", () => {
   );
 });
 
-test("un Supervisor mezzo muto da' mezza cartolina, non nessuna", async () => {
+test("un Supervisor mezzo muto da' mezza rapporto, non nessuna", async () => {
   const ferro = new Ferro({
     segno: "segno-finto",
     registro: ZITTO,
@@ -223,7 +223,7 @@ test("senza il segno del Supervisor non si bussa nemmeno", async () => {
   assert.equal(bussato, 0);
 });
 
-test("una risposta vale un minuto: quaranta cartoline non fanno quaranta giri di domande", async () => {
+test("una risposta vale un minuto: quaranta rapporti non fanno quaranta giri di domande", async () => {
   let quante = 0;
   let ora = 0;
   const ferro = new Ferro({

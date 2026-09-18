@@ -17,7 +17,7 @@
  *
  * ─── 1. Due ore, non quarantacinque minuti ───────────────────────────────
  *
- * La pagina chiama «muta» una casa che ha saltato tre cartoline
+ * La pagina chiama «muta» una casa che ha saltato tre rapporti
  * (`collaudo.js`, `MUTA_DOPO`): tre quarti d'ora. Va benissimo per un colore su
  * uno schermo che si sta gia' guardando, ed e' troppo poco per interrompere
  * qualcuno — un riavvio di Home Assistant, un aggiornamento, un router che si
@@ -64,7 +64,7 @@ export const INSIEME_BASTA = 3;
 /** E devono essere almeno questa frazione di quelle che uno segue. */
 export const INSIEME_FRAZIONE = 0.25;
 
-/* Le date qui arrivano in due forme e tutte e due sono legittime: la cartolina
+/* Le date qui arrivano in due forme e tutte e due sono legittime: il rapporto
  * porta un `quando` scritto in ISO dalla casa, mentre `vistaIl` e `avvisataIl`
  * li scrive questo server come numeri. `Date.parse` di un numero non e' una
  * data, ed e' il genere di sbaglio che passa le prove col dato di una forma
@@ -164,7 +164,7 @@ export function cosaDire({ mute = [], tornate = [], quante = 0 }) {
           case: [uno.casa.casa],
           testo:
             `${ilNome(uno.casa)} non parla più ${quantoTace(uno.minuti)}.\n` +
-            `L'ultima cartolina è arrivata ${quandoEra(uno.casa)}.`,
+            `L'ultima rapporto è arrivata ${quandoEra(uno.casa)}.`,
         });
       }
     }

@@ -182,7 +182,7 @@ options:
   # non rispondono. Cosi' si accorge che qualcosa non va prima che tocchi a te
   # telefonargli.
   #
-  # Nella cartolina non c'e' niente di tuo: nessun nome di entita', nessuna
+  # Nel rapporto non c'e' niente di tuo: nessun nome di entita', nessuna
   # stanza, nessuna persona, nessuno stato di nessun sensore, il nome del tuo
   # Wi-Fi no e il tuo indirizzo pubblico nemmeno. **Quello che parte lo puoi
   # leggere**, parola per parola, nella scheda «Il quadro» di gdahome, dove
@@ -190,7 +190,7 @@ options:
   #
   # Vuota vuol dire che non parte niente e non si apre nessuna connessione.
   quadro: ""
-  # Ogni quanti minuti parte una cartolina. Da 5 a 1440.
+  # Ogni quanti minuti parte un rapporto. Da 5 a 1440.
   quadro_ogni: 15
   # Questo Home Assistant e' di chi installa.
   #

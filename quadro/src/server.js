@@ -7,7 +7,7 @@
  *   GET    /                            la soglia: cos'e' questo indirizzo
  *   GET    /salute                      dice solo che e' vivo
  *
- *   POST   /cartolina                   una casa deposita i suoi numeri
+ *   POST   /rapporto                   una casa deposita i suoi numeri
  *
  *   GET    /console/                    la pagina dell'installatore
  *   GET    /console/io                  chi sono, quante ne ho, qual e' il tetto
@@ -27,7 +27,7 @@
  * ─── Tre chiavi, e ognuna apre una porta sola ────────────────────────────
  *
  * Dal **davanti** entrano le case, ognuna con la chiave che le e' stata data:
- * quella apre una porta sola — depositare una cartolina per la propria
+ * quella apre una porta sola — depositare un rapporto per la propria
  * matricola — e non fa vedere niente.
  *
  * Dal **retro** entrano gli installatori, ognuno con la sua: quella fa vedere
@@ -54,8 +54,8 @@ import { Fattorino, indirizzoBuono } from "./fattorino.js";
 import { CHI_VALIDO } from "./installatori.js";
 import { stessoSegreto } from "./segreti.js";
 
-/** Quanto puo' essere grossa una cartolina. Le vere stanno sotto i quattro. */
-const CARTOLINA_MASSIMA = 64 * 1024;
+/** Quanto puo' essere grossa un rapporto. Le vere stanno sotto i quattro. */
+const RAPPORTO_MASSIMA = 64 * 1024;
 
 const PAGINA = new URL("../console/index.html", import.meta.url);
 const PAGINA_DEL_GESTORE = new URL("../gestore/index.html", import.meta.url);
@@ -82,7 +82,7 @@ async function ilCorpo(richiesta, massimo) {
   const pezzi = [];
   for await (const pezzo of richiesta) {
     quanto += pezzo.length;
-    if (quanto > massimo) throw new TroppoGrosso("questa cartolina e' troppo grossa");
+    if (quanto > massimo) throw new TroppoGrosso("questo rapporto e' troppo grosso");
     pezzi.push(pezzo);
   }
   try {
@@ -103,7 +103,7 @@ export function costruisciIlServer({
   registro = { debug() {}, info() {}, attenzione() {}, errore() {} },
 }) {
   /* La gestione si apre solo dove c'e' una chiave vera. Senza, questo quadro
-   * riceve cartoline e non ha modo di aggiungere nessun installatore: e' una meta'
+   * riceve rapporti e non ha modo di aggiungere nessun installatore: e' una meta'
    * inutile, e va detto all'accensione invece di farlo scoprire dalla pagina. */
   const gestoreAperto = String(chiaveDelGestore).length >= 16;
 
@@ -147,7 +147,7 @@ export function costruisciIlServer({
 
     /* ─── Il davanti: le case ──────────────────────────────────────────── */
 
-    if (via === "/cartolina" && metodo === "POST") {
+    if (via === "/rapporto" && metodo === "POST") {
       const casa = String(richiesta.headers["x-casa"] || "");
       if (!CASA_VALIDA.test(casa)) {
         male(risposta, 400, "questa non e' una matricola");
@@ -162,13 +162,13 @@ export function costruisciIlServer({
       }
       let carta;
       try {
-        carta = await ilCorpo(richiesta, CARTOLINA_MASSIMA);
+        carta = await ilCorpo(richiesta, RAPPORTO_MASSIMA);
       } catch (errore) {
         male(risposta, 413, String(errore?.message || errore));
         return;
       }
       if (!carta || typeof carta !== "object" || Array.isArray(carta)) {
-        male(risposta, 400, "una cartolina e' un oggetto");
+        male(risposta, 400, "un rapporto e' un oggetto");
         return;
       }
       /* La matricola che conta e' quella in testa, non quella nel corpo: la
@@ -370,7 +370,7 @@ export function costruisciIlServer({
 
     if (casa && metodo === "DELETE") {
       /* Non seguirla piu' vuol dire due cose insieme: si butta quello che se
-       * ne sa, e si butta la sua chiave — se no la prima cartolina la farebbe
+       * ne sa, e si butta la sua chiave — se no la prima rapporto la farebbe
        * rinascere tre secondi dopo. */
       const mia = chiavi.diChiE(casa[1]) === chi;
       const cEra = case_.togli(casa[1], chi);
@@ -429,7 +429,7 @@ export function costruisciIlServer({
 
     if (uno && metodo === "DELETE") {
       /* Togliere un installatore non butta le sue case: restano nel quadro, senza piu'
-       * nessuno che le guardi, e le loro cartoline continuano ad arrivare. E'
+       * nessuno che le guardi, e le loro rapporti continuano ad arrivare. E'
        * voluto — sono impianti che funzionano in casa di qualcuno — e chi
        * gestisce se le ritrova da assegnare se lo si riaggiunge. */
       json(risposta, { chiuso: installatori.togli(uno[1]), ...ilQuadro() });

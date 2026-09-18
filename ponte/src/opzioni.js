@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { CENTRALINO_DELLA_CHAT } from "./chat.js";
-import { CodiceIllegibile, leggiIlCodice, OGNI_DI_SERIE, ogniQuanto } from "./cartolina.js";
+import { CodiceIllegibile, leggiIlCodice, OGNI_DI_SERIE, ogniQuanto } from "./rapporto.js";
 
 /* Il centralino dell'app, quello che accende chi la distribuisce.
  *
@@ -75,8 +75,8 @@ export function leggiIlQuadro(scritto, dillo = () => {}) {
   } catch (errore) {
     dillo(
       errore instanceof CodiceIllegibile
-        ? `il codice del quadro non si legge (${errore.message}): questa casa non manda nessuna cartolina`
-        : `${errore.message}: questa casa non manda nessuna cartolina finche' non si aggiorna gdahome`,
+        ? `il codice del quadro non si legge (${errore.message}): questa casa non manda nessun rapporto`
+        : `${errore.message}: questa casa non manda nessun rapporto finche' non si aggiorna gdahome`,
     );
     return null;
   }
@@ -180,7 +180,7 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
     installatore:
       String(process.env.PONTE_INSTALLATORE ?? scritte.installatore ?? "") === "true" ||
       scritte.installatore === true,
-    /* Il quadro di chi ha installato l'impianto: dove mandare la cartolina, e
+    /* Il quadro di chi ha installato l'impianto: dove mandare il rapporto, e
      * con che presentarsi.
      *
      * Vuoto e' la cosa normale, ed e' il caso di chiunque la casa se la sia

@@ -1,7 +1,7 @@
-/* Le prove delle regole: da una cartolina alle spunte, e a una parola.
+/* Le prove delle regole: da un rapporto alle spunte, e a una parola.
  *
  * Quello che si prova davvero: che **«non lo so» non sia «va male»** — e' la
- * differenza fra un cruscotto utile e uno che mente, e una cartolina a pezzi
+ * differenza fra un cruscotto utile e uno che mente, e un rapporto a pezzi
  * e' la cosa normale, non l'eccezione; che muta batta tutto, perche' di una
  * casa che non parla non si sa niente nemmeno di buono; e che un
  * aggiornamento solo non faccia suonare una spia, se no si smette di
@@ -37,7 +37,7 @@ const BUONA = {
   batterie: { scariche: 0, piuBassa: 47 },
 };
 
-test("una cartolina a pezzi non e' una casa che va male", () => {
+test("un rapporto a pezzi non e' una casa che va male", () => {
   /* Un Supervisor muto e Home Assistant giu': arriva quasi niente. E' il
    * giorno in cui l'installatore ha piu' bisogno di ricevere qualcosa. */
   const collaudo = ilCollaudo({ quando: appena(), ogni: 15, ponte: "1.4.32.15" });
