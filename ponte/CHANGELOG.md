@@ -5,6 +5,35 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.13
+
+**Gli interruttori Zigbee prendono il segno di Zigbee2MQTT, non quello di
+MQTT.**
+
+Nella 1.4.32.12 la seconda strada era il marchio dell'integrazione, e per
+i firmware Zigbee l'integrazione è `mqtt`: nei riquadri è uscito il logo
+di MQTT. Che è vero e non serve a niente — MQTT è la **strada** che quel
+firmware ha fatto per arrivare, non chi comanda l'interruttore. Tre
+interruttori col logo di MQTT dicono quanto tre «S».
+
+Chi li comanda sta in casa, ed è l'add-on di Zigbee2MQTT. Il suo segno si
+prende da lì, dalla macchina di casa, senza chiedere niente fuori — e si
+trova senza una domanda in più: Home Assistant fa un'entità `update.` per
+**ogni** add-on installato, anche per quelli a posto, e ognuna si porta
+dietro l'indirizzo della sua icona. Il ponte quegli stati li ha già in
+mano.
+
+Se Zigbee2MQTT gira da un'altra parte e in casa quell'add-on non c'è, non
+si mette niente e resta l'iniziale: meno di un logo, ma non il nome di
+un'altra cosa.
+
+**E un marchio che non esiste adesso è un no.** I marchi di Home Assistant
+servono lo stesso indirizzo in due modi, e in quello che il ponte usava
+un'integrazione senza marchio non risponde «non c'è»: risponde con un
+disegno che dice «logo mancante». Il telefono lo prendeva per un logo e lo
+disegnava, al posto dell'iniziale. Ora quella strada chiede l'indirizzo
+che risponde `404`, e l'iniziale torna al suo posto.
+
 ## 1.4.32.12
 
 **Il logo di chi non ne dichiara uno: lo si chiede al registro.**

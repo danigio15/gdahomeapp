@@ -17,6 +17,7 @@ import {
   aggiornamentiDaFare,
   ilLogoDi,
   ilMarchioDi,
+  ilSegnoDiZigbee2mqtt,
   QuestoNoNo,
 } from "../src/aggiornamenti.js";
 import { aggiornamentiDaFare as quelliDellaPlancia } from "../plancia/src/core/aggiornamenti-da-fare.js";
@@ -382,10 +383,9 @@ test("l'indirizzo del logo non viaggia: sul filo passa un si'", () => {
 });
 
 test("chi non dichiara un logo lo prende dall'integrazione da cui viene", async () => {
-  /* Gli aggiornamenti dei firmware Zigbee non hanno `entity_picture` affatto,
-   * e restavano con la loro iniziale — tre «S» identiche per tre interruttori.
-   * Quello che si sa di loro e' da dove vengono, e le integrazioni hanno tutte
-   * il loro marchio. */
+  /* Certi aggiornamenti non hanno `entity_picture` affatto, e restavano con
+   * la loro iniziale. Quello che si sa di loro e' da dove vengono, e le
+   * integrazioni hanno il loro marchio. */
   const chieste = [];
   const casa = {
     async chiedi(comando) {
@@ -394,7 +394,7 @@ test("chi non dichiara un logo lo prende dall'integrazione da cui viene", async 
         return [unAggiornamento("update.switch_casa", { friendly_name: "Switch casa" })];
       }
       if (comando.type === "config/entity_registry/get") {
-        return { entity_id: comando.entity_id, platform: "mqtt" };
+        return { entity_id: comando.entity_id, platform: "zha" };
       }
       return null;
     },
@@ -402,13 +402,112 @@ test("chi non dichiara un logo lo prende dall'integrazione da cui viene", async 
   const quali = new Aggiornamenti({ casa, registro: ZITTO });
   assert.equal(
     await quali.doveIlLogo("update.switch_casa"),
-    "https://brands.home-assistant.io/_/mqtt/icon.png",
+    "https://brands.home-assistant.io/zha/icon.png",
   );
 
   /* E si chiede **una volta**: la seconda risponde la memoria. */
   const quante = chieste.filter((una) => una.type === "config/entity_registry/get").length;
   await quali.doveIlLogo("update.switch_casa");
   assert.equal(chieste.filter((una) => una.type === "config/entity_registry/get").length, quante);
+});
+
+test("un firmware che arriva per MQTT prende il segno di Zigbee2MQTT", async () => {
+  /* La prima casa vera l'ha detto subito: con il marchio dell'integrazione
+   * tre interruttori Zigbee prendevano il logo di **MQTT**, che e' la strada
+   * che hanno fatto e non chi li comanda. Chi li comanda ce l'ha in casa, ed
+   * e' l'add-on di Zigbee2MQTT: il segno si prende da li'.
+   *
+   * E si prende **senza chiedere niente**: Home Assistant fa un'entita'
+   * `update.` per ogni add-on installato, anche per quelli a posto — questa
+   * sta a `off` — e ognuna si porta dietro l'indirizzo della sua icona. */
+  const casa = casaFinta({
+    stati: [
+      unAggiornamento("update.switch_casa", {
+        friendly_name: "Switch casa",
+        device_class: "firmware",
+      }),
+      unAggiornamento(
+        "update.zigbee2mqtt_update",
+        {
+          title: "Zigbee2MQTT",
+          entity_picture: "/api/hassio/addons/45df7312_zigbee2mqtt/icon",
+        },
+        "off",
+      ),
+    ],
+    quandoComanda: (comando) =>
+      comando.type === "config/entity_registry/get"
+        ? { entity_id: comando.entity_id, platform: "mqtt" }
+        : null,
+  });
+  const quali = new Aggiornamenti({ casa, registro: ZITTO });
+  assert.equal(
+    await quali.doveIlLogo("update.switch_casa"),
+    "/api/hassio/addons/45df7312_zigbee2mqtt/icon",
+  );
+});
+
+test("e se Zigbee2MQTT in casa non c'e', resta l'iniziale invece di MQTT", async () => {
+  /* Zigbee2MQTT puo' girare da un'altra parte, e allora un segno non ce l'ha.
+   * Fra l'iniziale e il logo di MQTT si sceglie l'iniziale: dice la prima
+   * lettera di quello che stai aggiornando, che e' meno di niente ma non e'
+   * il nome di un'altra cosa. */
+  const casa = casaFinta({
+    stati: [
+      unAggiornamento("update.switch_casa", {
+        friendly_name: "Switch casa",
+        device_class: "firmware",
+      }),
+    ],
+    quandoComanda: (comando) =>
+      comando.type === "config/entity_registry/get"
+        ? { entity_id: comando.entity_id, platform: "mqtt" }
+        : null,
+  });
+  const quali = new Aggiornamenti({ casa, registro: ZITTO });
+  assert.equal(await quali.doveIlLogo("update.switch_casa"), "");
+});
+
+test("e quello che arriva per MQTT e non e' un firmware il suo marchio ce l'ha", async () => {
+  /* La regola tocca i **firmware**: quelli sono apparecchi, e per MQTT ci
+   * arrivano da Zigbee2MQTT. Tutto il resto che passa da MQTT e' roba di
+   * MQTT, e il suo marchio e' quello giusto. */
+  const casa = casaFinta({
+    stati: [unAggiornamento("update.qualcosa", { title: "Qualcosa" })],
+    quandoComanda: (comando) =>
+      comando.type === "config/entity_registry/get"
+        ? { entity_id: comando.entity_id, platform: "mqtt" }
+        : null,
+  });
+  const quali = new Aggiornamenti({ casa, registro: ZITTO });
+  assert.equal(
+    await quali.doveIlLogo("update.qualcosa"),
+    "https://brands.home-assistant.io/mqtt/icon.png",
+  );
+});
+
+test("l'add-on di Zigbee2MQTT si riconosce, e un altro add-on non si scambia", () => {
+  const conQuesto = (dove) => [
+    unAggiornamento("update.uno_update", { entity_picture: dove }, "off"),
+  ];
+  for (const dove of [
+    "/api/hassio/addons/45df7312_zigbee2mqtt/icon",
+    "/api/hassio/addons/45df7312_zigbee2mqtt_edge/icon",
+    "/api/hassio/addons/zigbee2mqtt/icon",
+  ]) {
+    assert.equal(ilSegnoDiZigbee2mqtt(conQuesto(dove)), dove, dove);
+  }
+  /* E nessun altro: ne' un add-on che gli somiglia, ne' un indirizzo che
+   * quella forma non ce l'ha. */
+  for (const dove of [
+    "/api/hassio/addons/a0d7b954_vscode/icon",
+    "/api/hassio/addons/45df7312_zigbee2mqttproxy/icon",
+    "https://brands.home-assistant.io/zigbee2mqtt/icon.png",
+    "/api/hassio/addons/45df7312_zigbee2mqtt/../../altro/icon",
+  ]) {
+    assert.equal(ilSegnoDiZigbee2mqtt(conQuesto(dove)), "", dove);
+  }
+  assert.equal(ilSegnoDiZigbee2mqtt(null), "");
 });
 
 test("l'indirizzo vero dei marchi passa comunque", () => {
@@ -424,11 +523,19 @@ test("l'indirizzo vero dei marchi passa comunque", () => {
 });
 
 test("il nome di un'integrazione non porta da un'altra parte", () => {
-  assert.equal(ilMarchioDi("mqtt"), "https://brands.home-assistant.io/_/mqtt/icon.png");
-  assert.equal(ilMarchioDi("zha"), "https://brands.home-assistant.io/_/zha/icon.png");
+  assert.equal(ilMarchioDi("mqtt"), "https://brands.home-assistant.io/mqtt/icon.png");
+  assert.equal(ilMarchioDi("zha"), "https://brands.home-assistant.io/zha/icon.png");
   for (const brutto of ["../altro", "uno/due", "uno.due", "http://x", "", "  ", null]) {
     assert.equal(ilMarchioDi(brutto), "", String(brutto));
   }
+});
+
+test("il marchio che si costruisce non ha il `_/`, che servirebbe un segnaposto", () => {
+  /* I marchi di Home Assistant servono lo stesso indirizzo in due modi: con
+   * il `_/` davanti, un'integrazione che un marchio non ce l'ha risponde
+   * `200` con dentro il disegno «logo mancante» invece di `404`. Il telefono
+   * lo prenderebbe per un logo e lo disegnerebbe al posto dell'iniziale. */
+  assert.equal(ilMarchioDi("mai_sentita").includes("/_/"), false);
 });
 
 test("di un'entita' che l'elenco non ha non si chiede nemmeno di chi e'", async () => {

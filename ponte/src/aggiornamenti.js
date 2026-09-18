@@ -215,17 +215,13 @@ export function ilLogoDi(stato) {
 /**
  * Il marchio di un'integrazione, dai marchi di Home Assistant.
  *
- * E' la seconda strada, e serve a chi non dichiara **niente**: gli
- * aggiornamenti dei firmware Zigbee non hanno `entity_picture` affatto, e nel
- * riquadro restava l'iniziale — tre «S» identiche per «Switch casa», «Switch
- * cortile» e «Switch tavernetta», che e' un'iniziale che non dice niente.
- *
- * Quello che si sa di loro e' **da dove vengono**: il registro delle entita'
- * dice l'integrazione — `mqtt` per chi passa da Zigbee2MQTT, `zha` per chi
- * parla con la chiavetta — e le integrazioni hanno tutte il loro marchio. Non
- * e' il logo dell'interruttore, e non pretende di esserlo: e' il segno di chi
- * lo porta in casa, che e' la stessa cosa che Home Assistant fa vedere nella
- * pagina delle integrazioni.
+ * E' la seconda strada, e serve a chi non dichiara **niente**: certi
+ * aggiornamenti non hanno `entity_picture` affatto, e nel riquadro restava
+ * l'iniziale. Quello che si sa di loro e' **da dove vengono**: il registro
+ * delle entita' dice l'integrazione, e le integrazioni hanno il loro marchio.
+ * Non e' il logo dell'apparecchio, e non pretende di esserlo: e' il segno di
+ * chi lo porta in casa, che e' la stessa cosa che Home Assistant fa vedere
+ * nella pagina delle integrazioni.
  *
  * @param {string} integrazione il nome dell'integrazione, come lo dice il registro
  */
@@ -234,7 +230,46 @@ export function ilMarchioDi(integrazione) {
   /* Solo quello che e' un nome: il pezzo finisce dentro un indirizzo, e un
    * nome con una barra o un punto porterebbe da un'altra parte. */
   if (!/^[a-z0-9_]+$/.test(quale)) return "";
-  return `${DOVE_I_MARCHI}_/${quale}/icon.png`;
+  /* **Senza** il `_/` davanti, ed e' la differenza fra un no e un quadrato
+   * grigio: i marchi di Home Assistant servono quell'indirizzo in due modi, e
+   * con il `_/` un'integrazione che un marchio non ce l'ha non risponde `404`
+   * — risponde `200` con dentro il segnaposto «logo mancante». Il telefono lo
+   * prenderebbe per un logo e lo disegnerebbe, al posto dell'iniziale, che
+   * almeno dice la prima lettera di quello che stai aggiornando. */
+  return `${DOVE_I_MARCHI}${quale}/icon.png`;
+}
+
+/* L'integrazione che non e' un prodotto ma una **strada**, e la classe di chi
+ * ci passa sopra. Insieme dicono «questo e' un dispositivo di Zigbee2MQTT». */
+const UNA_STRADA = "mqtt";
+const UN_FIRMWARE = "firmware";
+
+/* Come si riconosce l'add-on di Zigbee2MQTT fra gli altri. Lo slug ha davanti
+ * il numero di chi tiene il deposito (`45df7312_zigbee2mqtt`), e dietro puo'
+ * avere una coda (`_edge`): quello che conta e' il pezzo in mezzo. */
+const ZIGBEE2MQTT = /(?:^|_)zigbee2mqtt(?:_|$)/;
+const LICONA_DI_UN_ADDON = /^\/api\/hassio\/addons\/([a-z0-9_-]+)\/icon$/;
+
+/**
+ * Il segno dell'add-on di Zigbee2MQTT, se questa casa ce l'ha.
+ *
+ * Non si chiede niente a nessuno: Home Assistant fa un'entita' `update.` per
+ * **ogni** add-on installato — anche per quelli a posto, che stanno a `off` —
+ * e ognuna si porta dietro l'indirizzo della sua icona. Quindi l'elenco degli
+ * stati, che il ponte ha gia' in mano, dice anche quali add-on ci sono e dove
+ * stanno i loro segni.
+ *
+ * @param {Array<object>} stati gli stati di Home Assistant, tutti
+ */
+export function ilSegnoDiZigbee2mqtt(stati) {
+  const dentro = Array.isArray(stati) ? stati : [];
+  for (const stato of dentro) {
+    if (!pulito(stato?.entity_id).startsWith(DOMINIO)) continue;
+    const dove = pulito(stato?.attributes?.entity_picture);
+    const quale = LICONA_DI_UN_ADDON.exec(dove);
+    if (quale && ZIGBEE2MQTT.test(quale[1])) return dove;
+  }
+  return "";
 }
 
 function staccaIlFilo(stato) {
@@ -333,9 +368,16 @@ export class Aggiornamenti {
      * viaggia: il telefono chiede il logo di un'entita', e l'indirizzo lo
      * tiene questa mappa. */
     this._dovIlLogo = new Map();
-    /* Di che integrazione e' un'entita', quando l'ha fatto chiedere. Si tiene
-     * per sempre: un'entita' non cambia integrazione mentre il ponte gira, e
-     * la risposta vale anche quando e' «non si sa». */
+    /* Di che classe e' ognuno: `firmware` e' quello che distingue un
+     * apparecchio da un programma, e serve a capire chi lo porta in casa. */
+    this._laClasse = new Map();
+    /* Il segno dell'add-on di Zigbee2MQTT, se questa casa ce l'ha. */
+    this._diZigbee = "";
+    /* Dove sta il segno di chi non ne dichiara uno, quando l'ha fatto
+     * chiedere. Si svuota insieme all'elenco: la risposta non dipende solo
+     * dall'entita' ma anche da quali add-on ci sono in casa, e quello cambia
+     * — chi installa Zigbee2MQTT domani non deve riavviare il ponte per
+     * vedere il suo segno. */
     this._diChiE = new Map();
   }
 
@@ -353,6 +395,16 @@ export class Aggiornamenti {
         .map((stato) => [pulito(stato.entity_id), ilLogoDi(stato)])
         .filter(([, dove]) => dove !== ""),
     );
+    this._laClasse = new Map(
+      dentro
+        .filter(aspettaDiEssereFatto)
+        .map((stato) => [pulito(stato.entity_id), pulito(stato.attributes?.device_class)]),
+    );
+    /* Si guarda in **tutti** gli stati, non solo in quelli che aspettano: un
+     * add-on a posto ha la sua entita' `update.` a `off`, e il segno ce l'ha
+     * comunque. */
+    this._diZigbee = ilSegnoDiZigbee2mqtt(dentro);
+    this._diChiE = new Map();
     this._lettoIl = this.adesso();
     return this._elenco;
   }
@@ -396,7 +448,7 @@ export class Aggiornamenti {
         type: "config/entity_registry/get",
         entity_id: quale,
       });
-      dove = ilMarchioDi(riga?.platform);
+      dove = this._chiLoPorta(quale, riga?.platform);
     } catch (errore) {
       /* Un registro che non risponde non e' un guasto da mostrare: e' un logo
        * che non c'e'. Si dice al registro nostro e si va avanti. */
@@ -404,6 +456,32 @@ export class Aggiornamenti {
     }
     this._diChiE.set(quale, dove);
     return dove;
+  }
+
+  /* Il segno di chi porta in casa questa entita'.
+   *
+   * Di solito e' il marchio della sua integrazione. C'e' un caso in cui non
+   * va, e l'ha visto subito la prima casa vera: un **firmware** che arriva
+   * per **MQTT** e' un dispositivo di Zigbee2MQTT, e mettergli il marchio di
+   * MQTT vuol dire far vedere la **strada** che ha fatto invece di chi lo
+   * comanda. Tre interruttori Zigbee col logo di MQTT non sono piu' utili di
+   * tre «S»: dicono una cosa che non e' quella che stai guardando.
+   *
+   * Chi li comanda ce l'ha in casa, ed e' l'add-on di Zigbee2MQTT: il suo
+   * segno si prende da li', dalla sua macchina, senza andare a chiedere
+   * niente fuori. Se quell'add-on non c'e' — Zigbee2MQTT gira da un'altra
+   * parte — non si mette niente e resta l'iniziale, che e' meglio del nome
+   * sbagliato.
+   *
+   * @param {string} entita l'entita' `update.`
+   * @param {string} integrazione l'integrazione, come la dice il registro
+   */
+  _chiLoPorta(entita, integrazione) {
+    const quale = pulito(integrazione).toLowerCase();
+    if (quale === UNA_STRADA && this._laClasse.get(entita) === UN_FIRMWARE) {
+      return this._diZigbee;
+    }
+    return ilMarchioDi(quale);
   }
 
   /**

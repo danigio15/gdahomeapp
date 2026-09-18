@@ -9,6 +9,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { createHash } from "node:crypto";
+import { crc32, deflateSync } from "node:zlib";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -42,6 +43,56 @@ const ICONA_DELL_ADDON = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), "..", "ponte", "marchio", "gdahome.png"),
 );
 
+/* Un PNG di un colore solo, fatto qui.
+ *
+ * Serve per **distinguere le due strade nella fotografia**. Il ponte, per chi
+ * un logo non lo dichiara, ha due modi di trovarne uno: il marchio
+ * dell'integrazione, che sta fuori, e l'icona di un add-on, che sta in casa.
+ * Se questa casa finta servisse la stessa immagine per tutti e due, una
+ * fotografia col logo giusto non direbbe **da dove e' arrivato** — e una
+ * strada sbagliata resterebbe verde. Un quadrato di un colore che non
+ * somiglia a niente si riconosce a occhio: se in un riquadro c'e' quello, il
+ * ponte e' andato a prendere un marchio.
+ *
+ * @param {Array<number>} colore rosso, verde e blu
+ * @param {number} lato quanto e' grande, in punti
+ */
+function unQuadratoPieno([rosso, verde, blu], lato = 96) {
+  const riga = Buffer.alloc(1 + lato * 3);
+  for (let quale = 0; quale < lato; quale += 1) {
+    riga[1 + quale * 3] = rosso;
+    riga[2 + quale * 3] = verde;
+    riga[3 + quale * 3] = blu;
+  }
+  const testa = Buffer.alloc(13);
+  testa.writeUInt32BE(lato, 0);
+  testa.writeUInt32BE(lato, 4);
+  /* Otto bit per colore, e tre colori senza tavolozza. */
+  testa[8] = 8;
+  testa[9] = 2;
+  const pezzo = (nome, corpo) => {
+    const quanto = Buffer.alloc(4);
+    quanto.writeUInt32BE(corpo.length, 0);
+    const tutto = Buffer.concat([Buffer.from(nome, "latin1"), corpo]);
+    const firma = Buffer.alloc(4);
+    firma.writeUInt32BE(crc32(tutto), 0);
+    return Buffer.concat([quanto, tutto, firma]);
+  };
+  return Buffer.concat([
+    Buffer.of(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a),
+    pezzo("IHDR", testa),
+    pezzo("IDAT", deflateSync(Buffer.concat(Array.from({ length: lato }, () => riga)))),
+    pezzo("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+/* Il marchio che serve questa casa al posto di quelli di Home Assistant. */
+const IL_MARCHIO_FINTO = unQuadratoPieno([0x8b, 0x1a, 0x5c]);
+
+/* Quali integrazioni un marchio ce l'hanno. Sono poche apposta: quelle che il
+ * collaudo attraversa, piu' `mqtt` che c'e' ma non si deve vedere. */
+const I_MARCHI_CHE_CI_SONO = new Set(["homeassistant", "mqtt", "zha"]);
+
 /* Le note lunghe che questa casa sa dare: il `CHANGELOG.md` vero.
  *
  * E' quello che risponderebbe una casa vera per l'aggiornamento della
@@ -60,16 +111,17 @@ const IL_CHANGELOG = readFileSync(
  * Aggiornamenti dell'app legge quelle e basta — e una sezione che nel collaudo
  * si fotografa sempre vuota non si e' mai guardata davvero.
  *
- * Sono le quattro che si trovano in tutte le case, e sono diverse apposta: il
+ * Sono quelle che si trovano in tutte le case, e sono diverse apposta: il
  * sistema e l'add-on **portano giu' il filo** quando si installano — e
- * l'app deve dirlo prima; la plancia no; e il firmware di una presa non si
- * installa chiamando un servizio, quindi il tasto non ci va.
+ * l'app deve dirlo prima; la plancia no; e il firmware di un apparecchio non
+ * si installa chiamando un servizio, quindi il tasto non ci va.
  *
  * E sono diverse anche in **quello che sanno dire di se'**, che e' la seconda
- * meta' della sezione:
+ * meta' della sezione. Le strade per arrivare a un segno sono quattro, e qui
+ * ci sono tutte:
  *
  *  - `entity_picture` di **casa** (`/api/hassio/addons/…/icon`): il segno lo
- *    apre il ponte col segno di Home Assistant, e questa casa finta quel
+ *    apre il ponte col segno del Supervisor, e questa casa finta quel
  *    percorso lo serve per davvero. E' l'unico modo di provare la strada
  *    intera — attributo, ponte, segno, byte, immagine nel quadrato — in un
  *    browser vero;
@@ -77,10 +129,19 @@ const IL_CHANGELOG = readFileSync(
  *    un giro fuori, e da un banco senza internet non arriva. Percio' quella
  *    riga resta con la sua iniziale, ed e' giusto che si veda: e' quello che
  *    fa l'app quando un logo non c'e' o non arriva;
- *  - il **quinto bit** di `supported_features` (16): «le note della versione
- *    le so, chiedimele». Chi ce l'ha risponde a `update/release_notes`, e nel
- *    collaudo risponde col `CHANGELOG.md` vero. Chi non ce l'ha non se le fa
- *    nemmeno chiedere. */
+ *  - **niente**, e allora il ponte guarda da dove viene: il registro dice
+ *    l'integrazione, e il marchio dell'integrazione si va a prendere. E' la
+ *    strada di `update.interruttore_cortile_firmware`, che e' della
+ *    chiavetta;
+ *  - **niente**, e l'integrazione e' soltanto la strada che ha fatto: un
+ *    firmware che arriva per `mqtt` e' un dispositivo di Zigbee2MQTT, e il
+ *    segno da far vedere e' quello del suo add-on, non quello di MQTT. E' la
+ *    strada di `update.presa_lavatrice_firmware`;
+ *
+ * e in mezzo il **quinto bit** di `supported_features` (16): «le note della
+ * versione le so, chiedimele». Chi ce l'ha risponde a `update/release_notes`,
+ * e nel collaudo risponde col `CHANGELOG.md` vero. Chi non ce l'ha non se le
+ * fa nemmeno chiedere. */
 const DA_AGGIORNARE = [
   {
     entity_id: "update.dashboardmodern_update",
@@ -137,19 +198,57 @@ const DA_AGGIORNARE = [
       supported_features: 0,
     },
   },
+  {
+    entity_id: "update.interruttore_cortile_firmware",
+    state: "on",
+    attributes: {
+      friendly_name: "Interruttore cortile",
+      installed_version: "0x00102428",
+      latest_version: "0x00102437",
+      device_class: "firmware",
+      supported_features: 0,
+    },
+  },
+];
+
+/* Gli add-on che **non** aspettano niente.
+ *
+ * Home Assistant fa un'entita' `update.` per ogni add-on installato, anche
+ * per quelli a posto: lo stato e' `off`, e l'indirizzo della sua icona ce
+ * l'ha comunque. Nella sezione dell'app non si vedono — non c'e' niente da
+ * fare — ma il ponte li legge, ed e' da li' che trova il segno di chi porta
+ * in casa i dispositivi Zigbee. Senza questa riga la strada non si
+ * percorrerebbe, e questo e' esattamente il caso di una casa vera: l'add-on
+ * di Zigbee2MQTT quasi sempre e' aggiornato. */
+const GLI_ADDON_A_POSTO = [
+  {
+    entity_id: "update.zigbee2mqtt_update",
+    state: "off",
+    attributes: {
+      friendly_name: "Zigbee2MQTT Update",
+      title: "Zigbee2MQTT",
+      installed_version: "2.6.2",
+      latest_version: "2.6.2",
+      entity_picture: "/api/hassio/addons/45df7312_zigbee2mqtt/icon",
+      supported_features: 1,
+    },
+  },
 ];
 
 /* Di che integrazione e' un'entita'.
  *
  * Il registro di Home Assistant lo dice per tutte; qui basta per quelle che
  * il ponte va a chiedere, cioe' quelle che un logo non lo dichiarano. Il
- * firmware di una presa che passa da Zigbee2MQTT e' dell'integrazione `mqtt`,
- * e `mqtt` un marchio ce l'ha: e' quello che si vede al posto dell'iniziale. */
+ * firmware di una presa che passa da Zigbee2MQTT e' dell'integrazione `mqtt`
+ * — e un marchio `mqtt` ce l'ha, ma non e' quello che si vuole vedere: e' la
+ * strada, non chi comanda l'apparecchio. Il ponte deve arrivare all'icona
+ * dell'add-on di Zigbee2MQTT, quella qui sopra. */
 const DI_CHI_SONO = {
   "update.presa_lavatrice_firmware": "mqtt",
+  "update.interruttore_cortile_firmware": "zha",
 };
 
-const CASA = [...DEMO.entita, ...DA_AGGIORNARE].map((una) => ({
+const CASA = [...DEMO.entita, ...DA_AGGIORNARE, ...GLI_ADDON_A_POSTO].map((una) => ({
   ...una,
   last_changed: ADESSO,
   last_updated: ADESSO,
@@ -322,10 +421,20 @@ export function alzaLaCasaFinta() {
      * — e da un banco senza internet non arriva. Questa casa finta fa anche
      * quella parte, cosi' la strada si percorre intera: l'entita' che non
      * dichiara niente, il registro che dice di chi e', il marchio che torna e
-     * finisce nel quadrato. Fuori dal banco quell'indirizzo e' quello vero. */
-    if (/^\/_\/[a-z0-9_]+\/icon\.png$/.test(percorso)) {
+     * finisce nel quadrato. Fuori dal banco quell'indirizzo e' quello vero.
+     *
+     * E un'integrazione che un marchio non ce l'ha risponde **404**, come fa
+     * il servizio vero: se qui rispondesse comunque, il ponte potrebbe
+     * chiedere un nome inventato e il banco non lo direbbe mai. */
+    const chiedeUnMarchio = /^\/([a-z0-9_]+)\/icon\.png$/.exec(percorso);
+    if (chiedeUnMarchio) {
+      if (!I_MARCHI_CHE_CI_SONO.has(chiedeUnMarchio[1])) {
+        risposta.writeHead(404, { "content-type": "text/plain" });
+        risposta.end("questo marchio non c'e'");
+        return;
+      }
       risposta.writeHead(200, { "content-type": "image/png" });
-      risposta.end(ICONA_DELL_ADDON);
+      risposta.end(IL_MARCHIO_FINTO);
       return;
     }
     /* L'icona di un add-on, nelle **due** forme in cui si chiede: quella del
