@@ -38,6 +38,7 @@ import {
   spazioDaPercorrere,
 } from "../core/la-fascia-deriva.js";
 import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
+import { parolaDellaPorta, parolaDiStato } from "./le-parole-di-home-assistant.js";
 import { windowOpenFromState } from "../core/shutter-window.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
 import { CHIAVE_VERSI, apertaSecondoVerso, insiemeInvertiti } from "../core/verso-aperture.js";
@@ -601,20 +602,47 @@ function finestra() {
   return nodo;
 }
 
-/* Com'e' adesso quella voce, in parole: quello che dice Home Assistant, che e'
- * la sola risposta vera. Una voce che non risponde piu' lo dice. */
-function statoDellaVoce(entity, states) {
+/* Le pastiglie che parlano di qualcosa che si apre: li' «acceso» non e' la
+ * parola: una finestra e' aperta, e chi legge «ON» sotto il nome di una
+ * finestra deve tradurselo da solo. */
+const SI_APRONO = new Set(["varchi", "porte", "finestre", "tapparelle"]);
+
+/* Com'e' adesso quella voce, IN PAROLE.
+ *
+ * Prima si scriveva quello che dice Home Assistant e basta — `on`, `off`,
+ * `unavailable` — sotto l'identificatore dell'entita' in maiuscolo:
+ *
+ *     BINARY_SENSOR.FINESTRA_BAGNO_GRANDE_CONTACT · ON
+ *
+ * Due righe per non dire niente. L'identificatore e' il nome che quella cosa
+ * ha dentro Home Assistant, e in una plancia non serve a chi guarda: serve a
+ * chi configura, e in configurazione infatti c'e'. E `ON` non e' una parola
+ * italiana.
+ *
+ * Adesso resta il nome, e accanto c'e' com'e' adesso, detto: «Aperta»,
+ * «Accesa», «In riproduzione». Le parole sono quelle di
+ * `le-parole-di-home-assistant.js`, che e' il posto dove stanno tutte — e per
+ * le cose che si aprono quelle al femminile, che e' l'altra meta' della stessa
+ * tabella. Una voce che non risponde piu' lo dice. */
+function statoDellaVoce(entity, states, chiave = "") {
   const id = clean(entity);
-  if (!id) return "";
+  if (!id) return { parola: "", muta: true };
   const risolta = clean(root.resolveEntity?.(id) || id);
   const stato = states?.[risolta] || states?.[id];
   const grezzo = clean(stato?.state);
   if (!grezzo || /^(unknown|unavailable)$/i.test(grezzo))
-    return t("non risponde", "not responding");
-  return grezzo;
+    return { parola: t("non risponde", "not responding"), muta: true };
+  if (SI_APRONO.has(clean(chiave))) {
+    /* Un contatto dice `on` quando e' aperto: e' la stessa cosa detta nella
+     * lingua dei sensori. */
+    const comeSiApre = { on: "open", off: "closed" }[grezzo.toLowerCase()] || grezzo;
+    const detta = parolaDellaPorta(comeSiApre);
+    if (detta) return { parola: detta, muta: false };
+  }
+  return { parola: parolaDiStato(grezzo), muta: false };
 }
 
-function rigaDellElenco(voce, states) {
+function rigaDellElenco(voce, states, chiave = "") {
   const entita = clean(voce?.entity);
   const nome = clean(voce?.name) || entita;
   const comando = comandoPerSpegnere(entita, states?.[entita]);
@@ -640,13 +668,16 @@ function rigaDellElenco(voce, states) {
           parole[comando.parola] || parole.spegni,
         )}</button>`
       : "";
+  const adesso = statoDellaVoce(entita, states, chiave);
+  const pastiglia = adesso.parola
+    ? `<span class="dm-casa-stato" data-dm-muta="${adesso.muta}"><i aria-hidden="true"></i>${esc(
+        adesso.parola,
+      )}</span>`
+    : "";
   return `<div class="detail-row dm-casa-voce">
       <div class="d-info">
         <div class="d-name">${esc(nome)}</div>
-        <div class="d-state"><span class="dm-casa-id">${esc(entita)}</span> · <b>${esc(
-          statoDellaVoce(entita, states),
-        )}</b></div>
-      </div>${tasto}</div>`;
+      </div>${pastiglia}${tasto}</div>`;
 }
 
 /** Riempie l'elenco aperto con quello che e' acceso adesso. */
@@ -695,7 +726,7 @@ export function disegnaLElenco() {
         : `${voci.length} ${t("accesi · tocca per spegnere", "on · tap to turn off")}`;
     if (sotto.textContent !== briciola) sotto.textContent = briciola;
   }
-  const disegno = voci.map((voce) => rigaDellElenco(voce, states)).join("");
+  const disegno = voci.map((voce) => rigaDellElenco(voce, states, chiave)).join("");
   if (elenco.innerHTML !== disegno) elenco.innerHTML = disegno;
   return true;
 }
@@ -1212,8 +1243,7 @@ function stile() {
     html[data-theme="dark"] .dm-casa-pastiglia[data-dm-casa="posta"] .dm-casa-coda{color:#93c5fd}
     /* L'elenco di cosa e' acceso: la finestra e' vestita con le classi del
        guscio — «modal-wrapper», «modal-card», «detail-row» — e qui si scrive
-       solo quello che e' suo: la riga, il tasto che spegne, l'entita' in
-       piccolo sotto il nome. */
+       solo quello che e' suo: la riga, com'e' adesso, e il tasto che spegne. */
     #dm-casa-popup .dm-casa-elenco{display:grid;gap:8px}
     #dm-casa-popup .dm-casa-voce{display:flex;align-items:center;gap:10px}
     #dm-casa-popup .dm-casa-voce .d-info{min-width:0;flex:1;overflow:hidden}
@@ -1222,11 +1252,30 @@ function stile() {
        dall'altra, e qui il nome e' l'unica cosa che si legge. */
     #dm-casa-popup .dm-casa-voce .d-name{
       overflow-wrap:anywhere;font-size:14px;font-weight:800}
-    #dm-casa-popup .dm-casa-id{
-      font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;
-      color:var(--text-dim,#64748b)}
-    #dm-casa-popup .dm-casa-voce .d-state{font-size:11px;color:var(--text-dim,#64748b)}
-    #dm-casa-popup .dm-casa-voce .d-state b{font-weight:900;color:#f59e0b}
+    /* Com'e' adesso: una pastiglia, non una riga di testo.
+       Prende il colore della cosa che si sta guardando — lo stesso accento
+       della tessera, che la finestra si mette addosso quando si apre — e il
+       puntino davanti si vede prima della parola. Chi non risponde resta
+       grigio: e' l'unico stato che non e' una notizia sulla casa. */
+    #dm-casa-popup .dm-casa-stato{
+      flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;
+      padding:6px 12px;border-radius:999px;
+      font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
+      color:var(--dm-widget-accent,#0ea5e9);
+      background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 13%,transparent);
+      box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 24%,transparent)}
+    #dm-casa-popup .dm-casa-stato i{
+      width:7px;height:7px;border-radius:50%;background:currentColor;
+      box-shadow:0 0 0 3px color-mix(in srgb,currentColor 20%,transparent)}
+    #dm-casa-popup .dm-casa-stato[data-dm-muta="true"]{
+      color:var(--text-dim,#64748b);
+      background:color-mix(in srgb,var(--text-dim,#64748b) 12%,transparent);
+      box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text-dim,#64748b) 20%,transparent)}
+    /* La riga resta una riga anche sul telefono: il nome va a capo dentro il
+       suo posto — puo' farlo, e' scritto qui sopra — e la pastiglia col tasto
+       restano a destra, in mezzo. Mandandoli a capo si otteneva una riga col
+       nome e sotto una fila vuota a sinistra: peggio di quello che si voleva
+       evitare. */
     #dm-casa-popup .dm-casa-spegni{
       flex:0 0 auto;border:0;cursor:pointer;padding:9px 14px;border-radius:11px;
       font:inherit;font-size:11px;font-weight:900;letter-spacing:.06em;
