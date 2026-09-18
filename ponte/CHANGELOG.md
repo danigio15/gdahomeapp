@@ -5,6 +5,30 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.12
+
+**Il logo di chi non ne dichiara uno: lo si chiede al registro.**
+
+Nella 1.4.32.11 c'è scritto che gli interruttori Zigbee restano con la
+loro iniziale, e che quella era la risposta giusta. Non lo era: tre «S»
+identiche per «Switch casa», «Switch cortile» e «Switch tavernetta» non
+dicono niente, e una riga che non si distingue dalle altre due tanto vale
+che non ci sia.
+
+Loro un indirizzo per il segno non lo dichiarano affatto. Però si sa **da
+dove vengono**: il registro delle entità di Home Assistant dice
+l'integrazione — `mqtt` per chi passa da Zigbee2MQTT, `zha` per chi parla
+con la chiavetta — e le integrazioni hanno tutte il loro marchio. È lo
+stesso segno che Home Assistant fa vedere nella pagina delle
+integrazioni: non è il logo dell'interruttore, ed è quello di chi lo porta
+in casa.
+
+Così le strade diventano due, e la seconda si prende solo quando la prima
+non c'è. Il registro lo si chiede una volta per entità, e solo per quelle
+che aspettano davvero un aggiornamento; la risposta si tiene, anche
+quando è «non si sa», che è un modo di non richiedere due volte una cosa
+già chiesta.
+
 ## 1.4.32.11
 
 **L'icona di un add-on la chiede al Supervisor, e non a Home Assistant.**
