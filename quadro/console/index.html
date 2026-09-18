@@ -735,6 +735,12 @@
         background: transparent;
       }
 
+      .tasto:disabled {
+        opacity: 0.45;
+        cursor: default;
+        box-shadow: none;
+      }
+
       .tasto.grande {
         font-size: 0.95rem;
         padding: 12px 22px;
@@ -1137,6 +1143,112 @@
       ul.schede .giu .come,
       ul.schede .giu .tipo {
         color: var(--fioco);
+      }
+
+      /* ─── Gli aggiornamenti ────────────────────────────────────────── */
+      ul.versi {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      ul.versi li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 0;
+        flex-wrap: wrap;
+      }
+
+      ul.versi li + li {
+        border-top: 1px solid var(--bordo-tenue);
+      }
+
+      ul.versi .che {
+        flex: 1;
+        min-width: 9rem;
+      }
+
+      ul.versi .che b {
+        display: block;
+        font-size: 0.89rem;
+        font-weight: 650;
+      }
+
+      ul.versi .salto {
+        display: block;
+        color: var(--fioco);
+        font-size: 0.78rem;
+        font-variant-numeric: tabular-nums;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      }
+
+      ul.versi .tasto {
+        padding: 6px 14px;
+        font-size: 0.82rem;
+      }
+
+      .pastiglia.lavoro {
+        background: var(--alone-azzurro);
+        color: var(--azzurro-cupo);
+      }
+
+      /* Il cartello del lavoro in ballo. Azzurro e non ambra: non è un guaio,
+       * è una cosa che sta succedendo. */
+      .cartello {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 15px;
+        padding: 14px 16px;
+        border-radius: var(--raggio-piccolo);
+        font-size: 0.86rem;
+        line-height: 1.55;
+        background: var(--alone-azzurro);
+      }
+
+      .cartello.male {
+        background: var(--alone-male);
+      }
+
+      .cartello.bene {
+        background: var(--alone-bene);
+      }
+
+      .cartello .gettone {
+        width: 25px;
+        height: 25px;
+        flex: none;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        background: color-mix(in srgb, var(--azzurro) 22%, transparent);
+        color: var(--azzurro-cupo);
+      }
+
+      .cartello.male .gettone {
+        background: color-mix(in srgb, var(--male) 22%, transparent);
+        color: var(--male);
+      }
+
+      .cartello.bene .gettone {
+        background: color-mix(in srgb, var(--bene) 22%, transparent);
+        color: var(--bene);
+      }
+
+      /* ─── La flotta degli aggiornamenti ────────────────────────────── */
+      .mucchio + .mucchio {
+        margin-top: 14px;
+      }
+
+      .mucchio .indietro-chi {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 13px;
       }
 
       /* ─── Gli add-on ────────────────────────────────────────────────── */
@@ -1554,7 +1666,16 @@
                 { nome: "Studio Code Server", su: true, allAvvio: true, aggiornabile: false },
               ],
             },
-            aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
+            aggiornamenti: {
+              quanti: 0,
+              ha: false,
+              addon: 0,
+              gdahome: false,
+              firmware: 0,
+              elenco: [],
+            },
+            manutenzione: true,
+            lavoro: null,
             plance: { quante: 3, configurate: 3 },
             telefoni: { abbinati: 2, visti7gg: 2 },
             fuori: { acceso: true, filo: true, daGiorni: 41 },
@@ -1617,7 +1738,65 @@
                 { nome: "Duck DNS", su: true, allAvvio: true, aggiornabile: false },
               ],
             },
-            aggiornamenti: { quanti: 6, ha: true, addon: 2, gdahome: true, firmware: 2 },
+            aggiornamenti: {
+              quanti: 6,
+              ha: true,
+              addon: 2,
+              gdahome: true,
+              firmware: 2,
+              elenco: [
+                {
+                  nome: "gdahome",
+                  da: "1.4.32.9",
+                  a: "1.4.32.14",
+                  nostra: true,
+                  installabile: true,
+                  stacca: true,
+                },
+                {
+                  nome: "Home Assistant Core",
+                  da: "2026.6.2",
+                  a: "2026.9.1",
+                  nostra: true,
+                  installabile: true,
+                  stacca: true,
+                },
+                {
+                  nome: "Mosquitto broker",
+                  da: "6.4.0",
+                  a: "6.5.1",
+                  nostra: false,
+                  installabile: true,
+                  stacca: false,
+                },
+                {
+                  nome: "Zigbee2MQTT",
+                  da: "2.1.0",
+                  a: "2.3.2",
+                  nostra: false,
+                  installabile: true,
+                  stacca: false,
+                },
+                {
+                  nome: "Termostato camera",
+                  da: "1.9",
+                  a: "2.0",
+                  nostra: false,
+                  installabile: false,
+                  stacca: false,
+                },
+                {
+                  nome: "Presa cucina",
+                  da: "3.2.1",
+                  a: "3.4.0",
+                  nostra: false,
+                  installabile: false,
+                  stacca: false,
+                },
+              ],
+            },
+            manutenzione: true,
+            lavoro: null,
             plance: { quante: 1, configurate: 1 },
             telefoni: { abbinati: 1, visti7gg: 1 },
             fuori: { acceso: true, filo: true, daGiorni: 3 },
@@ -1670,7 +1849,38 @@
                 { nome: "Google Drive Backup", su: true, allAvvio: true, aggiornabile: false },
               ],
             },
-            aggiornamenti: { quanti: 2, ha: true, addon: 1, gdahome: true, firmware: 0 },
+            aggiornamenti: {
+              quanti: 2,
+              ha: true,
+              addon: 1,
+              gdahome: true,
+              firmware: 0,
+              elenco: [
+                {
+                  nome: "gdahome",
+                  da: "1.4.32.11",
+                  a: "1.4.32.14",
+                  nostra: true,
+                  installabile: true,
+                  stacca: true,
+                },
+                {
+                  nome: "Home Assistant Core",
+                  da: "2026.8.4",
+                  a: "2026.9.1",
+                  nostra: true,
+                  installabile: true,
+                  stacca: true,
+                },
+              ],
+            },
+            manutenzione: true,
+            lavoro: {
+              cosa: "gdahome 1.4.32.14",
+              stato: "in corso",
+              quando: "2 giorni fa",
+              stacca: true,
+            },
             plance: { quante: 1, configurate: 1 },
             telefoni: { abbinati: 2, visti7gg: 0 },
             fuori: { acceso: true, filo: true, daGiorni: 9 },
@@ -1721,7 +1931,16 @@
                 { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
               ],
             },
-            aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
+            aggiornamenti: {
+              quanti: 0,
+              ha: false,
+              addon: 0,
+              gdahome: false,
+              firmware: 0,
+              elenco: [],
+            },
+            manutenzione: true,
+            lavoro: null,
             plance: { quante: 1, configurate: 0 },
             telefoni: { abbinati: 0, visti7gg: 0 },
             fuori: { acceso: true, filo: true, daGiorni: 1 },
@@ -1783,7 +2002,16 @@
                 { nome: "Google Drive Backup", su: true, allAvvio: true, aggiornabile: false },
               ],
             },
-            aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
+            aggiornamenti: {
+              quanti: 0,
+              ha: false,
+              addon: 0,
+              gdahome: false,
+              firmware: 0,
+              elenco: [],
+            },
+            manutenzione: true,
+            lavoro: null,
             plance: { quante: 2, configurate: 2 },
             telefoni: { abbinati: 4, visti7gg: 3 },
             fuori: { acceso: true, filo: true, daGiorni: 120 },
@@ -1835,7 +2063,30 @@
                 { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
               ],
             },
-            aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
+            aggiornamenti: {
+              quanti: 0,
+              ha: false,
+              addon: 0,
+              gdahome: false,
+              firmware: 0,
+              elenco: [
+                {
+                  nome: "Home Assistant Core",
+                  da: "2026.9.0",
+                  a: "2026.9.1",
+                  nostra: true,
+                  installabile: true,
+                  stacca: true,
+                },
+              ],
+            },
+            manutenzione: true,
+            lavoro: {
+              cosa: "Home Assistant Core 2026.9.1",
+              stato: "in corso",
+              quando: "4 minuti fa",
+              stacca: true,
+            },
             plance: { quante: 2, configurate: 2 },
             telefoni: { abbinati: 3, visti7gg: 2 },
             fuori: { acceso: true, filo: true, daGiorni: 74 },
@@ -1893,7 +2144,21 @@
                 { nome: "Studio Code Server", su: false, allAvvio: false, aggiornabile: false },
               ],
             },
-            aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
+            aggiornamenti: {
+              quanti: 0,
+              ha: false,
+              addon: 0,
+              gdahome: false,
+              firmware: 0,
+              elenco: [],
+            },
+            manutenzione: true,
+            lavoro: {
+              cosa: "Mosquitto broker 6.5.1",
+              stato: "fatto",
+              quando: "ieri alle 22:14",
+              stacca: false,
+            },
             plance: { quante: 1, configurate: 1 },
             telefoni: { abbinati: 2, visti7gg: 2 },
             fuori: { acceso: true, filo: true, daGiorni: 30 },
@@ -1946,7 +2211,25 @@
                 { nome: "File editor", su: true, allAvvio: true, aggiornabile: true },
               ],
             },
-            aggiornamenti: { quanti: 1, ha: false, addon: 1, gdahome: false, firmware: 0 },
+            aggiornamenti: {
+              quanti: 1,
+              ha: false,
+              addon: 1,
+              gdahome: false,
+              firmware: 0,
+              elenco: [
+                {
+                  nome: "File editor",
+                  da: "5.8.0",
+                  a: "5.9.0",
+                  nostra: false,
+                  installabile: true,
+                  stacca: false,
+                },
+              ],
+            },
+            manutenzione: false,
+            lavoro: null,
             plance: { quante: 1, configurate: 1 },
             telefoni: { abbinati: 1, visti7gg: 1 },
             fuori: { acceso: true, filo: true, daGiorni: 210 },
@@ -2027,6 +2310,26 @@
 
       /* Sotto quale percentuale un segnale Wi-Fi è una spiegazione. */
       const SEGNALE_DEBOLE = 45;
+
+      /* Entro quanti minuti una casa deve tornare dopo un aggiornamento che le
+       * fa cadere il filo.
+       *
+       * `aggiornamenti.js` li chiama «quelli che staccano»: gdahome si riavvia
+       * e si porta via il filo, Home Assistant si riavvia e il ponte resta a
+       * parlare con una casa che non c'è. È normale, e va detto prima — «detto
+       * prima è un'attesa, non detto è un guasto». Oltre questa soglia però
+       * non è più un'attesa: è un aggiornamento che non è tornato, ed è la
+       * cosa peggiore che possa fare un quadro che aggiorna da lontano. Va
+       * detta con quelle parole, non nascosta dietro un «muta». */
+      const STA_TORNANDO = 45;
+
+      const staLavorando = (c) => c.lavoro !== null && c.lavoro.stato === "in corso";
+
+      /* Quelli che si possono davvero installare da qui: la casa ha aperto la
+       * manutenzione, e quella voce si installa chiamando un servizio. Un
+       * firmware che si porta col cacciavite non ha un tasto, e mostrarglielo
+       * sarebbe una promessa che non si mantiene. */
+      const daFare = (c) => c.aggiornamenti.elenco.filter((uno) => uno.installabile);
 
       const livello = (valore, attenta, male) =>
         valore >= male ? "male" : valore >= attenta ? "attenta" : "bene";
@@ -2180,6 +2483,18 @@
       function loStato(casa) {
         const c = casa.carta;
         if (eMuta(c)) {
+          if (staLavorando(c) && c.lavoro.stacca) {
+            const fermi = minutiDaAllora(c.quando);
+            return {
+              chiave: "muta",
+              segno: "■",
+              parola: fermi > STA_TORNANDO ? "non è tornata" : "sta aggiornando",
+              perché:
+                fermi > STA_TORNANDO
+                  ? `${c.lavoro.cosa} è partito ${c.lavoro.quando} e questa casa non è più tornata. Un aggiornamento che stacca il filo se lo riprende in pochi minuti: ${daQuanto(c.quando)} non è un'attesa, è un guasto. Qui si va di persona.`
+                  : `Sta installando ${c.lavoro.cosa}, e quell'aggiornamento fa cadere il filo: è normale che per qualche minuto non si faccia sentire.`,
+            };
+          }
           return {
             chiave: "muta",
             segno: "■",
@@ -2239,6 +2554,7 @@
        * non suona. */
       function lePastiglie(c) {
         const p = [];
+        if (staLavorando(c)) p.push([`sta installando ${c.lavoro.cosa}`, "lavoro"]);
         if (!c.rete.internet) p.push(["senza internet", "male"]);
         if (addonGiu(c) > 0)
           p.push([`${plurale(addonGiu(c), "add-on fermo", "add-on fermi")}`, "male"]);
@@ -2326,8 +2642,10 @@
         `Impianti Rossi · ${plurale(CASE.length, "impianto", "impianti")}`;
 
       function disegna() {
+        const dietro = CASE.filter((una) => una.carta.aggiornamenti.elenco.length).length;
         doveNav.innerHTML = [
           ["case", "Le case", 0],
+          ["aggiornamenti", "Aggiornamenti", dietro],
           ["abbina", "Abbina", INVITI.length + APPENA.length],
         ]
           .map(
@@ -2338,7 +2656,12 @@
           )
           .join("");
 
-        dove.innerHTML = schermata === "case" ? leCase() : lAbbinamento();
+        dove.innerHTML =
+          schermata === "case"
+            ? leCase()
+            : schermata === "aggiornamenti"
+              ? laFlotta()
+              : lAbbinamento();
 
         dove.querySelectorAll("[data-filtro]").forEach((tasto) => {
           tasto.onclick = () => {
@@ -2531,10 +2854,17 @@
             <p class="limite">
               <span class="gettone" aria-hidden="true">◴</span>
               <span>
-                Questo quadro <b>guarda e basta</b>: non apre la plancia, non
-                comanda niente, e non vede entità, stanze né persone. Da qui non
-                si entra in casa di nessuno — per entrare serve un abbinamento,
-                e quello lo dà chi ci abita.
+                ${
+                  c.manutenzione
+                    ? `Questo quadro <b>non guarda dentro</b>: non apre la plancia
+                       e non vede entità, stanze né persone. Tocca due cose sole,
+                       e solo perché questa casa le ha aperte — <b>installare un
+                       aggiornamento</b> e <b>riavviare un add-on fermo</b>. Non
+                       c'è altro, e non c'è una riga di comando.`
+                    : `Questo quadro <b>guarda e basta</b>: non apre la plancia,
+                       non tocca niente, e non vede entità, stanze né persone.
+                       Questa casa non ha aperto la manutenzione.`
+                }
               </span>
             </p>
           </section>
@@ -2568,7 +2898,7 @@
             <p class="verdetto">${testo(verdetto)}</p>
           </section>
 
-          ${laMacchina(c)} ${laRete(c)} ${gliAddon(c)}
+          ${gliAggiornamenti(c)} ${laMacchina(c)} ${laRete(c)} ${gliAddon(c)}
 
           <section class="riquadro">
             <div class="capoRiquadro"><h3>La salute, quattordici giorni</h3></div>
@@ -2733,6 +3063,127 @@
           </section>`;
       }
 
+      /* Gli aggiornamenti: cosa c'è da fare, e il tasto per farlo.
+       *
+       * Le voci hanno la forma che `aggiornamentiDaFare` produce già nel
+       * ponte, e due dei suoi campi decidono cosa si vede:
+       *
+       *  - `installabile` — un firmware che si porta col cacciavite non ha
+       *    nessun tasto. Mostrarglielo sarebbe una promessa che non si
+       *    mantiene, ed è la regola che il ponte si è già data;
+       *  - `stacca` — gdahome e Home Assistant, installandosi, fanno cadere il
+       *    filo. Detto prima è un'attesa; non detto è un guasto — e da un
+       *    quadro che aggiorna da lontano, non detto è una casa che sembra
+       *    morta mentre sta solo riavviandosi.
+       *
+       * E il tasto c'è solo se quella casa **ha aperto la manutenzione**.
+       * Vedere cosa c'è da fare e poterlo fare sono due permessi diversi, e
+       * il secondo non si dà da sé insieme al primo. */
+      function gliAggiornamenti(c) {
+        const elenco = c.aggiornamenti.elenco;
+        const possibili = daFare(c);
+        const cartello = ilCartello(c);
+
+        if (!elenco.length)
+          return `
+            <section class="riquadro">
+              <div class="capoRiquadro"><h3>Gli aggiornamenti</h3></div>
+              ${cartello}
+              <p class="nota">Niente da fare: questa casa è aggiornata.</p>
+            </section>`;
+
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>Gli aggiornamenti</h3>
+              <span class="conta">${plurale(elenco.length, "in attesa", "in attesa")}</span>
+            </div>
+            ${cartello}
+            <ul class="versi">
+              ${elenco
+                .map(
+                  (uno) => `
+                <li>
+                  <span class="che">
+                    <b>${testo(uno.nome)}</b>
+                    <span class="salto">${testo(uno.da)} → ${testo(uno.a)}</span>
+                  </span>
+                  ${uno.stacca ? '<span class="pastiglia attenta">fa cadere il filo</span>' : ""}
+                  ${
+                    !uno.installabile
+                      ? '<span class="pastiglia">si porta col cacciavite</span>'
+                      : c.manutenzione
+                        ? '<button type="button" class="tasto">Installa</button>'
+                        : '<span class="pastiglia">manutenzione chiusa</span>'
+                  }
+                </li>`,
+                )
+                .join("")}
+            </ul>
+            ${
+              c.manutenzione
+                ? `<div class="azioni">
+                    <button type="button" class="tasto forte" ${possibili.length ? "" : "disabled"}>
+                      Installa ${possibili.length === elenco.length ? "tutti" : `i ${possibili.length} che si possono`}
+                    </button>
+                  </div>
+                  <p class="verdetto">
+                    Il backup si fa <b>prima, sempre</b>: è la condizione, non
+                    una casella da spuntare. E quelli che staccano il filo si
+                    installano uno per volta — due insieme su una casa sola
+                    vogliono dire non sapere quale dei due non è tornato.
+                  </p>`
+                : `<div class="limite" style="margin-top: 16px">
+                    <span class="gettone" aria-hidden="true">◴</span>
+                    <span>
+                      <b>Questa casa non ha aperto la manutenzione.</b> Si vede
+                      cosa c'è da fare e non si può farlo, ed è giusto così:
+                      guardare e toccare sono due permessi diversi.
+                      L'interruttore sta nella sua console, nella scheda «Il
+                      quadro», e lo tiene in mano chi ci abita.
+                    </span>
+                  </div>`
+            }
+          </section>`;
+      }
+
+      /* Il cartello del lavoro: cosa sta facendo questa casa adesso, o cosa ha
+       * appena finito. */
+      function ilCartello(c) {
+        const l = c.lavoro;
+        if (l === null) return "";
+        if (l.stato === "fatto")
+          return `
+            <div class="cartello bene">
+              <span class="gettone" aria-hidden="true">✓</span>
+              <span><b>${testo(l.cosa)}</b> installato ${testo(l.quando)}, dal quadro.</span>
+            </div>`;
+        if (l.stato === "fallito")
+          return `
+            <div class="cartello male">
+              <span class="gettone" aria-hidden="true">✕</span>
+              <span
+                ><b>${testo(l.cosa)}</b> non è andato ${testo(l.quando)}:
+                ${testo(l.perché || "Home Assistant ha detto di no")}.</span
+              >
+            </div>`;
+        const fermi = minutiDaAllora(c.quando);
+        const tardi = l.stacca && fermi > STA_TORNANDO;
+        return `
+          <div class="cartello ${tardi ? "male" : ""}">
+            <span class="gettone" aria-hidden="true">${tardi ? "!" : "◴"}</span>
+            <span>
+              <b>${testo(l.cosa)}</b> è partito ${testo(l.quando)}${
+                tardi
+                  ? ` e questa casa non è più tornata. Un aggiornamento che stacca il filo se lo riprende in pochi minuti: qui si va di persona.`
+                  : l.stacca
+                    ? `. Fa cadere il filo, quindi per qualche minuto questa casa non si fa sentire — è normale.`
+                    : `. Come è andata lo dirà la prossima cartolina.`
+              }
+            </span>
+          </div>`;
+      }
+
       /* La rete: le schede che il Supervisor dichiara, più gli apparati di
        * casa che la plancia già sorveglia.
        *
@@ -2813,6 +3264,152 @@
               }
             </p>
           </section>`;
+      }
+
+      /* ─── Schermata: gli aggiornamenti di tutta la flotta ─────────────
+       *
+       * Con quaranta impianti la domanda cambia. Casa per casa è «a questa
+       * cosa manca?», e quella risposta sta nella scheda della casa. Da qui
+       * invece è **«quali sono indietro su Home Assistant Core?»**, che è una
+       * domanda sola con dentro quaranta case, e si sbriga in un gesto invece
+       * che in quaranta.
+       *
+       * Si raggruppa per quello che c'è da installare, non per casa: le voci
+       * uguali stanno insieme, e sotto ognuna ci sono le case che ce l'hanno
+       * indietro, ciascuna con la versione che ha adesso.
+       * ─────────────────────────────────────────────────────────────────── */
+      function laFlotta() {
+        /* Un mucchio per voce da installare. La chiave è il nome più la
+         * versione a cui si va: «Home Assistant Core → 2026.9.1» è un
+         * mucchio, «→ 2026.8.4» ne sarebbe un altro, e mescolarli vorrebbe
+         * dire un tasto che installa due cose diverse. */
+        const mucchi = new Map();
+        for (const casa of CASE) {
+          for (const uno of casa.carta.aggiornamenti.elenco) {
+            const chiave = `${uno.nome} → ${uno.a}`;
+            if (!mucchi.has(chiave))
+              mucchi.set(chiave, { nome: uno.nome, a: uno.a, nostra: uno.nostra, case: [] });
+            mucchi.get(chiave).case.push({ casa, voce: uno });
+          }
+        }
+
+        const ordinati = [...mucchi.values()].sort((una, altra) => {
+          if (una.nostra !== altra.nostra) return una.nostra ? -1 : 1;
+          if (una.case.length !== altra.case.length) return altra.case.length - una.case.length;
+          return una.nome.localeCompare(altra.nome);
+        });
+
+        const voci = ordinati.reduce((somma, uno) => somma + uno.case.length, 0);
+        const dietro = CASE.filter((una) => una.carta.aggiornamenti.elenco.length).length;
+
+        if (!ordinati.length)
+          return `
+            <h1 class="titolone">Gli aggiornamenti</h1>
+            <p class="sottotitolo">Tutte le case sono aggiornate. Non capita spesso.</p>`;
+
+        return `
+          <h1 class="titolone">Gli aggiornamenti</h1>
+          <p class="sottotitolo">
+            ${plurale(voci, "cosa da installare", "cose da installare")} su
+            ${plurale(dietro, "casa", "case")}, raggruppate per quello che sono e
+            non per dove stanno: con quaranta impianti la domanda non è «cosa
+            manca a questa casa», è «quali sono indietro su Home Assistant
+            Core».
+          </p>
+
+          ${ordinati
+            .map((uno) => {
+              const giaInBallo = ({ casa }) =>
+                staLavorando(casa.carta) && casa.carta.lavoro.cosa.startsWith(uno.nome);
+              const possibili = uno.case.filter(
+                (riga) =>
+                  riga.voce.installabile && riga.casa.carta.manutenzione && !giaInBallo(riga),
+              );
+              const inBallo = uno.case.filter(giaInBallo).length;
+              const chiuse = uno.case.filter(
+                ({ casa, voce }) => voce.installabile && !casa.carta.manutenzione,
+              ).length;
+              const cacciavite = uno.case.filter(({ voce }) => !voce.installabile).length;
+
+              return `
+              <section class="riquadro mucchio">
+                <div class="capoRiquadro">
+                  <h3>${testo(uno.nome)}</h3>
+                  <span class="conta">→ ${testo(uno.a)} · ${plurale(uno.case.length, "casa", "case")}</span>
+                </div>
+                <div class="indietro-chi">
+                  ${uno.case
+                    .map(({ casa, voce }) => {
+                      const sta =
+                        staLavorando(casa.carta) && casa.carta.lavoro.cosa.startsWith(uno.nome);
+                      return `<span class="pastiglia ${sta ? "lavoro" : voce.installabile && casa.carta.manutenzione ? "" : "attenta"}"
+                        >${testo(casa.nome)} · ${testo(voce.da)}${sta ? " · in corso" : ""}</span
+                      >`;
+                    })
+                    .join("")}
+                </div>
+                ${
+                  possibili.length
+                    ? `<div class="azioni">
+                        <button type="button" class="tasto forte">
+                          Installa su ${plurale(possibili.length, "casa", "case")}
+                        </button>
+                      </div>`
+                    : ""
+                }
+                ${
+                  chiuse || cacciavite || inBallo
+                    ? `<p class="verdetto">
+                        ${inBallo ? `${plurale(inBallo, "casa lo sta", "case lo stanno")} già installando. ` : ""}${
+                          chiuse
+                            ? `${plurale(chiuse, "casa non ha", "case non hanno")} aperto la manutenzione al quadro. `
+                            : ""
+                        }${
+                          cacciavite
+                            ? `${plurale(cacciavite, "si porta", "si portano")} col cacciavite: da qui non ${cacciavite === 1 ? "si installa" : "si installano"}.`
+                            : ""
+                        }
+                      </p>`
+                    : ""
+                }
+              </section>`;
+            })
+            .join("")}
+
+          <section class="riquadro" style="margin-top: 14px">
+            <div class="capoRiquadro"><h3>Prima di premere</h3></div>
+            <ul class="spunte">
+              <li class="fatta">
+                <span class="bollino" aria-hidden="true">✓</span>
+                <span class="cosa">
+                  <b>Il backup viene prima, sempre.</b> Non è una casella da
+                  spuntare: è la condizione perché il tasto esista. Un
+                  aggiornamento che va storto senza backup dietro è una casa da
+                  rifare.
+                </span>
+              </li>
+              <li class="fatta">
+                <span class="bollino" aria-hidden="true">✓</span>
+                <span class="cosa">
+                  <b>Quelli che staccano il filo, uno per volta.</b> gdahome e
+                  Home Assistant si riavviano installandosi: due insieme sulla
+                  stessa casa vogliono dire non sapere quale dei due non è
+                  tornato.
+                </span>
+              </li>
+              <li class="fatta">
+                <span class="bollino" aria-hidden="true">✓</span>
+                <span class="cosa">
+                  <b>Quaranta case insieme sono quaranta rischi insieme.</b> Il
+                  tasto qui sopra fa una cosa sola su più case, e va usato
+                  sapendolo: se quella cosa va male, va male dappertutto. Una
+                  casa per prova, e le altre il giorno dopo, è una noia che si
+                  paga una volta sola.
+                </span>
+              </li>
+            </ul>
+          </section>
+        `;
       }
 
       /* ─── Schermata: l'abbinamento ───────────────────────────────────
@@ -2972,12 +3569,23 @@
                   <li class="fatta">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
-                      <b>Il quadro ascolta e non parla.</b> Non apre la plancia,
-                      non comanda niente e non vede entità, stanze né persone:
-                      riceve una cartolina di numeri e si ferma lì. Non è una
-                      dimenticanza — per entrare in una casa serve un
-                      abbinamento, e quello lo dà chi ci abita, col suo segno,
-                      che toglie con un bottone quando vuole.
+                      <b>Il quadro non guarda dentro.</b> Non apre la plancia e
+                      non vede entità, stanze né persone: riceve una cartolina
+                      di numeri. Per entrare in una casa serve un abbinamento, e
+                      quello lo dà chi ci abita, col suo segno, che toglie con un
+                      bottone quando vuole.
+                    </span>
+                  </li>
+                  <li class="fatta">
+                    <span class="bollino" aria-hidden="true">✓</span>
+                    <span class="cosa">
+                      <b>La manutenzione è un secondo interruttore.</b> Mandare
+                      la cartolina e lasciarsi aggiornare sono due permessi, e il
+                      secondo è spento di serie: chi lo accende lo accende
+                      apposta. Acceso, il quadro può installare un aggiornamento
+                      e riavviare un add-on fermo — due verbi, scritti nel
+                      programma, e nient'altro. Ogni cosa che fa resta scritta
+                      nella console dell'add-on, dove la legge chi ci abita.
                     </span>
                   </li>
                   <li class="fatta">

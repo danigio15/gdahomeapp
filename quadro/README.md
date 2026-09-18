@@ -57,6 +57,7 @@ Aprendo una casa:
 | **Gli add-on** | tutti, uno per pastiglia: acceso, **fermo** (parte all'avvio e non gira) o spento a mano |
 | **La salute** | la striscia dei giorni, dispositivi totali e spariti, batterie sotto soglia e la più bassa, ultimo backup, errori nel registro, da quanto regge il filo |
 | **I dispositivi spariti** | le impronte, non i nomi (sotto c'è perché) |
+| **Gli aggiornamenti** | cosa c'è da installare, da quale versione a quale, e **il tasto per farlo** dove quella casa ha aperto la manutenzione |
 | **Le versioni** | gdahome, la plancia, Home Assistant Core, Supervisor, il sistema — con «c'è la nuova» dove c'è |
 | **La cartolina** | il testo grezzo, come è arrivato |
 
@@ -303,6 +304,70 @@ tasto che la chiedeva: dal quadro non si apre niente, e allora dieci case
 nell'app restano quello che erano — le case di chi la usa, non la flotta di chi
 la installa. **L'app non va toccata.**
 
+## Aggiornare da lontano
+
+Vedere che una casa è indietro e non poterci fare niente è mezzo lavoro. Il
+quadro ha quindi **due verbi**, e sono due e non di più:
+
+| | |
+|---|---|
+| `aggiorna` | installa una voce `update.` — Home Assistant, un add-on, gdahome, un firmware che si installi da sé |
+| `riavvia` | fa ripartire un add-on che è fermo |
+
+Niente altro: nessuna riga di comando, nessun cambio di configurazione, nessuna
+lettura di stati. L'elenco dei verbi sta **nel programma del ponte**, non nel
+messaggio: una parola che non è in quella lista viene rifiutata, e non c'è modo
+di aggiungerne una dall'esterno.
+
+**Il quadro non bussa mai.** Non potrebbe: una casa di gdahome un indirizzo
+pubblico non ce l'ha, ed è tutto il punto del ponte. L'ordine viaggia **nella
+risposta alla cartolina**: la casa deposita i suoi numeri, e nella risposta si
+trova, se c'è, una cosa da fare. Nessuna porta da aprire, nessun servizio in
+ascolto — la stessa forma che ha già il filo verso il centralino.
+
+**La manutenzione è un secondo interruttore**, e spento di serie:
+
+```yaml
+quadro: "…"            # manda la cartolina
+quadro_manutenzione: false   # e lasciati anche aggiornare — no, finché non lo dici
+```
+
+Vedere e toccare sono due permessi, e il secondo non si dà da sé insieme al
+primo. Nella console dell'add-on, scheda «Il quadro», stanno l'interruttore, la
+lista dei due verbi scritta a parole, e **il registro di quello che il quadro
+ha fatto in questa casa** — con la data. Chi ci abita legge cosa è stato
+toccato, quando, e da chi.
+
+Tre regole che il ponte applica e il quadro non può scavalcare:
+
+1. **Il backup viene prima, sempre.** Non è una casella da spuntare: è la
+   condizione perché il verbo esista. Un aggiornamento che va storto senza
+   backup dietro è una casa da rifare.
+2. **Quelli che staccano il filo, uno per volta.** `aggiornamenti.js` li marca
+   già (`stacca`): gdahome e Home Assistant si riavviano installandosi. Due
+   insieme sulla stessa casa vogliono dire non sapere quale dei due non è
+   tornato.
+3. **Quello che non si installa da sé non ha un tasto.** `installabile` lo dice
+   già, ed è la regola che il ponte si è data: un firmware che si porta col
+   cacciavite mostrato con un tasto è una promessa che non si mantiene.
+
+E una conseguenza che va guardata in faccia: **una casa che sta installando
+qualcosa che stacca il filo smette di mandare cartoline.** Senza saperlo, il
+quadro la darebbe per muta ogni volta che si aggiorna qualcosa. Perciò sa cosa
+ha chiesto, e lo dice: entro tre quarti d'ora è «sta aggiornando»; oltre, non è
+più un'attesa ma **«non è tornata»** — che è la cosa peggiore che possa fare un
+quadro che aggiorna da lontano, e va detta con quelle parole invece che
+nascosta dietro un «muta».
+
+### La schermata di flotta
+
+Casa per casa la domanda è «a questa cosa manca». Con quaranta impianti è
+un'altra: **«quali sono indietro su Home Assistant Core?»**. La scheda
+«Aggiornamenti» raggruppa per quello che c'è da installare invece che per dove
+sta, e sotto ogni voce ci sono le case che ce l'hanno indietro con la versione
+che hanno adesso. Un gesto invece di quaranta — e un avvertimento scritto lì
+sotto, perché quaranta case insieme sono quaranta rischi insieme.
+
 ## Cosa il quadro non può fare
 
 È la parte che decide se questo pezzo si può dare a qualcuno, e viene prima di
@@ -310,16 +375,21 @@ tutte le altre. Un installatore che tiene quaranta impianti non deve poter
 guardare dentro quaranta case: quelle case sono di altri, e dentro ci sono le
 telecamere, le presenze, gli orari di chi ci vive.
 
-Perciò il quadro **guarda e basta**, e le tre cose che non fa sono tre cose che
-non ha:
+Perciò il quadro **non guarda dentro**, e le tre cose che non fa sono tre cose
+che non ha:
 
 - **non apre la plancia** — non c'è nessun tasto che porti dentro una casa, e
   non è un tasto dimenticato: il quadro non ha nessun segno con cui entrare;
-- **non comanda niente** — la cartolina va in una direzione sola, e non esiste
-  un verso di ritorno. Un quadro che comandasse sarebbe una porta di servizio
-  dell'installatore in casa del cliente;
 - **non vede entità, stanze né persone** — riceve numeri, versioni e nomi di
-  processi, e si ferma lì.
+  processi, e si ferma lì;
+- **non tocca niente oltre i due verbi** — e solo dove quella casa ha aperto la
+  manutenzione. Non c'è una riga di comando, non si cambia la configurazione,
+  non si legge uno stato.
+
+Le due cose si tengono insieme meglio di come sembra: **un elettricista
+sostituisce un interruttore senza leggere la posta di chi ci abita.** Guardare
+dentro casa e fare manutenzione sulla scatola non sono lo stesso permesso, e
+questo pezzo dà il secondo e non il primo.
 
 Per entrare in una casa serve un abbinamento, e quello lo dà **chi ci abita**,
 col suo segno, che toglie con un bottone quando vuole. Vale anche per
@@ -330,8 +400,12 @@ guardi.
 
 ## Le tre regole che non si toccano
 
-1. **Il quadro ascolta e non parla.** Vedi qui sopra: la cartolina va in una
-   direzione sola, e il quadro non ha con che entrare né con che comandare.
+1. **Il quadro non guarda dentro, e tocca solo quello che gli è stato
+   aperto.** Una stesura precedente diceva «ascolta e non parla», e con gli
+   aggiornamenti quella frase è diventata falsa: si cambia invece di tenerla
+   per bella. Quello che non cambia è la metà che conta — dentro casa non
+   guarda — e quello che si è aggiunto ha un interruttore suo, spento di serie,
+   in mano a chi ci abita.
 2. **Il consenso è di chi ci abita, non di chi ha installato.** L'opzione si
    vede nella scheda dell'add-on, la scheda della console fa leggere parola per
    parola quello che parte, e il tasto per smettere è lì di fianco. Si dice, non
