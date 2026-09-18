@@ -664,14 +664,21 @@ function skeletonMarkup(labels) {
             <span class="g-val" data-dm-total-running>0</span>
             <span class="g-name">${esc(labels.active)}<span class="dm-sr-only"> · ${esc(labels.activeHidden)}</span></span>
           </div>
+          <!-- La sfumatura porta il nome del suo posto, il pannello che la
+               contiene: un nome fisso, in una pagina con due grafici, farebbe
+               rispondere il primo per tutti, e se il primo fosse in un ramo
+               chiuso non dipingerebbe nessuno — il difetto delle icone
+               trasparenti su iPhone, con un altro nome. Il posto e' unico in
+               pagina perche' e' un identificatore, quindi due non ce ne
+               possono essere. -->
           <svg class="dm-side-spark" data-dm-spark viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
             <defs>
-              <linearGradient id="dm-appl-spark-fill" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="appl-kpi-grid-spark" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0" stop-color="#0ea5e9" stop-opacity="0.35"/>
                 <stop offset="1" stop-color="#0ea5e9" stop-opacity="0.02"/>
               </linearGradient>
             </defs>
-            <path class="dm-spark-area" d="" fill="url(#dm-appl-spark-fill)"/>
+            <path class="dm-spark-area" d="" fill="url(#appl-kpi-grid-spark)"/>
             <path class="dm-spark-line" d="" fill="none"/>
           </svg>
           <div class="glance-card dm-total-daily">

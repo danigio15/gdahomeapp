@@ -27,6 +27,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile, readdir } from "node:fs/promises";
 
+import { applianceHeroArtwork } from "../src/core/appliance-hero-artwork.js";
 import { CHIAVI_OGGETTI, oggettoWidget } from "../src/core/oggetti-widget.js";
 
 const SORGENTE = new URL("../src/", import.meta.url);
@@ -152,4 +153,90 @@ test("chi mostra un oggetto dice sempre dove lo mette", async () => {
     [],
     "qui si mostra un disegno senza dire dove: passa un terzo argomento stabile (il posto), o su iPhone quel disegno resta trasparente",
   );
+});
+
+/* ── e i disegni che non stanno nel catalogo ────────────────────────────────
+ *
+ * La regola non riguarda solo le icone: vale per ogni sfumatura, ogni filtro,
+ * ogni maschera. Contati sulla sorgente, in tutta la plancia i disegni che
+ * citano un nome sono quattro file: il catalogo degli oggetti, il disegno
+ * grande dell'elettrodomestico, il grafico degli elettrodomestici e la traccia
+ * del server. Gli ultimi tre avevano un nome FISSO — funzionava perche' in
+ * pagina ce n'era uno solo alla volta, cioe' per fortuna e non per
+ * costruzione. Adesso ognuno porta il nome del suo posto.
+ */
+
+test("il disegno grande dell'elettrodomestico: due posti, nessun nome in comune", () => {
+  const uno = applianceHeroArtwork("lavatrice", 170, { chiave: "lavatrice-1" });
+  const due = applianceHeroArtwork("lavatrice", 170, { chiave: "lavatrice-2" });
+  const nomi = (markup) => new Set([...markup.matchAll(/\bid="([^"]+)"/g)].map(([, id]) => id));
+  const suoi = nomi(uno);
+  assert.ok(suoi.size > 5, `poche definizioni: ${suoi.size}`);
+  const comuni = [...suoi].filter((id) => nomi(due).has(id));
+  assert.deepEqual(comuni, [], "due disegni di posti diversi si passano una definizione");
+  /* Il filtro dell'ombra era l'unico fisso: da lui il primo disegno della
+   * pagina rispondeva per tutti. */
+  for (const markup of [uno, due]) {
+    const dichiarati = nomi(markup);
+    for (const [, id] of markup.matchAll(/url\(#([^)\s]+)\)/g)) {
+      assert.ok(dichiarati.has(id), `${id} non e' dichiarato dentro il disegno`);
+    }
+    assert.ok(!markup.includes("url(#dmh-blur)"), "il filtro e' tornato a un nome fisso");
+  }
+});
+
+test("il grafico e la traccia portano il nome della loro pagina", async () => {
+  const grafico = await readFile(
+    new URL("../src/sections/appliance-showcase-section.js", import.meta.url),
+    "utf8",
+  );
+  /* Il posto e' il pannello che lo contiene, ed e' un identificatore: in una
+   * pagina non ce ne possono essere due. */
+  assert.match(grafico, /id="appl-kpi-grid-spark"/);
+  assert.match(grafico, /url\(#appl-kpi-grid-spark\)/);
+  assert.ok(!grafico.includes("dm-appl-spark-fill"), "il nome fisso e' tornato");
+
+  const traccia = await readFile(
+    new URL("../src/sections/minipc-showcase-section.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(traccia, /id="page-server-trace"/);
+  /* Qui il riempimento lo mette il foglio di stile, non il markup: e' il caso
+   * che un censimento del solo markup non vedrebbe. */
+  assert.match(traccia, /\.dm-srvx-trace-area\{fill:url\(#page-server-trace\)\}/);
+  assert.ok(!traccia.includes("dmSrvxTraceFill"), "il nome fisso e' tornato");
+});
+
+test("in tutta la plancia, chi chiede una sfumatura la dichiara nel suo file", async () => {
+  /* La rete larga: un nome chiesto in un file e dichiarato in un altro e' per
+   * definizione un rimando fra due elementi della pagina, che e' la cosa da
+   * cui si viene. Si guarda la sorgente senza i commenti, dove i nomi si
+   * citano per raccontare il difetto e non per dipingere. */
+  const senzaCommenti = (testo) => testo.replace(/\/\*[\s\S]*?\*\//g, " ");
+  /* Solo i nomi scritti per intero: un «$» vuol dire che quel pezzo lo compone
+   * il programma — «url(#${prefisso}$1)» e' la riscrittura che da' a ogni
+   * disegno il nome del suo posto, e «url(#$2)» e' il ripiego di colore. Non
+   * sono nomi, sono modelli, e a controllarli ci sono le prove qui sopra, che
+   * guardano il markup finito invece della sorgente. */
+  const files = (await readdir(SORGENTE, { recursive: true })).filter((nome) => /\.js$/.test(nome));
+  const guai = [];
+  let chiesti = 0;
+  for (const nome of files) {
+    const testo = senzaCommenti(await readFile(new URL(nome, SORGENTE), "utf8"));
+    const chiede = new Set([
+      ...[...testo.matchAll(/url\(#([A-Za-z0-9_-]+)\)/g)].map(([, id]) => id),
+      ...[...testo.matchAll(/<use[^>]*?(?:xlink:)?href="#([A-Za-z0-9_-]+)/g)].map(([, id]) => id),
+    ]);
+    if (!chiede.size) continue;
+    chiesti += chiede.size;
+    const dichiara = new Set([
+      ...[...testo.matchAll(/\bid="([A-Za-z0-9_-]+)"/g)].map(([, id]) => id),
+      ...[...testo.matchAll(/\.id\s*=\s*"([A-Za-z0-9_-]+)"/g)].map(([, id]) => id),
+    ]);
+    for (const id of chiede) {
+      if (!dichiara.has(id)) guai.push(`${nome} → ${id}`);
+    }
+  }
+  assert.ok(chiesti > 40, `pochi nomi chiesti: ${chiesti}`);
+  assert.deepEqual(guai, [], "questo file chiede una sfumatura che non dichiara");
 });
