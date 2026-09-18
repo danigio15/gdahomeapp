@@ -55,14 +55,25 @@ export function laVersioneDellApp(pubspec) {
   return /^version: (\S+)$/m.exec(pubspec)?.[1] || "";
 }
 
-/* Il numero di costruzione: 1.4.25 → 104250, e 1.4.25.1 → 104251.
+/* Quante correzioni ci stanno fra due versioni della plancia: cento, da 0 a 99.
  *
- * L'ultima cifra e' la correzione dell'add-on, e senza correzione e' zero:
- * cosi' ogni versione della plancia ne ha dieci a disposizione, e il numero
- * cresce sempre — che e' l'unica cosa che i negozi chiedono. */
+ * **Erano dieci**, e dieci sono finite: dopo la 1.4.32.9 il numero successivo
+ * e' la 1.4.32.10, e con una cifra sola quella dava 104330 — **lo stesso
+ * numero della 1.4.33**. Un numero di costruzione non si puo' riusare: il
+ * negozio lo rifiuta, e non lo rifiuta oggi, lo rifiuta il giorno che si fa la
+ * plancia nuova, quando nessuno si ricorda piu' perche'.
+ *
+ * Allargandolo a due cifre i numeri **crescono comunque** — 1.4.32.9 era
+ * 104329 e diventa 1043209 — che e' l'unica cosa che i negozi chiedono. */
+const CORREZIONI = 100;
+
+/* Il numero di costruzione: 1.4.25 → 1042500, e 1.4.25.1 → 1042501.
+ *
+ * Le ultime due cifre sono la correzione dell'add-on, e senza correzione sono
+ * zero: cosi' non c'e' un secondo numero da ricordarsi. */
 export function laCostruzione(versione) {
   const [grande, medio, piccolo, correzione = 0] = versione.split(".").map(Number);
-  return (grande * 10000 + medio * 100 + piccolo) * 10 + correzione;
+  return (grande * 10000 + medio * 100 + piccolo) * CORREZIONI + correzione;
 }
 
 function scrivi(quale) {
@@ -71,6 +82,16 @@ function scrivi(quale) {
     process.stderr.write(
       `«${quale}» non e' una versione: ci vogliono tre numeri, o quattro con la\n` +
         "correzione dell'add-on. Per esempio 1.4.25 oppure 1.4.25.1\n",
+    );
+    process.exit(64);
+  }
+  /* La correzione deve stare nel posto che ha. Se no il numero di costruzione
+   * si accavalla con quello della plancia dopo, e non lo si scopre qui: lo
+   * scopre il negozio, mesi dopo, rifiutando un numero gia' usato. */
+  if (pezzi.length === 4 && Number(pezzi[3]) >= CORREZIONI) {
+    process.stderr.write(
+      `la correzione «${pezzi[3]}» non ci sta: da 0 a ${CORREZIONI - 1}.\n` +
+        "Oltre, il numero di costruzione sarebbe quello della plancia dopo.\n",
     );
     process.exit(64);
   }

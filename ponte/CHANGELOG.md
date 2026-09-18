@@ -5,6 +5,43 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.10
+
+**I loghi che non arrivano lo dicono, invece di sparire in silenzio.**
+
+Nella 1.4.32.9 ogni riga degli aggiornamenti ha preso il suo segno, e in
+una casa vera alcuni si vedevano e altri no — l'add-on con la sua icona sì,
+Home Assistant sì, un add-on qualunque no, gli interruttori Zigbee no. Non
+era il logo il problema: era che **non c'era modo di sapere perché**. Tre
+silenzi, e sono chiusi tutti e tre.
+
+Un 404 di Home Assistant è una risposta _riuscita_ con dentro un no, e
+diventava «niente logo» senza lasciare traccia: da fuori non si poteva
+distinguere un indirizzo storto, un segno non passato, e un add-on che
+un'icona non ce l'ha. Adesso il registro dell'add-on scrive, per ogni logo
+che non arriva, **dove** ha chiesto e **cosa gli ha risposto**.
+
+Un salto di indirizzo — un `301` — tornava anche lui come una risposta
+riuscita, con dentro niente. Ora si segue, uno solo, e solo verso un
+indirizzo che sarebbe passato comunque.
+
+E il terzo, che era il peggiore: **una caduta diventava «non ce n'è uno»,
+per sempre.** Il filo che cade un momento, i marchi che non rispondono, un
+`502` — e quella riga restava con l'iniziale fino a che l'app non si
+riapriva. Adesso un intoppo si riprova alla lettura dopo; solo un
+indirizzo che non esiste resta un no, perché domani non risponderà in un
+altro modo.
+
+I segni si chiedono a gruppi di quattro invece di uno per volta: uno per
+volta il decimo aspettava i nove prima di lui, e uno lento teneva fermi
+tutti quelli dopo. In una casa con dieci aggiornamenti si vedeva.
+
+**E le correzioni dell'add-on adesso sono cento invece di dieci.** Il
+quarto numero aveva una cifra sola, e dieci sono finite proprio qui: la
+1.4.32.10 dava lo stesso numero di costruzione della 1.4.33 — un numero
+che il negozio rifiuta, e non il giorno dello sbaglio, il giorno che si fa
+la plancia nuova.
+
 ## 1.4.32.9
 
 **Gli aggiornamenti di casa, con i loghi, e queste note lette dentro l'app.**

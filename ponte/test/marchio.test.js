@@ -176,10 +176,14 @@ test("l'app e l'add-on portano lo stesso numero", () => {
   );
 
   /* E il numero di costruzione — quello che vogliono i negozi, che deve solo
-   * crescere — si deriva dal nome: 1.4.24 diventa 104240, e la correzione
-   * dell'add-on e' l'ultima cifra: 1.4.24.1 diventa 104241. Cosi' non c'e' un
-   * secondo numero da ricordarsi, e ogni versione della plancia ha dieci
-   * correzioni a disposizione per andare anche nel negozio. */
+   * crescere — si deriva dal nome: 1.4.24 diventa 1042400, e la correzione
+   * dell'add-on sono le ultime due cifre: 1.4.24.1 diventa 1042401. Cosi' non
+   * c'e' un secondo numero da ricordarsi, e ogni versione della plancia ha
+   * **cento** correzioni a disposizione per andare anche nel negozio.
+   *
+   * Cento e non dieci: dieci sono finite alla 1.4.32.9, e la 1.4.32.10 con una
+   * cifra sola dava lo stesso numero della 1.4.33 — che il negozio rifiuta il
+   * giorno che si fa la plancia nuova, non il giorno dello sbaglio. */
   /* E il terzo posto: il numero che l'app **fa vedere**.
    *
    * Il `pubspec` lo legge chi costruisce, non l'app che gira, e per rileggerlo
@@ -199,9 +203,19 @@ test("l'app e l'add-on portano lo stesso numero", () => {
   assert.equal(scritto[1], `${nome[1]} (${costruzione})`);
 
   const correzione = suoi.length === 4 ? Number(suoi[3]) : 0;
-  assert.ok(correzione >= 0 && correzione <= 9, "di correzioni ce ne stanno dieci, da 0 a 9");
+  assert.ok(correzione >= 0 && correzione <= 99, "di correzioni ce ne stanno cento, da 0 a 99");
   assert.equal(
     Number(costruzione),
-    (Number(grande) * 10000 + Number(medio) * 100 + Number(piccolo)) * 10 + correzione,
+    (Number(grande) * 10000 + Number(medio) * 100 + Number(piccolo)) * 100 + correzione,
   );
+
+  /* E due versioni diverse non fanno lo stesso numero di costruzione: e' la
+   * regola che si era rotta, e questa la tiene. */
+  const numeroDi = (v) => {
+    const [a, b, c, d = 0] = v.split(".").map(Number);
+    return (a * 10000 + b * 100 + c) * 100 + d;
+  };
+  assert.notEqual(numeroDi("1.4.32.10"), numeroDi("1.4.33"));
+  assert.ok(numeroDi("1.4.32.10") > numeroDi("1.4.32.9"));
+  assert.ok(numeroDi("1.4.33") > numeroDi("1.4.32.99"));
 });
