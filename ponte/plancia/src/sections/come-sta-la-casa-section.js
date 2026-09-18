@@ -31,7 +31,12 @@ import {
   postaRitirata,
 } from "../core/come-sta-la-casa.js";
 import { comandoPerSpegnere } from "../core/come-si-spegne.js";
-import { durataDellaDeriva, spazioDaPercorrere } from "../core/la-fascia-deriva.js";
+import {
+  VELO_DELLA_FASCIA,
+  durataDellaDeriva,
+  laCorsaDelNastro,
+  spazioDaPercorrere,
+} from "../core/la-fascia-deriva.js";
 import { haOggettoWidget, oggettoWidget } from "../core/oggetti-widget.js";
 import { windowOpenFromState } from "../core/shutter-window.js";
 import { iconGlyphMarkup } from "./icon-engine-section.js";
@@ -456,17 +461,24 @@ function imbottituraDellaFascia(riga) {
 function tieniLaFasciaInMovimento(riga) {
   const nastro = riga?.querySelector(":scope > .dm-casa-nastro");
   if (!nastro) return false;
-  const strada = spazioDaPercorrere({
+  const fuori = spazioDaPercorrere({
     scrollWidth: nastro.scrollWidth,
     clientWidth: riga.clientWidth,
     imbottitura: imbottituraDellaFascia(riga),
   });
+  /* La corsa e' quello che sporge piu' un velo per capo: cosi' la prima e
+   * l'ultima pastiglia, dove il nastro si ferma, escono da sotto la
+   * sfumatura. Il velo lo dice il modulo, e lo scriviamo anche nel foglio —
+   * la sfumatura si disegna con questo numero, non con una sua copia. */
+  const strada = laCorsaDelNastro(fuori);
   if (!strada) {
     delete riga.dataset.dmDeriva;
+    riga.style.removeProperty("--dm-casa-velo");
     riga.style.removeProperty("--dm-casa-strada");
     riga.style.removeProperty("--dm-casa-durata");
     return false;
   }
+  riga.style.setProperty("--dm-casa-velo", `${VELO_DELLA_FASCIA}px`);
   riga.style.setProperty("--dm-casa-strada", `${strada}px`);
   riga.style.setProperty("--dm-casa-durata", `${durataDellaDeriva(strada)}s`);
   riga.dataset.dmDeriva = "true";
@@ -1087,9 +1099,15 @@ function stile() {
        non sa quanto sono larghe le pastiglie. */
     #dm-casa-riga[data-dm-deriva="true"] .dm-casa-nastro{
       animation:dm-casa-deriva var(--dm-casa-durata,12s) ease-in-out infinite alternate}
+    /* La corsa sporge di un velo ai due capi, e il velo e' la sfumatura qui
+       sotto: lo stesso numero, preso dalla stessa variabile. Dove il nastro si
+       ferma, la pastiglia che si stava aspettando resta in chiaro invece che
+       mezza sotto la sfumatura — era quello il «tagliata ai lati».
+       La strada la conta la sezione col velo dentro, perche' la durata si
+       calcola sulla distanza e la velocita' deve restare quella. */
     @keyframes dm-casa-deriva{
-      from{translate:0}
-      to{translate:calc(-1 * var(--dm-casa-strada,0px))}}
+      from{translate:var(--dm-casa-velo,0px)}
+      to{translate:calc(var(--dm-casa-velo,0px) - var(--dm-casa-strada,0px))}}
     /* Chi ci mette il dito o il puntatore sopra comanda lui: la fascia si ferma
        e si legge. Riprende quando lo si toglie. */
     #dm-casa-riga:hover .dm-casa-nastro,
@@ -1098,12 +1116,17 @@ function stile() {
     /* Le sfumature ai due bordi dicono «continua»: si accendono solo quando
        c'e' davvero qualcosa fuori. */
     #dm-casa-riga[data-dm-deriva="true"]{
-      mask-image:linear-gradient(to right,transparent 0,#000 22px,#000 calc(100% - 22px),transparent 100%);
-      -webkit-mask-image:linear-gradient(to right,transparent 0,#000 22px,#000 calc(100% - 22px),transparent 100%)}
+      mask-image:linear-gradient(to right,transparent 0,#000 var(--dm-casa-velo,0px),#000 calc(100% - var(--dm-casa-velo,0px)),transparent 100%);
+      -webkit-mask-image:linear-gradient(to right,transparent 0,#000 var(--dm-casa-velo,0px),#000 calc(100% - var(--dm-casa-velo,0px)),transparent 100%)}
     @media (prefers-reduced-motion:reduce){
       /* Chi ha chiesto meno animazioni si trascina la fascia a mano: e' l'unico
-         caso in cui torna a scorrere invece di derivare. */
-      #dm-casa-riga[data-dm-deriva="true"] .dm-casa-nastro{animation:none}
+         caso in cui torna a scorrere invece di derivare. E fermo il nastro, il
+         velo se lo deve guadagnare lo scorrimento — il nastro si allarga di un
+         velo per parte, e chi trascina porta la prima e l'ultima pastiglia
+         fuori dalla sfumatura come fa la deriva. Senza, qui restavano tagliate
+         davvero: a mano non si sporge. */
+      #dm-casa-riga[data-dm-deriva="true"] .dm-casa-nastro{
+        animation:none;padding-inline:var(--dm-casa-velo,0px)}
       #dm-casa-riga[data-dm-deriva="true"]{overflow-x:auto;scrollbar-width:none}
       #dm-casa-riga[data-dm-deriva="true"]::-webkit-scrollbar{display:none}}
 

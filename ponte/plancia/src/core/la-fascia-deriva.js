@@ -62,6 +62,39 @@ export function spazioDaPercorrere({ scrollWidth, clientWidth, imbottitura = 0 }
   return oltre > TOLLERANZA ? Math.round(oltre) : 0;
 }
 
+/* Quanto sporge il velo dentro la fascia, a ogni capo.
+ *
+ * I due bordi sono sfumati per dire «continua»: dove la sfumatura è piena, la
+ * pastiglia che le sta sotto non si legge. Finché il nastro cammina non è un
+ * danno — quello che sfuma adesso si legge un istante dopo — ma ai due capi il
+ * nastro si ferma, e lì la pastiglia che si stava aspettando restava sotto il
+ * velo senza più strada per uscirne. «La fascia si taglia ai lati»: era vero,
+ * e si tagliava proprio dove si era fermata ad aspettare.
+ *
+ * Allora la corsa non finisce dove finiscono le pastiglie, ma un velo più in
+ * là: ai due capi il nastro sporge di quanto la fascia sfuma, e la prima e
+ * l'ultima pastiglia si fermano in chiaro.
+ *
+ * Il numero sta qui, uno solo, e da qui lo prende anche il foglio di stile —
+ * `--dm-casa-velo`, che è quello con cui disegna la sfumatura. Scritto in due
+ * posti, prima o poi uno dei due cambierebbe da solo e la pastiglia tornerebbe
+ * mezza sfumata senza che nessuno avesse toccato la sfumatura.
+ */
+export const VELO_DELLA_FASCIA = 22;
+
+/**
+ * La corsa intera del nastro: quello che sporge, più un velo per capo.
+ *
+ * È questa — non il solo spazio fuori — la strada che il nastro percorre
+ * davvero, quindi è questa che va detta al foglio e data alla durata: il tempo
+ * si calcola sulla distanza, e sulla distanza sbagliata la velocità non
+ * sarebbe più quella.
+ */
+export function laCorsaDelNastro(spazio) {
+  const fuori = Math.max(0, numero(spazio));
+  return fuori ? Math.round(fuori) + 2 * VELO_DELLA_FASCIA : 0;
+}
+
 /* Quanto ci mette a percorrerlo, a velocità costante.
  *
  * A velocità costante e non a durata costante, ed è la differenza fra una cosa

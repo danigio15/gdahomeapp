@@ -27,7 +27,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { durataDellaDeriva, spazioDaPercorrere } from "../src/core/la-fascia-deriva.js";
+import {
+  VELO_DELLA_FASCIA,
+  durataDellaDeriva,
+  laCorsaDelNastro,
+  spazioDaPercorrere,
+} from "../src/core/la-fascia-deriva.js";
 
 test("una fascia che ci sta tutta non ha strada da fare", () => {
   assert.equal(spazioDaPercorrere({ scrollWidth: 300, clientWidth: 300 }), 0);
@@ -147,4 +152,95 @@ test("la sezione dice davvero quanto misura l'imbottitura, o il conto resta teor
   assert.match(sezione, /function imbottituraDellaFascia\(riga\)/);
   assert.match(sezione, /paddingLeft/);
   assert.match(sezione, /paddingRight/);
+});
+
+/* «Sistema la fascia tagliata ai lati.»
+ *
+ * La fascia non era rotta: deriva, si ferma se le si mette un dito sopra, e
+ * sfuma i due bordi solo quando c'è davvero qualcosa fuori. Tagliata lo era
+ * però ai due capi della corsa, e per una ragione precisa: il nastro arrivava
+ * a filo del bordo interno, e sul bordo interno la sfumatura è ancora piena.
+ * La prima e l'ultima pastiglia — quelle che si stava aspettando — si
+ * fermavano mezze sotto il velo, senza più strada per uscirne.
+ */
+test("la corsa del nastro sporge di un velo a ogni capo", () => {
+  const fuori = spazioDaPercorrere({ scrollWidth: 520, clientWidth: 358 });
+  assert.equal(fuori, 162);
+  assert.equal(laCorsaDelNastro(fuori), 162 + 2 * VELO_DELLA_FASCIA);
+});
+
+test("ai due capi la pastiglia esce tutta da sotto la sfumatura", () => {
+  /* Il conto che conta: alla fine dell'andata il nastro non si ferma a filo
+   * del bordo, ma un velo più in là. Quello che avanza oltre lo spazio fuori è
+   * esattamente il velo, per parte. */
+  for (const fuori of [3, 40, 162, 900]) {
+    const corsa = laCorsaDelNastro(fuori);
+    const sporgenza = (corsa - fuori) / 2;
+    assert.equal(sporgenza, VELO_DELLA_FASCIA, `con ${fuori} fuori`);
+    assert.ok(sporgenza >= VELO_DELLA_FASCIA, "sotto il velo resterebbe tagliata");
+  }
+});
+
+test("una fascia che ci sta tutta non sporge di niente", () => {
+  /* Il velo si accende solo con la deriva: senza strada non c'è né sfumatura
+   * né sporgenza, altrimenti una casa tranquilla con due voci avrebbe due
+   * bordi sfumati che dicono «continua» su niente. */
+  assert.equal(laCorsaDelNastro(0), 0);
+  assert.equal(laCorsaDelNastro(-10), 0);
+  assert.equal(laCorsaDelNastro(undefined), 0);
+});
+
+test("la durata si calcola sulla corsa vera, velo compreso", () => {
+  /* Altrimenti la velocità non è più quella dichiarata: quarantaquattro pixel
+   * percorsi nel tempo di zero sono uno strappo alla fine di ogni andata. */
+  const fuori = 200;
+  const corsa = laCorsaDelNastro(fuori);
+  assert.ok(durataDellaDeriva(corsa) > durataDellaDeriva(fuori));
+  assert.equal(durataDellaDeriva(corsa), durataDellaDeriva(fuori + 2 * VELO_DELLA_FASCIA));
+});
+
+test("il velo della sfumatura e quello della corsa sono lo stesso numero", () => {
+  /* Scritto due volte — una nella sfumatura, una nella corsa — prima o poi uno
+   * dei due cambierebbe da solo, e la pastiglia tornerebbe mezza sfumata senza
+   * che nessuno avesse toccato la sfumatura. Quindi: un numero nel modulo, una
+   * variabile nel foglio, e nel foglio nessuna misura scritta a mano. */
+  const sezione = readFileSync(
+    new URL("../src/sections/come-sta-la-casa-section.js", import.meta.url),
+    "utf8",
+  );
+  /* Lo scrive la sezione, col numero del modulo. */
+  assert.match(sezione, /setProperty\("--dm-casa-velo", `\$\{VELO_DELLA_FASCIA\}px`\)/);
+  assert.match(sezione, /const strada = laCorsaDelNastro\(fuori\)/);
+  assert.match(sezione, /durataDellaDeriva\(strada\)/);
+  /* La sfumatura lo legge da lì, e la corsa anche. */
+  const sfumatura = sezione.match(/mask-image:linear-gradient\(to right,[^;}]+/g) || [];
+  assert.equal(sfumatura.length, 2, "la sfumatura e la sua copia -webkit-");
+  for (const riga of sfumatura) {
+    assert.match(riga, /var\(--dm-casa-velo/);
+    /* Il ripiego della variabile è uno zero, e uno zero non è una misura:
+     * togliendola, nella sfumatura non deve restare nessun numero. */
+    const senzaVelo = riga.replaceAll("var(--dm-casa-velo,0px)", "VELO");
+    assert.ok(!/\d+px/.test(senzaVelo), `misura scritta a mano nella sfumatura: ${riga}`);
+  }
+  assert.match(sezione, /from\{translate:var\(--dm-casa-velo,0px\)\}/);
+  assert.match(
+    sezione,
+    /to\{translate:calc\(var\(--dm-casa-velo,0px\) - var\(--dm-casa-strada,0px\)\)\}/,
+  );
+  /* E quando non c'è deriva si toglie con gli altri: una variabile rimasta
+   * sporcherebbe la prossima fascia che non deve muoversi. */
+  assert.match(sezione, /removeProperty\("--dm-casa-velo"\)/);
+});
+
+test("senza animazioni il velo se lo guadagna lo scorrimento", () => {
+  /* Chi ha chiesto meno movimento si trascina la fascia a mano, e a mano non
+   * si può sporgere oltre il contenuto: lì il velo lo deve fare il nastro,
+   * allargandosi di quanto la fascia sfuma. Senza, in quel caso le due
+   * pastiglie dei capi restavano tagliate davvero. */
+  const sezione = readFileSync(
+    new URL("../src/sections/come-sta-la-casa-section.js", import.meta.url),
+    "utf8",
+  );
+  const menoMovimento = sezione.slice(sezione.indexOf("@media (prefers-reduced-motion:reduce)"));
+  assert.match(menoMovimento, /padding-inline:var\(--dm-casa-velo,0px\)/);
 });
