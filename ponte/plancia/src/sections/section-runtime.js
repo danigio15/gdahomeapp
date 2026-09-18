@@ -57,6 +57,7 @@ import { installQuickClimateEditorSection } from "./quick-climate-editor-section
 import { installVmcEditor } from "./vmc-editor-section.js";
 import { installAssistSection } from "./assist-section.js";
 import { installAssistEditor } from "./assist-editor-section.js";
+import { installClimaCosaManca } from "./il-clima-dice-cosa-manca-section.js";
 import { installTrvEditor } from "./trv-editor-section.js";
 import { installSecurityShowcaseSection } from "./security-showcase-section.js";
 import { installSecurityDoorsSection } from "./security-doors-section.js";
@@ -937,6 +938,7 @@ export function installSectionRuntime() {
     installQuickClimateEditorSection();
     /* La valvola TRV (#300): una casella in piu' nella scheda dell'unita' clima. */
     installTrvEditor();
+    installClimaCosaManca();
     /* La ventilazione meccanica (#371): la sua scheda si appende in fondo
      * alla configurazione del Clima, dov'e' che uno cerca l'aria di casa. */
     installVmcEditor();

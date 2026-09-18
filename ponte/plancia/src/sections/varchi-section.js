@@ -18,6 +18,7 @@ import { CHIAVE_VERSI, insiemeInvertiti } from "../core/verso-aperture.js";
 import {
   CHIAVE_VARCHI,
   contoDeiVarchi,
+  varchiConLeFinestre,
   varchiConfigurati,
   varchiDiCasa,
 } from "../core/varchi-di-casa.js";
@@ -44,8 +45,16 @@ export const VARCHI_TAB = "varchi";
 
 /* ── cosa c'è da guardare ─────────────────────────────────────────────── */
 
+/* La configurazione, coi contatti dichiarati nelle Finestre dentro.
+ *
+ * Li aggiungeva solo la tessera della Home, e qui non si vedevano: la stessa
+ * casa aveva due elenchi di varchi a seconda di dove la si guardava. Adesso
+ * l'elenco e' uno, e lo compone `varchiConLeFinestre`. */
 function configurazione() {
-  return readJson(CHIAVE_VARCHI, {});
+  return varchiConLeFinestre(
+    readJson(CHIAVE_VARCHI, {}),
+    root.getTapparelle?.() || readJson("cd_tapparelle", []),
+  );
 }
 
 function girati() {

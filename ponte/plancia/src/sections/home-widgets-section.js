@@ -202,7 +202,12 @@ import {
 } from "../core/arieggiare.js";
 import { azioniDellaPorta } from "../core/security-door-model.js";
 import { humidityEntry } from "../core/room-overview.js";
-import { CHIAVE_VARCHI, contoDeiVarchi, varchiDiCasa } from "../core/varchi-di-casa.js";
+import {
+  CHIAVE_VARCHI,
+  contoDeiVarchi,
+  varchiConLeFinestre,
+  varchiDiCasa,
+} from "../core/varchi-di-casa.js";
 import {
   CHIAVE_RILEVAMENTI,
   rilevamentiAccesi,
@@ -3892,33 +3897,22 @@ function ariaModel(states) {
  * domande diverse — «come stanno le mie finestre» e «cosa e' aperto in casa» —
  * e chi ne vuole una sola spegne la riga in UNA delle due, che dalla 1.4.15 si
  * puo' fare per tessera e non per entita'. */
-function contattiDelleFinestre() {
-  const righe = root.getTapparelle?.() || readJson("cd_tapparelle", []);
-  const presi = [];
-  for (const item of Array.isArray(righe) ? righe : []) {
-    for (const entity of [contactEntity(item), inferriataEntity(item)]) {
-      const id = clean(entity);
-      if (id) presi.push(id);
-    }
-  }
-  return presi;
-}
-
 function varchiModel(states) {
   const fuori = widgetExcludedEntities("varchi");
-  const config = readJson(CHIAVE_VARCHI, {});
   const girati = insiemeInvertiti(readJson(CHIAVE_VERSI, {}));
   /* I contatti dichiarati nelle Finestre entrano fra gli aggiunti: e' la
    * stessa strada di chi li aggiunge a mano nella scheda dei Varchi, perche' e'
    * la stessa cosa — qualcuno ha detto che quello e' un varco. Chi ne aveva
-   * escluso uno resta escluso: l'esclusione si legge dopo, e vince. */
-  const dichiarati = contattiDelleFinestre();
-  const conLeFinestre = dichiarati.length
-    ? { ...(config && typeof config === "object" ? config : {}) , aggiunte: [
-        ...(Array.isArray(config?.aggiunte) ? config.aggiunte : []),
-        ...dichiarati,
-      ] }
-    : config;
+   * escluso uno resta escluso: l'esclusione si legge dopo, e vince.
+   *
+   * Il conto lo fa `varchiConLeFinestre`, e non piu' questa tessera: la stessa
+   * riunione la fanno adesso anche la pagina Varchi e la sua scheda, che prima
+   * non ne sapevano niente — «in configurazione nessun contatto trovato,
+   * invece nella home me li mette tutti e due» (#19). */
+  const conLeFinestre = varchiConLeFinestre(
+    readJson(CHIAVE_VARCHI, {}),
+    root.getTapparelle?.() || readJson("cd_tapparelle", []),
+  );
   const righe = varchiDiCasa(states, conLeFinestre, girati, (entity) =>
     friendlyName(states, entity),
   ).filter((riga) => widgetIncludes(riga.entity, fuori));

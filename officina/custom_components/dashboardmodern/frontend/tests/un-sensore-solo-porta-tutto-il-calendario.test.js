@@ -317,3 +317,91 @@ test("lo stesso materiale non esce due volte da due elenchi", () => {
   );
   assert.equal(lettura.righe.filter((riga) => riga.materiale === "indifferenziato").length, 1);
 });
+
+/* Il SAVNO di Conegliano, con gli attributi veri della segnalazione #28.
+ *
+ * «Il sensore continua a non riportare alcun dato»: riportava una riga sola, e
+ * generica. La data la leggeva — `data` era già fra i nomi noti — ma la
+ * frazione no: quel sensore la scrive in `cosa` e in `rifiuti`, e nessuno dei
+ * due era fra i nomi che si guardavano. Sette ritiri diventavano sette
+ * «Altro», e siccome di ogni materiale si tiene la prima occasione, di sette
+ * ne restava uno.
+ */
+const SAVNO = Object.freeze({
+  state: "2026-09-18",
+  attributes: {
+    ritiri: [
+      {
+        giorno_settimana: "Venerdì",
+        quando: "Oggi",
+        data: "2026-09-18",
+        giorni_mancanti: 0,
+        cosa: "Umido + Secco",
+        rifiuti: ["Umido", "Secco"],
+      },
+      {
+        giorno_settimana: "Lunedì",
+        quando: "21/09",
+        data: "2026-09-21",
+        giorni_mancanti: 3,
+        cosa: "Verde Zona B",
+        rifiuti: ["Verde Zona B"],
+      },
+      {
+        giorno_settimana: "Giovedì",
+        quando: "24/09",
+        data: "2026-09-24",
+        giorni_mancanti: 6,
+        cosa: "Carta + Vetro 2",
+        rifiuti: ["Carta", "Vetro 2"],
+      },
+    ],
+    numero_ritiri: 3,
+    comune: "Conegliano",
+    icon: "mdi:calendar-clock",
+    friendly_name: "SAVNO Conegliano Prossimi ritiri",
+  },
+});
+const IL_GIORNO_DEL_SAVNO = Date.parse("2026-09-18T09:00:00+02:00");
+
+test("il sensore del comune scrive «cosa» e «rifiuti», e adesso si leggono", () => {
+  const righe = ritiriDaUnElenco(SAVNO, IL_GIORNO_DEL_SAVNO);
+  assert.deepEqual(materiali(righe), ["organico", "indifferenziato", "verde", "carta", "vetro"]);
+  assert.deepEqual(
+    righe.map((riga) => riga.giorni),
+    [0, 0, 3, 6, 6],
+  );
+  /* Nessuna riga «Altro»: se ne salta fuori una, vuol dire che una frazione
+   * non è stata riconosciuta. */
+  assert.ok(!materiali(righe).includes("altro"));
+});
+
+test("un ritiro che porta via due frazioni sono due bidoni, non uno", () => {
+  /* «Umido + Secco» stasera: chi guarda deve vederli tutti e due, perché sono
+   * due bidoni da mettere fuori. Indovinarne uno solo dal testo ne perdeva uno
+   * — e il perso era sempre lo stesso, quello scritto dopo. */
+  const righe = ritiriDaUnElenco(SAVNO, IL_GIORNO_DEL_SAVNO).filter((riga) => riga.giorni === 0);
+  assert.deepEqual(materiali(righe), ["organico", "indifferenziato"]);
+});
+
+test("la «e» non divide: «Plastica e lattine» resta un bidone solo", () => {
+  /* L'errore opposto, e sarebbe peggio: una frazione sola contata due volte
+   * riempie la sera di bidoni che non esistono. Si divide sui segni che
+   * separano — più, barra, virgola — non sulle congiunzioni. */
+  const righe = ritiriDaUnElenco(
+    { state: "ok", attributes: { prossimi_ritiri: [{ data: giorno(1), tipo: "Plastica e lattine" }] } },
+    ADESSO,
+  );
+  assert.deepEqual(materiali(righe), ["plastica"]);
+});
+
+test("una voce con la sola data resta una riga, come prima", () => {
+  /* Muta, ma con la sua data: un sensore che dice solo quando passa dice
+   * comunque qualcosa, e toglierla sarebbe una perdita. */
+  const righe = ritiriDaUnElenco(
+    { state: "ok", attributes: { prossimi_ritiri: [{ data: giorno(2) }] } },
+    ADESSO,
+  );
+  assert.deepEqual(materiali(righe), ["altro"]);
+  assert.equal(righe[0].giorni, 2);
+});

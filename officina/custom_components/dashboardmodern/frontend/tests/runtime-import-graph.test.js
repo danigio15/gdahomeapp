@@ -1276,8 +1276,17 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // mappa piatta «entita' → stanza», e chi disegna la legge. Il posto dove
   // quella mappa vive e' questo, ed e' uno solo: scriverla in tre punti
   // vorrebbe dire tre idee diverse di cosa sia una stanza.
+  // 361 con «cosa manca» nella scheda del clima (#10): «ogni qualvolta che
+  // seleziono l'entità climate.condizionatore_sala mi da questo errore
+  // Inserisci nome ed entità climate valida». L'entità era giusta, mancava il
+  // nome, e il messaggio dava la colpa all'unica cosa che andava bene. È un
+  // file in più perché è una regola in più e non una riga dentro qualcosa che
+  // parla d'altro: il nome lo si propone da Home Assistant quando la casella è
+  // vuota, e quando manca davvero si dice quale delle due caselle è. Gli altri
+  // che toccano quel tasto — la valvola TRV, il clima rapido, la VMC — gli
+  // attaccano ciascuno la propria casella, e questa è la loro stessa forma.
   assert.ok(
-    relative.length <= 360,
+    relative.length <= 361,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

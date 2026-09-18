@@ -348,6 +348,20 @@ const NOMI_DEL_MATERIALE = Object.freeze([
   "waste_types",
   "fraction",
   "frazione",
+  /* Il dialetto italiano dei sensori comunali: il SAVNO di Conegliano scrive
+   * `cosa: "Umido + Secco"` e `rifiuti: ["Umido", "Secco"]`, e nessuno dei due
+   * nomi era qui dentro. La data si leggeva, la frazione no: tutte le voci
+   * uscivano «Altro», e siccome di ogni materiale si tiene la prima, di sette
+   * ritiri ne restava uno solo e generico. «Il sensore continua a non
+   * riportare alcun dato»: riportava una riga che non diceva niente. */
+  "rifiuti",
+  "rifiuto",
+  "frazioni",
+  "materiale",
+  "materiali",
+  "categoria",
+  "categorie",
+  "cosa",
   "name",
   "nome",
   "summary",
@@ -360,8 +374,18 @@ const NOMI_DEL_MATERIALE = Object.freeze([
 
 const testoDi = (valore) => (Array.isArray(valore) ? valore.join(" ") : pulito(valore));
 
-/* Una voce dell'elenco, comunque sia scritta: torna la data e il testo da cui
- * si indovina il materiale, oppure `null` se una data non c'e'. */
+/* Un ritiro solo puo' portare via piu' frazioni: «Umido + Secco», «Carta /
+ * Vetro». Sono due bidoni da mettere fuori, e chi guarda la sera vuole vederli
+ * tutti e due — indovinare un materiale solo da quel testo ne perde uno.
+ *
+ * Si divide sui segni che separano e basta: la «e» no, perche' «Plastica e
+ * lattine» e' un bidone solo e chiamarli due sarebbe l'errore opposto. */
+const CHE_DIVIDE = /\s*[+/&,;]\s*/;
+
+const frazioniDi = (testo) => pulito(testo).split(CHE_DIVIDE).map(pulito).filter(Boolean);
+
+/* Una voce dell'elenco, comunque sia scritta: torna la data e le frazioni che
+ * quel ritiro porta via, oppure `null` se una data non c'e'. */
 function voceDellElenco(voce) {
   if (voce && typeof voce === "object" && !Array.isArray(voce)) {
     let data = null;
@@ -370,8 +394,14 @@ function voceDellElenco(voce) {
       if (data) break;
     }
     if (!data) return null;
-    const parti = NOMI_DEL_MATERIALE.map((nome) => testoDi(voce[nome])).filter(Boolean);
-    return { data, testo: parti.join(" ") };
+    /* Un elenco scritto come elenco e' la divisione gia' fatta da chi l'ha
+     * scritto, e vale piu' di qualunque divisione nostra: si prende quello. */
+    const elencate = NOMI_DEL_MATERIALE.map((nome) => voce[nome]).find(
+      (valore) => Array.isArray(valore) && valore.map(pulito).filter(Boolean).length,
+    );
+    if (elencate) return { data, frazioni: elencate.map(pulito).filter(Boolean) };
+    const primo = NOMI_DEL_MATERIALE.map((nome) => testoDi(voce[nome])).find(Boolean) || "";
+    return { data, frazioni: frazioniDi(primo) };
   }
   /* Una frase: «2026-09-11 Plastica», «Plastica: 11/09», «Plastica il 11 set».
    * La data e' il pezzo che si sa leggere; il resto e' il nome. */
@@ -383,7 +413,7 @@ function voceDellElenco(voce) {
       const data = leggiData(pezzi.slice(da, da + quanti).join(" "));
       if (!data) continue;
       const resto = [...pezzi.slice(0, da), ...pezzi.slice(da + quanti)].join(" ");
-      return { data, testo: resto || frase };
+      return { data, frazioni: [resto || frase] };
     }
   return null;
 }
@@ -406,7 +436,7 @@ function elencoGrezzo(attributi) {
       const voci = Object.entries(valore)
         .map(([chiave, quando]) => {
           const data = leggiData(quando);
-          return data ? { data, testo: chiave } : null;
+          return data ? { data, frazioni: frazioniDi(chiave) } : null;
         })
         .filter(Boolean);
       if (voci.length) return voci;
@@ -428,32 +458,40 @@ export function ritiriDaUnElenco(stato, adesso = Date.now()) {
   const attributi = stato?.attributes;
   if (!attributi || typeof attributi !== "object") return [];
   const visti = new Set();
-  return elencoGrezzo(attributi)
-    .map((voce) => {
-      const giorni = giorniFra(adesso, voce.data);
-      const materiale = materialeDiSerie(materialeDalNome(voce.testo));
-      return { ...voce, giorni, materiale };
-    })
-    .filter((voce) => voce.giorni >= 0)
-    .sort((sinistra, destra) => sinistra.giorni - destra.giorni)
-    .filter((voce) => {
-      if (visti.has(voce.materiale.chiave)) return false;
-      visti.add(voce.materiale.chiave);
-      return true;
-    })
-    .map((voce) => ({
-      id: `elenco-${voce.materiale.chiave}`,
-      materiale: voce.materiale.chiave,
-      nome: nomeCheAggiungeQualcosa(voce.testo),
-      icona: voce.materiale.icona,
-      colore: voce.materiale.colore,
-      entity: "",
-      muto: false,
-      dallElenco: true,
-      data: voce.data,
-      giorni: voce.giorni,
-      quando: quandoCodice(voce.giorni),
-    }));
+  return (
+    elencoGrezzo(attributi)
+      /* Un ritiro che porta via due frazioni diventa due righe: sono due bidoni
+       * da mettere fuori. Una voce che la frazione non la dice resta una riga
+       * sola — muta, ma con la sua data, che e' meglio di niente. */
+      .flatMap((voce) =>
+        (voce.frazioni?.length ? voce.frazioni : [""]).map((testo) => ({ data: voce.data, testo })),
+      )
+      .map((voce) => {
+        const giorni = giorniFra(adesso, voce.data);
+        const materiale = materialeDiSerie(materialeDalNome(voce.testo));
+        return { ...voce, giorni, materiale };
+      })
+      .filter((voce) => voce.giorni >= 0)
+      .sort((sinistra, destra) => sinistra.giorni - destra.giorni)
+      .filter((voce) => {
+        if (visti.has(voce.materiale.chiave)) return false;
+        visti.add(voce.materiale.chiave);
+        return true;
+      })
+      .map((voce) => ({
+        id: `elenco-${voce.materiale.chiave}`,
+        materiale: voce.materiale.chiave,
+        nome: nomeCheAggiungeQualcosa(voce.testo),
+        icona: voce.materiale.icona,
+        colore: voce.materiale.colore,
+        entity: "",
+        muto: false,
+        dallElenco: true,
+        data: voce.data,
+        giorni: voce.giorni,
+        quando: quandoCodice(voce.giorni),
+      }))
+  );
 }
 
 /** La configurazione, ripulita. */

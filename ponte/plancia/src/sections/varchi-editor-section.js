@@ -15,7 +15,13 @@
  * un tasto vorrebbe solo dire perdere la risposta chiudendo la scheda.
  */
 import { CHIAVE_VERSI, insiemeInvertiti } from "../core/verso-aperture.js";
-import { CHIAVE_VARCHI, normalizzaVarchi, varchiDiCasa } from "../core/varchi-di-casa.js";
+import {
+  CHIAVE_VARCHI,
+  contattiDichiaratiNelleFinestre,
+  normalizzaVarchi,
+  varchiConLeFinestre,
+  varchiDiCasa,
+} from "../core/varchi-di-casa.js";
 import { VARCHI_TAB, renderVarchi } from "./varchi-section.js";
 import {
   allStates,
@@ -36,7 +42,22 @@ const state = (root[KEY] ||= { installed: false });
 
 export const VARCHI_EDITOR_TAB = VARCHI_TAB;
 
+/* Quello che la scheda elenca e' quello che la Home mostra, coi contatti
+ * dichiarati nelle Finestre compresi: prima non c'erano, e in Home comparivano
+ * lo stesso — «in configurazione nessun contatto trovato, invece nella home me
+ * li mette tutti e due». Non elencandoli non si potevano nemmeno togliere. */
+function righeDelleFinestre() {
+  return root.getTapparelle?.() || readJson("cd_tapparelle", []);
+}
+
 function configurazione() {
+  return normalizzaVarchi(varchiConLeFinestre(readJson(CHIAVE_VARCHI, {}), righeDelleFinestre()));
+}
+
+/* Quello che si salva e' solo la configurazione dei Varchi: i contatti delle
+ * Finestre stanno nelle Finestre, e riscriverli qui fra gli «aggiunti» ne
+ * farebbe una copia che il giorno che si cambia la riga non si aggiorna. */
+function configurazioneSalvata() {
   return normalizzaVarchi(readJson(CHIAVE_VARCHI, {}));
 }
 
@@ -58,14 +79,21 @@ function ridisegna() {
 
 /* ── il disegno della scheda ──────────────────────────────────────────── */
 
-function rigaMarkup(riga, scelte) {
-  const aggiunto = scelte.aggiunte.includes(riga.entity);
+function rigaMarkup(riga, scelte, dalleFinestre = new Set()) {
+  /* Da dove viene questa riga, quando non l'ha trovata Home Assistant da se':
+   * «aggiunto a mano» su un contatto che sta dentro una riga delle Finestre
+   * manderebbe a cercare nella scheda sbagliata quello che si vuole cambiare. */
+  const provenienza = dalleFinestre.has(riga.entity)
+    ? t("dalle Finestre", "from Windows")
+    : scelte.aggiunte.includes(riga.entity)
+      ? t("aggiunto a mano", "added by hand")
+      : "";
   return `<article class="ed-row dm-varco-ed-riga" data-varco="${esc(riga.stato || "muto")}">
     <span class="dm-varco-ed-ic" aria-hidden="true">${esc(riga.glifo)}</span>
     <div class="ed-row-main dm-varco-ed-testo">
       <input class="ed-input dm-varco-ed-nome" value="${esc(riga.name)}"
         data-dm-varco-nome="${esc(riga.entity)}" aria-label="${esc(t("Nome", "Name"))}">
-      <small class="ed-row-old mono">${esc(riga.entity)}${aggiunto ? ` · ${esc(t("aggiunto a mano", "added by hand"))}` : ""}</small>
+      <small class="ed-row-old mono">${esc(riga.entity)}${provenienza ? ` · ${esc(provenienza)}` : ""}</small>
     </div>
     <button type="button" class="ed-del dm-varco-ed-togli" data-dm-varco-escludi="${esc(riga.entity)}"
       title="${esc(t("Togli dall'elenco", "Drop from the list"))}"
@@ -85,6 +113,7 @@ function fuoriMarkup(scelte) {
 
 function schedaMarkup() {
   const scelte = configurazione();
+  const dalleFinestre = new Set(contattiDichiaratiNelleFinestre(righeDelleFinestre()));
   const states = allStates();
   const righe = varchiDiCasa(
     states,
@@ -110,7 +139,7 @@ function schedaMarkup() {
   <div class="ed-slot-lbl dm-varco-ed-titolo">${esc(t("I contatti di casa", "The contacts at home"))}</div>
   ${
     righe.length
-      ? `<div class="ed-list dm-varco-ed-lista">${righe.map((riga) => rigaMarkup(riga, scelte)).join("")}</div>`
+      ? `<div class="ed-list dm-varco-ed-lista">${righe.map((riga) => rigaMarkup(riga, scelte, dalleFinestre)).join("")}</div>`
       : `<div class="ed-empty">${esc(t("Nessun contatto trovato", "No contact found"))}</div>`
   }
   ${scelte.escluse.length ? `<div class="ed-slot-lbl dm-varco-ed-titolo">${esc(t("Tolti dai conti", "Dropped from the count"))}</div>` : ""}
@@ -145,7 +174,7 @@ export function ensureVarchiEditorTab() {
 function onClick(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || activeTab() !== VARCHI_EDITOR_TAB || !body.contains(event.target)) return;
-  const scelte = configurazione();
+  const scelte = configurazioneSalvata();
 
   const lente = event.target.closest("[data-dm-varco-pick]");
   if (lente) {
@@ -196,7 +225,7 @@ function onInput(event) {
   if (!campo) return;
   const entity = clean(campo.dataset.dmVarcoNome);
   if (!entity) return;
-  const scelte = configurazione();
+  const scelte = configurazioneSalvata();
   const nomi = { ...scelte.nomi };
   const scritto = clean(campo.value);
   if (scritto) nomi[entity] = scritto;
