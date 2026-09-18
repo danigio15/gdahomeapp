@@ -139,8 +139,9 @@ e nient'altro.
 **Cosa non c'è, e non ci deve andare:** nomi di entità, nomi di stanze, nomi di
 persone, stati di sensori, **l'SSID del Wi-Fi**, **l'indirizzo pubblico**,
 posizione, foto, la configurazione della plancia, il contenuto delle
-segnalazioni. Il quadro dice **che c'è da guardare**; guardare si fa dentro
-casa, dall'app, sul filo cifrato, col segno che chi ci abita può togliere.
+segnalazioni. Il quadro dice **che c'è da guardare**, e finisce lì: guardare
+dentro casa è un'altra cosa, e non si fa da qui (vedi «Cosa il quadro non può
+fare»).
 
 La regola si dice meglio così: **cosa c'è nella scatola, non chi ci abita.**
 «Mosquitto broker» ed `eth0` sono nomi di prodotti e di schede, e non dicono
@@ -156,7 +157,12 @@ non esce.
 **Le impronte.** Un dispositivo sparito l'installatore lo vuole seguire: è
 quello di ieri o un altro? Perciò la casa manda quattro cifre,
 `sha256(sale_di_casa + entity_id)` accorciato, con un sale che nasce in `/data`
-e non esce mai. Il quadro può dire «lo stesso di ieri» e non può dire quale.
+e non esce mai. Il quadro può dire «lo stesso di ieri» — cioè distinguere un
+dispositivo morto da una rete che balla — e non può dire quale. **Il nome non
+lo scopre nessuno da lì**, e non è una cosa da aggiungere dopo: quei nomi
+dicono cosa c'è in una casa e in quali stanze. Se serve saperlo, lo legge chi
+ci abita dalla propria plancia, dove quel dispositivo risulta non disponibile,
+e lo dice se vuole.
 Nella prima versione si possono anche lasciar fuori: contarli basta a far
 suonare la spia.
 
@@ -288,20 +294,44 @@ Le vie:
 `src/collaudo.js` è già scritto dentro la bozza — `ilCollaudo`, `loStato`,
 `leSpie` — e va portato lì com'è, con le sue prove.
 
-### Nell'app
+### Nell'app: niente
 
-`caseMassime` sta a 10 (`app/lib/casa/archivio_delle_case.dart:16`): «più di
-così non è un elenco di case, è un elenco di prove». Per un installatore che
-dal quadro vuole **aprire** la casa che lampeggia, dieci sono poche. Va alzato,
-e serve un modo di aprire una casa per matricola da un link.
+Una stesura di questo documento diceva di alzare `caseMassime` da 10
+(`app/lib/casa/archivio_delle_case.dart:16`) perché l'installatore, dal quadro,
+dovesse poter **aprire** la casa che lampeggia. Quella riga è caduta insieme al
+tasto che la chiedeva: dal quadro non si apre niente, e allora dieci case
+nell'app restano quello che erano — le case di chi la usa, non la flotta di chi
+la installa. **L'app non va toccata.**
+
+## Cosa il quadro non può fare
+
+È la parte che decide se questo pezzo si può dare a qualcuno, e viene prima di
+tutte le altre. Un installatore che tiene quaranta impianti non deve poter
+guardare dentro quaranta case: quelle case sono di altri, e dentro ci sono le
+telecamere, le presenze, gli orari di chi ci vive.
+
+Perciò il quadro **guarda e basta**, e le tre cose che non fa sono tre cose che
+non ha:
+
+- **non apre la plancia** — non c'è nessun tasto che porti dentro una casa, e
+  non è un tasto dimenticato: il quadro non ha nessun segno con cui entrare;
+- **non comanda niente** — la cartolina va in una direzione sola, e non esiste
+  un verso di ritorno. Un quadro che comandasse sarebbe una porta di servizio
+  dell'installatore in casa del cliente;
+- **non vede entità, stanze né persone** — riceve numeri, versioni e nomi di
+  processi, e si ferma lì.
+
+Per entrare in una casa serve un abbinamento, e quello lo dà **chi ci abita**,
+col suo segno, che toglie con un bottone quando vuole. Vale anche per
+l'installatore il giorno dell'installazione: il telefono che abbina per provare
+l'impianto è un telefono come gli altri, e al momento della consegna si stacca.
+Il quadro mostra quanti telefoni sono abbinati proprio perché quel conto si
+guardi.
 
 ## Le tre regole che non si toccano
 
-1. **Il quadro ascolta e non parla.** La cartolina va in una direzione sola, e
-   il quadro non ha nessun modo di comandare niente. Un quadro che comandasse
-   sarebbe una porta di servizio dell'installatore in casa del cliente. Per
-   entrare c'è la strada che esiste già: l'app, col suo segno, che si toglie
-   con un bottone.
+1. **Il quadro ascolta e non parla.** Vedi qui sopra: la cartolina va in una
+   direzione sola, e il quadro non ha con che entrare né con che comandare.
 2. **Il consenso è di chi ci abita, non di chi ha installato.** L'opzione si
    vede nella scheda dell'add-on, la scheda della console fa leggere parola per
    parola quello che parte, e il tasto per smettere è lì di fianco. Si dice, non

@@ -741,6 +741,38 @@
         border-radius: 13px;
       }
 
+      /* La riga del limite: cosa questo quadro non può fare. Sta sotto i
+       * tasti e non in fondo alla pagina, perché è la cornice dentro cui si
+       * legge tutto il resto — e perché un tasto che non c'è si nota meno di
+       * una riga che dice perché non c'è. */
+      .limite {
+        display: flex;
+        gap: 11px;
+        margin: 16px 0 0;
+        padding: 13px 15px;
+        background: var(--carta-alta);
+        border-radius: var(--raggio-piccolo);
+        font-size: 0.83rem;
+        line-height: 1.55;
+        color: var(--lieve);
+      }
+
+      .limite .gettone {
+        width: 24px;
+        height: 24px;
+        flex: none;
+        border-radius: 8px;
+        background: var(--alone-azzurro);
+        color: var(--azzurro-cupo);
+        display: grid;
+        place-items: center;
+        font-size: 0.8rem;
+      }
+
+      .limite b {
+        color: var(--notte);
+      }
+
       /* ─── Il misuratore del collaudo ────────────────────────────────── */
       .misura {
         display: flex;
@@ -2491,11 +2523,20 @@
               </div>
             </dl>
             <div class="azioni">
-              <button type="button" class="tasto forte">Apri questa casa nell'app</button>
+              <button type="button" class="tasto forte">Copia il rapporto</button>
               <button type="button" class="tasto">Stampa il verbale</button>
               <button type="button" class="tasto">Rinomina</button>
               <button type="button" class="tasto male">Non seguirla più</button>
             </div>
+            <p class="limite">
+              <span class="gettone" aria-hidden="true">◴</span>
+              <span>
+                Questo quadro <b>guarda e basta</b>: non apre la plancia, non
+                comanda niente, e non vede entità, stanze né persone. Da qui non
+                si entra in casa di nessuno — per entrare serve un abbinamento,
+                e quello lo dà chi ci abita.
+              </span>
+            </p>
           </section>
 
           <section class="riquadro">
@@ -2554,12 +2595,17 @@
               ${c.dispositivi.impronte.map((una) => `<span>#${testo(una)}</span>`).join("")}
             </div>
             <p class="nota">
-              Il quadro non sa quali sono, e non lo può sapere: la casa manda
+              Il quadro non sa quali sono, e non lo deve sapere: la casa manda
               quattro cifre ricavate dal nome del dispositivo con un sale che non
               esce da lì. Servono a dire <em>lo stesso di ieri</em> oppure
-              <em>un altro</em>, e a niente di più. Per sapere il nome si apre la
-              casa dall'app, sul filo cifrato, con il segno che chi ci abita può
-              togliere quando vuole.
+              <em>un altro</em> — cioè a distinguere un dispositivo morto da una
+              rete che balla — e a niente di più.
+              <br /><br />
+              <b>Il nome non lo scopre nessuno da qui</b>, e non è una cosa da
+              aggiungere dopo: quei nomi dicono cosa c'è in una casa e in quali
+              stanze. Se serve saperlo, lo legge chi ci abita dalla propria
+              plancia, dove quel dispositivo risulta non disponibile, e lo dice
+              se vuole.
             </p>
           </section>`
               : ""
@@ -2926,10 +2972,12 @@
                   <li class="fatta">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
-                      <b>Il quadro ascolta e non parla.</b> Non può comandare
-                      niente in nessuna casa, e non è una dimenticanza: per
-                      entrare c'è l'app, col suo segno, che il cliente toglie con
-                      un bottone.
+                      <b>Il quadro ascolta e non parla.</b> Non apre la plancia,
+                      non comanda niente e non vede entità, stanze né persone:
+                      riceve una cartolina di numeri e si ferma lì. Non è una
+                      dimenticanza — per entrare in una casa serve un
+                      abbinamento, e quello lo dà chi ci abita, col suo segno,
+                      che toglie con un bottone quando vuole.
                     </span>
                   </li>
                   <li class="fatta">
