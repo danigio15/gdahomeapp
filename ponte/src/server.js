@@ -350,6 +350,13 @@ export function costruisciLaConsole({
   /* La chat di assistenza. Alla console serve per una riga sola, e non e' una
    * riga da poco: dire se questa casa **risponde** alle chat. */
   chat,
+  /* Il postino della cartolina al quadro di chi ha fatto l'impianto, e il
+   * ferro che sa svuotarne la casella. La scheda «Il quadro» di questa pagina
+   * e' l'unico posto dove chi ci abita legge **cosa** parte da casa sua e ha
+   * il tasto per farlo smettere: senza, l'unica cosa che vedrebbe sarebbe una
+   * riga incollata in una casella. */
+  postino,
+  ferro,
   aggiornamento,
   cartellaDellaConsole,
   cartellaDellApp,
@@ -388,6 +395,8 @@ export function costruisciLaConsole({
           planceInCasa,
           configurazione,
           chat,
+          postino,
+          ferro,
           aggiornamento,
         });
       } catch (errore) {
@@ -750,6 +759,8 @@ async function api({
   planceInCasa,
   configurazione,
   chat,
+  postino,
+  ferro,
   aggiornamento,
 }) {
   /* C'e' una versione nuova del ponte?
@@ -758,6 +769,54 @@ async function api({
    * GitHub: `/api/stato` la console lo chiede ogni dieci secondi, e dieci
    * secondi non sono il passo di una cosa che cambia una volta al giorno.
    */
+  /* La cartolina al quadro: cosa parte da questa casa, e a chi.
+   *
+   * La chiave **non** esce da qui, e non e' una dimenticanza: chi guarda
+   * questa pagina deve sapere a chi la sua casa parla, non avere in mano di
+   * che farla parlare. L'indirizzo si', che e' la risposta a «a chi?».
+   */
+  if (via === "/api/quadro" && metodo === "GET") {
+    if (!postino || !postino.acceso) {
+      json(risposta, { acceso: false });
+      return;
+    }
+    json(risposta, {
+      acceso: true,
+      dove: postino.dove,
+      ogni: postino.ogni,
+      /* L'ultima cartolina spedita, **in chiaro e per intero**. E' il punto di
+       * questa scheda: non «manda dei dati», ma questi dati, parola per
+       * parola, con dentro tutto quello che c'e' e niente di piu'. */
+      ultima: postino.ultima,
+      esito: postino.ultimoEsito,
+    });
+    return;
+  }
+
+  /* «Smetti.»
+   *
+   * Non basta fermare il postino: la riga resterebbe nella scheda dell'add-on
+   * e al primo riavvio la casa ricomincerebbe a parlare senza che nessuno
+   * l'abbia chiesto. Si fa tutt'e due — si ferma adesso, e si svuota la
+   * casella perche' resti fermo — e se il Supervisor non lascia scrivere si
+   * dice **cosa fare a mano** invece di dire che e' andata.
+   */
+  if (via === "/api/quadro" && metodo === "DELETE") {
+    if (!postino || !postino.acceso) {
+      json(risposta, { acceso: false });
+      return;
+    }
+    postino.ferma();
+    const esito = ferro ? await ferro.spegniLaCartolina() : { spento: false, perche: "" };
+    registro.info(
+      esito.spento
+        ? "la cartolina al quadro e' stata fermata da questa pagina"
+        : `la cartolina e' ferma, ma la casella no: ${esito.perche}`,
+    );
+    json(risposta, { acceso: false, ...esito });
+    return;
+  }
+
   if (via === "/api/aggiornamento" && metodo === "GET") {
     if (!aggiornamento) {
       json(risposta, { locale: false });

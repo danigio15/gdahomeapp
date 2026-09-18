@@ -42,6 +42,11 @@
         <rect x="17.5" y="13.5" width="4" height="6" rx="2" />
         <path d="M19.5 19.5v.5a2.5 2.5 0 0 1-2.5 2.5h-2" />
       </symbol>
+      <symbol id="ic-quadro" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="16" rx="2.5" />
+        <path d="M3 9h18" />
+        <path d="M8 12v5M12 12v5M16 12v5" />
+      </symbol>
       <symbol id="ic-onde" viewBox="0 0 24 24">
         <path d="M3 12h3l2.5-7 3.5 14 3-9 2 4h4" />
       </symbol>
@@ -307,6 +312,53 @@
           </section>
         </div>
       </div>
+
+      <!-- ⑥ Il quadro di chi ha fatto l'impianto.
+           Si vede **solo** dove quella casella e' piena, cioe' quasi mai: una
+           casa che nessuno ha installato per mestiere non ha nessun motivo di
+           leggere questa roba. Dove invece c'e', e' l'unico posto in cui chi
+           ci abita legge cosa parte da casa sua — non «dei dati», ma il testo,
+           parola per parola — e ha il tasto per farlo smettere. Una casella in
+           una scheda di configurazione non e' un consenso: e' una riga
+           incollata. -->
+      <section class="scheda" id="scheda-quadro" hidden>
+        <div class="testa-di-scheda">
+          <h2>
+            <svg class="ic" aria-hidden="true"><use href="#ic-quadro" /></svg
+            ><span data-en="The panel of whoever installed your home"
+              >Il quadro di chi ti ha fatto l'impianto</span
+            >
+          </h2>
+          <span class="conta" id="quadro-esito"></span>
+        </div>
+        <p class="spiegazione" id="quadro-dove">…</p>
+        <details class="apribile" id="quadro-cosa">
+          <summary data-en="What goes out from here">Cosa parte da qui</summary>
+          <p
+            class="minuta"
+            data-en="This is the last postcard sent, exactly as it left. Numbers, versions and process names — nothing else. If something in here surprises you, that is what the button below is for."
+          >
+            Questa è l'ultima cartolina spedita, esattamente com'è partita. Numeri, versioni e nomi
+            di processi — niente altro. Se qui dentro c'è qualcosa che non ti aspettavi, il tasto
+            qui sotto serve a questo.
+          </p>
+          <pre class="cartolina" id="quadro-testo">…</pre>
+        </details>
+        <p
+          class="minuta"
+          data-en="Not in there: no entity names, no rooms, no people, no sensor states, not your Wi-Fi name and not your public address. The devices that stopped answering go out as four digits, worked out with a salt that is born in this home and never leaves it."
+        >
+          Lì dentro non ci sono: nomi di entità, stanze, persone, stati di sensori; il nome del tuo
+          Wi-Fi no, e il tuo indirizzo pubblico nemmeno. I dispositivi che non rispondono partono
+          come quattro cifre, ricavate con un sale che nasce in questa casa e non ne esce.
+        </p>
+        <div class="riga-di-tasti">
+          <button id="quadro-smetti" type="button" class="toglie" data-en="Stop sending it">
+            Smetti di mandarla
+          </button>
+        </div>
+        <p class="avviso" id="quadro-avviso" hidden></p>
+      </section>
 
       <!-- ⑤ Tutto quello che serve **quando qualcosa non va**, in un posto solo
            e chiuso. Qui dentro stanno le quattro schede che prima erano quattro

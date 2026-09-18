@@ -456,6 +456,17 @@ a.tenue {
 /* I tasti che non sono «il» tasto della scheda. Erano trasparenti col solo
    filo intorno: su un tema dove il filo e' quasi del colore della carta non si
    capiva che fossero tasti. Un ripieno appena accennato basta. */
+button.toglie {
+  background: transparent;
+  color: var(--male);
+  border: 1px solid color-mix(in srgb, var(--male) 40%, transparent);
+  font-weight: 550;
+}
+
+button.toglie:hover:not(:disabled) {
+  border-color: var(--male);
+}
+
 button.tenue,
 a.tenue {
   background: color-mix(in srgb, var(--testo) 4%, transparent);
@@ -756,6 +767,30 @@ code {
   background: color-mix(in srgb, var(--acceso) 4%, transparent);
   text-align: center;
   overflow-wrap: anywhere;
+}
+
+/* La cartolina in chiaro: il testo che parte da questa casa, per intero.
+ *
+ * Non si accorcia e non si riassume. Il senso di questa scheda e' che chi ci
+ * abita possa **leggere** quello che esce, e un riassunto di quello che esce
+ * e' esattamente la cosa di cui ci si dovrebbe fidare. Scorre nel suo
+ * riquadro, che e' l'unico modo di tenerla intera senza allargare la pagina. */
+.cartolina {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--fondo);
+  color: var(--tenue);
+  max-height: 22rem;
+  overflow: auto;
+  white-space: pre;
+}
+
+.apribile + .minuta {
+  margin-top: 14px;
 }
 
 .codice.piccolo {

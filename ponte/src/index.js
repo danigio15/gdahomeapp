@@ -307,6 +307,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * Assistant chiede al ponte le stesse cose che gli chiede quella dentro
      * l'app, e le fa lo stesso oggetto. */
     commissioni,
+    /* La cartolina al quadro, e come farla smettere: la scheda «Il quadro»
+     * fa leggere l'ultima spedita parola per parola, e ha li' il tasto. */
+    postino,
+    ferro,
     /* Se c'e' una versione nuova del ponte, e il bottone per portarsela
      * dentro: l'unico posto da cui chi non ha un computer puo' aggiornare. */
     aggiornamento,

@@ -30,6 +30,12 @@
  * Le funzioni che leggono quelle risposte stanno fuori dalla classe e non
  * sanno cosa sia la rete: la forma di quelle risposte non la decidiamo noi, e
  * va letta senza fidarsi di niente.
+ *
+ * Qui dentro si **legge**, con una sola eccezione dichiarata: `spegniLaCartolina`
+ * svuota la casella del quadro nelle opzioni dell'add-on, ed e' quello che sta
+ * dietro il tasto «smetti» della console. Sta qui e non altrove perche' e'
+ * una chiamata al Supervisor, e le chiamate al Supervisor stanno in un posto
+ * solo.
  */
 
 /** Quanto si aspetta il Supervisor prima di lasciar perdere. */
@@ -300,6 +306,44 @@ export class Ferro {
     }
     if (!nessuna) this._dettoIlGuaio = false;
     return { os, host, network, addons: addons?.addons ?? [], core, supervisor };
+  }
+
+  /* Svuotare la casella del quadro nelle opzioni dell'add-on.
+   *
+   * E' **l'unica cosa che questo file scrive**, e c'e' per un motivo solo: un
+   * tasto «smetti» che smette finche' non si riavvia non e' un tasto che
+   * smette, e' una bugia con un bottone sopra. Fermare il postino in memoria
+   * lascia la riga nella scheda dell'add-on, e al primo riavvio la casa
+   * ricomincia a parlare senza che nessuno l'abbia chiesto.
+   *
+   * La via e' quella del Supervisor per le proprie opzioni, la stessa famiglia
+   * di `/addons/self/rebuild` che `aggiornamento.js` usa gia'. Si scrive solo
+   * questa chiave: quello che c'e' d'altro nella scheda non si tocca. */
+  async spegniLaCartolina() {
+    if (!this.segno || typeof this.prendi !== "function") {
+      return { spento: false, perche: "qui non c'e' nessun Supervisor a cui dirlo" };
+    }
+    try {
+      const risposta = await this.prendi(`${this.supervisor}/addons/self/options`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${this.segno}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ options: { quadro: "" } }),
+        signal: AbortSignal.timeout(ATTESA),
+      });
+      if (!risposta.ok) {
+        return {
+          spento: false,
+          perche: `il Supervisor ha risposto ${risposta.status}: svuota la casella «Il quadro» nella scheda dell'add-on`,
+        };
+      }
+      this.registro.info("la cartolina non parte piu': la casella del quadro e' stata svuotata");
+      return { spento: true, perche: "" };
+    } catch (errore) {
+      return { spento: false, perche: String(errore?.message || errore) };
+    }
   }
 
   async _via(via) {

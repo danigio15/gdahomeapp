@@ -1655,6 +1655,116 @@
     });
   });
 
+  /* ─── Il quadro di chi ha fatto l'impianto ──────────────────────────────
+   *
+   * Questa scheda compare **solo** dove quella casella e' piena — cioe' quasi
+   * mai — e fa una cosa sola che le altre non fanno: mostra il testo che parte
+   * da questa casa, intero e senza riassunti. Un riassunto di quello che esce
+   * e' esattamente la cosa di cui ci si dovrebbe fidare.
+   *
+   * Si chiede ogni minuto e non ogni dieci secondi come il resto: la cartolina
+   * parte ogni quindici minuti, e chiedere sei volte piu' spesso di quanto
+   * cambi vuol dire sei richieste per niente. */
+  function quandoEArrivata(esito) {
+    if (!esito) return due("non è ancora partita nessuna", "none has gone out yet");
+    var quanti = Math.round((Date.now() - esito.quando) / 60000);
+    var fa =
+      quanti < 1
+        ? due("adesso", "just now")
+        : quanti < 60
+          ? quanti + due(" min fa", " min ago")
+          : Math.round(quanti / 60) + due(" ore fa", " hours ago");
+    if (esito.andata) return due("l'ultima è arrivata ", "the last one arrived ") + fa;
+    return due("l'ultima non è arrivata (", "the last one did not arrive (") + fa + ")";
+  }
+
+  function guardaIlQuadro() {
+    return chiedi("api/quadro")
+      .then(function (quadro) {
+        var scheda = trova("scheda-quadro");
+        if (!quadro || !quadro.acceso) {
+          scheda.hidden = true;
+          return;
+        }
+        scheda.hidden = false;
+        trova("quadro-dove").textContent = due(
+          "Questa casa manda una cartolina a " + quadro.dove + ", ogni " + quadro.ogni + " minuti.",
+          "This home sends a postcard to " + quadro.dove + ", every " + quadro.ogni + " minutes.",
+        );
+        trova("quadro-esito").textContent = quandoEArrivata(quadro.esito);
+        /* Il testo com'e' partito. `JSON.stringify` con l'indentazione: e' lo
+         * stesso oggetto che e' andato, non una sua descrizione. */
+        trova("quadro-testo").textContent = quadro.ultima
+          ? JSON.stringify(quadro.ultima, null, 2)
+          : due(
+              "Non ne è ancora partita nessuna: la prima esce mezzo minuto dopo l'accensione.",
+              "None has gone out yet: the first one leaves half a minute after start-up.",
+            );
+      })
+      .catch(function () {
+        /* Una via che non risponde non deve far sparire la scheda: chi la sta
+         * leggendo perderebbe sotto gli occhi la cosa che stava guardando. */
+      });
+  }
+
+  /* «Smetti», in due tempi.
+   *
+   * Il primo tocco chiede conferma e il secondo fa. Non e' una finestra che si
+   * mette in mezzo: e' lo stesso tasto che cambia parola, e chi non voleva
+   * premerlo se ne va senza dover chiudere niente.
+   *
+   * E smettere vuol dire smettere: si ferma adesso **e** si svuota la casella
+   * nella scheda dell'add-on, se no al primo riavvio ricomincerebbe. Dove il
+   * Supervisor non lascia scrivere si dice cosa fare a mano, invece di dire
+   * che e' andata. */
+  (function () {
+    var tasto = trova("quadro-smetti");
+    var parola = tasto.textContent;
+    var sicuro = false;
+    var orologio = null;
+
+    tasto.addEventListener("click", function () {
+      if (!sicuro) {
+        sicuro = true;
+        tasto.textContent = due("Sicuro? Premi di nuovo", "Sure? Press again");
+        orologio = setTimeout(function () {
+          sicuro = false;
+          tasto.textContent = parola;
+        }, 6000);
+        return;
+      }
+      if (orologio) clearTimeout(orologio);
+      sicuro = false;
+      tasto.textContent = parola;
+      tasto.disabled = true;
+      chiedi("api/quadro", { method: "DELETE" })
+        .then(function (esito) {
+          var avviso = trova("quadro-avviso");
+          if (esito && esito.spento) {
+            trova("scheda-quadro").hidden = true;
+            return;
+          }
+          /* Fermata adesso, ma la casella e' rimasta piena: va detto, perche'
+           * al riavvio ricomincia. */
+          avviso.hidden = false;
+          avviso.className = "avviso giallo";
+          avviso.textContent = due(
+            "Non manda più niente da adesso, ma la casella «Il quadro» è rimasta piena: svuotala nella scheda di questo add-on, se no al prossimo riavvio ricomincia.",
+            "It sends nothing from now on, but the «The panel» box is still filled in: empty it in this add-on's options, otherwise it starts again at the next restart.",
+          );
+        })
+        .catch(function (errore) {
+          var avviso = trova("quadro-avviso");
+          avviso.hidden = false;
+          avviso.className = "avviso";
+          avviso.textContent = errore.message;
+        })
+        .finally(function () {
+          tasto.disabled = false;
+        });
+    });
+  })();
+
   /* Prima di tutto il resto: le parole della pagina, nella lingua di chi
    * guarda. Va fatto prima che qualcosa le riscriva, e prima che si legga il
    * testo di un tasto per rimetterlo dov'era. */
@@ -1667,4 +1777,8 @@
    * si chiede ogni dieci secondi come il resto. */
   guardaLAggiornamento();
   setInterval(guardaLAggiornamento, 10 * 60 * 1000);
+  /* E la cartolina al quadro: ogni minuto, che e' gia' quindici volte piu'
+   * spesso di quanto parta. */
+  guardaIlQuadro();
+  setInterval(guardaIlQuadro, 60 * 1000);
 })();

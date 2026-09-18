@@ -73,7 +73,7 @@ async function casaFinta() {
   };
 }
 
-async function banco() {
+async function banco({ quadro = null } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "ponte-server-"));
   const ha = await casaFinta();
   const primaCasa = process.env.PONTE_CASA;
@@ -92,6 +92,8 @@ async function banco() {
     giorniDiSilenzio: 90,
     registro: "errore",
     console: fileURLToPath(new URL("../console", import.meta.url)),
+    quadro,
+    quadroOgni: 15,
   });
 
   const app = `http://127.0.0.1:${avviato.app.address().port}`;
@@ -575,6 +577,69 @@ test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-
      * sta dietro l'autenticazione di Home Assistant, quella porta no. */
     const fuori = await prendi(`${b.app}/api/plance`);
     assert.equal(fuori.status, 404);
+  } finally {
+    await b.spegni();
+  }
+});
+
+/* ─── La cartolina al quadro, dalla console ───────────────────────────────
+ *
+ * Quello che si prova qui: che la scheda esista **solo** dove qualcuno ha
+ * incollato un codice; che quella via dica a chi parla questa casa e **non**
+ * dica con che — l'indirizzo e' la risposta a «a chi?», la chiave sarebbe di
+ * che farla parlare; e che «smetti» smetta davvero, cioe' fermi il postino e
+ * svuoti la casella, perche' un tasto che smette finche' non si riavvia e' una
+ * bugia con un bottone sopra.
+ */
+
+test("senza codice la scheda del quadro non c'e' nemmeno", async () => {
+  const b = await banco();
+  try {
+    const detto = await (await prendi(`${b.consolle}/api/quadro`)).json();
+    assert.deepEqual(detto, { acceso: false });
+    /* E non si puo' spegnere quello che non e' acceso, senza che sia un
+     * errore: e' semplicemente gia' cosi'. */
+    const spento = await (await prendi(`${b.consolle}/api/quadro`, { method: "DELETE" })).json();
+    assert.deepEqual(spento, { acceso: false });
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("col codice, la console dice a chi parla questa casa — e non dice con che", async () => {
+  const b = await banco({
+    quadro: { dove: "https://quadro.impiantirossi.it", chiave: "CHIAVE-SEGRETISSIMA-9XQF" },
+  });
+  try {
+    const risposta = await prendi(`${b.consolle}/api/quadro`);
+    const testo = await risposta.text();
+    const detto = JSON.parse(testo);
+    assert.equal(detto.acceso, true);
+    assert.equal(detto.dove, "https://quadro.impiantirossi.it");
+    assert.equal(detto.ogni, 15);
+    /* La riga che conta: da questa pagina si legge **a chi**, non si prende
+     * di che. */
+    assert.ok(
+      !testo.includes("SEGRETISSIMA"),
+      "la chiave del quadro non deve uscire dalla console",
+    );
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("«smetti» ferma il postino e svuota la casella, che se no al riavvio ricomincia", async () => {
+  const b = await banco({
+    quadro: { dove: "https://quadro.impiantirossi.it", chiave: "CHIAVE-LUNGA-ABBASTANZA" },
+  });
+  try {
+    assert.equal(b.postino.acceso, true);
+    const esito = await (await prendi(`${b.consolle}/api/quadro`, { method: "DELETE" })).json();
+    assert.equal(esito.acceso, false);
+    /* Il Supervisor finto risponde a tutto, quindi la casella si e' svuotata:
+     * quello che conta e' che si sia **provato** a svuotarla, e che l'esito
+     * arrivi a chi ha premuto invece di essere ingoiato. */
+    assert.equal(esito.spento, true);
   } finally {
     await b.spegni();
   }

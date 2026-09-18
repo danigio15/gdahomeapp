@@ -444,14 +444,27 @@ guardi.
    la fa leggere. Si prova con `curl` e un file, senza nessun quadro acceso — ed
    è già utile da sola: chi ha una casa sola può guardarsi la sua.
 
-   **Metà fatta**, in `1.4.32.15`: ci sono `ponte/src/salute.js`,
-   `ponte/src/ferro.js` e `ponte/src/cartolina.js` con le loro 45 prove, le due
-   opzioni nel manifesto tradotte in italiano e in inglese, e il postino acceso
-   in `index.js`. Manca **la scheda «Il quadro» nella console dell'add-on**, che
-   è la metà che riguarda chi ci abita: leggere in chiaro l'ultima cartolina
-   spedita, e il tasto per smettere. Finché non c'è, l'interruttore è solo la
-   casella nella scheda dell'add-on — che si vede e si svuota, ma non fa
-   leggere niente.
+   **Fatta**, in `1.4.32.15`. Il ponte: `ponte/src/salute.js`,
+   `ponte/src/ferro.js` e `ponte/src/cartolina.js`, le due opzioni nel
+   manifesto tradotte in italiano e in inglese, il postino acceso in
+   `index.js`. E la console: la scheda **«Il quadro di chi ti ha fatto
+   l'impianto»**, che compare solo dove quella casella è piena — cioè quasi mai
+   — e fa la cosa per cui esiste: mostra **il testo dell'ultima cartolina
+   spedita, intero e senza riassunti**. Un riassunto di quello che esce è
+   esattamente la cosa di cui ci si dovrebbe fidare.
+
+   Il tasto **«Smetti di mandarla»** ferma il postino *e* svuota la casella
+   nelle opzioni dell'add-on, passando dal Supervisor
+   (`Ferro.spegniLaCartolina`): fermarlo solo in memoria vorrebbe dire che al
+   primo riavvio la casa ricomincia a parlare da sola, cioè un tasto che smette
+   finché non si riavvia — una bugia con un bottone sopra. Dove il Supervisor
+   non lascia scrivere si dice **cosa fare a mano**, invece di dire che è
+   andata.
+
+   Quarantotto prove in tutto, tre delle quali col ponte intero acceso
+   (`ponte/test/server.test.js`): che senza codice la scheda non ci sia, che
+   quella via dica a chi parla questa casa e **non** dica con che, e che
+   «smetti» faccia tutt'e due le cose.
 2. **Il quadro in Node**, la pagina che c'è già attaccata a dati veri.
 3. **La versione su Cloudflare**, come `nuvola/`, con la stessa prova dal vivo
    contro tutte e due.

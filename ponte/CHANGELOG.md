@@ -40,6 +40,17 @@ niente.
 
 Non passa dal centralino di gdahome: va dalla casa al quadro e basta.
 
+**E lo puoi leggere e fermare da qui.** In questa pagina, dove quella casella è
+piena, compare la scheda «Il quadro di chi ti ha fatto l'impianto»: c'è scritto
+a chi parla la tua casa e ogni quanto, e sotto «Cosa parte da qui» c'è
+**l'ultima cartolina spedita per intero**, com'è partita. Non un riassunto: il
+testo. Un riassunto di quello che esce sarebbe esattamente la cosa di cui
+dovresti fidarti.
+
+Il tasto **«Smetti di mandarla»** ferma tutto adesso e svuota anche la casella,
+perché se no al prossimo riavvio ricomincerebbe da sola. Se non ci riesce te lo
+dice, e ti dice cosa fare a mano.
+
 ## 1.4.32.14
 
 **La pastiglia dei rifiuti non si scrive due volte.**
