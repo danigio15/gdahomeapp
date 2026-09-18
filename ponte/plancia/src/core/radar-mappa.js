@@ -434,20 +434,32 @@ export const FONDI_MAPPA = Object.freeze({
       "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
     attribuzione: "Esri",
   }),
-  /* Resta in elenco: a chi funziona non si toglie niente, e chi l'aveva
-   * scelto a mano se lo tiene. Semplicemente non e' piu' quello di serie. */
-  osm: Object.freeze({
-    nome: "OpenStreetMap",
-    modello: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribuzione: "© OpenStreetMap",
-  }),
 });
 
 /* CARTO non c'e' piu': i suoi quadratini gratuiti oggi tornano stampati «API
  * Key Required» e «Zoom Level Not Supported» — una mappa piena di scritte al
  * posto delle strade (visto sul campo). Chi l'aveva scelto passa alla mappa di
- * serie senza dover toccare niente. */
-export const FONDI_RITIRATI = Object.freeze({ carto: "esri" });
+ * serie senza dover toccare niente.
+ *
+ * E adesso nemmeno OpenStreetMap, che e' la seconda meta' della stessa storia.
+ *
+ * Il loro server e' quello del sito di OpenStreetMap, tenuto da volontari, e le
+ * regole d'uso escludono un uso come il nostro: chi non si adegua viene
+ * bloccato guardando `Referer` e `User-Agent`. Per questo non era gia' piu'
+ * quello di serie (#529) — ma restava in tendina, «a chi funziona non si toglie
+ * niente».
+ *
+ * Dal campo (#29) la fotografia di cosa vuol dire sceglierlo oggi: i quadratini
+ * arrivano, e dentro c'e' stampato «403 — Access blocked. App is not following
+ * the tile usage policy of OpenStreetMap's volunteer-run servers». Una mappa
+ * fatta di scritte rosse, identica a quella di CARTO, e chi la vede non pensa
+ * «ho scelto un servizio che mi blocca»: pensa che sia rotta la plancia. La
+ * segnalazione infatti si chiamava «la mappa non funziona».
+ *
+ * Una voce di tendina che risponde cosi' non e' una scelta, e' una trappola:
+ * si ritira, e chi l'aveva scelta si ritrova la mappa di serie senza dover
+ * toccare niente. */
+export const FONDI_RITIRATI = Object.freeze({ carto: "esri", osm: "esri" });
 
 /* Ma «carto» non e' solo una parola nella tendina.
  *
@@ -458,7 +470,12 @@ export const FONDI_RITIRATI = Object.freeze({ carto: "esri" });
  * risponde con la scritta al posto della mappa, e chi guarda vede «Zoom Level
  * Not Supported» sopra le sue strade senza sapere perche'. Un indirizzo si
  * riconosce dal suo ospite: se e' quello, si passa alla mappa di serie. */
-const OSPITI_RITIRATI = [/(^|\.)cartocdn\.com$/i, /(^|\.)carto\.com$/i];
+const OSPITI_RITIRATI = [
+  /(^|\.)cartocdn\.com$/i,
+  /(^|\.)carto\.com$/i,
+  /(^|\.)tile\.openstreetmap\.org$/i,
+  /(^|\.)tile\.osm\.org$/i,
+];
 
 /** Se un indirizzo di tessere e' di un servizio che abbiamo ritirato. */
 export function indirizzoRitirato(modello) {
@@ -570,8 +587,8 @@ export function modelliDelServizio(servizio, fotogrammi = []) {
  * la plancia bussi a nessuno sceglie «Nessuno» apposta. */
 export const SERVIZIO_DI_SERIE = "rainviewer";
 /* Quella di serie e' Esri, non piu' OpenStreetMap (#529): le ragioni stanno
- * accanto a `FONDI_MAPPA`. Chi aveva scelto OpenStreetMap a mano se lo tiene —
- * qui si cambia solo la risposta a «non ho scelto niente». */
+ * accanto a `FONDI_MAPPA`. E adesso non e' piu' nemmeno una scelta possibile:
+ * vedi `FONDI_RITIRATI`, che dice perche'. */
 export const FONDO_DI_SERIE = "esri";
 export const NIENTE = Object.freeze(["nessuno", "nessuna", "none"]);
 

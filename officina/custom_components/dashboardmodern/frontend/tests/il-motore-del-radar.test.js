@@ -224,19 +224,23 @@ test("dall'elenco di RainViewer si prende l'ultimo fotogramma misurato, non una 
 test("la mappa di fondo: una voce della tendina, o un indirizzo proprio", async () => {
   const { modelloDelFondo, FONDI_MAPPA, FONDI_RITIRATI, FONDO_DI_SERIE } =
     await import("../src/core/radar-mappa.js");
-  assert.equal(modelloDelFondo({ fondo: "osm" }), FONDI_MAPPA.osm.modello);
   /* CARTO e' ritirato: i suoi quadratini gratuiti tornano stampati «API Key
    * Required». Chi l'aveva scelto passa alla mappa di serie da solo. */
   assert.equal(FONDI_MAPPA.carto, undefined);
-  assert.deepEqual(FONDI_RITIRATI, { carto: "esri" });
+  assert.deepEqual(FONDI_RITIRATI, { carto: "esri", osm: "esri" });
   assert.equal(modelloDelFondo({ fondo: "carto" }), FONDI_MAPPA.esri.modello);
   /* Quella di serie non e' piu' OpenStreetMap (#529): il loro server e' del
    * sito di OpenStreetMap, le regole d'uso escludono un uso come il nostro, e
    * chi non si adegua viene bloccato guardando `Referer` e `User-Agent` — da
-   * cui il 403 dal computer e la mappa che invece si vede dal telefono. */
+   * cui il 403 dal computer e la mappa che invece si vede dal telefono.
+   *
+   * E adesso non e' nemmeno piu' in elenco (#29): sceglierlo voleva dire una
+   * mappa fatta di quadratini con scritto «403 · Access blocked», che chi
+   * guarda legge come «la plancia e' rotta». Chi l'aveva scelto passa alla
+   * mappa di serie da solo, come per CARTO. */
   assert.equal(FONDO_DI_SERIE, "esri");
-  /* Ma OpenStreetMap resta in elenco: a chi funziona non si toglie niente. */
-  assert.ok(FONDI_MAPPA.osm);
+  assert.equal(FONDI_MAPPA.osm, undefined);
+  assert.equal(modelloDelFondo({ fondo: "osm" }), FONDI_MAPPA.esri.modello);
   /* E ogni fondo si porta il nome di chi lo disegna: Esri lo chiede, e senza
    * un posto dove scriverlo non si potrebbe usarlo. */
   for (const [chiave, voce] of Object.entries(FONDI_MAPPA))
@@ -298,9 +302,17 @@ test("un indirizzo di un servizio ritirato non si usa piu'", () => {
     true,
   );
   assert.equal(indirizzoRitirato("https://carto.com/{z}/{x}/{y}.png"), true);
+  /* E adesso anche i quadratini della fondazione OpenStreetMap (#29): chi li
+   * chiede si vede tornare «403 · Access blocked», e la mappa diventa un muro
+   * di scritte rosse. Vale anche per i suoi nomi brevi e per i sottodomini. */
+  assert.equal(indirizzoRitirato("https://tile.openstreetmap.org/{z}/{x}/{y}.png"), true);
+  assert.equal(indirizzoRitirato("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"), true);
+  assert.equal(indirizzoRitirato("https://tile.osm.org/{z}/{x}/{y}.png"), true);
   /* Gli altri restano quelli di chi li ha scritti. */
-  assert.equal(indirizzoRitirato("https://tile.openstreetmap.org/{z}/{x}/{y}.png"), false);
   assert.equal(indirizzoRitirato("https://tiles.casamia.lan/{z}/{x}/{y}.png"), false);
+  /* Anche uno che parla di OpenStreetMap senza essere il loro server: chi si
+   * serve i quadratini da sé non va spostato da nessuna parte. */
+  assert.equal(indirizzoRitirato("https://openstreetmap.casamia.lan/{z}/{x}/{y}.png"), false);
   assert.equal(indirizzoRitirato(""), false);
   /* E un ospite che finisce per caso con quelle lettere non e' quel servizio. */
   assert.equal(indirizzoRitirato("https://noncartocdn.com/{z}/{x}/{y}.png"), false);
