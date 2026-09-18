@@ -335,6 +335,14 @@
         background: var(--ambra);
       }
 
+      /* I tre tasti di una ditta stanno insieme: sul computer in fila, sul
+       * telefono in una griglia da tre che non va a capo. Senza, «Chiudi»
+       * cadeva da solo su una riga sua per ogni ditta dell'elenco. */
+      .tasti {
+        display: flex;
+        gap: 9px;
+      }
+
       .pastiglia {
         display: inline-flex;
         align-items: center;
@@ -497,12 +505,81 @@
       }
 
       @media (max-width: 720px) {
+        main {
+          padding: 18px 16px 44px;
+        }
+
+        /* Le tessere a due a due. Una per riga vuol dire quattro schede alte
+         * prima di arrivare a quello per cui si è aperta la pagina, e su un
+         * telefono quella è mezza schermata di numeri che non si stavano
+         * cercando. */
+        .tessere {
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+        }
+
+        .tessera {
+          padding: 12px 13px;
+          gap: 10px;
+        }
+
+        .tessera b {
+          font-size: 1.3rem;
+        }
+
+        .tessera span {
+          font-size: 0.74rem;
+        }
+
         ul.ditte > li {
           grid-template-columns: 1fr;
-          gap: 11px;
+          gap: 10px;
         }
+
+        /* Quante case e il metro sulla stessa riga: sono la stessa domanda, e
+         * incolonnarli allunga ogni ditta per niente. */
         .quante {
           text-align: left;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .quante .metro {
+          margin-top: 0;
+          flex: 1;
+          max-width: 150px;
+        }
+
+        .quante .minuta {
+          margin-top: 0 !important;
+        }
+
+        /* Lo stato sopra, i tre tasti sotto in una riga sola e larghi uguali.
+         * Prima «Chiudi» cadeva da solo per ogni ditta, e un elenco fatto di
+         * righe sfrangiate non si scorre con l'occhio. */
+        ul.ditte .azioni {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 9px;
+          width: 100%;
+        }
+
+        .tasti {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 7px;
+          width: 100%;
+        }
+
+        .tasti button {
+          padding: 8px 4px;
+          font-size: 0.78rem;
+        }
+
+        ul.ditte .pastiglia {
+          font-size: 0.75rem;
+          padding: 4px 9px;
         }
       }
     </style>
@@ -739,9 +816,11 @@
               <span class="pastiglia ${stato.come}">
                 <span aria-hidden="true">${stato.forma}</span>${testo(stato.parola)}
               </span>
-              <button type="button" class="piccolo" data-tetto="${testo(una.chi)}">Tetto</button>
-              <button type="button" class="piccolo" data-rifai="${testo(una.chi)}">Nuova chiave</button>
-              <button type="button" class="piccolo male" data-chiudi="${testo(una.chi)}">Chiudi</button>
+              <span class="tasti">
+                <button type="button" class="piccolo" data-tetto="${testo(una.chi)}">Tetto</button>
+                <button type="button" class="piccolo" data-rifai="${testo(una.chi)}">Nuova chiave</button>
+                <button type="button" class="piccolo male" data-chiudi="${testo(una.chi)}">Chiudi</button>
+              </span>
             </span>
           </li>`;
       }
