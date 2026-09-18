@@ -169,6 +169,7 @@ import {
 import { categoriaDelleAllerte, fraseDellAllerta } from "./allerte-section.js";
 import {
   CHIAVE_RIFIUTI,
+  ilCalendarioRipeteUnaRiga,
   letturaRifiuti,
   normalizzaRifiuti,
   rifiutiConfigurati,
@@ -5051,9 +5052,19 @@ function rifiutiModel(states) {
     quando: riga.quando,
     giorni: riga.giorni,
   });
+  /* Il calendario non ripete una riga: stesso materiale e stesso giorno e' lo
+   * stesso bidone.
+   *
+   * La regola c'era gia' per «il prossimo ritiro» — `letturaRifiuti` la scrive
+   * nero su bianco — ma qui sotto mancava, e l'elenco della tessera e la
+   * fascia sotto il meteo leggono **queste** righe: «Indicazione rifiuti sulla
+   * pastiglia doppia», con «Vetro OGGI» scritto due volte. Chi scende le scale
+   * col bidone non ne ha due, e una pastiglia che ripete la prima non
+   * aggiunge niente: toglie spazio all'altra notizia che stava accanto. */
+  const ilCalendarioRipete = ilCalendarioRipeteUnaRiga(lettura);
   const rows = [
     ...lettura.righe.map((riga) => rigaDi(riga, segnoDelRitiro(riga), disegnoDelRitiro(riga))),
-    ...(lettura.calendario
+    ...(lettura.calendario && !ilCalendarioRipete
       ? [
           rigaDi(
             lettura.calendario,

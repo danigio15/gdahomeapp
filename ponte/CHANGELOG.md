@@ -5,6 +5,34 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.14
+
+**La pastiglia dei rifiuti non si scrive due volte.**
+
+«Indicazione rifiuti sulla pastiglia doppia»: nella fascia sotto il meteo
+c'erano «Vetro OGGI» e «Vetro OGGI», e accanto restava posto per una
+notizia sola invece di due. Chi scende le scale ha un bidone, non due.
+
+Da dove veniva: nella plancia la regola «stesso materiale e stesso giorno è
+lo stesso bidone» c'era già, ma solo per «il prossimo ritiro». Le **righe**
+— quelle che finiscono nell'elenco della tessera e nella fascia — mettevano
+in fila i sensori per materiale e il «Calendario dei ritiri» senza
+guardarsi. Adesso la regola vale anche lì, ed è scritta una volta sola nel
+modello dei rifiuti.
+
+E sulla fascia c'è una seconda rete: due righe che si **leggono uguali** —
+stesso segno, stesso nome, stesso giorno — sono una pastiglia sola. Così
+chi ha due integrazioni che nominano lo stesso bidone non vede la scritta
+doppia, e la sua configurazione non si tocca: nell'elenco della tessera ci
+sono tutte e due, col loro nome.
+
+**E i loghi degli aggiornamenti si aprono alla misura in cui si vedono.**
+Arrivano a 256 punti per lato e nel riquadro se ne disegnano trentadue:
+aperti com'erano, ognuno si teneva in memoria un quarto di mega — tre per
+una casa con dodici aggiornamenti — e adesso sono sedici kilobyte a testa.
+Non è la cura dello scatto che si vede da browser: quello l'ho misurato sul
+banco e i tempi non si muovono. È memoria che non serviva a niente.
+
 ## 1.4.32.13
 
 **Gli interruttori Zigbee prendono il segno di Zigbee2MQTT, non quello di

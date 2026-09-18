@@ -23,6 +23,7 @@ import {
   normalizzaOraDelRitiro,
   pastiglieDellaCasa,
 } from "../src/core/come-sta-la-casa.js";
+import { ilCalendarioRipeteUnaRiga } from "../src/core/rifiuti-model.js";
 
 const alle = (ora) => new Date(2026, 8, 16, ora, 30, 0);
 
@@ -116,6 +117,79 @@ test("tutti i bidoni della stessa uscita, anche la sera (#567 non si perde)", ()
     adesso: alle(22),
   });
   assert.deepEqual(nomiDeiRifiuti(diSera), ["Vetro", "Plastica"]);
+});
+
+test("due righe che si leggono uguali sono una pastiglia sola (#Vetro OGGI due volte)", () => {
+  /* «Indicazione rifiuti sulla pastiglia doppia»: nella fascia c'erano
+   * «Vetro OGGI» e «Vetro OGGI», e accanto restava posto per una notizia
+   * sola invece di due.
+   *
+   * La pastiglia porta tre cose — il segno, il nome e il giorno — e se
+   * quelle tornano uguali la seconda non dice niente di nuovo a chi scende
+   * le scale col bidone. Le righe restano tutte nell'elenco della tessera,
+   * col loro nome e la loro entità: qui si toglie la scritta doppia. */
+  const dueVolteVetro = {
+    key: "rifiuti",
+    icon: "♻️",
+    accent: "#16a34a",
+    rows: [
+      { quando: "oggi", name: "Vetro", glyph: "🍾", entity: "sensor.vetro" },
+      { quando: "oggi", name: "Vetro", glyph: "🍾", entity: "calendar.rifiuti" },
+    ],
+  };
+  const fascia = pastiglieDellaCasa([dueVolteVetro], { adesso: alle(9) });
+  assert.deepEqual(nomiDeiRifiuti(fascia), ["Vetro"]);
+
+  /* E due bidoni **diversi** dello stesso giorno restano due: la regola
+   * guarda cosa c'è scritto, non quante righe sono (#567 non si perde). */
+  const vetroEOrganico = {
+    ...dueVolteVetro,
+    rows: [
+      { quando: "oggi", name: "Vetro", glyph: "🍾", entity: "sensor.vetro" },
+      { quando: "oggi", name: "Organico", glyph: "🥬", entity: "sensor.organico" },
+    ],
+  };
+  assert.deepEqual(nomiDeiRifiuti(pastiglieDellaCasa([vetroEOrganico], { adesso: alle(9) })), [
+    "Vetro",
+    "Organico",
+  ]);
+
+  /* Lo stesso nome scritto con un'altra maiuscola è lo stesso bidone: sono
+   * due integrazioni che nominano la stessa cosa, non due uscite. */
+  const maiuscole = {
+    ...dueVolteVetro,
+    rows: [
+      { quando: "oggi", name: "Vetro", glyph: "🍾", entity: "sensor.vetro" },
+      { quando: "oggi", name: "VETRO", glyph: "🍾", entity: "sensor.vetro_2" },
+    ],
+  };
+  assert.deepEqual(nomiDeiRifiuti(pastiglieDellaCasa([maiuscole], { adesso: alle(9) })), [
+    "Vetro",
+  ]);
+});
+
+test("il «Calendario dei ritiri» non ripete una riga nemmeno nell'elenco", () => {
+  /* La regola c'era per «il prossimo ritiro» e mancava per le righe, che sono
+   * quelle che finiscono nell'elenco della tessera e nella fascia. Stesso
+   * materiale e stesso giorno: è lo stesso bidone, detto da due posti. */
+  const lettura = {
+    righe: [{ materiale: "vetro", giorni: 0 }],
+    calendario: { materiale: "vetro", giorni: 0 },
+  };
+  assert.equal(ilCalendarioRipeteUnaRiga(lettura), true);
+  /* Un giorno diverso è un'altra uscita, e ci va. */
+  assert.equal(
+    ilCalendarioRipeteUnaRiga({ ...lettura, calendario: { materiale: "vetro", giorni: 1 } }),
+    false,
+  );
+  /* Un materiale diverso è un altro bidone. */
+  assert.equal(
+    ilCalendarioRipeteUnaRiga({ ...lettura, calendario: { materiale: "carta", giorni: 0 } }),
+    false,
+  );
+  /* E senza calendario non c'è niente da ripetere. */
+  assert.equal(ilCalendarioRipeteUnaRiga({ righe: [], calendario: null }), false);
+  assert.equal(ilCalendarioRipeteUnaRiga(null), false);
 });
 
 test("la sezione porta l'orologio al nucleo, e la scelta arriva dalla casella", () => {

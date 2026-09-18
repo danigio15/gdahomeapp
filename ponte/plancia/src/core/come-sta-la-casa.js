@@ -277,7 +277,27 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, adesso } = {
     const modello = perChiave.get(voce.chiave);
     if (!modello) continue;
     if (voce.chiave === "rifiuti") {
-      for (const riga of ritiriVicini(modello, giorni))
+      /* Due righe che sulla fascia si **leggono uguali** sono un bidone solo.
+       *
+       * La pastiglia porta tre cose: il segno, il nome e il giorno. Se quelle
+       * tre tornano uguali, la seconda non aggiunge niente — dice due volte la
+       * stessa cosa («Indicazione rifiuti sulla pastiglia doppia»: «Vetro
+       * OGGI» e «Vetro OGGI»), e lo fa prendendo il posto della notizia che
+       * stava accanto.
+       *
+       * Non si tocca la configurazione di nessuno: chi ha due sensori per lo
+       * stesso bidone li tiene, e nell'elenco della tessera ci sono tutti e
+       * due col loro nome. Qui si toglie la pastiglia doppia, che e' una cosa
+       * scritta, non una cosa configurata. */
+      const giaScritte = new Set();
+      for (const riga of ritiriVicini(modello, giorni)) {
+        const comeSiLegge = [
+          pulito(riga.glyph),
+          pulito(riga.name).toLowerCase(),
+          pulito(riga.quando),
+        ].join("|");
+        if (giaScritte.has(comeSiLegge)) continue;
+        giaScritte.add(comeSiLegge);
         fuori.push({
           chiave: "rifiuti",
           /* Una pastiglia per bidone, quindi la chiave non basta piu' a dire
@@ -290,6 +310,7 @@ export function pastiglieDellaCasa(modelli, { barra, posta, misure, adesso } = {
           quando: riga.quando,
           nome: pulito(riga.name),
         });
+      }
       continue;
     }
     if (voce.chiave === "sicurezza") {

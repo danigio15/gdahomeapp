@@ -873,6 +873,23 @@ class _IlSegno extends StatelessWidget {
 
   static const double _lato = 42;
 
+  /* Quanto grande si **apre** l'immagine.
+   *
+   * I loghi arrivano a 256 punti per lato — e' la misura che chiede Home
+   * Assistant ai suoi marchi — e qui dentro si disegnano in trentadue. Aperta
+   * com'e', ognuna si tiene in memoria un quadrato da 256 per 256 a quattro
+   * byte: un quarto di mega a riga, tre per una casa con dodici
+   * aggiornamenti. Aperta alla misura in cui si vede sono sedici kilobyte.
+   *
+   * Novantasei e non trentadue: uno schermo a densita' tre disegna quei
+   * trentadue punti con novantasei pixel, e aprirla piu' piccola vorrebbe
+   * dire un logo sfocato sui telefoni buoni.
+   *
+   * Non e' la cura dello scatto che si vede da browser — l'ho misurato sul
+   * banco e i tempi non si muovono di un millesimo — e' memoria che non
+   * serviva a niente. */
+  static const int _quantiPunti = 96;
+
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
@@ -904,6 +921,7 @@ class _IlSegno extends StatelessWidget {
               padding: const EdgeInsets.all(5),
               child: Image.memory(
                 dentro,
+                cacheHeight: _quantiPunti,
                 /* `contain` e non `cover`: un logo e' fatto per stare intero,
                  * e ritagliarne i bordi vuol dire tagliare la parte che lo fa
                  * riconoscere. */

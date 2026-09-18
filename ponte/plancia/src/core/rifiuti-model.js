@@ -770,6 +770,32 @@ export function quandoCodice(giorni) {
 }
 
 /**
+ * Se il «Calendario dei ritiri» ripete una riga: stesso materiale, stesso giorno.
+ *
+ * E' la gemella della regola che `letturaRifiuti` applica a «il prossimo
+ * ritiro»: un evento del calendario che dice quello che un sensore per
+ * materiale dice gia' non e' un secondo bidone. La differenza e' dove si
+ * guarda — la' nei «prossimi», qui nelle **righe**, che sono quelle che
+ * finiscono nell'elenco della tessera e nella fascia sotto il meteo.
+ *
+ * Li' la regola c'era, qui mancava: «Indicazione rifiuti sulla pastiglia
+ * doppia», con «Vetro OGGI» scritto due volte. Chi scende le scale ha un
+ * bidone, non due, e la seconda pastiglia prende il posto dell'altra notizia.
+ *
+ * @param {object} lettura quello che torna da `letturaRifiuti`
+ */
+export function ilCalendarioRipeteUnaRiga(lettura) {
+  const calendario = lettura?.calendario;
+  if (!calendario) return false;
+  const righe = Array.isArray(lettura?.righe) ? lettura.righe : [];
+  return righe.some(
+    (riga) =>
+      pulito(riga?.materiale) === pulito(calendario.materiale) &&
+      riga?.giorni === calendario.giorni,
+  );
+}
+
+/**
  * La lettura di tutti i materiali configurati, adesso.
  *
  * Ogni riga porta la data trovata e i giorni che mancano; le righe si
