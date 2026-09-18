@@ -1,0 +1,1252 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Il quadro</title>
+    <!--
+      IL QUADRO — BOZZA, CON DENTRO CASE FINTE.
+
+      Questa pagina non parla con niente: le case che si vedono stanno scritte
+      qui sotto, in `CASE`. Serve a guardare il cruscotto prima di costruirlo, e
+      a discutere su una cosa invece che su una descrizione. Quando il quadro
+      sarà vero, `CASE` arriva da `GET /case` e il resto della pagina resta
+      com'è — per questo i dati stanno in cima e separati da tutto.
+
+      È parente della console del centralino (`centralino/console/index.html`):
+      stessa tavolozza, stesse forme, nessuna richiesta a nessuno — niente
+      font, niente librerie. Una pagina sola, che si apre anche dal telefono.
+      Gli accenti però sono quelli veri, come nella console del ponte: quella
+      del centralino la legge chi mantiene l'app, questa la legge un
+      installatore tutti i giorni, ed è una pagina di prodotto.
+
+      Quello che si vede qui è tutto quello che il quadro sa di una casa, ed è
+      quello che sta scritto nella cartolina: numeri e versioni. Niente nomi di
+      entità, niente stanze, niente persone, nessuno stato di nessun sensore.
+      Il nome della casa — «Rossi — via Verdi 12» — dalla casa non arriva: lo
+      scrive l'installatore qui, e resta qui.
+
+      UNA COSA MISURATA, CHE HA DECISO IL DISEGNO.
+
+      I tre colori di stato del progetto — `--spia`, `--ottone`, `--allarme` —
+      fra ambra e rosso sono a 1.7 di distanza per chi non distingue il rosso
+      dal verde (9.1 per chi li distingue tutti: sotto la soglia comunque). Su
+      una pagina il cui mestiere è far vedere a colpo d'occhio quali case stanno
+      bene, un pallino colorato **da solo** non può portare il significato.
+      Perciò ogni stato ha tre cose insieme: una **forma** (● ▲ ■ ◇), una
+      **parola** e un colore. Chi non vede i colori legge la pagina lo stesso, e
+      chi li vede la legge più in fretta.
+
+      La variabile del fondo delle schede qui si chiama `--scheda` e non
+      `--quadro` come nella console del centralino: lì «quadro» voleva dire «il
+      riquadro bianco», qui vuol dire il pezzo intero, e due significati sulla
+      stessa parola nello stesso file si pagano dopo.
+    -->
+    <style>
+      :root {
+        --carta: #eef1f0;
+        --scheda: #ffffff;
+        --velo: #f6f8f7;
+        --inchiostro: #13212a;
+        --smorzato: #52636a;
+        --tenue: #7e8d92;
+        --linea: #d5dcda;
+        --ottone: #8a5710;
+        --spia: #1f6b4a;
+        --allarme: #a5392c;
+        /* Il pieno della striscia dei giorni: si deve vedere che c'è, e non
+         * si deve leggere prima dei buchi. */
+        --pieno: #c2cdc9;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --carta: #0e181d;
+          --scheda: #15232a;
+          --velo: #1a2a31;
+          --inchiostro: #dce6e4;
+          --smorzato: #9badb1;
+          --tenue: #7a8d92;
+          --linea: #243740;
+          --ottone: #dca45c;
+          --spia: #5fc493;
+          --allarme: #e98b7d;
+          --pieno: #35505b;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--carta);
+        color: var(--inchiostro);
+        font:
+          16px/1.5 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: var(--carta);
+        border-bottom: 1px solid var(--linea);
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      header .chi {
+        color: var(--tenue);
+        font-size: 0.82rem;
+        white-space: nowrap;
+      }
+
+      main {
+        max-width: 58rem;
+        margin-inline: auto;
+        padding: 16px;
+      }
+
+      .mono {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 0.82em;
+      }
+
+      .via {
+        position: absolute;
+        left: -9999px;
+      }
+
+      button {
+        font: inherit;
+        color: var(--inchiostro);
+        background: var(--scheda);
+        border: 1px solid var(--linea);
+        border-radius: 3px;
+        padding: 7px 12px;
+        cursor: pointer;
+      }
+
+      button.male {
+        color: var(--allarme);
+        border-color: var(--allarme);
+        background: transparent;
+      }
+
+      .riquadro {
+        background: var(--scheda);
+        border: 1px solid var(--linea);
+        border-radius: 4px;
+        padding: 16px;
+      }
+
+      /* ─── Il capo: il numero che decide la giornata ─────────────────────
+       *
+       * Uno solo, e grande. La domanda di chi apre questa pagina la mattina non
+       * è «quante case ho» — quello lo sa — ma «quante me ne chiedono qualcosa
+       * adesso». Le altre quattro cifre stanno sotto, piccole, perché servono a
+       * spiegare questa. */
+      .capo {
+        background: var(--scheda);
+        border: 1px solid var(--linea);
+        border-radius: 4px;
+        padding: 20px 18px;
+        margin-bottom: 14px;
+      }
+
+      .capo .cifra {
+        font-size: 3rem;
+        font-weight: 600;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+
+      .capo .dice {
+        font-size: 1rem;
+        margin-top: 6px;
+      }
+
+      .capo .sotto {
+        color: var(--tenue);
+        font-size: 0.85rem;
+        margin-top: 4px;
+      }
+
+      .conti {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px 26px;
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid var(--linea);
+      }
+
+      .conti div {
+        min-width: 4.5rem;
+      }
+
+      .conti b {
+        display: block;
+        font-size: 1.35rem;
+        font-weight: 600;
+        line-height: 1.2;
+      }
+
+      .conti span {
+        color: var(--tenue);
+        font-size: 0.78rem;
+      }
+
+      /* ─── I filtri: una riga sola, sopra l'elenco ───────────────────── */
+      .filtri {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+
+      .filtri button[aria-pressed="true"] {
+        background: var(--inchiostro);
+        color: var(--carta);
+        border-color: var(--inchiostro);
+      }
+
+      /* ─── Gli stati: forma + parola + colore, mai il colore da solo ─── */
+      .stato {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .stato .segno {
+        font-size: 0.9em;
+        line-height: 1;
+      }
+
+      .stato.posto {
+        color: var(--spia);
+      }
+
+      .stato.guardare {
+        color: var(--ottone);
+      }
+
+      .stato.muta {
+        color: var(--allarme);
+      }
+
+      .stato.aperto {
+        color: var(--tenue);
+      }
+
+      /* ─── L'elenco delle case ──────────────────────────────────────── */
+      ul.case {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      ul.case > li > button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 13px 15px;
+      }
+
+      .riga1 {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+      }
+
+      .riga1 strong {
+        font-weight: 600;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .quando {
+        margin-left: auto;
+        color: var(--tenue);
+        font-size: 0.8rem;
+        white-space: nowrap;
+        flex: none;
+      }
+
+      .targa {
+        color: var(--tenue);
+        font-size: 0.78rem;
+        margin-top: 3px;
+      }
+
+      .spie {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 14px;
+        margin-top: 7px;
+        font-size: 0.82rem;
+        color: var(--smorzato);
+      }
+
+      .spie .voce {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .spie .voce.male {
+        color: var(--allarme);
+      }
+
+      .spie .voce.attenta {
+        color: var(--ottone);
+      }
+
+      .vecchie {
+        color: var(--tenue);
+        font-size: 0.78rem;
+        margin-top: 7px;
+        font-style: italic;
+      }
+
+      /* ─── La striscia dei quattordici giorni ────────────────────────
+       *
+       * Una casella per giorno, e i giorni stanno incolonnati fra una casa e
+       * l'altra. Quello che si deve vedere non è «ha parlato» — che è la regola
+       * — ma **quando non l'ha fatto**: perciò i giorni pieni sono quieti e i
+       * buchi si vedono da lontano. Sotto c'è scritto a parole quante volte,
+       * perché una striscia di colori da sola non è un'informazione che tutti
+       * possono leggere. */
+      .striscia {
+        display: flex;
+        gap: 2px;
+        margin-top: 8px;
+      }
+
+      .striscia i {
+        display: block;
+        width: 100%;
+        max-width: 18px;
+        height: 9px;
+        border-radius: 1px;
+        background: var(--pieno);
+      }
+
+      .striscia i.mezza {
+        background: var(--ottone);
+        opacity: 0.6;
+      }
+
+      .striscia i.vuota {
+        background: var(--allarme);
+      }
+
+      .striscia i.prima {
+        background: transparent;
+        border: 1px dashed var(--linea);
+      }
+
+      .strisciaDice {
+        color: var(--tenue);
+        font-size: 0.75rem;
+        margin-top: 6px;
+      }
+
+      /* ─── Il dettaglio di una casa ──────────────────────────────────── */
+      .indietro {
+        margin-bottom: 12px;
+      }
+
+      h2 {
+        font-size: 1.15rem;
+        font-weight: 600;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+
+      h3 {
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--tenue);
+        margin: 0 0 10px;
+      }
+
+      .riquadro + .riquadro {
+        margin-top: 12px;
+      }
+
+      dl.fila {
+        margin: 0;
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 7px 18px;
+      }
+
+      dl.fila dt {
+        color: var(--tenue);
+        font-size: 0.85rem;
+      }
+
+      dl.fila dd {
+        margin: 0;
+        font-size: 0.9rem;
+      }
+
+      ul.spunte {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+
+      ul.spunte li {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        font-size: 0.9rem;
+      }
+
+      ul.spunte .segno {
+        flex: none;
+        width: 1em;
+        text-align: center;
+        font-size: 0.85em;
+      }
+
+      ul.spunte .fatta .segno {
+        color: var(--spia);
+      }
+
+      ul.spunte .manca .segno {
+        color: var(--ottone);
+      }
+
+      ul.spunte .cosa {
+        flex: 1;
+        min-width: 0;
+      }
+
+      ul.spunte .dettaglio {
+        color: var(--tenue);
+        font-size: 0.82rem;
+        white-space: nowrap;
+      }
+
+      .verdetto {
+        margin-top: 12px;
+        padding-top: 11px;
+        border-top: 1px solid var(--linea);
+        font-size: 0.85rem;
+        color: var(--smorzato);
+      }
+
+      table.versioni {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+      }
+
+      table.versioni td {
+        padding: 6px 0;
+        border-bottom: 1px solid var(--linea);
+      }
+
+      table.versioni tr:last-child td {
+        border-bottom: 0;
+      }
+
+      table.versioni td.numero {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+
+      table.versioni td.numero .nuova {
+        color: var(--ottone);
+        font-size: 0.82em;
+        display: block;
+      }
+
+      .impronte {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+
+      .impronte span {
+        background: var(--velo);
+        border: 1px solid var(--linea);
+        border-radius: 3px;
+        padding: 3px 8px;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 0.8rem;
+      }
+
+      .nota {
+        color: var(--tenue);
+        font-size: 0.82rem;
+      }
+
+      pre.cartolina {
+        margin: 0;
+        padding: 12px;
+        background: var(--velo);
+        border: 1px solid var(--linea);
+        border-radius: 3px;
+        overflow-x: auto;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 0.78rem;
+        line-height: 1.55;
+      }
+
+      .azioni {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      footer {
+        max-width: 58rem;
+        margin: 0 auto;
+        padding: 6px 16px 28px;
+        color: var(--tenue);
+        font-size: 0.78rem;
+      }
+
+      @media (max-width: 30rem) {
+        .quando {
+          display: none;
+        }
+
+        dl.fila {
+          grid-template-columns: 1fr;
+          gap: 2px 0;
+        }
+
+        dl.fila dd {
+          margin-bottom: 8px;
+        }
+
+        ul.spunte li {
+          flex-wrap: wrap;
+        }
+
+        ul.spunte .dettaglio {
+          width: 100%;
+          padding-left: calc(1em + 9px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Il quadro</h1>
+      <span class="chi" id="chi"></span>
+    </header>
+
+    <main id="dove"></main>
+
+    <footer>
+      Bozza con case finte. Nessuna di queste case esiste, e questa pagina non chiama nessuno.
+    </footer>
+
+    <script>
+      /* ───────────────────────────────────────────────────────────────────
+       * LE CASE FINTE.
+       *
+       * Ognuna è l'ultima cartolina arrivata (`carta`), più le tre cose che il
+       * quadro sa per conto suo e che la casa non manda: il nome che le ha dato
+       * l'installatore, il giorno in cui il collaudo si è chiuso la prima
+       * volta, e la storia dei giorni.
+       *
+       * La forma di `carta` è quella proposta in `quadro/README.md`: quando il
+       * quadro esisterà, queste righe arrivano da `GET /case` così come sono.
+       * ─────────────────────────────────────────────────────────────────── */
+      const CASE = [
+        {
+          nome: "Rossi — via Verdi 12",
+          da: "12 marzo 2026",
+          collaudataIl: "12 marzo 2026",
+          giorni: "PPPPPPPPPPPPPP",
+          carta: {
+            casa: "casa_a3f19c74e05b2d8890fa4c1e6b73d052",
+            quando: "2026-09-18T09:41:12Z",
+            ogni: 15,
+            ponte: "1.4.32.14",
+            plancia: "1.4.32",
+            ha: "2026.9.1",
+            supervisor: "2026.08.3",
+            sistema: "Home Assistant OS 14.2",
+            aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
+            plance: { quante: 3, configurate: 3 },
+            telefoni: { abbinati: 2, visti7gg: 2 },
+            fuori: { acceso: true, filo: true, daGiorni: 41 },
+            dispositivi: { totali: 214, spariti: 3, impronte: ["7c2a", "91ff", "04be"] },
+            batterie: { sotto20: 0, piuBassa: 47 },
+            backup: { giorniFa: 2 },
+            registro: { errori24h: 0 },
+          },
+        },
+        {
+          nome: "Bianchi — Villa al Lago",
+          da: "2 novembre 2025",
+          collaudataIl: "3 novembre 2025",
+          giorni: "PPPPPPPPPPPPPP",
+          carta: {
+            casa: "casa_5e8b02cc19a743f1bd6690e2a4718f3c",
+            quando: "2026-09-18T09:38:02Z",
+            ogni: 15,
+            ponte: "1.4.32.14",
+            plancia: "1.4.32",
+            ha: "2026.9.1",
+            supervisor: "2026.08.3",
+            sistema: "Home Assistant OS 14.2",
+            aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
+            plance: { quante: 2, configurate: 2 },
+            telefoni: { abbinati: 4, visti7gg: 3 },
+            fuori: { acceso: true, filo: true, daGiorni: 120 },
+            dispositivi: { totali: 388, spariti: 0, impronte: [] },
+            batterie: { sotto20: 0, piuBassa: 62 },
+            backup: { giorniFa: 1 },
+            registro: { errori24h: 0 },
+          },
+        },
+        {
+          nome: "Studio Marelli",
+          da: "8 gennaio 2026",
+          collaudataIl: "8 gennaio 2026",
+          giorni: "PPPPPPPPPPPMVV",
+          carta: {
+            casa: "casa_bb0417d9f3e8462a85c1079de6b24a9f",
+            quando: "2026-09-16T04:12:55Z",
+            ogni: 15,
+            ponte: "1.4.32.11",
+            plancia: "1.4.32",
+            ha: "2026.8.4",
+            supervisor: "2026.08.1",
+            sistema: "Home Assistant OS 14.1",
+            aggiornamenti: { quanti: 2, ha: true, addon: 1, gdahome: true, firmware: 0 },
+            plance: { quante: 1, configurate: 1 },
+            telefoni: { abbinati: 2, visti7gg: 0 },
+            fuori: { acceso: true, filo: true, daGiorni: 9 },
+            dispositivi: { totali: 96, spariti: 0, impronte: [] },
+            batterie: { sotto20: 1, piuBassa: 14 },
+            backup: { giorniFa: 31 },
+            registro: { errori24h: 0 },
+          },
+        },
+        {
+          nome: "Conti — casa di campagna",
+          da: "19 giugno 2025",
+          collaudataIl: "20 giugno 2025",
+          giorni: "PPPPPMPPPPPPPP",
+          carta: {
+            casa: "casa_71cd3a6e884b09f25de4a1c7b3608e14",
+            quando: "2026-09-18T09:29:47Z",
+            ogni: 15,
+            ponte: "1.4.32.9",
+            plancia: "1.4.31",
+            ha: "2026.6.2",
+            supervisor: "2026.07.2",
+            sistema: "Home Assistant OS 13.2",
+            aggiornamenti: { quanti: 6, ha: true, addon: 2, gdahome: true, firmware: 2 },
+            plance: { quante: 1, configurate: 1 },
+            telefoni: { abbinati: 1, visti7gg: 1 },
+            fuori: { acceso: true, filo: true, daGiorni: 3 },
+            dispositivi: { totali: 132, spariti: 1, impronte: ["e3b1"] },
+            batterie: { sotto20: 4, piuBassa: 6 },
+            backup: { giorniFa: 88 },
+            registro: { errori24h: 12 },
+          },
+        },
+        {
+          nome: "B&B Le Rondini",
+          da: "17 settembre 2026",
+          collaudataIl: null,
+          giorni: "            PP",
+          carta: {
+            casa: "casa_0ad9f4b17c26e358920b6cf1d4e7a385",
+            quando: "2026-09-18T09:40:08Z",
+            ogni: 15,
+            ponte: "1.4.32.14",
+            plancia: "1.4.32",
+            ha: "2026.9.1",
+            supervisor: "2026.08.3",
+            sistema: "Home Assistant OS 14.2",
+            aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
+            plance: { quante: 1, configurate: 0 },
+            telefoni: { abbinati: 0, visti7gg: 0 },
+            fuori: { acceso: true, filo: true, daGiorni: 1 },
+            dispositivi: { totali: 58, spariti: 0, impronte: [] },
+            batterie: { sotto20: 0, piuBassa: 91 },
+            backup: { giorniFa: null },
+            registro: { errori24h: 0 },
+          },
+        },
+        {
+          nome: "Ferrari — attico centro",
+          da: "5 aprile 2026",
+          collaudataIl: "6 aprile 2026",
+          giorni: "PPPPPPPPPPPPPP",
+          carta: {
+            casa: "casa_92e740b8d15cf6a3e0724b9d8c31506a",
+            quando: "2026-09-18T09:35:19Z",
+            ogni: 15,
+            ponte: "1.4.32.14",
+            plancia: "1.4.32",
+            ha: "2026.9.1",
+            supervisor: "2026.08.3",
+            sistema: "Home Assistant OS 14.2",
+            aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
+            plance: { quante: 2, configurate: 2 },
+            telefoni: { abbinati: 3, visti7gg: 2 },
+            fuori: { acceso: true, filo: true, daGiorni: 74 },
+            dispositivi: { totali: 167, spariti: 0, impronte: [] },
+            batterie: { sotto20: 0, piuBassa: 55 },
+            backup: { giorniFa: 3 },
+            registro: { errori24h: 0 },
+          },
+        },
+        {
+          nome: "Greco — via Trento 4",
+          da: "23 febbraio 2026",
+          collaudataIl: "23 febbraio 2026",
+          giorni: "PPPPPPPPPPPPPP",
+          carta: {
+            casa: "casa_4f6a1e93b82d70c5a94e83610fd27b4e",
+            quando: "2026-09-18T09:33:51Z",
+            ogni: 15,
+            ponte: "1.4.32.14",
+            plancia: "1.4.32",
+            ha: "2026.9.1",
+            supervisor: "2026.08.3",
+            sistema: "Home Assistant Supervised",
+            aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
+            plance: { quante: 1, configurate: 1 },
+            telefoni: { abbinati: 2, visti7gg: 2 },
+            fuori: { acceso: true, filo: true, daGiorni: 30 },
+            dispositivi: { totali: 89, spariti: 0, impronte: [] },
+            batterie: { sotto20: 0, piuBassa: 73 },
+            backup: { giorniFa: 4 },
+            registro: { errori24h: 0 },
+          },
+        },
+        {
+          nome: "Palestra Olimpia",
+          da: "14 dicembre 2025",
+          collaudataIl: "14 dicembre 2025",
+          giorni: "PPPPPPPPPPPPPP",
+          carta: {
+            casa: "casa_c208e5719ba634df80e27c14a6b39052",
+            quando: "2026-09-18T09:42:00Z",
+            ogni: 15,
+            ponte: "1.4.32.14",
+            plancia: "1.4.32",
+            ha: "2026.9.1",
+            supervisor: "2026.08.3",
+            sistema: "Home Assistant OS 14.2",
+            aggiornamenti: { quanti: 1, ha: false, addon: 1, gdahome: false, firmware: 0 },
+            plance: { quante: 1, configurate: 1 },
+            telefoni: { abbinati: 1, visti7gg: 1 },
+            fuori: { acceso: true, filo: true, daGiorni: 210 },
+            dispositivi: { totali: 41, spariti: 0, impronte: [] },
+            batterie: { sotto20: 0, piuBassa: 88 },
+            backup: { giorniFa: 6 },
+            registro: { errori24h: 0 },
+          },
+        },
+      ];
+
+      /* Adesso, per questa bozza: qualche minuto dopo l'ultima cartolina, così
+       * i «3 minuti fa» tornano sempre invece di invecchiare col file. */
+      const ADESSO = new Date("2026-09-18T09:44:00Z").getTime();
+
+      /* ───────────────────────────────────────────────────────────────────
+       * IL COLLAUDO E LA SALUTE.
+       *
+       * Sono le sole regole di questa pagina, ed è la stessa cosa che nel
+       * quadro vero starà in `src/collaudo.js`: da una cartolina si ricavano
+       * delle spunte, e dalle spunte uno stato. Qui stanno scritte una volta e
+       * si leggono tutte insieme, che è il punto di una bozza.
+       * ─────────────────────────────────────────────────────────────────── */
+
+      /* Dopo quante cartoline saltate una casa è muta. Tre: una sola può essere
+       * un riavvio, tre no. */
+      const MUTA_DOPO = 3;
+
+      /* Quanti giorni può stare fermo un backup prima che sia una cosa da
+       * guardare. Due settimane: chi fa il backup ogni notte se ne accorge
+       * subito, chi lo fa a mano una volta al mese non viene tormentato. */
+      const BACKUP_FERMO = 14;
+
+      /* Sotto quale carica una batteria si conta fra quelle da cambiare. */
+      const BATTERIA_SCARICA = 20;
+
+      const minutiDaAllora = (quando) => Math.round((ADESSO - new Date(quando).getTime()) / 60000);
+
+      const plurale = (quanti, uno, molti) => `${quanti} ${quanti === 1 ? uno : molti}`;
+
+      function daQuanto(quando) {
+        const minuti = minutiDaAllora(quando);
+        if (minuti < 1) return "adesso";
+        if (minuti < 60) return `${minuti} min fa`;
+        const ore = Math.round(minuti / 60);
+        if (ore < 24) return `${ore} ${ore === 1 ? "ora" : "ore"} fa`;
+        const giorni = Math.round(ore / 24);
+        return `${giorni} ${giorni === 1 ? "giorno" : "giorni"} fa`;
+      }
+
+      const eMuta = (c) => minutiDaAllora(c.quando) > c.ogni * MUTA_DOPO;
+
+      const backupFermo = (c) => c.backup.giorniFa === null || c.backup.giorniFa > BACKUP_FERMO;
+
+      /* Quando un aggiornamento in attesa è una cosa da guardare.
+       *
+       * Non sempre: un add-on che ha una versione nuova da ieri non è un
+       * impianto da andare a vedere, e una casa che diventa ambra per quello
+       * insegna a non guardare più le case ambra. Diventa una cosa da guardare
+       * quando tocca Home Assistant o gdahome — lì dentro ci sono le correzioni
+       * di sicurezza — o quando se ne sono accumulati tre.
+       *
+       * Nel collaudo invece contano tutti: alla consegna un impianto si lascia
+       * aggiornato, e quella spunta è severa apposta. Sono due domande diverse
+       * sulla stessa riga, ed è giusto che diano due risposte diverse. */
+      const aggiornamentiPesano = (a) => a.quanti >= 3 || a.ha || a.gdahome;
+
+      /* Le spunte del collaudo: l'impianto è finito bene?
+       *
+       * Sono le cose che un installatore controlla prima di andarsene, e sono
+       * tutte già dentro la cartolina. `manca` non vuol dire rotto: vuol dire
+       * che quella riga non si può ancora spuntare. */
+      function ilCollaudo(c) {
+        const spunte = [
+          {
+            cosa: "La plancia è configurata",
+            fatta: c.plance.configurate > 0,
+            dettaglio:
+              c.plance.configurate > 0
+                ? `${c.plance.configurate} su ${c.plance.quante}`
+                : "nessuna, è vuota",
+          },
+          {
+            cosa: "C'è almeno un telefono abbinato",
+            fatta: c.telefoni.abbinati > 0,
+            dettaglio:
+              c.telefoni.abbinati > 0
+                ? plurale(c.telefoni.abbinati, "telefono", "telefoni")
+                : "nessuno",
+          },
+          {
+            cosa: "Da fuori casa funziona",
+            fatta: c.fuori.acceso && c.fuori.filo,
+            dettaglio: c.fuori.acceso
+              ? c.fuori.filo
+                ? `filo su da ${c.fuori.daGiorni} gg`
+                : "acceso, filo giù"
+              : "spento",
+          },
+          {
+            cosa: "Nessun dispositivo sparito",
+            fatta: c.dispositivi.spariti === 0,
+            dettaglio:
+              c.dispositivi.spariti === 0
+                ? `${c.dispositivi.totali} tutti là`
+                : `${c.dispositivi.spariti} su ${c.dispositivi.totali}`,
+          },
+          {
+            cosa: "Niente da aggiornare",
+            fatta: c.aggiornamenti.quanti === 0,
+            dettaglio:
+              c.aggiornamenti.quanti === 0
+                ? "tutto aggiornato"
+                : `${plurale(c.aggiornamenti.quanti, "aggiornamento", "aggiornamenti")} in attesa`,
+          },
+          {
+            cosa: "Il backup gira",
+            fatta: !backupFermo(c),
+            dettaglio:
+              c.backup.giorniFa === null ? "mai fatto" : `l'ultimo ${c.backup.giorniFa} gg fa`,
+          },
+          {
+            cosa: "Nessuna batteria da cambiare",
+            fatta: c.batterie.sotto20 === 0,
+            dettaglio:
+              c.batterie.sotto20 === 0
+                ? `la più bassa al ${c.batterie.piuBassa}%`
+                : `${c.batterie.sotto20} sotto il ${BATTERIA_SCARICA}%`,
+          },
+        ];
+        return { spunte, fatte: spunte.filter((una) => una.fatta).length, quante: spunte.length };
+      }
+
+      /* Lo stato di una casa, in una parola.
+       *
+       * L'ordine conta. Muta batte tutto: di una casa che non parla non si sa
+       * niente, nemmeno che sta bene — quello che si vede di lei è vecchio.
+       * Poi il collaudo mai chiuso, che non è un guasto ma un lavoro lasciato a
+       * metà, e sta in un'altra fila perché si sbriga in un altro modo. Poi
+       * quello che si è rotto dopo. */
+      function loStato(casa) {
+        const c = casa.carta;
+        if (eMuta(c)) {
+          return {
+            chiave: "muta",
+            segno: "■",
+            parola: "muta",
+            perché: `non manda una cartolina da ${daQuanto(c.quando)}`,
+          };
+        }
+        if (casa.collaudataIl === null) {
+          const collaudo = ilCollaudo(c);
+          return {
+            chiave: "aperto",
+            segno: "◇",
+            parola: "collaudo aperto",
+            perché: `${collaudo.fatte} spunte su ${collaudo.quante}`,
+          };
+        }
+        const guai = [];
+        if (c.dispositivi.spariti > 0)
+          guai.push(plurale(c.dispositivi.spariti, "dispositivo sparito", "dispositivi spariti"));
+        if (c.batterie.sotto20 > 0)
+          guai.push(plurale(c.batterie.sotto20, "batteria scarica", "batterie scariche"));
+        if (aggiornamentiPesano(c.aggiornamenti))
+          guai.push(plurale(c.aggiornamenti.quanti, "aggiornamento", "aggiornamenti"));
+        if (backupFermo(c)) guai.push("backup fermo");
+        if (c.registro.errori24h > 0) guai.push(plurale(c.registro.errori24h, "errore", "errori"));
+        if (guai.length) {
+          return {
+            chiave: "guardare",
+            segno: "▲",
+            parola: "da guardare",
+            perché: guai.join(" · "),
+          };
+        }
+        return { chiave: "posto", segno: "●", parola: "a posto", perché: "" };
+      }
+
+      /* Le spie di una riga: le stesse cose, dette per esteso. Ci sono anche
+       * quelle che non fanno diventare la casa ambra — l'aggiornamento singolo
+       * si vede lo stesso, semplicemente non suona. */
+      function leSpie(c) {
+        const spie = [];
+        if (c.dispositivi.spariti > 0)
+          spie.push([
+            plurale(c.dispositivi.spariti, "dispositivo sparito", "dispositivi spariti"),
+            "male",
+          ]);
+        if (c.registro.errori24h > 0)
+          spie.push([`${plurale(c.registro.errori24h, "errore", "errori")} in 24h`, "male"]);
+        if (c.batterie.sotto20 > 0)
+          spie.push([
+            `${plurale(c.batterie.sotto20, "batteria", "batterie")} sotto il ${BATTERIA_SCARICA}%`,
+            "attenta",
+          ]);
+        if (c.aggiornamenti.quanti > 0)
+          spie.push([
+            plurale(c.aggiornamenti.quanti, "aggiornamento", "aggiornamenti"),
+            aggiornamentiPesano(c.aggiornamenti) ? "attenta" : "",
+          ]);
+        if (c.backup.giorniFa === null) spie.push(["backup mai fatto", "attenta"]);
+        else if (backupFermo(c)) spie.push([`backup fermo da ${c.backup.giorniFa} gg`, "attenta"]);
+        if (c.plance.configurate === 0) spie.push(["plancia da configurare", "attenta"]);
+        if (c.telefoni.abbinati === 0) spie.push(["nessun telefono abbinato", "attenta"]);
+        if (!spie.length) spie.push([`${c.dispositivi.totali} dispositivi, tutti là`, ""]);
+        return spie;
+      }
+
+      /* ─── Disegnare ──────────────────────────────────────────────────── */
+
+      const testo = (cosa) =>
+        String(cosa).replace(
+          /[&<>"']/g,
+          (uno) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[uno],
+        );
+
+      const spia = (stato) =>
+        `<span class="stato ${stato.chiave}"><span class="segno" aria-hidden="true">${stato.segno}</span>${testo(stato.parola)}</span>`;
+
+      /* La striscia: `P` giorno pieno, `M` a metà, `V` muta, spazio «non c'era
+       * ancora». */
+      function laStriscia(giorni) {
+        const celle = [...giorni]
+          .map((uno) => {
+            if (uno === "V") return '<i class="vuota" title="muta tutto il giorno"></i>';
+            if (uno === "M") return '<i class="mezza" title="muta per qualche ora"></i>';
+            if (uno === " ") return '<i class="prima" title="non era ancora accesa"></i>';
+            return '<i title="tutte le cartoline arrivate"></i>';
+          })
+          .join("");
+        const vuoti = [...giorni].filter((uno) => uno === "V" || uno === "M").length;
+        const accesi = [...giorni].filter((uno) => uno !== " ").length;
+        const dice =
+          accesi < giorni.length
+            ? `${plurale(accesi, "giorno", "giorni")} da quando è accesa`
+            : vuoti === 0
+              ? "14 giorni, sempre viva"
+              : `14 giorni · muta ${plurale(vuoti, "volta", "volte")}`;
+        return `<div class="striscia" role="img" aria-label="${testo(dice)}">${celle}</div><div class="strisciaDice">${testo(dice)}</div>`;
+      }
+
+      let filtro = "tutte";
+      let aperta = null;
+      const dove = document.getElementById("dove");
+
+      document.getElementById("chi").textContent =
+        `Impianti Rossi · ${plurale(CASE.length, "casa", "case")}`;
+
+      function disegna() {
+        dove.innerHTML = aperta === null ? lElenco() : ilDettaglio(CASE[aperta]);
+        dove.querySelectorAll("[data-casa]").forEach((tasto) => {
+          tasto.onclick = () => {
+            aperta = Number(tasto.dataset.casa);
+            window.scrollTo(0, 0);
+            disegna();
+          };
+        });
+        dove.querySelectorAll("[data-filtro]").forEach((tasto) => {
+          tasto.onclick = () => {
+            filtro = tasto.dataset.filtro;
+            disegna();
+          };
+        });
+        const torna = dove.querySelector("[data-indietro]");
+        if (torna)
+          torna.onclick = () => {
+            aperta = null;
+            disegna();
+          };
+      }
+
+      function lElenco() {
+        const conStato = CASE.map((una, indice) => ({ una, indice, stato: loStato(una) }));
+        const quante = (chiave) => conStato.filter((r) => r.stato.chiave === chiave).length;
+        const aspettano = conStato.length - quante("posto");
+
+        const file = [
+          ["tutte", `Tutte (${conStato.length})`],
+          ["muta", `Mute (${quante("muta")})`],
+          ["guardare", `Da guardare (${quante("guardare")})`],
+          ["aperto", `Collaudo aperto (${quante("aperto")})`],
+          ["posto", `A posto (${quante("posto")})`],
+        ];
+
+        const viste = conStato.filter((r) => filtro === "tutte" || r.stato.chiave === filtro);
+        const ultima = conStato
+          .map((r) => r.una.carta.quando)
+          .sort()
+          .reverse()[0];
+
+        return `
+          <section class="capo">
+            <div class="cifra">${aspettano}</div>
+            <div class="dice">${aspettano === 1 ? "casa ti aspetta" : "case ti aspettano"}</div>
+            <div class="sotto">su ${conStato.length} seguite da questo quadro · l'ultima cartolina è arrivata ${testo(daQuanto(ultima))}</div>
+            <div class="conti">
+              <div><b>${quante("muta")}</b><span>mute</span></div>
+              <div><b>${quante("guardare")}</b><span>da guardare</span></div>
+              <div><b>${quante("aperto")}</b><span>collaudo aperto</span></div>
+              <div><b>${quante("posto")}</b><span>a posto</span></div>
+            </div>
+          </section>
+
+          <div class="filtri">
+            ${file
+              .map(
+                ([chiave, parola]) =>
+                  `<button data-filtro="${chiave}" aria-pressed="${filtro === chiave}">${testo(parola)}</button>`,
+              )
+              .join("")}
+          </div>
+
+          <ul class="case">
+            ${viste.map(({ una, indice, stato }) => unaRiga(una, indice, stato)).join("")}
+          </ul>
+        `;
+      }
+
+      function unaRiga(casa, indice, stato) {
+        const c = casa.carta;
+        const muta = stato.chiave === "muta";
+
+        return `
+          <li>
+            <button data-casa="${indice}">
+              <div class="riga1">
+                ${spia(stato)}
+                <strong>${testo(casa.nome)}</strong>
+                <span class="quando">${testo(daQuanto(c.quando))}</span>
+              </div>
+              <div class="targa mono">${testo(c.casa.slice(0, 13))}… · gdahome ${testo(c.ponte)} · HA ${testo(c.ha)}</div>
+              <div class="spie">
+                ${leSpie(c)
+                  .map(
+                    ([parola, come]) =>
+                      `<span class="voce ${come}">${come ? '<span aria-hidden="true">▲</span>' : ""}${testo(parola)}</span>`,
+                  )
+                  .join("")}
+              </div>
+              ${muta ? `<div class="vecchie">Quello che c'è scritto qui sopra è vecchio: lo diceva l'ultima cartolina, ${testo(daQuanto(c.quando))}.</div>` : ""}
+              ${laStriscia(casa.giorni)}
+            </button>
+          </li>
+        `;
+      }
+
+      function ilDettaglio(casa) {
+        const c = casa.carta;
+        const stato = loStato(casa);
+        const collaudo = ilCollaudo(c);
+
+        const versioni = [
+          ["gdahome (il ponte)", c.ponte, c.aggiornamenti.gdahome],
+          ["la plancia", c.plancia, false],
+          ["Home Assistant Core", c.ha, c.aggiornamenti.ha],
+          ["Supervisor", c.supervisor, false],
+          ["il sistema", c.sistema, false],
+        ];
+
+        const verdetto =
+          collaudo.fatte === collaudo.quante
+            ? "Tutte spuntate: questo impianto è a posto."
+            : casa.collaudataIl === null
+              ? "Non è ancora stata consegnata: finché le spunte non sono tutte, resta in fila."
+              : `Il collaudo si era chiuso il ${casa.collaudataIl}. Queste righe si sono riaperte dopo, ed è il motivo per cui questa casa è qui.`;
+
+        return `
+          <div class="indietro"><button data-indietro>← tutte le case</button></div>
+
+          <section class="riquadro">
+            <div class="riga1" style="margin-bottom:8px">
+              ${spia(stato)}
+              <h2>${testo(casa.nome)}</h2>
+            </div>
+            ${stato.perché ? `<div class="nota" style="margin-bottom:14px">${testo(stato.perché)}</div>` : ""}
+            <dl class="fila">
+              <dt>Matricola</dt><dd class="mono">${testo(c.casa)}</dd>
+              <dt>Installata il</dt><dd>${testo(casa.da)}</dd>
+              <dt>Collaudata il</dt><dd>${casa.collaudataIl === null ? "mai" : testo(casa.collaudataIl)}</dd>
+              <dt>Ultima cartolina</dt><dd>${testo(daQuanto(c.quando))} — ne manda una ogni ${c.ogni} minuti</dd>
+              <dt>Telefoni</dt><dd>${plurale(c.telefoni.abbinati, "abbinato", "abbinati")}, ${c.telefoni.visti7gg} visti in 7 giorni</dd>
+            </dl>
+            <div class="azioni">
+              <button>Apri questa casa nell'app</button>
+              <button>Rinomina</button>
+              <button class="male">Non seguirla più</button>
+            </div>
+          </section>
+
+          <section class="riquadro">
+            <h3>Il collaudo — l'impianto è finito bene?</h3>
+            <ul class="spunte">
+              ${collaudo.spunte
+                .map(
+                  (una) => `
+                <li class="${una.fatta ? "fatta" : "manca"}">
+                  <span class="segno" aria-hidden="true">${una.fatta ? "✓" : "▲"}</span>
+                  <span class="cosa">${testo(una.cosa)}<span class="via">${una.fatta ? " — fatta" : " — manca"}</span></span>
+                  <span class="dettaglio">${testo(una.dettaglio)}</span>
+                </li>`,
+                )
+                .join("")}
+            </ul>
+            <div class="verdetto">${collaudo.fatte} spunte su ${collaudo.quante}. ${testo(verdetto)}</div>
+          </section>
+
+          <section class="riquadro">
+            <h3>La salute — regge nel tempo?</h3>
+            ${laStriscia(casa.giorni)}
+            <dl class="fila" style="margin-top:14px">
+              <dt>Dispositivi</dt><dd>${c.dispositivi.totali} in tutto, ${c.dispositivi.spariti} non rispondono</dd>
+              <dt>Batterie</dt><dd>${c.batterie.sotto20} sotto il ${BATTERIA_SCARICA}%, la più bassa al ${c.batterie.piuBassa}%</dd>
+              <dt>Backup</dt><dd>${c.backup.giorniFa === null ? "mai fatto" : `l'ultimo ${plurale(c.backup.giorniFa, "giorno fa", "giorni fa")}`}</dd>
+              <dt>Errori nel registro</dt><dd>${c.registro.errori24h} nelle ultime 24 ore</dd>
+              <dt>Da fuori casa</dt><dd>${c.fuori.acceso ? (c.fuori.filo ? `filo su da ${plurale(c.fuori.daGiorni, "giorno", "giorni")}` : "acceso, ma il filo è giù") : "spento"}</dd>
+            </dl>
+          </section>
+
+          ${
+            c.dispositivi.spariti > 0
+              ? `
+          <section class="riquadro">
+            <h3>I dispositivi che non rispondono</h3>
+            <div class="impronte">${c.dispositivi.impronte.map((una) => `<span>#${testo(una)}</span>`).join("")}</div>
+            <div class="nota">
+              Il quadro non sa quali sono, e non lo può sapere: la casa manda
+              quattro cifre ricavate dal nome del dispositivo con un sale che
+              non esce da lì. Servono a dire <em>lo stesso di ieri</em> oppure
+              <em>un altro</em>, e a niente di più. Per sapere il nome si apre
+              la casa dall'app, sul filo cifrato, con il segno che chi ci abita
+              può togliere quando vuole.
+            </div>
+          </section>`
+              : ""
+          }
+
+          <section class="riquadro">
+            <h3>Le versioni</h3>
+            <table class="versioni">
+              ${versioni
+                .map(
+                  ([cosa, quale, nuova]) => `
+                <tr>
+                  <td>${testo(cosa)}</td>
+                  <td class="numero">${testo(quale)}${nuova ? '<span class="nuova">c\'è la nuova</span>' : ""}</td>
+                </tr>`,
+                )
+                .join("")}
+            </table>
+          </section>
+
+          <section class="riquadro">
+            <h3>La cartolina, come è arrivata</h3>
+            <pre class="cartolina">${testo(JSON.stringify(c, null, 2))}</pre>
+            <div class="nota" style="margin-top:10px">
+              Questo è <strong>tutto</strong> quello che questa casa manda.
+              Nessun nome di entità, nessuna stanza, nessuna persona, nessuno
+              stato di nessun sensore, nessun indirizzo. Lo stesso testo, parola
+              per parola, lo legge chi ci abita: sta nella scheda «Il quadro»
+              della console dell'add-on, insieme al tasto per smettere di
+              mandarlo.
+            </div>
+          </section>
+        `;
+      }
+
+      disegna();
+    </script>
+  </body>
+</html>
