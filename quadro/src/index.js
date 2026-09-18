@@ -1,18 +1,23 @@
 /* Il quadro si alza.
  *
- * Un server, due archivi su disco, niente altro. Non c'e' niente da
+ * Un server, tre archivi su disco, niente altro. Non c'e' niente da
  * installare: HTTP e la crittografia vengono da Node, e il resto sono seicento
  * righe di programma.
  *
- * Gira su una macchina dell'installatore — un VPS da cinque euro, un mini PC
- * in ufficio. Non gira sul centralino di gdahome, e quello e' il punto: le case
- * che questo quadro guarda sono di clienti di qualcun altro.
+ * **Ce n'e' uno solo, e sta su una macchina di gdahome.** Non uno per
+ * installatore: chi installa non accende niente, non prende un dominio e non
+ * apre una porta — gli si da' una chiave e apre una pagina. Dentro ci stanno
+ * le case di installatori diversi, e tenerle separate e' mestiere di questo
+ * programma, non di macchine diverse.
  *
- * E non gira su Cloudflare, a differenza del centralino. Il Worker in `nuvola/`
- * esiste per non chiedere cinque euro al mese a chi vuole accendere una luce da
- * fuori casa; qui chi accende e' un installatore, che un server ce l'ha gia'.
- * Il resto del conto — l'archivio da rifare su KV o D1, e le regole da tenere
- * allineate in due copie — sta in fondo al README.
+ * E' anche l'unico modo perche' un limite sia un limite. Un quadro che gira in
+ * casa di chi lo usa i propri conti se li fa da se': il numero di case che un
+ * installatore puo' seguire lo decide chi tiene il quadro, e lo puo' decidere
+ * solo se il quadro e' suo.
+ *
+ * Non sta dentro il centralino, che e' un'altra cosa e sta su un'altra porta:
+ * quello instrada senza capire, e c'e' una prova che guarda cosa lo
+ * attraversa. Sulla stessa macchina si', nello stesso programma no.
  */
 
 import { CaseSeguite } from "./case.js";
@@ -32,8 +37,8 @@ export async function alzaIlQuadro({
   livello = process.env.QUADRO_REGISTRO || "info",
   /* La chiave di gestione: quella di chi **tiene** il quadro.
    *
-   * Non e' la chiave di un installatore — quelle le fa questo quadro, una per
-   * conto, e le vede solo chi le riceve. Questa aggiunge gli installatori e mette i limiti, e
+   * Non e' la chiave di un installatore — quelle le fa questo quadro, una a
+   * testa, e le vede solo chi le riceve. Questa aggiunge gli installatori e mette i limiti, e
    * senza non si puo' iscrivere nessuno: un quadro cosi' riceve rapporti di
    * case gia' abbinate e non ne fa entrare di nuove. Va lunga. */
   chiaveDelGestore = process.env.QUADRO_GESTORE || "",

@@ -444,7 +444,7 @@ test("quando non arriva, il perché lo capisce chi ci abita", () => {
   assert.equal(perchePreciso(new Error("un errore qualunque")), "un errore qualunque");
 });
 
-test("il nome della ditta arriva nella risposta, e la casa se lo ricorda", async () => {
+test("il nome dell'installatore arriva nella risposta, e la casa se lo ricorda", async () => {
   /* La casa non ha altro modo di saperlo: nel codice incollato c'è solo un
    * codice. Serve alla scheda nella console, dove chi ci abita legge a chi
    * vanno i suoi numeri. */

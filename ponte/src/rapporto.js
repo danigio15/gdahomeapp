@@ -86,7 +86,7 @@ const ATTESA = 10_000;
 
 /* Quanto si aspetta prima del primo rapporto. Non zero: all'accensione
  * dell'add-on Home Assistant sta spesso ancora partendo, e un rapporto
- * spedita adesso direbbe che in questa casa non c'e' niente. */
+ * spedito adesso direbbe che in questa casa non c'e' niente. */
 const PRIMA_ASPETTA = 30_000;
 
 /* Quando il quadro non risponde si rallenta invece di insistere: un quadro
@@ -434,7 +434,7 @@ export class Postino {
      * dati», ma **questi** dati, parola per parola. */
     this._ultima = null;
     this._ultimoEsito = null;
-    /* Il nome della ditta, come lo dice il quadro rispondendo. In memoria e
+    /* Il nome dell'installatore, come lo dice il quadro rispondendo. In memoria e
      * basta: dopo un riavvio si riempie al primo rapporto. */
     this._chi = "";
   }
@@ -448,7 +448,7 @@ export class Postino {
     return this._ultima;
   }
 
-  /** Il nome della ditta che riceve, come l'ha detto il quadro. */
+  /** Il nome dell'installatore che riceve, come l'ha detto il quadro. */
   get chi() {
     return this._chi || "";
   }

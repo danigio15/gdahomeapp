@@ -1,8 +1,8 @@
 /* La porta del quadro.
  *
  * Un quadro solo, su una macchina di gdahome, con dentro le case di installatori
- * diverse. Chi installa non accende niente: gli si apre un conto, gli si da'
- * una chiave, e apre una pagina.
+ * diversi. Chi installa non accende niente: lo si aggiunge, gli si da' una
+ * chiave, e apre una pagina.
  *
  *   GET    /                             la soglia: cos'e' questo indirizzo
  *   GET    /salute                       dice solo che e' vivo
@@ -182,14 +182,14 @@ export function costruisciIlServer({
       const di = chiavi.diChiE(casa);
       case_.deposita(casa, { ...carta, casa }, di);
       if (!prima) registro.info(`una casa nuova si e' presentata: ${casa}`);
-      /* Nella risposta torna **il nome della ditta**, che la casa non ha modo
+      /* Nella risposta torna **il nome dell'installatore**, che la casa non ha modo
        * di sapere altrimenti: nel codice che le e' stato incollato c'e' solo un
        * codice. Serve alla console dell'add-on, dove chi ci abita legge chi
        * riceve i suoi numeri — e «Impianti Rossi» gli dice qualcosa, un
        * indirizzo no.
        *
        * Quel nome lo scrive **chi tiene il quadro**, non l'installatore: non
-       * c'e' nessuna via da cui una ditta possa cambiarsi il nome, e quindi non
+       * c'e' nessuna via da cui uno possa cambiarsi il nome, e quindi non
        * c'e' modo di presentarsi in casa di qualcuno come qualcun altro. */
       json(risposta, { presa: true, di: installatori.quello(di)?.nome || "" });
       return;
@@ -391,12 +391,12 @@ export function costruisciIlServer({
      *
      * Lo tornano **tutte** le vie che cambiano qualcosa, non solo quella che
      * legge: una risposta che porta l'elenco ma non i totali fa scrivere zero
-     * alla pagina, e chi ha appena aperto un conto vede «0 impianti in tutto»
+     * alla pagina, e chi ha appena aggiunto un installatore vede «0 impianti in tutto»
      * con le righe che dicono altro. Una forma sola non lo lascia succedere. */
     const ilQuadro = () => ({
       installatori: installatori.elenco((chi) => case_.quante(chi)),
       case: case_.lista.length,
-      /* Quelle di un conto chiuso: restano, e continuano a depositare. Senza
+      /* Quelle di un installatore tolto: restano, e continuano a depositare. Senza
        * questo numero il totale non tornerebbe con la somma degli installatori, e non
        * si capirebbe perche'. */
       orfane: case_.orfane(installatori.lista.map((uno) => uno.chi)),
@@ -432,7 +432,7 @@ export function costruisciIlServer({
 
     if (uno && metodo === "DELETE") {
       /* Togliere un installatore non butta le sue case: restano nel quadro, senza piu'
-       * nessuno che le guardi, e le loro rapporti continuano ad arrivare. E'
+       * nessuno che le guardi, e i loro rapporti continuano ad arrivare. E'
        * voluto — sono impianti che funzionano in casa di qualcuno — e chi
        * gestisce se le ritrova da assegnare se lo si riaggiunge. */
       json(risposta, { chiuso: installatori.togli(uno[1]), ...ilQuadro() });

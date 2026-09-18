@@ -1,9 +1,9 @@
 /* Gli installatori iscritti a questo quadro.
  *
  * Il quadro e' **uno solo**, e sta su una macchina di gdahome. Chi installa non
- * accende niente, non compra nessun dominio e non tiene su nessun server: gli
- * si apre un conto, gli si da' una chiave, e da quel momento apre una pagina e
- * vede i suoi impianti.
+ * accende niente, non compra nessun dominio e non tiene su nessun server: lo
+ * si aggiunge, gli si da' una chiave, e da quel momento apre una pagina e vede
+ * i suoi impianti.
  *
  * ─── Perche' questo file cambia tutto il resto ───────────────────────────
  *
@@ -40,7 +40,7 @@ import { codiceNuovo, impronta, stessoSegreto } from "./segreti.js";
 /** Quanto e' lunga la chiave con cui un installatore apre la sua pagina. */
 export const CHIAVE_LUNGA = 32;
 
-/** La matricola di un conto, come se la fabbrica questo file. */
+/** La matricola di un installatore, come se la fabbrica questo file. */
 export const CHI_VALIDO = /^inst_[0-9a-f]{16}$/;
 
 /** Zero vuol dire senza limite: e' il caso di chi non si conta. */
@@ -61,7 +61,7 @@ export class Installatori {
   }
 
   /**
-   * Un conto nuovo.
+   * Un installatore nuovo.
    *
    * La chiave torna **in chiaro una volta sola**, e qui resta solo la sua
    * impronta: se si perde si rifa', non si recupera. E' la stessa regola dei
@@ -107,7 +107,7 @@ export class Installatori {
    *
    * Torna la matricola, o `null`. Si scorre tutta la lista anche quando la
    * prima torna: un confronto che si ferma appena trova dice, col tempo che ci
-   * mette, quanti conti ci sono prima di quello giusto.
+   * mette, quanti installatori ci sono prima di quello giusto.
    */
   riconosci(chiave) {
     const detta = String(chiave ?? "");
@@ -119,7 +119,7 @@ export class Installatori {
     }
     if (!trovato) return null;
     /* L'ultima volta che si e' fatto vivo: serve a chi tiene il quadro per
-     * sapere chi lo usa davvero e chi ha un conto aperto e basta. Si scrive di
+     * sapere chi lo usa davvero e chi e' solo iscritto. Si scrive di
      * rado — una volta all'ora — perche' una pagina che si rinfresca da sola
      * ogni minuto non deve far scrivere il disco ogni minuto. */
     const ora = this.adesso();

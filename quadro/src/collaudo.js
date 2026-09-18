@@ -19,7 +19,7 @@
  * fila per sempre, per una cosa che non e' sua.
  */
 
-/* Dopo quante rapporti saltati una casa e' muta. Tre: una sola puo' essere un
+/* Dopo quanti rapporti saltati una casa e' muta. Uno solo puo' essere un
  * riavvio, tre no. */
 export const MUTA_DOPO = 3;
 

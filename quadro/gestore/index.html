@@ -238,9 +238,9 @@
         color: var(--lieve);
       }
 
-      /* ─── L'elenco delle ditte ──────────────────────────────────────── */
+      /* ─── L'elenco degli installatori ───────────────────────────────── */
 
-      ul.ditte {
+      ul.installatori {
         list-style: none;
         margin: 0;
         padding: 0;
@@ -248,7 +248,7 @@
         flex-direction: column;
       }
 
-      ul.ditte > li {
+      ul.installatori > li {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto auto;
         align-items: center;
@@ -258,14 +258,14 @@
         position: relative;
       }
 
-      ul.ditte > li:first-child {
+      ul.installatori > li:first-child {
         border-top: 0;
       }
 
       /* La barretta colorata a sinistra: è così la plancia, è così l'elenco
        * delle case. Non porta informazione da sola — accanto c'è la pastiglia
        * con la forma e la parola — ma fa scorrere l'occhio. */
-      ul.ditte > li::before {
+      ul.installatori > li::before {
         content: "";
         position: absolute;
         left: 0;
@@ -531,7 +531,7 @@
           font-size: 0.74rem;
         }
 
-        ul.ditte > li {
+        ul.installatori > li {
           grid-template-columns: 1fr;
           gap: 10px;
         }
@@ -558,7 +558,7 @@
         /* Lo stato sopra, i tre tasti sotto in una riga sola e larghi uguali.
          * Prima «Togli» cadeva da solo per ogni riga, e un elenco fatto di
          * righe sfrangiate non si scorre con l'occhio. */
-        ul.ditte .azioni {
+        ul.installatori .azioni {
           flex-direction: column;
           align-items: flex-start;
           gap: 9px;
@@ -577,7 +577,7 @@
           font-size: 0.78rem;
         }
 
-        ul.ditte .pastiglia {
+        ul.installatori .pastiglia {
           font-size: 0.75rem;
           padding: 4px 9px;
         }
@@ -603,7 +603,7 @@
       /* ───────────────────────────────────────────────────────────────────
        * Questa pagina parla con `/gestore/…` e con nient'altro.
        *
-       * Non chiede mai `/console/…`: quelle vie vogliono la chiave di una
+       * Non chiede mai `/console/…`: quelle vie vogliono la chiave di un
        * installatore, e chi tiene il quadro non ce l'ha — né deve averla. Le case non
        * si vedono da qui, e non è una cosa da aggiungere un giorno: è la riga
        * per cui un installatore può fidarsi a metterci dentro i suoi clienti.
@@ -617,12 +617,12 @@
         /* Finestra anonima: si richiede a ogni apertura. */
       }
 
-      let DITTE = [];
+      let INSTALLATORI = [];
       let CASE = 0;
       let ORFANE = 0;
       /* La chiave appena fatta, che si vede una volta sola e poi sparisce
        * ricaricando. Non finisce in nessun archivio, nemmeno del browser. */
-      let APPENA_FATTA = null;
+      let APPENA_FATTO = null;
 
       const dove = document.getElementById("dove");
       const testo = (s) =>
@@ -653,7 +653,7 @@
       }
 
       function prendi(detto) {
-        DITTE = detto.installatori || [];
+        INSTALLATORI = detto.installatori || [];
         CASE = detto.case || 0;
         ORFANE = detto.orfane || 0;
       }
@@ -672,24 +672,24 @@
       /* Lo stato di un installatore: una forma, una parola e un colore. Mai il colore
        * da solo — l'ambra e il rosso di questo progetto stanno a ΔE 5.7 per chi
        * non distingue il rosso. */
-      function loStato(una) {
-        if (una.pieno) return { come: "ambra", forma: "▲", parola: "al limite" };
-        if (!una.vistoIl) return { come: "quieta", forma: "◇", parola: "mai entrato" };
-        const giorni = (Date.now() - una.vistoIl) / 86400000;
+      function loStato(uno) {
+        if (uno.pieno) return { come: "ambra", forma: "▲", parola: "al limite" };
+        if (!uno.vistoIl) return { come: "quieta", forma: "◇", parola: "mai entrato" };
+        const giorni = (Date.now() - uno.vistoIl) / 86400000;
         if (giorni > 30) return { come: "quieta", forma: "■", parola: "non lo apre" };
         return { come: "bene", forma: "●", parola: "a posto" };
       }
 
       function disegna() {
-        const alTetto = DITTE.filter((una) => una.pieno).length;
+        const alTetto = INSTALLATORI.filter((uno) => uno.pieno).length;
         document.getElementById("sottotitolo").textContent =
-          `gestione installatori · ${plurale(DITTE.length, "iscritto", "iscritti")}`;
+          `gestione installatori · ${plurale(INSTALLATORI.length, "iscritto", "iscritti")}`;
 
         dove.innerHTML = `
           <div class="tessere">
             <div class="tessera">
               <span class="segno" style="background: var(--alone-azzurro); color: var(--azzurro-scuro)">●</span>
-              <span><b>${DITTE.length}</b><span>installatori</span></span>
+              <span><b>${INSTALLATORI.length}</b><span>installatori</span></span>
             </div>
             <div class="tessera">
               <span class="segno" style="background: var(--alone-azzurro); color: var(--azzurro-scuro)">◆</span>
@@ -723,13 +723,13 @@
               Il limite è quanti impianti può seguire. <b>Zero</b> vuol dire senza limite.
             </p>
             ${
-              APPENA_FATTA
+              APPENA_FATTO
                 ? `<div class="chiaveNuova">
-                     <p><b>La chiave di ${testo(APPENA_FATTA.nome)}.</b> Consegnagliela adesso: qui
+                     <p><b>La chiave di ${testo(APPENA_FATTO.nome)}.</b> Consegnagliela adesso: qui
                      resta solo la sua impronta, e questa riga non si rivede più.</p>
-                     <div class="valore">${testo(APPENA_FATTA.chiave)}</div>
+                     <div class="valore">${testo(APPENA_FATTO.chiave)}</div>
                      <div class="azioni">
-                       <button type="button" data-copia="${testo(APPENA_FATTA.chiave)}">Copia</button>
+                       <button type="button" data-copia="${testo(APPENA_FATTO.chiave)}">Copia</button>
                        <button type="button" class="piccolo" data-chiudi-chiave>Ho finito</button>
                      </div>
                    </div>`
@@ -743,8 +743,8 @@
               <span class="conta">${plurale(CASE, "impianto", "impianti")} in tutto</span>
             </div>
             ${
-              DITTE.length
-                ? `<ul class="ditte">${DITTE.map(laDitta).join("")}</ul>`
+              INSTALLATORI.length
+                ? `<ul class="installatori">${INSTALLATORI.map(unInstallatore).join("")}</ul>`
                 : `<p class="vuoto">Nessuno, per adesso. Il primo si aggiunge qui sopra.</p>`
             }
             ${
@@ -775,7 +775,7 @@
 
         dove.querySelector("[data-iscrivi]")?.addEventListener("click", iscrivi);
         dove.querySelector("[data-chiudi-chiave]")?.addEventListener("click", () => {
-          APPENA_FATTA = null;
+          APPENA_FATTO = null;
           disegna();
         });
         dove.querySelectorAll("[data-copia]").forEach((tasto) => {
@@ -799,27 +799,27 @@
         });
       }
 
-      function laDitta(una) {
-        const stato = loStato(una);
-        const quota = una.soglia > 0 ? Math.min(100, Math.round((una.case / una.soglia) * 100)) : 0;
+      function unInstallatore(uno) {
+        const stato = loStato(uno);
+        const quota = uno.soglia > 0 ? Math.min(100, Math.round((uno.case / uno.soglia) * 100)) : 0;
         return `
           <li class="${stato.come === "quieta" ? "" : stato.come}">
             <span class="chi">
-              <b class="${una.nome ? "" : "senzaNome"}">${testo(una.nome || "senza nome")}</b>
-              <span>ultima volta qui: ${testo(daQuanto(una.vistoIl))}</span>
+              <b class="${uno.nome ? "" : "senzaNome"}">${testo(uno.nome || "senza nome")}</b>
+              <span>ultima volta qui: ${testo(daQuanto(uno.vistoIl))}</span>
             </span>
-            <span class="quante ${una.pieno ? "pieno" : ""}">
-              <b>${una.case}${una.soglia > 0 ? ` <span style="color: var(--fioco)">/ ${una.soglia}</span>` : ""}</b>
-              ${una.soglia > 0 ? `<span class="metro"><i style="width: ${quota}%"></i></span>` : `<span class="minuta" style="display:block;margin-top:4px">senza limite</span>`}
+            <span class="quante ${uno.pieno ? "pieno" : ""}">
+              <b>${uno.case}${uno.soglia > 0 ? ` <span style="color: var(--fioco)">/ ${uno.soglia}</span>` : ""}</b>
+              ${uno.soglia > 0 ? `<span class="metro"><i style="width: ${quota}%"></i></span>` : `<span class="minuta" style="display:block;margin-top:4px">senza limite</span>`}
             </span>
             <span class="azioni">
               <span class="pastiglia ${stato.come}">
                 <span aria-hidden="true">${stato.forma}</span>${testo(stato.parola)}
               </span>
               <span class="tasti">
-                <button type="button" class="piccolo" data-tetto="${testo(una.chi)}">Limite</button>
-                <button type="button" class="piccolo" data-rifai="${testo(una.chi)}">Nuova chiave</button>
-                <button type="button" class="piccolo male" data-chiudi="${testo(una.chi)}">Togli</button>
+                <button type="button" class="piccolo" data-tetto="${testo(uno.chi)}">Limite</button>
+                <button type="button" class="piccolo" data-rifai="${testo(uno.chi)}">Nuova chiave</button>
+                <button type="button" class="piccolo male" data-chiudi="${testo(uno.chi)}">Togli</button>
               </span>
             </span>
           </li>`;
@@ -837,15 +837,15 @@
           body: JSON.stringify({ nome, soglia }),
         });
         prendi(detto);
-        APPENA_FATTA = { nome, chiave: detto.chiave };
+        APPENA_FATTO = { nome, chiave: detto.chiave };
         disegna();
       }
 
       async function cambiaIlTetto(chi) {
-        const una = DITTE.find((altra) => altra.chi === chi);
+        const uno = INSTALLATORI.find((altro) => altro.chi === chi);
         const detto = prompt(
-          `Quanti impianti può seguire ${una?.nome || "questo installatore"}? Zero = nessun limite.`,
-          String(una?.soglia ?? 0),
+          `Quanti impianti può seguire ${uno?.nome || "questo installatore"}? Zero = nessun limite.`,
+          String(uno?.soglia ?? 0),
         );
         if (detto === null) return;
         prendi(
@@ -858,15 +858,15 @@
       }
 
       async function rifaiLaChiave(chi) {
-        const una = DITTE.find((altra) => altra.chi === chi);
+        const uno = INSTALLATORI.find((altro) => altro.chi === chi);
         if (
           !confirm(
-            `Fare una chiave nuova per ${una?.nome || "questo installatore"}?\n\nQuella di prima smette di aprire subito.`,
+            `Fare uno chiave nuova per ${uno?.nome || "questo installatore"}?\n\nQuella di prima smette di aprire subito.`,
           )
         )
           return;
         const detto = await chiedi(`/installatore/${chi}/chiave`, { method: "POST" });
-        APPENA_FATTA = { nome: una?.nome || "questo installatore", chiave: detto.chiave };
+        APPENA_FATTO = { nome: uno?.nome || "questo installatore", chiave: detto.chiave };
         disegna();
       }
 
@@ -874,7 +874,7 @@
        * nella console degli installatori: è la cosa che toglie a qualcuno
        * l'accesso ai suoi impianti, e un clic solo è poco. */
       async function togliLInstallatore(chi, tasto) {
-        const una = DITTE.find((altra) => altra.chi === chi);
+        const uno = INSTALLATORI.find((altro) => altro.chi === chi);
         if (tasto.dataset.sicuro !== "sì") {
           tasto.dataset.sicuro = "sì";
           tasto.textContent = "Sicuro?";
@@ -936,7 +936,7 @@
       apri();
       /* Un rinfresco lento: questa pagina si guarda ogni tanto, non si fissa. */
       setInterval(() => {
-        if (chiave && !APPENA_FATTA) void apri();
+        if (chiave && !APPENA_FATTO) void apri();
       }, 60000);
     </script>
   </body>

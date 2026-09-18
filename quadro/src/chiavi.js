@@ -21,8 +21,8 @@
  * la cosa che regge tutto il resto — **quello che c'e' scritto nella casella
  * e' quello che parte** — per guadagnare poco.
  *
- * Quindi il codice resta quello, e a bruciarsi e' il suo essere libero: alla
- * prima rapporto si lega a quella matricola, e da allora nessun'altra casa lo
+ * Quindi il codice resta quello, e a bruciarsi e' il suo essere libero: al
+ * primo rapporto si lega a quella matricola, e da allora nessun'altra casa lo
  * puo' usare. Chi lo intercettasse prima dell'uso dovrebbe comunque conoscere
  * una matricola, che e' centoventotto bit di caso.
  */

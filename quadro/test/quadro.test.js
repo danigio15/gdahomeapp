@@ -3,11 +3,11 @@
  * Quello che si prova, e in quest'ordine di importanza:
  *
  *  1. **che due installatori non si vedano.** Adesso il quadro e' uno solo e
- *     sta su una macchina di gdahome, con dentro le case di ditte diverse che
- *     fra loro si fanno concorrenza: i clienti di Rossi non sono affari di
+ *     sta su una macchina di gdahome, con dentro le case di installatori diversi
+ *     che fra loro si fanno concorrenza: i clienti di Rossi non sono affari di
  *     Bianchi. E' la riga che regge tutto quanto il resto;
  *  2. **che una casa non possa leggere nessuna console.** La chiave di una
- *     casa apre una porta sola — depositare la propria rapporto — e non fa
+ *     casa apre una porta sola — depositare il proprio rapporto — e non fa
  *     vedere niente;
  *  3. **che un codice usato non serva a nessun'altra casa**, che e' cosa vuol
  *     dire «si brucia»;
@@ -48,7 +48,7 @@ const RAPPORTO = {
   macchina: { scheda: "ODROID-N2+", cpu: 14, ram: 38, disco: 46, temperatura: 46, discoVita: 11 },
 };
 
-async function banco({ ditte = 1, soglia = 0 } = {}) {
+async function banco({ installatori = 1, soglia = 0 } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "quadro-"));
   const acceso = await alzaIlQuadro({
     porta: 0,
@@ -69,27 +69,27 @@ async function banco({ ditte = 1, soglia = 0 } = {}) {
       },
     });
 
-  /* Le ditte iscritte prima che la prova cominci. Ognuna riceve la sua chiave
-   * una volta sola, come nella vita. */
-  const conti = [];
-  for (let n = 0; n < ditte; n += 1) {
+  /* Gli installatori iscritti prima che la prova cominci. Ognuno riceve la sua
+   * chiave una volta sola, come nella vita. */
+  const iscritti = [];
+  for (let n = 0; n < installatori; n += 1) {
     const detto = await (
       await gestore("/installatori", {
         method: "POST",
-        body: JSON.stringify({ nome: `Ditta ${n + 1}`, soglia }),
+        body: JSON.stringify({ nome: `Installatore ${n + 1}`, soglia }),
       })
     ).json();
-    conti.push(detto);
+    iscritti.push(detto);
   }
 
   return {
     ...acceso,
     dove,
     gestore,
-    conti,
-    /* Il retro: si bussa con la chiave di **una** ditta, la prima se non si
-     * dice altro. */
-    retro: (via, opzioni = {}, chiave = conti[0]?.chiave) =>
+    iscritti,
+    /* Il retro: si bussa con la chiave di **un** installatore, il primo se non
+     * si dice altro. */
+    retro: (via, opzioni = {}, chiave = iscritti[0]?.chiave) =>
       fetch(`${dove}/console${via}`, {
         ...opzioni,
         headers: {
@@ -286,15 +286,15 @@ test("la soglia e la salute rispondono a chi non sa cosa sia questo indirizzo", 
   }
 });
 
-/* ─── Due ditte sullo stesso quadro ───────────────────────────────────── */
+/* ─── Due installatori sullo stesso quadro ────────────────────────────── */
 
 test("due installatori sullo stesso quadro non si vedono", async () => {
   /* La riga che regge tutto. Il quadro e' uno solo e sta su una macchina di
-   * gdahome: dentro ci sono le case di ditte che fra loro si fanno
+   * gdahome: dentro ci sono le case di installatori che fra loro si fanno
    * concorrenza, e un elenco che le mescolasse consegnerebbe a ognuna la
    * clientela dell'altra. */
-  const b = await banco({ ditte: 2 });
-  const [rossi, bianchi] = b.conti;
+  const b = await banco({ installatori: 2 });
+  const [rossi, bianchi] = b.iscritti;
   try {
     await b.deposita(UNA, await unCodice(b, "Rossi", rossi.chiave));
     await b.deposita(ALTRA, await unCodice(b, "Bianchi", bianchi.chiave));
@@ -331,8 +331,8 @@ test("la casa di un altro non si rinomina e non si toglie, nemmeno sapendone la 
   /* Le matricole non sono segrete — passano in chiaro nelle intestazioni — e
    * quindi l'appartenenza dev'essere un lucchetto sulla via, non un filtro
    * sull'elenco. */
-  const b = await banco({ ditte: 2 });
-  const [rossi, bianchi] = b.conti;
+  const b = await banco({ installatori: 2 });
+  const [rossi, bianchi] = b.iscritti;
   try {
     await b.deposita(UNA, await unCodice(b, "Rossi", rossi.chiave));
     await b.retro(
@@ -363,7 +363,7 @@ test("il limite e' un limite: al limite non esce nessun codice nuovo", async () 
   /* Qui il limite lo impone il server di chi lo decide, non un controllo dentro
    * un programma che gira su una macchina altrui. E' la differenza fra un no e
    * un dosso. */
-  const b = await banco({ ditte: 1, soglia: 1 });
+  const b = await banco({ installatori: 1, soglia: 1 });
   try {
     await b.deposita(UNA, await unCodice(b));
 
@@ -372,7 +372,7 @@ test("il limite e' un limite: al limite non esce nessun codice nuovo", async () 
     assert.match((await ancora.json()).errore, /il tuo limite e' 1, e ci sei arrivato/);
 
     /* Chi tiene il quadro alza il limite, e il codice esce. */
-    await b.gestore(`/installatore/${b.conti[0].chi}`, {
+    await b.gestore(`/installatore/${b.iscritti[0].chi}`, {
       method: "PUT",
       body: JSON.stringify({ soglia: 5 }),
     });
@@ -388,7 +388,7 @@ test("il limite e' un limite: al limite non esce nessun codice nuovo", async () 
 test("gli inviti aperti contano nel limite, se no si fa il pieno in un minuto", async () => {
   /* Senza questa riga si generano venti codici mentre si e' sotto il limite, e
    * il giorno dopo ci sono venti case oltre, tutte legittime. */
-  const b = await banco({ ditte: 1, soglia: 2 });
+  const b = await banco({ installatori: 1, soglia: 2 });
   try {
     assert.equal(
       (await b.retro("/inviti", { method: "POST", body: JSON.stringify({}) })).status,
@@ -408,11 +408,11 @@ test("gli inviti aperti contano nel limite, se no si fa il pieno in un minuto", 
 });
 
 test("chi tiene il quadro conta le case di ognuno, e non sa quali sono", async () => {
-  /* Il conto e' suo, l'elenco no: sa che quella ditta ne segue due, non chi
-   * sono. Un elenco di nomi di clienti di ditte terze e' un'altra cosa, e piu'
+  /* Il conto e' suo, l'elenco no: sa che quello ne segue due, non chi
+   * sono. Un elenco di nomi di clienti di terzi e' un'altra cosa, e piu'
    * pesante, che contare licenze. */
-  const b = await banco({ ditte: 2 });
-  const [rossi] = b.conti;
+  const b = await banco({ installatori: 2 });
+  const [rossi] = b.iscritti;
   try {
     await b.deposita(UNA, await unCodice(b, "", rossi.chiave));
     await b.retro(
@@ -426,7 +426,7 @@ test("chi tiene il quadro conta le case di ognuno, e non sa quali sono", async (
 
     const suo = detto.installatori.find((uno) => uno.chi === rossi.chi);
     assert.equal(suo.case, 1);
-    assert.equal(suo.nome, "Ditta 1");
+    assert.equal(suo.nome, "Installatore 1");
     for (const parola of ["Verdi", "Rossi —", UNA]) {
       assert.ok(!scritto.includes(parola), `«${parola}» e' arrivata a chi tiene il quadro`);
     }
@@ -436,12 +436,12 @@ test("chi tiene il quadro conta le case di ognuno, e non sa quali sono", async (
 });
 
 test("una chiave rifatta apre, e quella di prima no", async () => {
-  const b = await banco({ ditte: 1 });
-  const vecchia = b.conti[0].chiave;
+  const b = await banco({ installatori: 1 });
+  const vecchia = b.iscritti[0].chiave;
   try {
     assert.equal((await b.retro("/case", {}, vecchia)).status, 200);
     const detto = await (
-      await b.gestore(`/installatore/${b.conti[0].chi}/chiave`, { method: "POST" })
+      await b.gestore(`/installatore/${b.iscritti[0].chi}/chiave`, { method: "POST" })
     ).json();
     assert.equal((await b.retro("/case", {}, detto.chiave)).status, 200);
     assert.equal((await b.retro("/case", {}, vecchia)).status, 401);
@@ -450,10 +450,10 @@ test("una chiave rifatta apre, e quella di prima no", async () => {
   }
 });
 
-test("un installatore non entra nella gestione, e non si apre un conto da se'", async () => {
-  const b = await banco({ ditte: 1 });
+test("un installatore non entra nella gestione, e non se ne aggiunge uno da se'", async () => {
+  const b = await banco({ installatori: 1 });
   try {
-    const sua = b.conti[0].chiave;
+    const sua = b.iscritti[0].chiave;
     assert.equal(
       (
         await fetch(`${b.dove}/gestore/installatori`, {
@@ -477,21 +477,21 @@ test("un installatore non entra nella gestione, e non si apre un conto da se'", 
   }
 });
 
-test("chiudere un conto non butta le sue case: restano, e si vedono ancora contate", async () => {
+test("togliere un installatore non butta le sue case: restano, e si vedono ancora contate", async () => {
   /* E' una scelta, non un effetto collaterale, e sta qui perche' non torni
    * indietro da sola: sono impianti che funzionano in casa di qualcuno, e
-   * spegnerne il monitoraggio perche' una ditta ha smesso di pagare punirebbe
+   * spegnerne il monitoraggio perche' un installatore ha smesso di pagare punirebbe
    * il cliente per una faccenda che non e' sua. I rapporti continuano ad
    * arrivare, e chi tiene il quadro le vede contate a parte. */
-  const b = await banco({ ditte: 1 });
-  const rossi = b.conti[0];
+  const b = await banco({ installatori: 1 });
+  const rossi = b.iscritti[0];
   try {
     const codice = await unCodice(b);
     await b.deposita(UNA, codice);
 
     await b.gestore(`/installatore/${rossi.chi}`, { method: "DELETE" });
 
-    /* La chiave della ditta non apre piu' niente. */
+    /* La chiave dell'installatore non apre piu' niente. */
     assert.equal((await b.retro("/case", {}, rossi.chiave)).status, 401);
 
     /* Ma la casa c'e' ancora, e continua a depositare. */
@@ -499,7 +499,7 @@ test("chiudere un conto non butta le sue case: restano, e si vedono ancora conta
 
     const detto = await (await b.gestore("/installatori")).json();
     assert.equal(detto.installatori.length, 0);
-    assert.equal(detto.case, 1, "la casa e' sparita insieme al conto");
+    assert.equal(detto.case, 1, "la casa e' sparita insieme all'installatore");
     assert.equal(detto.orfane, 1, "una casa senza piu' nessuno che la guardi non si vede");
   } finally {
     await b.chiudi();
@@ -510,7 +510,7 @@ test("l'installatore dice dove vuole gli avvisi, e su http non si mandano", asyn
   /* Nel messaggio c'è il nome che lui ha dato a una casa — l'unica cosa in
    * tutto questo quadro che nomini una persona — e in chiaro lo leggerebbe
    * chiunque stia in mezzo. */
-  const b = await banco({ ditte: 1 });
+  const b = await banco({ installatori: 1 });
   try {
     const storto = await b.retro("/io/avvisi", {
       method: "PUT",
@@ -534,8 +534,8 @@ test("l'installatore dice dove vuole gli avvisi, e su http non si mandano", asyn
 });
 
 test("un installatore non vede né cambia l'indirizzo degli avvisi di un altro", async () => {
-  const b = await banco({ ditte: 2 });
-  const [rossi, bianchi] = b.conti;
+  const b = await banco({ installatori: 2 });
+  const [rossi, bianchi] = b.iscritti;
   try {
     await b.retro(
       "/io/avvisi",
@@ -544,7 +544,7 @@ test("un installatore non vede né cambia l'indirizzo degli avvisi di un altro",
     );
     const suoi = await (await b.retro("/io", {}, bianchi.chiave)).json();
     assert.equal(suoi.avvisi, "", "Bianchi vede dove viene avvisato Rossi");
-    assert.equal(suoi.nome, "Ditta 2");
+    assert.equal(suoi.nome, "Installatore 2");
   } finally {
     await b.chiudi();
   }
@@ -555,20 +555,20 @@ test("la risposta al rapporto dice alla casa di chi è il quadro", async () => {
    * c'è solo un codice. Serve alla scheda nella console dell'add-on, dove chi
    * ci abita legge a chi vanno i suoi numeri — «Impianti Rossi» gli dice
    * qualcosa, un indirizzo no. */
-  const b = await banco({ ditte: 1 });
+  const b = await banco({ installatori: 1 });
   try {
     const risposta = await b.deposita(UNA, await unCodice(b));
-    assert.deepEqual(await risposta.json(), { presa: true, di: "Ditta 1" });
+    assert.deepEqual(await risposta.json(), { presa: true, di: "Installatore 1" });
   } finally {
     await b.chiudi();
   }
 });
 
-test("una ditta non può cambiarsi il nome, e quindi non può spacciarsi per un'altra", async () => {
+test("un installatore non può cambiarsi il nome, e quindi non può spacciarsi per un altro", async () => {
   /* È la riga che rende quel nome degno di essere mostrato in casa di
-   * qualcuno: lo scrive chi tiene il quadro, e non c'è nessuna via da cui una
-   * ditta possa riscriverselo. */
-  const b = await banco({ ditte: 1 });
+   * qualcuno: lo scrive chi tiene il quadro, e non c'è nessuna via da cui un
+   * installatore possa riscriverselo. */
+  const b = await banco({ installatori: 1 });
   try {
     for (const [via, corpo] of [
       ["/io", { nome: "Impianti Bianchi" }],
@@ -578,10 +578,10 @@ test("una ditta non può cambiarsi il nome, e quindi non può spacciarsi per un'
       assert.ok(provato.status >= 400, `«PUT ${via}» ha lasciato cambiare il nome`);
     }
     const risposta = await b.deposita(UNA, await unCodice(b));
-    assert.equal((await risposta.json()).di, "Ditta 1");
+    assert.equal((await risposta.json()).di, "Installatore 1");
 
     /* Chi tiene il quadro sì, e la casa lo vede al deposito dopo. */
-    await b.gestore(`/installatore/${b.conti[0].chi}`, {
+    await b.gestore(`/installatore/${b.iscritti[0].chi}`, {
       method: "PUT",
       body: JSON.stringify({ nome: "Impianti Rossi" }),
     });
@@ -595,7 +595,7 @@ test("una ditta non può cambiarsi il nome, e quindi non può spacciarsi per un'
 test("la pagina di gestione si serve senza chiave, e le sue vie no", async () => {
   /* Servirla dietro autenticazione vorrebbe dire non avere nessun posto dove
    * digitare la chiave. La pagina non mostra niente finché non ce l'ha. */
-  const b = await banco({ ditte: 0 });
+  const b = await banco({ installatori: 0 });
   try {
     const pagina = await fetch(`${b.dove}/gestore/`);
     assert.equal(pagina.status, 200);
@@ -614,15 +614,15 @@ test("la pagina di gestione si serve senza chiave, e le sue vie no", async () =>
 
 test("ogni risposta della gestione porta i totali, non solo l'elenco", async () => {
   /* Una risposta con l'elenco ma senza i totali fa scrivere zero alla pagina:
-   * chi ha appena aperto un conto vede «0 impianti in tutto» con le righe che
+   * chi ha appena aggiunto un installatore vede «0 impianti in tutto» con le righe che
    * dicono altro. È successo, e questa prova è perché non risucceda. */
-  const b = await banco({ ditte: 1 });
+  const b = await banco({ installatori: 1 });
   try {
     await b.deposita(UNA, await unCodice(b));
 
     const dopoOgnuna = [
       await b.gestore("/installatori", { method: "POST", body: JSON.stringify({ nome: "Nuova" }) }),
-      await b.gestore(`/installatore/${b.conti[0].chi}`, {
+      await b.gestore(`/installatore/${b.iscritti[0].chi}`, {
         method: "PUT",
         body: JSON.stringify({ soglia: 9 }),
       }),

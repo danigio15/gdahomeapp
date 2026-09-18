@@ -355,7 +355,7 @@ install -d -m 755 /etc/caddy/conf.d
 
 cat >/etc/caddy/conf.d/quadro.caddy <<FINE
 # Il quadro. Le case depositano su /rapporto, gli installatori guardano su
-# /console/, e chi tiene il quadro apre i conti su /gestore/.
+# /console/, e chi tiene il quadro aggiunge gli installatori su /gestore/.
 $NOME_DEL_QUADRO {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:$PORTA

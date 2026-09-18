@@ -1,8 +1,8 @@
 /* Le case che questo quadro segue.
  *
  * Di ognuna si tiene poco: l'ultimo rapporto, il giorno in cui e' arrivata la
- * prima, quello in cui il collaudo si e' chiuso, e **quante rapporti sono
- * arrivate per ogni giorno** — che e' tutto quello che serve per disegnare la
+ * prima, quello in cui il collaudo si e' chiuso, e **quanti rapporti sono
+ * arrivati per ogni giorno** — che e' tutto quello che serve per disegnare la
  * striscia dei quattordici giorni.
  *
  * ─── Il nome sta qui, e ci resta ─────────────────────────────────────────
@@ -173,9 +173,9 @@ export class CaseSeguite {
    * Le case rimaste senza nessuno che le guardi.
    *
    * Quando un installatore si toglie, i suoi impianti **restano**: sono impianti che
-   * funzionano in casa di qualcuno, e spegnerne il monitoraggio perche' una
-   * ditta ha smesso di pagare punirebbe il cliente per una faccenda che non e'
-   * sua. Le loro rapporti continuano ad arrivare.
+   * funzionano in casa di qualcuno, e spegnerne il monitoraggio perche' chi
+   * li ha messi ha smesso di pagare punirebbe il cliente per una faccenda che
+   * non e' sua. I loro rapporti continuano ad arrivare.
    *
    * Ma restare invisibili sarebbe un'altra cosa: chi tiene il quadro vedrebbe
    * un totale che non torna con la somma degli installatori e non saprebbe perche'.

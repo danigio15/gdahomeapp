@@ -769,13 +769,13 @@ code {
   overflow-wrap: anywhere;
 }
 
-/* La cartolina in chiaro: il testo che parte da questa casa, per intero.
+/* Il rapporto in chiaro: il testo che parte da questa casa, per intero.
  *
  * Non si accorcia e non si riassume. Il senso di questa scheda e' che chi ci
  * abita possa **leggere** quello che esce, e un riassunto di quello che esce
  * e' esattamente la cosa di cui ci si dovrebbe fidare. Scorre nel suo
- * riquadro, che e' l'unico modo di tenerla intera senza allargare la pagina. */
-.cartolina {
+ * riquadro, che e' l'unico modo di tenerlo intero senza allargare la pagina. */
+.rapporto {
   font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   font-size: 0.78rem;
   line-height: 1.6;

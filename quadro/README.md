@@ -79,22 +79,100 @@ quadro è accorgersene mentre nessuno guarda.
 
 ## Accenderlo
 
-Su una macchina vera, in un colpo solo — da `root`, anche di fianco al tramite:
+Quattro passi, in quest'ordine. Il primo non si può saltare: senza il nome che
+risolve, Caddy non riesce a prendere il certificato e lo script si ferma a metà.
+
+### 1 · Il record DNS
+
+Nel pannello di chi tiene `gdahome.org`:
+
+| tipo | nome | valore |
+|---|---|---|
+| `A` | `quadro` | `185.213.27.137` |
+
+È lo stesso indirizzo di `tramite`, `webapp` e del sito: una macchina sola, e
+Caddy smista per nome.
+
+> **Se il DNS è su Cloudflare, il proxy arancione va spento** (*DNS only*). Il
+> certificato se lo prende Caddy da sé, e con la nuvola davanti non ci riesce.
+
+Si controlla da qualunque macchina, anche da quella dove si sta leggendo:
+
+```
+getent ahostsv4 quadro.gdahome.org
+```
+
+Deve rispondere `185.213.27.137`. Se non risponde, si aspetta: un record nuovo
+gira in pochi minuti, ma può metterci di più.
+
+### 2 · La macchina
+
+Da `root`, sulla macchina dove gira già il tramite. Prima **senza installare
+niente**, per vedere se quadra tutto:
 
 ```
 read -rsp 'gettone: ' G && echo && curl -fsSL \
   --config <(printf 'header = "Authorization: Bearer %s"\n' "$G") \
   -H 'Accept: application/vnd.github.raw' \
   https://api.github.com/repos/danigio15/gdahomeapp/contents/quadro/accendi.sh \
-  | GETTONE_LETTURA="$G" bash
+  | GETTONE_LETTURA="$G" bash -s -- --controlla
 ```
 
-`accendi.sh` installa Node e Caddy se non ci sono, scarica il quadro e **lo
-prova prima di metterlo**, lo accende come servizio, prende il certificato, e
-alla fine dice la chiave di gestione. Con `--controlla` guarda se tutto
-quadra senza installare niente.
+Se dice che quadra tutto, si rilancia la stessa riga **senza** `--controlla` e
+il quadro va su.
 
-Due cose che fa e che vale la pena sapere:
+Il gettone è quello di lettura della repository — lo stesso del tramite. Si
+batte al prompt e non finisce né nella riga di comando né nella cronologia
+della shell.
+
+**Alla fine stampa la chiave di gestione.** Si vede quella volta e mai più: va
+nel gestore di password prima di chiudere il terminale. Se sfugge, si rilegge
+sulla macchina:
+
+```
+sed -n 's/^QUADRO_GESTORE=//p' /etc/quadro/ambiente
+```
+
+### 3 · Controllare che sia in piedi
+
+```
+curl https://quadro.gdahome.org/salute
+```
+
+Risponde `{"vivo":true,"case":0,"installatori":0,"gestore":true}`. Le tre cose
+da guardare in quella riga:
+
+| | |
+|---|---|
+| `vivo` | il quadro risponde |
+| `gestore` | la chiave c'è, e la pagina di gestione si apre. Se è `false`, lo script non l'ha scritta e non si può aggiungere nessuno |
+| `installatori` | quanti ce ne sono. A questo punto zero |
+
+Se non risponde da fuori ma risponde da dentro (`curl 127.0.0.1:8100/salute`),
+è il certificato: Caddy lo prende al primo che bussa, e il primo giro può
+metterci un minuto.
+
+Quando qualcosa non va, i tre posti dove guardare:
+
+```
+journalctl -u quadro -n 50 --no-pager      il quadro
+journalctl -u caddy  -n 30 --no-pager      il certificato
+caddy validate --config /etc/caddy/Caddyfile
+```
+
+### 4 · Il primo installatore
+
+Si apre `https://quadro.gdahome.org/gestore/`, si incolla la chiave di
+gestione, e da lì si aggiunge. Oppure da riga di comando, che è la stessa cosa:
+
+vedi [Aggiungere un installatore](#aggiungere-un-installatore) qui sotto.
+
+### Quello che lo script fa, e che vale la pena sapere
+
+`accendi.sh` installa Node e Caddy se non ci sono, scarica il quadro e **lo
+prova prima di metterlo** — se le prove di quella versione non passano, non
+tocca quello che c'era — lo accende come servizio, prende il certificato, e
+accende il giro che lo tiene aggiornato da solo ogni dieci minuti.
 
 - **Non riscrive il Caddyfile del tramite: ci mette un innesto** in
   `/etc/caddy/conf.d/`. Il tramite il suo file lo riscrive tutto a ogni giro, e
@@ -102,11 +180,13 @@ Due cose che fa e che vale la pena sapere:
   sarebbe il quadro, cioè quello che nessuno sta guardando. C'è una prova che
   tiene tutte e due le metà: che questo non lo riscriva, e che quello del
   tramite legga gli innesti.
-- **Rilanciarlo non cambia la chiave della gestione.** Da quella si aprono i
-  installatori: rifarla a ogni giro vuol dire chiudere fuori chi
-  tiene il quadro, e con lui tutti quelli che avrebbe dovuto aggiungere.
+- **Rilanciarlo non porta via niente.** La chiave di gestione, se c'è già,
+  resta quella: rifarla a ogni giro vuol dire chiudere fuori chi tiene il
+  quadro, e con lui tutti gli installatori che avrebbe dovuto aggiungere. E il
+  gettone di lettura non lo richiede nemmeno, se il tramite è già lì: è la
+  stessa repository.
 
-Sul banco, senza niente da installare:
+### Sul banco, senza installare niente
 
 ```
 cd quadro
@@ -120,17 +200,14 @@ QUADRO_GESTORE='qualcosa di lungo e a caso' npm run avvia
 | `QUADRO_DATI` | dove tiene i suoi file, `./dati` |
 | `QUADRO_REGISTRO` | quanto parla: `debug`, `info`, `attenzione`, `errore` |
 
-Davanti va messo un HTTPS vero su **`quadro.gdahome.org`** — che è l'indirizzo
-scritto nell'add-on (`QUADRO_DI_DIFETTO` in `ponte/src/rapporto.js`) — perché
-le case ci mandano la loro chiave a ogni rapporto, e in chiaro la manderebbero
-a chiunque ascolti.
+> **`quadro.gdahome.org` deve risolvere prima di rilasciare l'add-on.** Quel
+> nome sta scritto dentro il ponte (`QUADRO_DI_DIFETTO` in
+> `ponte/src/rapporto.js`), e una volta uscita una versione quella riga sta in
+> ogni casa: cambiarla dopo vuol dire un'altra versione e aspettare che tutte
+> si aggiornino. Una casa che non trova il quadro non si rompe — rallenta i
+> tentativi e scrive nella sua console *perché* non ci riesce — ma è un giro di
+> telefonate che si evita controllando un nome.
 
-> **Quel nome deve risolvere prima di rilasciare l'add-on.** Una volta uscita
-> una versione, quella riga sta in ogni casa: cambiarla dopo vuol dire un'altra
-> versione e aspettare che tutte si aggiornino. Una casa che non trova il quadro
-> non si rompe — rallenta i tentativi e scrive nella sua console *perché* non ci
-> riesce — ma è un giro di telefonate che si evita controllando un nome. La console chiede le sue vie in relativo apposta, così un proxy la può
-montare anche sotto un prefisso.
 
 ### Aggiungere un installatore
 
@@ -166,7 +243,7 @@ nessun'altra.
 
 **I suoi impianti restano.** Sono impianti che funzionano in casa di qualcuno, e
 spegnerne il monitoraggio perché un installatore ha smesso di pagare punirebbe il
-cliente per una faccenda che non è sua: le loro rapporti continuano ad
+cliente per una faccenda che non è sua: i loro rapporti continuano ad
 arrivare. Quello che smette è la sua chiave, che da quel momento non apre più niente.
 
 Restano però **contate a parte**: `GET /gestore/installatori` porta un `orfane`,
@@ -464,10 +541,10 @@ leggere e spegnere.
 
 ```
 quadro/
-  src/index.js       lo accende: il server, i due archivi, la potatura
-  src/server.js      le vie, e due chiavi che non si toccano
+  src/index.js       lo accende: il server, i tre archivi, la potatura
+  src/server.js      le vie, e tre chiavi che non si toccano
   src/case.js        le case seguite: matricola, nome dell'installatore,
-                     collaudataIl, e quante rapporti per giorno
+                     collaudataIl, e quanti rapporti per giorno
   src/collaudo.js    da un rapporto alle spunte, e dalle spunte allo stato
   src/chiavi.js      gli inviti, e le chiavi che ne restano
   src/archivio.js    ─┐
@@ -480,8 +557,8 @@ quadro/
   console/index.html la pagina
 ```
 
-`src/rapporti.js` non c'è, e non è una dimenticanza: si tiene **l'ultima**
-rapporto e un numero per giorno, non tutte. Novantasei righe al giorno per
+`src/rapporti.js` non c'è, e non è una dimenticanza: si tiene **l'ultimo**
+rapporto e un numero per giorno, non tutti. Novantasei righe al giorno per
 casa, su quaranta case, sono quattromila righe al giorno per disegnare quattordici
 caselle.
 

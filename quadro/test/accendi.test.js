@@ -9,7 +9,7 @@
  * danno in silenzio:
  *
  *  - **che rilanciarlo non cambi la chiave della gestione.** Quella chiave
- *    apre i conti degli installatori: rifarla a ogni giro vorrebbe dire che chi
+ *    aggiunge gli installatori: rifarla a ogni giro vorrebbe dire che chi
  *    reincolla la riga per aggiornare si ritrova fuori dal proprio quadro;
  *  - **che non riscriva il Caddyfile.** Il tramite il suo lo riscrive tutto a
  *    ogni giro. Se anche questo facesse lo stesso, l'ultimo lanciato
@@ -66,7 +66,7 @@ test("e anche i pezzi che scrive sulla macchina", () => {
 });
 
 test("rilanciarlo non cambia la chiave della gestione", () => {
-  /* La riga che conta di piu'. Da quella chiave si aprono i conti degli
+  /* La riga che conta di piu'. Da quella chiave si aggiungono gli
    * installatori: cambiarla a sorpresa chiude fuori chi tiene il quadro, e con
    * lui tutti quelli che avrebbe dovuto iscrivere. */
   assert.match(

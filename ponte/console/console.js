@@ -1707,9 +1707,9 @@
           return;
         }
         scheda.hidden = false;
-        /* Chi riceve, col nome della ditta se il quadro l'ha detto.
+        /* Chi riceve, col nome dell'installatore se il quadro l'ha detto.
          *
-         * Il nome viene da chi tiene il quadro, non dalla ditta: non c'e'
+         * Il nome viene da chi tiene il quadro, non da lui: non c'e'
          * nessuna via da cui un installatore possa cambiarsi il nome, quindi
          * nessuno puo' presentarsi qui dentro come qualcun altro. L'indirizzo
          * si mostra lo stesso, e non e' ridondanza: e' quello che si controlla

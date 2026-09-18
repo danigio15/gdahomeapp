@@ -13,8 +13,8 @@
 ///
 /// E' una differenza che conta. L'interruttore dice soltanto «questo Home
 /// Assistant e' di chi installa», che e' un'informazione innocua anche se
-/// qualcuno la legge. La chiave invece aprirebbe l'elenco degli impianti di una
-/// ditta — cioe' i clienti di qualcuno — e quella non si lascia in giro.
+/// qualcuno la legge. La chiave invece aprirebbe l'elenco degli impianti di un
+/// installatore — cioe' i clienti di qualcuno — e quella non si lascia in giro.
 ///
 /// ─── E il cruscotto non si rifa' qui ──────────────────────────────────────
 ///
