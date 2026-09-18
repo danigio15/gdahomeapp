@@ -17,6 +17,8 @@
 
 import { CaseSeguite } from "./case.js";
 import { Chiavi } from "./chiavi.js";
+import { Fattorino } from "./fattorino.js";
+import { Giro } from "./giro.js";
 import { Installatori } from "./installatori.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciIlServer } from "./server.js";
@@ -41,13 +43,21 @@ export async function alzaIlQuadro({
   const chiavi = new Chiavi({ cartella });
   const installatori = new Installatori({ cartella });
 
+  const fattorino = new Fattorino({ registro });
+
   const server = costruisciIlServer({
     case: case_,
     chiavi,
     installatori,
     chiaveDelGestore,
+    fattorino,
     registro,
   });
+
+  /* Il giro degli avvisi: quello che fa lavorare il quadro mentre nessuno lo
+   * guarda. Parte insieme al server e non dice niente al primo passaggio —
+   * un quadro appena acceso non sa cosa e' successo mentre era spento. */
+  const giro = new Giro({ case: case_, installatori, fattorino, registro });
 
   await new Promise((riuscito, fallito) => {
     server.once("error", fallito);
@@ -69,11 +79,13 @@ export async function alzaIlQuadro({
       "senza QUADRO_GESTORE non si puo' iscrivere nessun installatore: le case gia' abbinate continuano a depositare",
     );
 
-  const giro = setInterval(() => {
+  giro.parti();
+
+  const potatura = setInterval(() => {
     const andati = chiavi.potatura();
     if (andati) registro.info(`${andati} codici scaduti sono stati buttati`);
   }, POTATURA);
-  giro.unref?.();
+  potatura.unref?.();
 
   return {
     server,
@@ -81,10 +93,12 @@ export async function alzaIlQuadro({
     case: case_,
     chiavi,
     installatori,
+    giro,
     registro,
     spegni: () =>
       new Promise((ok) => {
-        clearInterval(giro);
+        giro.ferma();
+        clearInterval(potatura);
         server.close(ok);
       }),
   };

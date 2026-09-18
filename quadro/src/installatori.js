@@ -83,6 +83,9 @@ export class Installatori {
       soglia: Math.max(0, Math.floor(Number(soglia) || 0)),
       da: this.adesso(),
       vistoIl: null,
+      /* Dove vuole essere avvisato quando una casa tace. Vuoto vuol dire che
+       * non vuole: niente avvisi e nessuna richiesta a nessuno. */
+      avvisi: "",
     };
     this.lista.push(uno);
     this.archivio.salva();
@@ -133,6 +136,23 @@ export class Installatori {
     uno.nome = String(nome ?? "")
       .trim()
       .slice(0, 80);
+    this.archivio.salva();
+    return true;
+  }
+
+  /**
+   * Dove mandargli gli avvisi. Vuoto li spegne.
+   *
+   * Non si controlla qui che sia un indirizzo buono: lo fa il fattorino, che
+   * e' l'unico che sa cosa sa consegnare. Due controlli dello stesso fatto in
+   * due file sono due controlli che un giorno dicono cose diverse.
+   */
+  doveAvvisare(chi, dove) {
+    const uno = this.quello(chi);
+    if (!uno) return false;
+    uno.avvisi = String(dove ?? "")
+      .trim()
+      .slice(0, 300);
     this.archivio.salva();
     return true;
   }

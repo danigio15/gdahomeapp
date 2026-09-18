@@ -505,3 +505,47 @@ test("chiudere un conto non butta le sue case: restano, e si vedono ancora conta
     await b.chiudi();
   }
 });
+
+test("l'installatore dice dove vuole gli avvisi, e su http non si mandano", async () => {
+  /* Nel messaggio c'è il nome che lui ha dato a una casa — l'unica cosa in
+   * tutto questo quadro che nomini una persona — e in chiaro lo leggerebbe
+   * chiunque stia in mezzo. */
+  const b = await banco({ ditte: 1 });
+  try {
+    const storto = await b.retro("/io/avvisi", {
+      method: "PUT",
+      body: JSON.stringify({ dove: "http://esempio.it/avvisi" }),
+    });
+    assert.equal(storto.status, 400);
+    assert.match((await storto.json()).errore, /https/);
+
+    await b.retro("/io/avvisi", {
+      method: "PUT",
+      body: JSON.stringify({ dove: "https://esempio.it/avvisi" }),
+    });
+    assert.equal((await (await b.retro("/io")).json()).avvisi, "https://esempio.it/avvisi");
+
+    /* Vuoto li spegne, ed è un caso normale. */
+    await b.retro("/io/avvisi", { method: "PUT", body: JSON.stringify({ dove: "" }) });
+    assert.equal((await (await b.retro("/io")).json()).avvisi, "");
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("un installatore non vede né cambia l'indirizzo degli avvisi di un altro", async () => {
+  const b = await banco({ ditte: 2 });
+  const [rossi, bianchi] = b.conti;
+  try {
+    await b.retro(
+      "/io/avvisi",
+      { method: "PUT", body: JSON.stringify({ dove: "https://rossi.it/avvisi" }) },
+      rossi.chiave,
+    );
+    const suoi = await (await b.retro("/io", {}, bianchi.chiave)).json();
+    assert.equal(suoi.avvisi, "", "Bianchi vede dove viene avvisato Rossi");
+    assert.equal(suoi.nome, "Ditta 2");
+  } finally {
+    await b.chiudi();
+  }
+});

@@ -1821,6 +1821,53 @@
               ? laFlotta()
               : lAbbinamento();
 
+        const esito = (parole, bene = true) => {
+          const riga = document.getElementById("esito-avvisi");
+          if (!riga) return;
+          riga.hidden = false;
+          riga.textContent = parole;
+          riga.style.color = bene ? "var(--bene)" : "var(--male)";
+        };
+
+        const tastoAvvisi = dove.querySelector("[data-avvisi]");
+        if (tastoAvvisi) {
+          tastoAvvisi.onclick = () =>
+            faiEpoi(tastoAvvisi, async () => {
+              const detto = document.getElementById("dove-avvisi")?.value || "";
+              try {
+                await chiedi("/io/avvisi", {
+                  method: "PUT",
+                  body: JSON.stringify({ dove: detto }),
+                });
+                IO.avvisi = detto.trim();
+                esito(IO.avvisi ? "Salvato." : "Avvisi spenti.");
+              } catch (male) {
+                esito(male.message, false);
+              }
+            });
+        }
+
+        const tastoProva = dove.querySelector("[data-prova-avvisi]");
+        if (tastoProva) {
+          tastoProva.onclick = () =>
+            faiEpoi(tastoProva, async () => {
+              try {
+                const detto = await chiedi("/io/avvisi/prova", { method: "POST" });
+                /* «Arrivato» vuol dire che chi riceve l'ha accettato, non che
+                 * l'hai letto: se il tasto dice di sì e il messaggio non c'è, il
+                 * problema sta dall'altra parte. */
+                esito(
+                  detto.arrivato
+                    ? "Mandato. Se non lo vedi, il problema è dopo l'indirizzo."
+                    : "Quell'indirizzo non l'ha accettato.",
+                  detto.arrivato,
+                );
+              } catch (male) {
+                esito(male.message, false);
+              }
+            });
+        }
+
         dove.querySelectorAll("[data-filtro]").forEach((tasto) => {
           tasto.onclick = () => {
             filtro = filtro === tasto.dataset.filtro ? "tutte" : tasto.dataset.filtro;
@@ -2906,6 +2953,39 @@
               </section>
 
               <section class="riquadro">
+                <div class="capoRiquadro"><h3>Quando una casa tace</h3></div>
+                <p class="minuta">
+                  Il quadro ti scrive quando un impianto smette di parlare da più
+                  di due ore, e di nuovo quando riprende. Mette un
+                  <span class="mono">POST</span> a un indirizzo tuo: va bene un
+                  bot di Telegram, Slack, ntfy, o quello che usi già.
+                </p>
+                <div class="azioni">
+                  <input
+                    type="url"
+                    id="dove-avvisi"
+                    maxlength="300"
+                    placeholder="https://…"
+                    aria-label="Dove mandare gli avvisi"
+                    value="${testo(IO.avvisi || "")}"
+                  />
+                  <button type="button" class="tasto forte" data-avvisi>Salva</button>
+                  ${IO.avvisi ? `<button type="button" class="tasto" data-prova-avvisi>Mandane uno di prova</button>` : ""}
+                </div>
+                <p class="minuta" id="esito-avvisi" hidden></p>
+                <div class="avvertenza">
+                  <span class="gettone" aria-hidden="true">!</span>
+                  <span>
+                    Nell'avviso c'è il nome che hai dato tu alla casa, che è
+                    l'unica cosa in tutto questo quadro che nomini una persona:
+                    per questo l'indirizzo dev'essere <b>https</b>, e per questo
+                    va in un posto che leggi solo tu. Lascialo vuoto e non parte
+                    niente.
+                  </span>
+                </div>
+              </section>
+
+              <section class="riquadro">
                 <div class="capoRiquadro"><h3>Come funziona, in breve</h3></div>
                 <ul class="spunte">
                   <li class="fatta">
@@ -2950,9 +3030,10 @@
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
                       <b>Non passa dal centralino.</b> La cartolina va dalla casa
-                      al tuo quadro e basta: su
-                      <span class="strada">tramite.gdahome.org</span> non ci
-                      finisce niente.
+                      a questo quadro e basta: su
+                      <span class="strada">tramite.gdahome.org</span> — quello
+                      che fa entrare i telefoni da fuori casa — non ci finisce
+                      niente.
                     </span>
                   </li>
                 </ul>

@@ -50,6 +50,7 @@ import { createServer } from "node:http";
 import { TUTTE } from "./case.js";
 import { CASA_VALIDA, TroppiInviti } from "./chiavi.js";
 import { DISCO_FINITO, DISCO_PIENO, TROPPO_CALDO } from "./collaudo.js";
+import { Fattorino, indirizzoBuono } from "./fattorino.js";
 import { CHI_VALIDO } from "./installatori.js";
 import { stessoSegreto } from "./segreti.js";
 
@@ -96,6 +97,7 @@ export function costruisciIlServer({
   chiavi,
   installatori,
   chiaveDelGestore = "",
+  fattorino = new Fattorino(),
   registro = { debug() {}, info() {}, attenzione() {}, errore() {} },
 }) {
   /* Lo sgabuzzino si apre solo dove c'e' una chiave vera. Senza, questo quadro
@@ -238,7 +240,42 @@ export function costruisciIlServer({
         nome: io?.nome || "",
         soglia: io?.soglia || 0,
         case: case_.quante(chi),
+        avvisi: io?.avvisi || "",
       });
+      return;
+    }
+
+    if (via === "/io/avvisi" && metodo === "PUT") {
+      const detto = await ilDetto(richiesta);
+      const dove = String(detto?.dove ?? "").trim();
+      /* Vuoto li spegne, ed e' un caso normale. Un indirizzo che non e' `https`
+       * si rifiuta subito dicendo perche': nel messaggio c'e' il nome che lui
+       * ha dato a una casa, e in chiaro lo leggerebbe chiunque stia in mezzo. */
+      if (dove && !indirizzoBuono(dove)) {
+        male(risposta, 400, "l'indirizzo degli avvisi deve cominciare per https://");
+        return;
+      }
+      installatori.doveAvvisare(chi, dove);
+      json(risposta, { avvisi: dove });
+      return;
+    }
+
+    if (via === "/io/avvisi/prova" && metodo === "POST") {
+      /* Un messaggio finto, adesso. Un avviso che si scopre rotto la notte che
+       * serviva non e' un avviso: qui si vede subito se quell'indirizzo
+       * accetta quello che gli si manda. */
+      if (!io?.avvisi) {
+        male(risposta, 400, "prima serve un indirizzo dove mandarli");
+        return;
+      }
+      const arrivato = await fattorino.porta(io.avvisi, {
+        tipo: "prova",
+        case: [],
+        testo:
+          "Questa e' una prova del quadro di gdahome. " +
+          "Se la stai leggendo, gli avvisi arrivano dove devono.",
+      });
+      json(risposta, { arrivato });
       return;
     }
 

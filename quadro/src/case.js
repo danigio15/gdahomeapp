@@ -85,6 +85,11 @@ export class CaseSeguite {
         vistaIl: ora,
         carta: null,
         giorni: {},
+        /* Quando si e' mandato l'avviso che questa casa tace. E' il segno di
+         * «di questa l'ho gia' detto»: si mette mandando, si toglie quando
+         * torna a parlare. Senza, una casa muta da tre giorni sarebbe una
+         * notizia a ogni giro invece che una sola volta. */
+        avvisataIl: null,
       };
       this.lista.push(una);
     }
@@ -148,6 +153,15 @@ export class CaseSeguite {
         if (differenza !== 0) return differenza;
         return (una.nome || una.casa).localeCompare(altra.nome || altra.casa);
       });
+  }
+
+  /** Segna che di questa si e' parlato, o che non se ne parla piu'. */
+  segnaAvvisata(casa, quando) {
+    const una = this.quella(casa);
+    if (!una) return false;
+    una.avvisataIl = quando;
+    this.archivio.salva();
+    return true;
   }
 
   /** Quante ne segue uno. E' il numero su cui si misura il suo tetto. */

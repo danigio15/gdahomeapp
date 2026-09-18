@@ -136,6 +136,33 @@ Restano però **contate a parte**: `GET /gestore/installatori` porta un `orfane`
 se no il totale non tornerebbe con la somma delle ditte e non si capirebbe
 perché. E il giorno che quel conto riapre, si ritrovano.
 
+### Quando una casa tace
+
+Il quadro scrive all'installatore quando un impianto smette di parlare, e di
+nuovo quando riprende. Mette un `POST` a un indirizzo suo — un bot di Telegram,
+Slack, ntfy, il suo gestionale — con dentro `{ testo, tipo, case, quadro }`.
+
+Niente posta elettronica, e non per pigrizia: mandare una mail che arrivi
+davvero vuol dire SMTP, TLS, SPF, DKIM e una reputazione da difendere, e il
+primo avviso che finisce nello spam è un avviso che non è mai esistito. Chi
+vuole la mail ci mette davanti tre righe sue.
+
+**La parte difficile non è accorgersene: è tacere.** Un avviso che squilla a
+ogni riavvio di Home Assistant si silenzia in una settimana, e da quel momento
+non avvisa più di niente. Quindi ci sono quattro regole che servono a **non**
+mandare niente, e una sola che manda:
+
+| | |
+|---|---|
+| **due ore, non tre quarti d'ora** | la pagina colora «muta» dopo tre cartoline saltate, e va bene per un colore su uno schermo che si sta già guardando. Un messaggio che arriva addosso vuole più pazienza: un riavvio, un aggiornamento e un router che si riaccende ci stanno dentro. Il colore è per chi guarda, il messaggio per chi non sta guardando |
+| **una volta sola** | una casa muta da tre giorni è una notizia, non una al giorno |
+| **se tacciono in tanti insieme** | otto su dodici non sono otto guasti: è un guasto. Un messaggio solo, che dice di guardare prima più in grande |
+| **se siamo stati via noi** | è la regola che nessuno scrive e che poi si paga. Se il quadro è stato fermo tre ore, al ritorno *tutte* le case sembrano mute perché nessuno era in ascolto. Il giro si ricorda quando è passato: se il buco è più grande del silenzio che cerca, quel giro non dice niente e riparte dal prossimo |
+
+E il segno di «questa l'ho già detta» si scrive **dopo** la consegna, e solo se è
+riuscita: scriverlo prima vorrebbe dire che un indirizzo sbagliato per mezz'ora
+si mangia per sempre gli avvisi di quella mezz'ora.
+
 ### Il tetto
 
 Gli inviti aperti contano come case: senza quella riga si fanno venti codici in
@@ -406,6 +433,10 @@ quadro/
                      collaudataIl, e quante cartoline per giorno
   src/collaudo.js    da una cartolina alle spunte, e dalle spunte allo stato
   src/chiavi.js      gli inviti, e le chiavi che ne restano
+  src/installatori.js  i conti, le chiavi, i tetti
+  src/avvisi.js      quando una casa tace, e quando vale la pena dirlo
+  src/fattorino.js   chi porta fuori gli avvisi
+  src/giro.js        passa ogni dieci minuti, guarda, e semmai parla
   console/index.html la pagina
 ```
 
@@ -611,12 +642,17 @@ guardi.
    cartolina non dice resti **«non si sa»** invece di diventare una spunta
    rossa — è la differenza fra un impianto che ha un guaio e un impianto che non
    l'ha raccontato.
-3. **L'avviso quando una casa tace.** Oggi il quadro bisogna andarlo a
-   guardare: un impianto che smette di parlare alle tre di notte si scopre la
-   mattina dopo, e solo se qualcuno apre la pagina. E' il pezzo che lo
-   trasforma da cruscotto in una cosa che lavora mentre l'installatore non
-   guarda — che poi e' il motivo per cui il quadro esiste, visto che il guaio
-   di adesso e' proprio che nessuno sa cosa succede nelle case consegnate.
+3. **L'avviso quando una casa tace.** Il pezzo che trasforma il quadro da
+   cruscotto in una cosa che lavora mentre l'installatore non guarda.
+
+   **Fatta.** `src/avvisi.js` decide, `src/fattorino.js` consegna, `src/giro.js`
+   passa ogni dieci minuti. Le regole stanno [qui sopra](#quando-una-casa-tace).
+
+   Ventitré prove, e quelle che contano provano che **stia zitto**: che non
+   ridica una casa muta da tre giorni, che otto insieme facciano un messaggio
+   solo, che un fermo del quadro non svegli nessuno, e che una consegna fallita
+   lasci la casa da riavvisare. Perché un avviso si giudica da quando tace:
+   mandarlo lo fa anche una riga che manda sempre.
 4. Poi, se serve: la storia lunga, le impronte dei dispositivi.
 
 ### La tappa che non si fa: il quadro su Cloudflare
