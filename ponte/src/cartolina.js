@@ -47,30 +47,20 @@
 
 import { gliAddon, gliApparati, laMacchina, laRete } from "./ferro.js";
 import { ilBackup, leBatterie, leEntita } from "./salute.js";
-import { TesserinoNoNo, verificaIlTesserino } from "./tesserino.js";
 
-/* Il nome e il numero, come nell'invito del QR code (`invito.js`): quell'uno
- * e' l'unica cosa che permetta a un quadro vecchio di dire «questo codice
- * viene da un ponte piu' nuovo di me» invece di leggere per meta' qualcosa che
- * non e' piu' quello che crede. */
-const NOME = "quadro";
-const VERSIONE = 2;
-const SEPARATORE = "|";
-
-/* La prima versione della riga finiva con la chiave, e il ponte si fidava di
- * chiunque scrivesse un indirizzo `https`. La seconda porta anche il
- * **tesserino** — chi e' l'installatore, per quale quadro, fino a quando — e
- * senza quello non si abbina piu' niente.
+/* Dove sta il quadro.
  *
- * Una riga della prima versione non si legge: **si rifiuta**. Se la si
- * accettasse «per compatibilita'», il modo di saltare il tesserino sarebbe
- * scrivere `1` al posto di `2` — cioe' il controllo lo spegnerebbe chi deve
- * essere controllato, scrivendo una cifra. Un numero di versione non puo'
- * essere la porta di servizio del controllo che la versione introduce.
+ * **Scritto qui, e non in una casella dell'add-on.** E' la stessa scelta gia'
+ * fatta per il centralino (`opzioni.js`, `CENTRALINO_DI_DIFETTO`), e per lo
+ * stesso motivo: una casella che non va toccata e' una casella che prima o poi
+ * qualcuno tocca — scrivendoci qualcosa di storto, o congelando per quella casa
+ * un indirizzo che il giorno che cambia non cambia piu'.
  *
- * Non rompe niente a nessuno: il quadro non e' mai stato rilasciato, e righe
- * della prima versione in giro non ce ne sono. */
-const PRIMA_DEL_TESSERINO = 1;
+ * Il quadro e' uno solo e sta su una macchina di gdahome. Chi installa non
+ * accende niente, non compra nessun dominio e non tiene su nessun server: gli
+ * si da' un codice, lo incolla, e ha finito.
+ */
+export const QUADRO_DI_DIFETTO = "https://quadro.gdahome.org";
 
 /** Ogni quanto parte una cartolina, in minuti, quando non si dice altro. */
 export const OGNI_DI_SERIE = 15;
@@ -96,88 +86,59 @@ const PRIMA_ASPETTA = 30_000;
 const RALLENTA_FINO_A = 8;
 
 export class CodiceIllegibile extends Error {}
-export class CodiceTroppoNuovo extends Error {}
 
 /**
  * Il codice del quadro, come si incolla nella scheda dell'add-on.
  *
- *     quadro|2|https://quadro.impiantirossi.it|K7M2-9XQF-3BHT-R4VN|TESSERINO
+ *     K7M2-9XQF-3BHT-R4VN
  *
- * Una riga sola e leggibile, non un blocco di base64: quando qualcosa non va,
- * la prima domanda e' «cosa ci hai incollato?», e a quella si deve poter
- * rispondere leggendo. Dentro ci stanno le cose che servono — **dove**
- * chiamare, **con che** presentarsi, e **chi dice** che quel quadro sia
- * riconosciuto — perche' tre caselle da riempire giuste sono tre caselle da
- * sbagliare.
+ * Venti caratteri, e basta. Prima era una riga lunga che portava dentro anche
+ * l'indirizzo del quadro e un numero di versione; adesso l'indirizzo sta nel
+ * programma, e la versione non serve piu' a nessuno perche' il quadro che fa il
+ * codice e quello che risponde sono **la stessa macchina**.
  *
- * Non e' un indirizzo web apposta, come per l'invito del QR code: un
- * `https://…` incollato dove non deve promette qualcosa che non puo'
- * mantenere.
+ * Quello che resta e' il codice che il quadro ha generato: si detta al
+ * telefono, si copia senza sbagliare, e chi lo incolla non deve sapere niente
+ * di indirizzi.
  *
- * ─── Non c'e' modo di leggerlo senza verificarlo ─────────────────────────
- *
- * Questa e' l'unica via per trasformare quella riga in qualcosa di usabile, e
- * il tesserino lo controlla **qui dentro**. Non c'e' una `leggiIlCodice` che
- * spacchetta e una `verificaIlCodice` da chiamare dopo, perche' il giorno che
- * ci fossero tutt'e due, qualcuno chiamerebbe la prima e basta — e nessuno se
- * ne accorgerebbe, visto che funzionerebbe benissimo.
- *
- * @param {string} scritto la riga incollata nella scheda
- * @param {{adesso?: number, chiavi?: string[]}} come `chiavi` serve alle prove,
- *   che si firmano le loro invece di conoscere quella vera
+ * I trattini si tengono o si tolgono, e qui non si toccano: a confrontarlo e'
+ * il quadro, che li toglie da tutt'e due le parti. Chi ricopia a mano un codice
+ * a gruppi di quattro sbaglia meno, e chi lo incolla da un messaggio se li
+ * porta dietro.
  */
-export function leggiIlCodice(scritto, { adesso = Date.now(), chiavi } = {}) {
+export function leggiIlCodice(scritto) {
   const testo = String(scritto ?? "").trim();
   if (!testo) return null;
 
-  const pezzi = testo.split(SEPARATORE);
-  if (pezzi[0] !== NOME) {
-    throw new CodiceIllegibile("questo non e' un codice del quadro");
-  }
-  const numero = Number(pezzi[1]);
-  if (!Number.isInteger(numero) || numero < 1) {
-    throw new CodiceIllegibile("questo non e' un codice del quadro");
-  }
-  if (numero > VERSIONE) {
-    throw new CodiceTroppoNuovo("questo codice viene da un quadro piu' nuovo di questo ponte");
-  }
-  if (numero <= PRIMA_DEL_TESSERINO) {
+  /* Chi ha in mano la riga vecchia — `quadro|2|https://…|CHIAVE` — non merita
+   * un «codice non valido»: merita di sapere che adesso ci va solo il pezzo
+   * finale. */
+  if (testo.includes("|")) {
     throw new CodiceIllegibile(
-      "questo codice viene da un quadro senza tesserino: chiedine uno nuovo a chi te l'ha dato",
+      "qui adesso ci va solo il codice, senza indirizzo: e' l'ultimo pezzo di quella riga",
+    );
+  }
+  if (/^https?:/i.test(testo)) {
+    throw new CodiceIllegibile("qui ci va il codice del quadro, non un indirizzo");
+  }
+
+  const nudo = testo.replace(/-/g, "").toUpperCase();
+  if (nudo.length < 8) {
+    throw new CodiceIllegibile("questo codice e' troppo corto per essere un codice del quadro");
+  }
+  if (!/^[A-Z0-9]+$/.test(nudo)) {
+    throw new CodiceIllegibile(
+      "in questo codice ci sono caratteri che un codice del quadro non ha",
     );
   }
 
-  const dove = (pezzi[2] ?? "").trim().replace(/\/+$/, "");
-  const chiave = (pezzi[3] ?? "").trim();
-  if (!/^https:\/\/[^\s/]+/.test(dove)) {
-    /* Solo `https`. Non e' pignoleria: dentro la cartolina c'e' come sta la
-     * casa di qualcuno, e su `http` la legge chiunque stia in mezzo. */
-    throw new CodiceIllegibile("l'indirizzo del quadro deve cominciare per https://");
-  }
-  if (chiave.length < 8) {
-    throw new CodiceIllegibile("in questo codice manca la chiave");
-  }
+  /* L'indirizzo si puo' spostare da fuori, e qui non c'e' niente da difendere:
+   * il quadro e' di gdahome, e una casa che ne guardasse un altro semplicemente
+   * non comparirebbe nel suo — come una casa senza codice. Serve alle prove, e
+   * a chi si rifa' gdahome per se'. */
+  const dove = String(process.env.PONTE_QUADRO_DOVE || QUADRO_DI_DIFETTO).replace(/\/+$/, "");
 
-  /* Il tesserino, per ultimo e obbligatorio.
-   *
-   * L'errore che esce di qui dice **perche'** — firma sbagliata, quadro
-   * sbagliato, scaduto il tal giorno — e quel messaggio finisce nel registro e
-   * nella console. Un «codice non valido» e basta manderebbe l'installatore a
-   * rigenerare cinque volte un codice che e' giusto, quando il problema e' che
-   * il suo tesserino e' scaduto da tre settimane. */
-  const tessera = (pezzi[4] ?? "").trim();
-  if (!tessera) {
-    throw new CodiceIllegibile("in questo codice manca il tesserino");
-  }
-  let tesserino;
-  try {
-    tesserino = verificaIlTesserino(tessera, { dove, adesso, chiavi });
-  } catch (errore) {
-    if (errore instanceof TesserinoNoNo) throw new CodiceIllegibile(errore.message);
-    throw errore;
-  }
-
-  return { dove, chiave, tesserino };
+  return { dove, chiave: testo };
 }
 
 /** Ogni quanto, tenuto dentro i limiti. */

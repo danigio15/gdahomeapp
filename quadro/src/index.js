@@ -17,6 +17,7 @@
 
 import { CaseSeguite } from "./case.js";
 import { Chiavi } from "./chiavi.js";
+import { Installatori } from "./installatori.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciIlServer } from "./server.js";
 
@@ -27,22 +28,24 @@ export async function alzaIlQuadro({
   porta = Number(process.env.QUADRO_PORTA || 8100),
   cartella = process.env.QUADRO_DATI || "./dati",
   livello = process.env.QUADRO_REGISTRO || "info",
-  /* La chiave con cui si apre la console.
+  /* La chiave dello sgabuzzino: quella di chi **tiene** il quadro.
    *
-   * Senza, questo quadro riceve le cartoline e non le fa vedere a nessuno —
-   * meta' inutile, e lo dice all'accensione invece di farlo scoprire a chi
-   * apre la pagina. Va lunga: e' l'unica cosa fra un indirizzo pubblico e
-   * l'elenco degli impianti di qualcuno. */
-  chiaveDellaConsole = process.env.QUADRO_CHIAVE || "",
+   * Non e' la chiave di un installatore — quelle le fa questo quadro, una per
+   * conto, e le vede solo chi le riceve. Questa apre i conti e mette i tetti, e
+   * senza non si puo' iscrivere nessuno: un quadro cosi' riceve cartoline di
+   * case gia' abbinate e non ne fa entrare di nuove. Va lunga. */
+  chiaveDelGestore = process.env.QUADRO_GESTORE || "",
 } = {}) {
   const registro = apriIlRegistro(livello);
   const case_ = new CaseSeguite({ cartella });
   const chiavi = new Chiavi({ cartella });
+  const installatori = new Installatori({ cartella });
 
   const server = costruisciIlServer({
     case: case_,
     chiavi,
-    chiaveDellaConsole,
+    installatori,
+    chiaveDelGestore,
     registro,
   });
 
@@ -56,11 +59,14 @@ export async function alzaIlQuadro({
 
   const vera = server.address().port;
   registro.info(`il quadro ascolta sulla ${vera}`);
-  registro.info(`${case_.lista.length} case seguite, ${chiavi.elenco().length} codici in attesa`);
-  if (String(chiaveDellaConsole).length >= 16) registro.info("la console e' aperta su /console/");
+  registro.info(
+    `${installatori.lista.length} installatori, ${case_.lista.length} case seguite, ` +
+      `${chiavi.elenco().length} codici in attesa`,
+  );
+  if (String(chiaveDelGestore).length >= 16) registro.info("lo sgabuzzino e' aperto su /gestore/");
   else
     registro.attenzione(
-      "senza QUADRO_CHIAVE la console non si apre: le cartoline arrivano e non le guarda nessuno",
+      "senza QUADRO_GESTORE non si puo' iscrivere nessun installatore: le case gia' abbinate continuano a depositare",
     );
 
   const giro = setInterval(() => {
@@ -74,6 +80,7 @@ export async function alzaIlQuadro({
     porta: vera,
     case: case_,
     chiavi,
+    installatori,
     registro,
     spegni: () =>
       new Promise((ok) => {

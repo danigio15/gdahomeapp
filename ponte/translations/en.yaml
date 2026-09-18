@@ -30,7 +30,7 @@ configuration:
   quadro:
     name: The panel of whoever installed your home
     description: >-
-      Leave it empty. If an installer set your home up, they give you a line to
+      Leave it empty. If an installer set your home up, they give you a code to
       paste here: from then on this home sends them a few lines of numbers
       every quarter of an hour — the versions, how full the disk is, which
       add-ons are running, how many entities stopped answering — and they find
@@ -43,7 +43,7 @@ configuration:
     name: How often a postcard goes out
     description: >-
       Every how many minutes this home writes to the panel. It only counts if
-      the line above is filled in.
+      the box above is filled in.
   registro:
     name: The log
     description: How much it writes in the add-on's log.

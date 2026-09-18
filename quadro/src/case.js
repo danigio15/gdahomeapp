@@ -29,6 +29,11 @@ import { collaudoChiuso, ilCollaudo, lePastiglie, loStato } from "./collaudo.js"
 
 const GIORNO = 24 * 60 * 60 * 1000;
 
+/* «Tutte quelle che ci sono, di chiunque siano.» La usa solo chi tiene il
+ * quadro, per contarle; non e' un valore di serie da nessuna parte, cosi' una
+ * chiamata che vede tutto si riconosce a occhio leggendo. */
+export const TUTTE = Symbol("tutte le case, di chiunque");
+
 /** Quanti giorni di storia si tengono. Come la striscia, piu' un po'. */
 export const GIORNI_TENUTI = 21;
 
@@ -64,11 +69,23 @@ export class CaseSeguite {
    * aperto»: e' il momento in cui una casa entra nel quadro, e chi l'ha
    * installata le da' un nome quando la vede comparire.
    */
-  deposita(casa, carta) {
+  deposita(casa, carta, di = null) {
     const ora = this.adesso();
     let una = this.quella(casa);
     if (!una) {
-      una = { casa, nome: "", da: ora, collaudataIl: null, vistaIl: ora, carta: null, giorni: {} };
+      una = {
+        casa,
+        /* Di chi e' questa casa. Lo dice l'invito con cui e' entrata, e da qui
+         * non si muove: e' quello che la fa comparire nella pagina di un
+         * installatore e non in quella di un altro. */
+        di,
+        nome: "",
+        da: ora,
+        collaudataIl: null,
+        vistaIl: ora,
+        carta: null,
+        giorni: {},
+      };
       this.lista.push(una);
     }
     una.vistaIl = ora;
@@ -85,9 +102,11 @@ export class CaseSeguite {
     return una;
   }
 
-  rinomina(casa, nome) {
+  /* `di` e' un lucchetto, non un filtro: senza, l'installatore che scrivesse a
+   * mano la matricola di una casa di un altro potrebbe rinominargliela. */
+  rinomina(casa, nome, di) {
     const una = this.quella(casa);
-    if (!una) return false;
+    if (!una || (di !== TUTTE && una.di !== di)) return false;
     una.nome = String(nome ?? "")
       .trim()
       .slice(0, 80);
@@ -95,9 +114,11 @@ export class CaseSeguite {
     return true;
   }
 
-  togli(casa) {
+  togli(casa, di) {
     const prima = this.lista.length;
-    this.archivio.dati.case = this.lista.filter((una) => una.casa !== casa);
+    this.archivio.dati.case = this.lista.filter(
+      (una) => !(una.casa === casa && (di === TUTTE || una.di === di)),
+    );
     if (this.lista.length !== prima) this.archivio.salva();
     return this.lista.length !== prima;
   }
@@ -109,9 +130,14 @@ export class CaseSeguite {
    * stessero in tutt'e due i posti, il giorno che una cambia ne cambierebbe una
    * sola, e due schermi direbbero due cose diverse della stessa casa.
    */
-  elenco() {
+  /* `di` non ha un valore di serie **apposta**: chiamarla senza vorrebbe dire
+   * l'elenco di tutti, cioe' le case di ditte diverse mescolate in una pagina
+   * sola. Chi ne ha davvero bisogno — chi tiene il quadro, per contarle — passa
+   * `TUTTE`, e cosi' quella riga si vede leggendo. */
+  elenco(di) {
     const ora = this.adesso();
     return this.lista
+      .filter((una) => di === TUTTE || una.di === di)
       .map((una) => this.vestita(una, ora))
       .sort((una, altra) => {
         /* Prima quelle che chiedono qualcosa, e fra quelle prima le mute: chi
@@ -122,6 +148,11 @@ export class CaseSeguite {
         if (differenza !== 0) return differenza;
         return (una.nome || una.casa).localeCompare(altra.nome || altra.casa);
       });
+  }
+
+  /** Quante ne segue uno. E' il numero su cui si misura il suo tetto. */
+  quante(di) {
+    return this.lista.filter((una) => una.di === di).length;
   }
 
   vestita(una, ora = this.adesso()) {

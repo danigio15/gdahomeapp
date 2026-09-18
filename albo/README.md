@@ -1,11 +1,33 @@
 # L'albo
 
-**Progetto, non ancora costruito.** Qui c'è come gdahome riconosce gli
-installatori, quante case hanno, e cosa succede a chi non è iscritto.
+**Non si fa, ed è tenuto qui perché un giorno qualcuno lo ripropone.**
 
-L'albo professionale è il registro di chi può esercitare. Un installatore è
-**iscritto all'albo**, e quello che si porta dietro è **il tesserino**: una riga
-firmata che dice chi è, fino a quando, e per quante case.
+Questo documento progettava come gdahome riconosce gli installatori quando il
+quadro sta su una macchina **loro**: un *tesserino* firmato Ed25519 dentro il
+codice di abbinamento, che il ponte verifica offline. La tappa 1 era anche stata
+costruita, e funzionava.
+
+È caduto per una ragione che lo rende inutile, non sbagliato: **il quadro adesso
+è uno solo e sta su una macchina di gdahome** (`quadro/README.md`). Tutto questo
+meccanismo esisteva per imporre un limite a un programma che girava su ferro
+altrui — dove un contatore si toglie in trenta secondi, e l'unica presa possibile
+era una firma da controllare in casa del cliente. Con il quadro ospitato qui, il
+tetto è un numero su una macchina di chi lo decide: chi è al limite non genera il
+codice successivo, e non c'è niente da aggirare perché non c'è niente da
+eseguire altrove.
+
+**Una serratura vera ha reso inutile un dosso molto ingegnoso.** Il codice è
+stato tolto — `ponte/src/tesserino.js`, le sue ventidue prove,
+`albo/strumenti/firma.mjs` — e la riga di abbinamento è tornata corta: solo il
+codice, perché l'indirizzo lo sa il programma.
+
+Quello che resta sotto è il ragionamento com'era. Vale la pena tenerlo per due
+motivi: perché la domanda che lo ha generato — *come conto e limito le case di
+un installatore* — è viva, e ha solo trovato una risposta migliore; e perché il
+giorno che qualcuno proponesse di nuovo il quadro auto-ospitato, qui c'è già
+scritto cosa costerebbe.
+
+---
 
 ## Il problema, detto bene
 

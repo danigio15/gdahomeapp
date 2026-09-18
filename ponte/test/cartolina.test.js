@@ -18,11 +18,9 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { generateKeyPairSync, sign } from "node:crypto";
 
 import {
   CodiceIllegibile,
-  CodiceTroppoNuovo,
   compila,
   fabbricaLaCartolina,
   leggiIlCodice,
@@ -36,97 +34,44 @@ const ZITTO = { debug() {}, info() {}, attenzione() {}, errore() {} };
 
 /* ─── Il codice del quadro ─────────────────────────────────────────────── */
 
-/* Un albo finto: le prove si firmano i loro tesserini, perche' la chiave vera
- * non sta nella repository e una prova che avesse bisogno di un segreto per
- * girare non girerebbe. */
-const ALBO = (() => {
-  const { publicKey, privateKey } = generateKeyPairSync("ed25519");
-  return {
-    chiavi: [publicKey.export({ type: "spki", format: "der" }).toString("base64url")],
-    fai(dove = "quadro.impiantirossi.it", fino = "2027-03-01") {
-      const detto = Buffer.from(JSON.stringify({ i: "rossi", d: dove, s: 40, f: fino })).toString(
-        "base64url",
-      );
-      return `${detto}.${sign(null, Buffer.from(detto, "ascii"), privateKey).toString("base64url")}`;
-    },
-  };
-})();
-
-const ADESSO = Date.parse("2026-09-18T12:00:00Z");
-const come = { adesso: ADESSO, chiavi: ALBO.chiavi };
-const unCodice = (dove = "https://quadro.impiantirossi.it", chiave = "K7M2-9XQF-3BHT-R4VN") =>
-  `quadro|2|${dove}|${chiave}|${ALBO.fai()}`;
-
-test("il codice si legge, e dentro ci sono tutte e tre le cose che servono", () => {
-  const letto = leggiIlCodice(unCodice("https://quadro.impiantirossi.it/"), come);
-  assert.equal(letto.dove, "https://quadro.impiantirossi.it");
+test("il codice e' solo il codice: l'indirizzo lo sa il programma", () => {
+  /* Prima ci voleva una riga con dentro anche l'indirizzo. Adesso il quadro e'
+   * uno solo e sta su una macchina di gdahome: chi installa incolla venti
+   * caratteri e ha finito. */
+  const letto = leggiIlCodice("K7M2-9XQF-3BHT-R4VN");
   assert.equal(letto.chiave, "K7M2-9XQF-3BHT-R4VN");
-  assert.equal(letto.tesserino.chi, "rossi");
-  assert.equal(letto.tesserino.fino, "2027-03-01");
+  assert.match(letto.dove, /^https:\/\//);
 });
 
 test("una casella vuota non e' un errore: e' il caso normale", () => {
-  assert.equal(leggiIlCodice("", come), null);
-  assert.equal(leggiIlCodice("   ", come), null);
-  assert.equal(leggiIlCodice(null, come), null);
+  assert.equal(leggiIlCodice(""), null);
+  assert.equal(leggiIlCodice("   "), null);
+  assert.equal(leggiIlCodice(null), null);
 });
 
-test("su http non si manda: in mezzo c'e' come sta la casa di qualcuno", () => {
+test("chi incolla la riga vecchia si sente dire quale pezzo serve", () => {
+  /* Un «codice non valido» lo manderebbe a rigenerarlo cinque volte. Il codice
+   * che ha in mano va benissimo: e' il resto della riga che e' di troppo. */
   assert.throws(
-    () => leggiIlCodice(unCodice("http://quadro.impiantirossi.it"), come),
-    CodiceIllegibile,
+    () => leggiIlCodice("quadro|2|https://quadro.impiantirossi.it|K7M2-9XQF-3BHT-R4VN"),
+    (male) => male instanceof CodiceIllegibile && /solo il codice/.test(male.message),
+  );
+  assert.throws(
+    () => leggiIlCodice("https://quadro.impiantirossi.it"),
+    (male) => male instanceof CodiceIllegibile && /non un indirizzo/.test(male.message),
   );
 });
 
-test("un codice di qualcos'altro, o senza chiave, si rifiuta invece di provarci", () => {
-  assert.throws(() => leggiIlCodice("gdahome|2|ABC|DEF|GHI", come), CodiceIllegibile);
-  assert.throws(() => leggiIlCodice(unCodice("https://q.it", "corta"), come), CodiceIllegibile);
-  assert.throws(() => leggiIlCodice(unCodice("non-un-indirizzo"), come), CodiceIllegibile);
+test("quello che non e' un codice si rifiuta invece di provarci", () => {
+  assert.throws(() => leggiIlCodice("corto"), CodiceIllegibile);
+  assert.throws(() => leggiIlCodice("ABCD-EF!!-1234-5678"), CodiceIllegibile);
 });
 
-test("un codice piu' nuovo di questo ponte lo dice, invece di leggerne meta'", () => {
-  assert.throws(
-    () => leggiIlCodice("quadro|3|https://q.it|K7M2-9XQF|e-qualcosa-di-nuovo", come),
-    CodiceTroppoNuovo,
-  );
-});
-
-test("scrivere «1» al posto di «2» non salta il tesserino", () => {
-  /* La porta di servizio che non ci deve essere. Se la prima versione fosse
-   * accettata «per compatibilita'», il modo di fare a meno del tesserino
-   * sarebbe cambiare una cifra — cioe' il controllo lo spegnerebbe chi deve
-   * essere controllato. */
-  assert.throws(
-    () => leggiIlCodice("quadro|1|https://quadro.impiantirossi.it|K7M2-9XQF-3BHT-R4VN", come),
-    (male) => male instanceof CodiceIllegibile && /senza tesserino/.test(male.message),
-  );
-});
-
-test("un codice senza tesserino, o con un tesserino di un altro quadro, non abbina", () => {
-  assert.throws(
-    () => leggiIlCodice("quadro|2|https://quadro.impiantirossi.it|K7M2-9XQF-3BHT-R4VN", come),
-    (male) => male instanceof CodiceIllegibile && /manca il tesserino/.test(male.message),
-  );
-  /* Il tesserino di Rossi dentro il codice del quadro di Bianchi: il motivo
-   * per cui il tesserino si lega a una macchina e non solo a una persona. */
-  assert.throws(
-    () => leggiIlCodice(`quadro|2|https://quadro.impiantibianchi.it|K7M2-9XQF|${ALBO.fai()}`, come),
-    (male) =>
-      male instanceof CodiceIllegibile && /non per quadro\.impiantibianchi\.it/.test(male.message),
-  );
-});
-
-test("il perche' di un rifiuto arriva a chi legge, invece di «codice non valido»", () => {
-  /* Un messaggio muto manda l'installatore a rigenerare cinque volte un codice
-   * che e' giusto, quando il problema e' che il tesserino e' scaduto. */
-  assert.throws(
-    () =>
-      leggiIlCodice(
-        `quadro|2|https://quadro.impiantirossi.it|K7M2-9XQF|${ALBO.fai("quadro.impiantirossi.it", "2026-09-01")}`,
-        come,
-      ),
-    (male) => male instanceof CodiceIllegibile && /scaduto il 2026-09-01/.test(male.message),
-  );
+test("i trattini non contano, e il codice resta com'e' stato scritto", () => {
+  /* A confrontarlo e' il quadro, che li toglie da tutt'e due le parti: qui non
+   * si riscrive quello che l'installatore ha incollato. */
+  assert.equal(leggiIlCodice("k7m29xqf3bhtr4vn").chiave, "k7m29xqf3bhtr4vn");
+  assert.equal(leggiIlCodice("  K7M2-9XQF-3BHT-R4VN  ").chiave, "K7M2-9XQF-3BHT-R4VN");
 });
 
 test("ogni quanto sta dentro i suoi limiti, e una sciocchezza torna al difetto", () => {

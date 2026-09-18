@@ -16,6 +16,7 @@ import { join } from "node:path";
 import { CaseSeguite } from "../src/case.js";
 
 const UNA = "casa_a3f19c74e05b2d8890fa4c1e6b73d052";
+const DITTA = "inst_0123456789abcdef";
 const GIORNO = 24 * 60 * 60 * 1000;
 const MINUTO = 60 * 1000;
 
@@ -107,12 +108,12 @@ test("le case si ordinano per quello che chiedono, non per come sono arrivate", 
   try {
     const aPosto = "casa_11111111111111111111111111111111";
     const muta = "casa_22222222222222222222222222222222";
-    b.case.deposita(muta, carta(b));
-    b.case.rinomina(muta, "La muta");
+    b.case.deposita(muta, carta(b), DITTA);
+    b.case.rinomina(muta, "La muta", DITTA);
     b.vai(3 * 60 * MINUTO);
-    b.case.deposita(aPosto, { ...carta(b), telefoni: { abbinati: 1, visti7gg: 1 } });
-    b.case.rinomina(aPosto, "Quella a posto");
-    const elenco = b.case.elenco();
+    b.case.deposita(aPosto, { ...carta(b), telefoni: { abbinati: 1, visti7gg: 1 } }, DITTA);
+    b.case.rinomina(aPosto, "Quella a posto", DITTA);
+    const elenco = b.case.elenco(DITTA);
     assert.equal(elenco[0].casa, muta, "chi non parla sta in cima");
     assert.equal(elenco[0].stato.chiave, "muta");
   } finally {

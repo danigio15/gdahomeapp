@@ -1,30 +1,41 @@
 /* La porta del quadro.
  *
- * Poche vie, e due mondi che non si toccano.
+ * Un quadro solo, su una macchina di gdahome, con dentro le case di ditte
+ * diverse. Chi installa non accende niente: gli si apre un conto, gli si da'
+ * una chiave, e apre una pagina.
  *
- *   GET    /                          la soglia: cos'e' questo indirizzo
- *   GET    /salute                    dice solo che e' vivo
+ *   GET    /                            la soglia: cos'e' questo indirizzo
+ *   GET    /salute                      dice solo che e' vivo
  *
- *   POST   /cartolina                 una casa deposita i suoi numeri
+ *   POST   /cartolina                   una casa deposita i suoi numeri
  *
- *   GET    /console/                  la pagina, e sotto le sue vie
- *   GET    /console/case              le case, gia' vestite
- *   GET    /console/inviti            i codici in attesa
- *   POST   /console/inviti            fanne uno nuovo
- *   DELETE /console/inviti/<codice>   annullalo
- *   PUT    /console/casa/<casa_…>     il nome che le da' l'installatore
- *   DELETE /console/casa/<casa_…>     non seguirla piu'
+ *   GET    /console/                    la pagina dell'installatore
+ *   GET    /console/io                  chi sono, quante ne ho, qual e' il tetto
+ *   GET    /console/case                **le sue** case
+ *   GET    /console/inviti              i **suoi** codici in attesa
+ *   POST   /console/inviti              fanne uno, se il tetto lo consente
+ *   DELETE /console/inviti/<codice>     annulla il suo
+ *   PUT    /console/casa/<casa_…>       il nome, se la casa e' sua
+ *   DELETE /console/casa/<casa_…>       non seguirla piu', se e' sua
  *
- * ─── Due chiavi diverse, e non e' una complicazione inutile ──────────────
+ *   GET    /gestore/installatori        chi e' iscritto, e quante case ha
+ *   POST   /gestore/installatori        un conto nuovo
+ *   PUT    /gestore/installatore/<id>   nome e tetto
+ *   POST   /gestore/installatore/<id>/chiave   una chiave nuova
+ *   DELETE /gestore/installatore/<id>   chiudi il conto
+ *
+ * ─── Tre chiavi, e ognuna apre una porta sola ────────────────────────────
  *
  * Dal **davanti** entrano le case, ognuna con la chiave che le e' stata data:
  * quella apre una porta sola — depositare una cartolina per la propria
- * matricola — e non fa vedere niente. Dal **retro** entra l'installatore con
- * la chiave della console, e quella fa vedere tutto e non permette di
- * depositare niente.
+ * matricola — e non fa vedere niente.
  *
- * Con una chiave sola, una casa qualunque potrebbe leggere l'elenco degli
- * impianti di chi l'ha installata — cioe' i clienti di qualcun altro.
+ * Dal **retro** entrano gli installatori, ognuno con la sua: quella fa vedere
+ * **le sue** case e nient'altro. E' la riga che tiene separate ditte che fra
+ * loro si fanno concorrenza: i clienti di Rossi non sono affari di Bianchi.
+ *
+ * Dallo **sgabuzzino** entra chi tiene il quadro: apre i conti, mette i tetti,
+ * e vede **quante** case ha ognuno — non quali. Il conto e' suo, l'elenco no.
  *
  * ─── Cosa non c'e' ───────────────────────────────────────────────────────
  *
@@ -36,15 +47,15 @@
 import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 
+import { TUTTE } from "./case.js";
 import { CASA_VALIDA, TroppiInviti } from "./chiavi.js";
 import { DISCO_FINITO, DISCO_PIENO, TROPPO_CALDO } from "./collaudo.js";
+import { CHI_VALIDO } from "./installatori.js";
 import { stessoSegreto } from "./segreti.js";
 
 /** Quanto puo' essere grossa una cartolina. Le vere stanno sotto i quattro. */
 const CARTOLINA_MASSIMA = 64 * 1024;
 
-/* La pagina della console: una sola, letta dal disco al primo che la chiede e
- * poi tenuta in memoria. */
 const PAGINA = new URL("../console/index.html", import.meta.url);
 let pagina;
 
@@ -83,16 +94,14 @@ class TroppoGrosso extends Error {}
 export function costruisciIlServer({
   case: case_,
   chiavi,
-  chiaveDellaConsole = "",
+  installatori,
+  chiaveDelGestore = "",
   registro = { debug() {}, info() {}, attenzione() {}, errore() {} },
 }) {
-  /* La console e' aperta solo dove c'e' una chiave vera. Senza, questo quadro
-   * riceve le cartoline e non le fa vedere a nessuno: e' una meta' inutile, e
-   * va detto all'accensione invece di farlo scoprire aprendo la pagina. */
-  const consoleAperta = String(chiaveDellaConsole).length >= 16;
-
-  const puoGuardare = (richiesta) =>
-    consoleAperta && stessoSegreto(ilSegno(richiesta), String(chiaveDellaConsole));
+  /* Lo sgabuzzino si apre solo dove c'e' una chiave vera. Senza, questo quadro
+   * riceve cartoline e non ha modo di aprire un conto a nessuno: e' una meta'
+   * inutile, e va detto all'accensione invece di farlo scoprire dalla pagina. */
+  const gestoreAperto = String(chiaveDelGestore).length >= 16;
 
   return createServer((richiesta, risposta) => {
     servi(richiesta, risposta).catch((errore) => {
@@ -102,15 +111,11 @@ export function costruisciIlServer({
   });
 
   async function servi(richiesta, risposta) {
-    /* La barra finale **non** si toglie, e non e' una svista.
-     *
-     * La pagina della console chiede le sue vie in relativo — `case`, non
-     * `/console/case` — cosi' funziona anche dietro un proxy che la monta
-     * sotto un prefisso. Un indirizzo relativo si risolve contro la cartella:
-     * da `/console/` porta a `/console/case`, da `/console` porterebbe a
-     * `/case`. Percio' la pagina sta su `/console/` e chi bussa a `/console`
-     * ci viene mandato, invece di ricevere una pagina i cui tasti non
-     * funzionano. */
+    /* La barra finale **non** si toglie, e non e' una svista: la pagina chiede
+     * le sue vie in relativo — `case`, non `/console/case` — cosi' funziona
+     * anche dietro un proxy che la monta sotto un prefisso. Da `/console/` un
+     * indirizzo relativo porta a `/console/case`; da `/console` porterebbe a
+     * `/case`. Percio' chi bussa senza barra ci viene mandato. */
     const via = (richiesta.url || "/").split("?")[0];
     const metodo = richiesta.method || "GET";
 
@@ -118,23 +123,20 @@ export function costruisciIlServer({
       json(risposta, {
         vivo: true,
         case: case_.lista.length,
-        /* Se la console si puo' aprire. Chi accende un quadro e non mette la
-         * chiave lo scopre da qui, invece che da una pagina che dice sempre
-         * «la chiave non va bene». */
-        console: consoleAperta,
+        installatori: installatori.lista.length,
+        gestore: gestoreAperto,
       });
       return;
     }
 
     if (via === "/" && metodo === "GET") {
-      /* La soglia. Chi si tiene l'indirizzo fra i segnalibri prima o poi lo
-       * apre nudo, e trovarci un errore in JSON vuol dire crederlo rotto. */
       risposta.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
       risposta.end(
         "Il quadro di gdahome.\n\n" +
           "Qui le case installate depositano poche righe di numeri, e chi le ha\n" +
           "installate le guarda. Non si entra in nessuna casa da qui.\n\n" +
-          "La console sta su /console/.\n",
+          "Se hai un codice, va incollato nella scheda dell'add-on gdahome di\n" +
+          "casa tua, non qui. La console degli installatori sta su /console/.\n",
       );
       return;
     }
@@ -167,15 +169,16 @@ export function costruisciIlServer({
       }
       /* La matricola che conta e' quella in testa, non quella nel corpo: la
        * prima e' stata verificata contro una chiave, la seconda l'ha scritta
-       * chi manda. Si riscrive, e non si discute. */
+       * chi manda. Si riscrive, e non si discute. Lo stesso vale per di chi e'
+       * questa casa: lo dice l'invito con cui e' entrata. */
       const prima = case_.quella(casa);
-      case_.deposita(casa, { ...carta, casa });
+      case_.deposita(casa, { ...carta, casa }, chiavi.diChiE(casa));
       if (!prima) registro.info(`una casa nuova si e' presentata: ${casa}`);
       json(risposta, { presa: true });
       return;
     }
 
-    /* ─── Il retro: l'installatore ─────────────────────────────────────── */
+    /* ─── Il retro: gli installatori ───────────────────────────────────── */
 
     if (via === "/console" && metodo === "GET") {
       risposta.writeHead(301, { location: "/console/" });
@@ -189,36 +192,70 @@ export function costruisciIlServer({
     }
 
     if (via.startsWith("/console/")) {
-      if (!puoGuardare(richiesta)) {
+      const chi = installatori.riconosci(ilSegno(richiesta));
+      if (!chi) {
+        male(risposta, 401, "la chiave non va bene");
+        return;
+      }
+      await ilRetro(
+        richiesta,
+        risposta,
+        via.slice("/console".length).replace(/\/+$/, ""),
+        metodo,
+        chi,
+      );
+      return;
+    }
+
+    /* ─── Lo sgabuzzino: chi tiene il quadro ───────────────────────────── */
+
+    if (via.startsWith("/gestore/")) {
+      if (!gestoreAperto || !stessoSegreto(ilSegno(richiesta), String(chiaveDelGestore))) {
         male(
           risposta,
           401,
-          consoleAperta ? "la chiave non va bene" : "questo quadro non ha console",
+          gestoreAperto ? "la chiave non va bene" : "questo quadro non ha gestore",
         );
         return;
       }
-      await ilRetro(richiesta, risposta, via.slice("/console".length).replace(/\/+$/, ""), metodo);
+      await loSgabuzzino(
+        richiesta,
+        risposta,
+        via.slice("/gestore".length).replace(/\/+$/, ""),
+        metodo,
+      );
       return;
     }
 
     male(risposta, 404, "qui non c'e' niente");
   }
 
-  async function ilRetro(richiesta, risposta, via, metodo) {
+  async function ilRetro(richiesta, risposta, via, metodo, chi) {
+    const io = installatori.quello(chi);
+
+    if (via === "/io" && metodo === "GET") {
+      json(risposta, {
+        nome: io?.nome || "",
+        soglia: io?.soglia || 0,
+        case: case_.quante(chi),
+      });
+      return;
+    }
+
     if (via === "/case" && metodo === "GET") {
       json(risposta, {
-        case: case_.elenco(),
+        case: case_.elenco(chi),
         /* Le soglie con cui la pagina colora i metri sono **le stesse** con cui
-         * qui si decide se una casa è da guardare. Viaggiano insieme alle case
-         * invece di stare scritte anche nella pagina: due numeri uguali in due
-         * posti sono due numeri che prima o poi diventano diversi. */
+         * qui si decide se una casa e' da guardare: viaggiano insieme alle case
+         * invece di stare scritte anche nella pagina, perche' due numeri uguali
+         * in due posti sono due numeri che prima o poi diventano diversi. */
         soglie: { troppoCaldo: TROPPO_CALDO, discoPieno: DISCO_PIENO, discoFinito: DISCO_FINITO },
       });
       return;
     }
 
     if (via === "/inviti" && metodo === "GET") {
-      json(risposta, { inviti: chiavi.elenco() });
+      json(risposta, { inviti: chiavi.elenco(chi) });
       return;
     }
 
@@ -230,9 +267,14 @@ export function costruisciIlServer({
         detto = {};
       }
       try {
-        const codice = chiavi.fai({ per: detto?.per });
+        const codice = chiavi.fai({
+          di: chi,
+          per: detto?.per,
+          tetto: io?.soglia || 0,
+          quante: case_.quante(chi),
+        });
         registro.info("un codice nuovo, buono per una casa e per un quarto d'ora");
-        json(risposta, { codice, inviti: chiavi.elenco() });
+        json(risposta, { codice, inviti: chiavi.elenco(chi) });
       } catch (errore) {
         male(risposta, errore instanceof TroppiInviti ? 409 : 500, String(errore?.message));
       }
@@ -241,7 +283,7 @@ export function costruisciIlServer({
 
     const invito = /^\/inviti\/([A-Za-z0-9-]{8,40})$/.exec(via);
     if (invito && metodo === "DELETE") {
-      json(risposta, { annullato: chiavi.annulla(invito[1]), inviti: chiavi.elenco() });
+      json(risposta, { annullato: chiavi.annulla(invito[1], chi), inviti: chiavi.elenco(chi) });
       return;
     }
 
@@ -253,11 +295,13 @@ export function costruisciIlServer({
       } catch (_errore) {
         detto = {};
       }
-      if (!case_.rinomina(casa[1], detto?.nome)) {
-        male(risposta, 404, "questa casa non la segue nessuno");
+      if (!case_.rinomina(casa[1], detto?.nome, chi)) {
+        /* «Non e' tua» e «non esiste» si dicono uguale: da un no non si deve
+         * imparare che una certa matricola esiste da qualche altra parte. */
+        male(risposta, 404, "questa casa non la segui tu");
         return;
       }
-      json(risposta, { case: case_.elenco() });
+      json(risposta, { case: case_.elenco(chi) });
       return;
     }
 
@@ -265,14 +309,87 @@ export function costruisciIlServer({
       /* Non seguirla piu' vuol dire due cose insieme: si butta quello che se
        * ne sa, e si butta la sua chiave — se no la prima cartolina la farebbe
        * rinascere tre secondi dopo. */
-      const cEra = case_.togli(casa[1]);
-      chiavi.stacca(casa[1]);
+      const mia = chiavi.diChiE(casa[1]) === chi;
+      const cEra = case_.togli(casa[1], chi);
+      if (mia) chiavi.stacca(casa[1]);
       if (cEra) registro.info(`questa casa non si segue piu': ${casa[1]}`);
-      json(risposta, { tolta: cEra, case: case_.elenco() });
+      json(risposta, { tolta: cEra, case: case_.elenco(chi) });
       return;
     }
 
     male(risposta, 404, "qui non c'e' niente");
+  }
+
+  async function loSgabuzzino(richiesta, risposta, via, metodo) {
+    if (via === "/installatori" && metodo === "GET") {
+      json(risposta, {
+        installatori: installatori.elenco((chi) => case_.quante(chi)),
+        case: case_.lista.length,
+      });
+      return;
+    }
+
+    if (via === "/installatori" && metodo === "POST") {
+      const detto = await ilDetto(richiesta);
+      const fatto = installatori.fai({ nome: detto?.nome, soglia: detto?.soglia });
+      registro.info(`un conto nuovo: ${fatto.chi}`);
+      /* La chiave in chiaro esce **una volta sola**, adesso. Poi qui resta solo
+       * la sua impronta: se si perde si rifa', non si recupera. */
+      json(risposta, {
+        ...fatto,
+        installatori: installatori.elenco((chi) => case_.quante(chi)),
+      });
+      return;
+    }
+
+    const uno = new RegExp(`^/installatore/(${CHI_VALIDO.source.slice(1, -1)})$`).exec(via);
+    if (uno && metodo === "PUT") {
+      const detto = await ilDetto(richiesta);
+      if (!installatori.quello(uno[1])) {
+        male(risposta, 404, "questo conto non c'e'");
+        return;
+      }
+      if (detto?.nome !== undefined) installatori.rinomina(uno[1], detto.nome);
+      if (detto?.soglia !== undefined) installatori.tetto(uno[1], detto.soglia);
+      json(risposta, { installatori: installatori.elenco((chi) => case_.quante(chi)) });
+      return;
+    }
+
+    if (uno && metodo === "DELETE") {
+      /* Chiudere un conto non butta le sue case: restano nel quadro, senza piu'
+       * nessuno che le guardi, e le loro cartoline continuano ad arrivare. E'
+       * voluto — sono impianti che funzionano in casa di qualcuno — e chi
+       * gestisce se le ritrova da assegnare se quel conto riapre. */
+      json(risposta, {
+        chiuso: installatori.togli(uno[1]),
+        installatori: installatori.elenco((chi) => case_.quante(chi)),
+      });
+      return;
+    }
+
+    const chiave = new RegExp(`^/installatore/(${CHI_VALIDO.source.slice(1, -1)})/chiave$`).exec(
+      via,
+    );
+    if (chiave && metodo === "POST") {
+      const nuova = installatori.rifai(chiave[1]);
+      if (!nuova) {
+        male(risposta, 404, "questo conto non c'e'");
+        return;
+      }
+      registro.info(`chiave rifatta per ${chiave[1]}: quella di prima non apre piu'`);
+      json(risposta, { chiave: nuova });
+      return;
+    }
+
+    male(risposta, 404, "qui non c'e' niente");
+  }
+
+  async function ilDetto(richiesta) {
+    try {
+      return await ilCorpo(richiesta, 4096);
+    } catch (_errore) {
+      return {};
+    }
   }
 
   function laPagina(risposta) {
@@ -292,3 +409,6 @@ export function costruisciIlServer({
     risposta.end(pagina);
   }
 }
+
+/* Usato dallo sgabuzzino per contare tutto quello che c'e', di chiunque sia. */
+export { TUTTE };

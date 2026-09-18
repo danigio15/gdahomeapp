@@ -5,8 +5,9 @@ chi installa impianti è la sua.
 
 **Dove siamo.** Le prime due tappe sono fatte. Il ponte sa spedire la sua
 cartolina — spenta di serie, e si legge per intero dalla sua console — e il
-quadro gira: server, console attaccata a dati veri, abbinamento delle case.
-Resta l'avviso quando una casa tace. Per accenderlo, [qui sotto](#accenderlo).
+quadro gira: server, console attaccata a dati veri, abbinamento delle case, e
+**più ditte sullo stesso quadro** che fra loro non si vedono. Resta l'avviso
+quando una casa tace. Per accenderlo, [qui sotto](#accenderlo).
 
 ## A cosa serve
 
@@ -23,23 +24,51 @@ Il quadro risponde a due domande, e sono due domande diverse:
 - **la salute** — *regge nel tempo?* Le stesse righe guardate tutti i giorni,
   che si riaprono quando qualcosa si rompe.
 
-## Dove sta, e perché non sta altrove
+## Dove sta
 
-Il quadro è **un pezzo che si accende l'installatore**, come il centralino:
-Node su una macchina sua. Il ponte gli parla **diritto**, in HTTPS, e
-`tramite.gdahome.org` non c'entra niente.
+**Uno solo, su una macchina di gdahome.** Chi installa non accende niente, non
+compra nessun dominio e non tiene su nessun server: gli si apre un conto, gli si
+dà una chiave, e apre una pagina. Dentro ci stanno le case di ditte diverse, e
+ogni ditta vede solo le sue.
 
-Su una macchina sua e basta, non anche su Cloudflare come il centralino: il
-perché sta [in fondo](#la-tappa-che-non-si-fa-il-quadro-su-cloudflare), ed è che
-`nuvola/` esiste per non far pagare niente a chi abita una casa, mentre qui chi
-accende è un installatore che un server ce l'ha già.
+Il ponte gli parla **diritto**, in HTTPS, all'indirizzo scritto dentro l'add-on
+(`ponte/src/cartolina.js`, `QUADRO_DI_DIFETTO`) — come già fa col centralino, e
+per lo stesso motivo: una casella che non va toccata è una casella che prima o
+poi qualcuno tocca.
 
-Non sta sul centralino di gdahome, e non è una questione di fatica: il
-centralino oggi instrada e non capisce, e c'è una prova che guarda tutto quello
-che lo attraversa e controlla che non ci sia niente di leggibile. Un cruscotto
-lì dentro renderebbe falsa quella riga del README, e farebbe di chi mantiene
-l'app il custode dei dati di centinaia di case che sono di qualcun altro.
-L'installatore invece con quelle case un contratto ce l'ha già.
+### Come ci si è arrivati, e cosa è caduto per strada
+
+Le prime stesure lo davano **auto-ospitato**: ogni installatore il suo quadro,
+sul suo dominio. Era una scelta di privacy — le case che quel quadro guarda sono
+clienti suoi, e il contratto ce l'ha lui — e si portava dietro due conseguenze
+che non si vedevano subito.
+
+La prima: **un tetto al numero di case non si poteva imporre.** Quel programma
+girava su ferro dell'installatore, e un contatore lì dentro si toglie in trenta
+secondi. Ci si era inventati una firma da verificare nel ponte — un *tesserino*,
+in `albo/README.md` — che era il meglio ottenibile, e restava un dosso, non una
+serratura.
+
+La seconda, più semplice: **all'installatore toccava lavoro.** Un VPS, un
+dominio, un HTTPS, gli aggiornamenti. Per uno che monta impianti è fatica che
+non gli compete.
+
+Ospitandolo qui cadono tutte e due. Il tetto è un numero su una macchina di chi
+lo decide: chi è al limite non genera il codice successivo, e non c'è niente da
+aggirare perché non c'è niente da eseguire in casa d'altri. E all'installatore
+non resta niente da fare.
+
+**In cambio si paga una cosa, e va detta.** Il nome che l'installatore dà a una
+casa — «Rossi — via Verdi 12» — sta su questo server, e quello è un dato che
+nomina una persona e un indirizzo. Chi tiene il quadro ne diventa custode. Per
+questo il retro di chi lo gestisce vede **quante** case ha ognuno e non **quali**:
+il conto serve alle licenze, l'elenco dei clienti di una ditta terza no. C'è una
+prova che controlla che in quella risposta non finiscano nomi.
+
+Non sta invece **dentro** il centralino, e non è una questione di fatica: quello
+instrada e non capisce, e c'è una prova che guarda cosa lo attraversa. Può stare
+sulla stessa macchina — è un altro processo e un'altra porta — ma non nello
+stesso programma.
 
 Non sta nemmeno solo nell'app, e per un motivo pratico: un cruscotto che vive
 in un telefono dice che una casa è giù **quando lo apri**. Il mestiere del
@@ -49,29 +78,58 @@ quadro è accorgersene mentre nessuno guarda.
 
 ```
 cd quadro
-QUADRO_CHIAVE='qualcosa di lungo e a caso' npm run avvia
+QUADRO_GESTORE='qualcosa di lungo e a caso' npm run avvia
 ```
-
-Poi `http://<macchina>:8100/console/`: la chiave la chiede la pagina e se la
-tiene nel browser, non sta in nessun indirizzo. Le altre manopole, tutte con un
-valore di serie che va bene:
 
 | | |
 |---|---|
-| `QUADRO_CHIAVE` | la chiave del retro, almeno sedici caratteri. Senza, il quadro riceve le cartoline e non le fa vedere a nessuno: lo dice all'accensione e su `/salute`, invece di lasciarlo scoprire da una pagina che risponde sempre di no |
+| `QUADRO_GESTORE` | la chiave dello **sgabuzzino**, almeno sedici caratteri: apre i conti e mette i tetti. Senza, non si può iscrivere nessuno — le case già abbinate continuano a depositare, e il quadro lo dice all'accensione e su `/salute` |
 | `QUADRO_PORTA` | `8100` |
-| `QUADRO_DATI` | dove tiene i suoi due file, `./dati` |
+| `QUADRO_DATI` | dove tiene i suoi file, `./dati` |
 | `QUADRO_REGISTRO` | quanto parla: `debug`, `info`, `attenzione`, `errore` |
 
-Davanti va messo un HTTPS vero — un proxy, un tunnel, quello che si preferisce:
-le case ci mandano la loro chiave a ogni cartolina, e in chiaro la manderebbero
-a chiunque ascolti. La console chiede le sue vie in relativo apposta, così un
-proxy la può montare anche sotto un prefisso.
+Davanti va messo un HTTPS vero, e l'indirizzo dev'essere **quello scritto
+nell'add-on** (`QUADRO_DI_DIFETTO` in `ponte/src/cartolina.js`): le case ci
+mandano la loro chiave a ogni cartolina, e in chiaro la manderebbero a chiunque
+ascolti. La console chiede le sue vie in relativo apposta, così un proxy la può
+montare anche sotto un prefisso.
 
-Per far entrare una casa: dalla console, **Abbina** fa un codice che vive un
-quarto d'ora; si incolla nella casella `quadro` della scheda dell'add-on in
-quella casa, insieme all'indirizzo del quadro. La prima cartolina lega il codice
-a quella matricola, e da lì in poi non serve a nessun'altra.
+### Iscrivere un installatore
+
+Dallo sgabuzzino, che è roba di chi tiene il quadro:
+
+```
+curl -X POST https://quadro.gdahome.org/gestore/installatori \
+  -H "authorization: Bearer $QUADRO_GESTORE" \
+  -H "content-type: application/json" \
+  -d '{"nome": "Impianti Rossi", "soglia": 40}'
+```
+
+Risponde con la sua **chiave, in chiaro e una volta sola**: quella si consegna
+all'installatore, e qui resta solo l'impronta. Se si perde si rifà
+(`POST /gestore/installatore/<id>/chiave`), non si recupera — e la vecchia
+smette di aprire nello stesso istante.
+
+`soglia: 0` vuol dire senza tetto.
+
+### E l'installatore cosa fa
+
+Apre `https://quadro.gdahome.org/console/`, incolla la sua chiave — la pagina se
+la tiene nel browser, non sta in nessun indirizzo — e vede i suoi impianti. Per
+farne entrare uno: **Abbina** gli dà un codice che vive un quarto d'ora, e quel
+codice si incolla nella casella `quadro` della scheda dell'add-on in casa del
+cliente. Nient'altro: niente indirizzo, niente server, niente dominio.
+
+La prima cartolina lega il codice a quella matricola, e da lì in poi non serve a
+nessun'altra casa — e la casa è **sua**, cioè compare nella sua pagina e in
+nessun'altra.
+
+### Il tetto
+
+Gli inviti aperti contano come case: senza quella riga si fanno venti codici in
+un minuto stando sotto il tetto, e il giorno dopo ci sono venti case oltre,
+tutte legittime. Chi è al limite vede il tasto spento e il perché scritto sopra,
+invece di scoprirlo da un rifiuto col cliente che aspetta.
 
 ## Cosa vede l'installatore
 

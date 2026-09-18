@@ -2,15 +2,21 @@
  *
  * Quello che si prova, e in quest'ordine di importanza:
  *
- *  1. **che una casa non possa leggere la console.** E' la riga che regge
- *     tutto: le case che questo quadro guarda sono di clienti di qualcun
- *     altro, e la chiave di una casa apre una porta sola — depositare la
- *     propria cartolina — e non fa vedere niente;
- *  2. **che un codice usato non serva a nessun'altra casa**, che e' cosa vuol
+ *  1. **che due installatori non si vedano.** Adesso il quadro e' uno solo e
+ *     sta su una macchina di gdahome, con dentro le case di ditte diverse che
+ *     fra loro si fanno concorrenza: i clienti di Rossi non sono affari di
+ *     Bianchi. E' la riga che regge tutto quanto il resto;
+ *  2. **che una casa non possa leggere nessuna console.** La chiave di una
+ *     casa apre una porta sola — depositare la propria cartolina — e non fa
+ *     vedere niente;
+ *  3. **che un codice usato non serva a nessun'altra casa**, che e' cosa vuol
  *     dire «si brucia»;
- *  3. che quello che una cartolina non dice resti «non si sa» invece di
+ *  4. **che il tetto sia un tetto.** Qui il limite lo impone il server di chi
+ *     lo decide, non un controllo dentro un programma che gira su una macchina
+ *     altrui: quando conta, conta davvero;
+ *  5. che quello che una cartolina non dice resti «non si sa» invece di
  *     diventare una spunta rossa;
- *  4. che la matricola che conta sia quella verificata, non quella scritta nel
+ *  6. che la matricola che conta sia quella verificata, non quella scritta nel
  *     corpo da chi manda.
  */
 
@@ -22,7 +28,7 @@ import { join } from "node:path";
 
 import { alzaIlQuadro } from "../src/index.js";
 
-const CHIAVE_DELLA_CONSOLE = "una-chiave-lunga-abbastanza-per-la-console";
+const CHIAVE_DEL_GESTORE = "una-chiave-lunga-abbastanza-per-il-gestore";
 const UNA = "casa_a3f19c74e05b2d8890fa4c1e6b73d052";
 const ALTRA = "casa_71cd3a6e884b09f25de4a1c7b3608e14";
 
@@ -42,24 +48,52 @@ const CARTOLINA = {
   macchina: { scheda: "ODROID-N2+", cpu: 14, ram: 38, disco: 46, temperatura: 46, discoVita: 11 },
 };
 
-async function banco() {
+async function banco({ ditte = 1, soglia = 0 } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "quadro-"));
   const acceso = await alzaIlQuadro({
     porta: 0,
     cartella,
     livello: "errore",
-    chiaveDellaConsole: CHIAVE_DELLA_CONSOLE,
+    chiaveDelGestore: CHIAVE_DEL_GESTORE,
   });
   const dove = `http://127.0.0.1:${acceso.porta}`;
+
+  /* Lo sgabuzzino: chi tiene il quadro. */
+  const gestore = (via, opzioni = {}) =>
+    fetch(`${dove}/gestore${via}`, {
+      ...opzioni,
+      headers: {
+        authorization: `Bearer ${CHIAVE_DEL_GESTORE}`,
+        "content-type": "application/json",
+        ...(opzioni.headers || {}),
+      },
+    });
+
+  /* Le ditte iscritte prima che la prova cominci. Ognuna riceve la sua chiave
+   * una volta sola, come nella vita. */
+  const conti = [];
+  for (let n = 0; n < ditte; n += 1) {
+    const detto = await (
+      await gestore("/installatori", {
+        method: "POST",
+        body: JSON.stringify({ nome: `Ditta ${n + 1}`, soglia }),
+      })
+    ).json();
+    conti.push(detto);
+  }
+
   return {
     ...acceso,
     dove,
-    /* Il retro: si bussa con la chiave della console. */
-    retro: (via, opzioni = {}) =>
+    gestore,
+    conti,
+    /* Il retro: si bussa con la chiave di **una** ditta, la prima se non si
+     * dice altro. */
+    retro: (via, opzioni = {}, chiave = conti[0]?.chiave) =>
       fetch(`${dove}/console${via}`, {
         ...opzioni,
         headers: {
-          authorization: `Bearer ${CHIAVE_DELLA_CONSOLE}`,
+          authorization: `Bearer ${chiave}`,
           "content-type": "application/json",
           ...(opzioni.headers || {}),
         },
@@ -82,27 +116,36 @@ async function banco() {
   };
 }
 
-const unCodice = async (b, per = "") => {
+const unCodice = async (b, per = "", chiave) => {
   const detto = await (
-    await b.retro("/inviti", { method: "POST", body: JSON.stringify({ per }) })
+    await b.retro("/inviti", { method: "POST", body: JSON.stringify({ per }) }, chiave)
   ).json();
   return detto.codice;
 };
 
-test("una casa non puo' leggere la console, e non e' una svista", async () => {
+test("una casa non puo' leggere nessuna console, e non e' una svista", async () => {
   const b = await banco();
   try {
     const codice = await unCodice(b);
     assert.equal((await b.deposita(UNA, codice)).status, 200);
 
     /* La chiave che le apre il deposito non le apre niente altro: quelle case
-     * sono di clienti di qualcun altro. */
+     * sono di clienti di qualcun altro. Nemmeno lo sgabuzzino. */
     for (const via of ["/case", "/inviti"]) {
       const risposta = await fetch(`${b.dove}/console${via}`, {
         headers: { authorization: `Bearer ${codice}` },
       });
       assert.equal(risposta.status, 401, `«${via}» si e' aperta con la chiave di una casa`);
     }
+    assert.equal(
+      (
+        await fetch(`${b.dove}/gestore/installatori`, {
+          headers: { authorization: `Bearer ${codice}` },
+        })
+      ).status,
+      401,
+      "lo sgabuzzino si e' aperto con la chiave di una casa",
+    );
     /* E senza niente in testa, nemmeno. */
     assert.equal((await fetch(`${b.dove}/console/case`)).status, 401);
   } finally {
@@ -237,7 +280,198 @@ test("la soglia e la salute rispondono a chi non sa cosa sia questo indirizzo", 
     assert.equal(soglia.status, 200);
     assert.match(await soglia.text(), /Non si entra in nessuna casa/);
     const salute = await (await fetch(`${b.dove}/salute`)).json();
-    assert.deepEqual(salute, { vivo: true, case: 0, console: true });
+    assert.deepEqual(salute, { vivo: true, case: 0, installatori: 1, gestore: true });
+  } finally {
+    await b.chiudi();
+  }
+});
+
+/* ─── Due ditte sullo stesso quadro ───────────────────────────────────── */
+
+test("due installatori sullo stesso quadro non si vedono", async () => {
+  /* La riga che regge tutto. Il quadro e' uno solo e sta su una macchina di
+   * gdahome: dentro ci sono le case di ditte che fra loro si fanno
+   * concorrenza, e un elenco che le mescolasse consegnerebbe a ognuna la
+   * clientela dell'altra. */
+  const b = await banco({ ditte: 2 });
+  const [rossi, bianchi] = b.conti;
+  try {
+    await b.deposita(UNA, await unCodice(b, "Rossi", rossi.chiave));
+    await b.deposita(ALTRA, await unCodice(b, "Bianchi", bianchi.chiave));
+
+    const diRossi = await (await b.retro("/case", {}, rossi.chiave)).json();
+    const diBianchi = await (await b.retro("/case", {}, bianchi.chiave)).json();
+
+    assert.deepEqual(
+      diRossi.case.map((una) => una.casa),
+      [UNA],
+      "Rossi vede una casa che non e' sua",
+    );
+    assert.deepEqual(
+      diBianchi.case.map((una) => una.casa),
+      [ALTRA],
+      "Bianchi vede una casa che non e' sua",
+    );
+
+    /* E nemmeno i codici in attesa: un invito aperto dice che una casa sta per
+     * arrivare, e quando arrivera' e' un'informazione commerciale. */
+    await b.retro(
+      "/inviti",
+      { method: "POST", body: JSON.stringify({ per: "il prossimo" }) },
+      rossi.chiave,
+    );
+    const invitiDiBianchi = await (await b.retro("/inviti", {}, bianchi.chiave)).json();
+    assert.equal(invitiDiBianchi.inviti.length, 0);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("la casa di un altro non si rinomina e non si toglie, nemmeno sapendone la matricola", async () => {
+  /* Le matricole non sono segrete — passano in chiaro nelle intestazioni — e
+   * quindi l'appartenenza dev'essere un lucchetto sulla via, non un filtro
+   * sull'elenco. */
+  const b = await banco({ ditte: 2 });
+  const [rossi, bianchi] = b.conti;
+  try {
+    await b.deposita(UNA, await unCodice(b, "Rossi", rossi.chiave));
+    await b.retro(
+      `/casa/${UNA}`,
+      { method: "PUT", body: JSON.stringify({ nome: "Casa Rossi" }) },
+      rossi.chiave,
+    );
+
+    const rinomina = await b.retro(
+      `/casa/${UNA}`,
+      { method: "PUT", body: JSON.stringify({ nome: "adesso e' mia" }) },
+      bianchi.chiave,
+    );
+    assert.equal(rinomina.status, 404, "Bianchi ha rinominato una casa di Rossi");
+
+    const tolta = await b.retro(`/casa/${UNA}`, { method: "DELETE" }, bianchi.chiave);
+    assert.equal((await tolta.json()).tolta, false, "Bianchi ha tolto una casa di Rossi");
+
+    /* E a Rossi e' rimasta com'era. */
+    const sue = await (await b.retro("/case", {}, rossi.chiave)).json();
+    assert.equal(sue.case[0].nome, "Casa Rossi");
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("il tetto e' un tetto: al limite non esce nessun codice nuovo", async () => {
+  /* Qui il limite lo impone il server di chi lo decide, non un controllo dentro
+   * un programma che gira su una macchina altrui. E' la differenza fra un no e
+   * un dosso. */
+  const b = await banco({ ditte: 1, soglia: 1 });
+  try {
+    await b.deposita(UNA, await unCodice(b));
+
+    const ancora = await b.retro("/inviti", { method: "POST", body: JSON.stringify({}) });
+    assert.equal(ancora.status, 409);
+    assert.match((await ancora.json()).errore, /arriva a 1 case/);
+
+    /* Chi tiene il quadro alza il tetto, e il codice esce. */
+    await b.gestore(`/installatore/${b.conti[0].chi}`, {
+      method: "PUT",
+      body: JSON.stringify({ soglia: 5 }),
+    });
+    assert.equal(
+      (await b.retro("/inviti", { method: "POST", body: JSON.stringify({}) })).status,
+      200,
+    );
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("gli inviti aperti contano nel tetto, se no si fa il pieno in un minuto", async () => {
+  /* Senza questa riga si generano venti codici mentre si e' sotto il tetto, e
+   * il giorno dopo ci sono venti case oltre, tutte legittime. */
+  const b = await banco({ ditte: 1, soglia: 2 });
+  try {
+    assert.equal(
+      (await b.retro("/inviti", { method: "POST", body: JSON.stringify({}) })).status,
+      200,
+    );
+    assert.equal(
+      (await b.retro("/inviti", { method: "POST", body: JSON.stringify({}) })).status,
+      200,
+    );
+    assert.equal(
+      (await b.retro("/inviti", { method: "POST", body: JSON.stringify({}) })).status,
+      409,
+    );
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("chi tiene il quadro conta le case di ognuno, e non sa quali sono", async () => {
+  /* Il conto e' suo, l'elenco no: sa che quella ditta ne segue due, non chi
+   * sono. Un elenco di nomi di clienti di ditte terze e' un'altra cosa, e piu'
+   * pesante, che contare licenze. */
+  const b = await banco({ ditte: 2 });
+  const [rossi] = b.conti;
+  try {
+    await b.deposita(UNA, await unCodice(b, "", rossi.chiave));
+    await b.retro(
+      `/casa/${UNA}`,
+      { method: "PUT", body: JSON.stringify({ nome: "Rossi — via Verdi 12" }) },
+      rossi.chiave,
+    );
+
+    const detto = await (await b.gestore("/installatori")).json();
+    const scritto = JSON.stringify(detto);
+
+    const suo = detto.installatori.find((uno) => uno.chi === rossi.chi);
+    assert.equal(suo.case, 1);
+    assert.equal(suo.nome, "Ditta 1");
+    for (const parola of ["Verdi", "Rossi —", UNA]) {
+      assert.ok(!scritto.includes(parola), `«${parola}» e' arrivata a chi tiene il quadro`);
+    }
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("una chiave rifatta apre, e quella di prima no", async () => {
+  const b = await banco({ ditte: 1 });
+  const vecchia = b.conti[0].chiave;
+  try {
+    assert.equal((await b.retro("/case", {}, vecchia)).status, 200);
+    const detto = await (
+      await b.gestore(`/installatore/${b.conti[0].chi}/chiave`, { method: "POST" })
+    ).json();
+    assert.equal((await b.retro("/case", {}, detto.chiave)).status, 200);
+    assert.equal((await b.retro("/case", {}, vecchia)).status, 401);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("un installatore non entra nello sgabuzzino, e non si apre un conto da se'", async () => {
+  const b = await banco({ ditte: 1 });
+  try {
+    const sua = b.conti[0].chiave;
+    assert.equal(
+      (
+        await fetch(`${b.dove}/gestore/installatori`, {
+          headers: { authorization: `Bearer ${sua}` },
+        })
+      ).status,
+      401,
+    );
+    assert.equal(
+      (
+        await fetch(`${b.dove}/gestore/installatori`, {
+          method: "POST",
+          headers: { authorization: `Bearer ${sua}`, "content-type": "application/json" },
+          body: JSON.stringify({ nome: "me ne apro un altro", soglia: 999 }),
+        })
+      ).status,
+      401,
+    );
   } finally {
     await b.chiudi();
   }

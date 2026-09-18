@@ -1653,6 +1653,11 @@
 
       let CASE = [];
       let INVITI = [];
+      /* Chi sono, quante ne ho e qual è il mio tetto. Il tetto si mostra
+       * **prima** di sbatterci: un codice rifiutato al quarantunesimo impianto,
+       * con il cliente che aspetta, è il momento peggiore per scoprire che
+       * esiste un limite. */
+      let IO = { nome: "", soglia: 0, case: 0 };
       /* Le soglie con cui si colorano i metri arrivano dal server insieme alle
        * case: sono le stesse con cui lui decide, e scritte una volta sola. */
       let SOGLIE = { troppoCaldo: 75, discoPieno: 85, discoFinito: 80 };
@@ -1682,11 +1687,25 @@
       class ChiaveNoNo extends Error {}
 
       async function carica() {
-        const [case_, inviti] = await Promise.all([chiedi("/case"), chiedi("/inviti")]);
+        const [case_, inviti, io] = await Promise.all([
+          chiedi("/case"),
+          chiedi("/inviti"),
+          chiedi("/io"),
+        ]);
         CASE = case_.case || [];
         INVITI = inviti.inviti || [];
+        IO = io || IO;
         if (case_.soglie) SOGLIE = case_.soglie;
       }
+
+      /* Quante ne restano prima del tetto, o `null` se tetto non ce n'è.
+       *
+       * **Gli inviti aperti contano**, come li conta il server: se qui si
+       * contassero solo le case, la testata direbbe «due ancora» con un codice
+       * già in attesa, e il secondo verrebbe rifiutato. Un numero che promette
+       * più di quello che il server concede è peggio di nessun numero. */
+      const quanteRestano = () =>
+        IO.soglia > 0 ? Math.max(0, IO.soglia - ((IO.case || CASE.length) + INVITI.length)) : null;
 
       /* Le case appena arrivate sono quelle che non hanno ancora un nome: non
        * sono un elenco a parte, sono una domanda sullo stesso elenco. */
@@ -1790,7 +1809,11 @@
           )
           .join("");
 
-        document.getElementById("chi").textContent = plurale(CASE.length, "impianto", "impianti");
+        const restano = quanteRestano();
+        document.getElementById("chi").textContent =
+          (IO.nome ? `${IO.nome} · ` : "") +
+          plurale(CASE.length, "impianto", "impianti") +
+          (restano === null ? "" : ` · ${restano} ancora`);
         dove.innerHTML =
           schermata === "case"
             ? leCase()
@@ -2767,6 +2790,21 @@
                   </li>
                 </ol>
 
+                ${
+                  quanteRestano() === 0
+                    ? `<p class="minuta" style="margin-top: 16px">
+                         <b>Sei arrivato al tuo tetto di ${IO.soglia} impianti.</b> Per aggiungerne
+                         serve alzarlo: scrivi a chi tiene il quadro. I codici già fatti restano
+                         buoni, e gli impianti che segui continuano a funzionare.
+                       </p>`
+                    : quanteRestano() !== null && quanteRestano() <= 3
+                      ? `<p class="minuta" style="margin-top: 16px">
+                           Ne restano <b>${quanteRestano()}</b> prima del tuo tetto di
+                           ${IO.soglia}. Gli inviti aperti contano.
+                         </p>`
+                      : ""
+                }
+
                 <div class="azioni">
                   <input
                     type="text"
@@ -2775,7 +2813,12 @@
                     placeholder="Per chi è, se ti serve ricordartelo"
                     aria-label="Per chi è questo codice"
                   />
-                  <button type="button" class="tasto forte grande" data-fai>
+                  <button
+                    type="button"
+                    class="tasto forte grande"
+                    data-fai
+                    ${quanteRestano() === 0 ? "disabled" : ""}
+                  >
                     ${primo ? "Fai un altro codice" : "Fai un codice"}
                   </button>
                 </div>
