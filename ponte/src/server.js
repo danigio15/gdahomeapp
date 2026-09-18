@@ -11,6 +11,7 @@
  * filo con un segno gia' avuto. Nient'altro esiste su quella porta.
  */
 
+import { QUADRO_DI_DIFETTO } from "./cartolina.js";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
@@ -775,6 +776,17 @@ async function api({
    * questa pagina deve sapere a chi la sua casa parla, non avere in mano di
    * che farla parlare. L'indirizzo si', che e' la risposta a «a chi?».
    */
+  if (via === "/api/cruscotto" && metodo === "GET") {
+    /* Solo un si' o un no, piu' dove andare. La chiave della flotta qui non
+     * c'e' e non ci deve essere: la chiede quella pagina, e resta nel browser
+     * di chi la digita. */
+    json(risposta, {
+      installatore: Boolean(opzioni?.installatore),
+      dove: opzioni?.installatore ? `${QUADRO_DI_DIFETTO}/console/` : "",
+    });
+    return;
+  }
+
   if (via === "/api/quadro" && metodo === "GET") {
     if (!postino || !postino.acceso) {
       json(risposta, { acceso: false });

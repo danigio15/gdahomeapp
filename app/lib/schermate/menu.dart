@@ -53,6 +53,12 @@ enum Sezione {
    * della console. Chi la voce ce l'ha lo decide il ponte, non l'app — vedi
    * `vociDellaBarra`. */
   console('avvisi', pronta: true),
+  /* Il cruscotto di chi installa. Come la Console non e' una voce come le
+   * altre: compare **solo dove le opzioni del ponte hanno l'interruttore
+   * `installatore` acceso**, cioe' sull'Home Assistant di chi monta impianti e
+   * non in casa di un cliente. Chi la voce ce l'ha lo decide il ponte, non
+   * l'app — vedi `vociDellaBarra`. */
+  cruscotto('macchine', pronta: true),
   aiutanti('mie'),
   zigbee('runtime'),
   automazioni('azioni');
@@ -78,6 +84,7 @@ enum Sezione {
     Sezione.segnalazioni => inLingua(it: 'Segnalazioni', en: 'Reports'),
     Sezione.assistenza => inLingua(it: 'Assistenza', en: 'Support'),
     Sezione.console => inLingua(it: 'Console', en: 'Console'),
+    Sezione.cruscotto => inLingua(it: 'Il mio cruscotto', en: 'My panel'),
     Sezione.aiutanti => inLingua(it: 'Aiutanti', en: 'Helpers'),
     Sezione.zigbee => inLingua(it: 'Zigbee', en: 'Zigbee'),
     Sezione.automazioni => inLingua(it: 'Automazioni', en: 'Automations'),

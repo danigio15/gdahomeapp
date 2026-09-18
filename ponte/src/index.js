@@ -136,6 +136,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     fotoDiCasa,
     segnalazioni,
     chat,
+    installatore: opzioni.installatore,
     spegnimento,
     aggiornamenti,
   });

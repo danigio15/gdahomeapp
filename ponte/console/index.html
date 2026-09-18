@@ -321,6 +321,56 @@
            parola per parola — e ha il tasto per farlo smettere. Una casella in
            una scheda di configurazione non e' un consenso: e' una riga
            incollata. -->
+      <!--
+        IL CRUSCOTTO DI CHI INSTALLA.
+
+        Compare solo dove l'opzione `installatore` e' accesa, cioe' sull'Home
+        Assistant di chi monta impianti — non in casa di un cliente.
+
+        **Non rifà il cruscotto: apre quello che c'è.** Le regole di cosa sia
+        una casa muta, o a posto, o da guardare stanno in un posto solo
+        (`quadro/src/collaudo.js`) e il cruscotto che le disegna è uno. Una
+        copia qui dentro sarebbe un terzo posto dove stanno le stesse cose, e
+        prima o poi i tre direbbero cose diverse della stessa casa.
+
+        **E la chiave della flotta non passa di qui.** La chiede quella pagina
+        e resta nel suo browser: in queste opzioni non c'è, e sul disco di
+        questa casa non finisce.
+      -->
+      <section class="scheda" id="scheda-cruscotto" hidden>
+        <div class="testa-di-scheda">
+          <h2>
+            <svg class="ic" aria-hidden="true"><use href="#ic-quadro" /></svg
+            ><span data-en="Your panel">Il mio cruscotto</span>
+          </h2>
+        </div>
+        <p
+          class="spiegazione"
+          data-en="The systems you installed, all together: which ones are quiet, which need looking at, which are still to be signed off."
+        >
+          Gli impianti che hai montato, tutti insieme: quali tacciono, quali sono da guardare, quali
+          sono ancora da consegnare.
+        </p>
+        <div class="riga-di-tasti">
+          <a
+            id="cruscotto-vai"
+            class="bottone"
+            target="_blank"
+            rel="noopener"
+            data-en="Open the panel"
+            >Apri il cruscotto</a
+          >
+        </div>
+        <p
+          class="minuta"
+          data-en="It opens on gdahome's panel, with your key — which is asked for there and stays in this browser: it is not in this add-on's options and it does not end up on this home's disk. This section is here because this Home Assistant is marked as an installer's one."
+        >
+          Si apre sul quadro di gdahome, con la tua chiave — che la chiede lì e resta in questo
+          browser: nelle opzioni di questo add-on non c'è, e sul disco di questa casa non finisce.
+          Questa sezione c'è perché questo Home Assistant è segnato come quello di chi installa.
+        </p>
+      </section>
+
       <section class="scheda" id="scheda-quadro" hidden>
         <div class="testa-di-scheda">
           <h2>

@@ -192,6 +192,21 @@ options:
   quadro: ""
   # Ogni quanti minuti parte una cartolina. Da 5 a 1440.
   quadro_ogni: 15
+  # Questo Home Assistant e' di chi installa.
+  #
+  # Acceso, nella console di gdahome compare una sezione in piu' — **il tuo
+  # cruscotto** — da cui si aprono gli impianti che hai montato. Nell'app
+  # compare la voce corrispondente.
+  #
+  # **Va acceso sul TUO Home Assistant, non su quello di un cliente.** In casa
+  # di un cliente quella sezione la vedrebbe lui, e chiederebbe la chiave: non
+  # gli si aprirebbe niente senza, ma e' una porta che in casa d'altri non
+  # ha motivo di esserci.
+  #
+  # **La chiave della flotta non si scrive qui.** La chiede la pagina e resta
+  # nel browser di chi la digita: cosi' non finisce sul disco di nessuna casa —
+  # nemmeno della tua, se la apri dal telefono di qualcun altro.
+  installatore: false
   registro: info
 
 schema:
@@ -211,4 +226,5 @@ schema:
   # a chi la sua casa sta parlando.
   quadro: str?
   quadro_ogni: int(5,1440)
+  installatore: bool
   registro: list(debug|info|attenzione|errore)

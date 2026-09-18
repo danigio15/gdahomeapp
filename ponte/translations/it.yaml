@@ -55,6 +55,14 @@ configuration:
     description: >-
       Ogni quanti minuti questa casa scrive al quadro. Conta solo se la
       casella qui sopra e' piena.
+  installatore:
+    name: Questo Home Assistant e' di chi installa
+    description: >-
+      Lascialo spento. Acceso, nella console di gdahome compare una sezione in
+      piu' — il tuo cruscotto — da cui guardi gli impianti che hai montato, e
+      nell'app compare la voce corrispondente. Accendilo sul tuo Home
+      Assistant, non su quello di un cliente. La chiave della flotta non si
+      scrive qui: la chiede la pagina e resta nel browser di chi la digita.
   registro:
     name: Il registro
     description: Quanto scrive nel registro dell'add-on.

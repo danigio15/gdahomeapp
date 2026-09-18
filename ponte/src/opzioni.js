@@ -174,6 +174,12 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
      * E' la stessa che sta fra i segreti del centralino: non si inventa qui,
      * si copia da li'. */
     chiaveDellaConsole: String(process.env.PONTE_CHIAVE_CONSOLE || scritte.chiave_console || ""),
+    /* Questo Home Assistant e' di chi installa: fa comparire una sezione nella
+     * console e una voce nell'app. E' **solo un interruttore** — la chiave
+     * della flotta non passa di qui e non finisce sul disco di nessuna casa. */
+    installatore:
+      String(process.env.PONTE_INSTALLATORE ?? scritte.installatore ?? "") === "true" ||
+      scritte.installatore === true,
     /* Il quadro di chi ha installato l'impianto: dove mandare la cartolina, e
      * con che presentarsi.
      *

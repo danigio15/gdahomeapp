@@ -1665,6 +1665,26 @@
    * Si chiede ogni minuto e non ogni dieci secondi come il resto: la cartolina
    * parte ogni quindici minuti, e chiedere sei volte piu' spesso di quanto
    * cambi vuol dire sei richieste per niente. */
+  /* Il cruscotto di chi installa: la scheda c'e' solo dove l'add-on ha
+   * l'interruttore acceso. Una porta che non si apre e' peggio di una porta che
+   * non c'e', ed e' la stessa regola della voce «Console» nell'app. */
+  function guardaIlCruscotto() {
+    chiedi("api/cruscotto")
+      .then(function (detto) {
+        var scheda = trova("scheda-cruscotto");
+        if (!detto || !detto.installatore || !detto.dove) {
+          scheda.hidden = true;
+          return;
+        }
+        trova("cruscotto-vai").href = detto.dove;
+        scheda.hidden = false;
+      })
+      .catch(function () {
+        /* Un ponte vecchio non conosce quella via: la scheda resta via, ed e'
+         * la risposta giusta. */
+      });
+  }
+
   function quandoEArrivata(esito) {
     if (!esito) return due("non è ancora partita nessuna", "none has gone out yet");
     var quanti = Math.round((Date.now() - esito.quando) / 60000);
@@ -1812,5 +1832,6 @@
   /* E la cartolina al quadro: ogni minuto, che e' gia' quindici volte piu'
    * spesso di quanto parta. */
   guardaIlQuadro();
+  guardaIlCruscotto();
   setInterval(guardaIlQuadro, 60 * 1000);
 })();

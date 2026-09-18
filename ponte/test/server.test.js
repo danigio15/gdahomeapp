@@ -73,7 +73,7 @@ async function casaFinta() {
   };
 }
 
-async function banco({ quadro = null } = {}) {
+async function banco({ quadro = null, installatore = false } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "ponte-server-"));
   const ha = await casaFinta();
   const primaCasa = process.env.PONTE_CASA;
@@ -94,6 +94,7 @@ async function banco({ quadro = null } = {}) {
     console: fileURLToPath(new URL("../console", import.meta.url)),
     quadro,
     quadroOgni: 15,
+    installatore,
   });
 
   const app = `http://127.0.0.1:${avviato.app.address().port}`;
@@ -644,6 +645,38 @@ test("«smetti» ferma il postino e svuota la casella, che se no al riavvio rico
      * quello che conta e' che si sia **provato** a svuotarla, e che l'esito
      * arrivi a chi ha premuto invece di essere ingoiato. */
     assert.equal(esito.spento, true);
+  } finally {
+    await b.spegni();
+  }
+});
+
+/* ─── Il cruscotto di chi installa ────────────────────────────────────── */
+
+test("senza l'interruttore, la scheda del cruscotto non c'è e non dice dove", async () => {
+  /* Una porta che non si apre è peggio di una porta che non c'è: in casa di un
+   * cliente quella sezione non ha motivo di esistere. */
+  const b = await banco();
+  try {
+    const detto = await (await prendi(`${b.consolle}/api/cruscotto`)).json();
+    assert.equal(detto.installatore, false);
+    assert.equal(detto.dove, "");
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("con l'interruttore, dice dove si apre — e nient'altro", async () => {
+  /* La riga che conta: da qui esce un sì e un indirizzo. La chiave della flotta
+   * non passa da queste opzioni e non finisce sul disco di questa casa — la
+   * chiede quella pagina, e resta nel browser di chi la digita. */
+  const b = await banco({ installatore: true });
+  try {
+    const risposta = await prendi(`${b.consolle}/api/cruscotto`);
+    const testo = await risposta.text();
+    const detto = JSON.parse(testo);
+    assert.equal(detto.installatore, true);
+    assert.match(detto.dove, /^https:\/\/.+\/console\/$/);
+    assert.deepEqual(Object.keys(detto).sort(), ["dove", "installatore"]);
   } finally {
     await b.spegni();
   }

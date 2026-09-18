@@ -44,6 +44,14 @@ configuration:
     description: >-
       Every how many minutes this home writes to the panel. It only counts if
       the box above is filled in.
+  installatore:
+    name: This Home Assistant belongs to an installer
+    description: >-
+      Leave it off. On, the gdahome console gains one more section — your
+      panel — where you watch the systems you installed, and the app gains the
+      matching entry. Turn it on in your own Home Assistant, not in a client's.
+      The fleet key is not written here: the page asks for it and it stays in
+      the browser of whoever types it.
   registro:
     name: The log
     description: How much it writes in the add-on's log.
