@@ -323,13 +323,19 @@ finto che fa lo stesso. È l'unico modo di avere prove che girino davvero a ogni
 commit.
 
 ```bash
-npm test                        # ponte, centralino e nuvola: 522 prove
-npm run test:ponte              # il ponte: 421 prove, due secondi
-cd app && flutter test          # l'app: 300 prove, mezzo minuto
+npm test                        # tutto quello che gira su Node: 4662 prove
+npm run test:ponte              # il ponte: 509 prove, due secondi
+npm run test:plancia            # la plancia: 4042 prove, un minuto
+cd app && flutter test          # l'app: 372 prove, mezzo minuto
 
 npm run format:check            # prettier, sui file nostri
 cd app && flutter analyze       # l'analisi di Dart
 ```
+
+Le prove della plancia stanno in `officina/`, dove vive DashboardModern, e per
+un po' `npm test` non le chiamava: nove erano rosse da settimane e nessuno lo
+sapeva. Adesso `npm test` le chiama, e anche le Prove di GitHub hanno il suo
+lavoro.
 
 Per il ponte non serve `npm install`: dipendenze non ne ha. `npm install` serve
 solo per `prettier`.
