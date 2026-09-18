@@ -58,7 +58,9 @@ import { stessoSegreto } from "./segreti.js";
 const CARTOLINA_MASSIMA = 64 * 1024;
 
 const PAGINA = new URL("../console/index.html", import.meta.url);
+const PAGINA_DEL_GESTORE = new URL("../gestore/index.html", import.meta.url);
 let pagina;
+let paginaDelGestore;
 
 export function json(risposta, corpo, stato = 200) {
   const testo = JSON.stringify(corpo);
@@ -221,6 +223,20 @@ export function costruisciIlServer({
 
     /* ─── Lo sgabuzzino: chi tiene il quadro ───────────────────────────── */
 
+    if (via === "/gestore" && metodo === "GET") {
+      risposta.writeHead(301, { location: "/gestore/" });
+      risposta.end();
+      return;
+    }
+
+    /* La pagina si serve **senza chiave**, come quella degli installatori: la
+     * chiave la chiede lei, e senza non mostra niente. Servirla dietro
+     * autenticazione vorrebbe dire non avere nessun posto dove digitarla. */
+    if (via === "/gestore/" && metodo === "GET") {
+      laPagina(risposta, PAGINA_DEL_GESTORE, "gestore");
+      return;
+    }
+
     if (via.startsWith("/gestore/")) {
       if (!gestoreAperto || !stessoSegreto(ilSegno(richiesta), String(chiaveDelGestore))) {
         male(
@@ -368,15 +384,23 @@ export function costruisciIlServer({
   }
 
   async function loSgabuzzino(richiesta, risposta, via, metodo) {
+    /* Il quadro visto da chi lo tiene, sempre nella stessa forma.
+     *
+     * Lo tornano **tutte** le vie che cambiano qualcosa, non solo quella che
+     * legge: una risposta che porta l'elenco ma non i totali fa scrivere zero
+     * alla pagina, e chi ha appena aperto un conto vede «0 impianti in tutto»
+     * con le righe che dicono altro. Una forma sola non lo lascia succedere. */
+    const ilQuadro = () => ({
+      installatori: installatori.elenco((chi) => case_.quante(chi)),
+      case: case_.lista.length,
+      /* Quelle di un conto chiuso: restano, e continuano a depositare. Senza
+       * questo numero il totale non tornerebbe con la somma delle ditte, e non
+       * si capirebbe perche'. */
+      orfane: case_.orfane(installatori.lista.map((uno) => uno.chi)),
+    });
+
     if (via === "/installatori" && metodo === "GET") {
-      json(risposta, {
-        installatori: installatori.elenco((chi) => case_.quante(chi)),
-        case: case_.lista.length,
-        /* Quelle di un conto chiuso: restano, e continuano a depositare. Senza
-         * questo numero il totale non tornerebbe con la somma delle ditte, e
-         * non si capirebbe perche'. */
-        orfane: case_.orfane(installatori.lista.map((uno) => uno.chi)),
-      });
+      json(risposta, ilQuadro());
       return;
     }
 
@@ -386,10 +410,7 @@ export function costruisciIlServer({
       registro.info(`un conto nuovo: ${fatto.chi}`);
       /* La chiave in chiaro esce **una volta sola**, adesso. Poi qui resta solo
        * la sua impronta: se si perde si rifa', non si recupera. */
-      json(risposta, {
-        ...fatto,
-        installatori: installatori.elenco((chi) => case_.quante(chi)),
-      });
+      json(risposta, { ...fatto, ...ilQuadro() });
       return;
     }
 
@@ -402,7 +423,7 @@ export function costruisciIlServer({
       }
       if (detto?.nome !== undefined) installatori.rinomina(uno[1], detto.nome);
       if (detto?.soglia !== undefined) installatori.tetto(uno[1], detto.soglia);
-      json(risposta, { installatori: installatori.elenco((chi) => case_.quante(chi)) });
+      json(risposta, ilQuadro());
       return;
     }
 
@@ -411,10 +432,7 @@ export function costruisciIlServer({
        * nessuno che le guardi, e le loro cartoline continuano ad arrivare. E'
        * voluto — sono impianti che funzionano in casa di qualcuno — e chi
        * gestisce se le ritrova da assegnare se quel conto riapre. */
-      json(risposta, {
-        chiuso: installatori.togli(uno[1]),
-        installatori: installatori.elenco((chi) => case_.quante(chi)),
-      });
+      json(risposta, { chiuso: installatori.togli(uno[1]), ...ilQuadro() });
       return;
     }
 
@@ -443,21 +461,28 @@ export function costruisciIlServer({
     }
   }
 
-  function laPagina(risposta) {
-    try {
-      if (pagina === undefined) pagina = readFileSync(PAGINA);
-    } catch (_errore) {
-      pagina = null;
+  function laPagina(risposta, quale = PAGINA, chiamata = "console") {
+    /* Lette dal disco al primo che le chiede, e poi tenute in memoria. */
+    let foglio = quale === PAGINA ? pagina : paginaDelGestore;
+    if (foglio === undefined) {
+      try {
+        foglio = readFileSync(quale);
+      } catch (_errore) {
+        foglio = null;
+      }
+      if (quale === PAGINA) pagina = foglio;
+      else paginaDelGestore = foglio;
     }
-    if (!pagina) {
-      male(risposta, 404, "la pagina della console non c'e'");
+    if (!foglio) {
+      male(risposta, 404, `la pagina della ${chiamata} non c'e'`);
       return;
     }
+    const pagina_ = foglio;
     risposta.writeHead(200, {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "no-store",
     });
-    risposta.end(pagina);
+    risposta.end(pagina_);
   }
 }
 

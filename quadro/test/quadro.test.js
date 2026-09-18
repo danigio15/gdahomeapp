@@ -591,3 +591,50 @@ test("una ditta non può cambiarsi il nome, e quindi non può spacciarsi per un'
     await b.chiudi();
   }
 });
+
+test("la pagina del gestore si serve senza chiave, e le sue vie no", async () => {
+  /* Servirla dietro autenticazione vorrebbe dire non avere nessun posto dove
+   * digitare la chiave. La pagina non mostra niente finché non ce l'ha. */
+  const b = await banco({ ditte: 0 });
+  try {
+    const pagina = await fetch(`${b.dove}/gestore/`);
+    assert.equal(pagina.status, 200);
+    assert.match(await pagina.text(), /chi lo tiene/);
+
+    /* Senza barra ci si viene mandati, se no le vie in relativo si perdono. */
+    const senzaBarra = await fetch(`${b.dove}/gestore`, { redirect: "manual" });
+    assert.equal(senzaBarra.status, 301);
+
+    /* Ma i dati no. */
+    assert.equal((await fetch(`${b.dove}/gestore/installatori`)).status, 401);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("ogni risposta dello sgabuzzino porta i totali, non solo l'elenco", async () => {
+  /* Una risposta con l'elenco ma senza i totali fa scrivere zero alla pagina:
+   * chi ha appena aperto un conto vede «0 impianti in tutto» con le righe che
+   * dicono altro. È successo, e questa prova è perché non risucceda. */
+  const b = await banco({ ditte: 1 });
+  try {
+    await b.deposita(UNA, await unCodice(b));
+
+    const dopoOgnuna = [
+      await b.gestore("/installatori", { method: "POST", body: JSON.stringify({ nome: "Nuova" }) }),
+      await b.gestore(`/installatore/${b.conti[0].chi}`, {
+        method: "PUT",
+        body: JSON.stringify({ soglia: 9 }),
+      }),
+      await b.gestore("/installatori"),
+    ];
+    for (const risposta of dopoOgnuna) {
+      const detto = await risposta.json();
+      assert.equal(detto.case, 1, "i totali mancano da una risposta");
+      assert.equal(typeof detto.orfane, "number");
+      assert.ok(Array.isArray(detto.installatori));
+    }
+  } finally {
+    await b.chiudi();
+  }
+});

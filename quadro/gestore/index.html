@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Il quadro · chi lo tiene</title>
+    <!--
+      LO SGABUZZINO: la pagina di chi tiene il quadro.
+
+      Non è la console degli installatori — quella sta in `../console/` e mostra
+      le case. Qui non si vede nessuna casa: si aprono i conti, si mettono i
+      tetti, e si contano gli impianti di ognuno.
+
+      QUANTE, NON QUALI.
+
+      È la regola di questa pagina, e non è una limitazione tecnica: sarebbe
+      facilissimo mostrare l'elenco. Un elenco dei clienti di una ditta terza è
+      un'altra cosa, e più pesante, che contare licenze — e chi tiene il quadro
+      non ne ha bisogno per fare il suo mestiere. C'è una prova che controlla
+      che in questa risposta non finiscano nomi di case.
+
+      GLI STATI PORTANO UNA FORMA, UNA PAROLA E UN COLORE.
+
+      Misurato: l'ambra `#b45309` e il rosso `#be123c` di questo progetto stanno
+      a ΔE 5.7 per chi non distingue il rosso, e a 11.5 anche a vista piena —
+      sotto la soglia oltre cui due colori si dicono diversi. Quindi il colore
+      non basta mai da solo, e ogni stato porta anche ● ▲ ■ e una parola.
+
+      LA CHIAVE SI VEDE UNA VOLTA SOLA.
+
+      Quando si apre un conto, la chiave esce in chiaro adesso e mai più: qui
+      resta solo la sua impronta. Per questo il momento in cui compare è la cosa
+      più grossa della pagina, e ci sta scritto sopra che non tornerà.
+    -->
+    <style>
+      /* I colori sono quelli di `sito/stile.css` e della console degli
+       * installatori: questa pagina e quella sono lo stesso prodotto, viste da
+       * due parti diverse. */
+      :root {
+        --notte: #0f172a;
+        --lieve: #64748b;
+        --fioco: #94a3b8;
+
+        --fondo: #f0f4f8;
+        --carta: #ffffff;
+        --carta-alta: #f8fafc;
+        --bordo: #e2e8f0;
+        --bordo-tenue: #eef2f7;
+
+        --azzurro: #0ea5e9;
+        --azzurro-scuro: #0284c7;
+        --bene: #15803d;
+        --ambra: #b45309;
+        --male: #be123c;
+
+        --alone-azzurro: #e0f2fe;
+        --alone-bene: #dcfce7;
+        --alone-ambra: #fef3c7;
+        --alone-male: #ffe4e6;
+
+        --raggio: 20px;
+        --raggio-piccolo: 14px;
+        --ombra: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 23, 42, 0.16);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-tema="chiaro"]) {
+          --notte: #e8eef6;
+          --lieve: #93a3b8;
+          --fioco: #64748b;
+          --fondo: #0b1220;
+          --carta: #131c2b;
+          --carta-alta: #182233;
+          --bordo: #24314a;
+          --bordo-tenue: #1c2537;
+          --alone-azzurro: #0c2f44;
+          --alone-bene: #0d2e1c;
+          --alone-ambra: #322108;
+          --alone-male: #3a1020;
+          --bene: #4ade80;
+          --ambra: #fbbf24;
+          --male: #fb7185;
+          --ombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--fondo);
+        color: var(--notte);
+        font:
+          15px/1.55 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      header {
+        padding: 26px 24px 0;
+      }
+
+      .testata {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .marchio {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+      }
+
+      /* Il bollo: lo stesso della console degli installatori, così le due
+       * pagine si riconoscono come una cosa sola. */
+      .bollo {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        background: linear-gradient(150deg, var(--azzurro), var(--azzurro-scuro));
+        display: grid;
+        place-items: center;
+        gap: 3px;
+        grid-template-columns: 1fr 1fr;
+        padding: 9px;
+        flex: none;
+      }
+
+      .bollo i {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 2px;
+      }
+
+      .nomi b {
+        display: block;
+        font-size: 1.08rem;
+        letter-spacing: -0.01em;
+      }
+
+      .nomi span {
+        display: block;
+        font-size: 0.83rem;
+        color: var(--lieve);
+      }
+
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 22px 24px 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .riquadro {
+        background: var(--carta);
+        border-radius: var(--raggio);
+        box-shadow: var(--ombra);
+        padding: 22px 24px;
+      }
+
+      .capoRiquadro {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      h3 {
+        margin: 0;
+        font-size: 0.74rem;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--lieve);
+        font-weight: 700;
+      }
+
+      .conta {
+        font-size: 0.83rem;
+        color: var(--fioco);
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ─── Le tessere in cima ────────────────────────────────────────── */
+
+      .tessere {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 14px;
+      }
+
+      .tessera {
+        background: var(--carta);
+        border-radius: var(--raggio-piccolo);
+        box-shadow: var(--ombra);
+        padding: 15px 18px;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+      }
+
+      .tessera .segno {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        font-size: 0.72rem;
+        flex: none;
+      }
+
+      .tessera b {
+        display: block;
+        font-size: 1.5rem;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
+      }
+
+      .tessera span {
+        font-size: 0.8rem;
+        color: var(--lieve);
+      }
+
+      /* ─── L'elenco delle ditte ──────────────────────────────────────── */
+
+      ul.ditte {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      ul.ditte > li {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: center;
+        gap: 16px;
+        padding: 15px 0 15px 15px;
+        border-top: 1px solid var(--bordo-tenue);
+        position: relative;
+      }
+
+      ul.ditte > li:first-child {
+        border-top: 0;
+      }
+
+      /* La barretta colorata a sinistra: è così la plancia, è così l'elenco
+       * delle case. Non porta informazione da sola — accanto c'è la pastiglia
+       * con la forma e la parola — ma fa scorrere l'occhio. */
+      ul.ditte > li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 15px;
+        bottom: 15px;
+        width: 4px;
+        border-radius: 4px;
+        background: var(--bordo);
+      }
+
+      li.bene::before {
+        background: var(--bene);
+      }
+      li.ambra::before {
+        background: var(--ambra);
+      }
+      li.male::before {
+        background: var(--male);
+      }
+
+      .chi b {
+        display: block;
+        font-size: 1rem;
+        letter-spacing: -0.01em;
+      }
+
+      .chi span {
+        display: block;
+        font-size: 0.81rem;
+        color: var(--lieve);
+        margin-top: 2px;
+      }
+
+      .senzaNome {
+        color: var(--fioco);
+        font-style: italic;
+      }
+
+      /* Il metro delle case sul tetto. Sottile e discreto: è un'indicazione, e
+       * il numero esatto sta scritto sopra. */
+      .quante {
+        min-width: 132px;
+        text-align: right;
+      }
+
+      .quante b {
+        font-size: 0.95rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .quante .metro {
+        height: 5px;
+        border-radius: 5px;
+        background: var(--bordo-tenue);
+        margin-top: 7px;
+        overflow: hidden;
+      }
+
+      .quante .metro i {
+        display: block;
+        height: 100%;
+        border-radius: 5px;
+        background: var(--azzurro);
+      }
+
+      .quante.pieno .metro i {
+        background: var(--ambra);
+      }
+
+      .pastiglia {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 11px;
+        border-radius: 999px;
+        font-size: 0.79rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .pastiglia.bene {
+        background: var(--alone-bene);
+        color: var(--bene);
+      }
+      .pastiglia.ambra {
+        background: var(--alone-ambra);
+        color: var(--ambra);
+      }
+      .pastiglia.male {
+        background: var(--alone-male);
+        color: var(--male);
+      }
+      .pastiglia.quieta {
+        background: var(--carta-alta);
+        color: var(--lieve);
+      }
+
+      /* ─── Tasti e caselle ───────────────────────────────────────────── */
+
+      .azioni {
+        display: flex;
+        gap: 9px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      input[type="text"],
+      input[type="number"] {
+        font: inherit;
+        padding: 9px 13px;
+        border-radius: var(--raggio-piccolo);
+        border: 1px solid var(--bordo);
+        background: var(--carta);
+        color: var(--notte);
+        min-width: 0;
+      }
+
+      input[type="text"] {
+        flex: 1 1 210px;
+      }
+
+      input[type="number"] {
+        width: 104px;
+      }
+
+      input:focus-visible,
+      button:focus-visible {
+        outline: 2px solid var(--azzurro);
+        outline-offset: 2px;
+      }
+
+      button {
+        font: inherit;
+        font-weight: 600;
+        padding: 9px 15px;
+        border-radius: var(--raggio-piccolo);
+        border: 1px solid var(--bordo);
+        background: var(--carta);
+        color: var(--notte);
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: var(--carta-alta);
+      }
+
+      button.forte {
+        background: var(--azzurro);
+        border-color: var(--azzurro);
+        color: #fff;
+      }
+
+      button.forte:hover {
+        background: var(--azzurro-scuro);
+      }
+
+      button.male {
+        color: var(--male);
+        border-color: var(--alone-male);
+      }
+
+      button.piccolo {
+        padding: 6px 11px;
+        font-size: 0.84rem;
+      }
+
+      /* ─── La chiave, che si vede una volta sola ─────────────────────── */
+
+      .chiaveNuova {
+        margin-top: 16px;
+        border-radius: var(--raggio-piccolo);
+        background: var(--alone-azzurro);
+        padding: 18px 20px;
+      }
+
+      .chiaveNuova p {
+        margin: 0 0 10px;
+        font-size: 0.88rem;
+      }
+
+      .chiaveNuova .valore {
+        font:
+          600 1.05rem/1.5 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        word-break: break-all;
+        background: var(--carta);
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+        user-select: all;
+      }
+
+      .minuta {
+        font-size: 0.85rem;
+        color: var(--lieve);
+        margin: 0;
+      }
+
+      .avvertenza {
+        display: flex;
+        gap: 11px;
+        align-items: flex-start;
+        background: var(--alone-ambra);
+        border-radius: var(--raggio-piccolo);
+        padding: 13px 15px;
+        font-size: 0.86rem;
+        margin-top: 15px;
+      }
+
+      .avvertenza .gettone {
+        flex: none;
+        width: 21px;
+        height: 21px;
+        border-radius: 50%;
+        background: var(--ambra);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 0.74rem;
+        font-weight: 700;
+      }
+
+      .vuoto {
+        text-align: center;
+        padding: 26px 0 8px;
+        color: var(--lieve);
+      }
+
+      @media (max-width: 720px) {
+        ul.ditte > li {
+          grid-template-columns: 1fr;
+          gap: 11px;
+        }
+        .quante {
+          text-align: left;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="testata">
+        <div class="marchio">
+          <span class="bollo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span class="nomi">
+            <b>Il quadro</b>
+            <span id="sottotitolo">chi lo tiene</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <main id="dove"></main>
+
+    <script>
+      /* ───────────────────────────────────────────────────────────────────
+       * Questa pagina parla con `/gestore/…` e con nient'altro.
+       *
+       * Non chiede mai `/console/…`: quelle vie vogliono la chiave di una
+       * ditta, e chi tiene il quadro non ce l'ha — né deve averla. Le case non
+       * si vedono da qui, e non è una cosa da aggiungere un giorno: è la riga
+       * per cui un installatore può fidarsi a metterci dentro i suoi clienti.
+       * ─────────────────────────────────────────────────────────────────── */
+
+      const DOVE_STA_LA_CHIAVE = "gdahome.quadro.gestore";
+      let chiave = "";
+      try {
+        chiave = localStorage.getItem(DOVE_STA_LA_CHIAVE) || "";
+      } catch (_niente) {
+        /* Finestra anonima: si richiede a ogni apertura. */
+      }
+
+      let DITTE = [];
+      let CASE = 0;
+      let ORFANE = 0;
+      /* La chiave appena fatta, che si vede una volta sola e poi sparisce
+       * ricaricando. Non finisce in nessun archivio, nemmeno del browser. */
+      let APPENA_FATTA = null;
+
+      const dove = document.getElementById("dove");
+      const testo = (s) =>
+        String(s ?? "").replace(
+          /[&<>"']/g,
+          (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+        );
+
+      const plurale = (quanti, uno, molti) => `${quanti} ${quanti === 1 ? uno : molti}`;
+
+      class ChiaveNoNo extends Error {}
+
+      async function chiedi(via, opzioni = {}) {
+        /* In relativo: da `/gestore/` porta dove deve, e funziona anche dietro
+         * un proxy che monta il quadro sotto un prefisso. */
+        const risposta = await fetch(via.replace(/^\//, ""), {
+          ...opzioni,
+          headers: {
+            authorization: `Bearer ${chiave}`,
+            "content-type": "application/json",
+            ...(opzioni.headers || {}),
+          },
+        });
+        if (risposta.status === 401) throw new ChiaveNoNo();
+        const corpo = await risposta.json().catch(() => ({}));
+        if (!risposta.ok) throw new Error(corpo.errore || "non ha funzionato");
+        return corpo;
+      }
+
+      function prendi(detto) {
+        DITTE = detto.installatori || [];
+        CASE = detto.case || 0;
+        ORFANE = detto.orfane || 0;
+      }
+
+      /* Da quanto non si fa vedere, in parole. */
+      function daQuanto(quando) {
+        if (!quando) return "mai";
+        const minuti = Math.round((Date.now() - quando) / 60000);
+        if (minuti < 60) return "oggi";
+        const ore = Math.round(minuti / 60);
+        if (ore < 24) return "oggi";
+        const giorni = Math.round(ore / 24);
+        return `${giorni} ${giorni === 1 ? "giorno" : "giorni"} fa`;
+      }
+
+      /* Lo stato di una ditta: una forma, una parola e un colore. Mai il colore
+       * da solo — l'ambra e il rosso di questo progetto stanno a ΔE 5.7 per chi
+       * non distingue il rosso. */
+      function loStato(una) {
+        if (una.pieno) return { come: "ambra", forma: "▲", parola: "al tetto" };
+        if (!una.vistoIl) return { come: "quieta", forma: "◇", parola: "mai entrato" };
+        const giorni = (Date.now() - una.vistoIl) / 86400000;
+        if (giorni > 30) return { come: "quieta", forma: "■", parola: "non lo apre" };
+        return { come: "bene", forma: "●", parola: "a posto" };
+      }
+
+      function disegna() {
+        const alTetto = DITTE.filter((una) => una.pieno).length;
+        document.getElementById("sottotitolo").textContent =
+          `chi lo tiene · ${plurale(DITTE.length, "installatore", "installatori")}`;
+
+        dove.innerHTML = `
+          <div class="tessere">
+            <div class="tessera">
+              <span class="segno" style="background: var(--alone-azzurro); color: var(--azzurro-scuro)">●</span>
+              <span><b>${DITTE.length}</b><span>installatori</span></span>
+            </div>
+            <div class="tessera">
+              <span class="segno" style="background: var(--alone-azzurro); color: var(--azzurro-scuro)">◆</span>
+              <span><b>${CASE}</b><span>impianti in tutto</span></span>
+            </div>
+            <div class="tessera">
+              <span class="segno" style="background: var(--alone-ambra); color: var(--ambra)">▲</span>
+              <span><b>${alTetto}</b><span>al tetto</span></span>
+            </div>
+            <div class="tessera">
+              <span class="segno" style="background: ${ORFANE ? "var(--alone-ambra); color: var(--ambra)" : "var(--carta-alta); color: var(--fioco)"}">◇</span>
+              <span><b>${ORFANE}</b><span>senza più nessuno</span></span>
+            </div>
+          </div>
+
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>Iscrivi un installatore</h3>
+            </div>
+            <p class="minuta" style="margin-bottom: 14px">
+              Gli si apre un conto e gli si dà una chiave: da quel momento apre
+              <span style="font-family: ui-monospace, monospace">/console/</span> e vede i suoi
+              impianti. Non deve accendere niente e non deve comprare nessun dominio.
+            </p>
+            <div class="azioni">
+              <input type="text" id="nome" maxlength="80" placeholder="Come si chiama la ditta" aria-label="Il nome della ditta" />
+              <input type="number" id="tetto" min="0" max="9999" placeholder="Tetto" value="40" aria-label="Quante case al massimo" />
+              <button type="button" class="forte" data-iscrivi>Apri il conto</button>
+            </div>
+            <p class="minuta" style="margin-top: 10px">
+              Il tetto è quante case può seguire. <b>Zero</b> vuol dire senza limite.
+            </p>
+            ${
+              APPENA_FATTA
+                ? `<div class="chiaveNuova">
+                     <p><b>La chiave di ${testo(APPENA_FATTA.nome)}.</b> Consegnagliela adesso: qui
+                     resta solo la sua impronta, e questa riga non si rivede più.</p>
+                     <div class="valore">${testo(APPENA_FATTA.chiave)}</div>
+                     <div class="azioni">
+                       <button type="button" data-copia="${testo(APPENA_FATTA.chiave)}">Copia</button>
+                       <button type="button" class="piccolo" data-chiudi-chiave>Ho finito</button>
+                     </div>
+                   </div>`
+                : ""
+            }
+          </section>
+
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>Gli installatori</h3>
+              <span class="conta">${plurale(CASE, "impianto", "impianti")} in tutto</span>
+            </div>
+            ${
+              DITTE.length
+                ? `<ul class="ditte">${DITTE.map(laDitta).join("")}</ul>`
+                : `<p class="vuoto">Nessuno, per adesso. Il primo si iscrive qui sopra.</p>`
+            }
+            ${
+              ORFANE
+                ? `<div class="avvertenza">
+                     <span class="gettone" aria-hidden="true">!</span>
+                     <span>
+                       <b>${plurale(ORFANE, "impianto", "impianti")} senza più nessuno che li guardi.</b>
+                       Sono case di conti chiusi: continuano a mandare le loro cartoline — sono
+                       impianti che funzionano in casa di qualcuno — e si ritrovano il giorno che
+                       quel conto riapre.
+                     </span>
+                   </div>`
+                : ""
+            }
+          </section>
+
+          <section class="riquadro">
+            <div class="capoRiquadro"><h3>Cosa non si vede da qui</h3></div>
+            <p class="minuta">
+              <b>Quante case ha ognuno, non quali.</b> Non è una cosa che manca: sarebbe
+              facilissimo mostrare l'elenco. Un elenco dei clienti di una ditta terza è un'altra
+              cosa — e più pesante — che contare licenze, e per tenere il quadro non serve. È anche
+              la riga per cui un installatore può fidarsi a metterci dentro i suoi impianti.
+            </p>
+          </section>
+        `;
+
+        dove.querySelector("[data-iscrivi]")?.addEventListener("click", iscrivi);
+        dove.querySelector("[data-chiudi-chiave]")?.addEventListener("click", () => {
+          APPENA_FATTA = null;
+          disegna();
+        });
+        dove.querySelectorAll("[data-copia]").forEach((tasto) => {
+          tasto.onclick = async () => {
+            try {
+              await navigator.clipboard.writeText(tasto.dataset.copia);
+              tasto.textContent = "Copiata";
+            } catch (_niente) {
+              tasto.textContent = "Selezionala a mano";
+            }
+          };
+        });
+        dove.querySelectorAll("[data-tetto]").forEach((tasto) => {
+          tasto.onclick = () => cambiaIlTetto(tasto.dataset.tetto);
+        });
+        dove.querySelectorAll("[data-rifai]").forEach((tasto) => {
+          tasto.onclick = () => rifaiLaChiave(tasto.dataset.rifai);
+        });
+        dove.querySelectorAll("[data-chiudi]").forEach((tasto) => {
+          tasto.onclick = () => chiudiIlConto(tasto.dataset.chiudi, tasto);
+        });
+      }
+
+      function laDitta(una) {
+        const stato = loStato(una);
+        const quota = una.soglia > 0 ? Math.min(100, Math.round((una.case / una.soglia) * 100)) : 0;
+        return `
+          <li class="${stato.come === "quieta" ? "" : stato.come}">
+            <span class="chi">
+              <b class="${una.nome ? "" : "senzaNome"}">${testo(una.nome || "senza nome")}</b>
+              <span>ultima volta qui: ${testo(daQuanto(una.vistoIl))}</span>
+            </span>
+            <span class="quante ${una.pieno ? "pieno" : ""}">
+              <b>${una.case}${una.soglia > 0 ? ` <span style="color: var(--fioco)">/ ${una.soglia}</span>` : ""}</b>
+              ${una.soglia > 0 ? `<span class="metro"><i style="width: ${quota}%"></i></span>` : `<span class="minuta" style="display:block;margin-top:4px">senza tetto</span>`}
+            </span>
+            <span class="azioni">
+              <span class="pastiglia ${stato.come}">
+                <span aria-hidden="true">${stato.forma}</span>${testo(stato.parola)}
+              </span>
+              <button type="button" class="piccolo" data-tetto="${testo(una.chi)}">Tetto</button>
+              <button type="button" class="piccolo" data-rifai="${testo(una.chi)}">Nuova chiave</button>
+              <button type="button" class="piccolo male" data-chiudi="${testo(una.chi)}">Chiudi</button>
+            </span>
+          </li>`;
+      }
+
+      async function iscrivi() {
+        const nome = document.getElementById("nome").value.trim();
+        const soglia = Number(document.getElementById("tetto").value) || 0;
+        if (!nome) {
+          document.getElementById("nome").focus();
+          return;
+        }
+        const detto = await chiedi("/installatori", {
+          method: "POST",
+          body: JSON.stringify({ nome, soglia }),
+        });
+        prendi(detto);
+        APPENA_FATTA = { nome, chiave: detto.chiave };
+        disegna();
+      }
+
+      async function cambiaIlTetto(chi) {
+        const una = DITTE.find((altra) => altra.chi === chi);
+        const detto = prompt(
+          `Quante case può seguire ${una?.nome || "questa ditta"}? Zero = senza tetto.`,
+          String(una?.soglia ?? 0),
+        );
+        if (detto === null) return;
+        prendi(
+          await chiedi(`/installatore/${chi}`, {
+            method: "PUT",
+            body: JSON.stringify({ soglia: Number(detto) || 0 }),
+          }),
+        );
+        disegna();
+      }
+
+      async function rifaiLaChiave(chi) {
+        const una = DITTE.find((altra) => altra.chi === chi);
+        if (
+          !confirm(
+            `Fare una chiave nuova per ${una?.nome || "questa ditta"}?\n\nQuella di prima smette di aprire subito.`,
+          )
+        )
+          return;
+        const detto = await chiedi(`/installatore/${chi}/chiave`, { method: "POST" });
+        APPENA_FATTA = { nome: una?.nome || "questa ditta", chiave: detto.chiave };
+        disegna();
+      }
+
+      /* Chiudere un conto si conferma in due tempi, come «non seguirla più»
+       * nella console degli installatori: è la cosa che toglie a qualcuno
+       * l'accesso ai suoi impianti, e un clic solo è poco. */
+      async function chiudiIlConto(chi, tasto) {
+        const una = DITTE.find((altra) => altra.chi === chi);
+        if (tasto.dataset.sicuro !== "sì") {
+          tasto.dataset.sicuro = "sì";
+          tasto.textContent = "Sicuro?";
+          setTimeout(() => {
+            tasto.dataset.sicuro = "";
+            tasto.textContent = "Chiudi";
+          }, 4000);
+          return;
+        }
+        prendi(await chiedi(`/installatore/${chi}`, { method: "DELETE" }));
+        disegna();
+      }
+
+      function chiedimiLaChiave(perche) {
+        dove.innerHTML = `
+          <section class="riquadro" style="max-width: 460px; margin: 40px auto">
+            <div class="capoRiquadro"><h3>La chiave dello sgabuzzino</h3></div>
+            <p class="minuta" style="margin-bottom: 14px">
+              ${testo(perche || "È quella con cui hai acceso il quadro: da qui si aprono i conti degli installatori.")}
+            </p>
+            <div class="azioni">
+              <input type="text" id="la-chiave" placeholder="Incollala qui" aria-label="La chiave dello sgabuzzino" />
+              <button type="button" class="forte" id="entra">Entra</button>
+            </div>
+          </section>`;
+        const entra = () => {
+          chiave = document.getElementById("la-chiave").value.trim();
+          try {
+            localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+          } catch (_niente) {
+            /* Si resta con quella in memoria, e si richiede alla prossima. */
+          }
+          apri();
+        };
+        document.getElementById("entra").onclick = entra;
+        document.getElementById("la-chiave").onkeydown = (e) => {
+          if (e.key === "Enter") entra();
+        };
+        document.getElementById("la-chiave").focus();
+      }
+
+      async function apri() {
+        if (!chiave) {
+          chiedimiLaChiave();
+          return;
+        }
+        try {
+          prendi(await chiedi("/installatori"));
+          disegna();
+        } catch (male) {
+          if (male instanceof ChiaveNoNo) {
+            chiedimiLaChiave("Quella chiave non apre. Riprova.");
+            return;
+          }
+          dove.innerHTML = `<section class="riquadro"><p class="minuta">${testo(male.message)}</p></section>`;
+        }
+      }
+
+      apri();
+      /* Un rinfresco lento: questa pagina si guarda ogni tanto, non si fissa. */
+      setInterval(() => {
+        if (chiave && !APPENA_FATTA) void apri();
+      }, 60000);
+    </script>
+  </body>
+</html>
