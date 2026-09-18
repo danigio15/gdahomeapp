@@ -113077,9 +113077,9 @@ else{k=a6.rx
 k=m.bm(k==null?a6.k3:k)}k=A.ac(q,a5,a5,a5,a5,k,a5,a5)
 q=a7.w
 j=A.ac(A.u("This app","Questa app"),a5,a5,a5,a5,q,a5,a5)
-i=n.$2(A.u("Version","Versione"),"1.4.32 (1043211)")
+i=n.$2(A.u("Version","Versione"),"1.4.32 (1043212)")
 h=A.u("Package","Pacchetto")
-h=n.$2(h,"43-c7fbefe")
+h=n.$2(h,"44-65aeb6c")
 g=A.u("Relay","Centralino")
 f=$.ain()
 f=f==null?a5:f.a
@@ -113411,7 +113411,7 @@ $S:11}
 A.FB.prototype={
 K(a){var s,r,q=null,p=A.K(a).ax,o=$.ain(),n=o==null?q:o.a
 if(n==null)n=A.u("no relay","nessun centralino")
-o=this.d?"gdahome 1.4.32 (1043211) \xb7 "+n:"gdahome 1.4.32 (1043211)"
+o=this.d?"gdahome 1.4.32 (1043212) \xb7 "+n:"gdahome 1.4.32 (1043212)"
 s=A.K(a).ok.Q
 if(s==null)s=q
 else{r=p.rx
@@ -113478,7 +113478,7 @@ case 1:return A.o(q,r)}})
 return A.p($async$yr,r)},
 ajI(){var s,r,q=null,p=this.a.c,o=t.N
 o=A.x(o,o)
-o.m(0,"app","43-c7fbefe")
+o.m(0,"app","44-65aeb6c")
 o.m(0,"sistema","web")
 s=p.Q
 s=s==null?q:s.b
