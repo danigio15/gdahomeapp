@@ -5,6 +5,34 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.15
+
+**La barra delle sezioni su un tablet: i disegni alla loro misura vera, e il
+nome che si legge.**
+
+Le misure di serie sono quelle di un telefono tenuto in mano: il disegno di
+una sezione sta in ventiquattro punti e il suo nome è scritto in **nove**.
+Su un tablet in orizzontale, a mezzo metro dagli occhi, quei nove punti sono
+una riga grigia che si indovina.
+
+I disegni delle sezioni sono SVG col riquadro «0 0 32»: portarli a
+trentadue non è ingrandirli, è **smetterli di rimpicciolire** — una figura
+fitta schiacciata a tre quarti perde le linee sottili, e si vede. Il nome
+passa da nove a dodici punti.
+
+E la spaziatura si stringe per fare posto: i fianchi di ogni sezione da
+quattordici a dodici punti, lo spazio fra una e l'altra da dodici a dieci.
+Il conto torna: su un tablet largo milleottanta le sezioni ci stanno tutte
+come prima, senza che la barra cominci a scorrere. Insieme a loro cresce lo
+spazio riservato in fondo alla pagina — sedici punti, quanto è cresciuta la
+barra — se no la barra più alta si mangiava proprio la distanza che serviva
+a non coprire l'ultima tessera.
+
+**Sul telefono non cambia niente, nemmeno girato.** La regola vuole almeno
+settecentosessantotto punti di larghezza **e** seicento di altezza: un
+telefono in orizzontale ha la prima misura e non la seconda, e su uno
+schermo alto trecentonovanta una barra più alta si mangia le tessere.
+
 ## 1.4.32.14
 
 **La pastiglia dei rifiuti non si scrive due volte.**

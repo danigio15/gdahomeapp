@@ -21,6 +21,7 @@
  *     node guarda.mjs            fotografa e basta
  *     node guarda.mjs --resta    resta acceso, per guardarci dentro col browser
  *     node guarda.mjs --largo    su uno schermo da computer, com'e' da browser
+ *     node guarda.mjs --tavoletta  su un tablet tenuto in orizzontale
  *     node guarda.mjs --scuro    col tema scuro
  */
 
@@ -63,6 +64,19 @@ const SCURO = process.argv.includes("--scuro");
  * per non coprire quelle del telefono. */
 const LARGO = process.argv.includes("--largo");
 
+/* `--tavoletta`: un tablet **girato**, che e' la terza faccia.
+ *
+ * Il telefono in verticale e il computer in orizzontale li si guardava gia'.
+ * Un tablet tenuto in orizzontale non e' ne' uno ne' l'altro: ha la larghezza
+ * di un computer e l'altezza di mezzo telefono, e quello che casca e' sempre
+ * la stessa cosa — la roba che misura dall'alto. La barra in fondo alla
+ * plancia si mangia le tessere, la testa col meteo si prende un terzo di
+ * schermo, il menu dell'app non ci sta in altezza.
+ *
+ * Mille e centottanta per ottocentoventi: e' un iPad girato, ed e' anche la
+ * misura in cui la barra della plancia ci sta ancora tutta senza scorrere. */
+const TAVOLETTA = process.argv.includes("--tavoletta");
+
 /* In che lingua gira l'app, e come si chiamano le cose in quella lingua.
  *
  * Il collaudo preme quello che leggerebbe una persona: se l'app parla inglese,
@@ -80,7 +94,7 @@ const due = (it, en) => (INGLESE ? en : it);
  * guarda deve fare in tempo a leggere. */
 const FILMA = process.argv.includes("--filma");
 /* Una cartella per faccia: telefono, telefono scuro, computer. */
-const FOTO = join(QUI, "foto", LARGO ? "largo" : SCURO ? "scuro" : "");
+const FOTO = join(QUI, "foto", TAVOLETTA ? "tavoletta" : LARGO ? "largo" : SCURO ? "scuro" : "");
 /* Dove il servitore serve la plancia. Fissa, perche' l'app la deve sapere
  * quando la si costruisce: `--dart-define=PLANCIA_URL=http://127.0.0.1:8765`. */
 const PORTA_DEL_SERVITORE = Number(process.env.PORTA_DEL_SERVITORE || 8765);
@@ -480,7 +494,11 @@ async function main() {
   daSpegnere.push(() => browser.close());
   const contesto = await browser.newContext({
     /* Un telefono di quelli di adesso, o un computer. */
-    viewport: LARGO ? { width: 1440, height: 900 } : { width: 430, height: 932 },
+    viewport: TAVOLETTA
+      ? { width: 1180, height: 820 }
+      : LARGO
+        ? { width: 1440, height: 900 }
+        : { width: 430, height: 932 },
     deviceScaleFactor: 2,
     colorScheme: SCURO ? "dark" : "light",
     /* In che lingua gira l'app: quella del telefono, e qui il telefono e'
@@ -1922,7 +1940,10 @@ if (RESTA) {
     const dove = await banco.pagina.video()?.path();
     await banco.contesto.close();
     if (dove && existsSync(dove)) {
-      video = join(VIDEO, `giro-completo${LARGO ? "-largo" : SCURO ? "-scuro" : ""}.webm`);
+      video = join(
+        VIDEO,
+        `giro-completo${TAVOLETTA ? "-tavoletta" : LARGO ? "-largo" : SCURO ? "-scuro" : ""}.webm`,
+      );
       renameSync(dove, video);
     }
   }

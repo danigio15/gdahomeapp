@@ -320,7 +320,16 @@ async function main() {
   const chromium = await apriPlaywright();
   const server = await servitore(await laPagina());
   const porta = server.address().port;
-  const browser = await chromium.launch({ args: ["--force-color-profile=srgb"] });
+  /* Il browser: quello che Playwright si e' scaricato, o quello che gli si
+   * indica. `CHROME_EXECUTABLE` e' la stessa variabile con cui il collaudo
+   * trova il suo (`collaudo/guarda.mjs`): su una macchina dove i browser di
+   * Playwright stanno altrove — un container con la cartella condivisa — senza
+   * questa riga il programma si ferma dicendo «npx playwright install» su un
+   * browser che c'e'. */
+  const browser = await chromium.launch({
+    ...(process.env.CHROME_EXECUTABLE ? { executablePath: process.env.CHROME_EXECUTABLE } : {}),
+    args: ["--force-color-profile=srgb"],
+  });
 
   for (const [nome, misura] of Object.entries(SCHERMI)) {
     const pagina = await browser.newPage({
