@@ -5,9 +5,14 @@
  * righe di programma.
  *
  * Gira su una macchina dell'installatore — un VPS da cinque euro, un mini PC
- * in ufficio — oppure su Cloudflare, quando ci sara' la versione per il Worker.
- * Non gira sul centralino di gdahome, e quello e' il punto: le case che questo
- * quadro guarda sono di clienti di qualcun altro.
+ * in ufficio. Non gira sul centralino di gdahome, e quello e' il punto: le case
+ * che questo quadro guarda sono di clienti di qualcun altro.
+ *
+ * E non gira su Cloudflare, a differenza del centralino. Il Worker in `nuvola/`
+ * esiste per non chiedere cinque euro al mese a chi vuole accendere una luce da
+ * fuori casa; qui chi accende e' un installatore, che un server ce l'ha gia'.
+ * Il resto del conto — l'archivio da rifare su KV o D1, e le regole da tenere
+ * allineate in due copie — sta in fondo al README.
  */
 
 import { CaseSeguite } from "./case.js";

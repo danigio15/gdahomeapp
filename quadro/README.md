@@ -6,7 +6,7 @@ chi installa impianti è la sua.
 **Dove siamo.** Le prime due tappe sono fatte. Il ponte sa spedire la sua
 cartolina — spenta di serie, e si legge per intero dalla sua console — e il
 quadro gira: server, console attaccata a dati veri, abbinamento delle case.
-Resta la versione su Cloudflare. Per accenderlo, [qui sotto](#accenderlo).
+Resta l'avviso quando una casa tace. Per accenderlo, [qui sotto](#accenderlo).
 
 ## A cosa serve
 
@@ -26,9 +26,13 @@ Il quadro risponde a due domande, e sono due domande diverse:
 ## Dove sta, e perché non sta altrove
 
 Il quadro è **un pezzo che si accende l'installatore**, come il centralino:
-Node su una macchina sua, oppure un Worker su Cloudflare (`nuvola/` è il
-precedente, piano gratuito e indirizzo compreso). Il ponte gli parla
-**diritto**, in HTTPS, e `tramite.gdahome.org` non c'entra niente.
+Node su una macchina sua. Il ponte gli parla **diritto**, in HTTPS, e
+`tramite.gdahome.org` non c'entra niente.
+
+Su una macchina sua e basta, non anche su Cloudflare come il centralino: il
+perché sta [in fondo](#la-tappa-che-non-si-fa-il-quadro-su-cloudflare), ed è che
+`nuvola/` esiste per non far pagare niente a chi abita una casa, mentre qui chi
+accende è un installatore che un server ce l'ha già.
 
 Non sta sul centralino di gdahome, e non è una questione di fatica: il
 centralino oggi instrada e non capisce, e c'è una prova che guarda tutto quello
@@ -537,10 +541,65 @@ guardi.
    cartolina non dice resti **«non si sa»** invece di diventare una spunta
    rossa — è la differenza fra un impianto che ha un guaio e un impianto che non
    l'ha raccontato.
-3. **La versione su Cloudflare**, come `nuvola/`, con la stessa prova dal vivo
-   contro tutte e due.
-4. Poi, se serve: la storia lunga, un avviso quando una casa tace, le impronte
-   dei dispositivi.
+3. **L'avviso quando una casa tace.** Oggi il quadro bisogna andarlo a
+   guardare: un impianto che smette di parlare alle tre di notte si scopre la
+   mattina dopo, e solo se qualcuno apre la pagina. E' il pezzo che lo
+   trasforma da cruscotto in una cosa che lavora mentre l'installatore non
+   guarda — che poi e' il motivo per cui il quadro esiste, visto che il guaio
+   di adesso e' proprio che nessuno sa cosa succede nelle case consegnate.
+4. Poi, se serve: la storia lunga, le impronte dei dispositivi.
+
+### La tappa che non si fa: il quadro su Cloudflare
+
+Una stesura diceva **«la versione su Cloudflare, come `nuvola/`, con la stessa
+prova dal vivo contro tutte e due»**. E' tolta, e qui c'e' scritto perche' — se
+no fra sei mesi qualcuno la rimette guardando `nuvola/` e pensando «c'e' per il
+centralino, ci vorra' anche qui».
+
+**`nuvola/` esiste per un motivo che qui non vale.** Il suo README lo dice
+netto: *«un centralino da tenere acceso e' un server da pagare, e chiedere
+cinque euro al mese per accendere una luce da fuori casa e' il modo piu' rapido
+di far chiudere l'app»*. Il centralino lo accende **chi abita la casa**: una
+persona qualunque, per cui cinque euro al mese e un dominio da comprare sono la
+differenza fra usare l'app e disinstallarla. Cloudflare regala il piano e
+l'indirizzo, e quella e' tutta la ragione del pezzo.
+
+Il quadro invece lo accende **l'installatore**: uno che monta gdahome in
+quaranta case, che quelle installazioni le fattura, e che un server e un dominio
+ce li ha gia'. Cinque euro al mese su quaranta impianti sono dodici centesimi a
+impianto all'anno. La barriera che `nuvola/` abbatte, qui non c'e'. E il vincolo
+vero del quadro — che a ospitarlo sia l'installatore, perche' le case che guarda
+sono clienti suoi — il suo server lo soddisfa gia'.
+
+**E non sarebbe lo stesso programma su un altro motore.** Delle milleduecento
+righe, `collaudo.js` (le regole, trecentocinquanta righe) e' puro e passerebbe
+di peso; le altre seicentonovanta no. `archivio.js` e' `readFileSync` e
+`renameSync`, e su un Worker il filesystem **non c'e'**: andrebbe rifatto su KV,
+D1 o Durable Objects. Quelli sono asincroni, quindi le otto `salva()` dentro
+`case.js` e `chiavi.js` diventano `async`, e con loro `deposita`, `riconosci`,
+`fai`, `annulla`, `togli`, `rinomina`, `stacca` e `potatura` — cioe' tutta la
+superficie che il server chiama. E `server.js` e' `node:http`, che diventa un
+handler `fetch` con la pagina incollata dentro.
+
+Nemmeno la scelta dell'archivio sarebbe ovvia: il quadro riscrive tutto a ogni
+cartolina, e quaranta case ogni quindici minuti fanno quasi quattromila
+scritture al giorno **sulla stessa chiave** — che su KV e' il caso da non fare.
+Resterebbe D1, e allora `case.js` smette di essere un oggetto JSON che si muta e
+diventa SQL.
+
+**Ma la ragione che basterebbe da sola e' un'altra.** Questo progetto la tassa
+delle copie la paga gia': `segnalazioni.js` sono cinquecentoquattro righe
+identiche fra `centralino/` e `nuvola/`, tenute allineate da una prova scritta
+apposta perche' — dice la prova — il rischio e' *«si corregge un difetto da una
+parte e dall'altra resta»*. Un quadro su Worker vorrebbe dire pagarla una terza
+volta, e su `collaudo.js`: cioe' **proprio sulle regole**. Una divergenza
+silenziosa li' fa dire a due schermi due cose diverse della stessa casa — che e'
+esattamente l'errore appena tolto dalla pagina, dove le soglie stavano scritte
+due volte.
+
+Costo: settecento righe riscritte, una seconda architettura d'archivio e un
+vincolo di sincronia permanente sulle regole. Beneficio, per chi un posto dove
+metterlo ce l'ha gia': nessuno.
 
 ## Quello che resta da decidere
 
