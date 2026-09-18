@@ -84,26 +84,37 @@ risolve, Caddy non riesce a prendere il certificato e lo script si ferma a metà
 
 ### 1 · Il record DNS
 
-Nel pannello di chi tiene `gdahome.org` — oggi Namecheap: *Domain List* →
-**Manage** su `gdahome.org` → scheda **Advanced DNS** → *Host Records* → **Add
-New Record**.
+La zona di `gdahome.org` la servono i nameserver di **Cloudflare**
+(`carmelo.ns.cloudflare.com`, `maya.ns.cloudflare.com`), e lì va messo il
+record — non dal registrar, che il DNS non lo tiene lui.
 
-| tipo | Host | valore | TTL |
-|---|---|---|---|
-| `A Record` | `quadro` | `185.213.27.137` | `Automatic` |
+*dash.cloudflare.com* → `gdahome.org` → **DNS** → **Record** → **Aggiungi
+record**:
+
+| Tipo | Nome | Indirizzo IPv4 | Stato proxy | TTL |
+|---|---|---|---|---|
+| `A` | `quadro` | `185.213.27.137` | **Solo DNS** | `Automatico` |
 
 È lo stesso indirizzo di `tramite`, `webapp` e del sito: una macchina sola, e
 Caddy smista per nome.
 
-> **Nella casella «Host» va `quadro` e basta.** Scritto per intero, il record
-> finisce su `quadro.gdahome.org.gdahome.org`: la tabella sembra giusta e il
-> nome non risponde. È la stessa nota che sta nel centralino, dove questo passo
-> era già stato sbagliato una volta.
+> **Lo «Stato proxy» va messo su «Solo DNS» — la nuvola grigia.** È l'unica
+> cosa in quella schermata che si può sbagliare senza accorgersene, perché
+> Cloudflare parte **arancione** (*Con proxy*) e va spento a mano ogni volta.
+>
+> Arancione vuol dire che Cloudflare si mette in mezzo, e il certificato — che
+> se lo prende Caddy su questa macchina, parlando con Let's Encrypt — non
+> arriva: lo script si ferma con un errore che parla di ACME, e uno va a
+> cercare il guasto dove non è.
+>
+> Non è una cosa da decidere: **è già così per tutti gli altri.** Nella tabella,
+> `gdahome.org`, `tramite`, `webapp` e `www` dicono tutti «Solo DNS». Si vede
+> anche da fuori senza aprire il pannello: rispondono `185.213.27.137`, che è
+> questa macchina, e non un indirizzo di Cloudflare (`104.…`, `172.6…`,
+> `188.114.…`). `quadro` va messo uguale agli altri.
 
-Su Namecheap non c'è nessun proxy da spegnere, e la riga sotto non serve. Vale
-il giorno che il DNS si spostasse: **se finisce su Cloudflare, la nuvola
-arancione va spenta** (*DNS only*), perché il certificato se lo prende Caddy da
-sé e con un proxy davanti non ci riesce.
+Gli `MX` verso `eforward…registrar-servers.com` e il `TXT` con l'`SPF` sono la
+posta del dominio, e non c'entrano niente con questo: non si toccano.
 
 Si controlla da qualunque macchina, anche da quella dove si sta leggendo:
 

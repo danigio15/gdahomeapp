@@ -132,10 +132,11 @@ dove_punta() {
   getent ahostsv4 "$1" 2>/dev/null | awk '{print $1; exit}'
 }
 
-# Come si chiama, nella tabella del DNS, la casella di questo nome. Su
-# Namecheap la colonna si chiama «Host», e il nome nudo — `gdahome.org` — non
-# si scrive: si scrive `@`. Detto sbagliato, il record finisce su
-# `gdahome.org.gdahome.org`, e nessuno capisce perche' non risponde.
+# Come si chiama, nella tabella del DNS, la casella di questo nome. La zona di
+# gdahome.org sta su Cloudflare, dove la colonna si chiama «Nome» e il nome
+# nudo — `gdahome.org` — si puo' scrivere `@`. Su altri pannelli la colonna si
+# chiama «Host» e il nome intero non si scrive: il record finirebbe su
+# `gdahome.org.gdahome.org`, e nessuno capirebbe perche' non risponde.
 la_casella() {
   local nome="$1"
   if [[ "$(printf '%s' "$nome" | tr -cd . | wc -c)" -le 1 ]]; then
