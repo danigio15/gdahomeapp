@@ -127,6 +127,7 @@ class PonteFinto {
             tipo.startsWith('ponte/chat/') ||
             tipo.startsWith('ponte/console/') ||
             tipo.startsWith('ponte/aggiornamenti/'))) {
+      chieste.add(detto);
       _manda(presa, {'id': id, ..._segnalazione(detto)});
       return;
     }
@@ -358,6 +359,14 @@ class PonteFinto {
   /// Una voce che c'e' con dentro `null` e' una casa che **dice no**: e' come
   /// si prova una Home Assistant che `update/release_notes` non lo conosce.
   final Map<String, String?> leNote = {};
+
+  /// I loghi il cui indirizzo risponde male, per entita': il codice che
+  /// risponde. Un 404 e' «non esiste»; un 502 e' un intoppo, e si riprova.
+  final Map<String, int> iLoghiChePapperano = {};
+
+  /// Quelli che sbagliano **una volta sola**: alla seconda domanda rispondono
+  /// bene. E' come si guarda che il riprovare serva a qualcosa.
+  final Set<String> iLoghiCheSbaglianoUnaVolta = {};
 
   /// I loghi che questa casa ha, per entita'. Chi non c'e' non ne ha uno.
   final Map<String, Uint8List> loghi = {};
@@ -628,6 +637,18 @@ class PonteFinto {
            * riceve un no, che non e' un guasto. */
           case 'ponte/aggiornamenti/logo':
             final chi = detto['entity_id']?.toString() ?? '';
+            /* Un indirizzo che risponde male: si dice com'e', e non si finge
+             * che quel logo non esista. */
+            final storto = iLoghiChePapperano[chi];
+            if (storto != null) {
+              /* Una volta sola, se chi prova lo chiede: cosi' si guarda che
+               * la seconda domanda vada a buon fine. */
+              if (iLoghiCheSbaglianoUnaVolta.contains(chi)) {
+                iLoghiCheSbaglianoUnaVolta.remove(chi);
+                iLoghiChePapperano.remove(chi);
+              }
+              return si({'stato': storto, 'tipo': 'text/plain', 'corpo': ''});
+            }
             final byte = loghi[chi];
             if (byte == null) {
               return no('not_found', 'questo aggiornamento non ha un logo');
@@ -708,6 +729,16 @@ class PonteFinto {
   /// I file che il ponte finto sa servire con `ponte/http`: il percorso, il
   /// tipo e i byte. Sotto `/api/` si risponde con l'eco della richiesta.
   final Map<String, (String, List<int>)> file = {};
+
+  /// Le domande arrivate su questa strada, in ordine.
+  ///
+  /// Le segnalazioni, la chat, la console e gli aggiornamenti non passano da
+  /// `_commissione`, e quindi non finivano in `commissioni`: una prova che
+  /// contava li' contava **zero** e diceva verde per la ragione sbagliata.
+  /// Quello che si vuole sapere spesso non e' cosa si vede, ma quante volte
+  /// l'app ha chiesto — se un logo che non e' arrivato si richiede, se uno che
+  /// non c'e' non si richiede piu'.
+  final List<Map<String, dynamic>> chieste = [];
 
   /// Le commissioni arrivate, in ordine: serve a contare quante volte un
   /// file e' stato chiesto davvero.

@@ -324,8 +324,13 @@ void main() {
     );
     ponte.loghi['update.un_addon'] = _unPng();
     await apri(tester);
+    /* Un respiro in piu': l'immagine si apre a parte, e l'iniziale tornerebbe
+     * un fotogramma dopo se i byte non fossero un'immagine. */
+    await respira(tester);
 
-    /* Prima che arrivi c'era l'iniziale; adesso c'e' l'immagine. */
+    /* Prima che arrivi c'era l'iniziale; adesso c'e' l'immagine — e
+     * l'iniziale **non torna**, che e' il modo di sapere che i byte si sono
+     * aperti davvero. */
     expect(find.byType(Image), findsWidgets);
     expect(find.text('U'), findsNothing);
   });
@@ -520,14 +525,101 @@ void main() {
     await apri(tester);
     expect(find.text('Cosa cambia'), findsNothing);
   });
+  testWidgets('un logo che non si e\' riuscito a prendere si richiede', (
+    tester,
+  ) async {
+    await unaCasa(tester);
+    ponte.aggiornamenti.add(
+      _voce('update.un_addon', 'Un add-on', da: '1.0', a: '1.1', logo: true),
+    );
+    /* La prima volta l'indirizzo risponde 502 — un intoppo, non un no — e
+     * dalla seconda risponde bene. */
+    ponte.iLoghiChePapperano['update.un_addon'] = 502;
+    ponte.iLoghiCheSbaglianoUnaVolta.add('update.un_addon');
+    ponte.loghi['update.un_addon'] = _unPng();
+
+    /* La schermata si pompa a mano, perche' questa prova deve farla **tornare
+     * a vedersi**: e' quella la strada per cui il riprovare esiste — si esce
+     * dalla sezione e si rientra, e l'elenco si rilegge. */
+    Future<void> guardala({required bool visibile}) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: temaChiaro(),
+          home: Scaffold(
+            body: SchermataDegliAggiornamenti(
+              collegamento: collegamento,
+              visibile: visibile,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await respira(tester);
+      await respira(tester);
+    }
+
+    await guardala(visibile: true);
+
+    /* Intanto c'e' l'iniziale, e non un buco. */
+    expect(find.text('U'), findsOneWidget);
+
+    /* Poi l'intoppo passa. Se la caduta si fosse tenuta come «non ce n'e'
+     * uno», quella riga resterebbe con l'iniziale fino a che l'app non si
+     * riapre. */
+    await guardala(visibile: false);
+    await guardala(visibile: true);
+    /* Un respiro in piu': i byte arrivano dentro l'ultima attesa, e quello che
+     * si cerca a schermo e' l'**ultimo fotogramma disegnato**. */
+    await respira(tester);
+
+    /* L'ha richiesto, e stavolta e' arrivato: al posto dell'iniziale c'e'
+     * l'immagine. */
+    expect(find.byType(Image), findsWidgets);
+    expect(find.text('U'), findsNothing);
+    final quante = ponte.chieste
+        .where(
+          (una) =>
+              una['type'] == 'ponte/aggiornamenti/logo' &&
+              una['entity_id'] == 'update.un_addon',
+        )
+        .length;
+    expect(quante, greaterThan(1));
+  });
+
+  testWidgets('un indirizzo che non esiste si tiene: non lo si richiede', (
+    tester,
+  ) async {
+    await unaCasa(tester);
+    ponte.aggiornamenti.add(
+      _voce('update.senza', 'Senza logo', da: '1.0', a: '1.1', logo: true),
+    );
+    /* 404: quell'indirizzo domani non risponderà in un altro modo. */
+    ponte.iLoghiChePapperano['update.senza'] = 404;
+    ponte.loghi['update.senza'] = _unPng();
+    await apri(tester);
+    await respira(tester);
+    await respira(tester);
+
+    /* Resta l'iniziale, e quel logo non si richiede: il ponte finto lo avrebbe
+     * pure dato, ma non gli si chiede piu'. */
+    expect(find.text('S'), findsOneWidget);
+    final quante = ponte.chieste
+        .where((una) => una['type'] == 'ponte/aggiornamenti/logo')
+        .length;
+    expect(quante, 1);
+  });
 }
 
-/// Un PNG vero, il piu\' piccolo che si possa disegnare: un punto solo.
+/// Un PNG **vero**: due punti per due, azzurri.
 ///
-/// Serve perche\' `Image.memory` apra qualcosa davvero — con dei byte
-/// qualunque chiamerebbe `errorBuilder`, e la prova direbbe il contrario di
-/// quello che vuole dire.
+/// Serve perche' `Image.memory` apra qualcosa davvero. Quello di prima non era
+/// un PNG valido, e il guasto non si vedeva: `Image.memory` apre i byte a
+/// parte, e una prova che guarda lo schermo subito dopo trova la casella
+/// ancora vuota — non l'iniziale dell'`errorBuilder`, che arriva un
+/// fotogramma piu' tardi. La prova passava, e l'immagine non si era aperta
+/// mai. Percio' adesso si guarda che l'iniziale **non torni**, che e' l'unica
+/// cosa che distingue un'immagine aperta da una buttata via.
 Uint8List _unPng() => base64Decode(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/'
-  'q842iQAAAABJRU5ErkJggg==',
+  'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR42mNw3PsViBggFAAz'
+  '0gfNmuAENwAAAABJRU5ErkJggg==',
 );

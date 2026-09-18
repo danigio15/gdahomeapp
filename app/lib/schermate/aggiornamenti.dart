@@ -65,6 +65,13 @@ const _ogniQuanto = Duration(seconds: 6);
 /// pagina come sta il foglio del changelog.
 const double _quantoLarga = 760;
 
+/// Quanti segni si chiedono insieme.
+///
+/// Quattro: abbastanza perche' in una casa con dieci aggiornamenti arrivino
+/// tutti in due giri, e pochi da non riempire il filo di immagini mentre la
+/// schermata sta ancora leggendo l'elenco.
+const int _quantiSegniInsieme = 4;
+
 class SchermataDegliAggiornamenti extends StatefulWidget {
   const SchermataDegliAggiornamenti({
     super.key,
@@ -207,25 +214,48 @@ class _SchermataDegliAggiornamentiState
     }
   }
 
-  /* I segni di chi aspetta, uno per uno.
+  /* I segni di chi aspetta.
    *
-   * Non nell'elenco: un elenco con dentro sei immagini in base64 sarebbe un
+   * Non nell'elenco: un elenco con dentro dieci immagini in base64 sarebbe un
    * messaggio da centinaia di kilobyte ogni sei secondi, e da fuori casa
-   * passa dal centralino. Qui si chiedono **una volta sola per apertura** e
-   * si tengono; la riga intanto disegna l'iniziale, e quando il segno arriva
-   * si mette al suo posto.
+   * passa dal centralino. Qui si chiedono una volta e si tengono; la riga
+   * intanto disegna l'iniziale, e quando il segno arriva si mette al suo
+   * posto.
    *
-   * Uno per volta e non tutti insieme: sono immagini piccole e non c'e'
-   * niente da aspettare, e sei domande in fila sul filo mentre si guarda
-   * l'elenco non sono un ingorgo. */
+   * **A gruppi, e non uno per volta.** Uno per volta vuol dire che il decimo
+   * aspetta i nove prima di lui, e che uno che ci mette dieci secondi — un
+   * marchio che non risponde, e su una casa vera ce n'e' sempre uno — tiene
+   * fermi tutti quelli dopo. In una casa con dieci aggiornamenti si vedeva:
+   * i primi arrivavano e gli ultimi restavano con l'iniziale.
+   *
+   * E quello che **non si e' riusciti** a prendere non si tiene: al giro dopo
+   * si riprova. Si tiene solo il «non ce n'e' uno», che e' una risposta. */
   Future<void> _iSegni(List<UnAggiornamento> fila) async {
-    for (final uno in fila) {
-      if (!mounted || !uno.logo || _loghi.containsKey(uno.entita)) continue;
+    final daChiedere = fila
+        .where((uno) => uno.logo && !_loghi.containsKey(uno.entita))
+        .toList();
+    for (var da = 0; da < daChiedere.length; da += _quantiSegniInsieme) {
       final filo = _presa;
-      if (filo == null) return;
-      final preso = await GliAggiornamenti(filo).logo(uno.entita);
+      if (filo == null || !mounted) return;
+      final sportello = GliAggiornamenti(filo);
+      final questi = daChiedere.skip(da).take(_quantiSegniInsieme).toList();
+      final presi = await Future.wait(
+        questi.map(
+          (uno) => sportello
+              .logo(uno.entita)
+              /* Una caduta non e' un no: si lascia fuori dalla memoria, e la
+               * prossima lettura dell'elenco lo richiede. */
+              .then<(Uint8List?, bool)>((byte) => (byte, true))
+              .onError<Object>((_, _) => (null, false)),
+        ),
+      );
       if (!mounted) return;
-      setState(() => _loghi[uno.entita] = preso);
+      setState(() {
+        for (var quale = 0; quale < questi.length; quale += 1) {
+          final (byte, riuscito) = presi[quale];
+          if (riuscito) _loghi[questi[quale].entita] = byte;
+        }
+      });
     }
   }
 

@@ -56,7 +56,7 @@ import { DISPOSITIVI_MASSIMI, ENTITA_MASSIME } from "./catalogo.js";
 import { BASE_DELLE_FOTO, BASE_DI_CASA, FOTO_MASSIMA } from "./foto.js";
 import { BASE as BASE_DELLA_PLANCIA } from "./plancia.js";
 import { ChatHaDettoNo } from "./chat.js";
-import { QuestoNoNo } from "./aggiornamenti.js";
+import { I_MARCHI, QuestoNoNo } from "./aggiornamenti.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 import { SegnalazioniDellaPlancia } from "./segnalazioni-della-plancia.js";
 import { laVede, QuellaPlanciaNo, TroppePlance } from "./plance.js";
@@ -570,15 +570,32 @@ export class Commissioni {
     const dove = await this.aggiornamenti.doveIlLogo(entita);
     if (!dove) return no(id, "not_found", "questo aggiornamento non ha un logo");
     if (dove.startsWith("/")) {
-      return this._http(
+      const risposta = await this._http(
         { id, metodo: "GET", percorso: dove, senzaGzip: true },
         chiChiede,
         amministra,
       );
+      /* Un 404 da Home Assistant e' una risposta riuscita con dentro un no, e
+       * senza questa riga non lo direbbe a nessuno: il telefono vedrebbe
+       * «niente logo» e disegnerebbe l'iniziale, e da fuori non si saprebbe
+       * mai se l'indirizzo era storto, se il segno non e' passato, o se
+       * quell'add-on un'icona non ce l'ha. */
+      this._diCosaHaDetto(entita, dove, risposta?.result?.stato);
+      return risposta;
     }
+    return this._logoDiFuori(id, entita, dove);
+  }
+
+  /* Il segno preso fuori, dai marchi di Home Assistant.
+   *
+   * Un salto di indirizzo si segue, **uno solo**, e solo verso un indirizzo
+   * che passerebbe comunque: senza, un 301 tornava com'era — una risposta
+   * riuscita, con dentro niente — e il telefono disegnava l'iniziale senza che
+   * nessuno potesse sapere perche'. */
+  async _logoDiFuori(id, entita, dove, salti = 1) {
     await this._ilMioTurno();
     try {
-      const { stato, tipo, corpo } = await this.scarica({
+      const { stato, tipo, corpo, intestazioni } = await this.scarica({
         url: dove,
         metodo: "GET",
         intestazioni: { "accept-encoding": "identity" },
@@ -586,13 +603,30 @@ export class Commissioni {
         massimo: RISPOSTA_MASSIMA,
         attesa: ATTESA,
       });
+      const altrove = stato >= 300 && stato < 400 ? intestazioni?.location : null;
+      if (altrove && salti > 0) {
+        const laNuova = new URL(altrove, dove).toString();
+        if (!laNuova.startsWith(I_MARCHI)) {
+          this.registro.attenzione(`il logo di ${entita}: ${dove} manda fuori (${laNuova})`);
+          return no(id, "not_found", "quel logo manda da un'altra parte");
+        }
+        this._finito();
+        return this._logoDiFuori(id, entita, laNuova, salti - 1);
+      }
+      this._diCosaHaDetto(entita, dove, stato);
       return si(id, impacchetta(stato, tipo, corpo, { senzaGzip: true }));
     } catch (errore) {
-      this.registro.attenzione(`il logo di ${entita}: ${errore?.message || errore}`);
+      this.registro.attenzione(`il logo di ${entita} (${dove}): ${errore?.message || errore}`);
       return no(id, "ponte_http", String(errore?.message || "non ha funzionato"));
     } finally {
       this._finito();
     }
+  }
+
+  /* Quando un logo non e' arrivato, si scrive **dove** e **cosa ha detto**. */
+  _diCosaHaDetto(entita, dove, stato) {
+    if (stato === 200) return;
+    this.registro.attenzione(`il logo di ${entita}: ${dove} ha risposto ${stato ?? "niente"}`);
   }
 
   /* Dove stanno i file della plancia, e quale plancia aprire.
@@ -1467,6 +1501,10 @@ export function scaricaDavvero({
             stato: risposta.statusCode ?? 0,
             tipo: risposta.headers["content-type"] || "application/octet-stream",
             corpo: Buffer.concat(pezzi),
+            /* Le intestazioni servono a chi deve seguire un salto di
+             * indirizzo: senza `location` un 301 e' una risposta riuscita con
+             * dentro niente. */
+            intestazioni: risposta.headers,
           }),
         );
         risposta.on("error", fallito);

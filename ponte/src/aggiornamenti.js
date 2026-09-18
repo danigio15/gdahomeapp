@@ -186,7 +186,7 @@ const STACCANO = [
  * un'entita' avrebbe il ponte come messaggero per andare dove vuole. Due
  * razze, e nient'altro.
  */
-const I_MARCHI = "https://brands.home-assistant.io/";
+export const I_MARCHI = "https://brands.home-assistant.io/";
 
 /**
  * Dove sta il segno di questo aggiornamento, o stringa vuota se non si sa.

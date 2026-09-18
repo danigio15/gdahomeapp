@@ -25,6 +25,7 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 
 /// Un aggiornamento che aspetta di essere fatto.
@@ -208,26 +209,43 @@ class GliAggiornamenti {
   /// Home Assistant. Il telefono non va a chiedere in giro chi ha in casa, e
   /// non puo' far scaricare al ponte un indirizzo scelto da lui.
   ///
-  /// Un no non e' un guasto: un aggiornamento senza logo e' la normalita', e
-  /// al suo posto si disegna l'iniziale. Percio' qui non si solleva.
+  /// **`null` e una caduta non sono la stessa cosa**, e qui si distinguono:
+  ///
+  ///  - `null` vuol dire «quel logo non c'e'» — l'entita' non ne dichiara
+  ///    nessuno, o l'indirizzo ha risposto che non esiste. E' una risposta, e
+  ///    chi chiama se la tiene: richiederla ogni sei secondi per sempre
+  ///    sarebbe un giro sul filo per sapere di nuovo la stessa cosa;
+  ///  - **solleva** quando non si e' riusciti a prenderlo: il filo che cade, un
+  ///    ponte piu' vecchio dell'app, i marchi che non rispondono. Quello non si
+  ///    tiene, e al giro dopo si riprova — se no un intoppo di un momento
+  ///    lascerebbe quella riga senza logo fino a che l'app non si riapre.
+  ///
+  /// Prima questo metodo ingoiava tutto e tornava `null`: comodo, e sbagliato
+  /// — una caduta diventava «non ce n'e' uno», per sempre, e senza dirlo a
+  /// nessuno.
   Future<Uint8List?> logo(String entita) async {
-    try {
-      final detto = await _filo.risultato({
-        'type': 'ponte/aggiornamenti/logo',
-        'entity_id': entita,
-      });
-      if (detto is! Map) return null;
-      final stato = int.tryParse('${detto['stato'] ?? 0}') ?? 0;
-      if (stato != 200) return null;
-      final corpo = detto['corpo'];
-      if (corpo is! String || corpo.isEmpty) return null;
-      /* Il ponte le immagini non le comprime — un PNG gzippato pesa quanto
-       * prima — quindi qui non c'e' niente da aprire: sono byte. */
-      final byte = base64Decode(corpo);
-      return byte.isEmpty ? null : byte;
-    } catch (_) {
-      return null;
+    final detto = await _filo.risultato({
+      'type': 'ponte/aggiornamenti/logo',
+      'entity_id': entita,
+    }, entro: const Duration(seconds: 12));
+    if (detto is! Map) return null;
+    final stato = int.tryParse('${detto['stato'] ?? 0}') ?? 0;
+    /* Quello che non c'e' non c'e': 404, 403, 410 sono indirizzi che non
+     * risponderanno domani in un altro modo. Tutto il resto — un 502, un 500,
+     * un vuoto — e' un intoppo, e si riprova. */
+    if (stato == 404 || stato == 403 || stato == 410) return null;
+    if (stato != 200) {
+      throw ComandoRifiutato(
+        'il logo ha risposto $stato',
+        codice: 'logo_$stato',
+      );
     }
+    final corpo = detto['corpo'];
+    if (corpo is! String || corpo.isEmpty) return null;
+    /* Il ponte le immagini non le comprime — un PNG gzippato pesa quanto
+     * prima — quindi qui non c'e' niente da aprire: sono byte. */
+    final byte = base64Decode(corpo);
+    return byte.isEmpty ? null : byte;
   }
 
   /// Riavvia Home Assistant. Il filo cade subito dopo, ed e' il segno che sta
