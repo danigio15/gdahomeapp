@@ -549,3 +549,45 @@ test("un installatore non vede né cambia l'indirizzo degli avvisi di un altro",
     await b.chiudi();
   }
 });
+
+test("la risposta alla cartolina dice alla casa di chi è il quadro", async () => {
+  /* La casa non ha altro modo di saperlo: nel codice che le è stato incollato
+   * c'è solo un codice. Serve alla scheda nella console dell'add-on, dove chi
+   * ci abita legge a chi vanno i suoi numeri — «Impianti Rossi» gli dice
+   * qualcosa, un indirizzo no. */
+  const b = await banco({ ditte: 1 });
+  try {
+    const risposta = await b.deposita(UNA, await unCodice(b));
+    assert.deepEqual(await risposta.json(), { presa: true, di: "Ditta 1" });
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("una ditta non può cambiarsi il nome, e quindi non può spacciarsi per un'altra", async () => {
+  /* È la riga che rende quel nome degno di essere mostrato in casa di
+   * qualcuno: lo scrive chi tiene il quadro, e non c'è nessuna via da cui una
+   * ditta possa riscriverselo. */
+  const b = await banco({ ditte: 1 });
+  try {
+    for (const [via, corpo] of [
+      ["/io", { nome: "Impianti Bianchi" }],
+      ["/io/nome", { nome: "Impianti Bianchi" }],
+    ]) {
+      const provato = await b.retro(via, { method: "PUT", body: JSON.stringify(corpo) });
+      assert.ok(provato.status >= 400, `«PUT ${via}» ha lasciato cambiare il nome`);
+    }
+    const risposta = await b.deposita(UNA, await unCodice(b));
+    assert.equal((await risposta.json()).di, "Ditta 1");
+
+    /* Chi tiene il quadro sì, e la casa lo vede al deposito dopo. */
+    await b.gestore(`/installatore/${b.conti[0].chi}`, {
+      method: "PUT",
+      body: JSON.stringify({ nome: "Impianti Rossi" }),
+    });
+    const dopo = await b.deposita(UNA, await unCodice(b));
+    assert.equal((await dopo.json()).di, "Impianti Rossi");
+  } finally {
+    await b.chiudi();
+  }
+});

@@ -617,6 +617,10 @@ test("col codice, la console dice a chi parla questa casa — e non dice con che
     assert.equal(detto.acceso, true);
     assert.equal(detto.dove, "https://quadro.impiantirossi.it");
     assert.equal(detto.ogni, 15);
+    /* Il nome della ditta e' vuoto finche' non e' partita la prima cartolina:
+     * arriva **nella risposta** del quadro, e finche' non c'e' la scheda mostra
+     * l'indirizzo e basta invece di inventarsi qualcosa. */
+    assert.equal(detto.chi, "");
     /* La riga che conta: da questa pagina si legge **a chi**, non si prende
      * di che. */
     assert.ok(

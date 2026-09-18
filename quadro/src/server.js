@@ -174,9 +174,19 @@ export function costruisciIlServer({
        * chi manda. Si riscrive, e non si discute. Lo stesso vale per di chi e'
        * questa casa: lo dice l'invito con cui e' entrata. */
       const prima = case_.quella(casa);
-      case_.deposita(casa, { ...carta, casa }, chiavi.diChiE(casa));
+      const di = chiavi.diChiE(casa);
+      case_.deposita(casa, { ...carta, casa }, di);
       if (!prima) registro.info(`una casa nuova si e' presentata: ${casa}`);
-      json(risposta, { presa: true });
+      /* Nella risposta torna **il nome della ditta**, che la casa non ha modo
+       * di sapere altrimenti: nel codice che le e' stato incollato c'e' solo un
+       * codice. Serve alla console dell'add-on, dove chi ci abita legge chi
+       * riceve i suoi numeri — e «Impianti Rossi» gli dice qualcosa, un
+       * indirizzo no.
+       *
+       * Quel nome lo scrive **chi tiene il quadro**, non l'installatore: non
+       * c'e' nessuna via da cui una ditta possa cambiarsi il nome, e quindi non
+       * c'e' modo di presentarsi in casa di qualcuno come qualcun altro. */
+      json(risposta, { presa: true, di: installatori.quello(di)?.nome || "" });
       return;
     }
 

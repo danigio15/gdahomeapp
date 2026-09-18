@@ -1687,10 +1687,42 @@
           return;
         }
         scheda.hidden = false;
-        trova("quadro-dove").textContent = due(
-          "Questa casa manda una cartolina a " + quadro.dove + ", ogni " + quadro.ogni + " minuti.",
-          "This home sends a postcard to " + quadro.dove + ", every " + quadro.ogni + " minutes.",
-        );
+        /* Chi riceve, col nome della ditta se il quadro l'ha detto.
+         *
+         * Il nome viene da chi tiene il quadro, non dalla ditta: non c'e'
+         * nessuna via da cui un installatore possa cambiarsi il nome, quindi
+         * nessuno puo' presentarsi qui dentro come qualcun altro. L'indirizzo
+         * si mostra lo stesso, e non e' ridondanza: e' quello che si controlla
+         * se il nome non convince. */
+        trova("quadro-dove").textContent = quadro.chi
+          ? due(
+              "Questa casa manda una cartolina a " +
+                quadro.chi +
+                ", ogni " +
+                quadro.ogni +
+                " minuti, passando da " +
+                quadro.dove +
+                ".",
+              "This home sends a postcard to " +
+                quadro.chi +
+                ", every " +
+                quadro.ogni +
+                " minutes, through " +
+                quadro.dove +
+                ".",
+            )
+          : due(
+              "Questa casa manda una cartolina a " +
+                quadro.dove +
+                ", ogni " +
+                quadro.ogni +
+                " minuti.",
+              "This home sends a postcard to " +
+                quadro.dove +
+                ", every " +
+                quadro.ogni +
+                " minutes.",
+            );
         trova("quadro-esito").textContent = quandoEArrivata(quadro.esito);
         /* Il testo com'e' partito. `JSON.stringify` con l'indentazione: e' lo
          * stesso oggetto che e' andato, non una sua descrizione. */

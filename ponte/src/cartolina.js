@@ -434,6 +434,9 @@ export class Postino {
      * dati», ma **questi** dati, parola per parola. */
     this._ultima = null;
     this._ultimoEsito = null;
+    /* Il nome della ditta, come lo dice il quadro rispondendo. In memoria e
+     * basta: dopo un riavvio si riempie alla prima cartolina. */
+    this._chi = "";
   }
 
   /** Se questa casa manda qualcosa a qualcuno. */
@@ -443,6 +446,11 @@ export class Postino {
 
   get ultima() {
     return this._ultima;
+  }
+
+  /** Il nome della ditta che riceve, come l'ha detto il quadro. */
+  get chi() {
+    return this._chi || "";
   }
 
   get ultimoEsito() {
@@ -518,6 +526,27 @@ export class Postino {
         this.registro.info("il quadro risponde di nuovo");
         this._quanteVoltePerNiente = 0;
       }
+
+      /* Di chi e' il quadro che ha ricevuto.
+       *
+       * Arriva **nella risposta** e non nel codice incollato, perche' nel
+       * codice c'e' solo un codice: la casa non ha altro modo di saperlo. Serve
+       * a una cosa sola — la scheda in questa console, dove chi ci abita legge
+       * a chi vanno i suoi numeri. «Impianti Rossi» gli dice qualcosa, un
+       * indirizzo no.
+       *
+       * Sta in memoria e non su disco: dopo un riavvio la scheda mostra
+       * l'indirizzo finche' non parte la prima cartolina, che e' un quarto
+       * d'ora. Scriverlo in `/data` per un quarto d'ora di comodo vorrebbe dire
+       * un file in piu' da tenere buono per sempre. */
+      try {
+        const detto = await risposta.json();
+        if (typeof detto?.di === "string") this._chi = detto.di.slice(0, 80);
+      } catch (_errore) {
+        /* Una risposta che non e' JSON non e' un guasto: la cartolina e'
+         * arrivata, ed e' quello che conta. Il nome resta quello di prima. */
+      }
+
       this._ultimoEsito = { andata: true, quando: this.adesso(), perche: "" };
       return true;
     } catch (errore) {

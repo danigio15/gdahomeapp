@@ -443,3 +443,52 @@ test("quando non arriva, il perché lo capisce chi ci abita", () => {
   assert.equal(perchePreciso(con("MAI_VISTO", "qualcosa di nuovo")), "qualcosa di nuovo");
   assert.equal(perchePreciso(new Error("un errore qualunque")), "un errore qualunque");
 });
+
+test("il nome della ditta arriva nella risposta, e la casa se lo ricorda", async () => {
+  /* La casa non ha altro modo di saperlo: nel codice incollato c'è solo un
+   * codice. Serve alla scheda nella console, dove chi ci abita legge a chi
+   * vanno i suoi numeri. */
+  const postino = new Postino({
+    dove: "https://quadro.gdahome.org",
+    chiave: "K7M2-9XQF-3BHT-R4VN",
+    casa: "casa_abc",
+    fabbrica: () => ({ casa: "casa_abc", ponte: "1.4.32.15" }),
+    registro: ZITTO,
+    fetch: async () => ({ ok: true, json: async () => ({ presa: true, di: "Impianti Rossi" }) }),
+  });
+
+  assert.equal(postino.chi, "", "prima della prima cartolina non si inventa niente");
+  assert.equal(await postino.manda(), true);
+  assert.equal(postino.chi, "Impianti Rossi");
+});
+
+test("una risposta senza nome, o che non è JSON, non fa danni", async () => {
+  /* La cartolina è arrivata, ed è quello che conta: il nome resta vuoto e la
+   * scheda mostra l'indirizzo, che è quello che faceva prima. */
+  const conRisposta = (risposta) =>
+    new Postino({
+      dove: "https://quadro.gdahome.org",
+      chiave: "K7M2-9XQF-3BHT-R4VN",
+      casa: "casa_abc",
+      fabbrica: () => ({ casa: "casa_abc" }),
+      registro: ZITTO,
+      fetch: async () => risposta,
+    });
+
+  const senzaNome = conRisposta({ ok: true, json: async () => ({ presa: true }) });
+  const nonJson = conRisposta({
+    ok: true,
+    json: async () => {
+      throw new Error("non è JSON");
+    },
+  });
+
+  assert.equal(
+    await senzaNome.manda(),
+    true,
+    "una risposta senza nome non deve far fallire l'invio",
+  );
+  assert.equal(await nonJson.manda(), true, "una risposta che non è JSON nemmeno");
+  assert.equal(senzaNome.chi, "");
+  assert.equal(nonJson.chi, "");
+});
