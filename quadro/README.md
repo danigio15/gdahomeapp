@@ -127,6 +127,25 @@ gira in pochi minuti, ma può metterci di più.
 
 ### 2 · La macchina
 
+> **Prima: il codice deve stare dove lo script lo va a prendere.** Sono due
+> posti, e li sbaglia chi non li conosce:
+>
+> - la riga qui sotto scarica `accendi.sh` dal **ramo di difetto** della
+>   repository, cioè `main`;
+> - lo script poi si tira giù il quadro dal **segno `tramite`** (`SEGNO` in
+>   cima al file), lo stesso che segue il tramite, perché su `main` si spinge
+>   dieci volte al giorno e una macchina che seguisse `main` si riavvierebbe
+>   dieci volte al giorno, ogni tanto su un commit scritto a metà.
+>
+> Finché `quadro/` sta solo su un ramo di lavoro, la prima riga risponde `404`
+> e la seconda dice *«nel pacchetto non c'è il quadro»*. Si sistema una volta
+> sola: il ramo si porta su `main`, e il segno `tramite` si sposta lì sopra.
+>
+> Per provarlo **prima** di tutto questo si può puntare le due cose al ramo,
+> aggiungendo `?ref=<ramo>` all'indirizzo e `SEGNO_DEL_QUADRO=<ramo>` davanti a
+> `bash`. Va bene per una prova, non per lasciarlo così: quel quadro si
+> aggiornerebbe a ogni spinta su un ramo di lavoro.
+
 Da `root`, sulla macchina dove gira già il tramite. Prima **senza installare
 niente**, per vedere se quadra tutto:
 
