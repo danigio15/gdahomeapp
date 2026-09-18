@@ -214,7 +214,6 @@ function rigaMarkup(riga) {
     <span class="dm-mia-ic" aria-hidden="true">${esc(icona)}</span>
     <span class="dm-mia-nome">
       <strong>${esc(riga.nome)}</strong>
-      <small class="mono">${esc(riga.entity)}</small>
     </span>
     <span class="dm-mia-coda">${codaMarkup(riga)}</span>
   </article>`;
@@ -386,9 +385,6 @@ function installStyles() {
       .dm-mia-nome strong{
         font-size:14px;font-weight:800;color:var(--text,#0f172a);
         overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-      .dm-mia-nome small{
-        font-size:10.5px;color:var(--text-dim,#64748b);
-        overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .dm-mia-val b{font-size:17px;font-weight:900;color:var(--text,#0f172a);white-space:nowrap}
       .dm-mia-val b small{font-size:11px;font-weight:800;color:var(--text-dim,#64748b)}
       .dm-mia-val .dm-mia-muta{font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
@@ -453,7 +449,6 @@ function installStyles() {
         border-radius:14px}
       .dm-mia-lista[data-formato="piccole"] .dm-mia-ic{width:32px;height:32px;font-size:15px;border-radius:11px}
       .dm-mia-lista[data-formato="piccole"] .dm-mia-nome strong{font-size:12.5px}
-      .dm-mia-lista[data-formato="piccole"] .dm-mia-nome small{display:none}
       .dm-mia-lista[data-formato="piccole"] .dm-mia-val b{font-size:14px}
       .dm-mia-lista[data-formato="piccole"] .dm-mia-lev{width:38px;height:22px}
       .dm-mia-lista[data-formato="piccole"] .dm-mia-lev i{width:16px;height:16px}

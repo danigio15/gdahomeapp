@@ -178,8 +178,13 @@ export function titoloDeiVarchi(conto) {
  * aperta».
  *
  * Senza un istante non si scrive niente: una porta senza storia non è una
- * porta appena aperta, e inventare «da poco» sarebbe una bugia. In quel caso
- * torna l'identificativo, che è comunque meglio di una riga vuota. */
+ * porta appena aperta, e inventare «da poco» sarebbe una bugia. E quella riga
+ * resta vuota, non torna l'identificativo: «nei popup dei dispositivi accesi
+ * mi devi togliere la riga sotto al nome, non voglio vedere il nome entità» —
+ * e poi «sì fallo anche nelle pagine». Vale qui come vale là, e non manca
+ * niente a chi guarda: lo stato in parole sta già in fondo alla riga
+ * («Aperto», «Chiuso», «Non risponde»). L'identificativo resta dov'è utile,
+ * cioè nella scheda Varchi della configurazione. */
 /* La scritta, in parole. Sta separata dal markup perche' la legge anche la
  * firma del ridisegno: e' l'unico pezzo di questa pagina che cambia da solo,
  * col passare del tempo, e chi decide se ridisegnare deve poterlo guardare. */
@@ -200,8 +205,7 @@ function daQuandoTesto(riga) {
 }
 
 function daQuandoMarkup(riga) {
-  if (riga.da === null || riga.da === undefined)
-    return `<small class="mono">${esc(riga.entity)}</small>`;
+  if (riga.da === null || riga.da === undefined) return "";
   return `<small>${esc(daQuandoTesto(riga))}</small>`;
 }
 

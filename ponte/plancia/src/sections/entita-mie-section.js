@@ -66,7 +66,7 @@ function disegno(riga) {
 function rigaMarkup(riga) {
   return `<article class="dm-mie-riga" data-on="${riga.acceso}" data-muta="${riga.muto}">
     <span class="dm-mie-ic" aria-hidden="true">${disegno(riga)}</span>
-    <span class="dm-mie-nome"><strong>${esc(riga.nome)}</strong><small class="mono">${esc(riga.entity)}</small></span>
+    <span class="dm-mie-nome"><strong>${esc(riga.nome)}</strong></span>
     <span class="dm-mie-val">${valoreMarkup(riga)}</span>
     ${
       riga.comandabile && !riga.muto
@@ -212,9 +212,6 @@ function installStyles() {
       .dm-mie-riga[data-on="true"] .dm-mie-ic{background:rgba(249,115,22,.14)}
       .dm-mie-nome{display:grid;gap:2px;min-width:0}
       .dm-mie-nome strong{font-size:13.5px;font-weight:800;color:var(--text,#0f172a)}
-      .dm-mie-nome small{
-        font-size:10.5px;color:var(--text-dim,#64748b);
-        white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .dm-mie-val b{font-family:'Oswald',sans-serif;font-size:19px;font-weight:700;color:var(--text,#0f172a)}
       .dm-mie-val small{font-size:11px;font-weight:700;color:var(--text-dim,#64748b)}
       .dm-mie-muta{font-size:11px!important;font-weight:800!important;color:var(--text-dim,#64748b)!important}

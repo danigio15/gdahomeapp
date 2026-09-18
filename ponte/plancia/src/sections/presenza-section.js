@@ -182,9 +182,13 @@ export function daQuandoTesto(riga) {
   return `${parola} ${quantoTempoInParole(minuti)}`;
 }
 
+/* Senza un istante non si scrive niente, e non si scrive nemmeno
+ * l'identificativo: «non voglio vedere il nome entità», e nelle pagine come
+ * nelle finestre. Chi guarda non ci perde niente — lo stato in parole sta già
+ * in fondo alla riga — e chi configura l'identificativo lo trova dov'è sempre
+ * stato, nella scheda Presenza della configurazione. */
 function daQuandoMarkup(riga) {
-  if (riga.da === null || riga.da === undefined)
-    return `<small class="mono">${esc(riga.entity)}</small>`;
+  if (riga.da === null || riga.da === undefined) return "";
   return `<small>${esc(daQuandoTesto(riga))}</small>`;
 }
 

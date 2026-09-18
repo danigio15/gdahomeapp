@@ -656,10 +656,13 @@ function corpoDelDettaglio(lettura) {
         )
         .join("")}</dl>`,
     );
-  /* L'entita' in fondo, in piccolo: quando un valore non torna, la prima
-   * domanda e' «da dove viene questo numero», e la risposta e' qui. */
-  if (clean(lettura.entity))
-    pezzi.push(`<p class="dm-allerta-dettaglio-fonte mono">${esc(lettura.entity)}</p>`);
+  /* E in fondo non c'e' piu' il nome dell'entita'.
+   *
+   * Stava li' per rispondere a «da dove viene questo numero», che e' una
+   * domanda che si fa chi configura — e chi configura ha la sua scheda, dove
+   * quel nome c'e' e serve. Chi apre questo dettaglio vuole sapere se in
+   * cantina c'e' acqua: «non voglio vedere il nome entita'», nelle finestre
+   * come nelle pagine. */
   return pezzi.join("");
 }
 
@@ -915,8 +918,6 @@ function installStyles() {
     #dm-allerta-dettaglio .dm-allerta-voce dd{
       margin:0;font-size:13.5px;line-height:1.45;overflow-wrap:anywhere;
       color:var(--primary-text-color,#0f172a)}
-    #dm-allerta-dettaglio .dm-allerta-dettaglio-fonte{
-      margin:0;font-size:11px;color:var(--text-dim,#94a3b8);overflow-wrap:anywhere}
 `,
   );
 }
