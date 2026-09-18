@@ -51,11 +51,33 @@ Aprendo una casa:
 | | |
 |---|---|
 | **L'impianto** | matricola, installata il, collaudata il, ogni quanto manda, telefoni abbinati e quanti visti in 7 giorni |
-| **Il collaudo** | sette spunte: plancia configurata · almeno un telefono · da fuori casa funziona · nessun dispositivo sparito · niente da aggiornare · il backup gira · nessuna batteria da cambiare |
+| **Il collaudo** | dieci spunte: plancia configurata · almeno un telefono · da fuori casa funziona · nessun dispositivo sparito · niente da aggiornare · il backup gira · **gli add-on che devono girare, girano** · **la rete regge** · **la macchina non soffre** · nessuna batteria da cambiare |
+| **La macchina** | la scheda (ODROID-N2+, ODROID-M1, un NUC…), CPU, memoria, disco e quanto resta, temperatura **con la tacca a 75°**, **la vita già consumata del disco**, da quanti giorni è accesa |
+| **La rete** | internet sì o no, ogni scheda con su/giù, cavo o Wi-Fi, quale è la principale, il segnale, l'indirizzo sulla rete di casa — e gli apparati sorvegliati (il router, i ripetitori) con quanti non rispondono |
+| **Gli add-on** | tutti, uno per pastiglia: acceso, **fermo** (parte all'avvio e non gira) o spento a mano |
 | **La salute** | la striscia dei giorni, dispositivi totali e spariti, batterie sotto soglia e la più bassa, ultimo backup, errori nel registro, da quanto regge il filo |
 | **I dispositivi spariti** | le impronte, non i nomi (sotto c'è perché) |
 | **Le versioni** | gdahome, la plancia, Home Assistant Core, Supervisor, il sistema — con «c'è la nuova» dove c'è |
 | **La cartolina** | il testo grezzo, come è arrivato |
+
+### Le tre domande che la macchina risponde da sola
+
+**La vita del disco è la riga che nessuno guarda e che conta di più.** Su un
+ODROID Home Assistant scrive tutto il giorno su una eMMC o una microSD, e
+quelle hanno un numero di scritture e poi finiscono. Il Supervisor dichiara
+`disk_life_time`, cioè la percentuale già spesa: vederla salire vuol dire
+cambiare il supporto quando decidi tu, invece di scoprirlo il giorno che il
+cliente ha perso tutto. Dove non c'è — un NUC con un SSD — non si inventa.
+
+**La tacca a 75° non è un numero scelto qui:** è quella che la plancia disegna
+già sull'arco della temperatura del MiniPC, ed è dove un ODROID comincia a
+rallentarsi da solo. Sopra, la casa non si rompe: diventa lenta, e nessuno
+capisce perché.
+
+**Un add-on fermo non è un add-on spento.** Conta solo chi **parte all'avvio**
+ed è giù: nessuno spegne un add-on lasciandogli l'avvio automatico, quindi
+quello si è fermato da solo. Uno messo a mano e lasciato fermo è una scelta di
+chi ci abita, e dirglielo ogni quarto d'ora insegna a non guardare più.
 
 ### Gli stati, e perché hanno una forma
 
@@ -86,6 +108,23 @@ e nient'altro.
   "ha": "2026.9.1",
   "supervisor": "2026.08.3",
   "sistema": "Home Assistant OS 14.2",
+  "macchina": {
+    "scheda": "ODROID-N2+", "cpu": 14, "ram": 38,
+    "disco": 46, "discoLiberi": 17.2,
+    "temperatura": 46, "discoVita": 11, "accesaDa": 41
+  },
+  "rete": {
+    "internet": true,
+    "schede": [
+      { "nome": "eth0", "tipo": "ethernet", "su": true, "principale": true, "ip": "192.168.1.50" },
+      { "nome": "wlan0", "tipo": "wifi", "su": false, "principale": false, "ip": "", "segnale": null }
+    ],
+    "sorvegliate": { "quante": 3, "giu": 0 }
+  },
+  "addon": {
+    "quanti": 8, "accesi": 8, "spentiCheDovrebbero": 0,
+    "elenco": [{ "nome": "Mosquitto broker", "su": true, "allAvvio": true, "aggiornabile": false }]
+  },
   "aggiornamenti": { "quanti": 0, "ha": false, "addon": 0, "gdahome": false, "firmware": 0 },
   "plance": { "quante": 3, "configurate": 3 },
   "telefoni": { "abbinati": 2, "visti7gg": 2 },
@@ -98,10 +137,21 @@ e nient'altro.
 ```
 
 **Cosa non c'è, e non ci deve andare:** nomi di entità, nomi di stanze, nomi di
-persone, stati di sensori, indirizzi IP, posizione, foto, la configurazione
-della plancia, il contenuto delle segnalazioni. Il quadro dice **che c'è da
-guardare**; guardare si fa dentro casa, dall'app, sul filo cifrato, col segno
-che chi ci abita può togliere.
+persone, stati di sensori, **l'SSID del Wi-Fi**, **l'indirizzo pubblico**,
+posizione, foto, la configurazione della plancia, il contenuto delle
+segnalazioni. Il quadro dice **che c'è da guardare**; guardare si fa dentro
+casa, dall'app, sul filo cifrato, col segno che chi ci abita può togliere.
+
+La regola si dice meglio così: **cosa c'è nella scatola, non chi ci abita.**
+«Mosquitto broker» ed `eth0` sono nomi di prodotti e di schede, e non dicono
+niente di nessuno. L'SSID sì — una rete che si chiama «Casa Rossi» è una
+persona — e resta fuori.
+
+**L'indirizzo sulla rete di casa invece c'è, ed è un cambio voluto** rispetto a
+come stava scritto prima. `192.168.1.50` non identifica nessuno, e a chi ripara
+queste macchine serve davvero: «la scatola ha cambiato indirizzo» è metà delle
+telefonate. L'indirizzo pubblico è un'altra cosa — quello dice dove abiti — e
+non esce.
 
 **Le impronte.** Un dispositivo sparito l'installatore lo vuole seguire: è
 quello di ieri o un altro? Perciò la casa manda quattro cifre,
@@ -150,6 +200,47 @@ export function iDispositivi(stati, { sale }) → { totali, spariti, impronte }
 export function leBatterie(stati, { scarica = 20 }) → { sotto20, piuBassa }
 export function ilBackup(stati) → { giorniFa }        // dall'entità del backup
 ```
+
+**`ponte/src/ferro.js`** — nuovo: la macchina, la rete e gli add-on
+
+Quasi tutto lo dice il Supervisor, e **senza che nessuno configuri niente in
+casa del cliente** — che è la cosa che conta: un installatore non può contare
+sul fatto che il cliente abbia aggiunto l'integrazione System Monitor.
+
+```js
+/* `/os/info` + `/host/info` + `/supervisor/stats`.
+ * Da `/os/info` viene `board` (`odroid-n2`) e da `/host/info` il
+ * `disk_life_time`, che sulle schede con eMMC o microSD è la riga che conta. */
+export function laMacchina({ os, host, stats, temperatura }) → object
+
+/* `/network/info`, la stessa via che `ritorno.js` chiama già per sapere dove
+ * sta questa casa: lì si tengono solo gli `ipv4.address`, qui anche
+ * `enabled`, `connected`, `primary`, `type` e il segnale.
+ * L'SSID si butta apposta, e una prova tiene fermo che non esca. */
+export function laRete({ network, filoSu }) → object
+
+/* `/addons`: nome, `state`, `boot`, `update_available`. La sola domanda che
+ * conta è `boot === "auto" && state !== "started"`. */
+export function gliAddon({ addons }) → object
+```
+
+Le due cose che il Supervisor **non** dice sono la temperatura della scheda e
+gli apparati di rete di casa, e tutt'e due ce l'ha già la plancia:
+
+- la temperatura sta nell'arco del MiniPC, insieme a `dm.server_cpu`,
+  `dm.server_ram`, `dm.server_disco` e all'uptime
+  (`officina/.../sections/minipc-showcase-section.js`);
+- il router e i ripetitori sono i `binary_sensor` con
+  `device_class: connectivity` che la sezione «Macchine e rete» adotta **per
+  integrazione** e non per classe — la regola sta in
+  `officina/.../core/macchine-e-rete.js`, e serve a non risucchiare ogni
+  telefono e ogni presa Wi-Fi della casa. Il ponte guarda le stesse entità con
+  le stesse regole, e dove non è stato spuntato niente manda zero invece di
+  fingere.
+
+Che i due numeri siano gli stessi non è un dettaglio: è la regola che
+`aggiornamenti.js` si è già data — «chi guarda la dashboard e chi guarda l'app
+devono vedere lo stesso elenco, con gli stessi nomi e nello stesso ordine».
 
 **`ponte/src/opzioni.js`** — due voci: `quadro` (il codice incollato, vuoto di
 serie) e `quadro_ogni` (minuti, 15).

@@ -954,6 +954,200 @@
         color: var(--lieve);
       }
 
+      /* ─── I metri della macchina ────────────────────────────────────
+       *
+       * Quattro barre, non quattro numeri: la percentuale di un disco la si
+       * capisce guardandola, e il colore dice da solo se è il caso di
+       * muoversi. Il binario vuoto è l'alone del colore che avrebbe la barra
+       * piena, così lo stato si legge su tutta la larghezza e non solo dove
+       * il riempimento arriva. */
+      .metri {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+        gap: 15px 22px;
+      }
+
+      .capoMetro {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        margin-bottom: 6px;
+      }
+
+      .capoMetro span {
+        color: var(--fioco);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+      }
+
+      .capoMetro b {
+        margin-left: auto;
+        font-size: 0.95rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .capoMetro small {
+        color: var(--fioco);
+        font-size: 0.73rem;
+        font-weight: 450;
+      }
+
+      .binario {
+        position: relative;
+        height: 9px;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+
+      .binario i {
+        position: absolute;
+        inset: 0 auto 0 0;
+        border-radius: 5px;
+      }
+
+      .binario.bene {
+        background: var(--alone-bene);
+      }
+
+      .binario.bene i {
+        background: var(--bene);
+      }
+
+      .binario.attenta {
+        background: var(--alone-ambra);
+      }
+
+      .binario.attenta i {
+        background: var(--ambra);
+      }
+
+      .binario.male {
+        background: var(--alone-male);
+      }
+
+      .binario.male i {
+        background: var(--male);
+      }
+
+      /* La tacca dei settantacinque gradi, quella che la plancia disegna già
+       * sull'arco del MiniPC. */
+      .binario .tacca {
+        position: absolute;
+        inset: 0 auto;
+        width: 3px;
+        margin-left: -1.5px;
+        background: var(--carta);
+      }
+
+      .capoMetro b.male {
+        color: var(--male);
+      }
+
+      .capoMetro b.attenta {
+        color: var(--ambra);
+      }
+
+      /* ─── Le schede di rete ─────────────────────────────────────────── */
+      ul.schede {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      ul.schede li {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 10px 0;
+        font-size: 0.88rem;
+        flex-wrap: wrap;
+      }
+
+      ul.schede li + li {
+        border-top: 1px solid var(--bordo-tenue);
+      }
+
+      ul.schede .lucina {
+        width: 9px;
+        height: 9px;
+        flex: none;
+        border-radius: 999px;
+      }
+
+      ul.schede .su .lucina {
+        background: var(--bene);
+        box-shadow: 0 0 0 4px var(--alone-bene);
+      }
+
+      ul.schede .giu .lucina {
+        background: var(--fioco);
+        box-shadow: 0 0 0 4px var(--bordo-tenue);
+      }
+
+      ul.schede .come {
+        font-weight: 650;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 0.83rem;
+      }
+
+      ul.schede .dove {
+        margin-left: auto;
+        color: var(--fioco);
+        font-size: 0.8rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      ul.schede .giu .come,
+      ul.schede .giu .tipo {
+        color: var(--fioco);
+      }
+
+      /* ─── Gli add-on ────────────────────────────────────────────────── */
+      .addon {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .addon .uno {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.79rem;
+        font-weight: 550;
+        padding: 5px 11px;
+        border-radius: 999px;
+        background: var(--alone-bene);
+        color: var(--bene);
+      }
+
+      .addon .uno.fermo {
+        background: var(--alone-male);
+        color: var(--male);
+      }
+
+      .addon .uno.apposta {
+        background: var(--carta-alta);
+        color: var(--fioco);
+      }
+
+      .addon .uno .puntino {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      .addon .uno.apposta .puntino {
+        background: transparent;
+        box-shadow: inset 0 0 0 1.5px currentColor;
+      }
+
       /* ─── L'abbinamento ─────────────────────────────────────────────── */
       .abbina {
         display: grid;
@@ -1288,6 +1482,46 @@
             ha: "2026.9.1",
             supervisor: "2026.08.3",
             sistema: "Home Assistant OS 14.2",
+            macchina: {
+              scheda: "ODROID-N2+",
+              cpu: 14,
+              ram: 38,
+              disco: 46,
+              discoLiberi: 17.2,
+              temperatura: 46,
+              discoVita: 11,
+              accesaDa: 41,
+            },
+            rete: {
+              internet: true,
+              schede: [
+                { nome: "eth0", tipo: "ethernet", su: true, principale: true, ip: "192.168.1.50" },
+                {
+                  nome: "wlan0",
+                  tipo: "wifi",
+                  su: false,
+                  principale: false,
+                  ip: "",
+                  segnale: null,
+                },
+              ],
+              sorvegliate: { quante: 3, giu: 0 },
+            },
+            addon: {
+              quanti: 8,
+              accesi: 8,
+              spentiCheDovrebbero: 0,
+              elenco: [
+                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Mosquitto broker", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Zigbee2MQTT", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "ESPHome", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "File editor", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Samba share", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Studio Code Server", su: true, allAvvio: true, aggiornabile: false },
+              ],
+            },
             aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
             plance: { quante: 3, configurate: 3 },
             telefoni: { abbinati: 2, visti7gg: 2 },
@@ -1312,6 +1546,45 @@
             ha: "2026.6.2",
             supervisor: "2026.07.2",
             sistema: "Home Assistant OS 13.2",
+            macchina: {
+              scheda: "ODROID-N2",
+              cpu: 71,
+              ram: 88,
+              disco: 93,
+              discoLiberi: 1.1,
+              temperatura: 79,
+              discoVita: 74,
+              accesaDa: 3,
+            },
+            rete: {
+              internet: true,
+              schede: [
+                { nome: "eth0", tipo: "ethernet", su: false, principale: false, ip: "" },
+                {
+                  nome: "wlan0",
+                  tipo: "wifi",
+                  su: true,
+                  principale: true,
+                  ip: "192.168.4.22",
+                  segnale: 38,
+                },
+              ],
+              sorvegliate: { quante: 4, giu: 2 },
+            },
+            addon: {
+              quanti: 7,
+              accesi: 5,
+              spentiCheDovrebbero: 2,
+              elenco: [
+                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: true },
+                { nome: "Mosquitto broker", su: false, allAvvio: true, aggiornabile: false },
+                { nome: "Zigbee2MQTT", su: false, allAvvio: true, aggiornabile: true },
+                { nome: "ESPHome", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Samba share", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Duck DNS", su: true, allAvvio: true, aggiornabile: false },
+              ],
+            },
             aggiornamenti: { quanti: 6, ha: true, addon: 2, gdahome: true, firmware: 2 },
             plance: { quante: 1, configurate: 1 },
             telefoni: { abbinati: 1, visti7gg: 1 },
@@ -1336,6 +1609,35 @@
             ha: "2026.8.4",
             supervisor: "2026.08.1",
             sistema: "Home Assistant OS 14.1",
+            macchina: {
+              scheda: "ODROID-M1",
+              cpu: 9,
+              ram: 41,
+              disco: 52,
+              discoLiberi: 28.4,
+              temperatura: 44,
+              discoVita: 26,
+              accesaDa: 9,
+            },
+            rete: {
+              internet: false,
+              schede: [
+                { nome: "eth0", tipo: "ethernet", su: true, principale: true, ip: "10.0.0.30" },
+              ],
+              sorvegliate: { quante: 2, giu: 2 },
+            },
+            addon: {
+              quanti: 5,
+              accesi: 5,
+              spentiCheDovrebbero: 0,
+              elenco: [
+                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: true },
+                { nome: "Mosquitto broker", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "ESPHome", su: true, allAvvio: true, aggiornabile: true },
+                { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Google Drive Backup", su: true, allAvvio: true, aggiornabile: false },
+              ],
+            },
             aggiornamenti: { quanti: 2, ha: true, addon: 1, gdahome: true, firmware: 0 },
             plance: { quante: 1, configurate: 1 },
             telefoni: { abbinati: 2, visti7gg: 0 },
@@ -1360,6 +1662,33 @@
             ha: "2026.9.1",
             supervisor: "2026.08.3",
             sistema: "Home Assistant OS 14.2",
+            macchina: {
+              scheda: "ODROID-N2+",
+              cpu: 11,
+              ram: 29,
+              disco: 12,
+              discoLiberi: 27.9,
+              temperatura: 42,
+              discoVita: 1,
+              accesaDa: 2,
+            },
+            rete: {
+              internet: true,
+              schede: [
+                { nome: "eth0", tipo: "ethernet", su: true, principale: true, ip: "192.168.8.12" },
+              ],
+              sorvegliate: { quante: 0, giu: 0 },
+            },
+            addon: {
+              quanti: 3,
+              accesi: 3,
+              spentiCheDovrebbero: 0,
+              elenco: [
+                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Mosquitto broker", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
+              ],
+            },
             aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
             plance: { quante: 1, configurate: 0 },
             telefoni: { abbinati: 0, visti7gg: 0 },
@@ -1384,6 +1713,44 @@
             ha: "2026.9.1",
             supervisor: "2026.08.3",
             sistema: "Home Assistant OS 14.2",
+            macchina: {
+              scheda: "ODROID-N2+",
+              cpu: 22,
+              ram: 54,
+              disco: 61,
+              discoLiberi: 11.6,
+              temperatura: 52,
+              discoVita: 34,
+              accesaDa: 120,
+            },
+            rete: {
+              internet: true,
+              schede: [
+                { nome: "eth0", tipo: "ethernet", su: true, principale: true, ip: "192.168.1.8" },
+                {
+                  nome: "wlan0",
+                  tipo: "wifi",
+                  su: true,
+                  principale: false,
+                  ip: "192.168.1.9",
+                  segnale: 71,
+                },
+              ],
+              sorvegliate: { quante: 6, giu: 0 },
+            },
+            addon: {
+              quanti: 11,
+              accesi: 11,
+              spentiCheDovrebbero: 0,
+              elenco: [
+                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Mosquitto broker", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Zigbee2MQTT", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "ESPHome", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Frigate", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Google Drive Backup", su: true, allAvvio: true, aggiornabile: false },
+              ],
+            },
             aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
             plance: { quante: 2, configurate: 2 },
             telefoni: { abbinati: 4, visti7gg: 3 },
@@ -1408,6 +1775,34 @@
             ha: "2026.9.1",
             supervisor: "2026.08.3",
             sistema: "Home Assistant OS 14.2",
+            macchina: {
+              scheda: "ODROID-N2+",
+              cpu: 18,
+              ram: 44,
+              disco: 38,
+              discoLiberi: 19.8,
+              temperatura: 49,
+              discoVita: 19,
+              accesaDa: 74,
+            },
+            rete: {
+              internet: true,
+              schede: [
+                { nome: "eth0", tipo: "ethernet", su: true, principale: true, ip: "192.168.0.24" },
+              ],
+              sorvegliate: { quante: 2, giu: 0 },
+            },
+            addon: {
+              quanti: 6,
+              accesi: 6,
+              spentiCheDovrebbero: 0,
+              elenco: [
+                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Mosquitto broker", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "ESPHome", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
+              ],
+            },
             aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
             plance: { quante: 2, configurate: 2 },
             telefoni: { abbinati: 3, visti7gg: 2 },
@@ -1432,6 +1827,40 @@
             ha: "2026.9.1",
             supervisor: "2026.08.3",
             sistema: "Home Assistant Supervised",
+            macchina: {
+              scheda: "Intel NUC · Debian 13",
+              cpu: 7,
+              ram: 31,
+              disco: 24,
+              discoLiberi: 182.4,
+              temperatura: 41,
+              discoVita: null,
+              accesaDa: 30,
+            },
+            rete: {
+              internet: true,
+              schede: [
+                {
+                  nome: "enp2s0",
+                  tipo: "ethernet",
+                  su: true,
+                  principale: true,
+                  ip: "192.168.1.14",
+                },
+              ],
+              sorvegliate: { quante: 1, giu: 0 },
+            },
+            addon: {
+              quanti: 4,
+              accesi: 3,
+              spentiCheDovrebbero: 0,
+              elenco: [
+                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Mosquitto broker", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Studio Code Server", su: false, allAvvio: false, aggiornabile: false },
+              ],
+            },
             aggiornamenti: { quanti: 0, ha: false, addon: 0, gdahome: false, firmware: 0 },
             plance: { quante: 1, configurate: 1 },
             telefoni: { abbinati: 2, visti7gg: 2 },
@@ -1456,6 +1885,35 @@
             ha: "2026.9.1",
             supervisor: "2026.08.3",
             sistema: "Home Assistant OS 14.2",
+            macchina: {
+              scheda: "ODROID-N2+",
+              cpu: 12,
+              ram: 33,
+              disco: 71,
+              discoLiberi: 8.2,
+              temperatura: 55,
+              discoVita: 58,
+              accesaDa: 210,
+            },
+            rete: {
+              internet: true,
+              schede: [
+                { nome: "eth0", tipo: "ethernet", su: true, principale: true, ip: "192.168.2.7" },
+              ],
+              sorvegliate: { quante: 1, giu: 0 },
+            },
+            addon: {
+              quanti: 5,
+              accesi: 4,
+              spentiCheDovrebbero: 0,
+              elenco: [
+                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Mosquitto broker", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
+                { nome: "Samba share", su: false, allAvvio: false, aggiornabile: false },
+                { nome: "File editor", su: true, allAvvio: true, aggiornabile: true },
+              ],
+            },
             aggiornamenti: { quanti: 1, ha: false, addon: 1, gdahome: false, firmware: 0 },
             plance: { quante: 1, configurate: 1 },
             telefoni: { abbinati: 1, visti7gg: 1 },
@@ -1513,6 +1971,54 @@
 
       /* Sotto quale carica una batteria si conta fra quelle da cambiare. */
       const BATTERIA_SCARICA = 20;
+
+      /* La tacca della temperatura.
+       *
+       * Settantacinque gradi non è un numero scelto qui: è la tacca che la
+       * plancia disegna già sull'arco della temperatura del MiniPC, ed è dove
+       * un Odroid comincia a rallentarsi da solo per non cuocersi. Sopra, la
+       * casa non si rompe — diventa lenta, e nessuno capisce perché. */
+      const TROPPO_CALDO = 75;
+      const CALDINO = 65;
+
+      /* Quanto può essere pieno un disco prima che sia una cosa da guardare, e
+       * quanto può essere consumato.
+       *
+       * Il secondo è quello che conta su queste macchine: una eMMC o una
+       * microSD hanno un numero di scritture e poi finiscono, e Home Assistant
+       * scrive tutto il giorno. `disk_life_time` è la percentuale già spesa, e
+       * l'ha il Supervisor. Vederla salire vuol dire cambiare il supporto
+       * prima che sia il supporto a decidere quando. */
+      const DISCO_PIENO = 85;
+      const DISCO_STANCO = 50;
+      const DISCO_FINITO = 80;
+
+      /* Sotto quale percentuale un segnale Wi-Fi è una spiegazione. */
+      const SEGNALE_DEBOLE = 45;
+
+      const livello = (valore, attenta, male) =>
+        valore >= male ? "male" : valore >= attenta ? "attenta" : "bene";
+
+      /* Gli add-on che dovrebbero girare e non girano.
+       *
+       * Non «quelli spenti»: quelli **spenti che partono all'avvio**. Un add-on
+       * messo a mano e lasciato fermo è una scelta di chi ci abita, e dirgli
+       * ogni quarto d'ora che è fermo vuol dire insegnargli a non guardare più.
+       * Uno con l'avvio automatico che è giù, invece, è qualcosa che si è
+       * rotto: nessuno lo spegne di proposito lasciandogli l'avvio acceso. */
+      const addonGiu = (c) => c.addon.spentiCheDovrebbero;
+
+      /* Le schede di rete che dovrebbero essere su e non lo sono: quella
+       * principale, o l'unica che c'è. Una `wlan0` spenta su una casa
+       * cablata non è un guasto, è una scheda che non si usa. */
+      const reteGiu = (c) => {
+        const su = c.rete.schede.filter((una) => una.su);
+        if (!su.length) return "nessuna scheda di rete è su";
+        if (!c.rete.internet) return "la casa non vede internet";
+        if (c.rete.sorvegliate.giu > 0)
+          return `${plurale(c.rete.sorvegliate.giu, "apparato di rete giù", "apparati di rete giù")}`;
+        return "";
+      };
 
       const minutiDaAllora = (quando) => Math.round((ADESSO - new Date(quando).getTime()) / 60000);
 
@@ -1600,6 +2106,27 @@
               c.backup.giorniFa === null ? "mai fatto" : `l'ultimo ${c.backup.giorniFa} gg fa`,
           },
           {
+            cosa: "Gli add-on che devono girare, girano",
+            fatta: addonGiu(c) === 0,
+            dettaglio:
+              addonGiu(c) === 0
+                ? `${c.addon.accesi} accesi su ${c.addon.quanti}`
+                : `${plurale(addonGiu(c), "fermo", "fermi")} con l'avvio automatico`,
+          },
+          {
+            cosa: "La rete regge",
+            fatta: reteGiu(c) === "",
+            dettaglio: reteGiu(c) === "" ? "internet c'è, apparati su" : reteGiu(c),
+          },
+          {
+            cosa: "La macchina non soffre",
+            fatta:
+              c.macchina.temperatura < TROPPO_CALDO &&
+              c.macchina.disco < DISCO_PIENO &&
+              (c.macchina.discoVita === null || c.macchina.discoVita < DISCO_FINITO),
+            dettaglio: `${c.macchina.temperatura}° · disco al ${c.macchina.disco}%`,
+          },
+          {
             cosa: "Nessuna batteria da cambiare",
             fatta: c.batterie.sotto20 === 0,
             dettaglio:
@@ -1638,6 +2165,17 @@
           };
         }
         const guai = [];
+        if (!c.rete.internet) guai.push("senza internet");
+        if (addonGiu(c) > 0) guai.push(`${plurale(addonGiu(c), "add-on fermo", "add-on fermi")}`);
+        if (c.macchina.temperatura >= TROPPO_CALDO)
+          guai.push(`${c.macchina.temperatura}° sulla scheda`);
+        if (c.macchina.disco >= DISCO_PIENO) guai.push(`disco al ${c.macchina.disco}%`);
+        if (c.macchina.discoVita !== null && c.macchina.discoVita >= DISCO_FINITO)
+          guai.push(`disco consumato al ${c.macchina.discoVita}%`);
+        if (c.rete.sorvegliate.giu > 0)
+          guai.push(
+            `${plurale(c.rete.sorvegliate.giu, "apparato di rete giù", "apparati di rete giù")}`,
+          );
         if (c.dispositivi.spariti > 0)
           guai.push(plurale(c.dispositivi.spariti, "dispositivo sparito", "dispositivi spariti"));
         if (c.registro.errori24h > 0)
@@ -1650,11 +2188,15 @@
           );
         if (backupFermo(c)) guai.push("backup fermo");
         if (guai.length) {
+          const prime = guai.slice(0, 3);
+          const restano = guai.length - prime.length;
           return {
             chiave: "guardare",
             segno: "▲",
             parola: "da guardare",
-            perché: `${guai.join(", ")}.`,
+            perché: restano
+              ? `${prime.join(", ")}, e altre ${restano} cose qui sotto.`
+              : `${prime.join(", ")}.`,
           };
         }
         return { chiave: "posto", segno: "●", parola: "a posto", perché: "" };
@@ -1665,6 +2207,16 @@
        * non suona. */
       function lePastiglie(c) {
         const p = [];
+        if (!c.rete.internet) p.push(["senza internet", "male"]);
+        if (addonGiu(c) > 0)
+          p.push([`${plurale(addonGiu(c), "add-on fermo", "add-on fermi")}`, "male"]);
+        if (c.rete.sorvegliate.giu > 0)
+          p.push([`${plurale(c.rete.sorvegliate.giu, "apparato giù", "apparati giù")}`, "male"]);
+        if (c.macchina.temperatura >= TROPPO_CALDO)
+          p.push([`${c.macchina.temperatura}° sulla scheda`, "attenta"]);
+        if (c.macchina.disco >= DISCO_PIENO) p.push([`disco al ${c.macchina.disco}%`, "attenta"]);
+        if (c.macchina.discoVita !== null && c.macchina.discoVita >= DISCO_FINITO)
+          p.push([`disco consumato al ${c.macchina.discoVita}%`, "attenta"]);
         if (c.dispositivi.spariti > 0)
           p.push([
             plurale(c.dispositivi.spariti, "dispositivo sparito", "dispositivi spariti"),
@@ -1975,6 +2527,8 @@
             <p class="verdetto">${testo(verdetto)}</p>
           </section>
 
+          ${laMacchina(c)} ${laRete(c)} ${gliAddon(c)}
+
           <section class="riquadro">
             <div class="capoRiquadro"><h3>La salute, quattordici giorni</h3></div>
             ${laStriscia(casa.giorni, true)}
@@ -2043,6 +2597,176 @@
             </details>
           </section>
         `;
+      }
+
+      /* Un metro: l'etichetta, il valore, il binario. `tacca` è dove il
+       * binario porta un segno — i 75° della temperatura — e va in centesimi
+       * della scala, non nell'unità del valore. */
+      function unMetro({ che, valore, unita = "%", sotto = "", come, quanto, tacca = null }) {
+        return `
+          <div>
+            <div class="capoMetro">
+              <span>${testo(che)}</span>
+              ${sotto ? `<small>${testo(sotto)}</small>` : ""}
+              <b class="${come === "bene" ? "" : come}">${testo(valore)}${testo(unita)}</b>
+            </div>
+            <div class="binario ${come}">
+              <i style="width: ${Math.max(2, Math.min(100, quanto))}%"></i>
+              ${tacca === null ? "" : `<span class="tacca" style="left: ${tacca}%"></span>`}
+            </div>
+          </div>`;
+      }
+
+      /* La macchina: quello che il Supervisor sa del ferro sotto Home
+       * Assistant, più la temperatura che la plancia disegna già.
+       *
+       * `discoVita` è la riga che su queste schede conta davvero e che nessuno
+       * guarda: una eMMC o una microSD hanno un numero di scritture e poi
+       * finiscono. Quando c'è, ha la sua barra; su una macchina che non la
+       * dichiara — un NUC con un SSD — non si inventa. */
+      function laMacchina(c) {
+        const m = c.macchina;
+        const metri = [
+          unMetro({
+            che: "CPU",
+            valore: m.cpu,
+            quanto: m.cpu,
+            come: livello(m.cpu, 70, 90),
+          }),
+          unMetro({
+            che: "Memoria",
+            valore: m.ram,
+            quanto: m.ram,
+            come: livello(m.ram, 75, 90),
+          }),
+          unMetro({
+            che: "Disco",
+            valore: m.disco,
+            quanto: m.disco,
+            sotto: `${m.discoLiberi} GB liberi`,
+            come: livello(m.disco, 75, DISCO_PIENO),
+          }),
+          unMetro({
+            che: "Temperatura",
+            valore: m.temperatura,
+            unita: "°",
+            quanto: m.temperatura,
+            sotto: `tacca a ${TROPPO_CALDO}°`,
+            tacca: TROPPO_CALDO,
+            come: livello(m.temperatura, CALDINO, TROPPO_CALDO),
+          }),
+        ];
+        if (m.discoVita !== null)
+          metri.push(
+            unMetro({
+              che: "Vita del disco",
+              valore: m.discoVita,
+              quanto: m.discoVita,
+              sotto: "già consumata",
+              come: livello(m.discoVita, DISCO_STANCO, DISCO_FINITO),
+            }),
+          );
+
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>La macchina</h3>
+              <span class="conta">${testo(m.scheda)}</span>
+            </div>
+            <div class="metri">${metri.join("")}</div>
+            <p class="verdetto">
+              ${testo(c.sistema)} · accesa da ${plurale(m.accesaDa, "giorno", "giorni")}.
+              ${
+                m.discoVita !== null && m.discoVita >= DISCO_STANCO
+                  ? `Il supporto è consumato al ${m.discoVita}%: su queste schede è la cosa che si rompe per prima, e si cambia prima che decida lui.`
+                  : m.temperatura >= TROPPO_CALDO
+                    ? `Sopra i ${TROPPO_CALDO}° la scheda si rallenta da sola: la casa non si rompe, diventa lenta — e nessuno capisce perché.`
+                    : "Niente che chieda di andare a vedere."
+              }
+            </p>
+          </section>`;
+      }
+
+      /* La rete: le schede che il Supervisor dichiara, più gli apparati di
+       * casa che la plancia già sorveglia.
+       *
+       * I due pezzi non sono la stessa cosa e non vanno confusi. Le schede
+       * sono quelle **della macchina** e le sa il Supervisor senza che
+       * nessuno configuri niente. Gli apparati — il router, i ripetitori —
+       * sono i `binary_sensor` con `device_class: connectivity` che la
+       * sezione «Macchine e rete» della plancia adotta per integrazione: ci
+       * sono se chi ci abita li ha spuntati, e dove non sono spuntati qui
+       * si dice zero invece di fingere. */
+      function laRete(c) {
+        const r = c.rete;
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>La rete</h3>
+              <span class="pastiglia ${r.internet ? "bene" : "male"}">
+                ${r.internet ? "internet c&#39;è" : "senza internet"}
+              </span>
+            </div>
+            <ul class="schede">
+              ${r.schede
+                .map(
+                  (una) => `
+                <li class="${una.su ? "su" : "giu"}">
+                  <span class="lucina" aria-hidden="true"></span>
+                  <span class="come">${testo(una.nome)}</span>
+                  <span class="tipo pastiglia">${testo(una.tipo === "wifi" ? "Wi-Fi" : "cavo")}</span>
+                  ${una.principale ? '<span class="pastiglia bene">principale</span>' : ""}
+                  ${
+                    una.tipo === "wifi" && una.su && una.segnale !== null
+                      ? `<span class="pastiglia ${una.segnale < SEGNALE_DEBOLE ? "attenta" : ""}">segnale ${una.segnale}%</span>`
+                      : ""
+                  }
+                  <span class="dove">${una.su ? testo(una.ip) : "non attiva"}</span>
+                </li>`,
+                )
+                .join("")}
+            </ul>
+            <p class="verdetto">
+              ${
+                r.sorvegliate.quante === 0
+                  ? "Nessun apparato di rete sorvegliato in questa casa: nella plancia, sezione «Macchine e rete», si spunta l'integrazione del router e i suoi ripetitori compaiono da soli."
+                  : r.sorvegliate.giu === 0
+                    ? `${plurale(r.sorvegliate.quante, "apparato sorvegliato", "apparati sorvegliati")}, tutti su.`
+                    : `${r.sorvegliate.giu} ${r.sorvegliate.giu === 1 ? "apparato" : "apparati"} su ${r.sorvegliate.quante} non rispondono.`
+              }
+            </p>
+          </section>`;
+      }
+
+      /* Gli add-on, e la sola domanda che conta: ce n'è qualcuno che dovrebbe
+       * girare e non gira? */
+      function gliAddon(c) {
+        const a = c.addon;
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>Gli add-on</h3>
+              <span class="conta">${a.accesi}/${a.quanti} accesi</span>
+            </div>
+            <div class="addon">
+              ${a.elenco
+                .map((uno) => {
+                  const come = uno.su ? "" : uno.allAvvio ? "fermo" : "apposta";
+                  return `<span class="uno ${come}"
+                    ><span class="puntino" aria-hidden="true"></span>${testo(uno.nome)}${
+                      uno.su ? "" : uno.allAvvio ? " — fermo" : " — spento a mano"
+                    }</span>`;
+                })
+                .join("")}
+            </div>
+            <p class="verdetto">
+              ${
+                addonGiu(c) === 0
+                  ? "Nessun add-on con l'avvio automatico è fermo. Quelli spenti a mano restano spenti, ed è giusto: li ha spenti qualcuno."
+                  : `${plurale(addonGiu(c), "add-on parte", "add-on partono")} all'avvio e in questo momento ${addonGiu(c) === 1 ? "è fermo" : "sono fermi"}. Nessuno spegne un add-on lasciandogli l'avvio automatico: questo si è fermato da solo.`
+              }
+            </p>
+          </section>`;
       }
 
       /* ─── Schermata: l'abbinamento ───────────────────────────────────
