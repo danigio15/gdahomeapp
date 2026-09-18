@@ -84,17 +84,26 @@ risolve, Caddy non riesce a prendere il certificato e lo script si ferma a metà
 
 ### 1 · Il record DNS
 
-Nel pannello di chi tiene `gdahome.org`:
+Nel pannello di chi tiene `gdahome.org` — oggi Namecheap: *Domain List* →
+**Manage** su `gdahome.org` → scheda **Advanced DNS** → *Host Records* → **Add
+New Record**.
 
-| tipo | nome | valore |
-|---|---|---|
-| `A` | `quadro` | `185.213.27.137` |
+| tipo | Host | valore | TTL |
+|---|---|---|---|
+| `A Record` | `quadro` | `185.213.27.137` | `Automatic` |
 
 È lo stesso indirizzo di `tramite`, `webapp` e del sito: una macchina sola, e
 Caddy smista per nome.
 
-> **Se il DNS è su Cloudflare, il proxy arancione va spento** (*DNS only*). Il
-> certificato se lo prende Caddy da sé, e con la nuvola davanti non ci riesce.
+> **Nella casella «Host» va `quadro` e basta.** Scritto per intero, il record
+> finisce su `quadro.gdahome.org.gdahome.org`: la tabella sembra giusta e il
+> nome non risponde. È la stessa nota che sta nel centralino, dove questo passo
+> era già stato sbagliato una volta.
+
+Su Namecheap non c'è nessun proxy da spegnere, e la riga sotto non serve. Vale
+il giorno che il DNS si spostasse: **se finisce su Cloudflare, la nuvola
+arancione va spenta** (*DNS only*), perché il certificato se lo prende Caddy da
+sé e con un proxy davanti non ci riesce.
 
 Si controlla da qualunque macchina, anche da quella dove si sta leggendo:
 

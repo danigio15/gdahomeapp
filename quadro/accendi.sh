@@ -116,8 +116,14 @@ QUI="$(mio_indirizzo)"
 SUO="$(getent ahostsv4 "$NOME_DEL_QUADRO" 2>/dev/null | awk '{print $1}' | head -1 || true)"
 
 if [[ -z "$SUO" ]]; then
+  # La casella «Host» vuole il nome **corto**. Scritto per intero, il record
+  # finisce su `quadro.gdahome.org.gdahome.org`, la tabella sembra giusta e
+  # nessuno capisce perche' non risponde. E' la stessa nota che sta nel
+  # centralino, dove lo stesso passo era gia' stato sbagliato una volta.
   male "«$NOME_DEL_QUADRO» non risolve." \
     "Va creato un record A che punti a ${QUI:-questa macchina}." \
+    "Nella tabella del DNS la casella «Host» vuole «${NOME_DEL_QUADRO%%.*}»," \
+    "non il nome intero: quello ci si attacca il dominio un'altra volta." \
     "Se il DNS e' su Cloudflare, il proxy arancione va spento: il certificato" \
     "se lo prende Caddy, e con la nuvola davanti non ci riesce."
 elif [[ -n "$QUI" && "$SUO" != "$QUI" ]]; then
