@@ -5,6 +5,11 @@ node_modules/
 # Roba del ponte in prova
 /ponte/data/
 
+# Quello che il quadro si scrive quando gira: le case che segue, coi nomi che
+# gli ha dato l'installatore, e le impronte delle chiavi. E' roba di clienti di
+# qualcuno, e in una repository non ci va nemmeno per sbaglio.
+/quadro/dati/
+
 # ─── Flutter ───────────────────────────────────────────────────────────────
 # `android/` e `ios/` ci vanno dentro: sono configurazione del progetto, non
 # roba costruita. Quello che si butta e' cio' che si rifa' con un comando.

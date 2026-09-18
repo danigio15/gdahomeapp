@@ -1,0 +1,348 @@
+/* Da una cartolina alle spunte, e dalle spunte a una parola.
+ *
+ * Sono le sole regole di questo pezzo, e stanno **qui e basta**: la console e'
+ * una pagina che disegna quello che le arriva gia' deciso. Se le regole
+ * stessero anche li', il giorno che una cambia ne cambierebbe una sola, e due
+ * schermi direbbero due cose diverse della stessa casa.
+ *
+ * ─── Tre risposte, non due ───────────────────────────────────────────────
+ *
+ * Una spunta puo' essere `true`, `false` o **`null`**, e la terza e' la piu'
+ * importante. Il ponte lascia fuori dalla cartolina quello che non e' riuscito
+ * a sapere — una casa senza System Monitor non manda la CPU, un Supervisor che
+ * non risponde non manda la macchina — e la differenza fra «non lo so» e «va
+ * male» e' tutta la differenza fra un cruscotto utile e un cruscotto che
+ * mente. `null` si dice «questa casa non lo dice», e non fa suonare niente.
+ *
+ * Percio' il collaudo si chiude quando **nessuna spunta e' `false`**, non
+ * quando sono tutte `true`: se no una casa a cui manca un dato resterebbe in
+ * fila per sempre, per una cosa che non e' sua.
+ */
+
+/* Dopo quante cartoline saltate una casa e' muta. Tre: una sola puo' essere un
+ * riavvio, tre no. */
+export const MUTA_DOPO = 3;
+
+/* Quanti giorni puo' stare fermo un backup prima che sia una cosa da guardare.
+ * Due settimane: chi lo fa ogni notte se ne accorge subito, chi lo fa a mano
+ * una volta al mese non viene tormentato. */
+export const BACKUP_FERMO = 14;
+
+/* La tacca della temperatura. Non e' un numero scelto qui: e' quella che la
+ * plancia disegna gia' sull'arco del MiniPC, ed e' dove un ODROID comincia a
+ * rallentarsi da solo. Sopra, la casa non si rompe — diventa lenta, e nessuno
+ * capisce perche'. */
+export const TROPPO_CALDO = 75;
+
+/** Oltre quanto un disco e' pieno, e oltre quanto e' consumato. */
+export const DISCO_PIENO = 85;
+export const DISCO_FINITO = 80;
+
+const MINUTO = 60 * 1000;
+
+const numero = (valore) => (Number.isFinite(Number(valore)) ? Number(valore) : null);
+
+const plurale = (quanti, uno, molti) => `${quanti} ${quanti === 1 ? uno : molti}`;
+
+export function daQuanto(quando, adesso = Date.now()) {
+  const minuti = Math.round((adesso - Date.parse(String(quando))) / MINUTO);
+  if (!Number.isFinite(minuti)) return "chissà quando";
+  if (minuti < 1) return "adesso";
+  if (minuti < 60) return `${minuti} min fa`;
+  const ore = Math.round(minuti / 60);
+  if (ore < 24) return `${ore} ${ore === 1 ? "ora" : "ore"} fa`;
+  const giorni = Math.round(ore / 24);
+  return `${giorni} ${giorni === 1 ? "giorno" : "giorni"} fa`;
+}
+
+export function eMuta(carta, adesso = Date.now()) {
+  const quando = Date.parse(String(carta?.quando));
+  if (!Number.isFinite(quando)) return true;
+  const ogni = numero(carta?.ogni) || 15;
+  return adesso - quando > ogni * MUTA_DOPO * MINUTO;
+}
+
+const backupFermo = (carta) => {
+  if (!carta?.backup) return null;
+  const giorni = carta.backup.giorniFa;
+  return giorni === null || giorni === undefined || giorni > BACKUP_FERMO;
+};
+
+/* Quando un aggiornamento in attesa e' una cosa da guardare.
+ *
+ * Non sempre: un add-on che ha una versione nuova da ieri non e' un impianto
+ * da andare a vedere, e una casa che diventa ambra per quello insegna a non
+ * guardare piu' le case ambra. Conta quando tocca Home Assistant o gdahome —
+ * li' dentro ci sono le correzioni di sicurezza — o quando se ne sono
+ * accumulati tre.
+ *
+ * Nel collaudo invece contano tutti: alla consegna un impianto si lascia
+ * aggiornato, e quella spunta e' severa apposta. Due domande diverse sulla
+ * stessa riga, ed e' giusto che diano due risposte diverse. */
+export const aggiornamentiPesano = (a) =>
+  Boolean(a) && ((numero(a.quanti) ?? 0) >= 3 || a.ha === true || a.gdahome === true);
+
+/** Gli add-on che partono all'avvio e non girano. */
+export const addonGiu = (carta) =>
+  carta?.addon ? (numero(carta.addon.spentiCheDovrebbero) ?? 0) : null;
+
+/**
+ * Le spunte del collaudo: l'impianto e' finito bene?
+ *
+ * Sono le cose che un installatore controlla prima di andarsene, e sono tutte
+ * gia' dentro la cartolina. `fatta: false` non vuol dire rotto: vuol dire che
+ * quella riga non si puo' ancora spuntare.
+ */
+export function ilCollaudo(carta) {
+  const c = carta ?? {};
+  const spunte = [];
+  const metti = (cosa, fatta, dettaglio) => spunte.push({ cosa, fatta, dettaglio });
+
+  metti(
+    "La plancia è configurata",
+    c.plance ? c.plance.configurate > 0 : null,
+    c.plance
+      ? c.plance.configurate > 0
+        ? `${c.plance.configurate} su ${c.plance.quante}`
+        : "nessuna, è vuota"
+      : "questa casa non lo dice",
+  );
+  metti(
+    "C'è almeno un telefono abbinato",
+    c.telefoni ? c.telefoni.abbinati > 0 : null,
+    c.telefoni
+      ? c.telefoni.abbinati > 0
+        ? plurale(c.telefoni.abbinati, "telefono", "telefoni")
+        : "nessuno"
+      : "questa casa non lo dice",
+  );
+  metti(
+    "Da fuori casa funziona",
+    c.fuori ? Boolean(c.fuori.acceso && c.fuori.filo) : null,
+    c.fuori
+      ? c.fuori.acceso
+        ? c.fuori.filo
+          ? "filo su"
+          : "acceso, filo giù"
+        : "spento"
+      : "questa casa non lo dice",
+  );
+  metti(
+    "Nessuna entità sparita",
+    c.entita ? c.entita.sparite === 0 : null,
+    c.entita
+      ? c.entita.sparite === 0
+        ? `${c.entita.totali} tutte là`
+        : `${c.entita.sparite} su ${c.entita.totali}`
+      : "questa casa non lo dice",
+  );
+  metti(
+    "Niente da aggiornare",
+    c.aggiornamenti ? c.aggiornamenti.quanti === 0 : null,
+    c.aggiornamenti
+      ? c.aggiornamenti.quanti === 0
+        ? "tutto aggiornato"
+        : `${plurale(c.aggiornamenti.quanti, "aggiornamento", "aggiornamenti")} in attesa`
+      : "questa casa non lo dice",
+  );
+  metti(
+    "Gli add-on che devono girare, girano",
+    c.addon ? addonGiu(c) === 0 : null,
+    c.addon
+      ? addonGiu(c) === 0
+        ? `${c.addon.accesi} accesi su ${c.addon.quanti}`
+        : `${plurale(addonGiu(c), "fermo", "fermi")} con l'avvio automatico`
+      : "questa casa non lo dice",
+  );
+  metti(
+    "La rete regge",
+    c.rete ? Boolean(c.rete.internet) && (c.rete.sorvegliate?.giu ?? 0) === 0 : null,
+    c.rete
+      ? !c.rete.internet
+        ? "non vede internet"
+        : (c.rete.sorvegliate?.giu ?? 0) > 0
+          ? `${c.rete.sorvegliate.giu} apparati giù`
+          : "internet c'è"
+      : "questa casa non lo dice",
+  );
+  metti(
+    "La macchina non soffre",
+    laMacchinaRegge(c.macchina),
+    c.macchina
+      ? [
+          c.macchina.temperatura === null || c.macchina.temperatura === undefined
+            ? null
+            : `${c.macchina.temperatura}°`,
+          c.macchina.disco === null || c.macchina.disco === undefined
+            ? null
+            : `disco al ${c.macchina.disco}%`,
+        ]
+          .filter(Boolean)
+          .join(" · ") || "senza numeri da guardare"
+      : "questa casa non lo dice",
+  );
+  metti(
+    "Il backup gira",
+    c.backup ? !backupFermo(c) : null,
+    c.backup
+      ? c.backup.giorniFa === null || c.backup.giorniFa === undefined
+        ? "mai fatto"
+        : `l'ultimo ${plurale(c.backup.giorniFa, "giorno fa", "giorni fa")}`
+      : "questa casa non lo dice",
+  );
+  metti(
+    "Nessuna batteria da cambiare",
+    c.batterie ? c.batterie.scariche === 0 : null,
+    c.batterie
+      ? c.batterie.scariche === 0
+        ? c.batterie.piuBassa === null || c.batterie.piuBassa === undefined
+          ? "nessuna batteria in casa"
+          : `la più bassa al ${c.batterie.piuBassa}%`
+        : `${c.batterie.scariche} sotto soglia`
+      : "questa casa non lo dice",
+  );
+
+  return {
+    spunte,
+    fatte: spunte.filter((una) => una.fatta === true).length,
+    aperte: spunte.filter((una) => una.fatta === false).length,
+    ignote: spunte.filter((una) => una.fatta === null).length,
+    quante: spunte.length,
+  };
+}
+
+/* La macchina regge? `null` dove non se ne sa abbastanza per dirlo — e una
+ * macchina che dichiara solo il disco si giudica sul disco, invece di finire
+ * fra quelle di cui non si sa niente. */
+function laMacchinaRegge(m) {
+  if (!m) return null;
+  const guarda = [];
+  if (m.temperatura !== null && m.temperatura !== undefined)
+    guarda.push(m.temperatura < TROPPO_CALDO);
+  if (m.disco !== null && m.disco !== undefined) guarda.push(m.disco < DISCO_PIENO);
+  if (m.discoVita !== null && m.discoVita !== undefined) guarda.push(m.discoVita < DISCO_FINITO);
+  if (!guarda.length) return null;
+  return guarda.every(Boolean);
+}
+
+/** Se questa casa puo' dirsi consegnata: nessuna spunta aperta. */
+export const collaudoChiuso = (carta) => ilCollaudo(carta).aperte === 0;
+
+/**
+ * Lo stato di una casa, in una parola.
+ *
+ * L'ordine conta. **Muta batte tutto**: di una casa che non parla non si sa
+ * niente, nemmeno che sta bene — quello che si vede di lei e' vecchio. Poi il
+ * collaudo mai chiuso, che non e' un guasto ma un lavoro lasciato a meta', e
+ * sta in una fila sua perche' si sbriga in un altro modo. Poi quello che si e'
+ * rotto dopo.
+ */
+export function loStato(casa, adesso = Date.now()) {
+  const c = casa?.carta ?? null;
+  if (!c) {
+    return {
+      chiave: "aperto",
+      segno: "◇",
+      parola: "collaudo aperto",
+      perché: "Non è ancora arrivata nessuna cartolina da questa casa.",
+    };
+  }
+  if (eMuta(c, adesso)) {
+    return {
+      chiave: "muta",
+      segno: "■",
+      parola: "muta",
+      perché: `Non manda una cartolina da ${daQuanto(c.quando, adesso)}. Quello che si vede qui sotto è vecchio di altrettanto.`,
+    };
+  }
+  if (!casa.collaudataIl) {
+    const collaudo = ilCollaudo(c);
+    return {
+      chiave: "aperto",
+      segno: "◇",
+      parola: "collaudo aperto",
+      perché: `Installata da poco e non ancora consegnata: ${collaudo.aperte} ${collaudo.aperte === 1 ? "spunta aperta" : "spunte aperte"} su ${collaudo.quante}.`,
+    };
+  }
+
+  const guai = [];
+  if (c.rete && !c.rete.internet) guai.push("senza internet");
+  if (addonGiu(c) > 0) guai.push(plurale(addonGiu(c), "add-on fermo", "add-on fermi"));
+  if ((c.rete?.sorvegliate?.giu ?? 0) > 0)
+    guai.push(plurale(c.rete.sorvegliate.giu, "apparato di rete giù", "apparati di rete giù"));
+  if ((c.entita?.sparite ?? 0) > 0)
+    guai.push(plurale(c.entita.sparite, "entità sparita", "entità sparite"));
+  if ((c.registro?.errori24h ?? 0) > 0)
+    guai.push(`${plurale(c.registro.errori24h, "errore", "errori")} nel registro`);
+  if ((c.macchina?.temperatura ?? 0) >= TROPPO_CALDO)
+    guai.push(`${c.macchina.temperatura}° sulla scheda`);
+  if ((c.macchina?.disco ?? 0) >= DISCO_PIENO) guai.push(`disco al ${c.macchina.disco}%`);
+  if ((c.macchina?.discoVita ?? 0) >= DISCO_FINITO)
+    guai.push(`disco consumato al ${c.macchina.discoVita}%`);
+  if ((c.batterie?.scariche ?? 0) > 0)
+    guai.push(plurale(c.batterie.scariche, "batteria scarica", "batterie scariche"));
+  if (aggiornamentiPesano(c.aggiornamenti))
+    guai.push(`${plurale(c.aggiornamenti.quanti, "aggiornamento", "aggiornamenti")} in attesa`);
+  if (backupFermo(c)) guai.push("backup fermo");
+
+  if (guai.length) {
+    const prime = guai.slice(0, 3);
+    const restano = guai.length - prime.length;
+    return {
+      chiave: "guardare",
+      segno: "▲",
+      parola: "da guardare",
+      perché: restano
+        ? `${prime.join(", ")}, e altre ${restano} cose qui sotto.`
+        : `${prime.join(", ")}.`,
+    };
+  }
+  return { chiave: "posto", segno: "●", parola: "a posto", perché: "" };
+}
+
+/**
+ * Le pastiglie di una riga: quello che non va, una cosa per pastiglia.
+ *
+ * Ci sono anche le cose che non fanno diventare ambra la casa — un
+ * aggiornamento singolo si vede lo stesso, semplicemente non suona.
+ */
+export function lePastiglie(carta) {
+  const c = carta ?? {};
+  const p = [];
+  const metti = (parola, come) => p.push({ parola, come });
+
+  if (c.rete && !c.rete.internet) metti("senza internet", "male");
+  if (addonGiu(c) > 0) metti(plurale(addonGiu(c), "add-on fermo", "add-on fermi"), "male");
+  if ((c.rete?.sorvegliate?.giu ?? 0) > 0)
+    metti(plurale(c.rete.sorvegliate.giu, "apparato giù", "apparati giù"), "male");
+  if ((c.entita?.sparite ?? 0) > 0)
+    metti(plurale(c.entita.sparite, "entità sparita", "entità sparite"), "male");
+  if ((c.registro?.errori24h ?? 0) > 0)
+    metti(`${plurale(c.registro.errori24h, "errore", "errori")} in 24h`, "male");
+  if ((c.macchina?.temperatura ?? 0) >= TROPPO_CALDO)
+    metti(`${c.macchina.temperatura}° sulla scheda`, "attenta");
+  if ((c.macchina?.disco ?? 0) >= DISCO_PIENO) metti(`disco al ${c.macchina.disco}%`, "attenta");
+  if ((c.macchina?.discoVita ?? 0) >= DISCO_FINITO)
+    metti(`disco consumato al ${c.macchina.discoVita}%`, "attenta");
+  if ((c.batterie?.scariche ?? 0) > 0)
+    metti(plurale(c.batterie.scariche, "batteria scarica", "batterie scariche"), "attenta");
+  if ((c.aggiornamenti?.quanti ?? 0) > 0)
+    metti(
+      plurale(c.aggiornamenti.quanti, "aggiornamento", "aggiornamenti"),
+      aggiornamentiPesano(c.aggiornamenti) ? "attenta" : "",
+    );
+  if (backupFermo(c))
+    metti(
+      c.backup.giorniFa === null || c.backup.giorniFa === undefined
+        ? "backup mai fatto"
+        : `backup fermo da ${c.backup.giorniFa} gg`,
+      "attenta",
+    );
+  if (c.plance && c.plance.configurate === 0) metti("plancia da configurare", "attenta");
+  if (c.telefoni && c.telefoni.abbinati === 0) metti("nessun telefono abbinato", "attenta");
+
+  if (!p.length) {
+    metti(c.entita ? `${c.entita.totali} entità, tutte là` : "nessuna spia accesa", "bene");
+  }
+  return p;
+}

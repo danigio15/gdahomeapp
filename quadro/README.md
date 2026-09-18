@@ -1,11 +1,12 @@
 # Il quadro
 
-**Bozza.** Qui dentro non c'è ancora niente che gira: c'è il disegno di come
-un installatore guarda i suoi impianti, e la pagina che lo fa vedere
-(`console/index.html`, con case finte). Serve a decidere prima di costruire.
-
 Il quadro elettrico e il quadro della situazione sono la stessa parola, e per
 chi installa impianti è la sua.
+
+**Dove siamo.** Le prime due tappe sono fatte. Il ponte sa spedire la sua
+cartolina — spenta di serie, e si legge per intero dalla sua console — e il
+quadro gira: server, console attaccata a dati veri, abbinamento delle case.
+Resta la versione su Cloudflare. Per accenderlo, [qui sotto](#accenderlo).
 
 ## A cosa serve
 
@@ -39,6 +40,34 @@ L'installatore invece con quelle case un contratto ce l'ha già.
 Non sta nemmeno solo nell'app, e per un motivo pratico: un cruscotto che vive
 in un telefono dice che una casa è giù **quando lo apri**. Il mestiere del
 quadro è accorgersene mentre nessuno guarda.
+
+## Accenderlo
+
+```
+cd quadro
+QUADRO_CHIAVE='qualcosa di lungo e a caso' npm run avvia
+```
+
+Poi `http://<macchina>:8100/console/`: la chiave la chiede la pagina e se la
+tiene nel browser, non sta in nessun indirizzo. Le altre manopole, tutte con un
+valore di serie che va bene:
+
+| | |
+|---|---|
+| `QUADRO_CHIAVE` | la chiave del retro, almeno sedici caratteri. Senza, il quadro riceve le cartoline e non le fa vedere a nessuno: lo dice all'accensione e su `/salute`, invece di lasciarlo scoprire da una pagina che risponde sempre di no |
+| `QUADRO_PORTA` | `8100` |
+| `QUADRO_DATI` | dove tiene i suoi due file, `./dati` |
+| `QUADRO_REGISTRO` | quanto parla: `debug`, `info`, `attenzione`, `errore` |
+
+Davanti va messo un HTTPS vero — un proxy, un tunnel, quello che si preferisce:
+le case ci mandano la loro chiave a ogni cartolina, e in chiaro la manderebbero
+a chiunque ascolti. La console chiede le sue vie in relativo apposta, così un
+proxy la può montare anche sotto un prefisso.
+
+Per far entrare una casa: dalla console, **Abbina** fa un codice che vive un
+quarto d'ora; si incolla nella casella `quadro` della scheda dell'add-on in
+quella casa, insieme all'indirizzo del quadro. La prima cartolina lega il codice
+a quella matricola, e da lì in poi non serve a nessun'altra.
 
 ## Cosa vede l'installatore
 
@@ -297,27 +326,54 @@ leggere e spegnere.
 
 ```
 quadro/
-  src/quadro.js      il server: le vie, e niente altro
+  src/index.js       lo accende: il server, i due archivi, la potatura
+  src/server.js      le vie, e due chiavi che non si toccano
   src/case.js        le case seguite: matricola, nome dell'installatore,
-                     collaudataIl, la storia dei giorni
-  src/cartoline.js   riceve, valida, tiene N giorni e pota
+                     collaudataIl, e quante cartoline per giorno
   src/collaudo.js    da una cartolina alle spunte, e dalle spunte allo stato
-  src/chiavi.js      le chiavi di flotta, e la loro impronta
-  console/index.html la pagina (la bozza c'è già)
+  src/chiavi.js      gli inviti, e le chiavi che ne restano
+  console/index.html la pagina
 ```
 
-Le vie:
+`src/cartoline.js` non c'è, e non è una dimenticanza: si tiene **l'ultima**
+cartolina e un numero per giorno, non tutte. Novantasei righe al giorno per
+casa, su quaranta case, sono quattromila righe al giorno per disegnare quattordici
+caselle.
+
+Le vie, davanti:
 
 | | |
 |---|---|
-| `POST /cartolina` | la casa deposita. Matricola + chiave di flotta; una matricola mai vista nasce qui, in fila «collaudo aperto» |
-| `GET /case` | l'elenco per la console — è la forma di `CASE` nella bozza |
-| `GET /casa/:matricola` | una casa, con la sua storia |
-| `PUT /casa/:matricola` | il nome che le dà l'installatore, e «non seguirla più» |
-| `GET /salute` | se il quadro sta in piedi |
+| `GET /` | la soglia: cos'è questo indirizzo, in italiano. Chi lo tiene fra i segnalibri prima o poi lo apre nudo |
+| `GET /salute` | se è vivo, quante case segue, e se la console è aperta |
+| `POST /cartolina` | la casa deposita. `x-casa` + la sua chiave; una matricola mai vista nasce qui, senza nome e in fila «collaudo aperto» |
 
-`src/collaudo.js` è già scritto dentro la bozza — `ilCollaudo`, `loStato`,
-`leSpie` — e va portato lì com'è, con le sue prove.
+E dietro, tutte dentro `/console/` e tutte con la chiave della console:
+
+| | |
+|---|---|
+| `GET /console/` | la pagina |
+| `GET /console/case` | l'elenco già vestito: stato, spunte e pastiglie **già decisi**, più le tre soglie con cui la pagina colora i metri |
+| `GET` `POST /console/inviti` | i codici in attesa, e uno nuovo |
+| `DELETE /console/inviti/<codice>` | annullalo |
+| `PUT /console/casa/<matricola>` | il nome che le dà l'installatore |
+| `DELETE /console/casa/<matricola>` | non seguirla più: si butta quello che se ne sa **e** la sua chiave, se no la prima cartolina la fa rinascere tre secondi dopo |
+
+Le due chiavi sono due apposta. Dal davanti entrano le case, ognuna con la sua:
+apre una porta sola — depositare per la propria matricola — e non fa vedere
+niente. Dal retro entra l'installatore, e la sua fa vedere tutto e non lascia
+depositare niente. Con una chiave sola, una casa qualunque potrebbe leggersi
+l'elenco degli impianti di chi l'ha installata, cioè i clienti di qualcun altro.
+
+**Una cosa è andata diversamente da come sta scritta qui sopra.** Il documento
+diceva che alla prima cartolina il quadro restituisce alla casa una chiave nuova
+e l'invito muore. Sarebbe un po' più stretto, e si è scelto di no: quella chiave
+nuova la casa dovrebbe tenersela in `/data`, e da quel momento la riga scritta
+nella scheda dell'add-on non sarebbe più quella che la casa usa davvero — si
+perderebbe **quello che c'è scritto nella casella è quello che parte**, per
+guadagnare poco. Il codice resta quello, e a bruciarsi è il suo essere libero:
+alla prima cartolina si lega a quella matricola e nessun'altra casa lo può più
+usare.
 
 ### Nell'app: niente
 
@@ -466,6 +522,21 @@ guardi.
    quella via dica a chi parla questa casa e **non** dica con che, e che
    «smetti» faccia tutt'e due le cose.
 2. **Il quadro in Node**, la pagina che c'è già attaccata a dati veri.
+
+   **Fatta.** Seicento righe e nessuna dipendenza: `src/server.js` con le vie
+   qui sopra, `src/case.js` che tiene l'ultima cartolina e la storia dei giorni,
+   `src/collaudo.js` con le regole, `src/chiavi.js` con gli inviti. La pagina è
+   la stessa di prima, meno le novecento righe di dati finti e **meno le regole
+   che si era portata dietro**: stato, spunte e pastiglie arrivano decisi da
+   `GET case`, e con loro le tre soglie dei metri. Quella pagina ora disegna e
+   basta, perché una soglia scritta in due posti prima o poi diventa due soglie.
+
+   Ventisei prove, nove delle quali col quadro intero acceso: che una casa non
+   possa leggere la console, che un codice usato non serva a nessun'altra casa,
+   che la matricola in testa vinca su quella nel corpo, e che quello che una
+   cartolina non dice resti **«non si sa»** invece di diventare una spunta
+   rossa — è la differenza fra un impianto che ha un guaio e un impianto che non
+   l'ha raccontato.
 3. **La versione su Cloudflare**, come `nuvola/`, con la stessa prova dal vivo
    contro tutte e due.
 4. Poi, se serve: la storia lunga, un avviso quando una casa tace, le impronte
@@ -479,8 +550,10 @@ guardi.
 - **Quanto tiene il quadro.** Qui si propone la striscia a quattordici giorni,
   come la finestra del traffico di GitHub in `strumenti/conta-le-case.mjs`.
 - **Le soglie.** Batteria al 20%, backup fermo dopo 14 giorni, muta dopo tre
-  cartoline saltate: sono numeri scelti per far vedere la bozza, non misurati.
-- **Se un aggiornamento in attesa fa suonare la spia.** Nella bozza no, a meno
+  cartoline saltate, 75 °C, disco al 85%: sono scelte a occhio, non misurate.
+  Stanno tutte in cima a `src/collaudo.js` con un nome, che è il minimo perché
+  un giorno si possano cambiare sapendo quante sono.
+- **Se un aggiornamento in attesa fa suonare la spia.** Per ora no, a meno
   che tocchi Home Assistant o gdahome o siano tre: una casa che diventa ambra
   perché un add-on ha una versione nuova da ieri insegna a non guardare più le
   case ambra. Nel collaudo invece contano tutti, perché alla consegna un

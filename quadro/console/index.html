@@ -5,16 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Il quadro degli impianti</title>
     <!--
-      IL QUADRO — BOZZA, CON DENTRO CASE FINTE.
+      IL QUADRO — LA CONSOLE DI CHI INSTALLA.
 
-      Questa pagina non parla con niente: le case che si vedono stanno scritte
-      qui sotto, in `CASE`. Serve a guardare il cruscotto prima di costruirlo, e
-      a discutere su una cosa invece che su una descrizione. Quando il quadro
-      sarà vero, `CASE` arriva da `GET /case` e il resto della pagina resta
-      com'è — per questo i dati stanno in cima e separati da tutto.
+      Questa pagina è una sola, e sta tutta qui: il server la legge dal disco e
+      la serve su `/console/`. Da lì chiede le sue vie in **relativo** — `case`,
+      non `/console/case` — così funziona anche dietro un proxy che la monta
+      sotto un prefisso. Chi bussa a `/console` senza barra ci viene mandato dal
+      server, perché da `/console` un indirizzo relativo porterebbe a `/case`.
 
-      Niente font, niente librerie, nessuna richiesta a nessuno: la regola delle
-      altre console del progetto vale anche qui.
+      Niente font, niente librerie, nessuna richiesta a nessuno che non sia il
+      proprio quadro: la regola delle altre console del progetto vale anche qui.
+
+      QUI NON SI DECIDE NIENTE.
+
+      Lo stato di una casa, le spunte del collaudo e le pastiglie arrivano già
+      decisi da `quadro/src/collaudo.js`, dentro `GET case`. Questa pagina li
+      disegna e basta. Era nata col contrario — le regole scritte qui, coi dati
+      finti accanto — e il giorno che una soglia cambia, cambiarla in due posti
+      vuol dire cambiarla in uno solo: due schermi che dicono due cose diverse
+      della stessa casa. Anche le tre soglie che colorano i metri (caldo, disco
+      pieno, disco finito) viaggiano dal server insieme alle case.
 
       DA DOVE VENGONO I COLORI E LE FORME.
 
@@ -1072,6 +1082,20 @@
 
       /* La tacca dei settantacinque gradi, quella che la plancia disegna già
        * sull'arco del MiniPC. */
+      .binario .nonLoDice {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: 0.6rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--fioco);
+        background: var(--carta-alta);
+        border-radius: 5px;
+      }
+
       .binario .tacca {
         position: absolute;
         inset: 0 auto;
@@ -1595,772 +1619,88 @@
     <main id="dove"></main>
 
     <footer>
-      Bozza con otto case finte: nessuna esiste, e questa pagina non chiama nessuno. Quello che
-      diventerà sta in <span class="mono">quadro/README.md</span>.
+      Il quadro di gdahome. Da qui non si entra in nessuna casa e non si vede niente di chi ci
+      abita: si guardano i numeri che ogni impianto manda da sé.
     </footer>
 
     <script>
       /* ───────────────────────────────────────────────────────────────────
-       * LE CASE FINTE.
+       * DA DOVE ARRIVA QUELLO CHE SI VEDE.
        *
-       * Ognuna è l'ultima cartolina arrivata (`carta`), più le tre cose che il
-       * quadro sa per conto suo e che la casa non manda: il nome che le ha dato
-       * l'installatore, il giorno in cui il collaudo si è chiuso la prima
-       * volta, e la storia dei giorni.
+       * Da `/console/case` e `/console/inviti`, e **gia' deciso**: lo stato di
+       * una casa, le sue spunte e le sue pastiglie li calcola il server
+       * (`src/collaudo.js`). Qui dentro non c'e' nessuna regola, ed e' voluto:
+       * se le regole stessero in tutt'e due i posti, il giorno che una cambia
+       * ne cambierebbe una sola, e due schermi direbbero due cose diverse
+       * della stessa casa.
        *
-       * La forma di `carta` è quella proposta in `quadro/README.md`: quando il
-       * quadro esisterà, queste righe arrivano da `GET /case` così come sono.
+       * Questa pagina disegna. Non decide.
+       *
+       * ─── La chiave ─────────────────────────────────────────────────────
+       *
+       * Resta nel browser e non nella pagina: chi guarda questo quadro lo apre
+       * tutti i giorni, e ribattere una chiave lunga tutti i giorni finisce con
+       * una chiave corta. Un tasto la butta via.
        * ─────────────────────────────────────────────────────────────────── */
-      const CASE = [
-        {
-          nome: "Rossi — via Verdi 12",
-          da: "12 marzo 2026",
-          collaudataIl: "12 marzo 2026",
-          giorni: "PPPPPPPPPPPPPP",
-          carta: {
-            casa: "casa_a3f19c74e05b2d8890fa4c1e6b73d052",
-            quando: "2026-09-18T09:41:12Z",
-            ogni: 15,
-            ponte: "1.4.32.14",
-            plancia: "1.4.32",
-            ha: "2026.9.1",
-            supervisor: "2026.08.3",
-            sistema: "Home Assistant OS 14.2",
-            macchina: {
-              scheda: "ODROID-N2+",
-              cpu: 14,
-              ram: 38,
-              disco: 46,
-              discoLiberi: 17.2,
-              temperatura: 46,
-              discoVita: 11,
-              accesaDa: 41,
-            },
-            rete: {
-              internet: true,
-              schede: [
-                { nome: "eth0", tipo: "ethernet", su: true, principale: true, ip: "192.168.1.50" },
-                {
-                  nome: "wlan0",
-                  tipo: "wifi",
-                  su: false,
-                  principale: false,
-                  ip: "",
-                  segnale: null,
-                },
-              ],
-              sorvegliate: { quante: 3, giu: 0 },
-            },
-            addon: {
-              quanti: 8,
-              accesi: 8,
-              spentiCheDovrebbero: 0,
-              elenco: [
-                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Mosquitto broker", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Zigbee2MQTT", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "ESPHome", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "File editor", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Samba share", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Studio Code Server", su: true, allAvvio: true, aggiornabile: false },
-              ],
-            },
-            aggiornamenti: {
-              quanti: 0,
-              ha: false,
-              addon: 0,
-              gdahome: false,
-              firmware: 0,
-              elenco: [],
-            },
-            manutenzione: true,
-            lavoro: null,
-            plance: { quante: 3, configurate: 3 },
-            telefoni: { abbinati: 2, visti7gg: 2 },
-            fuori: { acceso: true, filo: true, daGiorni: 41 },
-            dispositivi: { totali: 214, spariti: 3, impronte: ["7c2a", "91ff", "04be"] },
-            batterie: { sotto20: 0, piuBassa: 47 },
-            backup: { giorniFa: 2 },
-            registro: { errori24h: 0 },
-          },
-        },
-        {
-          nome: "Conti — casa di campagna",
-          da: "19 giugno 2025",
-          collaudataIl: "20 giugno 2025",
-          giorni: "PPPPPMPPPPPPPP",
-          carta: {
-            casa: "casa_71cd3a6e884b09f25de4a1c7b3608e14",
-            quando: "2026-09-18T09:29:47Z",
-            ogni: 15,
-            ponte: "1.4.32.9",
-            plancia: "1.4.31",
-            ha: "2026.6.2",
-            supervisor: "2026.07.2",
-            sistema: "Home Assistant OS 13.2",
-            macchina: {
-              scheda: "ODROID-N2",
-              cpu: 71,
-              ram: 88,
-              disco: 93,
-              discoLiberi: 1.1,
-              temperatura: 79,
-              discoVita: 74,
-              accesaDa: 3,
-            },
-            rete: {
-              internet: true,
-              schede: [
-                { nome: "eth0", tipo: "ethernet", su: false, principale: false, ip: "" },
-                {
-                  nome: "wlan0",
-                  tipo: "wifi",
-                  su: true,
-                  principale: true,
-                  ip: "192.168.4.22",
-                  segnale: 38,
-                },
-              ],
-              sorvegliate: { quante: 4, giu: 2 },
-            },
-            addon: {
-              quanti: 7,
-              accesi: 5,
-              spentiCheDovrebbero: 2,
-              elenco: [
-                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: true },
-                { nome: "Mosquitto broker", su: false, allAvvio: true, aggiornabile: false },
-                { nome: "Zigbee2MQTT", su: false, allAvvio: true, aggiornabile: true },
-                { nome: "ESPHome", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Samba share", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Duck DNS", su: true, allAvvio: true, aggiornabile: false },
-              ],
-            },
-            aggiornamenti: {
-              quanti: 6,
-              ha: true,
-              addon: 2,
-              gdahome: true,
-              firmware: 2,
-              elenco: [
-                {
-                  nome: "gdahome",
-                  da: "1.4.32.9",
-                  a: "1.4.32.14",
-                  nostra: true,
-                  installabile: true,
-                  stacca: true,
-                },
-                {
-                  nome: "Home Assistant Core",
-                  da: "2026.6.2",
-                  a: "2026.9.1",
-                  nostra: true,
-                  installabile: true,
-                  stacca: true,
-                },
-                {
-                  nome: "Mosquitto broker",
-                  da: "6.4.0",
-                  a: "6.5.1",
-                  nostra: false,
-                  installabile: true,
-                  stacca: false,
-                },
-                {
-                  nome: "Zigbee2MQTT",
-                  da: "2.1.0",
-                  a: "2.3.2",
-                  nostra: false,
-                  installabile: true,
-                  stacca: false,
-                },
-                {
-                  nome: "Termostato camera",
-                  da: "1.9",
-                  a: "2.0",
-                  nostra: false,
-                  installabile: false,
-                  stacca: false,
-                },
-                {
-                  nome: "Presa cucina",
-                  da: "3.2.1",
-                  a: "3.4.0",
-                  nostra: false,
-                  installabile: false,
-                  stacca: false,
-                },
-              ],
-            },
-            manutenzione: true,
-            lavoro: null,
-            plance: { quante: 1, configurate: 1 },
-            telefoni: { abbinati: 1, visti7gg: 1 },
-            fuori: { acceso: true, filo: true, daGiorni: 3 },
-            dispositivi: { totali: 132, spariti: 1, impronte: ["e3b1"] },
-            batterie: { sotto20: 4, piuBassa: 6 },
-            backup: { giorniFa: 88 },
-            registro: { errori24h: 12 },
-          },
-        },
-        {
-          nome: "Studio Marelli",
-          da: "8 gennaio 2026",
-          collaudataIl: "8 gennaio 2026",
-          giorni: "PPPPPPPPPPPMVV",
-          carta: {
-            casa: "casa_bb0417d9f3e8462a85c1079de6b24a9f",
-            quando: "2026-09-16T04:12:55Z",
-            ogni: 15,
-            ponte: "1.4.32.11",
-            plancia: "1.4.32",
-            ha: "2026.8.4",
-            supervisor: "2026.08.1",
-            sistema: "Home Assistant OS 14.1",
-            macchina: {
-              scheda: "ODROID-M1",
-              cpu: 9,
-              ram: 41,
-              disco: 52,
-              discoLiberi: 28.4,
-              temperatura: 44,
-              discoVita: 26,
-              accesaDa: 9,
-            },
-            rete: {
-              internet: false,
-              schede: [
-                { nome: "eth0", tipo: "ethernet", su: true, principale: true, ip: "10.0.0.30" },
-              ],
-              sorvegliate: { quante: 2, giu: 2 },
-            },
-            addon: {
-              quanti: 5,
-              accesi: 5,
-              spentiCheDovrebbero: 0,
-              elenco: [
-                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: true },
-                { nome: "Mosquitto broker", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "ESPHome", su: true, allAvvio: true, aggiornabile: true },
-                { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Google Drive Backup", su: true, allAvvio: true, aggiornabile: false },
-              ],
-            },
-            aggiornamenti: {
-              quanti: 2,
-              ha: true,
-              addon: 1,
-              gdahome: true,
-              firmware: 0,
-              elenco: [
-                {
-                  nome: "gdahome",
-                  da: "1.4.32.11",
-                  a: "1.4.32.14",
-                  nostra: true,
-                  installabile: true,
-                  stacca: true,
-                },
-                {
-                  nome: "Home Assistant Core",
-                  da: "2026.8.4",
-                  a: "2026.9.1",
-                  nostra: true,
-                  installabile: true,
-                  stacca: true,
-                },
-              ],
-            },
-            manutenzione: true,
-            lavoro: {
-              cosa: "gdahome 1.4.32.14",
-              stato: "in corso",
-              quando: "2 giorni fa",
-              stacca: true,
-            },
-            plance: { quante: 1, configurate: 1 },
-            telefoni: { abbinati: 2, visti7gg: 0 },
-            fuori: { acceso: true, filo: true, daGiorni: 9 },
-            dispositivi: { totali: 96, spariti: 0, impronte: [] },
-            batterie: { sotto20: 1, piuBassa: 14 },
-            backup: { giorniFa: 31 },
-            registro: { errori24h: 0 },
-          },
-        },
-        {
-          nome: "B&B Le Rondini",
-          da: "17 settembre 2026",
-          collaudataIl: null,
-          giorni: "            PP",
-          carta: {
-            casa: "casa_0ad9f4b17c26e358920b6cf1d4e7a385",
-            quando: "2026-09-18T09:40:08Z",
-            ogni: 15,
-            ponte: "1.4.32.14",
-            plancia: "1.4.32",
-            ha: "2026.9.1",
-            supervisor: "2026.08.3",
-            sistema: "Home Assistant OS 14.2",
-            macchina: {
-              scheda: "ODROID-N2+",
-              cpu: 11,
-              ram: 29,
-              disco: 12,
-              discoLiberi: 27.9,
-              temperatura: 42,
-              discoVita: 1,
-              accesaDa: 2,
-            },
-            rete: {
-              internet: true,
-              schede: [
-                { nome: "eth0", tipo: "ethernet", su: true, principale: true, ip: "192.168.8.12" },
-              ],
-              sorvegliate: { quante: 0, giu: 0 },
-            },
-            addon: {
-              quanti: 3,
-              accesi: 3,
-              spentiCheDovrebbero: 0,
-              elenco: [
-                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Mosquitto broker", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
-              ],
-            },
-            aggiornamenti: {
-              quanti: 0,
-              ha: false,
-              addon: 0,
-              gdahome: false,
-              firmware: 0,
-              elenco: [],
-            },
-            manutenzione: true,
-            lavoro: null,
-            plance: { quante: 1, configurate: 0 },
-            telefoni: { abbinati: 0, visti7gg: 0 },
-            fuori: { acceso: true, filo: true, daGiorni: 1 },
-            dispositivi: { totali: 58, spariti: 0, impronte: [] },
-            batterie: { sotto20: 0, piuBassa: 91 },
-            backup: { giorniFa: null },
-            registro: { errori24h: 0 },
-          },
-        },
-        {
-          nome: "Bianchi — Villa al Lago",
-          da: "2 novembre 2025",
-          collaudataIl: "3 novembre 2025",
-          giorni: "PPPPPPPPPPPPPP",
-          carta: {
-            casa: "casa_5e8b02cc19a743f1bd6690e2a4718f3c",
-            quando: "2026-09-18T09:38:02Z",
-            ogni: 15,
-            ponte: "1.4.32.14",
-            plancia: "1.4.32",
-            ha: "2026.9.1",
-            supervisor: "2026.08.3",
-            sistema: "Home Assistant OS 14.2",
-            macchina: {
-              scheda: "ODROID-N2+",
-              cpu: 22,
-              ram: 54,
-              disco: 61,
-              discoLiberi: 11.6,
-              temperatura: 52,
-              discoVita: 34,
-              accesaDa: 120,
-            },
-            rete: {
-              internet: true,
-              schede: [
-                { nome: "eth0", tipo: "ethernet", su: true, principale: true, ip: "192.168.1.8" },
-                {
-                  nome: "wlan0",
-                  tipo: "wifi",
-                  su: true,
-                  principale: false,
-                  ip: "192.168.1.9",
-                  segnale: 71,
-                },
-              ],
-              sorvegliate: { quante: 6, giu: 0 },
-            },
-            addon: {
-              quanti: 11,
-              accesi: 11,
-              spentiCheDovrebbero: 0,
-              elenco: [
-                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Mosquitto broker", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Zigbee2MQTT", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "ESPHome", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Frigate", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Google Drive Backup", su: true, allAvvio: true, aggiornabile: false },
-              ],
-            },
-            aggiornamenti: {
-              quanti: 0,
-              ha: false,
-              addon: 0,
-              gdahome: false,
-              firmware: 0,
-              elenco: [],
-            },
-            manutenzione: true,
-            lavoro: null,
-            plance: { quante: 2, configurate: 2 },
-            telefoni: { abbinati: 4, visti7gg: 3 },
-            fuori: { acceso: true, filo: true, daGiorni: 120 },
-            dispositivi: { totali: 388, spariti: 0, impronte: [] },
-            batterie: { sotto20: 0, piuBassa: 62 },
-            backup: { giorniFa: 1 },
-            registro: { errori24h: 0 },
-          },
-        },
-        {
-          nome: "Ferrari — attico centro",
-          da: "5 aprile 2026",
-          collaudataIl: "6 aprile 2026",
-          giorni: "PPPPPPPPPPPPPP",
-          carta: {
-            casa: "casa_92e740b8d15cf6a3e0724b9d8c31506a",
-            quando: "2026-09-18T09:35:19Z",
-            ogni: 15,
-            ponte: "1.4.32.14",
-            plancia: "1.4.32",
-            ha: "2026.9.1",
-            supervisor: "2026.08.3",
-            sistema: "Home Assistant OS 14.2",
-            macchina: {
-              scheda: "ODROID-N2+",
-              cpu: 18,
-              ram: 44,
-              disco: 38,
-              discoLiberi: 19.8,
-              temperatura: 49,
-              discoVita: 19,
-              accesaDa: 74,
-            },
-            rete: {
-              internet: true,
-              schede: [
-                { nome: "eth0", tipo: "ethernet", su: true, principale: true, ip: "192.168.0.24" },
-              ],
-              sorvegliate: { quante: 2, giu: 0 },
-            },
-            addon: {
-              quanti: 6,
-              accesi: 6,
-              spentiCheDovrebbero: 0,
-              elenco: [
-                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Mosquitto broker", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "ESPHome", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
-              ],
-            },
-            aggiornamenti: {
-              quanti: 0,
-              ha: false,
-              addon: 0,
-              gdahome: false,
-              firmware: 0,
-              elenco: [
-                {
-                  nome: "Home Assistant Core",
-                  da: "2026.9.0",
-                  a: "2026.9.1",
-                  nostra: true,
-                  installabile: true,
-                  stacca: true,
-                },
-              ],
-            },
-            manutenzione: true,
-            lavoro: {
-              cosa: "Home Assistant Core 2026.9.1",
-              stato: "in corso",
-              quando: "4 minuti fa",
-              stacca: true,
-            },
-            plance: { quante: 2, configurate: 2 },
-            telefoni: { abbinati: 3, visti7gg: 2 },
-            fuori: { acceso: true, filo: true, daGiorni: 74 },
-            dispositivi: { totali: 167, spariti: 0, impronte: [] },
-            batterie: { sotto20: 0, piuBassa: 55 },
-            backup: { giorniFa: 3 },
-            registro: { errori24h: 0 },
-          },
-        },
-        {
-          nome: "Greco — via Trento 4",
-          da: "23 febbraio 2026",
-          collaudataIl: "23 febbraio 2026",
-          giorni: "PPPPPPPPPPPPPP",
-          carta: {
-            casa: "casa_4f6a1e93b82d70c5a94e83610fd27b4e",
-            quando: "2026-09-18T09:33:51Z",
-            ogni: 15,
-            ponte: "1.4.32.14",
-            plancia: "1.4.32",
-            ha: "2026.9.1",
-            supervisor: "2026.08.3",
-            sistema: "Home Assistant Supervised",
-            macchina: {
-              scheda: "Intel NUC · Debian 13",
-              cpu: 7,
-              ram: 31,
-              disco: 24,
-              discoLiberi: 182.4,
-              temperatura: 41,
-              discoVita: null,
-              accesaDa: 30,
-            },
-            rete: {
-              internet: true,
-              schede: [
-                {
-                  nome: "enp2s0",
-                  tipo: "ethernet",
-                  su: true,
-                  principale: true,
-                  ip: "192.168.1.14",
-                },
-              ],
-              sorvegliate: { quante: 1, giu: 0 },
-            },
-            addon: {
-              quanti: 4,
-              accesi: 3,
-              spentiCheDovrebbero: 0,
-              elenco: [
-                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Mosquitto broker", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Studio Code Server", su: false, allAvvio: false, aggiornabile: false },
-              ],
-            },
-            aggiornamenti: {
-              quanti: 0,
-              ha: false,
-              addon: 0,
-              gdahome: false,
-              firmware: 0,
-              elenco: [],
-            },
-            manutenzione: true,
-            lavoro: {
-              cosa: "Mosquitto broker 6.5.1",
-              stato: "fatto",
-              quando: "ieri alle 22:14",
-              stacca: false,
-            },
-            plance: { quante: 1, configurate: 1 },
-            telefoni: { abbinati: 2, visti7gg: 2 },
-            fuori: { acceso: true, filo: true, daGiorni: 30 },
-            dispositivi: { totali: 89, spariti: 0, impronte: [] },
-            batterie: { sotto20: 0, piuBassa: 73 },
-            backup: { giorniFa: 4 },
-            registro: { errori24h: 0 },
-          },
-        },
-        {
-          nome: "Palestra Olimpia",
-          da: "14 dicembre 2025",
-          collaudataIl: "14 dicembre 2025",
-          giorni: "PPPPPPPPPPPPPP",
-          carta: {
-            casa: "casa_c208e5719ba634df80e27c14a6b39052",
-            quando: "2026-09-18T09:42:00Z",
-            ogni: 15,
-            ponte: "1.4.32.14",
-            plancia: "1.4.32",
-            ha: "2026.9.1",
-            supervisor: "2026.08.3",
-            sistema: "Home Assistant OS 14.2",
-            macchina: {
-              scheda: "ODROID-N2+",
-              cpu: 12,
-              ram: 33,
-              disco: 71,
-              discoLiberi: 8.2,
-              temperatura: 55,
-              discoVita: 58,
-              accesaDa: 210,
-            },
-            rete: {
-              internet: true,
-              schede: [
-                { nome: "eth0", tipo: "ethernet", su: true, principale: true, ip: "192.168.2.7" },
-              ],
-              sorvegliate: { quante: 1, giu: 0 },
-            },
-            addon: {
-              quanti: 5,
-              accesi: 4,
-              spentiCheDovrebbero: 0,
-              elenco: [
-                { nome: "gdahome", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Mosquitto broker", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Terminal & SSH", su: true, allAvvio: true, aggiornabile: false },
-                { nome: "Samba share", su: false, allAvvio: false, aggiornabile: false },
-                { nome: "File editor", su: true, allAvvio: true, aggiornabile: true },
-              ],
-            },
-            aggiornamenti: {
-              quanti: 1,
-              ha: false,
-              addon: 1,
-              gdahome: false,
-              firmware: 0,
-              elenco: [
-                {
-                  nome: "File editor",
-                  da: "5.8.0",
-                  a: "5.9.0",
-                  nostra: false,
-                  installabile: true,
-                  stacca: false,
-                },
-              ],
-            },
-            manutenzione: false,
-            lavoro: null,
-            plance: { quante: 1, configurate: 1 },
-            telefoni: { abbinati: 1, visti7gg: 1 },
-            fuori: { acceso: true, filo: true, daGiorni: 210 },
-            dispositivi: { totali: 41, spariti: 0, impronte: [] },
-            batterie: { sotto20: 0, piuBassa: 88 },
-            backup: { giorniFa: 6 },
-            registro: { errori24h: 0 },
-          },
-        },
-      ];
+      const DOVE_STA_LA_CHIAVE = "gdahome.quadro.chiave";
 
-      /* Gli inviti aperti: fatti dal quadro, non ancora usati da nessuna casa.
-       * `scadeFra` sono i secondi che restavano quando la pagina si è aperta. */
-      const INVITI = [
-        { codice: "K7M2-9XQF-3BHT-R4VN", fattoIl: "oggi alle 11:29", scadeFra: 782, per: "" },
-        {
-          codice: "P4WD-8JHC-52NK-TQY6",
-          fattoIl: "oggi alle 11:06",
-          scadeFra: 194,
-          per: "Villa Aurora — 2º piano",
-        },
-      ];
+      let chiave = "";
+      try {
+        chiave = localStorage.getItem(DOVE_STA_LA_CHIAVE) || "";
+      } catch (_niente) {
+        /* Finestra anonima, deposito bloccato: si chiede a ogni apertura. */
+      }
 
-      /* Le case che hanno usato un invito e non hanno ancora un nome: sono
-       * arrivate, mandano, e aspettano solo la targhetta. */
-      const APPENA = [
-        {
-          casa: "casa_d71f0b93ac2e4856b0197fe3d5c28a64",
-          arrivataIl: "6 minuti fa",
-          ha: "2026.9.1",
-        },
-      ];
-
-      /* Adesso, per questa bozza: qualche minuto dopo l'ultima cartolina, così
-       * i «3 minuti fa» tornano sempre invece di invecchiare col file. */
-      const ADESSO = new Date("2026-09-18T09:44:00Z").getTime();
-
-      /* ───────────────────────────────────────────────────────────────────
-       * IL COLLAUDO E LA SALUTE.
-       *
-       * Sono le sole regole di questa pagina, ed è la stessa cosa che nel
-       * quadro vero starà in `src/collaudo.js`: da una cartolina si ricavano
-       * delle spunte, e dalle spunte uno stato.
-       * ─────────────────────────────────────────────────────────────────── */
-
-      /* Dopo quante cartoline saltate una casa è muta. Tre: una sola può essere
-       * un riavvio, tre no. */
-      const MUTA_DOPO = 3;
-
-      /* Quanti giorni può stare fermo un backup prima che sia una cosa da
-       * guardare. Due settimane: chi lo fa ogni notte se ne accorge subito, chi
-       * lo fa a mano una volta al mese non viene tormentato. */
-      const BACKUP_FERMO = 14;
-
-      /* Sotto quale carica una batteria si conta fra quelle da cambiare. */
+      let CASE = [];
+      let INVITI = [];
+      /* Le soglie con cui si colorano i metri arrivano dal server insieme alle
+       * case: sono le stesse con cui lui decide, e scritte una volta sola. */
+      let SOGLIE = { troppoCaldo: 75, discoPieno: 85, discoFinito: 80 };
       const BATTERIA_SCARICA = 20;
-
-      /* La tacca della temperatura.
-       *
-       * Settantacinque gradi non è un numero scelto qui: è la tacca che la
-       * plancia disegna già sull'arco della temperatura del MiniPC, ed è dove
-       * un Odroid comincia a rallentarsi da solo per non cuocersi. Sopra, la
-       * casa non si rompe — diventa lenta, e nessuno capisce perché. */
-      const TROPPO_CALDO = 75;
-      const CALDINO = 65;
-
-      /* Quanto può essere pieno un disco prima che sia una cosa da guardare, e
-       * quanto può essere consumato.
-       *
-       * Il secondo è quello che conta su queste macchine: una eMMC o una
-       * microSD hanno un numero di scritture e poi finiscono, e Home Assistant
-       * scrive tutto il giorno. `disk_life_time` è la percentuale già spesa, e
-       * l'ha il Supervisor. Vederla salire vuol dire cambiare il supporto
-       * prima che sia il supporto a decidere quando. */
-      const DISCO_PIENO = 85;
-      const DISCO_STANCO = 50;
-      const DISCO_FINITO = 80;
-
-      /* Sotto quale percentuale un segnale Wi-Fi è una spiegazione. */
       const SEGNALE_DEBOLE = 45;
+      const DISCO_STANCO = 50;
 
-      /* Entro quanti minuti una casa deve tornare dopo un aggiornamento che le
-       * fa cadere il filo.
-       *
-       * `aggiornamenti.js` li chiama «quelli che staccano»: gdahome si riavvia
-       * e si porta via il filo, Home Assistant si riavvia e il ponte resta a
-       * parlare con una casa che non c'è. È normale, e va detto prima — «detto
-       * prima è un'attesa, non detto è un guasto». Oltre questa soglia però
-       * non è più un'attesa: è un aggiornamento che non è tornato, ed è la
-       * cosa peggiore che possa fare un quadro che aggiorna da lontano. Va
-       * detta con quelle parole, non nascosta dietro un «muta». */
-      const STA_TORNANDO = 45;
+      const ADESSO = () => Date.now();
 
-      const staLavorando = (c) => c.lavoro !== null && c.lavoro.stato === "in corso";
+      async function chiedi(via, opzioni = {}) {
+        /* In relativo, senza la barra davanti: da `/console/` porta dove deve,
+         * e funziona anche se un domani la console sta sotto un prefisso. */
+        const risposta = await fetch(via.replace(/^\//, ""), {
+          ...opzioni,
+          headers: {
+            authorization: `Bearer ${chiave}`,
+            "content-type": "application/json",
+            ...(opzioni.headers || {}),
+          },
+        });
+        if (risposta.status === 401) throw new ChiaveNoNo();
+        const corpo = await risposta.json().catch(() => ({}));
+        if (!risposta.ok) throw new Error(corpo.errore || "non ha funzionato");
+        return corpo;
+      }
 
-      /* Quelli che si possono davvero installare da qui: la casa ha aperto la
-       * manutenzione, e quella voce si installa chiamando un servizio. Un
-       * firmware che si porta col cacciavite non ha un tasto, e mostrarglielo
-       * sarebbe una promessa che non si mantiene. */
-      const daFare = (c) => c.aggiornamenti.elenco.filter((uno) => uno.installabile);
+      class ChiaveNoNo extends Error {}
 
-      const livello = (valore, attenta, male) =>
-        valore >= male ? "male" : valore >= attenta ? "attenta" : "bene";
+      async function carica() {
+        const [case_, inviti] = await Promise.all([chiedi("/case"), chiedi("/inviti")]);
+        CASE = case_.case || [];
+        INVITI = inviti.inviti || [];
+        if (case_.soglie) SOGLIE = case_.soglie;
+      }
 
-      /* Gli add-on che dovrebbero girare e non girano.
-       *
-       * Non «quelli spenti»: quelli **spenti che partono all'avvio**. Un add-on
-       * messo a mano e lasciato fermo è una scelta di chi ci abita, e dirgli
-       * ogni quarto d'ora che è fermo vuol dire insegnargli a non guardare più.
-       * Uno con l'avvio automatico che è giù, invece, è qualcosa che si è
-       * rotto: nessuno lo spegne di proposito lasciandogli l'avvio acceso. */
-      const addonGiu = (c) => c.addon.spentiCheDovrebbero;
+      /* Le case appena arrivate sono quelle che non hanno ancora un nome: non
+       * sono un elenco a parte, sono una domanda sullo stesso elenco. */
+      const appenaArrivate = () => CASE.filter((una) => una.senzaNome);
 
-      /* Le schede di rete che dovrebbero essere su e non lo sono: quella
-       * principale, o l'unica che c'è. Una `wlan0` spenta su una casa
-       * cablata non è un guasto, è una scheda che non si usa. */
-      const reteGiu = (c) => {
-        const su = c.rete.schede.filter((una) => una.su);
-        if (!su.length) return "nessuna scheda di rete è su";
-        if (!c.rete.internet) return "la casa non vede internet";
-        if (c.rete.sorvegliate.giu > 0)
-          return `${plurale(c.rete.sorvegliate.giu, "apparato di rete giù", "apparati di rete giù")}`;
-        return "";
-      };
-
-      const minutiDaAllora = (quando) => Math.round((ADESSO - new Date(quando).getTime()) / 60000);
+      /* Il codice a gruppi di quattro: il server lo scrive gia' cosi', e questa
+       * riga c'e' perche' una vecchia versione non lo faceva. */
+      const laRiga = (codice) => String(codice);
 
       const plurale = (quanti, uno, molti) => `${quanti} ${quanti === 1 ? uno : molti}`;
 
       function daQuanto(quando) {
-        const minuti = minutiDaAllora(quando);
+        const minuti = Math.round((ADESSO() - new Date(quando).getTime()) / 60000);
+        if (!Number.isFinite(minuti)) return "chissà quando";
         if (minuti < 1) return "adesso";
         if (minuti < 60) return `${minuti} min fa`;
         const ore = Math.round(minuti / 60);
@@ -2369,226 +1709,23 @@
         return `${giorni} ${giorni === 1 ? "giorno" : "giorni"} fa`;
       }
 
-      const eMuta = (c) => minutiDaAllora(c.quando) > c.ogni * MUTA_DOPO;
+      const ilGiorno = (quando) =>
+        /* In italiano, non nella lingua del browser: questa pagina e' in
+         * italiano tutta, e una data in inglese in mezzo si nota. */
+        new Date(quando).toLocaleDateString("it-IT", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        });
 
-      const backupFermo = (c) => c.backup.giorniFa === null || c.backup.giorniFa > BACKUP_FERMO;
+      const livello = (valore, attenta, male) =>
+        valore >= male ? "male" : valore >= attenta ? "attenta" : "bene";
 
-      /* Quando un aggiornamento in attesa è una cosa da guardare.
-       *
-       * Non sempre: un add-on che ha una versione nuova da ieri non è un
-       * impianto da andare a vedere, e una casa che diventa ambra per quello
-       * insegna a non guardare più le case ambra. Conta quando tocca Home
-       * Assistant o gdahome — lì dentro ci sono le correzioni di sicurezza — o
-       * quando se ne sono accumulati tre.
-       *
-       * Nel collaudo invece contano tutti: alla consegna un impianto si lascia
-       * aggiornato, e quella spunta è severa apposta. Due domande diverse sulla
-       * stessa riga, ed è giusto che diano due risposte diverse. */
-      const aggiornamentiPesano = (a) => a.quanti >= 3 || a.ha || a.gdahome;
-
-      /* Le spunte del collaudo: l'impianto è finito bene?
-       *
-       * Sono le cose che un installatore controlla prima di andarsene, e sono
-       * tutte già dentro la cartolina. `manca` non vuol dire rotto: vuol dire
-       * che quella riga non si può ancora spuntare. */
-      function ilCollaudo(c) {
-        const spunte = [
-          {
-            cosa: "La plancia è configurata",
-            fatta: c.plance.configurate > 0,
-            dettaglio:
-              c.plance.configurate > 0
-                ? `${c.plance.configurate} su ${c.plance.quante}`
-                : "nessuna, è vuota",
-          },
-          {
-            cosa: "C'è almeno un telefono abbinato",
-            fatta: c.telefoni.abbinati > 0,
-            dettaglio:
-              c.telefoni.abbinati > 0
-                ? plurale(c.telefoni.abbinati, "telefono", "telefoni")
-                : "nessuno",
-          },
-          {
-            cosa: "Da fuori casa funziona",
-            fatta: c.fuori.acceso && c.fuori.filo,
-            dettaglio: c.fuori.acceso
-              ? c.fuori.filo
-                ? `filo su da ${c.fuori.daGiorni} gg`
-                : "acceso, filo giù"
-              : "spento",
-          },
-          {
-            cosa: "Nessun dispositivo sparito",
-            fatta: c.dispositivi.spariti === 0,
-            dettaglio:
-              c.dispositivi.spariti === 0
-                ? `${c.dispositivi.totali} tutti là`
-                : `${c.dispositivi.spariti} su ${c.dispositivi.totali}`,
-          },
-          {
-            cosa: "Niente da aggiornare",
-            fatta: c.aggiornamenti.quanti === 0,
-            dettaglio:
-              c.aggiornamenti.quanti === 0
-                ? "tutto aggiornato"
-                : `${plurale(c.aggiornamenti.quanti, "aggiornamento", "aggiornamenti")} in attesa`,
-          },
-          {
-            cosa: "Il backup gira",
-            fatta: !backupFermo(c),
-            dettaglio:
-              c.backup.giorniFa === null ? "mai fatto" : `l'ultimo ${c.backup.giorniFa} gg fa`,
-          },
-          {
-            cosa: "Gli add-on che devono girare, girano",
-            fatta: addonGiu(c) === 0,
-            dettaglio:
-              addonGiu(c) === 0
-                ? `${c.addon.accesi} accesi su ${c.addon.quanti}`
-                : `${plurale(addonGiu(c), "fermo", "fermi")} con l'avvio automatico`,
-          },
-          {
-            cosa: "La rete regge",
-            fatta: reteGiu(c) === "",
-            dettaglio: reteGiu(c) === "" ? "internet c'è, apparati su" : reteGiu(c),
-          },
-          {
-            cosa: "La macchina non soffre",
-            fatta:
-              c.macchina.temperatura < TROPPO_CALDO &&
-              c.macchina.disco < DISCO_PIENO &&
-              (c.macchina.discoVita === null || c.macchina.discoVita < DISCO_FINITO),
-            dettaglio: `${c.macchina.temperatura}° · disco al ${c.macchina.disco}%`,
-          },
-          {
-            cosa: "Nessuna batteria da cambiare",
-            fatta: c.batterie.sotto20 === 0,
-            dettaglio:
-              c.batterie.sotto20 === 0
-                ? `la più bassa al ${c.batterie.piuBassa}%`
-                : `${c.batterie.sotto20} sotto il ${BATTERIA_SCARICA}%`,
-          },
-        ];
-        return { spunte, fatte: spunte.filter((una) => una.fatta).length, quante: spunte.length };
-      }
-
-      /* Lo stato di una casa, in una parola.
-       *
-       * L'ordine conta. Muta batte tutto: di una casa che non parla non si sa
-       * niente, nemmeno che sta bene — quello che si vede di lei è vecchio. Poi
-       * il collaudo mai chiuso, che non è un guasto ma un lavoro lasciato a
-       * metà, e sta in un'altra fila perché si sbriga in un altro modo. Poi
-       * quello che si è rotto dopo. */
-      function loStato(casa) {
-        const c = casa.carta;
-        if (eMuta(c)) {
-          if (staLavorando(c) && c.lavoro.stacca) {
-            const fermi = minutiDaAllora(c.quando);
-            return {
-              chiave: "muta",
-              segno: "■",
-              parola: fermi > STA_TORNANDO ? "non è tornata" : "sta aggiornando",
-              perché:
-                fermi > STA_TORNANDO
-                  ? `${c.lavoro.cosa} è partito ${c.lavoro.quando} e questa casa non è più tornata. Un aggiornamento che stacca il filo se lo riprende in pochi minuti: ${daQuanto(c.quando)} non è un'attesa, è un guasto. Qui si va di persona.`
-                  : `Sta installando ${c.lavoro.cosa}, e quell'aggiornamento fa cadere il filo: è normale che per qualche minuto non si faccia sentire.`,
-            };
-          }
-          return {
-            chiave: "muta",
-            segno: "■",
-            parola: "muta",
-            perché: `Non manda una cartolina da ${daQuanto(c.quando)}. Quello che si vede qui sotto è vecchio di altrettanto.`,
-          };
-        }
-        if (casa.collaudataIl === null) {
-          const collaudo = ilCollaudo(c);
-          return {
-            chiave: "aperto",
-            segno: "◇",
-            parola: "collaudo aperto",
-            perché: `Installata da poco e non ancora consegnata: ${collaudo.fatte} spunte su ${collaudo.quante}.`,
-          };
-        }
-        const guai = [];
-        if (!c.rete.internet) guai.push("senza internet");
-        if (addonGiu(c) > 0) guai.push(`${plurale(addonGiu(c), "add-on fermo", "add-on fermi")}`);
-        if (c.macchina.temperatura >= TROPPO_CALDO)
-          guai.push(`${c.macchina.temperatura}° sulla scheda`);
-        if (c.macchina.disco >= DISCO_PIENO) guai.push(`disco al ${c.macchina.disco}%`);
-        if (c.macchina.discoVita !== null && c.macchina.discoVita >= DISCO_FINITO)
-          guai.push(`disco consumato al ${c.macchina.discoVita}%`);
-        if (c.rete.sorvegliate.giu > 0)
-          guai.push(
-            `${plurale(c.rete.sorvegliate.giu, "apparato di rete giù", "apparati di rete giù")}`,
-          );
-        if (c.dispositivi.spariti > 0)
-          guai.push(plurale(c.dispositivi.spariti, "dispositivo sparito", "dispositivi spariti"));
-        if (c.registro.errori24h > 0)
-          guai.push(`${plurale(c.registro.errori24h, "errore", "errori")} nel registro`);
-        if (c.batterie.sotto20 > 0)
-          guai.push(plurale(c.batterie.sotto20, "batteria scarica", "batterie scariche"));
-        if (aggiornamentiPesano(c.aggiornamenti))
-          guai.push(
-            `${plurale(c.aggiornamenti.quanti, "aggiornamento", "aggiornamenti")} in attesa`,
-          );
-        if (backupFermo(c)) guai.push("backup fermo");
-        if (guai.length) {
-          const prime = guai.slice(0, 3);
-          const restano = guai.length - prime.length;
-          return {
-            chiave: "guardare",
-            segno: "▲",
-            parola: "da guardare",
-            perché: restano
-              ? `${prime.join(", ")}, e altre ${restano} cose qui sotto.`
-              : `${prime.join(", ")}.`,
-          };
-        }
-        return { chiave: "posto", segno: "●", parola: "a posto", perché: "" };
-      }
-
-      /* Le pastiglie di una riga. Ci sono anche le cose che non fanno diventare
-       * ambra la casa — l'aggiornamento singolo si vede lo stesso, semplicemente
-       * non suona. */
-      function lePastiglie(c) {
-        const p = [];
-        if (staLavorando(c)) p.push([`sta installando ${c.lavoro.cosa}`, "lavoro"]);
-        if (!c.rete.internet) p.push(["senza internet", "male"]);
-        if (addonGiu(c) > 0)
-          p.push([`${plurale(addonGiu(c), "add-on fermo", "add-on fermi")}`, "male"]);
-        if (c.rete.sorvegliate.giu > 0)
-          p.push([`${plurale(c.rete.sorvegliate.giu, "apparato giù", "apparati giù")}`, "male"]);
-        if (c.macchina.temperatura >= TROPPO_CALDO)
-          p.push([`${c.macchina.temperatura}° sulla scheda`, "attenta"]);
-        if (c.macchina.disco >= DISCO_PIENO) p.push([`disco al ${c.macchina.disco}%`, "attenta"]);
-        if (c.macchina.discoVita !== null && c.macchina.discoVita >= DISCO_FINITO)
-          p.push([`disco consumato al ${c.macchina.discoVita}%`, "attenta"]);
-        if (c.dispositivi.spariti > 0)
-          p.push([
-            plurale(c.dispositivi.spariti, "dispositivo sparito", "dispositivi spariti"),
-            "male",
-          ]);
-        if (c.registro.errori24h > 0)
-          p.push([`${plurale(c.registro.errori24h, "errore", "errori")} in 24h`, "male"]);
-        if (c.batterie.sotto20 > 0)
-          p.push([
-            `${plurale(c.batterie.sotto20, "batteria", "batterie")} sotto il ${BATTERIA_SCARICA}%`,
-            "attenta",
-          ]);
-        if (c.aggiornamenti.quanti > 0)
-          p.push([
-            plurale(c.aggiornamenti.quanti, "aggiornamento", "aggiornamenti"),
-            aggiornamentiPesano(c.aggiornamenti) ? "attenta" : "",
-          ]);
-        if (c.backup.giorniFa === null) p.push(["backup mai fatto", "attenta"]);
-        else if (backupFermo(c)) p.push([`backup fermo da ${c.backup.giorniFa} gg`, "attenta"]);
-        if (c.plance.configurate === 0) p.push(["plancia da configurare", "attenta"]);
-        if (c.telefoni.abbinati === 0) p.push(["nessun telefono abbinato", "attenta"]);
-        if (!p.length) p.push([`${c.dispositivi.totali} dispositivi, tutti là`, "bene"]);
-        return p;
-      }
+      /* Il lavoro in ballo e la manutenzione: il ponte non li manda ancora —
+       * i due verbi del quadro sono disegnati e non costruiti — e finche' non
+       * arrivano queste due righe rispondono di no invece di rompersi. */
+      const staLavorando = (c) => Boolean(c && c.lavoro && c.lavoro.stato === "in corso");
+      const daFare = (c) => (c.aggiornamenti?.elenco || []).filter((uno) => uno.installabile);
 
       /* ─── Disegnare ──────────────────────────────────────────────────── */
 
@@ -2638,15 +1775,12 @@
       const dove = document.getElementById("dove");
       const doveNav = document.getElementById("nav");
 
-      document.getElementById("chi").textContent =
-        `Impianti Rossi · ${plurale(CASE.length, "impianto", "impianti")}`;
-
       function disegna() {
-        const dietro = CASE.filter((una) => una.carta.aggiornamenti.elenco.length).length;
+        const dietro = CASE.filter((una) => (una.carta?.aggiornamenti?.elenco || []).length).length;
         doveNav.innerHTML = [
           ["case", "Le case", 0],
           ["aggiornamenti", "Aggiornamenti", dietro],
-          ["abbina", "Abbina", INVITI.length + APPENA.length],
+          ["abbina", "Abbina", INVITI.length + appenaArrivate().length],
         ]
           .map(
             ([quale, parola, quanti]) => `
@@ -2656,6 +1790,7 @@
           )
           .join("");
 
+        document.getElementById("chi").textContent = plurale(CASE.length, "impianto", "impianti");
         dove.innerHTML =
           schermata === "case"
             ? leCase()
@@ -2683,7 +1818,110 @@
             suTelefonoApro = false;
             disegna();
           };
+
+        /* I tasti che cambiano qualcosa. Ognuno fa la sua chiamata, ricarica e
+         * ridisegna: non si tocca niente a schermo prima che il server abbia
+         * detto di sì, se no si vedrebbe una cosa che non è successa. */
+        dove.querySelectorAll("[data-fai]").forEach((tasto) => {
+          tasto.onclick = () =>
+            faiEpoi(tasto, () =>
+              chiedi("/inviti", {
+                method: "POST",
+                body: JSON.stringify({ per: dove.querySelector("#per-chi")?.value || "" }),
+              }),
+            );
+        });
+        dove.querySelectorAll("[data-annulla]").forEach((tasto) => {
+          tasto.onclick = () =>
+            faiEpoi(tasto, () =>
+              chiedi(`/inviti/${encodeURIComponent(tasto.dataset.annulla)}`, { method: "DELETE" }),
+            );
+        });
+        dove.querySelectorAll("[data-tieni]").forEach((tasto) => {
+          tasto.onclick = () => {
+            const casella = dove.querySelector(`[data-nome="${tasto.dataset.tieni}"]`);
+            const nome = (casella?.value || "").trim();
+            if (!nome) {
+              casella?.focus();
+              return;
+            }
+            faiEpoi(tasto, () =>
+              chiedi(`/casa/${tasto.dataset.tieni}`, {
+                method: "PUT",
+                body: JSON.stringify({ nome }),
+              }),
+            );
+          };
+        });
+        dove.querySelectorAll("[data-rinomina]").forEach((tasto) => {
+          tasto.onclick = () => {
+            const adesso = CASE.find((una) => una.casa === tasto.dataset.rinomina);
+            const nome = window.prompt(
+              "Come si chiama questo impianto?",
+              adesso?.senzaNome ? "" : adesso?.nome || "",
+            );
+            if (nome === null) return;
+            faiEpoi(tasto, () =>
+              chiedi(`/casa/${tasto.dataset.rinomina}`, {
+                method: "PUT",
+                body: JSON.stringify({ nome }),
+              }),
+            );
+          };
+        });
+        dove.querySelectorAll("[data-molla]").forEach((tasto) => {
+          tasto.onclick = () => {
+            /* In due tempi, sullo stesso tasto: il primo chiede conferma e il
+             * secondo fa. Non si butta la storia di un impianto per un tocco
+             * andato storto. */
+            if (tasto.dataset.sicuro !== "sì") {
+              tasto.dataset.sicuro = "sì";
+              tasto.textContent = "Sicuro? Premi di nuovo";
+              setTimeout(() => {
+                tasto.dataset.sicuro = "";
+                tasto.textContent = "Non seguirla più";
+              }, 6000);
+              return;
+            }
+            faiEpoi(tasto, () =>
+              chiedi(`/casa/${tasto.dataset.molla}`, { method: "DELETE" }).then(() => {
+                aperta = 0;
+                suTelefonoApro = false;
+              }),
+            );
+          };
+        });
+        dove.querySelectorAll("[data-copia]").forEach((tasto) => {
+          tasto.onclick = () => {
+            navigator.clipboard?.writeText(tasto.dataset.copia);
+            const prima = tasto.textContent;
+            tasto.textContent = "Copiato";
+            setTimeout(() => {
+              tasto.textContent = prima;
+            }, 2000);
+          };
+        });
+
         avviaGliOrologi();
+      }
+
+      /* Fa una cosa, poi ricarica e ridisegna. Il tasto resta spento mentre
+       * succede: due tocchi su «fai un codice» sono due codici. */
+      async function faiEpoi(tasto, cosa) {
+        tasto.disabled = true;
+        try {
+          await cosa();
+          await carica();
+          disegna();
+        } catch (errore) {
+          if (errore instanceof ChiaveNoNo) {
+            chiedimiLaChiave();
+            return;
+          }
+          window.alert(errore.message || "non ha funzionato");
+        } finally {
+          tasto.disabled = false;
+        }
       }
 
       doveNav.onclick = (evento) => {
@@ -2697,7 +1935,7 @@
 
       /* ─── Schermata: le case ─────────────────────────────────────────── */
       function leCase() {
-        const conStato = CASE.map((una, indice) => ({ una, indice, stato: loStato(una) }));
+        const conStato = CASE.map((una, indice) => ({ una, indice, stato: una.stato }));
         const quante = (chiave) => conStato.filter((r) => r.stato.chiave === chiave).length;
         const viste = conStato.filter((r) => filtro === "tutte" || r.stato.chiave === filtro);
 
@@ -2730,7 +1968,7 @@
             </div>
 
             <div class="scheda">
-              ${ilDettaglio(CASE[aperta], loStato(CASE[aperta]))}
+              ${CASE.length ? ilDettaglio(CASE[Math.min(aperta, CASE.length - 1)]) : ""}
             </div>
           </div>
         `;
@@ -2755,13 +1993,14 @@
             </div>
             <div class="pastiglie">
               ${(() => {
-                const tutte = lePastiglie(c);
+                const tutte = casa.pastiglie || [];
                 const viste = tutte.slice(0, 3);
                 const restano = tutte.length - viste.length;
                 return (
                   viste
                     .map(
-                      ([parola, come]) => `<span class="pastiglia ${come}">${testo(parola)}</span>`,
+                      ({ parola, come }) =>
+                        `<span class="pastiglia ${come}">${testo(parola)}</span>`,
                     )
                     .join("") + (restano ? `<span class="pastiglia">+${restano}</span>` : "")
                 );
@@ -2772,48 +2011,59 @@
         `;
       }
 
-      function ilDettaglio(casa, stato) {
+      function ilDettaglio(casa) {
+        const stato = casa.stato;
         const c = casa.carta;
-        const collaudo = ilCollaudo(c);
+        const collaudo = casa.collaudo || { spunte: [], fatte: 0, aperte: 0, ignote: 0, quante: 0 };
 
         const verdetto =
           collaudo.fatte === collaudo.quante
             ? "Tutte spuntate: questo impianto è a posto."
-            : casa.collaudataIl === null
-              ? "Non è ancora stata consegnata: finché le spunte non sono tutte, resta in fila."
-              : `Il collaudo si era chiuso il ${casa.collaudataIl}. Queste righe si sono riaperte dopo, ed è il motivo per cui questa casa è qui.`;
+            : !casa.collaudataIl
+              ? "Non è ancora stata consegnata: finché resta una spunta aperta, resta in fila."
+              : `Il collaudo si era chiuso il ${ilGiorno(casa.collaudataIl)}. Queste righe si sono riaperte dopo, ed è il motivo per cui questa casa è qui.`;
 
         const versioni = [
-          ["gdahome (il ponte)", c.ponte, c.aggiornamenti.gdahome],
+          ["gdahome (il ponte)", c.ponte, c.aggiornamenti?.gdahome],
           ["la plancia", c.plancia, false],
-          ["Home Assistant Core", c.ha, c.aggiornamenti.ha],
+          ["Home Assistant Core", c.ha, c.aggiornamenti?.ha],
           ["Supervisor", c.supervisor, false],
           ["il sistema", c.sistema, false],
         ];
 
         const misure = [
-          c.dispositivi.spariti > 0
-            ? ["Dispositivi spariti", c.dispositivi.spariti, `su ${c.dispositivi.totali}`, "male"]
-            : ["Dispositivi", c.dispositivi.totali, "rispondono tutti", ""],
+          (c.entita?.sparite ?? 0) > 0
+            ? ["Entità sparite", c.entita.sparite, `su ${c.entita.totali}`, "male"]
+            : ["Entità", c.entita?.totali ?? "—", "rispondono tutte", ""],
           [
             "Batteria più bassa",
-            `${c.batterie.piuBassa}%`,
-            c.batterie.sotto20 > 0
-              ? `${c.batterie.sotto20} sotto il ${BATTERIA_SCARICA}%`
-              : "nessuna da cambiare",
-            c.batterie.sotto20 > 0 ? "attenta" : "",
+            c.batterie?.piuBassa === null || c.batterie?.piuBassa === undefined
+              ? "—"
+              : `${c.batterie.piuBassa}%`,
+            !c.batterie
+              ? "questa casa non lo dice"
+              : c.batterie.scariche > 0
+                ? `${c.batterie.scariche} sotto il ${BATTERIA_SCARICA}%`
+                : "nessuna da cambiare",
+            (c.batterie?.scariche ?? 0) > 0 ? "attenta" : "",
           ],
           [
             "Ultimo backup",
-            c.backup.giorniFa === null ? "mai" : c.backup.giorniFa,
-            c.backup.giorniFa === null ? "non ne ha mai fatto uno" : "giorni fa",
-            backupFermo(c) ? "attenta" : "",
+            !c.backup || c.backup.giorniFa === null || c.backup.giorniFa === undefined
+              ? "mai"
+              : c.backup.giorniFa,
+            !c.backup
+              ? "questa casa non lo dice"
+              : c.backup.giorniFa === null || c.backup.giorniFa === undefined
+                ? "non ne ha mai fatto uno"
+                : "giorni fa",
+            c.backup && (c.backup.giorniFa === null || c.backup.giorniFa > 14) ? "attenta" : "",
           ],
           [
             "Errori nel registro",
-            c.registro.errori24h,
+            c.registro?.errori24h ?? "—",
             "nelle ultime 24 ore",
-            c.registro.errori24h > 0 ? "male" : "",
+            (c.registro?.errori24h ?? 0) > 0 ? "male" : "",
           ],
         ];
 
@@ -2831,10 +2081,10 @@
                 <dt>Matricola</dt>
                 <dd class="mono">${testo(c.casa.slice(0, 18))}…</dd>
               </div>
-              <div><dt>Installata</dt><dd>${testo(casa.da)}</dd></div>
+              <div><dt>Vista la prima volta</dt><dd>${testo(ilGiorno(casa.da))}</dd></div>
               <div>
                 <dt>Collaudata</dt>
-                <dd>${casa.collaudataIl === null ? "mai" : testo(casa.collaudataIl)}</dd>
+                <dd>${casa.collaudataIl ? testo(ilGiorno(casa.collaudataIl)) : "mai"}</dd>
               </div>
               <div>
                 <dt>Cartolina</dt>
@@ -2842,14 +2092,23 @@
               </div>
               <div>
                 <dt>Telefoni</dt>
-                <dd>${c.telefoni.abbinati} — ${c.telefoni.visti7gg} visti in 7 gg</dd>
+                <dd>${c.telefoni ? `${c.telefoni.abbinati} — ${c.telefoni.visti7gg} visti in 7 gg` : "—"}</dd>
               </div>
             </dl>
             <div class="azioni">
-              <button type="button" class="tasto forte">Copia il rapporto</button>
-              <button type="button" class="tasto">Stampa il verbale</button>
-              <button type="button" class="tasto">Rinomina</button>
-              <button type="button" class="tasto male">Non seguirla più</button>
+              <button
+                type="button"
+                class="tasto forte"
+                data-copia="${testo(JSON.stringify(c, null, 2))}"
+              >
+                Copia il rapporto
+              </button>
+              <button type="button" class="tasto" data-rinomina="${testo(casa.casa)}">
+                Rinomina
+              </button>
+              <button type="button" class="tasto male" data-molla="${testo(casa.casa)}">
+                Non seguirla più
+              </button>
             </div>
             <p class="limite">
               <span class="gettone" aria-hidden="true">◴</span>
@@ -2917,12 +2176,12 @@
           </section>
 
           ${
-            c.dispositivi.spariti > 0
+            (c.entita?.sparite ?? 0) > 0
               ? `
           <section class="riquadro">
             <div class="capoRiquadro"><h3>I dispositivi che non rispondono</h3></div>
             <div class="impronte">
-              ${c.dispositivi.impronte.map((una) => `<span>#${testo(una)}</span>`).join("")}
+              ${(c.entita?.impronte || []).map((una) => `<span>#${testo(una)}</span>`).join("")}
             </div>
             <p class="nota">
               Il quadro non sa quali sono, e non lo deve sapere: la casa manda
@@ -2979,6 +2238,14 @@
        * binario porta un segno — i 75° della temperatura — e va in centesimi
        * della scala, non nell'unità del valore. */
       function unMetro({ che, valore, unita = "%", sotto = "", come, quanto, tacca = null }) {
+        /* Quello che questa casa non dice non si disegna a zero: una CPU che
+         * non c'e' non e' una CPU allo zero per cento. */
+        if (valore === null || valore === undefined)
+          return `
+            <div>
+              <div class="capoMetro"><span>${testo(che)}</span><b class="attenta">—</b></div>
+              <div class="binario"><span class="nonLoDice">non lo dice</span></div>
+            </div>`;
         return `
           <div>
             <div class="capoMetro">
@@ -2993,6 +2260,15 @@
           </div>`;
       }
 
+      /* Un riquadro che dice che non si sa, invece di uno che disegna zeri. */
+      function riquadroMuto(titolo, perché) {
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro"><h3>${testo(titolo)}</h3></div>
+            <p class="nota">${testo(perché)}</p>
+          </section>`;
+      }
+
       /* La macchina: quello che il Supervisor sa del ferro sotto Home
        * Assistant, più la temperatura che la plancia disegna già.
        *
@@ -3002,6 +2278,10 @@
        * dichiara — un NUC con un SSD — non si inventa. */
       function laMacchina(c) {
         const m = c.macchina;
+        /* Una cartolina senza macchina non e' una casa senza macchina: e' una
+         * casa il cui Supervisor non ha risposto. Si dice, e non si disegnano
+         * cinque metri a zero. */
+        if (!m) return riquadroMuto("La macchina", "Il Supervisor di questa casa non ha risposto.");
         const metri = [
           unMetro({
             che: "CPU",
@@ -3020,16 +2300,16 @@
             valore: m.disco,
             quanto: m.disco,
             sotto: `${m.discoLiberi} GB liberi`,
-            come: livello(m.disco, 75, DISCO_PIENO),
+            come: livello(m.disco, 75, SOGLIE.discoPieno),
           }),
           unMetro({
             che: "Temperatura",
             valore: m.temperatura,
             unita: "°",
             quanto: m.temperatura,
-            sotto: `tacca a ${TROPPO_CALDO}°`,
-            tacca: TROPPO_CALDO,
-            come: livello(m.temperatura, CALDINO, TROPPO_CALDO),
+            sotto: `tacca a ${SOGLIE.troppoCaldo}°`,
+            tacca: SOGLIE.troppoCaldo,
+            come: livello(m.temperatura, SOGLIE.troppoCaldo - 10, SOGLIE.troppoCaldo),
           }),
         ];
         if (m.discoVita !== null)
@@ -3039,7 +2319,7 @@
               valore: m.discoVita,
               quanto: m.discoVita,
               sotto: "già consumata",
-              come: livello(m.discoVita, DISCO_STANCO, DISCO_FINITO),
+              come: livello(m.discoVita, DISCO_STANCO, SOGLIE.discoFinito),
             }),
           );
 
@@ -3055,8 +2335,8 @@
               ${
                 m.discoVita !== null && m.discoVita >= DISCO_STANCO
                   ? `Il supporto è consumato al ${m.discoVita}%: su queste schede è la cosa che si rompe per prima, e si cambia prima che decida lui.`
-                  : m.temperatura >= TROPPO_CALDO
-                    ? `Sopra i ${TROPPO_CALDO}° la scheda si rallenta da sola: la casa non si rompe, diventa lenta — e nessuno capisce perché.`
+                  : m.temperatura >= SOGLIE.troppoCaldo
+                    ? `Sopra i ${SOGLIE.troppoCaldo}° la scheda si rallenta da sola: la casa non si rompe, diventa lenta — e nessuno capisce perché.`
                     : "Niente che chieda di andare a vedere."
               }
             </p>
@@ -3080,7 +2360,12 @@
        * Vedere cosa c'è da fare e poterlo fare sono due permessi diversi, e
        * il secondo non si dà da sé insieme al primo. */
       function gliAggiornamenti(c) {
-        const elenco = c.aggiornamenti.elenco;
+        if (!c.aggiornamenti)
+          return riquadroMuto(
+            "Gli aggiornamenti",
+            "Questa casa non ha detto cosa c'è da aggiornare.",
+          );
+        const elenco = c.aggiornamenti.elenco || [];
         const possibili = daFare(c);
         const cartello = ilCartello(c);
 
@@ -3151,7 +2436,10 @@
        * appena finito. */
       function ilCartello(c) {
         const l = c.lavoro;
-        if (l === null) return "";
+        /* Non `=== null`: il ponte questa riga non la manda affatto, e
+         * `undefined` non e' `null`. E' il genere di differenza che si paga
+         * quando una bozza coi dati scritti a mano incontra dei dati veri. */
+        if (!l) return "";
         if (l.stato === "fatto")
           return `
             <div class="cartello bene">
@@ -3167,8 +2455,8 @@
                 ${testo(l.perché || "Home Assistant ha detto di no")}.</span
               >
             </div>`;
-        const fermi = minutiDaAllora(c.quando);
-        const tardi = l.stacca && fermi > STA_TORNANDO;
+        const fermi = Math.round((ADESSO() - new Date(c.quando).getTime()) / 60000);
+        const tardi = l.stacca && fermi > 45;
         return `
           <div class="cartello ${tardi ? "male" : ""}">
             <span class="gettone" aria-hidden="true">${tardi ? "!" : "◴"}</span>
@@ -3196,6 +2484,7 @@
        * si dice zero invece di fingere. */
       function laRete(c) {
         const r = c.rete;
+        if (!r) return riquadroMuto("La rete", "Questa casa non ha detto niente della sua rete.");
         return `
           <section class="riquadro">
             <div class="capoRiquadro">
@@ -3239,6 +2528,7 @@
        * girare e non gira? */
       function gliAddon(c) {
         const a = c.addon;
+        if (!a) return riquadroMuto("Gli add-on", "Questa casa non ha detto quali add-on ha.");
         return `
           <section class="riquadro">
             <div class="capoRiquadro">
@@ -3258,9 +2548,9 @@
             </div>
             <p class="verdetto">
               ${
-                addonGiu(c) === 0
+                a.spentiCheDovrebbero === 0
                   ? "Nessun add-on con l'avvio automatico è fermo. Quelli spenti a mano restano spenti, ed è giusto: li ha spenti qualcuno."
-                  : `${plurale(addonGiu(c), "add-on parte", "add-on partono")} all'avvio e in questo momento ${addonGiu(c) === 1 ? "è fermo" : "sono fermi"}. Nessuno spegne un add-on lasciandogli l'avvio automatico: questo si è fermato da solo.`
+                  : `${plurale(a.spentiCheDovrebbero, "add-on parte", "add-on partono")} all'avvio e in questo momento ${a.spentiCheDovrebbero === 1 ? "è fermo" : "sono fermi"}. Nessuno spegne un add-on lasciandogli l'avvio automatico: questo si è fermato da solo.`
               }
             </p>
           </section>`;
@@ -3300,7 +2590,7 @@
         });
 
         const voci = ordinati.reduce((somma, uno) => somma + uno.case.length, 0);
-        const dietro = CASE.filter((una) => una.carta.aggiornamenti.elenco.length).length;
+        const dietro = CASE.filter((una) => (una.carta?.aggiornamenti?.elenco || []).length).length;
 
         if (!ordinati.length)
           return `
@@ -3425,7 +2715,7 @@
        * non ce l'hanno — è tutto il punto del ponte.
        * ─────────────────────────────────────────────────────────────────── */
       function lAbbinamento() {
-        const primo = INVITI[0];
+        const primo = INVITI[0] || null;
 
         return `
           <h1 class="titolone">Abbina un impianto</h1>
@@ -3439,14 +2729,22 @@
             <div class="colonna">
               <section class="riquadro tinto">
                 <div class="capoRiquadro"><h3>Il codice di adesso</h3></div>
-                <div class="codice">
-                  <span class="cifre">${testo(primo.codice)}</span>
-                  <button type="button" class="tasto copia">Copia</button>
-                </div>
-                <div class="scadenza">
-                  <span class="battito" aria-hidden="true"></span>
-                  Scade fra <b data-orologio="${primo.scadeFra}">—</b> · fatto ${testo(primo.fattoIl)}
-                </div>
+                ${
+                  primo
+                    ? `<div class="codice">
+                        <span class="cifre">${testo(laRiga(primo.codice))}</span>
+                        <button type="button" class="tasto copia" data-copia="${testo(laRiga(primo.codice))}">Copia</button>
+                      </div>
+                      <div class="scadenza">
+                        <span class="battito" aria-hidden="true"></span>
+                        Scade fra <b data-orologio="${primo.scadeFra}">—</b> · fatto ${testo(daQuanto(primo.fattoIl))}
+                      </div>`
+                    : `<p class="nota" style="margin: 16px 0 12px">
+                        Non c'è nessun codice aperto. Fanne uno quando sei davanti
+                        alla casa da abbinare: vale un quarto d'ora, e farlo prima
+                        di salire in macchina vuol dire trovarlo scaduto.
+                      </p>`
+                }
 
                 <ol class="passi" style="margin-top: 20px">
                   <li>
@@ -3470,35 +2768,50 @@
                 </ol>
 
                 <div class="azioni">
-                  <button type="button" class="tasto forte grande">Fai un altro codice</button>
-                  <button type="button" class="tasto grande">Scrivi per chi è</button>
+                  <input
+                    type="text"
+                    id="per-chi"
+                    maxlength="60"
+                    placeholder="Per chi è, se ti serve ricordartelo"
+                    aria-label="Per chi è questo codice"
+                  />
+                  <button type="button" class="tasto forte grande" data-fai>
+                    ${primo ? "Fai un altro codice" : "Fai un codice"}
+                  </button>
                 </div>
               </section>
 
               <section class="riquadro">
                 <div class="capoRiquadro">
                   <h3>Appena arrivate</h3>
-                  <span class="conta">${APPENA.length}</span>
+                  <span class="conta">${appenaArrivate().length}</span>
                 </div>
                 ${
-                  APPENA.length
+                  appenaArrivate().length
                     ? `<ul class="righe">
-                        ${APPENA.map(
-                          (una) => `
+                        ${appenaArrivate()
+                          .map(
+                            (una) => `
                           <li>
                             <span class="che">
                               <b class="mono">${testo(una.casa.slice(0, 22))}…</b>
-                              <span>arrivata ${testo(una.arrivataIl)} · Home Assistant ${testo(una.ha)}</span>
+                              <span
+                                >arrivata ${testo(daQuanto(una.da))}${una.carta?.ha ? ` · Home Assistant ${testo(una.carta.ha)}` : ""}</span
+                              >
                             </span>
                             <input
                               type="text"
                               id="nome-${testo(una.casa.slice(5, 13))}"
+                              data-nome="${testo(una.casa)}"
                               placeholder="Come la chiami?"
                               aria-label="Il nome di questa casa"
                             />
-                            <button type="button" class="tasto forte">Tienila</button>
+                            <button type="button" class="tasto forte" data-tieni="${testo(una.casa)}">
+                              Tienila
+                            </button>
                           </li>`,
-                        ).join("")}
+                          )
+                          .join("")}
                       </ul>
                       <p class="nota" style="margin-top: 14px">
                         Il nome lo scrivi tu e resta qui: la casa non lo manda e
@@ -3526,13 +2839,15 @@
                     (uno) => `
                     <li>
                       <span class="che">
-                        <b class="mono">${testo(uno.codice)}</b>
-                        <span>${uno.per ? `${testo(uno.per)} · ` : ""}fatto ${testo(uno.fattoIl)}</span>
+                        <b class="mono">${testo(laRiga(uno.codice))}</b>
+                        <span>${uno.per ? `${testo(uno.per)} · ` : ""}fatto ${testo(daQuanto(uno.fattoIl))}</span>
                       </span>
                       <span class="pastiglia attenta">
                         scade fra <b data-orologio="${uno.scadeFra}">—</b>
                       </span>
-                      <button type="button" class="tasto male">Annulla</button>
+                      <button type="button" class="tasto male" data-annulla="${testo(uno.codice)}">
+                        Annulla
+                      </button>
                     </li>`,
                   ).join("")}
                 </ul>
@@ -3629,7 +2944,72 @@
         ticchettio = setInterval(gira, 1000);
       }
 
-      disegna();
+      /* La chiave: si chiede una volta e resta nel browser. Chi guarda questo
+       * quadro lo apre tutti i giorni, e ribattere una chiave lunga tutti i
+       * giorni finisce con una chiave corta. */
+      function chiedimiLaChiave(perché = "") {
+        doveNav.innerHTML = "";
+        dove.innerHTML = `
+          <section class="riquadro tinto" style="max-width: 32rem; margin-inline: auto">
+            <div class="capoRiquadro"><h3>La chiave di questo quadro</h3></div>
+            <p class="nota" style="margin-bottom: 16px">
+              ${
+                perché
+                  ? testo(perché)
+                  : "È quella che sta sulla macchina come QUADRO_CHIAVE. Resta in questo browser, e non esce da qui."
+              }
+            </p>
+            <div class="azioni">
+              <input type="password" id="la-chiave" placeholder="la chiave" aria-label="La chiave" />
+              <button type="button" class="tasto forte" id="entra">Entra</button>
+            </div>
+          </section>`;
+        const casella = dove.querySelector("#la-chiave");
+        const entra = () => {
+          chiave = casella.value.trim();
+          try {
+            localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+          } catch (_niente) {
+            /* Vale per questa sessione e basta: meglio di non entrare. */
+          }
+          void apri();
+        };
+        dove.querySelector("#entra").onclick = entra;
+        casella.onkeydown = (evento) => {
+          if (evento.key === "Enter") entra();
+        };
+        casella.focus();
+      }
+
+      async function apri() {
+        if (!chiave) {
+          chiedimiLaChiave();
+          return;
+        }
+        try {
+          await carica();
+        } catch (errore) {
+          chiedimiLaChiave(
+            errore instanceof ChiaveNoNo ? "La chiave non va bene." : errore.message,
+          );
+          return;
+        }
+        disegna();
+      }
+
+      void apri();
+
+      /* Le cartoline arrivano ogni quindici minuti: si ricarica ogni minuto,
+       * che è già quindici volte più spesso di quanto cambi qualcosa. */
+      setInterval(() => {
+        if (!chiave) return;
+        carica()
+          .then(() => disegna())
+          .catch(() => {
+            /* Un giro andato male non deve far sparire quello che si sta
+             * guardando: si riprova al minuto dopo. */
+          });
+      }, 60 * 1000);
     </script>
   </body>
 </html>
