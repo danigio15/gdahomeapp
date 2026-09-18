@@ -541,6 +541,8 @@ bene "il tramite ascolta sulla $PORTA, e ripartira' da solo a ogni riavvio"
 
 passo "Metto Caddy davanti, e prendo i certificati"
 
+install -d -m 755 /etc/caddy/conf.d
+
 cat >/etc/caddy/Caddyfile <<FINE
 # Davanti al tramite.
 #
@@ -631,6 +633,18 @@ $NOME_DEL_SITO {
 www.$NOME_DEL_SITO {
 	redir https://$NOME_DEL_SITO{uri} permanent
 }
+
+# Gli altri pezzi di gdahome che stanno su questa macchina.
+#
+# Questo file si riscrive da capo a ogni giro di questo script, e finche' il
+# tramite era solo andava bene. Adesso di fianco puo' esserci il quadro
+# (\`quadro/accendi.sh\`), che scrive il suo pezzo in \`conf.d\`: senza questa
+# riga, il primo rilancio del tramite lo spegnerebbe — e nessuno se ne
+# accorgerebbe, perche' a smettere di funzionare sarebbe la cosa che nessuno
+# sta guardando.
+#
+# La cartella puo' anche essere vuota: \`import\` di zero file non e' un errore.
+import /etc/caddy/conf.d/*.caddy
 FINE
 
 caddy validate --config /etc/caddy/Caddyfile >/dev/null 2>&1 || male \

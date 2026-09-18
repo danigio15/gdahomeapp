@@ -76,6 +76,35 @@ quadro è accorgersene mentre nessuno guarda.
 
 ## Accenderlo
 
+Su una macchina vera, in un colpo solo — da `root`, anche di fianco al tramite:
+
+```
+read -rsp 'gettone: ' G && echo && curl -fsSL \
+  --config <(printf 'header = "Authorization: Bearer %s"\n' "$G") \
+  -H 'Accept: application/vnd.github.raw' \
+  https://api.github.com/repos/danigio15/gdahomeapp/contents/quadro/accendi.sh \
+  | GETTONE_LETTURA="$G" bash
+```
+
+`accendi.sh` installa Node e Caddy se non ci sono, scarica il quadro e **lo
+prova prima di metterlo**, lo accende come servizio, prende il certificato, e
+alla fine dice la chiave dello sgabuzzino. Con `--controlla` guarda se tutto
+quadra senza installare niente.
+
+Due cose che fa e che vale la pena sapere:
+
+- **Non riscrive il Caddyfile del tramite: ci mette un innesto** in
+  `/etc/caddy/conf.d/`. Il tramite il suo file lo riscrive tutto a ogni giro, e
+  due script che scrivono lo stesso file si spengono a vicenda — a sparire
+  sarebbe il quadro, cioè quello che nessuno sta guardando. C'è una prova che
+  tiene tutte e due le metà: che questo non lo riscriva, e che quello del
+  tramite legga gli innesti.
+- **Rilanciarlo non cambia la chiave dello sgabuzzino.** Da quella si aprono i
+  conti degli installatori: rifarla a ogni giro vuol dire chiudere fuori chi
+  tiene il quadro, e con lui tutti quelli che avrebbe dovuto iscrivere.
+
+Sul banco, senza niente da installare:
+
 ```
 cd quadro
 QUADRO_GESTORE='qualcosa di lungo e a caso' npm run avvia
