@@ -796,11 +796,11 @@ async function api({
       acceso: true,
       dove: postino.dove,
       /* Di chi e' il quadro, come l'ha detto lui rispondendo. Vuoto finche' non
-       * e' partita la prima rapporto, e allora la scheda mostra l'indirizzo e
+       * e' partita il primo rapporto, e allora la scheda mostra l'indirizzo e
        * basta — che e' quello che faceva prima. */
       chi: postino.chi,
       ogni: postino.ogni,
-      /* L'ultima rapporto spedita, **in chiaro e per intero**. E' il punto di
+      /* L'ultimo rapporto spedito, **in chiaro e per intero**. E' il punto di
        * questa scheda: non «manda dei dati», ma questi dati, parola per
        * parola, con dentro tutto quello che c'e' e niente di piu'. */
       ultima: postino.ultima,

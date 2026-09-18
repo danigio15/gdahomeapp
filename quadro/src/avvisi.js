@@ -164,7 +164,7 @@ export function cosaDire({ mute = [], tornate = [], quante = 0 }) {
           case: [uno.casa.casa],
           testo:
             `${ilNome(uno.casa)} non parla più ${quantoTace(uno.minuti)}.\n` +
-            `L'ultima rapporto è arrivata ${quandoEra(uno.casa)}.`,
+            `L'ultimo rapporto è arrivata ${quandoEra(uno.casa)}.`,
         });
       }
     }

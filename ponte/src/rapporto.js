@@ -84,7 +84,7 @@ const OGNI_AL_MASSIMO = 24 * 60;
 /** Quanto si aspetta il quadro prima di lasciar perdere. */
 const ATTESA = 10_000;
 
-/* Quanto si aspetta prima della prima rapporto. Non zero: all'accensione
+/* Quanto si aspetta prima del primo rapporto. Non zero: all'accensione
  * dell'add-on Home Assistant sta spesso ancora partendo, e un rapporto
  * spedita adesso direbbe che in questa casa non c'e' niente. */
 const PRIMA_ASPETTA = 30_000;
@@ -429,13 +429,13 @@ export class Postino {
 
     this._orologio = null;
     this._quanteVoltePerNiente = 0;
-    /* L'ultima rapporto spedita, in chiaro, e com'e' andata. Sono le due cose
+    /* L'ultimo rapporto spedito, in chiaro, e com'e' andata. Sono le due cose
      * che la console dell'add-on fa leggere a chi ci abita: non «manda dei
      * dati», ma **questi** dati, parola per parola. */
     this._ultima = null;
     this._ultimoEsito = null;
     /* Il nome della ditta, come lo dice il quadro rispondendo. In memoria e
-     * basta: dopo un riavvio si riempie alla prima rapporto. */
+     * basta: dopo un riavvio si riempie al primo rapporto. */
     this._chi = "";
   }
 
@@ -536,7 +536,7 @@ export class Postino {
        * indirizzo no.
        *
        * Sta in memoria e non su disco: dopo un riavvio la scheda mostra
-       * l'indirizzo finche' non parte la prima rapporto, che e' un quarto
+       * l'indirizzo finche' non parte il primo rapporto, che e' un quarto
        * d'ora. Scriverlo in `/data` per un quarto d'ora di comodo vorrebbe dire
        * un file in piu' da tenere buono per sempre. */
       try {

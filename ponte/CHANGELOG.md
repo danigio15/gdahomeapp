@@ -43,7 +43,7 @@ Non passa dal centralino di gdahome: va dalla casa al quadro e basta.
 **E lo puoi leggere e fermare da qui.** In questa pagina, dove quella casella è
 piena, compare la scheda «Il quadro di chi ti ha fatto l'impianto»: c'è scritto
 a chi parla la tua casa e ogni quanto, e sotto «Cosa parte da qui» c'è
-**l'ultima rapporto spedita per intero**, com'è partita. Non un riassunto: il
+**l'ultimo rapporto spedito per intero**, com'è partita. Non un riassunto: il
 testo. Un riassunto di quello che esce sarebbe esattamente la cosa di cui
 dovresti fidarti.
 

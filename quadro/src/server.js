@@ -370,7 +370,7 @@ export function costruisciIlServer({
 
     if (casa && metodo === "DELETE") {
       /* Non seguirla piu' vuol dire due cose insieme: si butta quello che se
-       * ne sa, e si butta la sua chiave — se no la prima rapporto la farebbe
+       * ne sa, e si butta la sua chiave — se no il primo rapporto la farebbe
        * rinascere tre secondi dopo. */
       const mia = chiavi.diChiE(casa[1]) === chi;
       const cEra = case_.togli(casa[1], chi);

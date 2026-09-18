@@ -13,7 +13,7 @@
  *
  * ─── Il codice si brucia, ma non si riscrive ─────────────────────────────
  *
- * Una stesura del documento diceva che alla prima rapporto il quadro
+ * Una stesura del documento diceva che al primo rapporto il quadro
  * restituisce alla casa **una chiave nuova**, e l'invito muore. Sarebbe un po'
  * piu' stretto, e si e' scelto di no: quella chiave nuova la casa dovrebbe
  * tenersela in `/data`, e da quel momento la riga scritta nella scheda

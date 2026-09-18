@@ -155,7 +155,7 @@ farne entrare uno: **Abbina** gli dà un codice che vive un quarto d'ora, e quel
 codice si incolla nella casella `quadro` della scheda dell'add-on in casa del
 cliente. Nient'altro: niente indirizzo, niente server, niente dominio.
 
-La prima rapporto lega il codice a quella matricola, e da lì in poi non serve a
+Il primo rapporto lega il codice a quella matricola, e da lì in poi non serve a
 nessun'altra casa — e la casa è **sua**, cioè compare nella sua pagina e in
 nessun'altra.
 
@@ -369,7 +369,7 @@ export class Postino {
   ferma()
   async manda()      // un rapporto, adesso
   get acceso()       // se questa casa manda qualcosa a qualcuno
-  get ultima()       // l'ultima rapporto spedita, per la console
+  get ultima()       // l'ultimo rapporto spedito, per la console
   get ultimoEsito()  // andata, o perché no
 }
 ```
@@ -450,7 +450,7 @@ permetta a un ponte vecchio di dire «questo codice viene da un quadro più nuov
 di me» invece di leggerne metà.
 
 **`ponte/console/`** — la scheda **«Il quadro»**, dietro l'ingress: a chi va,
-ogni quanto, **l'ultima rapporto spedita in chiaro**, quando è andata l'ultima
+ogni quanto, **l'ultimo rapporto spedito in chiaro**, quando è andata l'ultima
 e il tasto **«Smetti di mandarla»**. Più una riga nel registro la prima volta
 che parte.
 
@@ -496,7 +496,7 @@ E dietro, tutte dentro `/console/` e tutte con la chiave della console:
 | `GET` `POST /console/inviti` | i codici in attesa, e uno nuovo |
 | `DELETE /console/inviti/<codice>` | annullalo |
 | `PUT /console/casa/<matricola>` | il nome che le dà l'installatore |
-| `DELETE /console/casa/<matricola>` | non seguirla più: si butta quello che se ne sa **e** la sua chiave, se no la prima rapporto la fa rinascere tre secondi dopo |
+| `DELETE /console/casa/<matricola>` | non seguirla più: si butta quello che se ne sa **e** la sua chiave, se no il primo rapporto la fa rinascere tre secondi dopo |
 
 Le due chiavi sono due apposta. Dal davanti entrano le case, ognuna con la sua:
 apre una porta sola — depositare per la propria matricola — e non fa vedere
@@ -505,13 +505,13 @@ depositare niente. Con una chiave sola, una casa qualunque potrebbe leggersi
 l'elenco degli impianti di chi l'ha installata, cioè i clienti di qualcun altro.
 
 **Una cosa è andata diversamente da come sta scritta qui sopra.** Il documento
-diceva che alla prima rapporto il quadro restituisce alla casa una chiave nuova
+diceva che al primo rapporto il quadro restituisce alla casa una chiave nuova
 e l'invito muore. Sarebbe un po' più stretto, e si è scelto di no: quella chiave
 nuova la casa dovrebbe tenersela in `/data`, e da quel momento la riga scritta
 nella scheda dell'add-on non sarebbe più quella che la casa usa davvero — si
 perderebbe **quello che c'è scritto nella casella è quello che parte**, per
 guadagnare poco. Il codice resta quello, e a bruciarsi è il suo essere libero:
-alla prima rapporto si lega a quella matricola e nessun'altra casa lo può più
+al primo rapporto si lega a quella matricola e nessun'altra casa lo può più
 usare.
 
 ### Nell'app: niente
@@ -644,8 +644,8 @@ guardi.
    manifesto tradotte in italiano e in inglese, il postino acceso in
    `index.js`. E la console: la scheda **«Il quadro di chi ti ha fatto
    l'impianto»**, che compare solo dove quella casella è piena — cioè quasi mai
-   — e fa la cosa per cui esiste: mostra **il testo dell'ultima rapporto
-   spedita, intero e senza riassunti**. Un riassunto di quello che esce è
+   — e fa la cosa per cui esiste: mostra **il testo dell'ultimo rapporto
+   spedito, intero e senza riassunti**. Un riassunto di quello che esce è
    esattamente la cosa di cui ci si dovrebbe fidare.
 
    Il tasto **«Smetti di mandarla»** ferma il postino *e* svuota la casella
@@ -663,7 +663,7 @@ guardi.
 2. **Il quadro in Node**, la pagina che c'è già attaccata a dati veri.
 
    **Fatta.** Seicento righe e nessuna dipendenza: `src/server.js` con le vie
-   qui sopra, `src/case.js` che tiene l'ultima rapporto e la storia dei giorni,
+   qui sopra, `src/case.js` che tiene l'ultimo rapporto e la storia dei giorni,
    `src/collaudo.js` con le regole, `src/chiavi.js` con gli inviti. La pagina è
    la stessa di prima, meno le novecento righe di dati finti e **meno le regole
    che si era portata dietro**: stato, spunte e pastiglie arrivano decisi da

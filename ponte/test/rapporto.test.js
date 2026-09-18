@@ -457,7 +457,7 @@ test("il nome della ditta arriva nella risposta, e la casa se lo ricorda", async
     fetch: async () => ({ ok: true, json: async () => ({ presa: true, di: "Impianti Rossi" }) }),
   });
 
-  assert.equal(postino.chi, "", "prima della prima rapporto non si inventa niente");
+  assert.equal(postino.chi, "", "prima del primo rapporto non si inventa niente");
   assert.equal(await postino.manda(), true);
   assert.equal(postino.chi, "Impianti Rossi");
 });

@@ -189,7 +189,7 @@ test("una casa nuova nasce depositando, senza nome e in fila «collaudo aperto»
     assert.equal(case_.length, 1);
     assert.equal(case_[0].casa, UNA);
     assert.equal(case_[0].senzaNome, true);
-    /* La prima rapporto di questa casa ha tutte le spunte a posto, quindi il
+    /* Il primo rapporto di questa casa ha tutte le spunte a posto, quindi il
      * collaudo si chiude subito: e' giusto, l'impianto e' finito. */
     assert.equal(case_[0].stato.chiave, "posto");
     assert.ok(case_[0].collaudataIl);
@@ -265,7 +265,7 @@ test("non seguirla piu' butta quello che se ne sa e anche la sua chiave", async 
     await b.retro(`/casa/${UNA}`, { method: "DELETE" });
     const { case: case_ } = await (await b.retro("/case")).json();
     assert.equal(case_.length, 0);
-    /* E senza buttare anche la chiave, la prima rapporto la farebbe rinascere
+    /* E senza buttare anche la chiave, il primo rapporto la farebbe rinascere
      * tre secondi dopo. */
     assert.equal((await b.deposita(UNA, codice)).status, 403);
   } finally {

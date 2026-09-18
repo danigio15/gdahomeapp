@@ -1685,8 +1685,8 @@
       });
   }
 
-  function quandoEArrivata(esito) {
-    if (!esito) return due("non è ancora partita nessuna", "none has gone out yet");
+  function quandoEArrivato(esito) {
+    if (!esito) return due("non ne è ancora partito nessuno", "none has gone out yet");
     var quanti = Math.round((Date.now() - esito.quando) / 60000);
     var fa =
       quanti < 1
@@ -1694,8 +1694,8 @@
         : quanti < 60
           ? quanti + due(" min fa", " min ago")
           : Math.round(quanti / 60) + due(" ore fa", " hours ago");
-    if (esito.andata) return due("l'ultima è arrivata ", "the last one arrived ") + fa;
-    return due("l'ultima non è arrivata (", "the last one did not arrive (") + fa + ")";
+    if (esito.andata) return due("l'ultimo è arrivato ", "the last one arrived ") + fa;
+    return due("l'ultimo non è arrivato (", "the last one did not arrive (") + fa + ")";
   }
 
   function guardaIlQuadro() {
@@ -1723,7 +1723,7 @@
                 " minuti, passando da " +
                 quadro.dove +
                 ".",
-              "This home sends a postcard to " +
+              "This home sends a report to " +
                 quadro.chi +
                 ", every " +
                 quadro.ogni +
@@ -1737,19 +1737,15 @@
                 ", ogni " +
                 quadro.ogni +
                 " minuti.",
-              "This home sends a postcard to " +
-                quadro.dove +
-                ", every " +
-                quadro.ogni +
-                " minutes.",
+              "This home sends a report to " + quadro.dove + ", every " + quadro.ogni + " minutes.",
             );
-        trova("quadro-esito").textContent = quandoEArrivata(quadro.esito);
+        trova("quadro-esito").textContent = quandoEArrivato(quadro.esito);
         /* Il testo com'e' partito. `JSON.stringify` con l'indentazione: e' lo
          * stesso oggetto che e' andato, non una sua descrizione. */
         trova("quadro-testo").textContent = quadro.ultima
           ? JSON.stringify(quadro.ultima, null, 2)
           : due(
-              "Non ne è ancora partita nessuna: la prima esce mezzo minuto dopo l'accensione.",
+              "Non ne è ancora partito nessuno: il primo esce mezzo minuto dopo l'accensione.",
               "None has gone out yet: the first one leaves half a minute after start-up.",
             );
       })

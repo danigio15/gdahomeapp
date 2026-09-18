@@ -1,6 +1,6 @@
 /* Le case che questo quadro segue.
  *
- * Di ognuna si tiene poco: l'ultima rapporto, il giorno in cui e' arrivata la
+ * Di ognuna si tiene poco: l'ultimo rapporto, il giorno in cui e' arrivata la
  * prima, quello in cui il collaudo si e' chiuso, e **quante rapporti sono
  * arrivate per ogni giorno** — che e' tutto quello che serve per disegnare la
  * striscia dei quattordici giorni.

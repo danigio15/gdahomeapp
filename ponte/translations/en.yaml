@@ -40,7 +40,7 @@ configuration:
       for word, in gdahome's «The panel» tab, where the button to stop it also
       is.
   quadro_ogni:
-    name: How often a postcard goes out
+    name: How often a report goes out
     description: >-
       Every how many minutes this home writes to the panel. It only counts if
       the box above is filled in.
