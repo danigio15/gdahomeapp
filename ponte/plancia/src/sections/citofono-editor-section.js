@@ -370,6 +370,38 @@ function onClick(event) {
   }
 }
 
+/* Ogni casella si salva mentre la si compila (#13).
+ *
+ * «Non salva il sensore aperto o chiuso inserito per gestire la cassetta.»
+ *
+ * Non era una chiave scritta nel posto sbagliato: era che qui il salvataggio
+ * lo faceva soltanto il tasto. Chi sceglie l'entita' con la lente la vede
+ * comparire nella casella — il gesto sembra finito — e poi chiude la scheda,
+ * o apre un'altra riga, e quella casella non l'ha mai letta nessuno. Nelle
+ * altre schede di questa configurazione ogni gesto si salva subito: chi tocca
+ * quelle caselle sta rispondendo a una domanda, e aspettare un tasto vuol dire
+ * perdere la risposta.
+ *
+ * La scheda NON si ridisegna: un ridisegno a ogni lettera porterebbe via il
+ * cursore dalla casella. Il tasto «Salva» resta dov'e', e adesso conferma una
+ * cosa gia' fatta invece di essere l'unico modo di farla.
+ */
+function onInput(event) {
+  const campo = event.target?.closest?.("[data-dm-cit-campo]");
+  const body = doc?.getElementById("ed-body");
+  if (!campo || !body || activeTab() !== CITOFONO_EDITOR_TAB || !body.contains(campo)) return;
+  const riga = campo.closest("[data-dm-cit-indice]");
+  if (!riga) return;
+  const lista = clean(riga.dataset.dmCitLista);
+  const indice = Number(riga.dataset.dmCitIndice);
+  const tutte = configurazione();
+  const righe = tutte[lista];
+  if (!Number.isFinite(indice) || !righe?.[indice]) return;
+  const prossime = righe.slice();
+  prossime[indice] = leggiLaRiga(riga, righe[indice]);
+  salva({ ...tutte, [lista]: prossime });
+}
+
 function installStyles() {
   installStyle(
     "dm-citofono-editor-style",
@@ -408,6 +440,16 @@ export function installCitofonoEditor() {
     });
   });
   doc.addEventListener("click", onClick);
+  /* Anche `change`, e in DISCESA.
+   *
+   * La lente scrive nella casella e lancia un `change` — non un `input` — e
+   * quell'evento il guscio lo fa `new Event('change')`, che non risale: un
+   * ascoltatore sul documento in salita non lo sente mai. In discesa si',
+   * perche' la fase di cattura arriva al bersaglio comunque. Era proprio il
+   * gesto della segnalazione: si sceglie il sensore con la lente, compare
+   * nella casella, e non lo salva nessuno. */
+  doc.addEventListener("input", onInput, true);
+  doc.addEventListener("change", onInput, true);
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:editor-rendered"])
     root.addEventListener?.(evento, () => {
       root.queueMicrotask?.(() => {

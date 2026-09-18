@@ -81,7 +81,9 @@ const CAMPI_UPS = Object.freeze({
   batteria: [["Carica della batteria (%)", "Battery charge (%)"], "sensor.ups_battery_charge"],
   carico: [["Carico (%)", "Load (%)"], "sensor.ups_load"],
   autonomia: [
-    ["Autonomia (minuti)", "Runtime (minutes)"],
+    /* Senza «(minuti)»: l'unita' la dice l'entita', e chiederla qui vorrebbe
+     * dire farla scrivere due volte a chi ne ha una che parla in secondi. */
+    ["Autonomia residua", "Runtime left"],
     "sensor.ups_runtime",
     [
       "Quando la rete cade è il numero grande della tessera: è il tempo che resta.",

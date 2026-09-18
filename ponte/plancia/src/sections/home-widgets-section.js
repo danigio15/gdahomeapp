@@ -71,6 +71,12 @@ import {
 } from "../core/aria-model.js";
 import { nomeDellaLettura } from "../core/nome-della-lettura.js";
 import { cavoDalloStato, codiceDellaRicarica } from "../core/stato-della-ricarica.js";
+import { inKilowatt, oreEMinuti, tempoDellaRicarica } from "../core/il-tempo-della-ricarica.js";
+import {
+  CAPACITA_DI_CASA_KEY,
+  VEHICLE_CAPACITY_FIELD,
+  capacitaDellaBatteria,
+} from "../core/vehicle-model.js";
 import { eDellaWallbox } from "../core/wallbox-device-binding.js";
 import { statoUmanoEV } from "./il-popup-dell-auto-racconta-section.js";
 import { poolList } from "../core/pool-model.js";
@@ -2153,6 +2159,10 @@ function letturaVettura(states, auto, fuori, indice, visti = new Set()) {
     ricaricaEntita: stato?.entity || "",
     kw: sbircia("dm.ev_potenza_ricarica"),
     target: sbircia("dm.ev_target_soc"),
+    /* La capacita' della batteria di QUESTA vettura: senza, il tempo che manca
+     * si conterebbe su settanta kilowattora per tutte le auto del mondo, e su
+     * una batteria da quaranta uscirebbe quasi doppio. */
+    capacita: capacitaDellaBatteria(auto || {}),
     altre: altreCaselleEv(states, mappa, fuori, visti),
   };
 }
@@ -2308,6 +2318,12 @@ function letturaAttiva(states, fuori) {
     ricaricaEntita: stato?.entity || "",
     kw: refValue(states, "dm.ev_potenza_ricarica", fuori)?.value ?? null,
     target: refValue(states, "dm.ev_target_soc", fuori)?.value ?? null,
+    /* Chi non ha profili la capacita' la dichiara in una casella sua: e' la
+     * stessa che legge la pagina Auto, e senza le due direbbero due tempi
+     * diversi per la stessa carica. */
+    capacita: capacitaDellaBatteria({
+      [VEHICLE_CAPACITY_FIELD]: readJson(CAPACITA_DI_CASA_KEY, ""),
+    }),
     altre: altreCaselleEv(states, mappa, fuori, visti),
   };
 }
@@ -2425,6 +2441,32 @@ function evModel(states) {
   const percentuale = cariche.length ? Math.min(...cariche) : null;
   const kmTotali = letture.map((lettura) => lettura.km).filter((valore) => valore != null);
   const primaKm = kmTotali.length ? Math.min(...kmTotali) : null;
+  /* Sotto carica, la didascalia dice QUANTO MANCA — non i chilometri (#14).
+   *
+   * «La % di fine ricarica viene messa ma non viene calcolato il tempo
+   * rimanente: viene messo i km al posto del tempo.» I chilometri sono la
+   * risposta giusta a un'auto ferma — quanto ci faccio — ma a un'auto
+   * attaccata al cavo si guarda per sapere quando si puo' staccare, e li'
+   * l'autonomia e' un numero che non risponde e per giunta si muove.
+   *
+   * Il conto e' quello della pagina EV e del popup, chiamato dallo stesso
+   * posto: tre punti che dicono ore diverse per la stessa carica sono peggio
+   * di nessun numero. Quando non si puo' contare — carica ferma, potenza che
+   * non arriva, nessun traguardo — restano i chilometri, come prima. */
+  const attaccata = letture.find((lettura) => autoAllaPresa(lettura.ricarica)) || null;
+  const quantoManca = attaccata
+    ? tempoDellaRicarica({
+        codice: codiceDellaRicarica({ stato: attaccata.ricarica, potenza: attaccata.kw }),
+        soc: attaccata.percentuale,
+        target: attaccata.target,
+        kilowatt: inKilowatt(attaccata.kw),
+        capacita: attaccata.capacita,
+      })
+    : null;
+  const mancano =
+    quantoManca?.stato === "carica" && quantoManca.minuti != null
+      ? `${oreEMinuti(quantoManca.minuti)} ${t("alla fine", "to full")}`
+      : "";
   const didascalia = piu
     ? letture
         .map(
@@ -2432,9 +2474,8 @@ function evModel(states) {
             `${lettura.nome}${lettura.percentuale == null ? "" : ` ${Math.round(lettura.percentuale)}%`}`,
         )
         .join(" · ")
-    : percentuale != null && primaKm != null
-      ? `${formatNumber(primaKm, 0)} km`
-      : "";
+    : mancano ||
+      (percentuale != null && primaKm != null ? `${formatNumber(primaKm, 0)} km` : "");
   return {
     key: "ev",
     accent: "#06b6d4",

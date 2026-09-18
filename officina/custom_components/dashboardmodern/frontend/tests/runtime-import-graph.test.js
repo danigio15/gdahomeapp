@@ -1285,8 +1285,15 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // vuota, e quando manca davvero si dice quale delle due caselle è. Gli altri
   // che toccano quel tasto — la valvola TRV, il clima rapido, la VMC — gli
   // attaccano ciascuno la propria casella, e questa è la loro stessa forma.
+  // 362 con le unita' del tempo (#9): «il mio UPS (CyberPower) mostra il tempo
+  // residuo in secondi invece dei minuti». L'unita' non e' da chiedere, sta
+  // nell'entita' — ma il vocabolario che la legge lo usano in due, chi scrive
+  // una durata su una scheda e chi legge l'autonomia di un gruppo di
+  // continuita'. Scritto due volte, il giorno che un'integrazione dice «secs»
+  // lo impara una sola delle due. E' un file in piu' perche' e' un vocabolario,
+  // e un vocabolario ha un posto solo.
   assert.ok(
-    relative.length <= 361,
+    relative.length <= 362,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
