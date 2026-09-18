@@ -275,7 +275,7 @@ function tessereMarkup() {
         [key, icon, label],
         index,
       ) => `<div class="ed-row dm-widget-pref" data-widget-key="${esc(key)}">
-        <span class="dm-widget-pref-icon" aria-hidden="true">${oggettoWidget(key, icon)}</span>
+        <span class="dm-widget-pref-icon" aria-hidden="true">${oggettoWidget(key, icon, `pref-${key}`)}</span>
         <span class="ed-row-main"><strong class="ed-row-new">${esc(label)}</strong>${sorgenteMarkup(key)}</span>
         <button type="button" class="ed-del dm-widget-move" data-widget-up aria-label="${t("Più in alto", "Move up")}"${index === 0 ? " disabled" : ""}>▲</button>
         <button type="button" class="ed-del dm-widget-move" data-widget-down aria-label="${t("Più in basso", "Move down")}"${index === rows.length - 1 ? " disabled" : ""}>▼</button>

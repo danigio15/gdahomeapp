@@ -316,7 +316,10 @@ const OGGETTO_DEL_BLOCCO = Object.freeze({
   intestazione: "home",
 });
 
-const disegnoDelBlocco = (nome) => oggettoWidget(OGGETTO_DEL_BLOCCO[nome] || nome);
+/* Il posto e' il blocco: uno per nome, quindi il disegno si porta dietro le
+ * sue sfumature senza dipendere dal foglio in cima al corpo. */
+const disegnoDelBlocco = (nome) =>
+  oggettoWidget(OGGETTO_DEL_BLOCCO[nome] || nome, "", `blocco-${nome}`);
 
 function schedaAperta() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);

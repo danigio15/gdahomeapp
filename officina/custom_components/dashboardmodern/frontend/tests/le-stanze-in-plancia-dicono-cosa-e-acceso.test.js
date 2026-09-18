@@ -87,7 +87,9 @@ test("ogni genere porta il disegno di casa, non un'emoji", () => {
   /* Le pastiglie si disegnano con il catalogo degli oggetti, che è lo stesso
    * delle tessere e della fascia sotto il meteo. */
   assert.match(sorgente, /import \{ oggettoWidget \} from "\.\.\/core\/oggetti-widget\.js";/);
-  assert.match(sorgente, /oggettoWidget\(\s*voce\.oggetto,?\s*\)/);
+  /* Il disegno col posto — la stanza e il genere — cosi' due stanze che hanno
+   * accese le stesse cose non si passano le sfumature. */
+  assert.match(sorgente, /oggettoWidget\(\s*voce\.oggetto,\s*"",\s*`stanza-\$\{dove\}-\$\{voce\.chiave\}`,?\s*\)/);
 });
 
 test("una stanza spenta non mostra nessuna pastiglia", () => {

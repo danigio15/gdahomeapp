@@ -109,7 +109,8 @@ function ensureVoce() {
   voce.className = "tab";
   voce.dataset.tab = MEDIA_TAB;
   voce.id = `tab-${MEDIA_TAB}`;
-  voce.innerHTML = `<span class="icon">${oggettoWidget("media")}</span><span class="text">${esc(
+  /* Questa e' una voce della barra, e il posto segue la regola della barra. */
+  voce.innerHTML = `<span class="icon">${oggettoWidget("media", "", `nav-${MEDIA_TAB}`)}</span><span class="text">${esc(
     t("Musica", "Media"),
   )}</span>`;
   /* Dopo le Luci: la musica sta con le cose del salotto, non con gli impianti.
@@ -203,7 +204,7 @@ function copertinaMarkup(riga) {
     return `<img class="dm-mp-arte" alt="" aria-hidden="true" loading="lazy">
       <img class="dm-mp-fondo" alt="" aria-hidden="true" loading="lazy">`;
   return `<span class="dm-mp-arte dm-mp-arte-vuota" aria-hidden="true">${
-    riga.icona ? esc(riga.icona) : oggettoWidget("media")
+    riga.icona ? esc(riga.icona) : oggettoWidget("media", "", `mp-${riga.entity}`)
   }</span>`;
 }
 

@@ -247,7 +247,10 @@ function syncConfigTabIcons() {
      * ce l'ha ancora. La colonna della configurazione portava le emoji, che
      * cambiano faccia da un telefono all'altro e — peggio — si ripetevano:
      * Energia e Azioni avevano lo stesso fulmine. */
-    const marchio = disegno ? oggettoWidget(disegno) : "";
+    /* Col posto — la linguetta — cosi' il disegno non dipende dal foglio in
+     * cima al corpo: era quel rimando fra elementi diversi a lasciare le
+     * icone trasparenti su WebKit. */
+    const marchio = disegno ? oggettoWidget(disegno, "", `config-${tab}`) : "";
     if (marchio) {
       /* Come nella barra: conta cosa c'e' nella casella, non il ricordo di
        * avercelo messo (#561). */

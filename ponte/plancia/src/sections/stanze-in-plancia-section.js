@@ -132,7 +132,10 @@ export function riassuntoDellaStanza(pagina, states = allStates()) {
  * Escono solo i generi che hanno qualcosa acceso: una fila di zeri non e' un
  * colpo d'occhio, e' un modulo da compilare. Il numero sta accanto al disegno
  * perche' «due luci» e «una luce» sono due notizie diverse. */
-function accesePerTipoMarkup(perTipo) {
+/* `dove` e' la stanza: due stanze possono avere accese le stesse cose, e due
+ * pastiglie con gli stessi nomi di sfumatura tornerebbero a dipendere una
+ * dall'altra — che e' il difetto da cui si viene. */
+function accesePerTipoMarkup(perTipo, dove = "") {
   if (!perTipo.length) return "";
   return `<span class="dm-stanza-plancia-generi">${perTipo
     .map(
@@ -140,6 +143,8 @@ function accesePerTipoMarkup(perTipo) {
         `<span class="dm-stanza-plancia-genere" data-dm-genere="${esc(voce.chiave)}">` +
         `<span class="dm-stanza-plancia-genere-ic" aria-hidden="true">${oggettoWidget(
           voce.oggetto,
+          "",
+          `stanza-${dove}-${voce.chiave}`,
         )}</span><b>${esc(String(voce.quante))}</b></span>`,
     )
     .join("")}</span>`;
@@ -166,7 +171,7 @@ function cardMarkup(pagina, states) {
       <b>${esc(pagina.name)}</b>
       <small>${esc(misure)}</small>
     </span>
-    ${accesePerTipoMarkup(perTipo)}
+    ${accesePerTipoMarkup(perTipo, pagina.id)}
   </button>`;
 }
 
@@ -242,9 +247,7 @@ export function renderStanzeInPlancia() {
   /* Il titolo porta il disegno di casa, non il divano di sistema: e' l'unico
    * posto del blocco che era rimasto a un'emoji, e su due telefoni diversi
    * aveva due facce. */
-  casa.innerHTML = `<div class="section-title"><span class="dm-stanze-plancia-titolo-ic" aria-hidden="true">${oggettoWidget(
-    "stanze",
-  )}</span>${esc(t("Stanze", "Rooms"))}</div>
+  casa.innerHTML = `<div class="section-title"><span class="dm-stanze-plancia-titolo-ic" aria-hidden="true">${oggettoWidget("stanze", "", "stanze-titolo")}</span>${esc(t("Stanze", "Rooms"))}</div>
     <div class="dm-stanze-plancia-griglia">${pagine
       .map((voce) => cardMarkup(voce, states))
       .join("")}</div>`;

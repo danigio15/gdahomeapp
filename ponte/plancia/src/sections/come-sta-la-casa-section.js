@@ -290,7 +290,11 @@ function paroleDellaPastiglia(pastiglia) {
  * delle due. */
 function facciaDellaPastiglia(pastiglia) {
   const chiave = clean(pastiglia?.chiave);
-  if (haOggettoWidget(chiave)) return oggettoWidget(chiave);
+  /* Col posto: la pastiglia si porta dietro le SUE sfumature invece di
+   * prenderle dal foglio in cima al corpo, che e' un rimando fra elementi
+   * diversi e su WebKit lascia il disegno trasparente. Il posto e' la
+   * chiave: una pastiglia per chiave, quindi sempre lo stesso a ogni giro. */
+  if (haOggettoWidget(chiave)) return oggettoWidget(chiave, "", `fascia-${chiave}`);
   const nome = clean(pastiglia?.mdi);
   if (nome) return iconGlyphMarkup("action", nome, { size: 16 });
   return `<span class="dm-casa-emoji">${esc(String(pastiglia?.icona ?? ""))}</span>`;
@@ -881,7 +885,11 @@ function pannelloMarkup() {
   const righe = VOCI_DELLA_BARRA.map((voce) => {
     const etichetta = nomi[voce.chiave] || voce.chiave;
     return `<label class="ed-row dm-casa-ed-riga">
-      <span class="dm-casa-ed-ic" aria-hidden="true">${oggettoWidget(voce.chiave)}</span>
+      <span class="dm-casa-ed-ic" aria-hidden="true">${oggettoWidget(
+        voce.chiave,
+        "",
+        `casa-ed-${voce.chiave}`,
+      )}</span>
       <span class="ed-row-main"><strong class="ed-row-new">${esc(etichetta)}</strong></span>
       <input type="checkbox" data-dm-casa-voce="${esc(voce.chiave)}"${
         config.voci[voce.chiave] ? " checked" : ""

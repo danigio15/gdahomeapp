@@ -3684,7 +3684,7 @@ function mediaDetail(widget) {
         riga.copertina
           ? `<img class="dm-w-media-arte" src="${esc(riga.copertina)}" alt="" aria-hidden="true">`
           : `<span class="dm-w-media-arte dm-w-media-vuota" aria-hidden="true">${
-              riga.icona ? esc(riga.icona) : oggettoWidget("media")
+              riga.icona ? esc(riga.icona) : oggettoWidget("media", "", `w-media-${riga.entity}`)
             }</span>`
       }
       <span class="dm-w-media-testo">
@@ -5530,7 +5530,12 @@ export function facciaDellaTessera(widget) {
    * cosa ci sta sopra, non la forma della tessera. */
   if (widget?.faccia) return widget.faccia;
   const famiglia = famigliaDellaTessera(widget?.key);
-  if (haOggettoWidget(famiglia)) return oggettoWidget(famiglia);
+  /* Il posto e' la tessera, non la famiglia: la chiave e' unica in Home e
+   * non cambia da un giro all'altro, cosi' il disegno dichiara da se' le sue
+   * sfumature e non le chiede al foglio in cima al corpo — che e' il rimando
+   * fra elementi diversi che su WebKit non si risolve. */
+  if (haOggettoWidget(famiglia))
+    return oggettoWidget(famiglia, "", `tessera-${widget?.key || famiglia}`);
   return iconGlyphMarkup("action", widget?.icon, { size: 22 });
 }
 

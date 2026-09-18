@@ -58,7 +58,9 @@ function valoreMarkup(riga) {
 function disegno(riga) {
   const scelta = clean(riga.icona);
   if (scelta) return esc(scelta);
-  return oggettoWidget(riga.comandabile ? "azioni" : "evidenza");
+  /* Il posto e' l'entita': una riga per entita', e il disegno si porta dietro
+   * le sue sfumature invece di prenderle dal foglio in cima al corpo. */
+  return oggettoWidget(riga.comandabile ? "azioni" : "evidenza", "", `mie-${riga.entity}`);
 }
 
 function rigaMarkup(riga) {
@@ -95,7 +97,7 @@ function blocco(pagina) {
   nodo = doc.createElement("section");
   nodo.className = "dm-mie-ent";
   nodo.innerHTML = `<div class="dm-mie-testa">
-    <span class="dm-mie-testa-ic" aria-hidden="true">${oggettoWidget("mie")}</span>
+    <span class="dm-mie-testa-ic" aria-hidden="true">${oggettoWidget("mie", "", "mie-testa")}</span>
     <h3>${esc(t("Le tue entità", "Your own entities"))}</h3>
   </div><div class="dm-mie-lista"></div>`;
   casa.append(nodo);

@@ -51,7 +51,7 @@ test("l'elenco della scheda chiede il disegno, non si scrive un'emoji", () => {
   const sorgente = leggi("sections/come-sta-la-casa-section.js");
   assert.match(
     sorgente,
-    /<span class="dm-casa-ed-ic" aria-hidden="true">\$\{oggettoWidget\(voce\.chiave\)\}<\/span>/,
+    /<span class="dm-casa-ed-ic" aria-hidden="true">\$\{oggettoWidget\(\s*voce\.chiave,\s*"",\s*`casa-ed-\$\{voce\.chiave\}`,?\s*\)\}<\/span>/,
   );
   /* E la tabella dei nomi e' tornata a fare i nomi: niente piu' coppie
    * [emoji, nome], che erano il posto da cui usciva la seconda faccia. */

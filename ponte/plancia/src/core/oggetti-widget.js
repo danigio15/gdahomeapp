@@ -980,8 +980,15 @@ const nomeDelDisegno = (chiave) => {
  * sempre. Dipende dal posto — «nav-clima» — quindi e' lo stesso a ogni giro
  * dello stesso posto, e diverso da quello di ogni altro posto.
  *
- * Chi non lo chiede resta come prima, col foglio che risponde per lui: la
- * correzione vale dove il difetto si vede, e non muove tutto il resto. */
+ * Il posto lo dicono tutti: la barra, le facce delle tessere, le pastiglie
+ * della fascia, le linguette della configurazione. Contato nella pagina vera,
+ * il difetto non era della sola barra — dieci tessere e quattro pastiglie
+ * avevano ogni riferimento risolto fuori da se'. Una prova legge la sorgente e
+ * non lascia passare una chiamata senza posto, perche' quella chiamata si
+ * romperebbe soltanto su WebKit, cioe' soltanto dove qui non si prova.
+ *
+ * Il foglio resta, e resta la rete: chi non passa il posto non si rompe
+ * altrove, e senza il foglio tornerebbe il difetto della #304. */
 const RIPULISCI_IL_PREFISSO = /[^A-Za-z0-9_-]+/g;
 const conSfumatureSue = new Map();
 

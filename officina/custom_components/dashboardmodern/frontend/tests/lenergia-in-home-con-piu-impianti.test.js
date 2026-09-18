@@ -124,7 +124,17 @@ test("la seconda zona porta il disegno dell'Energia, come la prima", () => {
   const prima = facciaDellaTessera({ key: "energia", icon: "⚡" });
   const seconda = facciaDellaTessera({ key: "energia_zona_notte", icon: "⚡" });
   assert.match(prima, /<svg class="dm-oggetto"/, "la prima non ha il disegno di casa");
-  assert.equal(seconda, prima, "la seconda zona non disegna come la prima");
+  /* Lo stesso disegno, non lo stesso testo. Da quando ogni faccia si porta le
+   * sue sfumature col nome del proprio posto — la cura delle icone
+   * trasparenti su iPhone — due tessere della stessa famiglia scrivono lo
+   * stesso disegno con due nomi diversi, ed e' precisamente quello che le
+   * rende indipendenti l'una dall'altra. Si confronta quello che si vede. */
+  const senzaIlPosto = (markup, chiave) => markup.replaceAll(`tessera-${chiave}-`, "");
+  assert.equal(
+    senzaIlPosto(seconda, "energia_zona_notte"),
+    senzaIlPosto(prima, "energia"),
+    "la seconda zona non disegna come la prima",
+  );
 });
 
 test("una tessera che si porta la faccia da sola tiene la sua", () => {

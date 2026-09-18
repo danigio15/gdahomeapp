@@ -1,5 +1,10 @@
 /* «Il problema della barra: non carica le icone, scompaiono.» Su iPhone.
  *
+ * Partito dalla barra, e finito in tutta la plancia: contando nella pagina
+ * vera, il difetto ce l'avevano anche le dieci facce delle tessere della Home
+ * e le quattro pastiglie della fascia sotto il meteo. La causa e' una sola,
+ * quindi la cura e' una sola, e queste prove la tengono ferma dappertutto.
+ *
  * Misurato dal video fotogramma per fotogramma: la barra sta agli stessi
  * pixel, le scritte pure, e cambia solo la fascia dei disegni. Il disegno c'e'
  * e occupa il suo posto — e' trasparente. Cioe' il suo riempimento e'
@@ -20,9 +25,11 @@
  */
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 
 import { CHIAVI_OGGETTI, oggettoWidget } from "../src/core/oggetti-widget.js";
+
+const SORGENTE = new URL("../src/", import.meta.url);
 
 const idDichiarati = (markup) =>
   new Set([...markup.matchAll(/\bid="([^"]+)"/g)].map(([, id]) => id));
@@ -97,4 +104,52 @@ test("la barra chiede il disegno col suo posto", async () => {
   /* Il posto e' la voce: sempre lo stesso per quella voce, diverso da ogni
    * altra. Non un contatore e non un numero a caso. */
   assert.match(source, /oggettoWidget\(disegno, "", `nav-\$\{pagina\}`\)/);
+});
+
+/* Quanti argomenti ha questa chiamata, contando solo le virgole di primo
+ * livello: le chiamate stanno anche su piu' righe, e dentro ci sono altre
+ * parentesi e altre virgole. */
+function argomentiDellaChiamata(testo, dopoLaParentesi) {
+  let dentro = 1;
+  let virgole = 0;
+  for (let i = dopoLaParentesi; i < testo.length; i += 1) {
+    const c = testo[i];
+    if (c === "(" || c === "[" || c === "{") dentro += 1;
+    else if (c === ")" || c === "]" || c === "}") {
+      dentro -= 1;
+      if (!dentro) return virgole + 1;
+    } else if (c === "," && dentro === 1) virgole += 1;
+  }
+  return 0;
+}
+
+test("chi mostra un oggetto dice sempre dove lo mette", async () => {
+  /* La regola che tiene in piedi la cura, e la parte che si dimentica: un
+   * posto in meno e quel disegno torna a dipendere dal foglio in cima al
+   * corpo, cioe' torna trasparente su WebKit — e trasparente solo la', dove
+   * qui non si prova. Allora lo prova la sorgente.
+   *
+   * `haOggettoWidget` e il foglio restano la rete: chi non passa il posto non
+   * si rompe, si vede soltanto dove il rimando fra elementi si risolve. */
+  const senzaPosto = [];
+  const files = (await readdir(SORGENTE, { recursive: true })).filter((nome) => /\.js$/.test(nome));
+  let chiamate = 0;
+  for (const nome of files) {
+    if (nome.endsWith("oggetti-widget.js")) continue;
+    const testo = await readFile(new URL(nome, SORGENTE), "utf8");
+    for (const trovato of testo.matchAll(/\boggettoWidget\(/g)) {
+      const dopo = trovato.index + trovato[0].length;
+      chiamate += 1;
+      if (argomentiDellaChiamata(testo, dopo) < 3) {
+        const riga = testo.slice(0, trovato.index).split("\n").length;
+        senzaPosto.push(`${nome}:${riga}`);
+      }
+    }
+  }
+  assert.ok(chiamate > 10, `poche chiamate trovate: ${chiamate}`);
+  assert.deepEqual(
+    senzaPosto,
+    [],
+    "qui si mostra un disegno senza dire dove: passa un terzo argomento stabile (il posto), o su iPhone quel disegno resta trasparente",
+  );
 });
