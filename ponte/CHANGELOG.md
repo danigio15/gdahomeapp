@@ -11,6 +11,32 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.1
+
+**Se la casa te l'ha montata un installatore, adesso può accorgersi da solo
+che qualcosa non va.**
+
+Nella console di gdahome c'è una scheda nuova, «Il quadro». Chi ti ha fatto
+l'impianto ti dà un codice, tu lo incolli lì, e da quel momento questa casa
+gli manda ogni quarto d'ora **poche righe di numeri**: le versioni, quanto è
+pieno il disco, quali add-on girano, quante entità non rispondono. Così si
+accorge che qualcosa si è fermato prima che tocchi a te telefonargli.
+
+**Quello che parte lo puoi leggere.** Non «manda dei dati»: nella stessa
+scheda c'è il testo esatto che esce da qui, parola per parola, e non un
+riassunto — perché un riassunto di quello che esce è proprio la cosa di cui
+ci si dovrebbe fidare. Accanto c'è il nome di chi lo riceve, e il tasto per
+smettere.
+
+E quello che **non** parte, detto per intero: nessun nome di entità, nessuna
+stanza, nessuna persona, nessuno stato di nessun sensore, il nome del tuo
+Wi-Fi no e il tuo indirizzo pubblico nemmeno. Senza codice incollato non
+parte niente e non si apre nessuna connessione: la casella vuota è lo stato
+di serie.
+
+Per chi gli impianti li monta, c'è anche un interruttore «installatore» che
+accende la voce per arrivare al proprio cruscotto.
+
 ## 1.5.0
 
 **Su iPhone i disegni si vedevano solo una volta.**
