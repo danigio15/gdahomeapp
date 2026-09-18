@@ -83,6 +83,33 @@ function installStyles() {
         bottom:calc(90px + var(--dm-fondo-di-sistema))!important
       }
       .bottom-nav-bar{isolation:isolate!important}
+      /* Col tema chiaro la barra in vista e' **piena**.
+       *
+       * Il tema scuro la sfoca — «blur(18px)», qui sotto — e quello che ci
+       * passa dietro diventa una macchia. Il chiaro non l'ha mai sfocata: sta
+       * a rgba(255,255,255,.92), e quell'otto per cento e' testo **nitido**.
+       * Sul telefono la barra e' ritirata e non si vede; su un tablet sta
+       * sempre in fondo, e sotto di lei si leggevano i titoli delle tessere —
+       * «TEMPERATURA», «AUTO», «BATTERIE» — in filigrana sopra i suoi. Non
+       * sembra una barra di vetro: sembra una barra rotta.
+       *
+       * Piena e non sfocata: una sfocatura a schermo intero il browser la
+       * ricompone a ogni scorrimento, ed e' proprio il costo che questa
+       * plancia si e' levata di mezzo. Dal fondo della pagina la barra la
+       * staccano l'ombra e il suo bordo chiaro, che ci sono gia'.
+       *
+       * Solo quando e' in vista: tirata fuori, o tenuta ferma da chi l'ha
+       * scelta cosi' nella Config. Ritirata resta come era. */
+      nav.tabs.bottom-nav-bar.visible,
+      body.cd-nav-fixed nav.tabs.bottom-nav-bar{background:#fff!important}
+      html[data-theme="dark"] nav.tabs.bottom-nav-bar.visible,
+      html.dark nav.tabs.bottom-nav-bar.visible,
+      body[data-theme="dark"] nav.tabs.bottom-nav-bar.visible,
+      body.dark nav.tabs.bottom-nav-bar.visible,
+      html[data-theme="dark"] body.cd-nav-fixed nav.tabs.bottom-nav-bar,
+      html.dark body.cd-nav-fixed nav.tabs.bottom-nav-bar,
+      body[data-theme="dark"].cd-nav-fixed nav.tabs.bottom-nav-bar,
+      body.dark.cd-nav-fixed nav.tabs.bottom-nav-bar{background:#131c30!important}
       /* «Le icone sono poco leggibili, troppo chiare»: la voce a riposo
        * portava questo grigio al 70% di opacita', che sul bianco della barra
        * fa tre a uno — sotto la soglia di leggibilita'. Piu' scuro e quasi

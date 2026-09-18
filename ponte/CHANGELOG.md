@@ -5,6 +5,35 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.16
+
+**La barra delle sezioni non si legge più attraverso.**
+
+Su un tablet girato, sotto la barra si leggevano i titoli delle tessere che
+le passavano dietro — «TEMPERATURA», «AUTO», «BATTERIE», «ARIA» — in
+filigrana sopra i nomi della barra stessa. Non sembrava una barra di vetro:
+sembrava un disegno doppio.
+
+Misurato nel browser, non indovinato: col tema chiaro il fondo della barra
+stava a `rgba(255,255,255,.92)` e il vetro smerigliato era **spento**.
+Spento per una buona ragione — una sfocatura a schermo intero il browser la
+ricompone a ogni scorrimento, ed è un costo che questa plancia si è levata
+di mezzo — ma senza vetro quell'otto per cento di trasparenza non è una
+macchia: è testo nitido. Sul telefono non si vedeva perché lì la barra sta
+ritirata; su un tablet sta sempre in fondo.
+
+La cura è il fondo **pieno**, non il vetro riacceso: dietro non passa più
+niente da sfocare e il risparmio resta dov'era. Dal fondo della pagina la
+barra la staccano l'ombra e il suo bordo chiaro, che c'erano già. Vale nei
+due temi e solo quando la barra è in vista — tirata fuori, o tenuta ferma da
+chi l'ha scelta così: ritirata resta com'era.
+
+**E lo spazio in fondo alla pagina non c'entrava.** L'ho misurato prima di
+toccarlo: arrivati in fondo, l'ultima tessera si porta sopra la barra. Quello
+che si vede a mezza pagina è una barra che galleggia, ed è quello che fa una
+barra che galleggia: per non averla mai sopra niente va messa di lato, e
+quella è un'altra cosa — tutto il carrello delle sezioni è orizzontale.
+
 ## 1.4.32.15
 
 **La barra delle sezioni su un tablet: i disegni alla loro misura vera, e il
