@@ -47,14 +47,30 @@
 
 import { gliAddon, gliApparati, laMacchina, laRete } from "./ferro.js";
 import { ilBackup, leBatterie, leEntita } from "./salute.js";
+import { TesserinoNoNo, verificaIlTesserino } from "./tesserino.js";
 
 /* Il nome e il numero, come nell'invito del QR code (`invito.js`): quell'uno
  * e' l'unica cosa che permetta a un quadro vecchio di dire «questo codice
  * viene da un ponte piu' nuovo di me» invece di leggere per meta' qualcosa che
  * non e' piu' quello che crede. */
 const NOME = "quadro";
-const VERSIONE = 1;
+const VERSIONE = 2;
 const SEPARATORE = "|";
+
+/* La prima versione della riga finiva con la chiave, e il ponte si fidava di
+ * chiunque scrivesse un indirizzo `https`. La seconda porta anche il
+ * **tesserino** — chi e' l'installatore, per quale quadro, fino a quando — e
+ * senza quello non si abbina piu' niente.
+ *
+ * Una riga della prima versione non si legge: **si rifiuta**. Se la si
+ * accettasse «per compatibilita'», il modo di saltare il tesserino sarebbe
+ * scrivere `1` al posto di `2` — cioe' il controllo lo spegnerebbe chi deve
+ * essere controllato, scrivendo una cifra. Un numero di versione non puo'
+ * essere la porta di servizio del controllo che la versione introduce.
+ *
+ * Non rompe niente a nessuno: il quadro non e' mai stato rilasciato, e righe
+ * della prima versione in giro non ce ne sono. */
+const PRIMA_DEL_TESSERINO = 1;
 
 /** Ogni quanto parte una cartolina, in minuti, quando non si dice altro. */
 export const OGNI_DI_SERIE = 15;
@@ -85,19 +101,32 @@ export class CodiceTroppoNuovo extends Error {}
 /**
  * Il codice del quadro, come si incolla nella scheda dell'add-on.
  *
- *     quadro|1|https://quadro.impiantirossi.it|K7M2-9XQF-3BHT-R4VN
+ *     quadro|2|https://quadro.impiantirossi.it|K7M2-9XQF-3BHT-R4VN|TESSERINO
  *
  * Una riga sola e leggibile, non un blocco di base64: quando qualcosa non va,
  * la prima domanda e' «cosa ci hai incollato?», e a quella si deve poter
- * rispondere leggendo. Dentro ci stanno tutt'e due le cose che servono —
- * **dove** chiamare e **con che** presentarsi — perche' due caselle da
- * riempire giuste sono due caselle da sbagliare.
+ * rispondere leggendo. Dentro ci stanno le cose che servono — **dove**
+ * chiamare, **con che** presentarsi, e **chi dice** che quel quadro sia
+ * riconosciuto — perche' tre caselle da riempire giuste sono tre caselle da
+ * sbagliare.
  *
  * Non e' un indirizzo web apposta, come per l'invito del QR code: un
  * `https://…` incollato dove non deve promette qualcosa che non puo'
  * mantenere.
+ *
+ * ─── Non c'e' modo di leggerlo senza verificarlo ─────────────────────────
+ *
+ * Questa e' l'unica via per trasformare quella riga in qualcosa di usabile, e
+ * il tesserino lo controlla **qui dentro**. Non c'e' una `leggiIlCodice` che
+ * spacchetta e una `verificaIlCodice` da chiamare dopo, perche' il giorno che
+ * ci fossero tutt'e due, qualcuno chiamerebbe la prima e basta — e nessuno se
+ * ne accorgerebbe, visto che funzionerebbe benissimo.
+ *
+ * @param {string} scritto la riga incollata nella scheda
+ * @param {{adesso?: number, chiavi?: string[]}} come `chiavi` serve alle prove,
+ *   che si firmano le loro invece di conoscere quella vera
  */
-export function leggiIlCodice(scritto) {
+export function leggiIlCodice(scritto, { adesso = Date.now(), chiavi } = {}) {
   const testo = String(scritto ?? "").trim();
   if (!testo) return null;
 
@@ -112,6 +141,11 @@ export function leggiIlCodice(scritto) {
   if (numero > VERSIONE) {
     throw new CodiceTroppoNuovo("questo codice viene da un quadro piu' nuovo di questo ponte");
   }
+  if (numero <= PRIMA_DEL_TESSERINO) {
+    throw new CodiceIllegibile(
+      "questo codice viene da un quadro senza tesserino: chiedine uno nuovo a chi te l'ha dato",
+    );
+  }
 
   const dove = (pezzi[2] ?? "").trim().replace(/\/+$/, "");
   const chiave = (pezzi[3] ?? "").trim();
@@ -123,7 +157,27 @@ export function leggiIlCodice(scritto) {
   if (chiave.length < 8) {
     throw new CodiceIllegibile("in questo codice manca la chiave");
   }
-  return { dove, chiave };
+
+  /* Il tesserino, per ultimo e obbligatorio.
+   *
+   * L'errore che esce di qui dice **perche'** — firma sbagliata, quadro
+   * sbagliato, scaduto il tal giorno — e quel messaggio finisce nel registro e
+   * nella console. Un «codice non valido» e basta manderebbe l'installatore a
+   * rigenerare cinque volte un codice che e' giusto, quando il problema e' che
+   * il suo tesserino e' scaduto da tre settimane. */
+  const tessera = (pezzi[4] ?? "").trim();
+  if (!tessera) {
+    throw new CodiceIllegibile("in questo codice manca il tesserino");
+  }
+  let tesserino;
+  try {
+    tesserino = verificaIlTesserino(tessera, { dove, adesso, chiavi });
+  } catch (errore) {
+    if (errore instanceof TesserinoNoNo) throw new CodiceIllegibile(errore.message);
+    throw errore;
+  }
+
+  return { dove, chiave, tesserino };
 }
 
 /** Ogni quanto, tenuto dentro i limiti. */

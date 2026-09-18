@@ -10,6 +10,13 @@ node_modules/
 # qualcuno, e in una repository non ci va nemmeno per sbaglio.
 /quadro/dati/
 
+# La chiave privata dell'albo. E' l'unico segreto di tutto questo: chi ce l'ha
+# firma tesserini a nome di gdahome, e nessun ponte al mondo se ne accorge. Qui
+# dentro non ci deve finire mai, e una riga nel .gitignore costa meno di un
+# `git push` da annullare.
+*.pem
+/albo/dati/
+
 # ─── Flutter ───────────────────────────────────────────────────────────────
 # `android/` e `ios/` ci vanno dentro: sono configurazione del progetto, non
 # roba costruita. Quello che si butta e' cio' che si rifa' con un comando.

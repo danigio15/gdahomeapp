@@ -227,10 +227,66 @@ E due aggiunte piccole altrove:
 1. **Il tesserino e la sua verifica**, senza nessun albo acceso: `firma.mjs`
    che ne fa uno a mano, e il ponte che lo verifica o rifiuta. Da qui si può già
    lavorare — i tesserini si firmano a mano finché sono dieci.
+
+   **Fatta.** `ponte/src/tesserino.js` verifica, `albo/strumenti/firma.mjs` fa
+   le chiavi e firma, e la riga di abbinamento è passata alla **versione 2** col
+   tesserino obbligatorio.
+
+   La decisione che conta: **una riga versione 1 non si legge, si rifiuta.**
+   Accettarla «per compatibilità» vorrebbe dire che il modo di saltare il
+   tesserino è scrivere `1` al posto di `2` — cioè il controllo lo spegne, con
+   una cifra, chi deve essere controllato. Un numero di versione non può essere
+   la porta di servizio del controllo che quella versione introduce. Non rompe
+   niente a nessuno: il quadro non è mai stato rilasciato, e righe della prima
+   versione in giro non ce ne sono.
+
+   E non c'è una `leggiIlCodice` che spacchetta e una `verifica` da chiamare
+   dopo: il tesserino si controlla dentro l'unica funzione che trasforma quella
+   riga in qualcosa di usabile. Con due porte, un giorno qualcuno chiama la
+   prima e basta — e nessuno se ne accorge, visto che funzionerebbe benissimo.
+
+   Ventidue prove, e sono quasi tutte rifiuti: un controllo di licenza si
+   giudica da quello che respinge, non da quello che accetta — accettare un
+   tesserino buono lo fa anche una funzione che torna sempre `true`. Le più
+   importanti: che cambiare `soglia: 40` in `400` ricopiando la firma **non**
+   passi; che il tesserino di Rossi non valga nel quadro di Bianchi; che una
+   chiave vecchia continui a valere finché non la si toglie.
 2. **Il quadro lo porta**: mette il tesserino nei codici che genera, e si rifiuta
    di generarne se non ce l'ha o è scaduto.
 3. **L'albo**: il server, il battito, la console delle scadenze.
 4. **Il rinnovo automatico** a chi batte, e l'avviso a chi non batte più.
+
+## Come si comincia
+
+Una volta sola, sulla sua macchina:
+
+```
+node albo/strumenti/firma.mjs chiavi --scrivi
+```
+
+Fa la coppia, scrive la privata in `./albo-chiave-privata.pem` (permessi `0600`,
+e il `.gitignore` la tiene fuori di qui) e mette la pubblica in
+`ponte/src/tesserino.js`. Poi si ricostruisce l'add-on.
+
+**Finché quella lista è vuota, questo ponte non abbina nessun quadro** — e lo
+dice così: *«questo ponte non ha nessuna chiave dell'albo, e non può riconoscere
+nessun quadro»*. Non «tesserino non valido»: è un guasto di chi ha costruito
+l'add-on, non di chi ha incollato il codice, e mandare un installatore a
+rigenerare cinque volte un codice giusto è una caccia al fantasma.
+
+Poi, per ogni installatore:
+
+```
+node albo/strumenti/firma.mjs tesserino \
+  --chi rossi --dove quadro.impiantirossi.it --soglia 40 --mesi 3 \
+  --chiave-del-quadro K7M2-9XQF-3BHT-R4VN
+```
+
+che stampa la riga intera da incollare nella casella «quadro» dell'add-on.
+
+La chiave privata non si passa **mai** per contenuto sulla riga di comando —
+quella la legge chiunque abbia un terminale su quella macchina, e resta scritta
+nella storia della shell. Si passa il percorso, con `--chiave` o `ALBO_CHIAVE`.
 
 ## Quello che resta da decidere
 
