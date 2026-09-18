@@ -2716,6 +2716,20 @@
      "metti": []
     },
     {
+     "riga": 5821,
+     "via": 1,
+     "metti": [
+      "                       var nfRadar = document.querySelector('.dm-radar-blocco') ? ' The radar above is a separate thing and works on its own.' : ''; list.innerHTML = `<div style=\"text-align:center; padding:20px; color:var(--text-dim,#64748b); line-height:1.5;\"><strong style=\"display:block; font-size:14px; font-weight:800; color:var(--text,#0f172a); margin-bottom:6px;\">This weather entity has no forecast</strong>It reports the weather right now, not the next days. To see the seven days pick another weather entity under Config › Sections › Weather.${nfRadar}<code style=\"display:block; margin-top:10px; font-size:11px; color:var(--text-dim,#64748b);\">${entityId}</code></div>`;"
+     ]
+    },
+    {
+     "riga": 5833,
+     "via": 1,
+     "metti": [
+      "  if(!forecasts || forecasts.length === 0) { var nfRadar = document.querySelector('.dm-radar-blocco') ? ' The radar above is a separate thing and works on its own.' : ''; list.innerHTML = `<div style=\"text-align:center; padding:20px; color:var(--text-dim,#64748b); line-height:1.5;\"><strong style=\"display:block; font-size:14px; font-weight:800; color:var(--text,#0f172a); margin-bottom:6px;\">This weather entity has no forecast</strong>It reports the weather right now, not the next days. To see the seven days pick another weather entity under Config › Sections › Weather.${nfRadar}<code style=\"display:block; margin-top:10px; font-size:11px; color:var(--text-dim,#64748b);\">${currentWeatherEntity || ''}</code></div>`; return; }"
+     ]
+    },
+    {
      "riga": 5948,
      "via": 1,
      "metti": [

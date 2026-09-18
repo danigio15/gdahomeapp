@@ -1,4 +1,5 @@
 // DM-FIX-20260824A
+import { ultimoPezzo } from "./appliance-program.js";
 import { pick } from "./i18n.js";
 import { getDeviceDisplayName, getDeviceVisual } from "./device-model.js";
 import { modoDelLettore } from "./media-player.js";
@@ -327,12 +328,13 @@ const FERME = insieme(PAROLE_CHE_STANNO_FERME);
  * l'indirizzo «OperationState» e «Run» litigherebbero nella stessa riga.
  *
  * Vale per chiunque scriva cosi', non solo per Bosch: SmartThings ha i suoi
- * `samsungce.*`, e il conto e' lo stesso. */
-const ultimoPezzo = (valore) => {
-  const detto = String(valore ?? "").trim();
-  const punto = detto.lastIndexOf(".");
-  return punto > 0 && punto < detto.length - 1 ? detto.slice(punto + 1) : "";
-};
+ * `samsungce.*`, e il conto e' lo stesso.
+ *
+ * La regola sta in un posto solo — `appliance-program.js`, il modulo delle
+ * parole — perche' la usano in due: chi decide se la macchina sta lavorando e
+ * chi scrive la fase sulla card. Scritta due volte, una delle due sarebbe
+ * rimasta indietro, e su una lavastoviglie Bosch e' esattamente quello che era
+ * successo: lo stato si leggeva e la fase mostrava l'indirizzo. */
 
 /** Cosa dice una parola di stato: `running`, `standby`, `off` o niente. */
 export function letturaDelloStato(value) {

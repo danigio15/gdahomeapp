@@ -222,6 +222,32 @@ UPSTREAM_FIXES: tuple[tuple[str, str, str, int], ...] = (
         "if(i <= Math.min(currentPin.length, 4)) dot.classList.add('filled');",
         1,
     ),
+    # La riga rossa del meteo (#29): «di nuovo la mappa non viene riportata,
+    # insieme alle scritte rosse sotto». La riga diceva «Nessuna previsione
+    # disponibile per weather.…» ed era vera — quell'entità è una stazione, dà
+    # il tempo di adesso e i prossimi giorni non li sa — ma non diceva né cosa
+    # né cosa fare. Chi la trova in rosso sotto un riquadro di mappa conclude
+    # la cosa più naturale del mondo: che sia rotto tutto, radar compreso. La
+    # segnalazione è arrivata così, e il radar in quella casa non c'entrava.
+    # Adesso dice le tre cose che servono: che quell'entità le previsioni non
+    # le porta, dove si cambia, e — solo se il radar c'è davvero in pagina —
+    # che quello è un'altra cosa e funziona per conto suo.
+    #
+    # Il testo qui è in italiano, come tutto il guscio: le parole inglesi le
+    # rimette `parole_del_guscio_inglese.py --genera`, che è dove stanno tutte
+    # le altre.
+    (
+        "weather-no-forecast-entity",
+        """list.innerHTML = `<div style="text-align:center; padding: 20px; color:#e11d48; font-weight:800;">Nessuna previsione disponibile per ${entityId}</div>`;""",
+        """var nfRadar = document.querySelector('.dm-radar-blocco') ? ' Il radar qui sopra è un’altra cosa e funziona per conto suo.' : ''; list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-dim,#64748b); line-height:1.5;"><strong style="display:block; font-size:14px; font-weight:800; color:var(--text,#0f172a); margin-bottom:6px;">Questa entità meteo non dà le previsioni</strong>Dice che tempo fa adesso, non i prossimi giorni. Per vedere i sette giorni scegli un’altra entità meteo in Configurazione › Sezioni › Meteo.${nfRadar}<code style="display:block; margin-top:10px; font-size:11px; color:var(--text-dim,#64748b);">${entityId}</code></div>`;""",
+        1,
+    ),
+    (
+        "weather-no-forecast-empty",
+        """list.innerHTML = '<div style="text-align:center; padding: 20px; font-weight:800; color:#e11d48;">Nessuna previsione disponibile</div>'; return;""",
+        """var nfRadar = document.querySelector('.dm-radar-blocco') ? ' Il radar qui sopra è un’altra cosa e funziona per conto suo.' : ''; list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-dim,#64748b); line-height:1.5;"><strong style="display:block; font-size:14px; font-weight:800; color:var(--text,#0f172a); margin-bottom:6px;">Questa entità meteo non dà le previsioni</strong>Dice che tempo fa adesso, non i prossimi giorni. Per vedere i sette giorni scegli un’altra entità meteo in Configurazione › Sezioni › Meteo.${nfRadar}<code style="display:block; margin-top:10px; font-size:11px; color:var(--text-dim,#64748b);">${currentWeatherEntity || ''}</code></div>`; return;""",
+        1,
+    ),
 )
 
 
