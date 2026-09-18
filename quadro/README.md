@@ -124,6 +124,18 @@ La prima cartolina lega il codice a quella matricola, e da lì in poi non serve 
 nessun'altra casa — e la casa è **sua**, cioè compare nella sua pagina e in
 nessun'altra.
 
+### Quando un conto si chiude
+
+**Le case restano.** Sono impianti che funzionano in casa di qualcuno, e
+spegnerne il monitoraggio perché una ditta ha smesso di pagare punirebbe il
+cliente per una faccenda che non è sua: le loro cartoline continuano ad
+arrivare. Quello che smette è la chiave della ditta, che dal quel momento non
+apre più niente.
+
+Restano però **contate a parte**: `GET /gestore/installatori` porta un `orfane`,
+se no il totale non tornerebbe con la somma delle ditte e non si capirebbe
+perché. E il giorno che quel conto riapre, si ritrovano.
+
 ### Il tetto
 
 Gli inviti aperti contano come case: senza quella riga si fanno venti codici in

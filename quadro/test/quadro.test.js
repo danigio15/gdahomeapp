@@ -476,3 +476,32 @@ test("un installatore non entra nello sgabuzzino, e non si apre un conto da se'"
     await b.chiudi();
   }
 });
+
+test("chiudere un conto non butta le sue case: restano, e si vedono ancora contate", async () => {
+  /* E' una scelta, non un effetto collaterale, e sta qui perche' non torni
+   * indietro da sola: sono impianti che funzionano in casa di qualcuno, e
+   * spegnerne il monitoraggio perche' una ditta ha smesso di pagare punirebbe
+   * il cliente per una faccenda che non e' sua. Le cartoline continuano ad
+   * arrivare, e chi tiene il quadro le vede contate a parte. */
+  const b = await banco({ ditte: 1 });
+  const rossi = b.conti[0];
+  try {
+    const codice = await unCodice(b);
+    await b.deposita(UNA, codice);
+
+    await b.gestore(`/installatore/${rossi.chi}`, { method: "DELETE" });
+
+    /* La chiave della ditta non apre piu' niente. */
+    assert.equal((await b.retro("/case", {}, rossi.chiave)).status, 401);
+
+    /* Ma la casa c'e' ancora, e continua a depositare. */
+    assert.equal((await b.deposita(UNA, codice)).status, 200);
+
+    const detto = await (await b.gestore("/installatori")).json();
+    assert.equal(detto.installatori.length, 0);
+    assert.equal(detto.case, 1, "la casa e' sparita insieme al conto");
+    assert.equal(detto.orfane, 1, "una casa senza piu' nessuno che la guardi non si vede");
+  } finally {
+    await b.chiudi();
+  }
+});

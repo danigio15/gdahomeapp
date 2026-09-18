@@ -155,6 +155,24 @@ export class CaseSeguite {
     return this.lista.filter((una) => una.di === di).length;
   }
 
+  /**
+   * Le case rimaste senza nessuno che le guardi.
+   *
+   * Quando un conto si chiude, le sue case **restano**: sono impianti che
+   * funzionano in casa di qualcuno, e spegnerne il monitoraggio perche' una
+   * ditta ha smesso di pagare punirebbe il cliente per una faccenda che non e'
+   * sua. Le loro cartoline continuano ad arrivare.
+   *
+   * Ma restare invisibili sarebbe un'altra cosa: chi tiene il quadro vedrebbe
+   * un totale che non torna con la somma delle ditte e non saprebbe perche'.
+   * Questo numero e' li' per quello — e per ritrovarle il giorno che quel conto
+   * riapre.
+   */
+  orfane(conosciuti = []) {
+    const chi = new Set(conosciuti);
+    return this.lista.filter((una) => !una.di || !chi.has(una.di)).length;
+  }
+
   vestita(una, ora = this.adesso()) {
     const carta = una.carta;
     return {

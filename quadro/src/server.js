@@ -325,6 +325,10 @@ export function costruisciIlServer({
       json(risposta, {
         installatori: installatori.elenco((chi) => case_.quante(chi)),
         case: case_.lista.length,
+        /* Quelle di un conto chiuso: restano, e continuano a depositare. Senza
+         * questo numero il totale non tornerebbe con la somma delle ditte, e
+         * non si capirebbe perche'. */
+        orfane: case_.orfane(installatori.lista.map((uno) => uno.chi)),
       });
       return;
     }
