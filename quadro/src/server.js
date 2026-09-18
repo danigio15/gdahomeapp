@@ -34,7 +34,7 @@
  * **le sue** case e nient'altro. E' la riga che tiene separate ditte che fra
  * loro si fanno concorrenza: i clienti di Rossi non sono affari di Bianchi.
  *
- * Dallo **sgabuzzino** entra chi tiene il quadro: apre i conti, mette i tetti,
+ * Dalla **gestione** entra chi tiene il quadro: aggiunge gli installatori, mette i limiti,
  * e vede **quante** case ha ognuno — non quali. Il conto e' suo, l'elenco no.
  *
  * ─── Cosa non c'e' ───────────────────────────────────────────────────────
@@ -102,8 +102,8 @@ export function costruisciIlServer({
   fattorino = new Fattorino(),
   registro = { debug() {}, info() {}, attenzione() {}, errore() {} },
 }) {
-  /* Lo sgabuzzino si apre solo dove c'e' una chiave vera. Senza, questo quadro
-   * riceve cartoline e non ha modo di aprire un conto a nessuno: e' una meta'
+  /* La gestione si apre solo dove c'e' una chiave vera. Senza, questo quadro
+   * riceve cartoline e non ha modo di aggiungere nessun installatore: e' una meta'
    * inutile, e va detto all'accensione invece di farlo scoprire dalla pagina. */
   const gestoreAperto = String(chiaveDelGestore).length >= 16;
 
@@ -221,7 +221,7 @@ export function costruisciIlServer({
       return;
     }
 
-    /* ─── Lo sgabuzzino: chi tiene il quadro ───────────────────────────── */
+    /* ─── La gestione: chi tiene il quadro ───────────────────────────── */
 
     if (via === "/gestore" && metodo === "GET") {
       risposta.writeHead(301, { location: "/gestore/" });
@@ -246,7 +246,7 @@ export function costruisciIlServer({
         );
         return;
       }
-      await loSgabuzzino(
+      await laGestione(
         richiesta,
         risposta,
         via.slice("/gestore".length).replace(/\/+$/, ""),
@@ -383,7 +383,7 @@ export function costruisciIlServer({
     male(risposta, 404, "qui non c'e' niente");
   }
 
-  async function loSgabuzzino(richiesta, risposta, via, metodo) {
+  async function laGestione(richiesta, risposta, via, metodo) {
     /* Il quadro visto da chi lo tiene, sempre nella stessa forma.
      *
      * Lo tornano **tutte** le vie che cambiano qualcosa, non solo quella che
@@ -407,7 +407,7 @@ export function costruisciIlServer({
     if (via === "/installatori" && metodo === "POST") {
       const detto = await ilDetto(richiesta);
       const fatto = installatori.fai({ nome: detto?.nome, soglia: detto?.soglia });
-      registro.info(`un conto nuovo: ${fatto.chi}`);
+      registro.info(`un installatore nuovo: ${fatto.chi}`);
       /* La chiave in chiaro esce **una volta sola**, adesso. Poi qui resta solo
        * la sua impronta: se si perde si rifa', non si recupera. */
       json(risposta, { ...fatto, ...ilQuadro() });
@@ -418,7 +418,7 @@ export function costruisciIlServer({
     if (uno && metodo === "PUT") {
       const detto = await ilDetto(richiesta);
       if (!installatori.quello(uno[1])) {
-        male(risposta, 404, "questo conto non c'e'");
+        male(risposta, 404, "questo installatore non c'e'");
         return;
       }
       if (detto?.nome !== undefined) installatori.rinomina(uno[1], detto.nome);
@@ -428,10 +428,10 @@ export function costruisciIlServer({
     }
 
     if (uno && metodo === "DELETE") {
-      /* Chiudere un conto non butta le sue case: restano nel quadro, senza piu'
+      /* Togliere un installatore non butta le sue case: restano nel quadro, senza piu'
        * nessuno che le guardi, e le loro cartoline continuano ad arrivare. E'
        * voluto — sono impianti che funzionano in casa di qualcuno — e chi
-       * gestisce se le ritrova da assegnare se quel conto riapre. */
+       * gestisce se le ritrova da assegnare se lo si riaggiunge. */
       json(risposta, { chiuso: installatori.togli(uno[1]), ...ilQuadro() });
       return;
     }
@@ -442,7 +442,7 @@ export function costruisciIlServer({
     if (chiave && metodo === "POST") {
       const nuova = installatori.rifai(chiave[1]);
       if (!nuova) {
-        male(risposta, 404, "questo conto non c'e'");
+        male(risposta, 404, "questo installatore non c'e'");
         return;
       }
       registro.info(`chiave rifatta per ${chiave[1]}: quella di prima non apre piu'`);
@@ -486,5 +486,5 @@ export function costruisciIlServer({
   }
 }
 
-/* Usato dallo sgabuzzino per contare tutto quello che c'e', di chiunque sia. */
+/* Usato dalla gestione per contare tutto quello che c'e', di chiunque sia. */
 export { TUTTE };

@@ -30,10 +30,10 @@ export async function alzaIlQuadro({
   porta = Number(process.env.QUADRO_PORTA || 8100),
   cartella = process.env.QUADRO_DATI || "./dati",
   livello = process.env.QUADRO_REGISTRO || "info",
-  /* La chiave dello sgabuzzino: quella di chi **tiene** il quadro.
+  /* La chiave di gestione: quella di chi **tiene** il quadro.
    *
    * Non e' la chiave di un installatore — quelle le fa questo quadro, una per
-   * conto, e le vede solo chi le riceve. Questa apre i conti e mette i tetti, e
+   * conto, e le vede solo chi le riceve. Questa aggiunge gli installatori e mette i limiti, e
    * senza non si puo' iscrivere nessuno: un quadro cosi' riceve cartoline di
    * case gia' abbinate e non ne fa entrare di nuove. Va lunga. */
   chiaveDelGestore = process.env.QUADRO_GESTORE || "",
@@ -73,10 +73,11 @@ export async function alzaIlQuadro({
     `${installatori.lista.length} installatori, ${case_.lista.length} case seguite, ` +
       `${chiavi.elenco().length} codici in attesa`,
   );
-  if (String(chiaveDelGestore).length >= 16) registro.info("lo sgabuzzino e' aperto su /gestore/");
+  if (String(chiaveDelGestore).length >= 16)
+    registro.info("la gestione degli installatori e' aperta su /gestore/");
   else
     registro.attenzione(
-      "senza QUADRO_GESTORE non si puo' iscrivere nessun installatore: le case gia' abbinate continuano a depositare",
+      "senza QUADRO_GESTORE non si puo' aggiungere nessun installatore: le case gia' abbinate continuano a depositare",
     );
 
   giro.parti();

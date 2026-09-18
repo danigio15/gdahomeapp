@@ -58,7 +58,7 @@ async function banco({ ditte = 1, soglia = 0 } = {}) {
   });
   const dove = `http://127.0.0.1:${acceso.porta}`;
 
-  /* Lo sgabuzzino: chi tiene il quadro. */
+  /* La gestione: chi tiene il quadro. */
   const gestore = (via, opzioni = {}) =>
     fetch(`${dove}/gestore${via}`, {
       ...opzioni,
@@ -130,7 +130,7 @@ test("una casa non puo' leggere nessuna console, e non e' una svista", async () 
     assert.equal((await b.deposita(UNA, codice)).status, 200);
 
     /* La chiave che le apre il deposito non le apre niente altro: quelle case
-     * sono di clienti di qualcun altro. Nemmeno lo sgabuzzino. */
+     * sono di clienti di qualcun altro. Nemmeno la gestione. */
     for (const via of ["/case", "/inviti"]) {
       const risposta = await fetch(`${b.dove}/console${via}`, {
         headers: { authorization: `Bearer ${codice}` },
@@ -144,7 +144,7 @@ test("una casa non puo' leggere nessuna console, e non e' una svista", async () 
         })
       ).status,
       401,
-      "lo sgabuzzino si e' aperto con la chiave di una casa",
+      "la gestione si e' aperto con la chiave di una casa",
     );
     /* E senza niente in testa, nemmeno. */
     assert.equal((await fetch(`${b.dove}/console/case`)).status, 401);
@@ -450,7 +450,7 @@ test("una chiave rifatta apre, e quella di prima no", async () => {
   }
 });
 
-test("un installatore non entra nello sgabuzzino, e non si apre un conto da se'", async () => {
+test("un installatore non entra nella gestione, e non si apre un conto da se'", async () => {
   const b = await banco({ ditte: 1 });
   try {
     const sua = b.conti[0].chiave;
@@ -592,14 +592,14 @@ test("una ditta non può cambiarsi il nome, e quindi non può spacciarsi per un'
   }
 });
 
-test("la pagina del gestore si serve senza chiave, e le sue vie no", async () => {
+test("la pagina di gestione si serve senza chiave, e le sue vie no", async () => {
   /* Servirla dietro autenticazione vorrebbe dire non avere nessun posto dove
    * digitare la chiave. La pagina non mostra niente finché non ce l'ha. */
   const b = await banco({ ditte: 0 });
   try {
     const pagina = await fetch(`${b.dove}/gestore/`);
     assert.equal(pagina.status, 200);
-    assert.match(await pagina.text(), /chi lo tiene/);
+    assert.match(await pagina.text(), /gestione installatori/);
 
     /* Senza barra ci si viene mandati, se no le vie in relativo si perdono. */
     const senzaBarra = await fetch(`${b.dove}/gestore`, { redirect: "manual" });
@@ -612,7 +612,7 @@ test("la pagina del gestore si serve senza chiave, e le sue vie no", async () =>
   }
 });
 
-test("ogni risposta dello sgabuzzino porta i totali, non solo l'elenco", async () => {
+test("ogni risposta della gestione porta i totali, non solo l'elenco", async () => {
   /* Una risposta con l'elenco ma senza i totali fa scrivere zero alla pagina:
    * chi ha appena aperto un conto vede «0 impianti in tutto» con le righe che
    * dicono altro. È successo, e questa prova è perché non risucceda. */

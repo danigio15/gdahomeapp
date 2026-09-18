@@ -4,7 +4,7 @@
 #
 # Il quadro e' uno solo e sta da gdahome: le case installate ci depositano
 # poche righe di numeri, e chi le ha installate le guarda. Chi installa non
-# accende niente — gli si apre un conto da `/gestore/` e gli si da' una chiave.
+# accende niente: lo si aggiunge da `/gestore/` e gli si da' una chiave.
 #
 # Come si lancia, da `root`:
 #
@@ -22,7 +22,7 @@
 #      quadro punti a questa macchina;
 #   2. si rilegge il gettone di lettura — se sulla macchina c'e' gia' il
 #      tramite, e' lo stesso e non si richiede — e genera la chiave dello
-#      sgabuzzino, una volta sola;
+#      gestione, una volta sola;
 #   3. installa Node e Caddy, se non ci sono gia';
 #   4. scarica il quadro, lo prova, e solo se le prove passano lo mette;
 #   5. lo accende come servizio, e lo segna perche' riparta da solo;
@@ -30,9 +30,9 @@
 #      pezzo — cosi' il tramite e il quadro stanno sulla stessa macchina senza
 #      cancellarsi a vicenda;
 #   7. accende il giro che lo tiene aggiornato;
-#   8. prova che `/salute` risponda da fuori, e dice la chiave dello sgabuzzino.
+#   8. prova che `/salute` risponda da fuori, e dice la chiave di gestione.
 #
-# **E rilanciarlo non porta via niente.** La chiave dello sgabuzzino, se c'e'
+# **E rilanciarlo non porta via niente.** La chiave di gestione, se c'e'
 # gia', resta quella: e' nel gestore di password di chi tiene il quadro, e
 # cambiarla a sua insaputa vuol dire chiudergli la porta in faccia — e con lui
 # a tutti gli installatori, che non potrebbero piu' essere iscritti.
@@ -167,19 +167,19 @@ else
   bene "il gettone di lettura c'e' gia'"
 fi
 
-# La chiave dello sgabuzzino: quarantotto byte di caso, e **una volta sola**.
+# La chiave di gestione: quarantotto byte di caso, e **una volta sola**.
 #
-# Da li' si aprono i conti degli installatori e si mettono i tetti. Rifarla a
+# Da li' si aggiungono gli installatori e si mettono i limiti. Rifarla a
 # ogni giro vorrebbe dire che chi reincolla la riga per aggiornare si ritrova
-# fuori dal suo quadro — e senza quella chiave non si puo' iscrivere nessuno.
+# fuori dal suo quadro — e senza quella chiave non si puo' aggiungere nessuno.
 CHIAVE_GESTORE="$(gia_scritto "$CONFIGURAZIONE/ambiente" QUADRO_GESTORE)"
 CHIAVE_APPENA_FATTA=no
 if [[ -z "$CHIAVE_GESTORE" ]]; then
   CHIAVE_GESTORE="$(head -c 48 /dev/urandom | base64 | tr -d '=+/' | cut -c1-48)"
   CHIAVE_APPENA_FATTA=si
-  bene "chiave dello sgabuzzino generata (la dico alla fine)"
+  bene "chiave della gestione generata (la dico alla fine)"
 else
-  bene "la chiave dello sgabuzzino e' quella che c'era: non la tocco"
+  bene "la chiave di gestione e' quella che c'era: non la tocco"
 fi
 
 # ─── 3. Quello che serve sulla macchina ──────────────────────────────────────
@@ -465,16 +465,16 @@ fi
 # ─── E adesso ────────────────────────────────────────────────────────────────
 
 printf '\n%sIl quadro e in piedi.%s\n\n' "$verde" "$spento"
-printf '  Lo sgabuzzino:   https://%s/gestore/\n' "$NOME_DEL_QUADRO"
-printf '  Gli installatori: https://%s/console/\n\n' "$NOME_DEL_QUADRO"
+printf '  Gestione:         https://%s/gestore/\n' "$NOME_DEL_QUADRO"
+printf '  Console installatori: https://%s/console/\n\n' "$NOME_DEL_QUADRO"
 
 if [[ "$CHIAVE_APPENA_FATTA" == si ]]; then
-  printf '  La chiave dello sgabuzzino, che si vede adesso e mai piu:\n\n'
+  printf '  La chiave di gestione, che si vede adesso e mai piu:\n\n'
   printf '    %s\n\n' "$CHIAVE_GESTORE"
   printf '  Mettila nel gestore di password. Da qui si rilegge cosi:\n'
   printf '    sed -n "s/^QUADRO_GESTORE=//p" %s/ambiente\n\n' "$CONFIGURAZIONE"
 else
-  printf '  La chiave dello sgabuzzino e quella di prima. Si rilegge cosi:\n'
+  printf '  La chiave di gestione e quella di prima. Si rilegge cosi:\n'
   printf '    sed -n "s/^QUADRO_GESTORE=//p" %s/ambiente\n\n' "$CONFIGURAZIONE"
 fi
 

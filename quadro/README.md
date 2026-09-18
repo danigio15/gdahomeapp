@@ -27,7 +27,7 @@ Il quadro risponde a due domande, e sono due domande diverse:
 ## Dove sta
 
 **Uno solo, su una macchina di gdahome.** Chi installa non accende niente, non
-compra nessun dominio e non tiene su nessun server: gli si apre un conto, gli si
+compra nessun dominio e non tiene su nessun server: lo si aggiunge, gli si
 dà una chiave, e apre una pagina. Dentro ci stanno le case di ditte diverse, e
 ogni ditta vede solo le sue.
 
@@ -43,7 +43,7 @@ sul suo dominio. Era una scelta di privacy — le case che quel quadro guarda so
 clienti suoi, e il contratto ce l'ha lui — e si portava dietro due conseguenze
 che non si vedevano subito.
 
-La prima: **un tetto al numero di case non si poteva imporre.** Quel programma
+La prima: **un limite al numero di impianti non si poteva imporre.** Quel programma
 girava su ferro dell'installatore, e un contatore lì dentro si toglie in trenta
 secondi. Ci si era inventati una firma da verificare nel ponte — un *tesserino*,
 in `albo/README.md` — che era il meglio ottenibile, e restava un dosso, non una
@@ -53,7 +53,7 @@ La seconda, più semplice: **all'installatore toccava lavoro.** Un VPS, un
 dominio, un HTTPS, gli aggiornamenti. Per uno che monta impianti è fatica che
 non gli compete.
 
-Ospitandolo qui cadono tutte e due. Il tetto è un numero su una macchina di chi
+Ospitandolo qui cadono tutte e due. Il limite è un numero su una macchina di chi
 lo decide: chi è al limite non genera il codice successivo, e non c'è niente da
 aggirare perché non c'è niente da eseguire in casa d'altri. E all'installatore
 non resta niente da fare.
@@ -61,8 +61,8 @@ non resta niente da fare.
 **In cambio si paga una cosa, e va detta.** Il nome che l'installatore dà a una
 casa — «Rossi — via Verdi 12» — sta su questo server, e quello è un dato che
 nomina una persona e un indirizzo. Chi tiene il quadro ne diventa custode. Per
-questo il retro di chi lo gestisce vede **quante** case ha ognuno e non **quali**:
-il conto serve alle licenze, l'elenco dei clienti di una ditta terza no. C'è una
+questo il retro di chi lo gestisce vede **quanti** impianti ha ognuno e non **quali**:
+il numero serve alle licenze, l'elenco dei clienti di un'altra azienda no. C'è una
 prova che controlla che in quella risposta non finiscano nomi.
 
 Non sta invece **dentro** il centralino, e non è una questione di fatica: quello
@@ -88,7 +88,7 @@ read -rsp 'gettone: ' G && echo && curl -fsSL \
 
 `accendi.sh` installa Node e Caddy se non ci sono, scarica il quadro e **lo
 prova prima di metterlo**, lo accende come servizio, prende il certificato, e
-alla fine dice la chiave dello sgabuzzino. Con `--controlla` guarda se tutto
+alla fine dice la chiave di gestione. Con `--controlla` guarda se tutto
 quadra senza installare niente.
 
 Due cose che fa e che vale la pena sapere:
@@ -99,9 +99,9 @@ Due cose che fa e che vale la pena sapere:
   sarebbe il quadro, cioè quello che nessuno sta guardando. C'è una prova che
   tiene tutte e due le metà: che questo non lo riscriva, e che quello del
   tramite legga gli innesti.
-- **Rilanciarlo non cambia la chiave dello sgabuzzino.** Da quella si aprono i
-  conti degli installatori: rifarla a ogni giro vuol dire chiudere fuori chi
-  tiene il quadro, e con lui tutti quelli che avrebbe dovuto iscrivere.
+- **Rilanciarlo non cambia la chiave della gestione.** Da quella si aprono i
+  installatori: rifarla a ogni giro vuol dire chiudere fuori chi
+  tiene il quadro, e con lui tutti quelli che avrebbe dovuto aggiungere.
 
 Sul banco, senza niente da installare:
 
@@ -112,7 +112,7 @@ QUADRO_GESTORE='qualcosa di lungo e a caso' npm run avvia
 
 | | |
 |---|---|
-| `QUADRO_GESTORE` | la chiave dello **sgabuzzino**, almeno sedici caratteri: apre i conti e mette i tetti. Senza, non si può iscrivere nessuno — le case già abbinate continuano a depositare, e il quadro lo dice all'accensione e su `/salute` |
+| `QUADRO_GESTORE` | la chiave di **gestione**, almeno sedici caratteri: aggiunge gli installatori e mette i limiti. Senza, non si può aggiungere nessuno — le case già abbinate continuano a depositare, e il quadro lo dice all'accensione e su `/salute` |
 | `QUADRO_PORTA` | `8100` |
 | `QUADRO_DATI` | dove tiene i suoi file, `./dati` |
 | `QUADRO_REGISTRO` | quanto parla: `debug`, `info`, `attenzione`, `errore` |
@@ -129,9 +129,9 @@ a chiunque ascolti.
 > riesce — ma è un giro di telefonate che si evita controllando un nome. La console chiede le sue vie in relativo apposta, così un proxy la può
 montare anche sotto un prefisso.
 
-### Iscrivere un installatore
+### Aggiungere un installatore
 
-Dallo sgabuzzino, che è roba di chi tiene il quadro:
+Dalla pagina di gestione, o da riga di comando:
 
 ```
 curl -X POST https://quadro.gdahome.org/gestore/installatori \
@@ -145,7 +145,7 @@ all'installatore, e qui resta solo l'impronta. Se si perde si rifà
 (`POST /gestore/installatore/<id>/chiave`), non si recupera — e la vecchia
 smette di aprire nello stesso istante.
 
-`soglia: 0` vuol dire senza tetto.
+`soglia: 0` vuol dire nessun limite.
 
 ### E l'installatore cosa fa
 
@@ -159,17 +159,16 @@ La prima cartolina lega il codice a quella matricola, e da lì in poi non serve 
 nessun'altra casa — e la casa è **sua**, cioè compare nella sua pagina e in
 nessun'altra.
 
-### Quando un conto si chiude
+### Quando un installatore si toglie
 
-**Le case restano.** Sono impianti che funzionano in casa di qualcuno, e
+**I suoi impianti restano.** Sono impianti che funzionano in casa di qualcuno, e
 spegnerne il monitoraggio perché una ditta ha smesso di pagare punirebbe il
 cliente per una faccenda che non è sua: le loro cartoline continuano ad
-arrivare. Quello che smette è la chiave della ditta, che dal quel momento non
-apre più niente.
+arrivare. Quello che smette è la sua chiave, che da quel momento non apre più niente.
 
 Restano però **contate a parte**: `GET /gestore/installatori` porta un `orfane`,
 se no il totale non tornerebbe con la somma delle ditte e non si capirebbe
-perché. E il giorno che quel conto riapre, si ritrovano.
+perché. E il giorno che lo si riaggiunge, tornano a lui.
 
 ### Quando una casa tace
 
@@ -198,10 +197,10 @@ E il segno di «questa l'ho già detta» si scrive **dopo** la consegna, e solo 
 riuscita: scriverlo prima vorrebbe dire che un indirizzo sbagliato per mezz'ora
 si mangia per sempre gli avvisi di quella mezz'ora.
 
-### Il tetto
+### Il limite
 
-Gli inviti aperti contano come case: senza quella riga si fanno venti codici in
-un minuto stando sotto il tetto, e il giorno dopo ci sono venti case oltre,
+Gli inviti aperti contano come impianti: senza quella riga si fanno venti codici
+in un minuto stando sotto il limite, e il giorno dopo ci sono venti case oltre,
 tutte legittime. Chi è al limite vede il tasto spento e il perché scritto sopra,
 invece di scoprirlo da un rifiuto col cliente che aspetta.
 
@@ -468,7 +467,7 @@ quadro/
                      collaudataIl, e quante cartoline per giorno
   src/collaudo.js    da una cartolina alle spunte, e dalle spunte allo stato
   src/chiavi.js      gli inviti, e le chiavi che ne restano
-  src/installatori.js  i conti, le chiavi, i tetti
+  src/installatori.js  gli installatori, le chiavi, i limiti
   src/avvisi.js      quando una casa tace, e quando vale la pena dirlo
   src/fattorino.js   chi porta fuori gli avvisi
   src/giro.js        passa ogni dieci minuti, guarda, e semmai parla

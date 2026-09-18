@@ -5,11 +5,11 @@
  *
  * ─── Perche' una volta per installatore, e non una per tutte ─────────────
  *
- * Perche' la regola del «tacciono in tanti insieme» si misura sulle case **di
+ * Perche' la regola del «tacciono in tanti insieme» si misura sugli impianti **di
  * uno**: otto su dodici di Rossi sono un guasto suo da guardare in grande;
  * otto su quattrocento di tutto il quadro non vogliono dire niente e non
- * direbbero niente a nessuno. Un conto che mescolasse le ditte darebbe a
- * ognuna l'avviso sbagliato.
+ * direbbero niente a nessuno. Un calcolo che mescolasse gli installatori
+ * darebbe a ognuno l'avviso sbagliato.
  *
  * ─── Il segno si mette solo se il messaggio e' partito ───────────────────
  *

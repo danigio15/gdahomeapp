@@ -164,7 +164,7 @@ export class CaseSeguite {
     return true;
   }
 
-  /** Quante ne segue uno. E' il numero su cui si misura il suo tetto. */
+  /** Quante ne segue uno. E' il numero su cui si misura il suo limite. */
   quante(di) {
     return this.lista.filter((una) => una.di === di).length;
   }
@@ -172,15 +172,15 @@ export class CaseSeguite {
   /**
    * Le case rimaste senza nessuno che le guardi.
    *
-   * Quando un conto si chiude, le sue case **restano**: sono impianti che
+   * Quando un installatore si toglie, i suoi impianti **restano**: sono impianti che
    * funzionano in casa di qualcuno, e spegnerne il monitoraggio perche' una
    * ditta ha smesso di pagare punirebbe il cliente per una faccenda che non e'
    * sua. Le loro cartoline continuano ad arrivare.
    *
    * Ma restare invisibili sarebbe un'altra cosa: chi tiene il quadro vedrebbe
    * un totale che non torna con la somma delle ditte e non saprebbe perche'.
-   * Questo numero e' li' per quello — e per ritrovarle il giorno che quel conto
-   * riapre.
+   * Questo numero e' li' per quello — e per ritrovarli il giorno che lo si
+   * riaggiunge.
    */
   orfane(conosciuti = []) {
     const chi = new Set(conosciuti);

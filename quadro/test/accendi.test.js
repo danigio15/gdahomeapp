@@ -8,7 +8,7 @@
  * quanto sembri. Due cose contano piu' di tutte, e sono le due che farebbero
  * danno in silenzio:
  *
- *  - **che rilanciarlo non cambi la chiave dello sgabuzzino.** Quella chiave
+ *  - **che rilanciarlo non cambi la chiave della gestione.** Quella chiave
  *    apre i conti degli installatori: rifarla a ogni giro vorrebbe dire che chi
  *    reincolla la riga per aggiornare si ritrova fuori dal proprio quadro;
  *  - **che non riscriva il Caddyfile.** Il tramite il suo lo riscrive tutto a
@@ -65,7 +65,7 @@ test("e anche i pezzi che scrive sulla macchina", () => {
   }
 });
 
-test("rilanciarlo non cambia la chiave dello sgabuzzino", () => {
+test("rilanciarlo non cambia la chiave della gestione", () => {
   /* La riga che conta di piu'. Da quella chiave si aprono i conti degli
    * installatori: cambiarla a sorpresa chiude fuori chi tiene il quadro, e con
    * lui tutti quelli che avrebbe dovuto iscrivere. */
