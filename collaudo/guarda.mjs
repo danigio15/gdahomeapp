@@ -358,6 +358,12 @@ async function main() {
        * serve tutte e due le forme dell'indirizzo. Senza questo il banco non
        * percorrerebbe la strada che percorre una casa vera. */
       PONTE_SUPERVISOR: `http://127.0.0.1:${portaDellaCasa}`,
+      /* E i marchi di Home Assistant: in casa e'
+       * `https://brands.home-assistant.io/`, e da un banco senza internet non
+       * si raggiunge. Li fa anche lei la casa finta, cosi' la strada di chi
+       * non dichiara nessun logo si percorre intera invece di fermarsi
+       * sull'iniziale. */
+      PONTE_MARCHI: `http://127.0.0.1:${portaDellaCasa}/`,
       /* Il ponte chiama il centralino finto: la chiamata riesce, e le
        * segnalazioni hanno una strada per uscire. */
       PONTE_CENTRALINO: centralino.indirizzo,

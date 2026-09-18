@@ -188,6 +188,16 @@ const STACCANO = [
  */
 export const I_MARCHI = "https://brands.home-assistant.io/";
 
+/* Dove si vanno a **prendere** i marchi.
+ *
+ * E' la stessa cosa di `I_MARCHI`, tranne sul banco, dove internet non c'e' e
+ * li serve la casa finta. Sono due costanti e non una perche' fanno due
+ * lavori diversi, e confonderli si e' visto subito: `I_MARCHI` e' la **lista
+ * di quello che passa** — un indirizzo dichiarato da un'entita' vale solo se
+ * comincia cosi' — e spostarla per il banco voleva dire che l'indirizzo vero
+ * dei marchi, quello che dichiara Home Assistant, non passava piu'. */
+const DOVE_I_MARCHI = process.env.PONTE_MARCHI || I_MARCHI;
+
 /**
  * Dove sta il segno di questo aggiornamento, o stringa vuota se non si sa.
  *
@@ -200,6 +210,31 @@ export function ilLogoDi(stato) {
   if (dove.startsWith("/")) return dove;
   if (dove.startsWith(I_MARCHI)) return dove;
   return "";
+}
+
+/**
+ * Il marchio di un'integrazione, dai marchi di Home Assistant.
+ *
+ * E' la seconda strada, e serve a chi non dichiara **niente**: gli
+ * aggiornamenti dei firmware Zigbee non hanno `entity_picture` affatto, e nel
+ * riquadro restava l'iniziale — tre «S» identiche per «Switch casa», «Switch
+ * cortile» e «Switch tavernetta», che e' un'iniziale che non dice niente.
+ *
+ * Quello che si sa di loro e' **da dove vengono**: il registro delle entita'
+ * dice l'integrazione — `mqtt` per chi passa da Zigbee2MQTT, `zha` per chi
+ * parla con la chiavetta — e le integrazioni hanno tutte il loro marchio. Non
+ * e' il logo dell'interruttore, e non pretende di esserlo: e' il segno di chi
+ * lo porta in casa, che e' la stessa cosa che Home Assistant fa vedere nella
+ * pagina delle integrazioni.
+ *
+ * @param {string} integrazione il nome dell'integrazione, come lo dice il registro
+ */
+export function ilMarchioDi(integrazione) {
+  const quale = pulito(integrazione).toLowerCase();
+  /* Solo quello che e' un nome: il pezzo finisce dentro un indirizzo, e un
+   * nome con una barra o un punto porterebbe da un'altra parte. */
+  if (!/^[a-z0-9_]+$/.test(quale)) return "";
+  return `${DOVE_I_MARCHI}_/${quale}/icon.png`;
 }
 
 function staccaIlFilo(stato) {
@@ -243,10 +278,16 @@ export function aggiornamentiDaFare(stati) {
        * Assistant si porta dietro, non uno che indoviniamo noi. */
       note: pulito(stato.attributes?.release_url),
       dettagli: pulito(stato.attributes?.release_summary).slice(0, NOTE_MASSIME),
-      /* Se c'e' un segno da chiedere. L'indirizzo non viaggia: il telefono
-       * chiede «il logo di questa entita'», e dove andarlo a prendere lo sa
-       * il ponte. Cosi' quello che si scarica non lo scegli tu. */
-      logo: ilLogoDi(stato) !== "",
+      /* Se c'e' un segno da provare a prendere — e per un'entita' `update.`
+       * c'e' sempre: o l'indirizzo che dichiara, o il marchio
+       * dell'integrazione da cui viene. Quale delle due, e se quella strada
+       * porti a qualcosa, lo si sa solo chiedendolo; chi chiede tiene il no
+       * quando arriva, e non lo richiede piu'.
+       *
+       * L'indirizzo non viaggia: il telefono chiede «il logo di questa
+       * entita'», e dove andarlo a prendere lo sa il ponte. Cosi' quello che
+       * si scarica non lo scegli tu. */
+      logo: true,
       /* Se le note lunghe si possono chiedere: allora si leggono **dentro
        * l'app**, e l'indirizzo qui sopra resta l'ultima spiaggia. */
       leNote: saLeNote(stato.attributes),
@@ -292,6 +333,10 @@ export class Aggiornamenti {
      * viaggia: il telefono chiede il logo di un'entita', e l'indirizzo lo
      * tiene questa mappa. */
     this._dovIlLogo = new Map();
+    /* Di che integrazione e' un'entita', quando l'ha fatto chiedere. Si tiene
+     * per sempre: un'entita' non cambia integrazione mentre il ponte gira, e
+     * la risposta vale anche quando e' «non si sa». */
+    this._diChiE = new Map();
   }
 
   /* Cosa aspetta di essere aggiornato. L'elenco si tiene per qualche secondo:
@@ -336,7 +381,29 @@ export class Aggiornamenti {
     const quale = pulito(entita);
     if (!quale) return "";
     await this.elenco();
-    return this._dovIlLogo.get(quale) ?? "";
+    const dichiarato = this._dovIlLogo.get(quale);
+    if (dichiarato) return dichiarato;
+    /* Non dichiara niente: si guarda **da dove viene**.
+     *
+     * Solo per quelli che l'elenco ha: se l'entita' non aspetta nessun
+     * aggiornamento non si va a chiedere niente di lei, che e' la stessa
+     * regola del logo dichiarato. */
+    if (!this._elenco?.some((una) => una.entita === quale)) return "";
+    if (this._diChiE.has(quale)) return this._diChiE.get(quale);
+    let dove = "";
+    try {
+      const riga = await this.casa.chiedi({
+        type: "config/entity_registry/get",
+        entity_id: quale,
+      });
+      dove = ilMarchioDi(riga?.platform);
+    } catch (errore) {
+      /* Un registro che non risponde non e' un guasto da mostrare: e' un logo
+       * che non c'e'. Si dice al registro nostro e si va avanti. */
+      this.registro.info(`di chi e' ${quale}: ${errore?.message || errore}`);
+    }
+    this._diChiE.set(quale, dove);
+    return dove;
   }
 
   /**

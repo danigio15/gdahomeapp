@@ -139,6 +139,16 @@ const DA_AGGIORNARE = [
   },
 ];
 
+/* Di che integrazione e' un'entita'.
+ *
+ * Il registro di Home Assistant lo dice per tutte; qui basta per quelle che
+ * il ponte va a chiedere, cioe' quelle che un logo non lo dichiarano. Il
+ * firmware di una presa che passa da Zigbee2MQTT e' dell'integrazione `mqtt`,
+ * e `mqtt` un marchio ce l'ha: e' quello che si vede al posto dell'iniziale. */
+const DI_CHI_SONO = {
+  "update.presa_lavatrice_firmware": "mqtt",
+};
+
 const CASA = [...DEMO.entita, ...DA_AGGIORNARE].map((una) => ({
   ...una,
   last_changed: ADESSO,
@@ -306,6 +316,18 @@ export function alzaLaCasaFinta() {
       risposta.end("qui non c'e' niente");
       return;
     }
+    /* I marchi di Home Assistant, che qui non si raggiungono.
+     *
+     * Il ponte, per chi non dichiara un logo, va a `brands.home-assistant.io`
+     * — e da un banco senza internet non arriva. Questa casa finta fa anche
+     * quella parte, cosi' la strada si percorre intera: l'entita' che non
+     * dichiara niente, il registro che dice di chi e', il marchio che torna e
+     * finisce nel quadrato. Fuori dal banco quell'indirizzo e' quello vero. */
+    if (/^\/_\/[a-z0-9_]+\/icon\.png$/.test(percorso)) {
+      risposta.writeHead(200, { "content-type": "image/png" });
+      risposta.end(ICONA_DELL_ADDON);
+      return;
+    }
     /* L'icona di un add-on, nelle **due** forme in cui si chiede: quella del
      * Supervisor (`/addons/<add-on>/icon`), che e' la strada che fa il ponte,
      * e quella del proxy di Home Assistant (`/api/hassio/addons/…`), che
@@ -463,6 +485,19 @@ export function alzaLaCasaFinta() {
           return;
         }
         ok(IL_CHANGELOG);
+        return;
+      }
+      /* Di chi e' un'entita': il registro lo dice, e il ponte lo chiede per
+       * dare un marchio a chi non dichiara nessun logo — gli aggiornamenti
+       * dei firmware Zigbee non ne hanno affatto. */
+      case "config/entity_registry/get": {
+        const chi = String(detto.entity_id || "");
+        const quale = DI_CHI_SONO[chi];
+        if (!quale) {
+          no("not_found", `${chi} non e' nel registro`);
+          return;
+        }
+        ok({ entity_id: chi, platform: quale });
         return;
       }
       case "subscribe_events":

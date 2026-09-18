@@ -12,7 +12,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { Aggiornamenti, aggiornamentiDaFare, ilLogoDi, QuestoNoNo } from "../src/aggiornamenti.js";
+import {
+  Aggiornamenti,
+  aggiornamentiDaFare,
+  ilLogoDi,
+  ilMarchioDi,
+  QuestoNoNo,
+} from "../src/aggiornamenti.js";
 import { aggiornamentiDaFare as quelliDellaPlancia } from "../plancia/src/core/aggiornamenti-da-fare.js";
 import { Commissioni } from "../src/commissioni.js";
 import { RispostaNegativa } from "../src/casa.js";
@@ -357,7 +363,7 @@ test("il logo: di casa o dei marchi, e niente altro", () => {
   assert.equal(ilLogoDi(null), "");
 });
 
-test("la riga dice se un logo c'e', e l'indirizzo non viaggia", () => {
+test("l'indirizzo del logo non viaggia: sul filo passa un si'", () => {
   const fila = aggiornamentiDaFare([
     unAggiornamento("update.uno", {
       title: "Uno",
@@ -365,12 +371,94 @@ test("la riga dice se un logo c'e', e l'indirizzo non viaggia", () => {
     }),
     unAggiornamento("update.due", { title: "Due" }),
   ]);
-  const uno = fila.find((quale) => quale.entita === "update.uno");
-  const due = fila.find((quale) => quale.entita === "update.due");
-  assert.equal(uno.logo, true);
-  assert.equal(due.logo, false);
-  /* L'indirizzo resta nel ponte: sul filo passa un si' o un no. */
+  /* Per tutti c'e' qualcosa da provare: chi dichiara un indirizzo ha quello,
+   * chi non dichiara niente ha il marchio dell'integrazione da cui viene. */
+  assert.equal(
+    fila.every((quale) => quale.logo === true),
+    true,
+  );
+  /* E l'indirizzo resta nel ponte. */
   assert.equal(JSON.stringify(fila).includes("brands.home-assistant.io"), false);
+});
+
+test("chi non dichiara un logo lo prende dall'integrazione da cui viene", async () => {
+  /* Gli aggiornamenti dei firmware Zigbee non hanno `entity_picture` affatto,
+   * e restavano con la loro iniziale — tre «S» identiche per tre interruttori.
+   * Quello che si sa di loro e' da dove vengono, e le integrazioni hanno tutte
+   * il loro marchio. */
+  const chieste = [];
+  const casa = {
+    async chiedi(comando) {
+      chieste.push(comando);
+      if (comando.type === "get_states") {
+        return [unAggiornamento("update.switch_casa", { friendly_name: "Switch casa" })];
+      }
+      if (comando.type === "config/entity_registry/get") {
+        return { entity_id: comando.entity_id, platform: "mqtt" };
+      }
+      return null;
+    },
+  };
+  const quali = new Aggiornamenti({ casa, registro: ZITTO });
+  assert.equal(
+    await quali.doveIlLogo("update.switch_casa"),
+    "https://brands.home-assistant.io/_/mqtt/icon.png",
+  );
+
+  /* E si chiede **una volta**: la seconda risponde la memoria. */
+  const quante = chieste.filter((una) => una.type === "config/entity_registry/get").length;
+  await quali.doveIlLogo("update.switch_casa");
+  assert.equal(chieste.filter((una) => una.type === "config/entity_registry/get").length, quante);
+});
+
+test("l'indirizzo vero dei marchi passa comunque", () => {
+  /* `I_MARCHI` e' la lista di quello che passa, e resta l'indirizzo vero
+   * anche quando il banco si fa servire i marchi da un'altra parte: sono due
+   * lavori diversi, e confonderli faceva rifiutare proprio l'indirizzo che
+   * Home Assistant dichiara. */
+  const dentro = (dove) => ilLogoDi(unAggiornamento("update.uno", { entity_picture: dove }));
+  assert.equal(
+    dentro("https://brands.home-assistant.io/homeassistant/icon.png"),
+    "https://brands.home-assistant.io/homeassistant/icon.png",
+  );
+});
+
+test("il nome di un'integrazione non porta da un'altra parte", () => {
+  assert.equal(ilMarchioDi("mqtt"), "https://brands.home-assistant.io/_/mqtt/icon.png");
+  assert.equal(ilMarchioDi("zha"), "https://brands.home-assistant.io/_/zha/icon.png");
+  for (const brutto of ["../altro", "uno/due", "uno.due", "http://x", "", "  ", null]) {
+    assert.equal(ilMarchioDi(brutto), "", String(brutto));
+  }
+});
+
+test("di un'entita' che l'elenco non ha non si chiede nemmeno di chi e'", async () => {
+  const chieste = [];
+  const casa = {
+    async chiedi(comando) {
+      chieste.push(comando);
+      if (comando.type === "get_states") return [];
+      return { platform: "mqtt" };
+    },
+  };
+  const quali = new Aggiornamenti({ casa, registro: ZITTO });
+  assert.equal(await quali.doveIlLogo("update.mai_vista"), "");
+  assert.equal(
+    chieste.some((una) => una.type === "config/entity_registry/get"),
+    false,
+  );
+});
+
+test("un registro che non risponde e' un logo che non c'e', non un guasto", async () => {
+  const casa = {
+    async chiedi(comando) {
+      if (comando.type === "get_states") {
+        return [unAggiornamento("update.uno", { title: "Uno" })];
+      }
+      throw new RispostaNegativa("unknown_command", "non conosco quel registro");
+    },
+  };
+  const quali = new Aggiornamenti({ casa, registro: ZITTO });
+  assert.equal(await quali.doveIlLogo("update.uno"), "");
 });
 
 test("l'icona di un add-on la chiede al Supervisor, non al proxy di casa", async () => {
