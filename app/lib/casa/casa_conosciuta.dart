@@ -103,13 +103,31 @@ class CasaConosciuta {
   /// provare per primo un indirizzo di rete locale mentre si e' fuori vuol
   /// dire aspettare che scada un tentativo verso un indirizzo che non esiste,
   /// e succede a ogni apertura dell'app.
-  List<Approdo> approdi() {
+  ///
+  /// `soloSicuri` toglie quelli in chiaro, e serve a un caso solo: l'app
+  /// aperta da browser su un indirizzo `https`.
+  ///
+  /// Li' un indirizzo di casa in chiaro — `http://192.168.…`, che e' quello
+  /// che ha quasi tutti — il browser **non lo lascia chiamare**: e' la regola
+  /// del contenuto misto, e non si aggira. Provarci comunque non costa un
+  /// tentativo andato male: costa la pagina marcata **«non sicura»** finche'
+  /// resta aperta, col lucchetto sbarrato e la spiegazione che parla di
+  /// risorse che un attaccante potrebbe modificare. Chi la guarda pensa al
+  /// certificato — «il problema e' il certificato, anche a me esce non
+  /// sicuro» — e il certificato non c'entra niente.
+  ///
+  /// Quindi da una pagina cifrata si bussa solo dove si puo' bussare: il
+  /// centralino, o un indirizzo pubblico in `https`. Sul telefono e sul
+  /// computer non cambia niente — quella regola e' del browser, non nostra —
+  /// e l'indirizzo in chiaro resta la strada di casa.
+  List<Approdo> approdi({bool soloSicuri = false}) {
     final tutti = <Approdo>[
       if (inCasa != null) Approdo.diretto(DaDove.daDentro, inCasa!),
       if (daFuoriCasa != null) Approdo.diretto(DaDove.daFuori, daFuoriCasa!),
       if (centralino != null && (casaAlCentralino?.isNotEmpty ?? false))
         Approdo.dalCentralino(centralino!, casaAlCentralino!),
     ];
+    if (soloSicuri) tutti.removeWhere((uno) => !uno.sicuro);
     if (ultimoApprodo == null || tutti.length < 2) return tutti;
     tutti.sort((uno, altro) {
       if (uno.da == ultimoApprodo) return -1;
