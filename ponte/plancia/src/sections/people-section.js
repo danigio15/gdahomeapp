@@ -100,10 +100,27 @@ function portraitMarkup(view) {
   const photo = view.photo
     ? `<img class="dm-person-photo" src="${esc(view.photo)}" alt="" loading="lazy" data-person-img>`
     : "";
+  /* La pastiglia sul ritratto c'e' solo quando ha qualcosa da dire.
+   *
+   * Dal video di una casa vera, due card accanto: una con la pastiglia e il
+   * suo disegno dentro — l'omino di chi sta fermo — e l'altra con un cerchio
+   * VUOTO attaccato alla faccia. Sembra un'icona che non e' arrivata, e chi
+   * guarda lo segnala come tale; invece era il pallino di presenza, disegnato
+   * sempre, che di chi non ha un'attivita' nota non aveva niente da mettere
+   * dentro.
+   *
+   * E non aveva niente da dire nemmeno con quel colore: la presenza la
+   * raccontano gia' l'anello intorno al ritratto e la pastiglia accanto al
+   * nome, tutti e due di quel colore. Il pallino la diceva una terza volta,
+   * coprendo un pezzo di faccia — e accanto a una pastiglia piena passava per
+   * un buco.
+   *
+   * Quindi: c'e' quando c'e' l'attivita' — l'auto, la bici, i passi, l'omino
+   * fermo — e negli altri casi la foto resta la foto. */
   const activity = ACTIVITY_EMOJI[view.activity] || "";
   const dot = activity
     ? `<i class="dm-person-dot" data-activity="true" aria-hidden="true">${activity}</i>`
-    : `<i class="dm-person-dot" aria-hidden="true"></i>`;
+    : "";
   return `<span class="dm-person-portrait">${avatar}${photo}${dot}</span>`;
 }
 
@@ -629,9 +646,13 @@ function installStyles() {
     #dm-people .dm-person-photo,#dm-people .dm-person-avatar{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;box-shadow:0 12px 26px -12px rgba(var(--dm-presence),.75)}
     #dm-people .dm-person-avatar{display:grid;place-items:center;font-size:31px;background:radial-gradient(circle at 32% 26%,color-mix(in srgb,var(--dm-person-color,#0ea5e9) 10%,var(--card-bg,#fff)),color-mix(in srgb,var(--dm-person-color,#0ea5e9) 30%,var(--card-bg,#fff)));color:var(--dm-person-color,#0ea5e9)}
     #dm-people .dm-person-avatar b{font-size:22px;font-weight:900;letter-spacing:.5px;text-shadow:0 1px 0 color-mix(in srgb,#fff 55%,transparent)}
+    /* Il posto e la forma della pastiglia. Le misure qui sotto le riscrive la
+       riga dell'attivita', che e' l'unico caso in cui la pastiglia esiste: chi
+       non ha un'attivita' nota non ne ha piu' una, perche' un cerchio vuoto
+       attaccato alla faccia sembra un'icona che non e' arrivata. */
     #dm-people .dm-person-dot{position:absolute;right:0;bottom:0;width:15px;height:15px;border-radius:50%;background:rgb(var(--dm-presence));border:3px solid var(--card-bg,#fff);z-index:1;box-shadow:0 2px 6px rgba(var(--dm-presence),.5)}
-    /* Quando la persona si muove il pallino diventa il badge dell'attivita':
-     * l'auto, la bici, i passi. Fermo, torna un pallino. */
+    /* Quando la persona si muove la pastiglia porta l'attivita': l'auto, la
+     * bici, i passi, l'omino di chi sta fermo. */
     #dm-people .dm-person-dot[data-activity]{width:23px;height:23px;right:-3px;bottom:-2px;display:grid;place-items:center;font-size:12px;font-style:normal;background:var(--card-bg,#fff);border:2.5px solid rgb(var(--dm-presence))}
     #dm-people .dm-person-name{font-size:16px;font-weight:900;letter-spacing:-.3px;color:var(--text,#0f172a);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     /* La zona e' una pastiglia piena del colore di presenza: la cosa piu'

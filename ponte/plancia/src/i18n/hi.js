@@ -78,6 +78,8 @@ export default Object.freeze({
   "Zones and entry points of the panel": "पैनल के ज़ोन और प्रवेश बिंदु",
   "from Windows": "खिड़कियाँ से",
   "included here: the counter had already made them before its statistics began": "यहाँ शामिल: मीटर ने इन्हें अपने आँकड़े शुरू होने से पहले ही दर्ज कर लिया था",
+  "shutter up": "शटर ऊपर",
+  "shutters up": "शटर ऊपर",
   "to full": "पूरा होने में",
   "💾 Zones saved": "💾 ज़ोन सहेजे गए",
   "\" and its loads?": "\" और उसके लोड हटाएँ?",

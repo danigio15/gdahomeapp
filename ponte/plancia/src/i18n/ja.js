@@ -78,6 +78,8 @@ export default Object.freeze({
   "Zones and entry points of the panel": "警備パネルのゾーンと出入口",
   "from Windows": "「窓」から",
   "included here: the counter had already made them before its statistics began": "ここに含まれています：統計の記録が始まる前にメーターがすでに計測していた分です",
+  "shutter up": "シャッター開",
+  "shutters up": "シャッター開",
   "to full": "で満充電",
   "💾 Zones saved": "💾 ゾーンを保存しました",
   "\" and its loads?": "」とその負荷を削除しますか？",

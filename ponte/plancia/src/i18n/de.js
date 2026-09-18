@@ -78,6 +78,8 @@ export default Object.freeze({
   "Zones and entry points of the panel": "Zonen und Zugänge der Zentrale",
   "from Windows": "aus Fenster",
   "included here: the counter had already made them before its statistics began": "hier enthalten: Der Zähler hatte sie schon erfasst, bevor seine Statistiken begannen",
+  "shutter up": "Rollladen offen",
+  "shutters up": "Rollläden offen",
   "to full": "bis voll",
   "💾 Zones saved": "💾 Zonen gespeichert",
   "\" and its loads?": "\" samt seiner Verbraucher löschen?",

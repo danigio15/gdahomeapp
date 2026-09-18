@@ -78,6 +78,8 @@ export default Object.freeze({
   "Zones and entry points of the panel": "패널의 구역과 출입구",
   "from Windows": "창문에서",
   "included here: the counter had already made them before its statistics began": "여기에 포함됨: 통계가 시작되기 전에 계량기가 이미 기록한 값입니다",
+  "shutter up": "셔터 열림",
+  "shutters up": "셔터 열림",
   "to full": "완충까지",
   "💾 Zones saved": "💾 구역을 저장했습니다",
   "\" and its loads?": "\" 그룹과 그 부하를 삭제할까요?",

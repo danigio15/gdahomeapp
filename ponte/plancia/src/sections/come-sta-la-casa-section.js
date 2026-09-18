@@ -183,11 +183,17 @@ function laPostaAdesso(config, states) {
  * Il numero esce dalla frase e resta un numero. Le parole diventano quattordici
  * chiavi ferme, che si traducono una volta e valgono per ogni conto.
  */
-function parolaDelConto(chiave, conto) {
+function parolaDelConto(chiave, conto, modello = null) {
   const uno = conto === 1;
   if (chiave === "luci") return uno ? t("luce accesa", "light on") : t("luci accese", "lights on");
-  if (chiave === "tapparelle")
+  if (chiave === "tapparelle") {
+    /* Dove non c'e' un solo contatto sull'anta, quel conto sono i motori
+     * alzati e non le finestre aperte (#31): la tessera lo dice giusto da
+     * quando c'e' la #442, qui arrivava solo il numero. */
+    if (modello?.soloMotori)
+      return uno ? t("tapparella alzata", "shutter up") : t("tapparelle alzate", "shutters up");
     return uno ? t("finestra aperta", "window open") : t("finestre aperte", "windows open");
+  }
   if (chiave === "clima") return uno ? t("unità accesa", "unit on") : t("unità accese", "units on");
   if (chiave === "prese")
     return uno ? t("presa accesa", "socket on") : t("prese accese", "sockets on");
@@ -262,7 +268,7 @@ function paroleDellaPastiglia(pastiglia) {
      * QUALE sensore e' l'unica cosa che il numero da solo non dice. */
     return { testa, coda, titolo: pastiglia.nome ? `${pastiglia.nome} · ${testa}` : `${testa} ${coda}` };
   }
-  const parola = parolaDelConto(pastiglia.chiave, pastiglia.conto);
+  const parola = parolaDelConto(pastiglia.chiave, pastiglia.conto, pastiglia);
   const testa = String(pastiglia.conto);
   const nomi = vociDellaPastiglia(pastiglia)
     .map((voce) => voce.name)

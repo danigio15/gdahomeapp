@@ -78,6 +78,8 @@ export default Object.freeze({
   "Zones and entry points of the panel": "Panelin bölgeleri ve girişleri",
   "from Windows": "Pencereler’den",
   "included here: the counter had already made them before its statistics began": "buraya dahil: sayaç bunları istatistikleri başlamadan önce saymıştı",
+  "shutter up": "panjur açık",
+  "shutters up": "panjur açık",
   "to full": "dolmasına",
   "💾 Zones saved": "💾 Bölgeler kaydedildi",
   "\" and its loads?": "\" grubu ve yükleri silinsin mi?",

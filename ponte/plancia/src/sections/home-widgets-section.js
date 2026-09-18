@@ -1294,6 +1294,19 @@ function coversModel(states) {
      * suo, e due conti sulla stessa cosa non possono divergere se il conto e'
      * uno. */
     open: contate,
+    /* E con loro esce COSA sono state contate (#31).
+     *
+     * «Nella scheda il titolo tapparelle e' corretto, mentre in quei piccoli
+     *  popup che si aprono sopra dice finestre aperte.»
+     *
+     * Quel conto e' due cose diverse a seconda della casa: dove non c'e'
+     * nemmeno un contatto sull'anta sono i motori ALZATI, dove ci sono sono le
+     * finestre APERTE. La tessera lo sa e cambia parola — e' la #442, «sei
+     * tapparelle tirate su sono una casa normale, sei finestre aperte sono una
+     * casa da chiudere» — ma la fascia sotto il meteo leggeva solo il numero e
+     * ci metteva sempre la seconda. La correzione era arrivata a meta' strada:
+     * il numero era giusto e la parola diceva il falso. */
+    soloMotori,
   };
 }
 

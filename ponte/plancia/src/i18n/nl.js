@@ -78,6 +78,8 @@ export default Object.freeze({
   "Zones and entry points of the panel": "Zones en toegangen van de centrale",
   "from Windows": "uit Ramen",
   "included here: the counter had already made them before its statistics began": "hier meegeteld: de meter had ze al gemaakt voordat zijn statistieken begonnen",
+  "shutter up": "rolluik omhoog",
+  "shutters up": "rolluiken omhoog",
   "to full": "tot vol",
   "💾 Zones saved": "💾 Zones opgeslagen",
   "\" and its loads?": "\" en de verbruikers erin verwijderen?",

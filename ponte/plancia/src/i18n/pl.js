@@ -78,6 +78,8 @@ export default Object.freeze({
   "Zones and entry points of the panel": "Strefy i wejścia centrali",
   "from Windows": "z Okien",
   "included here: the counter had already made them before its statistics began": "wliczone tutaj: licznik zarejestrował je, zanim zaczęły się jego statystyki",
+  "shutter up": "roleta podniesiona",
+  "shutters up": "rolety podniesione",
   "to full": "do pełna",
   "💾 Zones saved": "💾 Strefy zapisane",
   "\" and its loads?": "\" wraz z jej odbiornikami?",
