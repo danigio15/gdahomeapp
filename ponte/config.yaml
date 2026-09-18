@@ -38,7 +38,7 @@ name: gdahome
 # non cambia, e nel negozio «Aggiorna» compare **solo** se questo numero si
 # alza: da qui il quarto. `1.4.24.1` si legge «la plancia 1.4.24, la prima
 # correzione nostra».
-version: "1.4.32.14"
+version: "1.4.32.15"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
@@ -172,6 +172,25 @@ options:
   # E' la stessa chiave messa fra i segreti del centralino, e non si inventa
   # qui: si copia da li'.
   chiave_console: ""
+  # Il quadro di chi ti ha fatto l'impianto.
+  #
+  # Lasciala vuota. Serve a chi la casa se l'e' fatta montare da un
+  # installatore: lui ti da' una riga da incollare qui, e da quel momento
+  # questa casa gli manda ogni quarto d'ora **poche righe di numeri** — le
+  # versioni, quanto e' pieno il disco, quali add-on girano, quante entita'
+  # non rispondono. Cosi' si accorge che qualcosa non va prima che tocchi a te
+  # telefonargli.
+  #
+  # Nella cartolina non c'e' niente di tuo: nessun nome di entita', nessuna
+  # stanza, nessuna persona, nessuno stato di nessun sensore, il nome del tuo
+  # Wi-Fi no e il tuo indirizzo pubblico nemmeno. **Quello che parte lo puoi
+  # leggere**, parola per parola, nella scheda «Il quadro» di gdahome, dove
+  # c'e' anche il tasto per smettere.
+  #
+  # Vuota vuol dire che non parte niente e non si apre nessuna connessione.
+  quadro: ""
+  # Ogni quanti minuti parte una cartolina. Da 5 a 1440.
+  quadro_ogni: 15
   registro: info
 
 schema:
@@ -186,4 +205,9 @@ schema:
   # riempire. Si puo' sempre rileggere da dove sta di casa: sulla macchina,
   # con `tramite-chiave`.
   chiave_console: password?
+  # `str?` e non `password?`: questa riga non e' un segreto da nascondere a chi
+  # ci abita — e' il contrario, e' la cosa che deve poter rileggere per sapere
+  # a chi la sua casa sta parlando.
+  quadro: str?
+  quadro_ogni: int(5,1440)
   registro: list(debug|info|attenzione|errore)

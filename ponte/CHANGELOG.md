@@ -5,6 +5,41 @@ disponibile»: prima di premere si legge cosa arriva. Il numero è quello della
 plancia che l'add-on ha dentro; il quarto numero — `1.4.32.2` — sono le
 correzioni dell'add-on fra due plance.
 
+## 1.4.32.15
+
+**La cartolina: la casa può dire come sta a chi te l'ha montata.**
+
+Se l'impianto te l'ha fatto un installatore, adesso può darti una riga da
+incollare nella casella **«Il quadro di chi ti ha fatto l'impianto»**: da quel
+momento questa casa gli manda ogni quarto d'ora poche righe di numeri — le
+versioni, quanto è pieno il disco, quali add-on girano, quante entità non
+rispondono — e lui si accorge che qualcosa non va prima che tocchi a te
+telefonargli.
+
+**Senza quella riga non parte niente**, e non si apre nessuna connessione: in
+una casa qualunque questo pezzo è codice che non gira.
+
+**Nella cartolina non c'è niente di tuo.** Nessun nome di entità, nessuna
+stanza, nessuna persona, nessuno stato di nessun sensore; il nome del tuo
+Wi-Fi no, e il tuo indirizzo pubblico nemmeno. La regola si dice così: cosa
+c'è nella scatola, non chi ci abita — «Mosquitto broker» ed `eth0` sono nomi
+di prodotti e di schede. Le entità che non rispondono partono come quattro
+cifre, con un sale che nasce in questa casa e non esce: servono a dire «è lo
+stesso di ieri», e a niente di più. Non è una promessa scritta in un
+documento: è una prova che compila una cartolina da una casa piena di nomi che
+raccontano una famiglia e controlla che non ne esca nemmeno uno.
+
+L'indirizzo **sulla rete di casa** invece c'è, ed è voluto: `192.168.1.50` non
+dice chi sei, e a chi ripara queste macchine serve tutti i giorni.
+
+E dove non si sa, si dice che non si sa. CPU, memoria e temperatura della
+macchina il Supervisor non le ha — quelle che offre sono del suo contenitore,
+non del ferro — e senza l'integrazione System Monitor restano vuote invece di
+diventare zero: uno zero rassicurante su una scheda in ginocchio è peggio di
+niente.
+
+Non passa dal centralino di gdahome: va dalla casa al quadro e basta.
+
 ## 1.4.32.14
 
 **La pastiglia dei rifiuti non si scrive due volte.**

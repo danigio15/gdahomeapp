@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { CENTRALINO_DELLA_CHAT } from "./chat.js";
+import { CodiceIllegibile, leggiIlCodice, OGNI_DI_SERIE, ogniQuanto } from "./cartolina.js";
 
 /* Il centralino dell'app, quello che accende chi la distribuisce.
  *
@@ -38,6 +39,7 @@ const DIFETTO = Object.freeze({
   dispositivi_massimi: 10,
   minuti_del_codice: 5,
   giorni_di_silenzio: 90,
+  quadro_ogni: OGNI_DI_SERIE,
   registro: "info",
 });
 
@@ -58,6 +60,25 @@ export function versioneDelPonte() {
     return /^version:\s*"?([^"\n]+)"?/m.exec(manifesto)?.[1]?.trim() || "";
   } catch (_errore) {
     return "";
+  }
+}
+
+/* Il registro vero non c'e' ancora quando si leggono le opzioni — lo si apre
+ * con il livello che sta scritto li' dentro — e un codice storto si deve dire
+ * lo stesso. Due righe su `stderr`, e basta. */
+const registroDiEmergenza = (riga) => process.stderr.write(`  ! ${riga}\n`);
+
+/* Il codice del quadro, letto senza far cadere niente. */
+export function leggiIlQuadro(scritto, dillo = () => {}) {
+  try {
+    return leggiIlCodice(scritto);
+  } catch (errore) {
+    dillo(
+      errore instanceof CodiceIllegibile
+        ? `il codice del quadro non si legge (${errore.message}): questa casa non manda nessuna cartolina`
+        : `${errore.message}: questa casa non manda nessuna cartolina finche' non si aggiorna gdahome`,
+    );
+    return null;
   }
 }
 
@@ -153,6 +174,20 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
      * E' la stessa che sta fra i segreti del centralino: non si inventa qui,
      * si copia da li'. */
     chiaveDellaConsole: String(process.env.PONTE_CHIAVE_CONSOLE || scritte.chiave_console || ""),
+    /* Il quadro di chi ha installato l'impianto: dove mandare la cartolina, e
+     * con che presentarsi.
+     *
+     * Vuoto e' la cosa normale, ed e' il caso di chiunque la casa se la sia
+     * messa da se': senza codice non parte niente e non si apre nessuna
+     * connessione. Chi ce l'ha se l'e' fatto dare da chi gli ha fatto
+     * l'impianto, e puo' toglierlo quando vuole.
+     *
+     * Un codice storto **non ferma il ponte**: si dice nel registro e si va
+     * avanti senza. Una casa che non si accende perche' qualcuno ha incollato
+     * male una riga in una casella facoltativa e' un guasto peggiore di quello
+     * che voleva evitare. */
+    quadro: leggiIlQuadro(process.env.PONTE_QUADRO || scritte.quadro, registroDiEmergenza),
+    quadroOgni: ogniQuanto(scritte.quadro_ogni, DIFETTO.quadro_ogni),
     versione: versioneDelPonte(),
   };
 }

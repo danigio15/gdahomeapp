@@ -180,24 +180,38 @@ resto.
 **`ponte/src/cartolina.js`** — nuovo
 
 ```js
-/* Il foglio, da quello che il ponte sa già. Nessuna rete qui dentro: si prova
- * tutto senza Home Assistant e senza un quadro acceso. */
-export function compila({ identita, opzioni, versioni, aggiornamenti, plance,
-                          dispositivi, fuori, salute, adesso }) → object
+/* Il foglio, da quello che il ponte sa già. Nessuna rete qui dentro e nessun
+ * orologio che non sia quello che gli si passa: si prova tutto senza Home
+ * Assistant, senza Supervisor e senza nessun quadro acceso. */
+export function compila({ casa, ogni, versioni, macchina, rete, apparati,
+                          addon, aggiornamenti, plance, telefoni, fuori,
+                          entita, batterie, backup, adesso }) → object
 
-/* Quattro esadecimali per un'entità, col sale di questa casa. */
-export function impronta(sale, entita) → string
+/* Da dove viene ogni numero: l'unico posto che lo sa. Torna una funzione, non
+ * un foglio, così ogni cartolina è di adesso invece che di quando il ponte si
+ * è acceso. */
+export function fabbricaLaCartolina({ identita, casa, ferro, aggiornamenti,
+                                      plance, configurazione, dispositivi,
+                                      chiamata, versioni, ogni }) → () => object
+
+/* Il codice incollato nella scheda dell'add-on. */
+export function leggiIlCodice(scritto) → { dove, chiave } | null
 
 /* Chi la spedisce: un orologio, e un tentativo che se fallisce rallenta
- * invece di insistere. Spento quando `dove` è vuoto — cioè quasi sempre. */
+ * invece di insistere. Spento quando manca il codice — cioè quasi sempre. */
 export class Postino {
-  constructor({ dove, chiave, ogni, prendi = fetch, registro, adesso })
+  constructor({ dove, chiave, casa, ogni, fabbrica, fetch, registro, adesso })
   parti()            // accende l'orologio
   ferma()
+  async manda()      // una cartolina, adesso
+  get acceso()       // se questa casa manda qualcosa a qualcuno
   get ultima()       // l'ultima cartolina spedita, per la console
   get ultimoEsito()  // andata, o perché no
 }
 ```
+
+L'impronta delle entità sta in `salute.js`, dove sta la cosa che la usa; il
+sale nasce in `identita.js`, di fianco al file che sopravvive ai riavvii.
 
 **`ponte/src/salute.js`** — nuovo
 
@@ -256,10 +270,20 @@ serie) e `quadro_ogni` (minuti, 15).
 `chiave_console`: una casella che quasi nessuno riempie, e chi la riempie sa
 cosa ci mette.
 
-**Il codice del quadro** è una stringa sola da incollare — l'indirizzo e la
-chiave insieme, come si fa già col QR code dell'abbinamento: base64url di
-`{"q":"https://quadro.rossi.it","k":"…"}`. Due caselle da riempire giuste
-sarebbero due caselle da sbagliare.
+**Il codice del quadro** è una riga sola da incollare, con dentro tutt'e due le
+cose che servono — dove chiamare e con che presentarsi:
+
+```
+quadro|1|https://quadro.impiantirossi.it|K7M2-9XQF-3BHT-R4VN
+```
+
+Due caselle da riempire giuste sarebbero due caselle da sbagliare. E leggibile,
+non un blocco di base64 come diceva una stesura di questo documento: quando
+qualcosa non va la prima domanda è «cosa ci hai incollato?», e a quella si deve
+poter rispondere leggendo. La forma è quella dell'invito del QR code
+(`ponte/src/invito.js`), numero di versione compreso: è l'unica cosa che
+permetta a un ponte vecchio di dire «questo codice viene da un quadro più nuovo
+di me» invece di leggerne metà.
 
 **`ponte/console/`** — la scheda **«Il quadro»**, dietro l'ingress: a chi va,
 ogni quanto, **l'ultima cartolina spedita in chiaro**, quando è andata l'ultima
@@ -419,6 +443,15 @@ guardi.
 1. **La cartolina nel ponte**, spenta di serie, con la scheda nella console che
    la fa leggere. Si prova con `curl` e un file, senza nessun quadro acceso — ed
    è già utile da sola: chi ha una casa sola può guardarsi la sua.
+
+   **Metà fatta**, in `1.4.32.15`: ci sono `ponte/src/salute.js`,
+   `ponte/src/ferro.js` e `ponte/src/cartolina.js` con le loro 45 prove, le due
+   opzioni nel manifesto tradotte in italiano e in inglese, e il postino acceso
+   in `index.js`. Manca **la scheda «Il quadro» nella console dell'add-on**, che
+   è la metà che riguarda chi ci abita: leggere in chiaro l'ultima cartolina
+   spedita, e il tasto per smettere. Finché non c'è, l'interruttore è solo la
+   casella nella scheda dell'add-on — che si vede e si svuota, ma non fa
+   leggere niente.
 2. **Il quadro in Node**, la pagina che c'è già attaccata a dati veri.
 3. **La versione su Cloudflare**, come `nuvola/`, con la stessa prova dal vivo
    contro tutte e due.

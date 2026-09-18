@@ -28,6 +28,29 @@ export class Identita {
       };
       this.archivio.salva();
     }
+    /* Il sale delle impronte.
+     *
+     * Serve alla cartolina del quadro: le entita' che non rispondono si
+     * mandano come quattro cifre, e senza un sale di questa casa la stessa
+     * entita' darebbe le stesse quattro cifre in tutte le case del mondo —
+     * cioe' si girerebbero in un pomeriggio con un elenco di nomi plausibili.
+     *
+     * Nasce qui e non dove si usa perche' qui c'e' gia' il file che
+     * sopravvive ai riavvii, e perche' una casa che cambia sale a ogni
+     * accensione farebbe credere al quadro che ogni giorno si rompe un
+     * dispositivo diverso. Si aggiunge senza rifare l'identita': le case che
+     * esistono gia' non hanno nessun motivo di cambiare numero. */
+    if (typeof this.archivio.dati.sale !== "string" || this.archivio.dati.sale.length < 32) {
+      this.archivio.dati.sale = randomBytes(16).toString("hex");
+      this.archivio.salva();
+    }
+  }
+
+  /* Il sale delle impronte. Non e' un segreto come quello del centralino — non
+   * apre niente — ma non esce lo stesso: e' quello che tiene i nomi delle
+   * entita' dentro questa casa. */
+  get sale() {
+    return this.archivio.dati.sale;
   }
 
   get casa() {

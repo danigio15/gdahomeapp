@@ -37,6 +37,24 @@ configuration:
     description: >-
       Lasciala vuota. Serve solo a chi risponde alle chat di assistenza: in
       tutte le altre case non cambia niente.
+  quadro:
+    name: Il quadro di chi ti ha fatto l'impianto
+    description: >-
+      Lasciala vuota. Se la casa te l'ha montata un installatore, lui ti da'
+      una riga da incollare qui: da quel momento questa casa gli manda ogni
+      quarto d'ora poche righe di numeri — le versioni, quanto e' pieno il
+      disco, quali add-on girano, quante entita' non rispondono — e lui si
+      accorge che qualcosa non va prima che tocchi a te telefonargli. Non c'e'
+      niente di tuo: nessun nome di entita', nessuna stanza, nessuna persona,
+      nessuno stato di nessun sensore, il nome del tuo Wi-Fi no e il tuo
+      indirizzo pubblico nemmeno. Quello che parte lo puoi leggere parola per
+      parola nella scheda «Il quadro» di gdahome, dove c'e' anche il tasto per
+      smettere.
+  quadro_ogni:
+    name: Ogni quanto parte una cartolina
+    description: >-
+      Ogni quanti minuti questa casa scrive al quadro. Conta solo se la riga
+      qui sopra e' piena.
   registro:
     name: Il registro
     description: Quanto scrive nel registro dell'add-on.
