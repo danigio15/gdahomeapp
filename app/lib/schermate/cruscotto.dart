@@ -69,8 +69,8 @@ class SchermataDelCruscotto extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 inLingua(
-                  it: 'Si apre nel browser, che e\' dove sta la tua chiave: qui dentro non c\'e\', '
-                      'e sul telefono non ci finisce.',
+                  it: 'Si apre nel browser, che è dove sta la tua chiave: qui dentro non '
+                      'c\'è, e sul telefono non ci finisce.',
                   en: 'It opens in the browser, which is where your key lives: it is not in '
                       'here, and it does not end up on the phone.',
                 ),
