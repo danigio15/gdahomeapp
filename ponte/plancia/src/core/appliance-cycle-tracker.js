@@ -19,6 +19,25 @@
 
 const STORAGE_KEY = "dm_appliance_cycles";
 const MAX_SAMPLE_GAP_MS = 5 * 60 * 1000;
+/* Quanto puo' stare ferma una macchina senza che il ciclo sia finito (#26).
+ *
+ * «Sto facendo una prova con la lavatrice con una presa comandata: vedo che la
+ *  card mi crea dei mini cicli perche' ogni tanto il consumo va a 0 W e poi
+ *  riparte con un nuovo ciclo.»
+ *
+ * Una lavatrice a meta' programma sta ferma davvero — fra il carico dell'acqua
+ * e il lavaggio, nell'ammollo, prima della centrifuga — e una presa smart quei
+ * minuti li vede come zero watt. La card fa bene a dire STANDBY: e' la verita',
+ * ed e' quello che qualcun altro aveva chiesto. Chi sbagliava era il conto dei
+ * cicli, che a ogni pausa ne chiudeva uno e al risveglio ne apriva un altro:
+ * alla fine del bucato quattro cicli da venti minuti invece di uno da un'ora e
+ * mezza, con quattro consumi e quattro costi che non sono niente.
+ *
+ * Venti minuti, e la scelta e' fra due errori. Troppo corto rimette i mini
+ * cicli; troppo lungo unisce due bucati veri in uno. Venti sta largo su
+ * qualunque pausa di programma e stretto sul tempo che ci vuole a svuotare il
+ * cestello e rifare un carico: fra due lavaggi veri ci passa sempre di piu'. */
+const PAUSA_DENTRO_UN_CICLO_MS = 20 * 60 * 1000;
 const MIN_CYCLE_MS = 60 * 1000;
 const MIN_CYCLE_KWH = 0.005;
 
@@ -100,6 +119,9 @@ export function createCycleTracker({
     delete record.active;
     if (!active) return;
     const fine = finePrudente(active, timestamp);
+    /* Il ciclo si chiude, ma non si butta: se la macchina riparte entro poco e'
+     * la stessa, e quello che si e' contato finora e' suo. */
+    record.sospeso = { ...active, fineMs: fine };
     const durationMs = fine - active.startMs;
     const startDaily = finiteOrNull(active.startDailyKwh);
     const lastDaily = finiteOrNull(active.lastDailyKwh);
@@ -148,6 +170,25 @@ export function createCycleTracker({
         const active = record.active;
         if (mode === "running") {
           if (!active) {
+            /* Riparte dopo una pausa breve: e' lo stesso ciclo, e riprende da
+             * dov'era invece di cominciarne un altro. La riga «ultimo ciclo»
+             * che la pausa aveva scritto si ritira: era un pezzo di questo, non
+             * un ciclo. */
+            const sospeso = record.sospeso;
+            const fermaDa = timestamp - (finiteOrNull(sospeso?.fineMs) ?? -Infinity);
+            if (sospeso && fermaDa >= 0 && fermaDa <= PAUSA_DENTRO_UN_CICLO_MS) {
+              delete record.sospeso;
+              const { fineMs: _fine, ...ripreso } = sospeso;
+              if (record.last && record.last.startMs === ripreso.startMs) delete record.last;
+              record.active = {
+                ...ripreso,
+                lastMs: timestamp,
+                lastWatts: finiteOrNull(entry.watts) ?? 0,
+              };
+              changed = true;
+              continue;
+            }
+            delete record.sospeso;
             record.active = {
               startMs: timestamp,
               lastMs: timestamp,

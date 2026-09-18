@@ -243,6 +243,9 @@ const PAROLE_CHE_ASPETTANO = Object.freeze([
   "guasto",
   "dooropen",
   "doorisopen",
+  /* Home Connect: la macchina e' accesa e chiede qualcosa — lo sportello, il
+   * brillantante, l'acqua. Spento sarebbe una bugia. */
+  "actionrequired",
   "setprogram",
   "selected",
   "inpausa",
@@ -305,13 +308,41 @@ const LAVORANO = insieme(PAROLE_CHE_LAVORANO);
 const ASPETTANO = insieme(PAROLE_CHE_ASPETTANO);
 const FERME = insieme(PAROLE_CHE_STANNO_FERME);
 
+/* Alcune integrazioni non pubblicano la parola: pubblicano il suo indirizzo.
+ *
+ * «La lavastoviglie e' in funzione ma la card indica spenta. Integrata con
+ *  Home Connect» (#27). Home Connect scrive lo stato per esteso, come lo
+ * chiama Bosch dentro il suo protocollo:
+ *
+ *     BSH.Common.EnumType.OperationState.Run
+ *
+ * Il vocabolario quella parola ce l'ha — `run` sta fra quelle che lavorano
+ * da quando c'e' — ma cercava la riga intera, e la riga intera non e' una
+ * parola: e' un percorso che finisce con la parola. Cosi' una macchina che
+ * diceva chiarissimo «Run» cadeva in fondo alla scala e usciva SPENTA.
+ *
+ * Si guarda anche l'ultimo pezzo, quello dopo l'ultimo punto. Non si guardano
+ * gli altri: `BSH.Common.EnumType.OperationState.Ready` finisce con «Ready» e
+ * deve dire pronto, e se si cercasse una parola conosciuta dentro tutto
+ * l'indirizzo «OperationState» e «Run» litigherebbero nella stessa riga.
+ *
+ * Vale per chiunque scriva cosi', non solo per Bosch: SmartThings ha i suoi
+ * `samsungce.*`, e il conto e' lo stesso. */
+const ultimoPezzo = (valore) => {
+  const detto = String(valore ?? "").trim();
+  const punto = detto.lastIndexOf(".");
+  return punto > 0 && punto < detto.length - 1 ? detto.slice(punto + 1) : "";
+};
+
 /** Cosa dice una parola di stato: `running`, `standby`, `off` o niente. */
 export function letturaDelloStato(value) {
-  const parola = senzaSeparatori(value);
-  if (!parola) return "";
-  if (LAVORANO.has(parola)) return "running";
-  if (ASPETTANO.has(parola)) return "standby";
-  if (FERME.has(parola)) return "off";
+  for (const detto of [value, ultimoPezzo(value)]) {
+    const parola = senzaSeparatori(detto);
+    if (!parola) continue;
+    if (LAVORANO.has(parola)) return "running";
+    if (ASPETTANO.has(parola)) return "standby";
+    if (FERME.has(parola)) return "off";
+  }
   return "";
 }
 
@@ -319,7 +350,6 @@ export function letturaDelloStato(value) {
  * si chiamano stato, fase o simili E che in questo momento dicono una parola
  * che il vocabolario conosce. Il nome da solo non basta — `sensor.stato_wifi`
  * si chiama stato e non parla di cicli — e la parola da sola nemmeno. */
-const semanticStateValues = new Set([...LAVORANO, ...ASPETTANO, ...FERME]);
 
 function inferSemanticStateEntity(device = {}, states = {}) {
   const entries = (device?.entities || []).map(entityId).filter(Boolean);
@@ -329,7 +359,10 @@ function inferSemanticStateEntity(device = {}, states = {}) {
   const semanticSensor = entries.find((id) => {
     if (!/^(sensor|binary_sensor)\./.test(id)) return false;
     if (!/(?:^|[._-])(state|status|phase|fase)(?:[._-]|$)/i.test(id)) return false;
-    return semanticStateValues.has(senzaSeparatori(states?.[id]?.state));
+    /* La stessa lettura di `letturaDelloStato`, indirizzi lunghi compresi: chi
+     * sceglie il sensore e chi lo legge devono riconoscere le stesse parole,
+     * o la casella si compila da sola e poi non dice niente. */
+    return Boolean(letturaDelloStato(states?.[id]?.state));
   });
   if (semanticSensor) return semanticSensor;
 
