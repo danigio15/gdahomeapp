@@ -17,6 +17,7 @@
 import { CHIAVE_ASSIST, SEZIONE_ASSIST, normalizzaAssist } from "../core/assist-model.js";
 import { siPuoParlare } from "./assist-section.js";
 import {
+  NOTA_DI_SCHEDA,
   ORDINE_IMPOSTAZIONI,
   clean,
   doc,
@@ -156,7 +157,7 @@ export function installAssistEditor() {
     "dm-assist-editor-style",
     `
     #ed-body .dm-assist-ed{display:grid;gap:8px}
-    #ed-body .dm-assist-ed-nota{font-size:11.5px;line-height:1.45;color:var(--text-dim,#64748b)}
+    #ed-body .dm-assist-ed-nota{${NOTA_DI_SCHEDA}}
     #ed-body .dm-assist-ed-riga{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:750;cursor:pointer}
     #ed-body .dm-assist-ed-riga input{width:18px;height:18px;margin:0;flex:0 0 auto}
     #ed-body .dm-assist-ed-campo{display:grid;gap:4px;font-size:11.5px;font-weight:800;color:var(--text-dim,#64748b)}

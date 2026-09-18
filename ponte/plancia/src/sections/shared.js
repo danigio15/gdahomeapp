@@ -781,6 +781,16 @@ export function righeDelDocumento(body, attributo, lista, leggi, tieni) {
  * una domanda sola: sparpagliata in due file, la risposta la si ricava
  * aprendoli tutti e due. Un numero nuovo si infila in mezzo senza toccare gli
  * altri — sono distanziati apposta. */
+/* La voce di una nota, sotto l'etichetta di un blocco della Config.
+ *
+ * Ogni blocco aggiunto alle Impostazioni si era scritto la sua: 11,5 punti da
+ * una parte, 12 dall'altra, due variabili diverse per lo stesso grigio. Non si
+ * vede riga per riga — si vede tutte insieme, ed e' esattamente quello che si
+ * vede aprendo quella scheda: quattro blocchi che sembrano scritti da quattro
+ * persone. Qui la voce e' una, e chi la usa non puo' farla scivolare.
+ */
+export const NOTA_DI_SCHEDA = "font-size:11.5px;line-height:1.45;color:var(--text-dim,#64748b)";
+
 export const ORDINE_IMPOSTAZIONI = Object.freeze({
   lingua: 10,
   chiosco: 15,

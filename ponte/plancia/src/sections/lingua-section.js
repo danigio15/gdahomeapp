@@ -35,6 +35,7 @@ import {
   dopoIGenerali,
   esc,
   inserisciInOrdine,
+  NOTA_DI_SCHEDA,
   installStyle,
   onEditorRedraw,
   root,
@@ -145,10 +146,9 @@ function installStile() {
     "dm-lingua-style",
     `
       /* La nota ha la voce di una nota: spiega la tendina qui sotto, non
-         apre un capitolo. */
-      #ed-body .dm-lingua-nota{
-        margin:2px 0 8px;font-size:12px;line-height:1.4;
-        color:var(--secondary-text-color,#64748b)}
+         apre un capitolo. Ed e' la voce di tutte le note di questa scheda,
+         presa da un posto solo: vedi NOTA_DI_SCHEDA. */
+      #ed-body .dm-lingua-nota{margin:2px 0 8px;${NOTA_DI_SCHEDA}}
       #ed-body .dm-lingua{margin-bottom:16px}
     `,
   );

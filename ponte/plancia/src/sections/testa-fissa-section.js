@@ -27,6 +27,7 @@ import {
   doc,
   dopoIGenerali,
   esc,
+  NOTA_DI_SCHEDA,
   inserisciInOrdine,
   installStyle,
   onEditorRedraw,
@@ -82,25 +83,24 @@ export function applicaTestaFissa() {
   return true;
 }
 
+/* Fatto come il chiosco, che e' fatto come tutti gli altri blocchi di questa
+ * scheda: etichetta e interruttore in riga, nota sotto. */
 function corpoMarkup() {
   const accesa = testaFissaAttiva();
-  return `<div class="ed-form dm-testa" id="${BLOCCO}">
+  return `<div class="ed-slot dm-testa" id="${BLOCCO}">
     <div class="dm-testa-riga">
-      <span class="dm-testa-glifo" aria-hidden="true">📌</span>
-      <span class="dm-testa-testo">
-        <b>${esc(t("Intestazione fissa", "Pinned header"))}</b>
-        <small>${esc(
-          t(
-            "La parte in alto — hamburger, nome della casa, meteo — resta ferma e il resto della plancia le scorre sotto. Vale solo su questo apparecchio.",
-            "The top strip — hamburger, house name, weather — stays put while the rest of the dashboard scrolls under it. This device only.",
-          ),
-        )}</small>
-      </span>
+      <span class="ed-slot-lbl">📌 ${esc(t("Intestazione fissa", "Pinned header"))}</span>
       <button type="button" class="dm-testa-int" role="switch"
         aria-checked="${accesa ? "true" : "false"}"
         aria-label="${esc(t("Intestazione fissa", "Pinned header"))}"
         data-dm-testa-int><i></i></button>
     </div>
+    <div class="dm-testa-nota">${esc(
+      t(
+        "La parte in alto — hamburger, nome della casa, meteo — resta ferma e il resto della plancia le scorre sotto. Vale solo su questo apparecchio.",
+        "The top strip — hamburger, house name, weather — stays put while the rest of the dashboard scrolls under it. This device only.",
+      ),
+    )}</div>
   </div>`;
 }
 
@@ -142,12 +142,14 @@ function installStili() {
   installStyle(
     "dm-testa-fissa-style",
     `
+    /* Lo stesso respiro fra un blocco e l'altro che ha la lingua: quattro
+       blocchi con quattro distanze diverse si vedono, e sono la prima cosa che
+       si vede aprendo questa scheda. */
+    #${BLOCCO}{margin-bottom:16px}
     #${BLOCCO} .dm-testa-riga{
-      display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px}
-    #${BLOCCO} .dm-testa-glifo{font-size:19px;line-height:1}
-    #${BLOCCO} .dm-testa-testo{display:grid;gap:3px;min-width:0}
-    #${BLOCCO} .dm-testa-testo b{font-size:13px;font-weight:800}
-    #${BLOCCO} .dm-testa-testo small{font-size:11px;line-height:1.35;color:var(--text-dim,#94a3b8)}
+      display:flex;align-items:center;justify-content:space-between;gap:12px}
+    #${BLOCCO} .dm-testa-riga .ed-slot-lbl{margin:0}
+    #${BLOCCO} .dm-testa-nota{margin-top:2px;${NOTA_DI_SCHEDA}}
     #${BLOCCO} .dm-testa-int{
       position:relative;width:38px;height:22px;flex:0 0 auto;padding:0;cursor:pointer;
       border:0;border-radius:999px;background:var(--divider-color,#cbd5e1);transition:background .18s ease}

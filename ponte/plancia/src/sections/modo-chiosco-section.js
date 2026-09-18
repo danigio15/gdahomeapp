@@ -28,6 +28,7 @@
  */
 import { kioskAttivo, setKioskMode } from "./beta12-room-color-lock-section.js";
 import {
+  NOTA_DI_SCHEDA,
   ORDINE_IMPOSTAZIONI,
   clean,
   doc,
@@ -50,25 +51,31 @@ function schedaAttiva() {
   return clean(doc?.querySelector?.(".ed-tab.active")?.dataset?.tab);
 }
 
+/* Fatto come gli altri blocchi di questa scheda, e non a modo suo.
+ *
+ * Qui dentro c'erano una riga nuda e un carattere piu' piccolo del resto: la
+ * lingua, Assist e l'elenco delle sezioni sono tutti `ed-slot` — etichetta in
+ * cima, nota sotto, il comando in fondo — e questi due interruttori, in mezzo
+ * a loro, sembravano righe di un'altra pagina finite li'. «Come grafica non e'
+ * allineata con il resto del config»: e' la stessa scheda, e si vede tutta
+ * insieme.
+ */
 function corpoMarkup() {
   const acceso = kioskAttivo();
-  return `<div class="ed-form dm-chiosco" id="${BLOCCO}">
+  return `<div class="ed-slot dm-chiosco" id="${BLOCCO}">
     <div class="dm-chiosco-riga">
-      <span class="dm-chiosco-glifo" aria-hidden="true">🖥️</span>
-      <span class="dm-chiosco-testo">
-        <b>${esc(t("Modo chiosco", "Kiosk mode"))}</b>
-        <small>${esc(
-          t(
-            "La plancia a tutto schermo, sopra la barra laterale di Home Assistant. Vale solo per questa plancia e solo su questo apparecchio: sul telefono si accende da sola.",
-            "The dashboard full screen, over the Home Assistant sidebar. It applies to this dashboard only and on this device only: on a phone it turns itself on.",
-          ),
-        )}</small>
-      </span>
+      <span class="ed-slot-lbl">🖥️ ${esc(t("Modo chiosco", "Kiosk mode"))}</span>
       <button type="button" class="dm-chiosco-int" role="switch"
         aria-checked="${acceso ? "true" : "false"}"
         aria-label="${esc(t("Modo chiosco", "Kiosk mode"))}"
         data-dm-chiosco-int><i></i></button>
     </div>
+    <div class="dm-chiosco-nota">${esc(
+      t(
+        "La plancia a tutto schermo, sopra la barra laterale di Home Assistant. Vale solo per questa plancia e solo su questo apparecchio: sul telefono si accende da sola.",
+        "The dashboard full screen, over the Home Assistant sidebar. It applies to this dashboard only and on this device only: on a phone it turns itself on.",
+      ),
+    )}</div>
   </div>`;
 }
 
@@ -112,12 +119,17 @@ function installStili() {
   installStyle(
     "dm-chiosco-style",
     `
+    /* L'etichetta e il suo interruttore sulla stessa riga: l'etichetta e'
+       quella di tutti — «ed-slot-lbl» — e l'interruttore sta dove finisce la
+       riga, come la tendina della lingua sta dove finisce la sua. */
+    /* Lo stesso respiro fra un blocco e l'altro che ha la lingua: quattro
+       blocchi con quattro distanze diverse si vedono, e sono la prima cosa che
+       si vede aprendo questa scheda. */
+    #${BLOCCO}{margin-bottom:16px}
     #${BLOCCO} .dm-chiosco-riga{
-      display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px}
-    #${BLOCCO} .dm-chiosco-glifo{font-size:19px;line-height:1}
-    #${BLOCCO} .dm-chiosco-testo{display:grid;gap:3px;min-width:0}
-    #${BLOCCO} .dm-chiosco-testo b{font-size:13px;font-weight:800}
-    #${BLOCCO} .dm-chiosco-testo small{font-size:11px;line-height:1.35;color:var(--text-dim,#94a3b8)}
+      display:flex;align-items:center;justify-content:space-between;gap:12px}
+    #${BLOCCO} .dm-chiosco-riga .ed-slot-lbl{margin:0}
+    #${BLOCCO} .dm-chiosco-nota{margin-top:2px;${NOTA_DI_SCHEDA}}
     #${BLOCCO} .dm-chiosco-int{
       position:relative;width:38px;height:22px;flex:0 0 auto;padding:0;cursor:pointer;
       border:0;border-radius:999px;background:var(--divider-color,#cbd5e1);transition:background .18s ease}
