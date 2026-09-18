@@ -14,130 +14,143 @@
       com'è — per questo i dati stanno in cima e separati da tutto.
 
       Niente font, niente librerie, nessuna richiesta a nessuno: la regola delle
-      altre console del progetto vale anche qui. Gli accenti però sono quelli
-      veri, come nella console del ponte — quella del centralino la legge chi
-      mantiene l'app, questa la legge un installatore tutti i giorni, ed è una
-      pagina di prodotto.
+      altre console del progetto vale anche qui.
 
-      COM'È FATTA, E PERCHÉ COSÌ.
+      DA DOVE VENGONO I COLORI E LE FORME.
 
-      Un quadro elettrico è una barra con sopra gli interruttori, ognuno con la
-      sua targhetta. Le case stanno in colonna nello stesso modo: una barra
-      sola, righe divise da un filo, e sul bordo sinistro la striscia che dice
-      come sta quella casa. Prima erano otto riquadri bianchi staccati, e otto
-      riquadri uguali non sono una gerarchia: sono un elenco piatto in cui
-      niente chiama.
+      Da `sito/stile.css` e dalla plancia, non dalla console del centralino. Le
+      prime due stesure erano parenti di quella — grigio-verde, fili sottili,
+      angoli da tre millimetri — e quella è un attrezzo da manutentore. gdahome
+      invece è bianco su azzurro chiarissimo, angoli da venti, ombre morbide a
+      due strati, pastiglie tonde e una barretta colorata a sinistra delle
+      righe: è così la plancia, è così il sito, e questa pagina è dello stesso
+      prodotto.
 
-      A destra — quando lo schermo ce l'ha — la casa aperta sta di fianco
-      all'elenco e non al suo posto: chi guarda quaranta impianti passa da uno
-      all'altro, e non deve tornare indietro ogni volta.
+      Le tessere dello stato in cima sono la stessa striscia che la plancia ha
+      sopra la Home («Inserito · 1 porta aperta · 1 varco aperto»).
 
-      Quello che si vede è tutto quello che il quadro sa di una casa, ed è
-      quello che c'è scritto nella cartolina: numeri e versioni. Niente nomi di
-      entità, niente stanze, niente persone, nessuno stato di nessun sensore.
-      Il nome della casa — «Rossi — via Verdi 12» — dalla casa non arriva: lo
-      scrive l'installatore qui, e resta qui.
+      DUE SCHERMATE.
+
+      «Le case» è il cruscotto: l'elenco a sinistra, la casa aperta a destra.
+      «Abbina» è come una casa entra qui dentro, ed è l'altra metà del lavoro:
+      senza quella il quadro è un cruscotto senza cruscotto.
 
       UNA COSA MISURATA, CHE HA DECISO IL DISEGNO.
 
-      I tre colori di stato del progetto — `--spia`, `--ottone`, `--allarme` —
-      fra ambra e rosso sono a 1.7 di distanza per chi non distingue il rosso
-      dal verde (9.1 per chi li distingue tutti: sotto la soglia comunque). Su
-      una pagina il cui mestiere è far vedere a colpo d'occhio quali case stanno
-      bene, un pallino colorato **da solo** non può portare il significato.
-      Perciò ogni stato ha tre cose insieme: una **forma** (● ▲ ■ ◇), una
-      **parola** e un colore. Chi non vede i colori legge la pagina lo stesso, e
-      chi li vede la legge più in fretta.
+      I tre colori di stato del sito — `--bene`, `--ambra`, `--male` — passano
+      la prova del daltonismo, ma l'ambra sul bianco sta sotto il contrasto di
+      3:1 e la coppia ambra/verde si avvicina a 7.0 per chi non distingue il
+      rosso. Perciò ogni stato porta tre cose insieme: una **forma** (● ▲ ■ ◇),
+      una **parola** e un colore. Chi non vede i colori legge la pagina lo
+      stesso, e chi li vede la legge più in fretta.
 
-      L'azzurro è l'unica cosa che si preme, ed è tenuto fuori dai tre colori di
-      stato apposta: un colore che vuol dire «guasto» e «premi qui» insieme non
-      vuol dire più niente.
+      L'azzurro è l'unica cosa che si preme, e sta fuori dai tre colori di stato
+      apposta: un colore che vuol dire «guasto» e «premi qui» insieme non vuol
+      dire più niente.
     -->
     <style>
       /* ─── I colori ──────────────────────────────────────────────────────
        *
-       * Il grigio non è grigio: tira al verde, come quello delle altre console
-       * del progetto e come la lamiera verniciata di un quadro. Il chiaro sta
-       * qui tutto intero; sotto si ridefiniscono solo le tessere che cambiano,
-       * due volte — per chi ha il sistema scuro e per chi lo sceglie. */
+       * Sono quelli di `sito/stile.css`, non reinventati: la notte, l'azzurro,
+       * l'ambra, il bene e il male, più gli aloni tenui che la plancia usa
+       * dietro le pastiglie. Il chiaro sta qui tutto intero; sotto si
+       * ridefiniscono solo le tessere che cambiano, due volte — per chi ha il
+       * sistema scuro e per chi lo sceglie. */
       :root {
-        --fondo: #e9edec;
-        --barra: #f4f6f5;
-        --scheda: #ffffff;
-        --velo: #f1f4f3;
-        --inchiostro: #101c22;
-        --smorzato: #53656c;
-        --tenue: #7d8e93;
-        --linea: #d2dad8;
-        --filo: #e2e8e6;
+        --notte: #0f172a;
+        --lieve: #64748b;
+        --fioco: #94a3b8;
 
-        --spia: #1f6b4a;
-        --ottone: #8a5710;
-        --allarme: #a5392c;
-        --spia-velo: #e3efe9;
-        --ottone-velo: #f7eedf;
-        --allarme-velo: #f9e7e4;
+        --fondo: #f0f4f8;
+        --carta: #ffffff;
+        --carta-alta: #f8fafc;
+        --bordo: #e2e8f0;
+        --bordo-tenue: #eef2f7;
 
-        --pieno: #a9c5b7;
-        --azzurro: #0a6d92;
-        --azzurro-velo: #e2eff4;
+        --azzurro: #0ea5e9;
+        --azzurro-scuro: #0284c7;
+        --azzurro-cupo: #075985;
+        --bene: #15803d;
+        --ambra: #b45309;
+        --male: #be123c;
 
-        --ombra: 0 1px 2px rgba(16, 28, 34, 0.06);
+        --alone-azzurro: #e0f2fe;
+        --alone-bene: #dcfce7;
+        --alone-ambra: #fef3c7;
+        --alone-male: #ffe4e6;
+        --giorno-pieno: #86efac;
+
+        --ombra: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+        --ombra-alta: 0 2px 6px rgba(15, 23, 42, 0.06), 0 24px 60px rgba(15, 23, 42, 0.12);
+        --ombra-tasto: 0 1px 2px rgba(15, 23, 42, 0.08), 0 6px 16px rgba(2, 132, 199, 0.28);
+
+        --raggio: 20px;
+        --raggio-piccolo: 14px;
       }
 
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme="light"]) {
-          --fondo: #0a1317;
-          --barra: #101b21;
-          --scheda: #142027;
-          --velo: #1a272e;
-          --inchiostro: #dfe8e6;
-          --smorzato: #9cadb2;
-          --tenue: #7b8e93;
-          --linea: #22343c;
-          --filo: #1c2c33;
+          --notte: #e8eef7;
+          --lieve: #93a3bb;
+          --fioco: #6b7c96;
 
-          --spia: #5fc493;
-          --ottone: #dca45c;
-          --allarme: #e98b7d;
-          --spia-velo: #16332a;
-          --ottone-velo: #33281a;
-          --allarme-velo: #39221f;
+          --fondo: #0a1120;
+          --carta: #121c2e;
+          --carta-alta: #18243a;
+          --bordo: #223049;
+          --bordo-tenue: #1b2739;
 
-          --pieno: #315549;
-          --azzurro: #4cb8dd;
-          --azzurro-velo: #14303b;
+          --azzurro: #38bdf8;
+          --azzurro-scuro: #0ea5e9;
+          --azzurro-cupo: #7dd3fc;
+          --bene: #4ade80;
+          --ambra: #fbbf24;
+          --male: #fb7185;
 
-          --ombra: 0 1px 2px rgba(0, 0, 0, 0.3);
+          --alone-azzurro: #0c2a3e;
+          --alone-bene: #10321f;
+          --alone-ambra: #33270c;
+          --alone-male: #3b1520;
+          --giorno-pieno: #1f7a4d;
+
+          --ombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.32);
+          --ombra-alta: 0 2px 6px rgba(0, 0, 0, 0.36), 0 24px 60px rgba(0, 0, 0, 0.46);
+          --ombra-tasto: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 16px rgba(14, 165, 233, 0.3);
         }
       }
 
       :root[data-theme="dark"] {
-        --fondo: #0a1317;
-        --barra: #101b21;
-        --scheda: #142027;
-        --velo: #1a272e;
-        --inchiostro: #dfe8e6;
-        --smorzato: #9cadb2;
-        --tenue: #7b8e93;
-        --linea: #22343c;
-        --filo: #1c2c33;
+        --notte: #e8eef7;
+        --lieve: #93a3bb;
+        --fioco: #6b7c96;
 
-        --spia: #5fc493;
-        --ottone: #dca45c;
-        --allarme: #e98b7d;
-        --spia-velo: #16332a;
-        --ottone-velo: #33281a;
-        --allarme-velo: #39221f;
+        --fondo: #0a1120;
+        --carta: #121c2e;
+        --carta-alta: #18243a;
+        --bordo: #223049;
+        --bordo-tenue: #1b2739;
 
-        --pieno: #315549;
-        --azzurro: #4cb8dd;
-        --azzurro-velo: #14303b;
+        --azzurro: #38bdf8;
+        --azzurro-scuro: #0ea5e9;
+        --azzurro-cupo: #7dd3fc;
+        --bene: #4ade80;
+        --ambra: #fbbf24;
+        --male: #fb7185;
 
-        --ombra: 0 1px 2px rgba(0, 0, 0, 0.3);
+        --alone-azzurro: #0c2a3e;
+        --alone-bene: #10321f;
+        --alone-ambra: #33270c;
+        --alone-male: #3b1520;
+        --giorno-pieno: #1f7a4d;
+
+        --ombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.32);
+        --ombra-alta: 0 2px 6px rgba(0, 0, 0, 0.36), 0 24px 60px rgba(0, 0, 0, 0.46);
+        --ombra-tasto: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 16px rgba(14, 165, 233, 0.3);
       }
 
-      * {
+      *,
+      *::before,
+      *::after {
         box-sizing: border-box;
       }
 
@@ -148,30 +161,26 @@
 
       body {
         background: var(--fondo);
-        color: var(--inchiostro);
+        color: var(--notte);
         font:
-          15px/1.5 system-ui,
+          15px/1.55 system-ui,
           -apple-system,
           "Segoe UI",
+          Roboto,
           sans-serif;
         -webkit-font-smoothing: antialiased;
       }
 
       :focus-visible {
         outline: 2px solid var(--azzurro);
-        outline-offset: 2px;
-        border-radius: 3px;
+        outline-offset: 3px;
+        border-radius: 8px;
       }
 
       .mono {
         font-family: ui-monospace, "SF Mono", Menlo, monospace;
       }
 
-      .num {
-        font-variant-numeric: tabular-nums;
-      }
-
-      /* Letto dai lettori di schermo, non dagli occhi. */
       .via {
         position: absolute;
         width: 1px;
@@ -185,489 +194,569 @@
       header {
         position: sticky;
         top: env(safe-area-inset-top, 0px);
-        z-index: 5;
-        background: var(--barra);
-        border-bottom: 1px solid var(--linea);
-        box-shadow: var(--ombra);
+        z-index: 20;
+        background: color-mix(in srgb, var(--fondo) 88%, transparent);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--bordo-tenue);
       }
 
       .testata {
-        max-width: 78rem;
+        max-width: 80rem;
         margin-inline: auto;
-        padding: 14px 20px;
+        padding: 13px 22px;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 18px;
         flex-wrap: wrap;
       }
 
       .marchio {
         display: flex;
-        align-items: baseline;
-        gap: 9px;
+        align-items: center;
+        gap: 11px;
+        min-width: 0;
+      }
+
+      /* Il bollo del marchio: un quadratino con la barra, come un quadro
+       * elettrico visto da lontano. */
+      .bollo {
+        width: 30px;
+        height: 30px;
+        flex: none;
+        border-radius: 9px;
+        background: linear-gradient(145deg, var(--azzurro), var(--azzurro-cupo));
+        display: grid;
+        place-items: center;
+        gap: 3px;
+        grid-auto-flow: column;
+        box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+      }
+
+      .bollo i {
+        width: 3.5px;
+        height: 14px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.92);
+      }
+
+      .bollo i.mezzo {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.6);
+      }
+
+      .marchio .nomi {
         min-width: 0;
       }
 
       .marchio b {
+        display: block;
         font-size: 0.95rem;
         font-weight: 650;
-        letter-spacing: -0.01em;
+        letter-spacing: -0.015em;
+        line-height: 1.25;
       }
 
       .marchio span {
-        color: var(--tenue);
-        font-size: 0.78rem;
+        display: block;
+        color: var(--lieve);
+        font-size: 0.76rem;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
-      /* Le quattro cifre del riepilogo. Sono il punto della pagina, e stanno in
-       * testata perché ci restino anche mentre si scorre l'elenco. */
-      .riepilogo {
-        display: flex;
-        gap: 6px;
+      nav {
         margin-left: auto;
-        flex-wrap: wrap;
-      }
-
-      .riepilogo .conto {
         display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 11px 6px 9px;
-        border: 1px solid var(--linea);
-        border-radius: 5px;
-        background: var(--scheda);
-        line-height: 1.15;
-      }
-
-      .riepilogo .conto b {
-        font-size: 1.15rem;
-        font-weight: 650;
-        font-variant-numeric: tabular-nums;
-      }
-
-      .riepilogo .conto span {
-        color: var(--smorzato);
-        font-size: 0.72rem;
-      }
-
-      .riepilogo .conto .segno {
-        font-size: 0.7rem;
-        line-height: 1;
-      }
-
-      .riepilogo .conto.vuoto {
-        opacity: 0.55;
-      }
-
-      /* ─── Il banco: l'elenco, e la casa aperta di fianco ─────────────── */
-      .banco {
-        max-width: 78rem;
-        margin-inline: auto;
-        padding: 18px 20px 40px;
-        display: grid;
-        grid-template-columns: minmax(0, 23rem) minmax(0, 1fr);
-        gap: 18px;
-        align-items: start;
-      }
-
-      /* ─── La barra delle case ───────────────────────────────────────── */
-      .filtri {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        margin-bottom: 10px;
-      }
-
-      .filtri button {
-        font: inherit;
-        font-size: 0.78rem;
-        color: var(--smorzato);
-        background: transparent;
-        border: 1px solid var(--linea);
+        gap: 4px;
+        padding: 4px;
+        background: var(--carta);
+        border: 1px solid var(--bordo);
         border-radius: 999px;
-        padding: 4px 11px;
-        cursor: pointer;
-      }
-
-      .filtri button:hover {
-        color: var(--inchiostro);
-        border-color: var(--tenue);
-      }
-
-      .filtri button[aria-pressed="true"] {
-        color: var(--azzurro);
-        background: var(--azzurro-velo);
-        border-color: var(--azzurro);
-      }
-
-      ul.barra {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        background: var(--scheda);
-        border: 1px solid var(--linea);
-        border-radius: 7px;
-        overflow: hidden;
         box-shadow: var(--ombra);
       }
 
-      ul.barra li + li {
-        border-top: 1px solid var(--filo);
+      nav button {
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 550;
+        color: var(--lieve);
+        background: transparent;
+        border: 0;
+        border-radius: 999px;
+        padding: 7px 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 7px;
       }
 
-      /* Una riga è un interruttore sulla barra: la striscia sul bordo dice
-       * come sta, e si legge in colonna senza leggere le parole. */
-      ul.barra button {
+      nav button:hover {
+        color: var(--notte);
+      }
+
+      nav button[aria-pressed="true"] {
+        color: #fff;
+        background: linear-gradient(145deg, var(--azzurro), var(--azzurro-scuro));
+        box-shadow: 0 1px 3px rgba(2, 132, 199, 0.35);
+      }
+
+      nav .quanti {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 1px 7px;
+        border-radius: 999px;
+        background: var(--alone-ambra);
+        color: var(--ambra);
+      }
+
+      nav button[aria-pressed="true"] .quanti {
+        background: rgba(255, 255, 255, 0.25);
+        color: #fff;
+      }
+
+      /* ─── L'impianto della pagina ────────────────────────────────────── */
+      main {
+        max-width: 80rem;
+        margin-inline: auto;
+        padding: 22px;
+      }
+
+      .titolone {
+        font-size: 1.6rem;
+        font-weight: 700;
+        letter-spacing: -0.028em;
+        margin: 0 0 4px;
+        text-wrap: balance;
+      }
+
+      .sottotitolo {
+        color: var(--lieve);
+        font-size: 0.92rem;
+        margin: 0 0 18px;
+        max-width: 46rem;
+      }
+
+      /* ─── La striscia dello stato, come sopra la Home della plancia ─── */
+      .striscia {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .tessera {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 13px 15px;
+        background: var(--carta);
+        border-radius: var(--raggio-piccolo);
+        box-shadow: var(--ombra);
+        text-align: left;
+        font: inherit;
+        color: inherit;
+        border: 1.5px solid transparent;
+        cursor: pointer;
+      }
+
+      .tessera[aria-pressed="true"] {
+        border-color: var(--azzurro);
+      }
+
+      .tessera .gettone {
+        width: 34px;
+        height: 34px;
+        flex: none;
+        border-radius: 11px;
+        display: grid;
+        place-items: center;
+        font-size: 0.8rem;
+      }
+
+      .tessera .numeri b {
+        display: block;
+        font-size: 1.3rem;
+        font-weight: 700;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
+      }
+
+      .tessera .numeri span {
+        display: block;
+        font-size: 0.74rem;
+        color: var(--lieve);
+        line-height: 1.3;
+      }
+
+      .gettone.posto {
+        background: var(--alone-bene);
+        color: var(--bene);
+      }
+
+      .gettone.guardare {
+        background: var(--alone-ambra);
+        color: var(--ambra);
+      }
+
+      .gettone.muta {
+        background: var(--alone-male);
+        color: var(--male);
+      }
+
+      .gettone.aperto {
+        background: var(--alone-azzurro);
+        color: var(--azzurro-cupo);
+      }
+
+      /* ─── Il banco: l'elenco e la casa aperta ───────────────────────── */
+      .banco {
+        display: grid;
+        grid-template-columns: minmax(0, 26rem) minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+
+      .fila {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+
+      /* ─── Una casa nell'elenco ──────────────────────────────────────── */
+      .casa {
+        position: relative;
         display: block;
         width: 100%;
         text-align: left;
         font: inherit;
         color: inherit;
-        background: transparent;
-        border: 0;
-        border-left: 3px solid transparent;
-        padding: 11px 13px 12px 12px;
+        background: var(--carta);
+        border: 1.5px solid transparent;
+        border-radius: var(--raggio-piccolo);
+        padding: 14px 15px 14px 20px;
         cursor: pointer;
+        box-shadow: var(--ombra);
+        overflow: hidden;
       }
 
-      ul.barra button:hover {
-        background: var(--velo);
+      /* La barretta: la stessa che la plancia mette a sinistra delle righe
+       * dei widget. Qui dice come sta la casa, e si legge in colonna senza
+       * leggere le parole. */
+      .casa::before {
+        content: "";
+        position: absolute;
+        left: 7px;
+        top: 14px;
+        bottom: 14px;
+        width: 4px;
+        border-radius: 3px;
+        background: var(--fioco);
       }
 
-      ul.barra button[aria-current="true"] {
-        background: var(--azzurro-velo);
+      .casa.posto::before {
+        background: var(--bene);
       }
 
-      ul.barra .posto {
-        border-left-color: var(--spia);
+      .casa.guardare::before {
+        background: var(--ambra);
       }
 
-      ul.barra .guardare {
-        border-left-color: var(--ottone);
+      .casa.muta::before {
+        background: var(--male);
       }
 
-      ul.barra .muta {
-        border-left-color: var(--allarme);
+      .casa.aperto::before {
+        background: var(--azzurro);
       }
 
-      ul.barra .aperto {
-        border-left-color: var(--tenue);
+      .casa[aria-current="true"] {
+        border-color: var(--azzurro);
+        box-shadow: var(--ombra-alta);
       }
 
-      .testa {
+      .capo {
         display: flex;
-        align-items: baseline;
-        gap: 8px;
+        align-items: center;
+        gap: 9px;
       }
 
-      .testa .nome {
-        font-size: 0.93rem;
-        font-weight: 600;
-        letter-spacing: -0.005em;
+      .capo .nome {
+        font-size: 0.97rem;
+        font-weight: 650;
+        letter-spacing: -0.012em;
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
-      .testa .quando {
+      .capo .quando {
         margin-left: auto;
         flex: none;
-        color: var(--tenue);
-        font-size: 0.72rem;
+        color: var(--fioco);
+        font-size: 0.75rem;
         font-variant-numeric: tabular-nums;
       }
 
-      .sottotesta {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        margin-top: 3px;
-        color: var(--tenue);
-        font-size: 0.72rem;
-      }
-
-      /* ─── Gli stati: forma + parola + colore, mai il colore da solo ─── */
-      .stato {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 0.69rem;
-        font-weight: 650;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        white-space: nowrap;
-        flex: none;
-      }
-
-      .stato .segno {
-        font-size: 0.85em;
-        line-height: 1;
-      }
-
-      .stato.posto {
-        color: var(--spia);
-      }
-
-      .stato.guardare {
-        color: var(--ottone);
-      }
-
-      .stato.muta {
-        color: var(--allarme);
-      }
-
-      .stato.aperto {
-        color: var(--tenue);
-      }
-
-      /* ─── Le pastiglie: quello che non va, una cosa per pastiglia ───── */
-      .pastiglie {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        margin-top: 8px;
-      }
-
+      /* ─── Le pastiglie tonde ────────────────────────────────────────── */
       .pastiglia {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        font-size: 0.72rem;
-        line-height: 1.3;
-        padding: 2px 7px;
-        border-radius: 3px;
-        background: var(--velo);
-        color: var(--smorzato);
+        gap: 5px;
+        font-size: 0.74rem;
+        font-weight: 600;
+        line-height: 1.35;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: var(--carta-alta);
+        color: var(--lieve);
         white-space: nowrap;
       }
 
-      .pastiglia.male {
-        background: var(--allarme-velo);
-        color: var(--allarme);
-      }
-
-      .pastiglia.attenta {
-        background: var(--ottone-velo);
-        color: var(--ottone);
-      }
-
+      .pastiglia.posto,
       .pastiglia.bene {
-        background: var(--spia-velo);
-        color: var(--spia);
+        background: var(--alone-bene);
+        color: var(--bene);
       }
 
-      .pastiglia .segno {
-        font-size: 0.85em;
+      .pastiglia.guardare,
+      .pastiglia.attenta {
+        background: var(--alone-ambra);
+        color: var(--ambra);
       }
 
-      /* ─── La striscia dei giorni ─────────────────────────────────────
-       *
-       * Quattordici barre, una per giorno, incolonnate fra una casa e l'altra.
-       * I giorni pieni sono verdi smorti e i buchi rossi: quello che si deve
-       * vedere da lontano non è che ha parlato — è la regola — ma quando non
-       * l'ha fatto. Sotto c'è scritto quante volte, perché una striscia di
-       * colori da sola non la legge chi i colori non li vede. */
+      .pastiglia.muta,
+      .pastiglia.male {
+        background: var(--alone-male);
+        color: var(--male);
+      }
+
+      .pastiglia.aperto {
+        background: var(--alone-azzurro);
+        color: var(--azzurro-cupo);
+      }
+
+      .pastiglie {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 9px;
+      }
+
+      .fianco {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 6px;
+        color: var(--fioco);
+        font-size: 0.75rem;
+      }
+
+      /* ─── La striscia dei quattordici giorni ────────────────────────── */
       .giorni {
         display: flex;
-        gap: 2px;
-        margin-top: 9px;
+        gap: 3px;
+        margin-top: 11px;
       }
 
       .giorni i {
         flex: 1;
-        height: 13px;
-        border-radius: 1px;
-        background: var(--pieno);
+        height: 14px;
+        border-radius: 3px;
+        background: var(--giorno-pieno);
       }
 
       .giorni.grande i {
-        height: 18px;
-        border-radius: 2px;
+        height: 24px;
+        border-radius: 5px;
       }
 
       .giorni i.mezza {
-        background: var(--ottone);
+        background: var(--ambra);
+        opacity: 0.75;
       }
 
       .giorni i.vuota {
-        background: var(--allarme);
+        background: var(--male);
       }
 
       .giorni i.prima {
-        background: transparent;
-        box-shadow: inset 0 0 0 1px var(--filo);
+        background: var(--bordo-tenue);
       }
 
       .giorniDice {
-        color: var(--tenue);
-        font-size: 0.7rem;
-        margin-top: 5px;
+        color: var(--fioco);
+        font-size: 0.73rem;
+        margin-top: 6px;
       }
 
-      /* ─── La casa aperta ─────────────────────────────────────────────── */
+      /* ─── Le schede della casa aperta ───────────────────────────────── */
       .scheda {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
         min-width: 0;
       }
 
       .riquadro {
-        background: var(--scheda);
-        border: 1px solid var(--linea);
-        border-radius: 7px;
-        padding: 16px 18px;
+        background: var(--carta);
+        border-radius: var(--raggio);
+        padding: 20px 22px;
         box-shadow: var(--ombra);
+      }
+
+      .riquadro.tinto {
+        background: linear-gradient(
+          160deg,
+          var(--alone-azzurro),
+          color-mix(in srgb, var(--alone-azzurro) 45%, var(--carta))
+        );
+        border: 1.5px solid color-mix(in srgb, var(--azzurro) 35%, transparent);
       }
 
       .indietro {
         display: none;
         font: inherit;
-        font-size: 0.82rem;
-        color: var(--azzurro);
+        font-size: 0.85rem;
+        font-weight: 550;
+        color: var(--azzurro-scuro);
         background: transparent;
         border: 0;
-        padding: 0 0 2px;
+        padding: 0;
         cursor: pointer;
         align-self: flex-start;
       }
 
-      .titolo {
-        display: flex;
-        align-items: baseline;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .titolo h2 {
+      h2 {
         margin: 0;
-        font-size: 1.3rem;
-        font-weight: 650;
-        letter-spacing: -0.02em;
+        font-size: 1.45rem;
+        font-weight: 700;
+        letter-spacing: -0.028em;
         text-wrap: balance;
       }
 
+      .titolo {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        flex-wrap: wrap;
+      }
+
       .perché {
-        color: var(--smorzato);
+        color: var(--lieve);
+        font-size: 0.9rem;
+        margin: 7px 0 0;
+      }
+
+      h3 {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--fioco);
+      }
+
+      .capoRiquadro {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 15px;
+      }
+
+      .capoRiquadro .conta {
+        margin-left: auto;
         font-size: 0.85rem;
-        margin-top: 5px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: var(--lieve);
       }
 
       .targa {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
-        gap: 12px 20px;
-        margin-top: 14px;
-        padding-top: 13px;
-        border-top: 1px solid var(--filo);
-      }
-
-      .targa div {
-        min-width: 0;
+        gap: 14px 22px;
+        margin-top: 18px;
+        padding-top: 17px;
+        border-top: 1px solid var(--bordo-tenue);
       }
 
       .targa dt {
-        color: var(--tenue);
+        color: var(--fioco);
         font-size: 0.68rem;
         text-transform: uppercase;
-        letter-spacing: 0.07em;
-        font-weight: 600;
+        letter-spacing: 0.08em;
+        font-weight: 700;
       }
 
       .targa dd {
-        margin: 2px 0 0;
-        font-size: 0.85rem;
+        margin: 3px 0 0;
+        font-size: 0.87rem;
         font-variant-numeric: tabular-nums;
       }
 
+      /* ─── I tasti ───────────────────────────────────────────────────── */
       .azioni {
         display: flex;
         flex-wrap: wrap;
-        gap: 7px;
-        margin-top: 15px;
+        gap: 8px;
+        margin-top: 18px;
       }
 
-      .azioni button {
+      .tasto {
         font: inherit;
-        font-size: 0.82rem;
-        color: var(--inchiostro);
-        background: var(--scheda);
-        border: 1px solid var(--linea);
-        border-radius: 5px;
-        padding: 7px 13px;
+        font-size: 0.86rem;
+        font-weight: 550;
+        color: var(--notte);
+        background: var(--carta);
+        border: 1px solid var(--bordo);
+        border-radius: 11px;
+        padding: 9px 16px;
         cursor: pointer;
       }
 
-      .azioni button:hover {
-        border-color: var(--tenue);
+      .tasto:hover {
+        border-color: var(--fioco);
       }
 
-      .azioni button.forte {
+      .tasto.forte {
         color: #fff;
-        background: var(--azzurro);
-        border-color: var(--azzurro);
+        background: linear-gradient(145deg, var(--azzurro), var(--azzurro-scuro));
+        border-color: transparent;
+        box-shadow: var(--ombra-tasto);
       }
 
-      :root[data-theme="dark"] .azioni button.forte,
-      .azioni button.forte {
-        color: var(--barra);
-      }
-
-      .azioni button.male {
-        color: var(--allarme);
-        border-color: var(--allarme);
+      .tasto.male {
+        color: var(--male);
+        border-color: color-mix(in srgb, var(--male) 40%, transparent);
         background: transparent;
       }
 
-      h3 {
-        margin: 0;
-        font-size: 0.69rem;
-        font-weight: 650;
-        text-transform: uppercase;
-        letter-spacing: 0.09em;
-        color: var(--tenue);
+      .tasto.grande {
+        font-size: 0.95rem;
+        padding: 12px 22px;
+        border-radius: 13px;
       }
 
-      .capoRiquadro {
-        display: flex;
-        align-items: baseline;
-        gap: 10px;
-        margin-bottom: 13px;
-      }
-
-      .capoRiquadro .conta {
-        margin-left: auto;
-        font-size: 0.8rem;
-        font-weight: 600;
-        font-variant-numeric: tabular-nums;
-        color: var(--smorzato);
-      }
-
-      /* Il misuratore del collaudo: sette caselle, una per spunta. */
+      /* ─── Il misuratore del collaudo ────────────────────────────────── */
       .misura {
         display: flex;
-        gap: 3px;
-        margin-bottom: 14px;
+        gap: 4px;
+        margin-bottom: 16px;
       }
 
       .misura i {
         flex: 1;
-        height: 5px;
-        border-radius: 1px;
-        background: var(--linea);
+        height: 7px;
+        border-radius: 4px;
+        background: var(--alone-ambra);
       }
 
       .misura i.fatta {
-        background: var(--spia);
-      }
-
-      .misura i.manca {
-        background: var(--ottone);
-        opacity: 0.5;
+        background: var(--bene);
       }
 
       ul.spunte {
@@ -680,33 +769,35 @@
 
       ul.spunte li {
         display: flex;
-        align-items: baseline;
-        gap: 10px;
-        padding: 7px 0;
-        font-size: 0.87rem;
+        align-items: center;
+        gap: 11px;
+        padding: 9px 0;
+        font-size: 0.89rem;
       }
 
       ul.spunte li + li {
-        border-top: 1px solid var(--filo);
+        border-top: 1px solid var(--bordo-tenue);
       }
 
-      ul.spunte .segno {
+      ul.spunte .bollino {
         flex: none;
-        width: 1em;
-        text-align: center;
-        font-size: 0.85em;
+        width: 21px;
+        height: 21px;
+        border-radius: 7px;
+        display: grid;
+        place-items: center;
+        font-size: 0.68rem;
+        font-weight: 700;
       }
 
-      ul.spunte .fatta .segno {
-        color: var(--spia);
+      ul.spunte .fatta .bollino {
+        background: var(--alone-bene);
+        color: var(--bene);
       }
 
-      ul.spunte .manca .segno {
-        color: var(--ottone);
-      }
-
-      ul.spunte .manca .cosa {
-        font-weight: 550;
+      ul.spunte .manca .bollino {
+        background: var(--alone-ambra);
+        color: var(--ambra);
       }
 
       ul.spunte .cosa {
@@ -714,81 +805,86 @@
         min-width: 0;
       }
 
+      ul.spunte .manca .cosa {
+        font-weight: 600;
+      }
+
       ul.spunte .dettaglio {
-        color: var(--tenue);
-        font-size: 0.78rem;
+        color: var(--fioco);
+        font-size: 0.79rem;
         text-align: right;
         font-variant-numeric: tabular-nums;
       }
 
       .verdetto {
-        margin-top: 13px;
-        padding-top: 12px;
-        border-top: 1px solid var(--filo);
-        font-size: 0.82rem;
-        color: var(--smorzato);
+        margin: 16px 0 0;
+        padding-top: 15px;
+        border-top: 1px solid var(--bordo-tenue);
+        font-size: 0.85rem;
+        color: var(--lieve);
       }
 
-      /* Le misure della salute: quattro caselle, non quattro righe di testo. */
+      /* ─── Le misure della salute ────────────────────────────────────── */
       .misure {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
-        gap: 1px;
-        margin-top: 15px;
-        background: var(--filo);
-        border: 1px solid var(--filo);
-        border-radius: 5px;
-        overflow: hidden;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        gap: 10px;
+        margin-top: 17px;
       }
 
-      .misure div {
-        background: var(--scheda);
-        padding: 10px 12px;
+      .misure > div {
+        background: var(--carta-alta);
+        border-radius: var(--raggio-piccolo);
+        padding: 12px 14px;
       }
 
       .misure dt {
-        color: var(--tenue);
+        color: var(--fioco);
         font-size: 0.68rem;
         text-transform: uppercase;
-        letter-spacing: 0.07em;
-        font-weight: 600;
+        letter-spacing: 0.08em;
+        font-weight: 700;
       }
 
       .misure dd {
-        margin: 3px 0 0;
-        font-size: 1.05rem;
-        font-weight: 600;
+        margin: 5px 0 0;
+        font-size: 1.28rem;
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
         font-variant-numeric: tabular-nums;
       }
 
       .misure dd small {
         display: block;
-        font-size: 0.72rem;
-        font-weight: 400;
-        color: var(--tenue);
-        margin-top: 1px;
+        font-size: 0.73rem;
+        font-weight: 450;
+        letter-spacing: 0;
+        color: var(--fioco);
+        margin-top: 3px;
       }
 
       .misure dd.male {
-        color: var(--allarme);
+        color: var(--male);
       }
 
       .misure dd.attenta {
-        color: var(--ottone);
+        color: var(--ambra);
       }
 
+      /* ─── Le versioni ───────────────────────────────────────────────── */
       table.versioni {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.87rem;
+        font-size: 0.88rem;
       }
 
       table.versioni td {
-        padding: 7px 0;
+        padding: 9px 0;
       }
 
       table.versioni tr + tr td {
-        border-top: 1px solid var(--filo);
+        border-top: 1px solid var(--bordo-tenue);
       }
 
       table.versioni td.numero {
@@ -797,46 +893,37 @@
         white-space: nowrap;
       }
 
-      table.versioni .nuova {
-        display: inline-block;
-        margin-left: 7px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        padding: 1px 6px;
-        border-radius: 3px;
-        background: var(--ottone-velo);
-        color: var(--ottone);
-      }
-
       .impronte {
         display: flex;
         flex-wrap: wrap;
-        gap: 5px;
-        margin-bottom: 11px;
+        gap: 6px;
+        margin-bottom: 13px;
       }
 
       .impronte span {
         font-family: ui-monospace, "SF Mono", Menlo, monospace;
-        font-size: 0.78rem;
-        padding: 3px 8px;
-        border-radius: 3px;
-        background: var(--allarme-velo);
-        color: var(--allarme);
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 5px 11px;
+        border-radius: 9px;
+        background: var(--alone-male);
+        color: var(--male);
       }
 
       .nota {
-        color: var(--smorzato);
-        font-size: 0.8rem;
-        line-height: 1.55;
-        max-width: 42rem;
+        color: var(--lieve);
+        font-size: 0.85rem;
+        line-height: 1.6;
+        max-width: 44rem;
+        margin: 0;
       }
 
       details.cartolina summary {
         cursor: pointer;
         list-style: none;
         display: flex;
-        align-items: baseline;
-        gap: 8px;
+        align-items: center;
+        gap: 12px;
       }
 
       details.cartolina summary::-webkit-details-marker {
@@ -846,11 +933,9 @@
       details.cartolina summary::after {
         content: "mostra";
         margin-left: auto;
-        font-size: 0.78rem;
-        color: var(--azzurro);
-        text-transform: none;
-        letter-spacing: 0;
-        font-weight: 500;
+        font-size: 0.82rem;
+        font-weight: 550;
+        color: var(--azzurro-scuro);
       }
 
       details.cartolina[open] summary::after {
@@ -858,28 +943,240 @@
       }
 
       details.cartolina pre {
-        margin: 13px 0 0;
-        padding: 13px;
-        background: var(--velo);
-        border-radius: 5px;
+        margin: 15px 0 0;
+        padding: 15px;
+        background: var(--carta-alta);
+        border-radius: var(--raggio-piccolo);
         overflow-x: auto;
         font-family: ui-monospace, "SF Mono", Menlo, monospace;
-        font-size: 0.75rem;
-        line-height: 1.6;
-        color: var(--smorzato);
+        font-size: 0.76rem;
+        line-height: 1.65;
+        color: var(--lieve);
       }
 
-      footer {
-        max-width: 78rem;
-        margin-inline: auto;
-        padding: 0 20px 34px;
-        color: var(--tenue);
+      /* ─── L'abbinamento ─────────────────────────────────────────────── */
+      .abbina {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+
+      .colonna {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-width: 0;
+      }
+
+      /* Il codice: la cosa più grande della schermata, perché è la cosa che
+       * si deve copiare stando in piedi in casa di qualcun altro. */
+      .codice {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 16px 0 12px;
+        padding: 16px 18px;
+        background: var(--carta);
+        border-radius: var(--raggio-piccolo);
+        box-shadow: var(--ombra);
+      }
+
+      .codice .cifre {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: clamp(1.1rem, 4.6vw, 1.55rem);
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .codice .copia {
+        margin-left: auto;
+      }
+
+      .scadenza {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 0.83rem;
+        color: var(--lieve);
+      }
+
+      .scadenza b {
+        font-variant-numeric: tabular-nums;
+        color: var(--notte);
+      }
+
+      /* I passi: numerati perché sono davvero una sequenza — il codice si fa
+       * qui, si incolla là, e la cartolina arriva dopo. */
+      ol.passi {
+        list-style: none;
+        counter-reset: passo;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      ol.passi li {
+        counter-increment: passo;
+        display: flex;
+        gap: 13px;
+        font-size: 0.89rem;
+      }
+
+      ol.passi li > span {
+        min-width: 0;
+      }
+
+      ol.passi li::before {
+        content: counter(passo);
+        flex: none;
+        width: 25px;
+        height: 25px;
+        border-radius: 9px;
+        background: var(--alone-azzurro);
+        color: var(--azzurro-cupo);
+        display: grid;
+        place-items: center;
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+
+      ol.passi b {
+        font-weight: 650;
+      }
+
+      .strada {
+        display: inline-block;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 0.8rem;
+        padding: 1px 7px;
+        border-radius: 7px;
+        background: var(--carta-alta);
+        color: var(--notte);
+      }
+
+      /* Le righe in attesa e appena arrivate. */
+      ul.righe {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      ul.righe li {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 12px 0;
+        flex-wrap: wrap;
+      }
+
+      ul.righe li + li {
+        border-top: 1px solid var(--bordo-tenue);
+      }
+
+      ul.righe .che {
+        min-width: 0;
+        flex: 1;
+      }
+
+      ul.righe .che b {
+        display: block;
+        font-size: 0.88rem;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+      }
+
+      ul.righe .che span {
+        display: block;
+        color: var(--fioco);
         font-size: 0.76rem;
       }
 
-      /* ─── Stretto: una cosa per volta ───────────────────────────────── */
-      @media (max-width: 62rem) {
-        .banco {
+      .vuoto {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 16px 0 4px;
+        color: var(--fioco);
+        font-size: 0.86rem;
+      }
+
+      .battito {
+        width: 9px;
+        height: 9px;
+        flex: none;
+        border-radius: 999px;
+        background: var(--bene);
+        box-shadow: 0 0 0 4px var(--alone-bene);
+        animation: respira 2.4s ease-in-out infinite;
+      }
+
+      @keyframes respira {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.35;
+        }
+      }
+
+      input[type="text"] {
+        font: inherit;
+        font-size: 0.87rem;
+        color: var(--notte);
+        background: var(--carta-alta);
+        border: 1px solid var(--bordo);
+        border-radius: 11px;
+        padding: 9px 13px;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .avvertenza {
+        display: flex;
+        gap: 11px;
+        margin-top: 16px;
+        padding: 14px 16px;
+        background: var(--alone-ambra);
+        border-radius: var(--raggio-piccolo);
+        font-size: 0.85rem;
+        line-height: 1.55;
+        color: var(--notte);
+      }
+
+      .avvertenza .gettone {
+        width: 25px;
+        height: 25px;
+        flex: none;
+        border-radius: 9px;
+        background: color-mix(in srgb, var(--ambra) 22%, transparent);
+        color: var(--ambra);
+        display: grid;
+        place-items: center;
+        font-size: 0.72rem;
+        font-weight: 700;
+      }
+
+      footer {
+        max-width: 80rem;
+        margin-inline: auto;
+        padding: 6px 22px 40px;
+        color: var(--fioco);
+        font-size: 0.79rem;
+      }
+
+      /* ─── Stretto ───────────────────────────────────────────────────── */
+      @media (max-width: 64rem) {
+        .banco,
+        .abbina {
           grid-template-columns: minmax(0, 1fr);
         }
 
@@ -887,7 +1184,8 @@
           display: block;
         }
 
-        .banco.aperta > .fila {
+        .banco.aperta > .fila,
+        .banco.aperta > .striscia {
           display: none;
         }
 
@@ -898,27 +1196,27 @@
 
       @media (max-width: 34rem) {
         .testata,
-        .banco,
+        main,
         footer {
           padding-inline: 16px;
         }
 
-        .riepilogo {
+        nav {
           margin-left: 0;
           width: 100%;
-        }
-
-        .riepilogo .conto {
-          flex: 1;
-          min-width: 0;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 1px;
-          padding: 7px 9px;
+          justify-content: center;
         }
 
         .riquadro {
-          padding: 14px 15px;
+          padding: 17px 16px;
+        }
+
+        .titolone {
+          font-size: 1.4rem;
+        }
+
+        h2 {
+          font-size: 1.25rem;
         }
 
         ul.spunte li {
@@ -927,13 +1225,16 @@
 
         ul.spunte .dettaglio {
           width: 100%;
-          padding-left: calc(1em + 10px);
+          padding-left: 32px;
           text-align: left;
         }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        * {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
           transition: none !important;
         }
       }
@@ -943,20 +1244,17 @@
     <header>
       <div class="testata">
         <div class="marchio">
-          <b>Il quadro</b>
-          <span id="chi"></span>
+          <span class="bollo" aria-hidden="true"><i></i><i class="mezzo"></i><i></i></span>
+          <span class="nomi">
+            <b>Il quadro</b>
+            <span id="chi"></span>
+          </span>
         </div>
-        <div class="riepilogo" id="riepilogo"></div>
+        <nav id="nav"></nav>
       </div>
     </header>
 
-    <div class="banco" id="banco">
-      <section class="fila">
-        <div class="filtri" id="filtri"></div>
-        <ul class="barra" id="elenco"></ul>
-      </section>
-      <section class="scheda" id="scheda"></section>
-    </div>
+    <main id="dove"></main>
 
     <footer>
       Bozza con otto case finte: nessuna esiste, e questa pagina non chiama nessuno. Quello che
@@ -1170,6 +1468,28 @@
         },
       ];
 
+      /* Gli inviti aperti: fatti dal quadro, non ancora usati da nessuna casa.
+       * `scadeFra` sono i secondi che restavano quando la pagina si è aperta. */
+      const INVITI = [
+        { codice: "K7M2-9XQF-3BHT-R4VN", fattoIl: "oggi alle 11:29", scadeFra: 782, per: "" },
+        {
+          codice: "P4WD-8JHC-52NK-TQY6",
+          fattoIl: "oggi alle 11:06",
+          scadeFra: 194,
+          per: "Villa Aurora — 2º piano",
+        },
+      ];
+
+      /* Le case che hanno usato un invito e non hanno ancora un nome: sono
+       * arrivate, mandano, e aspettano solo la targhetta. */
+      const APPENA = [
+        {
+          casa: "casa_d71f0b93ac2e4856b0197fe3d5c28a64",
+          arrivataIl: "6 minuti fa",
+          ha: "2026.9.1",
+        },
+      ];
+
       /* Adesso, per questa bozza: qualche minuto dopo l'ultima cartolina, così
        * i «3 minuti fa» tornano sempre invece di invecchiare col file. */
       const ADESSO = new Date("2026-09-18T09:44:00Z").getTime();
@@ -1379,7 +1699,7 @@
         );
 
       const spia = (stato) =>
-        `<span class="stato ${stato.chiave}"><span class="segno" aria-hidden="true">${stato.segno}</span>${testo(stato.parola)}</span>`;
+        `<span class="pastiglia ${stato.chiave}"><span aria-hidden="true">${stato.segno}</span>${testo(stato.parola)}</span>`;
 
       /* La striscia: `P` giorno pieno, `M` a metà, `V` muta, spazio «non c'era
        * ancora». */
@@ -1403,19 +1723,6 @@
         return `<div class="giorni${grande ? " grande" : ""}" role="img" aria-label="${testo(dice)}">${celle}</div><div class="giorniDice">${testo(dice)}</div>`;
       }
 
-      let filtro = "tutte";
-      let aperta = 0;
-      let suTelefonoApro = false;
-
-      const banco = document.getElementById("banco");
-      const doveRiepilogo = document.getElementById("riepilogo");
-      const doveFiltri = document.getElementById("filtri");
-      const doveElenco = document.getElementById("elenco");
-      const doveScheda = document.getElementById("scheda");
-
-      document.getElementById("chi").textContent =
-        `Impianti Rossi · ${plurale(CASE.length, "casa", "case")}`;
-
       const LE_FILE = [
         ["muta", "■", "mute"],
         ["guardare", "▲", "da guardare"],
@@ -1423,42 +1730,39 @@
         ["posto", "●", "a posto"],
       ];
 
+      let schermata = "case";
+      let filtro = "tutte";
+      let aperta = 0;
+      let suTelefonoApro = false;
+
+      const dove = document.getElementById("dove");
+      const doveNav = document.getElementById("nav");
+
+      document.getElementById("chi").textContent =
+        `Impianti Rossi · ${plurale(CASE.length, "impianto", "impianti")}`;
+
       function disegna() {
-        const conStato = CASE.map((una, indice) => ({ una, indice, stato: loStato(una) }));
-        const quante = (chiave) => conStato.filter((r) => r.stato.chiave === chiave).length;
-
-        doveRiepilogo.innerHTML = LE_FILE.map(
-          ([chiave, segno, parola]) => `
-            <div class="conto${quante(chiave) === 0 ? " vuoto" : ""}">
-              <span class="stato ${chiave}"><span class="segno" aria-hidden="true">${segno}</span></span>
-              <b>${quante(chiave)}</b>
-              <span>${testo(parola)}</span>
-            </div>`,
-        ).join("");
-
-        doveFiltri.innerHTML = [["tutte", `Tutte ${conStato.length}`]]
-          .concat(LE_FILE.map(([chiave, , parola]) => [chiave, `${parola} ${quante(chiave)}`]))
+        doveNav.innerHTML = [
+          ["case", "Le case", 0],
+          ["abbina", "Abbina", INVITI.length + APPENA.length],
+        ]
           .map(
-            ([chiave, parola]) =>
-              `<button type="button" data-filtro="${chiave}" aria-pressed="${filtro === chiave}">${testo(parola)}</button>`,
+            ([quale, parola, quanti]) => `
+            <button type="button" data-schermata="${quale}" aria-pressed="${schermata === quale}">
+              ${testo(parola)}${quanti ? `<span class="quanti">${quanti}</span>` : ""}
+            </button>`,
           )
           .join("");
 
-        const viste = conStato.filter((r) => filtro === "tutte" || r.stato.chiave === filtro);
-        doveElenco.innerHTML = viste
-          .map(({ una, indice, stato }) => unaRiga(una, indice, stato))
-          .join("");
+        dove.innerHTML = schermata === "case" ? leCase() : lAbbinamento();
 
-        banco.classList.toggle("aperta", suTelefonoApro);
-        doveScheda.innerHTML = ilDettaglio(CASE[aperta], loStato(CASE[aperta]));
-
-        doveFiltri.querySelectorAll("[data-filtro]").forEach((tasto) => {
+        dove.querySelectorAll("[data-filtro]").forEach((tasto) => {
           tasto.onclick = () => {
-            filtro = tasto.dataset.filtro;
+            filtro = filtro === tasto.dataset.filtro ? "tutte" : tasto.dataset.filtro;
             disegna();
           };
         });
-        doveElenco.querySelectorAll("[data-casa]").forEach((tasto) => {
+        dove.querySelectorAll("[data-casa]").forEach((tasto) => {
           tasto.onclick = () => {
             aperta = Number(tasto.dataset.casa);
             suTelefonoApro = true;
@@ -1466,43 +1770,98 @@
             window.scrollTo({ top: 0 });
           };
         });
-        const torna = doveScheda.querySelector("[data-indietro]");
+        const torna = dove.querySelector("[data-indietro]");
         if (torna)
           torna.onclick = () => {
             suTelefonoApro = false;
             disegna();
           };
+        avviaGliOrologi();
       }
 
-      function unaRiga(casa, indice, stato) {
+      doveNav.onclick = (evento) => {
+        const tasto = evento.target.closest("[data-schermata]");
+        if (!tasto) return;
+        schermata = tasto.dataset.schermata;
+        suTelefonoApro = false;
+        disegna();
+        window.scrollTo({ top: 0 });
+      };
+
+      /* ─── Schermata: le case ─────────────────────────────────────────── */
+      function leCase() {
+        const conStato = CASE.map((una, indice) => ({ una, indice, stato: loStato(una) }));
+        const quante = (chiave) => conStato.filter((r) => r.stato.chiave === chiave).length;
+        const viste = conStato.filter((r) => filtro === "tutte" || r.stato.chiave === filtro);
+
+        return `
+          <div class="banco${suTelefonoApro ? " aperta" : ""}">
+            <div class="striscia">
+              ${LE_FILE.map(
+                ([chiave, segno, parola]) => `
+                <button
+                  type="button"
+                  class="tessera"
+                  data-filtro="${chiave}"
+                  aria-pressed="${filtro === chiave}"
+                >
+                  <span class="gettone ${chiave}" aria-hidden="true">${segno}</span>
+                  <span class="numeri">
+                    <b>${quante(chiave)}</b>
+                    <span>${testo(parola)}</span>
+                  </span>
+                </button>`,
+              ).join("")}
+            </div>
+
+            <div class="fila">
+              ${
+                viste.length
+                  ? viste.map(({ una, indice, stato }) => unaCasa(una, indice, stato)).join("")
+                  : '<p class="nota">Nessuna casa in questa fila. Premi di nuovo la tessera per vederle tutte.</p>'
+              }
+            </div>
+
+            <div class="scheda">
+              ${ilDettaglio(CASE[aperta], loStato(CASE[aperta]))}
+            </div>
+          </div>
+        `;
+      }
+
+      function unaCasa(casa, indice, stato) {
         const c = casa.carta;
         return `
-          <li>
-            <button
-              type="button"
-              class="${stato.chiave}"
-              data-casa="${indice}"
-              aria-current="${indice === aperta}"
-            >
-              <div class="testa">
-                <span class="nome">${testo(casa.nome)}</span>
-                <span class="quando">${testo(daQuanto(c.quando))}</span>
-              </div>
-              <div class="sottotesta">
-                ${spia(stato)}
-                <span class="mono">${testo(c.casa.slice(5, 13))}</span>
-              </div>
-              <div class="pastiglie">
-                ${lePastiglie(c)
-                  .map(
-                    ([parola, come]) =>
-                      `<span class="pastiglia ${come}">${come === "male" || come === "attenta" ? '<span class="segno" aria-hidden="true">▲</span>' : ""}${testo(parola)}</span>`,
-                  )
-                  .join("")}
-              </div>
-              ${laStriscia(casa.giorni)}
-            </button>
-          </li>
+          <button
+            type="button"
+            class="casa ${stato.chiave}"
+            data-casa="${indice}"
+            aria-current="${indice === aperta}"
+          >
+            <div class="capo">
+              <span class="nome">${testo(casa.nome)}</span>
+              <span class="quando">${testo(daQuanto(c.quando))}</span>
+            </div>
+            <div class="fianco">
+              ${spia(stato)}
+              <span class="mono">${testo(c.casa.slice(5, 13))}</span>
+            </div>
+            <div class="pastiglie">
+              ${(() => {
+                const tutte = lePastiglie(c);
+                const viste = tutte.slice(0, 3);
+                const restano = tutte.length - viste.length;
+                return (
+                  viste
+                    .map(
+                      ([parola, come]) => `<span class="pastiglia ${come}">${testo(parola)}</span>`,
+                    )
+                    .join("") + (restano ? `<span class="pastiglia">+${restano}</span>` : "")
+                );
+              })()}
+            </div>
+            ${laStriscia(casa.giorni)}
+          </button>
         `;
       }
 
@@ -1580,31 +1939,31 @@
               </div>
             </dl>
             <div class="azioni">
-              <button type="button" class="forte">Apri questa casa nell'app</button>
-              <button type="button">Stampa il verbale</button>
-              <button type="button">Rinomina</button>
-              <button type="button" class="male">Non seguirla più</button>
+              <button type="button" class="tasto forte">Apri questa casa nell'app</button>
+              <button type="button" class="tasto">Stampa il verbale</button>
+              <button type="button" class="tasto">Rinomina</button>
+              <button type="button" class="tasto male">Non seguirla più</button>
             </div>
           </section>
 
           <section class="riquadro">
             <div class="capoRiquadro">
               <h3>Il collaudo</h3>
-              <span class="conta num">${collaudo.fatte}/${collaudo.quante}</span>
+              <span class="conta">${collaudo.fatte}/${collaudo.quante}</span>
             </div>
             <div
               class="misura"
               role="img"
               aria-label="${collaudo.fatte} spunte su ${collaudo.quante}"
             >
-              ${collaudo.spunte.map((una) => `<i class="${una.fatta ? "fatta" : "manca"}"></i>`).join("")}
+              ${collaudo.spunte.map((una) => `<i class="${una.fatta ? "fatta" : ""}"></i>`).join("")}
             </div>
             <ul class="spunte">
               ${collaudo.spunte
                 .map(
                   (una) => `
                 <li class="${una.fatta ? "fatta" : "manca"}">
-                  <span class="segno" aria-hidden="true">${una.fatta ? "✓" : "▲"}</span>
+                  <span class="bollino" aria-hidden="true">${una.fatta ? "✓" : "▲"}</span>
                   <span class="cosa"
                     >${testo(una.cosa)}<span class="via">${una.fatta ? " — fatta" : " — manca"}</span></span
                   >
@@ -1661,7 +2020,7 @@
                 <tr>
                   <td>${testo(che)}</td>
                   <td class="numero">
-                    ${testo(quale)}${nuova ? '<span class="nuova">c&#39;è la nuova</span>' : ""}
+                    ${testo(quale)}${nuova ? '<span class="pastiglia attenta" style="margin-left:8px">c&#39;è la nuova</span>' : ""}
                   </td>
                 </tr>`,
                 )
@@ -1673,7 +2032,7 @@
             <details class="cartolina">
               <summary><h3>La cartolina, come è arrivata</h3></summary>
               <pre>${testo(JSON.stringify(c, null, 2))}</pre>
-              <p class="nota" style="margin-top: 12px">
+              <p class="nota" style="margin-top: 14px">
                 Questo è <strong>tutto</strong> quello che questa casa manda.
                 Nessun nome di entità, nessuna stanza, nessuna persona, nessuno
                 stato di nessun sensore, nessun indirizzo. Lo stesso testo,
@@ -1684,6 +2043,210 @@
             </details>
           </section>
         `;
+      }
+
+      /* ─── Schermata: l'abbinamento ───────────────────────────────────
+       *
+       * Come una casa entra in questo quadro. È l'altra metà del lavoro, e
+       * ricalca quello che gdahome fa già per abbinare un telefono: un codice
+       * che vive pochi minuti, si usa una volta sola, e lascia dietro di sé una
+       * chiave che vale per quella casa e per nessun'altra.
+       *
+       * Il verso è quello che è per un motivo. Non è il quadro che va a cercare
+       * le case: è la casa che si presenta. Un quadro che andasse a bussare
+       * dovrebbe sapere dove sono, e le case di gdahome un indirizzo pubblico
+       * non ce l'hanno — è tutto il punto del ponte.
+       * ─────────────────────────────────────────────────────────────────── */
+      function lAbbinamento() {
+        const primo = INVITI[0];
+
+        return `
+          <h1 class="titolone">Abbina un impianto</h1>
+          <p class="sottotitolo">
+            Un codice che vale <b>quindici minuti</b> e <b>una casa sola</b>. Si
+            fa qui, si incolla nell'add-on in casa del cliente, e da quel momento
+            quella casa manda al quadro la sua cartolina — e nient'altro.
+          </p>
+
+          <div class="abbina">
+            <div class="colonna">
+              <section class="riquadro tinto">
+                <div class="capoRiquadro"><h3>Il codice di adesso</h3></div>
+                <div class="codice">
+                  <span class="cifre">${testo(primo.codice)}</span>
+                  <button type="button" class="tasto copia">Copia</button>
+                </div>
+                <div class="scadenza">
+                  <span class="battito" aria-hidden="true"></span>
+                  Scade fra <b data-orologio="${primo.scadeFra}">—</b> · fatto ${testo(primo.fattoIl)}
+                </div>
+
+                <ol class="passi" style="margin-top: 20px">
+                  <li>
+                    <span>
+                      In casa del cliente, apri Home Assistant e vai in
+                      <span class="strada">Impostazioni → Add-on → gdahome → Configurazione</span>.
+                    </span>
+                  </li>
+                  <li>
+                    <span>
+                      Incolla il codice nella casella <b>quadro</b> e premi
+                      <b>Salva</b>. L'add-on si riavvia da solo.
+                    </span>
+                  </li>
+                  <li>
+                    <span>
+                      Entro un minuto la casa compare qui sotto, in
+                      <b>appena arrivate</b>. Le dai un nome e hai finito.
+                    </span>
+                  </li>
+                </ol>
+
+                <div class="azioni">
+                  <button type="button" class="tasto forte grande">Fai un altro codice</button>
+                  <button type="button" class="tasto grande">Scrivi per chi è</button>
+                </div>
+              </section>
+
+              <section class="riquadro">
+                <div class="capoRiquadro">
+                  <h3>Appena arrivate</h3>
+                  <span class="conta">${APPENA.length}</span>
+                </div>
+                ${
+                  APPENA.length
+                    ? `<ul class="righe">
+                        ${APPENA.map(
+                          (una) => `
+                          <li>
+                            <span class="che">
+                              <b class="mono">${testo(una.casa.slice(0, 22))}…</b>
+                              <span>arrivata ${testo(una.arrivataIl)} · Home Assistant ${testo(una.ha)}</span>
+                            </span>
+                            <input
+                              type="text"
+                              id="nome-${testo(una.casa.slice(5, 13))}"
+                              placeholder="Come la chiami?"
+                              aria-label="Il nome di questa casa"
+                            />
+                            <button type="button" class="tasto forte">Tienila</button>
+                          </li>`,
+                        ).join("")}
+                      </ul>
+                      <p class="nota" style="margin-top: 14px">
+                        Il nome lo scrivi tu e resta qui: la casa non lo manda e
+                        non lo saprà mai. È l'unica cosa in questo quadro che
+                        parla di una persona, e sta sulla tua macchina perché con
+                        quella persona il contratto ce l'hai tu.
+                      </p>`
+                    : `<div class="vuoto">
+                        <span class="battito" aria-hidden="true"></span>
+                        Nessuna casa in arrivo. Quando una userà il codice, la
+                        vedi comparire qui.
+                      </div>`
+                }
+              </section>
+            </div>
+
+            <div class="colonna">
+              <section class="riquadro">
+                <div class="capoRiquadro">
+                  <h3>Codici in attesa</h3>
+                  <span class="conta">${INVITI.length}</span>
+                </div>
+                <ul class="righe">
+                  ${INVITI.map(
+                    (uno) => `
+                    <li>
+                      <span class="che">
+                        <b class="mono">${testo(uno.codice)}</b>
+                        <span>${uno.per ? `${testo(uno.per)} · ` : ""}fatto ${testo(uno.fattoIl)}</span>
+                      </span>
+                      <span class="pastiglia attenta">
+                        scade fra <b data-orologio="${uno.scadeFra}">—</b>
+                      </span>
+                      <button type="button" class="tasto male">Annulla</button>
+                    </li>`,
+                  ).join("")}
+                </ul>
+                <div class="avvertenza">
+                  <span class="gettone" aria-hidden="true">!</span>
+                  <span>
+                    Un codice che scade non fa danni: semplicemente non apre più
+                    niente. Se ne fai uno e poi cambi idea, annullalo — finché è
+                    vivo, chiunque ce l'abbia può far entrare <em>una</em> casa
+                    in questo quadro.
+                  </span>
+                </div>
+              </section>
+
+              <section class="riquadro">
+                <div class="capoRiquadro"><h3>Come funziona, in breve</h3></div>
+                <ul class="spunte">
+                  <li class="fatta">
+                    <span class="bollino" aria-hidden="true">✓</span>
+                    <span class="cosa">
+                      <b>Il codice si brucia.</b> Appena una casa lo usa, non vale
+                      più per nessun'altra: quella casa riceve una chiave sua, e
+                      da lì in poi è con quella che si presenta.
+                    </span>
+                  </li>
+                  <li class="fatta">
+                    <span class="bollino" aria-hidden="true">✓</span>
+                    <span class="cosa">
+                      <b>Si stacca da due parti.</b> Tu con «non seguirla più», e
+                      chi ci abita dalla console dell'add-on, dove legge in chiaro
+                      l'ultima cartolina spedita e ha lì il tasto per smettere.
+                    </span>
+                  </li>
+                  <li class="fatta">
+                    <span class="bollino" aria-hidden="true">✓</span>
+                    <span class="cosa">
+                      <b>Il quadro ascolta e non parla.</b> Non può comandare
+                      niente in nessuna casa, e non è una dimenticanza: per
+                      entrare c'è l'app, col suo segno, che il cliente toglie con
+                      un bottone.
+                    </span>
+                  </li>
+                  <li class="fatta">
+                    <span class="bollino" aria-hidden="true">✓</span>
+                    <span class="cosa">
+                      <b>Non passa dal centralino.</b> La cartolina va dalla casa
+                      al tuo quadro e basta: su
+                      <span class="strada">tramite.gdahome.org</span> non ci
+                      finisce niente.
+                    </span>
+                  </li>
+                </ul>
+              </section>
+            </div>
+          </div>
+        `;
+      }
+
+      /* Gli orologi delle scadenze. Un codice che scade è la cosa che fa
+       * sbagliare una installazione — si fa il codice, si sale in macchina, si
+       * arriva e non vale più — quindi quanto gli resta si vede, e si muove. */
+      let ticchettio = null;
+
+      function avviaGliOrologi() {
+        if (ticchettio) clearInterval(ticchettio);
+        const quadranti = [...dove.querySelectorAll("[data-orologio]")];
+        if (!quadranti.length) return;
+        const partiti = quadranti.map((q) => ({
+          q,
+          fino: Date.now() + Number(q.dataset.orologio) * 1000,
+        }));
+        const gira = () => {
+          for (const { q, fino } of partiti) {
+            const restano = Math.max(0, Math.round((fino - Date.now()) / 1000));
+            const minuti = String(Math.floor(restano / 60)).padStart(2, "0");
+            const secondi = String(restano % 60).padStart(2, "0");
+            q.textContent = restano ? `${minuti}:${secondi}` : "scaduto";
+          }
+        };
+        gira();
+        ticchettio = setInterval(gira, 1000);
       }
 
       disegna();
