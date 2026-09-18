@@ -59,6 +59,16 @@ import { ilBackup, leBatterie, leEntita } from "./salute.js";
  * Il quadro e' uno solo e sta su una macchina di gdahome. Chi installa non
  * accende niente, non compra nessun dominio e non tiene su nessun server: gli
  * si da' un codice, lo incolla, e ha finito.
+ *
+ * ─── Questo nome deve risolvere prima del rilascio ───────────────────────
+ *
+ * Una volta uscita una versione dell'add-on, questa riga sta **in ogni casa**:
+ * cambiarla dopo vuol dire un'altra versione e aspettare che tutte si
+ * aggiornino, e nel frattempo le case vecchie parlano a un indirizzo morto.
+ *
+ * Non e' una catastrofe — una casa che non trova il quadro non si rompe, rallenta
+ * i tentativi e scrive nella sua console **perche'** non ci riesce — ma e' un
+ * giro di telefonate che si evita controllando un nome.
  */
 export const QUADRO_DI_DIFETTO = "https://quadro.gdahome.org";
 
@@ -361,6 +371,40 @@ function iTelefoni(dispositivi, adesso) {
  * porta. Cosi' questa classe si prova con una funzione che torna `{}` e una
  * `fetch` finta, senza montare mezzo ponte.
  */
+/**
+ * Perche' non e' arrivata, detto a qualcuno.
+ *
+ * `fetch` di Node, quando qualcosa va storto sotto, alza sempre lo stesso
+ * «fetch failed» e mette la ragione vera in `cause`. Quel messaggio finisce
+ * nella scheda che legge **chi abita la casa**, e «fetch failed» non gli dice
+ * niente e non gli fa fare niente: non sa se e' rotta la sua rete, se il quadro
+ * e' spento, o se ha incollato un codice sbagliato.
+ *
+ * Qui si traducono i pochi casi che capitano davvero. Gli altri passano come
+ * sono — inventare una frase per un errore che non si conosce vuol dire mandare
+ * qualcuno a cercare la cosa sbagliata.
+ */
+export function perchePreciso(errore) {
+  const codice = errore?.cause?.code || "";
+  const sotto = errore?.cause?.message || "";
+
+  if (codice === "ENOTFOUND" || codice === "EAI_AGAIN") {
+    return "l'indirizzo del quadro non si trova: o non c'e' rete, o quel quadro non e' ancora acceso";
+  }
+  if (codice === "ECONNREFUSED") return "il quadro c'e' ma non risponde su quella porta";
+  if (codice === "ECONNRESET") return "la connessione col quadro e' caduta a meta'";
+  if (codice === "CERT_HAS_EXPIRED") return "il certificato del quadro e' scaduto";
+  if (codice === "DEPTH_ZERO_SELF_SIGNED_CERT" || codice === "UNABLE_TO_VERIFY_LEAF_SIGNATURE") {
+    return "il certificato del quadro non e' firmato da nessuno di conosciuto";
+  }
+  if (errore?.name === "TimeoutError" || codice === "UND_ERR_CONNECT_TIMEOUT") {
+    return "il quadro non ha risposto in tempo";
+  }
+
+  /* Meglio la ragione sotto che il «fetch failed» che la nasconde. */
+  return sotto || String(errore?.message || errore);
+}
+
 export class Postino {
   constructor({
     dove = "",
@@ -477,7 +521,7 @@ export class Postino {
       this._ultimoEsito = { andata: true, quando: this.adesso(), perche: "" };
       return true;
     } catch (errore) {
-      this._perNiente(String(errore?.message || errore));
+      this._perNiente(perchePreciso(errore));
       return false;
     }
   }

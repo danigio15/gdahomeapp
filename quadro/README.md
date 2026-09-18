@@ -88,10 +88,16 @@ QUADRO_GESTORE='qualcosa di lungo e a caso' npm run avvia
 | `QUADRO_DATI` | dove tiene i suoi file, `./dati` |
 | `QUADRO_REGISTRO` | quanto parla: `debug`, `info`, `attenzione`, `errore` |
 
-Davanti va messo un HTTPS vero, e l'indirizzo dev'essere **quello scritto
-nell'add-on** (`QUADRO_DI_DIFETTO` in `ponte/src/cartolina.js`): le case ci
-mandano la loro chiave a ogni cartolina, e in chiaro la manderebbero a chiunque
-ascolti. La console chiede le sue vie in relativo apposta, così un proxy la può
+Davanti va messo un HTTPS vero su **`quadro.gdahome.org`** — che è l'indirizzo
+scritto nell'add-on (`QUADRO_DI_DIFETTO` in `ponte/src/cartolina.js`) — perché
+le case ci mandano la loro chiave a ogni cartolina, e in chiaro la manderebbero
+a chiunque ascolti.
+
+> **Quel nome deve risolvere prima di rilasciare l'add-on.** Una volta uscita
+> una versione, quella riga sta in ogni casa: cambiarla dopo vuol dire un'altra
+> versione e aspettare che tutte si aggiornino. Una casa che non trova il quadro
+> non si rompe — rallenta i tentativi e scrive nella sua console *perché* non ci
+> riesce — ma è un giro di telefonate che si evita controllando un nome. La console chiede le sue vie in relativo apposta, così un proxy la può
 montare anche sotto un prefisso.
 
 ### Iscrivere un installatore

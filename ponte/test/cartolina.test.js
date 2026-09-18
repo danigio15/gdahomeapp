@@ -25,6 +25,7 @@ import {
   fabbricaLaCartolina,
   leggiIlCodice,
   ogniQuanto,
+  perchePreciso,
   Postino,
 } from "../src/cartolina.js";
 import { gliAddon, laMacchina, laRete } from "../src/ferro.js";
@@ -416,4 +417,29 @@ test("i telefoni: conta di piu' quanti si sono visti che quanti sono abbinati", 
   });
   const foglio = await fabbrica();
   assert.deepEqual(foglio.telefoni, { abbinati: 3, visti7gg: 2 });
+});
+
+test("quando non arriva, il perché lo capisce chi ci abita", () => {
+  /* `fetch` di Node alza sempre lo stesso «fetch failed» e mette la ragione
+   * vera in `cause`. Quel messaggio finisce nella scheda che legge chi abita la
+   * casa: «fetch failed» non gli dice niente e non gli fa fare niente. */
+  const con = (codice, messaggio = "") =>
+    Object.assign(new Error("fetch failed"), { cause: { code: codice, message: messaggio } });
+
+  assert.match(
+    perchePreciso(con("ENOTFOUND", "getaddrinfo ENOTFOUND quadro.gdahome.org")),
+    /non si trova/,
+  );
+  assert.match(perchePreciso(con("ECONNREFUSED")), /non risponde su quella porta/);
+  assert.match(perchePreciso(con("CERT_HAS_EXPIRED")), /certificato/);
+  assert.match(
+    perchePreciso(Object.assign(new Error("fetch failed"), { name: "TimeoutError" })),
+    /non ha risposto in tempo/,
+  );
+
+  /* Un errore che non si conosce passa com'è, e non si inventa una frase:
+   * mandare qualcuno a cercare la cosa sbagliata è peggio che non dirgli
+   * niente. Ma si dice la ragione sotto, non il «fetch failed» che la nasconde. */
+  assert.equal(perchePreciso(con("MAI_VISTO", "qualcosa di nuovo")), "qualcosa di nuovo");
+  assert.equal(perchePreciso(new Error("un errore qualunque")), "un errore qualunque");
 });
