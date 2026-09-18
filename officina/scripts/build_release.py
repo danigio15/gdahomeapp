@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import tempfile
 import zipfile
@@ -29,6 +30,29 @@ def _include_release_file(path: Path) -> bool:
     return not EXCLUDED_RELEASE_PARTS.intersection(relative.parts)
 
 
+def _release_files() -> list[Path]:
+    """Ogni file del componente, seguendo i collegamenti.
+
+    `Path.rglob` **non entra** in una cartella che e' un collegamento, e da
+    quando la plancia vive in `ponte/plancia/` qui dentro `frontend/legacy`,
+    `frontend/src`, `frontend/avatars` e `frontend/brands` sono collegamenti.
+    Il pacchetto usciva senza la plancia: la prova del rilascio lo diceva —
+    «missing required root files: frontend/legacy/dashboard.html, …» — e
+    diceva il vero.
+
+    `os.walk(followlinks=True)` li segue. I collegamenti puntano tutti fuori da
+    questo albero, verso una cartella sola, quindi non si gira in tondo.
+    """
+    trovati: list[Path] = []
+    for cartella, sotto, file in os.walk(COMPONENT, followlinks=True):
+        qui = Path(cartella)
+        # Le cartelle escluse non si aprono nemmeno: piu' veloce, e soprattutto
+        # non si scende in `node_modules` per poi buttare via tutto.
+        sotto[:] = [nome for nome in sotto if nome not in EXCLUDED_RELEASE_PARTS]
+        trovati.extend(qui / nome for nome in file)
+    return trovati
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--expected-commit", required=True)
@@ -49,7 +73,7 @@ def main() -> None:
             check=True,
         )
         with zipfile.ZipFile(args.output, "w", zipfile.ZIP_DEFLATED) as archive:
-            for path in COMPONENT.rglob("*"):
+            for path in _release_files():
                 if not _include_release_file(path):
                     continue
                 # HACS extracts a zip_release directly into

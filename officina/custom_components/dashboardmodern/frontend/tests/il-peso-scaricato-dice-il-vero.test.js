@@ -19,9 +19,28 @@
  * `decodedBodySize` — il corpo come e' arrivato contro il corpo disteso.
  */
 import assert from "node:assert/strict";
+import { realpathSync } from "node:fs";
+import { dirname } from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
 
-const CASA = new URL("../", import.meta.url).href;
+/* La cartella in cui il modulo **si vede**, che non e' quella da cui lo si
+ * importa.
+ *
+ * `pesoScaricato` conta «le risorse di casa propria», e casa propria la ricava
+ * dal suo stesso indirizzo: `import.meta.url` tagliato su `/legacy/`. Da
+ * quando la plancia vive in `ponte/plancia/` e qui dentro `legacy/` e' un
+ * collegamento, quell'indirizzo non e' piu' quello da cui la prova importa:
+ * Node carica un modulo dal posto **vero**, non dal collegamento. Le risorse
+ * finte costruite sull'indirizzo della prova finivano fuori casa, il conto
+ * restava vuoto e la riga rispondeva «?» — otto prove rosse che non parlavano
+ * di un difetto della plancia ma della cartella in cui sta.
+ *
+ * Percio' qui si segue lo stesso collegamento che segue Node, e si misura da
+ * dove il modulo si vede. In un browser non ci sono collegamenti e la
+ * questione non esiste; questa riga tiene la prova ancorata a quello che il
+ * modulo fa davvero, invece di a dove la prova crede che stia. */
+const CASA = `${pathToFileURL(dirname(realpathSync(new URL("../legacy", import.meta.url)))).href}/`;
 
 const { pesoScaricato } = await import(`../legacy/modules-entry.js?peso=${Date.now()}`);
 

@@ -30,6 +30,47 @@ jobs:
       - name: Le prove del centralino sulla nuvola
         run: npm run test:nuvola
 
+  # Le prove della plancia, che qui dentro non girava nessuno.
+  #
+  # Da quando DashboardModern vive in `officina/` le sue prove ci sono — piu' di
+  # quattromila — ma le Prove non le chiamavano, e nove erano rosse da
+  # settimane senza che nessuno lo sapesse. Otto per la cartella in cui sta
+  # (`legacy/` e' un collegamento e Node carica dal posto vero) e una che
+  # diceva una cosa vera e grossa: il pacchetto per HACS usciva **senza la
+  # plancia**, perche' chi lo costruisce non entrava nei collegamenti.
+  #
+  # Una prova rossa che nessuno guarda e' peggio di una prova che non c'e':
+  # da' l'idea che qualcosa sia coperto. Percio' adesso si chiamano qui.
+  plancia:
+    name: La plancia
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      # Il pacchetto per HACS lo costruisce uno script Python, e due prove lo
+      # costruiscono per davvero prima di guardarci dentro.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Le prove della plancia non hanno dipendenze: girano su Node e basta.
+      - name: Le prove della plancia
+        run: npm run test:frontend
+        working-directory: officina
+      - name: La sintassi dentro le pagine
+        run: npm run check:inline-syntax
+        working-directory: officina
+      - name: Le parole, nelle due lingue
+        run: npm run check:i18n
+        working-directory: officina
+      - name: Il guscio inglese
+        run: npm run check:guscio
+        working-directory: officina
+      - name: I moduli, tutti raggiungibili
+        run: npm run check:moduli
+        working-directory: officina
+
   forma:
     name: La forma del codice
     runs-on: ubuntu-latest
@@ -41,6 +82,11 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run format:check
+      # E la forma della plancia, che ha il suo elenco di file: prettier e'
+      # quello di qui, installato una volta sola.
+      - name: La forma della plancia
+        run: npm run format:check
+        working-directory: officina
 
   app:
     name: L'app
