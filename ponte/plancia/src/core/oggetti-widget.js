@@ -937,14 +937,79 @@ const nomeDelDisegno = (chiave) => {
   return ALTRI_NOMI[nome] || nome;
 };
 
+/* Le sfumature di un disegno, rinominate perche' rispondano solo a lui.
+ *
+ * ── Il difetto, e perche' solo su iPhone ───────────────────────────────────
+ *
+ * «Le icone in basso vanno e vengono», da un iPhone, mentre su Android le
+ * stesse icone si vedono sempre. Dal video, misurato fotogramma per
+ * fotogramma: la barra e le scritte stanno agli stessi pixel, e la fascia dei
+ * disegni e' vuota. Il disegno c'e' e occupa il suo posto — **e' trasparente**.
+ *
+ * Trasparente vuol dire una cosa sola: il suo riempimento e' `url(#qualcosa)`
+ * e quel qualcosa non si e' trovato. E il perche' sta in due decisioni giuste
+ * che insieme fanno un guaio.
+ *
+ * La prima: ogni disegno si porta dentro le proprie sfumature, e i loro
+ * identificatori nella sorgente sono tutti distinti — ottantasei su
+ * ottantasei. Quindi ogni disegno, da solo, basterebbe a se' stesso.
+ *
+ * La seconda: c'e' anche un foglio che raccoglie TUTTE le sfumature e sta in
+ * cima al corpo della pagina. Nacque per un difetto vero (#304): a un
+ * identificatore ripetuto risponde sempre il primo che lo porta, e il primo,
+ * allora, stava dentro una voce di barra che la configurazione teneva a
+ * `display:none` — una sfumatura in un ramo non disegnato non dipinge niente.
+ *
+ * Solo che il foglio, stando per primo, si prende **ogni** riferimento: da
+ * quel momento il disegno nella barra non guarda piu' le sue sfumature, guarda
+ * quelle del foglio. E' un rimando fra due elementi diversi della pagina, e
+ * WebKit — il motore dell'iPhone — quel rimando verso un SVG larghezza zero
+ * non lo risolve. Chromium si'. Da qui «solo su iPhone», che era l'indizio
+ * piu' importante di tutta la segnalazione.
+ *
+ * ── La cura ────────────────────────────────────────────────────────────────
+ *
+ * Chi ha bisogno di bastare a se' stesso lo dice, e si porta via un nome suo:
+ * le sue sfumature prendono un prefisso, e da quel momento l'unico che le
+ * dichiara e' lui, nel suo sottoalbero. Niente rimandi fra elementi, e niente
+ * da rendere disegnato.
+ *
+ * Il prefisso NON e' casuale, ed e' la parte che va guardata: chi disegna le
+ * tessere decide se ridisegnare confrontando il markup nuovo con quello di
+ * prima, e un identificatore diverso a ogni giro vorrebbe dire ridisegnare per
+ * sempre. Dipende dal posto — «nav-clima» — quindi e' lo stesso a ogni giro
+ * dello stesso posto, e diverso da quello di ogni altro posto.
+ *
+ * Chi non lo chiede resta come prima, col foglio che risponde per lui: la
+ * correzione vale dove il difetto si vede, e non muove tutto il resto. */
+const RIPULISCI_IL_PREFISSO = /[^A-Za-z0-9_-]+/g;
+const conSfumatureSue = new Map();
+
+function disegnoTuttoSuo(nome, disegno, dove) {
+  const prefisso = `${String(dove).replace(RIPULISCI_IL_PREFISSO, "-")}-`;
+  const chiave = `${nome}|${prefisso}`;
+  const gia = conSfumatureSue.get(chiave);
+  if (gia !== undefined) return gia;
+  const fatto = disegno
+    .replace(/\bid="([A-Za-z0-9_-]+)"/g, `id="${prefisso}$1"`)
+    .replace(/url\(#([A-Za-z0-9_-]+)\)/g, `url(#${prefisso}$1)`);
+  conSfumatureSue.set(chiave, fatto);
+  return fatto;
+}
+
 /* Il disegno della tessera, pronto da mettere dentro la pastiglia.
  *
  * Chi chiama passa anche il simbolo di ripiego — quello scelto in
- * configurazione per le tessere fatte in casa — e per quelle si tiene il suo. */
-export function oggettoWidget(chiave, ripiego = "") {
-  const disegno = OGGETTI[nomeDelDisegno(chiave)];
+ * configurazione per le tessere fatte in casa — e per quelle si tiene il suo.
+ *
+ * `dove` dice il posto in cui questo disegno andra' a stare, e chi lo passa
+ * ottiene un disegno che basta a se' stesso: vedi `disegnoTuttoSuo`. */
+export function oggettoWidget(chiave, ripiego = "", dove = "") {
+  const nome = nomeDelDisegno(chiave);
+  const disegno = OGGETTI[nome];
   if (!disegno) return String(ripiego || "");
-  return `<svg class="${CLASSE_DELL_OGGETTO}" viewBox="0 0 32 32" aria-hidden="true" focusable="false">${conRipiegoDiColore(disegno)}</svg>`;
+  const suo = dove ? disegnoTuttoSuo(nome, disegno, dove) : disegno;
+  return `<svg class="${CLASSE_DELL_OGGETTO}" viewBox="0 0 32 32" aria-hidden="true" focusable="false">${conRipiegoDiColore(suo)}</svg>`;
 }
 
 /* Il disegno c'e' davvero, o se lo ricorda soltanto chi l'ha messo.

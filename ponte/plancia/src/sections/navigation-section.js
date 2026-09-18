@@ -848,7 +848,10 @@ export function disegniNellaBarra(scope = doc) {
      * casella svuotata da qualcun altro tiene il segno e senza questo non si
      * ridipingeva mai piu' (#561). */
     if (!casella || disegnoGiaNellaCasella(casella, disegno)) continue;
-    const marchio = oggettoWidget(disegno);
+    /* Col posto, cosi' il disegno si porta dietro le SUE sfumature e non
+     * quelle del foglio in cima al corpo: era quel rimando fra elementi
+     * diversi a lasciare le icone trasparenti su iPhone, e solo la'. */
+    const marchio = oggettoWidget(disegno, "", `nav-${pagina}`);
     if (!marchio) continue;
     casella.innerHTML = marchio;
     casella.dataset.dmOggetto = disegno;
