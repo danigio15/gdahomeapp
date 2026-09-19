@@ -34,34 +34,34 @@
 # con un nome solo. Ogni nome adesso dice **quale**.
 configuration:
   da_fuori_casa:
-    name: Da fuori casa
+    name: Casa · Da fuori casa
     description: >-
       L'app entra anche quando non sei in casa, passando dal centralino di
       gdahome: nessuna porta da aprire sul router, nessun indirizzo pubblico,
       niente da installare. Spento, la casa si raggiunge solo dalla sua rete.
   porta_app:
-    name: La porta su cui bussa l'app
+    name: Casa · La porta su cui bussa l'app
     description: >-
       La porta che l'app usa quando sei in casa. Si cambia solo se un altro
       programma usa gia' questa.
   dispositivi_massimi:
-    name: Quanti telefoni insieme
+    name: Casa · Quanti telefoni insieme
     description: >-
       Quanti telefoni possono restare abbinati nello stesso momento. Il
       telefono di casa, quello di chi ci abita con te, quello dei nonni.
   minuti_del_codice:
-    name: Quanto vive un QR di abbinamento
+    name: Casa · Quanto vive un QR di abbinamento
     description: >-
       Per quanti minuti vale il QR code che abbina un telefono nuovo. Scaduto,
       se ne fa un altro: non si perde niente.
   giorni_di_silenzio:
-    name: Dopo quanto un telefono va riabbinato
+    name: Casa · Dopo quanto un telefono va riabbinato
     description: >-
       Dopo quanti giorni senza farsi vedere un telefono deve rifare
       l'abbinamento. Serve a chi perde un telefono e non se ne ricorda piu'.
       Zero vuol dire mai.
   quadro:
-    name: Il codice di chi ti ha fatto l'impianto
+    name: Casa · Il codice di chi ti ha fatto l'impianto
     description: >-
       Lasciala vuota. Se la casa te l'ha montata un installatore, lui ti da' un
       codice da incollare qui, e da quel momento questa casa gli manda poche
@@ -73,13 +73,18 @@ configuration:
       parte lo leggi parola per parola nella console di gdahome, dove c'e'
       anche il tasto per smettere.
   quadro_ogni:
-    name: Ogni quanto parte un rapporto
+    name: Casa · Ogni quanto parte un rapporto
     description: >-
       Ogni quanti minuti partono quelle righe di numeri. Conta solo se la
       casella qui sopra e' piena; vuota, non parte niente e non si apre nessuna
       connessione.
+  registro:
+    name: Casa · Quanto scrive il registro
+    description: >-
+      Quanto l'add-on racconta di se' nella scheda «Registro». «info» va bene
+      sempre; «debug» serve quando c'e' qualcosa da capire, e riempie.
   installatore:
-    name: Questo Home Assistant e' di chi installa
+    name: Installatore · Questo Home Assistant e' di chi installa
     description: >-
       Lascialo spento: serve a chi gdahome lo monta in casa d'altri. Acceso, e
       col codice scritto qui sotto, nella console di gdahome compare il tuo
@@ -87,7 +92,7 @@ configuration:
       nella barra laterale compare la voce per aprirlo. Da solo non accende
       niente. Va acceso sul tuo Home Assistant, non su quello di un cliente.
   chiave_cruscotto:
-    name: Il codice che apre il tuo cruscotto
+    name: Installatore · Il codice che apre il tuo cruscotto
     description: >-
       Quello che ti sei fatto dare quando il cruscotto ti e' stato aperto.
       Senza, l'interruttore qui sopra non fa niente: nessuna sezione, nessuna
@@ -95,7 +100,7 @@ configuration:
       Scrivilo sul tuo Home Assistant e non su quello di un cliente: le opzioni
       di un add-on stanno su disco in chiaro e finiscono nei backup.
   chiave_gestione:
-    name: La chiave per gestire gli installatori
+    name: Gestore · La chiave per gestire gli installatori
     description: >-
       Lasciala vuota: serve a una persona sola al mondo, quella che decide chi
       puo' installare. Scritta, nella barra laterale compare «Gestione
@@ -103,16 +108,11 @@ configuration:
       limiti; vuota, quella voce non esiste. Qui l'interruttore non c'e': la
       chiave e' l'interruttore.
   chiave_console:
-    name: La chiave dell'assistenza
+    name: Assistenza · La chiave per rispondere alle chat
     description: >-
       Lasciala vuota: serve a una casa sola al mondo, quella di chi risponde
       alle chat di assistenza, per leggere le conversazioni di tutti. In tutte
       le altre non cambia niente e non si vede niente.
-  registro:
-    name: Quanto scrive il registro
-    description: >-
-      Quanto l'add-on racconta di se' nella scheda «Registro». «info» va bene
-      sempre; «debug» serve quando c'e' qualcosa da capire, e riempie.
 network:
   8098/tcp: >-
     L'app di gdahome bussa qui. In casa basta cosi'; da fuori serve farla

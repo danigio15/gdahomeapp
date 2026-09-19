@@ -171,3 +171,41 @@ test("una chiave gia' battuta a mano non si fa sovrascrivere da una consegnata",
     );
   }
 });
+
+test("una chiave di cruscotto nella casella dell'abbinamento si riconosce, e lo dice", async () => {
+  /* E' successo alla prima persona che ci ha provato, e il difetto non era il
+   * suo: nella scheda dell'add-on ci sono due caselle che vogliono una stringa
+   * a caso, e da fuori si somigliano.
+   *
+   * Quello che ne usciva era `403 questa chiave non apre niente`, a ogni giro,
+   * per sempre — perche' quella stringa un invito non lo sara' mai. Un guasto
+   * che non dice niente e non smette manda a cercare il rotto nel quadro, non
+   * nella casella.
+   *
+   * I due numeri stanno in due file diversi: `CHIAVE_LUNGA` di
+   * `quadro/src/installatori.js` e `CHIAVE_DI_UN_CRUSCOTTO` di
+   * `ponte/src/rapporto.js`. Se si scollano, il ponte smette di riconoscere
+   * proprio la cosa per cui quel controllo esiste, e smette in silenzio. */
+  const { CHIAVE_LUNGA } = await import("../src/installatori.js");
+  const { CHIAVE_DI_UN_CRUSCOTTO, leggiIlCodice, CodiceIllegibile } =
+    await import("../../ponte/src/rapporto.js");
+  assert.equal(
+    CHIAVE_DI_UN_CRUSCOTTO,
+    CHIAVE_LUNGA,
+    "il ponte e il quadro non sono piu' d'accordo su quanto e' lunga una chiave",
+  );
+
+  /* Una chiave vera, fatta come le fa il quadro, e un invito vero. */
+  const { codiceNuovo, codiceAGruppi } = await import("../src/segreti.js");
+  assert.throws(
+    () => leggiIlCodice(codiceNuovo(CHIAVE_LUNGA)),
+    (errore) =>
+      errore instanceof CodiceIllegibile &&
+      /Il codice che apre il tuo cruscotto/.test(errore.message),
+    "una chiave di cruscotto deve essere riconosciuta, e deve dire dove va",
+  );
+  assert.ok(
+    leggiIlCodice(codiceAGruppi(codiceNuovo(16)))?.chiave,
+    "e un invito vero deve continuare a passare",
+  );
+});

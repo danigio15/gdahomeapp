@@ -2800,9 +2800,11 @@
         return `
           <h1 class="titolone">Abbina un impianto</h1>
           <p class="sottotitolo">
-            Un codice che vale <b>quindici minuti</b> e <b>una casa sola</b>. Si
-            fa qui, si incolla nell'add-on in casa del cliente, e da quel momento
-            quella casa manda al quadro il suo rapporto — e nient'altro.
+            Un codice che vale <b>un giorno</b> e <b>una casa sola</b>. Si fa qui,
+            si manda a chi ci abita, e da quel momento quella casa manda il suo
+            rapporto — e nient'altro. È lungo sedici caratteri, a gruppi di
+            quattro: la chiave con cui apri questa pagina è un'altra cosa, ed è
+            il doppio.
           </p>
 
           <div class="abbina">
@@ -2836,8 +2838,9 @@
                   </li>
                   <li>
                     <span>
-                      Incolla il codice nella casella <b>quadro</b> e premi
-                      <b>Salva</b>. L'add-on si riavvia da solo.
+                      Incolla il codice nella casella <b>Il codice di chi ti ha
+                      fatto l'impianto</b> e premi <b>Salva</b>. L'add-on si
+                      riavvia da solo.
                     </span>
                   </li>
                   <li>
@@ -3116,6 +3119,31 @@
         casella.focus();
       }
 
+      /* «La chiave non va bene» e' vero e non serve a niente.
+       *
+       * Nella scheda dell'add-on ci sono due caselle che vogliono una stringa a
+       * caso, e da fuori si somigliano: il codice che abbina una casa, e questa
+       * chiave. Scambiarle e' successo alla prima persona che ci ha provato, e
+       * quello che si prendeva era una frase che non dice da che parte
+       * guardare.
+       *
+       * I due pero' si distinguono da soli: un codice di abbinamento e' lungo
+       * sedici, questa chiave trentadue. Quando il conto torna si dice quale
+       * delle due si e' incollata, invece di lasciare cercare. */
+      const CODICE_DI_ABBINAMENTO = 16;
+      const LUNGA_COSI = 32;
+
+      function perchéNonVaBene() {
+        const nuda = String(chiave).replace(/-/g, "").length;
+        if (nuda === CODICE_DI_ABBINAMENTO) {
+          return "Questo è lungo come un codice di abbinamento, non come la tua chiave: quello va incollato nella casa del cliente, non qui.";
+        }
+        if (nuda !== LUNGA_COSI) {
+          return `La chiave non va bene: è lunga ${nuda}, e le chiavi sono lunghe ${LUNGA_COSI}.`;
+        }
+        return "La chiave non va bene.";
+      }
+
       async function apri() {
         if (!chiave) {
           chiedimiLaChiave();
@@ -3124,9 +3152,7 @@
         try {
           await carica();
         } catch (errore) {
-          chiedimiLaChiave(
-            errore instanceof ChiaveNoNo ? "La chiave non va bene." : errore.message,
-          );
+          chiedimiLaChiave(errore instanceof ChiaveNoNo ? perchéNonVaBene() : errore.message);
           return;
         }
         disegna();

@@ -72,6 +72,15 @@ import { ilBackup, leBatterie, leEntita } from "./salute.js";
  */
 export const QUADRO_DI_DIFETTO = "https://quadro.gdahome.org";
 
+/* Quanto e' lunga la chiave con cui un installatore apre il suo cruscotto.
+ *
+ * Sta qui per riconoscerla quando finisce nella casella sbagliata, e non per
+ * usarla: il ponte con quella chiave non ci fa niente. E' `CHIAVE_LUNGA` di
+ * `quadro/src/installatori.js`, e una prova tiene che i due numeri non si
+ * scollino — se si scollassero, questo controllo smetterebbe di riconoscere
+ * proprio la cosa per cui esiste, in silenzio. */
+export const CHIAVE_DI_UN_CRUSCOTTO = 32;
+
 /** Ogni quanto parte un rapporto, in minuti, quando non si dice altro. */
 export const OGNI_DI_SERIE = 1;
 
@@ -165,6 +174,29 @@ export function leggiIlCodice(scritto) {
   if (!/^[A-Z0-9]+$/.test(nudo)) {
     throw new CodiceIllegibile(
       "in questo codice ci sono caratteri che un codice del quadro non ha",
+    );
+  }
+  /* La chiave di un cruscotto, finita nella casella sbagliata.
+   *
+   * Nella scheda dell'add-on ci sono due caselle che vogliono una stringa a
+   * caso, e da fuori si somigliano: il codice di abbinamento che da'
+   * l'installatore, e la chiave con cui l'installatore apre il proprio
+   * cruscotto. Scambiarle e' successo alla prima persona che ci ha provato.
+   *
+   * Prima di questo controllo lo scambio dava un `403 questa chiave non apre
+   * niente`, a ogni giro, per sempre — perche' quella stringa un invito non lo
+   * sara' mai. Un guasto che non dice niente di utile e non smette e' il
+   * peggiore da riconoscere: sembra rotto il quadro, non la casella.
+   *
+   * I due pero' si distinguono: un invito e' `codiceNuovo(16)`, una chiave di
+   * installatore e' `codiceNuovo(32)`. Sedici contro trentadue, e la macchina
+   * il conto lo sa fare. */
+  if (nudo.length === CHIAVE_DI_UN_CRUSCOTTO) {
+    throw new CodiceIllegibile(
+      "questa e' lunga come la chiave di un cruscotto, non come un codice di " +
+        "abbinamento: la chiave va nella casella «Il codice che apre il tuo " +
+        "cruscotto», e qui ci va il codice a gruppi di quattro che ti ha dato " +
+        "chi ti ha fatto l'impianto",
     );
   }
 

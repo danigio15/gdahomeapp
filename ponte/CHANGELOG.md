@@ -11,6 +11,34 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.6
+
+**Se sbagli casella, adesso te lo dice.**
+
+Nella scheda ci sono due caselle che vogliono una stringa a caso, e da fuori si
+somigliano: il codice che abbina una casa, e la chiave con cui un installatore
+apre il proprio cruscotto. Scambiarle è successo alla prima persona che ci ha
+provato, e quello che si prendeva era un `403` a ogni giro — per sempre, perché
+quella stringa un invito non lo sarà mai. Un guasto che non dice niente e non
+smette manda a cercare il rotto nel quadro, non nella casella.
+
+I due però si distinguono: **un codice di abbinamento è lungo sedici, una chiave
+trentadue**. Adesso il conto lo fa la macchina, e dice quale delle due hai
+incollato e dove va.
+
+**E ogni casella dice in testa chi la deve compilare** — `Casa ·`,
+`Installatore ·`, `Gestore ·`, `Assistenza ·`. Home Assistant non ha titoli di
+sezione: disegna dodici caselle una sotto l'altra, e l'unico posto dove scrivere
+«questa non è roba tua» è il nome. Dove il prefisso cambia, cambia il pubblico.
+
+**L'hamburger è tornato.** Togliendo la barra di Home Assistant se ne andava
+anche il modo di riaprire il suo menu: chi entrava nel Cruscotto o nella
+Gestione restava dentro. Adesso c'è un tasto in alto a sinistra, dove
+l'hamburger sta di solito.
+
+E la pagina Abbina non dice più «quindici minuti» mentre il contatore ne mostra
+millequattrocento, né manda a una casella che si chiama in un altro modo.
+
 ## 1.5.5.1
 
 **La scheda dell'add-on si legge dall'alto in basso.**
