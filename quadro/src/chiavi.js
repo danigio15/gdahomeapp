@@ -243,6 +243,33 @@ export class Chiavi {
     return this.chiavi.length !== prima;
   }
 
+  /**
+   * Via tutto quello che e' di uno: i suoi inviti aperti e le chiavi delle sue
+   * case.
+   *
+   * Serve a «elimina» nella gestione, e la conseguenza e' grossa e voluta: da
+   * quel momento quelle case bussano e si sentono dire di no. Il codice che
+   * hanno incollato in configurazione non apre piu' niente, e per tornare
+   * dentro ce ne vuole uno nuovo — di un installatore vivo, incollato da
+   * dentro casa. E' esattamente quello che «elimina» vuol dire, ed e' la
+   * differenza con «congela», che non tocca niente di tutto questo.
+   *
+   * Torna quante ne ha buttate, per scriverlo nel registro.
+   */
+  toglieTutto(di) {
+    if (!di) return { inviti: 0, chiavi: 0 };
+    const inviti = this.inviti.length;
+    const chiavi = this.chiavi.length;
+    this.archivio.dati.inviti = this.inviti.filter((uno) => uno.di !== di);
+    this.archivio.dati.chiavi = this.chiavi.filter((una) => una.di !== di);
+    const quanti = {
+      inviti: inviti - this.inviti.length,
+      chiavi: chiavi - this.chiavi.length,
+    };
+    if (quanti.inviti || quanti.chiavi) this.archivio.salva();
+    return quanti;
+  }
+
   /** Via gli inviti scaduti: un codice morto non deve restare a occupare posto. */
   potatura() {
     const ora = this.adesso();

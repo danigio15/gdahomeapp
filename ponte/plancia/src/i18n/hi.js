@@ -2482,6 +2482,7 @@ export default Object.freeze({
   "Sweltering": "दमघोंटू गर्मी",
   "Swing": "फ्लैप",
   "Switch (turns it on and off)": "स्विच (चालू और बंद करता है)",
+  "Switch for": "इसका स्विच",
   "Switch, light or scene to control — popups do not need one": "नियंत्रित करने के लिए स्विच, रोशनी या दृश्य — पॉपअप को इसकी ज़रूरत नहीं",
   "Switch, light, fan or input_boolean used by the On/Off button.": "चालू/बंद बटन जिस switch, light, fan या input_boolean का उपयोग करता है।",
   "Switch-off": "बंद करना",

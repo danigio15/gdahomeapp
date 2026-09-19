@@ -2482,6 +2482,7 @@ export default Object.freeze({
   "Sweltering": "Drukkend heet",
   "Swing": "Lamellen",
   "Switch (turns it on and off)": "Schakelaar (zet aan en uit)",
+  "Switch for": "Schakelaar van",
   "Switch, light or scene to control — popups do not need one": "Schakelaar, lamp of scène om te bedienen — pop-ups hebben er geen nodig",
   "Switch, light, fan or input_boolean used by the On/Off button.": "switch, light, fan of input_boolean die de aan/uit-knop gebruikt.",
   "Switch-off": "Uitschakelen",

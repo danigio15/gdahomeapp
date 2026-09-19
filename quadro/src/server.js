@@ -9,6 +9,8 @@
  *
  *   POST   /rapporto                     una casa deposita i suoi numeri, e si
  *                                        porta via quello che le e' stato chiesto
+ *   GET    /attesa                       la casa resta in linea, e sente subito
+ *   GET    /segno/<segno>                l'icona di un aggiornamento, senza chiave
  *   GET    /marchio/<chi>                il logo di un installatore, senza chiave
  *
  *   GET    /console/                     la pagina dell'installatore
@@ -16,6 +18,7 @@
  *   PUT    /console/io/avvisi            dove mandarmi gli avvisi
  *   POST   /console/io/avvisi/prova      mandamene uno adesso, per vedere
  *   GET    /console/case                 **le sue** case
+ *   GET    /console/note/<segno>         le note intere di un aggiornamento
  *   GET    /console/inviti               i **suoi** codici in attesa
  *   POST   /console/inviti               fanne uno, se il limite lo consente
  *   DELETE /console/inviti/<codice>      annulla il suo
@@ -26,8 +29,10 @@
  *   GET    /gestore/installatori         chi c'e', e quanti impianti ha ognuno
  *   POST   /gestore/installatori         aggiungine uno
  *   PUT    /gestore/installatore/<id>    nome e limite
+ *   POST   /gestore/installatore/<id>/congela   congelagli l'utenza
+ *   DELETE /gestore/installatore/<id>/congela   e ridagliela
  *   POST   /gestore/installatore/<id>/chiave   una chiave nuova
- *   DELETE /gestore/installatore/<id>    toglilo
+ *   DELETE /gestore/installatore/<id>    eliminalo, con tutto quello che e' suo
  *
  * ─── Tre chiavi, e ognuna apre una porta sola ────────────────────────────
  *
@@ -60,9 +65,48 @@ import { comeVaLAggiornamento } from "./mi-aggiorno.js";
 import { CHI_VALIDO } from "./installatori.js";
 import { stessoSegreto } from "./segreti.js";
 import { ilTipoDi, Marchi, QUANTO_GROSSO } from "./marchi.js";
+import { SEGNO_VALIDO, Segni } from "./segni.js";
 
-/** Quanto puo' essere grossa un rapporto. Le vere stanno sotto i quattro. */
-const RAPPORTO_MASSIMA = 64 * 1024;
+/**
+ * Quanto puo' essere grossa un rapporto. Le vere stanno sotto i quattro KiB —
+ * ma un rapporto che porta le icone che gli sono state chieste pesa di piu', e
+ * quel di piu' e' il motivo di questo numero.
+ *
+ * Deve stare **sopra** a quello che la casa e' disposta a mandare
+ * (`IN_TUTTO_AL_MASSIMO` in `ponte/src/segni.js`, 96 KiB contati in base64) piu'
+ * il rapporto vero e proprio. Se stesse sotto succederebbe questo: la casa
+ * prepara le icone, il rapporto sfora, qui torna un 413 — e non salta l'icona,
+ * salta **tutto il rapporto**. La casa si tiene l'elenco di quello che le e'
+ * stato chiesto, al minuto dopo rimanda lo stesso pacco, e si ribecca il 413.
+ * Quella casa smetterebbe di dire come sta, per sempre, per un'icona.
+ *
+ * Ed e' esattamente com'era: 64 KiB qui contro 192 KiB di byte veri di la',
+ * che in base64 fanno 256. Bastava un'icona sola un po' grossa.
+ *
+ * I due numeri si tengono per mano, e una prova per parte li tiene fermi.
+ */
+const RAPPORTO_MASSIMA = 256 * 1024;
+
+/* A chi scrive un installatore a cui e' stata congelata l'utenza.
+ *
+ * Sta scritto qui e non nella pagina perche' e' una cosa di questo quadro, non
+ * del disegno: chi un domani mettesse su un quadro suo cambia una riga, e non
+ * va a cercarla dentro un foglio di stile. */
+export const DOVE_SCRIVERE = "assistenza@gdahome.org";
+
+/* Quanto si tiene aperta una richiesta di `/attesa` prima di rispondere a mani
+ * vuote.
+ *
+ * Cinquanta secondi. Il numero non e' scelto per il tempo reale — quello lo da'
+ * gia' la prima risposta — ma **contro chi sta in mezzo**: proxy, bilanciatori
+ * e router tagliano le richieste ferme, e sessanta secondi e' la soglia che si
+ * incontra piu' spesso. Chiudendo prima noi, il filo si riapre in modo
+ * ordinato invece di cadere, e nel registro della casa non compare un errore
+ * al minuto.
+ *
+ * E' anche il tempo massimo in cui una casa spenta resta scritta qui dentro
+ * senza che nessuno se ne accorga. */
+const QUANTO_SI_ASPETTA = 50 * 1000;
 
 const PAGINA = new URL("../console/index.html", import.meta.url);
 const PAGINA_DEL_GESTORE = new URL("../gestore/index.html", import.meta.url);
@@ -132,13 +176,69 @@ export function costruisciIlServer({
   /* I loghi degli installatori. Un file per uno, fuori dall'archivio: il
    * perche' sta in cima a `marchi.js`. */
   const marchi = new Marchi({ cartella });
+  /* Le icone vere degli aggiornamenti e le loro note intere, come le manda la
+   * casa. Il perche' sta in cima a `segni.js`. */
+  const segni = new Segni({ cartella });
 
-  return createServer((richiesta, risposta) => {
+  /* ─── Il filo tenuto aperto ───────────────────────────────────────────
+   *
+   * Chi sta fermo su `/attesa`, casa per casa. Dopo aver depositato, una casa
+   * lascia li' una richiesta che non si chiude: quando qualcuno preme
+   * «Installa» le si risponde **nell'istante**, invece di farle aspettare il
+   * rapporto del minuto dopo.
+   *
+   * Perche' una richiesta tenuta aperta e non un WebSocket: da una casa al
+   * quadro c'e' di mezzo il router di casa, e qualche volta il proxy di
+   * un'azienda. Una GET che tarda e' la cosa che passa dappertutto, e qui non
+   * serve altro — il filo porta una frase sola, ogni tanto, in una direzione.
+   *
+   * Una per casa: se ne arriva una seconda, la prima si chiude subito a mani
+   * vuote. Una casa che si riavvia lascia indietro la sua, e due fili aperti
+   * per la stessa casa vorrebbero dire un comando consegnato a quello morto.
+   *
+   * La memoria e' del processo e va bene cosi': se il quadro si riavvia i fili
+   * cadono, le case se ne accorgono e li riaprono, e nel frattempo c'e' il
+   * rapporto al minuto che non ha mai smesso. */
+  const aspettano = new Map();
+
+  function sveglia(casa, cosa) {
+    const chi = aspettano.get(casa);
+    if (!chi) return false;
+    aspettano.delete(casa);
+    clearTimeout(chi.orologio);
+    try {
+      chi.rispondi(cosa);
+    } catch (_errore) {
+      /* Il filo se n'e' andato mentre gli si rispondeva: non e' un guaio di
+       * nessuno, e il lavoro resta in coda per il rapporto dopo. */
+    }
+    return true;
+  }
+
+  /* Quando un lavoro viene chiesto, chi e' in linea lo sente adesso. */
+  case_.alLavoro = (casa) => {
+    if (!aspettano.has(casa)) return;
+    const fai = case_.ilLavoroDa(casa);
+    if (fai) sveglia(casa, { fai });
+  };
+
+  const server = createServer((richiesta, risposta) => {
     servi(richiesta, risposta).catch((errore) => {
       registro.errore(`il quadro e' inciampato: ${errore?.message || errore}`);
       if (!risposta.headersSent) male(risposta, 500, "qualcosa e' andato storto");
     });
   });
+
+  /* Spegnendo, i fili aperti si chiudono a mani vuote.
+   *
+   * Senza questo `server.close()` resterebbe li' ad aspettare che finiscano
+   * cinquanta richieste che per definizione non finiscono, e il quadro non si
+   * spegnerebbe piu' — in produzione, e nelle prove. Le case se ne accorgono e
+   * riaprono al giro dopo. */
+  server.lasciaAndareIFili = () => {
+    for (const casa of [...aspettano.keys()]) sveglia(casa, {});
+  };
+  return server;
 
   async function servi(richiesta, risposta) {
     /* La barra finale **non** si toglie, e non e' una svista: la pagina chiede
@@ -184,6 +284,53 @@ export function costruisciIlServer({
     }
 
     /* ─── Il davanti: le case ──────────────────────────────────────────── */
+
+    /* La casa resta in linea, e sente subito.
+     *
+     * Dopo aver depositato il suo rapporto, una casa chiede qui e **non si
+     * chiude**: la richiesta resta aperta finche' non c'e' qualcosa da dirle o
+     * finche' non scade. Cosi' fra il tasto «Installa» e l'installazione che
+     * parte non passa piu' un minuto — passa il tempo di un giro di rete.
+     *
+     * Chi non puo' o non vuole tenerlo aperto — un ponte vecchio, un proxy che
+     * taglia le richieste lunghe — non perde niente: il rapporto al minuto
+     * porta il lavoro come ha sempre fatto. Questo e' in piu', non al posto. */
+    if (via === "/attesa" && metodo === "GET") {
+      const casa = String(richiesta.headers["x-casa"] || "");
+      if (!CASA_VALIDA.test(casa)) {
+        male(risposta, 400, "questa non e' una matricola");
+        return;
+      }
+      if (!chiavi.riconosci(casa, ilSegno(richiesta))) {
+        male(risposta, 403, "questa chiave non apre niente");
+        return;
+      }
+      /* Quello che c'e' gia' non fa aspettare nessuno. */
+      const subito = case_.ilLavoroDa(casa);
+      if (subito) {
+        json(risposta, { fai: subito });
+        return;
+      }
+      /* Una per casa: la precedente si chiude a mani vuote, e quella casa ne
+       * apre una sola perche' aspetta la risposta prima di rifarlo. */
+      sveglia(casa, {});
+      const rispondi = (cosa) => json(risposta, cosa);
+      const orologio = setTimeout(() => sveglia(casa, {}), QUANTO_SI_ASPETTA);
+      orologio.unref?.();
+      aspettano.set(casa, { rispondi, orologio });
+      /* E se il filo cade dall'altra parte — casa spenta, rete che se ne va —
+       * si toglie di mezzo: se no la prima cosa che arriva finirebbe scritta
+       * dentro un socket che non c'e' piu', e quel lavoro sarebbe perso invece
+       * che consegnato al rapporto dopo. */
+      richiesta.on("close", () => {
+        const chi = aspettano.get(casa);
+        if (chi && chi.rispondi === rispondi) {
+          aspettano.delete(casa);
+          clearTimeout(orologio);
+        }
+      });
+      return;
+    }
 
     if (via === "/rapporto" && metodo === "POST") {
       const casa = String(richiesta.headers["x-casa"] || "");
@@ -246,12 +393,56 @@ export function costruisciIlServer({
        * marchio di un aggiornamento — se di qui passasse un indirizzo, sarebbe
        * questo quadro a decidere dove va a bussare il browser di chi ci abita. */
       const suo = installatori.quello(di);
+      /* Le icone e le note che sono arrivate dentro questo rapporto, e quelle
+       * che ancora mancano.
+       *
+       * E' questo scambio che fa viaggiare un'icona **una volta sola**: la casa
+       * manda solo quello che il quadro le dice di non avere, e il quadro lo
+       * sa guardando i suoi file. Un quadro che li perde li richiede da se'; una
+       * casa che si riavvia non rimanda niente che sia gia' arrivato. */
+      const elenco = carta?.aggiornamenti?.elenco;
+      segni.metti(elenco);
+      const manca = segni.quelliCheMancano(elenco);
       json(risposta, {
         presa: true,
         di: suo?.nome || "",
         ...(suo?.marchio ? { marchio: suo.chi } : {}),
         ...(fai ? { fai } : {}),
+        ...(manca.length ? { manca } : {}),
       });
+      return;
+    }
+
+    /* L'icona di un aggiornamento, **senza chiave**.
+     *
+     * Stessa regola del marchio di un installatore: sedici cifre esadecimali
+     * non si indovinano, e quello che si scopre indovinandole e' l'icona di
+     * Mosquitto. Chi la guarda e' il browser di chi installa, e la prende da
+     * qui invece che da `brands.home-assistant.io` — cosi' quel browser non va
+     * a farsi vedere da una macchina che non e' la sua, e quello che trova e'
+     * l'icona giusta invece del logo di HACS. */
+    /* `quale` e non `ilSegno`: quel nome e' gia' preso, ed e' la funzione che
+     * legge la chiave dall'intestazione. Chiamandolo cosi' la si oscurava, e
+     * da li' in poi **ogni** via che chiede una chiave rispondeva 500. */
+    const quale = new RegExp(`^/segno/(${SEGNO_VALIDO.source.slice(1, -1)})$`).exec(via);
+    if (quale && metodo === "GET") {
+      const suo = segni.leggi(quale[1]);
+      if (!suo) {
+        male(risposta, 404, "questo aggiornamento non ha un'icona");
+        return;
+      }
+      risposta.writeHead(200, {
+        "content-type": suo.tipo,
+        "content-length": suo.byte.length,
+        /* Un giorno: l'icona di una versione non cambia mai, e il segno cambia
+         * con la versione. */
+        "cache-control": "public, max-age=86400, immutable",
+        /* Un SVG porta dentro un programma: dentro un `<img>` non gira, ma
+         * questo indirizzo lo si puo' anche aprire a mano. */
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        "x-content-type-options": "nosniff",
+      });
+      risposta.end(suo.byte);
       return;
     }
 
@@ -303,6 +494,30 @@ export function costruisciIlServer({
       const chi = installatori.riconosci(ilSegno(richiesta));
       if (!chi) {
         male(risposta, 401, "la chiave non va bene");
+        return;
+      }
+      /* Congelato: la chiave apre, e non fa vedere niente.
+       *
+       * La chiave deve aprire, se no non si saprebbe chi sta bussando e non
+       * gli si potrebbe dire **perche'** non vede piu' niente: si troverebbe
+       * un «la chiave non va bene» e andrebbe a cercare un guasto che non
+       * c'e'. Quindi si risponde a lui, per nome, con l'indirizzo a cui
+       * scrivere.
+       *
+       * Il controllo sta **qui**, sulla soglia, e non dentro le singole vie:
+       * una via aggiunta domani sarebbe una via che si dimentica di guardare
+       * se questa utenza e' congelata, e nessuno se ne accorgerebbe fino al
+       * giorno che conta. */
+      if (installatori.congelato(chi)) {
+        json(
+          risposta,
+          {
+            errore: "questa utenza e' congelata",
+            congelato: true,
+            scrivi: DOVE_SCRIVERE,
+          },
+          403,
+        );
         return;
       }
       await ilRetro(
@@ -439,14 +654,52 @@ export function costruisciIlServer({
     }
 
     if (via === "/case" && metodo === "GET") {
+      const sue = case_.elenco(chi);
       json(risposta, {
-        case: case_.elenco(chi),
+        case: sue,
+        /* Di quali aggiornamenti si hanno le note intere.
+         *
+         * Un elenco a parte e non un campo dentro ogni riga: la riga di un
+         * aggiornamento e' quello che la casa ha mandato, e questo e' quello
+         * che il quadro ha ricevuto — due cose diverse, e mescolarle vorrebbe
+         * dire riscrivere il rapporto di una casa con roba nostra. Serve alla
+         * pagina per far comparire il tasto solo dove c'e' qualcosa da aprire.
+         *
+         * Solo quelli di **queste** case: un elenco di tutti quelli che il
+         * quadro ha sarebbe roba di case di altri, e viaggerebbe a ogni giro. */
+        note: [
+          ...new Set(
+            sue.flatMap((una) =>
+              (una.carta?.aggiornamenti?.elenco || [])
+                .map((uno) => String(uno?.segno || ""))
+                .filter((uno) => segni.note(uno)),
+            ),
+          ),
+        ],
         /* Le soglie con cui la pagina colora i metri sono **le stesse** con cui
          * qui si decide se una casa e' da guardare: viaggiano insieme alle case
          * invece di stare scritte anche nella pagina, perche' due numeri uguali
          * in due posti sono due numeri che prima o poi diventano diversi. */
         soglie: { troppoCaldo: TROPPO_CALDO, discoPieno: DISCO_PIENO, discoFinito: DISCO_FINITO },
       });
+      return;
+    }
+
+    /* Le note intere di un aggiornamento, quelle che la casa ha preso da Home
+     * Assistant.
+     *
+     * Con la chiave, e non senza come l'icona: un'icona e' un disegno, un
+     * CHANGELOG e' testo che qualcuno ha scritto. E si aprono **dentro la
+     * pagina**: prima c'era un collegamento che portava fuori, e leggere cosa
+     * cambia prima di premere «Installa» vuol dire restare dove si e'. */
+    const leNote = new RegExp(`^/note/(${SEGNO_VALIDO.source.slice(1, -1)})$`).exec(via);
+    if (leNote && metodo === "GET") {
+      const dette = segni.note(leNote[1]);
+      if (!dette) {
+        male(risposta, 404, "di questo aggiornamento non sono arrivate le note");
+        return;
+      }
+      json(risposta, { note: dette });
       return;
     }
 
@@ -592,23 +845,73 @@ export function costruisciIlServer({
     }
 
     if (uno && metodo === "DELETE") {
-      /* Togliere un installatore non butta le sue case: restano nel quadro, senza
-       * piu' nessuno che le guardi, e i loro rapporti continuano ad arrivare.
-       * E' voluto — sono impianti che funzionano in casa di qualcuno, e
-       * spegnerne il monitoraggio punirebbe il cliente per una faccenda che non
-       * e' sua.
+      /* Eliminare un installatore porta via **tutto quello che e' suo**: lui, i
+       * suoi codici in attesa, le chiavi delle sue case, le sue case e il suo
+       * marchio.
        *
-       * Qui c'era scritto che «chi gestisce se le ritrova da assegnare se lo si
-       * riaggiunge». **Non e' vero**, ed e' stato provato: `installatori.fai`
-       * da' una matricola nuova ogni volta, la chiave della casa resta legata a
-       * quella di prima — che non esiste piu' — e da qui non c'e' nessun modo
-       * di ridargliela.
+       * ─── Perche' adesso porta via anche le case ──────────────────────────
        *
-       * Quello che funziona e' rifare il giro dal davanti: un invito nuovo di
-       * un installatore vivo, incollato in casa, **sostituisce** la chiave
-       * (`chiavi.riconosci`) e la casa cambia padrone. Un modo di farlo da
-       * questa pagina non c'e' ancora. */
-      json(risposta, { chiuso: installatori.togli(uno[1]), ...ilQuadro() });
+       * Prima no: le case restavano, e siccome nessuno le guardava piu'
+       * diventavano un numero — «3 impianti senza piu' nessuno» — che non si
+       * poteva ne' aprire ne' riassegnare. Il ragionamento era buono (sono
+       * impianti che funzionano in casa di qualcuno) ma la conseguenza no:
+       * roba che occupa posto per sempre e non serve a nessuno.
+       *
+       * Adesso ci sono **due tasti, e due cose diverse**. Congela e' quello per
+       * la lite con l'installatore: lui non vede piu' niente, le case restano
+       * accese e non si perde una riga. Elimina e' quello per «questo non c'e'
+       * piu'», e fa proprio quello.
+       *
+       * ─── Cosa succede a quelle case ──────────────────────────────────────
+       *
+       * Continuano a mandare il rapporto — non lo sanno, e da qui non si
+       * decide cosa fa casa d'altri — e si sentono rispondere di no. Per
+       * tornare dentro ci vuole un codice nuovo, di un installatore vivo,
+       * incollato **da dentro casa**: e' l'unica strada, ed e' la stessa che
+       * regge tutto il resto. Riaggiungere l'installatore di prima non basta,
+       * perche' prende una matricola nuova.
+       *
+       * La pagina lo dice prima di farlo, con quante case si porta dietro. */
+      const chi = uno[1];
+      if (!installatori.quello(chi)) {
+        male(risposta, 404, "questo installatore non c'e'");
+        return;
+      }
+      const suoi = chiavi.toglieTutto(chi);
+      const quante = case_.toglieTutto(chi);
+      marchi.togli(chi, installatori.quello(chi)?.marchio || "");
+      const chiuso = installatori.togli(chi);
+      registro.info(
+        `installatore eliminato: ${chi} — ${quante} case, ${suoi.chiavi} chiavi, ` +
+          `${suoi.inviti} codici in attesa`,
+      );
+      json(risposta, { chiuso, case: quante, ...ilQuadro() });
+      return;
+    }
+
+    /* Congela e scongela.
+     *
+     * Due vie e non una con un `acceso: true/false` nel corpo: cosi' quello
+     * che sta per succedere si legge nel registro del server e nella barra del
+     * browser, e un corpo storto non puo' scongelare chi si voleva congelare. */
+    const gelo = new RegExp(`^/installatore/(${CHI_VALIDO.source.slice(1, -1)})/congela$`).exec(
+      via,
+    );
+    if (gelo && (metodo === "POST" || metodo === "DELETE")) {
+      if (!installatori.quello(gelo[1])) {
+        male(risposta, 404, "questo installatore non c'e'");
+        return;
+      }
+      const congela = metodo === "POST";
+      const cambiato = congela ? installatori.congela(gelo[1]) : installatori.scongela(gelo[1]);
+      if (cambiato) {
+        registro.info(
+          congela
+            ? `utenza congelata: ${gelo[1]} — la sua pagina non gli fa piu' vedere niente`
+            : `utenza scongelata: ${gelo[1]} — torna a vedere le sue case`,
+        );
+      }
+      json(risposta, { congelato: congela, ...ilQuadro() });
       return;
     }
 

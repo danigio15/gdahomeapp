@@ -12,6 +12,7 @@ import { join } from "node:path";
 import { Abbinamento } from "./abbinamento.js";
 import { Aggiornamento } from "./aggiornamento.js";
 import { fabbricaIlRapporto, Postino, QUADRO_DI_DIFETTO } from "./rapporto.js";
+import { Segni } from "./segni.js";
 import { Casa } from "./casa.js";
 import { Chat } from "./chat.js";
 import { Chiamata } from "./chiamata.js";
@@ -167,6 +168,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     segnalazioni,
     chat,
     installatore: opzioni.installatore,
+    gestore: opzioni.gestore,
     spegnimento,
     aggiornamenti,
   });
@@ -290,6 +292,14 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     casa,
     ferro,
     aggiornamenti,
+    /* Le icone vere degli aggiornamenti e le loro note intere, per il quadro.
+     *
+     * Le scarica il ponte — dal Supervisor per un add-on, dai marchi per
+     * un'integrazione — esattamente come fa per l'app. Non finiscono in ogni
+     * rapporto: e' il quadro a dire quali non ha, e partono solo quelle. Il
+     * perche' sta in cima a `segni.js`. */
+    segni: new Segni({ aggiornamenti, casa, registro }),
+    segniChiesti: () => postino.segniChiesti,
     lavori,
     manutenzione: opzioni.manutenzione,
     plance,

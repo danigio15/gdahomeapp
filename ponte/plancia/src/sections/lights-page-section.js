@@ -220,7 +220,26 @@ export function pageCardMarkup(view) {
   const bloccata = view.comandabile === false;
   return `<article class="dm-lucip-card ${view.on ? "is-on" : ""}" data-dm-lucip="${esc(view.id)}" data-dm-lucip-available="${view.available}" data-dm-lucip-comandabile="${!bloccata}" style="--dm-light-color:${esc(color)};--dm-light-segno:${esc(coloreDelSegno(color))};--dm-light-ink:${readableInk(color)};--dm-light-level:${view.on ? Math.max(12, level) : 0}%">
     <span class="dm-lucip-glow" aria-hidden="true"></span>
-    <button type="button" class="dm-lucip-main" data-dm-lucip-toggle aria-pressed="${view.on}"${bloccata ? ` aria-disabled="true" title="${esc(t("Si vede ma non si comanda", "Shown but not controllable"))}"` : ""}>
+    ${
+      /* Il corpo della tessera **non accende piu'**.
+       *
+       * Prima era tutto un tasto: il disegno, il nome, lo stato, i cartellini
+       * — dovunque si toccasse, la luce cambiava. Su una pagina di venti luci
+       * vuol dire accenderne una ogni volta che si scorre col dito o che ci si
+       * avvicina per leggere quale sia quale. «Non avere tutto il rettangolo
+       * completo che dove premi accende.»
+       *
+       * Quello che accende e' la levetta a destra, e basta: e' gia' lei a dire
+       * se la luce e' accesa, ed e' li' che uno la cerca.
+       *
+       * Con un'eccezione, che c'era gia' e resta: una luce che si guarda e
+       * basta la levetta non ce l'ha proprio, e allora il corpo torna un tasto
+       * — ma apre le informazioni, non accende. «Puoi mettere un popup che
+       * apre piu' informazioni, ma mai accendere o spegnere.» */
+      bloccata
+        ? `<button type="button" class="dm-lucip-main" data-dm-lucip-open title="${esc(t("Si vede ma non si comanda", "Shown but not controllable"))}">`
+        : `<div class="dm-lucip-main">`
+    }
       <span class="dm-lucip-orb" aria-hidden="true">${view.domain === "light" ? BULB : PLUG}</span>
       <span class="dm-lucip-title">
         <strong>${esc(view.name)}</strong>
@@ -231,8 +250,18 @@ export function pageCardMarkup(view) {
           ${badge ? `<span class="dm-lucip-badge" data-kind="${badge.kind}">${badge.label}</span>` : ""}
         </span>
       </span>
-      ${bloccata ? "" : `<span class="dm-lucip-led" aria-hidden="true"></span>`}
-    </button>
+      ${
+        bloccata
+          ? ""
+          : `<button
+              type="button"
+              class="dm-lucip-led"
+              data-dm-lucip-toggle
+              aria-pressed="${view.on}"
+              aria-label="${t("Interruttore di", "Switch for")} ${esc(view.name)}"
+            ></button>`
+      }
+    ${bloccata ? "</button>" : "</div>"}
     ${dimmer || tools ? `<div class="dm-lucip-tools">${dimmer}${tools}</div>` : ""}
   </article>`;
 }
@@ -400,6 +429,11 @@ function syncCard(card, view) {
   card.style.setProperty("--dm-light-ink", readableInk(color));
   const level = cardLevel(view);
   card.style.setProperty("--dm-light-level", view.on ? `${Math.max(12, level)}%` : "0%");
+  /* La levetta si chiama sempre allo stesso modo — «Interruttore di Strip TV»
+   * — e quello che cambia e' `aria-pressed`. E' il modo giusto per una levetta:
+   * chiamarla «Accendi» e poi «Spegni» vuol dire un comando che cambia nome
+   * sotto il dito, e in italiano vorrebbe pure la stessa parola che la pagina
+   * usa gia' per «accendi tutte». */
   card.querySelector("[data-dm-lucip-toggle]")?.setAttribute("aria-pressed", String(view.on));
   const label = card.querySelector("[data-dm-lucip-state]");
   const text = stateText(view);
@@ -715,8 +749,11 @@ function installStyles() {
       :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-glow{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s ease}
       :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-card.is-on .dm-lucip-glow{opacity:1;background:radial-gradient(120% 90% at 14% 0%,color-mix(in srgb,var(--dm-light-segno,#f59e0b) 24%,transparent) 0%,transparent 62%)}
 
-      :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-main{position:relative;display:flex;align-items:center;gap:12px;box-sizing:border-box;width:100%;margin:0;padding:14px;border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
-      :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-main:active{transform:scale(.985)}
+      :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-main{position:relative;display:flex;align-items:center;gap:12px;box-sizing:border-box;width:100%;margin:0;padding:14px;border:0;background:transparent;color:inherit;font:inherit;text-align:left;-webkit-tap-highlight-color:transparent}
+      /* Il corpo si tocca solo dove apre qualcosa, cioe' sulle luci che si
+       * guardano e basta: solo li' e' rimasto un tasto. */
+      :is(#page-luci,#page-stanze,#page-prese) button.dm-lucip-main{cursor:pointer}
+      :is(#page-luci,#page-stanze,#page-prese) button.dm-lucip-main:active{transform:scale(.985)}
       :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-orb{display:grid;place-items:center;flex:0 0 auto;width:50px;height:50px;border-radius:17px;background:linear-gradient(160deg,var(--secondary-background-color,#eef3f8),color-mix(in srgb,#94a3b8 14%,var(--secondary-background-color,#eef3f8)));color:var(--secondary-text-color,#94a3b8);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 2px rgba(15,23,42,.06);transition:background .3s ease,color .3s ease,box-shadow .3s ease,border-radius .3s ease}
       :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-orb svg{width:26px;height:26px}
       :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-card.is-on .dm-lucip-orb{border-radius:50%;background:radial-gradient(circle at 38% 32%,color-mix(in srgb,var(--dm-light-color,#f59e0b) 25%,#fff),var(--dm-light-color,#f59e0b));color:var(--dm-light-ink,#0f172a);box-shadow:0 3px 16px color-mix(in srgb,var(--dm-light-segno,#f59e0b) 50%,transparent),inset 0 1px 0 rgba(255,255,255,.55),0 0 0 1px color-mix(in srgb,var(--dm-light-segno,#f59e0b) 30%,transparent)}
@@ -749,7 +786,15 @@ function installStyles() {
        * pillola, con la manopola che scorre e si tinge del colore della
        * lampada. E' decorativo — il gesto resta il tocco sulla card — ma
        * racconta lo stato a colpo d'occhio. */
-      :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-led{position:relative;flex:0 0 auto;width:38px;height:22px;border-radius:999px;background:rgba(148,163,184,.28);box-shadow:inset 0 1px 3px rgba(15,23,42,.18);transition:background .25s ease,box-shadow .25s ease}
+      /* La levetta: adesso e' lei l'interruttore, e quindi e' un tasto vero.
+       * Quello che si vede resta di trentotto per ventidue; quello che si
+       * tocca e' un po' piu' largo intorno, col ::before, perche' su un
+       * telefono il dito arriva vicino e non preciso. Il ::after e' gia'
+       * preso: e' la pallina che scorre. */
+      :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-led{position:relative;flex:0 0 auto;width:38px;height:22px;padding:0;border:0;border-radius:999px;background:rgba(148,163,184,.28);box-shadow:inset 0 1px 3px rgba(15,23,42,.18);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .25s ease,box-shadow .25s ease}
+      :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-led::before{content:"";position:absolute;inset:-11px -8px;border-radius:999px}
+      :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-led:active{transform:scale(.94)}
+      :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-led:focus-visible{outline:2px solid var(--dm-light-segno,#f59e0b);outline-offset:3px}
       :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-led::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.35);transition:transform .25s ease,background .25s ease}
       :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-card.is-on .dm-lucip-led{background:color-mix(in srgb,var(--dm-light-segno,#f59e0b) 75%,#fff);box-shadow:inset 0 1px 3px color-mix(in srgb,var(--dm-light-segno,#f59e0b) 40%,rgba(15,23,42,.2)),0 0 12px color-mix(in srgb,var(--dm-light-segno,#f59e0b) 45%,transparent)}
       :is(#page-luci,#page-stanze,#page-prese) .dm-lucip-card.is-on .dm-lucip-led::after{transform:translateX(16px)}

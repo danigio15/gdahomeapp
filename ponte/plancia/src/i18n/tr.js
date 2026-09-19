@@ -2482,6 +2482,7 @@ export default Object.freeze({
   "Sweltering": "Bunaltıcı sıcak",
   "Swing": "Kanatlar",
   "Switch (turns it on and off)": "Anahtar (açar ve kapatır)",
+  "Switch for": "Şunun anahtarı:",
   "Switch, light or scene to control — popups do not need one": "Kontrol edilecek anahtar, ışık veya sahne — açılır pencerelerin buna ihtiyacı yok",
   "Switch, light, fan or input_boolean used by the On/Off button.": "Aç/Kapat düğmesinin kullandığı switch, light, fan ya da input_boolean.",
   "Switch-off": "Kapatma",

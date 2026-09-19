@@ -77,6 +77,14 @@ export class CaseSeguite {
   constructor({ cartella = "./dati", adesso = () => Date.now() } = {}) {
     this.adesso = adesso;
     this.archivio = new Archivio(join(cartella, "case.json"), { case: [] });
+    /* Chi avvisare quando a una casa viene chiesto qualcosa.
+     *
+     * Serve al filo tenuto aperto: una casa sta ferma su `/attesa` e il server
+     * le risponde **nell'istante** in cui qualcuno preme «Installa», invece di
+     * far aspettare il rapporto del minuto dopo. Lo monta il server, che e'
+     * l'unico che sa chi sta aspettando; qui dentro non c'e' niente di
+     * asincrono e non ci deve essere. */
+    this.alLavoro = null;
   }
 
   get lista() {
@@ -111,7 +119,7 @@ export class CaseSeguite {
         giorni: {},
         /* Quando si e' mandato l'avviso che questa casa tace. E' il segno di
          * «di questa l'ho gia' detto»: si mette mandando, si toglie quando
-         * torna a parlare. Senza, una casa muta da tre giorni sarebbe una
+         * torna a parlare. Senza, una casa offline da tre giorni sarebbe una
          * notizia a ogni giro invece che una sola volta. */
         avvisataIl: null,
         /* Il lavoro che aspetta di essere consegnato a questa casa, o `null`.
@@ -218,10 +226,10 @@ export class CaseSeguite {
       .filter((una) => di === TUTTE || una.di === di)
       .map((una) => this.vestita(una, ora))
       .sort((una, altra) => {
-        /* Prima quelle che chiedono qualcosa, e fra quelle prima le mute: chi
+        /* Prima quelle che chiedono qualcosa, e fra quelle prima le offline: chi
          * apre questa pagina la mattina vuole trovarsi in cima quello che gli
          * tocca, non l'ordine in cui le ha installate. */
-        const peso = { muta: 0, guardare: 1, posto: 2 };
+        const peso = { offline: 0, guardare: 1, posto: 2 };
         const differenza = peso[una.stato.chiave] - peso[altra.stato.chiave];
         if (differenza !== 0) return differenza;
         return (una.nome || una.casa).localeCompare(altra.nome || altra.casa);
@@ -270,6 +278,15 @@ export class CaseSeguite {
       mandato: null,
     };
     this.archivio.salva();
+    /* E se quella casa e' li' che aspetta, lo sa adesso. Dopo il salvataggio:
+     * chi si sveglia va a rileggere, e deve trovare quello che c'e' scritto. */
+    try {
+      this.alLavoro?.(casa);
+    } catch (_errore) {
+      /* Chi ascolta ha sbagliato: non e' un motivo per non aver chiesto il
+       * lavoro, che e' gia' scritto. Al rapporto dopo la casa lo trova
+       * lo stesso. */
+    }
     return { ...una.lavoro };
   }
 
@@ -323,6 +340,26 @@ export class CaseSeguite {
     una.avvisataIl = quando;
     this.archivio.salva();
     return true;
+  }
+
+  /**
+   * Via tutte le case di uno.
+   *
+   * La meta' di «elimina» che si vede: spariscono dall'elenco, dai conti, e
+   * con loro se ne va la storia — i giorni, i nomi che gli aveva dato,
+   * l'ultimo rapporto. Non c'e' un cestino, e non ci deve essere: «elimina»
+   * che tiene una copia da qualche parte e' un «nascondi» che si chiama in un
+   * altro modo.
+   *
+   * Torna quante ne ha buttate.
+   */
+  toglieTutto(di) {
+    if (!di) return 0;
+    const prima = this.lista.length;
+    this.archivio.dati.case = this.lista.filter((una) => una.di !== di);
+    const andate = prima - this.lista.length;
+    if (andate) this.archivio.salva();
+    return andate;
   }
 
   /** Quante ne segue uno. E' il numero su cui si misura il suo limite. */
@@ -379,7 +416,7 @@ export class CaseSeguite {
   /**
    * La striscia dei quattordici giorni, come stringa.
    *
-   * `P` giorno pieno, `M` a meta', `V` muta, spazio «non c'era ancora». Una
+   * `P` giorno pieno, `M` a meta', `V` offline, spazio «non c'era ancora». Una
    * stringa e non un elenco di oggetti perche' cosi' si legge anche nel
    * registro e in una risposta guardata a occhio, e perche' quattordici
    * caratteri sono quattordici caratteri.

@@ -291,16 +291,22 @@ function cardMarkup(view, showRoom) {
       : "";
   return `<article class="lgx-card dm-lightx-card ${view.on ? "is-on" : ""}" data-luce="${esc(view.id)}" data-dm-light="${esc(view.id)}" data-dm-light-available="${view.available}" style="--dm-light-color:${esc(cardColor(view))};--dm-light-ink:${readableInk(cardColor(view))};--dm-light-level:${view.on ? Math.max(12, level) : 0}%">
     <div class="lgx-glow"></div>
-    <button type="button" class="dm-lightx-main" data-dm-light-toggle aria-pressed="${view.on}">
+    <div class="dm-lightx-main">
       <span class="lgx-row-top">
         <span class="lgx-orb dm-lightx-orb">${view.domain === "light" ? BULB : PLUG}</span>
         <span class="dm-lightx-badges">${badges}</span>
-        <span class="lgx-led ${view.on ? "on" : ""}"></span>
+        <button
+          type="button"
+          class="lgx-led ${view.on ? "on" : ""}"
+          data-dm-light-toggle
+          aria-pressed="${view.on}"
+          aria-label="${t("Interruttore di", "Switch for")} ${esc(view.name)}"
+        ></button>
       </span>
       <span class="lgx-name">${esc(title)}</span>
       ${subtitle ? `<span class="lgx-sub">${esc(subtitle)}</span>` : ""}
       <span class="lgx-state" data-dm-light-state>${stateText(view)}</span>
-    </button>
+    </div>
     ${dimmer || tools ? `<div class="dm-lightx-tools">${dimmer}${tools}</div>` : ""}
   </article>`;
 }
@@ -372,6 +378,8 @@ function syncCard(card, view) {
   const level = cardLevel(view);
   card.style.setProperty("--dm-light-level", view.on ? `${Math.max(12, level)}%` : "0%");
   card.querySelector(".lgx-led")?.classList.toggle("on", view.on);
+  /* Si chiama sempre allo stesso modo, e quello che cambia e' `aria-pressed`:
+   * un comando che cambia nome sotto il dito non e' un comando. */
   card.querySelector("[data-dm-light-toggle]")?.setAttribute("aria-pressed", String(view.on));
   const label = card.querySelector("[data-dm-light-state]");
   const text = stateText(view);
@@ -898,8 +906,27 @@ function installStyles() {
     #details-list .dm-lightx-card.is-on .dm-lightx-orb{background:radial-gradient(circle at 38% 32%,color-mix(in srgb,var(--dm-light-color,#f59e0b) 25%,#fff),var(--dm-light-color,#f59e0b))!important;color:var(--dm-light-ink,#0f172a)!important;box-shadow:0 3px 12px color-mix(in srgb,var(--dm-light-color,#f59e0b) 45%,transparent)!important}
     #details-list .dm-lightx-card.is-on .lgx-state{color:color-mix(in srgb,var(--dm-light-color,#f59e0b) 60%,var(--text,#0f172a))!important}
 
-    #details-list .dm-lightx-main{display:grid!important;gap:1px!important;box-sizing:border-box!important;width:100%!important;margin:0!important;padding:12px 12px 4px!important;border:0!important;border-radius:18px 18px 0 0!important;background:transparent!important;color:inherit!important;font:inherit!important;text-align:left!important;cursor:pointer!important;-webkit-tap-highlight-color:transparent!important}
-    #details-list .dm-lightx-main:active{transform:scale(.985)!important}
+    /* Il corpo della tessera **non accende**.
+     *
+     * Prima era tutto un tasto: il disegno, il nome, la stanza, la scritta
+     * sotto — dovunque si toccasse, la luce cambiava. Su una parete di dieci
+     * luci vuol dire accenderne una ogni volta che si scorre la pagina col
+     * dito, o che si legge da vicino quale sia quale. «Non avere tutto il
+     * rettangolo completo che dove premi accende.»
+     *
+     * Adesso quello che accende e' il pallino a destra, e basta: e' gia' lui
+     * a dire se la luce e' accesa, ed e' il posto dove uno lo cerca. Il resto
+     * della tessera si legge e si tocca senza conseguenze. */
+    #details-list .dm-lightx-main{display:grid!important;gap:1px!important;box-sizing:border-box!important;width:100%!important;margin:0!important;padding:12px 12px 4px!important;border:0!important;border-radius:18px 18px 0 0!important;background:transparent!important;color:inherit!important;font:inherit!important;text-align:left!important;-webkit-tap-highlight-color:transparent!important}
+
+    /* Il pallino: quello che si vede resta di dieci punti — e' una spia, non
+     * un bottone da premere col pollice — ma quello che si **tocca** e' un
+     * tondo di trentotto, disegnato intorno e invisibile. Dieci punti su un
+     * telefono non si prendono. */
+    #details-list .lgx-led{position:relative!important;box-sizing:content-box!important;padding:0!important;border:0!important;background:#e2e8f0;cursor:pointer!important;-webkit-tap-highlight-color:transparent!important}
+    #details-list .lgx-led::after{content:''!important;position:absolute!important;inset:-14px!important;border-radius:50%!important}
+    #details-list .lgx-led:active{transform:scale(.85)!important}
+    #details-list .lgx-led:focus-visible{outline:2px solid var(--dm-light-color,#f59e0b)!important;outline-offset:3px!important}
     #details-list .dm-lightx-main .lgx-row-top{display:flex!important;align-items:center!important;gap:8px!important;margin-bottom:10px!important}
     #details-list .dm-lightx-main .lgx-orb{display:flex!important;align-items:center!important;justify-content:center!important}
     #details-list .dm-lightx-badges{display:flex!important;flex-wrap:wrap!important;gap:4px!important;margin-left:auto!important}

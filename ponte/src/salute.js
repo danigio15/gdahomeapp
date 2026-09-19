@@ -28,18 +28,48 @@
  * parola per parola nella scheda «Il quadro». Chi non lo vuole non incolla il
  * codice, e non parte niente.
  *
- * ─── Il dispositivo, non le sue entita' ──────────────────────────────────
+ * ─── Un dispositivo e' un dispositivo ────────────────────────────────────
+ *
+ * Si guardano **solo le entita' che appartengono a un dispositivo vero**:
+ * quelli che in Home Assistant stanno in «Dispositivi e integrazioni», Zigbee
+ * compreso. Tutto il resto no.
+ *
+ * Qui c'era un guasto, e in una casa vera si vedeva cosi':
+ *
+ *     I DISPOSITIVI NON COLLEGATI
+ *     Aggiornamento package elettrodomestici · Automazioni Elettrodomestici 1
+ *     Avvio Ritardato Conteggio Elettrodomestici · Avviso accensione lavatrice
+ *     … e altri 170
+ *
+ * Centottanta «dispositivi non collegati» in una casa che ne ha una
+ * quarantina. Non erano dispositivi: erano aiutanti, automazioni, sensori
+ * template, `input_boolean` — roba che un dispositivo non ce l'ha e non lo
+ * deve avere. Ci finivano perche' quando un'entita' non aveva un dispositivo
+ * si ripiegava sul suo nome, e quella riga di ripiego era la maggioranza.
+ *
+ * Un numero cosi' non e' impreciso, e' **inservibile**: chi lo legge non ha
+ * modo di sapere quali delle centottanta righe siano un guasto, e smette di
+ * guardarle tutte.
  *
  * Un termostato che se ne va porta giu' cinque entita', e cinque righe
  * «Termostato salotto Temperatura», «… Umidita'», «… Batteria» dicono una
- * cosa sola scritta cinque volte. Percio' si raggruppa per dispositivo, con i
- * due registri di Home Assistant, e si manda il nome del dispositivo. I
- * registri sono facoltativi: se non rispondono si manda il nome
- * dell'entita', che e' meno bello e non e' sbagliato.
+ * cosa sola scritta cinque volte. Percio' si raggruppa per dispositivo e si
+ * manda il nome del dispositivo.
  *
- * Il conto invece resta in entita', ed e' voluto: `giu` sono le entita' che
- * non rispondono, `dispositivi` quanti apparecchi sono. Due numeri diversi
- * per due domande diverse.
+ * I tre numeri parlano tutti della stessa popolazione — le entita' di un
+ * dispositivo — se no «8 entita' su 214» metterebbe insieme due conti fatti
+ * su due insiemi diversi. `totali` sono quelle che un dispositivo ce l'hanno,
+ * `giu` quelle di quelle che non rispondono, `dispositivi` quanti apparecchi
+ * sono.
+ *
+ * ─── E senza i registri non si indovina ──────────────────────────────────
+ *
+ * I due registri di Home Assistant dicono quali entita' appartengono a un
+ * dispositivo, e senza di loro la domanda non si puo' fare. Allora non si
+ * risponde: tutti e tre i numeri escono `null`, che il quadro sa gia'
+ * disegnare — «questa casa non lo dice», grigio, e non fa suonare niente.
+ * Ripiegare sui nomi delle entita' e' proprio la cosa che ha prodotto le
+ * centottanta righe.
  *
  * ─── Perche' `unavailable` e non `unknown` ────────────────────────────────
  *
@@ -116,27 +146,57 @@ function ilNomeDellEntita(stato) {
  * @param {object} registri `dispositivi` ed `entita`, come li da' Home Assistant
  */
 export function iNomi(giu, registri = null) {
-  const diChiE = new Map();
-  for (const riga of elenco(registri?.entita)) {
-    const quale = pulito(riga?.entity_id);
-    const suo = pulito(riga?.device_id);
-    if (quale && suo) diChiE.set(quale, suo);
-  }
-  const comeSiChiama = new Map();
-  for (const riga of elenco(registri?.dispositivi)) {
-    const quale = pulito(riga?.id);
-    const come = ilNomeDelDispositivo(riga);
-    if (quale && come) comeSiChiama.set(quale, come);
-  }
+  const quali = iDispositivi(registri);
+  if (!quali) return [];
   /* Un `Set`, e non un elenco: e' qui che cinque entita' di un termostato
    * diventano una riga sola. */
   const nomi = new Set();
   for (const uno of elenco(giu)) {
-    const suo = diChiE.get(pulito(uno?.entity_id));
-    const come = (suo && comeSiChiama.get(suo)) || ilNomeDellEntita(uno);
+    const suo = quali.diChiE(pulito(uno?.entity_id));
+    if (!suo) continue;
+    /* Il dispositivo c'e' e il suo nome e' vuoto: qui il ripiego sul nome
+     * dell'entita' ci sta, perche' la domanda «e' un dispositivo?» ha gia'
+     * avuto risposta si'. */
+    const come = quali.comeSiChiama(suo) || ilNomeDellEntita(uno);
     if (come) nomi.add(come);
   }
   return [...nomi].sort((una, altra) => una.localeCompare(altra, "it"));
+}
+
+/**
+ * I due registri, letti una volta: da un'entita' al nome del suo dispositivo.
+ *
+ * Torna `null` quando i registri non ci sono — e chi chiama non indovina.
+ * Un'entita' che un dispositivo non ce l'ha torna stringa vuota, e non e' un
+ * caso raro: aiutanti, automazioni, sensori template, scene e gruppi stanno
+ * tutti li'.
+ */
+function iDispositivi(registri) {
+  const righeE = elenco(registri?.entita);
+  const righeD = elenco(registri?.dispositivi);
+  if (!righeE.length || !righeD.length) return null;
+
+  /* I dispositivi per primi: il nome ci va anche se e' vuoto, perche' quello
+   * che conta qui e' **esserci**. Un'entita' che punta a un dispositivo che
+   * nel registro non c'e' piu' non e' di un dispositivo. */
+  const comeSiChiama = new Map();
+  for (const riga of righeD) {
+    const quale = pulito(riga?.id);
+    if (quale) comeSiChiama.set(quale, ilNomeDelDispositivo(riga));
+  }
+  const diChiE = new Map();
+  for (const riga of righeE) {
+    const quale = pulito(riga?.entity_id);
+    const suo = pulito(riga?.device_id);
+    if (quale && suo && comeSiChiama.has(suo)) diChiE.set(quale, suo);
+  }
+  return {
+    /* Di che dispositivo e' questa entita', o stringa vuota. E' anche il modo
+     * di chiedere «questa e' di un dispositivo?». */
+    diChiE: (entita) => diChiE.get(entita) || "",
+    /* Come si chiama quel dispositivo, o stringa vuota se il nome non ce l'ha. */
+    comeSiChiama: (suo) => comeSiChiama.get(suo) || "",
+  };
 }
 
 /**
@@ -151,7 +211,12 @@ export function iNomi(giu, registri = null) {
  * @param {object} opzioni `registri` per i nomi dei dispositivi, `quante` per il tetto
  */
 export function leEntita(stati, { quante = NOMI_MASSIMI, registri = null } = {}) {
-  const dentro = elenco(stati);
+  const quali = iDispositivi(registri);
+  /* Senza i registri non si sa quali entita' siano di un dispositivo, e non si
+   * indovina: tre `null`, che il quadro disegna «questa casa non lo dice». */
+  if (!quali) return { totali: null, giu: null, dispositivi: null, nomi: [] };
+
+  const dentro = elenco(stati).filter((uno) => quali.diChiE(pulito(uno?.entity_id)));
   const giu = dentro.filter(nonRisponde);
   const nomi = iNomi(giu, registri);
   return {

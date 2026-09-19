@@ -50,9 +50,9 @@
  * in tutti e tre.
  */
 
-/* Dopo quanti rapporti saltati una casa e' muta. Uno solo puo' essere un
+/* Dopo quanti rapporti saltati una casa e' offline. Uno solo puo' essere un
  * riavvio, tre no. */
-export const MUTA_DOPO = 3;
+export const OFFLINE_DOPO = 3;
 
 /* Quanti giorni puo' stare fermo un backup prima che sia una cosa da guardare.
  * Due settimane: chi lo fa ogni notte se ne accorge subito, chi lo fa a mano
@@ -91,11 +91,11 @@ export function daQuanto(quando, adesso = Date.now()) {
   return `${giorni} ${giorni === 1 ? "giorno" : "giorni"} fa`;
 }
 
-export function eMuta(carta, adesso = Date.now()) {
+export function eOffline(carta, adesso = Date.now()) {
   const quando = Date.parse(String(carta?.quando));
   if (!Number.isFinite(quando)) return true;
   const ogni = numero(carta?.ogni) || 15;
-  return adesso - quando > ogni * MUTA_DOPO * MINUTO;
+  return adesso - quando > ogni * OFFLINE_DOPO * MINUTO;
 }
 
 const backupFermo = (carta) => {
@@ -282,9 +282,9 @@ function laMacchinaRegge(m) {
 /**
  * Lo stato di una casa, in una parola.
  *
- * Tre, e l'ordine conta. **Muta batte tutto**: di una casa che non parla non si
- * sa niente, nemmeno che sta bene — quello che si vede di lei e' vecchio. Poi
- * quello che non va. Poi il resto.
+ * Tre, e l'ordine conta. **Offline batte tutto**: di una casa che non parla non
+ * si sa niente, nemmeno che sta bene — quello che si vede di lei e' vecchio.
+ * Poi quello che non va. Poi il resto.
  *
  * Ce n'era un quarto, «collaudo aperto», e teneva in una fila sua le case in
  * cui un controllo era rosso e nessuno aveva ancora dichiarato finito
@@ -294,11 +294,11 @@ function laMacchinaRegge(m) {
  */
 export function loStato(casa, adesso = Date.now()) {
   const c = casa?.carta ?? null;
-  if (!c || eMuta(c, adesso)) {
+  if (!c || eOffline(c, adesso)) {
     return {
-      chiave: "muta",
+      chiave: "offline",
       segno: "■",
-      parola: "muta",
+      parola: "offline",
       perché: c
         ? `Non manda un rapporto da ${daQuanto(c.quando, adesso)}. Quello che si vede qui sotto è vecchio di altrettanto.`
         : "Non è ancora arrivato nessun rapporto da questa casa.",

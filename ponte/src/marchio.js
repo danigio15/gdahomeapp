@@ -32,7 +32,20 @@
  *     vedeva: il segno era il nostro e le parole di fianco no, cioe' il
  *     marchio di un altro appoggiato al nostro. Sono due `span` attaccati —
  *     «Dashboard» in chiaro e «MODERN» in azzurro — e diventano «gda» e
- *     «home», che e' lo stesso disegno col nostro nome.
+ *     «home», che e' lo stesso disegno col nostro nome;
+ *  6. il **segno in cima a Configurazione**. Li' c'era una casetta azzurra
+ *     disegnata a mano dentro la pagina — non un logo di nessuno, ma
+ *     nemmeno il nostro — e chi apriva quella schermata vedeva il marchio
+ *     cambiare sotto gli occhi. Adesso e' lo stesso `logo.png` della
+ *     testata, cioe' il nostro, o quello dell'installatore dove c'e': una
+ *     riga sola, e i due segni non possono piu' divergere;
+ *  7. i **numeri di versione** che la plancia dichiara di se' stessa
+ *     (`legacy/build-info.js`). Dicevano `1.4.32` mentre l'add-on diceva
+ *     1.5.9.1, e si leggevano in due posti a schermo: sotto
+ *     «CONFIGURAZIONE» e nella diagnostica runtime. Quei numeri li scrive
+ *     uno script della plancia quando la si costruisce, e non sa niente di
+ *     gdahome; qui si rimettono in pari col nostro, che e' lo stesso che
+ *     sta in `ORIGINE.json`.
  *
  * Il velo resta leggero: il marchio di gdahome e' un disegno con sfumature, e
  * in PNG a 152 punti pesa quaranta kilobyte — dieci volte quello che c'era, e
@@ -105,6 +118,18 @@ const IL_TITOLO = /<title>[^<]*<\/title>/;
  * «Dashboard Modern», in due parole. */
 const L_ALT_DEL_LOGO = /alt="Dashboard Modern"/g;
 
+/* I numeri che la plancia dichiara di se' stessa. Sono dentro un `Object.freeze`
+ * scritto su una riga sola, e si riconoscono per nome. */
+const IL_BUILD_INFO = "legacy/build-info.js";
+const LA_VERSIONE_DELLA_PLANCIA = /("(?:integrationVersion|dashboardVersion)":")[^"]*(")/g;
+
+/* Il segno in cima a Configurazione: una casetta azzurra disegnata dentro la
+ * pagina. Si riconosce il contenitore — `cfg-hero-ico` — e si butta via quello
+ * che c'e' dentro: quel disegno cambia a ogni versione della plancia, il nome
+ * della classe no. */
+const IL_SEGNO_DI_CONFIGURAZIONE =
+  /(<div class="cfg-hero-ico"[^>]*>)\s*<svg[\s\S]*?<\/svg>\s*(<\/div>)/;
+
 /* La scritta accanto al logo: due `span` attaccati, «Dashboard» e «MODERN».
  *
  * Si riconosce la **coppia**, non le due parole da sole: in un runtime di
@@ -123,10 +148,18 @@ const LA_SCRITTA_DEL_LOGO = /(>)Dashboard(<\/span><span[^>]*>)MODERN(<\/span>)/g
  * solleva mai: un marchio che manca e' una plancia che si vede col suo nome di
  * prima, e va infinitamente meglio di una plancia che non si apre.
  */
-export function vestiDiGdahome(relativo, corpo, tipo, suo = null) {
+export function vestiDiGdahome(relativo, corpo, tipo, suo = null, versione = "") {
   const quale = String(relativo || "");
   const chi = daInstallatore(suo);
   try {
+    if (quale === IL_BUILD_INFO) {
+      const nostra = numeroDiVersione(versione);
+      if (!nostra) return { corpo, tipo };
+      const testo = corpo.toString("utf8");
+      const fatto = testo.replace(LA_VERSIONE_DELLA_PLANCIA, `$1${nostra}$2`);
+      if (fatto === testo) return { corpo, tipo };
+      return { corpo: Buffer.from(fatto, "utf8"), tipo };
+    }
     if (quale === IL_LOGO) {
       const nostro = chi?.logo || ilLogo();
       if (!nostro) return { corpo, tipo };
@@ -185,6 +218,16 @@ function perDisegnare(nome) {
 
 const perUnAttributo = (nome) => perDisegnare(nome);
 
+/* Un numero di versione, ripulito: cifre e punti e basta.
+ *
+ * Finisce dentro una stringa JSON in un file che il browser esegue, e arriva
+ * da `ORIGINE.json` — un file, quindi qualcosa che un giorno qualcuno
+ * modifica. Un apice in mezzo romperebbe la plancia intera, e qui non passa. */
+function numeroDiVersione(quale) {
+  const pulito = String(quale ?? "").trim();
+  return /^[0-9]+(\.[0-9]+){1,3}$/.test(pulito) ? pulito : "";
+}
+
 /* La scritta accanto al logo e' fatta di **due** pezzi attaccati: «gda» in
  * chiaro e «home» in azzurro. Un nome di due parole ci sta com'e'; uno di una
  * parola sola va tutto nel primo, e il secondo resta vuoto — che a schermo
@@ -202,6 +245,14 @@ function inDuePezzi(nome) {
 export function laPagina(testo, suo = null) {
   let fatto = String(testo);
   const chi = suo && suo.nome ? suo : null;
+  /* Il segno di Configurazione: lo stesso file della testata, che due righe
+   * piu' su diventa il nostro o quello dell'installatore. Indicarlo invece di
+   * incollarlo di nuovo e' quello che impedisce ai due segni di divergere: e'
+   * lo stesso. `./logo.png` perche' questa pagina sta in `legacy/`, come lui. */
+  fatto = fatto.replace(
+    IL_SEGNO_DI_CONFIGURAZIONE,
+    `$1<img src="./logo.png" alt="${perUnAttributo(chi ? chi.nome : NOME)}" width="52" height="52" style="display:block;object-fit:contain;border-radius:13px" />$2`,
+  );
   /* Il velo d'avvio: l'immagine si cambia solo se ce n'e' una da mettere. Il
    * logo di un installatore in un `data:` dentro la pagina pesa quanto pesa —
    * fino a centoventotto kilobyte prima del primo disegno — e allora li' resta

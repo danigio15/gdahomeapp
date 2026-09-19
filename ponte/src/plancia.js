@@ -206,6 +206,11 @@ export class Plancia {
         readFileSync(dove),
         tipo,
         this.installatore?.(),
+        /* E il numero di versione: la plancia ne dichiara uno suo, scritto
+         * quando la si costruisce, che di gdahome non sa niente. Quello buono
+         * e' in `ORIGINE.json`, ed e' lo stesso che il ponte mette nel
+         * rapporto — un posto solo, e i due non possono divergere. */
+        this.provenienza?.versione,
       );
       return { stato: 200, tipo: vestito.tipo, corpo: vestito.corpo };
     } catch (_errore) {

@@ -92,15 +92,15 @@ test("le case si ordinano per quello che chiedono, non per come sono arrivate", 
   const b = banco(Date.parse("2026-09-18T09:00:00Z"));
   try {
     const aPosto = "casa_11111111111111111111111111111111";
-    const muta = "casa_22222222222222222222222222222222";
-    b.case.deposita(muta, carta(b), CHI);
-    b.case.rinomina(muta, "La muta", CHI);
+    const offline = "casa_22222222222222222222222222222222";
+    b.case.deposita(offline, carta(b), CHI);
+    b.case.rinomina(offline, "Quella offline", CHI);
     b.vai(3 * 60 * MINUTO);
     b.case.deposita(aPosto, { ...carta(b), telefoni: { abbinati: 1, visti7gg: 1 } }, CHI);
     b.case.rinomina(aPosto, "Quella a posto", CHI);
     const elenco = b.case.elenco(CHI);
-    assert.equal(elenco[0].casa, muta, "chi non parla sta in cima");
-    assert.equal(elenco[0].stato.chiave, "muta");
+    assert.equal(elenco[0].casa, offline, "chi non parla sta in cima");
+    assert.equal(elenco[0].stato.chiave, "offline");
   } finally {
     b.chiudi();
   }
