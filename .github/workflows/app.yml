@@ -75,6 +75,10 @@ jobs:
             echo "::error::Chieste le piste ma manca il segreto NEGOZIO_GOOGLE."
             exit 1
           fi
+          # `pipefail` perche' lo stato di una catena e' quello dell'ULTIMO
+          # comando, e `tee` riesce sempre. Senza, un errore di node passa per
+          # una corsa verde.
+          set -o pipefail
           node strumenti/porta-nel-negozio.mjs --piste | tee piste.txt
           {
             echo "### Le piste di questa app"
@@ -359,6 +363,15 @@ jobs:
           fi
           solo=""
           if [ "$PROVA" = "true" ]; then solo="--prova"; fi
+          # `pipefail`, e questa riga e' costata una pubblicazione.
+          #
+          # Lo stato di una catena e' quello dell'ULTIMO comando: `tee` riesce
+          # sempre, quindi lo strumento poteva uscire con 1 — l'ha fatto, con
+          # un «403 The caller does not have permission» dal negozio — e il
+          # lavoro diventava verde lo stesso. Il pacchetto non era andato da
+          # nessuna parte e non lo diceva nessuno, che e' esattamente la cosa
+          # contro cui il commento qui sopra metteva in guardia.
+          set -o pipefail
           node strumenti/porta-nel-negozio.mjs \
             app/build/app/outputs/bundle/release/app-release.aab \
             --pista="$PISTA" $solo | tee negozio.txt

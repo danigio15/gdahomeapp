@@ -39,6 +39,8 @@ import {
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { NON_SONO_PLANCE } from "./voci-nella-barra.js";
+
 /* Dove finisce la cartina, dentro la `www` di Home Assistant. Una cartella
  * nostra e con il nostro nome: quello che c'e' intorno e' di chi ci abita. */
 export const CARTELLA = "gdahome";
@@ -1009,7 +1011,12 @@ export class PlanceInCasa {
   }
 
   /* Via le Plance di plance che non ci sono piu'. Solo le nostre: le altre le
-   * ha fatte qualcuno, e non si toccano. */
+   * ha fatte qualcuno, e non si toccano.
+   *
+   * E nemmeno le voci del ponte che Plance non sono — il Cruscotto e la
+   * Gestione. Cominciano per `gdahome-` come tutto il nostro, ma non stanno
+   * in nessun giro di plance, quindi senza l'elenco qui sotto finivano in
+   * questo cestino un secondo dopo essere state create. */
   async pulisci(quali) {
     const restano = new Set(quali.map((una) => indirizzoDi(una)));
     const dentro = await this.casa.chiedi({ type: "lovelace/dashboards/list" });
@@ -1017,7 +1024,8 @@ export class PlanceInCasa {
     let quante = 0;
     for (const una of elenco) {
       const dove = String(una?.url_path || "");
-      if (!dove.startsWith(DAVANTI) || restano.has(dove)) continue;
+      if (!dove.startsWith(DAVANTI) || restano.has(dove) || NON_SONO_PLANCE.includes(dove))
+        continue;
       await this.casa.chiedi({ type: "lovelace/dashboards/delete", dashboard_id: una.id });
       quante += 1;
     }

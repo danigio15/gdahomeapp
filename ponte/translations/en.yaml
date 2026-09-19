@@ -32,7 +32,7 @@ configuration:
     description: >-
       Leave it empty. If an installer set your home up, they give you a code to
       paste here: from then on this home sends them a few lines of numbers
-      every quarter of an hour — the versions, how full the disk is, which
+      every minute — the versions, how full the disk is, which
       add-ons are running, how many entities stopped answering — and they find
       out something is wrong before you have to call them. None of it is yours:
       no entity names, no rooms, no people, no sensor states, not your Wi-Fi
@@ -47,18 +47,24 @@ configuration:
   installatore:
     name: This Home Assistant belongs to an installer
     description: >-
-      Leave it off. On, the gdahome console gains one more section — your
-      panel — where you watch the systems you installed, and the app gains the
-      matching entry. Turn it on in your own Home Assistant, not in a client's.
-      The fleet key is not written here: the page asks for it and it stays in
-      the browser of whoever types it.
-  gestore:
-    name: This Home Assistant belongs to whoever keeps the panel
+      Leave it off. On — and with the code below filled in — the gdahome
+      console gains one more section, your panel, where you watch the systems
+      you installed, and the app gains the matching entry. On its own it turns
+      nothing on. Turn it on in your own Home Assistant, not in a client's.
+  chiave_flotta:
+    name: Your fleet's code
     description: >-
-      Leave it off. There is one such home in the world: on, the sidebar gains
+      Without this, the switch above does nothing: no section, no entry,
+      nowhere. Write it in your own Home Assistant and not in a client's: an
+      add-on's options sit on disk in the clear and end up in backups.
+  chiave_gestione:
+    name: The key of whoever keeps the panel
+    description: >-
+      Leave it empty: there is one such home in the world, and it is not yours
+      unless you already know what this is about. Filled in, the sidebar gains
       «Gestione installatori», where you add installers and set their limits.
-      The management key is not written here: the page asks for it and it stays
-      in the browser.
+      Empty, that entry does not exist. There is no switch here: the key is the
+      switch.
   registro:
     name: The log
     description: How much it writes in the add-on's log.

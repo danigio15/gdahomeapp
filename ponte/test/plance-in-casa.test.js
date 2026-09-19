@@ -30,6 +30,7 @@ import {
   lePlanceDiPrima,
 } from "../src/plance-in-casa.js";
 import { Plance } from "../src/plance.js";
+import { IL_CRUSCOTTO, LA_GESTIONE } from "../src/voci-nella-barra.js";
 
 /* Una Home Assistant finta al livello dei comandi: tiene le Plance e le
  * risorse in memoria, come le tiene lei, e mette in fila tutto quello che le
@@ -1107,6 +1108,44 @@ test("una cartina gia' giusta non chiede niente a nessuno", async () => {
       b.registro.detto.avvisi.filter((una) => /F5/.test(una)).length,
       0,
       "ha chiesto un F5 senza motivo",
+    );
+  } finally {
+    b.via();
+  }
+});
+
+test("il cestino non si porta via il Cruscotto e la Gestione, che Plance non sono", async () => {
+  /* Il guasto vero, con le sue parole nel registro: «la voce «Cruscotto
+   * installatore» e' nella barra laterale» e un secondo dopo «1 voce, 2
+   * tolte». Le due voci le mette `voci-nella-barra.js`, cominciano per
+   * `gdahome-` come tutto il nostro, e non sono di nessuna plancia — cioe'
+   * erano esattamente il bersaglio del filtro. Create e cancellate dallo
+   * stesso add-on, nello stesso avvio, e da fuori sembrava che accendere
+   * l'interruttore non facesse niente.
+   *
+   * Accanto resta la Plancia orfana, che invece **deve** andarsene: se questa
+   * prova passasse risparmiando tutto, non proverebbe niente. */
+  const b = banco({
+    plance: [
+      { id: "cruscotto", url_path: IL_CRUSCOTTO.dove, title: IL_CRUSCOTTO.titolo },
+      { id: "gestione", url_path: LA_GESTIONE.dove, title: LA_GESTIONE.titolo },
+      { id: "orfana", url_path: "gdahome-di-ieri", title: "Una di ieri" },
+    ],
+  });
+  try {
+    const esito = await b.in_casa.sistema();
+
+    assert.equal(esito.tolte, 1, "se ne va l'orfana, e quella sola");
+    assert.deepEqual(
+      b.casa.plance.map((una) => una.url_path).sort(),
+      [IL_CRUSCOTTO.dove, LA_GESTIONE.dove, "gdahome-primary"].sort(),
+    );
+    assert.equal(
+      b.casa.dette.some(
+        (una) => una.type === "lovelace/dashboards/delete" && una.dashboard_id !== "orfana",
+      ),
+      false,
+      "nessun altro cestino e' partito",
     );
   } finally {
     b.via();
