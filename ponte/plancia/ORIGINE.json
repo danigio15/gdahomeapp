@@ -1,11 +1,11 @@
 {
   "repository": "danigio15/gdahomeapp",
-  "commit": "bf86f8873eb1b1176469f58537f46cef6309a491",
+  "commit": "d5a8720f7452da56d191c445a72672baf4e275f4",
   "versione": "1.5.9",
-  "portata_il": "2026-09-19T16:51:23.223Z",
+  "portata_il": "2026-09-19T16:56:07.842Z",
   "file": 924,
   "byte": 18824013,
-  "sigillo": "66f313b438f3c98dabbd7ae95086e036eec826584519586379a1d8ece574f490",
+  "sigillo": "9f46649141a571b62c86ec96e2ea23310fe86eaf3229c71739287ea192d179ac",
   "firma": "",
   "impronte": {
     "avatars/LICENSE.txt": "e8c7c216d5a15ec564f66c8070b9bbce1b39e20822440af18d4ad735dd9b9e6e",
@@ -512,7 +512,7 @@
     "legacy/dashboard.html": "b99bada5085cb323f681388a3d12d0d390378e33d7d0ce40bdcbce225ac52a18",
     "legacy/logo.png": "d293a6bcc89915fe7ece3614ea5d203afe4f140ec9d927a919da2619bced895e",
     "legacy/modules-entry.js": "686f429c14087a3b00ae57cda6fe2ef0a70029d8e78e94f33eec7106822d8be6",
-    "legacy/parole-del-guscio-en.json": "6219730f2869361c0338273d829925591f15fe76429d3a7ab848d3ab808b5c7e",
+    "legacy/parole-del-guscio-en.json": "9ac17165bb5bdb69f79269c6da70319b70bdef229cd613eab2e77e9ded370c00",
     "legacy/patches/css-en.diff": "66490f6b85da5a5fb10903dcf5f0a571e3b1813fe78b33952c1b827fad2964fc",
     "legacy/patches/css-it.diff": "7b9f456023b76d991e24701276cac4e090179ef113979a57dcb86c578bf27388",
     "legacy/patches/runtime-en.diff": "e6babe699013b6a87b7d178c828d994999fb1b9450b5970cfe75916e04d0352f",
