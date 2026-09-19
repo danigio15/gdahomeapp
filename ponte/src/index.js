@@ -11,7 +11,7 @@ import { join } from "node:path";
 
 import { Abbinamento } from "./abbinamento.js";
 import { Aggiornamento } from "./aggiornamento.js";
-import { fabbricaLaRapporto, Postino } from "./rapporto.js";
+import { fabbricaIlRapporto, Postino, QUADRO_DI_DIFETTO } from "./rapporto.js";
 import { Casa } from "./casa.js";
 import { Chat } from "./chat.js";
 import { Chiamata } from "./chiamata.js";
@@ -23,6 +23,7 @@ import { BASE_DI_CASA, Foto } from "./foto.js";
 import { Plancia } from "./plancia.js";
 import { Plance } from "./plance.js";
 import { PlanceInCasa } from "./plance-in-casa.js";
+import { VoceDelCruscotto } from "./voce-del-cruscotto.js";
 import { UtentiDiCasa } from "./utenti.js";
 import { Identita } from "./identita.js";
 import { Dispositivi } from "./dispositivi.js";
@@ -241,7 +242,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * casa vede fuori — la prova piu' onesta che esista, non un ping a un
    * indirizzo scelto da noi ma la cosa vera che deve funzionare. Stessa strada
    * del Ritorno delle commissioni, e per lo stesso motivo. */
-  postino.fabbrica = fabbricaLaRapporto({
+  postino.fabbrica = fabbricaIlRapporto({
     identita,
     casa,
     ferro,
@@ -354,6 +355,21 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * solo al riavvio dopo. */
   void planceInCasa.sistemaConCalma().then(() => planceInCasa.sorveglia());
 
+  /* La voce «Cruscotto», per chi gli impianti li monta.
+   *
+   * Si dice **anche quando l'interruttore e' spento**: e' l'unico modo perche'
+   * spegnendolo la voce sparisca subito invece che al riavvio dopo. E non si
+   * aspetta, per lo stesso motivo delle Plance qui sopra — all'accensione
+   * l'integrazione i suoi comandi non li ha ancora registrati, e una voce di
+   * menu non vale il ritardo di tutto il resto. */
+  const voceDelCruscotto = new VoceDelCruscotto({
+    casa,
+    installatore: opzioni.installatore,
+    dove: `${QUADRO_DI_DIFETTO}/console/`,
+    registro,
+  });
+  void voceDelCruscotto.dilloConCalma();
+
   const giro = setInterval(() => {
     const andati = dispositivi.potatura();
     if (andati) registro.info(`${andati} dispositivi tolti perche' spariti da troppo tempo`);
@@ -363,6 +379,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   const abbassa = async () => {
     registro.info("il ponte si abbassa");
     planceInCasa.smettiDiSorvegliare();
+    voceDelCruscotto.ferma();
     clearInterval(giro);
     chiamata.spegni();
     postino.ferma();

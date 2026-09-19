@@ -119,6 +119,12 @@ TYPE_CHAT_OPEN = f"{DOMAIN}/chat/open"
 TYPE_CHAT_ANSWER = f"{DOMAIN}/chat/answer"
 TYPE_CHAT_DROP = f"{DOMAIN}/chat/drop"
 
+# La voce «Cruscotto» nella barra laterale. La accende il **ponte**, non una
+# pagina: l'interruttore sta nella scheda dell'add-on, e l'indirizzo del quadro
+# il ponte ce l'ha scritto dentro. Due posti dove dirlo vorrebbe dire due posti
+# da tenere d'accordo.
+TYPE_CRUSCOTTO_SET = f"{DOMAIN}/cruscotto/set"
+
 TYPE_TICKET_AUTH_START = f"{DOMAIN}/tickets/auth/start"
 TYPE_TICKET_AUTH_POLL = f"{DOMAIN}/tickets/auth/poll"
 TYPE_TICKET_AUTH_FORGET = f"{DOMAIN}/tickets/auth/forget"
@@ -1294,6 +1300,79 @@ async def async_ticket_auth_forget(
 
 
 @callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): TYPE_CRUSCOTTO_SET,
+        vol.Required("installatore"): bool,
+        vol.Optional("dove", default=""): vol.All(str, vol.Length(max=512)),
+    }
+)
+@websocket_api.async_response
+async def async_cruscotto_set(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Accende o spegne la voce «Cruscotto» nella barra laterale.
+
+    Lo dice il ponte, che l'interruttore ce l'ha nella sua scheda e l'indirizzo
+    del quadro lo sa. Qui non si decide niente: si esegue, e si controlla che
+    chi lo chiede possa chiederlo e che l'indirizzo sia un indirizzo.
+
+    Chi puo' chiederlo: un amministratore, o l'add-on — che per Home Assistant
+    e' un utente **generato dal sistema**. Un utente normale della casa no: una
+    voce nella barra laterale la vedono tutti quelli che entrano, e chi non
+    amministra questo impianto non ha motivo di poterla appendere.
+    """
+    if not _puo_toccare_la_barra(connection):
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_UNAUTHORIZED,
+            "Solo chi amministra questo Home Assistant puo' cambiare la"
+            " barra laterale.",
+        )
+        return
+
+    from .frontend import async_mostra_il_cruscotto, togli_il_cruscotto
+
+    if not msg["installatore"]:
+        connection.send_result(
+            msg["id"], {"mostrata": False, "cambiato": togli_il_cruscotto(hass)}
+        )
+        return
+
+    dove = str(msg.get("dove") or "").strip()
+    # Solo `https`. Un cruscotto in chiaro vorrebbe dire la chiave della flotta
+    # che passa in chiaro, e Home Assistant una pagina cifrata non la lascia
+    # nemmeno aprire dentro di se'.
+    if not dove.startswith("https://"):
+        connection.send_error(
+            msg["id"],
+            "invalid_format",
+            "L'indirizzo del quadro deve cominciare per https://.",
+        )
+        return
+
+    cambiato = await async_mostra_il_cruscotto(hass, dove)
+    connection.send_result(msg["id"], {"mostrata": True, "cambiato": cambiato})
+
+
+def _puo_toccare_la_barra(connection: Any) -> bool:
+    """Se chi chiama puo' appendere o togliere una voce nella barra laterale.
+
+    Gli add-on non sono amministratori per forza, ma sono **generati dal
+    sistema**: e' l'unico modo che Home Assistant da' per riconoscerli, e il
+    ponte e' un add-on che gira su questa macchina con il permesso di chi ce
+    l'ha messo.
+    """
+    user = getattr(connection, "user", None)
+    if user is None:
+        return False
+    return bool(
+        getattr(user, "is_admin", False) or getattr(user, "system_generated", False)
+    )
+
+
 def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register the shared configuration commands once per installation."""
     domain_data: dict[str, Any] = hass.data.setdefault(DOMAIN, {})
@@ -1330,6 +1409,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
         async_ticket_auth_start,
         async_ticket_auth_poll,
         async_ticket_auth_forget,
+        async_cruscotto_set,
     ):
         websocket_api.async_register_command(hass, command)
     domain_data[DATA_WEBSOCKET_REGISTERED] = True

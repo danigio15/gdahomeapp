@@ -5,6 +5,42 @@
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e le
 versioni seguono [Semantic Versioning](https://semver.org/lang/it/).
 
+## Non ancora rilasciato
+
+<!-- Il numero non si alza qui. Alzarlo vuol dire anche rigenerare
+     `legacy/build-info.js`, che sta dentro la cartella sigillata della
+     plancia: il sigillo va rifatto, e la firma che lo accompagna la puo'
+     mettere solo chi ha la chiave. E' un gesto di rilascio, e lo fa il
+     flusso di rilascio. -->
+
+### Aggiunto
+
+- **La voce «Cruscotto» nella barra laterale, per chi gli impianti li monta**
+
+  Chi installa gdahome in quaranta case un Home Assistant ce l'ha suo, e da lì
+  vuole arrivare ai suoi impianti senza aprire un altro posto. Accendendo
+  l'interruttore «installatore» nella scheda dell'add-on gdahome compare una
+  voce nuova nella barra laterale, che mostra il cruscotto della flotta.
+
+  Il cruscotto non è rifatto qui: è **quello che esiste già**, sul quadro,
+  mostrato dentro un riquadro. Rifarlo vorrebbe dire un terzo posto dove vivono
+  le stesse regole — cos'è un impianto muto, quando un collaudo è chiuso — e
+  tre posti che dicono la stessa cosa prima o poi ne dicono tre diverse.
+
+  L'interruttore resta **uno solo**, quello dell'add-on: questa integrazione
+  non ne aggiunge un secondo. Il perché sta in ADR-0009.
+
+  La voce la vede solo chi amministra: porta agli impianti dei clienti di
+  qualcuno, e Home Assistant in casa lo aprono anche i familiari. Spegnendo
+  l'interruttore sparisce subito, non al riavvio dopo.
+
+  Una cosa che sorprenderebbe, e che il riquadro dice in cima: la chiave della
+  flotta va incollata **una volta anche lì dentro**. I browser tengono separata
+  la memoria di una pagina aperta dentro un'altra — è una difesa contro chi
+  segue le persone da un sito all'altro, e fa bene a esistere. Su qualche
+  browser quella memoria può non restare proprio, e per questo il collegamento
+  per aprire il cruscotto fuori sta sempre in vista.
+
 ## 1.4.32 — 2026-09-16
 
 ### Aggiunto
