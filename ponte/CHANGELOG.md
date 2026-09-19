@@ -11,6 +11,20 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.8
+
+**Il quadro adesso dice quale versione sta girando.** Prima non lo diceva da
+nessuna parte: `/salute` diceva soltanto di essere vivo, la soglia è un testo
+fisso, e le pagine mostrano la versione *delle case*, non la sua. Per sapere se
+una correzione era arrivata bisognava entrare nella macchina e leggere un
+registro — cioè proprio la cosa che questo quadro esiste per non dover fare.
+
+Il numero c'era già: lo scrive il giro degli aggiornamenti quando **scambia** il
+codice, e lo scrive solo dopo che le prove di quella versione sono passate.
+Mancava qualcuno che lo leggesse. Adesso `curl https://quadro.gdahome.org/salute`
+risponde anche `"versione":"26bad09"`, sette cifre da confrontare a occhio con
+l'ultimo rilascio.
+
 ## 1.5.9.7
 
 **Nella pagina Luci si accende dalla levetta, non da tutto il riquadro.** Prima

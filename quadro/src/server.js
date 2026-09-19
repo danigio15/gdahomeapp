@@ -61,7 +61,7 @@ import { TUTTE } from "./case.js";
 import { CASA_VALIDA, TroppiInviti } from "./chiavi.js";
 import { DISCO_FINITO, DISCO_PIENO, TROPPO_CALDO } from "./controlli.js";
 import { Fattorino, indirizzoBuono } from "./fattorino.js";
-import { comeVaLAggiornamento } from "./mi-aggiorno.js";
+import { comeVaLAggiornamento, laVersioneCheGira } from "./mi-aggiorno.js";
 import { CHI_VALIDO } from "./installatori.js";
 import { stessoSegreto } from "./segreti.js";
 import { ilTipoDi, Marchi, QUANTO_GROSSO } from "./marchi.js";
@@ -114,7 +114,15 @@ let pagina;
 let paginaDelGestore;
 
 export function json(risposta, corpo, stato = 200) {
-  const testo = JSON.stringify(corpo);
+  /* L'a capo in fondo non e' un vezzo: `/salute` si guarda **col curl da un
+   * terminale** — lo dice il README, ed e' la prima cosa che si fa dopo aver
+   * acceso la macchina. Senza, la risposta finisce incollata al prompt della
+   * riga dopo, e su un telefono, dove la riga va a capo da sola, diventa
+   * illeggibile o sembra che non abbia risposto niente.
+   *
+   * Per chi legge la risposta da programma non cambia nulla: uno spazio bianco
+   * in fondo a un JSON lo ignorano tutti. */
+  const testo = `${JSON.stringify(corpo)}\n`;
   risposta.writeHead(stato, {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",
@@ -261,8 +269,13 @@ export function costruisciIlServer({
        * E non compare quasi mai: ci vogliono sei giri di fila andati a vuoto.
        * Un campo che c'e' sempre si smette di leggere. */
       const fermo = comeVaLAggiornamento({ cartella });
+      /* E **quale versione gira**, che era la cosa che non si poteva sapere da
+       * nessuna parte: questa riga risponde a «si e' aggiornato?» senza dover
+       * entrare nella macchina a leggere un registro. */
+      const versione = laVersioneCheGira();
       json(risposta, {
         vivo: true,
+        ...(versione ? { versione } : {}),
         case: case_.lista.length,
         installatori: installatori.lista.length,
         gestore: gestoreAperto,
