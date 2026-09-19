@@ -26,8 +26,10 @@
  *   GET    /gestore/installatori         chi c'e', e quanti impianti ha ognuno
  *   POST   /gestore/installatori         aggiungine uno
  *   PUT    /gestore/installatore/<id>    nome e limite
+ *   POST   /gestore/installatore/<id>/congela   congelagli l'utenza
+ *   DELETE /gestore/installatore/<id>/congela   e ridagliela
  *   POST   /gestore/installatore/<id>/chiave   una chiave nuova
- *   DELETE /gestore/installatore/<id>    toglilo
+ *   DELETE /gestore/installatore/<id>    eliminalo, con tutto quello che e' suo
  *
  * ─── Tre chiavi, e ognuna apre una porta sola ────────────────────────────
  *
@@ -63,6 +65,13 @@ import { ilTipoDi, Marchi, QUANTO_GROSSO } from "./marchi.js";
 
 /** Quanto puo' essere grossa un rapporto. Le vere stanno sotto i quattro. */
 const RAPPORTO_MASSIMA = 64 * 1024;
+
+/* A chi scrive un installatore a cui e' stata congelata l'utenza.
+ *
+ * Sta scritto qui e non nella pagina perche' e' una cosa di questo quadro, non
+ * del disegno: chi un domani mettesse su un quadro suo cambia una riga, e non
+ * va a cercarla dentro un foglio di stile. */
+export const DOVE_SCRIVERE = "assistenza@gdahome.org";
 
 const PAGINA = new URL("../console/index.html", import.meta.url);
 const PAGINA_DEL_GESTORE = new URL("../gestore/index.html", import.meta.url);
@@ -303,6 +312,30 @@ export function costruisciIlServer({
       const chi = installatori.riconosci(ilSegno(richiesta));
       if (!chi) {
         male(risposta, 401, "la chiave non va bene");
+        return;
+      }
+      /* Congelato: la chiave apre, e non fa vedere niente.
+       *
+       * La chiave deve aprire, se no non si saprebbe chi sta bussando e non
+       * gli si potrebbe dire **perche'** non vede piu' niente: si troverebbe
+       * un «la chiave non va bene» e andrebbe a cercare un guasto che non
+       * c'e'. Quindi si risponde a lui, per nome, con l'indirizzo a cui
+       * scrivere.
+       *
+       * Il controllo sta **qui**, sulla soglia, e non dentro le singole vie:
+       * una via aggiunta domani sarebbe una via che si dimentica di guardare
+       * se questa utenza e' congelata, e nessuno se ne accorgerebbe fino al
+       * giorno che conta. */
+      if (installatori.congelato(chi)) {
+        json(
+          risposta,
+          {
+            errore: "questa utenza e' congelata",
+            congelato: true,
+            scrivi: DOVE_SCRIVERE,
+          },
+          403,
+        );
         return;
       }
       await ilRetro(
@@ -592,23 +625,73 @@ export function costruisciIlServer({
     }
 
     if (uno && metodo === "DELETE") {
-      /* Togliere un installatore non butta le sue case: restano nel quadro, senza
-       * piu' nessuno che le guardi, e i loro rapporti continuano ad arrivare.
-       * E' voluto — sono impianti che funzionano in casa di qualcuno, e
-       * spegnerne il monitoraggio punirebbe il cliente per una faccenda che non
-       * e' sua.
+      /* Eliminare un installatore porta via **tutto quello che e' suo**: lui, i
+       * suoi codici in attesa, le chiavi delle sue case, le sue case e il suo
+       * marchio.
        *
-       * Qui c'era scritto che «chi gestisce se le ritrova da assegnare se lo si
-       * riaggiunge». **Non e' vero**, ed e' stato provato: `installatori.fai`
-       * da' una matricola nuova ogni volta, la chiave della casa resta legata a
-       * quella di prima — che non esiste piu' — e da qui non c'e' nessun modo
-       * di ridargliela.
+       * ─── Perche' adesso porta via anche le case ──────────────────────────
        *
-       * Quello che funziona e' rifare il giro dal davanti: un invito nuovo di
-       * un installatore vivo, incollato in casa, **sostituisce** la chiave
-       * (`chiavi.riconosci`) e la casa cambia padrone. Un modo di farlo da
-       * questa pagina non c'e' ancora. */
-      json(risposta, { chiuso: installatori.togli(uno[1]), ...ilQuadro() });
+       * Prima no: le case restavano, e siccome nessuno le guardava piu'
+       * diventavano un numero — «3 impianti senza piu' nessuno» — che non si
+       * poteva ne' aprire ne' riassegnare. Il ragionamento era buono (sono
+       * impianti che funzionano in casa di qualcuno) ma la conseguenza no:
+       * roba che occupa posto per sempre e non serve a nessuno.
+       *
+       * Adesso ci sono **due tasti, e due cose diverse**. Congela e' quello per
+       * la lite con l'installatore: lui non vede piu' niente, le case restano
+       * accese e non si perde una riga. Elimina e' quello per «questo non c'e'
+       * piu'», e fa proprio quello.
+       *
+       * ─── Cosa succede a quelle case ──────────────────────────────────────
+       *
+       * Continuano a mandare il rapporto — non lo sanno, e da qui non si
+       * decide cosa fa casa d'altri — e si sentono rispondere di no. Per
+       * tornare dentro ci vuole un codice nuovo, di un installatore vivo,
+       * incollato **da dentro casa**: e' l'unica strada, ed e' la stessa che
+       * regge tutto il resto. Riaggiungere l'installatore di prima non basta,
+       * perche' prende una matricola nuova.
+       *
+       * La pagina lo dice prima di farlo, con quante case si porta dietro. */
+      const chi = uno[1];
+      if (!installatori.quello(chi)) {
+        male(risposta, 404, "questo installatore non c'e'");
+        return;
+      }
+      const suoi = chiavi.toglieTutto(chi);
+      const quante = case_.toglieTutto(chi);
+      marchi.togli(chi, installatori.quello(chi)?.marchio || "");
+      const chiuso = installatori.togli(chi);
+      registro.info(
+        `installatore eliminato: ${chi} — ${quante} case, ${suoi.chiavi} chiavi, ` +
+          `${suoi.inviti} codici in attesa`,
+      );
+      json(risposta, { chiuso, case: quante, ...ilQuadro() });
+      return;
+    }
+
+    /* Congela e scongela.
+     *
+     * Due vie e non una con un `acceso: true/false` nel corpo: cosi' quello
+     * che sta per succedere si legge nel registro del server e nella barra del
+     * browser, e un corpo storto non puo' scongelare chi si voleva congelare. */
+    const gelo = new RegExp(`^/installatore/(${CHI_VALIDO.source.slice(1, -1)})/congela$`).exec(
+      via,
+    );
+    if (gelo && (metodo === "POST" || metodo === "DELETE")) {
+      if (!installatori.quello(gelo[1])) {
+        male(risposta, 404, "questo installatore non c'e'");
+        return;
+      }
+      const congela = metodo === "POST";
+      const cambiato = congela ? installatori.congela(gelo[1]) : installatori.scongela(gelo[1]);
+      if (cambiato) {
+        registro.info(
+          congela
+            ? `utenza congelata: ${gelo[1]} — la sua pagina non gli fa piu' vedere niente`
+            : `utenza scongelata: ${gelo[1]} — torna a vedere le sue case`,
+        );
+      }
+      json(risposta, { congelato: congela, ...ilQuadro() });
       return;
     }
 

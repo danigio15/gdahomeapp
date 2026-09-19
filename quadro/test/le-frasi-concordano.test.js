@@ -53,21 +53,29 @@ test("l'avviso degli impianti rimasti soli concorda col loro numero", () => {
   /* Con uno solo la frase va al singolare tutta quanta, non solo il nome. */
   const pagina = qua("gestore", "index.html");
   assert.match(pagina, /ORFANE === 1 \? "lo guardi" : "li guardi"/);
-  assert.match(pagina, /È l'impianto di un installatore che hai tolto/);
-  assert.match(pagina, /Sono impianti di installatori che hai tolto/);
+  assert.match(pagina, /È rimasto indietro da quando/);
+  assert.match(pagina, /Sono rimasti indietro da quando/);
+  assert.match(pagina, /ORFANE === 1 \? "recupera" : "recuperano"/);
 });
 
 test("l'avviso non promette che un installatore riaggiunto si riprenda i suoi impianti", () => {
   /* Provato, e non succede: `Installatori.fai` da' una matricola nuova ogni
-   * volta, e la casa punta ancora a quella di prima. La riga lo diceva, e una
-   * pagina che promette una cosa che non fa e' peggio di una che non dice
-   * niente — chi la legge aspetta un giorno che non arriva. */
+   * volta. La riga lo prometteva, e una pagina che promette una cosa che non
+   * fa e' peggio di una che non dice niente — chi la legge aspetta un giorno
+   * che non arriva.
+   *
+   * Adesso quella promessa non serve piu' nemmeno smentirla: da «elimina» non
+   * nascono piu' impianti rimasti soli, perche' le case se ne vanno con lui.
+   * Quelli che si vedono sono roba di prima, e la pagina dice quello. */
   const pagina = qua("gestore", "index.html");
-  assert.ok(
-    !/tornano? a qualcuno il giorno che/.test(pagina),
-    "la pagina promette di nuovo che gli impianti rimasti soli tornino da soli",
-  );
-  assert.match(pagina, /prende una matricola nuova/);
+  for (const bugia of [
+    /tornano? a qualcuno il giorno che/,
+    /si ritrova da assegnare/,
+    /Riaggiungere quell'installatore/,
+  ]) {
+    assert.ok(!bugia.test(pagina), `la pagina promette di nuovo ${bugia}`);
+  }
+  assert.match(pagina, /Adesso non ne nascono più/);
 });
 
 test("il riavvio si chiama riavvio, non «il filo che cade»", () => {

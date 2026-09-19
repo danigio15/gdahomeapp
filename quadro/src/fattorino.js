@@ -2,7 +2,7 @@
  *
  * `avvisi.js` decide **cosa** dire; questo lo consegna. Sono due file perche'
  * sono due mestieri: le regole si provano senza rete, e la rete si prova senza
- * dover fabbricare una casa muta.
+ * dover fabbricare una casa offline.
  *
  * ─── Un indirizzo, e nient'altro ─────────────────────────────────────────
  *
@@ -18,7 +18,7 @@
  *
  * ─── Cosa si manda ───────────────────────────────────────────────────────
  *
- *     { "testo": "…", "tipo": "muta", "case": ["casa_…"], "quadro": "…" }
+ *     { "testo": "…", "tipo": "offline", "case": ["casa_…"], "quadro": "…" }
  *
  * `testo` per primo, perche' e' quello che serve: chi riceve spesso lo prende
  * cosi' com'e' e lo mostra. Gli altri campi servono a chi ci vuole costruire

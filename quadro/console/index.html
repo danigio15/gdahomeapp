@@ -526,7 +526,7 @@
         color: var(--ambra);
       }
 
-      .gettone.muta {
+      .gettone.offline {
         background: var(--alone-male);
         color: var(--male);
       }
@@ -589,7 +589,7 @@
         background: var(--ambra);
       }
 
-      .casa.muta::before {
+      .casa.offline::before {
         background: var(--male);
       }
 
@@ -653,7 +653,7 @@
         color: var(--ambra);
       }
 
-      .pastiglia.muta,
+      .pastiglia.offline,
       .pastiglia.male {
         background: var(--alone-male);
         color: var(--male);
@@ -1911,11 +1911,26 @@
         });
         if (risposta.status === 401) throw new ChiaveNoNo();
         const corpo = await risposta.json().catch(() => ({}));
+        /* L'utenza congelata: la chiave apre, e non fa vedere niente.
+         *
+         * Si segna qui e non dove si chiama, perche' le vie sono una
+         * ventina e una dimenticata sarebbe una pagina che mostra un errore
+         * qualunque al posto del motivo vero. Da qui lo sa `disegna`, e lo
+         * sanno tutti i tasti insieme. */
+        if (risposta.status === 403 && corpo.congelato) {
+          CONGELATA = String(corpo.scrivi || "");
+          throw new Congelata();
+        }
         if (!risposta.ok) throw new Error(corpo.errore || "non ha funzionato");
+        /* E quando torna a rispondere, il cartello se ne va da solo: chi
+         * scongela non deve dire a nessuno di ricaricare la pagina. */
+        CONGELATA = null;
         return corpo;
       }
 
       class ChiaveNoNo extends Error {}
+
+      class Congelata extends Error {}
 
       async function carica() {
         const [case_, inviti, io] = await Promise.all([
@@ -2145,13 +2160,13 @@
       const spia = (stato) =>
         `<span class="pastiglia ${stato.chiave}"><span aria-hidden="true">${stato.segno}</span>${testo(stato.parola)}</span>`;
 
-      /* La striscia: `P` giorno pieno, `M` a metà, `V` muta, spazio «non c'era
+      /* La striscia: `P` giorno pieno, `M` a metà, `V` offline, spazio «non c'era
        * ancora». */
       function laStriscia(giorni, grande = false) {
         const celle = [...giorni]
           .map((uno) => {
-            if (uno === "V") return '<i class="vuota" title="muta tutto il giorno"></i>';
-            if (uno === "M") return '<i class="mezza" title="muta per qualche ora"></i>';
+            if (uno === "V") return '<i class="vuota" title="offline tutto il giorno"></i>';
+            if (uno === "M") return '<i class="mezza" title="offline per qualche ora"></i>';
             if (uno === " ") return '<i class="prima" title="non era ancora accesa"></i>';
             return '<i title="tutte i rapporti arrivati"></i>';
           })
@@ -2163,15 +2178,19 @@
             ? `${plurale(accesi, "giorno", "giorni")} da quando è accesa`
             : vuoti === 0
               ? "14 giorni, sempre viva"
-              : `14 giorni · muta ${plurale(vuoti, "volta", "volte")}`;
+              : `14 giorni · offline ${plurale(vuoti, "volta", "volte")}`;
         return `<div class="giorni${grande ? " grande" : ""}" role="img" aria-label="${testo(dice)}">${celle}</div><div class="giorniDice">${testo(dice)}</div>`;
       }
 
       const LE_FILE = [
-        ["muta", "■", "mute"],
+        ["offline", "■", "offline"],
         ["guardare", "▲", "da guardare"],
         ["posto", "●", "a posto"],
       ];
+
+      /* L'indirizzo a cui scrivere se l'utenza e' congelata, o `null` se non lo
+       * e'. Lo dice il server insieme al no: la pagina non se lo inventa. */
+      let CONGELATA = null;
 
       let schermata = "case";
       let filtro = "tutte";
@@ -2181,7 +2200,38 @@
       const dove = document.getElementById("dove");
       const doveNav = document.getElementById("nav");
 
+      /* Il cartello di chi ha l'utenza congelata.
+       *
+       * Prende tutta la pagina, e non e' una striscia in cima: una striscia
+       * sopra un elenco di impianti vorrebbe dire che gli impianti si vedono
+       * lo stesso, e il punto e' che non si vedono. Sotto non c'e' niente,
+       * perche' dal server non e' arrivato niente. */
+      function ilGelo() {
+        doveNav.innerHTML = "";
+        document.getElementById("chi").textContent = "Cruscotto installatore";
+        dove.innerHTML = `
+          <section class="riquadro" style="max-width: 640px; margin: 40px auto">
+            <div class="capoRiquadro"><h3>Utenza bloccata</h3></div>
+            <p style="margin: 0 0 14px; font-size: 1rem; line-height: 1.55">
+              <b>La tua utenza è bloccata dal gestore.</b> Si prega di contattare
+              il seguente indirizzo:
+            </p>
+            <p style="margin: 0 0 18px; font-size: 1.05rem">
+              <a href="mailto:${testo(CONGELATA)}">${testo(CONGELATA)}</a>
+            </p>
+            <p class="nota" style="margin: 0">
+              Gli impianti che segui continuano a funzionare e a mandare i loro
+              numeri: qui non si vedono, e non si è perso niente. Quando il
+              blocco viene tolto, questa pagina torna com'era da sola.
+            </p>
+          </section>`;
+      }
+
       function disegna() {
+        if (CONGELATA !== null) {
+          ilGelo();
+          return;
+        }
         const dietro = CASE.filter((una) => (una.carta?.aggiornamenti?.elenco || []).length).length;
         doveNav.innerHTML = [
           ["case", "Le case", 0],
@@ -3778,6 +3828,12 @@
            * vorrebbe dire chiedere a una persona una cosa che il programma ha
            * gia' in mano. Una volta sola: se non apre nemmeno quella, le
            * chiavi finite sono due e allora la domanda ci sta. */
+          /* Congelata: la chiave e' giusta, e chiederne un'altra manderebbe a
+           * cercare un guasto che non c'e'. Si mostra il cartello. */
+          if (errore instanceof Congelata) {
+            disegna();
+            return;
+          }
           if (errore instanceof ChiaveNoNo && consegnata && consegnata !== chiave) {
             chiave = consegnata;
             try {
@@ -3816,9 +3872,13 @@
         if (!chiave) return;
         carica()
           .then(() => disegna())
-          .catch(() => {
+          .catch((errore) => {
             /* Un giro andato male non deve far sparire quello che si sta
-             * guardando: si riprova al minuto dopo. */
+             * guardando: si riprova al minuto dopo. Un'utenza congelata invece
+             * si', ed e' il punto: chi viene bloccato mentre ha la pagina
+             * aperta se ne accorge entro dieci secondi, non alla prossima
+             * ricarica. */
+            if (errore instanceof Congelata) disegna();
           });
       }, 10 * 1000);
 
