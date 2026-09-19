@@ -394,9 +394,44 @@ passo "Accendo il giro degli aggiornamenti"
 cat >"$DOVE/aggiorna.sh" <<FINE
 #!/usr/bin/env bash
 set -euo pipefail
+
+# Il foglietto: c'e' solo quando questo giro non ce la fa.
+#
+# Prima, se non si sapeva la versione, il giro usciva **zitto**. Il quadro restava sull'ultima versione
+# che aveva — funzionante, quindi identico a uno che sta bene — e le correzioni
+# smettevano di arrivare senza che niente lo dicesse. Ci si accorge il giorno
+# che serve una correzione, che e' il giorno peggiore.
+#
+# Adesso lo scrive: nel registro della macchina ogni volta, e in un foglietto
+# che il quadro legge e riporta su \`/salute\`. La' pero' compare solo dopo
+# un'ora — sei giri di fila a vuoto — perche' un tentativo storto non vuol dire
+# niente e un avviso che si accende da solo ogni settimana si smette di
+# guardare.
+FOGLIETTO="$DATI/non-mi-aggiorno"
+
+non_ce_la_faccio() {
+  logger -t quadro "non riesco a sapere che versione c'e' su «$SEGNO»: \$1"
+  # La data e' quella del **primo** fallimento di fila: se il foglietto c'e'
+  # gia', non la si tocca, se no ogni giro azzererebbe il conto e l'ora non
+  # arriverebbe mai.
+  if [ -s "\$FOGLIETTO" ]; then
+    da="\$(head -1 "\$FOGLIETTO")"
+  else
+    da="\$(date +%s)"
+  fi
+  printf '%s\n%s\n' "\$da" "\$1" >"\$FOGLIETTO"
+  chmod 644 "\$FOGLIETTO" 2>/dev/null || true
+  exit 0
+}
+
 vecchia="\$(cat "$DOVE/versione" 2>/dev/null || true)"
 nuova="\$("$DOVE/sha.sh" "$REPO_DEL_QUADRO" "$SEGNO" 2>/dev/null || true)"
-[ -n "\$nuova" ] || exit 0
+[ -n "\$nuova" ] || non_ce_la_faccio "GitHub non risponde, o il segno non c'e' piu'"
+
+# Ce l'ha fatta: il foglietto se ne va. Un avviso che resta dopo che la cosa si
+# e' aggiustata e' peggio di nessun avviso.
+rm -f "\$FOGLIETTO"
+
 [ "\$nuova" != "\$vecchia" ] || exit 0
 # Se le prove della versione nuova non passano, \`scarica.sh\` si ferma e non
 # tocca niente: la macchina resta su quella di prima, che funziona.

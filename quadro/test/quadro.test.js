@@ -22,7 +22,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -85,6 +85,7 @@ async function banco({ installatori = 1, soglia = 0 } = {}) {
   return {
     ...acceso,
     dove,
+    cartella,
     gestore,
     iscritti,
     /* Il retro: si bussa con la chiave di **un** installatore, il primo se non
@@ -634,6 +635,37 @@ test("ogni risposta della gestione porta i totali, non solo l'elenco", async () 
       assert.equal(typeof detto.orfane, "number");
       assert.ok(Array.isArray(detto.installatori));
     }
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("«/salute» dice quando il quadro non riesce piu' ad aggiornarsi", async () => {
+  /* La riga che si guarda. Il registro di una macchina che funziona non lo apre
+   * nessuno, ed e' li' che un guasto silenzioso resterebbe in silenzio: questa
+   * riga invece e' quella che si apre dopo averlo acceso, e quella che si
+   * riapre quando si sospetta qualcosa. */
+  const b = await banco();
+  try {
+    const prima = await (await fetch(`${b.dove}/salute`)).json();
+    assert.equal("nonMiAggiorno" in prima, false, "lo dice anche quando va tutto bene");
+
+    /* Il foglietto come lo scrive `aggiorna.sh`: epoch in secondi, poi il
+     * perche'. Cinque ore fa, cioe' trenta giri di fila andati a vuoto. */
+    const cinqueOreFa = Math.floor((Date.now() - 5 * 60 * 60 * 1000) / 1000);
+    writeFileSync(
+      join(b.cartella, "non-mi-aggiorno"),
+      `${cinqueOreFa}\nGitHub non risponde, o il segno non c'e' piu'\n`,
+    );
+
+    const dopo = await (await fetch(`${b.dove}/salute`)).json();
+    assert.ok(dopo.nonMiAggiorno, "tace anche dopo cinque ore");
+    assert.equal(dopo.nonMiAggiorno.ore, 5);
+    assert.match(dopo.nonMiAggiorno.perche, /GitHub non risponde/);
+    /* E il resto continua a dire quello che diceva: un campo nuovo non deve
+     * portarsi via gli altri. */
+    assert.equal(dopo.vivo, true);
+    assert.equal(dopo.gestore, true);
   } finally {
     await b.chiudi();
   }

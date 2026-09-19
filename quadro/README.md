@@ -187,6 +187,27 @@ da guardare in quella riga:
 | `gestore` | la chiave c'è, e la pagina di gestione si apre. Se è `false`, lo script non l'ha scritta e non si può aggiungere nessuno |
 | `installatori` | quanti ce ne sono. A questo punto zero |
 
+E una quarta che **quasi sempre non c'è**, ed è la più importante quando c'è:
+
+| | |
+|---|---|
+| `nonMiAggiorno` | il quadro non riesce più a sapere quale versione c'è. Dice **da quando** e **perché** |
+
+Quel campo compare solo dopo **un'ora** di tentativi andati a vuoto — sei giri
+di fila. Un tentativo storto non vuol dire niente, e un avviso che si accende da
+solo una volta a settimana dopo un mese non lo guarda più nessuno.
+
+Prima quel guasto non lo diceva nessuno, ed è il peggiore che questo pezzo
+possa avere: somiglia in tutto allo stare bene. Il quadro risponde, le case
+depositano, le pagine si aprono — e le correzioni hanno smesso di arrivare
+settimane fa. Te ne accorgi il giorno che serve una correzione.
+
+> **Quella metà arriva solo rilanciando `accendi.sh`.** Il giro degli
+> aggiornamenti scambia il **codice** del quadro e non tocca gli script che gli
+> stanno di fianco — voluto: un aggiornamento che si porta via chi lo sta
+> eseguendo non finisce. Quindi la parte che *legge* il foglietto arriva da
+> sola, quella che lo *scrive* no. Una volta sola, e poi va.
+
 Se non risponde da fuori ma risponde da dentro (`curl 127.0.0.1:8100/salute`),
 è il certificato: Caddy lo prende al primo che bussa, e il primo giro può
 metterci un minuto.

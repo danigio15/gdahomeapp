@@ -19,6 +19,8 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+
+import { FOGLIETTO } from "../src/mi-aggiorno.js";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -177,4 +179,42 @@ test("l'indirizzo del quadro e' lo stesso che sta dentro l'add-on", () => {
     new RegExp(`NOME_DEL_QUADRO:-${scritto.replace(/\./g, "\\.")}\\}`),
     `lo script accende «${scritto}»? nel ponte c'e' quello`,
   );
+});
+
+test("il giro degli aggiornamenti non esce piu' zitto quando non ce la fa", () => {
+  /* Era il guasto che somigliava di piu' allo stare bene: GitHub non risponde,
+   * il giro esce, il quadro resta sull'ultima versione che aveva — e nessuno
+   * lo sa. Adesso lo scrive in due posti, e questa prova li tiene tutti e due.
+   *
+   * Il foglietto e `/salute` devono chiamarlo allo stesso modo, se no il
+   * quadro cercherebbe un file che il giro non scrive: e' la solita coppia che
+   * si scrive in due posti e prima o poi diverge. */
+  assert.match(ACCENDI, /non_ce_la_faccio\(\)/, "non c'e' nessuna via d'uscita che parli");
+  assert.match(
+    ACCENDI,
+    /logger -t quadro "non riesco a sapere che versione/,
+    "non lo dice al registro",
+  );
+  assert.match(
+    ACCENDI,
+    /FOGLIETTO="\$DATI\/non-mi-aggiorno"/,
+    "il foglietto non sta nei dati del quadro",
+  );
+  assert.match(
+    ACCENDI,
+    new RegExp(`FOGLIETTO="\\$DATI/${FOGLIETTO}"`),
+    "il nome del foglietto non e' quello che il quadro legge",
+  );
+
+  /* E quando ce la fa, il foglietto se ne va: un avviso che resta dopo che la
+   * cosa si e' aggiustata e' peggio di nessun avviso. */
+  assert.match(
+    ACCENDI,
+    /rm -f "\\\$FOGLIETTO"/,
+    "il foglietto non si toglie mai, e un avviso che resta quando la cosa e' passata e' peggio di nessun avviso",
+  );
+
+  /* La data e' quella del **primo** fallimento di fila. Riscrivendola a ogni
+   * giro, l'ora non arriverebbe mai e `/salute` resterebbe zitta per sempre. */
+  assert.match(ACCENDI, /head -1 "\\\$FOGLIETTO"/, "la data del primo fallimento non si tiene");
 });
