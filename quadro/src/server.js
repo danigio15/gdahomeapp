@@ -592,10 +592,22 @@ export function costruisciIlServer({
     }
 
     if (uno && metodo === "DELETE") {
-      /* Togliere un installatore non butta le sue case: restano nel quadro, senza piu'
-       * nessuno che le guardi, e i loro rapporti continuano ad arrivare. E'
-       * voluto — sono impianti che funzionano in casa di qualcuno — e chi
-       * gestisce se le ritrova da assegnare se lo si riaggiunge. */
+      /* Togliere un installatore non butta le sue case: restano nel quadro, senza
+       * piu' nessuno che le guardi, e i loro rapporti continuano ad arrivare.
+       * E' voluto — sono impianti che funzionano in casa di qualcuno, e
+       * spegnerne il monitoraggio punirebbe il cliente per una faccenda che non
+       * e' sua.
+       *
+       * Qui c'era scritto che «chi gestisce se le ritrova da assegnare se lo si
+       * riaggiunge». **Non e' vero**, ed e' stato provato: `installatori.fai`
+       * da' una matricola nuova ogni volta, la chiave della casa resta legata a
+       * quella di prima — che non esiste piu' — e da qui non c'e' nessun modo
+       * di ridargliela.
+       *
+       * Quello che funziona e' rifare il giro dal davanti: un invito nuovo di
+       * un installatore vivo, incollato in casa, **sostituisce** la chiave
+       * (`chiavi.riconosci`) e la casa cambia padrone. Un modo di farlo da
+       * questa pagina non c'e' ancora. */
       json(risposta, { chiuso: installatori.togli(uno[1]), ...ilQuadro() });
       return;
     }
