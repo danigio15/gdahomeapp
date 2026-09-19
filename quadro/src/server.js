@@ -9,6 +9,7 @@
  *
  *   POST   /rapporto                     una casa deposita i suoi numeri, e si
  *                                        porta via quello che le e' stato chiesto
+ *   GET    /marchio/<chi>                il logo di un installatore, senza chiave
  *
  *   GET    /console/                     la pagina dell'installatore
  *   GET    /console/io                   chi sono, quanti ne ho, qual e' il limite
@@ -58,6 +59,7 @@ import { Fattorino, indirizzoBuono } from "./fattorino.js";
 import { comeVaLAggiornamento } from "./mi-aggiorno.js";
 import { CHI_VALIDO } from "./installatori.js";
 import { stessoSegreto } from "./segreti.js";
+import { ilTipoDi, Marchi, QUANTO_GROSSO } from "./marchi.js";
 
 /** Quanto puo' essere grossa un rapporto. Le vere stanno sotto i quattro. */
 const RAPPORTO_MASSIMA = 64 * 1024;
@@ -97,6 +99,20 @@ async function ilCorpo(richiesta, massimo) {
   }
 }
 
+/* I byte com'e' arrivati, senza provare a leggerli come JSON: e' quello che
+ * serve a un'immagine. Il tetto e' l'argomento, perche' un logo e un rapporto
+ * non sono grossi uguale. */
+async function iByte(richiesta, massimo) {
+  let quanto = 0;
+  const pezzi = [];
+  for await (const pezzo of richiesta) {
+    quanto += pezzo.length;
+    if (quanto > massimo) throw new TroppoGrosso("questa immagine e' troppo grossa");
+    pezzi.push(pezzo);
+  }
+  return Buffer.concat(pezzi);
+}
+
 class TroppoGrosso extends Error {}
 
 export function costruisciIlServer({
@@ -112,6 +128,10 @@ export function costruisciIlServer({
    * riceve rapporti e non ha modo di aggiungere nessun installatore: e' una meta'
    * inutile, e va detto all'accensione invece di farlo scoprire dalla pagina. */
   const gestoreAperto = String(chiaveDelGestore).length >= 16;
+
+  /* I loghi degli installatori. Un file per uno, fuori dall'archivio: il
+   * perche' sta in cima a `marchi.js`. */
+  const marchi = new Marchi({ cartella });
 
   return createServer((richiesta, risposta) => {
     servi(richiesta, risposta).catch((errore) => {
@@ -218,11 +238,51 @@ export function costruisciIlServer({
        * vorrebbe dire riconsegnarle quello che sta gia' facendo. */
       const fai = case_.ilLavoroDa(casa);
       if (fai) registro.info(`a ${casa} si e' consegnato: ${fai.cosa} ${fai.nome} ${fai.a}`);
+      /* E se chi segue questa casa ha un logo suo, la matricola con cui
+       * andarselo a prendere.
+       *
+       * La **matricola**, non l'indirizzo: l'indirizzo se lo compone la casa
+       * col quadro che ha gia' in configurazione. E' la stessa regola del
+       * marchio di un aggiornamento — se di qui passasse un indirizzo, sarebbe
+       * questo quadro a decidere dove va a bussare il browser di chi ci abita. */
+      const suo = installatori.quello(di);
       json(risposta, {
         presa: true,
-        di: installatori.quello(di)?.nome || "",
+        di: suo?.nome || "",
+        ...(suo?.marchio ? { marchio: suo.chi } : {}),
         ...(fai ? { fai } : {}),
       });
+      return;
+    }
+
+    /* Il logo di un installatore, **senza chiave**.
+     *
+     * Non e' una svista. Questo logo deve arrivare nel browser di chi abita una
+     * casa abbinata — che una chiave non ce l'ha, e non gliela si puo' dare — e
+     * nella pagina del cruscotto, che la chiave ce l'ha ma la tiene per se'. Un
+     * `inst_` sono sedici cifre esadecimali: non si indovina, e quello che si
+     * scopre indovinandolo e' un logo stampato su un furgone. */
+    const ilMarchio = /^\/marchio\/(inst_[0-9a-f]{16})$/.exec(via);
+    if (ilMarchio && metodo === "GET") {
+      const suo = installatori.quello(ilMarchio[1]);
+      const byte = suo ? marchi.leggi(suo.chi, suo.marchio) : null;
+      if (!byte) {
+        male(risposta, 404, "questo installatore non ha un marchio");
+        return;
+      }
+      risposta.writeHead(200, {
+        "content-type": ilTipoDi(suo.marchio),
+        "content-length": byte.length,
+        /* Un'ora: un logo cambia una volta ogni mai, e ogni casa abbinata lo
+         * chiede a ogni ricarica della pagina. */
+        "cache-control": "public, max-age=3600",
+        /* Un SVG porta dentro un programma. Dentro un `<img>` non gira, ma
+         * questo indirizzo lo si puo' anche aprire a mano — ed e' li' che
+         * conterebbe. Queste due righe fanno si' che non conti. */
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        "x-content-type-options": "nosniff",
+      });
+      risposta.end(byte);
       return;
     }
 
@@ -297,7 +357,12 @@ export function costruisciIlServer({
 
     if (via === "/io" && metodo === "GET") {
       json(risposta, {
+        /* La matricola serve alla pagina per andarsi a prendere il proprio
+         * logo: `/marchio/<chi>` non vuole chiave, e la chiave non si mette in
+         * un `src` che finisce nella cronologia del browser. */
+        chi,
         nome: io?.nome || "",
+        marchio: io?.marchio || "",
         soglia: io?.soglia || 0,
         case: case_.quante(chi),
         avvisi: io?.avvisi || "",
@@ -317,6 +382,40 @@ export function costruisciIlServer({
       }
       installatori.doveAvvisare(chi, dove);
       json(risposta, { avvisi: dove });
+      return;
+    }
+
+    if (via === "/io/marchio" && metodo === "PUT") {
+      let byte;
+      try {
+        byte = await iByte(richiesta, QUANTO_GROSSO);
+      } catch (errore) {
+        male(risposta, 413, String(errore?.message || errore));
+        return;
+      }
+      const razza = marchi.metti(chi, byte, io?.marchio || "");
+      if (!razza) {
+        /* Un no che dice **perche'**: «non ha funzionato» davanti a un logo
+         * che si vede benissimo nel finder e' la risposta peggiore che ci sia. */
+        male(
+          risposta,
+          400,
+          byte.length > QUANTO_GROSSO
+            ? "questa immagine e' troppo grossa"
+            : "si accettano PNG, JPEG, WEBP e SVG, e questa non e' nessuno dei quattro",
+        );
+        return;
+      }
+      installatori.ilMarchio(chi, razza);
+      registro.info(`${chi} ha messo il suo marchio (${razza}, ${byte.length} byte)`);
+      json(risposta, { marchio: razza });
+      return;
+    }
+
+    if (via === "/io/marchio" && metodo === "DELETE") {
+      marchi.togli(chi, io?.marchio || "");
+      installatori.ilMarchio(chi, "");
+      json(risposta, { marchio: "" });
       return;
     }
 

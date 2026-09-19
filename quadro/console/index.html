@@ -365,6 +365,49 @@
         max-width: 46rem;
       }
 
+      /* Il marchio dell'installatore, dove c'e'. In testata e nel riquadro da
+         cui si carica: stessa forma, due misure. */
+      .suoMarchio {
+        flex: none;
+        border-radius: 9px;
+        object-fit: contain;
+        background: var(--carta);
+      }
+
+      .testata .suoMarchio {
+        width: 30px;
+        height: 30px;
+      }
+
+      .provaMarchio {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      .provaMarchio .suoMarchio {
+        width: 54px;
+        height: 54px;
+        border: 1px solid var(--bordo-tenue);
+      }
+
+      /* Il quadrato vuoto di chi un marchio non ce l'ha ancora: dice dove
+         andra' a finire, invece di lasciare la riga senza niente. */
+      .provaMarchio .vuoto {
+        width: 54px;
+        height: 54px;
+        flex: none;
+        border-radius: 9px;
+        border: 1px dashed var(--bordo);
+        display: grid;
+        place-items: center;
+        color: var(--fioco);
+        font-size: 0.72rem;
+        text-align: center;
+        line-height: 1.2;
+      }
+
       /* ─── I titoli che spezzano la scheda di una casa ────────────────
          La scheda e' una colonna di dieci riquadri, e ognuno ha gia' la sua
          etichettina grigia. Dieci etichettine sono dieci cose sullo stesso
@@ -1785,8 +1828,12 @@
              dice gia' dove sei, e il bollo resta dove serve — accanto agli
              aggiornamenti di gdahome, dove distingue la roba nostra. -->
         <div class="marchio">
+          <!-- Il marchio dell'installatore, se ne ha messo uno. Sta qui vuoto
+               e lo riempie `disegna()`: l'indirizzo dipende da chi ha aperto la
+               pagina, e questo file e' lo stesso per tutti. -->
+          <img class="suoMarchio" id="suo-marchio" alt="" hidden />
           <span class="nomi">
-            <b>Cruscotto installatore</b>
+            <b id="come-si-chiama">Cruscotto installatore</b>
             <span id="chi"></span>
           </span>
         </div>
@@ -1848,7 +1895,7 @@
        * **prima** di sbatterci: un codice rifiutato al quarantunesimo impianto,
        * con il cliente che aspetta, è il momento peggiore per scoprire che
        * esiste un limite. */
-      let IO = { nome: "", soglia: 0, case: 0 };
+      let IO = { chi: "", nome: "", marchio: "", soglia: 0, case: 0 };
       /* Le soglie con cui si colorano i metri arrivano dal server insieme alle
        * case: sono le stesse con cui lui decide, e scritte una volta sola. */
       let SOGLIE = { troppoCaldo: 75, discoPieno: 85, discoFinito: 80 };
@@ -1907,6 +1954,21 @@
       const laRiga = (codice) => String(codice);
 
       const plurale = (quanti, uno, molti) => `${quanti} ${quanti === 1 ? uno : molti}`;
+
+      /* L'indirizzo del proprio marchio.
+       *
+       * Assoluto e **senza chiave**: `/marchio/<chi>` non ne vuole, e una
+       * chiave dentro un `src` finirebbe nella cronologia del browser e nel
+       * registro di qualunque cosa stia in mezzo.
+       *
+       * In fondo c'e' la razza del file, che non serve a caricarlo: serve a
+       * cambiare l'indirizzo quando il marchio cambia, se no il browser
+       * continua a far vedere quello di prima per un'ora — che e' la cache che
+       * gli abbiamo chiesto noi. */
+      const ilSuoMarchio = () =>
+        IO.marchio
+          ? `/marchio/${encodeURIComponent(IO.chi)}?${encodeURIComponent(IO.marchio)}`
+          : "";
 
       function daQuanto(quando) {
         const minuti = Math.round((ADESSO() - new Date(quando).getTime()) / 60000);
@@ -2128,9 +2190,20 @@
           )
           .join("");
 
+        /* Il marchio in testata: se c'e' prende il posto del nostro, e il
+         * titolo diventa il nome dell'installatore. Se non c'e', la pagina
+         * resta quella di prima — non si fa un buco in cima per una cosa
+         * facoltativa. */
+        const suo = document.getElementById("suo-marchio");
+        suo.hidden = !IO.marchio;
+        if (IO.marchio && suo.getAttribute("src") !== ilSuoMarchio()) {
+          suo.src = ilSuoMarchio();
+        }
+        document.getElementById("come-si-chiama").textContent = IO.nome || "Cruscotto installatore";
+
         const restano = quanteRestano();
         document.getElementById("chi").textContent =
-          (IO.nome ? `${IO.nome} · ` : "") +
+          (IO.nome ? "Cruscotto installatore · " : "") +
           plurale(CASE.length, "impianto", "impianti") +
           (restano === null ? "" : ` · ${restano} ancora`);
         dove.innerHTML =
@@ -2165,6 +2238,51 @@
               }
             });
         }
+
+        /* Il marchio: si sceglie un file e parte, senza un tasto «Salva».
+         * Scegliere un file **e'** gia' la conferma: un secondo tasto sarebbe
+         * un passaggio in piu' per una cosa che si annulla ricaricando. */
+        const scegli = dove.querySelector("#scegli-marchio");
+        if (scegli)
+          scegli.onchange = async () => {
+            const file = scegli.files?.[0];
+            if (!file) return;
+            const riga = dove.querySelector("#esito-marchio");
+            const dillo = (che) => {
+              if (!riga) return;
+              riga.textContent = che;
+              riga.hidden = false;
+            };
+            scegli.disabled = true;
+            try {
+              const detto = await chiedi("/io/marchio", {
+                method: "PUT",
+                /* I byte com'e', non un JSON con dentro un base64: il server
+                 * guarda **come comincia il file** per sapere che roba e', e
+                 * un base64 comincia sempre uguale. */
+                body: await file.arrayBuffer(),
+                headers: { "content-type": file.type || "application/octet-stream" },
+              });
+              IO.marchio = detto.marchio || "";
+              dillo("Messo.");
+              disegna();
+            } catch (errore) {
+              if (errore instanceof ChiaveNoNo) {
+                chiedimiLaChiave();
+                return;
+              }
+              dillo(errore.message || "non ha funzionato");
+            } finally {
+              scegli.disabled = false;
+            }
+          };
+        const togliIlMarchio = dove.querySelector("[data-togli-marchio]");
+        if (togliIlMarchio)
+          togliIlMarchio.onclick = () =>
+            faiEpoi(togliIlMarchio, async () => {
+              await chiedi("/io/marchio", { method: "DELETE" });
+              IO.marchio = "";
+            });
 
         const tastoProva = dove.querySelector("[data-prova-avvisi]");
         if (tastoProva) {
@@ -3395,6 +3513,42 @@
                     niente. Se ne fai uno e poi cambi idea, annullalo — finché è
                     vivo, chiunque ce l'abbia può far entrare <em>una</em> casa
                     in questo quadro.
+                  </span>
+                </div>
+              </section>
+
+              <section class="riquadro">
+                <div class="capoRiquadro"><h3>Il tuo marchio</h3></div>
+                <p class="minuta">
+                  Il logo che hai stampato sul furgone. Compare qui in cima al
+                  posto del nostro, e <b>in casa dei tuoi clienti</b>: chi ci
+                  abita, quando ha un problema, chiama te — e allora è il tuo
+                  nome quello che deve leggere.
+                </p>
+                <div class="provaMarchio">
+                  ${
+                    IO.marchio
+                      ? `<img class="suoMarchio" src="${ilSuoMarchio()}" alt="Il tuo marchio" />`
+                      : `<span class="vuoto" aria-hidden="true">qui</span>`
+                  }
+                  <div class="azioni">
+                    <input
+                      type="file"
+                      id="scegli-marchio"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      aria-label="Scegli il file del tuo marchio"
+                    />
+                    ${IO.marchio ? `<button type="button" class="tasto" data-togli-marchio>Togli</button>` : ""}
+                  </div>
+                </div>
+                <p class="minuta" id="esito-marchio" hidden></p>
+                <div class="avvertenza">
+                  <span class="gettone" aria-hidden="true">!</span>
+                  <span>
+                    PNG, JPEG, WEBP o SVG, <b>fino a 128 kB</b>. Quadrato viene
+                    meglio: sta in un quadratino da trenta punti. Questo file lo
+                    scarica il browser di chi abita le case che segui, senza
+                    nessuna chiave — mettici il logo, non altro.
                   </span>
                 </div>
               </section>
