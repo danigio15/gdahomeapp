@@ -11,6 +11,26 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.4
+
+**Nel cruscotto di chi installa, ogni aggiornamento ha la sua icona vera.**
+Prima quella pagina mandava il browser di chi installa a prendersi l'icona su
+`brands.home-assistant.io`, con una parola presa dal rapporto, e c'erano due
+guai in uno: quel browser andava a farsi vedere da una macchina che non è la
+sua, e quello che trovava era sbagliato — il logo di HACS al posto di quello
+dell'applicazione (per un'integrazione installata da HACS quella parola **è**
+`hacs`) e niente del tutto per un firmware, che una parola non ce l'ha.
+
+Adesso l'icona giusta la manda la tua casa: gliela dà il suo Supervisor per gli
+add-on e i marchi di Home Assistant per le integrazioni, che è esattamente
+quello che l'add-on fa già per l'app sul telefono. Viaggia **una volta sola** —
+è il quadro a dire quali icone non ha — e il tuo browser non ci va più.
+
+**E il CHANGELOG si legge lì, senza uscire.** «Le note per intero» era un
+collegamento che portava sul sito di chi ha scritto l'aggiornamento: leggere
+cosa cambia prima di premere «Installa» voleva dire uscire dal cruscotto. Adesso
+le note arrivano insieme all'icona e si aprono sotto la riga.
+
 ## 1.5.9.3
 
 **Fra «Installa» e l'installazione che parte non passa più un minuto.** Passa un

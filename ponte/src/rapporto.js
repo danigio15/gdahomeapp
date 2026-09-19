@@ -366,6 +366,13 @@ export function fabbricaIlRapporto({
   casa,
   ferro,
   aggiornamenti = null,
+  /* Chi sa prendere l'icona vera di un aggiornamento e le sue note intere.
+   * Senza, il rapporto esce come prima: un marchio e basta. */
+  segni = null,
+  /* Quali segni il quadro ha detto di non avere, l'ultima volta che ha
+   * risposto. Una funzione e non un elenco: il valore cambia a ogni giro, e
+   * chi fabbrica il rapporto si costruisce una volta sola. */
+  segniChiesti = () => [],
   lavori = null,
   manutenzione = false,
   plance = null,
@@ -440,6 +447,15 @@ export function fabbricaIlRapporto({
         : [],
     );
 
+    /* E le icone e le note che il quadro ha detto di non avere. Solo quelle:
+     * il perche' sta in cima a `segni.js`. Uno che non arriva lascia il suo
+     * senza icona e non porta via gli altri. */
+    const iSegni =
+      segni && daFare
+        ? ((await forse("i segni", () => segni.quelliCheMancano(segniChiesti(), daFare))) ??
+          new Map())
+        : new Map();
+
     return compila({
       casa: identita.casa,
       ogni,
@@ -460,7 +476,7 @@ export function fabbricaIlRapporto({
         : null,
       apparati: quelli ? gliApparati(quelli, { scelte: apparatiScelti() }) : null,
       addon: detto ? gliAddon({ addons: detto.addons }) : null,
-      aggiornamenti: daFare ? iConti(daFare, marchi) : null,
+      aggiornamenti: daFare ? iConti(daFare, marchi, iSegni) : null,
       /* Il secondo interruttore, detto al quadro.
        *
        * Serve a lui per sapere se il tasto lo puo' far vedere: chi guarda una
@@ -685,6 +701,16 @@ export class Postino {
      * nuovo: insieme sono il pavimento di `IL_FILO_ALMENO`. */
     this._filoDa = 0;
     this._filoDopo = null;
+    /* Quali icone e quali note il quadro ha detto di non avere, l'ultima volta
+     * che ha risposto. Chi fabbrica il rapporto lo legge al giro dopo. Vive
+     * col processo: un ponte che si riavvia non manda niente finche' il quadro
+     * non ridice cosa gli manca, che e' quello che si vuole. */
+    this._segniChiesti = [];
+  }
+
+  /** I segni che il quadro ha detto di non avere. Lo legge chi fabbrica. */
+  get segniChiesti() {
+    return this._segniChiesti;
   }
 
   /** Se questa casa manda qualcosa a qualcuno. */
@@ -806,6 +832,13 @@ export class Postino {
       try {
         detto = await risposta.json();
         if (typeof detto?.di === "string") this._chi = detto.di.slice(0, 80);
+        /* Quali icone e quali note gli mancano. Al giro dopo partono quelle, e
+         * nessun'altra: il perche' sta in cima a `segni.js`. */
+        if (Array.isArray(detto?.manca)) {
+          this._segniChiesti = detto.manca
+            .filter((uno) => typeof uno === "string" && /^[0-9a-f]{16}$/.test(uno))
+            .slice(0, 40);
+        }
       } catch (_errore) {
         /* Una risposta che non e' JSON non e' un guasto: il rapporto e'
          * arrivata, ed e' quello che conta. Il nome resta quello di prima. */

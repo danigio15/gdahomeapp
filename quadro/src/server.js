@@ -10,6 +10,7 @@
  *   POST   /rapporto                     una casa deposita i suoi numeri, e si
  *                                        porta via quello che le e' stato chiesto
  *   GET    /attesa                       la casa resta in linea, e sente subito
+ *   GET    /segno/<segno>                l'icona di un aggiornamento, senza chiave
  *   GET    /marchio/<chi>                il logo di un installatore, senza chiave
  *
  *   GET    /console/                     la pagina dell'installatore
@@ -17,6 +18,7 @@
  *   PUT    /console/io/avvisi            dove mandarmi gli avvisi
  *   POST   /console/io/avvisi/prova      mandamene uno adesso, per vedere
  *   GET    /console/case                 **le sue** case
+ *   GET    /console/note/<segno>         le note intere di un aggiornamento
  *   GET    /console/inviti               i **suoi** codici in attesa
  *   POST   /console/inviti               fanne uno, se il limite lo consente
  *   DELETE /console/inviti/<codice>      annulla il suo
@@ -63,6 +65,7 @@ import { comeVaLAggiornamento } from "./mi-aggiorno.js";
 import { CHI_VALIDO } from "./installatori.js";
 import { stessoSegreto } from "./segreti.js";
 import { ilTipoDi, Marchi, QUANTO_GROSSO } from "./marchi.js";
+import { SEGNO_VALIDO, Segni } from "./segni.js";
 
 /** Quanto puo' essere grossa un rapporto. Le vere stanno sotto i quattro. */
 const RAPPORTO_MASSIMA = 64 * 1024;
@@ -156,6 +159,9 @@ export function costruisciIlServer({
   /* I loghi degli installatori. Un file per uno, fuori dall'archivio: il
    * perche' sta in cima a `marchi.js`. */
   const marchi = new Marchi({ cartella });
+  /* Le icone vere degli aggiornamenti e le loro note intere, come le manda la
+   * casa. Il perche' sta in cima a `segni.js`. */
+  const segni = new Segni({ cartella });
 
   /* ─── Il filo tenuto aperto ───────────────────────────────────────────
    *
@@ -370,12 +376,56 @@ export function costruisciIlServer({
        * marchio di un aggiornamento — se di qui passasse un indirizzo, sarebbe
        * questo quadro a decidere dove va a bussare il browser di chi ci abita. */
       const suo = installatori.quello(di);
+      /* Le icone e le note che sono arrivate dentro questo rapporto, e quelle
+       * che ancora mancano.
+       *
+       * E' questo scambio che fa viaggiare un'icona **una volta sola**: la casa
+       * manda solo quello che il quadro le dice di non avere, e il quadro lo
+       * sa guardando i suoi file. Un quadro che li perde li richiede da se'; una
+       * casa che si riavvia non rimanda niente che sia gia' arrivato. */
+      const elenco = carta?.aggiornamenti?.elenco;
+      segni.metti(elenco);
+      const manca = segni.quelliCheMancano(elenco);
       json(risposta, {
         presa: true,
         di: suo?.nome || "",
         ...(suo?.marchio ? { marchio: suo.chi } : {}),
         ...(fai ? { fai } : {}),
+        ...(manca.length ? { manca } : {}),
       });
+      return;
+    }
+
+    /* L'icona di un aggiornamento, **senza chiave**.
+     *
+     * Stessa regola del marchio di un installatore: sedici cifre esadecimali
+     * non si indovinano, e quello che si scopre indovinandole e' l'icona di
+     * Mosquitto. Chi la guarda e' il browser di chi installa, e la prende da
+     * qui invece che da `brands.home-assistant.io` — cosi' quel browser non va
+     * a farsi vedere da una macchina che non e' la sua, e quello che trova e'
+     * l'icona giusta invece del logo di HACS. */
+    /* `quale` e non `ilSegno`: quel nome e' gia' preso, ed e' la funzione che
+     * legge la chiave dall'intestazione. Chiamandolo cosi' la si oscurava, e
+     * da li' in poi **ogni** via che chiede una chiave rispondeva 500. */
+    const quale = new RegExp(`^/segno/(${SEGNO_VALIDO.source.slice(1, -1)})$`).exec(via);
+    if (quale && metodo === "GET") {
+      const suo = segni.leggi(quale[1]);
+      if (!suo) {
+        male(risposta, 404, "questo aggiornamento non ha un'icona");
+        return;
+      }
+      risposta.writeHead(200, {
+        "content-type": suo.tipo,
+        "content-length": suo.byte.length,
+        /* Un giorno: l'icona di una versione non cambia mai, e il segno cambia
+         * con la versione. */
+        "cache-control": "public, max-age=86400, immutable",
+        /* Un SVG porta dentro un programma: dentro un `<img>` non gira, ma
+         * questo indirizzo lo si puo' anche aprire a mano. */
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        "x-content-type-options": "nosniff",
+      });
+      risposta.end(suo.byte);
       return;
     }
 
@@ -587,14 +637,52 @@ export function costruisciIlServer({
     }
 
     if (via === "/case" && metodo === "GET") {
+      const sue = case_.elenco(chi);
       json(risposta, {
-        case: case_.elenco(chi),
+        case: sue,
+        /* Di quali aggiornamenti si hanno le note intere.
+         *
+         * Un elenco a parte e non un campo dentro ogni riga: la riga di un
+         * aggiornamento e' quello che la casa ha mandato, e questo e' quello
+         * che il quadro ha ricevuto — due cose diverse, e mescolarle vorrebbe
+         * dire riscrivere il rapporto di una casa con roba nostra. Serve alla
+         * pagina per far comparire il tasto solo dove c'e' qualcosa da aprire.
+         *
+         * Solo quelli di **queste** case: un elenco di tutti quelli che il
+         * quadro ha sarebbe roba di case di altri, e viaggerebbe a ogni giro. */
+        note: [
+          ...new Set(
+            sue.flatMap((una) =>
+              (una.carta?.aggiornamenti?.elenco || [])
+                .map((uno) => String(uno?.segno || ""))
+                .filter((uno) => segni.note(uno)),
+            ),
+          ),
+        ],
         /* Le soglie con cui la pagina colora i metri sono **le stesse** con cui
          * qui si decide se una casa e' da guardare: viaggiano insieme alle case
          * invece di stare scritte anche nella pagina, perche' due numeri uguali
          * in due posti sono due numeri che prima o poi diventano diversi. */
         soglie: { troppoCaldo: TROPPO_CALDO, discoPieno: DISCO_PIENO, discoFinito: DISCO_FINITO },
       });
+      return;
+    }
+
+    /* Le note intere di un aggiornamento, quelle che la casa ha preso da Home
+     * Assistant.
+     *
+     * Con la chiave, e non senza come l'icona: un'icona e' un disegno, un
+     * CHANGELOG e' testo che qualcuno ha scritto. E si aprono **dentro la
+     * pagina**: prima c'era un collegamento che portava fuori, e leggere cosa
+     * cambia prima di premere «Installa» vuol dire restare dove si e'. */
+    const leNote = new RegExp(`^/note/(${SEGNO_VALIDO.source.slice(1, -1)})$`).exec(via);
+    if (leNote && metodo === "GET") {
+      const dette = segni.note(leNote[1]);
+      if (!dette) {
+        male(risposta, 404, "di questo aggiornamento non sono arrivate le note");
+        return;
+      }
+      json(risposta, { note: dette });
       return;
     }
 

@@ -1363,6 +1363,41 @@
         white-space: pre-line;
       }
 
+      /* Un tasto che si legge come un collegamento: quello che fa e' aprire
+       * del testo, e un tasto grosso accanto a «Installa» inviterebbe a
+       * premere quello sbagliato. */
+      .comeUnLink {
+        background: none;
+        border: 0;
+        padding: 0;
+        font: inherit;
+        color: var(--azzurro);
+        text-decoration: underline;
+        cursor: pointer;
+      }
+
+      /* Le note intere, aperte sotto la riga.
+       *
+       * `pre-wrap` e non `pre-line`: un CHANGELOG ha le sue righe vuote e le
+       * sue rientranze, e schiacciarle vuol dire un muro di testo. Il tetto in
+       * altezza c'e' perche' certi ne hanno duecento, e sotto ce ne sono
+       * altri tre da leggere. */
+      .leNote {
+        grid-column: 2 / -1;
+        margin: 8px 0 2px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: var(--carta-alta);
+        border: 1px solid var(--bordo-tenue);
+        color: var(--lieve);
+        font-size: 0.8rem;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        max-height: 320px;
+        overflow-y: auto;
+      }
+
       ul.versi .cambia a {
         color: var(--azzurro-cupo);
         white-space: nowrap;
@@ -1939,6 +1974,7 @@
           chiedi("/io"),
         ]);
         CASE = case_.case || [];
+        CON_LE_NOTE = new Set(case_.note || []);
         INVITI = inviti.inviti || [];
         IO = io || IO;
         if (case_.soglie) SOGLIE = case_.soglie;
@@ -2073,13 +2109,6 @@
        * un disegno, e da solo non dice niente. */
       const A_PAROLE = { bene: "a posto", male: "non va", ignoto: "non si sa" };
 
-      /* Dove stanno i marchi delle integrazioni. Lo stesso posto da cui li
-       * prende Home Assistant, ed e' il quadro a saperlo: da casa arriva una
-       * **parola** — `shelly`, `zha` — non un indirizzo. Se arrivasse un
-       * indirizzo, chi puo' scrivere l'attributo di un'entita' deciderebbe
-       * dove va a bussare questa pagina. */
-      const I_MARCHI = "https://brands.home-assistant.io/";
-
       /* Il segno di un aggiornamento: il logo di chi lo porta, o l'iniziale.
        *
        * Tre casi, in ordine. La roba nostra porta il bollo del quadro, che e'
@@ -2099,14 +2128,31 @@
             .charAt(0)
             .toUpperCase() || "?",
         );
-        /* La stessa forma che il ponte si e' gia' controllato, ricontrollata
-         * qui: questa parola finisce dentro un indirizzo, e chi lo compone e'
-         * questa riga. Un controllo solo, dall'altra parte di una rete, non e'
-         * un controllo. */
-        if (!/^[a-z0-9_]+$/.test(String(uno.marchio || "")))
+        /* **L'icona vera, e arriva dalla casa.**
+         *
+         * Prima si mandava questo browser su `brands.home-assistant.io` con una
+         * parola presa dal rapporto, e c'erano due guai in uno: questo browser
+         * andava a farsi vedere da una macchina che non e' la sua, e quello che
+         * trovava era sbagliato — il logo di HACS al posto di quello
+         * dell'applicazione (per un'integrazione installata da HACS quella
+         * parola **e'** `hacs`), e niente del tutto per un firmware, che una
+         * parola non ce l'ha.
+         *
+         * L'icona giusta ce l'ha la casa: gliela da' il suo Supervisor per gli
+         * add-on e i marchi per le integrazioni, che e' esattamente quello che
+         * il ponte fa gia' per l'app sul telefono. La manda una volta sola, e
+         * il quadro la serve dal suo indirizzo.
+         *
+         * Il segno e' sedici cifre esadecimali, ricontrollate qui: finisce
+         * dentro un indirizzo, e chi lo compone e' questa riga. Un controllo
+         * solo, dall'altra parte di una rete, non e' un controllo. */
+        if (!/^[0-9a-f]{16}$/.test(String(uno.segno || "")))
           return `<span class="segno">${primo}</span>`;
+        /* La lettera resta sotto: finche' l'icona non e' arrivata — il primo
+         * giro dopo che un aggiornamento compare — la riga si legge lo stesso,
+         * e se non arrivera' mai si legge per sempre. */
         return `<span class="segno">${primo}<img
-          src="${I_MARCHI}${uno.marchio}/icon.png"
+          src="segno/${uno.segno}"
           alt=""
           loading="lazy"
           onerror="this.remove()"
@@ -2125,12 +2171,24 @@
        * occupa una riga vuota. */
       function cosaCambia(uno) {
         const detto = testo(String(uno.cosaCambia || "").trim());
-        const dove = String(uno.note || "");
-        const fuori = /^https:\/\/[^\s"'<>]+$/i.test(dove)
-          ? ` <a href="${testo(dove)}" target="_blank" rel="noopener noreferrer">le note per intero ↗</a>`
+        /* Le note intere si aprono **qui**, non fuori.
+         *
+         * Prima era un collegamento che portava sul sito di chi ha scritto
+         * l'aggiornamento: leggere cosa cambia prima di premere «Installa»
+         * voleva dire uscire dal cruscotto, e chi esce non sempre torna. Adesso
+         * le note le manda la casa insieme all'icona, e si aprono sotto la
+         * riga.
+         *
+         * Il tasto c'e' solo se ci sono davvero: il quadro le ha ricevute e le
+         * tiene. Se non ci sono, resta il riassunto — e se non c'e' nemmeno
+         * quello, la riga non si allunga per niente. */
+        const suo = String(uno.segno || "");
+        const note = /^[0-9a-f]{16}$/.test(suo) && CON_LE_NOTE.has(suo);
+        const dentro = note
+          ? ` <button type="button" class="comeUnLink" data-note="${suo}">cosa cambia, per intero</button>`
           : "";
-        if (!detto && !fuori) return "";
-        return `<p class="cambia">${detto}${fuori}</p>`;
+        if (!detto && !dentro) return "";
+        return `<p class="cambia">${detto}${dentro}</p><div class="leNote" data-note-di="${testo(suo)}" hidden></div>`;
       }
 
       /* Una riga di aggiornamento: il segno, cosa e', cosa si fa, cosa cambia.
@@ -2190,6 +2248,10 @@
 
       /* L'indirizzo a cui scrivere se l'utenza e' congelata, o `null` se non lo
        * e'. Lo dice il server insieme al no: la pagina non se lo inventa. */
+      /* Di quali aggiornamenti il quadro ha le note intere. Lo dice lui
+       * insieme alle case: la pagina non lo indovina. */
+      let CON_LE_NOTE = new Set();
+
       let CONGELATA = null;
 
       let schermata = "case";
@@ -2458,6 +2520,43 @@
               if (evento.key === "Enter") salva();
             };
         });
+        /* «Cosa cambia, per intero»: si apre sotto la riga, e si richiude.
+         *
+         * Il testo si chiede quando serve e non prima: un CHANGELOG per ogni
+         * aggiornamento di ogni casa, a ogni giro da dieci secondi, sarebbe
+         * roba che viaggia per niente — quasi nessuno li apre. */
+        dove.querySelectorAll("[data-note]").forEach((tasto) => {
+          tasto.onclick = async () => {
+            const suo = tasto.dataset.note;
+            const riquadro = dove.querySelector(`[data-note-di="${suo}"]`);
+            if (!riquadro) return;
+            if (!riquadro.hidden) {
+              riquadro.hidden = true;
+              tasto.textContent = "cosa cambia, per intero";
+              return;
+            }
+            riquadro.hidden = false;
+            tasto.textContent = "chiudi";
+            if (riquadro.dataset.gia === "sì") return;
+            riquadro.textContent = "…";
+            try {
+              const detto = await chiedi(`/note/${suo}`);
+              /* `textContent` e non HTML: sono parole scritte da chi ha fatto
+               * l'aggiornamento, cioe' da fuori, e qui dentro non ci si fida
+               * di niente che arrivi da fuori. Il foglio di stile le fa andare
+               * a capo dove erano. */
+              riquadro.textContent = String(detto.note || "").trim();
+              riquadro.dataset.gia = "sì";
+            } catch (errore) {
+              if (errore instanceof Congelata) {
+                disegna();
+                return;
+              }
+              riquadro.textContent = errore.message || "non ha funzionato";
+            }
+          };
+        });
+
         dove.querySelectorAll("[data-installa]").forEach((tasto) => {
           tasto.onclick = () => {
             /* In due tempi, sullo stesso tasto, come «non seguirla più».
