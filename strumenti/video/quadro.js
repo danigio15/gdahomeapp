@@ -154,7 +154,7 @@ scena(
     {
       t: q(1, 2.2),
       testo: t(
-        "Un solo quadro, su una macchina di gdahome. <b>Chi installa non accende niente.</b>",
+        "Un solo quadro, su una macchina di gdahome. <b>Chi installa non tiene su niente.</b>",
         "One panel, on a gdahome machine. <b>Installers run nothing of their own.</b>",
       ),
     },
@@ -170,9 +170,9 @@ scena(
   ${cartello("1", t("Dopo la consegna", "After handover"), t("non ci torni più", "you never go back"))}
   <div class="corpo incolonna">
     <div class="voci" style="max-width:820px">
-      ${croce(0.45, t("Il Wi-Fi di casa cambia, e l'impianto resta fuori", "The home Wi-Fi changes, and the system is left outside"))}
+      ${croce(0.45, t("Il Wi-Fi di casa cambia, e l'impianto resta tagliato fuori", "The home Wi-Fi changes, and the system is locked out"))}
       ${croce(0.75, t("Una presa Zigbee sparisce, e nessuno se ne accorge", "A Zigbee plug disappears, and nobody notices"))}
-      ${croce(1.05, t("Home Assistant resta fermo a sei mesi fa", "Home Assistant is still six months behind"))}
+      ${croce(1.05, t("Home Assistant resta indietro di sei mesi", "Home Assistant is still six months behind"))}
       ${croce(1.35, t("Il backup non gira dal giorno dell'installazione", "The backup hasn't run since the day it was installed"))}
     </div>
   </div>
@@ -246,7 +246,7 @@ scena(
     ${ritaglio({ foto: "quadro-abbina", x: 100, y: 222, largo: 650, alto: 436, scala: 0.78, stile: "--t:.45s" })}
     <div class="voci" style="max-width:580px">
       ${voce(q(0, 0.9), "#38bdf8", "1", t('Apri la pagina con la tua chiave, e premi <b>Abbina</b><span class="quando">Niente server da tenere su, niente dominio</span>', 'Open the page with your key and press <b>Pair</b><span class="quando">No server to keep up, no domain</span>'))}
-      ${voce(q(1, 1.25), "#38bdf8", "2", t('Il codice si incolla nella <b>casella dell\'add-on</b><span class="quando">In casa del cliente, e lo fa anche lui: vive un giorno</span>', "The code goes in the <b>add-on's field</b><span class=\"quando\">At the customer's home — it lives a day, so they can do it</span>"))}
+      ${voce(q(1, 1.25), "#38bdf8", "2", t('Il codice si incolla nella <b>casella dell\'add-on</b><span class="quando">In casa del cliente, e può farlo anche lui: vive un giorno</span>', "The code goes in the <b>add-on's field</b><span class=\"quando\">At the customer's home — it lives a day, so they can do it</span>"))}
       ${voce(q(2, 1.6), "#38bdf8", "3", t('Il primo rapporto lega il codice a quella casa<span class="quando">E da lì in poi non serve a nessun\'altra</span>', 'The first report binds the code to that home<span class="quando">And from then on it\'s no use to any other</span>'))}
     </div>
   </div>
@@ -294,7 +294,7 @@ scena(
     {
       t: q(1, 5.2),
       testo: t(
-        "Ogni riga è una casa: lo stato, da quanto non parla, le spie accese, <b>e la striscia dei quattordici giorni</b>.",
+        "Ogni riga è una casa: lo stato, da quanto non parla, le spie accese, <b>e la striscia degli ultimi quattordici giorni</b>.",
         "Each row is a home: its state, how long it's been quiet, the warnings, <b>and the fourteen-day strip</b>.",
       ),
     },
@@ -379,9 +379,9 @@ scena(
   <div class="corpo incolonna">
     ${ritaglio({ foto: "quadro-come-sta", x: 534, y: 232, largo: 540, alto: 84, scala: 1.6, stile: "--t:.4s" })}
     <div class="voci" style="max-width:880px">
-      ${voce(q(0, 0.9), "#fcd34d", "1", t('<b>La vita del disco</b><span class="quando">Una eMMC ha un numero di scritture, e poi finisce. Vederla salire vuol dire cambiarla quando decidi tu</span>', '<b>Disk life used</b><span class="quando">An eMMC has a number of writes, then it\'s done. Watching it climb means replacing it when you choose</span>'))}
+      ${voce(q(0, 0.9), "#fcd34d", "1", t('<b>La vita del disco</b><span class="quando">Un\'eMMC ha un numero di scritture, e poi finisce. Vederla salire vuol dire cambiare il supporto quando decidi tu</span>', '<b>Disk life used</b><span class="quando">An eMMC has a number of writes, then it\'s done. Watching it climb means replacing it when you choose</span>'))}
       ${voce(q(1, 1.25), "#fcd34d", "2", t('<b>La tacca a 75°</b><span class="quando">Sopra, la casa non si rompe: diventa lenta, e nessuno capisce perché</span>', '<b>The mark at 75°</b><span class="quando">Above it the home doesn\'t break: it gets slow, and nobody knows why</span>'))}
-      ${voce(q(2, 1.6), "#fcd34d", "3", t('<b>Un add-on fermo non è un add-on spento</b><span class="quando">Conta solo chi parte all\'avvio ed è giù: quello si è fermato da solo</span>', '<b>A stopped add-on isn\'t a switched-off add-on</b><span class="quando">Only ones set to start on boot count: that one stopped by itself</span>'))}
+      ${voce(q(2, 1.6), "#fcd34d", "3", t('<b>Un add-on fermo non è un add-on spento</b><span class="quando">Conta solo quello che parte all\'avvio ed è giù: si è fermato da solo</span>', '<b>A stopped add-on isn\'t a switched-off add-on</b><span class="quando">Only ones set to start on boot count: that one stopped by itself</span>'))}
     </div>
   </div>
   ${didascalia([
@@ -573,7 +573,7 @@ scena(
          proprio quello — e solo dopo la frase che riassume tutto. */
       t: q(1, 3),
       testo: t(
-        "«Mosquitto broker» ed «eth0» sono nomi di prodotti. Una rete che si chiama «Casa Rossi» è una persona, <b>e resta fuori</b>.",
+        "«Mosquitto broker» ed «eth0» sono nomi di prodotti. Una rete che si chiama «Casa Rossi» è il nome di una persona, <b>e resta fuori</b>.",
         "«Mosquitto broker» and «eth0» are product names. A network called «The Rossi House» is a person, <b>and stays out</b>.",
       ),
       piccola: true,
@@ -606,7 +606,7 @@ scena(
     {
       t: q(1, 1.6),
       testo: t(
-        "Gli si dà una chiave, e apre una pagina. <b>Niente server, niente dominio, niente da tenere su.</b>",
+        "All'installatore si dà una chiave, e apre una pagina. <b>Niente server, niente dominio, niente da tenere su.</b>",
         "You hand over a key, and they open a page. <b>No server, no domain, nothing to keep running.</b>",
       ),
     },

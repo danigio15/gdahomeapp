@@ -84,7 +84,7 @@ export const PARLATO = [
         en: "An installer puts gdahome in forty homes. After handover — right now — how are they doing?",
       },
       {
-        it: "Il quadro risponde a questa domanda. È il cruscotto di chi monta gli impianti, e sta su una macchina di gdahome: chi installa non accende niente.",
+        it: "Il quadro risponde a questa domanda. È il cruscotto di chi monta gli impianti, e sta su una macchina di gdahome: chi installa non tiene su niente.",
         en: "The panel answers that question. It is the dashboard of whoever installs them, and it runs on a gdahome machine: installers run nothing of their own.",
       },
     ],
@@ -198,7 +198,7 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "La vita del disco: una eMMC ha un numero di scritture e poi finisce. Vederla salire vuol dire cambiare il supporto quando decidi tu.",
+        it: "La vita del disco: un'eMMC ha un numero di scritture e poi finisce. Vederla salire vuol dire cambiare il supporto quando decidi tu.",
         en: "Disk life: an eMMC has a number of writes and then it's done. Watching it climb means replacing it when you choose.",
       },
       {
