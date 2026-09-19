@@ -42,8 +42,24 @@ void main() {
     await ponte.spegni();
   });
 
+  /* Che la domanda sia **arrivata**, non solo che la risposta sia vuota.
+   *
+   * Senza questa riga due di queste prove passavano a vuoto: si aspettavano il
+   * vuoto, e il vuoto glielo dava un ponte che a quella domanda non rispondeva
+   * affatto — nel ponte finto `ponte/quadro/` non passava la guardia, come nel
+   * ponte vero non passava il giro. Una prova verde per il motivo sbagliato
+   * non prova niente, e questa e' la riga che la smaschera. */
+  void laDomandaCEArrivata() {
+    expect(
+      ponte.chieste.any((quale) => quale['type'] == 'ponte/quadro/stato'),
+      isTrue,
+      reason: 'il ponte non l\'ha nemmeno sentita: il vuoto non vuol dire no',
+    );
+  }
+
   test('in una casa qualunque il cruscotto non c\'è', () async {
     final detto = await IlCruscotto(filo).dove();
+    laDomandaCEArrivata();
     expect(detto.cruscotto, '');
     expect(detto.gestione, '');
     expect(detto.chiave, '');
@@ -80,6 +96,7 @@ void main() {
     ponte.ilCodiceDelCruscotto = 'un-codice-che-non-apre-niente';
 
     final detto = await IlCruscotto(filo).dove();
+    laDomandaCEArrivata();
     expect(detto.cruscotto, '');
     expect(detto.chiave, '');
   });

@@ -136,6 +136,16 @@ class PonteFinto {
         (tipo.startsWith('ponte/segnalazioni/') ||
             tipo.startsWith('ponte/chat/') ||
             tipo.startsWith('ponte/console/') ||
+            /* `ponte/quadro/` mancava, e il caso che gli risponde piu' sotto
+             * era codice morto: una risposta scritta in una stanza dove la
+             * domanda non entra. E' **lo stesso difetto** che il ponte vero
+             * aveva su `ponte/quadro/stato`, rifatto qui dentro mentre lo si
+             * provava — e la prova, non arrivando risposta, leggeva «questa
+             * casa non ha nessun cruscotto», che e' la risposta giusta alla
+             * domanda sbagliata.
+             *
+             * Chi aggiunge una famiglia di comandi la aggiunge qui. */
+            tipo.startsWith('ponte/quadro/') ||
             tipo.startsWith('ponte/aggiornamenti/'))) {
       chieste.add(detto);
       _manda(presa, {'id': id, ..._segnalazione(detto)});
