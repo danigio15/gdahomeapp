@@ -2151,8 +2151,19 @@
         /* La lettera resta sotto: finche' l'icona non e' arrivata — il primo
          * giro dopo che un aggiornamento compare — la riga si legge lo stesso,
          * e se non arrivera' mai si legge per sempre. */
+        /* `../segno/`, con il punto punto.
+         *
+         * Questa pagina sta in `/console/`, e un indirizzo scritto `segno/…`
+         * si legge da li': `/console/segno/…`, dove non c'e' niente. L'icona
+         * si serve da `/segno/…`, che sta una cartella piu' su — senza chiave,
+         * perche' un'icona di Mosquitto non e' roba di nessuno.
+         *
+         * Scritto `/segno/…` con la barra davanti funzionerebbe qui e si
+         * romperebbe dietro un proxy che monta il quadro sotto un prefisso.
+         * Con il punto punto si conta dalla pagina, e vale in tutt'e due i
+         * casi. */
         return `<span class="segno">${primo}<img
-          src="segno/${uno.segno}"
+          src="../segno/${uno.segno}"
           alt=""
           loading="lazy"
           onerror="this.remove()"

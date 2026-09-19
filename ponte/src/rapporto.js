@@ -51,6 +51,7 @@
  */
 
 import { gliAddon, gliApparati, laMacchina, laRete } from "./ferro.js";
+import { ilSegnoDi } from "./segni.js";
 import { ilBackup, leBatterie, leEntita } from "./salute.js";
 
 /* Dove sta il quadro.
@@ -527,7 +528,7 @@ function lIndirizzoDelleNote(dove) {
  * `update.camera_di_marco_firmware` direbbe cosa c'e' in questa casa e in
  * quale stanza, e non e' quello che il quadro deve sapere per far vedere che
  * c'e' una versione nuova. */
-function iConti(daFare, marchi = new Map()) {
+function iConti(daFare, marchi = new Map(), segni = new Map()) {
   const elenco = Array.isArray(daFare) ? daFare : [];
   const suo = (uno) => /home.?assistant/i.test(String(uno.nome ?? ""));
   return {
@@ -539,25 +540,44 @@ function iConti(daFare, marchi = new Map()) {
      * conviene mettersi in macchina. */
     firmware: elenco.filter((uno) => uno.installabile !== true).length,
     addon: elenco.filter((uno) => uno.installabile === true && !uno.nostra && !suo(uno)).length,
-    elenco: elenco.map((uno) => ({
-      nome: String(uno.nome ?? ""),
-      da: String(uno.da ?? ""),
-      a: String(uno.a ?? ""),
-      nostra: uno.nostra === true,
-      installabile: uno.installabile === true,
-      stacca: uno.stacca === true,
-      /* Il marchio: una parola, non un indirizzo. Il perche' sta su
-       * `marchioDi`, in `aggiornamenti.js`. */
-      marchio: String(marchi.get(uno.entita) ?? ""),
-      /* Cosa cambia, con le parole di chi l'ha scritto: e' il
-       * `release_summary` dell'entita', che Home Assistant taglia gia' a 255
-       * caratteri. Sono le stesse righe che l'app fa leggere prima di premere
-       * «Installa», e sono la differenza fra un tasto premuto sapendo cosa fa
-       * e uno premuto al buio. Quelle lunghe stanno all'indirizzo qui sotto,
-       * e per leggerle serve il filo con la casa — che il quadro non ha. */
-      cosaCambia: String(uno.dettagli ?? ""),
-      note: lIndirizzoDelleNote(uno.note),
-    })),
+    elenco: elenco.map((uno) => {
+      /* Il segno di questo aggiornamento: l'impronta di quello che nella riga
+       * c'e' gia' — il nome e la versione — e nient'altro. Serve al quadro per
+       * due cose: chiedere l'icona e le note che non ha, e ritrovarle quando
+       * arrivano. L'entita' non passa di qui, e il perche' sta in cima a
+       * `segni.js`.
+       *
+       * Questa riga mancava, ed e' quella che teneva spenta tutta la
+       * faccenda: `iConti` prendeva i segni come terzo argomento — glieli
+       * passavamo — ma la firma ne dichiarava due e la riga non ne emetteva
+       * nessuno. Il quadro non vedeva mai un segno, quindi non ne chiedeva
+       * mai uno, quindi non arrivava mai un'icona. Tutto il lavoro girava a
+       * vuoto, e le prove guardavano i pezzi invece del giro intero. */
+      const segno = ilSegnoDi(uno.nome, uno.a);
+      return {
+        nome: String(uno.nome ?? ""),
+        da: String(uno.da ?? ""),
+        a: String(uno.a ?? ""),
+        nostra: uno.nostra === true,
+        installabile: uno.installabile === true,
+        stacca: uno.stacca === true,
+        segno,
+        /* E, se il quadro l'aveva chiesta, l'icona o le note — o il fatto che
+         * non esistono. */
+        ...(segni.get(segno) ?? {}),
+        /* Il marchio: una parola, non un indirizzo. Il perche' sta su
+         * `marchioDi`, in `aggiornamenti.js`. */
+        marchio: String(marchi.get(uno.entita) ?? ""),
+        /* Cosa cambia, con le parole di chi l'ha scritto: e' il
+         * `release_summary` dell'entita', che Home Assistant taglia gia' a 255
+         * caratteri. Sono le stesse righe che l'app fa leggere prima di premere
+         * «Installa», e sono la differenza fra un tasto premuto sapendo cosa fa
+         * e uno premuto al buio. Quelle lunghe stanno all'indirizzo qui sotto,
+         * e per leggerle serve il filo con la casa — che il quadro non ha. */
+        cosaCambia: String(uno.dettagli ?? ""),
+        note: lIndirizzoDelleNote(uno.note),
+      };
+    }),
   };
 }
 
@@ -833,12 +853,18 @@ export class Postino {
         detto = await risposta.json();
         if (typeof detto?.di === "string") this._chi = detto.di.slice(0, 80);
         /* Quali icone e quali note gli mancano. Al giro dopo partono quelle, e
-         * nessun'altra: il perche' sta in cima a `segni.js`. */
-        if (Array.isArray(detto?.manca)) {
-          this._segniChiesti = detto.manca
-            .filter((uno) => typeof uno === "string" && /^[0-9a-f]{16}$/.test(uno))
-            .slice(0, 40);
-        }
+         * nessun'altra: il perche' sta in cima a `segni.js`.
+         *
+         * E se **non** ne chiede piu' — cioe' se `manca` non c'e' — l'elenco si
+         * svuota. Prima si teneva quello di prima, e voleva dire rimandare le
+         * stesse icone ogni minuto per sempre: arrivate, salvate, e rimandate
+         * al giro dopo perche' nessuno aveva detto «basta». Una risposta buona
+         * che non chiede niente **e'** quel «basta». */
+        this._segniChiesti = Array.isArray(detto?.manca)
+          ? detto.manca
+              .filter((uno) => typeof uno === "string" && /^[0-9a-f]{16}$/.test(uno))
+              .slice(0, 40)
+          : [];
       } catch (_errore) {
         /* Una risposta che non e' JSON non e' un guasto: il rapporto e'
          * arrivata, ed e' quello che conta. Il nome resta quello di prima. */

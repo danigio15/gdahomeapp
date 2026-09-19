@@ -11,6 +11,49 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.6
+
+**Le icone degli aggiornamenti adesso arrivano davvero.** Nella 1.5.9.4 quel
+lavoro era tutto scritto e non funzionava niente: la casa non metteva nella
+riga il *segno* dell'aggiornamento — il pezzo da cui il quadro capisce quale
+icona gli manca — e quindi il quadro non ne chiedeva mai una, e quindi non ne
+arrivava mai una. Le prove guardavano i pezzi, uno per uno, e nessuna guardava
+il giro intero: adesso c'è, e parte da quello che la casa manda davvero.
+
+E con quella, altre cinque cose della stessa faccenda:
+
+- **Un rapporto con le icone non viene più rifiutato.** La casa era disposta a
+  mandarne fino a 192 KiB, che viaggiando diventano 256, e il quadro ne
+  accettava 64 in tutto. Bastava un'icona un po' grossa: il rapporto tornava
+  indietro, e siccome la casa si tiene l'elenco di quello che le è stato
+  chiesto, al minuto dopo rimandava lo stesso pacco. Quella casa avrebbe smesso
+  di dire come sta, per sempre, per un'icona.
+- **Quando il quadro non chiede più niente, la casa smette di mandare.** Prima
+  l'elenco di quello che era stato chiesto non si svuotava mai, e le stesse
+  icone ripartivano ogni minuto anche dopo essere arrivate.
+- **Se arriva una sola delle due metà, l'altra si richiede.** Note sì e icona
+  no — succede, è uno scarico che va storto — e il segno risultava completo
+  lo stesso: quell'icona non sarebbe arrivata mai più. Adesso la casa sa anche
+  dire «di questa non ce n'è», che è un'altra cosa da «non è arrivata», e per
+  un firmware la si smette di chiedere.
+- **L'icona nella pagina si vede.** L'indirizzo era scritto in modo che il
+  browser lo cercasse dentro `/console/`, dove non c'è: ogni icona salvata
+  bene tornava un 404 e restava l'iniziale.
+- **Il magazzino delle icone non gira più a vuoto.** Oltre le cinquecento se ne
+  buttavano in ordine di impronta, che sembra caso ma è una regola: le stesse
+  ogni volta. Arrivavano, si salvavano, si buttavano, si richiedevano. Adesso
+  se ne va quello che nessuno nomina più.
+
+**E una casa non può più avvelenare l'icona che vedono gli altri.** Il segno di
+un aggiornamento si ricava da cose pubbliche — il nome e la versione — quindi
+chiunque sa calcolare quello di un'applicazione diffusa; il magazzino è uno
+solo per tutti e chi scrive per primo vince. Una casa sola, bucata o in
+malafede, poteva mandare il segno di un aggiornamento che non ha con dentro
+l'immagine e le note che voleva, e quella roba sarebbe comparsa nella pagina di
+tutti gli installatori sotto il nome di un'applicazione vera. Adesso il segno
+lo ricalcola il quadro dalla riga, e quello che arriva scritto serve solo a
+vedere se combacia.
+
 ## 1.5.9.5
 
 **Dall'app si aprono di nuovo il Cruscotto e la Gestione.** Non comparivano in

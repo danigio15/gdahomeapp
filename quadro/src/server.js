@@ -67,8 +67,25 @@ import { stessoSegreto } from "./segreti.js";
 import { ilTipoDi, Marchi, QUANTO_GROSSO } from "./marchi.js";
 import { SEGNO_VALIDO, Segni } from "./segni.js";
 
-/** Quanto puo' essere grossa un rapporto. Le vere stanno sotto i quattro. */
-const RAPPORTO_MASSIMA = 64 * 1024;
+/**
+ * Quanto puo' essere grossa un rapporto. Le vere stanno sotto i quattro KiB —
+ * ma un rapporto che porta le icone che gli sono state chieste pesa di piu', e
+ * quel di piu' e' il motivo di questo numero.
+ *
+ * Deve stare **sopra** a quello che la casa e' disposta a mandare
+ * (`IN_TUTTO_AL_MASSIMO` in `ponte/src/segni.js`, 96 KiB contati in base64) piu'
+ * il rapporto vero e proprio. Se stesse sotto succederebbe questo: la casa
+ * prepara le icone, il rapporto sfora, qui torna un 413 — e non salta l'icona,
+ * salta **tutto il rapporto**. La casa si tiene l'elenco di quello che le e'
+ * stato chiesto, al minuto dopo rimanda lo stesso pacco, e si ribecca il 413.
+ * Quella casa smetterebbe di dire come sta, per sempre, per un'icona.
+ *
+ * Ed e' esattamente com'era: 64 KiB qui contro 192 KiB di byte veri di la',
+ * che in base64 fanno 256. Bastava un'icona sola un po' grossa.
+ *
+ * I due numeri si tengono per mano, e una prova per parte li tiene fermi.
+ */
+const RAPPORTO_MASSIMA = 256 * 1024;
 
 /* A chi scrive un installatore a cui e' stata congelata l'utenza.
  *

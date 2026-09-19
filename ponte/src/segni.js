@@ -48,16 +48,42 @@
 import { createHash } from "node:crypto";
 
 /** Quanto puo' pesare un'icona per essere mandata. Le vere stanno molto sotto. */
-export const UN_SEGNO_AL_MASSIMO = 64 * 1024;
+export const UN_SEGNO_AL_MASSIMO = 24 * 1024;
 
-/** E quanto ne possono pesare in tutto in un rapporto solo. */
-export const IN_TUTTO_AL_MASSIMO = 192 * 1024;
+/**
+ * E quanto ne possono pesare in tutto in un rapporto solo, **contati come
+ * viaggiano**: in base64, cioe' un terzo piu' dei byte veri.
+ *
+ * Il numero non e' scelto qui: e' scelto dal quadro, che i rapporti troppo
+ * grossi li rifiuta con un 413 (`RAPPORTO_MASSIMA` in `quadro/src/server.js`).
+ * E un rapporto rifiutato non e' un'icona che salta — e' **tutto** il
+ * rapporto che salta, e siccome la casa si tiene l'elenco di quello che le e'
+ * stato chiesto, al minuto dopo rimanda lo stesso pacco troppo grosso e si
+ * becca lo stesso 413. Quella casa smetterebbe di dire come sta, per sempre,
+ * per un'icona.
+ *
+ * Prima qui c'erano 192 KiB contati sui byte veri: in base64 fanno 256, e il
+ * quadro ne accettava 64 in tutto. Bastava **un'icona sola** un po' grossa.
+ *
+ * Adesso i due numeri si tengono per mano, e una prova per parte li tiene
+ * fermi: qui sotto ci deve stare il rapporto intero, non solo le icone.
+ */
+export const IN_TUTTO_AL_MASSIMO = 96 * 1024;
 
 /** Quanto testo di note si manda. Un CHANGELOG intero non ci sta e non serve. */
 export const NOTE_AL_MASSIMO = 8 * 1024;
 
 /** Quanto si aspetta un'icona. Non e' roba urgente: al giro dopo si riprova. */
 const ATTESA = 10_000;
+
+/**
+ * «Un'icona non c'e' proprio», che e' un'altra cosa da «non e' arrivata».
+ *
+ * La prima e' definitiva — un firmware non ha un logo da nessuna parte — e si
+ * dice al quadro, che smette di chiederla. La seconda e' di oggi — la rete, un
+ * 403, il Supervisor che dorme — e si tace, cosi' al giro dopo si riprova.
+ */
+const NON_CE_NE = Symbol("non ce n'e'");
 
 /* Da dove si accetta di scaricare un'icona che non sia del Supervisor.
  *
@@ -120,7 +146,8 @@ export class Segni {
    *
    * @param {string[]} manca i segni che il quadro non ha
    * @param {Array} elenco gli aggiornamenti come li ha dati `Aggiornamenti`
-   * @returns {Promise<Map<string, {logo?: string, logoTipo?: string, note?: string}>>}
+   * @returns {Promise<Map<string, {logo?: string, logoTipo?: string, leNote?: string,
+   *          senzaLogo?: boolean, senzaNote?: boolean}>>}
    */
   async quelliCheMancano(manca, elenco) {
     const chiesti = new Set((Array.isArray(manca) ? manca : []).map((uno) => String(uno)));
@@ -135,39 +162,62 @@ export class Segni {
        * lascia agli altri, e il quadro la richiede al giro dopo. */
       if (quanto < IN_TUTTO_AL_MASSIMO) {
         const preso = await this._ilLogo(uno?.entita);
-        if (preso) {
+        if (preso === NON_CE_NE) {
+          /* Un firmware non ha nessuna icona da nessuna parte. Dirlo e' meglio
+           * che tacere: il quadro se lo segna e smette di chiederla, invece di
+           * ridomandarla a ogni rapporto per sempre. */
+          suo.senzaLogo = true;
+        } else if (preso) {
           suo.logo = preso.byte.toString("base64");
           suo.logoTipo = preso.tipo;
-          quanto += preso.byte.length;
+          quanto += suo.logo.length;
         }
+        /* E se `preso` e' `null` non si dice niente: quello e' uno scarico
+         * andato storto — la rete, un 403, il Supervisor che dorme — e al
+         * giro dopo si riprova. «Non ce l'ho adesso» e «non esiste» sono due
+         * cose diverse, e confonderle vuol dire o richiedere per sempre o
+         * rinunciare per sempre. */
       }
       const note = await this._leNote(uno?.entita);
-      if (note) suo.note = note;
-      /* Un segno senza niente dentro non si manda: se no il quadro lo
-       * segnerebbe come «arrivato e vuoto» e non lo richiederebbe piu'. */
-      if (suo.logo || suo.note) fatti.set(quale, suo);
+      if (note) {
+        /* `leNote` e non `note`: nella riga del rapporto `note` c'e' gia', ed
+         * e' **l'indirizzo** delle note sul sito di chi le ha scritte. Queste
+         * sono il testo, che e' un'altra cosa — e chiamarle uguale voleva dire
+         * che una delle due si mangiava l'altra senza che nessuno se ne
+         * accorgesse. */
+        suo.leNote = note;
+        quanto += note.length;
+      } else {
+        /* Anche qui: chi non sa dare le note non ne ha, e `_leNote` non
+         * distingue il vuoto dal guasto perche' per le note **non c'e'**
+         * guasto — si leggono dall'entita' che e' gia' in mano. */
+        suo.senzaNote = true;
+      }
+      fatti.set(quale, suo);
     }
     return fatti;
   }
 
-  /* I byte dell'icona, o `null`. Non solleva mai: un'icona che non arriva e'
-   * una riga con la lettera, e va molto meglio di un rapporto che non parte. */
+  /* I byte dell'icona; `null` se non e' arrivata, `NON_CE_NE` se non esiste.
+   * Non solleva mai: un'icona che non arriva e' una riga con la lettera, e va
+   * molto meglio di un rapporto che non parte. */
   async _ilLogo(entita) {
-    if (!entita || !this.aggiornamenti) return null;
+    if (!entita || !this.aggiornamenti) return NON_CE_NE;
     let dove = "";
     try {
       dove = await this.aggiornamenti.doveIlLogo(entita);
     } catch (_errore) {
       return null;
     }
-    if (!dove) return null;
+    /* Nessun indirizzo: quell'aggiornamento un'icona non ce l'ha. */
+    if (!dove) return NON_CE_NE;
     /* L'icona di un add-on si chiede **al Supervisor**, non a Home Assistant:
      * la' quella strada e' un proxy con le sue regole di permesso, e in una
      * casa vera ha risposto 403 per l'icona di un add-on di un altro. Il
      * segno che abbiamo e' quello del Supervisor. */
     const dellAddon = /^\/api\/hassio\/(addons\/[^/]+\/(?:icon|logo))$/.exec(dove);
     if (dellAddon) {
-      if (!this.supervisor || !this.segno) return null;
+      if (!this.supervisor || !this.segno) return NON_CE_NE;
       return this._scarica(`${this.supervisor}/${dellAddon[1]}`, {
         authorization: `Bearer ${this.segno}`,
       });
@@ -175,8 +225,8 @@ export class Segni {
     /* Un indirizzo di casa che non sia del Supervisor non si sa chiedere da
      * qui — per quello ci vuole il segno di chi ha fatto la domanda — e non si
      * inventa: resta la lettera. */
-    if (dove.startsWith("/")) return null;
-    if (!dove.startsWith(I_MARCHI)) return null;
+    if (dove.startsWith("/")) return NON_CE_NE;
+    if (!dove.startsWith(I_MARCHI)) return NON_CE_NE;
     return this._scarica(dove, {});
   }
 

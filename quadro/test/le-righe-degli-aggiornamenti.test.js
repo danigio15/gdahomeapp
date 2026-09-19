@@ -73,7 +73,14 @@ test("l'icona arriva dal quadro, non dai marchi di Home Assistant", () => {
    * Adesso l'icona vera la manda la casa e la serve il quadro. */
   const { ilSegnoDi } = iPezzi();
   const disegnato = ilSegnoDi({ nome: "Switch casa", segno: "e574160d1c8dc4e2" });
-  assert.match(disegnato, /src="segno\/e574160d1c8dc4e2"/);
+  /* `../segno/`, con il punto punto: la pagina sta in `/console/`, e senza
+   * quello l'indirizzo si legge da li' — `/console/segno/…`, dove non c'e'
+   * niente, e ogni icona salvata bene tornava un 404. */
+  assert.match(disegnato, /src="\.\.\/segno\/e574160d1c8dc4e2"/);
+  assert.ok(
+    !/src="segno\//.test(disegnato),
+    "l'indirizzo si legge da /console/ e non trova niente",
+  );
   assert.ok(
     !disegnato.includes("brands.home-assistant.io"),
     "il browser di chi installa va ancora a farsi vedere fuori",

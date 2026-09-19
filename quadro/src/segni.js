@@ -33,8 +33,36 @@
  * quello che si scopre indovinandole e' l'icona di Mosquitto.
  */
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  utimesSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
+
+/**
+ * Il segno di un aggiornamento, rifatto qui.
+ *
+ * **La stessa riga** di `ilSegnoDi` in `ponte/src/segni.js`. Due copie di
+ * quattro righe sono meglio di un pacchetto condiviso fra due macchine che si
+ * aggiornano in momenti diversi — ma due copie si scollano, e allora una prova
+ * per parte pianta lo stesso valore noto: se una delle due cambia, cadono
+ * tutt'e due.
+ *
+ * E qui serve per una ragione precisa, che nella casa non c'e': **non ci si
+ * fida del segno che arriva**. Vedi `metti`.
+ */
+export function ilSegnoDi(nome, a) {
+  const chi = `${String(nome ?? "").trim()}\n${String(a ?? "").trim()}`;
+  if (chi.length < 2) return "";
+  return createHash("sha256").update(chi, "utf8").digest("hex").slice(0, 16);
+}
 
 /** Com'e' fatto un segno. La stessa forma che fa la casa. */
 export const SEGNO_VALIDO = /^[0-9a-f]{16}$/;
@@ -88,12 +116,17 @@ export class Segni {
     this.adesso = adesso;
   }
 
-  /** Dove sta l'icona di questo segno, se c'e'. */
+  /** Dove sta l'**icona** di questo segno, se c'e'. */
   _dove(segno) {
     if (!SEGNO_VALIDO.test(String(segno ?? ""))) return null;
     try {
       for (const nome of readdirSync(this.cartella)) {
-        if (nome.startsWith(`${segno}.`)) return join(this.cartella, nome);
+        /* La coda conta. Prima bastava che il nome cominciasse col segno, e
+         * sotto quel segno ci stanno anche `.note`, `.senza-logo`,
+         * `.senza-note`: il file delle note passava per un'icona, e un segno
+         * che aveva solo le note risultava completo. */
+        if (!nome.startsWith(`${segno}.`)) continue;
+        if (ilTipoDi(nome.slice(nome.lastIndexOf(".") + 1))) return join(this.cartella, nome);
       }
     } catch (_nonCE) {
       /* La cartella non c'e' ancora: nessun segno. */
@@ -101,10 +134,33 @@ export class Segni {
     return null;
   }
 
-  /** Se di questo segno si ha gia' tutto: l'icona **o** le note. */
+  /* Di un segno ci sono **due** cose, e vanno tenute separate.
+   *
+   * Prima qui c'era un `||`: bastava una delle due per dire «ce l'ho tutto».
+   * Arrivavano le note e l'icona no — succede, e' uno scarico che va storto —
+   * e da quel momento il segno risultava completo: `quelliCheMancano` non lo
+   * chiedeva piu', e quell'icona non sarebbe arrivata mai piu'. Un `&&` da
+   * solo ribalta il guasto: un firmware un'icona non ce l'ha proprio, e la si
+   * richiederebbe per sempre.
+   *
+   * Servono tutt'e tre gli stati, allora: ce l'ho, non ce l'ho, **non
+   * esiste**. Il terzo lo dice la casa — lei sola lo sa — e qui si segna con
+   * un file vuoto. */
+  _hoIlLogo(segno) {
+    return Boolean(this._dove(segno)) || existsSync(join(this.cartella, `${segno}.senza-logo`));
+  }
+
+  _hoLeNote(segno) {
+    return (
+      existsSync(join(this.cartella, `${segno}.note`)) ||
+      existsSync(join(this.cartella, `${segno}.senza-note`))
+    );
+  }
+
+  /** Se di questo segno si ha gia' tutto: l'icona **e** le note. */
   ce(segno) {
     if (!SEGNO_VALIDO.test(String(segno ?? ""))) return false;
-    return Boolean(this._dove(segno)) || existsSync(join(this.cartella, `${segno}.note`));
+    return this._hoIlLogo(segno) && this._hoLeNote(segno);
   }
 
   /**
@@ -116,25 +172,58 @@ export class Segni {
   metti(elenco) {
     let presi = 0;
     for (const uno of Array.isArray(elenco) ? elenco : []) {
-      const segno = String(uno?.segno ?? "");
+      /* ─── Il segno non si prende per buono: si rifa' ───────────────────
+       *
+       * Prima si scriveva quello che la casa diceva di essere il segno. Ma un
+       * segno e' `sha256(nome + versione)` di roba **pubblica**: chiunque sa
+       * che esiste «Mosquitto broker 6.5.2» sa anche che segno fa, senza
+       * doverlo indovinare. E questa cartella e' una sola per tutti, e chi
+       * scrive per primo vince.
+       *
+       * Quindi una casa qualunque — una sola, bucata o in malafede, di un
+       * installatore qualunque — poteva mandare il segno di un aggiornamento
+       * che non ha, con dentro l'immagine che voleva e le note che voleva, e
+       * quella roba sarebbe comparsa nella pagina di **tutti** gli altri
+       * installatori, sotto il nome di un'applicazione vera.
+       *
+       * Adesso il segno lo calcola il quadro dal nome e dalla versione che
+       * stanno nella riga — che sono le stesse due cose da cui lo fa la casa —
+       * e quello che arriva scritto si guarda solo per vedere se combacia. Chi
+       * vuole avvelenare l'icona di Mosquitto deve mandare una riga che dice
+       * di avere Mosquitto: allora il segno e' il suo, ed e' la stessa cosa
+       * che farebbe una casa che Mosquitto ce l'ha davvero. */
+      const segno = ilSegnoDi(uno?.nome, uno?.a);
       if (!SEGNO_VALIDO.test(segno)) continue;
+      /* Se la casa ne ha scritto uno diverso, quella riga si lascia stare: o
+       * e' un ponte che conta in un altro modo — e allora i suoi byte non si
+       * sa a cosa appartengano — o e' qualcuno che ci prova. */
+      if (uno?.segno !== undefined && String(uno.segno) !== segno) continue;
       try {
+        /* Un segno nominato in un rapporto e' un segno **in uso**: lo si
+         * segna come visto adesso, cosi' la potatura butta quelli che non
+         * servono piu' invece dei primi che le capitano. */
+        this._visto(segno);
         if (typeof uno?.logo === "string" && uno.logo) {
           const byte = Buffer.from(uno.logo, "base64");
           const coda = cheRazzaE(byte);
           if (coda && !this._dove(segno)) {
-            mkdirSync(this.cartella, { recursive: true });
-            writeFileSync(join(this.cartella, `${segno}.${coda}`), byte);
+            this._scrivi(`${segno}.${coda}`, byte);
             presi += 1;
           }
+        } else if (uno?.senzaLogo === true && !this._hoIlLogo(segno)) {
+          /* «Un'icona non ce n'e'»: un file vuoto che vale come risposta. Da
+           * qui in poi non si richiede piu'. */
+          this._scrivi(`${segno}.senza-logo`, Buffer.alloc(0));
+          presi += 1;
         }
-        if (typeof uno?.note === "string" && uno.note.trim()) {
-          const via = join(this.cartella, `${segno}.note`);
-          if (!existsSync(via)) {
-            mkdirSync(this.cartella, { recursive: true });
-            writeFileSync(via, uno.note.slice(0, NOTE_AL_MASSIMO), "utf8");
+        if (typeof uno?.leNote === "string" && uno.leNote.trim()) {
+          if (!existsSync(join(this.cartella, `${segno}.note`))) {
+            this._scrivi(`${segno}.note`, uno.leNote.slice(0, NOTE_AL_MASSIMO));
             presi += 1;
           }
+        } else if (uno?.senzaNote === true && !this._hoLeNote(segno)) {
+          this._scrivi(`${segno}.senza-note`, Buffer.alloc(0));
+          presi += 1;
         }
       } catch (_errore) {
         /* Un segno che non si scrive non e' un rapporto da rifiutare. */
@@ -142,6 +231,30 @@ export class Segni {
     }
     if (presi) this.potatura();
     return presi;
+  }
+
+  _scrivi(nome, roba) {
+    mkdirSync(this.cartella, { recursive: true });
+    writeFileSync(join(this.cartella, nome), roba, typeof roba === "string" ? "utf8" : undefined);
+  }
+
+  /* «Questo segno serve ancora»: si rinfresca la data dei suoi file. E' quello
+   * che guarda la potatura. */
+  _visto(segno) {
+    const quando = new Date(this.adesso());
+    let nomi;
+    try {
+      nomi = readdirSync(this.cartella).filter((nome) => nome.startsWith(`${segno}.`));
+    } catch (_nonCE) {
+      return;
+    }
+    for (const nome of nomi) {
+      try {
+        utimesSync(join(this.cartella, nome), quando, quando);
+      } catch (_errore) {
+        /* Una data che non si scrive non e' niente: al giro dopo si riprova. */
+      }
+    }
   }
 
   /** L'icona di un segno: `{byte, tipo}` o `null`. */
@@ -177,7 +290,10 @@ export class Segni {
   quelliCheMancano(elenco) {
     const manca = [];
     for (const uno of Array.isArray(elenco) ? elenco : []) {
-      const segno = String(uno?.segno ?? "");
+      /* Rifatto qui come in `metti`, e per lo stesso motivo: si chiede quello
+       * che manca **di questa riga**, non quello che la casa dice di volerci
+       * mandare. */
+      const segno = ilSegnoDi(uno?.nome, uno?.a);
       if (SEGNO_VALIDO.test(segno) && !this.ce(segno) && !manca.includes(segno)) {
         manca.push(segno);
       }
@@ -199,14 +315,36 @@ export class Segni {
      * e contarli separati vorrebbe dire buttare meta' di un segno. */
     const quali = [...new Set(nomi.map((nome) => nome.slice(0, nome.indexOf("."))))];
     if (quali.length <= QUANTI_SE_NE_TENGONO) return 0;
-    /* Quali se ne vanno: quelli in fondo all'ordine alfabetico, che essendo
-     * impronte e' **caso puro**. Ed e' quello che serve: il tetto sta qui
-     * perche' la cartella non cresca per sempre, non per indovinare quali
-     * icone serviranno ancora. Chi viene buttato e serve ancora se lo
-     * riprende al rapporto dopo, perche' `quelliCheMancano` lo ritrova
-     * mancante — e quello e' tutto il costo di un errore qui. */
+    /* ─── Quali se ne vanno: i meno usati di recente ─────────────────────
+     *
+     * Prima era l'ordine alfabetico, che essendo impronte sembrava caso puro.
+     * Ma il caso, se e' sempre lo stesso, non e' caso: e' una regola. Un segno
+     * che casca oltre il taglio ci casca **tutte le volte**, e allora il giro
+     * diventava — arriva, si salva, si butta; il rapporto dopo lo ritrova
+     * mancante, lo richiede, la casa lo rimanda, si salva, si butta. Per
+     * sempre, ogni minuto, per quella casa. Il tetto non si stabilizzava mai.
+     *
+     * Adesso conta quando un segno e' stato visto l'ultima volta — e ogni
+     * rapporto che lo nomina lo rinfresca (`_visto`). Cosi' quello che serve
+     * a una casa viva non se ne va, e quello che se ne va e' quello che
+     * nessuno nomina piu': l'icona di una versione che e' passata. */
+    const quando = new Map(
+      quali.map((quale) => {
+        let ultimo = 0;
+        for (const nome of nomi.filter((uno) => uno.startsWith(`${quale}.`))) {
+          try {
+            ultimo = Math.max(ultimo, statSync(join(this.cartella, nome)).mtimeMs);
+          } catch (_errore) {
+            /* Un file che non si guarda vale zero: se e' l'unico, quel segno
+             * e' il primo a andarsene, ed e' giusto cosi'. */
+          }
+        }
+        return [quale, ultimo];
+      }),
+    );
     let andati = 0;
-    for (const quale of quali.sort().slice(QUANTI_SE_NE_TENGONO)) {
+    const daPiuNuovo = quali.sort((una, altra) => quando.get(altra) - quando.get(una));
+    for (const quale of daPiuNuovo.slice(QUANTI_SE_NE_TENGONO)) {
       for (const nome of nomi.filter((uno) => uno.startsWith(`${quale}.`))) {
         try {
           rmSync(join(this.cartella, nome), { force: true });

@@ -31,6 +31,7 @@ import {
 import { gliAddon, laMacchina, laRete } from "../src/ferro.js";
 import { ilBackup, leBatterie, leEntita } from "../src/salute.js";
 import { Aggiornamenti } from "../src/aggiornamenti.js";
+import { ilSegnoDi } from "../src/segni.js";
 
 const ZITTO = { debug() {}, info() {}, attenzione() {}, errore() {} };
 
@@ -862,4 +863,84 @@ test("il filo non gira a vuoto nemmeno se dall'altra parte risponde all'istante"
   } finally {
     postino.ferma();
   }
+});
+
+test("quando il quadro non chiede piu' niente, la casa smette di mandare", async () => {
+  /* L'elenco di quello che il quadro ha chiesto e' quello che al giro dopo
+   * viaggia. Prima si teneva solo quando arrivava — `if (Array.isArray(manca))`
+   * — e una risposta buona che non chiedeva piu' niente lasciava intatto
+   * l'elenco di prima: le stesse icone rimandate ogni minuto, per sempre.
+   * Arrivate, salvate, e rimandate, perche' nessuno aveva mai detto «basta».
+   *
+   * Una risposta buona che non chiede niente **e'** quel «basta». */
+  const risposte = [
+    { manca: ["e574160d1c8dc4e2", "0123456789abcdef"] },
+    /* Le ha ricevute: adesso non chiede piu'. */
+    { presa: true },
+  ];
+  let giro = 0;
+  const postino = new Postino({
+    dove: "https://quadro.it",
+    chiave: "una-chiave-segretissima",
+    casa: "casa_abc",
+    fabbrica: () => ({ casa: "casa_abc" }),
+    registro: ZITTO,
+    fetch: async () => ({
+      ok: true,
+      status: 200,
+      async json() {
+        return risposte[Math.min(giro++, risposte.length - 1)];
+      },
+    }),
+  });
+  postino.parti();
+
+  await postino.manda();
+  assert.deepEqual(
+    postino.segniChiesti,
+    ["e574160d1c8dc4e2", "0123456789abcdef"],
+    "non si e' segnato quello che il quadro gli ha chiesto",
+  );
+
+  await postino.manda();
+  assert.deepEqual(postino.segniChiesti, [], "le rimanda ogni minuto per sempre");
+
+  postino.ferma();
+});
+
+test("il segno di un aggiornamento viaggia dentro la sua riga", async () => {
+  /* La riga che teneva spenta tutta la faccenda: `iConti` prendeva i segni
+   * come terzo argomento — glieli passavamo — ma la sua firma ne dichiarava
+   * due, e la riga non ne emetteva nessuno. Il quadro non vedeva mai un segno,
+   * quindi non ne chiedeva mai uno, quindi un'icona non arrivava mai.
+   *
+   * Le prove di prima guardavano i pezzi — il segno si calcola bene, il quadro
+   * risponde bene a un rapporto scritto a mano — e nessuna guardava il giro
+   * intero. */
+  const scrivi = fabbricaIlRapporto({
+    identita: { casa: "casa_abc" },
+    aggiornamenti: {
+      async elenco() {
+        return [
+          {
+            entita: "update.mosquitto_broker",
+            nome: "Mosquitto broker",
+            da: "6.4.0",
+            a: "6.5.1",
+            installabile: true,
+          },
+        ];
+      },
+      async marchioDi() {
+        return "mosquitto";
+      },
+    },
+    adesso: () => Date.now(),
+  });
+  const carta = await scrivi();
+  const riga = carta.aggiornamenti.elenco[0];
+  assert.equal(riga.segno, ilSegnoDi("Mosquitto broker", "6.5.1"));
+  assert.match(riga.segno, /^[0-9a-f]{16}$/);
+  /* E l'entita' non passa: direbbe chi ci abita e in quale stanza. */
+  assert.equal(JSON.stringify(carta).includes("update.mosquitto_broker"), false);
 });
