@@ -97,10 +97,23 @@ const OGNI_AL_MASSIMO = 24 * 60;
 /** Quanto si aspetta il quadro prima di lasciar perdere. */
 const ATTESA = 10_000;
 
-/* Quanto si aspetta prima del primo rapporto. Non zero: all'accensione
- * dell'add-on Home Assistant sta spesso ancora partendo, e un rapporto
- * spedito adesso direbbe che in questa casa non c'e' niente. */
-const PRIMA_ASPETTA = 30_000;
+/* Quanto si aspetta prima del primo rapporto.
+ *
+ * Erano trenta secondi, ed erano dimensionati su un passo da un quarto d'ora:
+ * li' un primo rapporto incompleto restava sullo schermo quindici minuti, e
+ * valeva la pena aspettare che Home Assistant finisse di partire.
+ *
+ * Adesso il passo e' un minuto, e quei trenta secondi costano piu' di quello
+ * che comprano. Il momento in cui contano davvero e' l'unico in cui qualcuno
+ * sta guardando: si incolla il codice, si salva, l'add-on riparte — e per
+ * mezzo minuto non succede niente. Chi guarda non vede «sto aspettando», vede
+ * che non funziona, e va a rifare il giro da capo.
+ *
+ * Il rischio che restava lo copre gia' `compila`: quello che non si sa resta
+ * **fuori** dal foglio invece di diventare uno zero. Un rapporto mandato
+ * troppo presto ha meno righe, non righe sbagliate — e un minuto dopo ne ha
+ * tutte. Due secondi bastano a non correre dietro alla propria accensione. */
+const PRIMA_ASPETTA = 2_000;
 
 /* Quando il quadro non risponde si rallenta invece di insistere: un quadro
  * spento per un giorno non deve prendersi una richiesta ogni quindici minuti

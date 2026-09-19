@@ -353,7 +353,7 @@ export function costruisciIlServer({
           limite: io?.soglia || 0,
           quante: case_.quante(chi),
         });
-        registro.info("un codice nuovo, buono per una casa e per un quarto d'ora");
+        registro.info("un codice nuovo, buono per una casa e per un giorno");
         json(risposta, { codice, inviti: chiavi.elenco(chi) });
       } catch (errore) {
         male(risposta, errore instanceof TroppiInviti ? 409 : 500, String(errore?.message));

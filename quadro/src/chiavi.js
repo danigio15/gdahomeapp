@@ -34,8 +34,27 @@ import { codiceNuovo, impronta, stessoSegreto } from "./segreti.js";
 
 const MINUTO = 60 * 1000;
 
-/** Quanto vive un invito. Gli stessi quindici minuti che dice il documento. */
-export const MINUTI_DELL_INVITO = 15;
+/* Quanto vive un invito.
+ *
+ * Erano quindici minuti, copiati dal codice che abbina un telefono. Li' hanno
+ * senso: chi abbina un telefono ha in mano il telefono e lo schermo che mostra
+ * il QR, e quindici minuti sono un'eternita'.
+ *
+ * Qui no, e si e' visto al primo uso vero. In quei quindici minuti ci devono
+ * stare: copiare il codice, aprire Home Assistant, trovare l'add-on, andare in
+ * Configurazione, incollare, salvare, far ripartire il ponte — e poi il primo
+ * rapporto. Chi si distrae in mezzo si prende un 403 che non dice «scaduto»,
+ * dice «questa chiave non apre niente», e va a cercare un guasto che non c'e'.
+ * E nel caso vero il codice non lo incolla nemmeno chi lo genera: lo manda a
+ * un cliente, che lo fara' stasera.
+ *
+ * Un giorno, allora. Il conto del rischio: chi intercettasse un codice non
+ * aprirebbe niente — non e' una porta, e' il permesso di **depositare** righe
+ * di numeri nella lista di un installatore. Dovrebbe anche conoscere una
+ * matricola, che e' centoventotto bit di caso, e il risultato del suo furto
+ * sarebbe una casa finta in un elenco, che si stacca con un tasto. Contro
+ * questo, quindici minuti non compravano niente. */
+export const MINUTI_DELL_INVITO = 24 * 60;
 
 /** Quanti inviti aperti si tengono insieme: oltre, e' un elenco di prove. */
 export const INVITI_AL_MASSIMO = 20;
@@ -71,7 +90,7 @@ export class Chiavi {
   }
 
   /**
-   * Un invito nuovo, per una casa sola e per un quarto d'ora.
+   * Un invito nuovo, per una casa sola e per un giorno.
    *
    * Lo fa **un installatore**, e la casa che lo usera' sara' sua: e' qui che
    * nasce l'appartenenza, e da qui che passa il limite. Un invito senza padrone
