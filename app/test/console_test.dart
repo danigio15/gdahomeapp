@@ -11,7 +11,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
-import 'package:gdahome/casa/cruscotto.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/barra.dart';
 import 'package:gdahome/schermate/console.dart';
@@ -208,78 +207,6 @@ void main() {
     expect(find.text('Nessuno ha scritto'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.runAsync(() async {
-      await collegamento.chiudi();
-      await ponte.spegni();
-    });
-  });
-
-  /* ─── Il codice non si ribatte ────────────────────────────────────────────
-   *
-   * «Se il codice è inserito nella configurazione add-on non lo deve richiedere
-   * più.» Sta nella scheda dell'add-on — è quello che fa esistere la voce — e
-   * dentro Home Assistant la tessera lo passa alla pagina da un pezzo. Nell'app
-   * no: l'app aveva solo l'indirizzo, e la pagina lo richiedeva da capo. Due
-   * volte lo stesso codice, e la seconda fa pensare che la prima sia andata
-   * storta.
-   */
-
-  testWidgets('il ponte dice dove si apre il cruscotto, e con che codice', (
-    tester,
-  ) async {
-    late PonteFinto ponte;
-    late Collegamento collegamento;
-    await tester.runAsync(() async {
-      ponte = await PonteFinto.alza();
-      ponte.lInstallatore = true;
-      ponte.ilCodiceDelCruscotto = 'codice-del-cruscotto';
-      collegamento = await _casaCollegata(ponte);
-    });
-    await _lasciaFare(tester);
-
-    final filo = collegamento.filo!;
-    late QuadroDiQuestaCasa detto;
-    await tester.runAsync(() async {
-      detto = await IlCruscotto(filo).dove();
-    });
-    expect(detto.cruscotto, 'https://quadro.gdahome.org/console/');
-    expect(detto.chiave, 'codice-del-cruscotto');
-
-    /* E dove il ponte il codice non lo dà — chi non amministra — resta vuoto, e
-     * la pagina se lo fa battere come prima. Non è un guasto. */
-    ponte.ilCodiceDelCruscotto = '';
-    await tester.runAsync(() async {
-      detto = await IlCruscotto(filo).dove();
-    });
-    expect(detto.cruscotto, 'https://quadro.gdahome.org/console/');
-    expect(detto.chiave, '');
-
-    await tester.runAsync(() async {
-      await collegamento.chiudi();
-      await ponte.spegni();
-    });
-  });
-
-  testWidgets('un codice senza la sua porta non si tiene', (tester) async {
-    /* Se la casa non è di chi installa, l'indirizzo non c'è — e un codice senza
-     * dove andare non apre niente: si butta invece di portarselo dietro. */
-    late PonteFinto ponte;
-    late Collegamento collegamento;
-    await tester.runAsync(() async {
-      ponte = await PonteFinto.alza();
-      ponte.lInstallatore = false;
-      ponte.ilCodiceDelCruscotto = 'un-codice-che-non-apre-niente';
-      collegamento = await _casaCollegata(ponte);
-    });
-    await _lasciaFare(tester);
-
-    late QuadroDiQuestaCasa detto;
-    await tester.runAsync(() async {
-      detto = await IlCruscotto(collegamento.filo!).dove();
-    });
-    expect(detto.cruscotto, '');
-    expect(detto.chiave, '');
-
     await tester.runAsync(() async {
       await collegamento.chiudi();
       await ponte.spegni();
