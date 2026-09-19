@@ -328,6 +328,99 @@ test("due installatori sullo stesso quadro non si vedono", async () => {
   }
 });
 
+test("una casa riabbinata cambia padrone davvero, elenchi e conti compresi", async () => {
+  /* Il guasto che ha fatto scrivere questa prova, raccontato da chi l'ha
+   * trovato: «ho tolto installatore e me lo lascia in piedi, secondo me legge
+   * ancora quello che avevo eliminato».
+   *
+   * Leggeva. Riabbinare sostituisce la **chiave**, ma di chi fosse la casa
+   * stava scritto in un secondo posto — la riga della casa — e quella non si
+   * muoveva. Siccome e' quella riga a decidere chi vede cosa, la casa
+   * spariva a tutti e due: zero impianti nel cruscotto del nuovo, e un
+   * impianto rimasto solo nel conto della gestione. */
+  const b = await banco({ installatori: 2 });
+  const [rossi, bianchi] = b.iscritti;
+  try {
+    await b.deposita(UNA, await unCodice(b, "Rossi", rossi.chiave));
+    await b.retro(
+      `/casa/${UNA}`,
+      { method: "PUT", body: JSON.stringify({ nome: "Sig.ra Verdi, via Tal dei Tali 3" }) },
+      rossi.chiave,
+    );
+
+    /* Il codice di Bianchi, incollato in quella stessa casa. E' l'unico modo
+     * che c'e' di riabbinare, e si fa da dentro casa: e' giusto cosi', perche'
+     * e' chi ci abita a decidere chi guarda il suo impianto. */
+    await b.deposita(UNA, await unCodice(b, "Bianchi", bianchi.chiave));
+
+    const diRossi = await (await b.retro("/case", {}, rossi.chiave)).json();
+    const diBianchi = await (await b.retro("/case", {}, bianchi.chiave)).json();
+    assert.deepEqual(diRossi.case, [], "a Rossi resta in elenco una casa che non e' piu' sua");
+    assert.deepEqual(
+      diBianchi.case.map((una) => una.casa),
+      [UNA],
+      "Bianchi non vede la casa che ha appena abbinato",
+    );
+
+    /* E il nome no: non e' il nome dell'impianto, e' la nota che si era preso
+     * Rossi, e dentro c'e' il cognome di una cliente. */
+    assert.equal(diBianchi.case[0].senzaNome, true);
+    assert.doesNotMatch(JSON.stringify(diBianchi.case[0]), /Verdi/);
+
+    const quadro = await (await b.gestore("/installatori")).json();
+    assert.equal(quadro.orfane, 0, "una casa che ha un padrone risulta rimasta sola");
+    assert.equal(quadro.installatori.find((uno) => uno.nome === "Installatore 1").case, 0);
+    assert.equal(quadro.installatori.find((uno) => uno.nome === "Installatore 2").case, 1);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("tolto l'installatore, la sua casa si recupera dandola a un altro", async () => {
+  /* Il giro intero, quello vero: mi iscrivo, abbino la mia casa, mi tolgo
+   * dalla gestione, mi riscrivo, e me la riprendo. Finche' non ha funzionato
+   * non si poteva nemmeno provare il quadro sulla propria casa. */
+  const b = await banco({ installatori: 1 });
+  const [prima] = b.iscritti;
+  try {
+    const sua = await unCodice(b, "la mia", prima.chiave);
+    await b.deposita(UNA, sua);
+
+    await b.gestore(`/installatore/${prima.chi}`, { method: "DELETE" });
+    const soli = await (await b.gestore("/installatori")).json();
+    assert.equal(soli.orfane, 1, "una casa senza piu' nessuno deve risultare rimasta sola");
+
+    /* La casa continua a depositare — spegnerle il monitoraggio punirebbe chi
+     * ci abita — ma non le si racconta piu' di un installatore che non c'e':
+     * la plancia si toglie il nome e il marchio, e torna la nostra. */
+    const muta = await (await b.deposita(UNA, sua)).json();
+    assert.equal(muta.presa, true);
+    assert.equal(muta.di, "");
+    assert.equal(muta.marchio, undefined);
+
+    const dopo = await (
+      await b.gestore("/installatori", {
+        method: "POST",
+        body: JSON.stringify({ nome: "Io, adesso" }),
+      })
+    ).json();
+
+    await b.deposita(UNA, await unCodice(b, "la mia", dopo.chiave));
+    const mie = await (await b.retro("/case", {}, dopo.chiave)).json();
+    assert.deepEqual(
+      mie.case.map((una) => una.casa),
+      [UNA],
+      "la casa non e' tornata a chi l'ha appena riabbinata",
+    );
+
+    const quadro = await (await b.gestore("/installatori")).json();
+    assert.equal(quadro.orfane, 0);
+    assert.equal(quadro.installatori.find((uno) => uno.chi === dopo.chi).case, 1);
+  } finally {
+    await b.chiudi();
+  }
+});
+
 test("la casa di un altro non si rinomina e non si toglie, nemmeno sapendone la matricola", async () => {
   /* Le matricole non sono segrete — passano in chiaro nelle intestazioni — e
    * quindi l'appartenenza dev'essere un lucchetto sulla via, non un filtro

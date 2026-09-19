@@ -183,3 +183,20 @@ test("consegnato una volta, non si riconsegna: se no si rifa' partire ogni minut
     b.chiudi();
   }
 });
+
+test("un lavoro chiesto dal vecchio non si consegna alla casa passata a un altro", () => {
+  /* Riabbinare vuol dire cambiare padrone, e da quel momento chi c'era prima
+   * su quella casa non comanda piu' niente — nemmeno l'aggiornamento che
+   * aveva gia' premuto e che stava ancora aspettando qui. */
+  const b = banco();
+  try {
+    b.case.deposita(UNA, carta(), CHI);
+    assert.ok(b.case.chiediUnLavoro(UNA, QUESTO, CHI)?.id);
+
+    b.case.deposita(UNA, carta(), UN_ALTRO);
+    assert.equal(b.case.ilLavoroDa(UNA), null);
+    assert.equal(b.case.vestita(b.case.quella(UNA)).chiesto, null);
+  } finally {
+    b.chiudi();
+  }
+});
