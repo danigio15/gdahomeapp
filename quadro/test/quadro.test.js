@@ -387,16 +387,13 @@ test("tolto l'installatore, la sua casa si recupera dandola a un altro", async (
     await b.deposita(UNA, sua);
 
     await b.gestore(`/installatore/${prima.chi}`, { method: "DELETE" });
-    const soli = await (await b.gestore("/installatori")).json();
-    assert.equal(soli.orfane, 1, "una casa senza piu' nessuno deve risultare rimasta sola");
+    const dopoIlTaglio = await (await b.gestore("/installatori")).json();
+    assert.equal(dopoIlTaglio.case, 0, "eliminare ha lasciato indietro la casa");
+    assert.equal(dopoIlTaglio.orfane, 0);
 
-    /* La casa continua a depositare — spegnerle il monitoraggio punirebbe chi
-     * ci abita — ma non le si racconta piu' di un installatore che non c'e':
-     * la plancia si toglie il nome e il marchio, e torna la nostra. */
-    const muta = await (await b.deposita(UNA, sua)).json();
-    assert.equal(muta.presa, true);
-    assert.equal(muta.di, "");
-    assert.equal(muta.marchio, undefined);
+    /* E la casa, col codice che aveva incollato, non entra piu': quello che
+     * l'apriva se n'e' andato con chi gliel'aveva dato. */
+    assert.equal((await b.deposita(UNA, sua)).status, 403);
 
     const dopo = await (
       await b.gestore("/installatori", {
@@ -571,12 +568,15 @@ test("un installatore non entra nella gestione, e non se ne aggiunge uno da se'"
   }
 });
 
-test("togliere un installatore non butta le sue case: restano, e si vedono ancora contate", async () => {
-  /* E' una scelta, non un effetto collaterale, e sta qui perche' non torni
-   * indietro da sola: sono impianti che funzionano in casa di qualcuno, e
-   * spegnerne il monitoraggio perche' un installatore ha smesso di pagare punirebbe
-   * il cliente per una faccenda che non e' sua. I rapporti continuano ad
-   * arrivare, e chi tiene il quadro le vede contate a parte. */
+test("eliminare un installatore porta via anche le sue case", async () => {
+  /* Qui c'era la prova della scelta di prima: le case restavano, e siccome
+   * nessuno le guardava piu' diventavano un numero — «1 impianto senza piu'
+   * nessuno» — che non si poteva ne' aprire ne' riassegnare.
+   *
+   * Adesso i tasti sono due e le cose sono due. Per la lite con
+   * l'installatore c'e' **congela**, che non tocca niente: le sue case restano
+   * accese e non si perde una riga (`congela-ed-elimina.test.js`). Elimina
+   * vuol dire «questo non c'e' piu'», e fa proprio quello. */
   const b = await banco({ installatori: 1 });
   const rossi = b.iscritti[0];
   try {
@@ -588,13 +588,14 @@ test("togliere un installatore non butta le sue case: restano, e si vedono ancor
     /* La chiave dell'installatore non apre piu' niente. */
     assert.equal((await b.retro("/case", {}, rossi.chiave)).status, 401);
 
-    /* Ma la casa c'e' ancora, e continua a depositare. */
-    assert.equal((await b.deposita(UNA, codice)).status, 200);
+    /* E la casa bussa e si sente dire di no: per tornare dentro ci vuole un
+     * codice nuovo, di un installatore vivo, incollato da dentro casa. */
+    assert.equal((await b.deposita(UNA, codice)).status, 403);
 
     const detto = await (await b.gestore("/installatori")).json();
     assert.equal(detto.installatori.length, 0);
-    assert.equal(detto.case, 1, "la casa e' sparita insieme all'installatore");
-    assert.equal(detto.orfane, 1, "una casa senza piu' nessuno che la guardi non si vede");
+    assert.equal(detto.case, 0, "la casa e' rimasta dov'era");
+    assert.equal(detto.orfane, 0, "resta una casa senza nessuno che la guardi");
   } finally {
     await b.chiudi();
   }

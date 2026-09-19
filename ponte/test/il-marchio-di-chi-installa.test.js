@@ -13,9 +13,10 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { cheImmagineE, Installatore } from "../src/installatore.js";
 import { laPagina, NOME, vestiDiGdahome } from "../src/marchio.js";
@@ -23,6 +24,14 @@ import { laPagina, NOME, vestiDiGdahome } from "../src/marchio.js";
 const ZITTO = { debug() {}, info() {}, attenzione() {}, errore() {} };
 const CHI = "inst_0123456789abcdef";
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4]);
+
+/* La plancia vera, non un finto: quello che si prova qui e' che le espressioni
+ * ritrovino quello che c'e' dentro davvero, e un finto scritto da noi
+ * risponderebbe di si' a qualunque espressione. */
+const LA_PLANCIA = readFileSync(
+  fileURLToPath(new URL("../plancia/legacy/dashboard.html", import.meta.url)),
+  "utf8",
+);
 
 function banco({ risposta = null, quadro = "https://quadro.invalid" } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "installatore-"));
@@ -246,4 +255,58 @@ test("un logo grosso non finisce dentro il velo d'avvio", () => {
     tipo: "image/png",
   });
   assert.ok(!pagina.includes(grosso.toString("base64")), "il logo grosso e' finito nel velo");
+});
+
+/* ─── Quello che la plancia dice di se' stessa ────────────────────────── */
+
+test("il segno in cima a Configurazione e' lo stesso logo della testata", () => {
+  /* Li' c'era una casetta azzurra disegnata a mano dentro la pagina: non il
+   * logo di nessuno, e nemmeno il nostro. Chi apriva Configurazione vedeva il
+   * marchio cambiare sotto gli occhi.
+   *
+   * Adesso quel posto **indica** `logo.png` invece di disegnare qualcosa, ed
+   * e' quello che impedisce ai due segni di divergere: e' lo stesso file, e
+   * `vestiDiGdahome` lo serve nostro o dell'installatore. */
+  const pagina = laPagina(LA_PLANCIA, null);
+  assert.match(pagina, /<div class="cfg-hero-ico"[^>]*><img src="\.\/logo\.png"/);
+  assert.ok(!/cfg-hero-ico[^>]*>\s*<svg/.test(pagina), "la casetta disegnata a mano e' ancora li'");
+  assert.match(pagina, /<div class="cfg-hero-ico"[^>]*><img[^>]*alt="gdahome"/);
+
+  /* E dove la casa ha un installatore col suo nome, quel nome ci va. */
+  const sua = laPagina(LA_PLANCIA, { nome: "Impianti Rossi", logo: PNG, tipo: "image/png" });
+  assert.match(sua, /<div class="cfg-hero-ico"[^>]*><img[^>]*alt="Impianti Rossi"/);
+});
+
+test("la plancia non dichiara piu' una versione sua, vecchia di quattordici giri", () => {
+  /* Si leggeva in due posti a schermo — sotto «CONFIGURAZIONE» e nella
+   * diagnostica runtime — e diceva 1.4.32 mentre l'add-on diceva 1.5.9.1.
+   *
+   * Quei numeri li scrive uno script della plancia quando la si costruisce, e
+   * di gdahome non sa niente. Si rimettono in pari qui, con quello di
+   * `ORIGINE.json`, che e' lo stesso che il ponte mette nel rapporto. */
+  const dentro = Buffer.from(
+    'export const BUILD_INFO = Object.freeze({"generated":true,' +
+      '"integrationVersion":"1.4.32","dashboardVersion":"1.4.32","moduleVersion":14});\n',
+  );
+  const fatto = vestiDiGdahome(
+    "legacy/build-info.js",
+    dentro,
+    "text/javascript",
+    null,
+    "1.5.9",
+  ).corpo.toString("utf8");
+  assert.match(fatto, /"integrationVersion":"1\.5\.9"/);
+  assert.match(fatto, /"dashboardVersion":"1\.5\.9"/);
+  /* E il resto non si tocca: sono numeri della plancia, non nostri. */
+  assert.match(fatto, /"moduleVersion":14/);
+
+  /* Senza una versione da mettere non si inventa niente, e un numero storto
+   * nemmeno: quel testo finisce dentro una stringa che il browser esegue. */
+  for (const storta of ["", '1.5.9"; alert(1); //', "boh", null]) {
+    assert.equal(
+      vestiDiGdahome("legacy/build-info.js", dentro, "text/javascript", null, storta).corpo,
+      dentro,
+      `«${storta}» e' passata`,
+    );
+  }
 });

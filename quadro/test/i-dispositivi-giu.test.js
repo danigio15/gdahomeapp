@@ -23,8 +23,22 @@ import { iControlli, lePastiglie, loStato } from "../src/controlli.js";
 const QUI = dirname(fileURLToPath(import.meta.url));
 const CONSOLE = readFileSync(join(QUI, "..", "console", "index.html"), "utf8");
 
+/* I registri di Home Assistant, che qui servono sempre: dalla 1.5.9.2 il ponte
+ * guarda **solo le entita' di un dispositivo vero** — quelle che stanno in
+ * «Dispositivi e integrazioni», Zigbee compreso — e senza i registri non
+ * risponde affatto. Il perche' sta in cima a `ponte/src/salute.js`. */
+const iRegistri = (quanti) => ({
+  dispositivi: Array.from({ length: quanti }, (_, i) => ({ id: `d${i}`, name: `Sonda ${i}` })),
+  entita: Array.from({ length: quanti }, (_, i) => ({
+    entity_id: `sensor.n${i}`,
+    device_id: `d${i}`,
+  })),
+});
+
 test("la console legge tutte le chiavi che il ponte mette in «entita»", () => {
-  const detto = leEntita([{ entity_id: "sensor.uno", state: "unavailable", attributes: {} }]);
+  const detto = leEntita([{ entity_id: "sensor.n0", state: "unavailable", attributes: {} }], {
+    registri: iRegistri(1),
+  });
   /* `totali`, `giu`, `dispositivi`, `nomi`: se il ponte ne aggiunge una e la
    * console non la guarda, e' roba che viaggia per niente; se ne ribattezza
    * una, e' il riquadro che sparisce. */
@@ -54,6 +68,7 @@ test("il numero vero dei dispositivi giu' non si perde nel taglio a dodici", () 
       state: "unavailable",
       attributes: {},
     })),
+    { registri: iRegistri(40) },
   );
   assert.equal(detto.dispositivi, 40);
   assert.equal(detto.nomi.length, 12);
@@ -71,11 +86,24 @@ test("i controlli giudicano il rapporto di adesso, non quello di ieri", () => {
    * Le loro prove non se ne sono accorte perche' gli davano tutte la
    * forma vecchia. Qui il rapporto lo fabbrica il **ponte**, cosi' il giorno
    * che cambia di la' si rompe di qua. */
+  const registri = {
+    dispositivi: [
+      { id: "d1", name: "Lampada" },
+      { id: "d2", name: "Presa garage" },
+    ],
+    entita: [
+      { entity_id: "light.una", device_id: "d1" },
+      { entity_id: "switch.presa", device_id: "d2" },
+    ],
+  };
   const carta = {
-    entita: leEntita([
-      { entity_id: "light.una", state: "on", attributes: {} },
-      { entity_id: "switch.presa", state: "unavailable", attributes: {} },
-    ]),
+    entita: leEntita(
+      [
+        { entity_id: "light.una", state: "on", attributes: {} },
+        { entity_id: "switch.presa", state: "unavailable", attributes: {} },
+      ],
+      { registri },
+    ),
   };
   const controlli = iControlli(carta).controlli;
   const quella = controlli.find((uno) => uno.cosa === "I collegamenti");
@@ -89,7 +117,7 @@ test("i controlli giudicano il rapporto di adesso, non quello di ieri", () => {
 
   /* E con tutto collegato la spunta e' verde, col totale giusto. */
   const aPosto = {
-    entita: leEntita([{ entity_id: "light.una", state: "on", attributes: {} }]),
+    entita: leEntita([{ entity_id: "light.una", state: "on", attributes: {} }], { registri }),
   };
   const buona = iControlli(aPosto).controlli.find((uno) => uno.cosa === "I collegamenti");
   assert.equal(buona.va, true);
@@ -98,10 +126,24 @@ test("i controlli giudicano il rapporto di adesso, non quello di ieri", () => {
 
 test("le pastiglie e lo stato non dicono «undefined» col rapporto di adesso", () => {
   const carta = {
-    entita: leEntita([
-      { entity_id: "sensor.uno", state: "unavailable", attributes: {} },
-      { entity_id: "sensor.due", state: "unavailable", attributes: {} },
-    ]),
+    entita: leEntita(
+      [
+        { entity_id: "sensor.uno", state: "unavailable", attributes: {} },
+        { entity_id: "sensor.due", state: "unavailable", attributes: {} },
+      ],
+      {
+        registri: {
+          dispositivi: [
+            { id: "d1", name: "Sonda cantina" },
+            { id: "d2", name: "Sonda garage" },
+          ],
+          entita: [
+            { entity_id: "sensor.uno", device_id: "d1" },
+            { entity_id: "sensor.due", device_id: "d2" },
+          ],
+        },
+      },
+    ),
   };
   const scritto = JSON.stringify([lePastiglie(carta), loStato({ carta, vistaIl: Date.now() })]);
   assert.ok(!scritto.includes("undefined"), scritto);

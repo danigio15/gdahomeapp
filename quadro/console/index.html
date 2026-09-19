@@ -526,7 +526,7 @@
         color: var(--ambra);
       }
 
-      .gettone.muta {
+      .gettone.offline {
         background: var(--alone-male);
         color: var(--male);
       }
@@ -589,7 +589,7 @@
         background: var(--ambra);
       }
 
-      .casa.muta::before {
+      .casa.offline::before {
         background: var(--male);
       }
 
@@ -653,7 +653,7 @@
         color: var(--ambra);
       }
 
-      .pastiglia.muta,
+      .pastiglia.offline,
       .pastiglia.male {
         background: var(--alone-male);
         color: var(--male);
@@ -1363,6 +1363,41 @@
         white-space: pre-line;
       }
 
+      /* Un tasto che si legge come un collegamento: quello che fa e' aprire
+       * del testo, e un tasto grosso accanto a «Installa» inviterebbe a
+       * premere quello sbagliato. */
+      .comeUnLink {
+        background: none;
+        border: 0;
+        padding: 0;
+        font: inherit;
+        color: var(--azzurro);
+        text-decoration: underline;
+        cursor: pointer;
+      }
+
+      /* Le note intere, aperte sotto la riga.
+       *
+       * `pre-wrap` e non `pre-line`: un CHANGELOG ha le sue righe vuote e le
+       * sue rientranze, e schiacciarle vuol dire un muro di testo. Il tetto in
+       * altezza c'e' perche' certi ne hanno duecento, e sotto ce ne sono
+       * altri tre da leggere. */
+      .leNote {
+        grid-column: 2 / -1;
+        margin: 8px 0 2px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: var(--carta-alta);
+        border: 1px solid var(--bordo-tenue);
+        color: var(--lieve);
+        font-size: 0.8rem;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        max-height: 320px;
+        overflow-y: auto;
+      }
+
       ul.versi .cambia a {
         color: var(--azzurro-cupo);
         white-space: nowrap;
@@ -1911,11 +1946,26 @@
         });
         if (risposta.status === 401) throw new ChiaveNoNo();
         const corpo = await risposta.json().catch(() => ({}));
+        /* L'utenza congelata: la chiave apre, e non fa vedere niente.
+         *
+         * Si segna qui e non dove si chiama, perche' le vie sono una
+         * ventina e una dimenticata sarebbe una pagina che mostra un errore
+         * qualunque al posto del motivo vero. Da qui lo sa `disegna`, e lo
+         * sanno tutti i tasti insieme. */
+        if (risposta.status === 403 && corpo.congelato) {
+          CONGELATA = String(corpo.scrivi || "");
+          throw new Congelata();
+        }
         if (!risposta.ok) throw new Error(corpo.errore || "non ha funzionato");
+        /* E quando torna a rispondere, il cartello se ne va da solo: chi
+         * scongela non deve dire a nessuno di ricaricare la pagina. */
+        CONGELATA = null;
         return corpo;
       }
 
       class ChiaveNoNo extends Error {}
+
+      class Congelata extends Error {}
 
       async function carica() {
         const [case_, inviti, io] = await Promise.all([
@@ -1924,6 +1974,7 @@
           chiedi("/io"),
         ]);
         CASE = case_.case || [];
+        CON_LE_NOTE = new Set(case_.note || []);
         INVITI = inviti.inviti || [];
         IO = io || IO;
         if (case_.soglie) SOGLIE = case_.soglie;
@@ -2058,13 +2109,6 @@
        * un disegno, e da solo non dice niente. */
       const A_PAROLE = { bene: "a posto", male: "non va", ignoto: "non si sa" };
 
-      /* Dove stanno i marchi delle integrazioni. Lo stesso posto da cui li
-       * prende Home Assistant, ed e' il quadro a saperlo: da casa arriva una
-       * **parola** — `shelly`, `zha` — non un indirizzo. Se arrivasse un
-       * indirizzo, chi puo' scrivere l'attributo di un'entita' deciderebbe
-       * dove va a bussare questa pagina. */
-      const I_MARCHI = "https://brands.home-assistant.io/";
-
       /* Il segno di un aggiornamento: il logo di chi lo porta, o l'iniziale.
        *
        * Tre casi, in ordine. La roba nostra porta il bollo del quadro, che e'
@@ -2084,14 +2128,42 @@
             .charAt(0)
             .toUpperCase() || "?",
         );
-        /* La stessa forma che il ponte si e' gia' controllato, ricontrollata
-         * qui: questa parola finisce dentro un indirizzo, e chi lo compone e'
-         * questa riga. Un controllo solo, dall'altra parte di una rete, non e'
-         * un controllo. */
-        if (!/^[a-z0-9_]+$/.test(String(uno.marchio || "")))
+        /* **L'icona vera, e arriva dalla casa.**
+         *
+         * Prima si mandava questo browser su `brands.home-assistant.io` con una
+         * parola presa dal rapporto, e c'erano due guai in uno: questo browser
+         * andava a farsi vedere da una macchina che non e' la sua, e quello che
+         * trovava era sbagliato — il logo di HACS al posto di quello
+         * dell'applicazione (per un'integrazione installata da HACS quella
+         * parola **e'** `hacs`), e niente del tutto per un firmware, che una
+         * parola non ce l'ha.
+         *
+         * L'icona giusta ce l'ha la casa: gliela da' il suo Supervisor per gli
+         * add-on e i marchi per le integrazioni, che e' esattamente quello che
+         * il ponte fa gia' per l'app sul telefono. La manda una volta sola, e
+         * il quadro la serve dal suo indirizzo.
+         *
+         * Il segno e' sedici cifre esadecimali, ricontrollate qui: finisce
+         * dentro un indirizzo, e chi lo compone e' questa riga. Un controllo
+         * solo, dall'altra parte di una rete, non e' un controllo. */
+        if (!/^[0-9a-f]{16}$/.test(String(uno.segno || "")))
           return `<span class="segno">${primo}</span>`;
+        /* La lettera resta sotto: finche' l'icona non e' arrivata — il primo
+         * giro dopo che un aggiornamento compare — la riga si legge lo stesso,
+         * e se non arrivera' mai si legge per sempre. */
+        /* `../segno/`, con il punto punto.
+         *
+         * Questa pagina sta in `/console/`, e un indirizzo scritto `segno/…`
+         * si legge da li': `/console/segno/…`, dove non c'e' niente. L'icona
+         * si serve da `/segno/…`, che sta una cartella piu' su — senza chiave,
+         * perche' un'icona di Mosquitto non e' roba di nessuno.
+         *
+         * Scritto `/segno/…` con la barra davanti funzionerebbe qui e si
+         * romperebbe dietro un proxy che monta il quadro sotto un prefisso.
+         * Con il punto punto si conta dalla pagina, e vale in tutt'e due i
+         * casi. */
         return `<span class="segno">${primo}<img
-          src="${I_MARCHI}${uno.marchio}/icon.png"
+          src="../segno/${uno.segno}"
           alt=""
           loading="lazy"
           onerror="this.remove()"
@@ -2110,12 +2182,24 @@
        * occupa una riga vuota. */
       function cosaCambia(uno) {
         const detto = testo(String(uno.cosaCambia || "").trim());
-        const dove = String(uno.note || "");
-        const fuori = /^https:\/\/[^\s"'<>]+$/i.test(dove)
-          ? ` <a href="${testo(dove)}" target="_blank" rel="noopener noreferrer">le note per intero ↗</a>`
+        /* Le note intere si aprono **qui**, non fuori.
+         *
+         * Prima era un collegamento che portava sul sito di chi ha scritto
+         * l'aggiornamento: leggere cosa cambia prima di premere «Installa»
+         * voleva dire uscire dal cruscotto, e chi esce non sempre torna. Adesso
+         * le note le manda la casa insieme all'icona, e si aprono sotto la
+         * riga.
+         *
+         * Il tasto c'e' solo se ci sono davvero: il quadro le ha ricevute e le
+         * tiene. Se non ci sono, resta il riassunto — e se non c'e' nemmeno
+         * quello, la riga non si allunga per niente. */
+        const suo = String(uno.segno || "");
+        const note = /^[0-9a-f]{16}$/.test(suo) && CON_LE_NOTE.has(suo);
+        const dentro = note
+          ? ` <button type="button" class="comeUnLink" data-note="${suo}">cosa cambia, per intero</button>`
           : "";
-        if (!detto && !fuori) return "";
-        return `<p class="cambia">${detto}${fuori}</p>`;
+        if (!detto && !dentro) return "";
+        return `<p class="cambia">${detto}${dentro}</p><div class="leNote" data-note-di="${testo(suo)}" hidden></div>`;
       }
 
       /* Una riga di aggiornamento: il segno, cosa e', cosa si fa, cosa cambia.
@@ -2145,13 +2229,13 @@
       const spia = (stato) =>
         `<span class="pastiglia ${stato.chiave}"><span aria-hidden="true">${stato.segno}</span>${testo(stato.parola)}</span>`;
 
-      /* La striscia: `P` giorno pieno, `M` a metà, `V` muta, spazio «non c'era
+      /* La striscia: `P` giorno pieno, `M` a metà, `V` offline, spazio «non c'era
        * ancora». */
       function laStriscia(giorni, grande = false) {
         const celle = [...giorni]
           .map((uno) => {
-            if (uno === "V") return '<i class="vuota" title="muta tutto il giorno"></i>';
-            if (uno === "M") return '<i class="mezza" title="muta per qualche ora"></i>';
+            if (uno === "V") return '<i class="vuota" title="offline tutto il giorno"></i>';
+            if (uno === "M") return '<i class="mezza" title="offline per qualche ora"></i>';
             if (uno === " ") return '<i class="prima" title="non era ancora accesa"></i>';
             return '<i title="tutte i rapporti arrivati"></i>';
           })
@@ -2163,15 +2247,23 @@
             ? `${plurale(accesi, "giorno", "giorni")} da quando è accesa`
             : vuoti === 0
               ? "14 giorni, sempre viva"
-              : `14 giorni · muta ${plurale(vuoti, "volta", "volte")}`;
+              : `14 giorni · offline ${plurale(vuoti, "volta", "volte")}`;
         return `<div class="giorni${grande ? " grande" : ""}" role="img" aria-label="${testo(dice)}">${celle}</div><div class="giorniDice">${testo(dice)}</div>`;
       }
 
       const LE_FILE = [
-        ["muta", "■", "mute"],
+        ["offline", "■", "offline"],
         ["guardare", "▲", "da guardare"],
         ["posto", "●", "a posto"],
       ];
+
+      /* L'indirizzo a cui scrivere se l'utenza e' congelata, o `null` se non lo
+       * e'. Lo dice il server insieme al no: la pagina non se lo inventa. */
+      /* Di quali aggiornamenti il quadro ha le note intere. Lo dice lui
+       * insieme alle case: la pagina non lo indovina. */
+      let CON_LE_NOTE = new Set();
+
+      let CONGELATA = null;
 
       let schermata = "case";
       let filtro = "tutte";
@@ -2181,7 +2273,38 @@
       const dove = document.getElementById("dove");
       const doveNav = document.getElementById("nav");
 
+      /* Il cartello di chi ha l'utenza congelata.
+       *
+       * Prende tutta la pagina, e non e' una striscia in cima: una striscia
+       * sopra un elenco di impianti vorrebbe dire che gli impianti si vedono
+       * lo stesso, e il punto e' che non si vedono. Sotto non c'e' niente,
+       * perche' dal server non e' arrivato niente. */
+      function ilGelo() {
+        doveNav.innerHTML = "";
+        document.getElementById("chi").textContent = "Cruscotto installatore";
+        dove.innerHTML = `
+          <section class="riquadro" style="max-width: 640px; margin: 40px auto">
+            <div class="capoRiquadro"><h3>Utenza bloccata</h3></div>
+            <p style="margin: 0 0 14px; font-size: 1rem; line-height: 1.55">
+              <b>La tua utenza è bloccata dal gestore.</b> Si prega di contattare
+              il seguente indirizzo:
+            </p>
+            <p style="margin: 0 0 18px; font-size: 1.05rem">
+              <a href="mailto:${testo(CONGELATA)}">${testo(CONGELATA)}</a>
+            </p>
+            <p class="nota" style="margin: 0">
+              Gli impianti che segui continuano a funzionare e a mandare i loro
+              numeri: qui non si vedono, e non si è perso niente. Quando il
+              blocco viene tolto, questa pagina torna com'era da sola.
+            </p>
+          </section>`;
+      }
+
       function disegna() {
+        if (CONGELATA !== null) {
+          ilGelo();
+          return;
+        }
         const dietro = CASE.filter((una) => (una.carta?.aggiornamenti?.elenco || []).length).length;
         doveNav.innerHTML = [
           ["case", "Le case", 0],
@@ -2408,6 +2531,43 @@
               if (evento.key === "Enter") salva();
             };
         });
+        /* «Cosa cambia, per intero»: si apre sotto la riga, e si richiude.
+         *
+         * Il testo si chiede quando serve e non prima: un CHANGELOG per ogni
+         * aggiornamento di ogni casa, a ogni giro da dieci secondi, sarebbe
+         * roba che viaggia per niente — quasi nessuno li apre. */
+        dove.querySelectorAll("[data-note]").forEach((tasto) => {
+          tasto.onclick = async () => {
+            const suo = tasto.dataset.note;
+            const riquadro = dove.querySelector(`[data-note-di="${suo}"]`);
+            if (!riquadro) return;
+            if (!riquadro.hidden) {
+              riquadro.hidden = true;
+              tasto.textContent = "cosa cambia, per intero";
+              return;
+            }
+            riquadro.hidden = false;
+            tasto.textContent = "chiudi";
+            if (riquadro.dataset.gia === "sì") return;
+            riquadro.textContent = "…";
+            try {
+              const detto = await chiedi(`/note/${suo}`);
+              /* `textContent` e non HTML: sono parole scritte da chi ha fatto
+               * l'aggiornamento, cioe' da fuori, e qui dentro non ci si fida
+               * di niente che arrivi da fuori. Il foglio di stile le fa andare
+               * a capo dove erano. */
+              riquadro.textContent = String(detto.note || "").trim();
+              riquadro.dataset.gia = "sì";
+            } catch (errore) {
+              if (errore instanceof Congelata) {
+                disegna();
+                return;
+              }
+              riquadro.textContent = errore.message || "non ha funzionato";
+            }
+          };
+        });
+
         dove.querySelectorAll("[data-installa]").forEach((tasto) => {
           tasto.onclick = () => {
             /* In due tempi, sullo stesso tasto, come «non seguirla più».
@@ -3778,6 +3938,12 @@
            * vorrebbe dire chiedere a una persona una cosa che il programma ha
            * gia' in mano. Una volta sola: se non apre nemmeno quella, le
            * chiavi finite sono due e allora la domanda ci sta. */
+          /* Congelata: la chiave e' giusta, e chiederne un'altra manderebbe a
+           * cercare un guasto che non c'e'. Si mostra il cartello. */
+          if (errore instanceof Congelata) {
+            disegna();
+            return;
+          }
           if (errore instanceof ChiaveNoNo && consegnata && consegnata !== chiave) {
             chiave = consegnata;
             try {
@@ -3816,9 +3982,13 @@
         if (!chiave) return;
         carica()
           .then(() => disegna())
-          .catch(() => {
+          .catch((errore) => {
             /* Un giro andato male non deve far sparire quello che si sta
-             * guardando: si riprova al minuto dopo. */
+             * guardando: si riprova al minuto dopo. Un'utenza congelata invece
+             * si', ed e' il punto: chi viene bloccato mentre ha la pagina
+             * aperta se ne accorge entro dieci secondi, non alla prossima
+             * ricarica. */
+            if (errore instanceof Congelata) disegna();
           });
       }, 10 * 1000);
 

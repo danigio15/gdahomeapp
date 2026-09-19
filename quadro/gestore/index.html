@@ -681,6 +681,9 @@
        * da solo — l'ambra e il rosso di questo progetto stanno a ΔE 5.7 per chi
        * non distingue il rosso. */
       function loStato(uno) {
+        /* Congelato batte tutto: di uno che non entra piu' non conta se sia al
+         * limite o da quanto non si fa vedere. */
+        if (uno.congelato) return { come: "male", forma: "■", parola: "congelato" };
         if (uno.pieno) return { come: "ambra", forma: "▲", parola: "al limite" };
         if (!uno.vistoIl) return { come: "quieta", forma: "◇", parola: "mai entrato" };
         const giorni = (Date.now() - uno.vistoIl) / 86400000;
@@ -766,26 +769,21 @@
                        >
                        ${
                          ORFANE === 1
-                           ? `È l'impianto di un installatore che hai tolto. Continua a mandare il
-                              suo rapporto, ed è giusto così: funziona in casa di qualcuno, e
-                              spegnerlo punirebbe il cliente per una faccenda che non è sua. Ma da
-                              qui non lo guarda più nessuno.`
-                           : `Sono impianti di installatori che hai tolto. Continuano a mandare i
-                              loro rapporti, ed è giusto così: funzionano in casa di qualcuno, e
-                              spegnerli punirebbe i clienti per una faccenda che non è loro. Ma da
-                              qui non li guarda più nessuno.`
+                           ? `È rimasto indietro da quando «Togli» lasciava le case dov'erano.
+                              Continua a mandare il suo rapporto, ed è giusto così: funziona in
+                              casa di qualcuno. Ma da qui non lo guarda più nessuno.`
+                           : `Sono rimasti indietro da quando «Togli» lasciava le case dov'erano.
+                              Continuano a mandare i loro rapporti, ed è giusto così: funzionano in
+                              casa di qualcuno. Ma da qui non li guarda più nessuno.`
                        }
                        <br /><br />
-                       <b>Riaggiungere quell'installatore non ${ORFANE === 1 ? "lo" : "li"} riporta
-                       indietro:</b> chi si riaggiunge prende una matricola nuova, e
-                       ${ORFANE === 1 ? "questo impianto punta" : "questi impianti puntano"} ancora
-                       a quella di prima. Si ${ORFANE === 1 ? "recupera" : "recuperano"} dall'altra
-                       parte: il codice di un installatore vivo, incollato nella configurazione
-                       dell'add-on di quella casa, e
-                       ${ORFANE === 1 ? "l'impianto passa" : "gli impianti passano"} a lui — questo
-                       conto cala da solo. Da questa pagina no: serve che qualcuno ci metta mano in
-                       casa, ed è voluto — chi ci abita deve poter scegliere chi guarda il suo
-                       impianto.
+                       <b>Adesso non ne nascono più:</b> Elimina porta via anche le case, e Congela
+                       non tocca niente. ${ORFANE === 1 ? "Questo" : "Questi"} si
+                       ${ORFANE === 1 ? "recupera" : "recuperano"} dall'altra parte — il codice di
+                       un installatore vivo, incollato nella configurazione dell'add-on di quella
+                       casa — e questo conto cala da solo. Da questa pagina no: serve che qualcuno
+                       ci metta mano in casa, ed è voluto — chi ci abita deve poter scegliere chi
+                       guarda il suo impianto.
                      </span>
                    </div>`
                 : ""
@@ -824,8 +822,14 @@
         dove.querySelectorAll("[data-rifai]").forEach((tasto) => {
           tasto.onclick = () => rifaiLaChiave(tasto.dataset.rifai);
         });
+        dove.querySelectorAll("[data-congela]").forEach((tasto) => {
+          tasto.onclick = () => congela(tasto.dataset.congela, true, tasto);
+        });
+        dove.querySelectorAll("[data-scongela]").forEach((tasto) => {
+          tasto.onclick = () => congela(tasto.dataset.scongela, false, tasto);
+        });
         dove.querySelectorAll("[data-chiudi]").forEach((tasto) => {
-          tasto.onclick = () => togliLInstallatore(tasto.dataset.chiudi, tasto);
+          tasto.onclick = () => eliminaLInstallatore(tasto.dataset.chiudi, tasto);
         });
       }
 
@@ -849,7 +853,12 @@
               <span class="tasti">
                 <button type="button" class="piccolo" data-tetto="${testo(uno.chi)}">Limite</button>
                 <button type="button" class="piccolo" data-rifai="${testo(uno.chi)}">Nuova chiave</button>
-                <button type="button" class="piccolo male" data-chiudi="${testo(uno.chi)}">Togli</button>
+                ${
+                  uno.congelato
+                    ? `<button type="button" class="piccolo" data-scongela="${testo(uno.chi)}">Sblocca</button>`
+                    : `<button type="button" class="piccolo" data-congela="${testo(uno.chi)}">Congela</button>`
+                }
+                <button type="button" class="piccolo male" data-chiudi="${testo(uno.chi)}">Elimina</button>
               </span>
             </span>
           </li>`;
@@ -900,18 +909,62 @@
         disegna();
       }
 
-      /* Togliere un installatore si conferma in due tempi, come «non seguirla più»
-       * nella console degli installatori: è la cosa che toglie a qualcuno
-       * l'accesso ai suoi impianti, e un clic solo è poco. */
-      async function togliLInstallatore(chi, tasto) {
+      /* Congelare: un interruttore, e si dice cosa fa prima di girarlo.
+       *
+       * Senza conferma in due tempi, e non per svista: è **reversibile**, e la
+       * cosa che si toglie a qualcuno la si può ridare col tasto accanto. La
+       * doppia conferma serve dove non si torna indietro, e se si mette
+       * dappertutto smette di voler dire qualcosa. */
+      async function congela(chi, gelo, tasto) {
         const uno = INSTALLATORI.find((altro) => altro.chi === chi);
+        const come = uno?.nome || "questo installatore";
+        if (
+          gelo &&
+          !confirm(
+            `Congelare l'utenza di ${come}?\n\n` +
+              "Da adesso, aprendo il suo cruscotto, non vede più nessuno dei suoi " +
+              "impianti: trova un cartello che gli dice di scriverci.\n\n" +
+              "Gli impianti restano accesi e continuano a mandare i loro numeri: " +
+              "non si perde niente, e sbloccandolo torna tutto com'era.",
+          )
+        )
+          return;
+        tasto.disabled = true;
+        try {
+          prendi(
+            await chiedi(`/installatore/${chi}/congela`, { method: gelo ? "POST" : "DELETE" }),
+          );
+        } finally {
+          tasto.disabled = false;
+        }
+        disegna();
+      }
+
+      /* Eliminare si conferma in due tempi, perché da qui non si torna
+       * indietro: non è «non lo vedo più», è «non c'è più». */
+      async function eliminaLInstallatore(chi, tasto) {
+        const uno = INSTALLATORI.find((altro) => altro.chi === chi);
+        const come = uno?.nome || "questo installatore";
         if (tasto.dataset.sicuro !== "sì") {
+          if (
+            !confirm(
+              `Eliminare ${come}?\n\n` +
+                `Se ne vanno anche ${plurale(uno?.case || 0, "il suo impianto", "i suoi impianti")}: ` +
+                "il quadro smette di riceverne i rapporti, e la loro storia qui dentro " +
+                "non c'è più.\n\n" +
+                "Non si torna indietro. Riaggiungendolo domani prende una matricola " +
+                "nuova, e ogni casa va riabbinata una per una col suo codice nuovo, " +
+                "da dentro casa.\n\n" +
+                "Se ti serve solo che smetta di vedere i suoi impianti, usa Congela.",
+            )
+          )
+            return;
           tasto.dataset.sicuro = "sì";
-          tasto.textContent = "Sicuro?";
+          tasto.textContent = "Elimina davvero";
           setTimeout(() => {
             tasto.dataset.sicuro = "";
-            tasto.textContent = "Togli";
-          }, 4000);
+            tasto.textContent = "Elimina";
+          }, 5000);
           return;
         }
         prendi(await chiedi(`/installatore/${chi}`, { method: "DELETE" }));

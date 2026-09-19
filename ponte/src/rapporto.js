@@ -51,6 +51,7 @@
  */
 
 import { gliAddon, gliApparati, laMacchina, laRete } from "./ferro.js";
+import { ilSegnoDi } from "./segni.js";
 import { ilBackup, leBatterie, leEntita } from "./salute.js";
 
 /* Dove sta il quadro.
@@ -110,6 +111,44 @@ const OGNI_AL_MASSIMO = 24 * 60;
 
 /** Quanto si aspetta il quadro prima di lasciar perdere. */
 const ATTESA = 10_000;
+
+/* Quanto si tiene aperto il filo verso il quadro prima di riaprirlo.
+ *
+ * Un po' piu' di quanto il quadro lo tiene (cinquanta secondi): a chiudere
+ * dev'essere lui, con una risposta. Se scadesse prima questa parte, ogni giro
+ * finirebbe con una richiesta annullata — che nel registro si legge come un
+ * errore, e non lo e'. */
+const IL_FILO_DURA = 70_000;
+
+/* Quanto si aspetta dopo un filo caduto, e fin dove si rallenta.
+ *
+ * Il filo e' un **di piu'**: se cade non si perde niente, perche' il rapporto
+ * al minuto porta il lavoro come ha sempre fatto. Quindi si riprova piano —
+ * un quadro spento non deve trovarsi una casa che bussa ogni secondo — e si
+ * riparte da capo appena una risposta torna. */
+const IL_FILO_RIPROVA = 5_000;
+const IL_FILO_RALLENTA_FINO_A = 12;
+
+/* Quanto passa **almeno** fra l'inizio di un giro di filo e l'inizio del
+ * successivo.
+ *
+ * E' un paracadute, e serve: a tenere aperta la richiesta e' il quadro, e
+ * questa casa non ha modo di sapere se davvero lo sta facendo. Un quadro che
+ * rispondesse nell'istante — uno vecchio, uno dietro un proxy che chiude le
+ * richieste ferme, uno che riconsegna sempre lo stesso lavoro — farebbe girare
+ * questa casa a vuoto quanto ne e' capace il processore.
+ *
+ * Sta **all'ingresso** del giro e non in uno dei rami di uscita, e la
+ * differenza non e' di stile: i modi di rientrare sono tre — a mani vuote, col
+ * rapporto che parte dopo un lavoro, e la riapertura dopo una caduta — e un
+ * pavimento messo su due di quei tre lascia aperta la strada che gira. C'era,
+ * e girava: con un quadro che riconsegnava lo stesso lavoro, lavoro → rapporto
+ * → filo → lavoro senza mai fermarsi un istante.
+ *
+ * Con un secondo, il caso peggiore e' una richiesta al secondo: si nota nel
+ * registro e non fa male a nessuno. Quando il quadro fa il suo mestiere questa
+ * riga non si accorge nemmeno di esistere. */
+const IL_FILO_ALMENO = 1_000;
 
 /* Quanto si tengono da parte i registri di Home Assistant.
  *
@@ -328,6 +367,13 @@ export function fabbricaIlRapporto({
   casa,
   ferro,
   aggiornamenti = null,
+  /* Chi sa prendere l'icona vera di un aggiornamento e le sue note intere.
+   * Senza, il rapporto esce come prima: un marchio e basta. */
+  segni = null,
+  /* Quali segni il quadro ha detto di non avere, l'ultima volta che ha
+   * risposto. Una funzione e non un elenco: il valore cambia a ogni giro, e
+   * chi fabbrica il rapporto si costruisce una volta sola. */
+  segniChiesti = () => [],
   lavori = null,
   manutenzione = false,
   plance = null,
@@ -402,6 +448,15 @@ export function fabbricaIlRapporto({
         : [],
     );
 
+    /* E le icone e le note che il quadro ha detto di non avere. Solo quelle:
+     * il perche' sta in cima a `segni.js`. Uno che non arriva lascia il suo
+     * senza icona e non porta via gli altri. */
+    const iSegni =
+      segni && daFare
+        ? ((await forse("i segni", () => segni.quelliCheMancano(segniChiesti(), daFare))) ??
+          new Map())
+        : new Map();
+
     return compila({
       casa: identita.casa,
       ogni,
@@ -422,7 +477,7 @@ export function fabbricaIlRapporto({
         : null,
       apparati: quelli ? gliApparati(quelli, { scelte: apparatiScelti() }) : null,
       addon: detto ? gliAddon({ addons: detto.addons }) : null,
-      aggiornamenti: daFare ? iConti(daFare, marchi) : null,
+      aggiornamenti: daFare ? iConti(daFare, marchi, iSegni) : null,
       /* Il secondo interruttore, detto al quadro.
        *
        * Serve a lui per sapere se il tasto lo puo' far vedere: chi guarda una
@@ -473,7 +528,7 @@ function lIndirizzoDelleNote(dove) {
  * `update.camera_di_marco_firmware` direbbe cosa c'e' in questa casa e in
  * quale stanza, e non e' quello che il quadro deve sapere per far vedere che
  * c'e' una versione nuova. */
-function iConti(daFare, marchi = new Map()) {
+function iConti(daFare, marchi = new Map(), segni = new Map()) {
   const elenco = Array.isArray(daFare) ? daFare : [];
   const suo = (uno) => /home.?assistant/i.test(String(uno.nome ?? ""));
   return {
@@ -485,25 +540,44 @@ function iConti(daFare, marchi = new Map()) {
      * conviene mettersi in macchina. */
     firmware: elenco.filter((uno) => uno.installabile !== true).length,
     addon: elenco.filter((uno) => uno.installabile === true && !uno.nostra && !suo(uno)).length,
-    elenco: elenco.map((uno) => ({
-      nome: String(uno.nome ?? ""),
-      da: String(uno.da ?? ""),
-      a: String(uno.a ?? ""),
-      nostra: uno.nostra === true,
-      installabile: uno.installabile === true,
-      stacca: uno.stacca === true,
-      /* Il marchio: una parola, non un indirizzo. Il perche' sta su
-       * `marchioDi`, in `aggiornamenti.js`. */
-      marchio: String(marchi.get(uno.entita) ?? ""),
-      /* Cosa cambia, con le parole di chi l'ha scritto: e' il
-       * `release_summary` dell'entita', che Home Assistant taglia gia' a 255
-       * caratteri. Sono le stesse righe che l'app fa leggere prima di premere
-       * «Installa», e sono la differenza fra un tasto premuto sapendo cosa fa
-       * e uno premuto al buio. Quelle lunghe stanno all'indirizzo qui sotto,
-       * e per leggerle serve il filo con la casa — che il quadro non ha. */
-      cosaCambia: String(uno.dettagli ?? ""),
-      note: lIndirizzoDelleNote(uno.note),
-    })),
+    elenco: elenco.map((uno) => {
+      /* Il segno di questo aggiornamento: l'impronta di quello che nella riga
+       * c'e' gia' — il nome e la versione — e nient'altro. Serve al quadro per
+       * due cose: chiedere l'icona e le note che non ha, e ritrovarle quando
+       * arrivano. L'entita' non passa di qui, e il perche' sta in cima a
+       * `segni.js`.
+       *
+       * Questa riga mancava, ed e' quella che teneva spenta tutta la
+       * faccenda: `iConti` prendeva i segni come terzo argomento — glieli
+       * passavamo — ma la firma ne dichiarava due e la riga non ne emetteva
+       * nessuno. Il quadro non vedeva mai un segno, quindi non ne chiedeva
+       * mai uno, quindi non arrivava mai un'icona. Tutto il lavoro girava a
+       * vuoto, e le prove guardavano i pezzi invece del giro intero. */
+      const segno = ilSegnoDi(uno.nome, uno.a);
+      return {
+        nome: String(uno.nome ?? ""),
+        da: String(uno.da ?? ""),
+        a: String(uno.a ?? ""),
+        nostra: uno.nostra === true,
+        installabile: uno.installabile === true,
+        stacca: uno.stacca === true,
+        segno,
+        /* E, se il quadro l'aveva chiesta, l'icona o le note — o il fatto che
+         * non esistono. */
+        ...(segni.get(segno) ?? {}),
+        /* Il marchio: una parola, non un indirizzo. Il perche' sta su
+         * `marchioDi`, in `aggiornamenti.js`. */
+        marchio: String(marchi.get(uno.entita) ?? ""),
+        /* Cosa cambia, con le parole di chi l'ha scritto: e' il
+         * `release_summary` dell'entita', che Home Assistant taglia gia' a 255
+         * caratteri. Sono le stesse righe che l'app fa leggere prima di premere
+         * «Installa», e sono la differenza fra un tasto premuto sapendo cosa fa
+         * e uno premuto al buio. Quelle lunghe stanno all'indirizzo qui sotto,
+         * e per leggerle serve il filo con la casa — che il quadro non ha. */
+        cosaCambia: String(uno.dettagli ?? ""),
+        note: lIndirizzoDelleNote(uno.note),
+      };
+    }),
   };
 }
 
@@ -624,6 +698,39 @@ export class Postino {
     /* Il nome dell'installatore, come lo dice il quadro rispondendo. In memoria e
      * basta: dopo un riavvio si riempie al primo rapporto. */
     this._chi = "";
+
+    /* ─── Il filo tenuto aperto ────────────────────────────────────────
+     *
+     * Dopo ogni rapporto questa casa lascia una richiesta al quadro che **non
+     * si chiude**: se qualcuno preme «Installa» lo sente nell'istante, invece
+     * di aspettare il rapporto del minuto dopo. Fra il tasto e
+     * l'installazione che parte passa un giro di rete.
+     *
+     * Non sostituisce niente: il rapporto al minuto continua, e porta il
+     * lavoro come ha sempre fatto. Se il filo non si puo' tenere — un proxy
+     * che taglia le richieste lunghe, il quadro spento — si perde la fretta e
+     * non si perde il comando.
+     *
+     * E resta una casa che **bussa**: qui non si apre nessuna porta, non c'e'
+     * niente in ascolto e niente da difendere. E' la stessa regola del
+     * rapporto, tenuta piu' a lungo. */
+    this._filo = null;
+    this._quanteVolteIlFiloCade = 0;
+    this._fermato = false;
+    /* Quando e' cominciato l'ultimo giro, e l'orologio che ne aspetta uno
+     * nuovo: insieme sono il pavimento di `IL_FILO_ALMENO`. */
+    this._filoDa = 0;
+    this._filoDopo = null;
+    /* Quali icone e quali note il quadro ha detto di non avere, l'ultima volta
+     * che ha risposto. Chi fabbrica il rapporto lo legge al giro dopo. Vive
+     * col processo: un ponte che si riavvia non manda niente finche' il quadro
+     * non ridice cosa gli manca, che e' quello che si vuole. */
+    this._segniChiesti = [];
+  }
+
+  /** I segni che il quadro ha detto di non avere. Lo legge chi fabbrica. */
+  get segniChiesti() {
+    return this._segniChiesti;
   }
 
   /** Se questa casa manda qualcosa a qualcuno. */
@@ -646,6 +753,7 @@ export class Postino {
 
   parti() {
     if (!this.acceso || this._orologio) return;
+    this._fermato = false;
     this.registro.info(`il rapporto va a ${this.dove}, ogni ${this.ogni} minuti`);
     const giro = () => {
       void this.manda();
@@ -658,6 +766,20 @@ export class Postino {
   ferma() {
     if (this._orologio) clearTimeout(this._orologio);
     this._orologio = null;
+    this._fermato = true;
+    if (this._filoDopo) clearTimeout(this._filoDopo);
+    this._filoDopo = null;
+    /* Il filo si taglia da qui: una richiesta tenuta aperta non finisce da
+     * sola, e senza questo il ponte non si spegnerebbe piu'. */
+    if (this._filo) {
+      const quello = this._filo;
+      this._filo = null;
+      try {
+        quello.abort();
+      } catch (_errore) {
+        /* Gia' chiuso: e' quello che si voleva. */
+      }
+    }
   }
 
   _riarma() {
@@ -730,6 +852,19 @@ export class Postino {
       try {
         detto = await risposta.json();
         if (typeof detto?.di === "string") this._chi = detto.di.slice(0, 80);
+        /* Quali icone e quali note gli mancano. Al giro dopo partono quelle, e
+         * nessun'altra: il perche' sta in cima a `segni.js`.
+         *
+         * E se **non** ne chiede piu' — cioe' se `manca` non c'e' — l'elenco si
+         * svuota. Prima si teneva quello di prima, e voleva dire rimandare le
+         * stesse icone ogni minuto per sempre: arrivate, salvate, e rimandate
+         * al giro dopo perche' nessuno aveva detto «basta». Una risposta buona
+         * che non chiede niente **e'** quel «basta». */
+        this._segniChiesti = Array.isArray(detto?.manca)
+          ? detto.manca
+              .filter((uno) => typeof uno === "string" && /^[0-9a-f]{16}$/.test(uno))
+              .slice(0, 40)
+          : [];
       } catch (_errore) {
         /* Una risposta che non e' JSON non e' un guasto: il rapporto e'
          * arrivata, ed e' quello che conta. Il nome resta quello di prima. */
@@ -765,11 +900,97 @@ export class Postino {
           this.registro.attenzione(`il lavoro chiesto dal quadro non e' partito: ${errore}`);
         }
       }
+      /* E si torna in linea. Non si aspetta: il filo dura un minuto, e questa
+       * funzione deve tornare a chi l'ha chiamata. */
+      void this._restaInLinea();
       return true;
     } catch (errore) {
       this._perNiente(perchePreciso(errore));
       return false;
     }
+  }
+
+  /**
+   * Resta in linea col quadro, e riparti appena ti risponde.
+   *
+   * Una richiesta per volta: se ce n'e' gia' una aperta non se ne apre una
+   * seconda. Chi chiama non aspetta — questo giro vive per conto suo, accanto
+   * all'orologio del rapporto.
+   *
+   * Il giro e' sempre lo stesso: si chiede, si aspetta. Se torna un lavoro lo
+   * si fa e si manda **subito** un rapporto — se no chi ha premuto il tasto
+   * vedrebbe partire l'installazione e poi un minuto di niente — e quel
+   * rapporto riapre il filo da se'. Se torna a mani vuote si riapre e basta.
+   */
+  async _restaInLinea() {
+    if (!this.acceso || this._fermato || this._filo || this._filoDopo) return;
+    /* Il pavimento, all'ingresso: vedi `IL_FILO_ALMENO`. */
+    const passato = this.adesso() - this._filoDa;
+    if (passato < IL_FILO_ALMENO) {
+      this._filoDopo = setTimeout(() => {
+        this._filoDopo = null;
+        void this._restaInLinea();
+      }, IL_FILO_ALMENO - passato);
+      this._filoDopo.unref?.();
+      return;
+    }
+    this._filoDa = this.adesso();
+    const taglia = new AbortController();
+    this._filo = taglia;
+    /* Un orologio nostro, e non solo `AbortSignal.timeout`: serve poterlo
+     * fermare quando la risposta arriva prima, se no resterebbe acceso a
+     * tenere in piedi il processo. */
+    const orologio = setTimeout(() => taglia.abort(), IL_FILO_DURA);
+    orologio.unref?.();
+    let detto = null;
+    try {
+      const risposta = await this.prendi(`${this.dove}/attesa`, {
+        headers: {
+          authorization: `Bearer ${this.chiave}`,
+          "x-casa": this.casa,
+        },
+        signal: taglia.signal,
+      });
+      if (!risposta.ok) throw new Error(`il quadro ha risposto ${risposta.status}`);
+      detto = await risposta.json().catch(() => ({}));
+      this._quanteVolteIlFiloCade = 0;
+    } catch (errore) {
+      /* Il filo e' un di piu': se cade non si dice niente ad alta voce — il
+       * rapporto al minuto continua a funzionare — e si riprova piano. */
+      this.registro.debug(`il filo col quadro: ${errore?.message || errore}`);
+      clearTimeout(orologio);
+      this._filo = null;
+      this._riapriIlFilo();
+      return;
+    }
+    clearTimeout(orologio);
+    this._filo = null;
+    if (this._fermato) return;
+
+    if (this.fai && detto?.fai) {
+      try {
+        await this.fai(detto.fai);
+      } catch (errore) {
+        this.registro.attenzione(`il lavoro chiesto dal quadro non e' partito: ${errore}`);
+      }
+      /* Un rapporto adesso, che dice com'e' andata **e** riapre il filo. Senza,
+       * chi ha premuto il tasto resterebbe a guardare uno schermo fermo per un
+       * minuto buono, con l'installazione gia' partita. */
+      void this.manda();
+      return;
+    }
+    void this._restaInLinea();
+  }
+
+  _riapriIlFilo() {
+    if (!this.acceso || this._fermato) return;
+    this._quanteVolteIlFiloCade = Math.min(
+      IL_FILO_RALLENTA_FINO_A,
+      this._quanteVolteIlFiloCade + 1,
+    );
+    const quanto = IL_FILO_RIPROVA * 2 ** (this._quanteVolteIlFiloCade - 1);
+    const orologio = setTimeout(() => void this._restaInLinea(), quanto);
+    orologio.unref?.();
   }
 
   _perNiente(perche) {

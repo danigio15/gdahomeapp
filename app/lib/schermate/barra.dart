@@ -802,19 +802,23 @@ class _NomeDellaVoce extends StatelessWidget {
 /// tutte le case — la vede solo chi risponde, cioe' la casa che nelle opzioni
 /// del ponte ha la chiave della console. In tutte le altre quella voce non c'e'
 /// proprio: una porta che non si apre e' peggio di una porta che non c'e'.
-/// E lo stesso vale per **Cruscotto**: gli impianti che ha montato chi
-/// installa. Compare solo dove le opzioni del ponte hanno acceso
-/// `installatore`, cioe' sul suo Home Assistant e non in casa di un cliente.
+/// E lo stesso vale per **Cruscotto** — gli impianti che ha montato chi
+/// installa, che compare solo dove le opzioni del ponte hanno acceso
+/// `installatore`, cioe' sul suo Home Assistant e non in casa di un cliente —
+/// e per **Gestione**, che compare in una casa sola al mondo: quella che nelle
+/// opzioni ha la chiave della gestione.
 /// (Nella barra laterale di Home Assistant la stessa voce si chiama «Cruscotto
 /// installatore»: li' sta in mezzo ai pannelli di chiunque, e il nome deve
 /// dire di chi e'. Qui no, perche' qui ci si e' gia' dentro.)
 List<Sezione> vociDellaBarra({
   bool conLaConsole = false,
   bool conIlCruscotto = false,
+  bool conLaGestione = false,
 }) => [
   for (final una in Sezione.values)
     if ((una != Sezione.console || conLaConsole) &&
-        (una != Sezione.cruscotto || conIlCruscotto))
+        (una != Sezione.cruscotto || conIlCruscotto) &&
+        (una != Sezione.gestione || conLaGestione))
       una,
 ];
 

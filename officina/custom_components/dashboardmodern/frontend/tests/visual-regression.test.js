@@ -65,9 +65,24 @@ const expectedTabs = [
  *    torna la pillola scritta «✕ CHIUDI» — nessun azzeramento del carattere,
  *    nessun ::before, e l'eccezione dello storico non serve piu': tutti i
  *    fogli della plancia chiudono con la stessa pastiglia. */
+/* I due fogli si sono mossi due volte, e tutt'e due per la barra in basso.
+ *
+ * Prima: le scritte lunghe uscivano dalla loro linguetta e finivano una sopra
+ * l'altra («ENERGELÆTTRODOMESTIAUTGESTIONE TERMICGA»). Adesso si tagliano coi
+ * puntini, la linguetta ha un tetto e la barra non e' mai piu' larga dello
+ * schermo.
+ *
+ * Poi: su un tablet appeso al muro le voci stavano strette per niente. Le
+ * regole del tocco sono scritte per un telefono — 72 punti a linguetta, 7 alla
+ * scritta, e tutte impaccate a sinistra — e un tablet le prendeva uguali, con
+ * mezza barra vuota a destra. Da 900 punti di larghezza in su adesso si
+ * dividono la riga che c'e'.
+ *
+ * Questa impronta non e' una regola: e' una firma. Serve a far vedere che i
+ * fogli si sono mossi, e chi la aggiorna deve sapere perche'. */
 const vendoredCssSnapshots = {
-  "dashboard-runtime-it.css": "93d2c9db5f62b641c1fd92d58db332aafd6e96d84a38e6610efd17fd3edba6be",
-  "dashboard-runtime-en.css": "02a4749ff9090df9612cfe022062d487aabc7c6c34600d5cf61177e91f427710",
+  "dashboard-runtime-it.css": "037c40fba6739bb56149e942a33fc88d60e999b8b81aaa08f0f928998e2ce993",
+  "dashboard-runtime-en.css": "44da756d2402956e2c497c6a519d291d364c43631df13b98198dea52beb07d3f",
 };
 
 for (const file of ["dashboard.html", "dashboard-en.html"]) {

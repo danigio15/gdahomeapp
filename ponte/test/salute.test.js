@@ -4,8 +4,8 @@
  * stessa cosa — contarli insieme vorrebbe dire una spia rossa a ogni riavvio
  * di Home Assistant; che una batteria sparita si conta una volta sola e non
  * due; che cinque entita' di un termostato che se ne va fanno **una riga**,
- * perche' se no il quadro mostra lo stesso guasto cinque volte; che senza
- * registri si risponde lo stesso invece di rispondere vuoto; e che «backup
+ * perche' se no il quadro mostra lo stesso guasto cinque volte; che **un
+ * dispositivo e' un dispositivo** e non un aiutante o un'automazione; e che «backup
  * mai riuscito» e «nessuna entita' del backup» arrivano tutt'e due a `null`,
  * che e' una perdita accettabile perche' la risposta all'installatore e' la
  * stessa.
@@ -21,17 +21,73 @@ const stato = (entity_id, state, attributes = {}) => ({ entity_id, state, attrib
 const batteria = (entity_id, quanto) =>
   stato(entity_id, String(quanto), { device_class: "battery", unit_of_measurement: "%" });
 
+/* I registri di una casa qualunque: due dispositivi veri, e basta. Tutto
+ * quello che negli stati non compare qui dentro — aiutanti, automazioni,
+ * sensori template — un dispositivo non ce l'ha. */
+const REGISTRI = {
+  dispositivi: [
+    { id: "d1", name: "Presa garage" },
+    { id: "d2", name: "Sonda cantina" },
+  ],
+  entita: [
+    { entity_id: "sensor.uno", device_id: "d1" },
+    { entity_id: "sensor.due", device_id: "d1" },
+    { entity_id: "sensor.tre", device_id: "d2" },
+    { entity_id: "light.cucina", device_id: "d2" },
+  ],
+};
+
 test("chi non risponde si conta; chi non ha ancora detto niente no", () => {
-  const conto = leEntita([
-    stato("light.cucina", "on"),
-    stato("sensor.uno", "unavailable"),
-    /* `unknown` e' un sensore appena riavviato che aspetta la prima misura:
-     * normalissimo, e non e' un dispositivo sparito. */
-    stato("sensor.due", "unknown"),
-    stato("sensor.tre", "unavailable"),
-  ]);
+  const conto = leEntita(
+    [
+      stato("light.cucina", "on"),
+      stato("sensor.uno", "unavailable"),
+      /* `unknown` e' un sensore appena riavviato che aspetta la prima misura:
+       * normalissimo, e non e' un dispositivo sparito. */
+      stato("sensor.due", "unknown"),
+      stato("sensor.tre", "unavailable"),
+    ],
+    { registri: REGISTRI },
+  );
   assert.equal(conto.totali, 4);
   assert.equal(conto.giu, 2);
+});
+
+test("un aiutante che non risponde non e' un dispositivo non collegato", () => {
+  /* Il guasto, come si vedeva in una casa vera: centottanta «dispositivi non
+   * collegati» in una casa che ne ha una quarantina — aiutanti, automazioni,
+   * sensori template, roba che un dispositivo non ce l'ha e non lo deve
+   * avere. Un numero cosi' non e' impreciso, e' inservibile. */
+  const conto = leEntita(
+    [
+      stato("sensor.uno", "unavailable"),
+      stato("input_boolean.avvio_ritardato", "unavailable", {
+        friendly_name: "Avvio Ritardato Conteggio Elettrodomestici",
+      }),
+      stato("automation.elettrodomestici_1", "unavailable", {
+        friendly_name: "Automazioni Elettrodomestici 1",
+      }),
+      stato("sensor.package_elettrodomestici", "unavailable", {
+        friendly_name: "Aggiornamento package elettrodomestici",
+      }),
+    ],
+    { registri: REGISTRI },
+  );
+  assert.equal(conto.dispositivi, 1, "sono finite dentro cose che dispositivi non sono");
+  assert.equal(conto.giu, 1);
+  assert.deepEqual(conto.nomi, ["Presa garage"]);
+  assert.ok(!JSON.stringify(conto).includes("Elettrodomestici"));
+});
+
+test("senza i registri non si indovina: non si risponde", () => {
+  /* Ripiegare sul nome dell'entita' e' proprio quello che ha prodotto le
+   * centottanta righe. Tre `null`, che il quadro disegna «questa casa non lo
+   * dice» — grigio, e non fa suonare niente. */
+  const conto = leEntita([stato("sensor.uno", "unavailable")]);
+  assert.equal(conto.totali, null);
+  assert.equal(conto.giu, null);
+  assert.equal(conto.dispositivi, null);
+  assert.deepEqual(conto.nomi, []);
 });
 
 test("cinque entita' di un dispositivo che se ne va fanno una riga sola", () => {
@@ -63,20 +119,6 @@ test("cinque entita' di un dispositivo che se ne va fanno una riga sola", () => 
   assert.deepEqual(conto.nomi, ["Termostato soggiorno"]);
 });
 
-test("senza registri si risponde lo stesso, coi nomi delle entita'", () => {
-  /* Un Home Assistant che non da' i registri non deve far sparire il
-   * riquadro: una riga per entita' e' peggio di una per dispositivo, ed e'
-   * molto meglio di niente. */
-  const conto = leEntita([
-    stato("sensor.pompa_calore", "unavailable"),
-    stato("switch.presa_garage", "unavailable", { friendly_name: "Presa del garage" }),
-  ]);
-  assert.equal(conto.dispositivi, 2);
-  /* Chi dichiara `friendly_name` lo usa; chi non lo dichiara da' la coda del
-   * suo identificativo, che almeno si legge. */
-  assert.deepEqual(conto.nomi, ["pompa calore", "Presa del garage"]);
-});
-
 test("solo quelli che non rispondono: di chi funziona non esce nemmeno il nome", () => {
   const registri = {
     dispositivi: [
@@ -96,21 +138,41 @@ test("solo quelli che non rispondono: di chi funziona non esce nemmeno il nome",
   assert.ok(!JSON.stringify(conto).includes("Laura"));
 });
 
+const tanti = (quanti) => ({
+  dispositivi: Array.from({ length: quanti }, (_, i) => ({ id: `d${i}`, name: `Sonda ${i}` })),
+  entita: Array.from({ length: quanti }, (_, i) => ({
+    entity_id: `sensor.n${i}`,
+    device_id: `d${i}`,
+  })),
+});
+
 test("i nomi sono in ordine: due rapporti uguali non devono sembrare diversi", () => {
+  const registri = {
+    dispositivi: [
+      { id: "z", name: "zeta" },
+      { id: "a", name: "alfa" },
+      { id: "m", name: "mu" },
+    ],
+    entita: [
+      { entity_id: "sensor.zeta", device_id: "z" },
+      { entity_id: "sensor.alfa", device_id: "a" },
+      { entity_id: "sensor.mu", device_id: "m" },
+    ],
+  };
   const stati = [
     stato("sensor.zeta", "unavailable"),
     stato("sensor.alfa", "unavailable"),
     stato("sensor.mu", "unavailable"),
   ];
-  const una = leEntita(stati);
-  const altra = leEntita([...stati].reverse());
+  const una = leEntita(stati, { registri });
+  const altra = leEntita([...stati].reverse(), { registri });
   assert.deepEqual(una.nomi, altra.nomi);
   assert.deepEqual(una.nomi, ["alfa", "mu", "zeta"]);
 });
 
 test("i nomi hanno un tetto, e quanti sono davvero si sa lo stesso", () => {
   const stati = Array.from({ length: 40 }, (_, i) => stato(`sensor.n${i}`, "unavailable"));
-  const conto = leEntita(stati, { quante: 12 });
+  const conto = leEntita(stati, { quante: 12, registri: tanti(40) });
   assert.equal(conto.giu, 40);
   /* `dispositivi` e' il numero vero, `nomi` quelli che si mandano: e' da
    * questa differenza che la console scrive «e altri ventotto» invece di far
@@ -120,6 +182,9 @@ test("i nomi hanno un tetto, e quanti sono davvero si sa lo stesso", () => {
 });
 
 test("un dispositivo senza nome cade sull'entita', invece di sparire", () => {
+  /* Il dispositivo c'e' — sta nel registro — e solo il suo nome e' vuoto: qui
+   * il ripiego ci sta, perche' la domanda «e' un dispositivo?» ha gia' avuto
+   * risposta si'. */
   const registri = {
     dispositivi: [{ id: "d1", name: "", name_by_user: null }],
     entita: [{ entity_id: "sensor.uno", device_id: "d1" }],
@@ -152,7 +217,18 @@ test("una batteria sparita non e' una batteria scarica: la conta gia' l'altra sp
     batteria("sensor.altra", 90),
   ];
   assert.deepEqual(leBatterie(stati), { scariche: 0, piuBassa: 90 });
-  assert.equal(leEntita(stati).giu, 1);
+  assert.equal(
+    leEntita(stati, {
+      registri: {
+        dispositivi: [{ id: "d1", name: "Serratura" }],
+        entita: [
+          { entity_id: "sensor.una", device_id: "d1" },
+          { entity_id: "sensor.altra", device_id: "d1" },
+        ],
+      },
+    }).giu,
+    1,
+  );
 });
 
 test("nessuna batteria in casa non e' «sono tutte al cento»", () => {
@@ -184,8 +260,16 @@ test("senza entita' del backup, e con un backup mai riuscito, la risposta e' la 
   });
 });
 
-test("niente stati, niente guai: si risponde zero invece di cadere", () => {
-  assert.deepEqual(leEntita(null), { totali: 0, giu: 0, dispositivi: 0, nomi: [] });
+test("niente stati, niente guai: si risponde «non lo so» invece di cadere", () => {
+  /* Senza registri la domanda non si puo' fare, e la risposta e' `null` — non
+   * zero. Zero vorrebbe dire «ho guardato e non ce n'e' nessuno», che e' una
+   * cosa diversa e non e' vera. */
+  assert.deepEqual(leEntita(null), { totali: null, giu: null, dispositivi: null, nomi: [] });
+  assert.deepEqual(
+    leEntita(null, { registri: REGISTRI }),
+    { totali: 0, giu: 0, dispositivi: 0, nomi: [] },
+    "coi registri e senza stati la risposta e' zero, non «non lo so»",
+  );
   /* Registri storti: non e' un guaio da far cadere, e' un rapporto senza i
    * nomi dei dispositivi. */
   assert.deepEqual(iNomi(null, { dispositivi: "boh", entita: 7 }), []);

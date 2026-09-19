@@ -4,7 +4,7 @@
  * l'avviso parta — quello lo farebbe anche una riga che manda sempre — ma che
  * **stia zitto** nei quattro casi in cui deve.
  *
- *  1. una casa muta da tre giorni e' una notizia, non una al giorno;
+ *  1. una casa offline da tre giorni e' una notizia, non una al giorno;
  *  2. otto case su dodici insieme sono un guasto, non otto;
  *  3. se il quadro e' stato fermo, il silenzio e' il nostro e non il loro;
  *  4. se la consegna non riesce, la casa resta da avvisare — se no un indirizzo
@@ -35,28 +35,28 @@ const unaCasa = (nome, minutiFa, avvisataIl = null) => ({
 /* ─── Le regole, senza niente acceso ───────────────────────────────────── */
 
 test("sotto le due ore non si dice niente: un riavvio non e' un guasto", () => {
-  /* La pagina chiama «muta» una casa dopo tre quarti d'ora, e va bene per un
+  /* La pagina chiama «offline» una casa dopo tre quarti d'ora, e va bene per un
    * colore. Un messaggio che arriva addosso a qualcuno vuole piu' pazienza:
    * un riavvio di Home Assistant, un aggiornamento e un router che si riaccende
    * ci stanno tutti dentro. */
-  const { mute } = chiTace([unaCasa("Rossi", 100)], { adesso: ORA });
-  assert.equal(mute.length, 0);
-  assert.equal(chiTace([unaCasa("Rossi", TACE_DOPO + 1)], { adesso: ORA }).mute.length, 1);
+  const { offline } = chiTace([unaCasa("Rossi", 100)], { adesso: ORA });
+  assert.equal(offline.length, 0);
+  assert.equal(chiTace([unaCasa("Rossi", TACE_DOPO + 1)], { adesso: ORA }).offline.length, 1);
 });
 
-test("una casa muta da tre giorni e' una notizia sola", () => {
+test("una casa offline da tre giorni e' una notizia sola", () => {
   const gia = unaCasa("Rossi", 3 * 24 * 60, ORA - 3 * 24 * 60 * MINUTO);
-  assert.equal(chiTace([gia], { adesso: ORA }).mute.length, 0, "l'ha ridetto");
+  assert.equal(chiTace([gia], { adesso: ORA }).offline.length, 0, "l'ha ridetto");
 });
 
 test("quando torna a parlare lo si dice, e ci si dimentica", () => {
   /* Senza questo messaggio qualcuno prende la macchina per una casa che si e'
    * rimessa a posto da sola mentre lui era in strada. */
   const tornata = unaCasa("Rossi", 2, ORA - 5 * 60 * MINUTO);
-  const { mute, tornate } = chiTace([tornata], { adesso: ORA });
-  assert.equal(mute.length, 0);
+  const { offline, tornate } = chiTace([tornata], { adesso: ORA });
+  assert.equal(offline.length, 0);
   assert.equal(tornate.length, 1);
-  assert.match(cosaDire({ mute, tornate, quante: 1 })[0].testo, /ha ripreso a parlare/);
+  assert.match(cosaDire({ offline, tornate, quante: 1 })[0].testo, /ha ripreso a parlare/);
 });
 
 test("otto case su dodici insieme sono un guasto, e si manda un messaggio solo", () => {
@@ -76,12 +76,12 @@ test("due case su venti restano due notizie: non tutto insieme e' un guasto gran
   for (let n = 0; n < 18; n += 1) tante.push(unaCasa(`su${n}`, 5));
   const detti = cosaDire({ ...chiTace(tante, { adesso: ORA }), quante: 20 });
   assert.equal(detti.length, 2);
-  assert.ok(detti.every((uno) => uno.tipo === "muta"));
+  assert.ok(detti.every((uno) => uno.tipo === "offline"));
 });
 
 test("se il quadro e' stato fermo, il silenzio e' il nostro", () => {
   /* La regola che nessuno scrive e che poi si paga: al ritorno da tre ore di
-   * fermo **tutte** le case sembrano mute, perche' nessuno era in ascolto. */
+   * fermo **tutte** le case sembrano offline, perche' nessuno era in ascolto. */
   assert.equal(siamoStatiViaNoi(ORA - 5 * MINUTO, ORA), false, "un giro normale");
   assert.equal(siamoStatiViaNoi(ORA - 5 * 60 * MINUTO, ORA), true, "tre ore di fermo");
   assert.equal(siamoStatiViaNoi(null, ORA), true, "il primo giro dopo l'accensione");
@@ -143,7 +143,7 @@ test("il primo giro dopo l'accensione non sveglia nessuno", async () => {
   }
 });
 
-test("al giro dopo, una casa muta si dice una volta e poi non piu'", async () => {
+test("al giro dopo, una casa offline si dice una volta e poi non piu'", async () => {
   const b = banco();
   try {
     b.deposita("rossi", 0);

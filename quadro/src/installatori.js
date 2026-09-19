@@ -86,10 +86,52 @@ export class Installatori {
       /* Dove vuole essere avvisato quando una casa tace. Vuoto vuol dire che
        * non vuole: niente avvisi e nessuna richiesta a nessuno. */
       avvisi: "",
+      /* Quando gli e' stata congelata l'utenza, o `null`.
+       *
+       * Congelato vuol dire che la sua chiave **apre ancora** — se no non si
+       * saprebbe chi sta bussando e non gli si potrebbe dire perche' non
+       * vede niente — ma non gli si fa vedere una riga delle sue case. Quello
+       * che vede e' un cartello con un indirizzo a cui scrivere.
+       *
+       * E vuol dire **solo quello**: le sue case continuano a mandare il
+       * rapporto e il quadro continua a riceverlo. Sospendere il monitoraggio
+       * di impianti che funzionano in casa di qualcuno, per una faccenda fra
+       * noi e chi li ha montati, sarebbe far pagare al cliente il conto di un
+       * altro. Ed e' anche il motivo per cui si scongela e torna tutto com'era:
+       * in mezzo non si e' perso niente. */
+      congelato: null,
     };
     this.lista.push(uno);
     this.archivio.salva();
     return { chi: uno.chi, chiave };
+  }
+
+  /**
+   * Congela un'utenza: da adesso la sua pagina non gli fa vedere piu' niente.
+   *
+   * Non e' «togli» col nome gentile. Togliere manda via tutto e non si torna
+   * indietro; questo e' un interruttore, e l'altro verso e' `scongela`.
+   */
+  congela(chi) {
+    const uno = this.quello(chi);
+    if (!uno || uno.congelato) return false;
+    uno.congelato = this.adesso();
+    this.archivio.salva();
+    return true;
+  }
+
+  /** E l'interruttore dall'altra parte: torna tutto com'era, senza rifare niente. */
+  scongela(chi) {
+    const uno = this.quello(chi);
+    if (!uno || !uno.congelato) return false;
+    uno.congelato = null;
+    this.archivio.salva();
+    return true;
+  }
+
+  /** Se questa utenza e' congelata. Una matricola che non c'e' non lo e'. */
+  congelato(chi) {
+    return Boolean(this.quello(chi)?.congelato);
   }
 
   /** Una chiave nuova per chi ha perso la sua. Quella di prima smette subito. */
@@ -204,6 +246,7 @@ export class Installatori {
         soglia: uno.soglia,
         da: uno.da,
         vistoIl: uno.vistoIl,
+        congelato: uno.congelato || null,
         case: quante(uno.chi),
         /* Al limite: la prossima casa non entra, e si vede prima che
          * l'installatore telefoni per chiedere perche'. */
