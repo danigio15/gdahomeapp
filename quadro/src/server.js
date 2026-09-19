@@ -61,7 +61,7 @@ import { TUTTE } from "./case.js";
 import { CASA_VALIDA, TroppiInviti } from "./chiavi.js";
 import { DISCO_FINITO, DISCO_PIENO, TROPPO_CALDO } from "./controlli.js";
 import { Fattorino, indirizzoBuono } from "./fattorino.js";
-import { comeVaLAggiornamento } from "./mi-aggiorno.js";
+import { comeVaLAggiornamento, laVersioneCheGira } from "./mi-aggiorno.js";
 import { CHI_VALIDO } from "./installatori.js";
 import { stessoSegreto } from "./segreti.js";
 import { ilTipoDi, Marchi, QUANTO_GROSSO } from "./marchi.js";
@@ -261,8 +261,13 @@ export function costruisciIlServer({
        * E non compare quasi mai: ci vogliono sei giri di fila andati a vuoto.
        * Un campo che c'e' sempre si smette di leggere. */
       const fermo = comeVaLAggiornamento({ cartella });
+      /* E **quale versione gira**, che era la cosa che non si poteva sapere da
+       * nessuna parte: questa riga risponde a «si e' aggiornato?» senza dover
+       * entrare nella macchina a leggere un registro. */
+      const versione = laVersioneCheGira();
       json(risposta, {
         vivo: true,
+        ...(versione ? { versione } : {}),
         case: case_.lista.length,
         installatori: installatori.lista.length,
         gestore: gestoreAperto,

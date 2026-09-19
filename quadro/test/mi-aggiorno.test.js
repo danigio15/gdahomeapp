@@ -20,7 +20,12 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { comeVaLAggiornamento, DOPO_QUANTO, FOGLIETTO } from "../src/mi-aggiorno.js";
+import {
+  comeVaLAggiornamento,
+  DOPO_QUANTO,
+  FOGLIETTO,
+  laVersioneCheGira,
+} from "../src/mi-aggiorno.js";
 
 const ORA = 60 * 60 * 1000;
 
@@ -116,5 +121,52 @@ test("senza un perche' scritto, si dice lo stesso che non si aggiorna", () => {
     assert.equal(detto.perche, "non si sa");
   } finally {
     b.chiudi();
+  }
+});
+
+/* ─── Quale versione gira ─────────────────────────────────────────────────
+ *
+ * «Verifica che il quadro si sia aggiornato.»
+ *
+ * Non si poteva. Da nessuna parte: `/salute` diceva solo di essere vivo, la
+ * soglia e' un testo fisso, e le pagine mostrano la versione **delle case**,
+ * non la sua. Restava entrare nella macchina a leggere un registro — cioe' la
+ * cosa che questo quadro esiste apposta per non dover fare.
+ *
+ * Il numero c'era gia': `accendi.sh` lo scrive quando scambia il codice, e lo
+ * scrive **dopo** che le prove di quella versione sono passate. Mancava solo
+ * qualcuno che lo leggesse.
+ */
+
+test("il quadro dice quale versione sta girando", () => {
+  const cartella = mkdtempSync(join(tmpdir(), "versione-"));
+  try {
+    const dove = join(cartella, "versione");
+    writeFileSync(dove, `${"a".repeat(40)}\n`, "utf8");
+    /* Sette cifre e non quaranta: e' un numero che qualcuno legge e confronta
+     * a occhio con quello dell'ultimo rilascio. */
+    assert.equal(laVersioneCheGira({ dove }), "aaaaaaa");
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("un quadro fatto partire a mano non dice una versione inventata", () => {
+  const cartella = mkdtempSync(join(tmpdir(), "versione-"));
+  try {
+    /* Il file non c'e': e' il caso di chi lo sta scrivendo sul banco, e non e'
+     * un guasto. Meglio non dire niente che dire un numero finto — questo
+     * numero serve proprio a fidarsi. */
+    assert.equal(laVersioneCheGira({ dove: join(cartella, "versione") }), "");
+    /* E quello che c'e' dentro deve essere un commit, non una riga qualunque:
+     * un file mezzo scritto, o scritto da qualcun altro, non diventa una
+     * versione. */
+    const dove = join(cartella, "versione");
+    for (const roba of ["", "  ", "non-un-commit", "aaa", `${"a".repeat(41)}`, "ZZZ"]) {
+      writeFileSync(dove, roba, "utf8");
+      assert.equal(laVersioneCheGira({ dove }), "", `«${roba}» e' passata per una versione`);
+    }
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
   }
 });

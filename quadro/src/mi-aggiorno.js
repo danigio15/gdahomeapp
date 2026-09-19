@@ -25,9 +25,24 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 /** Come si chiama il foglietto che il giro lascia quando non ce la fa. */
 export const FOGLIETTO = "non-mi-aggiorno";
+
+/**
+ * Dove sta scritta la versione che gira adesso.
+ *
+ * Non la scriviamo noi: la scrive `accendi.sh` quando **scambia** il codice,
+ * cioe' solo dopo che le prove di quella versione sono passate. E' il numero
+ * vero di quello che sta girando, non quello che si sperava di far girare.
+ *
+ * Sta accanto alla cartella del codice e non dentro (`/opt/quadro/versione`,
+ * col codice in `/opt/quadro/quadro/`), perche' il giro degli aggiornamenti
+ * scambia la cartella del codice intera: un file dentro sarebbe cancellato e
+ * riscritto proprio da chi lo deve leggere.
+ */
+const LA_VERSIONE = fileURLToPath(new URL("../../versione", import.meta.url));
 
 /** Da quanto deve durare prima che valga la pena dirlo. */
 export const DOPO_QUANTO = 60 * 60 * 1000;
@@ -60,4 +75,38 @@ export function comeVaLAggiornamento({ cartella = "./dati", adesso = () => Date.
     ore: Math.floor(da / (60 * 60 * 1000)),
     perche: resto.join("\n").trim() || "non si sa",
   };
+}
+
+/**
+ * Quale versione sta girando: le prime sette cifre del commit.
+ *
+ * ─── Perche' serve ────────────────────────────────────────────────────────
+ *
+ * Perche' senza, «il quadro si e' aggiornato?» non ha risposta. Da nessuna
+ * parte: non da `/salute`, che diceva solo di essere vivo; non dalla soglia,
+ * che e' un testo fisso; non dalle pagine, che mostrano la versione **delle
+ * case**, non la sua. Restava guardare il registro entrando nella macchina —
+ * cioe' la cosa che questo quadro esiste apposta per non dover fare.
+ *
+ * E' la domanda che si fa ogni volta che si rilascia qualcosa, ed e' anche
+ * quella che si fa quando una correzione sembra non essere arrivata. Una
+ * macchina che si aggiorna da sola deve saper dire **a che punto e'**: se no
+ * l'unico modo di controllarla e' fidarsi.
+ *
+ * Sette cifre e non quaranta perche' e' un numero che qualcuno legge e
+ * confronta a occhio con quello dell'ultimo rilascio.
+ *
+ * Stringa vuota quando quel file non c'e': un quadro fatto partire a mano,
+ * o uno sul banco di chi lo sta scrivendo. Non e' un guasto, e non si dice
+ * niente.
+ *
+ * @returns {string} sette cifre esadecimali, o stringa vuota
+ */
+export function laVersioneCheGira({ dove = LA_VERSIONE } = {}) {
+  try {
+    const scritto = readFileSync(dove, "utf8").trim();
+    return /^[0-9a-f]{40}$/.test(scritto) ? scritto.slice(0, 7) : "";
+  } catch (_nonCE) {
+    return "";
+  }
 }

@@ -182,12 +182,14 @@ sed -n 's/^QUADRO_GESTORE=//p' /etc/quadro/ambiente
 curl https://quadro.gdahome.org/salute
 ```
 
-Risponde `{"vivo":true,"case":0,"installatori":0,"gestore":true}`. Le tre cose
-da guardare in quella riga:
+Risponde
+`{"vivo":true,"versione":"26bad09","case":0,"installatori":0,"gestore":true}`.
+Le cose da guardare in quella riga:
 
 | | |
 |---|---|
 | `vivo` | il quadro risponde |
+| `versione` | **quale codice sta girando**: le prime sette cifre del commit. È la riga che risponde a «si è aggiornato?» — si confronta a occhio con l'ultimo rilascio, e se combacia il giro ha fatto il suo lavoro. Il numero lo scrive `accendi.sh` quando **scambia** il codice, cioè solo dopo che le prove di quella versione sono passate: è quello che gira davvero, non quello che si sperava di far girare. Manca su un quadro fatto partire a mano |
 | `gestore` | la chiave c'è, e la pagina di gestione si apre. Se è `false`, lo script non l'ha scritta e non si può aggiungere nessuno |
 | `installatori` | quanti ce ne sono. A questo punto zero |
 
@@ -653,7 +655,7 @@ Le vie, davanti:
 | | |
 |---|---|
 | `GET /` | la soglia: cos'è questo indirizzo, in italiano. Chi lo tiene fra i segnalibri prima o poi lo apre nudo |
-| `GET /salute` | se è vivo, quante case segue, e se la console è aperta |
+| `GET /salute` | se è vivo, **quale versione gira**, quante case segue, e se la console è aperta |
 | `POST /rapporto` | la casa deposita. `x-casa` + la sua chiave; una matricola mai vista nasce qui, senza nome |
 
 L'installatore, tutte dentro `/console/` e tutte con la **sua** chiave:
