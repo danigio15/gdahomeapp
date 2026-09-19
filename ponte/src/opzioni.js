@@ -43,6 +43,64 @@ const DIFETTO = Object.freeze({
   registro: "info",
 });
 
+/* Dove sta ogni casella adesso, e come si chiamava prima.
+ *
+ * Dalla 1.5.8 le opzioni sono a **sezioni**: Home Assistant non ha titoli, e
+ * tredici caselle in fila le leggevano tre persone diverse di cui due non
+ * c'entravano niente. Annidarle e' l'unico modo che la scheda dell'add-on
+ * abbia di disegnare un titolo.
+ *
+ * La chiave della sezione e' scelta apposta **diversa** da ogni chiave di
+ * prima: `installatore` e `gestore` erano interruttori, e una casa che se li
+ * ritrovasse come sezione avrebbe un booleano dove adesso ci va un gruppo.
+ *
+ * ─── E quella di prima si legge lo stesso ────────────────────────────────
+ *
+ * Il Supervisor, aggiornando, potrebbe tenersi le caselle vecchie o buttarle:
+ * non si sa da qui, e non e' una cosa da indovinare. Se se le tiene, questa
+ * riga fa si' che **non si rompa niente** — la casa continua a mandare il suo
+ * rapporto con il codice che ha gia'. Se le butta, quel codice va rimesso una
+ * volta, e la scheda dice dove.
+ *
+ * Costa una mappa e non costa nessun ramo: si legge il nuovo, e dove il nuovo
+ * non c'e' si ripiega sul vecchio. */
+const DOVE_STAVANO = Object.freeze({
+  da_fuori_casa: ["casa", "da_fuori_casa"],
+  quadro: ["casa", "quadro"],
+  quadro_ogni: ["casa", "quadro_ogni"],
+  quadro_manutenzione: ["casa", "quadro_manutenzione"],
+  minuti_del_codice: ["casa", "minuti_del_codice"],
+  giorni_di_silenzio: ["casa", "giorni_di_silenzio"],
+  dispositivi_massimi: ["casa", "dispositivi_massimi"],
+  installatore: ["chi_installa", "acceso"],
+  chiave_cruscotto: ["chi_installa", "chiave"],
+  chiave_gestione: ["gestione", "chiave"],
+  chiave_console: ["assistenza", "chiave"],
+  porta_app: ["avanzate", "porta_app"],
+  registro: ["avanzate", "registro"],
+});
+
+/* Le opzioni in **una riga sola di chiavi**, come le leggeva questo file
+ * prima delle sezioni.
+ *
+ * Sta qui e non sparso: dodici posti che sanno dove sta ogni casella sono
+ * dodici posti da cambiare il giorno che una si sposta, e undici che uno si
+ * dimentica. Da qui in giu' il resto del file non sa nemmeno che le sezioni
+ * esistano. */
+export function appiattisci(grezze) {
+  const dentro = grezze && typeof grezze === "object" ? grezze : {};
+  const piatte = { ...dentro };
+  for (const [nome, [sezione, campo]] of Object.entries(DOVE_STAVANO)) {
+    const gruppo = dentro[sezione];
+    if (!gruppo || typeof gruppo !== "object") continue;
+    /* `undefined` vuol dire «questa sezione quella casella non ce l'ha», e
+     * allora vale quella di prima. `""` e `false` no: sono risposte, e vincono
+     * su quello che c'era scritto nella scheda vecchia. */
+    if (gruppo[campo] !== undefined) piatte[nome] = gruppo[campo];
+  }
+  return piatte;
+}
+
 const numero = (valore, difetto) => {
   const letto = Number(valore);
   return Number.isFinite(letto) ? letto : difetto;
@@ -83,13 +141,15 @@ export function leggiIlQuadro(scritto, dillo = () => {}) {
 }
 
 export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data") {
-  let scritte = {};
+  let grezze = {};
   try {
-    scritte = JSON.parse(readFileSync(join(cartella, "options.json"), "utf8")) || {};
+    grezze = JSON.parse(readFileSync(join(cartella, "options.json"), "utf8")) || {};
   } catch (_errore) {
     /* Fuori dal Supervisor — in prova, o su un computer — il file non c'e'
      * proprio, e i difetti bastano. */
   }
+  /* A sezioni dalla 1.5.8, piatte prima: qui diventano una cosa sola. */
+  const scritte = appiattisci(grezze);
   /* Le due chiavi, lette una volta sola perche' servono due volte ciascuna:
    * per dire **se** la cosa e' accesa, e per darla a chi la usa.
    *

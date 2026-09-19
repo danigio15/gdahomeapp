@@ -11,6 +11,36 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.8
+
+> **Prima di aggiornare, tieni sotto mano il codice del quadro** (e, se le usi,
+> le chiavi del cruscotto e della gestione). Le caselle cambiano posto, e
+> secondo come si comporta il Supervisor potrebbe toccarti rimetterle una
+> volta. Le trovi dove sono adesso: Impostazioni › Add-on › gdahome ›
+> Configurazione.
+
+**La configurazione è in sezioni.** Erano tredici caselle una sotto l'altra, e
+le leggevano tre persone diverse di cui due non c'entravano niente: chi apriva
+la scheda si trovava fra i piedi «La chiave della console» e «La chiave della
+gestione» senza nessun modo di capire che non lo riguardavano.
+
+Adesso sono cinque gruppi con un titolo:
+
+- **La casa** — la tua parte, e per quasi tutti l'unica che conta
+- **Chi installa** — solo se gdahome lo monti in casa d'altri
+- **Chi tiene il quadro** e **L'assistenza** — una casa sola al mondo ciascuna
+- **Avanzate** — due numeri che non cambia quasi nessuno
+
+Home Assistant non ha titoli di sezione: li disegna **solo** per le caselle
+annidate. È l'unico modo che c'era, e il prezzo è quello scritto qui sopra. In
+cambio il prefisso nel nome sparisce: «Casa · Da fuori casa» adesso è «Da fuori
+casa» dentro «La casa», che è la stessa cosa detta una volta sola.
+
+**Il ponte legge tutt'e due le forme.** Se il Supervisor si tiene quello che
+avevi scritto, non ti accorgi di niente e la casa continua a mandare il suo
+rapporto senza che tu tocchi nulla. Se lo butta, lo rimetti una volta e non
+succede più.
+
 ## 1.5.7
 
 **Via il bollo dalla testata del cruscotto e della gestione**, e il tasto del

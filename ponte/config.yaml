@@ -43,7 +43,7 @@ name: gdahome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.5.7"
+version: "1.5.8"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
@@ -138,160 +138,206 @@ hassio_api: true
 hassio_role: manager
 
 options:
-  # Da fuori casa l'app entra passando da un centralino: il ponte non aspetta
-  # che qualcuno lo trovi, va lui e ci resta in attesa. Cosi' non c'e' nessuna
-  # porta da aprire sul router, nessun indirizzo pubblico da avere, e nessuna
-  # VPN da installare.
-  #
-  # Acceso, si usa il centralino di gdahome, e non c'e' niente da scrivere da
-  # nessuna parte. Spento, la casa si raggiunge solo dalla propria rete.
-  #
-  # **Qui non c'e' nessuna casella per l'indirizzo, e non e' una dimenticanza.**
-  # Prima c'era, e stava sempre vuota: l'indirizzo giusto e' quello scritto nel
-  # programma (`src/opzioni.js`, e identico dentro l'app), e una casella che non
-  # va toccata e' una casella che prima o poi qualcuno tocca — scrivendoci
-  # qualcosa di storto, o congelando per quella casa un indirizzo che il giorno
-  # che cambia non cambia piu'. Dove chiama questa casa lo dice la console,
-  # nella scheda «Da fuori casa».
-  #
-  # Chi vuole un centralino suo se ne accende uno (`nuvola/README.md`) e si
-  # tiene una copia locale di questo add-on, dove quella riga si cambia una
-  # volta: e' una cosa da chi sa cos'e' un centralino, e chi lo sa sa anche
-  # cambiare una riga.
-  da_fuori_casa: true
-  porta_app: 8098
-  # Quanti telefoni possono restare abbinati insieme.
-  dispositivi_massimi: 10
-  # Quanto vive un codice di abbinamento, in minuti.
-  minuti_del_codice: 5
-  # Quanto vive il segno di un telefono senza farsi vedere, in giorni.
-  # Zero vuol dire per sempre.
-  giorni_di_silenzio: 90
-  # Il quadro di chi ti ha fatto l'impianto.
-  #
-  # Lasciala vuota. Serve a chi la casa se l'e' fatta montare da un
-  # installatore: lui ti da' un codice da incollare qui — venti caratteri, tipo
-  # `K7M2-9XQF-3BHT-R4VN` — e da quel momento
-  # questa casa gli manda ogni minuto **poche righe di numeri** — le
-  # versioni, quanto e' pieno il disco, quali add-on girano, quante entita'
-  # non rispondono. Cosi' si accorge che qualcosa non va prima che tocchi a te
-  # telefonargli.
-  #
-  # Piu' **una cosa che numero non e'**, e te la diciamo prima: il **nome dei
-  # dispositivi che in quel momento non rispondono**. Solo quelli. Serve a chi
-  # deve venire a ripararli — un elenco di codici dice che qualcosa e' rotto e
-  # non dice cosa — e vuol dire che se la presa si chiama «Luce cucina», lui
-  # legge «Luce cucina».
-  #
-  # Tutto il resto no: nessuno stato di nessun sensore, nessuna persona,
-  # nessun nome dei dispositivi che **funzionano**, nessuna stanza, il nome
-  # del tuo Wi-Fi no e il tuo indirizzo pubblico nemmeno. **Quello che parte
-  # lo puoi leggere**, parola per parola, nella scheda «Il quadro» di gdahome,
-  # dove c'e' anche il tasto per smettere.
-  #
-  # Vuota vuol dire che non parte niente e non si apre nessuna connessione.
-  quadro: ""
-  # Ogni quanti minuti parte un rapporto. Da 1 a 1440.
-  quadro_ogni: 1
-  # Lascia che chi ti ha fatto l'impianto aggiorni da lontano.
-  #
-  # E' un **secondo** interruttore, ed e' spento di serie. Mandargli i numeri e
-  # lasciargli mettere le mani dentro sono due cose diverse: la prima l'hai gia'
-  # data incollando il codice qui sopra, questa no.
-  #
-  # Acceso, dal suo cruscotto puo' far partire un aggiornamento che questa casa
-  # ha gia' in attesa — quelli che vedi anche tu in Impostazioni — e niente
-  # altro: non puo' aprire la tua plancia, non puo' leggere i tuoi sensori, non
-  # puo' cambiare la tua configurazione. Un verbo solo, scritto nel programma.
-  #
-  # Non si apre nessuna porta verso casa tua: e' questa casa che ogni minuto
-  # manda il rapporto, e nella risposta trova, qualche volta, cosa fare.
-  #
-  # Quello che succede lo leggi dove leggi tutto il resto, nella scheda «Il
-  # quadro»: cosa gli e' stato chiesto di installare e com'e' andata stanno
-  # scritti nel rapporto, parola per parola.
-  quadro_manutenzione: false
-  registro: info
-  # Questo Home Assistant e' di chi installa.
-  #
-  # Acceso, nella console di gdahome compare una sezione in piu' — **il tuo
-  # cruscotto** — da cui si aprono gli impianti che hai montato. Nell'app
-  # compare la voce corrispondente.
-  #
-  # **Va acceso sul TUO Home Assistant, non su quello di un cliente.** In casa
-  # di un cliente quella sezione la vedrebbe lui, e chiederebbe la chiave: non
-  # gli si aprirebbe niente senza, ma e' una porta che in casa d'altri non
-  # ha motivo di esserci.
-  #
-  # **Da solo non accende niente**: serve anche il codice qui sotto.
-  installatore: false
-  # Il codice del tuo cruscotto, quello che ti sei fatto dare quando l'hai
-  # aperto.
-  #
-  # Senza questo, l'interruttore qui sopra non fa niente: nessuna sezione nella
-  # console, nessuna voce nella barra laterale, nessuna voce nell'app. Non
-  # chiuse — assenti.
-  #
-  # Prima bastava l'interruttore e il codice lo chiedeva la pagina. Chi lo
-  # accendeva per sbaglio si trovava comunque una porta che non si apriva, e
-  # una porta che si vede e' una domanda a cui qualcuno deve rispondere.
-  #
-  # **Scrivilo sul TUO Home Assistant, non su quello di un cliente.** Le
-  # opzioni di un add-on stanno su disco in chiaro e finiscono nei backup: e'
-  # la tua chiave, e va tenuta dove tieni le tue cose.
-  chiave_cruscotto: ""
-  # La chiave di chi **tiene** il quadro.
-  #
-  # Lasciala vuota: e' una casa sola al mondo, e non e' la tua a meno che tu
-  # non sappia gia' di cosa si tratta. Scritta, nella barra laterale compare
-  # «Gestione installatori», da cui si aggiungono gli installatori e si mettono
-  # i limiti. Vuota, quella voce non esiste.
-  #
-  # **Qui l'interruttore non c'e', e non e' una dimenticanza.** C'era, e su
-  # tutte le case del mondo era un interruttore da premere per curiosita'. La
-  # chiave e' l'interruttore: senza, non c'e' niente da accendere.
-  chiave_gestione: ""
-  # La chiave con cui si **risponde** alle chat di assistenza.
-  #
-  # Lasciala vuota. Serve a UNA installazione al mondo — quella di chi l'app la
-  # mantiene — per leggere le conversazioni di tutti e rispondere. In tutte le
-  # altre case non cambia niente e non si vede niente: la chat resta quella di
-  # chi chiede aiuto, che e' quello che serve.
-  #
-  # E' la stessa chiave messa fra i segreti del centralino, e non si inventa
-  # qui: si copia da li'.
-  chiave_console: ""
+  # ─────────────────────────────────────────────────────────────────────────
+  # CASA — questa e' la tua parte, e per quasi tutti e' l'unica.
+  # ─────────────────────────────────────────────────────────────────────────
+  casa:
+    # Da fuori casa l'app entra passando da un centralino: il ponte non aspetta
+    # che qualcuno lo trovi, va lui e ci resta in attesa. Cosi' non c'e' nessuna
+    # porta da aprire sul router, nessun indirizzo pubblico da avere, e nessuna
+    # VPN da installare.
+    #
+    # Acceso, si usa il centralino di gdahome, e non c'e' niente da scrivere da
+    # nessuna parte. Spento, la casa si raggiunge solo dalla propria rete.
+    #
+    # **Qui non c'e' nessuna casella per l'indirizzo, e non e' una dimenticanza.**
+    # Prima c'era, e stava sempre vuota: l'indirizzo giusto e' quello scritto nel
+    # programma (`src/opzioni.js`, e identico dentro l'app), e una casella che non
+    # va toccata e' una casella che prima o poi qualcuno tocca — scrivendoci
+    # qualcosa di storto, o congelando per quella casa un indirizzo che il giorno
+    # che cambia non cambia piu'. Dove chiama questa casa lo dice la console,
+    # nella scheda «Da fuori casa».
+    #
+    # Chi vuole un centralino suo se ne accende uno (`nuvola/README.md`) e si
+    # tiene una copia locale di questo add-on, dove quella riga si cambia una
+    # volta: e' una cosa da chi sa cos'e' un centralino, e chi lo sa sa anche
+    # cambiare una riga.
+    da_fuori_casa: true
+    # Il quadro di chi ti ha fatto l'impianto.
+    #
+    # Lasciala vuota. Serve a chi la casa se l'e' fatta montare da un
+    # installatore: lui ti da' un codice da incollare qui — venti caratteri, tipo
+    # `K7M2-9XQF-3BHT-R4VN` — e da quel momento
+    # questa casa gli manda ogni minuto **poche righe di numeri** — le
+    # versioni, quanto e' pieno il disco, quali add-on girano, quante entita'
+    # non rispondono. Cosi' si accorge che qualcosa non va prima che tocchi a te
+    # telefonargli.
+    #
+    # Piu' **una cosa che numero non e'**, e te la diciamo prima: il **nome dei
+    # dispositivi che in quel momento non rispondono**. Solo quelli. Serve a chi
+    # deve venire a ripararli — un elenco di codici dice che qualcosa e' rotto e
+    # non dice cosa — e vuol dire che se la presa si chiama «Luce cucina», lui
+    # legge «Luce cucina».
+    #
+    # Tutto il resto no: nessuno stato di nessun sensore, nessuna persona,
+    # nessun nome dei dispositivi che **funzionano**, nessuna stanza, il nome
+    # del tuo Wi-Fi no e il tuo indirizzo pubblico nemmeno. **Quello che parte
+    # lo puoi leggere**, parola per parola, nella scheda «Il quadro» di gdahome,
+    # dove c'e' anche il tasto per smettere.
+    #
+    # Vuota vuol dire che non parte niente e non si apre nessuna connessione.
+    quadro: ""
+    # Ogni quanti minuti parte un rapporto. Da 1 a 1440.
+    quadro_ogni: 1
+    # Lascia che chi ti ha fatto l'impianto aggiorni da lontano.
+    #
+    # E' un **secondo** interruttore, ed e' spento di serie. Mandargli i numeri e
+    # lasciargli mettere le mani dentro sono due cose diverse: la prima l'hai gia'
+    # data incollando il codice qui sopra, questa no.
+    #
+    # Acceso, dal suo cruscotto puo' far partire un aggiornamento che questa casa
+    # ha gia' in attesa — quelli che vedi anche tu in Impostazioni — e niente
+    # altro: non puo' aprire la tua plancia, non puo' leggere i tuoi sensori, non
+    # puo' cambiare la tua configurazione. Un verbo solo, scritto nel programma.
+    #
+    # Non si apre nessuna porta verso casa tua: e' questa casa che ogni minuto
+    # manda il rapporto, e nella risposta trova, qualche volta, cosa fare.
+    #
+    # Quello che succede lo leggi dove leggi tutto il resto, nella scheda «Il
+    # quadro»: cosa gli e' stato chiesto di installare e com'e' andata stanno
+    # scritti nel rapporto, parola per parola.
+    quadro_manutenzione: false
+    # Quanto vive un codice di abbinamento, in minuti.
+    minuti_del_codice: 5
+    # Quanto vive il segno di un telefono senza farsi vedere, in giorni.
+    # Zero vuol dire per sempre.
+    giorni_di_silenzio: 90
+    # Quanti telefoni possono restare abbinati insieme.
+    dispositivi_massimi: 10
 
-# Nello stesso ordine delle opzioni qui sopra, e non e' pignoleria: sono due
-# elenchi delle stesse dodici righe, e quando divergono si legge l'uno
-# cercando nell'altro. Una prova tiene che siano le stesse
-# (`ponte/test/manifesto.test.js`); l'ordine lo tiene chi scrive.
+  # ─────────────────────────────────────────────────────────────────────────
+  # INSTALLATORE — solo se gdahome lo monti in casa d'altri. Se la casa e' la
+  # tua, qui non c'e' niente da toccare.
+  # ─────────────────────────────────────────────────────────────────────────
+  chi_installa:
+    # Questo Home Assistant e' di chi installa.
+    #
+    # Acceso, nella console di gdahome compare una sezione in piu' — **il tuo
+    # cruscotto** — da cui si aprono gli impianti che hai montato. Nell'app
+    # compare la voce corrispondente.
+    #
+    # **Va acceso sul TUO Home Assistant, non su quello di un cliente.** In casa
+    # di un cliente quella sezione la vedrebbe lui, e chiederebbe la chiave: non
+    # gli si aprirebbe niente senza, ma e' una porta che in casa d'altri non
+    # ha motivo di esserci.
+    #
+    # **Da solo non accende niente**: serve anche il codice qui sotto.
+    acceso: false
+    # Il codice del tuo cruscotto, quello che ti sei fatto dare quando l'hai
+    # aperto.
+    #
+    # Senza questo, l'interruttore qui sopra non fa niente: nessuna sezione nella
+    # console, nessuna voce nella barra laterale, nessuna voce nell'app. Non
+    # chiuse — assenti.
+    #
+    # Prima bastava l'interruttore e il codice lo chiedeva la pagina. Chi lo
+    # accendeva per sbaglio si trovava comunque una porta che non si apriva, e
+    # una porta che si vede e' una domanda a cui qualcuno deve rispondere.
+    #
+    # **Scrivilo sul TUO Home Assistant, non su quello di un cliente.** Le
+    # opzioni di un add-on stanno su disco in chiaro e finiscono nei backup: e'
+    # la tua chiave, e va tenuta dove tieni le tue cose.
+    chiave: ""
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # GESTORE DEL QUADRO — una casa sola al mondo. Non e' la tua.
+  # ─────────────────────────────────────────────────────────────────────────
+  gestione:
+    # La chiave di chi **tiene** il quadro.
+    #
+    # Lasciala vuota: e' una casa sola al mondo, e non e' la tua a meno che tu
+    # non sappia gia' di cosa si tratta. Scritta, nella barra laterale compare
+    # «Gestione installatori», da cui si aggiungono gli installatori e si mettono
+    # i limiti. Vuota, quella voce non esiste.
+    #
+    # **Qui l'interruttore non c'e', e non e' una dimenticanza.** C'era, e su
+    # tutte le case del mondo era un interruttore da premere per curiosita'. La
+    # chiave e' l'interruttore: senza, non c'e' niente da accendere.
+    chiave: ""
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # ASSISTENZA — chi risponde alle segnalazioni di tutti. Una casa sola.
+  # ─────────────────────────────────────────────────────────────────────────
+  assistenza:
+    # La chiave con cui si **risponde** alle chat di assistenza.
+    #
+    # Lasciala vuota. Serve a UNA installazione al mondo — quella di chi l'app la
+    # mantiene — per leggere le conversazioni di tutti e rispondere. In tutte le
+    # altre case non cambia niente e non si vede niente: la chat resta quella di
+    # chi chiede aiuto, che e' quello che serve.
+    #
+    # E' la stessa chiave messa fra i segreti del centralino, e non si inventa
+    # qui: si copia da li'.
+    chiave: ""
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # AVANZATE — due numeri che nessuno cambia mai.
+  # ─────────────────────────────────────────────────────────────────────────
+  avanzate:
+    porta_app: 8098
+    registro: info
+
 schema:
-  da_fuori_casa: bool
-  porta_app: int(1024,65535)
-  dispositivi_massimi: int(1,100)
-  minuti_del_codice: int(1,60)
-  giorni_di_silenzio: int(0,3650)
-  # `str?` e non `password?`: questa riga non e' un segreto da nascondere a chi
-  # ci abita — e' il contrario, e' la cosa che deve poter rileggere per sapere
-  # a chi la sua casa sta parlando.
-  quadro: str?
-  quadro_ogni: int(1,1440)
-  # Il secondo interruttore, e sta qui in mezzo apposta: e' la casella subito
-  # dopo quelle del quadro, perche' senza quelle non vuol dire niente.
-  quadro_manutenzione: bool
-  registro: list(debug|info|attenzione|errore)
-  installatore: bool
-  # Le tre chiavi, tutte `password?`, e per gli stessi due motivi: Home
-  # Assistant le nasconde mentre si scrivono e non le rimostra dopo, e il `?`
-  # fa si' che chi non ne ha bisogno — cioe' quasi tutti — non si trovi un
-  # campo obbligatorio da riempire. Si rileggono da dove stanno di casa: sulla
-  # macchina del quadro, o da chi le ha consegnate.
-  #
-  # `gestore: bool` non c'e' piu': l'interruttore e' diventato
-  # `chiave_gestione`. Chi aggiorna da una versione che ce l'aveva se lo
-  # ritrova tolto dalla scheda, e il valore che ci aveva messo non conta piu'
-  # niente — che e' il punto: era un interruttore su case che non c'entravano.
-  chiave_cruscotto: password?
-  chiave_gestione: password?
-  chiave_console: password?
+  # ─────────────────────────────────────────────────────────────────────────
+  # CASA — questa e' la tua parte, e per quasi tutti e' l'unica.
+  # ─────────────────────────────────────────────────────────────────────────
+  casa:
+    da_fuori_casa: bool
+    # `str?` e non `password?`: questa riga non e' un segreto da nascondere a chi
+    # ci abita — e' il contrario, e' la cosa che deve poter rileggere per sapere
+    # a chi la sua casa sta parlando.
+    quadro: str?
+    quadro_ogni: int(1,1440)
+    # Il secondo interruttore, e sta qui in mezzo apposta: e' la casella subito
+    # dopo quelle del quadro, perche' senza quelle non vuol dire niente.
+    quadro_manutenzione: bool
+    minuti_del_codice: int(1,60)
+    giorni_di_silenzio: int(0,3650)
+    dispositivi_massimi: int(1,100)
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # INSTALLATORE — solo se gdahome lo monti in casa d'altri. Se la casa e' la
+  # tua, qui non c'e' niente da toccare.
+  # ─────────────────────────────────────────────────────────────────────────
+  chi_installa:
+    acceso: bool
+    # Le tre chiavi, tutte `password?`, e per gli stessi due motivi: Home
+    # Assistant le nasconde mentre si scrivono e non le rimostra dopo, e il `?`
+    # fa si' che chi non ne ha bisogno — cioe' quasi tutti — non si trovi un
+    # campo obbligatorio da riempire. Si rileggono da dove stanno di casa: sulla
+    # macchina del quadro, o da chi le ha consegnate.
+    #
+    # `gestore: bool` non c'e' piu': l'interruttore e' diventato
+    # `chiave_gestione`. Chi aggiorna da una versione che ce l'aveva se lo
+    # ritrova tolto dalla scheda, e il valore che ci aveva messo non conta piu'
+    # niente — che e' il punto: era un interruttore su case che non c'entravano.
+    chiave: password?
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # GESTORE DEL QUADRO — una casa sola al mondo. Non e' la tua.
+  # ─────────────────────────────────────────────────────────────────────────
+  gestione:
+    chiave: password?
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # ASSISTENZA — chi risponde alle segnalazioni di tutti. Una casa sola.
+  # ─────────────────────────────────────────────────────────────────────────
+  assistenza:
+    chiave: password?
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # AVANZATE — due numeri che nessuno cambia mai.
+  # ─────────────────────────────────────────────────────────────────────────
+  avanzate:
+    porta_app: int(1024,65535)
+    registro: list(debug|info|attenzione|errore)
