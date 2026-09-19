@@ -35,15 +35,23 @@ installata, e per questo non ha nessun motivo di passare da nessun altro.
 Si fa una volta sola, e sono due mezze cose in due posti diversi — è il punto
 in cui ci si ferma quasi sempre, perché la prima sembra finita:
 
-1. **Nella Google Cloud Console**, nel progetto legato al Play Console: si crea
-   l'account di servizio e gli si scarica una chiave JSON. Adesso l'account
-   esiste, ma il negozio non lo conosce ancora.
-2. **Nel Play Console**, Utenti e autorizzazioni → Invita utente: si invita
-   quell'indirizzo — `qualcosa@…iam.gserviceaccount.com` — e gli si dà il
-   permesso di pubblicare su questa app. Senza questo passaggio Google risponde
-   `403 the caller does not have permission`, che è esattamente quello che
-   risponderebbe se la chiave fosse sbagliata: da quella frase non si capisce
-   quale delle due metà manca.
+1. **Nella Google Cloud Console** (`console.cloud.google.com`, un altro sito):
+   si accende la **Google Play Android Developer API**, poi IAM e amministrazione
+   → Account di servizio → Crea. Nessun ruolo di Google Cloud da dargli: i
+   permessi stanno dall'altra parte. Poi Chiavi → Aggiungi chiave → JSON, e il
+   file si scarica. Adesso l'account esiste, ma il negozio non lo conosce ancora.
+2. **Nel Play Console**, Utenti e autorizzazioni → Invita nuovi utenti: si
+   incolla quell'indirizzo — `qualcosa@…iam.gserviceaccount.com` — e gli si dà
+   il permesso di pubblicare su questa app. Senza questo passaggio Google
+   risponde `403 the caller does not have permission`, che è esattamente quello
+   che risponderebbe se la chiave fosse sbagliata: da quella frase non si
+   capisce quale delle due metà manca.
+
+**La pagina «Accesso API» non c'è più.** Per anni la strada passava di là —
+Impostazioni → Accesso API — e mezza internet la racconta ancora così, guide di
+Google comprese. Google l'ha tolta: adesso l'invito si fa da Utenti e
+autorizzazioni come per una persona. Chi la cerca nelle Impostazioni non la
+trova e pensa di avere sbagliato qualcosa; non ha sbagliato niente.
 
 Poi il JSON va in Settings → Secrets and variables → Actions → New repository
 secret, con nome `NEGOZIO_GOOGLE`. In chiaro o in base64, li prende tutti e
