@@ -498,6 +498,7 @@ class _HomeState extends State<Home> {
                            * dove le opzioni del ponte l'hanno accesa. */
                           Sezione.cruscotto => SchermataDelCruscotto(
                             dove: _cruscotto,
+                            visibile: _sezione == Sezione.cruscotto,
                           ),
                           _ => _InArrivo(sezione),
                         },

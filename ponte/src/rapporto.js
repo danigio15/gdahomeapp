@@ -241,7 +241,7 @@ export function compila({
  * le entita'. **Mezza rapporto e' un'informazione — anzi, quel giorno e' la
  * piu' importante che ci sia.**
  */
-export function fabbricaLaRapporto({
+export function fabbricaIlRapporto({
   identita,
   casa,
   ferro,

@@ -169,3 +169,31 @@ DashboardModern storage documents will include explicit version metadata and mig
 - Upgrade behavior is predictable.
 - Failed migrations can produce repair issues.
 - Future schema evolution can happen without abandoning existing user dashboards.
+
+## ADR-0009: The Installer's Sidebar Entry Is Told by the Add-on, Not Configured Here
+
+### Status
+
+Accepted
+
+### Context
+
+A professional installer who deploys gdahome across many homes runs their own Home Assistant. From it they need to reach the fleet dashboard (the *quadro*) that watches every installation they maintain.
+
+Two facts constrain the design. First, the switch that marks a Home Assistant as belonging to an installer already exists — it is the `installatore` option in the gdahome add-on — and the address of the fleet dashboard is already compiled into the add-on (`QUADRO_DI_DIFETTO` in `ponte/src/rapporto.js`). Second, this integration has no channel to either the Supervisor or the add-on: it cannot discover either value on its own.
+
+The privacy rule that forbids exposing an installer's client list inside a *client's* Home Assistant does not apply here. This is the installer's own instance.
+
+### Decision
+
+The add-on tells the integration, through a WebSocket command (`dashboardmodern/cruscotto/set`) carrying `installatore` and `dove`. The integration registers or removes a sidebar panel accordingly, and renders the existing fleet dashboard in an embedded frame rather than reimplementing it.
+
+The command is restricted to administrators and system-generated users (which is what an add-on is), because a sidebar entry is visible to everyone who signs in to that installation and it leads to someone's client list.
+
+### Consequences
+
+- One switch, in one place. Adding a second one in this integration's options would create two sources of truth that must be kept in agreement.
+- No dependency on the Supervisor API, so nothing breaks where the Supervisor is absent — which is also exactly where the add-on, and therefore the switch, cannot exist.
+- The add-on repeats the statement on every start and after the switch changes; the integration treats an identical statement as a no-op so an open panel is not reloaded underneath its reader.
+- The fleet rules — what makes an installation silent, when a commissioning is complete — stay in one place, on the quadro. A native reimplementation would make a third home for them, and three copies of the same rule eventually disagree.
+- The embedded page keeps its own browser storage partition, so the fleet key must be entered once inside Home Assistant as well. The panel says so, and always offers a link to open the dashboard outside the frame, because that storage may not persist at all in some browsers.

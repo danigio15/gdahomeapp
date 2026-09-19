@@ -22,7 +22,7 @@ import assert from "node:assert/strict";
 import {
   CodiceIllegibile,
   compila,
-  fabbricaLaRapporto,
+  fabbricaIlRapporto,
   leggiIlCodice,
   ogniQuanto,
   perchePreciso,
@@ -302,7 +302,7 @@ const ferroFinto = (detto) => ({ chiedi: async () => detto });
 
 test("la fabbrica mette insieme quello che c'e', e chiama ogni volta", async () => {
   let giri = 0;
-  const fabbrica = fabbricaLaRapporto({
+  const fabbrica = fabbricaIlRapporto({
     identita: { casa: "casa_abc", sale: "sale" },
     casa: {
       chiedi: async () => {
@@ -341,7 +341,7 @@ test("la fabbrica mette insieme quello che c'e', e chiama ogni volta", async () 
 });
 
 test("mezza rapporto e' meglio di nessuna, e quel giorno e' la piu' importante", async () => {
-  const fabbrica = fabbricaLaRapporto({
+  const fabbrica = fabbricaIlRapporto({
     identita: { casa: "casa_abc", sale: "sale" },
     /* Home Assistant giu': e' esattamente il giorno in cui l'installatore deve
      * ricevere qualcosa. */
@@ -364,7 +364,7 @@ test("mezza rapporto e' meglio di nessuna, e quel giorno e' la piu' importante",
 });
 
 test("gli aggiornamenti si contano per razza, e il firmware si vede a parte", async () => {
-  const fabbrica = fabbricaLaRapporto({
+  const fabbrica = fabbricaIlRapporto({
     identita: { casa: "casa_abc", sale: "s" },
     casa: { chiedi: async () => [] },
     ferro: ferroFinto(null),
@@ -405,7 +405,7 @@ test("gli aggiornamenti si contano per razza, e il firmware si vede a parte", as
 test("i telefoni: conta di piu' quanti si sono visti che quanti sono abbinati", async () => {
   const adesso = Date.parse("2026-09-18T09:00:00Z");
   const giorni = (quanti) => adesso - quanti * 24 * 60 * 60 * 1000;
-  const fabbrica = fabbricaLaRapporto({
+  const fabbrica = fabbricaIlRapporto({
     identita: { casa: "casa_abc", sale: "s" },
     casa: { chiedi: async () => [] },
     ferro: ferroFinto(null),

@@ -1065,7 +1065,7 @@ export class Commissioni {
         case "ponte/chat/stato":
           return si(id, chat.stato());
         /* Se questa casa e' di chi installa, e quindi se l'app deve disegnare
-         * la voce «Il mio cruscotto». Come per la console: a deciderlo e' il
+         * la voce «Cruscotto installatore». Come per la console: a deciderlo e' il
          * ponte, non l'app — e chi non e' installatore non vede una porta che
          * non si apre.
          *
