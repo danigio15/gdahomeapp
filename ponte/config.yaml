@@ -43,7 +43,7 @@ name: gdahome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.5.5.1"
+version: "1.5.6"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
@@ -187,6 +187,7 @@ options:
   quadro: ""
   # Ogni quanti minuti parte un rapporto. Da 1 a 1440.
   quadro_ogni: 1
+  registro: info
   # Questo Home Assistant e' di chi installa.
   #
   # Acceso, nella console di gdahome compare una sezione in piu' — **il tuo
@@ -236,7 +237,6 @@ options:
   # E' la stessa chiave messa fra i segreti del centralino, e non si inventa
   # qui: si copia da li'.
   chiave_console: ""
-  registro: info
 
 # Nello stesso ordine delle opzioni qui sopra, e non e' pignoleria: sono due
 # elenchi delle stesse dodici righe, e quando divergono si legge l'uno
@@ -253,6 +253,7 @@ schema:
   # a chi la sua casa sta parlando.
   quadro: str?
   quadro_ogni: int(1,1440)
+  registro: list(debug|info|attenzione|errore)
   installatore: bool
   # Le tre chiavi, tutte `password?`, e per gli stessi due motivi: Home
   # Assistant le nasconde mentre si scrivono e non le rimostra dopo, e il `?`
@@ -267,4 +268,3 @@ schema:
   chiave_cruscotto: password?
   chiave_gestione: password?
   chiave_console: password?
-  registro: list(debug|info|attenzione|errore)

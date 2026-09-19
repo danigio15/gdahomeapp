@@ -102,14 +102,6 @@ function doveSiamo(da, quanti = 60) {
   return { tetto: null, pannello };
 }
 
-/* Se Home Assistant e' in modifica, la barra resta.
- *
- * In modifica quella barra e' l'unico modo di uscirne — «Fatto» sta li'. Con la
- * matita nascosta in modifica non ci si entra piu' per sbaglio; chi ci entra
- * di proposito, dall'indirizzo, la barra ce la trova.
- *
- * Passando da una all'altra Home Assistant rifa' le tessere: questa si stacca e
- * si riattacca, e la domanda si rifa' da se' senza stare a guardare niente. */
 /* Il foglio che toglie la barra, messo dove va.
  *
  * Sta fuori da tutt'e due le tessere che la usano — la plancia e il riquadro —
@@ -134,6 +126,14 @@ function senzaLaBarra(da, config = {}) {
   return { messa: true, foglio };
 }
 
+/* Se Home Assistant e' in modifica, la barra resta.
+ *
+ * In modifica quella barra e' l'unico modo di uscirne — «Fatto» sta li'. Con la
+ * matita nascosta in modifica non ci si entra piu' per sbaglio; chi ci entra
+ * di proposito, dall'indirizzo, la barra ce la trova.
+ *
+ * Passando da una all'altra Home Assistant rifa' le tessere: questa si stacca e
+ * si riattacca, e la domanda si rifa' da se' senza stare a guardare niente. */
 function inModifica(tetto) {
   return tetto?.lovelace?.editMode === true;
 }
@@ -543,6 +543,25 @@ class RiquadroDiGdahome extends HTMLElement {
     this._barra = null;
   }
 
+  /* Il tasto che riapre il menu di Home Assistant.
+   *
+   * Togliendo la barra se ne va anche l'hamburger, e con lui l'unico modo di
+   * tornare indietro: la pagina dentro e' di un altro dominio e non ha nessuna
+   * voce che porti fuori. Chi entrava qui restava dentro, e per uscire doveva
+   * sapere di poter premere il tasto «indietro» del telefono.
+   *
+   * `hass-toggle-menu` e' l'evento che Home Assistant ascolta per aprire e
+   * chiudere la sua barra laterale: e' lo stesso che manda il suo hamburger, e
+   * non c'e' niente da imitare. `composed` perche' deve uscire dall'ombra di
+   * questa tessera, `bubbles` perche' deve salire fino a chi lo ascolta.
+   *
+   * Sta **sopra** il riquadro e non accanto: il riquadro prende tutta la
+   * pagina, e un tasto fuori vorrebbe dire una striscia vuota in cima — cioe'
+   * la barra che abbiamo appena tolto. */
+  _apriIlMenu() {
+    this.dispatchEvent(new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true }));
+  }
+
   _disegna() {
     const dove = this._config.dove || "";
     this.shadowRoot.innerHTML = `
@@ -550,8 +569,34 @@ class RiquadroDiGdahome extends HTMLElement {
         :host { display: block; height: 100%; }
         .tutto { position: relative; width: 100%; height: 100%; min-height: 60vh; }
         iframe { border: 0; width: 100%; height: 100%; display: block; }
+        /* Il tasto del menu: dove sta l'hamburger di Home Assistant, cosi' chi
+           lo cerca lo trova dove se lo aspetta. Gli env() del notch servono:
+           su un telefono se lo mangerebbe la tacca. */
+        .menu {
+          position: absolute;
+          top: calc(8px + env(safe-area-inset-top, 0px));
+          inset-inline-start: calc(8px + env(safe-area-inset-left, 0px));
+          width: 40px; height: 40px; padding: 0;
+          display: grid; place-items: center;
+          border: 0; border-radius: 50%; cursor: pointer;
+          /* I colori di Home Assistant, non i nostri: questo tasto e' suo. */
+          background: var(--card-background-color, rgba(255, 255, 255, 0.92));
+          color: var(--primary-text-color, #212121);
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+        }
+        .menu:hover { filter: brightness(0.95); }
+        .menu svg { width: 22px; height: 22px; display: block; }
       </style>
-      <div class="tutto"><iframe title="gdahome" allow="fullscreen"></iframe></div>`;
+      <div class="tutto">
+        <iframe title="gdahome" allow="fullscreen"></iframe>
+        <button type="button" class="menu" title="Il menu di Home Assistant"
+                aria-label="Apri il menu di Home Assistant">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+            <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" />
+          </svg>
+        </button>
+      </div>`;
+    this.shadowRoot.querySelector(".menu").addEventListener("click", () => this._apriIlMenu());
     /* L'indirizzo si mette dopo, come attributo: dentro il testo del modello
        finirebbe in mezzo all'HTML, e un indirizzo in mezzo all'HTML e' un
        indirizzo che prima o poi porta dentro qualcos'altro. */
