@@ -11,6 +11,29 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.5
+
+**Dall'app si aprono di nuovo il Cruscotto e la Gestione.** Non comparivano in
+nessuna casa, nemmeno dove l'interruttore c'era: la domanda che il telefono fa
+al ponte — «questa casa ha il cruscotto? ha la gestione?» — era scritta in
+mezzo ai comandi della chat, e lì quella domanda non arriva mai. Il ponte la
+riconosceva e poi rispondeva «non conosco»; l'app si sentiva dire di no e non
+disegnava niente. Non erano il telefono né le opzioni: era una risposta scritta
+in una stanza dove la domanda non entrava.
+
+**E la voce «Gestione» nell'app adesso c'è.** Non era rotta: non era mai stata
+fatta. Il ponte fabbrica da tempo la sua voce nella barra laterale di Home
+Assistant, e nel menu dell'app quella voce non c'era proprio. Compare dove
+compare quella — cioè solo dove c'è la chiave della gestione — e apre la stessa
+pagina, non una copia rifatta.
+
+**La barra in basso, su un tablet, non scrive più tutto accalcato.** Le regole
+di quella barra per gli schermi che si toccano sono scritte per un telefono: la
+linguetta si ferma a 72 punti e le voci si stringono a sinistra. Un tablet
+appeso al muro le prendeva uguali, e si vedeva il risultato — le scritte una
+addosso all'altra con mezza barra vuota a destra. Da 900 punti di larghezza in
+su adesso le voci si dividono la riga che c'è, e la scritta torna leggibile.
+
 ## 1.5.9.4
 
 **Nel cruscotto di chi installa, ogni aggiornamento ha la sua icona vera.**

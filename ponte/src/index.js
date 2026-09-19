@@ -168,6 +168,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     segnalazioni,
     chat,
     installatore: opzioni.installatore,
+    gestore: opzioni.gestore,
     spegnimento,
     aggiornamenti,
   });

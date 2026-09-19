@@ -1947,6 +1947,50 @@ nav.tabs.bottom-nav-bar .tab.active .text {
         white-space: nowrap !important;
     }
 }
+/* ─── Un tablet non e' un telefono largo ──────────────────────────────────
+ *
+ * Le regole qui sopra valgono per **ogni** schermo che si tocca, e sono
+ * scritte per un telefono: la linguetta si ferma a 72 punti, la scritta a 7,
+ * e la barra si impacca a sinistra. In 360 punti di larghezza, con tredici
+ * sezioni, non c'e' altro modo.
+ *
+ * Su un tablet appeso al muro quei 72 punti restano 72 lo stesso — la barra e'
+ * larga quanto lo schermo, avanza mezzo schermo vuoto a destra, e le voci
+ * stanno strette per niente. E' quello che si vede nella foto del tablet di
+ * casa: le scritte si toccano fra loro mentre a destra non c'e' nessuno.
+ *
+ * Da 900 punti in su, e solo su uno schermo alto abbastanza da non essere un
+ * telefono girato, il posto che c'e' glielo si lascia: le linguette crescono
+ * fino a riempire la riga invece di accalcarsi, il disegno torna della misura
+ * di prima e la scritta si legge. Il tetto si alza, non si toglie: quello che
+ * non ci sta si taglia sempre coi puntini. */
+@media (hover: none) and (pointer: coarse) and (min-width: 900px) and (min-height: 600px) {
+    nav.tabs.bottom-nav-bar {
+        gap: 6px !important;
+        padding: 8px 12px !important;
+        justify-content: space-evenly !important;
+    }
+
+    nav.tabs.bottom-nav-bar .tab {
+        /* Crescono: e' la riga intera che si divide fra loro, non un posto
+         * fisso ciascuna con l'avanzo lasciato li'. */
+        flex: 1 1 auto !important;
+        min-width: 72px !important;
+        max-width: 132px !important;
+        padding: 10px 10px !important;
+        gap: 6px !important;
+    }
+
+    nav.tabs.bottom-nav-bar .tab .icon {
+        font-size: 24px !important;
+    }
+
+    nav.tabs.bottom-nav-bar .tab .text {
+        font-size: 10px !important;
+        letter-spacing: 0.4px !important;
+    }
+}
+
 html.dm-touch-navigation nav.tabs.bottom-nav-bar {
     bottom: -120px !important;
     width: calc(100% - 20px) !important;

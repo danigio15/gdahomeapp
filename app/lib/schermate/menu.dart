@@ -59,6 +59,20 @@ enum Sezione {
    * non in casa di un cliente. Chi la voce ce l'ha lo decide il ponte, non
    * l'app — vedi `vociDellaBarra`. */
   cruscotto('macchine', pronta: true),
+  /* Chi **tiene** il quadro: gli installatori iscritti, le loro chiavi, i
+   * limiti. Come le due qui sopra non e' una voce come le altre — compare in
+   * una casa sola al mondo, quella che nelle opzioni del ponte ha la chiave
+   * della gestione — e chi la voce ce l'ha lo decide il ponte, non l'app.
+   *
+   * Mancava, e non era rotta: il ponte fabbrica gia' la sua voce nella barra
+   * di Home Assistant, e qui non c'era proprio.
+   *
+   * Il disegno e' quello delle **persone**, e non uno di chiave o di
+   * lucchetto: quella pagina non apre niente, tiene l'elenco di chi installa
+   * — nomi, limiti, chiavi da dare e da togliere — e la cosa che ci sta
+   * dentro sono le persone. Nella barra di Home Assistant la voce ha
+   * `mdi:account-key`, che e' la stessa cosa detta con quello che li' c'e'. */
+  gestione('persone', pronta: true),
   aiutanti('mie'),
   zigbee('runtime'),
   automazioni('azioni');
@@ -93,6 +107,7 @@ enum Sezione {
      * stessa parola sono peggio di due parole. «Fleet» dice quello che la
      * schermata mostra — tutti gli impianti insieme — in una parola sola. */
     Sezione.cruscotto => inLingua(it: 'Cruscotto', en: 'Fleet'),
+    Sezione.gestione => inLingua(it: 'Gestione', en: 'Manage'),
     Sezione.aiutanti => inLingua(it: 'Aiutanti', en: 'Helpers'),
     Sezione.zigbee => inLingua(it: 'Zigbee', en: 'Zigbee'),
     Sezione.automazioni => inLingua(it: 'Automazioni', en: 'Automations'),

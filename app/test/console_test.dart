@@ -15,6 +15,7 @@ import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/barra.dart';
 import 'package:gdahome/schermate/console.dart';
 import 'package:gdahome/schermate/menu.dart';
+import 'package:gdahome/vestito/oggetti.dart';
 
 import 'ponte/ponte_finto.dart';
 
@@ -81,6 +82,50 @@ void main() {
       vociDellaBarra(conIlCruscotto: true),
       isNot(contains(Sezione.console)),
     );
+  });
+
+  test('la voce Gestione c\'è solo dove si tiene il quadro', () {
+    /* La terza delle tre, e per un pezzo era l'unica che nell'app non c'era
+     * proprio: il ponte fabbricava già la sua voce nella barra di Home
+     * Assistant, e qui nessuno l'aveva mai scritta. Non era rotta: mancava. */
+    expect(vociDellaBarra(), isNot(contains(Sezione.gestione)));
+    expect(vociDellaBarra(conLaGestione: true), contains(Sezione.gestione));
+    expect(
+      vociDellaBarra(conLaGestione: true).length,
+      vociDellaBarra().length + 1,
+    );
+    /* Indipendente dalle altre due, come le altre due fra loro. */
+    expect(
+      vociDellaBarra(conIlCruscotto: true),
+      isNot(contains(Sezione.gestione)),
+    );
+    expect(
+      vociDellaBarra(conLaGestione: true),
+      isNot(contains(Sezione.cruscotto)),
+    );
+  });
+
+  test('ogni sezione ha il suo disegno, e nessuna ne divide uno', () {
+    /* Due voci vicine con lo stesso disegno sono due voci che si leggono
+     * uguali: nella barra il nome si legge, ma il disegno è quello che si
+     * riconosce prima. `gestione` era nata con quello della Console. */
+    final disegni = <String, Sezione>{};
+    for (final una in Sezione.values) {
+      final gia = disegni[una.disegno];
+      expect(
+        gia,
+        isNull,
+        reason: '${una.name} e ${gia?.name} hanno lo stesso disegno '
+            '«${una.disegno}»',
+      );
+      disegni[una.disegno] = una;
+      /* E deve esistere davvero: un disegno che non c'è lascia un buco. */
+      expect(
+        disegniDegliOggetti,
+        contains(una.disegno),
+        reason: 'il disegno «${una.disegno}» di ${una.name} non esiste',
+      );
+    }
   });
 
   testWidgets('la coda si vede, si apre un filo e si risponde', (tester) async {

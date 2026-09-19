@@ -88,6 +88,9 @@ class _HomeState extends State<Home> {
   /* Dove sta il cruscotto di chi installa, se questa casa e' la sua. Vuoto
    * vuol dire che non lo e', e la voce del menu non c'e'. */
   String _cruscotto = '';
+  /* E dove sta la gestione, per l'unica casa al mondo che tiene il quadro.
+   * Stessa regola: vuoto vuol dire che la voce non c'e'. */
+  String _gestione = '';
   String? _chiestoPer;
 
   /* Quanti aggiornamenti aspettano in casa.
@@ -172,12 +175,17 @@ class _HomeState extends State<Home> {
     if (_chiestoPer == quale) return;
     _chiestoPer = quale;
     final risponde = await LaConsole(filo).cE();
-    final cruscotto = await IlCruscotto(filo).dove();
+    /* Cruscotto e Gestione sono la stessa domanda fatta a chi la sa, e il
+     * ponte le risponde in un giro solo. */
+    final quadro = await IlCruscotto(filo).dove();
     if (!mounted) return;
-    if (risponde != _console || cruscotto != _cruscotto) {
+    if (risponde != _console ||
+        quadro.cruscotto != _cruscotto ||
+        quadro.gestione != _gestione) {
       setState(() {
         _console = risponde;
-        _cruscotto = cruscotto;
+        _cruscotto = quadro.cruscotto;
+        _gestione = quadro.gestione;
       });
     }
   }
@@ -500,6 +508,15 @@ class _HomeState extends State<Home> {
                             dove: _cruscotto,
                             visibile: _sezione == Sezione.cruscotto,
                           ),
+                          /* Chi tiene il quadro: la stessa schermata del
+                           * cruscotto, con un altro indirizzo dentro. La
+                           * pagina e' quella che esiste gia' sul quadro, e
+                           * rifarla qui vorrebbe dire un secondo posto dove
+                           * stanno le stesse regole. */
+                          Sezione.gestione => SchermataDelCruscotto(
+                            dove: _gestione,
+                            visibile: _sezione == Sezione.gestione,
+                          ),
                           _ => _InArrivo(sezione),
                         },
                       ),
@@ -512,6 +529,7 @@ class _HomeState extends State<Home> {
               sezioni: vociDellaBarra(
                 conLaConsole: _console,
                 conIlCruscotto: _cruscotto.isNotEmpty,
+                conLaGestione: _gestione.isNotEmpty,
               ),
               aperta: _sezione,
               daAggiornare: _daAggiornare,

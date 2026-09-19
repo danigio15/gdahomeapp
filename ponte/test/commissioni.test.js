@@ -1747,3 +1747,62 @@ test("il telefono può chiedere sul filo dove sta questa casa", async () => {
   assert.equal(inciampata.success, false);
   assert.equal(inciampata.error.code, "unknown_error");
 });
+
+test("il telefono chiede sul filo se questa casa ha il cruscotto, la gestione, o tutt'e due", async () => {
+  /* Sono due voci del menu dell'app, e a decidere se esistono e' il ponte: la
+   * chiave del cruscotto e quella della gestione stanno nelle sue opzioni, e
+   * l'app non ha modo di saperlo — ne' deve — prima di chiederglielo.
+   *
+   * La gestione qui mancava del tutto. Non era rotta: il ponte fabbricava
+   * gia' la sua voce nella barra laterale di Home Assistant, e sul filo
+   * quella domanda non c'era mai stata. Adesso e' una domanda sola per
+   * tutt'e due: sono la stessa cosa chiesta a chi la sa, e due giri sul filo
+   * per due campi sarebbero due giri. */
+  const nessuno = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
+  assert.equal(nessuno.riconosce({ type: "ponte/quadro/stato" }), true);
+  const niente = await nessuno.rispondi({ id: 1, type: "ponte/quadro/stato" });
+  assert.equal(niente.success, true);
+  assert.equal(niente.result.installatore, false);
+  assert.equal(niente.result.gestore, false);
+  /* E senza il posto dove andare: una porta che non si apre e' peggio di una
+   * porta che non c'e'. */
+  assert.equal(niente.result.dove, "");
+  assert.equal(niente.result.doveGestione, "");
+
+  /* Chi monta impianti: il cruscotto si', la gestione no. */
+  const chiInstalla = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    installatore: true,
+  });
+  const suo = await chiInstalla.rispondi({ id: 2, type: "ponte/quadro/stato" });
+  assert.equal(suo.result.installatore, true);
+  assert.match(suo.result.dove, /^https:\/\/.+\/console\/$/);
+  assert.equal(suo.result.gestore, false);
+  assert.equal(suo.result.doveGestione, "");
+
+  /* Chi tiene il quadro: la gestione si'. Sono due interruttori, non uno. */
+  const chiTiene = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    gestore: true,
+  });
+  const tenuta = await chiTiene.rispondi({ id: 3, type: "ponte/quadro/stato" });
+  assert.equal(tenuta.result.gestore, true);
+  assert.match(tenuta.result.doveGestione, /^https:\/\/.+\/gestore\/$/);
+  assert.equal(tenuta.result.installatore, false);
+  assert.equal(tenuta.result.dove, "");
+
+  /* E la casa che ha tutt'e due — quella di chi il quadro lo tiene e ci monta
+   * anche i suoi impianti — le vede tutt'e due. */
+  const tutt = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    installatore: true,
+    gestore: true,
+  });
+  const due = await tutt.rispondi({ id: 4, type: "ponte/quadro/stato" });
+  assert.equal(due.result.installatore, true);
+  assert.equal(due.result.gestore, true);
+  assert.notEqual(due.result.dove, due.result.doveGestione);
+});
