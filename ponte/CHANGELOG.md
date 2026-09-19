@@ -11,6 +11,24 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.7
+
+**Nella pagina Luci si accende dalla levetta, non da tutto il riquadro.** Prima
+la card era un tasto solo: il disegno, il nome, lo stato, i cartellini —
+dovunque si toccasse, la luce cambiava. Su una pagina di venti luci vuol dire
+accenderne una ogni volta che si scorre col dito, o che ci si avvicina per
+leggere quale sia quale.
+
+Adesso quello che accende è la levetta a destra, e basta: è già lei a dire se
+la luce è accesa, ed è lì che uno la cerca. Il resto della card si legge e si
+tocca senza conseguenze. Vale anche nella lista che si apre dalla tessera
+Luci — erano due disegni della stessa card, e sistemarne uno solo voleva dire
+il guasto che resta in metà dei posti.
+
+Resta com'era l'unica eccezione: una luce che si guarda e basta la levetta non
+ce l'ha proprio, e lì il corpo della card apre le informazioni. Mai accendere,
+mai spegnere.
+
 ## 1.5.9.6
 
 **Le icone degli aggiornamenti adesso arrivano davvero.** Nella 1.5.9.4 quel

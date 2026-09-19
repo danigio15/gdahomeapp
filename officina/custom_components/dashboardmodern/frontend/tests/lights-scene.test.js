@@ -164,3 +164,24 @@ test("the Luci tab accepts a switch and says what each light can do", () => {
   assert.match(editor, /entityInput\.addEventListener\("input", describe\)/);
   assert.match(editor, /root\.dmOpenLightControl\?\.\(clean\(entityInput\.value\)\)/);
 });
+
+test("nella lista si accende dal pallino, non da tutta la tessera", () => {
+  /* La stessa cosa della pagina Luci, qui nella lista che si apre dalla
+   * tessera: «non avere tutto il rettangolo completo che dove premi accende».
+   * Erano due disegni diversi della stessa card, e sistemarne uno solo voleva
+   * dire il guasto che resta in meta' dei posti. */
+  const html = renderLightsPopupMarkup([strip]);
+  assert.match(
+    html,
+    /<button[^>]*class="lgx-led[^"]*"[^>]*data-dm-light-toggle/s,
+    "il pallino non e' l'interruttore",
+  );
+  const corpo = html.slice(html.indexOf("dm-lightx-main"), html.indexOf("lgx-led"));
+  assert.ok(
+    !corpo.includes("data-dm-light-toggle"),
+    "il corpo della tessera accende ancora",
+  );
+  assert.match(html, /<div class="dm-lightx-main">/, "il corpo e' ancora un tasto");
+  /* E si chiama: chi la raggiunge senza vederla sa cos'e'. */
+  assert.match(html, /aria-label="Interruttore di Strip TV"/);
+});

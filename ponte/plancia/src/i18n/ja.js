@@ -2482,6 +2482,7 @@ export default Object.freeze({
   "Sweltering": "うだるような暑さ",
   "Swing": "ルーバー",
   "Switch (turns it on and off)": "スイッチ (入と切)",
+  "Switch for": "スイッチ:",
   "Switch, light or scene to control — popups do not need one": "操作するスイッチ・照明・シーン — ポップアップには不要です",
   "Switch, light, fan or input_boolean used by the On/Off button.": "オン/オフのボタンが使う switch・light・fan・input_boolean です。",
   "Switch-off": "自動消灯",

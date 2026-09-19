@@ -2482,6 +2482,7 @@ export default Object.freeze({
   "Sweltering": "Sufocante",
   "Swing": "Lâminas",
   "Switch (turns it on and off)": "Interruptor (liga e desliga)",
+  "Switch for": "Interruptor de",
   "Switch, light or scene to control — popups do not need one": "Interruptor, luz ou cena a comandar — as janelas não precisam de nenhum",
   "Switch, light, fan or input_boolean used by the On/Off button.": "switch, light, fan ou input_boolean usado pelo botão Ligar/Desligar.",
   "Switch-off": "Desligamento",

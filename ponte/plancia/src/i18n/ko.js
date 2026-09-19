@@ -2482,6 +2482,7 @@ export default Object.freeze({
   "Sweltering": "찌는 더위",
   "Swing": "바람 방향",
   "Switch (turns it on and off)": "스위치 (켜고 끔)",
+  "Switch for": "스위치:",
   "Switch, light or scene to control — popups do not need one": "제어할 스위치, 조명 또는 장면 — 팝업에는 필요 없습니다",
   "Switch, light, fan or input_boolean used by the On/Off button.": "켜기/끄기 버튼이 쓰는 switch, light, fan 또는 input_boolean입니다.",
   "Switch-off": "끄기",

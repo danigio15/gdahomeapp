@@ -138,3 +138,62 @@ test("da schermo largo il nome ci sta e le tessere riempiono la riga", async () 
   // E la fascia in alto smette di essere due bottoni lunghi mezzo metro.
   assert.match(desktop[0], /\.dm-lucip-bulk\{flex:0 1 560px\}/);
 });
+
+/* ─── Si accende dalla levetta, non da tutta la card ─────────────────────
+ *
+ * «Puoi ridurre sulla pulsanteria luci il riquadro di accensione limitando
+ * verso il pallino a destra e non avere tutto il rettangolo completo che dove
+ * premi accende?»
+ *
+ * Prima il corpo della card era un tasto solo: il disegno, il nome, lo stato,
+ * i cartellini. Dovunque si toccasse, la luce cambiava — e su una pagina di
+ * venti luci vuol dire accenderne una ogni volta che si scorre col dito o che
+ * ci si avvicina per leggere quale sia quale.
+ */
+
+test("si accende dalla levetta, e il resto della card non accende niente", () => {
+  const disegnata = pageCardMarkup(strip);
+  /* Quello che accende e' la levetta, ed e' un tasto vero. */
+  assert.match(
+    disegnata,
+    /<button[^>]*class="dm-lucip-led"[^>]*data-dm-lucip-toggle/s,
+    "la levetta non e' l'interruttore",
+  );
+  /* E il corpo non lo e' piu': niente `data-dm-lucip-toggle` addosso. */
+  const corpo = disegnata.slice(
+    disegnata.indexOf("dm-lucip-main"),
+    disegnata.indexOf("dm-lucip-led"),
+  );
+  assert.ok(
+    !corpo.includes("data-dm-lucip-toggle"),
+    "il corpo della card accende ancora: si accende una luce scorrendo la pagina",
+  );
+  assert.match(disegnata, /<div class="dm-lucip-main">/, "il corpo e' ancora un tasto");
+});
+
+test("la levetta si chiama sempre uguale, e lo stato lo dice aria-pressed", () => {
+  /* Un comando che cambia nome sotto il dito non e' un comando: la levetta si
+   * chiama «Interruttore di Strip TV» sempre, e quello che cambia e' se
+   * risulta premuta. */
+  assert.match(pageCardMarkup(strip), /aria-label="Interruttore di Strip TV"/);
+  assert.match(pageCardMarkup(strip), /aria-pressed="true"/);
+  assert.match(pageCardMarkup({ ...strip, on: false }), /aria-pressed="false"/);
+});
+
+test("una luce che si guarda e basta non ha la levetta, e il corpo apre le informazioni", () => {
+  /* L'eccezione che c'era gia' e resta: «puoi mettere un popup che apre piu'
+   * informazioni, ma mai accendere o spegnere». Senza levetta il corpo
+   * resterebbe muto, e la card non aprirebbe piu' niente. */
+  const bloccata = { ...strip, comandabile: false };
+  const disegnata = pageCardMarkup(bloccata);
+  assert.ok(!disegnata.includes("dm-lucip-led"), "una cosa che non si comanda ha la levetta");
+  assert.ok(
+    !disegnata.includes("data-dm-lucip-toggle"),
+    "si accende lo stesso, e il lucchetto non vale niente",
+  );
+  assert.match(
+    disegnata,
+    /<button[^>]*class="dm-lucip-main"[^>]*data-dm-lucip-open/s,
+    "il corpo non apre piu' niente: la card e' diventata muta",
+  );
+});
