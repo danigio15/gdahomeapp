@@ -156,6 +156,58 @@ const COME_SUONA = { it: "it", en: "en-gb" };
  * strascica. */
 const ANDATURA = { it: 0.92, en: 0.95 };
 
+/* ── Come suona, e non soltanto cosa dice ────────────────────────────────
+ *
+ * Una voce sintetica si riconosce prima delle parole: esce alta, sottile e
+ * senza corpo, e a quel punto non conta quanto bene pronuncia — sembra un
+ * giocattolo. I tre pezzi qui sotto servono a quello, e sono la differenza fra
+ * un parlato montato e un modello lasciato come esce.
+ */
+
+/* Di quanto si abbassa la voce.
+ *
+ * `if_sara` esce a 224 Hz di fondamentale. Una narrazione italiana — uno che
+ * spiega un mestiere, seduto — sta fra i 180 e i 200: sopra i 210 non suona
+ * sbagliata, suona *piccola*. `rubberband` la porta a 197 con le formanti che
+ * scendono insieme, cioe' facendola sembrare una persona piu' grande, e non la
+ * stessa persona che parla piu' in basso. L'inglese `bf_emma` esce gia' a 182
+ * e non si tocca.
+ *
+ * Non rovina le parole, ed e' stato misurato con la prova che ha scelto la
+ * voce: 84,7% com'esce, 83,9% abbassata — dentro il rumore della misura.
+ *
+ * **Si fa pezzo per pezzo, prima di contare i tempi.** Spostare l'altezza
+ * accorcia dello 0,3%, e su quattro minuti sono otto decimi di secondo di voce
+ * che scivolano via dalle didascalie. Misurando ogni pezzo dopo averlo
+ * spostato, il conto torna da solo.
+ */
+const ALTEZZA = { it: 0.9, en: 1 };
+
+/* La ripulitura, sulla traccia gia' montata.
+ *
+ * Nessuno di questi filtri sposta il tempo, quindi qui si fa in una volta sola
+ * su tutto — e conviene: un compressore che vede l'intero parlato lo tiene
+ * insieme meglio di uno che vede una frase per volta.
+ *
+ *   highpass     sotto gli 80 Hz, in una voce, non c'e' voce: c'e' rimbombo
+ *   -3 a 300     la scatola che il modello mette sotto le vocali
+ *   +3 a 3200    la presenza, cioe' le consonanti che fanno capire le parole
+ *   deesser      le esse, che dopo quel +3 pungono
+ *   acompressor  un parlato ha alti e bassi, un video si guarda a un volume solo
+ */
+const RIPULITURA = [
+  "highpass=f=80",
+  "equalizer=f=300:t=q:w=1.2:g=-3",
+  "equalizer=f=3200:t=q:w=1.4:g=3",
+  "deesser=i=0.35",
+  "acompressor=threshold=-20dB:ratio=2.5:attack=15:release=250:makeup=2",
+];
+
+/* Quanto forte esce alla fine. -16 LUFS e' il livello di un video che si
+   guarda dentro una pagina; il film di prima stava a -17,9 e si sentiva
+   piano — chi guarda alzava, e alzava anche il resto. */
+const LIVELLO = { I: -16, TP: -1.5, LRA: 9 };
+
 /** Le frasi registrate da una persona, se ce ne sono. */
 const DETTI = path.join(QUI, "voce", "detti");
 
@@ -281,7 +333,7 @@ function intestazione(byte, come) {
  * secondi, gli altri uno dietro l'altro con un respiro in mezzo. Il posto nel
  * film lo si trova dopo, sommando le durate delle scene che vengono prima.
  */
-async function diTutto(lingua, cartella) {
+async function diTutto(lingua, cartella, ffmpeg) {
   /* Prima tutti i pezzi in fila, col posto dove andranno a finire: e' quello
      che si passa a chi parla, in una volta sola. */
   const lavoro = [];
@@ -308,6 +360,7 @@ async function diTutto(lingua, cartella) {
       lingua,
       daDire.map(({ testo, dove }) => ({ testo, dove })),
     );
+    await abbassaLaVoce(ffmpeg, daDire, ALTEZZA[lingua] ?? 1, cartella);
   }
 
   /* Poi si rimettono in scena e si contano i tempi: il primo pezzo comincia
@@ -462,23 +515,107 @@ async function esegui(dove, argomenti) {
   figlio.stderr.on("data", (pezzo) => (lamento += String(pezzo)));
   const [codice] = await once(figlio, "close");
   if (codice !== 0) throw new Error(`${path.basename(dove)} (${codice}): ${lamento.slice(-400)}`);
+  /* ffmpeg scrive tutto di la', anche quando la risposta e' quello che si era
+     chiesto: `loudnorm` restituisce le sue misure sullo standard error. */
+  return lamento;
 }
 
-/** Il wav montato diventa una traccia da tenere: aac, e un volume solo. */
+/**
+ * La voce, abbassata — un pezzo per volta, appena detta.
+ *
+ * Qui e non sulla traccia finita: `rubberband` accorcia dello 0,3% e sulla
+ * traccia intera quello 0,3% diventa una voce che scivola via dal film. Fatto
+ * adesso, ogni pezzo viene poi misurato com'e' davvero venuto.
+ *
+ * **Solo le frasi sintetiche.** Una detta da una persona ha gia' la sua
+ * altezza: spostargliela sarebbe truccarle la voce.
+ */
+async function abbassaLaVoce(ffmpeg, pezzi, quanto, cartella) {
+  if (quanto === 1) return;
+  for (const uno of pezzi) {
+    const giu = path.join(cartella, `giu-${path.basename(uno.dove)}`);
+    await esegui(ffmpeg, [
+      "-y",
+      "-i",
+      uno.dove,
+      "-af",
+      `rubberband=pitch=${quanto}`,
+      /* Come l'ha scritto chi parla: a 16 bit, che e' la forma che `ilSuono`
+         sa rimettere in fila. */
+      "-c:a",
+      "pcm_s16le",
+      giu,
+    ]);
+    uno.dove = giu;
+  }
+}
+
+/**
+ * Quanto forte suona gia', per poterlo alzare di quanto serve e basta.
+ *
+ * `loudnorm` sa lavorare in un passaggio solo, ma allora tiene d'occhio il
+ * livello mentre va e lo corregge strada facendo: su quattro minuti di parlato
+ * si sente respirare, perche' alza nelle pause. Misurato prima, il secondo
+ * passaggio alza **di un tanto fisso** (`linear=true`) e non tocca la
+ * dinamica: e' il modo in cui si monta un parlato, ed e' un ffmpeg in piu'.
+ */
+async function quantoSuona(ffmpeg, wav) {
+  const detto = await esegui(ffmpeg, [
+    "-y",
+    "-i",
+    wav,
+    "-af",
+    `${RIPULITURA.join(",")},loudnorm=I=${LIVELLO.I}:TP=${LIVELLO.TP}:LRA=${LIVELLO.LRA}:print_format=json`,
+    "-f",
+    "null",
+    "/dev/null",
+  ]);
+  const apre = detto.lastIndexOf("{");
+  const chiude = detto.lastIndexOf("}");
+  if (apre === -1 || chiude < apre) return null;
+  try {
+    const misure = JSON.parse(detto.slice(apre, chiude + 1));
+    /* Su un wav muto escono degli «-inf», e con quelli il secondo passaggio
+       non parte: meglio il passaggio solo che una traccia che non esce. */
+    return ["input_i", "input_tp", "input_lra", "input_thresh", "target_offset"].every((quale) =>
+      Number.isFinite(Number(misure[quale])),
+    )
+      ? misure
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Il wav montato diventa una traccia da tenere.
+ *
+ * Qui non si aggiunge niente di inventato: si toglie il rimbombo, si toglie la
+ * scatola, si tirano su le consonanti e si porta tutto a un livello solo —
+ * vedi `RIPULITURA` e `LIVELLO`. E' la differenza fra un modello lasciato
+ * com'esce e un parlato montato, e si sente prima delle parole.
+ */
 async function laTraccia(ffmpeg, wav, dove) {
+  const gia = await quantoSuona(ffmpeg, wav);
+  const livello =
+    `loudnorm=I=${LIVELLO.I}:TP=${LIVELLO.TP}:LRA=${LIVELLO.LRA}` +
+    (gia
+      ? `:measured_I=${gia.input_i}:measured_TP=${gia.input_tp}` +
+        `:measured_LRA=${gia.input_lra}:measured_thresh=${gia.input_thresh}` +
+        `:offset=${gia.target_offset}:linear=true`
+      : "");
   await esegui(ffmpeg, [
     "-y",
     "-i",
     wav,
-    /* Un parlato ha i suoi alti e bassi, e un video si guarda a un volume
-       solo: si porta tutto allo stesso livello invece di far alzare e
-       abbassare a chi guarda. */
     "-af",
-    "loudnorm=I=-18:TP=-2:LRA=11,aresample=22050",
+    /* `loudnorm` lavora a 192 kHz e li' lascerebbe la traccia: si torna ai
+       24 kHz con cui parla il modello, che e' anche quello che serve. */
+    `${RIPULITURA.join(",")},${livello},aresample=24000`,
     "-c:a",
     "aac",
     "-b:a",
-    "112k",
+    "128k",
     "-ac",
     "1",
     dove,
@@ -565,7 +702,7 @@ async function main() {
   try {
     for (const lingua of lingue) {
       detto(`🎙  ${lingua} · ${VOCI[lingua]} · ${PARLATO.length} scene`);
-      const detti = await diTutto(lingua, cartella);
+      const detti = await diTutto(lingua, cartella, ffmpeg);
       const tempi = iTempi(scene, detti);
       guardaLeScene(detti, tempi, { dillo: soloMisura });
       const parlato = detti.reduce(

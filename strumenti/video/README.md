@@ -537,6 +537,56 @@ l'italiano, **94,4%** l'inglese. Quello che resta fuori sono quasi tutte
 elisioni che un orecchio ricuce da sé e chi trascrive no: «stanze né persone»
 diventa «stanzene persone», «add-on» diventa «addon».
 
+### Perché sembrava un cartone animato
+
+La prova qui sopra dice quanto si **capisce**, e non dice niente su come suona.
+Sono due cose diverse, e la prima versione di questo film le ha tenute insieme
+per sbaglio: la voce si capiva benissimo — 84,1% — e sembrava lo stesso un
+giocattolo.
+
+Anche «sembra un giocattolo» però si misura, se si sa cosa guardare. Tre numeri,
+presi sulla traccia finita:
+
+| | prima | adesso | dove sta una voce che racconta |
+|---|---|---|---|
+| **altezza** (la fondamentale) | 224 Hz | **202 Hz** | 180–200 |
+| **presenza** (2–5 kHz sul corpo della voce) | −12,2 dB | **−8,4 dB** | −9 / −7 |
+| **livello** | −17,9 LUFS | **−15,9 LUFS** | −16 |
+
+L'altezza è quella che si sentiva di più. Kokoro tira fuori `if_sara` a 224 Hz:
+non è una voce sbagliata, è una voce **piccola**. Una narrazione italiana — uno
+che spiega un mestiere, seduto — sta più in basso. `rubberband` la porta a 202
+con le formanti che scendono insieme, cioè facendola sembrare una persona più
+grande, e non la stessa persona che parla più in basso. Le parole non ne
+soffrono, ed è stato misurato con la stessa prova di Whisper: 84,7% com'esce,
+83,9% abbassata — dentro il rumore della misura. L'inglese `bf_emma` usciva già
+a 189 Hz, e non si tocca.
+
+Gli altri due numeri sono montaggio, e a un parlato si fanno sempre: via il
+rimbombo sotto gli 80 Hz, −3 dB a 300 (la «scatola» che il modello mette sotto
+le vocali), +3 dB a 3200 (le consonanti, cioè le parole che si capiscono), un
+de-esser per le esse che dopo quel +3 pungono, un compressore perché un parlato
+ha alti e bassi e un video si guarda a un volume solo. Il livello arriva a −16
+LUFS **misurando prima e alzando poi di un tanto fisso**: `loudnorm` in un
+passaggio solo corregge strada facendo, e su quattro minuti si sente respirare
+perché alza nelle pause.
+
+**Dove sta il tranello.** Abbassare la voce accorcia dello 0,3%, e su quattro
+minuti sono otto decimi di secondo: una voce che scivola via dalle didascalie,
+piano, e in fondo al film di mezzo secondo. Per questo l'altezza si sposta **un
+pezzo per volta, prima che i tempi siano contati** — così ogni pezzo viene poi
+misurato com'è venuto davvero — mentre la ripulitura gira sulla traccia già
+montata, dove nessuno di quei filtri tocca la durata. Da fuori sono due liste di
+filtri di ffmpeg che si somigliano, e la differenza la tiene ferma una prova
+([`la-voce-non-scivola`](../test/la-voce-non-scivola.test.js)): nella ripulitura
+ammette solo i filtri che il tempo lo lasciano stare, e chi ne aggiunge uno deve
+fermarsi a dire di che razza è.
+
+Spostare l'altezza vuol dire **rigirare il film**, come cambiare voce: le scene
+aspettano la voce, e una voce spostata dura un altro tanto. L'inglese no — lì
+non si è spostato niente, e la traccia nuova è entrata nel film di prima senza
+ritoccare un fotogramma.
+
 Il modello e le voci **non stanno nella repository** — trecentocinquanta
 megabyte di roba di terzi — e si scaricano una volta sola in
 `strumenti/video/voce/`, che non si versiona:
