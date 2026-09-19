@@ -270,7 +270,7 @@ scena(
   (q) => `
   ${cartello("4", t("L'elenco", "The list"), t("quante case ti chiedono qualcosa adesso", "how many homes need you right now"))}
   <div class="corpo sovrapposti">
-    ${schermo("quadro-elenco", { largo: 740, classe: "cr via", stile: `--t:.4s;--t2:${q(1, 5) - 0.3}s` })}
+    ${schermo("quadro-elenco", { largo: 740, classe: "cr-cc via", stile: `--t:.4s;--t2:${q(1, 5) - 0.3}s` })}
     ${ritaglio({
       foto: "quadro-elenco",
       x: 100,
@@ -338,7 +338,7 @@ scena(
   (q) => `
   ${cartello("6", t("Dentro una casa", "Inside one home"), t("la macchina, la rete, gli add-on, la salute", "the machine, the network, the add-ons, the health"))}
   <div class="corpo sovrapposti">
-    ${schermo("quadro-come-sta", { largo: 740, classe: "cr via", stile: `--t:.4s;--t2:${q(1, 5.4) - 0.3}s` })}
+    ${schermo("quadro-come-sta", { largo: 740, classe: "cr-cc via", stile: `--t:.4s;--t2:${q(1, 5.4) - 0.3}s` })}
     ${ritaglio({
       foto: "quadro-dispositivi",
       x: 536,
@@ -404,7 +404,7 @@ scena(
   (q) => `
   ${cartello("8", t("Aggiornare da lontano", "Updating from afar"), t("un gesto invece di quaranta", "one gesture instead of forty"))}
   <div class="corpo sovrapposti">
-    ${schermo("quadro-aggiornamenti", { largo: 740, classe: "cr via", stile: `--t:.4s;--t2:${q(1, 5.2) - 0.3}s` })}
+    ${schermo("quadro-aggiornamenti", { largo: 740, classe: "cr-cc via", stile: `--t:.4s;--t2:${q(1, 5.2) - 0.3}s` })}
     ${ritaglio({
       foto: "quadro-controlli",
       x: 530,

@@ -8,7 +8,7 @@ fatti dalla stessa pagina web e dalla stessa cartella:
 | `gdahome-presentazione` | 1280×720 | 2:49 | quello che spiega: cos'è, come si installa l'add-on, come si abbina il telefono, quanto costa (niente) |
 | `gdahome-facebook` | 1080×1080 | 0:47 | il quadrato per il feed di Facebook |
 | `gdahome-tiktok` | 1080×1920 | 0:47 | lo stesso, in piedi, per TikTok — e per Reels e Storie |
-| `gdahome-quadro` | 1280×720 | 4:14 · 4:08 | **il quadro**, ed è l'unico **parlato**: cosa vede chi ha montato l'impianto quando gli si danno in gestione le case, e cosa da lì non vede |
+| `gdahome-quadro` | 1280×720 | 4:00 · 3:44 | **il quadro**, ed è l'unico **parlato**: cosa vede chi ha montato l'impianto quando gli si danno in gestione le case, e cosa da lì non vede |
 
 I primi tre parlano a chi abita una casa. Il quarto parla a chi ne segue
 quaranta, e per questo dice due cose che negli altri non ci sono: cosa si legge
@@ -129,10 +129,10 @@ mentre va.
 | `presentazione.html` + `scene.js` | il film lungo: quindici scene, disposte a coordinate |
 | `social.html` + `social.js` | il film corto: sette scene, disposte **a colonna** |
 | `quadro.html` + `quadro.js` | il film del quadro: quattordici scene, con dentro le fotografie della console vera |
-| `parlato.js` + `voce.mjs` | il copione parlato del film del quadro, e chi lo dice: sintetizza, monta la traccia e la attacca al film |
+| `parlato.js` + `voce.mjs` + `dillo.py` | il copione parlato del film del quadro, e chi lo dice: `dillo.py` fa i suoni, `voce.mjs` monta la traccia e la attacca al film |
 | `parlato-tempi.json` | quanto dura ogni scena e quando arriva ogni frase, nelle due lingue. **Lo scrive `voce.mjs`**, e `quadro.js` lo legge |
-| `voce-quadro.m4a` (e `-en`) | le due tracce parlate, che stanno qui apposta: così il film si rifà senza piper |
-| `voce/` | piper e le due voci, ottanta megabyte di roba di terzi; non sta nella repository |
+| `voce-quadro.m4a` (e `-en`) | le due tracce parlate, che stanno qui apposta: così il film si rifà senza il modello della voce |
+| `voce/` | il modello della voce e la busta delle voci, trecentocinquanta megabyte di roba di terzi; non sta nella repository |
 | `copertine.html` + `copertine.js` | le copertine di Facebook e l'immagine del profilo, ferme |
 | `plancia-vera.mjs` + `casa-finta.js` | fotografano **la plancia vera**, quella di `ponte/plancia/` |
 | `quadro-vero.mjs` + `flotta-finta.js` | fotografano **il quadro vero**, quello di `quadro/console/` |
@@ -201,6 +201,13 @@ documento — perché messi in fila si rimpicciolirebbero a vicenda. A separarli
 il tempo, non lo spazio: il primo se ne va (`via`) un attimo prima che arrivi il
 secondo, e chi guarda ha appena visto dove sta il pezzo che gli si sta
 ingrandendo davanti.
+
+> **Chi sta in mezzo non usa `cr`.** Quei due pezzi stanno in mezzo con un
+> `translate(-50%, -50%)`, e `cr` porta uno `scale` che lo **cancella**: lo
+> schermo finiva col suo angolo in alto a sinistra nel centro del palco,
+> sbordava a destra e copriva la didascalia — e il difetto si vede solo
+> guardando un fotogramma, perché la scena «funziona». Si usa `cr-cc`, che è
+> `cresci` con dentro il mezzo; se deve anche andarsene, `cr-cc via`.
 
 Le coordinate dei ritagli sono quelle **della fotografia** — 1440 punti di
 larghezza, la misura dello schermo che l'ha scattata — e non quelle del palco:
@@ -421,7 +428,7 @@ in inglese accanto come in `t("…", "…")` — e la voce la monta
 
 **La scena aspetta la voce.** La durata scritta in `quadro.js` è il minimo: se
 il parlato di quella scena dura di più, la scena si allunga fino a quando ha
-finito. Per questo l'italiano dura 4:14 e l'inglese 4:08 — la stessa frase nelle
+finito. Per questo l'italiano dura 4:00 e l'inglese 3:44 — la stessa frase nelle
 due lingue non dura uguale, e allungare l'italiano per far tornare i conti
 vorrebbe dire quattordici pause finte. E per lo stesso motivo **le didascalie
 arrivano con la frase che le dice**: i tempi li misura `voce.mjs` e li lascia in
@@ -442,30 +449,76 @@ il terzo non serve. Se invece il copione è cambiato, `voce.mjs` guarda quanto
 dura il film che trova, vede che è stato girato con altre parole e lo dice
 invece di attaccare una voce storta.
 
-**La voce è una macchina, e va detto.** La fa [piper](https://github.com/rhasspy/piper),
-che gira qui e non chiama nessuno: nessun servizio, nessuna chiave, nessuna
-riga di testo che esce da questa macchina. Non è una scelta di bellezza — una
-voce sintetica si sente che è sintetica — è che una registrata invecchia
-peggio: cambi una riga del copione e va rifatta tutta la sessione, mentre qui
-si cambia la riga e si rilancia. Il giorno che qualcuno registra la sua,
-bastano due file: si sostituiscono `voce-quadro.m4a` e `voce-quadro-en.m4a` e
-si rifà `--attacca`, senza toccare una riga di programma.
+**Cambiare voce vuol dire rigirare il film.** Non è una svista: la scena aspetta
+la voce, e una voce che legge più svelta fa scene più corte. Quindi si cambia
+`VOCI` in `voce.mjs` e si rifanno tutti e tre i comandi, non solo il terzo — che
+è una decina di minuti, quasi tutti di ripresa.
 
-Piper e le due voci **non stanno nella repository** — sono ottanta megabyte di
-roba di terzi — e si scaricano una volta sola in `strumenti/video/voce/`, che
-non si versiona:
+**La voce è una macchina, e va detto.** La fa
+[Kokoro](https://github.com/thewh1teagle/kokoro-onnx), un modello che gira qui
+e non chiama nessuno: nessun servizio, nessuna chiave, nessuna riga di testo
+che esce da questa macchina. A farlo parlare è [`dillo.py`](dillo.py), l'unico
+pezzo in Python di questa cartella — la libreria che sa caricare quel modello è
+Python, e riscriverla non è il mestiere di un film. Non è una scelta di
+bellezza: una voce sintetica si sente che è sintetica. È che una registrata
+invecchia peggio — cambi una riga del copione e va rifatta tutta la sessione —
+mentre qui si cambia la riga e si rilancia. Il giorno che qualcuno registra la
+sua, bastano due file: si sostituiscono `voce-quadro.m4a` e
+`voce-quadro-en.m4a` e si rifà `--attacca`, senza toccare una riga di
+programma.
+
+### Come si sceglie una voce senza poterla ascoltare
+
+Prima c'era piper, con la sua unica voce italiana: la più piccola, sedici
+kilohertz. **Si sentiva.** Ma «si sentiva» non è una misura, e chi ha montato
+questa voce non poteva ascoltarla — quindi è servito un modo di giudicarla che
+non fosse l'orecchio.
+
+Il modo è questo: si sintetizza una frase del copione, la si fa **riascoltare a
+un programma che trascrive** (Whisper, che gira qui come il resto), e si contano
+le parole che tornano. Non dice niente sul timbro — quello lo sceglie chi ha
+orecchie — ma dice tutto su quanto si capisce, che è la metà che conta di più in
+un video che spiega.
+
+Su sei frasi di questo copione, misurate nello stesso modo:
+
+| voce | parole che tornano |
+|---|---|
+| piper `it-riccardo_fasol-x-low` | 64,2% |
+| Kokoro `im_nicola` | 82,8% |
+| Kokoro `if_sara` | **83,8%** |
+
+E gli errori di piper dicevano cosa stava succedendo: «il quadro» diventava «il
+quarro», «un installatore» diventava «un install a torre», «Home Assistant
+resta indietro» diventava «un assisto entreste indietro». La stessa prova ha
+scelto anche **quanto andare piano** — 0,92 fa capire il 4% di parole in più
+dell'andatura normale, e 0,85 torna a peggiorare — e le riscritture di
+[`COME_SI_DICE`](parlato.js): «offlain» è passata, «zigbì» e «bàckup» sono state
+scartate perché si capivano **meno** di come erano scritte.
+
+Per l'inglese, fra quattro voci provate allo stesso modo, `bf_emma` ha fatto
+92,9% contro 90,9, 90,3 e 90,3.
+
+E la prova si rifà su **tutto** il copione, non su sei frasi: quarantuno frasi
+per lingua, che è la misura con cui si è chiuso il lavoro — **84,1%**
+l'italiano, **94,5%** l'inglese. Quello che resta fuori sono quasi tutte
+elisioni che un orecchio ricuce da sé e chi trascrive no: «stanze né persone»
+diventa «stanzene persone», «add-on» diventa «addon».
+
+Il modello e le voci **non stanno nella repository** — trecentocinquanta
+megabyte di roba di terzi — e si scaricano una volta sola in
+`strumenti/video/voce/`, che non si versiona:
 
 ```
 mkdir -p strumenti/video/voce && cd strumenti/video/voce
-curl -sSL -o piper.tar.gz https://github.com/rhasspy/piper/releases/download/v1.2.0/piper_amd64.tar.gz
-curl -sSL -o it.tar.gz    https://github.com/rhasspy/piper/releases/download/v0.0.2/voice-it-riccardo_fasol-x-low.tar.gz
-curl -sSL -o en.tar.gz    https://github.com/rhasspy/piper/releases/download/v0.0.2/voice-en-us-lessac-medium.tar.gz
-for f in *.tar.gz; do tar xzf "$f"; done
+curl -sSL -O https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx
+curl -sSL -O https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
+pip install kokoro-onnx soundfile
 ```
 
-Le **tracce** invece ci stanno, un mega in due: così chi rifà il film non ha
-bisogno di piper — `--attacca` le riattacca e basta — e chi cambia una parola
-del copione se ne accorge subito, perché il file cambia.
+Le **tracce** invece ci stanno: così chi rifà il film non ha bisogno né del
+modello né di Python — `--attacca` le riattacca e basta — e chi cambia una
+parola del copione se ne accorge subito, perché il file cambia.
 
 ## Cambiare le parole
 

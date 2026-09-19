@@ -12,7 +12,7 @@ una macchina vera.
 Sessantacinque prove qui dentro; il progetto intero ne conta più di settecento.
 Per accenderlo, [qui sotto](#accenderlo). Manca solo il record DNS.
 
-**C'è un video**, parlato, di poco più di quattro minuti: fa vedere tutto
+**C'è un video**, parlato, di quattro minuti: fa vedere tutto
 questo a chi installa — come entra una casa, l'elenco, i dieci controlli, la
 scheda di un impianto, gli aggiornamenti da lontano — e, con lo stesso peso,
 **cosa da lì non si vede**. Gli schermi non sono ricostruzioni: sono fotografie

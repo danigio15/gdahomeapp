@@ -35,6 +35,29 @@
  * i pezzi sono tre apposta, uno per riga.
  */
 
+/* ── Le parole che non si leggono come sono scritte ───────────────────────
+ *
+ * Quello che dice la voce esce da qui, e qui sopra le frasi sono scritte come
+ * si scrivono — e' un copione, lo legge una persona. Una parola pero' non
+ * sempre si **dice** come si scrive: chi fa i suoni legge con le regole
+ * dell'italiano, e su una parola che italiana non e' sbaglia.
+ *
+ * «Offline» era il caso: letto all'italiana usciva spezzato in due, «of
+ * lain». Scritto «offlain» torna una parola sola.
+ *
+ * La regola per aggiungerne una e' la stessa che ha trovato questa: si
+ * sintetizza la frase, la si fa riascoltare a un programma che trascrive, e si
+ * guarda cosa ha capito. Senza quella prova si mette una storpiatura al posto
+ * di un'altra — provate e scartate, in questo copione, «zigbì» per Zigbee e
+ * «bàckup» per backup: si capivano **meno** di come erano scritte.
+ *
+ * Vale solo per l'italiano: in inglese quelle parole sono a casa loro.
+ */
+export const COME_SI_DICE = {
+  it: [["offline", "offlain"]],
+  en: [],
+};
+
 /** Quanto respiro fra un pezzo e il prossimo, dentro la stessa scena. */
 export const RESPIRO = 0.45;
 
@@ -47,7 +70,7 @@ export const PARLATO = [
     dopo: 0.8,
     pezzi: [
       {
-        it: "Un installatore mette gdahome in quaranta case. Dopo la consegna, adesso, come stanno?",
+        it: "Un installatore mette gdahome in quaranta case. Dopo la consegna, come stanno?",
         en: "An installer puts gdahome in forty homes. After handover — right now — how are they doing?",
       },
       {
@@ -83,7 +106,7 @@ export const PARLATO = [
         en: "The panel answers one question: that system, right now — how is it?",
       },
       {
-        it: "Tre stati, e ognuno porta una forma, una parola e un colore.",
+        it: "Tre stati, e ognuno ha una forma, una parola e un colore.",
         en: "Three states, and each carries a shape, a word and a colour.",
       },
       {
@@ -169,7 +192,7 @@ export const PARLATO = [
         en: "Disk life: an eMMC has a number of writes and then it's done. Watching it climb means replacing it when you choose.",
       },
       {
-        it: "La tacca a settantacinque gradi: sopra, la casa non si rompe: diventa lenta.",
+        it: "La tacca a settantacinque gradi. Sopra, la casa non si rompe: diventa lenta.",
         en: "The mark at seventy-five degrees: above it the home doesn't break, it gets slow.",
       },
       {

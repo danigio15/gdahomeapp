@@ -18,43 +18,63 @@
  *
  * ─── La voce e' una macchina, ed e' scritto ──────────────────────────────
  *
- * Non c'e' nessuno in questo progetto che registri due minuti di italiano
+ * Non c'e' nessuno in questo progetto che registri quattro minuti di italiano
  * senza rifarli venti volte, e una voce registrata male invecchia peggio di
  * una sintetica: cambia una riga del copione e va rifatta tutta la sessione.
  * Qui invece si cambia la riga in `parlato.js` e si rilancia.
  *
- * La fa **piper**, che gira in casa e non chiama nessuno: nessun servizio,
- * nessuna chiave, nessuna riga di testo che esce da questa macchina. Il giorno
- * che qualcuno registra la sua voce, le tracce si sostituiscono e il film si
- * rifa' con `--attacca` senza toccare una riga di programma.
+ * La dice **Kokoro**, un modello che gira in casa e non chiama nessuno:
+ * nessun servizio, nessuna chiave, nessuna riga di testo che esce da questa
+ * macchina. A farlo parlare e' `dillo.py`, che e' l'unico pezzo in Python di
+ * questa cartella — la libreria che sa caricare quel modello e' Python, e
+ * riscriverla non e' il mestiere di un film.
+ *
+ * Prima era piper, e per l'italiano la sua unica voce: la piu' piccola,
+ * sedici kilohertz. **Si sentiva** — ma «si sentiva» non e' una misura, e chi
+ * ha montato questa voce non poteva ascoltarla. Quindi e' servito un modo di
+ * giudicarla che non fosse l'orecchio: si sintetizza una frase del copione, la
+ * si fa **riascoltare a un programma che trascrive**, e si contano le parole
+ * che tornano. Su sei frasi di prova piper ne faceva capire il 64,2% e Kokoro
+ * l'83,8%; su tutto il copione — quarantuno frasi — Kokoro sta all'84,1% in
+ * italiano e al 94,5% in inglese. Gli errori di piper dicevano cosa stava
+ * succedendo: «il quadro» diventava «il quarro», «un installatore» diventava
+ * «un install a torre». Non dice niente sul timbro, che non si misura: dice
+ * quanto si capisce, che e' la meta' che conta di piu'.
+ *
+ * La stessa prova ha scelto **quale voce** (`VOCI`), **quanto andare piano**
+ * (`ANDATURA`) e **come si dicono le parole che italiane non sono**
+ * (`COME_SI_DICE`, in `parlato.js`). Come si rifa' sta nel README, in «Come si
+ * sceglie una voce senza poterla ascoltare».
+ *
+ * Il giorno che qualcuno registra la sua voce, le tracce si sostituiscono e il
+ * film si rifa' con `--attacca` senza toccare una riga di programma.
  *
  * ─── Cosa serve, e dove si prende ────────────────────────────────────────
  *
- * Piper e due voci, che non stanno nella repository: sono ottanta megabyte di
- * roba di terzi, e si scaricano una volta.
+ * Il modello e le voci, che non stanno nella repository: sono trecentocinquanta
+ * megabyte di roba di terzi, e si scaricano una volta.
  *
  *   mkdir -p strumenti/video/voce && cd strumenti/video/voce
- *   curl -sSL -o piper.tar.gz https://github.com/rhasspy/piper/releases/download/v1.2.0/piper_amd64.tar.gz
- *   curl -sSL -o it.tar.gz    https://github.com/rhasspy/piper/releases/download/v0.0.2/voice-it-riccardo_fasol-x-low.tar.gz
- *   curl -sSL -o en.tar.gz    https://github.com/rhasspy/piper/releases/download/v0.0.2/voice-en-us-lessac-medium.tar.gz
- *   for f in *.tar.gz; do tar xzf "$f"; done
+ *   curl -sSL -O https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx
+ *   curl -sSL -O https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
+ *   pip install kokoro-onnx soundfile
  *
  * Quella cartella non si versiona (`.gitignore`). Chi ce l'ha altrove lo dice
- * con `PIPER`, `PIPER_VOCE_IT` e `PIPER_VOCE_EN`.
+ * con `KOKORO_MODELLO` e `KOKORO_VOCI`.
  *
  * Le tracce invece **stanno** nella repository — `voce-quadro.m4a` e
- * `voce-quadro-en.m4a`, un mega in due — cosi' chi rifa' il film non ha
- * bisogno di piper: `--attacca` le riattacca e basta.
+ * `voce-quadro-en.m4a` — cosi' chi rifa' il film non ha bisogno ne' del
+ * modello ne' di Python: `--attacca` le riattacca e basta.
  */
 
 import { execFileSync, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile, rename } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile, rename } from "node:fs/promises";
 import { once } from "node:events";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { CODA, PARLATO, RESPIRO } from "./parlato.js";
+import { CODA, COME_SI_DICE, PARLATO, RESPIRO } from "./parlato.js";
 
 const QUI = path.dirname(fileURLToPath(import.meta.url));
 const LINGUE = ["it", "en"];
@@ -86,74 +106,85 @@ async function leScene() {
   return trovate;
 }
 
-/* ── Piper, e le due voci ─────────────────────────────────────────────── */
+/* ── Chi parla ────────────────────────────────────────────────────────── */
 
-function trovaPiper() {
-  const suo = process.env.PIPER;
-  if (suo && existsSync(suo)) return suo;
-  const vicino = path.join(QUI, "voce", "piper", "piper");
-  if (existsSync(vicino)) return vicino;
-  try {
-    const inCammino = execFileSync("sh", ["-c", "command -v piper"], { encoding: "utf8" }).trim();
-    if (inCammino) return inCammino;
-  } catch {
-    /* niente in PATH */
-  }
-  throw new Error(
-    "piper non c'e'. Si scarica una volta sola: vedi le istruzioni in cima a questo file,\n" +
-      "oppure dillo con PIPER=/dove/sta/piper.",
-  );
-}
+/* Una voce per lingua, e sono quelle che si capiscono di piu'.
+ *
+ * Non e' un gusto, ed e' l'unico modo che ha chi non puo' ascoltare: si
+ * sintetizzano le frasi del copione, si fanno riascoltare a un programma che
+ * trascrive, e si contano le parole che tornano. Fra le due voci italiane e'
+ * finita 83,8 a 82,8 per `if_sara`; fra le quattro inglesi provate, `bf_emma`
+ * ha fatto 92,9 contro 90,9, 90,3 e 90,3. Sono differenze piccole — il timbro
+ * lo sceglie chi ha orecchie — ma la misura c'era, e si e' seguita.
+ */
+const VOCI = { it: "if_sara", en: "bf_emma" };
 
-async function trovaLaVoce(lingua) {
-  const sua = process.env[lingua === "it" ? "PIPER_VOCE_IT" : "PIPER_VOCE_EN"];
-  if (sua && existsSync(sua)) return sua;
-  const dove = path.join(QUI, "voce");
-  if (existsSync(dove)) {
-    /* `it-…x-low.onnx` e `en-us-…​.onnx`: si riconoscono dal principio del nome. */
-    const quali = (await readdir(dove)).filter(
-      (nome) => nome.endsWith(".onnx") && nome.startsWith(`${lingua}-`),
+/* Con che lingua si fanno i suoni. La voce inglese del film e' inglese
+   d'Inghilterra, e dirglielo cambia le vocali. */
+const COME_SUONA = { it: "it", en: "en-gb" };
+
+/* Quanto si legge piano.
+ *
+ * Uno che spiega un mestiere non corre, e il modello di serie corre. Quanto
+ * rallentarlo non e' a occhio: provate tre andature con la stessa prova delle
+ * voci, 0,92 fa capire il 4% di parole in piu' dell'uno, e 0,85 torna a
+ * peggiorare. Rallentare aiuta fino a un certo punto, e oltre quel punto
+ * strascica. */
+const ANDATURA = { it: 0.92, en: 0.95 };
+
+function serveIlModello() {
+  for (const [nome, variabile] of [
+    ["kokoro-v1.0.onnx", "KOKORO_MODELLO"],
+    ["voices-v1.0.bin", "KOKORO_VOCI"],
+  ]) {
+    const suo = process.env[variabile];
+    if (suo && existsSync(suo)) continue;
+    if (existsSync(path.join(QUI, "voce", nome))) continue;
+    throw new Error(
+      `manca ${nome}: si scarica una volta sola in strumenti/video/voce/ — le istruzioni\n` +
+        `sono in cima a questo file — oppure si dice dove sta con ${variabile}.`,
     );
-    if (quali.length) return path.join(dove, quali.sort()[0]);
   }
-  throw new Error(
-    `la voce ${lingua} non c'e' in strumenti/video/voce/: vedi le istruzioni in cima a questo file.`,
-  );
 }
 
-/* ── Il parlato, un pezzo per volta ───────────────────────────────────── */
+/* ── Il parlato, tutto in una volta ───────────────────────────────────── */
 
-/* Quanto si legge piano. Uno che spiega un mestiere non corre, e la voce di
-   serie corre: un filo piu' lenta, e un respiro piu' lungo fra una frase e
-   l'altra, e quello che si sente somiglia a una persona che racconta. */
-const ANDATURA = "1.06";
-const RESPIRO_DI_FRASE = "0.35";
-
-async function diLo(piper, voce, testo, dove) {
-  /* Piper legge la frase dallo standard input e scrive il wav dove gli si
-     dice. Una frase per volta, e non tutte insieme separate da un a capo:
-     cosi' di ognuna si sa quanto dura, ed e' quello che serve per metterle al
-     loro posto nel film. */
-  const figlio = spawn(
-    piper,
-    [
-      "--model",
-      voce,
-      "--length_scale",
-      ANDATURA,
-      "--sentence_silence",
-      RESPIRO_DI_FRASE,
-      "--output_file",
-      dove,
-    ],
-    { stdio: ["pipe", "ignore", "pipe"] },
+/** Il testo come va **detto**: vedi `COME_SI_DICE` in `parlato.js`. */
+const comeSiDice = (testo, lingua) =>
+  (COME_SI_DICE[lingua] ?? []).reduce(
+    (detto, [scritto, come]) =>
+      detto.replace(new RegExp(`\\b${scritto}\\b`, "gi"), (trovata) =>
+        trovata[0] === trovata[0].toUpperCase() ? come[0].toUpperCase() + come.slice(1) : come,
+      ),
+    testo,
   );
+
+/**
+ * Tutte le frasi di una lingua, dette in una volta sola.
+ *
+ * Si chiama `dillo.py` — vedi in cima — e gli si passa tutto il lavoro in un
+ * JSON: caricare il modello costa un paio di secondi, e caricarlo trenta volte
+ * sarebbe un minuto buttato a ogni ripresa.
+ */
+async function fallePronunciare(lingua, pezzi) {
+  const figlio = spawn("python3", [path.join(QUI, "dillo.py")], {
+    stdio: ["pipe", "pipe", "pipe"],
+  });
+  let detto = "";
   let lamento = "";
+  figlio.stdout.on("data", (pezzo) => (detto += String(pezzo)));
   figlio.stderr.on("data", (pezzo) => (lamento += String(pezzo)));
-  figlio.stdin.end(`${testo}\n`);
+  figlio.stdin.end(
+    JSON.stringify({
+      voce: VOCI[lingua],
+      lingua: COME_SUONA[lingua],
+      andatura: ANDATURA[lingua],
+      pezzi,
+    }),
+  );
   const [codice] = await once(figlio, "close");
-  if (codice !== 0) throw new Error(`piper (${codice}): ${lamento.slice(-400)}`);
-  return dove;
+  if (codice !== 0) throw new Error(`dillo.py (${codice}): ${lamento.trim().slice(-500)}`);
+  return JSON.parse(detto);
 }
 
 /* ── Un wav, letto e rimesso insieme ──────────────────────────────────────
@@ -220,15 +251,35 @@ function intestazione(byte, come) {
  * secondi, gli altri uno dietro l'altro con un respiro in mezzo. Il posto nel
  * film lo si trova dopo, sommando le durate delle scene che vengono prima.
  */
-async function diTutto(piper, voce, lingua, cartella) {
+async function diTutto(lingua, cartella) {
+  /* Prima tutti i pezzi in fila, col posto dove andranno a finire: e' quello
+     che si passa a chi parla, in una volta sola. */
+  const lavoro = [];
+  for (const [quale, scena] of PARLATO.entries()) {
+    for (const [numero, pezzo] of scena.pezzi.entries()) {
+      lavoro.push({
+        quale,
+        numero,
+        testo: comeSiDice(pezzo[lingua], lingua),
+        dove: path.join(cartella, `${lingua}-${quale}-${numero}.wav`),
+      });
+    }
+  }
+  await fallePronunciare(
+    lingua,
+    lavoro.map(({ testo, dove }) => ({ testo, dove })),
+  );
+
+  /* Poi si rimettono in scena e si contano i tempi: il primo pezzo comincia
+     dopo `dopo` secondi, gli altri uno dietro l'altro con un respiro in mezzo.
+     Il posto nel film lo si trova dopo, sommando le scene che vengono prima. */
   const detti = [];
   for (const [quale, scena] of PARLATO.entries()) {
     let quando = scena.dopo;
     const pezzi = [];
-    for (const [numero, pezzo] of scena.pezzi.entries()) {
-      const dove = path.join(cartella, `${lingua}-${quale}-${numero}.wav`);
-      await diLo(piper, voce, pezzo[lingua], dove);
-      const suono = ilSuono(await readFile(dove));
+    for (let numero = 0; numero < scena.pezzi.length; numero += 1) {
+      const suo = lavoro.find((uno) => uno.quale === quale && uno.numero === numero);
+      const suono = ilSuono(await readFile(suo.dove));
       pezzi.push({ suono, quando, dura: quantoDura(suono) });
       quando += quantoDura(suono) + RESPIRO;
     }
@@ -237,18 +288,6 @@ async function diTutto(piper, voce, lingua, cartella) {
   return detti;
 }
 
-/**
- * Quanto dura ogni scena, e da che minuto comincia.
- *
- * **La scena aspetta la voce.** Dura quello che c'e' scritto in `quadro.js` —
- * che e' il tempo che vuole quello che si vede — oppure quanto ci mette il
- * parlato a finire, se e' di piu'. Mai di meno: una voce che continua mentre
- * lo schermo e' gia' cambiato si sente subito, e si sente male.
- *
- * Quindi le due lingue fanno **due film di lunghezza diversa**, ed e' giusto
- * cosi': la stessa frase in inglese non dura quanto in italiano, e allungare
- * l'italiano per farlo tornare vorrebbe dire quattordici pause finte.
- */
 function iTempi(scene, detti) {
   const parlato = new Map(detti.map((uno) => [uno.scena, uno.finisce + CODA]));
   let somma = 0;
@@ -271,8 +310,8 @@ function iTempi(scene, detti) {
  * alle parole.
  *
  * **Sta nella repository**, ed e' l'unico file qui dentro fatto da un
- * programma. Il motivo e' che senza, chi rifa' il film senza piper installato
- * lo rifarebbe con le scene corte di prima e la voce gli finirebbe sopra.
+ * programma. Il motivo e' che senza, chi rifa' il film senza il modello della
+ * voce lo rifarebbe con le scene corte di prima e la voce gli finirebbe sopra.
  */
 async function scriviITempi(lingua, tempi, detti) {
   const dove = path.join(QUI, "parlato-tempi.json");
@@ -460,13 +499,12 @@ async function main() {
     return;
   }
 
-  const piper = trovaPiper();
+  serveIlModello();
   const cartella = await mkdtemp(path.join(tmpdir(), "voce-del-quadro-"));
   try {
     for (const lingua of lingue) {
-      const voce = await trovaLaVoce(lingua);
-      detto(`🎙  ${lingua} · ${path.basename(voce)} · ${PARLATO.length} scene`);
-      const detti = await diTutto(piper, voce, lingua, cartella);
+      detto(`🎙  ${lingua} · ${VOCI[lingua]} · ${PARLATO.length} scene`);
+      const detti = await diTutto(lingua, cartella);
       const tempi = iTempi(scene, detti);
       guardaLeScene(detti, tempi, { dillo: soloMisura });
       const parlato = detti.reduce(
