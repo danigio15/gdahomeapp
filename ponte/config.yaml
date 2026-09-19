@@ -208,22 +208,34 @@ options:
   # gli si aprirebbe niente senza, ma e' una porta che in casa d'altri non
   # ha motivo di esserci.
   #
-  # **La chiave della flotta non si scrive qui.** La chiede la pagina e resta
-  # nel browser di chi la digita: cosi' non finisce sul disco di nessuna casa —
-  # nemmeno della tua, se la apri dal telefono di qualcun altro.
+  # **Da solo non accende niente**: serve anche il codice qui sotto.
   installatore: false
-  # Questo Home Assistant e' di chi **tiene** il quadro.
+  # Il codice della flotta, quello che ti sei fatto dare quando hai aperto il
+  # cruscotto.
   #
-  # E' una casa sola al mondo, ed e' l'altra meta' dell'interruttore qui sopra:
-  # quello e' di chi gli impianti li monta, questo di chi decide **chi** puo'
-  # montarli. Acceso, nella barra laterale compare «Gestione installatori», da
-  # cui si aggiungono gli installatori e si mettono i limiti.
+  # Senza questo, l'interruttore qui sopra non fa niente: nessuna sezione nella
+  # console, nessuna voce nella barra laterale, nessuna voce nell'app. Non
+  # chiuse — assenti.
   #
-  # **La chiave di gestione non si scrive qui.** La chiede la pagina e resta nel
-  # browser, come quella della flotta: l'interruttore dice soltanto se la voce
-  # c'e'. Chi lo accendesse senza avere la chiave si troverebbe una pagina che
-  # gliela chiede e basta.
-  gestore: false
+  # Prima bastava l'interruttore e il codice lo chiedeva la pagina. Chi lo
+  # accendeva per sbaglio si trovava comunque una porta che non si apriva, e
+  # una porta che si vede e' una domanda a cui qualcuno deve rispondere.
+  #
+  # **Scrivilo sul TUO Home Assistant, non su quello di un cliente.** Le
+  # opzioni di un add-on stanno su disco in chiaro e finiscono nei backup: e'
+  # la tua chiave, e va tenuta dove tieni le tue cose.
+  chiave_flotta: ""
+  # La chiave di chi **tiene** il quadro.
+  #
+  # Lasciala vuota: e' una casa sola al mondo, e non e' la tua a meno che tu
+  # non sappia gia' di cosa si tratta. Scritta, nella barra laterale compare
+  # «Gestione installatori», da cui si aggiungono gli installatori e si mettono
+  # i limiti. Vuota, quella voce non esiste.
+  #
+  # **Qui l'interruttore non c'e', e non e' una dimenticanza.** C'era, e su
+  # tutte le case del mondo era un interruttore da premere per curiosita'. La
+  # chiave e' l'interruttore: senza, non c'e' niente da accendere.
+  chiave_gestione: ""
   registro: info
 
 schema:
@@ -244,5 +256,15 @@ schema:
   quadro: str?
   quadro_ogni: int(1,1440)
   installatore: bool
-  gestore: bool
+  # `password?` come `chiave_console`, e per gli stessi due motivi: Home
+  # Assistant le nasconde mentre si scrivono e non le rimostra dopo, e il `?`
+  # fa si' che chi non ne ha bisogno — cioe' quasi tutti — non si trovi un
+  # campo obbligatorio da riempire.
+  #
+  # `gestore: bool` non c'e' piu': l'interruttore e' diventato la chiave qui
+  # sotto. Chi aggiorna da una versione che ce l'aveva se lo ritrova tolto
+  # dalla scheda, e il valore che ci aveva messo non conta piu' niente — che e'
+  # il punto: era un interruttore su case che non c'entravano.
+  chiave_flotta: password?
+  chiave_gestione: password?
   registro: list(debug|info|attenzione|errore)

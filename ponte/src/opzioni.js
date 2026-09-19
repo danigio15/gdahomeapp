@@ -90,6 +90,19 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
     /* Fuori dal Supervisor — in prova, o su un computer — il file non c'e'
      * proprio, e i difetti bastano. */
   }
+  /* Le due chiavi, lette una volta sola perche' servono due volte ciascuna:
+   * per dire **se** la cosa e' accesa, e per darla a chi la usa.
+   *
+   * `trim()` non e' pignoleria: queste si incollano da un messaggio o da una
+   * mail, e uno spazio in fondo e' il modo piu' comune di ritrovarsi una
+   * chiave «scritta» che non apre niente. Meglio toglierlo qui che spiegarlo
+   * al telefono. */
+  const chiaveDellaFlotta = String(
+    process.env.PONTE_CHIAVE_FLOTTA ?? scritte.chiave_flotta ?? "",
+  ).trim();
+  const chiaveDellaGestione = String(
+    process.env.PONTE_CHIAVE_GESTIONE ?? scritte.chiave_gestione ?? "",
+  ).trim();
   return {
     cartella,
     /* Dove chiamare per farsi raggiungere da fuori.
@@ -174,15 +187,41 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
      * E' la stessa che sta fra i segreti del centralino: non si inventa qui,
      * si copia da li'. */
     chiaveDellaConsole: String(process.env.PONTE_CHIAVE_CONSOLE || scritte.chiave_console || ""),
-    /* Questo Home Assistant e' di chi installa: fa comparire una sezione nella
-     * console e una voce nell'app. E' **solo un interruttore** — la chiave
-     * della flotta non passa di qui e non finisce sul disco di nessuna casa. */
+    /* Questo Home Assistant e' di chi installa.
+     *
+     * Due condizioni, e servono tutt'e due: l'interruttore acceso **e** il
+     * codice della flotta scritto nella scheda. L'interruttore da solo non
+     * apre niente.
+     *
+     * Prima bastava l'interruttore, e la chiave la chiedeva la pagina. Il
+     * difetto era che chi lo accendeva per sbaglio — o in casa di un cliente —
+     * si trovava comunque una voce nella barra laterale e una sezione nella
+     * console: porte che non si aprono, ma che si vedono, e una porta che si
+     * vede e' una domanda a cui qualcuno deve rispondere. Adesso senza codice
+     * non compare niente: non chiuso, assente.
+     *
+     * Il costo, detto: la chiave finisce nelle opzioni dell'add-on, che stanno
+     * su disco in chiaro e nei backup. Va scritta sull'Home Assistant di chi
+     * installa — il suo — e non su quello di un cliente, ed e' la stessa
+     * ragione di prima detta piu' forte. */
     installatore:
-      String(process.env.PONTE_INSTALLATORE ?? scritte.installatore ?? "") === "true" ||
-      scritte.installatore === true,
-    gestore:
-      String(process.env.PONTE_GESTORE ?? scritte.gestore ?? "") === "true" ||
-      scritte.gestore === true,
+      (String(process.env.PONTE_INSTALLATORE ?? scritte.installatore ?? "") === "true" ||
+        scritte.installatore === true) &&
+      Boolean(chiaveDellaFlotta),
+    chiaveDellaFlotta,
+    /* Questo Home Assistant e' di chi **tiene** il quadro.
+     *
+     * Qui l'interruttore non c'e' proprio, e non e' una svista: e' una casa
+     * sola al mondo, e un interruttore su tutte le altre e' un invito a
+     * premerlo. La chiave e' l'interruttore — scritta, la voce c'e'; vuota,
+     * non esiste niente da accendere.
+     *
+     * Home Assistant non sa nascondere una casella a chi non la riguarda, e
+     * quindi la casella si vede dappertutto; ma `password?` la mostra a
+     * pallini e vuota non fa niente, e su ogni Home Assistant che non sia
+     * questo resta vuota. */
+    gestore: Boolean(chiaveDellaGestione),
+    chiaveDellaGestione,
     /* Il quadro di chi ha installato l'impianto: dove mandare il rapporto, e
      * con che presentarsi.
      *

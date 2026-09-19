@@ -58,18 +58,26 @@ configuration:
   installatore:
     name: Questo Home Assistant e' di chi installa
     description: >-
-      Lascialo spento. Acceso, nella console di gdahome compare una sezione in
-      piu' — il tuo cruscotto — da cui guardi gli impianti che hai montato, e
-      nell'app compare la voce corrispondente. Accendilo sul tuo Home
-      Assistant, non su quello di un cliente. La chiave della flotta non si
-      scrive qui: la chiede la pagina e resta nel browser di chi la digita.
-  gestore:
-    name: Questo Home Assistant e' di chi tiene il quadro
+      Lascialo spento. Acceso — e col codice scritto qui sotto — nella console
+      di gdahome compare una sezione in piu', il tuo cruscotto, da cui guardi
+      gli impianti che hai montato, e nell'app compare la voce corrispondente.
+      Da solo non accende niente. Accendilo sul tuo Home Assistant, non su
+      quello di un cliente.
+  chiave_flotta:
+    name: Il codice della tua flotta
     description: >-
-      Lascialo spento. E' una casa sola al mondo: acceso, nella barra laterale
-      compare «Gestione installatori», da cui aggiungi gli installatori e metti
-      i limiti. La chiave di gestione non si scrive qui: la chiede la pagina e
-      resta nel browser.
+      Senza questo, l'interruttore qui sopra non fa niente: nessuna sezione,
+      nessuna voce, da nessuna parte. Scrivilo sul tuo Home Assistant e non su
+      quello di un cliente: le opzioni di un add-on stanno su disco in chiaro e
+      finiscono nei backup.
+  chiave_gestione:
+    name: La chiave di chi tiene il quadro
+    description: >-
+      Lasciala vuota: e' una casa sola al mondo, e non e' la tua a meno che tu
+      non sappia gia' di cosa si tratta. Scritta, nella barra laterale compare
+      «Gestione installatori», da cui aggiungi gli installatori e metti i
+      limiti. Vuota, quella voce non esiste. Qui l'interruttore non c'e': la
+      chiave e' l'interruttore.
   registro:
     name: Il registro
     description: Quanto scrive nel registro dell'add-on.

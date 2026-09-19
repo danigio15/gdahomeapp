@@ -7,16 +7,27 @@
  *  - **Gestione installatori**, per chi il quadro lo tiene — una casa sola al
  *    mondo: da li' aggiunge gli installatori e mette i limiti.
  *
- * Ognuna ha il suo interruttore nella scheda dell'add-on, e ognuna compare solo
- * dove il suo e' acceso. Su un Home Assistant qualunque non c'e' nessuna delle
- * due: una porta che non si apre e' peggio di una porta che non c'e'.
+ * Su un Home Assistant qualunque non c'e' nessuna delle due: una porta che non
+ * si apre e' peggio di una porta che non c'e'.
  *
- * ─── Le chiavi non passano di qui ─────────────────────────────────────────
+ * ─── Cosa le fa comparire ─────────────────────────────────────────────────
  *
- * Ne' quella della flotta ne' quella di gestione stanno nelle opzioni
- * dell'add-on: le chiede la pagina, e restano nel browser di chi le digita.
- * L'interruttore dice soltanto **se la voce c'e'**, e chi l'accendesse senza
- * avere la chiave si troverebbe una pagina che gliela chiede e basta.
+ * La chiave, e solo la chiave. Chi decide e' `opzioni.js`, e qui arriva gia'
+ * deciso in `acceso`:
+ *
+ *  - il **Cruscotto** vuole l'interruttore `installatore` acceso **e** il
+ *    codice della flotta scritto nella scheda. L'interruttore da solo non
+ *    apre niente;
+ *  - la **Gestione** non ha nessun interruttore: c'e' la sua chiave o non c'e'
+ *    la voce.
+ *
+ * Prima bastavano gli interruttori, e le chiavi le chiedeva la pagina: non
+ * finivano sul disco di nessuno, ed era il pregio. Il difetto era che chi
+ * accendeva per curiosita' — o in casa di un cliente — si trovava comunque una
+ * voce nella barra laterale, e una porta che si vede e' una domanda a cui
+ * qualcuno deve rispondere. Il prezzo di questa scelta e' che le chiavi adesso
+ * stanno nelle opzioni dell'add-on, cioe' su disco in chiaro e nei backup: va
+ * scritta la propria, sul proprio Home Assistant.
  *
  * ─── Perche' la fa il ponte, e non l'integrazione ─────────────────────────
  *
