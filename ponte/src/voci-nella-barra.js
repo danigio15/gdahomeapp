@@ -66,6 +66,21 @@ export const LA_GESTIONE = Object.freeze({
   pagina: "gestore",
 });
 
+/* Gli indirizzi che sono del ponte ma **non** sono Plance.
+ *
+ * `plance-in-casa.js` fa piazza pulita: tutto quello che comincia per
+ * `gdahome-` e non e' una Plancia di questo giro se ne va. E' giusto — una
+ * Plancia tolta deve sparire anche dalla barra laterale, se no restano voci
+ * che non aprono piu' niente — ma queste due non sono Plance, e cominciano
+ * per `gdahome-` come tutto il resto.
+ *
+ * Senza questo elenco succedeva esattamente questo, e il registro lo diceva
+ * pure: «la voce e' nella barra laterale» e un secondo dopo «1 voce, 2
+ * tolte». Creata e cancellata dallo stesso add-on, nello stesso avvio.
+ *
+ * Chi aggiunge una terza voce la aggiunge qui. */
+export const NON_SONO_PLANCE = Object.freeze([IL_CRUSCOTTO.dove, LA_GESTIONE.dove]);
+
 /** Quanto si aspetta fra un tentativo e l'altro, in millisecondi. */
 export const ATTESE = [20_000, 60_000, 300_000];
 

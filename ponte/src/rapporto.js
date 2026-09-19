@@ -73,12 +73,25 @@ import { ilBackup, leBatterie, leEntita } from "./salute.js";
 export const QUADRO_DI_DIFETTO = "https://quadro.gdahome.org";
 
 /** Ogni quanto parte un rapporto, in minuti, quando non si dice altro. */
-export const OGNI_DI_SERIE = 15;
+export const OGNI_DI_SERIE = 1;
 
-/* Sotto questo non si scende: una casa che parla ogni mezzo minuto e' una
- * casa che scalda una macchina per niente, e quaranta case cosi' sono un
- * quadro che non sta in piedi. */
-const OGNI_AL_MINIMO = 5;
+/* Il pavimento e' un minuto, e prima erano cinque.
+ *
+ * Il ragionamento di allora era che una casa che parla spesso scalda una
+ * macchina per niente. Regge sul traffico e non regge su quello che il quadro
+ * serve a fare: un impianto che si ferma alle 9:02 con quindici minuti di
+ * passo si sa alle 9:15, e in quel quarto d'ora il cliente ha gia' telefonato
+ * — cioe' e' successo esattamente quello che il quadro doveva evitare.
+ *
+ * Il conto del traffico, fatto: un rapporto e' qualche riga di numeri, e
+ * quaranta case al minuto sono quaranta richieste al minuto. Una macchina da
+ * due lire le regge senza accorgersene; quello che non reggerebbe sarebbe un
+ * rapporto che porta dietro mezza casa, e questo non lo fa.
+ *
+ * Sotto il minuto non si scende lo stesso: la finestra piu' corta che serva a
+ * qualcuno e' il minuto, e trenta secondi raddoppierebbero tutto per una
+ * differenza che nessuno userebbe. */
+const OGNI_AL_MINIMO = 1;
 const OGNI_AL_MASSIMO = 24 * 60;
 
 /** Quanto si aspetta il quadro prima di lasciar perdere. */

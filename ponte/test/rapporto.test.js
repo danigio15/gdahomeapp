@@ -77,9 +77,15 @@ test("i trattini non contano, e il codice resta com'e' stato scritto", () => {
 
 test("ogni quanto sta dentro i suoi limiti, e una sciocchezza torna al difetto", () => {
   assert.equal(ogniQuanto(15), 15);
-  assert.equal(ogniQuanto(1), 5, "sotto i cinque minuti si scalda una macchina per niente");
+  assert.equal(
+    ogniQuanto(1),
+    1,
+    "il minuto e' il passo di serie, non una sciocchezza da correggere",
+  );
+  assert.equal(ogniQuanto(0.4), 1, "sotto il minuto non si scende");
+  assert.equal(ogniQuanto(-30), 1, "e un numero all'indietro nemmeno");
   assert.equal(ogniQuanto(99999), 1440);
-  assert.equal(ogniQuanto("boh"), 15);
+  assert.equal(ogniQuanto("boh"), 1);
 });
 
 /* ─── Il foglio ────────────────────────────────────────────────────────── */

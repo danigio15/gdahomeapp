@@ -42,7 +42,7 @@ configuration:
     description: >-
       Lasciala vuota. Se la casa te l'ha montata un installatore, lui ti da'
       un codice da incollare qui: da quel momento questa casa gli manda ogni
-      quarto d'ora poche righe di numeri — le versioni, quanto e' pieno il
+      minuto poche righe di numeri — le versioni, quanto e' pieno il
       disco, quali add-on girano, quante entita' non rispondono — e lui si
       accorge che qualcosa non va prima che tocchi a te telefonargli. Non c'e'
       niente di tuo: nessun nome di entita', nessuna stanza, nessuna persona,

@@ -32,7 +32,7 @@ configuration:
     description: >-
       Leave it empty. If an installer set your home up, they give you a code to
       paste here: from then on this home sends them a few lines of numbers
-      every quarter of an hour — the versions, how full the disk is, which
+      every minute — the versions, how full the disk is, which
       add-ons are running, how many entities stopped answering — and they find
       out something is wrong before you have to call them. None of it is yours:
       no entity names, no rooms, no people, no sensor states, not your Wi-Fi
