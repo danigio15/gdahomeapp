@@ -22,7 +22,7 @@ DEFAULT_OUT = FRONTEND / "legacy/build-info.js"
 ASSET_SUFFIXES = frozenset(
     {".js", ".css", ".html", ".json", ".png", ".svg", ".gif", ".webp"}
 )
-RUNTIME_ROOT_FILES = frozenset({"panel.js", "dashboard-card.js", "cruscotto.js"})
+RUNTIME_ROOT_FILES = frozenset({"panel.js", "dashboard-card.js"})
 RUNTIME_DIRECTORIES = ("legacy", "src")
 IGNORED_RUNTIME_PARTS = frozenset({"e2e", "tests", "__pycache__"})
 

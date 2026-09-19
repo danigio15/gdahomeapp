@@ -318,18 +318,7 @@ Subscriptions
   dashboardmodern/subscribe_dashboard_events
   dashboardmodern/subscribe_runtime_health
   dashboardmodern/subscribe_summaries
-
-Installer sidebar
-  dashboardmodern/cruscotto/set
 ```
-
-`dashboardmodern/cruscotto/set` is the one command whose caller is the gdahome
-add-on rather than a frontend. It carries `installatore` (bool) and `dove` (the
-`https` address of the fleet dashboard), and it registers or removes the
-`gdahome-cruscotto` sidebar panel. The switch and the address both live in the
-add-on, which this integration cannot read on its own; ADR-0009 explains why
-the statement flows in that direction and why the command refuses callers that
-are neither administrators nor system-generated users.
 
 Response shape principles:
 

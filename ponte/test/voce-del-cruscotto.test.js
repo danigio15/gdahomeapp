@@ -1,164 +1,215 @@
-/* La voce «Cruscotto installatore» detta a Home Assistant.
+/* La voce «Cruscotto installatore» messa nella barra laterale di Home Assistant.
  *
- * Il rischio vero di questo pezzo non e' che non funzioni: e' che non funzioni
- * **la prima volta** e nessuno se ne accorga. All'accensione dell'add-on Home
- * Assistant sta spesso ancora partendo, l'integrazione i suoi comandi non li
- * ha registrati, e il primo tentativo torna «comando sconosciuto». Se ci si
- * fermasse li', l'installatore accende l'interruttore, non vede niente, e
- * conclude che e' rotto.
+ * E' una plancia di Lovelace, e non un pannello di un'integrazione. La prima
+ * stesura lo faceva fare all'integrazione — sembrava il posto giusto, perche' i
+ * pannelli li registrano le integrazioni — e non arrivava a nessuno:
+ * l'integrazione nelle case non ci va piu'. Quello che segue prova la strada
+ * che invece ci arriva, cioe' quella che il ponte usa gia' per le Plance.
  *
- * L'altra meta' e' lo spegnimento: si deve dire **anche** quando l'interruttore
- * e' spento, se no la voce resta appesa fino al riavvio dopo — cioe' una voce
- * che porta a un posto che non si vuole piu' mostrare.
+ * Le cose che si provano, in ordine di quanto farebbero male:
+ *
+ *  1. **che non lampeggi.** Salvare una plancia manda un `lovelace_updated` a
+ *     tutte le pagine aperte, che si ridisegnano. Riscrivere a ogni accensione
+ *     la stessa cosa vuol dire far lampeggiare il tablet in cucina per niente;
+ *  2. **che spegnere l'interruttore la tolga davvero**, e subito;
+ *  3. **che si riprovi**: all'avvio Home Assistant sta ancora partendo e i
+ *     comandi di Lovelace arrivano a nessuno. Fermarsi al primo tentativo vuol
+ *     dire un installatore che accende l'interruttore e non vede niente;
+ *  4. **che la vedano solo gli amministratori**: porta agli impianti dei
+ *     clienti di qualcuno, e Home Assistant in casa lo aprono anche i familiari.
  */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { COMANDO, VoceDelCruscotto } from "../src/voce-del-cruscotto.js";
+import { DOVE, TITOLO, VoceDelCruscotto } from "../src/voce-del-cruscotto.js";
 
-const DOVE = "https://quadro.gdahome.org/console/";
+const QUADRO = "https://quadro.gdahome.org/console/";
 
-/* Una casa finta: registra cosa le si chiede, e risponde come le si dice. */
-function casaFinta(risposte) {
+/* Una Home Assistant finta: tiene le plance in una lista, e registra tutto
+ * quello che le si chiede. */
+function casaFinta({ gia = [], configurazione = null, rompe = null } = {}) {
+  const plance = [...gia];
   const chieste = [];
+  let salvata = configurazione;
   return {
     chieste,
+    get plance() {
+      return plance;
+    },
+    get salvata() {
+      return salvata;
+    },
     chiedi: async (comando) => {
       chieste.push(comando);
-      const risposta = risposte.shift();
-      if (risposta instanceof Error) throw risposta;
-      return risposta ?? { success: true };
+      if (rompe && rompe(comando)) throw new Error("Home Assistant sta ancora partendo");
+      switch (comando.type) {
+        case "lovelace/dashboards/list":
+          return plance;
+        case "lovelace/dashboards/create": {
+          const nuova = { id: "d1", ...comando };
+          plance.push(nuova);
+          return nuova;
+        }
+        case "lovelace/dashboards/update": {
+          const quale = plance.find((una) => una.id === comando.dashboard_id);
+          if (quale) Object.assign(quale, comando);
+          return quale;
+        }
+        case "lovelace/dashboards/delete": {
+          const dove = plance.findIndex((una) => una.id === comando.dashboard_id);
+          if (dove >= 0) plance.splice(dove, 1);
+          return true;
+        }
+        case "lovelace/config":
+          if (salvata === null) throw new Error("config not found");
+          return salvata;
+        case "lovelace/config/save":
+          salvata = comando.config;
+          return true;
+        default:
+          return null;
+      }
     },
   };
 }
 
 const zitto = { info() {}, attenzione() {}, errore() {} };
-
-/* L'attesa delle prove: un timer **senza** `unref`, se no il giro delle prove
- * si chiude mentre la promessa e' ancora in mano a nessuno. Quello vero
- * l'`unref` ce l'ha apposta, e non si tocca per far contente le prove. */
 const aspettaDavvero = (quanto) => new Promise((ok) => setTimeout(ok, quanto));
 
-test("acceso, lo dice con l'indirizzo del quadro", async () => {
-  const casa = casaFinta([{ success: true, result: { mostrata: true } }]);
-  const voce = new VoceDelCruscotto({
+const laVoce = (casa, dentro = {}) =>
+  new VoceDelCruscotto({
     casa,
     installatore: true,
-    dove: DOVE,
+    dove: QUADRO,
     registro: zitto,
     aspetta: aspettaDavvero,
+    ...dentro,
   });
 
-  assert.equal((await voce.dillo()).fatto, true);
-  assert.deepEqual(casa.chieste, [{ type: COMANDO, installatore: true, dove: DOVE }]);
+test("acceso, la voce compare nella barra laterale col cruscotto dentro", async () => {
+  const casa = casaFinta();
+  assert.equal((await laVoce(casa).dillo()).fatto, true);
+
+  const fatta = casa.chieste.find((c) => c.type === "lovelace/dashboards/create");
+  assert.ok(fatta, "non ha creato nessuna plancia");
+  assert.equal(fatta.url_path, DOVE);
+  assert.equal(fatta.title, TITOLO);
+  assert.equal(fatta.show_in_sidebar, true);
+  assert.equal(fatta.require_admin, true, "la vedrebbero tutti quelli che entrano");
+
+  /* E dentro c'e' il cruscotto vero, non una copia rifatta. */
+  const carta = casa.salvata.views[0].cards[0];
+  assert.equal(carta.type, "iframe");
+  assert.equal(carta.url, QUADRO);
+  assert.equal(casa.salvata.views[0].panel, true, "a pagina intera, non una tessera");
 });
 
-test("spento, lo dice lo stesso — se no la voce resta appesa", async () => {
-  const casa = casaFinta([{ success: true }]);
-  const voce = new VoceDelCruscotto({
-    casa,
-    installatore: false,
-    dove: DOVE,
-    registro: zitto,
-    aspetta: aspettaDavvero,
-  });
+test("ridirlo uguale non riscrive niente: se no il tablet in cucina lampeggia", async () => {
+  const casa = casaFinta();
+  await laVoce(casa).dillo();
+  const scritte = () => casa.chieste.filter((c) => c.type === "lovelace/config/save").length;
+  assert.equal(scritte(), 1);
 
-  assert.equal((await voce.dillo()).fatto, true);
-  assert.equal(casa.chieste.length, 1, "spegnere si dice, non si tace");
-  assert.equal(casa.chieste[0].installatore, false);
-  assert.equal(casa.chieste[0].dove, "", "spento non si manda nessun indirizzo");
+  await laVoce(casa).dillo();
+  assert.equal(scritte(), 1, "ha riscritto la stessa pagina una seconda volta");
+  assert.equal(
+    casa.chieste.filter((c) => c.type === "lovelace/dashboards/create").length,
+    1,
+    "ha creato la plancia due volte",
+  );
 });
 
-test("un «no» dell'integrazione non si scambia per un si'", async () => {
-  const casa = casaFinta([{ success: false, error: { message: "unknown command" } }]);
-  const voce = new VoceDelCruscotto({
-    casa,
-    installatore: true,
-    dove: DOVE,
-    registro: zitto,
-    aspetta: aspettaDavvero,
-  });
+test("cambiando l'indirizzo del quadro la pagina si riscrive", async () => {
+  const casa = casaFinta();
+  await laVoce(casa).dillo();
+  await laVoce(casa, { dove: "https://altro.example/console/" }).dillo();
 
-  const esito = await voce.dillo();
-  assert.equal(esito.fatto, false);
-  assert.match(esito.perche, /unknown command/);
+  assert.equal(casa.salvata.views[0].cards[0].url, "https://altro.example/console/");
+  assert.equal(casa.chieste.filter((c) => c.type === "lovelace/config/save").length, 2);
 });
 
-test("un filo che cade non fa cadere il ponte", async () => {
-  const casa = casaFinta([new Error("il filo e' chiuso")]);
-  const voce = new VoceDelCruscotto({
-    casa,
-    installatore: true,
-    dove: DOVE,
-    registro: zitto,
-    aspetta: aspettaDavvero,
-  });
+test("spegnere l'interruttore toglie la voce, subito", async () => {
+  const casa = casaFinta();
+  await laVoce(casa).dillo();
+  assert.equal(casa.plance.length, 1);
 
-  const esito = await voce.dillo();
-  assert.equal(esito.fatto, false);
-  assert.match(esito.perche, /il filo e' chiuso/);
+  assert.equal((await laVoce(casa, { installatore: false }).dillo()).fatto, true);
+  assert.equal(casa.plance.length, 0, "la voce e' rimasta appesa");
 });
 
-test("se la prima volta l'integrazione non c'era ancora, si riprova", async () => {
-  /* E' il caso che capita davvero a ogni accensione. */
-  const casa = casaFinta([
-    { success: false, error: { message: "unknown command" } },
-    { success: true },
-  ]);
-  const voce = new VoceDelCruscotto({
-    casa,
-    installatore: true,
-    dove: DOVE,
-    registro: zitto,
-    aspetta: aspettaDavvero,
-  });
+test("spento e senza voce, non si lamenta e non fa niente", async () => {
+  const casa = casaFinta();
+  assert.equal((await laVoce(casa, { installatore: false }).dillo()).fatto, true);
+  assert.equal(casa.chieste.filter((c) => c.type.startsWith("lovelace/dashboards/d")).length, 0);
+});
 
-  const esito = await voce.dilloConCalma([1]);
+test("una plancia rimasta con un titolo vecchio si raddrizza", async () => {
+  const casa = casaFinta({
+    gia: [{ id: "d9", url_path: DOVE, title: "Cruscotto", require_admin: false }],
+  });
+  await laVoce(casa).dillo();
+
+  const raddrizzata = casa.chieste.find((c) => c.type === "lovelace/dashboards/update");
+  assert.ok(raddrizzata, "l'ha lasciata com'era");
+  assert.equal(raddrizzata.title, TITOLO);
+  assert.equal(raddrizzata.require_admin, true, "restava aperta a tutti");
+});
+
+test("un indirizzo che non e' https non si mette in nessuna pagina", async () => {
+  for (const storto of ["", "http://quadro.gdahome.org/console/", "javascript:alert(1)"]) {
+    const casa = casaFinta();
+    const esito = await laVoce(casa, { dove: storto }).dillo();
+    assert.equal(esito.fatto, false, `ha accettato «${storto}»`);
+    assert.equal(casa.plance.length, 0);
+  }
+});
+
+test("se la prima volta Home Assistant stava partendo, si riprova", async () => {
+  let primo = true;
+  const casa = casaFinta({
+    rompe: (c) => {
+      if (c.type === "lovelace/dashboards/list" && primo) {
+        primo = false;
+        return true;
+      }
+      return false;
+    },
+  });
+  const esito = await laVoce(casa).dilloConCalma([1]);
   assert.equal(esito.fatto, true);
-  assert.equal(casa.chieste.length, 2);
+  assert.equal(casa.plance.length, 1);
 });
 
 test("non si riprova per sempre, e alla fine lo dice una volta sola", async () => {
-  const no = () => ({ success: false, error: { message: "unknown command" } });
-  const casa = casaFinta([no(), no(), no()]);
+  const casa = casaFinta({ rompe: () => true });
   const detto = [];
-  const voce = new VoceDelCruscotto({
-    casa,
-    installatore: true,
-    dove: DOVE,
+  const voce = laVoce(casa, {
     registro: { ...zitto, attenzione: (t) => detto.push(t) },
-    aspetta: aspettaDavvero,
   });
 
-  const esito = await voce.dilloConCalma([1, 1]);
-  assert.equal(esito.fatto, false);
-  assert.equal(casa.chieste.length, 3, "il primo piu' due ritenativi, e basta");
-  assert.equal(detto.length, 1, "un add-on senza l'integrazione non deve gridare");
+  assert.equal((await voce.dilloConCalma([1, 1])).fatto, false);
+  assert.equal(detto.length, 1, "un add-on che non ci riesce non deve gridare");
 });
 
 test("fermarlo interrompe i tentativi: il ponte si abbassa e non resta niente dietro", async () => {
-  const no = () => ({ success: false, error: { message: "unknown command" } });
-  const casa = casaFinta([no(), no(), no()]);
-  const voce = new VoceDelCruscotto({
-    casa,
-    installatore: true,
-    dove: DOVE,
-    registro: zitto,
-    aspetta: aspettaDavvero,
-  });
-
+  const casa = casaFinta({ rompe: () => true });
+  const voce = laVoce(casa);
   const giro = voce.dilloConCalma([20, 20]);
   voce.ferma();
   await giro;
-  assert.equal(casa.chieste.length, 1, "dopo il primo non ci ha piu' provato");
+  assert.equal(
+    casa.chieste.filter((c) => c.type === "lovelace/dashboards/list").length,
+    1,
+    "dopo il primo non ci ha piu' provato",
+  );
 });
 
 test("senza nessuno a cui dirlo non si schianta", async () => {
   const voce = new VoceDelCruscotto({
     casa: null,
     installatore: true,
-    dove: DOVE,
+    dove: QUADRO,
     registro: zitto,
   });
   assert.equal((await voce.dillo()).fatto, false);

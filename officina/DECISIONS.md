@@ -170,30 +170,30 @@ DashboardModern storage documents will include explicit version metadata and mig
 - Failed migrations can produce repair issues.
 - Future schema evolution can happen without abandoning existing user dashboards.
 
-## ADR-0009: The Installer's Sidebar Entry Is Told by the Add-on, Not Configured Here
+## ADR-0009: The Installer's Sidebar Entry Belongs to the Add-on, Not to This Integration
 
 ### Status
 
-Accepted
+Accepted. Supersedes a first version of this record, which placed the feature here and was wrong.
 
 ### Context
 
-A professional installer who deploys gdahome across many homes runs their own Home Assistant. From it they need to reach the fleet dashboard (the *quadro*) that watches every installation they maintain.
+A professional installer who deploys gdahome across many homes runs their own Home Assistant, and wants a sidebar entry that opens the fleet dashboard watching every installation they maintain.
 
-Two facts constrain the design. First, the switch that marks a Home Assistant as belonging to an installer already exists — it is the `installatore` option in the gdahome add-on — and the address of the fleet dashboard is already compiled into the add-on (`QUADRO_DI_DIFETTO` in `ponte/src/rapporto.js`). Second, this integration has no channel to either the Supervisor or the add-on: it cannot discover either value on its own.
+Sidebar panels are registered by integrations, so the first implementation put the feature here: a WebSocket command the add-on called, and a custom panel this integration registered. It was tested, documented, and inert.
 
-The privacy rule that forbids exposing an installer's client list inside a *client's* Home Assistant does not apply here. This is the installer's own instance.
+Inert because **this integration no longer reaches any home**. The repository it was installed from is gone; the dashboard now ships inside the add-on, and everything the dashboard used to ask this integration for, the add-on's bridge answers itself. `officina/` is the half of the project that is not served to anyone. Code placed here cannot be released.
 
 ### Decision
 
-The add-on tells the integration, through a WebSocket command (`dashboardmodern/cruscotto/set`) carrying `installatore` and `dove`. The integration registers or removes a sidebar panel accordingly, and renders the existing fleet dashboard in an embedded frame rather than reimplementing it.
+The sidebar entry is created by the add-on's bridge, as a Lovelace dashboard (`lovelace/dashboards/create`) holding a full-page `iframe` card pointing at the fleet dashboard. The implementation lives in `ponte/src/voce-del-cruscotto.js`.
 
-The command is restricted to administrators and system-generated users (which is what an add-on is), because a sidebar entry is visible to everyone who signs in to that installation and it leads to someone's client list.
+A Lovelace dashboard **is** a sidebar entry, it is created over the same WebSocket connection the bridge already uses for the house dashboards, and it needs no integration installed.
 
 ### Consequences
 
-- One switch, in one place. Adding a second one in this integration's options would create two sources of truth that must be kept in agreement.
-- No dependency on the Supervisor API, so nothing breaks where the Supervisor is absent — which is also exactly where the add-on, and therefore the switch, cannot exist.
-- The add-on repeats the statement on every start and after the switch changes; the integration treats an identical statement as a no-op so an open panel is not reloaded underneath its reader.
-- The fleet rules — what makes an installation silent, when a commissioning is complete — stay in one place, on the quadro. A native reimplementation would make a third home for them, and three copies of the same rule eventually disagree.
-- The embedded page keeps its own browser storage partition, so the fleet key must be entered once inside Home Assistant as well. The panel says so, and always offers a link to open the dashboard outside the frame, because that storage may not persist at all in some browsers.
+- The feature can actually ship, which the previous design could not.
+- One mechanism instead of two: the bridge already creates sidebar entries for the house dashboards, and this reuses that path, including its "write only when changed" rule — saving a dashboard broadcasts `lovelace_updated` and every open Home Assistant page redraws, so rewriting identical config on every add-on start would make the kitchen tablet flicker for nothing.
+- The entry requires admin, because it leads to somebody's client list and a home's Home Assistant is opened by the family too.
+- The fleet rules — what makes an installation silent, when a commissioning is complete — stay in one place, on the fleet dashboard itself. The card embeds it rather than reimplementing it.
+- The lesson worth keeping: "which layer owns this?" was the wrong first question. "Which layer still reaches the user?" was the right one, and asking it late cost a full implementation.
