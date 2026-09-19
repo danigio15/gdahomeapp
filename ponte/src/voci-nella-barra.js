@@ -121,11 +121,33 @@ export class VoceNellaBarra {
    * @param acceso se l'interruttore della scheda e' acceso.
    * @param quadro l'indirizzo del quadro, senza niente in fondo.
    */
-  constructor({ casa, quale, acceso = false, quadro = "", registro, aspetta = ASPETTA } = {}) {
+  constructor({
+    casa,
+    quale,
+    acceso = false,
+    quadro = "",
+    chiave = "",
+    registro,
+    aspetta = ASPETTA,
+  } = {}) {
     this.casa = casa;
     this.quale = quale;
     this.acceso = Boolean(acceso);
     this.quadro = String(quadro || "").replace(/\/+$/, "");
+    /* Il codice che apre questa pagina, quello scritto nella scheda
+     * dell'add-on. Da qui finisce nella configurazione della plancia, e la
+     * tessera lo passa alla pagina: cosi' si scrive **una volta sola**.
+     *
+     * Prima si scriveva due volte — nella scheda per far comparire la voce, e
+     * nella pagina per entrarci — e la seconda volta e' quella che fa pensare
+     * che la prima non abbia funzionato.
+     *
+     * Dove finisce, detto: nelle opzioni dell'add-on (dov'era gia') e nella
+     * configurazione di questa plancia, che sta in `.storage` di Home
+     * Assistant. Tutt'e due le legge chi amministra quell'Home Assistant, e
+     * questa voce e' `require_admin`: non si apre a nessuno che non potesse
+     * gia' leggere la prima. */
+    this.chiave = String(chiave || "");
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.aspetta = aspetta;
     this._fermo = false;
@@ -160,7 +182,18 @@ export class VoceNellaBarra {
         {
           title: this.quale.titolo,
           panel: true,
-          cards: [{ type: `custom:${RIQUADRO}`, dove: this.dove }],
+          cards: [
+            {
+              type: `custom:${RIQUADRO}`,
+              dove: this.dove,
+              /* Vuota non si scrive: una chiave assente e una chiave vuota
+               * sono la stessa cosa per chi legge, ma una riga in meno nella
+               * configurazione e' una riga in meno che cambia quando non
+               * cambia niente — e ogni scrittura fa lampeggiare le pagine
+               * aperte. */
+              ...(this.chiave ? { chiave: this.chiave } : {}),
+            },
+          ],
         },
       ],
     };

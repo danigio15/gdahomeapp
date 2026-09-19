@@ -108,7 +108,13 @@ test("fra una casa che si presenta e la pagina che lo mostra non passa un minuto
   const ponte = readFileSync(join(QUI, "..", "..", "ponte", "src", "rapporto.js"), "utf8");
   const primo = Number(/const PRIMA_ASPETTA = ([\d_]+);/.exec(ponte)?.[1].replace(/_/g, ""));
   const ogni = Number(/export const OGNI_DI_SERIE = (\d+);/.exec(ponte)?.[1]);
-  const ricarica = Number(/\}, (\d+) \* 1000\);\s*<\/script>/.exec(pagina("console"))?.[1]);
+  /* Il `}, N * 1000);` che chiude il `setInterval` che ricarica. La prima
+   * stesura ci attaccava `\s*</script>` per essere sicura di prendere quello
+   * giusto, e si e' rotta appena sotto ci e' finita un'altra riga: un aggancio
+   * che dipende da cosa gli sta **dopo** e' un aggancio che si scolla al primo
+   * che scrive li' sotto. `}, ` davanti basta a distinguerlo dall'altro
+   * intervallo della pagina, che e' `setInterval(gira, 1000)` su una riga. */
+  const ricarica = Number(/\}, (\d+) \* 1000\);/.exec(pagina("console"))?.[1]);
 
   assert.ok(Number.isFinite(primo) && Number.isFinite(ogni) && Number.isFinite(ricarica));
 
@@ -123,4 +129,45 @@ test("fra una casa che si presenta e la pagina che lo mostra non passa un minuto
     cambiare <= 120,
     `una casa che cambia stato ci mette ${cambiare}s a vedersi: nessuno sta a guardare, ma due minuti sono il tetto`,
   );
+});
+
+test("il codice si scrive una volta sola: chi lo manda e chi lo ascolta si chiamano uguale", () => {
+  /* Tre pezzi in tre file, e un nome che li tiene:
+   *
+   *  - `ponte/src/voci-nella-barra.js` mette il codice nella configurazione
+   *    della plancia;
+   *  - `ponte/carta/plancia.js` lo manda alla pagina con un `postMessage`;
+   *  - queste due pagine lo ascoltano.
+   *
+   * Se uno dei tre cambia il nome del messaggio, gli altri due non se ne
+   * accorgono: non c'e' nessun errore da nessuna parte, la pagina semplicemente
+   * torna a chiedere il codice a mano — cioe' esattamente il difetto che questo
+   * giro doveva togliere, tornato senza far rumore. */
+  const carta = readFileSync(join(QUI, "..", "..", "ponte", "carta", "plancia.js"), "utf8");
+  assert.match(
+    carta,
+    /postMessage\(\{ gdahome: "chiave", chiave \}, origine\)/,
+    "la tessera deve mandarlo, e a un'origine sola",
+  );
+  for (const quale of ["console", "gestore"]) {
+    assert.match(
+      pagina(quale),
+      /detto\.gdahome !== "chiave"/,
+      `la pagina «${quale}» deve ascoltare quel messaggio`,
+    );
+  }
+});
+
+test("una chiave gia' battuta a mano non si fa sovrascrivere da una consegnata", () => {
+  /* Chi ha battuto la sua chiave in questo browser ha deciso lui. Una consegna
+   * che gliela cambia sotto e' un modo silenzioso di non far entrare piu'
+   * nessuno — e succederebbe a chi apre la pagina da solo mentre l'add-on di
+   * casa manda la sua. */
+  for (const quale of ["console", "gestore"]) {
+    assert.match(
+      pagina(quale),
+      /if \(!arrivata \|\| chiave\) return;/,
+      `la pagina «${quale}» non deve scavalcare una chiave che c'e' gia'`,
+    );
+  }
 });

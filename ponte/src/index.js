@@ -363,11 +363,11 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * l'integrazione i suoi comandi non li ha ancora registrati, e una voce di
    * menu non vale il ritardo di tutto il resto. */
   const leVoci = [
-    { quale: IL_CRUSCOTTO, acceso: opzioni.installatore },
-    { quale: LA_GESTIONE, acceso: opzioni.gestore },
+    { quale: IL_CRUSCOTTO, acceso: opzioni.installatore, chiave: opzioni.chiaveDelCruscotto },
+    { quale: LA_GESTIONE, acceso: opzioni.gestore, chiave: opzioni.chiaveDellaGestione },
   ].map(
-    ({ quale, acceso }) =>
-      new VoceNellaBarra({ casa, quale, acceso, quadro: QUADRO_DI_DIFETTO, registro }),
+    ({ quale, acceso, chiave }) =>
+      new VoceNellaBarra({ casa, quale, acceso, chiave, quadro: QUADRO_DI_DIFETTO, registro }),
   );
   for (const una of leVoci) void una.dilloConCalma();
 

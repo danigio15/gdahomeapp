@@ -11,6 +11,50 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.5
+
+**Il codice si scrive una volta sola, e le due voci si aprono come la plancia.**
+
+Chi apriva «Cruscotto installatore» dopo aver messo il codice nella scheda
+dell'add-on se lo sentiva richiedere da capo. Due volte lo stesso codice, e la
+seconda è quella che fa pensare che la prima non abbia funzionato. Adesso
+l'add-on lo consegna alla pagina, e la pagina non chiede più niente.
+
+Non finisce nell'indirizzo — un `#chiave=…` andrebbe nella barra del browser,
+nella cronologia e in ogni schermata mandata per chiedere aiuto — ma in un
+messaggio diretto alla sola pagina del quadro. Chi la chiave se l'era già
+battuta a mano non se la vede cambiare sotto.
+
+**E sopra quelle pagine non c'è più la barra di Home Assistant.** Titolo,
+lente, matita: roba che sopra una pagina a tutto schermo non ci va, ed è lo
+stesso difetto che la plancia aveva già risolto. Adesso lo risolvono con lo
+stesso pezzo di codice, non con due copie.
+
+Le due pagine si chiamano anche come le voci che le aprono — «Cruscotto
+installatore» e «Gestione installatori» — invece di presentarsi con un nome
+diverso da quello su cui hai appena premuto.
+
+## Prima di questa, tre cose che si vedevano solo usandole
+
+**La pagina del cruscotto chiedeva una chiave che quella porta non ha mai
+aperto.** Diceva «è quella che sta sulla macchina come QUADRO_CHIAVE», mentre
+il server ha sempre voluto la chiave dell'installatore — quella che gli dà chi
+tiene il quadro. Un installatore andava a cercare una variabile d'ambiente su
+un computer che non ha mai visto.
+
+**Il codice di abbinamento scadeva mentre lo si incollava.** Quindici minuti,
+in cui dovevano starci: copiarlo, aprire Home Assistant, trovare l'add-on,
+incollare, salvare, far ripartire il ponte. E nel caso vero non lo incolla chi
+lo genera: lo manda a chi ci abita, che lo farà stasera. Quello che ne usciva
+era un «403 questa chiave non apre niente», che non dice «scaduto». Adesso
+vive **un giorno**.
+
+**E una casa che si presentava ci metteva due minuti a comparire.** Trenta
+secondi prima del primo rapporto, più il giro, più un minuto di ricarica della
+pagina: tutti numeri giusti quando il passo era un quarto d'ora, tutti
+sbagliati adesso. Ora sono dodici secondi, ed è il momento in cui qualcuno sta
+davvero guardando lo schermo.
+
 ## 1.5.4.1
 
 **Tre nomi per la stessa cosa, nella stessa schermata.**

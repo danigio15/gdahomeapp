@@ -484,6 +484,48 @@ class RiquadroDiGdahome extends HTMLElement {
     if (this._disegnata && this._disegnata !== dove) this._disegna();
   }
 
+  /* Il codice, consegnato alla pagina invece che richiesto a chi guarda.
+   *
+   * Sta nella scheda dell'add-on — e' quello che fa esistere questa voce — e
+   * senza questo passaggio la pagina dentro lo richiederebbe da capo. Due
+   * volte lo stesso codice, e la seconda e' quella che fa pensare che la prima
+   * non abbia funzionato.
+   *
+   * `postMessage` e non nell'indirizzo: un `#chiave=…` finirebbe nella barra
+   * degli indirizzi, nella cronologia e in ogni schermata che qualcuno manda
+   * per chiedere aiuto. Il secondo argomento e' l'origine del quadro, presa da
+   * `dove`: il messaggio lo puo' leggere quella pagina e nessun'altra, anche
+   * se un giorno dentro ci finisse altro.
+   *
+   * Si manda piu' di una volta perche' non c'e' modo di sapere **quando** la
+   * pagina si mette in ascolto: `load` dice che il documento c'e', non che il
+   * suo script e' arrivato in fondo. Tre colpi a distanza crescente costano
+   * tre messaggi e tolgono una corsa che si perde in silenzio. */
+  _consegnaLaChiave() {
+    const chiave = String(this._config.chiave || "");
+    if (!chiave) return;
+    let origine = "";
+    try {
+      origine = new URL(this._config.dove).origin;
+    } catch (_errore) {
+      return;
+    }
+    const finestra = this.shadowRoot.querySelector("iframe")?.contentWindow;
+    if (!finestra) return;
+    for (const fra of [0, 300, 1500]) {
+      const manda = () => {
+        try {
+          finestra.postMessage({ gdahome: "chiave", chiave }, origine);
+        } catch (_errore) {
+          /* La pagina se n'e' andata mentre aspettavamo: non c'e' niente da
+             dire a nessuno. */
+        }
+      };
+      if (fra === 0) manda();
+      else setTimeout(manda, fra);
+    }
+  }
+
   /* Una pagina intera, come la plancia: una tessera alta trecento punti non
    * servirebbe a niente. */
   getCardSize() {
@@ -513,7 +555,9 @@ class RiquadroDiGdahome extends HTMLElement {
     /* L'indirizzo si mette dopo, come attributo: dentro il testo del modello
        finirebbe in mezzo all'HTML, e un indirizzo in mezzo all'HTML e' un
        indirizzo che prima o poi porta dentro qualcos'altro. */
-    this.shadowRoot.querySelector("iframe").src = dove;
+    const riquadro = this.shadowRoot.querySelector("iframe");
+    riquadro.addEventListener("load", () => this._consegnaLaChiave());
+    riquadro.src = dove;
     this._disegnata = dove;
   }
 }
