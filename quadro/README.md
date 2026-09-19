@@ -291,9 +291,14 @@ smette di aprire nello stesso istante.
 
 Apre `https://quadro.gdahome.org/console/`, incolla la sua chiave — la pagina se
 la tiene nel browser, non sta in nessun indirizzo — e vede i suoi impianti. Per
-farne entrare uno: **Abbina** gli dà un codice che vive un quarto d'ora, e quel
+farne entrare uno: **Abbina** gli dà un codice che vive **un giorno**, e quel
 codice si incolla nella casella `quadro` della scheda dell'add-on in casa del
 cliente. Nient'altro: niente indirizzo, niente server, niente dominio.
+
+Un giorno e non un quarto d'ora perché quel codice, quasi sempre, non lo
+incolla chi lo genera: lo manda a chi ci abita, che lo farà stasera. E perché
+chi lo intercettasse non aprirebbe niente — non è una porta, è il permesso di
+*depositare* righe di numeri in una lista, e si stacca con un tasto.
 
 Il primo rapporto lega il codice a quella matricola, e da lì in poi non serve a
 nessun'altra casa — e la casa è **sua**, cioè compare nella sua pagina e in

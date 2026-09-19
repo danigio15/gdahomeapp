@@ -16,7 +16,7 @@
  * deciso in `acceso`:
  *
  *  - il **Cruscotto** vuole l'interruttore `installatore` acceso **e** il
- *    codice della flotta scritto nella scheda. L'interruttore da solo non
+ *    codice del cruscotto scritto nella scheda. L'interruttore da solo non
  *    apre niente;
  *  - la **Gestione** non ha nessun interruttore: c'e' la sua chiave o non c'e'
  *    la voce.
@@ -60,6 +60,14 @@
  * l'interruttore, non vede niente e pensa che sia rotto. E' lo stesso motivo,
  * e la stessa cura, delle Plance in `plance-in-casa.js`.
  */
+
+/* La tessera che disegna la pagina dentro la voce.
+ *
+ * Il nome deve essere lo stesso che `ponte/carta/plancia.js` registra con
+ * `customElements.define`: sono due file e un nome, e se si scollano Home
+ * Assistant disegna «Custom element doesn't exist» dentro un riquadro che
+ * nessuno sa piu' da dove viene. Una prova li tiene insieme. */
+export const RIQUADRO = "gdahome-riquadro";
 
 /* Le due voci. `dove` e' l'indirizzo dentro Home Assistant — vuole un trattino
  * dentro — e `pagina` quella del quadro che ci si apre. */
@@ -113,11 +121,33 @@ export class VoceNellaBarra {
    * @param acceso se l'interruttore della scheda e' acceso.
    * @param quadro l'indirizzo del quadro, senza niente in fondo.
    */
-  constructor({ casa, quale, acceso = false, quadro = "", registro, aspetta = ASPETTA } = {}) {
+  constructor({
+    casa,
+    quale,
+    acceso = false,
+    quadro = "",
+    chiave = "",
+    registro,
+    aspetta = ASPETTA,
+  } = {}) {
     this.casa = casa;
     this.quale = quale;
     this.acceso = Boolean(acceso);
     this.quadro = String(quadro || "").replace(/\/+$/, "");
+    /* Il codice che apre questa pagina, quello scritto nella scheda
+     * dell'add-on. Da qui finisce nella configurazione della plancia, e la
+     * tessera lo passa alla pagina: cosi' si scrive **una volta sola**.
+     *
+     * Prima si scriveva due volte — nella scheda per far comparire la voce, e
+     * nella pagina per entrarci — e la seconda volta e' quella che fa pensare
+     * che la prima non abbia funzionato.
+     *
+     * Dove finisce, detto: nelle opzioni dell'add-on (dov'era gia') e nella
+     * configurazione di questa plancia, che sta in `.storage` di Home
+     * Assistant. Tutt'e due le legge chi amministra quell'Home Assistant, e
+     * questa voce e' `require_admin`: non si apre a nessuno che non potesse
+     * gia' leggere la prima. */
+    this.chiave = String(chiave || "");
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.aspetta = aspetta;
     this._fermo = false;
@@ -133,6 +163,18 @@ export class VoceNellaBarra {
    *
    * `panel: true` e non una griglia: il cruscotto e' una pagina, e dentro una
    * colonna larga quattrocento punti sarebbe illeggibile.
+   *
+   * E la tessera e' la **nostra**, non l'`iframe` di Home Assistant. Le due
+   * aprono lo stesso indirizzo, ma sopra quella di Home Assistant resta la
+   * barra della dashboard — titolo, lente, matita — che sopra una pagina a
+   * tutto schermo non ci va. Toglierla vuol dire girare dentro la pagina di
+   * Home Assistant e risalire fino a `hui-root`, e questo lo puo' fare solo
+   * una tessera nostra: e' la stessa cosa che fa la plancia, e infatti sta
+   * nello stesso file (`ponte/carta/plancia.js`).
+   *
+   * Quel modulo e' gia' dichiarato a Lovelace da `plance-in-casa.js`, quindi
+   * qui non c'e' niente da dichiarare: se la plancia si apre, si apre anche
+   * questa.
    */
   vista() {
     return {
@@ -140,7 +182,18 @@ export class VoceNellaBarra {
         {
           title: this.quale.titolo,
           panel: true,
-          cards: [{ type: "iframe", url: this.dove, aspect_ratio: "100%" }],
+          cards: [
+            {
+              type: `custom:${RIQUADRO}`,
+              dove: this.dove,
+              /* Vuota non si scrive: una chiave assente e una chiave vuota
+               * sono la stessa cosa per chi legge, ma una riga in meno nella
+               * configurazione e' una riga in meno che cambia quando non
+               * cambia niente — e ogni scrittura fa lampeggiare le pagine
+               * aperte. */
+              ...(this.chiave ? { chiave: this.chiave } : {}),
+            },
+          ],
         },
       ],
     };

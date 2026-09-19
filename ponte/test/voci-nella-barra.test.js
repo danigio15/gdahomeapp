@@ -22,8 +22,10 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
-import { IL_CRUSCOTTO, LA_GESTIONE, VoceNellaBarra } from "../src/voci-nella-barra.js";
+import { IL_CRUSCOTTO, LA_GESTIONE, RIQUADRO, VoceNellaBarra } from "../src/voci-nella-barra.js";
 
 const QUADRO = "https://quadro.gdahome.org";
 
@@ -103,10 +105,12 @@ test("acceso, la voce compare nella barra laterale col cruscotto dentro", async 
   assert.equal(fatta.show_in_sidebar, true);
   assert.equal(fatta.require_admin, true, "la vedrebbero tutti quelli che entrano");
 
-  /* E dentro c'e' il cruscotto vero, non una copia rifatta. */
+  /* E dentro c'e' il cruscotto vero, non una copia rifatta — con la tessera
+   * nostra e non l'`iframe` di Home Assistant, che sopra si tiene la barra
+   * della dashboard. */
   const carta = casa.salvata.views[0].cards[0];
-  assert.equal(carta.type, "iframe");
-  assert.equal(carta.url, `${QUADRO}/console/`);
+  assert.equal(carta.type, `custom:${RIQUADRO}`);
+  assert.equal(carta.dove, `${QUADRO}/console/`);
   assert.equal(casa.salvata.views[0].panel, true, "a pagina intera, non una tessera");
 });
 
@@ -130,7 +134,7 @@ test("cambiando l'indirizzo del quadro la pagina si riscrive", async () => {
   await laVoce(casa).dillo();
   await laVoce(casa, { quadro: "https://altro.example" }).dillo();
 
-  assert.equal(casa.salvata.views[0].cards[0].url, "https://altro.example/console/");
+  assert.equal(casa.salvata.views[0].cards[0].dove, "https://altro.example/console/");
   assert.equal(casa.chieste.filter((c) => c.type === "lovelace/config/save").length, 2);
 });
 
@@ -242,7 +246,7 @@ test("la gestione apre /gestore/, non la console", async () => {
   const casa = casaFinta();
   await laVoce(casa, { quale: LA_GESTIONE }).dillo();
 
-  assert.equal(casa.salvata.views[0].cards[0].url, `${QUADRO}/gestore/`);
+  assert.equal(casa.salvata.views[0].cards[0].dove, `${QUADRO}/gestore/`);
   assert.equal(casa.salvata.views[0].title, LA_GESTIONE.titolo);
 });
 
@@ -256,5 +260,36 @@ test("spegnere una non tocca l'altra", async () => {
     casa.plance.map((una) => una.url_path),
     [IL_CRUSCOTTO.dove],
     "spegnendo la gestione se n'e' andato anche il cruscotto",
+  );
+});
+
+test("la tessera che la voce chiede e' la stessa che la cartina registra", () => {
+  /* Due file e un nome. Qui si scrive `custom:gdahome-riquadro` dentro la
+   * configurazione di una plancia; la' `customElements.define` decide come si
+   * chiama davvero. Se si scollano, Home Assistant non si lamenta con nessuno:
+   * disegna «Custom element doesn't exist» dentro un riquadro, e chi lo vede
+   * non ha modo di sapere da dove viene.
+   *
+   * Si guarda anche che la cartina tolga la barra a tutt'e due — plancia e
+   * riquadro — perche' e' l'unica ragione per cui questa tessera esiste invece
+   * dell'`iframe` di Home Assistant: senza quella riga tanto valeva l'altra. */
+  const cartina = readFileSync(
+    fileURLToPath(new URL("../carta/plancia.js", import.meta.url)),
+    "utf8",
+  );
+  assert.match(
+    cartina,
+    new RegExp(`const RIQUADRO = "${RIQUADRO}";`),
+    "la cartina deve registrare proprio questo nome",
+  );
+  assert.match(
+    cartina,
+    /customElements\.define\(RIQUADRO, RiquadroDiGdahome\)/,
+    "e deve registrarlo davvero, non solo nominarlo",
+  );
+  assert.equal(
+    (cartina.match(/senzaLaBarra\(this/g) || []).length,
+    2,
+    "la barra la tolgono tutt'e due: la plancia e il riquadro",
   );
 });

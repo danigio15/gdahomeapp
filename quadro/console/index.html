@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Il quadro · installatore</title>
+    <title>Cruscotto installatore</title>
     <!--
       IL QUADRO — LA CONSOLE DI CHI INSTALLA.
 
@@ -1618,7 +1618,7 @@
         <div class="marchio">
           <span class="bollo" aria-hidden="true"><i></i><i class="mezzo"></i><i></i></span>
           <span class="nomi">
-            <b>Il quadro</b>
+            <b>Cruscotto installatore</b>
             <span id="chi"></span>
           </span>
         </div>
@@ -1629,8 +1629,8 @@
     <main id="dove"></main>
 
     <footer>
-      Il quadro di gdahome. Da qui non si entra in nessuna casa e non si vede niente di chi ci
-      abita: si guardano i numeri che ogni impianto manda da sé.
+      Da qui non si entra in nessuna casa e non si vede niente di chi ci abita: si guardano i numeri
+      che ogni impianto manda da sé.
     </footer>
 
     <script>
@@ -2820,9 +2820,10 @@
                         Scade fra <b data-orologio="${primo.scadeFra}">—</b> · fatto ${testo(daQuanto(primo.fattoIl))}
                       </div>`
                     : `<p class="nota" style="margin: 16px 0 12px">
-                        Non c'è nessun codice aperto. Fanne uno quando sei davanti
-                        alla casa da abbinare: vale un quarto d'ora, e farlo prima
-                        di salire in macchina vuol dire trovarlo scaduto.
+                        Non c'è nessun codice aperto. Fanne uno e mandalo a chi
+                        abita la casa: vale un giorno, e va incollato nella scheda
+                        dell'add-on gdahome di casa sua. Si abbina da sé appena
+                        quella casa si fa viva.
                       </p>`
                 }
 
@@ -3085,12 +3086,12 @@
         doveNav.innerHTML = "";
         dove.innerHTML = `
           <section class="riquadro tinto" style="max-width: 32rem; margin-inline: auto">
-            <div class="capoRiquadro"><h3>La chiave di questo quadro</h3></div>
+            <div class="capoRiquadro"><h3>La tua chiave</h3></div>
             <p class="nota" style="margin-bottom: 16px">
               ${
                 perché
                   ? testo(perché)
-                  : "È quella che sta sulla macchina come QUADRO_CHIAVE. Resta in questo browser, e non esce da qui."
+                  : "Te l'ha data chi tiene il quadro, il giorno che ti ha aperto il cruscotto. Resta in questo browser, e non esce da qui."
               }
             </p>
             <div class="azioni">
@@ -3133,8 +3134,22 @@
 
       void apri();
 
-      /* I rapporti arrivano ogni quindici minuti: si ricarica ogni minuto,
-       * che è già quindici volte più spesso di quanto cambi qualcosa. */
+      /* Ogni dieci secondi.
+       *
+       * Era ogni minuto, e il conto scritto qui sopra diceva: i rapporti
+       * arrivano ogni quindici minuti, ricaricare ogni minuto è già quindici
+       * volte più spesso di quanto cambi qualcosa. Vero allora. Adesso i
+       * rapporti arrivano ogni minuto, e quel conto si è rovesciato: fra una
+       * casa che si fa viva e questa pagina che lo mostra potevano passare due
+       * minuti.
+       *
+       * Il momento che decide il numero è l'abbinamento: si manda un codice, e
+       * si sta davanti a questa pagina ad aspettare che la casa compaia. Dieci
+       * secondi lì sono un'attesa; un minuto è il momento in cui si ricarica a
+       * mano, e poi si va a cercare cosa non ha funzionato.
+       *
+       * Costa sei richieste al minuto **per pagina aperta**, e le pagine aperte
+       * sono quante sono le persone che stanno guardando: una, quasi sempre. */
       setInterval(() => {
         if (!chiave) return;
         carica()
@@ -3143,7 +3158,40 @@
             /* Un giro andato male non deve far sparire quello che si sta
              * guardando: si riprova al minuto dopo. */
           });
-      }, 60 * 1000);
+      }, 10 * 1000);
+
+      /* La chiave consegnata da chi ci tiene dentro.
+       *
+       * Questa pagina si apre in due modi: da sola in un browser, e dentro
+       * Home Assistant, in una voce della barra laterale che l'add-on
+       * fabbrica. Nel secondo caso il codice l'add-on ce l'ha gia' — e' quello
+       * scritto nella sua scheda, ed e' quello che fa esistere la voce — e
+       * richiederlo qui vorrebbe dire scriverlo due volte, con la seconda che
+       * fa pensare che la prima non abbia funzionato.
+       *
+       * Non si controlla da quale origine arriva, e non e' una svista: chi ci
+       * tiene dentro e' Home Assistant, e l'indirizzo di un Home Assistant e'
+       * diverso in ogni casa — non c'e' nessun elenco da scrivere qui. Quello
+       * che regge e' che il messaggio non **da'** accesso: porta una chiave,
+       * che vale se e' buona e non vale se non lo e'. Chi potesse mandarne una
+       * buona ce l'avrebbe gia'.
+       *
+       * Se una chiave c'e' gia' non si tocca: chi l'ha battuta a mano in
+       * questo browser ha deciso lui, e una consegna che gliela cambia sotto
+       * e' un modo di non far entrare piu' nessuno. */
+      addEventListener("message", (evento) => {
+        const detto = evento?.data;
+        if (!detto || detto.gdahome !== "chiave") return;
+        const arrivata = String(detto.chiave || "").trim();
+        if (!arrivata || chiave) return;
+        chiave = arrivata;
+        try {
+          localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+        } catch (_niente) {
+          /* Vale per questa apertura e basta: meglio di non entrare. */
+        }
+        void apri();
+      });
     </script>
   </body>
 </html>

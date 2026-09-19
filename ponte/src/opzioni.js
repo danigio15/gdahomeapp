@@ -97,8 +97,8 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
    * mail, e uno spazio in fondo e' il modo piu' comune di ritrovarsi una
    * chiave «scritta» che non apre niente. Meglio toglierlo qui che spiegarlo
    * al telefono. */
-  const chiaveDellaFlotta = String(
-    process.env.PONTE_CHIAVE_FLOTTA ?? scritte.chiave_flotta ?? "",
+  const chiaveDelCruscotto = String(
+    process.env.PONTE_CHIAVE_CRUSCOTTO ?? scritte.chiave_cruscotto ?? "",
   ).trim();
   const chiaveDellaGestione = String(
     process.env.PONTE_CHIAVE_GESTIONE ?? scritte.chiave_gestione ?? "",
@@ -190,7 +190,7 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
     /* Questo Home Assistant e' di chi installa.
      *
      * Due condizioni, e servono tutt'e due: l'interruttore acceso **e** il
-     * codice della flotta scritto nella scheda. L'interruttore da solo non
+     * codice del cruscotto scritto nella scheda. L'interruttore da solo non
      * apre niente.
      *
      * Prima bastava l'interruttore, e la chiave la chiedeva la pagina. Il
@@ -207,8 +207,8 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
     installatore:
       (String(process.env.PONTE_INSTALLATORE ?? scritte.installatore ?? "") === "true" ||
         scritte.installatore === true) &&
-      Boolean(chiaveDellaFlotta),
-    chiaveDellaFlotta,
+      Boolean(chiaveDelCruscotto),
+    chiaveDelCruscotto,
     /* Questo Home Assistant e' di chi **tiene** il quadro.
      *
      * Qui l'interruttore non c'e' proprio, e non e' una svista: e' una casa

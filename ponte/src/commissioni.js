@@ -328,9 +328,11 @@ export class Commissioni {
     fotoDiCasa = null,
     segnalazioni = null,
     chat = null,
-    /* Se questo Home Assistant e' di chi installa. Solo un si' o un no: la
-     * chiave della flotta non passa di qui, e non deve — sta nel browser di chi
-     * la digita, non sul disco di una casa. */
+    /* Se questo Home Assistant e' di chi installa. Solo un si' o un no: il
+     * codice del cruscotto non passa di qui, e non deve. Sta nelle opzioni
+     * dell'add-on, e di li' non si muove: chi guarda questa risposta sa **che**
+     * questa casa e' di un installatore, non con che cosa si aprirebbe il suo
+     * cruscotto. */
     installatore = false,
     spegnimento = null,
     aggiornamenti = null,
