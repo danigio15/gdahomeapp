@@ -760,10 +760,27 @@
                 ? `<div class="avvertenza">
                      <span class="gettone" aria-hidden="true">!</span>
                      <span>
-                       <b>${plurale(ORFANE, "impianto", "impianti")} senza più nessuno che li guardi.</b>
-                       Sono impianti di installatori che hai tolto: continuano a mandare le loro
-                       rapporti — sono impianti che funzionano in casa di qualcuno — e tornano a
-                       qualcuno il giorno che quell'installatore lo riaggiungi.
+                       <b
+                         >${plurale(ORFANE, "impianto", "impianti")} senza più nessuno che
+                         ${ORFANE === 1 ? "lo guardi" : "li guardi"}.</b
+                       >
+                       ${
+                         ORFANE === 1
+                           ? `È l'impianto di un installatore che hai tolto. Continua a mandare il
+                              suo rapporto, ed è giusto così: funziona in casa di qualcuno, e
+                              spegnerlo punirebbe il cliente per una faccenda che non è sua. Ma da
+                              qui non lo guarda più nessuno.`
+                           : `Sono impianti di installatori che hai tolto. Continuano a mandare i
+                              loro rapporti, ed è giusto così: funzionano in casa di qualcuno, e
+                              spegnerli punirebbe i clienti per una faccenda che non è loro. Ma da
+                              qui non li guarda più nessuno.`
+                       }
+                       <br /><br />
+                       <b>Riaggiungere quell'installatore non ${ORFANE === 1 ? "lo" : "li"} riporta
+                       indietro:</b> chi si riaggiunge prende una matricola nuova, e
+                       ${ORFANE === 1 ? "questo impianto punta" : "questi impianti puntano"} ancora
+                       a quella di prima. Per ora non c'è modo di
+                       ${ORFANE === 1 ? "ridarlo" : "ridarli"} a qualcuno da questa pagina.
                      </span>
                    </div>`
                 : ""
