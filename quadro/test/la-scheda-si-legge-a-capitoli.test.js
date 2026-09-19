@@ -3,8 +3,8 @@
  * Era una colonna di dieci riquadri, ognuno con la sua etichettina grigia in
  * cima. Dieci etichettine sono dieci cose sullo stesso piano: chi apre la
  * scheda di un impianto per sapere **cosa gli tocca** se le legge tutte e
- * dieci prima di trovarlo, e il collaudo — che e' la risposta — sta in mezzo
- * alla macchina e alle versioni.
+ * dieci prima di trovarlo, e i controlli — che sono la risposta — stanno in
+ * mezzo alla macchina e alle versioni.
  *
  * I capitoli sono tre perche' le domande sono tre: cosa mi tocca, come sta,
  * cos'e' di preciso. Questa prova tiene che ci siano tutti e tre e **in
@@ -39,7 +39,7 @@ test("ogni capitolo dice sottovoce cosa ci si trova dentro", () => {
   }
 });
 
-test("il collaudo e gli aggiornamenti stanno nel primo capitolo", () => {
+test("i controlli e gli aggiornamenti stanno nel primo capitolo", () => {
   /* E' la regola che i capitoli servono a tenere: quello che questa casa
    * **chiede** sta tutto insieme e sta in cima. Se un giorno «Gli
    * aggiornamenti» scivolasse sotto «Come sta», la scheda tornerebbe a essere
@@ -51,7 +51,7 @@ test("il collaudo e gli aggiornamenti stanno nel primo capitolo", () => {
   assert.ok(primo > 0 && secondo > primo && terzo > secondo, "i capitoli non sono in fila");
 
   for (const [che, quale] of [
-    ["<h3>Il collaudo</h3>", "il collaudo"],
+    ["<h3>I controlli</h3>", "i controlli"],
     ["${gliAggiornamenti(c, casa)}", "gli aggiornamenti"],
   ]) {
     const sta = dove(che);

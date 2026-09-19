@@ -47,7 +47,7 @@
  * ─── Perche' non una copia del cruscotto ──────────────────────────────────
  *
  * Perche' sarebbe un terzo posto dove vivono le stesse regole — cos'e' un
- * impianto muto, quando un collaudo e' chiuso — e tre posti che dicono la
+ * impianto muto, quando una casa e' da guardare — e tre posti che dicono la
  * stessa cosa prima o poi ne dicono tre diverse. Qui si mostra quello che
  * esiste gia'.
  *

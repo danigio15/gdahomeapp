@@ -1,9 +1,8 @@
 /* Le case che questo quadro segue.
  *
  * Di ognuna si tiene poco: l'ultimo rapporto, il giorno in cui e' arrivata la
- * prima, quello in cui il collaudo si e' chiuso, e **quanti rapporti sono
- * arrivati per ogni giorno** — che e' tutto quello che serve per disegnare la
- * striscia dei quattordici giorni.
+ * prima, e **quanti rapporti sono arrivati per ogni giorno** — che e' tutto
+ * quello che serve per disegnare la striscia dei quattordici giorni.
  *
  * ─── Il nome sta qui, e ci resta ─────────────────────────────────────────
  *
@@ -37,7 +36,7 @@
 import { join } from "node:path";
 
 import { Archivio } from "./archivio.js";
-import { collaudoChiuso, ilCollaudo, lePastiglie, loStato } from "./collaudo.js";
+import { iControlli, lePastiglie, loStato } from "./controlli.js";
 
 const GIORNO = 24 * 60 * 60 * 1000;
 
@@ -91,9 +90,9 @@ export class CaseSeguite {
   /**
    * Un rapporto e' arrivata.
    *
-   * Una matricola mai vista **nasce qui**, senza nome e in fila «collaudo
-   * aperto»: e' il momento in cui una casa entra nel quadro, e chi l'ha
-   * installata le da' un nome quando la vede comparire.
+   * Una matricola mai vista **nasce qui**, senza nome: e' il momento in cui una
+   * casa entra nel quadro, e chi l'ha installata le da' un nome quando la vede
+   * comparire.
    */
   deposita(casa, carta, di = null) {
     const ora = this.adesso();
@@ -107,7 +106,6 @@ export class CaseSeguite {
         di,
         nome: "",
         da: ora,
-        collaudataIl: null,
         vistaIl: ora,
         carta: null,
         giorni: {},
@@ -134,10 +132,11 @@ export class CaseSeguite {
     if (una.lavoro && ora - una.lavoro.chiesto > UN_LAVORO_ASPETTA) una.lavoro = null;
     una.giorni[ilGiorno(ora)] = (una.giorni[ilGiorno(ora)] || 0) + 1;
 
-    /* Il collaudo si chiude una volta sola, il giorno in cui nessuna spunta e'
-     * piu' aperta. Non si riapre: quello che si rompe dopo e' salute, non
-     * collaudo, ed e' un'altra colonna. */
-    if (!una.collaudataIl && collaudoChiuso(carta)) una.collaudataIl = ora;
+    /* Il giorno in cui «il collaudo si e' chiuso» non si tiene piu': non c'e'
+     * piu' un collaudo da chiudere. Si butta dalle case che ce l'hanno scritto,
+     * cosi' l'archivio non si porta dietro per anni un campo che non legge
+     * nessuno. */
+    if ("collaudataIl" in una) delete una.collaudataIl;
 
     this._potaIGiorni(una, ora);
     this.archivio.salva();
@@ -163,7 +162,7 @@ export class CaseSeguite {
    *
    * ─── Cosa si porta dietro e cosa no ──────────────────────────────────────
    *
-   * L'impianto e' lo stesso: i giorni, il collaudo, la carta restano. Quello
+   * L'impianto e' lo stesso: i giorni e la carta restano. Quello
    * che se ne va e' **quello che il vecchio aveva scritto lui**. Il nome per
    * primo: non e' il nome dell'impianto, e' la nota che si e' preso chi lo
    * seguiva, e li' dentro ci finisce il cognome del cliente o la via. I
@@ -222,7 +221,7 @@ export class CaseSeguite {
         /* Prima quelle che chiedono qualcosa, e fra quelle prima le mute: chi
          * apre questa pagina la mattina vuole trovarsi in cima quello che gli
          * tocca, non l'ordine in cui le ha installate. */
-        const peso = { muta: 0, guardare: 1, aperto: 2, posto: 3 };
+        const peso = { muta: 0, guardare: 1, posto: 2 };
         const differenza = peso[una.stato.chiave] - peso[altra.stato.chiave];
         if (differenza !== 0) return differenza;
         return (una.nome || una.casa).localeCompare(altra.nome || altra.casa);
@@ -362,12 +361,11 @@ export class CaseSeguite {
       nome: una.nome || `${una.casa.slice(0, 13)}…`,
       senzaNome: !una.nome,
       da: una.da,
-      collaudataIl: una.collaudataIl,
       vistaIl: una.vistaIl,
       giorni: this.striscia(una, ora),
       carta,
       stato: loStato(una, ora),
-      collaudo: carta ? ilCollaudo(carta) : null,
+      controlli: carta ? iControlli(carta) : null,
       pastiglie: carta ? lePastiglie(carta) : [],
       /* Quello che e' stato chiesto e che questa casa non e' ancora passata a
        * prendere. Sta **fuori** dalla carta apposta: la carta e' quello che la

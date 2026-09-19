@@ -18,8 +18,8 @@
 
       QUI NON SI DECIDE NIENTE.
 
-      Lo stato di una casa, le spunte del collaudo e le pastiglie arrivano già
-      decisi da `quadro/src/collaudo.js`, dentro `GET case`. Questa pagina li
+      Lo stato di una casa, i suoi dieci controlli e le pastiglie arrivano già
+      decisi da `quadro/src/controlli.js`, dentro `GET case`. Questa pagina li
       disegna e basta. Era nata col contrario — le regole scritte qui, coi dati
       finti accanto — e il giorno che una soglia cambia, cambiarla in due posti
       vuol dire cambiarla in uno solo: due schermi che dicono due cose diverse
@@ -904,31 +904,8 @@
         color: var(--notte);
       }
 
-      /* ─── Il misuratore del collaudo ────────────────────────────────── */
-      .misura {
-        display: flex;
-        gap: 4px;
-        margin-bottom: 16px;
-      }
-
-      .misura i {
-        flex: 1;
-        height: 7px;
-        border-radius: 4px;
-        background: var(--alone-ambra);
-      }
-
-      .misura i.fatta {
-        background: var(--bene);
-      }
-
-      /* Quello che la casa non dice non e' una tacca mancata: e' una tacca
-       * senza risposta, e si vede spenta invece che ambra. */
-      .misura i.ignota {
-        background: var(--carta-alta);
-      }
-
-      ul.spunte {
+      /* ─── I dieci controlli ─────────────────────────────────────────── */
+      ul.controlli {
         list-style: none;
         margin: 0;
         padding: 0;
@@ -936,7 +913,7 @@
         flex-direction: column;
       }
 
-      ul.spunte li {
+      ul.controlli li {
         display: flex;
         align-items: center;
         gap: 11px;
@@ -944,11 +921,11 @@
         font-size: 0.89rem;
       }
 
-      ul.spunte li + li {
+      ul.controlli li + li {
         border-top: 1px solid var(--bordo-tenue);
       }
 
-      ul.spunte .bollino {
+      ul.controlli .bollino {
         flex: none;
         width: 21px;
         height: 21px;
@@ -959,36 +936,36 @@
         font-weight: 700;
       }
 
-      ul.spunte .fatta .bollino {
+      ul.controlli .bene .bollino {
         background: var(--alone-bene);
         color: var(--bene);
       }
 
-      ul.spunte .manca .bollino {
-        background: var(--alone-ambra);
-        color: var(--ambra);
+      ul.controlli .male .bollino {
+        background: var(--alone-male);
+        color: var(--male);
       }
 
-      ul.spunte .ignota .bollino {
+      ul.controlli .ignoto .bollino {
         background: var(--carta-alta);
         color: var(--fioco);
       }
 
-      ul.spunte .ignota .cosa,
-      ul.spunte .ignota .dettaglio {
+      ul.controlli .ignoto .cosa,
+      ul.controlli .ignoto .dettaglio {
         color: var(--fioco);
       }
 
-      ul.spunte .cosa {
+      ul.controlli .cosa {
         flex: 1;
         min-width: 0;
       }
 
-      ul.spunte .manca .cosa {
+      ul.controlli .male .cosa {
         font-weight: 600;
       }
 
-      ul.spunte .dettaglio {
+      ul.controlli .dettaglio {
         color: var(--fioco);
         font-size: 0.79rem;
         text-align: right;
@@ -1812,11 +1789,11 @@
           font-size: 1.25rem;
         }
 
-        ul.spunte li {
+        ul.controlli li {
           flex-wrap: wrap;
         }
 
-        ul.spunte .dettaglio {
+        ul.controlli .dettaglio {
           width: 100%;
           padding-left: 32px;
           text-align: left;
@@ -1869,8 +1846,8 @@
        * DA DOVE ARRIVA QUELLO CHE SI VEDE.
        *
        * Da `/console/case` e `/console/inviti`, e **gia' deciso**: lo stato di
-       * una casa, le sue spunte e le sue pastiglie li calcola il server
-       * (`src/collaudo.js`). Qui dentro non c'e' nessuna regola, ed e' voluto:
+       * una casa, i suoi controlli e le sue pastiglie li calcola il server
+       * (`src/controlli.js`). Qui dentro non c'e' nessuna regola, ed e' voluto:
        * se le regole stessero in tutt'e due i posti, il giorno che una cambia
        * ne cambierebbe una sola, e due schermi direbbero due cose diverse
        * della stessa casa.
@@ -2065,26 +2042,21 @@
           (uno) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[uno],
         );
 
-      /* Com'e' andata una spunta del collaudo: tre stati, non due.
+      /* Come va un controllo: verde, rosso, e il terzo.
        *
-       * Il terzo e' quello che si scordava. `fatta` puo' essere `true`,
-       * `false` o `null`, e `null` vuol dire che quel pezzo di rapporto la
-       * casa non lo manda — una senza System Monitor non manda la macchina.
-       * Fin qui la pagina lo disegnava ambra insieme a quelle rotte, cioe'
-       * faceva vedere un guaio dove c'era solo silenzio; e intanto il
-       * collaudo si chiudeva lo stesso, perche' a tenerlo aperto sono solo le
-       * `false`. Due schermi della stessa cosa che dicevano il contrario.
-       *
-       * Adesso il silenzio ha un colore suo, spento, e si legge per quello
-       * che e'. */
-      const comEAndata = (una) =>
-        una.fatta === true ? "fatta" : una.fatta === false ? "manca" : "ignota";
+       * Il terzo e' quello che si scordava. `va` puo' essere `true`, `false` o
+       * `null`, e `null` vuol dire che quel pezzo di rapporto la casa non lo
+       * manda — una senza System Monitor non manda la macchina. Per un pezzo
+       * la pagina lo disegnava come le righe rotte, cioe' faceva vedere un
+       * guaio dove c'era solo silenzio. Adesso il silenzio ha un colore suo,
+       * spento, e si legge per quello che e'. */
+      const comeVa = (uno) => (uno.va === true ? "bene" : uno.va === false ? "male" : "ignoto");
 
-      const IL_BOLLINO = { fatta: "✓", manca: "▲", ignota: "◇" };
+      const IL_BOLLINO = { bene: "✓", male: "✗", ignoto: "◇" };
 
       /* Quello che sente chi legge lo schermo con le orecchie: il bollino e'
        * un disegno, e da solo non dice niente. */
-      const A_PAROLE = { fatta: "a posto", manca: "da guardare", ignota: "non si sa" };
+      const A_PAROLE = { bene: "a posto", male: "non va", ignoto: "non si sa" };
 
       /* Dove stanno i marchi delle integrazioni. Lo stesso posto da cui li
        * prende Home Assistant, ed e' il quadro a saperlo: da casa arriva una
@@ -2198,7 +2170,6 @@
       const LE_FILE = [
         ["muta", "■", "mute"],
         ["guardare", "▲", "da guardare"],
-        ["aperto", "◇", "collaudo aperto"],
         ["posto", "●", "a posto"],
       ];
 
@@ -2621,28 +2592,13 @@
       function ilDettaglio(casa) {
         const stato = casa.stato;
         const c = casa.carta;
-        const collaudo = casa.collaudo || { spunte: [], fatte: 0, aperte: 0, ignote: 0, quante: 0 };
-
-        /* Il verdetto guarda le righe **aperte**, non quelle spuntate.
-         *
-         * Guardava le spuntate, e a una casa che non dice tutto — Supervisor
-         * muto, niente System Monitor — capitava questo: sette righe grigie,
-         * nessuna rossa, e sotto la scritta che il collaudo si era riaperto.
-         * Non si era riaperto niente: erano sette domande senza risposta. Il
-         * collaudo si chiude quando nessuna riga e' aperta, ed e' questo che
-         * la frase deve dire. */
-        const verdetto =
-          collaudo.aperte === 0
-            ? collaudo.ignote === 0
-              ? "Tutte spuntate: questo impianto è a posto."
-              : `Niente da guardare. ${
-                  collaudo.ignote === 1
-                    ? "Una riga questa casa non la dice"
-                    : `${collaudo.ignote} righe questa casa non le dice`
-                }, e non fa suonare niente.`
-            : !casa.collaudataIl
-              ? "Non è ancora stata consegnata: finché resta una spunta aperta, resta in fila."
-              : `Il collaudo si era chiuso il ${ilGiorno(casa.collaudataIl)}. Queste righe si sono riaperte dopo, ed è il motivo per cui questa casa è qui.`;
+        const controlli = casa.controlli || {
+          controlli: [],
+          bene: 0,
+          male: 0,
+          ignoti: 0,
+          quanti: 0,
+        };
 
         const versioni = [
           ["gdahome (il ponte)", c.ponte, c.aggiornamenti?.gdahome],
@@ -2709,10 +2665,6 @@
               </div>
               <div><dt>Vista la prima volta</dt><dd>${testo(ilGiorno(casa.da))}</dd></div>
               <div>
-                <dt>Collaudata</dt>
-                <dd>${casa.collaudataIl ? testo(ilGiorno(casa.collaudataIl)) : "mai"}</dd>
-              </div>
-              <div>
                 <dt>Rapporto</dt>
                 <dd>${testo(daQuanto(c.quando))}, ogni ${c.ogni} min</dd>
               </div>
@@ -2778,36 +2730,21 @@
           </div>
 
           <section class="riquadro">
-            <div class="capoRiquadro">
-              <h3>Il collaudo</h3>
-              <span class="conta">${collaudo.quante - collaudo.aperte}/${collaudo.quante}</span>
-            </div>
-            <div
-              class="misura"
-              role="img"
-              aria-label="${
-                collaudo.aperte === 0
-                  ? "nessuna riga aperta"
-                  : `${plurale(collaudo.aperte, "riga aperta", "righe aperte")} su ${collaudo.quante}`
-              }"
-            >
-              ${collaudo.spunte.map((una) => `<i class="${comEAndata(una)}"></i>`).join("")}
-            </div>
-            <ul class="spunte">
-              ${collaudo.spunte
+            <div class="capoRiquadro"><h3>I controlli</h3></div>
+            <ul class="controlli">
+              ${controlli.controlli
                 .map(
-                  (una) => `
-                <li class="${comEAndata(una)}">
-                  <span class="bollino" aria-hidden="true">${IL_BOLLINO[comEAndata(una)]}</span>
+                  (uno) => `
+                <li class="${comeVa(uno)}">
+                  <span class="bollino" aria-hidden="true">${IL_BOLLINO[comeVa(uno)]}</span>
                   <span class="cosa"
-                    >${testo(una.cosa)}<span class="via"> — ${A_PAROLE[comEAndata(una)]}</span></span
+                    >${testo(uno.cosa)}<span class="via"> — ${A_PAROLE[comeVa(uno)]}</span></span
                   >
-                  <span class="dettaglio">${testo(una.dettaglio)}</span>
+                  <span class="dettaglio">${testo(uno.dettaglio)}</span>
                 </li>`,
                 )
                 .join("")}
             </ul>
-            <p class="verdetto">${testo(verdetto)}</p>
           </section>
 
           ${gliAggiornamenti(c, casa)}
@@ -3046,7 +2983,7 @@
          *
          * Qui c'era scritto «Niente da fare: questa casa e' aggiornata» in
          * tutti e due i casi, e su una casa con quattro aggiornamenti in
-         * attesa faceva questo: il collaudo diceva «4 in attesa» e due dita
+         * attesa faceva questo: i controlli dicevano «4 in attesa» e due dita
          * piu' sotto lo stesso schermo diceva che era aggiornata.
          *
          * Non e' un caso raro: i ponti fino alla 1.5.8 mandavano il **conto**
@@ -3400,8 +3337,8 @@
 
           <section class="riquadro" style="margin-top: 14px">
             <div class="capoRiquadro"><h3>Prima di premere</h3></div>
-            <ul class="spunte">
-              <li class="fatta">
+            <ul class="controlli">
+              <li class="bene">
                 <span class="bollino" aria-hidden="true">✓</span>
                 <span class="cosa">
                   <b>Il backup viene prima, sempre.</b> Non è una casella da
@@ -3410,7 +3347,7 @@
                   rifare.
                 </span>
               </li>
-              <li class="fatta">
+              <li class="bene">
                 <span class="bollino" aria-hidden="true">✓</span>
                 <span class="cosa">
                   <b>Quelli che vogliono un riavvio, uno per volta.</b> gdahome e
@@ -3679,8 +3616,8 @@
 
               <section class="riquadro">
                 <div class="capoRiquadro"><h3>Come funziona, in breve</h3></div>
-                <ul class="spunte">
-                  <li class="fatta">
+                <ul class="controlli">
+                  <li class="bene">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
                       <b>Il codice si brucia.</b> Appena una casa lo usa, non vale
@@ -3688,7 +3625,7 @@
                       da lì in poi è con quella che si presenta.
                     </span>
                   </li>
-                  <li class="fatta">
+                  <li class="bene">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
                       <b>Si stacca da due parti.</b> Tu con «non seguirla più», e
@@ -3696,7 +3633,7 @@
                       l'ultimo rapporto spedito e ha lì il tasto per smettere.
                     </span>
                   </li>
-                  <li class="fatta">
+                  <li class="bene">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
                       <b>Il quadro non guarda dentro.</b> Non apre la plancia e
@@ -3706,7 +3643,7 @@
                       bottone quando vuole.
                     </span>
                   </li>
-                  <li class="fatta">
+                  <li class="bene">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
                       <b>La manutenzione è un secondo interruttore.</b> Mandare
@@ -3721,7 +3658,7 @@
                       parola per parola.
                     </span>
                   </li>
-                  <li class="fatta">
+                  <li class="bene">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
                       <b>Non passa dal centralino.</b> Il rapporto va dalla casa

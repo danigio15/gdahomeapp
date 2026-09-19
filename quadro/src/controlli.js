@@ -1,22 +1,31 @@
-/* Da un rapporto alle spunte, e dalle spunte a una parola.
+/* Da un rapporto a dieci controlli, e dai controlli a una parola.
  *
  * Sono le sole regole di questo pezzo, e stanno **qui e basta**: la console e'
  * una pagina che disegna quello che le arriva gia' deciso. Se le regole
  * stessero anche li', il giorno che una cambia ne cambierebbe una sola, e due
  * schermi direbbero due cose diverse della stessa casa.
  *
+ * ─── Dieci controlli, e basta ────────────────────────────────────────────
+ *
+ * Qui c'era **il collaudo**: le stesse dieci righe, ma con sopra una cerimonia
+ * — una casa restava «in collaudo» finche' non erano tutte verdi, si
+ * «consegnava» una volta sola, e da allora quelle righe «si riaprivano». Era
+ * una cosa che nessuno aveva chiesto, e sullo schermo si vedeva: una casa
+ * appena abbinata veniva archiviata come lavoro non finito perche' aveva due
+ * batterie scariche.
+ *
+ * Adesso sono dieci controlli e basta. Verde quello che va, rosso quello che
+ * non va, e chi guarda decide da se' se e' un impianto finito. Non c'e' nessun
+ * traguardo, niente da chiudere e niente da riaprire.
+ *
  * ─── Tre risposte, non due ───────────────────────────────────────────────
  *
- * Una spunta puo' essere `true`, `false` o **`null`**, e la terza e' la piu'
+ * Un controllo puo' essere `true`, `false` o **`null`**, e la terza e' la piu'
  * importante. Il ponte lascia fuori dal rapporto quello che non e' riuscito
  * a sapere — una casa senza System Monitor non manda la CPU, un Supervisor che
  * non risponde non manda la macchina — e la differenza fra «non lo so» e «va
  * male» e' tutta la differenza fra un cruscotto utile e un cruscotto che
- * mente. `null` si dice «questa casa non lo dice», e non fa suonare niente.
- *
- * Percio' il collaudo si chiude quando **nessuna spunta e' `false`**, non
- * quando sono tutte `true`: se no una casa a cui manca un dato resterebbe in
- * fila per sempre, per una cosa che non e' sua.
+ * mente. `null` si dice «questa casa non lo dice», e non e' rosso.
  *
  * ─── Come sono scritte le righe ──────────────────────────────────────────
  *
@@ -27,15 +36,15 @@
  *
  * Il nome non giudica mai. Le righe erano scritte al contrario — «Sono
  * collegati tutti», «Niente da aggiornare», «Nessuna batteria da cambiare» —
- * e finche' erano verdi si leggevano bene; ambra, ognuna diceva il contrario
+ * e finche' erano verdi si leggevano bene; rosse, ognuna diceva il contrario
  * di se stessa a due dita di distanza:
  *
- *     ▲ Sono collegati tutti          17 dispositivi non collegati
- *     ▲ Niente da aggiornare          4 aggiornamenti in attesa
- *     ▲ Nessuna batteria da cambiare  2 sotto soglia
+ *     ✗ Sono collegati tutti          17 dispositivi non collegati
+ *     ✗ Niente da aggiornare          4 aggiornamenti in attesa
+ *     ✗ Nessuna batteria da cambiare  2 sotto soglia
  *
  * Tre righe che si smentiscono da sole, sullo stesso schermo. E non era un
- * caso: **una spunta ha tre stati e un titolo solo**, quindi un titolo che
+ * caso: **un controllo ha tre stati e un titolo solo**, quindi un titolo che
  * ne racconti uno e' sbagliato negli altri due. Adesso e' un nome e basta —
  * «I collegamenti», «Gli aggiornamenti», «Le batterie» — e si legge uguale
  * in tutti e tre.
@@ -103,9 +112,10 @@ const backupFermo = (carta) => {
  * li' dentro ci sono le correzioni di sicurezza — o quando se ne sono
  * accumulati tre.
  *
- * Nel collaudo invece contano tutti: alla consegna un impianto si lascia
- * aggiornato, e quella spunta e' severa apposta. Due domande diverse sulla
- * stessa riga, ed e' giusto che diano due risposte diverse. */
+ * Fra i dieci controlli invece contano tutti, e quella riga e' severa apposta:
+ * li' la domanda e' «questo impianto e' in ordine?», qui e' «devo andare a
+ * vedere?». Due domande diverse sullo stesso numero, ed e' giusto che diano
+ * due risposte diverse. */
 export const aggiornamentiPesano = (a) =>
   Boolean(a) && ((numero(a.quanti) ?? 0) >= 3 || a.ha === true || a.gdahome === true);
 
@@ -115,7 +125,7 @@ export const aggiornamentiPesano = (a) =>
  * Due nomi per lo stesso numero: `giu` e' quello di adesso, `sparite` quello
  * dei ponti fino alla 1.5.6. Sta in una funzione e non scritto tre volte
  * perche' e' gia' costato una volta: rinominando la chiave nel ponte, questo
- * file e' rimasto indietro e la spunta del collaudo diceva «undefined su 180»
+ * file e' rimasto indietro e il controllo diceva «undefined su 180»
  * — rossa per sempre, e senza che niente si rompesse.
  *
  * `null` vuol dire «questa casa non lo dice», che non e' zero. */
@@ -130,16 +140,17 @@ export const addonGiu = (carta) =>
   carta?.addon ? (numero(carta.addon.spentiCheDovrebbero) ?? 0) : null;
 
 /**
- * Le spunte del collaudo: l'impianto e' finito bene?
+ * I dieci controlli, da un rapporto.
  *
- * Sono le cose che un installatore controlla prima di andarsene, e sono tutte
- * gia' dentro il rapporto. `fatta: false` non vuol dire rotto: vuol dire che
- * quella riga non si puo' ancora spuntare.
+ * Sono le cose che chi ha montato l'impianto guarda quando apre la scheda di
+ * una casa, e sono tutte gia' dentro il rapporto. Non c'e' nessun traguardo da
+ * raggiungere: `va: false` vuol dire «questa cosa adesso non va», e domani puo'
+ * tornare verde da sola.
  */
-export function ilCollaudo(carta) {
+export function iControlli(carta) {
   const c = carta ?? {};
-  const spunte = [];
-  const metti = (cosa, fatta, dettaglio) => spunte.push({ cosa, fatta, dettaglio });
+  const controlli = [];
+  const metti = (cosa, va, dettaglio) => controlli.push({ cosa, va, dettaglio });
 
   metti(
     "La plancia",
@@ -246,11 +257,11 @@ export function ilCollaudo(carta) {
   );
 
   return {
-    spunte,
-    fatte: spunte.filter((una) => una.fatta === true).length,
-    aperte: spunte.filter((una) => una.fatta === false).length,
-    ignote: spunte.filter((una) => una.fatta === null).length,
-    quante: spunte.length,
+    controlli,
+    bene: controlli.filter((uno) => uno.va === true).length,
+    male: controlli.filter((uno) => uno.va === false).length,
+    ignoti: controlli.filter((uno) => uno.va === null).length,
+    quanti: controlli.length,
   };
 }
 
@@ -268,47 +279,49 @@ function laMacchinaRegge(m) {
   return guarda.every(Boolean);
 }
 
-/** Se questa casa puo' dirsi consegnata: nessuna spunta aperta. */
-export const collaudoChiuso = (carta) => ilCollaudo(carta).aperte === 0;
-
 /**
  * Lo stato di una casa, in una parola.
  *
- * L'ordine conta. **Muta batte tutto**: di una casa che non parla non si sa
- * niente, nemmeno che sta bene — quello che si vede di lei e' vecchio. Poi il
- * collaudo mai chiuso, che non e' un guasto ma un lavoro lasciato a meta', e
- * sta in una fila sua perche' si sbriga in un altro modo. Poi quello che si e'
- * rotto dopo.
+ * Tre, e l'ordine conta. **Muta batte tutto**: di una casa che non parla non si
+ * sa niente, nemmeno che sta bene — quello che si vede di lei e' vecchio. Poi
+ * quello che non va. Poi il resto.
+ *
+ * Ce n'era un quarto, «collaudo aperto», e teneva in una fila sua le case in
+ * cui un controllo era rosso e nessuno aveva ancora dichiarato finito
+ * l'impianto. Non serviva a niente che «da guardare» non dicesse gia': una casa
+ * con due batterie scariche va guardata, che sia stata montata ieri o tre anni
+ * fa. E archiviava come lavoro non finito una casa che funzionava.
  */
 export function loStato(casa, adesso = Date.now()) {
   const c = casa?.carta ?? null;
-  if (!c) {
-    return {
-      chiave: "aperto",
-      segno: "◇",
-      parola: "collaudo aperto",
-      perché: "Non è ancora arrivata nessun rapporto da questa casa.",
-    };
-  }
-  if (eMuta(c, adesso)) {
+  if (!c || eMuta(c, adesso)) {
     return {
       chiave: "muta",
       segno: "■",
       parola: "muta",
-      perché: `Non manda un rapporto da ${daQuanto(c.quando, adesso)}. Quello che si vede qui sotto è vecchio di altrettanto.`,
-    };
-  }
-  if (!casa.collaudataIl) {
-    const collaudo = ilCollaudo(c);
-    return {
-      chiave: "aperto",
-      segno: "◇",
-      parola: "collaudo aperto",
-      perché: `Installata da poco e non ancora consegnata: ${collaudo.aperte} ${collaudo.aperte === 1 ? "spunta aperta" : "spunte aperte"} su ${collaudo.quante}.`,
+      perché: c
+        ? `Non manda un rapporto da ${daQuanto(c.quando, adesso)}. Quello che si vede qui sotto è vecchio di altrettanto.`
+        : "Non è ancora arrivato nessun rapporto da questa casa.",
     };
   }
 
+  /* Quello che fa dire «vacci a vedere».
+   *
+   * Sono gli stessi dieci controlli, meno uno. Le prime tre righe qui sotto ci
+   * sono arrivate togliendo il collaudo: una plancia vuota, nessun telefono
+   * abbinato e il collegamento da fuori giu' erano cose che **solo** il
+   * collaudo teneva d'occhio, e senza di lui una casa con la plancia vuota
+   * sarebbe risultata «a posto» mentre nella sua scheda c'era una riga rossa.
+   * Due schermi della stessa casa che dicevano il contrario.
+   *
+   * L'unica differenza che resta e' voluta ed e' spiegata su
+   * `aggiornamentiPesano`: un aggiornamento solo si vede in elenco ma non
+   * colora la casa, se no si smette di guardare le case colorate. */
   const guai = [];
+  if (c.plance && c.plance.configurate === 0) guai.push("plancia da configurare");
+  if (c.telefoni && c.telefoni.abbinati === 0) guai.push("nessun telefono abbinato");
+  if (c.fuori && !(c.fuori.acceso && c.fuori.filo))
+    guai.push(c.fuori.acceso ? "da fuori casa, filo giù" : "da fuori casa, spento");
   if (c.rete && !c.rete.internet) guai.push("senza internet");
   if (addonGiu(c) > 0) guai.push(plurale(addonGiu(c), "add-on fermo", "add-on fermi"));
   if ((c.rete?.sorvegliate?.giu ?? 0) > 0)

@@ -18,7 +18,7 @@
  * ─── 1. Due ore, non quarantacinque minuti ───────────────────────────────
  *
  * La pagina chiama «muta» una casa che ha saltato tre rapporti
- * (`collaudo.js`, `MUTA_DOPO`): tre quarti d'ora. Va benissimo per un colore su
+ * (`controlli.js`, `MUTA_DOPO`): tre quarti d'ora. Va benissimo per un colore su
  * uno schermo che si sta gia' guardando, ed e' troppo poco per interrompere
  * qualcuno — un riavvio di Home Assistant, un aggiornamento, un router che si
  * riaccende ci stanno tutti dentro.
