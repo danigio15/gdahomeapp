@@ -1,5 +1,5 @@
-Seven reports closed, and a home that can say how it is doing.
+The app's number and your home's match again.
 
-Appliances tell you what they are doing, the weather has radar, blinds are no longer windows. Updates arrive with the right logos, and "What's new" is read in here instead of the browser.
+Nothing changes in here: this version lines the app's number up with the add-on's, which is where the news is — the panel entries that now stay in the sidebar, and the report to whoever installed your home going out every minute instead of every quarter of an hour.
 
-And if an installer set your home up, they can now notice on their own that something has stopped: a few lines of numbers, which you can read in full and stop whenever you want.
+Coming from further back you also get seven reports closed, the weather radar, and "What's new" read in here.
