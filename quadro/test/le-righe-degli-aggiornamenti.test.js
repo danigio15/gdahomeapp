@@ -24,14 +24,25 @@ import { dirname, join } from "node:path";
 const QUI = dirname(fileURLToPath(import.meta.url));
 const PAGINA = readFileSync(join(QUI, "..", "console", "index.html"), "utf8");
 
-const DA = "const testo = (cosa) =>";
-const A = "const spia = (stato) =>";
+/* Due pezzi, perche' in mezzo c'e' roba che ha bisogno del browser. Se un
+ * segno sparisce la prova non passa in silenzio: si ferma dicendo qual e'. */
+const PEZZI = [
+  ["const staLavorando = (c) =>", "const spia = (stato) =>"],
+  ["function ilTasto(uno, c, casa) {", "/* Il cartello in cima agli aggiornamenti"],
+];
 
 function iPezzi() {
-  const da = PAGINA.indexOf(DA);
-  const a = PAGINA.indexOf(A);
-  assert.ok(da > 0 && a > da, "i segni per ritagliare il programma non ci sono piu'");
-  return new Function(`${PAGINA.slice(da, a)}; return { ilSegnoDi, cosaCambia, unaRiga };`)();
+  let programma = "";
+  for (const [da, a] of PEZZI) {
+    const primo = PAGINA.indexOf(da);
+    const ultimo = PAGINA.indexOf(a);
+    assert.ok(primo >= 0, `nella pagina non c'e' piu' «${da}»`);
+    assert.ok(ultimo > primo, `nella pagina non c'e' piu' «${a}» dopo «${da}»`);
+    programma += PAGINA.slice(primo, ultimo);
+  }
+  return new Function(
+    `${programma}; return { ilSegnoDi, cosaCambia, unaRiga, ilTasto, eLaStessa };`,
+  )();
 }
 
 test("il marchio si ricontrolla qui, non solo nel ponte", () => {
@@ -118,4 +129,75 @@ test("la riga e' una sola, e la usano tutt'e due le schermate", () => {
   assert.match(disegnata, /1\.2\.0 → 1\.3\.0/);
   assert.match(disegnata, /Risolve il buio\./);
   assert.match(disegnata, /Installa/);
+});
+
+/* ─── Il tasto che installa a casa di qualcun altro ─────────────────────────
+ *
+ * Sei casi, e l'ordine in cui si leggono e' tutta la storia: il tasto e'
+ * l'ultimo, e tutto quello che viene prima e' una ragione per non mostrarlo.
+ * Un tasto che compare quando non dovrebbe e' una promessa che non si
+ * mantiene — o, peggio, un'installazione in casa di qualcuno che non l'ha
+ * permessa.
+ */
+
+const UNO = { nome: "Shelly Plus", da: "1.2.0", a: "1.3.0", installabile: true };
+const APERTA = { manutenzione: true };
+const CASA = { casa: "casa_a3f19c74e05b2d8890fa4c1e6b73d052", chiesto: null };
+
+test("senza manutenzione aperta il tasto non c'e', e c'e' scritto perche'", () => {
+  const { ilTasto } = iPezzi();
+  const disegnato = ilTasto(UNO, { manutenzione: false }, CASA);
+  assert.ok(!disegnato.includes("<button"), "il tasto compare su una casa che non l'ha aperta");
+  assert.match(disegnato, /manutenzione chiusa/);
+});
+
+test("una casa che non dice niente della manutenzione vale come chiusa", () => {
+  /* Una casa ferma a un ponte di ieri quella riga non la manda: `undefined`
+   * non e' un permesso. */
+  const { ilTasto } = iPezzi();
+  assert.ok(!ilTasto(UNO, {}, CASA).includes("<button"));
+});
+
+test("un firmware che si porta col cacciavite non ha nessun tasto", () => {
+  const { ilTasto } = iPezzi();
+  const disegnato = ilTasto({ ...UNO, installabile: false }, APERTA, CASA);
+  assert.ok(!disegnato.includes("<button"));
+  assert.match(disegnato, /cacciavite/);
+});
+
+test("con la manutenzione aperta il tasto porta nome e salto, non l'entita'", () => {
+  const { ilTasto } = iPezzi();
+  const disegnato = ilTasto({ ...UNO, entita: "update.camera_di_marco" }, APERTA, CASA);
+  assert.match(disegnato, /data-installa="casa_a3f19c74e05b2d8890fa4c1e6b73d052"/);
+  assert.match(disegnato, /data-quale-nome="Shelly Plus"/);
+  assert.match(disegnato, /data-quale-da="1\.2\.0"/);
+  assert.match(disegnato, /data-quale-a="1\.3\.0"/);
+  assert.ok(!disegnato.includes("camera_di_marco"), "l'entita' non deve finire nella pagina");
+});
+
+test("uno per volta: mentre una cosa sta andando le altre non hanno tasto", () => {
+  const { ilTasto } = iPezzi();
+  const altro = { nome: "Altro", da: "1", a: "2", installabile: true };
+  const inBallo = { ...APERTA, lavoro: { ...UNO, stato: "in corso" } };
+  assert.match(ilTasto(UNO, inBallo, CASA), /in corso/);
+  const disegnato = ilTasto(altro, inBallo, CASA);
+  assert.ok(!disegnato.includes("<button"));
+  assert.match(disegnato, /uno per volta/);
+});
+
+test("quello appena chiesto si puo' annullare, e gli altri aspettano", () => {
+  const { ilTasto } = iPezzi();
+  const conRichiesta = { ...CASA, chiesto: { ...UNO, chiesto: Date.now() } };
+  assert.match(ilTasto(UNO, APERTA, conRichiesta), /data-lascia-stare=/);
+  const altro = { nome: "Altro", da: "1", a: "2", installabile: true };
+  assert.match(ilTasto(altro, APERTA, conRichiesta), /uno per volta/);
+});
+
+test("si riconosce per nome e salto insieme, non per nome soltanto", () => {
+  /* Due versioni dello stesso nome sono due righe diverse: se bastasse il
+   * nome, il tasto sparirebbe da quella sbagliata. */
+  const { eLaStessa } = iPezzi();
+  assert.equal(eLaStessa(UNO, { nome: "Shelly Plus", da: "1.2.0", a: "1.3.0" }), true);
+  assert.equal(eLaStessa(UNO, { nome: "Shelly Plus", da: "1.3.0", a: "1.4.0" }), false);
+  assert.equal(eLaStessa(UNO, null), false);
 });
