@@ -83,6 +83,22 @@ export const aggiornamentiPesano = (a) =>
   Boolean(a) && ((numero(a.quanti) ?? 0) >= 3 || a.ha === true || a.gdahome === true);
 
 /** Gli add-on che partono all'avvio e non girano. */
+/* Quante entita' non rispondono, in questa casa.
+ *
+ * Due nomi per lo stesso numero: `giu` e' quello di adesso, `sparite` quello
+ * dei ponti fino alla 1.5.6. Sta in una funzione e non scritto tre volte
+ * perche' e' gia' costato una volta: rinominando la chiave nel ponte, questo
+ * file e' rimasto indietro e la spunta del collaudo diceva «undefined su 180»
+ * — rossa per sempre, e senza che niente si rompesse.
+ *
+ * `null` vuol dire «questa casa non lo dice», che non e' zero. */
+const quantiGiu = (c) => c?.entita?.giu ?? c?.entita?.sparite ?? null;
+
+/* E quanti apparecchi sono: un termostato che se ne va porta giu' cinque
+ * entita'. Le case ferme a un ponte di ieri non lo dicono, e allora si
+ * ripiega sul conto delle entita'. */
+const quantiApparecchi = (c) => c?.entita?.dispositivi ?? quantiGiu(c);
+
 export const addonGiu = (carta) =>
   carta?.addon ? (numero(carta.addon.spentiCheDovrebbero) ?? 0) : null;
 
@@ -128,13 +144,13 @@ export function ilCollaudo(carta) {
       : "questa casa non lo dice",
   );
   metti(
-    "Nessuna entità sparita",
-    c.entita ? c.entita.sparite === 0 : null,
-    c.entita
-      ? c.entita.sparite === 0
-        ? `${c.entita.totali} tutte là`
-        : `${c.entita.sparite} su ${c.entita.totali}`
-      : "questa casa non lo dice",
+    "Sono collegati tutti",
+    quantiGiu(c) === null ? null : quantiGiu(c) === 0,
+    quantiGiu(c) === null
+      ? "questa casa non lo dice"
+      : quantiGiu(c) === 0
+        ? `${c.entita.totali} entità, tutte là`
+        : `${plurale(quantiApparecchi(c), "dispositivo", "dispositivi")} non collegati`,
   );
   metti(
     "Niente da aggiornare",
@@ -270,8 +286,10 @@ export function loStato(casa, adesso = Date.now()) {
   if (addonGiu(c) > 0) guai.push(plurale(addonGiu(c), "add-on fermo", "add-on fermi"));
   if ((c.rete?.sorvegliate?.giu ?? 0) > 0)
     guai.push(plurale(c.rete.sorvegliate.giu, "apparato di rete giù", "apparati di rete giù"));
-  if ((c.entita?.sparite ?? 0) > 0)
-    guai.push(plurale(c.entita.sparite, "entità sparita", "entità sparite"));
+  if ((quantiGiu(c) ?? 0) > 0)
+    guai.push(
+      plurale(quantiApparecchi(c), "dispositivo non collegato", "dispositivi non collegati"),
+    );
   if ((c.registro?.errori24h ?? 0) > 0)
     guai.push(`${plurale(c.registro.errori24h, "errore", "errori")} nel registro`);
   if ((c.macchina?.temperatura ?? 0) >= TROPPO_CALDO)
@@ -315,8 +333,8 @@ export function lePastiglie(carta) {
   if (addonGiu(c) > 0) metti(plurale(addonGiu(c), "add-on fermo", "add-on fermi"), "male");
   if ((c.rete?.sorvegliate?.giu ?? 0) > 0)
     metti(plurale(c.rete.sorvegliate.giu, "apparato giù", "apparati giù"), "male");
-  if ((c.entita?.sparite ?? 0) > 0)
-    metti(plurale(c.entita.sparite, "entità sparita", "entità sparite"), "male");
+  if ((quantiGiu(c) ?? 0) > 0)
+    metti(plurale(quantiApparecchi(c), "non collegato", "non collegati"), "male");
   if ((c.registro?.errori24h ?? 0) > 0)
     metti(`${plurale(c.registro.errori24h, "errore", "errori")} in 24h`, "male");
   if ((c.macchina?.temperatura ?? 0) >= TROPPO_CALDO)

@@ -2495,10 +2495,10 @@
                 ${
                   c.manutenzione
                     ? `Questo quadro <b>non guarda dentro</b>: non apre la plancia
-                       e non vede entità, stanze né persone. Tocca due cose sole,
-                       e solo perché questa casa le ha aperte — <b>installare un
-                       aggiornamento</b> e <b>riavviare un add-on fermo</b>. Non
-                       c'è altro, e non c'è una riga di comando.`
+                       e non vede stanze né persone. Tocca <b>una cosa sola</b>, e
+                       solo perché questa casa gliel'ha aperta: far partire un
+                       aggiornamento che è <b>già in attesa qui</b>. Non c'è altro,
+                       e non c'è una riga di comando.`
                     : `Questo quadro <b>guarda e basta</b>: non apre la plancia,
                        non tocca niente, e non vede entità, stanze né persone.
                        Questa casa non ha aperto la manutenzione.`
@@ -2790,8 +2790,13 @@
                       <b>Questa casa non ha aperto la manutenzione.</b> Si vede
                       cosa c'è da fare e non si può farlo, ed è giusto così:
                       guardare e toccare sono due permessi diversi.
-                      L'interruttore sta nella sua console, nella scheda «Il
-                      quadro», e lo tiene in mano chi ci abita.
+                      <br /><br />
+                      Lo accende <b>chi ci abita</b>, sul suo Home Assistant:
+                      <b>Impostazioni › Add-on › gdahome › Configurazione</b>, la
+                      casella <i>«Lascia che chi ti ha fatto l'impianto aggiorni
+                      da lontano»</i>, poi <b>Salva</b> e l'add-on riparte da sé.
+                      Da qui non si accende, e non è una dimenticanza: sarebbe il
+                      permesso che se lo dà da solo.
                     </span>
                   </div>`
             }
@@ -3060,7 +3065,7 @@
                 <p class="verdetto">
                   ${
                     !aperta && daQui
-                      ? "Questa casa non ha aperto la manutenzione al quadro: da qui non si installa niente, e non è un guasto — è una scelta di chi ci abita. "
+                      ? "Questa casa non ha aperto la manutenzione al quadro: da qui non si installa niente, e non è un guasto — è una scelta di chi ci abita. La accende lui, dal suo Home Assistant: Impostazioni › Add-on › gdahome › Configurazione, la casella «Lascia che chi ti ha fatto l'impianto aggiorni da lontano». "
                       : ""
                   }${
                     cacciavite

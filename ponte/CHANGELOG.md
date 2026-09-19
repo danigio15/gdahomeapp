@@ -50,6 +50,13 @@ premuto ieri non installa una cosa diversa oggi.
 una casa sola vogliono dire non sapere quale dei due non è tornato. Il tasto
 chiede conferma due volte, perché non stai premendo un tasto sul tuo computer.
 
+**Dove si accende, detto dove serve.** Quando una casa non ha aperto la
+manutenzione, il cruscotto dell'installatore adesso non dice solo «è chiusa»:
+dice la strada esatta da fare — *Impostazioni › Add-on › gdahome ›
+Configurazione*, la casella col suo nome per intero — perché è lui che deve
+spiegarla al cliente al telefono. Da lì non si accende: sarebbe il permesso che
+se lo dà da solo.
+
 **Quello che ti è stato fatto lo leggi tu.** Cosa è stato chiesto e com'è andata
 stanno dentro il rapporto, e il rapporto nella scheda «Il quadro» si legge
 parola per parola: non un riassunto di quello che è successo, la cosa stessa che
@@ -102,6 +109,12 @@ posto e due giù manda due nomi. Niente stati di sensori, niente persone,
 niente SSID, niente indirizzo pubblico. Sta scritto nella casella dell'add-on
 prima che tu incolli il codice, e nella scheda «Il quadro» lo rileggi parola
 per parola, col tasto per smettere accanto.
+
+**La spunta del collaudo segue.** Si chiamava «Nessuna entità sparita» e
+contava le entità; adesso è **«Sono collegati tutti»** e conta gli apparecchi,
+con le stesse parole del riquadro qui sopra. (Nella prima stesura era rimasta
+indietro e diceva «undefined su 180», rossa per sempre: trovata guardando la
+pagina, non le prove — che ora ci sono.)
 
 **E si contano per apparecchio, non per entità.** Un termostato che se ne va
 portava giù cinque righe — temperatura, umidità, batteria, e via — e adesso ne

@@ -201,3 +201,21 @@ test("si riconosce per nome e salto insieme, non per nome soltanto", () => {
   assert.equal(eLaStessa(UNO, { nome: "Shelly Plus", da: "1.3.0", a: "1.4.0" }), false);
   assert.equal(eLaStessa(UNO, null), false);
 });
+
+test("quando dice «manutenzione chiusa», dice anche dove si apre — con le parole vere", () => {
+  /* La domanda che ha fatto nascere questa prova: «dove si abilita?». La
+   * pagina mandava a cercare l'interruttore in una scheda della console
+   * dell'add-on, e l'interruttore invece e' una **casella della
+   * configurazione**. Un installatore che legge quella riga manda il suo
+   * cliente nel posto sbagliato, e poi la colpa e' del programma.
+   *
+   * Il nome della casella si legge dalle traduzioni del ponte: se un giorno
+   * cambia li', questa prova si ferma invece di lasciare in giro istruzioni
+   * che non portano da nessuna parte. */
+  const parole = readFileSync(join(QUI, "..", "..", "ponte", "translations", "it.yaml"), "utf8");
+  const come = /^ {4}name: Casa · (Lascia che.*)$/m.exec(parole)?.[1];
+  assert.ok(come, "nelle traduzioni non c'e' piu' la casella della manutenzione");
+  assert.ok(PAGINA.includes(come), `il quadro non chiama quella casella col suo nome: «${come}»`);
+  /* E la strada per arrivarci, che senza il nome da solo non basta. */
+  assert.match(PAGINA, /Impostazioni › Add-on › gdahome › Configurazione/);
+});
