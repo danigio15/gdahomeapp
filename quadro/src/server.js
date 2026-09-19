@@ -54,6 +54,7 @@ import { TUTTE } from "./case.js";
 import { CASA_VALIDA, TroppiInviti } from "./chiavi.js";
 import { DISCO_FINITO, DISCO_PIENO, TROPPO_CALDO } from "./collaudo.js";
 import { Fattorino, indirizzoBuono } from "./fattorino.js";
+import { comeVaLAggiornamento } from "./mi-aggiorno.js";
 import { CHI_VALIDO } from "./installatori.js";
 import { stessoSegreto } from "./segreti.js";
 
@@ -102,6 +103,7 @@ export function costruisciIlServer({
   chiavi,
   installatori,
   chiaveDelGestore = "",
+  cartella = "./dati",
   fattorino = new Fattorino(),
   registro = { debug() {}, info() {}, attenzione() {}, errore() {} },
 }) {
@@ -127,11 +129,23 @@ export function costruisciIlServer({
     const metodo = richiesta.method || "GET";
 
     if ((via === "/salute" || via === "/salute/") && metodo === "GET") {
+      /* Se il quadro non riesce piu' ad aggiornarsi, lo dice **qui**.
+       *
+       * Qui e non nel registro, perche' questa riga qualcuno la guarda: e'
+       * quella che si apre dopo averlo acceso, e quella che si riapre quando
+       * si sospetta qualcosa. Il registro di una macchina che funziona non lo
+       * apre nessuno, ed e' esattamente il posto dove un guasto silenzioso
+       * resterebbe in silenzio.
+       *
+       * E non compare quasi mai: ci vogliono sei giri di fila andati a vuoto.
+       * Un campo che c'e' sempre si smette di leggere. */
+      const fermo = comeVaLAggiornamento({ cartella });
       json(risposta, {
         vivo: true,
         case: case_.lista.length,
         installatori: installatori.lista.length,
         gestore: gestoreAperto,
+        ...(fermo ? { nonMiAggiorno: fermo } : {}),
       });
       return;
     }

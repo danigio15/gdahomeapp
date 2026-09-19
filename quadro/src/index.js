@@ -55,6 +55,7 @@ export async function alzaIlQuadro({
     chiavi,
     installatori,
     chiaveDelGestore,
+    cartella,
     fattorino,
     registro,
   });
