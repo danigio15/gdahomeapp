@@ -11,6 +11,27 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.6.1
+
+*Tutto nel cruscotto di chi installa. Nelle case non cambia niente.*
+
+**Gli aggiornamenti si leggono per casa.** Erano raggruppati al contrario — un
+riquadro per ogni cosa da installare, e sotto le case che ce l'hanno indietro —
+perché con quaranta impianti la domanda è «chi è indietro su Home Assistant
+Core». Reggeva su un gesto che non c'era: il tasto «Installa su N case» non è
+mai stato collegato a niente. Restava solo il costo: con **una** casa sola,
+sedici riquadri che dicono tutti «1 casa». Ora una casa per riquadro, con dentro
+cosa le manca, e il nome si preme per aprirla.
+
+**«Rinomina» non apre più il popup del browser.** Sul telefono si apriva come un
+avviso di sistema — «la pagina all'indirizzo … indica» — cioè con l'aria di una
+cosa andata storta. Ora è una casella nella pagina, col nome di adesso già
+dentro da correggere.
+
+**E la pastiglia di «Abbina» conta solo i codici in attesa.** Sommava anche le
+case senza nome, così una casa appena abbinata lasciava acceso un «1» che si
+legge in un modo solo: c'è un abbinamento che non è andato. Era andato.
+
 ## 1.5.6
 
 **Se sbagli casella, adesso te lo dice.**

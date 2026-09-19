@@ -1502,6 +1502,34 @@
         flex: 1;
       }
 
+      /* Un tasto che si legge come il titolo che e': apre la scheda di quella
+         casa, e sopra un riquadro degli aggiornamenti e' il gesto che serve.
+         Un `<button>` e non un `<a>` perche' non si va da nessuna parte — si
+         cambia schermata qui dentro — e chi naviga con la tastiera o con lo
+         schermo che legge deve sentirsi dire «bottone». */
+      .comeUnLink {
+        font: inherit;
+        color: inherit;
+        background: none;
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+        text-align: start;
+      }
+      .comeUnLink:hover {
+        text-decoration: underline;
+      }
+
+      /* La casella per rinominare, che compare sotto i tasti della casa.
+         Stessa fila dei tasti sopra, cosi' non sembra arrivata da un'altra
+         pagina: casella che si allarga, tasto che sta della sua misura. */
+      .rinomina {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 10px;
+      }
+
       /* La riga piccola sotto a qualcos'altro: una spiegazione, un esito.
          Sta qui perche' le quattro che la usano nascevano senza regola — la
          classe veniva dalla console del ponte, che ha un foglio di stile suo e
@@ -1809,7 +1837,14 @@
         doveNav.innerHTML = [
           ["case", "Le case", 0],
           ["aggiornamenti", "Aggiornamenti", dietro],
-          ["abbina", "Abbina", INVITI.length + appenaArrivate().length],
+          /* La pastiglia conta **solo i codici in attesa**, e non piu' anche le
+             case senza nome.
+             Sommandole, una casa appena abbinata lasciava «Abbina 1» acceso, e
+             quel numero si legge in un modo solo: c'e' un abbinamento che non
+             e' andato. Invece e' andato — manca un nome, che e' un'altra cosa
+             e si vede da se', perche' quella casa nell'elenco si chiama
+             `casa_99592daf…`. */
+          ["abbina", "Abbina", INVITI.length],
         ]
           .map(
             ([quale, parola, quanti]) => `
@@ -1933,21 +1968,40 @@
             );
           };
         });
-        dove.querySelectorAll("[data-rinomina]").forEach((tasto) => {
+        dove.querySelectorAll("[data-apri-rinomina]").forEach((tasto) => {
           tasto.onclick = () => {
-            const adesso = CASE.find((una) => una.casa === tasto.dataset.rinomina);
-            const nome = window.prompt(
-              "Come si chiama questo impianto?",
-              adesso?.senzaNome ? "" : adesso?.nome || "",
-            );
-            if (nome === null) return;
+            const quale = tasto.dataset.apriRinomina;
+            const riga = dove.querySelector(`[data-rinomina-per="${quale}"]`);
+            if (!riga) return;
+            riga.hidden = !riga.hidden;
+            if (!riga.hidden) {
+              const casella = riga.querySelector("[data-rinomina-nome]");
+              casella?.focus();
+              casella?.select();
+            }
+          };
+        });
+        dove.querySelectorAll("[data-rinomina]").forEach((tasto) => {
+          const quale = tasto.dataset.rinomina;
+          const casella = dove.querySelector(`[data-rinomina-nome="${quale}"]`);
+          const salva = () => {
+            const nome = (casella?.value || "").trim();
+            /* Vuoto non si manda: svuotare il nome vorrebbe dire rimettere la
+             * casa fra quelle senza nome, e non e' quello che si chiede
+             * premendo «Rinomina». Chi vuole toglierlo ha «Non seguirla piu'». */
+            if (!nome) {
+              casella?.focus();
+              return;
+            }
             faiEpoi(tasto, () =>
-              chiedi(`/casa/${tasto.dataset.rinomina}`, {
-                method: "PUT",
-                body: JSON.stringify({ nome }),
-              }),
+              chiedi(`/casa/${quale}`, { method: "PUT", body: JSON.stringify({ nome }) }),
             );
           };
+          tasto.onclick = salva;
+          if (casella)
+            casella.onkeydown = (evento) => {
+              if (evento.key === "Enter") salva();
+            };
         });
         dove.querySelectorAll("[data-molla]").forEach((tasto) => {
           tasto.onclick = () => {
@@ -2183,11 +2237,29 @@
               >
                 Copia il rapporto
               </button>
-              <button type="button" class="tasto" data-rinomina="${testo(casa.casa)}">
+              <button type="button" class="tasto" data-apri-rinomina="${testo(casa.casa)}">
                 Rinomina
               </button>
               <button type="button" class="tasto male" data-molla="${testo(casa.casa)}">
                 Non seguirla più
+              </button>
+            </div>
+            <!-- La casella del nome, chiusa finché non si preme «Rinomina».
+                 Prima era un `window.prompt`: funzionava, e sul telefono si
+                 apre come un avviso di sistema che dice «la pagina
+                 all'indirizzo … indica», cioè con l'aria di una cosa andata
+                 storta. Qui invece è una casella come le altre, e il nome si
+                 corregge guardando quello di adesso invece che a memoria. -->
+            <div class="rinomina" data-rinomina-per="${testo(casa.casa)}" hidden>
+              <input
+                type="text"
+                data-rinomina-nome="${testo(casa.casa)}"
+                value="${casa.senzaNome ? "" : testo(casa.nome)}"
+                placeholder="Come la chiami?"
+                aria-label="Il nome di questa casa"
+              />
+              <button type="button" class="tasto forte" data-rinomina="${testo(casa.casa)}">
+                Salva
               </button>
             </div>
             <p class="limite">
@@ -2635,113 +2707,114 @@
             </p>
           </section>`;
       }
-
-      /* ─── Schermata: gli aggiornamenti di tutta la flotta ─────────────
+      /* ─── Schermata: gli aggiornamenti ───────────────────────────────
        *
-       * Con quaranta impianti la domanda cambia. Casa per casa è «a questa
-       * cosa manca?», e quella risposta sta nella scheda della casa. Da qui
-       * invece è **«quali sono indietro su Home Assistant Core?»**, che è una
-       * domanda sola con dentro quaranta case, e si sbriga in un gesto invece
-       * che in quaranta.
+       * **Una casa, un riquadro, e dentro cosa le manca.**
        *
-       * Si raggruppa per quello che c'è da installare, non per casa: le voci
-       * uguali stanno insieme, e sotto ognuna ci sono le case che ce l'hanno
-       * indietro, ciascuna con la versione che ha adesso.
+       * Prima si raggruppava al contrario: un riquadro per ogni cosa da
+       * installare, e sotto le case che ce l'hanno indietro. Il ragionamento
+       * scritto qui era che con quaranta impianti la domanda non e' «cosa
+       * manca a questa casa» ma «quali sono indietro su Home Assistant Core»,
+       * e che cosi' si sbriga in un gesto invece che in quaranta.
+       *
+       * Reggeva su una cosa che non c'e': quel gesto. Il tasto «Installa su N
+       * case» era li' da sempre e non e' mai stato agganciato a niente —
+       * nessun `data-`, nessun `onclick` — quindi non installava un bel
+       * niente, e il raggruppamento serviva un'azione che non esisteva.
+       *
+       * Quello che restava era il costo: con **una** casa sola diventano
+       * sedici riquadri che dicono tutti «1 casa», e per sapere cosa fare in
+       * quella casa bisogna leggerli tutti e sedici. E il lavoro vero si fa
+       * comunque nella scheda della casa, una alla volta, perche' e' li' che
+       * stanno il backup, la manutenzione e il tasto che installa.
+       *
+       * Quindi si raggruppa per dove si va a mettere le mani.
        * ─────────────────────────────────────────────────────────────────── */
       function laFlotta() {
-        /* Un mucchio per voce da installare. La chiave è il nome più la
-         * versione a cui si va: «Home Assistant Core → 2026.9.1» è un
-         * mucchio, «→ 2026.8.4» ne sarebbe un altro, e mescolarli vorrebbe
-         * dire un tasto che installa due cose diverse. */
-        const mucchi = new Map();
-        for (const casa of CASE) {
-          for (const uno of casa.carta.aggiornamenti.elenco) {
-            const chiave = `${uno.nome} → ${uno.a}`;
-            if (!mucchi.has(chiave))
-              mucchi.set(chiave, { nome: uno.nome, a: uno.a, nostra: uno.nostra, case: [] });
-            mucchi.get(chiave).case.push({ casa, voce: uno });
-          }
-        }
+        /* Una riga per casa, con quello che le manca. Dentro, le cose nostre
+         * per prime — gdahome e Home Assistant sono quelle che staccano il
+         * filo — e poi in ordine di nome, perche' un elenco che cambia ordine
+         * a ogni ricarica non si impara mai. */
+        const indietro = CASE.filter((una) => (una.carta?.aggiornamenti?.elenco || []).length).map(
+          (casa) => ({
+            casa,
+            cose: [...casa.carta.aggiornamenti.elenco].sort((una, altra) => {
+              if (una.nostra !== altra.nostra) return una.nostra ? -1 : 1;
+              return String(una.nome).localeCompare(String(altra.nome));
+            }),
+          }),
+        );
 
-        const ordinati = [...mucchi.values()].sort((una, altra) => {
-          if (una.nostra !== altra.nostra) return una.nostra ? -1 : 1;
-          if (una.case.length !== altra.case.length) return altra.case.length - una.case.length;
-          return una.nome.localeCompare(altra.nome);
+        /* Le case con piu' arretrati in cima: e' quella la casa da aprire per
+         * prima, e cercarla scorrendo sarebbe il lavoro che questa schermata
+         * dovrebbe togliere. */
+        indietro.sort((una, altra) => {
+          if (una.cose.length !== altra.cose.length) return altra.cose.length - una.cose.length;
+          return String(una.casa.nome).localeCompare(String(altra.casa.nome));
         });
 
-        const voci = ordinati.reduce((somma, uno) => somma + uno.case.length, 0);
-        const dietro = CASE.filter((una) => (una.carta?.aggiornamenti?.elenco || []).length).length;
-
-        if (!ordinati.length)
+        if (!indietro.length)
           return `
             <h1 class="titolone">Gli aggiornamenti</h1>
             <p class="sottotitolo">Tutte le case sono aggiornate. Non capita spesso.</p>`;
+
+        const voci = indietro.reduce((somma, una) => somma + una.cose.length, 0);
 
         return `
           <h1 class="titolone">Gli aggiornamenti</h1>
           <p class="sottotitolo">
             ${plurale(voci, "cosa da installare", "cose da installare")} su
-            ${plurale(dietro, "casa", "case")}, raggruppate per quello che sono e
-            non per dove stanno: con quaranta impianti la domanda non è «cosa
-            manca a questa casa», è «quali sono indietro su Home Assistant
-            Core».
+            ${plurale(indietro.length, "casa", "case")}. Una casa per riquadro, con
+            dentro quello che le manca: è dove si va a mettere le mani, e si apre
+            da qui premendo il suo nome.
           </p>
 
-          ${ordinati
-            .map((uno) => {
-              const giaInBallo = ({ casa }) =>
+          ${indietro
+            .map(({ casa, cose }) => {
+              const sta = (uno) =>
                 staLavorando(casa.carta) && casa.carta.lavoro.cosa.startsWith(uno.nome);
-              const possibili = uno.case.filter(
-                (riga) =>
-                  riga.voce.installabile && riga.casa.carta.manutenzione && !giaInBallo(riga),
-              );
-              const inBallo = uno.case.filter(giaInBallo).length;
-              const chiuse = uno.case.filter(
-                ({ casa, voce }) => voce.installabile && !casa.carta.manutenzione,
-              ).length;
-              const cacciavite = uno.case.filter(({ voce }) => !voce.installabile).length;
+              const aperta = Boolean(casa.carta.manutenzione);
+              const cacciavite = cose.filter((uno) => !uno.installabile).length;
+              const daQui = cose.filter((uno) => uno.installabile).length;
 
               return `
               <section class="riquadro mucchio">
                 <div class="capoRiquadro">
-                  <h3>${testo(uno.nome)}</h3>
-                  <span class="conta">→ ${testo(uno.a)} · ${plurale(uno.case.length, "casa", "case")}</span>
+                  <h3>
+                    <button type="button" class="comeUnLink" data-casa="${CASE.indexOf(casa)}">
+                      ${testo(casa.nome)}
+                    </button>
+                  </h3>
+                  <span class="conta">${plurale(cose.length, "cosa", "cose")}</span>
                 </div>
                 <div class="indietro-chi">
-                  ${uno.case
-                    .map(({ casa, voce }) => {
-                      const sta =
-                        staLavorando(casa.carta) && casa.carta.lavoro.cosa.startsWith(uno.nome);
-                      return `<span class="pastiglia ${sta ? "lavoro" : voce.installabile && casa.carta.manutenzione ? "" : "attenta"}"
-                        >${testo(casa.nome)} · ${testo(voce.da)}${sta ? " · in corso" : ""}</span
-                      >`;
-                    })
+                  ${cose
+                    .map(
+                      (uno) => `<span class="pastiglia ${
+                        sta(uno) ? "lavoro" : uno.installabile && aperta ? "" : "attenta"
+                      }"
+                        >${testo(uno.nome)} · ${testo(uno.da)} → ${testo(uno.a)}${
+                          sta(uno) ? " · in corso" : ""
+                        }</span
+                      >`,
+                    )
                     .join("")}
                 </div>
-                ${
-                  possibili.length
-                    ? `<div class="azioni">
-                        <button type="button" class="tasto forte">
-                          Installa su ${plurale(possibili.length, "casa", "case")}
-                        </button>
-                      </div>`
-                    : ""
-                }
-                ${
-                  chiuse || cacciavite || inBallo
-                    ? `<p class="verdetto">
-                        ${inBallo ? `${plurale(inBallo, "casa lo sta", "case lo stanno")} già installando. ` : ""}${
-                          chiuse
-                            ? `${plurale(chiuse, "casa non ha", "case non hanno")} aperto la manutenzione al quadro. `
-                            : ""
-                        }${
-                          cacciavite
-                            ? `${plurale(cacciavite, "si porta", "si portano")} col cacciavite: da qui non ${cacciavite === 1 ? "si installa" : "si installano"}.`
-                            : ""
-                        }
-                      </p>`
-                    : ""
-                }
+                <p class="verdetto">
+                  ${
+                    !aperta && daQui
+                      ? "Questa casa non ha aperto la manutenzione al quadro: da qui non si installa niente, e non è un guasto — è una scelta di chi ci abita."
+                      : ""
+                  }${
+                    cacciavite
+                      ? `${plurale(cacciavite, "si porta", "si portano")} col cacciavite: da qui non ${cacciavite === 1 ? "si installa" : "si installano"}.`
+                      : ""
+                  }${
+                    aperta && daQui
+                      ? `${plurale(daQui, "si installa", "si installano")} dalla scheda di questa casa, una alla volta.`
+                      : ""
+                  }
+                </p>
               </section>`;
             })
             .join("")}
@@ -2767,20 +2840,11 @@
                   tornato.
                 </span>
               </li>
-              <li class="fatta">
-                <span class="bollino" aria-hidden="true">✓</span>
-                <span class="cosa">
-                  <b>Quaranta case insieme sono quaranta rischi insieme.</b> Il
-                  tasto qui sopra fa una cosa sola su più case, e va usato
-                  sapendolo: se quella cosa va male, va male dappertutto. Una
-                  casa per prova, e le altre il giorno dopo, è una noia che si
-                  paga una volta sola.
-                </span>
-              </li>
             </ul>
           </section>
         `;
       }
+
 
       /* ─── Schermata: l'abbinamento ───────────────────────────────────
        *
