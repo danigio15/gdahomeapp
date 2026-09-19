@@ -467,6 +467,31 @@ sua, bastano due file: si sostituiscono `voce-quadro.m4a` e
 `voce-quadro-en.m4a` e si rifà `--attacca`, senza toccare una riga di
 programma.
 
+### Una voce vera, quando c'è
+
+Una voce sintetica resta una voce sintetica, per bravo che sia il modello: il
+tetto è quello, e non lo alza nessuna misura. Perciò la strada per metterci una
+voce **umana** è aperta, e non chiede di toccare una riga di programma.
+
+```
+node strumenti/video/voce.mjs --copione    l'elenco delle frasi, col nome del file
+```
+
+Si registrano — mono, 16 bit — e si mettono in `strumenti/video/voce/detti/`,
+una per file: `it-0-0.wav` è la prima frase della prima scena, `it-0-1.wav` la
+seconda. Chi trova un file lì dentro **non lo sintetizza: lo prende**. Quindi si
+può fare tutto, o una frase sola — quella che il modello dice male — e il resto
+resta com'è.
+
+Il montaggio non cambia: le scene si allungano su quanto dura la voce vera, le
+didascalie arrivano con la sua frase, e i tempi finiscono in
+`parlato-tempi.json` come sempre. Si rifà il giro dei tre comandi e il film è
+quello di prima con dentro una persona.
+
+E se la voce arriva già montata — una traccia sola per tutto il film — non
+serve nemmeno questo: si sostituiscono `voce-quadro.m4a` e `voce-quadro-en.m4a`
+e si rifà `--attacca`.
+
 ### Come si sceglie una voce senza poterla ascoltare
 
 Prima c'era piper, con la sua unica voce italiana: la più piccola, sedici

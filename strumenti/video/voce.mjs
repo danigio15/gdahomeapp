@@ -5,6 +5,7 @@
  *   node strumenti/video/voce.mjs --lingua it     solo l'italiano
  *   node strumenti/video/voce.mjs --misura        i tempi, senza toccare niente
  *   node strumenti/video/voce.mjs --attacca       riattacca le tracce gia' fatte
+ *   node strumenti/video/voce.mjs --copione       l'elenco delle frasi da registrare
  *
  * Gli altri tre film sono muti apposta — le parole stanno scritte sopra, ed e'
  * anche il modo in cui li guardano quasi tutti, col telefono in silenzio.
@@ -46,8 +47,31 @@
  * (`COME_SI_DICE`, in `parlato.js`). Come si rifa' sta nel README, in «Come si
  * sceglie una voce senza poterla ascoltare».
  *
- * Il giorno che qualcuno registra la sua voce, le tracce si sostituiscono e il
- * film si rifa' con `--attacca` senza toccare una riga di programma.
+ * ─── Una voce vera, quando c'e' ──────────────────────────────────────────
+ *
+ * Una voce sintetica resta una voce sintetica, per bravo che sia il modello:
+ * il tetto e' quello, e non lo alza nessuna misura. Percio' la strada per
+ * metterci una voce **umana** e' aperta, e non chiede di toccare niente.
+ *
+ * Si registrano le frasi — `--copione` le elenca tutte, con il nome del file
+ * che ognuna deve avere — e si mettono in `strumenti/video/voce/detti/`:
+ *
+ *   strumenti/video/voce/detti/it-0-0.wav     la prima frase della prima scena
+ *   strumenti/video/voce/detti/it-0-1.wav     la seconda
+ *   …
+ *
+ * Chi trova un file la' dentro non lo sintetizza: lo prende. Quindi si puo'
+ * fare tutto, o una frase sola — quella che il modello dice male — e il resto
+ * resta com'e'. Il montaggio non cambia: le scene si allungano su quello che
+ * dura la voce vera, e le didascalie arrivano con la sua frase.
+ *
+ * I wav vanno **mono** e a 16 bit, che e' quello che il montaggio sa rimettere
+ * in fila; il resto (quanto e' alto il volume, il silenzio davanti) lo sistema
+ * la traccia, che si normalizza da se'.
+ *
+ * E se la voce vera arriva gia' montata — una traccia sola per tutto il film —
+ * allora non serve nemmeno questo: si sostituiscono `voce-quadro.m4a` e
+ * `voce-quadro-en.m4a` e si rifa' `--attacca`.
  *
  * ─── Cosa serve, e dove si prende ────────────────────────────────────────
  *
@@ -131,6 +155,12 @@ const COME_SUONA = { it: "it", en: "en-gb" };
  * peggiorare. Rallentare aiuta fino a un certo punto, e oltre quel punto
  * strascica. */
 const ANDATURA = { it: 0.92, en: 0.95 };
+
+/** Le frasi registrate da una persona, se ce ne sono. */
+const DETTI = path.join(QUI, "voce", "detti");
+
+/** Come si chiama il file di una frase: lingua, scena, e quale pezzo. */
+const ilSuoFile = (lingua, scena, pezzo) => `${lingua}-${scena}-${pezzo}.wav`;
 
 function serveIlModello() {
   for (const [nome, variabile] of [
@@ -257,18 +287,28 @@ async function diTutto(lingua, cartella) {
   const lavoro = [];
   for (const [quale, scena] of PARLATO.entries()) {
     for (const [numero, pezzo] of scena.pezzi.entries()) {
+      /* Se questa frase l'ha gia' detta una persona, si prende la sua e non
+         si sintetizza niente: vedi «Una voce vera, quando c'e'», in cima. */
+      const sua = path.join(DETTI, ilSuoFile(lingua, quale, numero));
       lavoro.push({
         quale,
         numero,
         testo: comeSiDice(pezzo[lingua], lingua),
-        dove: path.join(cartella, `${lingua}-${quale}-${numero}.wav`),
+        dove: existsSync(sua) ? sua : path.join(cartella, `${lingua}-${quale}-${numero}.wav`),
+        vera: existsSync(sua),
       });
     }
   }
-  await fallePronunciare(
-    lingua,
-    lavoro.map(({ testo, dove }) => ({ testo, dove })),
-  );
+  const daDire = lavoro.filter((uno) => !uno.vera);
+  const vere = lavoro.length - daDire.length;
+  if (vere)
+    detto(`   ${vere} frasi su ${lavoro.length} sono registrate: quelle non si sintetizzano`);
+  if (daDire.length) {
+    await fallePronunciare(
+      lingua,
+      daDire.map(({ testo, dove }) => ({ testo, dove })),
+    );
+  }
 
   /* Poi si rimettono in scena e si contano i tempi: il primo pezzo comincia
      dopo `dopo` secondi, gli altri uno dietro l'altro con un respiro in mezzo.
@@ -480,9 +520,30 @@ async function main() {
   };
   const soloMisura = argomenti.includes("--misura");
   const soloAttacca = argomenti.includes("--attacca");
+  const soloCopione = argomenti.includes("--copione");
   const lingue = valore("--lingua") ? [valore("--lingua")] : LINGUE;
   for (const lingua of lingue) {
     if (!LINGUE.includes(lingua)) throw new Error(`lingua sconosciuta: ${lingua}`);
+  }
+
+  /* L'elenco delle frasi da registrare, per chi ci mette la sua voce.
+   *
+   * Non serve niente per stamparlo — ne' il modello, ne' ffmpeg — perche' chi
+   * lo chiede di solito non sta facendo un film: sta andando a leggere in un
+   * microfono, e quello che gli serve e' il testo e il nome del file. */
+  if (soloCopione) {
+    for (const lingua of lingue) {
+      detto(`\n── ${lingua} ── da mettere in strumenti/video/voce/detti/`);
+      for (const [quale, scena] of PARLATO.entries()) {
+        detto(`\n   ${scena.scena}`);
+        for (const [numero, pezzo] of scena.pezzi.entries()) {
+          const nome = ilSuoFile(lingua, quale, numero);
+          detto(`   ${existsSync(path.join(DETTI, nome)) ? "●" : "○"} ${nome}  ${pezzo[lingua]}`);
+        }
+      }
+    }
+    detto("\n   ● c'e' gia'   ○ manca, e la dice il modello");
+    return;
   }
 
   const ffmpeg = trovaFfmpeg();
