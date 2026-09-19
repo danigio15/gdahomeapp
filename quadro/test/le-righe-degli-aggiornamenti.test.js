@@ -213,7 +213,9 @@ test("quando dice «manutenzione chiusa», dice anche dove si apre — con le pa
    * cambia li', questa prova si ferma invece di lasciare in giro istruzioni
    * che non portano da nessuna parte. */
   const parole = readFileSync(join(QUI, "..", "..", "ponte", "translations", "it.yaml"), "utf8");
-  const come = /^ {4}name: Casa · (Lascia che.*)$/m.exec(parole)?.[1];
+  /* A otto spazi e senza prefisso: dalla 1.5.8 le caselle stanno dentro una
+   * sezione, e «Casa · » lo dice il titolo del gruppo. */
+  const come = /^ {8}name: (Lascia che.*)$/m.exec(parole)?.[1];
   assert.ok(come, "nelle traduzioni non c'e' piu' la casella della manutenzione");
   assert.ok(PAGINA.includes(come), `il quadro non chiama quella casella col suo nome: «${come}»`);
   /* E la strada per arrivarci, che senza il nome da solo non basta. */

@@ -365,6 +365,60 @@
         max-width: 46rem;
       }
 
+      /* ─── I titoli che spezzano la scheda di una casa ────────────────
+         La scheda e' una colonna di dieci riquadri, e ognuno ha gia' la sua
+         etichettina grigia. Dieci etichettine sono dieci cose sullo stesso
+         piano: chi cerca «cosa devo fare qui» le legge tutte e dieci.
+         Questi titoli fanno il piano di sopra, e sono tre perche' le domande
+         che si fanno aprendo la scheda di un impianto sono tre: cosa mi tocca,
+         come sta, e cosa c'e' dentro di preciso. */
+      .capitolo {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin: 26px 0 12px;
+      }
+
+      .capitolo:first-of-type {
+        margin-top: 18px;
+      }
+
+      .capitolo h2 {
+        margin: 0;
+        font-size: 1.12rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        flex: none;
+      }
+
+      .capitolo span {
+        color: var(--fioco);
+        font-size: 0.83rem;
+        min-width: 0;
+      }
+
+      /* Un filo che porta l'occhio fino in fondo alla riga: senza, un titolo
+         corto in cima a un riquadro largo galleggia. */
+      .capitolo::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--bordo-tenue);
+      }
+
+      @media (max-width: 640px) {
+        /* Sul telefono la riga di spiegazione va a capo sotto il titolo, e il
+           filo non ci sta piu': si toglie invece di spezzarsi in due. */
+        .capitolo {
+          flex-wrap: wrap;
+          gap: 2px 12px;
+        }
+
+        .capitolo::after {
+          display: none;
+        }
+      }
+
       /* ─── La striscia dello stato, come sopra la Home della plancia ─── */
       .striscia {
         grid-column: 1 / -1;
@@ -2544,6 +2598,11 @@
             </p>
           </section>
 
+          <div class="capitolo">
+            <h2>Cosa c'è da fare</h2>
+            <span>quello che questa casa chiede a te</span>
+          </div>
+
           <section class="riquadro">
             <div class="capoRiquadro">
               <h3>Il collaudo</h3>
@@ -2573,7 +2632,14 @@
             <p class="verdetto">${testo(verdetto)}</p>
           </section>
 
-          ${gliAggiornamenti(c, casa)} ${laMacchina(c)} ${laRete(c)} ${gliAddon(c)}
+          ${gliAggiornamenti(c, casa)}
+
+          <div class="capitolo">
+            <h2>Come sta</h2>
+            <span>la macchina, la rete, e cosa risponde</span>
+          </div>
+
+          ${laMacchina(c)} ${laRete(c)} ${gliAddon(c)}
 
           <section class="riquadro">
             <div class="capoRiquadro"><h3>La salute, quattordici giorni</h3></div>
@@ -2617,6 +2683,11 @@
           </section>`
               : ""
           }
+
+          <div class="capitolo">
+            <h2>Cos'è, di preciso</h2>
+            <span>i numeri di versione, e il rapporto com'è arrivato</span>
+          </div>
 
           <section class="riquadro">
             <div class="capoRiquadro"><h3>Le versioni</h3></div>

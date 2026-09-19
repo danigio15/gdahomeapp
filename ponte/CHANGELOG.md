@@ -36,6 +36,13 @@ annidate. È l'unico modo che c'era, e il prezzo è quello scritto qui sopra. In
 cambio il prefisso nel nome sparisce: «Casa · Da fuori casa» adesso è «Da fuori
 casa» dentro «La casa», che è la stessa cosa detta una volta sola.
 
+**E il cruscotto dell'installatore si legge a capitoli.** La scheda di una casa
+era una colonna di dieci riquadri tutti sullo stesso piano: chi la apriva per
+sapere cosa gli toccava se li leggeva tutti e dieci, e il collaudo — che è la
+risposta — stava in mezzo alla macchina e alle versioni. Adesso ci sono tre
+titoli, perché le domande che uno si fa aprendo un impianto sono tre: **Cosa
+c'è da fare**, **Come sta**, **Cos'è di preciso**.
+
 **Il ponte legge tutt'e due le forme.** Se il Supervisor si tiene quello che
 avevi scritto, non ti accorgi di niente e la casa continua a mandare il suo
 rapporto senza che tu tocchi nulla. Se lo butta, lo rimetti una volta e non
