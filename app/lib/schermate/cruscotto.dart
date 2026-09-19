@@ -53,9 +53,11 @@ class SchermataDelCruscotto extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 inLingua(
-                  it: 'Gli impianti che hai montato, tutti insieme: quali tacciono, quali '
+                  it:
+                      'Gli impianti che hai montato, tutti insieme: quali tacciono, quali '
                       'sono da guardare, quali sono ancora da consegnare.',
-                  en: 'The systems you installed, all together: which ones are quiet, which '
+                  en:
+                      'The systems you installed, all together: which ones are quiet, which '
                       'need looking at, which are still to be signed off.',
                 ),
                 style: tema.textTheme.bodyMedium,
@@ -64,14 +66,18 @@ class SchermataDelCruscotto extends StatelessWidget {
               FilledButton.icon(
                 onPressed: _apri,
                 icon: const Icon(Icons.open_in_new_rounded),
-                label: Text(inLingua(it: 'Apri il cruscotto', en: 'Open the panel')),
+                label: Text(
+                  inLingua(it: 'Apri il cruscotto', en: 'Open the panel'),
+                ),
               ),
               const SizedBox(height: 16),
               Text(
                 inLingua(
-                  it: 'Si apre nel browser, che è dove sta la tua chiave: qui dentro non '
+                  it:
+                      'Si apre nel browser, che è dove sta la tua chiave: qui dentro non '
                       'c\'è, e sul telefono non ci finisce.',
-                  en: 'It opens in the browser, which is where your key lives: it is not in '
+                  en:
+                      'It opens in the browser, which is where your key lives: it is not in '
                       'here, and it does not end up on the phone.',
                 ),
                 style: tema.textTheme.bodySmall,

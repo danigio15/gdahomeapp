@@ -73,8 +73,14 @@ void main() {
     );
     /* E le due voci sono indipendenti: chi risponde alle chat non è per
      * questo un installatore, e viceversa. */
-    expect(vociDellaBarra(conLaConsole: true), isNot(contains(Sezione.cruscotto)));
-    expect(vociDellaBarra(conIlCruscotto: true), isNot(contains(Sezione.console)));
+    expect(
+      vociDellaBarra(conLaConsole: true),
+      isNot(contains(Sezione.cruscotto)),
+    );
+    expect(
+      vociDellaBarra(conIlCruscotto: true),
+      isNot(contains(Sezione.console)),
+    );
   });
 
   testWidgets('la coda si vede, si apre un filo e si risponde', (tester) async {

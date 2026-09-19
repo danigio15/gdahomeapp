@@ -805,7 +805,10 @@ class _NomeDellaVoce extends StatelessWidget {
 /// E lo stesso vale per **Il mio cruscotto**: gli impianti che ha montato chi
 /// installa. Compare solo dove le opzioni del ponte hanno acceso
 /// `installatore`, cioe' sul suo Home Assistant e non in casa di un cliente.
-List<Sezione> vociDellaBarra({bool conLaConsole = false, bool conIlCruscotto = false}) => [
+List<Sezione> vociDellaBarra({
+  bool conLaConsole = false,
+  bool conIlCruscotto = false,
+}) => [
   for (final una in Sezione.values)
     if ((una != Sezione.console || conLaConsole) &&
         (una != Sezione.cruscotto || conIlCruscotto))

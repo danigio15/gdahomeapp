@@ -43,6 +43,7 @@ class IlCruscotto {
       if (detto is! Map) return '';
       if (detto['installatore'] != true) return '';
       final dove = detto['dove'];
+
       /// Solo `https`, e per lo stesso motivo di tutto il resto: di la' c'e'
       /// l'elenco degli impianti di qualcuno.
       if (dove is! String || !dove.startsWith('https://')) return '';
