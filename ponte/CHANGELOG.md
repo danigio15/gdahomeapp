@@ -11,6 +11,28 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.5.1
+
+**La scheda dell'add-on si legge dall'alto in basso.**
+
+Dodici caselle, e finora stavano in fila senza un ordine: «La chiave della
+console» — che serve a una casa sola al mondo — stava in mezzo, fra i telefoni
+e l'installatore. Chi leggeva dall'alto non aveva nessun modo di capire che
+non era roba sua.
+
+Adesso l'ordine è quello di chi legge: prima tutto quello che riguarda chi
+abita la casa, poi le due caselle di chi installa, poi in fondo le tre chiavi
+che restano vuote dappertutto tranne che in una casa.
+
+**E i nomi dicono di quale cosa parlano.** In questa scheda ci sono tre codici
+diversi — il QR che abbina un telefono, quello che dà l'installatore, e quello
+che apre il cruscotto di chi installa — e finché uno si chiamava «Quanto vive
+un codice» erano tre cose con un nome solo. Così anche «Giorni di silenzio»,
+che era una poesia: adesso dice «Dopo quanto un telefono va riabbinato».
+
+*Nell'app non cambia niente: è una correzione dell'add-on, e il numero
+dell'app resta 1.5.5.*
+
 ## 1.5.5
 
 **Il codice si scrive una volta sola, e le due voci si aprono come la plancia.**

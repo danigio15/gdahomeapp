@@ -1,4 +1,5 @@
-# The gdahome options, in English. See `it.yaml`: same options, same order.
+# The gdahome options, in English. See `it.yaml`: same options, same order,
+# and the reason for that order is written there.
 configuration:
   da_fuori_casa:
     name: From away
@@ -7,67 +8,78 @@ configuration:
       no port to open on the router, no public address, nothing to install.
       Off, your home is reachable only on its own network.
   porta_app:
-    name: The app's port
+    name: The port the app knocks on
     description: >-
-      The port the app knocks on while you are at home. Change it only if
-      another program already uses this one.
+      The port the app uses while you are at home. Change it only if another
+      program already uses this one.
   dispositivi_massimi:
-    name: How many phones
-    description: How many phones can stay paired at the same time.
+    name: How many phones at once
+    description: >-
+      How many phones can stay paired at the same time. Yours, the one of
+      whoever lives with you, your parents'.
   minuti_del_codice:
-    name: How long a code lives
-    description: For how many minutes a pairing QR code is good.
+    name: How long a pairing QR lives
+    description: >-
+      For how many minutes the QR code that pairs a new phone is good. Once it
+      expires you make another one: nothing is lost.
   giorni_di_silenzio:
-    name: Days of silence
+    name: After how long a phone has to pair again
     description: >-
-      After how many days without showing up a phone has to pair again. Zero
+      After how many days without showing up a phone has to pair again. It is
+      there for whoever loses a phone and does not think of it any more. Zero
       means never.
-  chiave_console:
-    name: The console key
-    description: >-
-      Leave it empty. It is only for whoever answers the support chats: in
-      every other home it changes nothing.
   quadro:
     name: The code of whoever installed your home
     description: >-
       Leave it empty. If an installer set your home up, they give you a code to
-      paste here: from then on this home sends them a few lines of numbers
-      every minute — the versions, how full the disk is, which
-      add-ons are running, how many entities stopped answering — and they find
-      out something is wrong before you have to call them. None of it is yours:
-      no entity names, no rooms, no people, no sensor states, not your Wi-Fi
-      name and not your public address either. You can read what goes out, word
-      for word, in the gdahome console, where the button to stop it also is.
+      paste here, and from then on this home sends them a few lines of numbers:
+      the versions, how full the disk is, which add-ons are running, how many
+      entities stopped answering. That way they find out something is wrong
+      before you have to call them. Nothing of yours goes out — no entity
+      names, no rooms, no people, no sensor states, not your Wi-Fi name and not
+      your address either — and what does go out you can read word for word in
+      the gdahome console, where the button to stop it also is.
   quadro_ogni:
     name: How often a status report goes out
     description: >-
-      Every how many minutes this home sends a report to whoever installed it.
-      It only counts if the box above is filled in.
+      Every how many minutes those lines of numbers go out. It only counts if
+      the box above is filled in; empty, nothing goes out and no connection is
+      opened.
   installatore:
     name: This Home Assistant belongs to an installer
     description: >-
-      Leave it off. On — and with the code below filled in — the gdahome
-      console gains one more section, your panel, where you watch the systems
-      you installed, and the app gains the matching entry. On its own it turns
-      nothing on. Turn it on in your own Home Assistant, not in a client's.
+      Leave it off: it is for whoever installs gdahome in other people's homes.
+      On, and with the code below filled in, the gdahome console gains your
+      panel — where you watch the systems you installed — and the app and the
+      sidebar gain the entry that opens it. On its own it turns nothing on.
+      Turn it on in your own Home Assistant, not in a client's.
   chiave_cruscotto:
-    name: Your panel's code
+    name: The code that opens your panel
     description: >-
-      This is the code that opens the panel above: without it the switch does
-      nothing — no section, no entry, nowhere. Write it in your own Home
-      Assistant and not in a client's: an add-on's options sit on disk in the
-      clear and end up in backups.
+      The one you were given when your panel was opened for you. Without it the
+      switch above does nothing: no section, no entry, nowhere. Filled in,
+      nobody asks you for it again. Write it in your own Home Assistant and not
+      in a client's: an add-on's options sit on disk in the clear and end up in
+      backups.
   chiave_gestione:
     name: The key for managing installers
     description: >-
       Leave it empty: it serves one person in the world, the one who decides
-      who may install, and that is not you unless you already know what this is
-      about. Filled in, the sidebar gains «Gestione installatori», where you add
-      installers and set their limits. Empty, that entry does not exist. There
-      is no switch here: the key is the switch.
+      who may install. Filled in, the sidebar gains «Gestione installatori»,
+      where installers are added and their limits set; empty, that entry does
+      not exist. There is no switch here: the key is the switch.
+  chiave_console:
+    name: The support key
+    description: >-
+      Leave it empty: it serves one home in the world, the one of whoever
+      answers the support chats, to read everybody's conversations. In every
+      other home it changes nothing and shows nothing.
   registro:
-    name: The log
-    description: How much it writes in the add-on's log.
+    name: How much the log writes
+    description: >-
+      How much the add-on says about itself in the «Registro» tab. «info» is
+      always fine; «debug» is for when there is something to work out, and it
+      fills up.
 network:
   8098/tcp: >-
     The gdahome app knocks here. At home that is all it takes; from away it

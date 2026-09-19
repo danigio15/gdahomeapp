@@ -128,3 +128,37 @@ test("ogni opzione dell'add-on ha il suo nome in tutte le lingue", () => {
     }
   }
 });
+
+test("le quattro liste stanno nello stesso ordine, e non solo con le stesse voci", () => {
+  /* Quattro elenchi delle stesse dodici righe: le opzioni, lo schema, e i due
+   * file delle lingue. Le prove qui sopra tengono che siano **le stesse**, e
+   * le ordinano prima di confrontarle — cioe' guardano apposta da un'altra
+   * parte rispetto all'ordine.
+   *
+   * L'ordine pero' e' quello che il Supervisor disegna nella scheda, e quella
+   * scheda la leggono tre persone diverse: chi abita la casa, chi installa, e
+   * una persona sola al mondo. Le tre chiavi in fondo restano vuote in tutte
+   * le case tranne una, e stanno in fondo apposta — prima «La chiave della
+   * console» stava fra i telefoni e l'installatore, e chi leggeva dall'alto
+   * non aveva nessun modo di capire che non era roba sua.
+   *
+   * Senza questa prova quell'ordine e' una cosa che vive nella testa di chi
+   * l'ha messo: il primo che aggiunge una casella la scrive dove capita, e la
+   * scheda torna a essere un elenco. */
+  const manifesto = readFileSync(qui("../config.yaml"), "utf8");
+  const opzioni = leChiaviDi(manifesto, "options");
+  assert.deepEqual(leChiaviDi(manifesto, "schema"), opzioni, "lo schema segue un altro ordine");
+  for (const lingua of LE_LINGUE) {
+    assert.deepEqual(
+      leChiaviDi(readFileSync(qui(`../translations/${lingua}.yaml`), "utf8"), "configuration"),
+      opzioni,
+      `«translations/${lingua}.yaml» segue un altro ordine`,
+    );
+  }
+
+  /* E le tre chiavi stanno in fondo, prima del registro: e' la regola che
+   * l'ordine serve a tenere, e senza dirla questa prova fisserebbe l'ordine di
+   * oggi senza sapere perche'. */
+  const ultime = opzioni.slice(-4);
+  assert.deepEqual(ultime, ["chiave_cruscotto", "chiave_gestione", "chiave_console", "registro"]);
+});
