@@ -78,7 +78,7 @@ test("il collaudo giudica il rapporto di adesso, non quello di ieri", () => {
     ]),
   };
   const spunte = ilCollaudo(carta).spunte;
-  const quella = spunte.find((una) => /collegat/i.test(una.cosa));
+  const quella = spunte.find((una) => una.cosa === "I collegamenti");
   assert.ok(quella, "nel collaudo non c'e' piu' la spunta dei dispositivi collegati");
   assert.equal(quella.fatta, false);
   assert.ok(
@@ -91,7 +91,7 @@ test("il collaudo giudica il rapporto di adesso, non quello di ieri", () => {
   const aPosto = {
     entita: leEntita([{ entity_id: "light.una", state: "on", attributes: {} }]),
   };
-  const buona = ilCollaudo(aPosto).spunte.find((una) => /collegat/i.test(una.cosa));
+  const buona = ilCollaudo(aPosto).spunte.find((una) => una.cosa === "I collegamenti");
   assert.equal(buona.fatta, true);
   assert.match(buona.dettaglio, /1 entità/);
 });
@@ -112,7 +112,7 @@ test("una casa ferma a un ponte di ieri si giudica lo stesso", () => {
   /* Le case si aggiornano quando gli pare: finche' ne resta una che manda
    * `sparite`, il collaudo la deve saper leggere. */
   const spunta = ilCollaudo({ entita: { totali: 180, sparite: 3, impronte: [] } }).spunte.find(
-    (una) => /collegat/i.test(una.cosa),
+    (una) => una.cosa === "I collegamenti",
   );
   assert.equal(spunta.fatta, false);
   assert.match(spunta.dettaglio, /3 dispositivi/);

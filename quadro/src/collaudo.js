@@ -17,6 +17,28 @@
  * Percio' il collaudo si chiude quando **nessuna spunta e' `false`**, non
  * quando sono tutte `true`: se no una casa a cui manca un dato resterebbe in
  * fila per sempre, per una cosa che non e' sua.
+ *
+ * ─── Come sono scritte le righe ──────────────────────────────────────────
+ *
+ * Una regola sola, e vale per tutte e dieci:
+ *
+ *     il nome dice **di cosa** si parla — il numero dice **come sta** —
+ *     il bollino dice **se va bene**.
+ *
+ * Il nome non giudica mai. Le righe erano scritte al contrario — «Sono
+ * collegati tutti», «Niente da aggiornare», «Nessuna batteria da cambiare» —
+ * e finche' erano verdi si leggevano bene; ambra, ognuna diceva il contrario
+ * di se stessa a due dita di distanza:
+ *
+ *     ▲ Sono collegati tutti          17 dispositivi non collegati
+ *     ▲ Niente da aggiornare          4 aggiornamenti in attesa
+ *     ▲ Nessuna batteria da cambiare  2 sotto soglia
+ *
+ * Tre righe che si smentiscono da sole, sullo stesso schermo. E non era un
+ * caso: **una spunta ha tre stati e un titolo solo**, quindi un titolo che
+ * ne racconti uno e' sbagliato negli altri due. Adesso e' un nome e basta —
+ * «I collegamenti», «Gli aggiornamenti», «Le batterie» — e si legge uguale
+ * in tutti e tre.
  */
 
 /* Dopo quanti rapporti saltati una casa e' muta. Uno solo puo' essere un
@@ -43,6 +65,11 @@ const MINUTO = 60 * 1000;
 const numero = (valore) => (Number.isFinite(Number(valore)) ? Number(valore) : null);
 
 const plurale = (quanti, uno, molti) => `${quanti} ${quanti === 1 ? uno : molti}`;
+
+/* Quando una casa non manda quel pezzo di rapporto. Non e' zero e non e' un
+ * guasto: e' silenzio, e si scrive sempre con le stesse parole perche' chi
+ * guarda dieci righe deve riconoscerlo a colpo d'occhio senza rileggerlo. */
+const NON_LO_DICE = "questa casa non lo dice";
 
 export function daQuanto(quando, adesso = Date.now()) {
   const minuti = Math.round((adesso - Date.parse(String(quando))) / MINUTO);
@@ -115,25 +142,25 @@ export function ilCollaudo(carta) {
   const metti = (cosa, fatta, dettaglio) => spunte.push({ cosa, fatta, dettaglio });
 
   metti(
-    "La plancia è configurata",
+    "La plancia",
     c.plance ? c.plance.configurate > 0 : null,
     c.plance
       ? c.plance.configurate > 0
         ? `${c.plance.configurate} su ${c.plance.quante}`
         : "nessuna, è vuota"
-      : "questa casa non lo dice",
+      : NON_LO_DICE,
   );
   metti(
-    "C'è almeno un telefono abbinato",
+    "I telefoni",
     c.telefoni ? c.telefoni.abbinati > 0 : null,
     c.telefoni
       ? c.telefoni.abbinati > 0
-        ? plurale(c.telefoni.abbinati, "telefono", "telefoni")
-        : "nessuno"
-      : "questa casa non lo dice",
+        ? plurale(c.telefoni.abbinati, "telefono abbinato", "telefoni abbinati")
+        : "nessuno abbinato"
+      : NON_LO_DICE,
   );
   metti(
-    "Da fuori casa funziona",
+    "Da fuori casa",
     c.fuori ? Boolean(c.fuori.acceso && c.fuori.filo) : null,
     c.fuori
       ? c.fuori.acceso
@@ -141,48 +168,48 @@ export function ilCollaudo(carta) {
           ? "filo su"
           : "acceso, filo giù"
         : "spento"
-      : "questa casa non lo dice",
+      : NON_LO_DICE,
   );
   metti(
-    "Sono collegati tutti",
+    "I collegamenti",
     quantiGiu(c) === null ? null : quantiGiu(c) === 0,
     quantiGiu(c) === null
-      ? "questa casa non lo dice"
+      ? NON_LO_DICE
       : quantiGiu(c) === 0
         ? `${c.entita.totali} entità, tutte là`
-        : `${plurale(quantiApparecchi(c), "dispositivo", "dispositivi")} non collegati`,
+        : plurale(quantiApparecchi(c), "dispositivo non collegato", "dispositivi non collegati"),
   );
   metti(
-    "Niente da aggiornare",
+    "Gli aggiornamenti",
     c.aggiornamenti ? c.aggiornamenti.quanti === 0 : null,
     c.aggiornamenti
       ? c.aggiornamenti.quanti === 0
         ? "tutto aggiornato"
-        : `${plurale(c.aggiornamenti.quanti, "aggiornamento", "aggiornamenti")} in attesa`
-      : "questa casa non lo dice",
+        : `${c.aggiornamenti.quanti} in attesa`
+      : NON_LO_DICE,
   );
   metti(
-    "Gli add-on che devono girare, girano",
+    "Gli add-on",
     c.addon ? addonGiu(c) === 0 : null,
     c.addon
       ? addonGiu(c) === 0
         ? `${c.addon.accesi} accesi su ${c.addon.quanti}`
         : `${plurale(addonGiu(c), "fermo", "fermi")} con l'avvio automatico`
-      : "questa casa non lo dice",
+      : NON_LO_DICE,
   );
   metti(
-    "La rete regge",
+    "La rete",
     c.rete ? Boolean(c.rete.internet) && (c.rete.sorvegliate?.giu ?? 0) === 0 : null,
     c.rete
       ? !c.rete.internet
         ? "non vede internet"
         : (c.rete.sorvegliate?.giu ?? 0) > 0
-          ? `${c.rete.sorvegliate.giu} apparati giù`
+          ? plurale(c.rete.sorvegliate.giu, "apparato giù", "apparati giù")
           : "internet c'è"
-      : "questa casa non lo dice",
+      : NON_LO_DICE,
   );
   metti(
-    "La macchina non soffre",
+    "La macchina",
     laMacchinaRegge(c.macchina),
     c.macchina
       ? [
@@ -195,27 +222,27 @@ export function ilCollaudo(carta) {
         ]
           .filter(Boolean)
           .join(" · ") || "senza numeri da guardare"
-      : "questa casa non lo dice",
+      : NON_LO_DICE,
   );
   metti(
-    "Il backup gira",
+    "Il backup",
     c.backup ? !backupFermo(c) : null,
     c.backup
       ? c.backup.giorniFa === null || c.backup.giorniFa === undefined
         ? "mai fatto"
         : `l'ultimo ${plurale(c.backup.giorniFa, "giorno fa", "giorni fa")}`
-      : "questa casa non lo dice",
+      : NON_LO_DICE,
   );
   metti(
-    "Nessuna batteria da cambiare",
+    "Le batterie",
     c.batterie ? c.batterie.scariche === 0 : null,
     c.batterie
       ? c.batterie.scariche === 0
         ? c.batterie.piuBassa === null || c.batterie.piuBassa === undefined
-          ? "nessuna batteria in casa"
+          ? "nessuna in casa"
           : `la più bassa al ${c.batterie.piuBassa}%`
         : `${c.batterie.scariche} sotto soglia`
-      : "questa casa non lo dice",
+      : NON_LO_DICE,
   );
 
   return {

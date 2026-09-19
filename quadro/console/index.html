@@ -922,6 +922,12 @@
         background: var(--bene);
       }
 
+      /* Quello che la casa non dice non e' una tacca mancata: e' una tacca
+       * senza risposta, e si vede spenta invece che ambra. */
+      .misura i.ignota {
+        background: var(--carta-alta);
+      }
+
       ul.spunte {
         list-style: none;
         margin: 0;
@@ -961,6 +967,16 @@
       ul.spunte .manca .bollino {
         background: var(--alone-ambra);
         color: var(--ambra);
+      }
+
+      ul.spunte .ignota .bollino {
+        background: var(--carta-alta);
+        color: var(--fioco);
+      }
+
+      ul.spunte .ignota .cosa,
+      ul.spunte .ignota .dettaglio {
+        color: var(--fioco);
       }
 
       ul.spunte .cosa {
@@ -1955,6 +1971,11 @@
 
       const plurale = (quanti, uno, molti) => `${quanti} ${quanti === 1 ? uno : molti}`;
 
+      /* C'e' davvero? Quello che una casa non manda non si scrive
+       * «undefined» sullo schermo di chi la ripara: o si dice che non lo dice,
+       * o quel pezzo di frase non si scrive proprio. */
+      const cE = (valore) => valore !== null && valore !== undefined && valore !== "";
+
       /* L'indirizzo del proprio marchio.
        *
        * Assoluto e **senza chiave**: `/marchio/<chi>` non ne vuole, e una
@@ -2043,6 +2064,27 @@
           /[&<>"']/g,
           (uno) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[uno],
         );
+
+      /* Com'e' andata una spunta del collaudo: tre stati, non due.
+       *
+       * Il terzo e' quello che si scordava. `fatta` puo' essere `true`,
+       * `false` o `null`, e `null` vuol dire che quel pezzo di rapporto la
+       * casa non lo manda — una senza System Monitor non manda la macchina.
+       * Fin qui la pagina lo disegnava ambra insieme a quelle rotte, cioe'
+       * faceva vedere un guaio dove c'era solo silenzio; e intanto il
+       * collaudo si chiudeva lo stesso, perche' a tenerlo aperto sono solo le
+       * `false`. Due schermi della stessa cosa che dicevano il contrario.
+       *
+       * Adesso il silenzio ha un colore suo, spento, e si legge per quello
+       * che e'. */
+      const comEAndata = (una) =>
+        una.fatta === true ? "fatta" : una.fatta === false ? "manca" : "ignota";
+
+      const IL_BOLLINO = { fatta: "✓", manca: "▲", ignota: "◇" };
+
+      /* Quello che sente chi legge lo schermo con le orecchie: il bollino e'
+       * un disegno, e da solo non dice niente. */
+      const A_PAROLE = { fatta: "a posto", manca: "da guardare", ignota: "non si sa" };
 
       /* Dove stanno i marchi delle integrazioni. Lo stesso posto da cui li
        * prende Home Assistant, ed e' il quadro a saperlo: da casa arriva una
@@ -2581,9 +2623,23 @@
         const c = casa.carta;
         const collaudo = casa.collaudo || { spunte: [], fatte: 0, aperte: 0, ignote: 0, quante: 0 };
 
+        /* Il verdetto guarda le righe **aperte**, non quelle spuntate.
+         *
+         * Guardava le spuntate, e a una casa che non dice tutto — Supervisor
+         * muto, niente System Monitor — capitava questo: sette righe grigie,
+         * nessuna rossa, e sotto la scritta che il collaudo si era riaperto.
+         * Non si era riaperto niente: erano sette domande senza risposta. Il
+         * collaudo si chiude quando nessuna riga e' aperta, ed e' questo che
+         * la frase deve dire. */
         const verdetto =
-          collaudo.fatte === collaudo.quante
-            ? "Tutte spuntate: questo impianto è a posto."
+          collaudo.aperte === 0
+            ? collaudo.ignote === 0
+              ? "Tutte spuntate: questo impianto è a posto."
+              : `Niente da guardare. ${
+                  collaudo.ignote === 1
+                    ? "Una riga questa casa non la dice"
+                    : `${collaudo.ignote} righe questa casa non le dice`
+                }, e non fa suonare niente.`
             : !casa.collaudataIl
               ? "Non è ancora stata consegnata: finché resta una spunta aperta, resta in fila."
               : `Il collaudo si era chiuso il ${ilGiorno(casa.collaudataIl)}. Queste righe si sono riaperte dopo, ed è il motivo per cui questa casa è qui.`;
@@ -2724,23 +2780,27 @@
           <section class="riquadro">
             <div class="capoRiquadro">
               <h3>Il collaudo</h3>
-              <span class="conta">${collaudo.fatte}/${collaudo.quante}</span>
+              <span class="conta">${collaudo.quante - collaudo.aperte}/${collaudo.quante}</span>
             </div>
             <div
               class="misura"
               role="img"
-              aria-label="${collaudo.fatte} spunte su ${collaudo.quante}"
+              aria-label="${
+                collaudo.aperte === 0
+                  ? "nessuna riga aperta"
+                  : `${plurale(collaudo.aperte, "riga aperta", "righe aperte")} su ${collaudo.quante}`
+              }"
             >
-              ${collaudo.spunte.map((una) => `<i class="${una.fatta ? "fatta" : ""}"></i>`).join("")}
+              ${collaudo.spunte.map((una) => `<i class="${comEAndata(una)}"></i>`).join("")}
             </div>
             <ul class="spunte">
               ${collaudo.spunte
                 .map(
                   (una) => `
-                <li class="${una.fatta ? "fatta" : "manca"}">
-                  <span class="bollino" aria-hidden="true">${una.fatta ? "✓" : "▲"}</span>
+                <li class="${comEAndata(una)}">
+                  <span class="bollino" aria-hidden="true">${IL_BOLLINO[comEAndata(una)]}</span>
                   <span class="cosa"
-                    >${testo(una.cosa)}<span class="via">${una.fatta ? " — fatta" : " — manca"}</span></span
+                    >${testo(una.cosa)}<span class="via"> — ${A_PAROLE[comEAndata(una)]}</span></span
                   >
                   <span class="dettaglio">${testo(una.dettaglio)}</span>
                 </li>`,
@@ -2816,7 +2876,7 @@
                 <tr>
                   <td>${testo(che)}</td>
                   <td class="numero">
-                    ${testo(quale)}${nuova ? '<span class="pastiglia attenta" style="margin-left:8px">c&#39;è la nuova</span>' : ""}
+                    ${cE(quale) ? testo(quale) : '<span class="nonLoDice">non lo dice</span>'}${nuova ? '<span class="pastiglia attenta" style="margin-left:8px">c&#39;è la nuova</span>' : ""}
                   </td>
                 </tr>`,
                 )
@@ -2908,7 +2968,7 @@
             che: "Disco",
             valore: m.disco,
             quanto: m.disco,
-            sotto: `${m.discoLiberi} GB liberi`,
+            sotto: cE(m.discoLiberi) ? `${m.discoLiberi} GB liberi` : "",
             come: livello(m.disco, 75, SOGLIE.discoPieno),
           }),
           unMetro({
@@ -2940,7 +3000,12 @@
             </div>
             <div class="metri">${metri.join("")}</div>
             <p class="verdetto">
-              ${testo(c.sistema)} · accesa da ${plurale(m.accesaDa, "giorno", "giorni")}.
+              ${[
+                cE(c.sistema) ? testo(c.sistema) : "",
+                cE(m.accesaDa) ? `accesa da ${plurale(m.accesaDa, "giorno", "giorni")}` : "",
+              ]
+                .filter(Boolean)
+                .join(" · ")}${cE(c.sistema) || cE(m.accesaDa) ? "." : ""}
               ${
                 m.discoVita !== null && m.discoVita >= DISCO_STANCO
                   ? `Il supporto è consumato al ${m.discoVita}%: su queste schede è la cosa che si rompe per prima, e si cambia prima che decida lui.`
@@ -2977,12 +3042,38 @@
         const elenco = c.aggiornamenti.elenco || [];
         const cartello = ilCartello(c, casa?.chiesto);
 
+        /* Il numero senza i nomi.
+         *
+         * Qui c'era scritto «Niente da fare: questa casa e' aggiornata» in
+         * tutti e due i casi, e su una casa con quattro aggiornamenti in
+         * attesa faceva questo: il collaudo diceva «4 in attesa» e due dita
+         * piu' sotto lo stesso schermo diceva che era aggiornata.
+         *
+         * Non e' un caso raro: i ponti fino alla 1.5.8 mandavano il **conto**
+         * e non l'elenco, quindi lo fa ogni casa non ancora aggiornata. Dire
+         * quale delle due cose e' — «non ho niente da mostrarti» oppure «non
+         * me li ha mandati» — e' la differenza fra un cruscotto e un
+         * indovinello. */
+        const quanti = Number(c.aggiornamenti.quanti) || 0;
         if (!elenco.length)
           return `
             <section class="riquadro">
               <div class="capoRiquadro"><h3>Gli aggiornamenti</h3></div>
               ${cartello}
-              <p class="nota">Niente da fare: questa casa è aggiornata.</p>
+              ${
+                quanti > 0
+                  ? `<div class="limite" style="margin-top: 16px">
+                      <span class="gettone" aria-hidden="true">◴</span>
+                      <span>
+                        <b>${plurale(quanti, "aggiornamento in attesa", "aggiornamenti in attesa")}, ma questa casa non manda l'elenco.</b>
+                        Il numero arriva, i nomi no: è un gdahome più vecchio
+                        della 1.5.9, che l'elenco non lo sapeva ancora mandare.
+                        Aggiorna l'add-on su quella casa e qui compaiono i nomi,
+                        i loghi, cosa cambia e il tasto per installarli.
+                      </span>
+                    </div>`
+                  : `<p class="nota">Niente da fare: questa casa è aggiornata.</p>`
+              }
             </section>`;
 
         return `
