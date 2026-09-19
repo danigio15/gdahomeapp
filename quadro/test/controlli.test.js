@@ -1,4 +1,4 @@
-/* Le prove delle regole: da un rapporto alle spunte, e a una parola.
+/* Le prove delle regole: da un rapporto ai dieci controlli, e a una parola.
  *
  * Quello che si prova davvero: che **«non lo so» non sia «va male»** — e' la
  * differenza fra un cruscotto utile e uno che mente, e un rapporto a pezzi
@@ -11,13 +11,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import {
-  aggiornamentiPesano,
-  collaudoChiuso,
-  ilCollaudo,
-  lePastiglie,
-  loStato,
-} from "../src/collaudo.js";
+import { aggiornamentiPesano, iControlli, lePastiglie, loStato } from "../src/controlli.js";
 
 const ADESSO = Date.parse("2026-09-18T09:44:00Z");
 const appena = (quanti = 3) => new Date(ADESSO - quanti * 60_000).toISOString();
@@ -40,61 +34,60 @@ const BUONA = {
 test("un rapporto a pezzi non e' una casa che va male", () => {
   /* Un Supervisor muto e Home Assistant giu': arriva quasi niente. E' il
    * giorno in cui l'installatore ha piu' bisogno di ricevere qualcosa. */
-  const collaudo = ilCollaudo({ quando: appena(), ogni: 15, ponte: "1.4.32.15" });
-  assert.equal(collaudo.aperte, 0, "niente e' «va male»");
-  assert.equal(collaudo.fatte, 0, "e niente e' «a posto»");
-  assert.equal(collaudo.ignote, collaudo.quante);
-  /* E siccome nessuna spunta e' aperta, quella casa e' consegnabile: non resta
-   * in fila per un dato che non e' suo. */
-  assert.equal(collaudoChiuso({ quando: appena(), ogni: 15 }), true);
+  const c = iControlli({ quando: appena(), ogni: 15, ponte: "1.4.32.15" });
+  assert.equal(c.male, 0, "niente e' «va male»");
+  assert.equal(c.bene, 0, "e niente e' «a posto»");
+  assert.equal(c.ignoti, c.quanti);
+  /* E quella casa non finisce in nessuna fila per questo: niente e' rosso. */
+  assert.equal(loStato({ carta: { quando: appena(), ogni: 15 } }, ADESSO).chiave, "posto");
 });
 
-test("una casa a posto ha tutte le spunte fatte, e nessuna ignota", () => {
-  const collaudo = ilCollaudo(BUONA);
-  assert.equal(collaudo.fatte, collaudo.quante);
-  assert.equal(collaudo.aperte, 0);
-  assert.equal(collaudo.ignote, 0);
+test("una casa a posto ha tutti i controlli verdi, e nessuno ignoto", () => {
+  const c = iControlli(BUONA);
+  assert.equal(c.bene, c.quanti);
+  assert.equal(c.male, 0);
+  assert.equal(c.ignoti, 0);
 });
 
 test("quello che va male si vede, e il resto resta a posto", () => {
-  const collaudo = ilCollaudo({
+  const c = iControlli({
     ...BUONA,
     addon: { quanti: 7, accesi: 5, spentiCheDovrebbero: 2, elenco: [] },
     macchina: { ...BUONA.macchina, temperatura: 79, disco: 93 },
   });
-  assert.equal(collaudo.aperte, 2);
-  assert.equal(collaudo.ignote, 0);
-  assert.equal(collaudoChiuso({ ...BUONA, macchina: { ...BUONA.macchina, disco: 93 } }), false);
+  assert.equal(c.male, 2);
+  assert.equal(c.ignoti, 0);
 });
 
 test("una macchina che dichiara solo il disco si giudica sul disco", () => {
   /* Senza System Monitor mancano CPU, memoria e temperatura: quello che resta
    * basta per un giudizio, e si da'. */
-  const spunta = ilCollaudo({
+  const quello = iControlli({
     ...BUONA,
     macchina: { scheda: "ODROID-N2+", disco: 93 },
-  }).spunte.find((una) => una.cosa === "La macchina");
-  assert.equal(spunta.fatta, false);
+  }).controlli.find((uno) => uno.cosa === "La macchina");
+  assert.equal(quello.va, false);
   /* E una che non dichiara nessun numero non si giudica per niente. */
-  const muta = ilCollaudo({ ...BUONA, macchina: { scheda: "ODROID-N2+" } }).spunte.find(
-    (una) => una.cosa === "La macchina",
+  const muta = iControlli({ ...BUONA, macchina: { scheda: "ODROID-N2+" } }).controlli.find(
+    (uno) => uno.cosa === "La macchina",
   );
-  assert.equal(muta.fatta, null);
+  assert.equal(muta.va, null);
 });
 
 test("muta batte tutto: di una casa che non parla non si sa niente di buono", () => {
   const vecchia = { ...BUONA, quando: new Date(ADESSO - 3 * 60 * 60 * 1000).toISOString() };
-  const stato = loStato({ carta: vecchia, collaudataIl: ADESSO }, ADESSO);
+  const stato = loStato({ carta: vecchia }, ADESSO);
   assert.equal(stato.chiave, "muta");
   assert.match(stato.perché, /è vecchio di altrettanto/);
 });
 
-test("il collaudo mai chiuso sta in una fila sua, non fra i guasti", () => {
-  const stato = loStato(
-    { carta: { ...BUONA, telefoni: { abbinati: 0, visti7gg: 0 } }, collaudataIl: null },
-    ADESSO,
-  );
-  assert.equal(stato.chiave, "aperto");
+test("una casa appena montata non finisce in una fila a parte", () => {
+  /* C'era un quarto stato, «collaudo aperto», e ci finiva ogni casa in cui un
+   * controllo era rosso e nessuno aveva ancora dichiarato finito l'impianto:
+   * una casa che funziona, archiviata come lavoro lasciato a meta'. Adesso le
+   * file sono tre, e un telefono che manca e' semplicemente da guardare. */
+  const stato = loStato({ carta: { ...BUONA, telefoni: { abbinati: 0, visti7gg: 0 } } }, ADESSO);
+  assert.equal(stato.chiave, "guardare");
 });
 
 test("un aggiornamento solo non suona; Home Assistant si", () => {
@@ -111,10 +104,7 @@ test("un aggiornamento solo non suona; Home Assistant si", () => {
   assert.ok(pastiglie.some((una) => /aggiornamento/.test(una.parola)));
   assert.equal(
     loStato(
-      {
-        carta: { ...BUONA, aggiornamenti: { quanti: 1, ha: false, gdahome: false } },
-        collaudataIl: ADESSO,
-      },
+      { carta: { ...BUONA, aggiornamenti: { quanti: 1, ha: false, gdahome: false } } },
       ADESSO,
     ).chiave,
     "posto",
@@ -131,7 +121,7 @@ test("la riga dei guai si ferma a tre, che un elenco di nove non si legge", () =
     backup: { giorniFa: 88 },
     macchina: { ...BUONA.macchina, temperatura: 79, disco: 93, discoVita: 94 },
   };
-  const stato = loStato({ carta: messaMale, collaudataIl: ADESSO }, ADESSO);
+  const stato = loStato({ carta: messaMale }, ADESSO);
   assert.equal(stato.chiave, "guardare");
   assert.match(stato.perché, /e altre \d+ cose qui sotto/);
 });

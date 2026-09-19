@@ -88,21 +88,6 @@ test("un giorno senza nessun rapporto e' vuoto, e si vede", () => {
   }
 });
 
-test("il collaudo si chiude una volta sola, e non si riapre", () => {
-  const b = banco(Date.parse("2026-09-18T09:00:00Z"));
-  try {
-    b.case.deposita(UNA, { ...carta(b), telefoni: { abbinati: 2, visti7gg: 2 } });
-    const chiusoIl = b.case.quella(UNA).collaudataIl;
-    assert.ok(chiusoIl);
-    /* Qualcosa si rompe: e' salute, non collaudo, e la data non si muove. */
-    b.vai(10 * MINUTO);
-    b.case.deposita(UNA, { ...carta(b), telefoni: { abbinati: 0, visti7gg: 0 } });
-    assert.equal(b.case.quella(UNA).collaudataIl, chiusoIl);
-  } finally {
-    b.chiudi();
-  }
-});
-
 test("le case si ordinano per quello che chiedono, non per come sono arrivate", () => {
   const b = banco(Date.parse("2026-09-18T09:00:00Z"));
   try {

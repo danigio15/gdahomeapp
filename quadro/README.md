@@ -20,12 +20,16 @@ presa Zigbee che sparisce, Home Assistant fermo a sei mesi fa, il backup che
 non gira dal giorno dell'installazione. Se ne accorge quando squilla il
 telefono, cioè quando il cliente è già arrabbiato.
 
-Il quadro risponde a due domande, e sono due domande diverse:
+Il quadro risponde a una domanda sola: **quell'impianto, adesso, come sta?**
+Dieci controlli per casa — verde quello che va, rosso quello che non va,
+spento quello che la casa non dice — guardati tutti i giorni.
 
-- **il collaudo** — *quell'impianto l'ho finito bene?* Una fila di spunte per
-  casa, che si chiude il giorno della consegna.
-- **la salute** — *regge nel tempo?* Le stesse righe guardate tutti i giorni,
-  che si riaprono quando qualcosa si rompe.
+C'era anche una seconda domanda, «l'ho finito bene?», con sopra tutta una
+cerimonia: una casa restava «in collaudo» finché non erano tutte verdi, si
+«consegnava» una volta sola, e da allora quelle righe «si riaprivano». Non
+l'aveva chiesta nessuno, e si vedeva: una casa appena abbinata veniva
+archiviata come lavoro non finito perché aveva due batterie scariche. È stata
+tolta — i dieci controlli sono rimasti quelli.
 
 ## Dove sta
 
@@ -359,8 +363,8 @@ Aprendo una casa:
 
 | | |
 |---|---|
-| **L'impianto** | matricola, installata il, collaudata il, ogni quanto manda, telefoni abbinati e quanti visti in 7 giorni |
-| **Il collaudo** | dieci spunte, e ognuna è un nome e basta — «I collegamenti», non «Sono collegati tutti»: la plancia · i telefoni · da fuori casa · i collegamenti · gli aggiornamenti · gli add-on · la rete · la macchina · il backup · le batterie. Il nome dice di cosa si parla, il numero a destra come sta, il bollino se va bene: ✓ a posto, ▲ da guardare, ◇ questa casa non lo dice |
+| **L'impianto** | matricola, installata il, ogni quanto manda, telefoni abbinati e quanti visti in 7 giorni |
+| **I controlli** | dieci, e ognuno è un nome e basta — «I collegamenti», non «Sono collegati tutti»: la plancia · i telefoni · da fuori casa · i collegamenti · gli aggiornamenti · gli add-on · la rete · la macchina · il backup · le batterie. Il nome dice di cosa si parla, il numero a destra come sta, il bollino se va bene: ✓ verde, ✗ rosso, ◇ questa casa non lo dice |
 | **La macchina** | la scheda (ODROID-N2+, ODROID-M1, un NUC…), CPU, memoria, disco e quanto resta, temperatura **con la tacca a 75°**, **la vita già consumata del disco**, da quanti giorni è accesa |
 | **La rete** | internet sì o no, ogni scheda con su/giù, cavo o Wi-Fi, quale è la principale, il segnale, l'indirizzo sulla rete di casa — e gli apparati sorvegliati (il router, i ripetitori) con quanti non rispondono |
 | **Gli add-on** | tutti, uno per pastiglia: acceso, **fermo** (parte all'avvio e non gira) o spento a mano |
@@ -391,10 +395,17 @@ chi ci abita, e dirglielo ogni quarto d'ora insegna a non guardare più.
 
 ### Gli stati, e perché hanno una forma
 
-Quattro: **● a posto**, **▲ da guardare**, **■ muta**, **◇ collaudo aperto**.
-Muta batte tutto — di una casa che non parla non si sa niente, nemmeno che sta
-bene — e il collaudo aperto sta in una fila sua, perché un lavoro non finito si
-sbriga in un altro modo da un impianto che si è rotto.
+Tre: **● a posto**, **▲ da guardare**, **■ muta**. Muta batte tutto — di una
+casa che non parla non si sa niente, nemmeno che sta bene.
+
+Ce n'era un quarto, **◇ collaudo aperto**, e teneva in una fila sua le case in
+cui un controllo era rosso e nessuno aveva ancora dichiarato finito l'impianto.
+È andato via col collaudo: non diceva niente che «da guardare» non dicesse già,
+e archiviava come lavoro non finito una casa che funzionava. Le tre cose che
+teneva d'occhio solo lui — plancia vuota, nessun telefono abbinato, il
+collegamento da fuori giù — sono passate fra i guai che fanno «da guardare», se
+no una casa con la plancia vuota sarebbe risultata a posto mentre nella sua
+scheda c'era una riga rossa.
 
 Ogni stato porta **una forma, una parola e un colore**, e non il colore da
 solo. Non è prudenza generica: misurando la tavolozza del progetto, `--ottone`
@@ -619,8 +630,8 @@ quadro/
   src/index.js       lo accende: il server, i tre archivi, la potatura
   src/server.js      le vie, e tre chiavi che non si toccano
   src/case.js        le case seguite: matricola, nome dell'installatore,
-                     collaudataIl, e quanti rapporti per giorno
-  src/collaudo.js    da un rapporto alle spunte, e dalle spunte allo stato
+                     e quanti rapporti per giorno
+  src/controlli.js   da un rapporto ai dieci controlli, e allo stato
   src/chiavi.js      gli inviti, e le chiavi che ne restano
   src/archivio.js    ─┐
   src/registro.js     ├ copie dal ponte, identiche: `src/PRESI_DAL_PONTE.md`
@@ -643,7 +654,7 @@ Le vie, davanti:
 |---|---|
 | `GET /` | la soglia: cos'è questo indirizzo, in italiano. Chi lo tiene fra i segnalibri prima o poi lo apre nudo |
 | `GET /salute` | se è vivo, quante case segue, e se la console è aperta |
-| `POST /rapporto` | la casa deposita. `x-casa` + la sua chiave; una matricola mai vista nasce qui, senza nome e in fila «collaudo aperto» |
+| `POST /rapporto` | la casa deposita. `x-casa` + la sua chiave; una matricola mai vista nasce qui, senza nome |
 
 L'installatore, tutte dentro `/console/` e tutte con la **sua** chiave:
 
@@ -859,7 +870,7 @@ guardi.
 
    **Fatta.** Seicento righe e nessuna dipendenza: `src/server.js` con le vie
    qui sopra, `src/case.js` che tiene l'ultimo rapporto e la storia dei giorni,
-   `src/collaudo.js` con le regole, `src/chiavi.js` con gli inviti. La pagina è
+   `src/controlli.js` con le regole, `src/chiavi.js` con gli inviti. La pagina è
    la stessa di prima, meno le novecento righe di dati finti e **meno le regole
    che si era portata dietro**: stato, spunte e pastiglie arrivano decisi da
    `GET case`, e con loro le tre soglie dei metri. Quella pagina ora disegna e
@@ -907,7 +918,7 @@ vero del quadro — che a ospitarlo sia l'installatore, perche' le case che guar
 sono clienti suoi — il suo server lo soddisfa gia'.
 
 **E non sarebbe lo stesso programma su un altro motore.** Delle milleduecento
-righe, `collaudo.js` (le regole, trecentocinquanta righe) e' puro e passerebbe
+righe, `controlli.js` (le regole, trecentocinquanta righe) e' puro e passerebbe
 di peso; le altre seicentonovanta no. `archivio.js` e' `readFileSync` e
 `renameSync`, e su un Worker il filesystem **non c'e'**: andrebbe rifatto su KV,
 D1 o Durable Objects. Quelli sono asincroni, quindi le otto `salva()` dentro
@@ -927,7 +938,7 @@ delle copie la paga gia': `segnalazioni.js` sono cinquecentoquattro righe
 identiche fra `centralino/` e `nuvola/`, tenute allineate da una prova scritta
 apposta perche' — dice la prova — il rischio e' *«si corregge un difetto da una
 parte e dall'altra resta»*. Un quadro su Worker vorrebbe dire pagarla una terza
-volta, e su `collaudo.js`: cioe' **proprio sulle regole**. Una divergenza
+volta, e su `controlli.js`: cioe' **proprio sulle regole**. Una divergenza
 silenziosa li' fa dire a due schermi due cose diverse della stessa casa — che e'
 esattamente l'errore appena tolto dalla pagina, dove le soglie stavano scritte
 due volte.
@@ -945,13 +956,15 @@ metterlo ce l'ha gia': nessuno.
   come la finestra del traffico di GitHub in `strumenti/conta-le-case.mjs`.
 - **Le soglie.** Batteria al 20%, backup fermo dopo 14 giorni, muta dopo tre
   rapporti saltati, 75 °C, disco al 85%: sono scelte a occhio, non misurate.
-  Stanno tutte in cima a `src/collaudo.js` con un nome, che è il minimo perché
+  Stanno tutte in cima a `src/controlli.js` con un nome, che è il minimo perché
   un giorno si possano cambiare sapendo quante sono.
 - **Se un aggiornamento in attesa fa suonare la spia.** Per ora no, a meno
   che tocchi Home Assistant o gdahome o siano tre: una casa che diventa ambra
   perché un add-on ha una versione nuova da ieri insegna a non guardare più le
-  case ambra. Nel collaudo invece contano tutti, perché alla consegna un
-  impianto si lascia aggiornato.
+  case ambra. Fra i dieci controlli invece contano tutti, e quella riga è severa
+  apposta: lì la domanda è «questo impianto è in ordine?», nell'elenco è «devo
+  andare a vedere?». È l'unica differenza rimasta fra le due liste, e sta
+  scritta sopra `aggiornamentiPesano`.
 - **Chi lo accende.** Se il quadro resta una cosa che un installatore si tira su
   da sé, o se un domani ne esiste uno ospitato — e allora tornano tutte le
   domande sui dati di case altrui, che è il motivo per cui qui sta da questa

@@ -182,7 +182,7 @@ test("un codice annullato non apre piu', e uno mai fatto nemmeno", async () => {
   }
 });
 
-test("una casa nuova nasce depositando, senza nome e in fila «collaudo aperto»", async () => {
+test("una casa nuova nasce depositando, senza nome", async () => {
   const b = await banco();
   try {
     await b.deposita(UNA, await unCodice(b, "Villa Aurora"));
@@ -190,10 +190,10 @@ test("una casa nuova nasce depositando, senza nome e in fila «collaudo aperto»
     assert.equal(case_.length, 1);
     assert.equal(case_[0].casa, UNA);
     assert.equal(case_[0].senzaNome, true);
-    /* Il primo rapporto di questa casa ha tutte le spunte a posto, quindi il
-     * collaudo si chiude subito: e' giusto, l'impianto e' finito. */
+    /* Il primo rapporto di questa casa ha tutti i controlli verdi, quindi e'
+     * a posto da subito. Non c'e' nessuna fila delle case da consegnare in cui
+     * metterla: quella era il collaudo, e non c'e' piu'. */
     assert.equal(case_[0].stato.chiave, "posto");
-    assert.ok(case_[0].collaudataIl);
 
     await b.retro(`/casa/${UNA}`, {
       method: "PUT",
@@ -217,13 +217,13 @@ test("quello che un rapporto non dice resta «non si sa», e non diventa rosso",
       ponte: "1.4.32.15",
     });
     const { case: case_ } = await (await b.retro("/case")).json();
-    const collaudo = case_[0].collaudo;
-    assert.equal(collaudo.aperte, 0, "niente e' «va male»");
-    assert.equal(collaudo.fatte, 0, "e niente e' «a posto»");
-    assert.equal(collaudo.ignote, collaudo.quante, "e' tutto «questa casa non lo dice»");
-    /* E siccome nessuna spunta e' aperta, questa casa e' consegnabile: non
-     * resta in fila per un dato che non e' suo. */
-    assert.ok(case_[0].collaudataIl);
+    const controlli = case_[0].controlli;
+    assert.equal(controlli.male, 0, "niente e' «va male»");
+    assert.equal(controlli.bene, 0, "e niente e' «a posto»");
+    assert.equal(controlli.ignoti, controlli.quanti, "e' tutto «questa casa non lo dice»");
+    /* E siccome niente e' rosso, questa casa non finisce in nessuna fila: non
+     * si guarda per un dato che non e' suo. */
+    assert.equal(case_[0].stato.chiave, "posto");
   } finally {
     await b.chiudi();
   }

@@ -54,7 +54,7 @@ import { createServer } from "node:http";
 
 import { TUTTE } from "./case.js";
 import { CASA_VALIDA, TroppiInviti } from "./chiavi.js";
-import { DISCO_FINITO, DISCO_PIENO, TROPPO_CALDO } from "./collaudo.js";
+import { DISCO_FINITO, DISCO_PIENO, TROPPO_CALDO } from "./controlli.js";
 import { Fattorino, indirizzoBuono } from "./fattorino.js";
 import { comeVaLAggiornamento } from "./mi-aggiorno.js";
 import { CHI_VALIDO } from "./installatori.js";

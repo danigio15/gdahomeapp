@@ -22,7 +22,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-import { ilCollaudo } from "../src/collaudo.js";
+import { iControlli } from "../src/controlli.js";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 const qua = (...pezzi) => readFileSync(join(QUI, "..", ...pezzi), "utf8");
@@ -86,7 +86,7 @@ test("il riavvio si chiama riavvio, non «il filo che cade»", () => {
   assert.match(qua("console", "index.html"), /riavvio necessario/);
 });
 
-/* ─── Il collaudo: il nome dice di cosa, non come va ──────────────────── */
+/* ─── I controlli: il nome dice di cosa, non come va ─────────────────── */
 
 /* Un rapporto in cui va tutto bene, e uno in cui va tutto male. Le stesse
  * dieci righe, gli stessi dieci nomi. */
@@ -119,36 +119,36 @@ const TUTTO_MALE = {
   batterie: { scariche: 2, piuBassa: 4 },
 };
 
-test("il nome di una spunta non cambia fra il verde e l'ambra", () => {
-  /* Il guasto era questo, e si vedeva solo quando la riga diventava ambra:
+test("il nome di un controllo non cambia fra il verde e il rosso", () => {
+  /* Il guasto era questo, e si vedeva solo quando la riga diventava rossa:
    *
-   *     ▲ Sono collegati tutti          17 dispositivi non collegati
-   *     ▲ Niente da aggiornare          4 aggiornamenti in attesa
-   *     ▲ Nessuna batteria da cambiare  2 sotto soglia
+   *     ✗ Sono collegati tutti          17 dispositivi non collegati
+   *     ✗ Niente da aggiornare          4 aggiornamenti in attesa
+   *     ✗ Nessuna batteria da cambiare  2 sotto soglia
    *
    * Un titolo solo per tre stati: raccontandone uno, e' sbagliato negli
    * altri due. */
-  const bene = ilCollaudo(TUTTO_BENE).spunte;
-  const male = ilCollaudo(TUTTO_MALE).spunte;
-  const ignote = ilCollaudo({ quando: TUTTO_BENE.quando, ogni: 1 }).spunte;
+  const bene = iControlli(TUTTO_BENE).controlli;
+  const male = iControlli(TUTTO_MALE).controlli;
+  const ignoti = iControlli({ quando: TUTTO_BENE.quando, ogni: 1 }).controlli;
 
   assert.deepEqual(
-    male.map((una) => una.cosa),
-    bene.map((una) => una.cosa),
+    male.map((uno) => uno.cosa),
+    bene.map((uno) => uno.cosa),
   );
   assert.deepEqual(
-    ignote.map((una) => una.cosa),
-    bene.map((una) => una.cosa),
+    ignoti.map((uno) => uno.cosa),
+    bene.map((uno) => uno.cosa),
   );
 
   /* E che i tre casi ci siano davvero: se no la prova passerebbe da sola. */
-  assert.ok(bene.every((una) => una.fatta === true));
-  assert.ok(male.every((una) => una.fatta === false));
-  assert.ok(ignote.every((una) => una.fatta === null));
+  assert.ok(bene.every((uno) => uno.va === true));
+  assert.ok(male.every((uno) => uno.va === false));
+  assert.ok(ignoti.every((uno) => uno.va === null));
 });
 
-test("il nome di una spunta e' un nome, non un giudizio", () => {
-  /* La regola, scritta in cima a `collaudo.js`: il nome dice **di cosa** si
+test("il nome di un controllo e' un nome, non un giudizio", () => {
+  /* La regola, scritta in cima a `controlli.js`: il nome dice **di cosa** si
    * parla, il numero a destra **come sta**, il bollino **se va bene**. Queste
    * sono le parole con cui un nome smette di essere un nome. */
   const GIUDIZI = [
@@ -166,26 +166,45 @@ test("il nome di una spunta e' un nome, non un giudizio", () => {
     /\bcambiare\b/i,
     /\baggiornare\b/i,
   ];
-  for (const una of ilCollaudo(TUTTO_MALE).spunte) {
+  for (const uno of iControlli(TUTTO_MALE).controlli) {
     for (const giudizio of GIUDIZI) {
-      assert.ok(!giudizio.test(una.cosa), `«${una.cosa}» giudica invece di nominare: ${giudizio}`);
+      assert.ok(!giudizio.test(uno.cosa), `«${uno.cosa}» giudica invece di nominare: ${giudizio}`);
     }
     assert.ok(
-      una.cosa.split(/\s+/).length <= 3,
-      `«${una.cosa}» e' una frase, non un nome: piu' di tre parole`,
+      uno.cosa.split(/\s+/).length <= 3,
+      `«${uno.cosa}» e' una frase, non un nome: piu' di tre parole`,
     );
   }
 });
 
 test("la console disegna tre stati, non due", () => {
   /* `null` vuol dire «questa casa non lo dice», e per un pezzo la pagina lo
-   * disegnava ambra insieme alle righe rotte: un guaio dove c'era silenzio.
-   * Intanto il collaudo si chiudeva lo stesso, perche' a tenerlo aperto sono
-   * solo le `false`. */
+   * disegnava come le righe rotte: un guaio dove c'era solo silenzio. */
   const [, pagina] = PAGINE[0];
-  assert.match(pagina, /ignota/, "la console non ha piu' lo stato «non si sa»");
-  assert.match(pagina, /fatta: "✓", manca: "▲", ignota: "◇"/);
-  assert.match(pagina, /fatta: "a posto", manca: "da guardare", ignota: "non si sa"/);
+  assert.match(pagina, /ignoto/, "la console non ha piu' lo stato «non si sa»");
+  assert.match(pagina, /bene: "✓", male: "✗", ignoto: "◇"/);
+  assert.match(pagina, /bene: "a posto", male: "non va", ignoto: "non si sa"/);
+});
+
+test("del collaudo non e' rimasto niente sullo schermo", () => {
+  /* Non l'aveva chiesto nessuno, e sullo schermo si vedeva: una casa appena
+   * abbinata veniva archiviata come lavoro non finito perche' aveva due
+   * batterie scariche, e ci restava finche' qualcuno non gliele cambiava.
+   * Adesso sono dieci controlli, verdi o rossi, e chi guarda decide da se'. */
+  const morte = [
+    /collaud/i,
+    /non è ancora stata consegnata/i,
+    /spunt[ae] apert[ae]/i,
+    /tutte spuntate/i,
+    /resta in fila/i,
+  ];
+  for (const [quale, pagina] of PAGINE) {
+    for (const parola of morte) {
+      assert.ok(!parola.test(pagina), `«${quale}» dice ancora ${parola}`);
+    }
+  }
+  /* `consegnata` come nome di variabile resta, e non c'entra: e' la chiave che
+   * la scheda dell'add-on porge alla pagina. */
 });
 
 test("quello che una casa non manda non si scrive «undefined»", () => {
@@ -206,7 +225,7 @@ test("quello che una casa non manda non si scrive «undefined»", () => {
 test("il conto degli aggiornamenti e l'elenco non si smentiscono", () => {
   /* Il riquadro diceva «Niente da fare: questa casa è aggiornata» ogni volta
    * che l'elenco era vuoto — anche con quattro aggiornamenti contati due dita
-   * piu' su, nel collaudo. I ponti fino alla 1.5.8 mandano il conto e non
+   * piu' su, fra i controlli. I ponti fino alla 1.5.8 mandano il conto e non
    * l'elenco, quindi capitava su ogni casa non ancora aggiornata. */
   const [, pagina] = PAGINE[0];
   assert.match(pagina, /non manda l'elenco/);

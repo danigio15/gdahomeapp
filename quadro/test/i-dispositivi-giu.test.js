@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 import { leEntita } from "../../ponte/src/salute.js";
-import { ilCollaudo, lePastiglie, loStato } from "../src/collaudo.js";
+import { iControlli, lePastiglie, loStato } from "../src/controlli.js";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
 const CONSOLE = readFileSync(join(QUI, "..", "console", "index.html"), "utf8");
@@ -60,15 +60,15 @@ test("il numero vero dei dispositivi giu' non si perde nel taglio a dodici", () 
   assert.match(CONSOLE, /e altri \$\{altri\}/, "la console non scrive quanti ne restano fuori");
 });
 
-/* ─── Il collaudo legge lo stesso numero della console ──────────────────── */
+/* ─── I controlli leggono lo stesso numero della console ──────────────────── */
 
-test("il collaudo giudica il rapporto di adesso, non quello di ieri", () => {
+test("i controlli giudicano il rapporto di adesso, non quello di ieri", () => {
   /* Questa prova esiste per un guasto vero, trovato guardando la pagina e non
-   * le prove: rinominando `sparite` in `giu` nel ponte, `collaudo.js` e'
+   * le prove: rinominando `sparite` in `giu` nel ponte, le regole erano
    * rimasto indietro e la spunta diceva **«undefined su 180»** — rossa per
    * sempre, e senza che niente si rompesse.
    *
-   * Le prove del collaudo non se ne sono accorte perche' gli davano tutte la
+   * Le loro prove non se ne sono accorte perche' gli davano tutte la
    * forma vecchia. Qui il rapporto lo fabbrica il **ponte**, cosi' il giorno
    * che cambia di la' si rompe di qua. */
   const carta = {
@@ -77,10 +77,10 @@ test("il collaudo giudica il rapporto di adesso, non quello di ieri", () => {
       { entity_id: "switch.presa", state: "unavailable", attributes: {} },
     ]),
   };
-  const spunte = ilCollaudo(carta).spunte;
-  const quella = spunte.find((una) => una.cosa === "I collegamenti");
-  assert.ok(quella, "nel collaudo non c'e' piu' la spunta dei dispositivi collegati");
-  assert.equal(quella.fatta, false);
+  const controlli = iControlli(carta).controlli;
+  const quella = controlli.find((uno) => uno.cosa === "I collegamenti");
+  assert.ok(quella, "fra i controlli non c'e' piu' quello dei collegamenti");
+  assert.equal(quella.va, false);
   assert.ok(
     !String(quella.dettaglio).includes("undefined"),
     `«${quella.dettaglio}» dice «undefined»`,
@@ -91,8 +91,8 @@ test("il collaudo giudica il rapporto di adesso, non quello di ieri", () => {
   const aPosto = {
     entita: leEntita([{ entity_id: "light.una", state: "on", attributes: {} }]),
   };
-  const buona = ilCollaudo(aPosto).spunte.find((una) => una.cosa === "I collegamenti");
-  assert.equal(buona.fatta, true);
+  const buona = iControlli(aPosto).controlli.find((uno) => uno.cosa === "I collegamenti");
+  assert.equal(buona.va, true);
   assert.match(buona.dettaglio, /1 entità/);
 });
 
@@ -110,10 +110,10 @@ test("le pastiglie e lo stato non dicono «undefined» col rapporto di adesso", 
 
 test("una casa ferma a un ponte di ieri si giudica lo stesso", () => {
   /* Le case si aggiornano quando gli pare: finche' ne resta una che manda
-   * `sparite`, il collaudo la deve saper leggere. */
-  const spunta = ilCollaudo({ entita: { totali: 180, sparite: 3, impronte: [] } }).spunte.find(
-    (una) => una.cosa === "I collegamenti",
+   * `sparite`, i controlli la devono saper leggere. */
+  const quello = iControlli({ entita: { totali: 180, sparite: 3, impronte: [] } }).controlli.find(
+    (uno) => uno.cosa === "I collegamenti",
   );
-  assert.equal(spunta.fatta, false);
-  assert.match(spunta.dettaglio, /3 dispositivi/);
+  assert.equal(quello.va, false);
+  assert.match(quello.dettaglio, /3 dispositivi/);
 });

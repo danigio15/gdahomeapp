@@ -508,7 +508,7 @@ function iConti(daFare, marchi = new Map()) {
 }
 
 /* Quante plance ci sono, e quante hanno qualcosa dentro. Una plancia vuota e'
- * un impianto lasciato a meta', ed e' una delle spunte del collaudo. */
+ * un impianto lasciato a meta', ed e' uno dei dieci controlli del quadro. */
 function lePlance(plance, configurazione) {
   const elenco = typeof plance.elenco === "function" ? plance.elenco() : [];
   if (!configurazione) return { quante: elenco.length, configurate: 0 };
