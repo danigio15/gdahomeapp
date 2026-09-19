@@ -747,7 +747,7 @@ Tre regole che il ponte applica e il quadro non può scavalcare:
 1. **Il backup viene prima, sempre.** Non è una casella da spuntare: è la
    condizione perché il verbo esista. Un aggiornamento che va storto senza
    backup dietro è una casa da rifare.
-2. **Quelli che staccano il filo, uno per volta.** `aggiornamenti.js` li marca
+2. **Quelli che vogliono un riavvio, uno per volta.** `aggiornamenti.js` li marca
    già (`stacca`): gdahome e Home Assistant si riavviano installandosi. Due
    insieme sulla stessa casa vogliono dire non sapere quale dei due non è
    tornato.
@@ -756,7 +756,7 @@ Tre regole che il ponte applica e il quadro non può scavalcare:
    cacciavite mostrato con un tasto è una promessa che non si mantiene.
 
 E una conseguenza che va guardata in faccia: **una casa che sta installando
-qualcosa che stacca il filo smette di mandare rapporti.** Senza saperlo, il
+qualcosa che vuole un riavvio smette di mandare rapporti.** Senza saperlo, il
 quadro la darebbe per muta ogni volta che si aggiorna qualcosa. Perciò sa cosa
 ha chiesto, e lo dice: entro tre quarti d'ora è «sta aggiornando»; oltre, non è
 più un'attesa ma **«non è tornata»** — che è la cosa peggiore che possa fare un

@@ -67,3 +67,19 @@ test("l'avviso non promette che un installatore riaggiunto si riprenda i suoi im
   );
   assert.match(pagina, /prende una matricola nuova/);
 });
+
+test("il riavvio si chiama riavvio, non «il filo che cade»", () => {
+  /* «Fa cadere il filo» diceva la cosa dal punto di vista del programma: il
+   * collegamento si interrompe. Chi legge non sta guardando un collegamento,
+   * sta decidendo se premere Installa adesso o stasera — e quello che gli
+   * serve sapere e' che la casa **si riavvia**.
+   *
+   * L'app lo diceva gia' cosi' («riavvia la casa»): era il quadro l'unico a
+   * parlare di fili, per la stessa cosa e nella stessa schermata. */
+  for (const [quale, pagina] of PAGINE) {
+    for (const storta of [/cadere il filo/i, /staccano il filo/i, /stacca il filo/i]) {
+      assert.ok(!storta.test(pagina), `«${quale}» parla ancora di fili invece che di riavvio`);
+    }
+  }
+  assert.match(qua("console", "index.html"), /riavvio necessario/);
+});

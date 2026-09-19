@@ -2996,7 +2996,7 @@
               ${elenco
                 .map((uno) =>
                   unaRiga(uno, {
-                    fare: `${uno.stacca ? '<span class="pastiglia attenta">fa cadere il filo</span>' : ""}${ilTasto(uno, c, casa)}`,
+                    fare: `${uno.stacca ? '<span class="pastiglia attenta">riavvio necessario</span>' : ""}${ilTasto(uno, c, casa)}`,
                   }),
                 )
                 .join("")}
@@ -3108,9 +3108,9 @@
             <span>
               <b>${testo(l.cosa)}</b> è partito ${testo(daQuanto(l.quando))}${
                 tardi
-                  ? ` e questa casa non è più tornata. Un aggiornamento che stacca il filo se lo riprende in pochi minuti: qui si va di persona.`
+                  ? ` e questa casa non è più tornata. Un riavvio dura pochi minuti: qui si va di persona.`
                   : l.stacca
-                    ? `. Fa cadere il filo, quindi per qualche minuto questa casa non si fa sentire — è normale.`
+                    ? `. La casa si riavvia, quindi per qualche minuto non si fa sentire — è normale.`
                     : `. Come è andata lo dirà il prossimo rapporto.`
               }
             </span>
@@ -3322,7 +3322,7 @@
               <li class="fatta">
                 <span class="bollino" aria-hidden="true">✓</span>
                 <span class="cosa">
-                  <b>Quelli che staccano il filo, uno per volta.</b> gdahome e
+                  <b>Quelli che vogliono un riavvio, uno per volta.</b> gdahome e
                   Home Assistant si riavviano installandosi: due insieme sulla
                   stessa casa vogliono dire non sapere quale dei due non è
                   tornato.
