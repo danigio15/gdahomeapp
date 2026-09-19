@@ -2,7 +2,7 @@
  *
  * Quello che si prova davvero: che **«non lo so» non sia «va male»** — e' la
  * differenza fra un cruscotto utile e uno che mente, e un rapporto a pezzi
- * e' la cosa normale, non l'eccezione; che muta batta tutto, perche' di una
+ * e' la cosa normale, non l'eccezione; che offline batta tutto, perche' di una
  * casa che non parla non si sa niente nemmeno di buono; e che un
  * aggiornamento solo non faccia suonare una spia, se no si smette di
  * guardarle.
@@ -68,16 +68,16 @@ test("una macchina che dichiara solo il disco si giudica sul disco", () => {
   }).controlli.find((uno) => uno.cosa === "La macchina");
   assert.equal(quello.va, false);
   /* E una che non dichiara nessun numero non si giudica per niente. */
-  const muta = iControlli({ ...BUONA, macchina: { scheda: "ODROID-N2+" } }).controlli.find(
+  const senzaNumeri = iControlli({ ...BUONA, macchina: { scheda: "ODROID-N2+" } }).controlli.find(
     (uno) => uno.cosa === "La macchina",
   );
-  assert.equal(muta.va, null);
+  assert.equal(senzaNumeri.va, null);
 });
 
-test("muta batte tutto: di una casa che non parla non si sa niente di buono", () => {
+test("offline batte tutto: di una casa che non parla non si sa niente di buono", () => {
   const vecchia = { ...BUONA, quando: new Date(ADESSO - 3 * 60 * 60 * 1000).toISOString() };
   const stato = loStato({ carta: vecchia }, ADESSO);
-  assert.equal(stato.chiave, "muta");
+  assert.equal(stato.chiave, "offline");
   assert.match(stato.perché, /è vecchio di altrettanto/);
 });
 

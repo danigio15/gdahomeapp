@@ -95,8 +95,8 @@ export class Giro {
     const sue = this.case.lista.filter((una) => una.di === uno.chi);
     if (!sue.length) return 0;
 
-    const { mute, tornate } = chiTace(sue, { tacePer: this.tacePer, adesso: ora });
-    if (!mute.length && !tornate.length) return 0;
+    const { offline, tornate } = chiTace(sue, { tacePer: this.tacePer, adesso: ora });
+    if (!offline.length && !tornate.length) return 0;
 
     /* Chi non ha detto dove vuole essere avvisato non riceve niente — ma le sue
      * case che sono tornate a parlare si dimenticano lo stesso, se no il giorno
@@ -108,7 +108,7 @@ export class Giro {
     }
 
     let partiti = 0;
-    for (const detto of cosaDire({ mute, tornate, quante: sue.length })) {
+    for (const detto of cosaDire({ offline, tornate, quante: sue.length })) {
       const arrivato = await this.fattorino.porta(uno.avvisi, detto);
       if (!arrivato) continue;
       partiti += 1;

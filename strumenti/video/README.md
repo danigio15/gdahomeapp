@@ -8,13 +8,17 @@ fatti dalla stessa pagina web e dalla stessa cartella:
 | `gdahome-presentazione` | 1280×720 | 2:49 | quello che spiega: cos'è, come si installa l'add-on, come si abbina il telefono, quanto costa (niente) |
 | `gdahome-facebook` | 1080×1080 | 0:47 | il quadrato per il feed di Facebook |
 | `gdahome-tiktok` | 1080×1920 | 0:47 | lo stesso, in piedi, per TikTok — e per Reels e Storie |
-| `gdahome-quadro` | 1280×720 | 2:10 | **il quadro**: cosa vede chi ha montato l'impianto quando gli si danno in gestione le case, e cosa da lì non vede |
+| `gdahome-quadro` | 1280×720 | 4:14 · 4:08 | **il quadro**, ed è l'unico **parlato**: cosa vede chi ha montato l'impianto quando gli si danno in gestione le case, e cosa da lì non vede |
 
 I primi tre parlano a chi abita una casa. Il quarto parla a chi ne segue
 quaranta, e per questo dice due cose che negli altri non ci sono: cosa si legge
 dal quadro, e **cosa da lì non si può leggere**. La seconda metà non è un di
 più — è quella che decide se questo pezzo si può dare in mano a qualcuno — e
 sta nel film per intero: `quadro/README.md`, «Cosa il quadro non può fare».
+
+È anche l'unico **con una voce che racconta** ([qui sotto](#il-quarto-invece-parla)),
+e l'unico che dura due lunghezze diverse nelle due lingue: le scene aspettano
+la voce, e la stessa frase in inglese non dura quanto in italiano.
 
 | immagine | misura | dove va |
 |---|---|---|
@@ -57,7 +61,12 @@ node strumenti/video/rendi.mjs                 i quattro filmati, nelle due ling
 node strumenti/video/rendi.mjs --film tiktok   uno solo (due lingue)
 node strumenti/video/rendi.mjs --lingua en     solo l'inglese
 node strumenti/video/rendi.mjs --copertine     le immagini ferme di Facebook
+node strumenti/video/voce.mjs                  la voce del film del quadro
 ```
+
+Il film del quadro è parlato, e la voce si fa **prima**: è lei a decidere
+quanto dura ogni scena. L'ordine sta in [«Il quarto invece parla»](#il-quarto-invece-parla),
+ed è tre comandi.
 
 Le fotografie della plancia vera si rifanno a parte, una lingua per volta —
 aprono la plancia e aspettano che si configuri da sola:
@@ -75,7 +84,9 @@ una flotta inventata e lo fotografa:
 node strumenti/video/quadro-vero.mjs
 ```
 
-Venti minuti circa per tutti e otto i filmati. Serve **Playwright** (`npm i -g playwright`,
+Mezz'ora circa per tutti e otto i filmati — il film del quadro dura il doppio
+degli altri e si riprende quasi tutto fotogramma per fotogramma. Serve
+**Playwright** (`npm i -g playwright`,
 oppure installato di fianco al progetto) e, per l'mp4, **ffmpeg**
 (`apt install ffmpeg`). Nient'altro.
 
@@ -99,6 +110,10 @@ mentre va.
 | `presentazione.html` + `scene.js` | il film lungo: quindici scene, disposte a coordinate |
 | `social.html` + `social.js` | il film corto: sette scene, disposte **a colonna** |
 | `quadro.html` + `quadro.js` | il film del quadro: quattordici scene, con dentro le fotografie della console vera |
+| `parlato.js` + `voce.mjs` | il copione parlato del film del quadro, e chi lo dice: sintetizza, monta la traccia e la attacca al film |
+| `parlato-tempi.json` | quanto dura ogni scena e quando arriva ogni frase, nelle due lingue. **Lo scrive `voce.mjs`**, e `quadro.js` lo legge |
+| `voce-quadro.m4a` (e `-en`) | le due tracce parlate, che stanno qui apposta: così il film si rifà senza piper |
+| `voce/` | piper e le due voci, ottanta megabyte di roba di terzi; non sta nella repository |
 | `copertine.html` + `copertine.js` | le copertine di Facebook e l'immagine del profilo, ferme |
 | `plancia-vera.mjs` + `casa-finta.js` | fotografano **la plancia vera**, quella di `ponte/plancia/` |
 | `quadro-vero.mjs` + `flotta-finta.js` | fotografano **il quadro vero**, quello di `quadro/console/` |
@@ -293,7 +308,7 @@ e un `POST /rapporto` con quel codice e la matricola in testa. Il quadro non sa
 che sono finte, e infatti le giudica lui: gli stati, i controlli e le pastiglie
 delle fotografie non sono scritti da nessuna parte qui dentro.
 
-La flotta sta in `flotta-finta.js`: quindici impianti, **una muta, tre da
+La flotta sta in `flotta-finta.js`: quindici impianti, **uno offline, tre da
 guardare, undici a posto**. È la proporzione di una giornata normale, ed è una
 scelta — se fossero metà rosse la fotografia racconterebbe un installatore che
 ha sbagliato mestiere, e se fossero tutte verdi non si capirebbe a cosa serve
@@ -355,22 +370,83 @@ alto) e in `come-si-prova-oggi` (la pastiglia); nel film corto, nella scena
 
 ## Il suono
 
-Non c'è, e non per dimenticanza: le parole stanno scritte sul filmato, ed è
-anche il modo in cui lo guardano quasi tutti — un video di installazione si
-guarda col telefono in silenzio, e uno sui social pure.
+**Nei primi tre non c'è**, e non per dimenticanza: le parole stanno scritte sul
+filmato, ed è anche il modo in cui li guardano quasi tutti — un video di
+installazione si guarda col telefono in silenzio, e uno sui social pure.
 
 Nei due corti c'è però una traccia audio **muta**: un negozio che riceve un
 video senza nessuna traccia ogni tanto lo rifiuta, e accorgersene mentre si
 pubblica è la cosa peggiore.
 
-Chi vuole leggere il parlato ha il copione in [`copione.md`](copione.md), scena
-per scena, con i tempi. Registrata una traccia, si attacca senza rifare il
-video:
+Chi vuole leggere il parlato di quei tre ha il copione in
+[`copione.md`](copione.md), scena per scena, con i tempi. Registrata una
+traccia, si attacca senza rifare il video:
 
 ```
 ffmpeg -i gdahome-tiktok.mp4 -i voce.m4a -map 0:v -map 1:a \
        -c:v copy -c:a aac -shortest gdahome-tiktok-con-voce.mp4
 ```
+
+### Il quarto invece parla
+
+Il film del quadro ha una voce che racconta, e le didascalie restano tutte.
+Non è un cambio di gusto: gli altri tre li guarda chi sta installando qualcosa
+o chi scorre un feed, in silenzio; questo spiega un mestiere a chi lo fa, si
+guarda seduti, e una voce che racconta mentre lo schermo mostra arriva dove
+una didascalia non arriva. Le parole restano scritte lo stesso, perché un
+video che si apre in una pagina senza suono non deve diventare mezzo film.
+
+Il copione sta in [`parlato.js`](parlato.js) — scena per scena, in italiano e
+in inglese accanto come in `t("…", "…")` — e la voce la monta
+[`voce.mjs`](voce.mjs).
+
+**La scena aspetta la voce.** La durata scritta in `quadro.js` è il minimo: se
+il parlato di quella scena dura di più, la scena si allunga fino a quando ha
+finito. Per questo l'italiano dura 4:14 e l'inglese 4:08 — la stessa frase nelle
+due lingue non dura uguale, e allungare l'italiano per far tornare i conti
+vorrebbe dire quattordici pause finte. E per lo stesso motivo **le didascalie
+arrivano con la frase che le dice**: i tempi li misura `voce.mjs` e li lascia in
+`parlato-tempi.json`, che è l'unico file di questa cartella scritto da un
+programma. Senza quel file il film si gira lo stesso: muto, con le scene corte
+e le didascalie dove stavano prima.
+
+L'ordine è questo, e conta:
+
+```
+node strumenti/video/voce.mjs                 le tracce, e i tempi delle scene
+node strumenti/video/rendi.mjs --film quadro  il film, con quei tempi
+node strumenti/video/voce.mjs --attacca       la voce dentro il film
+```
+
+Il primo comando, se il film c'è già ed è ancora quello giusto, attacca da sé e
+il terzo non serve. Se invece il copione è cambiato, `voce.mjs` guarda quanto
+dura il film che trova, vede che è stato girato con altre parole e lo dice
+invece di attaccare una voce storta.
+
+**La voce è una macchina, e va detto.** La fa [piper](https://github.com/rhasspy/piper),
+che gira qui e non chiama nessuno: nessun servizio, nessuna chiave, nessuna
+riga di testo che esce da questa macchina. Non è una scelta di bellezza — una
+voce sintetica si sente che è sintetica — è che una registrata invecchia
+peggio: cambi una riga del copione e va rifatta tutta la sessione, mentre qui
+si cambia la riga e si rilancia. Il giorno che qualcuno registra la sua,
+bastano due file: si sostituiscono `voce-quadro.m4a` e `voce-quadro-en.m4a` e
+si rifà `--attacca`, senza toccare una riga di programma.
+
+Piper e le due voci **non stanno nella repository** — sono ottanta megabyte di
+roba di terzi — e si scaricano una volta sola in `strumenti/video/voce/`, che
+non si versiona:
+
+```
+mkdir -p strumenti/video/voce && cd strumenti/video/voce
+curl -sSL -o piper.tar.gz https://github.com/rhasspy/piper/releases/download/v1.2.0/piper_amd64.tar.gz
+curl -sSL -o it.tar.gz    https://github.com/rhasspy/piper/releases/download/v0.0.2/voice-it-riccardo_fasol-x-low.tar.gz
+curl -sSL -o en.tar.gz    https://github.com/rhasspy/piper/releases/download/v0.0.2/voice-en-us-lessac-medium.tar.gz
+for f in *.tar.gz; do tar xzf "$f"; done
+```
+
+Le **tracce** invece ci stanno, un mega in due: così chi rifà il film non ha
+bisogno di piper — `--attacca` le riattacca e basta — e chi cambia una parola
+del copione se ne accorge subito, perché il file cambia.
 
 ## Cambiare le parole
 

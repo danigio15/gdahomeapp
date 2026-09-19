@@ -50,7 +50,7 @@
  * in tutti e tre.
  */
 
-/* Dopo quanti rapporti saltati una casa e' muta. Uno solo puo' essere un
+/* Dopo quanti rapporti saltati una casa e' offline. Uno solo puo' essere un
  * riavvio, tre no. */
 export const MUTA_DOPO = 3;
 
@@ -91,7 +91,7 @@ export function daQuanto(quando, adesso = Date.now()) {
   return `${giorni} ${giorni === 1 ? "giorno" : "giorni"} fa`;
 }
 
-export function eMuta(carta, adesso = Date.now()) {
+export function eOffline(carta, adesso = Date.now()) {
   const quando = Date.parse(String(carta?.quando));
   if (!Number.isFinite(quando)) return true;
   const ogni = numero(carta?.ogni) || 15;
@@ -282,9 +282,14 @@ function laMacchinaRegge(m) {
 /**
  * Lo stato di una casa, in una parola.
  *
- * Tre, e l'ordine conta. **Muta batte tutto**: di una casa che non parla non si
- * sa niente, nemmeno che sta bene — quello che si vede di lei e' vecchio. Poi
- * quello che non va. Poi il resto.
+ * Tre, e l'ordine conta. **Offline batte tutto**: di una casa che non parla
+ * non si sa niente, nemmeno che sta bene — quello che si vede di lei e'
+ * vecchio. Poi quello che non va. Poi il resto.
+ *
+ * Si chiamava «muta», ed era la parola giusta per quello che succede — una
+ * casa che ha smesso di parlare — ma non per chi la legge: «offline» lo
+ * capisce chiunque abbia mai guardato un apparecchio, e non va accordato al
+ * femminile ogni volta che finisce in una frase.
  *
  * Ce n'era un quarto, «collaudo aperto», e teneva in una fila sua le case in
  * cui un controllo era rosso e nessuno aveva ancora dichiarato finito
@@ -294,11 +299,11 @@ function laMacchinaRegge(m) {
  */
 export function loStato(casa, adesso = Date.now()) {
   const c = casa?.carta ?? null;
-  if (!c || eMuta(c, adesso)) {
+  if (!c || eOffline(c, adesso)) {
     return {
-      chiave: "muta",
+      chiave: "offline",
       segno: "■",
-      parola: "muta",
+      parola: "offline",
       perché: c
         ? `Non manda un rapporto da ${daQuanto(c.quando, adesso)}. Quello che si vede qui sotto è vecchio di altrettanto.`
         : "Non è ancora arrivato nessun rapporto da questa casa.",

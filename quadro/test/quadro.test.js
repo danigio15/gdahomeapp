@@ -393,10 +393,10 @@ test("tolto l'installatore, la sua casa si recupera dandola a un altro", async (
     /* La casa continua a depositare — spegnerle il monitoraggio punirebbe chi
      * ci abita — ma non le si racconta piu' di un installatore che non c'e':
      * la plancia si toglie il nome e il marchio, e torna la nostra. */
-    const muta = await (await b.deposita(UNA, sua)).json();
-    assert.equal(muta.presa, true);
-    assert.equal(muta.di, "");
-    assert.equal(muta.marchio, undefined);
+    const orfana = await (await b.deposita(UNA, sua)).json();
+    assert.equal(orfana.presa, true);
+    assert.equal(orfana.di, "");
+    assert.equal(orfana.marchio, undefined);
 
     const dopo = await (
       await b.gestore("/installatori", {

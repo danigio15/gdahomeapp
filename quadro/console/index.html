@@ -526,7 +526,7 @@
         color: var(--ambra);
       }
 
-      .gettone.muta {
+      .gettone.offline {
         background: var(--alone-male);
         color: var(--male);
       }
@@ -589,7 +589,7 @@
         background: var(--ambra);
       }
 
-      .casa.muta::before {
+      .casa.offline::before {
         background: var(--male);
       }
 
@@ -653,7 +653,7 @@
         color: var(--ambra);
       }
 
-      .pastiglia.muta,
+      .pastiglia.offline,
       .pastiglia.male {
         background: var(--alone-male);
         color: var(--male);
@@ -2155,13 +2155,13 @@
       const spia = (stato) =>
         `<span class="pastiglia ${stato.chiave}"><span aria-hidden="true">${stato.segno}</span>${testo(stato.parola)}</span>`;
 
-      /* La striscia: `P` giorno pieno, `M` a metà, `V` muta, spazio «non c'era
-       * ancora». */
+      /* La striscia: `P` giorno pieno, `M` a metà, `V` offline, spazio «non
+       * c'era ancora». */
       function laStriscia(giorni, grande = false) {
         const celle = [...giorni]
           .map((uno) => {
-            if (uno === "V") return '<i class="vuota" title="muta tutto il giorno"></i>';
-            if (uno === "M") return '<i class="mezza" title="muta per qualche ora"></i>';
+            if (uno === "V") return '<i class="vuota" title="offline tutto il giorno"></i>';
+            if (uno === "M") return '<i class="mezza" title="offline per qualche ora"></i>';
             if (uno === " ") return '<i class="prima" title="non era ancora accesa"></i>';
             return '<i title="tutte i rapporti arrivati"></i>';
           })
@@ -2173,12 +2173,12 @@
             ? `${plurale(accesi, "giorno", "giorni")} da quando è accesa`
             : vuoti === 0
               ? "14 giorni, sempre viva"
-              : `14 giorni · muta ${plurale(vuoti, "volta", "volte")}`;
+              : `14 giorni · offline ${plurale(vuoti, "volta", "volte")}`;
         return `<div class="giorni${grande ? " grande" : ""}" role="img" aria-label="${testo(dice)}">${celle}</div><div class="giorniDice">${testo(dice)}</div>`;
       }
 
       const LE_FILE = [
-        ["muta", "■", "mute"],
+        ["offline", "■", "offline"],
         ["guardare", "▲", "da guardare"],
         ["posto", "●", "a posto"],
       ];

@@ -134,7 +134,7 @@ const casa = (nome, matricola, come = {}) => ({
   /* Da quanti giorni e' installata. Serve alla striscia: un giorno in cui
      questa casa non esisteva non si giudica. */
   da: come.da ?? 120,
-  /* Da quanti minuti non parla. Sopra i tre rapporti saltati la casa e' muta —
+  /* Da quanti minuti non parla. Sopra i tre rapporti saltati la casa e' offline —
      e quello che si legge nella sua scheda e' vecchio di altrettanto. */
   taceDa: come.taceDa ?? 0,
   /* I buchi nella striscia dei quattordici giorni: quanti giorni fa, e quanto
@@ -179,7 +179,7 @@ const casa = (nome, matricola, come = {}) => ({
 
 /* ── La flotta ─────────────────────────────────────────────────────────────
  *
- * Quindici case: una muta, tre da guardare, undici a posto. E' la
+ * Quindici case: una offline, tre da guardare, undici a posto. E' la
  * proporzione di una giornata normale — se fossero meta' rosse, la fotografia
  * racconterebbe un installatore che ha sbagliato mestiere.
  */
@@ -223,7 +223,7 @@ export const FLOTTA = [
     ],
   }),
 
-  /* La muta: tace da tre giorni, e quello che si legge nella sua scheda e'
+  /* Quella offline: tace da tre giorni, e quello che si legge nella sua scheda e'
      vecchio di tre giorni. Il quadro lo dice con quelle parole. */
   casa("Palestra Tonic — Cologno", "casa_71cd3a6e884b09f25de4a1c7b3608e14", {
     da: 233,

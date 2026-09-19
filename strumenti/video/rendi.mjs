@@ -293,6 +293,11 @@ async function fabbricaIlQrCode() {
 const TIPI = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  /* I tempi del parlato, che il film del quadro si va a prendere da solo
+     (`parlato-tempi.json`). Senza questa riga si serviva come una roba
+     qualunque: `fetch` lo leggeva lo stesso, ma un file servito col tipo
+     sbagliato e' un guasto che aspetta. */
+  ".json": "application/json; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".svg": "image/svg+xml",
   ".png": "image/png",

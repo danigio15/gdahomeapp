@@ -17,7 +17,7 @@
  *
  * ─── 1. Due ore, non quarantacinque minuti ───────────────────────────────
  *
- * La pagina chiama «muta» una casa che ha saltato tre rapporti
+ * La pagina chiama «offline» una casa che ha saltato tre rapporti
  * (`controlli.js`, `MUTA_DOPO`): tre quarti d'ora. Va benissimo per un colore su
  * uno schermo che si sta gia' guardando, ed e' troppo poco per interrompere
  * qualcuno — un riavvio di Home Assistant, un aggiornamento, un router che si
@@ -29,7 +29,7 @@
  *
  * ─── 2. Una volta sola ───────────────────────────────────────────────────
  *
- * Una casa muta da tre giorni e' **una** notizia, non una ogni giro. Si segna
+ * Una casa offline da tre giorni e' **una** notizia, non una ogni giro. Si segna
  * quando la si e' detta, e non se ne parla piu' finche' non torna.
  *
  * ─── 3. Se tacciono in tanti insieme, non e' colpa loro ──────────────────
@@ -44,7 +44,7 @@
  *
  * E' la regola che nessuno scrive e che poi si paga. Se questo quadro e' stato
  * fermo tre ore — riavvio, aggiornamento, macchina spenta — al ritorno **tutte**
- * le case sembrano mute, perche' nessuno era in ascolto. Mandare quaranta
+ * le case sembrano offline, perche' nessuno era in ascolto. Mandare quaranta
  * messaggi per un guasto nostro e' il modo piu' rapido di far disattivare gli
  * avvisi a tutti quanti.
  *
@@ -110,14 +110,14 @@ export function siamoStatiViaNoi(ultimoGiro, adesso, tacePer = TACE_DOPO) {
  * a scrivere e' chi chiama, dopo aver mandato davvero.
  */
 export function chiTace(case_, { tacePer = TACE_DOPO, adesso = Date.now() } = {}) {
-  const mute = [];
+  const offline = [];
   const tornate = [];
   for (const una of case_) {
     const zitta = minutiDa(una.carta?.quando ?? una.vistaIl, adesso);
     const tace = zitta !== null && zitta >= tacePer;
 
     if (tace && !una.avvisataIl) {
-      mute.push({ casa: una, minuti: zitta });
+      offline.push({ casa: una, minuti: zitta });
       continue;
     }
     /* Tornata a parlare: si dice, e si dimentica. Senza questo messaggio
@@ -127,7 +127,7 @@ export function chiTace(case_, { tacePer = TACE_DOPO, adesso = Date.now() } = {}
       tornate.push({ casa: una, minuti: minutiDa(una.avvisataIl, adesso) });
     }
   }
-  return { mute, tornate };
+  return { offline, tornate };
 }
 
 /**
@@ -137,12 +137,12 @@ export function chiTace(case_, { tacePer = TACE_DOPO, adesso = Date.now() } = {}
  * fa qui e non chi lo spedisce, perche' cosi' si puo' provare: un messaggio e'
  * una promessa, e le promesse in questo progetto sono prove.
  */
-export function cosaDire({ mute = [], tornate = [], quante = 0 }) {
+export function cosaDire({ offline = [], tornate = [], quante = 0 }) {
   const detti = [];
 
-  if (mute.length) {
+  if (offline.length) {
     const insieme =
-      mute.length >= INSIEME_BASTA && quante > 0 && mute.length / quante >= INSIEME_FRAZIONE;
+      offline.length >= INSIEME_BASTA && quante > 0 && offline.length / quante >= INSIEME_FRAZIONE;
 
     if (insieme) {
       /* Un messaggio solo, e un consiglio invece di un elenco. Le case si
@@ -150,17 +150,17 @@ export function cosaDire({ mute = [], tornate = [], quante = 0 }) {
        * la prima riga dice gia' cosa guardare. */
       detti.push({
         tipo: "insieme",
-        case: mute.map((uno) => uno.casa.casa),
+        case: offline.map((uno) => uno.casa.casa),
         testo:
-          `${mute.length} impianti su ${quante} hanno smesso di parlare insieme. ` +
+          `${offline.length} impianti su ${quante} hanno smesso di parlare insieme. ` +
           `Quando sono tanti nello stesso momento di solito non è colpa loro: ` +
           `guarda prima se c'è un guasto più grande.\n\n` +
-          mute.map((uno) => `· ${ilNome(uno.casa)}`).join("\n"),
+          offline.map((uno) => `· ${ilNome(uno.casa)}`).join("\n"),
       });
     } else {
-      for (const uno of mute) {
+      for (const uno of offline) {
         detti.push({
-          tipo: "muta",
+          tipo: "offline",
           case: [uno.casa.casa],
           testo:
             `${ilNome(uno.casa)} non parla più ${quantoTace(uno.minuti)}.\n` +
@@ -174,7 +174,7 @@ export function cosaDire({ mute = [], tornate = [], quante = 0 }) {
     detti.push({
       tipo: "tornata",
       case: [uno.casa.casa],
-      testo: `${ilNome(uno.casa)} ha ripreso a parlare. Era muta ${quantoTace(uno.minuti)}.`,
+      testo: `${ilNome(uno.casa)} ha ripreso a parlare. Era offline ${quantoTace(uno.minuti)}.`,
     });
   }
 

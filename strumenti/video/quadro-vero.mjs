@@ -100,7 +100,7 @@ function scriviIlPassato(quadro, una, come, ora) {
     const quanto = Math.max(0, passato - (buco?.quanto ?? 0));
     dentro.giorni[ilGiorno(quando)] = Math.round(alGiorno * quanto);
   }
-  /* Una casa muta non ha mandato niente da quando tace: i giorni in mezzo
+  /* Una casa offline non ha mandato niente da quando tace: i giorni in mezzo
      restano come li ha scritti il buco, e l'ultimo rapporto e' vecchio. */
   quadro.case.archivio.salva();
 }

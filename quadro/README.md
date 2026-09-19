@@ -12,14 +12,14 @@ una macchina vera.
 Sessantacinque prove qui dentro; il progetto intero ne conta più di settecento.
 Per accenderlo, [qui sotto](#accenderlo). Manca solo il record DNS.
 
-**C'è un video** di due minuti che fa vedere tutto questo a chi installa — come
-entra una casa, l'elenco, i dieci controlli, la scheda di un impianto, gli
-aggiornamenti da lontano — e, con lo stesso peso, **cosa da lì non si vede**.
-Gli schermi non sono ricostruzioni: sono fotografie di questa console, con
-dentro una flotta inventata. Sta in
+**C'è un video**, parlato, di poco più di quattro minuti: fa vedere tutto
+questo a chi installa — come entra una casa, l'elenco, i dieci controlli, la
+scheda di un impianto, gli aggiornamenti da lontano — e, con lo stesso peso,
+**cosa da lì non si vede**. Gli schermi non sono ricostruzioni: sono fotografie
+di questa console, con dentro una flotta inventata. Sta in
 [`strumenti/video/`](../strumenti/video/README.md), in italiano e in inglese —
 le fotografie restano in italiano, che è l'unica lingua in cui questa pagina è
-scritta.
+scritta, e la voce è sintetica, che è scritto anche lì.
 
 ## A cosa serve
 
@@ -346,10 +346,10 @@ mandare niente, e una sola che manda:
 
 | | |
 |---|---|
-| **due ore, non tre quarti d'ora** | la pagina colora «muta» dopo tre rapporti saltati, e va bene per un colore su uno schermo che si sta già guardando. Un messaggio che arriva addosso vuole più pazienza: un riavvio, un aggiornamento e un router che si riaccende ci stanno dentro. Il colore è per chi guarda, il messaggio per chi non sta guardando |
-| **una volta sola** | una casa muta da tre giorni è una notizia, non una al giorno |
+| **due ore, non tre quarti d'ora** | la pagina colora «offline» dopo tre rapporti saltati, e va bene per un colore su uno schermo che si sta già guardando. Un messaggio che arriva addosso vuole più pazienza: un riavvio, un aggiornamento e un router che si riaccende ci stanno dentro. Il colore è per chi guarda, il messaggio per chi non sta guardando |
+| **una volta sola** | una casa offline da tre giorni è una notizia, non una al giorno |
 | **se tacciono in tanti insieme** | otto su dodici non sono otto guasti: è un guasto. Un messaggio solo, che dice di guardare prima più in grande |
-| **se siamo stati via noi** | è la regola che nessuno scrive e che poi si paga. Se il quadro è stato fermo tre ore, al ritorno *tutte* le case sembrano mute perché nessuno era in ascolto. Il giro si ricorda quando è passato: se il buco è più grande del silenzio che cerca, quel giro non dice niente e riparte dal prossimo |
+| **se siamo stati via noi** | è la regola che nessuno scrive e che poi si paga. Se il quadro è stato fermo tre ore, al ritorno *tutte* le case sembrano offline perché nessuno era in ascolto. Il giro si ricorda quando è passato: se il buco è più grande del silenzio che cerca, quel giro non dice niente e riparte dal prossimo |
 
 E il segno di «questa l'ho già detta» si scrive **dopo** la consegna, e solo se è
 riuscita: scriverlo prima vorrebbe dire che un indirizzo sbagliato per mezz'ora
@@ -404,8 +404,14 @@ chi ci abita, e dirglielo ogni quarto d'ora insegna a non guardare più.
 
 ### Gli stati, e perché hanno una forma
 
-Tre: **● a posto**, **▲ da guardare**, **■ muta**. Muta batte tutto — di una
-casa che non parla non si sa niente, nemmeno che sta bene.
+Tre: **● a posto**, **▲ da guardare**, **■ offline**. Offline batte tutto — di
+una casa che non parla non si sa niente, nemmeno che sta bene.
+
+Si chiamava «muta», ed era la parola giusta per la cosa: una casa che ha smesso
+di parlare. Non per chi la legge, però. «Offline» lo capisce chiunque abbia mai
+guardato un apparecchio, e non va accordato al femminile ogni volta che finisce
+in una frase — «1 offline» sta nella pastiglia come «3 offline», e la riga
+sotto la striscia dice «offline 2 volte» senza inciampare.
 
 Ce n'era un quarto, **◇ collaudo aperto**, e teneva in una fila sua le case in
 cui un controllo era rosso e nessuno aveva ancora dichiarato finito l'impianto.
@@ -787,11 +793,11 @@ Tre regole che il ponte applica e il quadro non può scavalcare:
 
 E una conseguenza che va guardata in faccia: **una casa che sta installando
 qualcosa che vuole un riavvio smette di mandare rapporti.** Senza saperlo, il
-quadro la darebbe per muta ogni volta che si aggiorna qualcosa. Perciò sa cosa
+quadro la darebbe per offline ogni volta che si aggiorna qualcosa. Perciò sa cosa
 ha chiesto, e lo dice: entro tre quarti d'ora è «sta aggiornando»; oltre, non è
 più un'attesa ma **«non è tornata»** — che è la cosa peggiore che possa fare un
 quadro che aggiorna da lontano, e va detta con quelle parole invece che
-nascosta dietro un «muta».
+nascosta dietro un «offline».
 
 ### La schermata di flotta
 
@@ -898,7 +904,7 @@ guardi.
    passa ogni dieci minuti. Le regole stanno [qui sopra](#quando-una-casa-tace).
 
    Ventitré prove allora, e quelle che contano provano che **stia zitto**: che non
-   ridica una casa muta da tre giorni, che otto insieme facciano un messaggio
+   ridica una casa offline da tre giorni, che otto insieme facciano un messaggio
    solo, che un fermo del quadro non svegli nessuno, e che una consegna fallita
    lasci la casa da riavvisare. Perché un avviso si giudica da quando tace:
    mandarlo lo fa anche una riga che manda sempre.
@@ -959,11 +965,11 @@ metterlo ce l'ha gia': nessuno.
 ## Quello che resta da decidere
 
 - **Ogni quanto.** Quindici minuti fanno 96 rapporti al giorno per casa: su
-  quaranta case sono quattromila richieste, che è niente. Ma una casa muta si
+  quaranta case sono quattromila richieste, che è niente. Ma una casa offline si
   scopre in tre quarti d'ora, e forse per un impianto va bene anche un'ora.
 - **Quanto tiene il quadro.** Qui si propone la striscia a quattordici giorni,
   come la finestra del traffico di GitHub in `strumenti/conta-le-case.mjs`.
-- **Le soglie.** Batteria al 20%, backup fermo dopo 14 giorni, muta dopo tre
+- **Le soglie.** Batteria al 20%, backup fermo dopo 14 giorni, offline dopo tre
   rapporti saltati, 75 °C, disco al 85%: sono scelte a occhio, non misurate.
   Stanno tutte in cima a `src/controlli.js` con un nome, che è il minimo perché
   un giorno si possano cambiare sapendo quante sono.
