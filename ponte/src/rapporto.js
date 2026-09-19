@@ -254,6 +254,8 @@ export function compila({
   apparati = null,
   addon = null,
   aggiornamenti = null,
+  manutenzione = false,
+  lavoro = null,
   plance = null,
   telefoni = null,
   fuori = null,
@@ -272,6 +274,10 @@ export function compila({
     ha: String(versioni.ha ?? ""),
     supervisor: String(versioni.supervisor ?? ""),
     sistema: String(versioni.sistema ?? ""),
+    /* Sempre, anche quando e' `false`: e' il secondo interruttore, e il quadro
+     * deve poter scrivere «questa casa non ha aperto la manutenzione». Una
+     * chiave che manca vorrebbe dire «non lo dice», che e' un'altra cosa. */
+    manutenzione: manutenzione === true,
   };
   /* Le parti che possono mancare si aggiungono solo se ci sono. Un Supervisor
    * che non ha risposto lascia il rapporto senza `macchina`, e il quadro lo
@@ -281,6 +287,7 @@ export function compila({
     rete,
     addon,
     aggiornamenti,
+    lavoro,
     plance,
     telefoni,
     fuori,
@@ -321,6 +328,8 @@ export function fabbricaIlRapporto({
   casa,
   ferro,
   aggiornamenti = null,
+  lavori = null,
+  manutenzione = false,
   plance = null,
   configurazione = null,
   dispositivi = null,
@@ -414,6 +423,17 @@ export function fabbricaIlRapporto({
       apparati: quelli ? gliApparati(quelli, { scelte: apparatiScelti() }) : null,
       addon: detto ? gliAddon({ addons: detto.addons }) : null,
       aggiornamenti: daFare ? iConti(daFare, marchi) : null,
+      /* Il secondo interruttore, detto al quadro.
+       *
+       * Serve a lui per sapere se il tasto lo puo' far vedere: chi guarda una
+       * casa chiusa deve leggere «questa casa non ha aperto la manutenzione»
+       * invece di premere un tasto che non fa niente. Il **no** vero pero' non
+       * sta qui — sta in `lavori.js`, in casa: un quadro che mandasse il
+       * comando lo stesso si sentirebbe rispondere di no da questa parte. */
+      manutenzione: manutenzione === true,
+      /* L'ultimo lavoro chiesto dal quadro, e com'e' andata. `null` quando non
+       * ne e' mai stato chiesto nessuno. */
+      lavoro: lavori ? lavori.stato(daFare) : null,
       plance: plance ? lePlance(plance, configurazione) : null,
       telefoni: dispositivi ? iTelefoni(dispositivi, adesso) : null,
       fuori: chiamata ? { acceso: Boolean(chiamata.dove), filo: chiamata.accesa === true } : null,
@@ -564,6 +584,7 @@ export class Postino {
     casa = "",
     ogni = OGNI_DI_SERIE,
     fabbrica,
+    fai = null,
     fetch: prendi = globalThis.fetch,
     registro,
     adesso = () => Date.now(),
@@ -574,6 +595,16 @@ export class Postino {
     this.casa = String(casa || "");
     this.ogni = ogniQuanto(ogni);
     this.fabbrica = fabbrica;
+    /* Cosa fare quando il quadro, rispondendo, chiede qualcosa.
+     *
+     * E' l'unica strada per cui un comando entra in questa casa, e passa
+     * **dentro una risposta**: la casa bussa, e qualche volta chi apre le dice
+     * qualcosa. Non c'e' nessuna porta aperta verso il quadro, nessun buco nel
+     * router, niente da difendere. Chi non bussa non riceve niente.
+     *
+     * Vuoto e' il caso normale finche' la manutenzione non e' aperta: il
+     * postino allora quella riga della risposta non la guarda nemmeno. */
+    this.fai = fai;
     this.prendi = prendi;
     this.registro = registro ?? { debug() {}, info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
@@ -691,8 +722,9 @@ export class Postino {
        * l'indirizzo finche' non parte il primo rapporto, che e' un quarto
        * d'ora. Scriverlo in `/data` per un quarto d'ora di comodo vorrebbe dire
        * un file in piu' da tenere buono per sempre. */
+      let detto = null;
       try {
-        const detto = await risposta.json();
+        detto = await risposta.json();
         if (typeof detto?.di === "string") this._chi = detto.di.slice(0, 80);
       } catch (_errore) {
         /* Una risposta che non e' JSON non e' un guasto: il rapporto e'
@@ -700,6 +732,24 @@ export class Postino {
       }
 
       this._ultimoEsito = { andata: true, quando: this.adesso(), perche: "" };
+
+      /* E qui, se c'e', quello che il quadro ha chiesto.
+       *
+       * Dopo aver segnato che il rapporto e' arrivata, e non prima: un lavoro
+       * che non parte non deve far sembrare caduto un rapporto che invece e'
+       * arrivata. Si aspetta che finisca perche' quello che fa — far partire
+       * un'installazione — ci mette poco: chi installa non aspetta la fine, e
+       * `installa` torna appena Home Assistant ha preso il comando.
+       *
+       * Quello che va storto lo scrive `Lavori` nel suo stato, e si legge nel
+       * rapporto del minuto dopo. Qui non si rompe niente. */
+      if (this.fai && detto?.fai) {
+        try {
+          await this.fai(detto.fai);
+        } catch (errore) {
+          this.registro.attenzione(`il lavoro chiesto dal quadro non e' partito: ${errore}`);
+        }
+      }
       return true;
     } catch (errore) {
       this._perNiente(perchePreciso(errore));

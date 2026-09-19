@@ -7,7 +7,8 @@
  *   GET    /                             la soglia: cos'e' questo indirizzo
  *   GET    /salute                       dice solo che e' vivo
  *
- *   POST   /rapporto                     una casa deposita i suoi numeri
+ *   POST   /rapporto                     una casa deposita i suoi numeri, e si
+ *                                        porta via quello che le e' stato chiesto
  *
  *   GET    /console/                     la pagina dell'installatore
  *   GET    /console/io                   chi sono, quanti ne ho, qual e' il limite
@@ -205,7 +206,23 @@ export function costruisciIlServer({
        * Quel nome lo scrive **chi tiene il quadro**, non l'installatore: non
        * c'e' nessuna via da cui uno possa cambiarsi il nome, e quindi non
        * c'e' modo di presentarsi in casa di qualcuno come qualcun altro. */
-      json(risposta, { presa: true, di: installatori.quello(di)?.nome || "" });
+      /* E nella stessa risposta, se c'e', **quello che le e' stato chiesto**.
+       *
+       * E' l'unica strada per cui un comando entra in una casa, e passa di
+       * qui: verso una casa non c'e' nessuna porta aperta, nessun buco nel
+       * router, niente da difendere. E' lei che bussa, ogni minuto, e qualche
+       * volta chi apre le dice qualcosa.
+       *
+       * Si chiede **dopo** aver depositato, e non prima: `deposita` butta il
+       * lavoro che quella casa ha gia' preso in carico, e chiederlo prima
+       * vorrebbe dire riconsegnarle quello che sta gia' facendo. */
+      const fai = case_.ilLavoroDa(casa);
+      if (fai) registro.info(`a ${casa} si e' consegnato: ${fai.cosa} ${fai.nome} ${fai.a}`);
+      json(risposta, {
+        presa: true,
+        di: installatori.quello(di)?.nome || "",
+        ...(fai ? { fai } : {}),
+      });
       return;
     }
 
@@ -382,6 +399,37 @@ export function costruisciIlServer({
         return;
       }
       json(risposta, { case: case_.elenco(chi) });
+      return;
+    }
+
+    const lavoro = /^\/casa\/(casa_[0-9a-f]{32})\/installa$/.exec(via);
+    if (lavoro && metodo === "POST") {
+      let detto = {};
+      try {
+        detto = await ilCorpo(richiesta, 4096);
+      } catch (_errore) {
+        detto = {};
+      }
+      const messo = case_.chiediUnLavoro(lavoro[1], detto, chi);
+      if (!messo) {
+        /* Tre no in uno, e si dicono uguale: la casa non e' tua, non ha aperto
+         * la manutenzione, o ne sta gia' facendo uno. Il primo dei tre e' il
+         * motivo per cui si dicono uguale — da un no non si deve imparare che
+         * una certa matricola esiste da qualche altra parte — e gli altri due
+         * la pagina li sa gia', perche' li legge nel rapporto. */
+        male(risposta, 409, "questo lavoro non si puo' chiedere adesso");
+        return;
+      }
+      registro.info(`chiesto a ${lavoro[1]}: installa ${messo.nome} ${messo.da} → ${messo.a}`);
+      json(risposta, { chiesto: messo, case: case_.elenco(chi) });
+      return;
+    }
+
+    if (lavoro && metodo === "DELETE") {
+      json(risposta, {
+        annullato: case_.annullaIlLavoro(lavoro[1], chi),
+        case: case_.elenco(chi),
+      });
       return;
     }
 

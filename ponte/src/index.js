@@ -34,6 +34,7 @@ import { Ritorno } from "./ritorno.js";
 import { Segnalazioni } from "./segnalazioni.js";
 import { Spegnimento } from "./spegnimento.js";
 import { Aggiornamenti } from "./aggiornamenti.js";
+import { Lavori } from "./lavori.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciLaConsole, costruisciLaPortaDellApp } from "./server.js";
 
@@ -220,10 +221,21 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * quello che parte nella scheda «Il quadro» della console, dove c'e' anche
    * il tasto per smettere. */
   const ferro = new Ferro({ registro });
+  /* Il secondo verbo del quadro: installare un aggiornamento che questa casa
+   * ha gia' in attesa. Il comando arriva nella risposta a un rapporto — non
+   * c'e' nessuna porta aperta — e chi dice di si' o di no e' questa casa, con
+   * la casella della manutenzione. Il perche' per esteso sta in `lavori.js`. */
+  const lavori = new Lavori({
+    aggiornamenti,
+    registro,
+    aperta: () => opzioni.manutenzione === true,
+  });
+
   const postino = new Postino({
     ...(opzioni.quadro ?? {}),
     casa: identita.casa,
     ogni: opzioni.quadroOgni,
+    fai: (detto) => lavori.fai(detto),
     registro,
   });
 
@@ -247,6 +259,8 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     casa,
     ferro,
     aggiornamenti,
+    lavori,
+    manutenzione: opzioni.manutenzione,
     plance,
     configurazione,
     dispositivi,

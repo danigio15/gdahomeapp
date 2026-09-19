@@ -79,6 +79,18 @@ configuration:
       Ogni quanti minuti partono quelle righe di numeri. Conta solo se la
       casella qui sopra e' piena; vuota, non parte niente e non si apre nessuna
       connessione.
+  quadro_manutenzione:
+    name: Casa · Lascia che chi ti ha fatto l'impianto aggiorni da lontano
+    description: >-
+      Lascialo spento se non ti serve. E' un secondo interruttore: mandargli i
+      numeri l'hai gia' deciso col codice qui sopra, lasciargli mettere le mani
+      dentro e' un'altra cosa. Acceso, dal suo cruscotto puo' far partire un
+      aggiornamento che questa casa ha gia' in attesa — quelli che vedi anche
+      tu in Impostazioni — e niente altro: non apre la tua plancia, non legge i
+      tuoi sensori, non tocca la tua configurazione. Non si apre nessuna porta
+      verso casa tua: e' questa casa che bussa, e nella risposta trova cosa
+      fare. Cosa gli e' stato chiesto e com'e' andata li leggi nel rapporto,
+      nella scheda «Il quadro».
   registro:
     name: Casa · Quanto scrive il registro
     description: >-

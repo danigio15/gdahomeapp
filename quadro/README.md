@@ -692,17 +692,29 @@ la installa. **L'app non va toccata.**
 ## Aggiornare da lontano
 
 Vedere che una casa è indietro e non poterci fare niente è mezzo lavoro. Il
-quadro ha quindi **due verbi**, e sono due e non di più:
+quadro ha quindi **un verbo**, e uno solo:
 
 | | |
 |---|---|
-| `aggiorna` | installa una voce `update.` — Home Assistant, un add-on, gdahome, un firmware che si installi da sé |
-| `riavvia` | fa ripartire un add-on che è fermo |
+| `installa` | installa una voce `update.` — Home Assistant, un add-on, gdahome, un firmware che si installi da sé |
 
 Niente altro: nessuna riga di comando, nessun cambio di configurazione, nessuna
-lettura di stati. L'elenco dei verbi sta **nel programma del ponte**, non nel
-messaggio: una parola che non è in quella lista viene rifiutata, e non c'è modo
-di aggiungerne una dall'esterno.
+lettura di stati. L'elenco dei verbi sta **nel programma del ponte**
+(`ponte/src/lavori.js`), non nel messaggio: una parola che non è in quella
+lista viene rifiutata, e non c'è modo di aggiungerne una dall'esterno.
+
+> Qui è stato scritto a lungo che i verbi erano due, il secondo `riavvia` per
+> far ripartire un add-on fermo. Non c'è: nel ponte c'è il pezzo che riavvia
+> Home Assistant, e nessun comando del quadro ci arriva. Il giorno che si fa,
+> questa tabella cresce di una riga — e non prima.
+
+**Si nomina per nome e salto di versione**, non per entità: nel rapporto
+l'entità non viaggia — `update.camera_di_marco_termostato` direbbe chi abita in
+quella casa e in quale stanza — quindi il quadro nomina quello che ha visto, e
+in casa si ritrova a cosa corrisponde. Ne viene gratis la regola più utile di
+tutte: se nel frattempo quella versione è già stata installata, o ne è uscita
+un'altra, il salto non torna più e **non si fa niente**. Un tasto premuto ieri
+non installa una cosa diversa oggi.
 
 **Il quadro non bussa mai.** Non potrebbe: una casa di gdahome un indirizzo
 pubblico non ce l'ha, ed è tutto il punto del ponte. L'ordine viaggia **nella
@@ -718,10 +730,17 @@ quadro_manutenzione: false   # e lasciati anche aggiornare — no, finché non l
 ```
 
 Vedere e toccare sono due permessi, e il secondo non si dà da sé insieme al
-primo. Nella console dell'add-on, scheda «Il quadro», stanno l'interruttore, la
-lista dei due verbi scritta a parole, e **il registro di quello che il quadro
-ha fatto in questa casa** — con la data. Chi ci abita legge cosa è stato
-toccato, quando, e da chi.
+primo. L'interruttore sta nelle opzioni dell'add-on, con scritto accanto cosa
+accende; e quello che il quadro ha chiesto a questa casa — cosa, e com'è
+andata — sta **dentro il rapporto**, che nella scheda «Il quadro» della console
+si legge parola per parola. Chi ci abita non deve fidarsi di un riassunto: legge
+la cosa stessa che è partita.
+
+Il comando si consegna **una volta sola**. Se una casa se lo porta via e poi non
+ne parla più — succede proprio quando quello che si installa è gdahome, perché
+il processo che dovrebbe raccontare com'è andata è quello che si sta
+aggiornando — non glielo si rioffre al rapporto dopo: sarebbe un'installazione
+al minuto. Il prezzo è che una risposta persa per strada va ripremuta a mano.
 
 Tre regole che il ponte applica e il quadro non può scavalcare:
 
@@ -767,7 +786,7 @@ che non ha:
   non è un tasto dimenticato: il quadro non ha nessun segno con cui entrare;
 - **non vede entità, stanze né persone** — riceve numeri, versioni e nomi di
   processi, e si ferma lì;
-- **non tocca niente oltre i due verbi** — e solo dove quella casa ha aperto la
+- **non tocca niente oltre il suo verbo** — e solo dove quella casa ha aperto la
   manutenzione. Non c'è una riga di comando, non si cambia la configurazione,
   non si legge uno stato.
 

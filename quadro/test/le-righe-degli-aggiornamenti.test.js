@@ -107,7 +107,7 @@ test("la riga e' una sola, e la usano tutt'e due le schermate", () => {
    * casa, pastigline nella flotta — e nella flotta non si vedeva ne' il logo
    * ne' cosa cambiava. Due disegni per una cosa sola vuol dire che uno resta
    * indietro, ed era sempre lo stesso. */
-  const quante = [...PAGINA.matchAll(/^\s*unaRiga\(uno, \{$/gm)].length;
+  const quante = [...PAGINA.matchAll(/(?<!function )unaRiga\(uno/g)].length;
   assert.equal(quante, 2, "le due schermate non disegnano piu' la stessa riga");
   const { unaRiga } = iPezzi();
   const disegnata = unaRiga(

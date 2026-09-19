@@ -11,6 +11,50 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.7
+
+**Dal cruscotto si installa.** Era il pezzo che mancava: il quadro faceva
+vedere cosa c'era da aggiornare in ogni casa e non c'era modo di farlo. Il
+tasto «Installa su N case» stava lì da un anno senza essere agganciato a
+niente — nessun `onclick`, nessuna chiamata — quindi non installava un bel
+niente, e chi lo premeva non se ne accorgeva nemmeno.
+
+**Verso casa tua non si apre nessuna porta.** È la cosa da leggere per prima.
+Non c'è nessun buco nel router, nessun servizio in ascolto, nessun indirizzo da
+difendere: è questa casa che ogni minuto manda il rapporto, e nella risposta
+trova — qualche volta — una riga che dice cosa fare. Chi non manda il rapporto
+non riceve niente, e chi toglie il codice smette di mandarlo.
+
+**È un secondo interruttore, e nasce spento.** Nelle opzioni c'è
+`Casa · Lascia che chi ti ha fatto l'impianto aggiorni da lontano`. Mandargli i
+numeri l'hai già deciso incollando il codice; questa è un'altra decisione, e la
+prendi tu. Spento — cioè finché non lo accendi — nel suo cruscotto il tasto non
+c'è e al posto suo c'è scritto perché.
+
+**Un verbo solo:** far partire un aggiornamento che questa casa *ha già in
+attesa*, gli stessi che vedi tu in Impostazioni. Non apre la tua plancia, non
+legge i tuoi sensori, non tocca la tua configurazione, non esegue comandi.
+L'elenco dei verbi sta nel programma del ponte, non nel messaggio: una parola
+che non è in quella lista viene rifiutata.
+
+> I documenti dicevano da tempo che i verbi erano due, con `riavvia` accanto.
+> Non c'è. Adesso i documenti dicono quello che c'è.
+
+**Si nomina per nome e salto di versione**, non per entità — «Shelly Plus», da
+`1.2.0` a `1.3.0` — perché nel rapporto l'entità non viaggia. Ne viene la regola
+più utile di tutte: se nel frattempo quella versione è già stata installata, o
+ne è uscita un'altra, il salto non torna e **non si fa niente**. Un tasto
+premuto ieri non installa una cosa diversa oggi.
+
+**Uno per volta**, e per questo non c'è nessun «installa tutti»: due insieme su
+una casa sola vogliono dire non sapere quale dei due non è tornato. Il tasto
+chiede conferma due volte, perché non stai premendo un tasto sul tuo computer.
+
+**Quello che ti è stato fatto lo leggi tu.** Cosa è stato chiesto e com'è andata
+stanno dentro il rapporto, e il rapporto nella scheda «Il quadro» si legge
+parola per parola: non un riassunto di quello che è successo, la cosa stessa che
+è partita. E nel registro dell'add-on c'è la riga con l'ora.
+
 ## 1.5.6.5
 
 **Gli aggiornamenti nel quadro, con il logo e con cosa cambia.** Erano

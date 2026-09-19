@@ -43,7 +43,7 @@ name: gdahome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.5.6.5"
+version: "1.5.7"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
@@ -193,6 +193,24 @@ options:
   quadro: ""
   # Ogni quanti minuti parte un rapporto. Da 1 a 1440.
   quadro_ogni: 1
+  # Lascia che chi ti ha fatto l'impianto aggiorni da lontano.
+  #
+  # E' un **secondo** interruttore, ed e' spento di serie. Mandargli i numeri e
+  # lasciargli mettere le mani dentro sono due cose diverse: la prima l'hai gia'
+  # data incollando il codice qui sopra, questa no.
+  #
+  # Acceso, dal suo cruscotto puo' far partire un aggiornamento che questa casa
+  # ha gia' in attesa — quelli che vedi anche tu in Impostazioni — e niente
+  # altro: non puo' aprire la tua plancia, non puo' leggere i tuoi sensori, non
+  # puo' cambiare la tua configurazione. Un verbo solo, scritto nel programma.
+  #
+  # Non si apre nessuna porta verso casa tua: e' questa casa che ogni minuto
+  # manda il rapporto, e nella risposta trova, qualche volta, cosa fare.
+  #
+  # Quello che succede lo leggi dove leggi tutto il resto, nella scheda «Il
+  # quadro»: cosa gli e' stato chiesto di installare e com'e' andata stanno
+  # scritti nel rapporto, parola per parola.
+  quadro_manutenzione: false
   registro: info
   # Questo Home Assistant e' di chi installa.
   #
@@ -259,6 +277,9 @@ schema:
   # a chi la sua casa sta parlando.
   quadro: str?
   quadro_ogni: int(1,1440)
+  # Il secondo interruttore, e sta qui in mezzo apposta: e' la casella subito
+  # dopo quelle del quadro, perche' senza quelle non vuol dire niente.
+  quadro_manutenzione: bool
   registro: list(debug|info|attenzione|errore)
   installatore: bool
   # Le tre chiavi, tutte `password?`, e per gli stessi due motivi: Home

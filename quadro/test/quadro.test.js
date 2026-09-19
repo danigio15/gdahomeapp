@@ -670,3 +670,128 @@ test("«/salute» dice quando il quadro non riesce piu' ad aggiornarsi", async (
     await b.chiudi();
   }
 });
+
+/* ─── Il secondo verbo: installare da lontano ──────────────────────────── */
+
+const CON_MANUTENZIONE = { ...RAPPORTO, manutenzione: true };
+const QUESTO = { nome: "Shelly Plus", da: "1.2.0", a: "1.3.0" };
+
+test("il comando entra in casa dentro la risposta a un rapporto, e una volta sola", async () => {
+  /* E' il pezzo che regge tutta la faccenda: verso una casa non c'e' nessuna
+   * porta aperta, nessun buco nel router, niente da difendere. E' lei che
+   * bussa ogni minuto, e qualche volta chi apre le dice qualcosa. */
+  const b = await banco({ installatori: 1 });
+  try {
+    const chiave = await unCodice(b);
+    await b.deposita(UNA, chiave, CON_MANUTENZIONE);
+
+    const chiesto = await b.retro(`/casa/${UNA}/installa`, {
+      method: "POST",
+      body: JSON.stringify(QUESTO),
+    });
+    assert.equal(chiesto.status, 200);
+
+    /* Al rapporto dopo se lo porta via. */
+    const preso = await (await b.deposita(UNA, chiave, CON_MANUTENZIONE)).json();
+    assert.equal(preso.fai.cosa, "installa");
+    assert.equal(preso.fai.nome, "Shelly Plus");
+    assert.equal(preso.fai.a, "1.3.0");
+
+    /* E a quello dopo ancora non c'e' piu': un tasto premuto una volta non
+     * installa due volte. */
+    const dopo = await (await b.deposita(UNA, chiave, CON_MANUTENZIONE)).json();
+    assert.equal(dopo.fai, undefined);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("una casa che non ha aperto la manutenzione non riceve nessun comando", async () => {
+  /* Il no vero lo dice la casa, in `lavori.js`. Questo e' il no di qui, e
+   * serve a non far aspettare dieci minuti una risposta gia' scritta. */
+  const b = await banco({ installatori: 1 });
+  try {
+    const chiave = await unCodice(b);
+    await b.deposita(UNA, chiave, RAPPORTO);
+    const chiesto = await b.retro(`/casa/${UNA}/installa`, {
+      method: "POST",
+      body: JSON.stringify(QUESTO),
+    });
+    assert.equal(chiesto.status, 409);
+    const preso = await (await b.deposita(UNA, chiave, RAPPORTO)).json();
+    assert.equal(preso.fai, undefined);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("nessuno fa installare niente a casa di un altro installatore", async () => {
+  /* Le matricole si possono scrivere a mano, e questa e' la via che fa
+   * succedere qualcosa in casa di qualcuno: e' quella dove un lucchetto
+   * dimenticato costa di piu'. */
+  const b = await banco({ installatori: 2 });
+  try {
+    const chiave = await unCodice(b, "", b.iscritti[0].chiave);
+    await b.deposita(UNA, chiave, CON_MANUTENZIONE);
+
+    const provato = await b.retro(
+      `/casa/${UNA}/installa`,
+      { method: "POST", body: JSON.stringify(QUESTO) },
+      b.iscritti[1].chiave,
+    );
+    assert.ok(provato.status >= 400, "un installatore ha fatto installare in casa di un altro");
+    const preso = await (await b.deposita(UNA, chiave, CON_MANUTENZIONE)).json();
+    assert.equal(preso.fai, undefined);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("una casa non puo' chiedere niente a se stessa, ne' a nessun'altra", async () => {
+  /* La chiave di una casa apre una porta sola. Provarci con la via che
+   * installa deve finire come tutte le altre. */
+  const b = await banco({ installatori: 1 });
+  try {
+    const chiave = await unCodice(b);
+    await b.deposita(UNA, chiave, CON_MANUTENZIONE);
+    const provato = await fetch(`${b.dove}/console/casa/${UNA}/installa`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${chiave}`, "content-type": "application/json" },
+      body: JSON.stringify(QUESTO),
+    });
+    assert.equal(provato.status, 401);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("si puo' annullare finche' la casa non e' passata a prenderselo", async () => {
+  const b = await banco({ installatori: 1 });
+  try {
+    const chiave = await unCodice(b);
+    await b.deposita(UNA, chiave, CON_MANUTENZIONE);
+    await b.retro(`/casa/${UNA}/installa`, { method: "POST", body: JSON.stringify(QUESTO) });
+    const tolto = await (await b.retro(`/casa/${UNA}/installa`, { method: "DELETE" })).json();
+    assert.equal(tolto.annullato, true);
+    const preso = await (await b.deposita(UNA, chiave, CON_MANUTENZIONE)).json();
+    assert.equal(preso.fai, undefined);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("finche' la casa non ha detto com'e' andata non se ne chiede un altro", async () => {
+  const b = await banco({ installatori: 1 });
+  try {
+    const chiave = await unCodice(b);
+    await b.deposita(UNA, chiave, CON_MANUTENZIONE);
+    await b.retro(`/casa/${UNA}/installa`, { method: "POST", body: JSON.stringify(QUESTO) });
+    const secondo = await b.retro(`/casa/${UNA}/installa`, {
+      method: "POST",
+      body: JSON.stringify({ nome: "Altro", da: "1", a: "2" }),
+    });
+    assert.equal(secondo.status, 409);
+  } finally {
+    await b.chiudi();
+  }
+});

@@ -168,7 +168,7 @@ test("le quattro liste stanno nello stesso ordine, e non solo con le stesse voci
 });
 
 test("ogni casella dice in testa chi la deve compilare", () => {
-  /* Home Assistant non ha titoli di sezione: disegna dodici caselle una sotto
+  /* Home Assistant non ha titoli di sezione: disegna le caselle una sotto
    * l'altra, e basta. Quindi l'unico posto dove dire «questa non e' roba tua»
    * e' il nome, e finche' non c'era scritto la si capiva leggendo tre righe di
    * descrizione — cioe' dopo averla gia' riempita.
@@ -177,17 +177,17 @@ test("ogni casella dice in testa chi la deve compilare", () => {
    * cruscotto e' finita nella casella della casa, e da li' un `403` a ogni giro
    * che non diceva niente di utile.
    *
-   * Il prefisso fa anche il lavoro che i titoli di sezione farebbero: otto
+   * Il prefisso fa anche il lavoro che i titoli di sezione farebbero: nove
    * «Casa» di fila, poi due «Installatore», poi una a testa per il gestore e
    * per l'assistenza. Dove il prefisso cambia, cambia il pubblico. */
   const chiDeveCompilare = {
-    it: { Casa: 8, Installatore: 2, Gestore: 1, Assistenza: 1 },
-    en: { Home: 8, Installer: 2, Manager: 1, Support: 1 },
+    it: { Casa: 9, Installatore: 2, Gestore: 1, Assistenza: 1 },
+    en: { Home: 9, Installer: 2, Manager: 1, Support: 1 },
   };
   for (const lingua of LE_LINGUE) {
     const parole = readFileSync(qui(`../translations/${lingua}.yaml`), "utf8");
     const nomi = [...parole.matchAll(/^ {4}name: (.*)$/gm)].map((una) => una[1]);
-    assert.equal(nomi.length, 12, `«${lingua}.yaml» non ha dodici nomi`);
+    assert.equal(nomi.length, 13, `«${lingua}.yaml» non ha tredici nomi`);
     const conti = {};
     for (const nome of nomi) {
       const [chi, ...resto] = nome.split(" · ");

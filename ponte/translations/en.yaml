@@ -35,16 +35,31 @@ configuration:
       paste here, and from then on this home sends them a few lines of numbers:
       the versions, how full the disk is, which add-ons are running, how many
       entities stopped answering. That way they find out something is wrong
-      before you have to call them. Nothing of yours goes out — no entity
-      names, no rooms, no people, no sensor states, not your Wi-Fi name and not
-      your address either — and what does go out you can read word for word in
-      the gdahome console, where the button to stop it also is.
+      before you have to call them. Plus the name of the devices that are not
+      answering at that moment, and only those: it is what tells the person who
+      has to come and fix them what to expect, so if the socket is called
+      "Kitchen light" they read "Kitchen light". Nothing else — no sensor
+      states, no people, no names of the devices that work, not your Wi-Fi name
+      and not your address. What does go out you can read word for word in the
+      gdahome console, where the button to stop it also is.
   quadro_ogni:
     name: Home · How often a status report goes out
     description: >-
       Every how many minutes those lines of numbers go out. It only counts if
       the box above is filled in; empty, nothing goes out and no connection is
       opened.
+  quadro_manutenzione:
+    name: Home · Let whoever installed your home update it from a distance
+    description: >-
+      Leave it off if you do not need it. It is a second switch: sending them
+      the numbers you already decided with the code above, letting them put
+      their hands inside is another thing. On, from their dashboard they can
+      start an update this home is already waiting for — the ones you see in
+      Settings too — and nothing else: they do not open your dashboard, they do
+      not read your sensors, they do not touch your configuration. No door is
+      opened towards your home: it is this home that knocks, and in the answer
+      it finds what to do. What they asked for and how it went you read in the
+      status report, in the "Il quadro" tab.
   registro:
     name: Home · How much the log writes
     description: >-

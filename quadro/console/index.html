@@ -1840,11 +1840,18 @@
       const livello = (valore, attenta, male) =>
         valore >= male ? "male" : valore >= attenta ? "attenta" : "bene";
 
-      /* Il lavoro in ballo e la manutenzione: il ponte non li manda ancora —
-       * i due verbi del quadro sono disegnati e non costruiti — e finche' non
-       * arrivano queste due righe rispondono di no invece di rompersi. */
+      /* Il lavoro in ballo e la manutenzione, adesso che il ponte li manda
+       * davvero. Restano scritte a prova di assenza: una casa ferma a un ponte
+       * di ieri queste due righe non le ha, e deve rispondere di no invece di
+       * rompersi. */
       const staLavorando = (c) => Boolean(c && c.lavoro && c.lavoro.stato === "in corso");
-      const daFare = (c) => (c.aggiornamenti?.elenco || []).filter((uno) => uno.installabile);
+
+      /* Se questa riga e' quella che sta succedendo — o quella che si e'
+       * appena chiesta. Si confronta per **nome e salto di versione**, che e'
+       * l'unico modo che c'e': l'entita' nel rapporto non viaggia, e non
+       * viaggia apposta. */
+      const eLaStessa = (uno, l) =>
+        Boolean(l) && l.nome === uno.nome && l.da === uno.da && l.a === uno.a;
 
       /* Quante entita' non rispondono.
        *
@@ -2179,6 +2186,45 @@
               if (evento.key === "Enter") salva();
             };
         });
+        dove.querySelectorAll("[data-installa]").forEach((tasto) => {
+          tasto.onclick = () => {
+            /* In due tempi, sullo stesso tasto, come «non seguirla più».
+             *
+             * Qui non si sta premendo un tasto sul proprio computer: si sta
+             * facendo partire un aggiornamento a casa di qualcun altro, che
+             * magari in quel momento sta guardando la televisione con le
+             * tapparelle collegate a quell'impianto. Un tocco andato storto
+             * scorrendo l'elenco non deve bastare. */
+            if (tasto.dataset.sicuro !== "sì") {
+              tasto.dataset.sicuro = "sì";
+              tasto.textContent = "Sicuro? Premi di nuovo";
+              setTimeout(() => {
+                tasto.dataset.sicuro = "";
+                tasto.textContent = "Installa";
+              }, 6000);
+              return;
+            }
+            faiEpoi(tasto, () =>
+              chiedi(`/casa/${tasto.dataset.installa}/installa`, {
+                method: "POST",
+                body: JSON.stringify({
+                  nome: tasto.dataset.qualeNome,
+                  da: tasto.dataset.qualeDa,
+                  a: tasto.dataset.qualeA,
+                }),
+              }),
+            );
+          };
+        });
+        dove.querySelectorAll("[data-lascia-stare]").forEach((tasto) => {
+          /* Annullare non chiede conferma: si annulla una cosa che non è
+           * ancora successa, e il danno di un tocco storto è ripremere
+           * «Installa». */
+          tasto.onclick = () =>
+            faiEpoi(tasto, () =>
+              chiedi(`/casa/${tasto.dataset.lasciaStare}/installa`, { method: "DELETE" }),
+            );
+        });
         dove.querySelectorAll("[data-molla]").forEach((tasto) => {
           tasto.onclick = () => {
             /* In due tempi, sullo stesso tasto: il primo chiede conferma e il
@@ -2490,7 +2536,7 @@
             <p class="verdetto">${testo(verdetto)}</p>
           </section>
 
-          ${gliAggiornamenti(c)} ${laMacchina(c)} ${laRete(c)} ${gliAddon(c)}
+          ${gliAggiornamenti(c, casa)} ${laMacchina(c)} ${laRete(c)} ${gliAddon(c)}
 
           <section class="riquadro">
             <div class="capoRiquadro"><h3>La salute, quattordici giorni</h3></div>
@@ -2696,15 +2742,14 @@
        * E il tasto c'è solo se quella casa **ha aperto la manutenzione**.
        * Vedere cosa c'è da fare e poterlo fare sono due permessi diversi, e
        * il secondo non si dà da sé insieme al primo. */
-      function gliAggiornamenti(c) {
+      function gliAggiornamenti(c, casa) {
         if (!c.aggiornamenti)
           return riquadroMuto(
             "Gli aggiornamenti",
             "Questa casa non ha detto cosa c'è da aggiornare.",
           );
         const elenco = c.aggiornamenti.elenco || [];
-        const possibili = daFare(c);
-        const cartello = ilCartello(c);
+        const cartello = ilCartello(c, casa?.chiesto);
 
         if (!elenco.length)
           return `
@@ -2725,29 +2770,19 @@
               ${elenco
                 .map((uno) =>
                   unaRiga(uno, {
-                    fare: `${uno.stacca ? '<span class="pastiglia attenta">fa cadere il filo</span>' : ""}${
-                      !uno.installabile
-                        ? '<span class="pastiglia">si porta col cacciavite</span>'
-                        : c.manutenzione
-                          ? '<button type="button" class="tasto">Installa</button>'
-                          : '<span class="pastiglia">manutenzione chiusa</span>'
-                    }`,
+                    fare: `${uno.stacca ? '<span class="pastiglia attenta">fa cadere il filo</span>' : ""}${ilTasto(uno, c, casa)}`,
                   }),
                 )
                 .join("")}
             </ul>
             ${
               c.manutenzione
-                ? `<div class="azioni">
-                    <button type="button" class="tasto forte" ${possibili.length ? "" : "disabled"}>
-                      Installa ${possibili.length === elenco.length ? "tutti" : `i ${possibili.length} che si possono`}
-                    </button>
-                  </div>
-                  <p class="verdetto">
+                ? `<p class="verdetto">
                     Il backup si fa <b>prima, sempre</b>: è la condizione, non
-                    una casella da spuntare. E quelli che staccano il filo si
-                    installano uno per volta — due insieme su una casa sola
-                    vogliono dire non sapere quale dei due non è tornato.
+                    una casella da spuntare. E se ne fa <b>uno per volta</b>:
+                    due insieme su una casa sola vogliono dire non sapere quale
+                    dei due non è tornato — per questo qui non c'è nessun
+                    «installa tutti».
                   </p>`
                 : `<div class="limite" style="margin-top: 16px">
                     <span class="gettone" aria-hidden="true">◴</span>
@@ -2763,27 +2798,75 @@
           </section>`;
       }
 
-      /* Il cartello del lavoro: cosa sta facendo questa casa adesso, o cosa ha
-       * appena finito. */
-      function ilCartello(c) {
+      /* Cosa si può fare su questa riga: il tasto, o il motivo per cui non c'è.
+       *
+       * Sei casi, e si leggono in quest'ordine perché così si escludono a
+       * vicenda. Il tasto è l'ultimo: tutto quello che viene prima è una
+       * ragione per non mostrarlo, e mostrarlo lo stesso sarebbe una promessa
+       * che non si mantiene.
+       *
+       * Il nome e il salto di versione finiscono in tre `data-`, e non
+       * l'entità: nel rapporto l'entità non c'è, e non c'è apposta. È lo stesso
+       * modo con cui la casa ritrova di cosa si sta parlando. */
+      function ilTasto(uno, c, casa) {
+        if (!uno.installabile) return '<span class="pastiglia">si porta col cacciavite</span>';
+        if (eLaStessa(uno, casa?.chiesto))
+          return `<button type="button" class="tasto" data-lascia-stare="${testo(casa.casa)}">
+            Annulla
+          </button>`;
+        if (eLaStessa(uno, c.lavoro) && c.lavoro.stato === "in corso")
+          return '<span class="pastiglia lavoro">in corso</span>';
+        if (casa?.chiesto || staLavorando(c)) return '<span class="pastiglia">uno per volta</span>';
+        if (!c.manutenzione) return '<span class="pastiglia">manutenzione chiusa</span>';
+        return `<button
+          type="button"
+          class="tasto"
+          data-installa="${testo(casa?.casa || "")}"
+          data-quale-nome="${testo(uno.nome)}"
+          data-quale-da="${testo(uno.da)}"
+          data-quale-a="${testo(uno.a)}"
+        >Installa</button>`;
+      }
+
+      /* Il cartello in cima agli aggiornamenti: cosa sta succedendo in questa
+       * casa, o com'è finita l'ultima volta.
+       *
+       * I nomi degli stati sono quelli che manda il ponte — `in corso`,
+       * `fatto`, `non riuscito` — e non una traduzione fatta qui: due
+       * vocabolari per la stessa cosa vogliono dire un cartello che smette di
+       * comparire il giorno che uno dei due cambia, in silenzio. */
+      function ilCartello(c, chiesto = null) {
+        /* Prima di tutto quello che si è appena chiesto e che la casa non è
+         * ancora passata a prendersi: sono i secondi in cui chi ha premuto il
+         * tasto si chiede se ha funzionato. */
+        if (chiesto)
+          return `
+            <div class="cartello">
+              <span class="gettone" aria-hidden="true">◴</span>
+              <span>
+                <b>${testo(chiesto.nome)} ${testo(chiesto.da)} → ${testo(chiesto.a)}</b>
+                è stato chiesto ${testo(daQuanto(chiesto.chiesto))}. Parte quando questa
+                casa manda il prossimo rapporto — non si bussa alla porta di
+                nessuno, è lei che passa a prenderselo.
+              </span>
+            </div>`;
         const l = c.lavoro;
-        /* Non `=== null`: il ponte questa riga non la manda affatto, e
-         * `undefined` non e' `null`. E' il genere di differenza che si paga
-         * quando una bozza coi dati scritti a mano incontra dei dati veri. */
+        /* Non `=== null`: una casa ferma a un ponte di ieri questa riga non la
+         * manda affatto, e `undefined` non è `null`. */
         if (!l) return "";
         if (l.stato === "fatto")
           return `
             <div class="cartello bene">
               <span class="gettone" aria-hidden="true">✓</span>
-              <span><b>${testo(l.cosa)}</b> installato ${testo(l.quando)}, dal quadro.</span>
+              <span><b>${testo(l.cosa)}</b> installato ${testo(daQuanto(l.quando))}, dal quadro.</span>
             </div>`;
-        if (l.stato === "fallito")
+        if (l.stato === "non riuscito")
           return `
             <div class="cartello male">
               <span class="gettone" aria-hidden="true">✕</span>
               <span
-                ><b>${testo(l.cosa)}</b> non è andato ${testo(l.quando)}:
-                ${testo(l.perché || "Home Assistant ha detto di no")}.</span
+                ><b>${testo(l.cosa)}</b> non è andato ${testo(daQuanto(l.quando))}:
+                ${testo(l.perche || "questa casa ha detto di no")}.</span
               >
             </div>`;
         const fermi = Math.round((ADESSO() - new Date(c.quando).getTime()) / 60000);
@@ -2792,12 +2875,12 @@
           <div class="cartello ${tardi ? "male" : ""}">
             <span class="gettone" aria-hidden="true">${tardi ? "!" : "◴"}</span>
             <span>
-              <b>${testo(l.cosa)}</b> è partito ${testo(l.quando)}${
+              <b>${testo(l.cosa)}</b> è partito ${testo(daQuanto(l.quando))}${
                 tardi
                   ? ` e questa casa non è più tornata. Un aggiornamento che stacca il filo se lo riprende in pochi minuti: qui si va di persona.`
                   : l.stacca
                     ? `. Fa cadere il filo, quindi per qualche minuto questa casa non si fa sentire — è normale.`
-                    : `. Come è andata lo dirà la prossima rapporto.`
+                    : `. Come è andata lo dirà il prossimo rapporto.`
               }
             </span>
           </div>`;
@@ -2896,10 +2979,15 @@
        * manca a questa casa» ma «quali sono indietro su Home Assistant Core»,
        * e che cosi' si sbriga in un gesto invece che in quaranta.
        *
-       * Reggeva su una cosa che non c'e': quel gesto. Il tasto «Installa su N
-       * case» era li' da sempre e non e' mai stato agganciato a niente —
+       * Reggeva su una cosa che non c'era: quel gesto. Il tasto «Installa su N
+       * case» e' stato li' per un anno senza essere agganciato a niente —
        * nessun `data-`, nessun `onclick` — quindi non installava un bel
        * niente, e il raggruppamento serviva un'azione che non esisteva.
+       *
+       * Adesso il gesto c'e', ed e' **una casa per volta**: si installa da qui,
+       * riga per riga. Un tasto solo che parte su quaranta impianti insieme
+       * resta quello che non si fa — se due non tornano non si sa quale dei
+       * quaranta guardare, e il backup lo si e' fatto su tutte o su nessuna.
        *
        * Quello che restava era il costo: con **una** casa sola diventano
        * sedici riquadri che dicono tutti «1 casa», e per sapere cosa fare in
@@ -2944,14 +3032,12 @@
           <p class="sottotitolo">
             ${plurale(voci, "cosa da installare", "cose da installare")} su
             ${plurale(indietro.length, "casa", "case")}. Una casa per riquadro, con
-            dentro quello che le manca: è dove si va a mettere le mani, e si apre
-            da qui premendo il suo nome.
+            dentro quello che le manca: si installa da qui, una cosa per volta, e
+            premendo il nome si apre la scheda con tutto il resto.
           </p>
 
           ${indietro
             .map(({ casa, cose }) => {
-              const sta = (uno) =>
-                staLavorando(casa.carta) && casa.carta.lavoro.cosa.startsWith(uno.nome);
               const aperta = Boolean(casa.carta.manutenzione);
               const cacciavite = cose.filter((uno) => !uno.installabile).length;
               const daQui = cose.filter((uno) => uno.installabile).length;
@@ -2968,31 +3054,21 @@
                 </div>
                 <ul class="versi">
                   ${cose
-                    .map((uno) =>
-                      unaRiga(uno, {
-                        fare: sta(uno)
-                          ? '<span class="pastiglia lavoro">in corso</span>'
-                          : !uno.installabile
-                            ? '<span class="pastiglia">col cacciavite</span>'
-                            : aperta
-                              ? ""
-                              : '<span class="pastiglia attenta">manutenzione chiusa</span>',
-                      }),
-                    )
+                    .map((uno) => unaRiga(uno, { fare: ilTasto(uno, casa.carta, casa) }))
                     .join("")}
                 </ul>
                 <p class="verdetto">
                   ${
                     !aperta && daQui
-                      ? "Questa casa non ha aperto la manutenzione al quadro: da qui non si installa niente, e non è un guasto — è una scelta di chi ci abita."
+                      ? "Questa casa non ha aperto la manutenzione al quadro: da qui non si installa niente, e non è un guasto — è una scelta di chi ci abita. "
                       : ""
                   }${
                     cacciavite
-                      ? `${plurale(cacciavite, "si porta", "si portano")} col cacciavite: da qui non ${cacciavite === 1 ? "si installa" : "si installano"}.`
+                      ? `${plurale(cacciavite, "si porta", "si portano")} col cacciavite: da qui non ${cacciavite === 1 ? "si installa" : "si installano"}. `
                       : ""
                   }${
                     aperta && daQui
-                      ? `${plurale(daQui, "si installa", "si installano")} dalla scheda di questa casa, una alla volta.`
+                      ? "Il backup viene prima, sempre; e se ne fa uno per volta, che è il motivo per cui non c'è nessun «installa tutti»."
                       : ""
                   }
                 </p>
@@ -3278,10 +3354,13 @@
                       <b>La manutenzione è un secondo interruttore.</b> Mandare
                       il rapporto e lasciarsi aggiornare sono due permessi, e il
                       secondo è spento di serie: chi lo accende lo accende
-                      apposta. Acceso, il quadro può installare un aggiornamento
-                      e riavviare un add-on fermo — due verbi, scritti nel
-                      programma, e nient'altro. Ogni cosa che fa resta scritta
-                      nella console dell'add-on, dove la legge chi ci abita.
+                      apposta. Acceso, da qui si può far partire un
+                      aggiornamento che quella casa <em>ha già in attesa</em> —
+                      un verbo solo, scritto nel programma — e nient'altro:
+                      niente riga di comando, niente configurazione, niente
+                      lettura di stati. Quello che si chiede finisce nel
+                      rapporto di quella casa, dove chi ci abita lo rilegge
+                      parola per parola.
                     </span>
                   </li>
                   <li class="fatta">

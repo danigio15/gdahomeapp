@@ -668,3 +668,83 @@ test("l'indirizzo delle note passa solo se e' un indirizzo da cliccare", async (
     assert.equal(foglio.aggiornamenti.elenco[0].note, atteso, `«${dove}»`);
   }
 });
+
+/* ─── Il comando che arriva nella risposta ─────────────────────────────── */
+
+test("quello che il quadro mette nella risposta arriva a chi lo deve fare", async () => {
+  /* E' l'unica strada per cui un comando entra in casa, e passa **dentro una
+   * risposta**: verso una casa non c'e' nessuna porta aperta. */
+  const arrivati = [];
+  const postino = new Postino({
+    dove: "https://quadro.it",
+    chiave: "una-chiave",
+    casa: "casa_abc",
+    fabbrica: () => ({}),
+    fai: (detto) => {
+      arrivati.push(detto);
+    },
+    registro: ZITTO,
+    fetch: async () => ({
+      ok: true,
+      json: async () => ({ presa: true, di: "Impianti Rossi", fai: { id: "x", cosa: "installa" } }),
+    }),
+  });
+  assert.equal(await postino.manda(), true);
+  assert.deepEqual(arrivati, [{ id: "x", cosa: "installa" }]);
+  /* E il nome dell'installatore arriva lo stesso: le due cose stanno nella
+   * stessa risposta e non si portano via a vicenda. */
+  assert.equal(postino.chi, "Impianti Rossi");
+});
+
+test("una risposta senza comando non fa succedere niente", async () => {
+  let chiamate = 0;
+  const postino = new Postino({
+    dove: "https://quadro.it",
+    chiave: "una-chiave",
+    casa: "casa_abc",
+    fabbrica: () => ({}),
+    fai: () => {
+      chiamate += 1;
+    },
+    registro: ZITTO,
+    fetch: async () => ({ ok: true, json: async () => ({ presa: true, di: "Rossi" }) }),
+  });
+  await postino.manda();
+  assert.equal(chiamate, 0);
+});
+
+test("un lavoro che non parte non fa sembrare caduto un rapporto arrivato", async () => {
+  /* Le due cose sono separate apposta: chi guarda la console dell'add-on deve
+   * leggere «il rapporto arriva», perche' arriva. Cos'e' andato storto nel
+   * lavoro si legge nel rapporto del minuto dopo. */
+  const postino = new Postino({
+    dove: "https://quadro.it",
+    chiave: "una-chiave",
+    casa: "casa_abc",
+    fabbrica: () => ({}),
+    fai: () => {
+      throw new Error("non e' partito");
+    },
+    registro: ZITTO,
+    fetch: async () => ({ ok: true, json: async () => ({ fai: { id: "x", cosa: "installa" } }) }),
+  });
+  assert.equal(await postino.manda(), true);
+  assert.equal(postino.ultimoEsito.andata, true);
+});
+
+test("il rapporto dice sempre se la manutenzione e' aperta, anche quando e' chiusa", async () => {
+  /* «Chiusa» e «non lo dice» sono due cose diverse: il quadro con la prima
+   * scrive «questa casa non ha aperto la manutenzione», con la seconda non sa
+   * cosa scrivere. */
+  const fai = (manutenzione) =>
+    fabbricaIlRapporto({
+      identita: { casa: "casa_abc" },
+      casa: { chiedi: async () => [] },
+      ferro: ferroFinto({ os: {}, host: {}, network: null, addons: [] }),
+      manutenzione,
+      registro: ZITTO,
+      adesso: () => Date.parse("2026-09-18T09:41:12Z"),
+    })();
+  assert.equal((await fai(false)).manutenzione, false);
+  assert.equal((await fai(true)).manutenzione, true);
+});

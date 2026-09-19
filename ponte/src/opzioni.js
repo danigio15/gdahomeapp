@@ -236,6 +236,20 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
      * che voleva evitare. */
     quadro: leggiIlQuadro(process.env.PONTE_QUADRO || scritte.quadro, registroDiEmergenza),
     quadroOgni: ogniQuanto(scritte.quadro_ogni, DIFETTO.quadro_ogni),
+    /* Il secondo interruttore: lasciarsi aggiornare da lontano.
+     *
+     * Mandare i numeri e farsi mettere le mani dentro sono due permessi, e
+     * questo e' spento di serie. Il primo si da' incollando un codice, e in
+     * quel gesto non ci sta dentro anche il secondo: chi lo accende lo accende
+     * apposta, e sa cosa sta accendendo perche' la casella lo dice.
+     *
+     * Senza codice del quadro non vuol dire niente e non fa niente: e' come la
+     * chiave di una porta che non c'e'. Si tiene lo stesso il valore com'e' —
+     * non si spegne da solo — cosi' chi rimette il codice ritrova quello che
+     * aveva scelto invece di doverci ripensare. */
+    manutenzione:
+      String(process.env.PONTE_MANUTENZIONE ?? scritte.quadro_manutenzione ?? "") === "true" ||
+      scritte.quadro_manutenzione === true,
     versione: versioneDelPonte(),
   };
 }
