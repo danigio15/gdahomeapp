@@ -165,6 +165,22 @@ export class Chiavi {
    *  2. la chiave e' un invito ancora vivo: si lega a questa casa, l'invito
    *     sparisce, e da adesso vale il caso 1;
    *  3. niente di tutto questo: no.
+   *
+   * ─── Una casa ha una chiave sola ─────────────────────────────────────────
+   *
+   * Qui c'era un guasto, e per vederlo bisognava cambiare installatore a una
+   * casa gia' abbinata — cioe' la prima cosa che si fa provando.
+   *
+   * Il caso 2 **aggiungeva**: la casa restava legata anche alla chiave di
+   * prima, e `diChiE` risponde con la **prima** che trova. Quindi l'invito
+   * nuovo veniva bruciato — spariva dai codici in attesa, come deve — e la
+   * casa continuava a risultare di chi c'era prima. Nel cruscotto del nuovo
+   * installatore: zero impianti. Da fuori sembrava che il codice fosse stato
+   * buttato via per niente.
+   *
+   * Adesso legarsi a un invito nuovo **sostituisce**, e il caso 1 ripara le
+   * doppie gia' fatte al primo rapporto che arriva: chi ha gia' il guasto in
+   * casa non deve rifare niente a mano.
    */
   riconosci(casa, chiave) {
     if (!CASA_VALIDA.test(String(casa ?? ""))) return false;
@@ -173,13 +189,25 @@ export class Chiavi {
     const segno = impronta(brutto(detta));
 
     const gia = this.chiavi.find((una) => stessoSegreto(una.impronta, segno));
-    if (gia) return gia.casa === casa;
+    if (gia) {
+      if (gia.casa !== casa) return false;
+      /* Ripara le doppie di prima: questa e' la chiave con cui la casa sta
+       * bussando adesso, quindi e' quella buona, e le altre sue se ne vanno. */
+      if (this.chiavi.some((una) => una !== gia && una.casa === casa)) {
+        this.archivio.dati.chiavi = this.chiavi.filter((una) => una === gia || una.casa !== casa);
+        this.archivio.salva();
+      }
+      return true;
+    }
 
     this.potatura();
     const invito = this.inviti.find((uno) => brutto(uno.codice) === brutto(detta));
     if (!invito) return false;
 
     this.archivio.dati.inviti = this.inviti.filter((uno) => uno !== invito);
+    /* Via la chiave di prima di questa casa, se ce n'era una: riabbinarsi vuol
+     * dire cambiare padrone, non averne due. */
+    this.archivio.dati.chiavi = this.chiavi.filter((una) => una.casa !== casa);
     this.chiavi.push({
       impronta: segno,
       casa,
