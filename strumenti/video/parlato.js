@@ -42,20 +42,30 @@
  * sempre si **dice** come si scrive: chi fa i suoni legge con le regole
  * dell'italiano, e su una parola che italiana non e' sbaglia.
  *
- * «Offline» era il caso: letto all'italiana usciva spezzato in due, «of
- * lain». Scritto «offlain» torna una parola sola.
+ * Due casi, e sono di razza diversa.
  *
- * La regola per aggiungerne una e' la stessa che ha trovato questa: si
- * sintetizza la frase, la si fa riascoltare a un programma che trascrive, e si
- * guarda cosa ha capito. Senza quella prova si mette una storpiatura al posto
- * di un'altra — provate e scartate, in questo copione, «zigbì» per Zigbee e
- * «bàckup» per backup: si capivano **meno** di come erano scritte.
+ * **Il nome.** «gdahome» si scrive attaccato e si dice lettera per lettera:
+ * *gi di a home*. Letto come una parola diventava «gdaòme» in italiano e
+ * «gidahoum» in inglese — cioe' il nome del prodotto, detto sbagliato, due
+ * volte in quattro minuti. Si scrive come si dice, e in inglese con i nomi
+ * inglesi delle lettere, che per G e D suonano uguale e per la A no.
  *
- * Vale solo per l'italiano: in inglese quelle parole sono a casa loro.
+ * **Le parole che italiane non sono.** «Offline» letto all'italiana usciva
+ * spezzato in due, «of lain»; scritto «offlain» torna una parola sola. Questo
+ * vale solo per l'italiano: in inglese quelle parole sono a casa loro.
+ *
+ * La regola per aggiungerne una e' quella che ha trovato queste: si sintetizza
+ * la frase, la si fa riascoltare a un programma che trascrive, e si guarda cosa
+ * ha capito. Senza quella prova si mette una storpiatura al posto di un'altra —
+ * provate e scartate, in questo copione, «zigbì» per Zigbee e «bàckup» per
+ * backup: si capivano **meno** di come erano scritte.
  */
 export const COME_SI_DICE = {
-  it: [["offline", "offlain"]],
-  en: [],
+  it: [
+    ["gdahome", "gi di a home"],
+    ["offline", "offlain"],
+  ],
+  en: [["gdahome", "gee dee ah home"]],
 };
 
 /** Quanto respiro fra un pezzo e il prossimo, dentro la stessa scena. */

@@ -496,6 +496,13 @@ dell'andatura normale, e 0,85 torna a peggiorare — e le riscritture di
 [`COME_SI_DICE`](parlato.js): «offlain» è passata, «zigbì» e «bàckup» sono state
 scartate perché si capivano **meno** di come erano scritte.
 
+**Il nome del prodotto invece non si misura: si chiede.** «gdahome» si scrive
+attaccato, e la voce lo leggeva come una parola — «gdaòme» in italiano,
+«gidahoum» in inglese. Si dice lettera per lettera, *gi di a home*, e nessuna
+prova poteva saperlo: lo sa chi il prodotto l'ha chiamato così. Adesso sta
+scritto come si dice, e in inglese con i nomi inglesi delle lettere — che per
+G e D suonano uguale, per la A no.
+
 Per l'inglese, fra quattro voci provate allo stesso modo, `bf_emma` ha fatto
 92,9% contro 90,9, 90,3 e 90,3.
 
