@@ -11,6 +11,33 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.2
+
+**«Dispositivi non collegati» adesso sono dispositivi.** In una casa vera ne
+contava centottanta — in una casa che ne ha una quarantina — e i nomi erano
+«Automazioni Elettrodomestici 1», «Avvio Ritardato Conteggio Elettrodomestici»,
+«Aggiornamento package elettrodomestici». Non erano dispositivi: erano aiutanti,
+automazioni e sensori template, roba che un dispositivo non ce l'ha e non lo
+deve avere. Un numero così non è impreciso, è inservibile — chi lo legge non
+può sapere quali di quelle righe siano un guasto, e smette di guardarle tutte.
+
+Adesso si guardano **solo le entità di un dispositivo vero**: quelli che in Home
+Assistant stanno in «Dispositivi e integrazioni», Zigbee compreso. E se Home
+Assistant non dà i suoi registri, quella riga dice «questa casa non lo dice»
+invece di tirare a indovinare.
+
+**La plancia diceva di essere la 1.4.32.** Si leggeva in due posti: sotto
+«CONFIGURAZIONE» e nella diagnostica runtime. Quei numeri li scrive uno script
+della plancia quando la si costruisce, e di gdahome non sa niente; adesso si
+rimettono in pari col nostro al momento di servirla, e non possono più
+divergere.
+
+**E il segno in cima a Configurazione è il logo di gdahome.** Prima c'era una
+casetta azzurra disegnata dentro la pagina — non il logo di nessuno, e nemmeno
+il nostro — e aprendo quella schermata il marchio cambiava sotto gli occhi.
+Adesso è lo stesso file della testata: il nostro, o quello di chi ti ha montato
+l'impianto se ne ha uno.
+
 ## 1.5.9.1
 
 **La plancia diceva di essere la 1.4.32.** Nella console, alla riga «La
