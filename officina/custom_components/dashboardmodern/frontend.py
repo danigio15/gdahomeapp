@@ -22,7 +22,8 @@ DATA_VIA_STABILE_DELLA_CARD = "via_stabile_della_card"
 DATA_PANEL_PATHS = "panel_paths"
 PANEL_URL_PATH = DOMAIN
 PANEL_COMPONENT_NAME = "dashboardmodern-panel"
-# La voce «Cruscotto»: c'e' solo nell'Home Assistant di chi installa, e ce la
+# La voce «Cruscotto installatore»: c'e' solo nell'Home Assistant di chi
+# installa, e ce la
 # mette il ponte dicendolo (`dashboardmodern/cruscotto/set`). Qui si tiene a
 # mente dove punta, per non riregistrarla identica a ogni giro del ponte.
 DATA_CRUSCOTTO_DOVE = "cruscotto_dove"
@@ -1727,7 +1728,7 @@ async def async_unregister_frontend_entry(hass: HomeAssistant, entry_id: str) ->
         _remove_panel(hass, path)
 
 
-# ─── La voce «Cruscotto», per chi gli impianti li monta ──────────────────────
+# ─── La voce «Cruscotto installatore» ───────────────────────────────────────
 #
 # Home Assistant e' di chi lo installa, e questo e' il suo. Il vincolo di
 # riservatezza del progetto vale per l'Home Assistant dei **clienti** — li'
@@ -1769,7 +1770,7 @@ async def async_mostra_il_cruscotto(hass: HomeAssistant, dove: str) -> bool:
     frontend.async_register_built_in_panel(
         hass,
         component_name="custom",
-        sidebar_title="Cruscotto",
+        sidebar_title="Cruscotto installatore",
         sidebar_icon="mdi:gauge",
         frontend_url_path=CRUSCOTTO_URL_PATH,
         config={

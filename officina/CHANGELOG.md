@@ -15,12 +15,12 @@ versioni seguono [Semantic Versioning](https://semver.org/lang/it/).
 
 ### Aggiunto
 
-- **La voce «Cruscotto» nella barra laterale, per chi gli impianti li monta**
+- **La voce «Cruscotto installatore» nella barra laterale, per chi gli impianti li monta**
 
   Chi installa gdahome in quaranta case un Home Assistant ce l'ha suo, e da lì
   vuole arrivare ai suoi impianti senza aprire un altro posto. Accendendo
-  l'interruttore «installatore» nella scheda dell'add-on gdahome compare una
-  voce nuova nella barra laterale, che mostra il cruscotto della flotta.
+  l'interruttore «installatore» nella scheda dell'add-on gdahome compare la voce
+  **Cruscotto installatore** nella barra laterale, che mostra il cruscotto della flotta.
 
   Il cruscotto non è rifatto qui: è **quello che esiste già**, sul quadro,
   mostrato dentro un riquadro. Rifarlo vorrebbe dire un terzo posto dove vivono

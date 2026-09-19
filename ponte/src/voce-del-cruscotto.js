@@ -1,4 +1,4 @@
-/* La voce «Cruscotto» nella barra laterale di chi installa.
+/* La voce «Cruscotto installatore» nella barra laterale di chi installa.
  *
  * Chi monta gdahome in quaranta case un Home Assistant ce l'ha **suo**, e da
  * li' vuole arrivare ai suoi impianti senza aprire un altro posto. Questo file
@@ -90,8 +90,8 @@ export class VoceDelCruscotto {
     if (esito.fatto) {
       this.registro.info(
         this.installatore
-          ? "la voce «Cruscotto» e' nella barra laterale di Home Assistant"
-          : "la voce «Cruscotto» non c'e', come chiede la scheda",
+          ? "la voce «Cruscotto installatore» e' nella barra laterale di Home Assistant"
+          : "la voce «Cruscotto installatore» non c'e', come chiede la scheda",
       );
       return esito;
     }
@@ -101,7 +101,7 @@ export class VoceDelCruscotto {
       if (this._fermo) return esito;
       esito = await this.dillo();
       if (esito.fatto) {
-        this.registro.info("la voce «Cruscotto» c'e', al secondo tentativo");
+        this.registro.info("la voce «Cruscotto installatore» c'e', al secondo tentativo");
         return esito;
       }
     }
@@ -109,7 +109,7 @@ export class VoceDelCruscotto {
      * l'integrazione e' un caso che esiste, e li' questo comando non
      * risponde mai. Non e' un guasto del ponte, e non deve sembrarlo. */
     this.registro.attenzione(
-      `non sono riuscito a mettere la voce «Cruscotto» nella barra laterale: ${esito.perche}`,
+      `non sono riuscito a mettere la voce «Cruscotto installatore» nella barra laterale: ${esito.perche}`,
     );
     return esito;
   }

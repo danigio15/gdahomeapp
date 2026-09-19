@@ -1,4 +1,4 @@
-"""La voce «Cruscotto» nella barra laterale di chi installa.
+"""La voce «Cruscotto installatore» nella barra laterale di chi installa.
 
 Chi monta gdahome in quaranta case un Home Assistant ce l'ha **suo**, e da li'
 vuole vedere i suoi impianti. La voce la accende il ponte — l'interruttore sta
@@ -83,7 +83,7 @@ async def test_la_voce_compare_e_porta_al_quadro(hass: HomeAssistant) -> None:
     assert not c.errori
     assert c.risultati == [{"mostrata": True, "cambiato": True}]
     pannello = hass.data["frontend_panels"][frontend_module.CRUSCOTTO_URL_PATH]
-    assert pannello.sidebar_title == "Cruscotto"
+    assert pannello.sidebar_title == "Cruscotto installatore"
     assert pannello.component_name == "custom"
     assert pannello.config["dove"] == DOVE
     # Non la vede chi entra in questa casa senza amministrarla.

@@ -119,10 +119,10 @@ TYPE_CHAT_OPEN = f"{DOMAIN}/chat/open"
 TYPE_CHAT_ANSWER = f"{DOMAIN}/chat/answer"
 TYPE_CHAT_DROP = f"{DOMAIN}/chat/drop"
 
-# La voce «Cruscotto» nella barra laterale. La accende il **ponte**, non una
-# pagina: l'interruttore sta nella scheda dell'add-on, e l'indirizzo del quadro
-# il ponte ce l'ha scritto dentro. Due posti dove dirlo vorrebbe dire due posti
-# da tenere d'accordo.
+# La voce «Cruscotto installatore» nella barra laterale. La accende il
+# **ponte**, non una pagina: l'interruttore sta nella scheda dell'add-on, e
+# l'indirizzo del quadro il ponte ce l'ha scritto dentro. Due posti dove dirlo
+# vorrebbe dire due posti da tenere d'accordo.
 TYPE_CRUSCOTTO_SET = f"{DOMAIN}/cruscotto/set"
 
 TYPE_TICKET_AUTH_START = f"{DOMAIN}/tickets/auth/start"
@@ -1313,7 +1313,7 @@ async def async_cruscotto_set(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Accende o spegne la voce «Cruscotto» nella barra laterale.
+    """Accende o spegne la voce «Cruscotto installatore» nella barra laterale.
 
     Lo dice il ponte, che l'interruttore ce l'ha nella sua scheda e l'indirizzo
     del quadro lo sa. Qui non si decide niente: si esegue, e si controlla che

@@ -1,4 +1,4 @@
-/* La voce «Cruscotto» detta a Home Assistant.
+/* La voce «Cruscotto installatore» detta a Home Assistant.
  *
  * Il rischio vero di questo pezzo non e' che non funzioni: e' che non funzioni
  * **la prima volta** e nessuno se ne accorga. All'accensione dell'add-on Home
