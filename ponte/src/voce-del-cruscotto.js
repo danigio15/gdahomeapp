@@ -1,34 +1,46 @@
 /* La voce «Cruscotto installatore» nella barra laterale di chi installa.
  *
  * Chi monta gdahome in quaranta case un Home Assistant ce l'ha **suo**, e da
- * li' vuole arrivare ai suoi impianti senza aprire un altro posto. Questo file
- * e' la riga che lo dice a Home Assistant.
+ * li' vuole arrivare ai suoi impianti senza aprire un altro posto.
  *
- * ─── Perche' lo dice il ponte e non l'integrazione ────────────────────────
+ * ─── Perche' la fa il ponte, e non l'integrazione ─────────────────────────
  *
- * Perche' l'interruttore sta nella scheda dell'add-on — `installatore` — e
- * l'indirizzo del quadro sta scritto nel ponte (`QUADRO_DI_DIFETTO`).
- * L'integrazione nessuna delle due cose la sa, e non parla ne' col Supervisor
- * ne' con l'add-on. Chiederle di scoprirlo vorrebbe dire o un secondo
- * interruttore nelle sue opzioni, o un canale nuovo verso il Supervisor: nel
- * primo caso due posti da tenere d'accordo, nel secondo una dipendenza che si
- * rompe dove il Supervisor non c'e'.
+ * Una stesura di questo pezzo la faceva registrare all'integrazione, con un
+ * comando WebSocket suo: sembrava il posto giusto, perche' i pannelli della
+ * barra laterale li registrano le integrazioni. Era sbagliato, e il motivo non
+ * era tecnico: **l'integrazione non arriva piu' nelle case**. La repository da
+ * cui si installava non esiste piu', la plancia arriva dall'add-on, e quello
+ * che la plancia chiedeva all'integrazione lo fa il ponte. Quel codice non
+ * faceva danno — era inerte — e non lo vedeva nessuno.
  *
- * Cosi' invece la catena e' corta e ha un capo solo: chi amministra accende
- * l'interruttore, il ponte lo legge e lo dice, l'integrazione appende la voce.
+ * Il ponte invece nella barra laterale ci scrive gia': le Plance le mette li'
+ * lui, con `lovelace/dashboards/create`. Una plancia di Lovelace **e'** una
+ * voce nella barra laterale, e dentro ci si mette quello che si vuole. Qui ci
+ * va una tessera `iframe` col cruscotto vero.
+ *
+ * ─── Perche' non una copia del cruscotto ──────────────────────────────────
+ *
+ * Perche' sarebbe un terzo posto dove vivono le stesse regole — cos'e' un
+ * impianto muto, quando un collaudo e' chiuso — e tre posti che dicono la
+ * stessa cosa prima o poi ne dicono tre diverse. Qui si mostra quello che
+ * esiste gia'.
  *
  * ─── E perche' si riprova ─────────────────────────────────────────────────
  *
- * All'accensione dell'add-on Home Assistant sta spesso ancora partendo, e
- * l'integrazione i suoi comandi non li ha ancora registrati: la prima volta
- * torna «comando sconosciuto». Aspettare qui vorrebbe dire tenere giu' il
- * ponte per una voce di menu; non riprovare vorrebbe dire una voce che compare
- * solo al riavvio dopo, cioe' un installatore che accende l'interruttore, non
- * vede niente e pensa che sia rotto.
+ * All'accensione dell'add-on Home Assistant sta spesso ancora partendo, e i
+ * comandi di Lovelace arrivano a nessuno. Aspettare qui vorrebbe dire tenere
+ * giu' il ponte per una voce di menu; non riprovare vorrebbe dire una voce che
+ * compare solo al riavvio dopo, cioe' un installatore che accende
+ * l'interruttore, non vede niente e pensa che sia rotto. E' lo stesso motivo,
+ * e la stessa cura, delle Plance in `plance-in-casa.js`.
  */
 
-/** Il comando dell'integrazione. */
-export const COMANDO = "dashboardmodern/cruscotto/set";
+/** Dove sta, nella barra laterale. Home Assistant vuole un trattino dentro. */
+export const DOVE = "gdahome-cruscotto";
+
+/** Come si chiama, e con che segno. */
+export const TITOLO = "Cruscotto installatore";
+export const SEGNO = "mdi:gauge";
 
 /** Quanto si aspetta fra un tentativo e l'altro, in millisecondi. */
 export const ATTESE = [20_000, 60_000, 300_000];
@@ -37,8 +49,7 @@ export const ATTESE = [20_000, 60_000, 300_000];
  *
  * `unref` e' voluto: un ritentativo in coda non deve tenere sveglio l'add-on
  * che si sta spegnendo. Costa pero' che sotto le prove il giro finisca prima
- * della promessa — «Promise resolution is still pending but the event loop has
- * already resolved» — e per questo si puo' sostituire dal di fuori invece di
+ * della promessa, e per questo si puo' sostituire dal di fuori invece di
  * togliere dal codice vero una cosa che al codice vero serve. */
 const ASPETTA = (quanto) =>
   new Promise((ok) => {
@@ -57,6 +68,31 @@ export class VoceDelCruscotto {
   }
 
   /**
+   * La pagina che sta dentro la voce: una sola, a pagina intera, col cruscotto.
+   *
+   * `panel: true` e non una griglia: il cruscotto e' una pagina, e dentro una
+   * colonna larga quattrocento punti sarebbe illeggibile.
+   */
+  vista() {
+    return {
+      views: [
+        {
+          title: TITOLO,
+          panel: true,
+          cards: [{ type: "iframe", url: this.dove, aspect_ratio: "100%" }],
+        },
+      ],
+    };
+  }
+
+  /** Quella che c'e' gia', se c'e'. */
+  async quellaCheCE() {
+    const dentro = await this.casa.chiedi({ type: "lovelace/dashboards/list" });
+    const elenco = Array.isArray(dentro) ? dentro : [];
+    return elenco.find((una) => String(una?.url_path) === DOVE) ?? null;
+  }
+
+  /**
    * Lo dice una volta. Torna `{fatto, perche}`.
    *
    * Spegnere l'interruttore si dice **lo stesso**, e non e' uno spreco: e'
@@ -65,18 +101,66 @@ export class VoceDelCruscotto {
   async dillo() {
     if (!this.casa?.chiedi) return { fatto: false, perche: "non c'e' nessuno a cui dirlo" };
     try {
-      const detto = await this.casa.chiedi({
-        type: COMANDO,
-        installatore: this.installatore,
-        dove: this.installatore ? this.dove : "",
-      });
-      if (detto?.success === false) {
-        return { fatto: false, perche: detto?.error?.message || "l'integrazione ha detto di no" };
+      const sua = await this.quellaCheCE();
+      if (!this.installatore) {
+        if (sua)
+          await this.casa.chiedi({ type: "lovelace/dashboards/delete", dashboard_id: sua.id });
+        return { fatto: true, perche: "" };
       }
+      if (!this.dove.startsWith("https://")) {
+        return { fatto: false, perche: "l'indirizzo del quadro non e' https" };
+      }
+      if (!sua) {
+        await this.casa.chiedi({
+          type: "lovelace/dashboards/create",
+          url_path: DOVE,
+          title: TITOLO,
+          icon: SEGNO,
+          show_in_sidebar: true,
+          /* Solo chi amministra: questa voce porta agli impianti dei clienti
+           * di qualcuno, e Home Assistant in casa lo aprono anche i
+           * familiari. */
+          require_admin: true,
+        });
+      } else if (String(sua.title || "") !== TITOLO || !sua.require_admin) {
+        await this.casa.chiedi({
+          type: "lovelace/dashboards/update",
+          dashboard_id: sua.id,
+          title: TITOLO,
+          require_admin: true,
+        });
+      }
+      await this.laVista();
       return { fatto: true, perche: "" };
     } catch (errore) {
       return { fatto: false, perche: errore?.message || String(errore) };
     }
+  }
+
+  /**
+   * La pagina, scritta **solo se e' cambiata**.
+   *
+   * Non e' per risparmiare una scrittura: salvare la configurazione di una
+   * plancia manda a tutte le pagine aperte di Home Assistant un
+   * `lovelace_updated`, e quelle si ridisegnano. Senza questo controllo ogni
+   * riavvio dell'add-on farebbe lampeggiare il cruscotto sotto gli occhi di
+   * chi lo stava guardando, per riscriverci dentro la stessa cosa.
+   */
+  async laVista() {
+    const voluta = this.vista();
+    let dentro = null;
+    try {
+      dentro = await this.casa.chiedi({ type: "lovelace/config", url_path: DOVE });
+    } catch (_errore) {
+      dentro = null;
+    }
+    if (dentro && JSON.stringify(dentro) === JSON.stringify(voluta)) return "c'era";
+    await this.casa.chiedi({
+      type: "lovelace/config/save",
+      url_path: DOVE,
+      config: voluta,
+    });
+    return dentro ? "riscritta" : "scritta";
   }
 
   /**
@@ -90,8 +174,8 @@ export class VoceDelCruscotto {
     if (esito.fatto) {
       this.registro.info(
         this.installatore
-          ? "la voce «Cruscotto installatore» e' nella barra laterale di Home Assistant"
-          : "la voce «Cruscotto installatore» non c'e', come chiede la scheda",
+          ? `la voce «${TITOLO}» e' nella barra laterale di Home Assistant`
+          : `la voce «${TITOLO}» non c'e', come chiede la scheda`,
       );
       return esito;
     }
@@ -101,15 +185,12 @@ export class VoceDelCruscotto {
       if (this._fermo) return esito;
       esito = await this.dillo();
       if (esito.fatto) {
-        this.registro.info("la voce «Cruscotto installatore» c'e', al secondo tentativo");
+        this.registro.info(`la voce «${TITOLO}» c'e', al secondo tentativo`);
         return esito;
       }
     }
-    /* Detto una volta sola, e senza allarmare: un add-on installato senza
-     * l'integrazione e' un caso che esiste, e li' questo comando non
-     * risponde mai. Non e' un guasto del ponte, e non deve sembrarlo. */
     this.registro.attenzione(
-      `non sono riuscito a mettere la voce «Cruscotto installatore» nella barra laterale: ${esito.perche}`,
+      `non sono riuscito a mettere la voce «${TITOLO}» nella barra laterale: ${esito.perche}`,
     );
     return esito;
   }

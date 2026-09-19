@@ -22,13 +22,6 @@ DATA_VIA_STABILE_DELLA_CARD = "via_stabile_della_card"
 DATA_PANEL_PATHS = "panel_paths"
 PANEL_URL_PATH = DOMAIN
 PANEL_COMPONENT_NAME = "dashboardmodern-panel"
-# La voce «Cruscotto installatore»: c'e' solo nell'Home Assistant di chi
-# installa, e ce la
-# mette il ponte dicendolo (`dashboardmodern/cruscotto/set`). Qui si tiene a
-# mente dove punta, per non riregistrarla identica a ogni giro del ponte.
-DATA_CRUSCOTTO_DOVE = "cruscotto_dove"
-CRUSCOTTO_URL_PATH = "gdahome-cruscotto"
-CRUSCOTTO_COMPONENT_NAME = "dashboardmodern-cruscotto"
 _LOGGER = logging.getLogger(__name__)
 
 STATIC_URL_PATH = "/dashboardmodern_static"
@@ -56,7 +49,7 @@ ASSET_SUFFIXES = frozenset(
         ".woff",
     }
 )
-RUNTIME_ROOT_FILES = frozenset({"panel.js", "dashboard-card.js", "cruscotto.js"})
+RUNTIME_ROOT_FILES = frozenset({"panel.js", "dashboard-card.js"})
 RUNTIME_DIRECTORIES = ("legacy", "src")
 # Cosa resta fuori dalla firma degli asset. Le cartelle si servono intere —
 # vedi `_ensure_static_registered` — ma la firma guarda solo i file che il
@@ -1726,78 +1719,3 @@ async def async_unregister_frontend_entry(hass: HomeAssistant, entry_id: str) ->
     path = paths.pop(entry_id, None)
     if path:
         _remove_panel(hass, path)
-
-
-# ─── La voce «Cruscotto installatore» ───────────────────────────────────────
-#
-# Home Assistant e' di chi lo installa, e questo e' il suo. Il vincolo di
-# riservatezza del progetto vale per l'Home Assistant dei **clienti** — li'
-# dentro un elenco di altri clienti non ci va mai — e qui non siamo li'.
-#
-# Chi accende la voce non e' questo file e non e' l'integrazione: e' il ponte,
-# che l'interruttore ce l'ha nella sua scheda e l'indirizzo del quadro lo sa
-# gia'. Un secondo interruttore qui vorrebbe dire due posti da tenere
-# d'accordo, e prima o poi due posti che dicono cose diverse.
-
-
-async def async_mostra_il_cruscotto(hass: HomeAssistant, dove: str) -> bool:
-    """Appende la voce alla barra laterale. Torna `True` se ha cambiato qualcosa.
-
-    Si puo' richiamare quanto si vuole: il ponte lo dice a ogni avvio, e
-    riregistrare un pannello identico vorrebbe dire farlo ricaricare sotto le
-    mani di chi lo sta guardando.
-
-    `require_admin` e' vero e non e' pignoleria: questa voce porta agli impianti
-    dei clienti di qualcuno, e in una casa Home Assistant lo aprono anche i
-    familiari.
-    """
-    from homeassistant.components import frontend
-
-    domain_data: dict[str, Any] = hass.data.setdefault(DOMAIN, {})
-    prima = domain_data.get(DATA_CRUSCOTTO_DOVE)
-    if prima == dove:
-        return False
-
-    # Il modulo del pannello e' uno degli asset del runtime: se i montaggi non
-    # ci sono ancora, la voce comparirebbe e la pagina resterebbe bianca.
-    asset_version = await hass.async_add_executor_job(_frontend_asset_version)
-    static_url_path = f"{STATIC_URL_PATH}/{asset_version}"
-    await _ensure_static_registered(hass, domain_data, static_url_path)
-
-    # Solo i parametri che la firma vecchia accetta. Il perche' sta scritto per
-    # esteso in `_register_or_update_panel`, e costa un'installazione che «non
-    # parte» su ogni casa ferma a una Home Assistant precedente alla 2026.3.
-    frontend.async_register_built_in_panel(
-        hass,
-        component_name="custom",
-        sidebar_title="Cruscotto installatore",
-        sidebar_icon="mdi:gauge",
-        frontend_url_path=CRUSCOTTO_URL_PATH,
-        config={
-            "dove": dove,
-            "_panel_custom": {
-                "name": f"{CRUSCOTTO_COMPONENT_NAME}-{asset_version[:8]}",
-                "embed_iframe": False,
-                "trust_external": False,
-                "module_url": f"{static_url_path}/cruscotto.js",
-            },
-        },
-        require_admin=True,
-        update=prima is not None,
-    )
-    domain_data[DATA_CRUSCOTTO_DOVE] = dove
-    return True
-
-
-def togli_il_cruscotto(hass: HomeAssistant) -> bool:
-    """Toglie la voce. Torna `True` se c'era.
-
-    Spegnere l'interruttore deve far sparire la voce **subito**, non al
-    prossimo riavvio: una voce che porta a un posto che non si vuole piu'
-    mostrare e' peggio di nessuna voce.
-    """
-    domain_data: dict[str, Any] | None = hass.data.get(DOMAIN)
-    if domain_data is None or domain_data.pop(DATA_CRUSCOTTO_DOVE, None) is None:
-        return False
-    _remove_panel(hass, CRUSCOTTO_URL_PATH)
-    return True

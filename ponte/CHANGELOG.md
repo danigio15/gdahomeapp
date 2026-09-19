@@ -11,6 +11,24 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.2
+
+**Per chi installa: il cruscotto anche nella barra laterale di Home Assistant.**
+
+Con l'interruttore «installatore» acceso compare una voce nuova,
+**Cruscotto installatore**, che apre gli impianti che hai montato senza uscire
+da Home Assistant. È la stessa cosa che la 1.5.1 aveva messo nell'app: adesso
+c'è in tutti e due i posti, e in tutti e due mostra il cruscotto vero — non una
+copia, che prima o poi racconterebbe un'altra storia.
+
+La voce la vede solo chi amministra: porta agli impianti dei clienti di
+qualcuno, e Home Assistant in casa lo aprono anche i familiari. Spegnendo
+l'interruttore sparisce subito.
+
+*Nella 1.5.1 quella voce c'era già, ma nel posto sbagliato: stava
+nell'integrazione DashboardModern, che dalla 1.4 non arriva più nelle case —
+la plancia viene dall'add-on. Non faceva danno e non la vedeva nessuno.*
+
 ## 1.5.1
 
 **Se la casa te l'ha montata un installatore, adesso può accorgersi da solo
