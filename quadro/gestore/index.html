@@ -117,33 +117,26 @@
         flex-wrap: wrap;
       }
 
+      /* Lo spazio per il tasto del menu di Home Assistant.
+         Questa pagina si apre anche **dentro** Home Assistant, in un riquadro
+         che ci mette sopra un tasto per riaprire il menu. Quel tasto galleggia:
+         sta in un altro documento, non sa cosa ha sotto di se' e non gli fa
+         spazio. Finora si e' provato a scansarlo — prima il marchio che ci
+         finiva sotto, poi il tasto spostato a destra dove si sedeva sulla nav —
+         e scansare non funziona, perche' da una parte o dall'altra sotto c'e'
+         sempre qualcosa.
+         Quindi non lo si scansa: gli si fa **spazio**. Quaranta punti piu' otto
+         di stacco, e solo quando questa pagina sta davvero dentro un riquadro
+         — aperta nel browser quel tasto non c'e', e un buco in cima sarebbe
+         solo un buco. */
+      :root[data-dentro] .testata {
+        padding-inline-start: 56px;
+      }
+
       .marchio {
         display: flex;
         align-items: center;
         gap: 13px;
-      }
-
-      /* Il bollo: lo stesso della console degli installatori, così le due
-       * pagine si riconoscono come una cosa sola. */
-      .bollo {
-        width: 38px;
-        height: 38px;
-        border-radius: 11px;
-        background: linear-gradient(150deg, var(--azzurro), var(--azzurro-scuro));
-        display: grid;
-        place-items: center;
-        gap: 3px;
-        grid-template-columns: 1fr 1fr;
-        padding: 9px;
-        flex: none;
-      }
-
-      .bollo i {
-        display: block;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.92);
-        border-radius: 2px;
       }
 
       .nomi b {
@@ -587,8 +580,10 @@
   <body>
     <header>
       <div class="testata">
+        <!-- Niente bollo, come nella console degli installatori e per la stessa
+             ragione: questa pagina si apre dentro Home Assistant, e il tasto
+             del menu galleggia proprio li' sopra. -->
         <div class="marchio">
-          <span class="bollo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <span class="nomi">
             <b>Gestione installatori</b>
             <span id="sottotitolo"></span>
@@ -608,6 +603,19 @@
        * si vedono da qui, e non è una cosa da aggiungere un giorno: è la riga
        * per cui un installatore può fidarsi a metterci dentro i suoi clienti.
        * ─────────────────────────────────────────────────────────────────── */
+
+      /* Se questa pagina sta dentro un riquadro di Home Assistant.
+       *
+       * Si guarda e basta: `window.top` di un'altra origine non si può
+       * leggere, e il confronto solleva — in quel caso la risposta è comunque
+       * «sì», perché un'origine diversa vuol dire proprio che qualcun altro ci
+       * ha messo dentro. Serve a una cosa sola: lasciare in cima lo spazio per
+       * il tasto del menu, che sta in quell'altro documento. */
+      try {
+        if (window.self !== window.top) document.documentElement.dataset.dentro = "sì";
+      } catch (_altroDominio) {
+        document.documentElement.dataset.dentro = "sì";
+      }
 
       const DOVE_STA_LA_CHIAVE = "gdahome.quadro.gestore";
       let chiave = "";

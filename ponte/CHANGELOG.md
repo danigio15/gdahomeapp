@@ -13,6 +13,22 @@ sono due cose.
 
 ## 1.5.7
 
+**Via il bollo dalla testata del cruscotto e della gestione**, e il tasto del
+menu di Home Assistant torna a sinistra, dov'è quello di Home Assistant e dove
+uno lo cerca.
+
+Ci si era sbattuto due volte. Quel tasto *galleggia*: sta nel documento di
+fuori, sopra la pagina, e la pagina non sa di averlo addosso. A sinistra si
+sedeva sopra il bollo; spostato a destra, si è seduto sulla nav. Scansarlo non
+funziona — da una parte o dall'altra, sotto c'è sempre qualcosa.
+
+Adesso non lo si scansa: **gli si fa spazio.** La pagina si accorge da sola di
+stare dentro un riquadro e gli lascia il posto in cima, e solo lì: aperta in un
+browser quel tasto non c'è, e un buco sarebbe solo un buco. Il bollo resta dove
+serve davvero — accanto agli aggiornamenti di gdahome, dove distingue la roba
+nostra senza scaricare niente.
+
+
 **Dal cruscotto si installa.** Era il pezzo che mancava: il quadro faceva
 vedere cosa c'era da aggiornare in ogni casa e non c'era modo di farlo. Il
 tasto «Installa su N case» stava lì da un anno senza essere agganciato a

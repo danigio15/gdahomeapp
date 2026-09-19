@@ -220,6 +220,22 @@
         flex-wrap: wrap;
       }
 
+      /* Lo spazio per il tasto del menu di Home Assistant.
+         Questa pagina si apre anche **dentro** Home Assistant, in un riquadro
+         che ci mette sopra un tasto per riaprire il menu. Quel tasto galleggia:
+         sta in un altro documento, non sa cosa ha sotto di se' e non gli fa
+         spazio. Finora si e' provato a scansarlo — prima il marchio che ci
+         finiva sotto, poi il tasto spostato a destra dove si sedeva sulla nav —
+         e scansare non funziona, perche' da una parte o dall'altra sotto c'e'
+         sempre qualcosa.
+         Quindi non lo si scansa: gli si fa **spazio**. Quaranta punti piu' otto
+         di stacco, e solo quando questa pagina sta davvero dentro un riquadro
+         — aperta nel browser quel tasto non c'e', e un buco in cima sarebbe
+         solo un buco. */
+      :root[data-dentro] .testata {
+        padding-inline-start: 56px;
+      }
+
       .marchio {
         display: flex;
         align-items: center;
@@ -227,8 +243,10 @@
         min-width: 0;
       }
 
-      /* Il bollo del marchio: un quadratino con la barra, come un quadro
-       * elettrico visto da lontano. */
+      /* Il bollo: un quadratino con la barra, come un quadro elettrico visto da
+       * lontano. Non sta piu' in testata — se lo mangiava il tasto del menu di
+       * Home Assistant — e serve al segno degli aggiornamenti nostri, dove
+       * distingue gdahome da tutto il resto senza andare a scaricare niente. */
       .bollo {
         width: 30px;
         height: 30px;
@@ -1705,8 +1723,14 @@
   <body>
     <header>
       <div class="testata">
+        <!-- Qui c'era il bollo del marchio, e non c'e' piu'.
+             Questa pagina si apre **dentro Home Assistant**, in un riquadro che
+             ci mette sopra il suo tasto del menu: e quel tasto galleggia, non
+             sa cosa ha sotto e non gli fa spazio. Il bollo gli finiva sotto, e
+             un marchio coperto a meta' e' peggio di nessun marchio. Il titolo
+             dice gia' dove sei, e il bollo resta dove serve — accanto agli
+             aggiornamenti di gdahome, dove distingue la roba nostra. -->
         <div class="marchio">
-          <span class="bollo" aria-hidden="true"><i></i><i class="mezzo"></i><i></i></span>
           <span class="nomi">
             <b>Cruscotto installatore</b>
             <span id="chi"></span>
@@ -1742,6 +1766,19 @@
        * tutti i giorni, e ribattere una chiave lunga tutti i giorni finisce con
        * una chiave corta. Un tasto la butta via.
        * ─────────────────────────────────────────────────────────────────── */
+      /* Se questa pagina sta dentro un riquadro di Home Assistant.
+       *
+       * Si guarda e basta: `window.top` di un'altra origine non si puo'
+       * leggere, e il confronto solleva — in quel caso la risposta e' comunque
+       * «si'», perche' un'origine diversa vuol dire proprio che qualcun altro
+       * ci ha messo dentro. Serve a una cosa sola: lasciare in cima lo spazio
+       * per il tasto del menu, che sta in quell'altro documento. */
+      try {
+        if (window.self !== window.top) document.documentElement.dataset.dentro = "sì";
+      } catch (_altroDominio) {
+        document.documentElement.dataset.dentro = "sì";
+      }
+
       const DOVE_STA_LA_CHIAVE = "gdahome.quadro.chiave";
 
       let chiave = "";
