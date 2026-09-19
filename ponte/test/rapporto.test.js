@@ -408,10 +408,15 @@ test("la fabbrica mette insieme quello che c'e', e chiama ogni volta", async () 
   assert.equal(chiesto.filter((che) => che === "config/entity_registry/list").length, 1);
 });
 
-test("i registri che non rispondono lasciano il rapporto con i nomi delle entita'", async () => {
+test("i registri che non rispondono lasciano il rapporto senza il conto dei dispositivi", async () => {
   /* Un Home Assistant che i registri non li da' — troppo vecchio, o un segno
-   * senza permessi — non deve far cadere il rapporto ne' fargli perdere il
-   * riquadro: si manda quello che si sa. */
+   * senza permessi — non deve far cadere il rapporto: si manda tutto il
+   * resto, e su quella riga si dice «non lo so».
+   *
+   * Prima si ripiegava sui nomi delle entita', e quel ripiego e' esattamente
+   * quello che in una casa vera ha prodotto centottanta «dispositivi non
+   * collegati» che dispositivi non erano. Senza i registri la domanda non si
+   * puo' fare, e una risposta inventata e' peggio di nessuna risposta. */
   const fabbrica = fabbricaIlRapporto({
     identita: { casa: "casa_abc" },
     casa: {
@@ -427,8 +432,13 @@ test("i registri che non rispondono lasciano il rapporto con i nomi delle entita
   });
 
   const foglio = await fabbrica();
-  assert.equal(foglio.entita.giu, 1);
-  assert.deepEqual(foglio.entita.nomi, ["pompa calore"]);
+  assert.equal(foglio.entita.giu, null);
+  assert.equal(foglio.entita.totali, null);
+  assert.equal(foglio.entita.dispositivi, null);
+  assert.deepEqual(foglio.entita.nomi, []);
+  /* E il resto del rapporto c'e' tutto: e' una riga che non si sa, non un
+   * rapporto caduta. */
+  assert.equal(foglio.casa, "casa_abc");
 });
 
 test("mezza rapporto e' meglio di nessuna, e quel giorno e' la piu' importante", async () => {
