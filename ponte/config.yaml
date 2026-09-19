@@ -43,7 +43,7 @@ name: gdahome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.5.2"
+version: "1.5.3"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
@@ -212,6 +212,18 @@ options:
   # nel browser di chi la digita: cosi' non finisce sul disco di nessuna casa —
   # nemmeno della tua, se la apri dal telefono di qualcun altro.
   installatore: false
+  # Questo Home Assistant e' di chi **tiene** il quadro.
+  #
+  # E' una casa sola al mondo, ed e' l'altra meta' dell'interruttore qui sopra:
+  # quello e' di chi gli impianti li monta, questo di chi decide **chi** puo'
+  # montarli. Acceso, nella barra laterale compare «Gestione installatori», da
+  # cui si aggiungono gli installatori e si mettono i limiti.
+  #
+  # **La chiave di gestione non si scrive qui.** La chiede la pagina e resta nel
+  # browser, come quella della flotta: l'interruttore dice soltanto se la voce
+  # c'e'. Chi lo accendesse senza avere la chiave si troverebbe una pagina che
+  # gliela chiede e basta.
+  gestore: false
   registro: info
 
 schema:
@@ -232,4 +244,5 @@ schema:
   quadro: str?
   quadro_ogni: int(5,1440)
   installatore: bool
+  gestore: bool
   registro: list(debug|info|attenzione|errore)

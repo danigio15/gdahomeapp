@@ -52,6 +52,13 @@ configuration:
       matching entry. Turn it on in your own Home Assistant, not in a client's.
       The fleet key is not written here: the page asks for it and it stays in
       the browser of whoever types it.
+  gestore:
+    name: This Home Assistant belongs to whoever keeps the panel
+    description: >-
+      Leave it off. There is one such home in the world: on, the sidebar gains
+      «Gestione installatori», where you add installers and set their limits.
+      The management key is not written here: the page asks for it and it stays
+      in the browser.
   registro:
     name: The log
     description: How much it writes in the add-on's log.

@@ -1,6 +1,7 @@
-/* La voce «Cruscotto installatore» messa nella barra laterale di Home Assistant.
+/* Le due voci di gdahome nella barra laterale di Home Assistant.
  *
- * E' una plancia di Lovelace, e non un pannello di un'integrazione. La prima
+ * Sono due — il cruscotto di chi installa e la gestione di chi tiene il quadro
+ * — e tutte e due sono plance di Lovelace, non pannelli di un'integrazione. La prima
  * stesura lo faceva fare all'integrazione — sembrava il posto giusto, perche' i
  * pannelli li registrano le integrazioni — e non arrivava a nessuno:
  * l'integrazione nelle case non ci va piu'. Quello che segue prova la strada
@@ -22,9 +23,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { DOVE, TITOLO, VoceDelCruscotto } from "../src/voce-del-cruscotto.js";
+import { IL_CRUSCOTTO, LA_GESTIONE, VoceNellaBarra } from "../src/voci-nella-barra.js";
 
-const QUADRO = "https://quadro.gdahome.org/console/";
+const QUADRO = "https://quadro.gdahome.org";
 
 /* Una Home Assistant finta: tiene le plance in una lista, e registra tutto
  * quello che le si chiede. */
@@ -47,7 +48,10 @@ function casaFinta({ gia = [], configurazione = null, rompe = null } = {}) {
         case "lovelace/dashboards/list":
           return plance;
         case "lovelace/dashboards/create": {
-          const nuova = { id: "d1", ...comando };
+          /* Un identificativo diverso per ognuna, come fa Home Assistant.
+           * Dandone uno solo a tutte, cancellarne una ne toglieva un'altra — e
+           * la prova delle due voci se n'e' accorta. */
+          const nuova = { id: `d${plance.length + 1}`, ...comando };
           plance.push(nuova);
           return nuova;
         }
@@ -78,10 +82,11 @@ const zitto = { info() {}, attenzione() {}, errore() {} };
 const aspettaDavvero = (quanto) => new Promise((ok) => setTimeout(ok, quanto));
 
 const laVoce = (casa, dentro = {}) =>
-  new VoceDelCruscotto({
+  new VoceNellaBarra({
     casa,
-    installatore: true,
-    dove: QUADRO,
+    quale: IL_CRUSCOTTO,
+    acceso: true,
+    quadro: QUADRO,
     registro: zitto,
     aspetta: aspettaDavvero,
     ...dentro,
@@ -93,15 +98,15 @@ test("acceso, la voce compare nella barra laterale col cruscotto dentro", async 
 
   const fatta = casa.chieste.find((c) => c.type === "lovelace/dashboards/create");
   assert.ok(fatta, "non ha creato nessuna plancia");
-  assert.equal(fatta.url_path, DOVE);
-  assert.equal(fatta.title, TITOLO);
+  assert.equal(fatta.url_path, IL_CRUSCOTTO.dove);
+  assert.equal(fatta.title, IL_CRUSCOTTO.titolo);
   assert.equal(fatta.show_in_sidebar, true);
   assert.equal(fatta.require_admin, true, "la vedrebbero tutti quelli che entrano");
 
   /* E dentro c'e' il cruscotto vero, non una copia rifatta. */
   const carta = casa.salvata.views[0].cards[0];
   assert.equal(carta.type, "iframe");
-  assert.equal(carta.url, QUADRO);
+  assert.equal(carta.url, `${QUADRO}/console/`);
   assert.equal(casa.salvata.views[0].panel, true, "a pagina intera, non una tessera");
 });
 
@@ -123,7 +128,7 @@ test("ridirlo uguale non riscrive niente: se no il tablet in cucina lampeggia", 
 test("cambiando l'indirizzo del quadro la pagina si riscrive", async () => {
   const casa = casaFinta();
   await laVoce(casa).dillo();
-  await laVoce(casa, { dove: "https://altro.example/console/" }).dillo();
+  await laVoce(casa, { quadro: "https://altro.example" }).dillo();
 
   assert.equal(casa.salvata.views[0].cards[0].url, "https://altro.example/console/");
   assert.equal(casa.chieste.filter((c) => c.type === "lovelace/config/save").length, 2);
@@ -134,32 +139,32 @@ test("spegnere l'interruttore toglie la voce, subito", async () => {
   await laVoce(casa).dillo();
   assert.equal(casa.plance.length, 1);
 
-  assert.equal((await laVoce(casa, { installatore: false }).dillo()).fatto, true);
+  assert.equal((await laVoce(casa, { acceso: false }).dillo()).fatto, true);
   assert.equal(casa.plance.length, 0, "la voce e' rimasta appesa");
 });
 
 test("spento e senza voce, non si lamenta e non fa niente", async () => {
   const casa = casaFinta();
-  assert.equal((await laVoce(casa, { installatore: false }).dillo()).fatto, true);
+  assert.equal((await laVoce(casa, { acceso: false }).dillo()).fatto, true);
   assert.equal(casa.chieste.filter((c) => c.type.startsWith("lovelace/dashboards/d")).length, 0);
 });
 
 test("una plancia rimasta con un titolo vecchio si raddrizza", async () => {
   const casa = casaFinta({
-    gia: [{ id: "d9", url_path: DOVE, title: "Cruscotto", require_admin: false }],
+    gia: [{ id: "d9", url_path: IL_CRUSCOTTO.dove, title: "Cruscotto", require_admin: false }],
   });
   await laVoce(casa).dillo();
 
   const raddrizzata = casa.chieste.find((c) => c.type === "lovelace/dashboards/update");
   assert.ok(raddrizzata, "l'ha lasciata com'era");
-  assert.equal(raddrizzata.title, TITOLO);
+  assert.equal(raddrizzata.title, IL_CRUSCOTTO.titolo);
   assert.equal(raddrizzata.require_admin, true, "restava aperta a tutti");
 });
 
 test("un indirizzo che non e' https non si mette in nessuna pagina", async () => {
-  for (const storto of ["", "http://quadro.gdahome.org/console/", "javascript:alert(1)"]) {
+  for (const storto of ["", "http://quadro.gdahome.org", "javascript:alert(1)"]) {
     const casa = casaFinta();
-    const esito = await laVoce(casa, { dove: storto }).dillo();
+    const esito = await laVoce(casa, { quadro: storto }).dillo();
     assert.equal(esito.fatto, false, `ha accettato «${storto}»`);
     assert.equal(casa.plance.length, 0);
   }
@@ -206,11 +211,50 @@ test("fermarlo interrompe i tentativi: il ponte si abbassa e non resta niente di
 });
 
 test("senza nessuno a cui dirlo non si schianta", async () => {
-  const voce = new VoceDelCruscotto({
+  const voce = new VoceNellaBarra({
     casa: null,
-    installatore: true,
-    dove: QUADRO,
+    quale: IL_CRUSCOTTO,
+    acceso: true,
+    quadro: QUADRO,
     registro: zitto,
   });
   assert.equal((await voce.dillo()).fatto, false);
+});
+
+test("le due voci sono due, e non si pestano i piedi", async () => {
+  /* Stesso filo, stessa macchina, due plance diverse: se si contendessero
+   * l'indirizzo, accendere la gestione spegnerebbe il cruscotto. */
+  const casa = casaFinta();
+  await laVoce(casa).dillo();
+  await laVoce(casa, { quale: LA_GESTIONE }).dillo();
+
+  assert.equal(casa.plance.length, 2);
+  assert.deepEqual(
+    casa.plance.map((una) => una.url_path).sort(),
+    [IL_CRUSCOTTO.dove, LA_GESTIONE.dove].sort(),
+  );
+});
+
+test("la gestione apre /gestore/, non la console", async () => {
+  /* Le due pagine del quadro sono due, e mandare chi tiene il quadro sulla
+   * console dell'installatore vorrebbe dire una voce che non fa quello che
+   * dice. */
+  const casa = casaFinta();
+  await laVoce(casa, { quale: LA_GESTIONE }).dillo();
+
+  assert.equal(casa.salvata.views[0].cards[0].url, `${QUADRO}/gestore/`);
+  assert.equal(casa.salvata.views[0].title, LA_GESTIONE.titolo);
+});
+
+test("spegnere una non tocca l'altra", async () => {
+  const casa = casaFinta();
+  await laVoce(casa).dillo();
+  await laVoce(casa, { quale: LA_GESTIONE }).dillo();
+  await laVoce(casa, { quale: LA_GESTIONE, acceso: false }).dillo();
+
+  assert.deepEqual(
+    casa.plance.map((una) => una.url_path),
+    [IL_CRUSCOTTO.dove],
+    "spegnendo la gestione se n'e' andato anche il cruscotto",
+  );
 });

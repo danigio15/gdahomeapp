@@ -11,6 +11,27 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.3
+
+**Per chi tiene il quadro: la gestione degli installatori nella barra laterale.**
+
+C'è un interruttore nuovo nella scheda dell'add-on, «Questo Home Assistant è di
+chi tiene il quadro». Acceso, nella barra laterale compare **Gestione
+installatori**: da lì aggiungi un installatore, gli dai il suo limite, gli rifai
+la chiave se la perde, o lo togli.
+
+È l'altra metà dell'interruttore della 1.5.2: quello è di chi gli impianti li
+monta, questo di chi decide chi può montarli. È una casa sola al mondo, e sugli
+Home Assistant di tutti gli altri quella voce non c'è — non nascosta: assente.
+
+**Nessuna delle due chiavi si scrive nella scheda dell'add-on**, né quella della
+flotta né quella di gestione: le chiede la pagina, e restano nel browser di chi
+le digita. L'interruttore dice soltanto se la voce c'è, e chi lo accendesse
+senza avere la chiave si troverebbe una pagina che gliela chiede e basta.
+
+Da quella pagina, come sempre, si vede **quanti** impianti ha ognuno e non
+quali.
+
 ## 1.5.2
 
 **Per chi installa: il cruscotto anche nella barra laterale di Home Assistant.**

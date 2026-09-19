@@ -180,6 +180,9 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
     installatore:
       String(process.env.PONTE_INSTALLATORE ?? scritte.installatore ?? "") === "true" ||
       scritte.installatore === true,
+    gestore:
+      String(process.env.PONTE_GESTORE ?? scritte.gestore ?? "") === "true" ||
+      scritte.gestore === true,
     /* Il quadro di chi ha installato l'impianto: dove mandare il rapporto, e
      * con che presentarsi.
      *
