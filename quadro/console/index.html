@@ -941,21 +941,29 @@
         white-space: nowrap;
       }
 
-      .impronte {
+      .nomiGiu {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
         margin-bottom: 13px;
       }
 
-      .impronte span {
-        font-family: ui-monospace, "SF Mono", Menlo, monospace;
-        font-size: 0.8rem;
+      /* Niente monospaziato e niente `nowrap`: qui dentro non ci sono piu'
+         quattro cifre, ci sono nomi come «Termostato del soggiorno», e su un
+         telefono uno solo di quelli e' piu' largo dello schermo. */
+      .nomiGiu span {
+        font-size: 0.85rem;
         font-weight: 600;
         padding: 5px 11px;
         border-radius: 9px;
         background: var(--alone-male);
         color: var(--male);
+      }
+
+      .nomiGiu span.eAltri {
+        background: transparent;
+        color: var(--lieve);
+        font-weight: 500;
       }
 
       .nota {
@@ -1784,6 +1792,36 @@
       const staLavorando = (c) => Boolean(c && c.lavoro && c.lavoro.stato === "in corso");
       const daFare = (c) => (c.aggiornamenti?.elenco || []).filter((uno) => uno.installabile);
 
+      /* Quante entita' non rispondono.
+       *
+       * Due nomi per lo stesso numero: `giu` e' quello di adesso, `sparite`
+       * quello dei ponti fino alla 1.5.6. Le due righe stanno qui per il tempo
+       * che ci mette l'ultima casa ad aggiornarsi: una casa ferma a ieri non
+       * deve far sparire il riquadro, deve solo mostrare quello che sa. */
+      const quantiGiu = (c) => c?.entita?.giu ?? c?.entita?.sparite ?? 0;
+
+      /* Le pastiglie dei dispositivi che non rispondono.
+       *
+       * Col ponte di adesso sono nomi. Da una casa vecchia arrivano le quattro
+       * cifre di allora, e si disegnano com'erano — col cancelletto davanti,
+       * che e' il segno che quello non e' un nome.
+       *
+       * `dispositivi` e' quanti sono **davvero**, `nomi` quanti se ne mandano:
+       * quando il secondo e' piu' corto del primo la differenza si scrive, se
+       * no dodici nomi sembrerebbero tutti quelli che ci sono. */
+      function iNomiGiu(c) {
+        const nomi = c?.entita?.nomi;
+        if (Array.isArray(nomi) && nomi.length) {
+          const quanti = c?.entita?.dispositivi ?? nomi.length;
+          const altri = Math.max(0, quanti - nomi.length);
+          return (
+            nomi.map((uno) => `<span>${testo(uno)}</span>`).join("") +
+            (altri ? `<span class="eAltri">e altri ${altri}</span>` : "")
+          );
+        }
+        return (c?.entita?.impronte || []).map((una) => `<span>#${testo(una)}</span>`).join("");
+      }
+
       /* ─── Disegnare ──────────────────────────────────────────────────── */
 
       const testo = (cosa) =>
@@ -2166,8 +2204,13 @@
         ];
 
         const misure = [
-          (c.entita?.sparite ?? 0) > 0
-            ? ["Entità sparite", c.entita.sparite, `su ${c.entita.totali}`, "male"]
+          quantiGiu(c) > 0
+            ? [
+                "Dispositivi non collegati",
+                c.entita?.dispositivi ?? quantiGiu(c),
+                `${quantiGiu(c)} entità su ${c.entita?.totali ?? "—"}`,
+                "male",
+              ]
             : ["Entità", c.entita?.totali ?? "—", "rispondono tutte", ""],
           [
             "Batteria più bassa",
@@ -2328,25 +2371,27 @@
           </section>
 
           ${
-            (c.entita?.sparite ?? 0) > 0
+            quantiGiu(c) > 0
               ? `
           <section class="riquadro">
-            <div class="capoRiquadro"><h3>I dispositivi che non rispondono</h3></div>
-            <div class="impronte">
-              ${(c.entita?.impronte || []).map((una) => `<span>#${testo(una)}</span>`).join("")}
+            <div class="capoRiquadro"><h3>I dispositivi non collegati</h3></div>
+            <div class="nomiGiu">
+              ${iNomiGiu(c)}
             </div>
             <p class="nota">
-              Il quadro non sa quali sono, e non lo deve sapere: la casa manda
-              quattro cifre ricavate dal nome del dispositivo con un sale che non
-              esce da lì. Servono a dire <em>lo stesso di ieri</em> oppure
-              <em>un altro</em> — cioè a distinguere un dispositivo morto da una
-              rete che balla — e a niente di più.
+              Questi non rispondono <em>adesso</em>: Home Assistant ci ha
+              parlato e non ci parla più. Può essere la presa staccata, il nodo
+              Zigbee che se n'è andato, l'integrazione caduta — e può essere
+              anche solo la rete che balla, per cui prima di mettersi in
+              macchina conviene guardare se domani ci sono ancora gli stessi
+              nomi.
               <br /><br />
-              <b>Il nome non lo scopre nessuno da qui</b>, e non è una cosa da
-              aggiungere dopo: quei nomi dicono cosa c'è in una casa e in quali
-              stanze. Se serve saperlo, lo legge chi ci abita dalla propria
-              plancia, dove quel dispositivo risulta non disponibile, e lo dice
-              se vuole.
+              Questa casa manda <b>solo il nome di quelli che non rispondono</b>,
+              e nient'altro di quello che ha dentro: i dispositivi che
+              funzionano il quadro non li vede nemmeno contati uno per uno. Chi
+              ci abita lo sa prima di incollare il codice — c'è scritto nella
+              casella dell'add-on — e lo rilegge parola per parola nella scheda
+              «Il quadro», dove c'è anche il tasto per smettere.
             </p>
           </section>`
               : ""
@@ -2375,11 +2420,13 @@
               <pre>${testo(JSON.stringify(c, null, 2))}</pre>
               <p class="nota" style="margin-top: 14px">
                 Questo è <strong>tutto</strong> quello che questa casa manda.
-                Nessun nome di entità, nessuna stanza, nessuna persona, nessuno
-                stato di nessun sensore, nessun indirizzo. Lo stesso testo,
-                parola per parola, lo legge chi ci abita: sta nella scheda «Il
-                quadro» della console dell'add-on, insieme al tasto per smettere
-                di mandarlo.
+                Gli unici nomi che ci trovi sono quelli dei dispositivi che in
+                questo momento non rispondono; di tutti gli altri non c'è
+                nemmeno l'elenco. Nessuna persona, nessuno stato di nessun
+                sensore, nessun indirizzo pubblico. Lo stesso testo, parola per
+                parola, lo legge chi ci abita: sta nella scheda «Il quadro»
+                della console dell'add-on, insieme al tasto per smettere di
+                mandarlo.
               </p>
             </details>
           </section>

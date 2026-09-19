@@ -11,6 +11,34 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.6.4
+
+**I dispositivi che non rispondono adesso hanno un nome.** Prima nel quadro
+dell'installatore erano dodici pastiglie così: `#00a7`, `#033f`, `#03ad`.
+Quattro cifre ricavate dal nome con un sale che non usciva da casa, e
+servivano a dire *è lo stesso di ieri* oppure *è un altro* — cioè a
+distinguere un apparecchio morto da una rete che balla.
+
+Era la scelta giusta finché quella spia serviva a **sapere**. Non regge nel
+momento in cui deve servire a **riparare**: davanti a dodici codici chi ha
+montato l'impianto sa che dodici cose sono giù e non sa da dove cominciare, e
+finisce che telefona a chi ci abita per farsi leggere i nomi — cioè quei nomi
+escono lo stesso, per telefono, e il quadro non è servito a niente.
+
+**Quello che parte adesso, detto per intero:** il nome dei dispositivi che in
+quel momento non rispondono. Solo quelli. Di tutti gli altri — quelli che
+funzionano — non parte nemmeno l'elenco: una casa con duecento apparecchi a
+posto e due giù manda due nomi. Niente stati di sensori, niente persone,
+niente SSID, niente indirizzo pubblico. Sta scritto nella casella dell'add-on
+prima che tu incolli il codice, e nella scheda «Il quadro» lo rileggi parola
+per parola, col tasto per smettere accanto.
+
+**E si contano per apparecchio, non per entità.** Un termostato che se ne va
+portava giù cinque righe — temperatura, umidità, batteria, e via — e adesso ne
+fa una: «Termostato soggiorno». Il conto delle entità c'è lo stesso, sotto, che
+è un'altra domanda. Il nome è quello che hai messo tu, se gliene hai messo uno:
+«Frigo» si trova, `Shelly Plus Plug S-6A3F` no.
+
 ## 1.5.6.3
 
 **Il tasto del menu si sedeva sopra il marchio della pagina.** Stava in alto a

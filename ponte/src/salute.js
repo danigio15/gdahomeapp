@@ -10,15 +10,36 @@
  * domanda si fa sulla rete di casa, dove un megabyte e mezzo non lo sente
  * nessuno.
  *
- * ─── Perche' entita' e non dispositivi ───────────────────────────────────
+ * ─── Il nome, e perche' adesso esce ──────────────────────────────────────
  *
- * Un dispositivo con cinque sensori, quando sparisce, qui conta cinque. E'
- * impreciso e si e' scelto lo stesso, per adesso: raggrupparle vorrebbe dire
- * chiedere anche il registro delle entita' — `config/entity_registry/list`,
- * un'altra domanda e un'altra cache — e il numero serve a far suonare una
- * spia, non a riempire un verbale. Percio' si chiamano **entita'** anche qui
- * dentro e nel rapporto: un numero impreciso con il nome giusto si legge
- * per quello che e', uno con il nome sbagliato mente.
+ * Qui dentro c'era un'impronta: quattro cifre ricavate dal nome con un sale
+ * di questa casa, che dicevano «e' lo stesso di ieri» oppure «e' un altro» e
+ * niente piu'. Era la scelta giusta finche' il quadro serviva a far suonare
+ * una spia. Non regge nel momento in cui quella spia deve servire a
+ * **ripararlo**: davanti a dodici pastiglie `#00a7` chi ha montato l'impianto
+ * sa che dodici cose non rispondono e non sa da dove cominciare, e va a
+ * finire che telefona a chi ci abita per farsi leggere i nomi — cioe' quei
+ * nomi escono lo stesso, per telefono, e nel frattempo il quadro non e'
+ * servito a niente.
+ *
+ * Percio' adesso esce il nome, e **solo di quelli che non rispondono**. Non e'
+ * una cosa che si puo' nascondere a chi ci abita: sta scritto nella casella
+ * dell'add-on prima che lui incolli il codice, e sta nel rapporto che legge
+ * parola per parola nella scheda «Il quadro». Chi non lo vuole non incolla il
+ * codice, e non parte niente.
+ *
+ * ─── Il dispositivo, non le sue entita' ──────────────────────────────────
+ *
+ * Un termostato che se ne va porta giu' cinque entita', e cinque righe
+ * «Termostato salotto Temperatura», «… Umidita'», «… Batteria» dicono una
+ * cosa sola scritta cinque volte. Percio' si raggruppa per dispositivo, con i
+ * due registri di Home Assistant, e si manda il nome del dispositivo. I
+ * registri sono facoltativi: se non rispondono si manda il nome
+ * dell'entita', che e' meno bello e non e' sbagliato.
+ *
+ * Il conto invece resta in entita', ed e' voluto: `giu` sono le entita' che
+ * non rispondono, `dispositivi` quanti apparecchi sono. Due numeri diversi
+ * per due domande diverse.
  *
  * ─── Perche' `unavailable` e non `unknown` ────────────────────────────────
  *
@@ -29,15 +50,16 @@
  * insieme vorrebbe dire una spia rossa a ogni riavvio di Home Assistant.
  */
 
-import { createHash } from "node:crypto";
-
 /** Sotto quale carica una batteria si conta fra quelle da cambiare. */
 export const BATTERIA_SCARICA = 20;
 
-/* Quante impronte si mandano al massimo. Servono a dire «gli stessi di ieri»,
- * e per quello ne bastano poche: una casa con quaranta entita' sparite ha un
- * guaio che si vede dal numero, non dall'elenco. */
-export const IMPRONTE_MASSIME = 12;
+/* Quanti nomi si mandano al massimo.
+ *
+ * Non e' prudenza, e' leggibilita': una casa con quaranta dispositivi giu' ha
+ * un guaio che si vede dal numero — e `dispositivi` quel numero lo dice tutto
+ * — mentre quaranta pastiglie in fila non le legge nessuno. Dodici stanno in
+ * tre righe e bastano a capire **di che roba si tratta**. */
+export const NOMI_MASSIMI = 12;
 
 /* Le entita' che dicono se un backup e' stato fatto, e quando. Le fa
  * l'integrazione `backup` di Home Assistant, che c'e' di serie. */
@@ -48,6 +70,10 @@ const QUANDO_IL_BACKUP = new Set([
 
 const GIORNO = 24 * 60 * 60 * 1000;
 
+const elenco = (che) => (Array.isArray(che) ? che : []);
+
+const pulito = (valore) => (valore == null ? "" : String(valore).trim());
+
 const numero = (valore) => {
   const letto = Number(valore);
   return Number.isFinite(letto) ? letto : null;
@@ -57,47 +83,82 @@ const numero = (valore) => {
  * solo, e il motivo sta in cima al file. */
 const nonRisponde = (stato) => String(stato?.state ?? "") === "unavailable";
 
-/**
- * Quattro cifre per un'entita', con il sale di questa casa.
+/* Il nome di un dispositivo, o di un'entita' che dispositivo non ne ha.
  *
- * Servono al quadro dell'installatore a dire «e' lo stesso di ieri» oppure «e'
- * un altro» — cioe' a distinguere un dispositivo morto da una rete che balla —
- * e a niente di piu'. Il nome dell'entita' **non esce da qui**: `binary_sensor.
- * camera_di_marco_finestra` dice chi abita in questa casa e in quale stanza
- * dorme, e quello non e' un dato da mandare a nessuno.
- *
- * Il sale nasce in `/data` alla prima accensione e non si muove: senza, la
- * stessa entita' darebbe la stessa impronta in tutte le case del mondo, e
- * quattro cifre di sha256 si girano in un pomeriggio con un elenco di nomi
- * plausibili.
- */
-export function impronta(sale, entita) {
-  return createHash("sha256")
-    .update(`${String(sale ?? "")}:${String(entita ?? "")}`, "utf8")
-    .digest("hex")
-    .slice(0, 4);
+ * Il nome che ha messo chi ci abita batte quello di fabbrica: una presa
+ * ribattezzata «Frigo» la si trova, `Shelly Plus Plug S-6A3F` no. */
+function ilNomeDelDispositivo(riga) {
+  return pulito(riga?.name_by_user) || pulito(riga?.name);
+}
+
+/* Come si chiama questa entita', quando un dispositivo non ce l'ha o i
+ * registri non hanno risposto. `friendly_name` e' quello che si legge nella
+ * plancia; senza, si prende la coda dell'identificativo, che almeno e'
+ * leggibile — `sensor.pompa_calore` diventa «pompa calore». */
+function ilNomeDellEntita(stato) {
+  const detto = pulito(stato?.attributes?.friendly_name);
+  if (detto) return detto;
+  const quale = pulito(stato?.entity_id);
+  return quale.split(".").slice(1).join(".").replace(/_/g, " ").trim() || quale;
 }
 
 /**
- * Quante entita' ci sono, e quante non rispondono.
+ * I nomi di cosa non risponde, uno per dispositivo.
+ *
+ * Senza registri risponde lo stesso, con i nomi delle entita': un rapporto
+ * con una riga in piu' del dovuto e' meglio di un rapporto senza la riga.
+ *
+ * In ordine, e non nell'ordine in cui Home Assistant li ha elencati: due
+ * rapporti di fila con le stesse cose giu' devono dare la stessa fila nello
+ * stesso posto, se no il quadro vede muoversi qualcosa che e' fermo.
+ *
+ * @param {Array} giu gli stati che non rispondono
+ * @param {object} registri `dispositivi` ed `entita`, come li da' Home Assistant
+ */
+export function iNomi(giu, registri = null) {
+  const diChiE = new Map();
+  for (const riga of elenco(registri?.entita)) {
+    const quale = pulito(riga?.entity_id);
+    const suo = pulito(riga?.device_id);
+    if (quale && suo) diChiE.set(quale, suo);
+  }
+  const comeSiChiama = new Map();
+  for (const riga of elenco(registri?.dispositivi)) {
+    const quale = pulito(riga?.id);
+    const come = ilNomeDelDispositivo(riga);
+    if (quale && come) comeSiChiama.set(quale, come);
+  }
+  /* Un `Set`, e non un elenco: e' qui che cinque entita' di un termostato
+   * diventano una riga sola. */
+  const nomi = new Set();
+  for (const uno of elenco(giu)) {
+    const suo = diChiE.get(pulito(uno?.entity_id));
+    const come = (suo && comeSiChiama.get(suo)) || ilNomeDellEntita(uno);
+    if (come) nomi.add(come);
+  }
+  return [...nomi].sort((una, altra) => una.localeCompare(altra, "it"));
+}
+
+/**
+ * Quante entita' ci sono, quante non rispondono, e come si chiamano.
+ *
+ * `giu` conta le **entita'**, `dispositivi` gli **apparecchi**: un termostato
+ * che se ne va fa cinque e uno. `nomi` e' tagliato a `quante`, e quando taglia
+ * si vede dal confronto con `dispositivi` — chi disegna dice «e altri tre»
+ * invece di far sparire il numero vero.
  *
  * @param {Array} stati quello che torna `get_states`
- * @param {object} opzioni `sale` per le impronte, `quante` per il tetto
+ * @param {object} opzioni `registri` per i nomi dei dispositivi, `quante` per il tetto
  */
-export function leEntita(stati, { sale = "", quante = IMPRONTE_MASSIME } = {}) {
-  const dentro = Array.isArray(stati) ? stati : [];
-  const sparite = dentro.filter(nonRisponde);
+export function leEntita(stati, { quante = NOMI_MASSIMI, registri = null } = {}) {
+  const dentro = elenco(stati);
+  const giu = dentro.filter(nonRisponde);
+  const nomi = iNomi(giu, registri);
   return {
     totali: dentro.length,
-    sparite: sparite.length,
-    /* In ordine, e non nell'ordine in cui Home Assistant le ha elencate: due
-     * rapporti di fila con le stesse entita' sparite devono dare le stesse
-     * quattro cifre nello stesso posto, se no il quadro vede cambiare
-     * qualcosa che non e' cambiato. */
-    impronte: sparite
-      .map((uno) => impronta(sale, uno?.entity_id))
-      .sort()
-      .slice(0, quante),
+    giu: giu.length,
+    dispositivi: nomi.length,
+    nomi: nomi.slice(0, quante),
   };
 }
 
@@ -120,7 +181,7 @@ export function leBatterie(stati, { scarica = BATTERIA_SCARICA } = {}) {
     if (uno?.attributes?.device_class !== "battery") continue;
     if (uno?.attributes?.unit_of_measurement !== "%") continue;
     /* Una batteria che non risponde non e' una batteria scarica: e' un
-     * dispositivo sparito, e lo conta gia' `leEntita`. Contarla anche qui
+     * dispositivo che non risponde, e lo conta gia' `leEntita`. Contarla qui
      * vorrebbe dire due spie per un guaio solo. */
     if (nonRisponde(uno)) continue;
     const quanto = numero(uno.state);

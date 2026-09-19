@@ -16,15 +16,20 @@
  *
  * Numeri, versioni e nomi di processi. La regola si dice cosi': **cosa c'e'
  * nella scatola, non chi ci abita.** «Mosquitto broker» ed `eth0` sono nomi di
- * prodotti e di schede e non dicono niente di nessuno; il nome di un'entita'
- * — `binary_sensor.camera_di_marco_finestra` — dice chi abita in questa casa e
- * in quale stanza dorme, e quello non esce (per questo ci sono le impronte, in
- * `salute.js`).
+ * prodotti e di schede e non dicono niente di nessuno.
  *
- * Fuori restano, e vanno lasciati fuori: nomi di entita', nomi di stanze, nomi
- * di persone, stati di sensori, l'SSID del Wi-Fi, l'indirizzo pubblico, la
- * posizione, le foto, la configurazione della plancia, il contenuto delle
- * segnalazioni.
+ * Con un'eccezione sola, e dichiarata: **il nome dei dispositivi che in questo
+ * momento non rispondono**. Il perche' sta in cima a `salute.js` — una spia
+ * che dice «dodici cose sono giu'» e non quali non serve a ripararle, serve a
+ * far telefonare — e il prezzo e' scritto nella casella dell'add-on prima che
+ * qualcuno incolli il codice: «Luce cucina» dice anche in che stanza sta.
+ * Quelli che **funzionano** non escono: di una casa con duecento dispositivi a
+ * posto e due giu', il quadro sa due nomi.
+ *
+ * Fuori restano, e vanno lasciati fuori: i nomi di tutto il resto, i nomi
+ * delle stanze, i nomi delle persone, gli stati dei sensori, l'SSID del
+ * Wi-Fi, l'indirizzo pubblico, la posizione, le foto, la configurazione della
+ * plancia, il contenuto delle segnalazioni.
  *
  * L'indirizzo **sulla rete di casa** invece c'e': `192.168.1.50` non
  * identifica nessuno, e a chi ripara queste macchine serve tutti i giorni —
@@ -105,6 +110,18 @@ const OGNI_AL_MASSIMO = 24 * 60;
 
 /** Quanto si aspetta il quadro prima di lasciar perdere. */
 const ATTESA = 10_000;
+
+/* Quanto si tengono da parte i registri di Home Assistant.
+ *
+ * Servono a dare un nome ai dispositivi che non rispondono, e cambiano quando
+ * qualcuno aggiunge o ribattezza un apparecchio — cioe' quasi mai. Il rapporto
+ * parte ogni minuto: richiederli ogni volta vorrebbe dire duemila righe di
+ * registro al minuto per due nomi che sono gli stessi di un'ora fa.
+ *
+ * Cinque minuti e' il ritardo massimo con cui un dispositivo appena
+ * ribattezzato si vede col nome nuovo, e nessuno ribattezza una presa
+ * guardando il cronometro. */
+const REGISTRI_DURANO = 5 * 60 * 1000;
 
 /* Quanto si aspetta prima del primo rapporto.
  *
@@ -327,11 +344,34 @@ export function fabbricaIlRapporto({
     }
   };
 
+  /* I due registri, tenuti da parte per cinque minuti. Stanno qui e non in una
+   * classe perche' li vuole un pezzo solo del rapporto, e una classe in piu'
+   * per due `Map` e' una classe in piu' da tenere a mente.
+   *
+   * Uno dei due che non risponde li butta tutti e due: senza quello delle
+   * entita' non si sa di chi e' un'entita', senza quello dei dispositivi non
+   * si sa come si chiama un dispositivo, e mezza risposta darebbe nomi a
+   * meta'. `iNomi` sa gia' cavarsela senza, con i nomi delle entita'. */
+  let registri = null;
+  let registriLettiIl = 0;
+  const iRegistri = async () => {
+    const ora = adesso();
+    if (registri && ora - registriLettiIl < REGISTRI_DURANO) return registri;
+    const [dispositivi, entita] = await Promise.all([
+      casa.chiedi({ type: "config/device_registry/list" }),
+      casa.chiedi({ type: "config/entity_registry/list" }),
+    ]);
+    registri = { dispositivi, entita };
+    registriLettiIl = adesso();
+    return registri;
+  };
+
   return async () => {
-    const [detto, stati, daFare] = await Promise.all([
+    const [detto, stati, daFare, registriOra] = await Promise.all([
       forse("il ferro", () => ferro.chiedi()),
       forse("le entita'", () => casa.chiedi({ type: "get_states" })),
       aggiornamenti ? forse("gli aggiornamenti", () => aggiornamenti.elenco()) : null,
+      forse("i registri", iRegistri),
     ]);
     const quelli = Array.isArray(stati) ? stati : null;
 
@@ -359,7 +399,7 @@ export function fabbricaIlRapporto({
       plance: plance ? lePlance(plance, configurazione) : null,
       telefoni: dispositivi ? iTelefoni(dispositivi, adesso) : null,
       fuori: chiamata ? { acceso: Boolean(chiamata.dove), filo: chiamata.accesa === true } : null,
-      entita: quelli ? leEntita(quelli, { sale: identita.sale }) : null,
+      entita: quelli ? leEntita(quelli, { registri: registriOra }) : null,
       batterie: quelli ? leBatterie(quelli) : null,
       backup: quelli ? ilBackup(quelli, { adesso }) : null,
     });

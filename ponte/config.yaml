@@ -43,7 +43,7 @@ name: gdahome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.5.6.3"
+version: "1.5.6.4"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
@@ -177,11 +177,17 @@ options:
   # non rispondono. Cosi' si accorge che qualcosa non va prima che tocchi a te
   # telefonargli.
   #
-  # Nel rapporto non c'e' niente di tuo: nessun nome di entita', nessuna
-  # stanza, nessuna persona, nessuno stato di nessun sensore, il nome del tuo
-  # Wi-Fi no e il tuo indirizzo pubblico nemmeno. **Quello che parte lo puoi
-  # leggere**, parola per parola, nella scheda «Il quadro» di gdahome, dove
-  # c'e' anche il tasto per smettere.
+  # Piu' **una cosa che numero non e'**, e te la diciamo prima: il **nome dei
+  # dispositivi che in quel momento non rispondono**. Solo quelli. Serve a chi
+  # deve venire a ripararli — un elenco di codici dice che qualcosa e' rotto e
+  # non dice cosa — e vuol dire che se la presa si chiama «Luce cucina», lui
+  # legge «Luce cucina».
+  #
+  # Tutto il resto no: nessuno stato di nessun sensore, nessuna persona,
+  # nessun nome dei dispositivi che **funzionano**, nessuna stanza, il nome
+  # del tuo Wi-Fi no e il tuo indirizzo pubblico nemmeno. **Quello che parte
+  # lo puoi leggere**, parola per parola, nella scheda «Il quadro» di gdahome,
+  # dove c'e' anche il tasto per smettere.
   #
   # Vuota vuol dire che non parte niente e non si apre nessuna connessione.
   quadro: ""

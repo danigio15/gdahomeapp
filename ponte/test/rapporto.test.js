@@ -122,9 +122,18 @@ test("senza rete, gli apparati non si appiccicano a niente", () => {
 
 /* ─── La prova che conta ───────────────────────────────────────────────── */
 
-test("dal rapporto non esce niente di chi ci abita", () => {
-  /* Una casa vera: i nomi delle entita' raccontano una famiglia, le stanze e
-   * gli orari. Nessuna di queste parole deve comparire nel testo spedito. */
+test("dal rapporto esce il nome di cio' che non risponde, e nient'altro di casa", () => {
+  /* Una casa vera: i nomi raccontano una famiglia, le stanze e gli orari.
+   *
+   * Di tutta questa roba ne esce **una**: il dispositivo che in questo
+   * momento non risponde. E' una scelta, ed e' costata la promessa di prima
+   * — «nessun nome, punto» — perche' quella promessa la manteneva un elenco
+   * di codici `#00a7` davanti al quale chi ha montato l'impianto telefonava
+   * a chi ci abita per farsi leggere i nomi. Il prezzo sta scritto nella
+   * casella dell'add-on prima che qualcuno incolli il codice.
+   *
+   * Quello che questa prova tiene fermo e' il **confine**: uno che non
+   * risponde esce, tutti gli altri no. */
   const stati = [
     { entity_id: "binary_sensor.camera_di_marco_finestra", state: "unavailable", attributes: {} },
     { entity_id: "device_tracker.telefono_di_laura", state: "home", attributes: {} },
@@ -145,6 +154,20 @@ test("dal rapporto non esce niente di chi ci abita", () => {
       attributes: {},
     },
   ];
+  const registri = {
+    dispositivi: [
+      { id: "d1", name: "Contatto finestra", name_by_user: "Finestra camera di Marco" },
+      { id: "d2", name: "Telefono di Laura" },
+      { id: "d3", name: "Serratura ingresso" },
+      { id: "d4", name: "Cameretta" },
+    ],
+    entita: [
+      { entity_id: "binary_sensor.camera_di_marco_finestra", device_id: "d1" },
+      { entity_id: "device_tracker.telefono_di_laura", device_id: "d2" },
+      { entity_id: "sensor.serratura_ingresso_batteria", device_id: "d3" },
+      { entity_id: "camera.cameretta", device_id: "d4" },
+    ],
+  };
   const network = {
     interfaces: [
       {
@@ -168,19 +191,24 @@ test("dal rapporto non esce niente di chi ci abita", () => {
     }),
     rete: laRete({ network, filoSu: true }),
     addon: gliAddon({ addons: [{ name: "Mosquitto broker", state: "started", boot: "auto" }] }),
-    entita: leEntita(stati, { sale: "il-sale-di-questa-casa" }),
+    entita: leEntita(stati, { registri }),
     batterie: leBatterie(stati),
     backup: ilBackup(stati, { adesso: () => Date.parse("2026-09-18T09:00:00Z") }),
   });
 
   const spedito = JSON.stringify(foglio);
+
+  /* Quello che esce, e che e' tutto il motivo per cui il quadro serve a
+   * qualcosa: chi deve venire sa **cosa** e' giu'. */
+  assert.deepEqual(foglio.entita.nomi, ["Finestra camera di Marco"]);
+
+  /* E il confine: gli altri tre dispositivi rispondono, e di loro nel
+   * rapporto non c'e' nemmeno il nome. */
   const maiPiu = [
-    "marco",
     "laura",
     "giovanni",
     "rossi",
     "cameretta",
-    "camera_di",
     "serratura",
     "ingresso",
     "Casa Rossi",
@@ -197,12 +225,33 @@ test("dal rapporto non esce niente di chi ci abita", () => {
     );
   }
 
-  /* E quello che serve c'e' lo stesso: la spia suona, senza dire su cosa. */
-  assert.equal(foglio.entita.sparite, 1);
-  assert.equal(foglio.entita.impronte.length, 1);
+  /* E quello che serve c'e' lo stesso. */
+  assert.equal(foglio.entita.giu, 1);
+  assert.equal(foglio.entita.dispositivi, 1);
   assert.equal(foglio.batterie.scariche, 1);
   assert.equal(foglio.backup.giorniFa, 2);
   assert.equal(foglio.rete.schede[0].ip, "192.168.1.50");
+});
+
+test("un dispositivo che funziona resta fuori anche se si chiama come uno giu'", () => {
+  /* Il filtro e' lo stato, non il nome: due prese dello stesso modello, una
+   * staccata e una no, non devono uscire tutt'e due. */
+  const stati = [
+    { entity_id: "switch.presa_uno", state: "unavailable", attributes: {} },
+    { entity_id: "switch.presa_due", state: "on", attributes: {} },
+  ];
+  const registri = {
+    dispositivi: [
+      { id: "a", name: "Presa lavatrice" },
+      { id: "b", name: "Presa asciugatrice" },
+    ],
+    entita: [
+      { entity_id: "switch.presa_uno", device_id: "a" },
+      { entity_id: "switch.presa_due", device_id: "b" },
+    ],
+  };
+  const conto = leEntita(stati, { registri });
+  assert.deepEqual(conto.nomi, ["Presa lavatrice"]);
 });
 
 /* ─── Il postino ───────────────────────────────────────────────────────── */
@@ -308,10 +357,15 @@ const ferroFinto = (detto) => ({ chiedi: async () => detto });
 
 test("la fabbrica mette insieme quello che c'e', e chiama ogni volta", async () => {
   let giri = 0;
+  const chiesto = [];
   const fabbrica = fabbricaIlRapporto({
-    identita: { casa: "casa_abc", sale: "sale" },
+    identita: { casa: "casa_abc" },
     casa: {
-      chiedi: async () => {
+      chiedi: async ({ type }) => {
+        chiesto.push(type);
+        if (type === "config/device_registry/list") return [{ id: "d1", name: "Sonda cantina" }];
+        if (type === "config/entity_registry/list")
+          return [{ entity_id: "sensor.uno", device_id: "d1" }];
         giri += 1;
         return [{ entity_id: "sensor.uno", state: "unavailable", attributes: {} }];
       },
@@ -338,17 +392,47 @@ test("la fabbrica mette insieme quello che c'e', e chiama ogni volta", async () 
   assert.equal(foglio.macchina.scheda, "ODROID-N2");
   assert.equal(foglio.rete.internet, true);
   assert.equal(foglio.addon.quanti, 1);
-  assert.equal(foglio.entita.sparite, 1);
+  assert.equal(foglio.entita.giu, 1);
+  assert.deepEqual(foglio.entita.nomi, ["Sonda cantina"]);
   assert.deepEqual(foglio.fuori, { acceso: true, filo: true });
 
   /* Ogni rapporto e' di adesso, non di quando il ponte si e' acceso. */
   await fabbrica();
   assert.equal(giri, 2);
+
+  /* I registri pero' no: chiesti una volta e tenuti. Un rapporto al minuto
+   * che si porta dietro due elenchi di registro ogni volta e' traffico per
+   * due nomi che sono gli stessi di un'ora fa. */
+  assert.equal(chiesto.filter((che) => che === "config/device_registry/list").length, 1);
+  assert.equal(chiesto.filter((che) => che === "config/entity_registry/list").length, 1);
+});
+
+test("i registri che non rispondono lasciano il rapporto con i nomi delle entita'", async () => {
+  /* Un Home Assistant che i registri non li da' — troppo vecchio, o un segno
+   * senza permessi — non deve far cadere il rapporto ne' fargli perdere il
+   * riquadro: si manda quello che si sa. */
+  const fabbrica = fabbricaIlRapporto({
+    identita: { casa: "casa_abc" },
+    casa: {
+      chiedi: async ({ type }) => {
+        if (type === "get_states")
+          return [{ entity_id: "sensor.pompa_calore", state: "unavailable", attributes: {} }];
+        throw new Error("questo comando non lo conosco");
+      },
+    },
+    ferro: ferroFinto({ os: {}, host: {}, network: null, addons: [] }),
+    registro: ZITTO,
+    adesso: () => Date.parse("2026-09-18T09:41:12Z"),
+  });
+
+  const foglio = await fabbrica();
+  assert.equal(foglio.entita.giu, 1);
+  assert.deepEqual(foglio.entita.nomi, ["pompa calore"]);
 });
 
 test("mezza rapporto e' meglio di nessuna, e quel giorno e' la piu' importante", async () => {
   const fabbrica = fabbricaIlRapporto({
-    identita: { casa: "casa_abc", sale: "sale" },
+    identita: { casa: "casa_abc" },
     /* Home Assistant giu': e' esattamente il giorno in cui l'installatore deve
      * ricevere qualcosa. */
     casa: {
@@ -371,7 +455,7 @@ test("mezza rapporto e' meglio di nessuna, e quel giorno e' la piu' importante",
 
 test("gli aggiornamenti si contano per razza, e il firmware si vede a parte", async () => {
   const fabbrica = fabbricaIlRapporto({
-    identita: { casa: "casa_abc", sale: "s" },
+    identita: { casa: "casa_abc" },
     casa: { chiedi: async () => [] },
     ferro: ferroFinto(null),
     aggiornamenti: {
@@ -412,7 +496,7 @@ test("i telefoni: conta di piu' quanti si sono visti che quanti sono abbinati", 
   const adesso = Date.parse("2026-09-18T09:00:00Z");
   const giorni = (quanti) => adesso - quanti * 24 * 60 * 60 * 1000;
   const fabbrica = fabbricaIlRapporto({
-    identita: { casa: "casa_abc", sale: "s" },
+    identita: { casa: "casa_abc" },
     casa: { chiedi: async () => [] },
     ferro: ferroFinto(null),
     dispositivi: {
