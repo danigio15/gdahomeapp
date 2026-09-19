@@ -760,10 +760,32 @@
                 ? `<div class="avvertenza">
                      <span class="gettone" aria-hidden="true">!</span>
                      <span>
-                       <b>${plurale(ORFANE, "impianto", "impianti")} senza più nessuno che li guardi.</b>
-                       Sono impianti di installatori che hai tolto: continuano a mandare le loro
-                       rapporti — sono impianti che funzionano in casa di qualcuno — e tornano a
-                       qualcuno il giorno che quell'installatore lo riaggiungi.
+                       <b
+                         >${plurale(ORFANE, "impianto", "impianti")} senza più nessuno che
+                         ${ORFANE === 1 ? "lo guardi" : "li guardi"}.</b
+                       >
+                       ${
+                         ORFANE === 1
+                           ? `È l'impianto di un installatore che hai tolto. Continua a mandare il
+                              suo rapporto, ed è giusto così: funziona in casa di qualcuno, e
+                              spegnerlo punirebbe il cliente per una faccenda che non è sua. Ma da
+                              qui non lo guarda più nessuno.`
+                           : `Sono impianti di installatori che hai tolto. Continuano a mandare i
+                              loro rapporti, ed è giusto così: funzionano in casa di qualcuno, e
+                              spegnerli punirebbe i clienti per una faccenda che non è loro. Ma da
+                              qui non li guarda più nessuno.`
+                       }
+                       <br /><br />
+                       <b>Riaggiungere quell'installatore non ${ORFANE === 1 ? "lo" : "li"} riporta
+                       indietro:</b> chi si riaggiunge prende una matricola nuova, e
+                       ${ORFANE === 1 ? "questo impianto punta" : "questi impianti puntano"} ancora
+                       a quella di prima. Si ${ORFANE === 1 ? "recupera" : "recuperano"} dall'altra
+                       parte: il codice di un installatore vivo, incollato nella configurazione
+                       dell'add-on di quella casa, e
+                       ${ORFANE === 1 ? "l'impianto passa" : "gli impianti passano"} a lui — questo
+                       conto cala da solo. Da questa pagina no: serve che qualcuno ci metta mano in
+                       casa, ed è voluto — chi ci abita deve poter scegliere chi guarda il suo
+                       impianto.
                      </span>
                    </div>`
                 : ""
@@ -934,6 +956,18 @@
           disegna();
         } catch (male) {
           if (male instanceof ChiaveNoNo) {
+            /* Rifiutata quella tenuta, si prova quella consegnata dalla scheda
+             * dell'add-on — una volta sola — prima di chiedere a mano. */
+            if (consegnata && consegnata !== chiave) {
+              chiave = consegnata;
+              try {
+                localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+              } catch (_niente) {
+                /* Vale per questa apertura e basta. */
+              }
+              void apri();
+              return;
+            }
             chiedimiLaChiave("Quella chiave non apre. Riprova.");
             return;
           }
@@ -966,11 +1000,19 @@
        * Se una chiave c'e' gia' non si tocca: chi l'ha battuta a mano in
        * questo browser ha deciso lui, e una consegna che gliela cambia sotto
        * e' un modo di non far entrare piu' nessuno. */
+      /* La consegna si ricorda anche quando non si usa: serve se quella tenuta
+       * nel browser viene rifiutata. Il perche' per esteso sta nella console
+       * degli installatori, dove il guasto si e' visto per primo — cambiata la
+       * chiave, restava quella morta e la pagina la chiedeva a mano, con
+       * quella giusta gia' scritta nella scheda dell'add-on. */
+      let consegnata = "";
       addEventListener("message", (evento) => {
         const detto = evento?.data;
         if (!detto || detto.gdahome !== "chiave") return;
         const arrivata = String(detto.chiave || "").trim();
-        if (!arrivata || chiave) return;
+        if (!arrivata) return;
+        consegnata = arrivata;
+        if (chiave) return;
         chiave = arrivata;
         try {
           localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);

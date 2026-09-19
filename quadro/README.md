@@ -360,12 +360,12 @@ Aprendo una casa:
 | | |
 |---|---|
 | **L'impianto** | matricola, installata il, collaudata il, ogni quanto manda, telefoni abbinati e quanti visti in 7 giorni |
-| **Il collaudo** | dieci spunte: plancia configurata · almeno un telefono · da fuori casa funziona · nessun dispositivo sparito · niente da aggiornare · il backup gira · **gli add-on che devono girare, girano** · **la rete regge** · **la macchina non soffre** · nessuna batteria da cambiare |
+| **Il collaudo** | dieci spunte, e ognuna è un nome e basta — «I collegamenti», non «Sono collegati tutti»: la plancia · i telefoni · da fuori casa · i collegamenti · gli aggiornamenti · gli add-on · la rete · la macchina · il backup · le batterie. Il nome dice di cosa si parla, il numero a destra come sta, il bollino se va bene: ✓ a posto, ▲ da guardare, ◇ questa casa non lo dice |
 | **La macchina** | la scheda (ODROID-N2+, ODROID-M1, un NUC…), CPU, memoria, disco e quanto resta, temperatura **con la tacca a 75°**, **la vita già consumata del disco**, da quanti giorni è accesa |
 | **La rete** | internet sì o no, ogni scheda con su/giù, cavo o Wi-Fi, quale è la principale, il segnale, l'indirizzo sulla rete di casa — e gli apparati sorvegliati (il router, i ripetitori) con quanti non rispondono |
 | **Gli add-on** | tutti, uno per pastiglia: acceso, **fermo** (parte all'avvio e non gira) o spento a mano |
-| **La salute** | la striscia dei giorni, dispositivi totali e spariti, batterie sotto soglia e la più bassa, ultimo backup, errori nel registro, da quanto regge il filo |
-| **I dispositivi spariti** | le impronte, non i nomi (sotto c'è perché) |
+| **La salute** | la striscia dei giorni, quante entità e quante non rispondono, batterie sotto soglia e la più bassa, ultimo backup, errori nel registro, da quanti giorni il collegamento da fuori non si riavvia |
+| **I dispositivi non collegati** | i loro nomi, fino a dodici (sotto c'è perché, e perché è cambiato) |
 | **Gli aggiornamenti** | cosa c'è da installare, da quale versione a quale, e **il tasto per farlo** dove quella casa ha aperto la manutenzione |
 | **Le versioni** | gdahome, la plancia, Home Assistant Core, Supervisor, il sistema — con «c'è la nuova» dove c'è |
 | **Il rapporto** | il testo grezzo, come è arrivato |
@@ -439,7 +439,7 @@ e nient'altro.
   "plance": { "quante": 3, "configurate": 3 },
   "telefoni": { "abbinati": 2, "visti7gg": 2 },
   "fuori": { "acceso": true, "filo": true, "daGiorni": 41 },
-  "dispositivi": { "totali": 214, "spariti": 3, "impronte": ["7c2a", "91ff", "04be"] },
+  "entita": { "totali": 214, "giu": 5, "dispositivi": 3, "nomi": ["Termostato bagno", "Presa garage", "Sensore porta"] },
   "batterie": { "sotto20": 0, "piuBassa": 47 },
   "backup": { "giorniFa": 2 },
   "registro": { "errori24h": 0 }
@@ -464,15 +464,24 @@ queste macchine serve davvero: «la scatola ha cambiato indirizzo» è metà del
 telefonate. L'indirizzo pubblico è un'altra cosa — quello dice dove abiti — e
 non esce.
 
-**Le impronte.** Un dispositivo sparito l'installatore lo vuole seguire: è
-quello di ieri o un altro? Perciò la casa manda quattro cifre,
-`sha256(sale_di_casa + entity_id)` accorciato, con un sale che nasce in `/data`
-e non esce mai. Il quadro può dire «lo stesso di ieri» — cioè distinguere un
-dispositivo morto da una rete che balla — e non può dire quale. **Il nome non
-lo scopre nessuno da lì**, e non è una cosa da aggiungere dopo: quei nomi
-dicono cosa c'è in una casa e in quali stanze. Se serve saperlo, lo legge chi
-ci abita dalla propria plancia, dove quel dispositivo risulta non disponibile,
-e lo dice se vuole.
+**I nomi dei dispositivi che non rispondono, e perché ci sono.** Qui la
+promessa è cambiata, alla prova sul campo e con il consenso di chi tiene il
+quadro. Prima viaggiavano quattro cifre — `sha256(sale_di_casa + entity_id)`
+accorciato — in modo che il quadro potesse dire «è lo stesso di ieri» senza
+poter dire quale. Sullo schermo faceva questo:
+
+    ▲ Sono collegati tutti          #7c2a #91ff #04be
+
+cioè chiedeva a chi ripara di uscire di casa, guidare, e scoprire sul posto
+cos'era `#7c2a`. Un cruscotto che nasconde il dato a **chi ha montato
+l'impianto** non protegge nessuno: protegge sé stesso, e scarica il lavoro
+sul cliente.
+
+Adesso viaggiano i **nomi** — al massimo dodici, e **solo di quelli che non
+rispondono**. La regola è stretta, ed è scritta anche nelle prove del ponte
+(`ponte/test/rapporto.test.js`): i nomi dei dispositivi che funzionano non
+escono, gli stati dei sensori non escono, e tutto il resto della riga qui
+sopra resta com'era.
 Nella prima versione si possono anche lasciar fuori: contarli basta a far
 suonare la spia.
 
@@ -481,7 +490,8 @@ suonare la spia.
 ### Nel ponte
 
 Quasi tutto il contenuto del rapporto il ponte ce l'ha già in mano. Le due
-cose che oggi non si chiede sono i dispositivi spariti e le batterie, e si
+cose che oggi non si chiede sono i dispositivi che non rispondono e le
+batterie, e si
 prendono dallo stesso `get_states` che `aggiornamenti.js` fa già ogni dieci
 secondi sulla rete di casa — oggi ne tiene solo le entità `update.` e butta il
 resto.
@@ -526,7 +536,7 @@ sale nasce in `identita.js`, di fianco al file che sopravvive ai riavvii.
 
 ```js
 /* Le due domande che oggi non si fanno, sugli stati che già arrivano. */
-export function iDispositivi(stati, { sale }) → { totali, spariti, impronte }
+export function leEntita(stati, { quante, registri }) → { totali, giu, dispositivi, nomi }
 export function leBatterie(stati, { scarica = 20 }) → { sotto20, piuBassa }
 export function ilBackup(stati) → { giorniFa }        // dall'entità del backup
 ```
@@ -747,7 +757,7 @@ Tre regole che il ponte applica e il quadro non può scavalcare:
 1. **Il backup viene prima, sempre.** Non è una casella da spuntare: è la
    condizione perché il verbo esista. Un aggiornamento che va storto senza
    backup dietro è una casa da rifare.
-2. **Quelli che staccano il filo, uno per volta.** `aggiornamenti.js` li marca
+2. **Quelli che vogliono un riavvio, uno per volta.** `aggiornamenti.js` li marca
    già (`stacca`): gdahome e Home Assistant si riavviano installandosi. Due
    insieme sulla stessa casa vogliono dire non sapere quale dei due non è
    tornato.
@@ -756,7 +766,7 @@ Tre regole che il ponte applica e il quadro non può scavalcare:
    cacciavite mostrato con un tasto è una promessa che non si mantiene.
 
 E una conseguenza che va guardata in faccia: **una casa che sta installando
-qualcosa che stacca il filo smette di mandare rapporti.** Senza saperlo, il
+qualcosa che vuole un riavvio smette di mandare rapporti.** Senza saperlo, il
 quadro la darebbe per muta ogni volta che si aggiorna qualcosa. Perciò sa cosa
 ha chiesto, e lo dice: entro tre quarti d'ora è «sta aggiornando»; oltre, non è
 più un'attesa ma **«non è tornata»** — che è la cosa peggiore che possa fare un
@@ -872,7 +882,7 @@ guardi.
    solo, che un fermo del quadro non svegli nessuno, e che una consegna fallita
    lasci la casa da riavvisare. Perché un avviso si giudica da quando tace:
    mandarlo lo fa anche una riga che manda sempre.
-4. Poi, se serve: la storia lunga, le impronte dei dispositivi.
+4. Poi, se serve: la storia lunga.
 
 ### La tappa che non si fa: il quadro su Cloudflare
 

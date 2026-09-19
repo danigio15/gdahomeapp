@@ -101,9 +101,9 @@ export class CaseSeguite {
     if (!una) {
       una = {
         casa,
-        /* Di chi e' questa casa. Lo dice l'invito con cui e' entrata, e da qui
-         * non si muove: e' quello che la fa comparire nella pagina di un
-         * installatore e non in quella di un altro. */
+        /* Di chi e' questa casa: e' quello che la fa comparire nella pagina di
+         * un installatore e non in quella di un altro. Lo dice l'invito con
+         * cui e' entrata — e lo **ridice a ogni rapporto**, qui sotto. */
         di,
         nome: "",
         da: ora,
@@ -124,6 +124,7 @@ export class CaseSeguite {
     }
     una.vistaIl = ora;
     una.carta = carta;
+    this._cambiaPadrone(una, di);
 
     /* La casa ha risposto di quel lavoro: da qui in poi lo stato lo racconta
      * lei, nel rapporto, e questo non serve piu'. Uno solo dei due lo puo'
@@ -141,6 +142,43 @@ export class CaseSeguite {
     this._potaIGiorni(una, ora);
     this.archivio.salva();
     return una;
+  }
+
+  /**
+   * Questa casa ha cambiato padrone?
+   *
+   * Qui sopra c'era scritto che di chi e' una casa «da qui non si muove». Era
+   * vero quando riabbinare non si poteva. Da quando si puo' — si incolla in
+   * configurazione l'invito di un altro installatore, e la chiave viene
+   * **sostituita** (`chiavi.riconosci`) — era un guasto, e di quelli che non
+   * si vedono: la chiave passava al nuovo, questa riga restava del vecchio, e
+   * siccome e' **questa riga** a decidere chi vede cosa, la casa spariva a
+   * tutti e due. Nel cruscotto del nuovo: zero impianti. Nel conto della
+   * gestione: un impianto rimasto solo, di una matricola che magari non
+   * esiste nemmeno piu' perche' quell'installatore e' stato tolto.
+   *
+   * `null` non sposta niente: vuol dire «non me l'hanno detto», non «di
+   * nessuno». Chi deposita per davvero — `/rapporto`, l'unico — lo dice
+   * sempre, perche' l'ha appena verificato contro una chiave.
+   *
+   * ─── Cosa si porta dietro e cosa no ──────────────────────────────────────
+   *
+   * L'impianto e' lo stesso: i giorni, il collaudo, la carta restano. Quello
+   * che se ne va e' **quello che il vecchio aveva scritto lui**. Il nome per
+   * primo: non e' il nome dell'impianto, e' la nota che si e' preso chi lo
+   * seguiva, e li' dentro ci finisce il cognome del cliente o la via. I
+   * clienti di Rossi non sono affari di Bianchi, e questo vale anche il giorno
+   * che una casa passa dall'uno all'altro.
+   *
+   * E se ne va il lavoro in coda: un aggiornamento chiesto dal vecchio non lo
+   * si consegna a una casa che adesso e' di un altro.
+   */
+  _cambiaPadrone(una, di) {
+    if (di === null || di === undefined || una.di === di) return;
+    una.di = di;
+    una.nome = "";
+    una.lavoro = null;
+    una.avvisataIl = null;
   }
 
   /* `di` e' un lucchetto, non un filtro: senza, l'installatore che scrivesse a
@@ -303,8 +341,12 @@ export class CaseSeguite {
    *
    * Ma restare invisibili sarebbe un'altra cosa: chi tiene il quadro vedrebbe
    * un totale che non torna con la somma degli installatori e non saprebbe perche'.
-   * Questo numero e' li' per quello — e per ritrovarli il giorno che lo si
-   * riaggiunge.
+   * Questo numero e' li' per quello.
+   *
+   * Non per ritrovarle il giorno che quell'installatore lo si riaggiunge:
+   * riaggiungerlo fa una matricola nuova, e queste restano legate a quella di
+   * prima. Si recuperano da davanti — un invito di un installatore vivo,
+   * incollato in casa — e allora tornano a qualcuno e questo numero cala.
    */
   orfane(conosciuti = []) {
     const chi = new Set(conosciuti);

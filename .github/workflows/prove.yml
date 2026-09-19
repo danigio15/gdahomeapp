@@ -14,21 +14,28 @@ concurrency:
 
 jobs:
   ponte:
-    name: Il ponte e il centralino
+    name: Il ponte, il centralino e il quadro
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: "22"
-      # Ne il ponte ne il centralino hanno dipendenze: le loro prove girano su
-      # Node e basta.
+      # Nessuno dei tre ha dipendenze: le loro prove girano su Node e basta.
       - name: Le prove del ponte
         run: npm run test:ponte
       - name: Le prove del centralino
         run: npm run test:centralino
       - name: Le prove del centralino sulla nuvola
         run: npm run test:nuvola
+      # Il quadro qui dentro non ci girava, e `npm test` lo chiamava gia' — era
+      # solo questo elenco a saltarlo. Centocinquanta prove che non guardava
+      # nessuno, su un pezzo che si rilascia da solo: la macchina del quadro le
+      # fa girare prima di installare, quindi una rotta non sarebbe mai andata
+      # in produzione, ma si sarebbe scoperta **cosi'** — con la macchina che
+      # resta indietro senza che nessuno sappia perche'.
+      - name: Le prove del quadro
+        run: npm run test:quadro
 
   # Le prove della plancia, che qui dentro non girava nessuno.
   #

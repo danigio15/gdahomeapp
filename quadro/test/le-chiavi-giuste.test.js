@@ -158,7 +158,7 @@ test("il codice si scrive una volta sola: chi lo manda e chi lo ascolta si chiam
   }
 });
 
-test("una chiave gia' battuta a mano non si fa sovrascrivere da una consegnata", () => {
+test("una chiave che apre non si fa sovrascrivere da una consegnata", () => {
   /* Chi ha battuto la sua chiave in questo browser ha deciso lui. Una consegna
    * che gliela cambia sotto e' un modo silenzioso di non far entrare piu'
    * nessuno — e succederebbe a chi apre la pagina da solo mentre l'add-on di
@@ -166,8 +166,39 @@ test("una chiave gia' battuta a mano non si fa sovrascrivere da una consegnata",
   for (const quale of ["console", "gestore"]) {
     assert.match(
       pagina(quale),
-      /if \(!arrivata \|\| chiave\) return;/,
+      /consegnata = arrivata;\s*\n\s*if \(chiave\) return;/,
       `la pagina «${quale}» non deve scavalcare una chiave che c'e' gia'`,
+    );
+  }
+});
+
+test("ma una chiave morta lascia il posto a quella consegnata, senza chiedere niente", () => {
+  /* Il guasto, visto su un impianto vero: tolto un installatore e messo un
+   * altro, il cruscotto diceva «la chiave non va bene» e la chiedeva a mano —
+   * con quella giusta gia' scritta nella scheda dell'add-on, a due centimetri.
+   *
+   * Nel browser era rimasta la chiave di prima. Non essendo vuota, la consegna
+   * veniva scartata; quella morta veniva provata, rifiutata, e la pagina
+   * chiedeva aiuto a chi non poteva darne — la chiave nuova ce l'aveva la
+   * scheda, non la persona.
+   *
+   * La consegna quindi si ricorda sempre, e si prova **una volta** quando
+   * quella tenuta viene rifiutata. Se non apre nemmeno quella, le chiavi
+   * finite sono due e allora la domanda ci sta. */
+  for (const quale of ["console", "gestore"]) {
+    const testo = pagina(quale);
+    assert.match(
+      testo,
+      /consegnata && consegnata !== chiave/,
+      `la pagina «${quale}» non prova piu' la chiave consegnata quando la sua e' morta`,
+    );
+    /* E la si prova **prima** di chiedere a mano, se no la domanda arriva
+     * comunque e la correzione non serve a niente. */
+    const dovePro = testo.indexOf("consegnata && consegnata !== chiave");
+    const doveChiedo = testo.indexOf("chiedimiLaChiave(", dovePro);
+    assert.ok(
+      dovePro > 0 && doveChiedo > dovePro,
+      `in «${quale}» la domanda a mano viene prima del secondo tentativo`,
     );
   }
 });
@@ -208,4 +239,102 @@ test("una chiave di cruscotto nella casella dell'abbinamento si riconosce, e lo 
     leggiIlCodice(codiceAGruppi(codiceNuovo(16)))?.chiave,
     "e un invito vero deve continuare a passare",
   );
+});
+
+/* ─── Riabbinare una casa a un altro installatore ──────────────────────────
+ *
+ * E' la prima cosa che si fa provando il quadro, ed era rotta.
+ *
+ * Legarsi a un invito nuovo **aggiungeva** una chiave invece di sostituirla, e
+ * `diChiE` risponde con la prima che trova. Quindi: l'invito nuovo veniva
+ * bruciato — spariva dai codici in attesa, come deve — e la casa continuava a
+ * risultare di chi c'era prima. Nel cruscotto del nuovo installatore: zero
+ * impianti, e la casa contata fra quelle rimaste senza nessuno. Da fuori
+ * sembrava che il codice fosse stato buttato via per niente.
+ */
+
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { Chiavi } from "../src/chiavi.js";
+
+const UNA_CASA = "casa_6cb8c2b4f6e1c0a9d8e7f6a5b4c3d2e1";
+const UNO = "inst_1111111111111111";
+const UN_ALTRO = "inst_2222222222222222";
+
+function leChiavi() {
+  const cartella = mkdtempSync(join(tmpdir(), "chiavi-"));
+  return {
+    chiavi: new Chiavi({ cartella }),
+    cartella,
+    via: () => rmSync(cartella, { recursive: true, force: true }),
+  };
+}
+
+test("una casa riabbinata passa al nuovo installatore, non resta al vecchio", () => {
+  const b = leChiavi();
+  try {
+    assert.equal(b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UNO, per: "Pippo" })), true);
+    assert.equal(b.chiavi.diChiE(UNA_CASA), UNO);
+
+    assert.equal(b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UN_ALTRO, per: "Marco" })), true);
+    assert.equal(b.chiavi.diChiE(UNA_CASA), UN_ALTRO, "la casa e' rimasta al padrone di prima");
+    assert.equal(
+      b.chiavi.chiavi.filter((una) => una.casa === UNA_CASA).length,
+      1,
+      "una casa ha una chiave sola: due vogliono dire che `diChiE` risponde a caso",
+    );
+  } finally {
+    b.via();
+  }
+});
+
+test("la chiave di prima, dopo il riabbinamento, non apre piu'", () => {
+  /* Se restasse buona, chi ha ancora quel codice in mano continuerebbe a far
+   * entrare rapporti per una casa che non e' piu' sua. */
+  const b = leChiavi();
+  try {
+    const vecchia = b.chiavi.fai({ di: UNO, per: "Pippo" });
+    b.chiavi.riconosci(UNA_CASA, vecchia);
+    b.chiavi.riconosci(UNA_CASA, b.chiavi.fai({ di: UN_ALTRO, per: "Marco" }));
+    assert.equal(b.chiavi.riconosci(UNA_CASA, vecchia), false);
+  } finally {
+    b.via();
+  }
+});
+
+test("le doppie gia' fatte si riparano da sole al primo rapporto", () => {
+  /* Chi ha gia' il guasto in casa non deve rifare niente a mano: la chiave con
+   * cui la casa bussa adesso e' quella buona, e le altre sue se ne vanno. */
+  const b = leChiavi();
+  try {
+    const vecchia = b.chiavi.fai({ di: UNO, per: "Pippo" });
+    b.chiavi.riconosci(UNA_CASA, vecchia);
+    /* Si rifa' a mano il guasto di prima: due chiavi per la stessa casa. */
+    const nuova = b.chiavi.fai({ di: UN_ALTRO, per: "Marco" });
+    b.chiavi.chiavi.push({ ...b.chiavi.chiavi[0], di: UN_ALTRO, natoIl: Date.now() });
+    b.chiavi.archivio.dati.inviti = [];
+    assert.equal(b.chiavi.chiavi.filter((una) => una.casa === UNA_CASA).length, 2);
+
+    /* Il rapporto dopo, con la chiave che la casa ha davvero. */
+    assert.equal(b.chiavi.riconosci(UNA_CASA, vecchia), true);
+    assert.equal(b.chiavi.chiavi.filter((una) => una.casa === UNA_CASA).length, 1);
+    assert.ok(nuova);
+  } finally {
+    b.via();
+  }
+});
+
+test("una chiave di un'altra casa resta un no, riparazione o no", () => {
+  const b = leChiavi();
+  try {
+    const sua = b.chiavi.fai({ di: UNO, per: "Pippo" });
+    b.chiavi.riconosci(UNA_CASA, sua);
+    assert.equal(
+      b.chiavi.riconosci("casa_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", sua),
+      false,
+      "un codice usato non deve servire a nessun'altra casa",
+    );
+  } finally {
+    b.via();
+  }
 });

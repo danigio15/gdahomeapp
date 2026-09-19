@@ -73,11 +73,11 @@ test("una macchina che dichiara solo il disco si giudica sul disco", () => {
   const spunta = ilCollaudo({
     ...BUONA,
     macchina: { scheda: "ODROID-N2+", disco: 93 },
-  }).spunte.find((una) => una.cosa === "La macchina non soffre");
+  }).spunte.find((una) => una.cosa === "La macchina");
   assert.equal(spunta.fatta, false);
   /* E una che non dichiara nessun numero non si giudica per niente. */
   const muta = ilCollaudo({ ...BUONA, macchina: { scheda: "ODROID-N2+" } }).spunte.find(
-    (una) => una.cosa === "La macchina non soffre",
+    (una) => una.cosa === "La macchina",
   );
   assert.equal(muta.fatta, null);
 });
