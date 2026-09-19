@@ -47,10 +47,7 @@ class SchermataDelCruscotto extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                inLingua(
-                  it: 'Cruscotto installatore',
-                  en: 'Installer dashboard',
-                ),
+                inLingua(it: 'Cruscotto', en: 'Fleet'),
                 style: tema.textTheme.headlineSmall,
               ),
               const SizedBox(height: 12),

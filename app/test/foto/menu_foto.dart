@@ -1,4 +1,4 @@
-/// Le fotografie del menu dell'app, con e senza «Cruscotto installatore».
+/// Le fotografie del menu dell'app, con e senza la voce «Cruscotto».
 ///
 /// Non e' una prova: e' un attrezzo per **guardare**, come
 /// `aggiornamenti_foto.dart`. Per questo il nome non finisce in `_test.dart` —

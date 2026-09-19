@@ -84,10 +84,15 @@ enum Sezione {
     Sezione.segnalazioni => inLingua(it: 'Segnalazioni', en: 'Reports'),
     Sezione.assistenza => inLingua(it: 'Assistenza', en: 'Support'),
     Sezione.console => inLingua(it: 'Console', en: 'Console'),
-    Sezione.cruscotto => inLingua(
-      it: 'Cruscotto installatore',
-      en: 'Installer dashboard',
-    ),
+    /* Qui basta «Cruscotto»: nell'app ci si e' gia' dentro, e «installatore»
+     * non aggiunge niente che il posto non dica gia'. Nella barra laterale di
+     * Home Assistant invece la voce si chiama «Cruscotto installatore», perche'
+     * li' sta in mezzo ai pannelli di chiunque e deve dire di chi e'.
+     *
+     * E in inglese non «Dashboard», che e' gia' di Plancia: due nomi per la
+     * stessa parola sono peggio di due parole. «Fleet» dice quello che la
+     * schermata mostra — tutti gli impianti insieme — in una parola sola. */
+    Sezione.cruscotto => inLingua(it: 'Cruscotto', en: 'Fleet'),
     Sezione.aiutanti => inLingua(it: 'Aiutanti', en: 'Helpers'),
     Sezione.zigbee => inLingua(it: 'Zigbee', en: 'Zigbee'),
     Sezione.automazioni => inLingua(it: 'Automazioni', en: 'Automations'),
