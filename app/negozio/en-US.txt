@@ -1,5 +1,5 @@
-Your home's updates, in the menu.
+Seven reports closed, and a home that can say how it is doing.
 
-gdahome now tells you when Home Assistant has updates waiting — the add-on, integrations, the system itself — and you install them right here, with a restart when one is needed. Until now you had to open Home Assistant to find out, so app-only users never saw them.
+Appliances tell you what they are doing, the weather has radar, blinds are no longer windows. Updates arrive with the right logos, and "What's new" is read in here instead of the browser.
 
-A badge on the menu entry says how many are pending.
+And if an installer set your home up, they can now notice on their own that something has stopped: a few lines of numbers, which you can read in full and stop whenever you want.

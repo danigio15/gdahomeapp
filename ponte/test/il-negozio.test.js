@@ -20,7 +20,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateKeyPairSync, createVerify } from "node:crypto";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -32,6 +32,7 @@ import {
   ilBiglietto,
   ilCredenziale,
   laPista,
+  lePiste,
   leNovita,
   porta,
   quantoPesa,
@@ -169,7 +170,7 @@ test("il peso si dice come lo direbbe uno", () => {
 /* Un Play Console finto: tiene in fila le chiamate che gli arrivano — perche'
  * metà di questa prova e' **quali** chiamate partono, e in che ordine — e sa
  * fallire su una di esse, per vedere cosa succede alla modifica aperta. */
-function negozioFinto({ rompiti = "" } = {}) {
+function negozioFinto({ rompiti = "", piste = null } = {}) {
   const fatte = [];
   const prendi = async (dove, opzioni = {}) => {
     const via = String(dove);
@@ -191,6 +192,8 @@ function negozioFinto({ rompiti = "" } = {}) {
     if (rompiti && via.includes(rompiti) && metodo !== "DELETE") {
       return risposta(403, { error: { message: "the caller does not have permission" } });
     }
+    if (piste && via.endsWith("/tracks") && metodo === "GET")
+      return risposta(200, { tracks: piste });
     if (via.includes("/bundles?uploadType=media")) return risposta(200, { versionCode: 104322 });
     if (via.endsWith("/edits") && metodo === "POST") return risposta(200, { id: "modifica-1" });
     return risposta(200, {});
@@ -304,4 +307,50 @@ test("senza gettone non si carica niente, e si dice dove guardare", async (t) =>
       }),
     /va invitato nel Play Console/,
   );
+});
+
+test("«--piste» dice i nomi veri, e non lascia la modifica aperta", async (t) => {
+  /* Il nome di una pista non si indovina: una prova chiusa aperta a mano nel
+   * Play Console si chiama `custom-4697217…`, non «prova chiusa». Questo giro
+   * serve solo a leggerli, e quindi **non deve cambiare niente**: apre una
+   * modifica perche' il negozio le piste le racconta solo dentro una, e poi la
+   * butta. */
+  const negozio = negozioFinto({
+    piste: [
+      { track: "internal", releases: [{ versionCodes: ["104322"] }] },
+      { track: "custom-4697217", releases: [{ versionCodes: ["104320", "104321"] }] },
+    ],
+  });
+
+  const piste = await lePiste({
+    segreto: JSON.stringify(credenzialeFinto()),
+    prendi: negozio.prendi,
+  });
+
+  assert.deepEqual(piste, [
+    { nome: "internal", versioni: [104322] },
+    { nome: "custom-4697217", versioni: [104320, 104321] },
+  ]);
+  assert.ok(
+    negozio.fatte.some((una) => una.startsWith("DELETE")),
+    "una modifica aperta e mai buttata resta li' a scadere, e sarebbe il colmo per un giro che voleva solo leggere",
+  );
+  assert.ok(
+    !negozio.fatte.some((una) => una.includes(":commit") || una.includes("uploadType=media")),
+    "leggere i nomi delle piste non carica niente e non pubblica niente",
+  );
+});
+
+test("il tasto del workflow e lo strumento si chiamano la stessa cosa", () => {
+  /* Le due meta': il bottone su GitHub e la parola che lo strumento capisce.
+   * Se una delle due cambia nome, il bottone resta li' e non fa piu' niente —
+   * e non se ne accorge nessuno finche' non serve. */
+  const workflow = readFileSync(join(RADICE, ".github", "workflows", "app.yml"), "utf8");
+  assert.match(
+    workflow,
+    /porta-nel-negozio\.mjs --piste/,
+    "il workflow deve chiamare lo strumento con la parola che lo strumento capisce",
+  );
+  const strumento = readFileSync(join(RADICE, "strumenti", "porta-nel-negozio.mjs"), "utf8");
+  assert.match(strumento, /detto\.includes\("--piste"\)/, "e lo strumento deve ancora capirla");
 });

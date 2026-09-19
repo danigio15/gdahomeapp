@@ -32,6 +32,14 @@ on:
         type: boolean
         required: false
         default: false
+      elenca_le_piste:
+        description: >-
+          Non costruisce niente: chiede solo al negozio come si chiamano
+          davvero le sue piste. Una prova chiusa fatta a mano non si chiama
+          «prova chiusa», e indovinarlo non si puo'.
+        type: boolean
+        required: false
+        default: false
   push:
     tags:
       - "v*"
@@ -40,9 +48,50 @@ permissions:
   contents: read
 
 jobs:
+  # Chiedere al negozio come si chiamano le sue piste non vuole ne' l'app
+  # costruita ne' la chiave per firmarla: vuole il credenziale e basta. Quindi
+  # sta per conto suo e dura mezzo minuto, e quando lo si chiede gli altri tre
+  # lavori non partono nemmeno — costruire tre piattaforme per leggere quattro
+  # righe sarebbe un'ora di macchine buttata.
+  #
+  # Serve perche' il nome vero di una pista non si indovina: una prova chiusa
+  # aperta a mano nel Play Console si chiama `custom-4697217…`, non «prova
+  # chiusa», e sbagliarlo vuol dire una corsa rossa dopo settanta megabyte
+  # gia' caricati.
+  piste:
+    name: Come si chiamano le piste
+    runs-on: ubuntu-latest
+    if: ${{ inputs.elenca_le_piste }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: Chiedi al negozio
+        env:
+          NEGOZIO_GOOGLE: ${{ secrets.NEGOZIO_GOOGLE }}
+        run: |
+          if [ -z "$NEGOZIO_GOOGLE" ]; then
+            echo "::error::Chieste le piste ma manca il segreto NEGOZIO_GOOGLE."
+            exit 1
+          fi
+          node strumenti/porta-nel-negozio.mjs --piste | tee piste.txt
+          {
+            echo "### Le piste di questa app"
+            echo ""
+            echo '```'
+            cat piste.txt
+            echo '```'
+            echo ""
+            echo "Il negozio elenca **le piste che hanno gia' qualcosa sopra**: una"
+            echo "prova appena aperta, ancora vuota, qui non si vede. Le si mette"
+            echo "sopra qualcosa una volta sola, e da li' in poi c'e'."
+          } >> "$GITHUB_STEP_SUMMARY"
+
   android:
     name: Android (APK)
     runs-on: ubuntu-latest
+    if: ${{ !inputs.elenca_le_piste }}
     # Per pubblicare la release a ogni etichetta, e solo per quello: gli
     # altri lavori restano in sola lettura.
     permissions:
@@ -381,6 +430,7 @@ jobs:
     # ragione per cui questo lavoro gira su una macchina diversa dagli altri.
     # Su GitHub un Mac c'e', e non bisogna comprarlo.
     runs-on: macos-15
+    if: ${{ !inputs.elenca_le_piste }}
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
@@ -511,6 +561,7 @@ jobs:
   web:
     name: Web
     runs-on: ubuntu-latest
+    if: ${{ !inputs.elenca_le_piste }}
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
