@@ -136,6 +136,16 @@ class PonteFinto {
         (tipo.startsWith('ponte/segnalazioni/') ||
             tipo.startsWith('ponte/chat/') ||
             tipo.startsWith('ponte/console/') ||
+            /* `ponte/quadro/` mancava, e il caso che gli risponde piu' sotto
+             * era codice morto: una risposta scritta in una stanza dove la
+             * domanda non entra. E' **lo stesso difetto** che il ponte vero
+             * aveva su `ponte/quadro/stato`, rifatto qui dentro mentre lo si
+             * provava — e la prova, non arrivando risposta, leggeva «questa
+             * casa non ha nessun cruscotto», che e' la risposta giusta alla
+             * domanda sbagliata.
+             *
+             * Chi aggiunge una famiglia di comandi la aggiunge qui. */
+            tipo.startsWith('ponte/quadro/') ||
             tipo.startsWith('ponte/aggiornamenti/'))) {
       chieste.add(detto);
       _manda(presa, {'id': id, ..._segnalazione(detto)});
@@ -399,6 +409,12 @@ class PonteFinto {
   /// e' solo il si' o il no.
   bool laConsole = false;
 
+  /* Se questa casa e' di chi installa, e il codice che il ponte le darebbe.
+   * Il codice il ponte vero lo manda **solo a chi amministra**: qui si decide
+   * riga per riga, che e' quello che serve alle prove. */
+  bool lInstallatore = false;
+  String ilCodiceDelCruscotto = '';
+
   /// La coda di chi risponde: le linee, e per ognuna il suo filo.
   final List<Map<String, dynamic>> conversazioni = [];
   final Map<String, List<Map<String, dynamic>>> fili = {};
@@ -562,6 +578,14 @@ class PonteFinto {
           'La chat di assistenza passa parole. Una foto si allega a una '
               'segnalazione.',
         );
+      case 'ponte/quadro/stato':
+        return si({
+          'installatore': lInstallatore,
+          'dove': lInstallatore ? 'https://quadro.gdahome.org/console/' : '',
+          if (ilCodiceDelCruscotto.isNotEmpty) 'chiave': ilCodiceDelCruscotto,
+          'gestore': false,
+          'doveGestione': '',
+        });
       case 'ponte/chat/stato':
         return si({
           'enabled': true,

@@ -47,17 +47,27 @@ class IlCruscotto {
   /// Se il ponte non conosce il comando — uno vecchio, di prima — la risposta
   /// e' no per tutt'e due, ed e' quella giusta: una voce che non si sa aprire
   /// non si disegna.
-  Future<({String cruscotto, String gestione})> dove() async {
+  Future<QuadroDiQuestaCasa> dove() async {
     try {
       final detto = await _filo.risultato({'type': 'ponte/quadro/stato'});
       if (detto is! Map) return _niente;
+      final cruscotto = detto['installatore'] == true
+          ? _soloHttps(detto['dove'])
+          : '';
+      final gestione = detto['gestore'] == true
+          ? _soloHttps(detto['doveGestione'])
+          : '';
       return (
-        cruscotto: detto['installatore'] == true
-            ? _soloHttps(detto['dove'])
-            : '',
-        gestione: detto['gestore'] == true
-            ? _soloHttps(detto['doveGestione'])
-            : '',
+        cruscotto: cruscotto,
+        gestione: gestione,
+        /* Il codice arriva solo se il ponte lo da', cioe' solo a chi
+         * amministra questa casa. Vuoto vuol dire «battitelo», che e' come
+         * andava prima e non e' un guasto. E senza indirizzo non si tiene
+         * comunque: un codice senza dove andare non apre niente. */
+        chiave: cruscotto.isEmpty ? '' : _unaChiave(detto['chiave']),
+        chiaveGestione: gestione.isEmpty
+            ? ''
+            : _unaChiave(detto['chiaveGestione']),
       );
     } catch (_) {
       return _niente;
@@ -65,7 +75,23 @@ class IlCruscotto {
   }
 }
 
-const _niente = (cruscotto: '', gestione: '');
+/// Dove si aprono le due pagine di questa casa, e con che codice.
+typedef QuadroDiQuestaCasa = ({
+  String cruscotto,
+  String gestione,
+  String chiave,
+  String chiaveGestione,
+});
+
+const _niente = (cruscotto: '', gestione: '', chiave: '', chiaveGestione: '');
+
+/// Un codice, se e' un codice.
+///
+/// Non si guarda cosa dice — quello lo sa il quadro — ma che sia una riga
+/// sola di testo: quello che arriva di qui finisce dentro una pagina, e una
+/// cosa che non e' una stringa non ci deve nemmeno provare.
+String _unaChiave(Object? quale) =>
+    quale is String && quale.trim().isNotEmpty ? quale.trim() : '';
 
 /// Solo `https`, e per lo stesso motivo di tutto il resto: di la' c'e' l'elenco
 /// degli impianti di qualcuno.

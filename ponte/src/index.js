@@ -169,6 +169,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     chat,
     installatore: opzioni.installatore,
     gestore: opzioni.gestore,
+    /* I due codici, per non farli ribattere nell'app: il perche' sta su
+     * `_ilQuadro`, e li vede solo chi amministra questa casa. */
+    chiaveDelCruscotto: opzioni.chiaveDelCruscotto,
+    chiaveDellaGestione: opzioni.chiaveDellaGestione,
     spegnimento,
     aggiornamenti,
   });

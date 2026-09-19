@@ -2,6 +2,7 @@
 /// plancia.
 library;
 
+import 'dart:convert';
 import 'dart:async';
 
 import 'package:flutter/painting.dart' show Color;
@@ -263,6 +264,44 @@ Future<void> diciLeMisure(
     );
   } catch (_) {
     /* La pagina non c'e' ancora, o se n'e' andata: alla prossima. */
+  }
+}
+
+/// Consegna alla pagina del quadro il codice che apre il cruscotto.
+///
+/// **La stessa strada della tessera dentro Home Assistant**
+/// (`ponte/carta/plancia.js`): un `postMessage` con la stessa forma, che la
+/// pagina ascolta gia'. Dentro Home Assistant il codice non si ribatte da un
+/// pezzo; nell'app si ribatteva, perche' l'app aveva solo l'indirizzo.
+///
+/// Non nell'indirizzo, e per il motivo di sempre: un `#chiave=…` finirebbe
+/// nella cronologia e in ogni schermata che qualcuno manda per chiedere aiuto.
+///
+/// Il codice si incolla dentro un `postMessage` passando da `jsonEncode`, non
+/// fra due apici: di la' c'e' una riga scritta da qualcuno in una casella, e
+/// un apice in mezzo trasformerebbe una chiave in un pezzo di programma.
+///
+/// Si manda piu' di una volta, come fa la tessera: `load` dice che il
+/// documento c'e', non che il suo script e' arrivato in fondo ad attaccare
+/// l'ascoltatore. Tre colpi a distanza crescente costano tre messaggi e
+/// tolgono una corsa che si perde in silenzio.
+Future<void> consegnaLaChiave(
+  WebViewController controllore,
+  String chiave,
+) async {
+  if (chiave.isEmpty) return;
+  final detto = jsonEncode({'gdahome': 'chiave', 'chiave': chiave});
+  for (final fra in const [
+    Duration.zero,
+    Duration(milliseconds: 300),
+    Duration(milliseconds: 1500),
+  ]) {
+    if (fra > Duration.zero) await Future<void>.delayed(fra);
+    try {
+      await controllore.runJavaScript('window.postMessage($detto,"*")');
+    } catch (_) {
+      /* La pagina non c'e' ancora, o se n'e' andata: c'e' il colpo dopo. */
+    }
   }
 }
 

@@ -91,6 +91,11 @@ class _HomeState extends State<Home> {
   /* E dove sta la gestione, per l'unica casa al mondo che tiene il quadro.
    * Stessa regola: vuoto vuol dire che la voce non c'e'. */
   String _gestione = '';
+  /* E i due codici, per chi amministra questa casa: senza, la pagina dentro
+   * il riquadro li fa ribattere anche se stanno gia' nella scheda
+   * dell'add-on. */
+  String _chiave = '';
+  String _chiaveGestione = '';
   String? _chiestoPer;
 
   /* Quanti aggiornamenti aspettano in casa.
@@ -181,11 +186,15 @@ class _HomeState extends State<Home> {
     if (!mounted) return;
     if (risponde != _console ||
         quadro.cruscotto != _cruscotto ||
-        quadro.gestione != _gestione) {
+        quadro.gestione != _gestione ||
+        quadro.chiave != _chiave ||
+        quadro.chiaveGestione != _chiaveGestione) {
       setState(() {
         _console = risponde;
         _cruscotto = quadro.cruscotto;
         _gestione = quadro.gestione;
+        _chiave = quadro.chiave;
+        _chiaveGestione = quadro.chiaveGestione;
       });
     }
   }
@@ -506,6 +515,7 @@ class _HomeState extends State<Home> {
                            * dove le opzioni del ponte l'hanno accesa. */
                           Sezione.cruscotto => SchermataDelCruscotto(
                             dove: _cruscotto,
+                            chiave: _chiave,
                             visibile: _sezione == Sezione.cruscotto,
                           ),
                           /* Chi tiene il quadro: la stessa schermata del
@@ -515,6 +525,7 @@ class _HomeState extends State<Home> {
                            * stanno le stesse regole. */
                           Sezione.gestione => SchermataDelCruscotto(
                             dove: _gestione,
+                            chiave: _chiaveGestione,
                             visibile: _sezione == Sezione.gestione,
                           ),
                           _ => _InArrivo(sezione),
