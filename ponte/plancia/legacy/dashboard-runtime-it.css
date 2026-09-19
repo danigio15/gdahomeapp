@@ -1709,6 +1709,11 @@ nav.tabs.bottom-nav-bar {
     display: inline-flex !important;
     justify-content: center !important;
     padding: 8px 12px !important;
+    /* E la barra non esce dallo schermo: quello che non ci sta si raggiunge
+     * scorrendo, invece di finire sotto il bordo. */
+    max-width: calc(100vw - 24px) !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
     z-index: 9900 !important;
     gap: 12px !important;
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
@@ -1718,7 +1723,11 @@ nav.tabs.bottom-nav-bar {
 
 nav.tabs.bottom-nav-bar .tab {
     flex: 0 1 auto !important;
-    min-width: 75px !important; 
+    min-width: 75px !important;
+    /* Il tetto: una voce lunga non si prende il posto delle altre, e quello
+     * che non ci sta si taglia qui dentro invece che uscire. */
+    max-width: 120px !important;
+    overflow: hidden !important; 
     background: transparent !important;
     border: none !important;
     display: flex !important;
@@ -1748,6 +1757,21 @@ nav.tabs.bottom-nav-bar .tab .text {
     letter-spacing: 0.5px !important;
     opacity: 0.7 !important;
     transition: 0.3s !important;
+    /* Le scritte lunghe restano dentro la loro linguetta.
+     *
+     * Senza queste quattro righe si scrivevano una sopra l'altra, e su un
+     * tablet si leggeva «ENERGELÆTTRODOMESTIAUTGESTIONE TERMICGA». Il motivo:
+     * la barra e' larga quanto le serve (`min-width: max-content`), ma quando
+     * le voci sono tante lo schermo la taglia; allora le linguette si
+     * stringono fino al loro minimo e il testo, che non aveva nessun limite,
+     * usciva dal suo riquadro e finiva addosso a quello di fianco.
+     *
+     * Tagliato coi puntini si legge meno, ma si legge: «ELETTRODOM…» dice
+     * quale voce e'. Due parole incastrate non dicono niente. */
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
 }
 
 /* Tab ATTIVO (Stato di base) */

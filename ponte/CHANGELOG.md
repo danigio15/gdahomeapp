@@ -11,6 +11,27 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.3
+
+**Fra «Installa» e l'installazione che parte non passa più un minuto.** Passa un
+giro di rete. La casa, dopo ogni rapporto, resta in linea col quadro: quando chi
+ti ha montato l'impianto preme il tasto, la tua casa lo sente nell'istante, lo
+fa, e manda subito il rapporto che dice com'è andata. Prima quel comando
+aspettava lì finché la casa non ci ripassava.
+
+Resta una casa che **bussa**: non si apre nessuna porta e non c'è niente in
+ascolto. È la stessa richiesta del rapporto, tenuta aperta più a lungo, e vuole
+la stessa chiave. E se non si può tenere — un router di mezzo, il quadro spento
+— non si perde niente: il rapporto al minuto porta il comando come ha sempre
+fatto. Questo è in più, non al posto.
+
+**Le scritte della barra in basso non si accavallano più.** Su uno schermo
+largo con molte voci si leggeva «ENERGELÆTTRODOMESTIAUTGESTIONE TERMICGA»: le
+scritte uscivano dalla loro linguetta e finivano una sopra l'altra. Adesso
+quello che non ci sta si taglia coi puntini — «ELETTRODOM…» dice quale voce è,
+due parole incastrate non dicono niente — e la barra, se le voci sono tante, si
+scorre invece di finire sotto il bordo.
+
 ## 1.5.9.2
 
 **«Dispositivi non collegati» adesso sono dispositivi.** In una casa vera ne
