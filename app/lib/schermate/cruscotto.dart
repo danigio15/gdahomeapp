@@ -46,11 +46,10 @@ class SchermataDelCruscotto extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                inLingua(it: 'Cruscotto', en: 'Fleet'),
-                style: tema.textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 12),
+              /* Il titolo non si ripete qui: lo dice gia' la barra in cima,
+               * come per ogni altra sezione. Ripeterlo era l'unico posto
+               * dell'app dove succedeva, e si vedeva — «Cruscotto» scritto due
+               * volte a tre centimetri di distanza. */
               Text(
                 inLingua(
                   it:
@@ -67,7 +66,7 @@ class SchermataDelCruscotto extends StatelessWidget {
                 onPressed: _apri,
                 icon: const Icon(Icons.open_in_new_rounded),
                 label: Text(
-                  inLingua(it: 'Apri il cruscotto', en: 'Open the panel'),
+                  inLingua(it: 'Apri il cruscotto', en: 'Open the fleet'),
                 ),
               ),
               const SizedBox(height: 16),
