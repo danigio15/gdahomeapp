@@ -114,7 +114,15 @@ let pagina;
 let paginaDelGestore;
 
 export function json(risposta, corpo, stato = 200) {
-  const testo = JSON.stringify(corpo);
+  /* L'a capo in fondo non e' un vezzo: `/salute` si guarda **col curl da un
+   * terminale** — lo dice il README, ed e' la prima cosa che si fa dopo aver
+   * acceso la macchina. Senza, la risposta finisce incollata al prompt della
+   * riga dopo, e su un telefono, dove la riga va a capo da sola, diventa
+   * illeggibile o sembra che non abbia risposto niente.
+   *
+   * Per chi legge la risposta da programma non cambia nulla: uno spazio bianco
+   * in fondo a un JSON lo ignorano tutti. */
+  const testo = `${JSON.stringify(corpo)}\n`;
   risposta.writeHead(stato, {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",

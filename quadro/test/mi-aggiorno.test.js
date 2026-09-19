@@ -170,3 +170,30 @@ test("un quadro fatto partire a mano non dice una versione inventata", () => {
     rmSync(cartella, { recursive: true, force: true });
   }
 });
+
+test("una risposta si legge in un terminale senza incollarsi al prompt", async () => {
+  /* `/salute` si guarda col curl da un terminale — lo dice il README, ed e' la
+   * prima cosa che si fa dopo aver acceso la macchina. Senza l'a capo in fondo
+   * la risposta finisce attaccata al prompt della riga dopo, e su un telefono
+   * sembra che non abbia risposto niente. */
+  const { alzaIlQuadro } = await import("../src/index.js");
+  const cartella = mkdtempSync(join(tmpdir(), "salute-"));
+  const acceso = await alzaIlQuadro({ porta: 0, cartella, livello: "errore" });
+  try {
+    const presa = await fetch(`http://127.0.0.1:${acceso.porta}/salute`);
+    const testo = await presa.text();
+    assert.ok(testo.endsWith("\n"), "la risposta si incolla al prompt della riga dopo");
+    /* E resta JSON valido: l'a capo lo ignorano tutti. */
+    assert.equal(JSON.parse(testo).vivo, true);
+    /* La lunghezza dichiarata conta i byte veri, a capo compreso: se no il
+     * browser aspetta un byte che non arriva mai, o ne taglia uno. */
+    assert.equal(
+      Number(presa.headers.get("content-length")),
+      Buffer.byteLength(testo),
+      "content-length non conta l'a capo",
+    );
+  } finally {
+    await acceso.spegni();
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
