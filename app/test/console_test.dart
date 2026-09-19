@@ -61,7 +61,7 @@ void main() {
     );
   });
 
-  test('la voce Il mio cruscotto c\'è solo da chi installa', () {
+  test('la voce Cruscotto installatore c\'è solo da chi installa', () {
     /* Come la Console: a decidere se esiste è il ponte, non l'app. In casa di
      * un cliente quella voce non c'è proprio — una porta che non si apre è
      * peggio di una porta che non c'è. */

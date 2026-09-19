@@ -84,7 +84,10 @@ enum Sezione {
     Sezione.segnalazioni => inLingua(it: 'Segnalazioni', en: 'Reports'),
     Sezione.assistenza => inLingua(it: 'Assistenza', en: 'Support'),
     Sezione.console => inLingua(it: 'Console', en: 'Console'),
-    Sezione.cruscotto => inLingua(it: 'Il mio cruscotto', en: 'My panel'),
+    Sezione.cruscotto => inLingua(
+      it: 'Cruscotto installatore',
+      en: 'Installer dashboard',
+    ),
     Sezione.aiutanti => inLingua(it: 'Aiutanti', en: 'Helpers'),
     Sezione.zigbee => inLingua(it: 'Zigbee', en: 'Zigbee'),
     Sezione.automazioni => inLingua(it: 'Automazioni', en: 'Automations'),

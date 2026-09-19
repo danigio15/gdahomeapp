@@ -802,7 +802,7 @@ class _NomeDellaVoce extends StatelessWidget {
 /// tutte le case — la vede solo chi risponde, cioe' la casa che nelle opzioni
 /// del ponte ha la chiave della console. In tutte le altre quella voce non c'e'
 /// proprio: una porta che non si apre e' peggio di una porta che non c'e'.
-/// E lo stesso vale per **Il mio cruscotto**: gli impianti che ha montato chi
+/// E lo stesso vale per **Cruscotto installatore**: gli impianti che ha montato chi
 /// installa. Compare solo dove le opzioni del ponte hanno acceso
 /// `installatore`, cioe' sul suo Home Assistant e non in casa di un cliente.
 List<Sezione> vociDellaBarra({
