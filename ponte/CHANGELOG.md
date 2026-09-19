@@ -11,6 +11,21 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.6.2
+
+**Il cruscotto dell'installatore si apriva bianco.** Colpa della 1.5.6.1, e di
+un carattere: un backtick dentro un commento, dentro una stringa che i backtick
+li usa per delimitarsi. Da lì in poi il file non era più un programma, e il
+browser si fermava — pagina vuota, nessun messaggio, e niente nel registro
+dell'add-on perché succedeva nel browser.
+
+Niente di rotto nei dati: era solo la pagina che non si disegnava.
+
+**E adesso una prova legge quel programma prima di te.** Erano 678, e nessuna
+lo faceva: c'è chi lo legge come testo e chi ci cerca dei numeri, nessuna aveva
+mai provato a leggerlo *come codice*. Era l'unico file del progetto che
+arrivava a destinazione senza che nessuno l'avesse mai aperto.
+
 ## 1.5.6.1
 
 *Tutto nel cruscotto di chi installa. Nelle case non cambia niente.*
