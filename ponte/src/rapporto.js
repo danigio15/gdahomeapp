@@ -585,6 +585,7 @@ export class Postino {
     ogni = OGNI_DI_SERIE,
     fabbrica,
     fai = null,
+    installatore = null,
     fetch: prendi = globalThis.fetch,
     registro,
     adesso = () => Date.now(),
@@ -605,6 +606,9 @@ export class Postino {
      * Vuoto e' il caso normale finche' la manutenzione non e' aperta: il
      * postino allora quella riga della risposta non la guarda nemmeno. */
     this.fai = fai;
+    /* Chi tiene il nome e il marchio di chi segue questa casa. Il quadro li
+     * dice rispondendo, e da li' la plancia prende la sua faccia. */
+    this.installatore = installatore;
     this.prendi = prendi;
     this.registro = registro ?? { debug() {}, info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
@@ -743,6 +747,17 @@ export class Postino {
        *
        * Quello che va storto lo scrive `Lavori` nel suo stato, e si legge nel
        * rapporto del minuto dopo. Qui non si rompe niente. */
+      /* Chi segue questa casa, e con che segno. Prima del lavoro: e' roba da
+       * disegnare, non da far succedere, e un'installazione che parte non deve
+       * lasciare la plancia vestita di ieri. */
+      if (this.installatore && detto) {
+        try {
+          await this.installatore.dice(detto);
+        } catch (errore) {
+          this.registro.debug(`il marchio di chi segue questa casa: ${errore?.message || errore}`);
+        }
+      }
+
       if (this.fai && detto?.fai) {
         try {
           await this.fai(detto.fai);

@@ -223,7 +223,7 @@ test("le sezioni hanno un titolo che dice di chi e' quella roba", () => {
       assert.ok(titolo.trim().length > 2, `«${titolo}» non e' un titolo`);
     }
     const nomi = [...parole.matchAll(/^ {8}name: (.*)$/gm)].map((una) => una[1]);
-    assert.equal(nomi.length, 13, `«${lingua}.yaml» non ha tredici nomi di casella`);
+    assert.equal(nomi.length, 14, `«${lingua}.yaml» non ha quattordici nomi di casella`);
     for (const nome of nomi) {
       assert.ok(
         !nome.includes(" · "),

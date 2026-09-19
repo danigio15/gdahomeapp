@@ -43,7 +43,7 @@ name: gdahome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.5.8"
+version: "1.5.9"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
@@ -207,6 +207,20 @@ options:
     # quadro»: cosa gli e' stato chiesto di installare e com'e' andata stanno
     # scritti nel rapporto, parola per parola.
     quadro_manutenzione: false
+    # Lascia che la plancia porti il nome e il logo di chi ti ha fatto
+    # l'impianto.
+    #
+    # Acceso — ed e' cosi' di serie — la voce nella barra laterale prende il suo
+    # nome al posto di «gdahome», e in cima alla plancia c'e' il suo logo.
+    # Serve a te: il giorno che qualcosa non va, hai davanti il nome di chi
+    # chiamare invece del nostro.
+    #
+    # Spento, resta gdahome. Non cambia nient'altro: il rapporto parte lo
+    # stesso, e la manutenzione resta come l'hai messa.
+    #
+    # Se la plancia l'hai gia' rinominata tu, quel nome non lo tocca nessuno —
+    # ne' questo interruttore, ne' un installatore che va o che viene.
+    quadro_marchio: true
     # Quanto vive un codice di abbinamento, in minuti.
     minuti_del_codice: 5
     # Quanto vive il segno di un telefono senza farsi vedere, in giorni.
@@ -301,6 +315,7 @@ schema:
     # Il secondo interruttore, e sta qui in mezzo apposta: e' la casella subito
     # dopo quelle del quadro, perche' senza quelle non vuol dire niente.
     quadro_manutenzione: bool
+    quadro_marchio: bool
     minuti_del_codice: int(1,60)
     giorni_di_silenzio: int(0,3650)
     dispositivi_massimi: int(1,100)

@@ -216,3 +216,121 @@ test("un file scritto a mano non fa cadere il ponte", () => {
     via();
   }
 });
+
+/* ─── Il nome di chi ha montato l'impianto ─────────────────────────────────
+ *
+ * La domanda che ha fatto nascere queste prove: «se l'utente toglie
+ * l'installatore, cosa gli resta? perde la configurazione della plancia?»
+ *
+ * No, e il motivo e' che qui si tocca **solo il titolo**. La configurazione
+ * sta sotto il `profilo` (`configurazione.js`), e il profilo non si sfiora:
+ * cambiare il titolo e' come cambiare la targhetta sulla porta, quello che
+ * c'e' dentro la stanza non si muove. Queste prove tengono ferma quella riga.
+ */
+
+test("la plancia prende il nome dell'installatore, e lo rida' indietro quando se ne va", () => {
+  const { cartella, via } = unPosto();
+  try {
+    const plance = lePlance(cartella);
+    assert.equal(plance.quale().titolo, "gdahome");
+
+    assert.equal(plance.intestala("Impianti Rossi"), true);
+    assert.equal(plance.quale().titolo, "Impianti Rossi");
+
+    /* E togliendolo si torna al nostro, senza che nessuno scriva niente. */
+    assert.equal(plance.intestala(""), true);
+    assert.equal(plance.quale().titolo, "gdahome");
+  } finally {
+    via();
+  }
+});
+
+test("togliendo l'installatore non si perde niente della plancia", () => {
+  /* Il profilo e' quello che regge la configurazione, ed e' quello che non si
+   * tocca. Se cambiasse, chi ci abita si ritroverebbe una plancia vuota il
+   * giorno che cambia installatore — e nessuno collegherebbe le due cose. */
+  const { cartella, via } = unPosto();
+  try {
+    const plance = lePlance(cartella);
+    const prima = plance.quale();
+
+    plance.intestala("Impianti Rossi");
+    plance.intestala("");
+    const dopo = plance.quale();
+
+    assert.equal(dopo.profilo, prima.profilo, "il profilo e' cambiato: la configurazione e' persa");
+    assert.equal(dopo.istanza, prima.istanza, "l'istanza e' cambiata: il browser non si ritrova");
+    assert.equal(dopo.primaria, true);
+    assert.deepEqual(dopo.utenti, prima.utenti);
+    assert.equal(dopo.solo_admin, prima.solo_admin);
+  } finally {
+    via();
+  }
+});
+
+test("un titolo scritto da chi ci abita non lo tocca nessun installatore", () => {
+  /* Ne' per metterci il suo, ne' per rimetterci il nostro. E' la stessa
+   * regola con cui, a suo tempo, si e' cambiato il nome del prodotto di
+   * prima: una volta sola, e solo se nessuno l'aveva rinominata. */
+  const { cartella, via } = unPosto();
+  try {
+    const plance = lePlance(cartella);
+    plance.rinomina("primary", "Casa nostra");
+
+    assert.equal(plance.intestala("Impianti Rossi"), false);
+    assert.equal(plance.quale().titolo, "Casa nostra");
+    assert.equal(plance.intestala(""), false);
+    assert.equal(plance.quale().titolo, "Casa nostra");
+  } finally {
+    via();
+  }
+});
+
+test("rinominandola a mano, quel titolo diventa suo e non torna piu' indietro", () => {
+  /* Il caso storto: l'installatore c'e', la plancia porta il suo nome, e chi
+   * ci abita la rinomina. Da quel momento quel titolo e' di chi ci abita, e
+   * il giorno che l'installatore si toglie non deve tornare «gdahome»
+   * cancellando quello che aveva scritto. */
+  const { cartella, via } = unPosto();
+  try {
+    const plance = lePlance(cartella);
+    plance.intestala("Impianti Rossi");
+    plance.rinomina("primary", "La mia casa");
+
+    assert.equal(plance.intestala(""), false);
+    assert.equal(plance.quale().titolo, "La mia casa");
+  } finally {
+    via();
+  }
+});
+
+test("lo stesso installatore due volte non riscrive niente", () => {
+  /* Il rapporto parte ogni minuto e porta ogni volta lo stesso nome: se ogni
+   * giro scrivesse sul disco, quel file cambierebbe data millequattrocento
+   * volte al giorno, e chi guarda i backup non capirebbe piu' niente. */
+  const { cartella, via } = unPosto();
+  try {
+    const plance = lePlance(cartella);
+    assert.equal(plance.intestala("Impianti Rossi"), true);
+    assert.equal(plance.intestala("Impianti Rossi"), false);
+    assert.equal(plance.intestala(""), true);
+    assert.equal(plance.intestala(""), false);
+  } finally {
+    via();
+  }
+});
+
+test("il nome dell'installatore sopravvive a una riaccensione", () => {
+  const { cartella, via } = unPosto();
+  try {
+    lePlance(cartella).intestala("Impianti Rossi");
+    /* Riacceso: se `daInstallatore` non sopravvivesse alla ripulita, quel
+     * titolo diventerebbe «di chi ci abita» e non si toglierebbe piu'. */
+    const dopo = lePlance(cartella);
+    assert.equal(dopo.quale().titolo, "Impianti Rossi");
+    assert.equal(dopo.intestala(""), true);
+    assert.equal(dopo.quale().titolo, "gdahome");
+  } finally {
+    via();
+  }
+});

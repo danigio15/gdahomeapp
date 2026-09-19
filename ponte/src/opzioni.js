@@ -69,6 +69,7 @@ const DOVE_STAVANO = Object.freeze({
   quadro: ["casa", "quadro"],
   quadro_ogni: ["casa", "quadro_ogni"],
   quadro_manutenzione: ["casa", "quadro_manutenzione"],
+  quadro_marchio: ["casa", "quadro_marchio"],
   minuti_del_codice: ["casa", "minuti_del_codice"],
   giorni_di_silenzio: ["casa", "giorni_di_silenzio"],
   dispositivi_massimi: ["casa", "dispositivi_massimi"],
@@ -310,6 +311,17 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
     manutenzione:
       String(process.env.PONTE_MANUTENZIONE ?? scritte.quadro_manutenzione ?? "") === "true" ||
       scritte.quadro_manutenzione === true,
+    /* Se la plancia porta il marchio di chi ha montato l'impianto.
+     *
+     * **Acceso di serie**, ed e' il contrario della manutenzione: quello e' un
+     * permesso — qualcuno da fuori fa succedere qualcosa qui dentro — e questo
+     * e' solo cosa c'e' scritto in cima a una pagina. Chi ha un installatore
+     * il suo nome ce l'ha voluto; chi non ce l'ha non se ne accorge, perche'
+     * senza installatore questa riga non cambia niente.
+     *
+     * Spento vuol dire spento anche se il quadro manda un marchio: la casa ha
+     * l'ultima parola su cosa si vede in casa sua. */
+    marchioDellInstallatore: scritte.quadro_marchio !== false,
     versione: versioneDelPonte(),
   };
 }

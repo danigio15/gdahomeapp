@@ -84,6 +84,15 @@ configuration:
           verso casa tua: e' questa casa che bussa, e nella risposta trova cosa
           fare. Cosa gli e' stato chiesto e com'e' andata li leggi nel rapporto,
           nella scheda «Il quadro».
+      quadro_marchio:
+        name: Lascia che la plancia porti il marchio di chi ti ha fatto l'impianto
+        description: >-
+          Acceso — ed e' cosi' di serie — la voce nella barra laterale prende il
+          suo nome al posto di «gdahome», e in cima alla plancia c'e' il suo
+          logo. Serve a te: il giorno che qualcosa non va, hai davanti il nome
+          di chi chiamare invece del nostro. Spento, resta gdahome, e non cambia
+          nient'altro. Se la plancia l'hai gia' rinominata tu, quel nome non lo
+          tocca nessuno.
       minuti_del_codice:
         name: Quanto vive un QR di abbinamento
         description: >-

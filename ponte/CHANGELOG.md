@@ -11,6 +11,40 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9
+
+**La plancia porta il nome e il logo di chi ti ha fatto l'impianto.** Se la casa
+te l'ha montata un installatore e lui il suo marchio l'ha caricato, la voce
+nella barra laterale prende il suo nome al posto di «gdahome», e in cima alla
+plancia c'è il suo logo. Serve a te: il giorno che qualcosa non va, hai davanti
+il nome di chi chiamare invece del nostro.
+
+**Se togli l'installatore, torna gdahome — e non perdi niente.** È la domanda
+che conta, e la risposta è nel come: si cambia **solo il titolo**. La
+configurazione della plancia sta sotto il *profilo*, e il profilo non si sfiora:
+cambiare il titolo è come cambiare la targhetta sulla porta, quello che c'è
+dentro la stanza non si muove. Tessere, colori, stanze, avvisi: tutto dov'era.
+
+**E se la plancia l'hai rinominata tu, quel nome non lo tocca nessuno.** Né un
+installatore che arriva, né uno che se ne va, né l'interruttore qui sotto. Si
+tocca solo quello che ci abbiamo messo noi: «gdahome», o il nome che ci aveva
+messo l'installatore di prima.
+
+**Il logo lo scarica il ponte, non il tuo browser.** Potrebbe prenderselo la
+pagina da sola — il quadro lo serve a chiunque — e non si fa: ogni volta che
+apri la plancia, il tuo browser andrebbe a farsi vedere da una macchina che non
+è la tua, e chi tiene il quadro si troverebbe in mano gli orari in cui in casa
+tua si guarda la plancia. Lo prende l'add-on, una volta al giorno, e da lì in
+poi lo serve lui dalla rete di casa.
+
+**C'è l'interruttore per dire di no:** *Casa › Lascia che la plancia porti il
+marchio di chi ti ha fatto l'impianto*, acceso di serie. Spento resta gdahome, e
+non cambia nient'altro — il rapporto parte lo stesso.
+
+**E nel cruscotto dell'installatore** il suo marchio sta in testata al posto del
+nostro, col suo nome. Si carica dalla pagina «Abbina»: PNG, JPEG, WEBP o SVG
+fino a 128 kB.
+
 ## 1.5.8
 
 > **Prima di aggiornare, tieni sotto mano il codice del quadro** (e, se le usi,
