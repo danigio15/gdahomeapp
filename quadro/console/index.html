@@ -1186,12 +1186,16 @@
         flex-direction: column;
       }
 
+      /* Una riga e' una griglia di tre colonne — il segno, cosa e', cosa si
+         fa — e cosa cambia va sotto, larga quanto le ultime due: su un
+         telefono le note sotto il logo sarebbero una colonna di parole
+         spezzate. */
       ul.versi li {
-        display: flex;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
         align-items: center;
-        gap: 12px;
+        gap: 6px 12px;
         padding: 11px 0;
-        flex-wrap: wrap;
       }
 
       ul.versi li + li {
@@ -1199,8 +1203,61 @@
       }
 
       ul.versi .che {
-        flex: 1;
-        min-width: 9rem;
+        min-width: 0;
+      }
+
+      /* Le pastiglie e i tasti stanno in fondo, tutti nella terza colonna. */
+      ul.versi .fare {
+        grid-column: 3;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      /* ─── Il segno di un aggiornamento ───────────────────────────────
+         L'iniziale sta sotto e si vede sempre; il marchio, quando arriva, ci
+         si mette sopra. Quello che non arriva — una casa senza internet, un
+         marchio che non esiste — si toglie da solo e sotto c'e' gia' la
+         lettera, invece di un quadratino rotto. */
+      .segno {
+        width: 32px;
+        height: 32px;
+        flex: none;
+        position: relative;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        background: var(--carta-alta);
+        color: var(--fioco);
+        font-size: 0.85rem;
+        font-weight: 700;
+      }
+
+      .segno img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: var(--carta);
+      }
+
+      /* Cosa cambia, con le parole di chi l'ha scritto. */
+      ul.versi .cambia {
+        grid-column: 2 / -1;
+        margin: 0;
+        color: var(--lieve);
+        font-size: 0.82rem;
+        line-height: 1.55;
+        white-space: pre-line;
+      }
+
+      ul.versi .cambia a {
+        color: var(--azzurro-cupo);
+        white-space: nowrap;
       }
 
       ul.versi .che b {
@@ -1276,11 +1333,8 @@
         margin-top: 14px;
       }
 
-      .mucchio .indietro-chi {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 13px;
+      .mucchio ul.versi {
+        margin-top: 4px;
       }
 
       /* ─── Gli add-on ────────────────────────────────────────────────── */
@@ -1829,6 +1883,90 @@
           /[&<>"']/g,
           (uno) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[uno],
         );
+
+      /* Dove stanno i marchi delle integrazioni. Lo stesso posto da cui li
+       * prende Home Assistant, ed e' il quadro a saperlo: da casa arriva una
+       * **parola** — `shelly`, `zha` — non un indirizzo. Se arrivasse un
+       * indirizzo, chi puo' scrivere l'attributo di un'entita' deciderebbe
+       * dove va a bussare questa pagina. */
+      const I_MARCHI = "https://brands.home-assistant.io/";
+
+      /* Il segno di un aggiornamento: il logo di chi lo porta, o l'iniziale.
+       *
+       * Tre casi, in ordine. La roba nostra porta il bollo del quadro, che e'
+       * disegnato qui e non si scarica da nessuna parte. Chi ha un marchio lo
+       * fa vedere — e sotto c'e' comunque l'iniziale, cosi' una casa senza
+       * internet o un marchio che non esiste finiscono sulla lettera invece
+       * che su un quadratino rotto. Chi non ce l'ha resta sull'iniziale, che
+       * e' quello che fa gia' l'app.
+       *
+       * `onerror` toglie l'immagine e scopre la lettera che sta sotto. */
+      function ilSegnoDi(uno) {
+        if (uno.nostra)
+          return '<span class="bollo" aria-hidden="true"><i></i><i class="mezzo"></i><i></i></span>';
+        const primo = testo(
+          String(uno.nome || "?")
+            .trim()
+            .charAt(0)
+            .toUpperCase() || "?",
+        );
+        /* La stessa forma che il ponte si e' gia' controllato, ricontrollata
+         * qui: questa parola finisce dentro un indirizzo, e chi lo compone e'
+         * questa riga. Un controllo solo, dall'altra parte di una rete, non e'
+         * un controllo. */
+        if (!/^[a-z0-9_]+$/.test(String(uno.marchio || "")))
+          return `<span class="segno">${primo}</span>`;
+        return `<span class="segno">${primo}<img
+          src="${I_MARCHI}${uno.marchio}/icon.png"
+          alt=""
+          loading="lazy"
+          onerror="this.remove()"
+        /></span>`;
+      }
+
+      /* Cosa cambia, con le parole di chi l'ha scritto.
+       *
+       * E' il `release_summary` dell'entita', che Home Assistant taglia gia'
+       * corto. Va disegnato **come testo**: arriva da fuori, e qui dentro non
+       * ci si fida di niente che arrivi da fuori. Le note lunghe stanno a un
+       * indirizzo, e per leggerle serve il filo con la casa — che il quadro
+       * non ha — quindi li' si manda il browser.
+       *
+       * Niente di tutto questo e' obbligatorio: chi non dice niente non
+       * occupa una riga vuota. */
+      function cosaCambia(uno) {
+        const detto = testo(String(uno.cosaCambia || "").trim());
+        const dove = String(uno.note || "");
+        const fuori = /^https:\/\/[^\s"'<>]+$/i.test(dove)
+          ? ` <a href="${testo(dove)}" target="_blank" rel="noopener noreferrer">le note per intero ↗</a>`
+          : "";
+        if (!detto && !fuori) return "";
+        return `<p class="cambia">${detto}${fuori}</p>`;
+      }
+
+      /* Una riga di aggiornamento: il segno, cosa e', cosa si fa, cosa cambia.
+       *
+       * Una sola, e la usano tutt'e due le schermate — la scheda di una casa e
+       * la flotta. Prima erano due disegni diversi per la stessa cosa: righe
+       * di qua, pastigline di la', e nella flotta non si vedeva ne' il logo ne'
+       * cosa cambiava. Due disegni per una cosa sola vuol dire che uno dei due
+       * resta indietro, ed era sempre lo stesso.
+       *
+       * `fare` e' quello che si puo' fare su questa riga: lo passa chi disegna,
+       * perche' dipende dalla casa — la manutenzione aperta, un lavoro in
+       * ballo — e non dall'aggiornamento. */
+      function unaRiga(uno, { fare = "" } = {}) {
+        return `
+          <li>
+            ${ilSegnoDi(uno)}
+            <span class="che">
+              <b>${testo(uno.nome)}</b>
+              <span class="salto">${testo(uno.da)} → ${testo(uno.a)}</span>
+            </span>
+            <span class="fare">${fare}</span>
+            ${cosaCambia(uno)}
+          </li>`;
+      }
 
       const spia = (stato) =>
         `<span class="pastiglia ${stato.chiave}"><span aria-hidden="true">${stato.segno}</span>${testo(stato.parola)}</span>`;
@@ -2585,22 +2723,16 @@
             ${cartello}
             <ul class="versi">
               ${elenco
-                .map(
-                  (uno) => `
-                <li>
-                  <span class="che">
-                    <b>${testo(uno.nome)}</b>
-                    <span class="salto">${testo(uno.da)} → ${testo(uno.a)}</span>
-                  </span>
-                  ${uno.stacca ? '<span class="pastiglia attenta">fa cadere il filo</span>' : ""}
-                  ${
-                    !uno.installabile
-                      ? '<span class="pastiglia">si porta col cacciavite</span>'
-                      : c.manutenzione
-                        ? '<button type="button" class="tasto">Installa</button>'
-                        : '<span class="pastiglia">manutenzione chiusa</span>'
-                  }
-                </li>`,
+                .map((uno) =>
+                  unaRiga(uno, {
+                    fare: `${uno.stacca ? '<span class="pastiglia attenta">fa cadere il filo</span>' : ""}${
+                      !uno.installabile
+                        ? '<span class="pastiglia">si porta col cacciavite</span>'
+                        : c.manutenzione
+                          ? '<button type="button" class="tasto">Installa</button>'
+                          : '<span class="pastiglia">manutenzione chiusa</span>'
+                    }`,
+                  }),
                 )
                 .join("")}
             </ul>
@@ -2834,19 +2966,21 @@
                   </h3>
                   <span class="conta">${plurale(cose.length, "cosa", "cose")}</span>
                 </div>
-                <div class="indietro-chi">
+                <ul class="versi">
                   ${cose
-                    .map(
-                      (uno) => `<span class="pastiglia ${
-                        sta(uno) ? "lavoro" : uno.installabile && aperta ? "" : "attenta"
-                      }"
-                        >${testo(uno.nome)} · ${testo(uno.da)} → ${testo(uno.a)}${
-                          sta(uno) ? " · in corso" : ""
-                        }</span
-                      >`,
+                    .map((uno) =>
+                      unaRiga(uno, {
+                        fare: sta(uno)
+                          ? '<span class="pastiglia lavoro">in corso</span>'
+                          : !uno.installabile
+                            ? '<span class="pastiglia">col cacciavite</span>'
+                            : aperta
+                              ? ""
+                              : '<span class="pastiglia attenta">manutenzione chiusa</span>',
+                      }),
                     )
                     .join("")}
-                </div>
+                </ul>
                 <p class="verdetto">
                   ${
                     !aperta && daQui

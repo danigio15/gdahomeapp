@@ -11,6 +11,32 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.6.5
+
+**Gli aggiornamenti nel quadro, con il logo e con cosa cambia.** Erano
+pastigline: «Shelly Plus · 1.2.0 → 1.3.0», e basta. Nell'app quella stessa
+schermata ha il logo di chi porta l'aggiornamento e le note della versione, e
+non c'era nessun motivo perché il quadro ne mostrasse meno — è lo stesso
+elenco, e chi lo guarda deve prendere la stessa decisione.
+
+**Il logo si compone, non si scarica da un indirizzo che arriva.** Da casa
+parte una *parola* — `shelly`, `zha`, `homeassistant` — e l'indirizzo dei
+marchi di Home Assistant lo sa il quadro. È la differenza fra una casa che
+dice «il mio logo è questo» e una casa che dice «vai a bussare qui»: la
+seconda, chiunque possa scrivere l'attributo di un'entità la può usare per
+mandare il browser dell'installatore dove vuole. Roba nostra a parte, che
+porta il bollo del quadro, disegnato nella pagina e mai scaricato.
+
+Add-on e Home Assistant passano dalla stessa porta (`hassio`) e non hanno lo
+stesso segno: un add-on la sua icona ce l'ha nella macchina di casa, e da
+fuori non si prende — resta l'iniziale, che dice più del logo del Supervisor
+ripetuto venti volte. Un firmware che arriva per MQTT porta il marchio di
+Zigbee2MQTT, e solo se quell'add-on in casa c'è davvero.
+
+**E la stessa riga la disegnano tutt'e due le schermate.** Prima erano due —
+righe nella scheda di una casa, pastigline nella flotta — e una delle due
+restava sempre indietro. Adesso è una.
+
 ## 1.5.6.4
 
 **I dispositivi che non rispondono adesso hanno un nome.** Prima nel quadro

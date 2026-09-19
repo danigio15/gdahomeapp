@@ -375,6 +375,24 @@ export function fabbricaIlRapporto({
     ]);
     const quelli = Array.isArray(stati) ? stati : null;
 
+    /* I marchi si chiedono **dopo** l'elenco, perche' e' l'elenco che dice di
+     * quali. Uno per aggiornamento che aspetta, e in una casa normale sono
+     * due o tre; la risposta se la tiene `Aggiornamenti` finche' l'elenco non
+     * si muove, quindi il minuto dopo non si richiede niente.
+     *
+     * Uno che non risponde lascia il suo senza marchio e non porta via gli
+     * altri: `Promise.all` su `forse` non solleva mai. */
+    const marchi = new Map(
+      daFare
+        ? await Promise.all(
+            daFare.map(async (uno) => [
+              uno.entita,
+              (await forse("un marchio", () => aggiornamenti.marchioDi(uno.entita))) ?? "",
+            ]),
+          )
+        : [],
+    );
+
     return compila({
       casa: identita.casa,
       ogni,
@@ -395,7 +413,7 @@ export function fabbricaIlRapporto({
         : null,
       apparati: quelli ? gliApparati(quelli, { scelte: apparatiScelti() }) : null,
       addon: detto ? gliAddon({ addons: detto.addons }) : null,
-      aggiornamenti: daFare ? iConti(daFare) : null,
+      aggiornamenti: daFare ? iConti(daFare, marchi) : null,
       plance: plance ? lePlance(plance, configurazione) : null,
       telefoni: dispositivi ? iTelefoni(dispositivi, adesso) : null,
       fuori: chiamata ? { acceso: Boolean(chiamata.dove), filo: chiamata.accesa === true } : null,
@@ -406,11 +424,36 @@ export function fabbricaIlRapporto({
   };
 }
 
+/* Quanto e' lungo l'indirizzo delle note che si accetta. Non e' una misura
+ * di sicurezza, e' un tetto: un `release_url` di diecimila caratteri e' un
+ * rapporto che diventa grande per niente. */
+const INDIRIZZO_MASSIMO = 300;
+
+/* L'indirizzo delle note lunghe, se e' un indirizzo da far vedere.
+ *
+ * Arriva da un attributo dell'entita', cioe' da fuori, e nel quadro diventa un
+ * collegamento su cui chi ha montato l'impianto clicca. Percio' passa solo
+ * `https://`: `javascript:` in un `href` e' un programma, e `http://` e'
+ * l'unica cosa che nel 2026 non si manda a cliccare a nessuno. Quello che non
+ * passa diventa stringa vuota, e nel quadro il collegamento non c'e' — le note
+ * brevi si leggono lo stesso. */
+function lIndirizzoDelleNote(dove) {
+  const quale = String(dove ?? "").trim();
+  if (quale.length > INDIRIZZO_MASSIMO) return "";
+  return /^https:\/\/[^\s"'<>]+$/i.test(quale) ? quale : "";
+}
+
 /* Quanti aggiornamenti aspettano, e di che razza. Le voci arrivano gia' fatte
  * da `aggiornamentiDaFare`, che e' lo stesso elenco che vede chi apre l'app:
  * chi guarda il quadro e chi guarda la casa non devono contare due numeri
- * diversi. */
-function iConti(daFare) {
+ * diversi.
+ *
+ * `marchi` e' entita' → parola, e l'entita' si usa **qui** per pescare il
+ * marchio giusto: nel foglio che parte non ci va, e non e' una dimenticanza.
+ * `update.camera_di_marco_firmware` direbbe cosa c'e' in questa casa e in
+ * quale stanza, e non e' quello che il quadro deve sapere per far vedere che
+ * c'e' una versione nuova. */
+function iConti(daFare, marchi = new Map()) {
   const elenco = Array.isArray(daFare) ? daFare : [];
   const suo = (uno) => /home.?assistant/i.test(String(uno.nome ?? ""));
   return {
@@ -429,6 +472,17 @@ function iConti(daFare) {
       nostra: uno.nostra === true,
       installabile: uno.installabile === true,
       stacca: uno.stacca === true,
+      /* Il marchio: una parola, non un indirizzo. Il perche' sta su
+       * `marchioDi`, in `aggiornamenti.js`. */
+      marchio: String(marchi.get(uno.entita) ?? ""),
+      /* Cosa cambia, con le parole di chi l'ha scritto: e' il
+       * `release_summary` dell'entita', che Home Assistant taglia gia' a 255
+       * caratteri. Sono le stesse righe che l'app fa leggere prima di premere
+       * «Installa», e sono la differenza fra un tasto premuto sapendo cosa fa
+       * e uno premuto al buio. Quelle lunghe stanno all'indirizzo qui sotto,
+       * e per leggerle serve il filo con la casa — che il quadro non ha. */
+      cosaCambia: String(uno.dettagli ?? ""),
+      note: lIndirizzoDelleNote(uno.note),
     })),
   };
 }

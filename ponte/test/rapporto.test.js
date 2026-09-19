@@ -30,6 +30,7 @@ import {
 } from "../src/rapporto.js";
 import { gliAddon, laMacchina, laRete } from "../src/ferro.js";
 import { ilBackup, leBatterie, leEntita } from "../src/salute.js";
+import { Aggiornamenti } from "../src/aggiornamenti.js";
 
 const ZITTO = { debug() {}, info() {}, attenzione() {}, errore() {} };
 
@@ -581,4 +582,89 @@ test("una risposta senza nome, o che non è JSON, non fa danni", async () => {
   assert.equal(await nonJson.manda(), true, "una risposta che non è JSON nemmeno");
   assert.equal(senzaNome.chi, "");
   assert.equal(nonJson.chi, "");
+});
+
+/* ─── Cosa parte di un aggiornamento ───────────────────────────────────── */
+
+test("dell'aggiornamento partono il marchio e cosa cambia, e non l'entita'", async () => {
+  const stati = [
+    {
+      entity_id: "update.camera_di_marco_termostato",
+      state: "on",
+      attributes: {
+        supported_features: 1,
+        friendly_name: "Termostato",
+        installed_version: "1.2.0",
+        latest_version: "1.3.0",
+        release_summary: "Risolve il riavvio notturno.",
+        release_url: "https://example.invalid/note",
+      },
+    },
+  ];
+  const fabbrica = fabbricaIlRapporto({
+    identita: { casa: "casa_abc" },
+    casa: {
+      chiedi: async ({ type }) => {
+        if (type === "get_states") return stati;
+        if (type === "config/entity_registry/get") return { platform: "shelly" };
+        return [];
+      },
+    },
+    ferro: ferroFinto({ os: {}, host: {}, network: null, addons: [] }),
+    aggiornamenti: new Aggiornamenti({
+      casa: { chiedi: async () => stati },
+      registro: ZITTO,
+    }),
+    registro: ZITTO,
+    adesso: () => Date.parse("2026-09-18T09:41:12Z"),
+  });
+
+  const foglio = await fabbrica();
+  const uno = foglio.aggiornamenti.elenco[0];
+  assert.equal(uno.nome, "Termostato");
+  assert.equal(uno.cosaCambia, "Risolve il riavvio notturno.");
+  assert.equal(uno.note, "https://example.invalid/note");
+
+  /* E l'entita' no: `update.camera_di_marco_termostato` direbbe chi abita in
+   * questa casa e in quale stanza dorme, e per far vedere che c'e' una
+   * versione nuova non serve. */
+  assert.equal(uno.entita, undefined);
+  assert.ok(!JSON.stringify(foglio).includes("camera_di_marco"));
+});
+
+test("l'indirizzo delle note passa solo se e' un indirizzo da cliccare", async () => {
+  /* Arriva da un attributo dell'entita', cioe' da fuori, e nel quadro diventa
+   * un collegamento. `javascript:` in un `href` e' un programma. */
+  for (const [dove, atteso] of [
+    ["https://example.invalid/note", "https://example.invalid/note"],
+    ["javascript:alert(1)", ""],
+    ["http://example.invalid/note", ""],
+    ["https://example.invalid/ a b", ""],
+    [`https://example.invalid/${"x".repeat(400)}`, ""],
+    ["", ""],
+  ]) {
+    const stati = [
+      {
+        entity_id: "update.uno",
+        state: "on",
+        attributes: {
+          supported_features: 1,
+          friendly_name: "Uno",
+          installed_version: "1",
+          latest_version: "2",
+          release_url: dove,
+        },
+      },
+    ];
+    const fabbrica = fabbricaIlRapporto({
+      identita: { casa: "casa_abc" },
+      casa: { chiedi: async ({ type }) => (type === "get_states" ? stati : []) },
+      ferro: ferroFinto({ os: {}, host: {}, network: null, addons: [] }),
+      aggiornamenti: new Aggiornamenti({ casa: { chiedi: async () => stati }, registro: ZITTO }),
+      registro: ZITTO,
+      adesso: () => Date.parse("2026-09-18T09:41:12Z"),
+    });
+    const foglio = await fabbrica();
+    assert.equal(foglio.aggiornamenti.elenco[0].note, atteso, `«${dove}»`);
+  }
 });

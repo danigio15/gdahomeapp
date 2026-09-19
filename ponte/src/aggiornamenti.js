@@ -244,6 +244,15 @@ export function ilMarchioDi(integrazione) {
 const UNA_STRADA = "mqtt";
 const UN_FIRMWARE = "firmware";
 
+/* L'integrazione che porta in casa il Supervisor e tutto quello che ci gira
+ * dentro: Home Assistant stesso, il sistema, e **ogni add-on**. Anche questa
+ * e' una strada e non un prodotto — col marchio di `hassio` venti add-on
+ * diversi avrebbero tutti lo stesso segno — e si separa guardando l'icona che
+ * dichiarano: un add-on ce l'ha e sta nella sua macchina, Home Assistant no. */
+const UN_SUPERVISORE = "hassio";
+const IL_MARCHIO_DI_CASA = "homeassistant";
+const IL_MARCHIO_DI_ZIGBEE = "zigbee2mqtt";
+
 /* Come si riconosce l'add-on di Zigbee2MQTT fra gli altri. Lo slug ha davanti
  * il numero di chi tiene il deposito (`45df7312_zigbee2mqtt`), e dietro puo'
  * avere una coda (`_edge`): quello che conta e' il pezzo in mezzo. */
@@ -379,6 +388,11 @@ export class Aggiornamenti {
      * — chi installa Zigbee2MQTT domani non deve riavviare il ponte per
      * vedere il suo segno. */
     this._diChiE = new Map();
+    /* E qui il **marchio** di ognuno: la stessa domanda al registro, tenuta
+     * a parte perche' la risposta e' un'altra cosa — non un indirizzo da
+     * andare a prendere, una parola da mandare a chi l'indirizzo se lo
+     * compone da se'. */
+    this._ilMarchio = new Map();
   }
 
   /* Cosa aspetta di essere aggiornato. L'elenco si tiene per qualche secondo:
@@ -405,6 +419,7 @@ export class Aggiornamenti {
      * comunque. */
     this._diZigbee = ilSegnoDiZigbee2mqtt(dentro);
     this._diChiE = new Map();
+    this._ilMarchio = new Map();
     this._lettoIl = this.adesso();
     return this._elenco;
   }
@@ -482,6 +497,82 @@ export class Aggiornamenti {
       return this._diZigbee;
     }
     return ilMarchioDi(quale);
+  }
+
+  /**
+   * Il marchio di chi porta questo aggiornamento, come **parola**.
+   *
+   * Non e' un indirizzo, ed e' tutta la differenza. Chi lo riceve e' il quadro
+   * dell'installatore: una macchina che con questa casa non parla, che non le
+   * puo' chiedere niente, e che quindi un logo non se lo puo' far dare —
+   * `doveIlLogo` funziona perche' il telefono il filo con la casa ce l'ha, e
+   * il quadro no. Se li' arrivasse un indirizzo, chi puo' scrivere
+   * l'attributo di un'entita' deciderebbe dove va a bussare il browser di chi
+   * ha montato l'impianto. Arriva invece una parola di `[a-z0-9_]`, e il posto
+   * dove andarla a cercare — `brands.home-assistant.io` — lo sa il quadro.
+   *
+   * Stringa vuota vuol dire «non si sa», ed e' una risposta: chi disegna mette
+   * l'iniziale del nome, che e' quello che fa gia' l'app.
+   *
+   * @param {string} entita l'entita' `update.`
+   */
+  async marchioDi(entita) {
+    const quale = pulito(entita);
+    if (!quale) return "";
+    await this.elenco();
+    /* Solo per quelli che l'elenco ha, come per il logo e per le note: non si
+     * va a chiedere niente al registro per un nome che arriva da fuori. */
+    if (!this._elenco?.some((una) => una.entita === quale)) return "";
+    if (this._ilMarchio.has(quale)) return this._ilMarchio.get(quale);
+    let chi = "";
+    try {
+      const riga = await this.casa.chiedi({
+        type: "config/entity_registry/get",
+        entity_id: quale,
+      });
+      chi = this._ilMarchioDi(quale, riga?.platform);
+    } catch (errore) {
+      /* Un registro che non risponde non e' un guasto da mostrare: e' un
+       * marchio che non si sa. */
+      this.registro.info(`il marchio di ${quale}: ${errore?.message || errore}`);
+    }
+    this._ilMarchio.set(quale, chi);
+    return chi;
+  }
+
+  /* Quale parola, viste le due strade che non sono prodotti.
+   *
+   * `mqtt` su un firmware e' un dispositivo di Zigbee2MQTT — il ragionamento
+   * per esteso sta su `_chiLoPorta` — e si manda il marchio di Zigbee2MQTT
+   * solo se quell'add-on in casa c'e' davvero.
+   *
+   * `hassio` e' l'altra: la porta di tutto quello che gira nel Supervisor. Un
+   * add-on da li' dentro dichiara la sua icona, che sta nella macchina di
+   * casa e da fuori non si prende: per quelli non si manda niente e resta
+   * l'iniziale, che dice piu' del logo del Supervisor ripetuto venti volte.
+   * Quello che passa da `hassio` e **non** e' un add-on e' Home Assistant
+   * stesso — il core, il sistema, il Supervisor — e quello il suo marchio ce
+   * l'ha.
+   *
+   * @param {string} entita l'entita' `update.`
+   * @param {string} integrazione l'integrazione, come la dice il registro
+   */
+  _ilMarchioDi(entita, integrazione) {
+    const quale = pulito(integrazione).toLowerCase();
+    if (quale === UNA_STRADA && this._laClasse.get(entita) === UN_FIRMWARE) {
+      return this._diZigbee ? IL_MARCHIO_DI_ZIGBEE : "";
+    }
+    if (quale === UN_SUPERVISORE) {
+      const suo = this._dovIlLogo.get(entita) ?? "";
+      return LICONA_DI_UN_ADDON.test(suo) ? "" : IL_MARCHIO_DI_CASA;
+    }
+    /* Solo quello che e' una parola: finisce dentro un indirizzo che compone
+     * qualcun altro, e una barra o un punto lo porterebbero da un'altra
+     * parte. E' lo stesso controllo di `ilMarchioDi`, e sta scritto due volte
+     * apposta: li' guarda un indirizzo che parte da qui, qui una parola che
+     * parte da qui, e il giorno che una delle due cambia non deve trascinarsi
+     * dietro l'altra. */
+    return /^[a-z0-9_]+$/.test(quale) ? quale : "";
   }
 
   /**
