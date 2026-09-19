@@ -52,8 +52,12 @@ class IlCruscotto {
       final detto = await _filo.risultato({'type': 'ponte/quadro/stato'});
       if (detto is! Map) return _niente;
       return (
-        cruscotto: detto['installatore'] == true ? _soloHttps(detto['dove']) : '',
-        gestione: detto['gestore'] == true ? _soloHttps(detto['doveGestione']) : '',
+        cruscotto: detto['installatore'] == true
+            ? _soloHttps(detto['dove'])
+            : '',
+        gestione: detto['gestore'] == true
+            ? _soloHttps(detto['doveGestione'])
+            : '',
       );
     } catch (_) {
       return _niente;

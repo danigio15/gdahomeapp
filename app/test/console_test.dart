@@ -115,7 +115,8 @@ void main() {
       expect(
         gia,
         isNull,
-        reason: '${una.name} e ${gia?.name} hanno lo stesso disegno '
+        reason:
+            '${una.name} e ${gia?.name} hanno lo stesso disegno '
             '«${una.disegno}»',
       );
       disegni[una.disegno] = una;
