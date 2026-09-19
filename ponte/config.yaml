@@ -43,7 +43,7 @@ name: gdahome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.5.5"
+version: "1.5.5.1"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
@@ -167,16 +167,6 @@ options:
   # Quanto vive il segno di un telefono senza farsi vedere, in giorni.
   # Zero vuol dire per sempre.
   giorni_di_silenzio: 90
-  # La chiave con cui si **risponde** alle chat di assistenza.
-  #
-  # Lasciala vuota. Serve a UNA installazione al mondo — quella di chi l'app la
-  # mantiene — per leggere le conversazioni di tutti e rispondere. In tutte le
-  # altre case non cambia niente e non si vede niente: la chat resta quella di
-  # chi chiede aiuto, che e' quello che serve.
-  #
-  # E' la stessa chiave messa fra i segreti del centralino, e non si inventa
-  # qui: si copia da li'.
-  chiave_console: ""
   # Il quadro di chi ti ha fatto l'impianto.
   #
   # Lasciala vuota. Serve a chi la casa se l'e' fatta montare da un
@@ -236,35 +226,45 @@ options:
   # tutte le case del mondo era un interruttore da premere per curiosita'. La
   # chiave e' l'interruttore: senza, non c'e' niente da accendere.
   chiave_gestione: ""
+  # La chiave con cui si **risponde** alle chat di assistenza.
+  #
+  # Lasciala vuota. Serve a UNA installazione al mondo — quella di chi l'app la
+  # mantiene — per leggere le conversazioni di tutti e rispondere. In tutte le
+  # altre case non cambia niente e non si vede niente: la chat resta quella di
+  # chi chiede aiuto, che e' quello che serve.
+  #
+  # E' la stessa chiave messa fra i segreti del centralino, e non si inventa
+  # qui: si copia da li'.
+  chiave_console: ""
   registro: info
 
+# Nello stesso ordine delle opzioni qui sopra, e non e' pignoleria: sono due
+# elenchi delle stesse dodici righe, e quando divergono si legge l'uno
+# cercando nell'altro. Una prova tiene che siano le stesse
+# (`ponte/test/manifesto.test.js`); l'ordine lo tiene chi scrive.
 schema:
   da_fuori_casa: bool
   porta_app: int(1024,65535)
   dispositivi_massimi: int(1,100)
   minuti_del_codice: int(1,60)
   giorni_di_silenzio: int(0,3650)
-  # `password` perche' Home Assistant la nasconda mentre si scrive e non la
-  # rimostri dopo; il `?` perche' chi non ne ha bisogno — cioe' chiunque tranne
-  # una installazione al mondo — non deve trovarsi un campo obbligatorio da
-  # riempire. Si puo' sempre rileggere da dove sta di casa: sulla macchina,
-  # con `tramite-chiave`.
-  chiave_console: password?
   # `str?` e non `password?`: questa riga non e' un segreto da nascondere a chi
   # ci abita — e' il contrario, e' la cosa che deve poter rileggere per sapere
   # a chi la sua casa sta parlando.
   quadro: str?
   quadro_ogni: int(1,1440)
   installatore: bool
-  # `password?` come `chiave_console`, e per gli stessi due motivi: Home
+  # Le tre chiavi, tutte `password?`, e per gli stessi due motivi: Home
   # Assistant le nasconde mentre si scrivono e non le rimostra dopo, e il `?`
   # fa si' che chi non ne ha bisogno — cioe' quasi tutti — non si trovi un
-  # campo obbligatorio da riempire.
+  # campo obbligatorio da riempire. Si rileggono da dove stanno di casa: sulla
+  # macchina del quadro, o da chi le ha consegnate.
   #
-  # `gestore: bool` non c'e' piu': l'interruttore e' diventato la chiave qui
-  # sotto. Chi aggiorna da una versione che ce l'aveva se lo ritrova tolto
-  # dalla scheda, e il valore che ci aveva messo non conta piu' niente — che e'
-  # il punto: era un interruttore su case che non c'entravano.
+  # `gestore: bool` non c'e' piu': l'interruttore e' diventato
+  # `chiave_gestione`. Chi aggiorna da una versione che ce l'aveva se lo
+  # ritrova tolto dalla scheda, e il valore che ci aveva messo non conta piu'
+  # niente — che e' il punto: era un interruttore su case che non c'entravano.
   chiave_cruscotto: password?
   chiave_gestione: password?
+  chiave_console: password?
   registro: list(debug|info|attenzione|errore)
