@@ -508,7 +508,7 @@ Per l'inglese, fra quattro voci provate allo stesso modo, `bf_emma` ha fatto
 
 E la prova si rifà su **tutto** il copione, non su sei frasi: quarantuno frasi
 per lingua, che è la misura con cui si è chiuso il lavoro — **84,1%**
-l'italiano, **94,5%** l'inglese. Quello che resta fuori sono quasi tutte
+l'italiano, **94,4%** l'inglese. Quello che resta fuori sono quasi tutte
 elisioni che un orecchio ricuce da sé e chi trascrive no: «stanze né persone»
 diventa «stanzene persone», «add-on» diventa «addon».
 

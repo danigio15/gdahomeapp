@@ -36,7 +36,7 @@
  * si fa **riascoltare a un programma che trascrive**, e si contano le parole
  * che tornano. Su sei frasi di prova piper ne faceva capire il 64,2% e Kokoro
  * l'83,8%; su tutto il copione — quarantuno frasi — Kokoro sta all'84,1% in
- * italiano e al 94,5% in inglese. Gli errori di piper dicevano cosa stava
+ * italiano e al 94,4% in inglese. Gli errori di piper dicevano cosa stava
  * succedendo: «il quadro» diventava «il quarro», «un installatore» diventava
  * «un install a torre». Non dice niente sul timbro, che non si misura: dice
  * quanto si capisce, che e' la meta' che conta di piu'.
