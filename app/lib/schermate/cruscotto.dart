@@ -118,8 +118,16 @@ class _StatoDelCruscotto extends State<SchermataDelCruscotto> {
     final controllore = riquadro.costruisciIlControllore(
       quandoCaricata: () {
         if (mounted) setState(() => _caricata = true);
-        /* E appena la pagina c'e', il codice: cosi' non lo si ribatte. */
-        unawaited(riquadro.consegnaLaChiave(controllore, widget.chiave));
+        /* E appena la pagina c'e', il codice: cosi' non lo si ribatte.
+         *
+         * `_controllore` e non la variabile qui sotto: questa chiusura la si
+         * scrive **dentro** l'espressione che quella variabile la crea, e li'
+         * non esiste ancora. Il campo si', ed e' gia' assegnato quando la
+         * pagina finisce di caricare. */
+        final suo = _controllore;
+        if (suo != null) {
+          unawaited(riquadro.consegnaLaChiave(suo, widget.chiave));
+        }
       },
       quandoFallisce: (perche) {
         if (mounted) setState(() => _guaio = perche);
