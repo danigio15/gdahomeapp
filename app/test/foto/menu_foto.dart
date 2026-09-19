@@ -24,7 +24,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/schermate/barra.dart';
-import 'package:gdahome/schermate/cruscotto.dart';
 import 'package:gdahome/schermate/da_parte.dart';
 import 'package:gdahome/schermate/menu.dart';
 import 'package:gdahome/vestito/sfondo.dart';
@@ -192,45 +191,18 @@ void main() {
     );
   });
 
-  /* E la schermata che quella voce apre.
+  /* La schermata che quella voce apre **non si fotografa qui**, e vale la pena
+   * dire perche' invece di lasciare un buco.
    *
-   * Sta qui e non in un attrezzo suo perche' e' la stessa cosa guardata un
-   * gesto piu' in la': si preme la voce, e si vede questa. */
-  Future<void> laSchermata(
-    WidgetTester tester, {
-    required String dove,
-    required bool scuro,
-  }) async {
-    quantoGrande(tester, scuro: scuro);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: temaChiaro(),
-        darkTheme: temaScuro(),
-        themeMode: scuro ? ThemeMode.dark : ThemeMode.light,
-        home: SfondoVivo(
-          child: Scaffold(
-            appBar: AppBar(title: Text(Sezione.cruscotto.titolo)),
-            body: const SchermataDelCruscotto(
-              dove: 'https://quadro.gdahome.org/console/',
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pump();
-    await expectLater(
-      find.byType(MaterialApp),
-      matchesGoldenFile('../../../collaudo/foto/menu/$dove.png'),
-    );
-  }
-
-  testWidgets('la schermata del cruscotto', (tester) async {
-    await laSchermata(tester, dove: 'schermata', scuro: false);
-  });
-
-  testWidgets('la schermata del cruscotto, al buio', (tester) async {
-    await laSchermata(tester, dove: 'schermata-scuro', scuro: true);
-  });
+   * Non e' piu' una pagina di Flutter: e' un riquadro col cruscotto vero
+   * dentro, quello che sta sul quadro. `flutter_tester` un WebView non ce l'ha
+   * — non e' una mancanza, e' che li' non c'e' nessun browser — quindi una
+   * fotografia scattata qui mostrerebbe un rettangolo vuoto e racconterebbe
+   * una schermata che non esiste.
+   *
+   * Quello che si puo' provare di quella schermata sono le sue regole, e
+   * quelle hanno le loro prove in `test/cruscotto_test.dart`: che il riquadro
+   * non si apra finche' la sezione non si guarda, e che un indirizzo che non
+   * e' un indirizzo si dica invece di provare ad aprirlo.
+   */
 }
