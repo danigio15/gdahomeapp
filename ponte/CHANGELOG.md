@@ -11,6 +11,16 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.6.3
+
+**Il tasto del menu si sedeva sopra il marchio della pagina.** Stava in alto a
+sinistra, dove sta l'hamburger di Home Assistant — e lì sotto, nel Cruscotto e
+nella Gestione, c'è già il marchio del quadro, che spuntava da sotto il tasto.
+
+Ora sta in alto a destra. Non è dove uno se lo aspetta, ed è il prezzo: quel
+tasto galleggia su una pagina che non sa di averlo addosso e non gli fa spazio.
+Ma un tasto fuori posto si trova, una cosa coperta no.
+
 ## 1.5.6.2
 
 **Il cruscotto dell'installatore si apriva bianco.** Colpa della 1.5.6.1, e di

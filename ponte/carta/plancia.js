@@ -575,7 +575,14 @@ class RiquadroDiGdahome extends HTMLElement {
         .menu {
           position: absolute;
           top: calc(8px + env(safe-area-inset-top, 0px));
-          inset-inline-start: calc(8px + env(safe-area-inset-left, 0px));
+          /* A destra, e non a sinistra dove sta l'hamburger di Home Assistant.
+             A sinistra si sedeva sopra il marchio della pagina dentro — quel
+             riquadro blu che spuntava da sotto il tasto — perche' questo tasto
+             galleggia su una pagina che non sa di averlo addosso e non gli fa
+             spazio. Spostarlo costa che non sta dove uno se lo aspetta;
+             lasciarlo li' costava coprire una cosa di qualcun altro, che e'
+             peggio: un tasto fuori posto si trova, una cosa nascosta no. */
+          inset-inline-end: calc(8px + env(safe-area-inset-right, 0px));
           width: 40px; height: 40px; padding: 0;
           display: grid; place-items: center;
           border: 0; border-radius: 50%; cursor: pointer;
