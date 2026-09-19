@@ -1,13 +1,20 @@
 # I video e le copertine di gdahome
 
-Tre filmati e tre immagini ferme, **ognuno in italiano e in inglese**, fatti
-dalla stessa pagina web e dalla stessa cartella:
+Quattro filmati e tre immagini ferme, **ognuno in italiano e in inglese**,
+fatti dalla stessa pagina web e dalla stessa cartella:
 
 | film | misura | dura | a cosa serve |
 |---|---|---|---|
 | `gdahome-presentazione` | 1280×720 | 2:49 | quello che spiega: cos'è, come si installa l'add-on, come si abbina il telefono, quanto costa (niente) |
 | `gdahome-facebook` | 1080×1080 | 0:47 | il quadrato per il feed di Facebook |
 | `gdahome-tiktok` | 1080×1920 | 0:47 | lo stesso, in piedi, per TikTok — e per Reels e Storie |
+| `gdahome-quadro` | 1280×720 | 2:10 | **il quadro**: cosa vede chi ha montato l'impianto quando gli si danno in gestione le case, e cosa da lì non vede |
+
+I primi tre parlano a chi abita una casa. Il quarto parla a chi ne segue
+quaranta, e per questo dice due cose che negli altri non ci sono: cosa si legge
+dal quadro, e **cosa da lì non si può leggere**. La seconda metà non è un di
+più — è quella che decide se questo pezzo si può dare in mano a qualcuno — e
+sta nel film per intero: `quadro/README.md`, «Cosa il quadro non può fare».
 
 | immagine | misura | dove va |
 |---|---|---|
@@ -28,6 +35,14 @@ restano in italiano anche lì, e non dipendono da qui: la parola del meteo
 («SOLEGGIATO») e la pastiglia «ANTIFURTO · CASA» sono scritte così dentro
 DashboardModern, che in inglese non le traduce.
 
+**La console del quadro invece resta in italiano anche nel film inglese**, e
+non è una dimenticanza: quella pagina è scritta in italiano e basta — sta
+scritto nel suo programma, «questa pagina è in italiano, non nella lingua del
+browser». Tradurre le fotografie vorrebbe dire far vedere un quadro che non
+esiste. Le parole del film cambiano, gli schermi no; il giorno che la console
+parla due lingue, si scattano le fotografie anche nell'altra e questa riga si
+cancella.
+
 I filmati escono in **mp4** (H.264, con una traccia audio muta nei due corti) se
 sulla macchina c'è un ffmpeg vero; se c'è solo quello di Playwright escono in
 webm, e la ripresa lo dice. Per i negozi dei video serve l'mp4: TikTok un webm
@@ -38,7 +53,7 @@ non lo prende.
 ## Rifarli
 
 ```
-node strumenti/video/rendi.mjs                 i tre filmati, nelle due lingue
+node strumenti/video/rendi.mjs                 i quattro filmati, nelle due lingue
 node strumenti/video/rendi.mjs --film tiktok   uno solo (due lingue)
 node strumenti/video/rendi.mjs --lingua en     solo l'inglese
 node strumenti/video/rendi.mjs --copertine     le immagini ferme di Facebook
@@ -52,7 +67,15 @@ node strumenti/video/plancia-vera.mjs
 node strumenti/video/plancia-vera.mjs --lingua en
 ```
 
-Un quarto d'ora circa per tutti e sei i filmati. Serve **Playwright** (`npm i -g playwright`,
+E quelle della console del quadro, che invece è una sola lingua e non ha
+bisogno di essere detto due volte — accende un quadro vero, gli fa depositare
+una flotta inventata e lo fotografa:
+
+```
+node strumenti/video/quadro-vero.mjs
+```
+
+Venti minuti circa per tutti e otto i filmati. Serve **Playwright** (`npm i -g playwright`,
 oppure installato di fianco al progetto) e, per l'mp4, **ffmpeg**
 (`apt install ffmpeg`). Nient'altro.
 
@@ -71,12 +94,15 @@ mentre va.
 
 | file | cosa fa |
 |---|---|
-| `comune.css` | quello che i tre film hanno in comune: caratteri, colori, il fondo del palco, le animazioni, il telefono, le schede |
+| `comune.css` | quello che i quattro film hanno in comune: caratteri, colori, il fondo del palco, le animazioni, il telefono, le schede |
 | `pezzi.js` | i pezzi condivisi: il marchio, i disegnini, il telefono, **la plancia**, e il palco che chi filma va a cercare |
 | `presentazione.html` + `scene.js` | il film lungo: quindici scene, disposte a coordinate |
 | `social.html` + `social.js` | il film corto: sette scene, disposte **a colonna** |
+| `quadro.html` + `quadro.js` | il film del quadro: quattordici scene, con dentro le fotografie della console vera |
 | `copertine.html` + `copertine.js` | le copertine di Facebook e l'immagine del profilo, ferme |
 | `plancia-vera.mjs` + `casa-finta.js` | fotografano **la plancia vera**, quella di `ponte/plancia/` |
+| `quadro-vero.mjs` + `flotta-finta.js` | fotografano **il quadro vero**, quello di `quadro/console/` |
+| `quadro-elenco.png`, `-controlli`, `-come-sta`, `-dispositivi`, `-aggiornamenti`, `-abbina` | le sei fotografie della console, che finiscono negli schermi del quarto film |
 | `plancia-telefono.png`, `-tablet`, `-computer` (e `-en`) | le fotografie, che finiscono negli schermi delle copertine |
 | `rendi.mjs` | chi filma: apre la pagina, sposta l'orologio, scatta, e passa gli scatti a ffmpeg |
 | `qrcode.svg` | il QR code che si vede nel film lungo — lo rifà `rendi.mjs` a ogni ripresa |
@@ -112,6 +138,40 @@ di chi pubblica, e quello che ci finisce sotto non lo legge nessuno. Per questo
 le scene del film corto non sono disposte a coordinate come quelle del film
 lungo, ma **a colonna**: si mettono in fila e si dispongono da sole con lo
 spazio che trovano, che in un quadrato e in un palco in piedi è diverso.
+
+### Il film del quadro, e perché gli schermi sono veri
+
+Negli altri tre film la plancia è **ricostruita** (`pezzi.js`), e c'è una
+ragione: lì si muove — una luce che si accende al tocco — e una fotografia non
+si tocca. Nel film del quadro invece non si muove niente dentro gli schermi, e
+allora vale la regola delle copertine: **si fotografa la cosa vera**.
+
+Le sei fotografie escono da `quadro-vero.mjs` (qui sotto), e sono la pagina di
+`quadro/console/` — quella che un installatore apre davvero. Un cruscotto
+ridisegnato a mano si sarebbe staccato dal vero al primo cambiamento, e nessuno
+se ne sarebbe accorto: un film è l'unico posto del progetto dove un difetto non
+si vede finché non lo guarda qualcuno da fuori.
+
+Due mosse sole, e tornano in tutte le scene che hanno uno schermo dentro:
+
+- **lo schermo intero**, dentro la cornice del computer di `pezzi.js`. Dice una
+  cosa e una sola — «è un cruscotto vero, e sono quindici case» — e non si
+  pretende che si legga;
+- **il ritaglio**, cioè un pezzo di quella stessa fotografia guardato da
+  vicino, che arriva quando lo schermo se ne va. È lì che si legge: una riga
+  dell'elenco, i due metri della macchina, la riga di un aggiornamento col suo
+  tasto.
+
+I due stanno nello stesso posto e si danno il cambio — `.corpo.sovrapposti` nel
+documento — perché messi in fila si rimpicciolirebbero a vicenda. A separarli è
+il tempo, non lo spazio: il primo se ne va (`via`) un attimo prima che arrivi il
+secondo, e chi guarda ha appena visto dove sta il pezzo che gli si sta
+ingrandendo davanti.
+
+Le coordinate dei ritagli sono quelle **della fotografia** — 1440 punti di
+larghezza, la misura dello schermo che l'ha scattata — e non quelle del palco:
+se un giorno la console sposta una scheda, si sposta un numero qui e non si
+rifà il conto di niente.
 
 ### Le copertine: i tre schermi, con la plancia vera
 
@@ -213,6 +273,45 @@ sembra un pezzo tagliato via.
 Le entità sono **inventate** e si vedono solo nelle immagini. `casa-finta.js`
 non è un pezzo del prodotto e non deve diventarlo.
 
+## Il quadro vero, fotografato
+
+```
+node strumenti/video/quadro-vero.mjs
+```
+
+Un minuto, e ne escono sei fotografie: `quadro-elenco.png`,
+`quadro-controlli.png`, `quadro-come-sta.png`, `quadro-dispositivi.png`,
+`quadro-aggiornamenti.png`, `quadro-abbina.png`. Sono 1440×900 — le
+proporzioni della cornice del computer di `pezzi.js` — e scattate al doppio,
+così un ritaglio si può guardare da vicino senza che si sgrani.
+
+**Come fa a girare senza installatori e senza case.** Lo script è il quadro:
+lo accende lui (`alzaIlQuadro`, porta a caso, archivi in una cartella
+temporanea), iscrive un installatore dalla via della gestione, e poi fa entrare
+quindici case **come entrano quelle vere** — un codice di abbinamento a testa,
+e un `POST /rapporto` con quel codice e la matricola in testa. Il quadro non sa
+che sono finte, e infatti le giudica lui: gli stati, i controlli e le pastiglie
+delle fotografie non sono scritti da nessuna parte qui dentro.
+
+La flotta sta in `flotta-finta.js`: quindici impianti, **una muta, tre da
+guardare, undici a posto**. È la proporzione di una giornata normale, ed è una
+scelta — se fossero metà rosse la fotografia racconterebbe un installatore che
+ha sbagliato mestiere, e se fossero tutte verdi non si capirebbe a cosa serve
+il quadro. I numeri sono quelli che il rapporto manda davvero
+(`ponte/src/rapporto.js`), con i nomi che hanno là dentro; i nomi delle case
+sono inventati, perché quelli veri sono clienti di qualcuno.
+
+**Una cosa sola si scrive da dietro, ed è il passato:** da quanti giorni una
+casa è installata e quanti rapporti ha mandato ogni giorno. Non c'è altro modo
+— per averlo davvero ci vorrebbero quattordici giorni — e senza, la striscia
+dei quattordici giorni sarebbe vuota in tutte e quindici le case. Si scrive sui
+dati del quadro e non attraverso una sua via, perché una via per riscrivere il
+passato non esiste e non deve esistere: lì si può perché quel quadro l'ha
+acceso questo script, e la cartella è sua.
+
+Le entità, i nomi e gli indirizzi sono **inventati** e si vedono solo nelle
+immagini. `flotta-finta.js` non è un pezzo del prodotto e non deve diventarlo.
+
 ## Quello che si vede è roba di qui dentro
 
 Il marchio è `app/assets/marchio/gda.png`, quello dell'icona dell'app. I
@@ -233,6 +332,13 @@ Le finestre di Home Assistant e la pagina di Google Play sono invece
 Nei tre filmati anche la plancia è ricostruita (`pezzi.js`), perché lì si
 muove: una luce che si accende al tocco. Nelle copertine, dove nessuno si
 muove, c'è quella vera.
+
+**E il quadro è vero.** Negli schermi del quarto film non c'è niente di
+disegnato: sono le fotografie di `quadro/console/index.html`, presa così com'è
+e riempita di una flotta inventata. Gli stati delle case, i dieci controlli e
+le pastiglie che si leggono lì dentro non li ha scritti questo film — li ha
+calcolati `quadro/src/controlli.js`, che è lo stesso programma che li calcola
+in casa di chi lo usa.
 
 ## Le date, e dove stanno scritte
 

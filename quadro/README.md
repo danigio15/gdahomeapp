@@ -12,6 +12,15 @@ una macchina vera.
 Sessantacinque prove qui dentro; il progetto intero ne conta più di settecento.
 Per accenderlo, [qui sotto](#accenderlo). Manca solo il record DNS.
 
+**C'è un video** di due minuti che fa vedere tutto questo a chi installa — come
+entra una casa, l'elenco, i dieci controlli, la scheda di un impianto, gli
+aggiornamenti da lontano — e, con lo stesso peso, **cosa da lì non si vede**.
+Gli schermi non sono ricostruzioni: sono fotografie di questa console, con
+dentro una flotta inventata. Sta in
+[`strumenti/video/`](../strumenti/video/README.md), in italiano e in inglese —
+le fotografie restano in italiano, che è l'unica lingua in cui questa pagina è
+scritta.
+
 ## A cosa serve
 
 Un installatore mette gdahome in quaranta case. Dopo la consegna non ci torna

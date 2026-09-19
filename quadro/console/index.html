@@ -1700,6 +1700,16 @@
         margin-top: 10px;
       }
 
+      /* E chiusa finche' non si preme «Rinomina».
+         L'attributo `hidden` da solo non la chiudeva: quello che fa e'
+         `display: none` scritto dal browser, e qualunque `display` scritto qui
+         lo vince. Cosi' la casella col nome e il tasto «Salva» stavano aperti
+         nella scheda di ogni casa, e il tasto «Rinomina» sembrava non fare
+         niente — premuto, toglieva un `hidden` che non nascondeva. */
+      .rinomina[hidden] {
+        display: none;
+      }
+
       /* La riga piccola sotto a qualcos'altro: una spiegazione, un esito.
          Sta qui perche' le quattro che la usano nascevano senza regola — la
          classe veniva dalla console del ponte, che ha un foglio di stile suo e
@@ -3675,6 +3685,26 @@
         `;
       }
 
+      /* Quanto resta, scritto come si legge.
+       *
+       * Erano minuti e secondi soltanto, e andavano bene quando un codice
+       * viveva un quarto d'ora. Adesso ne vive ventiquattro di ore, e quel
+       * formato scriveva «1439:59»: un numero che per sapere se si fa in tempo
+       * ad arrivare dal cliente bisogna dividere per sessanta. Sopra l'ora si
+       * scrivono le ore; sotto resta mm:ss, che negli ultimi minuti e'
+       * esattamente quello che serve.
+       *
+       * E' rimasto indietro cosi': il codice e' passato da un quarto d'ora a un
+       * giorno (`src/chiavi.js`), e questo orologio non lo sapeva. */
+      function quantoResta(secondi) {
+        if (secondi <= 0) return "scaduto";
+        const due = (quanti) => String(quanti).padStart(2, "0");
+        const ore = Math.floor(secondi / 3600);
+        const minuti = Math.floor((secondi % 3600) / 60);
+        const coda = `${due(minuti)}:${due(secondi % 60)}`;
+        return ore ? `${ore}:${coda}` : coda;
+      }
+
       /* Gli orologi delle scadenze. Un codice che scade è la cosa che fa
        * sbagliare una installazione — si fa il codice, si sale in macchina, si
        * arriva e non vale più — quindi quanto gli resta si vede, e si muove. */
@@ -3690,10 +3720,7 @@
         }));
         const gira = () => {
           for (const { q, fino } of partiti) {
-            const restano = Math.max(0, Math.round((fino - Date.now()) / 1000));
-            const minuti = String(Math.floor(restano / 60)).padStart(2, "0");
-            const secondi = String(restano % 60).padStart(2, "0");
-            q.textContent = restano ? `${minuti}:${secondi}` : "scaduto";
+            q.textContent = quantoResta(Math.max(0, Math.round((fino - Date.now()) / 1000)));
           }
         };
         gira();

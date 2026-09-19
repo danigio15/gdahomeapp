@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <title>gdahome — il quadro, per chi installa</title>
+    <!--
+      Il film del quadro: cosa vede chi ha montato l'impianto, e cosa non vede.
+
+      E' fatto come gli altri due — ogni scena e' una <section>, tutto quello
+      che si muove e' un'animazione CSS, e le animazioni stanno **ferme**
+      (`animation-play-state: paused`): a portarle avanti e' chi filma, un
+      fotogramma per volta. La stessa pagina girata due volte da' due file
+      identici.
+
+      Le due regole per chi ci mette mano sono quelle di sempre:
+
+      - **niente animazioni infinite.** Finita l'ultima, chi filma riusa
+        l'ultimo scatto invece di rifarlo: un puntino che pulsa per sempre gli
+        toglie quella scorciatoia e triplica il tempo di ripresa;
+      - **quello che compare dopo parte nascosto**, con `opacity: 0` nel foglio
+        di stile e l'animazione in `forwards`.
+
+      Una cosa e' diversa dagli altri due, ed e' il motivo per cui questo film
+      esiste: quello che si vede negli schermi **non e' disegnato qui**. Sono
+      le fotografie della console vera (`quadro-vero.mjs`), quella che un
+      installatore apre davvero. Un cruscotto ridisegnato a mano si sarebbe
+      staccato dal vero al primo cambiamento, e nessuno se ne sarebbe accorto.
+    -->
+    <link rel="stylesheet" href="comune.css" />
+    <style>
+      /* Il palco: la misura del filmato. Il fondo sta in `comune.css`. */
+      #palco {
+        width: 1280px;
+        height: 720px;
+      }
+
+      .scena.in-scena {
+        display: block;
+      }
+
+      /* ── Il cartello in alto a sinistra ─────────────────────────────── */
+      .cartello {
+        position: absolute;
+        left: 64px;
+        top: 34px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .cartello .numero {
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        background: linear-gradient(150deg, var(--accento), #0369a1);
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 17px;
+        color: #04121f;
+        box-shadow: 0 6px 18px rgba(14, 165, 233, 0.35);
+      }
+      .cartello h2 {
+        margin: 0;
+        font-size: 25px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .cartello .sotto {
+        margin: 2px 0 0;
+        font-size: 15px;
+        color: var(--tenue);
+        font-weight: 500;
+      }
+
+      /* ── Il corpo della scena ───────────────────────────────────────── */
+      /* Quello che sta fra il cartello e le didascalie. Le scene non sono
+         disegnate a coordinate come nel film lungo: qui dentro c'e' quasi
+         sempre uno schermo e un elenco di fianco, e lasciarli disporre da soli
+         vuol dire non rimisurare tutto quando una riga si allunga. */
+      .corpo {
+        position: absolute;
+        left: 64px;
+        right: 64px;
+        top: 96px;
+        bottom: 128px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 38px;
+      }
+      .corpo.incolonna {
+        flex-direction: column;
+        justify-content: center;
+        gap: 18px;
+      }
+
+      /* Due cose nello stesso posto, una dopo l'altra.
+         Serve a far vedere prima lo schermo intero — «e' un cruscotto vero, e
+         sono quaranta case» — e poi il pezzo che conta, ingrandito. Messi in
+         fila si rimpicciolirebbero a vicenda; qui invece stanno uno sopra
+         l'altro, e a separarli e' il tempo: il primo se ne va (`via`) un
+         attimo prima che arrivi il secondo. */
+      .corpo.sovrapposti > * {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      /* ── Le didascalie in basso ─────────────────────────────────────── */
+      .didascalia {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 30px;
+        text-align: center;
+        padding: 0 110px;
+      }
+      .didascalia p {
+        margin: 0;
+        font-size: 25px;
+        line-height: 1.38;
+        font-weight: 500;
+        color: #dce8fa;
+        text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
+      }
+      .didascalia p b {
+        color: #fff;
+        font-weight: 700;
+      }
+      .didascalia p.piccola {
+        font-size: 20px;
+        color: var(--tenue);
+      }
+      /* Le righe stanno una sopra l'altra: chi va via non sposta chi arriva. */
+      .didascalia .riga {
+        position: absolute;
+        left: 110px;
+        right: 110px;
+        bottom: 0;
+      }
+
+      /* ── I titoli grandi ────────────────────────────────────────────── */
+      .titolo {
+        margin: 0;
+        font-size: 54px;
+        line-height: 1.1;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        text-align: center;
+      }
+      .titolo.medio {
+        font-size: 42px;
+      }
+      .occhiello {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--tenue);
+        text-align: center;
+      }
+      .firma {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 34px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      /* ── Il ritaglio: un pezzo di console, guardato da vicino ───────── */
+      /* La fotografia e' una sola, grande quanto uno schermo vero; qui se ne
+         mostra un pezzo, ingrandito. Il ritaglio si fa con un involucro che
+         taglia e la fotografia spostata dentro, non con un file per ogni
+         pezzo: i file sarebbero cinque cose da rifare a ogni ripresa. */
+      .ritaglio {
+        position: relative;
+        overflow: hidden;
+        border-radius: 14px;
+        box-shadow:
+          0 26px 60px rgba(0, 0, 0, 0.5),
+          0 0 0 1px rgba(255, 255, 255, 0.1);
+        background: #f0f4f8;
+      }
+      .ritaglio img {
+        position: absolute;
+        max-width: none;
+      }
+
+      /* ── Le righe di elenco, di fianco a uno schermo ────────────────── */
+      .voci {
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+        width: 100%;
+      }
+      .voce {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 13px 17px;
+        font-size: 21px;
+        line-height: 1.34;
+        font-weight: 600;
+      }
+      .voce .bollo {
+        flex: 0 0 auto;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 17px;
+        font-weight: 800;
+      }
+      .voce .quando {
+        display: block;
+        margin-top: 3px;
+        font-size: 18px;
+        font-weight: 500;
+        color: var(--tenue);
+      }
+
+      /* Le tre pastiglie degli stati: forma, parola e colore — mai il colore
+         da solo. E' la stessa regola della console, e qui vale doppio: un
+         video lo si guarda anche su uno schermo che i colori li sbaglia. */
+      .stati {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+      }
+      .stato {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px 26px;
+        border-radius: 999px;
+        font-size: 25px;
+        font-weight: 700;
+      }
+      .stato .segno {
+        font-size: 22px;
+      }
+
+      /* ── Il rapporto, come si legge ─────────────────────────────────── */
+      .foglio {
+        font-family: "DejaVu Sans Mono", ui-monospace, monospace;
+        font-size: 18px;
+        line-height: 1.62;
+        padding: 20px 24px;
+        border-radius: 16px;
+        color: #cfe1f7;
+        white-space: pre;
+      }
+      .foglio .chiave {
+        color: #7dd3fc;
+      }
+      .foglio .numero {
+        color: #fcd34d;
+      }
+      /* Il commento di fianco a una riga di configurazione: quello che quella
+         riga fa, con le parole della scheda dell'add-on. */
+      .foglio .nota {
+        color: #7f92ad;
+      }
+      .foglio.grande {
+        font-size: 24px;
+        padding: 26px 32px;
+      }
+
+      /* Quello che nel rapporto non c'e', e non ci deve andare. */
+      .mai {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        max-width: 620px;
+      }
+      .mai span {
+        padding: 9px 16px;
+        border-radius: 999px;
+        font-size: 19px;
+        font-weight: 600;
+        color: #fda4af;
+        background: rgba(225, 29, 72, 0.12);
+        border: 1px solid rgba(225, 29, 72, 0.35);
+        text-decoration: line-through;
+        text-decoration-color: rgba(253, 164, 175, 0.55);
+      }
+
+      /* La pastiglia larga, per una frase sola che deve restare. */
+      .pastiglia {
+        display: inline-flex;
+        align-items: center;
+        gap: 13px;
+        padding: 15px 26px;
+        font-size: 23px;
+        font-weight: 700;
+        border-radius: 999px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="palco"></div>
+    <script type="module" src="quadro.js"></script>
+  </body>
+</html>
