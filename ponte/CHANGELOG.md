@@ -11,6 +11,27 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.9
+
+**Dall'app, Cruscotto e Gestione non richiedono più il codice.** Il codice sta
+già nella scheda dell'add-on — è quello che fa esistere la voce — e dentro Home
+Assistant la pagina non lo richiede da un pezzo: gliela passa la tessera.
+Nell'app se lo faceva ribattere, perché l'app aveva solo l'indirizzo e non il
+codice. Due volte lo stesso codice, e la seconda è quella che fa pensare che la
+prima non abbia funzionato.
+
+Adesso è il ponte a darlo, sulla stessa risposta con cui dice se quella casa ha
+il cruscotto, e l'app lo consegna alla pagina **per la stessa strada della
+tessera** di Home Assistant: un messaggio, non l'indirizzo — un `#chiave=…`
+finirebbe nella cronologia e in ogni schermata mandata per chiedere aiuto.
+
+**Lo riceve solo chi amministra quella casa.** In Home Assistant quella voce è
+riservata a chi amministra, e darla sul filo a chiunque abbia abbinato un
+telefono vorrebbe dire una porta più aperta dall'app che da casa: di là di quel
+codice c'è l'elenco dei clienti di qualcuno. Chi non amministra — e chi ha
+abbinato il telefono prima che il ponte sapesse di chi fosse — la voce continua
+a vederla e il codice continua a battersela, come prima.
+
 ## 1.5.9.8
 
 **Il quadro adesso dice quale versione sta girando.** Prima non lo diceva da

@@ -399,6 +399,12 @@ class PonteFinto {
   /// e' solo il si' o il no.
   bool laConsole = false;
 
+  /* Se questa casa e' di chi installa, e il codice che il ponte le darebbe.
+   * Il codice il ponte vero lo manda **solo a chi amministra**: qui si decide
+   * riga per riga, che e' quello che serve alle prove. */
+  bool lInstallatore = false;
+  String ilCodiceDelCruscotto = '';
+
   /// La coda di chi risponde: le linee, e per ognuna il suo filo.
   final List<Map<String, dynamic>> conversazioni = [];
   final Map<String, List<Map<String, dynamic>>> fili = {};
@@ -562,6 +568,14 @@ class PonteFinto {
           'La chat di assistenza passa parole. Una foto si allega a una '
               'segnalazione.',
         );
+      case 'ponte/quadro/stato':
+        return si({
+          'installatore': lInstallatore,
+          'dove': lInstallatore ? 'https://quadro.gdahome.org/console/' : '',
+          if (ilCodiceDelCruscotto.isNotEmpty) 'chiave': ilCodiceDelCruscotto,
+          'gestore': false,
+          'doveGestione': '',
+        });
       case 'ponte/chat/stato':
         return si({
           'enabled': true,

@@ -1806,3 +1806,59 @@ test("il telefono chiede sul filo se questa casa ha il cruscotto, la gestione, o
   assert.equal(due.result.gestore, true);
   assert.notEqual(due.result.dove, due.result.doveGestione);
 });
+
+test("il codice del cruscotto lo riceve chi amministra, e nessun altro", async () => {
+  /* Il codice sta gia' nella scheda dell'add-on — e' quello che fa esistere la
+   * voce — e dentro Home Assistant la pagina non lo richiede: la tessera glielo
+   * passa. Nell'app se lo faceva ribattere, perche' l'app aveva solo
+   * l'indirizzo. «Se il codice e' inserito nella configurazione add-on non lo
+   * deve richiedere piu'.»
+   *
+   * Ma in Home Assistant quella voce e' `require_admin`, e darlo sul filo a
+   * chiunque abbia abbinato un telefono vorrebbe dire una porta piu' aperta
+   * dall'app che da casa: di la' c'e' l'elenco dei clienti di qualcuno. */
+  const con = (piu) =>
+    new Commissioni({
+      casa: casaDiProva(),
+      registro: ZITTO,
+      installatore: true,
+      gestore: true,
+      chiaveDelCruscotto: "codice-del-cruscotto",
+      chiaveDellaGestione: "codice-della-gestione",
+      ...piu,
+    });
+
+  const suo = await con().rispondi({ id: 1, type: "ponte/quadro/stato" }, { amministra: true });
+  assert.equal(suo.result.chiave, "codice-del-cruscotto");
+  assert.equal(suo.result.chiaveGestione, "codice-della-gestione");
+
+  /* Chi non amministra vede la voce e si batte il codice: com'era ieri. */
+  const altrui = await con().rispondi({ id: 2, type: "ponte/quadro/stato" }, { amministra: false });
+  assert.equal(altrui.result.chiave, undefined, "il codice va a chi non amministra");
+  assert.equal(altrui.result.chiaveGestione, undefined);
+  assert.equal(altrui.result.installatore, true, "e la voce invece sparisce");
+
+  /* E un telefono abbinato prima che il ponte sapesse di chi fosse risponde
+   * «non si sa»: si chiude, non si apre. */
+  const nonSiSa = await con().rispondi({ id: 3, type: "ponte/quadro/stato" });
+  assert.equal(nonSiSa.result.chiave, undefined, "«non si sa» passa per un si'");
+  assert.equal(nonSiSa.result.chiaveGestione, undefined);
+
+  /* Il codice non viaggia mai senza la sua porta: una casa che non e' di chi
+   * installa non manda il codice del cruscotto nemmeno a chi amministra. */
+  const senzaPorta = await con({ installatore: false, gestore: false }).rispondi(
+    { id: 4, type: "ponte/quadro/stato" },
+    { amministra: true },
+  );
+  assert.equal(senzaPorta.result.chiave, undefined);
+  assert.equal(senzaPorta.result.chiaveGestione, undefined);
+
+  /* E una casa che la porta ce l'ha ma il codice no non inventa niente. */
+  const senzaCodice = await new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    installatore: true,
+  }).rispondi({ id: 5, type: "ponte/quadro/stato" }, { amministra: true });
+  assert.equal(senzaCodice.result.installatore, true);
+  assert.equal(senzaCodice.result.chiave, undefined);
+});

@@ -343,6 +343,10 @@ export class Commissioni {
     /* E se e' quello di chi **tiene** il quadro. Stessa regola: un si' o un no,
      * e la chiave della gestione non passa di qui. */
     gestore = false,
+    /* I due codici scritti nella scheda dell'add-on. Non servono al ponte per
+     * niente: servono a **non farli ribattere**. Il perche' sta su `_ilQuadro`. */
+    chiaveDelCruscotto = "",
+    chiaveDellaGestione = "",
     spegnimento = null,
     aggiornamenti = null,
     ritorno = null,
@@ -365,6 +369,8 @@ export class Commissioni {
      * come `installatore`, e per lo stesso motivo: una porta che non si apre
      * e' peggio di una porta che non c'e'. */
     this.gestore = Boolean(gestore);
+    this.chiaveDelCruscotto = String(chiaveDelCruscotto || "");
+    this.chiaveDellaGestione = String(chiaveDellaGestione || "");
     this.configurazione = configurazione;
     /* Il catalogo delle integrazioni e le foto: le altre due cose che la
      * plancia chiedeva all'integrazione. */
@@ -451,7 +457,7 @@ export class Commissioni {
     if (tipo === TIPO_PLANCIA) return this._laPlancia(detto, chiChiede, amministra);
     if (PLANCE.has(tipo)) return this._lePlance(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("ponte/chat/")) return this._chatDellApp(detto);
-    if (tipo === IL_QUADRO) return this._ilQuadro(detto);
+    if (tipo === IL_QUADRO) return this._ilQuadro(detto, amministra);
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
       return this._segnalazioni(detto);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
@@ -509,15 +515,40 @@ export class Commissioni {
    *
    * La prova qui sotto la tiene al suo posto: chiede senza chat, che e' il
    * caso che prima falliva. */
-  _ilQuadro(detto) {
+  _ilQuadro(detto, amministra = null) {
+    /* ─── E il codice, a chi amministra ───────────────────────────────────
+     *
+     * Il codice sta gia' nella scheda dell'add-on — e' quello che fa esistere
+     * la voce — e dentro Home Assistant la pagina non lo richiede: la tessera
+     * glielo passa (`ponte/carta/plancia.js`). Nell'app invece la stessa
+     * pagina se lo faceva ribattere, perche' l'app aveva solo l'indirizzo.
+     * Due volte lo stesso codice, e la seconda e' quella che fa pensare che
+     * la prima non abbia funzionato.
+     *
+     * `amministra === true` e non «chiunque abbia abbinato un telefono»: in
+     * Home Assistant quella voce e' `require_admin`, e darla sul filo a chi
+     * non amministra vorrebbe dire una porta piu' aperta dall'app che da casa.
+     * Di la' di quel codice c'e' l'elenco dei clienti di qualcuno.
+     *
+     * Chi non amministra — e chi ha abbinato il telefono prima che il ponte
+     * sapesse di chi fosse, che qui risponde `null` — la voce continua a
+     * vederla e il codice continua a battersela: com'era ieri. Si chiude, non
+     * si apre. */
+    const suo = amministra === true;
     return si(detto?.id ?? null, {
       installatore: this.installatore,
       dove: this.installatore ? `${QUADRO_DI_DIFETTO}/console/` : "",
+      ...(suo && this.installatore && this.chiaveDelCruscotto
+        ? { chiave: this.chiaveDelCruscotto }
+        : {}),
       /* E la gestione, che e' l'altra meta' e mancava: il ponte fabbrica gia'
        * la sua voce nella barra di Home Assistant, e nell'app non c'era
        * proprio. Non era rotta — non era mai stata fatta. */
       gestore: this.gestore,
       doveGestione: this.gestore ? `${QUADRO_DI_DIFETTO}/gestore/` : "",
+      ...(suo && this.gestore && this.chiaveDellaGestione
+        ? { chiaveGestione: this.chiaveDellaGestione }
+        : {}),
     });
   }
 
