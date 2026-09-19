@@ -11,6 +11,47 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.4
+
+**Le voci nella barra laterale non comparivano, e la colpa era dell'add-on.**
+
+Chi accendeva l'interruttore non vedeva niente. Non era un permesso e non era
+Home Assistant: il ponte creava la voce e un secondo dopo se la cancellava da
+solo. Fa piazza pulita delle Plance che non ci sono più — giusto, se no
+restano voci che non aprono più niente — e il Cruscotto e la Gestione
+finivano in quel cestino perché il loro indirizzo comincia come quello delle
+Plance. Adesso le salta.
+
+**Senza il codice non c'è la porta, invece di una porta che non si apre.**
+
+Le due chiavi si scrivono ora nella scheda dell'add-on, e sono loro a
+decidere:
+
+- il **Cruscotto** vuole l'interruttore «Questo Home Assistant è di chi
+  installa» acceso **e** il codice della flotta. Da solo l'interruttore non
+  apre più niente;
+- la **Gestione** non ha più nessun interruttore. È una casa sola al mondo, e
+  un interruttore su tutte le altre è un invito a premerlo: adesso c'è la sua
+  chiave o non c'è la voce.
+
+Prima bastava accendere, e la chiave la chiedeva la pagina — così non finiva
+sul disco di nessuno, ed era il pregio. Il difetto era che chi accendeva per
+curiosità, o in casa di un cliente, si trovava comunque una voce nella barra
+laterale: una porta che non si apre, ma che si vede, e una porta che si vede è
+una domanda a cui qualcuno deve rispondere.
+
+**Il prezzo, detto per intero:** le opzioni di un add-on stanno su disco in
+chiaro e finiscono nei backup. Sono chiavi da scrivere sul proprio Home
+Assistant, non su quello di un cliente. In tutte le case che non c'entrano le
+due caselle restano vuote e non fanno niente.
+
+**E il rapporto al quadro parte ogni minuto**, non più ogni quarto d'ora — e
+si può scendere fino a un minuto, prima il minimo era cinque. Con quindici
+minuti di passo un impianto fermo alle 9:02 si sapeva alle 9:15, e in quel
+quarto d'ora il cliente aveva già telefonato: cioè era successo esattamente
+quello che il quadro doveva evitare. Chi non manda niente a nessun quadro —
+cioè chiunque abbia quella casella vuota — non se ne accorge.
+
 ## 1.5.3
 
 **Per chi tiene il quadro: la gestione degli installatori nella barra laterale.**
