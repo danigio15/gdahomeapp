@@ -8,7 +8,7 @@ fatti dalla stessa pagina web e dalla stessa cartella:
 | `gdahome-presentazione` | 1280×720 | 2:49 | quello che spiega: cos'è, come si installa l'add-on, come si abbina il telefono, quanto costa (niente) |
 | `gdahome-facebook` | 1080×1080 | 0:47 | il quadrato per il feed di Facebook |
 | `gdahome-tiktok` | 1080×1920 | 0:47 | lo stesso, in piedi, per TikTok — e per Reels e Storie |
-| `gdahome-quadro` | 1280×720 | 4:00 · 3:44 | **il quadro**, ed è l'unico **parlato**: cosa vede chi ha montato l'impianto quando gli si danno in gestione le case, e cosa da lì non vede |
+| `gdahome-quadro` | 1280×720 | 4:00 · 3:46 | **il quadro**, ed è l'unico **parlato**: cosa vede chi ha montato l'impianto quando gli si danno in gestione le case, e cosa da lì non vede |
 
 I primi tre parlano a chi abita una casa. Il quarto parla a chi ne segue
 quaranta, e per questo dice due cose che negli altri non ci sono: cosa si legge
@@ -428,7 +428,7 @@ in inglese accanto come in `t("…", "…")` — e la voce la monta
 
 **La scena aspetta la voce.** La durata scritta in `quadro.js` è il minimo: se
 il parlato di quella scena dura di più, la scena si allunga fino a quando ha
-finito. Per questo l'italiano dura 4:00 e l'inglese 3:44 — la stessa frase nelle
+finito. Per questo l'italiano dura 4:00 e l'inglese 3:46 — la stessa frase nelle
 due lingue non dura uguale, e allungare l'italiano per far tornare i conti
 vorrebbe dire quattordici pause finte. E per lo stesso motivo **le didascalie
 arrivano con la frase che le dice**: i tempi li misura `voce.mjs` e li lascia in
