@@ -202,6 +202,26 @@ test("l'app e l'add-on portano lo stesso numero", () => {
   assert.equal(costruito[1], costruzione);
   assert.equal(scritto[1], `${nome[1]} (${costruzione})`);
 
+  /* E il quarto posto: quello che **la plancia dichiara mentre gira**.
+   *
+   * `ORIGINE.json` porta il numero che il ponte mette nel rapporto, e da li'
+   * finisce nella console dell'add-on, nel cruscotto di chi installa e
+   * nell'app, alla riga «la plancia». Non lo scriveva nessuno — lo script che
+   * sigilla se lo riporta avanti dal giro prima — e cosi' era rimasto fermo:
+   * tre numeri dicevano 1.5.9 e questo diceva **1.4.32**, quattordici versioni
+   * indietro, sulla stessa riga della stessa schermata.
+   *
+   * Qui ci va il numero a tre cifre: il quarto e' una correzione dell'add-on,
+   * e la plancia dentro e' la stessa. */
+  const origine = JSON.parse(
+    readFileSync(fileURLToPath(new URL("../plancia/ORIGINE.json", import.meta.url)), "utf8"),
+  );
+  assert.equal(
+    origine.versione,
+    `${grande}.${medio}.${piccolo}`,
+    "la plancia dichiara una versione diversa da quella dell'app e dell'add-on",
+  );
+
   const correzione = suoi.length === 4 ? Number(suoi[3]) : 0;
   assert.ok(correzione >= 0 && correzione <= 99, "di correzioni ce ne stanno cento, da 0 a 99");
   assert.equal(

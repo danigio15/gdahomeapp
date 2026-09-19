@@ -1,4 +1,4 @@
-/* Il numero di versione, scritto nei due posti che lo devono dire uguale.
+/* Il numero di versione, scritto nei quattro posti che lo devono dire uguale.
  *
  * L'add-on e l'app portano lo stesso numero, ed e' quello della plancia che
  * sta dentro: chi apre l'app e chi apre la console si aspetta di leggere due
@@ -46,6 +46,32 @@ const PUBSPEC = join(RADICE, "app", "pubspec.yaml");
  * terzo numero da ricordarsi, e una prova tiene ferma la regola che siano lo
  * stesso (`ponte/test/marchio.test.js`). */
 const VERSIONE_DART = join(RADICE, "app", "lib", "versione.dart");
+
+/* E il quarto: quello che **la plancia dichiara mentre gira**.
+ *
+ * `ORIGINE.json` e' la carta d'identita' della plancia — l'impronta di ogni
+ * file, il commit da cui viene, e il suo numero di versione. Quel numero lo
+ * legge il ponte (`plancia.provenienza.versione`) e lo mette nel rapporto, da
+ * dove finisce nella console dell'add-on, nel cruscotto dell'installatore e
+ * nell'app, alla riga «la plancia».
+ *
+ * Non lo scriveva nessuno. `sigilla-la-plancia.mjs` se lo riporta avanti dal
+ * giro prima (`versione: String(prima?.versione || "")`), quindi restava fermo
+ * al giorno in cui qualcuno l'aveva scritto a mano: mentre tutto il resto
+ * diceva 1.5.9, la plancia continuava a dichiararsi **1.4.32**. Tre numeri
+ * giusti e uno vecchio di quattordici versioni, sulla stessa riga della stessa
+ * schermata.
+ *
+ * Qui ci va il numero a **tre** cifre, non quello a quattro: il quarto e' una
+ * correzione dell'add-on, e la plancia dentro e' la stessa. E' la stessa regola
+ * del nome dell'app, ed e' per questo che `versioneDiQuestApp` si chiama «la
+ * versione della plancia che l'app ha dentro».
+ *
+ * Si tocca solo quel campo: il sigillo e' l'impronta dei file dentro `legacy/`,
+ * `src/`, `avatars/` e `brands/` (`ponte/src/provenienza.js`), e `ORIGINE.json`
+ * non e' fra quelli. Scriverci la versione non muove il sigillo e non invalida
+ * nessuna firma. */
+const ORIGINE_DELLA_PLANCIA = join(RADICE, "ponte", "plancia", "ORIGINE.json");
 
 export function laVersioneDellAddon(manifesto) {
   return /^version: "([^"]+)"$/m.exec(manifesto)?.[1] || "";
@@ -107,6 +133,7 @@ function scrivi(quale) {
    * anche l'app deve poter entrare nel negozio senza inventare una versione
    * della plancia che non esiste. */
   const tre = pezzi.slice(0, 3).join(".");
+  scriviLOrigine(tre);
   const pubspec = readFileSync(PUBSPEC, "utf8");
   const suo = `${tre}+${laCostruzione(quale)}`;
   const era = laVersioneDellApp(pubspec);
@@ -119,6 +146,27 @@ function scrivi(quale) {
   }
   writeFileSync(PUBSPEC, pubspec.replace(/^version: \S+$/m, `version: ${suo}`), "utf8");
   process.stdout.write(`l'app: ${era || "?"} → ${suo}\n`);
+}
+
+/* Quello che la plancia dichiara mentre gira. Se non c'e' — una copia della
+ * repository senza la plancia dentro — non si inventa niente e non si lamenta:
+ * chi non ha la plancia non ha niente da tenere in pari. */
+function scriviLOrigine(tre) {
+  let scritto;
+  try {
+    scritto = readFileSync(ORIGINE_DELLA_PLANCIA, "utf8");
+  } catch (_nonCE) {
+    return;
+  }
+  const dentro = JSON.parse(scritto);
+  const era = String(dentro.versione || "");
+  if (era === tre) {
+    process.stdout.write(`la plancia: ${era}, gia' quella giusta\n`);
+    return;
+  }
+  dentro.versione = tre;
+  writeFileSync(ORIGINE_DELLA_PLANCIA, `${JSON.stringify(dentro, null, 2)}\n`, "utf8");
+  process.stdout.write(`la plancia: ${era || "?"} → ${tre}\n`);
 }
 
 /* Il numero dentro l'app, per farlo vedere. */
@@ -155,6 +203,14 @@ function dimmi() {
   const addon = laVersioneDellAddon(readFileSync(MANIFESTO, "utf8"));
   const app = laVersioneDellApp(readFileSync(PUBSPEC, "utf8"));
   process.stdout.write(`add-on: ${addon}\napp:    ${app}\n`);
+  /* E la plancia. Sta qui perche' e' il posto dove si va a guardare quando i
+   * numeri non tornano, ed era proprio quello a non tornare. */
+  try {
+    const dentro = JSON.parse(readFileSync(ORIGINE_DELLA_PLANCIA, "utf8"));
+    process.stdout.write(`plancia: ${String(dentro.versione || "?")}\n`);
+  } catch (_nonCE) {
+    /* Senza plancia non c'e' niente da dire. */
+  }
 }
 
 const detto = process.argv[2];

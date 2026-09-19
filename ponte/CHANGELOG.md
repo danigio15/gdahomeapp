@@ -11,6 +11,20 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.1
+
+**La plancia diceva di essere la 1.4.32.** Nella console, alla riga «La
+plancia», e nella stessa riga che l'app fa vedere: un numero fermo a quattordici
+versioni fa, mentre l'add-on e l'app dicevano 1.5.9. Non era rotto niente — la
+plancia era quella giusta — ma un numero sbagliato su una riga che serve a
+capire cosa si ha installato è peggio di un numero che non c'è.
+
+Quel numero sta nella carta d'identità della plancia (`ORIGINE.json`) e non lo
+scriveva nessuno: chi la sigilla se lo riporta avanti dal giro prima, quindi
+restava fermo al giorno in cui qualcuno l'aveva scritto a mano. Adesso lo scrive
+lo stesso programma che scrive gli altri tre, e una prova tiene ferma la regola
+che siano lo stesso numero.
+
 ## 1.5.9
 
 **La plancia porta il nome e il logo di chi ti ha fatto l'impianto.** Se la casa
