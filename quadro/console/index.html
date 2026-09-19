@@ -3742,6 +3742,24 @@
         try {
           await carica();
         } catch (errore) {
+          /* La chiave tenuta non apre piu', e la scheda dell'add-on ce ne ha
+           * consegnata un'altra: si prova quella prima di chiedere a mano.
+           *
+           * E' il caso di chi cambia installatore: nel browser resta la chiave
+           * di prima, che da quel momento e' morta. Chiedere a mano li'
+           * vorrebbe dire chiedere a una persona una cosa che il programma ha
+           * gia' in mano. Una volta sola: se non apre nemmeno quella, le
+           * chiavi finite sono due e allora la domanda ci sta. */
+          if (errore instanceof ChiaveNoNo && consegnata && consegnata !== chiave) {
+            chiave = consegnata;
+            try {
+              localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+            } catch (_niente) {
+              /* Vale per questa apertura e basta. */
+            }
+            void apri();
+            return;
+          }
           chiedimiLaChiave(errore instanceof ChiaveNoNo ? perchéNonVaBene() : errore.message);
           return;
         }
@@ -3794,12 +3812,32 @@
        *
        * Se una chiave c'e' gia' non si tocca: chi l'ha battuta a mano in
        * questo browser ha deciso lui, e una consegna che gliela cambia sotto
-       * e' un modo di non far entrare piu' nessuno. */
+       * e' un modo di non far entrare piu' nessuno.
+       *
+       * **Ma si tiene da parte lo stesso.** Qui c'era un guasto, e si vedeva
+       * cosi': tolto un installatore e messo un altro, chi apriva questa
+       * pagina si sentiva dire «la chiave non va bene» e se la vedeva chiedere
+       * a mano — con quella giusta gia' scritta nella scheda dell'add-on, a
+       * due centimetri di distanza.
+       *
+       * Il motivo: nel browser era rimasta la chiave di prima, quella
+       * dell'installatore tolto. Non essendo vuota, la consegna veniva
+       * scartata; quella morta veniva provata, rifiutata, e la pagina
+       * chiedeva aiuto a chi non poteva darne — la chiave nuova ce l'aveva la
+       * scheda, non la persona.
+       *
+       * Adesso la consegna si ricorda sempre, e serve quando quella tenuta
+       * viene rifiutata: si prova quella, una volta, prima di disturbare
+       * qualcuno. Chi l'ha battuta a mano resta padrone finche' la sua
+       * funziona, che e' quello che questa riga voleva dire. */
+      let consegnata = "";
       addEventListener("message", (evento) => {
         const detto = evento?.data;
         if (!detto || detto.gdahome !== "chiave") return;
         const arrivata = String(detto.chiave || "").trim();
-        if (!arrivata || chiave) return;
+        if (!arrivata) return;
+        consegnata = arrivata;
+        if (chiave) return;
         chiave = arrivata;
         try {
           localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);

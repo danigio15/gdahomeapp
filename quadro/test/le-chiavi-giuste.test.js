@@ -158,7 +158,7 @@ test("il codice si scrive una volta sola: chi lo manda e chi lo ascolta si chiam
   }
 });
 
-test("una chiave gia' battuta a mano non si fa sovrascrivere da una consegnata", () => {
+test("una chiave che apre non si fa sovrascrivere da una consegnata", () => {
   /* Chi ha battuto la sua chiave in questo browser ha deciso lui. Una consegna
    * che gliela cambia sotto e' un modo silenzioso di non far entrare piu'
    * nessuno — e succederebbe a chi apre la pagina da solo mentre l'add-on di
@@ -166,8 +166,39 @@ test("una chiave gia' battuta a mano non si fa sovrascrivere da una consegnata",
   for (const quale of ["console", "gestore"]) {
     assert.match(
       pagina(quale),
-      /if \(!arrivata \|\| chiave\) return;/,
+      /consegnata = arrivata;\s*\n\s*if \(chiave\) return;/,
       `la pagina «${quale}» non deve scavalcare una chiave che c'e' gia'`,
+    );
+  }
+});
+
+test("ma una chiave morta lascia il posto a quella consegnata, senza chiedere niente", () => {
+  /* Il guasto, visto su un impianto vero: tolto un installatore e messo un
+   * altro, il cruscotto diceva «la chiave non va bene» e la chiedeva a mano —
+   * con quella giusta gia' scritta nella scheda dell'add-on, a due centimetri.
+   *
+   * Nel browser era rimasta la chiave di prima. Non essendo vuota, la consegna
+   * veniva scartata; quella morta veniva provata, rifiutata, e la pagina
+   * chiedeva aiuto a chi non poteva darne — la chiave nuova ce l'aveva la
+   * scheda, non la persona.
+   *
+   * La consegna quindi si ricorda sempre, e si prova **una volta** quando
+   * quella tenuta viene rifiutata. Se non apre nemmeno quella, le chiavi
+   * finite sono due e allora la domanda ci sta. */
+  for (const quale of ["console", "gestore"]) {
+    const testo = pagina(quale);
+    assert.match(
+      testo,
+      /consegnata && consegnata !== chiave/,
+      `la pagina «${quale}» non prova piu' la chiave consegnata quando la sua e' morta`,
+    );
+    /* E la si prova **prima** di chiedere a mano, se no la domanda arriva
+     * comunque e la correzione non serve a niente. */
+    const dovePro = testo.indexOf("consegnata && consegnata !== chiave");
+    const doveChiedo = testo.indexOf("chiedimiLaChiave(", dovePro);
+    assert.ok(
+      dovePro > 0 && doveChiedo > dovePro,
+      `in «${quale}» la domanda a mano viene prima del secondo tentativo`,
     );
   }
 });
