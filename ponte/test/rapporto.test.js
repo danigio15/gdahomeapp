@@ -30,6 +30,7 @@ import {
 } from "../src/rapporto.js";
 import { gliAddon, laMacchina, laRete } from "../src/ferro.js";
 import { ilBackup, leBatterie, leEntita } from "../src/salute.js";
+import { Aggiornamenti } from "../src/aggiornamenti.js";
 
 const ZITTO = { debug() {}, info() {}, attenzione() {}, errore() {} };
 
@@ -122,9 +123,18 @@ test("senza rete, gli apparati non si appiccicano a niente", () => {
 
 /* ─── La prova che conta ───────────────────────────────────────────────── */
 
-test("dal rapporto non esce niente di chi ci abita", () => {
-  /* Una casa vera: i nomi delle entita' raccontano una famiglia, le stanze e
-   * gli orari. Nessuna di queste parole deve comparire nel testo spedito. */
+test("dal rapporto esce il nome di cio' che non risponde, e nient'altro di casa", () => {
+  /* Una casa vera: i nomi raccontano una famiglia, le stanze e gli orari.
+   *
+   * Di tutta questa roba ne esce **una**: il dispositivo che in questo
+   * momento non risponde. E' una scelta, ed e' costata la promessa di prima
+   * — «nessun nome, punto» — perche' quella promessa la manteneva un elenco
+   * di codici `#00a7` davanti al quale chi ha montato l'impianto telefonava
+   * a chi ci abita per farsi leggere i nomi. Il prezzo sta scritto nella
+   * casella dell'add-on prima che qualcuno incolli il codice.
+   *
+   * Quello che questa prova tiene fermo e' il **confine**: uno che non
+   * risponde esce, tutti gli altri no. */
   const stati = [
     { entity_id: "binary_sensor.camera_di_marco_finestra", state: "unavailable", attributes: {} },
     { entity_id: "device_tracker.telefono_di_laura", state: "home", attributes: {} },
@@ -145,6 +155,20 @@ test("dal rapporto non esce niente di chi ci abita", () => {
       attributes: {},
     },
   ];
+  const registri = {
+    dispositivi: [
+      { id: "d1", name: "Contatto finestra", name_by_user: "Finestra camera di Marco" },
+      { id: "d2", name: "Telefono di Laura" },
+      { id: "d3", name: "Serratura ingresso" },
+      { id: "d4", name: "Cameretta" },
+    ],
+    entita: [
+      { entity_id: "binary_sensor.camera_di_marco_finestra", device_id: "d1" },
+      { entity_id: "device_tracker.telefono_di_laura", device_id: "d2" },
+      { entity_id: "sensor.serratura_ingresso_batteria", device_id: "d3" },
+      { entity_id: "camera.cameretta", device_id: "d4" },
+    ],
+  };
   const network = {
     interfaces: [
       {
@@ -168,19 +192,24 @@ test("dal rapporto non esce niente di chi ci abita", () => {
     }),
     rete: laRete({ network, filoSu: true }),
     addon: gliAddon({ addons: [{ name: "Mosquitto broker", state: "started", boot: "auto" }] }),
-    entita: leEntita(stati, { sale: "il-sale-di-questa-casa" }),
+    entita: leEntita(stati, { registri }),
     batterie: leBatterie(stati),
     backup: ilBackup(stati, { adesso: () => Date.parse("2026-09-18T09:00:00Z") }),
   });
 
   const spedito = JSON.stringify(foglio);
+
+  /* Quello che esce, e che e' tutto il motivo per cui il quadro serve a
+   * qualcosa: chi deve venire sa **cosa** e' giu'. */
+  assert.deepEqual(foglio.entita.nomi, ["Finestra camera di Marco"]);
+
+  /* E il confine: gli altri tre dispositivi rispondono, e di loro nel
+   * rapporto non c'e' nemmeno il nome. */
   const maiPiu = [
-    "marco",
     "laura",
     "giovanni",
     "rossi",
     "cameretta",
-    "camera_di",
     "serratura",
     "ingresso",
     "Casa Rossi",
@@ -197,12 +226,33 @@ test("dal rapporto non esce niente di chi ci abita", () => {
     );
   }
 
-  /* E quello che serve c'e' lo stesso: la spia suona, senza dire su cosa. */
-  assert.equal(foglio.entita.sparite, 1);
-  assert.equal(foglio.entita.impronte.length, 1);
+  /* E quello che serve c'e' lo stesso. */
+  assert.equal(foglio.entita.giu, 1);
+  assert.equal(foglio.entita.dispositivi, 1);
   assert.equal(foglio.batterie.scariche, 1);
   assert.equal(foglio.backup.giorniFa, 2);
   assert.equal(foglio.rete.schede[0].ip, "192.168.1.50");
+});
+
+test("un dispositivo che funziona resta fuori anche se si chiama come uno giu'", () => {
+  /* Il filtro e' lo stato, non il nome: due prese dello stesso modello, una
+   * staccata e una no, non devono uscire tutt'e due. */
+  const stati = [
+    { entity_id: "switch.presa_uno", state: "unavailable", attributes: {} },
+    { entity_id: "switch.presa_due", state: "on", attributes: {} },
+  ];
+  const registri = {
+    dispositivi: [
+      { id: "a", name: "Presa lavatrice" },
+      { id: "b", name: "Presa asciugatrice" },
+    ],
+    entita: [
+      { entity_id: "switch.presa_uno", device_id: "a" },
+      { entity_id: "switch.presa_due", device_id: "b" },
+    ],
+  };
+  const conto = leEntita(stati, { registri });
+  assert.deepEqual(conto.nomi, ["Presa lavatrice"]);
 });
 
 /* ─── Il postino ───────────────────────────────────────────────────────── */
@@ -308,10 +358,15 @@ const ferroFinto = (detto) => ({ chiedi: async () => detto });
 
 test("la fabbrica mette insieme quello che c'e', e chiama ogni volta", async () => {
   let giri = 0;
+  const chiesto = [];
   const fabbrica = fabbricaIlRapporto({
-    identita: { casa: "casa_abc", sale: "sale" },
+    identita: { casa: "casa_abc" },
     casa: {
-      chiedi: async () => {
+      chiedi: async ({ type }) => {
+        chiesto.push(type);
+        if (type === "config/device_registry/list") return [{ id: "d1", name: "Sonda cantina" }];
+        if (type === "config/entity_registry/list")
+          return [{ entity_id: "sensor.uno", device_id: "d1" }];
         giri += 1;
         return [{ entity_id: "sensor.uno", state: "unavailable", attributes: {} }];
       },
@@ -338,17 +393,47 @@ test("la fabbrica mette insieme quello che c'e', e chiama ogni volta", async () 
   assert.equal(foglio.macchina.scheda, "ODROID-N2");
   assert.equal(foglio.rete.internet, true);
   assert.equal(foglio.addon.quanti, 1);
-  assert.equal(foglio.entita.sparite, 1);
+  assert.equal(foglio.entita.giu, 1);
+  assert.deepEqual(foglio.entita.nomi, ["Sonda cantina"]);
   assert.deepEqual(foglio.fuori, { acceso: true, filo: true });
 
   /* Ogni rapporto e' di adesso, non di quando il ponte si e' acceso. */
   await fabbrica();
   assert.equal(giri, 2);
+
+  /* I registri pero' no: chiesti una volta e tenuti. Un rapporto al minuto
+   * che si porta dietro due elenchi di registro ogni volta e' traffico per
+   * due nomi che sono gli stessi di un'ora fa. */
+  assert.equal(chiesto.filter((che) => che === "config/device_registry/list").length, 1);
+  assert.equal(chiesto.filter((che) => che === "config/entity_registry/list").length, 1);
+});
+
+test("i registri che non rispondono lasciano il rapporto con i nomi delle entita'", async () => {
+  /* Un Home Assistant che i registri non li da' — troppo vecchio, o un segno
+   * senza permessi — non deve far cadere il rapporto ne' fargli perdere il
+   * riquadro: si manda quello che si sa. */
+  const fabbrica = fabbricaIlRapporto({
+    identita: { casa: "casa_abc" },
+    casa: {
+      chiedi: async ({ type }) => {
+        if (type === "get_states")
+          return [{ entity_id: "sensor.pompa_calore", state: "unavailable", attributes: {} }];
+        throw new Error("questo comando non lo conosco");
+      },
+    },
+    ferro: ferroFinto({ os: {}, host: {}, network: null, addons: [] }),
+    registro: ZITTO,
+    adesso: () => Date.parse("2026-09-18T09:41:12Z"),
+  });
+
+  const foglio = await fabbrica();
+  assert.equal(foglio.entita.giu, 1);
+  assert.deepEqual(foglio.entita.nomi, ["pompa calore"]);
 });
 
 test("mezza rapporto e' meglio di nessuna, e quel giorno e' la piu' importante", async () => {
   const fabbrica = fabbricaIlRapporto({
-    identita: { casa: "casa_abc", sale: "sale" },
+    identita: { casa: "casa_abc" },
     /* Home Assistant giu': e' esattamente il giorno in cui l'installatore deve
      * ricevere qualcosa. */
     casa: {
@@ -371,7 +456,7 @@ test("mezza rapporto e' meglio di nessuna, e quel giorno e' la piu' importante",
 
 test("gli aggiornamenti si contano per razza, e il firmware si vede a parte", async () => {
   const fabbrica = fabbricaIlRapporto({
-    identita: { casa: "casa_abc", sale: "s" },
+    identita: { casa: "casa_abc" },
     casa: { chiedi: async () => [] },
     ferro: ferroFinto(null),
     aggiornamenti: {
@@ -412,7 +497,7 @@ test("i telefoni: conta di piu' quanti si sono visti che quanti sono abbinati", 
   const adesso = Date.parse("2026-09-18T09:00:00Z");
   const giorni = (quanti) => adesso - quanti * 24 * 60 * 60 * 1000;
   const fabbrica = fabbricaIlRapporto({
-    identita: { casa: "casa_abc", sale: "s" },
+    identita: { casa: "casa_abc" },
     casa: { chiedi: async () => [] },
     ferro: ferroFinto(null),
     dispositivi: {
@@ -497,4 +582,169 @@ test("una risposta senza nome, o che non è JSON, non fa danni", async () => {
   assert.equal(await nonJson.manda(), true, "una risposta che non è JSON nemmeno");
   assert.equal(senzaNome.chi, "");
   assert.equal(nonJson.chi, "");
+});
+
+/* ─── Cosa parte di un aggiornamento ───────────────────────────────────── */
+
+test("dell'aggiornamento partono il marchio e cosa cambia, e non l'entita'", async () => {
+  const stati = [
+    {
+      entity_id: "update.camera_di_marco_termostato",
+      state: "on",
+      attributes: {
+        supported_features: 1,
+        friendly_name: "Termostato",
+        installed_version: "1.2.0",
+        latest_version: "1.3.0",
+        release_summary: "Risolve il riavvio notturno.",
+        release_url: "https://example.invalid/note",
+      },
+    },
+  ];
+  const fabbrica = fabbricaIlRapporto({
+    identita: { casa: "casa_abc" },
+    casa: {
+      chiedi: async ({ type }) => {
+        if (type === "get_states") return stati;
+        if (type === "config/entity_registry/get") return { platform: "shelly" };
+        return [];
+      },
+    },
+    ferro: ferroFinto({ os: {}, host: {}, network: null, addons: [] }),
+    aggiornamenti: new Aggiornamenti({
+      casa: { chiedi: async () => stati },
+      registro: ZITTO,
+    }),
+    registro: ZITTO,
+    adesso: () => Date.parse("2026-09-18T09:41:12Z"),
+  });
+
+  const foglio = await fabbrica();
+  const uno = foglio.aggiornamenti.elenco[0];
+  assert.equal(uno.nome, "Termostato");
+  assert.equal(uno.cosaCambia, "Risolve il riavvio notturno.");
+  assert.equal(uno.note, "https://example.invalid/note");
+
+  /* E l'entita' no: `update.camera_di_marco_termostato` direbbe chi abita in
+   * questa casa e in quale stanza dorme, e per far vedere che c'e' una
+   * versione nuova non serve. */
+  assert.equal(uno.entita, undefined);
+  assert.ok(!JSON.stringify(foglio).includes("camera_di_marco"));
+});
+
+test("l'indirizzo delle note passa solo se e' un indirizzo da cliccare", async () => {
+  /* Arriva da un attributo dell'entita', cioe' da fuori, e nel quadro diventa
+   * un collegamento. `javascript:` in un `href` e' un programma. */
+  for (const [dove, atteso] of [
+    ["https://example.invalid/note", "https://example.invalid/note"],
+    ["javascript:alert(1)", ""],
+    ["http://example.invalid/note", ""],
+    ["https://example.invalid/ a b", ""],
+    [`https://example.invalid/${"x".repeat(400)}`, ""],
+    ["", ""],
+  ]) {
+    const stati = [
+      {
+        entity_id: "update.uno",
+        state: "on",
+        attributes: {
+          supported_features: 1,
+          friendly_name: "Uno",
+          installed_version: "1",
+          latest_version: "2",
+          release_url: dove,
+        },
+      },
+    ];
+    const fabbrica = fabbricaIlRapporto({
+      identita: { casa: "casa_abc" },
+      casa: { chiedi: async ({ type }) => (type === "get_states" ? stati : []) },
+      ferro: ferroFinto({ os: {}, host: {}, network: null, addons: [] }),
+      aggiornamenti: new Aggiornamenti({ casa: { chiedi: async () => stati }, registro: ZITTO }),
+      registro: ZITTO,
+      adesso: () => Date.parse("2026-09-18T09:41:12Z"),
+    });
+    const foglio = await fabbrica();
+    assert.equal(foglio.aggiornamenti.elenco[0].note, atteso, `«${dove}»`);
+  }
+});
+
+/* ─── Il comando che arriva nella risposta ─────────────────────────────── */
+
+test("quello che il quadro mette nella risposta arriva a chi lo deve fare", async () => {
+  /* E' l'unica strada per cui un comando entra in casa, e passa **dentro una
+   * risposta**: verso una casa non c'e' nessuna porta aperta. */
+  const arrivati = [];
+  const postino = new Postino({
+    dove: "https://quadro.it",
+    chiave: "una-chiave",
+    casa: "casa_abc",
+    fabbrica: () => ({}),
+    fai: (detto) => {
+      arrivati.push(detto);
+    },
+    registro: ZITTO,
+    fetch: async () => ({
+      ok: true,
+      json: async () => ({ presa: true, di: "Impianti Rossi", fai: { id: "x", cosa: "installa" } }),
+    }),
+  });
+  assert.equal(await postino.manda(), true);
+  assert.deepEqual(arrivati, [{ id: "x", cosa: "installa" }]);
+  /* E il nome dell'installatore arriva lo stesso: le due cose stanno nella
+   * stessa risposta e non si portano via a vicenda. */
+  assert.equal(postino.chi, "Impianti Rossi");
+});
+
+test("una risposta senza comando non fa succedere niente", async () => {
+  let chiamate = 0;
+  const postino = new Postino({
+    dove: "https://quadro.it",
+    chiave: "una-chiave",
+    casa: "casa_abc",
+    fabbrica: () => ({}),
+    fai: () => {
+      chiamate += 1;
+    },
+    registro: ZITTO,
+    fetch: async () => ({ ok: true, json: async () => ({ presa: true, di: "Rossi" }) }),
+  });
+  await postino.manda();
+  assert.equal(chiamate, 0);
+});
+
+test("un lavoro che non parte non fa sembrare caduto un rapporto arrivato", async () => {
+  /* Le due cose sono separate apposta: chi guarda la console dell'add-on deve
+   * leggere «il rapporto arriva», perche' arriva. Cos'e' andato storto nel
+   * lavoro si legge nel rapporto del minuto dopo. */
+  const postino = new Postino({
+    dove: "https://quadro.it",
+    chiave: "una-chiave",
+    casa: "casa_abc",
+    fabbrica: () => ({}),
+    fai: () => {
+      throw new Error("non e' partito");
+    },
+    registro: ZITTO,
+    fetch: async () => ({ ok: true, json: async () => ({ fai: { id: "x", cosa: "installa" } }) }),
+  });
+  assert.equal(await postino.manda(), true);
+  assert.equal(postino.ultimoEsito.andata, true);
+});
+
+test("il rapporto dice sempre se la manutenzione e' aperta, anche quando e' chiusa", async () => {
+  /* «Chiusa» e «non lo dice» sono due cose diverse: il quadro con la prima
+   * scrive «questa casa non ha aperto la manutenzione», con la seconda non sa
+   * cosa scrivere. */
+  const fai = (manutenzione) =>
+    fabbricaIlRapporto({
+      identita: { casa: "casa_abc" },
+      casa: { chiedi: async () => [] },
+      ferro: ferroFinto({ os: {}, host: {}, network: null, addons: [] }),
+      manutenzione,
+      registro: ZITTO,
+      adesso: () => Date.parse("2026-09-18T09:41:12Z"),
+    })();
+  assert.equal((await fai(false)).manutenzione, false);
+  assert.equal((await fai(true)).manutenzione, true);
 });

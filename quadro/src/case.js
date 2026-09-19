@@ -13,6 +13,18 @@
  * non passa mai per nessun'altra parte: la casa non lo manda, non lo riceve e
  * non lo saprebbe leggere.
  *
+ * ─── Il lavoro chiesto, e perche' sta qui ────────────────────────────────
+ *
+ * Quando l'installatore preme «Installa» su una casa, quel comando **aspetta
+ * qui** finche' la casa non passa a prenderselo. Non si va a bussare a nessuno:
+ * verso una casa non c'e' nessuna porta, ed e' il pezzo di questo progetto che
+ * vale di piu' — la casa manda il rapporto ogni minuto, e nella risposta trova
+ * cosa fare.
+ *
+ * Uno per casa e non una coda. Due aggiornamenti insieme su un impianto solo
+ * vogliono dire non sapere quale dei due non e' tornato, ed e' la stessa regola
+ * che il cruscotto scrive a chi lo guarda.
+ *
  * ─── Perche' i giorni e non le ore ───────────────────────────────────────
  *
  * Tenere ogni rapporto vorrebbe dire novantasei righe al giorno per casa, e
@@ -46,7 +58,21 @@ export const GIORNI_NELLA_STRISCIA = 14;
  * a ogni riavvio non si guarda piu'. */
 const BASTA_COSI = 0.75;
 
+/* Quanto si tiene da parte un lavoro che nessuno viene a prendere.
+ *
+ * Una casa che parla manda un rapporto al minuto, quindi se in dieci minuti non
+ * e' passata a prenderselo vuol dire che e' spenta, o che non arriva piu' fuori.
+ * Tenerglielo li' per giorni vorrebbe dire un aggiornamento che parte da solo
+ * la notte che quella casa torna su, quando chi l'ha chiesto se n'e'
+ * dimenticato. Scaduto si butta, e se serve ancora si ripreme il tasto. */
+export const UN_LAVORO_ASPETTA = 10 * 60 * 1000;
+
 const ilGiorno = (quando) => new Date(quando).toISOString().slice(0, 10);
+
+const testo = (valore, quanto = 120) =>
+  String(valore ?? "")
+    .trim()
+    .slice(0, quanto);
 
 export class CaseSeguite {
   constructor({ cartella = "./dati", adesso = () => Date.now() } = {}) {
@@ -90,11 +116,21 @@ export class CaseSeguite {
          * torna a parlare. Senza, una casa muta da tre giorni sarebbe una
          * notizia a ogni giro invece che una sola volta. */
         avvisataIl: null,
+        /* Il lavoro che aspetta di essere consegnato a questa casa, o `null`.
+         * Ne sta uno per volta: il perche' e' in cima al file. */
+        lavoro: null,
       };
       this.lista.push(una);
     }
     una.vistaIl = ora;
     una.carta = carta;
+
+    /* La casa ha risposto di quel lavoro: da qui in poi lo stato lo racconta
+     * lei, nel rapporto, e questo non serve piu'. Uno solo dei due lo puo'
+     * sapere per davvero, ed e' quella che lo sta facendo. */
+    if (una.lavoro && carta?.lavoro?.id === una.lavoro.id) una.lavoro = null;
+    /* E quello che nessuno e' venuto a prendere scade: vedi `UN_LAVORO_ASPETTA`. */
+    if (una.lavoro && ora - una.lavoro.chiesto > UN_LAVORO_ASPETTA) una.lavoro = null;
     una.giorni[ilGiorno(ora)] = (una.giorni[ilGiorno(ora)] || 0) + 1;
 
     /* Il collaudo si chiude una volta sola, il giorno in cui nessuna spunta e'
@@ -155,6 +191,94 @@ export class CaseSeguite {
       });
   }
 
+  /**
+   * L'installatore chiede a una casa di installare qualcosa.
+   *
+   * Si nomina per **nome e salto di versione**, non per entita': nel rapporto
+   * l'entita' non c'e' — `update.camera_di_marco_termostato` direbbe chi abita
+   * in quella casa e in quale stanza — e quindi qui non c'e' niente da
+   * nominare se non quello che si e' visto. Il vantaggio viene gratis: se nel
+   * frattempo quella versione e' gia' stata messa, il salto non torna e in casa
+   * non si fa niente.
+   *
+   * `di` e' un lucchetto e non un filtro, come per `rinomina`: senza, chi
+   * scrivesse a mano la matricola di una casa di un altro gliela aggiornerebbe.
+   *
+   * Torna il lavoro messo in attesa, o `null` se non si e' potuto.
+   */
+  chiediUnLavoro(casa, { nome, da, a } = {}, di) {
+    const una = this.quella(casa);
+    if (!una || (di !== TUTTE && una.di !== di)) return null;
+    /* La casa deve aver aperto la manutenzione. E' garbo, non sicurezza: il no
+     * che conta lo dice la casa, in `lavori.js`, e lo direbbe lo stesso. Ma
+     * mettere in coda un comando che si sa gia' che verra' rifiutato vuol dire
+     * far aspettare dieci minuti una risposta che e' gia' scritta. */
+    if (una.carta?.manutenzione !== true) return null;
+    const quale = { nome: testo(nome), da: testo(da, 40), a: testo(a, 40) };
+    if (!quale.nome || !quale.a) return null;
+    /* Uno per volta. Quello vecchio scaduto pero' non blocca niente: una casa
+     * spenta da un'ora non deve impedire di richiedere la stessa cosa. */
+    const ora = this.adesso();
+    if (una.lavoro && ora - una.lavoro.chiesto <= UN_LAVORO_ASPETTA) return null;
+    una.lavoro = {
+      /* Un numero che non si ripete, e che serve a una cosa sola: far
+       * riconoscere alla casa un comando che ha gia' fatto. La risposta a un
+       * rapporto puo' arrivare due volte — la casa riprova, qui non si e' fatto
+       * in tempo a segnarselo — e un tasto premuto una volta non deve
+       * installare due volte. */
+      id: `${ora.toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
+      cosa: "installa",
+      ...quale,
+      chiesto: ora,
+      mandato: null,
+    };
+    this.archivio.salva();
+    return { ...una.lavoro };
+  }
+
+  /**
+   * Cosa dare a questa casa, adesso che e' passata.
+   *
+   * Si chiama rispondendo a un rapporto. Segna il momento in cui e' stato
+   * consegnato: da li' in poi lo stato lo racconta la casa.
+   */
+  ilLavoroDa(casa) {
+    const una = this.quella(casa);
+    if (!una?.lavoro) return null;
+    /* **Una volta sola**, e non «finche' la casa non conferma».
+     *
+     * Se una casa se lo porta via e poi non ne parla piu' — un ponte vecchio
+     * che quella riga non la manda, un'installazione che porta giu' il
+     * processo, e gdahome che aggiorna se stesso fa proprio questo — riofrirlo
+     * al rapporto dopo vorrebbe dire rifarlo partire ogni minuto. La casa si
+     * difende da sola riconoscendo l'`id`, ma quella memoria muore col
+     * processo, ed e' il processo che si sta aggiornando.
+     *
+     * Il costo, detto: se la risposta si perde per strada, quel comando non
+     * arriva e non arrivera'. Chi l'ha chiesto ripreme il tasto, e non succede
+     * niente di irreparabile. L'altro verso non e' cosi'. */
+    if (una.lavoro.mandato) return null;
+    const ora = this.adesso();
+    if (ora - una.lavoro.chiesto > UN_LAVORO_ASPETTA) {
+      una.lavoro = null;
+      this.archivio.salva();
+      return null;
+    }
+    una.lavoro.mandato = ora;
+    this.archivio.salva();
+    const { id, cosa, nome, da, a } = una.lavoro;
+    return { id, cosa, nome, da, a };
+  }
+
+  /** L'installatore ci ripensa, prima che la casa passi a prenderselo. */
+  annullaIlLavoro(casa, di) {
+    const una = this.quella(casa);
+    if (!una || (di !== TUTTE && una.di !== di) || !una.lavoro) return false;
+    una.lavoro = null;
+    this.archivio.salva();
+    return true;
+  }
+
   /** Segna che di questa si e' parlato, o che non se ne parla piu'. */
   segnaAvvisata(casa, quando) {
     const una = this.quella(casa);
@@ -203,6 +327,12 @@ export class CaseSeguite {
       stato: loStato(una, ora),
       collaudo: carta ? ilCollaudo(carta) : null,
       pastiglie: carta ? lePastiglie(carta) : [],
+      /* Quello che e' stato chiesto e che questa casa non e' ancora passata a
+       * prendere. Sta **fuori** dalla carta apposta: la carta e' quello che la
+       * casa ha detto, e questo e' quello che le si sta per dire. Mescolarli
+       * vorrebbe dire una pagina che non distingue piu' fra «l'ho chiesto» e
+       * «sta succedendo». */
+      chiesto: una.lavoro && !una.lavoro.mandato ? { ...una.lavoro } : null,
     };
   }
 

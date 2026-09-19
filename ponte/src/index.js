@@ -34,6 +34,8 @@ import { Ritorno } from "./ritorno.js";
 import { Segnalazioni } from "./segnalazioni.js";
 import { Spegnimento } from "./spegnimento.js";
 import { Aggiornamenti } from "./aggiornamenti.js";
+import { Lavori } from "./lavori.js";
+import { Installatore } from "./installatore.js";
 import { apriIlRegistro } from "./registro.js";
 import { costruisciLaConsole, costruisciLaPortaDellApp } from "./server.js";
 
@@ -49,15 +51,42 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     giorniDiSilenzio: opzioni.giorniDiSilenzio,
   });
   const abbinamento = new Abbinamento({ minutiDelCodice: opzioni.minutiDelCodice });
+  /* Chi ha montato questo impianto: il nome e il logo che la plancia indossa.
+   *
+   * Nasce **prima** della plancia perche' e' lei a doverlo chiedere, e nasce
+   * anche quando la casa ha detto di no: cosi' il logo che ha gia' in `/data`
+   * lo puo' buttare. Il perche' per esteso sta in `installatore.js`. */
+  const installatore = new Installatore({
+    cartella: opzioni.cartella,
+    quadro: opzioni.quadro?.dove || "",
+    registro,
+  });
+  if (!opzioni.marchioDellInstallatore) installatore.dimentica();
+
   /* La plancia, dentro l'add-on, e la sua configurazione: il telefono
    * chiede i file e la configurazione al ponte, e in Home Assistant non serve
-   * nessuna integrazione. */
-  const plancia = new Plancia();
+   * nessuna integrazione.
+   *
+   * Si veste al momento di servire: se questa casa ha un installatore col suo
+   * marchio, la pagina esce col suo nome e col suo logo. `vestito()` e non un
+   * oggetto, perche' la risposta cambia mentre il ponte gira. */
+  const plancia = new Plancia({
+    installatore: () => (opzioni.marchioDellInstallatore ? installatore.vestito() : null),
+  });
   const configurazione = new Configurazione({ cartella: opzioni.cartella });
   /* Quante plance ha questa casa. Una c'e' sempre — quella di sempre — e chi
    * ne vuole un'altra la aggiunge dalla scheda dell'add-on o dall'app, come
    * nella dashboard si aggiunge una seconda istanza. */
   const plance = new Plance({ cartella: opzioni.cartella, registro });
+  /* La voce nella barra laterale prende il nome di chi ha montato l'impianto,
+   * e se lo toglie quando quello se ne va. Si tocca **solo il titolo**: la
+   * configurazione della plancia sta sotto il profilo, e quello non si sfiora
+   * — il perche' sta su `Plance.intestala`. Un nome scritto da chi ci abita
+   * non lo tocca nessuno. */
+  installatore.alCambio = (nome) => {
+    if (opzioni.marchioDellInstallatore) plance.intestala(nome);
+  };
+  if (!opzioni.marchioDellInstallatore) plance.intestala("");
   if (plancia.cE) {
     registro.info(
       `la plancia c'e': ${plancia.descrizione().file} file, impronta ${plancia.impronta}`,
@@ -220,10 +249,24 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * quello che parte nella scheda «Il quadro» della console, dove c'e' anche
    * il tasto per smettere. */
   const ferro = new Ferro({ registro });
+  /* Il secondo verbo del quadro: installare un aggiornamento che questa casa
+   * ha gia' in attesa. Il comando arriva nella risposta a un rapporto — non
+   * c'e' nessuna porta aperta — e chi dice di si' o di no e' questa casa, con
+   * la casella della manutenzione. Il perche' per esteso sta in `lavori.js`. */
+  const lavori = new Lavori({
+    aggiornamenti,
+    registro,
+    aperta: () => opzioni.manutenzione === true,
+  });
+
   const postino = new Postino({
     ...(opzioni.quadro ?? {}),
     casa: identita.casa,
     ogni: opzioni.quadroOgni,
+    fai: (detto) => lavori.fai(detto),
+    /* Solo se questa casa lo vuole. Spento, il quadro puo' mandare quello che
+     * gli pare: qui non si guarda. */
+    installatore: opzioni.marchioDellInstallatore ? installatore : null,
     registro,
   });
 
@@ -247,6 +290,8 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     casa,
     ferro,
     aggiornamenti,
+    lavori,
+    manutenzione: opzioni.manutenzione,
     plance,
     configurazione,
     dispositivi,

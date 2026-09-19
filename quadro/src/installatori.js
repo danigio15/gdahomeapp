@@ -157,6 +157,21 @@ export class Installatori {
     return true;
   }
 
+  /**
+   * Che razza di marchio ha, o stringa vuota.
+   *
+   * Qui dentro ci sta **una parola** — `png`, `svg` — e non l'immagine: i byte
+   * stanno in un file per conto loro (`marchi.js`), perche' questo archivio si
+   * rilegge a ogni richiesta e si riscrive per cambiare una soglia.
+   */
+  ilMarchio(chi, razza) {
+    const uno = this.quello(chi);
+    if (!uno) return false;
+    uno.marchio = String(razza ?? "").trim();
+    this.archivio.salva();
+    return true;
+  }
+
   /** Il limite di case. Zero lo toglie. */
   limite(chi, quante) {
     const uno = this.quello(chi);
@@ -185,6 +200,7 @@ export class Installatori {
       .map((uno) => ({
         chi: uno.chi,
         nome: uno.nome,
+        marchio: uno.marchio || "",
         soglia: uno.soglia,
         da: uno.da,
         vistoIl: uno.vistoIl,

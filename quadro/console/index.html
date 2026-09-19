@@ -220,6 +220,22 @@
         flex-wrap: wrap;
       }
 
+      /* Lo spazio per il tasto del menu di Home Assistant.
+         Questa pagina si apre anche **dentro** Home Assistant, in un riquadro
+         che ci mette sopra un tasto per riaprire il menu. Quel tasto galleggia:
+         sta in un altro documento, non sa cosa ha sotto di se' e non gli fa
+         spazio. Finora si e' provato a scansarlo — prima il marchio che ci
+         finiva sotto, poi il tasto spostato a destra dove si sedeva sulla nav —
+         e scansare non funziona, perche' da una parte o dall'altra sotto c'e'
+         sempre qualcosa.
+         Quindi non lo si scansa: gli si fa **spazio**. Quaranta punti piu' otto
+         di stacco, e solo quando questa pagina sta davvero dentro un riquadro
+         — aperta nel browser quel tasto non c'e', e un buco in cima sarebbe
+         solo un buco. */
+      :root[data-dentro] .testata {
+        padding-inline-start: 56px;
+      }
+
       .marchio {
         display: flex;
         align-items: center;
@@ -227,8 +243,10 @@
         min-width: 0;
       }
 
-      /* Il bollo del marchio: un quadratino con la barra, come un quadro
-       * elettrico visto da lontano. */
+      /* Il bollo: un quadratino con la barra, come un quadro elettrico visto da
+       * lontano. Non sta piu' in testata — se lo mangiava il tasto del menu di
+       * Home Assistant — e serve al segno degli aggiornamenti nostri, dove
+       * distingue gdahome da tutto il resto senza andare a scaricare niente. */
       .bollo {
         width: 30px;
         height: 30px;
@@ -345,6 +363,103 @@
         font-size: 0.92rem;
         margin: 0 0 18px;
         max-width: 46rem;
+      }
+
+      /* Il marchio dell'installatore, dove c'e'. In testata e nel riquadro da
+         cui si carica: stessa forma, due misure. */
+      .suoMarchio {
+        flex: none;
+        border-radius: 9px;
+        object-fit: contain;
+        background: var(--carta);
+      }
+
+      .testata .suoMarchio {
+        width: 30px;
+        height: 30px;
+      }
+
+      .provaMarchio {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      .provaMarchio .suoMarchio {
+        width: 54px;
+        height: 54px;
+        border: 1px solid var(--bordo-tenue);
+      }
+
+      /* Il quadrato vuoto di chi un marchio non ce l'ha ancora: dice dove
+         andra' a finire, invece di lasciare la riga senza niente. */
+      .provaMarchio .vuoto {
+        width: 54px;
+        height: 54px;
+        flex: none;
+        border-radius: 9px;
+        border: 1px dashed var(--bordo);
+        display: grid;
+        place-items: center;
+        color: var(--fioco);
+        font-size: 0.72rem;
+        text-align: center;
+        line-height: 1.2;
+      }
+
+      /* ─── I titoli che spezzano la scheda di una casa ────────────────
+         La scheda e' una colonna di dieci riquadri, e ognuno ha gia' la sua
+         etichettina grigia. Dieci etichettine sono dieci cose sullo stesso
+         piano: chi cerca «cosa devo fare qui» le legge tutte e dieci.
+         Questi titoli fanno il piano di sopra, e sono tre perche' le domande
+         che si fanno aprendo la scheda di un impianto sono tre: cosa mi tocca,
+         come sta, e cosa c'e' dentro di preciso. */
+      .capitolo {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin: 26px 0 12px;
+      }
+
+      .capitolo:first-of-type {
+        margin-top: 18px;
+      }
+
+      .capitolo h2 {
+        margin: 0;
+        font-size: 1.12rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        flex: none;
+      }
+
+      .capitolo span {
+        color: var(--fioco);
+        font-size: 0.83rem;
+        min-width: 0;
+      }
+
+      /* Un filo che porta l'occhio fino in fondo alla riga: senza, un titolo
+         corto in cima a un riquadro largo galleggia. */
+      .capitolo::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--bordo-tenue);
+      }
+
+      @media (max-width: 640px) {
+        /* Sul telefono la riga di spiegazione va a capo sotto il titolo, e il
+           filo non ci sta piu': si toglie invece di spezzarsi in due. */
+        .capitolo {
+          flex-wrap: wrap;
+          gap: 2px 12px;
+        }
+
+        .capitolo::after {
+          display: none;
+        }
       }
 
       /* ─── La striscia dello stato, come sopra la Home della plancia ─── */
@@ -941,21 +1056,29 @@
         white-space: nowrap;
       }
 
-      .impronte {
+      .nomiGiu {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
         margin-bottom: 13px;
       }
 
-      .impronte span {
-        font-family: ui-monospace, "SF Mono", Menlo, monospace;
-        font-size: 0.8rem;
+      /* Niente monospaziato e niente `nowrap`: qui dentro non ci sono piu'
+         quattro cifre, ci sono nomi come «Termostato del soggiorno», e su un
+         telefono uno solo di quelli e' piu' largo dello schermo. */
+      .nomiGiu span {
+        font-size: 0.85rem;
         font-weight: 600;
         padding: 5px 11px;
         border-radius: 9px;
         background: var(--alone-male);
         color: var(--male);
+      }
+
+      .nomiGiu span.eAltri {
+        background: transparent;
+        color: var(--lieve);
+        font-weight: 500;
       }
 
       .nota {
@@ -1178,12 +1301,16 @@
         flex-direction: column;
       }
 
+      /* Una riga e' una griglia di tre colonne — il segno, cosa e', cosa si
+         fa — e cosa cambia va sotto, larga quanto le ultime due: su un
+         telefono le note sotto il logo sarebbero una colonna di parole
+         spezzate. */
       ul.versi li {
-        display: flex;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
         align-items: center;
-        gap: 12px;
+        gap: 6px 12px;
         padding: 11px 0;
-        flex-wrap: wrap;
       }
 
       ul.versi li + li {
@@ -1191,8 +1318,61 @@
       }
 
       ul.versi .che {
-        flex: 1;
-        min-width: 9rem;
+        min-width: 0;
+      }
+
+      /* Le pastiglie e i tasti stanno in fondo, tutti nella terza colonna. */
+      ul.versi .fare {
+        grid-column: 3;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      /* ─── Il segno di un aggiornamento ───────────────────────────────
+         L'iniziale sta sotto e si vede sempre; il marchio, quando arriva, ci
+         si mette sopra. Quello che non arriva — una casa senza internet, un
+         marchio che non esiste — si toglie da solo e sotto c'e' gia' la
+         lettera, invece di un quadratino rotto. */
+      .segno {
+        width: 32px;
+        height: 32px;
+        flex: none;
+        position: relative;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        background: var(--carta-alta);
+        color: var(--fioco);
+        font-size: 0.85rem;
+        font-weight: 700;
+      }
+
+      .segno img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: var(--carta);
+      }
+
+      /* Cosa cambia, con le parole di chi l'ha scritto. */
+      ul.versi .cambia {
+        grid-column: 2 / -1;
+        margin: 0;
+        color: var(--lieve);
+        font-size: 0.82rem;
+        line-height: 1.55;
+        white-space: pre-line;
+      }
+
+      ul.versi .cambia a {
+        color: var(--azzurro-cupo);
+        white-space: nowrap;
       }
 
       ul.versi .che b {
@@ -1268,11 +1448,8 @@
         margin-top: 14px;
       }
 
-      .mucchio .indietro-chi {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 13px;
+      .mucchio ul.versi {
+        margin-top: 4px;
       }
 
       /* ─── Gli add-on ────────────────────────────────────────────────── */
@@ -1643,10 +1820,20 @@
   <body>
     <header>
       <div class="testata">
+        <!-- Qui c'era il bollo del marchio, e non c'e' piu'.
+             Questa pagina si apre **dentro Home Assistant**, in un riquadro che
+             ci mette sopra il suo tasto del menu: e quel tasto galleggia, non
+             sa cosa ha sotto e non gli fa spazio. Il bollo gli finiva sotto, e
+             un marchio coperto a meta' e' peggio di nessun marchio. Il titolo
+             dice gia' dove sei, e il bollo resta dove serve — accanto agli
+             aggiornamenti di gdahome, dove distingue la roba nostra. -->
         <div class="marchio">
-          <span class="bollo" aria-hidden="true"><i></i><i class="mezzo"></i><i></i></span>
+          <!-- Il marchio dell'installatore, se ne ha messo uno. Sta qui vuoto
+               e lo riempie `disegna()`: l'indirizzo dipende da chi ha aperto la
+               pagina, e questo file e' lo stesso per tutti. -->
+          <img class="suoMarchio" id="suo-marchio" alt="" hidden />
           <span class="nomi">
-            <b>Cruscotto installatore</b>
+            <b id="come-si-chiama">Cruscotto installatore</b>
             <span id="chi"></span>
           </span>
         </div>
@@ -1680,6 +1867,19 @@
        * tutti i giorni, e ribattere una chiave lunga tutti i giorni finisce con
        * una chiave corta. Un tasto la butta via.
        * ─────────────────────────────────────────────────────────────────── */
+      /* Se questa pagina sta dentro un riquadro di Home Assistant.
+       *
+       * Si guarda e basta: `window.top` di un'altra origine non si puo'
+       * leggere, e il confronto solleva — in quel caso la risposta e' comunque
+       * «si'», perche' un'origine diversa vuol dire proprio che qualcun altro
+       * ci ha messo dentro. Serve a una cosa sola: lasciare in cima lo spazio
+       * per il tasto del menu, che sta in quell'altro documento. */
+      try {
+        if (window.self !== window.top) document.documentElement.dataset.dentro = "sì";
+      } catch (_altroDominio) {
+        document.documentElement.dataset.dentro = "sì";
+      }
+
       const DOVE_STA_LA_CHIAVE = "gdahome.quadro.chiave";
 
       let chiave = "";
@@ -1695,7 +1895,7 @@
        * **prima** di sbatterci: un codice rifiutato al quarantunesimo impianto,
        * con il cliente che aspetta, è il momento peggiore per scoprire che
        * esiste un limite. */
-      let IO = { nome: "", soglia: 0, case: 0 };
+      let IO = { chi: "", nome: "", marchio: "", soglia: 0, case: 0 };
       /* Le soglie con cui si colorano i metri arrivano dal server insieme alle
        * case: sono le stesse con cui lui decide, e scritte una volta sola. */
       let SOGLIE = { troppoCaldo: 75, discoPieno: 85, discoFinito: 80 };
@@ -1755,6 +1955,21 @@
 
       const plurale = (quanti, uno, molti) => `${quanti} ${quanti === 1 ? uno : molti}`;
 
+      /* L'indirizzo del proprio marchio.
+       *
+       * Assoluto e **senza chiave**: `/marchio/<chi>` non ne vuole, e una
+       * chiave dentro un `src` finirebbe nella cronologia del browser e nel
+       * registro di qualunque cosa stia in mezzo.
+       *
+       * In fondo c'e' la razza del file, che non serve a caricarlo: serve a
+       * cambiare l'indirizzo quando il marchio cambia, se no il browser
+       * continua a far vedere quello di prima per un'ora — che e' la cache che
+       * gli abbiamo chiesto noi. */
+      const ilSuoMarchio = () =>
+        IO.marchio
+          ? `/marchio/${encodeURIComponent(IO.chi)}?${encodeURIComponent(IO.marchio)}`
+          : "";
+
       function daQuanto(quando) {
         const minuti = Math.round((ADESSO() - new Date(quando).getTime()) / 60000);
         if (!Number.isFinite(minuti)) return "chissà quando";
@@ -1778,11 +1993,48 @@
       const livello = (valore, attenta, male) =>
         valore >= male ? "male" : valore >= attenta ? "attenta" : "bene";
 
-      /* Il lavoro in ballo e la manutenzione: il ponte non li manda ancora —
-       * i due verbi del quadro sono disegnati e non costruiti — e finche' non
-       * arrivano queste due righe rispondono di no invece di rompersi. */
+      /* Il lavoro in ballo e la manutenzione, adesso che il ponte li manda
+       * davvero. Restano scritte a prova di assenza: una casa ferma a un ponte
+       * di ieri queste due righe non le ha, e deve rispondere di no invece di
+       * rompersi. */
       const staLavorando = (c) => Boolean(c && c.lavoro && c.lavoro.stato === "in corso");
-      const daFare = (c) => (c.aggiornamenti?.elenco || []).filter((uno) => uno.installabile);
+
+      /* Se questa riga e' quella che sta succedendo — o quella che si e'
+       * appena chiesta. Si confronta per **nome e salto di versione**, che e'
+       * l'unico modo che c'e': l'entita' nel rapporto non viaggia, e non
+       * viaggia apposta. */
+      const eLaStessa = (uno, l) =>
+        Boolean(l) && l.nome === uno.nome && l.da === uno.da && l.a === uno.a;
+
+      /* Quante entita' non rispondono.
+       *
+       * Due nomi per lo stesso numero: `giu` e' quello di adesso, `sparite`
+       * quello dei ponti fino alla 1.5.6. Le due righe stanno qui per il tempo
+       * che ci mette l'ultima casa ad aggiornarsi: una casa ferma a ieri non
+       * deve far sparire il riquadro, deve solo mostrare quello che sa. */
+      const quantiGiu = (c) => c?.entita?.giu ?? c?.entita?.sparite ?? 0;
+
+      /* Le pastiglie dei dispositivi che non rispondono.
+       *
+       * Col ponte di adesso sono nomi. Da una casa vecchia arrivano le quattro
+       * cifre di allora, e si disegnano com'erano — col cancelletto davanti,
+       * che e' il segno che quello non e' un nome.
+       *
+       * `dispositivi` e' quanti sono **davvero**, `nomi` quanti se ne mandano:
+       * quando il secondo e' piu' corto del primo la differenza si scrive, se
+       * no dodici nomi sembrerebbero tutti quelli che ci sono. */
+      function iNomiGiu(c) {
+        const nomi = c?.entita?.nomi;
+        if (Array.isArray(nomi) && nomi.length) {
+          const quanti = c?.entita?.dispositivi ?? nomi.length;
+          const altri = Math.max(0, quanti - nomi.length);
+          return (
+            nomi.map((uno) => `<span>${testo(uno)}</span>`).join("") +
+            (altri ? `<span class="eAltri">e altri ${altri}</span>` : "")
+          );
+        }
+        return (c?.entita?.impronte || []).map((una) => `<span>#${testo(una)}</span>`).join("");
+      }
 
       /* ─── Disegnare ──────────────────────────────────────────────────── */
 
@@ -1791,6 +2043,90 @@
           /[&<>"']/g,
           (uno) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[uno],
         );
+
+      /* Dove stanno i marchi delle integrazioni. Lo stesso posto da cui li
+       * prende Home Assistant, ed e' il quadro a saperlo: da casa arriva una
+       * **parola** — `shelly`, `zha` — non un indirizzo. Se arrivasse un
+       * indirizzo, chi puo' scrivere l'attributo di un'entita' deciderebbe
+       * dove va a bussare questa pagina. */
+      const I_MARCHI = "https://brands.home-assistant.io/";
+
+      /* Il segno di un aggiornamento: il logo di chi lo porta, o l'iniziale.
+       *
+       * Tre casi, in ordine. La roba nostra porta il bollo del quadro, che e'
+       * disegnato qui e non si scarica da nessuna parte. Chi ha un marchio lo
+       * fa vedere — e sotto c'e' comunque l'iniziale, cosi' una casa senza
+       * internet o un marchio che non esiste finiscono sulla lettera invece
+       * che su un quadratino rotto. Chi non ce l'ha resta sull'iniziale, che
+       * e' quello che fa gia' l'app.
+       *
+       * `onerror` toglie l'immagine e scopre la lettera che sta sotto. */
+      function ilSegnoDi(uno) {
+        if (uno.nostra)
+          return '<span class="bollo" aria-hidden="true"><i></i><i class="mezzo"></i><i></i></span>';
+        const primo = testo(
+          String(uno.nome || "?")
+            .trim()
+            .charAt(0)
+            .toUpperCase() || "?",
+        );
+        /* La stessa forma che il ponte si e' gia' controllato, ricontrollata
+         * qui: questa parola finisce dentro un indirizzo, e chi lo compone e'
+         * questa riga. Un controllo solo, dall'altra parte di una rete, non e'
+         * un controllo. */
+        if (!/^[a-z0-9_]+$/.test(String(uno.marchio || "")))
+          return `<span class="segno">${primo}</span>`;
+        return `<span class="segno">${primo}<img
+          src="${I_MARCHI}${uno.marchio}/icon.png"
+          alt=""
+          loading="lazy"
+          onerror="this.remove()"
+        /></span>`;
+      }
+
+      /* Cosa cambia, con le parole di chi l'ha scritto.
+       *
+       * E' il `release_summary` dell'entita', che Home Assistant taglia gia'
+       * corto. Va disegnato **come testo**: arriva da fuori, e qui dentro non
+       * ci si fida di niente che arrivi da fuori. Le note lunghe stanno a un
+       * indirizzo, e per leggerle serve il filo con la casa — che il quadro
+       * non ha — quindi li' si manda il browser.
+       *
+       * Niente di tutto questo e' obbligatorio: chi non dice niente non
+       * occupa una riga vuota. */
+      function cosaCambia(uno) {
+        const detto = testo(String(uno.cosaCambia || "").trim());
+        const dove = String(uno.note || "");
+        const fuori = /^https:\/\/[^\s"'<>]+$/i.test(dove)
+          ? ` <a href="${testo(dove)}" target="_blank" rel="noopener noreferrer">le note per intero ↗</a>`
+          : "";
+        if (!detto && !fuori) return "";
+        return `<p class="cambia">${detto}${fuori}</p>`;
+      }
+
+      /* Una riga di aggiornamento: il segno, cosa e', cosa si fa, cosa cambia.
+       *
+       * Una sola, e la usano tutt'e due le schermate — la scheda di una casa e
+       * la flotta. Prima erano due disegni diversi per la stessa cosa: righe
+       * di qua, pastigline di la', e nella flotta non si vedeva ne' il logo ne'
+       * cosa cambiava. Due disegni per una cosa sola vuol dire che uno dei due
+       * resta indietro, ed era sempre lo stesso.
+       *
+       * `fare` e' quello che si puo' fare su questa riga: lo passa chi disegna,
+       * perche' dipende dalla casa — la manutenzione aperta, un lavoro in
+       * ballo — e non dall'aggiornamento. */
+      function unaRiga(uno, { fare = "" } = {}) {
+        return `
+          <li>
+            ${ilSegnoDi(uno)}
+            <span class="che">
+              <b>${testo(uno.nome)}</b>
+              <span class="salto">${testo(uno.da)} → ${testo(uno.a)}</span>
+            </span>
+            <span class="fare">${fare}</span>
+            ${cosaCambia(uno)}
+          </li>`;
+      }
 
       const spia = (stato) =>
         `<span class="pastiglia ${stato.chiave}"><span aria-hidden="true">${stato.segno}</span>${testo(stato.parola)}</span>`;
@@ -1854,9 +2190,20 @@
           )
           .join("");
 
+        /* Il marchio in testata: se c'e' prende il posto del nostro, e il
+         * titolo diventa il nome dell'installatore. Se non c'e', la pagina
+         * resta quella di prima — non si fa un buco in cima per una cosa
+         * facoltativa. */
+        const suo = document.getElementById("suo-marchio");
+        suo.hidden = !IO.marchio;
+        if (IO.marchio && suo.getAttribute("src") !== ilSuoMarchio()) {
+          suo.src = ilSuoMarchio();
+        }
+        document.getElementById("come-si-chiama").textContent = IO.nome || "Cruscotto installatore";
+
         const restano = quanteRestano();
         document.getElementById("chi").textContent =
-          (IO.nome ? `${IO.nome} · ` : "") +
+          (IO.nome ? "Cruscotto installatore · " : "") +
           plurale(CASE.length, "impianto", "impianti") +
           (restano === null ? "" : ` · ${restano} ancora`);
         dove.innerHTML =
@@ -1891,6 +2238,51 @@
               }
             });
         }
+
+        /* Il marchio: si sceglie un file e parte, senza un tasto «Salva».
+         * Scegliere un file **e'** gia' la conferma: un secondo tasto sarebbe
+         * un passaggio in piu' per una cosa che si annulla ricaricando. */
+        const scegli = dove.querySelector("#scegli-marchio");
+        if (scegli)
+          scegli.onchange = async () => {
+            const file = scegli.files?.[0];
+            if (!file) return;
+            const riga = dove.querySelector("#esito-marchio");
+            const dillo = (che) => {
+              if (!riga) return;
+              riga.textContent = che;
+              riga.hidden = false;
+            };
+            scegli.disabled = true;
+            try {
+              const detto = await chiedi("/io/marchio", {
+                method: "PUT",
+                /* I byte com'e', non un JSON con dentro un base64: il server
+                 * guarda **come comincia il file** per sapere che roba e', e
+                 * un base64 comincia sempre uguale. */
+                body: await file.arrayBuffer(),
+                headers: { "content-type": file.type || "application/octet-stream" },
+              });
+              IO.marchio = detto.marchio || "";
+              dillo("Messo.");
+              disegna();
+            } catch (errore) {
+              if (errore instanceof ChiaveNoNo) {
+                chiedimiLaChiave();
+                return;
+              }
+              dillo(errore.message || "non ha funzionato");
+            } finally {
+              scegli.disabled = false;
+            }
+          };
+        const togliIlMarchio = dove.querySelector("[data-togli-marchio]");
+        if (togliIlMarchio)
+          togliIlMarchio.onclick = () =>
+            faiEpoi(togliIlMarchio, async () => {
+              await chiedi("/io/marchio", { method: "DELETE" });
+              IO.marchio = "";
+            });
 
         const tastoProva = dove.querySelector("[data-prova-avvisi]");
         if (tastoProva) {
@@ -2002,6 +2394,45 @@
             casella.onkeydown = (evento) => {
               if (evento.key === "Enter") salva();
             };
+        });
+        dove.querySelectorAll("[data-installa]").forEach((tasto) => {
+          tasto.onclick = () => {
+            /* In due tempi, sullo stesso tasto, come «non seguirla più».
+             *
+             * Qui non si sta premendo un tasto sul proprio computer: si sta
+             * facendo partire un aggiornamento a casa di qualcun altro, che
+             * magari in quel momento sta guardando la televisione con le
+             * tapparelle collegate a quell'impianto. Un tocco andato storto
+             * scorrendo l'elenco non deve bastare. */
+            if (tasto.dataset.sicuro !== "sì") {
+              tasto.dataset.sicuro = "sì";
+              tasto.textContent = "Sicuro? Premi di nuovo";
+              setTimeout(() => {
+                tasto.dataset.sicuro = "";
+                tasto.textContent = "Installa";
+              }, 6000);
+              return;
+            }
+            faiEpoi(tasto, () =>
+              chiedi(`/casa/${tasto.dataset.installa}/installa`, {
+                method: "POST",
+                body: JSON.stringify({
+                  nome: tasto.dataset.qualeNome,
+                  da: tasto.dataset.qualeDa,
+                  a: tasto.dataset.qualeA,
+                }),
+              }),
+            );
+          };
+        });
+        dove.querySelectorAll("[data-lascia-stare]").forEach((tasto) => {
+          /* Annullare non chiede conferma: si annulla una cosa che non è
+           * ancora successa, e il danno di un tocco storto è ripremere
+           * «Installa». */
+          tasto.onclick = () =>
+            faiEpoi(tasto, () =>
+              chiedi(`/casa/${tasto.dataset.lasciaStare}/installa`, { method: "DELETE" }),
+            );
         });
         dove.querySelectorAll("[data-molla]").forEach((tasto) => {
           tasto.onclick = () => {
@@ -2166,8 +2597,13 @@
         ];
 
         const misure = [
-          (c.entita?.sparite ?? 0) > 0
-            ? ["Entità sparite", c.entita.sparite, `su ${c.entita.totali}`, "male"]
+          quantiGiu(c) > 0
+            ? [
+                "Dispositivi non collegati",
+                c.entita?.dispositivi ?? quantiGiu(c),
+                `${quantiGiu(c)} entità su ${c.entita?.totali ?? "—"}`,
+                "male",
+              ]
             : ["Entità", c.entita?.totali ?? "—", "rispondono tutte", ""],
           [
             "Batteria più bassa",
@@ -2268,10 +2704,10 @@
                 ${
                   c.manutenzione
                     ? `Questo quadro <b>non guarda dentro</b>: non apre la plancia
-                       e non vede entità, stanze né persone. Tocca due cose sole,
-                       e solo perché questa casa le ha aperte — <b>installare un
-                       aggiornamento</b> e <b>riavviare un add-on fermo</b>. Non
-                       c'è altro, e non c'è una riga di comando.`
+                       e non vede stanze né persone. Tocca <b>una cosa sola</b>, e
+                       solo perché questa casa gliel'ha aperta: far partire un
+                       aggiornamento che è <b>già in attesa qui</b>. Non c'è altro,
+                       e non c'è una riga di comando.`
                     : `Questo quadro <b>guarda e basta</b>: non apre la plancia,
                        non tocca niente, e non vede entità, stanze né persone.
                        Questa casa non ha aperto la manutenzione.`
@@ -2279,6 +2715,11 @@
               </span>
             </p>
           </section>
+
+          <div class="capitolo">
+            <h2>Cosa c'è da fare</h2>
+            <span>quello che questa casa chiede a te</span>
+          </div>
 
           <section class="riquadro">
             <div class="capoRiquadro">
@@ -2309,7 +2750,14 @@
             <p class="verdetto">${testo(verdetto)}</p>
           </section>
 
-          ${gliAggiornamenti(c)} ${laMacchina(c)} ${laRete(c)} ${gliAddon(c)}
+          ${gliAggiornamenti(c, casa)}
+
+          <div class="capitolo">
+            <h2>Come sta</h2>
+            <span>la macchina, la rete, e cosa risponde</span>
+          </div>
+
+          ${laMacchina(c)} ${laRete(c)} ${gliAddon(c)}
 
           <section class="riquadro">
             <div class="capoRiquadro"><h3>La salute, quattordici giorni</h3></div>
@@ -2328,29 +2776,36 @@
           </section>
 
           ${
-            (c.entita?.sparite ?? 0) > 0
+            quantiGiu(c) > 0
               ? `
           <section class="riquadro">
-            <div class="capoRiquadro"><h3>I dispositivi che non rispondono</h3></div>
-            <div class="impronte">
-              ${(c.entita?.impronte || []).map((una) => `<span>#${testo(una)}</span>`).join("")}
+            <div class="capoRiquadro"><h3>I dispositivi non collegati</h3></div>
+            <div class="nomiGiu">
+              ${iNomiGiu(c)}
             </div>
             <p class="nota">
-              Il quadro non sa quali sono, e non lo deve sapere: la casa manda
-              quattro cifre ricavate dal nome del dispositivo con un sale che non
-              esce da lì. Servono a dire <em>lo stesso di ieri</em> oppure
-              <em>un altro</em> — cioè a distinguere un dispositivo morto da una
-              rete che balla — e a niente di più.
+              Questi non rispondono <em>adesso</em>: Home Assistant ci ha
+              parlato e non ci parla più. Può essere la presa staccata, il nodo
+              Zigbee che se n'è andato, l'integrazione caduta — e può essere
+              anche solo la rete che balla, per cui prima di mettersi in
+              macchina conviene guardare se domani ci sono ancora gli stessi
+              nomi.
               <br /><br />
-              <b>Il nome non lo scopre nessuno da qui</b>, e non è una cosa da
-              aggiungere dopo: quei nomi dicono cosa c'è in una casa e in quali
-              stanze. Se serve saperlo, lo legge chi ci abita dalla propria
-              plancia, dove quel dispositivo risulta non disponibile, e lo dice
-              se vuole.
+              Questa casa manda <b>solo il nome di quelli che non rispondono</b>,
+              e nient'altro di quello che ha dentro: i dispositivi che
+              funzionano il quadro non li vede nemmeno contati uno per uno. Chi
+              ci abita lo sa prima di incollare il codice — c'è scritto nella
+              casella dell'add-on — e lo rilegge parola per parola nella scheda
+              «Il quadro», dove c'è anche il tasto per smettere.
             </p>
           </section>`
               : ""
           }
+
+          <div class="capitolo">
+            <h2>Cos'è, di preciso</h2>
+            <span>i numeri di versione, e il rapporto com'è arrivato</span>
+          </div>
 
           <section class="riquadro">
             <div class="capoRiquadro"><h3>Le versioni</h3></div>
@@ -2375,11 +2830,13 @@
               <pre>${testo(JSON.stringify(c, null, 2))}</pre>
               <p class="nota" style="margin-top: 14px">
                 Questo è <strong>tutto</strong> quello che questa casa manda.
-                Nessun nome di entità, nessuna stanza, nessuna persona, nessuno
-                stato di nessun sensore, nessun indirizzo. Lo stesso testo,
-                parola per parola, lo legge chi ci abita: sta nella scheda «Il
-                quadro» della console dell'add-on, insieme al tasto per smettere
-                di mandarlo.
+                Gli unici nomi che ci trovi sono quelli dei dispositivi che in
+                questo momento non rispondono; di tutti gli altri non c'è
+                nemmeno l'elenco. Nessuna persona, nessuno stato di nessun
+                sensore, nessun indirizzo pubblico. Lo stesso testo, parola per
+                parola, lo legge chi ci abita: sta nella scheda «Il quadro»
+                della console dell'add-on, insieme al tasto per smettere di
+                mandarlo.
               </p>
             </details>
           </section>
@@ -2511,15 +2968,14 @@
        * E il tasto c'è solo se quella casa **ha aperto la manutenzione**.
        * Vedere cosa c'è da fare e poterlo fare sono due permessi diversi, e
        * il secondo non si dà da sé insieme al primo. */
-      function gliAggiornamenti(c) {
+      function gliAggiornamenti(c, casa) {
         if (!c.aggiornamenti)
           return riquadroMuto(
             "Gli aggiornamenti",
             "Questa casa non ha detto cosa c'è da aggiornare.",
           );
         const elenco = c.aggiornamenti.elenco || [];
-        const possibili = daFare(c);
-        const cartello = ilCartello(c);
+        const cartello = ilCartello(c, casa?.chiesto);
 
         if (!elenco.length)
           return `
@@ -2538,37 +2994,21 @@
             ${cartello}
             <ul class="versi">
               ${elenco
-                .map(
-                  (uno) => `
-                <li>
-                  <span class="che">
-                    <b>${testo(uno.nome)}</b>
-                    <span class="salto">${testo(uno.da)} → ${testo(uno.a)}</span>
-                  </span>
-                  ${uno.stacca ? '<span class="pastiglia attenta">fa cadere il filo</span>' : ""}
-                  ${
-                    !uno.installabile
-                      ? '<span class="pastiglia">si porta col cacciavite</span>'
-                      : c.manutenzione
-                        ? '<button type="button" class="tasto">Installa</button>'
-                        : '<span class="pastiglia">manutenzione chiusa</span>'
-                  }
-                </li>`,
+                .map((uno) =>
+                  unaRiga(uno, {
+                    fare: `${uno.stacca ? '<span class="pastiglia attenta">fa cadere il filo</span>' : ""}${ilTasto(uno, c, casa)}`,
+                  }),
                 )
                 .join("")}
             </ul>
             ${
               c.manutenzione
-                ? `<div class="azioni">
-                    <button type="button" class="tasto forte" ${possibili.length ? "" : "disabled"}>
-                      Installa ${possibili.length === elenco.length ? "tutti" : `i ${possibili.length} che si possono`}
-                    </button>
-                  </div>
-                  <p class="verdetto">
+                ? `<p class="verdetto">
                     Il backup si fa <b>prima, sempre</b>: è la condizione, non
-                    una casella da spuntare. E quelli che staccano il filo si
-                    installano uno per volta — due insieme su una casa sola
-                    vogliono dire non sapere quale dei due non è tornato.
+                    una casella da spuntare. E se ne fa <b>uno per volta</b>:
+                    due insieme su una casa sola vogliono dire non sapere quale
+                    dei due non è tornato — per questo qui non c'è nessun
+                    «installa tutti».
                   </p>`
                 : `<div class="limite" style="margin-top: 16px">
                     <span class="gettone" aria-hidden="true">◴</span>
@@ -2576,35 +3016,88 @@
                       <b>Questa casa non ha aperto la manutenzione.</b> Si vede
                       cosa c'è da fare e non si può farlo, ed è giusto così:
                       guardare e toccare sono due permessi diversi.
-                      L'interruttore sta nella sua console, nella scheda «Il
-                      quadro», e lo tiene in mano chi ci abita.
+                      <br /><br />
+                      Lo accende <b>chi ci abita</b>, sul suo Home Assistant:
+                      <b>Impostazioni › Add-on › gdahome › Configurazione</b>, la
+                      casella <i>«Lascia che chi ti ha fatto l'impianto aggiorni
+                      da lontano»</i>, poi <b>Salva</b> e l'add-on riparte da sé.
+                      Da qui non si accende, e non è una dimenticanza: sarebbe il
+                      permesso che se lo dà da solo.
                     </span>
                   </div>`
             }
           </section>`;
       }
 
-      /* Il cartello del lavoro: cosa sta facendo questa casa adesso, o cosa ha
-       * appena finito. */
-      function ilCartello(c) {
+      /* Cosa si può fare su questa riga: il tasto, o il motivo per cui non c'è.
+       *
+       * Sei casi, e si leggono in quest'ordine perché così si escludono a
+       * vicenda. Il tasto è l'ultimo: tutto quello che viene prima è una
+       * ragione per non mostrarlo, e mostrarlo lo stesso sarebbe una promessa
+       * che non si mantiene.
+       *
+       * Il nome e il salto di versione finiscono in tre `data-`, e non
+       * l'entità: nel rapporto l'entità non c'è, e non c'è apposta. È lo stesso
+       * modo con cui la casa ritrova di cosa si sta parlando. */
+      function ilTasto(uno, c, casa) {
+        if (!uno.installabile) return '<span class="pastiglia">si porta col cacciavite</span>';
+        if (eLaStessa(uno, casa?.chiesto))
+          return `<button type="button" class="tasto" data-lascia-stare="${testo(casa.casa)}">
+            Annulla
+          </button>`;
+        if (eLaStessa(uno, c.lavoro) && c.lavoro.stato === "in corso")
+          return '<span class="pastiglia lavoro">in corso</span>';
+        if (casa?.chiesto || staLavorando(c)) return '<span class="pastiglia">uno per volta</span>';
+        if (!c.manutenzione) return '<span class="pastiglia">manutenzione chiusa</span>';
+        return `<button
+          type="button"
+          class="tasto"
+          data-installa="${testo(casa?.casa || "")}"
+          data-quale-nome="${testo(uno.nome)}"
+          data-quale-da="${testo(uno.da)}"
+          data-quale-a="${testo(uno.a)}"
+        >Installa</button>`;
+      }
+
+      /* Il cartello in cima agli aggiornamenti: cosa sta succedendo in questa
+       * casa, o com'è finita l'ultima volta.
+       *
+       * I nomi degli stati sono quelli che manda il ponte — `in corso`,
+       * `fatto`, `non riuscito` — e non una traduzione fatta qui: due
+       * vocabolari per la stessa cosa vogliono dire un cartello che smette di
+       * comparire il giorno che uno dei due cambia, in silenzio. */
+      function ilCartello(c, chiesto = null) {
+        /* Prima di tutto quello che si è appena chiesto e che la casa non è
+         * ancora passata a prendersi: sono i secondi in cui chi ha premuto il
+         * tasto si chiede se ha funzionato. */
+        if (chiesto)
+          return `
+            <div class="cartello">
+              <span class="gettone" aria-hidden="true">◴</span>
+              <span>
+                <b>${testo(chiesto.nome)} ${testo(chiesto.da)} → ${testo(chiesto.a)}</b>
+                è stato chiesto ${testo(daQuanto(chiesto.chiesto))}. Parte quando questa
+                casa manda il prossimo rapporto — non si bussa alla porta di
+                nessuno, è lei che passa a prenderselo.
+              </span>
+            </div>`;
         const l = c.lavoro;
-        /* Non `=== null`: il ponte questa riga non la manda affatto, e
-         * `undefined` non e' `null`. E' il genere di differenza che si paga
-         * quando una bozza coi dati scritti a mano incontra dei dati veri. */
+        /* Non `=== null`: una casa ferma a un ponte di ieri questa riga non la
+         * manda affatto, e `undefined` non è `null`. */
         if (!l) return "";
         if (l.stato === "fatto")
           return `
             <div class="cartello bene">
               <span class="gettone" aria-hidden="true">✓</span>
-              <span><b>${testo(l.cosa)}</b> installato ${testo(l.quando)}, dal quadro.</span>
+              <span><b>${testo(l.cosa)}</b> installato ${testo(daQuanto(l.quando))}, dal quadro.</span>
             </div>`;
-        if (l.stato === "fallito")
+        if (l.stato === "non riuscito")
           return `
             <div class="cartello male">
               <span class="gettone" aria-hidden="true">✕</span>
               <span
-                ><b>${testo(l.cosa)}</b> non è andato ${testo(l.quando)}:
-                ${testo(l.perché || "Home Assistant ha detto di no")}.</span
+                ><b>${testo(l.cosa)}</b> non è andato ${testo(daQuanto(l.quando))}:
+                ${testo(l.perche || "questa casa ha detto di no")}.</span
               >
             </div>`;
         const fermi = Math.round((ADESSO() - new Date(c.quando).getTime()) / 60000);
@@ -2613,12 +3106,12 @@
           <div class="cartello ${tardi ? "male" : ""}">
             <span class="gettone" aria-hidden="true">${tardi ? "!" : "◴"}</span>
             <span>
-              <b>${testo(l.cosa)}</b> è partito ${testo(l.quando)}${
+              <b>${testo(l.cosa)}</b> è partito ${testo(daQuanto(l.quando))}${
                 tardi
                   ? ` e questa casa non è più tornata. Un aggiornamento che stacca il filo se lo riprende in pochi minuti: qui si va di persona.`
                   : l.stacca
                     ? `. Fa cadere il filo, quindi per qualche minuto questa casa non si fa sentire — è normale.`
-                    : `. Come è andata lo dirà la prossima rapporto.`
+                    : `. Come è andata lo dirà il prossimo rapporto.`
               }
             </span>
           </div>`;
@@ -2717,10 +3210,15 @@
        * manca a questa casa» ma «quali sono indietro su Home Assistant Core»,
        * e che cosi' si sbriga in un gesto invece che in quaranta.
        *
-       * Reggeva su una cosa che non c'e': quel gesto. Il tasto «Installa su N
-       * case» era li' da sempre e non e' mai stato agganciato a niente —
+       * Reggeva su una cosa che non c'era: quel gesto. Il tasto «Installa su N
+       * case» e' stato li' per un anno senza essere agganciato a niente —
        * nessun `data-`, nessun `onclick` — quindi non installava un bel
        * niente, e il raggruppamento serviva un'azione che non esisteva.
+       *
+       * Adesso il gesto c'e', ed e' **una casa per volta**: si installa da qui,
+       * riga per riga. Un tasto solo che parte su quaranta impianti insieme
+       * resta quello che non si fa — se due non tornano non si sa quale dei
+       * quaranta guardare, e il backup lo si e' fatto su tutte o su nessuna.
        *
        * Quello che restava era il costo: con **una** casa sola diventano
        * sedici riquadri che dicono tutti «1 casa», e per sapere cosa fare in
@@ -2765,14 +3263,12 @@
           <p class="sottotitolo">
             ${plurale(voci, "cosa da installare", "cose da installare")} su
             ${plurale(indietro.length, "casa", "case")}. Una casa per riquadro, con
-            dentro quello che le manca: è dove si va a mettere le mani, e si apre
-            da qui premendo il suo nome.
+            dentro quello che le manca: si installa da qui, una cosa per volta, e
+            premendo il nome si apre la scheda con tutto il resto.
           </p>
 
           ${indietro
             .map(({ casa, cose }) => {
-              const sta = (uno) =>
-                staLavorando(casa.carta) && casa.carta.lavoro.cosa.startsWith(uno.nome);
               const aperta = Boolean(casa.carta.manutenzione);
               const cacciavite = cose.filter((uno) => !uno.installabile).length;
               const daQui = cose.filter((uno) => uno.installabile).length;
@@ -2787,31 +3283,23 @@
                   </h3>
                   <span class="conta">${plurale(cose.length, "cosa", "cose")}</span>
                 </div>
-                <div class="indietro-chi">
+                <ul class="versi">
                   ${cose
-                    .map(
-                      (uno) => `<span class="pastiglia ${
-                        sta(uno) ? "lavoro" : uno.installabile && aperta ? "" : "attenta"
-                      }"
-                        >${testo(uno.nome)} · ${testo(uno.da)} → ${testo(uno.a)}${
-                          sta(uno) ? " · in corso" : ""
-                        }</span
-                      >`,
-                    )
+                    .map((uno) => unaRiga(uno, { fare: ilTasto(uno, casa.carta, casa) }))
                     .join("")}
-                </div>
+                </ul>
                 <p class="verdetto">
                   ${
                     !aperta && daQui
-                      ? "Questa casa non ha aperto la manutenzione al quadro: da qui non si installa niente, e non è un guasto — è una scelta di chi ci abita."
+                      ? "Questa casa non ha aperto la manutenzione al quadro: da qui non si installa niente, e non è un guasto — è una scelta di chi ci abita. La accende lui, dal suo Home Assistant: Impostazioni › Add-on › gdahome › Configurazione, la casella «Lascia che chi ti ha fatto l'impianto aggiorni da lontano». "
                       : ""
                   }${
                     cacciavite
-                      ? `${plurale(cacciavite, "si porta", "si portano")} col cacciavite: da qui non ${cacciavite === 1 ? "si installa" : "si installano"}.`
+                      ? `${plurale(cacciavite, "si porta", "si portano")} col cacciavite: da qui non ${cacciavite === 1 ? "si installa" : "si installano"}. `
                       : ""
                   }${
                     aperta && daQui
-                      ? `${plurale(daQui, "si installa", "si installano")} dalla scheda di questa casa, una alla volta.`
+                      ? "Il backup viene prima, sempre; e se ne fa uno per volta, che è il motivo per cui non c'è nessun «installa tutti»."
                       : ""
                   }
                 </p>
@@ -3030,6 +3518,42 @@
               </section>
 
               <section class="riquadro">
+                <div class="capoRiquadro"><h3>Il tuo marchio</h3></div>
+                <p class="minuta">
+                  Il logo che hai stampato sul furgone. Compare qui in cima al
+                  posto del nostro, e <b>in casa dei tuoi clienti</b>: chi ci
+                  abita, quando ha un problema, chiama te — e allora è il tuo
+                  nome quello che deve leggere.
+                </p>
+                <div class="provaMarchio">
+                  ${
+                    IO.marchio
+                      ? `<img class="suoMarchio" src="${ilSuoMarchio()}" alt="Il tuo marchio" />`
+                      : `<span class="vuoto" aria-hidden="true">qui</span>`
+                  }
+                  <div class="azioni">
+                    <input
+                      type="file"
+                      id="scegli-marchio"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      aria-label="Scegli il file del tuo marchio"
+                    />
+                    ${IO.marchio ? `<button type="button" class="tasto" data-togli-marchio>Togli</button>` : ""}
+                  </div>
+                </div>
+                <p class="minuta" id="esito-marchio" hidden></p>
+                <div class="avvertenza">
+                  <span class="gettone" aria-hidden="true">!</span>
+                  <span>
+                    PNG, JPEG, WEBP o SVG, <b>fino a 128 kB</b>. Quadrato viene
+                    meglio: sta in un quadratino da trenta punti. Questo file lo
+                    scarica il browser di chi abita le case che segui, senza
+                    nessuna chiave — mettici il logo, non altro.
+                  </span>
+                </div>
+              </section>
+
+              <section class="riquadro">
                 <div class="capoRiquadro"><h3>Quando una casa tace</h3></div>
                 <p class="minuta">
                   Il quadro ti scrive quando un impianto smette di parlare da più
@@ -3097,10 +3621,13 @@
                       <b>La manutenzione è un secondo interruttore.</b> Mandare
                       il rapporto e lasciarsi aggiornare sono due permessi, e il
                       secondo è spento di serie: chi lo accende lo accende
-                      apposta. Acceso, il quadro può installare un aggiornamento
-                      e riavviare un add-on fermo — due verbi, scritti nel
-                      programma, e nient'altro. Ogni cosa che fa resta scritta
-                      nella console dell'add-on, dove la legge chi ci abita.
+                      apposta. Acceso, da qui si può far partire un
+                      aggiornamento che quella casa <em>ha già in attesa</em> —
+                      un verbo solo, scritto nel programma — e nient'altro:
+                      niente riga di comando, niente configurazione, niente
+                      lettura di stati. Quello che si chiede finisce nel
+                      rapporto di quella casa, dove chi ci abita lo rilegge
+                      parola per parola.
                     </span>
                   </li>
                   <li class="fatta">

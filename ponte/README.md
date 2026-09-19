@@ -120,16 +120,44 @@ il Wi-Fi di casa. Per chi la guarda dal divano va benissimo.
 
 ## Le opzioni
 
-|                       |                                                                                                        |
-| --------------------- | ------------------------------------------------------------------------------------------------------ |
+Dalla 1.5.8 stanno in **cinque sezioni**, e non più in tredici caselle di fila.
+Home Assistant non ha titoli di sezione: li disegna solo per le caselle
+annidate, ed è per questo che sono annidate. Di queste cinque, a chi abita la
+casa ne riguarda **una**.
+
+### `casa` — la tua parte
+
+|                       |                                                                                                       |
+| --------------------- | ----------------------------------------------------------------------------------------------------- |
 | `da_fuori_casa`       | acceso: si passa dal centralino di gdahome, e non c'è niente da scrivere. Spento: solo la rete di casa |
-| `porta_app`           | la porta su cui bussa l'app (di serie: 8098)                                                           |
-| `dispositivi_massimi` | quanti telefoni possono restare abbinati insieme (10)                                                  |
-| `minuti_del_codice`   | quanto vive un codice di abbinamento (5)                                                               |
-| `giorni_di_silenzio`  | dopo quanto un telefono sparito viene tolto da solo; zero vuol dire mai (90)                           |
-| `gettone`             | **lascialo vuoto**: da quando la repository è pubblica non serve più                                   |
-| `chiave_console`      | **lasciala vuota**: serve a una installazione al mondo, quella di chi risponde alle segnalazioni       |
-| `registro`            | `debug`, `info`, `attenzione`, `errore`                                                                |
+| `quadro`              | il codice che ti ha dato chi ti ha fatto l'impianto. Vuoto: non parte niente                          |
+| `quadro_ogni`         | ogni quanti minuti parte un rapporto (1)                                                              |
+| `quadro_manutenzione` | lascia che chi ti ha fatto l'impianto faccia partire un aggiornamento da lontano. Spento di serie     |
+| `minuti_del_codice`   | quanto vive il QR che abbina un telefono (5)                                                          |
+| `giorni_di_silenzio`  | dopo quanto un telefono sparito viene tolto da solo; zero vuol dire mai (90)                          |
+| `dispositivi_massimi` | quanti telefoni possono restare abbinati insieme (10)                                                 |
+
+### `chi_installa` — solo se gdahome lo monti in casa d'altri
+
+|           |                                                                                    |
+| --------- | ------------------------------------------------------------------------------------ |
+| `acceso`  | questo Home Assistant è il tuo, quello da cui tieni d'occhio gli impianti che hai montato |
+| `chiave`  | la chiave che apre il tuo cruscotto. Senza, l'interruttore qui sopra non accende niente  |
+
+### `gestione`, `assistenza` — una casa sola al mondo, e non è la tua
+
+Una `chiave` ciascuna, e in tutte le case restano vuote. La prima fa comparire
+la gestione degli installatori, la seconda la coda delle segnalazioni di tutti.
+
+### `avanzate`
+
+|             |                                              |
+| ----------- | ---------------------------------------------- |
+| `porta_app` | la porta su cui bussa l'app (di serie: 8098)   |
+| `registro`  | `debug`, `info`, `attenzione`, `errore`        |
+
+`gettone` non è più una casella: da quando la repository è pubblica non serve.
+Chi si tiene una copia privata dell'add-on lo passa dall'ambiente.
 
 ## Se qualcosa non torna
 

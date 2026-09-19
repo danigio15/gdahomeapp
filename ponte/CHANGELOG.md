@@ -11,6 +11,214 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9
+
+**La plancia porta il nome e il logo di chi ti ha fatto l'impianto.** Se la casa
+te l'ha montata un installatore e lui il suo marchio l'ha caricato, la voce
+nella barra laterale prende il suo nome al posto di «gdahome», e in cima alla
+plancia c'è il suo logo. Serve a te: il giorno che qualcosa non va, hai davanti
+il nome di chi chiamare invece del nostro.
+
+**Se togli l'installatore, torna gdahome — e non perdi niente.** È la domanda
+che conta, e la risposta è nel come: si cambia **solo il titolo**. La
+configurazione della plancia sta sotto il *profilo*, e il profilo non si sfiora:
+cambiare il titolo è come cambiare la targhetta sulla porta, quello che c'è
+dentro la stanza non si muove. Tessere, colori, stanze, avvisi: tutto dov'era.
+
+**E se la plancia l'hai rinominata tu, quel nome non lo tocca nessuno.** Né un
+installatore che arriva, né uno che se ne va, né l'interruttore qui sotto. Si
+tocca solo quello che ci abbiamo messo noi: «gdahome», o il nome che ci aveva
+messo l'installatore di prima.
+
+**Il logo lo scarica il ponte, non il tuo browser.** Potrebbe prenderselo la
+pagina da sola — il quadro lo serve a chiunque — e non si fa: ogni volta che
+apri la plancia, il tuo browser andrebbe a farsi vedere da una macchina che non
+è la tua, e chi tiene il quadro si troverebbe in mano gli orari in cui in casa
+tua si guarda la plancia. Lo prende l'add-on, una volta al giorno, e da lì in
+poi lo serve lui dalla rete di casa.
+
+**C'è l'interruttore per dire di no:** *Casa › Lascia che la plancia porti il
+marchio di chi ti ha fatto l'impianto*, acceso di serie. Spento resta gdahome, e
+non cambia nient'altro — il rapporto parte lo stesso.
+
+**E nel cruscotto dell'installatore** il suo marchio sta in testata al posto del
+nostro, col suo nome. Si carica dalla pagina «Abbina»: PNG, JPEG, WEBP o SVG
+fino a 128 kB.
+
+## 1.5.8
+
+> **Prima di aggiornare, tieni sotto mano il codice del quadro** (e, se le usi,
+> le chiavi del cruscotto e della gestione). Le caselle cambiano posto, e
+> secondo come si comporta il Supervisor potrebbe toccarti rimetterle una
+> volta. Le trovi dove sono adesso: Impostazioni › Add-on › gdahome ›
+> Configurazione.
+
+**La configurazione è in sezioni.** Erano tredici caselle una sotto l'altra, e
+le leggevano tre persone diverse di cui due non c'entravano niente: chi apriva
+la scheda si trovava fra i piedi «La chiave della console» e «La chiave della
+gestione» senza nessun modo di capire che non lo riguardavano.
+
+Adesso sono cinque gruppi con un titolo:
+
+- **La casa** — la tua parte, e per quasi tutti l'unica che conta
+- **Chi installa** — solo se gdahome lo monti in casa d'altri
+- **Chi tiene il quadro** e **L'assistenza** — una casa sola al mondo ciascuna
+- **Avanzate** — due numeri che non cambia quasi nessuno
+
+Home Assistant non ha titoli di sezione: li disegna **solo** per le caselle
+annidate. È l'unico modo che c'era, e il prezzo è quello scritto qui sopra. In
+cambio il prefisso nel nome sparisce: «Casa · Da fuori casa» adesso è «Da fuori
+casa» dentro «La casa», che è la stessa cosa detta una volta sola.
+
+**E il cruscotto dell'installatore si legge a capitoli.** La scheda di una casa
+era una colonna di dieci riquadri tutti sullo stesso piano: chi la apriva per
+sapere cosa gli toccava se li leggeva tutti e dieci, e il collaudo — che è la
+risposta — stava in mezzo alla macchina e alle versioni. Adesso ci sono tre
+titoli, perché le domande che uno si fa aprendo un impianto sono tre: **Cosa
+c'è da fare**, **Come sta**, **Cos'è di preciso**.
+
+**Il ponte legge tutt'e due le forme.** Se il Supervisor si tiene quello che
+avevi scritto, non ti accorgi di niente e la casa continua a mandare il suo
+rapporto senza che tu tocchi nulla. Se lo butta, lo rimetti una volta e non
+succede più.
+
+## 1.5.7
+
+**Via il bollo dalla testata del cruscotto e della gestione**, e il tasto del
+menu di Home Assistant torna a sinistra, dov'è quello di Home Assistant e dove
+uno lo cerca.
+
+Ci si era sbattuto due volte. Quel tasto *galleggia*: sta nel documento di
+fuori, sopra la pagina, e la pagina non sa di averlo addosso. A sinistra si
+sedeva sopra il bollo; spostato a destra, si è seduto sulla nav. Scansarlo non
+funziona — da una parte o dall'altra, sotto c'è sempre qualcosa.
+
+Adesso non lo si scansa: **gli si fa spazio.** La pagina si accorge da sola di
+stare dentro un riquadro e gli lascia il posto in cima, e solo lì: aperta in un
+browser quel tasto non c'è, e un buco sarebbe solo un buco. Il bollo resta dove
+serve davvero — accanto agli aggiornamenti di gdahome, dove distingue la roba
+nostra senza scaricare niente.
+
+
+**Dal cruscotto si installa.** Era il pezzo che mancava: il quadro faceva
+vedere cosa c'era da aggiornare in ogni casa e non c'era modo di farlo. Il
+tasto «Installa su N case» stava lì da un anno senza essere agganciato a
+niente — nessun `onclick`, nessuna chiamata — quindi non installava un bel
+niente, e chi lo premeva non se ne accorgeva nemmeno.
+
+**Verso casa tua non si apre nessuna porta.** È la cosa da leggere per prima.
+Non c'è nessun buco nel router, nessun servizio in ascolto, nessun indirizzo da
+difendere: è questa casa che ogni minuto manda il rapporto, e nella risposta
+trova — qualche volta — una riga che dice cosa fare. Chi non manda il rapporto
+non riceve niente, e chi toglie il codice smette di mandarlo.
+
+**È un secondo interruttore, e nasce spento.** Nelle opzioni c'è
+`Casa · Lascia che chi ti ha fatto l'impianto aggiorni da lontano`. Mandargli i
+numeri l'hai già deciso incollando il codice; questa è un'altra decisione, e la
+prendi tu. Spento — cioè finché non lo accendi — nel suo cruscotto il tasto non
+c'è e al posto suo c'è scritto perché.
+
+**Un verbo solo:** far partire un aggiornamento che questa casa *ha già in
+attesa*, gli stessi che vedi tu in Impostazioni. Non apre la tua plancia, non
+legge i tuoi sensori, non tocca la tua configurazione, non esegue comandi.
+L'elenco dei verbi sta nel programma del ponte, non nel messaggio: una parola
+che non è in quella lista viene rifiutata.
+
+> I documenti dicevano da tempo che i verbi erano due, con `riavvia` accanto.
+> Non c'è. Adesso i documenti dicono quello che c'è.
+
+**Si nomina per nome e salto di versione**, non per entità — «Shelly Plus», da
+`1.2.0` a `1.3.0` — perché nel rapporto l'entità non viaggia. Ne viene la regola
+più utile di tutte: se nel frattempo quella versione è già stata installata, o
+ne è uscita un'altra, il salto non torna e **non si fa niente**. Un tasto
+premuto ieri non installa una cosa diversa oggi.
+
+**Uno per volta**, e per questo non c'è nessun «installa tutti»: due insieme su
+una casa sola vogliono dire non sapere quale dei due non è tornato. Il tasto
+chiede conferma due volte, perché non stai premendo un tasto sul tuo computer.
+
+**Dove si accende, detto dove serve.** Quando una casa non ha aperto la
+manutenzione, il cruscotto dell'installatore adesso non dice solo «è chiusa»:
+dice la strada esatta da fare — *Impostazioni › Add-on › gdahome ›
+Configurazione*, la casella col suo nome per intero — perché è lui che deve
+spiegarla al cliente al telefono. Da lì non si accende: sarebbe il permesso che
+se lo dà da solo.
+
+**Quello che ti è stato fatto lo leggi tu.** Cosa è stato chiesto e com'è andata
+stanno dentro il rapporto, e il rapporto nella scheda «Il quadro» si legge
+parola per parola: non un riassunto di quello che è successo, la cosa stessa che
+è partita. E nel registro dell'add-on c'è la riga con l'ora.
+
+## 1.5.6.5
+
+**Gli aggiornamenti nel quadro, con il logo e con cosa cambia.** Erano
+pastigline: «Shelly Plus · 1.2.0 → 1.3.0», e basta. Nell'app quella stessa
+schermata ha il logo di chi porta l'aggiornamento e le note della versione, e
+non c'era nessun motivo perché il quadro ne mostrasse meno — è lo stesso
+elenco, e chi lo guarda deve prendere la stessa decisione.
+
+**Il logo si compone, non si scarica da un indirizzo che arriva.** Da casa
+parte una *parola* — `shelly`, `zha`, `homeassistant` — e l'indirizzo dei
+marchi di Home Assistant lo sa il quadro. È la differenza fra una casa che
+dice «il mio logo è questo» e una casa che dice «vai a bussare qui»: la
+seconda, chiunque possa scrivere l'attributo di un'entità la può usare per
+mandare il browser dell'installatore dove vuole. Roba nostra a parte, che
+porta il bollo del quadro, disegnato nella pagina e mai scaricato.
+
+Add-on e Home Assistant passano dalla stessa porta (`hassio`) e non hanno lo
+stesso segno: un add-on la sua icona ce l'ha nella macchina di casa, e da
+fuori non si prende — resta l'iniziale, che dice più del logo del Supervisor
+ripetuto venti volte. Un firmware che arriva per MQTT porta il marchio di
+Zigbee2MQTT, e solo se quell'add-on in casa c'è davvero.
+
+**E la stessa riga la disegnano tutt'e due le schermate.** Prima erano due —
+righe nella scheda di una casa, pastigline nella flotta — e una delle due
+restava sempre indietro. Adesso è una.
+
+## 1.5.6.4
+
+**I dispositivi che non rispondono adesso hanno un nome.** Prima nel quadro
+dell'installatore erano dodici pastiglie così: `#00a7`, `#033f`, `#03ad`.
+Quattro cifre ricavate dal nome con un sale che non usciva da casa, e
+servivano a dire *è lo stesso di ieri* oppure *è un altro* — cioè a
+distinguere un apparecchio morto da una rete che balla.
+
+Era la scelta giusta finché quella spia serviva a **sapere**. Non regge nel
+momento in cui deve servire a **riparare**: davanti a dodici codici chi ha
+montato l'impianto sa che dodici cose sono giù e non sa da dove cominciare, e
+finisce che telefona a chi ci abita per farsi leggere i nomi — cioè quei nomi
+escono lo stesso, per telefono, e il quadro non è servito a niente.
+
+**Quello che parte adesso, detto per intero:** il nome dei dispositivi che in
+quel momento non rispondono. Solo quelli. Di tutti gli altri — quelli che
+funzionano — non parte nemmeno l'elenco: una casa con duecento apparecchi a
+posto e due giù manda due nomi. Niente stati di sensori, niente persone,
+niente SSID, niente indirizzo pubblico. Sta scritto nella casella dell'add-on
+prima che tu incolli il codice, e nella scheda «Il quadro» lo rileggi parola
+per parola, col tasto per smettere accanto.
+
+**La spunta del collaudo segue.** Si chiamava «Nessuna entità sparita» e
+contava le entità; adesso è **«Sono collegati tutti»** e conta gli apparecchi,
+con le stesse parole del riquadro qui sopra. (Nella prima stesura era rimasta
+indietro e diceva «undefined su 180», rossa per sempre: trovata guardando la
+pagina, non le prove — che ora ci sono.)
+
+**E si contano per apparecchio, non per entità.** Un termostato che se ne va
+portava giù cinque righe — temperatura, umidità, batteria, e via — e adesso ne
+fa una: «Termostato soggiorno». Il conto delle entità c'è lo stesso, sotto, che
+è un'altra domanda. Il nome è quello che hai messo tu, se gliene hai messo uno:
+«Frigo» si trova, `Shelly Plus Plug S-6A3F` no.
+
+## 1.5.6.3
+
+**Il tasto del menu si sedeva sopra il marchio della pagina.** Stava in alto a
+sinistra, dove sta l'hamburger di Home Assistant — e lì sotto, nel Cruscotto e
+nella Gestione, c'è già il marchio del quadro, che spuntava da sotto il tasto.
+
+Ora sta in alto a destra. Non è dove uno se lo aspetta, ed è il prezzo: quel
+tasto galleggia su una pagina che non sa di averlo addosso e non gli fa spazio.
+Ma un tasto fuori posto si trova, una cosa coperta no.
+
 ## 1.5.6.2
 
 **Il cruscotto dell'installatore si apriva bianco.** Colpa della 1.5.6.1, e di

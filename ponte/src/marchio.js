@@ -61,6 +61,14 @@ const MARCHIO = join(QUI, "..", "marchio");
 const ilLogo = leggiUnaVolta(join(MARCHIO, "gdahome.png"));
 const ilVelo = leggiUnaVolta(join(MARCHIO, "gdahome-velo.webp"));
 
+/* Quanto puo' pesare un logo per finire **dentro** la pagina, nel velo
+ * d'avvio: quello sta in base64 nell'HTML e arriva prima di qualunque altra
+ * cosa. Il nostro, in WebP a 152 punti, pesa quattro kilobyte. Oltre questa
+ * misura il velo resta il nostro e il logo dell'installatore si vede un attimo
+ * dopo, in cima alla plancia: mezzo secondo di marchio nostro all'avvio costa
+ * meno di due secondi di schermo bianco. */
+const VELO_MASSIMO = 24 * 1024;
+
 function leggiUnaVolta(dove) {
   let dentro;
   let letto = false;
@@ -115,25 +123,28 @@ const LA_SCRITTA_DEL_LOGO = /(>)Dashboard(<\/span><span[^>]*>)MODERN(<\/span>)/g
  * solleva mai: un marchio che manca e' una plancia che si vede col suo nome di
  * prima, e va infinitamente meglio di una plancia che non si apre.
  */
-export function vestiDiGdahome(relativo, corpo, tipo) {
+export function vestiDiGdahome(relativo, corpo, tipo, suo = null) {
   const quale = String(relativo || "");
+  const chi = daInstallatore(suo);
   try {
     if (quale === IL_LOGO) {
-      const nostro = ilLogo();
-      return nostro ? { corpo: nostro, tipo } : { corpo, tipo };
+      const nostro = chi?.logo || ilLogo();
+      if (!nostro) return { corpo, tipo };
+      return { corpo: nostro, tipo: (chi?.logo && chi.tipo) || tipo };
     }
     if (quale.endsWith(".html")) {
-      return { corpo: Buffer.from(laPagina(corpo.toString("utf8")), "utf8"), tipo };
+      return { corpo: Buffer.from(laPagina(corpo.toString("utf8"), chi), "utf8"), tipo };
     }
     if (/^legacy\/dashboard-runtime-[a-z]{2}\.js$/.test(quale)) {
       const testo = corpo.toString("utf8");
+      const [davanti, dietro] = inDuePezzi(chi ? chi.nome : NOME);
       /* Si sostituisce e poi si guarda se e' cambiato qualcosa, invece di
        * chiedere prima «c'e'?»: su un'espressione con la `g`, `test` si
        * ricorda dove era arrivata, e la seconda domanda risponde dal punto
        * sbagliato. Sostituire e confrontare non ha memoria. */
       const fatto = testo
-        .replace(L_ALT_DEL_LOGO, `alt="${NOME}"`)
-        .replace(LA_SCRITTA_DEL_LOGO, "$1gda$2home$3");
+        .replace(L_ALT_DEL_LOGO, `alt="${perUnAttributo(chi ? chi.nome : NOME)}"`)
+        .replace(LA_SCRITTA_DEL_LOGO, `$1${davanti}$2${dietro}$3`);
       if (fatto === testo) return { corpo, tipo };
       return { corpo: Buffer.from(fatto, "utf8"), tipo };
     }
@@ -143,18 +154,73 @@ export function vestiDiGdahome(relativo, corpo, tipo) {
   }
 }
 
+/* Chi ha montato l'impianto, se c'e' e se ha qualcosa da far vedere.
+ *
+ * Torna `null` quando non c'e' niente da cambiare, cosi' chi disegna ha un
+ * caso solo da guardare invece di tre campi da controllare uno per uno. */
+function daInstallatore(suo) {
+  const nome = perDisegnare(suo?.nome);
+  const logo = Buffer.isBuffer(suo?.logo) && suo.logo.length ? suo.logo : null;
+  if (!nome && !logo) return null;
+  return { nome: nome || NOME, logo, tipo: String(suo?.tipo || "") };
+}
+
+/* Il nome di un installatore, ripulito per finire dentro una pagina.
+ *
+ * Arriva dal quadro, cioe' da fuori, e va a finire in un `<title>`, in un
+ * `alt=""` e dentro due `span`. Via i segni che in quei tre posti vogliono
+ * dire qualcosa — `<`, `>`, `"`, `&` — e via i «a capo», che in un attributo
+ * non ci stanno. Quello che resta e' un nome.
+ *
+ * Non si scappa, si **toglie**: un nome con dentro un `&lt;` lo si legge nel
+ * `<title>` ma non nei due `span`, dove finirebbe in mezzo a del testo gia'
+ * scritto. Togliere da' lo stesso risultato dappertutto. */
+function perDisegnare(nome) {
+  return String(nome ?? "")
+    .replace(/[<>"'&]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 40);
+}
+
+const perUnAttributo = (nome) => perDisegnare(nome);
+
+/* La scritta accanto al logo e' fatta di **due** pezzi attaccati: «gda» in
+ * chiaro e «home» in azzurro. Un nome di due parole ci sta com'e'; uno di una
+ * parola sola va tutto nel primo, e il secondo resta vuoto — che a schermo
+ * vuol dire una parola sola, giusta, invece di una spezzata a meta' a caso. */
+function inDuePezzi(nome) {
+  const pulito = perDisegnare(nome);
+  if (pulito === NOME) return ["gda", "home"];
+  const spazio = pulito.indexOf(" ");
+  if (spazio <= 0) return [pulito, ""];
+  return [pulito.slice(0, spazio), pulito.slice(spazio + 1)];
+}
+
 /* La pagina, vestita. Sta a parte perche' la prova la guarda come testo, che
  * e' il modo in cui si legge quello che cambia. */
-export function laPagina(testo) {
+export function laPagina(testo, suo = null) {
   let fatto = String(testo);
-  const velo = ilVelo();
+  const chi = suo && suo.nome ? suo : null;
+  /* Il velo d'avvio: l'immagine si cambia solo se ce n'e' una da mettere. Il
+   * logo di un installatore in un `data:` dentro la pagina pesa quanto pesa —
+   * fino a centoventotto kilobyte prima del primo disegno — e allora li' resta
+   * il nostro, che di kilobyte ne pesa quattro. La **parola** invece cambia:
+   * e' quella che si legge. */
+  const velo = chi?.logo && chi.logo.length <= VELO_MASSIMO ? chi.logo : ilVelo();
+  const razza = velo === chi?.logo ? chi.tipo || "image/png" : "image/webp";
   if (velo) {
     fatto = fatto.replace(
       LIMMAGINE_DEL_VELO,
-      `$1data:image/webp;base64,${velo.toString("base64")}$2`,
+      `$1data:${razza};base64,${velo.toString("base64")}$2`,
     );
   }
-  fatto = fatto.replace(LA_PAROLA_DEL_VELO, `$1${NOME}$2`);
-  fatto = fatto.replace(IL_TITOLO, `<title>${NOME}</title>`);
+  /* Ripulito **qui**, e non solo da chi chiama: questa funzione e' esportata —
+   * la prova la usa da sola, e domani la usera' qualcun altro — e un nome che
+   * arriva dal quadro finisce dentro un `<title>`. Una funzione che si fida di
+   * chi la chiama e' una funzione che un giorno qualcuno chiama male. */
+  const nome = perDisegnare(chi ? chi.nome : NOME) || NOME;
+  fatto = fatto.replace(LA_PAROLA_DEL_VELO, `$1${nome}$2`);
+  fatto = fatto.replace(IL_TITOLO, `<title>${nome}</title>`);
   return fatto;
 }

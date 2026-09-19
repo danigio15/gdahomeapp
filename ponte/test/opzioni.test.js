@@ -88,3 +88,98 @@ test("una chiave fatta di soli spazi e' una chiave vuota", (t) => {
   assert.equal(o.installatore, false);
   assert.equal(o.gestore, false);
 });
+
+/* ─── Le sezioni, e la scheda di prima ─────────────────────────────────────
+ *
+ * Dalla 1.5.8 le caselle sono annidate — `casa:`, `chi_installa:` — perche' e'
+ * l'unico modo che Home Assistant abbia di disegnare un titolo. Tutto il resto
+ * di `opzioni.js` continua a leggere nomi piatti: in mezzo c'e' `appiattisci`,
+ * e sta in un posto solo.
+ *
+ * Il Supervisor, aggiornando, potrebbe tenersi le caselle vecchie o buttarle:
+ * da qui non si sa. Se se le tiene, queste prove sono quello che fa si' che
+ * una casa gia' accesa continui a mandare il suo rapporto senza che nessuno
+ * tocchi niente.
+ */
+
+test("le caselle a sezioni si leggono come si leggevano quelle piatte", (t) => {
+  const o = scheda(t, {
+    casa: {
+      da_fuori_casa: false,
+      quadro: "K7M2-9XQF-3BHT-R4VN",
+      quadro_ogni: 7,
+      quadro_manutenzione: true,
+      minuti_del_codice: 9,
+      giorni_di_silenzio: 30,
+      dispositivi_massimi: 4,
+    },
+    chi_installa: { acceso: true, chiave: "K7M2-9XQF-3BHT-R4VN" },
+    gestione: { chiave: "una-chiave-del-gestore" },
+    assistenza: { chiave: "una-chiave-della-console" },
+    avanzate: { porta_app: 9000, registro: "debug" },
+  });
+  assert.equal(o.centralino, "", "«da fuori casa» spento non e' arrivato");
+  assert.ok(o.quadro, "il codice del quadro non e' arrivato");
+  assert.equal(o.quadroOgni, 7);
+  assert.equal(o.manutenzione, true);
+  assert.equal(o.minutiDelCodice, 9);
+  assert.equal(o.giorniDiSilenzio, 30);
+  assert.equal(o.dispositiviMassimi, 4);
+  assert.equal(o.installatore, true);
+  assert.equal(o.gestore, true);
+  assert.equal(o.chiaveDellaConsole, "una-chiave-della-console");
+  assert.equal(o.portaDellApp, 9000);
+  assert.equal(o.registro, "debug");
+});
+
+test("una casa ferma alla scheda piatta continua a funzionare", (t) => {
+  /* E' la casa di chi aggiorna: se il Supervisor si tiene le caselle di
+   * prima, qui non si rompe niente e non c'e' niente da rimettere a mano. */
+  const o = scheda(t, {
+    quadro: "K7M2-9XQF-3BHT-R4VN",
+    quadro_manutenzione: true,
+    installatore: true,
+    chiave_cruscotto: "K7M2-9XQF-3BHT-R4VN",
+    chiave_gestione: "una-chiave-del-gestore",
+    porta_app: 9000,
+  });
+  assert.ok(o.quadro);
+  assert.equal(o.manutenzione, true);
+  assert.equal(o.installatore, true);
+  assert.equal(o.gestore, true);
+  assert.equal(o.portaDellApp, 9000);
+});
+
+test("dove c'e' la sezione, e' la sezione che vale", (t) => {
+  /* Le due forme insieme succedono una volta sola: subito dopo
+   * l'aggiornamento, se il Supervisor si e' tenuto le vecchie. Quella nuova
+   * e' quella che si sta guardando nella scheda, e deve essere quella che
+   * conta — se no si cambia una casella e non cambia niente. */
+  const o = scheda(t, {
+    quadro_ogni: 60,
+    casa: { quadro_ogni: 3 },
+    installatore: true,
+    chi_installa: { acceso: false, chiave: "K7M2-9XQF-3BHT-R4VN" },
+  });
+  assert.equal(o.quadroOgni, 3);
+  assert.equal(o.installatore, false, "la sezione dice spento e la casella vecchia vince");
+});
+
+test("una sezione che dice «vuoto» o «spento» e' una risposta, non un silenzio", (t) => {
+  /* `""` e `false` sono scelte. Se contassero come «non detto», svuotare una
+   * casella non la svuoterebbe: tornerebbe quello che c'era scritto nella
+   * scheda vecchia, e chi l'ha svuotata non capirebbe perche'. */
+  const o = scheda(t, {
+    quadro: "K7M2-9XQF-3BHT-R4VN",
+    quadro_manutenzione: true,
+    casa: { quadro: "", quadro_manutenzione: false },
+  });
+  assert.equal(o.quadro, null, "il codice svuotato e' tornato indietro da solo");
+  assert.equal(o.manutenzione, false);
+});
+
+test("una sezione storta non fa cadere niente", (t) => {
+  const o = scheda(t, { casa: "non un gruppo", chi_installa: null, avanzate: 7 });
+  assert.equal(o.installatore, false);
+  assert.equal(o.portaDellApp, 8098);
+});

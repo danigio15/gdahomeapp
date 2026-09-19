@@ -16,15 +16,20 @@
  *
  * Numeri, versioni e nomi di processi. La regola si dice cosi': **cosa c'e'
  * nella scatola, non chi ci abita.** «Mosquitto broker» ed `eth0` sono nomi di
- * prodotti e di schede e non dicono niente di nessuno; il nome di un'entita'
- * — `binary_sensor.camera_di_marco_finestra` — dice chi abita in questa casa e
- * in quale stanza dorme, e quello non esce (per questo ci sono le impronte, in
- * `salute.js`).
+ * prodotti e di schede e non dicono niente di nessuno.
  *
- * Fuori restano, e vanno lasciati fuori: nomi di entita', nomi di stanze, nomi
- * di persone, stati di sensori, l'SSID del Wi-Fi, l'indirizzo pubblico, la
- * posizione, le foto, la configurazione della plancia, il contenuto delle
- * segnalazioni.
+ * Con un'eccezione sola, e dichiarata: **il nome dei dispositivi che in questo
+ * momento non rispondono**. Il perche' sta in cima a `salute.js` — una spia
+ * che dice «dodici cose sono giu'» e non quali non serve a ripararle, serve a
+ * far telefonare — e il prezzo e' scritto nella casella dell'add-on prima che
+ * qualcuno incolli il codice: «Luce cucina» dice anche in che stanza sta.
+ * Quelli che **funzionano** non escono: di una casa con duecento dispositivi a
+ * posto e due giu', il quadro sa due nomi.
+ *
+ * Fuori restano, e vanno lasciati fuori: i nomi di tutto il resto, i nomi
+ * delle stanze, i nomi delle persone, gli stati dei sensori, l'SSID del
+ * Wi-Fi, l'indirizzo pubblico, la posizione, le foto, la configurazione della
+ * plancia, il contenuto delle segnalazioni.
  *
  * L'indirizzo **sulla rete di casa** invece c'e': `192.168.1.50` non
  * identifica nessuno, e a chi ripara queste macchine serve tutti i giorni —
@@ -105,6 +110,18 @@ const OGNI_AL_MASSIMO = 24 * 60;
 
 /** Quanto si aspetta il quadro prima di lasciar perdere. */
 const ATTESA = 10_000;
+
+/* Quanto si tengono da parte i registri di Home Assistant.
+ *
+ * Servono a dare un nome ai dispositivi che non rispondono, e cambiano quando
+ * qualcuno aggiunge o ribattezza un apparecchio — cioe' quasi mai. Il rapporto
+ * parte ogni minuto: richiederli ogni volta vorrebbe dire duemila righe di
+ * registro al minuto per due nomi che sono gli stessi di un'ora fa.
+ *
+ * Cinque minuti e' il ritardo massimo con cui un dispositivo appena
+ * ribattezzato si vede col nome nuovo, e nessuno ribattezza una presa
+ * guardando il cronometro. */
+const REGISTRI_DURANO = 5 * 60 * 1000;
 
 /* Quanto si aspetta prima del primo rapporto.
  *
@@ -237,6 +254,8 @@ export function compila({
   apparati = null,
   addon = null,
   aggiornamenti = null,
+  manutenzione = false,
+  lavoro = null,
   plance = null,
   telefoni = null,
   fuori = null,
@@ -255,6 +274,10 @@ export function compila({
     ha: String(versioni.ha ?? ""),
     supervisor: String(versioni.supervisor ?? ""),
     sistema: String(versioni.sistema ?? ""),
+    /* Sempre, anche quando e' `false`: e' il secondo interruttore, e il quadro
+     * deve poter scrivere «questa casa non ha aperto la manutenzione». Una
+     * chiave che manca vorrebbe dire «non lo dice», che e' un'altra cosa. */
+    manutenzione: manutenzione === true,
   };
   /* Le parti che possono mancare si aggiungono solo se ci sono. Un Supervisor
    * che non ha risposto lascia il rapporto senza `macchina`, e il quadro lo
@@ -264,6 +287,7 @@ export function compila({
     rete,
     addon,
     aggiornamenti,
+    lavoro,
     plance,
     telefoni,
     fuori,
@@ -304,6 +328,8 @@ export function fabbricaIlRapporto({
   casa,
   ferro,
   aggiornamenti = null,
+  lavori = null,
+  manutenzione = false,
   plance = null,
   configurazione = null,
   dispositivi = null,
@@ -327,13 +353,54 @@ export function fabbricaIlRapporto({
     }
   };
 
+  /* I due registri, tenuti da parte per cinque minuti. Stanno qui e non in una
+   * classe perche' li vuole un pezzo solo del rapporto, e una classe in piu'
+   * per due `Map` e' una classe in piu' da tenere a mente.
+   *
+   * Uno dei due che non risponde li butta tutti e due: senza quello delle
+   * entita' non si sa di chi e' un'entita', senza quello dei dispositivi non
+   * si sa come si chiama un dispositivo, e mezza risposta darebbe nomi a
+   * meta'. `iNomi` sa gia' cavarsela senza, con i nomi delle entita'. */
+  let registri = null;
+  let registriLettiIl = 0;
+  const iRegistri = async () => {
+    const ora = adesso();
+    if (registri && ora - registriLettiIl < REGISTRI_DURANO) return registri;
+    const [dispositivi, entita] = await Promise.all([
+      casa.chiedi({ type: "config/device_registry/list" }),
+      casa.chiedi({ type: "config/entity_registry/list" }),
+    ]);
+    registri = { dispositivi, entita };
+    registriLettiIl = adesso();
+    return registri;
+  };
+
   return async () => {
-    const [detto, stati, daFare] = await Promise.all([
+    const [detto, stati, daFare, registriOra] = await Promise.all([
       forse("il ferro", () => ferro.chiedi()),
       forse("le entita'", () => casa.chiedi({ type: "get_states" })),
       aggiornamenti ? forse("gli aggiornamenti", () => aggiornamenti.elenco()) : null,
+      forse("i registri", iRegistri),
     ]);
     const quelli = Array.isArray(stati) ? stati : null;
+
+    /* I marchi si chiedono **dopo** l'elenco, perche' e' l'elenco che dice di
+     * quali. Uno per aggiornamento che aspetta, e in una casa normale sono
+     * due o tre; la risposta se la tiene `Aggiornamenti` finche' l'elenco non
+     * si muove, quindi il minuto dopo non si richiede niente.
+     *
+     * Uno che non risponde lascia il suo senza marchio e non porta via gli
+     * altri: `Promise.all` su `forse` non solleva mai. */
+    const marchi = new Map(
+      daFare
+        ? await Promise.all(
+            daFare.map(async (uno) => [
+              uno.entita,
+              (await forse("un marchio", () => aggiornamenti.marchioDi(uno.entita))) ?? "",
+            ]),
+          )
+        : [],
+    );
 
     return compila({
       casa: identita.casa,
@@ -355,22 +422,58 @@ export function fabbricaIlRapporto({
         : null,
       apparati: quelli ? gliApparati(quelli, { scelte: apparatiScelti() }) : null,
       addon: detto ? gliAddon({ addons: detto.addons }) : null,
-      aggiornamenti: daFare ? iConti(daFare) : null,
+      aggiornamenti: daFare ? iConti(daFare, marchi) : null,
+      /* Il secondo interruttore, detto al quadro.
+       *
+       * Serve a lui per sapere se il tasto lo puo' far vedere: chi guarda una
+       * casa chiusa deve leggere «questa casa non ha aperto la manutenzione»
+       * invece di premere un tasto che non fa niente. Il **no** vero pero' non
+       * sta qui — sta in `lavori.js`, in casa: un quadro che mandasse il
+       * comando lo stesso si sentirebbe rispondere di no da questa parte. */
+      manutenzione: manutenzione === true,
+      /* L'ultimo lavoro chiesto dal quadro, e com'e' andata. `null` quando non
+       * ne e' mai stato chiesto nessuno. */
+      lavoro: lavori ? lavori.stato(daFare) : null,
       plance: plance ? lePlance(plance, configurazione) : null,
       telefoni: dispositivi ? iTelefoni(dispositivi, adesso) : null,
       fuori: chiamata ? { acceso: Boolean(chiamata.dove), filo: chiamata.accesa === true } : null,
-      entita: quelli ? leEntita(quelli, { sale: identita.sale }) : null,
+      entita: quelli ? leEntita(quelli, { registri: registriOra }) : null,
       batterie: quelli ? leBatterie(quelli) : null,
       backup: quelli ? ilBackup(quelli, { adesso }) : null,
     });
   };
 }
 
+/* Quanto e' lungo l'indirizzo delle note che si accetta. Non e' una misura
+ * di sicurezza, e' un tetto: un `release_url` di diecimila caratteri e' un
+ * rapporto che diventa grande per niente. */
+const INDIRIZZO_MASSIMO = 300;
+
+/* L'indirizzo delle note lunghe, se e' un indirizzo da far vedere.
+ *
+ * Arriva da un attributo dell'entita', cioe' da fuori, e nel quadro diventa un
+ * collegamento su cui chi ha montato l'impianto clicca. Percio' passa solo
+ * `https://`: `javascript:` in un `href` e' un programma, e `http://` e'
+ * l'unica cosa che nel 2026 non si manda a cliccare a nessuno. Quello che non
+ * passa diventa stringa vuota, e nel quadro il collegamento non c'e' — le note
+ * brevi si leggono lo stesso. */
+function lIndirizzoDelleNote(dove) {
+  const quale = String(dove ?? "").trim();
+  if (quale.length > INDIRIZZO_MASSIMO) return "";
+  return /^https:\/\/[^\s"'<>]+$/i.test(quale) ? quale : "";
+}
+
 /* Quanti aggiornamenti aspettano, e di che razza. Le voci arrivano gia' fatte
  * da `aggiornamentiDaFare`, che e' lo stesso elenco che vede chi apre l'app:
  * chi guarda il quadro e chi guarda la casa non devono contare due numeri
- * diversi. */
-function iConti(daFare) {
+ * diversi.
+ *
+ * `marchi` e' entita' → parola, e l'entita' si usa **qui** per pescare il
+ * marchio giusto: nel foglio che parte non ci va, e non e' una dimenticanza.
+ * `update.camera_di_marco_firmware` direbbe cosa c'e' in questa casa e in
+ * quale stanza, e non e' quello che il quadro deve sapere per far vedere che
+ * c'e' una versione nuova. */
+function iConti(daFare, marchi = new Map()) {
   const elenco = Array.isArray(daFare) ? daFare : [];
   const suo = (uno) => /home.?assistant/i.test(String(uno.nome ?? ""));
   return {
@@ -389,6 +492,17 @@ function iConti(daFare) {
       nostra: uno.nostra === true,
       installabile: uno.installabile === true,
       stacca: uno.stacca === true,
+      /* Il marchio: una parola, non un indirizzo. Il perche' sta su
+       * `marchioDi`, in `aggiornamenti.js`. */
+      marchio: String(marchi.get(uno.entita) ?? ""),
+      /* Cosa cambia, con le parole di chi l'ha scritto: e' il
+       * `release_summary` dell'entita', che Home Assistant taglia gia' a 255
+       * caratteri. Sono le stesse righe che l'app fa leggere prima di premere
+       * «Installa», e sono la differenza fra un tasto premuto sapendo cosa fa
+       * e uno premuto al buio. Quelle lunghe stanno all'indirizzo qui sotto,
+       * e per leggerle serve il filo con la casa — che il quadro non ha. */
+      cosaCambia: String(uno.dettagli ?? ""),
+      note: lIndirizzoDelleNote(uno.note),
     })),
   };
 }
@@ -470,6 +584,8 @@ export class Postino {
     casa = "",
     ogni = OGNI_DI_SERIE,
     fabbrica,
+    fai = null,
+    installatore = null,
     fetch: prendi = globalThis.fetch,
     registro,
     adesso = () => Date.now(),
@@ -480,6 +596,19 @@ export class Postino {
     this.casa = String(casa || "");
     this.ogni = ogniQuanto(ogni);
     this.fabbrica = fabbrica;
+    /* Cosa fare quando il quadro, rispondendo, chiede qualcosa.
+     *
+     * E' l'unica strada per cui un comando entra in questa casa, e passa
+     * **dentro una risposta**: la casa bussa, e qualche volta chi apre le dice
+     * qualcosa. Non c'e' nessuna porta aperta verso il quadro, nessun buco nel
+     * router, niente da difendere. Chi non bussa non riceve niente.
+     *
+     * Vuoto e' il caso normale finche' la manutenzione non e' aperta: il
+     * postino allora quella riga della risposta non la guarda nemmeno. */
+    this.fai = fai;
+    /* Chi tiene il nome e il marchio di chi segue questa casa. Il quadro li
+     * dice rispondendo, e da li' la plancia prende la sua faccia. */
+    this.installatore = installatore;
     this.prendi = prendi;
     this.registro = registro ?? { debug() {}, info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
@@ -597,8 +726,9 @@ export class Postino {
        * l'indirizzo finche' non parte il primo rapporto, che e' un quarto
        * d'ora. Scriverlo in `/data` per un quarto d'ora di comodo vorrebbe dire
        * un file in piu' da tenere buono per sempre. */
+      let detto = null;
       try {
-        const detto = await risposta.json();
+        detto = await risposta.json();
         if (typeof detto?.di === "string") this._chi = detto.di.slice(0, 80);
       } catch (_errore) {
         /* Una risposta che non e' JSON non e' un guasto: il rapporto e'
@@ -606,6 +736,35 @@ export class Postino {
       }
 
       this._ultimoEsito = { andata: true, quando: this.adesso(), perche: "" };
+
+      /* E qui, se c'e', quello che il quadro ha chiesto.
+       *
+       * Dopo aver segnato che il rapporto e' arrivata, e non prima: un lavoro
+       * che non parte non deve far sembrare caduto un rapporto che invece e'
+       * arrivata. Si aspetta che finisca perche' quello che fa — far partire
+       * un'installazione — ci mette poco: chi installa non aspetta la fine, e
+       * `installa` torna appena Home Assistant ha preso il comando.
+       *
+       * Quello che va storto lo scrive `Lavori` nel suo stato, e si legge nel
+       * rapporto del minuto dopo. Qui non si rompe niente. */
+      /* Chi segue questa casa, e con che segno. Prima del lavoro: e' roba da
+       * disegnare, non da far succedere, e un'installazione che parte non deve
+       * lasciare la plancia vestita di ieri. */
+      if (this.installatore && detto) {
+        try {
+          await this.installatore.dice(detto);
+        } catch (errore) {
+          this.registro.debug(`il marchio di chi segue questa casa: ${errore?.message || errore}`);
+        }
+      }
+
+      if (this.fai && detto?.fai) {
+        try {
+          await this.fai(detto.fai);
+        } catch (errore) {
+          this.registro.attenzione(`il lavoro chiesto dal quadro non e' partito: ${errore}`);
+        }
+      }
       return true;
     } catch (errore) {
       this._perNiente(perchePreciso(errore));

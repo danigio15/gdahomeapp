@@ -239,6 +239,10 @@ export class Plance {
         creata_il: Number(una?.creata_il) || 0,
         utenti: utentiPuliti(una?.utenti),
         solo_admin: una?.solo_admin === true,
+        /* Il titolo che ci ha messo l'installatore, se ce l'ha messo lui.
+         * Serve a due cose sole: sapere che quello li' non l'ha scelto chi ci
+         * abita, e quindi poterlo togliere quando l'installatore se ne va. */
+        daInstallatore: titoloPulito(una?.daInstallatore),
       });
     }
     /* La prima plancia che si chiama ancora come il prodotto di prima prende
@@ -345,9 +349,57 @@ export class Plance {
     if (!nome) throw new QuellaPlanciaNo("una plancia senza nome non si trova", "senza_titolo");
     if (nome === una.titolo) return this.quale(una.profilo);
     una.titolo = nome;
+    /* Rinominandola a mano, quel titolo diventa **suo**: da qui in poi non lo
+     * tocca piu' nessun installatore che va o che viene. */
+    una.daInstallatore = "";
     this.archivio.salva();
     this._cambiato();
     return this.quale(una.profilo);
+  }
+
+  /**
+   * La prima plancia prende il nome di chi ha montato l'impianto — o se lo
+   * toglie, quando quello se ne va.
+   *
+   * ─── Cosa si tocca, e cosa no ────────────────────────────────────────────
+   *
+   * **Solo il titolo.** Il `profilo` non si sfiora, e non e' un dettaglio: e'
+   * li' che sta la configurazione della plancia (`configurazione.js` la tiene
+   * per profilo) ed e' da li' che la pagina ricava il nome con cui il browser
+   * si ricorda le cose (`istanza`). Cambiare il titolo e' come cambiare la
+   * targhetta sulla porta: quello che c'e' dentro la stanza non si muove.
+   * `nomeDelCassetto` si chiama solo quando una plancia **nasce**, mai qui.
+   *
+   * ─── Quando si tocca ─────────────────────────────────────────────────────
+   *
+   * Solo se il titolo di adesso e' uno dei due che abbiamo messo noi: quello
+   * di serie, o quello che ci aveva messo un installatore. Un titolo scritto
+   * da chi ci abita non si tocca **mai** — nemmeno per rimetterci il nostro,
+   * nemmeno se somiglia a uno dei due. E' la stessa regola con cui, tempo fa,
+   * si e' cambiato il nome del prodotto di prima.
+   *
+   * Cosi', quando l'installatore si toglie, chi ci abita si ritrova `gdahome`
+   * e la sua plancia esattamente com'era: non si perde una tessera, un colore
+   * ne' una stanza.
+   *
+   * @param {string} nome come si chiama l'installatore, o vuoto se non ce n'e'
+   * @returns {boolean} se qualcosa e' cambiato
+   */
+  intestala(nome) {
+    const una = this.archivio.dati.plance.find((quella) => quella.profilo === PROFILO_PRINCIPALE);
+    if (!una) return false;
+    const suo = titoloPulito(nome);
+    /* Nostro vuol dire: quello di serie, o quello che ci avevamo messo noi
+     * l'ultima volta. Tutto il resto e' di chi ci abita. */
+    const nostro = una.titolo === TITOLO_DELLA_PRIMA || una.titolo === una.daInstallatore;
+    if (!nostro) return false;
+    const voluto = suo || TITOLO_DELLA_PRIMA;
+    if (una.titolo === voluto && una.daInstallatore === suo) return false;
+    una.titolo = voluto;
+    una.daInstallatore = suo;
+    this.archivio.salva();
+    this._cambiato();
+    return true;
   }
 
   /* Chi la vede: l'elenco degli utenti di Home Assistant abilitati.

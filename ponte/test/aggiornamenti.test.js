@@ -920,3 +920,122 @@ test("le note passano dal ponte con la loro versione", async () => {
   assert.equal(niente.success, false);
   assert.equal(niente.error.code, "not_found");
 });
+
+/* ─── Il marchio, come parola ──────────────────────────────────────────────
+ *
+ * E' la strada del quadro, e non e' quella del telefono. Il telefono chiede
+ * «il logo di questa entita'» e il ponte glielo va a prendere, perche' fra i
+ * due c'e' un filo. Il quadro dell'installatore quel filo non ce l'ha: riceve
+ * un foglio e basta. Quindi riceve una **parola**, e l'indirizzo se lo compone
+ * lui — se no sarebbe questa casa a decidere dove va a bussare il browser di
+ * chi ha montato l'impianto.
+ */
+
+test("il marchio che parte e' una parola, non un indirizzo", async () => {
+  const casa = casaFinta({
+    stati: [unAggiornamento("update.switch_casa", { friendly_name: "Switch casa" })],
+    quandoComanda: (comando) =>
+      comando.type === "config/entity_registry/get" ? { platform: "zha" } : null,
+  });
+  const quali = new Aggiornamenti({ casa, registro: ZITTO });
+  const marchio = await quali.marchioDi("update.switch_casa");
+  assert.equal(marchio, "zha");
+  /* Niente `https://`, niente barre: quello lo mette chi disegna. */
+  assert.ok(!marchio.includes("/"));
+  assert.match(marchio, /^[a-z0-9_]+$/);
+
+  /* E si chiede una volta sola: la seconda risponde la memoria. */
+  const quante = casa.chieste.filter((una) => una.type === "config/entity_registry/get").length;
+  await quali.marchioDi("update.switch_casa");
+  assert.equal(
+    casa.chieste.filter((una) => una.type === "config/entity_registry/get").length,
+    quante,
+  );
+});
+
+test("un'integrazione con un nome storto non diventa un marchio", async () => {
+  /* Il pezzo finisce dentro un indirizzo che compone qualcun altro: una barra
+   * o due punti lo porterebbero da un'altra parte. */
+  for (const storta of ["../../altro", "zha/icon", "http://boh", "ZHA maiuscolo"]) {
+    const casa = casaFinta({
+      stati: [unAggiornamento("update.uno", { friendly_name: "Uno" })],
+      quandoComanda: (comando) =>
+        comando.type === "config/entity_registry/get" ? { platform: storta } : null,
+    });
+    const quali = new Aggiornamenti({ casa, registro: ZITTO });
+    assert.equal(await quali.marchioDi("update.uno"), "", `«${storta}» non deve passare`);
+  }
+});
+
+test("gli add-on non portano il marchio del Supervisor, che sarebbe lo stesso per tutti", async () => {
+  /* Un add-on dichiara la sua icona, che sta nella macchina di casa e da fuori
+   * non si prende. Mettergli `hassio` vorrebbe dire venti add-on diversi con
+   * lo stesso segno: l'iniziale del nome dice di piu'. */
+  const casa = casaFinta({
+    stati: [
+      unAggiornamento("update.mosquitto_update", {
+        title: "Mosquitto broker",
+        entity_picture: "/api/hassio/addons/core_mosquitto/icon",
+      }),
+      unAggiornamento("update.home_assistant_core_update", { title: "Home Assistant Core" }),
+    ],
+    quandoComanda: (comando) =>
+      comando.type === "config/entity_registry/get" ? { platform: "hassio" } : null,
+  });
+  const quali = new Aggiornamenti({ casa, registro: ZITTO });
+  assert.equal(await quali.marchioDi("update.mosquitto_update"), "");
+  /* Home Assistant stesso passa dalla stessa porta e un marchio ce l'ha. */
+  assert.equal(await quali.marchioDi("update.home_assistant_core_update"), "homeassistant");
+});
+
+test("un firmware che arriva per MQTT porta il marchio di Zigbee2MQTT, se in casa c'e'", async () => {
+  const conLaddon = [
+    unAggiornamento("update.switch_casa", {
+      friendly_name: "Switch casa",
+      device_class: "firmware",
+    }),
+    unAggiornamento(
+      "update.zigbee2mqtt_update",
+      { title: "Zigbee2MQTT", entity_picture: "/api/hassio/addons/45df7312_zigbee2mqtt/icon" },
+      "off",
+    ),
+  ];
+  const quando = (comando) =>
+    comando.type === "config/entity_registry/get" ? { platform: "mqtt" } : null;
+
+  const con = new Aggiornamenti({
+    casa: casaFinta({ stati: conLaddon, quandoComanda: quando }),
+    registro: ZITTO,
+  });
+  assert.equal(await con.marchioDi("update.switch_casa"), "zigbee2mqtt");
+
+  /* Senza quell'add-on in casa, Zigbee2MQTT gira da un'altra parte e non si
+   * indovina: meglio l'iniziale del nome sbagliato — e «MQTT» sarebbe la
+   * strada, non chi lo comanda. */
+  const senza = new Aggiornamenti({
+    casa: casaFinta({ stati: [conLaddon[0]], quandoComanda: quando }),
+    registro: ZITTO,
+  });
+  assert.equal(await senza.marchioDi("update.switch_casa"), "");
+});
+
+test("il marchio si chiede solo di quello che questa casa ha dichiarato", async () => {
+  /* Stessa regola del logo e delle note: un nome che arriva da fuori non fa
+   * partire nessuna domanda al registro. */
+  const casa = casaFinta({ stati: [unAggiornamento("update.uno", { friendly_name: "Uno" })] });
+  const quali = new Aggiornamenti({ casa, registro: ZITTO });
+  assert.equal(await quali.marchioDi("update.qualcosa_che_non_aspetta"), "");
+  assert.equal(await quali.marchioDi(""), "");
+  assert.equal(casa.chieste.filter((una) => una.type === "config/entity_registry/get").length, 0);
+});
+
+test("un registro che non risponde lascia il marchio vuoto, non fa cadere niente", async () => {
+  const casa = casaFinta({
+    stati: [unAggiornamento("update.uno", { friendly_name: "Uno" })],
+    quandoComanda: () => {
+      throw new Error("il registro non risponde");
+    },
+  });
+  const quali = new Aggiornamenti({ casa, registro: ZITTO });
+  assert.equal(await quali.marchioDi("update.uno"), "");
+});

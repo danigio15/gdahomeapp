@@ -68,24 +68,48 @@ test("nessun valore scritto in chiaro contiene un «due punti» piu' spazio", ()
   }
 });
 
-/* Le chiavi di un blocco del manifesto, quelle rientrate di due spazi.
+/* Le sezioni di un blocco del manifesto, e le caselle di ognuna.
  *
- * Si leggono a mano perche' quello che si guarda e' un elenco di nomi in un
- * blocco piatto, non una struttura. Se un giorno quel blocco cambiasse forma,
- * le liste tornerebbero vuote e la prova lo direbbe. */
-function leChiaviDi(testo, blocco) {
+ * Dalla 1.5.8 le opzioni sono annidate: `casa:`, `chi_installa:`, e sotto le
+ * caselle. E' l'unico modo che la scheda dell'add-on abbia di disegnare un
+ * titolo — Home Assistant, piatte, le mette una sotto l'altra e basta.
+ *
+ * Si leggono a mano, contando i rientri, e non con un lettore di YAML: la
+ * forma di questo blocco **e'** quello che si sta provando, e un lettore che
+ * la normalizza guarderebbe da un'altra parte. Torna un elenco di coppie,
+ * perche' anche l'ordine e' una cosa che si prova.
+ *
+ * Le sezioni stanno a due spazi in tutt'e tre i file. Le caselle no: nel
+ * manifesto sono a quattro, nelle traduzioni a sei, perche' li' c'e' `fields:`
+ * in mezzo — ed e' quello che dice `dentro`. */
+function leSezioniDi(testo, blocco, dentro = 0) {
   const righe = testo.split("\n");
   const inizio = righe.findIndex((una) => una === `${blocco}:`);
-  assert.notEqual(inizio, -1, `nel manifesto non c'e' nessun blocco «${blocco}:»`);
-  const chiavi = [];
+  assert.notEqual(inizio, -1, `non c'e' nessun blocco «${blocco}:»`);
+  const fuori = [];
+  const laSezione = /^ {2}([a-z_]+):\s*$/;
+  const laCasella = new RegExp(`^ {${4 + dentro * 2}}([a-z_]+):`);
   for (const una of righe.slice(inizio + 1)) {
     if (/^\S/.test(una)) break;
-    const trovata = /^ {2}([a-z_]+):/.exec(una);
-    if (trovata) chiavi.push(trovata[1]);
+    const sezione = laSezione.exec(una);
+    if (sezione) {
+      fuori.push([sezione[1], []]);
+      continue;
+    }
+    const casella = laCasella.exec(una);
+    if (casella && fuori.length) fuori[fuori.length - 1][1].push(casella[1]);
   }
-  assert.ok(chiavi.length > 0, `il blocco «${blocco}:» non ha nessuna chiave`);
-  return chiavi;
+  assert.ok(fuori.length > 0, `il blocco «${blocco}:» non ha nessuna sezione`);
+  return fuori;
 }
+
+/* Le caselle tutte di fila, sezione per sezione: «casa/quadro». Cosi' due
+ * elenchi si confrontano in una riga sola, e un nome spostato da una sezione
+ * all'altra si vede — che e' proprio il genere di cosa che si vuole vedere. */
+const leChiaviDi = (testo, blocco, dentro = 0) =>
+  leSezioniDi(testo, blocco, dentro).flatMap(([sezione, caselle]) =>
+    caselle.map((una) => `${sezione}/${una}`),
+  );
 
 test("ogni opzione dell'add-on ha la sua riga nello schema", () => {
   /* Il Supervisor le vuole tutte e due, e uguali: un'opzione senza schema e' un
@@ -113,18 +137,29 @@ test("ogni opzione dell'add-on ha il suo nome in tutte le lingue", () => {
   for (const lingua of LE_LINGUE) {
     const parole = readFileSync(qui(`../translations/${lingua}.yaml`), "utf8");
     assert.deepEqual(
-      leChiaviDi(parole, "configuration").sort(),
+      leChiaviDi(parole, "configuration", 1).sort(),
       opzioni,
       `«translations/${lingua}.yaml» non dice le stesse opzioni del manifesto`,
     );
     /* Il nome non basta che ci sia: deve dire qualcosa. Una voce con il solo
      * `description` lascia la casella chiamata come la variabile. */
-    for (const quale of opzioni) {
+    /* Il nome non basta che ci sia: deve dire qualcosa. E lo vogliono
+     * tutt'e due — la sezione, che nella scheda diventa il **titolo**, e ogni
+     * casella dentro. Una sezione senza nome e' un titolo che dice
+     * «chi_installa». */
+    for (const [sezione, caselle] of leSezioniDi(parole, "configuration", 1)) {
       assert.match(
         parole,
-        new RegExp(`^ {2}${quale}:\\n(?: {4}.*\\n)* {4}name: \\S`, "m"),
-        `in «translations/${lingua}.yaml» l'opzione «${quale}» non ha un nome`,
+        new RegExp(`^ {2}${sezione}:\\n {4}name: \\S`, "m"),
+        `in «translations/${lingua}.yaml» la sezione «${sezione}» non ha un titolo`,
       );
+      for (const quale of caselle) {
+        assert.match(
+          parole,
+          new RegExp(`^ {6}${quale}:\\n(?: {8}.*\\n)* {8}name: \\S`, "m"),
+          `in «translations/${lingua}.yaml» la casella «${sezione}/${quale}» non ha un nome`,
+        );
+      }
     }
   }
 });
@@ -150,50 +185,50 @@ test("le quattro liste stanno nello stesso ordine, e non solo con le stesse voci
   assert.deepEqual(leChiaviDi(manifesto, "schema"), opzioni, "lo schema segue un altro ordine");
   for (const lingua of LE_LINGUE) {
     assert.deepEqual(
-      leChiaviDi(readFileSync(qui(`../translations/${lingua}.yaml`), "utf8"), "configuration"),
+      leChiaviDi(readFileSync(qui(`../translations/${lingua}.yaml`), "utf8"), "configuration", 1),
       opzioni,
       `«translations/${lingua}.yaml» segue un altro ordine`,
     );
   }
 
-  /* E in fondo stanno le caselle che **non** sono di chi abita la casa: e' la
-   * regola che l'ordine serve a tenere, e senza dirla questa prova fisserebbe
-   * l'ordine di oggi senza sapere perche'. */
-  assert.deepEqual(opzioni.slice(-4), [
-    "installatore",
-    "chiave_cruscotto",
-    "chiave_gestione",
-    "chiave_console",
-  ]);
+  /* E le sezioni stanno in quest'ordine: prima quella di chi abita la casa,
+   * poi le tre che restano vuote in tutte le case tranne una o due, e in fondo
+   * i due numeri che non cambia nessuno. E' la regola che l'ordine serve a
+   * tenere, e senza dirla questa prova fisserebbe l'ordine di oggi senza
+   * sapere perche'. */
+  assert.deepEqual(
+    leSezioniDi(manifesto, "options").map(([quale]) => quale),
+    ["casa", "chi_installa", "gestione", "assistenza", "avanzate"],
+  );
 });
 
-test("ogni casella dice in testa chi la deve compilare", () => {
-  /* Home Assistant non ha titoli di sezione: disegna dodici caselle una sotto
-   * l'altra, e basta. Quindi l'unico posto dove dire «questa non e' roba tua»
-   * e' il nome, e finche' non c'era scritto la si capiva leggendo tre righe di
-   * descrizione — cioe' dopo averla gia' riempita.
+test("le sezioni hanno un titolo che dice di chi e' quella roba", () => {
+  /* Home Assistant, con le caselle piatte, non ha titoli di sezione: le
+   * disegnava una sotto l'altra e basta, e per un anno l'unico posto dove dire
+   * «questa non e' roba tua» e' stato il nome — «Casa · …», «Installatore · …».
    *
-   * E' costato un'ora a chi l'ha usata per prima: la chiave del proprio
-   * cruscotto e' finita nella casella della casa, e da li' un `403` a ogni giro
-   * che non diceva niente di utile.
+   * Era costato un'ora a chi l'ha usata per prima: la chiave del proprio
+   * cruscotto era finita nella casella della casa, e da li' un `403` a ogni
+   * giro che non diceva niente di utile. Il prefisso l'ha risolto a meta': con
+   * tredici caselle in fila, «non si capisce un tubo» lo stesso.
    *
-   * Il prefisso fa anche il lavoro che i titoli di sezione farebbero: otto
-   * «Casa» di fila, poi due «Installatore», poi una a testa per il gestore e
-   * per l'assistenza. Dove il prefisso cambia, cambia il pubblico. */
-  const chiDeveCompilare = {
-    it: { Casa: 8, Installatore: 2, Gestore: 1, Assistenza: 1 },
-    en: { Home: 8, Installer: 2, Manager: 1, Support: 1 },
-  };
+   * Adesso il titolo c'e' per davvero, perche' le caselle sono annidate. E
+   * quindi il prefisso **non ci va piu'**: «La casa › Casa · Da fuori casa» e'
+   * la stessa parola detta due volte. */
   for (const lingua of LE_LINGUE) {
     const parole = readFileSync(qui(`../translations/${lingua}.yaml`), "utf8");
-    const nomi = [...parole.matchAll(/^ {4}name: (.*)$/gm)].map((una) => una[1]);
-    assert.equal(nomi.length, 12, `«${lingua}.yaml» non ha dodici nomi`);
-    const conti = {};
-    for (const nome of nomi) {
-      const [chi, ...resto] = nome.split(" · ");
-      assert.ok(resto.length > 0, `«${nome}» non dice chi la deve compilare`);
-      conti[chi] = (conti[chi] || 0) + 1;
+    const titoli = [...parole.matchAll(/^ {4}name: (.*)$/gm)].map((una) => una[1]);
+    assert.equal(titoli.length, 5, `«${lingua}.yaml» non ha cinque titoli di sezione`);
+    for (const titolo of titoli) {
+      assert.ok(titolo.trim().length > 2, `«${titolo}» non e' un titolo`);
     }
-    assert.deepEqual(conti, chiDeveCompilare[lingua], `«${lingua}.yaml»: i gruppi non tornano`);
+    const nomi = [...parole.matchAll(/^ {8}name: (.*)$/gm)].map((una) => una[1]);
+    assert.equal(nomi.length, 14, `«${lingua}.yaml» non ha quattordici nomi di casella`);
+    for (const nome of nomi) {
+      assert.ok(
+        !nome.includes(" · "),
+        `«${nome}» porta ancora il prefisso: adesso lo dice il titolo della sezione`,
+      );
+    }
   }
 });

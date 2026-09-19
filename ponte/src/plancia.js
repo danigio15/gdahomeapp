@@ -63,8 +63,15 @@ export class Plancia {
   constructor({
     cartella = process.env.PONTE_PLANCIA_CARTELLA ||
       fileURLToPath(new URL("../plancia", import.meta.url)),
+    installatore = null,
   } = {}) {
     this.cartella = resolve(cartella);
+    /* Chi segue questa casa, quando c'e': una funzione, e non un oggetto,
+     * perche' la risposta cambia mentre il ponte gira — un installatore si
+     * abbina e si toglie — e un oggetto passato all'accensione resterebbe
+     * quello di allora. Vuota vuol dire «il marchio e' il nostro», che e' il
+     * caso di quasi tutte le case. */
+    this.installatore = installatore;
     this._impronta = null;
     this._provenienza = null;
   }
@@ -194,7 +201,12 @@ export class Plancia {
        * non si vedono subito. Vestirla qui vuol dire che la versione dopo, e
        * quella dell'anno prossimo, arrivano vestite senza che nessuno
        * rifaccia niente. Vedi `marchio.js`. */
-      const vestito = vestiDiGdahome(relativi.join("/"), readFileSync(dove), tipo);
+      const vestito = vestiDiGdahome(
+        relativi.join("/"),
+        readFileSync(dove),
+        tipo,
+        this.installatore?.(),
+      );
       return { stato: 200, tipo: vestito.tipo, corpo: vestito.corpo };
     } catch (_errore) {
       return questoNo();

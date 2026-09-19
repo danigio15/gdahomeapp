@@ -183,7 +183,7 @@ Non perché è obbligato — perché senza non lavora, e con gli conviene:
 * il rinnovo è automatico se il battito arriva, e da chiedere a mano se non
   arriva;
 * e il tesserino è quello che sblocca le cose che contano: gli **aggiornamenti
-  da remoto** (i due verbi `aggiorna` e `riavvia`), il marchio, l'assistenza,
+  da remoto** (il verbo `installa`), il marchio, l'assistenza,
   l'essere elencato fra gli installatori riconosciuti.
 
 ## Cosa vede lei
