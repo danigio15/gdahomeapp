@@ -1,5 +1,5 @@
-Gli aggiornamenti di casa, nel menu.
+Sette segnalazioni chiuse, e la casa che sa dire come sta.
 
-gdahome ti dice quando Home Assistant ha aggiornamenti da fare — l'add-on, le integrazioni, il sistema — e li installi da qui, col riavvio quando serve. Prima bisognava entrare in Home Assistant per scoprirlo: chi usa solo l'app non li vedeva mai.
+Gli elettrodomestici dicono cosa stanno facendo, il meteo ha il radar, le tapparelle non sono più finestre. Gli aggiornamenti arrivano con i loghi giusti, e «Cosa cambia» si legge qui dentro invece che nel browser.
 
-Un numero sulla voce del menu dice quanti sono.
+E se la casa te l'ha montata un installatore, adesso può accorgersi da solo che qualcosa si è fermato: poche righe di numeri, che puoi leggere per intero e fermare quando vuoi.
