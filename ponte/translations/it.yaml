@@ -37,6 +37,32 @@ configuration:
     description: >-
       Lasciala vuota. Serve solo a chi risponde alle chat di assistenza: in
       tutte le altre case non cambia niente.
+  quadro:
+    name: Il quadro di chi ti ha fatto l'impianto
+    description: >-
+      Lasciala vuota. Se la casa te l'ha montata un installatore, lui ti da'
+      un codice da incollare qui: da quel momento questa casa gli manda ogni
+      quarto d'ora poche righe di numeri — le versioni, quanto e' pieno il
+      disco, quali add-on girano, quante entita' non rispondono — e lui si
+      accorge che qualcosa non va prima che tocchi a te telefonargli. Non c'e'
+      niente di tuo: nessun nome di entita', nessuna stanza, nessuna persona,
+      nessuno stato di nessun sensore, il nome del tuo Wi-Fi no e il tuo
+      indirizzo pubblico nemmeno. Quello che parte lo puoi leggere parola per
+      parola nella scheda «Il quadro» di gdahome, dove c'e' anche il tasto per
+      smettere.
+  quadro_ogni:
+    name: Ogni quanto parte un rapporto
+    description: >-
+      Ogni quanti minuti questa casa scrive al quadro. Conta solo se la
+      casella qui sopra e' piena.
+  installatore:
+    name: Questo Home Assistant e' di chi installa
+    description: >-
+      Lascialo spento. Acceso, nella console di gdahome compare una sezione in
+      piu' — il tuo cruscotto — da cui guardi gli impianti che hai montato, e
+      nell'app compare la voce corrispondente. Accendilo sul tuo Home
+      Assistant, non su quello di un cliente. La chiave della flotta non si
+      scrive qui: la chiede la pagina e resta nel browser di chi la digita.
   registro:
     name: Il registro
     description: Quanto scrive nel registro dell'add-on.

@@ -11,6 +11,7 @@
  * filo con un segno gia' avuto. Nient'altro esiste su quella porta.
  */
 
+import { QUADRO_DI_DIFETTO } from "./rapporto.js";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
@@ -350,6 +351,13 @@ export function costruisciLaConsole({
   /* La chat di assistenza. Alla console serve per una riga sola, e non e' una
    * riga da poco: dire se questa casa **risponde** alle chat. */
   chat,
+  /* Il postino del rapporto al quadro di chi ha fatto l'impianto, e il
+   * ferro che sa svuotarne la casella. La scheda «Il quadro» di questa pagina
+   * e' l'unico posto dove chi ci abita legge **cosa** parte da casa sua e ha
+   * il tasto per farlo smettere: senza, l'unica cosa che vedrebbe sarebbe una
+   * riga incollata in una casella. */
+  postino,
+  ferro,
   aggiornamento,
   cartellaDellaConsole,
   cartellaDellApp,
@@ -388,6 +396,8 @@ export function costruisciLaConsole({
           planceInCasa,
           configurazione,
           chat,
+          postino,
+          ferro,
           aggiornamento,
         });
       } catch (errore) {
@@ -750,6 +760,8 @@ async function api({
   planceInCasa,
   configurazione,
   chat,
+  postino,
+  ferro,
   aggiornamento,
 }) {
   /* C'e' una versione nuova del ponte?
@@ -758,6 +770,69 @@ async function api({
    * GitHub: `/api/stato` la console lo chiede ogni dieci secondi, e dieci
    * secondi non sono il passo di una cosa che cambia una volta al giorno.
    */
+  /* Il rapporto al quadro: cosa parte da questa casa, e a chi.
+   *
+   * La chiave **non** esce da qui, e non e' una dimenticanza: chi guarda
+   * questa pagina deve sapere a chi la sua casa parla, non avere in mano di
+   * che farla parlare. L'indirizzo si', che e' la risposta a «a chi?».
+   */
+  if (via === "/api/cruscotto" && metodo === "GET") {
+    /* Solo un si' o un no, piu' dove andare. La chiave della flotta qui non
+     * c'e' e non ci deve essere: la chiede quella pagina, e resta nel browser
+     * di chi la digita. */
+    json(risposta, {
+      installatore: Boolean(opzioni?.installatore),
+      dove: opzioni?.installatore ? `${QUADRO_DI_DIFETTO}/console/` : "",
+    });
+    return;
+  }
+
+  if (via === "/api/quadro" && metodo === "GET") {
+    if (!postino || !postino.acceso) {
+      json(risposta, { acceso: false });
+      return;
+    }
+    json(risposta, {
+      acceso: true,
+      dove: postino.dove,
+      /* Di chi e' il quadro, come l'ha detto lui rispondendo. Vuoto finche' non
+       * e' partita il primo rapporto, e allora la scheda mostra l'indirizzo e
+       * basta — che e' quello che faceva prima. */
+      chi: postino.chi,
+      ogni: postino.ogni,
+      /* L'ultimo rapporto spedito, **in chiaro e per intero**. E' il punto di
+       * questa scheda: non «manda dei dati», ma questi dati, parola per
+       * parola, con dentro tutto quello che c'e' e niente di piu'. */
+      ultima: postino.ultima,
+      esito: postino.ultimoEsito,
+    });
+    return;
+  }
+
+  /* «Smetti.»
+   *
+   * Non basta fermare il postino: la riga resterebbe nella scheda dell'add-on
+   * e al primo riavvio la casa ricomincerebbe a parlare senza che nessuno
+   * l'abbia chiesto. Si fa tutt'e due — si ferma adesso, e si svuota la
+   * casella perche' resti fermo — e se il Supervisor non lascia scrivere si
+   * dice **cosa fare a mano** invece di dire che e' andata.
+   */
+  if (via === "/api/quadro" && metodo === "DELETE") {
+    if (!postino || !postino.acceso) {
+      json(risposta, { acceso: false });
+      return;
+    }
+    postino.ferma();
+    const esito = ferro ? await ferro.spegniLaRapporto() : { spento: false, perche: "" };
+    registro.info(
+      esito.spento
+        ? "il rapporto al quadro e' stata fermata da questa pagina"
+        : `il rapporto e' ferma, ma la casella no: ${esito.perche}`,
+    );
+    json(risposta, { acceso: false, ...esito });
+    return;
+  }
+
   if (via === "/api/aggiornamento" && metodo === "GET") {
     if (!aggiornamento) {
       json(risposta, { locale: false });

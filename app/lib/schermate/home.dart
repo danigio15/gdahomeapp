@@ -32,6 +32,7 @@ import 'package:flutter/services.dart' show SystemNavigator;
 import '../casa/aggiornamenti.dart';
 import '../casa/collegamento.dart';
 import '../casa/console.dart';
+import '../casa/cruscotto.dart';
 import '../casa/impostazioni.dart';
 import '../misure/lavori.dart';
 import '../parole.dart';
@@ -42,6 +43,7 @@ import 'aggiornamenti.dart';
 import 'assistenza.dart';
 import 'barra.dart';
 import 'console.dart';
+import 'cruscotto.dart';
 import 'diagnostica.dart';
 import 'dispositivi.dart';
 import 'firma.dart';
@@ -83,6 +85,9 @@ class _HomeState extends State<Home> {
    * deve — prima di chiederglielo. Falso finche' non risponde, cosi' una casa
    * qualunque non vede mai comparire e sparire una voce di menu. */
   bool _console = false;
+  /* Dove sta il cruscotto di chi installa, se questa casa e' la sua. Vuoto
+   * vuol dire che non lo e', e la voce del menu non c'e'. */
+  String _cruscotto = '';
   String? _chiestoPer;
 
   /* Quanti aggiornamenti aspettano in casa.
@@ -167,8 +172,14 @@ class _HomeState extends State<Home> {
     if (_chiestoPer == quale) return;
     _chiestoPer = quale;
     final risponde = await LaConsole(filo).cE();
+    final cruscotto = await IlCruscotto(filo).dove();
     if (!mounted) return;
-    if (risponde != _console) setState(() => _console = risponde);
+    if (risponde != _console || cruscotto != _cruscotto) {
+      setState(() {
+        _console = risponde;
+        _cruscotto = cruscotto;
+      });
+    }
   }
 
   /// Quello che una segnalazione porta con se' senza che nessuno lo scriva:
@@ -483,6 +494,11 @@ class _HomeState extends State<Home> {
                           Sezione.console => SchermataDellaConsole(
                             collegamento: collegamento,
                           ),
+                          /* Gli impianti di chi installa: la voce c'e' solo
+                           * dove le opzioni del ponte l'hanno accesa. */
+                          Sezione.cruscotto => SchermataDelCruscotto(
+                            dove: _cruscotto,
+                          ),
                           _ => _InArrivo(sezione),
                         },
                       ),
@@ -492,7 +508,10 @@ class _HomeState extends State<Home> {
             ),
             BarraDelleSezioni(
               key: _barra,
-              sezioni: vociDellaBarra(conLaConsole: _console),
+              sezioni: vociDellaBarra(
+                conLaConsole: _console,
+                conIlCruscotto: _cruscotto.isNotEmpty,
+              ),
               aperta: _sezione,
               daAggiornare: _daAggiornare,
               vai: _vai,

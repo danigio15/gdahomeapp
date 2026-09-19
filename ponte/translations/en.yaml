@@ -27,6 +27,31 @@ configuration:
     description: >-
       Leave it empty. It is only for whoever answers the support chats: in
       every other home it changes nothing.
+  quadro:
+    name: The panel of whoever installed your home
+    description: >-
+      Leave it empty. If an installer set your home up, they give you a code to
+      paste here: from then on this home sends them a few lines of numbers
+      every quarter of an hour — the versions, how full the disk is, which
+      add-ons are running, how many entities stopped answering — and they find
+      out something is wrong before you have to call them. None of it is yours:
+      no entity names, no rooms, no people, no sensor states, not your Wi-Fi
+      name and not your public address either. You can read what goes out, word
+      for word, in gdahome's «The panel» tab, where the button to stop it also
+      is.
+  quadro_ogni:
+    name: How often a status report goes out
+    description: >-
+      Every how many minutes this home writes to the panel. It only counts if
+      the box above is filled in.
+  installatore:
+    name: This Home Assistant belongs to an installer
+    description: >-
+      Leave it off. On, the gdahome console gains one more section — your
+      panel — where you watch the systems you installed, and the app gains the
+      matching entry. Turn it on in your own Home Assistant, not in a client's.
+      The fleet key is not written here: the page asks for it and it stays in
+      the browser of whoever types it.
   registro:
     name: The log
     description: How much it writes in the add-on's log.

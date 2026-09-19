@@ -1,0 +1,13 @@
+{
+  "name": "gdahome-quadro",
+  "private": true,
+  "type": "module",
+  "description": "Il cruscotto di chi installa: guarda gli impianti che ha montato, senza entrare in casa di nessuno.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "avvia": "node src/index.js",
+    "test": "node --test test/*.test.js"
+  }
+}

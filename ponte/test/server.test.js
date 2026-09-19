@@ -73,7 +73,7 @@ async function casaFinta() {
   };
 }
 
-async function banco() {
+async function banco({ quadro = null, installatore = false } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "ponte-server-"));
   const ha = await casaFinta();
   const primaCasa = process.env.PONTE_CASA;
@@ -92,6 +92,9 @@ async function banco() {
     giorniDiSilenzio: 90,
     registro: "errore",
     console: fileURLToPath(new URL("../console", import.meta.url)),
+    quadro,
+    quadroOgni: 15,
+    installatore,
   });
 
   const app = `http://127.0.0.1:${avviato.app.address().port}`;
@@ -575,6 +578,105 @@ test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-
      * sta dietro l'autenticazione di Home Assistant, quella porta no. */
     const fuori = await prendi(`${b.app}/api/plance`);
     assert.equal(fuori.status, 404);
+  } finally {
+    await b.spegni();
+  }
+});
+
+/* ─── Il rapporto al quadro, dalla console ───────────────────────────────
+ *
+ * Quello che si prova qui: che la scheda esista **solo** dove qualcuno ha
+ * incollato un codice; che quella via dica a chi parla questa casa e **non**
+ * dica con che — l'indirizzo e' la risposta a «a chi?», la chiave sarebbe di
+ * che farla parlare; e che «smetti» smetta davvero, cioe' fermi il postino e
+ * svuoti la casella, perche' un tasto che smette finche' non si riavvia e' una
+ * bugia con un bottone sopra.
+ */
+
+test("senza codice la scheda del quadro non c'e' nemmeno", async () => {
+  const b = await banco();
+  try {
+    const detto = await (await prendi(`${b.consolle}/api/quadro`)).json();
+    assert.deepEqual(detto, { acceso: false });
+    /* E non si puo' spegnere quello che non e' acceso, senza che sia un
+     * errore: e' semplicemente gia' cosi'. */
+    const spento = await (await prendi(`${b.consolle}/api/quadro`, { method: "DELETE" })).json();
+    assert.deepEqual(spento, { acceso: false });
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("col codice, la console dice a chi parla questa casa — e non dice con che", async () => {
+  const b = await banco({
+    quadro: { dove: "https://quadro.impiantirossi.it", chiave: "CHIAVE-SEGRETISSIMA-9XQF" },
+  });
+  try {
+    const risposta = await prendi(`${b.consolle}/api/quadro`);
+    const testo = await risposta.text();
+    const detto = JSON.parse(testo);
+    assert.equal(detto.acceso, true);
+    assert.equal(detto.dove, "https://quadro.impiantirossi.it");
+    assert.equal(detto.ogni, 15);
+    /* Il nome dell'installatore e' vuoto finche' non e' partito il primo rapporto:
+     * arriva **nella risposta** del quadro, e finche' non c'e' la scheda mostra
+     * l'indirizzo e basta invece di inventarsi qualcosa. */
+    assert.equal(detto.chi, "");
+    /* La riga che conta: da questa pagina si legge **a chi**, non si prende
+     * di che. */
+    assert.ok(
+      !testo.includes("SEGRETISSIMA"),
+      "la chiave del quadro non deve uscire dalla console",
+    );
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("«smetti» ferma il postino e svuota la casella, che se no al riavvio ricomincia", async () => {
+  const b = await banco({
+    quadro: { dove: "https://quadro.impiantirossi.it", chiave: "CHIAVE-LUNGA-ABBASTANZA" },
+  });
+  try {
+    assert.equal(b.postino.acceso, true);
+    const esito = await (await prendi(`${b.consolle}/api/quadro`, { method: "DELETE" })).json();
+    assert.equal(esito.acceso, false);
+    /* Il Supervisor finto risponde a tutto, quindi la casella si e' svuotata:
+     * quello che conta e' che si sia **provato** a svuotarla, e che l'esito
+     * arrivi a chi ha premuto invece di essere ingoiato. */
+    assert.equal(esito.spento, true);
+  } finally {
+    await b.spegni();
+  }
+});
+
+/* ─── Il cruscotto di chi installa ────────────────────────────────────── */
+
+test("senza l'interruttore, la scheda del cruscotto non c'è e non dice dove", async () => {
+  /* Una porta che non si apre è peggio di una porta che non c'è: in casa di un
+   * cliente quella sezione non ha motivo di esistere. */
+  const b = await banco();
+  try {
+    const detto = await (await prendi(`${b.consolle}/api/cruscotto`)).json();
+    assert.equal(detto.installatore, false);
+    assert.equal(detto.dove, "");
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("con l'interruttore, dice dove si apre — e nient'altro", async () => {
+  /* La riga che conta: da qui esce un sì e un indirizzo. La chiave della flotta
+   * non passa da queste opzioni e non finisce sul disco di questa casa — la
+   * chiede quella pagina, e resta nel browser di chi la digita. */
+  const b = await banco({ installatore: true });
+  try {
+    const risposta = await prendi(`${b.consolle}/api/cruscotto`);
+    const testo = await risposta.text();
+    const detto = JSON.parse(testo);
+    assert.equal(detto.installatore, true);
+    assert.match(detto.dove, /^https:\/\/.+\/console\/$/);
+    assert.deepEqual(Object.keys(detto).sort(), ["dove", "installatore"]);
   } finally {
     await b.spegni();
   }

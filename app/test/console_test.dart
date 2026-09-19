@@ -61,6 +61,28 @@ void main() {
     );
   });
 
+  test('la voce Il mio cruscotto c\'è solo da chi installa', () {
+    /* Come la Console: a decidere se esiste è il ponte, non l'app. In casa di
+     * un cliente quella voce non c'è proprio — una porta che non si apre è
+     * peggio di una porta che non c'è. */
+    expect(vociDellaBarra(), isNot(contains(Sezione.cruscotto)));
+    expect(vociDellaBarra(conIlCruscotto: true), contains(Sezione.cruscotto));
+    expect(
+      vociDellaBarra(conIlCruscotto: true).length,
+      vociDellaBarra().length + 1,
+    );
+    /* E le due voci sono indipendenti: chi risponde alle chat non è per
+     * questo un installatore, e viceversa. */
+    expect(
+      vociDellaBarra(conLaConsole: true),
+      isNot(contains(Sezione.cruscotto)),
+    );
+    expect(
+      vociDellaBarra(conIlCruscotto: true),
+      isNot(contains(Sezione.console)),
+    );
+  });
+
   testWidgets('la coda si vede, si apre un filo e si risponde', (tester) async {
     late PonteFinto ponte;
     late Collegamento collegamento;

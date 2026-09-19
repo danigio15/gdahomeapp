@@ -11,12 +11,14 @@ import { join } from "node:path";
 
 import { Abbinamento } from "./abbinamento.js";
 import { Aggiornamento } from "./aggiornamento.js";
+import { fabbricaLaRapporto, Postino } from "./rapporto.js";
 import { Casa } from "./casa.js";
 import { Chat } from "./chat.js";
 import { Chiamata } from "./chiamata.js";
 import { Commissioni } from "./commissioni.js";
 import { Catalogo } from "./catalogo.js";
 import { Configurazione } from "./configurazione.js";
+import { Ferro } from "./ferro.js";
 import { BASE_DI_CASA, Foto } from "./foto.js";
 import { Plancia } from "./plancia.js";
 import { Plance } from "./plance.js";
@@ -134,6 +136,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     fotoDiCasa,
     segnalazioni,
     chat,
+    installatore: opzioni.installatore,
     spegnimento,
     aggiornamenti,
   });
@@ -206,6 +209,23 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * Ritorno nasce dopo: gli serve la porta vera, che la sa solo il server. */
   commissioni.ritorno = ritorno;
 
+  /* Il rapporto al quadro di chi ha fatto l'impianto.
+   *
+   * **Spenta, a meno che in quella casella non ci sia un codice.** Senza, qui
+   * non parte niente e non si apre nessuna connessione: in una casa qualunque
+   * — cioe' in quasi tutte — questo pezzo e' codice che non gira.
+   *
+   * Chi ce l'ha se l'e' fatto dare da chi gli ha montato la casa, e legge
+   * quello che parte nella scheda «Il quadro» della console, dove c'e' anche
+   * il tasto per smettere. */
+  const ferro = new Ferro({ registro });
+  const postino = new Postino({
+    ...(opzioni.quadro ?? {}),
+    casa: identita.casa,
+    ogni: opzioni.quadroOgni,
+    registro,
+  });
+
   const portiere = new Portiere({ ponte, dispositivi, abbinamento, registro, ritorno });
   const chiamata = new Chiamata({
     dove: opzioni.centralino,
@@ -214,6 +234,29 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   portiere.chiamata = chiamata;
+  /* E qui il postino riceve da dove prendere i suoi numeri.
+   *
+   * Si monta adesso e non insieme a lui perche' gli serve la **chiamata**, che
+   * nasce qui sotto: e' guardando quel filo che il rapporto sa dire se questa
+   * casa vede fuori — la prova piu' onesta che esista, non un ping a un
+   * indirizzo scelto da noi ma la cosa vera che deve funzionare. Stessa strada
+   * del Ritorno delle commissioni, e per lo stesso motivo. */
+  postino.fabbrica = fabbricaLaRapporto({
+    identita,
+    casa,
+    ferro,
+    aggiornamenti,
+    plance,
+    configurazione,
+    dispositivi,
+    chiamata,
+    versioni: {
+      ponte: opzioni.versione,
+      plancia: plancia.cE ? plancia.provenienza.versione : "",
+    },
+    ogni: opzioni.quadroOgni,
+    registro,
+  });
 
   const app = costruisciLaPortaDellApp({
     ponte,
@@ -265,6 +308,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
      * Assistant chiede al ponte le stesse cose che gli chiede quella dentro
      * l'app, e le fa lo stesso oggetto. */
     commissioni,
+    /* Il rapporto al quadro, e come farla smettere: la scheda «Il quadro»
+     * fa leggere l'ultima spedita parola per parola, e ha li' il tasto. */
+    postino,
+    ferro,
     /* Se c'e' una versione nuova del ponte, e il bottone per portarsela
      * dentro: l'unico posto da cui chi non ha un computer puo' aggiornare. */
     aggiornamento,
@@ -292,6 +339,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   registro.info(`${dispositivi.quanti()} dispositivi abbinati`);
 
   chiamata.avvia();
+  postino.parti();
 
   const saluto = await casa.saluta();
   if (saluto.viva) registro.info("Home Assistant risponde");
@@ -317,6 +365,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     planceInCasa.smettiDiSorvegliare();
     clearInterval(giro);
     chiamata.spegni();
+    postino.ferma();
     ponte.chiudiTutto();
     spegnimento.chiudi();
     casa.chiudiIlFiloMio();
@@ -333,6 +382,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     chiamata,
     ritorno,
     registro,
+    postino,
     app,
     console: console_,
     planceInCasa,

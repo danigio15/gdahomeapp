@@ -42,6 +42,7 @@
  * filo, che dopo l'abbinamento puo' chiedere a Home Assistant qualunque cosa.
  */
 
+import { QUADRO_DI_DIFETTO } from "./rapporto.js";
 import { request as richiestaHttp } from "node:http";
 import { request as richiestaHttps } from "node:https";
 import { gzipSync } from "node:zlib";
@@ -327,6 +328,10 @@ export class Commissioni {
     fotoDiCasa = null,
     segnalazioni = null,
     chat = null,
+    /* Se questo Home Assistant e' di chi installa. Solo un si' o un no: la
+     * chiave della flotta non passa di qui, e non deve — sta nel browser di chi
+     * la digita, non sul disco di una casa. */
+    installatore = false,
     spegnimento = null,
     aggiornamenti = null,
     ritorno = null,
@@ -343,6 +348,7 @@ export class Commissioni {
      * quante sono, come si chiamano e in quale cassetto tiene la sua
      * configurazione ognuna (`plance.js`). */
     this.plance = plance;
+    this.installatore = Boolean(installatore);
     this.configurazione = configurazione;
     /* Il catalogo delle integrazioni e le foto: le altre due cose che la
      * plancia chiedeva all'integrazione. */
@@ -1058,6 +1064,20 @@ export class Commissioni {
          * `chat/state` che riceve la finestra della plancia. */
         case "ponte/chat/stato":
           return si(id, chat.stato());
+        /* Se questa casa e' di chi installa, e quindi se l'app deve disegnare
+         * la voce «Il mio cruscotto». Come per la console: a deciderlo e' il
+         * ponte, non l'app — e chi non e' installatore non vede una porta che
+         * non si apre.
+         *
+         * `dove` e' l'indirizzo del quadro, lo stesso che sa il rapporto: la
+         * voce apre **il cruscotto che esiste gia'**, non una sua copia rifatta
+         * nell'app. Una copia sarebbe un terzo posto dove stanno le stesse
+         * regole, e prima o poi i tre direbbero cose diverse. */
+        case "ponte/quadro/stato":
+          return si(id, {
+            installatore: this.installatore,
+            dove: this.installatore ? `${QUADRO_DI_DIFETTO}/console/` : "",
+          });
         case "ponte/chat/leggi": {
           /* Un centralino giu' non e' una schermata vuota: le parole che
            * c'erano si vedono ancora, e il guasto si dice **accanto** — nella

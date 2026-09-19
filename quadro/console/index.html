@@ -1,0 +1,3149 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Il quadro · installatore</title>
+    <!--
+      IL QUADRO — LA CONSOLE DI CHI INSTALLA.
+
+      Questa pagina è una sola, e sta tutta qui: il server la legge dal disco e
+      la serve su `/console/`. Da lì chiede le sue vie in **relativo** — `case`,
+      non `/console/case` — così funziona anche dietro un proxy che la monta
+      sotto un prefisso. Chi bussa a `/console` senza barra ci viene mandato dal
+      server, perché da `/console` un indirizzo relativo porterebbe a `/case`.
+
+      Niente font, niente librerie, nessuna richiesta a nessuno che non sia il
+      proprio quadro: la regola delle altre console del progetto vale anche qui.
+
+      QUI NON SI DECIDE NIENTE.
+
+      Lo stato di una casa, le spunte del collaudo e le pastiglie arrivano già
+      decisi da `quadro/src/collaudo.js`, dentro `GET case`. Questa pagina li
+      disegna e basta. Era nata col contrario — le regole scritte qui, coi dati
+      finti accanto — e il giorno che una soglia cambia, cambiarla in due posti
+      vuol dire cambiarla in uno solo: due schermi che dicono due cose diverse
+      della stessa casa. Anche le tre soglie che colorano i metri (caldo, disco
+      pieno, disco finito) viaggiano dal server insieme alle case.
+
+      DA DOVE VENGONO I COLORI E LE FORME.
+
+      Da `sito/stile.css` e dalla plancia, non dalla console del centralino. Le
+      prime due stesure erano parenti di quella — grigio-verde, fili sottili,
+      angoli da tre millimetri — e quella è un attrezzo da manutentore. gdahome
+      invece è bianco su azzurro chiarissimo, angoli da venti, ombre morbide a
+      due strati, pastiglie tonde e una barretta colorata a sinistra delle
+      righe: è così la plancia, è così il sito, e questa pagina è dello stesso
+      prodotto.
+
+      Le tessere dello stato in cima sono la stessa striscia che la plancia ha
+      sopra la Home («Inserito · 1 porta aperta · 1 varco aperto»).
+
+      DUE SCHERMATE.
+
+      «Le case» è il cruscotto: l'elenco a sinistra, la casa aperta a destra.
+      «Abbina» è come una casa entra qui dentro, ed è l'altra metà del lavoro:
+      senza quella il quadro è un cruscotto senza cruscotto.
+
+      UNA COSA MISURATA, CHE HA DECISO IL DISEGNO.
+
+      I tre colori di stato del sito — `--bene`, `--ambra`, `--male` — passano
+      la prova del daltonismo, ma l'ambra sul bianco sta sotto il contrasto di
+      3:1 e la coppia ambra/verde si avvicina a 7.0 per chi non distingue il
+      rosso. Perciò ogni stato porta tre cose insieme: una **forma** (● ▲ ■ ◇),
+      una **parola** e un colore. Chi non vede i colori legge la pagina lo
+      stesso, e chi li vede la legge più in fretta.
+
+      L'azzurro è l'unica cosa che si preme, e sta fuori dai tre colori di stato
+      apposta: un colore che vuol dire «guasto» e «premi qui» insieme non vuol
+      dire più niente.
+    -->
+    <style>
+      /* ─── I colori ──────────────────────────────────────────────────────
+       *
+       * Sono quelli di `sito/stile.css`, non reinventati: la notte, l'azzurro,
+       * l'ambra, il bene e il male, più gli aloni tenui che la plancia usa
+       * dietro le pastiglie. Il chiaro sta qui tutto intero; sotto si
+       * ridefiniscono solo le tessere che cambiano, due volte — per chi ha il
+       * sistema scuro e per chi lo sceglie. */
+      :root {
+        --notte: #0f172a;
+        --lieve: #64748b;
+        --fioco: #94a3b8;
+
+        --fondo: #f0f4f8;
+        --carta: #ffffff;
+        --carta-alta: #f8fafc;
+        --bordo: #e2e8f0;
+        --bordo-tenue: #eef2f7;
+
+        --azzurro: #0ea5e9;
+        --azzurro-scuro: #0284c7;
+        --azzurro-cupo: #075985;
+        --bene: #15803d;
+        --ambra: #b45309;
+        --male: #be123c;
+
+        --alone-azzurro: #e0f2fe;
+        --alone-bene: #dcfce7;
+        --alone-ambra: #fef3c7;
+        --alone-male: #ffe4e6;
+        --giorno-pieno: #86efac;
+
+        --ombra: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+        --ombra-alta: 0 2px 6px rgba(15, 23, 42, 0.06), 0 24px 60px rgba(15, 23, 42, 0.12);
+        --ombra-tasto: 0 1px 2px rgba(15, 23, 42, 0.08), 0 6px 16px rgba(2, 132, 199, 0.28);
+
+        --raggio: 20px;
+        --raggio-piccolo: 14px;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --notte: #e8eef7;
+          --lieve: #93a3bb;
+          --fioco: #6b7c96;
+
+          --fondo: #0a1120;
+          --carta: #121c2e;
+          --carta-alta: #18243a;
+          --bordo: #223049;
+          --bordo-tenue: #1b2739;
+
+          --azzurro: #38bdf8;
+          --azzurro-scuro: #0ea5e9;
+          --azzurro-cupo: #7dd3fc;
+          --bene: #4ade80;
+          --ambra: #fbbf24;
+          --male: #fb7185;
+
+          --alone-azzurro: #0c2a3e;
+          --alone-bene: #10321f;
+          --alone-ambra: #33270c;
+          --alone-male: #3b1520;
+          --giorno-pieno: #1f7a4d;
+
+          --ombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.32);
+          --ombra-alta: 0 2px 6px rgba(0, 0, 0, 0.36), 0 24px 60px rgba(0, 0, 0, 0.46);
+          --ombra-tasto: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 16px rgba(14, 165, 233, 0.3);
+        }
+      }
+
+      :root[data-theme="dark"] {
+        --notte: #e8eef7;
+        --lieve: #93a3bb;
+        --fioco: #6b7c96;
+
+        --fondo: #0a1120;
+        --carta: #121c2e;
+        --carta-alta: #18243a;
+        --bordo: #223049;
+        --bordo-tenue: #1b2739;
+
+        --azzurro: #38bdf8;
+        --azzurro-scuro: #0ea5e9;
+        --azzurro-cupo: #7dd3fc;
+        --bene: #4ade80;
+        --ambra: #fbbf24;
+        --male: #fb7185;
+
+        --alone-azzurro: #0c2a3e;
+        --alone-bene: #10321f;
+        --alone-ambra: #33270c;
+        --alone-male: #3b1520;
+        --giorno-pieno: #1f7a4d;
+
+        --ombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.32);
+        --ombra-alta: 0 2px 6px rgba(0, 0, 0, 0.36), 0 24px 60px rgba(0, 0, 0, 0.46);
+        --ombra-tasto: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 16px rgba(14, 165, 233, 0.3);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+      }
+
+      body {
+        background: var(--fondo);
+        color: var(--notte);
+        font:
+          15px/1.55 system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--azzurro);
+        outline-offset: 3px;
+        border-radius: 8px;
+      }
+
+      .mono {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      }
+
+      .via {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+
+      /* ─── La testata ──────────────────────────────────────────────────── */
+      header {
+        position: sticky;
+        top: env(safe-area-inset-top, 0px);
+        z-index: 20;
+        background: color-mix(in srgb, var(--fondo) 88%, transparent);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--bordo-tenue);
+      }
+
+      .testata {
+        max-width: 80rem;
+        margin-inline: auto;
+        padding: 13px 22px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+      }
+
+      .marchio {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        min-width: 0;
+      }
+
+      /* Il bollo del marchio: un quadratino con la barra, come un quadro
+       * elettrico visto da lontano. */
+      .bollo {
+        width: 30px;
+        height: 30px;
+        flex: none;
+        border-radius: 9px;
+        background: linear-gradient(145deg, var(--azzurro), var(--azzurro-cupo));
+        display: grid;
+        place-items: center;
+        gap: 3px;
+        grid-auto-flow: column;
+        box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+      }
+
+      .bollo i {
+        width: 3.5px;
+        height: 14px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.92);
+      }
+
+      .bollo i.mezzo {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.6);
+      }
+
+      .marchio .nomi {
+        min-width: 0;
+      }
+
+      .marchio b {
+        display: block;
+        font-size: 0.95rem;
+        font-weight: 650;
+        letter-spacing: -0.015em;
+        line-height: 1.25;
+      }
+
+      .marchio span {
+        display: block;
+        color: var(--lieve);
+        font-size: 0.76rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      nav {
+        margin-left: auto;
+        display: flex;
+        gap: 4px;
+        padding: 4px;
+        background: var(--carta);
+        border: 1px solid var(--bordo);
+        border-radius: 999px;
+        box-shadow: var(--ombra);
+      }
+
+      nav button {
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 550;
+        color: var(--lieve);
+        background: transparent;
+        border: 0;
+        border-radius: 999px;
+        padding: 7px 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      nav button:hover {
+        color: var(--notte);
+      }
+
+      nav button[aria-pressed="true"] {
+        color: #fff;
+        background: linear-gradient(145deg, var(--azzurro), var(--azzurro-scuro));
+        box-shadow: 0 1px 3px rgba(2, 132, 199, 0.35);
+      }
+
+      nav .quanti {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 1px 7px;
+        border-radius: 999px;
+        background: var(--alone-ambra);
+        color: var(--ambra);
+      }
+
+      nav button[aria-pressed="true"] .quanti {
+        background: rgba(255, 255, 255, 0.25);
+        color: #fff;
+      }
+
+      /* ─── L'impianto della pagina ────────────────────────────────────── */
+      main {
+        max-width: 80rem;
+        margin-inline: auto;
+        padding: 22px;
+      }
+
+      .titolone {
+        font-size: 1.6rem;
+        font-weight: 700;
+        letter-spacing: -0.028em;
+        margin: 0 0 4px;
+        text-wrap: balance;
+      }
+
+      .sottotitolo {
+        color: var(--lieve);
+        font-size: 0.92rem;
+        margin: 0 0 18px;
+        max-width: 46rem;
+      }
+
+      /* ─── La striscia dello stato, come sopra la Home della plancia ─── */
+      .striscia {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .tessera {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 13px 15px;
+        background: var(--carta);
+        border-radius: var(--raggio-piccolo);
+        box-shadow: var(--ombra);
+        text-align: left;
+        font: inherit;
+        color: inherit;
+        border: 1.5px solid transparent;
+        cursor: pointer;
+      }
+
+      .tessera[aria-pressed="true"] {
+        border-color: var(--azzurro);
+      }
+
+      .tessera .gettone {
+        width: 34px;
+        height: 34px;
+        flex: none;
+        border-radius: 11px;
+        display: grid;
+        place-items: center;
+        font-size: 0.8rem;
+      }
+
+      .tessera .numeri b {
+        display: block;
+        font-size: 1.3rem;
+        font-weight: 700;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
+      }
+
+      .tessera .numeri span {
+        display: block;
+        font-size: 0.74rem;
+        color: var(--lieve);
+        line-height: 1.3;
+      }
+
+      .gettone.posto {
+        background: var(--alone-bene);
+        color: var(--bene);
+      }
+
+      .gettone.guardare {
+        background: var(--alone-ambra);
+        color: var(--ambra);
+      }
+
+      .gettone.muta {
+        background: var(--alone-male);
+        color: var(--male);
+      }
+
+      .gettone.aperto {
+        background: var(--alone-azzurro);
+        color: var(--azzurro-cupo);
+      }
+
+      /* ─── Il banco: l'elenco e la casa aperta ───────────────────────── */
+      .banco {
+        display: grid;
+        grid-template-columns: minmax(0, 26rem) minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+
+      .fila {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+
+      /* ─── Una casa nell'elenco ──────────────────────────────────────── */
+      .casa {
+        position: relative;
+        display: block;
+        width: 100%;
+        text-align: left;
+        font: inherit;
+        color: inherit;
+        background: var(--carta);
+        border: 1.5px solid transparent;
+        border-radius: var(--raggio-piccolo);
+        padding: 14px 15px 14px 20px;
+        cursor: pointer;
+        box-shadow: var(--ombra);
+        overflow: hidden;
+      }
+
+      /* La barretta: la stessa che la plancia mette a sinistra delle righe
+       * dei widget. Qui dice come sta la casa, e si legge in colonna senza
+       * leggere le parole. */
+      .casa::before {
+        content: "";
+        position: absolute;
+        left: 7px;
+        top: 14px;
+        bottom: 14px;
+        width: 4px;
+        border-radius: 3px;
+        background: var(--fioco);
+      }
+
+      .casa.posto::before {
+        background: var(--bene);
+      }
+
+      .casa.guardare::before {
+        background: var(--ambra);
+      }
+
+      .casa.muta::before {
+        background: var(--male);
+      }
+
+      .casa.aperto::before {
+        background: var(--azzurro);
+      }
+
+      .casa[aria-current="true"] {
+        border-color: var(--azzurro);
+        box-shadow: var(--ombra-alta);
+      }
+
+      .capo {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .capo .nome {
+        font-size: 0.97rem;
+        font-weight: 650;
+        letter-spacing: -0.012em;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .capo .quando {
+        margin-left: auto;
+        flex: none;
+        color: var(--fioco);
+        font-size: 0.75rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ─── Le pastiglie tonde ────────────────────────────────────────── */
+      .pastiglia {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.74rem;
+        font-weight: 600;
+        line-height: 1.35;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: var(--carta-alta);
+        color: var(--lieve);
+        white-space: nowrap;
+      }
+
+      .pastiglia.posto,
+      .pastiglia.bene {
+        background: var(--alone-bene);
+        color: var(--bene);
+      }
+
+      .pastiglia.guardare,
+      .pastiglia.attenta {
+        background: var(--alone-ambra);
+        color: var(--ambra);
+      }
+
+      .pastiglia.muta,
+      .pastiglia.male {
+        background: var(--alone-male);
+        color: var(--male);
+      }
+
+      .pastiglia.aperto {
+        background: var(--alone-azzurro);
+        color: var(--azzurro-cupo);
+      }
+
+      .pastiglie {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 9px;
+      }
+
+      .fianco {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 6px;
+        color: var(--fioco);
+        font-size: 0.75rem;
+      }
+
+      /* ─── La striscia dei quattordici giorni ────────────────────────── */
+      .giorni {
+        display: flex;
+        gap: 3px;
+        margin-top: 11px;
+      }
+
+      .giorni i {
+        flex: 1;
+        height: 14px;
+        border-radius: 3px;
+        background: var(--giorno-pieno);
+      }
+
+      .giorni.grande i {
+        height: 24px;
+        border-radius: 5px;
+      }
+
+      .giorni i.mezza {
+        background: var(--ambra);
+        opacity: 0.75;
+      }
+
+      .giorni i.vuota {
+        background: var(--male);
+      }
+
+      .giorni i.prima {
+        background: var(--bordo-tenue);
+      }
+
+      .giorniDice {
+        color: var(--fioco);
+        font-size: 0.73rem;
+        margin-top: 6px;
+      }
+
+      /* ─── Le schede della casa aperta ───────────────────────────────── */
+      .scheda {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-width: 0;
+      }
+
+      .riquadro {
+        background: var(--carta);
+        border-radius: var(--raggio);
+        padding: 20px 22px;
+        box-shadow: var(--ombra);
+      }
+
+      .riquadro.tinto {
+        background: linear-gradient(
+          160deg,
+          var(--alone-azzurro),
+          color-mix(in srgb, var(--alone-azzurro) 45%, var(--carta))
+        );
+        border: 1.5px solid color-mix(in srgb, var(--azzurro) 35%, transparent);
+      }
+
+      .indietro {
+        display: none;
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 550;
+        color: var(--azzurro-scuro);
+        background: transparent;
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+        align-self: flex-start;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 1.45rem;
+        font-weight: 700;
+        letter-spacing: -0.028em;
+        text-wrap: balance;
+      }
+
+      .titolo {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        flex-wrap: wrap;
+      }
+
+      .perché {
+        color: var(--lieve);
+        font-size: 0.9rem;
+        margin: 7px 0 0;
+      }
+
+      h3 {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--fioco);
+      }
+
+      .capoRiquadro {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 15px;
+      }
+
+      .capoRiquadro .conta {
+        margin-left: auto;
+        font-size: 0.85rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: var(--lieve);
+      }
+
+      .targa {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+        gap: 14px 22px;
+        margin-top: 18px;
+        padding-top: 17px;
+        border-top: 1px solid var(--bordo-tenue);
+      }
+
+      .targa dt {
+        color: var(--fioco);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+      }
+
+      .targa dd {
+        margin: 3px 0 0;
+        font-size: 0.87rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ─── I tasti ───────────────────────────────────────────────────── */
+      .azioni {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 18px;
+      }
+
+      .tasto {
+        font: inherit;
+        font-size: 0.86rem;
+        font-weight: 550;
+        color: var(--notte);
+        background: var(--carta);
+        border: 1px solid var(--bordo);
+        border-radius: 11px;
+        padding: 9px 16px;
+        cursor: pointer;
+      }
+
+      .tasto:hover {
+        border-color: var(--fioco);
+      }
+
+      .tasto.forte {
+        color: #fff;
+        background: linear-gradient(145deg, var(--azzurro), var(--azzurro-scuro));
+        border-color: transparent;
+        box-shadow: var(--ombra-tasto);
+      }
+
+      .tasto.male {
+        color: var(--male);
+        border-color: color-mix(in srgb, var(--male) 40%, transparent);
+        background: transparent;
+      }
+
+      .tasto:disabled {
+        opacity: 0.45;
+        cursor: default;
+        box-shadow: none;
+      }
+
+      .tasto.grande {
+        font-size: 0.95rem;
+        padding: 12px 22px;
+        border-radius: 13px;
+      }
+
+      /* La riga del limite: cosa questo quadro non può fare. Sta sotto i
+       * tasti e non in fondo alla pagina, perché è la cornice dentro cui si
+       * legge tutto il resto — e perché un tasto che non c'è si nota meno di
+       * una riga che dice perché non c'è. */
+      .limite {
+        display: flex;
+        gap: 11px;
+        margin: 16px 0 0;
+        padding: 13px 15px;
+        background: var(--carta-alta);
+        border-radius: var(--raggio-piccolo);
+        font-size: 0.83rem;
+        line-height: 1.55;
+        color: var(--lieve);
+      }
+
+      .limite .gettone {
+        width: 24px;
+        height: 24px;
+        flex: none;
+        border-radius: 8px;
+        background: var(--alone-azzurro);
+        color: var(--azzurro-cupo);
+        display: grid;
+        place-items: center;
+        font-size: 0.8rem;
+      }
+
+      .limite b {
+        color: var(--notte);
+      }
+
+      /* ─── Il misuratore del collaudo ────────────────────────────────── */
+      .misura {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 16px;
+      }
+
+      .misura i {
+        flex: 1;
+        height: 7px;
+        border-radius: 4px;
+        background: var(--alone-ambra);
+      }
+
+      .misura i.fatta {
+        background: var(--bene);
+      }
+
+      ul.spunte {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      ul.spunte li {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 9px 0;
+        font-size: 0.89rem;
+      }
+
+      ul.spunte li + li {
+        border-top: 1px solid var(--bordo-tenue);
+      }
+
+      ul.spunte .bollino {
+        flex: none;
+        width: 21px;
+        height: 21px;
+        border-radius: 7px;
+        display: grid;
+        place-items: center;
+        font-size: 0.68rem;
+        font-weight: 700;
+      }
+
+      ul.spunte .fatta .bollino {
+        background: var(--alone-bene);
+        color: var(--bene);
+      }
+
+      ul.spunte .manca .bollino {
+        background: var(--alone-ambra);
+        color: var(--ambra);
+      }
+
+      ul.spunte .cosa {
+        flex: 1;
+        min-width: 0;
+      }
+
+      ul.spunte .manca .cosa {
+        font-weight: 600;
+      }
+
+      ul.spunte .dettaglio {
+        color: var(--fioco);
+        font-size: 0.79rem;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .verdetto {
+        margin: 16px 0 0;
+        padding-top: 15px;
+        border-top: 1px solid var(--bordo-tenue);
+        font-size: 0.85rem;
+        color: var(--lieve);
+      }
+
+      /* ─── Le misure della salute ────────────────────────────────────── */
+      .misure {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        gap: 10px;
+        margin-top: 17px;
+      }
+
+      .misure > div {
+        background: var(--carta-alta);
+        border-radius: var(--raggio-piccolo);
+        padding: 12px 14px;
+      }
+
+      .misure dt {
+        color: var(--fioco);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+      }
+
+      .misure dd {
+        margin: 5px 0 0;
+        font-size: 1.28rem;
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .misure dd small {
+        display: block;
+        font-size: 0.73rem;
+        font-weight: 450;
+        letter-spacing: 0;
+        color: var(--fioco);
+        margin-top: 3px;
+      }
+
+      .misure dd.male {
+        color: var(--male);
+      }
+
+      .misure dd.attenta {
+        color: var(--ambra);
+      }
+
+      /* ─── Le versioni ───────────────────────────────────────────────── */
+      table.versioni {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+      }
+
+      table.versioni td {
+        padding: 9px 0;
+      }
+
+      table.versioni tr + tr td {
+        border-top: 1px solid var(--bordo-tenue);
+      }
+
+      table.versioni td.numero {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+
+      .impronte {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 13px;
+      }
+
+      .impronte span {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 5px 11px;
+        border-radius: 9px;
+        background: var(--alone-male);
+        color: var(--male);
+      }
+
+      .nota {
+        color: var(--lieve);
+        font-size: 0.85rem;
+        line-height: 1.6;
+        max-width: 44rem;
+        margin: 0;
+      }
+
+      details.rapporto summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      details.rapporto summary::-webkit-details-marker {
+        display: none;
+      }
+
+      details.rapporto summary::after {
+        content: "mostra";
+        margin-left: auto;
+        font-size: 0.82rem;
+        font-weight: 550;
+        color: var(--azzurro-scuro);
+      }
+
+      details.rapporto[open] summary::after {
+        content: "nascondi";
+      }
+
+      details.rapporto pre {
+        margin: 15px 0 0;
+        padding: 15px;
+        background: var(--carta-alta);
+        border-radius: var(--raggio-piccolo);
+        overflow-x: auto;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 0.76rem;
+        line-height: 1.65;
+        color: var(--lieve);
+      }
+
+      /* ─── I metri della macchina ────────────────────────────────────
+       *
+       * Quattro barre, non quattro numeri: la percentuale di un disco la si
+       * capisce guardandola, e il colore dice da solo se è il caso di
+       * muoversi. Il binario vuoto è l'alone del colore che avrebbe la barra
+       * piena, così lo stato si legge su tutta la larghezza e non solo dove
+       * il riempimento arriva. */
+      .metri {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+        gap: 15px 22px;
+      }
+
+      .capoMetro {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        margin-bottom: 6px;
+      }
+
+      .capoMetro span {
+        color: var(--fioco);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+      }
+
+      .capoMetro b {
+        margin-left: auto;
+        font-size: 0.95rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .capoMetro small {
+        color: var(--fioco);
+        font-size: 0.73rem;
+        font-weight: 450;
+      }
+
+      .binario {
+        position: relative;
+        height: 9px;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+
+      .binario i {
+        position: absolute;
+        inset: 0 auto 0 0;
+        border-radius: 5px;
+      }
+
+      .binario.bene {
+        background: var(--alone-bene);
+      }
+
+      .binario.bene i {
+        background: var(--bene);
+      }
+
+      .binario.attenta {
+        background: var(--alone-ambra);
+      }
+
+      .binario.attenta i {
+        background: var(--ambra);
+      }
+
+      .binario.male {
+        background: var(--alone-male);
+      }
+
+      .binario.male i {
+        background: var(--male);
+      }
+
+      /* La tacca dei settantacinque gradi, quella che la plancia disegna già
+       * sull'arco del MiniPC. */
+      .binario .nonLoDice {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: 0.6rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--fioco);
+        background: var(--carta-alta);
+        border-radius: 5px;
+      }
+
+      .binario .tacca {
+        position: absolute;
+        inset: 0 auto;
+        width: 3px;
+        margin-left: -1.5px;
+        background: var(--carta);
+      }
+
+      .capoMetro b.male {
+        color: var(--male);
+      }
+
+      .capoMetro b.attenta {
+        color: var(--ambra);
+      }
+
+      /* ─── Le schede di rete ─────────────────────────────────────────── */
+      ul.schede {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      ul.schede li {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 10px 0;
+        font-size: 0.88rem;
+        flex-wrap: wrap;
+      }
+
+      ul.schede li + li {
+        border-top: 1px solid var(--bordo-tenue);
+      }
+
+      ul.schede .lucina {
+        width: 9px;
+        height: 9px;
+        flex: none;
+        border-radius: 999px;
+      }
+
+      ul.schede .su .lucina {
+        background: var(--bene);
+        box-shadow: 0 0 0 4px var(--alone-bene);
+      }
+
+      ul.schede .giu .lucina {
+        background: var(--fioco);
+        box-shadow: 0 0 0 4px var(--bordo-tenue);
+      }
+
+      ul.schede .come {
+        font-weight: 650;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 0.83rem;
+      }
+
+      ul.schede .dove {
+        margin-left: auto;
+        color: var(--fioco);
+        font-size: 0.8rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      ul.schede .giu .come,
+      ul.schede .giu .tipo {
+        color: var(--fioco);
+      }
+
+      /* ─── Gli aggiornamenti ────────────────────────────────────────── */
+      ul.versi {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      ul.versi li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 0;
+        flex-wrap: wrap;
+      }
+
+      ul.versi li + li {
+        border-top: 1px solid var(--bordo-tenue);
+      }
+
+      ul.versi .che {
+        flex: 1;
+        min-width: 9rem;
+      }
+
+      ul.versi .che b {
+        display: block;
+        font-size: 0.89rem;
+        font-weight: 650;
+      }
+
+      ul.versi .salto {
+        display: block;
+        color: var(--fioco);
+        font-size: 0.78rem;
+        font-variant-numeric: tabular-nums;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      }
+
+      ul.versi .tasto {
+        padding: 6px 14px;
+        font-size: 0.82rem;
+      }
+
+      .pastiglia.lavoro {
+        background: var(--alone-azzurro);
+        color: var(--azzurro-cupo);
+      }
+
+      /* Il cartello del lavoro in ballo. Azzurro e non ambra: non è un guaio,
+       * è una cosa che sta succedendo. */
+      .cartello {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 15px;
+        padding: 14px 16px;
+        border-radius: var(--raggio-piccolo);
+        font-size: 0.86rem;
+        line-height: 1.55;
+        background: var(--alone-azzurro);
+      }
+
+      .cartello.male {
+        background: var(--alone-male);
+      }
+
+      .cartello.bene {
+        background: var(--alone-bene);
+      }
+
+      .cartello .gettone {
+        width: 25px;
+        height: 25px;
+        flex: none;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        background: color-mix(in srgb, var(--azzurro) 22%, transparent);
+        color: var(--azzurro-cupo);
+      }
+
+      .cartello.male .gettone {
+        background: color-mix(in srgb, var(--male) 22%, transparent);
+        color: var(--male);
+      }
+
+      .cartello.bene .gettone {
+        background: color-mix(in srgb, var(--bene) 22%, transparent);
+        color: var(--bene);
+      }
+
+      /* ─── La flotta degli aggiornamenti ────────────────────────────── */
+      .mucchio + .mucchio {
+        margin-top: 14px;
+      }
+
+      .mucchio .indietro-chi {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 13px;
+      }
+
+      /* ─── Gli add-on ────────────────────────────────────────────────── */
+      .addon {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .addon .uno {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.79rem;
+        font-weight: 550;
+        padding: 5px 11px;
+        border-radius: 999px;
+        background: var(--alone-bene);
+        color: var(--bene);
+      }
+
+      .addon .uno.fermo {
+        background: var(--alone-male);
+        color: var(--male);
+      }
+
+      .addon .uno.apposta {
+        background: var(--carta-alta);
+        color: var(--fioco);
+      }
+
+      .addon .uno .puntino {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      .addon .uno.apposta .puntino {
+        background: transparent;
+        box-shadow: inset 0 0 0 1.5px currentColor;
+      }
+
+      /* ─── L'abbinamento ─────────────────────────────────────────────── */
+      .abbina {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+
+      .colonna {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-width: 0;
+      }
+
+      /* Il codice: la cosa più grande della schermata, perché è la cosa che
+       * si deve copiare stando in piedi in casa di qualcun altro. */
+      .codice {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 16px 0 12px;
+        padding: 16px 18px;
+        background: var(--carta);
+        border-radius: var(--raggio-piccolo);
+        box-shadow: var(--ombra);
+      }
+
+      .codice .cifre {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: clamp(1.1rem, 4.6vw, 1.55rem);
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .codice .copia {
+        margin-left: auto;
+      }
+
+      .scadenza {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 0.83rem;
+        color: var(--lieve);
+      }
+
+      .scadenza b {
+        font-variant-numeric: tabular-nums;
+        color: var(--notte);
+      }
+
+      /* I passi: numerati perché sono davvero una sequenza — il codice si fa
+       * qui, si incolla là, e il rapporto arriva dopo. */
+      ol.passi {
+        list-style: none;
+        counter-reset: passo;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      ol.passi li {
+        counter-increment: passo;
+        display: flex;
+        gap: 13px;
+        font-size: 0.89rem;
+      }
+
+      ol.passi li > span {
+        min-width: 0;
+      }
+
+      ol.passi li::before {
+        content: counter(passo);
+        flex: none;
+        width: 25px;
+        height: 25px;
+        border-radius: 9px;
+        background: var(--alone-azzurro);
+        color: var(--azzurro-cupo);
+        display: grid;
+        place-items: center;
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+
+      ol.passi b {
+        font-weight: 650;
+      }
+
+      .strada {
+        display: inline-block;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 0.8rem;
+        padding: 1px 7px;
+        border-radius: 7px;
+        background: var(--carta-alta);
+        color: var(--notte);
+      }
+
+      /* Le righe in attesa e appena arrivate. */
+      ul.righe {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      ul.righe li {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 12px 0;
+        flex-wrap: wrap;
+      }
+
+      ul.righe li + li {
+        border-top: 1px solid var(--bordo-tenue);
+      }
+
+      ul.righe .che {
+        min-width: 0;
+        flex: 1;
+      }
+
+      ul.righe .che b {
+        display: block;
+        font-size: 0.88rem;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+      }
+
+      ul.righe .che span {
+        display: block;
+        color: var(--fioco);
+        font-size: 0.76rem;
+      }
+
+      .vuoto {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 16px 0 4px;
+        color: var(--fioco);
+        font-size: 0.86rem;
+      }
+
+      .battito {
+        width: 9px;
+        height: 9px;
+        flex: none;
+        border-radius: 999px;
+        background: var(--bene);
+        box-shadow: 0 0 0 4px var(--alone-bene);
+        animation: respira 2.4s ease-in-out infinite;
+      }
+
+      @keyframes respira {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.35;
+        }
+      }
+
+      input[type="text"] {
+        font: inherit;
+        font-size: 0.87rem;
+        color: var(--notte);
+        background: var(--carta-alta);
+        border: 1px solid var(--bordo);
+        border-radius: 11px;
+        padding: 9px 13px;
+        min-width: 0;
+        flex: 1;
+      }
+
+      /* La riga piccola sotto a qualcos'altro: una spiegazione, un esito.
+         Sta qui perche' le quattro che la usano nascevano senza regola — la
+         classe veniva dalla console del ponte, che ha un foglio di stile suo e
+         qui non arriva. Si vedevano grandi come il resto del testo. */
+      .minuta {
+        font-size: 0.85rem;
+        color: var(--lieve);
+        margin: 0;
+      }
+
+      .avvertenza {
+        display: flex;
+        gap: 11px;
+        margin-top: 16px;
+        padding: 14px 16px;
+        background: var(--alone-ambra);
+        border-radius: var(--raggio-piccolo);
+        font-size: 0.85rem;
+        line-height: 1.55;
+        color: var(--notte);
+      }
+
+      .avvertenza .gettone {
+        width: 25px;
+        height: 25px;
+        flex: none;
+        border-radius: 9px;
+        background: color-mix(in srgb, var(--ambra) 22%, transparent);
+        color: var(--ambra);
+        display: grid;
+        place-items: center;
+        font-size: 0.72rem;
+        font-weight: 700;
+      }
+
+      footer {
+        max-width: 80rem;
+        margin-inline: auto;
+        padding: 6px 22px 40px;
+        color: var(--fioco);
+        font-size: 0.79rem;
+      }
+
+      /* ─── Stretto ───────────────────────────────────────────────────── */
+      @media (max-width: 64rem) {
+        .banco,
+        .abbina {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .indietro {
+          display: block;
+        }
+
+        .banco.aperta > .fila,
+        .banco.aperta > .striscia {
+          display: none;
+        }
+
+        .banco:not(.aperta) > .scheda {
+          display: none;
+        }
+      }
+
+      @media (max-width: 34rem) {
+        .testata,
+        main,
+        footer {
+          padding-inline: 16px;
+        }
+
+        nav {
+          margin-left: 0;
+          width: 100%;
+          justify-content: center;
+        }
+
+        .riquadro {
+          padding: 17px 16px;
+        }
+
+        .titolone {
+          font-size: 1.4rem;
+        }
+
+        h2 {
+          font-size: 1.25rem;
+        }
+
+        ul.spunte li {
+          flex-wrap: wrap;
+        }
+
+        ul.spunte .dettaglio {
+          width: 100%;
+          padding-left: 32px;
+          text-align: left;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="testata">
+        <div class="marchio">
+          <span class="bollo" aria-hidden="true"><i></i><i class="mezzo"></i><i></i></span>
+          <span class="nomi">
+            <b>Il quadro</b>
+            <span id="chi"></span>
+          </span>
+        </div>
+        <nav id="nav"></nav>
+      </div>
+    </header>
+
+    <main id="dove"></main>
+
+    <footer>
+      Il quadro di gdahome. Da qui non si entra in nessuna casa e non si vede niente di chi ci
+      abita: si guardano i numeri che ogni impianto manda da sé.
+    </footer>
+
+    <script>
+      /* ───────────────────────────────────────────────────────────────────
+       * DA DOVE ARRIVA QUELLO CHE SI VEDE.
+       *
+       * Da `/console/case` e `/console/inviti`, e **gia' deciso**: lo stato di
+       * una casa, le sue spunte e le sue pastiglie li calcola il server
+       * (`src/collaudo.js`). Qui dentro non c'e' nessuna regola, ed e' voluto:
+       * se le regole stessero in tutt'e due i posti, il giorno che una cambia
+       * ne cambierebbe una sola, e due schermi direbbero due cose diverse
+       * della stessa casa.
+       *
+       * Questa pagina disegna. Non decide.
+       *
+       * ─── La chiave ─────────────────────────────────────────────────────
+       *
+       * Resta nel browser e non nella pagina: chi guarda questo quadro lo apre
+       * tutti i giorni, e ribattere una chiave lunga tutti i giorni finisce con
+       * una chiave corta. Un tasto la butta via.
+       * ─────────────────────────────────────────────────────────────────── */
+      const DOVE_STA_LA_CHIAVE = "gdahome.quadro.chiave";
+
+      let chiave = "";
+      try {
+        chiave = localStorage.getItem(DOVE_STA_LA_CHIAVE) || "";
+      } catch (_niente) {
+        /* Finestra anonima, deposito bloccato: si chiede a ogni apertura. */
+      }
+
+      let CASE = [];
+      let INVITI = [];
+      /* Chi sono, quante ne ho e qual è il mio tetto. Il tetto si mostra
+       * **prima** di sbatterci: un codice rifiutato al quarantunesimo impianto,
+       * con il cliente che aspetta, è il momento peggiore per scoprire che
+       * esiste un limite. */
+      let IO = { nome: "", soglia: 0, case: 0 };
+      /* Le soglie con cui si colorano i metri arrivano dal server insieme alle
+       * case: sono le stesse con cui lui decide, e scritte una volta sola. */
+      let SOGLIE = { troppoCaldo: 75, discoPieno: 85, discoFinito: 80 };
+      const BATTERIA_SCARICA = 20;
+      const SEGNALE_DEBOLE = 45;
+      const DISCO_STANCO = 50;
+
+      const ADESSO = () => Date.now();
+
+      async function chiedi(via, opzioni = {}) {
+        /* In relativo, senza la barra davanti: da `/console/` porta dove deve,
+         * e funziona anche se un domani la console sta sotto un prefisso. */
+        const risposta = await fetch(via.replace(/^\//, ""), {
+          ...opzioni,
+          headers: {
+            authorization: `Bearer ${chiave}`,
+            "content-type": "application/json",
+            ...(opzioni.headers || {}),
+          },
+        });
+        if (risposta.status === 401) throw new ChiaveNoNo();
+        const corpo = await risposta.json().catch(() => ({}));
+        if (!risposta.ok) throw new Error(corpo.errore || "non ha funzionato");
+        return corpo;
+      }
+
+      class ChiaveNoNo extends Error {}
+
+      async function carica() {
+        const [case_, inviti, io] = await Promise.all([
+          chiedi("/case"),
+          chiedi("/inviti"),
+          chiedi("/io"),
+        ]);
+        CASE = case_.case || [];
+        INVITI = inviti.inviti || [];
+        IO = io || IO;
+        if (case_.soglie) SOGLIE = case_.soglie;
+      }
+
+      /* Quante ne restano prima del tetto, o `null` se tetto non ce n'è.
+       *
+       * **Gli inviti aperti contano**, come li conta il server: se qui si
+       * contassero solo le case, la testata direbbe «due ancora» con un codice
+       * già in attesa, e il secondo verrebbe rifiutato. Un numero che promette
+       * più di quello che il server concede è peggio di nessun numero. */
+      const quanteRestano = () =>
+        IO.soglia > 0 ? Math.max(0, IO.soglia - ((IO.case || CASE.length) + INVITI.length)) : null;
+
+      /* Le case appena arrivate sono quelle che non hanno ancora un nome: non
+       * sono un elenco a parte, sono una domanda sullo stesso elenco. */
+      const appenaArrivate = () => CASE.filter((una) => una.senzaNome);
+
+      /* Il codice a gruppi di quattro: il server lo scrive gia' cosi', e questa
+       * riga c'e' perche' una vecchia versione non lo faceva. */
+      const laRiga = (codice) => String(codice);
+
+      const plurale = (quanti, uno, molti) => `${quanti} ${quanti === 1 ? uno : molti}`;
+
+      function daQuanto(quando) {
+        const minuti = Math.round((ADESSO() - new Date(quando).getTime()) / 60000);
+        if (!Number.isFinite(minuti)) return "chissà quando";
+        if (minuti < 1) return "adesso";
+        if (minuti < 60) return `${minuti} min fa`;
+        const ore = Math.round(minuti / 60);
+        if (ore < 24) return `${ore} ${ore === 1 ? "ora" : "ore"} fa`;
+        const giorni = Math.round(ore / 24);
+        return `${giorni} ${giorni === 1 ? "giorno" : "giorni"} fa`;
+      }
+
+      const ilGiorno = (quando) =>
+        /* In italiano, non nella lingua del browser: questa pagina e' in
+         * italiano tutta, e una data in inglese in mezzo si nota. */
+        new Date(quando).toLocaleDateString("it-IT", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        });
+
+      const livello = (valore, attenta, male) =>
+        valore >= male ? "male" : valore >= attenta ? "attenta" : "bene";
+
+      /* Il lavoro in ballo e la manutenzione: il ponte non li manda ancora —
+       * i due verbi del quadro sono disegnati e non costruiti — e finche' non
+       * arrivano queste due righe rispondono di no invece di rompersi. */
+      const staLavorando = (c) => Boolean(c && c.lavoro && c.lavoro.stato === "in corso");
+      const daFare = (c) => (c.aggiornamenti?.elenco || []).filter((uno) => uno.installabile);
+
+      /* ─── Disegnare ──────────────────────────────────────────────────── */
+
+      const testo = (cosa) =>
+        String(cosa).replace(
+          /[&<>"']/g,
+          (uno) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[uno],
+        );
+
+      const spia = (stato) =>
+        `<span class="pastiglia ${stato.chiave}"><span aria-hidden="true">${stato.segno}</span>${testo(stato.parola)}</span>`;
+
+      /* La striscia: `P` giorno pieno, `M` a metà, `V` muta, spazio «non c'era
+       * ancora». */
+      function laStriscia(giorni, grande = false) {
+        const celle = [...giorni]
+          .map((uno) => {
+            if (uno === "V") return '<i class="vuota" title="muta tutto il giorno"></i>';
+            if (uno === "M") return '<i class="mezza" title="muta per qualche ora"></i>';
+            if (uno === " ") return '<i class="prima" title="non era ancora accesa"></i>';
+            return '<i title="tutte i rapporti arrivati"></i>';
+          })
+          .join("");
+        const vuoti = [...giorni].filter((uno) => uno === "V" || uno === "M").length;
+        const accesi = [...giorni].filter((uno) => uno !== " ").length;
+        const dice =
+          accesi < giorni.length
+            ? `${plurale(accesi, "giorno", "giorni")} da quando è accesa`
+            : vuoti === 0
+              ? "14 giorni, sempre viva"
+              : `14 giorni · muta ${plurale(vuoti, "volta", "volte")}`;
+        return `<div class="giorni${grande ? " grande" : ""}" role="img" aria-label="${testo(dice)}">${celle}</div><div class="giorniDice">${testo(dice)}</div>`;
+      }
+
+      const LE_FILE = [
+        ["muta", "■", "mute"],
+        ["guardare", "▲", "da guardare"],
+        ["aperto", "◇", "collaudo aperto"],
+        ["posto", "●", "a posto"],
+      ];
+
+      let schermata = "case";
+      let filtro = "tutte";
+      let aperta = 0;
+      let suTelefonoApro = false;
+
+      const dove = document.getElementById("dove");
+      const doveNav = document.getElementById("nav");
+
+      function disegna() {
+        const dietro = CASE.filter((una) => (una.carta?.aggiornamenti?.elenco || []).length).length;
+        doveNav.innerHTML = [
+          ["case", "Le case", 0],
+          ["aggiornamenti", "Aggiornamenti", dietro],
+          ["abbina", "Abbina", INVITI.length + appenaArrivate().length],
+        ]
+          .map(
+            ([quale, parola, quanti]) => `
+            <button type="button" data-schermata="${quale}" aria-pressed="${schermata === quale}">
+              ${testo(parola)}${quanti ? `<span class="quanti">${quanti}</span>` : ""}
+            </button>`,
+          )
+          .join("");
+
+        const restano = quanteRestano();
+        document.getElementById("chi").textContent =
+          (IO.nome ? `${IO.nome} · ` : "") +
+          plurale(CASE.length, "impianto", "impianti") +
+          (restano === null ? "" : ` · ${restano} ancora`);
+        dove.innerHTML =
+          schermata === "case"
+            ? leCase()
+            : schermata === "aggiornamenti"
+              ? laFlotta()
+              : lAbbinamento();
+
+        const esito = (parole, bene = true) => {
+          const riga = document.getElementById("esito-avvisi");
+          if (!riga) return;
+          riga.hidden = false;
+          riga.textContent = parole;
+          riga.style.color = bene ? "var(--bene)" : "var(--male)";
+        };
+
+        const tastoAvvisi = dove.querySelector("[data-avvisi]");
+        if (tastoAvvisi) {
+          tastoAvvisi.onclick = () =>
+            faiEpoi(tastoAvvisi, async () => {
+              const detto = document.getElementById("dove-avvisi")?.value || "";
+              try {
+                await chiedi("/io/avvisi", {
+                  method: "PUT",
+                  body: JSON.stringify({ dove: detto }),
+                });
+                IO.avvisi = detto.trim();
+                esito(IO.avvisi ? "Salvato." : "Avvisi spenti.");
+              } catch (male) {
+                esito(male.message, false);
+              }
+            });
+        }
+
+        const tastoProva = dove.querySelector("[data-prova-avvisi]");
+        if (tastoProva) {
+          tastoProva.onclick = () =>
+            faiEpoi(tastoProva, async () => {
+              try {
+                const detto = await chiedi("/io/avvisi/prova", { method: "POST" });
+                /* «Arrivato» vuol dire che chi riceve l'ha accettato, non che
+                 * l'hai letto: se il tasto dice di sì e il messaggio non c'è, il
+                 * problema sta dall'altra parte. */
+                esito(
+                  detto.arrivato
+                    ? "Mandato. Se non lo vedi, il problema è dopo l'indirizzo."
+                    : "Quell'indirizzo non l'ha accettato.",
+                  detto.arrivato,
+                );
+              } catch (male) {
+                esito(male.message, false);
+              }
+            });
+        }
+
+        dove.querySelectorAll("[data-filtro]").forEach((tasto) => {
+          tasto.onclick = () => {
+            filtro = filtro === tasto.dataset.filtro ? "tutte" : tasto.dataset.filtro;
+            disegna();
+          };
+        });
+        dove.querySelectorAll("[data-casa]").forEach((tasto) => {
+          tasto.onclick = () => {
+            aperta = Number(tasto.dataset.casa);
+            suTelefonoApro = true;
+            disegna();
+            window.scrollTo({ top: 0 });
+          };
+        });
+        const torna = dove.querySelector("[data-indietro]");
+        if (torna)
+          torna.onclick = () => {
+            suTelefonoApro = false;
+            disegna();
+          };
+
+        /* I tasti che cambiano qualcosa. Ognuno fa la sua chiamata, ricarica e
+         * ridisegna: non si tocca niente a schermo prima che il server abbia
+         * detto di sì, se no si vedrebbe una cosa che non è successa. */
+        dove.querySelectorAll("[data-fai]").forEach((tasto) => {
+          tasto.onclick = () =>
+            faiEpoi(tasto, () =>
+              chiedi("/inviti", {
+                method: "POST",
+                body: JSON.stringify({ per: dove.querySelector("#per-chi")?.value || "" }),
+              }),
+            );
+        });
+        dove.querySelectorAll("[data-annulla]").forEach((tasto) => {
+          tasto.onclick = () =>
+            faiEpoi(tasto, () =>
+              chiedi(`/inviti/${encodeURIComponent(tasto.dataset.annulla)}`, { method: "DELETE" }),
+            );
+        });
+        dove.querySelectorAll("[data-tieni]").forEach((tasto) => {
+          tasto.onclick = () => {
+            const casella = dove.querySelector(`[data-nome="${tasto.dataset.tieni}"]`);
+            const nome = (casella?.value || "").trim();
+            if (!nome) {
+              casella?.focus();
+              return;
+            }
+            faiEpoi(tasto, () =>
+              chiedi(`/casa/${tasto.dataset.tieni}`, {
+                method: "PUT",
+                body: JSON.stringify({ nome }),
+              }),
+            );
+          };
+        });
+        dove.querySelectorAll("[data-rinomina]").forEach((tasto) => {
+          tasto.onclick = () => {
+            const adesso = CASE.find((una) => una.casa === tasto.dataset.rinomina);
+            const nome = window.prompt(
+              "Come si chiama questo impianto?",
+              adesso?.senzaNome ? "" : adesso?.nome || "",
+            );
+            if (nome === null) return;
+            faiEpoi(tasto, () =>
+              chiedi(`/casa/${tasto.dataset.rinomina}`, {
+                method: "PUT",
+                body: JSON.stringify({ nome }),
+              }),
+            );
+          };
+        });
+        dove.querySelectorAll("[data-molla]").forEach((tasto) => {
+          tasto.onclick = () => {
+            /* In due tempi, sullo stesso tasto: il primo chiede conferma e il
+             * secondo fa. Non si butta la storia di un impianto per un tocco
+             * andato storto. */
+            if (tasto.dataset.sicuro !== "sì") {
+              tasto.dataset.sicuro = "sì";
+              tasto.textContent = "Sicuro? Premi di nuovo";
+              setTimeout(() => {
+                tasto.dataset.sicuro = "";
+                tasto.textContent = "Non seguirla più";
+              }, 6000);
+              return;
+            }
+            faiEpoi(tasto, () =>
+              chiedi(`/casa/${tasto.dataset.molla}`, { method: "DELETE" }).then(() => {
+                aperta = 0;
+                suTelefonoApro = false;
+              }),
+            );
+          };
+        });
+        dove.querySelectorAll("[data-copia]").forEach((tasto) => {
+          tasto.onclick = () => {
+            navigator.clipboard?.writeText(tasto.dataset.copia);
+            const prima = tasto.textContent;
+            tasto.textContent = "Copiato";
+            setTimeout(() => {
+              tasto.textContent = prima;
+            }, 2000);
+          };
+        });
+
+        avviaGliOrologi();
+      }
+
+      /* Fa una cosa, poi ricarica e ridisegna. Il tasto resta spento mentre
+       * succede: due tocchi su «fai un codice» sono due codici. */
+      async function faiEpoi(tasto, cosa) {
+        tasto.disabled = true;
+        try {
+          await cosa();
+          await carica();
+          disegna();
+        } catch (errore) {
+          if (errore instanceof ChiaveNoNo) {
+            chiedimiLaChiave();
+            return;
+          }
+          window.alert(errore.message || "non ha funzionato");
+        } finally {
+          tasto.disabled = false;
+        }
+      }
+
+      doveNav.onclick = (evento) => {
+        const tasto = evento.target.closest("[data-schermata]");
+        if (!tasto) return;
+        schermata = tasto.dataset.schermata;
+        suTelefonoApro = false;
+        disegna();
+        window.scrollTo({ top: 0 });
+      };
+
+      /* ─── Schermata: le case ─────────────────────────────────────────── */
+      function leCase() {
+        const conStato = CASE.map((una, indice) => ({ una, indice, stato: una.stato }));
+        const quante = (chiave) => conStato.filter((r) => r.stato.chiave === chiave).length;
+        const viste = conStato.filter((r) => filtro === "tutte" || r.stato.chiave === filtro);
+
+        return `
+          <div class="banco${suTelefonoApro ? " aperta" : ""}">
+            <div class="striscia">
+              ${LE_FILE.map(
+                ([chiave, segno, parola]) => `
+                <button
+                  type="button"
+                  class="tessera"
+                  data-filtro="${chiave}"
+                  aria-pressed="${filtro === chiave}"
+                >
+                  <span class="gettone ${chiave}" aria-hidden="true">${segno}</span>
+                  <span class="numeri">
+                    <b>${quante(chiave)}</b>
+                    <span>${testo(parola)}</span>
+                  </span>
+                </button>`,
+              ).join("")}
+            </div>
+
+            <div class="fila">
+              ${
+                viste.length
+                  ? viste.map(({ una, indice, stato }) => unaCasa(una, indice, stato)).join("")
+                  : '<p class="nota">Nessuna casa in questa fila. Premi di nuovo la tessera per vederle tutte.</p>'
+              }
+            </div>
+
+            <div class="scheda">
+              ${CASE.length ? ilDettaglio(CASE[Math.min(aperta, CASE.length - 1)]) : ""}
+            </div>
+          </div>
+        `;
+      }
+
+      function unaCasa(casa, indice, stato) {
+        const c = casa.carta;
+        return `
+          <button
+            type="button"
+            class="casa ${stato.chiave}"
+            data-casa="${indice}"
+            aria-current="${indice === aperta}"
+          >
+            <div class="capo">
+              <span class="nome">${testo(casa.nome)}</span>
+              <span class="quando">${testo(daQuanto(c.quando))}</span>
+            </div>
+            <div class="fianco">
+              ${spia(stato)}
+              <span class="mono">${testo(c.casa.slice(5, 13))}</span>
+            </div>
+            <div class="pastiglie">
+              ${(() => {
+                const tutte = casa.pastiglie || [];
+                const viste = tutte.slice(0, 3);
+                const restano = tutte.length - viste.length;
+                return (
+                  viste
+                    .map(
+                      ({ parola, come }) =>
+                        `<span class="pastiglia ${come}">${testo(parola)}</span>`,
+                    )
+                    .join("") + (restano ? `<span class="pastiglia">+${restano}</span>` : "")
+                );
+              })()}
+            </div>
+            ${laStriscia(casa.giorni)}
+          </button>
+        `;
+      }
+
+      function ilDettaglio(casa) {
+        const stato = casa.stato;
+        const c = casa.carta;
+        const collaudo = casa.collaudo || { spunte: [], fatte: 0, aperte: 0, ignote: 0, quante: 0 };
+
+        const verdetto =
+          collaudo.fatte === collaudo.quante
+            ? "Tutte spuntate: questo impianto è a posto."
+            : !casa.collaudataIl
+              ? "Non è ancora stata consegnata: finché resta una spunta aperta, resta in fila."
+              : `Il collaudo si era chiuso il ${ilGiorno(casa.collaudataIl)}. Queste righe si sono riaperte dopo, ed è il motivo per cui questa casa è qui.`;
+
+        const versioni = [
+          ["gdahome (il ponte)", c.ponte, c.aggiornamenti?.gdahome],
+          ["la plancia", c.plancia, false],
+          ["Home Assistant Core", c.ha, c.aggiornamenti?.ha],
+          ["Supervisor", c.supervisor, false],
+          ["il sistema", c.sistema, false],
+        ];
+
+        const misure = [
+          (c.entita?.sparite ?? 0) > 0
+            ? ["Entità sparite", c.entita.sparite, `su ${c.entita.totali}`, "male"]
+            : ["Entità", c.entita?.totali ?? "—", "rispondono tutte", ""],
+          [
+            "Batteria più bassa",
+            c.batterie?.piuBassa === null || c.batterie?.piuBassa === undefined
+              ? "—"
+              : `${c.batterie.piuBassa}%`,
+            !c.batterie
+              ? "questa casa non lo dice"
+              : c.batterie.scariche > 0
+                ? `${c.batterie.scariche} sotto il ${BATTERIA_SCARICA}%`
+                : "nessuna da cambiare",
+            (c.batterie?.scariche ?? 0) > 0 ? "attenta" : "",
+          ],
+          [
+            "Ultimo backup",
+            !c.backup || c.backup.giorniFa === null || c.backup.giorniFa === undefined
+              ? "mai"
+              : c.backup.giorniFa,
+            !c.backup
+              ? "questa casa non lo dice"
+              : c.backup.giorniFa === null || c.backup.giorniFa === undefined
+                ? "non ne ha mai fatto uno"
+                : "giorni fa",
+            c.backup && (c.backup.giorniFa === null || c.backup.giorniFa > 14) ? "attenta" : "",
+          ],
+          [
+            "Errori nel registro",
+            c.registro?.errori24h ?? "—",
+            "nelle ultime 24 ore",
+            (c.registro?.errori24h ?? 0) > 0 ? "male" : "",
+          ],
+        ];
+
+        return `
+          <button type="button" class="indietro" data-indietro>← tutte le case</button>
+
+          <section class="riquadro">
+            <div class="titolo">
+              <h2>${testo(casa.nome)}</h2>
+              ${spia(stato)}
+            </div>
+            ${stato.perché ? `<p class="perché">${testo(stato.perché)}</p>` : ""}
+            <dl class="targa">
+              <div>
+                <dt>Matricola</dt>
+                <dd class="mono">${testo(c.casa.slice(0, 18))}…</dd>
+              </div>
+              <div><dt>Vista la prima volta</dt><dd>${testo(ilGiorno(casa.da))}</dd></div>
+              <div>
+                <dt>Collaudata</dt>
+                <dd>${casa.collaudataIl ? testo(ilGiorno(casa.collaudataIl)) : "mai"}</dd>
+              </div>
+              <div>
+                <dt>Rapporto</dt>
+                <dd>${testo(daQuanto(c.quando))}, ogni ${c.ogni} min</dd>
+              </div>
+              <div>
+                <dt>Telefoni</dt>
+                <dd>${c.telefoni ? `${c.telefoni.abbinati} — ${c.telefoni.visti7gg} visti in 7 gg` : "—"}</dd>
+              </div>
+            </dl>
+            <div class="azioni">
+              <button
+                type="button"
+                class="tasto forte"
+                data-copia="${testo(JSON.stringify(c, null, 2))}"
+              >
+                Copia il rapporto
+              </button>
+              <button type="button" class="tasto" data-rinomina="${testo(casa.casa)}">
+                Rinomina
+              </button>
+              <button type="button" class="tasto male" data-molla="${testo(casa.casa)}">
+                Non seguirla più
+              </button>
+            </div>
+            <p class="limite">
+              <span class="gettone" aria-hidden="true">◴</span>
+              <span>
+                ${
+                  c.manutenzione
+                    ? `Questo quadro <b>non guarda dentro</b>: non apre la plancia
+                       e non vede entità, stanze né persone. Tocca due cose sole,
+                       e solo perché questa casa le ha aperte — <b>installare un
+                       aggiornamento</b> e <b>riavviare un add-on fermo</b>. Non
+                       c'è altro, e non c'è una riga di comando.`
+                    : `Questo quadro <b>guarda e basta</b>: non apre la plancia,
+                       non tocca niente, e non vede entità, stanze né persone.
+                       Questa casa non ha aperto la manutenzione.`
+                }
+              </span>
+            </p>
+          </section>
+
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>Il collaudo</h3>
+              <span class="conta">${collaudo.fatte}/${collaudo.quante}</span>
+            </div>
+            <div
+              class="misura"
+              role="img"
+              aria-label="${collaudo.fatte} spunte su ${collaudo.quante}"
+            >
+              ${collaudo.spunte.map((una) => `<i class="${una.fatta ? "fatta" : ""}"></i>`).join("")}
+            </div>
+            <ul class="spunte">
+              ${collaudo.spunte
+                .map(
+                  (una) => `
+                <li class="${una.fatta ? "fatta" : "manca"}">
+                  <span class="bollino" aria-hidden="true">${una.fatta ? "✓" : "▲"}</span>
+                  <span class="cosa"
+                    >${testo(una.cosa)}<span class="via">${una.fatta ? " — fatta" : " — manca"}</span></span
+                  >
+                  <span class="dettaglio">${testo(una.dettaglio)}</span>
+                </li>`,
+                )
+                .join("")}
+            </ul>
+            <p class="verdetto">${testo(verdetto)}</p>
+          </section>
+
+          ${gliAggiornamenti(c)} ${laMacchina(c)} ${laRete(c)} ${gliAddon(c)}
+
+          <section class="riquadro">
+            <div class="capoRiquadro"><h3>La salute, quattordici giorni</h3></div>
+            ${laStriscia(casa.giorni, true)}
+            <dl class="misure">
+              ${misure
+                .map(
+                  ([che, quanto, sotto, come]) => `
+                <div>
+                  <dt>${testo(che)}</dt>
+                  <dd class="${come}">${testo(quanto)}<small>${testo(sotto)}</small></dd>
+                </div>`,
+                )
+                .join("")}
+            </dl>
+          </section>
+
+          ${
+            (c.entita?.sparite ?? 0) > 0
+              ? `
+          <section class="riquadro">
+            <div class="capoRiquadro"><h3>I dispositivi che non rispondono</h3></div>
+            <div class="impronte">
+              ${(c.entita?.impronte || []).map((una) => `<span>#${testo(una)}</span>`).join("")}
+            </div>
+            <p class="nota">
+              Il quadro non sa quali sono, e non lo deve sapere: la casa manda
+              quattro cifre ricavate dal nome del dispositivo con un sale che non
+              esce da lì. Servono a dire <em>lo stesso di ieri</em> oppure
+              <em>un altro</em> — cioè a distinguere un dispositivo morto da una
+              rete che balla — e a niente di più.
+              <br /><br />
+              <b>Il nome non lo scopre nessuno da qui</b>, e non è una cosa da
+              aggiungere dopo: quei nomi dicono cosa c'è in una casa e in quali
+              stanze. Se serve saperlo, lo legge chi ci abita dalla propria
+              plancia, dove quel dispositivo risulta non disponibile, e lo dice
+              se vuole.
+            </p>
+          </section>`
+              : ""
+          }
+
+          <section class="riquadro">
+            <div class="capoRiquadro"><h3>Le versioni</h3></div>
+            <table class="versioni">
+              ${versioni
+                .map(
+                  ([che, quale, nuova]) => `
+                <tr>
+                  <td>${testo(che)}</td>
+                  <td class="numero">
+                    ${testo(quale)}${nuova ? '<span class="pastiglia attenta" style="margin-left:8px">c&#39;è la nuova</span>' : ""}
+                  </td>
+                </tr>`,
+                )
+                .join("")}
+            </table>
+          </section>
+
+          <section class="riquadro">
+            <details class="rapporto">
+              <summary><h3>Il rapporto, come è arrivata</h3></summary>
+              <pre>${testo(JSON.stringify(c, null, 2))}</pre>
+              <p class="nota" style="margin-top: 14px">
+                Questo è <strong>tutto</strong> quello che questa casa manda.
+                Nessun nome di entità, nessuna stanza, nessuna persona, nessuno
+                stato di nessun sensore, nessun indirizzo. Lo stesso testo,
+                parola per parola, lo legge chi ci abita: sta nella scheda «Il
+                quadro» della console dell'add-on, insieme al tasto per smettere
+                di mandarlo.
+              </p>
+            </details>
+          </section>
+        `;
+      }
+
+      /* Un metro: l'etichetta, il valore, il binario. `tacca` è dove il
+       * binario porta un segno — i 75° della temperatura — e va in centesimi
+       * della scala, non nell'unità del valore. */
+      function unMetro({ che, valore, unita = "%", sotto = "", come, quanto, tacca = null }) {
+        /* Quello che questa casa non dice non si disegna a zero: una CPU che
+         * non c'e' non e' una CPU allo zero per cento. */
+        if (valore === null || valore === undefined)
+          return `
+            <div>
+              <div class="capoMetro"><span>${testo(che)}</span><b class="attenta">—</b></div>
+              <div class="binario"><span class="nonLoDice">non lo dice</span></div>
+            </div>`;
+        return `
+          <div>
+            <div class="capoMetro">
+              <span>${testo(che)}</span>
+              ${sotto ? `<small>${testo(sotto)}</small>` : ""}
+              <b class="${come === "bene" ? "" : come}">${testo(valore)}${testo(unita)}</b>
+            </div>
+            <div class="binario ${come}">
+              <i style="width: ${Math.max(2, Math.min(100, quanto))}%"></i>
+              ${tacca === null ? "" : `<span class="tacca" style="left: ${tacca}%"></span>`}
+            </div>
+          </div>`;
+      }
+
+      /* Un riquadro che dice che non si sa, invece di uno che disegna zeri. */
+      function riquadroMuto(titolo, perché) {
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro"><h3>${testo(titolo)}</h3></div>
+            <p class="nota">${testo(perché)}</p>
+          </section>`;
+      }
+
+      /* La macchina: quello che il Supervisor sa del ferro sotto Home
+       * Assistant, più la temperatura che la plancia disegna già.
+       *
+       * `discoVita` è la riga che su queste schede conta davvero e che nessuno
+       * guarda: una eMMC o una microSD hanno un numero di scritture e poi
+       * finiscono. Quando c'è, ha la sua barra; su una macchina che non la
+       * dichiara — un NUC con un SSD — non si inventa. */
+      function laMacchina(c) {
+        const m = c.macchina;
+        /* Un rapporto senza macchina non e' una casa senza macchina: e' una
+         * casa il cui Supervisor non ha risposto. Si dice, e non si disegnano
+         * cinque metri a zero. */
+        if (!m) return riquadroMuto("La macchina", "Il Supervisor di questa casa non ha risposto.");
+        const metri = [
+          unMetro({
+            che: "CPU",
+            valore: m.cpu,
+            quanto: m.cpu,
+            come: livello(m.cpu, 70, 90),
+          }),
+          unMetro({
+            che: "Memoria",
+            valore: m.ram,
+            quanto: m.ram,
+            come: livello(m.ram, 75, 90),
+          }),
+          unMetro({
+            che: "Disco",
+            valore: m.disco,
+            quanto: m.disco,
+            sotto: `${m.discoLiberi} GB liberi`,
+            come: livello(m.disco, 75, SOGLIE.discoPieno),
+          }),
+          unMetro({
+            che: "Temperatura",
+            valore: m.temperatura,
+            unita: "°",
+            quanto: m.temperatura,
+            sotto: `tacca a ${SOGLIE.troppoCaldo}°`,
+            tacca: SOGLIE.troppoCaldo,
+            come: livello(m.temperatura, SOGLIE.troppoCaldo - 10, SOGLIE.troppoCaldo),
+          }),
+        ];
+        if (m.discoVita !== null)
+          metri.push(
+            unMetro({
+              che: "Vita del disco",
+              valore: m.discoVita,
+              quanto: m.discoVita,
+              sotto: "già consumata",
+              come: livello(m.discoVita, DISCO_STANCO, SOGLIE.discoFinito),
+            }),
+          );
+
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>La macchina</h3>
+              <span class="conta">${testo(m.scheda)}</span>
+            </div>
+            <div class="metri">${metri.join("")}</div>
+            <p class="verdetto">
+              ${testo(c.sistema)} · accesa da ${plurale(m.accesaDa, "giorno", "giorni")}.
+              ${
+                m.discoVita !== null && m.discoVita >= DISCO_STANCO
+                  ? `Il supporto è consumato al ${m.discoVita}%: su queste schede è la cosa che si rompe per prima, e si cambia prima che decida lui.`
+                  : m.temperatura >= SOGLIE.troppoCaldo
+                    ? `Sopra i ${SOGLIE.troppoCaldo}° la scheda si rallenta da sola: la casa non si rompe, diventa lenta — e nessuno capisce perché.`
+                    : "Niente che chieda di andare a vedere."
+              }
+            </p>
+          </section>`;
+      }
+
+      /* Gli aggiornamenti: cosa c'è da fare, e il tasto per farlo.
+       *
+       * Le voci hanno la forma che `aggiornamentiDaFare` produce già nel
+       * ponte, e due dei suoi campi decidono cosa si vede:
+       *
+       *  - `installabile` — un firmware che si porta col cacciavite non ha
+       *    nessun tasto. Mostrarglielo sarebbe una promessa che non si
+       *    mantiene, ed è la regola che il ponte si è già data;
+       *  - `stacca` — gdahome e Home Assistant, installandosi, fanno cadere il
+       *    filo. Detto prima è un'attesa; non detto è un guasto — e da un
+       *    quadro che aggiorna da lontano, non detto è una casa che sembra
+       *    morta mentre sta solo riavviandosi.
+       *
+       * E il tasto c'è solo se quella casa **ha aperto la manutenzione**.
+       * Vedere cosa c'è da fare e poterlo fare sono due permessi diversi, e
+       * il secondo non si dà da sé insieme al primo. */
+      function gliAggiornamenti(c) {
+        if (!c.aggiornamenti)
+          return riquadroMuto(
+            "Gli aggiornamenti",
+            "Questa casa non ha detto cosa c'è da aggiornare.",
+          );
+        const elenco = c.aggiornamenti.elenco || [];
+        const possibili = daFare(c);
+        const cartello = ilCartello(c);
+
+        if (!elenco.length)
+          return `
+            <section class="riquadro">
+              <div class="capoRiquadro"><h3>Gli aggiornamenti</h3></div>
+              ${cartello}
+              <p class="nota">Niente da fare: questa casa è aggiornata.</p>
+            </section>`;
+
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>Gli aggiornamenti</h3>
+              <span class="conta">${plurale(elenco.length, "in attesa", "in attesa")}</span>
+            </div>
+            ${cartello}
+            <ul class="versi">
+              ${elenco
+                .map(
+                  (uno) => `
+                <li>
+                  <span class="che">
+                    <b>${testo(uno.nome)}</b>
+                    <span class="salto">${testo(uno.da)} → ${testo(uno.a)}</span>
+                  </span>
+                  ${uno.stacca ? '<span class="pastiglia attenta">fa cadere il filo</span>' : ""}
+                  ${
+                    !uno.installabile
+                      ? '<span class="pastiglia">si porta col cacciavite</span>'
+                      : c.manutenzione
+                        ? '<button type="button" class="tasto">Installa</button>'
+                        : '<span class="pastiglia">manutenzione chiusa</span>'
+                  }
+                </li>`,
+                )
+                .join("")}
+            </ul>
+            ${
+              c.manutenzione
+                ? `<div class="azioni">
+                    <button type="button" class="tasto forte" ${possibili.length ? "" : "disabled"}>
+                      Installa ${possibili.length === elenco.length ? "tutti" : `i ${possibili.length} che si possono`}
+                    </button>
+                  </div>
+                  <p class="verdetto">
+                    Il backup si fa <b>prima, sempre</b>: è la condizione, non
+                    una casella da spuntare. E quelli che staccano il filo si
+                    installano uno per volta — due insieme su una casa sola
+                    vogliono dire non sapere quale dei due non è tornato.
+                  </p>`
+                : `<div class="limite" style="margin-top: 16px">
+                    <span class="gettone" aria-hidden="true">◴</span>
+                    <span>
+                      <b>Questa casa non ha aperto la manutenzione.</b> Si vede
+                      cosa c'è da fare e non si può farlo, ed è giusto così:
+                      guardare e toccare sono due permessi diversi.
+                      L'interruttore sta nella sua console, nella scheda «Il
+                      quadro», e lo tiene in mano chi ci abita.
+                    </span>
+                  </div>`
+            }
+          </section>`;
+      }
+
+      /* Il cartello del lavoro: cosa sta facendo questa casa adesso, o cosa ha
+       * appena finito. */
+      function ilCartello(c) {
+        const l = c.lavoro;
+        /* Non `=== null`: il ponte questa riga non la manda affatto, e
+         * `undefined` non e' `null`. E' il genere di differenza che si paga
+         * quando una bozza coi dati scritti a mano incontra dei dati veri. */
+        if (!l) return "";
+        if (l.stato === "fatto")
+          return `
+            <div class="cartello bene">
+              <span class="gettone" aria-hidden="true">✓</span>
+              <span><b>${testo(l.cosa)}</b> installato ${testo(l.quando)}, dal quadro.</span>
+            </div>`;
+        if (l.stato === "fallito")
+          return `
+            <div class="cartello male">
+              <span class="gettone" aria-hidden="true">✕</span>
+              <span
+                ><b>${testo(l.cosa)}</b> non è andato ${testo(l.quando)}:
+                ${testo(l.perché || "Home Assistant ha detto di no")}.</span
+              >
+            </div>`;
+        const fermi = Math.round((ADESSO() - new Date(c.quando).getTime()) / 60000);
+        const tardi = l.stacca && fermi > 45;
+        return `
+          <div class="cartello ${tardi ? "male" : ""}">
+            <span class="gettone" aria-hidden="true">${tardi ? "!" : "◴"}</span>
+            <span>
+              <b>${testo(l.cosa)}</b> è partito ${testo(l.quando)}${
+                tardi
+                  ? ` e questa casa non è più tornata. Un aggiornamento che stacca il filo se lo riprende in pochi minuti: qui si va di persona.`
+                  : l.stacca
+                    ? `. Fa cadere il filo, quindi per qualche minuto questa casa non si fa sentire — è normale.`
+                    : `. Come è andata lo dirà la prossima rapporto.`
+              }
+            </span>
+          </div>`;
+      }
+
+      /* La rete: le schede che il Supervisor dichiara, più gli apparati di
+       * casa che la plancia già sorveglia.
+       *
+       * I due pezzi non sono la stessa cosa e non vanno confusi. Le schede
+       * sono quelle **della macchina** e le sa il Supervisor senza che
+       * nessuno configuri niente. Gli apparati — il router, i ripetitori —
+       * sono i `binary_sensor` con `device_class: connectivity` che la
+       * sezione «Macchine e rete» della plancia adotta per integrazione: ci
+       * sono se chi ci abita li ha spuntati, e dove non sono spuntati qui
+       * si dice zero invece di fingere. */
+      function laRete(c) {
+        const r = c.rete;
+        if (!r) return riquadroMuto("La rete", "Questa casa non ha detto niente della sua rete.");
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>La rete</h3>
+              <span class="pastiglia ${r.internet ? "bene" : "male"}">
+                ${r.internet ? "internet c&#39;è" : "senza internet"}
+              </span>
+            </div>
+            <ul class="schede">
+              ${r.schede
+                .map(
+                  (una) => `
+                <li class="${una.su ? "su" : "giu"}">
+                  <span class="lucina" aria-hidden="true"></span>
+                  <span class="come">${testo(una.nome)}</span>
+                  <span class="tipo pastiglia">${testo(una.tipo === "wifi" ? "Wi-Fi" : "cavo")}</span>
+                  ${una.principale ? '<span class="pastiglia bene">principale</span>' : ""}
+                  ${
+                    una.tipo === "wifi" && una.su && una.segnale !== null
+                      ? `<span class="pastiglia ${una.segnale < SEGNALE_DEBOLE ? "attenta" : ""}">segnale ${una.segnale}%</span>`
+                      : ""
+                  }
+                  <span class="dove">${una.su ? testo(una.ip) : "non attiva"}</span>
+                </li>`,
+                )
+                .join("")}
+            </ul>
+            <p class="verdetto">
+              ${
+                r.sorvegliate.quante === 0
+                  ? "Nessun apparato di rete sorvegliato in questa casa: nella plancia, sezione «Macchine e rete», si spunta l'integrazione del router e i suoi ripetitori compaiono da soli."
+                  : r.sorvegliate.giu === 0
+                    ? `${plurale(r.sorvegliate.quante, "apparato sorvegliato", "apparati sorvegliati")}, tutti su.`
+                    : `${r.sorvegliate.giu} ${r.sorvegliate.giu === 1 ? "apparato" : "apparati"} su ${r.sorvegliate.quante} non rispondono.`
+              }
+            </p>
+          </section>`;
+      }
+
+      /* Gli add-on, e la sola domanda che conta: ce n'è qualcuno che dovrebbe
+       * girare e non gira? */
+      function gliAddon(c) {
+        const a = c.addon;
+        if (!a) return riquadroMuto("Gli add-on", "Questa casa non ha detto quali add-on ha.");
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>Gli add-on</h3>
+              <span class="conta">${a.accesi}/${a.quanti} accesi</span>
+            </div>
+            <div class="addon">
+              ${a.elenco
+                .map((uno) => {
+                  const come = uno.su ? "" : uno.allAvvio ? "fermo" : "apposta";
+                  return `<span class="uno ${come}"
+                    ><span class="puntino" aria-hidden="true"></span>${testo(uno.nome)}${
+                      uno.su ? "" : uno.allAvvio ? " — fermo" : " — spento a mano"
+                    }</span>`;
+                })
+                .join("")}
+            </div>
+            <p class="verdetto">
+              ${
+                a.spentiCheDovrebbero === 0
+                  ? "Nessun add-on con l'avvio automatico è fermo. Quelli spenti a mano restano spenti, ed è giusto: li ha spenti qualcuno."
+                  : `${plurale(a.spentiCheDovrebbero, "add-on parte", "add-on partono")} all'avvio e in questo momento ${a.spentiCheDovrebbero === 1 ? "è fermo" : "sono fermi"}. Nessuno spegne un add-on lasciandogli l'avvio automatico: questo si è fermato da solo.`
+              }
+            </p>
+          </section>`;
+      }
+
+      /* ─── Schermata: gli aggiornamenti di tutta la flotta ─────────────
+       *
+       * Con quaranta impianti la domanda cambia. Casa per casa è «a questa
+       * cosa manca?», e quella risposta sta nella scheda della casa. Da qui
+       * invece è **«quali sono indietro su Home Assistant Core?»**, che è una
+       * domanda sola con dentro quaranta case, e si sbriga in un gesto invece
+       * che in quaranta.
+       *
+       * Si raggruppa per quello che c'è da installare, non per casa: le voci
+       * uguali stanno insieme, e sotto ognuna ci sono le case che ce l'hanno
+       * indietro, ciascuna con la versione che ha adesso.
+       * ─────────────────────────────────────────────────────────────────── */
+      function laFlotta() {
+        /* Un mucchio per voce da installare. La chiave è il nome più la
+         * versione a cui si va: «Home Assistant Core → 2026.9.1» è un
+         * mucchio, «→ 2026.8.4» ne sarebbe un altro, e mescolarli vorrebbe
+         * dire un tasto che installa due cose diverse. */
+        const mucchi = new Map();
+        for (const casa of CASE) {
+          for (const uno of casa.carta.aggiornamenti.elenco) {
+            const chiave = `${uno.nome} → ${uno.a}`;
+            if (!mucchi.has(chiave))
+              mucchi.set(chiave, { nome: uno.nome, a: uno.a, nostra: uno.nostra, case: [] });
+            mucchi.get(chiave).case.push({ casa, voce: uno });
+          }
+        }
+
+        const ordinati = [...mucchi.values()].sort((una, altra) => {
+          if (una.nostra !== altra.nostra) return una.nostra ? -1 : 1;
+          if (una.case.length !== altra.case.length) return altra.case.length - una.case.length;
+          return una.nome.localeCompare(altra.nome);
+        });
+
+        const voci = ordinati.reduce((somma, uno) => somma + uno.case.length, 0);
+        const dietro = CASE.filter((una) => (una.carta?.aggiornamenti?.elenco || []).length).length;
+
+        if (!ordinati.length)
+          return `
+            <h1 class="titolone">Gli aggiornamenti</h1>
+            <p class="sottotitolo">Tutte le case sono aggiornate. Non capita spesso.</p>`;
+
+        return `
+          <h1 class="titolone">Gli aggiornamenti</h1>
+          <p class="sottotitolo">
+            ${plurale(voci, "cosa da installare", "cose da installare")} su
+            ${plurale(dietro, "casa", "case")}, raggruppate per quello che sono e
+            non per dove stanno: con quaranta impianti la domanda non è «cosa
+            manca a questa casa», è «quali sono indietro su Home Assistant
+            Core».
+          </p>
+
+          ${ordinati
+            .map((uno) => {
+              const giaInBallo = ({ casa }) =>
+                staLavorando(casa.carta) && casa.carta.lavoro.cosa.startsWith(uno.nome);
+              const possibili = uno.case.filter(
+                (riga) =>
+                  riga.voce.installabile && riga.casa.carta.manutenzione && !giaInBallo(riga),
+              );
+              const inBallo = uno.case.filter(giaInBallo).length;
+              const chiuse = uno.case.filter(
+                ({ casa, voce }) => voce.installabile && !casa.carta.manutenzione,
+              ).length;
+              const cacciavite = uno.case.filter(({ voce }) => !voce.installabile).length;
+
+              return `
+              <section class="riquadro mucchio">
+                <div class="capoRiquadro">
+                  <h3>${testo(uno.nome)}</h3>
+                  <span class="conta">→ ${testo(uno.a)} · ${plurale(uno.case.length, "casa", "case")}</span>
+                </div>
+                <div class="indietro-chi">
+                  ${uno.case
+                    .map(({ casa, voce }) => {
+                      const sta =
+                        staLavorando(casa.carta) && casa.carta.lavoro.cosa.startsWith(uno.nome);
+                      return `<span class="pastiglia ${sta ? "lavoro" : voce.installabile && casa.carta.manutenzione ? "" : "attenta"}"
+                        >${testo(casa.nome)} · ${testo(voce.da)}${sta ? " · in corso" : ""}</span
+                      >`;
+                    })
+                    .join("")}
+                </div>
+                ${
+                  possibili.length
+                    ? `<div class="azioni">
+                        <button type="button" class="tasto forte">
+                          Installa su ${plurale(possibili.length, "casa", "case")}
+                        </button>
+                      </div>`
+                    : ""
+                }
+                ${
+                  chiuse || cacciavite || inBallo
+                    ? `<p class="verdetto">
+                        ${inBallo ? `${plurale(inBallo, "casa lo sta", "case lo stanno")} già installando. ` : ""}${
+                          chiuse
+                            ? `${plurale(chiuse, "casa non ha", "case non hanno")} aperto la manutenzione al quadro. `
+                            : ""
+                        }${
+                          cacciavite
+                            ? `${plurale(cacciavite, "si porta", "si portano")} col cacciavite: da qui non ${cacciavite === 1 ? "si installa" : "si installano"}.`
+                            : ""
+                        }
+                      </p>`
+                    : ""
+                }
+              </section>`;
+            })
+            .join("")}
+
+          <section class="riquadro" style="margin-top: 14px">
+            <div class="capoRiquadro"><h3>Prima di premere</h3></div>
+            <ul class="spunte">
+              <li class="fatta">
+                <span class="bollino" aria-hidden="true">✓</span>
+                <span class="cosa">
+                  <b>Il backup viene prima, sempre.</b> Non è una casella da
+                  spuntare: è la condizione perché il tasto esista. Un
+                  aggiornamento che va storto senza backup dietro è una casa da
+                  rifare.
+                </span>
+              </li>
+              <li class="fatta">
+                <span class="bollino" aria-hidden="true">✓</span>
+                <span class="cosa">
+                  <b>Quelli che staccano il filo, uno per volta.</b> gdahome e
+                  Home Assistant si riavviano installandosi: due insieme sulla
+                  stessa casa vogliono dire non sapere quale dei due non è
+                  tornato.
+                </span>
+              </li>
+              <li class="fatta">
+                <span class="bollino" aria-hidden="true">✓</span>
+                <span class="cosa">
+                  <b>Quaranta case insieme sono quaranta rischi insieme.</b> Il
+                  tasto qui sopra fa una cosa sola su più case, e va usato
+                  sapendolo: se quella cosa va male, va male dappertutto. Una
+                  casa per prova, e le altre il giorno dopo, è una noia che si
+                  paga una volta sola.
+                </span>
+              </li>
+            </ul>
+          </section>
+        `;
+      }
+
+      /* ─── Schermata: l'abbinamento ───────────────────────────────────
+       *
+       * Come una casa entra in questo quadro. È l'altra metà del lavoro, e
+       * ricalca quello che gdahome fa già per abbinare un telefono: un codice
+       * che vive pochi minuti, si usa una volta sola, e lascia dietro di sé una
+       * chiave che vale per quella casa e per nessun'altra.
+       *
+       * Il verso è quello che è per un motivo. Non è il quadro che va a cercare
+       * le case: è la casa che si presenta. Un quadro che andasse a bussare
+       * dovrebbe sapere dove sono, e le case di gdahome un indirizzo pubblico
+       * non ce l'hanno — è tutto il punto del ponte.
+       * ─────────────────────────────────────────────────────────────────── */
+      function lAbbinamento() {
+        const primo = INVITI[0] || null;
+
+        return `
+          <h1 class="titolone">Abbina un impianto</h1>
+          <p class="sottotitolo">
+            Un codice che vale <b>quindici minuti</b> e <b>una casa sola</b>. Si
+            fa qui, si incolla nell'add-on in casa del cliente, e da quel momento
+            quella casa manda al quadro il suo rapporto — e nient'altro.
+          </p>
+
+          <div class="abbina">
+            <div class="colonna">
+              <section class="riquadro tinto">
+                <div class="capoRiquadro"><h3>Il codice di adesso</h3></div>
+                ${
+                  primo
+                    ? `<div class="codice">
+                        <span class="cifre">${testo(laRiga(primo.codice))}</span>
+                        <button type="button" class="tasto copia" data-copia="${testo(laRiga(primo.codice))}">Copia</button>
+                      </div>
+                      <div class="scadenza">
+                        <span class="battito" aria-hidden="true"></span>
+                        Scade fra <b data-orologio="${primo.scadeFra}">—</b> · fatto ${testo(daQuanto(primo.fattoIl))}
+                      </div>`
+                    : `<p class="nota" style="margin: 16px 0 12px">
+                        Non c'è nessun codice aperto. Fanne uno quando sei davanti
+                        alla casa da abbinare: vale un quarto d'ora, e farlo prima
+                        di salire in macchina vuol dire trovarlo scaduto.
+                      </p>`
+                }
+
+                <ol class="passi" style="margin-top: 20px">
+                  <li>
+                    <span>
+                      In casa del cliente, apri Home Assistant e vai in
+                      <span class="strada">Impostazioni → Add-on → gdahome → Configurazione</span>.
+                    </span>
+                  </li>
+                  <li>
+                    <span>
+                      Incolla il codice nella casella <b>quadro</b> e premi
+                      <b>Salva</b>. L'add-on si riavvia da solo.
+                    </span>
+                  </li>
+                  <li>
+                    <span>
+                      Entro un minuto la casa compare qui sotto, in
+                      <b>appena arrivate</b>. Le dai un nome e hai finito.
+                    </span>
+                  </li>
+                </ol>
+
+                ${
+                  quanteRestano() === 0
+                    ? `<p class="minuta" style="margin-top: 16px">
+                         <b>Sei arrivato al tuo limite di ${IO.soglia} impianti.</b> Per aggiungerne
+                         serve alzarlo: scrivi a chi tiene il quadro. I codici già fatti restano
+                         buoni, e gli impianti che segui continuano a funzionare.
+                       </p>`
+                    : quanteRestano() !== null && quanteRestano() <= 3
+                      ? `<p class="minuta" style="margin-top: 16px">
+                           Ne restano <b>${quanteRestano()}</b> prima del tuo limite di
+                           ${IO.soglia}. Gli inviti aperti contano.
+                         </p>`
+                      : ""
+                }
+
+                <div class="azioni">
+                  <input
+                    type="text"
+                    id="per-chi"
+                    maxlength="60"
+                    placeholder="Per chi è, se ti serve ricordartelo"
+                    aria-label="Per chi è questo codice"
+                  />
+                  <button
+                    type="button"
+                    class="tasto forte grande"
+                    data-fai
+                    ${quanteRestano() === 0 ? "disabled" : ""}
+                  >
+                    ${primo ? "Fai un altro codice" : "Fai un codice"}
+                  </button>
+                </div>
+              </section>
+
+              <section class="riquadro">
+                <div class="capoRiquadro">
+                  <h3>Appena arrivate</h3>
+                  <span class="conta">${appenaArrivate().length}</span>
+                </div>
+                ${
+                  appenaArrivate().length
+                    ? `<ul class="righe">
+                        ${appenaArrivate()
+                          .map(
+                            (una) => `
+                          <li>
+                            <span class="che">
+                              <b class="mono">${testo(una.casa.slice(0, 22))}…</b>
+                              <span
+                                >arrivata ${testo(daQuanto(una.da))}${una.carta?.ha ? ` · Home Assistant ${testo(una.carta.ha)}` : ""}</span
+                              >
+                            </span>
+                            <input
+                              type="text"
+                              id="nome-${testo(una.casa.slice(5, 13))}"
+                              data-nome="${testo(una.casa)}"
+                              placeholder="Come la chiami?"
+                              aria-label="Il nome di questa casa"
+                            />
+                            <button type="button" class="tasto forte" data-tieni="${testo(una.casa)}">
+                              Tienila
+                            </button>
+                          </li>`,
+                          )
+                          .join("")}
+                      </ul>
+                      <p class="nota" style="margin-top: 14px">
+                        Il nome lo scrivi tu e resta qui: la casa non lo manda e
+                        non lo saprà mai. È l'unica cosa in questo quadro che
+                        parla di una persona, e sta sulla tua macchina perché con
+                        quella persona il contratto ce l'hai tu.
+                      </p>`
+                    : `<div class="vuoto">
+                        <span class="battito" aria-hidden="true"></span>
+                        Nessuna casa in arrivo. Quando una userà il codice, la
+                        vedi comparire qui.
+                      </div>`
+                }
+              </section>
+            </div>
+
+            <div class="colonna">
+              <section class="riquadro">
+                <div class="capoRiquadro">
+                  <h3>Codici in attesa</h3>
+                  <span class="conta">${INVITI.length}</span>
+                </div>
+                <ul class="righe">
+                  ${INVITI.map(
+                    (uno) => `
+                    <li>
+                      <span class="che">
+                        <b class="mono">${testo(laRiga(uno.codice))}</b>
+                        <span>${uno.per ? `${testo(uno.per)} · ` : ""}fatto ${testo(daQuanto(uno.fattoIl))}</span>
+                      </span>
+                      <span class="pastiglia attenta">
+                        scade fra <b data-orologio="${uno.scadeFra}">—</b>
+                      </span>
+                      <button type="button" class="tasto male" data-annulla="${testo(uno.codice)}">
+                        Annulla
+                      </button>
+                    </li>`,
+                  ).join("")}
+                </ul>
+                <div class="avvertenza">
+                  <span class="gettone" aria-hidden="true">!</span>
+                  <span>
+                    Un codice che scade non fa danni: semplicemente non apre più
+                    niente. Se ne fai uno e poi cambi idea, annullalo — finché è
+                    vivo, chiunque ce l'abbia può far entrare <em>una</em> casa
+                    in questo quadro.
+                  </span>
+                </div>
+              </section>
+
+              <section class="riquadro">
+                <div class="capoRiquadro"><h3>Quando una casa tace</h3></div>
+                <p class="minuta">
+                  Il quadro ti scrive quando un impianto smette di parlare da più
+                  di due ore, e di nuovo quando riprende. Mette un
+                  <span class="mono">POST</span> a un indirizzo tuo: va bene un
+                  bot di Telegram, Slack, ntfy, o quello che usi già.
+                </p>
+                <div class="azioni">
+                  <input
+                    type="url"
+                    id="dove-avvisi"
+                    maxlength="300"
+                    placeholder="https://…"
+                    aria-label="Dove mandare gli avvisi"
+                    value="${testo(IO.avvisi || "")}"
+                  />
+                  <button type="button" class="tasto forte" data-avvisi>Salva</button>
+                  ${IO.avvisi ? `<button type="button" class="tasto" data-prova-avvisi>Mandane uno di prova</button>` : ""}
+                </div>
+                <p class="minuta" id="esito-avvisi" hidden></p>
+                <div class="avvertenza">
+                  <span class="gettone" aria-hidden="true">!</span>
+                  <span>
+                    Nell'avviso c'è il nome che hai dato tu alla casa, che è
+                    l'unica cosa in tutto questo quadro che nomini una persona:
+                    per questo l'indirizzo dev'essere <b>https</b>, e per questo
+                    va in un posto che leggi solo tu. Lascialo vuoto e non parte
+                    niente.
+                  </span>
+                </div>
+              </section>
+
+              <section class="riquadro">
+                <div class="capoRiquadro"><h3>Come funziona, in breve</h3></div>
+                <ul class="spunte">
+                  <li class="fatta">
+                    <span class="bollino" aria-hidden="true">✓</span>
+                    <span class="cosa">
+                      <b>Il codice si brucia.</b> Appena una casa lo usa, non vale
+                      più per nessun'altra: quella casa riceve una chiave sua, e
+                      da lì in poi è con quella che si presenta.
+                    </span>
+                  </li>
+                  <li class="fatta">
+                    <span class="bollino" aria-hidden="true">✓</span>
+                    <span class="cosa">
+                      <b>Si stacca da due parti.</b> Tu con «non seguirla più», e
+                      chi ci abita dalla console dell'add-on, dove legge in chiaro
+                      l'ultimo rapporto spedito e ha lì il tasto per smettere.
+                    </span>
+                  </li>
+                  <li class="fatta">
+                    <span class="bollino" aria-hidden="true">✓</span>
+                    <span class="cosa">
+                      <b>Il quadro non guarda dentro.</b> Non apre la plancia e
+                      non vede entità, stanze né persone: riceve un rapporto
+                      di numeri. Per entrare in una casa serve un abbinamento, e
+                      quello lo dà chi ci abita, col suo segno, che toglie con un
+                      bottone quando vuole.
+                    </span>
+                  </li>
+                  <li class="fatta">
+                    <span class="bollino" aria-hidden="true">✓</span>
+                    <span class="cosa">
+                      <b>La manutenzione è un secondo interruttore.</b> Mandare
+                      il rapporto e lasciarsi aggiornare sono due permessi, e il
+                      secondo è spento di serie: chi lo accende lo accende
+                      apposta. Acceso, il quadro può installare un aggiornamento
+                      e riavviare un add-on fermo — due verbi, scritti nel
+                      programma, e nient'altro. Ogni cosa che fa resta scritta
+                      nella console dell'add-on, dove la legge chi ci abita.
+                    </span>
+                  </li>
+                  <li class="fatta">
+                    <span class="bollino" aria-hidden="true">✓</span>
+                    <span class="cosa">
+                      <b>Non passa dal centralino.</b> Il rapporto va dalla casa
+                      a questo quadro e basta: su
+                      <span class="strada">tramite.gdahome.org</span> — quello
+                      che fa entrare i telefoni da fuori casa — non ci finisce
+                      niente.
+                    </span>
+                  </li>
+                </ul>
+              </section>
+            </div>
+          </div>
+        `;
+      }
+
+      /* Gli orologi delle scadenze. Un codice che scade è la cosa che fa
+       * sbagliare una installazione — si fa il codice, si sale in macchina, si
+       * arriva e non vale più — quindi quanto gli resta si vede, e si muove. */
+      let ticchettio = null;
+
+      function avviaGliOrologi() {
+        if (ticchettio) clearInterval(ticchettio);
+        const quadranti = [...dove.querySelectorAll("[data-orologio]")];
+        if (!quadranti.length) return;
+        const partiti = quadranti.map((q) => ({
+          q,
+          fino: Date.now() + Number(q.dataset.orologio) * 1000,
+        }));
+        const gira = () => {
+          for (const { q, fino } of partiti) {
+            const restano = Math.max(0, Math.round((fino - Date.now()) / 1000));
+            const minuti = String(Math.floor(restano / 60)).padStart(2, "0");
+            const secondi = String(restano % 60).padStart(2, "0");
+            q.textContent = restano ? `${minuti}:${secondi}` : "scaduto";
+          }
+        };
+        gira();
+        ticchettio = setInterval(gira, 1000);
+      }
+
+      /* La chiave: si chiede una volta e resta nel browser. Chi guarda questo
+       * quadro lo apre tutti i giorni, e ribattere una chiave lunga tutti i
+       * giorni finisce con una chiave corta. */
+      function chiedimiLaChiave(perché = "") {
+        doveNav.innerHTML = "";
+        dove.innerHTML = `
+          <section class="riquadro tinto" style="max-width: 32rem; margin-inline: auto">
+            <div class="capoRiquadro"><h3>La chiave di questo quadro</h3></div>
+            <p class="nota" style="margin-bottom: 16px">
+              ${
+                perché
+                  ? testo(perché)
+                  : "È quella che sta sulla macchina come QUADRO_CHIAVE. Resta in questo browser, e non esce da qui."
+              }
+            </p>
+            <div class="azioni">
+              <input type="password" id="la-chiave" placeholder="la chiave" aria-label="La chiave" />
+              <button type="button" class="tasto forte" id="entra">Entra</button>
+            </div>
+          </section>`;
+        const casella = dove.querySelector("#la-chiave");
+        const entra = () => {
+          chiave = casella.value.trim();
+          try {
+            localStorage.setItem(DOVE_STA_LA_CHIAVE, chiave);
+          } catch (_niente) {
+            /* Vale per questa sessione e basta: meglio di non entrare. */
+          }
+          void apri();
+        };
+        dove.querySelector("#entra").onclick = entra;
+        casella.onkeydown = (evento) => {
+          if (evento.key === "Enter") entra();
+        };
+        casella.focus();
+      }
+
+      async function apri() {
+        if (!chiave) {
+          chiedimiLaChiave();
+          return;
+        }
+        try {
+          await carica();
+        } catch (errore) {
+          chiedimiLaChiave(
+            errore instanceof ChiaveNoNo ? "La chiave non va bene." : errore.message,
+          );
+          return;
+        }
+        disegna();
+      }
+
+      void apri();
+
+      /* I rapporti arrivano ogni quindici minuti: si ricarica ogni minuto,
+       * che è già quindici volte più spesso di quanto cambi qualcosa. */
+      setInterval(() => {
+        if (!chiave) return;
+        carica()
+          .then(() => disegna())
+          .catch(() => {
+            /* Un giro andato male non deve far sparire quello che si sta
+             * guardando: si riprova al minuto dopo. */
+          });
+      }, 60 * 1000);
+    </script>
+  </body>
+</html>

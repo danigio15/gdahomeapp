@@ -132,10 +132,11 @@ dove_punta() {
   getent ahostsv4 "$1" 2>/dev/null | awk '{print $1; exit}'
 }
 
-# Come si chiama, nella tabella del DNS, la casella di questo nome. Su
-# Namecheap la colonna si chiama «Host», e il nome nudo — `gdahome.org` — non
-# si scrive: si scrive `@`. Detto sbagliato, il record finisce su
-# `gdahome.org.gdahome.org`, e nessuno capisce perche' non risponde.
+# Come si chiama, nella tabella del DNS, la casella di questo nome. La zona di
+# gdahome.org sta su Cloudflare, dove la colonna si chiama «Nome» e il nome
+# nudo — `gdahome.org` — si puo' scrivere `@`. Su altri pannelli la colonna si
+# chiama «Host» e il nome intero non si scrive: il record finirebbe su
+# `gdahome.org.gdahome.org`, e nessuno capirebbe perche' non risponde.
 la_casella() {
   local nome="$1"
   if [[ "$(printf '%s' "$nome" | tr -cd . | wc -c)" -le 1 ]]; then
@@ -541,6 +542,8 @@ bene "il tramite ascolta sulla $PORTA, e ripartira' da solo a ogni riavvio"
 
 passo "Metto Caddy davanti, e prendo i certificati"
 
+install -d -m 755 /etc/caddy/conf.d
+
 cat >/etc/caddy/Caddyfile <<FINE
 # Davanti al tramite.
 #
@@ -631,6 +634,18 @@ $NOME_DEL_SITO {
 www.$NOME_DEL_SITO {
 	redir https://$NOME_DEL_SITO{uri} permanent
 }
+
+# Gli altri pezzi di gdahome che stanno su questa macchina.
+#
+# Questo file si riscrive da capo a ogni giro di questo script, e finche' il
+# tramite era solo andava bene. Adesso di fianco puo' esserci il quadro
+# (\`quadro/accendi.sh\`), che scrive il suo pezzo in \`conf.d\`: senza questa
+# riga, il primo rilancio del tramite lo spegnerebbe — e nessuno se ne
+# accorgerebbe, perche' a smettere di funzionare sarebbe la cosa che nessuno
+# sta guardando.
+#
+# La cartella puo' anche essere vuota: \`import\` di zero file non e' un errore.
+import /etc/caddy/conf.d/*.caddy
 FINE
 
 caddy validate --config /etc/caddy/Caddyfile >/dev/null 2>&1 || male \

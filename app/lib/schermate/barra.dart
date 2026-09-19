@@ -802,12 +802,18 @@ class _NomeDellaVoce extends StatelessWidget {
 /// tutte le case — la vede solo chi risponde, cioe' la casa che nelle opzioni
 /// del ponte ha la chiave della console. In tutte le altre quella voce non c'e'
 /// proprio: una porta che non si apre e' peggio di una porta che non c'e'.
-List<Sezione> vociDellaBarra({bool conLaConsole = false}) => conLaConsole
-    ? Sezione.values
-    : [
-        for (final una in Sezione.values)
-          if (una != Sezione.console) una,
-      ];
+/// E lo stesso vale per **Il mio cruscotto**: gli impianti che ha montato chi
+/// installa. Compare solo dove le opzioni del ponte hanno acceso
+/// `installatore`, cioe' sul suo Home Assistant e non in casa di un cliente.
+List<Sezione> vociDellaBarra({
+  bool conLaConsole = false,
+  bool conIlCruscotto = false,
+}) => [
+  for (final una in Sezione.values)
+    if ((una != Sezione.console || conLaConsole) &&
+        (una != Sezione.cruscotto || conIlCruscotto))
+      una,
+];
 
 /// Come si chiama il tasto che apre la barra: il ☰ nella barra del titolo.
 /// Il lettore di schermo lo legge cosi', e le prove lo cercano con questo
