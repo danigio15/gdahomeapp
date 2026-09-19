@@ -54,6 +54,39 @@ const SCHERMI = {
   computer: { largo: 1440, alto: 900 },
 };
 
+/* Uno schermo qualunque, per guardare la plancia dove si e' rotta.
+ *
+ *     node strumenti/video/plancia-vera.mjs --schermo 834x1194 --tocco
+ *
+ * Le tre misure qui sopra sono quelle delle copertine, e non bastano quando
+ * qualcuno manda la fotografia di un guasto: «sull'iPad i nomi delle sezioni
+ * si accavallano» si guarda **a quella misura la'**, e col dito, perche' meta'
+ * del foglio di stile della barra si accende su «hover:none e pointer:coarse»
+ * e in un browser da tavolo quella meta' non esiste. Quello che ne esce
+ * finisce in `provini/`, che non sta nella repository.
+ *
+ * `--tocco` e' la differenza fra vedere il guasto e non vederlo: senza, si
+ * fotografa un tablet che il foglio di stile crede un computer. */
+const suSchermo = (nomi) => {
+  const detto = nomi.includes("--schermo") ? nomi[nomi.indexOf("--schermo") + 1] : null;
+  if (!detto) return null;
+  const misura = /^(\d{3,5})x(\d{3,5})$/.exec(detto.trim());
+  if (!misura) throw new Error(`«${detto}» non e' una misura: si scrive 834x1194`);
+  return { largo: Number(misura[1]), alto: Number(misura[2]) };
+};
+
+const SOLO_UNO = suSchermo(process.argv);
+const COL_DITO = process.argv.includes("--tocco");
+/* `--barra` tira fuori la barra delle sezioni prima di scattare.
+ *
+ * Su un telefono e su un tablet quella barra sta nascosta sotto il bordo, e
+ * si chiama premendo la maniglia: una fotografia presa cosi' com'e' non la
+ * contiene, e se il guasto e' **nella barra** quella fotografia non serve a
+ * niente. Si preme la maniglia vera, non si accende la classe a mano: la
+ * classe la mette il programma della plancia, ed e' quello che si vuole
+ * guardare. */
+const CON_LA_BARRA = process.argv.includes("--barra");
+
 /* In che lingua si fotografa, e come si chiama quello che ne esce. */
 const LINGUA = process.argv.includes("--lingua")
   ? process.argv[process.argv.indexOf("--lingua") + 1]
@@ -331,10 +364,16 @@ async function main() {
     args: ["--force-color-profile=srgb"],
   });
 
-  for (const [nome, misura] of Object.entries(SCHERMI)) {
+  const daFare = SOLO_UNO
+    ? [[`${SOLO_UNO.largo}x${SOLO_UNO.alto}${COL_DITO ? "-tocco" : ""}`, SOLO_UNO]]
+    : Object.entries(SCHERMI);
+  for (const [nome, misura] of daFare) {
     const pagina = await browser.newPage({
       viewport: { width: misura.largo, height: misura.alto },
       deviceScaleFactor: 2,
+      /* Col dito: e' quello che accende «hover:none e pointer:coarse», cioe'
+         meta' del foglio di stile della barra in fondo. */
+      ...(COL_DITO ? { hasTouch: true, isMobile: true } : {}),
     });
     /* Il nome in cima alla plancia.
      *
@@ -439,6 +478,26 @@ async function main() {
     await collegaIlMeteo(pagina);
     const pronta = await aspettaCheSiaPronta(pagina);
     await pagina.waitForTimeout(2500);
+    if (CON_LA_BARRA) {
+      /* Si preme dalla pagina e non da fuori: la maniglia e' una striscia alta
+         sei punti attaccata al bordo, e chi guida il browser da fuori si
+         rifiuta di premere una cosa che «non vede». Il gestore che risponde e'
+         lo stesso, ed e' quello che si vuole far girare. */
+      const uscita = await pagina.evaluate(() => {
+        const maniglia = document.querySelector(".bottom-nav-handle");
+        if (!maniglia) return "senza maniglia";
+        maniglia.click();
+        return "premuta";
+      });
+      /* Il tempo che ci mette a salire: la sua transizione dura quattro
+         decimi, e uno scatto preso prima la becca a mezza altezza. */
+      await pagina.waitForTimeout(1200);
+      const fuori = await pagina.evaluate(
+        () => !!document.querySelector("nav.tabs.bottom-nav-bar.visible"),
+      );
+      console.log(`   la barra: ${uscita}, ${fuori ? "e' uscita" : "NON e' uscita"}`);
+    }
+
     /* Prima di scattare si ferma quello che si muove.
      *
      * La plancia ha in cima una striscia che scorre da sola — «1 varco aperto
@@ -463,7 +522,11 @@ async function main() {
     });
     await pagina.waitForTimeout(600);
 
-    const dove = path.join(QUI, `${conLaLingua(`plancia-${nome}`)}.png`);
+    /* Le tre misure delle copertine si sovrascrivono; una misura chiesta a
+       mano e' un provino, e non deve poter sporcare una fotografia buona. */
+    const dove = SOLO_UNO
+      ? path.join(QUI, "provini", `plancia-${nome}.png`)
+      : path.join(QUI, `${conLaLingua(`plancia-${nome}`)}.png`);
     await pagina.screenshot({ path: dove });
     const chiesto = await pagina.evaluate(() => window.__CASA_FINTA_CHIESTO__ || []);
     if (process.env.SBIRCIA) {

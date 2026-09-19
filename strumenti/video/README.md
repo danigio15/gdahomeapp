@@ -84,6 +84,25 @@ una flotta inventata e lo fotografa:
 node strumenti/video/quadro-vero.mjs
 ```
 
+**Guardare la plancia dove si è rotta.** Le tre misure delle copertine non
+bastano quando arriva la fotografia di un guasto: `plancia-vera.mjs` apre la
+plancia vera a una misura qualunque, e quello che ne esce finisce in
+`provini/`.
+
+```
+node strumenti/video/plancia-vera.mjs --schermo 834x1194 --tocco --barra
+```
+
+Le due aggiunte contano più della misura. **`--tocco`** accende
+`hover:none`/`pointer:coarse`, che è metà del foglio di stile della barra in
+fondo: senza, si fotografa un tablet che il foglio crede un computer, e il
+guasto non c'è. **`--barra`** preme la maniglia e tira fuori la barra delle
+sezioni, che su un telefono e su un tablet sta nascosta sotto il bordo — e se
+il guasto è lì dentro, una fotografia senza barra non serve a niente.
+
+È così che si è visto il difetto dei nomi accavallati su iPad: 834×1194, col
+dito, con la barra fuori.
+
 Mezz'ora circa per tutti e otto i filmati — il film del quadro dura il doppio
 degli altri e si riprende quasi tutto fotogramma per fotogramma. Serve
 **Playwright** (`npm i -g playwright`,

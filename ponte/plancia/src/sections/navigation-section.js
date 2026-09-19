@@ -181,6 +181,28 @@ function installStyles() {
         nav.tabs.bottom-nav-bar .tab .icon{font-size:26px!important}
         nav.tabs.bottom-nav-bar .tab .text{font-size:12px!important;letter-spacing:.02em!important}
         nav.tabs.bottom-nav-bar .tab{padding:8px 12px!important;gap:5px!important}
+        /* E la pastiglia si allarga quanto serve al nome.
+         *
+         * Il blocco del tocco — quello di legacy/dashboard-runtime-it.css che
+         * comincia con «hover:none e pointer:coarse», e che su un tablet vale
+         * — tiene ogni pastiglia dentro settantadue punti. E' la misura giusta
+         * per un nome scritto in **sette** punti, che e' quello che quel
+         * blocco scrive. Qui sopra pero' il nome torna a dodici, e
+         * «ELETTRODOMESTICI» in dodici punti sono centotrenta: il nome usciva
+         * dalla sua pastiglia e finiva **sopra quella di fianco**. Su un iPad
+         * si leggevano due sezioni una dentro l'altra, e nessuna delle due si
+         * leggeva.
+         *
+         * Il tetto si toglie e basta: il resto c'e' gia'. Sul tocco la barra
+         * scorre da se' — overflow-x:auto — e parte da sinistra invece che dal
+         * centro, quindi le pastiglie larghe non si stringono e non si
+         * accavallano: si mettono in fila e si scorrono col dito, come sul
+         * computer si scorrono con le frecce.
+         *
+         * Il min-width invece resta: e' quanto deve essere grande una cosa da
+         * premere col dito, e non c'entra con quanto e' lungo il nome. */
+        nav.tabs.bottom-nav-bar .tab{max-width:none!important}
+        nav.tabs.bottom-nav-bar .tab .text{white-space:nowrap!important}
         /* E lo spazio in fondo alla pagina cresce di quanto e' cresciuta la
          * barra — sedici punti — se no la barra piu' alta si mangia proprio
          * la distanza che serviva a non coprire l'ultima tessera. Sono i tre
