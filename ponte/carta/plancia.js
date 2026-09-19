@@ -110,6 +110,30 @@ function doveSiamo(da, quanti = 60) {
  *
  * Passando da una all'altra Home Assistant rifa' le tessere: questa si stacca e
  * si riattacca, e la domanda si rifa' da se' senza stare a guardare niente. */
+/* Il foglio che toglie la barra, messo dove va.
+ *
+ * Sta fuori da tutt'e due le tessere che la usano — la plancia e il riquadro —
+ * perche' copiarla sarebbe due posti dove vive la stessa regola, e il giorno
+ * che Home Assistant cambia il nome di `hui-root` uno dei due resterebbe
+ * indietro senza che nessuno se ne accorga.
+ *
+ * Torna due cose e non una: `messa` dice se la barra adesso non c'e' — vero
+ * anche quando il foglio ce l'aveva gia' messo qualcun altro — e `foglio` solo
+ * quello che abbiamo appeso **noi**. E' la distinzione che conta quando si
+ * riattacca: si toglie il proprio, non quello di un altro, se no due tessere
+ * nella stessa pagina si spengono la barra a vicenda. */
+function senzaLaBarra(da, config = {}) {
+  if (config?.barra === true) return { messa: false, foglio: null };
+  const { tetto, pannello } = doveSiamo(da);
+  if (!tetto?.shadowRoot || !pannello || inModifica(tetto)) return { messa: false, foglio: null };
+  if (tetto.shadowRoot.getElementById?.(FOGLIO)) return { messa: true, foglio: null };
+  const foglio = document.createElement("style");
+  foglio.id = FOGLIO;
+  foglio.textContent = SENZA_BARRA;
+  tetto.shadowRoot.appendChild(foglio);
+  return { messa: true, foglio };
+}
+
 function inModifica(tetto) {
   return tetto?.lovelace?.editMode === true;
 }
@@ -175,16 +199,9 @@ class PlanciaDiGdahome extends HTMLElement {
    * chi apre gdahome — la sua plancia la vista se la fabbrica gdahome — e' per
    * chi si mette la tessera in una dashboard sua e quella barra la vuole. */
   _togliLaBarra() {
-    if (this._config.barra === true) return false;
-    const { tetto, pannello } = doveSiamo(this);
-    if (!tetto?.shadowRoot || !pannello || inModifica(tetto)) return false;
-    if (tetto.shadowRoot.getElementById?.(FOGLIO)) return true;
-    const foglio = document.createElement("style");
-    foglio.id = FOGLIO;
-    foglio.textContent = SENZA_BARRA;
-    tetto.shadowRoot.appendChild(foglio);
-    this._barra = foglio;
-    return true;
+    const { messa, foglio } = senzaLaBarra(this, this._config);
+    if (foglio) this._barra = foglio;
+    return messa;
   }
 
   /* E rimessa, appena la plancia se ne va.
@@ -422,6 +439,86 @@ class PlanciaDiGdahome extends HTMLElement {
 }
 
 if (!customElements.get(NOME)) customElements.define(NOME, PlanciaDiGdahome);
+
+/* ─── Il riquadro: una pagina del quadro, dentro Home Assistant ────────────
+ *
+ * Il Cruscotto e la Gestione sono due pagine servite dal quadro, e nella barra
+ * laterale ci arrivano dentro una vista a pannello — come la plancia. La prima
+ * stesura ci metteva la tessera `iframe` di Home Assistant, e funzionava:
+ * l'indirizzo si apriva. Sopra pero' restava la barra della dashboard, col
+ * titolo, la lente e la matita, che sopra una pagina a tutto schermo non ci va
+ * — ed e' esattamente il difetto che la plancia aveva risolto.
+ *
+ * La tessera `iframe` di Home Assistant quella barra non la puo' togliere: e'
+ * roba sua, e la pagina dentro e' di un altro dominio. Toglierla vuol dire
+ * essere una tessera **nostra**, che gira dentro la pagina di Home Assistant e
+ * risale le ombre fino a `hui-root`. Cioe' fare quello che fa la plancia.
+ *
+ * Quindi sta qui e non in un file suo: questo modulo Lovelace ce l'ha gia'
+ * dichiarato, e un secondo file vorrebbe dire una seconda risorsa da
+ * dichiarare, da versionare e da tenere allineata — per una tessera che e'
+ * venti righe.
+ */
+const RIQUADRO = "gdahome-riquadro";
+
+class RiquadroDiGdahome extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this._config = {};
+    this._barra = null;
+    this._disegnata = "";
+  }
+
+  /* `dove` e basta, e deve essere `https:`.
+   *
+   * Il controllo e' qui e non al disegno perche' l'editor di Lovelace chiama
+   * `setConfig` mentre si scrive: chi sbaglia l'indirizzo lo sa subito, invece
+   * di trovarsi un riquadro bianco e nessuna spiegazione. */
+  setConfig(config) {
+    const dove = String(config?.dove || "");
+    if (!/^https:\/\//.test(dove)) {
+      throw new Error("«dove» vuole l'indirizzo della pagina, e deve essere https");
+    }
+    this._config = { ...config, dove };
+    if (this._disegnata && this._disegnata !== dove) this._disegna();
+  }
+
+  /* Una pagina intera, come la plancia: una tessera alta trecento punti non
+   * servirebbe a niente. */
+  getCardSize() {
+    return 12;
+  }
+
+  connectedCallback() {
+    const { foglio } = senzaLaBarra(this, this._config);
+    if (foglio) this._barra = foglio;
+    this._disegna();
+  }
+
+  disconnectedCallback() {
+    this._barra?.remove?.();
+    this._barra = null;
+  }
+
+  _disegna() {
+    const dove = this._config.dove || "";
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: block; height: 100%; }
+        .tutto { position: relative; width: 100%; height: 100%; min-height: 60vh; }
+        iframe { border: 0; width: 100%; height: 100%; display: block; }
+      </style>
+      <div class="tutto"><iframe title="gdahome" allow="fullscreen"></iframe></div>`;
+    /* L'indirizzo si mette dopo, come attributo: dentro il testo del modello
+       finirebbe in mezzo all'HTML, e un indirizzo in mezzo all'HTML e' un
+       indirizzo che prima o poi porta dentro qualcos'altro. */
+    this.shadowRoot.querySelector("iframe").src = dove;
+    this._disegnata = dove;
+  }
+}
+
+if (!customElements.get(RIQUADRO)) customElements.define(RIQUADRO, RiquadroDiGdahome);
 
 /* Una riga nell'elenco delle tessere, cosi' chi apre l'editor la trova invece
  * di doverla scrivere a mano. */

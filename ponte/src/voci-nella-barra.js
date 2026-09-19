@@ -61,6 +61,14 @@
  * e la stessa cura, delle Plance in `plance-in-casa.js`.
  */
 
+/* La tessera che disegna la pagina dentro la voce.
+ *
+ * Il nome deve essere lo stesso che `ponte/carta/plancia.js` registra con
+ * `customElements.define`: sono due file e un nome, e se si scollano Home
+ * Assistant disegna «Custom element doesn't exist» dentro un riquadro che
+ * nessuno sa piu' da dove viene. Una prova li tiene insieme. */
+export const RIQUADRO = "gdahome-riquadro";
+
 /* Le due voci. `dove` e' l'indirizzo dentro Home Assistant — vuole un trattino
  * dentro — e `pagina` quella del quadro che ci si apre. */
 export const IL_CRUSCOTTO = Object.freeze({
@@ -133,6 +141,18 @@ export class VoceNellaBarra {
    *
    * `panel: true` e non una griglia: il cruscotto e' una pagina, e dentro una
    * colonna larga quattrocento punti sarebbe illeggibile.
+   *
+   * E la tessera e' la **nostra**, non l'`iframe` di Home Assistant. Le due
+   * aprono lo stesso indirizzo, ma sopra quella di Home Assistant resta la
+   * barra della dashboard — titolo, lente, matita — che sopra una pagina a
+   * tutto schermo non ci va. Toglierla vuol dire girare dentro la pagina di
+   * Home Assistant e risalire fino a `hui-root`, e questo lo puo' fare solo
+   * una tessera nostra: e' la stessa cosa che fa la plancia, e infatti sta
+   * nello stesso file (`ponte/carta/plancia.js`).
+   *
+   * Quel modulo e' gia' dichiarato a Lovelace da `plance-in-casa.js`, quindi
+   * qui non c'e' niente da dichiarare: se la plancia si apre, si apre anche
+   * questa.
    */
   vista() {
     return {
@@ -140,7 +160,7 @@ export class VoceNellaBarra {
         {
           title: this.quale.titolo,
           panel: true,
-          cards: [{ type: "iframe", url: this.dove, aspect_ratio: "100%" }],
+          cards: [{ type: `custom:${RIQUADRO}`, dove: this.dove }],
         },
       ],
     };
