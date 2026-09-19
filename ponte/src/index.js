@@ -23,7 +23,7 @@ import { BASE_DI_CASA, Foto } from "./foto.js";
 import { Plancia } from "./plancia.js";
 import { Plance } from "./plance.js";
 import { PlanceInCasa } from "./plance-in-casa.js";
-import { VoceDelCruscotto } from "./voce-del-cruscotto.js";
+import { IL_CRUSCOTTO, LA_GESTIONE, VoceNellaBarra } from "./voci-nella-barra.js";
 import { UtentiDiCasa } from "./utenti.js";
 import { Identita } from "./identita.js";
 import { Dispositivi } from "./dispositivi.js";
@@ -362,13 +362,14 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * aspetta, per lo stesso motivo delle Plance qui sopra — all'accensione
    * l'integrazione i suoi comandi non li ha ancora registrati, e una voce di
    * menu non vale il ritardo di tutto il resto. */
-  const voceDelCruscotto = new VoceDelCruscotto({
-    casa,
-    installatore: opzioni.installatore,
-    dove: `${QUADRO_DI_DIFETTO}/console/`,
-    registro,
-  });
-  void voceDelCruscotto.dilloConCalma();
+  const leVoci = [
+    { quale: IL_CRUSCOTTO, acceso: opzioni.installatore },
+    { quale: LA_GESTIONE, acceso: opzioni.gestore },
+  ].map(
+    ({ quale, acceso }) =>
+      new VoceNellaBarra({ casa, quale, acceso, quadro: QUADRO_DI_DIFETTO, registro }),
+  );
+  for (const una of leVoci) void una.dilloConCalma();
 
   const giro = setInterval(() => {
     const andati = dispositivi.potatura();
@@ -379,7 +380,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   const abbassa = async () => {
     registro.info("il ponte si abbassa");
     planceInCasa.smettiDiSorvegliare();
-    voceDelCruscotto.ferma();
+    for (const una of leVoci) una.ferma();
     clearInterval(giro);
     chiamata.spegni();
     postino.ferma();

@@ -1,7 +1,22 @@
-/* La voce «Cruscotto installatore» nella barra laterale di chi installa.
+/* Le voci di gdahome nella barra laterale di Home Assistant.
  *
- * Chi monta gdahome in quaranta case un Home Assistant ce l'ha **suo**, e da
- * li' vuole arrivare ai suoi impianti senza aprire un altro posto.
+ * Sono due, e vanno a due persone diverse:
+ *
+ *  - **Cruscotto installatore**, per chi gdahome lo monta in quaranta case: da
+ *    li' arriva ai suoi impianti senza aprire un altro posto;
+ *  - **Gestione installatori**, per chi il quadro lo tiene — una casa sola al
+ *    mondo: da li' aggiunge gli installatori e mette i limiti.
+ *
+ * Ognuna ha il suo interruttore nella scheda dell'add-on, e ognuna compare solo
+ * dove il suo e' acceso. Su un Home Assistant qualunque non c'e' nessuna delle
+ * due: una porta che non si apre e' peggio di una porta che non c'e'.
+ *
+ * ─── Le chiavi non passano di qui ─────────────────────────────────────────
+ *
+ * Ne' quella della flotta ne' quella di gestione stanno nelle opzioni
+ * dell'add-on: le chiede la pagina, e restano nel browser di chi le digita.
+ * L'interruttore dice soltanto **se la voce c'e'**, e chi l'accendesse senza
+ * avere la chiave si troverebbe una pagina che gliela chiede e basta.
  *
  * ─── Perche' la fa il ponte, e non l'integrazione ─────────────────────────
  *
@@ -35,12 +50,21 @@
  * e la stessa cura, delle Plance in `plance-in-casa.js`.
  */
 
-/** Dove sta, nella barra laterale. Home Assistant vuole un trattino dentro. */
-export const DOVE = "gdahome-cruscotto";
+/* Le due voci. `dove` e' l'indirizzo dentro Home Assistant — vuole un trattino
+ * dentro — e `pagina` quella del quadro che ci si apre. */
+export const IL_CRUSCOTTO = Object.freeze({
+  dove: "gdahome-cruscotto",
+  titolo: "Cruscotto installatore",
+  segno: "mdi:gauge",
+  pagina: "console",
+});
 
-/** Come si chiama, e con che segno. */
-export const TITOLO = "Cruscotto installatore";
-export const SEGNO = "mdi:gauge";
+export const LA_GESTIONE = Object.freeze({
+  dove: "gdahome-gestione",
+  titolo: "Gestione installatori",
+  segno: "mdi:account-key",
+  pagina: "gestore",
+});
 
 /** Quanto si aspetta fra un tentativo e l'altro, in millisecondi. */
 export const ATTESE = [20_000, 60_000, 300_000];
@@ -57,14 +81,25 @@ const ASPETTA = (quanto) =>
     giro.unref?.();
   });
 
-export class VoceDelCruscotto {
-  constructor({ casa, installatore = false, dove = "", registro, aspetta = ASPETTA } = {}) {
+export class VoceNellaBarra {
+  /**
+   * @param quale una delle due qui sopra: `IL_CRUSCOTTO` o `LA_GESTIONE`.
+   * @param acceso se l'interruttore della scheda e' acceso.
+   * @param quadro l'indirizzo del quadro, senza niente in fondo.
+   */
+  constructor({ casa, quale, acceso = false, quadro = "", registro, aspetta = ASPETTA } = {}) {
     this.casa = casa;
-    this.installatore = Boolean(installatore);
-    this.dove = String(dove || "");
+    this.quale = quale;
+    this.acceso = Boolean(acceso);
+    this.quadro = String(quadro || "").replace(/\/+$/, "");
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.aspetta = aspetta;
     this._fermo = false;
+  }
+
+  /** L'indirizzo intero della pagina che questa voce apre. */
+  get dove() {
+    return this.quadro ? `${this.quadro}/${this.quale.pagina}/` : "";
   }
 
   /**
@@ -77,7 +112,7 @@ export class VoceDelCruscotto {
     return {
       views: [
         {
-          title: TITOLO,
+          title: this.quale.titolo,
           panel: true,
           cards: [{ type: "iframe", url: this.dove, aspect_ratio: "100%" }],
         },
@@ -89,7 +124,7 @@ export class VoceDelCruscotto {
   async quellaCheCE() {
     const dentro = await this.casa.chiedi({ type: "lovelace/dashboards/list" });
     const elenco = Array.isArray(dentro) ? dentro : [];
-    return elenco.find((una) => String(una?.url_path) === DOVE) ?? null;
+    return elenco.find((una) => String(una?.url_path) === this.quale.dove) ?? null;
   }
 
   /**
@@ -102,7 +137,7 @@ export class VoceDelCruscotto {
     if (!this.casa?.chiedi) return { fatto: false, perche: "non c'e' nessuno a cui dirlo" };
     try {
       const sua = await this.quellaCheCE();
-      if (!this.installatore) {
+      if (!this.acceso) {
         if (sua)
           await this.casa.chiedi({ type: "lovelace/dashboards/delete", dashboard_id: sua.id });
         return { fatto: true, perche: "" };
@@ -113,20 +148,20 @@ export class VoceDelCruscotto {
       if (!sua) {
         await this.casa.chiedi({
           type: "lovelace/dashboards/create",
-          url_path: DOVE,
-          title: TITOLO,
-          icon: SEGNO,
+          url_path: this.quale.dove,
+          title: this.quale.titolo,
+          icon: this.quale.segno,
           show_in_sidebar: true,
           /* Solo chi amministra: questa voce porta agli impianti dei clienti
            * di qualcuno, e Home Assistant in casa lo aprono anche i
            * familiari. */
           require_admin: true,
         });
-      } else if (String(sua.title || "") !== TITOLO || !sua.require_admin) {
+      } else if (String(sua.title || "") !== this.quale.titolo || !sua.require_admin) {
         await this.casa.chiedi({
           type: "lovelace/dashboards/update",
           dashboard_id: sua.id,
-          title: TITOLO,
+          title: this.quale.titolo,
           require_admin: true,
         });
       }
@@ -150,14 +185,14 @@ export class VoceDelCruscotto {
     const voluta = this.vista();
     let dentro = null;
     try {
-      dentro = await this.casa.chiedi({ type: "lovelace/config", url_path: DOVE });
+      dentro = await this.casa.chiedi({ type: "lovelace/config", url_path: this.quale.dove });
     } catch (_errore) {
       dentro = null;
     }
     if (dentro && JSON.stringify(dentro) === JSON.stringify(voluta)) return "c'era";
     await this.casa.chiedi({
       type: "lovelace/config/save",
-      url_path: DOVE,
+      url_path: this.quale.dove,
       config: voluta,
     });
     return dentro ? "riscritta" : "scritta";
@@ -173,9 +208,9 @@ export class VoceDelCruscotto {
     let esito = await this.dillo();
     if (esito.fatto) {
       this.registro.info(
-        this.installatore
-          ? `la voce «${TITOLO}» e' nella barra laterale di Home Assistant`
-          : `la voce «${TITOLO}» non c'e', come chiede la scheda`,
+        this.acceso
+          ? `la voce «${this.quale.titolo}» e' nella barra laterale di Home Assistant`
+          : `la voce «${this.quale.titolo}» non c'e', come chiede la scheda`,
       );
       return esito;
     }
@@ -185,12 +220,12 @@ export class VoceDelCruscotto {
       if (this._fermo) return esito;
       esito = await this.dillo();
       if (esito.fatto) {
-        this.registro.info(`la voce «${TITOLO}» c'e', al secondo tentativo`);
+        this.registro.info(`la voce «${this.quale.titolo}» c'e', al secondo tentativo`);
         return esito;
       }
     }
     this.registro.attenzione(
-      `non sono riuscito a mettere la voce «${TITOLO}» nella barra laterale: ${esito.perche}`,
+      `non sono riuscito a mettere la voce «${this.quale.titolo}» nella barra laterale: ${esito.perche}`,
     );
     return esito;
   }

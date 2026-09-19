@@ -63,6 +63,13 @@ configuration:
       nell'app compare la voce corrispondente. Accendilo sul tuo Home
       Assistant, non su quello di un cliente. La chiave della flotta non si
       scrive qui: la chiede la pagina e resta nel browser di chi la digita.
+  gestore:
+    name: Questo Home Assistant e' di chi tiene il quadro
+    description: >-
+      Lascialo spento. E' una casa sola al mondo: acceso, nella barra laterale
+      compare «Gestione installatori», da cui aggiungi gli installatori e metti
+      i limiti. La chiave di gestione non si scrive qui: la chiede la pagina e
+      resta nel browser.
   registro:
     name: Il registro
     description: Quanto scrive nel registro dell'add-on.
