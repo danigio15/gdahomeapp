@@ -111,6 +111,44 @@ const OGNI_AL_MASSIMO = 24 * 60;
 /** Quanto si aspetta il quadro prima di lasciar perdere. */
 const ATTESA = 10_000;
 
+/* Quanto si tiene aperto il filo verso il quadro prima di riaprirlo.
+ *
+ * Un po' piu' di quanto il quadro lo tiene (cinquanta secondi): a chiudere
+ * dev'essere lui, con una risposta. Se scadesse prima questa parte, ogni giro
+ * finirebbe con una richiesta annullata — che nel registro si legge come un
+ * errore, e non lo e'. */
+const IL_FILO_DURA = 70_000;
+
+/* Quanto si aspetta dopo un filo caduto, e fin dove si rallenta.
+ *
+ * Il filo e' un **di piu'**: se cade non si perde niente, perche' il rapporto
+ * al minuto porta il lavoro come ha sempre fatto. Quindi si riprova piano —
+ * un quadro spento non deve trovarsi una casa che bussa ogni secondo — e si
+ * riparte da capo appena una risposta torna. */
+const IL_FILO_RIPROVA = 5_000;
+const IL_FILO_RALLENTA_FINO_A = 12;
+
+/* Quanto passa **almeno** fra l'inizio di un giro di filo e l'inizio del
+ * successivo.
+ *
+ * E' un paracadute, e serve: a tenere aperta la richiesta e' il quadro, e
+ * questa casa non ha modo di sapere se davvero lo sta facendo. Un quadro che
+ * rispondesse nell'istante — uno vecchio, uno dietro un proxy che chiude le
+ * richieste ferme, uno che riconsegna sempre lo stesso lavoro — farebbe girare
+ * questa casa a vuoto quanto ne e' capace il processore.
+ *
+ * Sta **all'ingresso** del giro e non in uno dei rami di uscita, e la
+ * differenza non e' di stile: i modi di rientrare sono tre — a mani vuote, col
+ * rapporto che parte dopo un lavoro, e la riapertura dopo una caduta — e un
+ * pavimento messo su due di quei tre lascia aperta la strada che gira. C'era,
+ * e girava: con un quadro che riconsegnava lo stesso lavoro, lavoro → rapporto
+ * → filo → lavoro senza mai fermarsi un istante.
+ *
+ * Con un secondo, il caso peggiore e' una richiesta al secondo: si nota nel
+ * registro e non fa male a nessuno. Quando il quadro fa il suo mestiere questa
+ * riga non si accorge nemmeno di esistere. */
+const IL_FILO_ALMENO = 1_000;
+
 /* Quanto si tengono da parte i registri di Home Assistant.
  *
  * Servono a dare un nome ai dispositivi che non rispondono, e cambiano quando
@@ -624,6 +662,29 @@ export class Postino {
     /* Il nome dell'installatore, come lo dice il quadro rispondendo. In memoria e
      * basta: dopo un riavvio si riempie al primo rapporto. */
     this._chi = "";
+
+    /* ─── Il filo tenuto aperto ────────────────────────────────────────
+     *
+     * Dopo ogni rapporto questa casa lascia una richiesta al quadro che **non
+     * si chiude**: se qualcuno preme «Installa» lo sente nell'istante, invece
+     * di aspettare il rapporto del minuto dopo. Fra il tasto e
+     * l'installazione che parte passa un giro di rete.
+     *
+     * Non sostituisce niente: il rapporto al minuto continua, e porta il
+     * lavoro come ha sempre fatto. Se il filo non si puo' tenere — un proxy
+     * che taglia le richieste lunghe, il quadro spento — si perde la fretta e
+     * non si perde il comando.
+     *
+     * E resta una casa che **bussa**: qui non si apre nessuna porta, non c'e'
+     * niente in ascolto e niente da difendere. E' la stessa regola del
+     * rapporto, tenuta piu' a lungo. */
+    this._filo = null;
+    this._quanteVolteIlFiloCade = 0;
+    this._fermato = false;
+    /* Quando e' cominciato l'ultimo giro, e l'orologio che ne aspetta uno
+     * nuovo: insieme sono il pavimento di `IL_FILO_ALMENO`. */
+    this._filoDa = 0;
+    this._filoDopo = null;
   }
 
   /** Se questa casa manda qualcosa a qualcuno. */
@@ -646,6 +707,7 @@ export class Postino {
 
   parti() {
     if (!this.acceso || this._orologio) return;
+    this._fermato = false;
     this.registro.info(`il rapporto va a ${this.dove}, ogni ${this.ogni} minuti`);
     const giro = () => {
       void this.manda();
@@ -658,6 +720,20 @@ export class Postino {
   ferma() {
     if (this._orologio) clearTimeout(this._orologio);
     this._orologio = null;
+    this._fermato = true;
+    if (this._filoDopo) clearTimeout(this._filoDopo);
+    this._filoDopo = null;
+    /* Il filo si taglia da qui: una richiesta tenuta aperta non finisce da
+     * sola, e senza questo il ponte non si spegnerebbe piu'. */
+    if (this._filo) {
+      const quello = this._filo;
+      this._filo = null;
+      try {
+        quello.abort();
+      } catch (_errore) {
+        /* Gia' chiuso: e' quello che si voleva. */
+      }
+    }
   }
 
   _riarma() {
@@ -765,11 +841,97 @@ export class Postino {
           this.registro.attenzione(`il lavoro chiesto dal quadro non e' partito: ${errore}`);
         }
       }
+      /* E si torna in linea. Non si aspetta: il filo dura un minuto, e questa
+       * funzione deve tornare a chi l'ha chiamata. */
+      void this._restaInLinea();
       return true;
     } catch (errore) {
       this._perNiente(perchePreciso(errore));
       return false;
     }
+  }
+
+  /**
+   * Resta in linea col quadro, e riparti appena ti risponde.
+   *
+   * Una richiesta per volta: se ce n'e' gia' una aperta non se ne apre una
+   * seconda. Chi chiama non aspetta — questo giro vive per conto suo, accanto
+   * all'orologio del rapporto.
+   *
+   * Il giro e' sempre lo stesso: si chiede, si aspetta. Se torna un lavoro lo
+   * si fa e si manda **subito** un rapporto — se no chi ha premuto il tasto
+   * vedrebbe partire l'installazione e poi un minuto di niente — e quel
+   * rapporto riapre il filo da se'. Se torna a mani vuote si riapre e basta.
+   */
+  async _restaInLinea() {
+    if (!this.acceso || this._fermato || this._filo || this._filoDopo) return;
+    /* Il pavimento, all'ingresso: vedi `IL_FILO_ALMENO`. */
+    const passato = this.adesso() - this._filoDa;
+    if (passato < IL_FILO_ALMENO) {
+      this._filoDopo = setTimeout(() => {
+        this._filoDopo = null;
+        void this._restaInLinea();
+      }, IL_FILO_ALMENO - passato);
+      this._filoDopo.unref?.();
+      return;
+    }
+    this._filoDa = this.adesso();
+    const taglia = new AbortController();
+    this._filo = taglia;
+    /* Un orologio nostro, e non solo `AbortSignal.timeout`: serve poterlo
+     * fermare quando la risposta arriva prima, se no resterebbe acceso a
+     * tenere in piedi il processo. */
+    const orologio = setTimeout(() => taglia.abort(), IL_FILO_DURA);
+    orologio.unref?.();
+    let detto = null;
+    try {
+      const risposta = await this.prendi(`${this.dove}/attesa`, {
+        headers: {
+          authorization: `Bearer ${this.chiave}`,
+          "x-casa": this.casa,
+        },
+        signal: taglia.signal,
+      });
+      if (!risposta.ok) throw new Error(`il quadro ha risposto ${risposta.status}`);
+      detto = await risposta.json().catch(() => ({}));
+      this._quanteVolteIlFiloCade = 0;
+    } catch (errore) {
+      /* Il filo e' un di piu': se cade non si dice niente ad alta voce — il
+       * rapporto al minuto continua a funzionare — e si riprova piano. */
+      this.registro.debug(`il filo col quadro: ${errore?.message || errore}`);
+      clearTimeout(orologio);
+      this._filo = null;
+      this._riapriIlFilo();
+      return;
+    }
+    clearTimeout(orologio);
+    this._filo = null;
+    if (this._fermato) return;
+
+    if (this.fai && detto?.fai) {
+      try {
+        await this.fai(detto.fai);
+      } catch (errore) {
+        this.registro.attenzione(`il lavoro chiesto dal quadro non e' partito: ${errore}`);
+      }
+      /* Un rapporto adesso, che dice com'e' andata **e** riapre il filo. Senza,
+       * chi ha premuto il tasto resterebbe a guardare uno schermo fermo per un
+       * minuto buono, con l'installazione gia' partita. */
+      void this.manda();
+      return;
+    }
+    void this._restaInLinea();
+  }
+
+  _riapriIlFilo() {
+    if (!this.acceso || this._fermato) return;
+    this._quanteVolteIlFiloCade = Math.min(
+      IL_FILO_RALLENTA_FINO_A,
+      this._quanteVolteIlFiloCade + 1,
+    );
+    const quanto = IL_FILO_RIPROVA * 2 ** (this._quanteVolteIlFiloCade - 1);
+    const orologio = setTimeout(() => void this._restaInLinea(), quanto);
+    orologio.unref?.();
   }
 
   _perNiente(perche) {

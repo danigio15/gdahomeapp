@@ -77,6 +77,14 @@ export class CaseSeguite {
   constructor({ cartella = "./dati", adesso = () => Date.now() } = {}) {
     this.adesso = adesso;
     this.archivio = new Archivio(join(cartella, "case.json"), { case: [] });
+    /* Chi avvisare quando a una casa viene chiesto qualcosa.
+     *
+     * Serve al filo tenuto aperto: una casa sta ferma su `/attesa` e il server
+     * le risponde **nell'istante** in cui qualcuno preme «Installa», invece di
+     * far aspettare il rapporto del minuto dopo. Lo monta il server, che e'
+     * l'unico che sa chi sta aspettando; qui dentro non c'e' niente di
+     * asincrono e non ci deve essere. */
+    this.alLavoro = null;
   }
 
   get lista() {
@@ -270,6 +278,15 @@ export class CaseSeguite {
       mandato: null,
     };
     this.archivio.salva();
+    /* E se quella casa e' li' che aspetta, lo sa adesso. Dopo il salvataggio:
+     * chi si sveglia va a rileggere, e deve trovare quello che c'e' scritto. */
+    try {
+      this.alLavoro?.(casa);
+    } catch (_errore) {
+      /* Chi ascolta ha sbagliato: non e' un motivo per non aver chiesto il
+       * lavoro, che e' gia' scritto. Al rapporto dopo la casa lo trova
+       * lo stesso. */
+    }
     return { ...una.lavoro };
   }
 

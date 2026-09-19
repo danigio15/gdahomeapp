@@ -9,6 +9,7 @@
  *
  *   POST   /rapporto                     una casa deposita i suoi numeri, e si
  *                                        porta via quello che le e' stato chiesto
+ *   GET    /attesa                       la casa resta in linea, e sente subito
  *   GET    /marchio/<chi>                il logo di un installatore, senza chiave
  *
  *   GET    /console/                     la pagina dell'installatore
@@ -72,6 +73,20 @@ const RAPPORTO_MASSIMA = 64 * 1024;
  * del disegno: chi un domani mettesse su un quadro suo cambia una riga, e non
  * va a cercarla dentro un foglio di stile. */
 export const DOVE_SCRIVERE = "assistenza@gdahome.org";
+
+/* Quanto si tiene aperta una richiesta di `/attesa` prima di rispondere a mani
+ * vuote.
+ *
+ * Cinquanta secondi. Il numero non e' scelto per il tempo reale — quello lo da'
+ * gia' la prima risposta — ma **contro chi sta in mezzo**: proxy, bilanciatori
+ * e router tagliano le richieste ferme, e sessanta secondi e' la soglia che si
+ * incontra piu' spesso. Chiudendo prima noi, il filo si riapre in modo
+ * ordinato invece di cadere, e nel registro della casa non compare un errore
+ * al minuto.
+ *
+ * E' anche il tempo massimo in cui una casa spenta resta scritta qui dentro
+ * senza che nessuno se ne accorga. */
+const QUANTO_SI_ASPETTA = 50 * 1000;
 
 const PAGINA = new URL("../console/index.html", import.meta.url);
 const PAGINA_DEL_GESTORE = new URL("../gestore/index.html", import.meta.url);
@@ -142,12 +157,65 @@ export function costruisciIlServer({
    * perche' sta in cima a `marchi.js`. */
   const marchi = new Marchi({ cartella });
 
-  return createServer((richiesta, risposta) => {
+  /* ─── Il filo tenuto aperto ───────────────────────────────────────────
+   *
+   * Chi sta fermo su `/attesa`, casa per casa. Dopo aver depositato, una casa
+   * lascia li' una richiesta che non si chiude: quando qualcuno preme
+   * «Installa» le si risponde **nell'istante**, invece di farle aspettare il
+   * rapporto del minuto dopo.
+   *
+   * Perche' una richiesta tenuta aperta e non un WebSocket: da una casa al
+   * quadro c'e' di mezzo il router di casa, e qualche volta il proxy di
+   * un'azienda. Una GET che tarda e' la cosa che passa dappertutto, e qui non
+   * serve altro — il filo porta una frase sola, ogni tanto, in una direzione.
+   *
+   * Una per casa: se ne arriva una seconda, la prima si chiude subito a mani
+   * vuote. Una casa che si riavvia lascia indietro la sua, e due fili aperti
+   * per la stessa casa vorrebbero dire un comando consegnato a quello morto.
+   *
+   * La memoria e' del processo e va bene cosi': se il quadro si riavvia i fili
+   * cadono, le case se ne accorgono e li riaprono, e nel frattempo c'e' il
+   * rapporto al minuto che non ha mai smesso. */
+  const aspettano = new Map();
+
+  function sveglia(casa, cosa) {
+    const chi = aspettano.get(casa);
+    if (!chi) return false;
+    aspettano.delete(casa);
+    clearTimeout(chi.orologio);
+    try {
+      chi.rispondi(cosa);
+    } catch (_errore) {
+      /* Il filo se n'e' andato mentre gli si rispondeva: non e' un guaio di
+       * nessuno, e il lavoro resta in coda per il rapporto dopo. */
+    }
+    return true;
+  }
+
+  /* Quando un lavoro viene chiesto, chi e' in linea lo sente adesso. */
+  case_.alLavoro = (casa) => {
+    if (!aspettano.has(casa)) return;
+    const fai = case_.ilLavoroDa(casa);
+    if (fai) sveglia(casa, { fai });
+  };
+
+  const server = createServer((richiesta, risposta) => {
     servi(richiesta, risposta).catch((errore) => {
       registro.errore(`il quadro e' inciampato: ${errore?.message || errore}`);
       if (!risposta.headersSent) male(risposta, 500, "qualcosa e' andato storto");
     });
   });
+
+  /* Spegnendo, i fili aperti si chiudono a mani vuote.
+   *
+   * Senza questo `server.close()` resterebbe li' ad aspettare che finiscano
+   * cinquanta richieste che per definizione non finiscono, e il quadro non si
+   * spegnerebbe piu' — in produzione, e nelle prove. Le case se ne accorgono e
+   * riaprono al giro dopo. */
+  server.lasciaAndareIFili = () => {
+    for (const casa of [...aspettano.keys()]) sveglia(casa, {});
+  };
+  return server;
 
   async function servi(richiesta, risposta) {
     /* La barra finale **non** si toglie, e non e' una svista: la pagina chiede
@@ -193,6 +261,53 @@ export function costruisciIlServer({
     }
 
     /* ─── Il davanti: le case ──────────────────────────────────────────── */
+
+    /* La casa resta in linea, e sente subito.
+     *
+     * Dopo aver depositato il suo rapporto, una casa chiede qui e **non si
+     * chiude**: la richiesta resta aperta finche' non c'e' qualcosa da dirle o
+     * finche' non scade. Cosi' fra il tasto «Installa» e l'installazione che
+     * parte non passa piu' un minuto — passa il tempo di un giro di rete.
+     *
+     * Chi non puo' o non vuole tenerlo aperto — un ponte vecchio, un proxy che
+     * taglia le richieste lunghe — non perde niente: il rapporto al minuto
+     * porta il lavoro come ha sempre fatto. Questo e' in piu', non al posto. */
+    if (via === "/attesa" && metodo === "GET") {
+      const casa = String(richiesta.headers["x-casa"] || "");
+      if (!CASA_VALIDA.test(casa)) {
+        male(risposta, 400, "questa non e' una matricola");
+        return;
+      }
+      if (!chiavi.riconosci(casa, ilSegno(richiesta))) {
+        male(risposta, 403, "questa chiave non apre niente");
+        return;
+      }
+      /* Quello che c'e' gia' non fa aspettare nessuno. */
+      const subito = case_.ilLavoroDa(casa);
+      if (subito) {
+        json(risposta, { fai: subito });
+        return;
+      }
+      /* Una per casa: la precedente si chiude a mani vuote, e quella casa ne
+       * apre una sola perche' aspetta la risposta prima di rifarlo. */
+      sveglia(casa, {});
+      const rispondi = (cosa) => json(risposta, cosa);
+      const orologio = setTimeout(() => sveglia(casa, {}), QUANTO_SI_ASPETTA);
+      orologio.unref?.();
+      aspettano.set(casa, { rispondi, orologio });
+      /* E se il filo cade dall'altra parte — casa spenta, rete che se ne va —
+       * si toglie di mezzo: se no la prima cosa che arriva finirebbe scritta
+       * dentro un socket che non c'e' piu', e quel lavoro sarebbe perso invece
+       * che consegnato al rapporto dopo. */
+      richiesta.on("close", () => {
+        const chi = aspettano.get(casa);
+        if (chi && chi.rispondi === rispondi) {
+          aspettano.delete(casa);
+          clearTimeout(orologio);
+        }
+      });
+      return;
+    }
 
     if (via === "/rapporto" && metodo === "POST") {
       const casa = String(richiesta.headers["x-casa"] || "");

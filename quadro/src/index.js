@@ -106,6 +106,10 @@ export async function alzaIlQuadro({
       new Promise((ok) => {
         giro.ferma();
         clearInterval(potatura);
+        /* Prima i fili tenuti aperti, poi il server: `close` aspetta che le
+         * richieste in corso finiscano, e quelle per definizione non
+         * finiscono da sole. */
+        server.lasciaAndareIFili?.();
         server.close(ok);
       }),
   };
