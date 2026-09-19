@@ -32,7 +32,7 @@ test("una scheda vuota non accende niente di tutto questo", (t) => {
   const o = scheda(t, {});
   assert.equal(o.installatore, false);
   assert.equal(o.gestore, false);
-  assert.equal(o.chiaveDellaFlotta, "");
+  assert.equal(o.chiaveDelCruscotto, "");
   assert.equal(o.chiaveDellaGestione, "");
 });
 
@@ -48,15 +48,15 @@ test("l'interruttore dell'installatore, senza il codice, non apre niente", (t) =
 test("il codice dell'installatore, senza l'interruttore, nemmeno", (t) => {
   /* L'altra meta': chi incolla un codice e non accende non ha chiesto niente.
    * Servono tutt'e due, e in nessun ordine una sola basta. */
-  const o = scheda(t, { chiave_flotta: "K7M2-9XQF-3BHT-R4VN" });
+  const o = scheda(t, { chiave_cruscotto: "K7M2-9XQF-3BHT-R4VN" });
   assert.equal(o.installatore, false);
-  assert.equal(o.chiaveDellaFlotta, "K7M2-9XQF-3BHT-R4VN", "il codice si legge lo stesso");
+  assert.equal(o.chiaveDelCruscotto, "K7M2-9XQF-3BHT-R4VN", "il codice si legge lo stesso");
 });
 
 test("interruttore e codice insieme: adesso si', e il codice arriva a chi lo usa", (t) => {
-  const o = scheda(t, { installatore: true, chiave_flotta: "K7M2-9XQF-3BHT-R4VN" });
+  const o = scheda(t, { installatore: true, chiave_cruscotto: "K7M2-9XQF-3BHT-R4VN" });
   assert.equal(o.installatore, true);
-  assert.equal(o.chiaveDellaFlotta, "K7M2-9XQF-3BHT-R4VN");
+  assert.equal(o.chiaveDelCruscotto, "K7M2-9XQF-3BHT-R4VN");
 });
 
 test("la gestione non ha nessun interruttore: la chiave e' l'interruttore", (t) => {
@@ -74,17 +74,17 @@ test("uno spazio incollato per sbaglio non fa fallire una chiave", (t) => {
    * niente. Meglio toglierlo qui che spiegarlo al telefono. */
   const o = scheda(t, {
     installatore: true,
-    chiave_flotta: "  K7M2-9XQF-3BHT-R4VN\n",
+    chiave_cruscotto: "  K7M2-9XQF-3BHT-R4VN\n",
     chiave_gestione: " GG-1234-ABCD-5678 ",
   });
   assert.equal(o.installatore, true);
-  assert.equal(o.chiaveDellaFlotta, "K7M2-9XQF-3BHT-R4VN");
+  assert.equal(o.chiaveDelCruscotto, "K7M2-9XQF-3BHT-R4VN");
   assert.equal(o.chiaveDellaGestione, "GG-1234-ABCD-5678");
   assert.equal(o.gestore, true);
 });
 
 test("una chiave fatta di soli spazi e' una chiave vuota", (t) => {
-  const o = scheda(t, { installatore: true, chiave_flotta: "   ", chiave_gestione: "\t\n" });
+  const o = scheda(t, { installatore: true, chiave_cruscotto: "   ", chiave_gestione: "\t\n" });
   assert.equal(o.installatore, false);
   assert.equal(o.gestore, false);
 });

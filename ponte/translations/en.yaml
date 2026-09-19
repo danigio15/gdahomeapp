@@ -28,7 +28,7 @@ configuration:
       Leave it empty. It is only for whoever answers the support chats: in
       every other home it changes nothing.
   quadro:
-    name: The panel of whoever installed your home
+    name: The code of whoever installed your home
     description: >-
       Leave it empty. If an installer set your home up, they give you a code to
       paste here: from then on this home sends them a few lines of numbers
@@ -37,13 +37,12 @@ configuration:
       out something is wrong before you have to call them. None of it is yours:
       no entity names, no rooms, no people, no sensor states, not your Wi-Fi
       name and not your public address either. You can read what goes out, word
-      for word, in gdahome's «The panel» tab, where the button to stop it also
-      is.
+      for word, in the gdahome console, where the button to stop it also is.
   quadro_ogni:
     name: How often a status report goes out
     description: >-
-      Every how many minutes this home writes to the panel. It only counts if
-      the box above is filled in.
+      Every how many minutes this home sends a report to whoever installed it.
+      It only counts if the box above is filled in.
   installatore:
     name: This Home Assistant belongs to an installer
     description: >-
@@ -51,20 +50,21 @@ configuration:
       console gains one more section, your panel, where you watch the systems
       you installed, and the app gains the matching entry. On its own it turns
       nothing on. Turn it on in your own Home Assistant, not in a client's.
-  chiave_flotta:
-    name: Your fleet's code
+  chiave_cruscotto:
+    name: Your panel's code
     description: >-
-      Without this, the switch above does nothing: no section, no entry,
-      nowhere. Write it in your own Home Assistant and not in a client's: an
-      add-on's options sit on disk in the clear and end up in backups.
+      This is the code that opens the panel above: without it the switch does
+      nothing — no section, no entry, nowhere. Write it in your own Home
+      Assistant and not in a client's: an add-on's options sit on disk in the
+      clear and end up in backups.
   chiave_gestione:
-    name: The key of whoever keeps the panel
+    name: The key for managing installers
     description: >-
-      Leave it empty: there is one such home in the world, and it is not yours
-      unless you already know what this is about. Filled in, the sidebar gains
-      «Gestione installatori», where you add installers and set their limits.
-      Empty, that entry does not exist. There is no switch here: the key is the
-      switch.
+      Leave it empty: it serves one person in the world, the one who decides
+      who may install, and that is not you unless you already know what this is
+      about. Filled in, the sidebar gains «Gestione installatori», where you add
+      installers and set their limits. Empty, that entry does not exist. There
+      is no switch here: the key is the switch.
   registro:
     name: The log
     description: How much it writes in the add-on's log.

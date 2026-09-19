@@ -11,6 +11,38 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.4.1
+
+**Tre nomi per la stessa cosa, nella stessa schermata.**
+
+Nella scheda dell'add-on c'era scritto «il tuo **cruscotto**», e la casella
+sotto chiedeva il codice della «**flotta**». Poi ne compariva un terzo, il
+«**quadro**». Sono la stessa cosa guardata da tre punti diversi, ma chi apre
+quella scheda non ha modo di saperlo: «flotta» e «quadro» erano parole prese
+da dentro il codice, finite davanti a chi il codice non lo legge.
+
+Adesso ogni casella parla la lingua di chi la deve riempire:
+
+- chi abita la casa incolla **«Il codice di chi ti ha fatto l'impianto»**, e
+  non deve imparare nessun nome nuovo;
+- chi installa incolla **«Il codice del tuo cruscotto»**, che è la stessa
+  parola dell'interruttore sopra e della voce nella barra laterale;
+- chi gestisce gli installatori incolla **«La chiave per gestire gli
+  installatori»**, che è il nome della voce che fa comparire.
+
+**E tre commenti nel codice dicevano il falso.** Sostenevano che quelle chiavi
+«non finiscono sul disco di nessuna casa» — vero fino alla 1.5.3, non più
+dalla 1.5.4, che è la versione che ce le ha messe. Un commento che mente è
+peggio di nessun commento: chi lo legge smette di verificare.
+
+Quello che resta vero, e adesso è scritto per bene: dalla console il codice
+del cruscotto **non esce**. Sta nelle opzioni perché è lì che dice se la
+sezione esiste, ma servirlo a chi apre la pagina vorrebbe dire darlo a
+chiunque, in casa, apra quella pagina.
+
+*Nell'app non cambia niente: è una correzione dell'add-on, e il numero
+dell'app resta 1.5.4.*
+
 ## 1.5.4
 
 **Le voci nella barra laterale non comparivano, e la colpa era dell'add-on.**

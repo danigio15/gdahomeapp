@@ -16,7 +16,7 @@
  * deciso in `acceso`:
  *
  *  - il **Cruscotto** vuole l'interruttore `installatore` acceso **e** il
- *    codice della flotta scritto nella scheda. L'interruttore da solo non
+ *    codice del cruscotto scritto nella scheda. L'interruttore da solo non
  *    apre niente;
  *  - la **Gestione** non ha nessun interruttore: c'e' la sua chiave o non c'e'
  *    la voce.

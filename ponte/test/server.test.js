@@ -666,7 +666,7 @@ test("senza l'interruttore, la scheda del cruscotto non c'è e non dice dove", a
 });
 
 test("con l'interruttore, dice dove si apre — e nient'altro", async () => {
-  /* La riga che conta: da qui esce un sì e un indirizzo. La chiave della flotta
+  /* La riga che conta: da qui esce un sì e un indirizzo. Il codice del cruscotto
    * non passa da queste opzioni e non finisce sul disco di questa casa — la
    * chiede quella pagina, e resta nel browser di chi la digita. */
   const b = await banco({ installatore: true });

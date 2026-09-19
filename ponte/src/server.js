@@ -777,9 +777,11 @@ async function api({
    * che farla parlare. L'indirizzo si', che e' la risposta a «a chi?».
    */
   if (via === "/api/cruscotto" && metodo === "GET") {
-    /* Solo un si' o un no, piu' dove andare. La chiave della flotta qui non
-     * c'e' e non ci deve essere: la chiede quella pagina, e resta nel browser
-     * di chi la digita. */
+    /* Solo un si' o un no, piu' dove andare. Il codice del cruscotto qui non
+     * c'e' e non ci deve essere, anche adesso che sta nelle opzioni: da qui
+     * uscirebbe verso chiunque apra la console in casa, mentre digitato nella
+     * pagina resta nel browser di chi lo digita. Questa pagina deve sapere a
+     * chi la sua casa parla, non avere in mano di che farla parlare. */
     json(risposta, {
       installatore: Boolean(opzioni?.installatore),
       dove: opzioni?.installatore ? `${QUADRO_DI_DIFETTO}/console/` : "",

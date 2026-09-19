@@ -43,7 +43,7 @@ name: gdahome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.5.4"
+version: "1.5.4.1"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
@@ -210,8 +210,8 @@ options:
   #
   # **Da solo non accende niente**: serve anche il codice qui sotto.
   installatore: false
-  # Il codice della flotta, quello che ti sei fatto dare quando hai aperto il
-  # cruscotto.
+  # Il codice del tuo cruscotto, quello che ti sei fatto dare quando l'hai
+  # aperto.
   #
   # Senza questo, l'interruttore qui sopra non fa niente: nessuna sezione nella
   # console, nessuna voce nella barra laterale, nessuna voce nell'app. Non
@@ -224,7 +224,7 @@ options:
   # **Scrivilo sul TUO Home Assistant, non su quello di un cliente.** Le
   # opzioni di un add-on stanno su disco in chiaro e finiscono nei backup: e'
   # la tua chiave, e va tenuta dove tieni le tue cose.
-  chiave_flotta: ""
+  chiave_cruscotto: ""
   # La chiave di chi **tiene** il quadro.
   #
   # Lasciala vuota: e' una casa sola al mondo, e non e' la tua a meno che tu
@@ -265,6 +265,6 @@ schema:
   # sotto. Chi aggiorna da una versione che ce l'aveva se lo ritrova tolto
   # dalla scheda, e il valore che ci aveva messo non conta piu' niente — che e'
   # il punto: era un interruttore su case che non c'entravano.
-  chiave_flotta: password?
+  chiave_cruscotto: password?
   chiave_gestione: password?
   registro: list(debug|info|attenzione|errore)
