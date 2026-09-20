@@ -76,6 +76,11 @@ rapporto. La configurazione viaggia su una strada sua, non dentro il rapporto �
 ritirare quella scritta — e il rapporto porta solo un numero in più per
 plancia, la revisione, così il cruscotto sa se quello che tiene è ancora quello.
 
+**Il controllo delle batterie dice di cosa parla.** Nel cruscotto si chiama
+«Batterie dei dispositivi», e la tessera dello stato «Batteria più bassa dei
+dispositivi»: sono le pile dei sensori e dei telecomandi, non una batteria di
+casa. E le case, nell'elenco, sono card.
+
 **Le icone della barra non spariscono più su iPhone.** «Le icone in basso
 vanno e vengono»: il posto c'era, il nome sotto pure, e in mezzo niente, finché
 non tornavano tutte insieme. Nella 1.5.9.1 si era portata ogni sfumatura dentro
@@ -100,7 +105,7 @@ in un cerchio, colorato in proporzione a come stanno, con sotto le tre file —
 offline, da guardare, a posto — che si premono e filtrano. Poi **da guardare
 adesso**: una carta per ogni casa che chiede qualcosa, che scorre di lato; si
 apre e mostra **solo quello che non va**, e «Mostra tutto» apre il resto. In
-fondo **tutti gli impianti**, una mattonella per casa con la linea degli
+fondo **tutti gli impianti**, una card per casa con la linea degli
 ultimi quattordici giorni, che batte quando arriva un rapporto. Una casa si
 apre in un foglio che sale dal basso, con la stessa scheda di prima a
 capitoli; i metri della macchina sono diventati anellini. La barra delle

@@ -4201,7 +4201,7 @@
               ]
             : ["Entità", c.entita?.totali ?? "—", "rispondono tutte", ""],
           [
-            "Batteria più bassa",
+            "Batteria più bassa dei dispositivi",
             c.batterie?.piuBassa === null || c.batterie?.piuBassa === undefined
               ? "—"
               : `${c.batterie.piuBassa}%`,
@@ -4604,7 +4604,7 @@
         if ((c.batterie?.scariche ?? 0) > 0)
           anelli.push(
             unMetro({
-              che: "Batteria più bassa",
+              che: "Batteria più bassa dei dispositivi",
               valore: c.batterie.piuBassa,
               quanto: c.batterie.piuBassa,
               sotto: `${c.batterie.scariche} sotto il ${BATTERIA_SCARICA}%`,

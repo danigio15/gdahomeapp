@@ -46,7 +46,7 @@
  * Tre righe che si smentiscono da sole, sullo stesso schermo. E non era un
  * caso: **un controllo ha tre stati e un titolo solo**, quindi un titolo che
  * ne racconti uno e' sbagliato negli altri due. Adesso e' un nome e basta —
- * «I collegamenti», «Gli aggiornamenti», «Le batterie» — e si legge uguale
+ * «I collegamenti», «Gli aggiornamenti», «Batterie dei dispositivi» — e si legge uguale
  * in tutti e tre.
  */
 
@@ -249,7 +249,7 @@ export function iControlli(carta) {
       : NON_LO_DICE,
   );
   metti(
-    "Le batterie",
+    "Batterie dei dispositivi",
     c.batterie ? c.batterie.scariche === 0 : null,
     c.batterie
       ? c.batterie.scariche === 0

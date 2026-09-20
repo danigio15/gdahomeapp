@@ -366,7 +366,7 @@ Aprendo una casa:
 | | |
 |---|---|
 | **L'impianto** | matricola, installata il, ogni quanto manda, telefoni abbinati e quanti visti in 7 giorni |
-| **I controlli** | dieci, e ognuno è un nome e basta — «I collegamenti», non «Sono collegati tutti»: la plancia · i telefoni · da fuori casa · i collegamenti · gli aggiornamenti · gli add-on · la rete · la macchina · il backup · le batterie. Il nome dice di cosa si parla, il numero a destra come sta, il bollino se va bene: ✓ in ordine, ✗ anomalia, ◇ non rilevato — e nel dettaglio, quando manca il dato, «non comunicato» |
+| **I controlli** | dieci, e ognuno è un nome e basta — «I collegamenti», non «Sono collegati tutti»: la plancia · i telefoni · da fuori casa · i collegamenti · gli aggiornamenti · gli add-on · la rete · la macchina · il backup · batterie dei dispositivi. Il nome dice di cosa si parla, il numero a destra come sta, il bollino se va bene: ✓ in ordine, ✗ anomalia, ◇ non rilevato — e nel dettaglio, quando manca il dato, «non comunicato» |
 | **La macchina** | la scheda (ODROID-N2+, ODROID-M1, un NUC…), CPU, memoria, disco e quanto resta, temperatura **con la tacca a 75°**, **la vita già consumata del disco**, da quanti giorni è accesa |
 | **La rete** | internet sì o no, ogni scheda con su/giù, cavo o Wi-Fi, quale è la principale, il segnale, l'indirizzo sulla rete di casa — e gli apparati sorvegliati (il router, i ripetitori) con quanti non rispondono |
 | **Gli add-on** | tutti, uno per pastiglia: acceso, **fermo** (parte all'avvio e non gira) o spento a mano |
