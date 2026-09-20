@@ -12,6 +12,7 @@
  *   GET    /attesa                       la casa resta in linea, e sente subito
  *   GET    /segno/<segno>                l'icona di un aggiornamento, senza chiave
  *   GET    /marchio/<chi>                il logo di un installatore, senza chiave
+ *   GET    /carattere/<nome>.woff2       il carattere delle pagine, senza chiave
  *
  *   GET    /console/                     la pagina dell'installatore
  *   GET    /console/io                   chi sono, quanti ne ho, qual e' il limite
@@ -468,6 +469,39 @@ export function costruisciIlServer({
         "x-content-type-options": "nosniff",
       });
       risposta.end(suo.byte);
+      return;
+    }
+
+    /* Il carattere delle pagine, servito da qui e non da Google.
+     *
+     * Le due pagine sono scritte in Manrope. Prenderlo da Google Fonts vorrebbe
+     * dire che il browser di ogni installatore — e di chi apre il cruscotto
+     * dentro Home Assistant — va a farsi vedere da una macchina che non e' la
+     * nostra, a ogni pagina: e' la stessa regola delle icone e dei marchi, che
+     * il browser non va a prendere da fuori. I due file stanno in
+     * `quadro/carattere/` con la loro licenza (OFL), e si servono senza
+     * chiave: un carattere non e' un segreto, ed e' un file che la pagina
+     * chiede prima di avere la chiave in mano. Un anno di cache: il nome del
+     * file cambia se cambia il carattere. */
+    const ilCarattere = /^\/carattere\/(manrope-latin(?:-ext)?)\.woff2$/.exec(via);
+    if (ilCarattere && metodo === "GET") {
+      let byte = null;
+      try {
+        byte = readFileSync(new URL(`../carattere/${ilCarattere[1]}.woff2`, import.meta.url));
+      } catch (_nonCE) {
+        byte = null;
+      }
+      if (!byte) {
+        male(risposta, 404, "questo carattere non c'e'");
+        return;
+      }
+      risposta.writeHead(200, {
+        "content-type": "font/woff2",
+        "content-length": byte.length,
+        "cache-control": "public, max-age=31536000, immutable",
+        "x-content-type-options": "nosniff",
+      });
+      risposta.end(byte);
       return;
     }
 
