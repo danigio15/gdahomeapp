@@ -80,8 +80,8 @@ export const PARLATO = [
     dopo: 0.8,
     pezzi: [
       {
-        it: "Un installatore mette gdahome in quaranta case. Dopo la consegna, come fa a sapere come stanno?",
-        en: "An installer puts gdahome in forty homes. After handover — right now — how are they doing?",
+        it: "Un installatore mette gdahome in quaranta case. Dopo la consegna, come fa a sapere se ci sono problemi da gestire?",
+        en: "An installer puts gdahome in forty homes. After handover, how do they know whether there are problems to deal with?",
       },
       {
         it: "A questo serve il cruscotto installatore: è la console web di chi installa, ospitata da gdahome. Chi installa non deve mantenere nessun server.",
@@ -112,16 +112,16 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "Il cruscotto risponde a una domanda sola: quell'impianto, adesso, come sta?",
-        en: "The dashboard answers one question: that system, right now — how is it?",
+        it: "Il cruscotto risponde a una domanda sola: quell'impianto, adesso, ha problemi da gestire?",
+        en: "The dashboard answers one question: that system, right now: is there a problem to deal with?",
       },
       {
         it: "Gli stati sono tre, e ognuno ha una forma, una parola e un colore: in ordine, da verificare, offline.",
         en: "There are three states, each with a shape, a word and a colour: in order, to check, offline.",
       },
       {
-        it: "Lo stato offline viene prima di tutti: di un impianto che non comunica non sappiamo nulla, nemmeno che stia bene.",
-        en: "Offline comes before everything: of a system that isn't reporting we know nothing — not even that it's fine.",
+        it: "Lo stato offline viene prima di tutti: di un impianto che non comunica non sappiamo nulla, nemmeno se ha problemi.",
+        en: "Offline comes before everything: of a system that isn't reporting we know nothing, not even whether it has a problem.",
       },
     ],
   },
@@ -152,8 +152,8 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "Il cruscotto si apre sull'anello: tutti gli impianti in un cerchio, colorato in proporzione a come stanno, e sotto i tre numeri: offline, da verificare, in ordine.",
-        en: "The dashboard opens on the ring: every system in one circle, coloured in proportion to how they are, with the three counts below: offline, to check, in order.",
+        it: "Il cruscotto si apre sull'anello: tutti gli impianti in un cerchio, colorato in proporzione a quanti hanno problemi da gestire, e sotto i tre numeri: offline, da verificare, in ordine.",
+        en: "The dashboard opens on the ring: every system in one circle, coloured in proportion to how many have problems to deal with, with the three counts below: offline, to check, in order.",
       },
       {
         it: "Poi le case da verificare adesso, una carta per ciascuna, con scritto cosa non va.",
