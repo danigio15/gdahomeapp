@@ -130,17 +130,29 @@ function installStyles() {
        * qual e' quella aperta — ma abbastanza da riconoscerle; quella aperta
        * torna a colori pieni. */
       .bottom-nav-bar .tab .icon>.dm-oggetto{width:24px;height:24px;display:block;margin:0 auto}
-      /* Un velo solo, non due che si moltiplicano.
+      /* Nessun filtro sulle caselle della barra (#8).
        *
-       * Il simbolo stava gia' a .78 di opacita' per la regola qui sopra, e
-       * questa gliene metteva sopra un altro — .72 — su una figura portata a
-       * quasi monocroma: 0,56 di opacita' su un disegno senza colore, che e'
-       * il «troppo chiare» arrivato dal campo. Adesso il grigio e' un accenno
-       * e il colore si riconosce; a dire qual e' la voce aperta ci pensano il
+       * Il guscio spegne i simboli a riposo con «grayscale(1) opacity(0.5)»,
+       * e qui c'era un velo piu' leggero per i disegni di casa — un accenno
+       * di grigio, dopo che due veli sommati avevano dato il «troppo chiare».
+       * Su iPhone pero' le icone della barra restavano TRASPARENTI: il posto
+       * c'era, il nome sotto pure, e in mezzo niente; tornavano tutte insieme
+       * dopo qualche secondo, o scorrendo. Portare le sfumature dentro ogni
+       * disegno (#304) non e' bastato, e il video guardato fotogramma per
+       * fotogramma dice perche': mancavano anche le EMOJI, che sfumature non
+       * ne hanno. Quello che le caselle vuote avevano in comune, e i nomi
+       * sotto no, era il filtro: su WebKit un elemento con un filtro dentro
+       * una barra che scorre diventa un livello a se', e quel livello si
+       * ridipinge quando gli pare.
+       *
+       * Quindi niente filtro, in nessun tema e su nessuna casella — nemmeno
+       * quello del guscio, che questa regola batte per specificita' (la
+       * classe nominata due volte, come per le tavolozze qui sotto) e per
+       * ordine. Le voci a riposo restano appena spente per opacita', che
+       * non fa nascere livelli; a dire qual e' la voce aperta ci pensano il
        * fondo della pastiglia e il nome, che sono segnali piu' forti di uno
        * sbiadimento. */
-      nav.tabs.bottom-nav-bar .tab .icon:has(>.dm-oggetto){filter:grayscale(.28) saturate(1.06) contrast(1.04)!important}
-      nav.tabs.bottom-nav-bar .tab.active .icon:has(>.dm-oggetto){filter:none!important}
+      nav.tabs.bottom-nav-bar.bottom-nav-bar .tab .icon{filter:none!important}
       .bottom-nav-bar .tab.active{color:var(--text,#0f172a)!important}
       nav.tabs.bottom-nav-bar .tab.active .icon,nav.tabs.bottom-nav-bar .tab.active .text{opacity:1!important}
       html[data-theme="dark"] .bottom-nav-bar,html.dark .bottom-nav-bar,body[data-theme="dark"] .bottom-nav-bar,body.dark .bottom-nav-bar,.dark .bottom-nav-bar{background:rgba(19,28,48,.94)!important;border-color:#40506f!important;box-shadow:0 14px 38px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.07)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important}
