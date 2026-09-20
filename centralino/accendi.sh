@@ -277,6 +277,44 @@ else
   bene "la chiave della console e' quella che c'era: non la tocco"
 fi
 
+# La posta del modulo «Contatti» del sito. E' l'unica cosa del sito che non e'
+# un file: il messaggio arriva al tramite e parte come una mail, consegnata a
+# un server di posta che esiste gia' — quello della casella che risponde — con
+# utente e password, come farebbe un programma di posta qualunque. Non si
+# tiene in piedi nessun server di posta. Senza, il modulo non fa finta: dice a
+# chi scrive di scrivere direttamente all'indirizzo.
+#
+# La password si chiede a tastiera spenta e finisce solo in `ambiente`, chiuso
+# a 600: come gli altri segreti, mai in un argomento di riga di comando.
+POSTA_SERVER="${POSTA_SERVER:-$(gia_scritto "$CONFIGURAZIONE/ambiente" POSTA_SERVER)}"
+POSTA_PORTA="${POSTA_PORTA:-$(gia_scritto "$CONFIGURAZIONE/ambiente" POSTA_PORTA)}"
+POSTA_UTENTE="${POSTA_UTENTE:-$(gia_scritto "$CONFIGURAZIONE/ambiente" POSTA_UTENTE)}"
+POSTA_PASSWORD="${POSTA_PASSWORD:-$(gia_scritto "$CONFIGURAZIONE/ambiente" POSTA_PASSWORD)}"
+POSTA_DA="${POSTA_DA:-$(gia_scritto "$CONFIGURAZIONE/ambiente" POSTA_DA)}"
+POSTA_A="${POSTA_A:-$(gia_scritto "$CONFIGURAZIONE/ambiente" POSTA_A)}"
+if [[ -n "$POSTA_SERVER" ]]; then
+  bene "il modulo dei contatti spedisce da $POSTA_SERVER a ${POSTA_A:-?}"
+else
+  nota "Il server di posta con cui il modulo «Contatti» del sito spedisce (es. smtp.mail.me.com)."
+  nota "Se lo lasci vuoto il modulo dice di scrivere direttamente all'indirizzo: si accende dopo."
+  printf '  server di posta (invio per saltare): ' >&2
+  IFS= read -r POSTA_SERVER </dev/tty || true
+  if [[ -n "$POSTA_SERVER" ]]; then
+    printf '  porta [587]: ' >&2
+    IFS= read -r POSTA_PORTA </dev/tty || true
+    POSTA_PORTA="${POSTA_PORTA:-587}"
+    printf '  utente (la casella con cui si entra): ' >&2
+    IFS= read -r POSTA_UTENTE </dev/tty || true
+    chiedi_zitto "password della casella: " POSTA_PASSWORD
+    printf '  mittente [%s]: ' "$POSTA_UTENTE" >&2
+    IFS= read -r POSTA_DA </dev/tty || true
+    POSTA_DA="${POSTA_DA:-$POSTA_UTENTE}"
+    printf '  a chi arriva [assistenza@%s]: ' "$NOME_DEL_SITO" >&2
+    IFS= read -r POSTA_A </dev/tty || true
+    POSTA_A="${POSTA_A:-assistenza@$NOME_DEL_SITO}"
+  fi
+fi
+
 # ─── 3. Quello che serve sulla macchina ──────────────────────────────────────
 
 passo "Installo quello che serve"
@@ -478,6 +516,13 @@ passo "Accendo il servizio"
   # da qualche parte, e questa macchina da sola non sa come si chiama il sito.
   printf 'NOME_DEL_SITO=%s\n' "$NOME_DEL_SITO"
   printf 'NOME_DELL_APP=%s\n' "$NOME_DELL_APP"
+  # La posta del modulo dei contatti: vuote, il modulo e' spento e lo dice.
+  printf 'POSTA_SERVER=%s\n' "$POSTA_SERVER"
+  printf 'POSTA_PORTA=%s\n' "$POSTA_PORTA"
+  printf 'POSTA_UTENTE=%s\n' "$POSTA_UTENTE"
+  printf 'POSTA_PASSWORD=%s\n' "$POSTA_PASSWORD"
+  printf 'POSTA_DA=%s\n' "$POSTA_DA"
+  printf 'POSTA_A=%s\n' "$POSTA_A"
   printf 'NODE_OPTIONS=--disable-warning=ExperimentalWarning\n'
 } >"$CONFIGURAZIONE/ambiente"
 chmod 600 "$CONFIGURAZIONE/ambiente"
@@ -626,7 +671,16 @@ $NOME_DEL_SITO {
 	header X-Content-Type-Options nosniff
 	header Referrer-Policy strict-origin-when-cross-origin
 
-	file_server
+	# Il modulo «Contatti» della pagina e' l'unica cosa del sito che non e'
+	# un file: il messaggio va al tramite, sulla stessa macchina, che lo
+	# spedisce per posta. Qui non c'e' PHP e non c'e' niente da scrivere su
+	# disco. Tutto il resto resta com'era, servito cosi' com'e'.
+	handle /contatto {
+		reverse_proxy 127.0.0.1:$PORTA
+	}
+	handle {
+		file_server
+	}
 }
 
 # E \`www\` non e' un secondo sito: e' lo stesso, detto come lo dice chi ha

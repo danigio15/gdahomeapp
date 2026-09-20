@@ -82,6 +82,28 @@ quella della plancia: la seconda mostra una casa non ancora configurata, col
 riquadro «La dashboard è quasi pronta», che è la schermata giusta per il
 manuale e la peggiore possibile per una copertina.
 
+## Per chi installa, e dove scrivere
+
+Due cose che il sito non diceva. Il **cruscotto installatore** ha una sezione
+sua (`#installatori`), perché è l'unico pezzo di gdahome che si paga e l'unico
+che non è per chi abita la casa: la prima cosa scritta è cosa **non** vede, con
+le parole del quadro (`quadro/README.md`), e «Quanto costa» adesso dice che per
+casa tua è gratis e che il cruscotto è a parte.
+
+E c'è un posto dove **scrivere** (`#contatti`): un modulo con nome, email e
+messaggio, che arriva per posta a `assistenza@gdahome.org`. È l'unica cosa
+della pagina che non è un file. Manda un `POST /contatto`, che Caddy passa al
+tramite sulla stessa macchina, e il tramite lo consegna al server di posta
+della casella che risponde (`centralino/src/posta.js`, e il perché sta lì).
+Senza JavaScript funziona lo stesso: il modulo è un modulo, e il tramite
+risponde con una pagina nella lingua che si stava leggendo. Con JavaScript
+l'esito compare sotto il tasto, e la pagina resta dov'è.
+
+Se il tramite non ha un server di posta, il modulo non fa finta: dice che non è
+attivo e a chi scrivere. Le impostazioni le chiede `centralino/accendi.sh`
+(`POSTA_SERVER`, `POSTA_UTENTE`, …), e `/salute` del tramite porta
+`posta: true` quando è acceso.
+
 ## Come si guarda
 
 La plancia non sta nella repository due volte: `sito/dashboardmodern_static/`
@@ -99,12 +121,12 @@ carica i moduli della plancia.
 
 |                             |                                                                                                                    |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `index.html`                | la pagina: il colpo d'occhio, le schermate, come funziona, la plancia, cosa fa, dove sta                           |
+| `index.html`                | la pagina: il colpo d'occhio, le schermate, come funziona, la plancia, cosa fa, per chi installa, dove sta, quanto costa, contatti |
 | `privacy.html`              | l'informativa — la gemella di `docs/PRIVACY.md`, ed è l'indirizzo che il Play Store tiene da parte                 |
 | `stile.css`                 | i colori (quelli di `app/lib/vestito/tema.dart`), i caratteri, il fondo vivo coi due aloni, il telaio del riquadro |
 | `privacy.css`               | l'unica cosa che nell'informativa è diversa: una colonna stretta, da leggere                                       |
 | `casa-in-pagina.js`         | la Home Assistant finta che fa girare la plancia                                                                   |
-| `sito.js`                   | l'ombra sotto la barra, le schede che compaiono — lo caricano tutte e due le pagine                                |
+| `sito.js`                   | la lingua, l'ombra sotto la barra, le schede che compaiono, il modulo dei contatti — lo caricano tutte e due le pagine |
 | `statico/`                  | marchio, icone, caratteri, casa demo e **le schermate dell'app** — **non si tocca a mano**, è salvata nella repository |
 | `dashboardmodern_static/`   | la plancia vera — **non si tocca a mano**, ed è fuori da git                                                       |
 | `gdahome.png`               | il marchio dell'informativa                                                                                        |
@@ -155,14 +177,16 @@ dell'aggiornamento va avanti lo stesso, perché il tramite è un servizio e il
 sito è una pagina, e non si tiene fermo il primo per la seconda.
 
 Davanti c'è Caddy, che si prende il certificato da solo e serve la cartella
-così com'è. Nel suo blocco ci sono tre cose e basta:
+così com'è. Nel suo blocco ci sono quattro cose e basta:
 
 - **niente `try_files`** — una pagina che non esiste deve dire che non esiste,
   non far finta di essere l'indice;
 - **due velocità di cache** — la plancia e `statico/` un giorno, perché
   cambiano solo quando cambia la versione; le pagine no, perché un testo
   corretto che resta in cache è un testo corretto che nessuno legge;
-- **`www` è un redirect vero**, non un secondo sito.
+- **`www` è un redirect vero**, non un secondo sito;
+- **`/contatto` va al tramite** — l'unica via del sito che non è un file: il
+  modulo dei contatti, che il tramite spedisce per posta.
 
 ### E prima di spostare il segno
 

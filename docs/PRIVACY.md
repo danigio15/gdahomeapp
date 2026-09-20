@@ -1,6 +1,6 @@
 # Privacy di gdahome
 
-Ultimo aggiornamento: 13 settembre 2026.
+Ultimo aggiornamento: 20 settembre 2026.
 
 gdahome è l'app che apre la plancia di Home Assistant sul telefono. Questa
 pagina dice, in modo chiaro e senza giri di parole, **quali dati ci sono di
@@ -55,6 +55,15 @@ quando la scrivi:
 Vanno a chi mantiene gdahome, per rispondere. Non vanno a nessun altro, non
 vengono usate per profilare niente e non finiscono in nessuna pubblicità. Se
 non scrivi una segnalazione, non parte niente.
+
+## Il modulo dei contatti sul sito
+
+Su gdahome.org c'è un modulo per scrivere a chi mantiene gdahome. Quello che ci
+scrivi — il nome, l'indirizzo email e il messaggio — parte come una mail verso
+assistenza@gdahome.org, e serve a una cosa sola: risponderti. Sulla macchina
+che lo spedisce non resta niente del messaggio; resta, per un'ora e solo in
+memoria, il conto di quante volte un indirizzo di rete ha usato il modulo, che
+serve a non farlo usare a raffica. Se non scrivi, non parte niente.
 
 ## La fotocamera
 

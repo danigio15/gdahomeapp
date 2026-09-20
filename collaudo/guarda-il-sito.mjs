@@ -254,6 +254,34 @@ for (const misura of MISURE) {
   if (quanto.pagina > quanto.finestra + 1)
     lamenta(`[${misura.nome}] la pagina scorre di lato: ${quanto.pagina} su ${quanto.finestra}`);
 
+  /* Le sezioni si raggiungono dalla barra a tutte le larghezze. Sul computer
+   * le voci stanno in fila; sotto i 940 pixel stanno dietro un tasto, e il
+   * tasto deve esserci, aprirle, e non far scorrere la pagina di lato. Prima
+   * sul telefono sparivano e basta, e dal telefono si arrivava a una sezione
+   * solo scorrendo tutta la pagina. */
+  const tasto = pagina.locator(".menu > summary");
+  const primaVoce = pagina.locator('.navigazione a[href="#contatti"]');
+  if (misura.larghezza > 940) {
+    if (await tasto.isVisible()) lamenta(`[${misura.nome}] c'e' il tasto del menu del telefono`);
+    if (!(await primaVoce.isVisible()))
+      lamenta(`[${misura.nome}] le voci della barra non si vedono`);
+  } else {
+    if (!(await tasto.isVisible())) lamenta(`[${misura.nome}] manca il tasto del menu`);
+    if (await primaVoce.isVisible()) lamenta(`[${misura.nome}] le voci si vedono col menu chiuso`);
+    await tasto.click();
+    if (!(await primaVoce.isVisible())) lamenta(`[${misura.nome}] il menu non si apre`);
+    const aperto = await pagina.evaluate(() => ({
+      pagina: document.documentElement.scrollWidth,
+      finestra: window.innerWidth,
+    }));
+    if (aperto.pagina > aperto.finestra + 1)
+      lamenta(`[${misura.nome}] col menu aperto la pagina scorre di lato`);
+    await primaVoce.click();
+    if (await primaVoce.isVisible())
+      lamenta(`[${misura.nome}] il menu resta aperto dopo la scelta`);
+    await pagina.evaluate(() => window.scrollTo(0, 0));
+  }
+
   const riquadro = await laPlancia(pagina);
   const voci = await riquadro.locator("nav.tabs .tab").count();
   if (voci < 10) lamenta(`[${misura.nome}] la barra della plancia ha ${voci} voci`);
@@ -426,6 +454,37 @@ await prova("i link portano dove dicono", async () => {
     null,
     { timeout: 10000 },
   );
+});
+
+/* Il modulo dei contatti e' l'unica cosa della pagina che non e' un file: se
+ * il suo indirizzo cambiasse, o il tasto sparisse, la pagina si aprirebbe
+ * benissimo e nessuno potrebbe piu' scrivere. Qui si guarda che ci sia, che
+ * mandi al tramite, che i tre campi abbiano i nomi che il tramite legge, e che
+ * dal menu si arrivi a lui e alla sezione per chi installa. */
+await prova("il modulo dei contatti c'e', e manda al tramite", async () => {
+  const modulo = await pagina.evaluate(() => {
+    const forma = document.querySelector("#contatti form");
+    if (!forma) return null;
+    return {
+      via: forma.getAttribute("action"),
+      metodo: (forma.getAttribute("method") || "").toLowerCase(),
+      campi: [...forma.querySelectorAll("input, textarea")].map((uno) => uno.name),
+      tasto: Boolean(forma.querySelector('button[type="submit"]')),
+      dalMenu: Boolean(document.querySelector('.navigazione a[href="#contatti"]')),
+      installatori:
+        Boolean(document.querySelector('.navigazione a[href="#installatori"]')) &&
+        Boolean(document.getElementById("installatori")),
+    };
+  });
+  if (!modulo) throw new Error("nella sezione «contatti» non c'e' nessun modulo");
+  if (modulo.via !== "/contatto" || modulo.metodo !== "post")
+    throw new Error(`il modulo manda a ${modulo.metodo} ${modulo.via}`);
+  for (const campo of ["nome", "email", "messaggio"])
+    if (!modulo.campi.includes(campo)) throw new Error(`manca il campo «${campo}»`);
+  if (!modulo.tasto) throw new Error("non c'e' il tasto per mandare");
+  if (!modulo.dalMenu) throw new Error("dal menu non si arriva ai contatti");
+  if (!modulo.installatori)
+    throw new Error("la sezione per chi installa non c'e', o dal menu non ci si arriva");
 });
 
 /* Le schermate dell'app sono il pezzo che regge la copertina: senza di loro

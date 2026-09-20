@@ -47,6 +47,33 @@
           />
           <span>gdahome</span>
         </a>
+        <!-- Sul telefono le voci stanno dietro un tasto. E' un <details> e non
+             un tasto con JavaScript: si apre e si chiude da solo, anche senza
+             script. Sta PRIMA della barra delle voci perche' e' `.menu[open]
+             ~ .navigazione` a farle comparire: una lista sola, la stessa del
+             computer, e non una seconda copia da tenere allineata. -->
+        <details class="menu">
+          <summary aria-label="Le sezioni del sito" data-en-aria-label="The sections of this site">
+            <svg class="menu-chiuso" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path
+                d="M4 7h16M4 12h16M4 17h16"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                fill="none"
+              />
+            </svg>
+            <svg class="menu-aperto" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path
+                d="M6 6l12 12M18 6L6 18"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                fill="none"
+              />
+            </svg>
+          </summary>
+        </details>
         <nav
           class="navigazione"
           aria-label="Le sezioni del sito"
@@ -55,8 +82,10 @@
           <a href="#come" data-en="How it works">Come funziona</a>
           <a href="#plancia" data-en="The dashboard">La plancia</a>
           <a href="#funzioni" data-en="What it does">Cosa fa</a>
+          <a href="#installatori" data-en="Installers">Installatori</a>
           <a href="#scarica" data-en="Where it is">Dove sta</a>
           <a href="#sostieni" data-en="Support it">Sostienila</a>
+          <a href="#contatti" data-en="Contact">Contatti</a>
         </nav>
         <div class="attrezzi">
           <!-- La lingua, in cima e sempre a schermo.
@@ -818,6 +847,126 @@
         </div>
       </section>
 
+      <!-- ── Per chi installa ─────────────────────────────────────────── -->
+      <!-- Il cruscotto e' l'unico pezzo di gdahome che si paga, e l'unico che
+           non e' per chi abita la casa: sta in una sezione sua, e la prima
+           cosa scritta e' cosa NON vede. Le parole sono quelle del quadro
+           (`quadro/README.md`): qui non si promette niente che la' non ci sia. -->
+      <section id="installatori">
+        <div class="limite">
+          <p class="occhiello" data-en="For installers">Per chi installa</p>
+          <h2 data-en="Every system you look after, on one page.">
+            Tutti gli impianti che segui, in una pagina.
+          </h2>
+          <p
+            class="guida"
+            data-en="The installer panel is the part of gdahome for whoever puts systems together for other people: every home you look after sends a report once a minute, and one page tells you which ones need something. It is a separate, paid service. For the people who live in the home nothing changes, and nothing costs anything."
+          >
+            Il cruscotto installatore è la parte di gdahome per chi mette in piedi impianti per gli
+            altri: ogni casa che segui manda un rapporto al minuto, e una pagina sola ti dice quali
+            hanno bisogno di qualcosa. È un servizio a parte, a pagamento. Per chi abita la casa non
+            cambia niente, e non costa niente.
+          </p>
+
+          <div class="carte">
+            <article class="carta appare">
+              <h3 data-en="What you see">Cosa vedi</h3>
+              <ul class="elenco-segni">
+                <li
+                  data-en="Every system on one page, and first of all how many are asking for something right now"
+                >
+                  Tutti gli impianti in una pagina, e per primo quanti chiedono qualcosa adesso
+                </li>
+                <li
+                  data-en="Ten checks a day for each home: the dashboard, the phones, the connection from away, the links, the updates, the add-ons, the network, the machine, the backup, the batteries of the devices"
+                >
+                  Dieci controlli al giorno per ogni casa: la plancia, i telefoni, il collegamento
+                  da fuori, i collegamenti, gli aggiornamenti, gli add-on, la rete, la macchina, il
+                  backup, le batterie dei dispositivi
+                </li>
+                <li
+                  data-en="The machine: processor, memory, disk and how much of its life is already spent, temperature"
+                >
+                  La macchina: processore, memoria, disco e quanta vita ha già consumato,
+                  temperatura
+                </li>
+                <li data-en="A notice when a home stops talking, and one when it starts again">
+                  Un avviso quando una casa smette di parlare, e uno quando riprende
+                </li>
+              </ul>
+            </article>
+            <article class="carta appare">
+              <h3 data-en="What you can do">Cosa puoi fare</h3>
+              <ul class="elenco-segni">
+                <li data-en="&lt;b&gt;Install updates&lt;/b&gt; from afar, where there are any">
+                  <b>Installare gli aggiornamenti</b> da lontano, dove ci sono
+                </li>
+                <li data-en="&lt;b&gt;Restart&lt;/b&gt;, when it is needed">
+                  <b>Riavviare</b>, quando serve
+                </li>
+                <li
+                  data-en="&lt;b&gt;Configure the customer's dashboard&lt;/b&gt; from your panel: the sections, the rooms, the entities"
+                >
+                  <b>Configurare la plancia</b> del cliente dal tuo cruscotto: le sezioni, le
+                  stanze, le entità
+                </li>
+              </ul>
+              <p
+                data-en="Each one only where the customer has allowed it: three switches on the add-on's page, off by default, that the people who live in the home turn on and off."
+              >
+                Ognuna solo dove il cliente l'ha permessa: tre interruttori nella scheda
+                dell'add-on, spenti di serie, che chi abita la casa accende e spegne.
+              </p>
+            </article>
+            <article class="carta appare">
+              <h3 data-en="What you cannot see">Cosa non vedi</h3>
+              <ul class="elenco-segni contro">
+                <li
+                  data-en="You do not open the customer's dashboard: there is no command to get into a home"
+                >
+                  Non apri la plancia del cliente: non esiste un comando per entrare in una casa
+                </li>
+                <li data-en="You see no rooms, people or cameras: you get numbers, not names">
+                  Non vedi stanze, persone né telecamere: ricevi numeri, non nomi
+                </li>
+                <li
+                  data-en="The camera images never leave the home, not even while you configure the dashboard"
+                >
+                  Le immagini delle telecamere non escono mai di casa, nemmeno mentre configuri la
+                  plancia
+                </li>
+              </ul>
+              <p
+                data-en="An electrician replaces a switch without reading the post of the people who live there."
+              >
+                Un elettricista sostituisce un interruttore senza leggere la posta di chi ci abita.
+              </p>
+            </article>
+          </div>
+
+          <div class="bottoni bottoni-mezzo">
+            <a class="bottone bottone-pieno" href="#contatti" data-en="Ask for access"
+              >Chiedi un accesso</a
+            >
+            <a
+              class="bottone bottone-vuoto"
+              href="https://github.com/danigio15/gdahomeapp/blob/main/quadro/README.md"
+              rel="noopener"
+              data-en="How it is built →"
+              >Com'è fatto →</a
+            >
+          </div>
+          <p
+            class="sottobottoni sottobottoni-mezzo"
+            data-en="How a home comes in: from the panel you generate a code that lasts one day, the people who live there paste it into the add-on's page, and from then on that home appears on your page and on nobody else's."
+          >
+            Come entra una casa: dal cruscotto generi un codice che vale un giorno, chi abita la
+            casa lo incolla nella scheda dell'add-on, e da quel momento quella casa compare nella
+            tua pagina e in nessun'altra.
+          </p>
+        </div>
+      </section>
+
       <!-- ── Scarica ────────────────────────────────────────────────────── -->
       <section id="scarica">
         <div class="limite">
@@ -965,16 +1114,19 @@
       <section id="sostieni">
         <div class="limite">
           <p class="occhiello" data-en="What it costs">Quanto costa</p>
-          <h2 data-en="Nothing. And it is not a free trial.">
-            Niente. E non è una prova gratuita.
+          <h2 data-en="Nothing, for your home. And it is not a free trial.">
+            Niente, per casa tua. E non è una prova gratuita.
           </h2>
           <p
             class="guida"
-            data-en="gdahome is free, and it stays free: there is no paid version, nothing locked behind a subscription, no adverts, and nothing of yours to sell — the data of your home never leaves it, which is the whole point of how it is built."
+            data-en="gdahome is free for the people who live in the home, and it stays free: the add-on, the dashboard, the app and your home from away, with no paid version, nothing locked behind a subscription, no adverts, and nothing of yours to sell — the data of your home never leaves it, which is the whole point of how it is built. The one thing that is paid for is the installer panel: a separate service, that takes nothing away from the people who live in the home."
           >
-            gdahome è gratis, e resta gratis: non c'è una versione a pagamento, non c'è niente di
-            chiuso dietro un abbonamento, non ci sono pubblicità, e non c'è niente di tuo da vendere
-            — i dati della tua casa da casa non escono, ed è tutto il senso di com'è fatta.
+            gdahome è gratis per chi abita la casa, e resta gratis: l'add-on, la plancia, l'app e la
+            casa da fuori, senza una versione a pagamento, senza niente di chiuso dietro un
+            abbonamento, senza pubblicità, e senza niente di tuo da vendere — i dati della tua casa
+            da casa non escono, ed è tutto il senso di com'è fatta. L'unica cosa che si paga è il
+            cruscotto per chi installa: un servizio a parte, che non toglie niente a chi abita la
+            casa.
           </p>
 
           <div class="carte carte-strette">
@@ -1025,6 +1177,96 @@
           </p>
         </div>
       </section>
+
+      <!-- ── Contatti ──────────────────────────────────────────────────── -->
+      <!-- Il modulo e' l'unica cosa della pagina che non e' un file: manda un
+           POST a `/contatto`, che Caddy passa al tramite sulla stessa
+           macchina, e il tramite lo spedisce per posta a chi risponde
+           (`centralino/src/posta.js`). Senza JavaScript funziona lo stesso:
+           il modulo e' un modulo, e il tramite risponde con una pagina.
+           L'indirizzo sta scritto in `data-scrivi`: e' quello che il modulo
+           dice quando la posta non e' configurata o non parte. -->
+      <section id="contatti">
+        <div class="limite">
+          <p class="occhiello" data-en="Contact">Contatti</p>
+          <h2 data-en="Write to us. A person answers.">Scrivici. Risponde una persona.</h2>
+          <p
+            class="guida"
+            data-en="If gdahome is already in your home, the shortest way is the support chat inside the app: it arrives with the version and the state of the connection, and it is answered from there. For everything else — the installer panel, a question before you start, a collaboration — there is this form. It reaches &lt;b&gt;assistenza@gdahome.org&lt;/b&gt;."
+          >
+            Se gdahome è già in casa tua, la strada più corta è la chat di assistenza dentro l'app:
+            arriva con la versione e con lo stato del collegamento, e si risponde da lì. Per tutto
+            il resto — il cruscotto per chi installa, una domanda prima di cominciare, una
+            collaborazione — c'è questo modulo. Arriva a <b>assistenza@gdahome.org</b>.
+          </p>
+
+          <div class="contatto">
+            <form
+              class="modulo appare"
+              id="modulo-contatti"
+              method="post"
+              action="/contatto"
+              data-scrivi="assistenza@gdahome.org"
+            >
+              <div class="modulo-riga">
+                <label class="campo">
+                  <span data-en="Name">Nome</span>
+                  <input type="text" name="nome" required maxlength="120" autocomplete="name" />
+                </label>
+                <label class="campo">
+                  <span data-en="Email">Email</span>
+                  <input type="email" name="email" required maxlength="200" autocomplete="email" />
+                </label>
+              </div>
+              <label class="campo">
+                <span data-en="Message">Messaggio</span>
+                <textarea name="messaggio" required maxlength="5000" rows="6"></textarea>
+              </label>
+              <!-- La trappola: un campo che una persona non vede e non riempie.
+                   Chi lo riempie e' un programma, e il tramite butta via il
+                   messaggio rispondendo lo stesso «partito». -->
+              <div class="miele" aria-hidden="true">
+                <label
+                  >Sito <input type="text" name="sito" tabindex="-1" autocomplete="off"
+                /></label>
+              </div>
+              <input type="hidden" name="lingua" value="it" />
+              <div class="modulo-piede">
+                <button class="bottone bottone-pieno" type="submit" data-en="Send">Invia</button>
+                <p
+                  class="modulo-nota"
+                  data-en='What you write goes by mail to whoever answers, and does not stay on the machine. &lt;a href="privacy.html"&gt;Privacy&lt;/a&gt;'
+                >
+                  Quello che scrivi va per posta a chi risponde, e sulla macchina non resta.
+                  <a href="privacy.html">Privacy</a>
+                </p>
+              </div>
+              <p class="modulo-esito" role="status" aria-live="polite" hidden></p>
+            </form>
+
+            <aside class="carta appare contatto-a-fianco">
+              <b data-en="If you install for others">Se installi per gli altri</b>
+              <p
+                data-en="Say how many systems you look after and where: you get an answer with the terms and an access to the panel."
+              >
+                Scrivi quanti impianti segui e da dove: ti rispondiamo con le condizioni e con un
+                accesso al cruscotto.
+              </p>
+              <b data-en="If you would rather write directly"
+                >Se preferisci scrivere direttamente</b
+              >
+              <p><a href="mailto:assistenza@gdahome.org">assistenza@gdahome.org</a></p>
+              <b data-en="If something is wrong in the app">Se qualcosa non va nell'app</b>
+              <p
+                data-en="The support chat and the reports are inside the app, and they arrive with what it takes to understand the problem."
+              >
+                La chat di assistenza e le segnalazioni stanno dentro l'app, e arrivano con quello
+                che serve per capire il problema.
+              </p>
+            </aside>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer class="fondo-pagina">
@@ -1038,8 +1280,10 @@
         <nav aria-label="Link utili" data-en-aria-label="Useful links">
           <a href="#come" data-en="How it works">Come funziona</a>
           <a href="#plancia" data-en="The dashboard">La plancia</a>
+          <a href="#installatori" data-en="Installers">Installatori</a>
           <a href="#scarica" data-en="Where it is">Dove sta</a>
           <a href="#sostieni" data-en="Support it">Sostienila</a>
+          <a href="#contatti" data-en="Contact">Contatti</a>
           <a href="privacy.html" data-en="Privacy">Privacy</a>
           <a href="https://github.com/danigio15/gdahomeapp" rel="noopener">GitHub</a>
         </nav>
