@@ -200,3 +200,63 @@ test("un lavoro chiesto dal vecchio non si consegna alla casa passata a un altro
     b.chiudi();
   }
 });
+
+test("«riavvia» si chiede come «installa», e non ha niente da nominare", () => {
+  /* Il secondo verbo. Stessa strada: si mette in attesa, la casa se lo porta
+   * via al rapporto dopo, vale solo con la manutenzione aperta. Ma non c'e'
+   * un nome e non c'e' un salto di versione: e' quella casa, tutta. */
+  const b = banco();
+  try {
+    b.case.deposita(UNA, carta(), CHI);
+    const messo = b.case.chiediUnLavoro(UNA, { cosa: "riavvia" }, CHI);
+    assert.ok(messo?.id);
+    assert.equal(messo.cosa, "riavvia");
+    const preso = b.case.ilLavoroDa(UNA);
+    assert.deepEqual(preso, { id: messo.id, cosa: "riavvia", nome: "", da: "", a: "" });
+    assert.equal(b.case.ilLavoroDa(UNA), null, "consegnato una volta sola, come l'altro");
+  } finally {
+    b.chiudi();
+  }
+});
+
+test("il riavvio vuole la manutenzione aperta, come tutto il resto", () => {
+  const b = banco();
+  try {
+    b.case.deposita(UNA, carta({ manutenzione: false }), CHI);
+    assert.equal(b.case.chiediUnLavoro(UNA, { cosa: "riavvia" }, CHI), null);
+  } finally {
+    b.chiudi();
+  }
+});
+
+test("un verbo che non e' uno dei due non e' un lavoro", () => {
+  /* Non e' un canale per comandi: sono quei due comandi li'. Un `cosa` che
+   * arriva scritto a mano non diventa un lavoro perche' ha un nome. */
+  const b = banco();
+  try {
+    b.case.deposita(UNA, carta(), CHI);
+    for (const cosa of ["spegni", "call_service", "riavvia_tutto", ""]) {
+      assert.equal(
+        b.case.chiediUnLavoro(UNA, { cosa, ...QUESTO }, CHI),
+        null,
+        `«${cosa}» e' passato`,
+      );
+    }
+    assert.equal(b.case.ilLavoroDa(UNA), null);
+  } finally {
+    b.chiudi();
+  }
+});
+
+test("un riavvio e un'installazione non si mettono in fila insieme", () => {
+  /* Uno per volta vale anche fra verbi diversi: un riavvio in mezzo a
+   * un'installazione e' il modo migliore per non sapere piu' cosa e' andato. */
+  const b = banco();
+  try {
+    b.case.deposita(UNA, carta(), CHI);
+    assert.ok(b.case.chiediUnLavoro(UNA, QUESTO, CHI));
+    assert.equal(b.case.chiediUnLavoro(UNA, { cosa: "riavvia" }, CHI), null);
+  } finally {
+    b.chiudi();
+  }
+});

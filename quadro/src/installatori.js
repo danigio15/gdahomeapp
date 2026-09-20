@@ -237,7 +237,7 @@ export class Installatori {
    * dato ai suoi impianti restano dove sono e non passano mai di qua: chi
    * gestisce il quadro sa che Rossi ne segue trentasette, non chi sono.
    */
-  elenco(quante = () => 0) {
+  elenco(quante = () => 0, entita = () => 0) {
     return this.lista
       .map((uno) => ({
         chi: uno.chi,
@@ -248,6 +248,7 @@ export class Installatori {
         vistoIl: uno.vistoIl,
         congelato: uno.congelato || null,
         case: quante(uno.chi),
+        entita: entita(uno.chi),
         /* Al limite: la prossima casa non entra, e si vede prima che
          * l'installatore telefoni per chiedere perche'. */
         pieno: uno.soglia > SENZA_TETTO && quante(uno.chi) >= uno.soglia,

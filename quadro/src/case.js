@@ -251,7 +251,7 @@ export class CaseSeguite {
    *
    * Torna il lavoro messo in attesa, o `null` se non si e' potuto.
    */
-  chiediUnLavoro(casa, { nome, da, a } = {}, di) {
+  chiediUnLavoro(casa, { cosa = "installa", nome, da, a } = {}, di) {
     const una = this.quella(casa);
     if (!una || (di !== TUTTE && una.di !== di)) return null;
     /* La casa deve aver aperto la manutenzione. E' garbo, non sicurezza: il no
@@ -259,8 +259,15 @@ export class CaseSeguite {
      * mettere in coda un comando che si sa gia' che verra' rifiutato vuol dire
      * far aspettare dieci minuti una risposta che e' gia' scritta. */
     if (una.carta?.manutenzione !== true) return null;
-    const quale = { nome: testo(nome), da: testo(da, 40), a: testo(a, 40) };
-    if (!quale.nome || !quale.a) return null;
+    /* Due verbi, e nessun altro. «Installa» si nomina per nome e salto di
+     * versione; «riavvia» — Home Assistant, tutto — non ha niente da nominare:
+     * e' quella casa, e basta. */
+    if (cosa !== "installa" && cosa !== "riavvia") return null;
+    const quale =
+      cosa === "riavvia"
+        ? { nome: "", da: "", a: "" }
+        : { nome: testo(nome), da: testo(da, 40), a: testo(a, 40) };
+    if (cosa === "installa" && (!quale.nome || !quale.a)) return null;
     /* Uno per volta. Quello vecchio scaduto pero' non blocca niente: una casa
      * spenta da un'ora non deve impedire di richiedere la stessa cosa. */
     const ora = this.adesso();
@@ -272,7 +279,7 @@ export class CaseSeguite {
        * in tempo a segnarselo — e un tasto premuto una volta non deve
        * installare due volte. */
       id: `${ora.toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
-      cosa: "installa",
+      cosa,
       ...quale,
       chiesto: ora,
       mandato: null,
@@ -365,6 +372,20 @@ export class CaseSeguite {
   /** Quante ne segue uno. E' il numero su cui si misura il suo limite. */
   quante(di) {
     return this.lista.filter((una) => una.di === di).length;
+  }
+
+  /**
+   * Quante entita' in tutto, sommando le sue case.
+   *
+   * E' il numero che chi tiene il quadro vuole vedere accanto a «quante case»:
+   * dodici impianti da ottanta entita' e dodici da trecento sono due lavori
+   * diversi, e il conto delle case da solo non lo dice. Una casa che non ha
+   * ancora mandato niente conta zero, non manca.
+   */
+  entita(di) {
+    return this.lista
+      .filter((una) => una.di === di)
+      .reduce((tutte, una) => tutte + (Number(una.carta?.entita?.totali) || 0), 0);
   }
 
   /**

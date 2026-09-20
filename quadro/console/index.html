@@ -2916,6 +2916,24 @@
             );
           };
         });
+        dove.querySelectorAll("[data-riavvia]").forEach((tasto) => {
+          tasto.onclick = () => {
+            /* In due tempi, come «Installa», e per la stessa ragione: si sta
+             * spegnendo e riaccendendo la casa di qualcun altro. */
+            if (tasto.dataset.sicuro !== "sì") {
+              tasto.dataset.sicuro = "sì";
+              tasto.textContent = "Sicuro? Premi di nuovo";
+              setTimeout(() => {
+                tasto.dataset.sicuro = "";
+                tasto.textContent = "Riavvia Home Assistant";
+              }, 6000);
+              return;
+            }
+            faiEpoi(tasto, () =>
+              chiedi(`/casa/${tasto.dataset.riavvia}/riavvia`, { method: "POST" }),
+            );
+          };
+        });
         dove.querySelectorAll("[data-lascia-stare]").forEach((tasto) => {
           /* Annullare non chiede conferma: si annulla una cosa che non è
            * ancora successa, e il danno di un tocco storto è ripremere
@@ -3190,16 +3208,35 @@
                 ${
                   c.manutenzione
                     ? `Questo quadro <b>non guarda dentro</b>: non apre la plancia
-                       e non vede stanze né persone. Tocca <b>una cosa sola</b>, e
-                       solo perché questa casa gliel'ha aperta: far partire un
-                       aggiornamento che è <b>già in attesa qui</b>. Non c'è altro,
-                       e non c'è una riga di comando.`
+                       e non vede stanze né persone. Tocca <b>due cose</b>, e
+                       solo perché questa casa gliele ha aperte: far partire un
+                       aggiornamento che è <b>già in attesa qui</b>, e riavviare
+                       Home Assistant. Non c'è altro, e non c'è una riga di
+                       comando.`
                     : `Questo quadro <b>guarda e basta</b>: non apre la plancia,
                        non tocca niente, e non vede entità, stanze né persone.
                        Questa casa non ha aperto la manutenzione.`
                 }
               </span>
             </p>
+            ${
+              /* Il riavvio: il tasto c'è solo con la manutenzione aperta, e
+               * solo se in quella casa non sta già succedendo qualcosa — un
+               * riavvio in mezzo a un'installazione è il modo migliore per non
+               * sapere più cosa è andato e cosa no. E' il tasto per il giorno
+               * che un'integrazione si impunta e chi ci abita non c'è: prima
+               * si telefonava a casa per far premere «Riavvia». */
+              c.manutenzione && !staLavorando(c) && !casa.chiesto
+                ? `<div class="azioni" style="margin-top: 10px">
+                     <button type="button" class="tasto" data-riavvia="${testo(casa.casa)}">
+                       Riavvia Home Assistant
+                     </button>
+                     <span class="nota" style="align-self: center">
+                       Il filo cade per un minuto e torna da solo.
+                     </span>
+                   </div>`
+                : ""
+            }
           </section>
 
           <div class="capitolo">
@@ -3605,7 +3642,7 @@
           return `
             <div class="cartello bene">
               <span class="gettone" aria-hidden="true">✓</span>
-              <span><b>${testo(l.cosa)}</b> installato ${testo(daQuanto(l.quando))}, dal quadro.</span>
+              <span><b>${testo(l.cosa)}</b> ${l.riavvio ? "fatto" : "installato"} ${testo(daQuanto(l.quando))}, dal quadro.</span>
             </div>`;
         if (l.stato === "non riuscito")
           return `

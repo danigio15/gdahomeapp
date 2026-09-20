@@ -96,6 +96,7 @@ async function banco() {
     ...acceso,
     dove,
     retro,
+    gestore,
     unCodice,
     deposita: (casa, chiave, carta) =>
       fetch(`${dove}/rapporto`, {
@@ -234,6 +235,27 @@ test("le note intere si leggono dal cruscotto, con la chiave", async () => {
      * un disegno come l'icona. */
     assert.equal((await fetch(`${b.dove}/console/note/${SEGNO}`)).status, 401);
     assert.equal((await b.retro(`/note/${"0".repeat(16)}`)).status, 404);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("chi tiene il quadro legge le stesse note, con la chiave della gestione", async () => {
+  /* Le note le ha prese la casa da Home Assistant e le tiene il quadro: chi
+   * lo tiene le legge dalla sua porta, uguali. Senza chiave restano chiuse,
+   * come dal cruscotto — e' testo che qualcuno ha scritto. */
+  const b = await banco();
+  try {
+    const codice = await b.unCodice("Rossi");
+    await b.deposita(
+      UNA,
+      codice,
+      rapporto({ leNote: "## 6.5.1\n\n- una cosa\n- un'altra", senzaLogo: true }),
+    );
+    const dette = await (await b.gestore(`/note/${SEGNO}`)).json();
+    assert.match(dette.note, /una cosa/);
+    assert.equal((await fetch(`${b.dove}/gestore/note/${SEGNO}`)).status, 401);
+    assert.equal((await b.gestore(`/note/${"0".repeat(16)}`)).status, 404);
   } finally {
     await b.chiudi();
   }

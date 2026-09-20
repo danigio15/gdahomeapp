@@ -1,11 +1,10 @@
 /* Il lavoro che il quadro chiede, e come va a finire.
  *
- * E' **l'unico verbo** che il quadro abbia: installare un aggiornamento che
- * questa casa ha gia' in attesa. Per un anno e' stato disegnato e non
- * costruito — nel cruscotto c'era il tasto «Installa su N case» e non era
- * agganciato a niente, ne' un `data-`, ne' un `onclick` — e i documenti
- * intanto ne raccontavano due, con `riavvia` accanto. Quello non c'e': il
- * giorno che si fa, si aggiunge qui.
+ * Sono **due verbi**, e nessun altro: installare un aggiornamento che questa
+ * casa ha gia' in attesa, e riavviare Home Assistant. Per un anno il primo e'
+ * stato disegnato e non costruito — nel cruscotto c'era il tasto «Installa su
+ * N case» e non era agganciato a niente — e il secondo stava solo nei
+ * documenti. Adesso ci sono tutt'e due, e passano dalla stessa strada.
  *
  * ─── Da dove arriva il comando ───────────────────────────────────────────
  *
@@ -35,8 +34,11 @@
  *
  * ─── Cosa si accetta, e come si chiama quello che si installa ────────────
  *
- * Un verbo solo, `installa`, e niente altro: non e' un canale per comandi, e'
- * quel comando li'.
+ * Due verbi, `installa` e `riavvia`, e niente altro: non e' un canale per
+ * comandi, sono quei due comandi li'. Il riavvio e' di Home Assistant tutto —
+ * `homeassistant.restart`, lo stesso che si preme da Impostazioni — e non ha
+ * niente da nominare. Serve il giorno che un'integrazione si impunta e chi ci
+ * abita non c'e': prima si telefonava a casa per far premere un tasto.
  *
  * E si nomina per **nome e salto di versione** — «Shelly Plus», da `1.2.0` a
  * `1.3.0` — non per entita'. Non e' un giro storto: l'entita' nel rapporto non
@@ -58,6 +60,14 @@
  * sempre e che nessuno sa piu' se guardare o no. */
 export const TROPPO_TEMPO = 60 * 60 * 1000;
 
+/* Dopo quanto un riavvio si puo' dire fatto.
+ *
+ * Home Assistant non dice «sono tornato»: si spegne, il filo cade, e a un
+ * certo punto risponde di nuovo. Un elenco degli aggiornamenti letto **dopo**
+ * questo tempo e' la prova che e' tornato — letto prima potrebbe essere la
+ * risposta di uno che non si e' ancora spento. */
+export const UN_RIAVVIO_CI_METTE = 45 * 1000;
+
 /** Quanto lunga puo' essere una stringa che arriva dal quadro. */
 const LUNGHEZZA_MASSIMA = 120;
 
@@ -69,7 +79,9 @@ const pulito = (valore, quanto = LUNGHEZZA_MASSIMA) =>
 /* Come si scrive un lavoro perche' si legga in una riga sola, nel quadro e
  * nella console dell'add-on. */
 const comeSiChiama = (comando) =>
-  `${comando.nome} ${comando.da} → ${comando.a}`.replace(/\s+/g, " ").trim();
+  comando.cosa === "riavvia"
+    ? "riavvio di Home Assistant"
+    : `${comando.nome} ${comando.da} → ${comando.a}`.replace(/\s+/g, " ").trim();
 
 export class Lavori {
   /**
@@ -108,7 +120,8 @@ export class Lavori {
       da: pulito(detto?.da, 40),
       a: pulito(detto?.a, 40),
     };
-    if (!comando.id || comando.cosa !== "installa" || !comando.nome) {
+    const riavvio = comando.cosa === "riavvia";
+    if (!comando.id || (comando.cosa !== "installa" && !riavvio) || (!riavvio && !comando.nome)) {
       this.registro.attenzione(`il quadro ha chiesto qualcosa che non si capisce: ${comando.cosa}`);
       return;
     }
@@ -122,9 +135,26 @@ export class Lavori {
        * qui si dice di no e si scrive perche': una casa che rifiuta in
        * silenzio e' una casa che sembra rotta. */
       this.registro.attenzione(
-        "il quadro ha chiesto di installare qualcosa, e la manutenzione e' chiusa: non si fa",
+        `il quadro ha chiesto di ${riavvio ? "riavviare" : "installare qualcosa"}, e la manutenzione e' chiusa: non si fa`,
       );
       this._segna(comando, "non riuscito", "la manutenzione di questa casa e' chiusa");
+      return;
+    }
+
+    if (riavvio) {
+      /* Il filo cade di sicuro: e' Home Assistant che si spegne, e il ponte
+       * con lui. `riavvia` lo sa e non aspetta una risposta che non arriva.
+       * «In corso» finche' la casa non risponde di nuovo: vedi `stato`. */
+      try {
+        await this.aggiornamenti.riavvia();
+        this._segna(comando, "in corso", "", true);
+        this.registro.info(
+          "il quadro ha chiesto di riavviare Home Assistant: il filo cade, e torna da solo",
+        );
+      } catch (errore) {
+        this._segna(comando, "non riuscito", String(errore?.message || errore));
+        this.registro.attenzione(`il riavvio non e' partito: ${errore?.message || errore}`);
+      }
       return;
     }
 
@@ -181,6 +211,18 @@ export class Lavori {
     /* Senza elenco non si giudica: una casa con Home Assistant giu' non ha
      * finito niente, e dire «fatto» sarebbe la bugia piu' comoda. */
     if (!Array.isArray(daFare)) return { ...lavoro };
+    /* Un riavvio e' fatto quando Home Assistant risponde di nuovo — e questo
+     * elenco e' una risposta sua — passato il tempo che ci mette a spegnersi.
+     * Prima di quel tempo potrebbe essere l'ultima risposta di uno che sta
+     * ancora chiudendo. */
+    if (lavoro.riavvio) {
+      if (this.adesso() - lavoro.quando > UN_RIAVVIO_CI_METTE) {
+        this._lavoro = { ...lavoro, stato: "fatto", finitoIl: this.adesso() };
+        this.registro.info(`fatto: ${lavoro.cosa}`);
+        return { ...this._lavoro };
+      }
+      return { ...lavoro };
+    }
     const ancora = daFare.some(
       (uno) => uno.nome === lavoro.nome && uno.da === lavoro.da && uno.a === lavoro.a,
     );
@@ -213,6 +255,7 @@ export class Lavori {
       nome: comando.nome,
       da: comando.da,
       a: comando.a,
+      riavvio: comando.cosa === "riavvia",
       stato,
       perche,
       stacca,
