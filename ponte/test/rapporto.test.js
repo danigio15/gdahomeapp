@@ -832,6 +832,44 @@ test("dopo il rapporto la casa resta in linea, e quello che arriva lo fa subito"
   }
 });
 
+test("se il quadro dice «un rapporto, adesso», parte un rapporto senza nessun lavoro", async () => {
+  /* I nomi scelti per le plance e una plancia in piu' viaggiano nella
+   * risposta al rapporto, non come lavoro: il quadro sveglia il filo con
+   * `rapporto: true`, e la casa passa subito invece di aspettare il minuto.
+   * Un ponte che quella parola non la conosce riapre il filo e basta. */
+  const chieste = [];
+  let dilloAlFilo;
+  const fatti = [];
+  const postino = new Postino({
+    dove: "https://quadro.it",
+    chiave: "una-chiave",
+    casa: "casa_abc",
+    fabbrica: () => ({ casa: "casa_abc" }),
+    registro: ZITTO,
+    fai: (detto) => {
+      fatti.push(detto);
+    },
+    fetch: async (dove) => {
+      chieste.push(dove);
+      if (dove.endsWith("/attesa")) {
+        return new Promise((ok) => {
+          dilloAlFilo = (cosa) => ok({ ok: true, json: async () => cosa });
+        });
+      }
+      return { ok: true, json: async () => ({ presa: true }) };
+    },
+  });
+  try {
+    assert.equal(await postino.manda(), true);
+    await aspetta(() => chieste.includes("https://quadro.it/attesa"));
+    dilloAlFilo({ rapporto: true });
+    await aspetta(() => chieste.filter((una) => una.endsWith("/rapporto")).length >= 2);
+    assert.equal(fatti.length, 0, "non c'era nessun lavoro da fare");
+  } finally {
+    postino.ferma();
+  }
+});
+
 test("il filo non gira a vuoto nemmeno se dall'altra parte risponde all'istante", async () => {
   /* Il paracadute di `IL_FILO_ALMENO`. Senza, un quadro che riconsegnasse
    * sempre lo stesso lavoro farebbe girare questa casa — lavoro, rapporto,

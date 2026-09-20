@@ -7,6 +7,7 @@ import 'dart:js_interop_unsafe';
 
 import 'package:flutter/painting.dart' show Color;
 import 'package:flutter/widgets.dart' show Widget;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:web/web.dart' as web;
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -122,14 +123,137 @@ Future<void> diciLeMisure(
 
 /// Consegna alla pagina del quadro il codice che apre il cruscotto.
 ///
-/// Nel browser non serve, e non si fa: la pagina del quadro sta in un `iframe`
-/// di **un'altra origine**, e quel codice il browser se lo tiene lui nel suo
-/// deposito. Chi apre il cruscotto da qui lo batte una volta sola nella vita
-/// di quel browser — che e' esattamente quello che sul telefono mancava.
+/// **Anche nel browser, e non era scontato.** Una stesura di questo file
+/// diceva che qui non serviva: la pagina del quadro sta in un `iframe` di
+/// un'altra origine, e il codice il browser se lo sarebbe tenuto nel suo
+/// deposito, battuto una volta sola nella vita di quel browser. Non e'
+/// cosi', e si e' visto dal campo: il cruscotto lo chiedeva **a ogni**
+/// apertura. Il deposito di una pagina che sta dentro il riquadro di un
+/// altro sito e' a parte — Safari lo separa da anni, Chrome dal 2023 — e a
+/// volte non dura nemmeno la sessione. Quindi la si consegna, come sul
+/// telefono e come fa la tessera dentro Home Assistant
+/// (`ponte/carta/plancia.js`): un `postMessage` con la stessa forma, che la
+/// pagina ascolta gia'.
+///
+/// **A chi.** Al riquadro che ha aperto [pagina], e a nessun altro: il
+/// secondo argomento di `postMessage` e' l'origine del quadro, cosi' il
+/// messaggio lo legge quella pagina e basta, anche se un giorno nel
+/// documento ci finisse un altro riquadro. Il riquadro si riconosce
+/// dall'indirizzo che gli e' stato dato — il cruscotto e la gestione sono due
+/// riquadri sulla stessa origine, con due codici diversi, e il codice di uno
+/// non deve finire nell'altro.
+///
+/// **Quando.** Sul `load` del riquadro, che per una pagina scritta in un file
+/// solo vuol dire a script gia' letto, e ascoltatore gia' attaccato; e tre
+/// colpi dopo per sicurezza, come fa la tessera. Il riquadro puo' non
+/// esserci ancora quando si arriva qui: `quandoCaricata` nel browser scatta
+/// subito, e la vista attacca il riquadro al documento al fotogramma dopo.
+/// Allora lo si aspetta, per qualche secondo, e poi ci si arrende in
+/// silenzio — la pagina il codice lo chiede da se', come ha sempre fatto.
 Future<void> consegnaLaChiave(
   WebViewController controllore,
-  String chiave,
-) async {}
+  String chiave, {
+  required Uri pagina,
+}) async {
+  if (chiave.isEmpty) return;
+  final dove = pagina.toString();
+  for (final fra in const [0, 100, 300, 700, 1500, 3000, 6000]) {
+    if (fra > 0) await Future<void>.delayed(Duration(milliseconds: fra));
+    final riquadro = _ilRiquadroDi(dove);
+    if (riquadro == null) continue;
+    /* Il codice sta sull'elemento, e l'ascoltatore lo rilegge da li' a ogni
+     * `load`: cosi' un codice arrivato dopo — la home lo richiede finche'
+     * non ce l'ha — prende il posto di quello di prima senza un secondo
+     * ascoltatore, e una pagina ricaricata riceve sempre l'ultimo. Un
+     * ascoltatore per riquadro, attaccato una volta. */
+    riquadro.setAttribute(_consegnato, chiave);
+    if (!riquadro.hasAttribute(_inAscolto)) {
+      riquadro.setAttribute(_inAscolto, 'sì');
+      riquadro.addEventListener(
+        'load',
+        ((web.Event _) => _consegnaA(
+          riquadro.contentWindow,
+          riquadro.getAttribute(_consegnato) ?? '',
+          pagina,
+        )).toJS,
+      );
+    }
+    _consegnaA(riquadro.contentWindow, chiave, pagina);
+    return;
+  }
+}
+
+/// L'attributo in cui il riquadro tiene l'ultimo codice da consegnare.
+const String _consegnato = 'data-gdahome-chiave';
+
+/// E quello che dice che l'ascoltatore del `load` c'e' gia'.
+const String _inAscolto = 'data-gdahome-ascolta';
+
+/// Il riquadro che ha aperto quell'indirizzo, se e' gia' nel documento.
+web.HTMLIFrameElement? _ilRiquadroDi(String dove) {
+  final riquadri = web.document.querySelectorAll('iframe');
+  for (var quale = 0; quale < riquadri.length; quale += 1) {
+    final uno = riquadri.item(quale);
+    if (uno == null || !uno.isA<web.HTMLIFrameElement>()) continue;
+    final riquadro = uno as web.HTMLIFrameElement;
+    if (riquadro.src.startsWith(dove)) return riquadro;
+  }
+  return null;
+}
+
+/// Tre colpi a distanza crescente, come la tessera: `load` dice che il
+/// documento c'e', non che il suo ascoltatore ci sia gia'.
+void _consegnaA(web.Window? finestra, String chiave, Uri pagina) {
+  if (finestra == null || chiave.isEmpty) return;
+  final origine = pagina.origin;
+  void manda() {
+    try {
+      finestra.postMessage(
+        {'gdahome': 'chiave', 'chiave': chiave}.jsify(),
+        origine.toJS,
+      );
+    } catch (_) {
+      /* La pagina se n'e' andata mentre aspettavamo: non c'e' niente da
+       * dire a nessuno. */
+    }
+  }
+
+  manda();
+  for (final fra in const [300, 1500]) {
+    Timer(Duration(milliseconds: fra), manda);
+  }
+}
+
+/// Apre il cruscotto in una scheda del browser, col codice dietro.
+///
+/// `url_launcher` apre la scheda con `noopener`, che e' la cosa giusta per
+/// un collegamento qualunque: la pagina nuova non puo' toccare questa. Ma
+/// cosi' non le si puo' nemmeno parlare, e il codice resterebbe qui — ed e'
+/// il motivo per cui dal browser il cruscotto lo richiedeva. Il quadro e' una
+/// pagina nostra: si apre tenendo la maniglia, e le si consegna il codice
+/// come al riquadro. Piu' colpi, e piu' lontani: una scheda nuova non dice
+/// quando ha finito di leggere, e su un telefono ci mette qualche secondo.
+///
+/// Se il browser la scheda non la apre — un blocco dei popup, che qui non
+/// dovrebbe scattare perche' si arriva da un tocco — si ripiega sulla via di
+/// prima, e il codice lo si batte.
+Future<void> apriFuori(Uri pagina, String chiave) async {
+  web.Window? finestra;
+  try {
+    finestra = web.window.open(pagina.toString(), '_blank');
+  } catch (_) {
+    finestra = null;
+  }
+  if (finestra == null) {
+    await launchUrl(pagina, mode: LaunchMode.externalApplication);
+    return;
+  }
+  if (chiave.isEmpty) return;
+  for (final fra in const [400, 1200, 2500, 5000, 9000]) {
+    await Future<void>.delayed(Duration(milliseconds: fra));
+    _consegnaA(finestra, chiave, pagina);
+  }
+}
 
 /// Apre la Configurazione della plancia: la sua pagina, quella vera.
 ///

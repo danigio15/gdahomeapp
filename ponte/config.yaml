@@ -43,7 +43,7 @@ name: gdahome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.5.9.13"
+version: "1.5.9.14"
 slug: gdahome
 # Le virgolette non sono un vezzo: dentro c'e' un «due punti» seguito da uno
 # spazio, e in YAML quella e' la cosa che separa una chiave dal suo valore.
@@ -229,9 +229,12 @@ options:
     # Se una configurazione contenesse un indirizzo di flusso, questa casa la
     # rifiuta e lo scrive nel rapporto.
     #
-    # Accendendola, sappi che i nomi delle tue stanze e delle tue entita'
-    # escono da casa tua verso il suo cruscotto: e' il prezzo di farsi
-    # sistemare la plancia da lontano, e sta scritto qui perche' lo decida tu.
+    # Accendendola, sappi che i nomi delle tue stanze, dei tuoi dispositivi e
+    # delle tue entita' escono da casa tua verso il suo cruscotto, con quello
+    # che ogni entita' sa fare (una luce che sa i colori, un clima coi suoi
+    # modi): e' l'inventario che serve al suo editor per scegliere una presa
+    # e metterla in una stanza, ed e' il prezzo di farsi sistemare la plancia
+    # da lontano. Sta scritto qui perche' lo decida tu.
     quadro_configurazione: false
     # Lascia che la plancia porti il nome e il logo di chi ti ha fatto
     # l'impianto.

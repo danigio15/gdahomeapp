@@ -23,6 +23,12 @@
 /// preferisce il browser, e serve il giorno che il riquadro facesse i capricci
 /// su un telefono che non abbiamo in mano.
 ///
+/// **E nel browser il codice arriva lo stesso.** Qui c'era scritto che
+/// nell'app web non serviva consegnarlo, perche' il browser se lo sarebbe
+/// tenuto: il cruscotto invece lo richiedeva a ogni apertura, e il motivo sta
+/// in `riquadro/sul_web.dart`. Adesso lo riceve il riquadro, e lo riceve la
+/// scheda che apre il tasto in basso.
+///
 /// ─── La riga che non si puo' sbagliare ────────────────────────────────────
 ///
 /// `_siPuoAndare` lascia passare **solo** le pagine del quadro. Un collegamento
@@ -100,6 +106,20 @@ class _StatoDelCruscotto extends State<SchermataDelCruscotto> {
   void didUpdateWidget(SchermataDelCruscotto vecchia) {
     super.didUpdateWidget(vecchia);
     _apriSeTocca();
+    /* Il codice arrivato **dopo**. La home lo richiede al ponte finche' non
+     * ce l'ha, e puo' arrivare a riquadro gia' aperto: al `load` della
+     * pagina era vuoto e non si e' consegnato niente. Senza questa riga la
+     * pagina restava a chiederlo a mano con quello giusto gia' in mano. */
+    final controllore = _controllore;
+    final dove = _indirizzo;
+    if (controllore != null &&
+        dove != null &&
+        widget.chiave.isNotEmpty &&
+        widget.chiave != vecchia.chiave) {
+      unawaited(
+        riquadro.consegnaLaChiave(controllore, widget.chiave, pagina: dove),
+      );
+    }
   }
 
   @override
@@ -126,7 +146,9 @@ class _StatoDelCruscotto extends State<SchermataDelCruscotto> {
          * pagina finisce di caricare. */
         final suo = _controllore;
         if (suo != null) {
-          unawaited(riquadro.consegnaLaChiave(suo, widget.chiave));
+          unawaited(
+            riquadro.consegnaLaChiave(suo, widget.chiave, pagina: dove),
+          );
         }
       },
       quandoFallisce: (perche) {
@@ -149,10 +171,17 @@ class _StatoDelCruscotto extends State<SchermataDelCruscotto> {
     return false;
   }
 
+  /// Fuori: un collegamento che non e' del quadro va nel browser com'e';
+  /// il cruscotto stesso — il tasto in basso — ci va **col suo codice**,
+  /// dove si puo' (nel browser si', sul telefono no: vedi `riquadro/`).
   Future<void> _fuori([Uri? quale]) async {
-    final dove = quale ?? _indirizzo;
+    if (quale != null) {
+      await launchUrl(quale, mode: LaunchMode.externalApplication);
+      return;
+    }
+    final dove = _indirizzo;
     if (dove == null) return;
-    await launchUrl(dove, mode: LaunchMode.externalApplication);
+    await riquadro.apriFuori(dove, widget.chiave);
   }
 
   @override

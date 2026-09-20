@@ -15,6 +15,15 @@
  * far cambiare una data. Sta in `plance/<casa>.json`, si apre quando serve, e
  * quando una casa non si segue piu' se ne va con lei.
  *
+ * ─── L'inventario, per l'editor ─────────────────────────────────────────
+ *
+ * Dalla 1.5.9.14 con lo scatto arriva anche **cosa c'e'** in casa — le
+ * entita' con le loro capacita', i dispositivi, le stanze — perche' l'editor
+ * vero della plancia, aperto dal cruscotto, deve poter scegliere una presa
+ * dall'elenco e metterla in una stanza. Uno per casa, non per plancia. Mai
+ * gli stati: la casa li toglie prima di partire (`ponte/src/inventario.js`)
+ * e qui si ritolgono con lo stesso setaccio, che ne e' una copia identica.
+ *
  * ─── Quello che qui non c'e' ────────────────────────────────────────────
  *
  * Nessuna immagine. Gli scatti arrivano gia' passati al setaccio di casa
@@ -25,6 +34,7 @@
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { Archivio } from "./archivio.js";
+import { eUnInventario, inventarioSenzaDati } from "./inventario.js";
 
 /** Il nome di un profilo, come lo scrive il ponte. */
 export const PROFILO_BUONO = /^[a-z0-9][a-z0-9-]{0,63}$/;
@@ -108,6 +118,11 @@ export class PlanceDelleCase {
     this.adesso = adesso;
     /* Gli archivi aperti, uno per casa: si aprono al primo uso e restano. */
     this._aperti = new Map();
+    /* Le plance di cui il cruscotto vuole uno scatto **adesso**, anche se
+     * la revisione e' la stessa: chi apre l'editor vuole com'e' fatta la
+     * plancia oggi, e l'inventario di oggi. In memoria: se il quadro si
+     * riavvia la richiesta si perde, e chi ha l'editor aperto la rifa'. */
+    this._daRinfrescare = new Map();
   }
 
   _dove(casa) {
@@ -118,7 +133,7 @@ export class PlanceDelleCase {
     if (!CASA_BUONA.test(casa)) throw new Error("questa non e' una matricola");
     let suo = this._aperti.get(casa);
     if (!suo) {
-      suo = new Archivio(this._dove(casa), { scatti: {}, chieste: {} });
+      suo = new Archivio(this._dove(casa), { scatti: {}, chieste: {}, inventario: null });
       if (!suo.dati.scatti || typeof suo.dati.scatti !== "object") suo.dati.scatti = {};
       if (!suo.dati.chieste || typeof suo.dati.chieste !== "object") suo.dati.chieste = {};
       this._aperti.set(casa, suo);
@@ -137,7 +152,19 @@ export class PlanceDelleCase {
    * Si tiene l'ultimo scatto per profilo: la storia la tiene la casa, che ne
    * conserva cinque revisioni, e qui ne serve una — quella da far vedere.
    */
-  prendi(casa, { profilo, titolo = "", revisione = 0, valori } = {}) {
+  prendi(
+    casa,
+    {
+      profilo,
+      titolo = "",
+      revisione = 0,
+      chiavi = 0,
+      generazione = 0,
+      aggiornataIl = 0,
+      valori,
+      inventario = null,
+    } = {},
+  ) {
     if (!PROFILO_BUONO.test(String(profilo ?? ""))) return null;
     if (!valori || typeof valori !== "object" || Array.isArray(valori)) return null;
     const suo = this._archivio(casa);
@@ -150,13 +177,43 @@ export class PlanceDelleCase {
       profilo,
       titolo: testo(titolo, 40),
       revisione: intero(revisione),
+      /* I tre numeri della generazione dello scatto, per l'editor: senza,
+       * alla prima apertura riscriverebbe la plancia per «aggiornarla». */
+      chiavi: intero(chiavi),
+      generazione: intero(generazione),
+      aggiornataIl: intero(aggiornataIl),
       presoIl: this.adesso(),
       /* La casa li toglie prima di partire; qui si ritoglie quello che fosse
        * passato lo stesso. All'installatore un flusso non si fa vedere. */
       valori: senzaFlussi(valori),
     };
+    /* L'inventario: ripassato dal setaccio, e tenuto uno per casa. Se questo
+     * scatto non lo porta resta quello di prima. */
+    if (eUnInventario(inventario)) {
+      suo.dati.inventario = { ...inventarioSenzaDati(inventario), presoIl: this.adesso() };
+    }
+    this._daRinfrescare.get(casa)?.delete(profilo);
     suo.salva();
     return this.scatto(casa, profilo);
+  }
+
+  /** L'inventario di una casa, com'e' arrivato l'ultima volta, o `null`. */
+  inventario(casa) {
+    if (!this._cE(casa)) return null;
+    const suo = this._archivio(casa);
+    return eUnInventario(suo.dati.inventario) ? suo.dati.inventario : null;
+  }
+
+  /**
+   * Il cruscotto vuole lo scatto di questa plancia adesso, e l'inventario con
+   * lui: la casa lo manda al passaggio dopo anche se la revisione non e'
+   * cambiata. Si toglie quando lo scatto arriva.
+   */
+  rinfresca(casa, profilo) {
+    if (!CASA_BUONA.test(casa) || !PROFILO_BUONO.test(String(profilo ?? ""))) return false;
+    if (!this._daRinfrescare.has(casa)) this._daRinfrescare.set(casa, new Set());
+    this._daRinfrescare.get(casa).add(profilo);
+    return true;
   }
 
   /** Lo scatto di una plancia, con la richiesta in attesa se c'e'. */
@@ -190,11 +247,15 @@ export class PlanceDelleCase {
   quali(casa, elenco) {
     if (!Array.isArray(elenco)) return [];
     const scatti = new Map(this.scatti(casa).map((uno) => [uno.profilo, uno.revisione]));
+    const volute = this._daRinfrescare.get(casa) ?? new Set();
     return elenco
       .filter((una) => una && PROFILO_BUONO.test(String(una.profilo ?? "")))
       .slice(0, PROFILI_AL_MASSIMO)
       .filter(
-        (una) => !scatti.has(una.profilo) || scatti.get(una.profilo) !== intero(una.revisione),
+        (una) =>
+          volute.has(una.profilo) ||
+          !scatti.has(una.profilo) ||
+          scatti.get(una.profilo) !== intero(una.revisione),
       )
       .map((una) => una.profilo);
   }
@@ -264,6 +325,7 @@ export class PlanceDelleCase {
   /** Una casa che non si segue piu' si porta via le sue plance. */
   butta(casa) {
     this._aperti.delete(casa);
+    this._daRinfrescare.delete(casa);
     if (!CASA_BUONA.test(casa)) return false;
     const dove = this._dove(casa);
     if (!existsSync(dove)) return false;

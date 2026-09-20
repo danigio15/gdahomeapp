@@ -35,6 +35,12 @@
  *   DELETE /console/casa/<casa_…>/installa   ci ripensa, se non e' ancora passata
  *   GET    /console/casa/<casa_…>/plancia/<profilo>/configurazione   com'e' fatta quella plancia
  *   PUT    /console/casa/<casa_…>/plancia/<profilo>/configurazione   scrivila cosi', al prossimo rapporto
+ *   POST   /console/casa/<casa_…>/plancia/<profilo>/rinfresca   chiedi alla casa lo scatto di adesso
+ *   GET    /console/casa/<casa_…>/plancia/<profilo>/stato       se lo scatto c'e', e di quando
+ *
+ *   GET    /plancia-da-lontano/<casa_…>/<profilo>/            la pagina dell'editor della plancia
+ *   WS     /plancia-da-lontano/<casa_…>/<profilo>/websocket   e il filo su cui parla, cieco
+ *   GET    /dashboardmodern_static/…                          i file della plancia, senza chiave
  *
  *   GET    /gestore/                     la pagina di chi tiene il quadro
  *   GET    /gestore/installatori         chi c'e', quanti impianti ha ognuno e
@@ -83,7 +89,10 @@ import { DISCO_FINITO, DISCO_PIENO, TROPPO_CALDO } from "./controlli.js";
 import { Fattorino, indirizzoBuono } from "./fattorino.js";
 import { comeVaLAggiornamento, laVersioneCheGira } from "./mi-aggiorno.js";
 import { CHI_VALIDO } from "./installatori.js";
+import { CucituraCieca } from "./cucitura-cieca.js";
 import { haFlussi, PlanceDelleCase, PLANCIA_MASSIMA } from "./plance.js";
+import { BASE as BASE_DELLA_PLANCIA, PlanciaServita } from "./plancia-servita.js";
+import { accetta, eUnaSalita } from "./presa.js";
 import { stessoSegreto } from "./segreti.js";
 import { ilTipoDi, Marchi, QUANTO_GROSSO } from "./marchi.js";
 import { SEGNO_VALIDO, Segni } from "./segni.js";
@@ -195,6 +204,9 @@ export function costruisciIlServer({
   chiaveDelGestore = "",
   cartella = "./dati",
   fattorino = new Fattorino(),
+  /* La plancia da servire dentro il cruscotto, per l'editor: quella
+   * dell'add-on, trovata da sola (`plancia-servita.js`). */
+  plancia: planciaServita = new PlanciaServita(),
   registro = { debug() {}, info() {}, attenzione() {}, errore() {} },
 }) {
   /* La gestione si apre solo dove c'e' una chiave vera. Senza, questo quadro
@@ -267,9 +279,49 @@ export function costruisciIlServer({
    * cinquanta richieste che per definizione non finiscono, e il quadro non si
    * spegnerebbe piu' — in produzione, e nelle prove. Le case se ne accorgono e
    * riaprono al giro dopo. */
+  /* E gli editor aperti: un WebSocket aperto tiene su il server come una
+   * richiesta aperta. */
+  const cuciture = new Set();
   server.lasciaAndareIFili = () => {
     for (const casa of [...aspettano.keys()]) sveglia(casa, {});
+    for (const una of [...cuciture]) una.chiudi(1001, "il quadro si spegne");
   };
+
+  /* Il filo dell'editor della plancia: la pagina crede di parlare con Home
+   * Assistant, e parla con la cucitura cieca (`cucitura-cieca.js`), che di
+   * casa ha solo quello che la casa le ha mandato. Chi e' lo dice il primo
+   * messaggio, col codice del cruscotto. */
+  server.on("upgrade", (richiesta, socket, testa) => {
+    const via = new URL(richiesta.url || "/", "http://quadro").pathname;
+    const salita =
+      /^\/plancia-da-lontano\/(casa_[0-9a-f]{32})\/([a-z0-9][a-z0-9-]{0,40})\/websocket$/.exec(via);
+    if (!salita || !eUnaSalita(richiesta)) {
+      socket.end("HTTP/1.1 404 Not Found\r\n\r\n");
+      return;
+    }
+    const presa = accetta(richiesta, socket, {
+      onGuasto: (errore) => registro.errore(`l'editor della plancia: ${errore?.stack || errore}`),
+    });
+    if (!presa) return;
+    const cucitura = new CucituraCieca({
+      presa,
+      casa: salita[1],
+      profilo: salita[2],
+      scatti,
+      case: case_,
+      riconosci: (segno) => installatori.riconosci(segno),
+      congelato: (chi) => installatori.congelato(chi),
+      registro,
+      da: socket.remoteAddress || "?",
+    });
+    cuciture.add(cucitura);
+    const eraChiusa = presa.onChiusa;
+    presa.onChiusa = (motivo) => {
+      cuciture.delete(cucitura);
+      eraChiusa?.(motivo);
+    };
+    presa.riprendi(testa);
+  });
   return server;
 
   async function servi(richiesta, risposta) {
@@ -403,7 +455,13 @@ export function costruisciIlServer({
         profilo: scatto?.profilo,
         titolo: scatto?.titolo,
         revisione: scatto?.revisione,
+        chiavi: scatto?.chiavi,
+        generazione: scatto?.generazione,
+        aggiornataIl: scatto?.aggiornataIl,
         valori: scatto?.valori,
+        /* L'inventario di casa, se questo scatto lo porta: cosa c'e', senza
+         * cosa succede. Ripassa dal setaccio dentro `prendi`. */
+        inventario: scatto?.inventario ?? null,
       });
       if (!preso) {
         male(risposta, 400, "uno scatto e' un profilo, un titolo, una revisione e i valori");
@@ -636,6 +694,68 @@ export function costruisciIlServer({
     if (via === "/console" && metodo === "GET") {
       risposta.writeHead(301, { location: "/console/" });
       risposta.end();
+      return;
+    }
+
+    /* La pagina dell'editor della plancia, per il cruscotto.
+     *
+     * Senza chiave, come i suoi file: e' la pagina pubblica della plancia,
+     * quella della repository, con in testa per quale casa e quale plancia
+     * e'. Quello che non e' pubblico — lo scatto, l'inventario — lo da' il
+     * filo, e il filo la chiave la vuole. Si serve solo per una casa che
+     * lascia configurare da lontano: alle altre non c'e' niente da mostrare. */
+    const daLontano =
+      /^\/plancia-da-lontano\/(casa_[0-9a-f]{32})\/([a-z0-9][a-z0-9-]{0,40})\/$/.exec(via);
+    if (daLontano && metodo === "GET") {
+      const sua = case_.quella(daLontano[1]);
+      if (!sua || sua.carta?.configurazione !== true) {
+        male(risposta, 404, "qui non c'e' niente");
+        return;
+      }
+      if (!planciaServita.cE) {
+        male(risposta, 404, "questo quadro non si porta dietro la plancia");
+        return;
+      }
+      /* Il marchio di chi segue la casa e i nomi che ha scelto per questa
+       * plancia: la pagina esce vestita come la vedrebbe chi ci abita. */
+      const suo = installatori.quello(sua.di);
+      const logo = suo?.marchio ? marchi.leggi(suo.chi, suo.marchio) : null;
+      const chi = suo ? { nome: suo.nome, logo, tipo: ilTipoDi(suo.marchio) } : null;
+      const scatto = scatti.scatto(daLontano[1], daLontano[2]);
+      risposta.writeHead(200, {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-store",
+      });
+      risposta.end(
+        planciaServita.pagina({
+          casa: daLontano[1],
+          profilo: daLontano[2],
+          chi,
+          vesti: case_.leVestiDi(daLontano[1])?.[daLontano[2]] ?? null,
+          configurata: scatto ? Object.keys(scatto.valori || {}).length > 0 : null,
+        }),
+      );
+      return;
+    }
+
+    /* E i suoi file: senza chiave — sono quelli della repository — e con
+     * l'impronta nell'indirizzo, cosi' il browser se li tiene un anno. */
+    if (via.startsWith(`${BASE_DELLA_PLANCIA}/`) && metodo === "GET") {
+      if (!planciaServita.cE) {
+        male(risposta, 404, "questo quadro non si porta dietro la plancia");
+        return;
+      }
+      const letto = planciaServita.leggi(via);
+      if (letto.stato !== 200) {
+        male(risposta, letto.stato, "questo file non c'e'");
+        return;
+      }
+      risposta.writeHead(200, {
+        "content-type": letto.tipo,
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-length": letto.corpo.length,
+      });
+      risposta.end(letto.corpo);
       return;
     }
 
@@ -962,6 +1082,11 @@ export function costruisciIlServer({
         return;
       }
       registro.info(`${chi} ha vestito la plancia ${veste[2]} di ${veste[1]}`);
+      /* E la casa lo sa adesso, se e' in linea: la scelta viaggia nella
+       * risposta al rapporto, e senza questa riga arriverebbe al giro del
+       * minuto. Un ponte di ieri, che questa parola non la conosce, riapre
+       * il filo e basta, e la trova al giro dopo come prima. */
+      sveglia(veste[1], { rapporto: true });
       json(risposta, { case: case_.elenco(chi) });
       return;
     }
@@ -1006,6 +1131,10 @@ export function costruisciIlServer({
         return;
       }
       registro.info(`${chi} ha aggiunto la plancia ${esito.profilo} a ${plance[1]}`);
+      /* La casa la crea appena passa, e passa adesso se e' in linea: chi ha
+       * premuto «Aggiungi» la vede nascere in pochi secondi, senza che in
+       * casa nessuno confermi niente — non c'e' niente da confermare. */
+      sveglia(plance[1], { rapporto: true });
       json(risposta, { profilo: esito.profilo, case: case_.elenco(chi) });
       return;
     }
@@ -1013,6 +1142,47 @@ export function costruisciIlServer({
     /* I due lavori che si chiedono a una casa: installare una cosa, o
      * riavviare Home Assistant. Stessa strada — si mette in attesa, la casa se
      * lo porta via al rapporto dopo — e stessa porta per annullare. */
+    /* L'editor vuole la plancia **di adesso**: si segna che lo scatto di
+     * questa plancia va rimandato anche se la revisione e' la stessa, e si
+     * sveglia la casa perche' passi subito. La risposta dice cosa c'e' gia'
+     * — lo scatto di prima, se c'e', e di quando — e se la casa era in
+     * linea: chi apre l'editor sa cosa aspettarsi. */
+    const rinfresco =
+      /^\/casa\/(casa_[0-9a-f]{32})\/plancia\/([a-z0-9][a-z0-9-]{0,40})\/(rinfresca|stato)$/.exec(
+        via,
+      );
+    if (rinfresco && metodo === (rinfresco[3] === "rinfresca" ? "POST" : "GET")) {
+      const sua = case_.quella(rinfresco[1]);
+      if (!sua || sua.di !== chi) {
+        male(risposta, 404, "qui non c'e' niente");
+        return;
+      }
+      if (sua.carta?.configurazione !== true) {
+        male(risposta, 409, "questo impianto non lascia configurare la plancia da lontano");
+        return;
+      }
+      let inLinea = aspettano.has(rinfresco[1]);
+      if (rinfresco[3] === "rinfresca") {
+        scatti.rinfresca(rinfresco[1], rinfresco[2]);
+        inLinea = sveglia(rinfresco[1], { rapporto: true }) || inLinea;
+        registro.info(`${chi} vuole lo scatto di «${rinfresco[2]}» di ${rinfresco[1]} adesso`);
+      }
+      const scatto = scatti.scatto(rinfresco[1], rinfresco[2]);
+      json(risposta, {
+        scatto: scatto
+          ? {
+              revisione: scatto.revisione,
+              presoIl: scatto.presoIl,
+              chiesta: scatto.chiesta,
+            }
+          : null,
+        inventario: Boolean(scatti.inventario(rinfresco[1])),
+        inLinea,
+        editor: planciaServita.cE ? planciaServita.versione() : "",
+      });
+      return;
+    }
+
     /* Com'e' fatta una plancia di una casa che lo permette, e scriverla.
      *
      * Leggere da' lo scatto arrivato da casa, con la richiesta in attesa se

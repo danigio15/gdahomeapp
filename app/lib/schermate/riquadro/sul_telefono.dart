@@ -285,10 +285,15 @@ Future<void> diciLeMisure(
 /// documento c'e', non che il suo script e' arrivato in fondo ad attaccare
 /// l'ascoltatore. Tre colpi a distanza crescente costano tre messaggi e
 /// tolgono una corsa che si perde in silenzio.
+///
+/// [pagina] qui non serve — il WebView e' uno e la pagina dentro e' quella —
+/// sta nella firma perche' la firma e' una sola: nel browser e' quello che
+/// dice a quale riquadro consegnare (`sul_web.dart`).
 Future<void> consegnaLaChiave(
   WebViewController controllore,
-  String chiave,
-) async {
+  String chiave, {
+  required Uri pagina,
+}) async {
   if (chiave.isEmpty) return;
   final detto = jsonEncode({'gdahome': 'chiave', 'chiave': chiave});
   for (final fra in const [
@@ -303,6 +308,16 @@ Future<void> consegnaLaChiave(
       /* La pagina non c'e' ancora, o se n'e' andata: c'e' il colpo dopo. */
     }
   }
+}
+
+/// Apre il cruscotto nel browser del telefono.
+///
+/// Fuori dall'app il codice non si consegna: quello e' un browser di un
+/// altro, e a una scheda aperta con `launchUrl` non si parla. La pagina lo
+/// chiede da se', una volta, come ha sempre fatto — e per questo la strada
+/// normale e' il riquadro qui dentro, dove il codice arriva da solo.
+Future<void> apriFuori(Uri pagina, String chiave) async {
+  await launchUrl(pagina, mode: LaunchMode.externalApplication);
 }
 
 /// Apre la Configurazione della plancia: la sua pagina, quella vera.

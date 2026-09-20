@@ -297,6 +297,7 @@ export function compila({
   aggiornamenti = null,
   manutenzione = false,
   configurazione = false,
+  marchio = false,
   lavoro = null,
   plance = null,
   telefoni = null,
@@ -325,6 +326,10 @@ export function compila({
      * non l'ha permesso» — e come il secondo e' garbo, non sicurezza: il no
      * vero lo dice `lavori.js`. */
     configurazione: configurazione === true,
+    /* E se le sue plance si vestono come dice chi la segue — il marchio, i
+     * nomi scelti dal cruscotto, una plancia in piu'. Sempre presente, per la
+     * stessa ragione degli altri due: «spento» e «non lo dice» sono due cose. */
+    marchio: marchio === true,
   };
   /* Le parti che possono mancare si aggiungono solo se ci sono. Un Supervisor
    * che non ha risposto lascia il rapporto senza `macchina`, e il quadro lo
@@ -387,6 +392,11 @@ export function fabbricaIlRapporto({
   /* Se questa casa lascia configurare la plancia da lontano. Una funzione, come
    * `segniChiesti`: si legge a ogni giro. */
   configurazionePlancia = () => false,
+  /* Se questa casa lascia che le sue plance si vestano come dice chi la segue
+   * — il marchio, i nomi scelti dal cruscotto, una plancia in piu'. Il quadro
+   * lo legge per dire a chi installa perche' una scelta non arriva, invece di
+   * lasciarlo aspettare una plancia che in casa non nascera'. */
+  marchioDellInstallatore = false,
   plance = null,
   configurazione = null,
   dispositivi = null,
@@ -498,6 +508,7 @@ export function fabbricaIlRapporto({
        * comando lo stesso si sentirebbe rispondere di no da questa parte. */
       manutenzione: manutenzione === true,
       configurazione: configurazionePlancia() === true,
+      marchio: marchioDellInstallatore === true,
       /* L'ultimo lavoro chiesto dal quadro, e com'e' andata. `null` quando non
        * ne e' mai stato chiesto nessuno. */
       lavoro: lavori ? lavori.stato(daFare) : null,
@@ -835,10 +846,28 @@ export class Postino {
   async _mandaLePlance(profili) {
     if (!this.plancia || this.plancia.attiva?.() !== true) return 0;
     let mandate = 0;
+    /* L'inventario di casa — cosa c'e', senza i dati (`inventario.js`) —
+     * viaggia **col primo** scatto del giro e basta: e' lo stesso per tutte
+     * le plance, e l'editor del cruscotto ne vuole uno per casa. Se non si
+     * riesce a compilarlo, lo scatto parte lo stesso: senza inventario
+     * l'editor apre con l'elenco vuoto, e lo dice. */
+    let inventario = null;
+    let inventarioProvato = false;
     for (const profilo of profili.slice(0, PROFILI_AL_MASSIMO)) {
       if (!profiloBuono(profilo)) continue;
       const scatto = this.plancia.scatta(profilo);
       if (!scatto || !scatto.valori || typeof scatto.valori !== "object") continue;
+      if (!inventarioProvato && typeof this.plancia.inventario === "function") {
+        inventarioProvato = true;
+        try {
+          inventario = await this.plancia.inventario();
+        } catch (errore) {
+          inventario = null;
+          this.registro.attenzione(
+            `l'inventario per il cruscotto non si e' potuto compilare: ${errore?.message || errore}`,
+          );
+        }
+      }
       const risposta = await this.prendi(`${this.dove}/plancia`, {
         method: "POST",
         headers: {
@@ -850,12 +879,18 @@ export class Postino {
           profilo,
           titolo: String(scatto.titolo ?? "").slice(0, 40),
           revisione: Number(scatto.revisione) || 0,
+          chiavi: Number(scatto.chiavi) || 0,
+          generazione: Number(scatto.generazione) || 0,
+          aggiornataIl: Number(scatto.aggiornataIl) || 0,
           valori: senzaFlussi(scatto.valori),
+          ...(inventario ? { inventario } : {}),
         }),
         signal: AbortSignal.timeout(ATTESA * 3),
       });
       if (!risposta.ok)
         throw new Error(`il quadro ha risposto ${risposta.status} allo scatto di «${profilo}»`);
+      /* Arrivato una volta, non si rimanda con gli scatti dopo. */
+      inventario = null;
       mandate += 1;
       this.registro.info(`lo scatto della plancia «${profilo}» e' arrivato al quadro`);
     }
@@ -1092,6 +1127,18 @@ export class Postino {
       /* Un rapporto adesso, che dice com'e' andata **e** riapre il filo. Senza,
        * chi ha premuto il tasto resterebbe a guardare uno schermo fermo per un
        * minuto buono, con l'installazione gia' partita. */
+      void this.manda();
+      return;
+    }
+    /* «Un rapporto, adesso»: il quadro non ha un lavoro da dare, ha qualcosa
+     * da far leggere nella **risposta** al rapporto — i nomi che chi installa
+     * ha appena scelto per le plance, una plancia in piu' da far nascere, lo
+     * scatto di una plancia che vuole vedere adesso. Sono cose che viaggiano
+     * solo in quella risposta, e aspettare il giro del minuto vorrebbe dire
+     * un installatore che guarda «arriva col prossimo rapporto» per un minuto
+     * buono, e legge che la casa deve fare qualcosa. Non deve fare niente:
+     * e' gia' fatto, appena passa. */
+    if (detto?.rapporto === true) {
       void this.manda();
       return;
     }

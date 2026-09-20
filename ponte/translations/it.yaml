@@ -98,8 +98,9 @@ configuration:
           dalla stessa strada di un aggiornamento: e' la casa che passa a
           ritirarlo. Quello che non vede, perche' da questa strada non passa: le
           immagini e i flussi delle telecamere, gli stati dei sensori, quello che
-          succede in casa. Sappi che i nomi delle tue stanze e delle tue entita'
-          escono verso il suo cruscotto: lo decidi tu, accendendola.
+          succede in casa. Sappi che i nomi delle tue stanze, dei tuoi dispositivi
+          e delle tue entita' escono verso il suo cruscotto, con quello che ogni
+          entita' sa fare — non cosa sta facendo: lo decidi tu, accendendola.
       quadro_marchio:
         name: Lascia che la plancia porti il marchio di chi ti ha fatto l'impianto
         description: >-

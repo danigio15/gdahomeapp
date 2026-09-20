@@ -53,3 +53,5 @@ nuvola/pubblico/
 # misura — e portano dentro percorsi della macchina su cui sono nati. Il
 # collaudo vero e' `collaudo/guarda.mjs`, e quello sta nella repository.
 /collaudo/_*
+# La plancia che accendi.sh copia accanto al quadro sulla macchina: qui e in ponte/plancia.
+quadro/plancia/

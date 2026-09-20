@@ -298,4 +298,15 @@ test("il rapporto porta l'elenco delle plance: profilo e titolo, e niente di que
       { profilo: "suocero", titolo: "Suocero" },
     ],
   });
+  /* E se le vesti in questa casa si applicano: senza l'interruttore del
+   * marchio il quadro deve poterlo dire, invece di far aspettare una
+   * plancia che non nasce. Non detto vuol dire spento. */
+  assert.equal(foglio.marchio, false);
+  const vestibile = await fabbricaIlRapporto({
+    identita: { casa: "casa_abc" },
+    casa: { chiedi: async () => [] },
+    marchioDellInstallatore: true,
+    registro: ZITTO,
+  })();
+  assert.equal(vestibile.marchio, true);
 });

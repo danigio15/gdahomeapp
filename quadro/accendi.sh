@@ -268,6 +268,12 @@ radice="$(find "$tmp" -maxdepth 1 -mindepth 1 -type d | head -1)"
 # aggiornamento che non finisce.
 rm -rf "$DOVE/quadro.nuovo"
 cp -a "$radice/quadro" "$DOVE/quadro.nuovo"
+# E la plancia dell'add-on, accanto a `src/`: e' quella che il cruscotto apre
+# nell'editor della Configurazione (`src/plancia-servita.js`). Senza, il
+# quadro parte lo stesso e la Configurazione dal cruscotto non si apre.
+if [ -d "$radice/ponte/plancia" ]; then
+  cp -a "$radice/ponte/plancia" "$DOVE/quadro.nuovo/plancia"
+fi
 rm -rf "$DOVE/quadro.vecchio"
 [ -d "$DOVE/quadro" ] && mv "$DOVE/quadro" "$DOVE/quadro.vecchio"
 mv "$DOVE/quadro.nuovo" "$DOVE/quadro"
