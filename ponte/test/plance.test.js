@@ -217,7 +217,7 @@ test("un file scritto a mano non fa cadere il ponte", () => {
   }
 });
 
-/* ─── Il nome di chi ha montato l'impianto ─────────────────────────────────
+/* ─── Le vesti: il titolo scelto da chi ha montato l'impianto ───────────
  *
  * La domanda che ha fatto nascere queste prove: «se l'utente toglie
  * l'installatore, cosa gli resta? perde la configurazione della plancia?»
@@ -226,36 +226,52 @@ test("un file scritto a mano non fa cadere il ponte", () => {
  * sta sotto il `profilo` (`configurazione.js`), e il profilo non si sfiora:
  * cambiare il titolo e' come cambiare la targhetta sulla porta, quello che
  * c'e' dentro la stanza non si muove. Queste prove tengono ferma quella riga.
+ *
+ * E la seconda domanda, arrivata dopo: «e se chi ci abita la rinomina?». Il
+ * suo titolo resta, finche' l'installatore non sceglie qualcos'altro.
  */
 
-test("la plancia prende il nome dell'installatore, e lo rida' indietro quando se ne va", () => {
+test("la plancia si veste col titolo scelto, e lo rida' indietro quando la scelta sparisce", () => {
   const { cartella, via } = unPosto();
   try {
     const plance = lePlance(cartella);
-    assert.equal(plance.quale().titolo, "gdahome");
+    plance.aggiungi("Suocero");
+    assert.equal(
+      plance.vesti({ primary: { titolo: "Casa Rossi" }, suocero: { titolo: "Nonni" } }),
+      true,
+    );
+    assert.equal(plance.quale().titolo, "Casa Rossi");
+    assert.equal(plance.quale("suocero").titolo, "Nonni");
 
-    assert.equal(plance.intestala("Impianti Rossi"), true);
-    assert.equal(plance.quale().titolo, "Impianti Rossi");
+    /* La stessa scelta, al rapporto dopo: niente da scrivere. */
+    assert.equal(
+      plance.vesti({ primary: { titolo: "Casa Rossi" }, suocero: { titolo: "Nonni" } }),
+      false,
+    );
 
-    /* E togliendolo si torna al nostro, senza che nessuno scriva niente. */
-    assert.equal(plance.intestala(""), true);
+    /* Via le scelte: la prima torna nostra, l'altra torna com'era in casa. */
+    assert.equal(plance.vesti({}), true);
     assert.equal(plance.quale().titolo, "gdahome");
+    assert.equal(plance.quale("suocero").titolo, "Suocero");
+    assert.equal(plance.vesti({}), false);
   } finally {
     via();
   }
 });
 
-test("togliendo l'installatore non si perde niente della plancia", () => {
+test("vestendola non si perde niente della plancia", () => {
   /* Il profilo e' quello che regge la configurazione, ed e' quello che non si
    * tocca. Se cambiasse, chi ci abita si ritroverebbe una plancia vuota il
-   * giorno che cambia installatore — e nessuno collegherebbe le due cose. */
+   * giorno che l'installatore le da' un nome — e nessuno collegherebbe le
+   * due cose. */
   const { cartella, via } = unPosto();
   try {
     const plance = lePlance(cartella);
+    plance.chiLaVede("primary", ["u1"]);
     const prima = plance.quale();
 
-    plance.intestala("Impianti Rossi");
-    plance.intestala("");
+    plance.vesti({ primary: { titolo: "Casa Rossi" } });
+    plance.vesti({});
     const dopo = plance.quale();
 
     assert.equal(dopo.profilo, prima.profilo, "il profilo e' cambiato: la configurazione e' persa");
@@ -268,68 +284,89 @@ test("togliendo l'installatore non si perde niente della plancia", () => {
   }
 });
 
-test("un titolo scritto da chi ci abita non lo tocca nessun installatore", () => {
-  /* Ne' per metterci il suo, ne' per rimetterci il nostro. E' la stessa
-   * regola con cui, a suo tempo, si e' cambiato il nome del prodotto di
-   * prima: una volta sola, e solo se nessuno l'aveva rinominata. */
+test("un titolo scritto in casa resta finche' l'installatore non sceglie qualcos'altro", () => {
+  /* Il caso storto: la plancia porta il titolo scelto dall'installatore, e
+   * chi ci abita la rinomina dall'app. La stessa scelta torna ogni minuto
+   * col rapporto, e non deve riscrivere niente — se no i due se la
+   * rinominerebbero a vicenda per sempre. */
   const { cartella, via } = unPosto();
   try {
     const plance = lePlance(cartella);
-    plance.rinomina("primary", "Casa nostra");
-
-    assert.equal(plance.intestala("Impianti Rossi"), false);
-    assert.equal(plance.quale().titolo, "Casa nostra");
-    assert.equal(plance.intestala(""), false);
-    assert.equal(plance.quale().titolo, "Casa nostra");
-  } finally {
-    via();
-  }
-});
-
-test("rinominandola a mano, quel titolo diventa suo e non torna piu' indietro", () => {
-  /* Il caso storto: l'installatore c'e', la plancia porta il suo nome, e chi
-   * ci abita la rinomina. Da quel momento quel titolo e' di chi ci abita, e
-   * il giorno che l'installatore si toglie non deve tornare «gdahome»
-   * cancellando quello che aveva scritto. */
-  const { cartella, via } = unPosto();
-  try {
-    const plance = lePlance(cartella);
-    plance.intestala("Impianti Rossi");
+    plance.vesti({ primary: { titolo: "Casa Rossi" } });
     plance.rinomina("primary", "La mia casa");
 
-    assert.equal(plance.intestala(""), false);
+    assert.equal(plance.vesti({ primary: { titolo: "Casa Rossi" } }), false);
+    assert.equal(plance.quale().titolo, "La mia casa");
+
+    /* Una scelta **nuova** invece si mette, e il titolo di casa si ricorda:
+     * sparita la scelta, torna quello. */
+    assert.equal(plance.vesti({ primary: { titolo: "Villa Rossi" } }), true);
+    assert.equal(plance.quale().titolo, "Villa Rossi");
+    assert.equal(plance.vesti({}), true);
     assert.equal(plance.quale().titolo, "La mia casa");
   } finally {
     via();
   }
 });
 
-test("lo stesso installatore due volte non riscrive niente", () => {
-  /* Il rapporto parte ogni minuto e porta ogni volta lo stesso nome: se ogni
-   * giro scrivesse sul disco, quel file cambierebbe data millequattrocento
-   * volte al giorno, e chi guarda i backup non capirebbe piu' niente. */
+test("se la scelta sparisce dopo che in casa l'hanno rinominata, il titolo di casa resta", () => {
   const { cartella, via } = unPosto();
   try {
     const plance = lePlance(cartella);
-    assert.equal(plance.intestala("Impianti Rossi"), true);
-    assert.equal(plance.intestala("Impianti Rossi"), false);
-    assert.equal(plance.intestala(""), true);
-    assert.equal(plance.intestala(""), false);
+    plance.vesti({ primary: { titolo: "Casa Rossi" } });
+    plance.rinomina("primary", "La mia casa");
+    assert.equal(plance.vesti({}), true);
+    assert.equal(plance.quale().titolo, "La mia casa");
+    assert.equal(plance.vesti({}), false);
   } finally {
     via();
   }
 });
 
-test("il nome dell'installatore sopravvive a una riaccensione", () => {
+test("la scelta sopravvive a una riaccensione, e una plancia che non c'e' non si veste", () => {
   const { cartella, via } = unPosto();
   try {
-    lePlance(cartella).intestala("Impianti Rossi");
-    /* Riacceso: se `daInstallatore` non sopravvivesse alla ripulita, quel
-     * titolo diventerebbe «di chi ci abita» e non si toglierebbe piu'. */
+    lePlance(cartella).vesti({ primary: { titolo: "Casa Rossi" }, fantasma: { titolo: "X" } });
+    /* Riacceso: se `scelta` e `daInstallatore` non sopravvivessero alla
+     * ripulita, quel titolo diventerebbe «di chi ci abita» e non si
+     * toglierebbe piu'. */
     const dopo = lePlance(cartella);
-    assert.equal(dopo.quale().titolo, "Impianti Rossi");
-    assert.equal(dopo.intestala(""), true);
+    assert.equal(dopo.quale().titolo, "Casa Rossi");
+    assert.equal(dopo.quale("fantasma"), null);
+    assert.equal(dopo.vesti({ primary: { titolo: "Casa Rossi" } }), false);
+    assert.equal(dopo.vesti({}), true);
     assert.equal(dopo.quale().titolo, "gdahome");
+  } finally {
+    via();
+  }
+});
+
+test("il titolo che fino a ieri prendeva il nome dell'installatore torna nostro", () => {
+  /* Fino alla 1.5.9.12 la prima plancia prendeva da sola il nome di chi
+   * segue la casa, e lo segnava in `daInstallatore`. Dopo l'aggiornamento,
+   * alla prima risposta senza scelte, quel titolo torna «gdahome»: il nome
+   * da solo non va piu' nel menu laterale, ci va quello scelto. */
+  const { cartella, via } = unPosto();
+  try {
+    writeFileSync(
+      join(cartella, "plance.json"),
+      JSON.stringify({
+        plance: [
+          {
+            profilo: "primary",
+            titolo: "Impianti Rossi",
+            creata_il: 0,
+            utenti: [],
+            solo_admin: false,
+            daInstallatore: "Impianti Rossi",
+          },
+        ],
+      }),
+    );
+    const plance = lePlance(cartella);
+    assert.equal(plance.quale().titolo, "Impianti Rossi");
+    assert.equal(plance.vesti({}), true);
+    assert.equal(plance.quale().titolo, "gdahome");
   } finally {
     via();
   }

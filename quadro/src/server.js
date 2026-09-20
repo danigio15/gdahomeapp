@@ -24,6 +24,7 @@
  *   POST   /console/inviti               fanne uno, se il limite lo consente
  *   DELETE /console/inviti/<codice>      annulla il suo
  *   PUT    /console/casa/<casa_…>        il nome, se la casa e' sua
+ *   PUT    /console/casa/<casa_…>/plancia/<profilo>   i due nomi di una sua plancia
  *   DELETE /console/casa/<casa_…>        non seguirla piu', se e' sua
  *   POST   /console/casa/<casa_…>/installa   chiedile di installare una cosa
  *   POST   /console/casa/<casa_…>/riavvia    chiedile di riavviare Home Assistant
@@ -429,12 +430,17 @@ export function costruisciIlServer({
       const elenco = carta?.aggiornamenti?.elenco;
       segni.metti(elenco);
       const manca = segni.quelliCheMancano(elenco);
+      /* E le vesti delle sue plance: i nomi che chi la segue ha scelto per
+       * ognuna, se ne ha scelti. Assenti vuol dire «nessuno», e la casa lo
+       * legge cosi': quello che era vestito si sveste. */
+      const vesti = case_.leVestiDi(casa);
       json(risposta, {
         presa: true,
         di: suo?.nome || "",
         ...(suo?.marchio ? { marchio: suo.chi } : {}),
         ...(fai ? { fai } : {}),
         ...(manca.length ? { manca } : {}),
+        ...(vesti ? { vesti } : {}),
       });
       return;
     }
@@ -825,6 +831,44 @@ export function costruisciIlServer({
         male(risposta, 404, "questa casa non la segui tu");
         return;
       }
+      json(risposta, { case: case_.elenco(chi) });
+      return;
+    }
+
+    /* Le vesti di una plancia: i due nomi che l'installatore sceglie per
+     * ognuna delle plance di una sua casa — il titolo per il menu laterale e
+     * la home, la parola del velo d'avvio. Vedi `Case.vesti`. */
+    const veste = /^\/casa\/(casa_[0-9a-f]{32})\/plancia\/([a-z0-9][a-z0-9-]{0,40})$/.exec(via);
+    if (veste && metodo === "PUT") {
+      let detto = {};
+      try {
+        detto = await ilCorpo(richiesta, 4096);
+      } catch (_errore) {
+        detto = {};
+      }
+      const esito = case_.vesti(
+        veste[1],
+        veste[2],
+        { titolo: detto?.titolo, velo: detto?.velo },
+        chi,
+      );
+      if (esito.errore === "non_sua") {
+        male(risposta, 404, "questa casa non la segui tu");
+        return;
+      }
+      if (esito.errore === "senza_elenco") {
+        male(
+          risposta,
+          409,
+          "questo impianto non manda ancora l'elenco delle plance: aggiorna l'add-on gdahome di casa",
+        );
+        return;
+      }
+      if (esito.errore === "non_ce") {
+        male(risposta, 404, "questo impianto non ha una plancia con quel profilo");
+        return;
+      }
+      registro.info(`${chi} ha vestito la plancia ${veste[2]} di ${veste[1]}`);
       json(risposta, { case: case_.elenco(chi) });
       return;
     }

@@ -152,6 +152,7 @@ export class Plancia {
    * aggiunto niente. */
   descrizione(quale = null) {
     const origine = this.origine();
+    const vesti = this.vestiDi(quale);
     return {
       base: this.base,
       impronta: this.impronta,
@@ -160,10 +161,28 @@ export class Plancia {
       istanza: quale?.istanza || NOME,
       profilo: quale?.profilo || "primary",
       primario: quale ? quale.primaria !== false : true,
+      /* Le vesti scelte per questa plancia da chi installa: la parola del
+       * velo e la scritta della testata. Vuote se non ha scelto niente. Chi
+       * serve la pagina — il servitore dell'app — le scrive in testa. */
+      velo: vesti?.velo || "",
+      testata: vesti?.testata || "",
       file: this._quanti,
       commit: typeof origine.commit === "string" ? origine.commit : "",
       portata_il: typeof origine.portata_il === "string" ? origine.portata_il : "",
     };
+  }
+
+  /* Le vesti di una plancia: la parola del velo e la scritta della testata
+   * che chi installa ha scelto per **questa**, o `null` se non ha scelto
+   * niente. Le legge chi serve la pagina — dentro Home Assistant e nell'app —
+   * e le scrive in testa; vedi `premesse.js`. */
+  vestiDi(quale) {
+    const suo = this.installatore?.(quale?.profilo || "");
+    if (!suo) return null;
+    const velo = String(suo.velo || "");
+    const testata = String(suo.titolo || "");
+    if (!velo && !testata) return null;
+    return { velo, testata };
   }
 
   /* Un file, dal percorso come lo chiede il browser.
@@ -171,8 +190,12 @@ export class Plancia {
    * Torna `{stato, tipo, corpo}`, con `stato` 404 quando non c'e' — e non
    * c'e' anche quando l'impronta e' quella di una plancia vecchia: un
    * telefono che chiede file di due versioni diverse insieme finirebbe con
-   * una pagina fatta a meta'. */
-  leggi(percorso) {
+   * una pagina fatta a meta'.
+   *
+   * Con `quale` — la plancia che si sta servendo, quando chi chiede lo sa —
+   * la pagina esce gia' con le sue vesti; senza, con quelle di serie, e ci
+   * pensano le premesse. */
+  leggi(percorso, quale = null) {
     const pezzi = String(percorso || "")
       .split("?")[0]
       .split("/");
@@ -205,7 +228,7 @@ export class Plancia {
         relativi.join("/"),
         readFileSync(dove),
         tipo,
-        this.installatore?.(),
+        this.installatore?.(quale?.profilo || ""),
         /* E il numero di versione: la plancia ne dichiara uno suo, scritto
          * quando la si costruisce, che di gdahome non sa niente. Quello buono
          * e' in `ORIGINE.json`, ed e' lo stesso che il ponte mette nel

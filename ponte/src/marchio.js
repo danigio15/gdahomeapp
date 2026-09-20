@@ -130,6 +130,15 @@ const LA_VERSIONE_DELLA_PLANCIA = /("(?:integrationVersion|dashboardVersion)":")
 const IL_SEGNO_DI_CONFIGURAZIONE =
   /(<div class="cfg-hero-ico"[^>]*>)\s*<svg[\s\S]*?<\/svg>\s*(<\/div>)/;
 
+/* Lo script che, subito dopo il velo, gli cambia la parola se la pagina ne
+ * porta una in testa (`window.__GDAHOME_VELO__`, messa dalle premesse: e' il
+ * nome all'avvio che chi installa ha scelto per **questa** plancia). Sta
+ * attaccato al `<b>` e non in fondo alla pagina: il velo e' la prima cosa a
+ * schermo, e la parola deve essere quella giusta al primo disegno. */
+export const IL_VELO_SI_RIVESTE =
+  "<script>(function(){var v=window.__GDAHOME_VELO__;if(!v)return;" +
+  'var b=document.querySelector("#cd-boot-overlay b");if(b)b.textContent=v;})()</script>';
+
 /* La scritta accanto al logo: due `span` attaccati, «Dashboard» e «MODERN».
  *
  * Si riconosce la **coppia**, non le due parole da sole: in un runtime di
@@ -170,14 +179,14 @@ export function vestiDiGdahome(relativo, corpo, tipo, suo = null, versione = "")
     }
     if (/^legacy\/dashboard-runtime-[a-z]{2}\.js$/.test(quale)) {
       const testo = corpo.toString("utf8");
-      const [davanti, dietro] = inDuePezzi(chi ? chi.nome : NOME);
+      const diSerie = inDuePezzi(chi ? chi.nome : NOME);
       /* Si sostituisce e poi si guarda se e' cambiato qualcosa, invece di
        * chiedere prima «c'e'?»: su un'espressione con la `g`, `test` si
        * ricorda dove era arrivata, e la seconda domanda risponde dal punto
        * sbagliato. Sostituire e confrontare non ha memoria. */
       const fatto = testo
         .replace(L_ALT_DEL_LOGO, `alt="${perUnAttributo(chi ? chi.nome : NOME)}"`)
-        .replace(LA_SCRITTA_DEL_LOGO, `$1${davanti}$2${dietro}$3`);
+        .replace(LA_SCRITTA_DEL_LOGO, `$1${laTestata(0, diSerie)}$2${laTestata(1, diSerie)}$3`);
       if (fatto === testo) return { corpo, tipo };
       return { corpo: Buffer.from(fatto, "utf8"), tipo };
     }
@@ -187,15 +196,37 @@ export function vestiDiGdahome(relativo, corpo, tipo, suo = null, versione = "")
   }
 }
 
+/* Un pezzo della scritta della testata, scritto **dentro** il template
+ * literal del runtime: il pezzo scelto per questa plancia se la pagina lo
+ * porta in testa (`window.__GDAHOME_TESTATA__`, due pezzi, messi dalle
+ * premesse), se no quello di serie — il nome di chi installa in due pezzi, o
+ * «gda» e «home».
+ *
+ * Non si puo' scrivere la parola e basta, come si faceva: il runtime e' un
+ * file solo per tutte le plance della casa, e il browser lo tiene in cache
+ * per un anno. La parola giusta la puo' scegliere solo la pagina, al momento
+ * di disegnare, e questa e' la riga che glielo lascia fare. */
+function laTestata(quale, diSerie) {
+  return `\${(window.__GDAHOME_TESTATA__||${JSON.stringify(diSerie)})[${quale}]}`;
+}
+
 /* Chi ha montato l'impianto, se c'e' e se ha qualcosa da far vedere.
  *
  * Torna `null` quando non c'e' niente da cambiare, cosi' chi disegna ha un
- * caso solo da guardare invece di tre campi da controllare uno per uno. */
+ * caso solo da guardare invece di tre campi da controllare uno per uno. Con
+ * le vesti della plancia che si sta servendo, se chi serve le sa: il titolo
+ * scelto e la parola del velo. */
 function daInstallatore(suo) {
   const nome = perDisegnare(suo?.nome);
   const logo = Buffer.isBuffer(suo?.logo) && suo.logo.length ? suo.logo : null;
   if (!nome && !logo) return null;
-  return { nome: nome || NOME, logo, tipo: String(suo?.tipo || "") };
+  return {
+    nome: nome || NOME,
+    logo,
+    tipo: String(suo?.tipo || ""),
+    titolo: perDisegnare(suo?.titolo),
+    velo: perDisegnare(suo?.velo),
+  };
 }
 
 /* Il nome di un installatore, ripulito per finire dentro una pagina.
@@ -232,7 +263,7 @@ function numeroDiVersione(quale) {
  * chiaro e «home» in azzurro. Un nome di due parole ci sta com'e'; uno di una
  * parola sola va tutto nel primo, e il secondo resta vuoto — che a schermo
  * vuol dire una parola sola, giusta, invece di una spezzata a meta' a caso. */
-function inDuePezzi(nome) {
+export function inDuePezzi(nome) {
   const pulito = perDisegnare(nome);
   if (pulito === NOME) return ["gda", "home"];
   const spazio = pulito.indexOf(" ");
@@ -271,7 +302,13 @@ export function laPagina(testo, suo = null) {
    * arriva dal quadro finisce dentro un `<title>`. Una funzione che si fida di
    * chi la chiama e' una funzione che un giorno qualcuno chiama male. */
   const nome = perDisegnare(chi ? chi.nome : NOME) || NOME;
-  fatto = fatto.replace(LA_PAROLA_DEL_VELO, `$1${nome}$2`);
-  fatto = fatto.replace(IL_TITOLO, `<title>${nome}</title>`);
+  /* La parola del velo: quella scelta per questa plancia se la si conosce
+   * gia' qui — la pagina servita dentro Home Assistant sa quale plancia e' —
+   * e comunque, subito dopo, lo script che la rilegge da `__GDAHOME_VELO__`:
+   * e' la strada dell'app, che la pagina la prende una volta e la veste ogni
+   * volta che la apre. */
+  const parolaDelVelo = perDisegnare(chi?.velo) || nome;
+  fatto = fatto.replace(LA_PAROLA_DEL_VELO, `$1${parolaDelVelo}$2${IL_VELO_SI_RIVESTE}`);
+  fatto = fatto.replace(IL_TITOLO, `<title>${perDisegnare(chi?.titolo) || nome}</title>`);
   return fatto;
 }

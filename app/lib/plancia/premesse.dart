@@ -699,6 +699,31 @@ class Premesse {
    * voleva dire cancellare la scelta di chi l'aveva fatta dalle sue tessere.
    * Vedi `laConfigFuoriDallaPlancia`. */
 
+  /// Le due globali delle vesti, o niente.
+  ///
+  /// Via `<` e `>`: finiscono dentro uno `<script>`, e un `</script>` dentro
+  /// una stringa chiuderebbe lo script. Il ponte le ripulisce gia'; fra lui e
+  /// qui c'e' un filo, e un controllo da una parte sola non e' un controllo.
+  static String leVesti(PannelloDellaPlancia? quale) {
+    if (quale == null) return '';
+    String pulito(String cosa) => cosa.replaceAll(RegExp('[<>]'), '');
+    final velo = pulito(quale.velo);
+    final testata = pulito(quale.testata);
+    return '${velo.isEmpty ? '' : 'window.__GDAHOME_VELO__=${jsonEncode(velo)};'}'
+        '${testata.isEmpty ? '' : 'window.__GDAHOME_TESTATA__=${jsonEncode(inDuePezzi(testata))};'}';
+  }
+
+  /// La scritta della testata in due pezzi, come la disegna la plancia: il
+  /// primo in chiaro e il secondo in azzurro. Un nome di due o piu' parole si
+  /// spezza al primo spazio; uno di una parola sola va tutto nel primo, e il
+  /// secondo resta vuoto. La stessa regola di `inDuePezzi` in `marchio.js`.
+  static List<String> inDuePezzi(String nome) {
+    final pulito = nome.replaceAll(RegExp(r'\s+'), ' ').trim();
+    final spazio = pulito.indexOf(' ');
+    if (spazio <= 0) return [pulito, ''];
+    return [pulito.substring(0, spazio), pulito.substring(spazio + 1)];
+  }
+
   /// La pagina, con in testa quello che le serve sapere.
   ///
   /// [ilWebSocket] e' un pezzo di programma che vale un costruttore di
@@ -717,6 +742,13 @@ class Premesse {
         'window.__DASHBOARDMODERN_PRIMARY__=${quale?.primario ?? true};'
         'window.__DASHBOARDMODERN_LOCALE__=${jsonEncode(lingua)};'
         'window.__GDAHOME__=true;'
+        /* Le vesti di questa plancia, se chi ha montato l'impianto le ha
+           scelte: la parola del velo e la scritta della testata, in due
+           pezzi. La pagina le legge al momento di disegnare — il velo con lo
+           script che il ponte gli attacca, la testata dentro il runtime — e
+           senza non si scrive niente. E' la stessa riga che scrive il ponte
+           quando serve lui la pagina (`premesse.js`, `leVesti`). */
+        '${leVesti(quale)}'
         /* Se questa plancia ha una configurazione. Assente vuol dire «non lo
            so», e chi legge la pagina tiene l'orologio di prima. */
         '${switch (quale?.configurata) {

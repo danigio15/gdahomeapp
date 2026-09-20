@@ -186,8 +186,11 @@ test("senza installatore la plancia resta vestita di gdahome", () => {
   const fatto = vestiDiGdahome(IL_RUNTIME, Buffer.from(UN_PEZZO, "utf8"), "text/javascript");
   const testo = fatto.corpo.toString("utf8");
   assert.match(testo, /alt="gdahome"/);
-  assert.match(testo, />gda<\/span>/);
-  assert.match(testo, />home<\/span>/);
+  /* La scritta la sceglie la pagina al momento di disegnare, e di riserva
+   * c'e' «gda home»: il runtime e' uno per tutte le plance della casa. */
+  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["gda","home"\]\)\[0\]/);
+  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["gda","home"\]\)\[1\]/);
+  assert.equal(testo.includes("MODERN"), false);
 });
 
 test("con un installatore la plancia porta il suo nome e il suo logo", () => {
@@ -199,8 +202,8 @@ test("con un installatore la plancia porta il suo nome e il suo logo", () => {
     suo,
   ).corpo.toString("utf8");
   assert.match(testo, /alt="Impianti Rossi"/);
-  assert.match(testo, />Impianti<\/span>/);
-  assert.match(testo, />Rossi<\/span>/);
+  assert.match(testo, /\["Impianti","Rossi"\]\)\[0\]/);
+  assert.match(testo, /\["Impianti","Rossi"\]\)\[1\]/);
 
   /* E il logo: gli stessi byte, col tipo che sono davvero. */
   const logo = vestiDiGdahome("legacy/logo.png", Buffer.from("vecchio"), "image/png", suo);
@@ -212,8 +215,11 @@ test("un nome di una parola sola non si spezza a meta'", () => {
   const testo = vestiDiGdahome(IL_RUNTIME, Buffer.from(UN_PEZZO, "utf8"), "text/javascript", {
     nome: "Elettrotecnica",
   }).corpo.toString("utf8");
-  assert.match(testo, />Elettrotecnica<\/span>/);
-  assert.match(testo, /><\/span>/, "il secondo pezzo resta vuoto invece di prendersi una sillaba");
+  assert.match(
+    testo,
+    /\["Elettrotecnica",""\]/,
+    "il secondo pezzo resta vuoto invece di prendersi una sillaba",
+  );
 });
 
 test("un nome che arriva dal quadro non porta dentro dell'HTML", () => {
@@ -227,7 +233,13 @@ test("un nome che arriva dal quadro non porta dentro dell'HTML", () => {
   assert.ok(!testo.includes('alt=""'), "l'attributo si e' chiuso a meta'");
 
   const pagina = laPagina("<title>x</title><b>DashboardModern</b>", { nome: storto });
-  assert.ok(!pagina.includes("<script>"));
+  /* Dopo il velo c'e' uno `<script>` **nostro** (vedi `IL_VELO_SI_RIVESTE`):
+   * quello che non ci deve essere e' un tag venuto dal nome. */
+  assert.ok(
+    !pagina.includes("<script>alert"),
+    "un tag dal nome dell'installatore e' diventato un tag",
+  );
+  assert.ok(!pagina.includes("</script></b>"));
   assert.match(pagina, /<title>[^<]*<\/title>/);
 });
 

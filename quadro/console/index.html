@@ -1443,6 +1443,69 @@
         display: none;
       }
 
+      /* ─── Le plance: i due nomi di ognuna ────────────────────────────── */
+
+      .veste {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+        gap: 10px 12px;
+        align-items: end;
+        padding: 14px 0 4px;
+      }
+
+      .veste + .veste {
+        margin-top: 8px;
+        border-top: 1px solid var(--linea);
+      }
+
+      .veste-capo {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+        min-width: 0;
+      }
+
+      .veste-capo b {
+        font-size: 0.95rem;
+        overflow-wrap: anywhere;
+      }
+
+      .veste-capo small {
+        font-size: 0.78rem;
+        color: var(--ink-3);
+        font-weight: 600;
+      }
+
+      .veste label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .veste label span {
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: var(--ink-3);
+      }
+
+      .veste input {
+        width: 100%;
+        flex: none;
+      }
+
+      @media (max-width: 40rem) {
+        .veste {
+          grid-template-columns: 1fr;
+        }
+
+        .veste .tasto {
+          justify-self: start;
+        }
+      }
+
       /* La riga che dice cosa questo quadro puo' e non puo' fare. */
       .limite,
       .avvertenza,
@@ -3286,6 +3349,33 @@
               if (evento.key === "Enter") salva();
             };
         });
+        /* Le vesti di una plancia: i due nomi si salvano insieme, col tasto o
+         * con Invio da una delle due caselle. Vuoti tutti e due tolgono la
+         * scelta. Il no del server — «aggiorna l'add-on», «non e' tua» — lo
+         * mostra `faiEpoi`, come per tutto il resto. */
+        dove.querySelectorAll("[data-salva-veste]").forEach((tasto) => {
+          const riga = tasto.closest("[data-veste]");
+          const salva = () =>
+            faiEpoi(tasto, async () => {
+              await chiedi(
+                `/casa/${tasto.dataset.perCasa}/plancia/${encodeURIComponent(tasto.dataset.salvaVeste)}`,
+                {
+                  method: "PUT",
+                  body: JSON.stringify({
+                    titolo: riga?.querySelector("[data-veste-titolo]")?.value || "",
+                    velo: riga?.querySelector("[data-veste-velo]")?.value || "",
+                  }),
+                },
+              );
+              avvisa("Salvato: arriva in casa col rapporto dopo");
+            });
+          tasto.onclick = salva;
+          riga?.querySelectorAll("input").forEach((casella) => {
+            casella.onkeydown = (evento) => {
+              if (evento.key === "Enter") salva();
+            };
+          });
+        });
         /* «Cosa cambia, per intero»: si apre sotto la riga, e si richiude.
          *
          * Il testo si chiede quando serve e non prima: un CHANGELOG per ogni
@@ -4031,6 +4121,13 @@
           }
 
           <div class="capitolo">
+            <h2>Le plance</h2>
+            <span>i nomi che porta ogni plancia</span>
+          </div>
+
+          ${leVestiDellePlance(casa, c)}
+
+          <div class="capitolo">
             <h2>Dettagli tecnici</h2>
             <span>versioni e rapporto completo</span>
           </div>
@@ -4057,7 +4154,7 @@
               <summary><h3>Rapporto completo</h3></summary>
               <pre>${testo(JSON.stringify(c, null, 2))}</pre>
               <p class="nota" style="margin-top: 14px">
-                Questo è <strong>tutto</strong> ciò che l'impianto invia. Gli unici nomi presenti sono quelli dei dispositivi che in questo momento non rispondono; degli altri non c'è nemmeno l'elenco. Nessuna persona, nessuno stato di sensori, nessun indirizzo pubblico. Lo stesso testo lo legge chi abita la casa, nella scheda «Il cruscotto» della console dell'add-on, insieme al tasto per interrompere l'invio.
+                Questo è <strong>tutto</strong> ciò che l'impianto invia. Gli unici nomi presenti sono quelli dei dispositivi che in questo momento non rispondono — degli altri non c'è nemmeno l'elenco — e i titoli delle plance, che servono a scegliere da qui come chiamarle. Nessuna persona, nessuno stato di sensori, nessun indirizzo pubblico. Lo stesso testo lo legge chi abita la casa, nella scheda «Il cruscotto» della console dell'add-on, insieme al tasto per interrompere l'invio.
               </p>
             </details>
           </section>
@@ -4077,6 +4174,81 @@
        * tiene i capitoli in ordine cerca la prima volta che certe righe
        * compaiono, e la prima deve essere quella della scheda intera. */
       const GRAVI = new Set(["I collegamenti", "Gli add-on"]);
+
+      /* ─── Le plance: i due nomi di ognuna ─────────────────────────────
+       *
+       * Per ogni plancia dell'impianto l'installatore sceglie il nome che va
+       * nel menu laterale di Home Assistant e in cima alla home, e quello che
+       * compare col suo logo mentre la pagina si apre. Il quadro li tiene e
+       * la casa se li porta via col rapporto dopo: qui non si entra in casa,
+       * si lascia un biglietto. L'elenco delle plance lo manda l'add-on dalla
+       * 1.5.9.13: prima si vede solo quante sono, e allora lo si dice. */
+      function leVestiDellePlance(casa, c) {
+        const elenco = Array.isArray(c.plance?.elenco) ? c.plance.elenco : null;
+        if (!elenco) {
+          return `
+          <section class="riquadro">
+            <div class="capoRiquadro"><h3>Come si chiamano</h3></div>
+            <div class="avvertenza" style="margin-top: 0">
+              <span class="gettone" aria-hidden="true">!</span>
+              <span>
+                Questo impianto dice quante plance ha, ma non quali: l'add-on gdahome di casa è precedente alla 1.5.9.13. Aggiornalo dalla schermata Aggiornamenti, e i nomi si scelgono da qui.
+              </span>
+            </div>
+          </section>`;
+        }
+        const vesti = casa.vesti || {};
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>Come si chiamano</h3>
+              <span class="conta">${testo(plurale(elenco.length, "plancia", "plance"))}</span>
+            </div>
+            <p class="minuta">
+              Per ogni plancia due nomi. Il <b>nome della plancia</b> va nel menu laterale di Home Assistant e in cima alla home; il <b>nome all'avvio</b> compare col tuo logo mentre la pagina si apre. Lasciali vuoti e la plancia tiene il nome che ha in casa, e all'avvio mostra il tuo.
+            </p>
+            ${elenco
+              .map((una) => {
+                const profilo = String(una.profilo || "");
+                const sue = vesti[profilo] || {};
+                const inCasa = una.titolo || profilo;
+                return `
+            <div class="veste" data-veste="${testo(profilo)}">
+              <div class="veste-capo">
+                <b>${testo(inCasa)}</b>
+                <small>${profilo === "primary" ? "la prima plancia, com'è chiamata in casa" : "com'è chiamata in casa"}</small>
+              </div>
+              <label>
+                <span>Nome della plancia</span>
+                <input
+                  type="text"
+                  maxlength="40"
+                  data-veste-titolo
+                  value="${testo(sue.titolo || "")}"
+                  placeholder="${testo(inCasa)}"
+                  autocomplete="off"
+                />
+              </label>
+              <label>
+                <span>Nome all'avvio</span>
+                <input
+                  type="text"
+                  maxlength="40"
+                  data-veste-velo
+                  value="${testo(sue.velo || "")}"
+                  placeholder="${testo(IO.nome || "gdahome")}"
+                  autocomplete="off"
+                />
+              </label>
+              <button type="button" class="tasto forte" data-salva-veste="${testo(profilo)}" data-per-casa="${testo(casa.casa)}">Salva</button>
+            </div>`;
+              })
+              .join("")}
+            <p class="nota" style="margin-top: 14px">
+              Arrivano in casa col rapporto dopo, entro un minuto. Se chi abita la casa rinomina una plancia dall'app, il suo nome resta finché qui non ne scegli un altro.
+            </p>
+          </section>`;
+      }
 
       function soloIGuai(casa) {
         const stato = casa.stato;
@@ -4877,7 +5049,7 @@
                   <li class="bene">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
-                      <b>Il cruscotto non entra nell'impianto.</b> Non apre la plancia e non vede entità, stanze né persone: riceve un rapporto di numeri. L'abbinamento lo concede chi abita la casa, e lo revoca con un tasto quando vuole.
+                      <b>Il cruscotto non entra nell'impianto.</b> Non apre la plancia e non vede entità, stanze né persone: riceve un rapporto di numeri, più i titoli delle plance e i nomi dei soli dispositivi che non rispondono. L'abbinamento lo concede chi abita la casa, e lo revoca con un tasto quando vuole.
                     </span>
                   </li>
                   <li class="bene">

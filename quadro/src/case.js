@@ -68,6 +68,19 @@ export const UN_LAVORO_ASPETTA = 10 * 60 * 1000;
 
 const ilGiorno = (quando) => new Date(quando).toISOString().slice(0, 10);
 
+/** Com'e' fatto il profilo di una plancia. La stessa regola del ponte. */
+export const PROFILO_VALIDO = /^[a-z0-9][a-z0-9-]{0,40}$/;
+
+/* Un nome scelto per una plancia, ripulito per finire in una pagina di casa
+ * d'altri: via i segni che li' vogliono dire qualcosa, e quaranta lettere al
+ * massimo, che e' quanto un titolo di plancia puo' essere lungo nel ponte. */
+const unaVeste = (testo) =>
+  String(testo ?? "")
+    .replace(/[<>"'&]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 40);
+
 const testo = (valore, quanto = 120) =>
   String(valore ?? "")
     .trim()
@@ -125,6 +138,8 @@ export class CaseSeguite {
         /* Il lavoro che aspetta di essere consegnato a questa casa, o `null`.
          * Ne sta uno per volta: il perche' e' in cima al file. */
         lavoro: null,
+        /* Le vesti delle sue plance: profilo → {titolo, velo}. Vedi `vesti`. */
+        vesti: {},
       };
       this.lista.push(una);
     }
@@ -186,6 +201,54 @@ export class CaseSeguite {
     una.nome = "";
     una.lavoro = null;
     una.avvisataIl = null;
+    /* E le vesti delle plance: i nomi che il vecchio aveva scelto sono suoi,
+     * e la casa se li toglie al rapporto dopo. */
+    una.vesti = {};
+  }
+
+  /**
+   * Le vesti di una plancia di questa casa: il **titolo**, che va nel menu
+   * laterale di Home Assistant e in cima alla home, e la parola del **velo**,
+   * quella che compare col logo dell'installatore mentre la pagina si apre.
+   * Le sceglie lui dal cruscotto, plancia per plancia, e la casa se le porta
+   * via con la risposta al rapporto (`leVesti`).
+   *
+   * Si veste solo una plancia che la casa ha detto di avere nell'ultimo
+   * rapporto (`plance.elenco`): un profilo inventato non finirebbe in nessun
+   * menu, e resterebbe scritto qui per sempre. Un impianto con l'add-on di
+   * ieri l'elenco non lo manda, e allora non si veste niente: lo si dice,
+   * cosi' chi installa sa che deve aggiornarlo. Tutte e due vuote tolgono la
+   * scelta.
+   *
+   * `di` e' un lucchetto e non un filtro, come per `rinomina`.
+   *
+   * Torna `{errore}` — `non_sua`, `senza_elenco`, `non_ce` — o `{vesti}`.
+   */
+  vesti(casa, profilo, { titolo, velo } = {}, di) {
+    const una = this.quella(casa);
+    if (!una || (di !== TUTTE && una.di !== di)) return { errore: "non_sua" };
+    const elenco = Array.isArray(una.carta?.plance?.elenco) ? una.carta.plance.elenco : null;
+    if (!elenco) return { errore: "senza_elenco" };
+    const quale = String(profilo || "");
+    if (!PROFILO_VALIDO.test(quale) || !elenco.some((p) => p?.profilo === quale)) {
+      return { errore: "non_ce" };
+    }
+    const pulite = { titolo: unaVeste(titolo), velo: unaVeste(velo) };
+    if (!una.vesti || typeof una.vesti !== "object") una.vesti = {};
+    if (!pulite.titolo && !pulite.velo) delete una.vesti[quale];
+    else una.vesti[quale] = pulite;
+    this.archivio.salva();
+    return { vesti: this.leVesti(una) };
+  }
+
+  /** Le vesti da mandare a una casa, o `null` se non ne ha nessuna. */
+  leVesti(una) {
+    const sue = una?.vesti;
+    return sue && typeof sue === "object" && Object.keys(sue).length ? { ...sue } : null;
+  }
+
+  leVestiDi(casa) {
+    return this.leVesti(this.quella(casa));
   }
 
   /* `di` e' un lucchetto, non un filtro: senza, l'installatore che scrivesse a
@@ -431,6 +494,9 @@ export class CaseSeguite {
        * vorrebbe dire una pagina che non distingue piu' fra «l'ho chiesto» e
        * «sta succedendo». */
       chiesto: una.lavoro && !una.lavoro.mandato ? { ...una.lavoro } : null,
+      /* I nomi che l'installatore ha scelto per le plance di questa casa,
+       * profilo per profilo. Vuoto per quasi tutte. */
+      vesti: una.vesti && typeof una.vesti === "object" ? { ...una.vesti } : {},
     };
   }
 

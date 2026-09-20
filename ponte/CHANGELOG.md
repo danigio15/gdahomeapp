@@ -30,9 +30,24 @@ non si capiva che si premono. Adesso la prima fila è «tutti», accesa di serie
 e le altre tre filtrano.
 
 **Dalla gestione si rinomina un installatore.** Il tasto «Rinomina» accanto a
-«Limite»: il nome nuovo compare nel suo cruscotto e, al rapporto dopo, in cima
-alle plance dei suoi impianti. Fino a ieri l'unica via era eliminarlo e
-rifarlo, cioè riabbinare ogni impianto.
+«Limite»: il nome nuovo compare nel suo cruscotto e, al rapporto dopo, nelle
+plance dei suoi impianti. Fino a ieri l'unica via era eliminarlo e rifarlo,
+cioè riabbinare ogni impianto.
+
+**Ogni plancia porta i nomi che sceglie l'installatore.** Nel cruscotto, nel
+foglio di un impianto, c'è il capitolo «Le plance»: per ognuna due caselle. Il
+**nome della plancia** va nel menu laterale di Home Assistant e in cima alla
+home; il **nome all'avvio** compare col suo logo mentre la pagina si apre,
+nell'app e dentro Home Assistant. Arrivano in casa col rapporto dopo. Fino a
+ieri la prima plancia prendeva da sola il nome dell'installatore, e nel menu
+laterale compariva «giovanni» al posto di «Casa»: quello non succede più, e in
+quelle case il titolo torna «gdahome» finché lui non ne sceglie uno. Un titolo
+scritto in casa, dall'app, resta finché l'installatore non sceglie qualcos'altro.
+Per farlo, il rapporto porta anche **profilo e titolo di ogni plancia** — nomi
+di cose in casa, non di chi ci abita — e lo si legge, come tutto il resto,
+nella console dell'add-on. Un impianto con l'add-on precedente non manda
+l'elenco, e il cruscotto lo dice invece di far finta. Dalla gestione le scelte
+si leggono e basta.
 
 ## 1.5.9.12
 

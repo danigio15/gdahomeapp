@@ -14,7 +14,11 @@ const _pagina =
     '<!DOCTYPE html><html lang="it"><head><title>x</title></head>'
     '<body>la plancia</body></html>';
 
-Premesse _premesse({bool? configurata}) => Premesse(
+Premesse _premesse({
+  bool? configurata,
+  String velo = '',
+  String testata = '',
+}) => Premesse(
   pannello: PannelloDellaPlancia(
     percorso: 'dashboardmodern',
     titolo: 'DashboardModern',
@@ -24,6 +28,8 @@ Premesse _premesse({bool? configurata}) => Premesse(
     primario: true,
     varianti: const ['dashboard.html'],
     configurata: configurata,
+    velo: velo,
+    testata: testata,
   ),
 );
 
@@ -40,6 +46,35 @@ void main() {
     );
     expect(servita, contains('window.__GDAHOME__=true;'));
     expect(servita, contains('la plancia'));
+    /* Senza vesti scelte non si scrive niente: la plancia porta il nome di
+       chi l'ha montata, o gdahome. */
+    expect(servita, isNot(contains('__GDAHOME_VELO__')));
+    expect(servita, isNot(contains('__GDAHOME_TESTATA__')));
+  });
+
+  test('le vesti scelte per questa plancia vanno in testa, in due pezzi', () {
+    /* Il velo lo legge lo script che il ponte attacca al velo; la testata la
+       legge il runtime al momento di disegnare. Sono le stesse due righe che
+       scrive il ponte quando serve lui la pagina dentro Home Assistant. */
+    final servita = _premesse(
+      velo: 'Rossi impianti',
+      testata: 'Casa Rossi',
+    ).conLePremesse(_pagina, ilWebSocket: 'WebSocket');
+    expect(servita, contains('window.__GDAHOME_VELO__="Rossi impianti";'));
+    expect(servita, contains('window.__GDAHOME_TESTATA__=["Casa","Rossi"];'));
+
+    /* Una parola sola non si spezza a meta': il secondo pezzo resta vuoto. */
+    expect(Premesse.inDuePezzi('Elettrotecnica'), ['Elettrotecnica', '']);
+    expect(Premesse.inDuePezzi('  Casa   Rossi  Bianchi '), [
+      'Casa',
+      'Rossi Bianchi',
+    ]);
+
+    /* E un `</script>` dentro un nome non chiude lo script. */
+    final storta = _premesse(velo: '</script><script>alert(1)')
+        .conLePremesse(_pagina, ilWebSocket: 'WebSocket');
+    expect(storta, isNot(contains('</script><script>alert')));
+    expect(storta, contains('window.__GDAHOME_VELO__="/script'));
   });
 
   test('la tenda sulla barra si alza comunque, e solo se serve', () {

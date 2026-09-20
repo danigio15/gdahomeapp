@@ -75,15 +75,18 @@ test("e la scritta accanto al logo dice gda home", (t) => {
   const servito = plancia.leggi(dove("legacy/dashboard-runtime-it.js"));
   const testo = servito.corpo.toString("utf8");
 
-  assert.match(testo, />gda<\/span>/);
-  assert.match(testo, />home<\/span>/);
+  /* La parola la sceglie la pagina al momento di disegnare — e' il nome che
+   * chi installa ha dato a quella plancia, se gliel'ha dato — e di riserva
+   * c'e' «gda home». Il runtime e' un file solo per tutte le plance. */
+  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["gda","home"\]\)\[0\]\}<\/span>/);
+  assert.match(testo, /\(window\.__GDAHOME_TESTATA__\|\|\["gda","home"\]\)\[1\]\}<\/span>/);
   assert.equal(testo.includes(">MODERN</span>"), false, "la parola di prima non c'e' piu'");
 
   /* E anche in inglese: e' lo stesso marchio, e una testata vestita a meta'
    * si vedrebbe solo a chi cambia lingua. */
   const inglese = plancia.leggi(dove("legacy/dashboard-runtime-en.js"));
   const suo = inglese.corpo.toString("utf8");
-  assert.match(suo, />gda<\/span>/);
+  assert.match(suo, /\["gda","home"\]\)\[0\]/);
   assert.equal(suo.includes(">MODERN</span>"), false);
 });
 

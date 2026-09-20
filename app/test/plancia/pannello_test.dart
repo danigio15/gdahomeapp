@@ -136,6 +136,27 @@ void main() {
     expect(scarna.base, '/dashboardmodern_static/x');
     expect(scarna.titolo, 'gdahome');
     expect(scarna.varianti, isEmpty);
+    /* Un ponte di ieri non dice le vesti: vuote, cioe' quelle di serie. */
+    expect(scarna.velo, '');
+    expect(scarna.testata, '');
+  });
+
+  test('le vesti scelte da chi ha montato l\'impianto si leggono com\'è', () {
+    final vestita = leggiLaPlanciaDelPonte({
+      'base': '/dashboardmodern_static/x',
+      'velo': ' Rossi impianti ',
+      'testata': 'Casa Rossi',
+    })!;
+    expect(vestita.velo, 'Rossi impianti');
+    expect(vestita.testata, 'Casa Rossi');
+    /* Una risposta storta non diventa una parola. */
+    final storta = leggiLaPlanciaDelPonte({
+      'base': '/dashboardmodern_static/x',
+      'velo': 1,
+      'testata': null,
+    })!;
+    expect(storta.velo, '');
+    expect(storta.testata, '');
   });
 
   test('«questa plancia è configurata» si legge, e «non lo so» resta tale', () {

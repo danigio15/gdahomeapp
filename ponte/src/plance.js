@@ -243,6 +243,11 @@ export class Plance {
          * Serve a due cose sole: sapere che quello li' non l'ha scelto chi ci
          * abita, e quindi poterlo togliere quando l'installatore se ne va. */
         daInstallatore: titoloPulito(una?.daInstallatore),
+        /* Il titolo che la plancia aveva **prima** che l'installatore ci
+         * mettesse il suo, e l'ultima scelta che ha fatto: il perche' di
+         * tutti e due sta su `vesti`. */
+        titoloDiCasa: titoloPulito(una?.titoloDiCasa),
+        scelta: titoloPulito(una?.scelta),
       });
     }
     /* La prima plancia che si chiama ancora come il prodotto di prima prende
@@ -259,6 +264,9 @@ export class Plance {
         creata_il: 0,
         utenti: [],
         solo_admin: false,
+        daInstallatore: "",
+        titoloDiCasa: "",
+        scelta: "",
       });
     }
     buone.sort((una, altra) =>
@@ -358,8 +366,14 @@ export class Plance {
   }
 
   /**
-   * La prima plancia prende il nome di chi ha montato l'impianto — o se lo
-   * toglie, quando quello se ne va.
+   * Le plance si vestono come dice chi le segue: per ognuna il titolo che
+   * l'installatore ha scelto dal cruscotto, o niente.
+   *
+   * Fino a ieri la prima plancia prendeva da sola il **nome** di chi ha
+   * montato l'impianto. Adesso il nome da solo non va da nessuna parte: nel
+   * menu laterale va quello che l'installatore ha scelto per quella plancia,
+   * e dove non ha scelto niente il titolo resta com'era — o torna com'era, se
+   * era ancora quello messo da noi.
    *
    * ─── Cosa si tocca, e cosa no ────────────────────────────────────────────
    *
@@ -370,33 +384,51 @@ export class Plance {
    * targhetta sulla porta: quello che c'e' dentro la stanza non si muove.
    * `nomeDelCassetto` si chiama solo quando una plancia **nasce**, mai qui.
    *
-   * ─── Quando si tocca ─────────────────────────────────────────────────────
+   * ─── Chi vince ───────────────────────────────────────────────────────────
    *
-   * Solo se il titolo di adesso e' uno dei due che abbiamo messo noi: quello
-   * di serie, o quello che ci aveva messo un installatore. Un titolo scritto
-   * da chi ci abita non si tocca **mai** — nemmeno per rimetterci il nostro,
-   * nemmeno se somiglia a uno dei due. E' la stessa regola con cui, tempo fa,
-   * si e' cambiato il nome del prodotto di prima.
+   * La scelta dell'installatore si mette quando **arriva o cambia**, e il
+   * titolo che c'era — se non l'avevamo messo noi — si ricorda in
+   * `titoloDiCasa`, per restituirlo il giorno che la scelta sparisce. Se nel
+   * frattempo chi ci abita rinomina la plancia a mano, il suo titolo resta
+   * finche' l'installatore non sceglie **qualcos'altro**: la stessa scelta,
+   * che torna ogni minuto col rapporto, non riscrive niente (`scelta` e' li'
+   * per questo). Se no i due se la rinominerebbero a vicenda per sempre.
    *
-   * Cosi', quando l'installatore si toglie, chi ci abita si ritrova `gdahome`
-   * e la sua plancia esattamente com'era: non si perde una tessera, un colore
-   * ne' una stanza.
-   *
-   * @param {string} nome come si chiama l'installatore, o vuoto se non ce n'e'
+   * @param {Record<string, {titolo?: string}>} mappa profilo → vesti
    * @returns {boolean} se qualcosa e' cambiato
    */
-  intestala(nome) {
-    const una = this.archivio.dati.plance.find((quella) => quella.profilo === PROFILO_PRINCIPALE);
-    if (!una) return false;
-    const suo = titoloPulito(nome);
-    /* Nostro vuol dire: quello di serie, o quello che ci avevamo messo noi
-     * l'ultima volta. Tutto il resto e' di chi ci abita. */
-    const nostro = una.titolo === TITOLO_DELLA_PRIMA || una.titolo === una.daInstallatore;
-    if (!nostro) return false;
-    const voluto = suo || TITOLO_DELLA_PRIMA;
-    if (una.titolo === voluto && una.daInstallatore === suo) return false;
-    una.titolo = voluto;
-    una.daInstallatore = suo;
+  vesti(mappa) {
+    let cambiato = false;
+    for (const una of this.archivio.dati.plance) {
+      const scelto = titoloPulito(mappa?.[una.profilo]?.titolo);
+      if (scelto) {
+        if (scelto === una.scelta) continue;
+        /* Nostro vuol dire: quello di serie, o quello che ci avevamo messo
+         * noi l'ultima volta. Tutto il resto e' di chi ci abita, e si tiene
+         * da parte. */
+        const nostro =
+          una.titolo === una.daInstallatore ||
+          (una.profilo === PROFILO_PRINCIPALE && una.titolo === TITOLO_DELLA_PRIMA);
+        if (!nostro) una.titoloDiCasa = una.titolo;
+        una.titolo = scelto;
+        una.daInstallatore = scelto;
+        una.scelta = scelto;
+        cambiato = true;
+      } else if (una.scelta || una.daInstallatore) {
+        /* La scelta non c'e' piu'. Il titolo torna quello di casa solo se e'
+         * ancora il nostro: uno scritto a mano nel frattempo resta suo. */
+        if (una.titolo === una.daInstallatore) {
+          una.titolo =
+            una.titoloDiCasa ||
+            (una.profilo === PROFILO_PRINCIPALE ? TITOLO_DELLA_PRIMA : una.profilo);
+        }
+        una.daInstallatore = "";
+        una.titoloDiCasa = "";
+        una.scelta = "";
+        cambiato = true;
+      }
+    }
+    if (!cambiato) return false;
     this.archivio.salva();
     this._cambiato();
     return true;

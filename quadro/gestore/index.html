@@ -22,8 +22,8 @@
       `/gestore/installatore/<chi>/case`, che le costruisce con lo stesso
       pezzo di programma che le costruisce per lui. Quindi qui non arriva una
       riga che non arrivi anche a lui — i numeri che ogni casa manda da sé, e
-      i nomi solo dei dispositivi che non rispondono. E da qui si guarda e
-      basta: non si installa, non si riavvia, non si rinomina. La casa è sua.
+      i nomi solo dei dispositivi che non rispondono, i titoli delle plance. E
+      da qui si guarda e basta: non si installa, non si riavvia, non si rinomina. La casa è sua.
 
       LA GRAFICA È QUELLA DEL CRUSCOTTO, E ANCHE IL PROGRAMMA DELLA SCHEDA.
 
@@ -1406,6 +1406,21 @@
         overflow-wrap: anywhere;
       }
 
+      /* I nomi scelti per le plance: si leggono, e basta. Una colonna larga
+         per plancia: due nomi su due righe, senza andare a capo a meta'. */
+      .targa.vesti-lette {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      }
+
+      .vesti-lette dd {
+        font-weight: 500;
+        line-height: 1.5;
+      }
+
+      .vesti-lette dd b {
+        font-weight: 700;
+      }
+
       .rinomina {
         display: flex;
         gap: 8px;
@@ -2757,8 +2772,8 @@
 
       <footer>
         Da qui si vedono gli impianti di ogni installatore come li vede lui: i numeri che ogni
-        impianto invia da sé, e i nomi solo dei dispositivi che non rispondono. Non si entra in
-        nessuna casa, e da qui non si tocca niente: si guarda.
+        impianto invia da sé, i titoli delle plance, e i nomi solo dei dispositivi che non
+        rispondono. Non si entra in nessuna casa, e da qui non si tocca niente: si guarda.
       </footer>
     </div>
 
@@ -3822,7 +3837,7 @@
           <section class="riquadro" style="margin-top: 14px">
             <div class="capoRiquadro"><h3>Cosa si vede da qui</h3></div>
             <p class="minuta">
-              <b>Quello che vede l'installatore, e niente di più.</b> Gli impianti di ognuno arrivano dalla stessa strada da cui arrivano a lui: i numeri che ogni impianto invia da sé, e i nomi solo dei dispositivi che non rispondono. Nessuna persona, nessuna stanza, nessuno stato di sensori. E da qui si guarda soltanto: non si installa, non si riavvia, non si rinomina. L'impianto è suo, e la sua chiave resta sua.
+              <b>Quello che vede l'installatore, e niente di più.</b> Gli impianti di ognuno arrivano dalla stessa strada da cui arrivano a lui: i numeri che ogni impianto invia da sé, i titoli delle sue plance, e i nomi solo dei dispositivi che non rispondono. Nessuna persona, nessuna stanza, nessuno stato di sensori. E da qui si guarda soltanto: non si installa, non si riavvia, non si rinomina. L'impianto è suo, e la sua chiave resta sua.
             </p>
             ${
               ORFANE
@@ -4197,6 +4212,38 @@
               : ""
           }
 
+          ${
+            /* I nomi che l'installatore ha scelto per le plance: da qui si
+             * leggono e basta, come tutto il resto della scheda. */
+            Array.isArray(c.plance?.elenco) && c.plance.elenco.length
+              ? `<div class="capitolo">
+                   <h2>Le plance</h2>
+                   <span>i nomi che l'installatore ha scelto</span>
+                 </div>
+
+                 <section class="riquadro">
+                   <dl class="targa vesti-lette">
+                     ${c.plance.elenco
+                       .map((una) => {
+                         const sue = (casa.vesti || {})[una.profilo] || {};
+                         return `
+                     <div>
+                       <dt>${testo(una.titolo || una.profilo)}</dt>
+                       <dd>
+                         nel menu: ${sue.titolo ? `<b>${testo(sue.titolo)}</b>` : "com'è in casa"}<br />
+                         all'avvio: ${sue.velo ? `<b>${testo(sue.velo)}</b>` : "il nome dell'installatore"}
+                       </dd>
+                     </div>`;
+                       })
+                       .join("")}
+                   </dl>
+                   <p class="nota" style="margin-top: 12px">
+                     Li sceglie l'installatore dal suo cruscotto, plancia per plancia: da qui si leggono e basta.
+                   </p>
+                 </section>`
+              : ""
+          }
+
           <div class="capitolo">
             <h2>Dettagli tecnici</h2>
             <span>versioni e rapporto completo</span>
@@ -4224,7 +4271,7 @@
               <summary><h3>Rapporto completo</h3></summary>
               <pre>${testo(JSON.stringify(c, null, 2))}</pre>
               <p class="nota" style="margin-top: 14px">
-                Questo è <strong>tutto</strong> ciò che l'impianto invia, e lo legge uguale il suo installatore. Gli unici nomi presenti sono quelli dei dispositivi che in questo momento non rispondono. Nessuna persona, nessuno stato di sensori, nessun indirizzo pubblico.
+                Questo è <strong>tutto</strong> ciò che l'impianto invia, e lo legge uguale il suo installatore. Gli unici nomi presenti sono quelli dei dispositivi che in questo momento non rispondono, e i titoli delle plance. Nessuna persona, nessuno stato di sensori, nessun indirizzo pubblico.
               </p>
             </details>
           </section>

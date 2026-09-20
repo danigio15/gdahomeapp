@@ -24,7 +24,7 @@
 /* Il nome del prodotto, da una parte sola: e' l'istanza della prima plancia,
  * cioe' il nome sotto cui la pagina tiene le proprie cose nel deposito del
  * browser. */
-import { NOME } from "./marchio.js";
+import { inDuePezzi, NOME } from "./marchio.js";
 
 /* La lingua di serie. La plancia ha una pagina per lingua — `dashboard.html`
  * e' l'italiano — e quale aprire lo decide questa. Home Assistant la sua
@@ -205,9 +205,26 @@ export const AVVISO_ASPETTA_LA_CONFIGURAZIONE =
   'else document.addEventListener("DOMContentLoaded",parti);' +
   "})();</script>";
 
+/* Le vesti di questa plancia, se chi installa le ha scelte: la parola del
+ * velo e la scritta della testata, in due pezzi. La pagina le legge al
+ * momento di disegnare (vedi `marchio.js`: il velo e il runtime le cercano
+ * per nome). Senza, non si scrive niente e la plancia porta il nome di chi
+ * installa, o il nostro. Via `<` e `>` anche qui: finiscono dentro uno
+ * `<script>`, e un `</script>` dentro una stringa chiuderebbe lo script. */
+export function leVesti(vesti) {
+  if (!vesti || typeof vesti !== "object") return "";
+  const pulito = (cosa) => String(cosa ?? "").replace(/[<>]/g, "");
+  let fuori = "";
+  const velo = pulito(vesti.velo);
+  if (velo) fuori += `window.__GDAHOME_VELO__=${JSON.stringify(velo)};`;
+  const testata = pulito(vesti.testata);
+  if (testata) fuori += `window.__GDAHOME_TESTATA__=${JSON.stringify(inDuePezzi(testata))};`;
+  return fuori;
+}
+
 export function conLePremesse(
   pagina,
-  { base, quale = null, lingua, doveIlWebSocket, configurata = null },
+  { base, quale = null, lingua, doveIlWebSocket, configurata = null, vesti = null },
 ) {
   const premessa =
     `<base href="${base.replace(/\/*$/, "/")}" />` +
@@ -219,6 +236,7 @@ export function conLePremesse(
     `window.__DASHBOARDMODERN_PRIMARY__=${quale ? quale.primaria !== false : true};` +
     `window.__DASHBOARDMODERN_LOCALE__=${JSON.stringify(linguaPulita(lingua))};` +
     "window.__GDAHOME__=true;" +
+    leVesti(vesti) +
     /* Se questa plancia ha una configurazione. `null` vuol dire «non lo so»,
      * e allora la pagina non lo scrive nemmeno: chi legge tiene l'orologio. */
     (typeof configurata === "boolean"

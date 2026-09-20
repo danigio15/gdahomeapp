@@ -449,7 +449,10 @@ e nient'altro.
     "elenco": [{ "nome": "Mosquitto broker", "su": true, "allAvvio": true, "aggiornabile": false }]
   },
   "aggiornamenti": { "quanti": 0, "ha": false, "addon": 0, "gdahome": false, "firmware": 0 },
-  "plance": { "quante": 3, "configurate": 3 },
+  "plance": {
+    "quante": 3, "configurate": 3,
+    "elenco": [{ "profilo": "primary", "titolo": "gdahome" }, { "profilo": "suocero", "titolo": "Suocero" }]
+  },
   "telefoni": { "abbinati": 2, "visti7gg": 2 },
   "fuori": { "acceso": true, "filo": true, "daGiorni": 41 },
   "entita": { "totali": 214, "giu": 5, "dispositivi": 3, "nomi": ["Termostato bagno", "Presa garage", "Sensore porta"] },
@@ -465,6 +468,12 @@ posizione, foto, la configurazione della plancia, il contenuto delle
 segnalazioni. Il quadro dice **che c'è da guardare**, e finisce lì: guardare
 dentro casa è un'altra cosa, e non si fa da qui (vedi «Cosa il quadro non può
 fare»).
+
+I **titoli delle plance** invece ci sono («gdahome», «Suocero»), col profilo
+di ognuna: servono all'installatore per scegliere, dal cruscotto, come chiamare
+ogni plancia nel menu laterale e all'avvio — e la scelta torna alla casa nella
+risposta al rapporto (`vesti`). Sono i nomi di cose che stanno in casa, non di
+chi ci abita, e quello che c'è **dentro** una plancia non parte.
 
 La regola si dice meglio così: **cosa c'è nella scatola, non chi ci abita.**
 «Mosquitto broker» ed `eth0` sono nomi di prodotti e di schede, e non dicono
@@ -670,6 +679,7 @@ L'installatore, tutte dentro `/console/` e tutte con la **sua** chiave:
 | `GET` `POST /console/inviti` | i codici in attesa, e uno nuovo |
 | `DELETE /console/inviti/<codice>` | annullalo |
 | `PUT /console/casa/<matricola>` | il nome che le dà l'installatore |
+| `PUT /console/casa/<matricola>/plancia/<profilo>` | i due nomi di una plancia di quella casa: `titolo` (menu laterale e testata della home) e `velo` (la parola all'avvio, col suo logo). Solo una plancia che la casa dice di avere; tutti e due vuoti tolgono la scelta. Tornano alla casa con la risposta al rapporto |
 | `DELETE /console/casa/<matricola>` | non seguirla più: si butta quello che se ne sa **e** la sua chiave, se no il primo rapporto la fa rinascere tre secondi dopo |
 
 E chi tiene il quadro, dentro `/gestore/` e con la chiave di gestione:
@@ -679,7 +689,7 @@ E chi tiene il quadro, dentro `/gestore/` e con la chiave di gestione:
 | `GET /gestore/` | la pagina |
 | `GET /gestore/installatori` | chi c'è, quanti impianti ha ognuno, e quanti sono rimasti senza nessuno |
 | `POST /gestore/installatori` | aggiungine uno. Risponde con la sua chiave, **in chiaro e una volta sola** |
-| `PUT /gestore/installatore/<id>` | nome e limite |
+| `PUT /gestore/installatore/<id>` | nome e limite. Un nome vuoto non passa |
 | `POST /gestore/installatore/<id>/chiave` | una chiave nuova; quella di prima smette subito |
 | `DELETE /gestore/installatore/<id>` | toglilo. I suoi impianti restano |
 

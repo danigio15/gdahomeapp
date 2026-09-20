@@ -21,11 +21,13 @@ import { dirname, join } from "node:path";
 const QUI = dirname(fileURLToPath(import.meta.url));
 const PAGINA = readFileSync(join(QUI, "..", "console", "index.html"), "utf8");
 
-test("i tre capitoli ci sono, e in quest'ordine", () => {
+test("i quattro capitoli ci sono, e in quest'ordine", () => {
   const titoli = [...PAGINA.matchAll(/<div class="capitolo">\s*<h2>([^<]+)<\/h2>/g)].map((una) =>
     una[1].trim(),
   );
-  assert.deepEqual(titoli, ["Da fare", "Stato dell'impianto", "Dettagli tecnici"]);
+  /* «Le plance» sta dopo lo stato e prima dei dettagli: e' una cosa che si
+   * sceglie una volta, non una che si controlla ogni mattina. */
+  assert.deepEqual(titoli, ["Da fare", "Stato dell'impianto", "Le plance", "Dettagli tecnici"]);
 });
 
 test("ogni capitolo dice sottovoce cosa ci si trova dentro", () => {
@@ -33,7 +35,7 @@ test("ogni capitolo dice sottovoce cosa ci si trova dentro", () => {
    * non dice quali quattro. La riga di fianco e' quella che fa risparmiare lo
    * scorrimento. */
   const righe = [...PAGINA.matchAll(/<div class="capitolo">\s*<h2>[^<]+<\/h2>\s*<span>([^<]+)</g)];
-  assert.equal(righe.length, 3, "un capitolo e' rimasto senza la sua riga di spiegazione");
+  assert.equal(righe.length, 4, "un capitolo e' rimasto senza la sua riga di spiegazione");
   for (const [, riga] of righe) {
     assert.ok(riga.trim().length > 12, `«${riga.trim()}» non spiega niente`);
   }
@@ -47,8 +49,12 @@ test("i controlli e gli aggiornamenti stanno nel primo capitolo", () => {
   const dove = (che) => PAGINA.indexOf(che);
   const primo = dove("<h2>Da fare</h2>");
   const secondo = dove("<h2>Stato dell'impianto</h2>");
-  const terzo = dove("<h2>Dettagli tecnici</h2>");
-  assert.ok(primo > 0 && secondo > primo && terzo > secondo, "i capitoli non sono in fila");
+  const terzo = dove("<h2>Le plance</h2>");
+  const quarto = dove("<h2>Dettagli tecnici</h2>");
+  assert.ok(
+    primo > 0 && secondo > primo && terzo > secondo && quarto > terzo,
+    "i capitoli non sono in fila",
+  );
 
   for (const [che, quale] of [
     ["<h3>I controlli</h3>", "i controlli"],
@@ -61,5 +67,7 @@ test("i controlli e gli aggiornamenti stanno nel primo capitolo", () => {
     const sta = dove(che);
     assert.ok(sta > secondo && sta < terzo, `«${che}» non sta piu' nel secondo capitolo`);
   }
-  assert.ok(dove("<h3>Le versioni</h3>") > terzo, "le versioni non stanno piu' nell'ultimo");
+  const vesti = dove("${leVestiDellePlance(casa, c)}");
+  assert.ok(vesti > terzo && vesti < quarto, "le vesti delle plance non stanno nel terzo capitolo");
+  assert.ok(dove("<h3>Le versioni</h3>") > quarto, "le versioni non stanno piu' nell'ultimo");
 });

@@ -582,10 +582,20 @@ function iConti(daFare, marchi = new Map(), segni = new Map()) {
 }
 
 /* Quante plance ci sono, e quante hanno qualcosa dentro. Una plancia vuota e'
- * un impianto lasciato a meta', ed e' uno dei dieci controlli del quadro. */
+ * un impianto lasciato a meta', ed e' uno dei dieci controlli del quadro.
+ *
+ * E **quali sono**: profilo e titolo di ognuna. E' l'elenco da cui, nel
+ * cruscotto, chi installa sceglie il nome che ogni plancia porta nel menu
+ * laterale e sul velo d'avvio — il profilo perche' e' la chiave con cui la
+ * scelta torna indietro, il titolo perche' senza non si saprebbe quale e'
+ * quale. Di quello che una plancia ha **dentro** non parte niente. */
 function lePlance(plance, configurazione) {
   const elenco = typeof plance.elenco === "function" ? plance.elenco() : [];
-  if (!configurazione) return { quante: elenco.length, configurate: 0 };
+  const nomi = elenco.map((una) => ({
+    profilo: String(una.profilo || ""),
+    titolo: String(una.titolo || ""),
+  }));
+  if (!configurazione) return { quante: elenco.length, configurate: 0, elenco: nomi };
   const configurate = elenco.filter((una) => {
     try {
       const dentro = configurazione.leggi(una.profilo);
@@ -594,7 +604,7 @@ function lePlance(plance, configurazione) {
       return false;
     }
   }).length;
-  return { quante: elenco.length, configurate };
+  return { quante: elenco.length, configurate, elenco: nomi };
 }
 
 /* Quanti telefoni sono abbinati, e quanti si sono fatti vedere in una
