@@ -12,15 +12,6 @@ una macchina vera.
 Sessantacinque prove qui dentro; il progetto intero ne conta più di settecento.
 Per accenderlo, [qui sotto](#accenderlo). Manca solo il record DNS.
 
-**C'è un video**, parlato, di quattro minuti: fa vedere tutto
-questo a chi installa — come entra una casa, l'elenco, i dieci controlli, la
-scheda di un impianto, gli aggiornamenti da lontano — e, con lo stesso peso,
-**cosa da lì non si vede**. Gli schermi non sono ricostruzioni: sono fotografie
-di questa console, con dentro una flotta inventata. Sta in
-[`strumenti/video/`](../strumenti/video/README.md), in italiano e in inglese —
-le fotografie restano in italiano, che è l'unica lingua in cui questa pagina è
-scritta, e la voce è sintetica, che è scritto anche lì.
-
 ## A cosa serve
 
 Un installatore mette gdahome in quaranta case. Dopo la consegna non ci torna
@@ -191,12 +182,14 @@ sed -n 's/^QUADRO_GESTORE=//p' /etc/quadro/ambiente
 curl https://quadro.gdahome.org/salute
 ```
 
-Risponde `{"vivo":true,"case":0,"installatori":0,"gestore":true}`. Le tre cose
-da guardare in quella riga:
+Risponde
+`{"vivo":true,"versione":"26bad09","case":0,"installatori":0,"gestore":true}`.
+Le cose da guardare in quella riga:
 
 | | |
 |---|---|
 | `vivo` | il quadro risponde |
+| `versione` | **quale codice sta girando**: le prime sette cifre del commit. È la riga che risponde a «si è aggiornato?» — si confronta a occhio con l'ultimo rilascio, e se combacia il giro ha fatto il suo lavoro. Il numero lo scrive `accendi.sh` quando **scambia** il codice, cioè solo dopo che le prove di quella versione sono passate: è quello che gira davvero, non quello che si sperava di far girare. Manca su un quadro fatto partire a mano |
 | `gestore` | la chiave c'è, e la pagina di gestione si apre. Se è `false`, lo script non l'ha scritta e non si può aggiungere nessuno |
 | `installatori` | quanti ce ne sono. A questo punto zero |
 
@@ -373,7 +366,7 @@ Aprendo una casa:
 | | |
 |---|---|
 | **L'impianto** | matricola, installata il, ogni quanto manda, telefoni abbinati e quanti visti in 7 giorni |
-| **I controlli** | dieci, e ognuno è un nome e basta — «I collegamenti», non «Sono collegati tutti»: la plancia · i telefoni · da fuori casa · i collegamenti · gli aggiornamenti · gli add-on · la rete · la macchina · il backup · le batterie. Il nome dice di cosa si parla, il numero a destra come sta, il bollino se va bene: ✓ verde, ✗ rosso, ◇ questa casa non lo dice |
+| **I controlli** | dieci, e ognuno è un nome e basta — «I collegamenti», non «Sono collegati tutti»: la plancia · i telefoni · da fuori casa · i collegamenti · gli aggiornamenti · gli add-on · la rete · la macchina · il backup · le batterie. Il nome dice di cosa si parla, il numero a destra come sta, il bollino se va bene: ✓ in ordine, ✗ anomalia, ◇ non rilevato — e nel dettaglio, quando manca il dato, «non comunicato» |
 | **La macchina** | la scheda (ODROID-N2+, ODROID-M1, un NUC…), CPU, memoria, disco e quanto resta, temperatura **con la tacca a 75°**, **la vita già consumata del disco**, da quanti giorni è accesa |
 | **La rete** | internet sì o no, ogni scheda con su/giù, cavo o Wi-Fi, quale è la principale, il segnale, l'indirizzo sulla rete di casa — e gli apparati sorvegliati (il router, i ripetitori) con quanti non rispondono |
 | **Gli add-on** | tutti, uno per pastiglia: acceso, **fermo** (parte all'avvio e non gira) o spento a mano |
@@ -404,14 +397,8 @@ chi ci abita, e dirglielo ogni quarto d'ora insegna a non guardare più.
 
 ### Gli stati, e perché hanno una forma
 
-Tre: **● a posto**, **▲ da guardare**, **■ offline**. Offline batte tutto — di
-una casa che non parla non si sa niente, nemmeno che sta bene.
-
-Si chiamava «muta», ed era la parola giusta per la cosa: una casa che ha smesso
-di parlare. Non per chi la legge, però. «Offline» lo capisce chiunque abbia mai
-guardato un apparecchio, e non va accordato al femminile ogni volta che finisce
-in una frase — «1 offline» sta nella pastiglia come «3 offline», e la riga
-sotto la striscia dice «offline 2 volte» senza inciampare.
+Tre: **● in ordine**, **▲ da verificare**, **■ offline**. Offline batte tutto — di una
+casa che non parla non si sa niente, nemmeno che sta bene.
 
 Ce n'era un quarto, **◇ collaudo aperto**, e teneva in una fila sua le case in
 cui un controllo era rosso e nessuno aveva ancora dichiarato finito l'impianto.
@@ -431,7 +418,7 @@ solo non porta il significato. Le forme e le parole sì.
 
 ## Il rapporto
 
-Quello che una casa manda, ogni quindici minuti. Ci sono **numeri e versioni**,
+Quello che una casa manda, ogni minuto (`quadro_ogni`, di serie 1). Ci sono **numeri e versioni**,
 e nient'altro.
 
 ```json
@@ -668,7 +655,7 @@ Le vie, davanti:
 | | |
 |---|---|
 | `GET /` | la soglia: cos'è questo indirizzo, in italiano. Chi lo tiene fra i segnalibri prima o poi lo apre nudo |
-| `GET /salute` | se è vivo, quante case segue, e se la console è aperta |
+| `GET /salute` | se è vivo, **quale versione gira**, quante case segue, e se la console è aperta |
 | `POST /rapporto` | la casa deposita. `x-casa` + la sua chiave; una matricola mai vista nasce qui, senza nome |
 
 L'installatore, tutte dentro `/console/` e tutte con la **sua** chiave:

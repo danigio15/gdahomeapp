@@ -1775,6 +1775,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Interruttore boiler": "Boiler switch",
   "Interruttore del dispositivo": "Device switch",
   "Interruttore della resistenza": "Heating element switch",
+  "Interruttore di": "Switch for",
   "Interruttore solare termico": "Solar switch",
   "Interruttore ventola": "Fan switch",
   "Interruttore, luce o scena da comandare — i popup non ne hanno bisogno": "Switch, light or scene to control — popups do not need one",

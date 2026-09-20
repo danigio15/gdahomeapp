@@ -117,6 +117,12 @@ const PLANCE = new Map([
  * se risponde. */
 const DOVE_TORNARE = "ponte/casa/dove";
 
+/* Se questa casa ha il cruscotto di chi installa, la gestione, o tutt'e due.
+ *
+ * Una domanda sola per due voci del menu, perche' sono la stessa domanda fatta
+ * a chi la sa: due giri sul filo per due campi sarebbero due giri. */
+const IL_QUADRO = "ponte/quadro/stato";
+
 const CONFIG_GET = "dashboardmodern/config/get";
 const CONFIG_SET = "dashboardmodern/config/set";
 const CONFIG_RESTORE = "dashboardmodern/config/restore";
@@ -334,6 +340,16 @@ export class Commissioni {
      * questa casa e' di un installatore, non con che cosa si aprirebbe il suo
      * cruscotto. */
     installatore = false,
+    /* E se e' quello di chi **tiene** il quadro. Stessa regola: un si' o un no,
+     * e la chiave della gestione non passa di qui. */
+    gestore = false,
+    /* I due codici scritti nella scheda dell'add-on. Non servono al ponte per
+     * niente: servono a **non farli ribattere**. Il perche' sta su `_ilQuadro`. */
+    chiaveDelCruscotto = "",
+    chiaveDellaGestione = "",
+    /* Chi c'e' in questa casa, e chi la amministra. Serve a una domanda sola —
+     * `_ilQuadro` — e il perche' sta li'. */
+    utenti = null,
     spegnimento = null,
     aggiornamenti = null,
     ritorno = null,
@@ -351,6 +367,14 @@ export class Commissioni {
      * configurazione ognuna (`plance.js`). */
     this.plance = plance;
     this.installatore = Boolean(installatore);
+    /* E se questo Home Assistant e' quello di chi **tiene** il quadro. Una
+     * casa sola al mondo, e la voce nell'app compare li' e in nessun'altra —
+     * come `installatore`, e per lo stesso motivo: una porta che non si apre
+     * e' peggio di una porta che non c'e'. */
+    this.gestore = Boolean(gestore);
+    this.chiaveDelCruscotto = String(chiaveDelCruscotto || "");
+    this.chiaveDellaGestione = String(chiaveDellaGestione || "");
+    this.utenti = utenti;
     this.configurazione = configurazione;
     /* Il catalogo delle integrazioni e le foto: le altre due cose che la
      * plancia chiedeva all'integrazione. */
@@ -437,6 +461,7 @@ export class Commissioni {
     if (tipo === TIPO_PLANCIA) return this._laPlancia(detto, chiChiede, amministra);
     if (PLANCE.has(tipo)) return this._lePlance(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("ponte/chat/")) return this._chatDellApp(detto);
+    if (tipo === IL_QUADRO) return this._ilQuadro(detto, chiChiede, amministra);
     if (typeof tipo === "string" && tipo.startsWith("ponte/segnalazioni/"))
       return this._segnalazioni(detto);
     if (tipo === CONFIG_GET || tipo === CONFIG_SET || tipo === CONFIG_RESTORE)
@@ -466,6 +491,99 @@ export class Commissioni {
       return si(id, tipo === "frontend/get_user_data" ? { value: null } : null);
     }
     return no(id, "unknown_command", `non conosco ${tipo}`);
+  }
+
+  /* Se questa casa ha il cruscotto di chi installa, la gestione del quadro, o
+   * tutt'e due: le due voci del menu che l'app da sola non puo' sapere.
+   *
+   * A deciderlo e' il ponte — le due chiavi stanno nelle sue opzioni — e chi
+   * non le ha non vede una porta che non si apre. Stessa regola della
+   * «Console», e per lo stesso motivo.
+   *
+   * `dove` e `doveGestione` sono indirizzi del quadro, gli stessi che sa il
+   * rapporto: le voci aprono **le pagine che esistono gia'**, non una loro
+   * copia rifatta nell'app. Una copia sarebbe un terzo posto dove stanno le
+   * stesse regole, e prima o poi i tre direbbero cose diverse.
+   *
+   * ─── Perche' non rispondeva nessuno ──────────────────────────────────────
+   *
+   * Questo pezzo stava scritto **dentro la chat**, in mezzo ai comandi
+   * `ponte/chat/…`, e li' non ci arriva: il giro manda alla chat solo quello
+   * che comincia per `ponte/chat/`, e `ponte/quadro/stato` comincia per
+   * `ponte/quadro/`. La domanda veniva riconosciuta — tutto quello che
+   * comincia per `ponte/` e' roba nostra — e poi cadeva in fondo, su «non
+   * conosco». L'app chiedeva, si sentiva dire di no, e non disegnava niente:
+   * «da app non esce il cruscotto ne' installatore ne' gestore». Non era il
+   * telefono e non erano le opzioni. Era una risposta scritta in una stanza
+   * dove la domanda non entrava.
+   *
+   * La prova qui sotto la tiene al suo posto: chiede senza chat, che e' il
+   * caso che prima falliva. */
+  async _ilQuadro(detto, chiChiede = "", amministra = null) {
+    /* ─── E il codice, a chi amministra ───────────────────────────────────
+     *
+     * Il codice sta gia' nella scheda dell'add-on — e' quello che fa esistere
+     * la voce — e dentro Home Assistant la pagina non lo richiede: la tessera
+     * glielo passa (`ponte/carta/plancia.js`). Nell'app invece la stessa
+     * pagina se lo faceva ribattere, perche' l'app aveva solo l'indirizzo.
+     * Due volte lo stesso codice, e la seconda e' quella che fa pensare che
+     * la prima non abbia funzionato.
+     *
+     * `amministra === true` e non «chiunque abbia abbinato un telefono»: in
+     * Home Assistant quella voce e' `require_admin`, e darla sul filo a chi
+     * non amministra vorrebbe dire una porta piu' aperta dall'app che da casa.
+     * Di la' di quel codice c'e' l'elenco dei clienti di qualcuno.
+     *
+     * Chi non amministra — e chi ha abbinato il telefono prima che il ponte
+     * sapesse di chi fosse, che qui risponde `null` — la voce continua a
+     * vederla e il codice continua a battersela: com'era ieri. Si chiude, non
+     * si apre. */
+    /* ─── «Non si sa» qui si va a vedere ─────────────────────────────────
+     *
+     * `amministra` arriva da `amministratoreSubito`, che risponde **dalla
+     * memoria**: se l'elenco degli utenti non e' ancora stato chiesto torna
+     * `null`. E' voluto — quella risposta sta sulla strada di ogni comando, e
+     * non puo' fermarsi ad aspettare Home Assistant.
+     *
+     * Questa domanda pero' si fa **una volta per collegamento**, nell'istante
+     * in cui il filo si alza: cioe' esattamente quando quella memoria e' piu'
+     * fredda. Trattare quel `null` come un no voleva dire che il codice non
+     * partiva quasi mai, e siccome l'app la domanda non la rifa', quella
+     * sessione restava senza. E' successo: riassociato il telefono, la pagina
+     * continuava a chiedere il codice.
+     *
+     * Quindi qui il «non si sa» non si prende per un no: si va a vedere, e
+     * aspettare una volta per collegamento non costa niente a nessuno. Chi
+     * risponde davvero no resta un no, e un telefono senza utente addosso —
+     * abbinato prima che il ponte sapesse di chi fosse — torna `false` da se',
+     * senza chiedere niente. */
+    let suo = amministra;
+    if (suo === null && this.utenti?.amministratore) {
+      try {
+        suo = await this.utenti.amministratore(chiChiede);
+      } catch (_errore) {
+        /* Home Assistant che non risponde non e' un no e non e' un si': e'
+         * un'altra volta. Qui pero' una risposta va data, e fra le due si
+         * sceglie quella che non apre niente. */
+        suo = false;
+      }
+    }
+    const puo = suo === true;
+    return si(detto?.id ?? null, {
+      installatore: this.installatore,
+      dove: this.installatore ? `${QUADRO_DI_DIFETTO}/console/` : "",
+      ...(puo && this.installatore && this.chiaveDelCruscotto
+        ? { chiave: this.chiaveDelCruscotto }
+        : {}),
+      /* E la gestione, che e' l'altra meta' e mancava: il ponte fabbrica gia'
+       * la sua voce nella barra di Home Assistant, e nell'app non c'era
+       * proprio. Non era rotta — non era mai stata fatta. */
+      gestore: this.gestore,
+      doveGestione: this.gestore ? `${QUADRO_DI_DIFETTO}/gestore/` : "",
+      ...(puo && this.gestore && this.chiaveDellaGestione
+        ? { chiaveGestione: this.chiaveDellaGestione }
+        : {}),
+    });
   }
 
   /* Dove ribussare: le stesse tre cose del QR code, dette sul filo.
@@ -1066,20 +1184,6 @@ export class Commissioni {
          * `chat/state` che riceve la finestra della plancia. */
         case "ponte/chat/stato":
           return si(id, chat.stato());
-        /* Se questa casa e' di chi installa, e quindi se l'app deve disegnare
-         * la voce «Cruscotto installatore». Come per la console: a deciderlo e' il
-         * ponte, non l'app — e chi non e' installatore non vede una porta che
-         * non si apre.
-         *
-         * `dove` e' l'indirizzo del quadro, lo stesso che sa il rapporto: la
-         * voce apre **il cruscotto che esiste gia'**, non una sua copia rifatta
-         * nell'app. Una copia sarebbe un terzo posto dove stanno le stesse
-         * regole, e prima o poi i tre direbbero cose diverse. */
-        case "ponte/quadro/stato":
-          return si(id, {
-            installatore: this.installatore,
-            dove: this.installatore ? `${QUADRO_DI_DIFETTO}/console/` : "",
-          });
         case "ponte/chat/leggi": {
           /* Un centralino giu' non e' una schermata vuota: le parole che
            * c'erano si vedono ancora, e il guasto si dice **accanto** — nella

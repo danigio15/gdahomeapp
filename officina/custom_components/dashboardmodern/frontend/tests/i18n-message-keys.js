@@ -2941,6 +2941,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Sweltering",
   "Swing",
   "Switch (turns it on and off)",
+  "Switch for",
   "Switch-off",
   "Switch, light or scene to control — popups do not need one",
   "Switch, light, fan or input_boolean used by the On/Off button.",

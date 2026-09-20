@@ -85,7 +85,7 @@ export const PARLATO = [
       },
       {
         it: "A questo serve il cruscotto installatore: è la console web di chi installa, ospitata da gdahome. Chi installa non deve mantenere nessun server.",
-        en: "The panel answers that question. It is the dashboard of whoever installs them, and it runs on a gdahome machine: installers run nothing of their own.",
+        en: "That is what the installer dashboard is for: the web console for whoever installs, hosted by gdahome. Installers run nothing of their own.",
       },
     ],
   },
@@ -95,15 +95,15 @@ export const PARLATO = [
     pezzi: [
       {
         it: "Dopo la consegna, in quella casa non ci torni più. Il cliente cambia il Wi-Fi, una presa Zigbee smette di rispondere, Home Assistant non viene aggiornato, il backup non viene eseguito da mesi.",
-        en: "After handover you never go back to that home. The Wi-Fi changes, a Zigbee plug disappears, Home Assistant falls behind, the backup hasn't run in months.",
+        en: "After handover you never go back to that home. The Wi-Fi changes, a Zigbee plug stops answering, Home Assistant is never updated, the backup hasn't run in months.",
       },
       {
         it: "Te ne accorgi solo quando ti chiama il cliente.",
-        en: "You find out when the phone rings.",
+        en: "You find out when the customer calls.",
       },
       {
         it: "Cioè quando il problema è già diventato un reclamo.",
-        en: "That is, when the customer is already angry.",
+        en: "That is, when the problem has already become a complaint.",
       },
     ],
   },
@@ -113,15 +113,15 @@ export const PARLATO = [
     pezzi: [
       {
         it: "Il cruscotto risponde a una domanda sola: quell'impianto, adesso, come sta?",
-        en: "The panel answers one question: that system, right now — how is it?",
+        en: "The dashboard answers one question: that system, right now — how is it?",
       },
       {
-        it: "Gli stati sono tre, e ognuno ha una forma, una parola e un colore.",
-        en: "Three states, and each carries a shape, a word and a colour.",
+        it: "Gli stati sono tre, e ognuno ha una forma, una parola e un colore: in ordine, da verificare, offline.",
+        en: "There are three states, each with a shape, a word and a colour: in order, to check, offline.",
       },
       {
         it: "Lo stato offline viene prima di tutti: di un impianto che non comunica non sappiamo nulla, nemmeno che stia bene.",
-        en: "Offline beats everything: a home that isn't talking tells you nothing — not even that it's fine.",
+        en: "Offline comes before everything: of a system that isn't reporting we know nothing — not even that it's fine.",
       },
     ],
   },
@@ -130,20 +130,20 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "Per collegare un impianto premi Abbina: il cruscotto genera un codice valido un giorno.",
-        en: "To bring a home in, press Pair: out comes a code that lives one day.",
+        it: "Per collegare un impianto apri Abbinamento e premi Genera codice: esce un codice che vale un giorno e un solo impianto.",
+        en: "To connect a system, open Pairing and press Generate code: you get a code that lasts one day and works for one system.",
       },
       {
-        it: "Il codice si incolla nell'add-on, in casa del cliente, che può farlo anche da solo.",
-        en: "It goes into the add-on's field at the customer's home, and they can do it themselves.",
+        it: "In casa del cliente il codice si inserisce nella configurazione dell'add-on gdahome, nella casella «Il codice di chi ti ha fatto l'impianto». Può farlo anche il cliente.",
+        en: "At the customer's home the code goes into the gdahome add-on's configuration, in the field «The code of whoever installed your home». The customer can do it themselves.",
       },
       {
-        it: "Al primo collegamento il codice si lega a quell'impianto, e non funziona più su nessun altro.",
-        en: "The first report binds it to that home, and it's no use to any other.",
+        it: "Entro un minuto l'impianto compare nel cruscotto, e da quel momento il codice non funziona più su nessun altro.",
+        en: "Within a minute the system shows up on the dashboard, and from then on the code works for no other.",
       },
       {
         it: "Chi intercettasse il codice non potrebbe entrare in casa: non apre nessun accesso, permette soltanto di inviare dati di stato.",
-        en: "Intercepting it opens nothing: it isn't a door, it's permission to drop off rows of numbers.",
+        en: "Intercepting the code gets nobody into the home: it opens no access, it only allows status data to be sent.",
       },
     ],
   },
@@ -152,12 +152,16 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "Il cruscotto si apre sul dato che conta: quanti impianti richiedono un intervento adesso.",
-        en: "The panel opens on the number that matters: how many homes need something from you now.",
+        it: "Il cruscotto si apre sull'anello: tutti gli impianti in un cerchio, colorato in proporzione a come stanno, e sotto i tre numeri: offline, da verificare, in ordine.",
+        en: "The dashboard opens on the ring: every system in one circle, coloured in proportion to how they are, with the three counts below: offline, to check, in order.",
       },
       {
-        it: "Ogni riga è un impianto: lo stato, da quanto non comunica, gli avvisi attivi, e l'andamento degli ultimi quattordici giorni.",
-        en: "Each row is a home: its state, how long it's been quiet, the warnings lit, and the strip of the last fourteen days.",
+        it: "Poi le case da verificare adesso, una carta per ciascuna, con scritto cosa non va.",
+        en: "Then the homes to check right now, one card each, saying what's wrong.",
+      },
+      {
+        it: "E in fondo tutti gli impianti, una mattonella per casa: lo stato, da quanto non comunica, e la linea degli ultimi quattordici giorni.",
+        en: "And at the bottom every system, one tile per home: its state, how long since it last reported, and the line of the last fourteen days.",
       },
     ],
   },
@@ -166,16 +170,16 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "Per ogni impianto il cruscotto esegue dieci controlli, tutti i giorni.",
-        en: "For every home, ten checks, looked at every day.",
+        it: "Per ogni impianto il cruscotto esegue dieci controlli, tutti i giorni: la plancia, i telefoni, il collegamento da fuori casa, i collegamenti, gli aggiornamenti, gli add-on, la rete, la macchina, il backup e le batterie.",
+        en: "For every system the dashboard runs ten checks, every day: the dashboard, the phones, access from outside, connections, updates, add-ons, network, machine, backup and batteries.",
       },
       {
         it: "Ogni controllo porta il nome di ciò che verifica: «I collegamenti», non «Sono tutti collegati».",
-        en: "Each one is just a name: «Connections», not «Everything is connected».",
+        en: "Each check is named after what it verifies: «Connections», not «Everything is connected».",
       },
       {
-        it: "Il risultato è verde, rosso, oppure — ed è importante — «questa casa non lo dice».",
-        en: "Green, red, or — and this matters — this home doesn't say.",
+        it: "Il risultato è verde, rosso, oppure — ed è importante — «non comunicato»: il dato non è arrivato, che non è la stessa cosa di un guasto.",
+        en: "The result is green, red, or — and this matters — «not reported»: the data didn't arrive, which is not the same as a fault.",
       },
     ],
   },
@@ -184,11 +188,15 @@ export const PARLATO = [
     dopo: 0.6,
     pezzi: [
       {
-        it: "La scheda di un impianto mostra la macchina: il modello, la CPU, il disco e la temperatura. Poi le interfacce di rete, una per una, e gli add-on installati.",
-        en: "Inside one home: the machine, with its board, the CPU, the disk and the temperature. The network, card by card. The add-ons, one by one.",
+        it: "Un impianto si apre in un foglio. In cima, cosa non va, la matricola, quando è stato abbinato, l'ultimo rapporto e i telefoni collegati.",
+        en: "A system opens in a sheet. At the top, what's wrong, the serial, when it was paired, the last report and the connected phones.",
       },
       {
-        it: "E l'elenco dei dispositivi che non rispondono, con i loro nomi.",
+        it: "Poi i capitoli: da fare, con i controlli e gli aggiornamenti; lo stato dell'impianto, con macchina, rete, add-on, gli ultimi quattordici giorni e i dispositivi; e i dettagli tecnici, con le versioni e il rapporto completo.",
+        en: "Then the chapters: to do, with the checks and the updates; the system's state, with machine, network, add-ons, the last fourteen days and the devices; and the technical details, with versions and the full report.",
+      },
+      {
+        it: "E i dispositivi che non rispondono, con i loro nomi.",
         en: "And the devices that don't answer, by name.",
       },
     ],
@@ -199,19 +207,19 @@ export const PARLATO = [
     pezzi: [
       {
         it: "La vita del disco: una memoria eMMC sopporta un numero limitato di scritture. Seguirne il consumo permette di sostituirla prima che si guasti.",
-        en: "Disk life: an eMMC has a number of writes and then it's done. Watching it climb means replacing it when you choose.",
+        en: "Disk life: an eMMC memory takes a limited number of writes. Following how much is used up lets you replace it before it fails.",
       },
       {
-        it: "La tacca dei settantacinque gradi: oltre questa temperatura l'impianto non si guasta, ma rallenta.",
-        en: "The mark at seventy-five degrees: above it the home doesn't break, it gets slow.",
+        it: "La temperatura, con la soglia a settantacinque gradi: oltre, l'impianto non si guasta, ma rallenta.",
+        en: "Temperature, with the threshold at seventy-five degrees: above it the system doesn't break, it slows down.",
       },
       {
-        it: "Un add-on fermo non è un add-on spento: il cruscotto segnala solo quelli impostati per avviarsi da soli.",
-        en: "And a stopped add-on isn't a switched-off one: only what starts on boot and is down counts.",
+        it: "Un add-on fermo non è un add-on spento: il cruscotto segnala solo quelli con l'avvio automatico.",
+        en: "A stopped add-on isn't a switched-off add-on: the dashboard only flags the ones set to start automatically.",
       },
       {
         it: "E quando un dato non c'è, il cruscotto lo lascia vuoto invece di stimarlo.",
-        en: "Where a number isn't there, nothing is made up.",
+        en: "And when a number isn't there, the dashboard leaves it blank instead of guessing.",
       },
     ],
   },
@@ -221,11 +229,11 @@ export const PARLATO = [
     pezzi: [
       {
         it: "Sapere che un impianto è da aggiornare e non poter intervenire serve a poco. Qui vedi quali impianti aggiornare, da quale versione a quale, e il pulsante per farlo.",
-        en: "Seeing a home fall behind and being unable to act is half a job. Here is who's behind, from which version to which, and the button to install.",
+        en: "Knowing a system needs updating and not being able to act is of little use. Here you see which systems to update, from which version to which, and the button to do it.",
       },
       {
-        it: "Il backup viene eseguito prima, sempre. Un impianto per volta. E ciò che non si installa in automatico non ha nessun pulsante.",
-        en: "Backup comes first, always. One at a time. And what cannot install itself gets no button.",
+        it: "Il backup viene eseguito prima, sempre. Un impianto per volta: per questo non c'è un «installa tutti». E ciò che non si installa in automatico non ha nessun pulsante.",
+        en: "Backup runs first, always. One system at a time: that's why there is no «install all». And what can't install itself gets no button.",
       },
     ],
   },
@@ -235,29 +243,15 @@ export const PARLATO = [
     pezzi: [
       {
         it: "Leggere i dati e intervenire sono due permessi distinti, e il secondo non è compreso nel primo.",
-        en: "Seeing and touching are two permissions, and the second doesn't come free with the first.",
+        en: "Reading the data and acting on it are two separate permissions, and the second isn't included in the first.",
       },
       {
         it: "La manutenzione da remoto è un secondo interruttore, disattivato di serie: lo attiva il cliente, dalle opzioni dell'add-on.",
-        en: "Maintenance is a second switch, off out of the box: it's turned on by whoever lives in that home, from the add-on's options.",
+        en: "Remote maintenance is a second switch, off by default: the customer turns it on, from the add-on's options.",
       },
       {
         it: "E ogni comando inviato dal cruscotto resta scritto per esteso nel registro dell'add-on.",
-        en: "And whatever the panel asked of it is readable word for word, in the add-on's console.",
-      },
-    ],
-  },
-  {
-    scena: "quando-una-casa-tace",
-    dopo: 0.6,
-    pezzi: [
-      {
-        it: "Quando un impianto smette di comunicare, il cruscotto invia una notifica dove la leggi davvero: Telegram, Slack o il tuo gestionale.",
-        en: "When a home stops talking, the panel posts to an address of yours: Telegram, Slack, your own back office.",
-      },
-      {
-        it: "La parte difficile non è accorgersene, è evitare gli avvisi inutili. Il cruscotto aspetta due ore, avvisa una volta sola, e se a fermarsi è stato lui non avvisa affatto.",
-        en: "The hard part isn't noticing: it's staying quiet. It waits two hours, says it once, and wakes nobody when the outage was its own.",
+        en: "And every command the dashboard sends stays written out in full in the add-on's log.",
       },
     ],
   },
@@ -267,27 +261,27 @@ export const PARLATO = [
     pezzi: [
       {
         it: "E adesso la parte più importante: cosa il cruscotto non può fare.",
-        en: "And now the part that comes before all the rest: what the panel cannot do.",
+        en: "And now the part that matters most: what the dashboard cannot do.",
       },
       {
         it: "Non apre la plancia del cliente.",
-        en: "It doesn't open the dashboard.",
+        en: "It doesn't open the customer's dashboard.",
       },
       {
         it: "Non vede entità, stanze o persone.",
         en: "It sees no entities, rooms or people.",
       },
       {
-        it: "Non esegue nessuna operazione oltre l'aggiornamento, e solo sugli impianti che l'hanno consentito.",
-        en: "It touches nothing beyond its one verb, and only where that home opened maintenance.",
+        it: "Può fare due sole cose, e solo sugli impianti che l'hanno autorizzato: avviare un aggiornamento già in attesa e riavviare Home Assistant. Nient'altro.",
+        en: "It can do two things only, and only on systems that allowed it: start an update already waiting, and restart Home Assistant. Nothing else.",
       },
       {
         it: "Come un elettricista che sostituisce un interruttore senza entrare nella vita di chi abita la casa.",
-        en: "An electrician replaces a switch without reading the residents' mail.",
+        en: "Like an electrician replacing a switch without stepping into the lives of the people who live there.",
       },
       {
         it: "Per accedere a un impianto serve un abbinamento, e lo concede il cliente.",
-        en: "Getting into a home takes a pairing, and that is given by whoever lives there.",
+        en: "Getting into a system takes a pairing, and the customer is the one who grants it.",
       },
     ],
   },
@@ -297,15 +291,15 @@ export const PARLATO = [
     pezzi: [
       {
         it: "Quello che ogni impianto invia, in tempo reale, sono numeri e versioni.",
-        en: "What a home sends, in real time, is numbers and versions.",
+        en: "What every system sends, in real time, is numbers and versions.",
       },
       {
         it: "Restano fuori i nomi delle stanze, i nomi delle persone, gli stati dei sensori, il nome della rete Wi-Fi, l'indirizzo pubblico e le telecamere.",
-        en: "Left out are room names, people's names, sensor states, the Wi-Fi name, the public address, cameras.",
+        en: "Room names, people's names, sensor states, the Wi-Fi name, the public address and the cameras stay out.",
       },
       {
         it: "Il cruscotto sa cosa c'è nell'impianto, non chi abita la casa.",
-        en: "What's in the box, not who lives in it.",
+        en: "The dashboard knows what's in the box, not who lives in the home.",
       },
     ],
   },
@@ -315,7 +309,7 @@ export const PARLATO = [
     pezzi: [
       {
         it: "Il cruscotto è uno solo, ospitato da gdahome. All'installatore basta una chiave per aprire la pagina.",
-        en: "There is one panel, and it runs on a gdahome machine. The installer is handed a key and opens a page.",
+        en: "There is one dashboard, hosted by gdahome. The installer needs only a key to open the page.",
       },
       {
         it: "Nessun server, nessun dominio, niente da mantenere.",

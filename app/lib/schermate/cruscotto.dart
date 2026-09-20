@@ -44,8 +44,17 @@ class SchermataDelCruscotto extends StatefulWidget {
   const SchermataDelCruscotto({
     super.key,
     required this.dove,
+    this.chiave = '',
     this.visibile = true,
   });
+
+  /// Il codice che apre questa pagina, se il ponte l'ha dato.
+  ///
+  /// Sta nella scheda dell'add-on — e' quello che fa esistere la voce — e il
+  /// ponte lo passa **solo a chi amministra** questa casa. Vuoto vuol dire che
+  /// la pagina lo chiede, come faceva prima: non e' un guasto, e' il caso di
+  /// chi non amministra.
+  final String chiave;
 
   /// L'indirizzo del cruscotto, come l'ha detto il ponte. Vuoto non arriva
   /// mai: senza, questa schermata non si apre nemmeno.
@@ -109,6 +118,16 @@ class _StatoDelCruscotto extends State<SchermataDelCruscotto> {
     final controllore = riquadro.costruisciIlControllore(
       quandoCaricata: () {
         if (mounted) setState(() => _caricata = true);
+        /* E appena la pagina c'e', il codice: cosi' non lo si ribatte.
+         *
+         * `_controllore` e non la variabile qui sotto: questa chiusura la si
+         * scrive **dentro** l'espressione che quella variabile la crea, e li'
+         * non esiste ancora. Il campo si', ed e' gia' assegnato quando la
+         * pagina finisce di caricare. */
+        final suo = _controllore;
+        if (suo != null) {
+          unawaited(riquadro.consegnaLaChiave(suo, widget.chiave));
+        }
       },
       quandoFallisce: (perche) {
         if (mounted) setState(() => _guaio = perche);

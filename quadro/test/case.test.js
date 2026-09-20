@@ -94,7 +94,7 @@ test("le case si ordinano per quello che chiedono, non per come sono arrivate", 
     const aPosto = "casa_11111111111111111111111111111111";
     const offline = "casa_22222222222222222222222222222222";
     b.case.deposita(offline, carta(b), CHI);
-    b.case.rinomina(offline, "L'offline", CHI);
+    b.case.rinomina(offline, "Quella offline", CHI);
     b.vai(3 * 60 * MINUTO);
     b.case.deposita(aPosto, { ...carta(b), telefoni: { abbinati: 1, visti7gg: 1 } }, CHI);
     b.case.rinomina(aPosto, "Quella a posto", CHI);

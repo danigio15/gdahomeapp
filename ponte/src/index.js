@@ -12,6 +12,7 @@ import { join } from "node:path";
 import { Abbinamento } from "./abbinamento.js";
 import { Aggiornamento } from "./aggiornamento.js";
 import { fabbricaIlRapporto, Postino, QUADRO_DI_DIFETTO } from "./rapporto.js";
+import { Segni } from "./segni.js";
 import { Casa } from "./casa.js";
 import { Chat } from "./chat.js";
 import { Chiamata } from "./chiamata.js";
@@ -155,6 +156,19 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * `update.` e si manda al telefono, che con tre righe sa quello che nella
    * dashboard si vede col pallino rosso. */
   const aggiornamenti = new Aggiornamenti({ casa, registro });
+  /* Chi c'e' in questa casa, e chi la amministra.
+   *
+   * Non si tiene niente sul disco: si chiede a Home Assistant e la risposta
+   * vale un minuto. Serve a tre cose: disegnare le spunte di «chi la vede»,
+   * rispondere alla sola domanda che l'ingress non sa — «questo utente
+   * amministra?» — e dire al ponte se il telefono che chiede una plancia
+   * riservata a chi amministra ne ha il diritto — e alle commissioni, per
+   * decidere se dare all'app i due codici del quadro.
+   *
+   * Sta **prima** delle commissioni perche' e' loro: dichiararlo dopo e
+   * passarlo lo stesso vuol dire un ponte che non si accende. */
+  const utenti = new UtentiDiCasa({ casa, registro });
+
   const commissioni = new Commissioni({
     casa,
     registro,
@@ -167,18 +181,18 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     segnalazioni,
     chat,
     installatore: opzioni.installatore,
+    gestore: opzioni.gestore,
+    /* I due codici, per non farli ribattere nell'app: il perche' sta su
+     * `_ilQuadro`, e li vede solo chi amministra questa casa. */
+    chiaveDelCruscotto: opzioni.chiaveDelCruscotto,
+    chiaveDellaGestione: opzioni.chiaveDellaGestione,
+    /* E chi amministra: serve a decidere se quei due codici si danno. Senza,
+     * `_ilQuadro` puo' solo leggere la memoria — che quando la domanda arriva
+     * e' ancora vuota — e non darli mai. */
+    utenti,
     spegnimento,
     aggiornamenti,
   });
-  /* Chi c'e' in questa casa, e chi la amministra.
-   *
-   * Non si tiene niente sul disco: si chiede a Home Assistant e la risposta
-   * vale un minuto. Serve a tre cose: disegnare le spunte di «chi la vede»,
-   * rispondere alla sola domanda che l'ingress non sa — «questo utente
-   * amministra?» — e dire al ponte se il telefono che chiede una plancia
-   * riservata a chi amministra ne ha il diritto. */
-  const utenti = new UtentiDiCasa({ casa, registro });
-
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni, utenti });
 
   /* Le plance fra le «Plance» di Home Assistant, una voce per ognuna.
@@ -290,6 +304,24 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     casa,
     ferro,
     aggiornamenti,
+    /* Le icone vere degli aggiornamenti e le loro note intere, per il quadro.
+     *
+     * Le scarica il ponte — dal Supervisor per un add-on, dai marchi per
+     * un'integrazione — esattamente come fa per l'app. Non finiscono in ogni
+     * rapporto: e' il quadro a dire quali non ha, e partono solo quelle. Il
+     * perche' sta in cima a `segni.js`. */
+    segni: new Segni({
+      aggiornamenti,
+      casa,
+      registro,
+      /* L'icona che sta in casa si chiede per **la stessa strada dell'app**, e
+       * non se ne apre una seconda accanto: due strade per la stessa icona
+       * vuol dire due schermi che ne mostrano una sola, ed e' successo — nel
+       * cruscotto restavano le letterine mentre nell'app le icone c'erano. */
+      ilLogoDiCasa: (entita) =>
+        commissioni.rispondi({ id: null, type: "ponte/aggiornamenti/logo", entity_id: entita }),
+    }),
+    segniChiesti: () => postino.segniChiesti,
     lavori,
     manutenzione: opzioni.manutenzione,
     plance,

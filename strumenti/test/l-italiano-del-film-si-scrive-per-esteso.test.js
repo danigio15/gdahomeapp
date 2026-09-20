@@ -45,7 +45,7 @@ function leDidascalie() {
       const dentro = readFileSync(join(cartella, nome), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
       /* Il primo pezzo di `t("italiano", "inglese")`, con gli apici di tutte
          e due le razze e le fughe rimesse a posto. */
-      return [...dentro.matchAll(/t\(\s*(["'])((?:\\.|(?!\1).)*)\1/g)].map((una) => [
+      return [...dentro.matchAll(/(?<![\w.])t\(\s*(["'])((?:\\.|(?!\1).)*)\1/g)].map((una) => [
         nome,
         una[2].replace(/\\(['"])/g, "$1"),
       ]);
@@ -56,7 +56,9 @@ function leDidascalie() {
 const leBattute = () => PARLATO.flatMap((scena) => scena.pezzi.map((pezzo) => pezzo.it));
 
 /** Senza i tag, che non si vedono e non si sentono. */
-const soloParole = (testo) => testo.replace(/<[^>]*>/g, " ");
+/* Senza uno spazio al posto del tag: «sull'<b>anello</b>» e' un'elisione, e con
+   lo spazio in mezzo sembrerebbe un accento scritto con l'apostrofo. */
+const soloParole = (testo) => testo.replace(/<[^>]*>/g, "");
 
 const TUTTE = () => [
   ...leDidascalie().map(([nome, testo]) => [`si vede (${nome})`, testo]),

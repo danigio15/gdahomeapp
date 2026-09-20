@@ -52,7 +52,7 @@
 
 /* Dopo quanti rapporti saltati una casa e' offline. Uno solo puo' essere un
  * riavvio, tre no. */
-export const MUTA_DOPO = 3;
+export const OFFLINE_DOPO = 3;
 
 /* Quanti giorni puo' stare fermo un backup prima che sia una cosa da guardare.
  * Due settimane: chi lo fa ogni notte se ne accorge subito, chi lo fa a mano
@@ -78,7 +78,7 @@ const plurale = (quanti, uno, molti) => `${quanti} ${quanti === 1 ? uno : molti}
 /* Quando una casa non manda quel pezzo di rapporto. Non e' zero e non e' un
  * guasto: e' silenzio, e si scrive sempre con le stesse parole perche' chi
  * guarda dieci righe deve riconoscerlo a colpo d'occhio senza rileggerlo. */
-const NON_LO_DICE = "questa casa non lo dice";
+const NON_LO_DICE = "non comunicato";
 
 export function daQuanto(quando, adesso = Date.now()) {
   const minuti = Math.round((adesso - Date.parse(String(quando))) / MINUTO);
@@ -95,7 +95,7 @@ export function eOffline(carta, adesso = Date.now()) {
   const quando = Date.parse(String(carta?.quando));
   if (!Number.isFinite(quando)) return true;
   const ogni = numero(carta?.ogni) || 15;
-  return adesso - quando > ogni * MUTA_DOPO * MINUTO;
+  return adesso - quando > ogni * OFFLINE_DOPO * MINUTO;
 }
 
 const backupFermo = (carta) => {
@@ -158,7 +158,7 @@ export function iControlli(carta) {
     c.plance
       ? c.plance.configurate > 0
         ? `${c.plance.configurate} su ${c.plance.quante}`
-        : "nessuna, è vuota"
+        : "nessuna configurata"
       : NON_LO_DICE,
   );
   metti(
@@ -176,9 +176,9 @@ export function iControlli(carta) {
     c.fuori
       ? c.fuori.acceso
         ? c.fuori.filo
-          ? "filo su"
-          : "acceso, filo giù"
-        : "spento"
+          ? "connesso"
+          : "attivo, non connesso"
+        : "disattivato"
       : NON_LO_DICE,
   );
   metti(
@@ -187,7 +187,7 @@ export function iControlli(carta) {
     quantiGiu(c) === null
       ? NON_LO_DICE
       : quantiGiu(c) === 0
-        ? `${c.entita.totali} entità, tutte là`
+        ? `${c.entita.totali} entità, tutte raggiungibili`
         : plurale(quantiApparecchi(c), "dispositivo non collegato", "dispositivi non collegati"),
   );
   metti(
@@ -204,7 +204,7 @@ export function iControlli(carta) {
     c.addon ? addonGiu(c) === 0 : null,
     c.addon
       ? addonGiu(c) === 0
-        ? `${c.addon.accesi} accesi su ${c.addon.quanti}`
+        ? `${c.addon.accesi} attivi su ${c.addon.quanti}`
         : `${plurale(addonGiu(c), "fermo", "fermi")} con l'avvio automatico`
       : NON_LO_DICE,
   );
@@ -213,10 +213,14 @@ export function iControlli(carta) {
     c.rete ? Boolean(c.rete.internet) && (c.rete.sorvegliate?.giu ?? 0) === 0 : null,
     c.rete
       ? !c.rete.internet
-        ? "non vede internet"
+        ? "senza internet"
         : (c.rete.sorvegliate?.giu ?? 0) > 0
-          ? plurale(c.rete.sorvegliate.giu, "apparato giù", "apparati giù")
-          : "internet c'è"
+          ? plurale(
+              c.rete.sorvegliate.giu,
+              "apparato non raggiungibile",
+              "apparati non raggiungibili",
+            )
+          : "internet raggiungibile"
       : NON_LO_DICE,
   );
   metti(
@@ -232,7 +236,7 @@ export function iControlli(carta) {
             : `disco al ${c.macchina.disco}%`,
         ]
           .filter(Boolean)
-          .join(" · ") || "senza numeri da guardare"
+          .join(" · ") || "nessun valore disponibile"
       : NON_LO_DICE,
   );
   metti(
@@ -240,7 +244,7 @@ export function iControlli(carta) {
     c.backup ? !backupFermo(c) : null,
     c.backup
       ? c.backup.giorniFa === null || c.backup.giorniFa === undefined
-        ? "mai fatto"
+        ? "mai eseguito"
         : `l'ultimo ${plurale(c.backup.giorniFa, "giorno fa", "giorni fa")}`
       : NON_LO_DICE,
   );
@@ -250,7 +254,7 @@ export function iControlli(carta) {
     c.batterie
       ? c.batterie.scariche === 0
         ? c.batterie.piuBassa === null || c.batterie.piuBassa === undefined
-          ? "nessuna in casa"
+          ? "nessuna presente"
           : `la più bassa al ${c.batterie.piuBassa}%`
         : `${c.batterie.scariche} sotto soglia`
       : NON_LO_DICE,
@@ -282,14 +286,9 @@ function laMacchinaRegge(m) {
 /**
  * Lo stato di una casa, in una parola.
  *
- * Tre, e l'ordine conta. **Offline batte tutto**: di una casa che non parla
- * non si sa niente, nemmeno che sta bene — quello che si vede di lei e'
- * vecchio. Poi quello che non va. Poi il resto.
- *
- * Si chiamava «muta», ed era la parola giusta per quello che succede — una
- * casa che ha smesso di parlare — ma non per chi la legge: «offline» lo
- * capisce chiunque abbia mai guardato un apparecchio, e non va accordato al
- * femminile ogni volta che finisce in una frase.
+ * Tre, e l'ordine conta. **Offline batte tutto**: di una casa che non parla non
+ * si sa niente, nemmeno che sta bene — quello che si vede di lei e' vecchio.
+ * Poi quello che non va. Poi il resto.
  *
  * Ce n'era un quarto, «collaudo aperto», e teneva in una fila sua le case in
  * cui un controllo era rosso e nessuno aveva ancora dichiarato finito
@@ -305,8 +304,8 @@ export function loStato(casa, adesso = Date.now()) {
       segno: "■",
       parola: "offline",
       perché: c
-        ? `Non manda un rapporto da ${daQuanto(c.quando, adesso)}. Quello che si vede qui sotto è vecchio di altrettanto.`
-        : "Non è ancora arrivato nessun rapporto da questa casa.",
+        ? `Nessun rapporto da ${daQuanto(c.quando, adesso)}: i dati qui sotto risalgono ad allora.`
+        : "Nessun rapporto ancora ricevuto da questo impianto.",
     };
   }
 
@@ -326,11 +325,19 @@ export function loStato(casa, adesso = Date.now()) {
   if (c.plance && c.plance.configurate === 0) guai.push("plancia da configurare");
   if (c.telefoni && c.telefoni.abbinati === 0) guai.push("nessun telefono abbinato");
   if (c.fuori && !(c.fuori.acceso && c.fuori.filo))
-    guai.push(c.fuori.acceso ? "da fuori casa, filo giù" : "da fuori casa, spento");
+    guai.push(
+      c.fuori.acceso ? "accesso da fuori casa non connesso" : "accesso da fuori casa disattivato",
+    );
   if (c.rete && !c.rete.internet) guai.push("senza internet");
   if (addonGiu(c) > 0) guai.push(plurale(addonGiu(c), "add-on fermo", "add-on fermi"));
   if ((c.rete?.sorvegliate?.giu ?? 0) > 0)
-    guai.push(plurale(c.rete.sorvegliate.giu, "apparato di rete giù", "apparati di rete giù"));
+    guai.push(
+      plurale(
+        c.rete.sorvegliate.giu,
+        "apparato di rete non raggiungibile",
+        "apparati di rete non raggiungibili",
+      ),
+    );
   if ((quantiGiu(c) ?? 0) > 0)
     guai.push(
       plurale(quantiApparecchi(c), "dispositivo non collegato", "dispositivi non collegati"),
@@ -354,13 +361,13 @@ export function loStato(casa, adesso = Date.now()) {
     return {
       chiave: "guardare",
       segno: "▲",
-      parola: "da guardare",
+      parola: "da verificare",
       perché: restano
-        ? `${prime.join(", ")}, e altre ${restano} cose qui sotto.`
+        ? `${prime.join(", ")} e altre ${restano} segnalazioni.`
         : `${prime.join(", ")}.`,
     };
   }
-  return { chiave: "posto", segno: "●", parola: "a posto", perché: "" };
+  return { chiave: "posto", segno: "●", parola: "in ordine", perché: "" };
 }
 
 /**
@@ -377,7 +384,10 @@ export function lePastiglie(carta) {
   if (c.rete && !c.rete.internet) metti("senza internet", "male");
   if (addonGiu(c) > 0) metti(plurale(addonGiu(c), "add-on fermo", "add-on fermi"), "male");
   if ((c.rete?.sorvegliate?.giu ?? 0) > 0)
-    metti(plurale(c.rete.sorvegliate.giu, "apparato giù", "apparati giù"), "male");
+    metti(
+      plurale(c.rete.sorvegliate.giu, "apparato non raggiungibile", "apparati non raggiungibili"),
+      "male",
+    );
   if ((quantiGiu(c) ?? 0) > 0)
     metti(plurale(quantiApparecchi(c), "non collegato", "non collegati"), "male");
   if ((c.registro?.errori24h ?? 0) > 0)
@@ -397,7 +407,7 @@ export function lePastiglie(carta) {
   if (backupFermo(c))
     metti(
       c.backup.giorniFa === null || c.backup.giorniFa === undefined
-        ? "backup mai fatto"
+        ? "backup mai eseguito"
         : `backup fermo da ${c.backup.giorniFa} gg`,
       "attenta",
     );
@@ -405,7 +415,10 @@ export function lePastiglie(carta) {
   if (c.telefoni && c.telefoni.abbinati === 0) metti("nessun telefono abbinato", "attenta");
 
   if (!p.length) {
-    metti(c.entita ? `${c.entita.totali} entità, tutte là` : "nessuna spia accesa", "bene");
+    metti(
+      c.entita ? `${c.entita.totali} entità, tutte raggiungibili` : "nessuna segnalazione",
+      "bene",
+    );
   }
   return p;
 }

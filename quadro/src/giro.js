@@ -98,11 +98,16 @@ export class Giro {
     const { offline, tornate } = chiTace(sue, { tacePer: this.tacePer, adesso: ora });
     if (!offline.length && !tornate.length) return 0;
 
-    /* Chi non ha detto dove vuole essere avvisato non riceve niente — ma le sue
-     * case che sono tornate a parlare si dimenticano lo stesso, se no il giorno
-     * che accende gli avvisi si becca un mucchio di «e' tornata» di roba
-     * successa mesi fa. */
-    if (!uno.avvisi) {
+    /* Chi non ha detto dove vuole essere avvisato non riceve niente — e nemmeno
+     * chi ha l'utenza congelata: se la sua pagina non gli fa vedere una riga,
+     * mandargli una mail sulla casa di un cliente sarebbe la stessa cosa detta
+     * per un'altra strada.
+     *
+     * In tutti e due i casi le sue case che sono tornate a parlare si
+     * dimenticano lo stesso, se no il giorno che si scongela — o che accende
+     * gli avvisi — si becca un mucchio di «e' tornata» di roba successa mesi
+     * fa. */
+    if (!uno.avvisi || uno.congelato) {
       for (const quella of tornate) this.case.segnaAvvisata(quella.casa.casa, null);
       return 0;
     }

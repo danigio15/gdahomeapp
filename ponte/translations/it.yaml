@@ -77,13 +77,14 @@ configuration:
         description: >-
           Lascialo spento se non ti serve. E' un secondo interruttore: mandargli i
           numeri l'hai gia' deciso col codice qui sopra, lasciargli mettere le mani
-          dentro e' un'altra cosa. Acceso, dal suo cruscotto puo' far partire un
-          aggiornamento che questa casa ha gia' in attesa — quelli che vedi anche
-          tu in Impostazioni — e niente altro: non apre la tua plancia, non legge i
-          tuoi sensori, non tocca la tua configurazione. Non si apre nessuna porta
+          dentro e' un'altra cosa. Acceso, dal suo cruscotto puo' fare due cose e
+          basta: far partire un aggiornamento che questa casa ha gia' in attesa —
+          quelli che vedi anche tu in Impostazioni — e riavviare Home Assistant,
+          lo stesso «Riavvia» di Impostazioni. Niente altro: non apre la tua
+          plancia, non legge i tuoi sensori, non tocca la tua configurazione. Non si apre nessuna porta
           verso casa tua: e' questa casa che bussa, e nella risposta trova cosa
           fare. Cosa gli e' stato chiesto e com'e' andata li leggi nel rapporto,
-          nella scheda «Il quadro».
+          nella scheda «Il cruscotto».
       quadro_marchio:
         name: Lascia che la plancia porti il marchio di chi ti ha fatto l'impianto
         description: >-
@@ -133,10 +134,9 @@ configuration:
           Scrivilo sul tuo Home Assistant e non su quello di un cliente: le opzioni
           di un add-on stanno su disco in chiaro e finiscono nei backup.
   gestione:
-    name: Chi tiene il quadro
+    name: Chi gestisce il cruscotto
     description: >-
-      Una casa sola al mondo, e non e' la tua: e' quella di chi il quadro degli installatori lo
-      manda avanti. Lasciala vuota.
+      Una casa sola al mondo, e non e' la tua: e' quella di chi gestisce il cruscotto degli installatori. Lasciala vuota.
     fields:
       chiave:
         name: La chiave per gestire gli installatori

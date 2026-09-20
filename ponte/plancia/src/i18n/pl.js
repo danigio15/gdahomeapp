@@ -2482,6 +2482,7 @@ export default Object.freeze({
   "Sweltering": "Skwar",
   "Swing": "Żaluzje",
   "Switch (turns it on and off)": "Przełącznik (włącza i wyłącza)",
+  "Switch for": "Przełącznik dla",
   "Switch, light or scene to control — popups do not need one": "Przełącznik, światło lub scena do sterowania — okienka jej nie potrzebują",
   "Switch, light, fan or input_boolean used by the On/Off button.": "switch, light, fan lub input_boolean używany przez przycisk wł./wył.",
   "Switch-off": "Wyłączenie",

@@ -53,21 +53,29 @@ test("l'avviso degli impianti rimasti soli concorda col loro numero", () => {
   /* Con uno solo la frase va al singolare tutta quanta, non solo il nome. */
   const pagina = qua("gestore", "index.html");
   assert.match(pagina, /ORFANE === 1 \? "lo guardi" : "li guardi"/);
-  assert.match(pagina, /È l'impianto di un installatore che hai tolto/);
-  assert.match(pagina, /Sono impianti di installatori che hai tolto/);
+  assert.match(pagina, /È rimasto indietro da quando/);
+  assert.match(pagina, /Sono rimasti indietro da quando/);
+  assert.match(pagina, /ORFANE === 1 \? "recupera" : "recuperano"/);
 });
 
 test("l'avviso non promette che un installatore riaggiunto si riprenda i suoi impianti", () => {
   /* Provato, e non succede: `Installatori.fai` da' una matricola nuova ogni
-   * volta, e la casa punta ancora a quella di prima. La riga lo diceva, e una
-   * pagina che promette una cosa che non fa e' peggio di una che non dice
-   * niente — chi la legge aspetta un giorno che non arriva. */
+   * volta. La riga lo prometteva, e una pagina che promette una cosa che non
+   * fa e' peggio di una che non dice niente — chi la legge aspetta un giorno
+   * che non arriva.
+   *
+   * Adesso quella promessa non serve piu' nemmeno smentirla: da «elimina» non
+   * nascono piu' impianti rimasti soli, perche' le case se ne vanno con lui.
+   * Quelli che si vedono sono roba di prima, e la pagina dice quello. */
   const pagina = qua("gestore", "index.html");
-  assert.ok(
-    !/tornano? a qualcuno il giorno che/.test(pagina),
-    "la pagina promette di nuovo che gli impianti rimasti soli tornino da soli",
-  );
-  assert.match(pagina, /prende una matricola nuova/);
+  for (const bugia of [
+    /tornano? a qualcuno il giorno che/,
+    /si ritrova da assegnare/,
+    /Riaggiungere quell'installatore/,
+  ]) {
+    assert.ok(!bugia.test(pagina), `la pagina promette di nuovo ${bugia}`);
+  }
+  assert.match(pagina, /Adesso non ne nascono più/);
 });
 
 test("il riavvio si chiama riavvio, non «il filo che cade»", () => {
@@ -183,7 +191,7 @@ test("la console disegna tre stati, non due", () => {
   const [, pagina] = PAGINE[0];
   assert.match(pagina, /ignoto/, "la console non ha piu' lo stato «non si sa»");
   assert.match(pagina, /bene: "✓", male: "✗", ignoto: "◇"/);
-  assert.match(pagina, /bene: "a posto", male: "non va", ignoto: "non si sa"/);
+  assert.match(pagina, /bene: "in ordine", male: "anomalia", ignoto: "non rilevato"/);
 });
 
 test("del collaudo non e' rimasto niente sullo schermo", () => {
@@ -230,4 +238,39 @@ test("il conto degli aggiornamenti e l'elenco non si smentiscono", () => {
   const [, pagina] = PAGINE[0];
   assert.match(pagina, /non manda l'elenco/);
   assert.match(pagina, /const quanti = Number\(c\.aggiornamenti\.quanti\) \|\| 0;/);
+});
+
+/* ─── E le parole devono essere le stesse dei due schermi ─────────────────
+ *
+ * «Inoltre le scritte devono essere uguali, che cazzo significa si porta col
+ * cacciavite?»
+ *
+ * Un firmware che non si installa da qui nel cruscotto si chiamava «si porta
+ * col cacciavite» e nell'app «Questo si aggiorna dal suo apparecchio». Due
+ * schermi, la stessa cosa, due vocabolari — e uno dei due bisogna pure
+ * indovinarlo. Chi li guarda tutti e due non sta leggendo due programmi.
+ *
+ * Il cacciavite resta nei commenti, dove parliamo fra noi.
+ */
+
+test("un firmware che non si installa da qui si chiama come nell'app", () => {
+  const laPagina = qua("console", "index.html");
+  const senzaCommenti = laPagina.replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.ok(
+    !/cacciavite/i.test(senzaCommenti),
+    "nella pagina si legge ancora «cacciavite»: nell'app quella parola non c'è",
+  );
+  /* E si chiama con le parole che usa l'app (`app/lib/schermate/aggiornamenti.dart`). */
+  assert.match(senzaCommenti, /si aggiorna dal suo apparecchio/);
+
+  /* L'app, per confronto: se un giorno cambia li', questa prova lo dice. */
+  const lApp = readFileSync(
+    join(QUI, "..", "..", "app", "lib", "schermate", "aggiornamenti.dart"),
+    "utf8",
+  );
+  assert.match(
+    lApp,
+    /si aggiorna dal suo apparecchio/,
+    "l'app ha cambiato parole: cambiale anche nel cruscotto",
+  );
 });

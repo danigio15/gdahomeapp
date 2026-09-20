@@ -3,9 +3,13 @@
  *
  *   node strumenti/video/quadro-vero.mjs
  *
- * Ne escono le quattro fotografie che il film del quadro monta dentro lo
- * schermo del computer: l'elenco delle case, la scheda di una casa aperta,
- * la schermata degli aggiornamenti e quella dell'abbinamento.
+ * Ne escono le otto fotografie che il film del cruscotto monta dentro lo
+ * schermo del computer: la schermata degli impianti — l'anello, le case da
+ * verificare, le mattonelle —; la scheda di una casa aperta nel suo foglio,
+ * in cinque punti: la testata con cosa il cruscotto puo' fare e il tasto
+ * «Riavvia Home Assistant», i dieci controlli, lo stato dell'impianto, la
+ * macchina con i suoi anelli, i dispositivi che non rispondono; e poi la
+ * schermata degli aggiornamenti e quella dell'abbinamento.
  *
  * **Non sono ricostruzioni.** E' `quadro/console/index.html` — la pagina che
  * un installatore apre davvero — servita dal quadro vero, che qui si accende
@@ -14,7 +18,7 @@
  * non viene da qui dentro, e il giorno che la pagina cambia resterebbe indietro
  * senza che nessuno se ne accorga.
  *
- * Quello che e' finto e' **la flotta**: quattordici case inventate
+ * Quello che e' finto e' **la flotta**: quindici case inventate
  * (`flotta-finta.js`) che depositano un rapporto come lo deposita una casa
  * vera — `POST /rapporto`, con la chiave che le e' stata data e la sua
  * matricola in testa. Il quadro non sa che sono finte, e infatti le giudica
@@ -24,7 +28,7 @@
  * L'unica cosa che si scrive da dietro e' **il passato**: da quanti giorni una
  * casa e' installata e quanti rapporti ha mandato ogni giorno. Non c'e' altro
  * modo — per averlo davvero ci vorrebbero quattordici giorni — e senza, la
- * striscia dei quattordici giorni sarebbe vuota in tutte e quattordici le
+ * striscia dei quattordici giorni sarebbe vuota in tutte e quindici le
  * case.
  */
 
@@ -88,7 +92,7 @@ function scriviIlPassato(quadro, una, come, ora) {
   dentro.da = ora - come.da * GIORNO;
   dentro.vistaIl = ora - come.taceDa * 60 * 1000;
   dentro.giorni = {};
-  /* Quanti ne manda una casa in un giorno intero: uno ogni quindici minuti. */
+  /* Quanti ne manda una casa in un giorno intero: uno al minuto. */
   const alGiorno = Math.round(GIORNO / (come.rapporto.ogni * 60 * 1000));
   for (let i = 0; i < 14; i += 1) {
     const quando = ora - i * GIORNO;
@@ -191,66 +195,71 @@ async function fotografa() {
       localStorage.setItem("gdahome.quadro.chiave", chiave);
     }, sua);
     await pagina.goto(`${dove}/console/`, { waitUntil: "networkidle" });
-    await pagina.waitForSelector(".fila", { timeout: 15000 });
+    await pagina.waitForSelector(".mattonella", { timeout: 15000 });
     await pagina.evaluate(() => document.fonts.ready);
-
     const scatta = async (nome) => {
       await pagina.screenshot({ path: path.join(QUI, `${nome}.png`) });
       detto(`   · ${nome}.png`);
     };
-
-    /* 1. L'elenco, con aperta la casa che ha addosso qualcosa da guardare:
-          una casa tutta verde non fa vedere a cosa serve il quadro. */
-    await pagina.getByRole("button", { name: /Bianchi/ }).click();
-    await pagina.waitForTimeout(200);
+    /* Il foglio di una casa scorre per conto suo (`.foglio-corpo`), non la
+       pagina: si porta in cima il capitolo che serve **dentro** al foglio, e
+       si lascia un dito d'aria per la testata che gli sta ferma sopra. */
+    const portaInCima = async (tag, comincia) => {
+      await pagina.evaluate(
+        ([tag, comincia]) => {
+          const titolo = [...document.querySelectorAll(tag)].find((uno) =>
+            uno.textContent.trim().startsWith(comincia),
+          );
+          const dentro = titolo?.closest("section, .capitolo") ?? titolo;
+          dentro?.scrollIntoView({ block: "start" });
+          const corpo = document.querySelector(".foglio-corpo");
+          if (corpo) corpo.scrollTop -= 72;
+        },
+        [tag, comincia],
+      );
+      await pagina.waitForTimeout(250);
+    };
+    /* 1. La schermata degli impianti com'e' quando si apre: l'anello, le case
+          da verificare adesso, e sotto tutte le mattonelle. Nessun foglio
+          aperto: e' la schermata, il soggetto. */
     await scatta("quadro-elenco");
-
-    /* 2. I dieci controlli, che sono la risposta alla domanda del quadro.
-          Stanno nel primo capitolo, sotto l'intestazione della casa. */
-    await pagina.evaluate(() => {
-      const controlli = [...document.querySelectorAll("h3")].find((uno) =>
-        uno.textContent.trim().startsWith("I controlli"),
-      );
-      controlli?.closest("section")?.scrollIntoView({ block: "start" });
-      window.scrollBy(0, -80);
-    });
-    await pagina.waitForTimeout(200);
+    /* 2. La casa che ha addosso qualcosa da verificare, aperta nel foglio che
+          sale dal basso. Sotto la testata c'e' scritto cosa il cruscotto puo'
+          fare li' dentro, e poi «Da fare»: l'aggiornamento in attesa e il tasto
+          per riavviare Home Assistant — e' la casa con la manutenzione aperta.
+          Una casa tutta in ordine non farebbe vedere a cosa serve. Il nome
+          compare due volte nella pagina, nella carta e nella mattonella: si
+          preme la mattonella. */
+    await pagina.locator("button.mattonella", { hasText: "Bianchi" }).click();
+    await pagina.waitForSelector(".foglio-corpo", { timeout: 15000 });
+    await pagina.waitForTimeout(400);
+    await scatta("quadro-da-fare");
+    /* 3. I dieci controlli, che sono la risposta alla domanda del cruscotto. */
+    await portaInCima("h3", "I controlli");
     await scatta("quadro-controlli");
-
-    /* 3. La stessa casa, piu' giu': la macchina, la rete, gli add-on. */
-    await pagina.evaluate(() => {
-      const capitolo = [...document.querySelectorAll("h2")].find((uno) =>
-        uno.textContent.includes("Come sta"),
-      );
-      capitolo?.scrollIntoView({ block: "start" });
-      /* Un filo piu' su: la testata sta ferma in cima, e un titolo che le
-         finisce sotto in una fotografia sembra tagliato via. */
-      window.scrollBy(0, -80);
-    });
-    await pagina.waitForTimeout(200);
-    await scatta("quadro-come-sta");
-
-    /* 4. I dispositivi che non rispondono, **coi loro nomi**. E' la riga in
-          cui il quadro concede di piu', ed e' una scelta: quattro cifre di
+    /* 4. Lo stato dell'impianto: i quattro numeri e gli ultimi quattordici
+          giorni, che nella scheda sono un capitolo a se'. */
+    await portaInCima("h2", "Stato dell'impianto");
+    await scatta("quadro-stato");
+    /* 5. La macchina, con i suoi anelli — temperatura e vita del disco sono
+          qui — dentro i dettagli tecnici, che cominciano dalle versioni. */
+    await portaInCima("h3", "La macchina");
+    await scatta("quadro-dettagli");
+    /* 6. I dispositivi che non rispondono, **coi loro nomi**. E' la riga in
+          cui il cruscotto concede di piu', ed e' una scelta: quattro cifre di
           impronta chiedevano a chi ripara di uscire di casa e scoprire sul
           posto cos'era «#7c2a». */
-    await pagina.evaluate(() => {
-      const quelli = [...document.querySelectorAll("h3")].find((uno) =>
-        uno.textContent.includes("dispositivi non collegati"),
-      );
-      quelli?.closest("section")?.scrollIntoView({ block: "start" });
-      window.scrollBy(0, -80);
-    });
-    await pagina.waitForTimeout(200);
+    await portaInCima("h3", "I dispositivi non collegati");
     await scatta("quadro-dispositivi");
-
-    /* 5. La flotta: chi e' indietro, raggruppato per quello che c'e' da
+    /* Si chiude il foglio prima di cambiare schermata. */
+    await pagina.keyboard.press("Escape");
+    await pagina.waitForTimeout(400);
+    /* 7. La flotta: chi e' indietro, raggruppato per quello che c'e' da
           installare invece che per dove sta. */
     await pagina.getByRole("button", { name: /^Aggiornamenti/ }).click();
     await pagina.waitForTimeout(300);
     await scatta("quadro-aggiornamenti");
-
-    /* 6. L'abbinamento: un codice che vive un giorno. */
+    /* 8. L'abbinamento: un codice che vive un giorno. */
     await pagina.getByRole("button", { name: /^Abbina/ }).click();
     await pagina.waitForTimeout(300);
     await scatta("quadro-abbina");

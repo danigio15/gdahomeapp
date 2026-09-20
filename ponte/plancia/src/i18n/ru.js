@@ -2482,6 +2482,7 @@ export default Object.freeze({
   "Sweltering": "Изнуряющая жара",
   "Swing": "Жалюзи",
   "Switch (turns it on and off)": "Выключатель (включает и выключает)",
+  "Switch for": "Выключатель для",
   "Switch, light or scene to control — popups do not need one": "Выключатель, свет или сцена для управления — всплывающим окнам он не нужен",
   "Switch, light, fan or input_boolean used by the On/Off button.": "switch, light, fan или input_boolean, используемый кнопкой вкл./выкл.",
   "Switch-off": "Выключение",

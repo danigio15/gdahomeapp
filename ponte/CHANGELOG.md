@@ -11,6 +11,329 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.12
+
+**Il cruscotto ha una faccia nuova.** Si chiama Aurora: un cielo che sfuma
+dietro tutto, vetro smerigliato sopra, angoli larghi, un carattere solo e
+nessuna scritta in maiuscolo. Non è un ritocco: è ridisegnato da capo per chi
+lo guarda dal telefono in mezzo a un cantiere, e deve leggersi da lontano.
+
+La schermata delle case ha tre pezzi. In cima **l'anello**: tutti gli impianti
+in un cerchio, colorato in proporzione a come stanno, con sotto le tre file —
+offline, da guardare, a posto — che si premono e filtrano. Poi **da guardare
+adesso**: una carta per ogni casa che chiede qualcosa, che scorre di lato; si
+apre e mostra **solo quello che non va**, e «Mostra tutto» apre il resto. In
+fondo **tutti gli impianti**, una mattonella per casa con la linea degli
+ultimi quattordici giorni, che batte quando arriva un rapporto. Una casa si
+apre in un foglio che sale dal basso, con la stessa scheda di prima a
+capitoli; i metri della macchina sono diventati anellini. La barra delle
+schermate sta in cima e ci resta mentre si scorre — e nell'app non lascia più
+quella fascia vuota sopra la testata. Gli avvisi sono una riga in basso, non
+più una finestra del browser.
+
+Il carattere lo serve il cruscotto, da casa sua: il browser di chi apre queste
+pagine — da fuori o dentro Home Assistant — non va a farsi vedere da nessun
+altro, nemmeno per un carattere. Il cruscotto nell'app cambia da solo, senza
+aggiornare l'app: quello che l'app fa vedere è la pagina del cruscotto.
+
+**Chi gestisce il cruscotto vede gli impianti di ogni installatore.** Fino a ieri la
+gestione contava e basta — quanti impianti ha ognuno, non quali. Adesso vede
+di ognuno i nomi che gli ha dato, come stanno, quante entità ha ciascuna, e
+apre la stessa scheda che apre lui: **in sola lettura**, e con la stessa
+grafica. La regola è cambiata di poco e conta molto: le case arrivano alla
+gestione dalla stessa strada da cui arrivano all'installatore, quindi lì non
+arriva una riga che non arrivi anche a lui — i numeri che ogni casa manda da
+sé, e i nomi solo dei dispositivi che non rispondono. E da lì non si tocca
+niente: non si installa, non si riavvia, non si rinomina. Il limite si cambia
+in una riga sotto l'installatore; congelare, rifare la chiave ed eliminare
+chiedono conferma in due tempi, con scritto sotto cosa succede.
+
+**Dal cruscotto si riavvia Home Assistant.** È il tasto per il giorno che
+un'integrazione si impunta e chi ci abita non c'è: prima si telefonava a casa
+per far premere «Riavvia». C'è solo se quella casa ha aperto la manutenzione,
+solo se lì non sta già succedendo altro, e chiede conferma in due tempi. La
+casa lo esegue al prossimo rapporto, come fa per un'installazione — e come per
+un'installazione dice di no da sola se il cruscotto glielo chiedesse senza
+permesso. È il secondo verbo che il cruscotto conosce, dopo «installa», e non ce
+ne sono altri. Serve questa versione dell'add-on in casa: un ponte più vecchio
+il riavvio non lo sa fare, e lo dice.
+
+**E le parole sono quelle giuste.** Tutte le scritte del cruscotto e della
+gestione sono state riviste con termini coerenti: gli impianti sono
+«impianti», gli stati sono «offline», «da verificare» e «in ordine», i tasti
+dicono cosa fanno — «Genera codice», «Salva», «Rimuovi», «Aggiorna» — e le
+conferme in due tempi dicono «Premi ancora per confermare». La sezione degli
+avvisi via web, che nessuno usava, non c'è più.
+
+## 1.5.9.11
+
+**Nel cruscotto tornano le icone degli aggiornamenti.** Quelle che si vedono
+nell'app — Home Assistant Core, il sistema operativo, Frigate, il minipc — nel
+cruscotto erano un quadratino vuoto, e per chi guarda dodici case di fila un
+elenco senza facce è un elenco che si legge peggio.
+
+Il motivo era una sola riga. Le icone non le scarica il browser di nessuno: le
+va a prendere il ponte, a casa, e le manda insieme al rapporto. Solo che
+quando l'indirizzo dell'icona era **di casa** — `/api/...`, cioè una cosa che
+esiste dentro Home Assistant e da fuori no — il ponte rispondeva «quell'icona
+non esiste», che è una risposta definitiva: non si richiede più. Ma quelle
+icone esistono eccome, e il ponte le sa prendere da sempre: è la stessa strada
+che usa l'app, che infatti le vede. Adesso la usa anche per il quadro.
+
+Sistemare il ponte però non bastava: il quadro quel «non esiste» se l'era già
+scritto, e non l'avrebbe richiesto mai più. Adesso **un no scade**. Richiederlo
+costa una riga di rapporto e una domanda che la casa si fa in memoria — per un
+firmware che un'icona non ce l'ha davvero il no torna uguale e non viaggia
+niente — e in cambio una risposta sbagliata non resta lì per sempre. È la
+risposta che nessuno rimette mai in discussione: per questo va rimessa in
+discussione ogni tanto.
+
+**Le note di una versione si leggono, invece di leggersi coi cancelletti.**
+«Cosa cambia, per intero» apriva il CHANGELOG così come è scritto: `## 5.3.0`
+col cancelletto davanti, gli elenchi con gli asterischi, il grassetto con le
+stelline. Nell'app le stesse identiche parole si leggono disegnate. Una cosa
+sola mostrata in due modi diversi sono due cose da imparare invece di una.
+
+Adesso il quadro le disegna come le disegna l'app, con lo stesso lettore e le
+stesse regole: titoli, elenchi, righe che separano, blocchi di codice, e dentro
+la riga grassetto, corsivo, codice e link. Anche quella di cominciare dalla
+versione nuova, e non dal principio della storia. E quella più importante:
+**quello che non sa disegnare non lo butta, lo lascia scritto com'è** — una
+tabella esce con le sue barre e si capisce lo stesso, un pezzo mangiato no.
+
+Quelle parole le ha scritte chi ha fatto l'aggiornamento, non noi, e fra lì e
+lo schermo non c'è nessun altro che le guardi: prima si scappano tutte, e i
+tag li mette solo il quadro. Un `<script>` scritto dentro le note si legge
+`<script>`. I link si possono premere — si aprono di fianco, e senza portarsi
+dietro l'indirizzo del quadro di nessuno.
+
+**E si dice «si aggiorna dal suo apparecchio».** C'è roba che da qui non si
+installa: certi firmware vogliono il pulsante sull'oggetto. L'app lo dice
+così; il cruscotto se l'era inventata un'altra frase, che non vuol dire niente
+per nessuno. Adesso è la stessa, e c'è una prova che lo tiene fermo.
+
+## 1.5.9.10
+
+**Adesso il codice del cruscotto arriva davvero.** Nella 1.5.9.9 quasi mai:
+il ponte lo dà solo a chi amministra la casa, e per sapere chi amministra
+guarda l'elenco degli utenti — che tiene in memoria e chiede a Home Assistant
+quando serve. Ma l'app quella domanda la fa **una volta sola, nell'istante in
+cui il filo si alza**: cioè esattamente quando quella memoria è ancora vuota.
+Il ponte rispondeva «non so chi sei», il codice non partiva, e siccome l'app
+non lo richiedeva quella sessione restava senza. Riassociare il telefono non
+serviva a niente.
+
+Adesso «non si sa» non è più un no: il ponte va a vedere. Aspettare una volta
+per collegamento non costa niente a nessuno, e chi risponde davvero no resta un
+no. Se Home Assistant non risponde affatto, fra le due si sceglie quella che
+non apre niente.
+
+E l'app non si tiene più quel «niente codice» per tutta la sessione: finché c'è
+una porta di cui sa l'indirizzo ma non il codice riprova, poche volte e poi
+basta — chi non amministra quel codice non lo avrà mai, e continuare a
+chiederlo sarebbe un giro che non finisce.
+
+## 1.5.9.9
+
+**Dall'app, Cruscotto e Gestione non richiedono più il codice.** Il codice sta
+già nella scheda dell'add-on — è quello che fa esistere la voce — e dentro Home
+Assistant la pagina non lo richiede da un pezzo: gliela passa la tessera.
+Nell'app se lo faceva ribattere, perché l'app aveva solo l'indirizzo e non il
+codice. Due volte lo stesso codice, e la seconda è quella che fa pensare che la
+prima non abbia funzionato.
+
+Adesso è il ponte a darlo, sulla stessa risposta con cui dice se quella casa ha
+il cruscotto, e l'app lo consegna alla pagina **per la stessa strada della
+tessera** di Home Assistant: un messaggio, non l'indirizzo — un `#chiave=…`
+finirebbe nella cronologia e in ogni schermata mandata per chiedere aiuto.
+
+**Lo riceve solo chi amministra quella casa.** In Home Assistant quella voce è
+riservata a chi amministra, e darla sul filo a chiunque abbia abbinato un
+telefono vorrebbe dire una porta più aperta dall'app che da casa: di là di quel
+codice c'è l'elenco dei clienti di qualcuno. Chi non amministra — e chi ha
+abbinato il telefono prima che il ponte sapesse di chi fosse — la voce continua
+a vederla e il codice continua a battersela, come prima.
+
+## 1.5.9.8
+
+**Il quadro adesso dice quale versione sta girando.** Prima non lo diceva da
+nessuna parte: `/salute` diceva soltanto di essere vivo, la soglia è un testo
+fisso, e le pagine mostrano la versione *delle case*, non la sua. Per sapere se
+una correzione era arrivata bisognava entrare nella macchina e leggere un
+registro — cioè proprio la cosa che questo quadro esiste per non dover fare.
+
+Il numero c'era già: lo scrive il giro degli aggiornamenti quando **scambia** il
+codice, e lo scrive solo dopo che le prove di quella versione sono passate.
+Mancava qualcuno che lo leggesse. Adesso `curl https://quadro.gdahome.org/salute`
+risponde anche `"versione":"26bad09"`, sette cifre da confrontare a occhio con
+l'ultimo rilascio.
+
+## 1.5.9.7
+
+**Nella pagina Luci si accende dalla levetta, non da tutto il riquadro.** Prima
+la card era un tasto solo: il disegno, il nome, lo stato, i cartellini —
+dovunque si toccasse, la luce cambiava. Su una pagina di venti luci vuol dire
+accenderne una ogni volta che si scorre col dito, o che ci si avvicina per
+leggere quale sia quale.
+
+Adesso quello che accende è la levetta a destra, e basta: è già lei a dire se
+la luce è accesa, ed è lì che uno la cerca. Il resto della card si legge e si
+tocca senza conseguenze. Vale anche nella lista che si apre dalla tessera
+Luci — erano due disegni della stessa card, e sistemarne uno solo voleva dire
+il guasto che resta in metà dei posti.
+
+Resta com'era l'unica eccezione: una luce che si guarda e basta la levetta non
+ce l'ha proprio, e lì il corpo della card apre le informazioni. Mai accendere,
+mai spegnere.
+
+## 1.5.9.6
+
+**Le icone degli aggiornamenti adesso arrivano davvero.** Nella 1.5.9.4 quel
+lavoro era tutto scritto e non funzionava niente: la casa non metteva nella
+riga il *segno* dell'aggiornamento — il pezzo da cui il quadro capisce quale
+icona gli manca — e quindi il quadro non ne chiedeva mai una, e quindi non ne
+arrivava mai una. Le prove guardavano i pezzi, uno per uno, e nessuna guardava
+il giro intero: adesso c'è, e parte da quello che la casa manda davvero.
+
+E con quella, altre cinque cose della stessa faccenda:
+
+- **Un rapporto con le icone non viene più rifiutato.** La casa era disposta a
+  mandarne fino a 192 KiB, che viaggiando diventano 256, e il quadro ne
+  accettava 64 in tutto. Bastava un'icona un po' grossa: il rapporto tornava
+  indietro, e siccome la casa si tiene l'elenco di quello che le è stato
+  chiesto, al minuto dopo rimandava lo stesso pacco. Quella casa avrebbe smesso
+  di dire come sta, per sempre, per un'icona.
+- **Quando il quadro non chiede più niente, la casa smette di mandare.** Prima
+  l'elenco di quello che era stato chiesto non si svuotava mai, e le stesse
+  icone ripartivano ogni minuto anche dopo essere arrivate.
+- **Se arriva una sola delle due metà, l'altra si richiede.** Note sì e icona
+  no — succede, è uno scarico che va storto — e il segno risultava completo
+  lo stesso: quell'icona non sarebbe arrivata mai più. Adesso la casa sa anche
+  dire «di questa non ce n'è», che è un'altra cosa da «non è arrivata», e per
+  un firmware la si smette di chiedere.
+- **L'icona nella pagina si vede.** L'indirizzo era scritto in modo che il
+  browser lo cercasse dentro `/console/`, dove non c'è: ogni icona salvata
+  bene tornava un 404 e restava l'iniziale.
+- **Il magazzino delle icone non gira più a vuoto.** Oltre le cinquecento se ne
+  buttavano in ordine di impronta, che sembra caso ma è una regola: le stesse
+  ogni volta. Arrivavano, si salvavano, si buttavano, si richiedevano. Adesso
+  se ne va quello che nessuno nomina più.
+
+**E una casa non può più avvelenare l'icona che vedono gli altri.** Il segno di
+un aggiornamento si ricava da cose pubbliche — il nome e la versione — quindi
+chiunque sa calcolare quello di un'applicazione diffusa; il magazzino è uno
+solo per tutti e chi scrive per primo vince. Una casa sola, bucata o in
+malafede, poteva mandare il segno di un aggiornamento che non ha con dentro
+l'immagine e le note che voleva, e quella roba sarebbe comparsa nella pagina di
+tutti gli installatori sotto il nome di un'applicazione vera. Adesso il segno
+lo ricalcola il quadro dalla riga, e quello che arriva scritto serve solo a
+vedere se combacia.
+
+## 1.5.9.5
+
+**Dall'app si aprono di nuovo il Cruscotto e la Gestione.** Non comparivano in
+nessuna casa, nemmeno dove l'interruttore c'era: la domanda che il telefono fa
+al ponte — «questa casa ha il cruscotto? ha la gestione?» — era scritta in
+mezzo ai comandi della chat, e lì quella domanda non arriva mai. Il ponte la
+riconosceva e poi rispondeva «non conosco»; l'app si sentiva dire di no e non
+disegnava niente. Non erano il telefono né le opzioni: era una risposta scritta
+in una stanza dove la domanda non entrava.
+
+**E la voce «Gestione» nell'app adesso c'è.** Non era rotta: non era mai stata
+fatta. Il ponte fabbrica da tempo la sua voce nella barra laterale di Home
+Assistant, e nel menu dell'app quella voce non c'era proprio. Compare dove
+compare quella — cioè solo dove c'è la chiave della gestione — e apre la stessa
+pagina, non una copia rifatta.
+
+**La barra in basso, su un tablet, non scrive più tutto accalcato.** Le regole
+di quella barra per gli schermi che si toccano sono scritte per un telefono: la
+linguetta si ferma a 72 punti e le voci si stringono a sinistra. Un tablet
+appeso al muro le prendeva uguali, e si vedeva il risultato — le scritte una
+addosso all'altra con mezza barra vuota a destra. Da 900 punti di larghezza in
+su adesso le voci si dividono la riga che c'è, e la scritta torna leggibile.
+
+## 1.5.9.4
+
+**Nel cruscotto di chi installa, ogni aggiornamento ha la sua icona vera.**
+Prima quella pagina mandava il browser di chi installa a prendersi l'icona su
+`brands.home-assistant.io`, con una parola presa dal rapporto, e c'erano due
+guai in uno: quel browser andava a farsi vedere da una macchina che non è la
+sua, e quello che trovava era sbagliato — il logo di HACS al posto di quello
+dell'applicazione (per un'integrazione installata da HACS quella parola **è**
+`hacs`) e niente del tutto per un firmware, che una parola non ce l'ha.
+
+Adesso l'icona giusta la manda la tua casa: gliela dà il suo Supervisor per gli
+add-on e i marchi di Home Assistant per le integrazioni, che è esattamente
+quello che l'add-on fa già per l'app sul telefono. Viaggia **una volta sola** —
+è il quadro a dire quali icone non ha — e il tuo browser non ci va più.
+
+**E il CHANGELOG si legge lì, senza uscire.** «Le note per intero» era un
+collegamento che portava sul sito di chi ha scritto l'aggiornamento: leggere
+cosa cambia prima di premere «Installa» voleva dire uscire dal cruscotto. Adesso
+le note arrivano insieme all'icona e si aprono sotto la riga.
+
+## 1.5.9.3
+
+**Fra «Installa» e l'installazione che parte non passa più un minuto.** Passa un
+giro di rete. La casa, dopo ogni rapporto, resta in linea col quadro: quando chi
+ti ha montato l'impianto preme il tasto, la tua casa lo sente nell'istante, lo
+fa, e manda subito il rapporto che dice com'è andata. Prima quel comando
+aspettava lì finché la casa non ci ripassava.
+
+Resta una casa che **bussa**: non si apre nessuna porta e non c'è niente in
+ascolto. È la stessa richiesta del rapporto, tenuta aperta più a lungo, e vuole
+la stessa chiave. E se non si può tenere — un router di mezzo, il quadro spento
+— non si perde niente: il rapporto al minuto porta il comando come ha sempre
+fatto. Questo è in più, non al posto.
+
+**Le scritte della barra in basso non si accavallano più.** Su uno schermo
+largo con molte voci si leggeva «ENERGELÆTTRODOMESTIAUTGESTIONE TERMICGA»: le
+scritte uscivano dalla loro linguetta e finivano una sopra l'altra. Adesso
+quello che non ci sta si taglia coi puntini — «ELETTRODOM…» dice quale voce è,
+due parole incastrate non dicono niente — e la barra, se le voci sono tante, si
+scorre invece di finire sotto il bordo.
+
+## 1.5.9.2
+
+**«Dispositivi non collegati» adesso sono dispositivi.** In una casa vera ne
+contava centottanta — in una casa che ne ha una quarantina — e i nomi erano
+«Automazioni Elettrodomestici 1», «Avvio Ritardato Conteggio Elettrodomestici»,
+«Aggiornamento package elettrodomestici». Non erano dispositivi: erano aiutanti,
+automazioni e sensori template, roba che un dispositivo non ce l'ha e non lo
+deve avere. Un numero così non è impreciso, è inservibile — chi lo legge non
+può sapere quali di quelle righe siano un guasto, e smette di guardarle tutte.
+
+Adesso si guardano **solo le entità di un dispositivo vero**: quelli che in Home
+Assistant stanno in «Dispositivi e integrazioni», Zigbee compreso. E se Home
+Assistant non dà i suoi registri, quella riga dice «questa casa non lo dice»
+invece di tirare a indovinare.
+
+**La plancia diceva di essere la 1.4.32.** Si leggeva in due posti: sotto
+«CONFIGURAZIONE» e nella diagnostica runtime. Quei numeri li scrive uno script
+della plancia quando la si costruisce, e di gdahome non sa niente; adesso si
+rimettono in pari col nostro al momento di servirla, e non possono più
+divergere.
+
+**E il segno in cima a Configurazione è il logo di gdahome.** Prima c'era una
+casetta azzurra disegnata dentro la pagina — non il logo di nessuno, e nemmeno
+il nostro — e aprendo quella schermata il marchio cambiava sotto gli occhi.
+Adesso è lo stesso file della testata: il nostro, o quello di chi ti ha montato
+l'impianto se ne ha uno.
+
+## 1.5.9.1
+
+**La plancia diceva di essere la 1.4.32.** Nella console, alla riga «La
+plancia», e nella stessa riga che l'app fa vedere: un numero fermo a quattordici
+versioni fa, mentre l'add-on e l'app dicevano 1.5.9. Non era rotto niente — la
+plancia era quella giusta — ma un numero sbagliato su una riga che serve a
+capire cosa si ha installato è peggio di un numero che non c'è.
+
+Quel numero sta nella carta d'identità della plancia (`ORIGINE.json`) e non lo
+scriveva nessuno: chi la sigilla se lo riporta avanti dal giro prima, quindi
+restava fermo al giorno in cui qualcuno l'aveva scritto a mano. Adesso lo scrive
+lo stesso programma che scrive gli altri tre, e una prova tiene ferma la regola
+che siano lo stesso numero.
+
 ## 1.5.9
 
 **La plancia porta il nome e il logo di chi ti ha fatto l'impianto.** Se la casa

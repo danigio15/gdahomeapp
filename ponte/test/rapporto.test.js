@@ -31,6 +31,7 @@ import {
 import { gliAddon, laMacchina, laRete } from "../src/ferro.js";
 import { ilBackup, leBatterie, leEntita } from "../src/salute.js";
 import { Aggiornamenti } from "../src/aggiornamenti.js";
+import { ilSegnoDi } from "../src/segni.js";
 
 const ZITTO = { debug() {}, info() {}, attenzione() {}, errore() {} };
 
@@ -255,6 +256,17 @@ test("un dispositivo che funziona resta fuori anche se si chiama come uno giu'",
   assert.deepEqual(conto.nomi, ["Presa lavatrice"]);
 });
 
+/* Aspetta che una cosa diventi vera, senza dormire a caso: il filo vive fuori
+ * da chi lo chiama, e provarlo vuol dire guardare finche' non succede. */
+async function aspetta(che, quanto = 2000) {
+  const fino = Date.now() + quanto;
+  while (Date.now() < fino) {
+    if (che()) return;
+    await new Promise((ok) => setTimeout(ok, 5));
+  }
+  throw new Error("non e' successo in tempo");
+}
+
 /* ─── Il postino ───────────────────────────────────────────────────────── */
 
 test("senza codice non parte niente e non si apre nessuna connessione", async () => {
@@ -274,7 +286,10 @@ test("senza codice non parte niente e non si apre nessuna connessione", async ()
 });
 
 test("la chiave viaggia in testa e non nel corpo, che la console fa leggere", async () => {
-  let vista = null;
+  /* Le richieste sono due — il rapporto, e il filo che resta in linea — e
+   * quella che si guarda qui e' la prima. Si tengono tutte perche' la regola
+   * vale per tutte e due: la chiave sta in testa, e nel corpo non c'e'. */
+  const viste = [];
   const postino = new Postino({
     dove: "https://quadro.it",
     chiave: "una-chiave-segretissima",
@@ -282,14 +297,19 @@ test("la chiave viaggia in testa e non nel corpo, che la console fa leggere", as
     fabbrica: () => ({ casa: "casa_abc", ponte: "1.4.32.14" }),
     registro: ZITTO,
     fetch: async (dove, come) => {
-      vista = { dove, come };
+      viste.push({ dove, come });
       return { ok: true };
     },
   });
   assert.equal(await postino.manda(), true);
+  postino.ferma();
+  const vista = viste.find((una) => una.dove.endsWith("/rapporto"));
+  assert.ok(vista, "il rapporto non e' partito");
   assert.equal(vista.dove, "https://quadro.it/rapporto");
-  assert.equal(vista.come.headers.authorization, "Bearer una-chiave-segretissima");
-  assert.ok(!vista.come.body.includes("segretissima"));
+  for (const una of viste) {
+    assert.equal(una.come.headers.authorization, "Bearer una-chiave-segretissima");
+    assert.ok(!String(una.come.body ?? "").includes("segretissima"));
+  }
   /* E quello che la console fa leggere e' esattamente quello che e' partito. */
   assert.deepEqual(postino.ultima, { casa: "casa_abc", ponte: "1.4.32.14" });
   assert.equal(postino.ultimoEsito.andata, true);
@@ -408,10 +428,15 @@ test("la fabbrica mette insieme quello che c'e', e chiama ogni volta", async () 
   assert.equal(chiesto.filter((che) => che === "config/entity_registry/list").length, 1);
 });
 
-test("i registri che non rispondono lasciano il rapporto con i nomi delle entita'", async () => {
+test("i registri che non rispondono lasciano il rapporto senza il conto dei dispositivi", async () => {
   /* Un Home Assistant che i registri non li da' — troppo vecchio, o un segno
-   * senza permessi — non deve far cadere il rapporto ne' fargli perdere il
-   * riquadro: si manda quello che si sa. */
+   * senza permessi — non deve far cadere il rapporto: si manda tutto il
+   * resto, e su quella riga si dice «non lo so».
+   *
+   * Prima si ripiegava sui nomi delle entita', e quel ripiego e' esattamente
+   * quello che in una casa vera ha prodotto centottanta «dispositivi non
+   * collegati» che dispositivi non erano. Senza i registri la domanda non si
+   * puo' fare, e una risposta inventata e' peggio di nessuna risposta. */
   const fabbrica = fabbricaIlRapporto({
     identita: { casa: "casa_abc" },
     casa: {
@@ -427,8 +452,13 @@ test("i registri che non rispondono lasciano il rapporto con i nomi delle entita
   });
 
   const foglio = await fabbrica();
-  assert.equal(foglio.entita.giu, 1);
-  assert.deepEqual(foglio.entita.nomi, ["pompa calore"]);
+  assert.equal(foglio.entita.giu, null);
+  assert.equal(foglio.entita.totali, null);
+  assert.equal(foglio.entita.dispositivi, null);
+  assert.deepEqual(foglio.entita.nomi, []);
+  /* E il resto del rapporto c'e' tutto: e' una riga che non si sa, non un
+   * rapporto caduta. */
+  assert.equal(foglio.casa, "casa_abc");
 });
 
 test("mezza rapporto e' meglio di nessuna, e quel giorno e' la piu' importante", async () => {
@@ -747,4 +777,170 @@ test("il rapporto dice sempre se la manutenzione e' aperta, anche quando e' chiu
     })();
   assert.equal((await fai(false)).manutenzione, false);
   assert.equal((await fai(true)).manutenzione, true);
+});
+
+/* ─── Il filo tenuto aperto ─────────────────────────────────────────────── */
+
+test("dopo il rapporto la casa resta in linea, e quello che arriva lo fa subito", async () => {
+  /* E' la meta' di casa del tempo reale: il quadro tiene aperta la richiesta e
+   * risponde quando qualcuno preme il tasto; qui si prova che questa casa
+   * quella richiesta la apra, e che quello che ne esce lo faccia. */
+  const chieste = [];
+  let dilloAlFilo;
+  const fatti = [];
+  const postino = new Postino({
+    dove: "https://quadro.it",
+    chiave: "una-chiave",
+    casa: "casa_abc",
+    fabbrica: () => ({ casa: "casa_abc" }),
+    registro: ZITTO,
+    fai: (detto) => {
+      fatti.push(detto);
+    },
+    fetch: async (dove, come) => {
+      chieste.push(dove);
+      if (dove.endsWith("/attesa")) {
+        /* Il filo: si tiene aperto finche' questa prova non ci mette dentro
+         * qualcosa, che e' esattamente quello che fa il quadro. */
+        return new Promise((ok) => {
+          dilloAlFilo = (cosa) => ok({ ok: true, json: async () => cosa });
+        });
+      }
+      void come;
+      return { ok: true, json: async () => ({ presa: true }) };
+    },
+  });
+
+  try {
+    assert.equal(await postino.manda(), true);
+    /* Il filo si apre da se', subito dopo il rapporto. */
+    await aspetta(() => chieste.includes("https://quadro.it/attesa"));
+    assert.ok(dilloAlFilo, "la casa non e' rimasta in linea");
+
+    /* E quello che il quadro ci mette dentro si fa, senza aspettare il
+     * rapporto del minuto dopo. */
+    dilloAlFilo({ fai: { id: "x", cosa: "installa", nome: "Mosquitto broker", a: "6.5.1" } });
+    await aspetta(() => fatti.length === 1);
+    assert.equal(fatti[0].nome, "Mosquitto broker");
+
+    /* E subito dopo parte un rapporto, che dice com'e' andata: senza, chi ha
+     * premuto il tasto guarderebbe uno schermo fermo per un minuto buono con
+     * l'installazione gia' partita. */
+    await aspetta(() => chieste.filter((una) => una.endsWith("/rapporto")).length >= 2);
+  } finally {
+    postino.ferma();
+  }
+});
+
+test("il filo non gira a vuoto nemmeno se dall'altra parte risponde all'istante", async () => {
+  /* Il paracadute di `IL_FILO_ALMENO`. Senza, un quadro che riconsegnasse
+   * sempre lo stesso lavoro farebbe girare questa casa — lavoro, rapporto,
+   * filo, lavoro — quanto ne e' capace il processore. E' successo davvero,
+   * scrivendolo. */
+  let quante = 0;
+  const postino = new Postino({
+    dove: "https://quadro.it",
+    chiave: "una-chiave",
+    casa: "casa_abc",
+    fabbrica: () => ({ casa: "casa_abc" }),
+    registro: ZITTO,
+    fai: () => {},
+    fetch: async (dove) => {
+      quante += 1;
+      return {
+        ok: true,
+        json: async () =>
+          dove.endsWith("/attesa") ? { fai: { id: "x", cosa: "installa", nome: "n", a: "2" } } : {},
+      };
+    },
+  });
+  try {
+    await postino.manda();
+    await new Promise((ok) => setTimeout(ok, 250));
+    /* In un quarto di secondo, con un pavimento di un secondo, i giri sono
+     * pochissimi. Senza pavimento sarebbero decine di migliaia. */
+    assert.ok(quante < 20, `${quante} richieste in 250ms: sta girando a vuoto`);
+  } finally {
+    postino.ferma();
+  }
+});
+
+test("quando il quadro non chiede piu' niente, la casa smette di mandare", async () => {
+  /* L'elenco di quello che il quadro ha chiesto e' quello che al giro dopo
+   * viaggia. Prima si teneva solo quando arrivava — `if (Array.isArray(manca))`
+   * — e una risposta buona che non chiedeva piu' niente lasciava intatto
+   * l'elenco di prima: le stesse icone rimandate ogni minuto, per sempre.
+   * Arrivate, salvate, e rimandate, perche' nessuno aveva mai detto «basta».
+   *
+   * Una risposta buona che non chiede niente **e'** quel «basta». */
+  const risposte = [
+    { manca: ["e574160d1c8dc4e2", "0123456789abcdef"] },
+    /* Le ha ricevute: adesso non chiede piu'. */
+    { presa: true },
+  ];
+  let giro = 0;
+  const postino = new Postino({
+    dove: "https://quadro.it",
+    chiave: "una-chiave-segretissima",
+    casa: "casa_abc",
+    fabbrica: () => ({ casa: "casa_abc" }),
+    registro: ZITTO,
+    fetch: async () => ({
+      ok: true,
+      status: 200,
+      async json() {
+        return risposte[Math.min(giro++, risposte.length - 1)];
+      },
+    }),
+  });
+  postino.parti();
+
+  await postino.manda();
+  assert.deepEqual(
+    postino.segniChiesti,
+    ["e574160d1c8dc4e2", "0123456789abcdef"],
+    "non si e' segnato quello che il quadro gli ha chiesto",
+  );
+
+  await postino.manda();
+  assert.deepEqual(postino.segniChiesti, [], "le rimanda ogni minuto per sempre");
+
+  postino.ferma();
+});
+
+test("il segno di un aggiornamento viaggia dentro la sua riga", async () => {
+  /* La riga che teneva spenta tutta la faccenda: `iConti` prendeva i segni
+   * come terzo argomento — glieli passavamo — ma la sua firma ne dichiarava
+   * due, e la riga non ne emetteva nessuno. Il quadro non vedeva mai un segno,
+   * quindi non ne chiedeva mai uno, quindi un'icona non arrivava mai.
+   *
+   * Le prove di prima guardavano i pezzi — il segno si calcola bene, il quadro
+   * risponde bene a un rapporto scritto a mano — e nessuna guardava il giro
+   * intero. */
+  const scrivi = fabbricaIlRapporto({
+    identita: { casa: "casa_abc" },
+    aggiornamenti: {
+      async elenco() {
+        return [
+          {
+            entita: "update.mosquitto_broker",
+            nome: "Mosquitto broker",
+            da: "6.4.0",
+            a: "6.5.1",
+            installabile: true,
+          },
+        ];
+      },
+      async marchioDi() {
+        return "mosquitto";
+      },
+    },
+    adesso: () => Date.now(),
+  });
+  const carta = await scrivi();
+  const riga = carta.aggiornamenti.elenco[0];
+  assert.equal(riga.segno, ilSegnoDi("Mosquitto broker", "6.5.1"));
+  assert.match(riga.segno, /^[0-9a-f]{16}$/);
+  /* E l'entita' non passa: direbbe chi ci abita e in quale stanza. */
+  assert.equal(JSON.stringify(carta).includes("update.mosquitto_broker"), false);
 });

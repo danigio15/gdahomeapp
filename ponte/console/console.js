@@ -1936,8 +1936,8 @@
           avviso.hidden = false;
           avviso.className = "avviso giallo";
           avviso.textContent = due(
-            "Non manda più niente da adesso, ma la casella «Il quadro» è rimasta piena: svuotala nella scheda di questo add-on, se no al prossimo riavvio ricomincia.",
-            "It sends nothing from now on, but the «The panel» box is still filled in: empty it in this add-on's options, otherwise it starts again at the next restart.",
+            "Non manda più niente da adesso, ma la casella «Il codice di chi ti ha fatto l'impianto» è rimasta piena: svuotala nella scheda di questo add-on, se no al prossimo riavvio ricomincia.",
+            "It sends nothing from now on, but the «The code of whoever installed your home» box is still filled in: empty it in this add-on's options, otherwise it starts again at the next restart.",
           );
         })
         .catch(function (errore) {

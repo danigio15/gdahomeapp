@@ -77,6 +77,14 @@ export class CaseSeguite {
   constructor({ cartella = "./dati", adesso = () => Date.now() } = {}) {
     this.adesso = adesso;
     this.archivio = new Archivio(join(cartella, "case.json"), { case: [] });
+    /* Chi avvisare quando a una casa viene chiesto qualcosa.
+     *
+     * Serve al filo tenuto aperto: una casa sta ferma su `/attesa` e il server
+     * le risponde **nell'istante** in cui qualcuno preme «Installa», invece di
+     * far aspettare il rapporto del minuto dopo. Lo monta il server, che e'
+     * l'unico che sa chi sta aspettando; qui dentro non c'e' niente di
+     * asincrono e non ci deve essere. */
+    this.alLavoro = null;
   }
 
   get lista() {
@@ -218,8 +226,7 @@ export class CaseSeguite {
       .filter((una) => di === TUTTE || una.di === di)
       .map((una) => this.vestita(una, ora))
       .sort((una, altra) => {
-        /* Prima quelle che chiedono qualcosa, e fra quelle prima quelle
-         * offline: chi
+        /* Prima quelle che chiedono qualcosa, e fra quelle prima le offline: chi
          * apre questa pagina la mattina vuole trovarsi in cima quello che gli
          * tocca, non l'ordine in cui le ha installate. */
         const peso = { offline: 0, guardare: 1, posto: 2 };
@@ -244,7 +251,7 @@ export class CaseSeguite {
    *
    * Torna il lavoro messo in attesa, o `null` se non si e' potuto.
    */
-  chiediUnLavoro(casa, { nome, da, a } = {}, di) {
+  chiediUnLavoro(casa, { cosa = "installa", nome, da, a } = {}, di) {
     const una = this.quella(casa);
     if (!una || (di !== TUTTE && una.di !== di)) return null;
     /* La casa deve aver aperto la manutenzione. E' garbo, non sicurezza: il no
@@ -252,8 +259,15 @@ export class CaseSeguite {
      * mettere in coda un comando che si sa gia' che verra' rifiutato vuol dire
      * far aspettare dieci minuti una risposta che e' gia' scritta. */
     if (una.carta?.manutenzione !== true) return null;
-    const quale = { nome: testo(nome), da: testo(da, 40), a: testo(a, 40) };
-    if (!quale.nome || !quale.a) return null;
+    /* Due verbi, e nessun altro. «Installa» si nomina per nome e salto di
+     * versione; «riavvia» — Home Assistant, tutto — non ha niente da nominare:
+     * e' quella casa, e basta. */
+    if (cosa !== "installa" && cosa !== "riavvia") return null;
+    const quale =
+      cosa === "riavvia"
+        ? { nome: "", da: "", a: "" }
+        : { nome: testo(nome), da: testo(da, 40), a: testo(a, 40) };
+    if (cosa === "installa" && (!quale.nome || !quale.a)) return null;
     /* Uno per volta. Quello vecchio scaduto pero' non blocca niente: una casa
      * spenta da un'ora non deve impedire di richiedere la stessa cosa. */
     const ora = this.adesso();
@@ -265,12 +279,21 @@ export class CaseSeguite {
        * in tempo a segnarselo — e un tasto premuto una volta non deve
        * installare due volte. */
       id: `${ora.toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
-      cosa: "installa",
+      cosa,
       ...quale,
       chiesto: ora,
       mandato: null,
     };
     this.archivio.salva();
+    /* E se quella casa e' li' che aspetta, lo sa adesso. Dopo il salvataggio:
+     * chi si sveglia va a rileggere, e deve trovare quello che c'e' scritto. */
+    try {
+      this.alLavoro?.(casa);
+    } catch (_errore) {
+      /* Chi ascolta ha sbagliato: non e' un motivo per non aver chiesto il
+       * lavoro, che e' gia' scritto. Al rapporto dopo la casa lo trova
+       * lo stesso. */
+    }
     return { ...una.lavoro };
   }
 
@@ -326,9 +349,43 @@ export class CaseSeguite {
     return true;
   }
 
+  /**
+   * Via tutte le case di uno.
+   *
+   * La meta' di «elimina» che si vede: spariscono dall'elenco, dai conti, e
+   * con loro se ne va la storia — i giorni, i nomi che gli aveva dato,
+   * l'ultimo rapporto. Non c'e' un cestino, e non ci deve essere: «elimina»
+   * che tiene una copia da qualche parte e' un «nascondi» che si chiama in un
+   * altro modo.
+   *
+   * Torna quante ne ha buttate.
+   */
+  toglieTutto(di) {
+    if (!di) return 0;
+    const prima = this.lista.length;
+    this.archivio.dati.case = this.lista.filter((una) => una.di !== di);
+    const andate = prima - this.lista.length;
+    if (andate) this.archivio.salva();
+    return andate;
+  }
+
   /** Quante ne segue uno. E' il numero su cui si misura il suo limite. */
   quante(di) {
     return this.lista.filter((una) => una.di === di).length;
+  }
+
+  /**
+   * Quante entita' in tutto, sommando le sue case.
+   *
+   * E' il numero che chi tiene il quadro vuole vedere accanto a «quante case»:
+   * dodici impianti da ottanta entita' e dodici da trecento sono due lavori
+   * diversi, e il conto delle case da solo non lo dice. Una casa che non ha
+   * ancora mandato niente conta zero, non manca.
+   */
+  entita(di) {
+    return this.lista
+      .filter((una) => una.di === di)
+      .reduce((tutte, una) => tutte + (Number(una.carta?.entita?.totali) || 0), 0);
   }
 
   /**

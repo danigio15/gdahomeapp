@@ -25,7 +25,7 @@ test("i tre capitoli ci sono, e in quest'ordine", () => {
   const titoli = [...PAGINA.matchAll(/<div class="capitolo">\s*<h2>([^<]+)<\/h2>/g)].map((una) =>
     una[1].trim(),
   );
-  assert.deepEqual(titoli, ["Cosa c'è da fare", "Come sta", "Cos'è, di preciso"]);
+  assert.deepEqual(titoli, ["Da fare", "Stato dell'impianto", "Dettagli tecnici"]);
 });
 
 test("ogni capitolo dice sottovoce cosa ci si trova dentro", () => {
@@ -45,9 +45,9 @@ test("i controlli e gli aggiornamenti stanno nel primo capitolo", () => {
    * aggiornamenti» scivolasse sotto «Come sta», la scheda tornerebbe a essere
    * un elenco e nessuno se ne accorgerebbe. */
   const dove = (che) => PAGINA.indexOf(che);
-  const primo = dove("<h2>Cosa c'è da fare</h2>");
-  const secondo = dove("<h2>Come sta</h2>");
-  const terzo = dove("<h2>Cos'è, di preciso</h2>");
+  const primo = dove("<h2>Da fare</h2>");
+  const secondo = dove("<h2>Stato dell'impianto</h2>");
+  const terzo = dove("<h2>Dettagli tecnici</h2>");
   assert.ok(primo > 0 && secondo > primo && terzo > secondo, "i capitoli non sono in fila");
 
   for (const [che, quale] of [

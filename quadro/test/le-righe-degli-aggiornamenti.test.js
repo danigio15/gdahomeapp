@@ -45,31 +45,61 @@ function iPezzi() {
   )();
 }
 
-test("il marchio si ricontrolla qui, non solo nel ponte", () => {
+test("il segno si ricontrolla qui, non solo nel ponte", () => {
   const { ilSegnoDi } = iPezzi();
-  /* Questa parola finisce dentro un indirizzo, e chi lo compone e' questa
-   * pagina: una barra o due punti la porterebbero da un'altra parte. */
+  /* Il segno finisce dentro un indirizzo, e chi lo compone e' questa pagina:
+   * una barra o due punti la porterebbero da un'altra parte. */
   for (const storto of [
     "../../altro",
-    "zha/icon.png",
+    "e574160d1c8dc4e2/../x",
     "https://altrove.invalid/x",
     'x" onload="alert(1)',
-    "ZHA",
+    "E574160D1C8DC4E2",
+    "e574160d1c8dc4",
   ]) {
-    const disegnato = ilSegnoDi({ nome: "Switch", marchio: storto });
+    const disegnato = ilSegnoDi({ nome: "Switch", segno: storto });
     assert.ok(!disegnato.includes("<img"), `«${storto}» non deve diventare un'immagine`);
     assert.ok(!disegnato.includes(storto), `«${storto}» non deve finire nella pagina`);
   }
 });
 
-test("un marchio buono diventa un'immagine dai marchi di Home Assistant, e nient'altro", () => {
+test("l'icona arriva dal quadro, non dai marchi di Home Assistant", () => {
+  /* Prima questa pagina mandava il browser di chi installa su
+   * `brands.home-assistant.io` con una parola presa dal rapporto, e c'erano
+   * due guai in uno: quel browser andava a farsi vedere da una macchina che
+   * non e' la sua, e quello che trovava era sbagliato — il logo di HACS al
+   * posto di quello dell'applicazione, o niente per un firmware.
+   *
+   * Adesso l'icona vera la manda la casa e la serve il quadro. */
   const { ilSegnoDi } = iPezzi();
-  const disegnato = ilSegnoDi({ nome: "Switch casa", marchio: "shelly" });
-  assert.match(disegnato, /src="https:\/\/brands\.home-assistant\.io\/shelly\/icon\.png"/);
-  /* E sotto c'e' l'iniziale: una casa senza internet, o un marchio che non
-   * esiste, finiscono sulla lettera invece che su un quadratino rotto. */
+  const disegnato = ilSegnoDi({ nome: "Switch casa", segno: "e574160d1c8dc4e2" });
+  /* `../segno/`, con il punto punto: la pagina sta in `/console/`, e senza
+   * quello l'indirizzo si legge da li' — `/console/segno/…`, dove non c'e'
+   * niente, e ogni icona salvata bene tornava un 404. */
+  assert.match(disegnato, /src="\.\.\/segno\/e574160d1c8dc4e2"/);
+  assert.ok(
+    !/src="segno\//.test(disegnato),
+    "l'indirizzo si legge da /console/ e non trova niente",
+  );
+  assert.ok(
+    !disegnato.includes("brands.home-assistant.io"),
+    "il browser di chi installa va ancora a farsi vedere fuori",
+  );
+  /* E sotto c'e' l'iniziale: finche' l'icona non e' arrivata — il primo giro
+   * dopo che un aggiornamento compare — la riga si legge lo stesso. */
   assert.match(disegnato, />S</);
   assert.match(disegnato, /onerror="this\.remove\(\)"/);
+});
+
+test("in tutta la pagina non si va piu' a prendere niente dai marchi", () => {
+  /* Nei commenti quel nome c'e' ancora, ed e' giusto: e' il racconto di com'era
+   * prima. Quello che non ci deve piu' essere e' un indirizzo che il browser
+   * vada a chiedere. */
+  const senzaCommenti = PAGINA.replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.ok(
+    !senzaCommenti.includes("brands.home-assistant.io"),
+    "resta un indirizzo dei marchi: quel browser ci va ancora",
+  );
 });
 
 test("la roba nostra porta il bollo del quadro, che non si scarica da nessuna parte", () => {
@@ -90,21 +120,26 @@ test("cosa cambia si disegna come testo, non come programma", () => {
   assert.match(disegnato, /&amp;/);
 });
 
-test("l'indirizzo delle note diventa un collegamento solo se e' https", () => {
+test("le note per intero si aprono qui, e non mandano piu' fuori", () => {
+  /* Era un collegamento verso il sito di chi ha scritto l'aggiornamento:
+   * leggere cosa cambia prima di premere «Installa» voleva dire uscire dal
+   * cruscotto, e chi esce non sempre torna. */
   const { cosaCambia } = iPezzi();
-  for (const storto of [
-    "javascript:alert(1)",
-    "http://example.invalid/note",
-    'https://example.invalid/" onmouseover="alert(1)',
-    "data:text/html,<script>",
-  ]) {
-    const disegnato = cosaCambia({ cosaCambia: "qualcosa", note: storto });
-    assert.ok(!disegnato.includes("<a "), `«${storto}» non deve diventare un collegamento`);
-  }
-  const buono = cosaCambia({ cosaCambia: "qualcosa", note: "https://example.invalid/note" });
-  assert.match(buono, /<a href="https:\/\/example\.invalid\/note"/);
-  /* Si apre fuori, e senza portarsi dietro questa pagina. */
-  assert.match(buono, /rel="noopener noreferrer"/);
+  globalThis.CON_LE_NOTE = new Set(["e574160d1c8dc4e2"]);
+  const con = cosaCambia({ cosaCambia: "qualcosa", segno: "e574160d1c8dc4e2" });
+  assert.match(con, /data-note="e574160d1c8dc4e2"/);
+  assert.ok(!con.includes("<a "), "manda ancora fuori");
+  assert.ok(!con.includes('target="_blank"'), "manda ancora fuori");
+
+  /* Il tasto c'e' solo dove le note ci sono davvero: un tasto che non apre
+   * niente e' peggio di nessun tasto. */
+  globalThis.CON_LE_NOTE = new Set();
+  const senza = cosaCambia({ cosaCambia: "qualcosa", segno: "e574160d1c8dc4e2" });
+  assert.ok(!senza.includes("data-note="), "il tasto c'e' anche senza note da aprire");
+
+  /* E un segno storto non ci prova nemmeno. */
+  globalThis.CON_LE_NOTE = new Set(["../altro"]);
+  assert.ok(!cosaCambia({ cosaCambia: "x", segno: "../altro" }).includes("data-note="));
 });
 
 test("chi non ha niente da dire non occupa una riga vuota", () => {
@@ -148,7 +183,7 @@ test("senza manutenzione aperta il tasto non c'e', e c'e' scritto perche'", () =
   const { ilTasto } = iPezzi();
   const disegnato = ilTasto(UNO, { manutenzione: false }, CASA);
   assert.ok(!disegnato.includes("<button"), "il tasto compare su una casa che non l'ha aperta");
-  assert.match(disegnato, /manutenzione chiusa/);
+  assert.match(disegnato, /manutenzione non attiva/);
 });
 
 test("una casa che non dice niente della manutenzione vale come chiusa", () => {
@@ -158,11 +193,14 @@ test("una casa che non dice niente della manutenzione vale come chiusa", () => {
   assert.ok(!ilTasto(UNO, {}, CASA).includes("<button"));
 });
 
-test("un firmware che si porta col cacciavite non ha nessun tasto", () => {
+test("un firmware che si aggiorna dal suo apparecchio non ha nessun tasto", () => {
   const { ilTasto } = iPezzi();
   const disegnato = ilTasto({ ...UNO, installabile: false }, APERTA, CASA);
   assert.ok(!disegnato.includes("<button"));
-  assert.match(disegnato, /cacciavite/);
+  /* Le stesse parole dell\'app, che per la stessa cosa dice «Questo si
+   * aggiorna dal suo apparecchio». Due schermate che raccontano la stessa
+   * cosa con due parole diverse sono due cose da imparare invece di una. */
+  assert.match(disegnato, /si aggiorna dal suo apparecchio/);
 });
 
 test("con la manutenzione aperta il tasto porta nome e salto, non l'entita'", () => {

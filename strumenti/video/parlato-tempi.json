@@ -16,55 +16,57 @@
       ]
     },
     "una-domanda-sola": {
-      "durata": 16.75,
+      "durata": 19,
       "pezzi": [
         0.6,
         5.28,
-        9.37
+        11.6
       ]
     },
     "come-entra-una-casa": {
-      "durata": 26,
+      "durata": 34,
       "pezzi": [
         0.6,
-        6.58,
-        11.74,
-        17.58
+        8.32,
+        18.56,
+        25.64
       ]
     },
     "l-elenco": {
-      "durata": 14.75,
+      "durata": 24.75,
       "pezzi": [
         0.6,
-        6.53
+        10.49,
+        15.86
       ]
     },
     "i-dieci-controlli": {
-      "durata": 16.75,
+      "durata": 28,
       "pezzi": [
         0.6,
-        5.16,
-        11.18
+        13.32,
+        19.33
       ]
     },
     "dentro-una-casa": {
-      "durata": 14.75,
+      "durata": 26.25,
       "pezzi": [
         0.6,
-        10.28
+        8.92,
+        22.36
       ]
     },
     "tre-righe-che-contano": {
-      "durata": 28.5,
+      "durata": 27.75,
       "pezzi": [
         0.6,
         10.28,
-        16.72,
-        23.41
+        16.37,
+        22.55
       ]
     },
     "gli-aggiornamenti": {
-      "durata": 19,
+      "durata": 21.25,
       "pezzi": [
         0.6,
         10.84
@@ -78,22 +80,15 @@
         14.93
       ]
     },
-    "quando-una-casa-tace": {
-      "durata": 19.75,
-      "pezzi": [
-        0.6,
-        8.74
-      ]
-    },
     "cosa-non-puo-fare": {
-      "durata": 27.75,
+      "durata": 31,
       "pezzi": [
         0.6,
         5.04,
         7.55,
         10.32,
-        16.54,
-        22.72
+        19.75,
+        25.92
       ]
     },
     "numeri-non-nomi": {
@@ -114,114 +109,109 @@
   },
   "en": {
     "apertura": {
-      "durata": 17,
+      "durata": 16.5,
       "pezzi": [
         0.8,
         6.97
       ]
     },
     "dopo-la-consegna": {
-      "durata": 16,
+      "durata": 17.25,
       "pezzi": [
         0.6,
-        10.39,
-        12.72
+        10.93,
+        13.47
       ]
     },
     "una-domanda-sola": {
-      "durata": 14.5,
+      "durata": 17.25,
       "pezzi": [
         0.6,
-        4.98,
-        8.48
+        5.1,
+        10.42
       ]
     },
     "come-entra-una-casa": {
-      "durata": 20,
+      "durata": 31.5,
       "pezzi": [
         0.6,
-        4.78,
-        9.69,
-        13.92
+        8.07,
+        18.31,
+        23.86
       ]
     },
     "l-elenco": {
-      "durata": 12.75,
+      "durata": 22.5,
       "pezzi": [
         0.6,
-        5.81
+        10.12,
+        14.11
       ]
     },
     "i-dieci-controlli": {
-      "durata": 12,
+      "durata": 24.25,
       "pezzi": [
         0.6,
-        3.67,
-        8.05
+        11.03,
+        16.48
       ]
     },
     "dentro-una-casa": {
-      "durata": 12.5,
+      "durata": 23.75,
       "pezzi": [
         0.6,
-        9.28
+        8.11,
+        20.49
       ]
     },
     "tre-righe-che-contano": {
-      "durata": 21.5,
+      "durata": 26.25,
       "pezzi": [
         0.6,
-        7.81,
-        12.7,
-        18.14
+        8.92,
+        15.32,
+        21.66
       ]
     },
     "gli-aggiornamenti": {
-      "durata": 16,
+      "durata": 19,
       "pezzi": [
         0.6,
-        9.63
+        10.2
       ]
     },
     "vedere-e-toccare": {
-      "durata": 18.5,
+      "durata": 18.75,
       "pezzi": [
         0.6,
-        5.62,
-        12.98
-      ]
-    },
-    "quando-una-casa-tace": {
-      "durata": 15.25,
-      "pezzi": [
-        0.6,
-        7.09
+        6.75,
+        13.38
       ]
     },
     "cosa-non-puo-fare": {
-      "durata": 24.75,
+      "durata": 29.5,
       "pezzi": [
         0.6,
-        5.12,
-        7.37,
-        10.25,
-        15.5,
-        19.62
+        4.68,
+        7.43,
+        10.31,
+        18.91,
+        24.35
       ]
     },
     "numeri-non-nomi": {
-      "durata": 13.5,
+      "durata": 15,
       "pezzi": [
         0.6,
-        4.42,
-        10.55
+        4.76,
+        11.01
       ]
     },
     "chiusura": {
-      "durata": 11.25,
+      "durata": 10.75,
       "pezzi": [
         0.6,
-        7.62
+        7.19
       ]
     }
   }

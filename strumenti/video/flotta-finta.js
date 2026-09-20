@@ -141,7 +141,7 @@ const casa = (nome, matricola, come = {}) => ({
      grossi. `1` giorno intero muto, `0.4` una mattinata. */
   buchi: come.buchi ?? [],
   rapporto: {
-    ogni: 15,
+    ogni: 1,
     ...OGGI,
     ...(come.versioni ?? {}),
     /* Il secondo interruttore, e sta a chi ci abita: di serie e' spento, e

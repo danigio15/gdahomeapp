@@ -2482,6 +2482,7 @@ export default Object.freeze({
   "Sweltering": "حر خانق",
   "Swing": "الريش",
   "Switch (turns it on and off)": "مفتاح (يشغّل ويطفئ)",
+  "Switch for": "مفتاح",
   "Switch, light or scene to control — popups do not need one": "مفتاح أو ضوء أو مشهد للتحكم — النوافذ المنبثقة لا تحتاج إليه",
   "Switch, light, fan or input_boolean used by the On/Off button.": "كيان switch أو light أو fan أو input_boolean يستخدمه زر التشغيل/الإطفاء.",
   "Switch-off": "الإطفاء",

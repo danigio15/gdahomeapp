@@ -2482,6 +2482,7 @@ export default Object.freeze({
   "Sweltering": "酷热难当",
   "Swing": "导风板",
   "Switch (turns it on and off)": "开关（开和关）",
+  "Switch for": "开关：",
   "Switch, light or scene to control — popups do not need one": "要控制的开关、灯光或场景 — 弹窗不需要",
   "Switch, light, fan or input_boolean used by the On/Off button.": "开关按钮所用的 switch、light、fan 或 input_boolean。",
   "Switch-off": "定时关闭",

@@ -128,7 +128,7 @@ mentre va.
 | `pezzi.js` | i pezzi condivisi: il marchio, i disegnini, il telefono, **la plancia**, e il palco che chi filma va a cercare |
 | `presentazione.html` + `scene.js` | il film lungo: quindici scene, disposte a coordinate |
 | `social.html` + `social.js` | il film corto: sette scene, disposte **a colonna** |
-| `quadro.html` + `quadro.js` | il film del quadro: quattordici scene, con dentro le fotografie della console vera |
+| `quadro.html` + `quadro.js` | il film del cruscotto: tredici scene, con dentro le fotografie della console vera |
 | `parlato.js` + `voce.mjs` + `dillo.py` | il copione parlato del film del quadro, e chi lo dice: `dillo.py` fa i suoni, `voce.mjs` monta la traccia e la attacca al film |
 | `parlato-tempi.json` | quanto dura ogni scena e quando arriva ogni frase, nelle due lingue. **Lo scrive `voce.mjs`**, e `quadro.js` lo legge |
 | `voce-quadro.m4a` (e `-en`) | le due tracce parlate, che stanno qui apposta: così il film si rifà senza il modello della voce |
@@ -136,7 +136,7 @@ mentre va.
 | `copertine.html` + `copertine.js` | le copertine di Facebook e l'immagine del profilo, ferme |
 | `plancia-vera.mjs` + `casa-finta.js` | fotografano **la plancia vera**, quella di `ponte/plancia/` |
 | `quadro-vero.mjs` + `flotta-finta.js` | fotografano **il quadro vero**, quello di `quadro/console/` |
-| `quadro-elenco.png`, `-controlli`, `-come-sta`, `-dispositivi`, `-aggiornamenti`, `-abbina` | le sei fotografie della console, che finiscono negli schermi del quarto film |
+| `quadro-elenco.png`, `-da-fare`, `-controlli`, `-dettagli`, `-dispositivi`, `-aggiornamenti`, `-abbina` | le sette fotografie della console, che finiscono negli schermi del quarto film |
 | `plancia-telefono.png`, `-tablet`, `-computer` (e `-en`) | le fotografie, che finiscono negli schermi delle copertine |
 | `rendi.mjs` | chi filma: apre la pagina, sposta l'orologio, scatta, e passa gli scatti a ffmpeg |
 | `qrcode.svg` | il QR code che si vede nel film lungo — lo rifà `rendi.mjs` a ogni ripresa |
@@ -180,7 +180,7 @@ ragione: lì si muove — una luce che si accende al tocco — e una fotografia 
 si tocca. Nel film del quadro invece non si muove niente dentro gli schermi, e
 allora vale la regola delle copertine: **si fotografa la cosa vera**.
 
-Le sei fotografie escono da `quadro-vero.mjs` (qui sotto), e sono la pagina di
+Le sette fotografie escono da `quadro-vero.mjs` (qui sotto), e sono la pagina di
 `quadro/console/` — quella che un installatore apre davvero. Un cruscotto
 ridisegnato a mano si sarebbe staccato dal vero al primo cambiamento, e nessuno
 se ne sarebbe accorto: un film è l'unico posto del progetto dove un difetto non
@@ -320,9 +320,9 @@ non è un pezzo del prodotto e non deve diventarlo.
 node strumenti/video/quadro-vero.mjs
 ```
 
-Un minuto, e ne escono sei fotografie: `quadro-elenco.png`,
-`quadro-controlli.png`, `quadro-come-sta.png`, `quadro-dispositivi.png`,
-`quadro-aggiornamenti.png`, `quadro-abbina.png`. Sono 1440×900 — le
+Un minuto, e ne escono sette fotografie: `quadro-elenco.png`,
+`quadro-da-fare.png`, `quadro-controlli.png`, `quadro-dettagli.png`,
+`quadro-dispositivi.png`, `quadro-aggiornamenti.png`, `quadro-abbina.png`. Sono 1440×900 — le
 proporzioni della cornice del computer di `pezzi.js` — e scattate al doppio,
 così un ritaglio si può guardare da vicino senza che si sgrani.
 

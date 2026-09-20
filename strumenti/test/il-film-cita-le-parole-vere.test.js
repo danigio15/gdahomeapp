@@ -31,21 +31,28 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
-const leggi = (...pezzi) => readFileSync(join(QUI, "..", "..", ...pezzi), "utf8");
+/** Un file del quadro, **senza i commenti**: una parola che sopravvive solo
+ *  in un commento sullo schermo non c'e' piu', e non deve far passare la prova. */
+const leggi = (...pezzi) =>
+  readFileSync(join(QUI, "..", "..", ...pezzi), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/<!--[\s\S]*?-->/g, "");
 
 /* Dove il quadro le scrive, e come si chiama la cosa nel film. */
 const LE_PAROLE = [
-  /* Il nome del prodotto: la console lo scrive nel titolo della pagina e in
-     testa all'elenco, e nelle fotografie del film si legge. Il film lo ha
-     chiamato «il quadro» per mesi — che e' il nome interno, quello delle
-     cartelle e delle chiavi — e sullo schermo non c'e' mai stato. */
   ["Cruscotto installatore", ["quadro", "console", "index.html"]],
-  ["a posto", ["quadro", "console", "index.html"]],
-  ["da guardare", ["quadro", "console", "index.html"]],
+  ["in ordine", ["quadro", "console", "index.html"]],
+  ["da verificare", ["quadro", "console", "index.html"]],
+  ["Da verificare ora", ["quadro", "console", "index.html"]],
+  ["Tutti gli impianti", ["quadro", "console", "index.html"]],
+  ["Abbinamento", ["quadro", "console", "index.html"]],
+  ["Genera codice", ["quadro", "console", "index.html"]],
   ["Vita del disco", ["quadro", "console", "index.html"]],
-  ["Abbina", ["quadro", "console", "index.html"]],
-  ["questa casa non lo dice", ["quadro", "src", "controlli.js"]],
+  ["Stato dell'impianto", ["quadro", "console", "index.html"]],
+  ["Dettagli tecnici", ["quadro", "console", "index.html"]],
+  ["Riavvia Home Assistant", ["quadro", "console", "index.html"]],
   ["I collegamenti", ["quadro", "src", "controlli.js"]],
+  ["non comunicato", ["quadro", "src", "controlli.js"]],
 ];
 
 /**
@@ -59,7 +66,7 @@ const LE_PAROLE = [
  */
 function leDidascalie() {
   const scene = leggi("strumenti", "video", "quadro.js").replace(/\/\*[\s\S]*?\*\//g, "");
-  return [...scene.matchAll(/t\(\s*(["'])((?:\\.|(?!\1).)*)\1/g)]
+  return [...scene.matchAll(/(?<![\w.])t\(\s*(["'])((?:\\.|(?!\1).)*)\1/g)]
     .map((una) => una[2].replace(/\\(['"])/g, "$1"))
     .join("\n");
 }

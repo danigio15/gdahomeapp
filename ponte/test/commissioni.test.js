@@ -1747,3 +1747,189 @@ test("il telefono può chiedere sul filo dove sta questa casa", async () => {
   assert.equal(inciampata.success, false);
   assert.equal(inciampata.error.code, "unknown_error");
 });
+
+test("il telefono chiede sul filo se questa casa ha il cruscotto, la gestione, o tutt'e due", async () => {
+  /* Sono due voci del menu dell'app, e a decidere se esistono e' il ponte: la
+   * chiave del cruscotto e quella della gestione stanno nelle sue opzioni, e
+   * l'app non ha modo di saperlo — ne' deve — prima di chiederglielo.
+   *
+   * La gestione qui mancava del tutto. Non era rotta: il ponte fabbricava
+   * gia' la sua voce nella barra laterale di Home Assistant, e sul filo
+   * quella domanda non c'era mai stata. Adesso e' una domanda sola per
+   * tutt'e due: sono la stessa cosa chiesta a chi la sa, e due giri sul filo
+   * per due campi sarebbero due giri. */
+  const nessuno = new Commissioni({ casa: casaDiProva(), registro: ZITTO });
+  assert.equal(nessuno.riconosce({ type: "ponte/quadro/stato" }), true);
+  const niente = await nessuno.rispondi({ id: 1, type: "ponte/quadro/stato" });
+  assert.equal(niente.success, true);
+  assert.equal(niente.result.installatore, false);
+  assert.equal(niente.result.gestore, false);
+  /* E senza il posto dove andare: una porta che non si apre e' peggio di una
+   * porta che non c'e'. */
+  assert.equal(niente.result.dove, "");
+  assert.equal(niente.result.doveGestione, "");
+
+  /* Chi monta impianti: il cruscotto si', la gestione no. */
+  const chiInstalla = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    installatore: true,
+  });
+  const suo = await chiInstalla.rispondi({ id: 2, type: "ponte/quadro/stato" });
+  assert.equal(suo.result.installatore, true);
+  assert.match(suo.result.dove, /^https:\/\/.+\/console\/$/);
+  assert.equal(suo.result.gestore, false);
+  assert.equal(suo.result.doveGestione, "");
+
+  /* Chi tiene il quadro: la gestione si'. Sono due interruttori, non uno. */
+  const chiTiene = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    gestore: true,
+  });
+  const tenuta = await chiTiene.rispondi({ id: 3, type: "ponte/quadro/stato" });
+  assert.equal(tenuta.result.gestore, true);
+  assert.match(tenuta.result.doveGestione, /^https:\/\/.+\/gestore\/$/);
+  assert.equal(tenuta.result.installatore, false);
+  assert.equal(tenuta.result.dove, "");
+
+  /* E la casa che ha tutt'e due — quella di chi il quadro lo tiene e ci monta
+   * anche i suoi impianti — le vede tutt'e due. */
+  const tutt = new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    installatore: true,
+    gestore: true,
+  });
+  const due = await tutt.rispondi({ id: 4, type: "ponte/quadro/stato" });
+  assert.equal(due.result.installatore, true);
+  assert.equal(due.result.gestore, true);
+  assert.notEqual(due.result.dove, due.result.doveGestione);
+});
+
+test("il codice del cruscotto lo riceve chi amministra, e nessun altro", async () => {
+  /* Il codice sta gia' nella scheda dell'add-on — e' quello che fa esistere la
+   * voce — e dentro Home Assistant la pagina non lo richiede: la tessera glielo
+   * passa. Nell'app se lo faceva ribattere, perche' l'app aveva solo
+   * l'indirizzo. «Se il codice e' inserito nella configurazione add-on non lo
+   * deve richiedere piu'.»
+   *
+   * Ma in Home Assistant quella voce e' `require_admin`, e darlo sul filo a
+   * chiunque abbia abbinato un telefono vorrebbe dire una porta piu' aperta
+   * dall'app che da casa: di la' c'e' l'elenco dei clienti di qualcuno. */
+  const con = (piu) =>
+    new Commissioni({
+      casa: casaDiProva(),
+      registro: ZITTO,
+      installatore: true,
+      gestore: true,
+      chiaveDelCruscotto: "codice-del-cruscotto",
+      chiaveDellaGestione: "codice-della-gestione",
+      ...piu,
+    });
+
+  const suo = await con().rispondi({ id: 1, type: "ponte/quadro/stato" }, { amministra: true });
+  assert.equal(suo.result.chiave, "codice-del-cruscotto");
+  assert.equal(suo.result.chiaveGestione, "codice-della-gestione");
+
+  /* Chi non amministra vede la voce e si batte il codice: com'era ieri. */
+  const altrui = await con().rispondi({ id: 2, type: "ponte/quadro/stato" }, { amministra: false });
+  assert.equal(altrui.result.chiave, undefined, "il codice va a chi non amministra");
+  assert.equal(altrui.result.chiaveGestione, undefined);
+  assert.equal(altrui.result.installatore, true, "e la voce invece sparisce");
+
+  /* Senza nessuno a cui chiedere, «non si sa» resta un no. */
+  const nonSiSa = await con().rispondi({ id: 3, type: "ponte/quadro/stato" });
+  assert.equal(nonSiSa.result.chiave, undefined, "«non si sa» passa per un si'");
+  assert.equal(nonSiSa.result.chiaveGestione, undefined);
+
+  /* Il codice non viaggia mai senza la sua porta: una casa che non e' di chi
+   * installa non manda il codice del cruscotto nemmeno a chi amministra. */
+  const senzaPorta = await con({ installatore: false, gestore: false }).rispondi(
+    { id: 4, type: "ponte/quadro/stato" },
+    { amministra: true },
+  );
+  assert.equal(senzaPorta.result.chiave, undefined);
+  assert.equal(senzaPorta.result.chiaveGestione, undefined);
+
+  /* E una casa che la porta ce l'ha ma il codice no non inventa niente. */
+  const senzaCodice = await new Commissioni({
+    casa: casaDiProva(),
+    registro: ZITTO,
+    installatore: true,
+  }).rispondi({ id: 5, type: "ponte/quadro/stato" }, { amministra: true });
+  assert.equal(senzaCodice.result.installatore, true);
+  assert.equal(senzaCodice.result.chiave, undefined);
+});
+
+test("«non si sa chi chiede» non e' un no: si va a vedere", async () => {
+  /* Il difetto che ha tenuto il codice fermo in casa vera.
+   *
+   * `amministratoreSubito` risponde **dalla memoria**, e se l'elenco degli
+   * utenti non e' ancora stato chiesto torna `null`. E' voluto: quella
+   * risposta sta sulla strada di ogni comando e non puo' fermarsi ad aspettare
+   * Home Assistant.
+   *
+   * Ma questa domanda si fa **una volta per collegamento, nell'istante in cui
+   * il filo si alza** — cioe' esattamente quando quella memoria e' piu'
+   * fredda. Prendendo quel `null` per un no, il codice non partiva quasi mai;
+   * e siccome l'app la domanda non la rifaceva, quella sessione restava senza.
+   * Riassociare il telefono non serviva a niente, ed e' esattamente quello che
+   * e' successo. */
+  let chiesto = 0;
+  const con = (utenti) =>
+    new Commissioni({
+      casa: casaDiProva(),
+      registro: ZITTO,
+      installatore: true,
+      chiaveDelCruscotto: "codice-del-cruscotto",
+      utenti,
+    });
+
+  /* Memoria fredda — `amministra` non arriva — ma chiedendo si scopre che
+   * amministra. */
+  const freddo = con({
+    async amministratore(chi) {
+      chiesto += 1;
+      assert.equal(chi, "utente-di-casa", "chiede di un altro");
+      return true;
+    },
+  });
+  const detta = await freddo.rispondi(
+    { id: 1, type: "ponte/quadro/stato" },
+    { chiChiede: "utente-di-casa" },
+  );
+  assert.equal(chiesto, 1, "non e' andato a vedere");
+  assert.equal(detta.result.chiave, "codice-del-cruscotto");
+
+  /* Chi risponde davvero no resta un no, e non si richiede niente a nessuno:
+   * `amministra` gia' c'e'. */
+  let toccato = 0;
+  const no = con({
+    async amministratore() {
+      toccato += 1;
+      return true;
+    },
+  });
+  const negata = await no.rispondi(
+    { id: 2, type: "ponte/quadro/stato" },
+    { chiChiede: "un-altro", amministra: false },
+  );
+  assert.equal(toccato, 0, "chiede anche quando la risposta ce l'ha gia'");
+  assert.equal(negata.result.chiave, undefined);
+
+  /* E se Home Assistant non risponde, fra le due si sceglie quella che non
+   * apre niente. */
+  const rotto = con({
+    async amministratore() {
+      throw new Error("Home Assistant non risponde");
+    },
+  });
+  const inciampata = await rotto.rispondi(
+    { id: 3, type: "ponte/quadro/stato" },
+    { chiChiede: "utente-di-casa" },
+  );
+  assert.equal(inciampata.success, true, "un guasto di la' porta giu' la risposta");
+  assert.equal(inciampata.result.installatore, true);
+  assert.equal(inciampata.result.chiave, undefined, "un guasto apre la porta");
+});

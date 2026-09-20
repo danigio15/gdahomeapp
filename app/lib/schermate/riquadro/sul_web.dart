@@ -120,6 +120,17 @@ Future<void> diciLeMisure(
   required double basso,
 }) async {}
 
+/// Consegna alla pagina del quadro il codice che apre il cruscotto.
+///
+/// Nel browser non serve, e non si fa: la pagina del quadro sta in un `iframe`
+/// di **un'altra origine**, e quel codice il browser se lo tiene lui nel suo
+/// deposito. Chi apre il cruscotto da qui lo batte una volta sola nella vita
+/// di quel browser — che e' esattamente quello che sul telefono mancava.
+Future<void> consegnaLaChiave(
+  WebViewController controllore,
+  String chiave,
+) async {}
+
 /// Apre la Configurazione della plancia: la sua pagina, quella vera.
 ///
 /// Nel browser il riquadro e' un `iframe`, e la plancia arriva dallo stesso
