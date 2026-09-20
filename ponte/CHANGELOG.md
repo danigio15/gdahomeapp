@@ -46,15 +46,21 @@ quando una è ferma o una cartuccia è agli sgoccioli, rossa se è ferma, e
 toccandola si apre la tessera. Si spegne dalla configurazione della barra come
 le altre voci.
 
-**«Apri nel browser» dal telefono non chiede più la chiave.** Nella 1.5.9.14
-la consegna valeva nell'app web, dove la scheda nuova la apre l'app e le può
-parlare; dal telefono il tasto apre il browser del sistema, a cui l'app non
-può dire niente — e la chiave nell'indirizzo non ci va, che finisce nella
-cronologia. Adesso l'app chiede al quadro un **biglietto**: vale un minuto e
-una volta sola, e lo mette lei nell'indirizzo. Il cruscotto lo consegna al
-quadro, riceve la chiave e la tiene come se fosse stata battuta, e toglie il
-biglietto dall'indirizzo prima che finisca nella cronologia. Chi apre
-l'indirizzo a mano continua a battere la chiave una volta, come prima.
+**Il cruscotto non chiede più la chiave, da nessuna parte.** Tre strade, e
+prima ne andava una sola. **Dall'app web** la consegna della 1.5.9.14 non
+arrivava: chi ospita la pagina doveva trovare il riquadro e indovinare il
+momento. Adesso è la pagina a **chiedere** la chiave a chi la contiene o a chi
+l'ha aperta, finché qualcuno risponde; l'app e la tessera in Home Assistant
+rispondono, a quella pagina e a nessun'altra. **Dal telefono**, «Apri nel
+browser» apre il browser del sistema, a cui l'app non può parlare — e la
+chiave nell'indirizzo non ci va, che finisce nella cronologia: l'app chiede al
+quadro un **biglietto**, che vale un minuto e una volta sola, e lo mette lei
+nell'indirizzo; il cruscotto lo cambia con la chiave, la tiene come se fosse
+stata battuta, e toglie il biglietto dall'indirizzo. **Dalla console
+dell'add-on in Home Assistant**, il tasto «Apri il cruscotto» apre una scheda
+già aperta: il biglietto lo chiede la casa al quadro con la chiave delle sue
+opzioni, che da lì continua a non uscire. Chi apre l'indirizzo a mano continua
+a battere la chiave una volta, come prima.
 
 **Il cruscotto dice di chi è il problema quando l'editor non si apre.** «Questo
 quadro non ha la plancia da servire» si leggeva come se mancasse la plancia

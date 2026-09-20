@@ -5802,6 +5802,41 @@
         void apri();
       }
       if (BIGLIETTO) void entraColBiglietto(BIGLIETTO);
+
+      /* E se nessuno la consegna, la si chiede.
+       *
+       * Fin qui la chiave arrivava «a spinta»: chi ospita questa pagina — la
+       * tessera in Home Assistant, l'app — cercava il riquadro e gli mandava
+       * la chiave, al momento giusto, per qualche colpo. Nell'app web quella
+       * spinta non arrivava, e la pagina restava a chiedere la chiave a chi
+       * ce l'aveva gia' in mano. Non e' questa pagina che puo' sapere quando
+       * chi la ospita e' pronto: allora e' lei a chiedere — a chi la
+       * contiene, e a chi l'ha aperta — e chi ha la chiave risponde. La
+       * domanda non porta niente, e va a chiunque: la chiave che torna vale
+       * se apre, e chi potesse mandarne una buona ce l'avrebbe gia'. Si
+       * chiede finche' non arriva, e si smette da soli. */
+      function chiediLaChiaveAChiMiOspita() {
+        if (chiave) return;
+        const ospiti = [];
+        try {
+          if (window.parent && window.parent !== window) ospiti.push(window.parent);
+        } catch (_niente) {}
+        try {
+          if (window.opener) ospiti.push(window.opener);
+        } catch (_niente) {}
+        if (!ospiti.length) return;
+        const domanda = () => {
+          if (chiave) return;
+          for (const ospite of ospiti) {
+            try {
+              ospite.postMessage({ gdahome: "chiave?" }, "*");
+            } catch (_niente) {}
+          }
+        };
+        domanda();
+        for (const fra of [400, 1200, 3000, 7000]) setTimeout(domanda, fra);
+      }
+      if (!BIGLIETTO) chiediLaChiaveAChiMiOspita();
     </script>
   </body>
 </html>

@@ -73,7 +73,7 @@ async function casaFinta() {
   };
 }
 
-async function banco({ quadro = null, installatore = false } = {}) {
+async function banco({ quadro = null, installatore = false, chiaveDelCruscotto = "" } = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "ponte-server-"));
   const ha = await casaFinta();
   const primaCasa = process.env.PONTE_CASA;
@@ -95,6 +95,7 @@ async function banco({ quadro = null, installatore = false } = {}) {
     quadro,
     quadroOgni: 15,
     installatore,
+    chiaveDelCruscotto,
   });
 
   const app = `http://127.0.0.1:${avviato.app.address().port}`;
@@ -679,5 +680,90 @@ test("con l'interruttore, dice dove si apre — e nient'altro", async () => {
     assert.deepEqual(Object.keys(detto).sort(), ["dove", "installatore"]);
   } finally {
     await b.spegni();
+  }
+});
+
+/* Il tasto «Apri il cruscotto» apre una scheda gia' aperta: la casa chiede al
+ * quadro un biglietto con la chiave delle sue opzioni, e alla pagina da' solo
+ * il biglietto — un minuto, una volta — mai la chiave. */
+async function unQuadroFinto(
+  risposta = (chiave) => ({ stato: 200, corpo: { biglietto: "b".repeat(32), chiave } }),
+) {
+  const viste = [];
+  const quadro = createServer((richiesta, replica) => {
+    const chiave = String(richiesta.headers.authorization || "").replace(/^Bearer\s+/i, "");
+    viste.push({ via: richiesta.url, metodo: richiesta.method, chiave });
+    const { stato, corpo } = risposta(chiave);
+    replica.writeHead(stato, { "content-type": "application/json" });
+    replica.end(JSON.stringify(corpo));
+  });
+  await new Promise((ok) => quadro.listen(0, "127.0.0.1", ok));
+  const dove = `http://127.0.0.1:${quadro.address().port}`;
+  const prima = process.env.PONTE_QUADRO_DOVE;
+  process.env.PONTE_QUADRO_DOVE = dove;
+  return {
+    dove,
+    viste,
+    async spegni() {
+      await new Promise((ok) => quadro.close(ok));
+      if (prima === undefined) delete process.env.PONTE_QUADRO_DOVE;
+      else process.env.PONTE_QUADRO_DOVE = prima;
+    },
+  };
+}
+
+test("il tasto del cruscotto riceve un biglietto chiesto con la chiave delle opzioni, non la chiave", async () => {
+  const q = await unQuadroFinto();
+  const b = await banco({
+    installatore: true,
+    chiaveDelCruscotto: "la-chiave-del-cruscotto-di-rossi",
+  });
+  try {
+    const risposta = await prendi(`${b.consolle}/api/cruscotto/biglietto`, {
+      method: "POST",
+      body: "{}",
+    });
+    assert.equal(risposta.status, 200);
+    const detto = await risposta.json();
+    assert.equal(detto.dove, `${q.dove}/console/?biglietto=${"b".repeat(32)}`);
+    assert.deepEqual(Object.keys(detto), ["dove"]);
+    /* La chiave e' andata al quadro, con la sua via, e alla pagina no. */
+    assert.deepEqual(q.viste, [
+      { via: "/console/biglietto", metodo: "POST", chiave: "la-chiave-del-cruscotto-di-rossi" },
+    ]);
+    assert.ok(!JSON.stringify(detto).includes("la-chiave-del-cruscotto-di-rossi"));
+    /* E la via di prima continua a non dire la chiave. */
+    const scheda = await (await prendi(`${b.consolle}/api/cruscotto`)).json();
+    assert.deepEqual(Object.keys(scheda).sort(), ["dove", "installatore"]);
+  } finally {
+    await b.spegni();
+    await q.spegni();
+  }
+});
+
+test("senza cruscotto, o con un quadro che dice di no, il biglietto non c'e' — e lo si dice", async () => {
+  const q = await unQuadroFinto(() => ({ stato: 401, corpo: { errore: "la chiave non va bene" } }));
+  const senza = await banco();
+  try {
+    const risposta = await prendi(`${senza.consolle}/api/cruscotto/biglietto`, {
+      method: "POST",
+      body: "{}",
+    });
+    assert.equal(risposta.status, 404);
+    assert.deepEqual(q.viste, [], "senza cruscotto il quadro non si disturba nemmeno");
+  } finally {
+    await senza.spegni();
+  }
+  const con = await banco({ installatore: true, chiaveDelCruscotto: "una-chiave-morta" });
+  try {
+    const risposta = await prendi(`${con.consolle}/api/cruscotto/biglietto`, {
+      method: "POST",
+      body: "{}",
+    });
+    assert.equal(risposta.status, 502);
+    assert.equal((await risposta.json()).errore, "la chiave del cruscotto non apre piu'");
+  } finally {
+    await con.spegni();
+    await q.spegni();
   }
 });

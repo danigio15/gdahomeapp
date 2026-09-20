@@ -325,3 +325,56 @@ test("fuori da una Plancia non cerca niente, e non si rompe", () => {
   assert.equal(tessera._togliLaBarra(), false);
   assert.doesNotThrow(() => tessera._rimettiLaBarra());
 });
+
+/* La pagina dentro chiede il codice da se' (`{gdahome: "chiave?"}`), e la
+ * tessera risponde: a lei sola, e solo se viene dall'origine del quadro. */
+test("la tessera risponde alla pagina che chiede il codice, e a nessun altro", () => {
+  const { finestra } = unBrowser();
+  const Riquadro = finestra.customElements.get("gdahome-riquadro");
+  assert.ok(Riquadro, "la tessera del riquadro c'e'");
+  const tessera = Object.create(Riquadro.prototype);
+  tessera._config = { dove: "https://quadro.gdahome.org/console/", chiave: "la-chiave" };
+  const mandati = [];
+  const dentro = { postMessage: (detto, origine) => mandati.push([detto, origine]) };
+  tessera.shadowRoot = { querySelector: () => ({ contentWindow: dentro }) };
+
+  tessera._rispondiAllaPagina({
+    data: { gdahome: "chiave?" },
+    origin: "https://quadro.gdahome.org",
+    source: dentro,
+  });
+  /* Per valore: l'oggetto nasce nel contesto della tessera, e un confronto
+   * stretto guarderebbe anche il suo prototipo, che e' di un altro mondo. */
+  assert.equal(
+    JSON.stringify(mandati),
+    JSON.stringify([[{ gdahome: "chiave", chiave: "la-chiave" }, "https://quadro.gdahome.org"]]),
+  );
+
+  /* Un'altra origine, un'altra finestra, un'altra domanda: niente. */
+  const altra = { postMessage: (detto, origine) => mandati.push(["altra", detto, origine]) };
+  tessera._rispondiAllaPagina({
+    data: { gdahome: "chiave?" },
+    origin: "https://altro.example",
+    source: dentro,
+  });
+  tessera._rispondiAllaPagina({
+    data: { gdahome: "chiave?" },
+    origin: "https://quadro.gdahome.org",
+    source: altra,
+  });
+  tessera._rispondiAllaPagina({
+    data: { gdahome: "pagina" },
+    origin: "https://quadro.gdahome.org",
+    source: dentro,
+  });
+  assert.equal(mandati.length, 1);
+
+  /* E senza codice nelle opzioni non c'e' niente da rispondere. */
+  tessera._config = { dove: "https://quadro.gdahome.org/console/", chiave: "" };
+  tessera._rispondiAllaPagina({
+    data: { gdahome: "chiave?" },
+    origin: "https://quadro.gdahome.org",
+    source: dentro,
+  });
+  assert.equal(mandati.length, 1);
+});

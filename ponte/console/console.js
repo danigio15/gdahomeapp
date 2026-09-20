@@ -1811,7 +1811,33 @@
           scheda.hidden = true;
           return;
         }
-        trova("cruscotto-vai").href = detto.dove;
+        var vai = trova("cruscotto-vai");
+        vai.href = detto.dove;
+        /* Col biglietto: la scheda si apre gia' aperta, senza ribattere la
+         * chiave. La scheda si apre subito, al tocco — un browser lascia
+         * aprire una scheda solo mentre il dito e' sul tasto — e l'indirizzo
+         * le si da' quando il biglietto arriva. Se il quadro non lo da', ci
+         * va l'indirizzo com'e', e la chiave la chiede la pagina, com'era. */
+        if (!vai.dataset.biglietto) {
+          vai.dataset.biglietto = "s\u00ec";
+          vai.addEventListener("click", function (evento) {
+            var scheda = null;
+            try {
+              scheda = window.open("", "_blank");
+            } catch (_niente) {
+              scheda = null;
+            }
+            if (!scheda) return;
+            evento.preventDefault();
+            chiedi("api/cruscotto/biglietto", { method: "POST", body: "{}" })
+              .then(function (risposta) {
+                scheda.location = risposta && risposta.dove ? risposta.dove : vai.href;
+              })
+              .catch(function () {
+                scheda.location = vai.href;
+              });
+          });
+        }
         scheda.hidden = false;
       })
       .catch(function () {
