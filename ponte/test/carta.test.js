@@ -378,3 +378,66 @@ test("la tessera risponde alla pagina che chiede il codice, e a nessun altro", (
   });
   assert.equal(mandati.length, 1);
 });
+
+/* «Le 3 linee per tornare in HA»: su Chrome e sull'app per Mac non facevano
+ * niente, su iPhone e Android si' (#35).
+ *
+ * Il tasto chiedeva a Home Assistant di aprire la barra laterale. Su uno
+ * schermo stretto quella barra e' un cassetto e si apre; su uno largo non e'
+ * un cassetto — sta di fianco o non c'e' — e li' non c'era niente da aprire.
+ * Adesso su schermo largo rimette la barra della dashboard, che e' quella che
+ * il kiosk toglie e che porta il menu e le linguette. */
+test("il tasto del menu: stretto chiede il cassetto, largo rimette la barra", () => {
+  const { finestra } = unBrowser();
+  const Riquadro = finestra.customElements.get("gdahome-riquadro");
+  const riquadro = Object.create(Riquadro.prototype);
+  riquadro._config = { dove: "https://quadro.gdahome.org/console/" };
+
+  const chiesti = [];
+  riquadro.dispatchEvent = (evento) => chiesti.push(evento?.type);
+  /* Il browser finto ha quel tanto che basta: l'evento lo si aggiunge qui,
+   * dov'e' la prova che lo usa. */
+  finestra.CustomEvent = class {
+    constructor(tipo, dettagli) {
+      this.type = tipo;
+      Object.assign(this, dettagli || {});
+    }
+  };
+
+  /* Schermo stretto: si chiede il cassetto, e la barra resta com'era. */
+  finestra.matchMedia = (quale) => ({ matches: /max-width: 870px/.test(quale) });
+  let tolta = 0;
+  riquadro._barra = { remove: () => (tolta += 1) };
+  riquadro._apriIlMenu();
+  assert.deepEqual(chiesti, ["hass-toggle-menu"]);
+  assert.equal(tolta, 0, "sul telefono la barra della dashboard non c'entra");
+
+  /* Schermo largo: si chiede lo stesso — non fa male — e in piu' la barra
+   * torna, che e' l'unica strada indietro che li' esiste. */
+  finestra.matchMedia = () => ({ matches: false });
+  riquadro._apriIlMenu();
+  assert.deepEqual(chiesti, ["hass-toggle-menu", "hass-toggle-menu"]);
+  assert.equal(tolta, 1, "la barra della dashboard torna");
+  assert.equal(riquadro._barra, null);
+});
+
+test("e premuto di nuovo la barra se ne va: il kiosk si accende e si spegne", () => {
+  const { finestra } = unBrowser();
+  const Riquadro = finestra.customElements.get("gdahome-riquadro");
+  const riquadro = Object.create(Riquadro.prototype);
+  riquadro._config = { dove: "https://quadro.gdahome.org/console/" };
+  riquadro.dispatchEvent = () => {};
+  riquadro._barra = null;
+  finestra.matchMedia = () => ({ matches: false });
+  finestra.CustomEvent = class {
+    constructor(tipo) {
+      this.type = tipo;
+    }
+  };
+
+  /* Senza una dashboard vera sotto, rimettere il kiosk non trova nessun
+   * tetto: quello che conta e' che ci PROVI, cioe' che il secondo tocco non
+   * sia un tocco a vuoto come il primo era prima di questa correzione. */
+  riquadro._apriIlMenu();
+  assert.equal(riquadro._barra, null);
+});

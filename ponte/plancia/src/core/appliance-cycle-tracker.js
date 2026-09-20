@@ -39,6 +39,28 @@ const MAX_SAMPLE_GAP_MS = 5 * 60 * 1000;
  * cestello e rifare un carico: fra due lavaggi veri ci passa sempre di piu'. */
 const PAUSA_DENTRO_UN_CICLO_MS = 20 * 60 * 1000;
 const MIN_CYCLE_MS = 60 * 1000;
+/* Da quanto si e' guardato, perche' l'avvio valga (#65).
+ *
+ * «Tutti gli elettrodomestici evidenziano "avvio" solo con l'ora in cui apro
+ *  la scheda: se la apro dopo 10 minuti che un elettrodomestico e' gia' in
+ *  funzione mi indica che e' appena iniziato il ciclo.»
+ *
+ * Il ciclo si apriva con l'istante in cui il contatore vedeva «in funzione»
+ * per la prima volta. Quando il contatore stava gia' guardando — la plancia
+ * aperta, la raffica degli stati che arriva — quell'istante E' l'avvio, a
+ * qualche secondo. Quando invece nessuno guardava — il browser chiuso, il
+ * telefono in tasca, la plancia appena aperta — non e' l'avvio: e' l'ora in
+ * cui si e' cominciato a guardare, e scriverla come avvio e' dire una cosa
+ * falsa con la faccia di un dato.
+ *
+ * Le due cose si distinguono senza chiedere niente a nessuno: basta sapere se
+ * questo apparecchio lo si e' visto poco fa. Sotto questa soglia il giro e'
+ * quello normale e l'avvio e' buono; sopra, si e' stati via, e l'avvio e' il
+ * primo istante in cui lo si e' rivisto — che e' un «da non prima di». */
+const GUARDATO_DA_POCO_MS = 5 * 60 * 1000;
+/* Un avvio detto dalla casa piu' vecchio di un giorno non e' questo ciclo: e'
+ * un interruttore rimasto acceso, o un orologio che non torna. */
+const UN_GIORNO_MS = 24 * 60 * 60 * 1000;
 const MIN_CYCLE_KWH = 0.005;
 
 const finiteOrNull = (value) => {
@@ -141,6 +163,10 @@ export function createCycleTracker({
     if (durationMs < MIN_CYCLE_MS && kwh == null) return;
     record.last = {
       startMs: active.startMs,
+      /* Se l'ora dell'avvio era una supposizione se lo ricorda anche da
+       * chiusa: la durata di quel ciclo e' un «almeno», e chi la scrive lo
+       * deve poter dire. */
+      ...(active.avvioIncerto ? { avvioIncerto: true } : {}),
       endMs: fine,
       durationMinutes: Math.round(durationMs / 60000),
       kwh: kwh != null ? Math.round(kwh * 1000) / 1000 : null,
@@ -168,6 +194,12 @@ export function createCycleTracker({
         const mode = String(entry?.mode || "off");
         const record = (records[id] ||= {});
         const active = record.active;
+        /* Quando lo si e' visto l'ultima volta, qualunque cosa stesse
+         * facendo: e' cio' che distingue «l'ho visto partire» da «l'ho
+         * trovato gia' partito». Si scrive DOPO aver deciso, qui sotto. */
+        const vistoPrima = record.vistoIl;
+        record.vistoIl = timestamp;
+        if (vistoPrima !== timestamp) changed = true;
         if (mode === "running") {
           if (!active) {
             /* Riparte dopo una pausa breve: e' lo stesso ciclo, e riprende da
@@ -189,8 +221,29 @@ export function createCycleTracker({
               continue;
             }
             delete record.sospeso;
+            /* Quando comincia davvero.
+             *
+             * Tre risposte, in ordine di quanto sono sicure:
+             *
+             * 1. lo dice la casa — un interruttore di attivita' («sta
+             *    lavorando: si'») e' acceso da quel momento li', e Home
+             *    Assistant lo sa: `iniziatoIl`;
+             * 2. lo si e' visto partire — l'apparecchio era sotto gli occhi
+             *    fino a poco fa e adesso e' in funzione: l'avvio e' adesso;
+             * 3. non si sa — si e' stati via, e adesso lo si trova in
+             *    funzione: l'avvio e' «non dopo adesso», e si segna.
+             */
+            const detto = finiteOrNull(entry.iniziatoIl);
+            const sensato =
+              detto != null && detto <= timestamp && timestamp - detto <= UN_GIORNO_MS;
+            const guardatoDaPoco =
+              timestamp - (finiteOrNull(vistoPrima) ?? -Infinity) <= GUARDATO_DA_POCO_MS;
             record.active = {
-              startMs: timestamp,
+              startMs: sensato ? detto : timestamp,
+              /* `true` quando l'ora dell'avvio e' una supposizione: chi la
+               * mostra lo dice, invece di far passare per un orario una cosa
+               * che orario non e'. */
+              ...(sensato || guardatoDaPoco ? {} : { avvioIncerto: true }),
               lastMs: timestamp,
               kwhIntegral: 0,
               lastWatts: finiteOrNull(entry.watts) ?? 0,

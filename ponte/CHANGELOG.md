@@ -20,6 +20,37 @@ il disegno passa dal motore delle icone, come in tutto il resto della
 plancia: un simbolo scelto a mano resta il simbolo, un token diventa il suo
 disegno.
 
+**L'avvio dell'ultimo ciclo non è più l'ora in cui apri la scheda** (#65).
+«Se apro la scheda dopo 10 minuti che un elettrodomestico è già in funzione mi
+indica che è appena iniziato il ciclo.» Il contatore apriva il ciclo con
+l'istante in cui vedeva «in funzione» per la prima volta: quando stava già
+guardando quell'istante **è** l'avvio, ma quando nessuno guardava — browser
+chiuso, plancia appena aperta — è solo l'ora in cui si è cominciato a
+guardare. Adesso sono tre risposte: se la casa lo sa dire (un sensore
+`binary_sensor` di attività, dove `last_changed` è davvero l'avvio) vale
+quella; se la macchina è partita sotto gli occhi, l'avvio è quello; se la si è
+trovata già in funzione, la scheda scrive **«da prima di» le 10:35** e la
+durata **«almeno 1h 10m»**, invece di far passare una supposizione per una
+misura.
+
+**Il numero grande della tessera non esce più dalla sua scatola** (#30). «Su
+Google Chrome si vede male il numero, che è sovrapposto.» Il numero è Oswald a
+quaranta, e un margine negativo gli toglie l'aria che quella riga si porta
+dentro. Quel margine però è tarato su quel carattere a quel corpo: un valore
+più lungo passa a Inter a venti, e lì toglieva più di quanto la riga fosse
+alta — una scatola di cinque pixel per un testo che ne occupa trentadue, e il
+resto finiva sopra l'insegna e sotto sulla didascalia. Non era Chrome: era
+qualunque tessera con un valore di otto caratteri o più.
+
+**Le tre linee per tornare in Home Assistant funzionano anche da computer**
+(#35). «Se c'è la modalità kiosk attiva c'è questo problema, se è disattivata
+no»; e «da app installata su Mac uguale, invece su telefono iPhone e Android
+tutto ok». Il tasto chiedeva a Home Assistant di aprire la barra laterale: su
+uno schermo stretto quella barra è un cassetto e si apre — ed è perché sul
+telefono andava — su uno largo non è un cassetto, e lì non c'era niente da
+aprire. Adesso su schermo largo rimette la barra della dashboard, quella che
+il kiosk toglie, col suo menu e le sue linguette; premuto di nuovo se ne va.
+
 **Il rilascio dice se l'app è arrivata davvero nel negozio.** «L'apk
 dell'ultima release non è arrivato nello store»: il registro scriveva
 «pubblicato» e il lavoro diventava verde, ma quella riga voleva dire soltanto

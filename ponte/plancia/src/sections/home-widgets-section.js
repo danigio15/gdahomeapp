@@ -9589,12 +9589,26 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-po
   font-family:'Oswald','Inter',sans-serif;font-weight:200;font-size:40px;line-height:1.6;
   letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
 /* Una parola al posto di un numero si rimpicciolisce quanto basta a entrare
-   intera: meglio leggerla tutta che leggerne meta' in grande. */
+   intera: meglio leggerla tutta che leggerne meta' in grande.
+
+   E **il margine negativo se ne va con lei** (#30). «Su Google Chrome si vede
+   male il numero, che e' sovrapposto»: quei -13,6 px sopra e sotto sono la
+   meta' dell'aria che Oswald a quaranta si prende dentro la riga a 1.6, e
+   servono a togliere quell'aria senza tagliare il disegno. Con un altro
+   carattere e un altro corpo quella meta' e' un'altra: a venti diventava piu'
+   alta della riga stessa — 32 px di riga meno 27,2 di margini fanno una
+   scatola di 4,8 px — e il testo, che 32 ne occupa davvero, usciva sopra
+   l'insegna e sotto sulla didascalia. Non era Chrome: era qualunque tessera
+   con un valore lungo, e si vedeva dove il valore lungo c'era.
+
+   Qui la riga e' quella del carattere che si usa, e la scatola e' alta quanto
+   quello che ci si vede dentro: niente da compensare, niente che esca. */
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-value[data-dm-len="medio"]{
-  font-family:'Inter',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.01em}
+  font-family:'Inter',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.01em;
+  line-height:1.3;margin:0}
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-value[data-dm-len="lungo"]{
   font-family:'Inter',sans-serif;font-weight:800;font-size:16px;letter-spacing:0;
-  white-space:normal;line-height:1.15;
+  white-space:normal;line-height:1.15;margin:0;
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-unit{
   display:inline;margin-left:6px;font-style:normal;font-size:10.5px;font-weight:900;letter-spacing:.12em;

@@ -287,9 +287,19 @@ test("la tessera che la voce chiede e' la stessa che la cartina registra", () =>
     /customElements\.define\(RIQUADRO, RiquadroDiGdahome\)/,
     "e deve registrarlo davvero, non solo nominarlo",
   );
-  assert.equal(
-    (cartina.match(/senzaLaBarra\(this/g) || []).length,
-    2,
-    "la barra la tolgono tutt'e due: la plancia e il riquadro",
-  );
+  /* La barra la tolgono tutt'e due, e si guarda dentro le due classi invece
+   * di contare le chiamate: il riquadro ne ha una in piu' da quando il suo
+   * tasto rimette il kiosk dopo averlo tolto (#35), e un conto secco
+   * diventava rosso per una riga che fa esattamente quello che la prova
+   * vuole. */
+  for (const [quale, dove] of [
+    ["la plancia", "class PlanciaDiGdahome"],
+    ["il riquadro", "class RiquadroDiGdahome"],
+  ]) {
+    const inizio = cartina.indexOf(dove);
+    assert.notEqual(inizio, -1, `manca ${quale}`);
+    const fine = cartina.indexOf("\nclass ", inizio + 1);
+    const corpo = cartina.slice(inizio, fine === -1 ? cartina.length : fine);
+    assert.match(corpo, /senzaLaBarra\(this/, `${quale} deve togliere la barra`);
+  }
 });
