@@ -142,7 +142,7 @@ scena(
   (q) => `
   <div class="corpo incolonna">
     ${firma(0.1)}
-    <h1 class="titolo cr" style="--t:.5s">${t("Hai installato quaranta impianti.<br />Adesso come stanno?", "Forty systems installed.<br />How are they doing right now?")}</h1>
+    <h1 class="titolo cr" style="--t:.5s">${t("Hai installato quaranta impianti.<br />Come fai a sapere se ci sono problemi da gestire?", "Forty systems installed.<br />How do you know if there are problems to deal with?")}</h1>
     <div class="vetro pastiglia ap" style="--t:${q(1, 1.3)}s;border-color:rgba(14,165,233,.45);color:#7dd3fc">
       ${t("Cruscotto installatore · una pagina sola per tutti i tuoi impianti", "Installer dashboard · one page for all your systems")}
     </div>
@@ -200,7 +200,7 @@ scena(
   (q) => `
   ${cartello("2", t("Una domanda sola", "One question"), t("dieci controlli per ogni impianto, ogni giorno", "ten checks per system, every day"))}
   <div class="corpo incolonna">
-    <h1 class="titolo medio en" style="--t:.35s">${t("Quell'impianto, adesso, come sta?", "That system, right now — how is it?")}</h1>
+    <h1 class="titolo medio en" style="--t:.35s">${t("Quell'impianto, adesso, ha problemi da gestire?", "That system, right now: is there a problem to deal with?")}</h1>
     <div class="stati" style="margin-top:14px">
       <div class="vetro stato cr" style="--t:${q(1, 1)}s;border-color:rgba(22,163,74,.5);color:#86efac">
         <span class="segno">●</span>${t("in ordine", "in order")}
@@ -225,8 +225,8 @@ scena(
     {
       t: q(2, 5),
       testo: t(
-        "<b>Lo stato offline viene prima di tutti:</b> di un impianto che non comunica non sappiamo nulla, nemmeno che stia bene.",
-        "<b>Offline comes before everything:</b> of a system that isn't reporting we know nothing — not even that it's fine.",
+        "<b>Lo stato offline viene prima di tutti:</b> di un impianto che non comunica non sappiamo nulla, nemmeno se ha problemi.",
+        "<b>Offline comes before everything:</b> of a system that isn't reporting we know nothing — not even whether it has a problem.",
       ),
     },
   ])}`,
@@ -275,8 +275,8 @@ scena(
     {
       t: q(0, 1.6),
       testo: t(
-        "Il cruscotto si apre sull'<b>anello</b>: tutti gli impianti in un cerchio, colorato in proporzione a come stanno, e sotto i tre numeri.",
-        "The dashboard opens on the <b>ring</b>: every system in one circle, coloured in proportion to how they are, with the three counts below.",
+        "Il cruscotto si apre sull'<b>anello</b>: tutti gli impianti in un cerchio, colorato in proporzione a quanti hanno problemi da gestire, e sotto i tre numeri.",
+        "The dashboard opens on the <b>ring</b>: every system in one circle, coloured in proportion to how many have problems to deal with, with the three counts below.",
       ),
       t2: q(1, 5) - 0.3,
     },
