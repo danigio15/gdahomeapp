@@ -217,6 +217,10 @@ export function campionaICicli() {
         id: key,
         mode: model.mode,
         watts: model.watts,
+        /* Da quando e' in funzione, quando la casa lo sa: e' l'avvio vero del
+         * ciclo, e senza di lui il contatore puo' solo dire «da quando
+         * guardo» (#65). */
+        iniziatoIl: model.iniziatoIl,
         dailyKwh: dailyEnergyKwh(device, states),
         remainingSeconds: remainingInfo(device, states, now, cycles.record(key))?.seconds,
       };

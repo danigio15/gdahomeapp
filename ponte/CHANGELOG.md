@@ -11,6 +11,70 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.16
+
+**Il popup di un'azione rapida disegna la sua icona, non ne scrive il nome.**
+Con un'azione che porta un'icona del catalogo, in cima alla finestra delle
+voci si leggeva `mdi:home` sopra il titolo, che ci finiva pure sotto. Adesso
+il disegno passa dal motore delle icone, come in tutto il resto della
+plancia: un simbolo scelto a mano resta il simbolo, un token diventa il suo
+disegno.
+
+**L'avvio dell'ultimo ciclo non è più l'ora in cui apri la scheda** (#65).
+«Se apro la scheda dopo 10 minuti che un elettrodomestico è già in funzione mi
+indica che è appena iniziato il ciclo.» Il contatore apriva il ciclo con
+l'istante in cui vedeva «in funzione» per la prima volta: quando stava già
+guardando quell'istante **è** l'avvio, ma quando nessuno guardava — browser
+chiuso, plancia appena aperta — è solo l'ora in cui si è cominciato a
+guardare. Adesso sono tre risposte: se la casa lo sa dire (un sensore
+`binary_sensor` di attività, dove `last_changed` è davvero l'avvio) vale
+quella; se la macchina è partita sotto gli occhi, l'avvio è quello; se la si è
+trovata già in funzione, la scheda scrive **«da prima di» le 10:35** e la
+durata **«almeno 1h 10m»**, invece di far passare una supposizione per una
+misura.
+
+**Il numero grande della tessera non esce più dalla sua scatola** (#30). «Su
+Google Chrome si vede male il numero, che è sovrapposto.» Il numero è Oswald a
+quaranta, e un margine negativo gli toglie l'aria che quella riga si porta
+dentro. Quel margine però è tarato su quel carattere a quel corpo: un valore
+più lungo passa a Inter a venti, e lì toglieva più di quanto la riga fosse
+alta — una scatola di cinque pixel per un testo che ne occupa trentadue, e il
+resto finiva sopra l'insegna e sotto sulla didascalia. Non era Chrome: era
+qualunque tessera con un valore di otto caratteri o più.
+
+**Le tre linee per tornare in Home Assistant funzionano anche da computer**
+(#35). «Se c'è la modalità kiosk attiva c'è questo problema, se è disattivata
+no»; e «da app installata su Mac uguale, invece su telefono iPhone e Android
+tutto ok». Il tasto chiedeva a Home Assistant di aprire la barra laterale: su
+uno schermo stretto quella barra è un cassetto e si apre — ed è perché sul
+telefono andava — su uno largo non è un cassetto, e lì non c'era niente da
+aprire. Adesso su schermo largo rimette la barra della dashboard, quella che
+il kiosk toglie, col suo menu e le sue linguette; premuto di nuovo se ne va.
+
+**Il rilascio dice se l'app è arrivata davvero nel negozio.** «L'apk
+dell'ultima release non è arrivato nello store»: il registro scriveva
+«pubblicato» e il lavoro diventava verde, ma quella riga voleva dire soltanto
+che Google aveva accettato la consegna — non che il pacchetto fosse sulla
+pista. Adesso, dopo la consegna, lo strumento riapre una modifica, **riguarda
+la pista** e scrive cosa ci vede: «il negozio conferma: la 1050915 è sulla
+pista «alpha», stato completed». Se non la vede lo dice a chiare lettere, con
+le versioni che invece ci sono, e non finge un rosso: la consegna è andata,
+il pacchetto può essere ancora in lavorazione o in revisione. E `--piste`
+adesso dice anche lo stato di ogni versione, non solo il numero.
+
+**La tessera delle finestre conta anche le tapparelle, e nel nome lo dice**
+(#64). «Ho provato ad associare oltre che alla tapparella anche il sensore
+finestra della stessa, ma facendo così il widget mostra solo 1, ma ci sono 4
+tapparelle aperte e 1 sensore della finestra aperto: dovrebbe mostrare
+entrambi.» Era il prezzo della #442 pagato dall'altra parte: per non chiamare
+«finestre aperte» quattro tapparelle tirate su, il numero grande aveva smesso
+di contarle — con quattro su e una finestra aperta diceva «1», con quattro su
+e nessuna aperta diceva «0» sopra la scritta «4 alzate». Adesso dove ci sono
+tutte e due le cose la tessera si chiama **Finestre e tapparelle**, il numero
+conta quello che la tessera elenca, e la didascalia le tiene separate. La
+pastiglia sotto il meteo non cambia: lì una tapparella alzata non è una
+finestra aperta, e continua a dire le ante aperte e basta.
+
 ## 1.5.9.15
 
 **Nell'app, cambiando casa, la testata della plancia diceva ancora la casa di

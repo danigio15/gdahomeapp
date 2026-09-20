@@ -1217,7 +1217,8 @@ function coversModel(states) {
   /* Chi si alza e chi si apre, e quale delle due cose conta il numero grande:
    * la regola sta tutta in `contoDelleAperture`, che e' pura e si prova con i
    * numeri invece che rileggendo queste righe. */
-  const { alzate, aperte, soloMotori, insieme, contate } = contoDelleAperture(rows);
+  const { alzate, aperte, soloMotori, miste, insieme, contate, tutte } =
+    contoDelleAperture(rows);
   /* «L'avviso di arieggiare funziona ma e' presente solo se entri nella
    * sezione, andrebbe messo a livello di widget» (#500).
    *
@@ -1279,10 +1280,17 @@ function coversModel(states) {
     icon: "🪟",
     /* Il nome dice cosa c'e' dentro: senza un solo contatto sull'anta questa
      * tessera parla di motori, e si chiama come loro. */
-    label: soloMotori ? t("Tapparelle", "Shutters") : t("Finestre", "Windows"),
-    value: String(contate.length),
+    /* Col nome di quello che conta (#64): dove ci sono tutte e due le cose la
+     * tessera le elenca tutte e due, e chiamarsi «Finestre» con dentro anche
+     * le tapparelle e' la parola che faceva dire «troppo equivoco». */
+    label: soloMotori
+      ? t("Tapparelle", "Shutters")
+      : miste
+        ? t("Finestre e tapparelle", "Windows and shutters")
+        : t("Finestre", "Windows"),
+    value: String(tutte.length),
     caption: didascalia(),
-    ring: Math.round((contate.length / insieme.length) * 100),
+    ring: Math.round((tutte.length / (miste ? rows.length : insieme.length)) * 100),
     /* Rosso solo quando c'e' da fare: una tessera che avvisa sempre non
      * avvisa. Le finestre aperte sono uno stato, non un avviso — quello lo
      * dicono i Varchi. */
@@ -1294,6 +1302,9 @@ function coversModel(states) {
      * suo, e due conti sulla stessa cosa non possono divergere se il conto e'
      * uno. */
     open: contate,
+    /* E tutto quello che la tessera conta: le ante aperte con i motori su.
+     * Chi apre la tessera trova l'elenco, che e' quello che il numero dice. */
+    aperteEAlzate: tutte,
     /* E con loro esce COSA sono state contate (#31).
      *
      * «Nella scheda il titolo tapparelle e' corretto, mentre in quei piccoli
@@ -9578,12 +9589,26 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-po
   font-family:'Oswald','Inter',sans-serif;font-weight:200;font-size:40px;line-height:1.6;
   letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
 /* Una parola al posto di un numero si rimpicciolisce quanto basta a entrare
-   intera: meglio leggerla tutta che leggerne meta' in grande. */
+   intera: meglio leggerla tutta che leggerne meta' in grande.
+
+   E **il margine negativo se ne va con lei** (#30). «Su Google Chrome si vede
+   male il numero, che e' sovrapposto»: quei -13,6 px sopra e sotto sono la
+   meta' dell'aria che Oswald a quaranta si prende dentro la riga a 1.6, e
+   servono a togliere quell'aria senza tagliare il disegno. Con un altro
+   carattere e un altro corpo quella meta' e' un'altra: a venti diventava piu'
+   alta della riga stessa — 32 px di riga meno 27,2 di margini fanno una
+   scatola di 4,8 px — e il testo, che 32 ne occupa davvero, usciva sopra
+   l'insegna e sotto sulla didascalia. Non era Chrome: era qualunque tessera
+   con un valore lungo, e si vedeva dove il valore lungo c'era.
+
+   Qui la riga e' quella del carattere che si usa, e la scatola e' alta quanto
+   quello che ci si vede dentro: niente da compensare, niente che esca. */
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-value[data-dm-len="medio"]{
-  font-family:'Inter',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.01em}
+  font-family:'Inter',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.01em;
+  line-height:1.3;margin:0}
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-value[data-dm-len="lungo"]{
   font-family:'Inter',sans-serif;font-weight:800;font-size:16px;letter-spacing:0;
-  white-space:normal;line-height:1.15;
+  white-space:normal;line-height:1.15;margin:0;
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-unit{
   display:inline;margin-left:6px;font-style:normal;font-size:10.5px;font-weight:900;letter-spacing:.12em;

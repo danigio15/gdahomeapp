@@ -594,7 +594,54 @@ class RiquadroDiGdahome extends HTMLElement {
    * pagina, e un tasto fuori vorrebbe dire una striscia vuota in cima — cioe'
    * la barra che abbiamo appena tolto. */
   _apriIlMenu() {
+    /* Il cassetto di Home Assistant, dove un cassetto c'e'. */
     this.dispatchEvent(new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true }));
+    /* E su schermo largo, la barra della dashboard (#35).
+     *
+     * «Il problema delle 3 linee per tornare in HA su Chrome: se c'e' la
+     *  modalita' kiosk attiva c'e' questo problema, se e' disattivata no» — e
+     *  dall'altro capo: «da app installata su Mac uguale, invece su telefono
+     *  iPhone e Android tutto ok».
+     *
+     * La riga qui sopra e' l'unica cosa che il tasto faceva, e chiede a Home
+     * Assistant di aprire la barra laterale. Su uno schermo stretto quella
+     * barra E' un cassetto, si apre, e infatti sul telefono funziona. Su uno
+     * schermo largo non e' un cassetto: sta di fianco o non c'e', e quella
+     * richiesta li' non apre niente — il tasto sembrava rotto perche' non
+     * aveva niente da aprire.
+     *
+     * Allora li' si rimette la barra della dashboard, che e' quella che il
+     * kiosk aveva tolto: ha il suo menu e le sue linguette, ed e' la strada
+     * per tornare indietro che si stava cercando. Premuto di nuovo se ne va,
+     * cosi' il kiosk resta una cosa che si accende e si spegne e non una
+     * porta che si apre una volta sola.
+     *
+     * La misura e' quella di Home Assistant — sotto gli 870 pixel la barra
+     * laterale diventa un cassetto — e non una scelta nostra: due soglie per
+     * la stessa cosa divergono al primo cambio di versione. */
+    try {
+      if (window.matchMedia?.("(max-width: 870px)")?.matches) return;
+    } catch (_errore) {
+      /* Senza `matchMedia` non si sa quanto e' largo: si fa la cosa che
+       * funziona dappertutto, cioe' rimettere la barra. */
+    }
+    this._scambiaLaBarra();
+  }
+
+  /* La barra della dashboard: se c'e' la si toglie, se non c'e' la si rimette.
+   *
+   * `this._barra` e' il foglio che la nasconde: finche' c'e', il kiosk e'
+   * acceso. Buttarlo vuol dire far tornare la barra; rifarlo, rinasconderla.
+   * Torna `true` quando dopo il tocco la barra si vede. */
+  _scambiaLaBarra() {
+    if (this._barra) {
+      this._barra.remove?.();
+      this._barra = null;
+      return true;
+    }
+    const { foglio } = senzaLaBarra(this, this._config);
+    if (foglio) this._barra = foglio;
+    return false;
   }
 
   _disegna() {

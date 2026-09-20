@@ -103,6 +103,14 @@ test("senza una voce fissata il tasto apre il popup, e il popup chiama il serviz
     /chiama\(entity\.split\("\."\)\[0\], "select_option", entity, \{ option: voce \}\)/,
   );
   assert.match(sorgente, /classList\?\.add\("dm-widget-popup-open"\)/);
+  /* E il disegno dell'azione, non il suo nome: un'icona puo' essere un
+   * simbolo scelto a mano o un token del catalogo, e scritta come testo
+   * «mdi:home» si legge tale e quale sopra il titolo. */
+  assert.match(
+    sorgente,
+    /writeIconGlyph\(faccia, azione\?\.icon, \{ size: 22, fallback: "🎚️" \}\)/,
+  );
+  assert.doesNotMatch(sorgente, /faccia\.textContent = /);
   /* La veste e' quella delle altre finestre: il foglio dei widget la dichiara
    * anche per questa, in ogni regola, e nessuna resta a due. */
   const widgets = leggi("src/sections/home-widgets-section.js");

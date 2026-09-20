@@ -170,7 +170,7 @@ test("il peso si dice come lo direbbe uno", () => {
 /* Un Play Console finto: tiene in fila le chiamate che gli arrivano — perche'
  * metà di questa prova e' **quali** chiamate partono, e in che ordine — e sa
  * fallire su una di esse, per vedere cosa succede alla modifica aperta. */
-function negozioFinto({ rompiti = "", piste = null } = {}) {
+function negozioFinto({ rompiti = "", piste = null, sullaPista = null } = {}) {
   const fatte = [];
   const prendi = async (dove, opzioni = {}) => {
     const via = String(dove);
@@ -194,6 +194,13 @@ function negozioFinto({ rompiti = "", piste = null } = {}) {
     }
     if (piste && via.endsWith("/tracks") && metodo === "GET")
       return risposta(200, { tracks: piste });
+    /* Cosa c'e' su UNA pista: e' la domanda che si fa dopo aver consegnato,
+     * per sapere se il pacchetto e' arrivato davvero. */
+    if (/\/tracks\/[^/]+$/.test(via) && metodo === "GET")
+      return risposta(200, {
+        track: via.split("/").pop(),
+        releases: sullaPista ?? [{ status: "completed", versionCodes: ["104322"] }],
+      });
     if (via.includes("/bundles?uploadType=media")) return risposta(200, { versionCode: 104322 });
     if (via.endsWith("/edits") && metodo === "POST") return risposta(200, { id: "modifica-1" });
     return risposta(200, {});
@@ -219,9 +226,20 @@ test("il giro intero: apre, carica, mette sulla pista, chiede, consegna", async 
     novita: NOVITA,
     segreto: JSON.stringify(credenzialeFinto()),
     prendi: negozio.prendi,
+    aspetta: async () => {},
   });
 
-  assert.deepEqual(esito, { versione: 104322, pista: "internal", pubblicato: true });
+  /* Consegnata E confermata: il `commit` dice che il negozio ha preso la
+   * modifica, e da solo non basta — «l'apk dell'ultima release non e' arrivato
+   * nello store» e' la domanda che nasce da li'. Dopo la consegna si riguarda
+   * la pista, e quello che si vede si scrive. */
+  assert.deepEqual(esito, {
+    versione: 104322,
+    pista: "internal",
+    pubblicato: true,
+    confermato: true,
+    stato: "completed",
+  });
   const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
   assert.deepEqual(negozio.fatte, [
     "POST https://oauth2.googleapis.com/token",
@@ -230,7 +248,37 @@ test("il giro intero: apre, carica, mette sulla pista, chiede, consegna", async 
     `PATCH ${app}/edits/modifica-1/tracks/internal`,
     `POST ${app}/edits/modifica-1:validate`,
     `POST ${app}/edits/modifica-1:commit`,
+    /* La riguardata: una modifica nuova, perche' quella consegnata non c'e'
+     * piu', e poi buttata. */
+    `POST ${app}/edits`,
+    `GET ${app}/edits/modifica-1/tracks/internal`,
+    `DELETE ${app}/edits/modifica-1`,
   ]);
+});
+
+test("consegnata ma non ancora visibile: lo dice, e non dice di aver fallito", async (t) => {
+  /* Il pacchetto puo' essere in lavorazione o in revisione: la consegna e'
+   * andata davvero, e far diventare rosso il lavoro sarebbe sbagliato quanto
+   * il verde di prima, che diceva «pubblicato» senza aver guardato. */
+  const negozio = negozioFinto({ sullaPista: [{ status: "completed", versionCodes: ["104321"] }] });
+  const detto = [];
+  const esito = await porta({
+    pacco: unPacco(t),
+    pista: "alpha",
+    novita: NOVITA,
+    segreto: JSON.stringify(credenzialeFinto()),
+    prendi: negozio.prendi,
+    aspetta: async () => {},
+    dillo: (cosa) => detto.push(cosa),
+  });
+
+  assert.equal(esito.pubblicato, true, "la modifica e' stata consegnata");
+  assert.equal(esito.confermato, false);
+  const avviso = detto.find((una) => una.startsWith("ATTENZIONE"));
+  assert.ok(avviso, "senza conferma lo deve dire, e non a mezza bocca");
+  assert.match(avviso, /non mi conferma la 104322 sulla pista «alpha»/);
+  assert.match(avviso, /li' vedo la 104321/);
+  assert.match(avviso, /in lavorazione o in revisione/);
 });
 
 test("--prova fa tutto e poi butta: nel negozio non cambia niente", async (t) => {
@@ -317,8 +365,11 @@ test("«--piste» dice i nomi veri, e non lascia la modifica aperta", async (t) 
    * butta. */
   const negozio = negozioFinto({
     piste: [
-      { track: "internal", releases: [{ versionCodes: ["104322"] }] },
-      { track: "custom-4697217", releases: [{ versionCodes: ["104320", "104321"] }] },
+      { track: "internal", releases: [{ status: "completed", versionCodes: ["104322"] }] },
+      {
+        track: "custom-4697217",
+        releases: [{ status: "inProgress", versionCodes: ["104320", "104321"] }],
+      },
     ],
   });
 
@@ -327,9 +378,13 @@ test("«--piste» dice i nomi veri, e non lascia la modifica aperta", async (t) 
     prendi: negozio.prendi,
   });
 
+  /* Col nome, le versioni e **in che stato stanno**: «completed» e' arrivata a
+   * tutti quelli della pista, «inProgress» a una fetta, «draft» non e' uscita.
+   * Senza quella parola l'elenco diceva un numero e lasciava la domanda —
+   * «l'apk non e' arrivato nello store» si risponde qui. */
   assert.deepEqual(piste, [
-    { nome: "internal", versioni: [104322] },
-    { nome: "custom-4697217", versioni: [104320, 104321] },
+    { nome: "internal", versioni: [104322], stati: ["completed"] },
+    { nome: "custom-4697217", versioni: [104320, 104321], stati: ["inProgress"] },
   ]);
   assert.ok(
     negozio.fatte.some((una) => una.startsWith("DELETE")),

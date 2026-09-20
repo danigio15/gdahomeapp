@@ -55,13 +55,20 @@ test("la tessera legge quel conto e non se lo rifa' per conto suo", async () => 
   const dentro = await modello();
   assert.match(
     dentro,
-    /const \{ alzate, aperte, soloMotori, insieme, contate \} = contoDelleAperture\(rows\);/,
+    /const \{ alzate, aperte, soloMotori, miste, insieme, contate, tutte \} =\s*\n?\s*contoDelleAperture\(rows\);/,
   );
 });
 
 test("senza un solo contatto la tessera si chiama come quello che conta", async () => {
   const dentro = await modello();
-  assert.match(dentro, /label: soloMotori \? t\("Tapparelle", "Shutters"\) : t\("Finestre", "Windows"\)/);
+  /* Tre casi e non piu' due (#64): solo motori, solo ante, e tutte e due —
+   * che e' il caso in cui il nome deve dirlo, perche' il numero le conta
+   * tutte. */
+  assert.match(dentro, /soloMotori\s*\n?\s*\? t\("Tapparelle", "Shutters"\)/);
+  assert.match(
+    dentro,
+    /miste\s*\n?\s*\? t\("Finestre e tapparelle", "Windows and shutters"\)\s*\n?\s*: t\("Finestre", "Windows"\)/,
+  );
   /* E la didascalia dice «alzate», non «aperte»: è la parola per cui questa
    * segnalazione esiste. */
   assert.match(dentro, /t\(`\$\{alzate\.length\} alzate`, `\$\{alzate\.length\} up`\)/);

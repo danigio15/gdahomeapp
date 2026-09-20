@@ -146,10 +146,23 @@ export function formatCostLabel(cost) {
   return `${value.toFixed(2)} €`;
 }
 
-export function formatStartLabel(startMs, now, locale = "it") {
+/* L'ora dell'avvio, e il segno di quando e' una supposizione (#65).
+ *
+ * «Se apro la scheda dopo 10 minuti che un elettrodomestico e' gia' in
+ *  funzione mi indica che e' appena iniziato il ciclo.» Quando il contatore
+ * l'apparecchio lo trova gia' in funzione — nessuno stava guardando — quello
+ * che sa non e' l'avvio: e' il primo momento in cui l'ha visto, cioe' un «non
+ * dopo». Scriverlo come un orario qualunque e' la bugia che questa
+ * segnalazione ha trovato; scriverlo con il segno «da prima di» e' la stessa
+ * riga che dice anche quanto ne sa. */
+export function formatStartLabel(startMs, now, locale = "it", incerto = false) {
   const start = finiteOrNull(startMs);
   const reference = finiteOrNull(now);
   if (start == null || reference == null) return "—";
+  if (incerto) {
+    const quando = formatStartLabel(start, reference, locale);
+    return quando === "—" ? quando : `${pick("da prima di", "from before", locale)} ${quando}`;
+  }
   const startDate = new Date(start);
   const nowDate = new Date(reference);
   const dayStart = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate());
@@ -350,6 +363,11 @@ export function lastCycleInfo(device = {}, states = {}, options = {}) {
   const startSnapshot = stateSnapshot(states, device.last_start_entity);
   if (startSnapshot) startMs = parseTimestampMs(startSnapshot.state);
   if (startMs == null) startMs = finiteOrNull(trackerStart);
+  /* Se quell'ora e' una supposizione del contatore. Un'entita' della casa che
+   * dichiara l'avvio la batte sempre: quella l'avvio lo SA, e allora di
+   * incerto non c'e' niente. */
+  const avvioIncerto =
+    !startSnapshot && Boolean(running && active ? active.avvioIncerto : last?.avvioIncerto);
 
   let durationMinutes = null;
   const durationSnapshot = stateSnapshot(states, device.last_duration_entity);
@@ -394,9 +412,16 @@ export function lastCycleInfo(device = {}, states = {}, options = {}) {
     kwh,
     cost,
     live: running && Boolean(active),
-    startLabel: formatStartLabel(startMs, now, locale),
+    /* `true` quando l'avvio — e quindi la durata — e' un «almeno»: chi
+     * disegna puo' dirlo, invece di far passare per misura una supposizione. */
+    avvioIncerto,
+    startLabel: formatStartLabel(startMs, now, locale, avvioIncerto),
     durationLabel:
-      continuous && durationMinutes == null ? "—" : formatMinutesLabel(durationMinutes, locale),
+      continuous && durationMinutes == null
+        ? "—"
+        : avvioIncerto && durationMinutes != null
+          ? `${pick("almeno", "at least", locale)} ${formatMinutesLabel(durationMinutes, locale)}`
+          : formatMinutesLabel(durationMinutes, locale),
     energyLabel: formatKwhLabel(kwh),
     costLabel: formatCostLabel(cost),
   };

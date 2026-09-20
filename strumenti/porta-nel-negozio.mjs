@@ -279,6 +279,9 @@ export async function porta({
   prendi = globalThis.fetch,
   prova = false,
   dillo = () => {},
+  /* Quanto si aspetta fra un tentativo e l'altro di riguardare la pista: le
+   * prove lo passano a zero, che se no aspettano davvero. */
+  aspetta = (quanto) => new Promise((ok) => setTimeout(ok, quanto)),
 }) {
   const credenziale = ilCredenziale(segreto);
   const byte = readFileSync(pacco);
@@ -328,7 +331,26 @@ export async function porta({
 
     await chiedi(prendi, perApp(`/edits/${quale}:commit`), { metodo: "POST", gettone });
     dillo(`pubblicato: la ${numero} e' sulla pista «${pista}»`);
-    return { versione: numero, pista, pubblicato: true };
+
+    /* E adesso si guarda se c'e' davvero. Un `commit` riuscito dice che il
+     * negozio ha preso la modifica, non che i tester vedranno qualcosa: fra le
+     * due cose c'e' la lavorazione del pacchetto, e a volte una revisione. */
+    const sulla = await cosaCEeSullaPista({ pista, gettone, prendi, aspetta });
+    const mia = (sulla || []).find((una) => una.versioni.includes(numero));
+    if (mia) {
+      dillo(`il negozio conferma: la ${numero} e' sulla pista «${pista}», stato ${mia.stato}`);
+      return { versione: numero, pista, pubblicato: true, confermato: true, stato: mia.stato };
+    }
+    /* Non si fa fallire: la modifica e' stata consegnata davvero, e dire di no
+     * sarebbe sbagliato quanto il verde di prima. Si dice quello che si sa. */
+    const altre = (sulla || []).flatMap((una) => una.versioni);
+    dillo(
+      `ATTENZIONE: il negozio non mi conferma la ${numero} sulla pista «${pista}»` +
+        (altre.length ? ` (li' vedo la ${altre.join(", ")})` : " (non vedo nessuna versione)") +
+        ". La consegna e' andata: il pacchetto puo' essere ancora in lavorazione o in revisione. " +
+        "Da controllare nella Play Console, o con --piste.",
+    );
+    return { versione: numero, pista, pubblicato: true, confermato: false, stato: "" };
   } catch (errore) {
     /* Una modifica aperta e mai consegnata resta li' a scadere, e la prossima
      * volta nessuno sa cosa ci fosse dentro. */
@@ -340,6 +362,58 @@ export async function porta({
     }
     throw errore;
   }
+}
+
+/* Quello che c'e' davvero su una pista, chiesto al negozio.
+ *
+ * Il `commit` dice che la modifica e' stata consegnata, e finiva li': il
+ * registro scriveva «pubblicato» e il lavoro diventava verde. Ma «consegnata»
+ * e «sulla pista» sono due cose, e la differenza si scopre soltanto
+ * riguardando — «l'apk dell'ultima release non e' arrivato nello store» e' la
+ * domanda a cui questo passo risponde senza aprire la console.
+ *
+ * Si riguarda con una modifica NUOVA, perche' quella consegnata non esiste
+ * piu'; e si riprova un paio di volte, perche' il negozio ci mette qualche
+ * istante a farlo vedere. Chi chiede non passa il segreto: passa il gettone
+ * che ha gia' in mano. */
+export async function cosaCEeSullaPista({
+  pista,
+  gettone,
+  prendi = globalThis.fetch,
+  tentativi = 3,
+  aspetta = (quanto) => new Promise((ok) => setTimeout(ok, quanto)),
+}) {
+  let ultimo = null;
+  for (let giro = 0; giro < Math.max(1, tentativi); giro += 1) {
+    if (giro > 0) await aspetta(2000 * giro);
+    const modifica = await chiedi(prendi, perApp("/edits"), { metodo: "POST", gettone });
+    const quale = String(modifica?.id || "");
+    if (!quale) continue;
+    try {
+      const dentro = await chiedi(
+        prendi,
+        perApp(`/edits/${quale}/tracks/${encodeURIComponent(pista)}`),
+        {
+          gettone,
+        },
+      );
+      ultimo = (Array.isArray(dentro?.releases) ? dentro.releases : []).map((uno) => ({
+        stato: String(uno?.status || ""),
+        versioni: (Array.isArray(uno?.versionCodes) ? uno.versionCodes : []).map(Number),
+      }));
+      if (ultimo.length) return ultimo;
+    } catch (_errore) {
+      /* Una lettura andata male non e' una pubblicazione andata male: si
+       * riprova, e se non viene si dice che non si sa. */
+    } finally {
+      try {
+        await chiedi(prendi, perApp(`/edits/${quale}`), { metodo: "DELETE", gettone });
+      } catch (_errore) {
+        /* Scadra' da se'. */
+      }
+    }
+  }
+  return ultimo;
 }
 
 /** Come si chiamano davvero le piste di questa app. */
@@ -358,6 +432,12 @@ export async function lePiste({
       versioni: (Array.isArray(una?.releases) ? una.releases : []).flatMap((uno) =>
         (Array.isArray(uno?.versionCodes) ? uno.versionCodes : []).map(Number),
       ),
+      /* E in che stato sta ognuna: «completed» e' distribuita a tutti quelli
+       * della pista, «inProgress» e' a una fetta, «draft» non e' uscita. Senza
+       * questa parola l'elenco diceva un numero e lasciava la domanda. */
+      stati: (Array.isArray(una?.releases) ? una.releases : [])
+        .map((uno) => String(uno?.status || ""))
+        .filter(Boolean),
     }));
   } finally {
     try {
@@ -388,7 +468,11 @@ if (process.argv[1] && process.argv[1].endsWith("porta-nel-negozio.mjs")) {
       .then((piste) => {
         if (!piste.length) return dillo("questa app non ha nessuna pista con qualcosa sopra");
         for (const una of piste) {
-          dillo(`${una.nome}${una.versioni.length ? `: versione ${una.versioni.join(", ")}` : ""}`);
+          const stati = (una.stati || []).filter(Boolean);
+          dillo(
+            `${una.nome}${una.versioni.length ? `: versione ${una.versioni.join(", ")}` : ""}` +
+              (stati.length ? ` (${stati.join(", ")})` : ""),
+          );
         }
       })
       .catch(vaMale);

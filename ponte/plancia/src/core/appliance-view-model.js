@@ -498,6 +498,21 @@ export function createApplianceViewModel(
     now: Number.isFinite(options.now) ? options.now : Date.now(),
     holds: options.holds instanceof Map ? options.holds : runHolds,
   });
+  /* Da quando e' in funzione, quando la casa lo sa (#65).
+   *
+   * Solo da un interruttore di attivita' — `binary_sensor.…_running`, «sta
+   * lavorando: si'» — perche' li' `last_changed` E' l'avvio del ciclo: quel
+   * contatto si e' acceso quando la macchina e' partita e resta acceso fino
+   * alla fine. Da un sensore che racconta le fasi («lavaggio», «risciacquo»,
+   * «centrifuga») lo stesso campo direbbe l'ultimo cambio di fase, cioe' un
+   * orario vero e un avvio falso; e da un sensore di potenza direbbe l'ultima
+   * lettura dei watt, che cambia ogni pochi secondi. Dove non si sa, non si
+   * dice: il contatore dei cicli ha la sua risposta (`avvioIncerto`). */
+  const iniziatoIl = (() => {
+    if (mode !== "running" || !activityBinary || configuredState !== "on") return null;
+    const quando = Date.parse(states?.[stateEntity]?.last_changed || "");
+    return Number.isFinite(quando) ? quando : null;
+  })();
   const labels = {
     running: pick("IN FUNZIONE", "RUNNING", locale),
     standby: pick("STANDBY", "STANDBY", locale),
@@ -522,6 +537,8 @@ export function createApplianceViewModel(
     label: labels[mode],
     badge: mode,
     watts,
+    /* Da quando, se la casa lo sa dire: lo legge il contatore dei cicli. */
+    iniziatoIl,
     powerEntity,
     controlEntity,
     stateEntity,

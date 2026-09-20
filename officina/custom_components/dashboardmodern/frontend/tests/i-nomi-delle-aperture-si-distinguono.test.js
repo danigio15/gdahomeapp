@@ -70,8 +70,11 @@ test("quello che diceva la tessera lo dice Finestre, ed è l'unico a dirlo", () 
     ponte.indexOf("function securityModel"),
   );
   /* Il nome dice cosa c'è dentro: con un contatto la tessera è delle Finestre,
-   * senza nemmeno uno parla di motori e si chiama come loro (#442). */
-  assert.match(coperture, /t\("Tapparelle", "Shutters"\) : t\("Finestre", "Windows"\)/);
+   * senza nemmeno uno parla di motori e si chiama come loro (#442) — e con
+   * tutte e due le cose lo dice, perché le conta tutte e due (#64). */
+  assert.match(coperture, /t\("Tapparelle", "Shutters"\)/);
+  assert.match(coperture, /t\("Finestre e tapparelle", "Windows and shutters"\)/);
+  assert.match(coperture, /t\("Finestre", "Windows"\)/);
   /* E la didascalia le NOMINA ancora: contarle e basta farebbe tornare la
    * tessera delle aperture. Le tapparelle alzate si contano, che è un'altra
    * cosa e va detta con un'altra parola. */

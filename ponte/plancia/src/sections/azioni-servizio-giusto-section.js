@@ -34,7 +34,17 @@
  * mostra tutte e fa scegliere — o mette direttamente quella fissata
  * nell'editor, per chi vuole un tasto secco. Il popup sta qui sotto.
  */
-import { allStates, clean, doc, esc, installStyle, lexicalGlobal, root, t } from "./shared.js";
+import {
+  allStates,
+  clean,
+  doc,
+  esc,
+  installStyle,
+  lexicalGlobal,
+  root,
+  t,
+  writeIconGlyph,
+} from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_AZIONI_SERVIZIO__";
 const state = (root[KEY] ||= { installed: false, listeners: false });
@@ -157,7 +167,12 @@ export function apriIlMenu(entity, azione = null) {
     sotto.textContent = voci.length
       ? t("tocca la voce da mettere", "tap the option to set")
       : t("questo menu non dice le sue voci", "this menu does not list its options");
-  if (faccia) faccia.textContent = clean(azione?.icon) || "🎚️";
+  /* Il disegno, non il suo nome: l'icona di un'azione puo' essere un
+   * simbolo scelto a mano («⚡») o un token del catalogo («mdi:home»), e
+   * scritto come testo quel token si legge tale e quale sopra il titolo.
+   * `writeIconGlyph` sa la differenza, ed e' la stessa strada che prende
+   * la fascia sotto il meteo per la faccia della sua finestra. */
+  if (faccia) writeIconGlyph(faccia, azione?.icon, { size: 22, fallback: "🎚️" });
   if (corpo)
     corpo.innerHTML = voci.length
       ? voci
