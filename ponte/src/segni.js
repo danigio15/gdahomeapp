@@ -131,6 +131,10 @@ export class Segni {
     supervisor = process.env.PONTE_SUPERVISOR || "http://supervisor",
     segno = process.env.SUPERVISOR_TOKEN || "",
     fetch: prendi = globalThis.fetch,
+    /* Come si chiede a Home Assistant l'icona di un aggiornamento: la stessa
+     * strada dell'app (`ponte/aggiornamenti/logo`). Senza, le icone che stanno
+     * in casa non arrivano — e per un pezzo non sono arrivate. */
+    ilLogoDiCasa = null,
     registro = null,
   } = {}) {
     this.aggiornamenti = aggiornamenti;
@@ -138,6 +142,7 @@ export class Segni {
     this.supervisor = String(supervisor || "").replace(/\/+$/, "");
     this.segno = String(segno || "");
     this.prendi = prendi;
+    this.ilLogoDiCasa = ilLogoDiCasa;
     this.registro = registro ?? { debug() {}, info() {}, attenzione() {}, errore() {} };
   }
 
@@ -222,12 +227,62 @@ export class Segni {
         authorization: `Bearer ${this.segno}`,
       });
     }
-    /* Un indirizzo di casa che non sia del Supervisor non si sa chiedere da
-     * qui — per quello ci vuole il segno di chi ha fatto la domanda — e non si
-     * inventa: resta la lettera. */
-    if (dove.startsWith("/")) return NON_CE_NE;
+    /* ─── Le icone che stanno in casa ─────────────────────────────────────
+     *
+     * Qui c'era scritto che un indirizzo di casa «non si sa chiedere», e si
+     * rispondeva `NON_CE_NE`: cioe' **non esiste**. Era falso, e faceva danno
+     * due volte: l'icona non partiva, e il quadro si segnava che quel segno
+     * un'icona non ce l'ha — per sempre, senza richiederla mai piu'.
+     *
+     * Il risultato si vedeva a schermo: nell'app le icone c'erano tutte,
+     * nel cruscotto quasi nessuna. Frigate, Home Assistant Core, il sistema
+     * operativo, il firmware del minipc — tutti con la loro letterina — e
+     * l'unica che passava era quella che arrivava dai marchi.
+     *
+     * Chiederla si sa, e si sapeva gia': e' `ponte/aggiornamenti/logo`, la
+     * strada che l'app usa da sempre, e che passa da Home Assistant col segno
+     * di casa. Adesso si chiama quella invece di rifarne una piu' povera
+     * accanto. Due strade per la stessa icona vuol dire due schermi che ne
+     * mostrano una sola, ed e' successo. */
+    if (dove.startsWith("/")) {
+      if (!this.ilLogoDiCasa) return NON_CE_NE;
+      return this._daCasa(entita);
+    }
     if (!dove.startsWith(I_MARCHI)) return NON_CE_NE;
     return this._scarica(dove, {});
+  }
+
+  /* L'icona chiesta per la strada dell'app, e sbucciata dalla sua risposta. */
+  async _daCasa(entita) {
+    let detta = null;
+    try {
+      detta = await this.ilLogoDiCasa(entita);
+    } catch (_errore) {
+      return null;
+    }
+    /* Un no vero — quell'entita' un'icona non ce l'ha — e un no di oggi non
+     * sono la stessa cosa: il primo si dice al quadro, il secondo si tace e si
+     * riprova. `not_found` e' il primo; tutto il resto e' il secondo. */
+    if (!detta?.success) return detta?.error?.code === "not_found" ? NON_CE_NE : null;
+    const dentro = detta.result ?? {};
+    if (Number(dentro.stato) === 404) return NON_CE_NE;
+    if (Number(dentro.stato) !== 200) return null;
+    /* Compressa non si sa spacchettare da qui, e non serve: si richiede senza
+     * gzip. Se arriva compressa lo stesso, si lascia perdere per oggi. */
+    if (dentro.compresso) return null;
+    let byte = null;
+    try {
+      byte = Buffer.from(String(dentro.corpo ?? ""), "base64");
+    } catch (_errore) {
+      return null;
+    }
+    /* Arrivata, ma non e' un'immagine che si sappia mostrare — o e' troppo
+     * grossa per stare in un rapporto. Qui `NON_CE_NE` e non `null`, al
+     * contrario di `_scarica`: la' il dubbio e' la rete, qui la risposta e'
+     * arrivata intera ed e' quella. Richiederla ogni minuto non la
+     * rimpicciolisce. */
+    const tipo = cheImmagineE(byte);
+    return tipo ? { byte, tipo } : NON_CE_NE;
   }
 
   async _scarica(url, intestazioni) {

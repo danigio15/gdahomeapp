@@ -11,6 +11,53 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.11
+
+**Nel cruscotto tornano le icone degli aggiornamenti.** Quelle che si vedono
+nell'app — Home Assistant Core, il sistema operativo, Frigate, il minipc — nel
+cruscotto erano un quadratino vuoto, e per chi guarda dodici case di fila un
+elenco senza facce è un elenco che si legge peggio.
+
+Il motivo era una sola riga. Le icone non le scarica il browser di nessuno: le
+va a prendere il ponte, a casa, e le manda insieme al rapporto. Solo che
+quando l'indirizzo dell'icona era **di casa** — `/api/...`, cioè una cosa che
+esiste dentro Home Assistant e da fuori no — il ponte rispondeva «quell'icona
+non esiste», che è una risposta definitiva: non si richiede più. Ma quelle
+icone esistono eccome, e il ponte le sa prendere da sempre: è la stessa strada
+che usa l'app, che infatti le vede. Adesso la usa anche per il quadro.
+
+Sistemare il ponte però non bastava: il quadro quel «non esiste» se l'era già
+scritto, e non l'avrebbe richiesto mai più. Adesso **un no scade**. Richiederlo
+costa una riga di rapporto e una domanda che la casa si fa in memoria — per un
+firmware che un'icona non ce l'ha davvero il no torna uguale e non viaggia
+niente — e in cambio una risposta sbagliata non resta lì per sempre. È la
+risposta che nessuno rimette mai in discussione: per questo va rimessa in
+discussione ogni tanto.
+
+**Le note di una versione si leggono, invece di leggersi coi cancelletti.**
+«Cosa cambia, per intero» apriva il CHANGELOG così come è scritto: `## 5.3.0`
+col cancelletto davanti, gli elenchi con gli asterischi, il grassetto con le
+stelline. Nell'app le stesse identiche parole si leggono disegnate. Una cosa
+sola mostrata in due modi diversi sono due cose da imparare invece di una.
+
+Adesso il quadro le disegna come le disegna l'app, con lo stesso lettore e le
+stesse regole: titoli, elenchi, righe che separano, blocchi di codice, e dentro
+la riga grassetto, corsivo, codice e link. Anche quella di cominciare dalla
+versione nuova, e non dal principio della storia. E quella più importante:
+**quello che non sa disegnare non lo butta, lo lascia scritto com'è** — una
+tabella esce con le sue barre e si capisce lo stesso, un pezzo mangiato no.
+
+Quelle parole le ha scritte chi ha fatto l'aggiornamento, non noi, e fra lì e
+lo schermo non c'è nessun altro che le guardi: prima si scappano tutte, e i
+tag li mette solo il quadro. Un `<script>` scritto dentro le note si legge
+`<script>`. I link si possono premere — si aprono di fianco, e senza portarsi
+dietro l'indirizzo del quadro di nessuno.
+
+**E si dice «si aggiorna dal suo apparecchio».** C'è roba che da qui non si
+installa: certi firmware vogliono il pulsante sull'oggetto. L'app lo dice
+così; il cruscotto se l'era inventata un'altra frase, che non vuol dire niente
+per nessuno. Adesso è la stessa, e c'è una prova che lo tiene fermo.
+
 ## 1.5.9.10
 
 **Adesso il codice del cruscotto arriva davvero.** Nella 1.5.9.9 quasi mai:

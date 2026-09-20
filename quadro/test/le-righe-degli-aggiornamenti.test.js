@@ -193,11 +193,14 @@ test("una casa che non dice niente della manutenzione vale come chiusa", () => {
   assert.ok(!ilTasto(UNO, {}, CASA).includes("<button"));
 });
 
-test("un firmware che si porta col cacciavite non ha nessun tasto", () => {
+test("un firmware che si aggiorna dal suo apparecchio non ha nessun tasto", () => {
   const { ilTasto } = iPezzi();
   const disegnato = ilTasto({ ...UNO, installabile: false }, APERTA, CASA);
   assert.ok(!disegnato.includes("<button"));
-  assert.match(disegnato, /cacciavite/);
+  /* Le stesse parole dell\'app, che per la stessa cosa dice «Questo si
+   * aggiorna dal suo apparecchio». Due schermate che raccontano la stessa
+   * cosa con due parole diverse sono due cose da imparare invece di una. */
+  assert.match(disegnato, /si aggiorna dal suo apparecchio/);
 });
 
 test("con la manutenzione aperta il tasto porta nome e salto, non l'entita'", () => {
