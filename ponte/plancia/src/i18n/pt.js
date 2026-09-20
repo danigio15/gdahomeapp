@@ -77,6 +77,7 @@ export default Object.freeze({
   "One tap picks it: while that entity is on, the appliance card and its Home tile take on a colour so you notice them. None is picked by default — a fridge opened to get the milk is not a fault — but the garage freezer door, or the washing machine finishing, belong here.": "Um toque escolhe: enquanto essa entidade estiver ligada, o cartão do eletrodoméstico e o seu mosaico na Home ganham cor para dar nas vistas. Por omissão não há nenhuma escolhida — um frigorífico aberto para ir buscar o leite não é uma avaria — mas a porta da arca da garagem, ou o fim de ciclo da máquina de lavar, ficam aqui.",
   "What to show in the window": "O que mostrar na janela",
   "Which rooms show up on Home, with the temperature and how many things are on: one tap takes you into the room. As many as you like; none ticked means no block at all.": "Que divisões aparecem no ecrã inicial, com a temperatura e quantas coisas estão ligadas: um toque leva-o para dentro da divisão. As que quiseres; sem nenhuma assinalada não há bloco.",
+  "Windows and shutters": "Janelas e estores",
   "Zones and entry points of the panel": "Zonas e acessos da central",
   "from Windows": "de Janelas",
   "included here: the counter had already made them before its statistics began": "incluídos aqui: o contador já os tinha registado antes de começarem as suas estatísticas",

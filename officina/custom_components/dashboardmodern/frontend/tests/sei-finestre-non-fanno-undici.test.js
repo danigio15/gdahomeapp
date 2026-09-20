@@ -104,8 +104,15 @@ test("la tessera scrive quel numero, e quell'anello", async () => {
     sorgente.indexOf("function coversModel(states)"),
     sorgente.indexOf("function securityModel(states)"),
   );
-  assert.match(dentro, /value: String\(contate\.length\)/);
-  assert.match(dentro, /ring: Math\.round\(\(contate\.length \/ insieme\.length\) \* 100\)/);
+  /* Il numero grande e' quello che la tessera ELENCA: dove ci sono tapparelle
+   * e contatti insieme le conta tutte e due (#64), che e' la meta' che qui
+   * mancava — sei finestre non fanno undici, ma quattro tapparelle su non
+   * fanno nemmeno zero. */
+  assert.match(dentro, /value: String\(tutte\.length\)/);
+  assert.match(
+    dentro,
+    /ring: Math\.round\(\(tutte\.length \/ \(miste \? rows\.length : insieme\.length\)\) \* 100\)/,
+  );
   /* La barra sotto il meteo legge questo campo per la sua pastiglia: se qui
    * restassero tutte le righe aperte, la pastiglia direbbe undici mentre la
    * tessera dice sei, ed è il guasto peggiore dei due. */

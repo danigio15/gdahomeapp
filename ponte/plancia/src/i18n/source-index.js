@@ -1446,6 +1446,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Finestra chiusa": "Window closed",
   "Finestre": "Windows",
   "finestre aperte": "windows open",
+  "Finestre e tapparelle": "Windows and shutters",
   "Finestrini (aperti/chiusi)": "Windows (open/closed)",
   "Finestrini aperti": "Windows open",
   "Finestrini chiusi": "Windows closed",

@@ -1217,7 +1217,8 @@ function coversModel(states) {
   /* Chi si alza e chi si apre, e quale delle due cose conta il numero grande:
    * la regola sta tutta in `contoDelleAperture`, che e' pura e si prova con i
    * numeri invece che rileggendo queste righe. */
-  const { alzate, aperte, soloMotori, insieme, contate } = contoDelleAperture(rows);
+  const { alzate, aperte, soloMotori, miste, insieme, contate, tutte } =
+    contoDelleAperture(rows);
   /* «L'avviso di arieggiare funziona ma e' presente solo se entri nella
    * sezione, andrebbe messo a livello di widget» (#500).
    *
@@ -1279,10 +1280,17 @@ function coversModel(states) {
     icon: "🪟",
     /* Il nome dice cosa c'e' dentro: senza un solo contatto sull'anta questa
      * tessera parla di motori, e si chiama come loro. */
-    label: soloMotori ? t("Tapparelle", "Shutters") : t("Finestre", "Windows"),
-    value: String(contate.length),
+    /* Col nome di quello che conta (#64): dove ci sono tutte e due le cose la
+     * tessera le elenca tutte e due, e chiamarsi «Finestre» con dentro anche
+     * le tapparelle e' la parola che faceva dire «troppo equivoco». */
+    label: soloMotori
+      ? t("Tapparelle", "Shutters")
+      : miste
+        ? t("Finestre e tapparelle", "Windows and shutters")
+        : t("Finestre", "Windows"),
+    value: String(tutte.length),
     caption: didascalia(),
-    ring: Math.round((contate.length / insieme.length) * 100),
+    ring: Math.round((tutte.length / (miste ? rows.length : insieme.length)) * 100),
     /* Rosso solo quando c'e' da fare: una tessera che avvisa sempre non
      * avvisa. Le finestre aperte sono uno stato, non un avviso — quello lo
      * dicono i Varchi. */
@@ -1294,6 +1302,9 @@ function coversModel(states) {
      * suo, e due conti sulla stessa cosa non possono divergere se il conto e'
      * uno. */
     open: contate,
+    /* E tutto quello che la tessera conta: le ante aperte con i motori su.
+     * Chi apre la tessera trova l'elenco, che e' quello che il numero dice. */
+    aperteEAlzate: tutte,
     /* E con loro esce COSA sono state contate (#31).
      *
      * «Nella scheda il titolo tapparelle e' corretto, mentre in quei piccoli

@@ -3559,6 +3559,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Window open",
   "Windows",
   "Windows (open/closed)",
+  "Windows and shutters",
   "Windows closed",
   "windows open",
   "Windows open",

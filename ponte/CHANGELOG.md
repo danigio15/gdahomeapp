@@ -11,6 +11,28 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.16
+
+**Il popup di un'azione rapida disegna la sua icona, non ne scrive il nome.**
+Con un'azione che porta un'icona del catalogo, in cima alla finestra delle
+voci si leggeva `mdi:home` sopra il titolo, che ci finiva pure sotto. Adesso
+il disegno passa dal motore delle icone, come in tutto il resto della
+plancia: un simbolo scelto a mano resta il simbolo, un token diventa il suo
+disegno.
+
+**La tessera delle finestre conta anche le tapparelle, e nel nome lo dice**
+(#64). «Ho provato ad associare oltre che alla tapparella anche il sensore
+finestra della stessa, ma facendo così il widget mostra solo 1, ma ci sono 4
+tapparelle aperte e 1 sensore della finestra aperto: dovrebbe mostrare
+entrambi.» Era il prezzo della #442 pagato dall'altra parte: per non chiamare
+«finestre aperte» quattro tapparelle tirate su, il numero grande aveva smesso
+di contarle — con quattro su e una finestra aperta diceva «1», con quattro su
+e nessuna aperta diceva «0» sopra la scritta «4 alzate». Adesso dove ci sono
+tutte e due le cose la tessera si chiama **Finestre e tapparelle**, il numero
+conta quello che la tessera elenca, e la didascalia le tiene separate. La
+pastiglia sotto il meteo non cambia: lì una tapparella alzata non è una
+finestra aperta, e continua a dire le ante aperte e basta.
+
 ## 1.5.9.15
 
 **Nell'app, cambiando casa, la testata della plancia diceva ancora la casa di

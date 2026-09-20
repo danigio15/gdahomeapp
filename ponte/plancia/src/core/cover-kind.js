@@ -232,6 +232,25 @@ export function contoDelleAperture(righe = []) {
   const aperte = contatti.filter((riga) => riga.open);
   /* Senza un solo contatto la tessera parla di motori e si chiama come loro. */
   const soloMotori = coperture.length > 0 && contatti.length === 0;
+  /* E quando ci sono tutte e due le cose, la riga e' mista (#64).
+   *
+   * «Ho provato ad associare oltre che alla tapparella anche il sensore
+   *  finestra della stessa, ma facendo cosi' il widget mostra solo 1, ma ci
+   *  sono 4 tapparelle aperte e 1 sensore della finestra aperto: dovrebbe
+   *  mostrare entrambi.»
+   *
+   * Era vero, ed era il prezzo della #442 pagato dall'altra parte: per non
+   * chiamare «finestre aperte» quattro tapparelle tirate su, il numero grande
+   * aveva smesso di contarle del tutto. Con quattro tapparelle su e una
+   * finestra aperta la tessera diceva «1», e con quattro su e nessuna aperta
+   * diceva «0» sopra la scritta «4 alzate»: un numero che non torna con
+   * quello che c'e' scritto sotto e' peggio di una parola imprecisa.
+   *
+   * Le due cose restano due — chi le conta per fare una notizia guarda
+   * `contate`, che e' rimasto quello di prima, e la pastiglia sotto il meteo
+   * continua a dire le finestre aperte e basta — ma la tessera, che le elenca
+   * tutte, le conta tutte e nel nome lo dice. */
+  const miste = coperture.length > 0 && contatti.length > 0;
   const insieme = soloMotori ? coperture : contatti;
   return {
     coperture,
@@ -239,7 +258,12 @@ export function contoDelleAperture(righe = []) {
     alzate,
     aperte,
     soloMotori,
+    miste,
     insieme,
+    /* Quello che la tessera conta ed elenca: tutto cio' che e' aperto o su. */
+    tutte: soloMotori ? alzate : miste ? [...aperte, ...alzate] : aperte,
+    /* Quello che fa notizia: le ante aperte, o i motori se contatti non ce ne
+     * sono. E' il conto che legge la pastiglia sotto il meteo. */
     contate: soloMotori ? alzate : aperte,
   };
 }
