@@ -59,7 +59,9 @@ configuration:
           Lasciala vuota. Se la casa te l'ha montata un installatore, lui ti da' un
           codice da incollare qui, e da quel momento questa casa gli manda poche
           righe di numeri: le versioni, quanto e' pieno il disco, quali add-on
-          girano, quante entita' non rispondono. Piu' il nome dei dispositivi che
+          girano, quante entita' non rispondono, come si chiamano le tue plance —
+          cosi' dal suo cruscotto sceglie come chiamarle. Piu' il nome dei
+          dispositivi che
           in quel momento non rispondono, e solo quelli: serve a chi deve venire a
           ripararli, e vuol dire che se la presa si chiama «Luce cucina» lui legge
           «Luce cucina». Tutto il resto no — nessuno stato di nessun sensore,
@@ -77,13 +79,27 @@ configuration:
         description: >-
           Lascialo spento se non ti serve. E' un secondo interruttore: mandargli i
           numeri l'hai gia' deciso col codice qui sopra, lasciargli mettere le mani
-          dentro e' un'altra cosa. Acceso, dal suo cruscotto puo' far partire un
-          aggiornamento che questa casa ha gia' in attesa — quelli che vedi anche
-          tu in Impostazioni — e niente altro: non apre la tua plancia, non legge i
-          tuoi sensori, non tocca la tua configurazione. Non si apre nessuna porta
+          dentro e' un'altra cosa. Acceso, dal suo cruscotto puo' fare due cose e
+          basta: far partire un aggiornamento che questa casa ha gia' in attesa —
+          quelli che vedi anche tu in Impostazioni — e riavviare Home Assistant,
+          lo stesso «Riavvia» di Impostazioni. Niente altro: non apre la tua
+          plancia, non legge i tuoi sensori, non tocca la tua configurazione. Non si apre nessuna porta
           verso casa tua: e' questa casa che bussa, e nella risposta trova cosa
           fare. Cosa gli e' stato chiesto e com'e' andata li leggi nel rapporto,
           nella scheda «Il cruscotto».
+      quadro_configurazione:
+        name: Lascia che chi ti ha fatto l'impianto configuri la plancia da lontano
+        description: >-
+          Lascialo spento se non ti serve. E' un terzo interruttore, a parte dalla
+          manutenzione. Acceso, dal suo cruscotto vede com'e' fatta la tua plancia
+          — le sezioni, le stanze, le entita' che ci hai messo, la disposizione — e
+          la puo' cambiare, per esempio per metterti nella stanza giusta una presa
+          appena aggiunta senza venire. Quello che cambia arriva a questa casa
+          dalla stessa strada di un aggiornamento: e' la casa che passa a
+          ritirarlo. Quello che non vede, perche' da questa strada non passa: le
+          immagini e i flussi delle telecamere, gli stati dei sensori, quello che
+          succede in casa. Sappi che i nomi delle tue stanze e delle tue entita'
+          escono verso il suo cruscotto: lo decidi tu, accendendola.
       quadro_marchio:
         name: Lascia che la plancia porti il marchio di chi ti ha fatto l'impianto
         description: >-

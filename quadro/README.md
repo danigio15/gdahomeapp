@@ -366,7 +366,7 @@ Aprendo una casa:
 | | |
 |---|---|
 | **L'impianto** | matricola, installata il, ogni quanto manda, telefoni abbinati e quanti visti in 7 giorni |
-| **I controlli** | dieci, e ognuno è un nome e basta — «I collegamenti», non «Sono collegati tutti»: la plancia · i telefoni · da fuori casa · i collegamenti · gli aggiornamenti · gli add-on · la rete · la macchina · il backup · le batterie. Il nome dice di cosa si parla, il numero a destra come sta, il bollino se va bene: ✓ verde, ✗ rosso, ◇ questa casa non lo dice |
+| **I controlli** | dieci, e ognuno è un nome e basta — «I collegamenti», non «Sono collegati tutti»: la plancia · i telefoni · da fuori casa · i collegamenti · gli aggiornamenti · gli add-on · la rete · la macchina · il backup · le batterie. Il nome dice di cosa si parla, il numero a destra come sta, il bollino se va bene: ✓ in ordine, ✗ anomalia, ◇ non rilevato — e nel dettaglio, quando manca il dato, «non comunicato» |
 | **La macchina** | la scheda (ODROID-N2+, ODROID-M1, un NUC…), CPU, memoria, disco e quanto resta, temperatura **con la tacca a 75°**, **la vita già consumata del disco**, da quanti giorni è accesa |
 | **La rete** | internet sì o no, ogni scheda con su/giù, cavo o Wi-Fi, quale è la principale, il segnale, l'indirizzo sulla rete di casa — e gli apparati sorvegliati (il router, i ripetitori) con quanti non rispondono |
 | **Gli add-on** | tutti, uno per pastiglia: acceso, **fermo** (parte all'avvio e non gira) o spento a mano |
@@ -397,7 +397,7 @@ chi ci abita, e dirglielo ogni quarto d'ora insegna a non guardare più.
 
 ### Gli stati, e perché hanno una forma
 
-Tre: **● a posto**, **▲ da guardare**, **■ offline**. Offline batte tutto — di una
+Tre: **● in ordine**, **▲ da verificare**, **■ offline**. Offline batte tutto — di una
 casa che non parla non si sa niente, nemmeno che sta bene.
 
 Ce n'era un quarto, **◇ collaudo aperto**, e teneva in una fila sua le case in
@@ -418,7 +418,7 @@ solo non porta il significato. Le forme e le parole sì.
 
 ## Il rapporto
 
-Quello che una casa manda, ogni quindici minuti. Ci sono **numeri e versioni**,
+Quello che una casa manda, ogni minuto (`quadro_ogni`, di serie 1). Ci sono **numeri e versioni**,
 e nient'altro.
 
 ```json
@@ -449,7 +449,11 @@ e nient'altro.
     "elenco": [{ "nome": "Mosquitto broker", "su": true, "allAvvio": true, "aggiornabile": false }]
   },
   "aggiornamenti": { "quanti": 0, "ha": false, "addon": 0, "gdahome": false, "firmware": 0 },
-  "plance": { "quante": 3, "configurate": 3 },
+  "plance": {
+    "quante": 3, "configurate": 3,
+    "elenco": [{ "profilo": "primary", "titolo": "gdahome" }, { "profilo": "suocero", "titolo": "Suocero" }]
+  },
+  "configurazione": false,
   "telefoni": { "abbinati": 2, "visti7gg": 2 },
   "fuori": { "acceso": true, "filo": true, "daGiorni": 41 },
   "entita": { "totali": 214, "giu": 5, "dispositivi": 3, "nomi": ["Termostato bagno", "Presa garage", "Sensore porta"] },
@@ -461,10 +465,18 @@ e nient'altro.
 
 **Cosa non c'è, e non ci deve andare:** nomi di entità, nomi di stanze, nomi di
 persone, stati di sensori, **l'SSID del Wi-Fi**, **l'indirizzo pubblico**,
-posizione, foto, la configurazione della plancia, il contenuto delle
-segnalazioni. Il quadro dice **che c'è da guardare**, e finisce lì: guardare
-dentro casa è un'altra cosa, e non si fa da qui (vedi «Cosa il quadro non può
-fare»).
+posizione, foto, il contenuto delle segnalazioni, e la configurazione della
+plancia — a meno che chi abita la casa non abbia acceso apposta il terzo
+interruttore: allora viaggia, ma **a parte** e mai dentro il rapporto, che ne
+porta solo la revisione (vedi «Configurare la plancia da lontano»). Il quadro
+dice **che c'è da guardare**, e finisce lì: guardare dentro casa è un'altra
+cosa, e non si fa da qui (vedi «Cosa il quadro non può fare»).
+
+I **titoli delle plance** invece ci sono («gdahome», «Suocero»), col profilo
+di ognuna: servono all'installatore per scegliere, dal cruscotto, come chiamare
+ogni plancia nel menu laterale e all'avvio — e la scelta torna alla casa nella
+risposta al rapporto (`vesti`). Sono i nomi di cose che stanno in casa, non di
+chi ci abita, e quello che c'è **dentro** una plancia non parte.
 
 La regola si dice meglio così: **cosa c'è nella scatola, non chi ci abita.**
 «Mosquitto broker» ed `eth0` sono nomi di prodotti e di schede, e non dicono
@@ -657,6 +669,8 @@ Le vie, davanti:
 | `GET /` | la soglia: cos'è questo indirizzo, in italiano. Chi lo tiene fra i segnalibri prima o poi lo apre nudo |
 | `GET /salute` | se è vivo, **quale versione gira**, quante case segue, e se la console è aperta |
 | `POST /rapporto` | la casa deposita. `x-casa` + la sua chiave; una matricola mai vista nasce qui, senza nome |
+| `POST /plancia` | la casa manda com'è fatta una sua plancia — profilo, revisione, valori — **solo** se nella risposta al rapporto il quadro gliel'ha chiesta (`vuoleLaPlancia`) e solo se ha acceso il terzo interruttore. Senza flussi di telecamere: la casa li toglie prima, il quadro rifiuta quello che ne contiene |
+| `GET /plancia/<profilo>?id=…` | la casa ritira la configurazione che le è stata scritta, per identificativo del lavoro `configura` |
 
 L'installatore, tutte dentro `/console/` e tutte con la **sua** chiave:
 
@@ -670,6 +684,10 @@ L'installatore, tutte dentro `/console/` e tutte con la **sua** chiave:
 | `GET` `POST /console/inviti` | i codici in attesa, e uno nuovo |
 | `DELETE /console/inviti/<codice>` | annullalo |
 | `PUT /console/casa/<matricola>` | il nome che le dà l'installatore |
+| `PUT /console/casa/<matricola>/plancia/<profilo>` | i due nomi di una plancia di quella casa: `titolo` (menu laterale e testata della home) e `velo` (la parola all'avvio, col suo logo). Solo una plancia che la casa dice di avere; tutti e due vuoti tolgono la scelta. Tornano alla casa con la risposta al rapporto |
+| `POST /console/casa/<matricola>/plance` | una plancia in più, col suo `titolo` (e `velo`): qui nasce la scelta, segnata `nuova`, e la casa la crea al rapporto dopo, vuota come una aggiunta dall'app. Otto per casa, contando quelle in attesa. Da qui non se ne toglie nessuna |
+| `GET /console/casa/<matricola>/plancia/<profilo>/configurazione` | com'è fatta quella plancia, come l'ha mandata la casa: lo scatto con revisione e valori, o niente se non è ancora arrivato. Solo se quella casa ha acceso il terzo interruttore |
+| `PUT /console/casa/<matricola>/plancia/<profilo>/configurazione` | scrivila così: i `valori` interi e la `revisioneAttesa`. Diventa un lavoro `configura`, che la casa ritira al rapporto dopo; se in casa nel frattempo è cambiata, la casa rifiuta e lo dice |
 | `DELETE /console/casa/<matricola>` | non seguirla più: si butta quello che se ne sa **e** la sua chiave, se no il primo rapporto la fa rinascere tre secondi dopo |
 
 E chi tiene il quadro, dentro `/gestore/` e con la chiave di gestione:
@@ -679,7 +697,7 @@ E chi tiene il quadro, dentro `/gestore/` e con la chiave di gestione:
 | `GET /gestore/` | la pagina |
 | `GET /gestore/installatori` | chi c'è, quanti impianti ha ognuno, e quanti sono rimasti senza nessuno |
 | `POST /gestore/installatori` | aggiungine uno. Risponde con la sua chiave, **in chiaro e una volta sola** |
-| `PUT /gestore/installatore/<id>` | nome e limite |
+| `PUT /gestore/installatore/<id>` | nome e limite. Un nome vuoto non passa |
 | `POST /gestore/installatore/<id>/chiave` | una chiave nuova; quella di prima smette subito |
 | `DELETE /gestore/installatore/<id>` | toglilo. I suoi impianti restano |
 
@@ -715,21 +733,18 @@ la installa. **L'app non va toccata.**
 ## Aggiornare da lontano
 
 Vedere che una casa è indietro e non poterci fare niente è mezzo lavoro. Il
-quadro ha quindi **un verbo**, e uno solo:
+quadro ha quindi **tre verbi**, e nessun altro:
 
 | | |
 |---|---|
 | `installa` | installa una voce `update.` — Home Assistant, un add-on, gdahome, un firmware che si installi da sé |
+| `riavvia` | riavvia Home Assistant tutto, lo stesso «Riavvia» di Impostazioni. Con la manutenzione, come `installa` |
+| `configura` | riscrive com'è fatta una plancia — sezioni, stanze, entità, disposizione. **Con un permesso suo**, il terzo: vedi «Configurare la plancia da lontano» |
 
-Niente altro: nessuna riga di comando, nessun cambio di configurazione, nessuna
-lettura di stati. L'elenco dei verbi sta **nel programma del ponte**
-(`ponte/src/lavori.js`), non nel messaggio: una parola che non è in quella
-lista viene rifiutata, e non c'è modo di aggiungerne una dall'esterno.
-
-> Qui è stato scritto a lungo che i verbi erano due, il secondo `riavvia` per
-> far ripartire un add-on fermo. Non c'è: nel ponte c'è il pezzo che riavvia
-> Home Assistant, e nessun comando del quadro ci arriva. Il giorno che si fa,
-> questa tabella cresce di una riga — e non prima.
+Niente altro: nessuna riga di comando, nessuna lettura di stati. L'elenco dei
+verbi sta **nel programma del ponte** (`ponte/src/lavori.js`), non nel
+messaggio: una parola che non è in quella lista viene rifiutata, e non c'è
+modo di aggiungerne una dall'esterno.
 
 **Si nomina per nome e salto di versione**, non per entità: nel rapporto
 l'entità non viaggia — `update.camera_di_marco_termostato` direbbe chi abita in
@@ -745,11 +760,13 @@ risposta al rapporto**: la casa deposita i suoi numeri, e nella risposta si
 trova, se c'è, una cosa da fare. Nessuna porta da aprire, nessun servizio in
 ascolto — la stessa forma che ha già il filo verso il centralino.
 
-**La manutenzione è un secondo interruttore**, e spento di serie:
+**La manutenzione è un secondo interruttore**, e spento di serie — e la
+configurazione della plancia un **terzo**, a parte:
 
 ```yaml
-quadro: "…"            # manda il rapporto
-quadro_manutenzione: false   # e lasciati anche aggiornare — no, finché non lo dici
+quadro: "…"                   # manda il rapporto
+quadro_manutenzione: false    # e lasciati anche aggiornare — no, finché non lo dici
+quadro_configurazione: false  # e lasciati riscrivere la plancia — no, finché non lo dici
 ```
 
 Vedere e toccare sono due permessi, e il secondo non si dà da sé insieme al
@@ -795,6 +812,55 @@ sta, e sotto ogni voce ci sono le case che ce l'hanno indietro con la versione
 che hanno adesso. Un gesto invece di quaranta — e un avvertimento scritto lì
 sotto, perché quaranta case insieme sono quaranta rischi insieme.
 
+## Configurare la plancia da lontano
+
+Il giorno che l'installatore aggiunge una presa, la presa va messa nella stanza
+giusta della plancia: prima toccava a chi abita la casa, o a lui venendo. Da
+qui si fa dal cruscotto — **solo dove chi abita la casa l'ha permesso**, con un
+terzo interruttore nelle opzioni dell'add-on: «Lascia che chi ti ha fatto
+l'impianto configuri la plancia da lontano». È a parte dalla manutenzione,
+perché lasciar installare un aggiornamento e lasciar rimettere mano alla
+propria plancia sono due fiducie diverse, e un interruttore solo le avrebbe
+legate per forza.
+
+Nel foglio di un impianto, nel capitolo «Le plance», accanto ai nomi di ogni
+plancia c'è il tasto **Configurazione**: apre com'è fatta — la configurazione
+intera, in JSON, com'è arrivata da casa — e la si riscrive. Al rapporto dopo la
+casa ritira la modifica e la applica, e com'è andata sta nel rapporto, parola
+per parola, come per un aggiornamento.
+
+**Come viaggia, e perché non dentro il rapporto.** Il rapporto ha un tetto di
+256 KiB e una plancia configurata può pesarne di più. Quindi la configurazione
+ha una strada sua, e la percorre sempre la casa:
+
+1. il rapporto porta, per ogni plancia, profilo, titolo e **revisione** — un
+   numero, non un contenuto — e dice se il terzo interruttore è acceso
+   (`configurazione: true`);
+2. il quadro, nella risposta al rapporto, dice **di quali plance non ha lo
+   scatto**, o ne ha uno di un'altra revisione (`vuoleLaPlancia`);
+3. la casa le manda, una per volta, su `POST /plancia`: profilo, revisione e
+   valori, **senza i flussi delle telecamere** — li toglie prima di partire,
+   e il quadro rifiuta comunque quello che ne contiene;
+4. quando l'installatore salva, il quadro mette in attesa un lavoro
+   `configura` con l'identificativo dello scatto scritto; la casa lo trova
+   nella risposta al rapporto, lo ritira su `GET /plancia/<profilo>?id=…`, lo
+   controlla — la revisione attesa, i flussi, il peso — e lo applica.
+
+Il controllo vero sta in casa: il quadro non manda `configura` a un impianto
+che ha l'interruttore spento, ma se lo mandasse lo stesso la casa risponde di
+no, e lo scrive nel rapporto («la configurazione da lontano è chiusa in questa
+casa»). Se in casa la plancia è cambiata nel frattempo — dall'app, da chi ci
+abita — la revisione attesa non torna, e la casa rifiuta: si rilegge e si
+rifà, invece di sovrascrivere il lavoro di qualcun altro.
+
+**Cosa esce da casa, accendendolo.** I nomi delle stanze e delle entità che
+stanno nella plancia: è il prezzo di farsi sistemare la plancia da lontano, e
+sta scritto accanto all'interruttore perché lo decida chi ci abita. Non escono
+le immagini né gli indirizzi dei flussi delle telecamere, non escono gli stati
+dei sensori, non esce niente di quello che succede in casa: il cruscotto
+configura la plancia, non la guarda. Otto plance per casa e otto MiB per
+plancia sono i tetti, uguali nei due programmi.
+
 ## Cosa il quadro non può fare
 
 È la parte che decide se questo pezzo si può dare a qualcuno, e viene prima di
@@ -809,9 +875,10 @@ che non ha:
   non è un tasto dimenticato: il quadro non ha nessun segno con cui entrare;
 - **non vede entità, stanze né persone** — riceve numeri, versioni e nomi di
   processi, e si ferma lì;
-- **non tocca niente oltre il suo verbo** — e solo dove quella casa ha aperto la
-  manutenzione. Non c'è una riga di comando, non si cambia la configurazione,
-  non si legge uno stato.
+- **non tocca niente oltre i suoi verbi** — e solo dove quella casa ha aperto la
+  manutenzione; la configurazione della plancia solo dove ha aperto anche
+  quella, con l'interruttore suo. Non c'è una riga di comando, non si legge uno
+  stato.
 
 Le due cose si tengono insieme meglio di come sembra: **un elettricista
 sostituisce un interruttore senza leggere la posta di chi ci abita.** Guardare

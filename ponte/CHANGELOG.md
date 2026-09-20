@@ -11,6 +11,83 @@ fuori. La plancia dentro continua a dire la sua, e si legge dov'è sempre
 stata: nella pastiglia «La plancia» della console. Sono due numeri perché
 sono due cose.
 
+## 1.5.9.13
+
+**Le icone degli aggiornamenti arrivano tutte nel cruscotto.** Nella 1.5.9.11
+era stata sistemata l'icona che sta in casa; quella dei marchi di Home
+Assistant — Home Assistant stesso, il sistema operativo, Frigate — il rapporto
+se la scaricava per conto suo, con uno scaricatore diverso da quello dell'app,
+e in una casa vera non portava niente, senza dirlo: nell'app i loghi c'erano,
+nel cruscotto restava la lettera. Adesso la strada è una sola, quella
+dell'app: se un'icona si vede nell'app, si vede nel cruscotto. E il tetto per
+un'icona è passato da 24 a 64 KiB, che è quello che il cruscotto accetta: un
+marchio colorato da 256 punti li passava, e non partiva. Quello che non
+arriva, adesso, si legge nel registro dell'add-on.
+
+**Nel cruscotto la fila «tutti» è quella di serie.** Sotto l'anello c'erano
+solo offline, da verificare e in ordine, e a pagina aperta nessuna era accesa:
+non si capiva che si premono. Adesso la prima fila è «tutti», accesa di serie,
+e le altre tre filtrano.
+
+**Dalla gestione si rinomina un installatore.** Il tasto «Rinomina» accanto a
+«Limite»: il nome nuovo compare nel suo cruscotto e, al rapporto dopo, nelle
+plance dei suoi impianti. Fino a ieri l'unica via era eliminarlo e rifarlo,
+cioè riabbinare ogni impianto.
+
+**Ogni plancia porta i nomi che sceglie l'installatore.** Nel cruscotto, nel
+foglio di un impianto, c'è il capitolo «Le plance»: per ognuna due caselle. Il
+**nome della plancia** va nel menu laterale di Home Assistant e in cima alla
+home; il **nome all'avvio** compare col suo logo mentre la pagina si apre,
+nell'app e dentro Home Assistant. Arrivano in casa col rapporto dopo. Fino a
+ieri la prima plancia prendeva da sola il nome dell'installatore, e nel menu
+laterale compariva «giovanni» al posto di «Casa»: quello non succede più, e in
+quelle case il titolo torna «gdahome» finché lui non ne sceglie uno. Un titolo
+scritto in casa, dall'app, resta finché l'installatore non sceglie qualcos'altro.
+Per farlo, il rapporto porta anche **profilo e titolo di ogni plancia** — nomi
+di cose in casa, non di chi ci abita — e lo si legge, come tutto il resto,
+nella console dell'add-on. Un impianto con l'add-on precedente non manda
+l'elenco, e il cruscotto lo dice invece di far finta. E dallo stesso capitolo
+se ne **aggiunge una**: «Una plancia in più», col suo nome, e la casa la crea
+al rapporto dopo, vuota come una aggiunta dall'app; da quel momento è come le
+altre. Di plance se ne tengono otto, contando quelle in attesa, e da qui non
+se ne toglie nessuna: si toglie da casa. Dalla gestione le scelte si leggono e
+basta.
+
+**Dalla Configurazione della plancia si riapre il menu dell'app.** Nell'app e
+nel browser, aperta la Configurazione dal menu, non c'era più un tasto per
+tornare indietro: la testata della plancia lì non c'è, e la barra in fondo è
+nascosta apposta. Adesso nel riquadro in cima, a sinistra del logo, c'è lo
+stesso ☰ della home, e apre lo stesso menu.
+
+**La plancia si configura dal cruscotto, con un terzo permesso della casa.**
+Accanto ai nomi di ogni plancia, nel capitolo «Le plance», c'è il tasto
+**Configurazione**: apre com'è fatta quella plancia — sezioni, stanze, entità,
+disposizione, la configurazione intera — e la si riscrive; l'impianto ritira la
+modifica al rapporto dopo, e com'è andata si legge nel foglio dell'impianto e
+nella console dell'add-on. Il tasto c'è **solo** dove chi abita la casa ha
+acceso un terzo interruttore nelle opzioni dell'add-on, «Lascia che chi ti ha
+fatto l'impianto configuri la plancia da lontano»: è a parte dalla manutenzione,
+perché lasciar installare un aggiornamento e lasciar rimettere mano alla
+propria plancia sono due cose diverse. Quello che passa è la configurazione; le
+telecamere no: gli indirizzi dei flussi non partono da casa, e una
+configurazione che ne contenesse uno la casa la rifiuta e lo scrive nel
+rapporto. La configurazione viaggia su una strada sua, non dentro il rapporto —
+è la casa che la manda quando il cruscotto dice di non averla, e che passa a
+ritirare quella scritta — e il rapporto porta solo un numero in più per
+plancia, la revisione, così il cruscotto sa se quello che tiene è ancora quello.
+
+**Le icone della barra non spariscono più su iPhone.** «Le icone in basso
+vanno e vengono»: il posto c'era, il nome sotto pure, e in mezzo niente, finché
+non tornavano tutte insieme. Nella 1.5.9.1 si era portata ogni sfumatura dentro
+il suo disegno, e non è bastato — chi l'aveva segnalato ha risposto «uguale a
+prima». Un video guardato fotogramma per fotogramma ha detto perché: fra le
+caselle vuote c'erano anche le emoji, che sfumature non ne hanno. Quello che le
+caselle vuote avevano in comune era il filtro grafico che spegneva le voci a
+riposo, e su iPhone un filtro dentro una barra che scorre si ridipinge quando
+gli pare. Adesso le caselle della barra non hanno filtri, in nessun tema: le
+voci a riposo restano appena spente per opacità, e a dire qual è quella aperta
+ci pensano la pastiglia e il nome.
+
 ## 1.5.9.12
 
 **Il cruscotto ha una faccia nuova.** Si chiama Aurora: un cielo che sfuma

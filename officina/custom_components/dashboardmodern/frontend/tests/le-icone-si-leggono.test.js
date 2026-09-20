@@ -77,7 +77,11 @@ test("la barra tiene un velo solo sulle voci a riposo", async () => {
    * grayscale(.85) opacity(.72), cioe' 0,56 su una figura senza colore. */
   assert.ok(!source.includes("grayscale(.85) opacity(.72)"));
   assert.ok(!/\.tab \.icon,[^{]*\.tab \.text\{opacity:\.78/.test(source));
-  assert.match(source, /grayscale\(\.28\)/);
+  /* Il velo e' uno, ed e' di sola opacita'. L'accenno di grigio che c'era
+   * qui — grayscale(.28) — era un filtro, e un filtro sulle caselle di una
+   * barra che scorre su iPhone le lasciava trasparenti (#8): la prova che lo
+   * tiene fuori e' `le-icone-della-barra-non-hanno-filtri`. */
+  assert.doesNotMatch(source, /grayscale\(\.28\)/);
   /* Il nome sotto il disegno: era --text-dim al 70%, che sul bianco della
    * barra fa 2,7 a uno. Questo grigio quasi pieno ne fa 7,7. */
   assert.match(source, /nav\.tabs\.bottom-nav-bar \.tab\{color:#3d4d66!important\}/);

@@ -62,7 +62,10 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     quadro: opzioni.quadro?.dove || "",
     registro,
   });
-  if (!opzioni.marchioDellInstallatore) installatore.dimentica();
+  if (!opzioni.marchioDellInstallatore) {
+    installatore.dimentica();
+    installatore.svesti();
+  }
 
   /* La plancia, dentro l'add-on, e la sua configurazione: il telefono
    * chiede i file e la configurazione al ponte, e in Home Assistant non serve
@@ -72,22 +75,23 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * marchio, la pagina esce col suo nome e col suo logo. `vestito()` e non un
    * oggetto, perche' la risposta cambia mentre il ponte gira. */
   const plancia = new Plancia({
-    installatore: () => (opzioni.marchioDellInstallatore ? installatore.vestito() : null),
+    installatore: (profilo) =>
+      opzioni.marchioDellInstallatore ? installatore.vestito(profilo) : null,
   });
   const configurazione = new Configurazione({ cartella: opzioni.cartella });
   /* Quante plance ha questa casa. Una c'e' sempre — quella di sempre — e chi
    * ne vuole un'altra la aggiunge dalla scheda dell'add-on o dall'app, come
    * nella dashboard si aggiunge una seconda istanza. */
   const plance = new Plance({ cartella: opzioni.cartella, registro });
-  /* La voce nella barra laterale prende il nome di chi ha montato l'impianto,
-   * e se lo toglie quando quello se ne va. Si tocca **solo il titolo**: la
-   * configurazione della plancia sta sotto il profilo, e quello non si sfiora
-   * — il perche' sta su `Plance.intestala`. Un nome scritto da chi ci abita
-   * non lo tocca nessuno. */
-  installatore.alCambio = (nome) => {
-    if (opzioni.marchioDellInstallatore) plance.intestala(nome);
+  /* Le plance si vestono come dice chi le segue: il titolo che ha scelto per
+   * ognuna, dal cruscotto, va nel menu laterale. Si tocca **solo il titolo**:
+   * la configurazione della plancia sta sotto il profilo, e quello non si
+   * sfiora — il perche' sta su `Plance.vesti`. Con l'interruttore spento
+   * non si veste niente, e quello che era vestito si sveste. */
+  installatore.alVestire = (vesti) => {
+    if (opzioni.marchioDellInstallatore) plance.vesti(vesti);
   };
-  if (!opzioni.marchioDellInstallatore) plance.intestala("");
+  if (!opzioni.marchioDellInstallatore) plance.vesti({});
   if (plancia.cE) {
     registro.info(
       `la plancia c'e': ${plancia.descrizione().file} file, impronta ${plancia.impronta}`,
@@ -271,6 +275,20 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     aggiornamenti,
     registro,
     aperta: () => opzioni.manutenzione === true,
+    /* Il terzo verbo: configurare la plancia da lontano, con la sua casella.
+     * Quello che l'installatore ha scritto lo ritira il postino — che nasce qui
+     * sotto, e si chiama solo quando un lavoro arriva — e lo scrive
+     * `configurazione`, con le stesse regole che valgono per un telefono di
+     * casa: la revisione attesa, il rifiuto di svuotare. */
+    plancia: {
+      aperta: () => opzioni.configurazionePlancia === true,
+      prendi: (profilo, id) => postino.prendiLaPlanciaChiesta(profilo, id),
+      scrivi: (profilo, valori, come) => configurazione.scrivi(profilo, valori, come),
+      titoloDi: (profilo) => plance.elenco().find((una) => una.profilo === profilo)?.titolo ?? "",
+      /* Com'e' adesso, per rimettere al loro posto i flussi che il quadro non
+       * ha mai visto. */
+      correnti: (profilo) => configurazione.leggi(profilo)?.snapshot?.values ?? null,
+    },
   });
 
   const postino = new Postino({
@@ -281,6 +299,21 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     /* Solo se questa casa lo vuole. Spento, il quadro puo' mandare quello che
      * gli pare: qui non si guarda. */
     installatore: opzioni.marchioDellInstallatore ? installatore : null,
+    /* Com'e' fatta una plancia, per il quadro che ne chiede lo scatto: solo
+     * con la casella accesa, e solo per le plance che questa casa ha. */
+    plancia: {
+      attiva: () => opzioni.configurazionePlancia === true,
+      scatta: (profilo) => {
+        const quale = plance.elenco().find((una) => una.profilo === profilo);
+        if (!quale) return null;
+        const dentro = configurazione.leggi(profilo)?.snapshot ?? null;
+        return {
+          titolo: quale.titolo,
+          revisione: Number(dentro?.revision) || 0,
+          valori: dentro?.values ?? {},
+        };
+      },
+    },
     registro,
   });
 
@@ -324,6 +357,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     segniChiesti: () => postino.segniChiesti,
     lavori,
     manutenzione: opzioni.manutenzione,
+    configurazionePlancia: () => opzioni.configurazionePlancia === true,
     plance,
     configurazione,
     dispositivi,

@@ -278,6 +278,10 @@
         padding: 6px 0 12px;
       }
 
+      :root[data-dentro] header {
+        padding-top: 14px;
+      }
+
       .testata {
         display: flex;
         align-items: center;
@@ -729,6 +733,38 @@
         flex-basis: 100%;
       }
 
+      /* Le plance di una casa, una riga ciascuna col tasto accanto al nome, e
+         sotto la riga aperta la casella con la configurazione: e' testo, e si
+         legge in un carattere a passo fisso perche' e' JSON. */
+      .plancia-editor {
+        grid-column: 1 / -1;
+        display: grid;
+        gap: 10px;
+      }
+      textarea.configurazione {
+        font:
+          0.82rem/1.45 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Consolas,
+          monospace;
+        color: var(--ink);
+        background: var(--vetro-pieno);
+        border: 1px solid var(--linea-forte);
+        border-radius: 14px;
+        padding: 12px 14px;
+        width: 100%;
+        min-height: 20rem;
+        resize: vertical;
+        box-sizing: border-box;
+        white-space: pre;
+      }
+      textarea.configurazione:focus {
+        outline: none;
+        border-color: var(--accento);
+        box-shadow: 0 0 0 3px var(--accento-soft);
+      }
+
       input[type="text"],
       input[type="url"],
       input[type="password"] {
@@ -942,6 +978,11 @@
         --tinta: var(--verde);
         --tinta-soft: var(--verde-soft);
         --tinta-luce: var(--verde-luce);
+      }
+      [data-stato="tutte"] {
+        --tinta: var(--accento);
+        --tinta-soft: var(--accento-soft);
+        --tinta-luce: var(--accento-soft);
       }
 
       /* ─── Da guardare adesso: le carte che scorrono di lato ──────────── */
@@ -1432,6 +1473,83 @@
 
       .rinomina[hidden] {
         display: none;
+      }
+
+      /* ─── Le plance: i due nomi di ognuna ────────────────────────────── */
+
+      .veste {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+        gap: 10px 12px;
+        align-items: end;
+        padding: 14px 0 4px;
+      }
+
+      .veste + .veste {
+        margin-top: 8px;
+        border-top: 1px solid var(--linea);
+      }
+
+      .veste-capo {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+        min-width: 0;
+      }
+
+      .veste-capo b {
+        font-size: 0.95rem;
+        overflow-wrap: anywhere;
+      }
+
+      .veste-capo small {
+        font-size: 0.78rem;
+        color: var(--ink-3);
+        font-weight: 600;
+      }
+
+      .veste label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .veste label span {
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: var(--ink-3);
+      }
+
+      .veste input {
+        width: 100%;
+        flex: none;
+      }
+
+      .veste-tasti {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      /* La riga da cui se ne aggiunge una: staccata da quelle che ci sono. */
+      .veste.aggiunta {
+        margin-top: 8px;
+        border-top: 1px dashed var(--linea-forte);
+      }
+
+      .veste input:disabled,
+      .veste .tasto:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      @media (max-width: 40rem) {
+        .veste {
+          grid-template-columns: 1fr;
+        }
       }
 
       /* La riga che dice cosa questo quadro puo' e non puo' fare. */
@@ -2573,6 +2691,85 @@
        * rompersi. */
       const staLavorando = (c) => Boolean(c && c.lavoro && c.lavoro.stato === "in corso");
 
+      /* La configurazione di una plancia, com'e' arrivata da casa, in una
+       * casella dove si riscrive. E' JSON e si vede come JSON: e' la
+       * configurazione intera, non una sua parte scelta per il video. */
+      const lEditorDi = (casa, una) => {
+        const chiave = `${casa.casa}/${una.profilo}`;
+        const letta = PLANCE_LETTE.get(chiave);
+        const chiesta =
+          casa.chiesto && casa.chiesto.cosa === "configura" && casa.chiesto.nome === una.profilo
+            ? casa.chiesto
+            : null;
+        if (!letta)
+          return `<div class="plancia-editor"><p class="nota">Si legge dal cruscotto…</p></div>`;
+        if (letta.errore)
+          return `<div class="plancia-editor"><p class="nota">${testo(letta.errore)}</p></div>`;
+        const scatto = letta.scatto;
+        if (!scatto) {
+          return `<div class="plancia-editor"><p class="nota">Di questa plancia il cruscotto non ha ancora ricevuto la configurazione: arriva col prossimo rapporto dell'impianto.</p></div>`;
+        }
+        const testoDaMostrare = letta.bozza ?? JSON.stringify(scatto.valori, null, 2);
+        return `
+          <div class="plancia-editor">
+            <p class="nota">
+              Com'era in casa alla revisione <b>${testo(scatto.revisione)}</b>, ricevuta
+              ${testo(daQuanto(scatto.presoIl))}.${
+                chiesta
+                  ? " <b>Una modifica è in attesa</b>: l'impianto la ritira al prossimo rapporto."
+                  : ""
+              }
+            </p>
+            <textarea
+              class="configurazione"
+              data-plancia-testo="${testo(chiave)}"
+              spellcheck="false"
+              aria-label="Configurazione della plancia"
+            >${testo(testoDaMostrare)}</textarea>
+            <div class="azioni">
+              <button
+                type="button"
+                class="tasto forte"
+                data-plancia-salva="${testo(casa.casa)}"
+                data-profilo="${testo(una.profilo)}"
+                data-revisione="${testo(scatto.revisione)}"
+              >
+                Salva
+              </button>
+              <button
+                type="button"
+                class="tasto"
+                data-plancia-ricarica="${testo(casa.casa)}"
+                data-profilo="${testo(una.profilo)}"
+              >
+                Ricarica
+              </button>
+              <button type="button" class="tasto" data-plancia-chiudi>Chiudi</button>
+            </div>
+            <p class="nota">
+              Di qui passa la configurazione: sezioni, stanze, entità, disposizione. Le immagini delle
+              telecamere no — non ci sono, e se ci fossero l'impianto rifiuterebbe la modifica.
+            </p>
+          </div>`;
+      };
+
+      /* Lo scatto di una plancia, letto dal cruscotto una volta e tenuto. */
+      async function leggiLaPlancia(casa, profilo, { forza = false } = {}) {
+        const chiave = `${casa}/${profilo}`;
+        if (!forza && PLANCE_LETTE.has(chiave)) return;
+        try {
+          const detto = await chiedi(`/casa/${casa}/plancia/${profilo}/configurazione`);
+          PLANCE_LETTE.set(chiave, { scatto: detto.scatto || null });
+        } catch (errore) {
+          if (errore instanceof ChiaveNoNo) {
+            chiedimiLaChiave();
+            return;
+          }
+          PLANCE_LETTE.set(chiave, { errore: errore.message || "non si è potuta leggere" });
+        }
+        disegna();
+      }
+
       /* Se questa riga e' quella che sta succedendo — o quella che si e'
        * appena chiesta. Si confronta per **nome e salto di versione**, che e'
        * l'unico modo che c'e': l'entita' nel rapporto non viaggia, e non
@@ -2982,7 +3179,11 @@
         return `<div class="giorni${grande ? " grande" : ""}" role="img" aria-label="${testo(dice)}">${celle}</div><div class="giorniDice">${testo(dice)}</div>`;
       }
 
+      /* La prima fila e' «tutti»: e' quella accesa quando si apre la pagina,
+       * e premere una delle altre tre filtra. Senza, a pagina aperta nessuna
+       * fila era accesa, e non si capiva che si premono. */
       const LE_FILE = [
+        ["tutte", "◎", "tutti"],
         ["offline", "■", "offline"],
         ["guardare", "▲", "da verificare"],
         ["posto", "●", "in ordine"],
@@ -3005,6 +3206,12 @@
        * salire, cioe' che l'apertura va disegnata con la sua animazione;
        * `chiudendo` che sta scendendo. */
       let foglioAperto = null;
+      /* La plancia aperta nella scheda, se c'e': casa e profilo. E quello che
+         si e' letto dal cruscotto per ogni plancia, con la bozza scritta nella
+         casella — cosi' un ridisegno della pagina, che arriva a ogni rapporto,
+         non porta via quello che si stava scrivendo. */
+      let planciaAperta = null;
+      const PLANCE_LETTE = new Map();
       /* Quale schermata e' stata disegnata l'ultima volta: l'anello si apre
        * con la sua animazione la prima volta che si vede, non a ogni giro da
        * dieci secondi. */
@@ -3273,6 +3480,75 @@
               if (evento.key === "Enter") salva();
             };
         });
+        /* Le vesti di una plancia: i due nomi si salvano insieme, col tasto o
+         * con Invio da una delle due caselle. Vuoti tutti e due tolgono la
+         * scelta. Il no del server — «aggiorna l'add-on», «non e' tua» — lo
+         * mostra `faiEpoi`, come per tutto il resto. */
+        dove.querySelectorAll("[data-salva-veste]").forEach((tasto) => {
+          const riga = tasto.closest("[data-veste]");
+          const salva = () =>
+            faiEpoi(tasto, async () => {
+              await chiedi(
+                `/casa/${tasto.dataset.perCasa}/plancia/${encodeURIComponent(tasto.dataset.salvaVeste)}`,
+                {
+                  method: "PUT",
+                  body: JSON.stringify({
+                    titolo: riga?.querySelector("[data-veste-titolo]")?.value || "",
+                    velo: riga?.querySelector("[data-veste-velo]")?.value || "",
+                  }),
+                },
+              );
+              avvisa("Salvato: arriva in casa col rapporto dopo");
+            });
+          tasto.onclick = salva;
+          riga?.querySelectorAll("input").forEach((casella) => {
+            casella.onkeydown = (evento) => {
+              if (evento.key === "Enter") salva();
+            };
+          });
+        });
+        /* Una in attesa si annulla svuotando le sue vesti: la casa non la
+         * crea. Vale finche' la casa non l'ha creata, cioe' un minuto. */
+        dove.querySelectorAll("[data-annulla-veste]").forEach((tasto) => {
+          tasto.onclick = () =>
+            faiEpoi(tasto, async () => {
+              await chiedi(
+                `/casa/${tasto.dataset.perCasa}/plancia/${encodeURIComponent(tasto.dataset.annullaVeste)}`,
+                { method: "PUT", body: JSON.stringify({ titolo: "", velo: "" }) },
+              );
+              avvisa("Annullata: la casa non la crea");
+            });
+        });
+        /* Una plancia in piu': qui nasce la scelta, la casa la crea al
+         * rapporto dopo e da li' in poi e' una riga come le altre. */
+        dove.querySelectorAll("[data-nuova-plancia]").forEach((tasto) => {
+          const riga = tasto.closest(".veste");
+          const aggiungi = () => {
+            const casella = riga?.querySelector("[data-nuova-titolo]");
+            const titolo = (casella?.value || "").trim();
+            if (!titolo) {
+              casella?.focus();
+              avvisa("Serve il nome della plancia");
+              return;
+            }
+            faiEpoi(tasto, async () => {
+              await chiedi(`/casa/${tasto.dataset.nuovaPlancia}/plance`, {
+                method: "POST",
+                body: JSON.stringify({
+                  titolo,
+                  velo: riga?.querySelector("[data-nuova-velo]")?.value || "",
+                }),
+              });
+              avvisa("Aggiunta: la casa la crea al rapporto dopo");
+            });
+          };
+          tasto.onclick = aggiungi;
+          riga?.querySelectorAll("input").forEach((casella) => {
+            casella.onkeydown = (evento) => {
+              if (evento.key === "Enter") aggiungi();
+            };
+          });
+        });
         /* «Cosa cambia, per intero»: si apre sotto la riga, e si richiude.
          *
          * Il testo si chiede quando serve e non prima: un CHANGELOG per ogni
@@ -3360,6 +3636,86 @@
             faiEpoi(tasto, () =>
               chiedi(`/casa/${tasto.dataset.riavvia}/riavvia`, { method: "POST" }),
             );
+          };
+        });
+        dove.querySelectorAll("[data-configura-plancia]").forEach((tasto) => {
+          tasto.onclick = () => {
+            const casa = tasto.dataset.configuraPlancia;
+            const profilo = tasto.dataset.profilo;
+            const gia =
+              Boolean(planciaAperta) &&
+              planciaAperta.casa === casa &&
+              planciaAperta.profilo === profilo;
+            planciaAperta = gia ? null : { casa, profilo };
+            disegna();
+            if (!gia) void leggiLaPlancia(casa, profilo);
+          };
+        });
+        dove.querySelectorAll("[data-plancia-chiudi]").forEach((tasto) => {
+          tasto.onclick = () => {
+            planciaAperta = null;
+            disegna();
+          };
+        });
+        dove.querySelectorAll("[data-plancia-ricarica]").forEach((tasto) => {
+          tasto.onclick = () => {
+            const chiave = `${tasto.dataset.planciaRicarica}/${tasto.dataset.profilo}`;
+            /* Ricaricare butta la bozza: e' quello che si e' premuto. */
+            PLANCE_LETTE.delete(chiave);
+            disegna();
+            void leggiLaPlancia(tasto.dataset.planciaRicarica, tasto.dataset.profilo, {
+              forza: true,
+            });
+          };
+        });
+        dove.querySelectorAll("[data-plancia-testo]").forEach((campo) => {
+          /* La bozza si tiene da parte a ogni tasto: la pagina si ridisegna a
+           * ogni rapporto, e un ridisegno non deve portare via il lavoro. */
+          campo.oninput = () => {
+            const letta = PLANCE_LETTE.get(campo.dataset.planciaTesto);
+            if (letta) letta.bozza = campo.value;
+          };
+        });
+        dove.querySelectorAll("[data-plancia-salva]").forEach((tasto) => {
+          tasto.onclick = () => {
+            const casa = tasto.dataset.planciaSalva;
+            const profilo = tasto.dataset.profilo;
+            const campo = dove.querySelector(`[data-plancia-testo="${casa}/${profilo}"]`);
+            let valori;
+            try {
+              valori = JSON.parse(campo ? campo.value : "");
+            } catch (_errore) {
+              avvisa("questo non è JSON: controlla le parentesi e le virgole");
+              return;
+            }
+            if (!valori || typeof valori !== "object" || Array.isArray(valori)) {
+              avvisa("una configurazione è un oggetto");
+              return;
+            }
+            /* In due tempi, come «Installa» e «Riavvia»: si sta riscrivendo la
+             * plancia di casa di qualcun altro. */
+            if (tasto.dataset.sicuro !== "sì") {
+              tasto.dataset.sicuro = "sì";
+              tasto.textContent = "Premi ancora per confermare";
+              setTimeout(() => {
+                tasto.dataset.sicuro = "";
+                tasto.textContent = "Salva";
+              }, 6000);
+              return;
+            }
+            faiEpoi(tasto, async () => {
+              await chiedi(`/casa/${casa}/plancia/${profilo}/configurazione`, {
+                method: "PUT",
+                body: JSON.stringify({
+                  valori,
+                  revisioneAttesa: Number(tasto.dataset.revisione) || 0,
+                }),
+              });
+              /* Scritta: la bozza non serve piu', e si rilegge subito com'e'
+               * davvero — con la richiesta in attesa, che la casa ritira al
+               * prossimo rapporto. */
+              await leggiLaPlancia(casa, profilo, { forza: true });
+            });
           };
         });
         dove.querySelectorAll("[data-lascia-stare]").forEach((tasto) => {
@@ -3654,7 +4010,7 @@
                   data-stato="${chiave}"
                   aria-pressed="${filtro === chiave}"
                 >
-                  <b>${quanti[chiave]}</b><span><i></i>${testo(parola)}</span>
+                  <b>${chiave === "tutte" ? CASE.length : quanti[chiave]}</b><span><i></i>${testo(parola)}</span>
                 </button>`,
               ).join("")}
             </div>
@@ -3803,6 +4159,7 @@
        * `foglioAperto` si svuota dopo. Nel mezzo un giro di `disegna` lo
        * ridisegna gia' giu', grazie a `chiudendo`. */
       function chiudiIlFoglio() {
+        planciaAperta = null;
         if (!foglioAperto || foglioAperto.chiudendo) return;
         foglioAperto.chiudendo = true;
         const questo = foglioAperto;
@@ -3929,8 +4286,16 @@
               <span>
                 ${
                   c.manutenzione
-                    ? `Questo cruscotto <b>non entra nell'impianto</b>: non apre la plancia e non vede stanze né persone. Può fare <b>due sole cose</b>, e solo perché questo impianto gliele ha autorizzate: avviare un aggiornamento <b>già in attesa</b> e riavviare Home Assistant. Nient'altro, e nessuna riga di comando.`
-                    : `Questo cruscotto <b>è in sola lettura</b>: non apre la plancia, non modifica niente e non vede entità, stanze né persone. Questo impianto non ha attivato la manutenzione.`
+                    ? `Questo cruscotto <b>non entra nell'impianto</b>: non apre la plancia e non vede stanze né persone. Può fare <b>due sole cose</b>, e solo perché questo impianto gliele ha autorizzate: avviare un aggiornamento <b>già in attesa</b> e riavviare Home Assistant. Nient'altro, e nessuna riga di comando.${
+                        c.configurazione
+                          ? ` Con un <b>terzo permesso</b>, dato a parte, può anche <b>configurare la plancia</b> — le sezioni, le stanze, le entità — senza vederla: le immagini delle telecamere di qui non passano.`
+                          : ""
+                      }`
+                    : `Questo cruscotto <b>è in sola lettura</b>: non apre la plancia, non modifica niente e non vede entità, stanze né persone. Questo impianto non ha attivato la manutenzione.${
+                        c.configurazione
+                          ? ` Ha però dato un permesso a parte: <b>configurare la plancia</b> — le sezioni, le stanze, le entità — senza vederla: le immagini delle telecamere di qui non passano.`
+                          : ""
+                      }`
                 }
               </span>
             </p>
@@ -4018,6 +4383,13 @@
           }
 
           <div class="capitolo">
+            <h2>Le plance</h2>
+            <span>i nomi che porta ogni plancia</span>
+          </div>
+
+          ${leVestiDellePlance(casa, c)}
+
+          <div class="capitolo">
             <h2>Dettagli tecnici</h2>
             <span>versioni e rapporto completo</span>
           </div>
@@ -4044,7 +4416,7 @@
               <summary><h3>Rapporto completo</h3></summary>
               <pre>${testo(JSON.stringify(c, null, 2))}</pre>
               <p class="nota" style="margin-top: 14px">
-                Questo è <strong>tutto</strong> ciò che l'impianto invia. Gli unici nomi presenti sono quelli dei dispositivi che in questo momento non rispondono; degli altri non c'è nemmeno l'elenco. Nessuna persona, nessuno stato di sensori, nessun indirizzo pubblico. Lo stesso testo lo legge chi abita la casa, nella scheda «Il cruscotto» della console dell'add-on, insieme al tasto per interrompere l'invio.
+                Questo è <strong>tutto</strong> ciò che l'impianto invia. Gli unici nomi presenti sono quelli dei dispositivi che in questo momento non rispondono — degli altri non c'è nemmeno l'elenco — e i titoli delle plance, che servono a scegliere da qui come chiamarle. Nessuna persona, nessuno stato di sensori, nessun indirizzo pubblico. Lo stesso testo lo legge chi abita la casa, nella scheda «Il cruscotto» della console dell'add-on, insieme al tasto per interrompere l'invio.
               </p>
             </details>
           </section>
@@ -4064,6 +4436,164 @@
        * tiene i capitoli in ordine cerca la prima volta che certe righe
        * compaiono, e la prima deve essere quella della scheda intera. */
       const GRAVI = new Set(["I collegamenti", "Gli add-on"]);
+
+      /* ─── Le plance: i due nomi di ognuna ─────────────────────────────
+       *
+       * Per ogni plancia dell'impianto l'installatore sceglie il nome che va
+       * nel menu laterale di Home Assistant e in cima alla home, e quello che
+       * compare col suo logo mentre la pagina si apre. Il quadro li tiene e
+       * la casa se li porta via col rapporto dopo: qui non si entra in casa,
+       * si lascia un biglietto. L'elenco delle plance lo manda l'add-on dalla
+       * 1.5.9.13: prima si vede solo quante sono, e allora lo si dice. */
+      /* Quante plance si tengono per casa: la stessa misura del ponte e del
+       * quadro. Qui serve a spegnere «Aggiungi» quando si e' arrivati. */
+      const PLANCE_AL_MASSIMO = 8;
+
+      function leVestiDellePlance(casa, c) {
+        const elenco = Array.isArray(c.plance?.elenco) ? c.plance.elenco : null;
+        if (!elenco) {
+          return `
+          <section class="riquadro">
+            <div class="capoRiquadro"><h3>Come si chiamano</h3></div>
+            <div class="avvertenza" style="margin-top: 0">
+              <span class="gettone" aria-hidden="true">!</span>
+              <span>
+                Questo impianto dice quante plance ha, ma non quali: l'add-on gdahome di casa è precedente alla 1.5.9.13. Aggiornalo dalla schermata Aggiornamenti, e i nomi si scelgono da qui.
+              </span>
+            </div>
+          </section>`;
+        }
+        const vesti = casa.vesti || {};
+        const inCasa = new Set(elenco.map((una) => String(una.profilo || "")));
+        /* Prima quelle che la casa ha, poi quelle aggiunte da qui che la casa
+         * deve ancora creare: al rapporto dopo passano di sopra da sole. */
+        const righe = [
+          ...elenco.map((una) => ({
+            profilo: String(una.profilo || ""),
+            titolo: una.titolo || una.profilo,
+            nuova: false,
+          })),
+          ...Object.entries(vesti)
+            .filter(([profilo, sue]) => sue?.nuova === true && !inCasa.has(profilo))
+            .map(([profilo, sue]) => ({ profilo, titolo: sue.titolo || profilo, nuova: true })),
+        ];
+        const alLimite = righe.length >= PLANCE_AL_MASSIMO;
+        /* Da qui si apre anche com'e' fatta: solo se quella casa lo permette —
+         * e' il terzo interruttore, `quadro_configurazione`, e la casa lo dice
+         * nel rapporto — e solo per una plancia che in casa c'e' gia'. */
+        const siConfigura = c.configurazione === true;
+        const unaRiga = (una) => {
+          const sue = vesti[una.profilo] || {};
+          const aperta =
+            Boolean(planciaAperta) &&
+            planciaAperta.casa === casa.casa &&
+            planciaAperta.profilo === una.profilo;
+          return `
+            <div class="veste${una.nuova ? " nuova" : ""}" data-veste="${testo(una.profilo)}">
+              <div class="veste-capo">
+                <b>${testo(una.titolo)}</b>
+                ${
+                  una.nuova
+                    ? `<span class="pastiglia attenta">in attesa che la casa la crei</span>`
+                    : `<small>${una.profilo === "primary" ? "la prima plancia, com'è chiamata in casa" : "com'è chiamata in casa"}</small>`
+                }
+              </div>
+              <label>
+                <span>Nome della plancia</span>
+                <input
+                  type="text"
+                  maxlength="40"
+                  data-veste-titolo
+                  value="${testo(sue.titolo || "")}"
+                  placeholder="${una.nuova ? "" : testo(una.titolo)}"
+                  autocomplete="off"
+                />
+              </label>
+              <label>
+                <span>Nome all'avvio</span>
+                <input
+                  type="text"
+                  maxlength="40"
+                  data-veste-velo
+                  value="${testo(sue.velo || "")}"
+                  placeholder="${testo(IO.nome || "gdahome")}"
+                  autocomplete="off"
+                />
+              </label>
+              <div class="veste-tasti">
+                <button type="button" class="tasto forte" data-salva-veste="${testo(una.profilo)}" data-per-casa="${testo(casa.casa)}">Salva</button>
+                ${
+                  una.nuova
+                    ? `<button type="button" class="tasto" data-annulla-veste="${testo(una.profilo)}" data-per-casa="${testo(casa.casa)}">Annulla</button>`
+                    : ""
+                }
+                ${
+                  siConfigura && !una.nuova
+                    ? `<button
+                  type="button"
+                  class="tasto${aperta ? " forte" : ""}"
+                  data-configura-plancia="${testo(casa.casa)}"
+                  data-profilo="${testo(una.profilo)}"
+                  aria-pressed="${aperta}"
+                >
+                  Configurazione
+                </button>`
+                    : ""
+                }
+              </div>
+              ${aperta ? lEditorDi(casa, una) : ""}
+            </div>`;
+        };
+        return `
+          <section class="riquadro">
+            <div class="capoRiquadro">
+              <h3>Come si chiamano</h3>
+              <span class="conta">${righe.length} di ${PLANCE_AL_MASSIMO}</span>
+            </div>
+            <p class="minuta">
+              Per ogni plancia due nomi. Il <b>nome della plancia</b> va nel menu laterale di Home Assistant e in cima alla home; il <b>nome all'avvio</b> compare col tuo logo mentre la pagina si apre. Lasciali vuoti e la plancia tiene il nome che ha in casa, e all'avvio mostra il tuo.${
+                siConfigura
+                  ? " Col tasto <b>Configurazione</b> si apre com'è fatta la plancia — sezioni, stanze, entità, disposizione — e si riscrive: l'impianto ritira la modifica al rapporto dopo."
+                  : " Com'è fatta ognuna da qui non si apre: questo impianto non ha attivato la <b>configurazione da lontano</b>. È il terzo interruttore nelle opzioni dell'add-on di casa, e lo accende chi ci abita."
+              }
+            </p>
+            ${righe.map(unaRiga).join("")}
+            <div class="veste aggiunta">
+              <div class="veste-capo">
+                <b>Una plancia in più</b>
+                <small>${alLimite ? `di plance se ne tengono ${PLANCE_AL_MASSIMO}: questo impianto è al limite` : "nasce vuota, come dall'app, e compare nel menu laterale al rapporto dopo"}</small>
+              </div>
+              <label>
+                <span>Nome della plancia</span>
+                <input
+                  type="text"
+                  maxlength="40"
+                  data-nuova-titolo
+                  placeholder="Es. Taverna"
+                  autocomplete="off"
+                  ${alLimite ? "disabled" : ""}
+                />
+              </label>
+              <label>
+                <span>Nome all'avvio</span>
+                <input
+                  type="text"
+                  maxlength="40"
+                  data-nuova-velo
+                  placeholder="${testo(IO.nome || "gdahome")}"
+                  autocomplete="off"
+                  ${alLimite ? "disabled" : ""}
+                />
+              </label>
+              <div class="veste-tasti">
+                <button type="button" class="tasto forte" data-nuova-plancia="${testo(casa.casa)}" ${alLimite ? "disabled" : ""}>Aggiungi</button>
+              </div>
+            </div>
+            <p class="nota" style="margin-top: 14px">
+              Arrivano in casa col rapporto dopo, entro un minuto. Se chi abita la casa rinomina una plancia dall'app, il suo nome resta finché qui non ne scegli un altro. Una plancia si toglie solo da casa, dall'app o dalla scheda dell'add-on: da qui no.
+            </p>
+          </section>`;
+      }
 
       function soloIGuai(casa) {
         const stato = casa.stato;
@@ -4406,7 +4936,9 @@
                 <b>${
                   chiesto.cosa === "riavvia"
                     ? "Il riavvio di Home Assistant"
-                    : `${testo(chiesto.nome)} ${testo(chiesto.da)} → ${testo(chiesto.a)}`
+                    : chiesto.cosa === "configura"
+                      ? `La configurazione della plancia «${testo(chiesto.nome)}»`
+                      : `${testo(chiesto.nome)} ${testo(chiesto.da)} → ${testo(chiesto.a)}`
                 }</b>
                 è stato richiesto ${testo(daQuanto(chiesto.chiesto))}. Parte al prossimo rapporto di questo impianto: è l'impianto a ritirare il comando, il cruscotto non lo contatta.
               </span>
@@ -4419,7 +4951,9 @@
           return `
             <div class="cartello bene">
               <span class="gettone" aria-hidden="true">✓</span>
-              <span><b>${testo(l.cosa)}</b> ${l.riavvio ? "fatto" : "installato"} ${testo(daQuanto(l.quando))}, dal cruscotto.</span>
+              <span><b>${testo(l.cosa)}</b> ${l.riavvio ? "fatto" : l.configurazione ? "applicata" : "installato"} ${testo(daQuanto(l.quando))}, dal cruscotto.${
+                l.configurazione && l.perche ? ` ${testo(l.perche)}.` : ""
+              }</span>
             </div>`;
         if (l.stato === "non riuscito")
           return `
@@ -4864,7 +5398,7 @@
                   <li class="bene">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
-                      <b>Il cruscotto non entra nell'impianto.</b> Non apre la plancia e non vede entità, stanze né persone: riceve un rapporto di numeri. L'abbinamento lo concede chi abita la casa, e lo revoca con un tasto quando vuole.
+                      <b>Il cruscotto non entra nell'impianto.</b> Non apre la plancia e non vede entità, stanze né persone: riceve un rapporto di numeri, più i titoli delle plance e i nomi dei soli dispositivi che non rispondono. L'abbinamento lo concede chi abita la casa, e lo revoca con un tasto quando vuole.
                     </span>
                   </li>
                   <li class="bene">
@@ -4886,6 +5420,26 @@
         `;
       }
 
+      /* Quanto resta a un codice, scritto come si legge.
+       *
+       * Erano minuti e secondi soltanto, e andavano bene quando un codice
+       * viveva un quarto d'ora. Adesso ne vive ventiquattro di ore, e quel
+       * formato scriveva «1439:59»: un numero che per sapere se si fa in tempo
+       * ad arrivare dal cliente bisogna dividere per sessanta. Sopra l'ora si
+       * scrivono le ore; sotto resta mm:ss, che negli ultimi minuti e'
+       * esattamente quello che serve.
+       *
+       * E' rimasto indietro cosi': il codice e' passato da un quarto d'ora a un
+       * giorno (`src/chiavi.js`), e questo orologio non lo sapeva. */
+      function quantoResta(secondi) {
+        if (secondi <= 0) return "scaduto";
+        const due = (quanti) => String(quanti).padStart(2, "0");
+        const ore = Math.floor(secondi / 3600);
+        const minuti = Math.floor((secondi % 3600) / 60);
+        const coda = `${due(minuti)}:${due(secondi % 60)}`;
+        return ore ? `${ore}:${coda}` : coda;
+      }
+
       /* Gli orologi delle scadenze. Un codice che scade è la cosa che fa
        * sbagliare una installazione — si fa il codice, si sale in macchina, si
        * arriva e non vale più — quindi quanto gli resta si vede, e si muove. */
@@ -4901,10 +5455,7 @@
         }));
         const gira = () => {
           for (const { q, fino } of partiti) {
-            const restano = Math.max(0, Math.round((fino - Date.now()) / 1000));
-            const minuti = String(Math.floor(restano / 60)).padStart(2, "0");
-            const secondi = String(restano % 60).padStart(2, "0");
-            q.textContent = restano ? `${minuti}:${secondi}` : "scaduto";
+            q.textContent = quantoResta(Math.max(0, Math.round((fino - Date.now()) / 1000)));
           }
         };
         gira();

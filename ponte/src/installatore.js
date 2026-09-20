@@ -31,6 +31,19 @@
  *
  * E si guarda **come comincia il file**: un `.png` che dentro e' altro resta
  * altro, e questo finisce dentro la pagina che apre chi ci abita.
+ *
+ * ─── Le vesti delle plance ───────────────────────────────────────────────
+ *
+ * Nella stessa risposta, se chi installa le ha scelte dal cruscotto, arrivano
+ * le **vesti** di ogni plancia di questa casa: il titolo, che va nel menu
+ * laterale e in cima alla home, e la parola del velo, quella che compare col
+ * logo mentre la pagina si apre. Plancia per plancia, con la chiave del
+ * profilo. Il nome di chi installa da solo non va piu' da nessuna parte: va
+ * quello che ha scelto, e dove non ha scelto niente resta com'era.
+ *
+ * Stanno su disco, e non solo in memoria come il nome: il velo si vede
+ * **prima** che parta il primo rapporto, e una casa che si riavvia deve aprire
+ * la plancia gia' vestita.
  */
 
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -49,6 +62,51 @@ const ATTESA = 10_000;
  * volta ogni mai, e la casa parla col quadro ogni minuto: riscaricarlo spesso
  * sarebbe traffico per niente. Un giorno. */
 const OGNI_TANTO = 24 * 60 * 60 * 1000;
+
+/** Com'e' fatto il profilo di una plancia. La stessa regola di `plance.js`. */
+export const PROFILO_VALIDO = /^[a-z0-9][a-z0-9-]{0,40}$/;
+
+/* Quanto puo' essere lungo un nome scelto, e quante plance si vestono al
+ * massimo: le stesse misure delle plance (`TITOLO_MASSIMO`, `QUANTE_AL_MASSIMO`). */
+const UN_NOME_AL_MASSIMO = 40;
+const VESTI_AL_MASSIMO = 8;
+const LE_VESTI = "vesti.json";
+
+/* Un nome che finisce in una pagina: via i segni che li' vogliono dire
+ * qualcosa. Lo stesso che fa `marchio.js` col nome, rifatto qui perche' fra
+ * il quadro e questa casa c'e' una rete, e un controllo da una parte sola non
+ * e' un controllo. */
+function unNome(testo) {
+  return String(testo ?? "")
+    .replace(/[<>"'&]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, UN_NOME_AL_MASSIMO);
+}
+
+/**
+ * Le vesti come le manda il quadro, ripulite: `{profilo: {titolo, velo}}`.
+ *
+ * Quello che non e' un profilo, o non ha ne' titolo ne' velo, non entra. Le
+ * chiavi tornano in ordine, cosi' due mappe uguali si scrivono uguali e
+ * «e' cambiato qualcosa?» si chiede confrontando due stringhe.
+ */
+export function vestiPulite(grezze) {
+  const pulite = {};
+  if (!grezze || typeof grezze !== "object" || Array.isArray(grezze)) return pulite;
+  for (const profilo of Object.keys(grezze).sort()) {
+    const una = grezze[profilo];
+    if (!PROFILO_VALIDO.test(profilo) || !una || typeof una !== "object") continue;
+    const titolo = unNome(una.titolo);
+    const velo = unNome(una.velo);
+    if (!titolo && !velo) continue;
+    /* `nuova`: una plancia che ancora non c'e', e che la casa deve creare.
+     * Vedi `Plance.vesti`. */
+    pulite[profilo] = { titolo, velo, ...(una.nuova === true ? { nuova: true } : {}) };
+    if (Object.keys(pulite).length >= VESTI_AL_MASSIMO) break;
+  }
+  return pulite;
+}
 
 const LE_RAZZE = [
   { tipo: "image/png", coda: "png", segno: [0x89, 0x50, 0x4e, 0x47] },
@@ -98,9 +156,13 @@ export class Installatore {
     this._tipo = "";
     this._presoIl = 0;
     this._riletto = false;
-    /* Chi va avvisato quando cambia il nome: la voce nella barra laterale, che
-     * deve seguirlo. Si monta dopo, perche' quella nasce piu' tardi. */
-    this.alCambio = null;
+    /* Le vesti delle plance, e se le si e' gia' lette dal disco. */
+    this._vesti = {};
+    this._vestiLette = false;
+    /* Chi va avvisato quando le vesti cambiano: le plance, che devono
+     * mettersi il titolo scelto nel menu laterale. Si monta dopo, perche'
+     * quelle nascono piu' tardi. */
+    this.alVestire = null;
   }
 
   /** Come si chiama, o vuoto: non c'e' nessun installatore, o non l'ha detto. */
@@ -108,16 +170,36 @@ export class Installatore {
     return this._nome;
   }
 
+  /** Le vesti di tutte le plance, com'erano nell'ultima risposta buona. */
+  get vesti() {
+    this._leVestiDalDisco();
+    return { ...this._vesti };
+  }
+
   /**
    * Quello che la plancia deve indossare, o `null`.
    *
    * Un caso solo per chi disegna: `null` vuol dire «questa casa porta il nostro
-   * marchio», che e' il caso di quasi tutte.
+   * marchio», che e' il caso di quasi tutte. Col profilo, porta anche le
+   * vesti scelte per **quella** plancia: `titolo` e `velo`, vuoti se chi
+   * installa non ha scelto niente.
    */
-  vestito() {
-    if (!this._nome && !this._logo) return null;
+  vestito(profilo = "") {
+    /* Prima si legge quello che sta gia' sul disco — il logo e le vesti — e
+     * solo dopo si decide se c'e' qualcosa da indossare: dopo un riavvio il
+     * nome arriva col primo rapporto, ma il logo e i nomi scelti ci sono
+     * gia', e la plancia deve uscire vestita al primo colpo. */
     this._dalDisco();
-    return { nome: this._nome, logo: this._logo, tipo: this._tipo };
+    this._leVestiDalDisco();
+    const sue = this._vesti[String(profilo || "")] || null;
+    if (!this._nome && !this._logo && !sue) return null;
+    return {
+      nome: this._nome,
+      logo: this._logo,
+      tipo: this._tipo,
+      titolo: sue?.titolo || "",
+      velo: sue?.velo || "",
+    };
   }
 
   /**
@@ -142,10 +224,26 @@ export class Installatore {
       this.registro.info(
         nome ? `questa casa la segue ${nome}` : "questa casa non la segue piu' nessuno",
       );
+    }
+    /* Le vesti delle plance: quello che chi installa ha scelto per ognuna.
+     * Assenti vuol dire «niente di scelto», e allora si tolgono: una risposta
+     * buona che non le porta **e'** il modo in cui il quadro dice che non ci
+     * sono piu'. */
+    this._leVestiDalDisco();
+    const vesti = vestiPulite(detto?.vesti);
+    if (JSON.stringify(vesti) !== JSON.stringify(this._vesti)) {
+      this._vesti = vesti;
+      this._scriviLeVesti();
+      const quante = Object.keys(vesti).length;
+      this.registro.info(
+        quante
+          ? `le plance si vestono come dice chi le segue (${quante})`
+          : "le plance tornano coi loro nomi",
+      );
       try {
-        this.alCambio?.(nome);
+        this.alVestire?.({ ...vesti });
       } catch (errore) {
-        this.registro.attenzione(`la voce nella barra non ha preso il nome: ${errore?.message}`);
+        this.registro.attenzione(`le plance non hanno preso le vesti: ${errore?.message}`);
       }
     }
     if (buono !== this._chi) {
@@ -159,12 +257,49 @@ export class Installatore {
     await this._vaiAPrenderlo();
   }
 
-  /** Via tutto: nessun installatore, nessun logo. */
+  /** Via il logo: quell'installatore non ce l'ha, o non c'e' piu'. */
   dimentica() {
     this._logo = null;
     this._tipo = "";
     this._presoIl = 0;
-    rmSync(this.cartella, { recursive: true, force: true });
+    for (const coda of ["png", "jpg", "webp", "svg"]) {
+      rmSync(join(this.cartella, `marchio.${coda}`), { force: true });
+    }
+  }
+
+  /** Via le vesti: nessuna scelta per nessuna plancia. */
+  svesti() {
+    this._vesti = {};
+    this._vestiLette = true;
+    rmSync(join(this.cartella, LE_VESTI), { force: true });
+  }
+
+  /* Le vesti che stanno gia' sul disco, lette una volta per accensione: dopo
+   * un riavvio il velo deve dire la parola giusta al primo colpo, senza
+   * aspettare che il quadro risponda. */
+  _leVestiDalDisco() {
+    if (this._vestiLette) return;
+    this._vestiLette = true;
+    try {
+      this._vesti = vestiPulite(JSON.parse(readFileSync(join(this.cartella, LE_VESTI), "utf8")));
+    } catch (_nonCE) {
+      this._vesti = {};
+    }
+  }
+
+  _scriviLeVesti() {
+    try {
+      if (Object.keys(this._vesti).length === 0) {
+        rmSync(join(this.cartella, LE_VESTI), { force: true });
+        return;
+      }
+      mkdirSync(this.cartella, { recursive: true });
+      writeFileSync(join(this.cartella, LE_VESTI), JSON.stringify(this._vesti));
+    } catch (errore) {
+      this.registro.attenzione(
+        `le vesti delle plance non si scrivono: ${errore?.message || errore}`,
+      );
+    }
   }
 
   /* Il logo che c'e' gia' sul disco, letto una volta per accensione: dopo un

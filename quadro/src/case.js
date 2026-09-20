@@ -68,6 +68,46 @@ export const UN_LAVORO_ASPETTA = 10 * 60 * 1000;
 
 const ilGiorno = (quando) => new Date(quando).toISOString().slice(0, 10);
 
+/** Com'e' fatto il profilo di una plancia. La stessa regola del ponte. */
+export const PROFILO_VALIDO = /^[a-z0-9][a-z0-9-]{0,40}$/;
+
+/** Quante plance si tengono per casa. La stessa misura del ponte (`QUANTE_AL_MASSIMO`). */
+export const PLANCE_AL_MASSIMO = 8;
+
+/* Il nome del cassetto di una plancia nuova, dal titolo: la stessa regola con
+ * cui lo fa il ponte (`nomeDelCassetto` in `plance.js`), rifatta qui perche'
+ * i nomi scelti hanno bisogno di una chiave prima ancora che la plancia
+ * esista in casa. Minuscole, cifre e trattini; un titolo che non lascia
+ * niente diventa «plancia». Un po' piu' corto di quello del ponte, per
+ * lasciare posto al numero quando due si chiamano uguali. */
+function nomeDelCassetto(titolo, giaPrese) {
+  const radice =
+    String(titolo || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 36) || "plancia";
+  let quale = /^[a-z0-9]/.test(radice) ? radice : `p-${radice}`;
+  let numero = 2;
+  while (giaPrese.has(quale)) {
+    quale = `${radice}-${numero}`;
+    numero += 1;
+  }
+  return quale;
+}
+
+/* Un nome scelto per una plancia, ripulito per finire in una pagina di casa
+ * d'altri: via i segni che li' vogliono dire qualcosa, e quaranta lettere al
+ * massimo, che e' quanto un titolo di plancia puo' essere lungo nel ponte. */
+const unaVeste = (testo) =>
+  String(testo ?? "")
+    .replace(/[<>"'&]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 40);
+
 const testo = (valore, quanto = 120) =>
   String(valore ?? "")
     .trim()
@@ -125,12 +165,15 @@ export class CaseSeguite {
         /* Il lavoro che aspetta di essere consegnato a questa casa, o `null`.
          * Ne sta uno per volta: il perche' e' in cima al file. */
         lavoro: null,
+        /* Le vesti delle sue plance: profilo → {titolo, velo}. Vedi `vesti`. */
+        vesti: {},
       };
       this.lista.push(una);
     }
     una.vistaIl = ora;
     una.carta = carta;
     this._cambiaPadrone(una, di);
+    this._allineaLeVesti(una);
 
     /* La casa ha risposto di quel lavoro: da qui in poi lo stato lo racconta
      * lei, nel rapporto, e questo non serve piu'. Uno solo dei due lo puo'
@@ -186,6 +229,113 @@ export class CaseSeguite {
     una.nome = "";
     una.lavoro = null;
     una.avvisataIl = null;
+    /* E le vesti delle plance: i nomi che il vecchio aveva scelto sono suoi,
+     * e la casa se li toglie al rapporto dopo. */
+    una.vesti = {};
+  }
+
+  /**
+   * Le vesti di una plancia di questa casa: il **titolo**, che va nel menu
+   * laterale di Home Assistant e in cima alla home, e la parola del **velo**,
+   * quella che compare col logo dell'installatore mentre la pagina si apre.
+   * Le sceglie lui dal cruscotto, plancia per plancia, e la casa se le porta
+   * via con la risposta al rapporto (`leVesti`).
+   *
+   * Si veste solo una plancia che la casa ha detto di avere nell'ultimo
+   * rapporto (`plance.elenco`): un profilo inventato non finirebbe in nessun
+   * menu, e resterebbe scritto qui per sempre. Un impianto con l'add-on di
+   * ieri l'elenco non lo manda, e allora non si veste niente: lo si dice,
+   * cosi' chi installa sa che deve aggiornarlo. Tutte e due vuote tolgono la
+   * scelta.
+   *
+   * `di` e' un lucchetto e non un filtro, come per `rinomina`.
+   *
+   * Torna `{errore}` — `non_sua`, `senza_elenco`, `non_ce` — o `{vesti}`.
+   */
+  vesti(casa, profilo, { titolo, velo } = {}, di) {
+    const una = this.quella(casa);
+    if (!una || (di !== TUTTE && una.di !== di)) return { errore: "non_sua" };
+    const elenco = Array.isArray(una.carta?.plance?.elenco) ? una.carta.plance.elenco : null;
+    if (!elenco) return { errore: "senza_elenco" };
+    const quale = String(profilo || "");
+    if (!una.vesti || typeof una.vesti !== "object") una.vesti = {};
+    /* Una che la casa deve ancora creare si veste come le altre: e' il modo
+     * di correggerle il nome prima che nasca. */
+    const inAttesa = una.vesti[quale]?.nuova === true;
+    if (!PROFILO_VALIDO.test(quale) || (!inAttesa && !elenco.some((p) => p?.profilo === quale))) {
+      return { errore: "non_ce" };
+    }
+    const pulite = { titolo: unaVeste(titolo), velo: unaVeste(velo) };
+    if (!pulite.titolo && !pulite.velo) {
+      /* Tutte e due vuote: via la scelta. Per una in attesa vuol dire che la
+       * casa non la crea. */
+      delete una.vesti[quale];
+    } else if (inAttesa && !pulite.titolo) {
+      return { errore: "senza_nome" };
+    } else {
+      una.vesti[quale] = inAttesa ? { ...pulite, nuova: true } : pulite;
+    }
+    this.archivio.salva();
+    return { vesti: this.leVesti(una) };
+  }
+
+  /**
+   * Una plancia in piu', voluta dal cruscotto.
+   *
+   * Qui nasce solo la **scelta**: il profilo, col titolo e la parola del
+   * velo, segnata `nuova`. La casa la crea al rapporto dopo (`Plance.vesti`
+   * nel ponte), vuota come una aggiunta dall'app, e dal rapporto successivo
+   * compare nell'elenco: a quel punto non e' piu' nuova, ed e' come le altre
+   * (`_allineaLeVesti`). Da qui una plancia non si toglie: si toglie da casa.
+   *
+   * Otto per casa, contando quelle in attesa: la stessa misura del ponte,
+   * che se no la nona la rifiuterebbe in silenzio.
+   */
+  nuovaPlancia(casa, { titolo, velo } = {}, di) {
+    const una = this.quella(casa);
+    if (!una || (di !== TUTTE && una.di !== di)) return { errore: "non_sua" };
+    const elenco = Array.isArray(una.carta?.plance?.elenco) ? una.carta.plance.elenco : null;
+    if (!elenco) return { errore: "senza_elenco" };
+    const nome = unaVeste(titolo);
+    if (!nome) return { errore: "senza_nome" };
+    if (!una.vesti || typeof una.vesti !== "object") una.vesti = {};
+    const inCasa = elenco.map((p) => String(p?.profilo || ""));
+    const inAttesa = Object.entries(una.vesti).filter(
+      ([p, v]) => v?.nuova === true && !inCasa.includes(p),
+    ).length;
+    if (inCasa.length + inAttesa >= PLANCE_AL_MASSIMO) return { errore: "troppe" };
+    const profilo = nomeDelCassetto(nome, new Set([...inCasa, ...Object.keys(una.vesti)]));
+    una.vesti[profilo] = { titolo: nome, velo: unaVeste(velo), nuova: true };
+    this.archivio.salva();
+    return { profilo, vesti: this.leVesti(una) };
+  }
+
+  /* Le vesti seguono la casa. Una plancia voluta dal cruscotto, appena la
+   * casa la manda nell'elenco, non e' piu' nuova; le vesti di una plancia che
+   * la casa non ha piu' se ne vanno, cosi' se in casa la tolgono non rinasce
+   * e qui non resta scritto niente per sempre. Senza elenco — l'add-on di
+   * ieri — non si tocca niente. */
+  _allineaLeVesti(una) {
+    const elenco = Array.isArray(una.carta?.plance?.elenco) ? una.carta.plance.elenco : null;
+    if (!elenco || !una.vesti || typeof una.vesti !== "object") return;
+    const inCasa = new Set(elenco.map((p) => String(p?.profilo || "")));
+    for (const [profilo, veste] of Object.entries(una.vesti)) {
+      if (inCasa.has(profilo)) {
+        if (veste?.nuova) delete veste.nuova;
+      } else if (veste?.nuova !== true) {
+        delete una.vesti[profilo];
+      }
+    }
+  }
+
+  /** Le vesti da mandare a una casa, o `null` se non ne ha nessuna. */
+  leVesti(una) {
+    const sue = una?.vesti;
+    return sue && typeof sue === "object" && Object.keys(sue).length ? { ...sue } : null;
+  }
+
+  leVestiDi(casa) {
+    return this.leVesti(this.quella(casa));
   }
 
   /* `di` e' un lucchetto, non un filtro: senza, l'installatore che scrivesse a
@@ -258,16 +408,25 @@ export class CaseSeguite {
      * che conta lo dice la casa, in `lavori.js`, e lo direbbe lo stesso. Ma
      * mettere in coda un comando che si sa gia' che verra' rifiutato vuol dire
      * far aspettare dieci minuti una risposta che e' gia' scritta. */
-    if (una.carta?.manutenzione !== true) return null;
-    /* Due verbi, e nessun altro. «Installa» si nomina per nome e salto di
+    /* Tre verbi, e nessun altro. «Installa» si nomina per nome e salto di
      * versione; «riavvia» — Home Assistant, tutto — non ha niente da nominare:
-     * e' quella casa, e basta. */
-    if (cosa !== "installa" && cosa !== "riavvia") return null;
+     * e' quella casa, e basta; «configura» nomina la plancia, col suo profilo,
+     * e in `da` porta la revisione su cui l'installatore ha scritto.
+     *
+     * I primi due passano dalla manutenzione. Il terzo ha la sua casella,
+     * `quadro_configurazione`, che la casa dice nel rapporto come dice l'altra:
+     * un permesso a parte, perche' lasciar installare e lasciar rimettere mano
+     * alla propria plancia non sono la stessa cosa. */
+    if (cosa !== "installa" && cosa !== "riavvia" && cosa !== "configura") return null;
+    if (cosa === "configura") {
+      if (una.carta?.configurazione !== true) return null;
+    } else if (una.carta?.manutenzione !== true) return null;
     const quale =
       cosa === "riavvia"
         ? { nome: "", da: "", a: "" }
         : { nome: testo(nome), da: testo(da, 40), a: testo(a, 40) };
     if (cosa === "installa" && (!quale.nome || !quale.a)) return null;
+    if (cosa === "configura" && !quale.nome) return null;
     /* Uno per volta. Quello vecchio scaduto pero' non blocca niente: una casa
      * spenta da un'ora non deve impedire di richiedere la stessa cosa. */
     const ora = this.adesso();
@@ -431,6 +590,9 @@ export class CaseSeguite {
        * vorrebbe dire una pagina che non distingue piu' fra «l'ho chiesto» e
        * «sta succedendo». */
       chiesto: una.lavoro && !una.lavoro.mandato ? { ...una.lavoro } : null,
+      /* I nomi che l'installatore ha scelto per le plance di questa casa,
+       * profilo per profilo. Vuoto per quasi tutte. */
+      vesti: una.vesti && typeof una.vesti === "object" ? { ...una.vesti } : {},
     };
   }
 

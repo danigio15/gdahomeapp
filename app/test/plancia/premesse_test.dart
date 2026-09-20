@@ -14,7 +14,11 @@ const _pagina =
     '<!DOCTYPE html><html lang="it"><head><title>x</title></head>'
     '<body>la plancia</body></html>';
 
-Premesse _premesse({bool? configurata}) => Premesse(
+Premesse _premesse({
+  bool? configurata,
+  String velo = '',
+  String testata = '',
+}) => Premesse(
   pannello: PannelloDellaPlancia(
     percorso: 'dashboardmodern',
     titolo: 'DashboardModern',
@@ -24,6 +28,8 @@ Premesse _premesse({bool? configurata}) => Premesse(
     primario: true,
     varianti: const ['dashboard.html'],
     configurata: configurata,
+    velo: velo,
+    testata: testata,
   ),
 );
 
@@ -40,6 +46,38 @@ void main() {
     );
     expect(servita, contains('window.__GDAHOME__=true;'));
     expect(servita, contains('la plancia'));
+    /* Senza vesti scelte non si scrive niente: la plancia porta il nome di
+       chi l'ha montata, o gdahome. */
+    expect(servita, isNot(contains('__GDAHOME_VELO__')));
+    expect(servita, isNot(contains('__GDAHOME_TESTATA__')));
+  });
+
+  test('le vesti scelte per questa plancia vanno in testa, in due pezzi', () {
+    /* Il velo lo legge lo script che il ponte attacca al velo; la testata la
+       legge il runtime al momento di disegnare. Sono le stesse due righe che
+       scrive il ponte quando serve lui la pagina dentro Home Assistant. */
+    final servita = _premesse(
+      velo: 'Rossi impianti',
+      testata: 'Casa Rossi',
+    ).conLePremesse(_pagina, ilWebSocket: 'WebSocket');
+    expect(servita, contains('window.__GDAHOME_VELO__="Rossi impianti";'));
+    expect(servita, contains('window.__GDAHOME_TESTATA__=["Casa","Rossi"];'));
+
+    /* Una parola sola non si spezza a meta': il secondo pezzo resta vuoto. */
+    expect(Premesse.inDuePezzi('Elettrotecnica'), ['Elettrotecnica', '']);
+    expect(Premesse.inDuePezzi('  Casa   Rossi  Bianchi '), [
+      'Casa',
+      'Rossi Bianchi',
+    ]);
+    /* Il nostro marchio si spezza come lo disegna la plancia, e come fa il
+       ponte: la casa manda gli stessi nomi all'app e a Home Assistant. */
+    expect(Premesse.inDuePezzi('gdahome'), ['gda', 'home']);
+
+    /* E un `</script>` dentro un nome non chiude lo script. */
+    final storta = _premesse(velo: '</script><script>alert(1)')
+        .conLePremesse(_pagina, ilWebSocket: 'WebSocket');
+    expect(storta, isNot(contains('</script><script>alert')));
+    expect(storta, contains('window.__GDAHOME_VELO__="/script'));
   });
 
   test('la tenda sulla barra si alza comunque, e solo se serve', () {
@@ -231,6 +269,25 @@ void main() {
     /* Tenuto premuto e' un altro gesto, e non e' nostro: la plancia accende
      * il suo kiosk, e il menu dell'app non si apre. */
     expect(servita, contains('Date.now()-premutoIl>=650'));
+  });
+
+  test('sulla Configurazione c\'è un ☰ nostro, e apre lo stesso menu', () {
+    /* La testata della plancia sulla Config non c'e', il «← HOME» e' tolto
+     * e la barra in fondo nascosta: senza un tasto nel riquadro in cima si
+     * restava li'. */
+    final servita = _premesse().conLePremesse(
+      _pagina,
+      ilWebSocket: 'WebSocket',
+    );
+    expect(servita, contains('querySelector("#page-config .cfg-hero")'));
+    expect(servita, contains('tasto.className="gdahome-menu"'));
+    expect(servita, contains('setAttribute("aria-label","Apri il menu")'));
+    expect(servita, contains('testata.insertBefore(tasto,testata.firstChild)'));
+    /* Uno solo, anche se il programma gira due volte. */
+    expect(servita, contains('testata.querySelector(".gdahome-menu"))return;'));
+    /* E il suo stile sta nella stessa premessa, coi colori della plancia. */
+    expect(servita, contains('id="gdahome-menu-in-config"'));
+    expect(servita, contains('background:var(--text,#0f172a)'));
   });
 
   test('la parola del menu non è il nome di una pagina della plancia', () {

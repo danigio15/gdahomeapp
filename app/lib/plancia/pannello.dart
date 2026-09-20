@@ -87,6 +87,8 @@ class PannelloDellaPlancia {
     required this.varianti,
     this.plance = const [],
     this.configurata,
+    this.velo = '',
+    this.testata = '',
   });
 
   /// Il percorso del pannello in Home Assistant: `dashboardmodern`, o
@@ -125,6 +127,18 @@ class PannelloDellaPlancia {
   /// per niente. Vuota vuol dire un ponte che non le sa tenere — uno di ieri —
   /// e allora di plancia ce n'e' una, com'e' sempre stato.
   final List<UnaPlancia> plance;
+
+  /// La parola del velo d'avvio, se chi ha montato l'impianto l'ha scelta
+  /// per questa plancia dal suo cruscotto: compare col suo logo mentre la
+  /// pagina si apre. Vuota vuol dire «quella di serie», cioe' il suo nome, o
+  /// gdahome. Chi serve la pagina la scrive in testa (`premesse.dart`), e la
+  /// pagina la legge al primo disegno.
+  final String velo;
+
+  /// La scritta accanto al logo, in cima alla home: il nome che chi ha
+  /// montato l'impianto ha dato a questa plancia. Vuota vuol dire «quella di
+  /// serie». Stessa strada del velo.
+  final String testata;
 
   /// Se questa plancia ha una configurazione, secondo il ponte.
   ///
@@ -250,6 +264,14 @@ PannelloDellaPlancia? leggiLaPlanciaDelPonte(Object? risposta) {
     configurata: switch (risposta['configurata']) {
       final bool si => si,
       _ => null,
+    },
+    velo: switch (risposta['velo']) {
+      final String s => s.trim(),
+      _ => '',
+    },
+    testata: switch (risposta['testata']) {
+      final String s => s.trim(),
+      _ => '',
     },
     varianti: [
       if (varianti is List)

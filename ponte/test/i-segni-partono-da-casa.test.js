@@ -122,3 +122,88 @@ test("quello che non e' un'immagine non diventa un'icona", async () => {
   assert.equal(suo.logo, undefined);
   assert.equal(suo.senzaLogo, true, "quella cosa li' non e' un'icona e non lo sara' mai");
 });
+
+/* ─── E anche il marchio passa di li' ─────────────────────────────────────
+ *
+ * Nella 1.5.9.11 la strada dell'app valeva solo per l'icona **di casa**; il
+ * marchio se lo scaricava il rapporto da solo, con un `fetch` nudo, e in una
+ * casa vera non portava niente: Home Assistant, il sistema e Frigate con la
+ * lettera nel cruscotto, e coi loghi nell'app. Adesso la strada e' una per
+ * tutte, e il `fetch` di qui non si chiama piu' se quella strada c'e'.
+ */
+
+test("anche l'icona dei marchi passa dalla strada dell'app, e il fetch di qui non si tocca", async () => {
+  let chiesta = "";
+  let scaricato = 0;
+  const segni = new Segni({
+    aggiornamenti: laCasa("https://brands.home-assistant.io/homeassistant/icon.png"),
+    registro: ZITTO,
+    async fetch() {
+      scaricato += 1;
+      throw new Error("non doveva passare di qui");
+    },
+    async ilLogoDiCasa(entita) {
+      chiesta = entita;
+      return {
+        success: true,
+        result: { stato: 200, tipo: "image/png", corpo: PNG.toString("base64") },
+      };
+    },
+  });
+  const quale = ilSegnoDi(UNO.nome, UNO.a);
+  const suo = (await segni.quelliCheMancano([quale], [UNO])).get(quale);
+  assert.equal(chiesta, UNO.entita);
+  assert.equal(scaricato, 0, "il marchio si e' scaricato per conto suo");
+  assert.equal(suo.logo, PNG.toString("base64"));
+});
+
+test("un'icona da quaranta kilobyte parte: il tetto e' quello del quadro", async () => {
+  /* Erano 24 KiB, e un marchio colorato da 256 punti li passa con niente:
+   * non partiva, e non lo diceva. */
+  const grossa = Buffer.concat([PNG, Buffer.alloc(40 * 1024, 3)]);
+  const segni = new Segni({
+    aggiornamenti: laCasa("https://brands.home-assistant.io/frigate/icon.png"),
+    registro: ZITTO,
+    async ilLogoDiCasa() {
+      return {
+        success: true,
+        result: { stato: 200, tipo: "image/png", corpo: grossa.toString("base64") },
+      };
+    },
+  });
+  const quale = ilSegnoDi(UNO.nome, UNO.a);
+  const suo = (await segni.quelliCheMancano([quale], [UNO])).get(quale);
+  assert.equal(suo.logo, grossa.toString("base64"), "l'icona grossa non e' partita");
+
+  const { UN_SEGNO_AL_MASSIMO } = await import("../src/segni.js");
+  const { QUANTO_GROSSA } = await import("../../quadro/src/segni.js");
+  assert.equal(
+    UN_SEGNO_AL_MASSIMO,
+    QUANTO_GROSSA,
+    "la casa manda fino a un peso e il quadro ne accetta un altro: una delle due si perde",
+  );
+});
+
+test("un'icona che non ci sta si dice nel registro, e non si richiede ogni minuto", async () => {
+  const { UN_SEGNO_AL_MASSIMO } = await import("../src/segni.js");
+  const enorme = Buffer.concat([PNG, Buffer.alloc(UN_SEGNO_AL_MASSIMO, 3)]);
+  const detto = [];
+  const segni = new Segni({
+    aggiornamenti: laCasa("https://brands.home-assistant.io/frigate/icon.png"),
+    registro: { ...ZITTO, attenzione: (riga) => detto.push(riga) },
+    async ilLogoDiCasa() {
+      return {
+        success: true,
+        result: { stato: 200, tipo: "image/png", corpo: enorme.toString("base64") },
+      };
+    },
+  });
+  const quale = ilSegnoDi(UNO.nome, UNO.a);
+  const suo = (await segni.quelliCheMancano([quale], [UNO])).get(quale);
+  assert.equal(suo.logo, undefined);
+  assert.equal(suo.senzaLogo, true, "un'icona troppo grossa si richiederebbe per sempre");
+  assert.ok(
+    detto.some((riga) => /piu' dei \d+ che stanno in un rapporto/.test(riga)),
+    `il registro non dice perche': ${JSON.stringify(detto)}`,
+  );
+});

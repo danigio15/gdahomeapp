@@ -133,6 +133,7 @@ casa ne riguarda **una**.
 | `quadro`              | il codice che ti ha dato chi ti ha fatto l'impianto. Vuoto: non parte niente                          |
 | `quadro_ogni`         | ogni quanti minuti parte un rapporto (1)                                                              |
 | `quadro_manutenzione` | lascia che chi ti ha fatto l'impianto faccia partire un aggiornamento da lontano. Spento di serie     |
+| `quadro_configurazione` | lascia che chi ti ha fatto l'impianto configuri la plancia da lontano: la vede com'è fatta e la riscrive, senza telecamere. Spento di serie |
 | `minuti_del_codice`   | quanto vive il QR che abbina un telefono (5)                                                          |
 | `giorni_di_silenzio`  | dopo quanto un telefono sparito viene tolto da solo; zero vuol dire mai (90)                          |
 | `dispositivi_massimi` | quanti telefoni possono restare abbinati insieme (10)                                                 |

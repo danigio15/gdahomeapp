@@ -1,9 +1,15 @@
 # Il copione
 
-Quello che si vede scritto sui filmati, scena per scena, con il momento in cui
-comincia ciascuna. Prima il film lungo, poi quello corto per i social — che è
-uno solo, girato in due misure. Serve a due cose: leggerlo a voce sopra il video (in fondo
-c'è come si attacca), e rileggere le parole senza rifare la ripresa.
+Quello che si vede scritto sui **tre film muti**, scena per scena, con il
+momento in cui comincia ciascuna. Prima il film lungo, poi quello corto per i
+social — che è uno solo, girato in due misure. Serve a due cose: leggerlo a
+voce sopra il video (in fondo c'è come si attacca), e rileggere le parole senza
+rifare la ripresa.
+
+> Il quarto film — quello del quadro — una voce ce l'ha già, e il suo copione
+> non sta qui: sta in [`parlato.js`](parlato.js), perché lì le parole non si
+> leggono soltanto, si **dicono**, e i tempi delle scene escono da quanto
+> durano. Come funziona sta nel README, in «Il quarto invece parla».
 
 I tempi fra parentesi sono **dall'inizio della scena**; quelli in grassetto
 sono dall'inizio del filmato. Le durate le dichiara `scene.js`, ed è da lì che

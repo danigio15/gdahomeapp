@@ -1,13 +1,24 @@
 # I video e le copertine di gdahome
 
-Tre filmati e tre immagini ferme, **ognuno in italiano e in inglese**, fatti
-dalla stessa pagina web e dalla stessa cartella:
+Quattro filmati e tre immagini ferme, **ognuno in italiano e in inglese**,
+fatti dalla stessa pagina web e dalla stessa cartella:
 
 | film | misura | dura | a cosa serve |
 |---|---|---|---|
 | `gdahome-presentazione` | 1280×720 | 2:49 | quello che spiega: cos'è, come si installa l'add-on, come si abbina il telefono, quanto costa (niente) |
 | `gdahome-facebook` | 1080×1080 | 0:47 | il quadrato per il feed di Facebook |
 | `gdahome-tiktok` | 1080×1920 | 0:47 | lo stesso, in piedi, per TikTok — e per Reels e Storie |
+| `gdahome-quadro` | 1280×720 | 5:03 · 4:36 | **il quadro**, ed è l'unico **parlato**: cosa vede chi ha montato l'impianto quando gli si danno in gestione le case, e cosa da lì non vede |
+
+I primi tre parlano a chi abita una casa. Il quarto parla a chi ne segue
+quaranta, e per questo dice due cose che negli altri non ci sono: cosa si legge
+dal quadro, e **cosa da lì non si può leggere**. La seconda metà non è un di
+più — è quella che decide se questo pezzo si può dare in mano a qualcuno — e
+sta nel film per intero: `quadro/README.md`, «Cosa il quadro non può fare».
+
+È anche l'unico **con una voce che racconta** ([qui sotto](#il-quarto-invece-parla)),
+e l'unico che dura due lunghezze diverse nelle due lingue: le scene aspettano
+la voce, e la stessa frase in inglese non dura quanto in italiano.
 
 | immagine | misura | dove va |
 |---|---|---|
@@ -28,6 +39,14 @@ restano in italiano anche lì, e non dipendono da qui: la parola del meteo
 («SOLEGGIATO») e la pastiglia «ANTIFURTO · CASA» sono scritte così dentro
 DashboardModern, che in inglese non le traduce.
 
+**La console del quadro invece resta in italiano anche nel film inglese**, e
+non è una dimenticanza: quella pagina è scritta in italiano e basta — sta
+scritto nel suo programma, «questa pagina è in italiano, non nella lingua del
+browser». Tradurre le fotografie vorrebbe dire far vedere un quadro che non
+esiste. Le parole del film cambiano, gli schermi no; il giorno che la console
+parla due lingue, si scattano le fotografie anche nell'altra e questa riga si
+cancella.
+
 I filmati escono in **mp4** (H.264, con una traccia audio muta nei due corti) se
 sulla macchina c'è un ffmpeg vero; se c'è solo quello di Playwright escono in
 webm, e la ripresa lo dice. Per i negozi dei video serve l'mp4: TikTok un webm
@@ -38,11 +57,16 @@ non lo prende.
 ## Rifarli
 
 ```
-node strumenti/video/rendi.mjs                 i tre filmati, nelle due lingue
+node strumenti/video/rendi.mjs                 i quattro filmati, nelle due lingue
 node strumenti/video/rendi.mjs --film tiktok   uno solo (due lingue)
 node strumenti/video/rendi.mjs --lingua en     solo l'inglese
 node strumenti/video/rendi.mjs --copertine     le immagini ferme di Facebook
+node strumenti/video/voce.mjs                  la voce del film del quadro
 ```
+
+Il film del quadro è parlato, e la voce si fa **prima**: è lei a decidere
+quanto dura ogni scena. L'ordine sta in [«Il quarto invece parla»](#il-quarto-invece-parla),
+ed è tre comandi.
 
 Le fotografie della plancia vera si rifanno a parte, una lingua per volta —
 aprono la plancia e aspettano che si configuri da sola:
@@ -52,7 +76,36 @@ node strumenti/video/plancia-vera.mjs
 node strumenti/video/plancia-vera.mjs --lingua en
 ```
 
-Un quarto d'ora circa per tutti e sei i filmati. Serve **Playwright** (`npm i -g playwright`,
+E quelle della console del quadro, che invece è una sola lingua e non ha
+bisogno di essere detto due volte — accende un quadro vero, gli fa depositare
+una flotta inventata e lo fotografa:
+
+```
+node strumenti/video/quadro-vero.mjs
+```
+
+**Guardare la plancia dove si è rotta.** Le tre misure delle copertine non
+bastano quando arriva la fotografia di un guasto: `plancia-vera.mjs` apre la
+plancia vera a una misura qualunque, e quello che ne esce finisce in
+`provini/`.
+
+```
+node strumenti/video/plancia-vera.mjs --schermo 834x1194 --tocco --barra
+```
+
+Le due aggiunte contano più della misura. **`--tocco`** accende
+`hover:none`/`pointer:coarse`, che è metà del foglio di stile della barra in
+fondo: senza, si fotografa un tablet che il foglio crede un computer, e il
+guasto non c'è. **`--barra`** preme la maniglia e tira fuori la barra delle
+sezioni, che su un telefono e su un tablet sta nascosta sotto il bordo — e se
+il guasto è lì dentro, una fotografia senza barra non serve a niente.
+
+È così che si è visto il difetto dei nomi accavallati su iPad: 834×1194, col
+dito, con la barra fuori.
+
+Mezz'ora circa per tutti e otto i filmati — il film del quadro dura il doppio
+degli altri e si riprende quasi tutto fotogramma per fotogramma. Serve
+**Playwright** (`npm i -g playwright`,
 oppure installato di fianco al progetto) e, per l'mp4, **ffmpeg**
 (`apt install ffmpeg`). Nient'altro.
 
@@ -71,12 +124,19 @@ mentre va.
 
 | file | cosa fa |
 |---|---|
-| `comune.css` | quello che i tre film hanno in comune: caratteri, colori, il fondo del palco, le animazioni, il telefono, le schede |
+| `comune.css` | quello che i quattro film hanno in comune: caratteri, colori, il fondo del palco, le animazioni, il telefono, le schede |
 | `pezzi.js` | i pezzi condivisi: il marchio, i disegnini, il telefono, **la plancia**, e il palco che chi filma va a cercare |
 | `presentazione.html` + `scene.js` | il film lungo: quindici scene, disposte a coordinate |
 | `social.html` + `social.js` | il film corto: sette scene, disposte **a colonna** |
+| `quadro.html` + `quadro.js` | il film del cruscotto: tredici scene, con dentro le fotografie della console vera |
+| `parlato.js` + `voce.mjs` + `dillo.py` | il copione parlato del film del quadro, e chi lo dice: `dillo.py` fa i suoni, `voce.mjs` monta la traccia e la attacca al film |
+| `parlato-tempi.json` | quanto dura ogni scena e quando arriva ogni frase, nelle due lingue. **Lo scrive `voce.mjs`**, e `quadro.js` lo legge |
+| `voce-quadro.m4a` (e `-en`) | le due tracce parlate, che stanno qui apposta: così il film si rifà senza il modello della voce |
+| `voce/` | il modello della voce e la busta delle voci, trecentocinquanta megabyte di roba di terzi; non sta nella repository |
 | `copertine.html` + `copertine.js` | le copertine di Facebook e l'immagine del profilo, ferme |
 | `plancia-vera.mjs` + `casa-finta.js` | fotografano **la plancia vera**, quella di `ponte/plancia/` |
+| `quadro-vero.mjs` + `flotta-finta.js` | fotografano **il quadro vero**, quello di `quadro/console/` |
+| `quadro-elenco.png`, `-da-fare`, `-controlli`, `-dettagli`, `-dispositivi`, `-aggiornamenti`, `-abbina` | le sette fotografie della console, che finiscono negli schermi del quarto film |
 | `plancia-telefono.png`, `-tablet`, `-computer` (e `-en`) | le fotografie, che finiscono negli schermi delle copertine |
 | `rendi.mjs` | chi filma: apre la pagina, sposta l'orologio, scatta, e passa gli scatti a ffmpeg |
 | `qrcode.svg` | il QR code che si vede nel film lungo — lo rifà `rendi.mjs` a ogni ripresa |
@@ -112,6 +172,47 @@ di chi pubblica, e quello che ci finisce sotto non lo legge nessuno. Per questo
 le scene del film corto non sono disposte a coordinate come quelle del film
 lungo, ma **a colonna**: si mettono in fila e si dispongono da sole con lo
 spazio che trovano, che in un quadrato e in un palco in piedi è diverso.
+
+### Il film del quadro, e perché gli schermi sono veri
+
+Negli altri tre film la plancia è **ricostruita** (`pezzi.js`), e c'è una
+ragione: lì si muove — una luce che si accende al tocco — e una fotografia non
+si tocca. Nel film del quadro invece non si muove niente dentro gli schermi, e
+allora vale la regola delle copertine: **si fotografa la cosa vera**.
+
+Le sette fotografie escono da `quadro-vero.mjs` (qui sotto), e sono la pagina di
+`quadro/console/` — quella che un installatore apre davvero. Un cruscotto
+ridisegnato a mano si sarebbe staccato dal vero al primo cambiamento, e nessuno
+se ne sarebbe accorto: un film è l'unico posto del progetto dove un difetto non
+si vede finché non lo guarda qualcuno da fuori.
+
+Due mosse sole, e tornano in tutte le scene che hanno uno schermo dentro:
+
+- **lo schermo intero**, dentro la cornice del computer di `pezzi.js`. Dice una
+  cosa e una sola — «è un cruscotto vero, e sono quindici case» — e non si
+  pretende che si legga;
+- **il ritaglio**, cioè un pezzo di quella stessa fotografia guardato da
+  vicino, che arriva quando lo schermo se ne va. È lì che si legge: una riga
+  dell'elenco, i due metri della macchina, la riga di un aggiornamento col suo
+  tasto.
+
+I due stanno nello stesso posto e si danno il cambio — `.corpo.sovrapposti` nel
+documento — perché messi in fila si rimpicciolirebbero a vicenda. A separarli è
+il tempo, non lo spazio: il primo se ne va (`via`) un attimo prima che arrivi il
+secondo, e chi guarda ha appena visto dove sta il pezzo che gli si sta
+ingrandendo davanti.
+
+> **Chi sta in mezzo non usa `cr`.** Quei due pezzi stanno in mezzo con un
+> `translate(-50%, -50%)`, e `cr` porta uno `scale` che lo **cancella**: lo
+> schermo finiva col suo angolo in alto a sinistra nel centro del palco,
+> sbordava a destra e copriva la didascalia — e il difetto si vede solo
+> guardando un fotogramma, perché la scena «funziona». Si usa `cr-cc`, che è
+> `cresci` con dentro il mezzo; se deve anche andarsene, `cr-cc via`.
+
+Le coordinate dei ritagli sono quelle **della fotografia** — 1440 punti di
+larghezza, la misura dello schermo che l'ha scattata — e non quelle del palco:
+se un giorno la console sposta una scheda, si sposta un numero qui e non si
+rifà il conto di niente.
 
 ### Le copertine: i tre schermi, con la plancia vera
 
@@ -213,6 +314,45 @@ sembra un pezzo tagliato via.
 Le entità sono **inventate** e si vedono solo nelle immagini. `casa-finta.js`
 non è un pezzo del prodotto e non deve diventarlo.
 
+## Il quadro vero, fotografato
+
+```
+node strumenti/video/quadro-vero.mjs
+```
+
+Un minuto, e ne escono sette fotografie: `quadro-elenco.png`,
+`quadro-da-fare.png`, `quadro-controlli.png`, `quadro-dettagli.png`,
+`quadro-dispositivi.png`, `quadro-aggiornamenti.png`, `quadro-abbina.png`. Sono 1440×900 — le
+proporzioni della cornice del computer di `pezzi.js` — e scattate al doppio,
+così un ritaglio si può guardare da vicino senza che si sgrani.
+
+**Come fa a girare senza installatori e senza case.** Lo script è il quadro:
+lo accende lui (`alzaIlQuadro`, porta a caso, archivi in una cartella
+temporanea), iscrive un installatore dalla via della gestione, e poi fa entrare
+quindici case **come entrano quelle vere** — un codice di abbinamento a testa,
+e un `POST /rapporto` con quel codice e la matricola in testa. Il quadro non sa
+che sono finte, e infatti le giudica lui: gli stati, i controlli e le pastiglie
+delle fotografie non sono scritti da nessuna parte qui dentro.
+
+La flotta sta in `flotta-finta.js`: quindici impianti, **uno offline, tre da
+guardare, undici a posto**. È la proporzione di una giornata normale, ed è una
+scelta — se fossero metà rosse la fotografia racconterebbe un installatore che
+ha sbagliato mestiere, e se fossero tutte verdi non si capirebbe a cosa serve
+il quadro. I numeri sono quelli che il rapporto manda davvero
+(`ponte/src/rapporto.js`), con i nomi che hanno là dentro; i nomi delle case
+sono inventati, perché quelli veri sono clienti di qualcuno.
+
+**Una cosa sola si scrive da dietro, ed è il passato:** da quanti giorni una
+casa è installata e quanti rapporti ha mandato ogni giorno. Non c'è altro modo
+— per averlo davvero ci vorrebbero quattordici giorni — e senza, la striscia
+dei quattordici giorni sarebbe vuota in tutte e quindici le case. Si scrive sui
+dati del quadro e non attraverso una sua via, perché una via per riscrivere il
+passato non esiste e non deve esistere: lì si può perché quel quadro l'ha
+acceso questo script, e la cartella è sua.
+
+Le entità, i nomi e gli indirizzi sono **inventati** e si vedono solo nelle
+immagini. `flotta-finta.js` non è un pezzo del prodotto e non deve diventarlo.
+
 ## Quello che si vede è roba di qui dentro
 
 Il marchio è `app/assets/marchio/gda.png`, quello dell'icona dell'app. I
@@ -234,6 +374,13 @@ Nei tre filmati anche la plancia è ricostruita (`pezzi.js`), perché lì si
 muove: una luce che si accende al tocco. Nelle copertine, dove nessuno si
 muove, c'è quella vera.
 
+**E il quadro è vero.** Negli schermi del quarto film non c'è niente di
+disegnato: sono le fotografie di `quadro/console/index.html`, presa così com'è
+e riempita di una flotta inventata. Gli stati delle case, i dieci controlli e
+le pastiglie che si leggono lì dentro non li ha scritti questo film — li ha
+calcolati `quadro/src/controlli.js`, che è lo stesso programma che li calcola
+in casa di chi lo usa.
+
 ## Le date, e dove stanno scritte
 
 I tre film dicono le stesse tre cose, e quando cambiano vanno cambiate in tutti
@@ -249,22 +396,211 @@ alto) e in `come-si-prova-oggi` (la pastiglia); nel film corto, nella scena
 
 ## Il suono
 
-Non c'è, e non per dimenticanza: le parole stanno scritte sul filmato, ed è
-anche il modo in cui lo guardano quasi tutti — un video di installazione si
-guarda col telefono in silenzio, e uno sui social pure.
+**Nei primi tre non c'è**, e non per dimenticanza: le parole stanno scritte sul
+filmato, ed è anche il modo in cui li guardano quasi tutti — un video di
+installazione si guarda col telefono in silenzio, e uno sui social pure.
 
 Nei due corti c'è però una traccia audio **muta**: un negozio che riceve un
 video senza nessuna traccia ogni tanto lo rifiuta, e accorgersene mentre si
 pubblica è la cosa peggiore.
 
-Chi vuole leggere il parlato ha il copione in [`copione.md`](copione.md), scena
-per scena, con i tempi. Registrata una traccia, si attacca senza rifare il
-video:
+Chi vuole leggere il parlato di quei tre ha il copione in
+[`copione.md`](copione.md), scena per scena, con i tempi. Registrata una
+traccia, si attacca senza rifare il video:
 
 ```
 ffmpeg -i gdahome-tiktok.mp4 -i voce.m4a -map 0:v -map 1:a \
        -c:v copy -c:a aac -shortest gdahome-tiktok-con-voce.mp4
 ```
+
+### Il quarto invece parla
+
+Il film del quadro ha una voce che racconta, e le didascalie restano tutte.
+Non è un cambio di gusto: gli altri tre li guarda chi sta installando qualcosa
+o chi scorre un feed, in silenzio; questo spiega un mestiere a chi lo fa, si
+guarda seduti, e una voce che racconta mentre lo schermo mostra arriva dove
+una didascalia non arriva. Le parole restano scritte lo stesso, perché un
+video che si apre in una pagina senza suono non deve diventare mezzo film.
+
+Il copione sta in [`parlato.js`](parlato.js) — scena per scena, in italiano e
+in inglese accanto come in `t("…", "…")` — e la voce la monta
+[`voce.mjs`](voce.mjs).
+
+**La scena aspetta la voce.** La durata scritta in `quadro.js` è il minimo: se
+il parlato di quella scena dura di più, la scena si allunga fino a quando ha
+finito. Per questo l'italiano dura 4:00 e l'inglese 3:46 — la stessa frase nelle
+due lingue non dura uguale, e allungare l'italiano per far tornare i conti
+vorrebbe dire quattordici pause finte. E per lo stesso motivo **le didascalie
+arrivano con la frase che le dice**: i tempi li misura `voce.mjs` e li lascia in
+`parlato-tempi.json`, che è l'unico file di questa cartella scritto da un
+programma. Senza quel file il film si gira lo stesso: muto, con le scene corte
+e le didascalie dove stavano prima.
+
+L'ordine è questo, e conta:
+
+```
+node strumenti/video/voce.mjs                 le tracce, e i tempi delle scene
+node strumenti/video/rendi.mjs --film quadro  il film, con quei tempi
+node strumenti/video/voce.mjs --attacca       la voce dentro il film
+```
+
+Il primo comando, se il film c'è già ed è ancora quello giusto, attacca da sé e
+il terzo non serve. Se invece il copione è cambiato, `voce.mjs` guarda quanto
+dura il film che trova, vede che è stato girato con altre parole e lo dice
+invece di attaccare una voce storta.
+
+**Cambiare voce vuol dire rigirare il film.** Non è una svista: la scena aspetta
+la voce, e una voce che legge più svelta fa scene più corte. Quindi si cambia
+`VOCI` in `voce.mjs` e si rifanno tutti e tre i comandi, non solo il terzo — che
+è una decina di minuti, quasi tutti di ripresa.
+
+**La voce è una macchina, e va detto.** La fa
+[Kokoro](https://github.com/thewh1teagle/kokoro-onnx), un modello che gira qui
+e non chiama nessuno: nessun servizio, nessuna chiave, nessuna riga di testo
+che esce da questa macchina. A farlo parlare è [`dillo.py`](dillo.py), l'unico
+pezzo in Python di questa cartella — la libreria che sa caricare quel modello è
+Python, e riscriverla non è il mestiere di un film. Non è una scelta di
+bellezza: una voce sintetica si sente che è sintetica. È che una registrata
+invecchia peggio — cambi una riga del copione e va rifatta tutta la sessione —
+mentre qui si cambia la riga e si rilancia. Il giorno che qualcuno registra la
+sua, bastano due file: si sostituiscono `voce-quadro.m4a` e
+`voce-quadro-en.m4a` e si rifà `--attacca`, senza toccare una riga di
+programma.
+
+### Una voce vera, quando c'è
+
+Una voce sintetica resta una voce sintetica, per bravo che sia il modello: il
+tetto è quello, e non lo alza nessuna misura. Perciò la strada per metterci una
+voce **umana** è aperta, e non chiede di toccare una riga di programma.
+
+```
+node strumenti/video/voce.mjs --copione    l'elenco delle frasi, col nome del file
+```
+
+Si registrano — mono, 16 bit — e si mettono in `strumenti/video/voce/detti/`,
+una per file: `it-0-0.wav` è la prima frase della prima scena, `it-0-1.wav` la
+seconda. Chi trova un file lì dentro **non lo sintetizza: lo prende**. Quindi si
+può fare tutto, o una frase sola — quella che il modello dice male — e il resto
+resta com'è.
+
+Il montaggio non cambia: le scene si allungano su quanto dura la voce vera, le
+didascalie arrivano con la sua frase, e i tempi finiscono in
+`parlato-tempi.json` come sempre. Si rifà il giro dei tre comandi e il film è
+quello di prima con dentro una persona.
+
+E se la voce arriva già montata — una traccia sola per tutto il film — non
+serve nemmeno questo: si sostituiscono `voce-quadro.m4a` e `voce-quadro-en.m4a`
+e si rifà `--attacca`.
+
+### Come si sceglie una voce senza poterla ascoltare
+
+Prima c'era piper, con la sua unica voce italiana: la più piccola, sedici
+kilohertz. **Si sentiva.** Ma «si sentiva» non è una misura, e chi ha montato
+questa voce non poteva ascoltarla — quindi è servito un modo di giudicarla che
+non fosse l'orecchio.
+
+Il modo è questo: si sintetizza una frase del copione, la si fa **riascoltare a
+un programma che trascrive** (Whisper, che gira qui come il resto), e si contano
+le parole che tornano. Non dice niente sul timbro — quello lo sceglie chi ha
+orecchie — ma dice tutto su quanto si capisce, che è la metà che conta di più in
+un video che spiega.
+
+Su sei frasi di questo copione, misurate nello stesso modo:
+
+| voce | parole che tornano |
+|---|---|
+| piper `it-riccardo_fasol-x-low` | 64,2% |
+| Kokoro `im_nicola` | 82,8% |
+| Kokoro `if_sara` | **83,8%** |
+
+E gli errori di piper dicevano cosa stava succedendo: «il quadro» diventava «il
+quarro», «un installatore» diventava «un install a torre», «Home Assistant
+resta indietro» diventava «un assisto entreste indietro». La stessa prova ha
+scelto anche **quanto andare piano** — 0,92 fa capire il 4% di parole in più
+dell'andatura normale, e 0,85 torna a peggiorare — e le riscritture di
+[`COME_SI_DICE`](parlato.js): «offlain» è passata, «zigbì» e «bàckup» sono state
+scartate perché si capivano **meno** di come erano scritte.
+
+**Il nome del prodotto invece non si misura: si chiede.** «gdahome» si scrive
+attaccato, e la voce lo leggeva come una parola — «gdaòme» in italiano,
+«gidahoum» in inglese. Si dice lettera per lettera, *gi di a home*, e nessuna
+prova poteva saperlo: lo sa chi il prodotto l'ha chiamato così. Adesso sta
+scritto come si dice, e in inglese con i nomi inglesi delle lettere — che per
+G e D suonano uguale, per la A no.
+
+Per l'inglese, fra quattro voci provate allo stesso modo, `bf_emma` ha fatto
+92,9% contro 90,9, 90,3 e 90,3.
+
+E la prova si rifà su **tutto** il copione, non su sei frasi: quarantuno frasi
+per lingua, che è la misura con cui si è chiuso il lavoro — **84,1%**
+l'italiano, **94,4%** l'inglese. Quello che resta fuori sono quasi tutte
+elisioni che un orecchio ricuce da sé e chi trascrive no: «stanze né persone»
+diventa «stanzene persone», «add-on» diventa «addon».
+
+### Perché sembrava un cartone animato
+
+La prova qui sopra dice quanto si **capisce**, e non dice niente su come suona.
+Sono due cose diverse, e la prima versione di questo film le ha tenute insieme
+per sbaglio: la voce si capiva benissimo — 84,1% — e sembrava lo stesso un
+giocattolo.
+
+Anche «sembra un giocattolo» però si misura, se si sa cosa guardare. Tre numeri,
+presi sulla traccia finita:
+
+| | prima | adesso | dove sta una voce che racconta |
+|---|---|---|---|
+| **altezza** (la fondamentale) | 224 Hz | **202 Hz** | 180–200 |
+| **presenza** (2–5 kHz sul corpo della voce) | −12,2 dB | **−8,4 dB** | −9 / −7 |
+| **livello** | −17,9 LUFS | **−15,9 LUFS** | −16 |
+
+L'altezza è quella che si sentiva di più. Kokoro tira fuori `if_sara` a 224 Hz:
+non è una voce sbagliata, è una voce **piccola**. Una narrazione italiana — uno
+che spiega un mestiere, seduto — sta più in basso. `rubberband` la porta a 202
+con le formanti che scendono insieme, cioè facendola sembrare una persona più
+grande, e non la stessa persona che parla più in basso. Le parole non ne
+soffrono, ed è stato misurato con la stessa prova di Whisper: 84,7% com'esce,
+83,9% abbassata — dentro il rumore della misura. L'inglese `bf_emma` usciva già
+a 189 Hz, e non si tocca.
+
+Gli altri due numeri sono montaggio, e a un parlato si fanno sempre: via il
+rimbombo sotto gli 80 Hz, −3 dB a 300 (la «scatola» che il modello mette sotto
+le vocali), +3 dB a 3200 (le consonanti, cioè le parole che si capiscono), un
+de-esser per le esse che dopo quel +3 pungono, un compressore perché un parlato
+ha alti e bassi e un video si guarda a un volume solo. Il livello arriva a −16
+LUFS **misurando prima e alzando poi di un tanto fisso**: `loudnorm` in un
+passaggio solo corregge strada facendo, e su quattro minuti si sente respirare
+perché alza nelle pause.
+
+**Dove sta il tranello.** Abbassare la voce accorcia dello 0,3%, e su quattro
+minuti sono otto decimi di secondo: una voce che scivola via dalle didascalie,
+piano, e in fondo al film di mezzo secondo. Per questo l'altezza si sposta **un
+pezzo per volta, prima che i tempi siano contati** — così ogni pezzo viene poi
+misurato com'è venuto davvero — mentre la ripulitura gira sulla traccia già
+montata, dove nessuno di quei filtri tocca la durata. Da fuori sono due liste di
+filtri di ffmpeg che si somigliano, e la differenza la tiene ferma una prova
+([`la-voce-non-scivola`](../test/la-voce-non-scivola.test.js)): nella ripulitura
+ammette solo i filtri che il tempo lo lasciano stare, e chi ne aggiunge uno deve
+fermarsi a dire di che razza è.
+
+Spostare l'altezza vuol dire **rigirare il film**, come cambiare voce: le scene
+aspettano la voce, e una voce spostata dura un altro tanto. L'inglese no — lì
+non si è spostato niente, e la traccia nuova è entrata nel film di prima senza
+ritoccare un fotogramma.
+
+Il modello e le voci **non stanno nella repository** — trecentocinquanta
+megabyte di roba di terzi — e si scaricano una volta sola in
+`strumenti/video/voce/`, che non si versiona:
+
+```
+mkdir -p strumenti/video/voce && cd strumenti/video/voce
+curl -sSL -O https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx
+curl -sSL -O https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
+pip install kokoro-onnx soundfile
+```
+
+Le **tracce** invece ci stanno: così chi rifà il film non ha bisogno né del
+modello né di Python — `--attacca` le riattacca e basta — e chi cambia una
+parola del copione se ne accorge subito, perché il file cambia.
 
 ## Cambiare le parole
 

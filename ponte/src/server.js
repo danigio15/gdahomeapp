@@ -710,7 +710,7 @@ async function laPlanciaServita({
     new URL(richiesta.url || "/", "http://ponte").searchParams.get("lingua"),
   );
   const nome = paginaDellaLingua(plancia.varianti(), lingua);
-  const letto = plancia.leggi(`${plancia.base}/legacy/${nome}`);
+  const letto = plancia.leggi(`${plancia.base}/legacy/${nome}`, quale);
   if (letto.stato !== 200) {
     male(risposta, 500, "la pagina della plancia non si legge");
     return;
@@ -724,6 +724,8 @@ async function laPlanciaServita({
     quale,
     lingua,
     doveIlWebSocket: `${davanti}/plancia/api/websocket`,
+    /* Le vesti scelte per questa plancia da chi installa, se ce ne sono. */
+    vesti: plancia.vestiDi(quale),
     /* Se questa plancia ha una configurazione. La pagina non lo puo' sapere —
      * la configurazione arriva dopo, sul filo — e senza saperlo l'unico modo di
      * decidere era un orologio. Qui la risposta ce l'abbiamo in mano. */

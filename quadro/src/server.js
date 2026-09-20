@@ -9,6 +9,9 @@
  *
  *   POST   /rapporto                     una casa deposita i suoi numeri, e si
  *                                        porta via quello che le e' stato chiesto
+ *   POST   /plancia                      una casa manda com'e' fatta una sua
+ *                                        plancia, se il quadro gliel'ha chiesto
+ *   GET    /plancia/<profilo>?id=…       e ritira quella che le e' stata scritta
  *   GET    /attesa                       la casa resta in linea, e sente subito
  *   GET    /segno/<segno>                l'icona di un aggiornamento, senza chiave
  *   GET    /marchio/<chi>                il logo di un installatore, senza chiave
@@ -24,10 +27,14 @@
  *   POST   /console/inviti               fanne uno, se il limite lo consente
  *   DELETE /console/inviti/<codice>      annulla il suo
  *   PUT    /console/casa/<casa_…>        il nome, se la casa e' sua
+ *   PUT    /console/casa/<casa_…>/plancia/<profilo>   i due nomi di una sua plancia
+ *   POST   /console/casa/<casa_…>/plance     una plancia in piu', che la casa crea
  *   DELETE /console/casa/<casa_…>        non seguirla piu', se e' sua
  *   POST   /console/casa/<casa_…>/installa   chiedile di installare una cosa
  *   POST   /console/casa/<casa_…>/riavvia    chiedile di riavviare Home Assistant
  *   DELETE /console/casa/<casa_…>/installa   ci ripensa, se non e' ancora passata
+ *   GET    /console/casa/<casa_…>/plancia/<profilo>/configurazione   com'e' fatta quella plancia
+ *   PUT    /console/casa/<casa_…>/plancia/<profilo>/configurazione   scrivila cosi', al prossimo rapporto
  *
  *   GET    /gestore/                     la pagina di chi tiene il quadro
  *   GET    /gestore/installatori         chi c'e', quanti impianti ha ognuno e
@@ -70,12 +77,13 @@
 import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 
-import { TUTTE } from "./case.js";
+import { TUTTE, PLANCE_AL_MASSIMO } from "./case.js";
 import { CASA_VALIDA, TroppiInviti } from "./chiavi.js";
 import { DISCO_FINITO, DISCO_PIENO, TROPPO_CALDO } from "./controlli.js";
 import { Fattorino, indirizzoBuono } from "./fattorino.js";
 import { comeVaLAggiornamento, laVersioneCheGira } from "./mi-aggiorno.js";
 import { CHI_VALIDO } from "./installatori.js";
+import { haFlussi, PlanceDelleCase, PLANCIA_MASSIMA } from "./plance.js";
 import { stessoSegreto } from "./segreti.js";
 import { ilTipoDi, Marchi, QUANTO_GROSSO } from "./marchi.js";
 import { SEGNO_VALIDO, Segni } from "./segni.js";
@@ -200,6 +208,9 @@ export function costruisciIlServer({
   /* Le icone vere degli aggiornamenti e le loro note intere, come le manda la
    * casa. Il perche' sta in cima a `segni.js`. */
   const segni = new Segni({ cartella });
+  /* Le plance delle case che si lasciano configurare da lontano: gli scatti
+   * che arrivano da casa e le richieste che aspettano di essere ritirate. */
+  const scatti = new PlanceDelleCase({ cartella });
 
   /* ─── Il filo tenuto aperto ───────────────────────────────────────────
    *
@@ -358,6 +369,79 @@ export function costruisciIlServer({
       return;
     }
 
+    /* Com'e' fatta una plancia, mandata da casa.
+     *
+     * Solo perche' il quadro l'ha chiesto nella risposta a un rapporto, e solo
+     * da una casa che nel suo ultimo rapporto ha detto di permetterlo: una che
+     * non lo permette qui non deposita niente, chieda pure chi vuole. Stessa
+     * chiave e stessa matricola del rapporto, un tetto suo — una plancia
+     * pesa piu' di un rapporto — e mai niente che sia un'immagine: quello che
+     * arriva e' gia' passato dal setaccio di casa, e qui non c'e' nessuna via
+     * che apra un flusso. */
+    if (via === "/plancia" && metodo === "POST") {
+      const casa = String(richiesta.headers["x-casa"] || "");
+      if (!CASA_VALIDA.test(casa)) {
+        male(risposta, 400, "questa non e' una matricola");
+        return;
+      }
+      if (!chiavi.riconosci(casa, ilSegno(richiesta))) {
+        male(risposta, 403, "questa chiave non apre niente");
+        return;
+      }
+      if (case_.quella(casa)?.carta?.configurazione !== true) {
+        male(risposta, 409, "questa casa non lascia configurare la plancia da lontano");
+        return;
+      }
+      let scatto;
+      try {
+        scatto = await ilCorpo(richiesta, PLANCIA_MASSIMA);
+      } catch (errore) {
+        male(risposta, 413, String(errore?.message || errore));
+        return;
+      }
+      const preso = scatti.prendi(casa, {
+        profilo: scatto?.profilo,
+        titolo: scatto?.titolo,
+        revisione: scatto?.revisione,
+        valori: scatto?.valori,
+      });
+      if (!preso) {
+        male(risposta, 400, "uno scatto e' un profilo, un titolo, una revisione e i valori");
+        return;
+      }
+      registro.info(
+        `da ${casa} e' arrivata la plancia «${preso.profilo}», revisione ${preso.revisione}`,
+      );
+      json(risposta, { presa: true });
+      return;
+    }
+    /* La configurazione che l'installatore ha scritto, ritirata da casa.
+     *
+     * E' il pezzo grosso di un lavoro «configura», che nella risposta al
+     * rapporto non ci starebbe: la casa ha trovato li' il lavoro, con il suo
+     * `id`, e viene a prendersi il resto con la sua chiave. Si consegna una
+     * volta, e per quell'`id` soltanto. */
+    const ritiro = /^\/plancia\/([a-z0-9][a-z0-9-]{0,63})$/.exec(via);
+    if (ritiro && metodo === "GET") {
+      const casa = String(richiesta.headers["x-casa"] || "");
+      if (!CASA_VALIDA.test(casa)) {
+        male(risposta, 400, "questa non e' una matricola");
+        return;
+      }
+      if (!chiavi.riconosci(casa, ilSegno(richiesta))) {
+        male(risposta, 403, "questa chiave non apre niente");
+        return;
+      }
+      const id = new URL(richiesta.url, "http://quadro").searchParams.get("id");
+      const chiesta = scatti.daConsegnare(casa, ritiro[1], id);
+      if (!chiesta) {
+        male(risposta, 404, "per questa plancia non c'e' niente da ritirare");
+        return;
+      }
+      registro.info(`${casa} ha ritirato la configurazione della plancia «${ritiro[1]}»`);
+      json(risposta, chiesta);
+      return;
+    }
     if (via === "/rapporto" && metodo === "POST") {
       const casa = String(richiesta.headers["x-casa"] || "");
       if (!CASA_VALIDA.test(casa)) {
@@ -429,12 +513,23 @@ export function costruisciIlServer({
       const elenco = carta?.aggiornamenti?.elenco;
       segni.metti(elenco);
       const manca = segni.quelliCheMancano(elenco);
+      /* E le vesti delle sue plance: i nomi che chi la segue ha scelto per
+       * ognuna, se ne ha scelti. Assenti vuol dire «nessuno», e la casa lo
+       * legge cosi': quello che era vestito si sveste. */
+      const vesti = case_.leVestiDi(casa);
+      /* E le plance di cui manca lo scatto, o ne ha uno di un'altra revisione:
+       * la casa le manda al giro dopo, su `/plancia`, e solo quelle. Solo se
+       * lo permette — e' lei a dirlo, nel rapporto. */
+      const vuoleLaPlancia =
+        carta?.configurazione === true ? scatti.quali(casa, carta?.plance?.elenco) : [];
       json(risposta, {
         presa: true,
         di: suo?.nome || "",
         ...(suo?.marchio ? { marchio: suo.chi } : {}),
         ...(fai ? { fai } : {}),
         ...(manca.length ? { manca } : {}),
+        ...(vesti ? { vesti } : {}),
+        ...(vuoleLaPlancia.length ? { vuoleLaPlancia } : {}),
       });
       return;
     }
@@ -829,10 +924,160 @@ export function costruisciIlServer({
       return;
     }
 
+    /* Le vesti di una plancia: i due nomi che l'installatore sceglie per
+     * ognuna delle plance di una sua casa — il titolo per il menu laterale e
+     * la home, la parola del velo d'avvio. Vedi `Case.vesti`. */
+    const veste = /^\/casa\/(casa_[0-9a-f]{32})\/plancia\/([a-z0-9][a-z0-9-]{0,40})$/.exec(via);
+    if (veste && metodo === "PUT") {
+      let detto = {};
+      try {
+        detto = await ilCorpo(richiesta, 4096);
+      } catch (_errore) {
+        detto = {};
+      }
+      const esito = case_.vesti(
+        veste[1],
+        veste[2],
+        { titolo: detto?.titolo, velo: detto?.velo },
+        chi,
+      );
+      if (esito.errore === "non_sua") {
+        male(risposta, 404, "questa casa non la segui tu");
+        return;
+      }
+      if (esito.errore === "senza_elenco") {
+        male(
+          risposta,
+          409,
+          "questo impianto non manda ancora l'elenco delle plance: aggiorna l'add-on gdahome di casa",
+        );
+        return;
+      }
+      if (esito.errore === "non_ce") {
+        male(risposta, 404, "questo impianto non ha una plancia con quel profilo");
+        return;
+      }
+      if (esito.errore === "senza_nome") {
+        male(risposta, 400, "una plancia che la casa deve ancora creare ha bisogno del suo nome");
+        return;
+      }
+      registro.info(`${chi} ha vestito la plancia ${veste[2]} di ${veste[1]}`);
+      json(risposta, { case: case_.elenco(chi) });
+      return;
+    }
+
+    /* Una plancia in piu', voluta dal cruscotto: qui nasce la scelta, la
+     * casa la crea al rapporto dopo. Vedi `Case.nuovaPlancia`. */
+    const plance = /^\/casa\/(casa_[0-9a-f]{32})\/plance$/.exec(via);
+    if (plance && metodo === "POST") {
+      let detto = {};
+      try {
+        detto = await ilCorpo(richiesta, 4096);
+      } catch (_errore) {
+        detto = {};
+      }
+      const esito = case_.nuovaPlancia(
+        plance[1],
+        { titolo: detto?.titolo, velo: detto?.velo },
+        chi,
+      );
+      if (esito.errore === "non_sua") {
+        male(risposta, 404, "questa casa non la segui tu");
+        return;
+      }
+      if (esito.errore === "senza_elenco") {
+        male(
+          risposta,
+          409,
+          "questo impianto non manda ancora l'elenco delle plance: aggiorna l'add-on gdahome di casa",
+        );
+        return;
+      }
+      if (esito.errore === "senza_nome") {
+        male(risposta, 400, "serve il nome della plancia");
+        return;
+      }
+      if (esito.errore === "troppe") {
+        male(
+          risposta,
+          409,
+          `di plance se ne tengono ${PLANCE_AL_MASSIMO} per impianto, e questo e' al limite`,
+        );
+        return;
+      }
+      registro.info(`${chi} ha aggiunto la plancia ${esito.profilo} a ${plance[1]}`);
+      json(risposta, { profilo: esito.profilo, case: case_.elenco(chi) });
+      return;
+    }
+
     /* I due lavori che si chiedono a una casa: installare una cosa, o
      * riavviare Home Assistant. Stessa strada — si mette in attesa, la casa se
      * lo porta via al rapporto dopo — e stessa porta per annullare. */
-    const lavoro = /^\/casa\/(casa_[0-9a-f]{32})\/(installa|riavvia)$/.exec(via);
+    /* Com'e' fatta una plancia di una casa che lo permette, e scriverla.
+     *
+     * Leggere da' lo scatto arrivato da casa, con la richiesta in attesa se
+     * c'e'. Scrivere mette in coda un lavoro «configura» — stessa strada di
+     * «installa»: la casa lo trova nel prossimo rapporto — e tiene da parte i
+     * valori perche' la casa passi a ritirarli. I no si dicono uguale, come
+     * per gli altri lavori: casa non tua, casa che non lo permette, un lavoro
+     * gia' in coda. */
+    const plancia =
+      /^\/casa\/(casa_[0-9a-f]{32})\/plancia\/([a-z0-9][a-z0-9-]{0,40})\/configurazione$/.exec(via);
+    if (plancia && (metodo === "GET" || metodo === "PUT")) {
+      const sua = case_.quella(plancia[1]);
+      if (!sua || sua.di !== chi) {
+        male(risposta, 404, "qui non c'e' niente");
+        return;
+      }
+      if (sua.carta?.configurazione !== true) {
+        male(risposta, 409, "questo impianto non lascia configurare la plancia da lontano");
+        return;
+      }
+      if (metodo === "GET") {
+        json(risposta, { scatto: scatti.scatto(plancia[1], plancia[2]) });
+        return;
+      }
+      let detto;
+      try {
+        detto = await ilCorpo(richiesta, PLANCIA_MASSIMA);
+      } catch (errore) {
+        male(risposta, 413, String(errore?.message || errore));
+        return;
+      }
+      const valori = detto?.valori;
+      if (!valori || typeof valori !== "object" || Array.isArray(valori)) {
+        male(risposta, 400, "una configurazione e' un oggetto");
+        return;
+      }
+      /* La regola che tiene in piedi il permesso, detta anche qui: da lontano
+       * si sceglie quale telecamera va dove, non dove sta il suo flusso. La
+       * casa lo ricontrolla per conto suo. */
+      if (haFlussi(valori)) {
+        male(
+          risposta,
+          400,
+          "dentro c'e' un indirizzo di flusso o un gettone: da lontano non si toccano",
+        );
+        return;
+      }
+      const revisioneAttesa = Number.isFinite(Number(detto?.revisioneAttesa))
+        ? Math.max(0, Math.floor(Number(detto.revisioneAttesa)))
+        : null;
+      const messo = case_.chiediUnLavoro(
+        plancia[1],
+        { cosa: "configura", nome: plancia[2], da: String(revisioneAttesa ?? ""), a: "" },
+        chi,
+      );
+      if (!messo) {
+        male(risposta, 409, "questo lavoro non si puo' chiedere adesso");
+        return;
+      }
+      scatti.chiedi(plancia[1], plancia[2], { id: messo.id, valori, revisioneAttesa });
+      registro.info(`chiesto a ${plancia[1]}: configura la plancia «${plancia[2]}»`);
+      json(risposta, { chiesto: messo, case: case_.elenco(chi) });
+      return;
+    }
+    const lavoro = /^\/casa\/(casa_[0-9a-f]{32})\/(installa|riavvia|configura)$/.exec(via);
     if (lavoro && metodo === "POST") {
       let detto = {};
       try {
@@ -860,10 +1105,11 @@ export function costruisciIlServer({
     }
 
     if (lavoro && metodo === "DELETE") {
-      json(risposta, {
-        annullato: case_.annullaIlLavoro(lavoro[1], chi),
-        case: case_.elenco(chi),
-      });
+      const inCoda = case_.quella(lavoro[1])?.lavoro;
+      const annullato = case_.annullaIlLavoro(lavoro[1], chi);
+      if (annullato && inCoda?.cosa === "configura")
+        scatti.dimenticaLaChiesta(lavoro[1], inCoda.nome);
+      json(risposta, { annullato, case: case_.elenco(chi) });
       return;
     }
 
@@ -874,6 +1120,7 @@ export function costruisciIlServer({
       const mia = chiavi.diChiE(casa[1]) === chi;
       const cEra = case_.togli(casa[1], chi);
       if (mia) chiavi.stacca(casa[1]);
+      if (cEra) scatti.butta(casa[1]);
       if (cEra) registro.info(`questa casa non si segue piu': ${casa[1]}`);
       json(risposta, { tolta: cEra, case: case_.elenco(chi) });
       return;
@@ -949,7 +1196,20 @@ export function costruisciIlServer({
         male(risposta, 404, "questo installatore non c'e'");
         return;
       }
-      if (detto?.nome !== undefined) installatori.rinomina(uno[1], detto.nome);
+      if (detto?.nome !== undefined) {
+        /* Vuoto si rifiuta: un installatore senza nome e' una riga che non
+         * dice di chi sono gli impianti, e il nome finisce anche in cima alle
+         * plance delle sue case. La soglia invece si cambia da sola, e allora
+         * il nome non si tocca. */
+        const nome = String(detto.nome ?? "")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (!nome) {
+          male(risposta, 400, "serve un nome");
+          return;
+        }
+        installatori.rinomina(uno[1], nome);
+      }
       if (detto?.soglia !== undefined) installatori.limite(uno[1], detto.soglia);
       json(risposta, ilQuadro());
       return;

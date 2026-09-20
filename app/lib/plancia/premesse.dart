@@ -496,7 +496,29 @@ class Premesse {
   /// [_tenutoPremuto] accende il suo kiosk. Quel tocco si ferma comunque —
   /// il menu della plancia non deve aprirsi nemmeno li' — ma il menu
   /// dell'app non si chiama: chi tiene premuto non ha chiesto il menu.
+  ///
+  /// **E sulla Configurazione un tasto nostro.** Li' la testata della plancia
+  /// non c'e': in cima sta il riquadro col logo e «CONFIGURAZIONE», senza
+  /// nessun ☰. Con la barra in fondo nascosta e il «← HOME» tolto (vedi
+  /// [laConfigFuoriDallaPlancia]) chi apriva la Config dal menu non aveva
+  /// piu' un tasto per riaprirlo: si restava li'. Adesso nel riquadro, a
+  /// sinistra del logo, c'e' lo stesso ☰ della home, e fa la stessa cosa.
+  /// Il riquadro sta scritto nella pagina, non lo disegna il runtime: il
+  /// tasto si mette una volta, appena la pagina c'e'.
   static const String iTreTrattiniApronoIlMenuDellApp =
+      '<style id="gdahome-menu-in-config">'
+      '#page-config .gdahome-menu{flex:0 0 auto;width:42px;height:42px;'
+      'border-radius:50%;border:1px solid var(--card-border,#e2e8f0);'
+      'background:var(--card-bg,#fff);display:flex;flex-direction:column;'
+      'align-items:center;justify-content:center;gap:5px;padding:0;margin:0;'
+      'cursor:pointer;box-shadow:0 4px 12px rgba(15,23,42,.08)}'
+      '#page-config .gdahome-menu span{display:block;width:18px;height:2px;'
+      'border-radius:2px;background:var(--text,#0f172a)}'
+      /* Sui telefoni stretti il riquadro si stringe un po', se no col tasto
+         in piu' «CONFIGURAZIONE» non ci sta piu' su una riga. */
+      '@media (max-width:430px){#page-config .cfg-hero{gap:12px;padding:18px 16px}'
+      '#page-config .cfg-hero-title{font-size:20px}}'
+      '</style>'
       '<script>(function(){'
       /* Le due strade per dirlo all'app sono le stesse della pagina che
          cambia: sul telefono un canale del WebView, nel browser il riquadro
@@ -526,6 +548,24 @@ class Premesse {
       'if(premutoIl&&Date.now()-premutoIl>=$_tenutoPremuto){premutoIl=0;return;}'
       'ilMenu();'
       '},true);'
+      /* Il tasto nel riquadro in cima alla Configurazione: uno solo, a
+         sinistra del logo, e chiama il menu dell'app come quello della home. */
+      'var ilTastoInConfig=function(){'
+      'var testata=document.querySelector("#page-config .cfg-hero");'
+      'if(!testata||testata.querySelector(".gdahome-menu"))return;'
+      'var tasto=document.createElement("button");'
+      'tasto.type="button";'
+      'tasto.className="gdahome-menu";'
+      'tasto.setAttribute("aria-label","Apri il menu");'
+      'tasto.innerHTML="<span></span><span></span><span></span>";'
+      'tasto.addEventListener("click",function(evento){'
+      'evento.preventDefault();evento.stopPropagation();ilMenu();'
+      '});'
+      'testata.insertBefore(tasto,testata.firstChild);'
+      '};'
+      'if(document.readyState==="loading")'
+      'document.addEventListener("DOMContentLoaded",ilTastoInConfig);'
+      'else ilTastoInConfig();'
       '})();</script>';
 
   /// Quanto vuol dire «tenuto premuto»: e' il tempo della plancia, non uno
@@ -699,6 +739,35 @@ class Premesse {
    * voleva dire cancellare la scelta di chi l'aveva fatta dalle sue tessere.
    * Vedi `laConfigFuoriDallaPlancia`. */
 
+  /// Le due globali delle vesti, o niente.
+  ///
+  /// Via `<` e `>`: finiscono dentro uno `<script>`, e un `</script>` dentro
+  /// una stringa chiuderebbe lo script. Il ponte le ripulisce gia'; fra lui e
+  /// qui c'e' un filo, e un controllo da una parte sola non e' un controllo.
+  static String leVesti(PannelloDellaPlancia? quale) {
+    if (quale == null) return '';
+    String pulito(String cosa) => cosa.replaceAll(RegExp('[<>]'), '');
+    final velo = pulito(quale.velo);
+    final testata = pulito(quale.testata);
+    return '${velo.isEmpty ? '' : 'window.__GDAHOME_VELO__=${jsonEncode(velo)};'}'
+        '${testata.isEmpty ? '' : 'window.__GDAHOME_TESTATA__=${jsonEncode(inDuePezzi(testata))};'}';
+  }
+
+  /// La scritta della testata in due pezzi, come la disegna la plancia: il
+  /// primo in chiaro e il secondo in azzurro. Un nome di due o piu' parole si
+  /// spezza al primo spazio; uno di una parola sola va tutto nel primo, e il
+  /// secondo resta vuoto. «gdahome» e' l'eccezione, ed e' «gda» e «home»:
+  /// e' il nostro marchio, disegnato cosi'. La stessa regola di `inDuePezzi`
+  /// in `marchio.js`, e deve restare la stessa: la casa manda gli stessi
+  /// nomi all'app e a Home Assistant.
+  static List<String> inDuePezzi(String nome) {
+    final pulito = nome.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (pulito == 'gdahome') return ['gda', 'home'];
+    final spazio = pulito.indexOf(' ');
+    if (spazio <= 0) return [pulito, ''];
+    return [pulito.substring(0, spazio), pulito.substring(spazio + 1)];
+  }
+
   /// La pagina, con in testa quello che le serve sapere.
   ///
   /// [ilWebSocket] e' un pezzo di programma che vale un costruttore di
@@ -717,6 +786,13 @@ class Premesse {
         'window.__DASHBOARDMODERN_PRIMARY__=${quale?.primario ?? true};'
         'window.__DASHBOARDMODERN_LOCALE__=${jsonEncode(lingua)};'
         'window.__GDAHOME__=true;'
+        /* Le vesti di questa plancia, se chi ha montato l'impianto le ha
+           scelte: la parola del velo e la scritta della testata, in due
+           pezzi. La pagina le legge al momento di disegnare — il velo con lo
+           script che il ponte gli attacca, la testata dentro il runtime — e
+           senza non si scrive niente. E' la stessa riga che scrive il ponte
+           quando serve lui la pagina (`premesse.js`, `leVesti`). */
+        '${leVesti(quale)}'
         /* Se questa plancia ha una configurazione. Assente vuol dire «non lo
            so», e chi legge la pagina tiene l'orologio di prima. */
         '${switch (quale?.configurata) {

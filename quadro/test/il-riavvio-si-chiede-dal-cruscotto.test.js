@@ -38,7 +38,9 @@ test("il tasto c'e' solo con la manutenzione aperta, e mai mentre sta succedendo
 });
 
 test("un riavvio finito si dice «fatto», non «installato»", () => {
-  assert.match(PAGINA, /l\.riavvio \? "fatto" : "installato"/);
+  /* E una configurazione della plancia si dice «applicata»: sono tre verbi, e
+   * ognuno finisce con la sua parola. */
+  assert.match(PAGINA, /l\.riavvio \? "fatto" : l\.configurazione \? "applicata" : "installato"/);
 });
 
 test("un riavvio appena chiesto si annuncia col suo nome, non con un salto di versione vuoto", () => {
