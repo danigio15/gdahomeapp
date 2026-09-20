@@ -45,7 +45,7 @@ configuration:
           not read your sensors, they do not touch your configuration. No door is
           opened towards your home: it is this home that knocks, and in the answer
           it finds what to do. What they asked for and how it went you read in the
-          status report, in the "Il quadro" tab.
+          status report, in the "Il cruscotto" tab.
       quadro_marchio:
         name: Let the dashboard carry the mark of whoever installed your home
         description: >-

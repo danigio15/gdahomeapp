@@ -25,7 +25,7 @@ test("il tasto c'e', chiede conferma in due tempi e chiama la sua porta", () => 
   const pezzo = gancio.slice(0, gancio.indexOf('querySelectorAll("[data-lascia-stare]")'));
   assert.match(
     pezzo,
-    /Sicuro\? Premi di nuovo/,
+    /Premi ancora per confermare/,
     "senza il secondo tempo un tocco storto riavvia una casa",
   );
   assert.match(pezzo, /\/casa\/\$\{tasto\.dataset\.riavvia\}\/riavvia`, \{ method: "POST" \}/);

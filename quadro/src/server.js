@@ -610,7 +610,7 @@ export function costruisciIlServer({
         male(
           risposta,
           401,
-          gestoreAperto ? "la chiave non va bene" : "questo quadro non ha gestore",
+          gestoreAperto ? "la chiave non va bene" : "questo cruscotto non ha gestore",
         );
         return;
       }

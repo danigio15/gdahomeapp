@@ -2312,6 +2312,10 @@
         .barra button svg {
           display: none;
         }
+        /* «da verificare» non ci sta su una riga: va a capo, non si tronca. */
+        .fila span {
+          white-space: normal;
+        }
         .tre-anelli {
           gap: 6px;
         }
@@ -2730,9 +2734,9 @@
             type="button"
             class="vivo"
             id="vivo"
-            title="Si ricarica da sola. Premi per farlo adesso."
+            title="Si aggiorna da sola. Premi per aggiornare adesso."
           >
-            <i></i><span id="vivo-dice">In ascolto</span>
+            <i></i><span id="vivo-dice">Aggiorna</span>
           </button>
         </div>
       </header>
@@ -2743,7 +2747,7 @@
 
       <footer>
         Da qui si vedono gli impianti di ogni installatore come li vede lui: i numeri che ogni
-        impianto manda da sé, e i nomi solo dei dispositivi che non rispondono. Non si entra in
+        impianto invia da sé, e i nomi solo dei dispositivi che non rispondono. Non si entra in
         nessuna casa, e da qui non si tocca niente: si guarda.
       </footer>
     </div>
@@ -3137,7 +3141,7 @@
 
       /* Quello che sente chi legge lo schermo con le orecchie: il bollino e'
        * un disegno, e da solo non dice niente. */
-      const A_PAROLE = { bene: "a posto", male: "non va", ignoto: "non si sa" };
+      const A_PAROLE = { bene: "in ordine", male: "anomalia", ignoto: "non rilevato" };
 
       /* Il segno di un aggiornamento: il logo di chi lo porta, o l'iniziale.
        *
@@ -3266,17 +3270,17 @@
           .map((uno) => {
             if (uno === "V") return '<i class="vuota" title="offline tutto il giorno"></i>';
             if (uno === "M") return '<i class="mezza" title="offline per qualche ora"></i>';
-            if (uno === " ") return '<i class="prima" title="non era ancora accesa"></i>';
-            return '<i title="tutte i rapporti arrivati"></i>';
+            if (uno === " ") return '<i class="prima" title="non ancora abbinato"></i>';
+            return '<i title="tutti i rapporti ricevuti"></i>';
           })
           .join("");
         const vuoti = [...giorni].filter((uno) => uno === "V" || uno === "M").length;
         const accesi = [...giorni].filter((uno) => uno !== " ").length;
         const dice =
           accesi < giorni.length
-            ? `${plurale(accesi, "giorno", "giorni")} da quando è accesa`
+            ? `${plurale(accesi, "giorno", "giorni")} dall'abbinamento`
             : vuoti === 0
-              ? "14 giorni, sempre viva"
+              ? "14 giorni, sempre online"
               : `14 giorni · offline ${plurale(vuoti, "volta", "volte")}`;
         return `<div class="giorni${grande ? " grande" : ""}" role="img" aria-label="${testo(dice)}">${celle}</div><div class="giorniDice">${testo(dice)}</div>`;
       }
@@ -3328,7 +3332,7 @@
             <div class="anellino">
               <div class="cerchio">${anellino(0, "bene", false)}<b class="attenta">—</b></div>
               <span>${testo(che)}</span>
-              <small class="nonLoDice">non lo dice</small>
+              <small class="nonLoDice">non comunicato</small>
             </div>`;
         return `
           <div class="anellino">
@@ -3361,7 +3365,8 @@
         /* Un rapporto senza macchina non e' una casa senza macchina: e' una
          * casa il cui Supervisor non ha risposto. Si dice, e non si disegnano
          * cinque metri a zero. */
-        if (!m) return riquadroMuto("La macchina", "Il Supervisor di questa casa non ha risposto.");
+        if (!m)
+          return riquadroMuto("La macchina", "Il Supervisor di questo impianto non ha risposto.");
         const metri = [
           unMetro({
             che: "CPU",
@@ -3418,10 +3423,10 @@
                 .join(" · ")}${cE(c.sistema) || cE(m.accesaDa) ? "." : ""}
               ${
                 m.discoVita !== null && m.discoVita >= DISCO_STANCO
-                  ? `Il supporto è consumato al ${m.discoVita}%: su queste schede è la cosa che si rompe per prima, e si cambia prima che decida lui.`
+                  ? `Il disco è consumato al ${m.discoVita}%: su queste schede è il primo componente a guastarsi, meglio sostituirlo per tempo.`
                   : m.temperatura >= SOGLIE.troppoCaldo
-                    ? `Sopra i ${SOGLIE.troppoCaldo}° la scheda si rallenta da sola: la casa non si rompe, diventa lenta — e nessuno capisce perché.`
-                    : "Niente che chieda di andare a vedere."
+                    ? `Sopra i ${SOGLIE.troppoCaldo}° la scheda riduce la velocità da sola: l'impianto non si guasta, ma rallenta.`
+                    : "Nessun valore fuori soglia."
               }
             </p>
           </section>`;
@@ -3448,9 +3453,7 @@
                     ? "Il riavvio di Home Assistant"
                     : `${testo(chiesto.nome)} ${testo(chiesto.da)} → ${testo(chiesto.a)}`
                 }</b>
-                è stato chiesto ${testo(daQuanto(chiesto.chiesto))}. Parte quando questa
-                casa manda il prossimo rapporto — non si bussa alla porta di
-                nessuno, è lei che passa a prenderselo.
+                è stato richiesto ${testo(daQuanto(chiesto.chiesto))}. Parte al prossimo rapporto di questo impianto: è l'impianto a ritirare il comando, il cruscotto non lo contatta.
               </span>
             </div>`;
         const l = c.lavoro;
@@ -3461,15 +3464,15 @@
           return `
             <div class="cartello bene">
               <span class="gettone" aria-hidden="true">✓</span>
-              <span><b>${testo(l.cosa)}</b> ${l.riavvio ? "fatto" : "installato"} ${testo(daQuanto(l.quando))}, dal quadro.</span>
+              <span><b>${testo(l.cosa)}</b> ${l.riavvio ? "fatto" : "installato"} ${testo(daQuanto(l.quando))}, dal cruscotto.</span>
             </div>`;
         if (l.stato === "non riuscito")
           return `
             <div class="cartello male">
               <span class="gettone" aria-hidden="true">✕</span>
               <span
-                ><b>${testo(l.cosa)}</b> non è andato ${testo(daQuanto(l.quando))}:
-                ${testo(l.perche || "questa casa ha detto di no")}.</span
+                ><b>${testo(l.cosa)}</b> non è riuscito ${testo(daQuanto(l.quando))}:
+                ${testo(l.perche || "l'impianto ha rifiutato")}.</span
               >
             </div>`;
         const fermi = Math.round((ADESSO() - new Date(c.quando).getTime()) / 60000);
@@ -3480,10 +3483,10 @@
             <span>
               <b>${testo(l.cosa)}</b> è partito ${testo(daQuanto(l.quando))}${
                 tardi
-                  ? ` e questa casa non è più tornata. Un riavvio dura pochi minuti: qui si va di persona.`
+                  ? ` e questo impianto non ha più risposto. Un riavvio dura pochi minuti: serve un intervento sul posto.`
                   : l.stacca
-                    ? `. La casa si riavvia, quindi per qualche minuto non si fa sentire — è normale.`
-                    : `. Come è andata lo dirà il prossimo rapporto.`
+                    ? `. L'impianto si riavvia: per qualche minuto non risponde, ed è normale.`
+                    : `. L'esito arriva col prossimo rapporto.`
               }
             </span>
           </div>`;
@@ -3501,13 +3504,14 @@
        * si dice zero invece di fingere. */
       function laRete(c) {
         const r = c.rete;
-        if (!r) return riquadroMuto("La rete", "Questa casa non ha detto niente della sua rete.");
+        if (!r)
+          return riquadroMuto("La rete", "Questo impianto non ha comunicato lo stato della rete.");
         return `
           <section class="riquadro">
             <div class="capoRiquadro">
               <h3>La rete</h3>
               <span class="pastiglia ${r.internet ? "bene" : "male"}">
-                ${r.internet ? "internet c&#39;è" : "senza internet"}
+                ${r.internet ? "internet raggiungibile" : "senza internet"}
               </span>
             </div>
             <ul class="schede">
@@ -3532,9 +3536,9 @@
             <p class="verdetto">
               ${
                 r.sorvegliate.quante === 0
-                  ? "Nessun apparato di rete sorvegliato in questa casa: nella plancia, sezione «Macchine e rete», si spunta l'integrazione del router e i suoi ripetitori compaiono da soli."
+                  ? "Nessun apparato di rete monitorato in questo impianto: nella plancia, sezione «Macchine e rete», si seleziona l'integrazione del router e i ripetitori compaiono da soli."
                   : r.sorvegliate.giu === 0
-                    ? `${plurale(r.sorvegliate.quante, "apparato sorvegliato", "apparati sorvegliati")}, tutti su.`
+                    ? `${plurale(r.sorvegliate.quante, "apparato monitorato", "apparati monitorati")}, tutti raggiungibili.`
                     : `${r.sorvegliate.giu} ${r.sorvegliate.giu === 1 ? "apparato" : "apparati"} su ${r.sorvegliate.quante} non rispondono.`
               }
             </p>
@@ -3545,7 +3549,8 @@
        * girare e non gira? */
       function gliAddon(c) {
         const a = c.addon;
-        if (!a) return riquadroMuto("Gli add-on", "Questa casa non ha detto quali add-on ha.");
+        if (!a)
+          return riquadroMuto("Gli add-on", "Questo impianto non ha comunicato i suoi add-on.");
         return `
           <section class="riquadro">
             <div class="capoRiquadro">
@@ -3558,7 +3563,7 @@
                   const come = uno.su ? "" : uno.allAvvio ? "fermo" : "apposta";
                   return `<span class="uno ${come}"
                     ><span class="puntino" aria-hidden="true"></span>${testo(uno.nome)}${
-                      uno.su ? "" : uno.allAvvio ? " — fermo" : " — spento a mano"
+                      uno.su ? "" : uno.allAvvio ? " · fermo" : " · spento manualmente"
                     }</span>`;
                 })
                 .join("")}
@@ -3566,8 +3571,8 @@
             <p class="verdetto">
               ${
                 a.spentiCheDovrebbero === 0
-                  ? "Nessun add-on con l'avvio automatico è fermo. Quelli spenti a mano restano spenti, ed è giusto: li ha spenti qualcuno."
-                  : `${plurale(a.spentiCheDovrebbero, "add-on parte", "add-on partono")} all'avvio e in questo momento ${a.spentiCheDovrebbero === 1 ? "è fermo" : "sono fermi"}. Nessuno spegne un add-on lasciandogli l'avvio automatico: questo si è fermato da solo.`
+                  ? "Nessun add-on con avvio automatico è fermo. Quelli spenti manualmente restano spenti: li ha spenti qualcuno."
+                  : `${plurale(a.spentiCheDovrebbero, "add-on parte", "add-on partono")} all'avvio e in questo momento ${a.spentiCheDovrebbero === 1 ? "è fermo" : "sono fermi"}. Un add-on con avvio automatico non si spegne da solo: si è arrestato.`
               }
             </p>
           </section>`;
@@ -3634,12 +3639,11 @@
        * da solo. Congelato batte tutto: di uno che non entra piu' non conta
        * se sia al limite o da quanto non si fa vedere. */
       function loStato(uno) {
-        if (uno.congelato) return { come: "congelato", parola: "congelato" };
+        if (uno.congelato) return { come: "congelato", parola: "sospeso" };
         if (uno.pieno) return { come: "limite", parola: "al limite" };
-        if (!uno.vistoIl) return { come: "quieta", parola: "mai entrato" };
-        if ((ADESSO() - uno.vistoIl) / 86400000 > 30)
-          return { come: "quieta", parola: "non lo apre" };
-        return { come: "posto", parola: "a posto" };
+        if (!uno.vistoIl) return { come: "quieta", parola: "nessun accesso" };
+        if ((ADESSO() - uno.vistoIl) / 86400000 > 30) return { come: "quieta", parola: "inattivo" };
+        return { come: "posto", parola: "in ordine" };
       }
 
       /* Le due icone della barra, disegnate qui: niente da scaricare. */
@@ -3695,7 +3699,7 @@
       function disegna() {
         const alLimite = INSTALLATORI.filter((uno) => uno.pieno).length;
         document.getElementById("sottotitolo").textContent =
-          `${plurale(INSTALLATORI.length, "iscritto", "iscritti")} · ${plurale(CASE, "impianto", "impianti")} in tutto`;
+          `${plurale(INSTALLATORI.length, "installatore", "installatori")} · ${plurale(CASE, "impianto", "impianti")}`;
 
         doveNav.innerHTML = [
           ["installatori", "Installatori", alLimite],
@@ -3757,14 +3761,14 @@
         const daGuardare = tutteLeCase.filter((una) => una.stato?.chiave !== "posto").length;
 
         const titolo = !INSTALLATORI.length
-          ? "Nessun installatore, ancora."
+          ? "Ancora nessun installatore."
           : alLimite
             ? `<em>${plurale(alLimite, "installatore al limite", "installatori al limite")}</em>${
-                posti ? `, ${plurale(liberi, "posto libero", "posti liberi")} in tutto` : ""
+                posti ? `, ${plurale(liberi, "posto disponibile", "posti disponibili")}` : ""
               }.`
             : posti
-              ? `Tutti a posto: <em>${plurale(liberi, "posto libero", "posti liberi")}</em> in tutto.`
-              : "Tutti a posto, e nessun limite messo.";
+              ? `Nessuno al limite: <em>${plurale(liberi, "posto disponibile", "posti disponibili")}</em>.`
+              : "Nessun limite impostato.";
 
         return `
           <section class="vetro anello-scheda">
@@ -3777,17 +3781,17 @@
             <div>
               <h2 class="titolo-flotta">${titolo}</h2>
               <p class="sotto-flotta">
-                ${numero(entitaTotali)} entità in tutto${
+                ${numero(entitaTotali)} entità in totale${
                   tutteLeCase.length
-                    ? ` · ${plurale(daGuardare, "impianto da guardare", "impianti da guardare")}`
+                    ? ` · ${plurale(daGuardare, "impianto da verificare", "impianti da verificare")}`
                     : ""
                 }.
               </p>
             </div>
             <div class="file">
-              <div class="fila ferma" data-stato="posto"><b>${aPosto}</b><span><i></i>a posto</span></div>
+              <div class="fila ferma" data-stato="posto"><b>${aPosto}</b><span><i></i>in ordine</span></div>
               <div class="fila ferma" data-stato="limite"><b>${alLimite}</b><span><i></i>al limite</span></div>
-              <div class="fila ferma" data-stato="congelato"><b>${congelati}</b><span><i></i>congelati</span></div>
+              <div class="fila ferma" data-stato="congelato"><b>${congelati}</b><span><i></i>sospesi</span></div>
             </div>
           </section>
 
@@ -3795,25 +3799,20 @@
 
           <div class="voce">
             <h2>Gli installatori</h2>
-            <span>${plurale(INSTALLATORI.length, "iscritto", "iscritti")}</span>
+            <span>${INSTALLATORI.length}</span>
           </div>
           ${
             INSTALLATORI.length
               ? `<div class="installatori">${INSTALLATORI.map(unInstallatore).join("")}</div>`
               : `<div class="vetro vuoto">
-                   <b>Nessuno, per adesso</b>
-                   Il primo si aggiunge da «Aggiungi»: gli dai un nome, un limite, e gli esce la chiave.
+                   <b>Ancora nessun installatore</b> Il primo si aggiunge da «Aggiungi»: nome, limite, e viene generata la sua chiave.
                  </div>`
           }
 
           <section class="riquadro" style="margin-top: 14px">
             <div class="capoRiquadro"><h3>Cosa si vede da qui</h3></div>
             <p class="minuta">
-              <b>Quello che vede l'installatore, e niente di più.</b> Le case di ognuno arrivano
-              dalla stessa strada da cui arrivano a lui: i numeri che ogni impianto manda da sé, e i
-              nomi solo dei dispositivi che non rispondono. Nessuna persona, nessuna stanza, nessuno
-              stato di nessun sensore. E da qui si guarda e basta — non si installa, non si riavvia,
-              non si rinomina: la casa è sua, e la sua chiave resta sua.
+              <b>Quello che vede l'installatore, e niente di più.</b> Gli impianti di ognuno arrivano dalla stessa strada da cui arrivano a lui: i numeri che ogni impianto invia da sé, e i nomi solo dei dispositivi che non rispondono. Nessuna persona, nessuna stanza, nessuno stato di sensori. E da qui si guarda soltanto: non si installa, non si riavvia, non si rinomina. L'impianto è suo, e la sua chiave resta sua.
             </p>
             ${
               ORFANE
@@ -3834,8 +3833,7 @@
                               casa di qualcuno. Ma da qui non li guarda più nessuno.`
                        }
                        <br /><br />
-                       <b>Adesso non ne nascono più:</b> Elimina porta via anche le case, e Congela
-                       non tocca niente. ${ORFANE === 1 ? "Questo" : "Questi"} si
+                       <b>Adesso non ne nascono più:</b> Elimina porta via anche gli impianti, e Sospendi non tocca niente. ${ORFANE === 1 ? "Questo" : "Questi"} si
                        ${ORFANE === 1 ? "recupera" : "recuperano"} dall'altra parte — il codice di
                        un installatore vivo, incollato nella configurazione dell'add-on di quella
                        casa — e questo conto cala da solo. Da questa pagina no: serve che qualcuno
@@ -3870,7 +3868,7 @@
               ${uno.nome ? testo(uno.nome) : "senza nome"}
               <span class="pill"><i></i>${testo(stato.parola)}</span>
             </h3>
-            <p class="visto">Ultima volta qui: ${testo(daQuantoEntra(uno.vistoIl))}</p>
+            <p class="visto">Ultimo accesso: ${testo(daQuantoEntra(uno.vistoIl))}</p>
             <div class="posti">
               <div class="conto">
                 <span>
@@ -3900,8 +3898,8 @@
               <button type="button" class="tasto" data-rifai="${testo(uno.chi)}">Nuova chiave</button>
               ${
                 uno.congelato
-                  ? `<button type="button" class="tasto" data-scongela="${testo(uno.chi)}">Sblocca</button>`
-                  : `<button type="button" class="tasto" data-congela="${testo(uno.chi)}">Congela</button>`
+                  ? `<button type="button" class="tasto" data-scongela="${testo(uno.chi)}">Riattiva</button>`
+                  : `<button type="button" class="tasto" data-congela="${testo(uno.chi)}">Sospendi</button>`
               }
               <button type="button" class="tasto male" data-elimina="${testo(uno.chi)}">Elimina</button>
             </div>
@@ -3915,9 +3913,7 @@
         const dette = LE_CASE_DI.get(uno.chi);
         if (!dette)
           return `<li class="nessuna">${
-            uno.case
-              ? "Le sue case non sono arrivate: riprova fra un attimo."
-              : "Nessun impianto ancora."
+            uno.case ? "Elenco impianti non ricevuto: riprova tra poco." : "Nessun impianto ancora."
           }</li>`;
         if (!dette.case.length) return `<li class="nessuna">Nessun impianto ancora.</li>`;
         return dette.case
@@ -3950,13 +3946,11 @@
           <section class="riquadro tinto" style="margin-top: 4px">
             <div class="capoRiquadro"><h3>Aggiungi un installatore</h3></div>
             <p class="minuta">
-              Lo aggiungi e gli dai una chiave: da quel momento apre
-              <span class="mono">/console/</span> e vede i suoi impianti. Non deve accendere niente e
-              non deve comprare nessun dominio.
+              Lo aggiungi e gli consegni la chiave: da quel momento apre il cruscotto e vede i suoi impianti. Non deve installare niente e non deve acquistare alcun dominio.
             </p>
             <div class="due-campi">
               <div class="campo">
-                <label for="nome">Come si chiama</label>
+                <label for="nome">Nome</label>
                 <input type="text" id="nome" maxlength="80" placeholder="Elettrotecnica Verdi" autocomplete="off" />
               </div>
               <div class="campo">
@@ -3981,13 +3975,12 @@
           <section class="chiave-nuova">
             <b>La chiave di ${testo(APPENA_FATTO.nome)}</b>
             <p>
-              Consegnagliela adesso: si vede <b>una volta sola</b>, qui resta solo la sua impronta e
-              questa riga non si rivede più. Se la perde, gliene fai una nuova.
+              Consegnagliela adesso: si vede <b>una volta sola</b>, qui resta solo la sua impronta. Se la perde, gliene generi una nuova.
             </p>
             <div class="valore">${testo(APPENA_FATTO.chiave)}</div>
             <div class="azioni" style="margin-top: 10px">
               <button type="button" class="tasto forte" data-copia="${testo(APPENA_FATTO.chiave)}">Copia</button>
-              <button type="button" class="tasto" data-chiudi-chiave>Ho finito</button>
+              <button type="button" class="tasto" data-chiudi-chiave>Chiudi</button>
             </div>
           </section>`;
       }
@@ -4030,7 +4023,7 @@
             <div class="foglio-corpo" id="foglio-corpo">${laScheda(casa)}</div>
             <div class="foglio-tasti">
               <button type="button" class="tasto" data-copia="${testo(JSON.stringify(c, null, 2))}">
-                Copia il rapporto
+                Copia rapporto
               </button>
             </div>
           </div>`;
@@ -4061,7 +4054,7 @@
           ["la plancia", c.plancia, false],
           ["Home Assistant Core", c.ha, c.aggiornamenti?.ha],
           ["Supervisor", c.supervisor, false],
-          ["il sistema", c.sistema, false],
+          ["Sistema operativo", c.sistema, false],
         ];
 
         const numeri = [
@@ -4075,20 +4068,16 @@
             "Batteria più bassa",
             cE(c.batterie?.piuBassa) ? `${c.batterie.piuBassa}%` : "—",
             !c.batterie
-              ? "questa casa non lo dice"
+              ? "non comunicato"
               : c.batterie.scariche > 0
                 ? `${c.batterie.scariche} sotto il ${BATTERIA_SCARICA}%`
-                : "nessuna da cambiare",
+                : "nessuna da sostituire",
             (c.batterie?.scariche ?? 0) > 0 ? "attenta" : "",
           ],
           [
             "Ultimo backup",
             !c.backup || !cE(c.backup.giorniFa) ? "mai" : c.backup.giorniFa,
-            !c.backup
-              ? "questa casa non lo dice"
-              : !cE(c.backup.giorniFa)
-                ? "non ne ha mai fatto uno"
-                : "giorni fa",
+            !c.backup ? "non comunicato" : !cE(c.backup.giorniFa) ? "mai eseguito" : "giorni fa",
             c.backup && (!cE(c.backup.giorniFa) || c.backup.giorniFa > 14) ? "attenta" : "",
           ],
           [
@@ -4111,14 +4100,14 @@
                 <dt>Matricola</dt>
                 <dd class="mono">${testo(String(c.casa || casa.casa).slice(0, 13))}…</dd>
               </div>
-              <div><dt>Vista la prima volta</dt><dd>${testo(ilGiorno(casa.da))}</dd></div>
+              <div><dt>Abbinato il</dt><dd>${testo(ilGiorno(casa.da))}</dd></div>
               <div>
-                <dt>Rapporto</dt>
-                <dd>${c.quando ? `${testo(daQuanto(c.quando))}, ogni ${testo(c.ogni)} min` : "mai arrivato"}</dd>
+                <dt>Ultimo rapporto</dt>
+                <dd>${c.quando ? `${testo(daQuanto(c.quando))}, ogni ${testo(c.ogni)} min` : "mai ricevuto"}</dd>
               </div>
               <div>
                 <dt>Manutenzione</dt>
-                <dd>${c.manutenzione ? "aperta al suo installatore" : "chiusa"}</dd>
+                <dd>${c.manutenzione ? "attiva" : "non attiva"}</dd>
               </div>
             </dl>
             <dl class="misure" style="margin-top: 14px">
@@ -4135,8 +4124,8 @@
           </section>
 
           <div class="capitolo">
-            <h2>Cosa le tocca</h2>
-            <span>quello che questa casa chiede al suo installatore</span>
+            <h2>Da fare</h2>
+            <span>quello che questo impianto richiede</span>
           </div>
 
           <section class="riquadro">
@@ -4160,14 +4149,14 @@
           ${gliAggiornamenti(c, casa)}
 
           <div class="capitolo">
-            <h2>Come sta</h2>
-            <span>la macchina, la rete, e cosa risponde</span>
+            <h2>Stato dell'impianto</h2>
+            <span>macchina, rete e dispositivi</span>
           </div>
 
           ${laMacchina(c)} ${laRete(c)} ${gliAddon(c)}
 
           <section class="riquadro">
-            <div class="capoRiquadro"><h3>La salute, quattordici giorni</h3></div>
+            <div class="capoRiquadro"><h3>Ultimi quattordici giorni</h3></div>
             ${laStriscia(casa.giorni, true)}
           </section>
 
@@ -4180,17 +4169,15 @@
                    </div>
                    <div class="nomiGiu">${iNomiGiu(c)}</div>
                    <p class="nota">
-                     Questa casa manda <b>solo il nome di quelli che non rispondono</b>, e
-                     nient'altro di quello che ha dentro. Lo stesso elenco lo legge il suo
-                     installatore, e chi ci abita.
+                     Questo impianto invia <b>solo i nomi dei dispositivi che non rispondono</b>, nient'altro. Lo stesso elenco lo leggono il suo installatore e chi abita la casa.
                    </p>
                  </section>`
               : ""
           }
 
           <div class="capitolo">
-            <h2>Cos'è, di preciso</h2>
-            <span>i numeri di versione, e il rapporto com'è arrivato</span>
+            <h2>Dettagli tecnici</h2>
+            <span>versioni e rapporto completo</span>
           </div>
 
           <section class="riquadro">
@@ -4202,7 +4189,7 @@
                 <tr>
                   <td>${testo(che)}</td>
                   <td class="numero">
-                    ${cE(quale) ? testo(quale) : '<span class="nonLoDice">non lo dice</span>'}${nuova ? '<span class="pastiglia attenta" style="margin-left:8px">c&#39;è la nuova</span>' : ""}
+                    ${cE(quale) ? testo(quale) : '<span class="nonLoDice">non comunicato</span>'}${nuova ? '<span class="pastiglia attenta" style="margin-left:8px">aggiornamento disponibile</span>' : ""}
                   </td>
                 </tr>`,
                 )
@@ -4212,13 +4199,10 @@
 
           <section class="riquadro">
             <details class="rapporto">
-              <summary><h3>Il rapporto, come è arrivato</h3></summary>
+              <summary><h3>Rapporto completo</h3></summary>
               <pre>${testo(JSON.stringify(c, null, 2))}</pre>
               <p class="nota" style="margin-top: 14px">
-                Questo è <strong>tutto</strong> quello che questa casa manda, e lo legge uguale il
-                suo installatore. Gli unici nomi che ci trovi sono quelli dei dispositivi che in
-                questo momento non rispondono. Nessuna persona, nessuno stato di nessun sensore,
-                nessun indirizzo pubblico.
+                Questo è <strong>tutto</strong> ciò che l'impianto invia, e lo legge uguale il suo installatore. Gli unici nomi presenti sono quelli dei dispositivi che in questo momento non rispondono. Nessuna persona, nessuno stato di sensori, nessun indirizzo pubblico.
               </p>
             </details>
           </section>
@@ -4231,7 +4215,7 @@
         if (!c.aggiornamenti)
           return riquadroMuto(
             "Gli aggiornamenti",
-            "Questa casa non ha detto cosa c'è da aggiornare.",
+            "Questo impianto non ha comunicato gli aggiornamenti.",
           );
         const elenco = c.aggiornamenti.elenco || [];
         const cartello = ilCartello(c, casa?.chiesto);
@@ -4244,8 +4228,8 @@
               <p class="nota">
                 ${
                   quanti > 0
-                    ? `${plurale(quanti, "aggiornamento in attesa", "aggiornamenti in attesa")}, ma questa casa non manda l'elenco: è un gdahome più vecchio della 1.5.9.`
-                    : "Niente da fare: questa casa è aggiornata."
+                    ? `${plurale(quanti, "aggiornamento in attesa", "aggiornamenti in attesa")}, ma questo impianto non manda l'elenco: è una versione di gdahome precedente alla 1.5.9.`
+                    : "Nessun aggiornamento in attesa: l'impianto è aggiornato."
                 }
               </p>
             </section>`;
@@ -4268,8 +4252,8 @@
             <p class="verdetto">
               ${
                 c.manutenzione
-                  ? "Questa casa ha aperto la manutenzione al suo installatore: è lui che installa, da qui si guarda."
-                  : "Questa casa non ha aperto la manutenzione: si vede cosa c'è da fare, e non lo fa nessuno da lontano."
+                  ? "Questo impianto ha la manutenzione attiva: installa il suo installatore, da qui si guarda soltanto."
+                  : "Questo impianto non ha la manutenzione attiva: gli aggiornamenti si vedono, ma nessuno li installa da remoto."
               }
             </p>
           </section>`;
@@ -4280,11 +4264,11 @@
         if (!uno.installabile)
           return '<span class="pastiglia">si aggiorna dal suo apparecchio</span>';
         if (eLaStessa(uno, casa?.chiesto))
-          return '<span class="pastiglia lavoro">chiesto dal suo installatore</span>';
+          return '<span class="pastiglia lavoro">richiesto dall\'installatore</span>';
         if (eLaStessa(uno, c.lavoro) && c.lavoro.stato === "in corso")
           return '<span class="pastiglia lavoro">in corso</span>';
-        if (!c.manutenzione) return '<span class="pastiglia">manutenzione chiusa</span>';
-        return '<span class="pastiglia">lo installa il suo installatore</span>';
+        if (!c.manutenzione) return '<span class="pastiglia">manutenzione non attiva</span>';
+        return '<span class="pastiglia">lo installa l\'installatore</span>';
       }
 
       /* ─── I tasti ────────────────────────────────────────────────────── */
@@ -4296,7 +4280,7 @@
         const spiega = tasto.closest("[data-installatore]")?.querySelector(".spiega");
         if (tasto.dataset.sicuro !== "sì") {
           tasto.dataset.sicuro = "sì";
-          tasto.textContent = "Sicuro? Premi di nuovo";
+          tasto.textContent = "Premi ancora per confermare";
           if (spiega) {
             spiega.textContent = spiegazione;
             spiega.hidden = false;
@@ -4425,7 +4409,7 @@
             inDueTempi(
               tasto,
               "Nuova chiave",
-              `Una chiave nuova per ${ilNomeDi(tasto.dataset.rifai)}: quella di prima smette di aprire subito.`,
+              `Una nuova chiave per ${ilNomeDi(tasto.dataset.rifai)}: quella attuale smette subito di funzionare.`,
               () => rifaiLaChiave(tasto.dataset.rifai, tasto),
             );
         });
@@ -4433,8 +4417,8 @@
           tasto.onclick = () =>
             inDueTempi(
               tasto,
-              "Congela",
-              `Da adesso ${ilNomeDi(tasto.dataset.congela)}, aprendo il suo cruscotto, non vede più nessuno dei suoi impianti: trova un cartello che gli dice di scriverci. Gli impianti restano accesi e continuano a mandare i loro numeri: non si perde niente, e sbloccandolo torna tutto com'era.`,
+              "Sospendi",
+              `Da questo momento ${ilNomeDi(tasto.dataset.congela)}, aprendo il cruscotto, non vede più i suoi impianti: trova un avviso che gli dice di contattarti. Gli impianti restano attivi e continuano a inviare i rapporti: non si perde niente, e riattivandolo torna tutto com'era.`,
               () => congela(tasto.dataset.congela, true, tasto),
             );
         });
@@ -4448,7 +4432,7 @@
             inDueTempi(
               tasto,
               "Elimina",
-              `Se ne va ${ilNomeDi(tasto.dataset.elimina)} e con lui ${plurale(uno?.case || 0, "il suo impianto", "i suoi impianti")}: il quadro smette di riceverne i rapporti, e la loro storia qui dentro non c'è più. Non si torna indietro: riaggiungendolo domani prende una matricola nuova, e ogni casa va riabbinata una per una col suo codice nuovo, da dentro casa. Se ti serve solo che smetta di vedere i suoi impianti, usa Congela.`,
+              `Viene eliminato ${ilNomeDi(tasto.dataset.elimina)} insieme ${plurale(uno?.case || 0, "al suo impianto", "ai suoi impianti")}: il cruscotto smette di riceverne i rapporti, e la loro storia qui non c'è più. Non si può annullare: se lo aggiungi di nuovo riceve una matricola nuova, e ogni impianto va riabbinato con un nuovo codice, dall'add-on di casa. Se ti serve solo che non veda più i suoi impianti, usa Sospendi.`,
               () => eliminaLInstallatore(tasto.dataset.elimina, tasto),
             );
           };
@@ -4460,7 +4444,7 @@
         const soglia = Number(document.getElementById("tetto")?.value) || 0;
         if (!nome) {
           document.getElementById("nome")?.focus();
-          avvisa("Serve il nome");
+          avvisa("Inserisci il nome");
           return;
         }
         await faiEpoi(tasto, async () => {
@@ -4469,7 +4453,7 @@
             body: JSON.stringify({ nome, soglia }),
           });
           APPENA_FATTO = { nome, chiave: detto.chiave };
-          avvisa(`${nome} è dentro`);
+          avvisa(`${nome} aggiunto`);
         });
       }
 
@@ -4491,7 +4475,7 @@
             method: "POST",
           });
           APPENA_FATTO = { nome, chiave: detto.chiave };
-          avvisa("Quella vecchia non apre più");
+          avvisa("La chiave precedente non è più valida");
         });
       }
 
@@ -4502,11 +4486,7 @@
           await chiedi(`/installatore/${encodeURIComponent(chi)}/congela`, {
             method: gelo ? "POST" : "DELETE",
           });
-          avvisa(
-            gelo
-              ? `${nome}: congelato. La chiave apre, e non fa vedere niente`
-              : `${nome}: sbloccato`,
-          );
+          avvisa(gelo ? `${nome}: sospeso` : `${nome}: riattivato`);
         });
       }
 
@@ -4516,7 +4496,7 @@
         await faiEpoi(tasto, async () => {
           await chiedi(`/installatore/${encodeURIComponent(chi)}`, { method: "DELETE" });
           if (foglioAperto?.chi === chi) foglioAperto = null;
-          avvisa(`${nome}: eliminato, con tutto il suo`);
+          avvisa(`${nome}: eliminato con i suoi impianti`);
         });
       }
 
@@ -4529,11 +4509,11 @@
           <section class="riquadro tinto" style="max-width: 32rem; margin-inline: auto">
             <div class="capoRiquadro"><h3>La chiave di gestione</h3></div>
             <p class="nota" style="margin-bottom: 16px">
-              ${testo(perche || "È quella con cui hai acceso il quadro: da qui si aggiungono gli installatori.")}
+              ${testo(perche || "È quella con cui hai avviato il cruscotto: da qui si aggiungono gli installatori.")}
             </p>
             <div class="azioni">
-              <input type="password" id="la-chiave" placeholder="Incollala qui" aria-label="La chiave di gestione" />
-              <button type="button" class="tasto forte" id="entra">Entra</button>
+              <input type="password" id="la-chiave" placeholder="Chiave" aria-label="La chiave di gestione" />
+              <button type="button" class="tasto forte" id="entra">Accedi</button>
             </div>
           </section>`;
         const casella = document.getElementById("la-chiave");
@@ -4574,7 +4554,7 @@
               void apri();
               return;
             }
-            chiedimiLaChiave("Quella chiave non apre. Riprova.");
+            chiedimiLaChiave("Chiave non valida. Riprova.");
             return;
           }
           doveNav.innerHTML = "";
@@ -4617,17 +4597,17 @@
       tastoVivo.onclick = async () => {
         if (!chiave || tastoVivo.getAttribute("aria-busy") === "true") return;
         tastoVivo.setAttribute("aria-busy", "true");
-        document.getElementById("vivo-dice").textContent = "Un attimo…";
+        document.getElementById("vivo-dice").textContent = "Aggiornamento…";
         try {
           await carica();
           disegna();
-          avvisa("Aggiornato adesso");
+          avvisa("Aggiornato");
         } catch (errore) {
           if (errore instanceof ChiaveNoNo) chiedimiLaChiave();
           else avvisa(errore.message || "non ha funzionato");
         } finally {
           tastoVivo.removeAttribute("aria-busy");
-          document.getElementById("vivo-dice").textContent = "In ascolto";
+          document.getElementById("vivo-dice").textContent = "Aggiorna";
         }
       };
 

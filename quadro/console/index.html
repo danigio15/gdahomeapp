@@ -2330,6 +2330,10 @@
         .barra button svg {
           display: none;
         }
+        /* «da verificare» non ci sta su una riga: va a capo, non si tronca. */
+        .fila span {
+          white-space: normal;
+        }
         .tre-anelli {
           gap: 6px;
         }
@@ -2374,9 +2378,9 @@
             type="button"
             class="vivo"
             id="vivo"
-            title="Si ricarica da sola. Premi per farlo adesso."
+            title="Si aggiorna da sola. Premi per aggiornare adesso."
           >
-            <i></i><span id="vivo-dice">In ascolto</span>
+            <i></i><span id="vivo-dice">Aggiorna</span>
           </button>
         </div>
       </header>
@@ -2390,7 +2394,7 @@
 
       <footer>
         Da qui non si entra in nessuna casa e non si vede niente di chi ci abita: si guardano i
-        numeri che ogni impianto manda da sé. I nomi che viaggiano sono solo quelli dei dispositivi
+        numeri che ogni impianto invia da sé. I nomi che viaggiano sono solo quelli dei dispositivi
         che non rispondono.
       </footer>
     </div>
@@ -2834,7 +2838,7 @@
 
       /* Quello che sente chi legge lo schermo con le orecchie: il bollino e'
        * un disegno, e da solo non dice niente. */
-      const A_PAROLE = { bene: "a posto", male: "non va", ignoto: "non si sa" };
+      const A_PAROLE = { bene: "in ordine", male: "anomalia", ignoto: "non rilevato" };
 
       /* Il segno di un aggiornamento: il logo di chi lo porta, o l'iniziale.
        *
@@ -2963,25 +2967,25 @@
           .map((uno) => {
             if (uno === "V") return '<i class="vuota" title="offline tutto il giorno"></i>';
             if (uno === "M") return '<i class="mezza" title="offline per qualche ora"></i>';
-            if (uno === " ") return '<i class="prima" title="non era ancora accesa"></i>';
-            return '<i title="tutte i rapporti arrivati"></i>';
+            if (uno === " ") return '<i class="prima" title="non ancora abbinato"></i>';
+            return '<i title="tutti i rapporti ricevuti"></i>';
           })
           .join("");
         const vuoti = [...giorni].filter((uno) => uno === "V" || uno === "M").length;
         const accesi = [...giorni].filter((uno) => uno !== " ").length;
         const dice =
           accesi < giorni.length
-            ? `${plurale(accesi, "giorno", "giorni")} da quando è accesa`
+            ? `${plurale(accesi, "giorno", "giorni")} dall'abbinamento`
             : vuoti === 0
-              ? "14 giorni, sempre viva"
+              ? "14 giorni, sempre online"
               : `14 giorni · offline ${plurale(vuoti, "volta", "volte")}`;
         return `<div class="giorni${grande ? " grande" : ""}" role="img" aria-label="${testo(dice)}">${celle}</div><div class="giorniDice">${testo(dice)}</div>`;
       }
 
       const LE_FILE = [
         ["offline", "■", "offline"],
-        ["guardare", "▲", "da guardare"],
-        ["posto", "●", "a posto"],
+        ["guardare", "▲", "da verificare"],
+        ["posto", "●", "in ordine"],
       ];
 
       /* L'indirizzo a cui scrivere se l'utenza e' congelata, o `null` se non lo
@@ -3035,18 +3039,15 @@
         document.getElementById("chi").textContent = "Cruscotto installatore";
         dove.innerHTML = `
           <section class="riquadro" style="max-width: 640px; margin: 40px auto">
-            <div class="capoRiquadro"><h3>Utenza bloccata</h3></div>
+            <div class="capoRiquadro"><h3>Utenza sospesa</h3></div>
             <p style="margin: 0 0 14px; font-size: 1rem; line-height: 1.55">
-              <b>La tua utenza è bloccata dal gestore.</b> Si prega di contattare
-              il seguente indirizzo:
+              <b>La tua utenza è stata sospesa dal gestore.</b> Contatta il seguente indirizzo:
             </p>
             <p style="margin: 0 0 18px; font-size: 1.05rem">
               <a href="mailto:${testo(CONGELATA)}">${testo(CONGELATA)}</a>
             </p>
             <p class="nota" style="margin: 0">
-              Gli impianti che segui continuano a funzionare e a mandare i loro
-              numeri: qui non si vedono, e non si è perso niente. Quando il
-              blocco viene tolto, questa pagina torna com'era da sola.
+              Gli impianti che segui continuano a funzionare e a inviare i loro rapporti: qui non si vedono, ma non si perde niente. Quando la sospensione viene tolta, questa pagina torna com'era da sola.
             </p>
           </section>`;
       }
@@ -3058,7 +3059,7 @@
         }
         const dietro = CASE.filter((una) => (una.carta?.aggiornamenti?.elenco || []).length).length;
         doveNav.innerHTML = [
-          ["case", "Le case", 0],
+          ["case", "Impianti", 0],
           ["aggiornamenti", "Aggiornamenti", dietro],
           /* La pastiglia conta **solo i codici in attesa**, e non piu' anche le
              case senza nome.
@@ -3067,7 +3068,7 @@
              e' andato. Invece e' andato — manca un nome, che e' un'altra cosa
              e si vede da se', perche' quella casa nell'elenco si chiama
              `casa_99592daf…`. */
-          ["abbina", "Abbina", INVITI.length],
+          ["abbina", "Abbinamento", INVITI.length],
         ]
           .map(
             ([quale, parola, quanti]) => `
@@ -3093,7 +3094,7 @@
         document.getElementById("chi").textContent =
           (IO.nome ? "Cruscotto installatore · " : "") +
           plurale(CASE.length, "impianto", "impianti") +
-          (restano === null ? "" : ` · ${restano} ancora`);
+          (restano === null ? "" : ` · ${restano} disponibili`);
 
         /* Il foglio si ridisegna insieme al resto, e il punto a cui era
          * scorso si tiene: un giro da dieci secondi non deve riportare in
@@ -3127,32 +3128,6 @@
           );
         }
 
-        const esito = (parole, bene = true) => {
-          const riga = document.getElementById("esito-avvisi");
-          if (!riga) return;
-          riga.hidden = false;
-          riga.textContent = parole;
-          riga.style.color = bene ? "var(--verde)" : "var(--rosso)";
-        };
-
-        const tastoAvvisi = dove.querySelector("[data-avvisi]");
-        if (tastoAvvisi) {
-          tastoAvvisi.onclick = () =>
-            faiEpoi(tastoAvvisi, async () => {
-              const detto = document.getElementById("dove-avvisi")?.value || "";
-              try {
-                await chiedi("/io/avvisi", {
-                  method: "PUT",
-                  body: JSON.stringify({ dove: detto }),
-                });
-                IO.avvisi = detto.trim();
-                esito(IO.avvisi ? "Salvato." : "Avvisi spenti.");
-              } catch (male) {
-                esito(male.message, false);
-              }
-            });
-        }
-
         /* Il marchio: si sceglie un file e parte, senza un tasto «Salva».
          * Scegliere un file **e'** gia' la conferma: un secondo tasto sarebbe
          * un passaggio in piu' per una cosa che si annulla ricaricando. */
@@ -3178,7 +3153,7 @@
                 headers: { "content-type": file.type || "application/octet-stream" },
               });
               IO.marchio = detto.marchio || "";
-              dillo("Messo.");
+              dillo("Salvato.");
               disegna();
             } catch (errore) {
               if (errore instanceof ChiaveNoNo) {
@@ -3197,27 +3172,6 @@
               await chiedi("/io/marchio", { method: "DELETE" });
               IO.marchio = "";
             });
-
-        const tastoProva = dove.querySelector("[data-prova-avvisi]");
-        if (tastoProva) {
-          tastoProva.onclick = () =>
-            faiEpoi(tastoProva, async () => {
-              try {
-                const detto = await chiedi("/io/avvisi/prova", { method: "POST" });
-                /* «Arrivato» vuol dire che chi riceve l'ha accettato, non che
-                 * l'hai letto: se il tasto dice di sì e il messaggio non c'è, il
-                 * problema sta dall'altra parte. */
-                esito(
-                  detto.arrivato
-                    ? "Mandato. Se non lo vedi, il problema è dopo l'indirizzo."
-                    : "Quell'indirizzo non l'ha accettato.",
-                  detto.arrivato,
-                );
-              } catch (male) {
-                esito(male.message, false);
-              }
-            });
-        }
 
         dove.querySelectorAll("[data-filtro]").forEach((tasto) => {
           tasto.onclick = () => {
@@ -3371,7 +3325,7 @@
              * scorrendo l'elenco non deve bastare. */
             if (tasto.dataset.sicuro !== "sì") {
               tasto.dataset.sicuro = "sì";
-              tasto.textContent = "Sicuro? Premi di nuovo";
+              tasto.textContent = "Premi ancora per confermare";
               setTimeout(() => {
                 tasto.dataset.sicuro = "";
                 tasto.textContent = "Installa";
@@ -3396,7 +3350,7 @@
              * spegnendo e riaccendendo la casa di qualcun altro. */
             if (tasto.dataset.sicuro !== "sì") {
               tasto.dataset.sicuro = "sì";
-              tasto.textContent = "Sicuro? Premi di nuovo";
+              tasto.textContent = "Premi ancora per confermare";
               setTimeout(() => {
                 tasto.dataset.sicuro = "";
                 tasto.textContent = "Riavvia Home Assistant";
@@ -3424,10 +3378,10 @@
              * andato storto. */
             if (tasto.dataset.sicuro !== "sì") {
               tasto.dataset.sicuro = "sì";
-              tasto.textContent = "Sicuro? Premi di nuovo";
+              tasto.textContent = "Premi ancora per confermare";
               setTimeout(() => {
                 tasto.dataset.sicuro = "";
-                tasto.textContent = "Non seguirla più";
+                tasto.textContent = "Rimuovi";
               }, 6000);
               return;
             }
@@ -3485,18 +3439,18 @@
       tastoVivo.onclick = async () => {
         if (!chiave || tastoVivo.getAttribute("aria-busy") === "true") return;
         tastoVivo.setAttribute("aria-busy", "true");
-        document.getElementById("vivo-dice").textContent = "Un attimo…";
+        document.getElementById("vivo-dice").textContent = "Aggiornamento…";
         try {
           await carica();
           disegna();
-          avvisa("Aggiornato adesso");
+          avvisa("Aggiornato");
         } catch (errore) {
           if (errore instanceof ChiaveNoNo) chiedimiLaChiave();
           else if (errore instanceof Congelata) disegna();
           else avvisa(errore.message || "non ha funzionato");
         } finally {
           tastoVivo.removeAttribute("aria-busy");
-          document.getElementById("vivo-dice").textContent = "In ascolto";
+          document.getElementById("vivo-dice").textContent = "Aggiorna";
         }
       };
 
@@ -3520,8 +3474,8 @@
 
       const IL_TITOLO_DELLA_FILA = {
         offline: "Offline",
-        guardare: "Da guardare",
-        posto: "A posto",
+        guardare: "Da verificare",
+        posto: "In ordine",
       };
 
       /* Le tre icone della barra, disegnate qui: niente da scaricare. */
@@ -3637,22 +3591,22 @@
       /* Come sta la flotta, in una riga: e' il titolo accanto all'anello. */
       function laFraseDellaFlotta(quanti) {
         const tutte = quanti.offline + quanti.guardare + quanti.posto;
-        if (!tutte) return "Nessun impianto, ancora.";
+        if (!tutte) return "Ancora nessun impianto.";
         if (!quanti.offline && !quanti.guardare)
           return tutte === 1
-            ? "A posto, l'unico che c'è."
-            : `Tutto a posto, <em>tutti e ${tutte}</em>.`;
+            ? "L'unico impianto è in ordine."
+            : `Tutto in ordine, <em>tutti e ${tutte}</em>.`;
         const altri =
           quanti.posto === 0
             ? ""
             : quanti.posto === 1
-              ? ", l'altro a posto"
-              : ", gli altri a posto";
+              ? ", l'altro in ordine"
+              : ", gli altri in ordine";
         if (quanti.offline)
           return `<em>${plurale(quanti.offline, "impianto offline", "impianti offline")}</em>${
-            quanti.guardare ? `, ${quanti.guardare} da guardare` : altri
+            quanti.guardare ? `, ${quanti.guardare} da verificare` : altri
           }.`;
-        return `<em>${plurale(quanti.guardare, "impianto da guardare", "impianti da guardare")}</em>${altri}.`;
+        return `<em>${plurale(quanti.guardare, "impianto da verificare", "impianti da verificare")}</em>${altri}.`;
       }
 
       /* Tre pezzi, dall'alto: l'anello con le tre file che filtrano, le carte
@@ -3709,7 +3663,7 @@
           ${
             chiedono.length && filtro === "tutte"
               ? `<div class="voce">
-                   <h2>Da guardare adesso</h2>
+                   <h2>Da verificare ora</h2>
                    <span>${plurale(chiedono.length, "impianto", "impianti")}</span>
                  </div>
                  <div class="scorri">
@@ -3725,16 +3679,14 @@
           ${
             !CASE.length
               ? `<div class="vetro vuoto">
-                   <b>Nessun impianto, ancora</b>
-                   Da «Abbina» si fa un codice, e la prima casa compare qui da sola.
+                   <b>Ancora nessun impianto</b> Da «Abbinamento» si genera un codice, e il primo impianto compare qui da solo.
                  </div>`
               : viste.length
                 ? `<div class="mattonelle">
                      ${viste.map((r) => unaCasa(r.una, r.indice, r.stato)).join("")}
                    </div>`
                 : `<div class="vetro vuoto">
-                     <b>Nessuno qui</b>
-                     Premi di nuovo la fila per vederli tutti.
+                     <b>Nessun impianto in questo gruppo</b> Premi di nuovo il filtro per vederli tutti.
                    </div>`
           }
         `;
@@ -3826,7 +3778,7 @@
               <div class="nomi">
                 <h2 id="foglio-titolo">${testo(casa.nome)}</h2>
                 <p>
-                  ${soloGuai ? "Solo quello che non va" : spia(casa.stato)}${c.quando ? ` · ultimo rapporto ${testo(daQuanto(c.quando))}` : ""}
+                  ${soloGuai ? "Solo le anomalie" : spia(casa.stato)}${c.quando ? ` · ultimo rapporto ${testo(daQuanto(c.quando))}` : ""}
                 </p>
               </div>
               <button type="button" class="tasto" data-chiudi>Chiudi</button>
@@ -3839,7 +3791,7 @@
                 soloGuai
                   ? `<button type="button" class="tasto forte" data-tutto>Mostra tutto</button>
                      <button type="button" class="tasto" data-copia="${testo(JSON.stringify(c, null, 2))}">
-                       Copia il rapporto
+                       Copia rapporto
                      </button>`
                   : ""
               }
@@ -3879,7 +3831,7 @@
           ["la plancia", c.plancia, false],
           ["Home Assistant Core", c.ha, c.aggiornamenti?.ha],
           ["Supervisor", c.supervisor, false],
-          ["il sistema", c.sistema, false],
+          ["Sistema operativo", c.sistema, false],
         ];
 
         const misure = [
@@ -3897,10 +3849,10 @@
               ? "—"
               : `${c.batterie.piuBassa}%`,
             !c.batterie
-              ? "questa casa non lo dice"
+              ? "non comunicato"
               : c.batterie.scariche > 0
                 ? `${c.batterie.scariche} sotto il ${BATTERIA_SCARICA}%`
-                : "nessuna da cambiare",
+                : "nessuna da sostituire",
             (c.batterie?.scariche ?? 0) > 0 ? "attenta" : "",
           ],
           [
@@ -3909,9 +3861,9 @@
               ? "mai"
               : c.backup.giorniFa,
             !c.backup
-              ? "questa casa non lo dice"
+              ? "non comunicato"
               : c.backup.giorniFa === null || c.backup.giorniFa === undefined
-                ? "non ne ha mai fatto uno"
+                ? "mai eseguito"
                 : "giorni fa",
             c.backup && (c.backup.giorniFa === null || c.backup.giorniFa > 14) ? "attenta" : "",
           ],
@@ -3931,14 +3883,14 @@
                 <dt>Matricola</dt>
                 <dd class="mono">${testo(String(c.casa || casa.casa).slice(0, 13))}…</dd>
               </div>
-              <div><dt>Vista la prima volta</dt><dd>${testo(ilGiorno(casa.da))}</dd></div>
+              <div><dt>Abbinato il</dt><dd>${testo(ilGiorno(casa.da))}</dd></div>
               <div>
-                <dt>Rapporto</dt>
-                <dd>${c.quando ? `${testo(daQuanto(c.quando))}, ogni ${testo(c.ogni)} min` : "mai arrivato"}</dd>
+                <dt>Ultimo rapporto</dt>
+                <dd>${c.quando ? `${testo(daQuanto(c.quando))}, ogni ${testo(c.ogni)} min` : "mai ricevuto"}</dd>
               </div>
               <div>
                 <dt>Telefoni</dt>
-                <dd>${c.telefoni ? `${c.telefoni.abbinati} — ${c.telefoni.visti7gg} visti in 7 gg` : "—"}</dd>
+                <dd>${c.telefoni ? `${c.telefoni.abbinati} abbinati · ${c.telefoni.visti7gg} attivi negli ultimi 7 giorni` : "—"}</dd>
               </div>
             </dl>
             <div class="azioni">
@@ -3947,14 +3899,12 @@
                 class="tasto forte"
                 data-copia="${testo(JSON.stringify(c, null, 2))}"
               >
-                Copia il rapporto
+                Copia rapporto
               </button>
               <button type="button" class="tasto" data-apri-rinomina="${testo(casa.casa)}">
                 Rinomina
               </button>
-              <button type="button" class="tasto male" data-molla="${testo(casa.casa)}">
-                Non seguirla più
-              </button>
+              <button type="button" class="tasto male" data-molla="${testo(casa.casa)}"> Rimuovi </button>
             </div>
             <!-- La casella del nome, chiusa finché non si preme «Rinomina».
                  Prima era un window.prompt: funzionava, e sul telefono si apre
@@ -3967,8 +3917,8 @@
                 type="text"
                 data-rinomina-nome="${testo(casa.casa)}"
                 value="${casa.senzaNome ? "" : testo(casa.nome)}"
-                placeholder="Come la chiami?"
-                aria-label="Il nome di questa casa"
+                placeholder="Nome dell'impianto"
+                aria-label="Nome dell'impianto"
               />
               <button type="button" class="tasto forte" data-rinomina="${testo(casa.casa)}">
                 Salva
@@ -3979,15 +3929,8 @@
               <span>
                 ${
                   c.manutenzione
-                    ? `Questo quadro <b>non guarda dentro</b>: non apre la plancia
-                       e non vede stanze né persone. Tocca <b>due cose</b>, e
-                       solo perché questa casa gliele ha aperte: far partire un
-                       aggiornamento che è <b>già in attesa qui</b>, e riavviare
-                       Home Assistant. Non c'è altro, e non c'è una riga di
-                       comando.`
-                    : `Questo quadro <b>guarda e basta</b>: non apre la plancia,
-                       non tocca niente, e non vede entità, stanze né persone.
-                       Questa casa non ha aperto la manutenzione.`
+                    ? `Questo cruscotto <b>non entra nell'impianto</b>: non apre la plancia e non vede stanze né persone. Può fare <b>due sole cose</b>, e solo perché questo impianto gliele ha autorizzate: avviare un aggiornamento <b>già in attesa</b> e riavviare Home Assistant. Nient'altro, e nessuna riga di comando.`
+                    : `Questo cruscotto <b>è in sola lettura</b>: non apre la plancia, non modifica niente e non vede entità, stanze né persone. Questo impianto non ha attivato la manutenzione.`
                 }
               </span>
             </p>
@@ -4004,7 +3947,7 @@
                        Riavvia Home Assistant
                      </button>
                      <span class="nota" style="align-self: center">
-                       Il filo cade per un minuto e torna da solo.
+                       La connessione si interrompe per circa un minuto e si ristabilisce da sola.
                      </span>
                    </div>`
                 : ""
@@ -4012,8 +3955,8 @@
           </section>
 
           <div class="capitolo">
-            <h2>Cosa c'è da fare</h2>
-            <span>quello che questa casa chiede a te</span>
+            <h2>Da fare</h2>
+            <span>quello che questo impianto richiede</span>
           </div>
 
           <section class="riquadro">
@@ -4037,14 +3980,14 @@
           ${gliAggiornamenti(c, casa)}
 
           <div class="capitolo">
-            <h2>Come sta</h2>
-            <span>la macchina, la rete, e cosa risponde</span>
+            <h2>Stato dell'impianto</h2>
+            <span>macchina, rete e dispositivi</span>
           </div>
 
           ${laMacchina(c)} ${laRete(c)} ${gliAddon(c)}
 
           <section class="riquadro">
-            <div class="capoRiquadro"><h3>La salute, quattordici giorni</h3></div>
+            <div class="capoRiquadro"><h3>Ultimi quattordici giorni</h3></div>
             ${laStriscia(casa.giorni, true)}
             <dl class="misure">
               ${misure
@@ -4068,27 +4011,15 @@
               ${iNomiGiu(c)}
             </div>
             <p class="nota">
-              Questi non rispondono <em>adesso</em>: Home Assistant ci ha
-              parlato e non ci parla più. Può essere la presa staccata, il nodo
-              Zigbee che se n'è andato, l'integrazione caduta — e può essere
-              anche solo la rete che balla, per cui prima di mettersi in
-              macchina conviene guardare se domani ci sono ancora gli stessi
-              nomi.
-              <br /><br />
-              Questa casa manda <b>solo il nome di quelli che non rispondono</b>,
-              e nient'altro di quello che ha dentro: i dispositivi che
-              funzionano il quadro non li vede nemmeno contati uno per uno. Chi
-              ci abita lo sa prima di incollare il codice — c'è scritto nella
-              casella dell'add-on — e lo rilegge parola per parola nella scheda
-              «Il quadro», dove c'è anche il tasto per smettere.
+              Questi dispositivi non rispondono <em>in questo momento</em>: Home Assistant li conosce ma non li raggiunge più. Può essere una presa staccata, un nodo Zigbee perso, un'integrazione caduta, o anche solo la rete instabile: prima di un intervento conviene verificare se domani compaiono ancora gli stessi nomi. <br /><br /> Questo impianto invia <b>solo i nomi dei dispositivi che non rispondono</b>, nient'altro: quelli che funzionano il cruscotto non li vede nemmeno. Chi abita la casa lo sa prima di inserire il codice — è scritto nella configurazione dell'add-on — e lo rilegge nella scheda «Il cruscotto», dove c'è anche il tasto per interrompere l'invio.
             </p>
           </section>`
               : ""
           }
 
           <div class="capitolo">
-            <h2>Cos'è, di preciso</h2>
-            <span>i numeri di versione, e il rapporto com'è arrivato</span>
+            <h2>Dettagli tecnici</h2>
+            <span>versioni e rapporto completo</span>
           </div>
 
           <section class="riquadro">
@@ -4100,7 +4031,7 @@
                 <tr>
                   <td>${testo(che)}</td>
                   <td class="numero">
-                    ${cE(quale) ? testo(quale) : '<span class="nonLoDice">non lo dice</span>'}${nuova ? '<span class="pastiglia attenta" style="margin-left:8px">c&#39;è la nuova</span>' : ""}
+                    ${cE(quale) ? testo(quale) : '<span class="nonLoDice">non comunicato</span>'}${nuova ? '<span class="pastiglia attenta" style="margin-left:8px">aggiornamento disponibile</span>' : ""}
                   </td>
                 </tr>`,
                 )
@@ -4110,17 +4041,10 @@
 
           <section class="riquadro">
             <details class="rapporto">
-              <summary><h3>Il rapporto, come è arrivato</h3></summary>
+              <summary><h3>Rapporto completo</h3></summary>
               <pre>${testo(JSON.stringify(c, null, 2))}</pre>
               <p class="nota" style="margin-top: 14px">
-                Questo è <strong>tutto</strong> quello che questa casa manda.
-                Gli unici nomi che ci trovi sono quelli dei dispositivi che in
-                questo momento non rispondono; di tutti gli altri non c'è
-                nemmeno l'elenco. Nessuna persona, nessuno stato di nessun
-                sensore, nessun indirizzo pubblico. Lo stesso testo, parola per
-                parola, lo legge chi ci abita: sta nella scheda «Il quadro»
-                della console dell'add-on, insieme al tasto per smettere di
-                mandarlo.
+                Questo è <strong>tutto</strong> ciò che l'impianto invia. Gli unici nomi presenti sono quelli dei dispositivi che in questo momento non rispondono; degli altri non c'è nemmeno l'elenco. Nessuna persona, nessuno stato di sensori, nessun indirizzo pubblico. Lo stesso testo lo legge chi abita la casa, nella scheda «Il cruscotto» della console dell'add-on, insieme al tasto per interrompere l'invio.
               </p>
             </details>
           </section>
@@ -4195,7 +4119,7 @@
               .join("")}
             ${
               !rotti.length && stato.chiave !== "offline"
-                ? `<li><i></i><span>${testo(stato.perché || "Niente che non vada.")}</span></li>`
+                ? `<li><i></i><span>${testo(stato.perché || "Nessuna anomalia.")}</span></li>`
                 : ""
             }
           </ul>
@@ -4211,7 +4135,7 @@
             quantiGiu(c) > 0
               ? `<section class="riquadro">
                    <div class="capoRiquadro">
-                     <h3>Chi non risponde</h3>
+                     <h3>Dispositivi che non rispondono</h3>
                      <span class="conta">${plurale(c.entita?.dispositivi ?? quantiGiu(c), "dispositivo", "dispositivi")}</span>
                    </div>
                    <div class="nomiGiu">${iNomiGiu(c)}</div>
@@ -4219,8 +4143,7 @@
               : ""
           }
           <p class="nota" style="margin: 4px 4px 0">
-            Qui c'è solo quello che non va. «Mostra tutto» apre la scheda intera:
-            la macchina, la rete, gli add-on, le versioni.
+            Qui ci sono solo le anomalie. «Mostra tutto» apre la scheda completa: macchina, rete, add-on, versioni.
           </p>
         `;
       }
@@ -4238,7 +4161,7 @@
             <div class="anellino">
               <div class="cerchio">${anellino(0, "bene", false)}<b class="attenta">—</b></div>
               <span>${testo(che)}</span>
-              <small class="nonLoDice">non lo dice</small>
+              <small class="nonLoDice">non comunicato</small>
             </div>`;
         return `
           <div class="anellino">
@@ -4271,7 +4194,8 @@
         /* Un rapporto senza macchina non e' una casa senza macchina: e' una
          * casa il cui Supervisor non ha risposto. Si dice, e non si disegnano
          * cinque metri a zero. */
-        if (!m) return riquadroMuto("La macchina", "Il Supervisor di questa casa non ha risposto.");
+        if (!m)
+          return riquadroMuto("La macchina", "Il Supervisor di questo impianto non ha risposto.");
         const metri = [
           unMetro({
             che: "CPU",
@@ -4328,10 +4252,10 @@
                 .join(" · ")}${cE(c.sistema) || cE(m.accesaDa) ? "." : ""}
               ${
                 m.discoVita !== null && m.discoVita >= DISCO_STANCO
-                  ? `Il supporto è consumato al ${m.discoVita}%: su queste schede è la cosa che si rompe per prima, e si cambia prima che decida lui.`
+                  ? `Il disco è consumato al ${m.discoVita}%: su queste schede è il primo componente a guastarsi, meglio sostituirlo per tempo.`
                   : m.temperatura >= SOGLIE.troppoCaldo
-                    ? `Sopra i ${SOGLIE.troppoCaldo}° la scheda si rallenta da sola: la casa non si rompe, diventa lenta — e nessuno capisce perché.`
-                    : "Niente che chieda di andare a vedere."
+                    ? `Sopra i ${SOGLIE.troppoCaldo}° la scheda riduce la velocità da sola: l'impianto non si guasta, ma rallenta.`
+                    : "Nessun valore fuori soglia."
               }
             </p>
           </section>`;
@@ -4357,7 +4281,7 @@
         if (!c.aggiornamenti)
           return riquadroMuto(
             "Gli aggiornamenti",
-            "Questa casa non ha detto cosa c'è da aggiornare.",
+            "Questo impianto non ha comunicato gli aggiornamenti.",
           );
         const elenco = c.aggiornamenti.elenco || [];
         const cartello = ilCartello(c, casa?.chiesto);
@@ -4385,14 +4309,10 @@
                   ? `<div class="limite" style="margin-top: 16px">
                       <span class="gettone" aria-hidden="true">◴</span>
                       <span>
-                        <b>${plurale(quanti, "aggiornamento in attesa", "aggiornamenti in attesa")}, ma questa casa non manda l'elenco.</b>
-                        Il numero arriva, i nomi no: è un gdahome più vecchio
-                        della 1.5.9, che l'elenco non lo sapeva ancora mandare.
-                        Aggiorna l'add-on su quella casa e qui compaiono i nomi,
-                        i loghi, cosa cambia e il tasto per installarli.
+                        <b>${plurale(quanti, "aggiornamento in attesa", "aggiornamenti in attesa")}, ma questo impianto non manda l'elenco.</b> Il numero arriva, i nomi no: è una versione di gdahome precedente alla 1.5.9, che non inviava ancora l'elenco. Aggiorna l'add-on su quell'impianto e qui compaiono nomi, icone, note e il tasto per installare.
                       </span>
                     </div>`
-                  : `<p class="nota">Niente da fare: questa casa è aggiornata.</p>`
+                  : `<p class="nota">Nessun aggiornamento in attesa: l'impianto è aggiornato.</p>`
               }
             </section>`;
 
@@ -4415,25 +4335,12 @@
             ${
               c.manutenzione
                 ? `<p class="verdetto">
-                    Il backup si fa <b>prima, sempre</b>: è la condizione, non
-                    una casella da spuntare. E se ne fa <b>uno per volta</b>:
-                    due insieme su una casa sola vogliono dire non sapere quale
-                    dei due non è tornato — per questo qui non c'è nessun
-                    «installa tutti».
+                    Il backup viene <b>sempre prima</b>: è la condizione, non un'opzione. E si installa <b>uno per volta</b>: due insieme sullo stesso impianto vogliono dire non sapere quale dei due ha causato un problema. Per questo non c'è un «installa tutti».
                   </p>`
                 : `<div class="limite" style="margin-top: 16px">
                     <span class="gettone" aria-hidden="true">◴</span>
                     <span>
-                      <b>Questa casa non ha aperto la manutenzione.</b> Si vede
-                      cosa c'è da fare e non si può farlo, ed è giusto così:
-                      guardare e toccare sono due permessi diversi.
-                      <br /><br />
-                      Lo accende <b>chi ci abita</b>, sul suo Home Assistant:
-                      <b>Impostazioni › Add-on › gdahome › Configurazione</b>, la
-                      casella <i>«Lascia che chi ti ha fatto l'impianto aggiorni
-                      da lontano»</i>, poi <b>Salva</b> e l'add-on riparte da sé.
-                      Da qui non si accende, e non è una dimenticanza: sarebbe il
-                      permesso che se lo dà da solo.
+                      <b>Questo impianto non ha attivato la manutenzione.</b> Gli aggiornamenti si vedono ma non si possono installare: vedere e intervenire sono due permessi diversi. <br /><br /> La attiva <b>chi abita la casa</b>, dal suo Home Assistant: <b>Impostazioni › Add-on › gdahome › Configurazione</b>, la casella <i>«Lascia che chi ti ha fatto l'impianto aggiorni da lontano»</i>, poi <b>Salva</b>; l'add-on si riavvia da solo. Da qui non si può attivare, ed è voluto: sarebbe un permesso che si concede da solo.
                     </span>
                   </div>`
             }
@@ -4469,7 +4376,7 @@
         if (eLaStessa(uno, c.lavoro) && c.lavoro.stato === "in corso")
           return '<span class="pastiglia lavoro">in corso</span>';
         if (casa?.chiesto || staLavorando(c)) return '<span class="pastiglia">uno per volta</span>';
-        if (!c.manutenzione) return '<span class="pastiglia">manutenzione chiusa</span>';
+        if (!c.manutenzione) return '<span class="pastiglia">manutenzione non attiva</span>';
         return `<button
           type="button"
           class="tasto"
@@ -4501,9 +4408,7 @@
                     ? "Il riavvio di Home Assistant"
                     : `${testo(chiesto.nome)} ${testo(chiesto.da)} → ${testo(chiesto.a)}`
                 }</b>
-                è stato chiesto ${testo(daQuanto(chiesto.chiesto))}. Parte quando questa
-                casa manda il prossimo rapporto — non si bussa alla porta di
-                nessuno, è lei che passa a prenderselo.
+                è stato richiesto ${testo(daQuanto(chiesto.chiesto))}. Parte al prossimo rapporto di questo impianto: è l'impianto a ritirare il comando, il cruscotto non lo contatta.
               </span>
             </div>`;
         const l = c.lavoro;
@@ -4514,15 +4419,15 @@
           return `
             <div class="cartello bene">
               <span class="gettone" aria-hidden="true">✓</span>
-              <span><b>${testo(l.cosa)}</b> ${l.riavvio ? "fatto" : "installato"} ${testo(daQuanto(l.quando))}, dal quadro.</span>
+              <span><b>${testo(l.cosa)}</b> ${l.riavvio ? "fatto" : "installato"} ${testo(daQuanto(l.quando))}, dal cruscotto.</span>
             </div>`;
         if (l.stato === "non riuscito")
           return `
             <div class="cartello male">
               <span class="gettone" aria-hidden="true">✕</span>
               <span
-                ><b>${testo(l.cosa)}</b> non è andato ${testo(daQuanto(l.quando))}:
-                ${testo(l.perche || "questa casa ha detto di no")}.</span
+                ><b>${testo(l.cosa)}</b> non è riuscito ${testo(daQuanto(l.quando))}:
+                ${testo(l.perche || "l'impianto ha rifiutato")}.</span
               >
             </div>`;
         const fermi = Math.round((ADESSO() - new Date(c.quando).getTime()) / 60000);
@@ -4533,10 +4438,10 @@
             <span>
               <b>${testo(l.cosa)}</b> è partito ${testo(daQuanto(l.quando))}${
                 tardi
-                  ? ` e questa casa non è più tornata. Un riavvio dura pochi minuti: qui si va di persona.`
+                  ? ` e questo impianto non ha più risposto. Un riavvio dura pochi minuti: serve un intervento sul posto.`
                   : l.stacca
-                    ? `. La casa si riavvia, quindi per qualche minuto non si fa sentire — è normale.`
-                    : `. Come è andata lo dirà il prossimo rapporto.`
+                    ? `. L'impianto si riavvia: per qualche minuto non risponde, ed è normale.`
+                    : `. L'esito arriva col prossimo rapporto.`
               }
             </span>
           </div>`;
@@ -4554,13 +4459,14 @@
        * si dice zero invece di fingere. */
       function laRete(c) {
         const r = c.rete;
-        if (!r) return riquadroMuto("La rete", "Questa casa non ha detto niente della sua rete.");
+        if (!r)
+          return riquadroMuto("La rete", "Questo impianto non ha comunicato lo stato della rete.");
         return `
           <section class="riquadro">
             <div class="capoRiquadro">
               <h3>La rete</h3>
               <span class="pastiglia ${r.internet ? "bene" : "male"}">
-                ${r.internet ? "internet c&#39;è" : "senza internet"}
+                ${r.internet ? "internet raggiungibile" : "senza internet"}
               </span>
             </div>
             <ul class="schede">
@@ -4585,9 +4491,9 @@
             <p class="verdetto">
               ${
                 r.sorvegliate.quante === 0
-                  ? "Nessun apparato di rete sorvegliato in questa casa: nella plancia, sezione «Macchine e rete», si spunta l'integrazione del router e i suoi ripetitori compaiono da soli."
+                  ? "Nessun apparato di rete monitorato in questo impianto: nella plancia, sezione «Macchine e rete», si seleziona l'integrazione del router e i ripetitori compaiono da soli."
                   : r.sorvegliate.giu === 0
-                    ? `${plurale(r.sorvegliate.quante, "apparato sorvegliato", "apparati sorvegliati")}, tutti su.`
+                    ? `${plurale(r.sorvegliate.quante, "apparato monitorato", "apparati monitorati")}, tutti raggiungibili.`
                     : `${r.sorvegliate.giu} ${r.sorvegliate.giu === 1 ? "apparato" : "apparati"} su ${r.sorvegliate.quante} non rispondono.`
               }
             </p>
@@ -4598,7 +4504,8 @@
        * girare e non gira? */
       function gliAddon(c) {
         const a = c.addon;
-        if (!a) return riquadroMuto("Gli add-on", "Questa casa non ha detto quali add-on ha.");
+        if (!a)
+          return riquadroMuto("Gli add-on", "Questo impianto non ha comunicato i suoi add-on.");
         return `
           <section class="riquadro">
             <div class="capoRiquadro">
@@ -4611,7 +4518,7 @@
                   const come = uno.su ? "" : uno.allAvvio ? "fermo" : "apposta";
                   return `<span class="uno ${come}"
                     ><span class="puntino" aria-hidden="true"></span>${testo(uno.nome)}${
-                      uno.su ? "" : uno.allAvvio ? " — fermo" : " — spento a mano"
+                      uno.su ? "" : uno.allAvvio ? " · fermo" : " · spento manualmente"
                     }</span>`;
                 })
                 .join("")}
@@ -4619,8 +4526,8 @@
             <p class="verdetto">
               ${
                 a.spentiCheDovrebbero === 0
-                  ? "Nessun add-on con l'avvio automatico è fermo. Quelli spenti a mano restano spenti, ed è giusto: li ha spenti qualcuno."
-                  : `${plurale(a.spentiCheDovrebbero, "add-on parte", "add-on partono")} all'avvio e in questo momento ${a.spentiCheDovrebbero === 1 ? "è fermo" : "sono fermi"}. Nessuno spegne un add-on lasciandogli l'avvio automatico: questo si è fermato da solo.`
+                  ? "Nessun add-on con avvio automatico è fermo. Quelli spenti manualmente restano spenti: li ha spenti qualcuno."
+                  : `${plurale(a.spentiCheDovrebbero, "add-on parte", "add-on partono")} all'avvio e in questo momento ${a.spentiCheDovrebbero === 1 ? "è fermo" : "sono fermi"}. Un add-on con avvio automatico non si spegne da solo: si è arrestato.`
               }
             </p>
           </section>`;
@@ -4679,17 +4586,14 @@
         if (!indietro.length)
           return `
             <h1 class="titolone">Gli aggiornamenti</h1>
-            <p class="sottotitolo">Tutte le case sono aggiornate. Non capita spesso.</p>`;
+            <p class="sottotitolo">Tutti gli impianti sono aggiornati.</p>`;
 
         const voci = indietro.reduce((somma, una) => somma + una.cose.length, 0);
 
         return `
           <h1 class="titolone">Gli aggiornamenti</h1>
           <p class="sottotitolo">
-            ${plurale(voci, "cosa da installare", "cose da installare")} su
-            ${plurale(indietro.length, "casa", "case")}. Una casa per riquadro, con
-            dentro quello che le manca: si installa da qui, una cosa per volta, e
-            premendo il nome si apre la scheda con tutto il resto.
+            ${plurale(voci, "aggiornamento in attesa", "aggiornamenti in attesa")} su ${plurale(indietro.length, "impianto", "impianti")}. Un riquadro per impianto, con quello che gli manca: si installa da qui, uno per volta, e premendo il nome si apre la scheda completa.
           </p>
 
           ${indietro
@@ -4706,7 +4610,7 @@
                       ${testo(casa.nome)}
                     </button>
                   </h3>
-                  <span class="conta">${plurale(cose.length, "cosa", "cose")}</span>
+                  <span class="conta">${plurale(cose.length, "aggiornamento", "aggiornamenti")}</span>
                 </div>
                 <ul class="versi">
                   ${cose
@@ -4716,7 +4620,7 @@
                 <p class="verdetto">
                   ${
                     !aperta && daQui
-                      ? "Questa casa non ha aperto la manutenzione al quadro: da qui non si installa niente, e non è un guasto — è una scelta di chi ci abita. La accende lui, dal suo Home Assistant: Impostazioni › Add-on › gdahome › Configurazione, la casella «Lascia che chi ti ha fatto l'impianto aggiorni da lontano». "
+                      ? "Questo impianto non ha attivato la manutenzione: da qui non si installa niente, ed è una scelta di chi abita la casa. La attiva lui, dal suo Home Assistant: Impostazioni › Add-on › gdahome › Configurazione, la casella «Lascia che chi ti ha fatto l'impianto aggiorni da lontano». "
                       : ""
                   }${
                     dalSuoApparecchio
@@ -4724,7 +4628,7 @@
                       : ""
                   }${
                     aperta && daQui
-                      ? "Il backup viene prima, sempre; e se ne fa uno per volta, che è il motivo per cui non c'è nessun «installa tutti»."
+                      ? "Il backup viene sempre prima, e si installa uno per volta: per questo non c'è un «installa tutti»."
                       : ""
                   }
                 </p>
@@ -4733,24 +4637,18 @@
             .join("")}
 
           <section class="riquadro" style="margin-top: 14px">
-            <div class="capoRiquadro"><h3>Prima di premere</h3></div>
+            <div class="capoRiquadro"><h3>Prima di installare</h3></div>
             <ul class="controlli">
               <li class="bene">
                 <span class="bollino" aria-hidden="true">✓</span>
                 <span class="cosa">
-                  <b>Il backup viene prima, sempre.</b> Non è una casella da
-                  spuntare: è la condizione perché il tasto esista. Un
-                  aggiornamento che va storto senza backup dietro è una casa da
-                  rifare.
+                  <b>Il backup viene sempre prima.</b> Non è un'opzione: è la condizione perché il tasto esista. Un aggiornamento fallito senza backup è un impianto da rifare.
                 </span>
               </li>
               <li class="bene">
                 <span class="bollino" aria-hidden="true">✓</span>
                 <span class="cosa">
-                  <b>Quelli che vogliono un riavvio, uno per volta.</b> gdahome e
-                  Home Assistant si riavviano installandosi: due insieme sulla
-                  stessa casa vogliono dire non sapere quale dei due non è
-                  tornato.
+                  <b>Quelli che richiedono un riavvio, uno per volta.</b> gdahome e Home Assistant si riavviano durante l'installazione: due insieme sullo stesso impianto vogliono dire non sapere quale dei due ha causato un problema.
                 </span>
               </li>
             </ul>
@@ -4774,19 +4672,15 @@
         const primo = INVITI[0] || null;
 
         return `
-          <h1 class="titolone">Abbina un impianto</h1>
+          <h1 class="titolone">Abbinamento</h1>
           <p class="sottotitolo">
-            Un codice che vale <b>un giorno</b> e <b>una casa sola</b>. Si fa qui,
-            si manda a chi ci abita, e da quel momento quella casa manda il suo
-            rapporto — e nient'altro. È lungo sedici caratteri, a gruppi di
-            quattro: la chiave con cui apri questa pagina è un'altra cosa, ed è
-            il doppio.
+            Un codice che vale <b>un giorno</b> e <b>un solo impianto</b>. Si genera qui, si invia a chi abita la casa, e da quel momento quell'impianto invia il suo rapporto, e nient'altro. È lungo sedici caratteri, a gruppi di quattro: la chiave con cui apri questa pagina è un'altra cosa, ed è lunga il doppio.
           </p>
 
           <div class="abbina">
             <div class="colonna">
               <section class="riquadro tinto">
-                <div class="capoRiquadro"><h3>Il codice di adesso</h3></div>
+                <div class="capoRiquadro"><h3>Codice attivo</h3></div>
                 ${
                   primo
                     ? `<div class="codice">
@@ -4795,13 +4689,10 @@
                       </div>
                       <div class="scadenza">
                         <span class="battito" aria-hidden="true"></span>
-                        Scade fra <b data-orologio="${primo.scadeFra}">—</b> · fatto ${testo(daQuanto(primo.fattoIl))}
+                        Scade fra <b data-orologio="${primo.scadeFra}">—</b> · generato ${testo(daQuanto(primo.fattoIl))}
                       </div>`
                     : `<p class="nota" style="margin: 16px 0 12px">
-                        Non c'è nessun codice aperto. Fanne uno e mandalo a chi
-                        abita la casa: vale un giorno, e va incollato nella scheda
-                        dell'add-on gdahome di casa sua. Si abbina da sé appena
-                        quella casa si fa viva.
+                        Nessun codice attivo. Generane uno e invialo a chi abita la casa: vale un giorno, e va inserito nella configurazione dell'add-on gdahome. L'abbinamento avviene da solo al primo rapporto.
                       </p>`
                 }
 
@@ -4814,15 +4705,12 @@
                   </li>
                   <li>
                     <span>
-                      Incolla il codice nella casella <b>Il codice di chi ti ha
-                      fatto l'impianto</b> e premi <b>Salva</b>. L'add-on si
-                      riavvia da solo.
+                      Inserisci il codice nella casella <b>Il codice di chi ti ha fatto l'impianto</b> e premi <b>Salva</b>. L'add-on si riavvia da solo.
                     </span>
                   </li>
                   <li>
                     <span>
-                      Entro un minuto la casa compare qui sotto, in
-                      <b>appena arrivate</b>. Le dai un nome e hai finito.
+                      Entro un minuto l'impianto compare qui sotto, in <b>Nuovi impianti</b>. Gli assegni un nome e hai finito.
                     </span>
                   </li>
                 </ol>
@@ -4830,14 +4718,11 @@
                 ${
                   quanteRestano() === 0
                     ? `<p class="minuta" style="margin-top: 16px">
-                         <b>Sei arrivato al tuo limite di ${IO.soglia} impianti.</b> Per aggiungerne
-                         serve alzarlo: scrivi a chi tiene il quadro. I codici già fatti restano
-                         buoni, e gli impianti che segui continuano a funzionare.
+                         <b>Hai raggiunto il limite di ${IO.soglia} impianti.</b> Per aggiungerne altri serve alzarlo: contatta chi gestisce il cruscotto. I codici già generati restano validi, e gli impianti che segui continuano a funzionare.
                        </p>`
                     : quanteRestano() !== null && quanteRestano() <= 3
                       ? `<p class="minuta" style="margin-top: 16px">
-                           Ne restano <b>${quanteRestano()}</b> prima del tuo limite di
-                           ${IO.soglia}. Gli inviti aperti contano.
+                           Restano <b>${quanteRestano()}</b> posti prima del limite di ${IO.soglia}. I codici attivi contano.
                          </p>`
                       : ""
                 }
@@ -4847,8 +4732,8 @@
                     type="text"
                     id="per-chi"
                     maxlength="60"
-                    placeholder="Per chi è, se ti serve ricordartelo"
-                    aria-label="Per chi è questo codice"
+                    placeholder="Riferimento (facoltativo)"
+                    aria-label="Riferimento del codice"
                   />
                   <button
                     type="button"
@@ -4856,14 +4741,14 @@
                     data-fai
                     ${quanteRestano() === 0 ? "disabled" : ""}
                   >
-                    ${primo ? "Fai un altro codice" : "Fai un codice"}
+                    ${primo ? "Genera un altro codice" : "Genera codice"}
                   </button>
                 </div>
               </section>
 
               <section class="riquadro">
                 <div class="capoRiquadro">
-                  <h3>Appena arrivate</h3>
+                  <h3>Nuovi impianti</h3>
                   <span class="conta">${appenaArrivate().length}</span>
                 </div>
                 ${
@@ -4876,33 +4761,27 @@
                             <span class="che">
                               <b class="mono">${testo(una.casa.slice(0, 22))}…</b>
                               <span
-                                >arrivata ${testo(daQuanto(una.da))}${una.carta?.ha ? ` · Home Assistant ${testo(una.carta.ha)}` : ""}</span
+                                >abbinato ${testo(daQuanto(una.da))}${una.carta?.ha ? ` · Home Assistant ${testo(una.carta.ha)}` : ""}</span
                               >
                             </span>
                             <input
                               type="text"
                               id="nome-${testo(una.casa.slice(5, 13))}"
                               data-nome="${testo(una.casa)}"
-                              placeholder="Come la chiami?"
-                              aria-label="Il nome di questa casa"
+                              placeholder="Nome dell'impianto"
+                              aria-label="Nome dell'impianto"
                             />
-                            <button type="button" class="tasto forte" data-tieni="${testo(una.casa)}">
-                              Tienila
-                            </button>
+                            <button type="button" class="tasto forte" data-tieni="${testo(una.casa)}"> Salva </button>
                           </li>`,
                           )
                           .join("")}
                       </ul>
                       <p class="nota" style="margin-top: 14px">
-                        Il nome lo scrivi tu e resta qui: la casa non lo manda e
-                        non lo saprà mai. È l'unica cosa in questo quadro che
-                        parla di una persona, e sta sulla tua macchina perché con
-                        quella persona il contratto ce l'hai tu.
+                        Il nome lo scrivi tu e resta qui: l'impianto non lo invia e non lo conoscerà mai. È l'unico dato in questo cruscotto che riguarda una persona, e resta sul tuo server perché il contratto con quella persona ce l'hai tu.
                       </p>`
                     : `<div class="vuoto">
                         <span class="battito" aria-hidden="true"></span>
-                        Nessuna casa in arrivo. Quando una userà il codice, la
-                        vedi comparire qui.
+                        Nessun impianto in arrivo. Quando uno userà il codice, comparirà qui.
                       </div>`
                 }
               </section>
@@ -4911,7 +4790,7 @@
             <div class="colonna">
               <section class="riquadro">
                 <div class="capoRiquadro">
-                  <h3>Codici in attesa</h3>
+                  <h3>Codici attivi</h3>
                   <span class="conta">${INVITI.length}</span>
                 </div>
                 <ul class="righe">
@@ -4920,41 +4799,33 @@
                     <li>
                       <span class="che">
                         <b class="mono">${testo(laRiga(uno.codice))}</b>
-                        <span>${uno.per ? `${testo(uno.per)} · ` : ""}fatto ${testo(daQuanto(uno.fattoIl))}</span>
+                        <span>${uno.per ? `${testo(uno.per)} · ` : ""}generato ${testo(daQuanto(uno.fattoIl))}</span>
                       </span>
                       <span class="pastiglia attenta">
                         scade fra <b data-orologio="${uno.scadeFra}">—</b>
                       </span>
-                      <button type="button" class="tasto male" data-annulla="${testo(uno.codice)}">
-                        Annulla
-                      </button>
+                      <button type="button" class="tasto male" data-annulla="${testo(uno.codice)}"> Revoca </button>
                     </li>`,
                   ).join("")}
                 </ul>
                 <div class="avvertenza">
                   <span class="gettone" aria-hidden="true">!</span>
                   <span>
-                    Un codice che scade non fa danni: semplicemente non apre più
-                    niente. Se ne fai uno e poi cambi idea, annullalo — finché è
-                    vivo, chiunque ce l'abbia può far entrare <em>una</em> casa
-                    in questo quadro.
+                    Un codice scaduto non fa danni: semplicemente non è più valido. Se ne generi uno e poi cambi idea, revocalo: finché è attivo, chiunque lo possieda può abbinare <em>un</em> impianto a questo cruscotto.
                   </span>
                 </div>
               </section>
 
               <section class="riquadro">
-                <div class="capoRiquadro"><h3>Il tuo marchio</h3></div>
+                <div class="capoRiquadro"><h3>Il tuo logo</h3></div>
                 <p class="minuta">
-                  Il logo che hai stampato sul furgone. Compare qui in cima al
-                  posto del nostro, e <b>in casa dei tuoi clienti</b>: chi ci
-                  abita, quando ha un problema, chiama te — e allora è il tuo
-                  nome quello che deve leggere.
+                  Compare qui in alto al posto del nostro e <b>nell'app dei tuoi clienti</b>: chi ha un problema chiama te, ed è il tuo nome che deve vedere.
                 </p>
                 <div class="provaMarchio">
                   ${
                     IO.marchio
                       ? `<img class="suoMarchio" src="${ilSuoMarchio()}" alt="Il tuo marchio" />`
-                      : `<span class="vuoto" aria-hidden="true">qui</span>`
+                      : `<span class="vuoto" aria-hidden="true">logo</span>`
                   }
                   <div class="azioni">
                     <input
@@ -4963,50 +4834,14 @@
                       accept="image/png,image/jpeg,image/webp,image/svg+xml"
                       aria-label="Scegli il file del tuo marchio"
                     />
-                    ${IO.marchio ? `<button type="button" class="tasto" data-togli-marchio>Togli</button>` : ""}
+                    ${IO.marchio ? `<button type="button" class="tasto" data-togli-marchio>Rimuovi</button>` : ""}
                   </div>
                 </div>
                 <p class="minuta" id="esito-marchio" hidden></p>
                 <div class="avvertenza">
                   <span class="gettone" aria-hidden="true">!</span>
                   <span>
-                    PNG, JPEG, WEBP o SVG, <b>fino a 128 kB</b>. Quadrato viene
-                    meglio: sta in un quadratino da trenta punti. Questo file lo
-                    scarica il browser di chi abita le case che segui, senza
-                    nessuna chiave — mettici il logo, non altro.
-                  </span>
-                </div>
-              </section>
-
-              <section class="riquadro">
-                <div class="capoRiquadro"><h3>Quando una casa tace</h3></div>
-                <p class="minuta">
-                  Il quadro ti scrive quando un impianto smette di parlare da più
-                  di due ore, e di nuovo quando riprende. Mette un
-                  <span class="mono">POST</span> a un indirizzo tuo: va bene un
-                  bot di Telegram, Slack, ntfy, o quello che usi già.
-                </p>
-                <div class="azioni">
-                  <input
-                    type="url"
-                    id="dove-avvisi"
-                    maxlength="300"
-                    placeholder="https://…"
-                    aria-label="Dove mandare gli avvisi"
-                    value="${testo(IO.avvisi || "")}"
-                  />
-                  <button type="button" class="tasto forte" data-avvisi>Salva</button>
-                  ${IO.avvisi ? `<button type="button" class="tasto" data-prova-avvisi>Mandane uno di prova</button>` : ""}
-                </div>
-                <p class="minuta" id="esito-avvisi" hidden></p>
-                <div class="avvertenza">
-                  <span class="gettone" aria-hidden="true">!</span>
-                  <span>
-                    Nell'avviso c'è il nome che hai dato tu alla casa, che è
-                    l'unica cosa in tutto questo quadro che nomini una persona:
-                    per questo l'indirizzo dev'essere <b>https</b>, e per questo
-                    va in un posto che leggi solo tu. Lascialo vuoto e non parte
-                    niente.
+                    PNG, JPEG, WEBP o SVG, <b>fino a 128 kB</b>. Meglio quadrato: viene mostrato in un riquadro da trenta punti. Questo file lo scarica il browser di chi abita gli impianti che segui, senza alcuna chiave: caricaci solo il logo.
                   </span>
                 </div>
               </section>
@@ -5017,52 +4852,31 @@
                   <li class="bene">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
-                      <b>Il codice si brucia.</b> Appena una casa lo usa, non vale
-                      più per nessun'altra: quella casa riceve una chiave sua, e
-                      da lì in poi è con quella che si presenta.
+                      <b>Il codice è monouso.</b> Appena un impianto lo usa, non vale più per nessun altro: quell'impianto riceve una chiave propria, con cui si presenta da quel momento.
                     </span>
                   </li>
                   <li class="bene">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
-                      <b>Si stacca da due parti.</b> Tu con «non seguirla più», e
-                      chi ci abita dalla console dell'add-on, dove legge in chiaro
-                      l'ultimo rapporto spedito e ha lì il tasto per smettere.
+                      <b>Si può scollegare da entrambe le parti.</b> Tu con «Rimuovi», e chi abita la casa dalla console dell'add-on, dove legge in chiaro l'ultimo rapporto inviato e ha il tasto per interrompere.
                     </span>
                   </li>
                   <li class="bene">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
-                      <b>Il quadro non guarda dentro.</b> Non apre la plancia e
-                      non vede entità, stanze né persone: riceve un rapporto
-                      di numeri. Per entrare in una casa serve un abbinamento, e
-                      quello lo dà chi ci abita, col suo segno, che toglie con un
-                      bottone quando vuole.
+                      <b>Il cruscotto non entra nell'impianto.</b> Non apre la plancia e non vede entità, stanze né persone: riceve un rapporto di numeri. L'abbinamento lo concede chi abita la casa, e lo revoca con un tasto quando vuole.
                     </span>
                   </li>
                   <li class="bene">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
-                      <b>La manutenzione è un secondo interruttore.</b> Mandare
-                      il rapporto e lasciarsi aggiornare sono due permessi, e il
-                      secondo è spento di serie: chi lo accende lo accende
-                      apposta. Acceso, da qui si può far partire un
-                      aggiornamento che quella casa <em>ha già in attesa</em> —
-                      un verbo solo, scritto nel programma — e nient'altro:
-                      niente riga di comando, niente configurazione, niente
-                      lettura di stati. Quello che si chiede finisce nel
-                      rapporto di quella casa, dove chi ci abita lo rilegge
-                      parola per parola.
+                      <b>La manutenzione è un permesso separato.</b> Inviare il rapporto e accettare aggiornamenti sono due permessi, e il secondo è disattivato di serie: chi lo attiva lo fa di proposito. Con la manutenzione attiva, da qui si può avviare un aggiornamento che quell'impianto <em>ha già in attesa</em> e riavviare Home Assistant, e nient'altro: nessuna riga di comando, nessuna configurazione, nessuna lettura di stati. Ogni richiesta finisce nel rapporto di quell'impianto, dove chi abita la casa la rilegge.
                     </span>
                   </li>
                   <li class="bene">
                     <span class="bollino" aria-hidden="true">✓</span>
                     <span class="cosa">
-                      <b>Non passa dal centralino.</b> Il rapporto va dalla casa
-                      a questo quadro e basta: su
-                      <span class="strada">tramite.gdahome.org</span> — quello
-                      che fa entrare i telefoni da fuori casa — non ci finisce
-                      niente.
+                      <b>Non passa dal centralino.</b> Il rapporto va dall'impianto a questo cruscotto e basta: su <span class="strada">tramite.gdahome.org</span>, il servizio che fa entrare i telefoni da fuori casa, non transita niente.
                     </span>
                   </li>
                 </ul>
@@ -5109,12 +4923,12 @@
               ${
                 perché
                   ? testo(perché)
-                  : "Te l'ha data chi tiene il quadro, il giorno che ti ha aperto il cruscotto. Resta in questo browser, e non esce da qui."
+                  : "Te l'ha consegnata chi gestisce il cruscotto. Resta in questo browser e non esce da qui."
               }
             </p>
             <div class="azioni">
-              <input type="password" id="la-chiave" placeholder="la chiave" aria-label="La chiave" />
-              <button type="button" class="tasto forte" id="entra">Entra</button>
+              <input type="password" id="la-chiave" placeholder="Chiave" aria-label="La chiave" />
+              <button type="button" class="tasto forte" id="entra">Accedi</button>
             </div>
           </section>`;
         const casella = dove.querySelector("#la-chiave");
@@ -5151,12 +4965,12 @@
       function perchéNonVaBene() {
         const nuda = String(chiave).replace(/-/g, "").length;
         if (nuda === CODICE_DI_ABBINAMENTO) {
-          return "Questo è lungo come un codice di abbinamento, non come la tua chiave: quello va incollato nella casa del cliente, non qui.";
+          return "Questo ha la lunghezza di un codice di abbinamento, non della chiave: quello va inserito nell'add-on del cliente, non qui.";
         }
         if (nuda !== LUNGA_COSI) {
-          return `La chiave non va bene: è lunga ${nuda}, e le chiavi sono lunghe ${LUNGA_COSI}.`;
+          return `Chiave non valida: è lunga ${nuda} caratteri, le chiavi ne hanno ${LUNGA_COSI}.`;
         }
-        return "La chiave non va bene.";
+        return "Chiave non valida.";
       }
 
       async function apri() {

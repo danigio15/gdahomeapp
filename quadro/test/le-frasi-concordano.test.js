@@ -191,7 +191,7 @@ test("la console disegna tre stati, non due", () => {
   const [, pagina] = PAGINE[0];
   assert.match(pagina, /ignoto/, "la console non ha piu' lo stato «non si sa»");
   assert.match(pagina, /bene: "✓", male: "✗", ignoto: "◇"/);
-  assert.match(pagina, /bene: "a posto", male: "non va", ignoto: "non si sa"/);
+  assert.match(pagina, /bene: "in ordine", male: "anomalia", ignoto: "non rilevato"/);
 });
 
 test("del collaudo non e' rimasto niente sullo schermo", () => {

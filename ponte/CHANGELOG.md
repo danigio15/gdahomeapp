@@ -31,12 +31,12 @@ schermate sta in cima e ci resta mentre si scorre — e nell'app non lascia più
 quella fascia vuota sopra la testata. Gli avvisi sono una riga in basso, non
 più una finestra del browser.
 
-Il carattere lo serve il quadro, da casa sua: il browser di chi apre queste
+Il carattere lo serve il cruscotto, da casa sua: il browser di chi apre queste
 pagine — da fuori o dentro Home Assistant — non va a farsi vedere da nessun
 altro, nemmeno per un carattere. Il cruscotto nell'app cambia da solo, senza
-aggiornare l'app: quello che l'app fa vedere è la pagina del quadro.
+aggiornare l'app: quello che l'app fa vedere è la pagina del cruscotto.
 
-**Chi tiene il quadro vede le case di ogni installatore.** Fino a ieri la
+**Chi gestisce il cruscotto vede gli impianti di ogni installatore.** Fino a ieri la
 gestione contava e basta — quanti impianti ha ognuno, non quali. Adesso vede
 di ognuno i nomi che gli ha dato, come stanno, quante entità ha ciascuna, e
 apre la stessa scheda che apre lui: **in sola lettura**, e con la stessa
@@ -53,10 +53,17 @@ un'integrazione si impunta e chi ci abita non c'è: prima si telefonava a casa
 per far premere «Riavvia». C'è solo se quella casa ha aperto la manutenzione,
 solo se lì non sta già succedendo altro, e chiede conferma in due tempi. La
 casa lo esegue al prossimo rapporto, come fa per un'installazione — e come per
-un'installazione dice di no da sola se il quadro glielo chiedesse senza
-permesso. È il secondo verbo che il quadro conosce, dopo «installa», e non ce
+un'installazione dice di no da sola se il cruscotto glielo chiedesse senza
+permesso. È il secondo verbo che il cruscotto conosce, dopo «installa», e non ce
 ne sono altri. Serve questa versione dell'add-on in casa: un ponte più vecchio
 il riavvio non lo sa fare, e lo dice.
+
+**E le parole sono quelle giuste.** Tutte le scritte del cruscotto e della
+gestione sono state riviste con termini coerenti: gli impianti sono
+«impianti», gli stati sono «offline», «da verificare» e «in ordine», i tasti
+dicono cosa fanno — «Genera codice», «Salva», «Rimuovi», «Aggiorna» — e le
+conferme in due tempi dicono «Premi ancora per confermare». La sezione degli
+avvisi via web, che nessuno usava, non c'è più.
 
 ## 1.5.9.11
 

@@ -78,7 +78,7 @@ test("offline batte tutto: di una casa che non parla non si sa niente di buono",
   const vecchia = { ...BUONA, quando: new Date(ADESSO - 3 * 60 * 60 * 1000).toISOString() };
   const stato = loStato({ carta: vecchia }, ADESSO);
   assert.equal(stato.chiave, "offline");
-  assert.match(stato.perché, /è vecchio di altrettanto/);
+  assert.match(stato.perché, /risalgono ad allora/);
 });
 
 test("una casa appena montata non finisce in una fila a parte", () => {
@@ -123,7 +123,7 @@ test("la riga dei guai si ferma a tre, che un elenco di nove non si legge", () =
   };
   const stato = loStato({ carta: messaMale }, ADESSO);
   assert.equal(stato.chiave, "guardare");
-  assert.match(stato.perché, /e altre \d+ cose qui sotto/);
+  assert.match(stato.perché, /e altre \d+ segnalazioni/);
 });
 
 test("senza niente che non va, la pastiglia dice quello che c'e' invece di tacere", () => {
