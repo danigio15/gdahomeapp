@@ -2861,7 +2861,7 @@ function cdEpChoose(id) {
     document.getElementById('cd-entpick')?.remove();
     if (ref && ref.nodeType === 1) { ref.value = id; try { ref.dispatchEvent(new Event('change')); } catch(e) {} return; } if (ref && ref.startsWith('#')) { const el = document.getElementById(ref.slice(1)); if (el) el.value = id; return; }
     if (ref === '__qa__') { const qa = document.getElementById('wz-qa-ent'); if (qa) qa.value = id; return; }
-    if (ref === '__ed_qa__') { const qa = document.getElementById('ed-qa-ent'); if (qa) qa.value = id; return; }
+    if (ref === '__ed_qa__') { const qa = document.getElementById('ed-qa-ent'); if (qa) { qa.value = id; edQaEntityChanged(); } return; }
     const inp = document.querySelector(`input[data-ref="${ref}"]`);
     if (inp) { inp.value = id; wzSetSlot(inp); if (WIZ.autoDetected) delete WIZ.autoDetected[ref]; }
     wzRender();
@@ -3705,7 +3705,7 @@ function editorRenderSezioni() {
               <div style="font-size:16px; flex-shrink:0;">${a.icon || (b && b.icon) || '⚡'}</div>
               <div class="ed-row-main">
                 <div class="ed-row-new">${a.name || (b && b.name) || '?'}</div>
-                <div class="ed-row-old mono">${a.type === 'builtin' ? 'popup nativo: ' + a.builtin : (a.type === 'luci_group' ? '💡 gruppo · ' + ((a.lights||[]).length) + ' luci' : a.type + ' · ' + (a.entity||''))}</div>
+                <div class="ed-row-old mono">${a.type === 'builtin' ? 'popup nativo: ' + a.builtin : (a.type === 'luci_group' ? '💡 gruppo · ' + ((a.lights||[]).length) + ' luci' : a.type + ' · ' + (a.entity||'') + (a.option ? ' → ' + a.option : ''))}</div>
               </div>
               ${a.type === 'luci_group' ? `<div class="ed-del" style="background:rgba(14,165,233,0.12);" onclick="edEditLightGroup(${i})">✏️</div>` : ''}
               <div class="ed-del" onclick="edDelQA(${i})">🗑️</div>
@@ -3726,7 +3726,8 @@ function editorRenderSezioni() {
               <input id="ed-qa-icon" class="ed-input ed-icon-input" placeholder="⚡" maxlength="4">
               <input id="ed-qa-name" class="ed-input" placeholder="Nome azione" style="flex:1;">
             </div>
-            <div id="ed-qa-ent-row" style="display:none; gap:6px;"><input id="ed-qa-ent" autocomplete="off" class="ed-input mono" placeholder="dm.core_054 / dm.core_023 / scene.x (non serve per i popup)"><button type="button" onclick="wzPickEntity('__ed_qa__')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>
+            <div id="ed-qa-ent-row" style="display:none; gap:6px;"><input id="ed-qa-ent" autocomplete="off" oninput="edQaEntityChanged()" class="ed-input mono" placeholder="dm.core_054 / dm.core_023 / scene.x (non serve per i popup)"><button type="button" onclick="wzPickEntity('__ed_qa__')" style="flex:0 0 38px; height:38px; border:none; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; font-size:14px; cursor:pointer;">🔍</button></div>
+            <div id="ed-qa-option-row" style="display:none; gap:6px; align-items:center;"><span style="font-size:11px; color:var(--text-dim); flex:0 0 auto;">Quale voce</span><select id="ed-qa-option" class="ed-input" style="flex:1;"></select></div>
               <div id="ed-qa-hint" style="font-size:11px; color:var(--text-dim); padding:0 2px;">💡 Dai un nome e premi Aggiungi: sceglierai le luci da una lista con ricerca.</div>
             <input id="ed-qa-confirm" class="ed-input" placeholder="Messaggio di conferma (facoltativo, es. Sei sicuro?)">
             <button class="ed-btn-add" onclick="edAddQA()">＋ Aggiungi azione rapida</button>
@@ -3816,6 +3817,34 @@ function edQaTypeChanged() {
     if (hint) hint.textContent = t === 'luci_group'
         ? '💡 Dai un nome e premi Aggiungi: sceglierai le luci da una lista con ricerca.'
         : (needsEntity ? '🔀 Scrivi o scegli con 🔍 l\'entità da comandare.' : '✨ Popup pronto: nome opzionale e premi Aggiungi.');
+    edQaEntityChanged();
+}
+
+/* L'entita' scelta e' un menu a tendina? Allora si sceglie anche la voce.
+   «Nelle azioni rapide, sotto il comando scena, se inserisco un'entita' che e'
+   un select mi devi far scegliere cosa far partire.» Un `select` non si
+   accende: ha delle voci, e premere il tasto deve metterne una. Le voci le
+   dice l'entita' stessa (`attributes.options`), e la riga compare solo per
+   lei: per tutto il resto non c'e' niente da scegliere. Chi la mette la
+   legge `azioni-servizio-giusto-section.js`, che chiama `select_option`. */
+function edQaEntityChanged() {
+    const row = document.getElementById('ed-qa-option-row');
+    const sel = document.getElementById('ed-qa-option');
+    const hint = document.getElementById('ed-qa-hint');
+    if (!row || !sel) return;
+    let eid = (document.getElementById('ed-qa-ent')?.value || '').trim();
+    try { eid = resolveEntity(eid) || eid; } catch(e) {}
+    let voci = [];
+    if (/^(select|input_select)\./.test(eid)) {
+        try { const attr = (_RAW_STATES[eid] || {}).attributes || {}; if (Array.isArray(attr.options)) voci = attr.options.map(String); } catch(e) {}
+    }
+    if (!voci.length) { row.style.display = 'none'; sel.innerHTML = ''; return; }
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    const prima = sel.value;
+    sel.innerHTML = '<option value="">— si sceglie ogni volta, dal popup —</option>' + voci.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    if (voci.includes(prima)) sel.value = prima;
+    row.style.display = 'flex';
+    if (hint) hint.textContent = '🎚️ Questa entità è un menu a tendina: il tasto apre un popup con le sue voci. Oppure fissane una qui.';
 }
 
 function edEditLightGroup(i) {
@@ -3862,6 +3891,9 @@ function edAddQA() {
         const a = { type: tsel, name, entity: ent };
         if (icon) a.icon = icon;
         if (conf) a.confirm = conf;
+        /* Un menu a tendina: la voce fissata qui, se c'e'; senza, il tasto la fa scegliere da un popup. */
+        const opt = (document.getElementById('ed-qa-option')?.value || '').trim();
+        if (opt) a.option = opt;
         list.push(a);
     }
     localStorage.setItem('cd_quick_actions', JSON.stringify(list));

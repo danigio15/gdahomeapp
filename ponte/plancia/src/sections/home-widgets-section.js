@@ -8643,7 +8643,7 @@ function installStyles() {
  * Piu' volte al secondo.
  *
  * Non e' il disegno che si rifa': e' il compositore. Chiedendo a Chromium
- * l'elenco degli strati, con la finestra aperta, :is(#dm-widget-popup,#dm-casa-popup) risulta
+ * l'elenco degli strati, con la finestra aperta, :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) risulta
  * un unico strato di tutto lo schermo — e ci sono dipinti dentro la card e la
  * testata, mentre il corpo, che scorre, ha uno strato suo. Lo backdrop-filter e'
  * quello che obbliga a tenerli insieme: sfocare cio' che sta dietro
@@ -8664,17 +8664,17 @@ function installStyles() {
  * modulo della barra vorrebbe dire due vesti che si scollano alla prima
  * ritoccata. Cosi' invece la veste e' scritta una volta, e chi la vuole si
  * chiama come si chiama: il contenuto resta affare di ciascuno. */
-:is(#dm-widget-popup,#dm-casa-popup){
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup){
   position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
   padding:20px;background:transparent;
   animation:dmWidgetPopupIn .2s ease-out}
-:is(#dm-widget-popup,#dm-casa-popup)::before{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)::before{
   content:"";position:absolute;inset:0;
   background:color-mix(in srgb,var(--bg-sculpted,#e6ebf1) 62%,rgba(15,23,42,.34));
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-:root:is([data-theme="dark"]) :is(#dm-widget-popup,#dm-casa-popup)::before,
-html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup)::before{background:color-mix(in srgb,#060a14 74%,rgba(2,6,15,.9))}
-:is(#dm-widget-popup,#dm-casa-popup)[hidden]{display:none}
+:root:is([data-theme="dark"]) :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)::before,
+html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)::before{background:color-mix(in srgb,#060a14 74%,rgba(2,6,15,.9))}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)[hidden]{display:none}
 /* Una conferma sta sopra a chi la chiede (#275).
  *
  * «Dalla home cliccando sicurezza mostra le porte per aprire, si clicca il
@@ -8702,7 +8702,7 @@ html.dm-widget-popup-open{overflow:hidden}
  *
  * Via anche l'anello bianco cucito dentro il bordo: valeva solo sul tema
  * chiaro, e sullo scuro era una riga luminosa in mezzo al buio. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail{
   /* Chi scorre e' il corpo, non la finestra.
    *
    * La finestra deve restare a contenuto tagliato — glielo chiede la regola che
@@ -8735,7 +8735,7 @@ html.dm-widget-popup-open{overflow:hidden}
  * prima. */
 /* Chi ha chiesto meno movimento non lo riceve: la finestra c'e' o non c'e'. */
 @media(prefers-reduced-motion:reduce){
-  :is(#dm-widget-popup,#dm-casa-popup),:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail{animation:none}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail{animation:none}
 }
 /* L'intestazione parla come le altre della plancia: maiuscoletto spaziato,
  * riga di separazione, il tondo per chiudere. Il velo colorato era un
@@ -8759,7 +8759,7 @@ html.dm-widget-popup-open{overflow:hidden}
  *
  * Titolo e sottotitolo vanno incolonnati, non affiancati: affiancati, il
  * sottotitolo di una sezione con sei voci finiva sempre coi puntini. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-head{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-head{
   flex:0 0 auto;position:relative;overflow:hidden;
   /* Tre righe: «Chiudi» in cima da solo, poi l'icona col nome della sezione, e
      sotto le briciole. E' la testata del progetto: la via d'uscita si vede
@@ -8778,14 +8778,14 @@ html.dm-widget-popup-open{overflow:hidden}
     var(--card-bg,#fff)}
 /* La riga in fondo alla fascia: due pixel che partono dal colore e sfumano,
    come in cima a ogni pagina. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-head::after{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-head::after{
   content:"";position:absolute;inset:auto 0 0 0;height:2px;opacity:.7;
   background:linear-gradient(90deg,
     var(--dm-widget-accent,#0ea5e9),
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 45%,transparent) 62%,transparent)}
 /* La pastiglia dell'icona: la tinta della sezione, appena posata, con l'anello
  * sottile che hanno tutte le pastiglie della plancia. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-head-ic{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-head-ic{
   grid-column:1;grid-row:2/4;flex:0 0 48px;width:48px;height:48px;display:grid;place-items:center;
   border-radius:16px;font-size:23px;
   background:linear-gradient(140deg,
@@ -8798,17 +8798,17 @@ html.dm-widget-popup-open{overflow:hidden}
     0 9px 18px -11px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 70%,transparent)}
 /* L'oggetto disegnato dentro la pastiglia della finestra e' lo stesso della
    tessera da cui si e' arrivati, un po' piu' grande perche' qui c'e' posto. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-head-ic .dm-oggetto{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-head-ic .dm-oggetto{
   width:30px;height:30px;display:block;filter:drop-shadow(0 2px 3px rgba(15,23,42,.22))}
 /* Il selettore e' lungo apposta: le stesse righe le riscrive piu' in basso la
  * regola condivisa con la tessera aperta in griglia, che a parita' di peso
  * vincerebbe perche' viene dopo. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-head strong{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-head strong{
   grid-column:2;grid-row:2;min-width:0;white-space:nowrap;overflow:hidden;
   font-family:'Oswald',system-ui,sans-serif;font-weight:700;
   font-size:clamp(19px,2.4vw,25px);line-height:1.05;letter-spacing:2px;text-transform:uppercase;
   color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 78%,#0f172a)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-head small{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-head small{
   grid-column:2;grid-row:3;flex:none;
   font-size:11px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;
   color:var(--text-dim,#64748b);
@@ -8824,7 +8824,7 @@ html.dm-widget-popup-open{overflow:hidden}
  * quale un dito manca. */
 /* A destra, come in tutti gli altri popup della plancia: a sinistra stava
  * addosso alla testata — «li non mi piace, e' vicino alla testata». */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-close{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-close{
   grid-column:1/-1;grid-row:1;justify-self:end;
   display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:0 12px 0 9px;
   border:1px solid var(--card-border,#e2e8f0);border-radius:999px;
@@ -8832,16 +8832,16 @@ html.dm-widget-popup-open{overflow:hidden}
   font-size:11px;font-weight:900;letter-spacing:1.4px;text-transform:uppercase;
   color:var(--text,#0f172a);cursor:pointer;
   transition:color .18s ease,background .18s ease,border-color .18s ease}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-close span{font-size:15px;letter-spacing:0;line-height:1}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-close:hover{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-close span{font-size:15px;letter-spacing:0;line-height:1}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-close:hover{
   color:#dc2626;border-color:color-mix(in srgb,#dc2626 40%,transparent);
   background:color-mix(in srgb,#dc2626 8%,var(--card-bg,#fff))}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-close:focus-visible{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-close:focus-visible{
   outline:2px solid var(--dm-widget-accent,#0ea5e9);outline-offset:2px}
-html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-close:hover{color:#fca5a5}
+html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-close:hover{color:#fca5a5}
 /* E la finestra non ha piu' bisogno del filo di colore sul bordo alto: adesso
  * il colore ce l'ha la fascia. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail::before{display:none}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail::before{display:none}
 /* ── una forma sola: il verdetto, la frase, la misura con la sua corsa ─────
  *
  * Il blocco in cima alla finestra. Prende la tinta della sezione appena
@@ -8851,49 +8851,49 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .
 /* Il lettore dentro la finestra: copertina quadrata, due righe di testo e i
    tasti sotto. Su una finestra larga un palmo i tasti non ci stanno in fila
    col resto, e mandarli a capo e' meglio che stringerli. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-media{
   display:grid;grid-template-columns:56px minmax(0,1fr);gap:11px;align-items:center;
   padding:11px;border-radius:16px;margin-bottom:9px;
   background:var(--bg-sculpted,#f0f4f8);border:1px solid var(--card-border,#e2e8f0)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media[data-muta="true"]{opacity:.6}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media-arte{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-media[data-muta="true"]{opacity:.6}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-media-arte{
   width:56px;height:56px;border-radius:13px;object-fit:cover;
   background:var(--card-bg,#fff);box-shadow:0 8px 16px -10px rgba(2,6,23,.6)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media-vuota{display:grid;place-items:center;font-size:24px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media-vuota .dm-oggetto{width:34px;height:34px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media-testo{display:grid;gap:2px;min-width:0}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media-dove{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-media-vuota{display:grid;place-items:center;font-size:24px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-media-vuota .dm-oggetto{width:34px;height:34px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-media-testo{display:grid;gap:2px;min-width:0}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-media-dove{
   font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
   color:var(--text-dim,#64748b)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media-titolo{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-media-titolo{
   font-size:13.5px;font-weight:800;color:var(--text,#0f172a);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media-sotto{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-media-sotto{
   font-size:11px;font-weight:600;color:var(--text-dim,#64748b);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-media .dm-mp-comandi{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-media .dm-mp-comandi{
   grid-column:1/-1;display:flex;gap:7px;margin:2px 0 0;flex-wrap:wrap}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-racconto{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-racconto{
   display:grid;gap:11px;margin:0 0 18px;padding:15px 16px 14px;
   border-radius:18px;
   border:1px solid color-mix(in srgb,var(--dm-verdetto,#10b981) 24%,transparent);
   background:linear-gradient(160deg,
     color-mix(in srgb,var(--dm-verdetto,#10b981) 11%,var(--card-bg,#fff)),
     var(--card-bg,#fff) 72%)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-racconto[data-dm-verdetto="bene"]{--dm-verdetto:#10b981}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-racconto[data-dm-verdetto="corso"]{--dm-verdetto:#f59e0b}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-racconto[data-dm-verdetto="guarda"]{--dm-verdetto:#e11d48}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-verdetto{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-racconto[data-dm-verdetto="bene"]{--dm-verdetto:#10b981}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-racconto[data-dm-verdetto="corso"]{--dm-verdetto:#f59e0b}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-racconto[data-dm-verdetto="guarda"]{--dm-verdetto:#e11d48}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-verdetto{
   justify-self:start;display:inline-flex;align-items:center;gap:6px;
   padding:4px 10px;border-radius:999px;
   background:color-mix(in srgb,var(--dm-verdetto,#10b981) 16%,transparent);
   color:color-mix(in srgb,var(--dm-verdetto,#10b981) 82%,#0f172a);
   font-size:9.5px;font-weight:900;letter-spacing:1.4px;text-transform:uppercase}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-verdetto::before{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-verdetto::before{
   content:"";width:6px;height:6px;border-radius:50%;background:var(--dm-verdetto,#10b981)}
 /* La frase e' la cosa che si legge davvero: sta grande come un testo, non come
    un'etichetta, e va a capo invece di finire in tre puntini. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-frase{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-frase{
   margin:0;font-size:14.5px;line-height:1.45;font-weight:700;
   color:var(--text,#0f172a);text-wrap:balance}
 /* I punti che sostengono la frase: piccoli, sotto, uno per riga. La frase
@@ -8902,142 +8902,142 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .
  * starebbero senza farne un paragrafo. */
 /* La barra del livello: sta sotto il nome, larga quanto la colonna, e non
    sposta niente — due pixel e mezzo di altezza dentro la riga che c'era gia'. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-livello{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-livello{
   display:block;margin-top:5px;height:3px;border-radius:999px;overflow:hidden;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 22%,transparent)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-livello>i{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-livello>i{
   display:block;height:100%;border-radius:inherit;
   background:var(--dm-widget-accent,#0ea5e9);
   transition:width .3s ease}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-livello[data-basso="true"]>i{background:#e11d48}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-punti{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-livello[data-basso="true"]>i{background:#e11d48}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-punti{
   margin:2px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-punti li{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-punti li{
   position:relative;padding-inline-start:13px;font-size:12.5px;line-height:1.4;
   font-weight:650;color:var(--text-dim,#64748b)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-punti li::before{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-punti li::before{
   content:"";position:absolute;inset-inline-start:2px;top:.62em;
   width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.55}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-misura{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-misura b{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-misura{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-misura b{
   font-family:'Oswald',system-ui,sans-serif;font-weight:300;
   font-size:clamp(30px,9vw,42px);line-height:1;letter-spacing:-.01em;
   color:var(--text,#0f172a);font-variant-numeric:tabular-nums}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-misura small{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-misura small{
   font-size:11px;font-weight:800;line-height:1.35;
   color:color-mix(in srgb,var(--dm-verdetto,#10b981) 70%,var(--text-dim,#64748b))}
 /* La corsa: dov'era, dov'e' arrivata. Senza numeri sopra — quelli stanno gia'
    accanto — perche' quello che serve e' la forma. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-corsa{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-corsa{
   display:grid;grid-template-columns:1fr 1fr;align-items:end;gap:2px 0;margin-top:2px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-corsa svg{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-corsa svg{
   grid-column:1/-1;width:100%;height:34px;overflow:visible}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-corsa polyline{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-corsa polyline{
   fill:none;stroke:var(--dm-verdetto,#10b981);stroke-width:1.6;
   stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-corsa circle{fill:var(--dm-verdetto,#10b981)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-corsa span{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-corsa circle{fill:var(--dm-verdetto,#10b981)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-corsa span{
   font-size:9px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;
   color:var(--text-dim,#94a3b8)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-corsa span:last-child{text-align:right}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-corsa span:last-child{text-align:right}
 /* ── le caselle e le pillole ──────────────────────────────────────────── */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-titoletto{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-titoletto{
   margin:18px 0 8px;font-size:9.5px;font-weight:900;letter-spacing:1.7px;
   text-transform:uppercase;color:var(--text-dim,#94a3b8)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-caselle{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-caselle{
   display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 /* La porta verso il cruscotto: un tasto pieno, del colore della tessera. Con
    il vestito delle righe sembrava una barra grigia — cioe' una cosa disabilitata
    invece dell'unico gesto che questa finestra offre. */
 /* La lettura del tempo: una riga sola, sopra i conti, in inchiostro pieno —
    e' una frase da leggere, non un'etichetta da scorrere. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-lettura{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-lettura{
   margin:0 0 10px;font-size:13px;font-weight:700;
   color:var(--text,#0f172a);line-height:1.35}
 /* Cosa e' arrivato oggi: l'etichetta a sinistra, poi una pastiglia per genere
    con il suo conto in coda al nome — «Difetti 1», come i filtri del cruscotto,
    che toglie di mezzo il singolare e il plurale. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-oggi{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-oggi{
   display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:0 0 10px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-oggi-lbl{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-oggi-lbl{
   font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
   color:var(--text-dim,#64748b)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-genere{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-genere{
   display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:50px;
   font-size:12px;font-weight:700;color:var(--text,#0f172a);
   background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 12%,transparent);
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 26%,transparent)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-genere b{opacity:.8}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-genere b{opacity:.8}
 /* Le conversazioni che aspettano. Un riquadro suo, in inchiostro d'accento,
    perche' e' la sola cosa di questa finestra che chiede di essere aperta: alla
    pari con i conti sarebbe passata per un'altra statistica. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-chat{
   margin:0 0 11px;padding:10px 11px;border-radius:14px;
   background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 10%,transparent);
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 28%,transparent)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat-testa{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-chat-testa{
   display:flex;align-items:center;gap:6px;margin-bottom:7px;
   font-size:12px;color:var(--text,#0f172a)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat-riga{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-chat-riga{
   display:flex;align-items:center;gap:8px;padding:3px 0;
   font-size:12px;color:var(--text,#0f172a)}
 /* Il titolo per intero non ci sta, e mandarlo a capo farebbe righe di altezza
    diversa: si taglia, e chi vuole leggerlo apre il cruscotto. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat-tit{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-chat-tit{
   flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat-n{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-chat-n{
   flex:none;min-width:18px;padding:1px 6px;border-radius:50px;text-align:center;
   font-size:11px;font-weight:800;color:#fff;
   background:var(--dm-widget-accent,#0ea5e9);font-variant-numeric:tabular-nums}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat-altre{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-chat-altre{
   margin-top:5px;font-size:11px;color:var(--text-dim,#64748b)}
 /* L'ultima risposta dell'assistenza, intera: e' la cosa che si e' venuti a
    leggere, e non si taglia. L'ora sta a destra, in piccolo. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat-quando{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-chat-quando{
   margin-left:auto;font-size:11px;color:var(--text-dim,#64748b)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-chat-testo{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-chat-testo{
   margin:0;font-size:13px;line-height:1.45;color:var(--text,#0f172a);
   overflow-wrap:anywhere}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-porta{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-porta{
   width:100%;margin-top:10px;padding:11px 14px;border:0;border-radius:14px;
   cursor:pointer;font-size:13px;font-weight:800;color:#fff;
   background:var(--dm-widget-accent,#0ea5e9)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-porta:hover{filter:brightness(1.08)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-casella{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-porta:hover{filter:brightness(1.08)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-casella{
   display:grid;gap:2px;padding:10px 11px;border-radius:14px;
   border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-caselle .dm-w-casella[hidden],
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillole .dm-w-pillola[hidden]{display:none}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-tutte-misure{margin-top:8px;justify-content:center}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-casella-ic{font-size:15px;line-height:1}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-casella-ic svg{width:18px;height:18px;display:block}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-casella b{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-caselle .dm-w-casella[hidden],
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillole .dm-w-pillola[hidden]{display:none}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-tutte-misure{margin-top:8px;justify-content:center}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-casella-ic{font-size:15px;line-height:1}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-casella-ic svg{width:18px;height:18px;display:block}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-casella b{
   font-family:'Oswald',system-ui,sans-serif;font-weight:400;font-size:19px;line-height:1.1;
   color:var(--text,#0f172a);font-variant-numeric:tabular-nums;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* La seconda misura della casella — l'umidita' accanto ai gradi — sta sotto il
  * numero grande, in tondo e col suo colore: si legge come un'altra cosa. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-casella-sotto{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-casella-sotto{
   font-style:normal;font-size:11.5px;font-weight:800;line-height:1.2;
   color:color-mix(in srgb,#0ea5e9 72%,var(--text-dim,#64748b));
   font-variant-numeric:tabular-nums}
 /* L'etichetta va a capo invece di finire nei puntini: «TEMPERATURA PANNELLO…»
  * non diceva piu' quale pannello. Due righe bastano a ogni nome vero. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-casella span{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-casella span{
   font-size:8.5px;font-weight:900;letter-spacing:1.1px;text-transform:uppercase;
   color:var(--text-dim,#94a3b8);line-height:1.4;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillole{display:flex;flex-wrap:wrap;gap:6px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillole{display:flex;flex-wrap:wrap;gap:6px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillola{
   display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;
   font-size:10.5px;font-weight:800;
   border:1px solid var(--card-border,#e2e8f0);
   background:var(--surface-2,#f8fafc);color:var(--text-dim,#94a3b8)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola::before{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillola::before{
   content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola-ic{display:inline-grid;place-items:center;font-size:12px;line-height:1}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola-ic svg{width:14px;height:14px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola[data-acceso="true"]{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillola-ic{display:inline-grid;place-items:center;font-size:12px;line-height:1}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillola-ic svg{width:14px;height:14px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillola[data-acceso="true"]{
   border-color:color-mix(in srgb,#10b981 34%,transparent);
   background:color-mix(in srgb,#10b981 12%,transparent);
   color:color-mix(in srgb,#10b981 76%,#0f172a)}
@@ -9045,37 +9045,37 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .
  * verde non e' sempre quello buono. Un varco aperto e' rosso e uno chiuso e'
  * verde (#367): senza questi due, un'apertura accesa sarebbe uscita verde
  * come una presa in funzione. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola[data-tono="allarme"]{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillola[data-tono="allarme"]{
   border-color:color-mix(in srgb,#dc2626 34%,transparent);
   background:color-mix(in srgb,#dc2626 12%,transparent);
   color:color-mix(in srgb,#dc2626 78%,#0f172a)}
 /* «Acceso» non e' «allarme»: e' una cosa che sta succedendo e che si vuole
    vedere — una stanza con dentro qualcuno (#432) — non una da guardare
    subito. Il rosso resta a chi deve alzare la testa. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola[data-tono="acceso"]{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillola[data-tono="acceso"]{
   border-color:color-mix(in srgb,#2563eb 34%,transparent);
   background:color-mix(in srgb,#2563eb 12%,transparent);
   color:color-mix(in srgb,#2563eb 78%,#0f172a)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola[data-tono="quiete"]{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillola[data-tono="quiete"]{
   border-color:color-mix(in srgb,#16a34a 30%,transparent);
   background:color-mix(in srgb,#16a34a 10%,transparent);
   color:color-mix(in srgb,#16a34a 74%,#0f172a)}
 /* Nome e stato si distinguono: il nome respira, lo stato e' la parola in
  * maiuscoletto dopo il punto — «non si capisce» era tutto sullo stesso tono. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola{font-size:11px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola-nome{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillola{font-size:11px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillola-nome{
   min-width:0;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   color:var(--text,#0f172a);font-weight:700}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola[data-acceso="true"] .dm-w-pillola-nome{color:inherit}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola b{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillola[data-acceso="true"] .dm-w-pillola-nome{color:inherit}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillola b{
   font-weight:900;color:inherit;text-transform:uppercase;font-size:9.5px;letter-spacing:.8px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-pillola b::before{content:"·";margin-right:5px;font-size:11px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-pillola b::before{content:"·";margin-right:5px;font-size:11px}
 @media(max-width:420px){
-  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-caselle{grid-template-columns:repeat(2,minmax(0,1fr))}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-caselle{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-piede{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-piede{
   display:flex;padding:0 15px 15px;margin:0}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-vai{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-vai{
   flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;
   min-height:46px;padding:12px 16px;border-radius:15px;
   border:1px solid var(--divider-color,#dbe4ee);
@@ -9083,10 +9083,10 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .
   color:var(--dm-widget-accent,#0369a1);
   font:inherit;font-size:13px;font-weight:800;letter-spacing:.4px;cursor:pointer;
   transition:transform .18s ease,box-shadow .18s ease}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-vai:hover{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-vai:hover{
   transform:translateY(-1px);box-shadow:0 10px 22px -16px rgba(15,23,42,.7)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-vai:active{transform:none}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-body{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-vai:active{transform:none}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-body{
   padding:16px 18px 20px;display:grid;gap:9px;
   /* L'altezza minima azzerata perche' un figlio di colonna flex, per difetto,
      non scende sotto il proprio contenuto: senza, la lista non si accorcia mai
@@ -9098,9 +9098,9 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .
      dove finisce la finestra. */
   scrollbar-width:thin;
   scrollbar-color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 42%,transparent) transparent}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-body::-webkit-scrollbar{width:9px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-body::-webkit-scrollbar-track{background:transparent}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-body::-webkit-scrollbar-thumb{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-body::-webkit-scrollbar{width:9px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-body::-webkit-scrollbar-track{background:transparent}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-body::-webkit-scrollbar-thumb{
   border-radius:100px;border:2px solid transparent;background-clip:padding-box;
   background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 38%,transparent)}
 /* Ogni riga e' una tessera coricata.
@@ -9122,33 +9122,33 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .
  * mettersi a leggere le righe. Stessa aria delle tessere della Home — numero
  * in Oswald, etichetta minuscola sotto — dentro un vassoio appena tinto del
  * colore della sezione. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-summary{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-summary{
   display:flex;margin:0 0 4px;border-radius:18px;
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 22%,transparent);
   background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 5%,var(--card-bg,#fff))}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-stat{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-stat{
   flex:1;min-width:0;display:grid;gap:2px;justify-items:center;padding:11px 8px 10px}
 /* Le colonne le separa una riga, non un buco nello sfondo: il vassoio a
    griglia con la fessura da un pixel veniva misurato piu' corto di quello che
    e' e tagliava le etichette. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-stat+.dm-w-stat{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-stat+.dm-w-stat{
   border-left:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 18%,transparent)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-stat b{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-stat b{
   font-family:'Oswald',system-ui,sans-serif;font-size:21px;font-weight:600;line-height:1;
   font-variant-numeric:tabular-nums;
   color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 72%,#0f172a)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-stat span{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-stat span{
   font-size:10px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;
   color:var(--text-dim,#94a3b8);text-align:center}
 /* La rotella: apre il pannello della riga, e quando e' aperto si tinge —
  * altrimenti, con il pannello sotto, non si capiva quale riga l'aveva
  * aperto. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-more{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-more{
   flex:0 0 32px;width:32px;height:32px;display:grid;place-items:center;
   border-radius:11px;font-size:14px;cursor:pointer;
   border:1px solid var(--card-border,#e8edf3);background:var(--surface-2,#f8fafc);
   transition:background .18s ease,border-color .18s ease,transform .25s ease}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row[data-dm-w-open="true"] .dm-w-more{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-open="true"] .dm-w-more{
   background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 14%,transparent);
   border-color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 40%,transparent);
   transform:rotate(60deg)}
@@ -9218,7 +9218,7 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .
  * Si accoda alla riga: margine negativo per chiudere lo spazio fra le righe,
  * angoli alti squadrati e nessun bordo in cima. Le due cose diventano una card
  * sola. */
-:is(:is(#dm-widget-popup,#dm-casa-popup),#clima-popup-overlay) .dm-w-panel{
+:is(:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#clima-popup-overlay) .dm-w-panel{
   margin:-9px 0 0;padding:14px 14px 15px;
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 40%,transparent);
   border-top:0;border-radius:0 0 18px 18px;
@@ -9226,10 +9226,10 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .
   box-shadow:0 14px 30px -22px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 90%,transparent)}
 /* Da sola non e' accodata a niente: torna una card intera, con tutti e quattro
    gli angoli e il bordo in cima. */
-:is(:is(#dm-widget-popup,#dm-casa-popup),#clima-popup-overlay) .dm-w-panel-solo{
+:is(:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#clima-popup-overlay) .dm-w-panel-solo{
   margin:0;border-top:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 40%,transparent);
   border-radius:18px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row{
   position:relative;display:flex;align-items:center;gap:12px;
   padding:10px 12px;border-radius:18px;
   border:1px solid var(--card-border,#eef2f7);
@@ -9238,175 +9238,175 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .
   transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
 /* Il binario di colore sul fianco non serve piu': il colore ce l'ha la
    pastiglia, e due cose colorate sulla stessa riga erano una di troppo. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row::before{display:none}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row:hover{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row::before{display:none}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row:hover{
   border-color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 32%,transparent);
   box-shadow:0 6px 16px -10px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 60%,transparent)}
 /* Aperta, la riga apre gli angoli in basso e lascia entrare il pannello. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row[data-dm-w-open="true"]{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-open="true"]{
   border-color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 40%,transparent);
   border-bottom-color:transparent;
   border-bottom-left-radius:0;border-bottom-right-radius:0;
   box-shadow:none}
 /* Accesa: la velatura sulla riga. Lo stato lo dice il comando o l'icona, a
    seconda di cosa quella sezione mette in riga — si guardano tutti e tre. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row:is(
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row:is(
   :has(.dm-w-glyph[data-on="true"]),
   :has(.dm-w-switch[data-on="true"]),
   :has(.dm-w-power[data-on="true"])){
   background:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 5%,var(--card-bg,#fff));
   border-color:color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 22%,var(--card-border,#eef2f7))}
 /* La pastiglia dell'icona: la stessa della tessera in Home. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-glyph{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-glyph{
   flex:0 0 38px;width:38px;height:38px;display:grid;place-items:center;
   border-radius:13px;font-size:18px;filter:none;opacity:1;
   background:var(--surface-2,#f8fafc);
   box-shadow:inset 0 0 0 1px var(--card-border,#e8edf3);
   transition:background .2s ease,box-shadow .2s ease,filter .2s ease}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-glyph[data-on="true"]{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-glyph[data-on="true"]{
   background:linear-gradient(150deg,
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 20%,#fff),
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 11%,#fff));
   box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 26%,transparent)}
 /* Spenta: il grigio sta sulla pastiglia intera, ma il fondo e' gia' quasi
    grigio — a cambiare e' solo l'emoji, che e' quello che si vuole. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-glyph[data-on="false"]{filter:grayscale(1);opacity:.5}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-glyph[data-on="false"]{filter:grayscale(1);opacity:.5}
 /* Il nome pesa piu' di quello che ha sotto: prima erano quasi uguali e la riga
    si leggeva tutta insieme, senza un ordine. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-name{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-name{
   gap:2px;font-size:14px;font-weight:800;letter-spacing:.1px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-name small{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-name small{
   font-size:11px;font-weight:700;letter-spacing:.2px;color:var(--text-dim,#94a3b8)}
 /* I numeri in Oswald, come tutti i numeri della plancia, e incolonnabili. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-val{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-val{
   font-family:'Oswald',system-ui,sans-serif;font-size:18px;font-weight:600;
   font-variant-numeric:tabular-nums;color:var(--text,#0f172a)}
 /* Il tasto di accensione: pastiglia quadrata come le altre, non un cerchio
    con l'alone — l'alone era l'unica cosa che si vedeva della riga. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-power{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-power{
   flex:0 0 36px;width:36px;height:36px;border-radius:12px;font-size:15px;
   border:1px solid var(--card-border,#e8edf3);background:var(--surface-2,#f8fafc);
   color:var(--text-dim,#94a3b8);box-shadow:none}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-power[data-on="true"]{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-power[data-on="true"]{
   border-color:transparent;background:var(--dm-widget-accent,#0ea5e9);color:#fff;
   box-shadow:0 6px 14px -8px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 85%,transparent)}
 /* «Spegni tutte»: una riga sola sopra l'elenco, larga quanto la finestra, che
    si legge come un'azione e non come una luce in piu'. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-tutte{padding:0}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-tutte-btn{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-tutte{padding:0}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-tutte-btn{
   display:flex;align-items:center;gap:9px;width:100%;padding:10px 14px;
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 35%,transparent);
   border-radius:14px;cursor:pointer;font:inherit;font-size:13px;font-weight:800;
   color:var(--text,#0f172a);
   background:color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 10%,transparent)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-tutte-btn:hover{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-tutte-btn:hover{
   background:color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 18%,transparent)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-tutte-btn>b{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-tutte-btn>b{
   margin-left:auto;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:900;
   background:color-mix(in srgb,var(--dm-widget-accent,#f59e0b) 22%,transparent)}
 /* L'interruttore: un filo piu' largo, e da spento un grigio che si vede senza
    gridare. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-switch{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-switch{
   flex:0 0 44px;width:44px;height:26px;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 26%,transparent)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-switch i{top:3px;left:3px;width:20px;height:20px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-switch[data-on="true"] i{transform:translateX(18px)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-switch i{top:3px;left:3px;width:20px;height:20px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-switch[data-on="true"] i{transform:translateX(18px)}
 /* I comandi minori — la tendina della posizione, le frecce — prendono la
    stessa forma della pastiglia, cosi' la riga ha un solo raggio. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row :is(.dm-w-position,.dm-w-arrows button,.dm-w-alarm button){
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row :is(.dm-w-position,.dm-w-arrows button,.dm-w-alarm button){
   border-radius:11px;background:var(--surface-2,#f8fafc);
   border:1px solid var(--card-border,#e8edf3)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-position{height:30px;width:38px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-arrows button{width:32px;height:32px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-position{height:30px;width:38px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-arrows button{width:32px;height:32px}
 /* Il titolo di un gruppo dentro la lista: maiuscoletto spaziato con la sua
    riga sottile, come le altre separazioni della plancia. */
 /* Il tasto che apre una porta: la stessa pastiglia quadrata degli altri
  * comandi di riga, in verde perche' apre. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-door{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-door{
   flex:0 0 36px;width:36px;height:36px;display:grid;place-items:center;
   border-radius:12px;font-size:16px;cursor:pointer;
   border:1px solid var(--card-border,#e8edf3);background:var(--surface-2,#f8fafc);
   transition:background .18s ease,border-color .18s ease,transform .15s ease}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-door:hover{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-door:hover{
   background:color-mix(in srgb,var(--dm-widget-accent,#10b981) 14%,transparent);
   border-color:color-mix(in srgb,var(--dm-widget-accent,#10b981) 45%,transparent)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-door:active{transform:scale(.94)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-door:active{transform:scale(.94)}
 @media(prefers-reduced-motion:reduce){
-  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-door{transition:none}
-  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-door:active{transform:none}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-door{transition:none}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-door:active{transform:none}
 }
 /* La riga per scrivere: una casella e un piu', larghi quanto la lista. */
-:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-add{
+:is(:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-add{
   display:flex;gap:8px;margin:9px 0 2px}
-:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-new{
+:is(:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-new{
   flex:1 1 auto;min-width:0;height:38px;padding:0 13px;border-radius:13px;
   border:1px solid var(--card-border,#e8edf3);background:var(--card-bg,#fff);
   font:inherit;font-size:13px;font-weight:700;color:var(--text,#0f172a);
   transition:border-color .18s ease,box-shadow .18s ease}
-:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-new::placeholder{color:var(--text-dim,#94a3b8);font-weight:600}
-:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-new:focus{
+:is(:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-new::placeholder{color:var(--text-dim,#94a3b8);font-weight:600}
+:is(:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-new:focus{
   outline:none;border-color:var(--dm-widget-accent,#0ea5e9);
   box-shadow:0 0 0 3px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 18%,transparent)}
-:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-plus{
+:is(:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-plus{
   flex:0 0 38px;width:38px;height:38px;display:grid;place-items:center;
   border:0;border-radius:13px;cursor:pointer;
   background:var(--dm-widget-accent,#0ea5e9);color:#fff;
   font:inherit;font-size:19px;font-weight:800;line-height:1;
   box-shadow:0 8px 18px -10px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 90%,transparent);
   transition:transform .15s ease,filter .18s ease}
-:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-plus:hover{filter:brightness(1.06)}
-:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-plus:active{transform:scale(.94)}
+:is(:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-plus:hover{filter:brightness(1.06)}
+:is(:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-plus:active{transform:scale(.94)}
 /* Il cestino sta in fondo alla riga e si fa vedere quando serve: sempre sul
    telefono, dove non c'e' un puntatore da avvicinare. */
-:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-del{
+:is(:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-del{
   flex:0 0 30px;width:30px;height:30px;display:grid;place-items:center;
   margin-left:auto;border:0;border-radius:10px;cursor:pointer;
   background:transparent;font-size:14px;line-height:1;opacity:.35;
   transition:opacity .18s ease,background .18s ease}
-:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-item:hover .dm-todo-del{opacity:1}
-:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-del:hover{background:#fee2e2;opacity:1}
-@media(hover:none){:is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-del{opacity:.7}}
+:is(:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-item:hover .dm-todo-del{opacity:1}
+:is(:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-del:hover{background:#fee2e2;opacity:1}
+@media(hover:none){:is(:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-del{opacity:.7}}
 @media(prefers-reduced-motion:reduce){
-  :is(:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-plus:active{transform:none}
+  :is(:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-plus:active{transform:none}
 }
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-block-title{
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-block-title{
   padding:10px 4px 8px;font-size:10.5px;letter-spacing:1.2px;
   border-bottom:1px solid var(--card-border,#eef2f7);margin-bottom:2px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-empty{margin:6px 4px;font-size:13px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 10px;padding-top:12px;border-top:1px solid var(--card-border,#e2e8f0)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-chip{display:inline-flex;align-items:center;gap:8px;min-width:0;padding:7px 12px 7px 8px;border-radius:14px;cursor:pointer;font:inherit;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);color:var(--text,#0f172a);transition:border-color .16s ease,background .16s ease}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-chip[aria-expanded="true"]{border-color:color-mix(in srgb,#0ea5e9 46%,transparent);background:color-mix(in srgb,#0ea5e9 10%,transparent)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-chip[data-on="false"] .dm-w-appl-art{color:var(--text-dim,#94a3b8);opacity:.7}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-chip[data-on="false"] .dm-w-appl-nome{font-weight:750;color:var(--text-dim,#64748b)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-chip[data-on="true"] .dm-w-appl-nome::after{content:"";display:inline-block;width:5px;height:5px;margin-left:6px;border-radius:50%;background:#16a34a;vertical-align:middle}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-art{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;color:#0ea5e9}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-art svg{width:26px;height:26px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-nome{min-width:0;overflow-wrap:anywhere;font-size:12.5px;font-weight:850}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-watt{flex:0 0 auto;font-size:11px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--text-dim,#64748b)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-invito{margin:0 4px;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-card{display:block;gap:0;padding:0}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-appl-card .appl-wide-card.dm-ap-card{cursor:default;box-shadow:none}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-empty{margin:6px 4px;font-size:13px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-appl-chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 10px;padding-top:12px;border-top:1px solid var(--card-border,#e2e8f0)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-appl-chip{display:inline-flex;align-items:center;gap:8px;min-width:0;padding:7px 12px 7px 8px;border-radius:14px;cursor:pointer;font:inherit;border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);color:var(--text,#0f172a);transition:border-color .16s ease,background .16s ease}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-appl-chip[aria-expanded="true"]{border-color:color-mix(in srgb,#0ea5e9 46%,transparent);background:color-mix(in srgb,#0ea5e9 10%,transparent)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-appl-chip[data-on="false"] .dm-w-appl-art{color:var(--text-dim,#94a3b8);opacity:.7}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-appl-chip[data-on="false"] .dm-w-appl-nome{font-weight:750;color:var(--text-dim,#64748b)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-appl-chip[data-on="true"] .dm-w-appl-nome::after{content:"";display:inline-block;width:5px;height:5px;margin-left:6px;border-radius:50%;background:#16a34a;vertical-align:middle}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-appl-art{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;color:#0ea5e9}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-appl-art svg{width:26px;height:26px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-appl-nome{min-width:0;overflow-wrap:anywhere;font-size:12.5px;font-weight:850}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-appl-watt{flex:0 0 auto;font-size:11px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--text-dim,#64748b)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-appl-invito{margin:0 4px;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-appl-card{display:block;gap:0;padding:0}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-appl-card .appl-wide-card.dm-ap-card{cursor:default;box-shadow:none}
 /* Le miniature delle telecamere: lo stesso angolo delle righe. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-cam{border-radius:16px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-cam{border-radius:16px}
 /* Nella finestra la colonna e' larga il doppio della tessera: con la stessa
  * misura minima i riquadri raddoppiavano, e quattro telecamere diventavano
  * quattro manifesti. Qui la traccia minima e' piu' stretta, cosi' le
  * miniature restano miniature e ce ne stanno tre per riga. */
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-cams{grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-cams{grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
 @media(prefers-reduced-motion:reduce){
-  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-row,:is(#dm-widget-popup,#dm-casa-popup) .dm-w-close,
-  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-more{transition:none}
-  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-row[data-dm-w-open="true"] .dm-w-more{transform:none}
-  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-close:hover{transform:none}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-close,
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-more{transition:none}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-open="true"] .dm-w-more{transform:none}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-close:hover{transform:none}
 }
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-name{font-size:13.5px;font-weight:800}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-val{font-size:14.5px;font-weight:900}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-glyph{font-size:17px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-name{font-size:13.5px;font-weight:800}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-val{font-size:14.5px;font-weight:900}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-glyph{font-size:17px}
 @media(max-width:600px){
-  :is(#dm-widget-popup,#dm-casa-popup){padding:16px}
-  :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail{border-radius:22px;max-height:82dvh}
-  :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .dm-w-head{padding:16px 16px 15px;column-gap:12px}
-  :is(#dm-widget-popup,#dm-casa-popup) .dm-w-body{padding:13px 15px 18px}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup){padding:16px}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail{border-radius:22px;max-height:82dvh}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-widget-detail .dm-w-head{padding:16px 16px 15px;column-gap:12px}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-body{padding:13px 15px 18px}
 }
 /* ── «In primo piano»: il ponte dei widget della Home ─────────────────── */
 #dm-widgets{display:block;margin:16px 0 6px}
@@ -9443,10 +9443,10 @@ html[data-theme="dark"] :is(#dm-widget-popup,#dm-casa-popup) .dm-widget-detail .
  * su quello di sotto, ombra corta attaccata alla carta e ombra lunga sfumata
  * sotto. E' quello che fa sembrare le tessere appoggiate sulla pagina invece
  * che stampate sopra. */
-${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-widgets-grid{
+${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup))")}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-widgets-grid{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile{
   position:relative;overflow:hidden;display:flex;flex-direction:column;gap:10px;
   min-height:118px;padding:15px 16px 17px;border:0;border-radius:22px;
   background:${FONDO_DELLA_CARTA};
@@ -9455,11 +9455,11 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
   transition:transform .18s cubic-bezier(.16,1,.3,1),box-shadow .2s ease,background .45s ease}
 /* La grana: la carta vera non e' mai perfettamente liscia, e senza quel velo
    le tessere sembrano vetro stampato. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile::before{${GRANA_DELLA_CARTA}}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile::before{${GRANA_DELLA_CARTA}}
 /* Accesa: il velo del suo colore, il bordo che si scalda e l'ombra lunga che
    prende la tinta della sezione. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-acceso="true"],
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-open="true"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile[data-acceso="true"],
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile[data-open="true"]{
   background:
     radial-gradient(135% 105% at 100% 0%,
       color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) var(--dm-velo),transparent),transparent 66%),
@@ -9473,42 +9473,42 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
     0 16px 32px -18px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 60%,rgba(15,23,42,.5))}
 /* L'alone che respira: sta dietro la tessera che chiede attenzione, e si
    spegne appena la cosa rientra. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-alone{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-alone{
   position:absolute;inset:-40% -30% auto -30%;height:150%;pointer-events:none;opacity:0;
   background:radial-gradient(60% 60% at 50% 0%,
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 55%,transparent),transparent 70%);
   transition:opacity .5s ease}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-alert="true"] .dm-tile-alone{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile[data-alert="true"] .dm-tile-alone{
   opacity:var(--dm-alone);animation:dmTileRespiro 3.4s ease-in-out infinite}
 @keyframes dmTileRespiro{
   0%,100%{opacity:calc(var(--dm-alone) * .45);transform:translateY(4px) scale(.97)}
   50%{opacity:var(--dm-alone);transform:translateY(-2px) scale(1.03)}}
 /* La lama: quando una tessera si accende, una luce del suo colore la
    attraversa una volta sola. E' l'unico momento in cui la plancia alza la voce. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-dm-accende]::after{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile[data-dm-accende]::after{
   content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
   background:linear-gradient(105deg,transparent 30%,
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 26%,transparent) 48%,transparent 66%);
   transform:translateX(-120%);animation:dmTileLama .85s cubic-bezier(.3,.7,.3,1)}
 @keyframes dmTileLama{to{transform:translateX(120%)}}
 /* L'ingresso e' per chi entra adesso: una tessera gia' vista non rianima. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile:not([data-dm-seen]){
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile:not([data-dm-seen]){
   animation:dmTileIn .42s cubic-bezier(.16,1,.3,1) both;
   animation-delay:calc(var(--dm-tile-i,0) * 55ms)}
 @keyframes dmTileIn{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
 @media(hover:hover){
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile:hover{transform:translateY(-2px)}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile:hover{transform:translateY(-2px)}
 }
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile:active{transform:translateY(1px) scale(.995)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile:focus-visible{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile:active{transform:translateY(1px) scale(.995)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile:focus-visible{
   outline:2px solid var(--dm-widget-accent,#0ea5e9);outline-offset:3px}
 
 /* La prima riga: la pastiglia e il nome, e nient'altro. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-cima{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-cima{
   position:relative;display:flex;align-items:center;gap:11px;min-width:0}
 /* La pastiglia e' un cuscino: gradiente, anello sottile, incavo in basso, e
    l'oggetto che ci posa sopra con la sua ombra. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-chip{
   flex:0 0 41px;width:41px;height:41px;display:grid;place-items:center;border-radius:15px;font-size:20px;
   background:linear-gradient(158deg,
     color-mix(in srgb,var(--text,#0f172a) 8%,var(--card-bg,#fff)),
@@ -9519,8 +9519,8 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
     inset 0 -3px 6px -4px color-mix(in srgb,var(--text,#0f172a) 30%,transparent),
     0 5px 11px -9px rgba(15,23,42,.8);
   transition:background .5s ease,box-shadow .5s ease}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-acceso="true"] .dm-tile-chip,
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-open="true"] .dm-tile-chip{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile[data-acceso="true"] .dm-tile-chip,
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile[data-open="true"] .dm-tile-chip{
   background:linear-gradient(158deg,
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) var(--dm-cuscino),var(--card-bg,#fff)),
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 9%,var(--card-bg,#fff)));
@@ -9529,23 +9529,23 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
     inset 0 0 0 1px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 32%,transparent),
     inset 0 -3px 7px -4px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 55%,transparent),
     0 10px 18px -11px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 90%,transparent)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip .dm-oggetto{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-chip .dm-oggetto{
   width:26px;height:26px;display:block;filter:drop-shadow(0 2px 3px rgba(15,23,42,.22))}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip[data-dm-sboccia]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-chip[data-dm-sboccia]{
   animation:dmTileSboccia .62s cubic-bezier(.2,.9,.25,1)}
 @keyframes dmTileSboccia{
   0%{transform:scale(1)}35%{transform:scale(1.2)}70%{transform:scale(.96)}100%{transform:scale(1)}}
 /* Il nome non finisce mai coi puntini: se non entra si stringe la spaziatura,
    poi si scende di corpo, e solo alla fine va su due righe. Chi lo stringe e'
    il codice, qui c'e' solo il punto di partenza. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-label{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-label{
   flex:1;min-width:0;font-size:9.8px;font-weight:900;letter-spacing:.11em;line-height:1.25;
   text-transform:uppercase;color:var(--text-dim,#64748b);
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
   word-break:normal;overflow-wrap:normal}
 
 /* La seconda riga: il numero, e l'unita' che gli sta accanto senza pesare. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-val{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-val{
   /* Il numero e la sua unita' devono restare attaccati anche per chi il testo
      lo legge invece di guardarlo: due riquadri di blocco affiancati diventano
      «42 %» quando si copiano o si ascoltano. Qui sono due pezzi in riga. */
@@ -9572,68 +9572,68 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
    niente si sposta, e dentro c'e' finalmente il posto per il disegno intero.
    L'interlinea che tiene i numeri vicini non l'ha decisa la finestra: la
    decide il margine. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-value{
   max-width:100%;overflow:hidden;padding:0;margin:-13.6px 0;
   display:inline-flex;align-items:baseline;vertical-align:baseline;
   font-family:'Oswald','Inter',sans-serif;font-weight:200;font-size:40px;line-height:1.6;
   letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
 /* Una parola al posto di un numero si rimpicciolisce quanto basta a entrare
    intera: meglio leggerla tutta che leggerne meta' in grande. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value[data-dm-len="medio"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-value[data-dm-len="medio"]{
   font-family:'Inter',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.01em}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value[data-dm-len="lungo"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-value[data-dm-len="lungo"]{
   font-family:'Inter',sans-serif;font-weight:800;font-size:16px;letter-spacing:0;
   white-space:normal;line-height:1.15;
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-unit{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-unit{
   display:inline;margin-left:6px;font-style:normal;font-size:10.5px;font-weight:900;letter-spacing:.12em;
   text-transform:uppercase;color:var(--text-dim,#94a3b8)}
 /* Il grado e la percentuale sono parte del numero, non un'etichetta: stanno
    attaccati e grandi quanto basta a leggerli. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-unit[data-simbolo="true"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-unit[data-simbolo="true"]{
   margin-left:1px;font-size:17px;font-weight:300;letter-spacing:0;
   font-family:'Oswald','Inter',sans-serif;color:var(--text-dim,#64748b)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-unit:empty{display:none}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-unit:empty{display:none}
 /* Il numero gira come un contatore: si muovono solo le cifre che cambiano. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value .dm-cifra{display:inline-block}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value .dm-cifra[data-verso="su"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-value .dm-cifra{display:inline-block}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-value .dm-cifra[data-verso="su"]{
   animation:dmCifraSu .46s cubic-bezier(.2,.9,.25,1) both}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value .dm-cifra[data-verso="giu"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-value .dm-cifra[data-verso="giu"]{
   animation:dmCifraGiu .46s cubic-bezier(.2,.9,.25,1) both}
 @keyframes dmCifraSu{0%{transform:translateY(70%);opacity:0}100%{transform:none;opacity:1}}
 @keyframes dmCifraGiu{0%{transform:translateY(-70%);opacity:0}100%{transform:none;opacity:1}}
 
 /* La terza riga: il dettaglio, e la misura che gli sta accanto. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-fondo{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-fondo{
   display:flex;align-items:center;gap:10px;min-width:0;margin-top:auto}
 /* Le due righe del fondo stanno in colonna: la didascalia e, sotto, la riga
    che la qualifica — l'artista di quel brano. La seconda c'e' solo dove il
    modello la scrive, e la mattonella resta la mattonella di sempre. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-testo{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-testo{
   flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-sotto{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-sotto{
   min-width:0;font-size:9.5px;font-weight:700;letter-spacing:.2px;
   color:var(--text-dim,#94a3b8);opacity:.72;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* I tre puntini: dentro non c'e' una lista, ci sono i comandi. Non sono un
    secondo tasto — toccare la mattonella apre gia' la finestra — sono il segno
    che li' dentro si comanda qualcosa. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-menu{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-menu{
   position:absolute;top:0;right:0;line-height:1;font-size:16px;font-weight:900;
   color:var(--text-dim,#94a3b8);opacity:.72;letter-spacing:0}
 /* La copertina riempie la pastiglia: e' l'unico disegno che non e' un'icona. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-arte{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-arte{
   width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip:has(.dm-tile-arte){overflow:hidden;padding:0}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-chip:has(.dm-tile-arte){overflow:hidden;padding:0}
 /* Un disegno nostro dentro la pastiglia — il bidone del prossimo ritiro —
    prende la misura della pastiglia, come farebbe un'icona: e' un disegno, non
    una fotografia, quindi non la riempie da bordo a bordo. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip .dm-catalogo-art{display:grid;place-items:center;line-height:0}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip .dm-catalogo-art svg{width:26px;height:26px;display:block}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-chip .dm-catalogo-art{display:grid;place-items:center;line-height:0}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-chip .dm-catalogo-art svg{width:26px;height:26px;display:block}
 @media(max-width:520px){
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip .dm-catalogo-art svg{width:23px;height:23px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-chip .dm-catalogo-art svg{width:23px;height:23px}
 }
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-caption{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-caption{
   flex:1;min-width:0;font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8);
   white-space:nowrap;overflow:hidden}
 /* Sfuma sul bordo invece di tagliare: si capisce che il testo continua.
@@ -9648,51 +9648,51 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
  *
  * La regola «:has()» lega la sfumatura al nastro che si muove: c'e' quando c'e'
  * qualcosa da rivelare, e non c'e' quando il testo e' tutto li'. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-caption:has(>[data-dm-scroll="true"]){
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-caption:has(>[data-dm-scroll="true"]){
   mask-image:linear-gradient(90deg,#000 84%,transparent);
   -webkit-mask-image:linear-gradient(90deg,#000 84%,transparent)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-scroll{display:inline-block;white-space:nowrap}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-scroll[data-dm-scroll="true"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-scroll{display:inline-block;white-space:nowrap}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-scroll[data-dm-scroll="true"]{
   animation:dmTileScroll var(--dm-scroll-dur,10s) ease-in-out infinite alternate;
   animation-delay:1.2s}
 @keyframes dmTileScroll{
   0%,12%{transform:translateX(0)}
   88%,100%{transform:translateX(var(--dm-scroll-x,0))}}
 @media(prefers-reduced-motion:reduce){
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-scroll[data-dm-scroll="true"]{animation:none}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-scroll[data-dm-scroll="true"]{animation:none}
 }
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-misura{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-misura{
   flex:0 0 auto;display:flex;align-items:center}
 /* I segmenti: quanti su quanti, senza leggere il numero. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-punti{display:flex;gap:3px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-punti i{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-punti{display:flex;gap:3px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-punti i{
   width:8px;height:18px;border-radius:4px;
   background:color-mix(in srgb,var(--text,#0f172a) 9%,transparent);
   box-shadow:inset 0 1px 0 var(--dm-vetrino);
   transition:background .4s ease,box-shadow .4s ease}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-punti i[data-on="true"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-punti i[data-on="true"]{
   background:linear-gradient(180deg,
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 78%,#fff),var(--dm-widget-accent,#0ea5e9));
   box-shadow:0 5px 10px -6px var(--dm-widget-accent,#0ea5e9),inset 0 1px 0 rgba(255,255,255,.5)}
 /* La barra: il letto incavato e il pieno lucido. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-scala{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-scala{
   position:relative;width:62px;height:5px;border-radius:99px;overflow:hidden;
   background:color-mix(in srgb,var(--text,#0f172a) 10%,transparent);
   box-shadow:inset 0 1px 2px rgba(15,23,42,.16)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-scala i{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-scala i{
   display:block;height:100%;border-radius:99px;
   background:linear-gradient(90deg,
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 55%,#fff),var(--dm-widget-accent,#0ea5e9));
   transition:width .5s cubic-bezier(.16,1,.3,1)}
 /* La batteria: si riempie, col vetrino sopra e il polo di lato. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-batt{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-batt{
   position:relative;display:flex;align-items:center;width:37px;height:18px;border-radius:6px;padding:2.6px;
   box-shadow:inset 0 0 0 1.8px color-mix(in srgb,var(--text,#0f172a) 20%,transparent),
              inset 0 1px 0 var(--dm-vetrino)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-batt::after{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-batt::after{
   content:"";position:absolute;right:-4.5px;top:5px;width:3.4px;height:8px;border-radius:0 2px 2px 0;
   background:color-mix(in srgb,var(--text,#0f172a) 20%,transparent)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-batt i{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-batt i{
   display:block;height:100%;border-radius:3px;
   background:linear-gradient(180deg,
     color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 75%,#fff),var(--dm-widget-accent,#0ea5e9));
@@ -9700,22 +9700,22 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
 
 /* Sugli schermi stretti scala tutto insieme, invece di tagliare. */
 @media(max-width:768px){
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile{padding:13px 13px 15px;min-height:110px;gap:9px}
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip{flex-basis:36px;width:36px;height:36px;border-radius:13px}
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip .dm-oggetto{width:23px;height:23px}
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-cima{gap:9px}
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-label{font-size:9.2px;letter-spacing:.07em}
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value{font-size:34px}
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-caption{font-size:10.5px}
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-scala{width:44px}
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-punti i{width:6px;height:15px}
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-batt{width:31px;height:16px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile{padding:13px 13px 15px;min-height:110px;gap:9px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-chip{flex-basis:36px;width:36px;height:36px;border-radius:13px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-chip .dm-oggetto{width:23px;height:23px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-cima{gap:9px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-label{font-size:9.2px;letter-spacing:.07em}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-value{font-size:34px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-caption{font-size:10.5px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-scala{width:44px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-punti i{width:6px;height:15px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-batt{width:31px;height:16px}
 }
 @media(prefers-reduced-motion:reduce){
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-alone,
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-dm-accende]::after,
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip[data-dm-sboccia],
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-value .dm-cifra{animation:none}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-alone,
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile[data-dm-accende]::after,
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-chip[data-dm-sboccia],
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-value .dm-cifra{animation:none}
 }
 :is(#dm-widgets) .dm-widgets-sub{
   overflow:hidden;white-space:nowrap;text-overflow:clip}
@@ -9726,13 +9726,13 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
 @media(prefers-reduced-motion:reduce){
   :is(#dm-widgets) .dm-sub-scroll[data-dm-scroll="true"]{animation:none}
 }
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-widget-detail{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-widget-detail{
   grid-column:1/-1;position:relative;overflow:hidden;
   border:1px solid color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 26%,var(--card-border,#e8edf3));
   border-radius:20px;background:var(--card-bg,#fff);
   box-shadow:0 16px 36px rgba(15,23,42,.10);
   animation:dmWidgetIn .32s cubic-bezier(.16,1,.3,1)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-widget-detail::before{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-widget-detail::before{
   content:"";position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,transparent,var(--dm-widget-accent,#0ea5e9) 30%,var(--dm-widget-accent,#0ea5e9) 70%,transparent)}
 @keyframes dmWidgetIn{from{opacity:0;transform:translateY(-7px) scale(.985)}to{opacity:1;transform:none}}
@@ -9741,31 +9741,31 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
  * dissolvenza del telefono, ne' il rispetto di chi ha chiesto meno movimento
  * (osservazione giusta della review). */
 @media(pointer:coarse){
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-widget-detail{animation:dmWidgetPopupIn .22s ease-out}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-widget-detail{animation:dmWidgetPopupIn .22s ease-out}
   /* E il velo sfocato dietro la card non si anima: ricomporre il fondale
    * sfumato a ogni fotogramma della dissolvenza e' il lavoro che sul telefono
    * faceva vibrare tutto lo sfondo. Il velo c'e' o non c'e'; a dissolversi
    * e' solo la card, che e' piccola. */
-  :is(#dm-widget-popup,#dm-casa-popup){animation:none}
+  :is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup){animation:none}
 }
 @media(prefers-reduced-motion:reduce){
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-widget-detail{animation:none}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-widget-detail{animation:none}
 }
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-head{display:flex;align-items:center;gap:9px;padding:13px 16px 10px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-head-ic{font-size:16px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-head strong{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-head{display:flex;align-items:center;gap:9px;padding:13px 16px 10px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-head-ic{font-size:16px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-head strong{
   font-size:12.5px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-head small{flex:1;min-width:0;font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8);
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-head small{flex:1;min-width:0;font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Il tondino da 28px e' della tessera in griglia: dentro la finestra di
  * dettaglio il Chiudi e' la pillola scritta della testata, e questa regola —
  * che viene dopo — la schiacciava a 28px facendo traboccare la scritta
  * («la x con chiudi ancora sballato»). */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-close:not(.dm-widget-detail .dm-w-close){
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-close:not(.dm-widget-detail .dm-w-close){
   flex:0 0 28px;width:28px;height:28px;display:grid;place-items:center;border:0;border-radius:9px;
   background:var(--surface-3,#f1f5f9);color:var(--text-dim,#64748b);font-size:12px;cursor:pointer}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-body{display:grid;gap:2px;padding:0 10px 12px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-row{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-body{display:grid;gap:2px;padding:0 10px 12px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-row{
   display:flex;align-items:center;gap:11px;min-height:42px;padding:5px 8px;border-radius:12px;
   animation:none;
   transition:background .2s ease}
@@ -9776,113 +9776,113 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
  * sfalsamenti qui sotto ritardavano un'animazione che era none. Non si
  * ripara: righe che scivolano dentro una card che sta ancora salendo sono
  * un secondo movimento sopra il primo, cioe' il tremolio. Se ne va tutto. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-row:hover{background:var(--surface-3,#f1f5f9)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-glyph{flex:0 0 auto;font-size:15px;transition:filter .25s ease,opacity .25s ease}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-glyph[data-on="false"]{filter:grayscale(1);opacity:.4}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-row:hover{background:var(--surface-3,#f1f5f9)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-glyph{flex:0 0 auto;font-size:15px;transition:filter .25s ease,opacity .25s ease}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-glyph[data-on="false"]{filter:grayscale(1);opacity:.4}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-appl-ic{
   flex:0 0 auto;display:grid;place-items:center;width:24px;height:24px;
   color:var(--dm-widget-accent,#06b6d4)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg{width:20px;height:20px;display:block;stroke:currentColor;fill:none}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg [stroke],:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg path,
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg rect,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg circle,
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg line{stroke:currentColor}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-appl-ic svg [fill="currentColor"]{fill:currentColor}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-appl-ic svg{width:20px;height:20px;display:block;stroke:currentColor;fill:none}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-appl-ic svg [stroke],:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-appl-ic svg path,
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-appl-ic svg rect,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-appl-ic svg circle,
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-appl-ic svg line{stroke:currentColor}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-appl-ic svg [fill="currentColor"]{fill:currentColor}
 /* L'aggiornamento: le note prima, il tasto dopo. Si leggono in quest'ordine
    perche' in quest'ordine si fanno.
    La riga puo' andare a capo: nome, versioni, note e tasto su un telefono in
    fila non ci stanno, e quello che esce dal bordo non si preme. E le versioni
    non sono un numero da incolonnare — sono un'etichetta, e come etichetta
    lasciano il posto al tasto. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-row[data-dm-w-agg]{flex-wrap:wrap}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row[data-dm-w-agg] .dm-w-val{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-row[data-dm-w-agg]{flex-wrap:wrap}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row[data-dm-w-agg] .dm-w-val{
   font-family:inherit;font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-agg-note{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-agg-note{
   flex:0 0 auto;font-size:10.5px;font-weight:800;letter-spacing:.02em;text-decoration:none;
   padding:4px 8px;border-radius:9px;border:1px solid var(--card-border,#e2e8f0);
   background:var(--surface-2,#f8fafc);color:var(--text-dim,#64748b)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-agg-note:hover{color:var(--text,#0f172a)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-agg-via{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-agg-note:hover{color:var(--text,#0f172a)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-agg-via{
   flex:0 0 auto;padding:5px 11px;border-radius:9px;border:0;cursor:pointer;
   font-size:10.5px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
   background:var(--dm-widget-accent,#d97706);color:#fff;
   transition:filter .2s ease,opacity .2s ease}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-agg-via:hover{filter:brightness(1.06)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-agg-via[disabled]{opacity:.55;cursor:default}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-agg-corso{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-agg-via:hover{filter:brightness(1.06)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-agg-via[disabled]{opacity:.55;cursor:default}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-agg-corso{
   flex:0 0 auto;font-size:10.5px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
   color:var(--dm-widget-accent,#d97706)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-alarm{display:inline-flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin-left:auto}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-alarm button{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-alarm{display:inline-flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin-left:auto}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-alarm button{
   width:32px;height:28px;border-radius:9px;border:1px solid var(--card-border,#e2e8f0);
   background:var(--surface-2,#f8fafc);font-size:13px;line-height:1;cursor:pointer;
   transition:transform .15s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-alarm button:hover{transform:translateY(-1px)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-alarm button[data-on="true"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-alarm button:hover{transform:translateY(-1px)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-alarm button[data-on="true"]{
   background:color-mix(in srgb,var(--dm-widget-accent,#10b981) 16%,transparent);
   border-color:var(--dm-widget-accent,#10b981);
   box-shadow:0 0 0 3px color-mix(in srgb,var(--dm-widget-accent,#10b981) 14%,transparent)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-name{min-width:0;flex:1;display:grid;gap:0;font-size:13px;font-weight:700;
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-name{min-width:0;flex:1;display:grid;gap:0;font-size:13px;font-weight:700;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-name small{font-size:10.5px;font-weight:700;color:var(--text-dim,#94a3b8)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-val{flex:0 0 auto;font-family:'Oswald',sans-serif;font-size:14px;font-weight:600}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-empty{margin:4px 8px;font-size:12.5px;font-weight:700;color:var(--text-dim,#64748b)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-block{padding:4px 6px 6px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-block-title{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-name small{font-size:10.5px;font-weight:700;color:var(--text-dim,#94a3b8)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-val{flex:0 0 auto;font-family:'Oswald',sans-serif;font-size:14px;font-weight:600}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-empty{margin:4px 8px;font-size:12.5px;font-weight:700;color:var(--text-dim,#64748b)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-block{padding:4px 6px 6px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-block-title{
   display:block;padding:4px 2px 7px;font-size:10.5px;font-weight:900;letter-spacing:1px;
   text-transform:uppercase;color:var(--text-dim,#64748b)}
 
 /* L'interruttore delle luci: una pillola che scatta. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-switch{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-switch{
   flex:0 0 40px;width:40px;height:23px;position:relative;border:0;border-radius:999px;cursor:pointer;
   background:color-mix(in srgb,var(--text-dim,#94a3b8) 32%,transparent);transition:background .25s ease}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-switch i{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-switch i{
   position:absolute;top:2.5px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;
   box-shadow:0 2px 6px rgba(15,23,42,.25);transition:transform .25s cubic-bezier(.16,1,.3,1)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-switch[data-on="true"]{background:var(--dm-widget-accent,#f59e0b)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-switch[data-on="true"] i{transform:translateX(16px)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-power{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-switch[data-on="true"]{background:var(--dm-widget-accent,#f59e0b)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-switch[data-on="true"] i{transform:translateX(16px)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-power{
   flex:0 0 32px;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;cursor:pointer;
   border:1.5px solid var(--card-border,#e8edf3);background:transparent;color:var(--text-dim,#94a3b8);
   font-size:14px;transition:all .25s ease}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-power[data-on="true"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-power[data-on="true"]{
   border-color:transparent;background:var(--dm-widget-accent,#0ea5e9);color:#fff;
   box-shadow:0 4px 12px color-mix(in srgb,var(--dm-widget-accent,#0ea5e9) 40%,transparent)}
 /* Il disegno dell'accensione sta al centro e prende il colore del tasto. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-power svg{display:block;width:17px;height:17px}
-:is(#dm-widget-popup,#dm-casa-popup) .dm-w-row .dm-w-power{display:grid;place-items:center}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-position{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-power svg{display:block;width:17px;height:17px}
+:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup) .dm-w-row .dm-w-power{display:grid;place-items:center}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-position{
   appearance:none;-webkit-appearance:none;flex:0 0 auto;margin-left:5px;height:26px;
   width:34px;text-align:center;text-align-last:center;
   padding:0;border:1px solid var(--card-border,#e2e8f0);border-radius:9px;
   background:var(--surface-2,#f8fafc);color:var(--text,#0f172a);
   font:inherit;font-size:12px;font-weight:800;line-height:1;cursor:pointer;
   transition:border-color .2s ease,background .2s ease}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-position:hover{border-color:var(--dm-widget-accent,#8b5cf6)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-arrows{display:inline-flex;gap:5px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-arrows button{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-position:hover{border-color:var(--dm-widget-accent,#8b5cf6)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-arrows{display:inline-flex;gap:5px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-arrows button{
   width:29px;height:29px;display:grid;place-items:center;border-radius:9px;cursor:pointer;
   border:1px solid var(--card-border,#e8edf3);background:var(--surface-3,#f1f5f9);
   color:var(--text,#0f172a);font-size:11px;transition:all .2s ease}
 /* I tre comandi sono disegni, non caratteri: qui si dice solo quanto sono
    grandi, il colore lo prendono dalla riga come tutto il resto. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-arrows button svg{display:block;width:15px;height:15px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-more svg{display:block;width:15px;height:15px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-more{display:grid;place-items:center}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-arrows button:hover{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-arrows button svg{display:block;width:15px;height:15px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-more svg{display:block;width:15px;height:15px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-more{display:grid;place-items:center}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-arrows button:hover{
   background:var(--dm-widget-accent,#8b5cf6);border-color:transparent;color:#fff}
 
 /* Le miniature delle telecamere: il letterbox scuro del muro, in piccolo. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cams{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:2px 6px 4px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam{position:relative;margin:0;border-radius:14px;overflow:hidden;background:#0b1220;aspect-ratio:16/9}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-cams{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:2px 6px 4px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-cam{position:relative;margin:0;border-radius:14px;overflow:hidden;background:#0b1220;aspect-ratio:16/9}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-cam img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;
   transition:opacity .4s ease,transform .6s cubic-bezier(.16,1,.3,1)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam:hover img{transform:scale(1.06)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam-live{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-cam:hover img{transform:scale(1.06)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-cam-live{
   display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;
   background:#f87171;vertical-align:1px;animation:dmWidgetLive 1.6s steps(1) infinite}
 @keyframes dmWidgetLive{0%,100%{opacity:1}50%{opacity:.25}}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam img[data-dm-camera-state="ready"]{opacity:1}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam figcaption{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-cam img[data-dm-camera-state="ready"]{opacity:1}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-cam figcaption{
   position:absolute;left:0;right:0;bottom:0;padding:5px 9px;
   font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#e2eefb;
   background:linear-gradient(0deg,rgba(2,6,15,.72),transparent)}
@@ -9897,83 +9897,83 @@ ${tokenDellaCarta(":is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup))")}
 /* I due pezzi dell'Agenda (#259): impegni sopra, cose da fare sotto. Il
    titolo di ognuno e' quello che li tiene distinti — mescolarli in un elenco
    solo darebbe righe che si somigliano e non fanno la stessa cosa. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-ag-parte + .dm-ag-parte{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-ag-parte + .dm-ag-parte{
   margin-top:18px;padding-top:16px;border-top:1px solid var(--card-border,#e2e8f0)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-ag-titolo{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-ag-titolo{
   margin:0 0 10px;font-size:12px;font-weight:900;letter-spacing:.4px;
   color:var(--text,#0f172a)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-lista{list-style:none;margin:0;padding:0 2px;display:grid;gap:9px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-evento{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-cal-lista{list-style:none;margin:0;padding:0 2px;display:grid;gap:9px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-cal-evento{
   display:flex;align-items:flex-start;gap:11px;min-width:0}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-ora{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-cal-ora{
   flex:0 0 auto;min-width:78px;font-size:11.5px;font-weight:800;line-height:1.5;
   font-variant-numeric:tabular-nums;color:var(--text-dim,#64748b);padding-top:1px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-testo{display:grid;gap:1px;min-width:0;flex:1}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-testo b{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-cal-testo{display:grid;gap:1px;min-width:0;flex:1}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-cal-testo b{
   font-size:13px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-testo small{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-cal-testo small{
   font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8);overflow-wrap:anywhere}
 /* Quello che sta succedendo adesso si stacca dagli altri: e' la riga per cui
    si e' aperta la finestra. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-evento[data-adesso="true"] .dm-cal-ora,
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-evento[data-adesso="true"] .dm-cal-testo b{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-cal-evento[data-adesso="true"] .dm-cal-ora,
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-cal-evento[data-adesso="true"] .dm-cal-testo b{
   color:var(--dm-widget-accent,#6366f1)}
 /* Il fondo del pannello, dove sta il tasto per segnare un impegno nuovo. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-fondo{display:flex;justify-content:center;padding:6px 0 2px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-cal-fondo{display:flex;justify-content:center;padding:6px 0 2px}
 /* Una scadenza dentro l'agenda (#259): la casella al posto dei tasti, e la
    parola «Da fare» dove gli altri hanno l'ora. Si vede che e' un'altra cosa
    senza doverla leggere. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-evento[data-scadenza="true"] .dm-cal-ora{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-cal-evento[data-scadenza="true"] .dm-cal-ora{
   color:var(--dm-widget-accent,#6366f1);opacity:.85}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-evento[data-scadenza="true"] .dm-todo-check{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-cal-evento[data-scadenza="true"] .dm-todo-check{
   margin-top:0;flex:0 0 19px;width:19px;height:19px}
 /* Quello che e' scaduto: il blocco si stacca dagli altri, perche' e' la riga
    per cui si apre l'agenda. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-w-block[data-dm-ritardo="true"] .dm-w-block-title{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-w-block[data-dm-ritardo="true"] .dm-w-block-title{
   color:#b91c1c}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-w-block[data-dm-ritardo="true"] .dm-cal-ora{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-w-block[data-dm-ritardo="true"] .dm-cal-ora{
   color:#b91c1c;opacity:1}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-cal-adesso{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-cal-adesso{
   flex:0 0 auto;align-self:center;padding:3px 9px;border-radius:999px;
   font-size:9.5px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:#fff;
   background:var(--dm-widget-accent,#6366f1)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-items{list-style:none;margin:0;padding:0 2px;display:grid;gap:8px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-item{display:flex;align-items:flex-start;gap:10px;min-width:0}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-check{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-items{list-style:none;margin:0;padding:0 2px;display:grid;gap:8px}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-item{display:flex;align-items:flex-start;gap:10px;min-width:0}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-check{
   position:relative;flex:0 0 21px;width:21px;height:21px;margin-top:1px;border-radius:50%;cursor:pointer;
   border:2px solid color-mix(in srgb,var(--text-dim,#94a3b8) 55%,transparent);background:transparent;padding:0;
   transition:border-color .2s ease,background .25s ease,transform .15s ease}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-check:hover{border-color:var(--dm-widget-accent,#059669);transform:scale(1.08)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-check::after{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-check:hover{border-color:var(--dm-widget-accent,#059669);transform:scale(1.08)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-check::after{
   content:"✓";position:absolute;inset:0;display:grid;place-items:center;
   color:#fff;font-size:12px;font-weight:900;opacity:0;transform:scale(.4);
   transition:opacity .2s ease,transform .25s cubic-bezier(.16,1,.3,1)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-item.is-done .dm-todo-check{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-item.is-done .dm-todo-check{
   border-color:var(--dm-widget-accent,#059669);background:var(--dm-widget-accent,#059669)}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-item.is-done .dm-todo-check::after{opacity:1;transform:scale(1)}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-item.is-done .dm-todo-check::after{opacity:1;transform:scale(1)}
 /* Il testo si prende lo spazio che avanza, cosi' la matita e il cestino
    restano insieme a destra: senza, la matita resta attaccata alla parola e il
    cestino se ne va da solo in fondo. */
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-text{flex:1;min-width:0;font-size:13.5px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-item.is-done .dm-todo-text{color:var(--text-dim,#94a3b8);text-decoration:line-through}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-due{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-text{flex:1;min-width:0;font-size:13.5px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-item.is-done .dm-todo-text{color:var(--text-dim,#94a3b8);text-decoration:line-through}
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-due{
   display:inline-flex;align-items:center;gap:3px;margin-left:7px;padding:1px 7px;border-radius:999px;
   background:var(--surface-3,#f1f5f9);border:1px solid var(--card-border,#e8edf3);
   font-size:10.5px;font-weight:800;color:var(--text-dim,#64748b);white-space:nowrap;vertical-align:1px}
-:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-due[data-overdue="true"]{
+:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-due[data-overdue="true"]{
   background:rgba(244,63,94,.10);border-color:rgba(244,63,94,.30);color:#be123c}
 
 @media (prefers-reduced-motion:reduce){
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chevron,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-check,
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup),#page-calendario) .dm-todo-check::after,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-switch,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-switch i,
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile-chip,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam img,
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile .dm-tile-shine{transition:none}
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-widget-detail,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-row,
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-tile[data-alert="true"] .dm-tile-chip::after,
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-w-cam-live{animation:none}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-chevron,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-check,
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup),#page-calendario) .dm-todo-check::after,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-switch,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-switch i,
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile-chip,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-cam img,
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile .dm-tile-shine{transition:none}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-widget-detail,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile,:is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-row,
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-tile[data-alert="true"] .dm-tile-chip::after,
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-w-cam-live{animation:none}
 }
 @media (max-width:520px){
-  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup)) .dm-widgets-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  :is(#dm-widgets,:is(#dm-widget-popup,#dm-casa-popup,#dm-qa-popup)) .dm-widgets-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 }
 ${regoleCompatte()}
 `,

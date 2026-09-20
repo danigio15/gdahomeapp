@@ -26,6 +26,16 @@ dalla configurazione di casa: adesso ogni casa ha il suo, e la prima volta si
 riempie da quello di prima, così il tema scelto non si perde, nemmeno per chi
 di casa ne ha una sola.
 
+**Un'azione rapida su un menu a tendina fa scegliere la voce.** «Sotto il
+comando scena, se inserisco un'entità che è un select mi devi far scegliere
+cosa far partire.» Un `select` non si accende e non è una scena: ha delle
+voci, e il tasto chiedeva a Home Assistant un servizio che non c'è, in
+silenzio. Adesso il tasto apre un **popup con le voci del menu**, con quella
+di adesso segnata, e mette quella che si tocca. Chi vuole un tasto secco la
+fissa nell'editor, nella riga «Quale voce» che compare appena l'entità è un
+menu a tendina: allora il tasto la mette senza chiedere, e si accende quando
+la casa è su quella voce.
+
 **Le stampanti sotto il meteo.** «Sulla sezione stampanti riesce a mettere i 4
 colori? che poi va sulla home sotto il meteo quando c'è un sottosoglia?» I
 quattro colori c'erano già — nero, ciano, magenta, giallo, ognuno con la sua

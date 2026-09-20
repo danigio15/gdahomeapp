@@ -1,4 +1,5 @@
 {
+  "— chosen each time, from the popup —": "— si sceglie ogni volta, dal popup —",
   "— No Report items configured —": "— Nessun elemento Report configurato —",
   "— No room —": "— Nessuna stanza —",
   "— Other zones —": "— Altre zone —",
@@ -70,6 +71,7 @@
   "⬇ DOWNLOAD": "⬇ SCARICA",
   "⭐ Custom": "⭐ Personalizzati",
   "🎉 All set!": "🎉 Tutto pronto!",
+  "🎚️ This entity is a dropdown: the button opens a popup with its options. Or fix one here.": "🎚️ Questa entità è un menu a tendina: il tasto apre un popup con le sue voci. Oppure fissane una qui.",
   "🏠 Create, rename and delete rooms only in the": "🏠 Crea, rinomina ed elimina le stanze nella sezione",
   "🏠 What is your home called?": "🏠 Come si chiama casa tua?",
   "👆 Auto-hide": "👆 A scomparsa",
@@ -427,6 +429,7 @@
   "WebRTC WebSocket unreachable": "WebSocket WebRTC non raggiungibile",
   "WebRTC: skipped — fill in “go2rtc stream name” in the Cameras tab (the camera name is not the lever)": "WebRTC: saltato — compila «Nome stream go2rtc» nella scheda Telecamere (il nome della telecamera non c’entra)",
   "WebRTC: skipped, the browser does not support it": "WebRTC: saltato, il browser non lo supporta",
+  "Which option": "Quale voce",
   "Without PV": "Senza FV",
   "WNW": "ONO",
   "WSW": "OSO",

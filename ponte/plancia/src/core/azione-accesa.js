@@ -35,12 +35,20 @@ const MUTI = new Set(["", "unavailable", "unknown", "none"]);
  * e' un pulsante che mette la casa in un certo modo, e finisce li'. */
 const SENZA_STATO = new Set(["scene", "script_run", "service", "url", "navigate"]);
 
+/* I menu a tendina di Home Assistant: hanno delle voci, e una e' quella di adesso. */
+const E_UN_MENU = /^(select|input_select)\./;
+
 /** L'entita' che dice se questa azione e' accesa, o "" se non ce n'e' una. */
 export function entitaDellAzione(azione) {
   if (!azione || typeof azione !== "object") return "";
+  const entity = pulito(azione.entity || azione.entity_id);
+  /* Un menu a tendina con la voce scelta uno stato ce l'ha — su quella voce
+   * o no — anche se sta sotto «Scena»: il tipo dice come l'ha messa
+   * l'utente, l'entita' dice cos'e'. */
+  if (pulito(azione.option) && E_UN_MENU.test(entity)) return entity;
   const tipo = minuscolo(azione.type);
   if (SENZA_STATO.has(tipo)) return "";
-  return pulito(azione.entity || azione.entity_id);
+  return entity;
 }
 
 /**
@@ -72,6 +80,10 @@ export function azioneAccesa(azione, states = {}, risolvi = null) {
   if (!entity) return null;
   const stato = minuscolo(states?.[risolta(entity, risolvi)]?.state);
   if (MUTI.has(stato)) return null;
+  /* Un menu a tendina e' acceso quando la casa e' sulla voce che il tasto
+   * mette: e' il modo in cui si vede, senza toccare niente, quale voce c'e'. */
+  const voce = minuscolo(azione.option);
+  if (voce && E_UN_MENU.test(entity)) return stato === voce;
   /* Uno script mentre gira e' acceso: e' l'unico caso in cui un gesto ha una
    * durata, e vederlo acceso dice «sta ancora andando». */
   return ACCESI.has(stato);
